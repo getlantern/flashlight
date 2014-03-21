@@ -5,6 +5,7 @@ Lightweight chained web proxy written in go.
 flashlight runs in one of two modes:
 
 client - meant to run locally to wherever the browser is running, forwards requests to the server
+
 server - handles requests from an upstream flashlight client proxy and actually proxies them to the final destination
 
 Using CloudFront, flashlight has the ability to masquerade as running on a different domain than it is.  The client simply
