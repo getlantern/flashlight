@@ -16,14 +16,14 @@ to route the request to the correct host.
 
 ### Usage
 
+```bash
 Usage of flashlight:
   -addr="": ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https
   -help=false: Get usage help
   -masquerade="": masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter
   -server="": hostname at which to connect to a server flashlight (always using https).  When specified, this flashlight will run as a client proxy, otherwise it runs as a server
   -serverPort=443: the port on which to connect to the server
-
-###
+```
 
 Example Server:
 
