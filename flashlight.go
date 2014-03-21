@@ -144,6 +144,7 @@ func handleServer(resp http.ResponseWriter, req *http.Request) {
 			req.URL.Scheme = "http"
 			// Grab the actual host from the original client and use that for the outbound request
 			req.URL.Host = req.Header.Get(X_LANTERN_HOST)
+			req.Host = req.URL.Host
 		},
 	}
 	rp.ServeHTTP(resp, req)
