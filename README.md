@@ -8,10 +8,10 @@ client - meant to run locally to wherever the browser is running, forwards reque
 
 server - handles requests from an upstream flashlight client proxy and actually proxies them to the final destination
 
-Using CloudFront, flashlight has the ability to masquerade as running on a different domain than it is.  The client simply
+Using CloudFlare, flashlight has the ability to masquerade as running on a different domain than it is.  The client simply
 specified the "masquerade" flag with a value like "thehackernews.com".  flashlight will then use that masquerade host for
-the DNS lookup and will also specify it as the ServerName for SNI (though this is not actually necessary on CloudFront).
-The Host header of the HTTP request will actually contain the correct host (e.g. getiantem.org), which causes CloudFront
+the DNS lookup and will also specify it as the ServerName for SNI (though this is not actually necessary on CloudFlare).
+The Host header of the HTTP request will actually contain the correct host (e.g. getiantem.org), which causes CloudFlare
 to route the request to the correct host.
 
 ### Usage

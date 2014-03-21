@@ -7,7 +7,6 @@ import (
 	"crypto/x509/pkix"
 	"flag"
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/oxtoacart/keyman"
 	"log"
 	"math/big"
@@ -15,6 +14,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -69,6 +69,8 @@ func main() {
 }
 
 func runClient() {
+	// On the client, use a bunch of CPUs if necessary
+	runtime.GOMAXPROCS(4)
 	wg.Add(1)
 
 	server := &http.Server{
@@ -120,6 +122,8 @@ func handleClient(resp http.ResponseWriter, req *http.Request) {
 			req.Header.Set(X_LANTERN_HOST, req.Host)
 			// Set our upstream proxy as the host for this request
 			req.Host = *upstreamHost
+			// TODO: handle https too
+			req.URL.Scheme = "http"
 			req.URL.Host = *upstreamHost
 		},
 		Transport: &http.Transport{
@@ -127,7 +131,7 @@ func handleClient(resp http.ResponseWriter, req *http.Request) {
 				tlsConfig := &tls.Config{
 					ServerName: host,
 				}
-				log.Printf("Dialing %s", upstreamAddr)
+				log.Printf("Using %s to handle request for: %s", upstreamAddr, req.URL.String())
 				return tls.Dial(network, upstreamAddr, tlsConfig)
 			},
 		},
@@ -139,12 +143,12 @@ func handleClient(resp http.ResponseWriter, req *http.Request) {
 func handleServer(resp http.ResponseWriter, req *http.Request) {
 	rp := httputil.ReverseProxy{
 		Director: func(req *http.Request) {
-			log.Printf("Request: %s", spew.Sdump(req))
 			// TODO - need to add support for tunneling HTTPS traffic using CONNECT
 			req.URL.Scheme = "http"
 			// Grab the actual host from the original client and use that for the outbound request
 			req.URL.Host = req.Header.Get(X_LANTERN_HOST)
 			req.Host = req.URL.Host
+			log.Printf("Handling request for: %s", req.URL.String())
 		},
 	}
 	rp.ServeHTTP(resp, req)
