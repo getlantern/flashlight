@@ -1,4 +1,4 @@
-// flashlight is a lightweight proxy that can be run in client or server mode.
+// flashlight is a lightweight chained proxy that can run in client or server mode.
 package main
 
 import (

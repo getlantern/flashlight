@@ -1,6 +1,6 @@
 ## flashlight
 
-Lightweight chained web proxy client written in go.
+Lightweight chained web proxy written in go.
 
 flashlight runs in one of two modes:
 
