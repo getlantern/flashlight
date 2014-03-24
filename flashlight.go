@@ -141,38 +141,22 @@ func handleClient(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	log.Printf("Using %s to handle request for: %s", upstreamAddr, req.URL.String())
-	if connIn, _, err := resp.(http.Hijacker).Hijack(); err != nil {
-		msg := fmt.Sprintf("Unable to access underlying connection from client: %s", err)
-		respondBadGateway(resp, req, msg)
-	} else {
-		// serverIsLocalhost := strings.Contains(*addr, "localhost") || strings.Contains(*addr, "127.0.0.1")
-		// tlsConfig := &tls.Config{
-		// 	ServerName:         host,
-		// 	InsecureSkipVerify: serverIsLocalhost,
-		// }
-		// connOut, err := tls.Dial("tcp", upstreamAddr, tlsConfig)
-		connOut, err := net.Dial("tcp", upstreamAddr)
-		if err != nil {
-			if connOut != nil {
-				defer connOut.Close()
-			}
-			msg := fmt.Sprintf("Unable to dial server: %s", err)
-			log.Println(msg)
-			respondBadGateway(resp, req, msg)
-		} else {
-			err := writeRequest(req, connOut)
-			if err != nil {
-				msg := fmt.Sprintf("Unable to write request to server: %s", err)
-				respondBadGateway(resp, req, msg)
-			} else {
-				log.Println("Wrote request, piping traffic")
-				go func() {
-					pipe(connIn, connOut)
-					log.Println("Done piping out")
-				}()
-			}
-		}
+	// serverIsLocalhost := strings.Contains(*addr, "localhost") || strings.Contains(*addr, "127.0.0.1")
+	// tlsConfig := &tls.Config{
+	// 	ServerName:         host,
+	// 	InsecureSkipVerify: serverIsLocalhost,
+	// }
+	// connOut, err := tls.Dial("tcp", upstreamAddr, tlsConfig)
+	rp := httputil.ReverseProxy{
+		Director: func(req *http.Request) {
+			req.URL.Scheme = "http"
+			log.Printf("Handling request for: %s", req.URL.String())
+		},
+		Dialer: func(network, addr) {
+			return net.Dial("tcp", upstreamAddr)
+		},
 	}
+	rp.ServeHTTP(rw, req)
 }
 
 // handleServer handles requests from a downstream flashlight
