@@ -3,7 +3,7 @@ package main
 
 import (
 	//"crypto/tls"
-	//"bufio"
+	"bufio"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"flag"
@@ -143,30 +143,60 @@ func handleClient(resp http.ResponseWriter, req *http.Request) {
 	if req.Method == "CONNECT" {
 		req.Method = "POST"
 		req.Header.Set(X_LANTERN_METHOD, "CONNECT")
-		//req.Header.Set("Transfer-Encoding", "chunked")
+		req.ContentLength = -1
 	}
 
 	log.Printf("Using %s to handle request for: %s", upstreamAddr, req.URL.String())
-	// serverIsLocalhost := strings.Contains(*addr, "localhost") || strings.Contains(*addr, "127.0.0.1")
-	// tlsConfig := &tls.Config{
-	// 	ServerName:         host,
-	// 	InsecureSkipVerify: serverIsLocalhost,
-	// }
-	// connOut, err := tls.Dial("tcp", upstreamAddr, tlsConfig)
-	connOut, err := net.Dial("tcp", upstreamAddr)
-	if err != nil {
-		if connOut != nil {
-			defer connOut.Close()
-		}
-		msg := fmt.Sprintf("Unable to dial server: %s", err)
-		log.Println(msg)
+	if connIn, _, err := resp.(http.Hijacker).Hijack(); err != nil {
+		msg := fmt.Sprintf("Unable to access underlying connection from client: %s", err)
 		respondBadGateway(resp, req, msg)
 	} else {
-		go req.WriteProxy()
-		go func() {
-			defer connOut.Close()
-			io.Copy(resp, connOut)
-		}()
+		// serverIsLocalhost := strings.Contains(*addr, "localhost") || strings.Contains(*addr, "127.0.0.1")
+		// tlsConfig := &tls.Config{
+		// 	ServerName:         host,
+		// 	InsecureSkipVerify: serverIsLocalhost,
+		// }
+		// connOut, err := tls.Dial("tcp", upstreamAddr, tlsConfig)
+		connOut, err := net.Dial("tcp", upstreamAddr)
+		if err != nil {
+			if connOut != nil {
+				defer connOut.Close()
+			}
+			msg := fmt.Sprintf("Unable to dial server: %s", err)
+			log.Println(msg)
+			respondBadGateway(resp, req, msg)
+		} else {
+			err := writeRequest(req, connOut)
+			if err != nil {
+				msg := fmt.Sprintf("Unable to write request to server: %s", err)
+				respondBadGateway(resp, req, msg)
+			} else {
+				log.Println("Tunneling")
+				connOutBuff := bufio.NewReaderSize(connOut, 8192)
+				connectResp, err := http.ReadResponse(connOutBuff, req)
+				if err != nil {
+					msg := fmt.Sprintf("Unable to read response: %s", err)
+					log.Printf(msg)
+					respondBadGateway(resp, req, msg)
+				}
+				log.Printf("Response: %s", connectResp)
+				// Write simple OK_RESPONSE (without chunking) to client
+				_, err = connIn.Write(OK_RESPONSE)
+				_, err = connIn.Write(END_OF_HEADERS)
+				if err != nil {
+					msg := fmt.Sprintf("Unable to send response line to client: %s", err)
+					respondBadGateway(resp, req, msg)
+				}
+				go func() {
+					defer connIn.Close()
+					io.Copy(connOut, connIn)
+				}()
+				go func() {
+					defer connOut.Close()
+					io.Copy(connIn, connectResp.Body)
+				}()
+			}
+		}
 	}
 }
 
@@ -210,10 +240,30 @@ func handleServerHTTPS(resp http.ResponseWriter, req *http.Request) {
 			respondBadGateway(resp, req, msg)
 		} else {
 			log.Printf("Tunneling traffic")
-			pipe(connIn, connOut)
-			connIn.Write(OK_RESPONSE)
-			connIn.Write([]byte("Content-Length: 1000000000\r\n"))
+			chunkedIn := httputil.NewChunkedWriter(connIn)
+			go func() {
+				defer connIn.Close()
+				io.Copy(connOut, connIn)
+			}()
+			go func() {
+				defer connOut.Close()
+				io.Copy(chunkedIn, connOut)
+			}()
+			_, err = connIn.Write(OK_RESPONSE)
+			if err != nil {
+				log.Printf("Unable to write response: %s", err)
+				return
+			}
+			_, err = connIn.Write([]byte("Transfer-Encoding: chunked\r\n"))
+			if err != nil {
+				log.Printf("Unable to write response: %s", err)
+				return
+			}
 			_, err = connIn.Write(END_OF_HEADERS)
+			if err != nil {
+				log.Printf("Unable to write response: %s", err)
+				return
+			}
 		}
 	}
 }
@@ -222,17 +272,14 @@ func writeRequest(req *http.Request, conn io.Writer) error {
 	if _, err := fmt.Fprintf(conn, "%s %s HTTP/1.1\r\n", valueOrDefault(req.Method, "GET"), req.URL.RequestURI()); err != nil {
 		return err
 	}
-	err := req.Header.Write(conn)
+	if err := req.Header.Write(conn); err != nil {
+		return err
+	}
+	_, err := conn.Write([]byte("Content-Length: 100000000\r\n"))
 	if err != nil {
 		return err
 	}
-	_, err = conn.Write([]byte("Transfer-Encoding: chunked\r\n"))
-	if err != nil {
-		return err
-	}
-	_, err = conn.Write([]byte("\r\n"))
-	_, err = conn.Write([]byte("0"))
-	_, err = conn.Write([]byte(""))
+	_, err = io.WriteString(conn, "\r\n")
 	return err
 }
 
