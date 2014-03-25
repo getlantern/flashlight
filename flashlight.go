@@ -7,7 +7,6 @@ import (
 	"crypto/x509/pkix"
 	"flag"
 	"fmt"
-	"github.com/oxtoacart/keyman"
 	"log"
 	"math/big"
 	"net"
@@ -15,15 +14,21 @@ import (
 	"net/http/httputil"
 	"os"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
+
+	"github.com/davecgh/go-spew/spew"
+	"github.com/oxtoacart/go-mitm/mitm"
+	"github.com/oxtoacart/keyman"
 )
 
 const (
-	CONNECT        = "CONNECT"
-	ONE_WEEK       = 7 * 24 * time.Hour
-	TWO_WEEKS      = ONE_WEEK * 2
-	X_LANTERN_HOST = "X-Lantern-Host"
+	CONNECT          = "CONNECT"
+	ONE_WEEK         = 7 * 24 * time.Hour
+	TWO_WEEKS        = ONE_WEEK * 2
+	X_LANTERN_HOST   = "X-Lantern-Host"
+	X_LANTERN_SCHEME = "X-Lantern-Scheme"
 
 	PK_FILE   = "proxypk.pem"
 	CERT_FILE = "proxycert.pem"
@@ -32,6 +37,7 @@ const (
 var (
 	help         = flag.Bool("help", false, "Get usage help")
 	addr         = flag.String("addr", "", "ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https")
+	mitmAddr     = flag.String("mitmAddr", "localhost:10093", "ip:port on which the client mitm proxy should listen for requets, defaults to localhost:10093")
 	upstreamHost = flag.String("server", "", "hostname at which to connect to a server flashlight (always using https).  When specified, this flashlight will run as a client proxy, otherwise it runs as a server")
 	upstreamPort = flag.Int("serverPort", 443, "the port on which to connect to the server")
 	masqueradeAs = flag.String("masquerade", "", "masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter")
@@ -44,6 +50,8 @@ var (
 	issuingCertPem []byte
 
 	wg sync.WaitGroup
+
+	mitmProxy *mitm.Proxy
 )
 
 func init() {
@@ -57,12 +65,13 @@ func init() {
 }
 
 func main() {
+	if err := initCerts(); err != nil {
+		log.Fatalf("Unable to initialize certs: %s", err)
+	}
 	if isDownstream {
 		runClient()
+		runMitmProxy()
 	} else {
-		if err := initCerts(); err != nil {
-			log.Fatalf("Unable to initialize certs: %s", err)
-		}
 		runServer()
 	}
 	wg.Wait()
@@ -89,6 +98,26 @@ func runClient() {
 	}()
 }
 
+func runMitmProxy() {
+	wg.Add(1)
+
+	var err error
+	mitmProxy, err = mitm.NewProxy(PK_FILE, CERT_FILE, *mitmAddr)
+	if err != nil {
+		log.Fatalf("Unable to initialize mitm proxy: %s", err)
+	}
+
+	mitmProxy.HandlerFunc = handleClientHTTPS
+	go func() {
+		log.Printf("About to start mitm proxy at %s", *mitmAddr)
+		errCh := mitmProxy.Start()
+		if err := <-errCh; err != nil {
+			log.Fatalf("Unable to start mitm proxy: %s", err)
+		}
+		wg.Done()
+	}()
+}
+
 func runServer() {
 	wg.Add(1)
 
@@ -102,6 +131,7 @@ func runServer() {
 	go func() {
 		log.Printf("About to start server (https) proxy at %s", *addr)
 		if err := server.ListenAndServeTLS(CERT_FILE, PK_FILE); err != nil {
+			// if err := server.ListenAndServe(); err != nil {
 			log.Fatalf("Unable to start server proxy: %s", err)
 		}
 		wg.Done()
@@ -110,6 +140,17 @@ func runServer() {
 
 // handleClient handles requests from a local client (e.g. the browser)
 func handleClient(resp http.ResponseWriter, req *http.Request) {
+	if req.Method == "CONNECT" {
+		mitmProxy.Intercept(resp, req)
+	} else {
+		req.URL.Scheme = "http"
+		handleClientHTTP(resp, req)
+	}
+}
+
+func handleClientHTTP(resp http.ResponseWriter, req *http.Request) {
+	log.Println(spew.Sdump(req))
+
 	host := *upstreamHost
 	if *masqueradeAs != "" {
 		host = *masqueradeAs
@@ -118,33 +159,50 @@ func handleClient(resp http.ResponseWriter, req *http.Request) {
 
 	rp := httputil.ReverseProxy{
 		Director: func(req *http.Request) {
-			// Remember the host that was actually requested
+			// Remember the host and scheme that was actually requested
 			req.Header.Set(X_LANTERN_HOST, req.Host)
+			req.Header.Set(X_LANTERN_SCHEME, req.URL.Scheme)
+			req.URL.Scheme = "http"
 			// Set our upstream proxy as the host for this request
 			req.Host = *upstreamHost
-			// TODO: handle https too
-			req.URL.Scheme = "http"
 			req.URL.Host = *upstreamHost
 		},
 		Transport: &http.Transport{
 			Dial: func(network, addr string) (net.Conn, error) {
+				log.Printf("Using %s to handle request for: %s", upstreamAddr, req.URL.String())
 				tlsConfig := &tls.Config{
 					ServerName: host,
 				}
-				log.Printf("Using %s to handle request for: %s", upstreamAddr, req.URL.String())
 				return tls.Dial(network, upstreamAddr, tlsConfig)
+				// return net.Dial(network, upstreamAddr)
 			},
 		},
 	}
 	rp.ServeHTTP(resp, req)
 }
 
+func handleClientHTTPS(resp http.ResponseWriter, req *http.Request) {
+	req.URL.Scheme = "https"
+	req.Host = hostIncludingPort(req)
+	handleClientHTTP(resp, req)
+}
+
+func hostIncludingPort(req *http.Request) (host string) {
+	host = req.Host
+	if !strings.Contains(host, ":") {
+		host = host + ":443"
+	}
+	return
+}
+
 // handleServer handles requests from a downstream flashlight
 func handleServer(resp http.ResponseWriter, req *http.Request) {
+	log.Println(spew.Sdump(req))
+
 	rp := httputil.ReverseProxy{
 		Director: func(req *http.Request) {
 			// TODO - need to add support for tunneling HTTPS traffic using CONNECT
-			req.URL.Scheme = "http"
+			req.URL.Scheme = req.Header.Get(X_LANTERN_SCHEME)
 			// Grab the actual host from the original client and use that for the outbound request
 			req.URL.Host = req.Header.Get(X_LANTERN_HOST)
 			req.Host = req.URL.Host
@@ -165,7 +223,8 @@ func initCerts() (err error) {
 	}
 	pkPem = pk.PEMEncoded()
 	if issuingCert, err = keyman.LoadCertificateFromFile(CERT_FILE); err != nil {
-		if issuingCert, err = certificateFor("Lantern", nil); err != nil {
+		// TODO: don't hardcode the common name
+		if issuingCert, err = certificateFor("lantern.io", nil); err != nil {
 			return
 		}
 		if err = issuingCert.WriteToFile(CERT_FILE); err != nil {
