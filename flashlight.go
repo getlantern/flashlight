@@ -3,6 +3,7 @@ package main
 
 import (
 	//"crypto/tls"
+	//"bufio"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"flag"
@@ -24,7 +25,8 @@ import (
 )
 
 const (
-	CONNECT   = "CONNECT"
+	CONNECT = "CONNECT"
+
 	ONE_WEEK  = 7 * 24 * time.Hour
 	TWO_WEEKS = ONE_WEEK * 2
 
@@ -36,6 +38,9 @@ const (
 )
 
 var (
+	OK_RESPONSE    = []byte("HTTP/1.1 200 Connection established\r\n")
+	END_OF_HEADERS = []byte("\r\n")
+
 	help         = flag.Bool("help", false, "Get usage help")
 	addr         = flag.String("addr", "", "ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https")
 	upstreamHost = flag.String("server", "", "hostname at which to connect to a server flashlight (always using https).  When specified, this flashlight will run as a client proxy, otherwise it runs as a server")
@@ -138,25 +143,66 @@ func handleClient(resp http.ResponseWriter, req *http.Request) {
 	if req.Method == "CONNECT" {
 		req.Method = "POST"
 		req.Header.Set(X_LANTERN_METHOD, "CONNECT")
+		//req.Header.Set("Transfer-Encoding", "chunked")
 	}
 
 	log.Printf("Using %s to handle request for: %s", upstreamAddr, req.URL.String())
-	// serverIsLocalhost := strings.Contains(*addr, "localhost") || strings.Contains(*addr, "127.0.0.1")
-	// tlsConfig := &tls.Config{
-	// 	ServerName:         host,
-	// 	InsecureSkipVerify: serverIsLocalhost,
-	// }
-	// connOut, err := tls.Dial("tcp", upstreamAddr, tlsConfig)
-	rp := httputil.ReverseProxy{
-		Director: func(req *http.Request) {
-			req.URL.Scheme = "http"
-			log.Printf("Handling request for: %s", req.URL.String())
-		},
-		Dialer: func(network, addr) {
-			return net.Dial("tcp", upstreamAddr)
-		},
+	if connIn, _, err := resp.(http.Hijacker).Hijack(); err != nil {
+		msg := fmt.Sprintf("Unable to access underlying connection from client: %s", err)
+		respondBadGateway(resp, req, msg)
+	} else {
+		// serverIsLocalhost := strings.Contains(*addr, "localhost") || strings.Contains(*addr, "127.0.0.1")
+		// tlsConfig := &tls.Config{
+		// 	ServerName:         host,
+		// 	InsecureSkipVerify: serverIsLocalhost,
+		// }
+		// connOut, err := tls.Dial("tcp", upstreamAddr, tlsConfig)
+		connOut, err := net.Dial("tcp", upstreamAddr)
+		if err != nil {
+			if connOut != nil {
+				defer connOut.Close()
+			}
+			msg := fmt.Sprintf("Unable to dial server: %s", err)
+			log.Println(msg)
+			respondBadGateway(resp, req, msg)
+		} else {
+			err := writeRequest(req, connOut)
+			if err != nil {
+				msg := fmt.Sprintf("Unable to write request to server: %s", err)
+				respondBadGateway(resp, req, msg)
+			} else {
+				log.Println("Tunneling")
+				// bufOutReader := bufio.NewReaderSize(connOut, 4096)
+				// connectResp, err := http.ReadResponse(bufOutReader, nil)
+				// if err != nil {
+				// 	msg := fmt.Sprintf("Unable to read response: %s", err)
+				// 	log.Printf(msg)
+				// 	respondBadGateway(resp, req, msg)
+				// }
+				// log.Printf("Response: %s", connectResp)
+				// isChunked := false
+				// for _, encoding := range connectResp.TransferEncoding {
+				// 	if encoding == "chunked" {
+				// 		isChunked = true
+				// 		break
+				// 	}
+				// }
+				// if isChunked {
+				// 	log.Println("Tunneling traffic with chunking")
+				// 	pipeChunked(connIn, connOut, connectResp.Body)
+				// } else {
+				// 	log.Println("Tunneling traffic without chunking")
+				pipeChunked(connIn, connOut)
+				// }
+				// _, err = connIn.Write(OK_RESPONSE)
+				// _, err = connIn.Write(END_OF_HEADERS)
+				// if err != nil {
+				// 	msg := fmt.Sprintf("Unable to forward response line to client: %s", err)
+				// 	respondBadGateway(resp, req, msg)
+				// }
+			}
+		}
 	}
-	rp.ServeHTTP(rw, req)
 }
 
 // handleServer handles requests from a downstream flashlight
@@ -200,7 +246,9 @@ func handleServerHTTPS(resp http.ResponseWriter, req *http.Request) {
 		} else {
 			log.Printf("Tunneling traffic")
 			pipe(connIn, connOut)
-			connIn.Write([]byte("HTTP/1.1 200 OK\r\nTransfer-Encoding: Chunked\r\n\r\n"))
+			connIn.Write(OK_RESPONSE)
+			connIn.Write([]byte("Content-Length: 1000000000\r\n"))
+			_, err = connIn.Write(END_OF_HEADERS)
 		}
 	}
 }
@@ -209,10 +257,17 @@ func writeRequest(req *http.Request, conn io.Writer) error {
 	if _, err := fmt.Fprintf(conn, "%s %s HTTP/1.1\r\n", valueOrDefault(req.Method, "GET"), req.URL.RequestURI()); err != nil {
 		return err
 	}
-	if err := req.Header.Write(conn); err != nil {
+	err := req.Header.Write(conn)
+	if err != nil {
 		return err
 	}
-	_, err := io.WriteString(conn, "\r\n")
+	_, err = conn.Write([]byte("Transfer-Encoding: chunked\r\n"))
+	if err != nil {
+		return err
+	}
+	_, err = conn.Write([]byte("\r\n"))
+	_, err = conn.Write([]byte("0"))
+	_, err = conn.Write([]byte(""))
 	return err
 }
 
@@ -244,12 +299,21 @@ func pipe(connIn net.Conn, connOut net.Conn) {
 	go func() {
 		defer connIn.Close()
 		io.Copy(connOut, connIn)
-		log.Println("Done piping out")
 	}()
 	go func() {
 		defer connOut.Close()
 		io.Copy(connIn, connOut)
-		log.Println("Done piping in")
+	}()
+}
+
+func pipeChunked(connIn net.Conn, connOut net.Conn) {
+	go func() {
+		defer connIn.Close()
+		io.Copy(httputil.NewChunkedWriter(connOut), connIn)
+	}()
+	go func() {
+		defer connOut.Close()
+		io.Copy(connIn, httputil.NewChunkedReader(connOut))
 	}()
 }
 
