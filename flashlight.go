@@ -147,61 +147,26 @@ func handleClient(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	log.Printf("Using %s to handle request for: %s", upstreamAddr, req.URL.String())
-	if connIn, _, err := resp.(http.Hijacker).Hijack(); err != nil {
-		msg := fmt.Sprintf("Unable to access underlying connection from client: %s", err)
+	// serverIsLocalhost := strings.Contains(*addr, "localhost") || strings.Contains(*addr, "127.0.0.1")
+	// tlsConfig := &tls.Config{
+	// 	ServerName:         host,
+	// 	InsecureSkipVerify: serverIsLocalhost,
+	// }
+	// connOut, err := tls.Dial("tcp", upstreamAddr, tlsConfig)
+	connOut, err := net.Dial("tcp", upstreamAddr)
+	if err != nil {
+		if connOut != nil {
+			defer connOut.Close()
+		}
+		msg := fmt.Sprintf("Unable to dial server: %s", err)
+		log.Println(msg)
 		respondBadGateway(resp, req, msg)
 	} else {
-		// serverIsLocalhost := strings.Contains(*addr, "localhost") || strings.Contains(*addr, "127.0.0.1")
-		// tlsConfig := &tls.Config{
-		// 	ServerName:         host,
-		// 	InsecureSkipVerify: serverIsLocalhost,
-		// }
-		// connOut, err := tls.Dial("tcp", upstreamAddr, tlsConfig)
-		connOut, err := net.Dial("tcp", upstreamAddr)
-		if err != nil {
-			if connOut != nil {
-				defer connOut.Close()
-			}
-			msg := fmt.Sprintf("Unable to dial server: %s", err)
-			log.Println(msg)
-			respondBadGateway(resp, req, msg)
-		} else {
-			err := writeRequest(req, connOut)
-			if err != nil {
-				msg := fmt.Sprintf("Unable to write request to server: %s", err)
-				respondBadGateway(resp, req, msg)
-			} else {
-				log.Println("Tunneling")
-				// bufOutReader := bufio.NewReaderSize(connOut, 4096)
-				// connectResp, err := http.ReadResponse(bufOutReader, nil)
-				// if err != nil {
-				// 	msg := fmt.Sprintf("Unable to read response: %s", err)
-				// 	log.Printf(msg)
-				// 	respondBadGateway(resp, req, msg)
-				// }
-				// log.Printf("Response: %s", connectResp)
-				// isChunked := false
-				// for _, encoding := range connectResp.TransferEncoding {
-				// 	if encoding == "chunked" {
-				// 		isChunked = true
-				// 		break
-				// 	}
-				// }
-				// if isChunked {
-				// 	log.Println("Tunneling traffic with chunking")
-				// 	pipeChunked(connIn, connOut, connectResp.Body)
-				// } else {
-				// 	log.Println("Tunneling traffic without chunking")
-				pipeChunked(connIn, connOut)
-				// }
-				// _, err = connIn.Write(OK_RESPONSE)
-				// _, err = connIn.Write(END_OF_HEADERS)
-				// if err != nil {
-				// 	msg := fmt.Sprintf("Unable to forward response line to client: %s", err)
-				// 	respondBadGateway(resp, req, msg)
-				// }
-			}
-		}
+		go req.WriteProxy()
+		go func() {
+			defer connOut.Close()
+			io.Copy(resp, connOut)
+		}()
 	}
 }
 
