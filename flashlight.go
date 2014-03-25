@@ -2,7 +2,7 @@
 package main
 
 import (
-	"crypto/tls"
+	//"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"flag"
@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 	"os"
 	"runtime"
 	"strings"
@@ -39,7 +40,7 @@ var (
 	addr         = flag.String("addr", "", "ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https")
 	mitmAddr     = flag.String("mitmAddr", "localhost:10093", "ip:port on which the client mitm proxy should listen for requets, defaults to localhost:10093")
 	upstreamHost = flag.String("server", "", "hostname at which to connect to a server flashlight (always using https).  When specified, this flashlight will run as a client proxy, otherwise it runs as a server")
-	upstreamPort = flag.Int("serverPort", 443, "the port on which to connect to the server")
+	upstreamPort = flag.Int("serverPort", 80, "the port on which to connect to the server")
 	masqueradeAs = flag.String("masquerade", "", "masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter")
 
 	isDownstream bool
@@ -134,8 +135,8 @@ func runServer() {
 
 	go func() {
 		log.Printf("About to start server (https) proxy at %s", *addr)
-		if err := server.ListenAndServeTLS(CERT_FILE, PK_FILE); err != nil {
-			// if err := server.ListenAndServe(); err != nil {
+		// if err := server.ListenAndServeTLS(CERT_FILE, PK_FILE); err != nil {
+		if err := server.ListenAndServe(); err != nil {
 			log.Fatalf("Unable to start server proxy: %s", err)
 		}
 		wg.Done()
@@ -155,8 +156,6 @@ func handleClient(resp http.ResponseWriter, req *http.Request) {
 // doHandleClient does the work of handling client HTTP requests and injecting
 // special Lantern headers to work correctly with the upstream server proxy.
 func doHandleClient(resp http.ResponseWriter, req *http.Request) {
-	log.Println(spew.Sdump(req))
-
 	host := *upstreamHost
 	if *masqueradeAs != "" {
 		host = *masqueradeAs
@@ -171,16 +170,22 @@ func doHandleClient(resp http.ResponseWriter, req *http.Request) {
 			req.URL.Scheme = "http"
 			// Set our upstream proxy as the host for this request
 			req.Host = *upstreamHost
-			req.URL.Host = *upstreamHost
+			req.URL.Host = "bubba"
+
+			log.Println(spew.Sdump(req))
 		},
 		Transport: &http.Transport{
+			Proxy: func(req *http.Request) (*url.URL, error) {
+				return url.Parse(fmt.Sprintf("http://www.google.com"))
+			},
 			Dial: func(network, addr string) (net.Conn, error) {
-				log.Printf("Using %s to handle request for: %s", upstreamAddr, req.URL.String())
-				tlsConfig := &tls.Config{
-					ServerName: host,
-				}
-				return tls.Dial(network, upstreamAddr, tlsConfig)
-				// return net.Dial(network, upstreamAddr)
+				// log.Printf("Using %s to handle request for: %s", upstreamAddr, req.URL.String())
+				// tlsConfig := &tls.Config{
+				// 	ServerName:         host,
+				// 	InsecureSkipVerify: true,
+				// }
+				// return tls.Dial(network, upstreamAddr, tlsConfig)
+				return net.Dial(network, upstreamAddr)
 			},
 		},
 	}
