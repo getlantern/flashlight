@@ -77,6 +77,7 @@ func main() {
 	wg.Wait()
 }
 
+// runClient runs the client HTTP proxy server
 func runClient() {
 	// On the client, use a bunch of CPUs if necessary
 	runtime.GOMAXPROCS(4)
@@ -98,6 +99,8 @@ func runClient() {
 	}()
 }
 
+// runMitmProxy runs the MITM proxy that the client uses for proxying HTTPS requests
+// we have to MITM these because we can't CONNECT tunnel through CloudFlare
 func runMitmProxy() {
 	wg.Add(1)
 
@@ -107,7 +110,7 @@ func runMitmProxy() {
 		log.Fatalf("Unable to initialize mitm proxy: %s", err)
 	}
 
-	mitmProxy.HandlerFunc = handleClientHTTPS
+	mitmProxy.HandlerFunc = handleClientMITM
 	go func() {
 		log.Printf("About to start mitm proxy at %s", *mitmAddr)
 		errCh := mitmProxy.Start()
@@ -118,6 +121,7 @@ func runMitmProxy() {
 	}()
 }
 
+// runServer runs the server HTTPS proxy
 func runServer() {
 	wg.Add(1)
 
@@ -144,11 +148,13 @@ func handleClient(resp http.ResponseWriter, req *http.Request) {
 		mitmProxy.Intercept(resp, req)
 	} else {
 		req.URL.Scheme = "http"
-		handleClientHTTP(resp, req)
+		doHandleClient(resp, req)
 	}
 }
 
-func handleClientHTTP(resp http.ResponseWriter, req *http.Request) {
+// doHandleClient does the work of handling client HTTP requests and injecting
+// special Lantern headers to work correctly with the upstream server proxy.
+func doHandleClient(resp http.ResponseWriter, req *http.Request) {
 	log.Println(spew.Sdump(req))
 
 	host := *upstreamHost
@@ -181,10 +187,12 @@ func handleClientHTTP(resp http.ResponseWriter, req *http.Request) {
 	rp.ServeHTTP(resp, req)
 }
 
-func handleClientHTTPS(resp http.ResponseWriter, req *http.Request) {
+// handleClientMITM handles requests to the client-side MITM proxy, making some
+// small modifications and then delegating to doHandleClient.
+func handleClientMITM(resp http.ResponseWriter, req *http.Request) {
 	req.URL.Scheme = "https"
 	req.Host = hostIncludingPort(req)
-	handleClientHTTP(resp, req)
+	doHandleClient(resp, req)
 }
 
 func hostIncludingPort(req *http.Request) (host string) {
@@ -195,7 +203,7 @@ func hostIncludingPort(req *http.Request) (host string) {
 	return
 }
 
-// handleServer handles requests from a downstream flashlight
+// handleServer handles requests from a downstream flashlight client
 func handleServer(resp http.ResponseWriter, req *http.Request) {
 	log.Println(spew.Sdump(req))
 
@@ -212,6 +220,8 @@ func handleServer(resp http.ResponseWriter, req *http.Request) {
 	rp.ServeHTTP(resp, req)
 }
 
+// initCerts initializes server certificates, used both for the server HTTPS
+// proxy and the client MITM proxy
 func initCerts() (err error) {
 	if pk, err = keyman.LoadPKFromFile(PK_FILE); err != nil {
 		if pk, err = keyman.GeneratePK(2048); err != nil {
@@ -235,6 +245,9 @@ func initCerts() (err error) {
 	return
 }
 
+// certificateFor generates a certificate for a given name, signed by the given
+// issuer.  If no issuer is specified, the generated certificate is
+// self-signed.
 func certificateFor(name string, issuer *keyman.Certificate) (cert *keyman.Certificate, err error) {
 	now := time.Now()
 	template := &x509.Certificate{
