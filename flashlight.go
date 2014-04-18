@@ -25,16 +25,20 @@ import (
 
 const (
 	CONNECT          = "CONNECT"
-	ONE_WEEK         = 7 * 24 * time.Hour
-	TWO_WEEKS        = ONE_WEEK * 2
 	X_LANTERN_HOST   = "X-Lantern-Host"
 	X_LANTERN_SCHEME = "X-Lantern-Scheme"
 
-	PK_FILE   = "proxypk.pem"
-	CERT_FILE = "proxycert.pem"
+	PK_FILE          = "proxypk.pem"
+	CA_CERT_FILE     = "cacert.pem"
+	SERVER_CERT_FILE = "servercert.pem"
 )
 
 var (
+	TOMORROW             = time.Now().AddDate(0, 0, 1)
+	ONE_MONTH_FROM_TODAY = time.Now().AddDate(0, 1, 0)
+	ONE_YEAR_FROM_TODAY  = time.Now().AddDate(1, 0, 0)
+	TEN_YEARS_FROM_TODAY = time.Now().AddDate(10, 0, 0)
+
 	help         = flag.Bool("help", false, "Get usage help")
 	addr         = flag.String("addr", "", "ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https")
 	upstreamHost = flag.String("server", "", "hostname at which to connect to a server flashlight (always using https).  When specified, this flashlight will run as a client proxy, otherwise it runs as a server")
@@ -43,10 +47,9 @@ var (
 
 	isDownstream bool
 
-	pk             *keyman.PrivateKey
-	pkPem          []byte
-	issuingCert    *keyman.Certificate
-	issuingCertPem []byte
+	pk         *keyman.PrivateKey
+	caCert     *keyman.Certificate
+	serverCert *keyman.Certificate
 
 	wg sync.WaitGroup
 
@@ -103,7 +106,7 @@ func runClient() {
 // CloudFlare
 func buildMitmProxy() {
 	var err error
-	mitmProxy, err = mitm.NewProxy(PK_FILE, CERT_FILE)
+	mitmProxy, err = mitm.NewProxy(PK_FILE, CA_CERT_FILE)
 	if err != nil {
 		log.Fatalf("Unable to initialize mitm proxy: %s", err)
 	}
@@ -122,7 +125,7 @@ func runServer() {
 
 	go func() {
 		log.Printf("About to start server (https) proxy at %s", *addr)
-		if err := server.ListenAndServeTLS(CERT_FILE, PK_FILE); err != nil {
+		if err := server.ListenAndServeTLS(SERVER_CERT_FILE, PK_FILE); err != nil {
 			// if err := server.ListenAndServe(); err != nil {
 			log.Fatalf("Unable to start server proxy: %s", err)
 		}
@@ -219,22 +222,32 @@ func initCerts(host string) (err error) {
 			return
 		}
 	}
-	pkPem = pk.PEMEncoded()
-	issuingCert, err = keyman.LoadCertificateFromFile(CERT_FILE)
-	if err != nil || issuingCert.X509().NotAfter.Before(time.Now()) {
-		// TODO: don't hardcode the common name
-		if issuingCert, err = certificateFor(host, nil); err != nil {
+
+	caCert, err = keyman.LoadCertificateFromFile(CA_CERT_FILE)
+	if err != nil || caCert.X509().NotAfter.Before(ONE_MONTH_FROM_TODAY) {
+		log.Println("Creating new self-signed CA cert")
+		if caCert, err = certificateFor("Lantern", TEN_YEARS_FROM_TODAY, true, nil); err != nil {
 			return
 		}
-		if err = issuingCert.WriteToFile(CERT_FILE); err != nil {
+		if err = caCert.WriteToFile(CA_CERT_FILE); err != nil {
 			return
 		}
 	}
-	issuingCertPem = issuingCert.PEMEncoded()
 
-	if isDownstream {
-		log.Println("Adding issuing cert to user trust store")
-		if err = issuingCert.AddAsTrustedRoot(); err != nil {
+	if !isDownstream {
+		serverCert, err = keyman.LoadCertificateFromFile(SERVER_CERT_FILE)
+		if err != nil || caCert.X509().NotAfter.Before(ONE_MONTH_FROM_TODAY) {
+			log.Println("Creating new server cert")
+			if serverCert, err = certificateFor(host, ONE_YEAR_FROM_TODAY, true, caCert); err != nil {
+				return
+			}
+			if err = serverCert.WriteToFile(SERVER_CERT_FILE); err != nil {
+				return
+			}
+		}
+	} else {
+		log.Println("Adding issuing cert to user trust store as trusted root")
+		if err = caCert.AddAsTrustedRoot(); err != nil {
 			return
 		}
 	}
@@ -244,22 +257,27 @@ func initCerts(host string) (err error) {
 // certificateFor generates a certificate for a given name, signed by the given
 // issuer.  If no issuer is specified, the generated certificate is
 // self-signed.
-func certificateFor(name string, issuer *keyman.Certificate) (cert *keyman.Certificate, err error) {
-	now := time.Now()
+func certificateFor(
+	name string,
+	validUntil time.Time,
+	isCA bool,
+	issuer *keyman.Certificate) (cert *keyman.Certificate, err error) {
 	template := &x509.Certificate{
 		SerialNumber: new(big.Int).SetInt64(int64(time.Now().Nanosecond())),
 		Subject: pkix.Name{
 			Organization: []string{"Lantern"},
 			CommonName:   name,
 		},
-		NotBefore: now.Add(-1 * ONE_WEEK),
-		NotAfter:  now.Add(TWO_WEEKS),
+		NotBefore: time.Now().AddDate(0, -1, 0),
+		NotAfter:  validUntil,
 
 		BasicConstraintsValid: true,
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 	}
 	if issuer == nil {
-		template.KeyUsage = template.KeyUsage | x509.KeyUsageCertSign
+		if isCA {
+			template.KeyUsage = template.KeyUsage | x509.KeyUsageCertSign
+		}
 		template.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}
 		template.IsCA = true
 	}
