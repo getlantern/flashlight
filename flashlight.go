@@ -26,54 +26,32 @@ const (
 	CONNECT          = "CONNECT"
 	X_LANTERN_HOST   = "X-Lantern-Host"
 	X_LANTERN_SCHEME = "X-Lantern-Scheme"
-
-	PK_FILE          = "proxypk.pem"
-	CA_CERT_FILE     = "cacert.pem"
-	SERVER_CERT_FILE = "servercert.pem"
 )
 
 var (
-	TOMORROW             = time.Now().AddDate(0, 0, 1)
-	ONE_MONTH_FROM_TODAY = time.Now().AddDate(0, 1, 0)
-	ONE_YEAR_FROM_TODAY  = time.Now().AddDate(1, 0, 0)
-	TEN_YEARS_FROM_TODAY = time.Now().AddDate(10, 0, 0)
-
 	help         = flag.Bool("help", false, "Get usage help")
 	addr         = flag.String("addr", "", "ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https")
 	upstreamHost = flag.String("server", "", "hostname at which to connect to a server flashlight (always using https).  When specified, this flashlight will run as a client proxy, otherwise it runs as a server")
 	upstreamPort = flag.Int("serverPort", 443, "the port on which to connect to the server")
 	masqueradeAs = flag.String("masquerade", "", "masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter")
+	configDir    = flag.String("configDir", "", "directory in which to store configuration (defaults to current directory)")
 
-	isDownstream, isUpstream bool
+	// flagsParsed is unused, this is just a trick to allow us to parse
+	// command-line flags before initializing the other variables
+	flagsParsed = parseFlags()
 
-	pk                 *keyman.PrivateKey
-	caCert, serverCert *keyman.Certificate
-
-	cp clientProtocol
-	sp protocol
-
-	wg sync.WaitGroup
-
-	mitmProxy *mitm.Proxy
-
-	reverseProxy *httputil.ReverseProxy
-)
-
-func init() {
-	flag.Parse()
-	if *help || *addr == "" {
-		flag.Usage()
-		os.Exit(1)
-	}
+	TOMORROW             = time.Now().AddDate(0, 0, 1)
+	ONE_MONTH_FROM_TODAY = time.Now().AddDate(0, 1, 0)
+	ONE_YEAR_FROM_TODAY  = time.Now().AddDate(1, 0, 0)
+	TEN_YEARS_FROM_TODAY = time.Now().AddDate(10, 0, 0)
 
 	isDownstream = *upstreamHost != ""
-	isUpstream = !isDownstream
+	isUpstream   = !isDownstream
 
 	// CloudFlare based protocol
 	cp = newCloudFlareClientProtocol(*upstreamHost, *upstreamPort, *masqueradeAs)
 	sp = newCloudFlareServerProtocol()
 
-	// ReverseProxy for plain text proxying
 	reverseProxy = &httputil.ReverseProxy{
 		Director: cp.rewrite,
 		Transport: &http.Transport{
@@ -81,6 +59,42 @@ func init() {
 				return cp.dial(addr)
 			},
 		},
+	}
+
+	mitmProxy = buildMitmProxy()
+
+	PK_FILE          = inConfigDir("proxypk.pem")
+	CA_CERT_FILE     = inConfigDir("cacert.pem")
+	SERVER_CERT_FILE = inConfigDir("servercert.pem")
+
+	pk                 *keyman.PrivateKey
+	caCert, serverCert *keyman.Certificate
+
+	wg sync.WaitGroup
+)
+
+func parseFlags() bool {
+	flag.Parse()
+	if *help || *addr == "" {
+		flag.Usage()
+		os.Exit(1)
+	}
+	return true
+}
+
+func inConfigDir(filename string) string {
+	if *configDir == "" {
+		return filename
+	} else {
+		if _, err := os.Stat(*configDir); err != nil {
+			if os.IsNotExist(err) {
+				// Create config dir
+				if err := os.MkdirAll(*configDir, 0755); err != nil {
+					log.Fatalf("Unable to create configDir at %s: %s", *configDir, err)
+				}
+			}
+		}
+		return fmt.Sprintf("%s%c%s", *configDir, os.PathSeparator, filename)
 	}
 }
 
@@ -122,12 +136,12 @@ func runClient() {
 // buildMitmProxy builds the MITM proxy that the client uses for proxying HTTPS
 // requests we have to MITM these because we can't CONNECT tunnel through
 // CloudFlare
-func buildMitmProxy() {
-	var err error
-	mitmProxy, err = mitm.NewProxy(PK_FILE, CA_CERT_FILE)
+func buildMitmProxy() *mitm.Proxy {
+	proxy, err := mitm.NewProxy(PK_FILE, CA_CERT_FILE)
 	if err != nil {
 		log.Fatalf("Unable to initialize mitm proxy: %s", err)
 	}
+	return proxy
 }
 
 // runServer runs the server HTTPS proxy
@@ -159,7 +173,6 @@ func runServer() {
 // handleClient handles requests from a local client (e.g. the browser)
 func handleClient(resp http.ResponseWriter, req *http.Request) {
 	if req.Method == "CONNECT" {
-		log.Println("Intercepting")
 		mitmProxy.InterceptWith(resp, req, handleClientMITM)
 	} else {
 		reverseProxy.ServeHTTP(resp, req)
@@ -234,6 +247,7 @@ func pipe(connIn net.Conn, connOut net.Conn) {
 // added to the current user's trust store (e.g. keychain) as a trusted root.
 func initCerts(host string) (err error) {
 	if pk, err = keyman.LoadPKFromFile(PK_FILE); err != nil {
+		log.Printf("Creating new PK at: %s", PK_FILE)
 		if pk, err = keyman.GeneratePK(2048); err != nil {
 			return
 		}
@@ -244,7 +258,7 @@ func initCerts(host string) (err error) {
 
 	caCert, err = keyman.LoadCertificateFromFile(CA_CERT_FILE)
 	if err != nil || caCert.X509().NotAfter.Before(ONE_MONTH_FROM_TODAY) {
-		log.Println("Creating new self-signed CA cert")
+		log.Printf("Creating new self-signed CA cert at: %s", CA_CERT_FILE)
 		if caCert, err = certificateFor("Lantern", TEN_YEARS_FROM_TODAY, true, nil); err != nil {
 			return
 		}
@@ -262,7 +276,7 @@ func initCerts(host string) (err error) {
 	if isUpstream {
 		serverCert, err = keyman.LoadCertificateFromFile(SERVER_CERT_FILE)
 		if err != nil || caCert.X509().NotAfter.Before(ONE_MONTH_FROM_TODAY) {
-			log.Println("Creating new server cert")
+			log.Println("Creating new server cert at: %s", SERVER_CERT_FILE)
 			if serverCert, err = certificateFor(host, ONE_YEAR_FROM_TODAY, true, caCert); err != nil {
 				return
 			}
