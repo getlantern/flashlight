@@ -14,6 +14,14 @@ the DNS lookup and will also specify it as the ServerName for SNI (though this i
 The Host header of the HTTP request will actually contain the correct host (e.g. getiantem.org), which causes CloudFlare
 to route the request to the correct host.
 
+Flashlight works for HTTPS requests by man-in-the-middling them.  Each
+flashlight client uses its own generated private key and a corresponding self-
+signed CA certificate.  It then generates certificates for different domains on
+the fly, signing these with its CA certificate.  When flashlight first generates
+its CA certificate, it installs it into the current user's system trust store as
+a trusted root CA so that the dynamically generated domain-specific certs are
+trusted by the browser and other HTTPS clients. 
+
 ### Usage
 
 ```bash
