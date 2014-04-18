@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/oxtoacart/go-mitm/mitm"
+	"github.com/getlantern/go-mitm/mitm"
 	"github.com/oxtoacart/keyman"
 )
 
@@ -37,7 +37,6 @@ const (
 var (
 	help         = flag.Bool("help", false, "Get usage help")
 	addr         = flag.String("addr", "", "ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https")
-	mitmAddr     = flag.String("mitmAddr", "localhost:10093", "ip:port on which the client mitm proxy should listen for requets, defaults to localhost:10093")
 	upstreamHost = flag.String("server", "", "hostname at which to connect to a server flashlight (always using https).  When specified, this flashlight will run as a client proxy, otherwise it runs as a server")
 	upstreamPort = flag.Int("serverPort", 443, "the port on which to connect to the server")
 	masqueradeAs = flag.String("masquerade", "", "masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter")
@@ -65,12 +64,12 @@ func init() {
 }
 
 func main() {
-	if err := initCerts(); err != nil {
+	if err := initCerts(strings.Split(*addr, ":")[0]); err != nil {
 		log.Fatalf("Unable to initialize certs: %s", err)
 	}
 	if isDownstream {
 		runClient()
-		runMitmProxy()
+		buildMitmProxy()
 	} else {
 		runServer()
 	}
@@ -99,26 +98,15 @@ func runClient() {
 	}()
 }
 
-// runMitmProxy runs the MITM proxy that the client uses for proxying HTTPS requests
-// we have to MITM these because we can't CONNECT tunnel through CloudFlare
-func runMitmProxy() {
-	wg.Add(1)
-
+// buildMitmProxy builds the MITM proxy that the client uses for proxying HTTPS
+// requests we have to MITM these because we can't CONNECT tunnel through
+// CloudFlare
+func buildMitmProxy() {
 	var err error
-	mitmProxy, err = mitm.NewProxy(PK_FILE, CERT_FILE, *mitmAddr)
+	mitmProxy, err = mitm.NewProxy(PK_FILE, CERT_FILE)
 	if err != nil {
 		log.Fatalf("Unable to initialize mitm proxy: %s", err)
 	}
-
-	mitmProxy.HandlerFunc = handleClientMITM
-	go func() {
-		log.Printf("About to start mitm proxy at %s", *mitmAddr)
-		errCh := mitmProxy.Start()
-		if err := <-errCh; err != nil {
-			log.Fatalf("Unable to start mitm proxy: %s", err)
-		}
-		wg.Done()
-	}()
 }
 
 // runServer runs the server HTTPS proxy
@@ -222,7 +210,7 @@ func handleServer(resp http.ResponseWriter, req *http.Request) {
 
 // initCerts initializes server certificates, used both for the server HTTPS
 // proxy and the client MITM proxy
-func initCerts() (err error) {
+func initCerts(host string) (err error) {
 	if pk, err = keyman.LoadPKFromFile(PK_FILE); err != nil {
 		if pk, err = keyman.GeneratePK(2048); err != nil {
 			return
@@ -232,9 +220,10 @@ func initCerts() (err error) {
 		}
 	}
 	pkPem = pk.PEMEncoded()
-	if issuingCert, err = keyman.LoadCertificateFromFile(CERT_FILE); err != nil {
+	issuingCert, err = keyman.LoadCertificateFromFile(CERT_FILE)
+	if err != nil || issuingCert.X509().NotAfter.Before(time.Now()) {
 		// TODO: don't hardcode the common name
-		if issuingCert, err = certificateFor("lantern.io", nil); err != nil {
+		if issuingCert, err = certificateFor(host, nil); err != nil {
 			return
 		}
 		if err = issuingCert.WriteToFile(CERT_FILE); err != nil {
@@ -242,6 +231,13 @@ func initCerts() (err error) {
 		}
 	}
 	issuingCertPem = issuingCert.PEMEncoded()
+
+	if isDownstream {
+		log.Println("Adding issuing cert to user trust store")
+		if err = issuingCert.AddAsTrustedRoot(); err != nil {
+			return
+		}
+	}
 	return
 }
 
