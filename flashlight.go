@@ -211,8 +211,11 @@ func handleServer(resp http.ResponseWriter, req *http.Request) {
 	rp.ServeHTTP(resp, req)
 }
 
-// initCerts initializes server certificates, used both for the server HTTPS
-// proxy and the client MITM proxy
+// initCerts initializes a private key and certificates, used both for the
+// server HTTPS proxy and the client MITM proxy.  Both types of proxy have a CA
+// certificate.  The server proxy also gets a server certificate signed by that
+// CA.  When running as a client proxy, the CA certificate is added to the
+// current user's trust store (e.g. keychain) as a trusted root.
 func initCerts(host string) (err error) {
 	if pk, err = keyman.LoadPKFromFile(PK_FILE); err != nil {
 		if pk, err = keyman.GeneratePK(2048); err != nil {
