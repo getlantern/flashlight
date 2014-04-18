@@ -45,11 +45,10 @@ var (
 	upstreamPort = flag.Int("serverPort", 443, "the port on which to connect to the server")
 	masqueradeAs = flag.String("masquerade", "", "masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter")
 
-	isDownstream bool
+	isDownstream, isUpstream bool
 
-	pk         *keyman.PrivateKey
-	caCert     *keyman.Certificate
-	serverCert *keyman.Certificate
+	pk                 *keyman.PrivateKey
+	caCert, serverCert *keyman.Certificate
 
 	wg sync.WaitGroup
 
@@ -64,6 +63,7 @@ func init() {
 	}
 
 	isDownstream = *upstreamHost != ""
+	isUpstream = !isDownstream
 }
 
 func main() {
@@ -214,8 +214,8 @@ func handleServer(resp http.ResponseWriter, req *http.Request) {
 // initCerts initializes a private key and certificates, used both for the
 // server HTTPS proxy and the client MITM proxy.  Both types of proxy have a CA
 // certificate.  The server proxy also gets a server certificate signed by that
-// CA.  When running as a client proxy, the CA certificate is added to the
-// current user's trust store (e.g. keychain) as a trusted root.
+// CA.  When running as a client proxy, any newly generated CA certificate is
+// added to the current user's trust store (e.g. keychain) as a trusted root.
 func initCerts(host string) (err error) {
 	if pk, err = keyman.LoadPKFromFile(PK_FILE); err != nil {
 		if pk, err = keyman.GeneratePK(2048); err != nil {
@@ -235,9 +235,15 @@ func initCerts(host string) (err error) {
 		if err = caCert.WriteToFile(CA_CERT_FILE); err != nil {
 			return
 		}
+		if isDownstream {
+			log.Println("Adding issuing cert to user trust store as trusted root")
+			if err = caCert.AddAsTrustedRoot(); err != nil {
+				return
+			}
+		}
 	}
 
-	if !isDownstream {
+	if isUpstream {
 		serverCert, err = keyman.LoadCertificateFromFile(SERVER_CERT_FILE)
 		if err != nil || caCert.X509().NotAfter.Before(ONE_MONTH_FROM_TODAY) {
 			log.Println("Creating new server cert")
@@ -247,11 +253,6 @@ func initCerts(host string) (err error) {
 			if err = serverCert.WriteToFile(SERVER_CERT_FILE); err != nil {
 				return
 			}
-		}
-	} else {
-		log.Println("Adding issuing cert to user trust store as trusted root")
-		if err = caCert.AddAsTrustedRoot(); err != nil {
-			return
 		}
 	}
 	return
