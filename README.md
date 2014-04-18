@@ -25,16 +25,24 @@ Usage of flashlight:
   -serverPort=443: the port on which to connect to the server
 ```
 
-Example Server:
-
-```bash
-./flashlight -addr 0.0.0.0:443
-```
+IMPORTANT - when running a test locally, you must run the client first so that
+it generates and installs cacert.pem into the user's trust store.  If cacert.pem
+already exists (i.e. you ran the server first) you have to manually install
+cacert.pem into your system trust store, otherwise the client will not trust the
+server's certificate.  In production, this is not an issue because the TLS
+connection is terminated at CloudFlare, which presents a real certificate signed
+by an already trusted CA.
 
 Example Client:
 
 ```bash
 ./flashlight -addr localhost:10080 -server getiantem.org -masquerade thehackernews.com
+```
+
+Example Server:
+
+```bash
+./flashlight -addr 0.0.0.0:443
 ```
 
 Example Curl Test:
