@@ -25,7 +25,7 @@ Usage of flashlight:
   -serverPort=443: the port on which to connect to the server
 ```
 
-IMPORTANT - when running a test locally, you must run the client first so that
+**IMPORTANT** - when running a test locally, you must run the client first so that
 it generates and installs cacert.pem into the user's trust store.  If cacert.pem
 already exists (i.e. you ran the server first) you have to manually install
 cacert.pem into your system trust store, otherwise the client will not trust the
