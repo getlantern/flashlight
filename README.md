@@ -63,84 +63,10 @@ Google is built by a large team of engineers, designers, researchers, robots, an
 On the client, you should see something like this for every request:
 
 ```bash
-2014/03/21 08:00:41 Dialing thehackernews.com:443
+2014/04/18 11:32:28 Using localhost:10081 to handle request
 ```
 
 On the server, you should see something like this for every request that's received:
 ```bash
-2014/03/21 09:08:30 Request: (*http.Request)(0xc2100a98f0)({
- Method: (string) "GET",
- URL: (*url.URL)(0xc21006d1c0)(/humans.txt),
- Proto: (string) "HTTP/1.1",
- ProtoMajor: (int) 1,
- ProtoMinor: (int) 1,
- Header: (http.Header) {
-  (string) "Cf-Ipcountry": ([]string) {
-   (string) "US"
-  },
-  (string) "X-Forwarded-For": ([]string) {
-   (string) "127.0.0.1,66.69.242.177"
-  },
-  (string) "User-Agent": ([]string) {
-   (string) "curl/7.30.0"
-  },
-  (string) "Connection": ([]string) {
-   (string) "Keep-Alive"
-  },
-  (string) "Accept-Encoding": ([]string) {
-   (string) "gzip"
-  },
-  (string) "Cf-Connecting-Ip": ([]string) {
-   (string) "66.69.242.177"
-  },
-  (string) "Cf-Ray": ([]string) {
-   (string) "10ea60e8aec90956-DFW"
-  },
-  (string) "X-Forwarded-Proto": ([]string) {
-   (string) "https"
-  },
-  (string) "Cf-Visitor": ([]string) {
-   (string) "{\"scheme\":\"https\"}"
-  },
-  (string) "Accept": ([]string) {
-   (string) "*/*"
-  },
-  (string) "X-Lantern-Host": ([]string) {
-   (string) "www.google.com"
-  }
- },
- Body: (*struct { *strings.Reader; io.Closer })(0x90ced0)({
-  Reader: (*strings.Reader)(0xc21004d240)({
-   s: (string) "",
-   i: (int) 0,
-   prevRune: (int) -1
-  }),
-  Closer: (ioutil.nopCloser) {
-   Reader: (io.Reader) <nil>
-  }
- }),
- ContentLength: (int64) 0,
- TransferEncoding: ([]string) <nil>,
- Close: (bool) false,
- Host: (string) "getiantem.org",
- Form: (url.Values) {
- },
- PostForm: (url.Values) {
- },
- MultipartForm: (*multipart.Form)(<nil>),
- Trailer: (http.Header) {
- },
- RemoteAddr: (string) "173.245.50.227:23690",
- RequestURI: (string) "/humans.txt",
- TLS: (*tls.ConnectionState)(0xc210052cc0)({
-  HandshakeComplete: (bool) true,
-  DidResume: (bool) false,
-  CipherSuite: (uint16) 49199,
-  NegotiatedProtocol: (string) "",
-  NegotiatedProtocolIsMutual: (bool) true,
-  ServerName: (string) "getiantem.org",
-  PeerCertificates: ([]*x509.Certificate) <nil>,
-  VerifiedChains: ([][]*x509.Certificate) <nil>
- })
-})
+2014/04/18 11:30:59 Handling request for: https://www.google.com/humans.txt
 ```

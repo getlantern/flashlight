@@ -2,11 +2,11 @@
 package main
 
 import (
-	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"math/big"
 	"net"
@@ -18,7 +18,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/getlantern/go-mitm/mitm"
 	"github.com/oxtoacart/keyman"
 )
@@ -50,9 +49,14 @@ var (
 	pk                 *keyman.PrivateKey
 	caCert, serverCert *keyman.Certificate
 
+	cp clientProtocol
+	sp protocol
+
 	wg sync.WaitGroup
 
 	mitmProxy *mitm.Proxy
+
+	reverseProxy *httputil.ReverseProxy
 )
 
 func init() {
@@ -64,6 +68,20 @@ func init() {
 
 	isDownstream = *upstreamHost != ""
 	isUpstream = !isDownstream
+
+	// CloudFlare based protocol
+	cp = newCloudFlareClientProtocol(*upstreamHost, *upstreamPort, *masqueradeAs)
+	sp = newCloudFlareServerProtocol()
+
+	// ReverseProxy for plain text proxying
+	reverseProxy = &httputil.ReverseProxy{
+		Director: cp.rewrite,
+		Transport: &http.Transport{
+			Dial: func(network, addr string) (net.Conn, error) {
+				return cp.dial(addr)
+			},
+		},
+	}
 }
 
 func main() {
@@ -117,8 +135,13 @@ func runServer() {
 	wg.Add(1)
 
 	server := &http.Server{
-		Addr:         *addr,
-		Handler:      http.HandlerFunc(handleServer),
+		Addr: *addr,
+		Handler: &httputil.ReverseProxy{
+			Director: func(req *http.Request) {
+				sp.rewrite(req)
+				log.Printf("Handling request for: %s", req.URL.String())
+			},
+		},
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
@@ -136,54 +159,48 @@ func runServer() {
 // handleClient handles requests from a local client (e.g. the browser)
 func handleClient(resp http.ResponseWriter, req *http.Request) {
 	if req.Method == "CONNECT" {
-		mitmProxy.Intercept(resp, req)
+		log.Println("Intercepting")
+		mitmProxy.InterceptWith(resp, req, handleClientMITM)
 	} else {
-		req.URL.Scheme = "http"
-		doHandleClient(resp, req)
+		reverseProxy.ServeHTTP(resp, req)
 	}
-}
-
-// doHandleClient does the work of handling client HTTP requests and injecting
-// special Lantern headers to work correctly with the upstream server proxy.
-func doHandleClient(resp http.ResponseWriter, req *http.Request) {
-	log.Println(spew.Sdump(req))
-
-	host := *upstreamHost
-	if *masqueradeAs != "" {
-		host = *masqueradeAs
-	}
-	upstreamAddr := fmt.Sprintf("%s:%d", host, *upstreamPort)
-
-	rp := httputil.ReverseProxy{
-		Director: func(req *http.Request) {
-			// Remember the host and scheme that was actually requested
-			req.Header.Set(X_LANTERN_HOST, req.Host)
-			req.Header.Set(X_LANTERN_SCHEME, req.URL.Scheme)
-			req.URL.Scheme = "http"
-			// Set our upstream proxy as the host for this request
-			req.Host = *upstreamHost
-			req.URL.Host = *upstreamHost
-		},
-		Transport: &http.Transport{
-			Dial: func(network, addr string) (net.Conn, error) {
-				log.Printf("Using %s to handle request for: %s", upstreamAddr, req.URL.String())
-				tlsConfig := &tls.Config{
-					ServerName: host,
-				}
-				return tls.Dial(network, upstreamAddr, tlsConfig)
-				// return net.Dial(network, upstreamAddr)
-			},
-		},
-	}
-	rp.ServeHTTP(resp, req)
 }
 
 // handleClientMITM handles requests to the client-side MITM proxy, making some
 // small modifications and then delegating to doHandleClient.
-func handleClientMITM(resp http.ResponseWriter, req *http.Request) {
-	req.URL.Scheme = "https"
-	req.Host = hostIncludingPort(req)
-	doHandleClient(resp, req)
+func handleClientMITM(connIn net.Conn, addr string) {
+	connOut, err := cp.dial(addr)
+	if err != nil {
+		msg := fmt.Sprintf("Unable to dial upstream proxy: %s", err)
+		respondBadGateway(connIn, msg)
+	}
+	serverConn := httputil.NewServerConn(connIn, nil)
+	go func() {
+		// Read each request
+		for {
+			req, err := serverConn.Read()
+			if err != nil {
+				if err != io.EOF {
+					msg := fmt.Sprintf("Unable to read request: %s", err)
+					connOut.Close()
+					respondBadGateway(connIn, msg)
+				}
+				return
+			}
+
+			req.URL.Scheme = "https"
+			req.URL.Host = strings.Split(addr, ":")[0]
+
+			// Rewrite the request
+			cp.rewrite(req)
+
+			// Write out the request
+			req.Write(connOut)
+
+			// Pipe data
+			pipe(connIn, connOut)
+		}
+	}()
 }
 
 func hostIncludingPort(req *http.Request) (host string) {
@@ -194,21 +211,20 @@ func hostIncludingPort(req *http.Request) (host string) {
 	return
 }
 
-// handleServer handles requests from a downstream flashlight client
-func handleServer(resp http.ResponseWriter, req *http.Request) {
-	log.Println(spew.Sdump(req))
+func respondBadGateway(connIn net.Conn, msg string) {
+	connIn.Write([]byte(fmt.Sprintf("HTTP/1.1 502 Bad Gateway: %s", msg)))
+	connIn.Close()
+}
 
-	rp := httputil.ReverseProxy{
-		Director: func(req *http.Request) {
-			// TODO - need to add support for tunneling HTTPS traffic using CONNECT
-			req.URL.Scheme = req.Header.Get(X_LANTERN_SCHEME)
-			// Grab the actual host from the original client and use that for the outbound request
-			req.URL.Host = req.Header.Get(X_LANTERN_HOST)
-			req.Host = req.URL.Host
-			log.Printf("Handling request for: %s", req.URL.String())
-		},
-	}
-	rp.ServeHTTP(resp, req)
+func pipe(connIn net.Conn, connOut net.Conn) {
+	go func() {
+		defer connIn.Close()
+		io.Copy(connOut, connIn)
+	}()
+	go func() {
+		defer connOut.Close()
+		io.Copy(connIn, connOut)
+	}()
 }
 
 // initCerts initializes a private key and certificates, used both for the
