@@ -221,16 +221,15 @@ func handleClientMITM(connIn net.Conn, addr string) {
 func handleServer(resp http.ResponseWriter, req *http.Request) {
 	if req.Header.Get(X_LANTERN_REQUEST_INFO) != "" {
 		// Client requested their info
-		clientAddr := req.Header.Get("X-Forwarded-For")
-		log.Printf("X-Forwarded-For: %s", clientAddr)
-		if clientAddr == "" {
-			clientAddr = req.RemoteAddr
+		clientIp := req.Header.Get("X-Forwarded-For")
+		if clientIp == "" {
+			clientIp = strings.Split(req.RemoteAddr, ":")[0]
 		} else {
 			// X-Forwarded-For may contain multiple ips, use the last
-			ips := strings.Split(clientAddr, ",")
-			clientAddr = ips[len(ips)-1]
+			ips := strings.Split(clientIp, ",")
+			clientIp = ips[len(ips)-1]
 		}
-		resp.Header().Set(X_LANTERN_PUBLIC_IP, strings.Split(clientAddr, ":")[0])
+		resp.Header().Set(X_LANTERN_PUBLIC_IP, clientIp)
 		resp.WriteHeader(200)
 	} else {
 		// Proxy as usual
