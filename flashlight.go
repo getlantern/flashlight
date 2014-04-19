@@ -23,9 +23,9 @@ import (
 )
 
 const (
-	CONNECT          = "CONNECT"
-	X_LANTERN_HOST   = "X-Lantern-Host"
-	X_LANTERN_SCHEME = "X-Lantern-Scheme"
+	CONNECT                = "CONNECT"
+	X_LANTERN_REQUEST_INFO = "X-Lantern-Request-Info"
+	X_LANTERN_PUBLIC_IP    = "X-LANTERN-PUBLIC-IP"
 )
 
 var (
@@ -52,12 +52,19 @@ var (
 	cp = newCloudFlareClientProtocol(*upstreamHost, *upstreamPort, *masqueradeAs)
 	sp = newCloudFlareServerProtocol()
 
-	reverseProxy = &httputil.ReverseProxy{
+	clientProxy = &httputil.ReverseProxy{
 		Director: cp.rewrite,
 		Transport: &http.Transport{
 			Dial: func(network, addr string) (net.Conn, error) {
 				return cp.dial(addr)
 			},
+		},
+	}
+
+	serverProxy = &httputil.ReverseProxy{
+		Director: func(req *http.Request) {
+			sp.rewrite(req)
+			log.Printf("Handling request for: %s", req.URL.String())
 		},
 	}
 
@@ -149,13 +156,8 @@ func runServer() {
 	wg.Add(1)
 
 	server := &http.Server{
-		Addr: *addr,
-		Handler: &httputil.ReverseProxy{
-			Director: func(req *http.Request) {
-				sp.rewrite(req)
-				log.Printf("Handling request for: %s", req.URL.String())
-			},
-		},
+		Addr:         *addr,
+		Handler:      http.HandlerFunc(handleServer),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
@@ -175,7 +177,7 @@ func handleClient(resp http.ResponseWriter, req *http.Request) {
 	if req.Method == "CONNECT" {
 		mitmProxy.InterceptWith(resp, req, handleClientMITM)
 	} else {
-		reverseProxy.ServeHTTP(resp, req)
+		clientProxy.ServeHTTP(resp, req)
 	}
 }
 
@@ -214,6 +216,26 @@ func handleClientMITM(connIn net.Conn, addr string) {
 			pipe(connIn, connOut)
 		}
 	}()
+}
+
+func handleServer(resp http.ResponseWriter, req *http.Request) {
+	if req.Header.Get(X_LANTERN_REQUEST_INFO) != "" {
+		// Client requested their info
+		clientAddr := req.Header.Get("X-Forwarded-For")
+		log.Printf("X-Forwarded-For: %s", clientAddr)
+		if clientAddr == "" {
+			clientAddr = req.RemoteAddr
+		} else {
+			// X-Forwarded-For may contain multiple ips, use the last
+			ips := strings.Split(clientAddr, ",")
+			clientAddr = ips[len(ips)-1]
+		}
+		resp.Header().Set(X_LANTERN_PUBLIC_IP, strings.Split(clientAddr, ":")[0])
+		resp.WriteHeader(200)
+	} else {
+		// Proxy as usual
+		serverProxy.ServeHTTP(resp, req)
+	}
 }
 
 func hostIncludingPort(req *http.Request) (host string) {
