@@ -35,6 +35,7 @@ var (
 	upstreamPort = flag.Int("serverPort", 443, "the port on which to connect to the server")
 	masqueradeAs = flag.String("masquerade", "", "masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter")
 	configDir    = flag.String("configDir", "", "directory in which to store configuration (defaults to current directory)")
+	instanceId   = flag.String("instanceId", "", "instanceId under which to report stats to statshub.  If not specified, no stats are reported.")
 
 	// flagsParsed is unused, this is just a trick to allow us to parse
 	// command-line flags before initializing the other variables
@@ -45,8 +46,9 @@ var (
 	ONE_YEAR_FROM_TODAY  = time.Now().AddDate(1, 0, 0)
 	TEN_YEARS_FROM_TODAY = time.Now().AddDate(10, 0, 0)
 
-	isDownstream = *upstreamHost != ""
-	isUpstream   = !isDownstream
+	shouldReportStats = *instanceId != ""
+	isDownstream      = *upstreamHost != ""
+	isUpstream        = !isDownstream
 
 	// CloudFlare based protocol
 	cp = newCloudFlareClientProtocol(*upstreamHost, *upstreamPort, *masqueradeAs)
@@ -72,7 +74,11 @@ var (
 				if err != nil {
 					return nil, err
 				}
-				return &countingConn{conn}, nil
+				if shouldReportStats {
+					// When reporting stats, use a special connection that counts bytes
+					return &countingConn{conn}, nil
+				}
+				return conn, err
 			},
 		},
 	}
@@ -122,7 +128,13 @@ func main() {
 		runClient()
 		buildMitmProxy()
 	} else {
-		reportStats()
+		if shouldReportStats {
+			iid := *instanceId
+			log.Printf("Reporting stats under instanceId %s", iid)
+			reportStats(iid)
+		} else {
+			log.Println("Not reporting stats (no instanceId specified at command line)")
+		}
 		runServer()
 	}
 	wg.Wait()
