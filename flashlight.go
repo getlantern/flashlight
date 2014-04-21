@@ -131,7 +131,7 @@ func main() {
 		if shouldReportStats {
 			iid := *instanceId
 			log.Printf("Reporting stats under instanceId %s", iid)
-			reportStats(iid)
+			startReportingStats(iid)
 		} else {
 			log.Println("Not reporting stats (no instanceId specified at command line)")
 		}

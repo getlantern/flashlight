@@ -17,64 +17,66 @@ const (
 var (
 	bytesGivenChan        = make(chan int, 1000)
 	REPORT_STATS_INTERVAL = 20 * time.Second
+	checkpointCh          = make(chan bool)
+	checkpointResultCh    = make(chan int)
 )
 
-// reportStats reports statistics for this proxy to statshub under the given
-// instanceId
+// startReportingStats reports statistics for this proxy to statshub under the
+// given instanceId
+func startReportingStats(instanceId string) {
+	go collectStats()
+	go reportStats(instanceId)
+}
+
+// collectStats collects bytesGiven from the countingConn
+func collectStats() {
+	bytesSum := 0
+
+	for {
+		select {
+		case bytesGiven := <-bytesGivenChan:
+			bytesSum += bytesGiven
+		case <-checkpointCh:
+			checkpointResultCh <- bytesSum
+			bytesSum = 0
+		}
+	}
+}
+
+// reportStats periodically checkpoints the total bytes given and report them
+// to statshub via HTTP post
 func reportStats(instanceId string) {
-	checkpoint := make(chan bool)
-	checkpointResult := make(chan int)
-
-	// Collect bytesGiven from the countingConn
-	go func() {
-		bytesSum := 0
-
-		for {
-			select {
-			case bytesGiven := <-bytesGivenChan:
-				bytesSum += bytesGiven
-			case <-checkpoint:
-				checkpointResult <- bytesSum
-				bytesSum = 0
-			}
+	for {
+		nextInterval := time.Now().Truncate(REPORT_STATS_INTERVAL).Add(REPORT_STATS_INTERVAL)
+		waitTime := nextInterval.Sub(time.Now())
+		time.Sleep(waitTime)
+		checkpointCh <- true
+		bytesSum := <-checkpointResultCh
+		report := map[string]interface{}{
+			"dims": map[string]string{},
+			"increments": map[string]int{
+				"bytesGivenFallback": bytesSum,
+			},
 		}
-	}()
 
-	// Periodically checkpoint the total bytes given and report them to statshub
-	// via HTTP post
-	go func() {
-		for {
-			nextInterval := time.Now().Truncate(REPORT_STATS_INTERVAL).Add(REPORT_STATS_INTERVAL)
-			waitTime := nextInterval.Sub(time.Now())
-			time.Sleep(waitTime)
-			checkpoint <- true
-			bytesSum := <-checkpointResult
-			report := map[string]interface{}{
-				"dims": map[string]string{},
-				"increments": map[string]int{
-					"bytesGivenFallback": bytesSum,
-				},
-			}
-
-			jsonBytes, err := json.Marshal(report)
-			if err != nil {
-				log.Printf("Unable to marshal json for stats: %s", err)
-				continue
-			}
-
-			url := fmt.Sprintf(STATSHUB_URL_TEMPLATE, instanceId)
-			resp, err := http.Post(url, "application/json", bytes.NewReader(jsonBytes))
-			if err != nil {
-				log.Printf("Unable to post stats to statshub: %s", err)
-				continue
-			}
-			if resp.StatusCode != 200 {
-				log.Printf("Unexpected response status posting stats to statshub: %d", resp.StatusCode)
-				continue
-			}
-			log.Printf("Reported %d bytes given to statshub", bytesSum)
+		jsonBytes, err := json.Marshal(report)
+		if err != nil {
+			log.Printf("Unable to marshal json for stats: %s", err)
+			continue
 		}
-	}()
+
+		url := fmt.Sprintf(STATSHUB_URL_TEMPLATE, instanceId)
+		resp, err := http.Post(url, "application/json", bytes.NewReader(jsonBytes))
+		if err != nil {
+			log.Printf("Unable to post stats to statshub: %s", err)
+			continue
+		}
+		if resp.StatusCode != 200 {
+			log.Printf("Unexpected response status posting stats to statshub: %d", resp.StatusCode)
+			continue
+		}
+		log.Printf("Reported %d bytesGiven to statshub", bytesSum)
+	}
 }
 
 // countingConn is a wrapper for net.Conn that counts bytes
