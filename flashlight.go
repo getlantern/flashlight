@@ -66,6 +66,15 @@ var (
 			sp.rewrite(req)
 			log.Printf("Handling request for: %s", req.URL.String())
 		},
+		Transport: &http.Transport{
+			Dial: func(network, addr string) (net.Conn, error) {
+				conn, err := net.Dial(network, addr)
+				if err != nil {
+					return nil, err
+				}
+				return &countingConn{conn}, nil
+			},
+		},
 	}
 
 	mitmProxy = buildMitmProxy()
@@ -113,6 +122,7 @@ func main() {
 		runClient()
 		buildMitmProxy()
 	} else {
+		reportStats()
 		runServer()
 	}
 	wg.Wait()
@@ -297,7 +307,7 @@ func initCerts(host string) (err error) {
 	if isUpstream {
 		serverCert, err = keyman.LoadCertificateFromFile(SERVER_CERT_FILE)
 		if err != nil || caCert.X509().NotAfter.Before(ONE_MONTH_FROM_TODAY) {
-			log.Println("Creating new server cert at: %s", SERVER_CERT_FILE)
+			log.Printf("Creating new server cert at: %s", SERVER_CERT_FILE)
 			if serverCert, err = certificateFor(host, ONE_YEAR_FROM_TODAY, true, caCert); err != nil {
 				return
 			}
