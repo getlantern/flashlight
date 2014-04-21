@@ -20,7 +20,7 @@ signed CA certificate.  It then generates certificates for different domains on
 the fly, signing these with its CA certificate.  When flashlight first generates
 its CA certificate, it installs it into the current user's system trust store as
 a trusted root CA so that the dynamically generated domain-specific certs are
-trusted by the browser and other HTTPS clients. 
+trusted by the browser and other HTTPS clients.
 
 ### Usage
 
@@ -29,6 +29,7 @@ Usage of flashlight:
   -addr="": ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https
   -configDir="": directory in which to store configuration (defaults to current directory)
   -help=false: Get usage help
+  -instanceId="": instanceId under which to report stats to statshub.  If not specified, no stats are reported.
   -masquerade="": masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter
   -server="": hostname at which to connect to a server flashlight (always using https).  When specified, this flashlight will run as a client proxy, otherwise it runs as a server
   -serverPort=443: the port on which to connect to the server
