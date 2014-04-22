@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bufio"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"flag"
@@ -32,10 +33,10 @@ var (
 	help         = flag.Bool("help", false, "Get usage help")
 	addr         = flag.String("addr", "", "ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https")
 	upstreamHost = flag.String("server", "", "hostname at which to connect to a server flashlight (always using https).  When specified, this flashlight will run as a client proxy, otherwise it runs as a server")
-	upstreamPort = flag.Int("serverPort", 443, "the port on which to connect to the server")
+	upstreamPort = flag.Int("serverport", 443, "the port on which to connect to the server")
 	masqueradeAs = flag.String("masquerade", "", "masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter")
-	configDir    = flag.String("configDir", "", "directory in which to store configuration (defaults to current directory)")
-	instanceId   = flag.String("instanceId", "", "instanceId under which to report stats to statshub.  If not specified, no stats are reported.")
+	configDir    = flag.String("configdir", "", "directory in which to store configuration (defaults to current directory)")
+	instanceId   = flag.String("instanceid", "", "instanceId under which to report stats to statshub.  If not specified, no stats are reported.")
 
 	// flagsParsed is unused, this is just a trick to allow us to parse
 	// command-line flags before initializing the other variables
@@ -206,36 +207,66 @@ func handleClient(resp http.ResponseWriter, req *http.Request) {
 // handleClientMITM handles requests to the client-side MITM proxy, making some
 // small modifications and then delegating to doHandleClient.
 func handleClientMITM(connIn net.Conn, addr string) {
+	go doHandleClientMITM(connIn, addr)
+}
+
+func doHandleClientMITM(connIn net.Conn, addr string) {
+	// Open the outbound connection
 	connOut, err := cp.dial(addr)
 	if err != nil {
 		msg := fmt.Sprintf("Unable to dial upstream proxy: %s", err)
 		respondBadGateway(connIn, msg)
 	}
+	defer connOut.Close()
+
+	// Create a server connection for reading requests
 	serverConn := httputil.NewServerConn(connIn, nil)
-	go func() {
-		// Read each request
-		for {
-			req, err := serverConn.Read()
-			if err != nil {
-				if err != io.EOF {
-					msg := fmt.Sprintf("Unable to read request: %s", err)
-					connOut.Close()
-					respondBadGateway(connIn, msg)
-				}
-				return
+
+	// Create a buffered reader to use for reading responses (later)
+	connOutBuf := bufio.NewReader(connOut)
+
+	// Read each request
+	for {
+		req, err := serverConn.Read()
+		if err != nil {
+			if err != io.EOF {
+				msg := fmt.Sprintf("Unable to read request: %s", err)
+				respondBadGateway(connIn, msg)
 			}
+			return
+		}
 
-			req.URL.Scheme = "https"
-			req.URL.Host = strings.Split(addr, ":")[0]
+		// Fix up the request URL
+		req.URL.Scheme = "https"
+		req.URL.Host = strings.Split(addr, ":")[0]
 
-			// Rewrite the request
-			cp.rewrite(req)
+		processMITMRequest(req, connIn, connOut, connOutBuf)
+	}
+}
 
-			// Write out the request
-			req.Write(connOut)
+// processMITMRequest processes a single request to the MITM'ed proxy
+func processMITMRequest(req *http.Request, connIn net.Conn, connOut net.Conn, connOutBuf *bufio.Reader) {
+	// Rewrite the request
+	cp.rewrite(req)
 
-			// Pipe data
-			pipe(connIn, connOut)
+	// Write out the request
+	req.Write(connOut)
+
+	go func() {
+		defer req.Body.Close()
+		io.Copy(connOut, req.Body)
+	}()
+
+	go func() {
+		resp, err := http.ReadResponse(connOutBuf, req)
+		if err != nil {
+			log.Printf("Unable to read response: %s", err)
+			defer connIn.Close()
+			defer connOut.Close()
+		} else {
+			defer resp.Body.Close()
+			resp.Write(connIn)
+			io.Copy(connIn, resp.Body)
 		}
 	}()
 }
@@ -270,17 +301,6 @@ func hostIncludingPort(req *http.Request) (host string) {
 func respondBadGateway(connIn net.Conn, msg string) {
 	connIn.Write([]byte(fmt.Sprintf("HTTP/1.1 502 Bad Gateway: %s", msg)))
 	connIn.Close()
-}
-
-func pipe(connIn net.Conn, connOut net.Conn) {
-	go func() {
-		defer connIn.Close()
-		io.Copy(connOut, connIn)
-	}()
-	go func() {
-		defer connOut.Close()
-		io.Copy(connIn, connOut)
-	}()
 }
 
 // initCerts initializes a private key and certificates, used both for the

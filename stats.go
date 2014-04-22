@@ -76,12 +76,10 @@ func postStats(instanceId string, bytesSum int) error {
 
 	url := fmt.Sprintf(STATSHUB_URL_TEMPLATE, instanceId)
 	resp, err := http.Post(url, "application/json", bytes.NewReader(jsonBytes))
-	if resp.Body != nil {
-		defer resp.Body.Close()
-	}
 	if err != nil {
 		return fmt.Errorf("Unable to post stats to statshub: %s", err)
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("Unexpected response status posting stats to statshub: %d", resp.StatusCode)
 	}

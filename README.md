@@ -27,12 +27,12 @@ trusted by the browser and other HTTPS clients.
 ```bash
 Usage of flashlight:
   -addr="": ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https
-  -configDir="": directory in which to store configuration (defaults to current directory)
+  -configdir="": directory in which to store configuration (defaults to current directory)
   -help=false: Get usage help
-  -instanceId="": instanceId under which to report stats to statshub.  If not specified, no stats are reported.
+  -instanceid="": instanceId under which to report stats to statshub.  If not specified, no stats are reported.
   -masquerade="": masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter
   -server="": hostname at which to connect to a server flashlight (always using https).  When specified, this flashlight will run as a client proxy, otherwise it runs as a server
-  -serverPort=443: the port on which to connect to the server
+  -serverport=443: the port on which to connect to the server
 ```
 
 **IMPORTANT** - when running a test locally, you must run the client first so that
