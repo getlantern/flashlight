@@ -52,31 +52,38 @@ func reportStats(instanceId string) {
 		time.Sleep(waitTime)
 		checkpointCh <- true
 		bytesSum := <-checkpointResultCh
-		report := map[string]interface{}{
-			"dims": map[string]string{},
-			"increments": map[string]int{
-				"bytesGivenFallback": bytesSum,
-			},
-		}
-
-		jsonBytes, err := json.Marshal(report)
+		err := postStats(instanceId, bytesSum)
 		if err != nil {
-			log.Printf("Unable to marshal json for stats: %s", err)
-			continue
+			log.Printf("Error on posting stats: %s", err)
+		} else {
+			log.Printf("Reported %d bytesGiven to statshub", bytesSum)
 		}
-
-		url := fmt.Sprintf(STATSHUB_URL_TEMPLATE, instanceId)
-		resp, err := http.Post(url, "application/json", bytes.NewReader(jsonBytes))
-		if err != nil {
-			log.Printf("Unable to post stats to statshub: %s", err)
-			continue
-		}
-		if resp.StatusCode != 200 {
-			log.Printf("Unexpected response status posting stats to statshub: %d", resp.StatusCode)
-			continue
-		}
-		log.Printf("Reported %d bytesGiven to statshub", bytesSum)
 	}
+}
+
+func postStats(instanceId string, bytesSum int) error {
+	report := map[string]interface{}{
+		"dims": map[string]string{},
+		"increments": map[string]int{
+			"bytesGivenFallback": bytesSum,
+		},
+	}
+
+	jsonBytes, err := json.Marshal(report)
+	if err != nil {
+		return fmt.Errorf("Unable to marshal json for stats: %s", err)
+	}
+
+	url := fmt.Sprintf(STATSHUB_URL_TEMPLATE, instanceId)
+	resp, err := http.Post(url, "application/json", bytes.NewReader(jsonBytes))
+	defer resp.Body.Close()
+	if err != nil {
+		return fmt.Errorf("Unable to post stats to statshub: %s", err)
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Unexpected response status posting stats to statshub: %d", resp.StatusCode)
+	}
+	return nil
 }
 
 // countingConn is a wrapper for net.Conn that counts bytes
