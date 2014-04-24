@@ -2,12 +2,10 @@
 package main
 
 import (
-	"bufio"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"math/big"
 	"net"
@@ -87,8 +85,6 @@ var (
 		},
 	}
 
-	mitmProxy = buildMitmProxy()
-
 	PK_FILE          = inConfigDir("proxypk.pem")
 	CA_CERT_FILE     = inConfigDir("cacert.pem")
 	SERVER_CERT_FILE = inConfigDir("servercert.pem")
@@ -136,7 +132,6 @@ func main() {
 	}
 	if isDownstream {
 		runClient()
-		buildMitmProxy()
 	} else {
 		useAllCores()
 		if shouldReportStats {
@@ -153,13 +148,13 @@ func main() {
 
 // runClient runs the client HTTP proxy server
 func runClient() {
-	// On the client, use a bunch of CPUs if necessary
-	runtime.GOMAXPROCS(4)
 	wg.Add(1)
+
+	mitmHandler := buildMITMHandler()
 
 	server := &http.Server{
 		Addr:         *addr,
-		Handler:      http.HandlerFunc(handleClient),
+		Handler:      mitmHandler,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
@@ -173,15 +168,19 @@ func runClient() {
 	}()
 }
 
-// buildMitmProxy builds the MITM proxy that the client uses for proxying HTTPS
-// requests we have to MITM these because we can't CONNECT tunnel through
-// CloudFlare
-func buildMitmProxy() *mitm.Proxy {
-	proxy, err := mitm.NewProxy(PK_FILE, CA_CERT_FILE)
+// buildMITMHandler builds the MITM handler that the client uses for proxying
+// HTTPS requests. We have to MITM these because we can't CONNECT tunnel through
+// CloudFlare.
+func buildMITMHandler() http.Handler {
+	cryptoConf := &mitm.CryptoConfig{
+		PKFile:   PK_FILE,
+		CertFile: CA_CERT_FILE,
+	}
+	mitmHandler, err := mitm.Wrap(clientProxy, cryptoConf)
 	if err != nil {
 		log.Fatalf("Unable to initialize mitm proxy: %s", err)
 	}
-	return proxy
+	return mitmHandler
 }
 
 // runServer runs the server HTTPS proxy
@@ -202,82 +201,6 @@ func runServer() {
 			log.Fatalf("Unable to start server proxy: %s", err)
 		}
 		wg.Done()
-	}()
-}
-
-// handleClient handles requests from a local client (e.g. the browser)
-func handleClient(resp http.ResponseWriter, req *http.Request) {
-	if req.Method == "CONNECT" {
-		mitmProxy.InterceptWith(resp, req, handleClientMITM)
-	} else {
-		clientProxy.ServeHTTP(resp, req)
-	}
-}
-
-// handleClientMITM handles requests to the client-side MITM proxy, making some
-// small modifications and then delegating to doHandleClient.
-func handleClientMITM(connIn net.Conn, addr string) {
-	go doHandleClientMITM(connIn, addr)
-}
-
-func doHandleClientMITM(connIn net.Conn, addr string) {
-	// Open the outbound connection
-	connOut, err := cp.dial(addr)
-	if err != nil {
-		msg := fmt.Sprintf("Unable to dial upstream proxy: %s", err)
-		respondBadGateway(connIn, msg)
-	}
-	defer connOut.Close()
-
-	// Create a server connection for reading requests
-	serverConn := httputil.NewServerConn(connIn, nil)
-
-	// Create a buffered reader to use for reading responses (later)
-	connOutBuf := bufio.NewReader(connOut)
-
-	// Read each request
-	for {
-		req, err := serverConn.Read()
-		if err != nil {
-			if err != httputil.ErrPersistEOF {
-				msg := fmt.Sprintf("Unable to read request: %s", err)
-				respondBadGateway(connIn, msg)
-			}
-			return
-		}
-
-		// Fix up the request URL
-		req.URL.Scheme = "https"
-		req.URL.Host = strings.Split(addr, ":")[0]
-
-		// Rewrite the request
-		cp.rewrite(req)
-		processMITMRequest(req, serverConn, connOut, connOutBuf)
-	}
-
-	log.Printf("Done handling MITM to: %s", addr)
-}
-
-// processMITMRequest processes a single request to the MITM'ing client proxy
-func processMITMRequest(req *http.Request, serverConn *httputil.ServerConn, connOut net.Conn, connOutBuf *bufio.Reader) {
-	// Write out the request
-	req.Write(connOut)
-
-	go func() {
-		defer req.Body.Close()
-		io.Copy(connOut, req.Body)
-	}()
-
-	go func() {
-		resp, err := http.ReadResponse(connOutBuf, req)
-		if err != nil {
-			log.Printf("Unable to read response: %s", err)
-			defer serverConn.Close()
-			defer connOut.Close()
-		} else {
-			defer resp.Body.Close()
-			serverConn.Write(req, resp)
-		}
 	}()
 }
 
