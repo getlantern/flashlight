@@ -28,6 +28,7 @@ trusted by the browser and other HTTPS clients.
 Usage of flashlight:
   -addr="": ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https
   -configdir="": directory in which to store configuration (defaults to current directory)
+  -cpuprofile="": write cpu profile to given file
   -help=false: Get usage help
   -instanceid="": instanceId under which to report stats to statshub.  If not specified, no stats are reported.
   -masquerade="": masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter

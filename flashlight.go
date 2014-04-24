@@ -14,7 +14,9 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"os/signal"
 	"runtime"
+	"runtime/pprof"
 	"strings"
 	"sync"
 	"time"
@@ -37,6 +39,7 @@ var (
 	masqueradeAs = flag.String("masquerade", "", "masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter")
 	configDir    = flag.String("configdir", "", "directory in which to store configuration (defaults to current directory)")
 	instanceId   = flag.String("instanceid", "", "instanceId under which to report stats to statshub.  If not specified, no stats are reported.")
+	cpuprofile   = flag.String("cpuprofile", "", "write cpu profile to given file")
 
 	// flagsParsed is unused, this is just a trick to allow us to parse
 	// command-line flags before initializing the other variables
@@ -122,6 +125,12 @@ func inConfigDir(filename string) string {
 }
 
 func main() {
+	if *cpuprofile != "" {
+		startCPUProfiling(*cpuprofile)
+		stopCPUProfilingOnSigINT(*cpuprofile)
+		defer stopCPUProfiling(*cpuprofile)
+	}
+
 	if err := initCerts(strings.Split(*addr, ":")[0]); err != nil {
 		log.Fatalf("Unable to initialize certs: %s", err)
 	}
@@ -129,6 +138,7 @@ func main() {
 		runClient()
 		buildMitmProxy()
 	} else {
+		useAllCores()
 		if shouldReportStats {
 			iid := *instanceId
 			log.Printf("Reporting stats under instanceId %s", iid)
@@ -229,7 +239,7 @@ func doHandleClientMITM(connIn net.Conn, addr string) {
 	for {
 		req, err := serverConn.Read()
 		if err != nil {
-			if err != io.EOF {
+			if err != httputil.ErrPersistEOF {
 				msg := fmt.Sprintf("Unable to read request: %s", err)
 				respondBadGateway(connIn, msg)
 			}
@@ -240,15 +250,16 @@ func doHandleClientMITM(connIn net.Conn, addr string) {
 		req.URL.Scheme = "https"
 		req.URL.Host = strings.Split(addr, ":")[0]
 
-		processMITMRequest(req, connIn, connOut, connOutBuf)
+		// Rewrite the request
+		cp.rewrite(req)
+		processMITMRequest(req, serverConn, connOut, connOutBuf)
 	}
+
+	log.Printf("Done handling MITM to: %s", addr)
 }
 
-// processMITMRequest processes a single request to the MITM'ed proxy
-func processMITMRequest(req *http.Request, connIn net.Conn, connOut net.Conn, connOutBuf *bufio.Reader) {
-	// Rewrite the request
-	cp.rewrite(req)
-
+// processMITMRequest processes a single request to the MITM'ing client proxy
+func processMITMRequest(req *http.Request, serverConn *httputil.ServerConn, connOut net.Conn, connOutBuf *bufio.Reader) {
 	// Write out the request
 	req.Write(connOut)
 
@@ -261,33 +272,39 @@ func processMITMRequest(req *http.Request, connIn net.Conn, connOut net.Conn, co
 		resp, err := http.ReadResponse(connOutBuf, req)
 		if err != nil {
 			log.Printf("Unable to read response: %s", err)
-			defer connIn.Close()
+			defer serverConn.Close()
 			defer connOut.Close()
 		} else {
 			defer resp.Body.Close()
-			resp.Write(connIn)
-			io.Copy(connIn, resp.Body)
+			serverConn.Write(req, resp)
 		}
 	}()
 }
 
+// handleServer handles requests to the server-side (upstream) proxy
 func handleServer(resp http.ResponseWriter, req *http.Request) {
 	if req.Header.Get(X_LANTERN_REQUEST_INFO) != "" {
-		// Client requested their info
-		clientIp := req.Header.Get("X-Forwarded-For")
-		if clientIp == "" {
-			clientIp = strings.Split(req.RemoteAddr, ":")[0]
-		} else {
-			// X-Forwarded-For may contain multiple ips, use the last
-			ips := strings.Split(clientIp, ",")
-			clientIp = ips[len(ips)-1]
-		}
-		resp.Header().Set(X_LANTERN_PUBLIC_IP, clientIp)
-		resp.WriteHeader(200)
+		handleInfoRequest(resp, req)
 	} else {
 		// Proxy as usual
 		serverProxy.ServeHTTP(resp, req)
 	}
+}
+
+// handleInfoRequest looks up info about the client (right now just ip address)
+// and returns it to the client
+func handleInfoRequest(resp http.ResponseWriter, req *http.Request) {
+	// Client requested their info
+	clientIp := req.Header.Get("X-Forwarded-For")
+	if clientIp == "" {
+		clientIp = strings.Split(req.RemoteAddr, ":")[0]
+	} else {
+		// X-Forwarded-For may contain multiple ips, use the last
+		ips := strings.Split(clientIp, ",")
+		clientIp = ips[len(ips)-1]
+	}
+	resp.Header().Set(X_LANTERN_PUBLIC_IP, clientIp)
+	resp.WriteHeader(200)
 }
 
 func hostIncludingPort(req *http.Request) (host string) {
@@ -380,4 +397,34 @@ func certificateFor(
 	}
 	cert, err = pk.Certificate(template, issuer)
 	return
+}
+
+func useAllCores() {
+	numcores := runtime.NumCPU()
+	log.Printf("Using all %d cores on machine", numcores)
+	runtime.GOMAXPROCS(numcores)
+}
+
+func startCPUProfiling(filename string) {
+	f, err := os.Create(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	pprof.StartCPUProfile(f)
+	log.Printf("Process will save cpu profile to %s after terminating: %s")
+}
+
+func stopCPUProfilingOnSigINT(filename string) {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		<-c
+		stopCPUProfiling(filename)
+		os.Exit(0)
+	}()
+}
+
+func stopCPUProfiling(filename string) {
+	log.Printf("Saving CPU profile to: %s", filename)
+	pprof.StopCPUProfile()
 }
