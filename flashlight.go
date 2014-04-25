@@ -60,8 +60,8 @@ var (
 	sp = newCloudFlareServerProtocol()
 
 	clientProxy = &httputil.ReverseProxy{
-		Director: cp.rewrite,
-		Transport: &http.Transport{
+		Director: cp.rewriteRequest,
+		Transport: withRewrite(cp.rewriteResponse, &http.Transport{
 			Dial: func(network, addr string) (net.Conn, error) {
 				return cp.dial(addr)
 			},
@@ -70,15 +70,15 @@ var (
 				// Requires Go 1.3+
 				ClientSessionCache: tls.NewLRUClientSessionCache(SESSIONS_TO_CACHE_CLIENT),
 			},
-		},
+		}),
 	}
 
 	serverProxy = &httputil.ReverseProxy{
 		Director: func(req *http.Request) {
-			sp.rewrite(req)
+			sp.rewriteRequest(req)
 			log.Printf("Handling request for: %s", req.URL.String())
 		},
-		Transport: &http.Transport{
+		Transport: withRewrite(sp.rewriteResponse, &http.Transport{
 			Dial: func(network, addr string) (net.Conn, error) {
 				conn, err := net.Dial(network, addr)
 				if err != nil {
@@ -95,7 +95,7 @@ var (
 				// Requires Go 1.3+
 				ClientSessionCache: tls.NewLRUClientSessionCache(SESSIONS_TO_CACHE_SERVER),
 			},
-		},
+		}),
 	}
 
 	PK_FILE          = inConfigDir("proxypk.pem")
@@ -363,4 +363,26 @@ func stopCPUProfilingOnSigINT(filename string) {
 func stopCPUProfiling(filename string) {
 	log.Printf("Saving CPU profile to: %s", filename)
 	pprof.StopCPUProfile()
+}
+
+// writhRewrite creates a RoundTripper that uses the supplied RoundTripper and
+// rewrites the response.
+func withRewrite(rw func(*http.Response), rt http.RoundTripper) http.RoundTripper {
+	return &wrappedRoundTripper{
+		rewrite: rw,
+		orig:    rt,
+	}
+}
+
+type wrappedRoundTripper struct {
+	rewrite func(*http.Response)
+	orig    http.RoundTripper
+}
+
+func (rt *wrappedRoundTripper) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	resp, err = rt.orig.RoundTrip(req)
+	if err == nil {
+		rt.rewrite(resp)
+	}
+	return
 }

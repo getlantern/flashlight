@@ -8,8 +8,11 @@ import (
 // a protocol defines how requests are manipulated on a proxy (both client and
 // server)
 type protocol interface {
-	// rewrite rewrites an http request
-	rewrite(*http.Request)
+	// rewriteRequest rewrites an http request
+	rewriteRequest(*http.Request)
+
+	// rewriteResponse rewrites an http response
+	rewriteResponse(*http.Response)
 }
 
 // a clientProtocol defines how connections are made to the upstream server

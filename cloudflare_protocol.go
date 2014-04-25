@@ -15,7 +15,8 @@ const (
 )
 
 var (
-	HEADERS_TO_TUNNEL = []string{"Access-Control-Allow-Origin"}
+	REQ_HEADERS_TO_TUNNEL  = []string{}
+	RESP_HEADERS_TO_TUNNEL = []string{"Access-Control-Allow-Origin"}
 )
 
 type cloudFlareServerProtocol struct {
@@ -39,7 +40,7 @@ func newCloudFlareClientProtocol(upstreamHost string, upstreamPort int, masquera
 	}
 }
 
-func (cf *cloudFlareClientProtocol) rewrite(req *http.Request) {
+func (cf *cloudFlareClientProtocol) rewriteRequest(req *http.Request) {
 	// Remember the host and scheme that was actually requested
 	req.Header.Set(X_LANTERN_HOST, req.Host)
 	req.Header.Set(X_LANTERN_SCHEME, req.URL.Scheme)
@@ -49,15 +50,11 @@ func (cf *cloudFlareClientProtocol) rewrite(req *http.Request) {
 	req.Host = cf.upstreamHost
 	req.URL.Host = cf.upstreamHost
 
-	// Tunnel headers to hide them from CloudFlare
-	for _, header := range HEADERS_TO_TUNNEL {
-		prefixedHeader := X_LANTERN_TUNNELED_PREFIX + header
-		value := req.Header.Get(header)
-		if value != "" {
-			req.Header.Set(prefixedHeader, value)
-			req.Header.Del(header)
-		}
-	}
+	tunnelHeaders(req.Header, REQ_HEADERS_TO_TUNNEL)
+}
+
+func (cf *cloudFlareClientProtocol) rewriteResponse(resp *http.Response) {
+	untunnelHeaders(resp.Header, RESP_HEADERS_TO_TUNNEL)
 }
 
 func (cf *cloudFlareClientProtocol) dial(addr string) (net.Conn, error) {
@@ -72,7 +69,7 @@ func newCloudFlareServerProtocol() *cloudFlareServerProtocol {
 	return &cloudFlareServerProtocol{}
 }
 
-func (cf *cloudFlareServerProtocol) rewrite(req *http.Request) {
+func (cf *cloudFlareServerProtocol) rewriteRequest(req *http.Request) {
 	req.URL.Scheme = req.Header.Get(X_LANTERN_SCHEME)
 	// Grab the actual host from the original client and use that for the outbound request
 	req.URL.Host = req.Header.Get(X_LANTERN_HOST)
@@ -85,13 +82,34 @@ func (cf *cloudFlareServerProtocol) rewrite(req *http.Request) {
 	req.Header.Del("X-Forwarded-For")
 	req.Host = req.URL.Host
 
-	// Tunnel headers to hide them from CloudFlare
-	for _, header := range HEADERS_TO_TUNNEL {
+	untunnelHeaders(req.Header, REQ_HEADERS_TO_TUNNEL)
+}
+
+func (cf *cloudFlareServerProtocol) rewriteResponse(resp *http.Response) {
+	tunnelHeaders(resp.Header, RESP_HEADERS_TO_TUNNEL)
+}
+
+// tunnelHeaders renames headers to allow them to tunnel through CloudFlare
+func tunnelHeaders(headers http.Header, tunneled []string) {
+	for _, header := range tunneled {
 		prefixedHeader := X_LANTERN_TUNNELED_PREFIX + header
-		value := req.Header.Get(prefixedHeader)
+		value := headers.Get(header)
 		if value != "" {
-			req.Header.Set(header, value)
-			req.Header.Del(prefixedHeader)
+			headers.Set(prefixedHeader, value)
+			headers.Del(header)
+		}
+	}
+}
+
+// untunnelHeaders renames tunneled headers back to their normal form after
+// passing through CloudFlare
+func untunnelHeaders(headers http.Header, tunneled []string) {
+	for _, header := range tunneled {
+		prefixedHeader := X_LANTERN_TUNNELED_PREFIX + header
+		value := headers.Get(prefixedHeader)
+		if value != "" {
+			headers.Set(header, value)
+			headers.Del(prefixedHeader)
 		}
 	}
 }
