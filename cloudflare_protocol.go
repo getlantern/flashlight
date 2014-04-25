@@ -17,6 +17,8 @@ const (
 
 var (
 	X_LANTERN_TUNNELED_PREFIX_LENGTH = len(X_LANTERN_TUNNELED_PREFIX)
+
+	HEADERS_EXCLUDED_FROM_TUNNELING = []string{"Content-Length"}
 )
 
 type cloudFlareServerProtocol struct {
@@ -49,8 +51,6 @@ func (cf *cloudFlareClientProtocol) rewriteRequest(req *http.Request) {
 	// Set our upstream proxy as the host for this request
 	req.Host = cf.upstreamHost
 	req.URL.Host = cf.upstreamHost
-
-	tunnelHeaders(req.Header)
 }
 
 func (cf *cloudFlareClientProtocol) rewriteResponse(resp *http.Response) {
@@ -81,8 +81,6 @@ func (cf *cloudFlareServerProtocol) rewriteRequest(req *http.Request) {
 	// Strip the X-Forwarded-For header to avoid leaking the client's IP address
 	req.Header.Del("X-Forwarded-For")
 	req.Host = req.URL.Host
-
-	untunnelHeaders(req.Header)
 }
 
 func (cf *cloudFlareServerProtocol) rewriteResponse(resp *http.Response) {
@@ -105,8 +103,10 @@ func untunnelHeaders(headers http.Header) {
 	for prefixedKey, values := range headers {
 		if strings.Index(prefixedKey, X_LANTERN_TUNNELED_PREFIX) == 0 {
 			key := prefixedKey[X_LANTERN_TUNNELED_PREFIX_LENGTH:]
-			for _, value := range values {
-				headers.Set(key, value)
+			if key != "Content-Length" {
+				for _, value := range values {
+					headers.Set(key, value)
+				}
 			}
 		}
 	}
