@@ -95,6 +95,7 @@ func tunnelHeaders(headers http.Header, tunneled []string) {
 		prefixedHeader := X_LANTERN_TUNNELED_PREFIX + header
 		value := headers.Get(header)
 		if value != "" {
+			log.Printf("Tunneling header: %s", header)
 			headers.Set(prefixedHeader, value)
 			headers.Del(header)
 		}
@@ -108,6 +109,7 @@ func untunnelHeaders(headers http.Header, tunneled []string) {
 		prefixedHeader := X_LANTERN_TUNNELED_PREFIX + header
 		value := headers.Get(prefixedHeader)
 		if value != "" {
+			log.Printf("untunneling header: %s", header)
 			headers.Set(header, value)
 			headers.Del(prefixedHeader)
 		}
