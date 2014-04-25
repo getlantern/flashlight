@@ -2,6 +2,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"flag"
@@ -24,9 +25,11 @@ import (
 )
 
 const (
-	CONNECT                = "CONNECT"
-	X_LANTERN_REQUEST_INFO = "X-Lantern-Request-Info"
-	X_LANTERN_PUBLIC_IP    = "X-LANTERN-PUBLIC-IP"
+	CONNECT                  = "CONNECT"
+	X_LANTERN_REQUEST_INFO   = "X-Lantern-Request-Info"
+	X_LANTERN_PUBLIC_IP      = "X-LANTERN-PUBLIC-IP"
+	SESSIONS_TO_CACHE_CLIENT = 10000
+	SESSIONS_TO_CACHE_SERVER = 100000
 )
 
 var (
@@ -62,6 +65,11 @@ var (
 			Dial: func(network, addr string) (net.Conn, error) {
 				return cp.dial(addr)
 			},
+			TLSClientConfig: &tls.Config{
+				// Use a TLS session cache to minimize TLS connection establishment
+				// Requires Go 1.3+
+				ClientSessionCache: tls.NewLRUClientSessionCache(SESSIONS_TO_CACHE_CLIENT),
+			},
 		},
 	}
 
@@ -81,6 +89,11 @@ var (
 					return &countingConn{conn}, nil
 				}
 				return conn, err
+			},
+			TLSClientConfig: &tls.Config{
+				// Use a TLS session cache to minimize TLS connection establishment
+				// Requires Go 1.3+
+				ClientSessionCache: tls.NewLRUClientSessionCache(SESSIONS_TO_CACHE_SERVER),
 			},
 		},
 	}
