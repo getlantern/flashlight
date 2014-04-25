@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -15,8 +16,7 @@ const (
 )
 
 var (
-	REQ_HEADERS_TO_TUNNEL  = []string{}
-	RESP_HEADERS_TO_TUNNEL = []string{"Access-Control-Allow-Origin"}
+	X_LANTERN_TUNNELED_PREFIX_LENGTH = len(X_LANTERN_TUNNELED_PREFIX)
 )
 
 type cloudFlareServerProtocol struct {
@@ -50,11 +50,11 @@ func (cf *cloudFlareClientProtocol) rewriteRequest(req *http.Request) {
 	req.Host = cf.upstreamHost
 	req.URL.Host = cf.upstreamHost
 
-	tunnelHeaders(req.Header, REQ_HEADERS_TO_TUNNEL)
+	tunnelHeaders(req.Header)
 }
 
 func (cf *cloudFlareClientProtocol) rewriteResponse(resp *http.Response) {
-	untunnelHeaders(resp.Header, RESP_HEADERS_TO_TUNNEL)
+	untunnelHeaders(resp.Header)
 }
 
 func (cf *cloudFlareClientProtocol) dial(addr string) (net.Conn, error) {
@@ -82,36 +82,32 @@ func (cf *cloudFlareServerProtocol) rewriteRequest(req *http.Request) {
 	req.Header.Del("X-Forwarded-For")
 	req.Host = req.URL.Host
 
-	untunnelHeaders(req.Header, REQ_HEADERS_TO_TUNNEL)
+	untunnelHeaders(req.Header)
 }
 
 func (cf *cloudFlareServerProtocol) rewriteResponse(resp *http.Response) {
-	tunnelHeaders(resp.Header, RESP_HEADERS_TO_TUNNEL)
+	tunnelHeaders(resp.Header)
 }
 
 // tunnelHeaders renames headers to allow them to tunnel through CloudFlare
-func tunnelHeaders(headers http.Header, tunneled []string) {
-	for _, header := range tunneled {
-		prefixedHeader := X_LANTERN_TUNNELED_PREFIX + header
-		value := headers.Get(header)
-		if value != "" {
-			log.Printf("Tunneling header: %s", header)
-			headers.Set(prefixedHeader, value)
-			headers.Del(header)
+func tunnelHeaders(headers http.Header) {
+	for key, values := range headers {
+		prefixedKey := X_LANTERN_TUNNELED_PREFIX + key
+		for _, value := range values {
+			headers.Set(prefixedKey, value)
 		}
 	}
 }
 
 // untunnelHeaders renames tunneled headers back to their normal form after
 // passing through CloudFlare
-func untunnelHeaders(headers http.Header, tunneled []string) {
-	for _, header := range tunneled {
-		prefixedHeader := X_LANTERN_TUNNELED_PREFIX + header
-		value := headers.Get(prefixedHeader)
-		if value != "" {
-			log.Printf("untunneling header: %s", header)
-			headers.Set(header, value)
-			headers.Del(prefixedHeader)
+func untunnelHeaders(headers http.Header) {
+	for prefixedKey, values := range headers {
+		if strings.Index(prefixedKey, X_LANTERN_TUNNELED_PREFIX) == 0 {
+			key := prefixedKey[X_LANTERN_TUNNELED_PREFIX_LENGTH:]
+			for _, value := range values {
+				headers.Set(key, value)
+			}
 		}
 	}
 }
