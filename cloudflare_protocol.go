@@ -9,8 +9,13 @@ import (
 )
 
 const (
-	X_LANTERN_HOST   = "X-Lantern-Host"
-	X_LANTERN_SCHEME = "X-Lantern-Scheme"
+	X_LANTERN_HOST            = "X-Lantern-Host"
+	X_LANTERN_SCHEME          = "X-Lantern-Scheme"
+	X_LANTERN_TUNNELED_PREFIX = "X-Lantern-Tunneled-"
+)
+
+var (
+	HEADERS_TO_TUNNEL = []string{"Access-Control-Allow-Origin"}
 )
 
 type cloudFlareServerProtocol struct {
@@ -39,9 +44,20 @@ func (cf *cloudFlareClientProtocol) rewrite(req *http.Request) {
 	req.Header.Set(X_LANTERN_HOST, req.Host)
 	req.Header.Set(X_LANTERN_SCHEME, req.URL.Scheme)
 	req.URL.Scheme = "http"
+
 	// Set our upstream proxy as the host for this request
 	req.Host = cf.upstreamHost
 	req.URL.Host = cf.upstreamHost
+
+	// Tunnel headers to hide them from CloudFlare
+	for _, header := range HEADERS_TO_TUNNEL {
+		prefixedHeader := X_LANTERN_TUNNELED_PREFIX + header
+		value := req.Header.Get(header)
+		if value != "" {
+			req.Header.Set(prefixedHeader, value)
+			req.Header.Del(header)
+		}
+	}
 }
 
 func (cf *cloudFlareClientProtocol) dial(addr string) (net.Conn, error) {
@@ -60,10 +76,22 @@ func (cf *cloudFlareServerProtocol) rewrite(req *http.Request) {
 	req.URL.Scheme = req.Header.Get(X_LANTERN_SCHEME)
 	// Grab the actual host from the original client and use that for the outbound request
 	req.URL.Host = req.Header.Get(X_LANTERN_HOST)
+
 	// Remove the Lantern headers
 	req.Header.Del(X_LANTERN_SCHEME)
 	req.Header.Del(X_LANTERN_HOST)
+
 	// Strip the X-Forwarded-For header to avoid leaking the client's IP address
 	req.Header.Del("X-Forwarded-For")
 	req.Host = req.URL.Host
+
+	// Tunnel headers to hide them from CloudFlare
+	for _, header := range HEADERS_TO_TUNNEL {
+		prefixedHeader := X_LANTERN_TUNNELED_PREFIX + header
+		value := req.Header.Get(prefixedHeader)
+		if value != "" {
+			req.Header.Set(header, value)
+			req.Header.Del(prefixedHeader)
+		}
+	}
 }
