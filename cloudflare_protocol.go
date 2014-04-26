@@ -52,8 +52,6 @@ func newCloudFlareClientProtocol(upstreamHost string, upstreamPort int, masquera
 }
 
 func (cf *cloudFlareClientProtocol) rewriteRequest(req *http.Request) {
-	tunnelHeaders(req.Header)
-
 	// Remember the host and scheme that was actually requested
 	req.Header.Set(X_LANTERN_HOST, req.Host)
 	req.Header.Set(X_LANTERN_SCHEME, req.URL.Scheme)
@@ -92,8 +90,6 @@ func (cf *cloudFlareServerProtocol) rewriteRequest(req *http.Request) {
 	// Strip the X-Forwarded-For header to avoid leaking the client's IP address
 	req.Header.Del("X-Forwarded-For")
 	req.Host = req.URL.Host
-
-	untunnelHeaders(req.Header)
 }
 
 func (cf *cloudFlareServerProtocol) rewriteResponse(resp *http.Response) {
