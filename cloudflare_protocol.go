@@ -10,6 +10,7 @@ import (
 )
 
 const (
+	X_LANTERN_URI             = "X-Lantern-Uri"
 	X_LANTERN_HOST            = "X-Lantern-Host"
 	X_LANTERN_SCHEME          = "X-Lantern-Scheme"
 	X_LANTERN_TUNNELED_PREFIX = "X-Lantern-Tunneled-"
@@ -53,6 +54,7 @@ func newCloudFlareClientProtocol(upstreamHost string, upstreamPort int, masquera
 
 func (cf *cloudFlareClientProtocol) rewriteRequest(req *http.Request) {
 	// Remember the host and scheme that was actually requested
+	req.Header.Set(X_LANTERN_URI, req.RequestURI)
 	req.Header.Set(X_LANTERN_HOST, req.Host)
 	req.Header.Set(X_LANTERN_SCHEME, req.URL.Scheme)
 	req.URL.Scheme = "http"
@@ -79,6 +81,8 @@ func newCloudFlareServerProtocol() *cloudFlareServerProtocol {
 }
 
 func (cf *cloudFlareServerProtocol) rewriteRequest(req *http.Request) {
+	req.RequestURI = req.Header.Get(X_LANTERN_URI)
+	req.Header.Set(X_LANTERN_URI, req.RequestURI)
 	req.URL.Scheme = req.Header.Get(X_LANTERN_SCHEME)
 	// Grab the actual host from the original client and use that for the outbound request
 	req.URL.Host = req.Header.Get(X_LANTERN_HOST)
