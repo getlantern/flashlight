@@ -60,7 +60,13 @@ var (
 	sp = newCloudFlareServerProtocol()
 
 	clientProxy = &httputil.ReverseProxy{
-		Director: cp.rewriteRequest,
+		Director: func(req *http.Request) {
+			// Check for local addresses, which we don't rewrite
+			ip, err := net.ResolveIPAddr("ip4", strings.Split(req.Host, ":")[0])
+			if err == nil && !ip.IP.IsLoopback() {
+				cp.rewriteRequest(req)
+			}
+		},
 		Transport: withRewrite(cp.rewriteResponse, &http.Transport{
 			Dial: func(network, addr string) (net.Conn, error) {
 				return cp.dial(addr)
