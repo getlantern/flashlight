@@ -6,7 +6,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"strings"
 )
 
 const (
@@ -18,17 +17,6 @@ const (
 
 var (
 	X_LANTERN_TUNNELED_PREFIX_LENGTH = len(X_LANTERN_TUNNELED_PREFIX)
-
-	HOP_BY_HOP_HEADERS = map[string]bool{
-		"Connection":          true,
-		"Keep-Alive":          true,
-		"Proxy-Authenticate":  true,
-		"Proxy-Authorization": true,
-		"TE":                true,
-		"Trailers":          true,
-		"Transfer-Encoding": true,
-		"Upgrade":           true,
-	}
 )
 
 type cloudFlareServerProtocol struct {
@@ -65,7 +53,6 @@ func (cf *cloudFlareClientProtocol) rewriteRequest(req *http.Request) {
 }
 
 func (cf *cloudFlareClientProtocol) rewriteResponse(resp *http.Response) {
-	untunnelHeaders(resp.Header)
 }
 
 func (cf *cloudFlareClientProtocol) dial(addr string) (net.Conn, error) {
@@ -97,34 +84,4 @@ func (cf *cloudFlareServerProtocol) rewriteRequest(req *http.Request) {
 }
 
 func (cf *cloudFlareServerProtocol) rewriteResponse(resp *http.Response) {
-	tunnelHeaders(resp.Header)
-}
-
-// tunnelHeaders renames headers to allow them to tunnel through CloudFlare
-func tunnelHeaders(headers http.Header) {
-	for key, values := range headers {
-		isHopByHopHeader := !HOP_BY_HOP_HEADERS[key]
-		if !isHopByHopHeader {
-			prefixedKey := X_LANTERN_TUNNELED_PREFIX + key
-			for _, value := range values {
-				headers.Set(prefixedKey, value)
-			}
-		}
-	}
-}
-
-// untunnelHeaders renames tunneled headers back to their normal form after
-// passing through CloudFlare
-func untunnelHeaders(headers http.Header) {
-	for prefixedKey, values := range headers {
-		if strings.Index(prefixedKey, X_LANTERN_TUNNELED_PREFIX) == 0 {
-			key := prefixedKey[X_LANTERN_TUNNELED_PREFIX_LENGTH:]
-			isHopByHopHeader := !HOP_BY_HOP_HEADERS[key]
-			if !isHopByHopHeader {
-				for _, value := range values {
-					headers.Set(key, value)
-				}
-			}
-		}
-	}
 }
