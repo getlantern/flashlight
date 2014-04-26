@@ -18,7 +18,16 @@ const (
 var (
 	X_LANTERN_TUNNELED_PREFIX_LENGTH = len(X_LANTERN_TUNNELED_PREFIX)
 
-	HEADERS_EXCLUDED_FROM_TUNNELING = []string{"Content-Length"}
+	HOP_BY_HOP_HEADERS = map[string]bool{
+		"Connection":          true,
+		"Keep-Alive":          true,
+		"Proxy-Authenticate":  true,
+		"Proxy-Authorization": true,
+		"TE":                true,
+		"Trailers":          true,
+		"Transfer-Encoding": true,
+		"Upgrade":           true,
+	}
 )
 
 type cloudFlareServerProtocol struct {
@@ -43,6 +52,8 @@ func newCloudFlareClientProtocol(upstreamHost string, upstreamPort int, masquera
 }
 
 func (cf *cloudFlareClientProtocol) rewriteRequest(req *http.Request) {
+	tunnelHeaders(req.Header)
+
 	// Remember the host and scheme that was actually requested
 	req.Header.Set(X_LANTERN_HOST, req.Host)
 	req.Header.Set(X_LANTERN_SCHEME, req.URL.Scheme)
@@ -81,6 +92,8 @@ func (cf *cloudFlareServerProtocol) rewriteRequest(req *http.Request) {
 	// Strip the X-Forwarded-For header to avoid leaking the client's IP address
 	req.Header.Del("X-Forwarded-For")
 	req.Host = req.URL.Host
+
+	untunnelHeaders(req.Header)
 }
 
 func (cf *cloudFlareServerProtocol) rewriteResponse(resp *http.Response) {
@@ -90,9 +103,12 @@ func (cf *cloudFlareServerProtocol) rewriteResponse(resp *http.Response) {
 // tunnelHeaders renames headers to allow them to tunnel through CloudFlare
 func tunnelHeaders(headers http.Header) {
 	for key, values := range headers {
-		prefixedKey := X_LANTERN_TUNNELED_PREFIX + key
-		for _, value := range values {
-			headers.Set(prefixedKey, value)
+		isHopByHopHeader := !HOP_BY_HOP_HEADERS[key]
+		if !isHopByHopHeader {
+			prefixedKey := X_LANTERN_TUNNELED_PREFIX + key
+			for _, value := range values {
+				headers.Set(prefixedKey, value)
+			}
 		}
 	}
 }
@@ -103,7 +119,8 @@ func untunnelHeaders(headers http.Header) {
 	for prefixedKey, values := range headers {
 		if strings.Index(prefixedKey, X_LANTERN_TUNNELED_PREFIX) == 0 {
 			key := prefixedKey[X_LANTERN_TUNNELED_PREFIX_LENGTH:]
-			if key != "Content-Length" {
+			isHopByHopHeader := !HOP_BY_HOP_HEADERS[key]
+			if !isHopByHopHeader {
 				for _, value := range values {
 					headers.Set(key, value)
 				}
