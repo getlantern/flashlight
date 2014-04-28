@@ -6,17 +6,13 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
+	"strings"
 )
 
 const (
-	X_LANTERN_URI             = "X-Lantern-Uri"
-	X_LANTERN_HOST            = "X-Lantern-Host"
-	X_LANTERN_SCHEME          = "X-Lantern-Scheme"
-	X_LANTERN_TUNNELED_PREFIX = "X-Lantern-Tunneled-"
-)
-
-var (
-	X_LANTERN_TUNNELED_PREFIX_LENGTH = len(X_LANTERN_TUNNELED_PREFIX)
+	X_LANTERN_PREFIX = "X-Lantern-"
+	X_LANTERN_URL    = X_LANTERN_PREFIX + "URL"
 )
 
 type cloudFlareServerProtocol struct {
@@ -42,9 +38,7 @@ func newCloudFlareClientProtocol(upstreamHost string, upstreamPort int, masquera
 
 func (cf *cloudFlareClientProtocol) rewriteRequest(req *http.Request) {
 	// Remember the host and scheme that was actually requested
-	req.Header.Set(X_LANTERN_URI, req.RequestURI)
-	req.Header.Set(X_LANTERN_HOST, req.Host)
-	req.Header.Set(X_LANTERN_SCHEME, req.URL.Scheme)
+	req.Header.Set(X_LANTERN_URL, req.URL.String())
 	req.URL.Scheme = "http"
 
 	// Set our upstream proxy as the host for this request
@@ -68,15 +62,20 @@ func newCloudFlareServerProtocol() *cloudFlareServerProtocol {
 }
 
 func (cf *cloudFlareServerProtocol) rewriteRequest(req *http.Request) {
-	req.RequestURI = req.Header.Get(X_LANTERN_URI)
-	req.Header.Set(X_LANTERN_URI, req.RequestURI)
-	req.URL.Scheme = req.Header.Get(X_LANTERN_SCHEME)
-	// Grab the actual host from the original client and use that for the outbound request
-	req.URL.Host = req.Header.Get(X_LANTERN_HOST)
+	// Grab the original URL as passed via the X_LANTERN_URL header
+	url, err := url.Parse(req.Header.Get(X_LANTERN_URL))
+	if err != nil {
+		log.Printf("Unable to parse URL from downstream! %s", err)
+		return
+	}
+	req.URL = url
 
-	// Remove the Lantern headers
-	req.Header.Del(X_LANTERN_SCHEME)
-	req.Header.Del(X_LANTERN_HOST)
+	// Remove all Lantern headers
+	for key, _ := range req.Header {
+		if strings.Index(key, X_LANTERN_PREFIX) == 0 {
+			delete(req.Header, key)
+		}
+	}
 
 	// Strip the X-Forwarded-For header to avoid leaking the client's IP address
 	req.Header.Del("X-Forwarded-For")
