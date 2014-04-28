@@ -70,6 +70,12 @@ func (cf *cloudFlareServerProtocol) rewriteRequest(req *http.Request) {
 	}
 	req.URL = url
 
+	// Grab the host from the URL
+	req.Host = req.URL.Host
+	// Remove the scheme and host from the URL
+	req.URL.Scheme = ""
+	req.URL.Host = ""
+
 	// Remove all Lantern headers
 	for key, _ := range req.Header {
 		if strings.Index(key, X_LANTERN_PREFIX) == 0 {

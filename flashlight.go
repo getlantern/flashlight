@@ -402,6 +402,6 @@ func (rt *wrappedRoundTripper) RoundTrip(req *http.Request) (resp *http.Response
 
 func dumpHeaders(category string, headers http.Header) {
 	if *dumpheaders {
-		log.Printf("%s\n%s\n%s\n%s", category, HR, spew.Sdump(headers), HR)
+		log.Printf("%s Headers\n%s\n%s\n%s\n\n", category, HR, spew.Sdump(headers), HR)
 	}
 }
