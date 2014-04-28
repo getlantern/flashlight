@@ -20,6 +20,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/getlantern/go-mitm/mitm"
 	"github.com/oxtoacart/keyman"
 )
@@ -30,6 +31,8 @@ const (
 	X_LANTERN_PUBLIC_IP      = "X-LANTERN-PUBLIC-IP"
 	SESSIONS_TO_CACHE_CLIENT = 10000
 	SESSIONS_TO_CACHE_SERVER = 100000
+
+	HR = "--------------------------------------------------------------------------------"
 )
 
 var (
@@ -40,6 +43,7 @@ var (
 	masqueradeAs = flag.String("masquerade", "", "masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter")
 	configDir    = flag.String("configdir", "", "directory in which to store configuration (defaults to current directory)")
 	instanceId   = flag.String("instanceid", "", "instanceId under which to report stats to statshub.  If not specified, no stats are reported.")
+	dumpheaders  = flag.Bool("dumpheaders", false, "dump the headers of outgoing requests and responses to stdout")
 	cpuprofile   = flag.String("cpuprofile", "", "write cpu profile to given file")
 
 	// flagsParsed is unused, this is just a trick to allow us to parse
@@ -66,6 +70,9 @@ var (
 			if err == nil && !ip.IP.IsLoopback() {
 				cp.rewriteRequest(req)
 			}
+			if *dumpheaders {
+				log.Printf("Request\n%s\n%s\n%s", HR, spew.Sdump(req), HR)
+			}
 		},
 		Transport: withRewrite(cp.rewriteResponse, &http.Transport{
 			Dial: func(network, addr string) (net.Conn, error) {
@@ -83,6 +90,9 @@ var (
 		Director: func(req *http.Request) {
 			sp.rewriteRequest(req)
 			log.Printf("Handling request for: %s", req.URL.String())
+			if *dumpheaders {
+				log.Printf("Request\n%s\n%s\n%s", HR, spew.Sdump(req), HR)
+			}
 		},
 		Transport: withRewrite(sp.rewriteResponse, &http.Transport{
 			Dial: func(network, addr string) (net.Conn, error) {
@@ -389,6 +399,9 @@ func (rt *wrappedRoundTripper) RoundTrip(req *http.Request) (resp *http.Response
 	resp, err = rt.orig.RoundTrip(req)
 	if err == nil {
 		rt.rewrite(resp)
+	}
+	if *dumpheaders {
+		log.Printf("Response\n%s\n%s\n%s", HR, spew.Sdump(req), HR)
 	}
 	return
 }
