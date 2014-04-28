@@ -76,8 +76,8 @@ func (cf *cloudFlareServerProtocol) rewriteRequest(req *http.Request) {
 
 	// Strip all CloudFlare and Lantern headers
 	for key, _ := range req.Header {
-		shouldStrip := strings.Index(key, X_LANTERN_PREFIX) ||
-			strings.Index(key, CF_PREFIX)
+		shouldStrip := strings.Index(key, X_LANTERN_PREFIX) == 0 ||
+			strings.Index(key, CF_PREFIX) == 0
 		if shouldStrip {
 			delete(req.Header, key)
 		}
