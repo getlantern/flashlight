@@ -70,9 +70,7 @@ var (
 			if err == nil && !ip.IP.IsLoopback() {
 				cp.rewriteRequest(req)
 			}
-			if *dumpheaders {
-				log.Printf("Request\n%s\n%s\n%s", HR, spew.Sdump(req), HR)
-			}
+			dumpHeaders("Request", req.Header)
 		},
 		Transport: withRewrite(cp.rewriteResponse, &http.Transport{
 			Dial: func(network, addr string) (net.Conn, error) {
@@ -90,9 +88,7 @@ var (
 		Director: func(req *http.Request) {
 			sp.rewriteRequest(req)
 			log.Printf("Handling request for: %s", req.URL.String())
-			if *dumpheaders {
-				log.Printf("Request\n%s\n%s\n%s", HR, spew.Sdump(req), HR)
-			}
+			dumpHeaders("Request", req.Header)
 		},
 		Transport: withRewrite(sp.rewriteResponse, &http.Transport{
 			Dial: func(network, addr string) (net.Conn, error) {
@@ -400,8 +396,12 @@ func (rt *wrappedRoundTripper) RoundTrip(req *http.Request) (resp *http.Response
 	if err == nil {
 		rt.rewrite(resp)
 	}
-	if *dumpheaders {
-		log.Printf("Response\n%s\n%s\n%s", HR, spew.Sdump(req), HR)
-	}
+	dumpHeaders("Response", resp.Header)
 	return
+}
+
+func dumpHeaders(category string, headers http.Header) {
+	if *dumpheaders {
+		log.Printf("%s\n%s\n%s\n%s", category, HR, spew.Sdump(headers), HR)
+	}
 }
