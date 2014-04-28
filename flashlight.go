@@ -395,8 +395,8 @@ func (rt *wrappedRoundTripper) RoundTrip(req *http.Request) (resp *http.Response
 	resp, err = rt.orig.RoundTrip(req)
 	if err == nil {
 		rt.rewrite(resp)
+		dumpHeaders("Response", resp.Header)
 	}
-	dumpHeaders("Response", resp.Header)
 	return
 }
 
