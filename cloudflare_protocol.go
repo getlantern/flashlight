@@ -11,6 +11,7 @@ import (
 )
 
 const (
+	CF_PREFIX        = "Cf-"
 	X_LANTERN_PREFIX = "X-Lantern-"
 	X_LANTERN_URL    = X_LANTERN_PREFIX + "URL"
 )
@@ -73,16 +74,20 @@ func (cf *cloudFlareServerProtocol) rewriteRequest(req *http.Request) {
 	// Grab the host from the URL
 	req.Host = req.URL.Host
 
-	// Remove all Lantern headers
+	// Strip all CloudFlare and Lantern headers
 	for key, _ := range req.Header {
-		if strings.Index(key, X_LANTERN_PREFIX) == 0 {
+		shouldStrip = strings.Index(key, X_LANTERN_PREFIX) ||
+			strings.Index(key, CF_PREFIX)
+		if shouldStrip {
 			delete(req.Header, key)
 		}
 	}
 
+	// Strip X-Forwarded-Proto header
+	req.Header.Del("X-Forwarded-Proto")
+
 	// Strip the X-Forwarded-For header to avoid leaking the client's IP address
 	req.Header.Del("X-Forwarded-For")
-	req.Host = req.URL.Host
 }
 
 func (cf *cloudFlareServerProtocol) rewriteResponse(resp *http.Response) {
