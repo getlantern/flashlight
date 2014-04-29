@@ -20,9 +20,11 @@ import (
 	"sync"
 	"time"
 
+	"code.google.com/p/go-uuid/uuid"
+
 	"github.com/davecgh/go-spew/spew"
 	"github.com/getlantern/go-mitm/mitm"
-	"github.com/oxtoacart/keyman"
+	"github.com/getlantern/keyman"
 )
 
 const (
@@ -31,6 +33,8 @@ const (
 	X_LANTERN_PUBLIC_IP      = "X-LANTERN-PUBLIC-IP"
 	SESSIONS_TO_CACHE_CLIENT = 10000
 	SESSIONS_TO_CACHE_SERVER = 100000
+
+	FLASHLIGHT_CN_PREFIX = "flashlight-"
 
 	HR = "--------------------------------------------------------------------------------"
 )
@@ -45,6 +49,7 @@ var (
 	instanceId   = flag.String("instanceid", "", "instanceId under which to report stats to statshub.  If not specified, no stats are reported.")
 	dumpheaders  = flag.Bool("dumpheaders", false, "dump the headers of outgoing requests and responses to stdout")
 	cpuprofile   = flag.String("cpuprofile", "", "write cpu profile to given file")
+	install      = flag.Bool("install", false, "install prerequisites into environment and then terminate")
 
 	// flagsParsed is unused, this is just a trick to allow us to parse
 	// command-line flags before initializing the other variables
@@ -80,6 +85,7 @@ var (
 				// Use a TLS session cache to minimize TLS connection establishment
 				// Requires Go 1.3+
 				ClientSessionCache: tls.NewLRUClientSessionCache(SESSIONS_TO_CACHE_CLIENT),
+				ServerName:         *upstreamHost,
 			},
 		}),
 	}
@@ -122,7 +128,7 @@ var (
 
 func parseFlags() bool {
 	flag.Parse()
-	if *help || *addr == "" {
+	if (*help || *addr == "") && !*install {
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -155,6 +161,12 @@ func main() {
 	if err := initCerts(strings.Split(*addr, ":")[0]); err != nil {
 		log.Fatalf("Unable to initialize certs: %s", err)
 	}
+
+	if *install {
+		log.Println("Only ran to init, exiting now")
+		os.Exit(0)
+	}
+
 	if isDownstream {
 		runClient()
 	} else {
@@ -275,43 +287,72 @@ func respondBadGateway(connIn net.Conn, msg string) {
 // added to the current user's trust store (e.g. keychain) as a trusted root.
 func initCerts(host string) (err error) {
 	if pk, err = keyman.LoadPKFromFile(PK_FILE); err != nil {
-		log.Printf("Creating new PK at: %s", PK_FILE)
-		if pk, err = keyman.GeneratePK(2048); err != nil {
-			return
-		}
-		if err = pk.WriteToFile(PK_FILE); err != nil {
-			return
+		if os.IsNotExist(err) {
+			log.Printf("Creating new PK at: %s", PK_FILE)
+			if pk, err = keyman.GeneratePK(2048); err != nil {
+				return
+			}
+			if err = pk.WriteToFile(PK_FILE); err != nil {
+				return
+			}
+		} else {
+			return fmt.Errorf("Unable to read private key, even though it exists: %s", err)
 		}
 	}
 
 	caCert, err = keyman.LoadCertificateFromFile(CA_CERT_FILE)
 	if err != nil || caCert.X509().NotAfter.Before(ONE_MONTH_FROM_TODAY) {
-		log.Printf("Creating new self-signed CA cert at: %s", CA_CERT_FILE)
-		if caCert, err = certificateFor("Lantern", TEN_YEARS_FROM_TODAY, true, nil); err != nil {
-			return
-		}
-		if err = caCert.WriteToFile(CA_CERT_FILE); err != nil {
-			return
-		}
-		if isDownstream {
-			log.Println("Adding issuing cert to user trust store as trusted root")
-			if err = caCert.AddAsTrustedRoot(); err != nil {
+		if os.IsNotExist(err) {
+			log.Printf("Creating new self-signed CA cert at: %s", CA_CERT_FILE)
+			if caCert, err = certificateFor(FLASHLIGHT_CN_PREFIX+uuid.New(), TEN_YEARS_FROM_TODAY, true, nil); err != nil {
 				return
 			}
+			if err = caCert.WriteToFile(CA_CERT_FILE); err != nil {
+				return
+			}
+		} else {
+			return fmt.Errorf("Unable to read CA cert, even though it exists: %s", err)
 		}
 	}
 
 	if isUpstream {
 		serverCert, err = keyman.LoadCertificateFromFile(SERVER_CERT_FILE)
 		if err != nil || caCert.X509().NotAfter.Before(ONE_MONTH_FROM_TODAY) {
-			log.Printf("Creating new server cert at: %s", SERVER_CERT_FILE)
-			if serverCert, err = certificateFor(host, ONE_YEAR_FROM_TODAY, true, caCert); err != nil {
-				return
-			}
-			if err = serverCert.WriteToFile(SERVER_CERT_FILE); err != nil {
-				return
+			if err == nil || os.IsNotExist(err) {
+				log.Printf("Creating new server cert at: %s", SERVER_CERT_FILE)
+				if serverCert, err = certificateFor(host, ONE_YEAR_FROM_TODAY, true, caCert); err != nil {
+					return
+				}
+				if err = serverCert.WriteToFile(SERVER_CERT_FILE); err != nil {
+					return
+				}
+			} else {
+				return fmt.Errorf("Unable to server cert, even though it exists: %s", err)
 			}
 		}
+	}
+
+	return installCACertIfNecessary()
+}
+
+func installCACertIfNecessary() (err error) {
+	needInstalledCert := (isDownstream || *install)
+	haveInstalledCert := false
+	if needInstalledCert {
+		haveInstalledCert, err = caCert.IsInstalled()
+		if err != nil {
+			return fmt.Errorf("Unable to check if certificate is installed: %s", err)
+		}
+	}
+	if needInstalledCert && !haveInstalledCert {
+		log.Println("Adding issuing cert to trust store as trusted root")
+		// TODO: add the cert as trusted root anytime that it's not already
+		// in the system keystore
+		if err = caCert.AddAsTrustedRoot(); err != nil {
+			return
+		}
+	} else {
+		log.Println("Issuing cert already found in trust store, not adding")
 	}
 	return
 }

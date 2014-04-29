@@ -52,10 +52,7 @@ func (cf *cloudFlareClientProtocol) rewriteResponse(resp *http.Response) {
 
 func (cf *cloudFlareClientProtocol) dial(addr string) (net.Conn, error) {
 	log.Printf("Using %s to handle request", cf.upstreamAddr)
-	tlsConfig := &tls.Config{
-		ServerName: cf.cloudFlareHost,
-	}
-	return tls.Dial("tcp", cf.upstreamAddr, tlsConfig)
+	return tls.Dial("tcp", cf.upstreamAddr, nil)
 }
 
 func newCloudFlareServerProtocol() *cloudFlareServerProtocol {
