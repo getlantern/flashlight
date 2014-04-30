@@ -332,10 +332,14 @@ func initCerts(host string) (err error) {
 		}
 	}
 
-	return installCACertIfNecessary()
+	err = installCACertToTrustStoreIfNecessary()
+	if err != nil {
+		log.Printf("Unable to install CA Cert to trust store, man in the middling may not work: ", err)
+	}
+	return nil
 }
 
-func installCACertIfNecessary() (err error) {
+func installCACertToTrustStoreIfNecessary() (err error) {
 	needInstalledCert := (isDownstream || *install)
 	haveInstalledCert := false
 	if needInstalledCert {
