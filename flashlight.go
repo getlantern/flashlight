@@ -40,20 +40,23 @@ const (
 )
 
 var (
-	help         = flag.Bool("help", false, "Get usage help")
-	addr         = flag.String("addr", "", "ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https")
-	upstreamHost = flag.String("server", "", "hostname at which to connect to a server flashlight (always using https).  When specified, this flashlight will run as a client proxy, otherwise it runs as a server")
-	upstreamPort = flag.Int("serverport", 443, "the port on which to connect to the server")
-	masqueradeAs = flag.String("masquerade", "", "masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter")
-	configDir    = flag.String("configdir", "", "directory in which to store configuration (defaults to current directory)")
-	instanceId   = flag.String("instanceid", "", "instanceId under which to report stats to statshub.  If not specified, no stats are reported.")
-	dumpheaders  = flag.Bool("dumpheaders", false, "dump the headers of outgoing requests and responses to stdout")
-	cpuprofile   = flag.String("cpuprofile", "", "write cpu profile to given file")
-	install      = flag.Bool("install", false, "install prerequisites into environment and then terminate")
+	help             = flag.Bool("help", false, "Get usage help")
+	addr             = flag.String("addr", "", "ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https")
+	upstreamHost     = flag.String("server", "", "hostname at which to connect to a server flashlight (always using https).  When specified, this flashlight will run as a client proxy, otherwise it runs as a server")
+	upstreamPort     = flag.Int("serverport", 443, "the port on which to connect to the server")
+	masqueradeAs     = flag.String("masquerade", "", "masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter")
+	masqueradeCACert = flag.String("masqueradecacert", "", "pin to this CA cert if specified (PEM format)")
+	configDir        = flag.String("configdir", "", "directory in which to store configuration (defaults to current directory)")
+	instanceId       = flag.String("instanceid", "", "instanceId under which to report stats to statshub.  If not specified, no stats are reported.")
+	dumpheaders      = flag.Bool("dumpheaders", false, "dump the headers of outgoing requests and responses to stdout")
+	cpuprofile       = flag.String("cpuprofile", "", "write cpu profile to given file")
+	install          = flag.Bool("install", false, "install prerequisites into environment and then terminate")
 
 	// flagsParsed is unused, this is just a trick to allow us to parse
 	// command-line flags before initializing the other variables
 	flagsParsed = parseFlags()
+
+	masqueradeCACertPool = poolForMasqueradeCACert()
 
 	TOMORROW             = time.Now().AddDate(0, 0, 1)
 	ONE_MONTH_FROM_TODAY = time.Now().AddDate(0, 1, 0)
@@ -133,6 +136,18 @@ func parseFlags() bool {
 		os.Exit(1)
 	}
 	return true
+}
+
+func poolForMasqueradeCACert() *x509.CertPool {
+	if *masqueradeCACert == "" {
+		return nil
+	}
+	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(*masqueradeCACert))
+	if err != nil {
+		log.Fatalf("Error loading upstream CA cert from PEM bytes: %s", err)
+		os.Exit(1)
+	}
+	return cert.PoolContainingCert()
 }
 
 func inConfigDir(filename string) string {
