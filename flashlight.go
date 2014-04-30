@@ -142,6 +142,7 @@ func poolForMasqueradeCACert() *x509.CertPool {
 	if *masqueradeCACert == "" {
 		return nil
 	}
+    log.Printf("Got masqueradeCACert: %s", *masqueradeCACert);
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(*masqueradeCACert))
 	if err != nil {
 		log.Fatalf("Error loading upstream CA cert from PEM bytes: %s", err)
