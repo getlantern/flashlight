@@ -334,7 +334,7 @@ func initCerts(host string) (err error) {
 
 	err = installCACertToTrustStoreIfNecessary()
 	if err != nil {
-		log.Printf("Unable to install CA Cert to trust store, man in the middling may not work: ", err)
+		log.Printf("Unable to install CA Cert to trust store, man in the middling may not work.  Suggest running flashlight as sudo with the -install flag: %s", err)
 	}
 	return nil
 }
