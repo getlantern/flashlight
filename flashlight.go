@@ -31,6 +31,8 @@ const (
 	CONNECT                  = "CONNECT"
 	X_LANTERN_REQUEST_INFO   = "X-Lantern-Request-Info"
 	X_LANTERN_PUBLIC_IP      = "X-LANTERN-PUBLIC-IP"
+	CLIENT_TIMEOUT           = 0 // don't timeout
+	SERVER_TIMEOUT           = 0 // don't timeout
 	SESSIONS_TO_CACHE_CLIENT = 10000
 	SESSIONS_TO_CACHE_SERVER = 100000
 
@@ -142,7 +144,7 @@ func poolForMasqueradeCACert() *x509.CertPool {
 	if *masqueradeCACert == "" {
 		return nil
 	}
-    log.Printf("Got masqueradeCACert: %s", *masqueradeCACert);
+	log.Printf("Got masqueradeCACert: %s", *masqueradeCACert)
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(*masqueradeCACert))
 	if err != nil {
 		log.Fatalf("Error loading upstream CA cert from PEM bytes: %s", err)
@@ -174,8 +176,8 @@ func main() {
 		defer stopCPUProfiling(*cpuprofile)
 	}
 
-	if err := initCerts(strings.Split(*addr, ":")[0]); err != nil {
-		log.Fatalf("Unable to initialize certs: %s", err)
+	if err := initCommonCerts(); err != nil {
+		log.Fatalf("Unable to initialize common certs: %s", err)
 	}
 
 	if *install {
@@ -194,6 +196,10 @@ func main() {
 		} else {
 			log.Println("Not reporting stats (no instanceId specified at command line)")
 		}
+		err := initServerCert(strings.Split(*addr, ":")[0])
+		if err != nil {
+			log.Fatalf("Unable to initialize server cert: %s", err)
+		}
 		runServer()
 	}
 	wg.Wait()
@@ -208,8 +214,8 @@ func runClient() {
 	server := &http.Server{
 		Addr:         *addr,
 		Handler:      mitmHandler,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  CLIENT_TIMEOUT,
+		WriteTimeout: CLIENT_TIMEOUT,
 	}
 
 	go func() {
@@ -243,8 +249,8 @@ func runServer() {
 	server := &http.Server{
 		Addr:         *addr,
 		Handler:      http.HandlerFunc(handleServer),
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  SERVER_TIMEOUT,
+		WriteTimeout: SERVER_TIMEOUT,
 	}
 
 	go func() {
@@ -296,12 +302,12 @@ func respondBadGateway(connIn net.Conn, msg string) {
 	connIn.Close()
 }
 
-// initCerts initializes a private key and certificates, used both for the
-// server HTTPS proxy and the client MITM proxy.  Both types of proxy have a CA
-// certificate.  The server proxy also gets a server certificate signed by that
-// CA.  When running as a client proxy, any newly generated CA certificate is
-// added to the current user's trust store (e.g. keychain) as a trusted root.
-func initCerts(host string) (err error) {
+// initCommonCerts initializes a private key and CA certificate, used both for
+// the server HTTPS proxy and the client MITM proxy.  The key and certificate
+// are generated if not already present. The CA  certificate is added to the
+// current user's trust store (e.g. keychain) as a trusted root if one with the
+// same common name is not already present.
+func initCommonCerts() (err error) {
 	if pk, err = keyman.LoadPKFromFile(PK_FILE); err != nil {
 		if os.IsNotExist(err) {
 			log.Printf("Creating new PK at: %s", PK_FILE)
@@ -331,26 +337,29 @@ func initCerts(host string) (err error) {
 		}
 	}
 
-	if isUpstream {
-		serverCert, err = keyman.LoadCertificateFromFile(SERVER_CERT_FILE)
-		if err != nil || caCert.X509().NotAfter.Before(ONE_MONTH_FROM_TODAY) {
-			if err == nil || os.IsNotExist(err) {
-				log.Printf("Creating new server cert at: %s", SERVER_CERT_FILE)
-				if serverCert, err = certificateFor(host, ONE_YEAR_FROM_TODAY, true, caCert); err != nil {
-					return
-				}
-				if err = serverCert.WriteToFile(SERVER_CERT_FILE); err != nil {
-					return
-				}
-			} else {
-				return fmt.Errorf("Unable to server cert, even though it exists: %s", err)
-			}
-		}
-	}
-
 	err = installCACertToTrustStoreIfNecessary()
 	if err != nil {
 		log.Printf("Unable to install CA Cert to trust store, man in the middling may not work.  Suggest running flashlight as sudo with the -install flag: %s", err)
+	}
+	return nil
+}
+
+// initServerCert initializes a certificate for use by a server proxy, signed by
+// the CA certificate.
+func initServerCert(host string) (err error) {
+	serverCert, err = keyman.LoadCertificateFromFile(SERVER_CERT_FILE)
+	if err != nil || caCert.X509().NotAfter.Before(ONE_MONTH_FROM_TODAY) {
+		if err == nil || os.IsNotExist(err) {
+			log.Printf("Creating new server cert at: %s", SERVER_CERT_FILE)
+			if serverCert, err = certificateFor(host, ONE_YEAR_FROM_TODAY, true, caCert); err != nil {
+				return
+			}
+			if err = serverCert.WriteToFile(SERVER_CERT_FILE); err != nil {
+				return
+			}
+		} else {
+			return fmt.Errorf("Unable to read server cert, even though it exists: %s", err)
+		}
 	}
 	return nil
 }
