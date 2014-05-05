@@ -17,7 +17,7 @@ type Protocol interface {
 
 // a ClientProtocol defines how connections are made to the upstream server
 type ClientProtocol interface {
-	protocol
+	Protocol
 
 	// dial is used on the client to dial out to the upstream server
 	Dial(addr string) (net.Conn, error)

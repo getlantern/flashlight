@@ -1,10 +1,7 @@
 package fastly
 
 import (
-	"crypto/tls"
-	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -14,8 +11,8 @@ import (
 type FastlyServerProtocol struct {
 }
 
-func NewServerProtocol() *fastlyServerProtocol {
-	return &fastlyServerProtocol{}
+func NewServerProtocol() *FastlyServerProtocol {
+	return &FastlyServerProtocol{}
 }
 
 func (cf *FastlyServerProtocol) RewriteRequest(req *http.Request) {

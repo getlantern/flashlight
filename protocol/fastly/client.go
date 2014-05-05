@@ -6,8 +6,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"net/url"
-	"strings"
 )
 
 // fastlyServerProtocol implements clientProtocol using Fastly (not yet working)
@@ -17,12 +15,12 @@ type FastlyClientProtocol struct {
 	upstreamAddr string
 }
 
-func NewClientProtocol(upstreamHost string, upstreamPort int, masqueradeAs string) *fastlyClientProtocol {
+func NewClientProtocol(upstreamHost string, upstreamPort int, masqueradeAs string) *FastlyClientProtocol {
 	fastlyHost := upstreamHost
 	if masqueradeAs != "" {
 		fastlyHost = masqueradeAs
 	}
-	return &fastlyClientProtocol{
+	return &FastlyClientProtocol{
 		upstreamHost: upstreamHost,
 		fastlyHost:   fastlyHost,
 		upstreamAddr: fmt.Sprintf("%s:%d", fastlyHost, upstreamPort),
