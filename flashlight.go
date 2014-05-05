@@ -23,6 +23,7 @@ import (
 	"code.google.com/p/go-uuid/uuid"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/getlantern/flashlight/protocol/cloudflare"
 	"github.com/getlantern/go-mitm/mitm"
 	"github.com/getlantern/keyman"
 )
@@ -75,8 +76,8 @@ var (
 
 	// Client and server protocols, right now hardcoded to use CloudFlare, could
 	// be made configurable to support other protocols like Fastly.
-	cp = newCloudFlareClientProtocol(*upstreamHost, *upstreamPort, *masqueradeAs)
-	sp = newCloudFlareServerProtocol()
+	clientProtocol = cloudflare.NewClientProtocol(*upstreamHost, *upstreamPort, *masqueradeAs, masqueradeCACertPool)
+	serverProtocol = cloudflare.NewServerProtocol()
 
 	// Proxy used on the client (MITM) side
 	clientProxy = &httputil.ReverseProxy{
@@ -84,13 +85,13 @@ var (
 			// Check for local addresses, which we don't rewrite
 			ip, err := net.ResolveIPAddr("ip4", strings.Split(req.Host, ":")[0])
 			if err == nil && !ip.IP.IsLoopback() {
-				cp.rewriteRequest(req)
+				clientProtocol.RewriteRequest(req)
 			}
 			dumpHeaders("Request", req.Header)
 		},
-		Transport: withRewrite(cp.rewriteResponse, &http.Transport{
+		Transport: withRewrite(clientProtocol.RewriteResponse, &http.Transport{
 			Dial: func(network, addr string) (net.Conn, error) {
-				return cp.dial(addr)
+				return clientProtocol.Dial(addr)
 			},
 			TLSClientConfig: &tls.Config{
 				// Use a TLS session cache to minimize TLS connection establishment
@@ -104,11 +105,11 @@ var (
 	// Proxy used on the server side
 	serverProxy = &httputil.ReverseProxy{
 		Director: func(req *http.Request) {
-			sp.rewriteRequest(req)
+			serverProtocol.RewriteRequest(req)
 			log.Printf("Handling request for: %s", req.URL.String())
 			dumpHeaders("Request", req.Header)
 		},
-		Transport: withRewrite(sp.rewriteResponse, &http.Transport{
+		Transport: withRewrite(serverProtocol.RewriteResponse, &http.Transport{
 			Dial: func(network, addr string) (net.Conn, error) {
 				conn, err := net.Dial(network, addr)
 				if err != nil {
