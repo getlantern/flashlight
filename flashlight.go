@@ -467,7 +467,7 @@ func startCPUProfiling(filename string) {
 		log.Fatal(err)
 	}
 	pprof.StartCPUProfile(f)
-	log.Printf("Process will save cpu profile to %s after terminating: %s")
+	log.Printf("Process will save cpu profile to %s after terminating", filename)
 }
 
 func stopCPUProfilingOnSigINT(filename string) {
