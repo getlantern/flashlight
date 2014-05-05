@@ -246,16 +246,27 @@ func buildMITMHandler() http.Handler {
 func runServer() {
 	wg.Add(1)
 
+	cert, err := tls.LoadX509KeyPair(SERVER_CERT_FILE, PK_FILE)
+	if err != nil {
+		log.Fatalf("Unable to load server certificate: %s", err)
+	}
+
 	server := &http.Server{
 		Addr:         *addr,
 		Handler:      http.HandlerFunc(handleServer),
 		ReadTimeout:  SERVER_TIMEOUT,
 		WriteTimeout: SERVER_TIMEOUT,
+		TLSConfig: &tls.Config{
+			Certificates: []tls.Certificate{cert},
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+			},
+		},
 	}
 
 	go func() {
 		log.Printf("About to start server (https) proxy at %s", *addr)
-		if err := server.ListenAndServeTLS(SERVER_CERT_FILE, PK_FILE); err != nil {
+		if err := server.ListenAndServe(); err != nil {
 			// if err := server.ListenAndServe(); err != nil {
 			log.Fatalf("Unable to start server proxy: %s", err)
 		}
