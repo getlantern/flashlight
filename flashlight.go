@@ -128,6 +128,23 @@ var (
 	pk                 *keyman.PrivateKey
 	caCert, serverCert *keyman.Certificate
 
+	// Default TLS configuration for servers
+	DEFAULT_TLS_SERVER_CONFIG = &tls.Config{
+		CipherSuites: []uint16{
+			tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+			tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+			tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+			tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+			tls.TLS_RSA_WITH_RC4_128_SHA,
+			tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+			tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+			tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+		},
+		PreferServerCipherSuites: true,
+	}
+
 	wg sync.WaitGroup
 )
 
@@ -232,8 +249,9 @@ func runClient() {
 // CloudFlare.
 func buildMITMHandler() http.Handler {
 	cryptoConf := &mitm.CryptoConfig{
-		PKFile:   PK_FILE,
-		CertFile: CA_CERT_FILE,
+		PKFile:          PK_FILE,
+		CertFile:        CA_CERT_FILE,
+		ServerTLSConfig: DEFAULT_TLS_SERVER_CONFIG,
 	}
 	mitmHandler, err := mitm.Wrap(clientProxy, cryptoConf)
 	if err != nil {
@@ -251,24 +269,7 @@ func runServer() {
 		Handler:      http.HandlerFunc(handleServer),
 		ReadTimeout:  SERVER_TIMEOUT,
 		WriteTimeout: SERVER_TIMEOUT,
-		TLSConfig: &tls.Config{
-			CipherSuites: []uint16{
-				// Supporting forward secrecy
-				tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-				tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
-				tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
-				tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
-
-				// Not supporting forward secrecy
-				tls.TLS_RSA_WITH_RC4_128_SHA,
-				tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
-				tls.TLS_RSA_WITH_AES_128_CBC_SHA,
-				tls.TLS_RSA_WITH_AES_256_CBC_SHA,
-				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-			},
-			PreferServerCipherSuites: true,
-		},
+		TLSConfig:    DEFAULT_TLS_SERVER_CONFIG,
 	}
 
 	go func() {
