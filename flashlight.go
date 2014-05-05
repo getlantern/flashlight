@@ -139,7 +139,7 @@ var (
 	// Default TLS configuration for servers
 	DEFAULT_TLS_SERVER_CONFIG = &tls.Config{
 		// The ECDHE cipher suites are preferred for performance and forward
-		// secrecy.
+		// secrecy.  See https://community.qualys.com/blogs/securitylabs/2013/06/25/ssl-labs-deploying-forward-secrecy.
 		PreferServerCipherSuites: true,
 		CipherSuites: []uint16{
 			tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
