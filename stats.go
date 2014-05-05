@@ -43,7 +43,7 @@ func collectStats() {
 	}
 }
 
-// reportStats periodically checkpoints the total bytes given and report them
+// reportStats periodically checkpoints the total bytes given and reports them
 // to statshub via HTTP post
 func reportStats(instanceId string) {
 	for {

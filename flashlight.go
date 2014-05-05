@@ -28,13 +28,13 @@ import (
 )
 
 const (
-	CONNECT                  = "CONNECT"
-	X_LANTERN_REQUEST_INFO   = "X-Lantern-Request-Info"
-	X_LANTERN_PUBLIC_IP      = "X-LANTERN-PUBLIC-IP"
-	CLIENT_TIMEOUT           = 0 // don't timeout
-	SERVER_TIMEOUT           = 0 // don't timeout
-	SESSIONS_TO_CACHE_CLIENT = 10000
-	SESSIONS_TO_CACHE_SERVER = 100000
+	CONNECT                      = "CONNECT"                // HTTP CONNECT method
+	X_LANTERN_REQUEST_INFO       = "X-Lantern-Request-Info" // Tells proxy to return info about the client
+	X_LANTERN_PUBLIC_IP          = "X-LANTERN-PUBLIC-IP"    // Client's public IP as seen by the proxy
+	CLIENT_TIMEOUT               = 0                        // don't timeout
+	SERVER_TIMEOUT               = 0                        // don't timeout
+	TLS_SESSIONS_TO_CACHE_CLIENT = 10000
+	TLS_SESSIONS_TO_CACHE_SERVER = 100000
 
 	FLASHLIGHT_CN_PREFIX = "flashlight-"
 
@@ -42,6 +42,7 @@ const (
 )
 
 var (
+	// Command-line Flags
 	help             = flag.Bool("help", false, "Get usage help")
 	addr             = flag.String("addr", "", "ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https")
 	upstreamHost     = flag.String("server", "", "hostname at which to connect to a server flashlight (always using https).  When specified, this flashlight will run as a client proxy, otherwise it runs as a server")
@@ -58,21 +59,26 @@ var (
 	// command-line flags before initializing the other variables
 	flagsParsed = parseFlags()
 
+	// Certificate pool for validating the domain against which we're masquerading
 	masqueradeCACertPool = poolForMasqueradeCACert()
 
+	// Points in time, mostly used for generating certificates
 	TOMORROW             = time.Now().AddDate(0, 0, 1)
 	ONE_MONTH_FROM_TODAY = time.Now().AddDate(0, 1, 0)
 	ONE_YEAR_FROM_TODAY  = time.Now().AddDate(1, 0, 0)
 	TEN_YEARS_FROM_TODAY = time.Now().AddDate(10, 0, 0)
 
+	// Miscellaneous configuration
 	shouldReportStats = *instanceId != ""
 	isDownstream      = *upstreamHost != ""
 	isUpstream        = !isDownstream
 
-	// CloudFlare based protocol
+	// Client and server protocols, right now hardcoded to use CloudFlare, could
+	// be made configurable to support other protocols like Fastly.
 	cp = newCloudFlareClientProtocol(*upstreamHost, *upstreamPort, *masqueradeAs)
 	sp = newCloudFlareServerProtocol()
 
+	// Proxy used on the client (MITM) side
 	clientProxy = &httputil.ReverseProxy{
 		Director: func(req *http.Request) {
 			// Check for local addresses, which we don't rewrite
@@ -89,12 +95,13 @@ var (
 			TLSClientConfig: &tls.Config{
 				// Use a TLS session cache to minimize TLS connection establishment
 				// Requires Go 1.3+
-				ClientSessionCache: tls.NewLRUClientSessionCache(SESSIONS_TO_CACHE_CLIENT),
+				ClientSessionCache: tls.NewLRUClientSessionCache(TLS_SESSIONS_TO_CACHE_CLIENT),
 				ServerName:         *upstreamHost,
 			},
 		}),
 	}
 
+	// Proxy used on the server side
 	serverProxy = &httputil.ReverseProxy{
 		Director: func(req *http.Request) {
 			sp.rewriteRequest(req)
@@ -116,7 +123,7 @@ var (
 			TLSClientConfig: &tls.Config{
 				// Use a TLS session cache to minimize TLS connection establishment
 				// Requires Go 1.3+
-				ClientSessionCache: tls.NewLRUClientSessionCache(SESSIONS_TO_CACHE_SERVER),
+				ClientSessionCache: tls.NewLRUClientSessionCache(TLS_SESSIONS_TO_CACHE_SERVER),
 			},
 		}),
 	}
@@ -130,6 +137,9 @@ var (
 
 	// Default TLS configuration for servers
 	DEFAULT_TLS_SERVER_CONFIG = &tls.Config{
+		// The ECDHE cipher suites are preferred for performance and forward
+		// secrecy.
+		PreferServerCipherSuites: true,
 		CipherSuites: []uint16{
 			tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
 			tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
@@ -142,12 +152,13 @@ var (
 			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
 		},
-		PreferServerCipherSuites: true,
 	}
 
 	wg sync.WaitGroup
 )
 
+// parseFlags parses the command-line flags.  If there's a problem with the
+// provided flags, it prints usage to stdout and exits with status 1.
 func parseFlags() bool {
 	flag.Parse()
 	if (*help || *addr == "") && !*install {
@@ -157,6 +168,8 @@ func parseFlags() bool {
 	return true
 }
 
+// poolForMasqueradeCACert builds a certificate pool that validates requests to
+// the upstream server using the certificate specified at the command line.
 func poolForMasqueradeCACert() *x509.CertPool {
 	if *masqueradeCACert == "" {
 		return nil
@@ -170,6 +183,8 @@ func poolForMasqueradeCACert() *x509.CertPool {
 	return cert.PoolContainingCert()
 }
 
+// inConfigDir returns the path to the given filename inside of the configDir
+// specified at the command line.
 func inConfigDir(filename string) string {
 	if *configDir == "" {
 		return filename
@@ -383,6 +398,9 @@ func initServerCert(host string) (err error) {
 	return nil
 }
 
+// installCACertToTrustStoreIfNecessary installs the CA certificate to the
+// system trust store if it hasn't already been installed.  This usually
+// requires flashlight to be running with root/Administrator privileges.
 func installCACertToTrustStoreIfNecessary() (err error) {
 	needInstalledCert := (isDownstream || *install)
 	haveInstalledCert := false
@@ -475,6 +493,9 @@ func withRewrite(rw func(*http.Response), rt http.RoundTripper) http.RoundTrippe
 	}
 }
 
+// wrappedRoundTripper is an http.RoundTripper that wraps another
+// http.RoundTripper to rewrite responses usnig the rewrite function prior to
+// returning them.
 type wrappedRoundTripper struct {
 	rewrite func(*http.Response)
 	orig    http.RoundTripper
@@ -489,6 +510,8 @@ func (rt *wrappedRoundTripper) RoundTrip(req *http.Request) (resp *http.Response
 	return
 }
 
+// logHeaders logs the given headers (request or response) if the dumpheaders
+// command line flag is true.
 func dumpHeaders(category string, headers http.Header) {
 	if *dumpheaders {
 		log.Printf("%s Headers\n%s\n%s\n%s\n\n", category, HR, spew.Sdump(headers), HR)

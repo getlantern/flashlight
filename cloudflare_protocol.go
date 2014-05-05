@@ -16,9 +16,11 @@ const (
 	X_LANTERN_URL    = X_LANTERN_PREFIX + "URL"
 )
 
+// cloudFlareServerProtocol implements serverProtocol using CloudFlare
 type cloudFlareServerProtocol struct {
 }
 
+// cloudFlareClientProtocol implements clientProtocol using CloudFlare
 type cloudFlareClientProtocol struct {
 	upstreamHost   string
 	cloudFlareHost string
