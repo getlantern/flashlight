@@ -42,7 +42,6 @@ func poolForCert(certString string) (*x509.CertPool, error) {
 	if certString == "" {
 		return nil, nil
 	}
-	log.Printf("Using masqueradeCACert: %s", certString)
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(certString))
 	if err != nil {
 		return nil, fmt.Errorf("Error loading masquerade CA cert from PEM bytes: %s", err)

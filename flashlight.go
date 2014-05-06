@@ -82,7 +82,6 @@ func main() {
 			protocol, err := cloudflare.NewClientProtocol(*upstreamHost, *upstreamPort, *masqueradeAs, *masqueradeCACert)
 			if err != nil {
 				log.Fatalf("Error initializing CloudFlare client protocol: %s", err)
-				os.Exit(1)
 			}
 			client := &proxy.Client{
 				ProxyConfig:  proxyConfig,
