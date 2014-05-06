@@ -19,16 +19,6 @@ import (
 	"github.com/getlantern/keyman"
 )
 
-// Proxy is the common interface for client and server proxies.
-type Proxy interface {
-	// Install installs the proxy (e.g. adding certificates to trust store)
-	Install() error
-
-	// Run() runs the proxy and blocks until it is finished
-	// Run() implicitly calls Install()
-	Run() error
-}
-
 // ProxyConfig encapsulates common proxy configuration
 type ProxyConfig struct {
 	Addr              string        // listen address in form of host:port
@@ -90,6 +80,20 @@ var (
 		},
 	}
 )
+
+// Install installs the proxy configuration (e.g. adding certificates to trust store)
+func (config *ProxyConfig) Install() error {
+	err := config.CertContext.initCommonCerts()
+	if err != nil {
+		return err
+	}
+	err = config.CertContext.installCACertToTrustStoreIfNecessary()
+	if err != nil {
+		log.Printf("Unable to install CA Cert to trust store, man in the middling may not work.  Suggest running flashlight as sudo with the -install flag: %s", err)
+	}
+	// Ignore above error
+	return nil
+}
 
 // initCommonCerts initializes a private key and CA certificate, used both for
 // the server HTTPS proxy and the client MITM proxy.  The key and certificate

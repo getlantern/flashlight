@@ -24,17 +24,18 @@ type Server struct {
 }
 
 func (server *Server) Install() error {
-	err := server.CertContext.initCommonCerts()
-	if err != nil {
-		return err
-	}
-	return server.CertContext.initServerCert(strings.Split(server.Addr, ":")[0])
+	return server.CertContext.initCommonCerts()
 }
 
 func (server *Server) Run() error {
-	err := server.Install()
+	err := server.CertContext.initCommonCerts()
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to initialize certs: %s", err)
+	}
+
+	err = server.CertContext.initServerCert(strings.Split(server.Addr, ":")[0])
+	if err != nil {
+		return fmt.Errorf("Unable to init server cert: %s", err)
 	}
 
 	server.buildReverseProxy()

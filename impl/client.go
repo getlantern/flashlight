@@ -20,23 +20,10 @@ type Client struct {
 	mitmHandler  http.Handler
 }
 
-func (client *Client) Install() error {
-	err := client.CertContext.initCommonCerts()
-	if err != nil {
-		return err
-	}
-	err = client.CertContext.installCACertToTrustStoreIfNecessary()
-	if err != nil {
-		log.Printf("Unable to install CA Cert to trust store, man in the middling may not work.  Suggest running flashlight as sudo with the -install flag: %s", err)
-	}
-	// Ignore above error
-	return nil
-}
-
 func (client *Client) Run() error {
 	err := client.Install()
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to install client: %s", err)
 	}
 
 	client.buildReverseProxy()

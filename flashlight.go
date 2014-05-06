@@ -33,6 +33,7 @@ var (
 	flagsParsed = parseFlags()
 
 	isDownstream = *upstreamHost != ""
+	isUpstream   = !isDownstream
 )
 
 // parseFlags parses the command-line flags.  If there's a problem with the
@@ -66,42 +67,45 @@ func main() {
 		},
 	}
 
-	var proxy impl.Proxy
-	if isDownstream {
-		// Protocol is right now hardcoded to use CloudFlare, could be made
-		// configurable to support other protocols like Fastly.
-		protocol, err := cloudflare.NewClientProtocol(*upstreamHost, *upstreamPort, *masqueradeAs, *masqueradeCACert)
-		if err != nil {
-			log.Fatalf("Error initializing CloudFlare client protocol: %s", err)
-			os.Exit(1)
-		}
-		proxy = &impl.Client{
-			ProxyConfig:  proxyConfig,
-			UpstreamHost: *upstreamHost,
-			Protocol:     protocol,
-		}
-	} else {
-		protocol := cloudflare.NewServerProtocol()
-		proxy = &impl.Server{
-			ProxyConfig: proxyConfig,
-			Protocol:    protocol,
-			InstanceId:  *instanceId,
-		}
-		useAllCores()
-	}
-
 	if *install {
-		log.Println("Installing proxy")
-		err := proxy.Install()
+		log.Println("Installing proxy config")
+		err := proxyConfig.Install()
 		if err != nil {
-			log.Fatalf("Unable to install proxy: %s", err)
+			log.Fatalf("Unable to install proxy config: %s", err)
 		}
 	} else {
 		log.Println("Running proxy")
-		err := proxy.Run()
-		if err != nil {
-			log.Fatalf("Unable to run proxy: %s", err)
+		if isDownstream {
+			// Protocol is right now hardcoded to use CloudFlare, could be made
+			// configurable to support other protocols like Fastly.
+			protocol, err := cloudflare.NewClientProtocol(*upstreamHost, *upstreamPort, *masqueradeAs, *masqueradeCACert)
+			if err != nil {
+				log.Fatalf("Error initializing CloudFlare client protocol: %s", err)
+				os.Exit(1)
+			}
+			client := &impl.Client{
+				ProxyConfig:  proxyConfig,
+				UpstreamHost: *upstreamHost,
+				Protocol:     protocol,
+			}
+			err = client.Run()
+			if err != nil {
+				log.Fatalf("Unable to run client proxy: %s", err)
+			}
+		} else {
+			protocol := cloudflare.NewServerProtocol()
+			server := &impl.Server{
+				ProxyConfig: proxyConfig,
+				Protocol:    protocol,
+				InstanceId:  *instanceId,
+			}
+			useAllCores()
+			err := server.Run()
+			if err != nil {
+				log.Fatalf("Unable to run server proxy: %s", err)
+			}
 		}
+
 	}
 }
 
