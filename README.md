@@ -84,3 +84,19 @@ On the server, you should see something like this for every request that's recei
 ```bash
 2014/04/18 11:30:59 Handling request for: https://www.google.com/humans.txt
 ```
+
+### Building
+
+Flashlight requires [Go 1.3](https://code.google.com/p/go/wiki/Downloads).
+
+It is convenient to build flashlight for multiple platforms using something like
+[goxc](https://github.com/laher/goxc).
+
+With goxc, the binaries used for Lantern can be built like this:
+
+```
+goxc -bc="linux,386 linux,amd64 windows,386 darwin" compile
+```
+
+The binaries end up at
+`$GOPATH/bin/flashlight-xc/snapshot/<platform>/flashlight`.
