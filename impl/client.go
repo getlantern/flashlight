@@ -21,10 +21,12 @@ type Client struct {
 }
 
 func (client *Client) Run() error {
-	err := client.Install()
+	err := client.InitCommonCerts()
 	if err != nil {
-		return fmt.Errorf("Unable to install client: %s", err)
+		return fmt.Errorf("Unable to init common certs: %s", err)
 	}
+
+	client.InstallCACertToTrustStoreIfNecessary()
 
 	client.buildReverseProxy()
 
@@ -95,10 +97,17 @@ func (client *Client) buildMITMHandler() (err error) {
 	return nil
 }
 
-// installCACertToTrustStoreIfNecessary installs the CA certificate to the
+func (config *ProxyConfig) InstallCACertToTrustStoreIfNecessary() {
+	err := config.CertContext.InstallCACertToTrustStoreIfNecessary()
+	if err != nil {
+		log.Printf("Unable to install CA Cert to trust store, man in the middling may not work.  Suggest running flashlight as sudo with the -install flag: %s", err)
+	}
+}
+
+// InstallCACertToTrustStoreIfNecessary installs the CA certificate to the
 // system trust store if it hasn't already been installed.  This usually
 // requires flashlight to be running with root/Administrator privileges.
-func (ctx *CertContext) installCACertToTrustStoreIfNecessary() (err error) {
+func (ctx *CertContext) InstallCACertToTrustStoreIfNecessary() error {
 	haveInstalledCert, err := ctx.caCert.IsInstalled()
 	if err != nil {
 		return fmt.Errorf("Unable to check if CA certificate is installed: %s", err)
@@ -108,10 +117,10 @@ func (ctx *CertContext) installCACertToTrustStoreIfNecessary() (err error) {
 		// TODO: add the cert as trusted root anytime that it's not already
 		// in the system keystore
 		if err = ctx.caCert.AddAsTrustedRoot(); err != nil {
-			return
+			return err
 		}
 	} else {
 		log.Println("CA cert already found in trust store, not adding")
 	}
-	return
+	return nil
 }

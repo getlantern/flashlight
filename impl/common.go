@@ -81,26 +81,16 @@ var (
 	}
 )
 
-// Install installs the proxy configuration (e.g. adding certificates to trust store)
-func (config *ProxyConfig) Install() error {
-	err := config.CertContext.initCommonCerts()
-	if err != nil {
-		return err
-	}
-	err = config.CertContext.installCACertToTrustStoreIfNecessary()
-	if err != nil {
-		log.Printf("Unable to install CA Cert to trust store, man in the middling may not work.  Suggest running flashlight as sudo with the -install flag: %s", err)
-	}
-	// Ignore above error
-	return nil
+func (config *ProxyConfig) InitCommonCerts() (err error) {
+	return config.CertContext.InitCommonCerts()
 }
 
-// initCommonCerts initializes a private key and CA certificate, used both for
+// InitCommonCerts initializes a private key and CA certificate, used both for
 // the server HTTPS proxy and the client MITM proxy.  The key and certificate
 // are generated if not already present. The CA  certificate is added to the
 // current user's trust store (e.g. keychain) as a trusted root if one with the
 // same common name is not already present.
-func (ctx *CertContext) initCommonCerts() (err error) {
+func (ctx *CertContext) InitCommonCerts() (err error) {
 	if ctx.pk, err = keyman.LoadPKFromFile(ctx.PKFile); err != nil {
 		if os.IsNotExist(err) {
 			log.Printf("Creating new PK at: %s", ctx.PKFile)
@@ -108,7 +98,7 @@ func (ctx *CertContext) initCommonCerts() (err error) {
 				return
 			}
 			if err = ctx.pk.WriteToFile(ctx.PKFile); err != nil {
-				return
+				return fmt.Errorf("Unable to save private key: %s", err)
 			}
 		} else {
 			return fmt.Errorf("Unable to read private key, even though it exists: %s", err)
@@ -123,7 +113,7 @@ func (ctx *CertContext) initCommonCerts() (err error) {
 				return
 			}
 			if err = ctx.caCert.WriteToFile(ctx.CACertFile); err != nil {
-				return
+				return fmt.Errorf("Unable to save CA certificate: %s", err)
 			}
 		} else {
 			return fmt.Errorf("Unable to read CA cert, even though it exists: %s", err)

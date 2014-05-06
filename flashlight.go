@@ -69,10 +69,11 @@ func main() {
 
 	if *install {
 		log.Println("Installing proxy config")
-		err := proxyConfig.Install()
+		err := proxyConfig.InitCommonCerts()
 		if err != nil {
-			log.Fatalf("Unable to install proxy config: %s", err)
+			log.Fatalf("Unable to init common certs: %s", err)
 		}
+		proxyConfig.InstallCACertToTrustStoreIfNecessary()
 	} else {
 		log.Println("Running proxy")
 		if isDownstream {

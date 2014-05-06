@@ -23,14 +23,10 @@ type Server struct {
 	checkpointResultCh chan int
 }
 
-func (server *Server) Install() error {
-	return server.CertContext.initCommonCerts()
-}
-
 func (server *Server) Run() error {
-	err := server.CertContext.initCommonCerts()
+	err := server.CertContext.InitCommonCerts()
 	if err != nil {
-		return fmt.Errorf("Unable to initialize certs: %s", err)
+		return fmt.Errorf("Unable to init common certs: %s", err)
 	}
 
 	err = server.CertContext.initServerCert(strings.Split(server.Addr, ":")[0])
