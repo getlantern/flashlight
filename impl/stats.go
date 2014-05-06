@@ -1,4 +1,4 @@
-package main
+package impl
 
 import (
 	"bytes"
@@ -12,32 +12,38 @@ import (
 
 const (
 	STATSHUB_URL_TEMPLATE = "https://pure-journey-3547.herokuapp.com/stats/%s"
+	REPORT_STATS_INTERVAL = 20 * time.Second
 )
 
-var (
-	bytesGivenChan        = make(chan int, 1000)
-	REPORT_STATS_INTERVAL = 20 * time.Second
-	checkpointCh          = make(chan bool)
-	checkpointResultCh    = make(chan int)
-)
+func (server *Server) startReportingStatsIfNecessary() {
+	if server.InstanceId != "" {
+		log.Printf("Reporting stats under InstanceId %s", server.InstanceId)
+		server.startReportingStats()
+	} else {
+		log.Println("Not reporting stats (no InstanceId specified)")
+	}
+}
 
 // startReportingStats reports statistics for this proxy to statshub under the
-// given instanceId
-func startReportingStats(instanceId string) {
-	go collectStats()
-	go reportStats(instanceId)
+// server's InstanceId
+func (server *Server) startReportingStats() {
+	server.bytesGivenChan = make(chan int, 1000)
+	server.checkpointCh = make(chan bool)
+	server.checkpointResultCh = make(chan int)
+	go server.collectStats()
+	go server.reportStats()
 }
 
 // collectStats collects bytesGiven from the countingConn
-func collectStats() {
+func (server *Server) collectStats() {
 	bytesSum := 0
 
 	for {
 		select {
-		case bytesGiven := <-bytesGivenChan:
+		case bytesGiven := <-server.bytesGivenChan:
 			bytesSum += bytesGiven
-		case <-checkpointCh:
-			checkpointResultCh <- bytesSum
+		case <-server.checkpointCh:
+			server.checkpointResultCh <- bytesSum
 			bytesSum = 0
 		}
 	}
@@ -45,14 +51,14 @@ func collectStats() {
 
 // reportStats periodically checkpoints the total bytes given and reports them
 // to statshub via HTTP post
-func reportStats(instanceId string) {
+func (server *Server) reportStats() {
 	for {
 		nextInterval := time.Now().Truncate(REPORT_STATS_INTERVAL).Add(REPORT_STATS_INTERVAL)
 		waitTime := nextInterval.Sub(time.Now())
 		time.Sleep(waitTime)
-		checkpointCh <- true
-		bytesSum := <-checkpointResultCh
-		err := postStats(instanceId, bytesSum)
+		server.checkpointCh <- true
+		bytesSum := <-server.checkpointResultCh
+		err := server.postStats(bytesSum)
 		if err != nil {
 			log.Printf("Error on posting stats: %s", err)
 		} else {
@@ -61,7 +67,7 @@ func reportStats(instanceId string) {
 	}
 }
 
-func postStats(instanceId string, bytesSum int) error {
+func (server *Server) postStats(bytesSum int) error {
 	report := map[string]interface{}{
 		"dims": map[string]string{},
 		"increments": map[string]int{
@@ -74,7 +80,7 @@ func postStats(instanceId string, bytesSum int) error {
 		return fmt.Errorf("Unable to marshal json for stats: %s", err)
 	}
 
-	url := fmt.Sprintf(STATSHUB_URL_TEMPLATE, instanceId)
+	url := fmt.Sprintf(STATSHUB_URL_TEMPLATE, server.InstanceId)
 	resp, err := http.Post(url, "application/json", bytes.NewReader(jsonBytes))
 	if err != nil {
 		return fmt.Errorf("Unable to post stats to statshub: %s", err)
@@ -88,18 +94,19 @@ func postStats(instanceId string, bytesSum int) error {
 
 // countingConn is a wrapper for net.Conn that counts bytes
 type countingConn struct {
-	orig net.Conn
+	orig   net.Conn
+	server *Server
 }
 
 func (c *countingConn) Read(b []byte) (n int, err error) {
 	n, err = c.orig.Read(b)
-	bytesGivenChan <- n
+	c.server.bytesGivenChan <- n
 	return
 }
 
 func (c *countingConn) Write(b []byte) (n int, err error) {
 	n, err = c.orig.Write(b)
-	bytesGivenChan <- n
+	c.server.bytesGivenChan <- n
 	return
 }
 
