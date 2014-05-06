@@ -10,8 +10,8 @@ import (
 	"runtime"
 	"runtime/pprof"
 
-	"github.com/getlantern/flashlight/impl"
 	"github.com/getlantern/flashlight/protocol/cloudflare"
+	"github.com/getlantern/flashlight/proxy"
 )
 
 var (
@@ -55,12 +55,12 @@ func main() {
 	}
 
 	// Set up the common ProxyConfig for clients and servers
-	proxyConfig := impl.ProxyConfig{
+	proxyConfig := proxy.ProxyConfig{
 		Addr:              *addr,
 		ShouldDumpHeaders: *dumpheaders,
 		ReadTimeout:       0, // don't timeout
 		WriteTimeout:      0,
-		CertContext: &impl.CertContext{
+		CertContext: &proxy.CertContext{
 			PKFile:         inConfigDir("proxypk.pem"),
 			CACertFile:     inConfigDir("cacert.pem"),
 			ServerCertFile: inConfigDir("servercert.pem"),
@@ -84,7 +84,7 @@ func main() {
 				log.Fatalf("Error initializing CloudFlare client protocol: %s", err)
 				os.Exit(1)
 			}
-			client := &impl.Client{
+			client := &proxy.Client{
 				ProxyConfig:  proxyConfig,
 				UpstreamHost: *upstreamHost,
 				Protocol:     protocol,
@@ -95,7 +95,7 @@ func main() {
 			}
 		} else {
 			protocol := cloudflare.NewServerProtocol()
-			server := &impl.Server{
+			server := &proxy.Server{
 				ProxyConfig: proxyConfig,
 				Protocol:    protocol,
 				InstanceId:  *instanceId,

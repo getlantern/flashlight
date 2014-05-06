@@ -1,4 +1,4 @@
-package impl
+package proxy
 
 import (
 	"bytes"

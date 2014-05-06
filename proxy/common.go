@@ -1,5 +1,5 @@
-// package impl provides the implementations of the client and server proxies
-package impl
+// package proxy provides the implementations of the client and server proxies
+package proxy
 
 import (
 	"crypto/tls"
