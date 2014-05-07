@@ -37,9 +37,9 @@ const (
 )
 
 // TestCloudFlare tests to make sure that a client and server can communicate
-// with each other to proxy traffic for an HTTP client other using the
-// CloudFlare protocol.  This does not test actually running through CloudFlare
-// and just uses a local HTTP server to serve the test content.
+// with each other to proxy traffic for an HTTP client using the CloudFlare
+// protocol.  This does not test actually running through CloudFlare and just
+// uses a local HTTP server to serve the test content.
 func TestCloudFlare(t *testing.T) {
 	// Set up a mock HTTP server
 	mockServer := &MockServer{}
