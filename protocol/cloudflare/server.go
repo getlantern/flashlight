@@ -37,10 +37,10 @@ func (cf *CloudFlareServerProtocol) RewriteRequest(req *http.Request) {
 	}
 
 	// Strip X-Forwarded-Proto header
-	req.Header.Del("X-Forwarded-Proto")
+	req.Header.Del(X_FORWARDED_PROTO)
 
 	// Strip the X-Forwarded-For header to avoid leaking the client's IP address
-	req.Header.Del("X-Forwarded-For")
+	req.Header.Del(X_FORWARDED_FOR)
 }
 
 func (cf *CloudFlareServerProtocol) RewriteResponse(resp *http.Response) {

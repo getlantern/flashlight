@@ -11,6 +11,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -31,7 +32,8 @@ const (
 	HTTPS_ADDR    = HOST + ":19875"
 	MASQUERADE_AS = "localhost"
 
-	EXPECTED_BODY = "This is some stuff that goes in the body\n"
+	EXPECTED_BODY    = "This is some stuff that goes in the body\n"
+	FORWARDED_FOR_IP = "192.168.1.1"
 )
 
 // TestCloudFlare tests to make sure that a client and server can communicate
@@ -108,6 +110,10 @@ func TestCloudFlare(t *testing.T) {
 			WriteTimeout: 0,
 			CertContext:  certContext,
 		},
+		TLSClientConfig: &tls.Config{
+			// Trust the mock server's cert
+			RootCAs: ms.certContext.caCert.PoolContainingCert(),
+		},
 	}
 	go func() {
 		err := server.Run()
@@ -118,12 +124,16 @@ func TestCloudFlare(t *testing.T) {
 	waitForServer(SERVER_ADDR, 2*time.Second, t)
 
 	certPool := certContext.caCert.PoolContainingCert()
-	testRequest("Plain Text Request", t, false, certPool, 200, nil)
-	// testRequest("HTTPS Request", t, true, certPool, 200, nil)
-	// testRequest("HTTPS Request without MITM Cert", t, true, nil, 200, fmt.Errorf("Get https://"+HTTPS_ADDR+": x509: certificate signed by unknown authority"))
+	testRequest("Plain Text Request", t, ms.requests, false, certPool, 200, nil)
+	testRequest("HTTPS Request", t, ms.requests, true, certPool, 200, nil)
+	testRequest("HTTPS Request without MITM Cert", t, ms.requests, true, nil, 200, fmt.Errorf("Get https://"+HTTPS_ADDR+": x509: certificate signed by unknown authority"))
 }
 
-func testRequest(testCase string, t *testing.T, https bool, certPool *x509.CertPool, expectedStatus int, expectedErr error) {
+// testRequest tests an individual request, either HTTP or HTTPS, making sure
+// that the response status and body match the expected values.  If the request
+// was successful, it also tests to make sure that the outbound request didn't
+// leak any Lantern or CloudFlare headers.
+func testRequest(testCase string, t *testing.T, requests chan *http.Request, https bool, certPool *x509.CertPool, expectedStatus int, expectedErr error) {
 	httpClient := &http.Client{Transport: &http.Transport{
 		Proxy: func(req *http.Request) (*url.URL, error) {
 			return url.Parse("http://" + CLIENT_ADDR)
@@ -159,6 +169,21 @@ func testRequest(testCase string, t *testing.T, https bool, certPool *x509.CertP
 				t.Errorf("%s: Unable to read response body: %s", testCase, err)
 			} else if string(body) != EXPECTED_BODY {
 				t.Errorf("%s: Body didn't contain expected text.\nExpected: %s\nGot     : '%s'", testCase, EXPECTED_BODY, string(body))
+			} else {
+				// Make sure none of the request headers contained CloudFlare or
+				// Lantern keys
+				req := <-requests
+				for key, values := range req.Header {
+					for _, value := range values {
+						if strings.Index(key, cloudflare.CF_PREFIX) >= 0 {
+							t.Errorf("%s: Outgoing request contained CloudFlare header %s: %s", testCase, key, value)
+						} else if strings.Index(key, cloudflare.X_LANTERN_PREFIX) >= 0 {
+							t.Errorf("%s: Outgoing request contained Lantern header %s: %s", testCase, key, value)
+						} else if strings.Index(key, "X-Forwarded-For") >= 0 && value == FORWARDED_FOR_IP {
+							t.Errorf("%s: Outgoing request contained X-Forwarded-For with original IP %s: %s", testCase, key, value)
+						}
+					}
+				}
 			}
 		}
 	}
@@ -167,6 +192,7 @@ func testRequest(testCase string, t *testing.T, https bool, certPool *x509.CertP
 // MockServer is an HTTP(S) server
 type MockServer struct {
 	certContext *CertContext
+	requests    chan *http.Request // publishes received requests
 }
 
 func (server *MockServer) init() error {
@@ -184,6 +210,8 @@ func (server *MockServer) init() error {
 	if err != nil {
 		fmt.Errorf("Unable to initialize mock server cert: %s", err)
 	}
+
+	server.requests = make(chan *http.Request, 100)
 	return nil
 }
 
@@ -223,6 +251,7 @@ func (server *MockServer) run() {
 
 func (server *MockServer) handle(resp http.ResponseWriter, req *http.Request) {
 	resp.Write([]byte(EXPECTED_BODY))
+	server.requests <- req
 }
 
 // MockCloudFlare pretends to be CloudFlare
@@ -262,6 +291,12 @@ func (cf *MockCloudFlare) run() error {
 				req.URL.Scheme = "https"
 				req.URL.Host = SERVER_ADDR
 				req.Host = SERVER_ADDR
+
+				// Set some headers like CloudFlare
+				req.Header.Set("Cf-A", "A")
+				req.Header.Set("Cf-B", "B")
+				req.Header.Set(cloudflare.X_FORWARDED_PROTO, "https")
+				req.Header.Set(cloudflare.X_FORWARDED_FOR, FORWARDED_FOR_IP)
 			},
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{

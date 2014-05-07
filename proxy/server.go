@@ -18,6 +18,7 @@ type Server struct {
 	ProxyConfig
 	Protocol           protocol.Protocol // host-spoofing protocol to use (e.g. CloudFlare)
 	InstanceId         string            // (optional) instanceid under which to report statistics
+	TLSClientConfig    *tls.Config       // (optional) configuration for TLS client used for outbound connections
 	bytesGivenChan     chan int
 	checkpointCh       chan bool
 	checkpointResultCh chan int
@@ -56,6 +57,17 @@ func (server *Server) Run() error {
 func (server *Server) buildReverseProxy() {
 	shouldReportStats := server.InstanceId != ""
 
+	var tlsClientConfig *tls.Config
+	if server.TLSClientConfig != nil {
+		// Make a copy of the supplied config
+		tlsClientConfig = &(*server.TLSClientConfig)
+	} else {
+		tlsClientConfig = &tls.Config{}
+	}
+	// Use a TLS session cache to minimize TLS connection establishment
+	// Requires Go 1.3+
+	tlsClientConfig.ClientSessionCache = tls.NewLRUClientSessionCache(TLS_SESSIONS_TO_CACHE_SERVER)
+
 	server.reverseProxy = &httputil.ReverseProxy{
 		Director: func(req *http.Request) {
 			server.Protocol.RewriteRequest(req)
@@ -76,11 +88,7 @@ func (server *Server) buildReverseProxy() {
 				}
 				return conn, err
 			},
-			TLSClientConfig: &tls.Config{
-				// Use a TLS session cache to minimize TLS connection establishment
-				// Requires Go 1.3+
-				ClientSessionCache: tls.NewLRUClientSessionCache(TLS_SESSIONS_TO_CACHE_SERVER),
-			},
+			TLSClientConfig: tlsClientConfig,
 		},
 	}
 
