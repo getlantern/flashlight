@@ -15,9 +15,10 @@ import (
 
 type Client struct {
 	ProxyConfig
-	UpstreamHost string
-	Protocol     protocol.ClientProtocol // host-spoofing protocol to use (e.g. CloudFlare)
-	mitmHandler  http.Handler
+	UpstreamHost        string
+	Protocol            protocol.ClientProtocol // host-spoofing protocol to use (e.g. CloudFlare)
+	ShouldProxyLoopback bool                    // if true, even requests to the loopback interface are sent to the server proxy
+	mitmHandler         http.Handler
 }
 
 func (client *Client) Run() error {
@@ -52,8 +53,7 @@ func (client *Client) buildReverseProxy() {
 	client.reverseProxy = &httputil.ReverseProxy{
 		Director: func(req *http.Request) {
 			// Check for local addresses, which we don't rewrite
-			ip, err := net.ResolveIPAddr("ip4", strings.Split(req.Host, ":")[0])
-			if err == nil && !ip.IP.IsLoopback() {
+			if client.ShouldProxyLoopback || isNotLoopback(req.Host) {
 				client.Protocol.RewriteRequest(req)
 			}
 			if client.ShouldDumpHeaders {
@@ -123,4 +123,10 @@ func (ctx *CertContext) InstallCACertToTrustStoreIfNecessary() error {
 		log.Println("CA cert already found in trust store, not adding")
 	}
 	return nil
+}
+
+func isNotLoopback(addr string) bool {
+	ip, err := net.ResolveIPAddr("ip4", strings.Split(addr, ":")[0])
+	return err == nil && !ip.IP.IsLoopback()
+
 }
