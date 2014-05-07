@@ -38,17 +38,18 @@ const (
 
 // TestCloudFlare tests to make sure that a client and server can communicate
 // with each other to proxy traffic for an HTTP client other using the
-// CloudFlare protocol.  This does not test actually running through CloudFlare.
+// CloudFlare protocol.  This does not test actually running through CloudFlare
+// and just uses a local HTTP server to serve the test content.
 func TestCloudFlare(t *testing.T) {
 	// Set up a mock HTTP server
-	ms := &MockServer{}
-	err := ms.init()
+	mockServer := &MockServer{}
+	err := mockServer.init()
 	if err != nil {
 		t.Fatalf("Unable to init mock HTTP(S) server: %s", err)
 	}
-	defer ms.deleteCerts()
+	defer mockServer.deleteCerts()
 
-	ms.run()
+	mockServer.run()
 	waitForServer(HTTP_ADDR, 2*time.Second, t)
 	waitForServer(HTTPS_ADDR, 2*time.Second, t)
 
@@ -68,7 +69,7 @@ func TestCloudFlare(t *testing.T) {
 	}()
 	waitForServer(CF_ADDR, 2*time.Second, t)
 
-	// Set up client and server
+	// Set up common certContext for proxies
 	certContext := &CertContext{
 		PKFile:         randomTempPath(),
 		CACertFile:     randomTempPath(),
@@ -78,6 +79,7 @@ func TestCloudFlare(t *testing.T) {
 	defer os.Remove(certContext.CACertFile)
 	defer os.Remove(certContext.ServerCertFile)
 
+	// Run client proxy
 	clientProtocol, err := cloudflare.NewClientProtocol(HOST, CF_PORT, MASQUERADE_AS, string(cf.certContext.caCert.PEMEncoded()))
 	if err != nil {
 		t.Fatalf("Error initializing client protocol: %s", err)
@@ -85,7 +87,7 @@ func TestCloudFlare(t *testing.T) {
 	client := &Client{
 		UpstreamHost:        "localhost",
 		Protocol:            clientProtocol,
-		ShouldProxyLoopback: true,
+		ShouldProxyLoopback: true, // this is only used when testing
 		ProxyConfig: ProxyConfig{
 			Addr:         CLIENT_ADDR,
 			ReadTimeout:  0, // don't timeout
@@ -101,6 +103,7 @@ func TestCloudFlare(t *testing.T) {
 	}()
 	waitForServer(CLIENT_ADDR, 2*time.Second, t)
 
+	// Run server proxy
 	serverProtocol := cloudflare.NewServerProtocol()
 	server := &Server{
 		Protocol: serverProtocol,
@@ -112,7 +115,7 @@ func TestCloudFlare(t *testing.T) {
 		},
 		TLSClientConfig: &tls.Config{
 			// Trust the mock server's cert
-			RootCAs: ms.certContext.caCert.PoolContainingCert(),
+			RootCAs: mockServer.certContext.caCert.PoolContainingCert(),
 		},
 	}
 	go func() {
@@ -123,10 +126,11 @@ func TestCloudFlare(t *testing.T) {
 	}()
 	waitForServer(SERVER_ADDR, 2*time.Second, t)
 
+	// Test various scenarios
 	certPool := certContext.caCert.PoolContainingCert()
-	testRequest("Plain Text Request", t, ms.requests, false, certPool, 200, nil)
-	testRequest("HTTPS Request", t, ms.requests, true, certPool, 200, nil)
-	testRequest("HTTPS Request without MITM Cert", t, ms.requests, true, nil, 200, fmt.Errorf("Get https://"+HTTPS_ADDR+": x509: certificate signed by unknown authority"))
+	testRequest("Plain Text Request", t, mockServer.requests, false, certPool, 200, nil)
+	testRequest("HTTPS Request", t, mockServer.requests, true, certPool, 200, nil)
+	testRequest("HTTPS Request without MITM Cert", t, mockServer.requests, true, nil, 200, fmt.Errorf("Get https://"+HTTPS_ADDR+": x509: certificate signed by unknown authority"))
 }
 
 // testRequest tests an individual request, either HTTP or HTTPS, making sure
@@ -144,26 +148,30 @@ func testRequest(testCase string, t *testing.T, requests chan *http.Request, htt
 			RootCAs: certPool,
 		},
 	}}
-	var dest string
+
+	var destURL string
 	if https {
-		dest = "https://" + HTTPS_ADDR
+		destURL = "https://" + HTTPS_ADDR
 	} else {
-		dest = "http://" + HTTP_ADDR
+		destURL = "http://" + HTTP_ADDR
 	}
-	req, err := http.NewRequest("GET", dest, nil)
+	req, err := http.NewRequest("GET", destURL, nil)
 	if err != nil {
 		t.Fatalf("Unable to construct request: %s", err)
 	}
 	resp, err := httpClient.Do(req)
-	errorsMatch := expectedErr == nil && err == nil ||
+
+	requestSuccessful := err == nil
+	gotCorrectError := expectedErr == nil && err == nil ||
 		expectedErr != nil && err != nil && err.Error() == expectedErr.Error()
-	if !errorsMatch {
+	if !gotCorrectError {
 		t.Errorf("%s: Wrong error.\nExpected: %s\nGot     : %s", testCase, expectedErr, err)
-	} else if err == nil {
+	} else if requestSuccessful {
+		defer resp.Body.Close()
 		if resp.StatusCode != expectedStatus {
 			t.Errorf("%s: Wrong response status. Expected %d, got %d", testCase, expectedStatus, resp.StatusCode)
 		} else {
-			defer resp.Body.Close()
+			// Check body
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				t.Errorf("%s: Unable to read response body: %s", testCase, err)
@@ -189,7 +197,7 @@ func testRequest(testCase string, t *testing.T, requests chan *http.Request, htt
 	}
 }
 
-// MockServer is an HTTP(S) server
+// MockServer is an HTTP+S server that serves up simple responses
 type MockServer struct {
 	certContext *CertContext
 	requests    chan *http.Request // publishes received requests
@@ -254,7 +262,7 @@ func (server *MockServer) handle(resp http.ResponseWriter, req *http.Request) {
 	server.requests <- req
 }
 
-// MockCloudFlare pretends to be CloudFlare
+// MockCloudFlare is a ReverseProxy that pretends to be CloudFlare
 type MockCloudFlare struct {
 	certContext *CertContext
 }
@@ -312,10 +320,15 @@ func (cf *MockCloudFlare) run() error {
 	return httpServer.ListenAndServeTLS(cf.certContext.ServerCertFile, cf.certContext.PKFile)
 }
 
+// randomTempPath creates a random file path in the temp folder (doesn't create
+// a file)
 func randomTempPath() string {
 	return os.TempDir() + string(os.PathSeparator) + uuid.New()
 }
 
+// waitForServer waits for a TCP server to start at the given address, waiting
+// up to the given limit and reporting an error to the given testing.T if the
+// server didn't start within the time limit.
 func waitForServer(addr string, limit time.Duration, t *testing.T) {
 	cutoff := time.Now().Add(limit)
 	for {
