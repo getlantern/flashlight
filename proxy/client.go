@@ -128,5 +128,4 @@ func (ctx *CertContext) InstallCACertToTrustStoreIfNecessary() error {
 func isNotLoopback(addr string) bool {
 	ip, err := net.ResolveIPAddr("ip4", strings.Split(addr, ":")[0])
 	return err == nil && !ip.IP.IsLoopback()
-
 }
