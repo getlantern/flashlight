@@ -10,4 +10,4 @@ install:
   - go get -v github.com/mattn/goveralls
 
 script:
-  - goveralls -v -service travis-ci -repotoken fJOyOh1RcQXwWMcqI3ziVgsxDY4uw8rPK
+  - goveralls -v -service travis-ci -repotoken K9aB4nlKTuA1IbzmOtrD2wZpnP1Aab5qs github.com/getlantern/flashlight/proxy
