@@ -95,8 +95,11 @@ It is convenient to build flashlight for multiple platforms using something like
 With goxc, the binaries used for Lantern can be built like this:
 
 ```
-goxc -bc="linux,386 linux,amd64 windows,386 darwin" validate compile
+goxc -build-ldflags="-w" -bc="linux,386 linux,amd64 windows,386 darwin" validate compile
 ```
+
+`-build-ldflags="-w"` causes the linker to omit debug symbols, which makes the
+resulting binaries considerably smaller.
 
 The binaries end up at
 `$GOPATH/bin/flashlight-xc/snapshot/<platform>/flashlight`.
