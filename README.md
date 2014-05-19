@@ -1,4 +1,4 @@
-flashlight ![Travis CI Status](https://travis-ci.org/getlantern/flashlight.svg?branch=master)
+flashlight ![Travis CI Status](https://travis-ci.org/getlantern/flashlight.svg?branch=master) [![Coverage Status](https://coveralls.io/repos/getlantern/flashlight/badge.png)](https://coveralls.io/r/getlantern/flashlight)
 ==========
 
 Lightweight host-spoofing web proxy written in go.
