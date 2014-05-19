@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	HOST          = "localhost"
+	HOST          = "127.0.0.1"
 	CF_PORT       = 19871
 	CF_ADDR       = HOST + ":19871"
 	CLIENT_PORT   = 19872
@@ -30,7 +30,7 @@ const (
 	SERVER_ADDR   = HOST + ":19873"
 	HTTP_ADDR     = HOST + ":19874"
 	HTTPS_ADDR    = HOST + ":19875"
-	MASQUERADE_AS = "localhost"
+	MASQUERADE_AS = HOST
 
 	EXPECTED_BODY    = "This is some stuff that goes in the body\n"
 	FORWARDED_FOR_IP = "192.168.1.1"
