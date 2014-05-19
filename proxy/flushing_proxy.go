@@ -41,6 +41,7 @@ func newFlushingRevereseProxy(rp *httputil.ReverseProxy) (*flushingReverseProxy,
 	}, nil
 }
 
+// ServeHTTP implements the method from http.Handler
 func (rp *flushingReverseProxy) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	if strings.ToLower(req.Header.Get(X_LANTERN_STREAMING)) == YES {
 		rp.reverseProxyWithFlushing.ServeHTTP(resp, req)
