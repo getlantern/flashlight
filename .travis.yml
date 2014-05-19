@@ -4,8 +4,8 @@ go:
   - tip
 
 install:
+  - go get
   - go get -v github.com/axw/gocov/gocov
-  - go get -v github.com/davecgh/go-spew/spew
   - go get -v github.com/mattn/goveralls
 
 after_script:
