@@ -85,7 +85,7 @@ func TestCloudFlare(t *testing.T) {
 		t.Fatalf("Error initializing client protocol: %s", err)
 	}
 	client := &Client{
-		UpstreamHost:        "localhost",
+		UpstreamHost:        HOST,
 		Protocol:            clientProtocol,
 		ShouldProxyLoopback: true, // this is only used when testing
 		ProxyConfig: ProxyConfig{

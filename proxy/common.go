@@ -3,11 +3,8 @@ package proxy
 
 import (
 	"crypto/tls"
-	"crypto/x509"
-	"crypto/x509/pkix"
 	"fmt"
 	"log"
-	"math/big"
 	"net/http"
 	"os"
 	"time"
@@ -130,27 +127,7 @@ func (ctx *CertContext) certificateFor(
 	validUntil time.Time,
 	isCA bool,
 	issuer *keyman.Certificate) (cert *keyman.Certificate, err error) {
-	template := &x509.Certificate{
-		SerialNumber: new(big.Int).SetInt64(int64(time.Now().Nanosecond())),
-		Subject: pkix.Name{
-			Organization: []string{"Lantern"},
-			CommonName:   name,
-		},
-		NotBefore: time.Now().AddDate(0, -1, 0),
-		NotAfter:  validUntil,
-
-		BasicConstraintsValid: true,
-		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
-	}
-	if issuer == nil {
-		if isCA {
-			template.KeyUsage = template.KeyUsage | x509.KeyUsageCertSign
-		}
-		template.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}
-		template.IsCA = true
-	}
-	cert, err = ctx.pk.Certificate(template, issuer)
-	return
+	return ctx.pk.TLSCertificateFor("Lantern", name, validUntil, isCA, issuer)
 }
 
 // writhRewrite creates a RoundTripper that uses the supplied RoundTripper and
