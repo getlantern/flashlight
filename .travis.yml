@@ -1,0 +1,11 @@
+language: go
+
+go:
+  - tip
+
+install:
+  - go get -v github.com/axw/gocov/gocov
+  - go get -v github.com/mattn/goveralls
+
+after_script:
+  - goveralls -v -service drone.io fJOyOh1RcQXwWMcqI3ziVgsxDY4uw8rPK
