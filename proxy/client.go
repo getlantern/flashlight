@@ -71,8 +71,6 @@ func (client *Client) buildReverseProxy() {
 				ServerName:         client.UpstreamHost,
 			},
 		},
-		// Flush periodically to provide basic support for streaming responses
-		FlushInterval: RESPONSE_FLUSH_INTERVAL,
 	}
 
 	var err error

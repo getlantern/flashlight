@@ -90,8 +90,6 @@ func (server *Server) buildReverseProxy() {
 			},
 			TLSClientConfig: tlsClientConfig,
 		},
-		// Flush periodically to provide basic support for streaming responses
-		FlushInterval: RESPONSE_FLUSH_INTERVAL,
 	}
 
 	var err error
