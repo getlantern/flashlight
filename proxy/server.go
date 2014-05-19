@@ -93,7 +93,7 @@ func (server *Server) buildReverseProxy() {
 	}
 
 	var err error
-	server.reverseProxy, err = newFlushingRevereseProxy(rp, RESPONSE_FLUSH_INTERVAL)
+	server.reverseProxy, err = newFlushingRevereseProxy(rp)
 	if err != nil {
 		log.Fatalf("Unable to construct flushingReverseProxy for server: %s", err)
 	}

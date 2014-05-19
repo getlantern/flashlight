@@ -74,7 +74,7 @@ func (client *Client) buildReverseProxy() {
 	}
 
 	var err error
-	client.reverseProxy, err = newFlushingRevereseProxy(rp, RESPONSE_FLUSH_INTERVAL)
+	client.reverseProxy, err = newFlushingRevereseProxy(rp)
 	if err != nil {
 		log.Fatalf("Unable to construct flushingReverseProxy for client: %s", err)
 	}

@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	X_LANTERN_STREAMING = "X-Lantern-Streaming"
-	YES                 = "yes"
+	X_LANTERN_STREAMING     = "X-Lantern-Streaming"
+	YES                     = "yes"
+	RESPONSE_FLUSH_INTERVAL = 50 * time.Millisecond
 )
 
 // flushingReverseProxy is a ReverseProxy that will periodically flush responses
@@ -20,11 +21,12 @@ type flushingReverseProxy struct {
 	reverseProxyWithFlushing *httputil.ReverseProxy // a copy of the main reverse proxy that flushes at regular intervals
 }
 
-func newFlushingRevereseProxy(rp *httputil.ReverseProxy, flushInterval time.Duration) (*flushingReverseProxy, error) {
+func newFlushingRevereseProxy(rp *httputil.ReverseProxy) (*flushingReverseProxy, error) {
 	// Make a copy of the rp, using the given flushInterval
 	frp := &httputil.ReverseProxy{
-		Director:      rp.Director,
-		FlushInterval: flushInterval,
+		Director: rp.Director,
+		// Flush the response periodically (good for streaming responses)
+		FlushInterval: RESPONSE_FLUSH_INTERVAL,
 	}
 	if rp.Transport != nil {
 		tr, ok := rp.Transport.(*http.Transport)

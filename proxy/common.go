@@ -47,7 +47,6 @@ const (
 	SERVER_TIMEOUT               = 0                        // don't timeout
 	TLS_SESSIONS_TO_CACHE_CLIENT = 10000
 	TLS_SESSIONS_TO_CACHE_SERVER = 100000
-	RESPONSE_FLUSH_INTERVAL      = 50 * time.Millisecond
 
 	FLASHLIGHT_CN_PREFIX = "flashlight-"
 
