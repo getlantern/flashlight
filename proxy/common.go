@@ -9,7 +9,6 @@ import (
 	"log"
 	"math/big"
 	"net/http"
-	"net/http/httputil"
 	"os"
 	"time"
 
@@ -27,7 +26,7 @@ type ProxyConfig struct {
 	TLSConfig         *tls.Config   // (optional) TLS configuration for inbound connections, if nil then DEFAULT_TLS_SERVER_CONFIG is used
 	ReadTimeout       time.Duration // (optional) timeout for read ops
 	WriteTimeout      time.Duration // (optional) timeout for write ops
-	reverseProxy      *httputil.ReverseProxy
+	reverseProxy      *flushingReverseProxy
 }
 
 // CertContext encapsulates the certificates used by a Proxy
@@ -48,7 +47,7 @@ const (
 	SERVER_TIMEOUT               = 0                        // don't timeout
 	TLS_SESSIONS_TO_CACHE_CLIENT = 10000
 	TLS_SESSIONS_TO_CACHE_SERVER = 100000
-	RESPONSE_FLUSH_INTERVAL      = 1 * time.Second
+	RESPONSE_FLUSH_INTERVAL      = 50 * time.Millisecond
 
 	FLASHLIGHT_CN_PREFIX = "flashlight-"
 

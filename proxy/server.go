@@ -68,7 +68,7 @@ func (server *Server) buildReverseProxy() {
 	// Requires Go 1.3+
 	tlsClientConfig.ClientSessionCache = tls.NewLRUClientSessionCache(TLS_SESSIONS_TO_CACHE_SERVER)
 
-	server.reverseProxy = &httputil.ReverseProxy{
+	rp := &httputil.ReverseProxy{
 		Director: func(req *http.Request) {
 			server.Protocol.RewriteRequest(req)
 			log.Printf("Handling request for: %s", req.URL.String())
@@ -94,8 +94,15 @@ func (server *Server) buildReverseProxy() {
 		FlushInterval: RESPONSE_FLUSH_INTERVAL,
 	}
 
+	var err error
+	server.reverseProxy, err = newFlushingRevereseProxy(rp, RESPONSE_FLUSH_INTERVAL)
+	if err != nil {
+		log.Fatalf("Unable to construct flushingReverseProxy for server: %s", err)
+	}
+
 	if server.ShouldDumpHeaders {
-		server.reverseProxy.Transport = withRewrite(server.Protocol.RewriteResponse, server.reverseProxy.Transport)
+		server.reverseProxy.reverseProxy.Transport = withRewrite(server.Protocol.RewriteResponse, server.reverseProxy.reverseProxy.Transport)
+		server.reverseProxy.reverseProxyWithFlushing.Transport = withRewrite(server.Protocol.RewriteResponse, server.reverseProxy.reverseProxyWithFlushing.Transport)
 	}
 }
 

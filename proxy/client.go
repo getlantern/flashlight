@@ -50,7 +50,7 @@ func (client *Client) Run() error {
 // buildReverseProxy builds the httputil.ReverseProxy used by the client to
 // proxy requests upstream.
 func (client *Client) buildReverseProxy() {
-	client.reverseProxy = &httputil.ReverseProxy{
+	rp := &httputil.ReverseProxy{
 		Director: func(req *http.Request) {
 			// Check for local addresses, which we don't rewrite
 			if client.ShouldProxyLoopback || isNotLoopback(req.Host) {
@@ -75,8 +75,15 @@ func (client *Client) buildReverseProxy() {
 		FlushInterval: RESPONSE_FLUSH_INTERVAL,
 	}
 
+	var err error
+	client.reverseProxy, err = newFlushingRevereseProxy(rp, RESPONSE_FLUSH_INTERVAL)
+	if err != nil {
+		log.Fatalf("Unable to construct flushingReverseProxy for client: %s", err)
+	}
+
 	if client.ShouldDumpHeaders {
-		client.reverseProxy.Transport = withRewrite(client.Protocol.RewriteResponse, client.reverseProxy.Transport)
+		client.reverseProxy.reverseProxy.Transport = withRewrite(client.Protocol.RewriteResponse, client.reverseProxy.reverseProxy.Transport)
+		client.reverseProxy.reverseProxyWithFlushing.Transport = withRewrite(client.Protocol.RewriteResponse, client.reverseProxy.reverseProxyWithFlushing.Transport)
 	}
 }
 
