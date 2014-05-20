@@ -11,5 +11,4 @@ install:
   - go get -v github.com/mattn/goveralls
 
 script:
-  - go test -covermode=count -coverprofile=profile.cov github.com/getlantern/flashlight/proxy
-  - $HOME/gopath/bin/goveralls -v -service travis-ci -coverprofile=profile.cov -repotoken K9aB4nlKTuA1IbzmOtrD2wZpnP1Aab5qs 
+  - $HOME/gopath/bin/goveralls -v -service travis-ci github.com/getlantern/flashlight/proxy
