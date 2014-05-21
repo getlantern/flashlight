@@ -27,7 +27,7 @@ func (server *Server) startReportingStatsIfNecessary() {
 // startReportingStats reports statistics for this proxy to statshub under the
 // server's InstanceId
 func (server *Server) startReportingStats() {
-	server.bytesGivenChan = make(chan int, 1000)
+	server.bytesGivenCh = make(chan int, 1000)
 	server.checkpointCh = make(chan bool)
 	server.checkpointResultCh = make(chan int)
 	go server.collectStats()
@@ -40,7 +40,7 @@ func (server *Server) collectStats() {
 
 	for {
 		select {
-		case bytesGiven := <-server.bytesGivenChan:
+		case bytesGiven := <-server.bytesGivenCh:
 			bytesSum += bytesGiven
 		case <-server.checkpointCh:
 			server.checkpointResultCh <- bytesSum
@@ -100,13 +100,13 @@ type countingConn struct {
 
 func (c *countingConn) Read(b []byte) (n int, err error) {
 	n, err = c.orig.Read(b)
-	c.server.bytesGivenChan <- n
+	c.server.bytesGivenCh <- n
 	return
 }
 
 func (c *countingConn) Write(b []byte) (n int, err error) {
 	n, err = c.orig.Write(b)
-	c.server.bytesGivenChan <- n
+	c.server.bytesGivenCh <- n
 	return
 }
 

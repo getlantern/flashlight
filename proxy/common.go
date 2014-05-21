@@ -40,12 +40,10 @@ const (
 	CONNECT                      = "CONNECT"                // HTTP CONNECT method
 	X_LANTERN_REQUEST_INFO       = "X-Lantern-Request-Info" // Tells proxy to return info about the client
 	X_LANTERN_PUBLIC_IP          = "X-LANTERN-PUBLIC-IP"    // Client's public IP as seen by the proxy
-	CLIENT_TIMEOUT               = 0                        // don't timeout
-	SERVER_TIMEOUT               = 0                        // don't timeout
 	TLS_SESSIONS_TO_CACHE_CLIENT = 10000
 	TLS_SESSIONS_TO_CACHE_SERVER = 100000
 
-	FLASHLIGHT_CN_PREFIX = "flashlight-"
+	FLASHLIGHT_CN_PREFIX = "flashlight-" // prefix for common-name on generated certificates
 
 	HR = "--------------------------------------------------------------------------------"
 )
@@ -77,10 +75,6 @@ var (
 	}
 )
 
-func (config *ProxyConfig) InitCommonCerts() (err error) {
-	return config.CertContext.InitCommonCerts()
-}
-
 // InitCommonCerts initializes a private key and CA certificate, used both for
 // the server HTTPS proxy and the client MITM proxy.  The key and certificate
 // are generated if not already present. The CA  certificate is added to the
@@ -102,7 +96,7 @@ func (ctx *CertContext) InitCommonCerts() (err error) {
 	}
 
 	ctx.caCert, err = keyman.LoadCertificateFromFile(ctx.CACertFile)
-	if err != nil || ctx.caCert.X509().NotAfter.Before(ONE_MONTH_FROM_TODAY) {
+	if err != nil || ctx.caCert.ExpiresBefore(ONE_MONTH_FROM_TODAY) {
 		if os.IsNotExist(err) {
 			log.Printf("Creating new self-signed CA cert at: %s", ctx.CACertFile)
 			if ctx.caCert, err = ctx.certificateFor(FLASHLIGHT_CN_PREFIX+uuid.New(), TEN_YEARS_FROM_TODAY, true, nil); err != nil {
@@ -132,26 +126,30 @@ func (ctx *CertContext) certificateFor(
 
 // writhRewrite creates a RoundTripper that uses the supplied RoundTripper and
 // rewrites the response.
-func withRewrite(rw func(*http.Response), rt http.RoundTripper) http.RoundTripper {
+func withRewrite(rw func(*http.Response), rt http.RoundTripper, dumpHeaders bool) http.RoundTripper {
 	return &wrappedRoundTripper{
-		rewrite: rw,
-		orig:    rt,
+		rewrite:     rw,
+		orig:        rt,
+		dumpHeaders: dumpHeaders,
 	}
 }
 
 // wrappedRoundTripper is an http.RoundTripper that wraps another
-// http.RoundTripper to rewrite responses usnig the rewrite function prior to
+// http.RoundTripper to rewrite responses using the rewrite function prior to
 // returning them.
 type wrappedRoundTripper struct {
-	rewrite func(*http.Response)
-	orig    http.RoundTripper
+	rewrite     func(*http.Response)
+	orig        http.RoundTripper
+	dumpHeaders bool
 }
 
 func (rt *wrappedRoundTripper) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	resp, err = rt.orig.RoundTrip(req)
 	if err == nil {
 		rt.rewrite(resp)
-		dumpHeaders("Response", resp.Header)
+		if rt.dumpHeaders {
+			dumpHeaders("Response", resp.Header)
+		}
 	}
 	return
 }

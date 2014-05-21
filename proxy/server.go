@@ -7,11 +7,9 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
-	"os"
 	"strings"
 
 	"github.com/getlantern/flashlight/protocol"
-	"github.com/getlantern/keyman"
 )
 
 type Server struct {
@@ -19,8 +17,8 @@ type Server struct {
 	Protocol           protocol.Protocol // host-spoofing protocol to use (e.g. CloudFlare)
 	InstanceId         string            // (optional) instanceid under which to report statistics
 	TLSClientConfig    *tls.Config       // (optional) configuration for TLS client used for outbound connections
-	bytesGivenChan     chan int
-	checkpointCh       chan bool
+	bytesGivenCh       chan int          // tracks bytes given
+	checkpointCh       chan bool         // used to sychronize checkpointing of stats to statshub
 	checkpointResultCh chan int
 }
 
@@ -96,10 +94,16 @@ func (server *Server) buildReverseProxy() {
 		log.Fatalf("Unable to construct flushingReverseProxy for server: %s", err)
 	}
 
-	if server.ShouldDumpHeaders {
-		server.reverseProxy.reverseProxy.Transport = withRewrite(server.Protocol.RewriteResponse, server.reverseProxy.reverseProxy.Transport)
-		server.reverseProxy.reverseProxyWithFlushing.Transport = withRewrite(server.Protocol.RewriteResponse, server.reverseProxy.reverseProxyWithFlushing.Transport)
-	}
+	server.reverseProxy.reverseProxy.Transport =
+		withRewrite(
+			server.Protocol.RewriteResponse,
+			server.reverseProxy.reverseProxy.Transport,
+			server.ShouldDumpHeaders)
+	server.reverseProxy.reverseProxyWithFlushing.Transport =
+		withRewrite(
+			server.Protocol.RewriteResponse,
+			server.reverseProxy.reverseProxyWithFlushing.Transport,
+			server.ShouldDumpHeaders)
 }
 
 // handleServer handles requests to the server-side (upstream) proxy
@@ -129,21 +133,14 @@ func (server *Server) handleInfoRequest(resp http.ResponseWriter, req *http.Requ
 }
 
 // initServerCert initializes a certificate for use by a server proxy, signed by
-// the CA certificate.
+// the CA certificate.  We always generate a new certificate just in case.
 func (ctx *CertContext) initServerCert(host string) (err error) {
-	ctx.serverCert, err = keyman.LoadCertificateFromFile(ctx.ServerCertFile)
-	if err != nil || ctx.serverCert.X509().NotAfter.Before(ONE_MONTH_FROM_TODAY) {
-		if err == nil || os.IsNotExist(err) {
-			log.Printf("Creating new server cert at: %s", ctx.ServerCertFile)
-			if ctx.serverCert, err = ctx.certificateFor(host, ONE_YEAR_FROM_TODAY, true, ctx.caCert); err != nil {
-				return
-			}
-			if err = ctx.serverCert.WriteToFile(ctx.ServerCertFile); err != nil {
-				return
-			}
-		} else {
-			return fmt.Errorf("Unable to read server cert, even though it exists: %s", err)
-		}
+	log.Printf("Creating new server cert at: %s", ctx.ServerCertFile)
+	if ctx.serverCert, err = ctx.certificateFor(host, TEN_YEARS_FROM_TODAY, true, ctx.caCert); err != nil {
+		return
+	}
+	if err = ctx.serverCert.WriteToFile(ctx.ServerCertFile); err != nil {
+		return
 	}
 	return nil
 }

@@ -22,7 +22,7 @@ type Client struct {
 }
 
 func (client *Client) Run() error {
-	err := client.InitCommonCerts()
+	err := client.CertContext.InitCommonCerts()
 	if err != nil {
 		return fmt.Errorf("Unable to init common certs: %s", err)
 	}
@@ -79,10 +79,14 @@ func (client *Client) buildReverseProxy() {
 		log.Fatalf("Unable to construct flushingReverseProxy for client: %s", err)
 	}
 
-	if client.ShouldDumpHeaders {
-		client.reverseProxy.reverseProxy.Transport = withRewrite(client.Protocol.RewriteResponse, client.reverseProxy.reverseProxy.Transport)
-		client.reverseProxy.reverseProxyWithFlushing.Transport = withRewrite(client.Protocol.RewriteResponse, client.reverseProxy.reverseProxyWithFlushing.Transport)
-	}
+	client.reverseProxy.reverseProxy.Transport = withRewrite(
+		client.Protocol.RewriteResponse,
+		client.reverseProxy.reverseProxy.Transport,
+		client.ShouldDumpHeaders)
+	client.reverseProxy.reverseProxyWithFlushing.Transport = withRewrite(
+		client.Protocol.RewriteResponse,
+		client.reverseProxy.reverseProxyWithFlushing.Transport,
+		client.ShouldDumpHeaders)
 }
 
 // buildMITMHandler builds the MITM handler that the client uses for proxying
