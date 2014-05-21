@@ -21,19 +21,20 @@ type flushingReverseProxy struct {
 	reverseProxyWithFlushing *httputil.ReverseProxy // a copy of the main reverse proxy that flushes at regular intervals
 }
 
-func newFlushingRevereseProxy(rp *httputil.ReverseProxy) (*flushingReverseProxy, error) {
+func newFlushingReverseProxy(rp *httputil.ReverseProxy) (*flushingReverseProxy, error) {
 	// Make a copy of the rp, using the given flushInterval
 	frp := &httputil.ReverseProxy{
 		Director: rp.Director,
 		// Flush the response periodically (good for streaming responses)
 		FlushInterval: RESPONSE_FLUSH_INTERVAL,
+		Transport:     &http.Transport{},
 	}
 	if rp.Transport != nil {
 		tr, ok := rp.Transport.(*http.Transport)
 		if !ok {
 			return nil, fmt.Errorf("newFlushingReverseProxy only works for proxies whose RoundTripper is the default http.Transport")
 		}
-		frp.Transport = &(*tr)
+		*(frp.Transport.(*http.Transport)) = *tr
 	}
 	return &flushingReverseProxy{
 		reverseProxy:             rp,

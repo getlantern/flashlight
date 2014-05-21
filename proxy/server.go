@@ -57,12 +57,10 @@ func (server *Server) Run() error {
 func (server *Server) buildReverseProxy() {
 	shouldReportStats := server.InstanceId != ""
 
-	var tlsClientConfig *tls.Config
+	tlsClientConfig := &tls.Config{}
 	if server.TLSClientConfig != nil {
 		// Make a copy of the supplied config
-		tlsClientConfig = &(*server.TLSClientConfig)
-	} else {
-		tlsClientConfig = &tls.Config{}
+		*tlsClientConfig = *server.TLSClientConfig
 	}
 	// Use a TLS session cache to minimize TLS connection establishment
 	// Requires Go 1.3+
@@ -93,7 +91,7 @@ func (server *Server) buildReverseProxy() {
 	}
 
 	var err error
-	server.reverseProxy, err = newFlushingRevereseProxy(rp)
+	server.reverseProxy, err = newFlushingReverseProxy(rp)
 	if err != nil {
 		log.Fatalf("Unable to construct flushingReverseProxy for server: %s", err)
 	}
