@@ -1,16 +1,15 @@
 package proxy
 
 import (
-	"crypto/tls"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
-	"net/http/httputil"
 	"strings"
 
 	"github.com/getlantern/flashlight/protocol"
 	"github.com/getlantern/go-mitm/mitm"
+	"github.com/getlantern/go-reverseproxy/rp"
 )
 
 type Client struct {
@@ -27,6 +26,7 @@ func (client *Client) Run() error {
 		return fmt.Errorf("Unable to init common certs: %s", err)
 	}
 
+	// Note - in practice, this only applies when running on Linux.
 	client.InstallCACertToTrustStoreIfNecessary()
 
 	client.buildReverseProxy()
@@ -50,7 +50,7 @@ func (client *Client) Run() error {
 // buildReverseProxy builds the httputil.ReverseProxy used by the client to
 // proxy requests upstream.
 func (client *Client) buildReverseProxy() {
-	rp := &httputil.ReverseProxy{
+	client.reverseProxy = &rp.ReverseProxy{
 		Director: func(req *http.Request) {
 			// Check for local addresses, which we don't rewrite
 			if client.ShouldProxyLoopback || isNotLoopback(req.Host) {
@@ -60,33 +60,16 @@ func (client *Client) buildReverseProxy() {
 				dumpHeaders("Request", req.Header)
 			}
 		},
-		Transport: &http.Transport{
-			Dial: func(network, addr string) (net.Conn, error) {
-				return client.Protocol.Dial(addr)
-			},
-			TLSClientConfig: &tls.Config{
-				// Use a TLS session cache to minimize TLS connection establishment
-				// Requires Go 1.3+
-				ClientSessionCache: tls.NewLRUClientSessionCache(TLS_SESSIONS_TO_CACHE_CLIENT),
-				ServerName:         client.UpstreamHost,
-			},
-		},
+		Transport: withRewrite(
+			client.Protocol.RewriteResponse,
+			client.ShouldDumpHeaders,
+			&http.Transport{
+				Dial: func(network, addr string) (net.Conn, error) {
+					return client.Protocol.Dial(addr)
+				},
+			}),
+		DynamicFlushInterval: flushIntervalFor,
 	}
-
-	var err error
-	client.reverseProxy, err = newFlushingReverseProxy(rp)
-	if err != nil {
-		log.Fatalf("Unable to construct flushingReverseProxy for client: %s", err)
-	}
-
-	client.reverseProxy.reverseProxy.Transport = withRewrite(
-		client.Protocol.RewriteResponse,
-		client.reverseProxy.reverseProxy.Transport,
-		client.ShouldDumpHeaders)
-	client.reverseProxy.reverseProxyWithFlushing.Transport = withRewrite(
-		client.Protocol.RewriteResponse,
-		client.reverseProxy.reverseProxyWithFlushing.Transport,
-		client.ShouldDumpHeaders)
 }
 
 // buildMITMHandler builds the MITM handler that the client uses for proxying

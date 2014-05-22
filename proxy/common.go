@@ -12,6 +12,7 @@ import (
 	"code.google.com/p/go-uuid/uuid"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/getlantern/go-reverseproxy/rp"
 	"github.com/getlantern/keyman"
 )
 
@@ -23,7 +24,7 @@ type ProxyConfig struct {
 	TLSConfig         *tls.Config   // (optional) TLS configuration for inbound connections, if nil then DEFAULT_TLS_SERVER_CONFIG is used
 	ReadTimeout       time.Duration // (optional) timeout for read ops
 	WriteTimeout      time.Duration // (optional) timeout for write ops
-	reverseProxy      *flushingReverseProxy
+	reverseProxy      *rp.ReverseProxy
 }
 
 // CertContext encapsulates the certificates used by a Proxy
@@ -40,7 +41,6 @@ const (
 	CONNECT                      = "CONNECT"                // HTTP CONNECT method
 	X_LANTERN_REQUEST_INFO       = "X-Lantern-Request-Info" // Tells proxy to return info about the client
 	X_LANTERN_PUBLIC_IP          = "X-LANTERN-PUBLIC-IP"    // Client's public IP as seen by the proxy
-	TLS_SESSIONS_TO_CACHE_CLIENT = 10000
 	TLS_SESSIONS_TO_CACHE_SERVER = 100000
 
 	FLASHLIGHT_CN_PREFIX = "flashlight-" // prefix for common-name on generated certificates
@@ -54,6 +54,8 @@ var (
 	ONE_MONTH_FROM_TODAY = time.Now().AddDate(0, 1, 0)
 	ONE_YEAR_FROM_TODAY  = time.Now().AddDate(1, 0, 0)
 	TEN_YEARS_FROM_TODAY = time.Now().AddDate(10, 0, 0)
+
+	STREAMING_FLUSH_INTERVAL = 50 * time.Millisecond
 
 	// Default TLS configuration for servers
 	DEFAULT_TLS_SERVER_CONFIG = &tls.Config{
@@ -126,7 +128,7 @@ func (ctx *CertContext) certificateFor(
 
 // writhRewrite creates a RoundTripper that uses the supplied RoundTripper and
 // rewrites the response.
-func withRewrite(rw func(*http.Response), rt http.RoundTripper, dumpHeaders bool) http.RoundTripper {
+func withRewrite(rw func(*http.Response), dumpHeaders bool, rt http.RoundTripper) http.RoundTripper {
 	return &wrappedRoundTripper{
 		rewrite:     rw,
 		orig:        rt,
@@ -157,4 +159,13 @@ func (rt *wrappedRoundTripper) RoundTrip(req *http.Request) (resp *http.Response
 // dumpHeaders logs the given headers (request or response).
 func dumpHeaders(category string, headers http.Header) {
 	log.Printf("%s Headers\n%s\n%s\n%s\n\n", category, HR, spew.Sdump(headers), HR)
+}
+
+// flushIntervalFor determines the flush interval for a given request/response
+// pair
+func flushIntervalFor(req *http.Request, res *http.Response) time.Duration {
+	if res.Header.Get("Content-type") == "text/event-stream" {
+		return STREAMING_FLUSH_INTERVAL
+	}
+	return 0
 }

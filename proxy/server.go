@@ -6,10 +6,10 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"net/http/httputil"
 	"strings"
 
 	"github.com/getlantern/flashlight/protocol"
+	"github.com/getlantern/go-reverseproxy/rp"
 )
 
 type Server struct {
@@ -64,7 +64,7 @@ func (server *Server) buildReverseProxy() {
 	// Requires Go 1.3+
 	tlsClientConfig.ClientSessionCache = tls.NewLRUClientSessionCache(TLS_SESSIONS_TO_CACHE_SERVER)
 
-	rp := &httputil.ReverseProxy{
+	server.reverseProxy = &rp.ReverseProxy{
 		Director: func(req *http.Request) {
 			server.Protocol.RewriteRequest(req)
 			log.Printf("Handling request for: %s", req.URL.String())
@@ -72,38 +72,25 @@ func (server *Server) buildReverseProxy() {
 				dumpHeaders("Request", req.Header)
 			}
 		},
-		Transport: &http.Transport{
-			Dial: func(network, addr string) (net.Conn, error) {
-				conn, err := net.Dial(network, addr)
-				if err != nil {
-					return nil, err
-				}
-				if shouldReportStats {
-					// When reporting stats, use a special connection that counts bytes
-					return &countingConn{conn, server}, nil
-				}
-				return conn, err
-			},
-			TLSClientConfig: tlsClientConfig,
-		},
-	}
-
-	var err error
-	server.reverseProxy, err = newFlushingReverseProxy(rp)
-	if err != nil {
-		log.Fatalf("Unable to construct flushingReverseProxy for server: %s", err)
-	}
-
-	server.reverseProxy.reverseProxy.Transport =
-		withRewrite(
+		Transport: withRewrite(
 			server.Protocol.RewriteResponse,
-			server.reverseProxy.reverseProxy.Transport,
-			server.ShouldDumpHeaders)
-	server.reverseProxy.reverseProxyWithFlushing.Transport =
-		withRewrite(
-			server.Protocol.RewriteResponse,
-			server.reverseProxy.reverseProxyWithFlushing.Transport,
-			server.ShouldDumpHeaders)
+			server.ShouldDumpHeaders,
+			&http.Transport{
+				Dial: func(network, addr string) (net.Conn, error) {
+					conn, err := net.Dial(network, addr)
+					if err != nil {
+						return nil, err
+					}
+					if shouldReportStats {
+						// When reporting stats, use a special connection that counts bytes
+						return &countingConn{conn, server}, nil
+					}
+					return conn, err
+				},
+				TLSClientConfig: tlsClientConfig,
+			}),
+		DynamicFlushInterval: flushIntervalFor,
+	}
 }
 
 // handleServer handles requests to the server-side (upstream) proxy
