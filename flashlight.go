@@ -4,12 +4,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
+
 	"os"
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
 
+	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/protocol/cloudflare"
 	"github.com/getlantern/flashlight/proxy"
 )
@@ -68,14 +69,14 @@ func main() {
 	}
 
 	if *install {
-		log.Println("Installing proxy config")
+		log.Debugf("Installing proxy config")
 		err := proxyConfig.CertContext.InitCommonCerts()
 		if err != nil {
 			log.Fatalf("Unable to init common certs: %s", err)
 		}
 		proxyConfig.InstallCACertToTrustStoreIfNecessary()
 	} else {
-		log.Println("Running proxy")
+		log.Debugf("Running proxy")
 		if isDownstream {
 			// Protocol is right now hardcoded to use CloudFlare, could be made
 			// configurable to support other protocols like Fastly.
@@ -129,7 +130,7 @@ func inConfigDir(filename string) string {
 
 func useAllCores() {
 	numcores := runtime.NumCPU()
-	log.Printf("Using all %d cores on machine", numcores)
+	log.Debugf("Using all %d cores on machine", numcores)
 	runtime.GOMAXPROCS(numcores)
 }
 
@@ -139,7 +140,7 @@ func startCPUProfiling(filename string) {
 		log.Fatal(err)
 	}
 	pprof.StartCPUProfile(f)
-	log.Printf("Process will save cpu profile to %s after terminating", filename)
+	log.Debugf("Process will save cpu profile to %s after terminating", filename)
 }
 
 func stopCPUProfilingOnSigINT(filename string) {
@@ -153,6 +154,6 @@ func stopCPUProfilingOnSigINT(filename string) {
 }
 
 func stopCPUProfiling(filename string) {
-	log.Printf("Saving CPU profile to: %s", filename)
+	log.Debugf("Saving CPU profile to: %s", filename)
 	pprof.StopCPUProfile()
 }

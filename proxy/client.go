@@ -2,11 +2,11 @@ package proxy
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"strings"
 
+	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/protocol"
 	"github.com/getlantern/go-mitm/mitm"
 	"github.com/getlantern/go-reverseproxy/rp"
@@ -43,7 +43,7 @@ func (client *Client) Run() error {
 		Handler:      client.mitmHandler,
 	}
 
-	log.Printf("About to start client (http) proxy at %s", client.Addr)
+	log.Debugf("About to start client (http) proxy at %s", client.Addr)
 	return httpServer.ListenAndServe()
 }
 
@@ -94,7 +94,7 @@ func (client *Client) buildMITMHandler() (err error) {
 func (config *ProxyConfig) InstallCACertToTrustStoreIfNecessary() {
 	err := config.CertContext.InstallCACertToTrustStoreIfNecessary()
 	if err != nil {
-		log.Printf("Unable to install CA Cert to trust store, man in the middling may not work.  Suggest running flashlight as sudo with the -install flag: %s", err)
+		log.Debugf("Unable to install CA Cert to trust store, man in the middling may not work.  Suggest running flashlight as sudo with the -install flag: %s", err)
 	}
 }
 
@@ -107,14 +107,14 @@ func (ctx *CertContext) InstallCACertToTrustStoreIfNecessary() error {
 		return fmt.Errorf("Unable to check if CA certificate is installed: %s", err)
 	}
 	if !haveInstalledCert {
-		log.Println("Adding CA cert to trust store as trusted root")
+		log.Debugf("Adding CA cert to trust store as trusted root")
 		// TODO: add the cert as trusted root anytime that it's not already
 		// in the system keystore
 		if err = ctx.caCert.AddAsTrustedRoot(); err != nil {
 			return err
 		}
 	} else {
-		log.Println("CA cert already found in trust store, not adding")
+		log.Debugf("CA cert already found in trust store, not adding")
 	}
 	return nil
 }

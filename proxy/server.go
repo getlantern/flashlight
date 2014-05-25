@@ -3,11 +3,11 @@ package proxy
 import (
 	"crypto/tls"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"strings"
 
+	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/protocol"
 	"github.com/getlantern/go-reverseproxy/rp"
 )
@@ -48,7 +48,7 @@ func (server *Server) Run() error {
 		httpServer.TLSConfig = DEFAULT_TLS_SERVER_CONFIG
 	}
 
-	log.Printf("About to start server (https) proxy at %s", server.Addr)
+	log.Debugf("About to start server (https) proxy at %s", server.Addr)
 	return httpServer.ListenAndServeTLS(server.CertContext.ServerCertFile, server.CertContext.PKFile)
 }
 
@@ -67,7 +67,7 @@ func (server *Server) buildReverseProxy() {
 	server.reverseProxy = &rp.ReverseProxy{
 		Director: func(req *http.Request) {
 			server.Protocol.RewriteRequest(req)
-			log.Printf("Handling request for: %s", req.URL.String())
+			log.Debugf("Handling request for: %s", req.URL.String())
 			if server.ShouldDumpHeaders {
 				dumpHeaders("Request", req.Header)
 			}
@@ -122,7 +122,7 @@ func (server *Server) handleInfoRequest(resp http.ResponseWriter, req *http.Requ
 // initServerCert initializes a certificate for use by a server proxy, signed by
 // the CA certificate.  We always generate a new certificate just in case.
 func (ctx *CertContext) initServerCert(host string) (err error) {
-	log.Printf("Creating new server cert at: %s", ctx.ServerCertFile)
+	log.Debugf("Creating new server cert at: %s", ctx.ServerCertFile)
 	if ctx.serverCert, err = ctx.certificateFor(host, TEN_YEARS_FROM_TODAY, true, ctx.caCert); err != nil {
 		return
 	}

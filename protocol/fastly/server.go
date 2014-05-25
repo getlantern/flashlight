@@ -1,10 +1,11 @@
 package fastly
 
 import (
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/getlantern/flashlight/log"
 )
 
 // FastlyServerProtocol implements serverProtocol using Fastly (not yet working)
@@ -19,7 +20,7 @@ func (cf *FastlyServerProtocol) RewriteRequest(req *http.Request) {
 	// Grab the original URL as passed via the X_LANTERN_URL header
 	url, err := url.Parse(req.Header.Get(X_LANTERN_URL))
 	if err != nil {
-		log.Printf("Unable to parse URL from downstream! %s", err)
+		log.Errorf("Unable to parse URL from downstream! %s", err)
 		return
 	}
 	req.URL = url

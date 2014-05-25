@@ -3,9 +3,10 @@ package fastly
 import (
 	"crypto/tls"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
+
+	"github.com/getlantern/flashlight/log"
 )
 
 // fastlyServerProtocol implements clientProtocol using Fastly (not yet working)
@@ -41,7 +42,7 @@ func (cf *FastlyClientProtocol) RewriteResponse(resp *http.Response) {
 }
 
 func (cf *FastlyClientProtocol) Dial(addr string) (net.Conn, error) {
-	log.Printf("Using %s to handle request", cf.upstreamAddr)
+	log.Debugf("Using %s to handle request", cf.upstreamAddr)
 
 	// Manually dial and upgrade to TLS to avoid logic in tls.Dial() that
 	// defaults the ServerName based on the host being dialed.

@@ -4,7 +4,6 @@ package proxy
 import (
 	"crypto/tls"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"code.google.com/p/go-uuid/uuid"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/go-reverseproxy/rp"
 	"github.com/getlantern/keyman"
 )
@@ -85,7 +85,7 @@ var (
 func (ctx *CertContext) InitCommonCerts() (err error) {
 	if ctx.pk, err = keyman.LoadPKFromFile(ctx.PKFile); err != nil {
 		if os.IsNotExist(err) {
-			log.Printf("Creating new PK at: %s", ctx.PKFile)
+			log.Debugf("Creating new PK at: %s", ctx.PKFile)
 			if ctx.pk, err = keyman.GeneratePK(2048); err != nil {
 				return
 			}
@@ -100,7 +100,7 @@ func (ctx *CertContext) InitCommonCerts() (err error) {
 	ctx.caCert, err = keyman.LoadCertificateFromFile(ctx.CACertFile)
 	if err != nil || ctx.caCert.ExpiresBefore(ONE_MONTH_FROM_TODAY) {
 		if os.IsNotExist(err) {
-			log.Printf("Creating new self-signed CA cert at: %s", ctx.CACertFile)
+			log.Debugf("Creating new self-signed CA cert at: %s", ctx.CACertFile)
 			if ctx.caCert, err = ctx.certificateFor(FLASHLIGHT_CN_PREFIX+uuid.New(), TEN_YEARS_FROM_TODAY, true, nil); err != nil {
 				return
 			}
@@ -158,7 +158,7 @@ func (rt *wrappedRoundTripper) RoundTrip(req *http.Request) (resp *http.Response
 
 // dumpHeaders logs the given headers (request or response).
 func dumpHeaders(category string, headers http.Header) {
-	log.Printf("%s Headers\n%s\n%s\n%s\n\n", category, HR, spew.Sdump(headers), HR)
+	log.Debugf("%s Headers\n%s\n%s\n%s\n\n", category, HR, spew.Sdump(headers), HR)
 }
 
 // flushIntervalFor determines the flush interval for a given request/response

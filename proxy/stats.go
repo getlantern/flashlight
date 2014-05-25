@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/getlantern/flashlight/log"
 )
 
 const (
@@ -17,10 +18,10 @@ const (
 
 func (server *Server) startReportingStatsIfNecessary() {
 	if server.InstanceId != "" {
-		log.Printf("Reporting stats under InstanceId %s", server.InstanceId)
+		log.Debugf("Reporting stats under InstanceId %s", server.InstanceId)
 		server.startReportingStats()
 	} else {
-		log.Println("Not reporting stats (no InstanceId specified)")
+		log.Debug("Not reporting stats (no InstanceId specified)")
 	}
 }
 
@@ -60,9 +61,9 @@ func (server *Server) reportStats() {
 		bytesSum := <-server.checkpointResultCh
 		err := server.postStats(bytesSum)
 		if err != nil {
-			log.Printf("Error on posting stats: %s", err)
+			log.Errorf("Error on posting stats: %s", err)
 		} else {
-			log.Printf("Reported %d bytesGiven to statshub", bytesSum)
+			log.Debugf("Reported %d bytesGiven to statshub", bytesSum)
 		}
 	}
 }

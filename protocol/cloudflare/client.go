@@ -4,10 +4,10 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 
+	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/keyman"
 )
 
@@ -76,6 +76,6 @@ func (cf *CloudFlareClientProtocol) Dial(addr string) (net.Conn, error) {
 		ClientSessionCache: tls.NewLRUClientSessionCache(TLS_SESSIONS_TO_CACHE_CLIENT),
 		//ServerName:         cf.upstreamHost, // why is this not on the protocol?
 	}
-	log.Printf("Using %s to handle request", cf.upstreamAddr)
+	log.Debugf("Using %s to handle request", cf.upstreamAddr)
 	return tls.Dial("tcp", cf.upstreamAddr, tlsConfig)
 }

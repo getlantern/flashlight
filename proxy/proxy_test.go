@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -49,7 +48,7 @@ func TestCloudFlare(t *testing.T) {
 	}
 	defer mockServer.deleteCerts()
 
-	mockServer.run()
+	mockServer.run(t)
 	waitForServer(HTTP_ADDR, 2*time.Second, t)
 	waitForServer(HTTPS_ADDR, 2*time.Second, t)
 
@@ -62,7 +61,7 @@ func TestCloudFlare(t *testing.T) {
 	defer cf.deleteCerts()
 
 	go func() {
-		err := cf.run()
+		err := cf.run(t)
 		if err != nil {
 			t.Fatalf("Unable to run mock CloudFlare: %s", err)
 		}
@@ -229,7 +228,7 @@ func (server *MockServer) deleteCerts() {
 	os.Remove(server.certContext.ServerCertFile)
 }
 
-func (server *MockServer) run() {
+func (server *MockServer) run(t *testing.T) {
 	httpServer := &http.Server{
 		Addr:    HTTP_ADDR,
 		Handler: http.HandlerFunc(server.handle),
@@ -241,18 +240,18 @@ func (server *MockServer) run() {
 	}
 
 	go func() {
-		log.Printf("About to start mock HTTP at: %s", httpServer.Addr)
+		t.Logf("About to start mock HTTP at: %s", httpServer.Addr)
 		err := httpServer.ListenAndServe()
 		if err != nil {
-			log.Printf("Unable to start HTTP server: %s", err)
+			t.Errorf("Unable to start HTTP server: %s", err)
 		}
 	}()
 
 	go func() {
-		log.Printf("About to start mock HTTPS at: %s", httpsServer.Addr)
+		t.Logf("About to start mock HTTPS at: %s", httpsServer.Addr)
 		err := httpsServer.ListenAndServeTLS(server.certContext.ServerCertFile, server.certContext.PKFile)
 		if err != nil {
-			log.Printf("Unable to start HTTP server: %s", err)
+			t.Errorf("Unable to start HTTP server: %s", err)
 		}
 	}()
 }
@@ -291,7 +290,7 @@ func (cf *MockCloudFlare) deleteCerts() {
 	os.Remove(cf.certContext.ServerCertFile)
 }
 
-func (cf *MockCloudFlare) run() error {
+func (cf *MockCloudFlare) run(t *testing.T) error {
 	httpServer := &http.Server{
 		Addr: CF_ADDR,
 		Handler: &httputil.ReverseProxy{
@@ -316,7 +315,7 @@ func (cf *MockCloudFlare) run() error {
 		},
 	}
 
-	log.Printf("About to start mock CloudFlare at: %s", httpServer.Addr)
+	t.Logf("About to start mock CloudFlare at: %s", httpServer.Addr)
 	return httpServer.ListenAndServeTLS(cf.certContext.ServerCertFile, cf.certContext.PKFile)
 }
 
