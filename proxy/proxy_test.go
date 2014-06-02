@@ -92,10 +92,6 @@ func TestCloudFlare(t *testing.T) {
 	}()
 	waitForServer(SERVER_ADDR, 2*time.Second, t)
 
-	// Run client proxy
-	if err != nil {
-		t.Fatalf("Error initializing client protocol: %s", err)
-	}
 	client := &Client{
 		ShouldProxyLoopback: true, // this is only used when testing
 		ProxyConfig: ProxyConfig{
