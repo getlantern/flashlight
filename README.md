@@ -70,11 +70,6 @@ On the client, you should see something like this for every request:
 Handling request for: http://www.google.com/humans.txt
 ```
 
-On the server, you should see something like this for every request that's received:
-```bash
-2014/04/18 11:30:59 Handling request for: https://www.google.com/humans.txt
-```
-
 ### Building
 
 Flashlight requires [Go 1.3](https://code.google.com/p/go/wiki/Downloads).
