@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"strings"
+	"time"
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
@@ -12,6 +13,10 @@ import (
 
 const (
 	CONNECT = "CONNECT" // HTTP CONNECT method
+)
+
+var (
+	flushInterval = 50 * time.Millisecond
 )
 
 type Client struct {
@@ -72,6 +77,7 @@ func (client *Client) buildReverseProxy() {
 					return conn, nil
 				},
 			}),
+		FlushInterval: flushInterval,
 	}
 }
 
