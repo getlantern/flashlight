@@ -15,8 +15,9 @@ type Server struct {
 	ProxyConfig
 	InstanceId         string       // (optional) instanceid under which to report statistics
 	CertContext        *CertContext // context for certificate management
-	bytesGivenCh       chan int     // tracks bytes given
-	checkpointCh       chan bool    // used to sychronize checkpointing of stats to statshub
+	proxy              *enproxy.Proxy
+	bytesGivenCh       chan int  // tracks bytes given
+	checkpointCh       chan bool // used to sychronize checkpointing of stats to statshub
 	checkpointResultCh chan int
 }
 
@@ -34,6 +35,8 @@ func (server *Server) Run() error {
 		return fmt.Errorf("Unable to init server cert: %s", err)
 	}
 
+	server.proxy = enproxy.NewProxy(0, 0)
+
 	// TODO: reenable stats reporting
 	server.startReportingStatsIfNecessary()
 
@@ -41,17 +44,23 @@ func (server *Server) Run() error {
 
 	httpServer := &http.Server{
 		Addr:         server.Addr,
-		Handler:      enproxy.NewProxy(0, 0),
+		Handler:      server,
 		ReadTimeout:  server.ReadTimeout,
 		WriteTimeout: server.WriteTimeout,
 		TLSConfig:    server.TLSConfig,
 	}
+
 	if httpServer.TLSConfig == nil {
 		httpServer.TLSConfig = DEFAULT_TLS_SERVER_CONFIG
 	}
 
 	log.Debugf("About to start server (https) proxy at %s", server.Addr)
 	return httpServer.ListenAndServeTLS(server.CertContext.ServerCertFile, server.CertContext.PKFile)
+}
+
+func (server *Server) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+	log.Debugf("Handling traffic to: %s", req.Header.Get(enproxy.X_HTTPCONN_DEST_ADDR))
+	server.proxy.ServeHTTP(resp, req)
 }
 
 // handleInfoRequest looks up info about the client (right now just ip address)

@@ -12,7 +12,7 @@ server - handles requests from an upstream flashlight client proxy and actually
 proxies them to the final destination
 
 Using CloudFlare (and other CDNS), flashlight has the ability to masquerade as
-running on a different domain than it is.  The client simply specified the
+running on a different domain than it is.  The client simply specifies the
 "masquerade" flag with a value like "thehackernews.com".  flashlight will then
 use that masquerade host for the DNS lookup and will also specify it as the
 ServerName for SNI (though this is not actually necessary on CloudFlare). The
@@ -20,16 +20,10 @@ Host header of the HTTP request will actually contain the correct host
 (e.g. getiantem.org), which causes CloudFlare to route the request to the
 correct host.
 
-Flashlight works for HTTPS requests by man-in-the-middling them.  Each
-flashlight client uses its own generated private key and a corresponding self-
-signed CA certificate.  It then generates certificates for different domains on
-the fly, signing these with its CA certificate.  When flashlight first generates
-its CA certificate, it installs it into the system trust store as a trusted root
-CA so that the dynamically generated domain-specific certs are trusted by the
-browser and other HTTPS clients.  Doing this typically requires root permissions
-so to facilitate this, flashlight can be run with the `-install` flag that
-simply prepares and installs the certificates and then terminates.  This avoids
-potentially problems with running a full flashlight with root permissions.
+Flashlight uses [enproxy](https://github.com/getlantern/enproxy) to encapsulate
+data from/to the client as http request/response pairs.  This allows it to
+tunnel regular HTTP as well as HTTPS traffic over CloudFlare.  In fact, it can
+tunnel any TCP traffic.
 
 ### Usage
 
@@ -40,32 +34,27 @@ Usage of flashlight:
   -cpuprofile="": write cpu profile to given file
   -dumpheaders=false: dump the headers of outgoing requests and responses to stdout
   -help=false: Get usage help
-  -install=false: install prerequisites into environment and then terminate
   -instanceid="": instanceId under which to report stats to statshub.  If not specified, no stats are reported.
   -masquerade="": masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter
-  -masqueradecacert="": pin to this CA cert if specified (PEM format)
+  -rootca="": pin to this CA cert if specified (PEM format)
   -server="": hostname at which to connect to a server flashlight (always using https).  When specified, this flashlight will run as a client proxy, otherwise it runs as a server
   -serverport=443: the port on which to connect to the server
 ```
 
-**IMPORTANT** - when running a test locally, you must run the client first so
-that it generates and installs cacert.pem into the user's trust store.
-If cacert.pem already exists (i.e. you ran the server first) you have to
-manually install cacert.pem into your system trust store, otherwise the client
-will not trust the server's certificate.  In production, this is not an issue
-because the TLS connection is terminated at CloudFlare, which presents a real
-certificate signed by an already trusted CA.
+**IMPORTANT** - when running a test locally, run the server first, then pass the
+contents of servercert.pem to the client flashlight with the -rootca flag.  This
+way the client will trust the local server, which is using a self-signed cert.
 
 Example Client:
 
 ```bash
-./flashlight -addr localhost:10080 -server getiantem.org -masquerade thehackernews.com
+./flashlight -addr localhost:10080 -server getiantem.org -masquerade cdnjs.com
 ```
 
 Example Server:
 
 ```bash
-./flashlight -addr 0.0.0.0:443
+./flashlight -addr :443
 ```
 
 Example Curl Test:
@@ -78,7 +67,7 @@ Google is built by a large team of engineers, designers, researchers, robots, an
 On the client, you should see something like this for every request:
 
 ```bash
-2014/04/18 11:32:28 Using localhost:10081 to handle request
+Handling request for: http://www.google.com/humans.txt
 ```
 
 On the server, you should see something like this for every request that's received:
