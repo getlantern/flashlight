@@ -3,11 +3,15 @@ package proxy
 import (
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"strings"
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
-	"github.com/getlantern/go-reverseproxy/rp"
+)
+
+const (
+	CONNECT = "CONNECT" // HTTP CONNECT method
 )
 
 type Client struct {
@@ -16,7 +20,7 @@ type Client struct {
 	EnproxyConfig       *enproxy.Config
 	ShouldProxyLoopback bool // if true, even requests to the loopback interface are sent to the server proxy
 
-	reverseProxy *rp.ReverseProxy
+	reverseProxy *httputil.ReverseProxy
 }
 
 func (client *Client) Run() error {
@@ -45,7 +49,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 // buildReverseProxy builds the httputil.ReverseProxy used by the client to
 // proxy requests upstream.
 func (client *Client) buildReverseProxy() {
-	client.reverseProxy = &rp.ReverseProxy{
+	client.reverseProxy = &httputil.ReverseProxy{
 		Director: func(req *http.Request) {
 			// do nothing
 		},
@@ -68,8 +72,31 @@ func (client *Client) buildReverseProxy() {
 					return conn, nil
 				},
 			}),
-		DynamicFlushInterval: flushIntervalFor,
 	}
+}
+
+// withDumpHeaders creates a RoundTripper that uses the supplied RoundTripper
+// and that dumps headers (if dumpHeaders is true).
+func withDumpHeaders(dumpHeaders bool, rt http.RoundTripper) http.RoundTripper {
+	if !dumpHeaders {
+		return rt
+	}
+	return &headerDumpingRoundTripper{rt}
+}
+
+// headerDumpingRoundTripper is an http.RoundTripper that wraps another
+// http.RoundTripper and dumps response headers to the log.
+type headerDumpingRoundTripper struct {
+	orig http.RoundTripper
+}
+
+func (rt *headerDumpingRoundTripper) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	dumpHeaders("Request", req.Header)
+	resp, err = rt.orig.RoundTrip(req)
+	if err == nil {
+		dumpHeaders("Response", resp.Header)
+	}
+	return
 }
 
 func isLoopback(addr string) bool {

@@ -121,7 +121,9 @@ func addressForServer() string {
 
 // Build a tls.Config for the client to use in dialing server
 func clientTLSConfig() *tls.Config {
-	tlsConfig := &tls.Config{}
+	tlsConfig := &tls.Config{
+		ClientSessionCache: tls.NewLRUClientSessionCache(1000),
+	}
 	if *rootCA != "" {
 		caCert, err := keyman.LoadCertificateFromPEMBytes([]byte(*rootCA))
 		if err != nil {

@@ -1,14 +1,40 @@
 package proxy
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/keyman"
+)
+
+var (
+	// Points in time, mostly used for generating certificates
+	TEN_YEARS_FROM_TODAY = time.Now().AddDate(10, 0, 0)
+
+	// Default TLS configuration for servers
+	DEFAULT_TLS_SERVER_CONFIG = &tls.Config{
+		// The ECDHE cipher suites are preferred for performance and forward
+		// secrecy.  See https://community.qualys.com/blogs/securitylabs/2013/06/25/ssl-labs-deploying-forward-secrecy.
+		PreferServerCipherSuites: true,
+		CipherSuites: []uint16{
+			tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+			tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+			tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+			tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+			tls.TLS_RSA_WITH_RC4_128_SHA,
+			tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+			tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+			tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+		},
+	}
 )
 
 type Server struct {
@@ -88,10 +114,12 @@ func (ctx *CertContext) initServerCert(host string) (err error) {
 	}
 
 	log.Debugf("Creating new server cert at: %s", ctx.ServerCertFile)
-	if ctx.serverCert, err = ctx.certificateFor(host, TEN_YEARS_FROM_TODAY, true, nil); err != nil {
+	ctx.serverCert, err = ctx.pk.TLSCertificateFor("Lantern", host, TEN_YEARS_FROM_TODAY, true, nil)
+	if err != nil {
 		return
 	}
-	if err = ctx.serverCert.WriteToFile(ctx.ServerCertFile); err != nil {
+	err = ctx.serverCert.WriteToFile(ctx.ServerCertFile)
+	if err != nil {
 		return
 	}
 	return nil
