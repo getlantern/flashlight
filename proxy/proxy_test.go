@@ -122,7 +122,7 @@ func TestCloudFlare(t *testing.T) {
 	certPool := mockServer.certContext.serverCert.PoolContainingCert()
 	testRequest("Plain Text Request", t, mockServer.requests, false, certPool, 200, nil)
 	testRequest("HTTPS Request", t, mockServer.requests, true, certPool, 200, nil)
-	testRequest("HTTPS Request without MITM Cert", t, mockServer.requests, true, nil, 200, fmt.Errorf("Get https://"+HTTPS_ADDR+": x509: certificate signed by unknown authority"))
+	testRequest("HTTPS Request without server Cert", t, mockServer.requests, true, nil, 200, fmt.Errorf("Get https://"+HTTPS_ADDR+": x509: certificate signed by unknown authority"))
 }
 
 // testRequest tests an individual request, either HTTP or HTTPS, making sure

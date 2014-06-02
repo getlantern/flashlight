@@ -40,7 +40,7 @@ func (client *Client) Run() error {
 func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	log.Debugf("Handling request for: %s", req.RequestURI)
 	if req.Method == CONNECT {
-		client.EnproxyConfig.Intercept(resp, req)
+		client.EnproxyConfig.Intercept(resp, req, client.ShouldProxyLoopback)
 	} else {
 		client.reverseProxy.ServeHTTP(resp, req)
 	}
