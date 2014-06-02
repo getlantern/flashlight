@@ -61,7 +61,6 @@ func (server *Server) Run() error {
 		return fmt.Errorf("Unable to init server cert: %s", err)
 	}
 
-	// TODO: reenable stats reporting
 	server.startReportingStatsIfNecessary()
 
 	httpServer := &http.Server{
