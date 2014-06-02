@@ -3,6 +3,7 @@ package proxy
 import (
 	"crypto/tls"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -63,11 +64,9 @@ func (server *Server) Run() error {
 	// TODO: reenable stats reporting
 	server.startReportingStatsIfNecessary()
 
-	// TODO: handle info requests?
-
 	httpServer := &http.Server{
 		Addr:         server.Addr,
-		Handler:      enproxy.NewProxy(0, 0),
+		Handler:      enproxy.NewProxy(0, 0, server.dialDestination),
 		ReadTimeout:  server.ReadTimeout,
 		WriteTimeout: server.WriteTimeout,
 		TLSConfig:    server.TLSConfig,
@@ -78,6 +77,23 @@ func (server *Server) Run() error {
 
 	log.Debugf("About to start server (https) proxy at %s", server.Addr)
 	return httpServer.ListenAndServeTLS(server.CertContext.ServerCertFile, server.CertContext.PKFile)
+}
+
+// dialDestination dials the destination server and wraps the resulting net.Conn
+// in a countingConn if an InstanceId was configured.
+func (server *Server) dialDestination(addr string) (net.Conn, error) {
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		return nil, err
+	}
+
+	shouldReportStats := server.InstanceId != ""
+	if shouldReportStats {
+		// When reporting stats, use a special connection that counts bytes
+		return &countingConn{conn, server}, nil
+	}
+
+	return conn, err
 }
 
 // handleInfoRequest looks up info about the client (right now just ip address)
