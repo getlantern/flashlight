@@ -3,38 +3,21 @@ package proxy
 
 import (
 	"crypto/tls"
-	"fmt"
 	"net/http"
-	"os"
 	"time"
-
-	"code.google.com/p/go-uuid/uuid"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/getlantern/flashlight/log"
-	"github.com/getlantern/go-reverseproxy/rp"
 	"github.com/getlantern/keyman"
 )
 
 // ProxyConfig encapsulates common proxy configuration
 type ProxyConfig struct {
 	Addr              string        // listen address in form of host:port
-	CertContext       *CertContext  // context for certificate management
 	ShouldDumpHeaders bool          // whether or not to dump headers of requests and responses
-	TLSConfig         *tls.Config   // (optional) TLS configuration for inbound connections, if nil then DEFAULT_TLS_SERVER_CONFIG is used
 	ReadTimeout       time.Duration // (optional) timeout for read ops
 	WriteTimeout      time.Duration // (optional) timeout for write ops
-	reverseProxy      *rp.ReverseProxy
-}
-
-// CertContext encapsulates the certificates used by a Proxy
-type CertContext struct {
-	PKFile         string
-	CACertFile     string
-	ServerCertFile string
-	pk             *keyman.PrivateKey
-	caCert         *keyman.Certificate
-	serverCert     *keyman.Certificate
+	TLSConfig         *tls.Config   // (optional) TLS configuration for inbound connections, if nil then DEFAULT_TLS_SERVER_CONFIG is used
 }
 
 const (
@@ -77,44 +60,6 @@ var (
 	}
 )
 
-// InitCommonCerts initializes a private key and CA certificate, used both for
-// the server HTTPS proxy and the client MITM proxy.  The key and certificate
-// are generated if not already present. The CA  certificate is added to the
-// current user's trust store (e.g. keychain) as a trusted root if one with the
-// same common name is not already present.
-func (ctx *CertContext) InitCommonCerts() (err error) {
-	if ctx.pk, err = keyman.LoadPKFromFile(ctx.PKFile); err != nil {
-		if os.IsNotExist(err) {
-			log.Debugf("Creating new PK at: %s", ctx.PKFile)
-			if ctx.pk, err = keyman.GeneratePK(2048); err != nil {
-				return
-			}
-			if err = ctx.pk.WriteToFile(ctx.PKFile); err != nil {
-				return fmt.Errorf("Unable to save private key: %s", err)
-			}
-		} else {
-			return fmt.Errorf("Unable to read private key, even though it exists: %s", err)
-		}
-	}
-
-	ctx.caCert, err = keyman.LoadCertificateFromFile(ctx.CACertFile)
-	if err != nil || ctx.caCert.ExpiresBefore(ONE_MONTH_FROM_TODAY) {
-		if os.IsNotExist(err) {
-			log.Debugf("Creating new self-signed CA cert at: %s", ctx.CACertFile)
-			if ctx.caCert, err = ctx.certificateFor(FLASHLIGHT_CN_PREFIX+uuid.New(), TEN_YEARS_FROM_TODAY, true, nil); err != nil {
-				return
-			}
-			if err = ctx.caCert.WriteToFile(ctx.CACertFile); err != nil {
-				return fmt.Errorf("Unable to save CA certificate: %s", err)
-			}
-		} else {
-			return fmt.Errorf("Unable to read CA cert, even though it exists: %s", err)
-		}
-	}
-
-	return nil
-}
-
 // certificateFor generates a certificate for a given name, signed by the given
 // issuer.  If no issuer is specified, the generated certificate is
 // self-signed.
@@ -126,32 +71,26 @@ func (ctx *CertContext) certificateFor(
 	return ctx.pk.TLSCertificateFor("Lantern", name, validUntil, isCA, issuer)
 }
 
-// writhRewrite creates a RoundTripper that uses the supplied RoundTripper and
-// rewrites the response.
-func withRewrite(rw func(*http.Response), dumpHeaders bool, rt http.RoundTripper) http.RoundTripper {
-	return &wrappedRoundTripper{
-		rewrite:     rw,
-		orig:        rt,
-		dumpHeaders: dumpHeaders,
+// withDumpHeaders creates a RoundTripper that uses the supplied RoundTripper
+// and that dumps headers (if dumpHeaders is true).
+func withDumpHeaders(dumpHeaders bool, rt http.RoundTripper) http.RoundTripper {
+	if !dumpHeaders {
+		return rt
 	}
+	return &headerDumpingRoundTripper{rt}
 }
 
-// wrappedRoundTripper is an http.RoundTripper that wraps another
-// http.RoundTripper to rewrite responses using the rewrite function prior to
-// returning them.
-type wrappedRoundTripper struct {
-	rewrite     func(*http.Response)
-	orig        http.RoundTripper
-	dumpHeaders bool
+// headerDumpingRoundTripper is an http.RoundTripper that wraps another
+// http.RoundTripper and dumps response headers to the log.
+type headerDumpingRoundTripper struct {
+	orig http.RoundTripper
 }
 
-func (rt *wrappedRoundTripper) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+func (rt *headerDumpingRoundTripper) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	dumpHeaders("Request", req.Header)
 	resp, err = rt.orig.RoundTrip(req)
 	if err == nil {
-		rt.rewrite(resp)
-		if rt.dumpHeaders {
-			dumpHeaders("Response", resp.Header)
-		}
+		dumpHeaders("Response", resp.Header)
 	}
 	return
 }

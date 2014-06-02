@@ -2,32 +2,35 @@
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"fmt"
-
+	"io"
+	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
 
+	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
-	"github.com/getlantern/flashlight/protocol/cloudflare"
 	"github.com/getlantern/flashlight/proxy"
+	"github.com/getlantern/keyman"
 )
 
 var (
 	// Command-line Flags
-	help             = flag.Bool("help", false, "Get usage help")
-	addr             = flag.String("addr", "", "ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https")
-	upstreamHost     = flag.String("server", "", "hostname at which to connect to a server flashlight (always using https).  When specified, this flashlight will run as a client proxy, otherwise it runs as a server")
-	upstreamPort     = flag.Int("serverport", 443, "the port on which to connect to the server")
-	masqueradeAs     = flag.String("masquerade", "", "masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter")
-	masqueradeCACert = flag.String("masqueradecacert", "", "pin to this CA cert if specified (PEM format)")
-	configDir        = flag.String("configdir", "", "directory in which to store configuration (defaults to current directory)")
-	instanceId       = flag.String("instanceid", "", "instanceId under which to report stats to statshub.  If not specified, no stats are reported.")
-	dumpheaders      = flag.Bool("dumpheaders", false, "dump the headers of outgoing requests and responses to stdout")
-	cpuprofile       = flag.String("cpuprofile", "", "write cpu profile to given file")
-	install          = flag.Bool("install", false, "install prerequisites into environment and then terminate")
+	help         = flag.Bool("help", false, "Get usage help")
+	addr         = flag.String("addr", "", "ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https")
+	upstreamHost = flag.String("server", "", "hostname at which to connect to a server flashlight (always using https).  When specified, this flashlight will run as a client proxy, otherwise it runs as a server")
+	upstreamPort = flag.Int("serverport", 443, "the port on which to connect to the server")
+	masqueradeAs = flag.String("masquerade", "", "masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter")
+	rootCA       = flag.String("rootca", "", "pin to this CA cert if specified (PEM format)")
+	configDir    = flag.String("configdir", "", "directory in which to store configuration (defaults to current directory)")
+	instanceId   = flag.String("instanceid", "", "instanceId under which to report stats to statshub.  If not specified, no stats are reported.")
+	dumpheaders  = flag.Bool("dumpheaders", false, "dump the headers of outgoing requests and responses to stdout")
+	cpuprofile   = flag.String("cpuprofile", "", "write cpu profile to given file")
 
 	// flagsParsed is unused, this is just a trick to allow us to parse
 	// command-line flags before initializing the other variables
@@ -41,7 +44,7 @@ var (
 // provided flags, it prints usage to stdout and exits with status 1.
 func parseFlags() bool {
 	flag.Parse()
-	if (*help || *addr == "") && !*install {
+	if *help || *addr == "" {
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -61,53 +64,72 @@ func main() {
 		ShouldDumpHeaders: *dumpheaders,
 		ReadTimeout:       0, // don't timeout
 		WriteTimeout:      0,
+	}
+
+	log.Debugf("Running proxy")
+	if isDownstream {
+		runClientProxy(proxyConfig)
+	} else {
+		runServerProxy(proxyConfig)
+	}
+}
+
+// Runs the client-side proxy
+func runClientProxy(proxyConfig proxy.ProxyConfig) {
+	client := &proxy.Client{
+		ProxyConfig: proxyConfig,
+		EnproxyConfig: &enproxy.Config{
+			DialProxy: func(addr string) (net.Conn, error) {
+				return tls.Dial("tcp", addressForServer(), clientTLSConfig())
+			},
+			NewRequest: func(method string, body io.Reader) (req *http.Request, err error) {
+				return http.NewRequest(method, "http://"+*upstreamHost+":80/", body)
+			},
+		},
+	}
+	err := client.Run()
+	if err != nil {
+		log.Fatalf("Unable to run client proxy: %s", err)
+	}
+}
+
+// Runs the server-side proxy
+func runServerProxy(proxyConfig proxy.ProxyConfig) {
+	useAllCores()
+	server := &proxy.Server{
+		ProxyConfig: proxyConfig,
+		InstanceId:  *instanceId,
 		CertContext: &proxy.CertContext{
 			PKFile:         inConfigDir("proxypk.pem"),
-			CACertFile:     inConfigDir("cacert.pem"),
 			ServerCertFile: inConfigDir("servercert.pem"),
 		},
 	}
-
-	if *install {
-		log.Debugf("Installing proxy config")
-		err := proxyConfig.CertContext.InitCommonCerts()
-		if err != nil {
-			log.Fatalf("Unable to init common certs: %s", err)
-		}
-		proxyConfig.InstallCACertToTrustStoreIfNecessary()
-	} else {
-		log.Debugf("Running proxy")
-		if isDownstream {
-			// Protocol is right now hardcoded to use CloudFlare, could be made
-			// configurable to support other protocols like Fastly.
-			protocol, err := cloudflare.NewClientProtocol(*upstreamHost, *upstreamPort, *masqueradeAs, *masqueradeCACert)
-			if err != nil {
-				log.Fatalf("Error initializing CloudFlare client protocol: %s", err)
-			}
-			client := &proxy.Client{
-				ProxyConfig:  proxyConfig,
-				UpstreamHost: *upstreamHost,
-				Protocol:     protocol,
-			}
-			err = client.Run()
-			if err != nil {
-				log.Fatalf("Unable to run client proxy: %s", err)
-			}
-		} else {
-			protocol := cloudflare.NewServerProtocol()
-			server := &proxy.Server{
-				ProxyConfig: proxyConfig,
-				Protocol:    protocol,
-				InstanceId:  *instanceId,
-			}
-			useAllCores()
-			err := server.Run()
-			if err != nil {
-				log.Fatalf("Unable to run server proxy: %s", err)
-			}
-		}
-
+	err := server.Run()
+	if err != nil {
+		log.Fatalf("Unable to run server proxy: %s", err)
 	}
+}
+
+// Get the address to dial for reaching the server
+func addressForServer() string {
+	serverHost := *upstreamHost
+	if *masqueradeAs != "" {
+		serverHost = *masqueradeAs
+	}
+	return fmt.Sprintf("%s:%d", serverHost, *upstreamPort)
+}
+
+// Build a tls.Config for the client to use in dialing server
+func clientTLSConfig() *tls.Config {
+	tlsConfig := &tls.Config{}
+	if *rootCA != "" {
+		caCert, err := keyman.LoadCertificateFromPEMBytes([]byte(*rootCA))
+		if err != nil {
+			log.Fatalf("Unable to load root ca cert: %s", err)
+		}
+		tlsConfig.RootCAs = caCert.PoolContainingCert()
+	}
+	return tlsConfig
 }
 
 // inConfigDir returns the path to the given filename inside of the configDir
