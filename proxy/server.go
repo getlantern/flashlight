@@ -89,6 +89,7 @@ func (server *Server) dialDestination(addr string) (net.Conn, error) {
 
 	shouldReportStats := server.InstanceId != ""
 	if shouldReportStats {
+		log.Debug("Using countingConn")
 		// When reporting stats, use a special connection that counts bytes
 		return &countingConn{conn, server}, nil
 	}
