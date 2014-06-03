@@ -15,6 +15,8 @@ import (
 )
 
 var (
+	dialTimeout = 10 * time.Second
+
 	// Points in time, mostly used for generating certificates
 	TEN_YEARS_FROM_TODAY = time.Now().AddDate(10, 0, 0)
 
@@ -81,7 +83,7 @@ func (server *Server) Run() error {
 // dialDestination dials the destination server and wraps the resulting net.Conn
 // in a countingConn if an InstanceId was configured.
 func (server *Server) dialDestination(addr string) (net.Conn, error) {
-	conn, err := net.Dial("tcp", addr)
+	conn, err := net.DialTimeout("tcp", addr, dialTimeout)
 	if err != nil {
 		return nil, err
 	}
