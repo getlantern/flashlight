@@ -4,7 +4,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
-	"strings"
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
@@ -17,8 +16,7 @@ const (
 type Client struct {
 	ProxyConfig
 
-	EnproxyConfig       *enproxy.Config
-	ShouldProxyLoopback bool // if true, even requests to the loopback interface are sent to the server proxy
+	EnproxyConfig *enproxy.Config
 
 	reverseProxy *httputil.ReverseProxy
 }
@@ -40,7 +38,7 @@ func (client *Client) Run() error {
 func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	log.Debugf("Handling request for: %s", req.RequestURI)
 	if req.Method == CONNECT {
-		client.EnproxyConfig.Intercept(resp, req, client.ShouldProxyLoopback)
+		client.EnproxyConfig.Intercept(resp, req)
 	} else {
 		client.reverseProxy.ServeHTTP(resp, req)
 	}
@@ -57,10 +55,6 @@ func (client *Client) buildReverseProxy() {
 			client.ShouldDumpHeaders,
 			&http.Transport{
 				Dial: func(network, addr string) (net.Conn, error) {
-					// Check for local addresses, which we proxy directly
-					if !client.ShouldProxyLoopback && isLoopback(addr) {
-						return net.Dial(network, addr)
-					}
 					conn := &enproxy.Conn{
 						Addr:   addr,
 						Config: client.EnproxyConfig,
@@ -97,9 +91,4 @@ func (rt *headerDumpingRoundTripper) RoundTrip(req *http.Request) (resp *http.Re
 		dumpHeaders("Response", resp.Header)
 	}
 	return
-}
-
-func isLoopback(addr string) bool {
-	ip, err := net.ResolveIPAddr("ip4", strings.Split(addr, ":")[0])
-	return err == nil && ip.IP.IsLoopback()
 }

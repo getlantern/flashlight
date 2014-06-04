@@ -93,7 +93,6 @@ func TestCloudFlare(t *testing.T) {
 	waitForServer(SERVER_ADDR, 2*time.Second, t)
 
 	client := &Client{
-		ShouldProxyLoopback: true, // this is only used when testing
 		ProxyConfig: ProxyConfig{
 			Addr:         CLIENT_ADDR,
 			ReadTimeout:  0, // don't timeout
