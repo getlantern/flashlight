@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
+	"time"
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
@@ -31,6 +32,7 @@ var (
 	instanceId   = flag.String("instanceid", "", "instanceId under which to report stats to statshub.  If not specified, no stats are reported.")
 	dumpheaders  = flag.Bool("dumpheaders", false, "dump the headers of outgoing requests and responses to stdout")
 	cpuprofile   = flag.String("cpuprofile", "", "write cpu profile to given file")
+	memprofile   = flag.String("memprofile", "", "write heap profile to given file")
 
 	// flagsParsed is unused, this is just a trick to allow us to parse
 	// command-line flags before initializing the other variables
@@ -54,9 +56,14 @@ func parseFlags() bool {
 func main() {
 	if *cpuprofile != "" {
 		startCPUProfiling(*cpuprofile)
-		stopCPUProfilingOnSigINT(*cpuprofile)
 		defer stopCPUProfiling(*cpuprofile)
 	}
+
+	if *memprofile != "" {
+		defer saveMemProfile(*memprofile)
+	}
+
+	saveProfilingOnSigINT()
 
 	// Set up the common ProxyConfig for clients and servers
 	proxyConfig := proxy.ProxyConfig{
@@ -167,17 +174,33 @@ func startCPUProfiling(filename string) {
 	log.Debugf("Process will save cpu profile to %s after terminating", filename)
 }
 
-func stopCPUProfilingOnSigINT(filename string) {
+func stopCPUProfiling(filename string) {
+	log.Debugf("Saving CPU profile to: %s", filename)
+	pprof.StopCPUProfile()
+}
+
+func saveMemProfile(filename string) {
+	f, err := os.Create(filename)
+	if err != nil {
+		log.Errorf("Unable to create file to save memprofile: %s", err)
+		return
+	}
+	log.Debugf("Saving heap profile to: %s", filename)
+	pprof.WriteHeapProfile(f)
+	f.Close()
+}
+
+func saveProfilingOnSigINT() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		<-c
-		stopCPUProfiling(filename)
-		os.Exit(0)
+		if *cpuprofile != "" {
+			stopCPUProfiling(*cpuprofile)
+		}
+		if *memprofile != "" {
+			saveMemProfile(*memprofile)
+		}
+		os.Exit(2)
 	}()
-}
-
-func stopCPUProfiling(filename string) {
-	log.Debugf("Saving CPU profile to: %s", filename)
-	pprof.StopCPUProfile()
 }
