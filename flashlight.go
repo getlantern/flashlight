@@ -12,7 +12,6 @@ import (
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
-	"time"
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
