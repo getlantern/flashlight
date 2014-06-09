@@ -59,7 +59,10 @@ func (client *Client) buildReverseProxy() {
 						Addr:   addr,
 						Config: client.EnproxyConfig,
 					}
-					conn.Connect()
+					err := conn.Connect()
+					if err != nil {
+						return nil, err
+					}
 					return conn, nil
 				},
 			}),
