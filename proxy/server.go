@@ -67,7 +67,9 @@ func (server *Server) Run() error {
 
 	// Set up an enproxy Proxy
 	proxy := &enproxy.Proxy{
-		Dial: server.dialDestination,
+		Dial:         server.dialDestination,
+		IdleInterval: 25 * time.Millisecond,
+		IdleTimeout:  70 * time.Millisecond,
 	}
 	proxy.Start()
 
@@ -101,22 +103,6 @@ func (server *Server) dialDestination(addr string) (net.Conn, error) {
 	}
 
 	return conn, err
-}
-
-// handleInfoRequest looks up info about the client (right now just ip address)
-// and returns it to the client
-func (server *Server) handleInfoRequest(resp http.ResponseWriter, req *http.Request) {
-	// Client requested their info
-	clientIp := req.Header.Get("X-Forwarded-For")
-	if clientIp == "" {
-		clientIp = strings.Split(req.RemoteAddr, ":")[0]
-	} else {
-		// X-Forwarded-For may contain multiple ips, use the last
-		ips := strings.Split(clientIp, ",")
-		clientIp = ips[len(ips)-1]
-	}
-	resp.Header().Set(X_LANTERN_PUBLIC_IP, clientIp)
-	resp.WriteHeader(200)
 }
 
 // initServerCert initializes a PK + cert for use by a server proxy, signed by
