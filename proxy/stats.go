@@ -70,7 +70,9 @@ func (server *Server) reportStats() {
 
 func (server *Server) postStats(bytesSum int) error {
 	report := map[string]interface{}{
-		"dims": map[string]string{},
+		"dims": map[string]string{
+			"fallback": server.InstanceId,
+		},
 		"increments": map[string]int{
 			"bytesGivenFallback": bytesSum,
 		},
