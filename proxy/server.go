@@ -65,9 +65,15 @@ func (server *Server) Run() error {
 
 	server.startReportingStatsIfNecessary()
 
+	// Set up an enproxy Proxy
+	proxy := &enproxy.Proxy{
+		Dial: server.dialDestination,
+	}
+	proxy.Start()
+
 	httpServer := &http.Server{
 		Addr:         server.Addr,
-		Handler:      enproxy.NewProxy(0, 0, server.dialDestination),
+		Handler:      proxy,
 		ReadTimeout:  server.ReadTimeout,
 		WriteTimeout: server.WriteTimeout,
 		TLSConfig:    server.TLSConfig,
