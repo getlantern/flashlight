@@ -89,7 +89,7 @@ func runClientProxy(proxyConfig proxy.ProxyConfig) {
 				return tls.Dial("tcp", addressForServer(), clientTLSConfig())
 			},
 			NewRequest: func(method string, body io.Reader) (req *http.Request, err error) {
-				return http.NewRequest(method, "http://"+*upstreamHost+":80/", body)
+				return http.NewRequest(method, "https://"+*upstreamHost+":443/", body)
 			},
 		},
 	}
