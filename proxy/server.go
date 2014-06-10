@@ -70,7 +70,6 @@ func (server *Server) Run() error {
 	proxy := &enproxy.Proxy{
 		Dial:         server.dialDestination,
 		Host:         server.Host,
-		IdleInterval: 25 * time.Millisecond,
 		IdleTimeout:  70 * time.Second,
 	}
 	proxy.Start()

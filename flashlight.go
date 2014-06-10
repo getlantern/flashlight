@@ -93,7 +93,7 @@ func runClientProxy(proxyConfig proxy.ProxyConfig) {
 				if host == "" {
 					host = *upstreamHost
 				}
-				return http.NewRequest(method, "http://"+host+":80/", body)
+				return http.NewRequest(method, "https://"+host+":443/", body)
 			},
 		},
 	}
