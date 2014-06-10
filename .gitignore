@@ -2,3 +2,4 @@ flashlight
 flashlight.ex?
 *.tar.gz
 *.pem
+*.swp

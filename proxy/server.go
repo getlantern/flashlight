@@ -42,6 +42,7 @@ var (
 
 type Server struct {
 	ProxyConfig
+	Host               string       // value to feed to X-LANTERN-HOST
 	InstanceId         string       // (optional) instanceid under which to report statistics
 	CertContext        *CertContext // context for certificate management
 	bytesGivenCh       chan int     // tracks bytes given
@@ -68,6 +69,7 @@ func (server *Server) Run() error {
 	// Set up an enproxy Proxy
 	proxy := &enproxy.Proxy{
 		Dial:         server.dialDestination,
+		Host:         server.Host,
 		IdleInterval: 25 * time.Millisecond,
 		IdleTimeout:  70 * time.Second,
 	}
