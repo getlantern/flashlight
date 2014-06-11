@@ -42,7 +42,7 @@ var (
 
 type Server struct {
 	ProxyConfig
-	Host               string       // value to feed to X-LANTERN-HOST
+	Host               string       // FQDN that is guaranteed to hit this server
 	InstanceId         string       // (optional) instanceid under which to report statistics
 	CertContext        *CertContext // context for certificate management
 	bytesGivenCh       chan int     // tracks bytes given
