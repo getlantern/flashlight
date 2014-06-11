@@ -104,8 +104,11 @@ func TestCloudFlare(t *testing.T) {
 					RootCAs: certContext.serverCert.PoolContainingCert(),
 				})
 			},
-			NewRequest: func(method string, body io.Reader) (req *http.Request, err error) {
-				return http.NewRequest(method, "http://"+SERVER_ADDR, body)
+			NewRequest: func(host string, method string, body io.Reader) (req *http.Request, err error) {
+				if host == "" {
+					host = SERVER_ADDR
+				}
+				return http.NewRequest(method, "http://"+host, body)
 			},
 		},
 	}

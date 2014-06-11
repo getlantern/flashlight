@@ -23,7 +23,8 @@ var (
 	// Command-line Flags
 	help         = flag.Bool("help", false, "Get usage help")
 	addr         = flag.String("addr", "", "ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https")
-	upstreamHost = flag.String("server", "", "hostname at which to connect to a server flashlight (always using https).  When specified, this flashlight will run as a client proxy, otherwise it runs as a server")
+	role         = flag.String("role", "", "either 'client' or 'server'")
+	upstreamHost = flag.String("server", "", "hostname of server flashlight (always using https)")
 	upstreamPort = flag.Int("serverport", 443, "the port on which to connect to the server")
 	masqueradeAs = flag.String("masquerade", "", "masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter")
 	rootCA       = flag.String("rootca", "", "pin to this CA cert if specified (PEM format)")
@@ -37,7 +38,7 @@ var (
 	// command-line flags before initializing the other variables
 	flagsParsed = parseFlags()
 
-	isDownstream = *upstreamHost != ""
+	isDownstream = *role == "client"
 	isUpstream   = !isDownstream
 )
 
@@ -45,7 +46,7 @@ var (
 // provided flags, it prints usage to stdout and exits with status 1.
 func parseFlags() bool {
 	flag.Parse()
-	if *help || *addr == "" {
+	if *help || *addr == "" || (*role != "server" && *role != "client") || *upstreamHost == "" {
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -88,8 +89,11 @@ func runClientProxy(proxyConfig proxy.ProxyConfig) {
 			DialProxy: func(addr string) (net.Conn, error) {
 				return tls.Dial("tcp", addressForServer(), clientTLSConfig())
 			},
-			NewRequest: func(method string, body io.Reader) (req *http.Request, err error) {
-				return http.NewRequest(method, "https://"+*upstreamHost+":443/", body)
+			NewRequest: func(host string, method string, body io.Reader) (req *http.Request, err error) {
+				if host == "" {
+					host = *upstreamHost
+				}
+				return http.NewRequest(method, "https://"+host+":443/", body)
 			},
 		},
 	}
@@ -104,6 +108,7 @@ func runServerProxy(proxyConfig proxy.ProxyConfig) {
 	useAllCores()
 	server := &proxy.Server{
 		ProxyConfig: proxyConfig,
+		Host:        *upstreamHost,
 		InstanceId:  *instanceId,
 		CertContext: &proxy.CertContext{
 			PKFile:         inConfigDir("proxypk.pem"),

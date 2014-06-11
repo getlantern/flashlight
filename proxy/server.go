@@ -42,6 +42,7 @@ var (
 
 type Server struct {
 	ProxyConfig
+	Host               string       // FQDN that is guaranteed to hit this server
 	InstanceId         string       // (optional) instanceid under which to report statistics
 	CertContext        *CertContext // context for certificate management
 	bytesGivenCh       chan int     // tracks bytes given
@@ -67,8 +68,9 @@ func (server *Server) Run() error {
 
 	// Set up an enproxy Proxy
 	proxy := &enproxy.Proxy{
-		Dial:        server.dialDestination,
-		IdleTimeout: 70 * time.Second,
+		Dial:         server.dialDestination,
+		Host:         server.Host,
+		IdleTimeout:  70 * time.Second,
 	}
 	proxy.Start()
 
