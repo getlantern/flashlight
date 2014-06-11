@@ -8,8 +8,8 @@ flashlight runs in one of two modes:
 client - meant to run locally to wherever the browser is running, forwards
 requests to the server
 
-server - handles requests from an upstream flashlight client proxy and actually
-proxies them to the final destination
+server - handles requests from a flashlight client proxy and actually proxies
+them to the final destination
 
 Using CloudFlare (and other CDNS), flashlight has the ability to masquerade as
 running on a different domain than it is.  The client simply specifies the
@@ -29,15 +29,16 @@ tunnel any TCP traffic.
 
 ```bash
 Usage of flashlight:
-  -addr="": ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https
+  -addr (required): ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https
   -configdir="": directory in which to store configuration (defaults to current directory)
   -cpuprofile="": write cpu profile to given file
   -dumpheaders=false: dump the headers of outgoing requests and responses to stdout
   -help=false: Get usage help
   -instanceid="": instanceId under which to report stats to statshub.  If not specified, no stats are reported.
   -masquerade="": masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter
+  -role (required): either 'client' or 'server'
   -rootca="": pin to this CA cert if specified (PEM format)
-  -server="": hostname at which to connect to a server flashlight (always using https).  When specified, this flashlight will run as a client proxy, otherwise it runs as a server
+  -server (required): FQDN of flashlight server
   -serverport=443: the port on which to connect to the server
 ```
 
