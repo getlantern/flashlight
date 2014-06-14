@@ -54,6 +54,13 @@ func (client *Client) buildReverseProxy() {
 		Transport: withDumpHeaders(
 			client.ShouldDumpHeaders,
 			&http.Transport{
+				// We disable keepalives because some servers pretend to support
+				// keep-alives but close their connections anyway, which causes
+				// an error inside ReverseProxy.  This is not an issue for HTTPS
+				// because  the browser is responsible for handling the problem,
+				// which browsers like Chrome and Firefox already know to do.
+				// See https://code.google.com/p/go/issues/detail?id=4677
+				DisableKeepAlives: true,
 				Dial: func(network, addr string) (net.Conn, error) {
 					conn := &enproxy.Conn{
 						Addr:   addr,
