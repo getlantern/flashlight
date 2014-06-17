@@ -42,7 +42,7 @@ func (server *Server) collectStats() {
 	for {
 		select {
 		case bytesGiven := <-server.bytesGivenCh:
-			bytesSum += bytesGiven
+			bytesSum = bytesSum + bytesGiven
 		case <-server.checkpointCh:
 			server.checkpointResultCh <- bytesSum
 			bytesSum = 0
