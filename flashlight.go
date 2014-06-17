@@ -22,9 +22,9 @@ import (
 var (
 	// Command-line Flags
 	help         = flag.Bool("help", false, "Get usage help")
-	addr         = flag.String("addr", "", "ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https")
-	role         = flag.String("role", "", "either 'client' or 'server'")
-	upstreamHost = flag.String("server", "", "hostname of server flashlight (always using https)")
+	addr         = flag.String("addr", "", "ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https (required)")
+	role         = flag.String("role", "", "either 'client' or 'server' (required)")
+	upstreamHost = flag.String("server", "", "FQDN of flashlight server (required)")
 	upstreamPort = flag.Int("serverport", 443, "the port on which to connect to the server")
 	masqueradeAs = flag.String("masquerade", "", "masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter")
 	rootCA       = flag.String("rootca", "", "pin to this CA cert if specified (PEM format)")
