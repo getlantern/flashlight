@@ -2,7 +2,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"flag"
 	"fmt"
 	"io"
@@ -17,6 +16,7 @@ import (
 	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/proxy"
 	"github.com/getlantern/keyman"
+	"github.com/getlantern/tls"
 )
 
 var (
@@ -93,7 +93,7 @@ func runClientProxy(proxyConfig proxy.ProxyConfig) {
 				if host == "" {
 					host = *upstreamHost
 				}
-				return http.NewRequest(method, "https://"+host+":443/", body)
+				return http.NewRequest(method, "http://"+host+"/", body)
 			},
 		},
 	}
@@ -133,8 +133,14 @@ func addressForServer() string {
 // Build a tls.Config for the client to use in dialing server
 func clientTLSConfig() *tls.Config {
 	tlsConfig := &tls.Config{
-		ClientSessionCache: tls.NewLRUClientSessionCache(1000),
+		ClientSessionCache:                  tls.NewLRUClientSessionCache(1000),
+		SuppressServerNameInClientHandshake: true,
 	}
+	// Note - we need to suppress the sending of the ServerName in the client
+	// handshake to make host-spoofing work with Fastly.  If the client Hello
+	// includes a server name, Fastly checks to make sure that this matches the
+	// Host header in the HTTP request and if they don't match, it returns a
+	// 400 Bad Request error.
 	if *rootCA != "" {
 		caCert, err := keyman.LoadCertificateFromPEMBytes([]byte(*rootCA))
 		if err != nil {
