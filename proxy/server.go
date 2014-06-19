@@ -79,15 +79,14 @@ func (server *Server) Run() error {
 		Handler:      proxy,
 		ReadTimeout:  server.ReadTimeout,
 		WriteTimeout: server.WriteTimeout,
-		// TLSConfig:    server.TLSConfig,
+		TLSConfig:    server.TLSConfig,
 	}
-	// if httpServer.TLSConfig == nil {
-	// 	httpServer.TLSConfig = DEFAULT_TLS_SERVER_CONFIG
-	// }
+	if httpServer.TLSConfig == nil {
+		httpServer.TLSConfig = DEFAULT_TLS_SERVER_CONFIG
+	}
 
 	log.Debugf("About to start server (https) proxy at %s", server.Addr)
-	// return httpServer.ListenAndServeTLS(server.CertContext.ServerCertFile, server.CertContext.PKFile)
-	return httpServer.ListenAndServe()
+	return httpServer.ListenAndServeTLS(server.CertContext.ServerCertFile, server.CertContext.PKFile)
 }
 
 // dialDestination dials the destination server and wraps the resulting net.Conn
