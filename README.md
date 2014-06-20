@@ -98,7 +98,7 @@ Handling request for: http://www.google.com/humans.txt
 
 ### Building
 
-Flashlight requires [Go 1.3](https://code.google.com/p/go/wiki/Downloads).
+Flashlight requires [Go 1.3](http://golang.org/dl/).
 
 It is convenient to build flashlight for multiple platforms using something like
 [goxc](https://github.com/laher/goxc).
