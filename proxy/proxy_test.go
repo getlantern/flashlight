@@ -100,8 +100,8 @@ func TestCloudFlare(t *testing.T) {
 		},
 		EnproxyConfig: &enproxy.Config{
 			DialProxy: func(addr string) (net.Conn, error) {
-				return tls.Dial("tcp", SERVER_ADDR, &tls.Config{
-					RootCAs: certContext.serverCert.PoolContainingCert(),
+				return tls.Dial("tcp", CF_ADDR, &tls.Config{
+					RootCAs: cf.certContext.serverCert.PoolContainingCert(),
 				})
 			},
 			NewRequest: func(host string, method string, body io.Reader) (req *http.Request, err error) {
@@ -262,16 +262,9 @@ func (cf *MockCloudFlare) run(t *testing.T) error {
 		Addr: CF_ADDR,
 		Handler: &httputil.ReverseProxy{
 			Director: func(req *http.Request) {
-				req.URL.Scheme = "https"
+				req.URL.Scheme = "http"
 				req.URL.Host = SERVER_ADDR
 				req.Host = SERVER_ADDR
-			},
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					// Real CloudFlare doesn't verify our cert, so mock doesn't
-					// either
-					InsecureSkipVerify: true,
-				},
 			},
 		},
 	}
