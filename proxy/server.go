@@ -42,12 +42,13 @@ var (
 
 type Server struct {
 	ProxyConfig
-	Host               string       // FQDN that is guaranteed to hit this server
-	InstanceId         string       // (optional) instanceid under which to report statistics
-	CertContext        *CertContext // context for certificate management
-	bytesGivenCh       chan int     // tracks bytes given
-	checkpointCh       chan bool    // used to sychronize checkpointing of stats to statshub
-	checkpointResultCh chan int
+	Host                       string       // FQDN that is guaranteed to hit this server
+	InstanceId                 string       // (optional) instanceid under which to report statistics
+	CertContext                *CertContext // context for certificate management
+	AllowNonGlobalDestinations bool         // if true, requests to LAN, Loopback, etc. will be allowed
+	bytesGivenCh               chan int     // tracks bytes given
+	checkpointCh               chan bool    // used to sychronize checkpointing of stats to statshub
+	checkpointResultCh         chan int
 }
 
 // CertContext encapsulates the certificates used by a Server
@@ -92,6 +93,17 @@ func (server *Server) Run() error {
 // dialDestination dials the destination server and wraps the resulting net.Conn
 // in a countingConn if an InstanceId was configured.
 func (server *Server) dialDestination(addr string) (net.Conn, error) {
+	if !server.AllowNonGlobalDestinations {
+		ipAddr, err := net.ResolveIPAddr("ip", addr)
+		if err != nil {
+			return nil, err
+		}
+		if !ipAddr.IP.IsGlobalUnicast() {
+			err = fmt.Errorf("Not accepting connections to non-global address: %s", ipAddr)
+			log.Error(err.Error())
+			return nil, err
+		}
+	}
 	conn, err := net.DialTimeout("tcp", addr, dialTimeout)
 	if err != nil {
 		return nil, err

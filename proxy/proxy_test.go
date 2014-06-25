@@ -82,7 +82,8 @@ func TestCloudFlare(t *testing.T) {
 			ReadTimeout:  0, // don't timeout
 			WriteTimeout: 0,
 		},
-		CertContext: certContext,
+		CertContext:                certContext,
+		AllowNonGlobalDestinations: true,
 	}
 	go func() {
 		err := server.Run()
