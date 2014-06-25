@@ -94,12 +94,15 @@ func (server *Server) Run() error {
 // in a countingConn if an InstanceId was configured.
 func (server *Server) dialDestination(addr string) (net.Conn, error) {
 	if !server.AllowNonGlobalDestinations {
-		ipAddr, err := net.ResolveIPAddr("ip", addr)
+		host := strings.Split(addr, ":")[0]
+		ipAddr, err := net.ResolveIPAddr("ip", host)
 		if err != nil {
+			err = fmt.Errorf("Unable to resolve destination IP addr: %s", err)
+			log.Error(err.Error())
 			return nil, err
 		}
 		if !ipAddr.IP.IsGlobalUnicast() {
-			err = fmt.Errorf("Not accepting connections to non-global address: %s", ipAddr)
+			err = fmt.Errorf("Not accepting connections to non-global address: %s", host)
 			log.Error(err.Error())
 			return nil, err
 		}
