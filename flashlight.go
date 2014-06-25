@@ -90,7 +90,7 @@ func runClientProxy(proxyConfig proxy.ProxyConfig) {
 			DialProxy: func(addr string) (net.Conn, error) {
 				return tls.DialWithDialer(
 					&net.Dialer{
-						Timeout:   10 * time.Second,
+						Timeout:   20 * time.Second,
 						KeepAlive: 70 * time.Second,
 					},
 					"tcp", addressForServer(), clientTLSConfig())
