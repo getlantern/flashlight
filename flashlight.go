@@ -34,6 +34,7 @@ var (
 	dumpheaders  = flag.Bool("dumpheaders", false, "dump the headers of outgoing requests and responses to stdout")
 	cpuprofile   = flag.String("cpuprofile", "", "write cpu profile to given file")
 	memprofile   = flag.String("memprofile", "", "write heap profile to given file")
+	parentPID    = flag.Int("parentpid", 0, "the parent process's PID, used on Windows for killing flashlight when the parent disappears")
 
 	// flagsParsed is unused, this is just a trick to allow us to parse
 	// command-line flags before initializing the other variables
