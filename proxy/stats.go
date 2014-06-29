@@ -54,8 +54,8 @@ func (server *Server) postStats(bytesGiven int64) error {
 			"flashlight": server.InstanceId,
 		},
 		"increments": map[string]int64{
-			"bytesGiven":           bytesGiven,
-			"bytesGivenFlashlight": bytesGiven,
+			"bytesGiven":             bytesGiven,
+			"bytesGivenByFlashlight": bytesGiven,
 		},
 	}
 
