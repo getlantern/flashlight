@@ -44,6 +44,7 @@ type Server struct {
 	ProxyConfig
 	Host                       string       // FQDN that is guaranteed to hit this server
 	InstanceId                 string       // (optional) instanceid under which to report statistics
+	Country                    string       // (optional) country under which to report statistics
 	CertContext                *CertContext // context for certificate management
 	AllowNonGlobalDestinations bool         // if true, requests to LAN, Loopback, etc. will be allowed
 	bytesGiven                 int64        // tracks bytes given

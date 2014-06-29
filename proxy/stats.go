@@ -51,7 +51,7 @@ func (server *Server) reportStats() {
 func (server *Server) postStats(bytesGiven int64) error {
 	report := map[string]interface{}{
 		"dims": map[string]string{
-			"flashlight": server.InstanceId,
+			"country": server.Country,
 		},
 		"increments": map[string]int64{
 			"bytesGiven":             bytesGiven,
