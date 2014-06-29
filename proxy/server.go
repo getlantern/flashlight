@@ -46,9 +46,7 @@ type Server struct {
 	InstanceId                 string       // (optional) instanceid under which to report statistics
 	CertContext                *CertContext // context for certificate management
 	AllowNonGlobalDestinations bool         // if true, requests to LAN, Loopback, etc. will be allowed
-	bytesGivenCh               chan int     // tracks bytes given
-	checkpointCh               chan bool    // used to sychronize checkpointing of stats to statshub
-	checkpointResultCh         chan int
+	bytesGiven                 int64        // tracks bytes given
 }
 
 // CertContext encapsulates the certificates used by a Server
@@ -65,12 +63,15 @@ func (server *Server) Run() error {
 		return fmt.Errorf("Unable to init server cert: %s", err)
 	}
 
-	server.startReportingStatsIfNecessary()
-
 	// Set up an enproxy Proxy
 	proxy := &enproxy.Proxy{
 		Dial: server.dialDestination,
 		Host: server.Host,
+	}
+	if server.startReportingStatsIfNecessary() {
+		// Add callbacks to track bytes given
+		proxy.OnBytesReceived = server.onBytesGiven
+		proxy.OnBytesSent = server.onBytesGiven
 	}
 	proxy.Start()
 
@@ -81,6 +82,7 @@ func (server *Server) Run() error {
 		WriteTimeout: server.WriteTimeout,
 		// TLSConfig:    server.TLSConfig,
 	}
+	// TODO: Add flag to reenable this
 	// if httpServer.TLSConfig == nil {
 	// 	httpServer.TLSConfig = DEFAULT_TLS_SERVER_CONFIG
 	// }
@@ -107,18 +109,7 @@ func (server *Server) dialDestination(addr string) (net.Conn, error) {
 			return nil, err
 		}
 	}
-	conn, err := net.DialTimeout("tcp", addr, dialTimeout)
-	if err != nil {
-		return nil, err
-	}
-
-	shouldReportStats := server.InstanceId != ""
-	if shouldReportStats {
-		// When reporting stats, use a special connection that counts bytes
-		return &countingConn{conn, server}, nil
-	}
-
-	return conn, err
+	return net.DialTimeout("tcp", addr, dialTimeout)
 }
 
 // initServerCert initializes a PK + cert for use by a server proxy, signed by

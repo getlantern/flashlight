@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/flashlight/log"
@@ -16,37 +16,18 @@ const (
 	REPORT_STATS_INTERVAL = 20 * time.Second
 )
 
-func (server *Server) startReportingStatsIfNecessary() {
+func (server *Server) onBytesGiven(clientIp string, bytes int64) {
+	atomic.AddInt64(&server.bytesGiven, bytes)
+}
+
+func (server *Server) startReportingStatsIfNecessary() bool {
 	if server.InstanceId != "" {
 		log.Debugf("Reporting stats under InstanceId %s", server.InstanceId)
-		server.startReportingStats()
+		go server.reportStats()
+		return true
 	} else {
 		log.Debug("Not reporting stats (no InstanceId specified)")
-	}
-}
-
-// startReportingStats reports statistics for this proxy to statshub under the
-// server's InstanceId
-func (server *Server) startReportingStats() {
-	server.bytesGivenCh = make(chan int, 1000)
-	server.checkpointCh = make(chan bool)
-	server.checkpointResultCh = make(chan int)
-	go server.collectStats()
-	go server.reportStats()
-}
-
-// collectStats collects bytesGiven from the countingConn
-func (server *Server) collectStats() {
-	bytesSum := 0
-
-	for {
-		select {
-		case bytesGiven := <-server.bytesGivenCh:
-			bytesSum = bytesSum + bytesGiven
-		case <-server.checkpointCh:
-			server.checkpointResultCh <- bytesSum
-			bytesSum = 0
-		}
+		return false
 	}
 }
 
@@ -57,24 +38,24 @@ func (server *Server) reportStats() {
 		nextInterval := time.Now().Truncate(REPORT_STATS_INTERVAL).Add(REPORT_STATS_INTERVAL)
 		waitTime := nextInterval.Sub(time.Now())
 		time.Sleep(waitTime)
-		server.checkpointCh <- true
-		bytesSum := <-server.checkpointResultCh
-		err := server.postStats(bytesSum)
+		bytesGiven := atomic.SwapInt64(&server.bytesGiven, 0)
+		err := server.postStats(bytesGiven)
 		if err != nil {
 			log.Errorf("Error on posting stats: %s", err)
 		} else {
-			log.Debugf("Reported %d bytesGiven to statshub", bytesSum)
+			log.Debugf("Reported %d bytesGiven to statshub", bytesGiven)
 		}
 	}
 }
 
-func (server *Server) postStats(bytesSum int) error {
+func (server *Server) postStats(bytesGiven int64) error {
 	report := map[string]interface{}{
 		"dims": map[string]string{
-			"fallback": server.InstanceId,
+			"flashlight": server.InstanceId,
 		},
-		"increments": map[string]int{
-			"bytesGivenFallback": bytesSum,
+		"increments": map[string]int64{
+			"bytesGiven":           bytesGiven,
+			"bytesGivenFlashlight": bytesGiven,
 		},
 	}
 
@@ -93,46 +74,4 @@ func (server *Server) postStats(bytesSum int) error {
 		return fmt.Errorf("Unexpected response status posting stats to statshub: %d", resp.StatusCode)
 	}
 	return nil
-}
-
-// countingConn is a wrapper for net.Conn that counts bytes
-type countingConn struct {
-	orig   net.Conn
-	server *Server
-}
-
-func (c *countingConn) Read(b []byte) (n int, err error) {
-	n, err = c.orig.Read(b)
-	c.server.bytesGivenCh <- n
-	return
-}
-
-func (c *countingConn) Write(b []byte) (n int, err error) {
-	n, err = c.orig.Write(b)
-	c.server.bytesGivenCh <- n
-	return
-}
-
-func (c *countingConn) Close() error {
-	return c.orig.Close()
-}
-
-func (c *countingConn) LocalAddr() net.Addr {
-	return c.orig.LocalAddr()
-}
-
-func (c *countingConn) RemoteAddr() net.Addr {
-	return c.orig.RemoteAddr()
-}
-
-func (c *countingConn) SetDeadline(t time.Time) error {
-	return c.orig.SetDeadline(t)
-}
-
-func (c *countingConn) SetReadDeadline(t time.Time) error {
-	return c.orig.SetReadDeadline(t)
-}
-
-func (c *countingConn) SetWriteDeadline(t time.Time) error {
-	return c.orig.SetWriteDeadline(t)
 }

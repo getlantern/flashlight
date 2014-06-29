@@ -99,10 +99,10 @@ type headerDumpingRoundTripper struct {
 }
 
 func (rt *headerDumpingRoundTripper) RoundTrip(req *http.Request) (resp *http.Response, err error) {
-	dumpHeaders("Request", req.Header)
+	dumpHeaders("Request", &req.Header)
 	resp, err = rt.orig.RoundTrip(req)
 	if err == nil {
-		dumpHeaders("Response", resp.Header)
+		dumpHeaders("Response", &resp.Header)
 	}
 	return
 }
