@@ -35,6 +35,8 @@ type Update struct {
 }
 
 func (server *Server) ListenAndServe() error {
+	server.clients = make(map[int]*Client)
+	server.peers = make(map[string]*Peer)
 	httpServer := &http.Server{
 		Addr:    server.Addr,
 		Handler: eventsource.Handler(server.onNewClient),
@@ -64,10 +66,7 @@ func (server *Server) removeClient(id int) {
 }
 
 func (server *Server) onNewClient(conn *eventsource.Conn) {
-	server.addClient(conn).run()
-}
-
-func (client *Client) run() {
+	client := server.addClient(conn)
 	for {
 		select {
 		case update := <-client.updates:
@@ -79,23 +78,36 @@ func (client *Client) run() {
 }
 
 func (server *Server) OnBytesReceived(ip string, bytes int64) {
-	server.getOrCreatePeer(ip).onBytesReceived(bytes)
+	peer, err := server.getOrCreatePeer(ip)
+	if err != nil {
+		log.Errorf("Unable to getOrCreatePeer: %s", err)
+		return
+	}
+	peer.onBytesReceived(bytes)
 }
 
 func (server *Server) OnBytesSent(ip string, bytes int64) {
-	server.getOrCreatePeer(ip).onBytesSent(bytes)
+	peer, err := server.getOrCreatePeer(ip)
+	if err != nil {
+		log.Errorf("Unable to getOrCreatePeer: %s", err)
+		return
+	}
+	peer.onBytesSent(bytes)
 }
 
-func (server *Server) getOrCreatePeer(ip string) *Peer {
+func (server *Server) getOrCreatePeer(ip string) (*Peer, error) {
 	server.peersMutex.Lock()
 	defer server.peersMutex.Unlock()
 	peer, found := server.peers[ip]
 	if found {
-		return peer
+		return peer, nil
 	}
-	peer = newPeer(ip, server.onPeerUpdate)
+	peer, err := newPeer(ip, server.onPeerUpdate)
+	if err != nil {
+		return nil, err
+	}
 	server.peers[ip] = peer
-	return peer
+	return peer, nil
 }
 
 func (server *Server) onPeerUpdate(peer *Peer) {

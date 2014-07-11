@@ -1,17 +1,26 @@
 package statserver
 
 import (
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"sync/atomic"
 	"time"
+
+	geoip2 "github.com/oschwald/geoip2-golang"
+)
+
+const (
+	GEOSERVE_URL_TEMPLATE = "http://go-geoserve.herokuapp.com/lookup/%s"
 )
 
 var (
-	publishInterval = 30 * time.Second
+	publishInterval = 10 * time.Second
 )
 
 // Peer represents information about a peer
 type Peer struct {
-	ID              string    `json:"peerid"`
+	IP              string    `json:"peerid"`
 	LastConnected   time.Time `json:"lastConnected"`
 	BytesDn         int64     `json:"bytesDn"`
 	BytesUp         int64     `json:"bytesUp"`
@@ -20,37 +29,80 @@ type Peer struct {
 	BPSUp           int64     `json:"bpsUp"`
 	BPSUpDn         int64     `json:"bpsUpDn"`
 	Country         string    `json:"country"`
-	Latitude        float32   `json:"lat"`
-	Longitude       float32   `json:"lon"`
+	Latitude        float64   `json:"lat"`
+	Longitude       float64   `json:"lon"`
+	pub             publish
 	atLastReporting *Peer
+	lastReported    time.Time
 }
 
 type publish func(peer *Peer)
 
-func newPeer(id string, pub publish) *Peer {
+func newPeer(ip string, pub publish) (*Peer, error) {
 	peer := &Peer{
-		ID: id,
-		atLastReporting: &Peer{
-			ID:            id,
-			LastConnected: time.Now(),
-		},
+		IP:              ip,
+		pub:             pub,
+		lastReported:    time.Now(),
+		atLastReporting: &Peer{},
 	}
-	go peer.publishPeriodically(pub)
-	return peer
+	*peer.atLastReporting = *peer
+	err := peer.run()
+	if err != nil {
+		return nil, err
+	}
+	return peer, nil
 }
 
-func (peer *Peer) publishPeriodically(pub publish) {
+func (peer *Peer) run() error {
+	err := peer.geolocate()
+	if err != nil {
+		return err
+	}
+	go peer.publishPeriodically()
+	return nil
+}
+
+func (peer *Peer) geolocate() error {
+	resp, err := http.Get(fmt.Sprintf(GEOSERVE_URL_TEMPLATE, peer.IP))
+	if err != nil {
+		return err
+	}
+	decoder := json.NewDecoder(resp.Body)
+	geodata := &geoip2.City{}
+	err = decoder.Decode(geodata)
+	if err != nil {
+		return err
+	}
+	peer.Country = geodata.Country.IsoCode
+	peer.Latitude = geodata.Location.Latitude
+	peer.Longitude = geodata.Location.Longitude
+	return nil
+}
+
+func (peer *Peer) publishPeriodically() {
 	for {
 		time.Sleep(publishInterval)
-		pub(peer)
-		*peer.atLastReporting = *peer
+		if peer.LastConnected != peer.atLastReporting.LastConnected {
+			// Only report if there's been activity
+			now := time.Now()
+			peer.lastReported = now
+			delta := peer.lastReported.Sub(peer.atLastReporting.lastReported).Seconds()
+			peer.BytesUpDn = peer.BytesUp + peer.BytesDn
+			peer.BPSDn = int64(float64(peer.BytesDn-peer.atLastReporting.BytesDn) / delta)
+			peer.BPSUp = int64(float64(peer.BytesUp-peer.atLastReporting.BytesUp) / delta)
+			peer.BPSUpDn = peer.BPSDn + peer.BPSUp
+			peer.pub(peer)
+			*peer.atLastReporting = *peer
+		}
 	}
 }
 
 func (peer *Peer) onBytesReceived(bytes int64) {
+	peer.LastConnected = time.Now()
 	atomic.AddInt64(&peer.BytesUp, bytes)
 }
 
 func (peer *Peer) onBytesSent(bytes int64) {
+	peer.LastConnected = time.Now()
 	atomic.AddInt64(&peer.BytesDn, bytes)
 }
