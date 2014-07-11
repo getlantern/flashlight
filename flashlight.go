@@ -16,6 +16,7 @@ import (
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/proxy"
+	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/tls"
 )
@@ -31,6 +32,7 @@ var (
 	rootCA       = flag.String("rootca", "", "pin to this CA cert if specified (PEM format)")
 	configDir    = flag.String("configdir", "", "directory in which to store configuration (defaults to current directory)")
 	instanceId   = flag.String("instanceid", "", "instanceId under which to report stats to statshub.  If not specified, no stats are reported.")
+	statsAddr    = flag.String("statsaddr", "", "host:port at which to make detailed stats available as a web service (optional)")
 	country      = flag.String("country", "xx", "2 digit country code under which to report stats.  Defaults to xx.")
 	dumpheaders  = flag.Bool("dumpheaders", false, "dump the headers of outgoing requests and responses to stdout")
 	cpuprofile   = flag.String("cpuprofile", "", "write cpu profile to given file")
@@ -117,12 +119,16 @@ func runServerProxy(proxyConfig proxy.ProxyConfig) {
 	server := &proxy.Server{
 		ProxyConfig: proxyConfig,
 		Host:        *upstreamHost,
-		InstanceId:  *instanceId,
-		Country:     *country,
 		CertContext: &proxy.CertContext{
 			PKFile:         inConfigDir("proxypk.pem"),
 			ServerCertFile: inConfigDir("servercert.pem"),
 		},
+	}
+	if *instanceId != "" {
+		server.StatReporter = &statreporter.Reporter{
+			InstanceId: *instanceId,
+			Country:    *country,
+		}
 	}
 	err := server.Run()
 	if err != nil {

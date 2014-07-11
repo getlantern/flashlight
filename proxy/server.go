@@ -11,6 +11,7 @@ import (
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
+	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/keyman"
 )
 
@@ -42,12 +43,10 @@ var (
 
 type Server struct {
 	ProxyConfig
-	Host                       string       // FQDN that is guaranteed to hit this server
-	InstanceId                 string       // (optional) instanceid under which to report statistics
-	Country                    string       // (optional) country under which to report statistics
-	CertContext                *CertContext // context for certificate management
-	AllowNonGlobalDestinations bool         // if true, requests to LAN, Loopback, etc. will be allowed
-	bytesGiven                 int64        // tracks bytes given
+	Host                       string                 // FQDN that is guaranteed to hit this server
+	CertContext                *CertContext           // context for certificate management
+	AllowNonGlobalDestinations bool                   // if true, requests to LAN, Loopback, etc. will be allowed
+	StatReporter               *statreporter.Reporter // optional reporter of stats
 }
 
 // CertContext encapsulates the certificates used by a Server
@@ -69,10 +68,11 @@ func (server *Server) Run() error {
 		Dial: server.dialDestination,
 		Host: server.Host,
 	}
+
 	if server.startReportingStatsIfNecessary() {
 		// Add callbacks to track bytes given
-		proxy.OnBytesReceived = server.onBytesGiven
-		proxy.OnBytesSent = server.onBytesGiven
+		proxy.OnBytesReceived = server.StatReporter.OnBytesGiven
+		proxy.OnBytesSent = server.StatReporter.OnBytesGiven
 	}
 	proxy.Start()
 
@@ -140,4 +140,15 @@ func (ctx *CertContext) initServerCert(host string) (err error) {
 		return
 	}
 	return nil
+}
+
+func (server *Server) startReportingStatsIfNecessary() bool {
+	if server.StatReporter != nil {
+		log.Debugf("Reporting stats under InstanceId %s", server.StatReporter.InstanceId)
+		go server.StatReporter.Start()
+		return true
+	} else {
+		log.Debug("Not reporting stats (no InstanceId specified)")
+		return false
+	}
 }
