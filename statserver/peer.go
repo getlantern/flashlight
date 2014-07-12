@@ -99,7 +99,6 @@ func (peer *Peer) publishPeriodically() {
 
 			// Publish copy of peer
 			peer.pub(peer.atLastReporting)
-
 		}
 	}
 }
