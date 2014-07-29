@@ -263,9 +263,16 @@ func (cf *MockCloudFlare) run(t *testing.T) error {
 		Addr: CF_ADDR,
 		Handler: &httputil.ReverseProxy{
 			Director: func(req *http.Request) {
-				req.URL.Scheme = "http"
+				req.URL.Scheme = "https"
 				req.URL.Host = SERVER_ADDR
 				req.Host = SERVER_ADDR
+			},
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					// Real CloudFlare doesn't verify our cert, so mock doesn't
+					// either
+					InsecureSkipVerify: true,
+				},
 			},
 		},
 	}
