@@ -114,3 +114,9 @@ resulting binaries considerably smaller.
 
 The binaries end up at
 `$GOPATH/bin/flashlight-xc/snapshot/<platform>/flashlight`.
+
+Note that these binaries should also be signed for use in production, at least on OSX and Windows. On OSX the command to do this should resemble the following (assuming you have an associated code signing certificate):
+
+```
+codesign -s "Developer ID Application: Brave New Software Project, Inc" -f install/osx/pt/flashlight/flashlight
+```
