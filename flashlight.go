@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
+	"time"
 	//"time"
 
 	"github.com/getlantern/enproxy"
@@ -93,13 +94,13 @@ func runClientProxy(proxyConfig proxy.ProxyConfig) {
 		ProxyConfig: proxyConfig,
 		EnproxyConfig: &enproxy.Config{
 			DialProxy: func(addr string) (net.Conn, error) {
-				// return tls.DialWithDialer(
-				// 	&net.Dialer{
-				// 		Timeout:   20 * time.Second,
-				// 		KeepAlive: 70 * time.Second,
-				// 	},
-				// 	"tcp", addressForServer(), clientTLSConfig())
-				return net.Dial("tcp", addressForServer())
+				return tls.DialWithDialer(
+					&net.Dialer{
+						Timeout:   20 * time.Second,
+						KeepAlive: 70 * time.Second,
+					},
+					"tcp", addressForServer(), clientTLSConfig())
+				//return net.Dial("tcp", addressForServer())
 			},
 			NewRequest: func(host string, method string, body io.Reader) (req *http.Request, err error) {
 				if host == "" {
