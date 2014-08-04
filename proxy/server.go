@@ -11,6 +11,8 @@ import (
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
+	"github.com/getlantern/flashlight/statreporter"
+	"github.com/getlantern/flashlight/statserver"
 	"github.com/getlantern/keyman"
 )
 
@@ -42,12 +44,11 @@ var (
 
 type Server struct {
 	ProxyConfig
-	Host                       string       // FQDN that is guaranteed to hit this server
-	InstanceId                 string       // (optional) instanceid under which to report statistics
-	Country                    string       // (optional) country under which to report statistics
-	CertContext                *CertContext // context for certificate management
-	AllowNonGlobalDestinations bool         // if true, requests to LAN, Loopback, etc. will be allowed
-	bytesGiven                 int64        // tracks bytes given
+	Host                       string                 // FQDN that is guaranteed to hit this server
+	CertContext                *CertContext           // context for certificate management
+	AllowNonGlobalDestinations bool                   // if true, requests to LAN, Loopback, etc. will be allowed
+	StatReporter               *statreporter.Reporter // optional reporter of stats
+	StatServer                 *statserver.Server     // optional server of stats
 }
 
 // CertContext encapsulates the certificates used by a Server
@@ -69,11 +70,31 @@ func (server *Server) Run() error {
 		Dial: server.dialDestination,
 		Host: server.Host,
 	}
-	if server.startReportingStatsIfNecessary() {
+
+	// Hook into stats reporting if necessary
+	reportingStats := server.startReportingStatsIfNecessary()
+	servingStats := server.startServingStatsIfNecessary()
+
+	if reportingStats || servingStats {
 		// Add callbacks to track bytes given
-		proxy.OnBytesReceived = server.onBytesGiven
-		proxy.OnBytesSent = server.onBytesGiven
+		proxy.OnBytesReceived = func(ip string, bytes int64) {
+			if reportingStats {
+				server.StatReporter.OnBytesGiven(ip, bytes)
+			}
+			if servingStats {
+				server.StatServer.OnBytesReceived(ip, bytes)
+			}
+		}
+		proxy.OnBytesSent = func(ip string, bytes int64) {
+			if reportingStats {
+				server.StatReporter.OnBytesGiven(ip, bytes)
+			}
+			if servingStats {
+				server.StatServer.OnBytesSent(ip, bytes)
+			}
+		}
 	}
+
 	proxy.Start()
 
 	httpServer := &http.Server{
@@ -140,4 +161,26 @@ func (ctx *CertContext) initServerCert(host string) (err error) {
 		return
 	}
 	return nil
+}
+
+func (server *Server) startReportingStatsIfNecessary() bool {
+	if server.StatReporter != nil {
+		log.Debugf("Reporting stats under InstanceId: %s", server.StatReporter.InstanceId)
+		go server.StatReporter.Start()
+		return true
+	} else {
+		log.Debug("Not reporting stats (no instanceid specified)")
+		return false
+	}
+}
+
+func (server *Server) startServingStatsIfNecessary() bool {
+	if server.StatServer != nil {
+		log.Debugf("Serving stats at address: %s", server.StatServer.Addr)
+		go server.StatServer.ListenAndServe()
+		return true
+	} else {
+		log.Debug("Not serving stats (no statsaddr specified)")
+		return false
+	}
 }
