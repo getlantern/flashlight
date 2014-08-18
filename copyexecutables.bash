@@ -8,8 +8,10 @@ function die() {
 # Sign while we're at it...
 
 xcbase=$GOPATH/bin/flashlight-xc/snapshot
-lantern=$HOME/lantern/install
+lantern=$1/install
 codesign -s "Developer ID Application: Brave New Software Project, Inc" -f $xcbase/darwin_amd64/flashlight || die "Could not code sign?"
+
+echo "Copying executables to $1"
 
 cp $xcbase/darwin_amd64/flashlight $lantern/osx/pt/flashlight/ || die "Could not copy darwin"
 cp $xcbase/windows_386/flashlight.exe $lantern/win/pt/flashlight/ || die "Could not copy windows"
