@@ -13,11 +13,13 @@ import (
 	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/statserver"
+	"github.com/getlantern/idletiming"
 	"github.com/getlantern/keyman"
 )
 
 var (
-	dialTimeout = 10 * time.Second
+	dialTimeout     = 10 * time.Second
+	httpIdleTimeout = 70 * time.Second
 
 	// Points in time, mostly used for generating certificates
 	TEN_YEARS_FROM_TODAY = time.Now().AddDate(10, 0, 0)
@@ -98,20 +100,32 @@ func (server *Server) Run() error {
 	proxy.Start()
 
 	httpServer := &http.Server{
-		Addr:         server.Addr,
 		Handler:      proxy,
 		ReadTimeout:  server.ReadTimeout,
 		WriteTimeout: server.WriteTimeout,
-		TLSConfig:    server.TLSConfig,
-	}
-	// TODO: Add flag to reenable this
-	if httpServer.TLSConfig == nil {
-		httpServer.TLSConfig = DEFAULT_TLS_SERVER_CONFIG
 	}
 
 	log.Debugf("About to start server (https) proxy at %s", server.Addr)
-	return httpServer.ListenAndServeTLS(server.CertContext.ServerCertFile, server.CertContext.PKFile)
-	//return httpServer.ListenAndServe()
+
+	tlsConfig := server.TLSConfig
+	if server.TLSConfig == nil {
+		tlsConfig = DEFAULT_TLS_SERVER_CONFIG
+	}
+	cert, err := tls.LoadX509KeyPair(server.CertContext.ServerCertFile, server.CertContext.PKFile)
+	if err != nil {
+		return fmt.Errorf("Unable to load certificate and key from %s and %s: %s", server.CertContext.ServerCertFile, server.CertContext.PKFile, err)
+	}
+	tlsConfig.Certificates = []tls.Certificate{cert}
+
+	listener, err := tls.Listen("tcp", server.Addr, tlsConfig)
+	if err != nil {
+		return fmt.Errorf("Unable to listen for tls connections at %s: %s", server.Addr, err)
+	}
+
+	// We use an idle timing listener to time out idle HTTP connections, since
+	// the CDNs seem to like keeping lots of connections open indefinitely.
+	idleTimingListener := idletiming.Listener(listener, httpIdleTimeout, nil)
+	return httpServer.Serve(idleTimingListener)
 }
 
 // dialDestination dials the destination server and wraps the resulting net.Conn
