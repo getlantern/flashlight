@@ -4,30 +4,39 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net"
 	"os"
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
+	"strconv"
+	"strings"
 
 	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/proxy"
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/statserver"
+	"github.com/oxtoacart/go-igdman/igdman"
+)
+
+const (
+	PORTMAP_FAILURE = 50
 )
 
 var (
 	// Command-line Flags
 	help         = flag.Bool("help", false, "Get usage help")
-	addr         = flag.String("addr", "", "ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https (required)")
+	addr         = flag.String("addr", "", "ip:port on which to listen for requests. When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https (required)")
+	portmap      = flag.Int("portmap", 0, "try to map this port on the firewall to the port on which flashlight is listening, using UPnP or NAT-PMP. If mapping this port fails, flashlight will exit with status code 50")
 	role         = flag.String("role", "", "either 'client' or 'server' (required)")
 	upstreamHost = flag.String("server", "", "FQDN of flashlight server (required)")
 	upstreamPort = flag.Int("serverport", 443, "the port on which to connect to the server")
 	masqueradeAs = flag.String("masquerade", "", "masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter")
 	rootCA       = flag.String("rootca", "", "pin to this CA cert if specified (PEM format)")
 	configDir    = flag.String("configdir", "", "directory in which to store configuration (defaults to current directory)")
-	instanceId   = flag.String("instanceid", "", "instanceId under which to report stats to statshub.  If not specified, no stats are reported.")
+	instanceId   = flag.String("instanceid", "", "instanceId under which to report stats to statshub. If not specified, no stats are reported.")
 	statsAddr    = flag.String("statsaddr", "", "host:port at which to make detailed stats available using server-sent events (optional)")
-	country      = flag.String("country", "xx", "2 digit country code under which to report stats.  Defaults to xx.")
+	country      = flag.String("country", "xx", "2 digit country code under which to report stats. Defaults to xx.")
 	dumpheaders  = flag.Bool("dumpheaders", false, "dump the headers of outgoing requests and responses to stdout")
 	cpuprofile   = flag.String("cpuprofile", "", "write cpu profile to given file")
 	memprofile   = flag.String("memprofile", "", "write heap profile to given file")
@@ -98,6 +107,17 @@ func runClientProxy(proxyConfig proxy.ProxyConfig) {
 // Runs the server-side proxy
 func runServerProxy(proxyConfig proxy.ProxyConfig) {
 	useAllCores()
+
+	if *portmap > 0 {
+		log.Debugf("Attempting to map external port %d", *portmap)
+		err := mapPort()
+		if err != nil {
+			log.Error(err.Error())
+			os.Exit(PORTMAP_FAILURE)
+		}
+		log.Debugf("Mapped external port %d", *portmap)
+	}
+
 	server := &proxy.Server{
 		ProxyConfig: proxyConfig,
 		Host:        *upstreamHost,
@@ -141,6 +161,45 @@ func inConfigDir(filename string) string {
 		}
 		return fmt.Sprintf("%s%c%s", *configDir, os.PathSeparator, filename)
 	}
+}
+
+func mapPort() error {
+	parts := strings.Split(*addr, ":")
+
+	internalPort, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return fmt.Errorf("Unable to parse local port: ")
+	}
+
+	internalIP := parts[0]
+	if internalIP == "" {
+		internalIP, err = determineInternalIP()
+		if err != nil {
+			return fmt.Errorf("Unable to determine internal IP: %s", err)
+		}
+	}
+
+	igd, err := igdman.NewIGD()
+	if err != nil {
+		return fmt.Errorf("Unable to get IGD: %s", err)
+	}
+
+	igd.RemovePortMapping(igdman.TCP, *portmap)
+	err = igd.AddPortMapping(igdman.TCP, internalIP, internalPort, *portmap, 0)
+	if err != nil {
+		return fmt.Errorf("Unable to map external port %d: %s", *portmap, err)
+	}
+
+	return nil
+}
+
+func determineInternalIP() (string, error) {
+	conn, err := net.Dial("tcp", "s3.amazonaws.com:443")
+	if err != nil {
+		return "", fmt.Errorf("Unable to determine local IP: %s", err)
+	}
+	defer conn.Close()
+	return strings.Split(conn.LocalAddr().String(), ":")[0], nil
 }
 
 func useAllCores() {
