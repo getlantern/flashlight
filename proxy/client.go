@@ -34,7 +34,7 @@ type Client struct {
 
 func (client *Client) Run() error {
 	if client.EnproxyConfig == nil {
-		client.EnproxyConfig = client.BuildEnproxyConfig()
+		client.BuildEnproxyConfig()
 	}
 	client.buildReverseProxy()
 
@@ -58,8 +58,8 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (client *Client) BuildEnproxyConfig() *enproxy.Config {
-	return &enproxy.Config{
+func (client *Client) BuildEnproxyConfig() {
+	client.EnproxyConfig = &enproxy.Config{
 		DialProxy: func(addr string) (net.Conn, error) {
 			return tls.DialWithDialer(
 				&net.Dialer{
@@ -75,6 +75,18 @@ func (client *Client) BuildEnproxyConfig() *enproxy.Config {
 			return http.NewRequest(method, "http://"+host+"/", body)
 		},
 	}
+}
+
+func (client *Client) DialWithEnproxy(network, addr string) (net.Conn, error) {
+	conn := &enproxy.Conn{
+		Addr:   addr,
+		Config: client.EnproxyConfig,
+	}
+	err := conn.Connect()
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
 }
 
 // buildReverseProxy builds the httputil.ReverseProxy used by the client to
@@ -95,17 +107,7 @@ func (client *Client) buildReverseProxy() {
 				// know to do.
 				// See https://code.google.com/p/go/issues/detail?id=4677
 				DisableKeepAlives: true,
-				Dial: func(network, addr string) (net.Conn, error) {
-					conn := &enproxy.Conn{
-						Addr:   addr,
-						Config: client.EnproxyConfig,
-					}
-					err := conn.Connect()
-					if err != nil {
-						return nil, err
-					}
-					return conn, nil
-				},
+				Dial:              client.DialWithEnproxy,
 			}),
 		// Set a FlushInterval to prevent overly aggressive buffering of
 		// responses, which helps keep memory usage down
