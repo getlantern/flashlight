@@ -4,23 +4,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
-	"net"
-	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
-	"time"
-	//"time"
 
-	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/proxy"
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/statserver"
-	"github.com/getlantern/keyman"
-	"github.com/getlantern/tls"
 )
 
 var (
@@ -91,24 +83,11 @@ func main() {
 // Runs the client-side proxy
 func runClientProxy(proxyConfig proxy.ProxyConfig) {
 	client := &proxy.Client{
-		ProxyConfig: proxyConfig,
-		EnproxyConfig: &enproxy.Config{
-			DialProxy: func(addr string) (net.Conn, error) {
-				return tls.DialWithDialer(
-					&net.Dialer{
-						Timeout:   20 * time.Second,
-						KeepAlive: 70 * time.Second,
-					},
-					"tcp", addressForServer(), clientTLSConfig())
-				//return net.Dial("tcp", addressForServer())
-			},
-			NewRequest: func(host string, method string, body io.Reader) (req *http.Request, err error) {
-				if host == "" {
-					host = *upstreamHost
-				}
-				return http.NewRequest(method, "http://"+host+"/", body)
-			},
-		},
+		ProxyConfig:  proxyConfig,
+		UpstreamHost: *upstreamHost,
+		UpstreamPort: *upstreamPort,
+		MasqueradeAs: *masqueradeAs,
+		RootCA:       *rootCA,
 	}
 	err := client.Run()
 	if err != nil {
@@ -144,36 +123,6 @@ func runServerProxy(proxyConfig proxy.ProxyConfig) {
 	if err != nil {
 		log.Fatalf("Unable to run server proxy: %s", err)
 	}
-}
-
-// Get the address to dial for reaching the server
-func addressForServer() string {
-	serverHost := *upstreamHost
-	if *masqueradeAs != "" {
-		serverHost = *masqueradeAs
-	}
-	return fmt.Sprintf("%s:%d", serverHost, *upstreamPort)
-}
-
-// Build a tls.Config for the client to use in dialing server
-func clientTLSConfig() *tls.Config {
-	tlsConfig := &tls.Config{
-		ClientSessionCache:                  tls.NewLRUClientSessionCache(1000),
-		SuppressServerNameInClientHandshake: true,
-	}
-	// Note - we need to suppress the sending of the ServerName in the client
-	// handshake to make host-spoofing work with Fastly.  If the client Hello
-	// includes a server name, Fastly checks to make sure that this matches the
-	// Host header in the HTTP request and if they don't match, it returns a
-	// 400 Bad Request error.
-	if *rootCA != "" {
-		caCert, err := keyman.LoadCertificateFromPEMBytes([]byte(*rootCA))
-		if err != nil {
-			log.Fatalf("Unable to load root ca cert: %s", err)
-		}
-		tlsConfig.RootCAs = caCert.PoolContainingCert()
-	}
-	return tlsConfig
 }
 
 // inConfigDir returns the path to the given filename inside of the configDir

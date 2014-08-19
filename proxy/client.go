@@ -1,6 +1,8 @@
 package proxy
 
 import (
+	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -8,6 +10,8 @@ import (
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
+	"github.com/getlantern/keyman"
+	"github.com/getlantern/tls"
 )
 
 const (
@@ -18,13 +22,19 @@ const (
 
 type Client struct {
 	ProxyConfig
-
+	UpstreamHost  string
+	UpstreamPort  int
+	MasqueradeAs  string
+	RootCA        string
 	EnproxyConfig *enproxy.Config
 
 	reverseProxy *httputil.ReverseProxy
 }
 
 func (client *Client) Run() error {
+	if client.EnproxyConfig == nil {
+		client.buildEnproxyConfig()
+	}
 	client.buildReverseProxy()
 
 	httpServer := &http.Server{
@@ -44,6 +54,25 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		client.EnproxyConfig.Intercept(resp, req)
 	} else {
 		client.reverseProxy.ServeHTTP(resp, req)
+	}
+}
+
+func (client *Client) buildEnproxyConfig() {
+	client.EnproxyConfig = &enproxy.Config{
+		DialProxy: func(addr string) (net.Conn, error) {
+			return tls.DialWithDialer(
+				&net.Dialer{
+					Timeout:   20 * time.Second,
+					KeepAlive: 70 * time.Second,
+				},
+				"tcp", client.addressForServer(), client.tlsConfig())
+		},
+		NewRequest: func(host string, method string, body io.Reader) (req *http.Request, err error) {
+			if host == "" {
+				host = client.UpstreamHost
+			}
+			return http.NewRequest(method, "http://"+host+"/", body)
+		},
 	}
 }
 
@@ -81,6 +110,36 @@ func (client *Client) buildReverseProxy() {
 		// responses, which helps keep memory usage down
 		FlushInterval: 250 * time.Millisecond,
 	}
+}
+
+// Get the address to dial for reaching the server
+func (client *Client) addressForServer() string {
+	serverHost := client.UpstreamHost
+	if client.MasqueradeAs != "" {
+		serverHost = client.MasqueradeAs
+	}
+	return fmt.Sprintf("%s:%d", serverHost, client.UpstreamPort)
+}
+
+// Build a tls.Config for the client to use in dialing server
+func (client *Client) tlsConfig() *tls.Config {
+	tlsConfig := &tls.Config{
+		ClientSessionCache:                  tls.NewLRUClientSessionCache(1000),
+		SuppressServerNameInClientHandshake: true,
+	}
+	// Note - we need to suppress the sending of the ServerName in the client
+	// handshake to make host-spoofing work with Fastly.  If the client Hello
+	// includes a server name, Fastly checks to make sure that this matches the
+	// Host header in the HTTP request and if they don't match, it returns a
+	// 400 Bad Request error.
+	if client.RootCA != "" {
+		caCert, err := keyman.LoadCertificateFromPEMBytes([]byte(client.RootCA))
+		if err != nil {
+			log.Fatalf("Unable to load root ca cert: %s", err)
+		}
+		tlsConfig.RootCAs = caCert.PoolContainingCert()
+	}
+	return tlsConfig
 }
 
 // withDumpHeaders creates a RoundTripper that uses the supplied RoundTripper
