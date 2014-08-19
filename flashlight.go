@@ -112,7 +112,7 @@ func runServerProxy(proxyConfig proxy.ProxyConfig) {
 		log.Debugf("Attempting to map external port %d", *portmap)
 		err := mapPort()
 		if err != nil {
-			log.Error(err.Error())
+			log.Errorf("Unable to map external port: %s", err)
 			os.Exit(PORTMAP_FAILURE)
 		}
 		log.Debugf("Mapped external port %d", *portmap)
@@ -187,7 +187,7 @@ func mapPort() error {
 	igd.RemovePortMapping(igdman.TCP, *portmap)
 	err = igd.AddPortMapping(igdman.TCP, internalIP, internalPort, *portmap, 0)
 	if err != nil {
-		return fmt.Errorf("Unable to map external port %d: %s", *portmap, err)
+		return fmt.Errorf("Unable to map port with igdman %d: %s", *portmap, err)
 	}
 
 	return nil

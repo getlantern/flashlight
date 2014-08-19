@@ -22,18 +22,19 @@ const (
 
 type Client struct {
 	ProxyConfig
-	UpstreamHost  string
-	UpstreamPort  int
-	MasqueradeAs  string
-	RootCA        string
-	EnproxyConfig *enproxy.Config
+	UpstreamHost       string
+	UpstreamPort       int
+	MasqueradeAs       string
+	RootCA             string
+	InsecureSkipVerify bool
+	EnproxyConfig      *enproxy.Config
 
 	reverseProxy *httputil.ReverseProxy
 }
 
 func (client *Client) Run() error {
 	if client.EnproxyConfig == nil {
-		client.buildEnproxyConfig()
+		client.EnproxyConfig = client.BuildEnproxyConfig()
 	}
 	client.buildReverseProxy()
 
@@ -57,8 +58,8 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (client *Client) buildEnproxyConfig() {
-	client.EnproxyConfig = &enproxy.Config{
+func (client *Client) BuildEnproxyConfig() *enproxy.Config {
+	return &enproxy.Config{
 		DialProxy: func(addr string) (net.Conn, error) {
 			return tls.DialWithDialer(
 				&net.Dialer{
@@ -126,6 +127,7 @@ func (client *Client) tlsConfig() *tls.Config {
 	tlsConfig := &tls.Config{
 		ClientSessionCache:                  tls.NewLRUClientSessionCache(1000),
 		SuppressServerNameInClientHandshake: true,
+		InsecureSkipVerify:                  client.InsecureSkipVerify,
 	}
 	// Note - we need to suppress the sending of the ServerName in the client
 	// handshake to make host-spoofing work with Fastly.  If the client Hello
