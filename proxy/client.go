@@ -27,6 +27,7 @@ type Client struct {
 	MasqueradeAs       string
 	RootCA             string
 	InsecureSkipVerify bool
+	DialTimeout        time.Duration
 	EnproxyConfig      *enproxy.Config
 
 	reverseProxy *httputil.ReverseProxy
@@ -59,11 +60,16 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 }
 
 func (client *Client) BuildEnproxyConfig() {
+	dialTimeout := client.DialTimeout
+	if dialTimeout == 0 {
+		dialTimeout = 20 * time.Second
+	}
+
 	client.EnproxyConfig = &enproxy.Config{
 		DialProxy: func(addr string) (net.Conn, error) {
 			return tls.DialWithDialer(
 				&net.Dialer{
-					Timeout:   20 * time.Second,
+					Timeout:   dialTimeout,
 					KeepAlive: 70 * time.Second,
 				},
 				"tcp", client.addressForServer(), client.tlsConfig())
