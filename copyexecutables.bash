@@ -5,6 +5,11 @@ function die() {
   exit 1
 }
 
+if [ $# -lt "1" ]
+then
+    die "$0: Path to lantern required"
+fi
+
 # Sign while we're at it...
 
 xcbase=$GOPATH/bin/flashlight-xc/snapshot
