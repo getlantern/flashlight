@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"crypto/x509"
 	"fmt"
 	"io"
 	"net"
@@ -123,20 +124,30 @@ func (client *Client) buildReverseProxy() {
 
 // Get the address to dial for reaching the server
 func (client *Client) addressForServer() string {
+	return fmt.Sprintf("%s:%d", client.serverHost(), client.UpstreamPort)
+}
+
+func (client *Client) serverHost() string {
 	serverHost := client.UpstreamHost
 	if client.MasqueradeAs != "" {
 		serverHost = client.MasqueradeAs
 	}
-	return fmt.Sprintf("%s:%d", serverHost, client.UpstreamPort)
+	return serverHost
 }
 
 // Build a tls.Config for the client to use in dialing server
 func (client *Client) tlsConfig() *tls.Config {
 	tlsConfig := &tls.Config{
-		ClientSessionCache:                  tls.NewLRUClientSessionCache(1000),
-		SuppressServerNameInClientHandshake: true,
-		InsecureSkipVerify:                  client.InsecureSkipVerify,
+		ClientSessionCache: tls.NewLRUClientSessionCache(1000),
+		InsecureSkipVerify: client.InsecureSkipVerify,
 	}
+
+	tlsConfig.VerifyServerCerts = func(certs []*x509.Certificate) ([][]*x509.Certificate, error) {
+		return tlsConfig.DefaultVerifyServerCerts(certs, &x509.VerifyOptions{
+			DNSName: client.serverHost(),
+		})
+	}
+
 	// Note - we need to suppress the sending of the ServerName in the client
 	// handshake to make host-spoofing work with Fastly.  If the client Hello
 	// includes a server name, Fastly checks to make sure that this matches the
