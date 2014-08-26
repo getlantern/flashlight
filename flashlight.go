@@ -38,11 +38,18 @@ var (
 // provided flags, it prints usage to stdout and exits with status 1.
 func parseFlags() bool {
 	cfg.InitFlags()
-	cfg.Bind()
+	err := cfg.Bind()
+	if err != nil {
+		log.Fatalf("Unable to bind config: %s", err)
+	}
 	flag.Parse()
 	if *help || cfg.Addr == "" || (cfg.Role != "server" && cfg.Role != "client") || cfg.UpstreamHost == "" {
 		flag.Usage()
 		os.Exit(1)
+	}
+	err = cfg.Save()
+	if err != nil {
+		log.Fatalf("Unable to save config: %s", err)
 	}
 	return true
 }

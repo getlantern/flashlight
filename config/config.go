@@ -61,10 +61,18 @@ func (c *Config) InitFlags() {
 }
 
 func (c *Config) Bind() error {
-	configFile := fmt.Sprintf("%s%cflashlight.yaml", c.ConfigDir, os.PathSeparator)
-	err := liveyaml.Bind(configFile, c)
+	cf := c.configFile()
+	err := liveyaml.Bind(cf, c)
 	if err != nil {
-		return fmt.Errorf("Unable to bind config to yaml file %s: %s", configFile, err)
+		return fmt.Errorf("Unable to bind config to yaml file %s: %s", cf, err)
 	}
 	return nil
+}
+
+func (c *Config) Save() error {
+	return liveyaml.Save(c.configFile(), c)
+}
+
+func (c *Config) configFile() string {
+	return fmt.Sprintf("%s%cflashlight.yaml", c.ConfigDir, os.PathSeparator)
 }
