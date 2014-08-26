@@ -16,7 +16,7 @@ import (
 	"github.com/getlantern/flashlight/proxy"
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/statserver"
-	"github.com/oxtoacart/go-igdman/igdman"
+	"github.com/getlantern/go-igdman/igdman"
 )
 
 const (
