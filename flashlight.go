@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/proxy"
 	"github.com/getlantern/flashlight/statreporter"
@@ -25,36 +26,21 @@ const (
 
 var (
 	// Command-line Flags
-	help         = flag.Bool("help", false, "Get usage help")
-	addr         = flag.String("addr", "", "ip:port on which to listen for requests. When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https (required)")
-	portmap      = flag.Int("portmap", 0, "try to map this port on the firewall to the port on which flashlight is listening, using UPnP or NAT-PMP. If mapping this port fails, flashlight will exit with status code 50")
-	role         = flag.String("role", "", "either 'client' or 'server' (required)")
-	upstreamHost = flag.String("server", "", "FQDN of flashlight server (required)")
-	upstreamPort = flag.Int("serverport", 443, "the port on which to connect to the server")
-	masqueradeAs = flag.String("masquerade", "", "masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter")
-	rootCA       = flag.String("rootca", "", "pin to this CA cert if specified (PEM format)")
-	configDir    = flag.String("configdir", "", "directory in which to store configuration (defaults to current directory)")
-	instanceId   = flag.String("instanceid", "", "instanceId under which to report stats to statshub. If not specified, no stats are reported.")
-	statsAddr    = flag.String("statsaddr", "", "host:port at which to make detailed stats available using server-sent events (optional)")
-	country      = flag.String("country", "xx", "2 digit country code under which to report stats. Defaults to xx.")
-	dumpheaders  = flag.Bool("dumpheaders", false, "dump the headers of outgoing requests and responses to stdout")
-	cpuprofile   = flag.String("cpuprofile", "", "write cpu profile to given file")
-	memprofile   = flag.String("memprofile", "", "write heap profile to given file")
-	parentPID    = flag.Int("parentpid", 0, "the parent process's PID, used on Windows for killing flashlight when the parent disappears")
+	help = flag.Bool("help", false, "Get usage help")
+	cfg  = config.Default()
 
 	// flagsParsed is unused, this is just a trick to allow us to parse
 	// command-line flags before initializing the other variables
 	flagsParsed = parseFlags()
-
-	isDownstream = *role == "client"
-	isUpstream   = !isDownstream
 )
 
 // parseFlags parses the command-line flags.  If there's a problem with the
 // provided flags, it prints usage to stdout and exits with status 1.
 func parseFlags() bool {
+	cfg.InitFlags()
+	cfg.Bind()
 	flag.Parse()
-	if *help || *addr == "" || (*role != "server" && *role != "client") || *upstreamHost == "" {
+	if *help || cfg.Addr == "" || (cfg.Role != "server" && cfg.Role != "client") || cfg.UpstreamHost == "" {
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -62,27 +48,27 @@ func parseFlags() bool {
 }
 
 func main() {
-	if *cpuprofile != "" {
-		startCPUProfiling(*cpuprofile)
-		defer stopCPUProfiling(*cpuprofile)
+	if cfg.CpuProfile != "" {
+		startCPUProfiling(cfg.CpuProfile)
+		defer stopCPUProfiling(cfg.CpuProfile)
 	}
 
-	if *memprofile != "" {
-		defer saveMemProfile(*memprofile)
+	if cfg.MemProfile != "" {
+		defer saveMemProfile(cfg.MemProfile)
 	}
 
 	saveProfilingOnSigINT()
 
 	// Set up the common ProxyConfig for clients and servers
 	proxyConfig := proxy.ProxyConfig{
-		Addr:              *addr,
-		ShouldDumpHeaders: *dumpheaders,
+		Addr:              cfg.Addr,
+		ShouldDumpHeaders: cfg.DumpHeaders,
 		ReadTimeout:       0, // don't timeout
 		WriteTimeout:      0,
 	}
 
 	log.Debugf("Running proxy")
-	if isDownstream {
+	if cfg.IsDownstream() {
 		runClientProxy(proxyConfig)
 	} else {
 		runServerProxy(proxyConfig)
@@ -93,10 +79,10 @@ func main() {
 func runClientProxy(proxyConfig proxy.ProxyConfig) {
 	client := &proxy.Client{
 		ProxyConfig:  proxyConfig,
-		UpstreamHost: *upstreamHost,
-		UpstreamPort: *upstreamPort,
-		MasqueradeAs: *masqueradeAs,
-		RootCA:       *rootCA,
+		UpstreamHost: cfg.UpstreamHost,
+		UpstreamPort: cfg.UpstreamPort,
+		MasqueradeAs: cfg.MasqueradeAs,
+		RootCA:       cfg.RootCA,
 	}
 	err := client.Run()
 	if err != nil {
@@ -108,35 +94,35 @@ func runClientProxy(proxyConfig proxy.ProxyConfig) {
 func runServerProxy(proxyConfig proxy.ProxyConfig) {
 	useAllCores()
 
-	if *portmap > 0 {
-		log.Debugf("Attempting to map external port %d", *portmap)
+	if cfg.Portmap > 0 {
+		log.Debugf("Attempting to map external port %d", cfg.Portmap)
 		err := mapPort()
 		if err != nil {
 			log.Errorf("Unable to map external port: %s", err)
 			os.Exit(PORTMAP_FAILURE)
 		}
-		log.Debugf("Mapped external port %d", *portmap)
+		log.Debugf("Mapped external port %d", cfg.Portmap)
 	}
 
 	server := &proxy.Server{
 		ProxyConfig: proxyConfig,
-		Host:        *upstreamHost,
+		Host:        cfg.UpstreamHost,
 		CertContext: &proxy.CertContext{
 			PKFile:         inConfigDir("proxypk.pem"),
 			ServerCertFile: inConfigDir("servercert.pem"),
 		},
 	}
-	if *instanceId != "" {
+	if cfg.InstanceId != "" {
 		// Report stats
 		server.StatReporter = &statreporter.Reporter{
-			InstanceId: *instanceId,
-			Country:    *country,
+			InstanceId: cfg.InstanceId,
+			Country:    cfg.Country,
 		}
 	}
-	if *statsAddr != "" {
+	if cfg.StatsAddr != "" {
 		// Serve stats
 		server.StatServer = &statserver.Server{
-			Addr: *statsAddr,
+			Addr: cfg.StatsAddr,
 		}
 	}
 	err := server.Run()
@@ -148,23 +134,23 @@ func runServerProxy(proxyConfig proxy.ProxyConfig) {
 // inConfigDir returns the path to the given filename inside of the configDir
 // specified at the command line.
 func inConfigDir(filename string) string {
-	if *configDir == "" {
+	if cfg.ConfigDir == "" {
 		return filename
 	} else {
-		if _, err := os.Stat(*configDir); err != nil {
+		if _, err := os.Stat(cfg.ConfigDir); err != nil {
 			if os.IsNotExist(err) {
 				// Create config dir
-				if err := os.MkdirAll(*configDir, 0755); err != nil {
-					log.Fatalf("Unable to create configDir at %s: %s", *configDir, err)
+				if err := os.MkdirAll(cfg.ConfigDir, 0755); err != nil {
+					log.Fatalf("Unable to create configDir at %s: %s", cfg.ConfigDir, err)
 				}
 			}
 		}
-		return fmt.Sprintf("%s%c%s", *configDir, os.PathSeparator, filename)
+		return fmt.Sprintf("%s%c%s", cfg.ConfigDir, os.PathSeparator, filename)
 	}
 }
 
 func mapPort() error {
-	parts := strings.Split(*addr, ":")
+	parts := strings.Split(cfg.Addr, ":")
 
 	internalPort, err := strconv.Atoi(parts[1])
 	if err != nil {
@@ -184,10 +170,10 @@ func mapPort() error {
 		return fmt.Errorf("Unable to get IGD: %s", err)
 	}
 
-	igd.RemovePortMapping(igdman.TCP, *portmap)
-	err = igd.AddPortMapping(igdman.TCP, internalIP, internalPort, *portmap, 0)
+	igd.RemovePortMapping(igdman.TCP, cfg.Portmap)
+	err = igd.AddPortMapping(igdman.TCP, internalIP, internalPort, cfg.Portmap, 0)
 	if err != nil {
-		return fmt.Errorf("Unable to map port with igdman %d: %s", *portmap, err)
+		return fmt.Errorf("Unable to map port with igdman %d: %s", cfg.Portmap, err)
 	}
 
 	return nil
@@ -238,11 +224,11 @@ func saveProfilingOnSigINT() {
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		<-c
-		if *cpuprofile != "" {
-			stopCPUProfiling(*cpuprofile)
+		if cfg.CpuProfile != "" {
+			stopCPUProfiling(cfg.CpuProfile)
 		}
-		if *memprofile != "" {
-			saveMemProfile(*memprofile)
+		if cfg.MemProfile != "" {
+			saveMemProfile(cfg.MemProfile)
 		}
 		os.Exit(2)
 	}()
