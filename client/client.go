@@ -161,6 +161,7 @@ func (client *Client) randomServer(req *http.Request) *server {
 func (client *Client) targetQOS(req *http.Request) int {
 	requestedQOS := req.Header.Get(X_FLASHLIGHT_QOS)
 	if requestedQOS != "" {
+		log.Debugf("Client requested QOS: %s", requestedQOS)
 		rqos, err := strconv.Atoi(requestedQOS)
 		if err == nil {
 			return rqos

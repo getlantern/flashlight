@@ -23,7 +23,6 @@ type Config struct {
 	DumpHeaders bool
 	CpuProfile  string
 	MemProfile  string
-	ParentPID   int
 }
 
 func DefaultConfig() *Config {
@@ -66,7 +65,6 @@ func (cfg *Config) InitFlags() {
 	flag.BoolVar(&cfg.DumpHeaders, "dumpheaders", cfg.DumpHeaders, "dump the headers of outgoing requests and responses to stdout")
 	flag.StringVar(&cfg.CpuProfile, "cpuprofile", cfg.CpuProfile, "write cpu profile to given file")
 	flag.StringVar(&cfg.MemProfile, "memprofile", cfg.MemProfile, "write heap profile to given file")
-	flag.IntVar(&cfg.ParentPID, "parentpid", cfg.ParentPID, "the parent process's PID, used on Windows for killing flashlight when the parent disappears")
 }
 
 func (cfg *Config) Bind(updates chan *Config, errors chan error) error {

@@ -26,7 +26,8 @@ const (
 
 var (
 	// Command-line Flags
-	help = flag.Bool("help", false, "Get usage help")
+	help      = flag.Bool("help", false, "Get usage help")
+	parentPID = flag.Int("parentpid", 0, "the parent process's PID, used on Windows for killing flashlight when the parent disappears")
 
 	configUpdates = make(chan *Config)
 	configErrors  = make(chan error)
