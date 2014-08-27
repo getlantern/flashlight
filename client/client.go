@@ -128,16 +128,15 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 // value are considered for inclusion.  However, if no servers meet the QOS
 // requirement, the last server in the list will be used by default.
 func (client *Client) randomServer(req *http.Request) *server {
-	client.cfgMutex.RLock()
-	defer client.cfgMutex.RUnlock()
-
 	targetQOS := client.targetQOS(req)
 
+	servers, totalServerWeights := client.getServers()
+
 	// Pick a random server using a target value between 0 and the total server weights
-	t := rand.Intn(client.totalServerWeights)
+	t := rand.Intn(totalServerWeights)
 	aw := 0
-	for i, server := range client.servers {
-		if i == len(client.servers)-1 {
+	for i, server := range servers {
+		if i == len(servers)-1 {
 			// Last server, use it irrespective of target QOS
 			return server
 		}
@@ -169,6 +168,12 @@ func (client *Client) targetQOS(req *http.Request) int {
 	}
 
 	return 0
+}
+
+func (client *Client) getServers() ([]*server, int) {
+	client.cfgMutex.RLock()
+	defer client.cfgMutex.RUnlock()
+	return client.servers, client.totalServerWeights
 }
 
 // ServerInfo captures configuration information for an upstream server

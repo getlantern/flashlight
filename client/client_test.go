@@ -9,8 +9,10 @@ func TestRandomServer(t *testing.T) {
 	client := &Client{
 		servers: []*server{
 			&server{
-				weight: 500,
-				qos:    0,
+				info: &ServerInfo{
+					Weight: 500,
+					QOS:    0,
+				},
 			},
 		},
 		totalServerWeights: 500,
@@ -30,11 +32,15 @@ func TestRandomServer(t *testing.T) {
 	}
 
 	client.servers = append(client.servers, &server{
-		weight: 1000,
-		qos:    5,
+		info: &ServerInfo{
+			Weight: 1000,
+			QOS:    5,
+		},
 	}, &server{
-		weight: 1500,
-		qos:    10,
+		info: &ServerInfo{
+			Weight: 1500,
+			QOS:    10,
+		},
 	})
 	client.totalServerWeights = 3000
 
@@ -49,7 +55,7 @@ func TestRandomServer(t *testing.T) {
 	// Do a bunch of random trials
 	for i := 0; i < 3000; i++ {
 		srv := client.randomServer(req)
-		freqs[srv.weight] = freqs[srv.weight] + 1
+		freqs[srv.info.Weight] = freqs[srv.info.Weight] + 1
 	}
 
 	for weight, freq := range freqs {
@@ -68,7 +74,7 @@ func TestRandomServer(t *testing.T) {
 	// Do a bunch of random trials
 	for i := 0; i < 2500; i++ {
 		srv := client.randomServer(req)
-		freqs[srv.weight] = freqs[srv.weight] + 1
+		freqs[srv.info.Weight] = freqs[srv.info.Weight] + 1
 	}
 
 	for weight, freq := range freqs {
