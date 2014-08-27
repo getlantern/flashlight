@@ -100,8 +100,8 @@ func TestCloudFlare(t *testing.T) {
 	}
 
 	clt.Configure(&client.ClientConfig{
-		Servers: []*client.ServerInfo{
-			&client.ServerInfo{Weight: 100},
+		Servers: map[string]*client.ServerInfo{
+			"default": &client.ServerInfo{Weight: 100},
 		},
 	}, []*enproxy.Config{
 		&enproxy.Config{
