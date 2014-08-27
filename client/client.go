@@ -34,7 +34,7 @@ func init() {
 
 // ClientConfig captures configuration information for a Client
 type ClientConfig struct {
-	Servers           []*ServerInfo
+	Servers           map[string]*ServerInfo
 	ShouldDumpHeaders bool // whether or not to dump headers of requests and responses
 }
 
@@ -78,27 +78,36 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	client.cfgMutex.Lock()
 	defer client.cfgMutex.Unlock()
 
+	log.Debugf("Configure() called")
 	if client.cfg != nil && reflect.DeepEqual(client.cfg, cfg) {
-		// Config unchanged
+		log.Debugf("Config unchanged: %s", client.cfg)
 		return
+	}
+
+	if client.cfg == nil {
+		log.Debugf("Client configuration initialized")
+	} else {
+		log.Debugf("Client configuration changed")
 	}
 
 	client.cfg = cfg
 
 	// Configure servers
 	client.servers = make([]*server, len(cfg.Servers))
-	for i, serverInfo := range cfg.Servers {
+	i := 0
+	for _, serverInfo := range cfg.Servers {
 		var enproxyConfig *enproxy.Config
 		if enproxyConfigs != nil {
 			enproxyConfig = enproxyConfigs[i]
 		}
 		client.servers[i] = serverInfo.buildServer(cfg.ShouldDumpHeaders, enproxyConfig)
+		i = i + 1
 	}
 
 	// Calculate total server weights
 	client.totalServerWeights = 0
 	for _, server := range client.servers {
-		client.totalServerWeights = client.totalServerWeights + server.weight
+		client.totalServerWeights = client.totalServerWeights + server.info.Weight
 	}
 }
 
@@ -106,6 +115,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	log.Debugf("Handling request for: %s", req.RequestURI)
 	server := client.randomServer(req)
+	log.Debugf("Using server %s", server.info.Host)
 	if req.Method == CONNECT {
 		server.enproxyConfig.Intercept(resp, req)
 	} else {
@@ -132,10 +142,10 @@ func (client *Client) randomServer(req *http.Request) *server {
 			// Last server, use it irrespective of target QOS
 			return server
 		}
-		aw = aw + server.weight
-		if server.qos < targetQOS {
+		aw = aw + server.info.Weight
+		if server.info.QOS < targetQOS {
 			// QOS too low, exclude server from rotation
-			t = t + server.weight
+			t = t + server.info.Weight
 			continue
 		}
 		if aw > t {
@@ -208,8 +218,7 @@ func (serverInfo *ServerInfo) buildServer(shouldDumpHeaders bool, enproxyConfig 
 	}
 
 	server := &server{
-		weight:        weight,
-		qos:           serverInfo.QOS,
+		info:          serverInfo,
 		enproxyConfig: enproxyConfig,
 	}
 
@@ -291,8 +300,7 @@ func (serverInfo *ServerInfo) tlsConfig() *tls.Config {
 
 // type server represents an upstream server that proxies traffic for clients
 type server struct {
-	weight        int
-	qos           int
+	info          *ServerInfo
 	enproxyConfig *enproxy.Config
 	reverseProxy  *httputil.ReverseProxy
 }
