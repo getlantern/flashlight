@@ -1,4 +1,4 @@
-package proxy
+package main
 
 import (
 	"crypto/tls"
@@ -16,6 +16,8 @@ import (
 
 	"code.google.com/p/go-uuid/uuid"
 	"github.com/getlantern/enproxy"
+	"github.com/getlantern/flashlight/client"
+	"github.com/getlantern/flashlight/server"
 )
 
 const (
@@ -68,7 +70,7 @@ func TestCloudFlare(t *testing.T) {
 	waitForServer(CF_ADDR, 2*time.Second, t)
 
 	// Set up common certContext for proxies
-	certContext := &CertContext{
+	certContext := &server.CertContext{
 		PKFile:         randomTempPath(),
 		ServerCertFile: randomTempPath(),
 	}
@@ -76,33 +78,36 @@ func TestCloudFlare(t *testing.T) {
 	defer os.Remove(certContext.ServerCertFile)
 
 	// Run server proxy
-	server := &Server{
-		ProxyConfig: ProxyConfig{
-			Addr:         SERVER_ADDR,
-			ReadTimeout:  0, // don't timeout
-			WriteTimeout: 0,
-		},
+	server := &server.Server{
+		Addr:                       SERVER_ADDR,
+		ReadTimeout:                0, // don't timeout
+		WriteTimeout:               0,
 		CertContext:                certContext,
 		AllowNonGlobalDestinations: true,
 	}
 	go func() {
-		err := server.Run()
+		err := server.ListenAndServe()
 		if err != nil {
 			t.Fatalf("Unable to run server: %s", err)
 		}
 	}()
 	waitForServer(SERVER_ADDR, 2*time.Second, t)
 
-	client := &Client{
-		ProxyConfig: ProxyConfig{
-			Addr:         CLIENT_ADDR,
-			ReadTimeout:  0, // don't timeout
-			WriteTimeout: 0,
+	clt := &client.Client{
+		Addr:         CLIENT_ADDR,
+		ReadTimeout:  0, // don't timeout
+		WriteTimeout: 0,
+	}
+
+	clt.Configure(&client.ClientConfig{
+		Servers: []*client.ServerInfo{
+			&client.ServerInfo{Weight: 100},
 		},
-		EnproxyConfig: &enproxy.Config{
+	}, []*enproxy.Config{
+		&enproxy.Config{
 			DialProxy: func(addr string) (net.Conn, error) {
 				return tls.Dial("tcp", CF_ADDR, &tls.Config{
-					RootCAs: cf.certContext.serverCert.PoolContainingCert(),
+					RootCAs: cf.certContext.ServerCert.PoolContainingCert(),
 				})
 			},
 			NewRequest: func(host string, method string, body io.Reader) (req *http.Request, err error) {
@@ -112,9 +117,9 @@ func TestCloudFlare(t *testing.T) {
 				return http.NewRequest(method, "http://"+host, body)
 			},
 		},
-	}
+	})
 	go func() {
-		err := client.Run()
+		err := clt.ListenAndServe()
 		if err != nil {
 			t.Fatalf("Unable to run client: %s", err)
 		}
@@ -122,7 +127,7 @@ func TestCloudFlare(t *testing.T) {
 	waitForServer(CLIENT_ADDR, 2*time.Second, t)
 
 	// Test various scenarios
-	certPool := mockServer.certContext.serverCert.PoolContainingCert()
+	certPool := mockServer.certContext.ServerCert.PoolContainingCert()
 	testRequest("Plain Text Request", t, mockServer.requests, false, certPool, 200, nil)
 	testRequest("HTTPS Request", t, mockServer.requests, true, certPool, 200, nil)
 	testRequest("HTTPS Request without server Cert", t, mockServer.requests, true, nil, 200, fmt.Errorf("Get https://"+HTTPS_ADDR+": x509: certificate signed by unknown authority"))
@@ -178,22 +183,22 @@ func testRequest(testCase string, t *testing.T, requests chan *http.Request, htt
 
 // MockServer is an HTTP+S server that serves up simple responses
 type MockServer struct {
-	certContext *CertContext
+	certContext *server.CertContext
 	requests    chan *http.Request // publishes received requests
 }
 
-func (server *MockServer) init() error {
-	server.certContext = &CertContext{
+func (srv *MockServer) init() error {
+	srv.certContext = &server.CertContext{
 		PKFile:         randomTempPath(),
 		ServerCertFile: randomTempPath(),
 	}
 
-	err := server.certContext.initServerCert(HOST)
+	err := srv.certContext.InitServerCert(HOST)
 	if err != nil {
 		fmt.Errorf("Unable to initialize mock server cert: %s", err)
 	}
 
-	server.requests = make(chan *http.Request, 100)
+	srv.requests = make(chan *http.Request, 100)
 	return nil
 }
 
@@ -237,16 +242,16 @@ func (server *MockServer) handle(resp http.ResponseWriter, req *http.Request) {
 
 // MockCloudFlare is a ReverseProxy that pretends to be CloudFlare
 type MockCloudFlare struct {
-	certContext *CertContext
+	certContext *server.CertContext
 }
 
 func (cf *MockCloudFlare) init() error {
-	cf.certContext = &CertContext{
+	cf.certContext = &server.CertContext{
 		PKFile:         randomTempPath(),
 		ServerCertFile: randomTempPath(),
 	}
 
-	err := cf.certContext.initServerCert(HOST)
+	err := cf.certContext.InitServerCert(HOST)
 	if err != nil {
 		fmt.Errorf("Unable to initialize mock CloudFlare server cert: %s", err)
 	}

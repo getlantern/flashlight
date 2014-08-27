@@ -12,9 +12,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/log"
-	"github.com/getlantern/flashlight/proxy"
+	"github.com/getlantern/flashlight/server"
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/statserver"
 	"github.com/getlantern/go-igdman/igdman"
@@ -27,34 +27,44 @@ const (
 var (
 	// Command-line Flags
 	help = flag.Bool("help", false, "Get usage help")
-	cfg  = config.Default()
 
-	// flagsParsed is unused, this is just a trick to allow us to parse
-	// command-line flags before initializing the other variables
-	flagsParsed = parseFlags()
+	configUpdates = make(chan *Config)
+	configErrors  = make(chan error)
 )
 
-// parseFlags parses the command-line flags.  If there's a problem with the
-// provided flags, it prints usage to stdout and exits with status 1.
-func parseFlags() bool {
+// configure parses the command-line flags and binds the configuration YAML.
+// If there's a problem with the provided flags, it prints usage to stdout and
+// exits with status 1.
+func configure() bool {
+	cfg := DefaultConfig()
 	cfg.InitFlags()
-	err := cfg.Bind()
+
+	err := cfg.Bind(configUpdates, configErrors)
 	if err != nil {
 		log.Fatalf("Unable to bind config: %s", err)
 	}
+
 	flag.Parse()
-	if *help || cfg.Addr == "" || (cfg.Role != "server" && cfg.Role != "client") || cfg.UpstreamHost == "" {
+	if *help || cfg.Addr == "" || (cfg.Role != "server" && cfg.Role != "client") {
 		flag.Usage()
 		os.Exit(1)
 	}
+
 	err = cfg.Save()
 	if err != nil {
 		log.Fatalf("Unable to save config: %s", err)
 	}
+
+	// Handle updates
 	return true
 }
 
 func main() {
+	configure()
+
+	// Read first configuration
+	cfg := <-configUpdates
+
 	if cfg.CpuProfile != "" {
 		startCPUProfiling(cfg.CpuProfile)
 		defer stopCPUProfiling(cfg.CpuProfile)
@@ -64,46 +74,46 @@ func main() {
 		defer saveMemProfile(cfg.MemProfile)
 	}
 
-	saveProfilingOnSigINT()
-
-	// Set up the common ProxyConfig for clients and servers
-	proxyConfig := proxy.ProxyConfig{
-		Addr:              cfg.Addr,
-		ShouldDumpHeaders: cfg.DumpHeaders,
-		ReadTimeout:       0, // don't timeout
-		WriteTimeout:      0,
-	}
+	saveProfilingOnSigINT(cfg)
 
 	log.Debugf("Running proxy")
 	if cfg.IsDownstream() {
-		runClientProxy(proxyConfig)
+		runClientProxy(cfg)
 	} else {
-		runServerProxy(proxyConfig)
+		runServerProxy(cfg)
 	}
 }
 
 // Runs the client-side proxy
-func runClientProxy(proxyConfig proxy.ProxyConfig) {
-	client := &proxy.Client{
-		ProxyConfig:  proxyConfig,
-		UpstreamHost: cfg.UpstreamHost,
-		UpstreamPort: cfg.UpstreamPort,
-		MasqueradeAs: cfg.MasqueradeAs,
-		RootCA:       cfg.RootCA,
+func runClientProxy(cfg *Config) {
+	client := &client.Client{
+		Addr:         cfg.Addr,
+		ReadTimeout:  0, // don't timeout
+		WriteTimeout: 0,
 	}
-	err := client.Run()
+	// Configure client initially
+	client.Configure(cfg.Client, nil)
+	// Continually poll for config updates and update client accordingly
+	go func() {
+		for {
+			cfg := <-configUpdates
+			client.Configure(cfg.Client, nil)
+		}
+	}()
+
+	err := client.ListenAndServe()
 	if err != nil {
 		log.Fatalf("Unable to run client proxy: %s", err)
 	}
 }
 
 // Runs the server-side proxy
-func runServerProxy(proxyConfig proxy.ProxyConfig) {
+func runServerProxy(cfg *Config) {
 	useAllCores()
 
 	if cfg.Portmap > 0 {
 		log.Debugf("Attempting to map external port %d", cfg.Portmap)
-		err := mapPort()
+		err := mapPort(cfg)
 		if err != nil {
 			log.Errorf("Unable to map external port: %s", err)
 			os.Exit(PORTMAP_FAILURE)
@@ -111,52 +121,36 @@ func runServerProxy(proxyConfig proxy.ProxyConfig) {
 		log.Debugf("Mapped external port %d", cfg.Portmap)
 	}
 
-	server := &proxy.Server{
-		ProxyConfig: proxyConfig,
-		Host:        cfg.UpstreamHost,
-		CertContext: &proxy.CertContext{
-			PKFile:         inConfigDir("proxypk.pem"),
-			ServerCertFile: inConfigDir("servercert.pem"),
+	srv := &server.Server{
+		Addr:         cfg.Addr,
+		ReadTimeout:  0, // don't timeout
+		WriteTimeout: 0,
+		Host:         cfg.Host,
+		CertContext: &server.CertContext{
+			PKFile:         cfg.InConfigDir("proxypk.pem"),
+			ServerCertFile: cfg.InConfigDir("servercert.pem"),
 		},
 	}
 	if cfg.InstanceId != "" {
 		// Report stats
-		server.StatReporter = &statreporter.Reporter{
+		srv.StatReporter = &statreporter.Reporter{
 			InstanceId: cfg.InstanceId,
 			Country:    cfg.Country,
 		}
 	}
 	if cfg.StatsAddr != "" {
 		// Serve stats
-		server.StatServer = &statserver.Server{
+		srv.StatServer = &statserver.Server{
 			Addr: cfg.StatsAddr,
 		}
 	}
-	err := server.Run()
+	err := srv.ListenAndServe()
 	if err != nil {
 		log.Fatalf("Unable to run server proxy: %s", err)
 	}
 }
 
-// inConfigDir returns the path to the given filename inside of the configDir
-// specified at the command line.
-func inConfigDir(filename string) string {
-	if cfg.ConfigDir == "" {
-		return filename
-	} else {
-		if _, err := os.Stat(cfg.ConfigDir); err != nil {
-			if os.IsNotExist(err) {
-				// Create config dir
-				if err := os.MkdirAll(cfg.ConfigDir, 0755); err != nil {
-					log.Fatalf("Unable to create configDir at %s: %s", cfg.ConfigDir, err)
-				}
-			}
-		}
-		return fmt.Sprintf("%s%c%s", cfg.ConfigDir, os.PathSeparator, filename)
-	}
-}
-
-func mapPort() error {
+func mapPort(cfg *Config) error {
 	parts := strings.Split(cfg.Addr, ":")
 
 	internalPort, err := strconv.Atoi(parts[1])
@@ -226,7 +220,7 @@ func saveMemProfile(filename string) {
 	f.Close()
 }
 
-func saveProfilingOnSigINT() {
+func saveProfilingOnSigINT(cfg *Config) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
