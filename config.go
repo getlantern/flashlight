@@ -108,5 +108,5 @@ func (cfg *Config) InConfigDir(filename string) string {
 }
 
 func (cfg *Config) configFile() string {
-	return fmt.Sprintf("%s%cflashlight.yaml", cfg.ConfigDir, os.PathSeparator)
+	return cfg.InConfigDir("flashlight.yaml")
 }
