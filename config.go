@@ -11,18 +11,18 @@ import (
 )
 
 type Config struct {
-	ConfigDir   string
-	Addr        string
-	Portmap     int
-	Role        string
-	Client      *client.ClientConfig
-	Host        string
-	InstanceId  string
-	StatsAddr   string
-	Country     string
-	DumpHeaders bool
-	CpuProfile  string
-	MemProfile  string
+	ConfigDir      string
+	Addr           string
+	Portmap        int
+	Role           string
+	Client         *client.ClientConfig
+	AdvertisedHost string
+	InstanceId     string
+	StatsAddr      string
+	Country        string
+	DumpHeaders    bool
+	CpuProfile     string
+	MemProfile     string
 }
 
 func DefaultConfig() *Config {
@@ -56,9 +56,10 @@ func (cfg *Config) InitFlags() {
 	flag.StringVar(&cfg.Addr, "addr", cfg.Addr, "ip:port on which to listen for requests. When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https (required)")
 	flag.IntVar(&cfg.Portmap, "portmap", cfg.Portmap, "try to map this port on the firewall to the port on which flashlight is listening, using UPnP or NAT-PMP. If mapping this port fails, flashlight will exit with status code 50")
 	flag.StringVar(&cfg.Role, "role", cfg.Role, "either 'client' or 'server' (required)")
-	flag.StringVar(&cfg.Host, "server", cfg.Host, "FQDN of flashlight server when running in server mode (required)")
+	flag.StringVar(&cfg.Client.Servers["roundrobin"].Host, "host", cfg.Client.Servers["roundrobin"].Host, "Hostname of upstream server")
 	flag.StringVar(&cfg.Client.Servers["roundrobin"].MasqueradeAs, "masquerade", cfg.Client.Servers["roundrobin"].MasqueradeAs, "masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter")
 	flag.StringVar(&cfg.Client.Servers["roundrobin"].RootCA, "rootca", cfg.Client.Servers["roundrobin"].RootCA, "pin to this CA cert if specified (PEM format)")
+	flag.StringVar(&cfg.AdvertisedHost, "server", cfg.AdvertisedHost, "FQDN of flashlight server when running in server mode (required)")
 	flag.StringVar(&cfg.InstanceId, "instanceid", cfg.InstanceId, "instanceId under which to report stats to statshub. If not specified, no stats are reported.")
 	flag.StringVar(&cfg.StatsAddr, "statsaddr", cfg.StatsAddr, "host:port at which to make detailed stats available using server-sent events (optional)")
 	flag.StringVar(&cfg.Country, "country", cfg.Country, "2 digit country code under which to report stats. Defaults to xx.")

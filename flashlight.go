@@ -126,7 +126,7 @@ func runServerProxy(cfg *Config) {
 		Addr:         cfg.Addr,
 		ReadTimeout:  0, // don't timeout
 		WriteTimeout: 0,
-		Host:         cfg.Host,
+		Host:         cfg.AdvertisedHost,
 		CertContext: &server.CertContext{
 			PKFile:         cfg.InConfigDir("proxypk.pem"),
 			ServerCertFile: cfg.InConfigDir("servercert.pem"),
