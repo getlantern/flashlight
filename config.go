@@ -36,7 +36,7 @@ func DefaultConfig() *Config {
 					Port:         443,
 					MasqueradeAs: "cdnjs.com",
 					QOS:          10,
-					Weight:       100,
+					Weight:       1000000,
 				},
 			},
 		},
