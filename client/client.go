@@ -113,9 +113,8 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 
 // ServeHTTP implements the method from interface http.Handler
 func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	log.Debugf("Handling request for: %s", req.RequestURI)
 	server := client.randomServer(req)
-	log.Debugf("Using server %s", server.info.Host)
+	log.Debugf("Using server %s to handle request for %s", server.info.Host, req.RequestURI)
 	if req.Method == CONNECT {
 		server.enproxyConfig.Intercept(resp, req)
 	} else {
