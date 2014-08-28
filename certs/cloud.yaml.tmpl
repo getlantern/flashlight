@@ -1,17 +1,11 @@
 # cloud.yaml contains the default configuration that's made available on the
 # internet.
 client:
-  cloudflare-masquerades:{% for key, val in masquerades.iteritems() %}
-    masquerade:
-      domain: {{ key }}
-      rootca: "{{ val }}"{% endfor %}
   servers:
     roundrobin:
       host: roundrobin.getiantem.org
       port: 443
-      masqueradeas: elance.com
-      rootca: "-----BEGIN CERTIFICATE-----\nMIIERjCCAy6gAwIBAgIEByd1ijANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJ\nRTESMBAGA1UEChMJQmFsdGltb3JlMRMwEQYDVQQLEwpDeWJlclRydXN0MSIwIAYD\nVQQDExlCYWx0aW1vcmUgQ3liZXJUcnVzdCBSb290MB4XDTEyMDcyNTE3NTgyOFoX\nDTE5MDcyNTE3NTc0NFowbDELMAkGA1UEBhMCVVMxFTATBgNVBAoTDERpZ2lDZXJ0\nIEluYzEZMBcGA1UECxMQd3d3LmRpZ2ljZXJ0LmNvbTErMCkGA1UEAxMiRGlnaUNl\ncnQgSGlnaCBBc3N1cmFuY2UgRVYgUm9vdCBDQTCCASIwDQYJKoZIhvcNAQEBBQAD\nggEPADCCAQoCggEBAMbM5XPm+9S75S0tMqbf5YE/yc0lSbZxKsPVlDRnogocsF9p\npkCxxLeyj9CYpKlBWTrT3JTWPNt0OKRKzE0lgvdKpVMSOO7zSW1xkX5jtqumX8Ok\nhPhPYlG++MXs2ziS4wblCJEMxChBVfvLWokVfnHoNb9Ncgk9vjo4UFt3MRuNs8ck\nRZqnrG0AFFoEt7oT61EKmEFBIk5lYYeBQVCmeVyJ3hlKV9Uu5l0cUyx+mM0aBhak\naHPQNAQTXKFx01p8VdteZOE3hzBWBOURtCmAEvF5OYiiAhF8J2a3iLd48soKqDir\nCmTCv2ZdlYTBoSUeh10aUAsgEsxBu24LUTi4S8sCAwEAAaOCAQAwgf0wEgYDVR0T\nAQH/BAgwBgEB/wIBATBTBgNVHSAETDBKMEgGCSsGAQQBsT4BADA7MDkGCCsGAQUF\nBwIBFi1odHRwOi8vY3liZXJ0cnVzdC5vbW5pcm9vdC5jb20vcmVwb3NpdG9yeS5j\nZm0wDgYDVR0PAQH/BAQDAgEGMB8GA1UdIwQYMBaAFOWdWTCCR1jMrPoIVDaGezq1\nBE3wMEIGA1UdHwQ7MDkwN6A1oDOGMWh0dHA6Ly9jZHAxLnB1YmxpYy10cnVzdC5j\nb20vQ1JML09tbmlyb290MjAyNS5jcmwwHQYDVR0OBBYEFLE+w2kD+L9HAdSYJhoI\nAu9jZCvDMA0GCSqGSIb3DQEBBQUAA4IBAQB2Vlg2DRmYtNmlyzB1rrHWgJfM7jhy\naDmwAj5GtsTyrNHS4WYW5oWkVXfLLhxZ3aVL3y8zu85gVyc6oU1Jb1V2bdXXwqBb\nKpv5S/d/Id3uXFcNADU68YxGywT2Ro/OBWrVxGz+bpi/pJy9joksvnEBQ8w2KmQG\nVpeTpUe9Sj+MG3XInrDwJZh3IcB2p1F6JCV9GDUG/sEJxQ47majNnSmwOon16ucq\n5eIkTmipHafd0ghLodFvDL0s4Lt8+qE8Zc86UkvTIHoKEFX4rUMWVCdOU3PIo5aJ\n0OF5xgl41fW9sbPFf6ZLr0kRyJecT3xwaRZcLbjQ3xwyUrne88MG6IMi\n-----END
-        CERTIFICATE-----\n"
+      masquerades: *cf
       insecureskipverify: false
       dialtimeoutmillis: 0
       keepalivemillis: 0
@@ -20,9 +14,7 @@ client:
     # fallbacks:
     #   host: fallbacks.getiantem.org
     #   port: 443
-    #   masqueradeas: elance.com
-    #   rootca: "-----BEGIN CERTIFICATE-----\nMIIERjCCAy6gAwIBAgIEByd1ijANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJ\nRTESMBAGA1UEChMJQmFsdGltb3JlMRMwEQYDVQQLEwpDeWJlclRydXN0MSIwIAYD\nVQQDExlCYWx0aW1vcmUgQ3liZXJUcnVzdCBSb290MB4XDTEyMDcyNTE3NTgyOFoX\nDTE5MDcyNTE3NTc0NFowbDELMAkGA1UEBhMCVVMxFTATBgNVBAoTDERpZ2lDZXJ0\nIEluYzEZMBcGA1UECxMQd3d3LmRpZ2ljZXJ0LmNvbTErMCkGA1UEAxMiRGlnaUNl\ncnQgSGlnaCBBc3N1cmFuY2UgRVYgUm9vdCBDQTCCASIwDQYJKoZIhvcNAQEBBQAD\nggEPADCCAQoCggEBAMbM5XPm+9S75S0tMqbf5YE/yc0lSbZxKsPVlDRnogocsF9p\npkCxxLeyj9CYpKlBWTrT3JTWPNt0OKRKzE0lgvdKpVMSOO7zSW1xkX5jtqumX8Ok\nhPhPYlG++MXs2ziS4wblCJEMxChBVfvLWokVfnHoNb9Ncgk9vjo4UFt3MRuNs8ck\nRZqnrG0AFFoEt7oT61EKmEFBIk5lYYeBQVCmeVyJ3hlKV9Uu5l0cUyx+mM0aBhak\naHPQNAQTXKFx01p8VdteZOE3hzBWBOURtCmAEvF5OYiiAhF8J2a3iLd48soKqDir\nCmTCv2ZdlYTBoSUeh10aUAsgEsxBu24LUTi4S8sCAwEAAaOCAQAwgf0wEgYDVR0T\nAQH/BAgwBgEB/wIBATBTBgNVHSAETDBKMEgGCSsGAQQBsT4BADA7MDkGCCsGAQUF\nBwIBFi1odHRwOi8vY3liZXJ0cnVzdC5vbW5pcm9vdC5jb20vcmVwb3NpdG9yeS5j\nZm0wDgYDVR0PAQH/BAQDAgEGMB8GA1UdIwQYMBaAFOWdWTCCR1jMrPoIVDaGezq1\nBE3wMEIGA1UdHwQ7MDkwN6A1oDOGMWh0dHA6Ly9jZHAxLnB1YmxpYy10cnVzdC5j\nb20vQ1JML09tbmlyb290MjAyNS5jcmwwHQYDVR0OBBYEFLE+w2kD+L9HAdSYJhoI\nAu9jZCvDMA0GCSqGSIb3DQEBBQUAA4IBAQB2Vlg2DRmYtNmlyzB1rrHWgJfM7jhy\naDmwAj5GtsTyrNHS4WYW5oWkVXfLLhxZ3aVL3y8zu85gVyc6oU1Jb1V2bdXXwqBb\nKpv5S/d/Id3uXFcNADU68YxGywT2Ro/OBWrVxGz+bpi/pJy9joksvnEBQ8w2KmQG\nVpeTpUe9Sj+MG3XInrDwJZh3IcB2p1F6JCV9GDUG/sEJxQ47majNnSmwOon16ucq\n5eIkTmipHafd0ghLodFvDL0s4Lt8+qE8Zc86UkvTIHoKEFX4rUMWVCdOU3PIo5aJ\n0OF5xgl41fW9sbPFf6ZLr0kRyJecT3xwaRZcLbjQ3xwyUrne88MG6IMi\n-----END
-    #     CERTIFICATE-----\n"
+    #   masquerades: *cf
     #   insecureskipverify: false
     #   dialtimeoutmillis: 0
     #   keepalivemillis: 0
@@ -31,11 +23,13 @@ client:
     # peers:
     #   host: peers.getiantem.org
     #   port: 443
-    #   masqueradeas: elance.com
-    #   rootca: "-----BEGIN CERTIFICATE-----\nMIIERjCCAy6gAwIBAgIEByd1ijANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJ\nRTESMBAGA1UEChMJQmFsdGltb3JlMRMwEQYDVQQLEwpDeWJlclRydXN0MSIwIAYD\nVQQDExlCYWx0aW1vcmUgQ3liZXJUcnVzdCBSb290MB4XDTEyMDcyNTE3NTgyOFoX\nDTE5MDcyNTE3NTc0NFowbDELMAkGA1UEBhMCVVMxFTATBgNVBAoTDERpZ2lDZXJ0\nIEluYzEZMBcGA1UECxMQd3d3LmRpZ2ljZXJ0LmNvbTErMCkGA1UEAxMiRGlnaUNl\ncnQgSGlnaCBBc3N1cmFuY2UgRVYgUm9vdCBDQTCCASIwDQYJKoZIhvcNAQEBBQAD\nggEPADCCAQoCggEBAMbM5XPm+9S75S0tMqbf5YE/yc0lSbZxKsPVlDRnogocsF9p\npkCxxLeyj9CYpKlBWTrT3JTWPNt0OKRKzE0lgvdKpVMSOO7zSW1xkX5jtqumX8Ok\nhPhPYlG++MXs2ziS4wblCJEMxChBVfvLWokVfnHoNb9Ncgk9vjo4UFt3MRuNs8ck\nRZqnrG0AFFoEt7oT61EKmEFBIk5lYYeBQVCmeVyJ3hlKV9Uu5l0cUyx+mM0aBhak\naHPQNAQTXKFx01p8VdteZOE3hzBWBOURtCmAEvF5OYiiAhF8J2a3iLd48soKqDir\nCmTCv2ZdlYTBoSUeh10aUAsgEsxBu24LUTi4S8sCAwEAAaOCAQAwgf0wEgYDVR0T\nAQH/BAgwBgEB/wIBATBTBgNVHSAETDBKMEgGCSsGAQQBsT4BADA7MDkGCCsGAQUF\nBwIBFi1odHRwOi8vY3liZXJ0cnVzdC5vbW5pcm9vdC5jb20vcmVwb3NpdG9yeS5j\nZm0wDgYDVR0PAQH/BAQDAgEGMB8GA1UdIwQYMBaAFOWdWTCCR1jMrPoIVDaGezq1\nBE3wMEIGA1UdHwQ7MDkwN6A1oDOGMWh0dHA6Ly9jZHAxLnB1YmxpYy10cnVzdC5j\nb20vQ1JML09tbmlyb290MjAyNS5jcmwwHQYDVR0OBBYEFLE+w2kD+L9HAdSYJhoI\nAu9jZCvDMA0GCSqGSIb3DQEBBQUAA4IBAQB2Vlg2DRmYtNmlyzB1rrHWgJfM7jhy\naDmwAj5GtsTyrNHS4WYW5oWkVXfLLhxZ3aVL3y8zu85gVyc6oU1Jb1V2bdXXwqBb\nKpv5S/d/Id3uXFcNADU68YxGywT2Ro/OBWrVxGz+bpi/pJy9joksvnEBQ8w2KmQG\nVpeTpUe9Sj+MG3XInrDwJZh3IcB2p1F6JCV9GDUG/sEJxQ47majNnSmwOon16ucq\n5eIkTmipHafd0ghLodFvDL0s4Lt8+qE8Zc86UkvTIHoKEFX4rUMWVCdOU3PIo5aJ\n0OF5xgl41fW9sbPFf6ZLr0kRyJecT3xwaRZcLbjQ3xwyUrne88MG6IMi\n-----END
-    #     CERTIFICATE-----\n"
+    #   masquerades: *cf
     #   insecureskipverify: false
     #   dialtimeoutmillis: 0
     #   keepalivemillis: 0
     #   weight: 10000
     #   qos: 2
+  cloudflare-masquerades: &cf{% for key, val in masquerades.iteritems() %}
+    masquerade:
+      domain: {{ key }}
+      rootca: "{{ val }}"{% endfor %}
