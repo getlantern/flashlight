@@ -62,34 +62,7 @@ func configure() bool {
 		log.Fatalf("Unable to save config: %s", err)
 	}
 
-	if cfg.CloudConfig != "" {
-		go pollCloudConfig(cfg)
-	}
 	return true
-}
-
-func pollCloudConfig(cfg *Config) {
-	log.Debugf("Polling for cloud configuration at: %s", cfg.CloudConfig)
-	time.Sleep(15 * time.Second)
-	for {
-		fetchCloudConfig(cfg)
-		time.Sleep(CLOUD_CONFIG_POLL_INTERVAL)
-	}
-}
-
-func fetchCloudConfig(cfg *Config) {
-	resp, err := http.Get(cfg.CloudConfig)
-	if err != nil {
-		log.Errorf("Unable to fetch cloud config at %s: %s", cfg.CloudConfig, err)
-		return
-	}
-	defer resp.Body.Close()
-	updated, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Errorf("Unable to read yaml from %s: %s", cfg.CloudConfig, err)
-	}
-	log.Debugf("Merging cloud configuration: %s", spew.Sdump(updated))
-	cfg.Merge(updated)
 }
 
 func main() {
@@ -109,12 +82,39 @@ func main() {
 
 	saveProfilingOnSigINT(cfg)
 
+	if cfg.CloudConfig != "" {
+		go pollCloudConfig(cfg)
+	}
+
 	log.Debugf("Running proxy")
 	if cfg.IsDownstream() {
 		runClientProxy(cfg)
 	} else {
 		runServerProxy(cfg)
 	}
+}
+
+func pollCloudConfig(cfg *Config) {
+	log.Debugf("Polling for cloud configuration at: %s", cfg.CloudConfig)
+	for {
+		fetchCloudConfig(cfg)
+		time.Sleep(CLOUD_CONFIG_POLL_INTERVAL)
+	}
+}
+
+func fetchCloudConfig(cfg *Config) {
+	resp, err := http.Get(cfg.CloudConfig)
+	if err != nil {
+		log.Errorf("Unable to fetch cloud config at %s: %s", cfg.CloudConfig, err)
+		return
+	}
+	defer resp.Body.Close()
+	updated, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Errorf("Unable to read yaml from %s: %s", cfg.CloudConfig, err)
+	}
+	log.Debugf("Merging cloud configuration: %s", spew.Sdump(updated))
+	cfg.Merge(updated)
 }
 
 // Runs the client-side proxy
