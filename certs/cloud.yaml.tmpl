@@ -1,0 +1,35 @@
+# cloud.yaml contains the default configuration that's made available on the
+# internet.
+client:
+  servers:
+    roundrobin:
+      host: roundrobin.getiantem.org
+      port: 443
+      masquerades: *cf
+      insecureskipverify: false
+      dialtimeoutmillis: 0
+      keepalivemillis: 0
+      weight: 1000000
+      qos: 5
+    # fallbacks:
+    #   host: fallbacks.getiantem.org
+    #   port: 443
+    #   masquerades: *cf
+    #   insecureskipverify: false
+    #   dialtimeoutmillis: 0
+    #   keepalivemillis: 0
+    #   weight: 1000000
+    #   qos: 10
+    # peers:
+    #   host: peers.getiantem.org
+    #   port: 443
+    #   masquerades: *cf
+    #   insecureskipverify: false
+    #   dialtimeoutmillis: 0
+    #   keepalivemillis: 0
+    #   weight: 10000
+    #   qos: 2
+  cloudflare-masquerades: &cf{% for key, val in masquerades.iteritems() %}
+    masquerade:
+      domain: {{ key }}
+      rootca: "{{ val }}"{% endfor %}
