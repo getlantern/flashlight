@@ -1,4 +1,4 @@
-package proxy
+package server
 
 import (
 	"crypto/tls"
@@ -45,7 +45,17 @@ var (
 )
 
 type Server struct {
-	ProxyConfig
+	// Addr: listen address in form of host:port
+	Addr string
+
+	// ReadTimeout: (optional) timeout for read ops
+	ReadTimeout time.Duration
+
+	// WriteTimeout: (optional) timeout for write ops
+	WriteTimeout time.Duration
+
+	TLSConfig *tls.Config
+
 	Host                       string                 // FQDN that is guaranteed to hit this server
 	CertContext                *CertContext           // context for certificate management
 	AllowNonGlobalDestinations bool                   // if true, requests to LAN, Loopback, etc. will be allowed
@@ -57,12 +67,12 @@ type Server struct {
 type CertContext struct {
 	PKFile         string
 	ServerCertFile string
-	pk             *keyman.PrivateKey
-	serverCert     *keyman.Certificate
+	PK             *keyman.PrivateKey
+	ServerCert     *keyman.Certificate
 }
 
-func (server *Server) Run() error {
-	err := server.CertContext.initServerCert(strings.Split(server.Addr, ":")[0])
+func (server *Server) ListenAndServe() error {
+	err := server.CertContext.InitServerCert(strings.Split(server.Addr, ":")[0])
 	if err != nil {
 		return fmt.Errorf("Unable to init server cert: %s", err)
 	}
@@ -148,16 +158,16 @@ func (server *Server) dialDestination(addr string) (net.Conn, error) {
 	return net.DialTimeout("tcp", addr, dialTimeout)
 }
 
-// initServerCert initializes a PK + cert for use by a server proxy, signed by
+// InitServerCert initializes a PK + cert for use by a server proxy, signed by
 // the CA certificate.  We always generate a new certificate just in case.
-func (ctx *CertContext) initServerCert(host string) (err error) {
-	if ctx.pk, err = keyman.LoadPKFromFile(ctx.PKFile); err != nil {
+func (ctx *CertContext) InitServerCert(host string) (err error) {
+	if ctx.PK, err = keyman.LoadPKFromFile(ctx.PKFile); err != nil {
 		if os.IsNotExist(err) {
 			log.Debugf("Creating new PK at: %s", ctx.PKFile)
-			if ctx.pk, err = keyman.GeneratePK(2048); err != nil {
+			if ctx.PK, err = keyman.GeneratePK(2048); err != nil {
 				return
 			}
-			if err = ctx.pk.WriteToFile(ctx.PKFile); err != nil {
+			if err = ctx.PK.WriteToFile(ctx.PKFile); err != nil {
 				return fmt.Errorf("Unable to save private key: %s", err)
 			}
 		} else {
@@ -166,11 +176,11 @@ func (ctx *CertContext) initServerCert(host string) (err error) {
 	}
 
 	log.Debugf("Creating new server cert at: %s", ctx.ServerCertFile)
-	ctx.serverCert, err = ctx.pk.TLSCertificateFor("Lantern", host, TEN_YEARS_FROM_TODAY, true, nil)
+	ctx.ServerCert, err = ctx.PK.TLSCertificateFor("Lantern", host, TEN_YEARS_FROM_TODAY, true, nil)
 	if err != nil {
 		return
 	}
-	err = ctx.serverCert.WriteToFile(ctx.ServerCertFile)
+	err = ctx.ServerCert.WriteToFile(ctx.ServerCertFile)
 	if err != nil {
 		return
 	}
