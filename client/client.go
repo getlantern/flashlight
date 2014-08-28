@@ -117,6 +117,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	server := client.randomServer(req)
 	masquerade := client.randomMasquerade()
 	log.Debugf("Using server %s to handle request for %s", server.info.Host, req.RequestURI)
+	log.Debugf("Using masquerade %s", masquerade.Domain)
 	if req.Method == CONNECT {
 		server.info.buildEnproxyConfig(masquerade).Intercept(resp, req)
 	} else {
