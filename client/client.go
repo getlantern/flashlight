@@ -34,8 +34,9 @@ func init() {
 
 // ClientConfig captures configuration information for a Client
 type ClientConfig struct {
-	Servers           map[string]*ServerInfo
-	ShouldDumpHeaders bool // whether or not to dump headers of requests and responses
+	CloudFlareMasquerades []*Masquerade
+	Servers               map[string]*ServerInfo
+	ShouldDumpHeaders     bool // whether or not to dump headers of requests and responses
 }
 
 // Client is an HTTP proxy that accepts connections from local programs and
@@ -114,12 +115,20 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 // ServeHTTP implements the method from interface http.Handler
 func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	server := client.randomServer(req)
+	masquerade := client.randomMasquerade()
 	log.Debugf("Using server %s to handle request for %s", server.info.Host, req.RequestURI)
 	if req.Method == CONNECT {
-		server.enproxyConfig.Intercept(resp, req)
+		server.info.buildEnproxyConfig(masquerade).Intercept(resp, req)
 	} else {
-		server.reverseProxy.ServeHTTP(resp, req)
+		//server.reverseProxy.ServeHTTP(resp, req)
+		server.info.buildReverseProxy(masquerade).ServeHTTP(resp, req)
 	}
+}
+
+// randomMasquerade picks a random masquerade domain and root certificate to use.
+func (client *Client) randomMasquerade() *Masquerade {
+	cf := client.cfg.CloudFlareMasquerades
+	return cf[rand.Intn(len(cf))]
 }
 
 // randomServer picks a random server from the list of servers, with higher
@@ -176,6 +185,11 @@ func (client *Client) getServers() ([]*server, int) {
 	return client.servers, client.totalServerWeights
 }
 
+type Masquerade struct {
+	Domain string
+	RootCA string
+}
+
 // ServerInfo captures configuration information for an upstream server
 type ServerInfo struct {
 	// Host: the host (e.g. getiantem.org)
@@ -185,11 +199,11 @@ type ServerInfo struct {
 	Port int
 
 	// MasqueradeAs: host as which to masquerade for host-spoofing (e.g. cdnjs.com)
-	MasqueradeAs string
+	//MasqueradeAs string
 
 	// RootCA: PEM encoded certificate for the certificate authority we trust to
 	// sign the server's certificate.
-	RootCA string
+	//RootCA string
 
 	// InsecureSkipVerify: if true, server's certificate is not verified.
 	InsecureSkipVerify bool
@@ -217,21 +231,85 @@ func (serverInfo *ServerInfo) buildServer(shouldDumpHeaders bool, enproxyConfig 
 		weight = 100
 	}
 
-	if enproxyConfig == nil {
-		enproxyConfig = serverInfo.buildEnproxyConfig()
-	}
+	/*
+		if enproxyConfig == nil {
+			enproxyConfig = serverInfo.buildEnproxyConfig()
+		}
+	*/
 
 	server := &server{
-		info:          serverInfo,
-		enproxyConfig: enproxyConfig,
+		info: serverInfo,
+		//enproxyConfig: enproxyConfig,
 	}
 
-	server.reverseProxy = server.buildReverseProxy(shouldDumpHeaders)
+	//server.reverseProxy = server.buildReverseProxy(shouldDumpHeaders)
 
 	return server
 }
 
-func (serverInfo *ServerInfo) buildEnproxyConfig() *enproxy.Config {
+/*
+func (serverInfo *ServerInfo) dialWithEnproxy(network, addr string) (net.Conn, error) {
+	conn := &enproxy.Conn{
+		Addr:   addr,
+		Config: server.enproxyConfig,
+	}
+	err := conn.Connect()
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+*/
+
+type masqueradeDialer struct {
+	masquerade *Masquerade
+	serverInfo *ServerInfo
+}
+
+func (dialer *masqueradeDialer) dial(network, addr string) (net.Conn, error) {
+	conn := &enproxy.Conn{
+		Addr:   addr,
+		Config: dialer.serverInfo.buildEnproxyConfig(dialer.masquerade),
+	}
+	err := conn.Connect()
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+// buildReverseProxy builds the httputil.ReverseProxy used to proxy requests to
+// the server.
+func (serverInfo *ServerInfo) buildReverseProxy(masquerade *Masquerade) *httputil.ReverseProxy {
+	return &httputil.ReverseProxy{
+		Director: func(req *http.Request) {
+			// do nothing
+		},
+		Transport: withDumpHeaders(
+			false,
+			&http.Transport{
+				// We disable keepalives because some servers pretend to support
+				// keep-alives but close their connections immediately, which
+				// causes an error inside ReverseProxy.  This is not an issue
+				// for HTTPS because  the browser is responsible for handling
+				// the problem, which browsers like Chrome and Firefox already
+				// know to do.
+				// See https://code.google.com/p/go/issues/detail?id=4677
+				DisableKeepAlives: true,
+				Dial: (&masqueradeDialer{
+					serverInfo: serverInfo,
+					masquerade: masquerade,
+				}).dial,
+
+				//Dial:              server.dialWithEnproxy,
+			}),
+		// Set a FlushInterval to prevent overly aggressive buffering of
+		// responses, which helps keep memory usage down
+		FlushInterval: 250 * time.Millisecond,
+	}
+}
+
+func (serverInfo *ServerInfo) buildEnproxyConfig(masquerade *Masquerade) *enproxy.Config {
 	dialTimeout := time.Duration(serverInfo.DialTimeoutMillis) * time.Millisecond
 	if dialTimeout == 0 {
 		dialTimeout = 5 * time.Second
@@ -249,7 +327,7 @@ func (serverInfo *ServerInfo) buildEnproxyConfig() *enproxy.Config {
 					Timeout:   dialTimeout,
 					KeepAlive: keepAlive,
 				},
-				"tcp", serverInfo.addressForServer(), serverInfo.tlsConfig())
+				"tcp", serverInfo.addressForServer(masquerade), serverInfo.tlsConfig(masquerade))
 		},
 		NewRequest: func(upstreamHost string, method string, body io.Reader) (req *http.Request, err error) {
 			if upstreamHost == "" {
@@ -262,20 +340,20 @@ func (serverInfo *ServerInfo) buildEnproxyConfig() *enproxy.Config {
 }
 
 // Get the address to dial for reaching the server
-func (serverInfo *ServerInfo) addressForServer() string {
-	return fmt.Sprintf("%s:%d", serverInfo.serverHost(), serverInfo.Port)
+func (serverInfo *ServerInfo) addressForServer(masquerade *Masquerade) string {
+	return fmt.Sprintf("%s:%d", serverInfo.serverHost(masquerade), serverInfo.Port)
 }
 
-func (serverInfo *ServerInfo) serverHost() string {
+func (serverInfo *ServerInfo) serverHost(masquerade *Masquerade) string {
 	serverHost := serverInfo.Host
-	if serverInfo.MasqueradeAs != "" {
-		serverHost = serverInfo.MasqueradeAs
+	if masquerade.Domain != "" {
+		serverHost = masquerade.Domain
 	}
 	return serverHost
 }
 
 // Build a tls.Config for dialing the upstream host
-func (serverInfo *ServerInfo) tlsConfig() *tls.Config {
+func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 	tlsConfig := &tls.Config{
 		ClientSessionCache: tls.NewLRUClientSessionCache(1000),
 		InsecureSkipVerify: serverInfo.InsecureSkipVerify,
@@ -283,7 +361,7 @@ func (serverInfo *ServerInfo) tlsConfig() *tls.Config {
 
 	tlsConfig.VerifyServerCerts = func(certs []*x509.Certificate) ([][]*x509.Certificate, error) {
 		return tlsConfig.DefaultVerifyServerCerts(certs, &x509.VerifyOptions{
-			DNSName: serverInfo.serverHost(),
+			DNSName: masquerade.Domain,
 		})
 	}
 
@@ -292,8 +370,8 @@ func (serverInfo *ServerInfo) tlsConfig() *tls.Config {
 	// includes a server name, Fastly checks to make sure that this matches the
 	// Host header in the HTTP request and if they don't match, it returns a
 	// 400 Bad Request error.
-	if serverInfo.RootCA != "" {
-		caCert, err := keyman.LoadCertificateFromPEMBytes([]byte(serverInfo.RootCA))
+	if masquerade.RootCA != "" {
+		caCert, err := keyman.LoadCertificateFromPEMBytes([]byte(masquerade.RootCA))
 		if err != nil {
 			log.Fatalf("Unable to load root ca cert: %s", err)
 		}
@@ -304,47 +382,9 @@ func (serverInfo *ServerInfo) tlsConfig() *tls.Config {
 
 // type server represents an upstream server that proxies traffic for clients
 type server struct {
-	info          *ServerInfo
-	enproxyConfig *enproxy.Config
-	reverseProxy  *httputil.ReverseProxy
-}
-
-func (server *server) dialWithEnproxy(network, addr string) (net.Conn, error) {
-	conn := &enproxy.Conn{
-		Addr:   addr,
-		Config: server.enproxyConfig,
-	}
-	err := conn.Connect()
-	if err != nil {
-		return nil, err
-	}
-	return conn, nil
-}
-
-// buildReverseProxy builds the httputil.ReverseProxy used to proxy requests to
-// the server.
-func (server *server) buildReverseProxy(shouldDumpHeaders bool) *httputil.ReverseProxy {
-	return &httputil.ReverseProxy{
-		Director: func(req *http.Request) {
-			// do nothing
-		},
-		Transport: withDumpHeaders(
-			shouldDumpHeaders,
-			&http.Transport{
-				// We disable keepalives because some servers pretend to support
-				// keep-alives but close their connections immediately, which
-				// causes an error inside ReverseProxy.  This is not an issue
-				// for HTTPS because  the browser is responsible for handling
-				// the problem, which browsers like Chrome and Firefox already
-				// know to do.
-				// See https://code.google.com/p/go/issues/detail?id=4677
-				DisableKeepAlives: true,
-				Dial:              server.dialWithEnproxy,
-			}),
-		// Set a FlushInterval to prevent overly aggressive buffering of
-		// responses, which helps keep memory usage down
-		FlushInterval: 250 * time.Millisecond,
-	}
+	info *ServerInfo
+	//enproxyConfig *enproxy.Config
+	//reverseProxy  *httputil.ReverseProxy
 }
 
 // withDumpHeaders creates a RoundTripper that uses the supplied RoundTripper
