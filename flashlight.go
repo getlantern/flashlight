@@ -4,14 +4,18 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/server"
@@ -25,6 +29,8 @@ const (
 )
 
 var (
+	CLOUD_CONFIG_POLL_INTERVAL = 1 * time.Minute
+
 	// Command-line Flags
 	help      = flag.Bool("help", false, "Get usage help")
 	parentPID = flag.Int("parentpid", 0, "the parent process's PID, used on Windows for killing flashlight when the parent disappears")
@@ -56,8 +62,37 @@ func configure() bool {
 		log.Fatalf("Unable to save config: %s", err)
 	}
 
-	// Handle updates
+	if cfg.CloudConfig != "" {
+		go pollCloudConfig(cfg)
+	}
 	return true
+}
+
+func pollCloudConfig(cfg *Config) {
+	log.Debugf("Polling for cloud configuration at: %s", cfg.CloudConfig)
+	for {
+		time.Sleep(CLOUD_CONFIG_POLL_INTERVAL)
+		doPollCloudConfig(cfg)
+	}
+}
+
+func doPollCloudConfig(cfg *Config) {
+	resp, err := http.Get(cfg.CloudConfig)
+	if err != nil {
+		log.Errorf("Unable to poll cloud config at %s: %s", cfg.CloudConfig, err)
+		return
+	}
+	defer resp.Body.Close()
+	bytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Errorf("Unable to read yaml from %s: %s", cfg.CloudConfig, err)
+	}
+	updated, err := ConfigFromBytes(bytes)
+	if err != nil {
+		log.Errorf("Unable to parse yaml: %s : %s", err, string(bytes))
+	}
+	log.Debugf("Merging cloud configuration: %s", spew.Sdump(updated))
+	cfg.Merge(updated)
 }
 
 func main() {

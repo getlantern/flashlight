@@ -80,7 +80,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 
 	log.Debugf("Configure() called")
 	if client.cfg != nil && reflect.DeepEqual(client.cfg, cfg) {
-		log.Debugf("Config unchanged: %s", client.cfg)
+		// Config unchanged
 		return
 	}
 

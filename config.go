@@ -8,10 +8,12 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/liveyaml"
+	"github.com/getlantern/yaml"
 )
 
 type Config struct {
 	ConfigDir      string
+	CloudConfig    string
 	Addr           string
 	Portmap        int
 	Role           string
@@ -43,6 +45,12 @@ func DefaultConfig() *Config {
 	}
 }
 
+func ConfigFromBytes(bytes []byte) (*Config, error) {
+	config := &Config{}
+	err := yaml.Unmarshal(bytes, config)
+	return config, err
+}
+
 func (cfg *Config) IsDownstream() bool {
 	return cfg.Role == "client"
 }
@@ -53,6 +61,7 @@ func (cfg *Config) IsUpstream() bool {
 
 func (cfg *Config) InitFlags() {
 	flag.StringVar(&cfg.ConfigDir, "configdir", cfg.ConfigDir, "directory in which to store configuration, including flashlight.yaml (defaults to current directory)")
+	flag.StringVar(&cfg.CloudConfig, "cloudconfig", cfg.CloudConfig, "optional http(s) URL to a cloud-based source for configuration updates")
 	flag.StringVar(&cfg.Addr, "addr", cfg.Addr, "ip:port on which to listen for requests. When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https (required)")
 	flag.IntVar(&cfg.Portmap, "portmap", cfg.Portmap, "try to map this port on the firewall to the port on which flashlight is listening, using UPnP or NAT-PMP. If mapping this port fails, flashlight will exit with status code 50")
 	flag.StringVar(&cfg.Role, "role", cfg.Role, "either 'client' or 'server' (required)")
@@ -89,6 +98,19 @@ func (cfg *Config) Bind(updates chan *Config, errors chan error) error {
 
 func (cfg *Config) Save() error {
 	return liveyaml.Save(cfg.configFile(), cfg)
+}
+
+// Merges the newer config into this config, which involves replacing the
+// client's list of servers with the value from the newer config.  The merged
+// config is saved to disk.
+func (cfg *Config) Merge(newer *Config) error {
+	if newer.Client != nil && newer.Client.Servers != nil {
+		if cfg.Client == nil {
+			cfg.Client = &client.ClientConfig{}
+		}
+		cfg.Client.Servers = newer.Client.Servers
+	}
+	return cfg.Save()
 }
 
 // InConfigDir returns the path to the given filename inside of the ConfigDir.
