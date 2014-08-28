@@ -29,7 +29,7 @@ client:
     #   keepalivemillis: 0
     #   weight: 10000
     #   qos: 2
-  cloudflare-masquerades: &cf{% for key, val in masquerades.iteritems() %}
-    masquerade:
-      domain: {{ key }}
-      rootca: "{{ val }}"{% endfor %}
+  masquerades: &cf [{% for key, val in masquerades.iteritems() %}
+    domain: {{ key }}
+    rootca: "{{ val }}",
+{% endfor %}

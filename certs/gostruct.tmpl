@@ -1,0 +1,5 @@
+{% for key, val in masquerades.iteritems() %}
+				&client.Masquerade{
+					Domain: "{{ key }}",
+					RootCA: "{{ val }}",
+				},{% endfor %}
