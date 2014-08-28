@@ -8,7 +8,7 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/liveyaml"
-	"github.com/getlantern/yaml"
+	"gopkg.in/getlantern/yaml.v1"
 )
 
 type Config struct {
