@@ -70,26 +70,23 @@ func configure() bool {
 
 func pollCloudConfig(cfg *Config) {
 	log.Debugf("Polling for cloud configuration at: %s", cfg.CloudConfig)
+	time.Sleep(15 * time.Second)
 	for {
+		fetchCloudConfig(cfg)
 		time.Sleep(CLOUD_CONFIG_POLL_INTERVAL)
-		doPollCloudConfig(cfg)
 	}
 }
 
-func doPollCloudConfig(cfg *Config) {
+func fetchCloudConfig(cfg *Config) {
 	resp, err := http.Get(cfg.CloudConfig)
 	if err != nil {
-		log.Errorf("Unable to poll cloud config at %s: %s", cfg.CloudConfig, err)
+		log.Errorf("Unable to fetch cloud config at %s: %s", cfg.CloudConfig, err)
 		return
 	}
 	defer resp.Body.Close()
-	bytes, err := ioutil.ReadAll(resp.Body)
+	updated, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Errorf("Unable to read yaml from %s: %s", cfg.CloudConfig, err)
-	}
-	updated, err := ConfigFromBytes(bytes)
-	if err != nil {
-		log.Errorf("Unable to parse yaml: %s : %s", err, string(bytes))
 	}
 	log.Debugf("Merging cloud configuration: %s", spew.Sdump(updated))
 	cfg.Merge(updated)

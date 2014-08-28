@@ -36,6 +36,7 @@ func DefaultConfig() *Config {
 					Host:         "roundrobin.getiantem.org",
 					Port:         443,
 					MasqueradeAs: "cdnjs.com",
+					RootCA:       "-----BEGIN CERTIFICATE-----\nMIIERjCCAy6gAwIBAgIEByd1ijANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJ\nRTESMBAGA1UEChMJQmFsdGltb3JlMRMwEQYDVQQLEwpDeWJlclRydXN0MSIwIAYD\nVQQDExlCYWx0aW1vcmUgQ3liZXJUcnVzdCBSb290MB4XDTEyMDcyNTE3NTgyOFoX\nDTE5MDcyNTE3NTc0NFowbDELMAkGA1UEBhMCVVMxFTATBgNVBAoTDERpZ2lDZXJ0\nIEluYzEZMBcGA1UECxMQd3d3LmRpZ2ljZXJ0LmNvbTErMCkGA1UEAxMiRGlnaUNl\ncnQgSGlnaCBBc3N1cmFuY2UgRVYgUm9vdCBDQTCCASIwDQYJKoZIhvcNAQEBBQAD\nggEPADCCAQoCggEBAMbM5XPm+9S75S0tMqbf5YE/yc0lSbZxKsPVlDRnogocsF9p\npkCxxLeyj9CYpKlBWTrT3JTWPNt0OKRKzE0lgvdKpVMSOO7zSW1xkX5jtqumX8Ok\nhPhPYlG++MXs2ziS4wblCJEMxChBVfvLWokVfnHoNb9Ncgk9vjo4UFt3MRuNs8ck\nRZqnrG0AFFoEt7oT61EKmEFBIk5lYYeBQVCmeVyJ3hlKV9Uu5l0cUyx+mM0aBhak\naHPQNAQTXKFx01p8VdteZOE3hzBWBOURtCmAEvF5OYiiAhF8J2a3iLd48soKqDir\nCmTCv2ZdlYTBoSUeh10aUAsgEsxBu24LUTi4S8sCAwEAAaOCAQAwgf0wEgYDVR0T\nAQH/BAgwBgEB/wIBATBTBgNVHSAETDBKMEgGCSsGAQQBsT4BADA7MDkGCCsGAQUF\nBwIBFi1odHRwOi8vY3liZXJ0cnVzdC5vbW5pcm9vdC5jb20vcmVwb3NpdG9yeS5j\nZm0wDgYDVR0PAQH/BAQDAgEGMB8GA1UdIwQYMBaAFOWdWTCCR1jMrPoIVDaGezq1\nBE3wMEIGA1UdHwQ7MDkwN6A1oDOGMWh0dHA6Ly9jZHAxLnB1YmxpYy10cnVzdC5j\nb20vQ1JML09tbmlyb290MjAyNS5jcmwwHQYDVR0OBBYEFLE+w2kD+L9HAdSYJhoI\nAu9jZCvDMA0GCSqGSIb3DQEBBQUAA4IBAQB2Vlg2DRmYtNmlyzB1rrHWgJfM7jhy\naDmwAj5GtsTyrNHS4WYW5oWkVXfLLhxZ3aVL3y8zu85gVyc6oU1Jb1V2bdXXwqBb\nKpv5S/d/Id3uXFcNADU68YxGywT2Ro/OBWrVxGz+bpi/pJy9joksvnEBQ8w2KmQG\nVpeTpUe9Sj+MG3XInrDwJZh3IcB2p1F6JCV9GDUG/sEJxQ47majNnSmwOon16ucq\n5eIkTmipHafd0ghLodFvDL0s4Lt8+qE8Zc86UkvTIHoKEFX4rUMWVCdOU3PIo5aJ\n0OF5xgl41fW9sbPFf6ZLr0kRyJecT3xwaRZcLbjQ3xwyUrne88MG6IMi\n-----END CERTIFICATE-----\n",
 					QOS:          10,
 					Weight:       1000000,
 				},
@@ -43,12 +44,6 @@ func DefaultConfig() *Config {
 		},
 		Country: "xx",
 	}
-}
-
-func ConfigFromBytes(bytes []byte) (*Config, error) {
-	config := &Config{}
-	err := yaml.Unmarshal(bytes, config)
-	return config, err
 }
 
 func (cfg *Config) IsDownstream() bool {
@@ -65,9 +60,6 @@ func (cfg *Config) InitFlags() {
 	flag.StringVar(&cfg.Addr, "addr", cfg.Addr, "ip:port on which to listen for requests. When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https (required)")
 	flag.IntVar(&cfg.Portmap, "portmap", cfg.Portmap, "try to map this port on the firewall to the port on which flashlight is listening, using UPnP or NAT-PMP. If mapping this port fails, flashlight will exit with status code 50")
 	flag.StringVar(&cfg.Role, "role", cfg.Role, "either 'client' or 'server' (required)")
-	flag.StringVar(&cfg.Client.Servers["roundrobin"].Host, "host", cfg.Client.Servers["roundrobin"].Host, "Hostname of upstream server")
-	flag.StringVar(&cfg.Client.Servers["roundrobin"].MasqueradeAs, "masquerade", cfg.Client.Servers["roundrobin"].MasqueradeAs, "masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter")
-	flag.StringVar(&cfg.Client.Servers["roundrobin"].RootCA, "rootca", cfg.Client.Servers["roundrobin"].RootCA, "pin to this CA cert if specified (PEM format)")
 	flag.StringVar(&cfg.AdvertisedHost, "server", cfg.AdvertisedHost, "FQDN of flashlight server when running in server mode (required)")
 	flag.StringVar(&cfg.InstanceId, "instanceid", cfg.InstanceId, "instanceId under which to report stats to statshub. If not specified, no stats are reported.")
 	flag.StringVar(&cfg.StatsAddr, "statsaddr", cfg.StatsAddr, "host:port at which to make detailed stats available using server-sent events (optional)")
@@ -103,14 +95,17 @@ func (cfg *Config) Save() error {
 // Merges the newer config into this config, which involves replacing the
 // client's list of servers with the value from the newer config.  The merged
 // config is saved to disk.
-func (cfg *Config) Merge(newer *Config) error {
-	if newer.Client != nil && newer.Client.Servers != nil {
-		if cfg.Client == nil {
-			cfg.Client = &client.ClientConfig{}
-		}
-		cfg.Client.Servers = newer.Client.Servers
+func (cfg *Config) Merge(newer []byte) error {
+	merged := &Config{}
+	err := liveyaml.Load(cfg.configFile(), merged)
+	if err != nil {
+		return fmt.Errorf("Unable to load config from %s: %s", cfg.configFile(), err)
 	}
-	return cfg.Save()
+	err = yaml.Unmarshal(newer, merged)
+	if err != nil {
+		return err
+	}
+	return merged.Save()
 }
 
 // InConfigDir returns the path to the given filename inside of the ConfigDir.
