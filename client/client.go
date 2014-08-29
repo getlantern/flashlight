@@ -4,6 +4,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"io/ioutil"
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
@@ -35,9 +35,9 @@ func init() {
 
 // ClientConfig captures configuration information for a Client
 type ClientConfig struct {
-	ShouldDumpHeaders   bool // whether or not to dump headers of requests and responses
-	Servers             map[string]*ServerInfo
-	MasqueradeSets      map[string][]*Masquerade
+	ShouldDumpHeaders bool // whether or not to dump headers of requests and responses
+	Servers           map[string]*ServerInfo
+	MasqueradeSets    map[string][]*Masquerade
 }
 
 // Client is an HTTP proxy that accepts connections from local programs and
@@ -52,11 +52,11 @@ type Client struct {
 	// WriteTimeout: (optional) timeout for write ops
 	WriteTimeout time.Duration
 
-	cfg                *ClientConfig
-	cfgMutex           sync.RWMutex
-	servers            []*server
-	totalServerWeights int
-	VerifiedMasquerades	map[string]chan *Masquerade
+	cfg                 *ClientConfig
+	cfgMutex            sync.RWMutex
+	servers             []*server
+	totalServerWeights  int
+	VerifiedMasquerades map[string]chan *Masquerade
 }
 
 // ListenAndServe makes the client listen for HTTP connections
@@ -131,29 +131,28 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 }
 
 func (client *Client) runMasqueradeChecks(cfg *ClientConfig) {
-	reliable := highestWeight(cfg)
+	reliable := highestQos(cfg)
 	for key, masquerades := range cfg.MasqueradeSets {
 		for _, masquerade := range masquerades {
-			go client.runMasqueradeCheck(masquerade, reliable, 
+			go client.runMasqueradeCheck(masquerade, reliable,
 				client.VerifiedMasquerades[key])
 		}
 	}
 }
 
-func highestWeight(cfg *ClientConfig) *ServerInfo {
+func highestQos(cfg *ClientConfig) *ServerInfo {
 	highest := 0
 	info := &ServerInfo{}
 	for _, serverInfo := range cfg.Servers {
-		if serverInfo.Weight > highest {
-			highest = serverInfo.Weight
+		if serverInfo.QOS > highest {
+			highest = serverInfo.QOS
 			info = serverInfo
-		}	
+		}
 	}
 	return info
 }
 
-
-// runMasqueradeCheck checks a single masquerade domain to see if it works on 
+// runMasqueradeCheck checks a single masquerade domain to see if it works on
 // this client.
 func (client *Client) runMasqueradeCheck(masquerade *Masquerade, serverInfo *ServerInfo,
 	verified chan<- *Masquerade) {
@@ -164,7 +163,7 @@ func (client *Client) runMasqueradeCheck(masquerade *Masquerade, serverInfo *Ser
 	if err != nil {
 		fmt.Errorf("HTTP Error: %s", resp)
 		log.Debugf("HTTP ERROR FOR MASQUERADE: %v", masquerade.Domain, err)
-		return 
+		return
 	} else {
 		body, err := ioutil.ReadAll(resp.Body)
 		defer resp.Body.Close()
@@ -194,7 +193,7 @@ func HttpClient(host string, masquerade *Masquerade) *http.Client {
 
 	return &http.Client{
 		Transport: &http.Transport{
-			Dial: func (network, addr string) (net.Conn, error) {
+			Dial: func(network, addr string) (net.Conn, error) {
 				conn := &enproxy.Conn{
 					Addr:   addr,
 					Config: enproxyConfig,
@@ -327,7 +326,7 @@ func (serverInfo *ServerInfo) buildServer(shouldDumpHeaders bool, masquerades ch
 
 	server := &server{
 		info:          serverInfo,
-		masquerades: masquerades,
+		masquerades:   masquerades,
 		enproxyConfig: enproxyConfig,
 	}
 
@@ -408,7 +407,7 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 }
 
 type server struct {
-	info          *ServerInfo
+	info *ServerInfo
 	//masquerades   []*Masquerade
 	masquerades   chan *Masquerade
 	enproxyConfig *enproxy.Config
@@ -464,7 +463,7 @@ func (server *server) getEnproxyConfig() *enproxy.Config {
 
 func (server *server) buildEnproxyConfig() *enproxy.Config {
 	log.Debugf("Reading from masquerade channel %v", server.masquerades)
-	masquerade := <- server.masquerades
+	masquerade := <-server.masquerades
 	log.Debugf("Using masquerade %s", masquerade.Domain)
 
 	// Put it right back on the channel.
