@@ -120,3 +120,12 @@ Note that these binaries should also be signed for use in production, at least o
 ```
 codesign -s "Developer ID Application: Brave New Software Project, Inc" -f install/osx/pt/flashlight/flashlight
 ```
+
+### Adding new masquerade hosts
+The certstotemplate.py script in the certs directory will take all the certificate files in that directory and will format them according to supplied Jinja templates. The usage is as follows:
+
+```
+Usage: ./certstotemplate.py -t <templatefile> -o <outputfile>
+```
+
+This is handy for converting those certificates to go code, for example. See [certs/gostruct.tmpl](https://github.com/getlantern/flashlight/blob/1762/certs/gostruct.tmpl) as an example. [certs/cloud.yaml.tmpl](https://github.com/getlantern/flashlight/blob/1762/certs/cloud.yaml.tmpl) is an example yaml template.
