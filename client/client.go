@@ -170,7 +170,7 @@ func (client *Client) runMasqueradeCheck(masquerade *Masquerade, serverInfo *Ser
 		if err != nil {
 			fmt.Errorf("HTTP Body Error: %s", body)
 		} else {
-			log.Debugf("SUCCESSFUL CHECK FOR: %s, %s, %v\n", masquerade.Domain, body, verified)
+			log.Debugf("SUCCESSFUL CHECK FOR: %s, %s, %v", masquerade.Domain, body, verified)
 			verified <- masquerade
 			log.Debugf("SENT TO CHANNEL")
 		}
