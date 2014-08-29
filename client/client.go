@@ -53,7 +53,7 @@ type Client struct {
 
 	cfg                *ClientConfig
 	cfgMutex           sync.RWMutex
-	servers            []*server
+	servers            []*ServerInfo
 	totalServerWeights int
 }
 
@@ -94,7 +94,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	client.cfg = cfg
 
 	// Configure servers
-	client.servers = make([]*server, len(cfg.Servers))
+	client.servers = make([]*ServerInfo, len(cfg.Servers))
 	i := 0
 	for _, serverInfo := range cfg.Servers {
 		var enproxyConfig *enproxy.Config
@@ -108,21 +108,21 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	// Calculate total server weights
 	client.totalServerWeights = 0
 	for _, server := range client.servers {
-		client.totalServerWeights = client.totalServerWeights + server.info.Weight
+		client.totalServerWeights = client.totalServerWeights + server.Weight
 	}
 }
 
 // ServeHTTP implements the method from interface http.Handler
 func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	server := client.randomServer(req)
-	log.Debugf("Using server %s to handle request for %s", server.info.Host, req.RequestURI)
+	log.Debugf("Using server %s to handle request for %s", server.Host, req.RequestURI)
 	if req.Method == CONNECT {
 		log.Debug("Building config")
-		server.info.buildEnproxyConfig().Intercept(resp, req)
+		server.buildEnproxyConfig().Intercept(resp, req)
 	} else {
 		//server.reverseProxy.ServeHTTP(resp, req)
 		log.Debug("Building reverse proxy")
-		server.info.buildReverseProxy().ServeHTTP(resp, req)
+		server.buildReverseProxy().ServeHTTP(resp, req)
 	}
 }
 
@@ -132,7 +132,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 // custom QOS header, only servers whose QOS meets or exceeds the requested
 // value are considered for inclusion.  However, if no servers meet the QOS
 // requirement, the last server in the list will be used by default.
-func (client *Client) randomServer(req *http.Request) *server {
+func (client *Client) randomServer(req *http.Request) *ServerInfo {
 	targetQOS := client.targetQOS(req)
 
 	servers, totalServerWeights := client.getServers()
@@ -145,10 +145,10 @@ func (client *Client) randomServer(req *http.Request) *server {
 			// Last server, use it irrespective of target QOS
 			return server
 		}
-		aw = aw + server.info.Weight
-		if server.info.QOS < targetQOS {
+		aw = aw + server.Weight
+		if server.QOS < targetQOS {
 			// QOS too low, exclude server from rotation
-			t = t + server.info.Weight
+			t = t + server.Weight
 			continue
 		}
 		if aw > t {
@@ -175,7 +175,7 @@ func (client *Client) targetQOS(req *http.Request) int {
 	return 0
 }
 
-func (client *Client) getServers() ([]*server, int) {
+func (client *Client) getServers() ([]*ServerInfo, int) {
 	client.cfgMutex.RLock()
 	defer client.cfgMutex.RUnlock()
 	return client.servers, client.totalServerWeights
@@ -223,7 +223,7 @@ type ServerInfo struct {
 
 // buildServer builds a server configured from this serverInfo using the given
 // enproxy.Config if provided.
-func (serverInfo *ServerInfo) buildServer(shouldDumpHeaders bool, enproxyConfig *enproxy.Config) *server {
+func (serverInfo *ServerInfo) buildServer(shouldDumpHeaders bool, enproxyConfig *enproxy.Config) *ServerInfo {
 	weight := serverInfo.Weight
 	if weight == 0 {
 		weight = 100
@@ -235,10 +235,15 @@ func (serverInfo *ServerInfo) buildServer(shouldDumpHeaders bool, enproxyConfig 
 		}
 	*/
 
+	server := new(ServerInfo)
+	*server = *serverInfo
+
+	/*
 	server := &server{
 		info: serverInfo,
 		//enproxyConfig: enproxyConfig,
 	}
+	*/
 
 	//server.reverseProxy = server.buildReverseProxy(shouldDumpHeaders)
 
@@ -364,13 +369,6 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 		tlsConfig.RootCAs = caCert.PoolContainingCert()
 	}
 	return tlsConfig
-}
-
-// type server represents an upstream server that proxies traffic for clients
-type server struct {
-	info *ServerInfo
-	//enproxyConfig *enproxy.Config
-	//reverseProxy  *httputil.ReverseProxy
 }
 
 // withDumpHeaders creates a RoundTripper that uses the supplied RoundTripper
