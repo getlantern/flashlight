@@ -34,9 +34,9 @@ func init() {
 
 // ClientConfig captures configuration information for a Client
 type ClientConfig struct {
-	CloudFlareMasquerades []*Masquerade
-	Servers               map[string]*ServerInfo
-	ShouldDumpHeaders     bool // whether or not to dump headers of requests and responses
+	ShouldDumpHeaders bool // whether or not to dump headers of requests and responses
+	Servers           map[string]*ServerInfo
+	MasqueradeSets    map[string][]*Masquerade
 }
 
 // Client is an HTTP proxy that accepts connections from local programs and
@@ -53,7 +53,7 @@ type Client struct {
 
 	cfg                *ClientConfig
 	cfgMutex           sync.RWMutex
-	servers            []*ServerInfo
+	servers            []*server
 	totalServerWeights int
 }
 
@@ -94,45 +94,46 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	client.cfg = cfg
 
 	// Configure servers
-	client.servers = make([]*ServerInfo, len(cfg.Servers))
+	client.servers = make([]*server, len(cfg.Servers))
 	i := 0
 	for _, serverInfo := range cfg.Servers {
 		var enproxyConfig *enproxy.Config
 		if enproxyConfigs != nil {
 			enproxyConfig = enproxyConfigs[i]
 		}
-		client.servers[i] = serverInfo.buildServer(cfg.ShouldDumpHeaders, enproxyConfig)
+		client.servers[i] = serverInfo.buildServer(
+			cfg.ShouldDumpHeaders,
+			cfg.MasqueradeSets[serverInfo.MasqueradeSet],
+			enproxyConfig)
 		i = i + 1
 	}
 
 	// Calculate total server weights
 	client.totalServerWeights = 0
 	for _, server := range client.servers {
-		client.totalServerWeights = client.totalServerWeights + server.Weight
+		client.totalServerWeights = client.totalServerWeights + server.info.Weight
 	}
 }
 
 // ServeHTTP implements the method from interface http.Handler
 func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	server := client.randomServer(req)
-	log.Debugf("Using server %s to handle request for %s", server.Host, req.RequestURI)
+	log.Debugf("Using server %s to handle request for %s", server.info.Host, req.RequestURI)
 	if req.Method == CONNECT {
-		log.Debug("Building config")
-		server.buildEnproxyConfig().Intercept(resp, req)
+		log.Debug("Handling CONNECT request")
+		server.getEnproxyConfig().Intercept(resp, req)
 	} else {
-		//server.reverseProxy.ServeHTTP(resp, req)
-		log.Debug("Building reverse proxy")
-		server.buildReverseProxy().ServeHTTP(resp, req)
+		log.Debug("Handling plain text HTTP request")
+		server.reverseProxy.ServeHTTP(resp, req)
 	}
 }
-
 
 // randomServer picks a random server from the list of servers, with higher
 // weight servers more likely to be picked.  If the request includes our
 // custom QOS header, only servers whose QOS meets or exceeds the requested
 // value are considered for inclusion.  However, if no servers meet the QOS
 // requirement, the last server in the list will be used by default.
-func (client *Client) randomServer(req *http.Request) *ServerInfo {
+func (client *Client) randomServer(req *http.Request) *server {
 	targetQOS := client.targetQOS(req)
 
 	servers, totalServerWeights := client.getServers()
@@ -145,10 +146,10 @@ func (client *Client) randomServer(req *http.Request) *ServerInfo {
 			// Last server, use it irrespective of target QOS
 			return server
 		}
-		aw = aw + server.Weight
-		if server.QOS < targetQOS {
+		aw = aw + server.info.Weight
+		if server.info.QOS < targetQOS {
 			// QOS too low, exclude server from rotation
-			t = t + server.Weight
+			t = t + server.info.Weight
 			continue
 		}
 		if aw > t {
@@ -175,7 +176,7 @@ func (client *Client) targetQOS(req *http.Request) int {
 	return 0
 }
 
-func (client *Client) getServers() ([]*ServerInfo, int) {
+func (client *Client) getServers() ([]*server, int) {
 	client.cfgMutex.RLock()
 	defer client.cfgMutex.RUnlock()
 	return client.servers, client.totalServerWeights
@@ -194,14 +195,9 @@ type ServerInfo struct {
 	// Port: the port (e.g. 443)
 	Port int
 
-	Masquerades *[]*Masquerade 
-
-	// MasqueradeAs: host as which to masquerade for host-spoofing (e.g. cdnjs.com)
-	//MasqueradeAs string
-
-	// RootCA: PEM encoded certificate for the certificate authority we trust to
-	// sign the server's certificate.
-	//RootCA string
+	// MasqueradeSet: the name of the masquerade set from ClientConfig that
+	// contains masquerade hosts to use for this server.
+	MasqueradeSet string
 
 	// InsecureSkipVerify: if true, server's certificate is not verified.
 	InsecureSkipVerify bool
@@ -223,84 +219,24 @@ type ServerInfo struct {
 
 // buildServer builds a server configured from this serverInfo using the given
 // enproxy.Config if provided.
-func (serverInfo *ServerInfo) buildServer(shouldDumpHeaders bool, enproxyConfig *enproxy.Config) *ServerInfo {
+func (serverInfo *ServerInfo) buildServer(shouldDumpHeaders bool, masquerades []*Masquerade, enproxyConfig *enproxy.Config) *server {
 	weight := serverInfo.Weight
 	if weight == 0 {
 		weight = 100
 	}
 
-	/*
-		if enproxyConfig == nil {
-			enproxyConfig = serverInfo.buildEnproxyConfig()
-		}
-	*/
-
-	server := new(ServerInfo)
-	*server = *serverInfo
-
-	/*
 	server := &server{
-		info: serverInfo,
-		//enproxyConfig: enproxyConfig,
+		info:          serverInfo,
+		masquerades:   masquerades,
+		enproxyConfig: enproxyConfig,
 	}
-	*/
 
-	//server.reverseProxy = server.buildReverseProxy(shouldDumpHeaders)
+	server.reverseProxy = server.buildReverseProxy(shouldDumpHeaders)
 
 	return server
 }
 
-func (serverInfo *ServerInfo) dialWithEnproxy(network, addr string) (net.Conn, error) {
-	log.Debug("Dialing with enproxy")
-	conn := &enproxy.Conn{
-		Addr:   addr,
-		Config: serverInfo.buildEnproxyConfig(),
-	}
-	err := conn.Connect()
-	if err != nil {
-		return nil, err
-	}
-	return conn, nil
-}
-
-// buildReverseProxy builds the httputil.ReverseProxy used to proxy requests to
-// the server.
-func (serverInfo *ServerInfo) buildReverseProxy() *httputil.ReverseProxy {
-	return &httputil.ReverseProxy{
-		Director: func(req *http.Request) {
-			// do nothing
-		},
-		Transport: withDumpHeaders(
-			false,
-			&http.Transport{
-				// We disable keepalives because some servers pretend to support
-				// keep-alives but close their connections immediately, which
-				// causes an error inside ReverseProxy.  This is not an issue
-				// for HTTPS because  the browser is responsible for handling
-				// the problem, which browsers like Chrome and Firefox already
-				// know to do.
-				// See https://code.google.com/p/go/issues/detail?id=4677
-				DisableKeepAlives: true,
-			    Dial:              serverInfo.dialWithEnproxy,
-			}),
-		// Set a FlushInterval to prevent overly aggressive buffering of
-		// responses, which helps keep memory usage down
-		FlushInterval: 250 * time.Millisecond,
-	}
-}
-
-
-// randomMasquerade picks a random masquerade domain and root certificate to use.
-func (serverInfo *ServerInfo) randomMasquerade() *Masquerade {
-	cf := *serverInfo.Masquerades
-	return cf[rand.Intn(len(cf))]
-}
-
-func (serverInfo *ServerInfo) buildEnproxyConfig() *enproxy.Config {
-	log.Debug("Building config...")
-	masquerade := serverInfo.randomMasquerade()
-	log.Debugf("Using masquerade %s", masquerade.Domain)
-
+func (serverInfo *ServerInfo) buildEnproxyConfig(masquerade *Masquerade) *enproxy.Config {
 	dialTimeout := time.Duration(serverInfo.DialTimeoutMillis) * time.Millisecond
 	if dialTimeout == 0 {
 		dialTimeout = 5 * time.Second
@@ -369,6 +305,67 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 		tlsConfig.RootCAs = caCert.PoolContainingCert()
 	}
 	return tlsConfig
+}
+
+type server struct {
+	info          *ServerInfo
+	masquerades   []*Masquerade
+	enproxyConfig *enproxy.Config
+	reverseProxy  *httputil.ReverseProxy
+}
+
+// buildReverseProxy builds the httputil.ReverseProxy used to proxy requests to
+// the server.
+func (server *server) buildReverseProxy(shouldDumpHeaders bool) *httputil.ReverseProxy {
+	return &httputil.ReverseProxy{
+		Director: func(req *http.Request) {
+			// do nothing
+		},
+		Transport: withDumpHeaders(
+			shouldDumpHeaders,
+			&http.Transport{
+				// We disable keepalives because some servers pretend to support
+				// keep-alives but close their connections immediately, which
+				// causes an error inside ReverseProxy.  This is not an issue
+				// for HTTPS because  the browser is responsible for handling
+				// the problem, which browsers like Chrome and Firefox already
+				// know to do.
+				// See https://code.google.com/p/go/issues/detail?id=4677
+				DisableKeepAlives: true,
+				Dial:              server.dialWithEnproxy,
+			}),
+		// Set a FlushInterval to prevent overly aggressive buffering of
+		// responses, which helps keep memory usage down
+		FlushInterval: 250 * time.Millisecond,
+	}
+}
+
+func (server *server) dialWithEnproxy(network, addr string) (net.Conn, error) {
+	conn := &enproxy.Conn{
+		Addr:   addr,
+		Config: server.getEnproxyConfig(),
+	}
+	err := conn.Connect()
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+func (server *server) getEnproxyConfig() *enproxy.Config {
+	if server.enproxyConfig != nil {
+		// Use hardcoded config
+		return server.enproxyConfig
+	}
+	// Build a config on the fly
+	return server.buildEnproxyConfig()
+}
+
+func (server *server) buildEnproxyConfig() *enproxy.Config {
+	ms := server.masquerades
+	masquerade := ms[rand.Intn(len(ms))]
+	log.Debugf("Using masquerade %s", masquerade.Domain)
+	return server.info.buildEnproxyConfig(masquerade)
 }
 
 // withDumpHeaders creates a RoundTripper that uses the supplied RoundTripper
