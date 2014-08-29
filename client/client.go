@@ -118,12 +118,9 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 		if enproxyConfigs != nil {
 			enproxyConfig = enproxyConfigs[i]
 		}
-		if len(serverInfo.MasqueradeSet) == 0 {
-			return
-		}
 		client.servers[i] = serverInfo.buildServer(
 			cfg.ShouldDumpHeaders,
-			client.masqueradeChannel(serverInfo),
+			client.VerifiedMasquerades[serverInfo.MasqueradeSet],
 			enproxyConfig)
 		i = i + 1
 	}
@@ -133,16 +130,6 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	for _, server := range client.servers {
 		client.totalServerWeights = client.totalServerWeights + server.info.Weight
 	}
-}
-
-// masqueradeChannel chooses the correct masquerade channel for the specified
-// server or creates a new one if the server is not configured to use
-// masquerades.
-func (client *Client) masqueradeChannel(serverInfo *ServerInfo) chan *Masquerade {
-	if serverInfo.MasqueradeSet != "" {
-		return client.VerifiedMasquerades[serverInfo.MasqueradeSet]
-	}
-	return make(chan *Masquerade)
 }
 
 // runMasqueradeChecks tests all masquerades to see which ones work.
@@ -176,7 +163,6 @@ func (client *Client) runMasqueradeCheck(masquerade *Masquerade, serverInfo *Ser
 	httpClient := HttpClient(serverInfo.Host, masquerade)
 	req, _ := http.NewRequest("HEAD", "http://www.google.com/humans.txt", nil)
 	resp, err := httpClient.Do(req)
-	//log.Debugf("Finished http call for %v", masquerade.Domain)
 	if err != nil {
 		fmt.Errorf("HTTP Error: %s", resp)
 		log.Debugf("HTTP ERROR FOR MASQUERADE: %v, %v", masquerade.Domain, err)
@@ -390,7 +376,7 @@ func (serverInfo *ServerInfo) addressForServer(masquerade *Masquerade) string {
 
 func (serverInfo *ServerInfo) serverHost(masquerade *Masquerade) string {
 	serverHost := serverInfo.Host
-	if masquerade.Domain != "" {
+	if masquerade != nil && masquerade.Domain != "" {
 		serverHost = masquerade.Domain
 	}
 	return serverHost
@@ -414,7 +400,7 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 	// includes a server name, Fastly checks to make sure that this matches the
 	// Host header in the HTTP request and if they don't match, it returns a
 	// 400 Bad Request error.
-	if masquerade.RootCA != "" {
+	if masquerade != nil && masquerade.RootCA != "" {
 		caCert, err := keyman.LoadCertificateFromPEMBytes([]byte(masquerade.RootCA))
 		if err != nil {
 			log.Fatalf("Unable to load root ca cert: %s", err)
@@ -425,8 +411,7 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 }
 
 type server struct {
-	info *ServerInfo
-	//masquerades   []*Masquerade
+	info          *ServerInfo
 	masquerades   chan *Masquerade
 	enproxyConfig *enproxy.Config
 	reverseProxy  *httputil.ReverseProxy
@@ -480,16 +465,23 @@ func (server *server) getEnproxyConfig() *enproxy.Config {
 }
 
 func (server *server) buildEnproxyConfig() *enproxy.Config {
+	return server.info.buildEnproxyConfig(server.nextMasquerade())
+}
+
+func (server *server) nextMasquerade() *Masquerade {
+	if server.masquerades == nil {
+		log.Debugf("No masquerade")
+		return nil
+	}
 	masquerade := <-server.masquerades
 	log.Debugf("Using masquerade %s", masquerade.Domain)
-
 	go func() {
 		// Make sure to put the masquerade back on the channel for
 		// future use. This effectively makes the channel a cyclic
 		// queue.
 		server.masquerades <- masquerade
 	}()
-	return server.info.buildEnproxyConfig(masquerade)
+	return masquerade
 }
 
 // withDumpHeaders creates a RoundTripper that uses the supplied RoundTripper
