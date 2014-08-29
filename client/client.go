@@ -162,7 +162,7 @@ func (client *Client) runMasqueradeCheck(masquerade *Masquerade, serverInfo *Ser
 	//log.Debugf("Finished http call for %v", masquerade.Domain)
 	if err != nil {
 		fmt.Errorf("HTTP Error: %s", resp)
-		log.Debugf("HTTP ERROR FOR MASQUERADE: %v", masquerade.Domain, err)
+		log.Debugf("HTTP ERROR FOR MASQUERADE: %v, %v", masquerade.Domain, err)
 		return
 	} else {
 		body, err := ioutil.ReadAll(resp.Body)
@@ -177,6 +177,8 @@ func (client *Client) runMasqueradeCheck(masquerade *Masquerade, serverInfo *Ser
 	}
 }
 
+// HttpClient creates a simple domain-fronted HTTP client using the specified
+// values for the upstream host to use and for the masquerade/domain fronted host.
 func HttpClient(host string, masquerade *Masquerade) *http.Client {
 	serverInfo := &ServerInfo{
 		Host: host,
