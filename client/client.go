@@ -98,7 +98,12 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	client.VerifiedMasquerades = make(map[string]chan *Masquerade)
 
 	// We create a bunch of channels for verified masquerade hosts
-	// to communicate through.
+	// to communicate through. Each masquerade set gets it own
+	// channel that receives verified Masquerade structs as they're
+	// verified. That allows the proxy code to not worry about the
+	// state of the checking -- it will automatically block if a
+	// a check hasn't succeeded yet. It then puts used Masquerades
+	// back on the channel so they'll be reused.
 	for key, _ := range cfg.MasqueradeSets {
 		client.VerifiedMasquerades[key] = make(chan *Masquerade)
 	}
@@ -118,7 +123,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 		}
 		client.servers[i] = serverInfo.buildServer(
 			cfg.ShouldDumpHeaders,
-			client.VerifiedMasquerades[serverInfo.MasqueradeSet],
+			client.masqueradeChannel(serverInfo),
 			enproxyConfig)
 		i = i + 1
 	}
@@ -130,6 +135,17 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	}
 }
 
+// masqueradeChannel chooses the correct masquerade channel for the specified
+// server or creates a new one if the server is not configured to use
+// masquerades.
+func (client *Client) masqueradeChannel(serverInfo *ServerInfo) chan *Masquerade {
+	if serverInfo.MasqueradeSet != "" {
+		return client.VerifiedMasquerades[serverInfo.MasqueradeSet]
+	}
+	return make(chan *Masquerade)
+}
+
+// runMasqueradeChecks tests all masquerades to see which ones work.
 func (client *Client) runMasqueradeChecks(cfg *ClientConfig) {
 	reliable := highestQos(cfg)
 	for key, masquerades := range cfg.MasqueradeSets {
@@ -140,6 +156,7 @@ func (client *Client) runMasqueradeChecks(cfg *ClientConfig) {
 	}
 }
 
+// highestQos finds the server with the highest reported quality of service.
 func highestQos(cfg *ClientConfig) *ServerInfo {
 	highest := 0
 	info := &ServerInfo{}
@@ -172,7 +189,6 @@ func (client *Client) runMasqueradeCheck(masquerade *Masquerade, serverInfo *Ser
 		} else {
 			log.Debugf("SUCCESSFUL CHECK FOR: %s, %s, %v", masquerade.Domain, body, verified)
 			verified <- masquerade
-			log.Debugf("SENT TO CHANNEL")
 		}
 	}
 }
@@ -389,7 +405,7 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 
 	tlsConfig.VerifyServerCerts = func(certs []*x509.Certificate) ([][]*x509.Certificate, error) {
 		return tlsConfig.DefaultVerifyServerCerts(certs, &x509.VerifyOptions{
-			DNSName: masquerade.Domain,
+			DNSName: serverInfo.serverHost(masquerade),
 		})
 	}
 
@@ -464,15 +480,14 @@ func (server *server) getEnproxyConfig() *enproxy.Config {
 }
 
 func (server *server) buildEnproxyConfig() *enproxy.Config {
-	log.Debugf("Reading from masquerade channel %v", server.masquerades)
 	masquerade := <-server.masquerades
 	log.Debugf("Using masquerade %s", masquerade.Domain)
 
-	// Put it right back on the channel.
 	go func() {
-		log.Debugf("Putting %v back on channel", masquerade.Domain)
+		// Make sure to put the masquerade back on the channel for
+		// future use. This effectively makes the channel a cyclic
+		// queue.
 		server.masquerades <- masquerade
-		log.Debugf("Put %v back on channel", masquerade.Domain)
 	}()
 	return server.info.buildEnproxyConfig(masquerade)
 }
