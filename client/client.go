@@ -115,22 +115,17 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 // ServeHTTP implements the method from interface http.Handler
 func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	server := client.randomServer(req)
-	masquerade := client.randomMasquerade()
 	log.Debugf("Using server %s to handle request for %s", server.info.Host, req.RequestURI)
-	log.Debugf("Using masquerade %s", masquerade.Domain)
 	if req.Method == CONNECT {
-		server.info.buildEnproxyConfig(masquerade).Intercept(resp, req)
+		log.Debug("Building config")
+		server.info.buildEnproxyConfig().Intercept(resp, req)
 	} else {
 		//server.reverseProxy.ServeHTTP(resp, req)
-		server.info.buildReverseProxy(masquerade).ServeHTTP(resp, req)
+		log.Debug("Building reverse proxy")
+		server.info.buildReverseProxy().ServeHTTP(resp, req)
 	}
 }
 
-// randomMasquerade picks a random masquerade domain and root certificate to use.
-func (client *Client) randomMasquerade() *Masquerade {
-	cf := client.cfg.CloudFlareMasquerades
-	return cf[rand.Intn(len(cf))]
-}
 
 // randomServer picks a random server from the list of servers, with higher
 // weight servers more likely to be picked.  If the request includes our
@@ -199,6 +194,8 @@ type ServerInfo struct {
 	// Port: the port (e.g. 443)
 	Port int
 
+	Masquerades *[]*Masquerade 
+
 	// MasqueradeAs: host as which to masquerade for host-spoofing (e.g. cdnjs.com)
 	//MasqueradeAs string
 
@@ -248,29 +245,11 @@ func (serverInfo *ServerInfo) buildServer(shouldDumpHeaders bool, enproxyConfig 
 	return server
 }
 
-/*
 func (serverInfo *ServerInfo) dialWithEnproxy(network, addr string) (net.Conn, error) {
+	log.Debug("Dialing with enproxy")
 	conn := &enproxy.Conn{
 		Addr:   addr,
-		Config: server.enproxyConfig,
-	}
-	err := conn.Connect()
-	if err != nil {
-		return nil, err
-	}
-	return conn, nil
-}
-*/
-
-type masqueradeDialer struct {
-	masquerade *Masquerade
-	serverInfo *ServerInfo
-}
-
-func (dialer *masqueradeDialer) dial(network, addr string) (net.Conn, error) {
-	conn := &enproxy.Conn{
-		Addr:   addr,
-		Config: dialer.serverInfo.buildEnproxyConfig(dialer.masquerade),
+		Config: serverInfo.buildEnproxyConfig(),
 	}
 	err := conn.Connect()
 	if err != nil {
@@ -281,7 +260,7 @@ func (dialer *masqueradeDialer) dial(network, addr string) (net.Conn, error) {
 
 // buildReverseProxy builds the httputil.ReverseProxy used to proxy requests to
 // the server.
-func (serverInfo *ServerInfo) buildReverseProxy(masquerade *Masquerade) *httputil.ReverseProxy {
+func (serverInfo *ServerInfo) buildReverseProxy() *httputil.ReverseProxy {
 	return &httputil.ReverseProxy{
 		Director: func(req *http.Request) {
 			// do nothing
@@ -297,12 +276,7 @@ func (serverInfo *ServerInfo) buildReverseProxy(masquerade *Masquerade) *httputi
 				// know to do.
 				// See https://code.google.com/p/go/issues/detail?id=4677
 				DisableKeepAlives: true,
-				Dial: (&masqueradeDialer{
-					serverInfo: serverInfo,
-					masquerade: masquerade,
-				}).dial,
-
-				//Dial:              server.dialWithEnproxy,
+			    Dial:              serverInfo.dialWithEnproxy,
 			}),
 		// Set a FlushInterval to prevent overly aggressive buffering of
 		// responses, which helps keep memory usage down
@@ -310,7 +284,18 @@ func (serverInfo *ServerInfo) buildReverseProxy(masquerade *Masquerade) *httputi
 	}
 }
 
-func (serverInfo *ServerInfo) buildEnproxyConfig(masquerade *Masquerade) *enproxy.Config {
+
+// randomMasquerade picks a random masquerade domain and root certificate to use.
+func (serverInfo *ServerInfo) randomMasquerade() *Masquerade {
+	cf := *serverInfo.Masquerades
+	return cf[rand.Intn(len(cf))]
+}
+
+func (serverInfo *ServerInfo) buildEnproxyConfig() *enproxy.Config {
+	log.Debug("Building config...")
+	masquerade := serverInfo.randomMasquerade()
+	log.Debugf("Using masquerade %s", masquerade.Domain)
+
 	dialTimeout := time.Duration(serverInfo.DialTimeoutMillis) * time.Millisecond
 	if dialTimeout == 0 {
 		dialTimeout = 5 * time.Second
