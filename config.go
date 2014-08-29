@@ -11,6 +11,10 @@ import (
 	"gopkg.in/getlantern/yaml.v1"
 )
 
+const (
+	CF = "cloudflare"
+)
+
 type Config struct {
 	ConfigDir      string
 	CloudConfig    string
@@ -33,13 +37,13 @@ func DefaultConfig() *Config {
 		Country:   "xx",
 		Client: &client.ClientConfig{
 			MasqueradeSets: map[string][]*client.Masquerade{
-				"cloudflare": cloudflareMasquerades,
+				CF: cloudflareMasquerades,
 			},
 			Servers: map[string]*client.ServerInfo{
 				"roundrobin": &client.ServerInfo{
 					Host:          "roundrobin.getiantem.org",
 					Port:          443,
-					MasqueradeSet: "cloudflare",
+					MasqueradeSet: CF,
 					QOS:           10,
 					Weight:        1000000,
 				},

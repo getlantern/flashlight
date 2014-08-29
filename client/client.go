@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"io/ioutil"
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
@@ -34,9 +35,9 @@ func init() {
 
 // ClientConfig captures configuration information for a Client
 type ClientConfig struct {
-	ShouldDumpHeaders bool // whether or not to dump headers of requests and responses
-	Servers           map[string]*ServerInfo
-	MasqueradeSets    map[string][]*Masquerade
+	ShouldDumpHeaders   bool // whether or not to dump headers of requests and responses
+	Servers             map[string]*ServerInfo
+	MasqueradeSets      map[string][]*Masquerade
 }
 
 // Client is an HTTP proxy that accepts connections from local programs and
@@ -55,6 +56,7 @@ type Client struct {
 	cfgMutex           sync.RWMutex
 	servers            []*server
 	totalServerWeights int
+	VerifiedMasquerades	map[string]chan *Masquerade
 }
 
 // ListenAndServe makes the client listen for HTTP connections
@@ -93,6 +95,16 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 
 	client.cfg = cfg
 
+	client.VerifiedMasquerades = make(map[string]chan *Masquerade)
+
+	// We create a bunch of channels for verified masquerade hosts
+	// to communicate through.
+	for key, _ := range cfg.MasqueradeSets {
+		client.VerifiedMasquerades[key] = make(chan *Masquerade)
+	}
+
+	client.runMasqueradeChecks(cfg)
+
 	// Configure servers
 	client.servers = make([]*server, len(cfg.Servers))
 	i := 0
@@ -101,9 +113,12 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 		if enproxyConfigs != nil {
 			enproxyConfig = enproxyConfigs[i]
 		}
+		if len(serverInfo.MasqueradeSet) == 0 {
+			return
+		}
 		client.servers[i] = serverInfo.buildServer(
 			cfg.ShouldDumpHeaders,
-			cfg.MasqueradeSets[serverInfo.MasqueradeSet],
+			client.VerifiedMasquerades[serverInfo.MasqueradeSet],
 			enproxyConfig)
 		i = i + 1
 	}
@@ -112,6 +127,85 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	client.totalServerWeights = 0
 	for _, server := range client.servers {
 		client.totalServerWeights = client.totalServerWeights + server.info.Weight
+	}
+}
+
+func (client *Client) runMasqueradeChecks(cfg *ClientConfig) {
+	reliable := highestWeight(cfg)
+	for key, masquerades := range cfg.MasqueradeSets {
+		for _, masquerade := range masquerades {
+			go client.runMasqueradeCheck(masquerade, reliable, 
+				client.VerifiedMasquerades[key])
+		}
+	}
+}
+
+func highestWeight(cfg *ClientConfig) *ServerInfo {
+	highest := 0
+	info := &ServerInfo{}
+	for _, serverInfo := range cfg.Servers {
+		if serverInfo.Weight > highest {
+			highest = serverInfo.Weight
+			info = serverInfo
+		}	
+	}
+	return info
+}
+
+
+// runMasqueradeCheck checks a single masquerade domain to see if it works on 
+// this client.
+func (client *Client) runMasqueradeCheck(masquerade *Masquerade, serverInfo *ServerInfo,
+	verified chan<- *Masquerade) {
+	httpClient := HttpClient(serverInfo.Host, masquerade)
+	req, _ := http.NewRequest("HEAD", "http://www.google.com/humans.txt", nil)
+	resp, err := httpClient.Do(req)
+	//log.Debugf("Finished http call for %v", masquerade.Domain)
+	if err != nil {
+		fmt.Errorf("HTTP Error: %s", resp)
+		log.Debugf("HTTP ERROR FOR MASQUERADE: %v", masquerade.Domain, err)
+		return 
+	} else {
+		body, err := ioutil.ReadAll(resp.Body)
+		defer resp.Body.Close()
+		if err != nil {
+			fmt.Errorf("HTTP Body Error: %s", body)
+		} else {
+			log.Debugf("SUCCESSFUL CHECK FOR: %s, %s, %v\n", masquerade.Domain, body, verified)
+			verified <- masquerade
+			log.Debugf("SENT TO CHANNEL")
+		}
+	}
+}
+
+func HttpClient(host string, masquerade *Masquerade) *http.Client {
+	serverInfo := &ServerInfo{
+		Host: host,
+		Port: 443,
+	}
+
+	if masquerade.RootCA == "" {
+		serverInfo.InsecureSkipVerify = true
+	} else {
+		serverInfo.InsecureSkipVerify = false
+	}
+
+	enproxyConfig := serverInfo.buildEnproxyConfig(masquerade)
+
+	return &http.Client{
+		Transport: &http.Transport{
+			Dial: func (network, addr string) (net.Conn, error) {
+				conn := &enproxy.Conn{
+					Addr:   addr,
+					Config: enproxyConfig,
+				}
+				err := conn.Connect()
+				if err != nil {
+					return nil, err
+				}
+				return conn, nil
+			},
+		},
 	}
 }
 
@@ -182,8 +276,14 @@ func (client *Client) getServers() ([]*server, int) {
 	return client.servers, client.totalServerWeights
 }
 
+// Masquerade contains the data for a single masquerade host, including
+// the domain and the root CA.
 type Masquerade struct {
+
+	// Domain: the domain to use for domain fronting
 	Domain string
+
+	// RootCA: the root CA for the domain.
 	RootCA string
 }
 
@@ -219,7 +319,7 @@ type ServerInfo struct {
 
 // buildServer builds a server configured from this serverInfo using the given
 // enproxy.Config if provided.
-func (serverInfo *ServerInfo) buildServer(shouldDumpHeaders bool, masquerades []*Masquerade, enproxyConfig *enproxy.Config) *server {
+func (serverInfo *ServerInfo) buildServer(shouldDumpHeaders bool, masquerades chan *Masquerade, enproxyConfig *enproxy.Config) *server {
 	weight := serverInfo.Weight
 	if weight == 0 {
 		weight = 100
@@ -227,7 +327,7 @@ func (serverInfo *ServerInfo) buildServer(shouldDumpHeaders bool, masquerades []
 
 	server := &server{
 		info:          serverInfo,
-		masquerades:   masquerades,
+		masquerades: masquerades,
 		enproxyConfig: enproxyConfig,
 	}
 
@@ -309,7 +409,8 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 
 type server struct {
 	info          *ServerInfo
-	masquerades   []*Masquerade
+	//masquerades   []*Masquerade
+	masquerades   chan *Masquerade
 	enproxyConfig *enproxy.Config
 	reverseProxy  *httputil.ReverseProxy
 }
@@ -362,9 +463,16 @@ func (server *server) getEnproxyConfig() *enproxy.Config {
 }
 
 func (server *server) buildEnproxyConfig() *enproxy.Config {
-	ms := server.masquerades
-	masquerade := ms[rand.Intn(len(ms))]
+	log.Debugf("Reading from masquerade channel %v", server.masquerades)
+	masquerade := <- server.masquerades
 	log.Debugf("Using masquerade %s", masquerade.Domain)
+
+	// Put it right back on the channel.
+	go func() {
+		log.Debugf("Putting %v back on channel", masquerade.Domain)
+		server.masquerades <- masquerade
+		log.Debugf("Put %v back on channel", masquerade.Domain)
+	}()
 	return server.info.buildEnproxyConfig(masquerade)
 }
 
