@@ -98,9 +98,8 @@ func (cfg *Config) Save() error {
 	return liveyaml.Save(cfg.configFile(), cfg)
 }
 
-// Merges the newer config into this config, which involves replacing the
-// client's list of servers with the value from the newer config.  The merged
-// config is saved to disk.
+// Merges the newer config into this config, saving the merged config to disk.
+// Where set, values from the newer config take precedence.
 func (cfg *Config) Merge(newer []byte) error {
 	merged := &Config{}
 	err := liveyaml.Load(cfg.configFile(), merged)
