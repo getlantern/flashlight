@@ -2,6 +2,7 @@ package client
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -351,12 +352,33 @@ func (serverInfo *ServerInfo) buildEnproxyConfig(masquerade *Masquerade) *enprox
 
 	return &enproxy.Config{
 		DialProxy: func(addr string) (net.Conn, error) {
-			return tls.DialWithDialer(
+			tlsConfig := serverInfo.tlsConfig(masquerade)
+
+			// Dial
+			conn, err := tls.DialWithDialer(
 				&net.Dialer{
 					Timeout:   dialTimeout,
 					KeepAlive: keepAlive,
 				},
-				"tcp", serverInfo.addressForServer(masquerade), serverInfo.tlsConfig(masquerade))
+				"tcp", serverInfo.addressForServer(masquerade), tlsConfig)
+			if err != nil {
+				return nil, err
+			}
+
+			if !serverInfo.InsecureSkipVerify {
+				// Handshake
+				err = conn.Handshake()
+				if err != nil {
+					return nil, err
+				}
+
+				err = serverInfo.verifyServerCerts(conn, tlsConfig, serverInfo.serverHost(masquerade))
+				if err != nil {
+					return nil, fmt.Errorf("Unable to verify server cert: %s", err)
+				}
+			}
+
+			return conn, nil
 		},
 		NewRequest: func(upstreamHost string, method string, body io.Reader) (req *http.Request, err error) {
 			if upstreamHost == "" {
@@ -366,6 +388,26 @@ func (serverInfo *ServerInfo) buildEnproxyConfig(masquerade *Masquerade) *enprox
 			return http.NewRequest(method, "http://"+upstreamHost+"/", body)
 		},
 	}
+}
+
+func (serverInfo *ServerInfo) verifyServerCerts(conn *tls.Conn, tlsConfig *tls.Config, host string) error {
+	certs := conn.ConnectionState().PeerCertificates
+
+	opts := x509.VerifyOptions{
+		Roots:         tlsConfig.RootCAs,
+		CurrentTime:   time.Now(),
+		DNSName:       host,
+		Intermediates: x509.NewCertPool(),
+	}
+
+	for i, cert := range certs {
+		if i == 0 {
+			continue
+		}
+		opts.Intermediates.AddCert(cert)
+	}
+	_, err := certs[0].Verify(opts)
+	return err
 }
 
 // Get the address to dial for reaching the server
@@ -385,14 +427,16 @@ func (serverInfo *ServerInfo) serverHost(masquerade *Masquerade) string {
 func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 	tlsConfig := &tls.Config{
 		ClientSessionCache: tls.NewLRUClientSessionCache(1000),
-		InsecureSkipVerify: serverInfo.InsecureSkipVerify,
+		InsecureSkipVerify: true,
 	}
 
-	// TODO - we need to suppress the sending of the ServerName in the client
+	// NOTE - we need to suppress the sending of the ServerName in the client
 	// handshake to make host-spoofing work with Fastly.  If the client Hello
 	// includes a server name, Fastly checks to make sure that this matches the
 	// Host header in the HTTP request and if they don't match, it returns a
-	// 400 Bad Request error.
+	// 400 Bad Request error. We accomplish this by setting InsecureSkipVerify
+	// to true, but then later we manually verify the server's certificate
+	// (see serverInfo.verifyServerCerts).
 	if masquerade != nil && masquerade.RootCA != "" {
 		caCert, err := keyman.LoadCertificateFromPEMBytes([]byte(masquerade.RootCA))
 		if err != nil {
