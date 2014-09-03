@@ -1,7 +1,7 @@
 package client
 
 import (
-	"crypto/x509"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -18,7 +18,6 @@ import (
 	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/proxy"
 	"github.com/getlantern/keyman"
-	"github.com/getlantern/tls"
 )
 
 const (
@@ -389,13 +388,7 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 		InsecureSkipVerify: serverInfo.InsecureSkipVerify,
 	}
 
-	tlsConfig.VerifyServerCerts = func(certs []*x509.Certificate) ([][]*x509.Certificate, error) {
-		return tlsConfig.DefaultVerifyServerCerts(certs, &x509.VerifyOptions{
-			DNSName: serverInfo.serverHost(masquerade),
-		})
-	}
-
-	// Note - we need to suppress the sending of the ServerName in the client
+	// TODO - we need to suppress the sending of the ServerName in the client
 	// handshake to make host-spoofing work with Fastly.  If the client Hello
 	// includes a server name, Fastly checks to make sure that this matches the
 	// Host header in the HTTP request and if they don't match, it returns a
