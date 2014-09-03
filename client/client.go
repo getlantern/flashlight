@@ -355,30 +355,31 @@ func (serverInfo *ServerInfo) buildEnproxyConfig(masquerade *Masquerade) *enprox
 			tlsConfig := serverInfo.tlsConfig(masquerade)
 
 			// Dial
-			conn, err := tls.DialWithDialer(
-				&net.Dialer{
-					Timeout:   dialTimeout,
-					KeepAlive: keepAlive,
-				},
-				"tcp", serverInfo.addressForServer(masquerade), tlsConfig)
+			dialer := &net.Dialer{
+				Timeout:   dialTimeout,
+				KeepAlive: keepAlive,
+			}
+			conn, err := dialer.Dial("tcp", serverInfo.addressForServer(masquerade))
 			if err != nil {
 				return nil, err
 			}
 
+			tlsConn := tls.Client(conn, tlsConfig)
+
 			if !serverInfo.InsecureSkipVerify {
 				// Handshake
-				err = conn.Handshake()
+				err = tlsConn.Handshake()
 				if err != nil {
 					return nil, err
 				}
 
-				err = serverInfo.verifyServerCerts(conn, tlsConfig, serverInfo.serverHost(masquerade))
+				err = serverInfo.verifyServerCerts(tlsConn, tlsConfig, serverInfo.serverHost(masquerade))
 				if err != nil {
 					return nil, fmt.Errorf("Unable to verify server cert: %s", err)
 				}
 			}
 
-			return conn, nil
+			return tlsConn, nil
 		},
 		NewRequest: func(upstreamHost string, method string, body io.Reader) (req *http.Request, err error) {
 			if upstreamHost == "" {
@@ -390,8 +391,8 @@ func (serverInfo *ServerInfo) buildEnproxyConfig(masquerade *Masquerade) *enprox
 	}
 }
 
-func (serverInfo *ServerInfo) verifyServerCerts(conn *tls.Conn, tlsConfig *tls.Config, host string) error {
-	certs := conn.ConnectionState().PeerCertificates
+func (serverInfo *ServerInfo) verifyServerCerts(tlsConn *tls.Conn, tlsConfig *tls.Config, host string) error {
+	certs := tlsConn.ConnectionState().PeerCertificates
 
 	opts := x509.VerifyOptions{
 		Roots:         tlsConfig.RootCAs,
