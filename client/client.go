@@ -18,6 +18,8 @@ import (
 	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/proxy"
 	"github.com/getlantern/keyman"
+
+	"gopkg.in/getlantern/tlsdialer.v1"
 )
 
 const (
@@ -351,12 +353,22 @@ func (serverInfo *ServerInfo) buildEnproxyConfig(masquerade *Masquerade) *enprox
 
 	return &enproxy.Config{
 		DialProxy: func(addr string) (net.Conn, error) {
-			return tls.DialWithDialer(
+			// Note - we need to suppress the sending of the ServerName in the
+			// client handshake to make host-spoofing work with Fastly.  If the
+			// client Hello includes a server name, Fastly checks to make sure
+			// that this matches the Host header in the HTTP request and if they
+			// don't match, it returns a 400 Bad Request error.
+			sendServerNameExtension := false
+
+			return tlsdialer.DialWithDialer(
 				&net.Dialer{
 					Timeout:   dialTimeout,
 					KeepAlive: keepAlive,
 				},
-				"tcp", serverInfo.addressForServer(masquerade), serverInfo.tlsConfig(masquerade))
+				"tcp",
+				serverInfo.addressForServer(masquerade),
+				sendServerNameExtension,
+				serverInfo.tlsConfig(masquerade))
 		},
 		NewRequest: func(upstreamHost string, method string, body io.Reader) (req *http.Request, err error) {
 			if upstreamHost == "" {
@@ -388,11 +400,6 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 		InsecureSkipVerify: serverInfo.InsecureSkipVerify,
 	}
 
-	// TODO - we need to suppress the sending of the ServerName in the client
-	// handshake to make host-spoofing work with Fastly.  If the client Hello
-	// includes a server name, Fastly checks to make sure that this matches the
-	// Host header in the HTTP request and if they don't match, it returns a
-	// 400 Bad Request error.
 	if masquerade != nil && masquerade.RootCA != "" {
 		caCert, err := keyman.LoadCertificateFromPEMBytes([]byte(masquerade.RootCA))
 		if err != nil {
