@@ -5,8 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"runtime"
@@ -15,7 +17,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/server"
@@ -98,23 +99,46 @@ func pollCloudConfig(cfg *Config) {
 	log.Debugf("Polling for cloud configuration at: %s", cfg.CloudConfig)
 	for {
 		fetchCloudConfig(cfg)
-		time.Sleep(CLOUD_CONFIG_POLL_INTERVAL)
+		// Wait a random amount of time around CLOUD_CONFIG_POLL_INTERVAL_SECONDS +- 50%
+		sleepTime := (CLOUD_CONFIG_POLL_INTERVAL.Nanoseconds() / 2) + rand.Int63n(CLOUD_CONFIG_POLL_INTERVAL.Nanoseconds())
+		time.Sleep(time.Duration(sleepTime))
 	}
 }
 
 func fetchCloudConfig(cfg *Config) {
-	resp, err := http.Get(cfg.CloudConfig)
-	if err != nil {
-		log.Errorf("Unable to fetch cloud config at %s: %s", cfg.CloudConfig, err)
-		return
+	updated, err := doFetchCloudConfig(cfg, false)
+	if err != nil && cfg.IsDownstream() {
+		updated, err = doFetchCloudConfig(cfg, true)
 	}
-	defer resp.Body.Close()
-	updated, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Errorf("Unable to read yaml from %s: %s", cfg.CloudConfig, err)
+		return
 	}
-	log.Debugf("Merging cloud configuration: %s", spew.Sdump(updated))
+	log.Debugf("Merging cloud configuration")
 	cfg.Merge(updated)
+}
+
+func doFetchCloudConfig(cfg *Config, tunnelThroughLocalProxy bool) ([]byte, error) {
+	client := &http.Client{}
+	if tunnelThroughLocalProxy {
+		// Use a custom transport that falls back to going through the proxy
+		client.Transport = &http.Transport{
+			Proxy: func(req *http.Request) (*url.URL, error) {
+				rawUrl := cfg.Addr
+				noHostSpecified := len(strings.Split(rawUrl, ":")[0]) == 0
+				if noHostSpecified {
+					rawUrl = "127.0.0.1" + rawUrl
+				}
+				return url.Parse(rawUrl)
+			},
+		}
+	}
+	resp, err := http.Get(cfg.CloudConfig)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to fetch cloud config at %s: %s", cfg.CloudConfig, err)
+	}
+	defer resp.Body.Close()
+	return ioutil.ReadAll(resp.Body)
 }
 
 // Runs the client-side proxy
