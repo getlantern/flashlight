@@ -53,11 +53,10 @@ type Client struct {
 	// WriteTimeout: (optional) timeout for write ops
 	WriteTimeout time.Duration
 
-	cfg                 *ClientConfig
-	cfgMutex            sync.RWMutex
-	servers             []*server
-	totalServerWeights  int
-	VerifiedMasquerades map[string]chan *Masquerade
+	cfg                *ClientConfig
+	cfgMutex           sync.RWMutex
+	servers            []*server
+	totalServerWeights int
 }
 
 // ListenAndServe makes the client listen for HTTP connections
@@ -96,7 +95,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 
 	client.cfg = cfg
 
-	client.VerifiedMasquerades = make(map[string]chan *Masquerade)
+	verifiedMasquerades := make(map[string]chan *Masquerade)
 
 	// We create a bunch of channels for verified masquerade hosts
 	// to communicate through. Each masquerade set gets it own
@@ -106,10 +105,10 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	// a check hasn't succeeded yet. It then puts used Masquerades
 	// back on the channel so they'll be reused.
 	for key, _ := range cfg.MasqueradeSets {
-		client.VerifiedMasquerades[key] = make(chan *Masquerade)
+		verifiedMasquerades[key] = make(chan *Masquerade)
 	}
 
-	client.runMasqueradeChecks(cfg)
+	client.runMasqueradeChecks(cfg, verifiedMasquerades)
 
 	// Configure servers
 	client.servers = make([]*server, len(cfg.Servers))
@@ -121,7 +120,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 		}
 		client.servers[i] = serverInfo.buildServer(
 			cfg.ShouldDumpHeaders,
-			client.VerifiedMasquerades[serverInfo.MasqueradeSet],
+			verifiedMasquerades[serverInfo.MasqueradeSet],
 			enproxyConfig)
 		i = i + 1
 	}
@@ -134,12 +133,12 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 }
 
 // runMasqueradeChecks tests all masquerades to see which ones work.
-func (client *Client) runMasqueradeChecks(cfg *ClientConfig) {
+func (client *Client) runMasqueradeChecks(cfg *ClientConfig, verifiedMasquerades map[string]chan *Masquerade) {
 	reliable := highestQos(cfg)
 	for key, masquerades := range cfg.MasqueradeSets {
 		for _, masquerade := range masquerades {
 			go client.runMasqueradeCheck(masquerade, reliable,
-				client.VerifiedMasquerades[key])
+				verifiedMasquerades[key])
 		}
 	}
 }
