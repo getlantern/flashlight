@@ -16,7 +16,6 @@ const (
 )
 
 type Config struct {
-	ConfigDir      string
 	CloudConfig    string
 	Addr           string
 	Portmap        int
@@ -29,12 +28,12 @@ type Config struct {
 	CpuProfile     string
 	MemProfile     string
 	Client         *client.ClientConfig
+	configDir      string
 }
 
 func DefaultConfig() *Config {
 	return &Config{
-		ConfigDir: ".",
-		Country:   "xx",
+		Country: "xx",
 		Client: &client.ClientConfig{
 			MasqueradeSets: map[string][]*client.Masquerade{
 				CF: cloudflareMasquerades,
@@ -49,6 +48,7 @@ func DefaultConfig() *Config {
 				},
 			},
 		},
+		configDir: "",
 	}
 }
 
@@ -61,7 +61,7 @@ func (cfg *Config) IsUpstream() bool {
 }
 
 func (cfg *Config) InitFlags() {
-	flag.StringVar(&cfg.ConfigDir, "configdir", cfg.ConfigDir, "directory in which to store configuration, including flashlight.yaml (defaults to current directory)")
+	flag.StringVar(&cfg.configDir, "configdir", cfg.configDir, "directory in which to store configuration, including flashlight.yaml (defaults to current directory)")
 	flag.StringVar(&cfg.CloudConfig, "cloudconfig", cfg.CloudConfig, "optional http(s) URL to a cloud-based source for configuration updates")
 	flag.StringVar(&cfg.Addr, "addr", cfg.Addr, "ip:port on which to listen for requests. When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https (required)")
 	flag.IntVar(&cfg.Portmap, "portmap", cfg.Portmap, "try to map this port on the firewall to the port on which flashlight is listening, using UPnP or NAT-PMP. If mapping this port fails, flashlight will exit with status code 50")
@@ -77,6 +77,8 @@ func (cfg *Config) InitFlags() {
 
 func (cfg *Config) Bind(updates chan *Config, errors chan error) error {
 	cf := cfg.configFile()
+	log.Debugf("Binding configuration to: %s", cf)
+
 	untypedUpdates := make(chan interface{}, len(updates))
 	err := liveyaml.Bind(cf, cfg, untypedUpdates, errors)
 	if err != nil {
@@ -101,7 +103,7 @@ func (cfg *Config) Save() error {
 // Merges the newer config into this config, saving the merged config to disk.
 // Where set, values from the newer config take precedence.
 func (cfg *Config) Merge(newer []byte) error {
-	merged := &Config{}
+	merged := &Config{configDir: cfg.configDir}
 	err := liveyaml.Load(cfg.configFile(), merged)
 	if err != nil {
 		return fmt.Errorf("Unable to load config from %s: %s", cfg.configFile(), err)
@@ -115,18 +117,18 @@ func (cfg *Config) Merge(newer []byte) error {
 
 // InConfigDir returns the path to the given filename inside of the ConfigDir.
 func (cfg *Config) InConfigDir(filename string) string {
-	if cfg.ConfigDir == "" {
+	if cfg.configDir == "" {
 		return filename
 	} else {
-		if _, err := os.Stat(cfg.ConfigDir); err != nil {
+		if _, err := os.Stat(cfg.configDir); err != nil {
 			if os.IsNotExist(err) {
 				// Create config dir
-				if err := os.MkdirAll(cfg.ConfigDir, 0755); err != nil {
-					log.Fatalf("Unable to create configDir at %s: %s", cfg.ConfigDir, err)
+				if err := os.MkdirAll(cfg.configDir, 0755); err != nil {
+					log.Fatalf("Unable to create configDir at %s: %s", cfg.configDir, err)
 				}
 			}
 		}
-		return fmt.Sprintf("%s%c%s", cfg.ConfigDir, os.PathSeparator, filename)
+		return fmt.Sprintf("%s%c%s", cfg.configDir, os.PathSeparator, filename)
 	}
 }
 

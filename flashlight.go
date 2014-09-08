@@ -46,12 +46,14 @@ var (
 func configure() bool {
 	cfg := DefaultConfig()
 	cfg.InitFlags()
+	flag.Parse()
 
 	err := cfg.Bind(configUpdates, configErrors)
 	if err != nil {
 		log.Fatalf("Unable to bind config: %s", err)
 	}
 
+	// Parse flags again to update config
 	flag.Parse()
 	if *help || cfg.Addr == "" || (cfg.Role != "server" && cfg.Role != "client") {
 		flag.Usage()
@@ -96,7 +98,6 @@ func main() {
 }
 
 func pollCloudConfig(cfg *Config) {
-	log.Debugf("Polling for cloud configuration at: %s", cfg.CloudConfig)
 	for {
 		fetchCloudConfig(cfg)
 		// Wait a random amount of time around CLOUD_CONFIG_POLL_INTERVAL_SECONDS +- 50%
@@ -133,6 +134,7 @@ func doFetchCloudConfig(cfg *Config, tunnelThroughLocalProxy bool) ([]byte, erro
 			},
 		}
 	}
+	log.Debugf("Checking for cloud configuration at: %s", cfg.CloudConfig)
 	resp, err := http.Get(cfg.CloudConfig)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to fetch cloud config at %s: %s", cfg.CloudConfig, err)
