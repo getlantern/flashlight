@@ -160,7 +160,7 @@ func highestQos(cfg *ClientConfig) *ServerInfo {
 // this client.
 func (client *Client) runMasqueradeCheck(masquerade *Masquerade, serverInfo *ServerInfo,
 	verified chan<- *Masquerade) {
-	httpClient := HttpClient(serverInfo.Host, masquerade)
+	httpClient := HttpClient(serverInfo, masquerade)
 	req, _ := http.NewRequest("HEAD", "http://www.google.com/humans.txt", nil)
 	resp, err := httpClient.Do(req)
 	if err != nil {
@@ -181,12 +181,7 @@ func (client *Client) runMasqueradeCheck(masquerade *Masquerade, serverInfo *Ser
 
 // HttpClient creates a simple domain-fronted HTTP client using the specified
 // values for the upstream host to use and for the masquerade/domain fronted host.
-func HttpClient(host string, masquerade *Masquerade) *http.Client {
-	serverInfo := &ServerInfo{
-		Host: host,
-		Port: 443,
-	}
-
+func HttpClient(serverInfo *ServerInfo, masquerade *Masquerade) *http.Client {
 	if masquerade.RootCA == "" {
 		serverInfo.InsecureSkipVerify = true
 	} else {
