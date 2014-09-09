@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
@@ -32,13 +31,6 @@ const (
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
-}
-
-// ClientConfig captures configuration information for a Client
-type ClientConfig struct {
-	ShouldDumpHeaders bool // whether or not to dump headers of requests and responses
-	Servers           map[string]*ServerInfo
-	MasqueradeSets    map[string][]*Masquerade
 }
 
 // Client is an HTTP proxy that accepts connections from local programs and
@@ -95,20 +87,12 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 
 	client.cfg = cfg
 
-	verifiedMasquerades := make(map[string]chan *Masquerade)
+	verifiedSets := make(map[string]*verifiedMasqueradeSet)
+	testServer := cfg.highestQosServer()
 
-	// We create a bunch of channels for verified masquerade hosts
-	// to communicate through. Each masquerade set gets it own
-	// channel that receives verified Masquerade structs as they're
-	// verified. That allows the proxy code to not worry about the
-	// state of the checking -- it will automatically block if a
-	// a check hasn't succeeded yet. It then puts used Masquerades
-	// back on the channel so they'll be reused.
-	for key, _ := range cfg.MasqueradeSets {
-		verifiedMasquerades[key] = make(chan *Masquerade)
+	for key, masqueradeSet := range cfg.MasqueradeSets {
+		verifiedSets[key] = newVerifiedMasqueradeSet(testServer, masqueradeSet)
 	}
-
-	client.runMasqueradeChecks(cfg, verifiedMasquerades)
 
 	// Configure servers
 	client.servers = make([]*server, len(cfg.Servers))
@@ -120,7 +104,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 		}
 		client.servers[i] = serverInfo.buildServer(
 			cfg.ShouldDumpHeaders,
-			verifiedMasquerades[serverInfo.MasqueradeSet],
+			verifiedSets[serverInfo.MasqueradeSet],
 			enproxyConfig)
 		i = i + 1
 	}
@@ -132,19 +116,8 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	}
 }
 
-// runMasqueradeChecks tests all masquerades to see which ones work.
-func (client *Client) runMasqueradeChecks(cfg *ClientConfig, verifiedMasquerades map[string]chan *Masquerade) {
-	reliable := highestQos(cfg)
-	for key, masquerades := range cfg.MasqueradeSets {
-		for _, masquerade := range masquerades {
-			go client.runMasqueradeCheck(masquerade, reliable,
-				verifiedMasquerades[key])
-		}
-	}
-}
-
 // highestQos finds the server with the highest reported quality of service.
-func highestQos(cfg *ClientConfig) *ServerInfo {
+func (cfg *ClientConfig) highestQosServer() *ServerInfo {
 	highest := 0
 	info := &ServerInfo{}
 	for _, serverInfo := range cfg.Servers {
@@ -154,57 +127,6 @@ func highestQos(cfg *ClientConfig) *ServerInfo {
 		}
 	}
 	return info
-}
-
-// runMasqueradeCheck checks a single masquerade domain to see if it works on
-// this client.
-func (client *Client) runMasqueradeCheck(masquerade *Masquerade, serverInfo *ServerInfo,
-	verified chan<- *Masquerade) {
-	httpClient := HttpClient(serverInfo, masquerade)
-	req, _ := http.NewRequest("HEAD", "http://www.google.com/humans.txt", nil)
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		fmt.Errorf("HTTP Error: %s", resp)
-		log.Debugf("HTTP ERROR FOR MASQUERADE: %v, %v", masquerade.Domain, err)
-		return
-	} else {
-		body, err := ioutil.ReadAll(resp.Body)
-		defer resp.Body.Close()
-		if err != nil {
-			fmt.Errorf("HTTP Body Error: %s", body)
-		} else {
-			log.Debugf("SUCCESSFUL CHECK FOR: %s, %s, %v", masquerade.Domain, body, verified)
-			verified <- masquerade
-		}
-	}
-}
-
-// HttpClient creates a simple domain-fronted HTTP client using the specified
-// values for the upstream host to use and for the masquerade/domain fronted host.
-func HttpClient(serverInfo *ServerInfo, masquerade *Masquerade) *http.Client {
-	if masquerade.RootCA == "" {
-		serverInfo.InsecureSkipVerify = true
-	} else {
-		serverInfo.InsecureSkipVerify = false
-	}
-
-	enproxyConfig := serverInfo.buildEnproxyConfig(masquerade)
-
-	return &http.Client{
-		Transport: &http.Transport{
-			Dial: func(network, addr string) (net.Conn, error) {
-				conn := &enproxy.Conn{
-					Addr:   addr,
-					Config: enproxyConfig,
-				}
-				err := conn.Connect()
-				if err != nil {
-					return nil, err
-				}
-				return conn, nil
-			},
-		},
-	}
 }
 
 // ServeHTTP implements the method from interface http.Handler
@@ -274,17 +196,6 @@ func (client *Client) getServers() ([]*server, int) {
 	return client.servers, client.totalServerWeights
 }
 
-// Masquerade contains the data for a single masquerade host, including
-// the domain and the root CA.
-type Masquerade struct {
-
-	// Domain: the domain to use for domain fronting
-	Domain string
-
-	// RootCA: the root CA for the domain.
-	RootCA string
-}
-
 // ServerInfo captures configuration information for an upstream server
 type ServerInfo struct {
 	// Host: the host (e.g. getiantem.org)
@@ -317,7 +228,7 @@ type ServerInfo struct {
 
 // buildServer builds a server configured from this serverInfo using the given
 // enproxy.Config if provided.
-func (serverInfo *ServerInfo) buildServer(shouldDumpHeaders bool, masquerades chan *Masquerade, enproxyConfig *enproxy.Config) *server {
+func (serverInfo *ServerInfo) buildServer(shouldDumpHeaders bool, masquerades *verifiedMasqueradeSet, enproxyConfig *enproxy.Config) *server {
 	weight := serverInfo.Weight
 	if weight == 0 {
 		weight = 100
@@ -406,7 +317,7 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 
 type server struct {
 	info          *ServerInfo
-	masquerades   chan *Masquerade
+	masquerades   *verifiedMasqueradeSet
 	enproxyConfig *enproxy.Config
 	reverseProxy  *httputil.ReverseProxy
 }
@@ -467,14 +378,8 @@ func (server *server) nextMasquerade() *Masquerade {
 		log.Debugf("No masquerade")
 		return nil
 	}
-	masquerade := <-server.masquerades
+	masquerade := server.masquerades.nextVerified()
 	log.Debugf("Using masquerade %s", masquerade.Domain)
-	go func() {
-		// Make sure to put the masquerade back on the channel for
-		// future use. This effectively makes the channel a cyclic
-		// queue.
-		server.masquerades <- masquerade
-	}()
 	return masquerade
 }
 
