@@ -1,19 +1,40 @@
-package main
+package config
 
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/log"
-	"github.com/getlantern/liveyaml"
+	"gopkg.in/getlantern/deepcopy.v1"
 	"gopkg.in/getlantern/yaml.v1"
 )
 
 const (
 	CF = "cloudflare"
 )
+
+var (
+	// flagCfg is a Config that captures command-line flags
+	flagCfg   = &Config{}
+	configDir = ""
+)
+
+func init() {
+	flag.StringVar(&configDir, "configdir", configDir, "directory in which to store configuration, including flashlight.yaml (defaults to current directory)")
+	flag.StringVar(&flagCfg.CloudConfig, "cloudconfig", flagCfg.CloudConfig, "optional http(s) URL to a cloud-based source for configuration updates")
+	flag.StringVar(&flagCfg.Addr, "addr", flagCfg.Addr, "ip:port on which to listen for requests. When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https (required)")
+	flag.IntVar(&flagCfg.Portmap, "portmap", flagCfg.Portmap, "try to map this port on the firewall to the port on which flashlight is listening, using UPnP or NAT-PMP. If mapping this port fails, flashlight will exit with status code 50")
+	flag.StringVar(&flagCfg.Role, "role", flagCfg.Role, "either 'client' or 'server' (required)")
+	flag.StringVar(&flagCfg.AdvertisedHost, "server", flagCfg.AdvertisedHost, "FQDN of flashlight server when running in server mode (required)")
+	flag.StringVar(&flagCfg.InstanceId, "instanceid", flagCfg.InstanceId, "instanceId under which to report stats to statshub. If not specified, no stats are reported.")
+	flag.StringVar(&flagCfg.StatsAddr, "statsaddr", flagCfg.StatsAddr, "host:port at which to make detailed stats available using server-sent events (optional)")
+	flag.StringVar(&flagCfg.Country, "country", flagCfg.Country, "2 digit country code under which to report stats. Defaults to xx.")
+	flag.StringVar(&flagCfg.CpuProfile, "cpuprofile", flagCfg.CpuProfile, "write cpu profile to given file")
+	flag.StringVar(&flagCfg.MemProfile, "memprofile", flagCfg.MemProfile, "write heap profile to given file")
+}
 
 type Config struct {
 	CloudConfig    string
@@ -24,32 +45,147 @@ type Config struct {
 	InstanceId     string
 	StatsAddr      string
 	Country        string
-	DumpHeaders    bool
 	CpuProfile     string
 	MemProfile     string
 	Client         *client.ClientConfig
-	configDir      string
+	filename       string
+	lastFileInfo   os.FileInfo
 }
 
-func DefaultConfig() *Config {
-	return &Config{
-		Country: "xx",
-		Client: &client.ClientConfig{
-			MasqueradeSets: map[string][]*client.Masquerade{
-				CF: cloudflareMasquerades,
-			},
-			Servers: map[string]*client.ServerInfo{
-				"roundrobin": &client.ServerInfo{
-					Host:          "roundrobin.getiantem.org",
-					Port:          443,
-					MasqueradeSet: CF,
-					QOS:           10,
-					Weight:        1000000,
-				},
-			},
-		},
-		configDir: "",
+// Load loads a Config from flashlight.yaml inside the configured configDir
+// with default values populated as necessary. If the file couldn't be loaded
+// for some reason, this function returns a new default Config. This function
+// assumes that flag.Parse() has already been called.
+func Load() (*Config, error) {
+	filename := InConfigDir("flashlight.yaml")
+	cfg := &Config{filename: filename}
+	fileInfo, err := os.Stat(filename)
+	if err != nil {
+		err = fmt.Errorf("Unable to stat config file %s: %s", filename, err)
+	} else {
+		cfg.lastFileInfo = fileInfo
+		bytes, err := ioutil.ReadFile(filename)
+		if err != nil {
+			err = fmt.Errorf("Error reading config from %s: %s", filename, err)
+		} else {
+			err = yaml.Unmarshal(bytes, cfg)
+			if err != nil {
+				err = fmt.Errorf("Error unmarshaling config yaml from file %s: %s", filename, err)
+			}
+		}
 	}
+	cfg.applyDefaults()
+	return cfg, err
+}
+
+func FromBytes(bytes []byte) (*Config, error) {
+	cfg := &Config{}
+	err := yaml.Unmarshal(bytes, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("Error unmarshaling config yaml from bytes: %s", err)
+	}
+	return cfg, nil
+}
+
+// Save saves this Config to the file from which it was loaded.
+func (cfg *Config) Save() error {
+	bytes, err := yaml.Marshal(cfg)
+	if err != nil {
+		return fmt.Errorf("Unable to marshal config yaml: %s", err)
+	}
+	err = ioutil.WriteFile(cfg.filename, bytes, 0644)
+	if err != nil {
+		return fmt.Errorf("Unable to write config yaml to file %s: %s", cfg.filename, err)
+	}
+	cfg.lastFileInfo, err = os.Stat(cfg.filename)
+	if err != nil {
+		return fmt.Errorf("Unable to stat file %s: %s", cfg.filename, err)
+	}
+	return nil
+}
+
+// Merge creates a new Config by merging the newer Config into this Config.
+// The rules for merging are particular to each field.
+func (cfg *Config) Merge(newer *Config) *Config {
+	// Copy newer to make sure anything we keep is ours alone
+	newer = newer.deepCopy()
+
+	// Initialize merged with a copy of the original cfg
+	merged := cfg.deepCopy()
+
+	// Merge fields
+	// Note - we do not copy filename because the Config's location is fixed
+	// once created
+	if newer.lastFileInfo != nil {
+		merged.lastFileInfo = newer.lastFileInfo
+	}
+	if newer.CloudConfig != "" {
+		merged.CloudConfig = newer.CloudConfig
+	}
+	if newer.Addr != "" {
+		merged.Addr = newer.Addr
+	}
+	if newer.Portmap != 0 {
+		merged.Portmap = newer.Portmap
+	}
+	if newer.Role != "" {
+		merged.Role = newer.Role
+	}
+	if newer.AdvertisedHost != "" {
+		merged.AdvertisedHost = newer.AdvertisedHost
+	}
+	if newer.InstanceId != "" {
+		merged.InstanceId = newer.InstanceId
+	}
+	if newer.StatsAddr != "" {
+		merged.StatsAddr = newer.StatsAddr
+	}
+	if newer.Country != "" {
+		merged.Country = newer.Country
+	}
+	if newer.CpuProfile != "" {
+		merged.CpuProfile = newer.CpuProfile
+	}
+	if newer.MemProfile != "" {
+		merged.MemProfile = newer.MemProfile
+	}
+
+	if newer.Client != nil {
+		if merged.Client == nil {
+			merged.Client = newer.Client
+		} else {
+			merged.Client.UpdateFrom(newer.Client)
+		}
+	}
+
+	// Apply defaults to the merged to make sure that it's complete and usable
+	merged.applyDefaults()
+	return merged
+}
+
+// ApplyFlags updates this Config from any command-line flags that were passed
+// in. ApplyFlags assumes that flag.Parse() has already been called.
+func (cfg *Config) ApplyFlags() *Config {
+	return cfg.Merge(flagCfg)
+}
+
+func (cfg *Config) UpdateFromDisk() (*Config, error) {
+	nextFileInfo, err := os.Stat(cfg.filename)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to stat file %s to check for update: %s", cfg.filename, err)
+	}
+	hasChanged := cfg.lastFileInfo == nil
+	if !hasChanged {
+		hasChanged = nextFileInfo.Size() != cfg.lastFileInfo.Size() || nextFileInfo.ModTime() != cfg.lastFileInfo.ModTime()
+	}
+	if hasChanged {
+		newer, err := Load()
+		if err != nil {
+			return nil, fmt.Errorf("Unable to load updated configuration from file %s: %s", cfg.filename, err)
+		}
+		return cfg.Merge(newer), nil
+	}
+	return nil, nil
 }
 
 func (cfg *Config) IsDownstream() bool {
@@ -60,80 +196,80 @@ func (cfg *Config) IsUpstream() bool {
 	return !cfg.IsDownstream()
 }
 
-func (cfg *Config) InitFlags() {
-	flag.StringVar(&cfg.configDir, "configdir", cfg.configDir, "directory in which to store configuration, including flashlight.yaml (defaults to current directory)")
-	flag.StringVar(&cfg.CloudConfig, "cloudconfig", cfg.CloudConfig, "optional http(s) URL to a cloud-based source for configuration updates")
-	flag.StringVar(&cfg.Addr, "addr", cfg.Addr, "ip:port on which to listen for requests. When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https (required)")
-	flag.IntVar(&cfg.Portmap, "portmap", cfg.Portmap, "try to map this port on the firewall to the port on which flashlight is listening, using UPnP or NAT-PMP. If mapping this port fails, flashlight will exit with status code 50")
-	flag.StringVar(&cfg.Role, "role", cfg.Role, "either 'client' or 'server' (required)")
-	flag.StringVar(&cfg.AdvertisedHost, "server", cfg.AdvertisedHost, "FQDN of flashlight server when running in server mode (required)")
-	flag.StringVar(&cfg.InstanceId, "instanceid", cfg.InstanceId, "instanceId under which to report stats to statshub. If not specified, no stats are reported.")
-	flag.StringVar(&cfg.StatsAddr, "statsaddr", cfg.StatsAddr, "host:port at which to make detailed stats available using server-sent events (optional)")
-	flag.StringVar(&cfg.Country, "country", cfg.Country, "2 digit country code under which to report stats. Defaults to xx.")
-	flag.BoolVar(&cfg.DumpHeaders, "dumpheaders", cfg.DumpHeaders, "dump the headers of outgoing requests and responses to stdout")
-	flag.StringVar(&cfg.CpuProfile, "cpuprofile", cfg.CpuProfile, "write cpu profile to given file")
-	flag.StringVar(&cfg.MemProfile, "memprofile", cfg.MemProfile, "write heap profile to given file")
-}
-
-func (cfg *Config) Bind(updates chan *Config, errors chan error) error {
-	cf := cfg.configFile()
-	log.Debugf("Binding configuration to: %s", cf)
-
-	untypedUpdates := make(chan interface{}, len(updates))
-	err := liveyaml.Bind(cf, cfg, untypedUpdates, errors)
-	if err != nil {
-		return fmt.Errorf("Unable to bind config to yaml file %s: %s", cf, err)
-	}
-
-	// Convert channel types
-	go func() {
-		for {
-			update := <-untypedUpdates
-			updates <- update.(*Config)
-		}
-	}()
-
-	return nil
-}
-
-func (cfg *Config) Save() error {
-	return liveyaml.Save(cfg.configFile(), cfg)
-}
-
-// Merges the newer config into this config, saving the merged config to disk.
-// Where set, values from the newer config take precedence.
-func (cfg *Config) Merge(newer []byte) error {
-	merged := &Config{configDir: cfg.configDir}
-	err := liveyaml.Load(cfg.configFile(), merged)
-	if err != nil {
-		return fmt.Errorf("Unable to load config from %s: %s", cfg.configFile(), err)
-	}
-	err = yaml.Unmarshal(newer, merged)
-	if err != nil {
-		return err
-	}
-	return merged.Save()
-}
-
-// InConfigDir returns the path to the given filename inside of the ConfigDir.
-func (cfg *Config) InConfigDir(filename string) string {
-	if cfg.configDir == "" {
+// InConfigDir returns the path to the given filename inside of the configDir.
+func InConfigDir(filename string) string {
+	if configDir == "" {
 		return filename
 	} else {
-		if _, err := os.Stat(cfg.configDir); err != nil {
+		if _, err := os.Stat(configDir); err != nil {
 			if os.IsNotExist(err) {
 				// Create config dir
-				if err := os.MkdirAll(cfg.configDir, 0755); err != nil {
-					log.Fatalf("Unable to create configDir at %s: %s", cfg.configDir, err)
+				if err := os.MkdirAll(configDir, 0755); err != nil {
+					log.Fatalf("Unable to create configDir at %s: %s", configDir, err)
 				}
 			}
 		}
-		return fmt.Sprintf("%s%c%s", cfg.configDir, os.PathSeparator, filename)
+		return fmt.Sprintf("%s%c%s", configDir, os.PathSeparator, filename)
 	}
 }
 
-func (cfg *Config) configFile() string {
-	return cfg.InConfigDir("flashlight.yaml")
+// applyDefaults populates default values on a Config to make sure that we have
+// a minimum viable config for running.  As new settings are added to
+// flashlight, this function should be updated to provide sensible defaults for
+// those settings.
+func (cfg *Config) applyDefaults() {
+	// Default country
+	if cfg.Country == "" {
+		cfg.Country = "xx"
+	}
+
+	// Make sure we always have a Client config
+	if cfg.Client == nil {
+		cfg.Client = &client.ClientConfig{}
+	}
+
+	// Make sure we always have at least one masquerade set
+	if cfg.Client.MasqueradeSets == nil {
+		cfg.Client.MasqueradeSets = make(map[string][]*client.Masquerade)
+	}
+	if len(cfg.Client.MasqueradeSets) == 0 {
+		cfg.Client.MasqueradeSets[CF] = cloudflareMasquerades
+	}
+
+	// Make sure we always have at least one server
+	if cfg.Client.Servers == nil {
+		cfg.Client.Servers = make([]*client.ServerInfo, 0)
+	}
+	if len(cfg.Client.Servers) == 0 {
+		cfg.Client.Servers = append(cfg.Client.Servers, &client.ServerInfo{
+			Host:          "roundrobin.getiantem.org",
+			Port:          443,
+			MasqueradeSet: CF,
+			QOS:           10,
+			Weight:        1000000,
+		})
+	}
+
+	// Make sure all servers have a QOS and Weight configured
+	for _, server := range cfg.Client.Servers {
+		if server.QOS == 0 {
+			server.QOS = 5
+		}
+		if server.Weight == 0 {
+			server.Weight = 100
+		}
+	}
+}
+
+func (cfg *Config) deepCopy() *Config {
+	copy := &Config{}
+	err := deepcopy.Copy(copy, cfg)
+	if err != nil {
+		panic(err)
+	}
+	copy.filename = cfg.filename
+	copy.lastFileInfo = cfg.lastFileInfo
+	return copy
 }
 
 var cloudflareMasquerades = []*client.Masquerade{

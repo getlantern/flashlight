@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/client"
+	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/server"
 	"github.com/getlantern/flashlight/statreporter"
@@ -30,49 +31,19 @@ const (
 )
 
 var (
-	CLOUD_CONFIG_POLL_INTERVAL = 1 * time.Minute
+	CLOUD_CONFIG_POLL_INTERVAL = 10 * time.Second
 
 	// Command-line Flags
 	help      = flag.Bool("help", false, "Get usage help")
 	parentPID = flag.Int("parentpid", 0, "the parent process's PID, used on Windows for killing flashlight when the parent disappears")
 
-	configUpdates = make(chan *Config)
-	configErrors  = make(chan error)
+	configUpdates = make(chan *config.Config)
+
+	cfg *config.Config
 )
-
-// configure parses the command-line flags and binds the configuration YAML.
-// If there's a problem with the provided flags, it prints usage to stdout and
-// exits with status 1.
-func configure() bool {
-	cfg := DefaultConfig()
-	cfg.InitFlags()
-	flag.Parse()
-
-	err := cfg.Bind(configUpdates, configErrors)
-	if err != nil {
-		log.Fatalf("Unable to bind config: %s", err)
-	}
-
-	// Parse flags again to update config
-	flag.Parse()
-	if *help || cfg.Addr == "" || (cfg.Role != "server" && cfg.Role != "client") {
-		flag.Usage()
-		os.Exit(1)
-	}
-
-	err = cfg.Save()
-	if err != nil {
-		log.Fatalf("Unable to save config: %s", err)
-	}
-
-	return true
-}
 
 func main() {
 	configure()
-
-	// Read first configuration
-	cfg := <-configUpdates
 
 	if cfg.CpuProfile != "" {
 		startCPUProfiling(cfg.CpuProfile)
@@ -85,10 +56,6 @@ func main() {
 
 	saveProfilingOnSigINT(cfg)
 
-	if cfg.CloudConfig != "" {
-		go pollCloudConfig(cfg)
-	}
-
 	log.Debugf("Running proxy")
 	if cfg.IsDownstream() {
 		runClientProxy(cfg)
@@ -97,29 +64,81 @@ func main() {
 	}
 }
 
-func pollCloudConfig(cfg *Config) {
+// configure parses the command-line flags and binds the configuration YAML.
+// If there's a problem with the provided flags, it prints usage to stdout and
+// exits with status 1.
+func configure() bool {
+	flag.Parse()
+	var err error
+	cfg, err = config.Load()
+	if err != nil {
+		log.Debugf("Error loading config, using default: %s", err)
+	}
+	cfg = cfg.ApplyFlags()
+	if *help || cfg.Addr == "" || (cfg.Role != "server" && cfg.Role != "client") {
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	err = cfg.Save()
+	if err != nil {
+		log.Fatalf("Unable to save config: %s", err)
+	}
+
+	go fetchConfigUpdates()
+
+	return true
+}
+
+func fetchConfigUpdates() {
+	nextCloud := nextCloudPoll()
 	for {
-		fetchCloudConfig(cfg)
-		// Wait a random amount of time around CLOUD_CONFIG_POLL_INTERVAL_SECONDS +- 50%
-		sleepTime := (CLOUD_CONFIG_POLL_INTERVAL.Nanoseconds() / 2) + rand.Int63n(CLOUD_CONFIG_POLL_INTERVAL.Nanoseconds())
-		time.Sleep(time.Duration(sleepTime))
+		cloudDelta := nextCloud.Sub(time.Now())
+		log.Debugf("CLOUD DELTA: %s", cloudDelta)
+		var err error
+		var updated *config.Config
+		select {
+		case <-time.After(1 * time.Second):
+			updated, err = cfg.UpdateFromDisk()
+		case <-time.After(cloudDelta):
+			if cfg.CloudConfig != "" {
+				updated, err = fetchCloudConfig(cfg)
+			}
+			nextCloud = nextCloudPoll()
+		}
+		if err != nil {
+			log.Errorf("Error fetching config updates: %s", err)
+		} else if updated != nil {
+			cfg = updated
+			updated.Save()
+			configUpdates <- updated
+		}
 	}
 }
 
-func fetchCloudConfig(cfg *Config) {
-	updated, err := doFetchCloudConfig(cfg, false)
+func nextCloudPoll() time.Time {
+	sleepTime := (CLOUD_CONFIG_POLL_INTERVAL.Nanoseconds() / 2) + rand.Int63n(CLOUD_CONFIG_POLL_INTERVAL.Nanoseconds())
+	return time.Now().Add(time.Duration(sleepTime))
+}
+
+func fetchCloudConfig(cfg *config.Config) (*config.Config, error) {
+	log.Debugf("Fetching cloud config from: %s", cfg.CloudConfig)
+	bytes, err := doFetchCloudConfig(cfg, false)
 	if err != nil && cfg.IsDownstream() {
-		updated, err = doFetchCloudConfig(cfg, true)
+		bytes, err = doFetchCloudConfig(cfg, true)
 	}
 	if err != nil {
-		log.Errorf("Unable to read yaml from %s: %s", cfg.CloudConfig, err)
-		return
+		return nil, fmt.Errorf("Unable to read yaml from %s: %s", cfg.CloudConfig, err)
+	}
+	updated, err := config.FromBytes(bytes)
+	if err != nil {
+		return nil, err
 	}
 	log.Debugf("Merging cloud configuration")
-	cfg.Merge(updated)
+	return cfg.Merge(updated), nil
 }
 
-func doFetchCloudConfig(cfg *Config, tunnelThroughLocalProxy bool) ([]byte, error) {
+func doFetchCloudConfig(cfg *config.Config, tunnelThroughLocalProxy bool) ([]byte, error) {
 	client := &http.Client{}
 	if tunnelThroughLocalProxy {
 		// Use a custom transport that falls back to going through the proxy
@@ -140,11 +159,14 @@ func doFetchCloudConfig(cfg *Config, tunnelThroughLocalProxy bool) ([]byte, erro
 		return nil, fmt.Errorf("Unable to fetch cloud config at %s: %s", cfg.CloudConfig, err)
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Unexpected response status: %d", resp.StatusCode)
+	}
 	return ioutil.ReadAll(resp.Body)
 }
 
 // Runs the client-side proxy
-func runClientProxy(cfg *Config) {
+func runClientProxy(cfg *config.Config) {
 	client := &client.Client{
 		Addr:         cfg.Addr,
 		ReadTimeout:  0, // don't timeout
@@ -167,7 +189,7 @@ func runClientProxy(cfg *Config) {
 }
 
 // Runs the server-side proxy
-func runServerProxy(cfg *Config) {
+func runServerProxy(cfg *config.Config) {
 	useAllCores()
 
 	if cfg.Portmap > 0 {
@@ -186,8 +208,8 @@ func runServerProxy(cfg *Config) {
 		WriteTimeout: 0,
 		Host:         cfg.AdvertisedHost,
 		CertContext: &server.CertContext{
-			PKFile:         cfg.InConfigDir("proxypk.pem"),
-			ServerCertFile: cfg.InConfigDir("servercert.pem"),
+			PKFile:         config.InConfigDir("proxypk.pem"),
+			ServerCertFile: config.InConfigDir("servercert.pem"),
 		},
 	}
 	if cfg.InstanceId != "" {
@@ -209,7 +231,7 @@ func runServerProxy(cfg *Config) {
 	}
 }
 
-func mapPort(cfg *Config) error {
+func mapPort(cfg *config.Config) error {
 	parts := strings.Split(cfg.Addr, ":")
 
 	internalPort, err := strconv.Atoi(parts[1])
@@ -279,7 +301,7 @@ func saveMemProfile(filename string) {
 	f.Close()
 }
 
-func saveProfilingOnSigINT(cfg *Config) {
+func saveProfilingOnSigINT(cfg *config.Config) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
