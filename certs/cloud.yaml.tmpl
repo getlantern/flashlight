@@ -29,7 +29,7 @@ client:
       keepalivemillis: 0
       weight: 10000
       qos: 2
-masqueradesets:
-  cloudflare:{% for key, val in masquerades.iteritems() %}
-  - domain: {{ key }}
-    rootca: "{{ val }}"{% endfor %}
+  masqueradesets:
+    cloudflare:{% for key, val in masquerades.iteritems() %}
+    - domain: {{ key }}
+      rootca: "{{ val }}"{% endfor %}
