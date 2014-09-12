@@ -5,31 +5,31 @@ client:
     roundrobin:
       host: roundrobin.getiantem.org
       port: 443
+      masqueradeset: "cloudflare"
+      insecureskipverify: false
+      dialtimeoutmillis: 0
+      keepalivemillis: 0
+      weight: 1000
+      qos: 5
+    fallbacks:
+      host: fallbacks.getiantem.org
+      port: 443
       masquerades: *cf
       insecureskipverify: false
       dialtimeoutmillis: 0
       keepalivemillis: 0
       weight: 1000000
-      qos: 5
-    # fallbacks:
-    #   host: fallbacks.getiantem.org
-    #   port: 443
-    #   masquerades: *cf
-    #   insecureskipverify: false
-    #   dialtimeoutmillis: 0
-    #   keepalivemillis: 0
-    #   weight: 1000000
-    #   qos: 10
-    # peers:
-    #   host: peers.getiantem.org
-    #   port: 443
-    #   masquerades: *cf
-    #   insecureskipverify: false
-    #   dialtimeoutmillis: 0
-    #   keepalivemillis: 0
-    #   weight: 10000
-    #   qos: 2
-  cloudflaremasquerades: &cf [{% for key, val in masquerades.iteritems() %}
-    domain: {{ key }}
-    rootca: "{{ val }}",
-{% endfor %}
+      qos: 10
+    peers:
+      host: peers.getiantem.org
+      port: 443
+      masqueradeset: "cloudflare"
+      insecureskipverify: false
+      dialtimeoutmillis: 0
+      keepalivemillis: 0
+      weight: 10000
+      qos: 2
+masqueradesets:
+  cloudflare:{% for key, val in masquerades.iteritems() %}
+  - domain: {{ key }}
+    rootca: "{{ val }}"{% endfor %}
