@@ -47,7 +47,7 @@ def generate_cloud(template, output, script):
         break
 
     for fn in filenames:
-    	if ("yaml" not in fn) and (fn not in script) and ("tmpl" not in fn):
+    	if ("yaml" not in fn) and (".txt" not in fn) and (fn not in script) and ("tmpl" not in fn):
     		certs[fn] = load_cert(fn)
 
 
