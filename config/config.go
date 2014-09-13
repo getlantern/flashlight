@@ -131,7 +131,7 @@ func (orig *Config) UpdatedFrom(updateBytes []byte) (*Config, error) {
 	}
 	if !reflect.DeepEqual(orig, updated) {
 		log.Debugf("Saving updated")
-		err = updated.Save()
+		err = updated.SaveToDisk()
 		if err != nil {
 			return nil, err
 		}

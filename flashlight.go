@@ -80,7 +80,7 @@ func configure() bool {
 		os.Exit(1)
 	}
 
-	err = cfg.Save()
+	err = cfg.SaveToDisk()
 	if err != nil {
 		log.Fatalf("Unable to save config: %s", err)
 	}
