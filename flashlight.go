@@ -31,7 +31,7 @@ const (
 )
 
 var (
-	CLOUD_CONFIG_POLL_INTERVAL = 10 * time.Second
+	CLOUD_CONFIG_POLL_INTERVAL = 1 * time.Minute
 
 	// Command-line Flags
 	help      = flag.Bool("help", false, "Get usage help")
@@ -70,7 +70,7 @@ func main() {
 func configure() bool {
 	flag.Parse()
 	var err error
-	cfg, err = config.Load()
+	cfg, err = config.LoadFromDisk()
 	if err != nil {
 		log.Debugf("Error loading config, using default: %s", err)
 	}
@@ -94,12 +94,13 @@ func fetchConfigUpdates() {
 	nextCloud := nextCloudPoll()
 	for {
 		cloudDelta := nextCloud.Sub(time.Now())
-		log.Debugf("CLOUD DELTA: %s", cloudDelta)
 		var err error
 		var updated *config.Config
 		select {
 		case <-time.After(1 * time.Second):
-			updated, err = cfg.UpdateFromDisk()
+			if cfg.HasChangedOnDisk() {
+				updated, err = config.LoadFromDisk()
+			}
 		case <-time.After(cloudDelta):
 			if cfg.CloudConfig != "" {
 				updated, err = fetchCloudConfig(cfg)
@@ -110,7 +111,6 @@ func fetchConfigUpdates() {
 			log.Errorf("Error fetching config updates: %s", err)
 		} else if updated != nil {
 			cfg = updated
-			updated.Save()
 			configUpdates <- updated
 		}
 	}
@@ -130,12 +130,8 @@ func fetchCloudConfig(cfg *config.Config) (*config.Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Unable to read yaml from %s: %s", cfg.CloudConfig, err)
 	}
-	updated, err := config.FromBytes(bytes)
-	if err != nil {
-		return nil, err
-	}
 	log.Debugf("Merging cloud configuration")
-	return cfg.Merge(updated), nil
+	return cfg.UpdatedFrom(bytes)
 }
 
 func doFetchCloudConfig(cfg *config.Config, tunnelThroughLocalProxy bool) ([]byte, error) {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"reflect"
 
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/log"
@@ -52,11 +53,11 @@ type Config struct {
 	lastFileInfo   os.FileInfo
 }
 
-// Load loads a Config from flashlight.yaml inside the configured configDir
-// with default values populated as necessary. If the file couldn't be loaded
-// for some reason, this function returns a new default Config. This function
-// assumes that flag.Parse() has already been called.
-func Load() (*Config, error) {
+// LoadFromDisk loads a Config from flashlight.yaml inside the configured
+// configDir with default values populated as necessary. If the file couldn't be
+// loaded for some reason, this function returns a new default Config. This
+// function assumes that flag.Parse() has already been called.
+func LoadFromDisk() (*Config, error) {
 	filename := InConfigDir("flashlight.yaml")
 	cfg := &Config{filename: filename}
 	fileInfo, err := os.Stat(filename)
@@ -78,17 +79,8 @@ func Load() (*Config, error) {
 	return cfg, err
 }
 
-func FromBytes(bytes []byte) (*Config, error) {
-	cfg := &Config{}
-	err := yaml.Unmarshal(bytes, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("Error unmarshaling config yaml from bytes: %s", err)
-	}
-	return cfg, nil
-}
-
-// Save saves this Config to the file from which it was loaded.
-func (cfg *Config) Save() error {
+// SaveToDisk saves this Config to the file from which it was loaded.
+func (cfg *Config) SaveToDisk() error {
 	bytes, err := yaml.Marshal(cfg)
 	if err != nil {
 		return fmt.Errorf("Unable to marshal config yaml: %s", err)
@@ -104,88 +96,53 @@ func (cfg *Config) Save() error {
 	return nil
 }
 
-// Merge creates a new Config by merging the newer Config into this Config.
-// The rules for merging are particular to each field.
-func (cfg *Config) Merge(newer *Config) *Config {
-	// Copy newer to make sure anything we keep is ours alone
-	newer = newer.deepCopy()
-
-	// Initialize merged with a copy of the original cfg
-	merged := cfg.deepCopy()
-
-	// Merge fields
-	// Note - we do not copy filename because the Config's location is fixed
-	// once created
-	if newer.lastFileInfo != nil {
-		merged.lastFileInfo = newer.lastFileInfo
-	}
-	if newer.CloudConfig != "" {
-		merged.CloudConfig = newer.CloudConfig
-	}
-	if newer.Addr != "" {
-		merged.Addr = newer.Addr
-	}
-	if newer.Portmap != 0 {
-		merged.Portmap = newer.Portmap
-	}
-	if newer.Role != "" {
-		merged.Role = newer.Role
-	}
-	if newer.AdvertisedHost != "" {
-		merged.AdvertisedHost = newer.AdvertisedHost
-	}
-	if newer.InstanceId != "" {
-		merged.InstanceId = newer.InstanceId
-	}
-	if newer.StatsAddr != "" {
-		merged.StatsAddr = newer.StatsAddr
-	}
-	if newer.Country != "" {
-		merged.Country = newer.Country
-	}
-	if newer.CpuProfile != "" {
-		merged.CpuProfile = newer.CpuProfile
-	}
-	if newer.MemProfile != "" {
-		merged.MemProfile = newer.MemProfile
-	}
-
-	if newer.Client != nil {
-		if merged.Client == nil {
-			merged.Client = newer.Client
-		} else {
-			merged.Client.UpdateFrom(newer.Client)
-		}
-	}
-
-	// Apply defaults to the merged to make sure that it's complete and usable
-	merged.applyDefaults()
-	return merged
-}
-
-// ApplyFlags updates this Config from any command-line flags that were passed
-// in. ApplyFlags assumes that flag.Parse() has already been called.
-func (cfg *Config) ApplyFlags() *Config {
-	return cfg.Merge(flagCfg)
-}
-
-func (cfg *Config) UpdateFromDisk() (*Config, error) {
+// HasChangedOnDisk checks whether Config has changed on disk
+func (cfg *Config) HasChangedOnDisk() bool {
 	nextFileInfo, err := os.Stat(cfg.filename)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to stat file %s to check for update: %s", cfg.filename, err)
+		return false
 	}
 	hasChanged := cfg.lastFileInfo == nil
 	if !hasChanged {
 		hasChanged = nextFileInfo.Size() != cfg.lastFileInfo.Size() || nextFileInfo.ModTime() != cfg.lastFileInfo.ModTime()
 	}
-	if hasChanged {
-		newer, err := Load()
-		if err != nil {
-			return nil, fmt.Errorf("Unable to load updated configuration from file %s: %s", cfg.filename, err)
-		}
-		return cfg.Merge(newer), nil
+	return hasChanged
+}
+
+// UpdatedFrom creates a new Config by merging the given yaml into this Config.
+// Any servers in the updated yaml replace ones in the original Config and any
+// masquerade sets in the updated yaml replace ones in the original Config.
+func (orig *Config) UpdatedFrom(updateBytes []byte) (*Config, error) {
+	updated := orig.deepCopy()
+	err := yaml.Unmarshal(updateBytes, updated)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to unmarshal YAML for update: %s", err)
 	}
-	return nil, nil
+	// Need to de-duplicate servers, since yaml appends them
+	servers := make(map[string]*client.ServerInfo)
+	for _, server := range updated.Client.Servers {
+		servers[server.Host] = server
+	}
+	updated.Client.Servers = make([]*client.ServerInfo, len(servers))
+	i := 0
+	for _, server := range servers {
+		updated.Client.Servers[i] = server
+		i = i + 1
+	}
+	if !reflect.DeepEqual(orig, updated) {
+		log.Debugf("Saving updated")
+		err = updated.Save()
+		if err != nil {
+			return nil, err
+		}
+	}
+	return updated, nil
+}
+
+// ApplyFlags updates this Config from any command-line flags that were passed
+// in. ApplyFlags assumes that flag.Parse() has already been called.
+func (cfg *Config) ApplyFlags() *Config {
+	return cfg.merge(flagCfg)
 }
 
 func (cfg *Config) IsDownstream() bool {
@@ -255,10 +212,14 @@ func (cfg *Config) applyDefaults() {
 		if server.QOS == 0 {
 			server.QOS = 5
 		}
-		if server.Weight == 0 {
-			server.Weight = 100
-		}
 	}
+}
+
+func (orig *Config) merge(updates interface{}) *Config {
+	updated := orig.deepCopy()
+	deepcopy.Copy(updated, updates)
+	updated.applyDefaults()
+	return updated
 }
 
 func (cfg *Config) deepCopy() *Config {

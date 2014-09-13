@@ -103,7 +103,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 			enproxyConfig = enproxyConfigs[i]
 		}
 		client.servers[i] = serverInfo.buildServer(
-			cfg.ShouldDumpHeaders(),
+			cfg.DumpHeaders,
 			verifiedSets[serverInfo.MasqueradeSet],
 			enproxyConfig)
 		i = i + 1
