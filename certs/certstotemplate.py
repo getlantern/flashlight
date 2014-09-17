@@ -4,6 +4,7 @@ from os import walk
 from jinja2 import Environment, FileSystemLoader
 import inspect, os
 import sys, getopt
+from collections import OrderedDict
 
 def main(argv):
     script = inspect.getfile(inspect.currentframe())
@@ -53,7 +54,8 @@ def generate_cloud(template, output, script):
 
     env = Environment(loader=FileSystemLoader("."))
     template = env.get_template(template)
-    rendered = template.render(masquerades=certs)
+    ordered = OrderedDict(sorted(certs.items(), key=lambda t: t[0])) 
+    rendered = template.render(masquerades=ordered)
 
     with open(output, "w") as cloudfile:
     	cloudfile.write(rendered)
