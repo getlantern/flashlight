@@ -212,6 +212,9 @@ func (cfg *Config) applyDefaults() {
 		if server.QOS == 0 {
 			server.QOS = 5
 		}
+		if server.Weight == 0 {
+			server.Weight = 100
+		}
 	}
 }
 
