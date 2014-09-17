@@ -17,26 +17,6 @@ const (
 	CF = "cloudflare"
 )
 
-var (
-	// flagCfg is a Config that captures command-line flags
-	flagCfg   = &Config{}
-	configDir = ""
-)
-
-func init() {
-	flag.StringVar(&configDir, "configdir", configDir, "directory in which to store configuration, including flashlight.yaml (defaults to current directory)")
-	flag.StringVar(&flagCfg.CloudConfig, "cloudconfig", flagCfg.CloudConfig, "optional http(s) URL to a cloud-based source for configuration updates")
-	flag.StringVar(&flagCfg.Addr, "addr", flagCfg.Addr, "ip:port on which to listen for requests. When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https (required)")
-	flag.IntVar(&flagCfg.Portmap, "portmap", flagCfg.Portmap, "try to map this port on the firewall to the port on which flashlight is listening, using UPnP or NAT-PMP. If mapping this port fails, flashlight will exit with status code 50")
-	flag.StringVar(&flagCfg.Role, "role", flagCfg.Role, "either 'client' or 'server' (required)")
-	flag.StringVar(&flagCfg.AdvertisedHost, "server", flagCfg.AdvertisedHost, "FQDN of flashlight server when running in server mode (required)")
-	flag.StringVar(&flagCfg.InstanceId, "instanceid", flagCfg.InstanceId, "instanceId under which to report stats to statshub. If not specified, no stats are reported.")
-	flag.StringVar(&flagCfg.StatsAddr, "statsaddr", flagCfg.StatsAddr, "host:port at which to make detailed stats available using server-sent events (optional)")
-	flag.StringVar(&flagCfg.Country, "country", flagCfg.Country, "2 digit country code under which to report stats. Defaults to xx.")
-	flag.StringVar(&flagCfg.CpuProfile, "cpuprofile", flagCfg.CpuProfile, "write cpu profile to given file")
-	flag.StringVar(&flagCfg.MemProfile, "memprofile", flagCfg.MemProfile, "write heap profile to given file")
-}
-
 type Config struct {
 	CloudConfig    string
 	Addr           string
@@ -53,12 +33,47 @@ type Config struct {
 	lastFileInfo   os.FileInfo
 }
 
+var (
+	// Flags
+	configDir      = flag.String("configdir", "", "directory in which to store configuration, including flashlight.yaml (defaults to current directory)")
+	cloudConfig    = flag.String("cloudconfig", "", "optional http(s) URL to a cloud-based source for configuration updates")
+	addr           = flag.String("addr", "", "ip:port on which to listen for requests. When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https (required)")
+	portmap        = flag.Int("portmap", 0, "try to map this port on the firewall to the port on which flashlight is listening, using UPnP or NAT-PMP. If mapping this port fails, flashlight will exit with status code 50")
+	role           = flag.String("role", "", "either 'client' or 'server' (required)")
+	advertisedHost = flag.String("server", "", "FQDN of flashlight server when running in server mode (required)")
+	instanceId     = flag.String("instanceid", "", "instanceId under which to report stats to statshub. If not specified, no stats are reported.")
+	statsAddr      = flag.String("statsaddr", "", "host:port at which to make detailed stats available using server-sent events (optional)")
+	country        = flag.String("country", "xx", "2 digit country code under which to report stats. Defaults to xx.")
+	cpuProfile     = flag.String("cpuprofile", "", "write cpu profile to given file")
+	memProfile     = flag.String("memprofile", "", "write heap profile to given file")
+)
+
+// ApplyFlags updates this Config from any command-line flags that were passed
+// in. ApplyFlags assumes that flag.Parse() has already been called.
+func (orig *Config) ApplyFlags() *Config {
+	updated := orig.deepCopy()
+	updated.CloudConfig = *cloudConfig
+	updated.Addr = *addr
+	updated.Portmap = *portmap
+	updated.Role = *role
+	updated.AdvertisedHost = *advertisedHost
+	updated.InstanceId = *instanceId
+	updated.StatsAddr = *statsAddr
+	updated.Country = *country
+	updated.CpuProfile = *cpuProfile
+	updated.MemProfile = *memProfile
+	updated.applyDefaults()
+	return updated
+}
+
 // LoadFromDisk loads a Config from flashlight.yaml inside the configured
 // configDir with default values populated as necessary. If the file couldn't be
 // loaded for some reason, this function returns a new default Config. This
 // function assumes that flag.Parse() has already been called.
 func LoadFromDisk() (*Config, error) {
 	filename := InConfigDir("flashlight.yaml")
+	log.Debugf("Loading config from: %s", filename)
+
 	cfg := &Config{filename: filename}
 	fileInfo, err := os.Stat(filename)
 	if err != nil {
@@ -139,12 +154,6 @@ func (orig *Config) UpdatedFrom(updateBytes []byte) (*Config, error) {
 	return updated, nil
 }
 
-// ApplyFlags updates this Config from any command-line flags that were passed
-// in. ApplyFlags assumes that flag.Parse() has already been called.
-func (cfg *Config) ApplyFlags() *Config {
-	return cfg.merge(flagCfg)
-}
-
 func (cfg *Config) IsDownstream() bool {
 	return cfg.Role == "client"
 }
@@ -155,18 +164,18 @@ func (cfg *Config) IsUpstream() bool {
 
 // InConfigDir returns the path to the given filename inside of the configDir.
 func InConfigDir(filename string) string {
-	if configDir == "" {
+	if *configDir == "" {
 		return filename
 	} else {
-		if _, err := os.Stat(configDir); err != nil {
+		if _, err := os.Stat(*configDir); err != nil {
 			if os.IsNotExist(err) {
 				// Create config dir
-				if err := os.MkdirAll(configDir, 0755); err != nil {
-					log.Fatalf("Unable to create configDir at %s: %s", configDir, err)
+				if err := os.MkdirAll(*configDir, 0755); err != nil {
+					log.Fatalf("Unable to create configDir at %s: %s", *configDir, err)
 				}
 			}
 		}
-		return fmt.Sprintf("%s%c%s", configDir, os.PathSeparator, filename)
+		return fmt.Sprintf("%s%c%s", *configDir, os.PathSeparator, filename)
 	}
 }
 
@@ -216,13 +225,6 @@ func (cfg *Config) applyDefaults() {
 			server.Weight = 100
 		}
 	}
-}
-
-func (orig *Config) merge(updates interface{}) *Config {
-	updated := orig.deepCopy()
-	deepcopy.Copy(updated, updates)
-	updated.applyDefaults()
-	return updated
 }
 
 func (cfg *Config) deepCopy() *Config {
