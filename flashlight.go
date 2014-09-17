@@ -38,12 +38,10 @@ var (
 	parentPID = flag.Int("parentpid", 0, "the parent process's PID, used on Windows for killing flashlight when the parent disappears")
 
 	configUpdates = make(chan *config.Config)
-
-	cfg *config.Config
 )
 
 func main() {
-	configure()
+	cfg := configure()
 
 	if cfg.CpuProfile != "" {
 		startCPUProfiling(cfg.CpuProfile)
@@ -67,10 +65,10 @@ func main() {
 // configure parses the command-line flags and binds the configuration YAML.
 // If there's a problem with the provided flags, it prints usage to stdout and
 // exits with status 1.
-func configure() bool {
+func configure() *config.Config {
 	flag.Parse()
 	var err error
-	cfg, err = config.LoadFromDisk()
+	cfg, err := config.LoadFromDisk()
 	if err != nil {
 		log.Debugf("Error loading config, using default: %s", err)
 	}
@@ -85,12 +83,12 @@ func configure() bool {
 		log.Fatalf("Unable to save config: %s", err)
 	}
 
-	go fetchConfigUpdates()
+	go fetchConfigUpdates(cfg)
 
-	return true
+	return cfg
 }
 
-func fetchConfigUpdates() {
+func fetchConfigUpdates(cfg *config.Config) {
 	nextCloud := nextCloudPoll()
 	for {
 		cloudDelta := nextCloud.Sub(time.Now())
