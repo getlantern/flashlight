@@ -252,6 +252,7 @@ func (serverInfo *ServerInfo) buildEnproxyConfig(masquerade *Masquerade) *enprox
 			}
 			return http.NewRequest(method, "http://"+upstreamHost+"/", body)
 		},
+		BufferRequests: serverInfo.BufferRequests,
 	}
 }
 
