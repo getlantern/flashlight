@@ -13,6 +13,6 @@ echo "Updating template"
 ./certstotemplate.py -t cloud.yaml.tmpl -o cloud.yaml
 
 echo "Adding cloud.yaml to s3"
-s3cmd put -P cloud.yaml s3://lantern || die "Could not upload cloud.yaml to s3"
+s3cmd put -P cloud.yaml s3://lantern_config || die "Could not upload cloud.yaml to s3"
 
 echo "File updated on s3"
