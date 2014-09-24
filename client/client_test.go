@@ -53,13 +53,13 @@ func TestRandomServer(t *testing.T) {
 	}
 
 	// Do a bunch of random trials
-	for i := 0; i < 3000; i++ {
+	for i := 0; i < 30000; i++ {
 		srv := client.randomServer(req)
 		freqs[srv.info.Weight] = freqs[srv.info.Weight] + 1
 	}
 
 	for weight, freq := range freqs {
-		if freq < float32(weight)-100 || freq > float32(weight)+100 {
+		if freq < (float32(weight)-100)*10 || freq > (float32(weight)+100)*10 {
 			t.Errorf("At QOS 0, weight %d was found an incorrect number of times: %f", weight, freq)
 		}
 	}
@@ -72,7 +72,7 @@ func TestRandomServer(t *testing.T) {
 
 	req.Header.Set(X_FLASHLIGHT_QOS, "5")
 	// Do a bunch of random trials
-	for i := 0; i < 2500; i++ {
+	for i := 0; i < 25000; i++ {
 		srv := client.randomServer(req)
 		freqs[srv.info.Weight] = freqs[srv.info.Weight] + 1
 	}
@@ -83,7 +83,7 @@ func TestRandomServer(t *testing.T) {
 				t.Errorf("At QOS 5, weight 500 should not have ever been found")
 			}
 		} else {
-			if freq < float32(weight)-200 || freq > float32(weight)+200 {
+			if freq < (float32(weight)-200)*10 || freq > (float32(weight)+200)*10 {
 				t.Errorf("At QOS 5, weight %d was found an incorrect number of times: %f", weight, freq)
 			}
 		}
