@@ -31,7 +31,7 @@ const (
 )
 
 var (
-	CLOUD_CONFIG_POLL_INTERVAL = 1 * time.Minute
+	CLOUD_CONFIG_POLL_INTERVAL = 15 * time.Second
 
 	// Command-line Flags
 	help      = flag.Bool("help", false, "Get usage help")
