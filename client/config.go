@@ -22,6 +22,11 @@ type ServerInfo struct {
 	// InsecureSkipVerify: if true, server's certificate is not verified.
 	InsecureSkipVerify bool
 
+	// BufferRequests: if true, requests to the proxy will be buffered and sent
+	// with identity encoding.  If false, they'll be streamed with chunked
+	// encoding.
+	BufferRequests bool
+
 	// DialTimeoutMillis: how long to wait on dialing server before timing out
 	// (defaults to 5 seconds)
 	DialTimeoutMillis int
