@@ -2,33 +2,30 @@
 # internet.
 client:
   servers:
-    roundrobin:
-      host: roundrobin.getiantem.org
-      port: 443
-      masqueradeset: "cloudflare"
-      insecureskipverify: false
-      dialtimeoutmillis: 0
-      keepalivemillis: 0
-      weight: 1
-      qos: 5
-    fallbacks:
-      host: fallbacks.getiantem.org
-      port: 443
-      masqueradeset: "cloudflare"
-      insecureskipverify: false
-      dialtimeoutmillis: 0
-      keepalivemillis: 0
-      weight: 4000
-      qos: 10
-    peers:
-      host: peers.getiantem.org
-      port: 443
-      masqueradeset: "cloudflare"
-      insecureskipverify: false
-      dialtimeoutmillis: 0
-      keepalivemillis: 0
-      weight: 1000
-      qos: 2
+  - host: roundrobin.getiantem.org
+    port: 443
+    masqueradeset: "cloudflare"
+    insecureskipverify: false
+    dialtimeoutmillis: 0
+    keepalivemillis: 0
+    weight: 1
+    qos: 5
+  - host: fallbacks.getiantem.org
+    port: 443
+    masqueradeset: "cloudflare"
+    insecureskipverify: false
+    dialtimeoutmillis: 0
+    keepalivemillis: 0
+    weight: 4000
+    qos: 10
+  - host: peers.getiantem.org
+    port: 443
+    masqueradeset: "cloudflare"
+    insecureskipverify: false
+    dialtimeoutmillis: 0
+    keepalivemillis: 0
+    weight: 1000
+    qos: 2
   masqueradesets:
     cloudflare:
     - domain: adf.ly
