@@ -52,7 +52,7 @@ func (vms *verifiedMasqueradeSet) verify(masquerade *Masquerade) {
 	req, _ := http.NewRequest("HEAD", "http://www.google.com/humans.txt", nil)
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		log.Debugf("HTTP ERROR FOR MASQUERADE %v: %v", masquerade.Domain, err)
+		log.Errorf("HTTP ERROR FOR MASQUERADE %v: %v", masquerade.Domain, err)
 		return
 	} else {
 		body, err := ioutil.ReadAll(resp.Body)
