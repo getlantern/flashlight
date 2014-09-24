@@ -88,10 +88,12 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	client.cfg = cfg
 
 	verifiedSets := make(map[string]*verifiedMasqueradeSet)
-	testServer := cfg.highestQosServer()
 
 	for key, masqueradeSet := range cfg.MasqueradeSets {
-		verifiedSets[key] = newVerifiedMasqueradeSet(testServer, masqueradeSet)
+		testServer := cfg.highestQosServer(key)
+		if testServer != nil {
+			verifiedSets[key] = newVerifiedMasqueradeSet(testServer, masqueradeSet)
+		}
 	}
 
 	// Configure servers
@@ -116,12 +118,13 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	}
 }
 
-// highestQos finds the server with the highest reported quality of service.
-func (cfg *ClientConfig) highestQosServer() *ServerInfo {
+// highestQos finds the server with the highest reported quality of service for
+// the named masqueradeSet.
+func (cfg *ClientConfig) highestQosServer(masqueradeSet string) *ServerInfo {
 	highest := 0
-	info := &ServerInfo{}
+	var info *ServerInfo
 	for _, serverInfo := range cfg.Servers {
-		if serverInfo.QOS > highest {
+		if serverInfo.MasqueradeSet == masqueradeSet && serverInfo.QOS > highest {
 			highest = serverInfo.QOS
 			info = serverInfo
 		}
