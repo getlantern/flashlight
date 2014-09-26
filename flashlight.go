@@ -28,6 +28,9 @@ import (
 
 const (
 	PORTMAP_FAILURE = 50
+
+	ETAG          = "ETag"
+	IF_NONE_MATCH = "If-None-Match"
 )
 
 var (
@@ -38,6 +41,8 @@ var (
 	parentPID = flag.Int("parentpid", 0, "the parent process's PID, used on Windows for killing flashlight when the parent disappears")
 
 	configUpdates = make(chan *config.Config)
+
+	lastCloudConfigETag = ""
 )
 
 func main() {
@@ -102,6 +107,9 @@ func fetchConfigUpdates(cfg *config.Config) {
 		case <-time.After(cloudDelta):
 			if cfg.CloudConfig != "" {
 				updated, err = fetchCloudConfig(cfg)
+				if updated == nil {
+					log.Debugf("Configuration unchanged in cloud at: %s", cfg.CloudConfig)
+				}
 			}
 			nextCloud = nextCloudPoll()
 		}
@@ -128,6 +136,9 @@ func fetchCloudConfig(cfg *config.Config) (*config.Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Unable to read yaml from %s: %s", cfg.CloudConfig, err)
 	}
+	if bytes == nil {
+		return nil, nil
+	}
 	log.Debugf("Merging cloud configuration")
 	return cfg.UpdatedFrom(bytes)
 }
@@ -143,19 +154,30 @@ func doFetchCloudConfig(cfg *config.Config, tunnelThroughLocalProxy bool) ([]byt
 				if noHostSpecified {
 					rawUrl = "127.0.0.1" + rawUrl
 				}
-				return url.Parse(rawUrl)
+				return url.Parse("http://" + rawUrl)
 			},
 		}
 	}
 	log.Debugf("Checking for cloud configuration at: %s", cfg.CloudConfig)
-	resp, err := http.Get(cfg.CloudConfig)
+	req, err := http.NewRequest("GET", cfg.CloudConfig, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to construct request for cloud config at %s: %s", cfg.CloudConfig, err)
+	}
+	if lastCloudConfigETag != "" {
+		// Don't bother fetching if unchanged
+		req.Header.Set(IF_NONE_MATCH, lastCloudConfigETag)
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to fetch cloud config at %s: %s", cfg.CloudConfig, err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
+	if resp.StatusCode == 304 {
+		return nil, nil
+	} else if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("Unexpected response status: %d", resp.StatusCode)
 	}
+	lastCloudConfigETag = resp.Header.Get(ETAG)
 	return ioutil.ReadAll(resp.Body)
 }
 

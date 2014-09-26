@@ -128,6 +128,7 @@ func (cfg *Config) HasChangedOnDisk() bool {
 // Any servers in the updated yaml replace ones in the original Config and any
 // masquerade sets in the updated yaml replace ones in the original Config.
 func (orig *Config) UpdatedFrom(updateBytes []byte) (*Config, error) {
+	origCopy := orig.deepCopy()
 	updated := orig.deepCopy()
 	err := yaml.Unmarshal(updateBytes, updated)
 	if err != nil {
@@ -144,7 +145,9 @@ func (orig *Config) UpdatedFrom(updateBytes []byte) (*Config, error) {
 		updated.Client.Servers[i] = server
 		i = i + 1
 	}
-	if !reflect.DeepEqual(orig, updated) {
+	origCopy.Client.SortServers()
+	updated.Client.SortServers()
+	if !reflect.DeepEqual(origCopy, updated) {
 		log.Debugf("Saving updated")
 		err = updated.SaveToDisk()
 		if err != nil {

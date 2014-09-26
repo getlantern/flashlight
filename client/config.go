@@ -1,5 +1,9 @@
 package client
 
+import (
+	"sort"
+)
+
 // ClientConfig captures configuration information for a Client
 type ClientConfig struct {
 	DumpHeaders    bool // whether or not to dump headers of requests and responses
@@ -51,3 +55,15 @@ type Masquerade struct {
 	// RootCA: the root CA for the domain.
 	RootCA string
 }
+
+// SortHosts sorts the Servers array in place, ordered by host
+func (c *ClientConfig) SortServers() {
+	sort.Sort(ByHost(c.Servers))
+}
+
+// ByHost implements sort.Interface for []*ServerInfo based on the host
+type ByHost []*ServerInfo
+
+func (a ByHost) Len() int           { return len(a) }
+func (a ByHost) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByHost) Less(i, j int) bool { return a[i].Host < a[j].Host }
