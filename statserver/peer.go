@@ -32,6 +32,7 @@ type Peer struct {
 	pub             publish
 	atLastReporting *Peer
 	lastReported    time.Time
+	reportedFinal   bool
 }
 
 // The City structure corresponds to the data in the GeoIP2/GeoLite2 City
@@ -159,8 +160,15 @@ func (peer *Peer) geolocate() error {
 func (peer *Peer) publishPeriodically() {
 	for {
 		time.Sleep(publishInterval)
-		// Only report if there's been activity
-		if peer.LastConnected != peer.atLastReporting.LastConnected {
+		newActivity := peer.LastConnected != peer.atLastReporting.LastConnected
+		if newActivity {
+			// We have new activity, meaning that we will eventually need to
+			// report a final update
+			peer.reportedFinal = false
+		}
+		// Only report if there's been activity or we need to make our final report
+		shouldReport := newActivity || !peer.reportedFinal
+		if shouldReport {
 			// Calculate stats
 			now := time.Now()
 			peer.lastReported = now
@@ -175,6 +183,11 @@ func (peer *Peer) publishPeriodically() {
 
 			// Publish copy of peer
 			peer.pub(peer.atLastReporting)
+
+			if shouldReport && !newActivity {
+				// We just reported our final update
+				peer.reportedFinal = true
+			}
 		}
 	}
 }
