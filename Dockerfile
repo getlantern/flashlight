@@ -5,7 +5,7 @@ FROM golang
 # Build the flashlight command inside the container.
 # (You may fetch or manage dependencies here,
 # either manually or with a tool like "godep".)
-RUN go get github.com/getlantern/flashlight
+RUN go get gopkg.in/getlantern/flashlight.docker
 
 # Run the flashlight command by default when the container starts.
 ENTRYPOINT /go/bin/flashlight -role server -addr :62443

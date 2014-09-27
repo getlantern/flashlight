@@ -78,7 +78,11 @@ func (server *Server) ListenAndServe() error {
 	}
 
 	if server.Host == "" {
-		server.Host = os.Getenv("SERVER")
+		serverFromEnv := os.Getenv("SERVER")
+		if serverFromEnv != "" {
+			log.Debugf("Setting server from environment: %s", serverFromEnv)
+			server.Host = serverFromEnv
+		}
 	}
 
 	// Set up an enproxy Proxy
