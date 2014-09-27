@@ -83,6 +83,10 @@ func (server *Server) ListenAndServe() error {
 		Host: server.Host,
 	}
 
+	if server.Host != "" {
+		log.Debugf("Running as host %s", server.Host)
+	}
+
 	// Hook into stats reporting if necessary
 	reportingStats := server.startReportingStatsIfNecessary()
 	servingStats := server.startServingStatsIfNecessary()
