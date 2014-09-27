@@ -77,6 +77,10 @@ func (server *Server) ListenAndServe() error {
 		return fmt.Errorf("Unable to init server cert: %s", err)
 	}
 
+	if server.Host == "" {
+		server.Host = os.Getenv("SERVER")
+	}
+
 	// Set up an enproxy Proxy
 	proxy := &enproxy.Proxy{
 		Dial: server.dialDestination,
