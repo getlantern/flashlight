@@ -219,6 +219,10 @@ func (serverInfo *ServerInfo) buildServer(shouldDumpHeaders bool, masquerades *v
 }
 
 func (serverInfo *ServerInfo) buildEnproxyConfig(masquerade *Masquerade) *enproxy.Config {
+	return serverInfo.buildEnproxyConfigDynamic(func() *Masquerade { return masquerade })
+}
+
+func (serverInfo *ServerInfo) buildEnproxyConfigDynamic(masqueradeSource func() *Masquerade) *enproxy.Config {
 	dialTimeout := time.Duration(serverInfo.DialTimeoutMillis) * time.Millisecond
 	if dialTimeout == 0 {
 		dialTimeout = 5 * time.Second
@@ -238,15 +242,30 @@ func (serverInfo *ServerInfo) buildEnproxyConfig(masquerade *Masquerade) *enprox
 			// don't match, it returns a 400 Bad Request error.
 			sendServerNameExtension := false
 
-			return tlsdialer.DialWithDialer(
-				&net.Dialer{
-					Timeout:   dialTimeout,
-					KeepAlive: keepAlive,
-				},
-				"tcp",
-				serverInfo.addressForServer(masquerade),
-				sendServerNameExtension,
-				serverInfo.tlsConfig(masquerade))
+			var conn net.Conn
+			var err error
+			for i := 0; i < 1+serverInfo.RedialAttempts; i++ {
+				if i > 0 {
+					log.Debugf("Error dialing, retrying: %s", err)
+					// Reset err
+					err = nil
+				}
+				masquerade := masqueradeSource()
+				conn, err = tlsdialer.DialWithDialer(
+					&net.Dialer{
+						Timeout:   dialTimeout,
+						KeepAlive: keepAlive,
+					},
+					"tcp",
+					serverInfo.addressForServer(masquerade),
+					sendServerNameExtension,
+					serverInfo.tlsConfig(masquerade))
+				if err == nil {
+					// dial succeeded
+					break
+				}
+			}
+			return conn, err
 		},
 		NewRequest: func(upstreamHost string, method string, body io.Reader) (req *http.Request, err error) {
 			if upstreamHost == "" {
@@ -344,7 +363,7 @@ func (server *server) getEnproxyConfig() *enproxy.Config {
 }
 
 func (server *server) buildEnproxyConfig() *enproxy.Config {
-	return server.info.buildEnproxyConfig(server.nextMasquerade())
+	return server.info.buildEnproxyConfigDynamic(server.nextMasquerade)
 }
 
 func (server *server) nextMasquerade() *Masquerade {

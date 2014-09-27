@@ -35,13 +35,17 @@ type ServerInfo struct {
 	// (defaults to 5 seconds)
 	DialTimeoutMillis int
 
+	// RedialAttempts: number of times to try redialing. The total number of
+	// dial attempts will be 1 + RedialAttempts.
+	RedialAttempts int
+
 	// KeepAliveMillis: interval for TCP keepalives (defaults to 70 seconds)
 	KeepAliveMillis int
 
 	// Weight: relative weight versus other servers (for round-robin)
 	Weight int
 
-	// QOS: relative quality of service offered.  Should be >= 0, with higher
+	// QOS: relative quality of service offered. Should be >= 0, with higher
 	// values indicating higher QOS.
 	QOS int
 }
