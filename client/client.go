@@ -225,7 +225,7 @@ func (serverInfo *ServerInfo) buildEnproxyConfig(masquerade *Masquerade) *enprox
 func (serverInfo *ServerInfo) buildEnproxyConfigDynamic(masqueradeSource func() *Masquerade) *enproxy.Config {
 	dialTimeout := time.Duration(serverInfo.DialTimeoutMillis) * time.Millisecond
 	if dialTimeout == 0 {
-		dialTimeout = 5 * time.Second
+		dialTimeout = 20 * time.Second
 	}
 
 	keepAlive := time.Duration(serverInfo.KeepAliveMillis) * time.Millisecond
