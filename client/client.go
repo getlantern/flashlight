@@ -226,11 +226,6 @@ func (serverInfo *ServerInfo) buildEnproxyConfigDynamic(masqueradeSource func() 
 		dialTimeout = 20 * time.Second
 	}
 
-	keepAlive := time.Duration(serverInfo.KeepAliveMillis) * time.Millisecond
-	if keepAlive == 0 {
-		keepAlive = 70 * time.Second
-	}
-
 	return &enproxy.Config{
 		DialProxy: func(addr string) (net.Conn, error) {
 			// Note - we need to suppress the sending of the ServerName in the
@@ -251,8 +246,7 @@ func (serverInfo *ServerInfo) buildEnproxyConfigDynamic(masqueradeSource func() 
 				masquerade := masqueradeSource()
 				conn, err = tlsdialer.DialWithDialer(
 					&net.Dialer{
-						Timeout:   dialTimeout,
-						KeepAlive: keepAlive,
+						Timeout: dialTimeout,
 					},
 					"tcp",
 					serverInfo.addressForServer(masquerade),

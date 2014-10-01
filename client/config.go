@@ -39,9 +39,6 @@ type ServerInfo struct {
 	// dial attempts will be 1 + RedialAttempts.
 	RedialAttempts int
 
-	// KeepAliveMillis: interval for TCP keepalives (defaults to 70 seconds)
-	KeepAliveMillis int
-
 	// Weight: relative weight versus other servers (for round-robin)
 	Weight int
 
