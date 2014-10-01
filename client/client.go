@@ -137,10 +137,8 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	server := client.randomServer(req)
 	log.Debugf("Using server %s to handle request for %s", server.info.Host, req.RequestURI)
 	if req.Method == CONNECT {
-		log.Debug("Handling CONNECT request")
 		server.getEnproxyConfig().Intercept(resp, req)
 	} else {
-		log.Debug("Handling plain text HTTP request")
 		server.reverseProxy.ServeHTTP(resp, req)
 	}
 }
