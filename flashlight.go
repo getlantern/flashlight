@@ -8,7 +8,6 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"os/signal"
 	"runtime"
@@ -23,6 +22,7 @@ import (
 	"github.com/getlantern/flashlight/server"
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/statserver"
+	"github.com/getlantern/flashlight/util"
 	"github.com/getlantern/go-igdman/igdman"
 )
 
@@ -107,7 +107,7 @@ func fetchConfigUpdates(cfg *config.Config) {
 		case <-time.After(cloudDelta):
 			if cfg.CloudConfig != "" {
 				updated, err = fetchCloudConfig(cfg)
-				if updated == nil {
+				if updated == nil && err == nil {
 					log.Debugf("Configuration unchanged in cloud at: %s", cfg.CloudConfig)
 				}
 			}
@@ -129,9 +129,11 @@ func nextCloudPoll() time.Time {
 
 func fetchCloudConfig(cfg *config.Config) (*config.Config, error) {
 	log.Debugf("Fetching cloud config from: %s", cfg.CloudConfig)
-	bytes, err := doFetchCloudConfig(cfg, false)
+	// Try it unproxied first
+	bytes, err := doFetchCloudConfig(cfg, "")
 	if err != nil && cfg.IsDownstream() {
-		bytes, err = doFetchCloudConfig(cfg, true)
+		// If that failed, try it proxied
+		bytes, err = doFetchCloudConfig(cfg, cfg.Addr)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("Unable to read yaml from %s: %s", cfg.CloudConfig, err)
@@ -143,20 +145,10 @@ func fetchCloudConfig(cfg *config.Config) (*config.Config, error) {
 	return cfg.UpdatedFrom(bytes)
 }
 
-func doFetchCloudConfig(cfg *config.Config, tunnelThroughLocalProxy bool) ([]byte, error) {
-	client := &http.Client{}
-	if tunnelThroughLocalProxy {
-		// Use a custom transport that falls back to going through the proxy
-		client.Transport = &http.Transport{
-			Proxy: func(req *http.Request) (*url.URL, error) {
-				rawUrl := cfg.Addr
-				noHostSpecified := len(strings.Split(rawUrl, ":")[0]) == 0
-				if noHostSpecified {
-					rawUrl = "127.0.0.1" + rawUrl
-				}
-				return url.Parse("http://" + rawUrl)
-			},
-		}
+func doFetchCloudConfig(cfg *config.Config, proxyAddr string) ([]byte, error) {
+	client, err := util.HTTPClient(cfg.CloudConfigCA, proxyAddr)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to initialize HTTP client: %s", err)
 	}
 	log.Debugf("Checking for cloud configuration at: %s", cfg.CloudConfig)
 	req, err := http.NewRequest("GET", cfg.CloudConfig, nil)
