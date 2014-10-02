@@ -19,6 +19,7 @@ const (
 
 type Config struct {
 	CloudConfig    string
+	CloudConfigCA  string
 	Addr           string
 	Portmap        int
 	Role           string
@@ -37,6 +38,7 @@ var (
 	// Flags
 	configDir      = flag.String("configdir", "", "directory in which to store configuration, including flashlight.yaml (defaults to current directory)")
 	cloudConfig    = flag.String("cloudconfig", "", "optional http(s) URL to a cloud-based source for configuration updates")
+	cloudConfigCA  = flag.String("cloudconfigca", "", "optional PEM encoded certificate used to verify TLS connections to fetch cloudconfig")
 	addr           = flag.String("addr", "", "ip:port on which to listen for requests. When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https (required)")
 	portmap        = flag.Int("portmap", 0, "try to map this port on the firewall to the port on which flashlight is listening, using UPnP or NAT-PMP. If mapping this port fails, flashlight will exit with status code 50")
 	role           = flag.String("role", "", "either 'client' or 'server' (required)")
@@ -53,6 +55,7 @@ var (
 func (orig *Config) ApplyFlags() *Config {
 	updated := orig.deepCopy()
 	updated.CloudConfig = *cloudConfig
+	updated.CloudConfigCA = *cloudConfigCA
 	updated.Addr = *addr
 	updated.Portmap = *portmap
 	updated.Role = *role
