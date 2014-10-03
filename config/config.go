@@ -230,6 +230,9 @@ func (cfg *Config) applyDefaults() {
 		if server.Weight == 0 {
 			server.Weight = 100
 		}
+		if server.RedialAttempts == 0 {
+			server.RedialAttempts = 2
+		}
 	}
 }
 
