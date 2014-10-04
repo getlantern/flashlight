@@ -19,9 +19,9 @@ func init() {
 			log.Errorf("No parent, not terminating when orphaned")
 			return
 		}
-		log.Errorf("Waiting for parent %d to terminate", *parentPID)
+		log.Debugf("Waiting for parent %d to terminate", *parentPID)
 		parent.Wait()
-		log.Error("Parent no longer running, terminating")
+		log.Debug("Parent no longer running, terminating")
 		os.Exit(0)
 	}()
 }
