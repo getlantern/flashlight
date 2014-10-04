@@ -29,7 +29,7 @@ def main(argv):
             template = arg
         elif opt in ("-o", "--output"):
             output = arg
-    
+
     generate_cloud(template, output, script)
 
 def usage(script):
@@ -48,9 +48,9 @@ def generate_cloud(template, output, script):
         break
 
     for fn in filenames:
-    	if ("yaml" not in fn) and (".txt" not in fn) and (".py" not in fn) and ("tmpl" not in fn):
-    		certs[fn] = load_cert(fn)
-
+        extension = fn[fn.rfind('.'):]
+        if extension not in [".yaml", ".txt", ".py", ".tmpl", ".bash", ".swp"]:
+            certs[fn] = load_cert(fn)
 
     env = Environment(loader=FileSystemLoader("."))
     template = env.get_template(template)
