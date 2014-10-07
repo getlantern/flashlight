@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/getlantern/connpool"
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/proxy"
@@ -93,6 +94,13 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 		testServer := cfg.highestQosServer(key)
 		if testServer != nil {
 			verifiedSets[key] = newVerifiedMasqueradeSet(testServer, masqueradeSet)
+		}
+	}
+
+	// Close existing servers
+	if client.servers != nil {
+		for _, server := range client.servers {
+			server.close()
 		}
 	}
 
@@ -216,49 +224,20 @@ func (serverInfo *ServerInfo) buildServer(shouldDumpHeaders bool, masquerades *v
 	return server
 }
 
-func (serverInfo *ServerInfo) buildEnproxyConfig(masquerade *Masquerade) *enproxy.Config {
-	return serverInfo.buildEnproxyConfigDynamic(func() *Masquerade { return masquerade })
+// disposableEnproxyConfig creates an enproxy.Config for one-time use (no
+// pooling, etc.)
+func (serverInfo *ServerInfo) disposableEnproxyConfig(masquerade *Masquerade) *enproxy.Config {
+	masqueradeSource := func() *Masquerade { return masquerade }
+	dial := serverInfo.dialerFor(masqueradeSource)
+	dialFunc := func(addr string) (net.Conn, error) {
+		return dial()
+	}
+	return serverInfo.enproxyConfigWith(dialFunc)
 }
 
-func (serverInfo *ServerInfo) buildEnproxyConfigDynamic(masqueradeSource func() *Masquerade) *enproxy.Config {
-	dialTimeout := time.Duration(serverInfo.DialTimeoutMillis) * time.Millisecond
-	if dialTimeout == 0 {
-		dialTimeout = 20 * time.Second
-	}
-
+func (serverInfo *ServerInfo) enproxyConfigWith(dialProxy func(addr string) (net.Conn, error)) *enproxy.Config {
 	return &enproxy.Config{
-		DialProxy: func(addr string) (net.Conn, error) {
-			// Note - we need to suppress the sending of the ServerName in the
-			// client handshake to make host-spoofing work with Fastly.  If the
-			// client Hello includes a server name, Fastly checks to make sure
-			// that this matches the Host header in the HTTP request and if they
-			// don't match, it returns a 400 Bad Request error.
-			sendServerNameExtension := false
-
-			var conn net.Conn
-			var err error
-			for i := 0; i < 1+serverInfo.RedialAttempts; i++ {
-				if i > 0 {
-					log.Debugf("Error dialing, retrying: %s", err)
-					// Reset err
-					err = nil
-				}
-				masquerade := masqueradeSource()
-				conn, err = tlsdialer.DialWithDialer(
-					&net.Dialer{
-						Timeout: dialTimeout,
-					},
-					"tcp",
-					serverInfo.addressForServer(masquerade),
-					sendServerNameExtension,
-					serverInfo.tlsConfig(masquerade))
-				if err == nil {
-					// dial succeeded
-					break
-				}
-			}
-			return conn, err
-		},
+		DialProxy: dialProxy,
 		NewRequest: func(upstreamHost string, method string, body io.Reader) (req *http.Request, err error) {
 			if upstreamHost == "" {
 				// No specific host requested, use configured one
@@ -267,6 +246,32 @@ func (serverInfo *ServerInfo) buildEnproxyConfigDynamic(masqueradeSource func() 
 			return http.NewRequest(method, "http://"+upstreamHost+"/", body)
 		},
 		BufferRequests: serverInfo.BufferRequests,
+	}
+}
+
+func (serverInfo *ServerInfo) dialerFor(masqueradeSource func() *Masquerade) func() (net.Conn, error) {
+	dialTimeout := time.Duration(serverInfo.DialTimeoutMillis) * time.Millisecond
+	if dialTimeout == 0 {
+		dialTimeout = 5 * time.Second
+	}
+
+	// Note - we need to suppress the sending of the ServerName in the
+	// client handshake to make host-spoofing work with Fastly.  If the
+	// client Hello includes a server name, Fastly checks to make sure
+	// that this matches the Host header in the HTTP request and if they
+	// don't match, it returns a 400 Bad Request error.
+	sendServerNameExtension := false
+
+	return func() (net.Conn, error) {
+		masquerade := masqueradeSource()
+		return tlsdialer.DialWithDialer(
+			&net.Dialer{
+				Timeout: dialTimeout,
+			},
+			"tcp",
+			serverInfo.addressForServer(masquerade),
+			sendServerNameExtension,
+			serverInfo.tlsConfig(masquerade))
 	}
 }
 
@@ -301,10 +306,12 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 }
 
 type server struct {
-	info          *ServerInfo
-	masquerades   *verifiedMasqueradeSet
-	enproxyConfig *enproxy.Config
-	reverseProxy  *httputil.ReverseProxy
+	info               *ServerInfo
+	masquerades        *verifiedMasqueradeSet
+	enproxyConfig      *enproxy.Config
+	enproxyConfigMutex sync.Mutex
+	connPool           *connpool.Pool
+	reverseProxy       *httputil.ReverseProxy
 }
 
 // buildReverseProxy builds the httputil.ReverseProxy used to proxy requests to
@@ -346,16 +353,34 @@ func (server *server) dialWithEnproxy(network, addr string) (net.Conn, error) {
 }
 
 func (server *server) getEnproxyConfig() *enproxy.Config {
-	if server.enproxyConfig != nil {
-		// Use hardcoded config
-		return server.enproxyConfig
+	server.enproxyConfigMutex.Lock()
+	defer server.enproxyConfigMutex.Unlock()
+	if server.enproxyConfig == nil {
+		// Build a config on the fly
+		server.enproxyConfig = server.buildEnproxyConfig()
 	}
-	// Build a config on the fly
-	return server.buildEnproxyConfig()
+	return server.enproxyConfig
 }
 
 func (server *server) buildEnproxyConfig() *enproxy.Config {
-	return server.info.buildEnproxyConfigDynamic(server.nextMasquerade)
+	server.connPool = &connpool.Pool{
+		MinSize:      30,
+		ClaimTimeout: 15 * time.Second,
+		Dial:         server.info.dialerFor(server.nextMasquerade),
+	}
+	server.connPool.Start()
+
+	return server.info.enproxyConfigWith(func(addr string) (net.Conn, error) {
+		return server.connPool.Get()
+	})
+}
+
+func (server *server) close() {
+	server.enproxyConfigMutex.Lock()
+	defer server.enproxyConfigMutex.Unlock()
+	if server.enproxyConfig != nil {
+		server.connPool.Stop()
+	}
 }
 
 func (server *server) nextMasquerade() *Masquerade {

@@ -14,7 +14,7 @@ func HttpClient(serverInfo *ServerInfo, masquerade *Masquerade) *http.Client {
 		serverInfo.InsecureSkipVerify = true
 	}
 
-	enproxyConfig := serverInfo.buildEnproxyConfig(masquerade)
+	enproxyConfig := serverInfo.disposableEnproxyConfig(masquerade)
 
 	return &http.Client{
 		Transport: &http.Transport{
