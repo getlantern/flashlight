@@ -145,7 +145,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	server := client.randomServer(req)
 	log.Debugf("Using server %s to handle request for %s", server.info.Host, req.RequestURI)
 	if req.Method == CONNECT {
-		server.getEnproxyConfig().Intercept(resp, req)
+		server.enproxyConfig.Intercept(resp, req)
 	} else {
 		server.reverseProxy.ServeHTTP(resp, req)
 	}
@@ -219,6 +219,10 @@ func (serverInfo *ServerInfo) buildServer(shouldDumpHeaders bool, masquerades *v
 		enproxyConfig: enproxyConfig,
 	}
 
+	if server.enproxyConfig == nil {
+		// Build a dynamic config
+		server.enproxyConfig = server.buildEnproxyConfig()
+	}
 	server.reverseProxy = server.buildReverseProxy(shouldDumpHeaders)
 
 	return server
@@ -306,12 +310,11 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 }
 
 type server struct {
-	info               *ServerInfo
-	masquerades        *verifiedMasqueradeSet
-	enproxyConfig      *enproxy.Config
-	enproxyConfigMutex sync.Mutex
-	connPool           *connpool.Pool
-	reverseProxy       *httputil.ReverseProxy
+	info          *ServerInfo
+	masquerades   *verifiedMasqueradeSet
+	enproxyConfig *enproxy.Config
+	connPool      *connpool.Pool
+	reverseProxy  *httputil.ReverseProxy
 }
 
 // buildReverseProxy builds the httputil.ReverseProxy used to proxy requests to
@@ -343,23 +346,13 @@ func (server *server) buildReverseProxy(shouldDumpHeaders bool) *httputil.Revers
 func (server *server) dialWithEnproxy(network, addr string) (net.Conn, error) {
 	conn := &enproxy.Conn{
 		Addr:   addr,
-		Config: server.getEnproxyConfig(),
+		Config: server.enproxyConfig,
 	}
 	err := conn.Connect()
 	if err != nil {
 		return nil, err
 	}
 	return conn, nil
-}
-
-func (server *server) getEnproxyConfig() *enproxy.Config {
-	server.enproxyConfigMutex.Lock()
-	defer server.enproxyConfigMutex.Unlock()
-	if server.enproxyConfig == nil {
-		// Build a config on the fly
-		server.enproxyConfig = server.buildEnproxyConfig()
-	}
-	return server.enproxyConfig
 }
 
 func (server *server) buildEnproxyConfig() *enproxy.Config {
@@ -376,9 +369,7 @@ func (server *server) buildEnproxyConfig() *enproxy.Config {
 }
 
 func (server *server) close() {
-	server.enproxyConfigMutex.Lock()
-	defer server.enproxyConfigMutex.Unlock()
-	if server.enproxyConfig != nil {
+	if server.connPool != nil {
 		server.connPool.Stop()
 	}
 }
