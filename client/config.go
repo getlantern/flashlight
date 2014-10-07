@@ -1,7 +1,9 @@
 package client
 
 import (
+	"net"
 	"sort"
+	"time"
 )
 
 // ClientConfig captures configuration information for a Client
@@ -45,6 +47,11 @@ type ServerInfo struct {
 	// QOS: relative quality of service offered. Should be >= 0, with higher
 	// values indicating higher QOS.
 	QOS int
+}
+
+type cachedConn struct {
+	conn   net.Conn
+	dialed time.Time
 }
 
 // Masquerade contains the data for a single masquerade host, including

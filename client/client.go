@@ -1,13 +1,8 @@
 package client
 
 import (
-	"crypto/tls"
-	"fmt"
-	"io"
 	"math/rand"
-	"net"
 	"net/http"
-	"net/http/httputil"
 	"reflect"
 	"strconv"
 	"sync"
@@ -15,10 +10,6 @@ import (
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
-	"github.com/getlantern/flashlight/proxy"
-	"github.com/getlantern/keyman"
-
-	"gopkg.in/getlantern/tlsdialer.v1"
 )
 
 const (
@@ -96,6 +87,13 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 		}
 	}
 
+	// Close existing servers
+	if client.servers != nil {
+		for _, server := range client.servers {
+			server.close()
+		}
+	}
+
 	// Configure servers
 	client.servers = make([]*server, len(cfg.Servers))
 	i := 0
@@ -137,7 +135,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	server := client.randomServer(req)
 	log.Debugf("Using server %s to handle request for %s", server.info.Host, req.RequestURI)
 	if req.Method == CONNECT {
-		server.getEnproxyConfig().Intercept(resp, req)
+		server.enproxyConfig.Intercept(resp, req)
 	} else {
 		server.reverseProxy.ServeHTTP(resp, req)
 	}
@@ -195,199 +193,4 @@ func (client *Client) getServers() ([]*server, int) {
 	client.cfgMutex.RLock()
 	defer client.cfgMutex.RUnlock()
 	return client.servers, client.totalServerWeights
-}
-
-// buildServer builds a server configured from this serverInfo using the given
-// enproxy.Config if provided.
-func (serverInfo *ServerInfo) buildServer(shouldDumpHeaders bool, masquerades *verifiedMasqueradeSet, enproxyConfig *enproxy.Config) *server {
-	weight := serverInfo.Weight
-	if weight == 0 {
-		weight = 100
-	}
-
-	server := &server{
-		info:          serverInfo,
-		masquerades:   masquerades,
-		enproxyConfig: enproxyConfig,
-	}
-
-	server.reverseProxy = server.buildReverseProxy(shouldDumpHeaders)
-
-	return server
-}
-
-func (serverInfo *ServerInfo) buildEnproxyConfig(masquerade *Masquerade) *enproxy.Config {
-	return serverInfo.buildEnproxyConfigDynamic(func() *Masquerade { return masquerade })
-}
-
-func (serverInfo *ServerInfo) buildEnproxyConfigDynamic(masqueradeSource func() *Masquerade) *enproxy.Config {
-	dialTimeout := time.Duration(serverInfo.DialTimeoutMillis) * time.Millisecond
-	if dialTimeout == 0 {
-		dialTimeout = 20 * time.Second
-	}
-
-	return &enproxy.Config{
-		DialProxy: func(addr string) (net.Conn, error) {
-			// Note - we need to suppress the sending of the ServerName in the
-			// client handshake to make host-spoofing work with Fastly.  If the
-			// client Hello includes a server name, Fastly checks to make sure
-			// that this matches the Host header in the HTTP request and if they
-			// don't match, it returns a 400 Bad Request error.
-			sendServerNameExtension := false
-
-			var conn net.Conn
-			var err error
-			for i := 0; i < 1+serverInfo.RedialAttempts; i++ {
-				if i > 0 {
-					log.Debugf("Error dialing, retrying: %s", err)
-					// Reset err
-					err = nil
-				}
-				masquerade := masqueradeSource()
-				conn, err = tlsdialer.DialWithDialer(
-					&net.Dialer{
-						Timeout: dialTimeout,
-					},
-					"tcp",
-					serverInfo.addressForServer(masquerade),
-					sendServerNameExtension,
-					serverInfo.tlsConfig(masquerade))
-				if err == nil {
-					// dial succeeded
-					break
-				}
-			}
-			return conn, err
-		},
-		NewRequest: func(upstreamHost string, method string, body io.Reader) (req *http.Request, err error) {
-			if upstreamHost == "" {
-				// No specific host requested, use configured one
-				upstreamHost = serverInfo.Host
-			}
-			return http.NewRequest(method, "http://"+upstreamHost+"/", body)
-		},
-		BufferRequests: serverInfo.BufferRequests,
-	}
-}
-
-// Get the address to dial for reaching the server
-func (serverInfo *ServerInfo) addressForServer(masquerade *Masquerade) string {
-	return fmt.Sprintf("%s:%d", serverInfo.serverHost(masquerade), serverInfo.Port)
-}
-
-func (serverInfo *ServerInfo) serverHost(masquerade *Masquerade) string {
-	serverHost := serverInfo.Host
-	if masquerade != nil && masquerade.Domain != "" {
-		serverHost = masquerade.Domain
-	}
-	return serverHost
-}
-
-// Build a tls.Config for dialing the upstream host
-func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
-	tlsConfig := &tls.Config{
-		ClientSessionCache: tls.NewLRUClientSessionCache(1000),
-		InsecureSkipVerify: serverInfo.InsecureSkipVerify,
-	}
-
-	if masquerade != nil && masquerade.RootCA != "" {
-		caCert, err := keyman.LoadCertificateFromPEMBytes([]byte(masquerade.RootCA))
-		if err != nil {
-			log.Fatalf("Unable to load root ca cert: %s", err)
-		}
-		tlsConfig.RootCAs = caCert.PoolContainingCert()
-	}
-	return tlsConfig
-}
-
-type server struct {
-	info          *ServerInfo
-	masquerades   *verifiedMasqueradeSet
-	enproxyConfig *enproxy.Config
-	reverseProxy  *httputil.ReverseProxy
-}
-
-// buildReverseProxy builds the httputil.ReverseProxy used to proxy requests to
-// the server.
-func (server *server) buildReverseProxy(shouldDumpHeaders bool) *httputil.ReverseProxy {
-	return &httputil.ReverseProxy{
-		Director: func(req *http.Request) {
-			// do nothing
-		},
-		Transport: withDumpHeaders(
-			shouldDumpHeaders,
-			&http.Transport{
-				// We disable keepalives because some servers pretend to support
-				// keep-alives but close their connections immediately, which
-				// causes an error inside ReverseProxy.  This is not an issue
-				// for HTTPS because  the browser is responsible for handling
-				// the problem, which browsers like Chrome and Firefox already
-				// know to do.
-				// See https://code.google.com/p/go/issues/detail?id=4677
-				DisableKeepAlives: true,
-				Dial:              server.dialWithEnproxy,
-			}),
-		// Set a FlushInterval to prevent overly aggressive buffering of
-		// responses, which helps keep memory usage down
-		FlushInterval: 250 * time.Millisecond,
-	}
-}
-
-func (server *server) dialWithEnproxy(network, addr string) (net.Conn, error) {
-	conn := &enproxy.Conn{
-		Addr:   addr,
-		Config: server.getEnproxyConfig(),
-	}
-	err := conn.Connect()
-	if err != nil {
-		return nil, err
-	}
-	return conn, nil
-}
-
-func (server *server) getEnproxyConfig() *enproxy.Config {
-	if server.enproxyConfig != nil {
-		// Use hardcoded config
-		return server.enproxyConfig
-	}
-	// Build a config on the fly
-	return server.buildEnproxyConfig()
-}
-
-func (server *server) buildEnproxyConfig() *enproxy.Config {
-	return server.info.buildEnproxyConfigDynamic(server.nextMasquerade)
-}
-
-func (server *server) nextMasquerade() *Masquerade {
-	if server.masquerades == nil {
-		log.Debugf("No masquerade")
-		return nil
-	}
-	masquerade := server.masquerades.nextVerified()
-	log.Debugf("Using masquerade %s", masquerade.Domain)
-	return masquerade
-}
-
-// withDumpHeaders creates a RoundTripper that uses the supplied RoundTripper
-// and that dumps headers is client is so configured.
-func withDumpHeaders(shouldDumpHeaders bool, rt http.RoundTripper) http.RoundTripper {
-	if !shouldDumpHeaders {
-		return rt
-	}
-	return &headerDumpingRoundTripper{rt}
-}
-
-// headerDumpingRoundTripper is an http.RoundTripper that wraps another
-// http.RoundTripper and dumps response headers to the log.
-type headerDumpingRoundTripper struct {
-	orig http.RoundTripper
-}
-
-func (rt *headerDumpingRoundTripper) RoundTrip(req *http.Request) (resp *http.Response, err error) {
-	proxy.DumpHeaders("Request", &req.Header)
-	resp, err = rt.orig.RoundTrip(req)
-	if err == nil {
-		proxy.DumpHeaders("Response", &resp.Header)
-	}
-	return
 }
