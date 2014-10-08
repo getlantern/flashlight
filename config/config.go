@@ -36,44 +36,62 @@ type Config struct {
 
 var (
 	// Flags
-	configDir      = flag.String("configdir", "", "directory in which to store configuration, including flashlight.yaml (defaults to current directory)")
-	cloudConfig    = flag.String("cloudconfig", "", "optional http(s) URL to a cloud-based source for configuration updates")
-	cloudConfigCA  = flag.String("cloudconfigca", "", "optional PEM encoded certificate used to verify TLS connections to fetch cloudconfig")
+	configdir      = flag.String("configdir", "", "directory in which to store configuration, including flashlight.yaml (defaults to current directory)")
+	cloudconfig    = flag.String("cloudconfig", "", "optional http(s) URL to a cloud-based source for configuration updates")
+	cloudconfigca  = flag.String("cloudconfigca", "", "optional PEM encoded certificate used to verify TLS connections to fetch cloudconfig")
 	addr           = flag.String("addr", "", "ip:port on which to listen for requests. When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https (required)")
 	role           = flag.String("role", "", "either 'client' or 'server' (required)")
-	instanceId     = flag.String("instanceid", "", "instanceId under which to report stats to statshub. If not specified, no stats are reported.")
-	statsAddr      = flag.String("statsaddr", "", "host:port at which to make detailed stats available using server-sent events (optional)")
+	instanceid     = flag.String("instanceid", "", "instanceId under which to report stats to statshub. If not specified, no stats are reported.")
+	statsaddr      = flag.String("statsaddr", "", "host:port at which to make detailed stats available using server-sent events (optional)")
 	country        = flag.String("country", "xx", "2 digit country code under which to report stats. Defaults to xx.")
-	cpuProfile     = flag.String("cpuprofile", "", "write cpu profile to given file")
-	memProfile     = flag.String("memprofile", "", "write heap profile to given file")
+	cpuprofile     = flag.String("cpuprofile", "", "write cpu profile to given file")
+	memprofile     = flag.String("memprofile", "", "write heap profile to given file")
 	portmap        = flag.Int("portmap", 0, "try to map this port on the firewall to the port on which flashlight is listening, using UPnP or NAT-PMP. If mapping this port fails, flashlight will exit with status code 50")
 	advertisedHost = flag.String("server", "", "FQDN of flashlight server when running in server mode (required)")
-	waddellAddr    = flag.String("waddelladdr", "", "if specified, connect to this waddell server and process NAT traversal requests inbound from waddell")
+	waddelladdr    = flag.String("waddelladdr", "", "if specified, connect to this waddell server and process NAT traversal requests inbound from waddell")
 )
 
 // ApplyFlags updates this Config from any command-line flags that were passed
 // in. ApplyFlags assumes that flag.Parse() has already been called.
 func (orig *Config) ApplyFlags() *Config {
 	updated := orig.deepCopy()
-
-	// General
-	updated.CloudConfig = *cloudConfig
-	updated.CloudConfigCA = *cloudConfigCA
-	updated.Addr = *addr
-	updated.Role = *role
-	updated.InstanceId = *instanceId
-	updated.StatsAddr = *statsAddr
-	updated.Country = *country
-	updated.CpuProfile = *cpuProfile
-	updated.MemProfile = *memProfile
-
-	// Server
 	if updated.Server == nil {
 		updated.Server = &server.ServerConfig{}
 	}
-	updated.Server.Portmap = *portmap
-	updated.Server.AdvertisedHost = *advertisedHost
-	updated.Server.WaddellAddr = *waddellAddr
+
+	// Visit all flags that have been set and copy to config
+	flag.Visit(func(f *flag.Flag) {
+		switch f.Name {
+		// General
+		case "cloudconfig":
+			updated.CloudConfig = *cloudconfig
+		case "cloudconfigca":
+			updated.CloudConfigCA = *cloudconfigca
+		case "addr":
+			updated.Addr = *addr
+		case "role":
+			updated.Role = *role
+		case "instanceid":
+			updated.InstanceId = *instanceid
+		case "statsaddr":
+			updated.StatsAddr = *statsaddr
+		case "country":
+			updated.Country = *country
+		case "cpuprofile":
+			updated.CpuProfile = *cpuprofile
+		case "memprofile":
+			updated.MemProfile = *memprofile
+
+		// Server
+		case "portmap":
+			updated.Server.Portmap = *portmap
+		case "server":
+			updated.Server.AdvertisedHost = *advertisedHost
+		case "waddelladdr":
+			updated.Server.WaddellAddr = *waddelladdr
+		}
+	})
+
 	updated.applyDefaults()
 	return updated
 }
@@ -177,20 +195,20 @@ func (cfg *Config) IsUpstream() bool {
 	return !cfg.IsDownstream()
 }
 
-// InConfigDir returns the path to the given filename inside of the configDir.
+// InConfigDir returns the path to the given filename inside of the configdir.
 func InConfigDir(filename string) string {
-	if *configDir == "" {
+	if *configdir == "" {
 		return filename
 	} else {
-		if _, err := os.Stat(*configDir); err != nil {
+		if _, err := os.Stat(*configdir); err != nil {
 			if os.IsNotExist(err) {
 				// Create config dir
-				if err := os.MkdirAll(*configDir, 0755); err != nil {
-					log.Fatalf("Unable to create configDir at %s: %s", *configDir, err)
+				if err := os.MkdirAll(*configdir, 0755); err != nil {
+					log.Fatalf("Unable to create configdir at %s: %s", *configdir, err)
 				}
 			}
 		}
-		return fmt.Sprintf("%s%c%s", *configDir, os.PathSeparator, filename)
+		return fmt.Sprintf("%s%c%s", *configdir, os.PathSeparator, filename)
 	}
 }
 
