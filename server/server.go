@@ -113,17 +113,16 @@ func (server *Server) Configure(newCfg *ServerConfig) {
 	}
 
 	if oldCfg == nil || newCfg.WaddellAddr != oldCfg.WaddellAddr {
+		log.Debugf("Waddell settings changed")
 		// Waddell settings changed
 		if server.waddellConn != nil {
 			log.Debugf("Closing old waddell connection")
-			server.waddellConn.Close()
-			server.waddellConn = nil
-			server.wc = nil
+			server.stopAcceptingNATTraversals()
 		}
 
 		server.waddellAddr = newCfg.WaddellAddr
 		if server.waddellAddr != "" {
-			server.acceptNATTraversals()
+			go server.acceptNATTraversals()
 		}
 	}
 
