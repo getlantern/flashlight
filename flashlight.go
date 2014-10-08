@@ -6,14 +6,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/getlantern/flashlight/client"
@@ -23,12 +20,9 @@ import (
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/statserver"
 	"github.com/getlantern/flashlight/util"
-	"github.com/getlantern/go-igdman/igdman"
 )
 
 const (
-	PORTMAP_FAILURE = 50
-
 	ETAG          = "ETag"
 	IF_NONE_MATCH = "If-None-Match"
 )
@@ -200,21 +194,10 @@ func runClientProxy(cfg *config.Config) {
 func runServerProxy(cfg *config.Config) {
 	useAllCores()
 
-	if cfg.Portmap > 0 {
-		log.Debugf("Attempting to map external port %d", cfg.Portmap)
-		err := mapPort(cfg)
-		if err != nil {
-			log.Errorf("Unable to map external port: %s", err)
-			os.Exit(PORTMAP_FAILURE)
-		}
-		log.Debugf("Mapped external port %d", cfg.Portmap)
-	}
-
 	srv := &server.Server{
 		Addr:         cfg.Addr,
 		ReadTimeout:  0, // don't timeout
 		WriteTimeout: 0,
-		Host:         cfg.AdvertisedHost,
 		CertContext: &server.CertContext{
 			PKFile:         config.InConfigDir("proxypk.pem"),
 			ServerCertFile: config.InConfigDir("servercert.pem"),
@@ -233,49 +216,20 @@ func runServerProxy(cfg *config.Config) {
 			Addr: cfg.StatsAddr,
 		}
 	}
+
+	srv.Configure(cfg.Server)
+	// Continually poll for config updates and update server accordingly
+	go func() {
+		for {
+			cfg := <-configUpdates
+			srv.Configure(cfg.Server)
+		}
+	}()
+
 	err := srv.ListenAndServe()
 	if err != nil {
 		log.Fatalf("Unable to run server proxy: %s", err)
 	}
-}
-
-func mapPort(cfg *config.Config) error {
-	parts := strings.Split(cfg.Addr, ":")
-
-	internalPort, err := strconv.Atoi(parts[1])
-	if err != nil {
-		return fmt.Errorf("Unable to parse local port: ")
-	}
-
-	internalIP := parts[0]
-	if internalIP == "" {
-		internalIP, err = determineInternalIP()
-		if err != nil {
-			return fmt.Errorf("Unable to determine internal IP: %s", err)
-		}
-	}
-
-	igd, err := igdman.NewIGD()
-	if err != nil {
-		return fmt.Errorf("Unable to get IGD: %s", err)
-	}
-
-	igd.RemovePortMapping(igdman.TCP, cfg.Portmap)
-	err = igd.AddPortMapping(igdman.TCP, internalIP, internalPort, cfg.Portmap, 0)
-	if err != nil {
-		return fmt.Errorf("Unable to map port with igdman %d: %s", cfg.Portmap, err)
-	}
-
-	return nil
-}
-
-func determineInternalIP() (string, error) {
-	conn, err := net.Dial("tcp", "s3.amazonaws.com:443")
-	if err != nil {
-		return "", fmt.Errorf("Unable to determine local IP: %s", err)
-	}
-	defer conn.Close()
-	return strings.Split(conn.LocalAddr().String(), ":")[0], nil
 }
 
 func useAllCores() {

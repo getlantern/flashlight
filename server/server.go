@@ -6,15 +6,23 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"reflect"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/statserver"
+	"github.com/getlantern/go-igdman/igdman"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/keyman"
+)
+
+const (
+	PortmapFailure = 50
 )
 
 var (
@@ -54,13 +62,53 @@ type Server struct {
 	// WriteTimeout: (optional) timeout for write ops
 	WriteTimeout time.Duration
 
-	TLSConfig *tls.Config
-
-	Host                       string                 // FQDN that is guaranteed to hit this server
 	CertContext                *CertContext           // context for certificate management
 	AllowNonGlobalDestinations bool                   // if true, requests to LAN, Loopback, etc. will be allowed
 	StatReporter               *statreporter.Reporter // optional reporter of stats
 	StatServer                 *statserver.Server     // optional server of stats
+
+	host     string
+	cfg      *ServerConfig
+	cfgMutex sync.Mutex
+}
+
+func (server *Server) Configure(newCfg *ServerConfig) {
+	server.cfgMutex.Lock()
+	defer server.cfgMutex.Unlock()
+
+	oldCfg := server.cfg
+
+	log.Debug("Server.Configure() called")
+	if oldCfg != nil && reflect.DeepEqual(oldCfg, newCfg) {
+		log.Debugf("Server configuration unchanged")
+		return
+	}
+
+	server.host = newCfg.AdvertisedHost
+
+	if oldCfg == nil || newCfg.Portmap != oldCfg.Portmap {
+		// Portmap changed
+		if oldCfg != nil && oldCfg.Portmap > 0 {
+			log.Debugf("Attempting to unmap old external port %d", oldCfg.Portmap)
+			err := unmapPort(oldCfg.Portmap)
+			if err != nil {
+				log.Errorf("Unable to unmap old external port: %s", err)
+			}
+			log.Debugf("Unmapped old external port %d", oldCfg.Portmap)
+		}
+
+		if newCfg.Portmap > 0 {
+			log.Debugf("Attempting to map new external port %d", newCfg.Portmap)
+			err := mapPort(server.Addr, newCfg.Portmap)
+			if err != nil {
+				log.Errorf("Unable to map new external port: %s", err)
+				os.Exit(PortmapFailure)
+			}
+			log.Debugf("Mapped new external port %d", newCfg.Portmap)
+		}
+	}
+
+	server.cfg = newCfg
 }
 
 // CertContext encapsulates the certificates used by a Server
@@ -80,11 +128,11 @@ func (server *Server) ListenAndServe() error {
 	// Set up an enproxy Proxy
 	proxy := &enproxy.Proxy{
 		Dial: server.dialDestination,
-		Host: server.Host,
+		Host: server.host,
 	}
 
-	if server.Host != "" {
-		log.Debugf("Running as host %s", server.Host)
+	if server.host != "" {
+		log.Debugf("Running as host %s", server.host)
 	}
 
 	// Hook into stats reporting if necessary
@@ -121,10 +169,7 @@ func (server *Server) ListenAndServe() error {
 
 	log.Debugf("About to start server (https) proxy at %s", server.Addr)
 
-	tlsConfig := server.TLSConfig
-	if server.TLSConfig == nil {
-		tlsConfig = DEFAULT_TLS_SERVER_CONFIG
-	}
+	tlsConfig := DEFAULT_TLS_SERVER_CONFIG
 	cert, err := tls.LoadX509KeyPair(server.CertContext.ServerCertFile, server.CertContext.PKFile)
 	if err != nil {
 		return fmt.Errorf("Unable to load certificate and key from %s and %s: %s", server.CertContext.ServerCertFile, server.CertContext.PKFile, err)
@@ -189,6 +234,59 @@ func (ctx *CertContext) InitServerCert(host string) (err error) {
 		return
 	}
 	return nil
+}
+
+func mapPort(addr string, port int) error {
+	parts := strings.Split(addr, ":")
+
+	internalPort, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return fmt.Errorf("Unable to parse local port: ")
+	}
+
+	internalIP := parts[0]
+	if internalIP == "" {
+		internalIP, err = determineInternalIP()
+		if err != nil {
+			return fmt.Errorf("Unable to determine internal IP: %s", err)
+		}
+	}
+
+	igd, err := igdman.NewIGD()
+	if err != nil {
+		return fmt.Errorf("Unable to get IGD: %s", err)
+	}
+
+	igd.RemovePortMapping(igdman.TCP, port)
+	err = igd.AddPortMapping(igdman.TCP, internalIP, internalPort, port, 0)
+	if err != nil {
+		return fmt.Errorf("Unable to map port with igdman %d: %s", port, err)
+	}
+
+	return nil
+}
+
+func unmapPort(port int) error {
+	igd, err := igdman.NewIGD()
+	if err != nil {
+		return fmt.Errorf("Unable to get IGD: %s", err)
+	}
+
+	igd.RemovePortMapping(igdman.TCP, port)
+	if err != nil {
+		return fmt.Errorf("Unable to unmap port with igdman %d: %s", port, err)
+	}
+
+	return nil
+}
+
+func determineInternalIP() (string, error) {
+	conn, err := net.Dial("tcp", "s3.amazonaws.com:443")
+	if err != nil {
+		return "", fmt.Errorf("Unable to determine local IP: %s", err)
+	}
+	defer conn.Close()
+	return strings.Split(conn.LocalAddr().String(), ":")[0], nil
 }
 
 func (server *Server) startReportingStatsIfNecessary() bool {

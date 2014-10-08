@@ -9,6 +9,7 @@ import (
 
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/log"
+	"github.com/getlantern/flashlight/server"
 	"gopkg.in/getlantern/deepcopy.v1"
 	"gopkg.in/getlantern/yaml.v1"
 )
@@ -18,20 +19,19 @@ const (
 )
 
 type Config struct {
-	CloudConfig    string
-	CloudConfigCA  string
-	Addr           string
-	Portmap        int
-	Role           string
-	AdvertisedHost string
-	InstanceId     string
-	StatsAddr      string
-	Country        string
-	CpuProfile     string
-	MemProfile     string
-	Client         *client.ClientConfig
-	filename       string
-	lastFileInfo   os.FileInfo
+	CloudConfig   string
+	CloudConfigCA string
+	Addr          string
+	Role          string
+	InstanceId    string
+	StatsAddr     string
+	Country       string
+	CpuProfile    string
+	MemProfile    string
+	Server        *server.ServerConfig
+	Client        *client.ClientConfig
+	filename      string
+	lastFileInfo  os.FileInfo
 }
 
 var (
@@ -40,31 +40,40 @@ var (
 	cloudConfig    = flag.String("cloudconfig", "", "optional http(s) URL to a cloud-based source for configuration updates")
 	cloudConfigCA  = flag.String("cloudconfigca", "", "optional PEM encoded certificate used to verify TLS connections to fetch cloudconfig")
 	addr           = flag.String("addr", "", "ip:port on which to listen for requests. When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https (required)")
-	portmap        = flag.Int("portmap", 0, "try to map this port on the firewall to the port on which flashlight is listening, using UPnP or NAT-PMP. If mapping this port fails, flashlight will exit with status code 50")
 	role           = flag.String("role", "", "either 'client' or 'server' (required)")
-	advertisedHost = flag.String("server", "", "FQDN of flashlight server when running in server mode (required)")
 	instanceId     = flag.String("instanceid", "", "instanceId under which to report stats to statshub. If not specified, no stats are reported.")
 	statsAddr      = flag.String("statsaddr", "", "host:port at which to make detailed stats available using server-sent events (optional)")
 	country        = flag.String("country", "xx", "2 digit country code under which to report stats. Defaults to xx.")
 	cpuProfile     = flag.String("cpuprofile", "", "write cpu profile to given file")
 	memProfile     = flag.String("memprofile", "", "write heap profile to given file")
+	portmap        = flag.Int("portmap", 0, "try to map this port on the firewall to the port on which flashlight is listening, using UPnP or NAT-PMP. If mapping this port fails, flashlight will exit with status code 50")
+	advertisedHost = flag.String("server", "", "FQDN of flashlight server when running in server mode (required)")
+	waddellAddr    = flag.String("waddelladdr", "", "if specified, connect to this waddell server and process NAT traversal requests inbound from waddell")
 )
 
 // ApplyFlags updates this Config from any command-line flags that were passed
 // in. ApplyFlags assumes that flag.Parse() has already been called.
 func (orig *Config) ApplyFlags() *Config {
 	updated := orig.deepCopy()
+
+	// General
 	updated.CloudConfig = *cloudConfig
 	updated.CloudConfigCA = *cloudConfigCA
 	updated.Addr = *addr
-	updated.Portmap = *portmap
 	updated.Role = *role
-	updated.AdvertisedHost = *advertisedHost
 	updated.InstanceId = *instanceId
 	updated.StatsAddr = *statsAddr
 	updated.Country = *country
 	updated.CpuProfile = *cpuProfile
 	updated.MemProfile = *memProfile
+
+	// Server
+	if updated.Server == nil {
+		updated.Server = &server.ServerConfig{}
+	}
+	updated.Server.Portmap = *portmap
+	updated.Server.AdvertisedHost = *advertisedHost
+	updated.Server.WaddellAddr = *waddellAddr
 	updated.applyDefaults()
 	return updated
 }

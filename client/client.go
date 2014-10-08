@@ -64,7 +64,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	client.cfgMutex.Lock()
 	defer client.cfgMutex.Unlock()
 
-	log.Debug("Configure() called")
+	log.Debug("Client.Configure() called")
 	if client.cfg != nil && reflect.DeepEqual(client.cfg, cfg) {
 		log.Debugf("Client configuration unchanged")
 		return
