@@ -61,7 +61,6 @@ func (orig *Config) ApplyFlags() *Config {
 
 	// Visit all flags that have been set and copy to config
 	flag.Visit(func(f *flag.Flag) {
-		log.Debug(f.(type))
 		switch f.Name {
 		// General
 		case "cloudconfig":
