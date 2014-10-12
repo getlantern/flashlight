@@ -1,4 +1,4 @@
-package natty
+package nattraversal
 
 import (
 	"encoding/binary"
@@ -23,7 +23,6 @@ const (
 	TIMEOUT          = 15 * time.Second
 )
 
-type PeerIds map[string]*PeerConn
 type Peers map[waddell.PeerId]*Peer
 
 type Peer struct {
@@ -90,8 +89,7 @@ func ConnectToWaddell(waddellAddr string) (err error) {
 	return err
 }
 
-func UpdateWaddellConn(waddellAddr, kind string,
-	peers *[]PeerConn) (err error) {
+func UpdateWaddellConn(waddellAddr string, peers *[]PeerConn) (err error) {
 	if WaddellAddr == "" || WaddellAddr != waddellAddr {
 		if WaddellConn != nil {
 			log.Debugf("Closing old waddell connection")
@@ -105,11 +103,10 @@ func UpdateWaddellConn(waddellAddr, kind string,
 			if err != nil {
 				return
 			}
-			if kind == "server" {
-				go ReceiveOffers()
-			} else {
-				log.Debugf("Checking peers list!!")
+			if peers != nil {
 				CheckPeersList(peers)
+			} else {
+				go ReceiveOffers()
 			}
 		}
 	}
