@@ -113,13 +113,19 @@ func UpdateWaddellConn(waddellAddr string, peers *[]PeerConn) (err error) {
 	return
 }
 
-func CheckPeersList(peers *[]PeerConn) {
-	for _, peer := range *peers {
-		if activePeers[peer.Id] {
+func CheckPeersList(configPeers *[]PeerConn) {
+	for _, peer := range *configPeers {
+		peerId, err := waddell.PeerIdFromString(peer.Id)
+		if err != nil {
+			log.Errorf("Unable to parse PeerID for server %s: %s",
+				peer.Id, err)
+		}
+
+		if peers[peerId] != nil {
 			continue
 		}
-		activePeers[peer.Id] = true
-		sendOffer(peer.Id)
+		log.Debugf("Sending offer to peer %s", peer.Id)
+		sendOffer(peerId)
 	}
 }
 
@@ -158,17 +164,18 @@ func receiveMessages(t *natty.Traversal, traversalId uint32) {
 	}
 }
 
-func sendOffer(id string) {
-	log.Debugf("Sending offer to peer %s", id)
+func sendOffer(peerId waddell.PeerId) {
 	traversalId := uint32(rand.Int31())
 	log.Debugf("Starting traversal: %d", traversalId)
 
 	t := natty.Offer(debugOut)
 
-	peerId, err := waddell.PeerIdFromString(id)
-	if err != nil {
-		log.Fatalf("Unable to parse PeerID for server %s: %s", id, err)
+	p := &Peer{
+		id:         peerId,
+		traversals: make(map[uint32]*natty.Traversal),
 	}
+	p.traversals[traversalId] = t
+	peers[peerId] = p
 
 	go sendMessages(t, peerId, traversalId)
 	go receiveMessages(t, traversalId)
