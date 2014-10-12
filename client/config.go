@@ -13,7 +13,7 @@ type ClientConfig struct {
 	DumpHeaders    bool // whether or not to dump headers of requests and responses
 	Servers        []*ServerInfo
 	MasqueradeSets map[string][]*Masquerade
-	Peers          []nattraversal.PeerConn
+	Peers          []nattraversal.PeerConfig
 }
 
 // ServerInfo captures configuration information for an upstream server
