@@ -14,6 +14,7 @@ import (
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
+	"github.com/getlantern/flashlight/nattraversal"
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/statserver"
 	"github.com/getlantern/go-igdman/igdman"
@@ -67,9 +68,11 @@ type Server struct {
 	StatReporter               *statreporter.Reporter // optional reporter of stats
 	StatServer                 *statserver.Server     // optional server of stats
 
-	host     string
-	cfg      *ServerConfig
-	cfgMutex sync.Mutex
+	host        string
+	waddellAddr string
+	wc          *nattraversal.WaddellConn
+	cfg         *ServerConfig
+	cfgMutex    sync.Mutex
 }
 
 func (server *Server) Configure(newCfg *ServerConfig) {
@@ -105,6 +108,24 @@ func (server *Server) Configure(newCfg *ServerConfig) {
 				os.Exit(PortmapFailure)
 			}
 			log.Debugf("Mapped new external port %d", newCfg.Portmap)
+		}
+	}
+
+	if oldCfg == nil || newCfg.WaddellAddr != oldCfg.WaddellAddr {
+		log.Debugf("Waddell settings changed")
+		// Waddell settings changed
+		if server.wc != nil {
+			log.Debugf("Closing old waddell connection")
+			nattraversal.CloseWaddellConn(oldCfg.WaddellAddr)
+		}
+
+		server.waddellAddr = newCfg.WaddellAddr
+		if server.waddellAddr != "" {
+			err, wc := nattraversal.ConnectToWaddell(server.waddellAddr)
+			if err == nil {
+				server.wc = wc
+				go nattraversal.ReceiveOffers(server.wc)
+			}
 		}
 	}
 

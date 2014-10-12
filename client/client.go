@@ -95,9 +95,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 		}
 	}
 
-	if nattraversal.Wc != nil {
-		nattraversal.CheckPeersList(&client.cfg.Peers)
-	}
+	nattraversal.CheckPeersList(&client.cfg.Peers)
 
 	// Configure servers
 	client.servers = make([]*server, len(cfg.Servers))

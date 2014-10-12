@@ -16,7 +16,6 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/log"
-	"github.com/getlantern/flashlight/nattraversal"
 	"github.com/getlantern/flashlight/server"
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/statserver"
@@ -176,18 +175,12 @@ func runClientProxy(cfg *config.Config) {
 		WriteTimeout: 0,
 	}
 
-	if cfg.WaddellAddr != "" {
-		nattraversal.UpdateWaddellConn(cfg.WaddellAddr, &cfg.Client.Peers)
-	}
-
 	// Configure client initially
 	client.Configure(cfg.Client, nil)
 	// Continually poll for config updates and update client accordingly
 	go func() {
 		for {
 			cfg := <-configUpdates
-			nattraversal.UpdateWaddellConn(cfg.WaddellAddr,
-				&cfg.Client.Peers)
 			client.Configure(cfg.Client, nil)
 		}
 	}()
@@ -225,16 +218,11 @@ func runServerProxy(cfg *config.Config) {
 		}
 	}
 
-	if cfg.WaddellAddr != "" {
-		nattraversal.UpdateWaddellConn(cfg.WaddellAddr, nil)
-	}
-
 	srv.Configure(cfg.Server)
 	// Continually poll for config updates and update server accordingly
 	go func() {
 		for {
 			cfg := <-configUpdates
-			nattraversal.UpdateWaddellConn(cfg.WaddellAddr, nil)
 			srv.Configure(cfg.Server)
 		}
 	}()

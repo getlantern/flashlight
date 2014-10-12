@@ -32,7 +32,13 @@ type Peer struct {
 }
 
 type PeerConn struct {
-	Id string
+	Id          string
+	WaddellAddr string
+}
+
+type WaddellConn struct {
+	client *waddell.Client
+	conn   net.Conn
 }
 
 type message []byte
@@ -50,19 +56,16 @@ func (msg message) getData() []byte {
 }
 
 var (
-	endianness  = binary.LittleEndian
-	activePeers map[string]bool
-	peers       Peers
-	peersMutex  sync.Mutex
-	debugOut    io.Writer
-	WaddellConn net.Conn
-	WaddellAddr string
-	Wc          *waddell.Client
-	serverReady = make(chan bool, 10)
+	endianness   = binary.LittleEndian
+	WaddellConns map[string]*WaddellConn
+	peers        Peers
+	peersMutex   sync.Mutex
+	debugOut     io.Writer
+	serverReady  = make(chan bool, 10)
 )
 
 func init() {
-	activePeers = make(map[string]bool)
+	WaddellConns = make(map[string]*WaddellConn)
 	peers = make(map[waddell.PeerId]*Peer)
 	//debugOut = os.Stderr
 }
@@ -73,41 +76,20 @@ func idToBytes(id uint32) []byte {
 	return b
 }
 
-func ConnectToWaddell(waddellAddr string) (err error) {
-
-	WaddellAddr = waddellAddr
-	WaddellConn, err = net.DialTimeout("tcp", waddellAddr, 20*time.Second)
+func ConnectToWaddell(waddellAddr string) (err error, wc *WaddellConn) {
+	conn, err := net.DialTimeout("tcp", waddellAddr, 20*time.Second)
 	if err != nil {
-		return err
+		return
 	}
-	Wc, err = waddell.Connect(WaddellConn)
+	client, err := waddell.Connect(conn)
+
 	if err != nil {
 		log.Errorf("Unable to connect to waddell: %s", err)
 	} else {
-		log.Debugf("Connected to Waddell!!! Id is: %s", Wc.ID())
-	}
-	return err
-}
-
-func UpdateWaddellConn(waddellAddr string, peers *[]PeerConn) (err error) {
-	if WaddellAddr == "" || WaddellAddr != waddellAddr {
-		if WaddellConn != nil {
-			log.Debugf("Closing old waddell connection")
-			CloseWaddellConn()
-		}
-		log.Debugf("New waddell addr is %s", waddellAddr)
-
-		if waddellAddr != "" {
-			WaddellAddr = waddellAddr
-			err = ConnectToWaddell(waddellAddr)
-			if err != nil {
-				return
-			}
-			if peers != nil {
-				CheckPeersList(peers)
-			} else {
-				go ReceiveOffers()
-			}
+		log.Debugf("Connected to Waddell!!! Id is: %s", client.ID())
+		WaddellConns[waddellAddr] = &WaddellConn{
+			client: client,
+			conn:   conn,
 		}
 	}
 	return
@@ -124,12 +106,18 @@ func CheckPeersList(configPeers *[]PeerConn) {
 		if peers[peerId] != nil {
 			continue
 		}
+
+		if WaddellConns[peer.WaddellAddr] == nil {
+			/* new waddell server--open connection to it */
+			ConnectToWaddell(peer.WaddellAddr)
+		}
+
 		log.Debugf("Sending offer to peer %s", peer.Id)
-		sendOffer(peerId)
+		sendOffer(peer.WaddellAddr, peerId)
 	}
 }
 
-func sendMessages(t *natty.Traversal, peerId waddell.PeerId,
+func sendMessages(wc *WaddellConn, t *natty.Traversal, peerId waddell.PeerId,
 	traversalId uint32) {
 	for {
 		msgOut, done := t.NextMsgOut()
@@ -137,14 +125,15 @@ func sendMessages(t *natty.Traversal, peerId waddell.PeerId,
 			return
 		}
 		log.Debugf("Sending %s", msgOut)
-		Wc.SendPieces(peerId, idToBytes(traversalId), []byte(msgOut))
+		wc.client.SendPieces(peerId, idToBytes(traversalId), []byte(msgOut))
 	}
 }
 
-func receiveMessages(t *natty.Traversal, traversalId uint32) {
+func receiveMessages(wc *WaddellConn, t *natty.Traversal,
+	traversalId uint32) {
 	b := make([]byte, MAX_MESSAGE_SIZE+waddell.WADDELL_OVERHEAD)
 	for {
-		wm, err := Wc.Receive(b)
+		wm, err := wc.client.Receive(b)
 		if err != nil {
 			log.Fatalf("Unable to read message from waddell: %s", err)
 		}
@@ -164,7 +153,9 @@ func receiveMessages(t *natty.Traversal, traversalId uint32) {
 	}
 }
 
-func sendOffer(peerId waddell.PeerId) {
+func sendOffer(waddellAddr string, peerId waddell.PeerId) {
+	wc := WaddellConns[waddellAddr]
+
 	traversalId := uint32(rand.Int31())
 	log.Debugf("Starting traversal: %d", traversalId)
 
@@ -177,8 +168,8 @@ func sendOffer(peerId waddell.PeerId) {
 	p.traversals[traversalId] = t
 	peers[peerId] = p
 
-	go sendMessages(t, peerId, traversalId)
-	go receiveMessages(t, traversalId)
+	go sendMessages(wc, t, peerId, traversalId)
+	go receiveMessages(wc, t, traversalId)
 
 	ft, err := t.FiveTupleTimeout(TIMEOUT)
 	if err != nil {
@@ -188,10 +179,10 @@ func sendOffer(peerId waddell.PeerId) {
 
 }
 
-func ReceiveOffers() {
+func ReceiveOffers(wc *WaddellConn) {
 	for {
 		b := make([]byte, MaxWaddellMessageSize+waddell.WADDELL_OVERHEAD)
-		wm, err := Wc.Receive(b)
+		wm, err := wc.client.Receive(b)
 		if err != nil {
 			log.Errorf("Unable to read message from waddell: %s", err)
 			if err != io.EOF || err != io.ErrUnexpectedEOF {
@@ -202,19 +193,22 @@ func ReceiveOffers() {
 		msg := []byte(wm.Body)
 		log.Debugf("Peer ID is %s", wm.From.String())
 		log.Debugf("Received waddell message: %s", msg[4:])
-		answer(wm)
+		answer(wc.client, wm)
 	}
 }
 
-func CloseWaddellConn() {
-	log.Debugf("Closing WaddellConn")
-	WaddellConn.Close()
-	log.Debugf("Closed WaddellConn")
-	WaddellConn = nil
-	Wc = nil
+func CloseWaddellConn(waddellAddr string) {
+	wc := WaddellConns[waddellAddr]
+	if wc != nil {
+		log.Debugf("Closing WaddellConn")
+		wc.conn.Close()
+		log.Debugf("Closed WaddellConn")
+		delete(WaddellConns, waddellAddr)
+		wc = nil
+	}
 }
 
-func answer(wm *waddell.Message) {
+func answer(wc *waddell.Client, wm *waddell.Message) {
 	peersMutex.Lock()
 	defer peersMutex.Unlock()
 	p := peers[wm.From]
@@ -225,10 +219,10 @@ func answer(wm *waddell.Message) {
 		}
 		peers[wm.From] = p
 	}
-	p.answer(wm)
+	p.answer(wc, wm)
 }
 
-func (p *Peer) answer(wm *waddell.Message) {
+func (p *Peer) answer(wc *waddell.Client, wm *waddell.Message) {
 	p.traversalsMutex.Lock()
 	defer p.traversalsMutex.Unlock()
 	msg := message(wm.Body)
@@ -246,7 +240,7 @@ func (p *Peer) answer(wm *waddell.Message) {
 					return
 				}
 				log.Debugf("Sending %s", msgOut)
-				Wc.SendPieces(p.id, idToBytes(traversalId), []byte(msgOut))
+				wc.SendPieces(p.id, idToBytes(traversalId), []byte(msgOut))
 			}
 		}()
 

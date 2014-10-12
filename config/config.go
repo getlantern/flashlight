@@ -28,7 +28,6 @@ type Config struct {
 	Country       string
 	CpuProfile    string
 	MemProfile    string
-	WaddellAddr   string
 	Server        *server.ServerConfig
 	Client        *client.ClientConfig
 	filename      string
@@ -89,7 +88,7 @@ func (orig *Config) ApplyFlags() *Config {
 		case "server":
 			updated.Server.AdvertisedHost = *advertisedHost
 		case "waddelladdr":
-			updated.WaddellAddr = *waddelladdr
+			updated.Server.WaddellAddr = *waddelladdr
 		}
 	})
 
