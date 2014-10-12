@@ -19,7 +19,6 @@ import (
 	"github.com/getlantern/go-igdman/igdman"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/keyman"
-	"github.com/getlantern/waddell"
 )
 
 const (
@@ -68,12 +67,9 @@ type Server struct {
 	StatReporter               *statreporter.Reporter // optional reporter of stats
 	StatServer                 *statserver.Server     // optional server of stats
 
-	host        string
-	waddellAddr string
-	waddellConn net.Conn
-	wc          *waddell.Client
-	cfg         *ServerConfig
-	cfgMutex    sync.Mutex
+	host     string
+	cfg      *ServerConfig
+	cfgMutex sync.Mutex
 }
 
 func (server *Server) Configure(newCfg *ServerConfig) {
@@ -109,20 +105,6 @@ func (server *Server) Configure(newCfg *ServerConfig) {
 				os.Exit(PortmapFailure)
 			}
 			log.Debugf("Mapped new external port %d", newCfg.Portmap)
-		}
-	}
-
-	if oldCfg == nil || newCfg.WaddellAddr != oldCfg.WaddellAddr {
-		log.Debugf("Waddell settings changed")
-		// Waddell settings changed
-		if server.waddellConn != nil {
-			log.Debugf("Closing old waddell connection")
-			server.stopAcceptingNATTraversals()
-		}
-
-		server.waddellAddr = newCfg.WaddellAddr
-		if server.waddellAddr != "" {
-			go server.acceptNATTraversals()
 		}
 	}
 
