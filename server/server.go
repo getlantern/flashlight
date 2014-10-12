@@ -117,6 +117,7 @@ func (server *Server) Configure(newCfg *ServerConfig) {
 		if server.wc != nil {
 			log.Debugf("Closing old waddell connection")
 			nattraversal.CloseWaddellConn(oldCfg.WaddellAddr)
+			server.wc = nil
 		}
 
 		server.waddellAddr = newCfg.WaddellAddr
