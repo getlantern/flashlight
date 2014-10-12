@@ -2,6 +2,7 @@ package nattraversal
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 	"math/rand"
 	"net"
@@ -18,9 +19,10 @@ const (
 )
 
 const (
-	MAX_MESSAGE_SIZE = 4096
-	READY            = "READY"
-	TIMEOUT          = 15 * time.Second
+	MaxMessageSize    = 4096
+	NumUDPTestPackets = 10
+	Ready             = "Ready"
+	Timeout           = 15 * time.Second
 )
 
 type Peers map[waddell.PeerId]*Peer
@@ -61,7 +63,7 @@ var (
 	peers        Peers
 	peersMutex   sync.Mutex
 	debugOut     io.Writer
-	serverReady  = make(chan bool, 10)
+	serverReady  = make(chan bool, NumUDPTestPackets)
 )
 
 func init() {
@@ -132,7 +134,7 @@ func sendMessages(wc *WaddellConn, t *natty.Traversal, peerId waddell.PeerId,
 
 func receiveMessages(wc *WaddellConn, t *natty.Traversal,
 	traversalId uint32) {
-	b := make([]byte, MAX_MESSAGE_SIZE+waddell.WADDELL_OVERHEAD)
+	b := make([]byte, MaxMessageSize+waddell.WADDELL_OVERHEAD)
 	for {
 		wm, err := wc.client.Receive(b)
 		if err != nil {
@@ -145,7 +147,7 @@ func receiveMessages(wc *WaddellConn, t *natty.Traversal,
 		}
 		log.Debugf("Received: %s", msg.getData())
 		msgString := string(msg.getData())
-		if READY == msgString {
+		if Ready == msgString {
 			// Server's ready!
 			serverReady <- true
 		} else {
@@ -172,12 +174,61 @@ func sendOffer(waddellAddr string, peerId waddell.PeerId) {
 	go sendMessages(wc, t, peerId, traversalId)
 	go receiveMessages(wc, t, traversalId)
 
-	ft, err := t.FiveTupleTimeout(TIMEOUT)
+	ft, err := t.FiveTupleTimeout(Timeout)
 	if err != nil {
 		log.Fatalf("Unable to offer: %s", err)
 	}
 	log.Debugf("Got five tuple: %s", ft)
+	if <-serverReady {
+		writeUDP(ft)
+	}
+}
 
+func writeUDP(ft *natty.FiveTuple) {
+	local, remote, err := ft.UDPAddrs()
+	if err != nil {
+		log.Fatalf("Unable to resolve UDP addresses: %s", err)
+	}
+	conn, err := net.DialUDP("udp", local, remote)
+	if err != nil {
+		log.Fatalf("Unable to dial UDP: %s", err)
+	}
+	for i := 0; i < NumUDPTestPackets; i++ {
+		msg := fmt.Sprintf("Hello from %s to %s", ft.Local, ft.Remote)
+		log.Debugf("Sending UDP message: %s", msg)
+		_, err := conn.Write([]byte(msg))
+		if err != nil {
+			log.Fatalf("Offerer unable to write to UDP: %s", err)
+		}
+		time.Sleep(1 * time.Second)
+	}
+	conn.Close()
+}
+
+func readUDP(wc *waddell.Client, peerId waddell.PeerId, traversalId uint32, ft *natty.FiveTuple) {
+	local, _, err := ft.UDPAddrs()
+	if err != nil {
+		log.Fatalf("Unable to resolve UDP addresses: %s", err)
+	}
+	conn, err := net.ListenUDP("udp", local)
+	if err != nil {
+		log.Fatalf("Unable to listen on UDP: %s", err)
+	}
+	log.Debugf("Listening for UDP packets at: %s", local)
+	notifyClientOfServerReady(wc, peerId, traversalId)
+	b := make([]byte, 1024)
+	for {
+		n, addr, err := conn.ReadFrom(b)
+		if err != nil {
+			log.Fatalf("Unable to read from UDP: %s", err)
+		}
+		msg := string(b[:n])
+		log.Debugf("Got UDP message from %s: '%s'", addr, msg)
+	}
+}
+
+func notifyClientOfServerReady(wc *waddell.Client, peerId waddell.PeerId, traversalId uint32) {
+	wc.SendPieces(peerId, idToBytes(traversalId), []byte(Ready))
 }
 
 func ReceiveOffers(waddellAddr string) {
@@ -257,14 +308,14 @@ func (p *Peer) answer(wc *waddell.Client, wm *waddell.Message) {
 				delete(p.traversals, traversalId)
 			}()
 
-			ft, err := t.FiveTupleTimeout(TIMEOUT)
+			ft, err := t.FiveTupleTimeout(Timeout)
 			if err != nil {
 				log.Debugf("Unable to answer traversal %d: %s", traversalId, err)
 				return
 			}
 
 			log.Debugf("Got five tuple: %s", ft)
-			//go readUDP(p.id, traversalId, ft)
+			go readUDP(wc, p.id, traversalId, ft)
 		}()
 		p.traversals[traversalId] = t
 	}
