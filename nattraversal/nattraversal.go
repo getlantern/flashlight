@@ -87,10 +87,11 @@ func ConnectToWaddell(waddellAddr string) (err error, wc *WaddellConn) {
 		log.Errorf("Unable to connect to waddell: %s", err)
 	} else {
 		log.Debugf("Connected to Waddell!!! Id is: %s", client.ID())
-		WaddellConns[waddellAddr] = &WaddellConn{
+		wc = &WaddellConn{
 			client: client,
 			conn:   conn,
 		}
+		WaddellConns[waddellAddr] = wc
 	}
 	return
 }
@@ -179,8 +180,12 @@ func sendOffer(waddellAddr string, peerId waddell.PeerId) {
 
 }
 
-func ReceiveOffers(wc *WaddellConn) {
+func ReceiveOffers(waddellAddr string) {
 	for {
+		wc := WaddellConns[waddellAddr]
+		if wc == nil {
+			continue
+		}
 		b := make([]byte, MaxWaddellMessageSize+waddell.WADDELL_OVERHEAD)
 		wm, err := wc.client.Receive(b)
 		if err != nil {
