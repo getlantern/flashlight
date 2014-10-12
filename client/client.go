@@ -10,6 +10,7 @@ import (
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
+	"github.com/getlantern/flashlight/nattraversal"
 )
 
 const (
@@ -92,6 +93,10 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 		for _, server := range client.servers {
 			server.close()
 		}
+	}
+
+	if nattraversal.Wc != nil {
+		nattraversal.CheckPeersList(&client.cfg.Peers)
 	}
 
 	// Configure servers
