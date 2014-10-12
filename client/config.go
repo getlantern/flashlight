@@ -4,6 +4,8 @@ import (
 	"net"
 	"sort"
 	"time"
+
+	"github.com/getlantern/flashlight/waddell"
 )
 
 // ClientConfig captures configuration information for a Client
@@ -11,6 +13,7 @@ type ClientConfig struct {
 	DumpHeaders    bool // whether or not to dump headers of requests and responses
 	Servers        []*ServerInfo
 	MasqueradeSets map[string][]*Masquerade
+	Peers          []waddell.PeerConn
 }
 
 // ServerInfo captures configuration information for an upstream server
