@@ -33,7 +33,7 @@ type Peer struct {
 	traversalsMutex sync.Mutex
 }
 
-type PeerConn struct {
+type PeerConfig struct {
 	Id          string
 	WaddellAddr string
 }
@@ -98,7 +98,7 @@ func ConnectToWaddell(waddellAddr string) (err error, wc *WaddellConn) {
 	return
 }
 
-func CheckPeersList(configPeers *[]PeerConn) {
+func CheckPeersList(configPeers *[]PeerConfig) {
 	for _, peer := range *configPeers {
 		peerId, err := waddell.PeerIdFromString(peer.Id)
 		if err != nil {
