@@ -10,7 +10,7 @@ import (
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
-	"github.com/getlantern/flashlight/nattraversal"
+	ntrv "github.com/getlantern/flashlight/nattraversal"
 )
 
 const (
@@ -95,7 +95,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 		}
 	}
 
-	nattraversal.CheckPeersList(&client.cfg.Peers)
+	ntrv.CheckPeersList(&client.cfg.Peers)
 
 	// Configure servers
 	client.servers = make([]*server, len(cfg.Servers))

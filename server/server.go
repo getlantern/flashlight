@@ -14,7 +14,7 @@ import (
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
-	"github.com/getlantern/flashlight/nattraversal"
+	ntrv "github.com/getlantern/flashlight/nattraversal"
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/statserver"
 	"github.com/getlantern/go-igdman/igdman"
@@ -70,7 +70,7 @@ type Server struct {
 
 	host        string
 	waddellAddr string
-	wc          *nattraversal.WaddellConn
+	wc          *ntrv.WaddellConn
 	cfg         *ServerConfig
 	cfgMutex    sync.Mutex
 }
@@ -116,17 +116,17 @@ func (server *Server) Configure(newCfg *ServerConfig) {
 		// Waddell settings changed
 		if server.wc != nil {
 			log.Debugf("Closing old waddell connection")
-			nattraversal.CloseWaddellConn(oldCfg.WaddellAddr)
+			ntrv.CloseWaddellConn(oldCfg.WaddellAddr)
 			server.wc = nil
 		}
 
 		server.waddellAddr = newCfg.WaddellAddr
 		if server.waddellAddr != "" {
-			wc, _ := nattraversal.ConnectToWaddell(server.waddellAddr)
+			wc, _ := ntrv.ConnectToWaddell(server.waddellAddr)
 			if wc != nil {
 				server.wc = wc
 				log.Debugf("Starting to receive offers")
-				go nattraversal.ReceiveOffers(server.waddellAddr)
+				go ntrv.ReceiveOffers(server.waddellAddr)
 			}
 		}
 	}
