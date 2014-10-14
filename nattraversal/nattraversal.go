@@ -78,7 +78,7 @@ func idToBytes(id uint32) []byte {
 	return b
 }
 
-func ConnectToWaddell(waddellAddr string) (err error, wc *WaddellConn) {
+func ConnectToWaddell(waddellAddr string) (wc *WaddellConn, err error) {
 	conn, err := net.DialTimeout("tcp", waddellAddr, 20*time.Second)
 	if err != nil {
 		return

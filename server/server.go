@@ -122,7 +122,7 @@ func (server *Server) Configure(newCfg *ServerConfig) {
 
 		server.waddellAddr = newCfg.WaddellAddr
 		if server.waddellAddr != "" {
-			_, wc := nattraversal.ConnectToWaddell(server.waddellAddr)
+			wc, _ := nattraversal.ConnectToWaddell(server.waddellAddr)
 			if wc != nil {
 				server.wc = wc
 				log.Debugf("Starting to receive offers")
