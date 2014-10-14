@@ -85,11 +85,9 @@ func (server *server) close() {
 
 func (server *server) nextMasquerade() *Masquerade {
 	if server.masquerades == nil {
-		log.Debugf("No masquerade")
 		return nil
 	}
 	masquerade := server.masquerades.nextVerified()
-	log.Debugf("Using masquerade %s", masquerade.Domain)
 	return masquerade
 }
 
