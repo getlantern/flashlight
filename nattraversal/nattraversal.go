@@ -43,32 +43,31 @@ type WaddellConn struct {
 	conn   net.Conn
 }
 
-type message []byte
-
-func (msg message) setTraversalId(id uint32) {
-	endianness.PutUint32(msg[:4], id)
-}
-
-func (msg message) getTraversalId() uint32 {
-	return endianness.Uint32(msg[:4])
-}
-
-func (msg message) getData() []byte {
-	return msg[4:]
+type TraversalOutcome struct {
+	peerId                        waddell.PeerId
+	answererOnline                bool          `json:",omitempty"`
+	answererGot5Tuple             bool          `json:",omitempty"`
+	offererGot5Tuple              bool          `json:",omitempty"`
+	traversalSucceeded            bool          `json:",omitempty"`
+	connectionSucceeded           bool          `json:",omitempty"`
+	traversalStarted              time.Time     `json:",omitempty"`
+	durationOfSuccessfulTraversal time.Duration `json:",omitempty"`
 }
 
 var (
-	endianness   = binary.LittleEndian
-	WaddellConns map[string]*WaddellConn
-	peers        Peers
-	peersMutex   sync.Mutex
-	debugOut     io.Writer
-	serverReady  = make(chan bool, NumUDPTestPackets)
+	endianness     = binary.LittleEndian
+	WaddellConns   map[string]*WaddellConn
+	peers          Peers
+	peersMutex     sync.Mutex
+	traversalStats map[uint32]*TraversalOutcome
+	debugOut       io.Writer
+	serverReady    = make(chan bool, NumUDPTestPackets)
 )
 
 func init() {
 	WaddellConns = make(map[string]*WaddellConn)
 	peers = make(map[waddell.PeerId]*Peer)
+	traversalStats = make(map[uint32]*TraversalOutcome)
 	//debugOut = os.Stderr
 }
 
@@ -106,6 +105,10 @@ func CheckPeersList(configPeers *[]PeerConfig) {
 				peer.Id, err)
 		}
 
+		/* check if we are already connected to this peer
+		 * on another waddell server to avoid opening a
+		 * redundant connection
+		 */
 		if peers[peerId] != nil {
 			continue
 		}
@@ -140,14 +143,19 @@ func receiveMessages(wc *WaddellConn, t *natty.Traversal,
 		if err != nil {
 			log.Fatalf("Unable to read message from waddell: %s", err)
 		}
-		msg := message(wm.Body)
+		msg := Message(wm.Body)
 		if msg.getTraversalId() != traversalId {
 			log.Debugf("Got message for unknown traversal %d, skipping", msg.getTraversalId())
 			continue
 		}
+
 		log.Debugf("Received: %s", msg.getData())
+		traversalStats[traversalId].answererOnline = true
+
 		msgString := string(msg.getData())
 		if Ready == msgString {
+			traversalStats[traversalId].answererGot5Tuple = true
+			traversalStats[traversalId].traversalSucceeded = true
 			// Server's ready!
 			serverReady <- true
 		} else {
@@ -157,6 +165,7 @@ func receiveMessages(wc *WaddellConn, t *natty.Traversal,
 }
 
 func sendOffer(waddellAddr string, peerId waddell.PeerId) {
+
 	wc := WaddellConns[waddellAddr]
 
 	traversalId := uint32(rand.Int31())
@@ -171,6 +180,14 @@ func sendOffer(waddellAddr string, peerId waddell.PeerId) {
 	p.traversals[traversalId] = t
 	peers[peerId] = p
 
+	/* create traversal result struct
+	 * to send to statshub
+	 */
+	traversalStats[traversalId] = &TraversalOutcome{
+		peerId:           wc.client.ID(),
+		traversalStarted: time.Now(),
+	}
+
 	go sendMessages(wc, t, peerId, traversalId)
 	go receiveMessages(wc, t, traversalId)
 
@@ -178,8 +195,13 @@ func sendOffer(waddellAddr string, peerId waddell.PeerId) {
 	if err != nil {
 		log.Fatalf("Unable to offer: %s", err)
 	}
+
 	log.Debugf("Got five tuple: %s", ft)
+
+	traversalStats[traversalId].offererGot5Tuple = true
+
 	if <-serverReady {
+		traversalStats[traversalId].traversalSucceeded = true
 		writeUDP(ft)
 	}
 }
@@ -205,6 +227,12 @@ func writeUDP(ft *natty.FiveTuple) {
 	conn.Close()
 }
 
+func (to *TraversalOutcome) recordSuccessfulTraversal() {
+	to.connectionSucceeded = true
+	to.durationOfSuccessfulTraversal =
+		time.Now().Sub(to.traversalStarted)
+}
+
 func readUDP(wc *waddell.Client, peerId waddell.PeerId, traversalId uint32, ft *natty.FiveTuple) {
 	local, _, err := ft.UDPAddrs()
 	if err != nil {
@@ -224,6 +252,12 @@ func readUDP(wc *waddell.Client, peerId waddell.PeerId, traversalId uint32, ft *
 		}
 		msg := string(b[:n])
 		log.Debugf("Got UDP message from %s: '%s'", addr, msg)
+
+		/* signal back to client here our country
+		 * send message back to offerer
+		 * that we received a UDP packet
+		 */
+
 	}
 }
 
@@ -281,9 +315,10 @@ func answer(wc *waddell.Client, wm *waddell.Message) {
 func (p *Peer) answer(wc *waddell.Client, wm *waddell.Message) {
 	p.traversalsMutex.Lock()
 	defer p.traversalsMutex.Unlock()
-	msg := message(wm.Body)
+	msg := Message(wm.Body)
 	traversalId := msg.getTraversalId()
 	t := p.traversals[traversalId]
+
 	if t == nil {
 		log.Debugf("Answering traversal: %d", traversalId)
 		// Set up a new Natty traversal
