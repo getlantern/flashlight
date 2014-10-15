@@ -57,13 +57,23 @@ func (reporter *Reporter) postStats(jsonBytes []byte) error {
 	return nil
 }
 
-func (reporter *Reporter) postTraversalStats(to *nattraversal.TraversalOutcome) error {
+func (reporter *Reporter) postTraversalStats(
+	to *nattraversal.TraversalOutcome) error {
 	var buffer bytes.Buffer
 	enc := json.NewEncoder(&buffer)
-	if err := enc.Encode(to); err != nil {
-		return fmt.Errorf("Unable to decode traversal outcome: %s", err)
+
+	report := map[string]interface{}{
+		"dims": map[string]string{
+			"offererCountry":  to.OffererCountry,
+			"answererCountry": to.AnswererCountry,
+			"operatingSystem": "",
+		},
+		"increments": to,
 	}
 
+	if err := enc.Encode(report); err != nil {
+		return fmt.Errorf("Unable to decode traversal outcome: %s", err)
+	}
 	return reporter.postStats(buffer.Bytes())
 }
 

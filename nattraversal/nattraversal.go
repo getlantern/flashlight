@@ -44,13 +44,15 @@ type WaddellConn struct {
 }
 
 type TraversalOutcome struct {
-	peerId                        waddell.PeerId
-	answererOnline                bool          `json:",omitempty"`
-	answererGot5Tuple             bool          `json:",omitempty"`
-	offererGot5Tuple              bool          `json:",omitempty"`
-	traversalSucceeded            bool          `json:",omitempty"`
-	connectionSucceeded           bool          `json:",omitempty"`
-	traversalStarted              time.Time     `json:",omitempty"`
+	PeerIds                       [2]waddell.PeerId
+	OffererCountry                string `json:"-"`
+	AnswererCountry               string `json:"-"`
+	answererOnline                bool
+	answererGot5Tuple             bool
+	offererGot5Tuple              bool
+	traversalSucceeded            bool
+	connectionSucceeded           bool
+	traversalStarted              time.Time
 	durationOfSuccessfulTraversal time.Duration `json:",omitempty"`
 }
 
@@ -184,7 +186,7 @@ func sendOffer(waddellAddr string, peerId waddell.PeerId) {
 	 * to send to statshub
 	 */
 	traversalStats[traversalId] = &TraversalOutcome{
-		peerId:           wc.client.ID(),
+		PeerIds:          [2]waddell.PeerId{peerId, wc.client.ID()},
 		traversalStarted: time.Now(),
 	}
 
