@@ -13,13 +13,14 @@ import (
 	"time"
 
 	"github.com/getlantern/enproxy"
-	"github.com/getlantern/flashlight/log"
-	ntrv "github.com/getlantern/flashlight/nattraversal"
+	"github.com/getlantern/flashlight/nattest"
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/statserver"
 	"github.com/getlantern/go-igdman/igdman"
+	log "github.com/getlantern/golog"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/keyman"
+	"github.com/getlantern/nattywad"
 )
 
 const (
@@ -68,11 +69,10 @@ type Server struct {
 	StatReporter               *statreporter.Reporter // optional reporter of stats
 	StatServer                 *statserver.Server     // optional server of stats
 
-	host        string
-	waddellAddr string
-	wc          *ntrv.WaddellConn
-	cfg         *ServerConfig
-	cfgMutex    sync.Mutex
+	host           string
+	nattywadServer *nattywad.Server
+	cfg            *ServerConfig
+	cfgMutex       sync.Mutex
 }
 
 func (server *Server) Configure(newCfg *ServerConfig) {
@@ -111,24 +111,20 @@ func (server *Server) Configure(newCfg *ServerConfig) {
 		}
 	}
 
-	if oldCfg == nil || newCfg.WaddellAddr != oldCfg.WaddellAddr {
-		log.Debugf("Waddell settings changed")
-		// Waddell settings changed
-		if server.wc != nil {
-			log.Debugf("Closing old waddell connection")
-			ntrv.CloseWaddellConn(oldCfg.WaddellAddr)
-			server.wc = nil
-		}
-
-		server.waddellAddr = newCfg.WaddellAddr
-		if server.waddellAddr != "" {
-			wc, _ := ntrv.ConnectToWaddell(server.waddellAddr)
-			if wc != nil {
-				server.wc = wc
-				log.Debugf("Starting to receive offers")
-				go ntrv.ReceiveOffers(server.waddellAddr)
+	if newCfg.WaddellAddr != "" || server.nattywadServer != nil {
+		if server.nattywadServer == nil {
+			server.nattywadServer = &nattywad.Server{
+				OnFiveTuple: func(local *net.UDPAddr, remote *net.UDPAddr) bool {
+					err := nattest.Serve(local)
+					if err != nil {
+						log.Error(err.Error())
+						return false
+					}
+					return true
+				},
 			}
 		}
+		server.nattywadServer.Configure(newCfg.WaddellAddr)
 	}
 
 	server.cfg = newCfg

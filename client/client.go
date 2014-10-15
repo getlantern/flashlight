@@ -2,6 +2,7 @@ package client
 
 import (
 	"math/rand"
+	"net"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -10,7 +11,8 @@ import (
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
-	ntrv "github.com/getlantern/flashlight/nattraversal"
+	"github.com/getlantern/flashlight/nattest"
+	"github.com/getlantern/nattywad"
 )
 
 const (
@@ -41,6 +43,7 @@ type Client struct {
 	cfgMutex           sync.RWMutex
 	servers            []*server
 	totalServerWeights int
+	nattywadClient     *nattywad.Client
 }
 
 // ListenAndServe makes the client listen for HTTP connections
@@ -77,8 +80,6 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 		log.Debugf("Client configuration changed")
 	}
 
-	client.cfg = cfg
-
 	verifiedSets := make(map[string]*verifiedMasqueradeSet)
 
 	for key, masqueradeSet := range cfg.MasqueradeSets {
@@ -94,8 +95,6 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 			server.close()
 		}
 	}
-
-	ntrv.CheckPeersList(&client.cfg.Peers)
 
 	// Configure servers
 	client.servers = make([]*server, len(cfg.Servers))
@@ -117,6 +116,24 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	for _, server := range client.servers {
 		client.totalServerWeights = client.totalServerWeights + server.info.Weight
 	}
+
+	if client.nattywadClient == nil {
+		client.nattywadClient = &nattywad.Client{
+			DialWaddell: func(addr string) (net.Conn, error) {
+				// TODO: dial with enproxy
+				// server := client.randomServerForQOS(10)
+				// return server.dialWithEnproxy("tcp", addr)
+				return net.DialTimeout("tcp", addr, 20*time.Second)
+			},
+			OnFiveTuple: func(local *net.UDPAddr, remote *net.UDPAddr) {
+				nattest.Ping(local, remote)
+			},
+		}
+	}
+
+	go client.nattywadClient.Configure(cfg.Peers)
+
+	client.cfg = cfg
 }
 
 // highestQos finds the server with the highest reported quality of service for
@@ -150,8 +167,10 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 // value are considered for inclusion.  However, if no servers meet the QOS
 // requirement, the last server in the list will be used by default.
 func (client *Client) randomServer(req *http.Request) *server {
-	targetQOS := client.targetQOS(req)
+	return client.randomServerForQOS(targetQOS(req))
+}
 
+func (client *Client) randomServerForQOS(targetQOS int) *server {
 	servers, totalServerWeights := client.getServers()
 
 	// Pick a random server using a target value between 0 and the total server weights
@@ -180,7 +199,7 @@ func (client *Client) randomServer(req *http.Request) *server {
 
 // targetQOS determines the target quality of service given the X-Flashlight-QOS
 // header if available, else returns 0.
-func (client *Client) targetQOS(req *http.Request) int {
+func targetQOS(req *http.Request) int {
 	requestedQOS := req.Header.Get(X_FLASHLIGHT_QOS)
 	if requestedQOS != "" {
 		rqos, err := strconv.Atoi(requestedQOS)
