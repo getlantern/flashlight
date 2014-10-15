@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/log"
+	//"github.com/getlantern/flashlight/nattraversal"
 )
 
 const (
@@ -34,7 +35,7 @@ func (reporter *Reporter) Start() {
 		waitTime := nextInterval.Sub(time.Now())
 		time.Sleep(waitTime)
 		bytesGiven := atomic.SwapInt64(&reporter.bytesGiven, 0)
-		err := reporter.postStats(bytesGiven)
+		err := reporter.postGiveStats(bytesGiven)
 		if err != nil {
 			log.Errorf("Error on posting stats: %s", err)
 		} else {
@@ -43,7 +44,40 @@ func (reporter *Reporter) Start() {
 	}
 }
 
-func (reporter *Reporter) postStats(bytesGiven int64) error {
+func (reporter *Reporter) postStats(jsonBytes []byte) error {
+	url := fmt.Sprintf(STATSHUB_URL_TEMPLATE, reporter.InstanceId)
+	resp, err := http.Post(url, "application/json", bytes.NewReader(jsonBytes))
+	if err != nil {
+		return fmt.Errorf("Unable to post stats to statshub: %s", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Unexpected response status posting stats to statshub: %d", resp.StatusCode)
+	}
+	return nil
+}
+
+// func (reporter *Reporter) postTraversalStats(
+// 	to *nattraversal.TraversalOutcome) error {
+// 	var buffer bytes.Buffer
+// 	enc := json.NewEncoder(&buffer)
+
+// 	report := map[string]interface{}{
+// 		"dims": map[string]string{
+// 			"offererCountry":  to.OffererCountry,
+// 			"answererCountry": to.AnswererCountry,
+// 			"operatingSystem": "",
+// 		},
+// 		"increments": to,
+// 	}
+
+// 	if err := enc.Encode(report); err != nil {
+// 		return fmt.Errorf("Unable to decode traversal outcome: %s", err)
+// 	}
+// 	return reporter.postStats(buffer.Bytes())
+// }
+
+func (reporter *Reporter) postGiveStats(bytesGiven int64) error {
 	report := map[string]interface{}{
 		"dims": map[string]string{
 			"country": reporter.Country,
@@ -59,14 +93,5 @@ func (reporter *Reporter) postStats(bytesGiven int64) error {
 		return fmt.Errorf("Unable to marshal json for stats: %s", err)
 	}
 
-	url := fmt.Sprintf(STATSHUB_URL_TEMPLATE, reporter.InstanceId)
-	resp, err := http.Post(url, "application/json", bytes.NewReader(jsonBytes))
-	if err != nil {
-		return fmt.Errorf("Unable to post stats to statshub: %s", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("Unexpected response status posting stats to statshub: %d", resp.StatusCode)
-	}
-	return nil
+	return reporter.postStats(jsonBytes)
 }
