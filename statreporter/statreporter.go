@@ -8,7 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/getlantern/flashlight/log"
+	log "github.com/getlantern/golog"
 	//"github.com/getlantern/flashlight/nattraversal"
 )
 

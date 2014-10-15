@@ -10,8 +10,8 @@ import (
 
 	"github.com/getlantern/connpool"
 	"github.com/getlantern/enproxy"
-	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/proxy"
+	log "github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
 	"net/http/httputil"
 

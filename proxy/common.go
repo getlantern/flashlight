@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/getlantern/flashlight/log"
+	log "github.com/getlantern/golog"
 )
 
 // ProxyConfig encapsulates common proxy configuration

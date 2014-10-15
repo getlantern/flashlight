@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/getlantern/eventsource"
-	"github.com/getlantern/flashlight/log"
+	log "github.com/getlantern/golog"
 )
 
 // Server provides an SSE server that publishes stat updates for peers.

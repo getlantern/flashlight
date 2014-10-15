@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/getlantern/flashlight/log"
+	log "github.com/getlantern/golog"
 )
 
 // On windows, make sure that flashlight stops running if its parent

@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/getlantern/enproxy"
-	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/nattest"
+	log "github.com/getlantern/golog"
 	"github.com/getlantern/nattywad"
 )
 
