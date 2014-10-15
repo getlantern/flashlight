@@ -21,6 +21,8 @@ const (
 	REVERSE_PROXY_FLUSH_INTERVAL = 250 * time.Millisecond
 
 	X_FLASHLIGHT_QOS = "X-Flashlight-QOS"
+
+	HighQOS = 10
 )
 
 func init() {
@@ -120,10 +122,10 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	if client.nattywadClient == nil {
 		client.nattywadClient = &nattywad.Client{
 			DialWaddell: func(addr string) (net.Conn, error) {
-				// TODO: dial with enproxy
-				// server := client.randomServerForQOS(10)
-				// return server.dialWithEnproxy("tcp", addr)
-				return net.DialTimeout("tcp", addr, 20*time.Second)
+				// Clients always connect to waddell via a proxy to prevent the
+				// waddell connection from being blocked by censors.
+				server := client.randomServerForQOS(HighQOS)
+				return server.dialWithEnproxy("tcp", addr)
 			},
 			OnFiveTuple: func(local *net.UDPAddr, remote *net.UDPAddr) {
 				nattest.Ping(local, remote)
