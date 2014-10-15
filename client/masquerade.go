@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-
-	log "github.com/getlantern/golog"
 )
 
 // verifiedMasqueradeSet represents a set of Masquerade configurations.

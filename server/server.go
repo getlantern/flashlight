@@ -17,7 +17,7 @@ import (
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/statserver"
 	"github.com/getlantern/go-igdman/igdman"
-	log "github.com/getlantern/golog"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/nattywad"
@@ -28,6 +28,8 @@ const (
 )
 
 var (
+	log = golog.LoggerFor("flashlight.nattest")
+
 	dialTimeout     = 10 * time.Second
 	httpIdleTimeout = 70 * time.Second
 

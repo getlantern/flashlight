@@ -8,13 +8,17 @@ import (
 	"sync/atomic"
 	"time"
 
-	log "github.com/getlantern/golog"
+	"github.com/getlantern/golog"
 	//"github.com/getlantern/flashlight/nattraversal"
 )
 
 const (
 	STATSHUB_URL_TEMPLATE = "https://pure-journey-3547.herokuapp.com/stats/%s"
 	REPORT_STATS_INTERVAL = 20 * time.Second
+)
+
+var (
+	log = golog.LoggerFor("flashlight.nattest")
 )
 
 type Reporter struct {

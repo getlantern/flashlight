@@ -19,7 +19,7 @@ import (
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/statserver"
 	"github.com/getlantern/flashlight/util"
-	log "github.com/getlantern/golog"
+	"github.com/getlantern/golog"
 )
 
 const (
@@ -29,6 +29,8 @@ const (
 
 var (
 	CLOUD_CONFIG_POLL_INTERVAL = 1 * time.Minute
+
+	log = golog.LoggerFor("flashlight")
 
 	// Command-line Flags
 	help      = flag.Bool("help", false, "Get usage help")

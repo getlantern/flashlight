@@ -6,7 +6,11 @@ import (
 	"sync"
 
 	"github.com/getlantern/eventsource"
-	log "github.com/getlantern/golog"
+	"github.com/getlantern/golog"
+)
+
+var (
+	log = golog.LoggerFor("flashlight.statserver")
 )
 
 // Server provides an SSE server that publishes stat updates for peers.

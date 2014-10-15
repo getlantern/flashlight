@@ -7,11 +7,15 @@ import (
 	"net"
 	"time"
 
-	log "github.com/getlantern/golog"
+	"github.com/getlantern/golog"
 )
 
 const (
 	NumUDPTestPackets = 10
+)
+
+var (
+	log = golog.LoggerFor("flashlight.nattest")
 )
 
 func Ping(local *net.UDPAddr, remote *net.UDPAddr) {

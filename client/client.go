@@ -11,7 +11,7 @@ import (
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/nattest"
-	log "github.com/getlantern/golog"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/nattywad"
 )
 
@@ -23,6 +23,10 @@ const (
 	X_FLASHLIGHT_QOS = "X-Flashlight-QOS"
 
 	HighQOS = 10
+)
+
+var (
+	log = golog.LoggerFor("flashlight.client")
 )
 
 func init() {

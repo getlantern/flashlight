@@ -9,13 +9,17 @@ import (
 
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/server"
-	log "github.com/getlantern/golog"
+	"github.com/getlantern/golog"
 	"gopkg.in/getlantern/deepcopy.v1"
 	"gopkg.in/getlantern/yaml.v1"
 )
 
 const (
 	CF = "cloudflare"
+)
+
+var (
+	log = golog.LoggerFor("flashlight.config")
 )
 
 type Config struct {

@@ -2,8 +2,6 @@ package main
 
 import (
 	"os"
-
-	log "github.com/getlantern/golog"
 )
 
 // On windows, make sure that flashlight stops running if its parent
