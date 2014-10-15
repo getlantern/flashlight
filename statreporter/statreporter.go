@@ -63,8 +63,8 @@ func (reporter *Reporter) postTraversalStats(to *nattraversal.TraversalOutcome) 
 	if err := enc.Encode(to); err != nil {
 		return fmt.Errorf("Unable to decode traversal outcome: %s", err)
 	}
-	reporter.postStats(buffer.Bytes())
-	return nil
+
+	return reporter.postStats(buffer.Bytes())
 }
 
 func (reporter *Reporter) postGiveStats(bytesGiven int64) error {
