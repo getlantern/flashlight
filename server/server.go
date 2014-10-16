@@ -116,7 +116,7 @@ func (server *Server) Configure(newCfg *ServerConfig) {
 	if newCfg.WaddellAddr != "" || server.nattywadServer != nil {
 		if server.nattywadServer == nil {
 			server.nattywadServer = &nattywad.Server{
-				OnFiveTuple: func(local *net.UDPAddr, remote *net.UDPAddr) bool {
+				OnSuccess: func(local *net.UDPAddr, remote *net.UDPAddr) bool {
 					err := nattest.Serve(local)
 					if err != nil {
 						log.Error(err.Error())

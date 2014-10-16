@@ -131,8 +131,16 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 				server := client.randomServerForQOS(HighQOS)
 				return server.dialWithEnproxy("tcp", addr)
 			},
-			OnFiveTuple: func(local *net.UDPAddr, remote *net.UDPAddr) {
-				nattest.Ping(local, remote)
+			OnSuccess: func(info *nattywad.TraversalInfo) {
+				log.Tracef("Traversal Succeeded: %s", info)
+				log.Tracef("Peer Country: %s", info.Peer.Extras["country"])
+				// TODO: record stats
+				nattest.Ping(info.LocalAddr, info.RemoteAddr)
+			},
+			OnFailure: func(info *nattywad.TraversalInfo) {
+				log.Tracef("Traversal Failed: %s", info)
+				log.Tracef("Peer Country: %s", info.Peer.Extras["country"])
+				// TODO: record stats
 			},
 		}
 	}
