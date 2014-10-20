@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"runtime"
 	"sync/atomic"
 	"time"
 
@@ -27,7 +28,6 @@ type TraversalStats []byte
 type Reporter struct {
 	InstanceId        string // (optional) instanceid under which to report statistics
 	Country           string // (optional) country under which to report statistics
-	OperatingSystem   string // operating system of client reporting stats
 	bytesGiven        int64  // tracks bytes given
 	traversalStats    TraversalStats
 	TraversalOutcomes chan *nattywad.TraversalInfo
@@ -74,6 +74,8 @@ func (reporter *Reporter) postStats(jsonBytes []byte) error {
 
 func (reporter *Reporter) convertTraversal(info *nattywad.TraversalInfo) (stat []byte) {
 
+	bool2int := map[bool]int{true: 1}
+
 	answererCountry := ""
 	if country, ok := info.Peer.Extras["country"]; ok {
 		answererCountry = country.(string)
@@ -83,14 +85,14 @@ func (reporter *Reporter) convertTraversal(info *nattywad.TraversalInfo) (stat [
 		"dims": map[string]string{
 			"answererCountry": answererCountry,
 			"offererCountry":  reporter.Country,
-			"operatingSystem": "",
+			"operatingSystem": runtime.GOOS,
 		},
 		"increments": map[string]interface{}{
-			"answererOnline":             info.ServerRespondedToSignaling,
-			"answererGot5Tuple":          info.ServerGotFiveTuple,
-			"offererGotFiveTuple":        info.OffererGotFiveTuple,
-			"traversalSucceeded":         info.TraversalSucceeded,
-			"connectionSucceeded":        info.ServerConnected,
+			"answererOnline":             bool2int[info.ServerRespondedToSignaling],
+			"answererGot5Tuple":          bool2int[info.ServerGotFiveTuple],
+			"offererGotFiveTuple":        bool2int[info.OffererGotFiveTuple],
+			"traversalSucceeded":         bool2int[info.TraversalSucceeded],
+			"connectionSucceeded":        bool2int[info.ServerConnected],
 			"durationOfSuccessTraversal": info.Duration,
 		},
 	}
