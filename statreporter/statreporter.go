@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	STATSHUB_URL_TEMPLATE = "https://pure-journey-3547.herokuapp.com/stats/%s"
-	REPORT_STATS_INTERVAL = 20 * time.Second
+	STATSHUB_URL_TEMPLATE      = "https://pure-journey-3547.herokuapp.com/stats/%s"
+	REPORT_STATS_INTERVAL      = 20 * time.Second
+	REPORT_TRAVERSALS_INTERVAL = 5 * time.Minute
 )
 
 var (
@@ -118,7 +119,7 @@ func (reporter *Reporter) coalesceTraversalStats() {
 			log.Debugf("logging traversal stat %s", stat)
 			reporter.traversalStats = append(reporter.traversalStats, stat...)
 			if timerCh == nil {
-				timer.Reset(10 * time.Second)
+				timer.Reset(REPORT_TRAVERSALS_INTERVAL)
 				timerCh = timer.C
 			}
 		case <-timerCh:
