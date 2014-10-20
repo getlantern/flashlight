@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/getlantern/golog"
+	"github.com/getlantern/nattywad"
 )
 
 const (
@@ -34,10 +35,10 @@ func Ping(local *net.UDPAddr, remote *net.UDPAddr, record Record) {
 	go func() {
 		for i := 0; i < NumUDPTestPackets; i++ {
 			msg := fmt.Sprintf("Hello from %s to %s", local, remote)
-			log.Debugf("nattest sending UDP message: %s", msg)
+			log.Tracef("nattest sending UDP message: %s", msg)
 			_, err := conn.Write([]byte(msg))
 			if err != nil {
-				log.Errorf("nattest unable to write to UDP: %v", err)
+				log.Debugf("nattest unable to write to UDP: %v", err)
 				return
 			}
 			time.Sleep(time.Second)
@@ -68,6 +69,10 @@ func Ping(local *net.UDPAddr, remote *net.UDPAddr, record Record) {
 	}()
 }
 
+func ConfirmConnectivity(conn *net.UDPAddr) {
+
+}
+
 func Serve(local *net.UDPAddr) error {
 	conn, err := net.ListenUDP("udp", local)
 	if err != nil {
@@ -88,6 +93,12 @@ func Serve(local *net.UDPAddr) error {
 			}
 			msg := string(b[:n])
 			log.Debugf("Got UDP message from %s: '%s'", addr, msg)
+			_, err = conn.Write([]byte(nattywad.ServerReady))
+			if err != nil {
+				log.Debugf("nattest unable to write to UDP: %v", err)
+				return
+			}
+
 		}
 	}()
 	log.Debugf("nattest listening for UDP packets at: %s", local)
