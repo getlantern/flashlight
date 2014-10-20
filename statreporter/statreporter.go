@@ -65,6 +65,7 @@ func (reporter *Reporter) Start() {
 
 func (reporter *Reporter) ListenForTraversals() {
 	reporter.TraversalOutcomes = make(chan *nattywad.TraversalInfo)
+	reporter.traversalStats = make(map[string]*TraversalOutcome)
 	go reporter.coalesceTraversalStats()
 }
 
