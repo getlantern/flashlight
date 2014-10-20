@@ -23,7 +23,16 @@ var (
 	log = golog.LoggerFor("flashlight.nattest")
 )
 
-type TraversalStats []byte
+type TraversalOutcome struct {
+	AnswererOnline                int           `json:answererOnline`
+	AnswererGot5Tuple             int           `json:answererGotFiveTuple`
+	OffererGot5Tuple              int           `json:offererGotFiveTuple`
+	TraversalSucceeded            int           `json:traversalSucceeded`
+	ConnectionSucceeded           int           `json:connectionSucceeded`
+	DurationOfSuccessfulTraversal time.Duration `json:durationOfTraversal`
+}
+
+type TraversalStats map[string]*TraversalOutcome
 
 type Reporter struct {
 	InstanceId        string // (optional) instanceid under which to report statistics
@@ -72,14 +81,10 @@ func (reporter *Reporter) postStats(jsonBytes []byte) error {
 	return nil
 }
 
-func (reporter *Reporter) convertTraversal(info *nattywad.TraversalInfo) (stat []byte) {
+func (reporter *Reporter) postTraversalStat(answererCountry string, outcome *TraversalOutcome) error {
 
-	bool2int := map[bool]int{true: 1}
-
-	answererCountry := ""
-	if country, ok := info.Peer.Extras["country"]; ok {
-		answererCountry = country.(string)
-	}
+	var buffer bytes.Buffer
+	enc := json.NewEncoder(&buffer)
 
 	report := map[string]interface{}{
 		"dims": map[string]string{
@@ -87,20 +92,12 @@ func (reporter *Reporter) convertTraversal(info *nattywad.TraversalInfo) (stat [
 			"offererCountry":  reporter.Country,
 			"operatingSystem": runtime.GOOS,
 		},
-		"increments": map[string]interface{}{
-			"answererOnline":             bool2int[info.ServerRespondedToSignaling],
-			"answererGot5Tuple":          bool2int[info.ServerGotFiveTuple],
-			"offererGotFiveTuple":        bool2int[info.OffererGotFiveTuple],
-			"traversalSucceeded":         bool2int[info.TraversalSucceeded],
-			"connectionSucceeded":        bool2int[info.ServerConnected],
-			"durationOfSuccessTraversal": info.Duration,
-		},
+		"increments": outcome,
 	}
-	stat, err := json.Marshal(report)
-	if err != nil {
-		log.Errorf("Unable to marshal json for stats: %s", err)
+	if err := enc.Encode(report); err != nil {
+		return fmt.Errorf("Unable to decode traversal outcome: %s", err)
 	}
-	return
+	return reporter.postStats(buffer.Bytes())
 }
 
 // coalesceTraversalStats consolidates NAT traversal reporting
@@ -116,17 +113,42 @@ func (reporter *Reporter) coalesceTraversalStats() {
 
 	for {
 		select {
-		case outcome := <-reporter.TraversalOutcomes:
-			stat := reporter.convertTraversal(outcome)
-			log.Debugf("logging traversal stat %s", stat)
-			reporter.traversalStats = append(reporter.traversalStats, stat...)
+		case info := <-reporter.TraversalOutcomes:
+			answererCountry := "xx"
+			if _, ok := info.Peer.Extras["country"]; ok {
+				answererCountry = info.Peer.Extras["country"].(string)
+			}
+			outcome := reporter.traversalStats[answererCountry]
+			if outcome == nil {
+				outcome = &TraversalOutcome{}
+				reporter.traversalStats[answererCountry] = outcome
+			}
+
+			if info.ServerRespondedToSignaling {
+				outcome.AnswererOnline += 1
+			}
+			if info.ServerRespondedToSignaling {
+				outcome.AnswererGot5Tuple += 1
+			}
+
+			if info.ServerConnected {
+				outcome.ConnectionSucceeded += 1
+			}
+
+			if info.TraversalSucceeded {
+				outcome.TraversalSucceeded += 1
+				outcome.DurationOfSuccessfulTraversal += info.Duration
+			}
+
 			if timerCh == nil {
 				timer.Reset(REPORT_TRAVERSALS_INTERVAL)
 				timerCh = timer.C
 			}
 		case <-timerCh:
-			reporter.postStats(reporter.traversalStats)
-			reporter.traversalStats = []byte{}
+			for answererCountry, outcome := range reporter.traversalStats {
+				reporter.postTraversalStat(answererCountry, outcome)
+				reporter.traversalStats[answererCountry] = nil
+			}
 		}
 	}
 }
