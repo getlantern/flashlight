@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/getlantern/golog"
-	//"github.com/getlantern/flashlight/nattraversal"
+	"github.com/getlantern/nattywad"
 )
 
 const (
@@ -21,10 +21,15 @@ var (
 	log = golog.LoggerFor("flashlight.nattest")
 )
 
+type TraversalStats []byte
+
 type Reporter struct {
-	InstanceId string // (optional) instanceid under which to report statistics
-	Country    string // (optional) country under which to report statistics
-	bytesGiven int64  // tracks bytes given
+	InstanceId        string // (optional) instanceid under which to report statistics
+	Country           string // (optional) country under which to report statistics
+	OperatingSystem   string // operating system of client reporting stats
+	bytesGiven        int64  // tracks bytes given
+	traversalStats    TraversalStats
+	TraversalOutcomes chan *nattywad.TraversalInfo
 }
 
 // OnBytesGiven registers the fact that bytes were given (sent or received)
@@ -48,6 +53,11 @@ func (reporter *Reporter) Start() {
 	}
 }
 
+func (reporter *Reporter) ListenForTraversals() {
+	reporter.TraversalOutcomes = make(chan *nattywad.TraversalInfo)
+	go reporter.coalesceTraversalStats()
+}
+
 func (reporter *Reporter) postStats(jsonBytes []byte) error {
 	url := fmt.Sprintf(STATSHUB_URL_TEMPLATE, reporter.InstanceId)
 	resp, err := http.Post(url, "application/json", bytes.NewReader(jsonBytes))
@@ -61,25 +71,62 @@ func (reporter *Reporter) postStats(jsonBytes []byte) error {
 	return nil
 }
 
-// func (reporter *Reporter) postTraversalStats(
-// 	to *nattraversal.TraversalOutcome) error {
-// 	var buffer bytes.Buffer
-// 	enc := json.NewEncoder(&buffer)
+func (reporter *Reporter) convertTraversal(info *nattywad.TraversalInfo) (stat []byte) {
 
-// 	report := map[string]interface{}{
-// 		"dims": map[string]string{
-// 			"offererCountry":  to.OffererCountry,
-// 			"answererCountry": to.AnswererCountry,
-// 			"operatingSystem": "",
-// 		},
-// 		"increments": to,
-// 	}
+	answererCountry := ""
+	if country, ok := info.Peer.Extras["country"]; ok {
+		answererCountry = country.(string)
+	}
 
-// 	if err := enc.Encode(report); err != nil {
-// 		return fmt.Errorf("Unable to decode traversal outcome: %s", err)
-// 	}
-// 	return reporter.postStats(buffer.Bytes())
-// }
+	report := map[string]interface{}{
+		"dims": map[string]string{
+			"answererCountry": answererCountry,
+			"offererCountry":  reporter.Country,
+			"operatingSystem": "",
+		},
+		"increments": map[string]interface{}{
+			"answererOnline":             info.ServerRespondedToSignaling,
+			"answererGot5Tuple":          info.ServerGotFiveTuple,
+			"offererGotFiveTuple":        info.OffererGotFiveTuple,
+			"traversalSucceeded":         info.TraversalSucceeded,
+			"connectionSucceeded":        info.ServerConnected,
+			"durationOfSuccessTraversal": info.Duration,
+		},
+	}
+	stat, err := json.Marshal(report)
+	if err != nil {
+		log.Errorf("Unable to marshal json for stats: %s", err)
+	}
+	return
+}
+
+// coalesceTraversalStats consolidates NAT traversal reporting
+// timerCh is initially nil and we block until the
+// first traversal happens; future traversals are coalesced
+// until the timer is ready to fire.
+// Once stats are reported, we return to the initial stat
+func (reporter *Reporter) coalesceTraversalStats() {
+
+	timer := time.NewTimer(0)
+
+	var timerCh <-chan time.Time
+
+	for {
+		select {
+		case outcome := <-reporter.TraversalOutcomes:
+			stat := reporter.convertTraversal(outcome)
+			log.Debugf("logging traversal stat %s", stat)
+			reporter.traversalStats = append(reporter.traversalStats, stat...)
+			if timerCh == nil {
+				timer.Reset(10 * time.Second)
+				timerCh = timer.C
+			}
+		case <-timerCh:
+			reporter.postStats(reporter.traversalStats)
+			reporter.traversalStats = []byte{}
+		}
+	}
+}
 
 func (reporter *Reporter) postGiveStats(bytesGiven int64) error {
 	report := map[string]interface{}{

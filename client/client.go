@@ -11,6 +11,7 @@ import (
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/nattest"
+	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/nattywad"
 )
@@ -50,6 +51,7 @@ type Client struct {
 	servers            []*server
 	totalServerWeights int
 	nattywadClient     *nattywad.Client
+	TraversalReporter  *statreporter.Reporter
 }
 
 // ListenAndServe makes the client listen for HTTP connections
@@ -124,6 +126,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	}
 
 	if client.nattywadClient == nil {
+
 		client.nattywadClient = &nattywad.Client{
 			DialWaddell: func(addr string) (net.Conn, error) {
 				// Clients always connect to waddell via a proxy to prevent the
@@ -134,12 +137,18 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 			OnSuccess: func(info *nattywad.TraversalInfo) {
 				log.Tracef("Traversal Succeeded: %s", info)
 				log.Tracef("Peer Country: %s", info.Peer.Extras["country"])
-				// TODO: record stats
-				nattest.Ping(info.LocalAddr, info.RemoteAddr)
+				record := func(conn *net.UDPConn, serverConnected bool) {
+					info.ServerConnected = serverConnected
+					client.TraversalReporter.TraversalOutcomes <- info
+					conn.Close()
+				}
+				nattest.Ping(info.LocalAddr, info.RemoteAddr, record)
 			},
 			OnFailure: func(info *nattywad.TraversalInfo) {
+				info.TraversalSucceeded = false
 				log.Tracef("Traversal Failed: %s", info)
 				log.Tracef("Peer Country: %s", info.Peer.Extras["country"])
+				client.TraversalReporter.TraversalOutcomes <- info
 				// TODO: record stats
 			},
 		}
