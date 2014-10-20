@@ -182,7 +182,6 @@ func runClientProxy(cfg *config.Config) {
 
 	client.TraversalReporter = &statreporter.Reporter{
 		Country: cfg.Country,
-		//OperatingSystem: cfg.OperatingSystem,
 	}
 	client.TraversalReporter.ListenForTraversals()
 
