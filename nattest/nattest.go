@@ -69,10 +69,6 @@ func Ping(local *net.UDPAddr, remote *net.UDPAddr, record Record) {
 	}()
 }
 
-func ConfirmConnectivity(conn *net.UDPAddr) {
-
-}
-
 func Serve(local *net.UDPAddr) error {
 	conn, err := net.ListenUDP("udp", local)
 	if err != nil {
