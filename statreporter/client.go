@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	CLIENT_INTERVAL = 5 * time.Second
+	CLIENT_INTERVAL = 5 * time.Minute
 )
 
 type TraversalOutcome struct {
@@ -69,6 +69,7 @@ func (reporter *ClientReporter) processTraversalStats() {
 				timerCh = timer.C
 			}
 		case <-timer.C:
+			log.Debugf("Posting traversal stats")
 			for answererCountry, outcome := range reporter.traversalStats {
 				reporter.postTraversalStat(answererCountry, outcome)
 			}
@@ -79,7 +80,6 @@ func (reporter *ClientReporter) processTraversalStats() {
 }
 
 func (reporter *ClientReporter) postTraversalStat(answererCountry string, outcome *TraversalOutcome) error {
-	log.Debugf("Posting traversal stats")
 	report := map[string]interface{}{
 		"dims": map[string]string{
 			"answererCountry": answererCountry,
