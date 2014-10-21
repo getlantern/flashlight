@@ -145,7 +145,13 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 		}
 	}
 
-	go client.nattywadClient.Configure(cfg.Peers)
+	peers := make([]*nattywad.ServerPeer, len(cfg.Peers))
+	i = 0
+	for _, peer := range cfg.Peers {
+		peers[i] = peer
+		i = i + 1
+	}
+	go client.nattywadClient.Configure(peers)
 
 	client.cfg = cfg
 }
