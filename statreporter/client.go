@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	CLIENT_INTERVAL = 5 * time.Minute
+	CLIENT_INTERVAL = 5 * time.Second
 )
 
 type TraversalOutcome struct {
@@ -23,7 +23,7 @@ type TraversalOutcome struct {
 	DurationOfSuccessfulTraversal uint64 `json:"durationOfTraversal"`
 }
 
-func (o *TraversalOutcome) merge(n *TraversalOutcome) {
+func (o *TraversalOutcome) coalesce(n *TraversalOutcome) {
 	o.AnswererOnline = o.AnswererOnline + n.AnswererOnline
 	o.AnswererGot5Tuple = o.AnswererGot5Tuple + n.AnswererGot5Tuple
 	o.OffererGot5Tuple = o.OffererGot5Tuple + n.OffererGot5Tuple
@@ -44,16 +44,16 @@ func (reporter *ClientReporter) Start() {
 	reporter.outcomesCh = make(chan *TraversalOutcome, 100)
 	reporter.OutcomesCh = reporter.outcomesCh
 	reporter.traversalStats = make(map[string]*TraversalOutcome)
-	go reporter.coalesceTraversalStats()
+	go reporter.processTraversalStats()
 }
 
-// coalesceTraversalStats consolidates NAT traversal reporting
-// timerCh is initially nil and we block until the
-// first traversal happens; future traversals are coalesced
-// until the timer is ready to fire.
-// Once stats are reported, we return to the initial stat
-func (reporter *ClientReporter) coalesceTraversalStats() {
-	timer := time.NewTimer(CLIENT_INTERVAL)
+// processTraversalStats coalesces TraversalOutcomes as they are received and
+// periodically reports these to statshub. The first  TraversalOutcome is
+// reported immediately, after which we reported coalesced outcomes every 5
+// minutes.
+func (reporter *ClientReporter) processTraversalStats() {
+	timer := time.NewTimer(0)
+	var timerCh <-chan time.Time
 
 	for {
 		select {
@@ -62,7 +62,11 @@ func (reporter *ClientReporter) coalesceTraversalStats() {
 			if o == nil {
 				reporter.traversalStats[n.AnswererCountry] = n
 			} else {
-				o.merge(n)
+				o.coalesce(n)
+			}
+			if timerCh == nil {
+				timer.Reset(CLIENT_INTERVAL)
+				timerCh = timer.C
 			}
 		case <-timer.C:
 			for answererCountry, outcome := range reporter.traversalStats {
@@ -75,6 +79,7 @@ func (reporter *ClientReporter) coalesceTraversalStats() {
 }
 
 func (reporter *ClientReporter) postTraversalStat(answererCountry string, outcome *TraversalOutcome) error {
+	log.Debugf("Posting traversal stats")
 	report := map[string]interface{}{
 		"dims": map[string]string{
 			"answererCountry": answererCountry,
