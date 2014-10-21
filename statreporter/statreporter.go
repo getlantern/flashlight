@@ -39,7 +39,7 @@ type Reporter struct {
 	Country           string // (optional) country under which to report statistics
 	bytesGiven        int64  // tracks bytes given
 	traversalStats    TraversalStats
-	TraversalOutcomes chan *nattywad.TraversalInfo
+	traversalOutcomes chan *TraversalOutcome
 }
 
 // OnBytesGiven registers the fact that bytes were given (sent or received)
@@ -64,9 +64,13 @@ func (reporter *Reporter) Start() {
 }
 
 func (reporter *Reporter) ListenForTraversals() {
-	reporter.TraversalOutcomes = make(chan *nattywad.TraversalInfo)
+	reporter.traversalOutcomes = make(chan *TraversalOutcome)
 	reporter.traversalStats = make(map[string]*TraversalOutcome)
 	go reporter.coalesceTraversalStats()
+}
+
+func (reporter *Reporter) GetOutcomesCh() chan<- *TraversalOutcome {
+	return reporter.traversalOutcomes
 }
 
 func (reporter *Reporter) postStats(jsonBytes []byte) error {
@@ -101,6 +105,36 @@ func (reporter *Reporter) postTraversalStat(answererCountry string, outcome *Tra
 	return reporter.postStats(buffer.Bytes())
 }
 
+func (reporter *Reporter) NewTraversalOutcome(info *nattywad.TraversalInfo, connectionSucceeded bool) *TraversalOutcome {
+
+	answererCountry := "xx"
+	if _, ok := info.Peer.Extras["country"]; ok {
+		answererCountry = info.Peer.Extras["country"].(string)
+	}
+	outcome := reporter.traversalStats[answererCountry]
+	if outcome == nil {
+		outcome = &TraversalOutcome{}
+		reporter.traversalStats[answererCountry] = outcome
+	}
+
+	if info.ServerRespondedToSignaling {
+		outcome.AnswererOnline += 1
+	}
+	if info.ServerGotFiveTuple {
+		outcome.AnswererGot5Tuple += 1
+	}
+
+	if connectionSucceeded {
+		outcome.ConnectionSucceeded += 1
+	}
+
+	if info.TraversalSucceeded {
+		outcome.TraversalSucceeded += 1
+		outcome.DurationOfSuccessfulTraversal += info.Duration
+	}
+	return outcome
+}
+
 // coalesceTraversalStats consolidates NAT traversal reporting
 // timerCh is initially nil and we block until the
 // first traversal happens; future traversals are coalesced
@@ -114,33 +148,7 @@ func (reporter *Reporter) coalesceTraversalStats() {
 
 	for {
 		select {
-		case info := <-reporter.TraversalOutcomes:
-			answererCountry := "xx"
-			if _, ok := info.Peer.Extras["country"]; ok {
-				answererCountry = info.Peer.Extras["country"].(string)
-			}
-			outcome := reporter.traversalStats[answererCountry]
-			if outcome == nil {
-				outcome = &TraversalOutcome{}
-				reporter.traversalStats[answererCountry] = outcome
-			}
-
-			if info.ServerRespondedToSignaling {
-				outcome.AnswererOnline += 1
-			}
-			if info.ServerRespondedToSignaling {
-				outcome.AnswererGot5Tuple += 1
-			}
-
-			if info.ServerConnected {
-				outcome.ConnectionSucceeded += 1
-			}
-
-			if info.TraversalSucceeded {
-				outcome.TraversalSucceeded += 1
-				outcome.DurationOfSuccessfulTraversal += info.Duration
-			}
-
+		case _ = <-reporter.traversalOutcomes:
 			if timerCh == nil {
 				timer.Reset(REPORT_TRAVERSALS_INTERVAL)
 				timerCh = timer.C

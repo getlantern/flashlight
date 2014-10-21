@@ -135,21 +135,22 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 				return server.dialWithEnproxy("tcp", addr)
 			},
 			OnSuccess: func(info *nattywad.TraversalInfo) {
+				reporter := client.TraversalReporter
 				log.Tracef("Traversal Succeeded: %s", info)
 				log.Tracef("Peer Country: %s", info.Peer.Extras["country"])
 				record := func(conn *net.UDPConn, serverConnected bool) {
-					info.ServerConnected = serverConnected
-					client.TraversalReporter.TraversalOutcomes <- info
+					outcome := reporter.NewTraversalOutcome(info, serverConnected)
+					reporter.GetOutcomesCh() <- outcome
 					conn.Close()
 				}
 				nattest.Ping(info.LocalAddr, info.RemoteAddr, record)
 			},
 			OnFailure: func(info *nattywad.TraversalInfo) {
-				info.TraversalSucceeded = false
+				reporter := client.TraversalReporter
 				log.Tracef("Traversal Failed: %s", info)
 				log.Tracef("Peer Country: %s", info.Peer.Extras["country"])
-				client.TraversalReporter.TraversalOutcomes <- info
-				// TODO: record stats
+				outcome := reporter.NewTraversalOutcome(info, false)
+				reporter.GetOutcomesCh() <- outcome
 			},
 		}
 	}
