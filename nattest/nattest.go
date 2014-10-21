@@ -61,7 +61,7 @@ func Serve(local *net.UDPAddr) error {
 		defer func() {
 			if !gotPing {
 				// If we didn't get a ping, close the conn. If we got a ping,
-				// this is handled by sendPongPackets().
+				// let sendPongPackets() handle it.
 				conn.Close()
 			}
 		}()
