@@ -13,13 +13,14 @@ import (
 	"time"
 
 	"github.com/getlantern/enproxy"
-	"github.com/getlantern/flashlight/log"
-	"github.com/getlantern/flashlight/nattraversal"
+	"github.com/getlantern/flashlight/nattest"
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/statserver"
 	"github.com/getlantern/go-igdman/igdman"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/keyman"
+	"github.com/getlantern/nattywad"
 )
 
 const (
@@ -27,6 +28,8 @@ const (
 )
 
 var (
+	log = golog.LoggerFor("flashlight.server")
+
 	dialTimeout     = 10 * time.Second
 	httpIdleTimeout = 70 * time.Second
 
@@ -63,16 +66,15 @@ type Server struct {
 	// WriteTimeout: (optional) timeout for write ops
 	WriteTimeout time.Duration
 
-	CertContext                *CertContext           // context for certificate management
-	AllowNonGlobalDestinations bool                   // if true, requests to LAN, Loopback, etc. will be allowed
-	StatReporter               *statreporter.Reporter // optional reporter of stats
-	StatServer                 *statserver.Server     // optional server of stats
+	CertContext                *CertContext                 // context for certificate management
+	AllowNonGlobalDestinations bool                         // if true, requests to LAN, Loopback, etc. will be allowed
+	StatReporter               *statreporter.ServerReporter // optional reporter of stats
+	StatServer                 *statserver.Server           // optional server of stats
 
-	host        string
-	waddellAddr string
-	wc          *nattraversal.WaddellConn
-	cfg         *ServerConfig
-	cfgMutex    sync.Mutex
+	host           string
+	nattywadServer *nattywad.Server
+	cfg            *ServerConfig
+	cfgMutex       sync.Mutex
 }
 
 func (server *Server) Configure(newCfg *ServerConfig) {
@@ -111,24 +113,20 @@ func (server *Server) Configure(newCfg *ServerConfig) {
 		}
 	}
 
-	if oldCfg == nil || newCfg.WaddellAddr != oldCfg.WaddellAddr {
-		log.Debugf("Waddell settings changed")
-		// Waddell settings changed
-		if server.wc != nil {
-			log.Debugf("Closing old waddell connection")
-			nattraversal.CloseWaddellConn(oldCfg.WaddellAddr)
-			server.wc = nil
-		}
-
-		server.waddellAddr = newCfg.WaddellAddr
-		if server.waddellAddr != "" {
-			_, wc := nattraversal.ConnectToWaddell(server.waddellAddr)
-			if wc != nil {
-				server.wc = wc
-				log.Debugf("Starting to receive offers")
-				go nattraversal.ReceiveOffers(server.waddellAddr)
+	if newCfg.WaddellAddr != "" || server.nattywadServer != nil {
+		if server.nattywadServer == nil {
+			server.nattywadServer = &nattywad.Server{
+				OnSuccess: func(local *net.UDPAddr, remote *net.UDPAddr) bool {
+					err := nattest.Serve(local)
+					if err != nil {
+						log.Error(err.Error())
+						return false
+					}
+					return true
+				},
 			}
 		}
+		server.nattywadServer.Configure(newCfg.WaddellAddr)
 	}
 
 	server.cfg = newCfg

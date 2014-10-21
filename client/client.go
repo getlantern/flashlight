@@ -2,6 +2,7 @@ package client
 
 import (
 	"math/rand"
+	"net"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -9,8 +10,10 @@ import (
 	"time"
 
 	"github.com/getlantern/enproxy"
-	"github.com/getlantern/flashlight/log"
-	"github.com/getlantern/flashlight/nattraversal"
+	"github.com/getlantern/flashlight/nattest"
+	"github.com/getlantern/flashlight/statreporter"
+	"github.com/getlantern/golog"
+	"github.com/getlantern/nattywad"
 )
 
 const (
@@ -19,6 +22,12 @@ const (
 	REVERSE_PROXY_FLUSH_INTERVAL = 250 * time.Millisecond
 
 	X_FLASHLIGHT_QOS = "X-Flashlight-QOS"
+
+	HighQOS = 10
+)
+
+var (
+	log = golog.LoggerFor("flashlight.client")
 )
 
 func init() {
@@ -41,6 +50,8 @@ type Client struct {
 	cfgMutex           sync.RWMutex
 	servers            []*server
 	totalServerWeights int
+	nattywadClient     *nattywad.Client
+	TraversalReporter  *statreporter.ClientReporter
 }
 
 // ListenAndServe makes the client listen for HTTP connections
@@ -77,8 +88,6 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 		log.Debugf("Client configuration changed")
 	}
 
-	client.cfg = cfg
-
 	verifiedSets := make(map[string]*verifiedMasqueradeSet)
 
 	for key, masqueradeSet := range cfg.MasqueradeSets {
@@ -94,8 +103,6 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 			server.close()
 		}
 	}
-
-	nattraversal.CheckPeersList(&client.cfg.Peers)
 
 	// Configure servers
 	client.servers = make([]*server, len(cfg.Servers))
@@ -117,6 +124,43 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	for _, server := range client.servers {
 		client.totalServerWeights = client.totalServerWeights + server.info.Weight
 	}
+
+	if client.nattywadClient == nil {
+
+		client.nattywadClient = &nattywad.Client{
+			DialWaddell: func(addr string) (net.Conn, error) {
+				// Clients always connect to waddell via a proxy to prevent the
+				// waddell connection from being blocked by censors.
+				server := client.randomServerForQOS(HighQOS)
+				return server.dialWithEnproxy("tcp", addr)
+			},
+			OnSuccess: func(info *nattywad.TraversalInfo) {
+				reporter := client.TraversalReporter
+				log.Tracef("Traversal Succeeded: %s", info)
+				log.Tracef("Peer Country: %s", info.Peer.Extras["country"])
+				serverConnected := nattest.Ping(info.LocalAddr, info.RemoteAddr)
+				outcome := newTraversalOutcome(info, true, serverConnected)
+				reporter.OutcomesCh <- outcome
+			},
+			OnFailure: func(info *nattywad.TraversalInfo) {
+				reporter := client.TraversalReporter
+				log.Tracef("Traversal Failed: %s", info)
+				log.Tracef("Peer Country: %s", info.Peer.Extras["country"])
+				outcome := newTraversalOutcome(info, false, false)
+				reporter.OutcomesCh <- outcome
+			},
+		}
+	}
+
+	peers := make([]*nattywad.ServerPeer, len(cfg.Peers))
+	i = 0
+	for _, peer := range cfg.Peers {
+		peers[i] = peer
+		i = i + 1
+	}
+	go client.nattywadClient.Configure(peers)
+
+	client.cfg = cfg
 }
 
 // highestQos finds the server with the highest reported quality of service for
@@ -150,8 +194,10 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 // value are considered for inclusion.  However, if no servers meet the QOS
 // requirement, the last server in the list will be used by default.
 func (client *Client) randomServer(req *http.Request) *server {
-	targetQOS := client.targetQOS(req)
+	return client.randomServerForQOS(targetQOS(req))
+}
 
+func (client *Client) randomServerForQOS(targetQOS int) *server {
 	servers, totalServerWeights := client.getServers()
 
 	// Pick a random server using a target value between 0 and the total server weights
@@ -180,7 +226,7 @@ func (client *Client) randomServer(req *http.Request) *server {
 
 // targetQOS determines the target quality of service given the X-Flashlight-QOS
 // header if available, else returns 0.
-func (client *Client) targetQOS(req *http.Request) int {
+func targetQOS(req *http.Request) int {
 	requestedQOS := req.Header.Get(X_FLASHLIGHT_QOS)
 	if requestedQOS != "" {
 		rqos, err := strconv.Atoi(requestedQOS)
@@ -196,4 +242,30 @@ func (client *Client) getServers() ([]*server, int) {
 	client.cfgMutex.RLock()
 	defer client.cfgMutex.RUnlock()
 	return client.servers, client.totalServerWeights
+}
+
+func newTraversalOutcome(info *nattywad.TraversalInfo, clientGotFiveTuple bool, connectionSucceeded bool) *statreporter.TraversalOutcome {
+	outcome := &statreporter.TraversalOutcome{}
+	outcome.AnswererCountry = "xx"
+	if _, ok := info.Peer.Extras["country"]; ok {
+		outcome.AnswererCountry = info.Peer.Extras["country"].(string)
+	}
+
+	if info.ServerRespondedToSignaling {
+		outcome.AnswererOnline = 1
+	}
+	if info.ServerGotFiveTuple {
+		outcome.AnswererGot5Tuple = 1
+	}
+	if clientGotFiveTuple {
+		outcome.OffererGot5Tuple = 1
+	}
+	if info.ServerGotFiveTuple && clientGotFiveTuple {
+		outcome.TraversalSucceeded = 1
+		outcome.DurationOfSuccessfulTraversal = uint64(info.Duration.Seconds())
+	}
+	if connectionSucceeded {
+		outcome.ConnectionSucceeded = 1
+	}
+	return outcome
 }

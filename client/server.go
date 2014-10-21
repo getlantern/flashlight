@@ -10,7 +10,6 @@ import (
 
 	"github.com/getlantern/connpool"
 	"github.com/getlantern/enproxy"
-	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/proxy"
 	"github.com/getlantern/keyman"
 	"net/http/httputil"
@@ -85,11 +84,9 @@ func (server *server) close() {
 
 func (server *server) nextMasquerade() *Masquerade {
 	if server.masquerades == nil {
-		log.Debugf("No masquerade")
 		return nil
 	}
 	masquerade := server.masquerades.nextVerified()
-	log.Debugf("Using masquerade %s", masquerade.Domain)
 	return masquerade
 }
 

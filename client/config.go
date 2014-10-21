@@ -5,7 +5,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/getlantern/flashlight/nattraversal"
+	"github.com/getlantern/nattywad"
 )
 
 // ClientConfig captures configuration information for a Client
@@ -13,7 +13,7 @@ type ClientConfig struct {
 	DumpHeaders    bool // whether or not to dump headers of requests and responses
 	Servers        []*ServerInfo
 	MasqueradeSets map[string][]*Masquerade
-	Peers          []nattraversal.PeerConfig
+	Peers          map[string]*nattywad.ServerPeer // keyed to peer id (e.g. XMPP JID)
 }
 
 // ServerInfo captures configuration information for an upstream server

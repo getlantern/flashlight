@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/getlantern/flashlight/log"
 )
 
 // verifiedMasqueradeSet represents a set of Masquerade configurations.
