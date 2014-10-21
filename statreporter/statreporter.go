@@ -5,26 +5,41 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"runtime"
 	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/golog"
-	//"github.com/getlantern/flashlight/nattraversal"
+	"github.com/getlantern/nattywad"
 )
 
 const (
-	STATSHUB_URL_TEMPLATE = "https://pure-journey-3547.herokuapp.com/stats/%s"
-	REPORT_STATS_INTERVAL = 20 * time.Second
+	STATSHUB_URL_TEMPLATE      = "https://pure-journey-3547.herokuapp.com/stats/%s"
+	REPORT_STATS_INTERVAL      = 20 * time.Second
+	REPORT_TRAVERSALS_INTERVAL = 5 * time.Minute
 )
 
 var (
 	log = golog.LoggerFor("flashlight.nattest")
 )
 
+type TraversalOutcome struct {
+	AnswererOnline                int           `json:answererOnline`
+	AnswererGot5Tuple             int           `json:answererGotFiveTuple`
+	OffererGot5Tuple              int           `json:offererGotFiveTuple`
+	TraversalSucceeded            int           `json:traversalSucceeded`
+	ConnectionSucceeded           int           `json:connectionSucceeded`
+	DurationOfSuccessfulTraversal time.Duration `json:durationOfTraversal`
+}
+
+type TraversalStats map[string]*TraversalOutcome
+
 type Reporter struct {
-	InstanceId string // (optional) instanceid under which to report statistics
-	Country    string // (optional) country under which to report statistics
-	bytesGiven int64  // tracks bytes given
+	InstanceId        string // (optional) instanceid under which to report statistics
+	Country           string // (optional) country under which to report statistics
+	bytesGiven        int64  // tracks bytes given
+	traversalStats    TraversalStats
+	traversalOutcomes chan *TraversalOutcome
 }
 
 // OnBytesGiven registers the fact that bytes were given (sent or received)
@@ -48,6 +63,16 @@ func (reporter *Reporter) Start() {
 	}
 }
 
+func (reporter *Reporter) ListenForTraversals() {
+	reporter.traversalOutcomes = make(chan *TraversalOutcome)
+	reporter.traversalStats = make(map[string]*TraversalOutcome)
+	go reporter.coalesceTraversalStats()
+}
+
+func (reporter *Reporter) GetOutcomesCh() chan<- *TraversalOutcome {
+	return reporter.traversalOutcomes
+}
+
 func (reporter *Reporter) postStats(jsonBytes []byte) error {
 	url := fmt.Sprintf(STATSHUB_URL_TEMPLATE, reporter.InstanceId)
 	resp, err := http.Post(url, "application/json", bytes.NewReader(jsonBytes))
@@ -61,25 +86,81 @@ func (reporter *Reporter) postStats(jsonBytes []byte) error {
 	return nil
 }
 
-// func (reporter *Reporter) postTraversalStats(
-// 	to *nattraversal.TraversalOutcome) error {
-// 	var buffer bytes.Buffer
-// 	enc := json.NewEncoder(&buffer)
+func (reporter *Reporter) postTraversalStat(answererCountry string, outcome *TraversalOutcome) error {
 
-// 	report := map[string]interface{}{
-// 		"dims": map[string]string{
-// 			"offererCountry":  to.OffererCountry,
-// 			"answererCountry": to.AnswererCountry,
-// 			"operatingSystem": "",
-// 		},
-// 		"increments": to,
-// 	}
+	var buffer bytes.Buffer
+	enc := json.NewEncoder(&buffer)
 
-// 	if err := enc.Encode(report); err != nil {
-// 		return fmt.Errorf("Unable to decode traversal outcome: %s", err)
-// 	}
-// 	return reporter.postStats(buffer.Bytes())
-// }
+	report := map[string]interface{}{
+		"dims": map[string]string{
+			"answererCountry": answererCountry,
+			"offererCountry":  reporter.Country,
+			"operatingSystem": runtime.GOOS,
+		},
+		"increments": outcome,
+	}
+	if err := enc.Encode(report); err != nil {
+		return fmt.Errorf("Unable to decode traversal outcome: %s", err)
+	}
+	return reporter.postStats(buffer.Bytes())
+}
+
+func (reporter *Reporter) NewTraversalOutcome(info *nattywad.TraversalInfo, connectionSucceeded bool) *TraversalOutcome {
+
+	answererCountry := "xx"
+	if _, ok := info.Peer.Extras["country"]; ok {
+		answererCountry = info.Peer.Extras["country"].(string)
+	}
+	outcome := reporter.traversalStats[answererCountry]
+	if outcome == nil {
+		outcome = &TraversalOutcome{}
+		reporter.traversalStats[answererCountry] = outcome
+	}
+
+	if info.ServerRespondedToSignaling {
+		outcome.AnswererOnline += 1
+	}
+	if info.ServerGotFiveTuple {
+		outcome.AnswererGot5Tuple += 1
+	}
+
+	if connectionSucceeded {
+		outcome.ConnectionSucceeded += 1
+	}
+
+	if info.TraversalSucceeded {
+		outcome.TraversalSucceeded += 1
+		outcome.DurationOfSuccessfulTraversal += info.Duration
+	}
+	return outcome
+}
+
+// coalesceTraversalStats consolidates NAT traversal reporting
+// timerCh is initially nil and we block until the
+// first traversal happens; future traversals are coalesced
+// until the timer is ready to fire.
+// Once stats are reported, we return to the initial stat
+func (reporter *Reporter) coalesceTraversalStats() {
+
+	timer := time.NewTimer(0)
+
+	var timerCh <-chan time.Time
+
+	for {
+		select {
+		case _ = <-reporter.traversalOutcomes:
+			if timerCh == nil {
+				timer.Reset(REPORT_TRAVERSALS_INTERVAL)
+				timerCh = timer.C
+			}
+		case <-timerCh:
+			for answererCountry, outcome := range reporter.traversalStats {
+				reporter.postTraversalStat(answererCountry, outcome)
+				reporter.traversalStats[answererCountry] = nil
+			}
+		}
+	}
+}
 
 func (reporter *Reporter) postGiveStats(bytesGiven int64) error {
 	report := map[string]interface{}{

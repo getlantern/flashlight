@@ -65,6 +65,12 @@ func runClientProxy(cfg *config.Config) {
 
 	// Configure client initially
 	client.Configure(cfg.Client, nil)
+
+	client.TraversalReporter = &statreporter.Reporter{
+		Country: cfg.Country,
+	}
+	client.TraversalReporter.ListenForTraversals()
+
 	// Continually poll for config updates and update client accordingly
 	go func() {
 		for {
