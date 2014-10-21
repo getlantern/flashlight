@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/getlantern/golog"
-	"github.com/getlantern/nattywad"
 )
 
 const (
@@ -20,25 +19,34 @@ const (
 )
 
 var (
-	log = golog.LoggerFor("flashlight.nattest")
+	log = golog.LoggerFor("flashlight.statreporter")
 )
 
 type TraversalOutcome struct {
-	AnswererOnline                int           `json:answererOnline`
-	AnswererGot5Tuple             int           `json:answererGotFiveTuple`
-	OffererGot5Tuple              int           `json:offererGotFiveTuple`
-	TraversalSucceeded            int           `json:traversalSucceeded`
-	ConnectionSucceeded           int           `json:connectionSucceeded`
-	DurationOfSuccessfulTraversal time.Duration `json:durationOfTraversal`
+	AnswererCountry               string        `json:"-"`
+	AnswererOnline                int           `json:"answererOnline"`
+	AnswererGot5Tuple             int           `json:"answererGotFiveTuple"`
+	OffererGot5Tuple              int           `json:"offererGotFiveTuple"`
+	TraversalSucceeded            int           `json:"traversalSucceeded"`
+	ConnectionSucceeded           int           `json:"connectionSucceeded"`
+	DurationOfSuccessfulTraversal time.Duration `json:"durationOfTraversal"`
 }
 
-type TraversalStats map[string]*TraversalOutcome
+func (o *TraversalOutcome) merge(n *TraversalOutcome) {
+	o.AnswererOnline = o.AnswererOnline + n.AnswererOnline
+	o.AnswererGot5Tuple = o.AnswererGot5Tuple + n.AnswererGot5Tuple
+	o.OffererGot5Tuple = o.OffererGot5Tuple + n.OffererGot5Tuple
+	o.ConnectionSucceeded = o.ConnectionSucceeded + n.ConnectionSucceeded
+	o.TraversalSucceeded = o.TraversalSucceeded + n.TraversalSucceeded
+	o.ConnectionSucceeded = o.ConnectionSucceeded + n.ConnectionSucceeded
+	o.DurationOfSuccessfulTraversal = o.DurationOfSuccessfulTraversal + n.DurationOfSuccessfulTraversal
+}
 
 type Reporter struct {
 	InstanceId        string // (optional) instanceid under which to report statistics
 	Country           string // (optional) country under which to report statistics
 	bytesGiven        int64  // tracks bytes given
-	traversalStats    TraversalStats
+	traversalStats    map[string]*TraversalOutcome
 	traversalOutcomes chan *TraversalOutcome
 }
 
@@ -105,36 +113,6 @@ func (reporter *Reporter) postTraversalStat(answererCountry string, outcome *Tra
 	return reporter.postStats(buffer.Bytes())
 }
 
-func (reporter *Reporter) NewTraversalOutcome(info *nattywad.TraversalInfo, connectionSucceeded bool) *TraversalOutcome {
-
-	answererCountry := "xx"
-	if _, ok := info.Peer.Extras["country"]; ok {
-		answererCountry = info.Peer.Extras["country"].(string)
-	}
-	outcome := reporter.traversalStats[answererCountry]
-	if outcome == nil {
-		outcome = &TraversalOutcome{}
-		reporter.traversalStats[answererCountry] = outcome
-	}
-
-	if info.ServerRespondedToSignaling {
-		outcome.AnswererOnline += 1
-	}
-	if info.ServerGotFiveTuple {
-		outcome.AnswererGot5Tuple += 1
-	}
-
-	if connectionSucceeded {
-		outcome.ConnectionSucceeded += 1
-	}
-
-	if info.TraversalSucceeded {
-		outcome.TraversalSucceeded += 1
-		outcome.DurationOfSuccessfulTraversal += info.Duration
-	}
-	return outcome
-}
-
 // coalesceTraversalStats consolidates NAT traversal reporting
 // timerCh is initially nil and we block until the
 // first traversal happens; future traversals are coalesced
@@ -142,13 +120,19 @@ func (reporter *Reporter) NewTraversalOutcome(info *nattywad.TraversalInfo, conn
 // Once stats are reported, we return to the initial stat
 func (reporter *Reporter) coalesceTraversalStats() {
 
-	timer := time.NewTimer(0)
+	timer := time.NewTimer(REPORT_STATS_INTERVAL)
 
 	var timerCh <-chan time.Time
 
 	for {
 		select {
-		case _ = <-reporter.traversalOutcomes:
+		case n := <-reporter.traversalOutcomes:
+			o := reporter.traversalStats[n.AnswererCountry]
+			if o == nil {
+				reporter.traversalStats[n.AnswererCountry] = n
+			} else {
+				o.merge(n)
+			}
 			if timerCh == nil {
 				timer.Reset(REPORT_TRAVERSALS_INTERVAL)
 				timerCh = timer.C
@@ -156,8 +140,9 @@ func (reporter *Reporter) coalesceTraversalStats() {
 		case <-timerCh:
 			for answererCountry, outcome := range reporter.traversalStats {
 				reporter.postTraversalStat(answererCountry, outcome)
-				reporter.traversalStats[answererCountry] = nil
 			}
+			reporter.traversalStats = make(map[string]*TraversalOutcome)
+			timer.Reset(REPORT_TRAVERSALS_INTERVAL)
 		}
 	}
 }

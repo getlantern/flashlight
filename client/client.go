@@ -139,7 +139,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 				log.Tracef("Traversal Succeeded: %s", info)
 				log.Tracef("Peer Country: %s", info.Peer.Extras["country"])
 				record := func(conn *net.UDPConn, serverConnected bool) {
-					outcome := reporter.NewTraversalOutcome(info, serverConnected)
+					outcome := newTraversalOutcome(info, true, serverConnected)
 					reporter.GetOutcomesCh() <- outcome
 					conn.Close()
 				}
@@ -149,7 +149,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 				reporter := client.TraversalReporter
 				log.Tracef("Traversal Failed: %s", info)
 				log.Tracef("Peer Country: %s", info.Peer.Extras["country"])
-				outcome := reporter.NewTraversalOutcome(info, false)
+				outcome := newTraversalOutcome(info, false, false)
 				reporter.GetOutcomesCh() <- outcome
 			},
 		}
@@ -245,4 +245,30 @@ func (client *Client) getServers() ([]*server, int) {
 	client.cfgMutex.RLock()
 	defer client.cfgMutex.RUnlock()
 	return client.servers, client.totalServerWeights
+}
+
+func newTraversalOutcome(info *nattywad.TraversalInfo, clientGotFiveTuple bool, connectionSucceeded bool) *statreporter.TraversalOutcome {
+	outcome := &statreporter.TraversalOutcome{}
+	outcome.AnswererCountry = "xx"
+	if _, ok := info.Peer.Extras["country"]; ok {
+		outcome.AnswererCountry = info.Peer.Extras["country"].(string)
+	}
+
+	if info.ServerRespondedToSignaling {
+		outcome.AnswererOnline = 1
+	}
+	if info.ServerGotFiveTuple {
+		outcome.AnswererGot5Tuple = 1
+	}
+	if clientGotFiveTuple {
+		outcome.OffererGot5Tuple = 1
+	}
+	if info.ServerGotFiveTuple && clientGotFiveTuple {
+		outcome.TraversalSucceeded = 1
+		outcome.DurationOfSuccessfulTraversal = info.Duration
+	}
+	if connectionSucceeded {
+		outcome.ConnectionSucceeded = 1
+	}
+	return outcome
 }

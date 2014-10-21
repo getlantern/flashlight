@@ -28,7 +28,7 @@ const (
 )
 
 var (
-	log = golog.LoggerFor("flashlight.nattest")
+	log = golog.LoggerFor("flashlight.server")
 
 	dialTimeout     = 10 * time.Second
 	httpIdleTimeout = 70 * time.Second
