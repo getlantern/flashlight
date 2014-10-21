@@ -51,7 +51,7 @@ type Client struct {
 	servers            []*server
 	totalServerWeights int
 	nattywadClient     *nattywad.Client
-	TraversalReporter  *statreporter.Reporter
+	TraversalReporter  *statreporter.ClientReporter
 }
 
 // ListenAndServe makes the client listen for HTTP connections

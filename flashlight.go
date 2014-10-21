@@ -66,10 +66,18 @@ func runClientProxy(cfg *config.Config) {
 	// Configure client initially
 	client.Configure(cfg.Client, nil)
 
-	client.TraversalReporter = &statreporter.Reporter{
-		Country: cfg.Country,
+	if cfg.InstanceId != "" {
+		log.Debugf("Reporting stats under InstanceId: %s", cfg.InstanceId)
+		client.TraversalReporter = &statreporter.ClientReporter{
+			Reporter: statreporter.Reporter{
+				InstanceId: cfg.InstanceId,
+				Country:    cfg.Country,
+			},
+		}
+		client.TraversalReporter.Start()
+	} else {
+		log.Debug("Not reporting stats (no instanceid specified)")
 	}
-	client.TraversalReporter.ListenForTraversals()
 
 	// Continually poll for config updates and update client accordingly
 	go func() {
@@ -100,9 +108,11 @@ func runServerProxy(cfg *config.Config) {
 	}
 	if cfg.InstanceId != "" {
 		// Report stats
-		srv.StatReporter = &statreporter.Reporter{
-			InstanceId: cfg.InstanceId,
-			Country:    cfg.Country,
+		srv.StatReporter = &statreporter.ServerReporter{
+			Reporter: statreporter.Reporter{
+				InstanceId: cfg.InstanceId,
+				Country:    cfg.Country,
+			},
 		}
 	}
 	if cfg.StatsAddr != "" {

@@ -66,10 +66,10 @@ type Server struct {
 	// WriteTimeout: (optional) timeout for write ops
 	WriteTimeout time.Duration
 
-	CertContext                *CertContext           // context for certificate management
-	AllowNonGlobalDestinations bool                   // if true, requests to LAN, Loopback, etc. will be allowed
-	StatReporter               *statreporter.Reporter // optional reporter of stats
-	StatServer                 *statserver.Server     // optional server of stats
+	CertContext                *CertContext                 // context for certificate management
+	AllowNonGlobalDestinations bool                         // if true, requests to LAN, Loopback, etc. will be allowed
+	StatReporter               *statreporter.ServerReporter // optional reporter of stats
+	StatServer                 *statserver.Server           // optional server of stats
 
 	host           string
 	nattywadServer *nattywad.Server
