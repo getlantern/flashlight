@@ -1,5 +1,13 @@
 // package nattest provides the capability to test a nat-traversed UDP
-// connection by sending packets back and forth between client and server.
+// connection by sending packets back and forth between client and server. The
+// client sends 10 packets containing "Ping" to the server, spaced out by 2
+// seconds. Once the server receives a Ping packet, it responds with 10 packets
+// containing "Pong", spaced out by 2 seconds, and then terminates. Once the
+// client receives a "Pong" packet, it considers the traversal successful.
+//
+// Note - both the client and server ignore unexpected (gibberish) packets, so
+// as long as client and server both get at least one good packet, the
+// connection is considered successful.
 package nattest
 
 import (
@@ -14,8 +22,8 @@ import (
 
 const (
 	NumUDPTestPackets = 10
-	PingPause         = 2 * time.Second
-	ConnTimeout       = NumUDPTestPackets * PingPause
+	PacketPause       = 2 * time.Second
+	ConnTimeout       = NumUDPTestPackets * PacketPause
 )
 
 var (
@@ -24,8 +32,6 @@ var (
 	pingMsg = []byte("ping")
 	pongMsg = []byte("pong")
 )
-
-type Record func(*net.UDPConn, bool)
 
 // Ping pings the server at the other end of a NAT-traversed UDP connection and
 // looks for echo packets to confirm connectivity with the server. It returns
@@ -40,18 +46,78 @@ func Ping(local *net.UDPAddr, remote *net.UDPAddr) bool {
 		return false
 	}
 
-	// Send ping packets
+	go sendPingPackets(conn)
+	return readPongPackets(conn)
+}
+
+func Serve(local *net.UDPAddr) error {
+	conn, err := net.ListenUDP("udp", local)
+	if err != nil {
+		return fmt.Errorf("Unable to listen on UDP: %s", err)
+	}
+
 	go func() {
-		for i := 0; i < NumUDPTestPackets; i++ {
-			_, err := conn.Write(pingMsg)
-			if err != nil {
-				log.Tracef("Unable to write to UDP: %v", err)
+		gotPing := false
+		defer func() {
+			if !gotPing {
+				// If we didn't get a ping, close the conn. If we got a ping,
+				// this is handled by sendPongPackets().
+				conn.Close()
+			}
+		}()
+
+		startTime := time.Now()
+		b := make([]byte, 1024)
+		for {
+			if time.Now().Sub(startTime) > 30*time.Second {
+				log.Tracef("Server stopped listening for UDP packets at: %s", local)
 				return
 			}
-			time.Sleep(PingPause)
+			n, addr, err := conn.ReadFrom(b)
+			if err != nil {
+				log.Debugf("Server unable to read from UDP: %s", err)
+			}
+			msg := b[:n]
+			log.Tracef("Got UDP message from %s: '%s'", addr, msg)
+			if bytes.Equal(msg, pingMsg) {
+				// We got a ping message, respond and break out of loop
+				gotPing = true
+				go sendPongPackets(conn, addr)
+				return
+			} else {
+				log.Debugf("Server received unexpected message: %s", msg)
+			}
 		}
 	}()
 
+	log.Tracef("nattest listening for UDP packets at: %s", local)
+	return nil
+}
+
+func sendPingPackets(conn *net.UDPConn) {
+	for i := 0; i < NumUDPTestPackets; i++ {
+		_, err := conn.Write(pingMsg)
+		if err != nil {
+			log.Tracef("Unable to send ping packet: %v", err)
+			return
+		}
+		time.Sleep(PacketPause)
+	}
+}
+
+func sendPongPackets(conn *net.UDPConn, to net.Addr) {
+	defer conn.Close()
+	for i := 0; i < NumUDPTestPackets; i++ {
+		_, err := conn.WriteTo(pongMsg, to)
+		if err != nil {
+			log.Tracef("Unable to send pong packet: %v", err)
+			return
+		}
+		time.Sleep(PacketPause)
+	}
+}
+
+func readPongPackets(conn *net.UDPConn) bool {
 	// Read pong packets
 	b := make([]byte, 1024)
 	conn.SetReadDeadline(time.Now().Add(ConnTimeout))
@@ -79,40 +145,4 @@ func Ping(local *net.UDPAddr, remote *net.UDPAddr) bool {
 	}
 
 	return false
-}
-
-func Serve(local *net.UDPAddr) error {
-	conn, err := net.ListenUDP("udp", local)
-	if err != nil {
-		return fmt.Errorf("Unable to listen on UDP: %s", err)
-	}
-
-	go func() {
-		startTime := time.Now()
-		b := make([]byte, 1024)
-		for {
-			if time.Now().Sub(startTime) > 30*time.Second {
-				log.Tracef("nattest stopped listening for UDP packets at: %s", local)
-				return
-			}
-			n, addr, err := conn.ReadFrom(b)
-			if err != nil {
-				log.Debugf("Unable to read from UDP: %s", err)
-			}
-			msg := b[:n]
-			log.Tracef("Got UDP message from %s: '%s'", addr, msg)
-			if bytes.Equal(msg, pingMsg) {
-				// We got a ping message, respond
-				_, err = conn.WriteTo([]byte(pongMsg), addr)
-				if err != nil {
-					log.Debugf("nattest unable to write to UDP: %v", err)
-					return
-				}
-			} else {
-				log.Debugf("Server received unexpected message: %s", msg)
-			}
-		}
-	}()
-	log.Tracef("nattest listening for UDP packets at: %s", local)
-	return nil
 }
