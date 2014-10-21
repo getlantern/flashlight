@@ -69,7 +69,7 @@ func (reporter *ClientReporter) processTraversalStats() {
 				timerCh = timer.C
 			}
 		case <-timer.C:
-			log.Debugf("Posting traversal stats")
+			log.Tracef("Posting available traversal stats")
 			for answererCountry, outcome := range reporter.traversalStats {
 				reporter.postTraversalStat(answererCountry, outcome)
 			}
