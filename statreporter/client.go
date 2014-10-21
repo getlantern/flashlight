@@ -12,13 +12,15 @@ var (
 )
 
 type TraversalOutcome struct {
-	AnswererCountry               string        `json:"-"`
-	AnswererOnline                int           `json:"answererOnline"`
-	AnswererGot5Tuple             int           `json:"answererGotFiveTuple"`
-	OffererGot5Tuple              int           `json:"offererGotFiveTuple"`
-	TraversalSucceeded            int           `json:"traversalSucceeded"`
-	ConnectionSucceeded           int           `json:"connectionSucceeded"`
-	DurationOfSuccessfulTraversal time.Duration `json:"durationOfTraversal"`
+	AnswererCountry     string `json:"-"`
+	AnswererOnline      uint64 `json:"answererOnline"`
+	AnswererGot5Tuple   uint64 `json:"answererGotFiveTuple"`
+	OffererGot5Tuple    uint64 `json:"offererGotFiveTuple"`
+	TraversalSucceeded  uint64 `json:"traversalSucceeded"`
+	ConnectionSucceeded uint64 `json:"connectionSucceeded"`
+
+	// DurationOfSuccessfulTraversal is the duration in seconds
+	DurationOfSuccessfulTraversal uint64 `json:"durationOfTraversal"`
 }
 
 func (o *TraversalOutcome) merge(n *TraversalOutcome) {
@@ -33,12 +35,14 @@ func (o *TraversalOutcome) merge(n *TraversalOutcome) {
 
 type ClientReporter struct {
 	Reporter
-	traversalStats    map[string]*TraversalOutcome
-	traversalOutcomes chan *TraversalOutcome
+	OutcomesCh     chan<- *TraversalOutcome
+	outcomesCh     chan *TraversalOutcome
+	traversalStats map[string]*TraversalOutcome
 }
 
 func (reporter *ClientReporter) Start() {
-	reporter.traversalOutcomes = make(chan *TraversalOutcome)
+	reporter.outcomesCh = make(chan *TraversalOutcome, 100)
+	reporter.OutcomesCh = reporter.outcomesCh
 	reporter.traversalStats = make(map[string]*TraversalOutcome)
 	go reporter.coalesceTraversalStats()
 }
@@ -51,18 +55,16 @@ func (reporter *ClientReporter) Start() {
 func (reporter *ClientReporter) coalesceTraversalStats() {
 	timer := time.NewTimer(CLIENT_INTERVAL)
 
-	var timerCh <-chan time.Time
-
 	for {
 		select {
-		case n := <-reporter.traversalOutcomes:
+		case n := <-reporter.outcomesCh:
 			o := reporter.traversalStats[n.AnswererCountry]
 			if o == nil {
 				reporter.traversalStats[n.AnswererCountry] = n
 			} else {
 				o.merge(n)
 			}
-		case <-timerCh:
+		case <-timer.C:
 			for answererCountry, outcome := range reporter.traversalStats {
 				reporter.postTraversalStat(answererCountry, outcome)
 			}
@@ -85,9 +87,6 @@ func (reporter *ClientReporter) postTraversalStat(answererCountry string, outcom
 	if err != nil {
 		return fmt.Errorf("Unable to decode traversal outcome: %s", err)
 	}
+	log.Tracef("Reporting: %s", string(jsonBytes))
 	return reporter.postStats(jsonBytes)
-}
-
-func (reporter *ClientReporter) GetOutcomesCh() chan<- *TraversalOutcome {
-	return reporter.traversalOutcomes
 }
