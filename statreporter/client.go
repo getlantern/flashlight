@@ -52,9 +52,12 @@ func (reporter *ClientReporter) Start() {
 // reported immediately, after which we reported coalesced outcomes every 5
 // minutes.
 func (reporter *ClientReporter) processTraversalStats() {
-	timer := time.NewTimer(0)
-	var timerCh <-chan time.Time
+	// Immediately post the first available stat
+	n := <-reporter.outcomesCh
+	reporter.postTraversalStats(n)
 
+	// Then start coalescing stats and posting every CLIENT_INTERVAL
+	timer := time.NewTimer(CLIENT_INTERVAL)
 	for {
 		select {
 		case n := <-reporter.outcomesCh:
@@ -64,14 +67,9 @@ func (reporter *ClientReporter) processTraversalStats() {
 			} else {
 				o.coalesce(n)
 			}
-			if timerCh == nil {
-				timer.Reset(CLIENT_INTERVAL)
-				timerCh = timer.C
-			}
 		case <-timer.C:
-			log.Tracef("Posting available traversal stats")
-			for answererCountry, outcome := range reporter.traversalStats {
-				reporter.postTraversalStat(answererCountry, outcome)
+			for _, outcome := range reporter.traversalStats {
+				reporter.postTraversalStats(outcome)
 			}
 			reporter.traversalStats = make(map[string]*TraversalOutcome)
 			timer.Reset(CLIENT_INTERVAL)
@@ -79,10 +77,10 @@ func (reporter *ClientReporter) processTraversalStats() {
 	}
 }
 
-func (reporter *ClientReporter) postTraversalStat(answererCountry string, outcome *TraversalOutcome) error {
+func (reporter *ClientReporter) postTraversalStats(outcome *TraversalOutcome) error {
 	report := map[string]interface{}{
 		"dims": map[string]string{
-			"answererCountry": answererCountry,
+			"answererCountry": outcome.AnswererCountry,
 			"offererCountry":  reporter.Country,
 			"operatingSystem": runtime.GOOS,
 		},
