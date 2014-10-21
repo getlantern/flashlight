@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	CloudConfigPollInterval = 5 * time.Second
+	CloudConfigPollInterval = 1 * time.Minute
 
 	cloudflare  = "cloudflare"
 	etag        = "ETag"
@@ -102,7 +102,9 @@ func Start(updateHandler func(updated *Config)) (*Config, error) {
 		},
 	}
 	initial, err := m.Start()
+	var cfg *Config
 	if err == nil {
+		cfg = initial.(*Config)
 		go func() {
 			// Read updates
 			for {
@@ -112,7 +114,7 @@ func Start(updateHandler func(updated *Config)) (*Config, error) {
 			}
 		}()
 	}
-	return initial.(*Config), err
+	return cfg, err
 }
 
 // Update updates the configuration using the given mutator function.
