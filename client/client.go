@@ -152,6 +152,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 					reporter.OutcomesCh <- outcome
 				}
 			},
+			KeepAliveInterval: 20 * time.Second,
 		}
 	}
 
