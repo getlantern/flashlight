@@ -139,14 +139,18 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 				log.Tracef("Peer Country: %s", info.Peer.Extras["country"])
 				serverConnected := nattest.Ping(info.LocalAddr, info.RemoteAddr)
 				outcome := newTraversalOutcome(info, true, serverConnected)
-				reporter.OutcomesCh <- outcome
+				if reporter != nil {
+					reporter.OutcomesCh <- outcome
+				}
 			},
 			OnFailure: func(info *nattywad.TraversalInfo) {
 				reporter := client.TraversalReporter
 				log.Debugf("NAT traversal Failed: %s", info)
 				log.Tracef("Peer Country: %s", info.Peer.Extras["country"])
 				outcome := newTraversalOutcome(info, false, false)
-				reporter.OutcomesCh <- outcome
+				if reporter != nil {
+					reporter.OutcomesCh <- outcome
+				}
 			},
 		}
 	}
