@@ -73,8 +73,8 @@ way the client will trust the local server, which is using a self-signed cert.
 
 Example Client:
 
-```bash
-./flashlight -addr localhost:10080 -server getiantem.org -masquerade cdnjs.com
+```bash 
+./flashlight -addr localhost:10080 -role client
 ```
 
 Example Server:
