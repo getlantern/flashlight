@@ -18,6 +18,10 @@ import (
 	"gopkg.in/getlantern/tlsdialer.v1"
 )
 
+var (
+	longDialLimit = 2 * time.Second
+)
+
 type server struct {
 	info          *ServerInfo
 	masquerades   *verifiedMasqueradeSet
@@ -178,7 +182,8 @@ func (serverInfo *ServerInfo) dialerFor(masqueradeSource func() *Masquerade) fun
 
 	return func() (net.Conn, error) {
 		masquerade := masqueradeSource()
-		return tlsdialer.DialWithDialer(
+		start := time.Now()
+		conn, err := tlsdialer.DialWithDialer(
 			&net.Dialer{
 				Timeout: dialTimeout,
 			},
@@ -186,6 +191,15 @@ func (serverInfo *ServerInfo) dialerFor(masqueradeSource func() *Masquerade) fun
 			serverInfo.addressForServer(masquerade),
 			sendServerNameExtension,
 			serverInfo.tlsConfig(masquerade))
+		delta := time.Now().Sub(start)
+		if delta > longDialLimit {
+			resultAddr := ""
+			if err == nil {
+				resultAddr = conn.RemoteAddr().String()
+			}
+			log.Debugf("Long dial to %s (%s), took: %s", masquerade.Domain, resultAddr, delta)
+		}
+		return conn, err
 	}
 }
 
