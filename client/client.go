@@ -10,6 +10,7 @@ import (
 
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
+	"github.com/getlantern/flashlight/statreporter"
 )
 
 const (
@@ -35,6 +36,9 @@ type Client struct {
 
 	// WriteTimeout: (optional) timeout for write ops
 	WriteTimeout time.Duration
+
+	// optional reporter of stats
+	StatReporter *statreporter.Reporter
 
 	cfg                *ClientConfig
 	cfgMutex           sync.RWMutex

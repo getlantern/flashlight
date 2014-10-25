@@ -88,7 +88,7 @@ func (server *Server) ListenAndServe() error {
 	}
 
 	// Hook into stats reporting if necessary
-	reportingStats := server.startReportingStatsIfNecessary()
+	reportingStats := server.StatReporter != nil
 	servingStats := server.startServingStatsIfNecessary()
 
 	if reportingStats || servingStats {
@@ -189,17 +189,6 @@ func (ctx *CertContext) InitServerCert(host string) (err error) {
 		return
 	}
 	return nil
-}
-
-func (server *Server) startReportingStatsIfNecessary() bool {
-	if server.StatReporter != nil {
-		log.Debugf("Reporting stats under InstanceId: %s", server.StatReporter.InstanceId)
-		go server.StatReporter.Start()
-		return true
-	} else {
-		log.Debug("Not reporting stats (no instanceid specified)")
-		return false
-	}
 }
 
 func (server *Server) startServingStatsIfNecessary() bool {
