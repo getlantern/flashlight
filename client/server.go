@@ -12,14 +12,11 @@ import (
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/proxy"
+	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/keyman"
 	"net/http/httputil"
 
-	"gopkg.in/getlantern/tlsdialer.v1"
-)
-
-var (
-	longDialLimit = 2 * time.Second
+	"gopkg.in/getlantern/tlsdialer.v2"
 )
 
 type server struct {
@@ -182,8 +179,7 @@ func (serverInfo *ServerInfo) dialerFor(masqueradeSource func() *Masquerade) fun
 
 	return func() (net.Conn, error) {
 		masquerade := masqueradeSource()
-		start := time.Now()
-		conn, err := tlsdialer.DialWithDialer(
+		cwt, err := tlsdialer.DialForTimings(
 			&net.Dialer{
 				Timeout: dialTimeout,
 			},
@@ -191,15 +187,38 @@ func (serverInfo *ServerInfo) dialerFor(masqueradeSource func() *Masquerade) fun
 			serverInfo.addressForServer(masquerade),
 			sendServerNameExtension,
 			serverInfo.tlsConfig(masquerade))
-		delta := time.Now().Sub(start)
-		if delta > longDialLimit {
-			resultAddr := ""
-			if err == nil {
-				resultAddr = conn.RemoteAddr().String()
-			}
-			log.Debugf("Long dial to %s (%s), took: %s", masquerade.Domain, resultAddr, delta)
+
+		domain := ""
+		if masquerade != nil {
+			domain = masquerade.Domain
 		}
-		return conn, err
+
+		resultAddr := ""
+		if err == nil {
+			resultAddr = cwt.Conn.RemoteAddr().String()
+		}
+
+		if cwt.ResolutionTime > 0 {
+			statreporter.Average("dnsLookupMillis", 1, toMillis(cwt.ResolutionTime))
+			if cwt.ResolutionTime > 1*time.Second {
+				log.Debugf("DNS lookup for %s (%s) took %s", domain, resultAddr, cwt.ResolutionTime)
+			}
+		}
+
+		if cwt.ConnectTime > 0 {
+			statreporter.Average("tcpConnectMillis", 1, toMillis(cwt.ConnectTime))
+			if cwt.ConnectTime > 2*time.Second {
+				log.Debugf("TCP connecting to %s (%s) took %s", domain, resultAddr, cwt.ConnectTime)
+			}
+		}
+
+		if cwt.HandshakeTime > 0 {
+			statreporter.Average("tlsHandshakeMillis", 1, toMillis(cwt.HandshakeTime))
+			if cwt.HandshakeTime > 2*time.Second {
+				log.Debugf("TLS handshake to %s (%s) took %s", domain, resultAddr, cwt.HandshakeTime)
+			}
+		}
+		return cwt.Conn, err
 	}
 }
 
@@ -231,4 +250,8 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 		tlsConfig.RootCAs = caCert.PoolContainingCert()
 	}
 	return tlsConfig
+}
+
+func toMillis(d time.Duration) int64 {
+	return int64(d) / 1000000
 }

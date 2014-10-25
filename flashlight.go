@@ -27,8 +27,13 @@ import (
 )
 
 const (
-	PORTMAP_FAILURE = 50
+	// Exit Statuses
+	ConfigError    = 1
+	Interrupted    = 2
+	PortmapFailure = 50
+)
 
+const (
 	ETAG          = "ETag"
 	IF_NONE_MATCH = "If-None-Match"
 )
@@ -59,6 +64,8 @@ func main() {
 
 	saveProfilingOnSigINT(cfg)
 
+	configureStats(cfg)
+
 	log.Debugf("Running proxy")
 	if cfg.IsDownstream() {
 		runClientProxy(cfg)
@@ -80,7 +87,7 @@ func configure() *config.Config {
 	cfg = cfg.ApplyFlags()
 	if *help || cfg.Addr == "" || (cfg.Role != "server" && cfg.Role != "client") {
 		flag.Usage()
-		os.Exit(1)
+		os.Exit(ConfigError)
 	}
 
 	err = cfg.SaveToDisk()
@@ -173,6 +180,30 @@ func doFetchCloudConfig(cfg *config.Config, proxyAddr string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
+func configureStats(cfg *config.Config) {
+	if cfg.StatsPeriod > 0 {
+		if cfg.StatshubAddr == "" {
+			log.Error("Must specify StatshubAddr if reporting stats")
+			flag.Usage()
+			os.Exit(ConfigError)
+		}
+		if cfg.InstanceId == "" {
+			log.Error("Must specify InstanceId if reporting stats")
+			flag.Usage()
+			os.Exit(ConfigError)
+		}
+		if cfg.Country == "" {
+			log.Error("Must specify Country if reporting stats")
+			flag.Usage()
+			os.Exit(ConfigError)
+		}
+		log.Debugf("Reporting stats to %s every %s under instance id '%s' in country %s", cfg.StatshubAddr, cfg.StatsPeriod, cfg.InstanceId, cfg.Country)
+		go statreporter.Start(cfg.StatsPeriod, cfg.StatshubAddr, cfg.InstanceId, cfg.Country)
+	} else {
+		log.Debug("Not reporting stats (no statsperiod specified)")
+	}
+}
+
 // Runs the client-side proxy
 func runClientProxy(cfg *config.Config) {
 	client := &client.Client{
@@ -205,7 +236,7 @@ func runServerProxy(cfg *config.Config) {
 		err := mapPort(cfg)
 		if err != nil {
 			log.Errorf("Unable to map external port: %s", err)
-			os.Exit(PORTMAP_FAILURE)
+			os.Exit(PortmapFailure)
 		}
 		log.Debugf("Mapped external port %d", cfg.Portmap)
 	}
@@ -219,13 +250,6 @@ func runServerProxy(cfg *config.Config) {
 			PKFile:         config.InConfigDir("proxypk.pem"),
 			ServerCertFile: config.InConfigDir("servercert.pem"),
 		},
-	}
-	if cfg.InstanceId != "" {
-		// Report stats
-		srv.StatReporter = &statreporter.Reporter{
-			InstanceId: cfg.InstanceId,
-			Country:    cfg.Country,
-		}
 	}
 	if cfg.StatsAddr != "" {
 		// Serve stats
@@ -320,6 +344,6 @@ func saveProfilingOnSigINT(cfg *config.Config) {
 		if cfg.MemProfile != "" {
 			saveMemProfile(cfg.MemProfile)
 		}
-		os.Exit(2)
+		os.Exit(Interrupted)
 	}()
 }
