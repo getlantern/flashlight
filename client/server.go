@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	longDialLimit = 2 * time.Second
+	longDialLimit = 10 * time.Second
 )
 
 type server struct {
@@ -71,7 +71,7 @@ func (server *server) dialWithEnproxy(network, addr string) (net.Conn, error) {
 func (server *server) buildEnproxyConfig() *enproxy.Config {
 	server.connPool = &connpool.Pool{
 		MinSize:      30,
-		ClaimTimeout: 15 * time.Second,
+		ClaimTimeout: 10 * time.Second,
 		Dial:         server.info.dialerFor(server.nextMasquerade),
 	}
 	server.connPool.Start()
