@@ -15,7 +15,7 @@ import (
 	"github.com/getlantern/keyman"
 	"net/http/httputil"
 
-	"gopkg.in/getlantern/tlsdialer.v1"
+	"gopkg.in/getlantern/tlsdialer.v2"
 )
 
 var (
@@ -69,9 +69,6 @@ func (server *server) dialWithEnproxy(network, addr string) (net.Conn, error) {
 }
 
 func (server *server) buildEnproxyConfig() *enproxy.Config {
-	if server.connPool != nil {
-		server.connPool.Stop()
-	}
 	server.connPool = &connpool.Pool{
 		MinSize:      30,
 		ClaimTimeout: 15 * time.Second,
@@ -86,7 +83,8 @@ func (server *server) buildEnproxyConfig() *enproxy.Config {
 
 func (server *server) close() {
 	if server.connPool != nil {
-		server.connPool.Stop()
+		// We stop the connPool on a goroutine so as not to wait for Stop to finish
+		go server.connPool.Stop()
 	}
 }
 
@@ -223,19 +221,36 @@ func (serverInfo *ServerInfo) serverHost(masquerade *Masquerade) string {
 	return serverHost
 }
 
-// Build a tls.Config for dialing the upstream host
+// tlsConfig builds a tls.Config for dialing the upstream host. Constructed
+// tls.Configs are cached on a per-masquerade basis to enable client session
+// caching and reduce the amount of PEM certificate parsing.
 func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
-	tlsConfig := &tls.Config{
-		ClientSessionCache: tls.NewLRUClientSessionCache(1000),
-		InsecureSkipVerify: serverInfo.InsecureSkipVerify,
+	serverInfo.tlsConfigsMutex.Lock()
+	defer serverInfo.tlsConfigsMutex.Unlock()
+
+	if serverInfo.tlsConfigs == nil {
+		serverInfo.tlsConfigs = make(map[string]*tls.Config)
 	}
 
-	if masquerade != nil && masquerade.RootCA != "" {
-		caCert, err := keyman.LoadCertificateFromPEMBytes([]byte(masquerade.RootCA))
-		if err != nil {
-			log.Fatalf("Unable to load root ca cert: %s", err)
-		}
-		tlsConfig.RootCAs = caCert.PoolContainingCert()
+	configKey := ""
+	if masquerade != nil {
+		configKey = masquerade.Domain + "|" + masquerade.RootCA
 	}
+	tlsConfig := serverInfo.tlsConfigs[configKey]
+	if tlsConfig == nil {
+		tlsConfig = &tls.Config{
+			ClientSessionCache: tls.NewLRUClientSessionCache(1000),
+			InsecureSkipVerify: serverInfo.InsecureSkipVerify,
+		}
+		if masquerade != nil && masquerade.RootCA != "" {
+			caCert, err := keyman.LoadCertificateFromPEMBytes([]byte(masquerade.RootCA))
+			if err != nil {
+				log.Fatalf("Unable to load root ca cert: %s", err)
+			}
+			tlsConfig.RootCAs = caCert.PoolContainingCert()
+		}
+		serverInfo.tlsConfigs[configKey] = tlsConfig
+	}
+
 	return tlsConfig
 }

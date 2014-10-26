@@ -1,8 +1,10 @@
 package client
 
 import (
+	"crypto/tls"
 	"net"
 	"sort"
+	"sync"
 	"time"
 )
 
@@ -47,6 +49,9 @@ type ServerInfo struct {
 	// QOS: relative quality of service offered. Should be >= 0, with higher
 	// values indicating higher QOS.
 	QOS int
+
+	tlsConfigs      map[string]*tls.Config
+	tlsConfigsMutex sync.Mutex
 }
 
 type cachedConn struct {
