@@ -69,6 +69,9 @@ func (server *server) dialWithEnproxy(network, addr string) (net.Conn, error) {
 }
 
 func (server *server) buildEnproxyConfig() *enproxy.Config {
+	if server.connPool != nil {
+		server.connPool.Stop()
+	}
 	server.connPool = &connpool.Pool{
 		MinSize:      30,
 		ClaimTimeout: 15 * time.Second,
