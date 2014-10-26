@@ -200,7 +200,11 @@ func (serverInfo *ServerInfo) dialerFor(masqueradeSource func() *Masquerade) fun
 			if err == nil {
 				resultAddr = conn.RemoteAddr().String()
 			}
-			log.Debugf("Long dial to %s (%s), took: %s", masquerade.Domain, resultAddr, delta)
+			domain := ""
+			if masquerade != nil {
+				domain = masquerade.Domain
+			}
+			log.Debugf("Long dial to %s (%s), took: %s", domain, resultAddr, delta)
 		}
 		return conn, err
 	}
