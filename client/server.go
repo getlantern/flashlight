@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
+	"math"
 	"net"
 	"net/http"
 	"time"
@@ -199,34 +200,57 @@ func (serverInfo *ServerInfo) dialerFor(masqueradeSource func() *Masquerade) fun
 		}
 
 		if cwt.ResolutionTime > 0 {
+			serverInfo.recordTiming("DNSLookup", cwt.ResolutionTime)
 			if cwt.ResolutionTime > 1*time.Second {
 				log.Debugf("DNS lookup for %s (%s) took %s", domain, resultAddr, cwt.ResolutionTime)
-				statreporter.Gauge(qualifiedWithMasqueradeSet("longDnsLookup")).Add(1)
 			}
 		}
 
 		if cwt.ConnectTime > 0 {
+			serverInfo.recordTiming("TCPConnect", cwt.ConnectTime)
 			if cwt.ConnectTime > 5*time.Second {
 				log.Debugf("TCP connecting to %s (%s) took %s", domain, resultAddr, cwt.ConnectTime)
-				statreporter.Gauge(qualifiedWithMasqueradeSet("longConnectTime")).Add(1)
 			}
 		}
 
 		if cwt.HandshakeTime > 0 {
+			serverInfo.recordTiming("TLSHandshake", cwt.HandshakeTime)
 			if cwt.HandshakeTime > 5*time.Second {
 				log.Debugf("TLS handshake to %s (%s) took %s", domain, resultAddr, cwt.HandshakeTime)
-				statreporter.Gauge(qualifiedWithMasqueradeSet("longHandshakeTime")).Add(1)
 			}
 		}
 		return cwt.Conn, err
 	}
 }
 
-func (serverInfo *ServerInfo) qualifiedWithMasqueradeSet(key string) string {
-	if serverInfo.MasqueradeSet == "" {
-		return key
+// recordTimings records timing information for the given step in establishing
+// a connection. It always records that the step happened, and it records the
+// highest timing threshold exceeded by the step.  Thresholds are 1, 2, 4, 8,
+// and 16 seconds.
+//
+// For example, if calling this with step = "DNSLookup" and duration = 2.5
+// seconds, we will increment two gauges, "DNSLookup" and
+// "DNSLookupOver2Sec".
+//
+// The stats are qualified by MasqueradeSet (if specified). If the MasqueradeSet
+// is "cloudflare", the above stats would be recorded as "DNSLookupTocloudflare"
+// and "DNSLookupTocloudflareOver2Sec". Otherwise, they're qualified by
+// host, e.g. "DNSLookupTolocalhost".
+func (serverInfo *ServerInfo) recordTiming(step string, duration time.Duration) {
+	if serverInfo.MasqueradeSet != "" {
+		step = fmt.Sprintf("%sTo%s", step, serverInfo.MasqueradeSet)
+	} else {
+		step = fmt.Sprintf("%sTo%s", step, serverInfo.Host)
 	}
-	return key + "_" + serverInfo.MasqueradeSet
+	statreporter.Gauge(step).Add(1)
+	for i := 4; i >= 0; i-- {
+		seconds := int(math.Pow(float64(2), float64(i)))
+		if duration > time.Duration(seconds)*time.Second {
+			key := fmt.Sprintf("%sOver%dSec", step, seconds)
+			statreporter.Gauge(key).Add(1)
+			return
+		}
+	}
 }
 
 // Get the address to dial for reaching the server
