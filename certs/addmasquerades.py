@@ -25,7 +25,7 @@ var CloudflareMasquerades = []*client.Masquerade{
 """
 
 
-def add_masquerades(domains):
+def addmasquerades(domains, refreshcerts=False):
 	if not in_same_directory():
 		# I tried making this robust to being called from elsewhere, but that
 		# wouldn't work with other scripts that this uses, and as long as the
@@ -33,7 +33,7 @@ def add_masquerades(domains):
 		print "You must call this from the same directory (%s/)" % here()
 		sys.exit(1)
 	for domain in domains:
-		if not os.path.exists(domain):
+		if refreshcerts or not os.path.exists(domain):
 			print "Getting cert for %s ..." % domain
 			# I call get_rootca before I create the file so an empty file
 			# won't be left around if get_rootca fails.
@@ -95,8 +95,8 @@ if __name__ == '__main__':
 		print "Where <masquerades file> should be the path of a file"
 		print "containing domain names separated by whitespace."
 		sys.exit(1)
-	add_masquerades(filter(None,
-						   map(str.strip,
-							   file(sys.argv[1]).read().split())))
+	addmasquerades(filter(None,
+						  map(str.strip,
+							  file(sys.argv[1]).read().split())))
 
 
