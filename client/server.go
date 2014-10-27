@@ -199,27 +199,34 @@ func (serverInfo *ServerInfo) dialerFor(masqueradeSource func() *Masquerade) fun
 		}
 
 		if cwt.ResolutionTime > 0 {
-			statreporter.Average("dnsLookupMillis", 1, toMillis(cwt.ResolutionTime))
 			if cwt.ResolutionTime > 1*time.Second {
 				log.Debugf("DNS lookup for %s (%s) took %s", domain, resultAddr, cwt.ResolutionTime)
+				statreporter.Gauge(qualifiedWithMasqueradeSet("longDnsLookup")).Add(1)
 			}
 		}
 
 		if cwt.ConnectTime > 0 {
-			statreporter.Average("tcpConnectMillis", 1, toMillis(cwt.ConnectTime))
-			if cwt.ConnectTime > 2*time.Second {
+			if cwt.ConnectTime > 5*time.Second {
 				log.Debugf("TCP connecting to %s (%s) took %s", domain, resultAddr, cwt.ConnectTime)
+				statreporter.Gauge(qualifiedWithMasqueradeSet("longConnectTime")).Add(1)
 			}
 		}
 
 		if cwt.HandshakeTime > 0 {
-			statreporter.Average("tlsHandshakeMillis", 1, toMillis(cwt.HandshakeTime))
-			if cwt.HandshakeTime > 2*time.Second {
+			if cwt.HandshakeTime > 5*time.Second {
 				log.Debugf("TLS handshake to %s (%s) took %s", domain, resultAddr, cwt.HandshakeTime)
+				statreporter.Gauge(qualifiedWithMasqueradeSet("longHandshakeTime")).Add(1)
 			}
 		}
 		return cwt.Conn, err
 	}
+}
+
+func (serverInfo *ServerInfo) qualifiedWithMasqueradeSet(key string) string {
+	if serverInfo.MasqueradeSet == "" {
+		return key
+	}
+	return key + "_" + serverInfo.MasqueradeSet
 }
 
 // Get the address to dial for reaching the server

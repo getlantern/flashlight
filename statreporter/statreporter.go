@@ -15,31 +15,36 @@ const (
 	StatshubUrlTemplate = "https://%s/stats/%s"
 )
 
-type increment struct {
-	key string
-	val int64
+const (
+	increments = "increments"
+	gauges     = "gauges"
+)
+
+const (
+	set = iota
+	add = iota
+)
+
+type update struct {
+	category string
+	action   int
+	key      string
+	val      int64
 }
 
-type average struct {
-	key   string
-	count int64
-	total int64
-}
-
-func (avg *average) calc() int64 {
-	return avg.total / avg.count
+type UpdateBuilder struct {
+	category string
+	key      string
 }
 
 var (
-	period     time.Duration
-	addr       string
-	id         string
-	country    string
-	incrCh     chan *increment
-	avgCh      chan *average
-	increments map[string]int64
-	averages   map[string]*average
-	started    int32
+	period       time.Duration
+	addr         string
+	id           string
+	country      string
+	updatesCh    chan *update
+	accumulators map[string]map[string]int64
+	started      int32
 )
 
 // Start runs a goroutine that periodically coalesces the collected statistics
@@ -54,54 +59,81 @@ func Start(reportingPeriod time.Duration, statshubAddr string, instanceId string
 	addr = statshubAddr
 	id = instanceId
 	country = countryCode
-	incrCh = make(chan *increment, 1000)
-	avgCh = make(chan *average, 1000)
-	initAccumulators()
+	updatesCh = make(chan *update, 1000)
+	accumulators = make(map[string]map[string]int64)
 
 	timer := time.NewTimer(timeToNextReport())
 	for {
 		select {
-		case next := <-incrCh:
+		case update := <-updatesCh:
 			// Coalesce
-			increments[next.key] = increments[next.key] + next.val
-		case next := <-avgCh:
-			// Coalesce
-			existing := averages[next.key]
-			if existing == nil {
-				averages[next.key] = next
-			} else {
-				existing.count = existing.count + next.count
-				existing.total = existing.total + next.total
+			accum := accumulators[update.category]
+			if accum == nil {
+				accum = make(map[string]int64)
+				accumulators[update.category] = accum
+			}
+			switch update.action {
+			case set:
+				accum[update.key] = update.val
+			case add:
+				accum[update.key] = accum[update.key] + update.val
 			}
 		case <-timer.C:
-			if len(increments) == 0 && len(averages) == 0 {
+			if len(accumulators) == 0 {
 				log.Debugf("No stats to report")
 			} else {
-				err := postStats(increments, averages)
+				err := postStats(accumulators)
 				if err != nil {
 					log.Errorf("Error on posting stats: %s", err)
 				}
-				initAccumulators()
+				accumulators = make(map[string]map[string]int64)
 			}
 			timer.Reset(timeToNextReport())
 		}
 	}
 }
 
-func initAccumulators() {
-	increments = make(map[string]int64)
-	averages = make(map[string]*average)
+// OnBytesGiven registers the fact that bytes were given (sent or received)
+func OnBytesGiven(clientIp string, bytes int64) {
+	Increment("bytesGiven").Add(bytes)
+	Increment("bytesGivenByFlashlight").Add(bytes)
 }
 
-func Increment(key string, value int64) {
-	if isStarted() {
-		incrCh <- &increment{key, value}
+func Increment(key string) *UpdateBuilder {
+	return &UpdateBuilder{
+		increments,
+		key,
 	}
 }
 
-func Average(key string, count int64, total int64) {
+func Gauge(key string) *UpdateBuilder {
+	return &UpdateBuilder{
+		gauges,
+		key,
+	}
+}
+
+func (b *UpdateBuilder) Add(val int64) {
+	postUpdate(&update{
+		b.category,
+		add,
+		b.key,
+		val,
+	})
+}
+
+func (b *UpdateBuilder) Set(val int64) {
+	postUpdate(&update{
+		b.category,
+		set,
+		b.key,
+		val,
+	})
+}
+
+func postUpdate(update *update) {
 	if isStarted() {
-		avgCh <- &average{key, count, total}
+		updatesCh <- update
 	}
 }
 
@@ -109,32 +141,21 @@ func isStarted() bool {
 	return atomic.LoadInt32(&started) == 1
 }
 
-// OnBytesGiven registers the fact that bytes were given (sent or received)
-func OnBytesGiven(clientIp string, bytes int64) {
-	Increment("bytesGiven", bytes)
-	Increment("bytesGivenByFlashlight", bytes)
-}
-
 func timeToNextReport() time.Duration {
 	nextInterval := time.Now().Truncate(period).Add(period)
 	return nextInterval.Sub(time.Now())
 }
 
-func postStats(increments map[string]int64, averages map[string]*average) error {
+func postStats(accumulators map[string]map[string]int64) error {
 	report := map[string]interface{}{
 		"dims": map[string]string{
 			"country": country,
 		},
-		"increments": increments,
 	}
 
-	gauges := make(map[string]int64)
-
-	for key, avg := range averages {
-		gauges[key] = avg.calc()
+	for category, accum := range accumulators {
+		report[category] = accum
 	}
-
-	report["gauges"] = gauges
 
 	jsonBytes, err := json.Marshal(report)
 	if err != nil {
