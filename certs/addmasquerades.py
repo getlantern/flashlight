@@ -18,11 +18,11 @@ import certstotemplate
 
 
 go_config_header = """\
-package cloud
+package config
 
 import "github.com/getlantern/flashlight/client"
 
-var CloudflareMasquerades = []*client.Masquerade{
+var cloudflareMasquerades = []*client.Masquerade{
 """
 
 
