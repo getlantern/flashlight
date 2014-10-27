@@ -45,7 +45,7 @@ def addmasquerades(domains, refreshcerts=False):
 	fronts = cloud_config['client']['masqueradesets']['cloudflare']
 	# Sort to make git diffs more helpful.
 	fronts.sort(key=lambda d: d['domain'])
-	with file(os.path.join('..', 'config', 'cloud.go'), 'w') as out:
+	with file(os.path.join('..', 'config', 'masquerades.go'), 'w') as out:
 		out.write(go_config_header)
 		for f in fronts:
 			out.write('\t&client.Masquerade{\n')
