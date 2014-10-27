@@ -1,4 +1,4 @@
-package config
+package cloud
 
 import (
 	"flag"
@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"time"
 
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config/cloud"
@@ -25,9 +26,11 @@ type Config struct {
 	Portmap        int
 	Role           string
 	AdvertisedHost string
+	StatsInterval  time.Duration
+	StatshubAddr   string
 	InstanceId     string
-	StatsAddr      string
 	Country        string
+	StatsAddr      string
 	CpuProfile     string
 	MemProfile     string
 	Client         *client.ClientConfig
@@ -44,9 +47,11 @@ var (
 	portmap        = flag.Int("portmap", 0, "try to map this port on the firewall to the port on which flashlight is listening, using UPnP or NAT-PMP. If mapping this port fails, flashlight will exit with status code 50")
 	role           = flag.String("role", "", "either 'client' or 'server' (required)")
 	advertisedHost = flag.String("server", "", "FQDN of flashlight server when running in server mode (required)")
-	instanceId     = flag.String("instanceid", "", "instanceId under which to report stats to statshub. If not specified, no stats are reported.")
-	statsAddr      = flag.String("statsaddr", "", "host:port at which to make detailed stats available using server-sent events (optional)")
+	statsInterval  = flag.Int("statsinterval", 0, "time in seconds to wait between reporting stats. If not specified, stats are not reported. If specified, statshub, instanceid and statsaddr must also be specified.")
+	statshubAddr   = flag.String("statshub", "pure-journey-3547.herokuapp.com", "address of statshub server")
+	instanceId     = flag.String("instanceid", "", "instanceId under which to report stats to statshub")
 	country        = flag.String("country", "xx", "2 digit country code under which to report stats. Defaults to xx.")
+	statsAddr      = flag.String("statsaddr", "", "host:port at which to make detailed stats available using server-sent events (optional)")
 	cpuProfile     = flag.String("cpuprofile", "", "write cpu profile to given file")
 	memProfile     = flag.String("memprofile", "", "write heap profile to given file")
 )
@@ -61,9 +66,11 @@ func (orig *Config) ApplyFlags() *Config {
 	updated.Portmap = *portmap
 	updated.Role = *role
 	updated.AdvertisedHost = *advertisedHost
+	updated.StatsInterval = time.Duration(*statsInterval) * time.Second
+	updated.StatshubAddr = *statshubAddr
 	updated.InstanceId = *instanceId
-	updated.StatsAddr = *statsAddr
 	updated.Country = *country
+	updated.StatsAddr = *statsAddr
 	updated.CpuProfile = *cpuProfile
 	updated.MemProfile = *memProfile
 	updated.applyDefaults()
