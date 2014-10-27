@@ -15,7 +15,7 @@ import (
 	"github.com/getlantern/keyman"
 	"net/http/httputil"
 
-	"gopkg.in/getlantern/tlsdialer.v2"
+	"gopkg.in/getlantern/tlsdialer.v1"
 )
 
 var (
