@@ -5,3 +5,4 @@ flashlight.ex?
 *.swo
 *.swp
 *.pyc
+certs/errors.txt

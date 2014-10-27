@@ -4,6 +4,7 @@ import inspect
 import os
 import socket
 import sys
+import traceback
 
 # sudo pip install pyopenssl
 # If you get an AttributeError: get_peer_cert_chain, try the --upgrade flag
@@ -32,13 +33,30 @@ def addmasquerades(domains, refreshcerts=False):
 		# user gets a clear error message this is not really a problem.
 		print "You must call this from the same directory (%s/)" % here()
 		sys.exit(1)
-	for domain in domains:
-		if refreshcerts or not os.path.exists(domain):
-			print "Getting cert for %s ..." % domain
-			# I call get_rootca before I create the file so an empty file
-			# won't be left around if get_rootca fails.
-			rootca = get_rootca(domain)
-			file(domain, 'w').write(rootca)
+	any_errors = False
+	with file('errors.txt', 'w') as errors:
+		for domain in domains:
+			if refreshcerts or not os.path.exists(domain):
+				print "Getting cert for %s ..." % domain
+				# I call get_rootca before I create the file so an empty file
+				# won't be left around if get_rootca fails.
+				try:
+					rootca = get_rootca(domain)
+					file(domain, 'w').write(rootca)
+				except KeyboardInterrupt:
+					raise
+				except:
+					any_errors = True
+					traceback.print_exc()
+					errors.write(domain + '\n')
+	if any_errors:
+		print "Some errors were detected while fetching certs."
+		print "The offending domains have been collected in the errors.txt file"
+		print "So you can retry those by running %s errors.txt" % thisfilename()
+		print "Do you want to go on to update cloud.yaml and masquerades.go"
+		print "anyway? (y/N)"
+		if raw_input().strip().lower() != 'y':
+			sys.exit(1)
 	certstotemplate.main(['-t', 'cloud.yaml.tmpl',
 		                  '-o', 'cloud.yaml'])
 	cloud_config = yaml.load(file('cloud.yaml'))
@@ -82,8 +100,11 @@ def get_rootca(domain):
 			pass
 	raise RuntimeError("Couldn't get cert for %s" % domain)
 
+def thisfilename():
+	return inspect.getfile(inspect.currentframe())
+
 def here():
-	return os.path.dirname(inspect.getfile(inspect.currentframe()))
+	return os.path.dirname(thisfilename())
 
 def in_same_directory():
 	return os.path.abspath(here()) == os.getcwd()
