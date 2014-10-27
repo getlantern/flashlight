@@ -19,7 +19,13 @@ import (
 )
 
 var (
+	// Cutoff for logging warnings about a dial having taken a long time.
 	longDialLimit = 10 * time.Second
+
+	// idleTimeout needs to be small enough that we stop using connections
+	// before the upstream server/CDN closes them itself.
+	// TODO: make this configurable.
+	idleTimeout = 10 * time.Second
 )
 
 type server struct {
@@ -71,7 +77,7 @@ func (server *server) dialWithEnproxy(network, addr string) (net.Conn, error) {
 func (server *server) buildEnproxyConfig() *enproxy.Config {
 	server.connPool = &connpool.Pool{
 		MinSize:      30,
-		ClaimTimeout: 10 * time.Second,
+		ClaimTimeout: idleTimeout,
 		Dial:         server.info.dialerFor(server.nextMasquerade),
 	}
 	server.connPool.Start()
@@ -165,6 +171,7 @@ func (serverInfo *ServerInfo) enproxyConfigWith(dialProxy func(addr string) (net
 			return http.NewRequest(method, "http://"+upstreamHost+"/", body)
 		},
 		BufferRequests: serverInfo.BufferRequests,
+		IdleTimeout:    idleTimeout, // TODO: make this configurable
 	}
 }
 
