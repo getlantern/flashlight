@@ -17,7 +17,7 @@ import certstotemplate
 
 
 go_config_header = """\
-package config
+package cloud
 
 import "github.com/getlantern/flashlight/client"
 

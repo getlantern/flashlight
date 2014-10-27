@@ -1,4 +1,4 @@
-package cloud
+package config
 
 import (
 	"flag"
