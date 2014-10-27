@@ -62,9 +62,9 @@ def addmasquerades(domains, refreshcerts=False):
 			print "Do you have s3cmd installed and configured?"
 
 def get_rootca(domain):
-	for version in [ssl.TLSv1_METHOD,
+	for version in [ssl.TLSv1_2_METHOD,
 			        ssl.TLSv1_1_METHOD,
-					ssl.TLSv1_2_METHOD]:
+					ssl.TLSv1_METHOD]:
 		try:
 			ctx = ssl.Context(version)
 			ctx.set_verify(ssl.VERIFY_NONE, lambda *args: True)
