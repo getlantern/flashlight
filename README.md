@@ -128,4 +128,4 @@ The certstotemplate.py script in the certs directory will take all the certifica
 Usage: ./certstotemplate.py -t <templatefile> -o <outputfile>
 ```
 
-This is handy for converting those certificates to go code, for example. See [certs/gostruct.tmpl](https://github.com/getlantern/flashlight/blob/1762/certs/gostruct.tmpl) as an example. [certs/cloud.yaml.tmpl](https://github.com/getlantern/flashlight/blob/1762/certs/cloud.yaml.tmpl) is an example yaml template.
+This is handy for converting those certificates to go code, for example. See [certs/gostruct.tmpl](https://github.com/getlantern/flashlight/blob/master/certs/gostruct.tmpl) as an example. [certs/cloud.yaml.tmpl](https://github.com/getlantern/flashlight/blob/master/certs/cloud.yaml.tmpl) is an example yaml template.
