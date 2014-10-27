@@ -184,7 +184,7 @@ func (cfg *ClientConfig) highestQosServer(masqueradeSet string) *ServerInfo {
 // ServeHTTP implements the method from interface http.Handler
 func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	server := client.randomServer(req)
-	log.Debugf("Using server %s to handle request for %s", server.info.Host, req.RequestURI)
+	log.Tracef("Using server %s to handle request for %s", server.info.Host, req.RequestURI)
 	if req.Method == CONNECT {
 		server.enproxyConfig.Intercept(resp, req)
 	} else {
