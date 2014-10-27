@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -58,7 +59,7 @@ func Start(reportingPeriod time.Duration, statshubAddr string, instanceId string
 	period = reportingPeriod
 	addr = statshubAddr
 	id = instanceId
-	country = countryCode
+	country = strings.ToLower(countryCode)
 	updatesCh = make(chan *update, 1000)
 	accumulators = make(map[string]map[string]int64)
 
