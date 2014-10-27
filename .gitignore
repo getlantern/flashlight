@@ -2,4 +2,6 @@ flashlight
 flashlight.ex?
 *.tar.gz
 *.pem
+*.swo
 *.swp
+*.pyc

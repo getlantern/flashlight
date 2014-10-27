@@ -49,12 +49,12 @@ def generate_cloud(template, output, script):
 
     for fn in filenames:
         extension = fn[fn.rfind('.'):]
-        if extension not in [".yaml", ".txt", ".py", ".tmpl", ".bash", ".swp"]:
+        if extension not in [".yaml", ".txt", ".py", ".pyc", ".tmpl", ".bash", ".swp"]:
             certs[fn] = load_cert(fn)
 
     env = Environment(loader=FileSystemLoader("."))
     template = env.get_template(template)
-    ordered = OrderedDict(sorted(certs.items(), key=lambda t: t[0])) 
+    ordered = OrderedDict(sorted(certs.items(), key=lambda t: t[0]))
     rendered = template.render(masquerades=ordered)
 
     with open(output, "w") as cloudfile:
