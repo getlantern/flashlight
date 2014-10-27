@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/client"
-	"github.com/getlantern/flashlight/config/cloud"
 	"github.com/getlantern/flashlight/log"
 	"gopkg.in/getlantern/deepcopy.v1"
 	"gopkg.in/getlantern/yaml.v1"
@@ -213,7 +212,7 @@ func (cfg *Config) applyDefaults() {
 		cfg.Client.MasqueradeSets = make(map[string][]*client.Masquerade)
 	}
 	if len(cfg.Client.MasqueradeSets) == 0 {
-		cfg.Client.MasqueradeSets[CF] = cloud.CloudflareMasquerades
+		cfg.Client.MasqueradeSets[CF] = cloudflareMasquerades
 	}
 
 	// Make sure we always have at least one server
