@@ -122,10 +122,11 @@ codesign -s "Developer ID Application: Brave New Software Project, Inc" -f insta
 ```
 
 ### Adding new masquerade hosts
-The certstotemplate.py script in the certs directory will take all the certificate files in that directory and will format them according to supplied Jinja templates. The usage is as follows:
 
-```
-Usage: ./certstotemplate.py -t <templatefile> -o <outputfile>
-```
+Compile the list of domains in a file, separated with whitespace (e.g., one
+per line), cd to the certs/ subfolder, and run `./addmasquerades.py <your file>`.
 
-This is handy for converting those certificates to go code, for example. See [certs/gostruct.tmpl](https://github.com/getlantern/flashlight/blob/master/certs/gostruct.tmpl) as an example. [certs/cloud.yaml.tmpl](https://github.com/getlantern/flashlight/blob/master/certs/cloud.yaml.tmpl) is an example yaml template.
+### Removing masquerade hosts
+
+Remove the corresponding cert file from the certs/ subfolder, cd to that
+directory and run `./addmasquerades.py nodomains.txt`.
