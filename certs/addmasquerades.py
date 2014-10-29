@@ -10,6 +10,13 @@ import traceback
 # If you get an AttributeError: get_peer_cert_chain, try the --upgrade flag
 # above.
 from OpenSSL import SSL as ssl, crypto
+
+try:
+    ssl.TLSv1_2_METHOD
+except AttributeError:
+    print "Bad OpenSSL version.  Try `pip install --upgrade pyopenssl` ?"
+    sys.exit(1)
+
 # sudo pip install pyyaml
 import yaml
 
@@ -44,9 +51,8 @@ def addmasquerades(domains, refreshcerts=False):
 					file(domain, 'w').write(rootca)
 				except KeyboardInterrupt:
 					raise
-				except:
+				except ErrorGettingCert:
 					any_errors = True
-					traceback.print_exc()
 					errors.write(domain + '\n')
 	if any_errors:
 		print "Some errors were detected while fetching certs."
@@ -78,6 +84,9 @@ def addmasquerades(domains, refreshcerts=False):
 		if result != 0:
 			print "Do you have s3cmd installed and configured?"
 
+class ErrorGettingCert(Exception):
+    pass
+
 def get_rootca(domain):
 	for version in [ssl.TLSv1_2_METHOD,
 			        ssl.TLSv1_1_METHOD,
@@ -95,9 +104,9 @@ def get_rootca(domain):
 				return crypto.dump_certificate(crypto.FILETYPE_PEM, chain[-1])
 			finally:
 				s.close()
-		except ssl.Error:
-			pass
-	raise RuntimeError("Couldn't get cert for %s" % domain)
+		except (IOError, ssl.Error):
+                        traceback.print_exc()
+	raise ErrorGettingCert
 
 def thisfilename():
 	return inspect.getfile(inspect.currentframe())
