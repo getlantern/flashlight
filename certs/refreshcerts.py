@@ -12,8 +12,7 @@ def refreshcerts(filename=None):
 		domains = [name for name in os.listdir('.') if iscert(name)]
 	else:
 		domains = map(str.strip, file(filename).read().split())
-	addmasquerades(domains,
-				   refreshcerts=True)
+	addmasquerades(domains, refreshcerts=True)
 
 
 if __name__ == '__main__':

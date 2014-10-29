@@ -142,3 +142,9 @@ per line), cd to the certs/ subfolder, and run `./addmasquerades.py <your file>`
 
 Remove the corresponding cert file from the certs/ subfolder, cd to that
 directory and run `./addmasquerades.py nodomains.txt`.
+
+#### Refreshing the root CA certs for hosts
+
+Run `./refreshcerts.py [<your file>]`, where the file, if provided, should
+have the same format as for `addmasquerades.py`.  If no domains file is
+provided, the root CA certs for all domains will be refreshed.
