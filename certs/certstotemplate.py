@@ -6,6 +6,8 @@ import inspect, os
 import sys, getopt
 from collections import OrderedDict
 
+from filtercerts import iscert
+
 def main(argv):
     script = inspect.getfile(inspect.currentframe())
     template = ''
@@ -46,15 +48,12 @@ def generate_cloud(template, output, script):
     for (dirpath, dirnames, filenames) in walk("."):
         f.extend(filenames)
         break
-
     for fn in filenames:
-        extension = fn[fn.rfind('.'):]
-        if extension not in [".yaml", ".txt", ".py", ".tmpl", ".bash", ".swp"]:
+        if iscert(fn):
             certs[fn] = load_cert(fn)
-
     env = Environment(loader=FileSystemLoader("."))
     template = env.get_template(template)
-    ordered = OrderedDict(sorted(certs.items(), key=lambda t: t[0])) 
+    ordered = OrderedDict(sorted(certs.items(), key=lambda t: t[0]))
     rendered = template.render(masquerades=ordered)
 
     with open(output, "w") as cloudfile:
