@@ -123,15 +123,34 @@ codesign -s "Developer ID Application: Brave New Software Project, Inc" -f insta
 
 ### Masquerade Host Management
 
-Masquerade host configuration is managed using utilities in the certs/ subfolder. These use python and require the following packages to be installed:.  Note - if you're not using virtual environments, you may need to sudo all of these commands.
+Masquerade host configuration is managed using utilities in the certs/ subfolder.
+
+#### Setup
+
+You need python 2.7 and the following packages:
 
 ```bash
-pip install pyaml
+pip install pyyaml
 pip install jinja2
 pip install --upgrade pyopenssl
 ```
+Notes:
+- If you're not using virtual environments, you may need to sudo all of these commands.
+- This requires a fairly recent version of OpenSSL (more recent than what is installed with OS X).
 
-Note - this requires a fairly recent version of OpenSSL (more recent than what is installed with OS X).
+In addition, you need the s3cmd tool installed and set up.  To install on
+Ubuntu:
+
+```bash
+sudo apt-get install s3cmd
+```
+
+On OS X:
+```bash
+brew install s3cmd
+```
+
+And then run `s3cmd --configure` and follow the on-screen instructions.
 
 #### Adding new masquerade hosts
 
