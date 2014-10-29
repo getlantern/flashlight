@@ -13,7 +13,6 @@ from OpenSSL import SSL as ssl, crypto
 # sudo pip install pyyaml
 import yaml
 
-from here import here
 import certstotemplate
 
 
