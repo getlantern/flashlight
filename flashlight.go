@@ -16,6 +16,13 @@ import (
 	"github.com/getlantern/golog"
 )
 
+const (
+	// Exit Statuses
+	ConfigError    = 1
+	Interrupted    = 2
+	PortmapFailure = 50
+)
+
 var (
 	log = golog.LoggerFor("flashlight")
 
@@ -34,6 +41,10 @@ func main() {
 	})
 	if err != nil {
 		log.Fatalf("Unable to start configuration: %s", err)
+	}
+	if *help || cfg.Addr == "" || (cfg.Role != "server" && cfg.Role != "client") {
+		flag.Usage()
+		os.Exit(ConfigError)
 	}
 
 	if cfg.CpuProfile != "" {
