@@ -121,12 +121,24 @@ Note that these binaries should also be signed for use in production, at least o
 codesign -s "Developer ID Application: Brave New Software Project, Inc" -f install/osx/pt/flashlight/flashlight
 ```
 
-### Adding new masquerade hosts
+### Masquerade Host Management
+
+Masquerade host configuration is managed using utilities in the certs/ subfolder. These use python and require the following packages to be installed:.  Note - if you're not using virtual environments, you may need to sudo all of these commands.
+
+```bash
+pip install pyaml
+pip install jinja2
+pip install --upgrade pyopenssl
+```
+
+Note - this requires a fairly recent version of OpenSSL (more recent than what is installed with OS X).
+
+#### Adding new masquerade hosts
 
 Compile the list of domains in a file, separated with whitespace (e.g., one
 per line), cd to the certs/ subfolder, and run `./addmasquerades.py <your file>`.
 
-### Removing masquerade hosts
+#### Removing masquerade hosts
 
 Remove the corresponding cert file from the certs/ subfolder, cd to that
 directory and run `./addmasquerades.py nodomains.txt`.
