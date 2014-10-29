@@ -53,7 +53,6 @@ def addmasquerades(domains, refreshcerts=False):
 					raise
 				except ErrorGettingCert:
 					any_errors = True
-					traceback.print_exc()
 					errors.write(domain + '\n')
 	if any_errors:
 		print "Some errors were detected while fetching certs."
@@ -105,8 +104,8 @@ def get_rootca(domain):
 				return crypto.dump_certificate(crypto.FILETYPE_PEM, chain[-1])
 			finally:
 				s.close()
-		except ssl.Error:
-			pass
+		except (IOError, ssl.Error):
+                        traceback.print_exc()
 	raise ErrorGettingCert
 
 def thisfilename():
