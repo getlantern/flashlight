@@ -150,7 +150,9 @@ On OS X:
 brew install s3cmd
 ```
 
-And then run `s3cmd --configure` and follow the on-screen instructions.
+And then run `s3cmd --configure` and follow the on-screen instructions.  You
+can get AWS credentials that are good for uploading to S3 in
+[too-many-secrets/lantern_aws/aws_credential](https://github.com/getlantern/too-many-secrets/blob/master/lantern_aws/aws_credential).
 
 #### Adding new masquerade hosts
 
