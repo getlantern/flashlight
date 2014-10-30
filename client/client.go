@@ -76,16 +76,16 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	client.cfgMutex.Lock()
 	defer client.cfgMutex.Unlock()
 
-	log.Debug("Client.Configure() called")
-	if client.cfg != nil && reflect.DeepEqual(client.cfg, cfg) {
-		log.Debugf("Client configuration unchanged")
-		return
-	}
-
-	if client.cfg == nil {
-		log.Debugf("Client configuration initialized")
+	log.Debug("Configure() called")
+	if client.cfg != nil {
+		if reflect.DeepEqual(client.cfg, cfg) {
+			log.Debugf("Client configuration unchanged")
+			return
+		} else {
+			log.Debugf("Client configuration changed")
+		}
 	} else {
-		log.Debugf("Client configuration changed")
+		log.Debugf("Client configuration initialized")
 	}
 
 	verifiedSets := make(map[string]*verifiedMasqueradeSet)

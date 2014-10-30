@@ -157,26 +157,19 @@ func (server *Server) ListenAndServe() error {
 	}
 
 	// Hook into stats reporting if necessary
-	reportingStats := server.startReportingStatsIfNecessary()
 	servingStats := server.startServingStatsIfNecessary()
 
-	if reportingStats || servingStats {
-		// Add callbacks to track bytes given
-		proxy.OnBytesReceived = func(ip string, bytes int64) {
-			if reportingStats {
-				server.StatReporter.OnBytesGiven(ip, bytes)
-			}
-			if servingStats {
-				server.StatServer.OnBytesReceived(ip, bytes)
-			}
+	// Add callbacks to track bytes given
+	proxy.OnBytesReceived = func(ip string, bytes int64) {
+		statreporter.OnBytesGiven(ip, bytes)
+		if servingStats {
+			server.StatServer.OnBytesReceived(ip, bytes)
 		}
-		proxy.OnBytesSent = func(ip string, bytes int64) {
-			if reportingStats {
-				server.StatReporter.OnBytesGiven(ip, bytes)
-			}
-			if servingStats {
-				server.StatServer.OnBytesSent(ip, bytes)
-			}
+	}
+	proxy.OnBytesSent = func(ip string, bytes int64) {
+		statreporter.OnBytesGiven(ip, bytes)
+		if servingStats {
+			server.StatServer.OnBytesSent(ip, bytes)
 		}
 	}
 
