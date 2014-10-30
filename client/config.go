@@ -12,8 +12,8 @@ import (
 type ClientConfig struct {
 	DumpHeaders    bool // whether or not to dump headers of requests and responses
 	Servers        []*ServerInfo
-	MasqueradeSets map[string][]*Masquerade
 	Peers          map[string]*nattywad.ServerPeer // keyed to peer id (e.g. XMPP JID)
+	MasqueradeSets map[string][]*Masquerade
 }
 
 // ServerInfo captures configuration information for an upstream server
