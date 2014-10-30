@@ -19,16 +19,6 @@ import (
 	"gopkg.in/getlantern/tlsdialer.v2"
 )
 
-var (
-	// Cutoff for logging warnings about a dial having taken a long time.
-	longDialLimit = 10 * time.Second
-
-	// idleTimeout needs to be small enough that we stop using connections
-	// before the upstream server/CDN closes them itself.
-	// TODO: make this configurable.
-	idleTimeout = 10 * time.Second
-)
-
 type server struct {
 	info          *ServerInfo
 	masquerades   *verifiedMasqueradeSet

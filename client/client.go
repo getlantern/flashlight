@@ -26,6 +26,14 @@ const (
 	X_FLASHLIGHT_QOS = "X-Flashlight-QOS"
 
 	HighQOS = 10
+
+		// Cutoff for logging warnings about a dial having taken a long time.
+	longDialLimit = 10 * time.Second
+
+	// idleTimeout needs to be small enough that we stop using connections
+	// before the upstream server/CDN closes them itself.
+	// TODO: make this configurable.
+	idleTimeout = 10 * time.Second
 )
 
 var (
@@ -149,7 +157,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 				log.Tracef("Peer Country: %s", info.Peer.Extras["country"])
 				reportTraversalResult(info, false, false)
 			},
-			KeepAliveInterval: 20 * time.Second,
+			KeepAliveInterval: idleTimeout - 2 * time.Second,
 		}
 	}
 
