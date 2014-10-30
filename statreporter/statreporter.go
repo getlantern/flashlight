@@ -60,7 +60,8 @@ func Start(reportingPeriod time.Duration, statshubAddr string, instanceId string
 	addr = statshubAddr
 	id = instanceId
 	country = strings.ToLower(countryCode)
-	updatesCh = make(chan *update, 1000)
+	// We buffer the updates channel to be able to continue accepting updates while we're posting a report
+	updatesCh = make(chan *update, 10000)
 	accumulators = make(map[string]map[string]int64)
 
 	timer := time.NewTimer(timeToNextReport())
@@ -134,7 +135,12 @@ func (b *UpdateBuilder) Set(val int64) {
 
 func postUpdate(update *update) {
 	if isStarted() {
-		updatesCh <- update
+		select {
+			case updatesCh <- update:
+				// update posted
+			default:
+				// drop stat
+			}
 	}
 }
 
