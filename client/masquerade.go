@@ -122,7 +122,7 @@ func (vms *verifiedMasqueradeSet) doVerify(masquerade *Masquerade) {
 	go func() {
 		// Limit amount of time we'll wait for a response
 		time.Sleep(30 * time.Second)
-		errCh <- fmt.Errorf("Timed out making HEAD request via %s", masquerade.Domain)
+		errCh <- fmt.Errorf("Timed out verifying %s", masquerade.Domain)
 	}()
 	go func() {
 		start := time.Now()
