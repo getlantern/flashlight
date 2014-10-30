@@ -66,10 +66,9 @@ type Server struct {
 	// WriteTimeout: (optional) timeout for write ops
 	WriteTimeout time.Duration
 
-	CertContext                *CertContext                 // context for certificate management
-	AllowNonGlobalDestinations bool                         // if true, requests to LAN, Loopback, etc. will be allowed
-	StatReporter               *statreporter.ServerReporter // optional reporter of stats
-	StatServer                 *statserver.Server           // optional server of stats
+	CertContext                *CertContext       // context for certificate management
+	AllowNonGlobalDestinations bool               // if true, requests to LAN, Loopback, etc. will be allowed
+	StatServer                 *statserver.Server // optional server of stats
 
 	host           string
 	nattywadServer *nattywad.Server
@@ -161,13 +160,13 @@ func (server *Server) ListenAndServe() error {
 
 	// Add callbacks to track bytes given
 	proxy.OnBytesReceived = func(ip string, bytes int64) {
-		statreporter.OnBytesGiven(ip, bytes)
+		onBytesGiven(bytes)
 		if servingStats {
 			server.StatServer.OnBytesReceived(ip, bytes)
 		}
 	}
 	proxy.OnBytesSent = func(ip string, bytes int64) {
-		statreporter.OnBytesGiven(ip, bytes)
+		onBytesGiven(bytes)
 		if servingStats {
 			server.StatServer.OnBytesSent(ip, bytes)
 		}
@@ -303,17 +302,6 @@ func determineInternalIP() (string, error) {
 	return strings.Split(conn.LocalAddr().String(), ":")[0], nil
 }
 
-func (server *Server) startReportingStatsIfNecessary() bool {
-	if server.StatReporter != nil {
-		log.Debugf("Reporting stats under InstanceId: %s", server.StatReporter.InstanceId)
-		go server.StatReporter.Start()
-		return true
-	} else {
-		log.Debug("Not reporting stats (no instanceid specified)")
-		return false
-	}
-}
-
 func (server *Server) startServingStatsIfNecessary() bool {
 	if server.StatServer != nil {
 		log.Debugf("Serving stats at address: %s", server.StatServer.Addr)
@@ -323,4 +311,10 @@ func (server *Server) startServingStatsIfNecessary() bool {
 		log.Debug("Not serving stats (no statsaddr specified)")
 		return false
 	}
+}
+
+func onBytesGiven(bytes int64) {
+	dims := statreporter.Dim("country", statreporter.Country)
+	dims.Increment("bytesGiven").Add(bytes)
+	dims.Increment("bytesGivenByFlashlight").Add(bytes)
 }

@@ -1,7 +1,6 @@
 package client
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 )
@@ -50,15 +49,15 @@ func (vms *verifiedMasqueradeSet) verify(masquerade *Masquerade) {
 	req, _ := http.NewRequest("HEAD", "http://www.google.com/humans.txt", nil)
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		log.Errorf("HTTP ERROR FOR MASQUERADE %v: %v", masquerade.Domain, err)
+		log.Debugf("Error verifying masquerade %v: %v", masquerade.Domain, err)
 		return
 	} else {
 		body, err := ioutil.ReadAll(resp.Body)
 		defer resp.Body.Close()
 		if err != nil {
-			fmt.Errorf("HTTP Body Error: %s", body)
+			log.Debugf("Error verifying masquerade %v: %v", masquerade.Domain, err)
 		} else {
-			log.Debugf("SUCCESSFUL CHECK FOR: %s, %s", masquerade.Domain, body)
+			log.Tracef("Successful masquerade check for %s, %s", masquerade.Domain, body)
 			vms.verifiedCh <- masquerade
 		}
 	}

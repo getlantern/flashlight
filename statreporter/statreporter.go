@@ -9,46 +9,31 @@ import (
 	"sync/atomic"
 	"time"
 
-	// "github.com/getlantern/golog"
+	"github.com/getlantern/golog"
 )
 
 var (
-//log = golog.LoggerFor("statreporter")
+	log = golog.LoggerFor("statreporter")
 )
 
 const (
 	StatshubUrlTemplate = "https://%s/stats/%s"
 )
 
-const (
-	increments = "increments"
-	gauges     = "gauges"
-)
+type stats map[string]int64
 
-const (
-	set = iota
-	add = iota
-)
-
-type update struct {
-	category string
-	action   int
-	key      string
-	val      int64
-}
-
-type UpdateBuilder struct {
-	category string
-	key      string
+type dimAccumulator struct {
+	dims       *Dims
+	categories map[string]stats
 }
 
 var (
+	Country      string
 	period       time.Duration
 	addr         string
 	id           string
-	country      string
 	updatesCh    chan *update
-	accumulators map[string]map[string]int64
+	accumulators map[string]*dimAccumulator
 	started      int32
 )
 
@@ -63,77 +48,45 @@ func Start(reportingPeriod time.Duration, statshubAddr string, instanceId string
 	period = reportingPeriod
 	addr = statshubAddr
 	id = instanceId
-	country = strings.ToLower(countryCode)
+	Country = strings.ToLower(countryCode)
 	updatesCh = make(chan *update, 1000)
-	accumulators = make(map[string]map[string]int64)
+	accumulators = make(map[string]*dimAccumulator)
 
 	timer := time.NewTimer(timeToNextReport())
 	for {
 		select {
 		case update := <-updatesCh:
 			// Coalesce
-			accum := accumulators[update.category]
-			if accum == nil {
-				accum = make(map[string]int64)
-				accumulators[update.category] = accum
+			dimsKey := update.dims.String()
+			dimAccum := accumulators[dimsKey]
+			if dimAccum == nil {
+				dimAccum = &dimAccumulator{
+					dims:       update.dims,
+					categories: make(map[string]stats),
+				}
+				accumulators[dimsKey] = dimAccum
+			}
+			categoryStats := dimAccum.categories[update.category]
+			if categoryStats == nil {
+				categoryStats = make(stats)
+				dimAccum.categories[update.category] = categoryStats
 			}
 			switch update.action {
 			case set:
-				accum[update.key] = update.val
+				categoryStats[update.key] = update.val
 			case add:
-				accum[update.key] = accum[update.key] + update.val
+				categoryStats[update.key] = categoryStats[update.key] + update.val
 			}
 		case <-timer.C:
 			if len(accumulators) == 0 {
 				log.Debugf("No stats to report")
 			} else {
-				err := postStats(accumulators)
-				if err != nil {
-					log.Errorf("Error on posting stats: %s", err)
-				}
-				accumulators = make(map[string]map[string]int64)
+				postStats(accumulators)
+				accumulators = make(map[string]*dimAccumulator)
 			}
 			timer.Reset(timeToNextReport())
 		}
 	}
-}
-
-// OnBytesGiven registers the fact that bytes were given (sent or received)
-func OnBytesGiven(clientIp string, bytes int64) {
-	Increment("bytesGiven").Add(bytes)
-	Increment("bytesGivenByFlashlight").Add(bytes)
-}
-
-func Increment(key string) *UpdateBuilder {
-	return &UpdateBuilder{
-		increments,
-		key,
-	}
-}
-
-func Gauge(key string) *UpdateBuilder {
-	return &UpdateBuilder{
-		gauges,
-		key,
-	}
-}
-
-func (b *UpdateBuilder) Add(val int64) {
-	postUpdate(&update{
-		b.category,
-		add,
-		b.key,
-		val,
-	})
-}
-
-func (b *UpdateBuilder) Set(val int64) {
-	postUpdate(&update{
-		b.category,
-		set,
-		b.key,
-		val,
-	})
 }
 
 func postUpdate(update *update) {
@@ -151,14 +104,25 @@ func timeToNextReport() time.Duration {
 	return nextInterval.Sub(time.Now())
 }
 
-func postStats(accumulators map[string]map[string]int64) error {
+func postStats(accumulators map[string]*dimAccumulator) {
+	for _, dimAccum := range accumulators {
+		dimsMap := make(map[string]string)
+		for i, key := range dimAccum.dims.keys {
+			dimsMap[key] = dimAccum.dims.values[i]
+		}
+		err := postStatsForDims(dimsMap, dimAccum)
+		if err != nil {
+			log.Errorf("Unable to post stats for dim %s: %s", err)
+		}
+	}
+}
+
+func postStatsForDims(dimsMap map[string]string, dimAccum *dimAccumulator) error {
 	report := map[string]interface{}{
-		"dims": map[string]string{
-			"country": country,
-		},
+		"dims": dimsMap,
 	}
 
-	for category, accum := range accumulators {
+	for category, accum := range dimAccum.categories {
 		report[category] = accum
 	}
 

@@ -253,12 +253,13 @@ func (serverInfo *ServerInfo) recordTiming(step string, duration time.Duration) 
 	} else {
 		step = fmt.Sprintf("%sTo%s", step, serverInfo.Host)
 	}
-	statreporter.Gauge(step).Add(1)
+	dims := statreporter.Dim("country", statreporter.Country)
+	dims.Gauge(step).Add(1)
 	for i := 4; i >= 0; i-- {
 		seconds := int(math.Pow(float64(2), float64(i)))
 		if duration > time.Duration(seconds)*time.Second {
 			key := fmt.Sprintf("%sOver%dSec", step, seconds)
-			statreporter.Gauge(key).Add(1)
+			dims.Gauge(key).Add(1)
 			return
 		}
 	}

@@ -103,19 +103,6 @@ func runClientProxy(cfg *config.Config) {
 	// Configure client initially
 	client.Configure(cfg.Client, nil)
 
-	if cfg.InstanceId != "" {
-		log.Debugf("Reporting stats under InstanceId: %s", cfg.InstanceId)
-		client.TraversalReporter = &statreporter.ClientReporter{
-			Reporter: statreporter.Reporter{
-				InstanceId: cfg.InstanceId,
-				Country:    cfg.Country,
-			},
-		}
-		client.TraversalReporter.Start()
-	} else {
-		log.Debug("Not reporting stats (no instanceid specified)")
-	}
-
 	// Continually poll for config updates and update client accordingly
 	go func() {
 		for {

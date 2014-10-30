@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"reflect"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -52,7 +53,6 @@ type Client struct {
 	servers            []*server
 	totalServerWeights int
 	nattywadClient     *nattywad.Client
-	TraversalReporter  *statreporter.ClientReporter
 }
 
 // ListenAndServe makes the client listen for HTTP connections
@@ -139,23 +139,15 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 				return server.dialWithEnproxy("tcp", addr)
 			},
 			OnSuccess: func(info *nattywad.TraversalInfo) {
-				reporter := client.TraversalReporter
 				log.Debugf("NAT traversal Succeeded: %s", info)
 				log.Tracef("Peer Country: %s", info.Peer.Extras["country"])
 				serverConnected := nattest.Ping(info.LocalAddr, info.RemoteAddr)
-				outcome := newTraversalOutcome(info, true, serverConnected)
-				if reporter != nil {
-					reporter.OutcomesCh <- outcome
-				}
+				reportTraversalResult(info, true, serverConnected)
 			},
 			OnFailure: func(info *nattywad.TraversalInfo) {
-				reporter := client.TraversalReporter
 				log.Debugf("NAT traversal Failed: %s", info)
 				log.Tracef("Peer Country: %s", info.Peer.Extras["country"])
-				outcome := newTraversalOutcome(info, false, false)
-				if reporter != nil {
-					reporter.OutcomesCh <- outcome
-				}
+				reportTraversalResult(info, false, false)
 			},
 			KeepAliveInterval: 20 * time.Second,
 		}
@@ -251,28 +243,33 @@ func (client *Client) getServers() ([]*server, int) {
 	return client.servers, client.totalServerWeights
 }
 
-func newTraversalOutcome(info *nattywad.TraversalInfo, clientGotFiveTuple bool, connectionSucceeded bool) *statreporter.TraversalOutcome {
-	outcome := &statreporter.TraversalOutcome{}
-	outcome.AnswererCountry = "xx"
+func reportTraversalResult(info *nattywad.TraversalInfo, clientGotFiveTuple bool, connectionSucceeded bool) {
+	answererCountry := "xx"
 	if _, ok := info.Peer.Extras["country"]; ok {
-		outcome.AnswererCountry = info.Peer.Extras["country"].(string)
+		answererCountry = info.Peer.Extras["country"].(string)
 	}
 
+	dims := statreporter.Dim("answererCountry", answererCountry).
+		And("offererCountry", statreporter.Country).
+		And("offererAnswererCountries", statreporter.Country+"_"+answererCountry).
+		And("operatingSystem", runtime.GOOS)
+
+	dims.Increment("traversalAttempted").Add(1)
+
 	if info.ServerRespondedToSignaling {
-		outcome.AnswererOnline = 1
+		dims.Increment("answererOnline").Add(1)
 	}
 	if info.ServerGotFiveTuple {
-		outcome.AnswererGot5Tuple = 1
+		dims.Increment("answererGot5Tuple").Add(1)
 	}
 	if clientGotFiveTuple {
-		outcome.OffererGot5Tuple = 1
+		dims.Increment("offererGot5Tuple").Add(1)
 	}
 	if info.ServerGotFiveTuple && clientGotFiveTuple {
-		outcome.TraversalSucceeded = 1
-		outcome.DurationOfSuccessfulTraversal = uint64(info.Duration.Seconds())
+		dims.Increment("traversalSucceeded").Add(1)
+		dims.Increment("durationOfSuccessfulTraversal").Add(int64(info.Duration.Seconds()))
 	}
 	if connectionSucceeded {
-		outcome.ConnectionSucceeded = 1
+		dims.Increment("connectionSucceeded").Add(1)
 	}
-	return outcome
 }
