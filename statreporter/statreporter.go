@@ -139,7 +139,7 @@ func postUpdate(update *update) {
 			case updatesCh <- update:
 				// update posted
 			default:
-				// drop stat
+				// drop stat to avoid blocking
 			}
 	}
 }
