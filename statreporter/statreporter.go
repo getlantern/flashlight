@@ -9,7 +9,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/getlantern/flashlight/log"
+	// "github.com/getlantern/golog"
+)
+
+var (
+//log = golog.LoggerFor("statreporter")
 )
 
 const (

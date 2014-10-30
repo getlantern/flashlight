@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/getlantern/deepcopy"
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/nattest"
 	"github.com/getlantern/flashlight/statreporter"
@@ -46,7 +47,7 @@ type Client struct {
 	// WriteTimeout: (optional) timeout for write ops
 	WriteTimeout time.Duration
 
-	cfg                *ClientConfig
+	priorCfg           *ClientConfig
 	cfgMutex           sync.RWMutex
 	servers            []*server
 	totalServerWeights int
@@ -77,8 +78,8 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	defer client.cfgMutex.Unlock()
 
 	log.Debug("Configure() called")
-	if client.cfg != nil {
-		if reflect.DeepEqual(client.cfg, cfg) {
+	if client.priorCfg != nil {
+		if reflect.DeepEqual(client.priorCfg, cfg) {
 			log.Debugf("Client configuration unchanged")
 			return
 		} else {
@@ -87,6 +88,10 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	} else {
 		log.Debugf("Client configuration initialized")
 	}
+
+	// Make a copy of cfg for comparing later
+	client.priorCfg = &ClientConfig{}
+	deepcopy.Copy(client.priorCfg, cfg)
 
 	verifiedSets := make(map[string]*verifiedMasqueradeSet)
 
@@ -163,8 +168,6 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 		i = i + 1
 	}
 	go client.nattywadClient.Configure(peers)
-
-	client.cfg = cfg
 }
 
 // highestQos finds the server with the highest reported quality of service for
