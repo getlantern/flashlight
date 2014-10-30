@@ -121,11 +121,51 @@ Note that these binaries should also be signed for use in production, at least o
 codesign -s "Developer ID Application: Brave New Software Project, Inc" -f install/osx/pt/flashlight/flashlight
 ```
 
-### Adding new masquerade hosts
-The certstotemplate.py script in the certs directory will take all the certificate files in that directory and will format them according to supplied Jinja templates. The usage is as follows:
+### Masquerade Host Management
 
+Masquerade host configuration is managed using utilities in the certs/ subfolder.
+
+#### Setup
+
+You need python 2.7 and the following packages:
+
+```bash
+pip install pyyaml
+pip install jinja2
+pip install --upgrade pyopenssl
 ```
-Usage: ./certstotemplate.py -t <templatefile> -o <outputfile>
+Notes:
+- If you're not using virtual environments, you may need to sudo all of these commands.
+- This requires a fairly recent version of OpenSSL (more recent than what is installed with OS X).
+
+In addition, you need the s3cmd tool installed and set up.  To install on
+Ubuntu:
+
+```bash
+sudo apt-get install s3cmd
 ```
 
-This is handy for converting those certificates to go code, for example. See [certs/gostruct.tmpl](https://github.com/getlantern/flashlight/blob/master/certs/gostruct.tmpl) as an example. [certs/cloud.yaml.tmpl](https://github.com/getlantern/flashlight/blob/master/certs/cloud.yaml.tmpl) is an example yaml template.
+On OS X:
+```bash
+brew install s3cmd
+```
+
+And then run `s3cmd --configure` and follow the on-screen instructions.  You
+can get AWS credentials that are good for uploading to S3 in
+[too-many-secrets/lantern_aws/aws_credential](https://github.com/getlantern/too-many-secrets/blob/master/lantern_aws/aws_credential).
+
+#### Adding new masquerade hosts
+
+Compile the list of domains in a file, separated with whitespace (e.g., one
+per line), cd to the certs/ subfolder, and run `./addmasquerades.py <your file>`.
+
+#### Removing masquerade hosts
+
+Remove the corresponding cert file from the certs/ subfolder, cd to that
+directory and run `./addmasquerades.py nodomains.txt`.
+
+#### Refreshing the root CA certs for hosts
+
+Run `./refreshcerts.py [<your file>]`, where the file, if provided, should
+have the same format as for `addmasquerades.py`.  If no domains file is
+provided, the root CA certs for all domains will be refreshed.
