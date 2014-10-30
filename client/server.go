@@ -244,10 +244,12 @@ func (serverInfo *ServerInfo) dialerFor(masqueradeSource func() *Masquerade) fun
 // seconds, we will increment two gauges, "DNSLookup" and
 // "DNSLookupOver2Sec".
 //
-// The stats are qualified by MasqueradeSet (if specified). If the MasqueradeSet
-// is "cloudflare", the above stats would be recorded as "DNSLookupTocloudflare"
-// and "DNSLookupTocloudflareOver2Sec". Otherwise, they're qualified by
-// host, e.g. "DNSLookupTolocalhost".
+// The stats are qualified by MasqueradeSet (if specified), otherwise they're
+// qualified by host. For example, if the MasqueradeSet is "cloudflare", the
+// above stats would be recorded as "DNSLookupTocloudflare" and
+// "DNSLookupTocloudflareOver2Sec". If the MasqueradeSet is "" and the host is
+// "localhost", the stats would be recorded as "DNSLookupTolocalhost" and
+// "DNSLookupTolocalhostOver2Sec".
 func (serverInfo *ServerInfo) recordTiming(step string, duration time.Duration) {
 	if serverInfo.MasqueradeSet != "" {
 		step = fmt.Sprintf("%sTo%s", step, serverInfo.MasqueradeSet)
@@ -310,8 +312,4 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 	}
 
 	return tlsConfig
-}
-
-func toMillis(d time.Duration) int64 {
-	return int64(d) / 1000000
 }
