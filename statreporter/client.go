@@ -82,6 +82,7 @@ func (reporter *ClientReporter) postTraversalStats(outcome *TraversalOutcome) er
 		"dims": map[string]string{
 			"answererCountry": outcome.AnswererCountry,
 			"offererCountry":  reporter.Country,
+			"offererAnswererCountries": reporter.Country + "_" + outcome.AnswererCountry,
 			"operatingSystem": runtime.GOOS,
 		},
 		"increments": outcome,
