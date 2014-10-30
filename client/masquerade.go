@@ -101,7 +101,6 @@ func (vms *verifiedMasqueradeSet) stop() {
 	vms.wg.Wait()
 	log.Debug("Closing vms.verifiedCh")
 	close(vms.verifiedCh)
-
 }
 
 // verify checks masquerades obtained from candidatesCh to see if they work on
