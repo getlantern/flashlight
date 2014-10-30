@@ -22,71 +22,81 @@ const (
 
 type stats map[string]int64
 
-type dimAccumulator struct {
-	dims       *Dims
+type dimGroupAccumulator struct {
+	dg         *DimGroup
 	categories map[string]stats
 }
 
 var (
 	Country      string
 	period       time.Duration
-	addr         string
 	id           string
 	updatesCh    chan *update
-	accumulators map[string]*dimAccumulator
+	accumulators map[string]*dimGroupAccumulator
 	started      int32
 )
 
+type report map[string]interface{}
+
+type reportPoster func(report report) error
+
 // Start runs a goroutine that periodically coalesces the collected statistics
-// and reports them to statshub via HTTP post
+// and reports them to statshub via HTTPS post
 func Start(reportingPeriod time.Duration, statshubAddr string, instanceId string, countryCode string) {
+	doStart(reportingPeriod, instanceId, countryCode, posterForDimGroupStats(statshubAddr))
+}
+
+func doStart(reportingPeriod time.Duration, instanceId string, countryCode string, postReport reportPoster) {
 	alreadyStarted := !atomic.CompareAndSwapInt32(&started, 0, 1)
 	if alreadyStarted {
 		log.Debugf("statreporter already started, not starting again")
 		return
 	}
+
 	period = reportingPeriod
-	addr = statshubAddr
 	id = instanceId
 	Country = strings.ToLower(countryCode)
 	updatesCh = make(chan *update, 1000)
-	accumulators = make(map[string]*dimAccumulator)
+	accumulators = make(map[string]*dimGroupAccumulator)
 
 	timer := time.NewTimer(timeToNextReport())
-	for {
-		select {
-		case update := <-updatesCh:
-			// Coalesce
-			dimsKey := update.dims.String()
-			dimAccum := accumulators[dimsKey]
-			if dimAccum == nil {
-				dimAccum = &dimAccumulator{
-					dims:       update.dims,
-					categories: make(map[string]stats),
+	go func() {
+		for {
+			select {
+			case update := <-updatesCh:
+				log.Tracef("Coalescing update: %s", update)
+				// Coalesce
+				dgKey := update.dg.String()
+				dgAccum := accumulators[dgKey]
+				if dgAccum == nil {
+					dgAccum = &dimGroupAccumulator{
+						dg:         update.dg,
+						categories: make(map[string]stats),
+					}
+					accumulators[dgKey] = dgAccum
 				}
-				accumulators[dimsKey] = dimAccum
+				categoryStats := dgAccum.categories[update.category]
+				if categoryStats == nil {
+					categoryStats = make(stats)
+					dgAccum.categories[update.category] = categoryStats
+				}
+				switch update.action {
+				case set:
+					categoryStats[update.key] = update.val
+				case add:
+					categoryStats[update.key] = categoryStats[update.key] + update.val
+				}
+			case <-timer.C:
+				if len(accumulators) == 0 {
+					log.Debugf("No stats to report")
+				} else {
+					postStats(accumulators, postReport)
+					accumulators = make(map[string]*dimGroupAccumulator)
+				}
+				timer.Reset(timeToNextReport())
 			}
-			categoryStats := dimAccum.categories[update.category]
-			if categoryStats == nil {
-				categoryStats = make(stats)
-				dimAccum.categories[update.category] = categoryStats
-			}
-			switch update.action {
-			case set:
-				categoryStats[update.key] = update.val
-			case add:
-				categoryStats[update.key] = categoryStats[update.key] + update.val
-			}
-		case <-timer.C:
-			if len(accumulators) == 0 {
-				log.Debugf("No stats to report")
-			} else {
-				postStats(accumulators)
-				accumulators = make(map[string]*dimAccumulator)
-			}
-			timer.Reset(timeToNextReport())
 		}
-	}
+	}()
 }
 
 func postUpdate(update *update) {
@@ -104,43 +114,45 @@ func timeToNextReport() time.Duration {
 	return nextInterval.Sub(time.Now())
 }
 
-func postStats(accumulators map[string]*dimAccumulator) {
-	for _, dimAccum := range accumulators {
-		dimsMap := make(map[string]string)
-		for i, key := range dimAccum.dims.keys {
-			dimsMap[key] = dimAccum.dims.values[i]
-		}
-		err := postStatsForDims(dimsMap, dimAccum)
+func postStats(accumulators map[string]*dimGroupAccumulator, postReport reportPoster) {
+	for _, dgAccum := range accumulators {
+		err := postReport(dgAccum.report())
 		if err != nil {
 			log.Errorf("Unable to post stats for dim %s: %s", err)
 		}
 	}
 }
 
-func postStatsForDims(dimsMap map[string]string, dimAccum *dimAccumulator) error {
-	report := map[string]interface{}{
-		"dims": dimsMap,
+func posterForDimGroupStats(addr string) reportPoster {
+	return func(report report) error {
+		jsonBytes, err := json.Marshal(report)
+		if err != nil {
+			return fmt.Errorf("Unable to marshal json for stats: %s", err)
+		}
+
+		url := fmt.Sprintf(StatshubUrlTemplate, addr, id)
+		resp, err := http.Post(url, "application/json", bytes.NewReader(jsonBytes))
+		if err != nil {
+			return fmt.Errorf("Unable to post stats to statshub: %s", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 200 {
+			return fmt.Errorf("Unexpected response status posting stats to statshub: %d", resp.StatusCode)
+		}
+
+		log.Debugf("Reported %s to statshub", string(jsonBytes))
+		return nil
+	}
+}
+
+func (dgAccum *dimGroupAccumulator) report() report {
+	report := report{
+		"dims": dgAccum.dg.dims,
 	}
 
-	for category, accum := range dimAccum.categories {
+	for category, accum := range dgAccum.categories {
 		report[category] = accum
 	}
 
-	jsonBytes, err := json.Marshal(report)
-	if err != nil {
-		return fmt.Errorf("Unable to marshal json for stats: %s", err)
-	}
-
-	url := fmt.Sprintf(StatshubUrlTemplate, addr, id)
-	resp, err := http.Post(url, "application/json", bytes.NewReader(jsonBytes))
-	if err != nil {
-		return fmt.Errorf("Unable to post stats to statshub: %s", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("Unexpected response status posting stats to statshub: %d", resp.StatusCode)
-	}
-
-	log.Debugf("Reported %s to statshub", string(jsonBytes))
-	return nil
+	return report
 }

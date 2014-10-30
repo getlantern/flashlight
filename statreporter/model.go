@@ -2,6 +2,7 @@ package statreporter
 
 import (
 	"fmt"
+	"sort"
 )
 
 const (
@@ -14,62 +15,78 @@ const (
 	add = iota
 )
 
-type Dims struct {
-	keys   []string
-	values []string
+// DimGroup represents a group of dimensions for
+type DimGroup struct {
+	dims map[string]string
+}
+
+// UpdateBuilder is an intermediary data structure used in preparing an update
+// for submission to statreporter.
+type UpdateBuilder struct {
+	dg       *DimGroup
+	category string
+	key      string
 }
 
 type update struct {
-	dims     *Dims
+	dg       *DimGroup
 	category string
 	action   int
 	key      string
 	val      int64
 }
 
-type UpdateBuilder struct {
-	dims     *Dims
-	category string
-	key      string
+// Dim constructs a DimGroup starting with a single dimension.
+func Dim(key string, value string) *DimGroup {
+	return &DimGroup{map[string]string{key: value}}
 }
 
-func Dim(key string, value string) *Dims {
-	return &Dims{
-		[]string{key},
-		[]string{value},
+// And creates a new DimGroup that adds the given dim to the existing ones in
+// the group.
+func (dg *DimGroup) And(key string, value string) *DimGroup {
+	newDims := map[string]string{key: value}
+	for k, v := range dg.dims {
+		newDims[k] = v
 	}
+	return &DimGroup{newDims}
 }
 
-func (dims *Dims) And(key string, value string) *Dims {
-	return &Dims{
-		append(dims.keys, key),
-		append(dims.values, value),
+// String returns a string representation of this DimGroup with keys in
+// alphabetical order, making it suitable for using as a key representing this
+// DimGroup.
+func (dg *DimGroup) String() string {
+	// Sort keys
+	keys := make([]string, len(dg.dims))
+	i := 0
+	for key, _ := range dg.dims {
+		keys[i] = key
+		i = i + 1
 	}
-}
+	sort.Strings(keys)
 
-func (dims *Dims) String() string {
+	// Build string
 	s := ""
-	for i, key := range dims.keys {
+	for i, key := range keys {
 		sep := ","
 		if i == 0 {
 			sep = ""
 		}
-		s = fmt.Sprintf("%s%s%s=%s", s, sep, key, dims.values[i])
+		s = fmt.Sprintf("%s%s%s=%s", s, sep, key, dg.dims[key])
 	}
 	return s
 }
 
-func (dims *Dims) Increment(key string) *UpdateBuilder {
+func (dg *DimGroup) Increment(key string) *UpdateBuilder {
 	return &UpdateBuilder{
-		dims,
+		dg,
 		increments,
 		key,
 	}
 }
 
-func (dims *Dims) Gauge(key string) *UpdateBuilder {
+func (dg *DimGroup) Gauge(key string) *UpdateBuilder {
 	return &UpdateBuilder{
-		dims,
+		dg,
 		gauges,
 		key,
 	}
@@ -77,7 +94,7 @@ func (dims *Dims) Gauge(key string) *UpdateBuilder {
 
 func (b *UpdateBuilder) Add(val int64) {
 	postUpdate(&update{
-		b.dims,
+		b.dg,
 		b.category,
 		add,
 		b.key,
@@ -87,7 +104,7 @@ func (b *UpdateBuilder) Add(val int64) {
 
 func (b *UpdateBuilder) Set(val int64) {
 	postUpdate(&update{
-		b.dims,
+		b.dg,
 		b.category,
 		set,
 		b.key,

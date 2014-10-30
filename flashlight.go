@@ -86,7 +86,7 @@ func configureStats(cfg *config.Config) {
 			os.Exit(ConfigError)
 		}
 		log.Debugf("Reporting stats to %s every %s under instance id '%s' in country %s", cfg.StatshubAddr, cfg.StatsPeriod, cfg.InstanceId, cfg.Country)
-		go statreporter.Start(cfg.StatsPeriod, cfg.StatshubAddr, cfg.InstanceId, cfg.Country)
+		statreporter.Start(cfg.StatsPeriod, cfg.StatshubAddr, cfg.InstanceId, cfg.Country)
 	} else {
 		log.Debug("Not reporting stats (no statsperiod specified)")
 	}
