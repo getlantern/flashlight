@@ -178,7 +178,7 @@ func (serverInfo *ServerInfo) enproxyConfigWith(dialProxy func(addr string) (net
 func (serverInfo *ServerInfo) dialerFor(masqueradeSource func() *Masquerade) func() (net.Conn, error) {
 	dialTimeout := time.Duration(serverInfo.DialTimeoutMillis) * time.Millisecond
 	if dialTimeout == 0 {
-		dialTimeout = 5 * time.Second
+		dialTimeout = 20 * time.Second
 	}
 
 	// Note - we need to suppress the sending of the ServerName in the
@@ -210,6 +210,10 @@ func (serverInfo *ServerInfo) dialerFor(masqueradeSource func() *Masquerade) fun
 				domain = masquerade.Domain
 			}
 			log.Debugf("Long dial to %s (%s), took: %s", domain, resultAddr, delta)
+		}
+
+		if err != nil && masquerade != nil {
+			err = fmt.Errorf("Unable to dial masquerade %s: %s", masquerade.Domain, err)
 		}
 		return conn, err
 	}

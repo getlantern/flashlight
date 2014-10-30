@@ -51,6 +51,10 @@ var (
 	statReporter        *statreporter.Reporter
 )
 
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
 func main() {
 	cfg := configure()
 
