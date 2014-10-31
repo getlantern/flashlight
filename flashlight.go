@@ -81,7 +81,7 @@ func main() {
 
 func displayVersion() {
 	if version == "" {
-		version = "unknown"
+		version = "development"
 	}
 	if buildDate == "" {
 		buildDate = "now"
