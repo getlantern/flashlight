@@ -124,7 +124,7 @@ func postStats(accumulators map[string]*dimGroupAccumulator, postReport reportPo
 	for _, dgAccum := range accumulators {
 		err := postReport(dgAccum.report())
 		if err != nil {
-			log.Errorf("Unable to post stats for dim %s: %s", err)
+			log.Errorf("Unable to post stats for dim %s: %s", dgAccum.dg, err)
 		}
 	}
 }
