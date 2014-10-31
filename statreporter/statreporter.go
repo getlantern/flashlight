@@ -28,12 +28,9 @@ type dimGroupAccumulator struct {
 }
 
 var (
-	Country      string
-	period       time.Duration
-	id           string
-	updatesCh    chan *update
-	accumulators map[string]*dimGroupAccumulator
-	started      int32
+	Country   string
+	updatesCh chan *update
+	started   int32
 )
 
 type report map[string]interface{}
@@ -43,7 +40,7 @@ type reportPoster func(report report) error
 // Start runs a goroutine that periodically coalesces the collected statistics
 // and reports them to statshub via HTTPS post
 func Start(reportingPeriod time.Duration, statshubAddr string, instanceId string, countryCode string) {
-	doStart(reportingPeriod, instanceId, countryCode, posterForDimGroupStats(statshubAddr))
+	doStart(reportingPeriod, instanceId, countryCode, posterForDimGroupStats(statshubAddr, instanceId))
 }
 
 func doStart(reportingPeriod time.Duration, instanceId string, countryCode string, postReport reportPoster) {
@@ -53,14 +50,13 @@ func doStart(reportingPeriod time.Duration, instanceId string, countryCode strin
 		return
 	}
 
-	period = reportingPeriod
-	id = instanceId
 	Country = strings.ToLower(countryCode)
+
 	// We buffer the updates channel to be able to continue accepting updates while we're posting a report
 	updatesCh = make(chan *update, 1000)
-	accumulators = make(map[string]*dimGroupAccumulator)
+	accumulators := make(map[string]*dimGroupAccumulator)
 
-	timer := time.NewTimer(timeToNextReport())
+	timer := time.NewTimer(timeToNextReport(reportingPeriod))
 	go func() {
 		for {
 			select {
@@ -94,7 +90,7 @@ func doStart(reportingPeriod time.Duration, instanceId string, countryCode strin
 					postStats(accumulators, postReport)
 					accumulators = make(map[string]*dimGroupAccumulator)
 				}
-				timer.Reset(timeToNextReport())
+				timer.Reset(timeToNextReport(reportingPeriod))
 			}
 		}
 	}()
@@ -115,8 +111,8 @@ func isStarted() bool {
 	return atomic.LoadInt32(&started) == 1
 }
 
-func timeToNextReport() time.Duration {
-	nextInterval := time.Now().Truncate(period).Add(period)
+func timeToNextReport(reportingPeriod time.Duration) time.Duration {
+	nextInterval := time.Now().Truncate(reportingPeriod).Add(reportingPeriod)
 	return nextInterval.Sub(time.Now())
 }
 
@@ -129,14 +125,14 @@ func postStats(accumulators map[string]*dimGroupAccumulator, postReport reportPo
 	}
 }
 
-func posterForDimGroupStats(addr string) reportPoster {
+func posterForDimGroupStats(addr string, instanceId string) reportPoster {
 	return func(report report) error {
 		jsonBytes, err := json.Marshal(report)
 		if err != nil {
 			return fmt.Errorf("Unable to marshal json for stats: %s", err)
 		}
 
-		url := fmt.Sprintf(StatshubUrlTemplate, addr, id)
+		url := fmt.Sprintf(StatshubUrlTemplate, addr, instanceId)
 		resp, err := http.Post(url, "application/json", bytes.NewReader(jsonBytes))
 		if err != nil {
 			return fmt.Errorf("Unable to post stats to statshub: %s", err)
