@@ -12,19 +12,22 @@ import (
 )
 
 const (
-	NumWorkers = 25
+	NumWorkers     = 25 // number of worker goroutines for verifying
+	MaxMasquerades = 20 // cap number of verified masquerades at this
 )
 
 // verifiedMasqueradeSet represents a set of Masquerade configurations.
 // verifiedMasqueradeSet verifies each configured Masquerade by attempting to
 // proxy using it.
 type verifiedMasqueradeSet struct {
-	testServer   *ServerInfo
-	masquerades  []*Masquerade
-	candidatesCh chan *Masquerade
-	stopCh       chan interface{}
-	verifiedCh   chan *Masquerade
-	wg           sync.WaitGroup
+	testServer         *ServerInfo
+	masquerades        []*Masquerade
+	candidatesCh       chan *Masquerade
+	stopCh             chan interface{}
+	verifiedCh         chan *Masquerade
+	verifiedCount      int
+	verifiedCountMutex sync.Mutex
+	wg                 sync.WaitGroup
 }
 
 // nextVerified returns the next available verified *Masquerade, blocking until
@@ -41,12 +44,18 @@ func (vms *verifiedMasqueradeSet) nextVerified() *Masquerade {
 // newVerifiedMasqueradeSet sets up a new verifiedMasqueradeSet that verifies
 // each of the given masquerades against the given testServer.
 func newVerifiedMasqueradeSet(testServer *ServerInfo, masquerades []*Masquerade) *verifiedMasqueradeSet {
+	// Size verifiedChSize to be able to hold the smaller of MaxMasquerades or
+	// the number of configured masquerades.
+	verifiedChSize := len(masquerades)
+	if MaxMasquerades < verifiedChSize {
+		verifiedChSize = MaxMasquerades
+	}
 	vms := &verifiedMasqueradeSet{
 		testServer:   testServer,
 		masquerades:  masquerades,
 		candidatesCh: make(chan *Masquerade),
 		stopCh:       make(chan interface{}, 1),
-		verifiedCh:   make(chan *Masquerade, len(masquerades)),
+		verifiedCh:   make(chan *Masquerade, verifiedChSize),
 	}
 
 	vms.wg.Add(NumWorkers)
@@ -101,11 +110,15 @@ func (vms *verifiedMasqueradeSet) verify() {
 			vms.wg.Done()
 			return
 		}
-		vms.doVerify(candidate)
+		if !vms.doVerify(candidate) {
+			return
+		}
 	}
 }
 
-func (vms *verifiedMasqueradeSet) doVerify(masquerade *Masquerade) {
+// doVerify does the verification and returns a boolean indicating whether or
+// not to continue processing more verifications.
+func (vms *verifiedMasqueradeSet) doVerify(masquerade *Masquerade) bool {
 	errCh := make(chan error, 2)
 	go func() {
 		// Limit amount of time we'll wait for a response
@@ -135,7 +148,23 @@ func (vms *verifiedMasqueradeSet) doVerify(masquerade *Masquerade) {
 	err := <-errCh
 	if err != nil {
 		log.Error(err)
-		return
+		return true
 	}
-	vms.verifiedCh <- masquerade
+	if vms.incrementVerifiedCount() {
+		vms.verifiedCh <- masquerade
+		return true
+	}
+	return false
+}
+
+// incrementVerifiedCount keeps track of the number of verified masquerades and
+// caps it at MaxMasquerades.
+func (vms *verifiedMasqueradeSet) incrementVerifiedCount() bool {
+	vms.verifiedCountMutex.Lock()
+	defer vms.verifiedCountMutex.Unlock()
+	if vms.verifiedCount == MaxMasquerades {
+		return false
+	}
+	vms.verifiedCount += 1
+	return true
 }
