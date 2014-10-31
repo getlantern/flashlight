@@ -41,6 +41,10 @@ func Dim(key string, value string) *DimGroup {
 	return &DimGroup{map[string]string{key: value}}
 }
 
+func CountryDim() *DimGroup {
+	return Dim("country", Country)
+}
+
 // And creates a new DimGroup that adds the given dim to the existing ones in
 // the group.
 func (dg *DimGroup) And(key string, value string) *DimGroup {
@@ -49,6 +53,10 @@ func (dg *DimGroup) And(key string, value string) *DimGroup {
 		newDims[k] = v
 	}
 	return &DimGroup{newDims}
+}
+
+func (dg *DimGroup) WithCountry() *DimGroup {
+	return dg.And("country", Country)
 }
 
 // String returns a string representation of this DimGroup with keys in

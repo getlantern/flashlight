@@ -262,8 +262,8 @@ func reportTraversalResult(info *nattywad.TraversalInfo, clientGotFiveTuple bool
 		answererCountry = info.Peer.Extras["country"].(string)
 	}
 
-	dims := statreporter.Dim("answererCountry", answererCountry).
-		And("offererCountry", statreporter.Country).
+	dims := statreporter.CountryDim().
+		And("answererCountry", answererCountry).
 		And("offererAnswererCountries", statreporter.Country+"_"+answererCountry).
 		And("operatingSystem", runtime.GOOS)
 

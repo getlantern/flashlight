@@ -314,7 +314,7 @@ func (server *Server) startServingStatsIfNecessary() bool {
 }
 
 func onBytesGiven(bytes int64) {
-	dims := statreporter.Dim("country", statreporter.Country)
+	dims := statreporter.CountryDim()
 	dims.Increment("bytesGiven").Add(bytes)
 	dims.Increment("bytesGivenByFlashlight").Add(bytes)
 }
