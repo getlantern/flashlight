@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/flashlight/log"
@@ -14,83 +16,152 @@ const (
 	StatshubUrlTemplate = "https://%s/stats/%s"
 )
 
+const (
+	increments = "increments"
+	gauges     = "gauges"
+)
+
+const (
+	set = iota
+	add = iota
+)
+
 type update struct {
-	cat string
-	key string
-	val int64
+	category string
+	action   int
+	key      string
+	val      int64
 }
 
-type statsMap map[string]map[string]int64
-
-type Reporter struct {
-	ReportingInterval time.Duration
-	StatshubAddr      string
-	InstanceId        string // (optional) instanceid under which to report statistics
-	Country           string // (optional) country under which to report statistics
-	updates           chan *update
-	stats             statsMap
+type UpdateBuilder struct {
+	category string
+	key      string
 }
 
-func (reporter *Reporter) Increment(key string, value int64) {
-	reporter.updates <- &update{"increments", key, value}
-}
+var (
+	period       time.Duration
+	addr         string
+	id           string
+	country      string
+	updatesCh    chan *update
+	accumulators map[string]map[string]int64
+	started      int32
+)
 
-// OnBytesGiven registers the fact that bytes were given (sent or received)
-func (reporter *Reporter) OnBytesGiven(clientIp string, bytes int64) {
-	reporter.Increment("bytesGiven", bytes)
-	reporter.Increment("bytesGivenByFlashlight", bytes)
-}
+// Start runs a goroutine that periodically coalesces the collected statistics
+// and reports them to statshub via HTTP post
+func Start(reportingPeriod time.Duration, statshubAddr string, instanceId string, countryCode string) {
+	alreadyStarted := !atomic.CompareAndSwapInt32(&started, 0, 1)
+	if alreadyStarted {
+		log.Debugf("statreporter already started, not starting again")
+		return
+	}
+	period = reportingPeriod
+	addr = statshubAddr
+	id = instanceId
+	country = strings.ToLower(countryCode)
+	// We buffer the updates channel to be able to continue accepting updates while we're posting a report
+	updatesCh = make(chan *update, 10000)
+	accumulators = make(map[string]map[string]int64)
 
-// reportStats periodically coalesces the collected statistics and reports
-// them to statshub via HTTP post
-func (reporter *Reporter) Start() {
-	reporter.updates = make(chan *update, 1000)
-	reporter.stats = make(statsMap)
-
-	timer := time.NewTimer(reporter.timeToNextReport())
+	timer := time.NewTimer(timeToNextReport())
 	for {
 		select {
-		case update := <-reporter.updates:
+		case update := <-updatesCh:
 			// Coalesce
-			cat := reporter.stats[update.cat]
-			if cat == nil {
-				cat = make(map[string]int64)
-				reporter.stats[update.cat] = cat
+			accum := accumulators[update.category]
+			if accum == nil {
+				accum = make(map[string]int64)
+				accumulators[update.category] = accum
 			}
-			switch update.cat {
-			case "increments":
-				cat[update.key] = cat[update.key] + update.val
-			default:
-				log.Errorf("Received stat of unknown category: %s", update.cat)
+			switch update.action {
+			case set:
+				accum[update.key] = update.val
+			case add:
+				accum[update.key] = accum[update.key] + update.val
 			}
 		case <-timer.C:
-			if len(reporter.stats) == 0 {
+			if len(accumulators) == 0 {
 				log.Debugf("No stats to report")
 			} else {
-				err := reporter.postStats(reporter.stats)
+				err := postStats(accumulators)
 				if err != nil {
 					log.Errorf("Error on posting stats: %s", err)
 				}
-				reporter.stats = make(statsMap)
+				accumulators = make(map[string]map[string]int64)
 			}
-			timer.Reset(reporter.timeToNextReport())
+			timer.Reset(timeToNextReport())
 		}
 	}
 }
 
-func (reporter *Reporter) timeToNextReport() time.Duration {
-	nextInterval := time.Now().Truncate(reporter.ReportingInterval).Add(reporter.ReportingInterval)
+// OnBytesGiven registers the fact that bytes were given (sent or received)
+func OnBytesGiven(clientIp string, bytes int64) {
+	Increment("bytesGiven").Add(bytes)
+	Increment("bytesGivenByFlashlight").Add(bytes)
+}
+
+func Increment(key string) *UpdateBuilder {
+	return &UpdateBuilder{
+		increments,
+		key,
+	}
+}
+
+func Gauge(key string) *UpdateBuilder {
+	return &UpdateBuilder{
+		gauges,
+		key,
+	}
+}
+
+func (b *UpdateBuilder) Add(val int64) {
+	postUpdate(&update{
+		b.category,
+		add,
+		b.key,
+		val,
+	})
+}
+
+func (b *UpdateBuilder) Set(val int64) {
+	postUpdate(&update{
+		b.category,
+		set,
+		b.key,
+		val,
+	})
+}
+
+func postUpdate(update *update) {
+	if isStarted() {
+		select {
+			case updatesCh <- update:
+				// update posted
+			default:
+				// drop stat to avoid blocking
+			}
+	}
+}
+
+func isStarted() bool {
+	return atomic.LoadInt32(&started) == 1
+}
+
+func timeToNextReport() time.Duration {
+	nextInterval := time.Now().Truncate(period).Add(period)
 	return nextInterval.Sub(time.Now())
 }
 
-func (reporter *Reporter) postStats(stats map[string]map[string]int64) error {
+func postStats(accumulators map[string]map[string]int64) error {
 	report := map[string]interface{}{
 		"dims": map[string]string{
-			"country": reporter.Country,
+			"country": country,
 		},
 	}
-	for k, v := range stats {
-		report[k] = v
+
+	for category, accum := range accumulators {
+		report[category] = accum
 	}
 
 	jsonBytes, err := json.Marshal(report)
@@ -98,7 +169,7 @@ func (reporter *Reporter) postStats(stats map[string]map[string]int64) error {
 		return fmt.Errorf("Unable to marshal json for stats: %s", err)
 	}
 
-	url := fmt.Sprintf(StatshubUrlTemplate, reporter.StatshubAddr, reporter.InstanceId)
+	url := fmt.Sprintf(StatshubUrlTemplate, addr, id)
 	resp, err := http.Post(url, "application/json", bytes.NewReader(jsonBytes))
 	if err != nil {
 		return fmt.Errorf("Unable to post stats to statshub: %s", err)

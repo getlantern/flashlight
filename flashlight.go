@@ -50,7 +50,6 @@ var (
 	configUpdates = make(chan *config.Config)
 
 	lastCloudConfigETag = ""
-	statReporter        *statreporter.Reporter
 )
 
 func main() {
@@ -193,7 +192,7 @@ func doFetchCloudConfig(cfg *config.Config, proxyAddr string) ([]byte, error) {
 }
 
 func configureStats(cfg *config.Config) {
-	if cfg.StatsInterval > 0 {
+	if cfg.StatsPeriod > 0 {
 		if cfg.StatshubAddr == "" {
 			log.Error("Must specify StatshubAddr if reporting stats")
 			flag.Usage()
@@ -209,18 +208,10 @@ func configureStats(cfg *config.Config) {
 			flag.Usage()
 			os.Exit(ConfigError)
 		}
-		// Report stats
-		statReporter = &statreporter.Reporter{
-			ReportingInterval: cfg.StatsInterval,
-			StatshubAddr:      cfg.StatshubAddr,
-			InstanceId:        cfg.InstanceId,
-			Country:           cfg.Country,
-		}
-
-		log.Debugf("Reporting stats to %s every %s under instance id '%s' in country %s", statReporter.StatshubAddr, statReporter.ReportingInterval, statReporter.InstanceId, statReporter.Country)
-		go statReporter.Start()
+		log.Debugf("Reporting stats to %s every %s under instance id '%s' in country %s", cfg.StatshubAddr, cfg.StatsPeriod, cfg.InstanceId, cfg.Country)
+		go statreporter.Start(cfg.StatsPeriod, cfg.StatshubAddr, cfg.InstanceId, cfg.Country)
 	} else {
-		log.Debug("Not reporting stats (no statsinterval specified)")
+		log.Debug("Not reporting stats (no statsperiod specified)")
 	}
 }
 
@@ -270,7 +261,6 @@ func runServerProxy(cfg *config.Config) {
 			PKFile:         config.InConfigDir("proxypk.pem"),
 			ServerCertFile: config.InConfigDir("servercert.pem"),
 		},
-		StatReporter: statReporter,
 	}
 	if cfg.StatsAddr != "" {
 		// Serve stats

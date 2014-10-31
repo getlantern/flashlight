@@ -56,11 +56,10 @@ type Server struct {
 
 	TLSConfig *tls.Config
 
-	Host                       string                 // FQDN that is guaranteed to hit this server
-	CertContext                *CertContext           // context for certificate management
-	AllowNonGlobalDestinations bool                   // if true, requests to LAN, Loopback, etc. will be allowed
-	StatReporter               *statreporter.Reporter // optional reporter of stats
-	StatServer                 *statserver.Server     // optional server of stats
+	Host                       string             // FQDN that is guaranteed to hit this server
+	CertContext                *CertContext       // context for certificate management
+	AllowNonGlobalDestinations bool               // if true, requests to LAN, Loopback, etc. will be allowed
+	StatServer                 *statserver.Server // optional server of stats
 }
 
 // CertContext encapsulates the certificates used by a Server
@@ -88,26 +87,19 @@ func (server *Server) ListenAndServe() error {
 	}
 
 	// Hook into stats reporting if necessary
-	reportingStats := server.StatReporter != nil
 	servingStats := server.startServingStatsIfNecessary()
 
-	if reportingStats || servingStats {
-		// Add callbacks to track bytes given
-		proxy.OnBytesReceived = func(ip string, bytes int64) {
-			if reportingStats {
-				server.StatReporter.OnBytesGiven(ip, bytes)
-			}
-			if servingStats {
-				server.StatServer.OnBytesReceived(ip, bytes)
-			}
+	// Add callbacks to track bytes given
+	proxy.OnBytesReceived = func(ip string, bytes int64) {
+		statreporter.OnBytesGiven(ip, bytes)
+		if servingStats {
+			server.StatServer.OnBytesReceived(ip, bytes)
 		}
-		proxy.OnBytesSent = func(ip string, bytes int64) {
-			if reportingStats {
-				server.StatReporter.OnBytesGiven(ip, bytes)
-			}
-			if servingStats {
-				server.StatServer.OnBytesSent(ip, bytes)
-			}
+	}
+	proxy.OnBytesSent = func(ip string, bytes int64) {
+		statreporter.OnBytesGiven(ip, bytes)
+		if servingStats {
+			server.StatServer.OnBytesSent(ip, bytes)
 		}
 	}
 
