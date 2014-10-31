@@ -83,7 +83,7 @@ func displayVersion() {
 	if version == "" {
 		version = "unknown"
 	}
-	log.Debugf("Running flashlight version %s", version)
+	log.Debugf("---- flashlight version %s ----", version)
 }
 
 // configure parses the command-line flags and binds the configuration YAML.
