@@ -39,6 +39,8 @@ const (
 )
 
 var (
+	version string
+
 	CLOUD_CONFIG_POLL_INTERVAL = 1 * time.Minute
 
 	// Command-line Flags
@@ -52,6 +54,8 @@ var (
 )
 
 func main() {
+	displayVersion()
+
 	cfg := configure()
 
 	if cfg.CpuProfile != "" {
@@ -73,6 +77,13 @@ func main() {
 	} else {
 		runServerProxy(cfg)
 	}
+}
+
+func displayVersion() {
+	if version == "" {
+		version = "unknown"
+	}
+	log.Debugf("Running flashlight version %s", version)
 }
 
 // configure parses the command-line flags and binds the configuration YAML.

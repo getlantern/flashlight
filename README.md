@@ -103,19 +103,20 @@ Flashlight requires [Go 1.3](http://golang.org/dl/).
 It is convenient to build flashlight for multiple platforms using something like
 [goxc](https://github.com/laher/goxc).
 
-With goxc, the binaries used for Lantern can be built like this:
+With goxc, the binaries used for Lantern can be built using the
+./crosscompile.bash script. This script also sets the version of flashlight to
+the most recent annotated tag in git. An annotated tag can be added like this:
 
-```
-goxc -build-ldflags="-w" -bc="linux,386 linux,amd64 windows,386 darwin" validate compile
-```
+`git tag -a v1.0.0 -m"Tagged 1.0.0"`
 
-`-build-ldflags="-w"` causes the linker to omit debug symbols, which makes the
-resulting binaries considerably smaller.
+Note - ./crosscompile.bash omits debug symbols to keep the build smaller.
 
 The binaries end up at
 `$GOPATH/bin/flashlight-xc/snapshot/<platform>/flashlight`.
 
-Note that these binaries should also be signed for use in production, at least on OSX and Windows. On OSX the command to do this should resemble the following (assuming you have an associated code signing certificate):
+Note that these binaries should also be signed for use in production, at least
+on OSX and Windows. On OSX the command to do this should resemble the following
+(assuming you have an associated code signing certificate):
 
 ```
 codesign -s "Developer ID Application: Brave New Software Project, Inc" -f install/osx/pt/flashlight/flashlight
