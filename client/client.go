@@ -20,10 +20,6 @@ const (
 	X_FLASHLIGHT_QOS = "X-Flashlight-QOS"
 )
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
 // Client is an HTTP proxy that accepts connections from local programs and
 // proxies these via remote flashlight servers.
 type Client struct {
@@ -40,6 +36,7 @@ type Client struct {
 	cfgMutex           sync.RWMutex
 	servers            []*server
 	totalServerWeights int
+	verifiedSets       map[string]*verifiedMasqueradeSet
 }
 
 // ListenAndServe makes the client listen for HTTP connections
@@ -78,12 +75,20 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 
 	client.cfg = cfg
 
-	verifiedSets := make(map[string]*verifiedMasqueradeSet)
+	if client.verifiedSets != nil {
+		// Stop old verifications
+		for _, verifiedSet := range client.verifiedSets {
+			go verifiedSet.stop()
+		}
+	}
+
+	// Set up new verified masquerade sets
+	client.verifiedSets = make(map[string]*verifiedMasqueradeSet)
 
 	for key, masqueradeSet := range cfg.MasqueradeSets {
 		testServer := cfg.highestQosServer(key)
 		if testServer != nil {
-			verifiedSets[key] = newVerifiedMasqueradeSet(testServer, masqueradeSet)
+			client.verifiedSets[key] = newVerifiedMasqueradeSet(testServer, masqueradeSet)
 		}
 	}
 
@@ -104,7 +109,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 		}
 		client.servers[i] = serverInfo.buildServer(
 			cfg.DumpHeaders,
-			verifiedSets[serverInfo.MasqueradeSet],
+			client.verifiedSets[serverInfo.MasqueradeSet],
 			enproxyConfig)
 		i = i + 1
 	}
