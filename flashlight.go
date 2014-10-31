@@ -39,7 +39,8 @@ const (
 )
 
 var (
-	version string
+	version   string
+	buildDate string
 
 	CLOUD_CONFIG_POLL_INTERVAL = 1 * time.Minute
 
@@ -82,7 +83,10 @@ func displayVersion() {
 	if version == "" {
 		version = "unknown"
 	}
-	log.Debugf("---- flashlight version %s ----", version)
+	if buildDate == "" {
+		buildDate = "now"
+	}
+	log.Debugf("---- flashlight version %s (%s) ----", version, buildDate)
 }
 
 // configure parses the command-line flags and binds the configuration YAML.
