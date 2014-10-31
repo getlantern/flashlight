@@ -39,6 +39,9 @@ const (
 )
 
 var (
+	version   string
+	buildDate string
+
 	CLOUD_CONFIG_POLL_INTERVAL = 1 * time.Minute
 
 	// Command-line Flags
@@ -48,7 +51,6 @@ var (
 	configUpdates = make(chan *config.Config)
 
 	lastCloudConfigETag = ""
-	statReporter        *statreporter.Reporter
 )
 
 func init() {
@@ -56,6 +58,8 @@ func init() {
 }
 
 func main() {
+	displayVersion()
+
 	cfg := configure()
 
 	if cfg.CpuProfile != "" {
@@ -77,6 +81,16 @@ func main() {
 	} else {
 		runServerProxy(cfg)
 	}
+}
+
+func displayVersion() {
+	if version == "" {
+		version = "development"
+	}
+	if buildDate == "" {
+		buildDate = "now"
+	}
+	log.Debugf("---- flashlight version %s (%s) ----", version, buildDate)
 }
 
 // configure parses the command-line flags and binds the configuration YAML.
@@ -186,7 +200,7 @@ func doFetchCloudConfig(cfg *config.Config, proxyAddr string) ([]byte, error) {
 }
 
 func configureStats(cfg *config.Config) {
-	if cfg.StatsInterval > 0 {
+	if cfg.StatsPeriod > 0 {
 		if cfg.StatshubAddr == "" {
 			log.Error("Must specify StatshubAddr if reporting stats")
 			flag.Usage()
@@ -202,18 +216,10 @@ func configureStats(cfg *config.Config) {
 			flag.Usage()
 			os.Exit(ConfigError)
 		}
-		// Report stats
-		statReporter = &statreporter.Reporter{
-			ReportingInterval: cfg.StatsInterval,
-			StatshubAddr:      cfg.StatshubAddr,
-			InstanceId:        cfg.InstanceId,
-			Country:           cfg.Country,
-		}
-
-		log.Debugf("Reporting stats to %s every %s under instance id '%s' in country %s", statReporter.StatshubAddr, statReporter.ReportingInterval, statReporter.InstanceId, statReporter.Country)
-		go statReporter.Start()
+		log.Debugf("Reporting stats to %s every %s under instance id '%s' in country %s", cfg.StatshubAddr, cfg.StatsPeriod, cfg.InstanceId, cfg.Country)
+		go statreporter.Start(cfg.StatsPeriod, cfg.StatshubAddr, cfg.InstanceId, cfg.Country)
 	} else {
-		log.Debug("Not reporting stats (no statsinterval specified)")
+		log.Debug("Not reporting stats (no statsperiod specified)")
 	}
 }
 
@@ -263,7 +269,6 @@ func runServerProxy(cfg *config.Config) {
 			PKFile:         config.InConfigDir("proxypk.pem"),
 			ServerCertFile: config.InConfigDir("servercert.pem"),
 		},
-		StatReporter: statReporter,
 	}
 	if cfg.StatsAddr != "" {
 		// Serve stats

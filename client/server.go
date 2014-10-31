@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
+	"math"
 	"net"
 	"net/http"
 	"time"
@@ -12,10 +13,11 @@ import (
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/log"
 	"github.com/getlantern/flashlight/proxy"
+	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/keyman"
 	"net/http/httputil"
 
-	"gopkg.in/getlantern/tlsdialer.v1"
+	"gopkg.in/getlantern/tlsdialer.v2"
 )
 
 var (
@@ -190,8 +192,7 @@ func (serverInfo *ServerInfo) dialerFor(masqueradeSource func() *Masquerade) fun
 
 	return func() (net.Conn, error) {
 		masquerade := masqueradeSource()
-		start := time.Now()
-		conn, err := tlsdialer.DialWithDialer(
+		cwt, err := tlsdialer.DialForTimings(
 			&net.Dialer{
 				Timeout: dialTimeout,
 			},
@@ -199,23 +200,74 @@ func (serverInfo *ServerInfo) dialerFor(masqueradeSource func() *Masquerade) fun
 			serverInfo.addressForServer(masquerade),
 			sendServerNameExtension,
 			serverInfo.tlsConfig(masquerade))
-		delta := time.Now().Sub(start)
-		if delta > longDialLimit {
-			resultAddr := ""
-			if err == nil {
-				resultAddr = conn.RemoteAddr().String()
+
+		domain := ""
+		if masquerade != nil {
+			domain = masquerade.Domain
+		}
+
+		resultAddr := ""
+		if err == nil {
+			resultAddr = cwt.Conn.RemoteAddr().String()
+		}
+
+		if cwt.ResolutionTime > 0 {
+			serverInfo.recordTiming("DNSLookup", cwt.ResolutionTime)
+			if cwt.ResolutionTime > 1*time.Second {
+				log.Debugf("DNS lookup for %s (%s) took %s", domain, resultAddr, cwt.ResolutionTime)
 			}
-			domain := ""
-			if masquerade != nil {
-				domain = masquerade.Domain
+		}
+
+		if cwt.ConnectTime > 0 {
+			serverInfo.recordTiming("TCPConnect", cwt.ConnectTime)
+			if cwt.ConnectTime > 5*time.Second {
+				log.Debugf("TCP connecting to %s (%s) took %s", domain, resultAddr, cwt.ConnectTime)
 			}
-			log.Debugf("Long dial to %s (%s), took: %s", domain, resultAddr, delta)
+		}
+
+		if cwt.HandshakeTime > 0 {
+			serverInfo.recordTiming("TLSHandshake", cwt.HandshakeTime)
+			if cwt.HandshakeTime > 5*time.Second {
+				log.Debugf("TLS handshake to %s (%s) took %s", domain, resultAddr, cwt.HandshakeTime)
+			}
 		}
 
 		if err != nil && masquerade != nil {
 			err = fmt.Errorf("Unable to dial masquerade %s: %s", masquerade.Domain, err)
 		}
-		return conn, err
+		return cwt.Conn, err
+	}
+}
+
+// recordTimings records timing information for the given step in establishing
+// a connection. It always records that the step happened, and it records the
+// highest timing threshold exceeded by the step.  Thresholds are 1, 2, 4, 8,
+// and 16 seconds.
+//
+// For example, if calling this with step = "DNSLookup" and duration = 2.5
+// seconds, we will increment two gauges, "DNSLookup" and
+// "DNSLookupOver2Sec".
+//
+// The stats are qualified by MasqueradeSet (if specified), otherwise they're
+// qualified by host. For example, if the MasqueradeSet is "cloudflare", the
+// above stats would be recorded as "DNSLookupTocloudflare" and
+// "DNSLookupTocloudflareOver2Sec". If the MasqueradeSet is "" and the host is
+// "localhost", the stats would be recorded as "DNSLookupTolocalhost" and
+// "DNSLookupTolocalhostOver2Sec".
+func (serverInfo *ServerInfo) recordTiming(step string, duration time.Duration) {
+	if serverInfo.MasqueradeSet != "" {
+		step = fmt.Sprintf("%sTo%s", step, serverInfo.MasqueradeSet)
+	} else {
+		step = fmt.Sprintf("%sTo%s", step, serverInfo.Host)
+	}
+	statreporter.Gauge(step).Add(1)
+	for i := 4; i >= 0; i-- {
+		seconds := int(math.Pow(float64(2), float64(i)))
+		if duration > time.Duration(seconds)*time.Second {
+			key := fmt.Sprintf("%sOver%dSec", step, seconds)
+			statreporter.Gauge(key).Add(1)
+			return
+		}
 	}
 }
 
