@@ -104,9 +104,9 @@ func postUpdate(update *update) {
 	if isStarted() {
 		select {
 		case updatesCh <- update:
-			// update posted
+			log.Tracef("Posted update: %s", update)
 		default:
-			// drop stat to avoid blocking
+			log.Tracef("Dropped update: %s", update)
 		}
 	}
 }
