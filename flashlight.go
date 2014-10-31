@@ -3,10 +3,12 @@ package main
 
 import (
 	"flag"
+	"math/rand"
 	"os"
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
+	"time"
 
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config"
@@ -24,7 +26,9 @@ const (
 )
 
 var (
-	log = golog.LoggerFor("flashlight")
+	log       = golog.LoggerFor("flashlight")
+	version   string
+	buildDate string
 
 	// Command-line Flags
 	help      = flag.Bool("help", false, "Get usage help")
@@ -33,7 +37,13 @@ var (
 	configUpdates = make(chan *config.Config)
 )
 
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
 func main() {
+	displayVersion()
+
 	flag.Parse()
 	configUpdates = make(chan *config.Config)
 	cfg, err := config.Start(func(updated *config.Config) {
@@ -66,6 +76,16 @@ func main() {
 	} else {
 		runServerProxy(cfg)
 	}
+}
+
+func displayVersion() {
+	if version == "" {
+		version = "development"
+	}
+	if buildDate == "" {
+		buildDate = "now"
+	}
+	log.Debugf("---- flashlight version %s (%s) ----", version, buildDate)
 }
 
 func configureStats(cfg *config.Config) {

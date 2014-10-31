@@ -56,6 +56,7 @@ func doStart(reportingPeriod time.Duration, instanceId string, countryCode strin
 	period = reportingPeriod
 	id = instanceId
 	Country = strings.ToLower(countryCode)
+	// We buffer the updates channel to be able to continue accepting updates while we're posting a report
 	updatesCh = make(chan *update, 1000)
 	accumulators = make(map[string]*dimGroupAccumulator)
 
@@ -101,7 +102,12 @@ func doStart(reportingPeriod time.Duration, instanceId string, countryCode strin
 
 func postUpdate(update *update) {
 	if isStarted() {
-		updatesCh <- update
+		select {
+		case updatesCh <- update:
+			// update posted
+		default:
+			// drop stat to avoid blocking
+		}
 	}
 }
 
