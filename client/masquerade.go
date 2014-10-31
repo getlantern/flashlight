@@ -46,7 +46,7 @@ func newVerifiedMasqueradeSet(testServer *ServerInfo, masquerades []*Masquerade)
 		masquerades:  masquerades,
 		candidatesCh: make(chan *Masquerade),
 		stopCh:       make(chan interface{}, 1),
-		verifiedCh:   make(chan *Masquerade),
+		verifiedCh:   make(chan *Masquerade, len(masquerades)),
 	}
 
 	vms.wg.Add(NumWorkers)
@@ -87,20 +87,9 @@ func (vms *verifiedMasqueradeSet) feedCandidate(candidate *Masquerade) bool {
 func (vms *verifiedMasqueradeSet) stop() {
 	log.Debug("Stop called")
 	vms.stopCh <- nil
-	go func() {
-		log.Debug("Draining verified channel")
-		for {
-			_, ok := <-vms.verifiedCh
-			if !ok {
-				log.Debug("Done draining")
-				break
-			}
-		}
-	}()
 	log.Debug("Waiting for workers to finish")
 	vms.wg.Wait()
-	log.Debug("Closing vms.verifiedCh")
-	close(vms.verifiedCh)
+	log.Debug("Stopped")
 }
 
 // verify checks masquerades obtained from candidatesCh to see if they work on
@@ -109,7 +98,6 @@ func (vms *verifiedMasqueradeSet) verify() {
 	for {
 		candidate, ok := <-vms.candidatesCh
 		if !ok {
-			log.Debug("Verification worker stopped")
 			vms.wg.Done()
 			return
 		}
