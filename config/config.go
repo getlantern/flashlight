@@ -1,7 +1,6 @@
 package config
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -37,6 +36,8 @@ type Config struct {
 	CloudConfigCA string
 	Addr          string
 	Role          string
+	StatsPeriod   time.Duration
+	StatshubAddr  string
 	InstanceId    string
 	StatsAddr     string
 	Country       string
@@ -45,24 +46,6 @@ type Config struct {
 	Server        *server.ServerConfig
 	Client        *client.ClientConfig
 }
-
-var (
-	// Flags
-	configdir      = flag.String("configdir", "", "directory in which to store configuration, including flashlight.yaml (defaults to current directory)")
-	configaddr     = flag.String("configaddr", "", "if specified, run an http-based configuration server at this address")
-	cloudconfig    = flag.String("cloudconfig", "", "optional http(s) URL to a cloud-based source for configuration updates")
-	cloudconfigca  = flag.String("cloudconfigca", "", "optional PEM encoded certificate used to verify TLS connections to fetch cloudconfig")
-	addr           = flag.String("addr", "", "ip:port on which to listen for requests. When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https (required)")
-	role           = flag.String("role", "", "either 'client' or 'server' (required)")
-	instanceid     = flag.String("instanceid", "", "instanceId under which to report stats to statshub. If not specified, no stats are reported.")
-	statsaddr      = flag.String("statsaddr", "", "host:port at which to make detailed stats available using server-sent events (optional)")
-	country        = flag.String("country", "xx", "2 digit country code under which to report stats. Defaults to xx.")
-	cpuprofile     = flag.String("cpuprofile", "", "write cpu profile to given file")
-	memprofile     = flag.String("memprofile", "", "write heap profile to given file")
-	portmap        = flag.Int("portmap", 0, "try to map this port on the firewall to the port on which flashlight is listening, using UPnP or NAT-PMP. If mapping this port fails, flashlight will exit with status code 50")
-	advertisedHost = flag.String("server", "", "FQDN of flashlight server when running in server mode (required)")
-	waddelladdr    = flag.String("waddelladdr", "", "if specified, connect to this waddell server and process NAT traversal requests inbound from waddell")
-)
 
 // Start starts the configuration system.
 func Start(updateHandler func(updated *Config)) (*Config, error) {
@@ -215,49 +198,6 @@ func (cfg *Config) IsUpstream() bool {
 	return !cfg.IsDownstream()
 }
 
-// applyFlags updates this Config from any command-line flags that were passed
-// in. ApplyFlags assumes that flag.Parse() has already been called.
-func (updated *Config) applyFlags() error {
-	if updated.Server == nil {
-		updated.Server = &server.ServerConfig{}
-	}
-
-	// Visit all flags that have been set and copy to config
-	flag.Visit(func(f *flag.Flag) {
-		switch f.Name {
-		// General
-		case "cloudconfig":
-			updated.CloudConfig = *cloudconfig
-		case "cloudconfigca":
-			updated.CloudConfigCA = *cloudconfigca
-		case "addr":
-			updated.Addr = *addr
-		case "role":
-			updated.Role = *role
-		case "instanceid":
-			updated.InstanceId = *instanceid
-		case "statsaddr":
-			updated.StatsAddr = *statsaddr
-		case "country":
-			updated.Country = *country
-		case "cpuprofile":
-			updated.CpuProfile = *cpuprofile
-		case "memprofile":
-			updated.MemProfile = *memprofile
-
-		// Server
-		case "portmap":
-			updated.Server.Portmap = *portmap
-		case "server":
-			updated.Server.AdvertisedHost = *advertisedHost
-		case "waddelladdr":
-			updated.Server.WaddellAddr = *waddelladdr
-		}
-	})
-
-	return nil
-}
-
 func (cfg Config) cloudPollSleepTime() time.Duration {
 	return time.Duration((CloudConfigPollInterval.Nanoseconds() / 2) + rand.Int63n(CloudConfigPollInterval.Nanoseconds()))
 }
@@ -324,11 +264,4 @@ func (updated *Config) updateFrom(updateBytes []byte) error {
 		i = i + 1
 	}
 	return nil
-}
-
-var cloudflareMasquerades = []*client.Masquerade{
-	&client.Masquerade{
-		Domain: "minecraftforum.net",
-		RootCA: "-----BEGIN CERTIFICATE-----\nMIIEYDCCA0igAwIBAgILBAAAAAABL07hRQwwDQYJKoZIhvcNAQEFBQAwVzELMAkG\nA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNVBAsTB1Jv\nb3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw0xMTA0MTMxMDAw\nMDBaFw0yMjA0MTMxMDAwMDBaMF0xCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9i\nYWxTaWduIG52LXNhMTMwMQYDVQQDEypHbG9iYWxTaWduIE9yZ2FuaXphdGlvbiBW\nYWxpZGF0aW9uIENBIC0gRzIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB\nAQDdNR3yIFQmGtDvpW+Bdllw3Of01AMkHyQOnSKf1Ccyeit87ovjYWI4F6+0S3qf\nZyEcLZVUunm6tsTyDSF0F2d04rFkCJlgePtnwkv3J41vNnbPMYzl8QbX3FcOW6zu\nzi2rqqlwLwKGyLHQCAeV6irs0Z7kNlw7pja1Q4ur944+ABv/hVlrYgGNguhKujiz\n4MP0bRmn6gXdhGfCZsckAnNate6kGdn8AM62pI3ffr1fsjqdhDFPyGMM5NgNUqN+\nARvUZ6UYKOsBp4I82Y4d5UcNuotZFKMfH0vq4idGhs6dOcRmQafiFSNrVkfB7cVT\n5NSAH2v6gEaYsgmmD5W+ZoiTAgMBAAGjggElMIIBITAOBgNVHQ8BAf8EBAMCAQYw\nEgYDVR0TAQH/BAgwBgEB/wIBADAdBgNVHQ4EFgQUXUayjcRLdBy77fVztjq3OI91\nnn4wRwYDVR0gBEAwPjA8BgRVHSAAMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3\nLmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMDMGA1UdHwQsMCowKKAmoCSGImh0\ndHA6Ly9jcmwuZ2xvYmFsc2lnbi5uZXQvcm9vdC5jcmwwPQYIKwYBBQUHAQEEMTAv\nMC0GCCsGAQUFBzABhiFodHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9yb290cjEw\nHwYDVR0jBBgwFoAUYHtmGkUNl8qJUC99BM00qP/8/UswDQYJKoZIhvcNAQEFBQAD\nggEBABvgiADHBREc/6stSEJSzSBo53xBjcEnxSxZZ6CaNduzUKcbYumlO/q2IQen\nfPMOK25+Lk2TnLryhj5jiBDYW2FQEtuHrhm70t8ylgCoXtwtI7yw07VKoI5lkS/Z\n9oL2dLLffCbvGSuXL+Ch7rkXIkg/pfcNYNUNUUflWP63n41edTzGQfDPgVRJEcYX\npOBWYdw9P91nbHZF2krqrhqkYE/Ho9aqp9nNgSvBZnWygI/1h01fwlr1kMbawb30\nhag8IyrhFHvBN91i0ZJsumB9iOQct+R2UTjEqUdOqCsukNK1OFHrwZyKarXMsh3o\nwFZUTKiL8IkyhtyTMr5NGvo1dbU=\n-----END CERTIFICATE-----\n",
-	},
 }

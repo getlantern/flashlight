@@ -73,8 +73,8 @@ way the client will trust the local server, which is using a self-signed cert.
 
 Example Client:
 
-```bash
-./flashlight -addr localhost:10080 -server getiantem.org -masquerade cdnjs.com
+```bash 
+./flashlight -addr localhost:10080 -role client
 ```
 
 Example Server:
@@ -103,29 +103,70 @@ Flashlight requires [Go 1.3](http://golang.org/dl/).
 It is convenient to build flashlight for multiple platforms using something like
 [goxc](https://github.com/laher/goxc).
 
-With goxc, the binaries used for Lantern can be built like this:
+With goxc, the binaries used for Lantern can be built using the
+./crosscompile.bash script. This script also sets the version of flashlight to
+the most recent annotated tag in git. An annotated tag can be added like this:
 
-```
-goxc -build-ldflags="-w" -bc="linux,386 linux,amd64 windows,386 darwin" validate compile
-```
+`git tag -a v1.0.0 -m"Tagged 1.0.0"`
 
-`-build-ldflags="-w"` causes the linker to omit debug symbols, which makes the
-resulting binaries considerably smaller.
+Note - ./crosscompile.bash omits debug symbols to keep the build smaller.
 
 The binaries end up at
 `$GOPATH/bin/flashlight-xc/snapshot/<platform>/flashlight`.
 
-Note that these binaries should also be signed for use in production, at least on OSX and Windows. On OSX the command to do this should resemble the following (assuming you have an associated code signing certificate):
+Note that these binaries should also be signed for use in production, at least
+on OSX and Windows. On OSX the command to do this should resemble the following
+(assuming you have an associated code signing certificate):
 
 ```
 codesign -s "Developer ID Application: Brave New Software Project, Inc" -f install/osx/pt/flashlight/flashlight
 ```
 
-### Adding new masquerade hosts
-The certstotemplate.py script in the certs directory will take all the certificate files in that directory and will format them according to supplied Jinja templates. The usage is as follows:
+### Masquerade Host Management
 
+Masquerade host configuration is managed using utilities in the certs/ subfolder.
+
+#### Setup
+
+You need python 2.7 and the following packages:
+
+```bash
+pip install pyyaml
+pip install jinja2
+pip install --upgrade pyopenssl
 ```
-Usage: ./certstotemplate.py -t <templatefile> -o <outputfile>
+Notes:
+- If you're not using virtual environments, you may need to sudo all of these commands.
+- This requires a fairly recent version of OpenSSL (more recent than what is installed with OS X).
+
+In addition, you need the s3cmd tool installed and set up.  To install on
+Ubuntu:
+
+```bash
+sudo apt-get install s3cmd
 ```
 
-This is handy for converting those certificates to go code, for example. See [certs/gostruct.tmpl](https://github.com/getlantern/flashlight/blob/1762/certs/gostruct.tmpl) as an example. [certs/cloud.yaml.tmpl](https://github.com/getlantern/flashlight/blob/1762/certs/cloud.yaml.tmpl) is an example yaml template.
+On OS X:
+```bash
+brew install s3cmd
+```
+
+And then run `s3cmd --configure` and follow the on-screen instructions.  You
+can get AWS credentials that are good for uploading to S3 in
+[too-many-secrets/lantern_aws/aws_credential](https://github.com/getlantern/too-many-secrets/blob/master/lantern_aws/aws_credential).
+
+#### Adding new masquerade hosts
+
+Compile the list of domains in a file, separated with whitespace (e.g., one
+per line), cd to the certs/ subfolder, and run `./addmasquerades.py <your file>`.
+
+#### Removing masquerade hosts
+
+Remove the corresponding cert file from the certs/ subfolder, cd to that
+directory and run `./addmasquerades.py nodomains.txt`.
+
+#### Refreshing the root CA certs for hosts
+
+Run `./refreshcerts.py [<your file>]`, where the file, if provided, should
+have the same format as for `addmasquerades.py`.  If no domains file is
+provided, the root CA certs for all domains will be refreshed.

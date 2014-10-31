@@ -3,10 +3,12 @@ package main
 
 import (
 	"flag"
+	"math/rand"
 	"os"
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
+	"time"
 
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config"
@@ -24,7 +26,9 @@ const (
 )
 
 var (
-	log = golog.LoggerFor("flashlight")
+	log       = golog.LoggerFor("flashlight")
+	version   string
+	buildDate string
 
 	// Command-line Flags
 	help      = flag.Bool("help", false, "Get usage help")
@@ -33,7 +37,13 @@ var (
 	configUpdates = make(chan *config.Config)
 )
 
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
 func main() {
+	displayVersion()
+
 	flag.Parse()
 	configUpdates = make(chan *config.Config)
 	cfg, err := config.Start(func(updated *config.Config) {
@@ -58,11 +68,47 @@ func main() {
 
 	saveProfilingOnSigINT(cfg)
 
+	configureStats(cfg)
+
 	log.Debugf("Running proxy")
 	if cfg.IsDownstream() {
 		runClientProxy(cfg)
 	} else {
 		runServerProxy(cfg)
+	}
+}
+
+func displayVersion() {
+	if version == "" {
+		version = "development"
+	}
+	if buildDate == "" {
+		buildDate = "now"
+	}
+	log.Debugf("---- flashlight version %s (%s) ----", version, buildDate)
+}
+
+func configureStats(cfg *config.Config) {
+	if cfg.StatsPeriod > 0 {
+		if cfg.StatshubAddr == "" {
+			log.Error("Must specify StatshubAddr if reporting stats")
+			flag.Usage()
+			os.Exit(ConfigError)
+		}
+		if cfg.InstanceId == "" {
+			log.Error("Must specify InstanceId if reporting stats")
+			flag.Usage()
+			os.Exit(ConfigError)
+		}
+		if cfg.Country == "" {
+			log.Error("Must specify Country if reporting stats")
+			flag.Usage()
+			os.Exit(ConfigError)
+		}
+		log.Debugf("Reporting stats to %s every %s under instance id '%s' in country %s", cfg.StatshubAddr, cfg.StatsPeriod, cfg.InstanceId, cfg.Country)
+		statreporter.Start(cfg.StatsPeriod, cfg.StatshubAddr, cfg.InstanceId, cfg.Country)
+	} else {
+		log.Debug("Not reporting stats (no statsperiod specified)")
 	}
 }
 
@@ -76,19 +122,6 @@ func runClientProxy(cfg *config.Config) {
 
 	// Configure client initially
 	client.Configure(cfg.Client, nil)
-
-	if cfg.InstanceId != "" {
-		log.Debugf("Reporting stats under InstanceId: %s", cfg.InstanceId)
-		client.TraversalReporter = &statreporter.ClientReporter{
-			Reporter: statreporter.Reporter{
-				InstanceId: cfg.InstanceId,
-				Country:    cfg.Country,
-			},
-		}
-		client.TraversalReporter.Start()
-	} else {
-		log.Debug("Not reporting stats (no instanceid specified)")
-	}
 
 	// Continually poll for config updates and update client accordingly
 	go func() {
@@ -117,15 +150,7 @@ func runServerProxy(cfg *config.Config) {
 			ServerCertFile: config.InConfigDir("servercert.pem"),
 		},
 	}
-	if cfg.InstanceId != "" {
-		// Report stats
-		srv.StatReporter = &statreporter.ServerReporter{
-			Reporter: statreporter.Reporter{
-				InstanceId: cfg.InstanceId,
-				Country:    cfg.Country,
-			},
-		}
-	}
+
 	if cfg.StatsAddr != "" {
 		// Serve stats
 		srv.StatServer = &statserver.Server{
@@ -190,6 +215,6 @@ func saveProfilingOnSigINT(cfg *config.Config) {
 		if cfg.MemProfile != "" {
 			saveMemProfile(cfg.MemProfile)
 		}
-		os.Exit(2)
+		os.Exit(Interrupted)
 	}()
 }

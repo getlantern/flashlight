@@ -5,10 +5,12 @@ import (
 	"net"
 	"net/http"
 	"reflect"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
 
+	"github.com/getlantern/deepcopy"
 	"github.com/getlantern/enproxy"
 	"github.com/getlantern/flashlight/nattest"
 	"github.com/getlantern/flashlight/statreporter"
@@ -24,15 +26,19 @@ const (
 	X_FLASHLIGHT_QOS = "X-Flashlight-QOS"
 
 	HighQOS = 10
+
+	// Cutoff for logging warnings about a dial having taken a long time.
+	longDialLimit = 10 * time.Second
+
+	// idleTimeout needs to be small enough that we stop using connections
+	// before the upstream server/CDN closes them itself.
+	// TODO: make this configurable.
+	idleTimeout = 10 * time.Second
 )
 
 var (
 	log = golog.LoggerFor("flashlight.client")
 )
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
 
 // Client is an HTTP proxy that accepts connections from local programs and
 // proxies these via remote flashlight servers.
@@ -46,12 +52,12 @@ type Client struct {
 	// WriteTimeout: (optional) timeout for write ops
 	WriteTimeout time.Duration
 
-	cfg                *ClientConfig
+	priorCfg           *ClientConfig
 	cfgMutex           sync.RWMutex
 	servers            []*server
 	totalServerWeights int
 	nattywadClient     *nattywad.Client
-	TraversalReporter  *statreporter.ClientReporter
+	verifiedSets       map[string]*verifiedMasqueradeSet
 }
 
 // ListenAndServe makes the client listen for HTTP connections
@@ -76,24 +82,36 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	client.cfgMutex.Lock()
 	defer client.cfgMutex.Unlock()
 
-	log.Debug("Client.Configure() called")
-	if client.cfg != nil && reflect.DeepEqual(client.cfg, cfg) {
-		log.Debugf("Client configuration unchanged")
-		return
-	}
-
-	if client.cfg == nil {
-		log.Debugf("Client configuration initialized")
+	log.Debug("Configure() called")
+	if client.priorCfg != nil {
+		if reflect.DeepEqual(client.priorCfg, cfg) {
+			log.Debugf("Client configuration unchanged")
+			return
+		} else {
+			log.Debugf("Client configuration changed")
+		}
 	} else {
-		log.Debugf("Client configuration changed")
+		log.Debugf("Client configuration initialized")
 	}
 
-	verifiedSets := make(map[string]*verifiedMasqueradeSet)
+	// Make a copy of cfg for comparing later
+	client.priorCfg = &ClientConfig{}
+	deepcopy.Copy(client.priorCfg, cfg)
+
+	if client.verifiedSets != nil {
+		// Stop old verifications
+		for _, verifiedSet := range client.verifiedSets {
+			go verifiedSet.stop()
+		}
+	}
+
+	// Set up new verified masquerade sets
+	client.verifiedSets = make(map[string]*verifiedMasqueradeSet)
 
 	for key, masqueradeSet := range cfg.MasqueradeSets {
 		testServer := cfg.highestQosServer(key)
 		if testServer != nil {
-			verifiedSets[key] = newVerifiedMasqueradeSet(testServer, masqueradeSet)
+			client.verifiedSets[key] = newVerifiedMasqueradeSet(testServer, masqueradeSet)
 		}
 	}
 
@@ -114,7 +132,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 		}
 		client.servers[i] = serverInfo.buildServer(
 			cfg.DumpHeaders,
-			verifiedSets[serverInfo.MasqueradeSet],
+			client.verifiedSets[serverInfo.MasqueradeSet],
 			enproxyConfig)
 		i = i + 1
 	}
@@ -134,25 +152,17 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 				return server.dialWithEnproxy("tcp", addr)
 			},
 			OnSuccess: func(info *nattywad.TraversalInfo) {
-				reporter := client.TraversalReporter
 				log.Debugf("NAT traversal Succeeded: %s", info)
 				log.Tracef("Peer Country: %s", info.Peer.Extras["country"])
 				serverConnected := nattest.Ping(info.LocalAddr, info.RemoteAddr)
-				outcome := newTraversalOutcome(info, true, serverConnected)
-				if reporter != nil {
-					reporter.OutcomesCh <- outcome
-				}
+				reportTraversalResult(info, true, serverConnected)
 			},
 			OnFailure: func(info *nattywad.TraversalInfo) {
-				reporter := client.TraversalReporter
 				log.Debugf("NAT traversal Failed: %s", info)
 				log.Tracef("Peer Country: %s", info.Peer.Extras["country"])
-				outcome := newTraversalOutcome(info, false, false)
-				if reporter != nil {
-					reporter.OutcomesCh <- outcome
-				}
+				reportTraversalResult(info, false, false)
 			},
-			KeepAliveInterval: 20 * time.Second,
+			KeepAliveInterval: idleTimeout - 2*time.Second,
 		}
 	}
 
@@ -163,8 +173,6 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 		i = i + 1
 	}
 	go client.nattywadClient.Configure(peers)
-
-	client.cfg = cfg
 }
 
 // highestQos finds the server with the highest reported quality of service for
@@ -248,28 +256,33 @@ func (client *Client) getServers() ([]*server, int) {
 	return client.servers, client.totalServerWeights
 }
 
-func newTraversalOutcome(info *nattywad.TraversalInfo, clientGotFiveTuple bool, connectionSucceeded bool) *statreporter.TraversalOutcome {
-	outcome := &statreporter.TraversalOutcome{}
-	outcome.AnswererCountry = "xx"
+func reportTraversalResult(info *nattywad.TraversalInfo, clientGotFiveTuple bool, connectionSucceeded bool) {
+	answererCountry := "xx"
 	if _, ok := info.Peer.Extras["country"]; ok {
-		outcome.AnswererCountry = info.Peer.Extras["country"].(string)
+		answererCountry = info.Peer.Extras["country"].(string)
 	}
 
+	dims := statreporter.Dim("answererCountry", answererCountry).
+		And("offererCountry", statreporter.Country).
+		And("offererAnswererCountries", statreporter.Country+"_"+answererCountry).
+		And("operatingSystem", runtime.GOOS)
+
+	dims.Increment("traversalAttempted").Add(1)
+
 	if info.ServerRespondedToSignaling {
-		outcome.AnswererOnline = 1
+		dims.Increment("answererOnline").Add(1)
 	}
 	if info.ServerGotFiveTuple {
-		outcome.AnswererGot5Tuple = 1
+		dims.Increment("answererGot5Tuple").Add(1)
 	}
 	if clientGotFiveTuple {
-		outcome.OffererGot5Tuple = 1
+		dims.Increment("offererGot5Tuple").Add(1)
 	}
 	if info.ServerGotFiveTuple && clientGotFiveTuple {
-		outcome.TraversalSucceeded = 1
-		outcome.DurationOfSuccessfulTraversal = uint64(info.Duration.Seconds())
+		dims.Increment("traversalSucceeded").Add(1)
+		dims.Increment("durationOfSuccessfulTraversal").Add(int64(info.Duration.Seconds()))
 	}
 	if connectionSucceeded {
-		outcome.ConnectionSucceeded = 1
+		dims.Increment("connectionSucceeded").Add(1)
 	}
-	return outcome
 }
