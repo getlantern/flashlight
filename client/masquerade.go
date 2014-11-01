@@ -35,9 +35,7 @@ type verifiedMasqueradeSet struct {
 // verifiedCh, turning verifiedCh into a sort of cyclic queue.
 func (vms *verifiedMasqueradeSet) nextVerified() *Masquerade {
 	masquerade := <-vms.verifiedCh
-	go func() {
-		vms.verifiedCh <- masquerade
-	}()
+	vms.verifiedCh <- masquerade
 	return masquerade
 }
 
