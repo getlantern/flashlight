@@ -189,11 +189,16 @@ func (serverInfo *ServerInfo) dialerFor(masqueradeSource func() *Masquerade) fun
 		dialTimeout = 20 * time.Second
 	}
 
-	// Note - we need to suppress the sending of the ServerName in the
-	// client handshake to make host-spoofing work with Fastly.  If the
-	// client Hello includes a server name, Fastly checks to make sure
-	// that this matches the Host header in the HTTP request and if they
-	// don't match, it returns a 400 Bad Request error.
+	// Note - we need to suppress the sending of the ServerName in the client
+	// handshake to make host-spoofing work with Fastly.  If the client Hello
+	// includes a server name, Fastly checks to make sure that this matches the
+	// Host header in the HTTP request and if they don't match, it returns
+	// a 400 Bad Request error.
+	//
+	// In addition, when dialing directly to an IP (as we are doing, as of this
+	// writing, for domain fronting) SNI could make us more fingerprintable,
+	// esp. considering Cloudflare doesn't allow access to its sites directly
+	// by IP.
 	sendServerNameExtension := false
 
 	return func() (net.Conn, error) {
@@ -206,6 +211,11 @@ func (serverInfo *ServerInfo) dialerFor(masqueradeSource func() *Masquerade) fun
 			serverInfo.addressForServer(masquerade),
 			sendServerNameExtension,
 			serverInfo.tlsConfig(masquerade))
+
+		if masquerade != nil && err == nil && !serverInfo.InsecureSkipVerify {
+			err = cwt.Conn.VerifyHostname("getiantem.org")
+			//err = cwt.Conn.VerifyHostname(masquerade.Domain)
+		}
 
 		domain := ""
 		if masquerade != nil {
@@ -302,14 +312,20 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 	}
 
 	configKey := ""
+	insecureSkipVerify := serverInfo.InsecureSkipVerify
 	if masquerade != nil {
 		configKey = masquerade.Domain + "|" + masquerade.RootCA
+		// When domain fronting, we are honoring serverInfo.InsecureSkipVerify
+		// manually as a separate step from Go's built-in handshake.  This is
+		// because we are connecting directly to an IP but still verifying
+		// against the corresponding domain.
+		insecureSkipVerify = true
 	}
 	tlsConfig := serverInfo.tlsConfigs[configKey]
 	if tlsConfig == nil {
 		tlsConfig = &tls.Config{
 			ClientSessionCache: tls.NewLRUClientSessionCache(1000),
-			InsecureSkipVerify: serverInfo.InsecureSkipVerify,
+			InsecureSkipVerify: insecureSkipVerify,
 		}
 		if masquerade != nil && masquerade.RootCA != "" {
 			caCert, err := keyman.LoadCertificateFromPEMBytes([]byte(masquerade.RootCA))
