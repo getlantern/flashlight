@@ -65,15 +65,21 @@ func (server *server) buildReverseProxy(shouldDumpHeaders bool) *httputil.Revers
 }
 
 func (server *server) dialWithEnproxy(network, addr string) (net.Conn, error) {
-	conn := &enproxy.Conn{
-		Addr:   addr,
-		Config: server.enproxyConfig,
+	return enproxyConfigDialer(server.enproxyConfig)(network, addr)
+}
+
+func enproxyConfigDialer(cfg *enproxy.Config) func(network, addr string) (net.Conn, error) {
+	return func(network, addr string) (net.Conn, error) {
+		conn := &enproxy.Conn{
+			Addr:   addr,
+			Config: cfg,
+		}
+		err := conn.Connect()
+		if err != nil {
+			return nil, err
+		}
+		return conn, nil
 	}
-	err := conn.Connect()
-	if err != nil {
-		return nil, err
-	}
-	return conn, nil
 }
 
 func (server *server) buildEnproxyConfig() *enproxy.Config {

@@ -1,10 +1,8 @@
 package client
 
 import (
-	"net"
 	"net/http"
 
-	"github.com/getlantern/enproxy"
 )
 
 // HttpClient creates a simple domain-fronted HTTP client using the specified
@@ -18,17 +16,7 @@ func HttpClient(serverInfo *ServerInfo, masquerade *Masquerade) *http.Client {
 
 	return &http.Client{
 		Transport: &http.Transport{
-			Dial: func(network, addr string) (net.Conn, error) {
-				conn := &enproxy.Conn{
-					Addr:   addr,
-					Config: enproxyConfig,
-				}
-				err := conn.Connect()
-				if err != nil {
-					return nil, err
-				}
-				return conn, nil
-			},
+			Dial: enproxyConfigDialer(enproxyConfig),
 		},
 	}
 }
