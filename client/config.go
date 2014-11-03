@@ -62,11 +62,14 @@ type cachedConn struct {
 // Masquerade contains the data for a single masquerade host, including
 // the domain and the root CA.
 type Masquerade struct {
-	// Domain: the domain to use for domain fronting
+	// Domain: the domain to use for certificate validation
 	Domain string
 
 	// RootCA: the root CA for the domain.
 	RootCA string
+
+	// IPAddress: the IP address used as host for domain fronting
+	IPAddress string
 }
 
 // SortHosts sorts the Servers array in place, ordered by host
