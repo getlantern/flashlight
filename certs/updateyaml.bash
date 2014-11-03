@@ -13,6 +13,6 @@ function die() {
 #./certstotemplate.py -t cloud.yaml.tmpl -o cloud.yaml || die "Could not create new template"
 
 echo "Adding cloud.yaml to s3"
-s3cmd put -P cloud.yaml s3://lantern_config || die "Could not upload cloud.yaml to s3"
+s3cmd put -P $(dirname $BASH_SOURCE)/cloud.yaml s3://lantern_config || die "Could not upload cloud.yaml to s3"
 
 echo "File updated on s3"
