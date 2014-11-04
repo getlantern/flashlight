@@ -93,7 +93,6 @@ def get_rootca(domain):
 					ssl.TLSv1_METHOD]:
 		try:
 			ctx = ssl.Context(version)
-			ctx.set_verify(ssl.VERIFY_NONE, lambda *args: True)
 			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			try:
 				conn = ssl.Connection(ctx, s)
