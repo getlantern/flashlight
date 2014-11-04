@@ -23,6 +23,9 @@ const (
 var (
 	log = golog.LoggerFor("genconfig")
 
+	domains   []string
+	blacklist = make(map[string]bool)
+
 	masqueradesTmpl string
 	yamlTmpl        string
 
@@ -35,23 +38,42 @@ var (
 )
 
 func main() {
-	if len(os.Args) != 2 {
+	if len(os.Args) < 2 {
 		log.Fatal("Please specify a file with a list of domains to use")
 	}
-	domainsFile := os.Args[1]
-	domains, err := ioutil.ReadFile(domainsFile)
-	if err != nil {
-		log.Fatalf("Unable to read domains file at %s: %s", domainsFile, err)
+	loadDomains()
+	if len(os.Args) > 2 {
+		loadBlacklist()
 	}
 
 	masqueradesTmpl = loadTemplate("masquerades.go.tmpl")
 	yamlTmpl = loadTemplate("cloud.yaml.tmpl")
 
-	go feedDomains(string(domains))
+	go feedDomains()
 	coalesceMasquerades()
 	buildModel()
 	generateTemplate(masqueradesTmpl, "../config/masquerades.go")
 	generateTemplate(yamlTmpl, "cloud.yaml")
+}
+
+func loadDomains() {
+	domainsFile := os.Args[1]
+	domainsBytes, err := ioutil.ReadFile(domainsFile)
+	if err != nil {
+		log.Fatalf("Unable to read domains file at %s: %s", domainsFile, err)
+	}
+	domains = strings.Split(string(domainsBytes), "\n")
+}
+
+func loadBlacklist() {
+	blacklistFile := os.Args[2]
+	blacklistBytes, err := ioutil.ReadFile(blacklistFile)
+	if err != nil {
+		log.Fatalf("Unable to read blacklist file at %s: %s", blacklistFile, err)
+	}
+	for _, domain := range strings.Split(string(blacklistBytes), "\n") {
+		blacklist[domain] = true
+	}
 }
 
 func loadTemplate(name string) string {
@@ -62,13 +84,13 @@ func loadTemplate(name string) string {
 	return string(bytes)
 }
 
-func feedDomains(domains string) {
+func feedDomains() {
 	wg.Add(numberOfWorkers)
 	for i := 0; i < numberOfWorkers; i++ {
 		go grabCerts()
 	}
 
-	for _, domain := range strings.Split(domains, "\n") {
+	for _, domain := range domains {
 		domainsCh <- domain
 	}
 	close(domainsCh)
@@ -82,6 +104,11 @@ func grabCerts() {
 	defer wg.Done()
 
 	for domain := range domainsCh {
+		_, blacklisted := blacklist[domain]
+		if blacklisted {
+			log.Tracef("Domain %s is blacklisted, skipping", domain)
+			continue
+		}
 		log.Tracef("Grabbing certs for domain: %s", domain)
 		cwt, err := tlsdialer.DialForTimings(&net.Dialer{
 			Timeout: 10 * time.Second,
@@ -99,8 +126,9 @@ func grabCerts() {
 			continue
 		}
 		masqueradesCh <- &client.Masquerade{
-			Domain: domain,
-			RootCA: strings.Replace(string(rootCert.PEMEncoded()), "\n", "\\n", -1),
+			Domain:    domain,
+			IpAddress: cwt.ResolvedAddr.IP.String(),
+			RootCA:    strings.Replace(string(rootCert.PEMEncoded()), "\n", "\\n", -1),
 		}
 	}
 }
