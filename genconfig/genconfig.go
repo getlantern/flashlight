@@ -13,7 +13,7 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
-	"github.com/getlantern/tlsdialer"
+	"gopkg.in/getlantern/tlsdialer.v2"
 )
 
 const (
@@ -82,7 +82,7 @@ func grabCerts() {
 	defer wg.Done()
 
 	for domain := range domainsCh {
-		log.Debugf("Grabbing certs for domain: %s", domain)
+		log.Tracef("Grabbing certs for domain: %s", domain)
 		cwt, err := tlsdialer.DialForTimings(&net.Dialer{
 			Timeout: 10 * time.Second,
 		}, "tcp", domain+":443", false, nil)
