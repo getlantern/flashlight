@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"text/template"
@@ -111,6 +112,7 @@ func coalesceMasquerades() {
 }
 
 func buildModel() {
+	sort.Sort(ByDomain(masquerades))
 	model = map[string]interface{}{
 		"masquerades": masquerades,
 	}
@@ -133,3 +135,9 @@ func generateTemplate(tmplString string, filename string) {
 		log.Errorf("Unable to generate %s: %s", filename, err)
 	}
 }
+
+type ByDomain []*client.Masquerade
+
+func (a ByDomain) Len() int           { return len(a) }
+func (a ByDomain) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByDomain) Less(i, j int) bool { return a[i].Domain < a[j].Domain }
