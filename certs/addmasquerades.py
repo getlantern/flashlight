@@ -11,6 +11,9 @@ import traceback
 # above.
 from OpenSSL import SSL as ssl, crypto
 
+# Utility for verifying hostnames (see http://stackoverflow.com/questions/1087227/validate-ssl-certificates-with-python)
+from backports.ssl_match_hostname import match_hostname, CertificateError
+
 try:
     ssl.TLSv1_2_METHOD
 except AttributeError:
@@ -88,11 +91,30 @@ class ErrorGettingCert(Exception):
     pass
 
 def get_rootca(domain):
+	def verify_cb(conn, x509, errno, errdepth, retcode):
+	  """
+	  callback for certificate validation
+	  should return true if verification passes and false otherwise
+	  """
+	  if errno == 0:
+	    if errdepth != 0:
+	      # don't validate names of root certificates
+	      return True
+	    else:
+	      try:
+	      	match_hostname(x509)
+	      	return True
+	      except CertificateError, ce:
+	      	return False
+	  else:
+	    return False
+
 	for version in [ssl.TLSv1_2_METHOD,
 			        ssl.TLSv1_1_METHOD,
 					ssl.TLSv1_METHOD]:
 		try:
 			ctx = ssl.Context(version)
+			ctx.set_verify(ssl.VERIFY_PEER, verify_cb)
 			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			try:
 				conn = ssl.Connection(ctx, s)
