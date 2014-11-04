@@ -124,7 +124,7 @@ codesign -s "Developer ID Application: Brave New Software Project, Inc" -f insta
 
 ### Masquerade Host Management
 
-Masquerade host configuration is managed using utilities in the ['genconfig/'](genconfig/) subfolder.
+Masquerade host configuration is managed using utilities in the [`genconfig/`](genconfig/) subfolder.
 
 #### Setup
 
@@ -151,4 +151,4 @@ The file allsites.txt contains the list of masquerade hosts we use. To add/remov
 1. Edit [`allsites.txt`](genconfig/allsites.txt)
 2. `go run genconfig.go allsites.txt`
 3. Commit the changed [`masquerades.go`](config/masquerades.go) and [`cloud.yaml`](genconfig/cloud.yaml) to git if you want
-4. Upload [`cloud.yaml`](genconfig/cloud.yaml) to s3 using [`udpateyaml.bash`](genconfig/updateyaml.bash( if you want
+4. Upload cloud.yaml to s3 using [`udpateyaml.bash`](genconfig/updateyaml.bash) if you want
