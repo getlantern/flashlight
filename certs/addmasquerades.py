@@ -110,7 +110,7 @@ def get_rootca(domain):
 	      	print "Certificate error"
 	      	return False
 	  else:
-	    print "Got error from openssl: %d" % errono
+	    print "Got error from openssl: %d" % errno
 	    return False
 
 	for version in [ssl.TLSv1_2_METHOD,
