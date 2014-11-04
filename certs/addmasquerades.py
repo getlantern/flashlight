@@ -107,8 +107,10 @@ def get_rootca(domain):
 	      	match_hostname(x509)
 	      	return True
 	      except CertificateError, ce:
+	      	print "Certificate error"
 	      	return False
 	  else:
+	  	print "Got error from openssl"
 	    return False
 
 	for version in [ssl.TLSv1_2_METHOD,
