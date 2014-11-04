@@ -96,14 +96,13 @@ def get_rootca(domain):
 	  callback for certificate validation
 	  should return true if verification passes and false otherwise
 	  """
-	  if True:
-	  	return False
 	  if errno == 0:
 	    if errdepth != 0:
 	      # don't validate names of root certificates
 	      return True
 	    else:
 	      try:
+	      	print "Matching hostname"
 	      	match_hostname(x509)
 	      	return True
 	      except CertificateError, ce:
