@@ -278,8 +278,12 @@ func (serverInfo *ServerInfo) addressForServer(masquerade *Masquerade) string {
 
 func (serverInfo *ServerInfo) serverHost(masquerade *Masquerade) string {
 	serverHost := serverInfo.Host
-	if masquerade != nil && masquerade.IpAddress != "" {
-		serverHost = masquerade.IpAddress
+	if masquerade != nil {
+		if masquerade.IpAddress != "" {
+			serverHost = masquerade.IpAddress
+		} else if masquerade.Domain != "" {
+			serverHost = masquerade.Domain
+		}
 	}
 	return serverHost
 }
