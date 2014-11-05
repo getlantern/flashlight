@@ -30,6 +30,7 @@ client:
     weight: 1000
     qos: 2
   masqueradesets:
-    cloudflare:{% for key, val in masquerades.iteritems() %}
-    - domain: {{ key }}
-      rootca: "{{ val }}"{% endfor %}
+    cloudflare:{{range .masquerades}}
+    - domain: {{.Domain}}
+      ipaddress: {{.IpAddress}}
+      rootca: "{{.RootCA}}"{{end}}
