@@ -129,6 +129,6 @@ present in domains.txt.
 To alter the list of domains or blacklist:
 
 1. Edit [`domains.txt`](genconfig/domains.txt) and/or [`blacklist.txt`](genconfig/blacklist.txt)
-2. `go run genconfig.go`.  If you want to specify different lists, you can use the -domains and/or -blacklist flags.  Use -help for usage instructions.
+2. `go run genconfig.go -domains domains.txt -blacklist blacklist.txt`.
 3. Commit the changed [`masquerades.go`](config/masquerades.go) and [`cloud.yaml`](genconfig/cloud.yaml) to git if you want.
 4. Upload cloud.yaml to s3 using [`udpateyaml.bash`](genconfig/updateyaml.bash) if you want.

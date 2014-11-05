@@ -23,8 +23,8 @@ const (
 
 var (
 	help          = flag.Bool("help", false, "Get usage help")
-	domainsFile   = flag.String("domains", "domains.txt", "Path to file containing list of domains to use, with one domain per line")
-	blacklistFile = flag.String("blacklist", "blacklist.txt", "Path to file containing list of blacklisted domains, which will be excluded from the configuration even if present in the domains file")
+	domainsFile   = flag.String("domains", "", "Path to file containing list of domains to use, with one domain per line (e.g. domains.txt)")
+	blacklistFile = flag.String("blacklist", "", "Path to file containing list of blacklisted domains, which will be excluded from the configuration even if present in the domains file (e.g. blacklist.txt)")
 )
 
 var (
@@ -66,6 +66,11 @@ func main() {
 }
 
 func loadDomains() {
+	if *domainsFile == "" {
+		log.Error("Please specify a domains file")
+		flag.Usage()
+		os.Exit(2)
+	}
 	domainsBytes, err := ioutil.ReadFile(*domainsFile)
 	if err != nil {
 		log.Fatalf("Unable to read domains file at %s: %s", *domainsFile, err)
@@ -74,6 +79,11 @@ func loadDomains() {
 }
 
 func loadBlacklist() {
+	if *blacklistFile == "" {
+		log.Error("Please specify a blacklist file")
+		flag.Usage()
+		os.Exit(3)
+	}
 	blacklistBytes, err := ioutil.ReadFile(*blacklistFile)
 	if err != nil {
 		log.Fatalf("Unable to read blacklist file at %s: %s", *blacklistFile, err)
