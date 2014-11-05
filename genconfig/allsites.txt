@@ -27,7 +27,6 @@ alexaboostup.com
 alexamaster.com
 allanalpass.com
 allbusiness.com
-allsites.txt
 almasryalyoum.com
 alnaharegypt.com
 alrakoba.net
@@ -536,7 +535,6 @@ nextinpact.com
 nextmedia.com
 ngrguardiannews.com
 niebezpiecznik.pl
-nodomains.txt
 nofilmschool.com
 nontonmovie.com
 noticiaaldia.com
@@ -821,7 +819,6 @@ unutulmazfilmler.com
 unwire.hk
 updatenowpro.com
 updatersoft.com
-updateyaml.bash
 uploadboy.com
 uppit.com
 uptimerobot.com
