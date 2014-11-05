@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"io/ioutil"
 	"net"
 	"os"
@@ -21,6 +22,12 @@ const (
 )
 
 var (
+	help          = flag.Bool("help", false, "Get usage help")
+	domainsFile   = flag.String("domains", "domains.txt", "Path to file containing list of domains to use, with one domain per line")
+	blacklistFile = flag.String("blacklist", "blacklist.txt", "Path to file containing list of blacklisted domains, which will be excluded from the configuration even if present in the domains file")
+)
+
+var (
 	log = golog.LoggerFor("genconfig")
 
 	domains   []string
@@ -38,13 +45,15 @@ var (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatal("Please specify a file with a list of domains to use")
+	flag.Parse()
+
+	if *help {
+		flag.Usage()
+		os.Exit(1)
 	}
+
 	loadDomains()
-	if len(os.Args) > 2 {
-		loadBlacklist()
-	}
+	loadBlacklist()
 
 	masqueradesTmpl = loadTemplate("masquerades.go.tmpl")
 	yamlTmpl = loadTemplate("cloud.yaml.tmpl")
@@ -57,19 +66,17 @@ func main() {
 }
 
 func loadDomains() {
-	domainsFile := os.Args[1]
-	domainsBytes, err := ioutil.ReadFile(domainsFile)
+	domainsBytes, err := ioutil.ReadFile(*domainsFile)
 	if err != nil {
-		log.Fatalf("Unable to read domains file at %s: %s", domainsFile, err)
+		log.Fatalf("Unable to read domains file at %s: %s", *domainsFile, err)
 	}
 	domains = strings.Split(string(domainsBytes), "\n")
 }
 
 func loadBlacklist() {
-	blacklistFile := os.Args[2]
-	blacklistBytes, err := ioutil.ReadFile(blacklistFile)
+	blacklistBytes, err := ioutil.ReadFile(*blacklistFile)
 	if err != nil {
-		log.Fatalf("Unable to read blacklist file at %s: %s", blacklistFile, err)
+		log.Fatalf("Unable to read blacklist file at %s: %s", *blacklistFile, err)
 	}
 	for _, domain := range strings.Split(string(blacklistBytes), "\n") {
 		blacklist[domain] = true

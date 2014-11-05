@@ -122,9 +122,13 @@ can get AWS credentials that are good for uploading to S3 in
 
 #### Managing masquerade hosts
 
-The file allsites.txt contains the list of masquerade hosts we use. To add/remove domains:
+The file domains.txt contains the list of masquerade hosts we use, and
+blacklist.txt contains a list of blacklisted domains that we exclude even if
+present in domains.txt.
 
-1. Edit [`allsites.txt`](genconfig/allsites.txt)
-2. `go run genconfig.go allsites.txt`.  You can also specify a 2nd file of blacklisted domains, which will be excluded from the configuration, for example `go run genconfig.go allsites.txt blacklist.txt`.
-3. Commit the changed [`masquerades.go`](config/masquerades.go) and [`cloud.yaml`](genconfig/cloud.yaml) to git if you want
-4. Upload cloud.yaml to s3 using [`udpateyaml.bash`](genconfig/updateyaml.bash) if you want
+To alter the list of domains or blacklist:
+
+1. Edit [`domains.txt`](genconfig/domains.txt) and/or [`blacklist.txt`](genconfig/blacklist.txt)
+2. `go run genconfig.go`.  If you want to specify different lists, you can use the -domains and/or -blacklist flags.  Use -help for usage instructions.
+3. Commit the changed [`masquerades.go`](config/masquerades.go) and [`cloud.yaml`](genconfig/cloud.yaml) to git if you want.
+4. Upload cloud.yaml to s3 using [`udpateyaml.bash`](genconfig/updateyaml.bash) if you want.
