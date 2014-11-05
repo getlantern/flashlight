@@ -183,11 +183,11 @@ func (serverInfo *ServerInfo) dialerFor(masqueradeSource func() *Masquerade) fun
 		dialTimeout = 20 * time.Second
 	}
 
-	// Note - we need to suppress the sending of the ServerName in the
-	// client handshake to make host-spoofing work with Fastly.  If the
-	// client Hello includes a server name, Fastly checks to make sure
-	// that this matches the Host header in the HTTP request and if they
-	// don't match, it returns a 400 Bad Request error.
+	// Note - we need to suppress the sending of the ServerName in the client
+	// handshake to make host-spoofing work with Fastly.  If the client Hello
+	// includes a server name, Fastly checks to make sure that this matches the
+	// Host header in the HTTP request and if they don't match, it returns
+	// a 400 Bad Request error.
 	sendServerNameExtension := false
 
 	return func() (net.Conn, error) {
@@ -278,8 +278,12 @@ func (serverInfo *ServerInfo) addressForServer(masquerade *Masquerade) string {
 
 func (serverInfo *ServerInfo) serverHost(masquerade *Masquerade) string {
 	serverHost := serverInfo.Host
-	if masquerade != nil && masquerade.Domain != "" {
-		serverHost = masquerade.Domain
+	if masquerade != nil {
+		if masquerade.IpAddress != "" {
+			serverHost = masquerade.IpAddress
+		} else if masquerade.Domain != "" {
+			serverHost = masquerade.Domain
+		}
 	}
 	return serverHost
 }
@@ -296,14 +300,17 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 	}
 
 	configKey := ""
+	serverName := serverInfo.Host
 	if masquerade != nil {
 		configKey = masquerade.Domain + "|" + masquerade.RootCA
+		serverName = masquerade.Domain
 	}
 	tlsConfig := serverInfo.tlsConfigs[configKey]
 	if tlsConfig == nil {
 		tlsConfig = &tls.Config{
 			ClientSessionCache: tls.NewLRUClientSessionCache(1000),
 			InsecureSkipVerify: serverInfo.InsecureSkipVerify,
+			ServerName:         serverName,
 		}
 		if masquerade != nil && masquerade.RootCA != "" {
 			caCert, err := keyman.LoadCertificateFromPEMBytes([]byte(masquerade.RootCA))
