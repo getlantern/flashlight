@@ -201,10 +201,6 @@ func (serverInfo *ServerInfo) dialerFor(masqueradeSource func() *Masquerade) fun
 			sendServerNameExtension,
 			serverInfo.tlsConfig(masquerade))
 
-		if masquerade != nil && err == nil && !serverInfo.InsecureSkipVerify {
-			err = cwt.Conn.VerifyHostname(masquerade.Domain)
-		}
-
 		domain := ""
 		if masquerade != nil {
 			domain = masquerade.Domain
@@ -300,20 +296,17 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 	}
 
 	configKey := ""
-	insecureSkipVerify := serverInfo.InsecureSkipVerify
+	serverName := serverInfo.Host
 	if masquerade != nil {
 		configKey = masquerade.Domain + "|" + masquerade.RootCA
-		// When domain fronting, we are honoring serverInfo.InsecureSkipVerify
-		// manually as a separate step from Go's built-in handshake.  This is
-		// because we are connecting directly to an IP but still verifying
-		// against the corresponding domain.
-		insecureSkipVerify = true
+		serverName = masquerade.Domain
 	}
 	tlsConfig := serverInfo.tlsConfigs[configKey]
 	if tlsConfig == nil {
 		tlsConfig = &tls.Config{
 			ClientSessionCache: tls.NewLRUClientSessionCache(1000),
-			InsecureSkipVerify: insecureSkipVerify,
+			InsecureSkipVerify: serverInfo.InsecureSkipVerify,
+			ServerName:         serverName,
 		}
 		if masquerade != nil && masquerade.RootCA != "" {
 			caCert, err := keyman.LoadCertificateFromPEMBytes([]byte(masquerade.RootCA))
