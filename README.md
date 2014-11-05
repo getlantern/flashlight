@@ -29,17 +29,22 @@ tunnel any TCP traffic.
 
 ```bash
 Usage of flashlight:
-  -addr (required): ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https
-  -configdir="": directory in which to store configuration (defaults to current directory)
+  -addr="": ip:port on which to listen for requests. When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https (required)
+  -cloudconfig="": optional http(s) URL to a cloud-based source for configuration updates
+  -cloudconfigca="": optional PEM encoded certificate used to verify TLS connections to fetch cloudconfig
+  -configdir="": directory in which to store configuration, including flashlight.yaml (defaults to current directory)
+  -country="xx": 2 digit country code under which to report stats. Defaults to xx.
   -cpuprofile="": write cpu profile to given file
-  -dumpheaders=false: dump the headers of outgoing requests and responses to stdout
   -help=false: Get usage help
-  -instanceid="": instanceId under which to report stats to statshub.  If not specified, no stats are reported.
-  -masquerade="": masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter
-  -role (required): either 'client' or 'server'
-  -rootca="": pin to this CA cert if specified (PEM format)
-  -server (required): FQDN of flashlight server
-  -serverport=443: the port on which to connect to the server
+  -instanceid="": instanceId under which to report stats to statshub
+  -memprofile="": write heap profile to given file
+  -parentpid=0: the parent process's PID, used on Windows for killing flashlight when the parent disappears
+  -portmap=0: try to map this port on the firewall to the port on which flashlight is listening, using UPnP or NAT-PMP. If mapping this port fails, flashlight will exit with status code 50
+  -role="": either 'client' or 'server' (required)
+  -server="": FQDN of flashlight server when running in server mode (required)
+  -statsaddr="": host:port at which to make detailed stats available using server-sent events (optional)
+  -statshub="pure-journey-3547.herokuapp.com": address of statshub server
+  -statsperiod=0: time in seconds to wait between reporting stats. If not specified, stats are not reported. If specified, statshub, instanceid and statsaddr must also be specified.
 ```
 
 -rootca needs to be the complete PEM data, with header and trailer and all
