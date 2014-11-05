@@ -296,7 +296,7 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 	}
 
 	configKey := ""
-	serverName := ""
+	serverName := serverInfo.Host
 	if masquerade != nil {
 		configKey = masquerade.Domain + "|" + masquerade.RootCA
 		serverName = masquerade.Domain
