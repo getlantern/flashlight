@@ -47,35 +47,6 @@ Usage of flashlight:
   -statsperiod=0: time in seconds to wait between reporting stats. If not specified, stats are not reported. If specified, statshub, instanceid and statsaddr must also be specified.
 ```
 
--rootca needs to be the complete PEM data, with header and trailer and all
-newlines, for example:
-
-```
-flashlight -addr localhost:10080 -server localhost -serverport 10081 -rootca "-----BEGIN CERTIFICATE-----
-MIIC/jCCAeigAwIBAgIEI6PHvjALBgkqhkiG9w0BAQswJjEQMA4GA1UEChMHTGFu
-dGVybjESMBAGA1UEAxMJbG9jYWxob3N0MB4XDTE0MDUwMzE5NTQzMFoXDTI0MDYw
-MzE5NTQzMFowJjEQMA4GA1UEChMHTGFudGVybjESMBAGA1UEAxMJbG9jYWxob3N0
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzYeEJ/wJMeu0LA9/DLuw
-n0j9HmAu/CK34e1jXsUuGkuheLLYWC32jVMsQdYaWuv8wFf2soXYH3WoEfOUkpTJ
-N53WA4mmRd2nZidUxvUIiLdcQlJf+xar7vJih5MgsMYmVR+r7C1fLYlONuFpM6XV
-5VuixGZyOcrLcOBbW1NimZLDzFYqAMy6l6U3eKvjK8KasnPURlAnVKRLquf4WA41
-diQXWAzJCVgPz/f3Z4nL/SCADOkc2nGOroh63xbIra1eQdKfn8fOU1qeq/Bl1gPq
-OdnSTGO19quSyf8XB6bDyl3TNeBCV5/FLIp8fjFzVdPAdZFjmMWTv3ccCEpmjsZe
-xwIDAQABozgwNjAOBgNVHQ8BAf8EBAMCAKQwEwYDVR0lBAwwCgYIKwYBBQUHAwEw
-DwYDVR0TAQH/BAUwAwEB/zALBgkqhkiG9w0BAQsDggEBAFLDvZBjdhLZuyHL3q6G
-ZC93zaGkpdS8ux3gw4lldtr/SYW8aJ9Ck4+aGv7kouFylAAmxUXODUqh8vG1mc7D
-uGHn5DHzHjlY1pSaedhcDcWIk1WB7ENoncWI9ZoutP3A4A+GTjwK35G7gBCP6bD+
-qI6VIezWU0oFlFOgTdIKHNEbFpEgIUm1WUhrQ1zzRGVNVNxo4YZyqxe3pVKNwSmx
-QggkGR2oOUVjfoyZ3pbUca4YnxiDgWRnbehgdK6Acq0kT9SCYAP0qTXCwZTeRJog
-Na7vvprDERbUvc9c0rSUGHUrKqbf5AAmStI6fHGTNvdOMHZfoekwrE0CbyWcX/UH
-gcA=
------END CERTIFICATE-----"
-```
-
-**IMPORTANT** - when running a test locally, run the server first, then pass the
-contents of servercert.pem to the client flashlight with the -rootca flag.  This
-way the client will trust the local server, which is using a self-signed cert.
-
 Example Client:
 
 ```bash 
@@ -85,7 +56,7 @@ Example Client:
 Example Server:
 
 ```bash
-./flashlight -addr :443
+./flashlight -addr :443 -role server
 ```
 
 Example Curl Test:
