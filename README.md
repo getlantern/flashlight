@@ -124,22 +124,11 @@ codesign -s "Developer ID Application: Brave New Software Project, Inc" -f insta
 
 ### Masquerade Host Management
 
-Masquerade host configuration is managed using utilities in the certs/ subfolder.
+Masquerade host configuration is managed using utilities in the [`genconfig/`](genconfig/) subfolder.
 
 #### Setup
 
-You need python 2.7 and the following packages:
-
-```bash
-pip install pyyaml
-pip install jinja2
-pip install --upgrade pyopenssl
-```
-Notes:
-- If you're not using virtual environments, you may need to sudo all of these commands.
-- This requires a fairly recent version of OpenSSL (more recent than what is installed with OS X).
-
-In addition, you need the s3cmd tool installed and set up.  To install on
+You need the s3cmd tool installed and set up.  To install on
 Ubuntu:
 
 ```bash
@@ -155,18 +144,11 @@ And then run `s3cmd --configure` and follow the on-screen instructions.  You
 can get AWS credentials that are good for uploading to S3 in
 [too-many-secrets/lantern_aws/aws_credential](https://github.com/getlantern/too-many-secrets/blob/master/lantern_aws/aws_credential).
 
-#### Adding new masquerade hosts
+#### Managing masquerade hosts
 
-Compile the list of domains in a file, separated with whitespace (e.g., one
-per line), cd to the certs/ subfolder, and run `./addmasquerades.py <your file>`.
+The file allsites.txt contains the list of masquerade hosts we use. To add/remove domains:
 
-#### Removing masquerade hosts
-
-Remove the corresponding cert file from the certs/ subfolder, cd to that
-directory and run `./addmasquerades.py nodomains.txt`.
-
-#### Refreshing the root CA certs for hosts
-
-Run `./refreshcerts.py [<your file>]`, where the file, if provided, should
-have the same format as for `addmasquerades.py`.  If no domains file is
-provided, the root CA certs for all domains will be refreshed.
+1. Edit [`allsites.txt`](genconfig/allsites.txt)
+2. `go run genconfig.go allsites.txt`.  You can also specify a 2nd file of blacklisted domains, which will be excluded from the configuration, for example `go run genconfig.go allsites.txt blacklist.txt`.
+3. Commit the changed [`masquerades.go`](config/masquerades.go) and [`cloud.yaml`](genconfig/cloud.yaml) to git if you want
+4. Upload cloud.yaml to s3 using [`udpateyaml.bash`](genconfig/updateyaml.bash) if you want
