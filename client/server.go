@@ -188,11 +188,6 @@ func (serverInfo *ServerInfo) dialerFor(masqueradeSource func() *Masquerade) fun
 	// includes a server name, Fastly checks to make sure that this matches the
 	// Host header in the HTTP request and if they don't match, it returns
 	// a 400 Bad Request error.
-	//
-	// In addition, when dialing directly to an IP (as we are doing, as of this
-	// writing, for domain fronting) SNI could make us more fingerprintable,
-	// esp. considering Cloudflare doesn't allow access to its sites directly
-	// by IP.
 	sendServerNameExtension := false
 
 	return func() (net.Conn, error) {
@@ -287,8 +282,8 @@ func (serverInfo *ServerInfo) addressForServer(masquerade *Masquerade) string {
 
 func (serverInfo *ServerInfo) serverHost(masquerade *Masquerade) string {
 	serverHost := serverInfo.Host
-	if masquerade != nil && masquerade.Domain != "" {
-		serverHost = masquerade.Domain
+	if masquerade != nil && masquerade.IpAddress != "" {
+		serverHost = masquerade.IpAddress
 	}
 	return serverHost
 }
