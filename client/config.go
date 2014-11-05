@@ -68,6 +68,10 @@ type Masquerade struct {
 	// Domain: the domain to use for domain fronting
 	Domain string
 
+	// IpAddress: pre-resolved ip address to use instead of Domain (if
+	// available) - NOT YET IMPLEMENTED, JUST FUTURE-PROOFING
+	IpAddress string
+
 	// RootCA: the root CA for the domain.
 	RootCA string
 }

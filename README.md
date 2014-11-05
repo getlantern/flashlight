@@ -29,47 +29,23 @@ tunnel any TCP traffic.
 
 ```bash
 Usage of flashlight:
-  -addr (required): ip:port on which to listen for requests.  When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https
-  -configdir="": directory in which to store configuration (defaults to current directory)
+  -addr="": ip:port on which to listen for requests. When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https (required)
+  -cloudconfig="": optional http(s) URL to a cloud-based source for configuration updates
+  -cloudconfigca="": optional PEM encoded certificate used to verify TLS connections to fetch cloudconfig
+  -configdir="": directory in which to store configuration, including flashlight.yaml (defaults to current directory)
+  -country="xx": 2 digit country code under which to report stats. Defaults to xx.
   -cpuprofile="": write cpu profile to given file
-  -dumpheaders=false: dump the headers of outgoing requests and responses to stdout
   -help=false: Get usage help
-  -instanceid="": instanceId under which to report stats to statshub.  If not specified, no stats are reported.
-  -masquerade="": masquerade host: if specified, flashlight will actually make a request to this host's IP but with a host header corresponding to the 'server' parameter
-  -role (required): either 'client' or 'server'
-  -rootca="": pin to this CA cert if specified (PEM format)
-  -server (required): FQDN of flashlight server
-  -serverport=443: the port on which to connect to the server
+  -instanceid="": instanceId under which to report stats to statshub
+  -memprofile="": write heap profile to given file
+  -parentpid=0: the parent process's PID, used on Windows for killing flashlight when the parent disappears
+  -portmap=0: try to map this port on the firewall to the port on which flashlight is listening, using UPnP or NAT-PMP. If mapping this port fails, flashlight will exit with status code 50
+  -role="": either 'client' or 'server' (required)
+  -server="": FQDN of flashlight server when running in server mode (required)
+  -statsaddr="": host:port at which to make detailed stats available using server-sent events (optional)
+  -statshub="pure-journey-3547.herokuapp.com": address of statshub server
+  -statsperiod=0: time in seconds to wait between reporting stats. If not specified, stats are not reported. If specified, statshub, instanceid and statsaddr must also be specified.
 ```
-
--rootca needs to be the complete PEM data, with header and trailer and all
-newlines, for example:
-
-```
-flashlight -addr localhost:10080 -server localhost -serverport 10081 -rootca "-----BEGIN CERTIFICATE-----
-MIIC/jCCAeigAwIBAgIEI6PHvjALBgkqhkiG9w0BAQswJjEQMA4GA1UEChMHTGFu
-dGVybjESMBAGA1UEAxMJbG9jYWxob3N0MB4XDTE0MDUwMzE5NTQzMFoXDTI0MDYw
-MzE5NTQzMFowJjEQMA4GA1UEChMHTGFudGVybjESMBAGA1UEAxMJbG9jYWxob3N0
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzYeEJ/wJMeu0LA9/DLuw
-n0j9HmAu/CK34e1jXsUuGkuheLLYWC32jVMsQdYaWuv8wFf2soXYH3WoEfOUkpTJ
-N53WA4mmRd2nZidUxvUIiLdcQlJf+xar7vJih5MgsMYmVR+r7C1fLYlONuFpM6XV
-5VuixGZyOcrLcOBbW1NimZLDzFYqAMy6l6U3eKvjK8KasnPURlAnVKRLquf4WA41
-diQXWAzJCVgPz/f3Z4nL/SCADOkc2nGOroh63xbIra1eQdKfn8fOU1qeq/Bl1gPq
-OdnSTGO19quSyf8XB6bDyl3TNeBCV5/FLIp8fjFzVdPAdZFjmMWTv3ccCEpmjsZe
-xwIDAQABozgwNjAOBgNVHQ8BAf8EBAMCAKQwEwYDVR0lBAwwCgYIKwYBBQUHAwEw
-DwYDVR0TAQH/BAUwAwEB/zALBgkqhkiG9w0BAQsDggEBAFLDvZBjdhLZuyHL3q6G
-ZC93zaGkpdS8ux3gw4lldtr/SYW8aJ9Ck4+aGv7kouFylAAmxUXODUqh8vG1mc7D
-uGHn5DHzHjlY1pSaedhcDcWIk1WB7ENoncWI9ZoutP3A4A+GTjwK35G7gBCP6bD+
-qI6VIezWU0oFlFOgTdIKHNEbFpEgIUm1WUhrQ1zzRGVNVNxo4YZyqxe3pVKNwSmx
-QggkGR2oOUVjfoyZ3pbUca4YnxiDgWRnbehgdK6Acq0kT9SCYAP0qTXCwZTeRJog
-Na7vvprDERbUvc9c0rSUGHUrKqbf5AAmStI6fHGTNvdOMHZfoekwrE0CbyWcX/UH
-gcA=
------END CERTIFICATE-----"
-```
-
-**IMPORTANT** - when running a test locally, run the server first, then pass the
-contents of servercert.pem to the client flashlight with the -rootca flag.  This
-way the client will trust the local server, which is using a self-signed cert.
 
 Example Client:
 
@@ -80,7 +56,7 @@ Example Client:
 Example Server:
 
 ```bash
-./flashlight -addr :443
+./flashlight -addr :443 -role server
 ```
 
 Example Curl Test:
@@ -124,22 +100,11 @@ codesign -s "Developer ID Application: Brave New Software Project, Inc" -f insta
 
 ### Masquerade Host Management
 
-Masquerade host configuration is managed using utilities in the certs/ subfolder.
+Masquerade host configuration is managed using utilities in the [`genconfig/`](genconfig/) subfolder.
 
 #### Setup
 
-You need python 2.7 and the following packages:
-
-```bash
-pip install pyyaml
-pip install jinja2
-pip install --upgrade pyopenssl
-```
-Notes:
-- If you're not using virtual environments, you may need to sudo all of these commands.
-- This requires a fairly recent version of OpenSSL (more recent than what is installed with OS X).
-
-In addition, you need the s3cmd tool installed and set up.  To install on
+You need the s3cmd tool installed and set up.  To install on
 Ubuntu:
 
 ```bash
@@ -155,18 +120,15 @@ And then run `s3cmd --configure` and follow the on-screen instructions.  You
 can get AWS credentials that are good for uploading to S3 in
 [too-many-secrets/lantern_aws/aws_credential](https://github.com/getlantern/too-many-secrets/blob/master/lantern_aws/aws_credential).
 
-#### Adding new masquerade hosts
+#### Managing masquerade hosts
 
-Compile the list of domains in a file, separated with whitespace (e.g., one
-per line), cd to the certs/ subfolder, and run `./addmasquerades.py <your file>`.
+The file domains.txt contains the list of masquerade hosts we use, and
+blacklist.txt contains a list of blacklisted domains that we exclude even if
+present in domains.txt.
 
-#### Removing masquerade hosts
+To alter the list of domains or blacklist:
 
-Remove the corresponding cert file from the certs/ subfolder, cd to that
-directory and run `./addmasquerades.py nodomains.txt`.
-
-#### Refreshing the root CA certs for hosts
-
-Run `./refreshcerts.py [<your file>]`, where the file, if provided, should
-have the same format as for `addmasquerades.py`.  If no domains file is
-provided, the root CA certs for all domains will be refreshed.
+1. Edit [`domains.txt`](genconfig/domains.txt) and/or [`blacklist.txt`](genconfig/blacklist.txt)
+2. `go run genconfig.go -domains domains.txt -blacklist blacklist.txt`.
+3. Commit the changed [`masquerades.go`](config/masquerades.go) and [`cloud.yaml`](genconfig/cloud.yaml) to git if you want.
+4. Upload cloud.yaml to s3 using [`udpateyaml.bash`](genconfig/updateyaml.bash) if you want.
