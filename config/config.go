@@ -160,7 +160,7 @@ func (cfg *Config) ApplyDefaults() {
 		cfg.Stats.StatshubAddr = *statshubAddr
 	}
 
-	if cfg.Client != nil {
+	if cfg.Client != nil && cfg.Role == "client" {
 		cfg.applyClientDefaults()
 	}
 }
