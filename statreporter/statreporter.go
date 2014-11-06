@@ -57,6 +57,9 @@ type reportPoster func(report report) error
 // Start runs a goroutine that periodically coalesces the collected statistics
 // and reports them to statshub via HTTPS post
 func Configure(cfg *Config) error {
+	if cfg.StatshubAddr == "" {
+		return fmt.Errorf("Must specify StatshubAddr if reporting stats")
+	}
 	return doConfigure(cfg, posterForDimGroupStats(cfg))
 }
 
@@ -81,9 +84,6 @@ func doConfigure(cfg *Config, poster reportPoster) error {
 		return nil
 	}
 
-	if cfg.StatshubAddr == "" {
-		return fmt.Errorf("Must specify StatshubAddr if reporting stats")
-	}
 	if cfg.InstanceId == "" {
 		return fmt.Errorf("Must specify InstanceId if reporting stats")
 	}
@@ -115,6 +115,8 @@ func postUpdate(update *update) {
 		default:
 			log.Tracef("Dropped update: %s", update)
 		}
+	} else {
+		log.Tracef("No reporter, dropping update")
 	}
 }
 

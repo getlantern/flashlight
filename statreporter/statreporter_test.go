@@ -19,7 +19,7 @@ func TestAll(t *testing.T) {
 	dg2 := Dim("b", "2").And("a", "1")
 
 	// Start reporting
-	doConfigure(&Config{
+	err := doConfigure(&Config{
 		ReportingPeriod: 100 * time.Millisecond,
 		InstanceId:      instanceid,
 	}, func(r report) error {
@@ -28,6 +28,9 @@ func TestAll(t *testing.T) {
 		}()
 		return nil
 	})
+	if err != nil {
+		t.Fatalf("Unable to configure statreporter: %s", err)
+	}
 
 	// Add stats
 	dg1.Increment("incra").Add(1)
