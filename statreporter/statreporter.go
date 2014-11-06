@@ -77,6 +77,7 @@ func doConfigure(cfg *Config, poster reportPoster) error {
 
 		log.Debug("Stopping old reporter")
 		currentReporter.stop()
+		currentReporter = nil
 	}
 
 	if cfg.ReportingPeriod == 0 {
