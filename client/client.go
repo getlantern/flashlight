@@ -12,6 +12,7 @@ import (
 
 	"github.com/getlantern/deepcopy"
 	"github.com/getlantern/enproxy"
+	"github.com/getlantern/flashlight/globals"
 	"github.com/getlantern/flashlight/nattest"
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/golog"
@@ -264,7 +265,7 @@ func reportTraversalResult(info *nattywad.TraversalInfo, clientGotFiveTuple bool
 
 	dims := statreporter.CountryDim().
 		And("answererCountry", answererCountry).
-		And("offererAnswererCountries", statreporter.Country+"_"+answererCountry).
+		And("offererAnswererCountries", globals.Country+"_"+answererCountry).
 		And("operatingSystem", runtime.GOOS)
 
 	dims.Increment("traversalAttempted").Add(1)

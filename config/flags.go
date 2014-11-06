@@ -4,7 +4,9 @@ import (
 	"flag"
 	"time"
 
+	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/server"
+	"github.com/getlantern/flashlight/statreporter"
 )
 
 var (
@@ -29,8 +31,16 @@ var (
 // applyFlags updates this Config from any command-line flags that were passed
 // in. ApplyFlags assumes that flag.Parse() has already been called.
 func (updated *Config) applyFlags() error {
+	if updated.Client == nil {
+		updated.Client = &client.ClientConfig{}
+	}
+
 	if updated.Server == nil {
 		updated.Server = &server.ServerConfig{}
+	}
+
+	if updated.Stats == nil {
+		updated.Stats = &statreporter.Config{}
 	}
 
 	// Visit all flags that have been set and copy to config
@@ -45,12 +55,6 @@ func (updated *Config) applyFlags() error {
 			updated.Addr = *addr
 		case "role":
 			updated.Role = *role
-		case "statsperiod":
-			updated.StatsPeriod = time.Duration(*statsPeriod) * time.Second
-		case "statshub":
-			updated.StatshubAddr = *statshubAddr
-		case "instanceid":
-			updated.InstanceId = *instanceid
 		case "statsaddr":
 			updated.StatsAddr = *statsaddr
 		case "country":
@@ -59,6 +63,14 @@ func (updated *Config) applyFlags() error {
 			updated.CpuProfile = *cpuprofile
 		case "memprofile":
 			updated.MemProfile = *memprofile
+
+			// Stats
+		case "statsperiod":
+			updated.Stats.ReportingPeriod = time.Duration(*statsPeriod) * time.Second
+		case "statshub":
+			updated.Stats.StatshubAddr = *statshubAddr
+		case "instanceid":
+			updated.Stats.InstanceId = *instanceid
 
 		// Server
 		case "portmap":
@@ -69,14 +81,6 @@ func (updated *Config) applyFlags() error {
 			updated.Server.WaddellAddr = *waddelladdr
 		}
 	})
-
-	// Set defaults
-	if updated.StatshubAddr == "" {
-		updated.StatshubAddr = *statshubAddr
-	}
-	if updated.Country == "" {
-		updated.Country = *country
-	}
 
 	return nil
 }

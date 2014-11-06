@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/client"
+	"github.com/getlantern/flashlight/globals"
 	"github.com/getlantern/flashlight/server"
+	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/util"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/yamlconf"
@@ -36,13 +38,11 @@ type Config struct {
 	CloudConfigCA string
 	Addr          string
 	Role          string
-	StatsPeriod   time.Duration
-	StatshubAddr  string
-	InstanceId    string
-	StatsAddr     string
 	Country       string
+	StatsAddr     string
 	CpuProfile    string
 	MemProfile    string
+	Stats         *statreporter.Config
 	Server        *server.ServerConfig
 	Client        *client.ClientConfig
 }
@@ -93,11 +93,16 @@ func Start(updateHandler func(updated *Config)) (*Config, error) {
 			for {
 				next := m.Next()
 				nextCfg := next.(*Config)
+				updateGlobals(nextCfg)
 				updateHandler(nextCfg)
 			}
 		}()
 	}
 	return cfg, err
+}
+
+func updateGlobals(cfg *Config) {
+	globals.Country = cfg.Country
 }
 
 // Update updates the configuration using the given mutator function.
@@ -143,14 +148,24 @@ func (cfg *Config) SetVersion(version int) {
 func (cfg *Config) ApplyDefaults() {
 	// Default country
 	if cfg.Country == "" {
-		cfg.Country = "xx"
+		cfg.Country = *country
 	}
 
-	// Make sure we always have a Client config
-	if cfg.Client == nil {
-		cfg.Client = &client.ClientConfig{}
+	// Make sure we always have a stats config
+	if cfg.Stats == nil {
+		cfg.Stats = &statreporter.Config{}
 	}
 
+	if cfg.Stats.StatshubAddr == "" {
+		cfg.Stats.StatshubAddr = *statshubAddr
+	}
+
+	if cfg.Client != nil {
+		cfg.applyClientDefaults()
+	}
+}
+
+func (cfg *Config) applyClientDefaults() {
 	// Make sure we always have at least one masquerade set
 	if cfg.Client.MasqueradeSets == nil {
 		cfg.Client.MasqueradeSets = make(map[string][]*client.Masquerade)

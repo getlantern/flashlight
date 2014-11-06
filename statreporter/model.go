@@ -3,6 +3,8 @@ package statreporter
 import (
 	"fmt"
 	"sort"
+
+	"github.com/getlantern/flashlight/globals"
 )
 
 const (
@@ -42,7 +44,7 @@ func Dim(key string, value string) *DimGroup {
 }
 
 func CountryDim() *DimGroup {
-	return Dim("country", Country)
+	return Dim(countryDim, globals.Country)
 }
 
 // And creates a new DimGroup that adds the given dim to the existing ones in
@@ -56,7 +58,7 @@ func (dg *DimGroup) And(key string, value string) *DimGroup {
 }
 
 func (dg *DimGroup) WithCountry() *DimGroup {
-	return dg.And("country", Country)
+	return dg.And(countryDim, globals.Country)
 }
 
 // String returns a string representation of this DimGroup with keys in

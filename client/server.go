@@ -11,6 +11,7 @@ import (
 
 	"github.com/getlantern/connpool"
 	"github.com/getlantern/enproxy"
+	"github.com/getlantern/flashlight/globals"
 	"github.com/getlantern/flashlight/proxy"
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/keyman"
@@ -249,7 +250,7 @@ func (serverInfo *ServerInfo) recordTiming(step string, duration time.Duration) 
 	} else {
 		step = fmt.Sprintf("%sTo%s", step, serverInfo.Host)
 	}
-	dims := statreporter.Dim("country", statreporter.Country)
+	dims := statreporter.Dim("country", globals.Country)
 	dims.Gauge(step).Add(1)
 	for i := 4; i >= 0; i-- {
 		seconds := int(math.Pow(float64(2), float64(i)))

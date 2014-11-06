@@ -68,6 +68,7 @@ func main() {
 
 	saveProfilingOnSigINT(cfg)
 
+	// Configure stats initially
 	configureStats(cfg)
 
 	log.Debugf("Running proxy")
@@ -89,26 +90,11 @@ func displayVersion() {
 }
 
 func configureStats(cfg *config.Config) {
-	if cfg.StatsPeriod > 0 {
-		if cfg.StatshubAddr == "" {
-			log.Error("Must specify StatshubAddr if reporting stats")
-			flag.Usage()
-			os.Exit(ConfigError)
-		}
-		if cfg.InstanceId == "" {
-			log.Error("Must specify InstanceId if reporting stats")
-			flag.Usage()
-			os.Exit(ConfigError)
-		}
-		if cfg.Country == "" {
-			log.Error("Must specify Country if reporting stats")
-			flag.Usage()
-			os.Exit(ConfigError)
-		}
-		log.Debugf("Reporting stats to %s every %s under instance id '%s' in country %s", cfg.StatshubAddr, cfg.StatsPeriod, cfg.InstanceId, cfg.Country)
-		statreporter.Start(cfg.StatsPeriod, cfg.StatshubAddr, cfg.InstanceId, cfg.Country)
-	} else {
-		log.Debug("Not reporting stats (no statsperiod specified)")
+	err := statreporter.Configure(cfg.Stats)
+	if err != nil {
+		log.Error(err)
+		flag.Usage()
+		os.Exit(ConfigError)
 	}
 }
 
@@ -127,6 +113,7 @@ func runClientProxy(cfg *config.Config) {
 	go func() {
 		for {
 			cfg := <-configUpdates
+			configureStats(cfg)
 			client.Configure(cfg.Client, nil)
 		}
 	}()
@@ -163,6 +150,7 @@ func runServerProxy(cfg *config.Config) {
 	go func() {
 		for {
 			cfg := <-configUpdates
+			configureStats(cfg)
 			srv.Configure(cfg.Server)
 		}
 	}()
