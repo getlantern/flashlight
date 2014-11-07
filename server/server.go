@@ -34,10 +34,10 @@ var (
 	httpIdleTimeout = 70 * time.Second
 
 	// Points in time, mostly used for generating certificates
-	TEN_YEARS_FROM_TODAY = time.Now().AddDate(10, 0, 0)
+	tenYearsFromToday = time.Now().AddDate(10, 0, 0)
 
 	// Default TLS configuration for servers
-	DEFAULT_TLS_SERVER_CONFIG = &tls.Config{
+	defaultTlsServerConfig = &tls.Config{
 		// The ECDHE cipher suites are preferred for performance and forward
 		// secrecy.  See https://community.qualys.com/blogs/securitylabs/2013/06/25/ssl-labs-deploying-forward-secrecy.
 		PreferServerCipherSuites: true,
@@ -182,7 +182,7 @@ func (server *Server) ListenAndServe() error {
 
 	log.Debugf("About to start server (https) proxy at %s", server.Addr)
 
-	tlsConfig := DEFAULT_TLS_SERVER_CONFIG
+	tlsConfig := defaultTlsServerConfig
 	cert, err := tls.LoadX509KeyPair(server.CertContext.ServerCertFile, server.CertContext.PKFile)
 	if err != nil {
 		return fmt.Errorf("Unable to load certificate and key from %s and %s: %s", server.CertContext.ServerCertFile, server.CertContext.PKFile, err)
@@ -238,7 +238,7 @@ func (ctx *CertContext) InitServerCert(host string) (err error) {
 	}
 
 	log.Debugf("Creating new server cert at: %s", ctx.ServerCertFile)
-	ctx.ServerCert, err = ctx.PK.TLSCertificateFor("Lantern", host, TEN_YEARS_FROM_TODAY, true, nil)
+	ctx.ServerCert, err = ctx.PK.TLSCertificateFor("Lantern", host, tenYearsFromToday, true, nil)
 	if err != nil {
 		return
 	}

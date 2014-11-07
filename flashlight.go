@@ -69,7 +69,7 @@ func main() {
 	saveProfilingOnSigINT(cfg)
 
 	// Configure stats initially
-	configureStats(cfg)
+	configureStats(cfg, true)
 
 	log.Debugf("Running proxy")
 	if cfg.IsDownstream() {
@@ -89,12 +89,14 @@ func displayVersion() {
 	log.Debugf("---- flashlight version %s (%s) ----", version, buildDate)
 }
 
-func configureStats(cfg *config.Config) {
+func configureStats(cfg *config.Config, failOnError bool) {
 	err := statreporter.Configure(cfg.Stats)
 	if err != nil {
 		log.Error(err)
-		flag.Usage()
-		os.Exit(ConfigError)
+		if failOnError {
+			flag.Usage()
+			os.Exit(ConfigError)
+		}
 	}
 }
 
@@ -113,7 +115,7 @@ func runClientProxy(cfg *config.Config) {
 	go func() {
 		for {
 			cfg := <-configUpdates
-			configureStats(cfg)
+			configureStats(cfg, false)
 			client.Configure(cfg.Client, nil)
 		}
 	}()
@@ -150,7 +152,7 @@ func runServerProxy(cfg *config.Config) {
 	go func() {
 		for {
 			cfg := <-configUpdates
-			configureStats(cfg)
+			configureStats(cfg, false)
 			srv.Configure(cfg.Server)
 		}
 	}()
