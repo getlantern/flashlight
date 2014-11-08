@@ -264,9 +264,9 @@ func reportTraversalResult(info *nattywad.TraversalInfo, clientGotFiveTuple bool
 	}
 
 	dims := statreporter.CountryDim().
-		And("answererCountry", answererCountry).
-		And("offererAnswererCountries", globals.Country+"_"+answererCountry).
-		And("operatingSystem", runtime.GOOS)
+		And("answerercountry", answererCountry).
+		And("offereranswerercountries", globals.Country+"_"+answererCountry).
+		And("operatingsystem", runtime.GOOS)
 
 	dims.Increment("traversalAttempted").Add(1)
 
