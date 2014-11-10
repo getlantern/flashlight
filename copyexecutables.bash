@@ -17,7 +17,7 @@ codesign -s "Developer ID Application: Brave New Software Project, Inc" -f flash
 
 echo "Copying executables to $1"
 
-cp flashlight_darwin_amd64 $lantern/osx/pt/flashlight/ || die "Could not copy darwin"
-cp flashlight_windows_386.exe $lantern/win/pt/flashlight/ || die "Could not copy windows"
-cp flashlight_linux_386 $lantern/linux_x86_32/pt/flashlight/ || die "Could not copy linux 32"
-cp flashlight_linux_amd64 $lantern/linux_x86_64/pt/flashlight/ || die "Could not copy linux 64"
+cp flashlight_darwin_amd64 $lantern/osx/pt/flashlight/flashlight || die "Could not copy darwin"
+cp flashlight_windows_386.exe $lantern/win/pt/flashlight/flashlight.exe || die "Could not copy windows"
+cp flashlight_linux_386 $lantern/linux_x86_32/pt/flashlight/flashlight || die "Could not copy linux 32"
+cp flashlight_linux_amd64 $lantern/linux_x86_64/pt/flashlight/flashlight || die "Could not copy linux 64"

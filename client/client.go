@@ -152,6 +152,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 				server := client.randomServerForQOS(HighQOS)
 				return server.dialWithEnproxy("tcp", addr)
 			},
+			ServerCert: nattywad.DEFAULT_WADDELL_CERT,
 			OnSuccess: func(info *nattywad.TraversalInfo) {
 				log.Debugf("NAT traversal Succeeded: %s", info)
 				log.Tracef("Peer Country: %s", info.Peer.Extras["country"])
