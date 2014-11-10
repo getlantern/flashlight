@@ -77,14 +77,14 @@ Handling request for: http://www.google.com/humans.txt
 Flashlight requires [Go 1.3.x](http://golang.org/dl/).
 
 It is convenient to build flashlight for multiple platforms using
-[gox](github.com/mitchellh/gox).
+[gox](https://github.com/mitchellh/gox).
 
 The typical cross-compilation setup doesn't work for anything that uses C code,
 which includes the DNS resolution code and some other things.  See
 [this blog](https://inconshreveable.com/04-30-2014/cross-compiling-golang-programs-with-native-libraries/)
-for more discussion of this.
+for more discussion.
 
-To deal with that, you need to use a Go installed
+To deal with that, you need to use a Go installed using
 [gonative](https://github.com/getlantern/gonative). Ultimately, you can put this
 go wherever you like. Ox keeps his at ~/go_native.
 
@@ -96,21 +96,31 @@ gonative -version="1.3.3" -platforms="darwin_amd64 linux_386 linux_amd64 windows
 mv go go_native
 ```
 
-Finally update your path to point at `~/go_native` instead of your previous go
-installation.
+Finally update your GOROOT and PATH to point at `~/go_native` instead of your
+previous go installation.  They should look something like this:
+
+```bash
+➜  flashlight git:(1606) ✗ echo $GOROOT
+/Users/ox.to.a.cart//go_native
+➜  flashlight git:(1606) ✗ which go
+/Users/ox.to.a.cart//go_native/bin/go
+```
 
 Now that you have go and gox set up, the binaries used for Lantern can be built
 with the `./crosscompile.bash` script. This script also sets the version of
 flashlight to the most recent annotated tag in git. An annotated tag can be
 added like this:
 
-`git tag -a v1.0.0 -m"Tagged 1.0.0"`
+```bash
+git tag -a v1.0.0 -m"Tagged 1.0.0"
+git push --tags
+```
 
 Note - ./crosscompile.bash omits debug symbols to keep the build smaller.
 
-Note that these binaries should also be signed for use in production, at least
-on OSX and Windows. On OSX the command to do this should resemble the following
-(assuming you have an associated code signing certificate):
+Note also that these binaries should also be signed for use in production, at
+least on OSX and Windows. On OSX the command to do this should resemble the
+following (assuming you have an associated code signing certificate):
 
 ```
 codesign -s "Developer ID Application: Brave New Software Project, Inc" -f install/osx/pt/flashlight/flashlight
