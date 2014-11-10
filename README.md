@@ -116,6 +116,10 @@ git tag -a v1.0.0 -m"Tagged 1.0.0"
 git push --tags
 ```
 
+The script `tagandbuild.bash` tags and runs crosscompile.bash.
+
+`./tagandbuild.bash <tag<`
+
 Note - ./crosscompile.bash omits debug symbols to keep the build smaller.
 
 Note also that these binaries should also be signed for use in production, at
