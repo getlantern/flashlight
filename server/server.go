@@ -125,7 +125,7 @@ func (server *Server) Configure(newCfg *ServerConfig) {
 				},
 			}
 		}
-		server.nattywadServer.Configure(newCfg.WaddellAddr)
+		server.nattywadServer.Configure(newCfg.WaddellAddr, nattywad.DEFAULT_WADDELL_CERT)
 	}
 
 	server.cfg = newCfg
