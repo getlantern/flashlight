@@ -64,6 +64,8 @@ func (updated *Config) applyFlags() error {
 			updated.CpuProfile = *cpuprofile
 		case "memprofile":
 			updated.MemProfile = *memprofile
+		case "waddellcert":
+			updated.WaddellCert = *waddellcert
 
 			// Stats
 		case "statsperiod":

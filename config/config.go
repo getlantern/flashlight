@@ -89,6 +89,7 @@ func Start(updateHandler func(updated *Config)) (*Config, error) {
 	var cfg *Config
 	if err == nil {
 		cfg = initial.(*Config)
+		updateGlobals(cfg)
 		go func() {
 			// Read updates
 			for {
