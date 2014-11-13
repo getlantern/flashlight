@@ -26,6 +26,7 @@ var (
 	portmap        = flag.Int("portmap", 0, "try to map this port on the firewall to the port on which flashlight is listening, using UPnP or NAT-PMP. If mapping this port fails, flashlight will exit with status code 50")
 	advertisedHost = flag.String("server", "", "FQDN of flashlight server when running in server mode (required)")
 	waddelladdr    = flag.String("waddelladdr", "", "if specified, connect to this waddell server and process NAT traversal requests inbound from waddell")
+	waddellcert    = flag.String("waddellcert", "", "if specified, use this cert (PEM-encoded) to authenticate connections to waddell.  Otherwise, a default certificate is used.")
 )
 
 // applyFlags updates this Config from any command-line flags that were passed

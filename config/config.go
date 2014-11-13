@@ -42,6 +42,7 @@ type Config struct {
 	StatsAddr     string
 	CpuProfile    string
 	MemProfile    string
+	WaddellCert   string
 	Stats         *statreporter.Config
 	Server        *server.ServerConfig
 	Client        *client.ClientConfig
@@ -103,6 +104,9 @@ func Start(updateHandler func(updated *Config)) (*Config, error) {
 
 func updateGlobals(cfg *Config) {
 	globals.Country = cfg.Country
+	if cfg.WaddellCert != "" {
+		globals.WaddellCert = cfg.WaddellCert
+	}
 }
 
 // Update updates the configuration using the given mutator function.

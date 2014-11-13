@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/getlantern/enproxy"
+	"github.com/getlantern/flashlight/globals"
 	"github.com/getlantern/flashlight/nattest"
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/statserver"
@@ -125,7 +126,7 @@ func (server *Server) Configure(newCfg *ServerConfig) {
 				},
 			}
 		}
-		server.nattywadServer.Configure(newCfg.WaddellAddr)
+		server.nattywadServer.Configure(newCfg.WaddellAddr, globals.WaddellCert)
 	}
 
 	server.cfg = newCfg
