@@ -77,7 +77,7 @@ Handling request for: http://www.google.com/humans.txt
 Flashlight requires [Go 1.3.x](http://golang.org/dl/).
 
 It is convenient to build flashlight for multiple platforms using
-[gox](https://github.com/mitchellh/gox).
+[gox](https://github.com/getlantern/gox).
 
 The typical cross-compilation setup doesn't work for anything that uses C code,
 which includes the DNS resolution code and some other things.  See
