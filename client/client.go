@@ -85,10 +85,14 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	// Set up new verified masquerade sets
 	client.verifiedSets = make(map[string]*verifiedMasqueradeSet)
 
+	var err error
 	for key, masqueradeSet := range cfg.MasqueradeSets {
 		testServer := cfg.highestQosServer(key)
 		if testServer != nil {
-			client.verifiedSets[key] = newVerifiedMasqueradeSet(testServer, masqueradeSet)
+			client.verifiedSets[key], err = newVerifiedMasqueradeSet(testServer, masqueradeSet)
+			if err != nil {
+				log.Fatalf("Unable to build verified masquerade set: %s", err)
+			}
 		}
 	}
 

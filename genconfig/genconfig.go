@@ -11,7 +11,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
 	"gopkg.in/getlantern/tlsdialer.v2"
@@ -25,6 +24,7 @@ var (
 	help          = flag.Bool("help", false, "Get usage help")
 	domainsFile   = flag.String("domains", "", "Path to file containing list of domains to use, with one domain per line (e.g. domains.txt)")
 	blacklistFile = flag.String("blacklist", "", "Path to file containing list of blacklisted domains, which will be excluded from the configuration even if present in the domains file (e.g. blacklist.txt)")
+	minFreq       = flag.Float64("minfreq", 3.0, "Minimum frequency (percentage) for including CA cert in list of trusted certs, defaults to 3.0%")
 )
 
 var (
@@ -37,12 +37,20 @@ var (
 	yamlTmpl        string
 
 	domainsCh     = make(chan string)
-	masqueradesCh = make(chan *client.Masquerade)
-	masquerades   = make([]*client.Masquerade, 0)
+	masqueradesCh = make(chan *masquerade)
 	wg            sync.WaitGroup
-
-	model map[string]interface{}
 )
+
+type masquerade struct {
+	Domain    string
+	IpAddress string
+	RootCA    string
+}
+
+type castat struct {
+	Cert string
+	freq float64
+}
 
 func main() {
 	flag.Parse()
@@ -59,10 +67,10 @@ func main() {
 	yamlTmpl = loadTemplate("cloud.yaml.tmpl")
 
 	go feedDomains()
-	coalesceMasquerades()
-	buildModel()
-	generateTemplate(masqueradesTmpl, "../config/masquerades.go")
-	generateTemplate(yamlTmpl, "cloud.yaml")
+	cas, masquerades := coalesceMasquerades()
+	model := buildModel(cas, masquerades)
+	generateTemplate(model, masqueradesTmpl, "../config/masquerades.go")
+	generateTemplate(model, yamlTmpl, "cloud.yaml")
 }
 
 func loadDomains() {
@@ -116,7 +124,7 @@ func feedDomains() {
 }
 
 // grabCerts grabs certificates for the domains received on domainsCh and sends
-// *client.Masquerades to masqueradesCh.
+// *masquerades to masqueradesCh.
 func grabCerts() {
 	defer wg.Done()
 
@@ -142,7 +150,7 @@ func grabCerts() {
 			log.Errorf("Unablet to load keyman certificate: %s", err)
 			continue
 		}
-		masqueradesCh <- &client.Masquerade{
+		masqueradesCh <- &masquerade{
 			Domain:    domain,
 			IpAddress: cwt.ResolvedAddr.IP.String(),
 			RootCA:    strings.Replace(string(rootCert.PEMEncoded()), "\n", "\\n", -1),
@@ -150,20 +158,52 @@ func grabCerts() {
 	}
 }
 
-func coalesceMasquerades() {
+func coalesceMasquerades() (map[string]*castat, []*masquerade) {
+	count := 0
+	certsWithFreq := make(map[string]int)
+
+	allMasquerades := make([]*masquerade, 0)
 	for masquerade := range masqueradesCh {
-		masquerades = append(masquerades, masquerade)
+		count = count + 1
+		certsWithFreq[masquerade.RootCA] = certsWithFreq[masquerade.RootCA] + 1
+		allMasquerades = append(allMasquerades, masquerade)
 	}
+
+	// Trust only those cas whose relative frequency exceeds *minFreq
+	trustedCAs := make(map[string]*castat)
+	for cert, freq := range certsWithFreq {
+		relFreq := float64(freq*100) / float64(count)
+		if relFreq > *minFreq {
+			trustedCAs[cert] = &castat{cert, relFreq}
+		}
+	}
+
+	// Pick only the masquerades associated with the trusted certs
+	trustedMasquerades := make([]*masquerade, 0)
+	for _, masquerade := range allMasquerades {
+		_, caFound := trustedCAs[masquerade.RootCA]
+		if caFound {
+			trustedMasquerades = append(trustedMasquerades, masquerade)
+		}
+	}
+
+	return trustedCAs, trustedMasquerades
 }
 
-func buildModel() {
+func buildModel(cas map[string]*castat, masquerades []*masquerade) map[string]interface{} {
+	casList := make([]*castat, 0, len(cas))
+	for _, ca := range cas {
+		casList = append(casList, ca)
+	}
+	sort.Sort(ByFreq(casList))
 	sort.Sort(ByDomain(masquerades))
-	model = map[string]interface{}{
+	return map[string]interface{}{
+		"cas":         casList,
 		"masquerades": masquerades,
 	}
 }
 
-func generateTemplate(tmplString string, filename string) {
+func generateTemplate(model map[string]interface{}, tmplString string, filename string) {
 	tmpl, err := template.New(filename).Parse(tmplString)
 	if err != nil {
 		log.Errorf("Unable to parse template: %s", err)
@@ -181,8 +221,14 @@ func generateTemplate(tmplString string, filename string) {
 	}
 }
 
-type ByDomain []*client.Masquerade
+type ByDomain []*masquerade
 
 func (a ByDomain) Len() int           { return len(a) }
 func (a ByDomain) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByDomain) Less(i, j int) bool { return a[i].Domain < a[j].Domain }
+
+type ByFreq []*castat
+
+func (a ByFreq) Len() int           { return len(a) }
+func (a ByFreq) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByFreq) Less(i, j int) bool { return a[i].freq > a[j].freq }

@@ -2,6 +2,7 @@ package client
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"net"
 	"sort"
 	"sync"
@@ -12,7 +13,7 @@ import (
 type ClientConfig struct {
 	DumpHeaders    bool // whether or not to dump headers of requests and responses
 	Servers        []*ServerInfo
-	MasqueradeSets map[string][]*Masquerade
+	MasqueradeSets map[string]*MasqueradeSet
 }
 
 // ServerInfo captures configuration information for an upstream server
@@ -54,9 +55,9 @@ type ServerInfo struct {
 	tlsConfigsMutex sync.Mutex
 }
 
-type cachedConn struct {
-	conn   net.Conn
-	dialed time.Time
+type MasqueradeSet struct {
+	TrustedCAs  []string
+	Masquerades []*Masquerade
 }
 
 // Masquerade contains the data for a single masquerade host, including
@@ -69,8 +70,14 @@ type Masquerade struct {
 	// available) - NOT YET IMPLEMENTED, JUST FUTURE-PROOFING
 	IpAddress string
 
-	// RootCA: the root CA for the domain.
-	RootCA string
+	// rootCAs contains the cert pool of root CAs that are trusted for this
+	// masquerade
+	rootCAs *x509.CertPool
+}
+
+type cachedConn struct {
+	conn   net.Conn
+	dialed time.Time
 }
 
 // SortHosts sorts the Servers array in place, ordered by host

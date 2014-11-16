@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/log"
+	"github.com/getlantern/keyman"
 )
 
 const (
@@ -41,16 +42,26 @@ func (vms *verifiedMasqueradeSet) nextVerified() *Masquerade {
 
 // newVerifiedMasqueradeSet sets up a new verifiedMasqueradeSet that verifies
 // each of the given masquerades against the given testServer.
-func newVerifiedMasqueradeSet(testServer *ServerInfo, masquerades []*Masquerade) *verifiedMasqueradeSet {
+func newVerifiedMasqueradeSet(testServer *ServerInfo, masqueradeSet *MasqueradeSet) (*verifiedMasqueradeSet, error) {
+	// Add cert pool with root CAs to each masquerade
+	rootCAs, err := keyman.PoolContainingCerts(masqueradeSet.TrustedCAs...)
+	if err != nil {
+		return nil, err
+	}
+	for _, masquerade := range masqueradeSet.Masquerades {
+		masquerade.rootCAs = rootCAs
+	}
+
 	// Size verifiedChSize to be able to hold the smaller of MaxMasquerades or
 	// the number of configured masquerades.
-	verifiedChSize := len(masquerades)
+	verifiedChSize := len(masqueradeSet.Masquerades)
 	if MaxMasquerades < verifiedChSize {
 		verifiedChSize = MaxMasquerades
 	}
+
 	vms := &verifiedMasqueradeSet{
 		testServer:   testServer,
-		masquerades:  masquerades,
+		masquerades:  masqueradeSet.Masquerades,
 		candidatesCh: make(chan *Masquerade),
 		stopCh:       make(chan interface{}, 1),
 		verifiedCh:   make(chan *Masquerade, verifiedChSize),
@@ -65,7 +76,7 @@ func newVerifiedMasqueradeSet(testServer *ServerInfo, masquerades []*Masquerade)
 	// Feed candidates for verification
 	go vms.feedCandidates()
 
-	return vms
+	return vms, nil
 }
 
 // feedCandidates feeds the candidate masquerades to our worker routines in

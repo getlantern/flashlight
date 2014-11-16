@@ -209,7 +209,7 @@ func (cfg *Config) applyDefaults() {
 
 	// Make sure we always have at least one masquerade set
 	if cfg.Client.MasqueradeSets == nil {
-		cfg.Client.MasqueradeSets = make(map[string][]*client.Masquerade)
+		cfg.Client.MasqueradeSets = make(map[string]*client.MasqueradeSet)
 	}
 	if len(cfg.Client.MasqueradeSets) == 0 {
 		cfg.Client.MasqueradeSets[CF] = cloudflareMasquerades
