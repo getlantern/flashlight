@@ -44,7 +44,11 @@ func (vms *verifiedMasqueradeSet) nextVerified() *Masquerade {
 // each of the given masquerades against the given testServer.
 func newVerifiedMasqueradeSet(testServer *ServerInfo, masqueradeSet *MasqueradeSet) (*verifiedMasqueradeSet, error) {
 	// Add cert pool with root CAs to each masquerade
-	rootCAs, err := keyman.PoolContainingCerts(masqueradeSet.TrustedCAs...)
+	certs := make([]string, 0, len(masqueradeSet.TrustedCAs))
+	for _, ca := range masqueradeSet.TrustedCAs {
+		certs = append(certs, ca.Cert)
+	}
+	rootCAs, err := keyman.PoolContainingCerts(certs...)
 	if err != nil {
 		return nil, err
 	}

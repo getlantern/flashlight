@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -44,12 +45,13 @@ var (
 type masquerade struct {
 	Domain    string
 	IpAddress string
-	RootCA    string
+	RootCA    *castat
 }
 
 type castat struct {
-	Cert string
-	freq float64
+	CommonName string
+	Cert       string
+	freq       float64
 }
 
 func main() {
@@ -59,6 +61,10 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
+
+	numcores := runtime.NumCPU()
+	log.Debugf("Using all %d cores on machine", numcores)
+	runtime.GOMAXPROCS(numcores)
 
 	loadDomains()
 	loadBlacklist()
@@ -150,38 +156,47 @@ func grabCerts() {
 			log.Errorf("Unablet to load keyman certificate: %s", err)
 			continue
 		}
+		ca := &castat{
+			CommonName: rootCA.Subject.CommonName,
+			Cert:       strings.Replace(string(rootCert.PEMEncoded()), "\n", "\\n", -1),
+		}
 		masqueradesCh <- &masquerade{
 			Domain:    domain,
 			IpAddress: cwt.ResolvedAddr.IP.String(),
-			RootCA:    strings.Replace(string(rootCert.PEMEncoded()), "\n", "\\n", -1),
+			RootCA:    ca,
 		}
 	}
 }
 
 func coalesceMasquerades() (map[string]*castat, []*masquerade) {
 	count := 0
-	certsWithFreq := make(map[string]int)
-
+	allCAs := make(map[string]*castat)
 	allMasquerades := make([]*masquerade, 0)
 	for masquerade := range masqueradesCh {
 		count = count + 1
-		certsWithFreq[masquerade.RootCA] = certsWithFreq[masquerade.RootCA] + 1
+		ca := allCAs[masquerade.RootCA.Cert]
+		if ca == nil {
+			ca = masquerade.RootCA
+		}
+		ca.freq = ca.freq + 1
+		allCAs[ca.Cert] = ca
 		allMasquerades = append(allMasquerades, masquerade)
 	}
 
 	// Trust only those cas whose relative frequency exceeds *minFreq
 	trustedCAs := make(map[string]*castat)
-	for cert, freq := range certsWithFreq {
-		relFreq := float64(freq*100) / float64(count)
-		if relFreq > *minFreq {
-			trustedCAs[cert] = &castat{cert, relFreq}
+	for _, ca := range allCAs {
+		// Make frequency relative
+		ca.freq = float64(ca.freq*100) / float64(count)
+		if ca.freq > *minFreq {
+			trustedCAs[ca.Cert] = ca
 		}
 	}
 
 	// Pick only the masquerades associated with the trusted certs
 	trustedMasquerades := make([]*masquerade, 0)
 	for _, masquerade := range allMasquerades {
-		_, caFound := trustedCAs[masquerade.RootCA]
+		_, caFound := trustedCAs[masquerade.RootCA.Cert]
 		if caFound {
 			trustedMasquerades = append(trustedMasquerades, masquerade)
 		}

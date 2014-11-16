@@ -32,7 +32,8 @@ client:
   masqueradesets:
     cloudflare:
       trustedcas: {{range .cas}}
-      - "{{.Cert}}"{{end}}
+      - commonname: "{{.CommonName}}"
+        cert: "{{.Cert}}"{{end}}
       masquerades: {{range .masquerades}}
       - domain: {{.Domain}}
         ipaddress: {{.IpAddress}}{{end}}

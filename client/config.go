@@ -56,8 +56,14 @@ type ServerInfo struct {
 }
 
 type MasqueradeSet struct {
-	TrustedCAs  []string
+	TrustedCAs  []*CA
 	Masquerades []*Masquerade
+}
+
+// CA represents a certificate authority
+type CA struct {
+	CommonName string
+	Cert       string // PEM-encoded
 }
 
 // Masquerade contains the data for a single masquerade host, including
