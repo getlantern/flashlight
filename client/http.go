@@ -12,7 +12,7 @@ import (
 // values for the upstream host to use and for the masquerade/domain fronted host.
 func HttpClient(serverInfo *ServerInfo, masquerade *Masquerade) *http.Client {
 	if masquerade != nil && globals.TrustedCAs == nil {
-		// serverInfo.InsecureSkipVerify = true
+		serverInfo.InsecureSkipVerify = true
 	}
 
 	enproxyConfig := serverInfo.disposableEnproxyConfig(masquerade)

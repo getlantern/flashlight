@@ -1,6 +1,7 @@
 package client
 
 import (
+	"crypto/x509"
 	"math/rand"
 	"net"
 	"net/http"
@@ -54,6 +55,7 @@ type Client struct {
 	WriteTimeout time.Duration
 
 	priorCfg           *ClientConfig
+	priorTrustedCAs    *x509.CertPool
 	cfgMutex           sync.RWMutex
 	servers            []*server
 	totalServerWeights int
@@ -84,8 +86,9 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	defer client.cfgMutex.Unlock()
 
 	log.Debug("Configure() called")
-	if client.priorCfg != nil {
-		if reflect.DeepEqual(client.priorCfg, cfg) {
+	if client.priorCfg != nil && client.priorTrustedCAs != nil {
+		if reflect.DeepEqual(client.priorCfg, cfg) &&
+			reflect.DeepEqual(client.priorTrustedCAs, globals.TrustedCAs) {
 			log.Debugf("Client configuration unchanged")
 			return
 		} else {
@@ -98,6 +101,7 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 	// Make a copy of cfg for comparing later
 	client.priorCfg = &ClientConfig{}
 	deepcopy.Copy(client.priorCfg, cfg)
+	client.priorTrustedCAs = globals.TrustedCAs
 
 	if client.verifiedSets != nil {
 		// Stop old verifications
