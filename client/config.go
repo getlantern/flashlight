@@ -64,7 +64,7 @@ type Masquerade struct {
 	Domain string
 
 	// IpAddress: pre-resolved ip address to use instead of Domain (if
-	// available) - NOT YET IMPLEMENTED, JUST FUTURE-PROOFING
+	// available)
 	IpAddress string
 }
 
