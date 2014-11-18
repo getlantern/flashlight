@@ -57,11 +57,6 @@ type ServerInfo struct {
 	tlsConfigsMutex sync.Mutex
 }
 
-type cachedConn struct {
-	conn   net.Conn
-	dialed time.Time
-}
-
 // Masquerade contains the data for a single masquerade host, including
 // the domain and the root CA.
 type Masquerade struct {
@@ -69,11 +64,13 @@ type Masquerade struct {
 	Domain string
 
 	// IpAddress: pre-resolved ip address to use instead of Domain (if
-	// available) - NOT YET IMPLEMENTED, JUST FUTURE-PROOFING
+	// available)
 	IpAddress string
+}
 
-	// RootCA: the root CA for the domain.
-	RootCA string
+type cachedConn struct {
+	conn   net.Conn
+	dialed time.Time
 }
 
 // SortHosts sorts the Servers array in place, ordered by host

@@ -14,7 +14,7 @@ const (
 
 const (
 	set = iota
-	add = iota
+	add
 )
 
 // DimGroup represents a group of dimensions for

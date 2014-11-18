@@ -121,7 +121,7 @@ git push --tags
 
 The script `tagandbuild.bash` tags and runs crosscompile.bash.
 
-`./tagandbuild.bash <tag<`
+`./tagandbuild.bash <tag>`
 
 Note - ./crosscompile.bash omits debug symbols to keep the build smaller.
 
@@ -133,12 +133,23 @@ following (assuming you have an associated code signing certificate):
 codesign -s "Developer ID Application: Brave New Software Project, Inc" -f install/osx/pt/flashlight/flashlight
 ```
 
-The script `copyexecutables` takes care of signing the OS X executable and
+The script `copyexecutables.bash` takes care of signing the OS X executable and
 copying everything in the Lantern file tree.
+
+`copyexecutables.bash` will also optionally sign the Windows executable if the
+environment variables BNS_CERT and BNS_CERT_PASS are set to point to
+[bns-cert.p12](https://github.com/getlantern/too-many-secrets/blob/master/bns_cert.p12)
+and its [password](https://github.com/getlantern/too-many-secrets/blob/master/build-installers/env-vars.txt#L3).
 
 The code signing [certificate](https://github.com/getlantern/too-many-secrets/blob/master/osx-code-signing-certificate.p12)
 and [password](https://github.com/getlantern/too-many-secrets/blob/master/osx-code-signing-certificate.p12.txt)
 can be obtained from [too-many-secrets](https://github.com/getlantern/too-many-secrets).
+
+note - Signing windows code requires that the
+[osslsigncode](http://sourceforge.net/projects/osslsigncode/) utility be
+installed. On OS X with homebrew, you can do this with
+`brew install osslsigncode`.
+
 
 ### Masquerade Host Management
 
