@@ -80,7 +80,7 @@ func doConfigure(cfg *Config, poster reportPoster) error {
 		currentReporter = nil
 	}
 
-	if cfg.ReportingPeriod == 0 {
+	if cfg.ReportingPeriod <= 0 {
 		log.Debug("Stat reporting turned off")
 		return nil
 	}
