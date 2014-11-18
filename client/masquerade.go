@@ -39,7 +39,7 @@ func (vms *verifiedMasqueradeSet) nextVerified() *Masquerade {
 
 // newVerifiedMasqueradeSet sets up a new verifiedMasqueradeSet that verifies
 // each of the given masquerades against the given testServer.
-func newVerifiedMasqueradeSet(testServer *ServerInfo, masquerades []*Masquerade) (*verifiedMasqueradeSet, error) {
+func newVerifiedMasqueradeSet(testServer *ServerInfo, masquerades []*Masquerade) *verifiedMasqueradeSet {
 	// Size verifiedChSize to be able to hold the smaller of MaxMasquerades or
 	// the number of configured masquerades.
 	verifiedChSize := len(masquerades)
@@ -64,7 +64,7 @@ func newVerifiedMasqueradeSet(testServer *ServerInfo, masquerades []*Masquerade)
 	// Feed candidates for verification
 	go vms.feedCandidates()
 
-	return vms, nil
+	return vms
 }
 
 // feedCandidates feeds the candidate masquerades to our worker routines in
