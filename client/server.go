@@ -11,22 +11,12 @@ import (
 
 	"github.com/getlantern/connpool"
 	"github.com/getlantern/enproxy"
-	"github.com/getlantern/flashlight/log"
+	"github.com/getlantern/flashlight/globals"
 	"github.com/getlantern/flashlight/proxy"
 	"github.com/getlantern/flashlight/statreporter"
 	"net/http/httputil"
 
 	"gopkg.in/getlantern/tlsdialer.v2"
-)
-
-var (
-	// Cutoff for logging warnings about a dial having taken a long time.
-	longDialLimit = 10 * time.Second
-
-	// idleTimeout needs to be small enough that we stop using connections
-	// before the upstream server/CDN closes them itself.
-	// TODO: make this configurable.
-	idleTimeout = 10 * time.Second
 )
 
 type server struct {
@@ -259,12 +249,13 @@ func (serverInfo *ServerInfo) recordTiming(step string, duration time.Duration) 
 	} else {
 		step = fmt.Sprintf("%sTo%s", step, serverInfo.Host)
 	}
-	statreporter.Gauge(step).Add(1)
+	dims := statreporter.Dim("country", globals.Country)
+	dims.Gauge(step).Add(1)
 	for i := 4; i >= 0; i-- {
 		seconds := int(math.Pow(float64(2), float64(i)))
 		if duration > time.Duration(seconds)*time.Second {
 			key := fmt.Sprintf("%sOver%dSec", step, seconds)
-			statreporter.Gauge(key).Add(1)
+			dims.Gauge(key).Add(1)
 			return
 		}
 	}

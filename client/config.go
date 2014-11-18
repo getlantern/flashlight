@@ -7,12 +7,15 @@ import (
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/getlantern/nattywad"
 )
 
 // ClientConfig captures configuration information for a Client
 type ClientConfig struct {
 	DumpHeaders    bool // whether or not to dump headers of requests and responses
 	Servers        []*ServerInfo
+	Peers          map[string]*nattywad.ServerPeer // keyed to peer id (e.g. XMPP JID)
 	MasqueradeSets map[string]*MasqueradeSet
 }
 
