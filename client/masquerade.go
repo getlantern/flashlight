@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"sync"
 	"time"
-
-	"github.com/getlantern/flashlight/log"
 )
 
 const (
@@ -41,13 +39,14 @@ func (vms *verifiedMasqueradeSet) nextVerified() *Masquerade {
 
 // newVerifiedMasqueradeSet sets up a new verifiedMasqueradeSet that verifies
 // each of the given masquerades against the given testServer.
-func newVerifiedMasqueradeSet(testServer *ServerInfo, masquerades []*Masquerade) *verifiedMasqueradeSet {
+func newVerifiedMasqueradeSet(testServer *ServerInfo, masquerades []*Masquerade) (*verifiedMasqueradeSet, error) {
 	// Size verifiedChSize to be able to hold the smaller of MaxMasquerades or
 	// the number of configured masquerades.
 	verifiedChSize := len(masquerades)
 	if MaxMasquerades < verifiedChSize {
 		verifiedChSize = MaxMasquerades
 	}
+
 	vms := &verifiedMasqueradeSet{
 		testServer:   testServer,
 		masquerades:  masquerades,
@@ -65,7 +64,7 @@ func newVerifiedMasqueradeSet(testServer *ServerInfo, masquerades []*Masquerade)
 	// Feed candidates for verification
 	go vms.feedCandidates()
 
-	return vms
+	return vms, nil
 }
 
 // feedCandidates feeds the candidate masquerades to our worker routines in
@@ -82,21 +81,21 @@ func (vms *verifiedMasqueradeSet) feedCandidates() {
 func (vms *verifiedMasqueradeSet) feedCandidate(candidate *Masquerade) bool {
 	select {
 	case <-vms.stopCh:
-		log.Debug("Received stop, not feeding any further")
+		log.Trace("Received stop, not feeding any further")
 		return false
 	case vms.candidatesCh <- candidate:
-		log.Debug("Fed candidate")
+		log.Trace("Fed candidate")
 		return true
 	}
 }
 
 // stop stops the verification process
 func (vms *verifiedMasqueradeSet) stop() {
-	log.Debug("Stop called")
+	log.Trace("Stop called")
 	vms.stopCh <- nil
-	log.Debug("Waiting for workers to finish")
+	log.Trace("Waiting for workers to finish")
 	vms.wg.Wait()
-	log.Debug("Stopped")
+	log.Trace("Stopped")
 }
 
 // verify checks masquerades obtained from candidatesCh to see if they work on
@@ -129,16 +128,16 @@ func (vms *verifiedMasqueradeSet) doVerify(masquerade *Masquerade) bool {
 		req, _ := http.NewRequest("HEAD", "http://www.google.com/humans.txt", nil)
 		resp, err := httpClient.Do(req)
 		if err != nil {
-			errCh <- fmt.Errorf("HTTP ERROR FOR MASQUERADE %v: %v", masquerade.Domain, err)
+			log.Debugf("Error verifying masquerade %v: %v", masquerade.Domain, err)
 			return
 		} else {
 			body, err := ioutil.ReadAll(resp.Body)
 			defer resp.Body.Close()
 			if err != nil {
-				errCh <- fmt.Errorf("HTTP Body Error: %s", body)
+				errCh <- fmt.Errorf("Error verifying masquerade %v: %v", masquerade.Domain, err)
 			} else {
 				delta := time.Now().Sub(start)
-				log.Debugf("SUCCESSFUL CHECK FOR: %s IN %s, %s", masquerade.Domain, delta, body)
+				log.Tracef("Successful masquerade check for %s in %s, %s", masquerade.Domain, delta, body)
 				errCh <- nil
 			}
 		}
