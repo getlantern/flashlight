@@ -300,8 +300,8 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 			InsecureSkipVerify: serverInfo.InsecureSkipVerify,
 			ServerName:         serverName,
 		}
-		if masquerade != nil && masquerade.rootCAs != nil {
-			tlsConfig.RootCAs = masquerade.rootCAs
+		if masquerade != nil && globals.TrustedCAs != nil {
+			tlsConfig.RootCAs = globals.TrustedCAs
 		}
 		serverInfo.tlsConfigs[masquerade.Domain] = tlsConfig
 	}

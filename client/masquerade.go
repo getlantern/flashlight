@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"sync"
 	"time"
-
-	"github.com/getlantern/keyman"
 )
 
 const (
@@ -41,30 +39,17 @@ func (vms *verifiedMasqueradeSet) nextVerified() *Masquerade {
 
 // newVerifiedMasqueradeSet sets up a new verifiedMasqueradeSet that verifies
 // each of the given masquerades against the given testServer.
-func newVerifiedMasqueradeSet(testServer *ServerInfo, masqueradeSet *MasqueradeSet) (*verifiedMasqueradeSet, error) {
-	// Add cert pool with root CAs to each masquerade
-	certs := make([]string, 0, len(masqueradeSet.TrustedCAs))
-	for _, ca := range masqueradeSet.TrustedCAs {
-		certs = append(certs, ca.Cert)
-	}
-	rootCAs, err := keyman.PoolContainingCerts(certs...)
-	if err != nil {
-		return nil, err
-	}
-	for _, masquerade := range masqueradeSet.Masquerades {
-		masquerade.rootCAs = rootCAs
-	}
-
+func newVerifiedMasqueradeSet(testServer *ServerInfo, masquerades []*Masquerade) (*verifiedMasqueradeSet, error) {
 	// Size verifiedChSize to be able to hold the smaller of MaxMasquerades or
 	// the number of configured masquerades.
-	verifiedChSize := len(masqueradeSet.Masquerades)
+	verifiedChSize := len(masquerades)
 	if MaxMasquerades < verifiedChSize {
 		verifiedChSize = MaxMasquerades
 	}
 
 	vms := &verifiedMasqueradeSet{
 		testServer:   testServer,
-		masquerades:  masqueradeSet.Masquerades,
+		masquerades:  masquerades,
 		candidatesCh: make(chan *Masquerade),
 		stopCh:       make(chan interface{}, 1),
 		verifiedCh:   make(chan *Masquerade, verifiedChSize),

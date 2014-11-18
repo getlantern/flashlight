@@ -2,7 +2,6 @@ package client
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"net"
 	"sort"
 	"sync"
@@ -16,7 +15,7 @@ type ClientConfig struct {
 	DumpHeaders    bool // whether or not to dump headers of requests and responses
 	Servers        []*ServerInfo
 	Peers          map[string]*nattywad.ServerPeer // keyed to peer id (e.g. XMPP JID)
-	MasqueradeSets map[string]*MasqueradeSet
+	MasqueradeSets map[string][]*Masquerade
 }
 
 // ServerInfo captures configuration information for an upstream server
@@ -58,17 +57,6 @@ type ServerInfo struct {
 	tlsConfigsMutex sync.Mutex
 }
 
-type MasqueradeSet struct {
-	TrustedCAs  []*CA
-	Masquerades []*Masquerade
-}
-
-// CA represents a certificate authority
-type CA struct {
-	CommonName string
-	Cert       string // PEM-encoded
-}
-
 // Masquerade contains the data for a single masquerade host, including
 // the domain and the root CA.
 type Masquerade struct {
@@ -78,10 +66,6 @@ type Masquerade struct {
 	// IpAddress: pre-resolved ip address to use instead of Domain (if
 	// available) - NOT YET IMPLEMENTED, JUST FUTURE-PROOFING
 	IpAddress string
-
-	// rootCAs contains the cert pool of root CAs that are trusted for this
-	// masquerade
-	rootCAs *x509.CertPool
 }
 
 type cachedConn struct {

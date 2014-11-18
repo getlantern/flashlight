@@ -30,11 +30,9 @@ client:
     weight: 1000
     qos: 2
   masqueradesets:
-    cloudflare:
-      trustedcas: {{range .cas}}
-      - commonname: "{{.CommonName}}"
-        cert: "{{.Cert}}"{{end}}
-      masquerades: {{range .masquerades}}
-      - domain: {{.Domain}}
-        ipaddress: {{.IpAddress}}{{end}}
-
+    cloudflare:{{range .masquerades}}
+    - domain: {{.Domain}}
+      ipaddress: {{.IpAddress}}{{end}}
+trustedcas: {{range .cas}}
+- commonname: "{{.CommonName}}"
+  cert: "{{.Cert}}"{{end}}  

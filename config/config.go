@@ -46,6 +46,13 @@ type Config struct {
 	Stats         *statreporter.Config
 	Server        *server.ServerConfig
 	Client        *client.ClientConfig
+	TrustedCAs    []*CA
+}
+
+// CA represents a certificate authority
+type CA struct {
+	CommonName string
+	Cert       string // PEM-encoded
 }
 
 // Start starts the configuration system.
@@ -108,6 +115,10 @@ func updateGlobals(cfg *Config) {
 	if cfg.WaddellCert != "" {
 		globals.WaddellCert = cfg.WaddellCert
 	}
+	err := globals.SetTrustedCAs(cfg.TrustedCACerts())
+	if err != nil {
+		log.Fatalf("Unable to configure trusted CAs: %s", err)
+	}
 }
 
 // Update updates the configuration using the given mutator function.
@@ -132,6 +143,15 @@ func InConfigDir(filename string) string {
 		}
 		return fmt.Sprintf("%s%c%s", *configdir, os.PathSeparator, filename)
 	}
+}
+
+// TrustedCACerts returns a slice of PEM-encoded certs for the trusted CAs
+func (cfg *Config) TrustedCACerts() []string {
+	certs := make([]string, 0, len(cfg.TrustedCAs))
+	for _, ca := range cfg.TrustedCAs {
+		certs = append(certs, ca.Cert)
+	}
+	return certs
 }
 
 // GetVersion implements the method from interface yamlconf.Config
@@ -168,12 +188,16 @@ func (cfg *Config) ApplyDefaults() {
 	if cfg.Client != nil && cfg.Role == "client" {
 		cfg.applyClientDefaults()
 	}
+
+	if cfg.TrustedCAs == nil || len(cfg.TrustedCAs) == 0 {
+		cfg.TrustedCAs = defaultTrustedCAs
+	}
 }
 
 func (cfg *Config) applyClientDefaults() {
 	// Make sure we always have at least one masquerade set
 	if cfg.Client.MasqueradeSets == nil {
-		cfg.Client.MasqueradeSets = make(map[string]*client.MasqueradeSet)
+		cfg.Client.MasqueradeSets = make(map[string][]*client.Masquerade)
 	}
 	if len(cfg.Client.MasqueradeSets) == 0 {
 		cfg.Client.MasqueradeSets[cloudflare] = cloudflareMasquerades
@@ -277,11 +301,9 @@ func (updated *Config) updateFrom(updateBytes []byte) error {
 	for _, server := range updated.Client.Servers {
 		servers[server.Host] = server
 	}
-	updated.Client.Servers = make([]*client.ServerInfo, len(servers))
-	i := 0
+	updated.Client.Servers = make([]*client.ServerInfo, 0, len(servers))
 	for _, server := range servers {
-		updated.Client.Servers[i] = server
-		i = i + 1
+		updated.Client.Servers = append(updated.Client.Servers, server)
 	}
 	return nil
 }
