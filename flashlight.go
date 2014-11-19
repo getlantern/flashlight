@@ -2,6 +2,7 @@
 package main
 
 import (
+	"compress/gzip"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -196,7 +197,11 @@ func doFetchCloudConfig(cfg *config.Config, proxyAddr string) ([]byte, error) {
 		return nil, fmt.Errorf("Unexpected response status: %d", resp.StatusCode)
 	}
 	lastCloudConfigETag = resp.Header.Get(ETAG)
-	return ioutil.ReadAll(resp.Body)
+	gzReader, err := gzip.NewReader(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to open gzip reader: %s", err)
+	}
+	return ioutil.ReadAll(gzReader)
 }
 
 func configureStats(cfg *config.Config) {
