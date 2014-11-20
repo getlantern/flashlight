@@ -14,7 +14,6 @@ import (
 	"github.com/getlantern/flashlight/globals"
 	"github.com/getlantern/flashlight/proxy"
 	"github.com/getlantern/flashlight/statreporter"
-	"github.com/getlantern/keyman"
 	"net/http/httputil"
 
 	"gopkg.in/getlantern/tlsdialer.v2"
@@ -290,27 +289,21 @@ func (serverInfo *ServerInfo) tlsConfig(masquerade *Masquerade) *tls.Config {
 		serverInfo.tlsConfigs = make(map[string]*tls.Config)
 	}
 
-	configKey := ""
 	serverName := serverInfo.Host
 	if masquerade != nil {
-		configKey = masquerade.Domain + "|" + masquerade.RootCA
 		serverName = masquerade.Domain
 	}
-	tlsConfig := serverInfo.tlsConfigs[configKey]
+	tlsConfig := serverInfo.tlsConfigs[masquerade.Domain]
 	if tlsConfig == nil {
 		tlsConfig = &tls.Config{
 			ClientSessionCache: tls.NewLRUClientSessionCache(1000),
 			InsecureSkipVerify: serverInfo.InsecureSkipVerify,
 			ServerName:         serverName,
 		}
-		if masquerade != nil && masquerade.RootCA != "" {
-			caCert, err := keyman.LoadCertificateFromPEMBytes([]byte(masquerade.RootCA))
-			if err != nil {
-				log.Fatalf("Unable to load root ca cert: %s", err)
-			}
-			tlsConfig.RootCAs = caCert.PoolContainingCert()
+		if masquerade != nil && globals.TrustedCAs != nil {
+			tlsConfig.RootCAs = globals.TrustedCAs
 		}
-		serverInfo.tlsConfigs[configKey] = tlsConfig
+		serverInfo.tlsConfigs[masquerade.Domain] = tlsConfig
 	}
 
 	return tlsConfig

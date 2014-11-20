@@ -14,7 +14,7 @@ const (
 
 const (
 	set = iota
-	add = iota
+	add
 )
 
 // DimGroup represents a group of dimensions for
@@ -76,12 +76,10 @@ func (dg *DimGroup) String() string {
 
 	// Build string
 	s := ""
-	for i, key := range keys {
-		sep := ","
-		if i == 0 {
-			sep = ""
-		}
+	sep := ""
+	for _, key := range keys {
 		s = fmt.Sprintf("%s%s%s=%s", s, sep, key, dg.dims[key])
+		sep = ","
 	}
 	return s
 }

@@ -46,6 +46,7 @@ func newVerifiedMasqueradeSet(testServer *ServerInfo, masquerades []*Masquerade)
 	if MaxMasquerades < verifiedChSize {
 		verifiedChSize = MaxMasquerades
 	}
+
 	vms := &verifiedMasqueradeSet{
 		testServer:   testServer,
 		masquerades:  masquerades,
