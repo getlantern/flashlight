@@ -23,7 +23,6 @@ import (
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/nattywad"
 	"github.com/getlantern/waddell"
-	"github.com/getlantern/withtimeout"
 )
 
 const (
@@ -33,9 +32,8 @@ const (
 var (
 	log = golog.LoggerFor("flashlight.server")
 
-	dialTimeout           = 10 * time.Second
-	httpIdleTimeout       = 70 * time.Second
-	waddellConnectTimeout = 20 * time.Second
+	dialTimeout     = 10 * time.Second
+	httpIdleTimeout = 70 * time.Second
 
 	// Points in time, mostly used for generating certificates
 	tenYearsFromToday = time.Now().AddDate(10, 0, 0)
@@ -204,24 +202,19 @@ func (server *Server) ListenAndServe() error {
 
 func (server *Server) startNattywad(waddellAddr string) {
 	log.Debugf("Connecting to waddell at: %s", waddellAddr)
-	server.waddellClient = &waddell.Client{
+	var err error
+	server.waddellClient, err = waddell.NewClient(&waddell.ClientConfig{
 		Dial: func() (net.Conn, error) {
 			return net.Dial("tcp", waddellAddr)
 		},
 		ServerCert:        globals.WaddellCert,
-		ReconnectAttempts: 100,
+		ReconnectAttempts: 10,
 		OnId: func(id waddell.PeerId) {
 			log.Debugf("Connected to Waddell!! Id is: %s", id)
 		},
-	}
-	_, timedOut, err := withtimeout.Do(waddellConnectTimeout, func() (interface{}, error) {
-		return server.waddellClient.Connect()
 	})
 	if err != nil {
 		log.Errorf("Unable to connect to waddell: %s", err)
-		if timedOut {
-			server.waddellClient.Close()
-		}
 		server.waddellClient = nil
 		return
 	}
