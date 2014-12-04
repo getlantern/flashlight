@@ -1,25 +1,29 @@
 package client
 
 import (
-	"crypto/tls"
-	"net"
+	"fmt"
+	"math"
 	"sort"
-	"sync"
 	"time"
 
+	"github.com/getlantern/balancer"
+	"github.com/getlantern/flashlight/globals"
+	"github.com/getlantern/flashlight/statreporter"
+	"github.com/getlantern/fronted"
 	"github.com/getlantern/nattywad"
 )
 
 // ClientConfig captures configuration information for a Client
 type ClientConfig struct {
 	DumpHeaders    bool // whether or not to dump headers of requests and responses
-	Servers        []*ServerInfo
+	FrontedServers []*FrontedServerInfo
 	Peers          map[string]*nattywad.ServerPeer // keyed to peer id (e.g. XMPP JID)
-	MasqueradeSets map[string][]*Masquerade
+	MasqueradeSets map[string][]*fronted.Masquerade
 }
 
-// ServerInfo captures configuration information for an upstream server
-type ServerInfo struct {
+// FrontedServerInfo captures configuration information for an upstream domain-
+// fronted server.
+type FrontedServerInfo struct {
 	// Host: the host (e.g. getiantem.org)
 	Host string
 
@@ -52,34 +56,89 @@ type ServerInfo struct {
 	// QOS: relative quality of service offered. Should be >= 0, with higher
 	// values indicating higher QOS.
 	QOS int
-
-	tlsConfigs      map[string]*tls.Config
-	tlsConfigsMutex sync.Mutex
 }
 
-// Masquerade contains the data for a single masquerade host, including
-// the domain and the root CA.
-type Masquerade struct {
-	// Domain: the domain to use for domain fronting
-	Domain string
-
-	// IpAddress: pre-resolved ip address to use instead of Domain (if
-	// available)
-	IpAddress string
+func (s *FrontedServerInfo) Dialer(masqueradeSets map[string][]*fronted.Masquerade) *balancer.Dialer {
+	return &balancer.Dialer{
+		Weight: s.Weight,
+		QOS:    s.QOS,
+		Dial: fronted.NewDialer(&fronted.Config{
+			Host:               s.Host,
+			Port:               s.Port,
+			InsecureSkipVerify: s.InsecureSkipVerify,
+			BufferRequests:     s.BufferRequests,
+			DialTimeoutMillis:  s.DialTimeoutMillis,
+			RedialAttempts:     s.RedialAttempts,
+			OnDialStats:        s.OnDialStats,
+			Masquerades:        masqueradeSets[s.MasqueradeSet],
+			RootCAs:            globals.TrustedCAs,
+		}).Dial,
+	}
 }
 
-type cachedConn struct {
-	conn   net.Conn
-	dialed time.Time
+func (s *FrontedServerInfo) OnDialStats(success bool, domain, addr string, resolutionTime, connectTime, handshakeTime time.Duration) {
+	if resolutionTime > 0 {
+		s.recordTiming("DNSLookup", resolutionTime)
+		if resolutionTime > 1*time.Second {
+			log.Debugf("DNS lookup for %s (%s) took %s", domain, addr, resolutionTime)
+		}
+	}
+
+	if connectTime > 0 {
+		s.recordTiming("TCPConnect", connectTime)
+		if connectTime > 5*time.Second {
+			log.Debugf("TCP connecting to %s (%s) took %s", domain, addr, connectTime)
+		}
+	}
+
+	if handshakeTime > 0 {
+		s.recordTiming("TLSHandshake", handshakeTime)
+		if handshakeTime > 5*time.Second {
+			log.Debugf("TLS handshake to %s (%s) took %s", domain, addr, handshakeTime)
+		}
+	}
 }
 
-// SortHosts sorts the Servers array in place, ordered by host
+// recordTimings records timing information for the given step in establishing
+// a connection. It always records that the step happened, and it records the
+// highest timing threshold exceeded by the step.  Thresholds are 1, 2, 4, 8,
+// and 16 seconds.
+//
+// For example, if calling this with step = "DNSLookup" and duration = 2.5
+// seconds, we will increment two gauges, "DNSLookup" and
+// "DNSLookupOver2Sec".
+//
+// The stats are qualified by MasqueradeSet (if specified), otherwise they're
+// qualified by host. For example, if the MasqueradeSet is "cloudflare", the
+// above stats would be recorded as "DNSLookupTocloudflare" and
+// "DNSLookupTocloudflareOver2Sec". If the MasqueradeSet is "" and the host is
+// "localhost", the stats would be recorded as "DNSLookupTolocalhost" and
+// "DNSLookupTolocalhostOver2Sec".
+func (s *FrontedServerInfo) recordTiming(step string, duration time.Duration) {
+	if s.MasqueradeSet != "" {
+		step = fmt.Sprintf("%sTo%s", step, s.MasqueradeSet)
+	} else {
+		step = fmt.Sprintf("%sTo%s", step, s.Host)
+	}
+	dims := statreporter.Dim("country", globals.Country)
+	dims.Gauge(step).Add(1)
+	for i := 4; i >= 0; i-- {
+		seconds := int(math.Pow(float64(2), float64(i)))
+		if duration > time.Duration(seconds)*time.Second {
+			key := fmt.Sprintf("%sOver%dSec", step, seconds)
+			dims.Gauge(key).Add(1)
+			return
+		}
+	}
+}
+
+// SortServers sorts the Servers array in place, ordered by host
 func (c *ClientConfig) SortServers() {
-	sort.Sort(ByHost(c.Servers))
+	sort.Sort(ByHost(c.FrontedServers))
 }
 
 // ByHost implements sort.Interface for []*ServerInfo based on the host
-type ByHost []*ServerInfo
+type ByHost []*FrontedServerInfo
 
 func (a ByHost) Len() int           { return len(a) }
 func (a ByHost) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
