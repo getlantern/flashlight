@@ -10,8 +10,8 @@ import (
 
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/yaml"
 	"github.com/getlantern/yamlconf"
+	"gopkg.in/getlantern/yaml.v1"
 
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/globals"
