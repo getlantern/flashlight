@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/getlantern/balancer"
-	"github.com/getlantern/enproxy"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/nattywad"
 
@@ -56,11 +55,8 @@ func (client *Client) ListenAndServe() error {
 }
 
 // Configure updates the client's configuration.  Configure can be called
-// before or after ListenAndServe, and can be called multiple times.  The
-// optional enproxyConfigs parameter allows explicitly specifying enproxy
-// configurations for the servers in ClientConfig in lieu of building them based
-// on the ServerInfo in ClientConfig (mostly useful for testing).
-func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Config) {
+// before or after ListenAndServe, and can be called multiple times.
+func (client *Client) Configure(cfg *ClientConfig) {
 	client.cfgMutex.Lock()
 	defer client.cfgMutex.Unlock()
 

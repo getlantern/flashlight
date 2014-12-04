@@ -22,7 +22,8 @@ func (client *Client) initBalancer(cfg *ClientConfig) *balancer.Balancer {
 
 	if client.balInitialized {
 		log.Trace("Draining balancer channel")
-		<-client.balCh
+		old := <-client.balCh
+		go old.Close()
 	} else {
 		log.Trace("Creating balancer channel")
 		client.balCh = make(chan *balancer.Balancer, 1)

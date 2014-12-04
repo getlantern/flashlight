@@ -10,12 +10,14 @@ import (
 	"runtime/pprof"
 	"time"
 
+	"github.com/getlantern/fronted"
+	"github.com/getlantern/golog"
+
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/server"
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/statserver"
-	"github.com/getlantern/golog"
 )
 
 const (
@@ -109,14 +111,14 @@ func runClientProxy(cfg *config.Config) {
 	}
 
 	// Configure client initially
-	client.Configure(cfg.Client, nil)
+	client.Configure(cfg.Client)
 
 	// Continually poll for config updates and update client accordingly
 	go func() {
 		for {
 			cfg := <-configUpdates
 			configureStats(cfg, false)
-			client.Configure(cfg.Client, nil)
+			client.Configure(cfg.Client)
 		}
 	}()
 
@@ -132,9 +134,10 @@ func runServerProxy(cfg *config.Config) {
 
 	srv := &server.Server{
 		Addr:         cfg.Addr,
+		Host:         cfg.Server.AdvertisedHost,
 		ReadTimeout:  0, // don't timeout
 		WriteTimeout: 0,
-		CertContext: &server.CertContext{
+		CertContext: &fronted.CertContext{
 			PKFile:         config.InConfigDir("proxypk.pem"),
 			ServerCertFile: config.InConfigDir("servercert.pem"),
 		},
