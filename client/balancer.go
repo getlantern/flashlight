@@ -11,11 +11,23 @@ func (client *Client) getBalancer() *balancer.Balancer {
 }
 
 func (client *Client) initBalancer(cfg *ClientConfig) *balancer.Balancer {
-	dialers := make([]*balancer.Dialer, 0, len(cfg.FrontedServers))
+	dialers := make([]*balancer.Dialer, 0, len(cfg.FrontedServers)+len(cfg.ChainedServers))
 
+	log.Debugf("Adding %d domain fronted servers", len(cfg.FrontedServers))
 	for _, s := range cfg.FrontedServers {
-		dialer := s.Dialer(cfg.MasqueradeSets)
+		dialer := s.dialer(cfg.MasqueradeSets)
 		dialers = append(dialers, dialer)
+	}
+
+	log.Debugf("Adding %d chained servers", len(cfg.ChainedServers))
+	for _, s := range cfg.ChainedServers {
+		dialer, err := s.dialer()
+		if err == nil {
+			dialers = append(dialers, dialer)
+		} else {
+			log.Debugf("Unable to configure chained server for %s: %s", s.Addr)
+		}
+
 	}
 
 	bal := balancer.New(dialers...)
@@ -30,6 +42,7 @@ func (client *Client) initBalancer(cfg *ClientConfig) *balancer.Balancer {
 	}
 	log.Trace("Publishing balancer")
 	client.balCh <- bal
+	client.balInitialized = true
 
 	return bal
 }

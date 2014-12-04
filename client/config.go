@@ -1,135 +1,24 @@
 package client
 
 import (
-	"fmt"
-	"math"
 	"sort"
 	"time"
 
-	"github.com/getlantern/balancer"
-	"github.com/getlantern/flashlight/globals"
-	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/nattywad"
+)
+
+var (
+	chainedDialTimeout = 30 * time.Second
 )
 
 // ClientConfig captures configuration information for a Client
 type ClientConfig struct {
 	DumpHeaders    bool // whether or not to dump headers of requests and responses
 	FrontedServers []*FrontedServerInfo
+	ChainedServers []*ChainedServerInfo
 	Peers          map[string]*nattywad.ServerPeer // keyed to peer id (e.g. XMPP JID)
 	MasqueradeSets map[string][]*fronted.Masquerade
-}
-
-// FrontedServerInfo captures configuration information for an upstream domain-
-// fronted server.
-type FrontedServerInfo struct {
-	// Host: the host (e.g. getiantem.org)
-	Host string
-
-	// Port: the port (e.g. 443)
-	Port int
-
-	// MasqueradeSet: the name of the masquerade set from ClientConfig that
-	// contains masquerade hosts to use for this server.
-	MasqueradeSet string
-
-	// InsecureSkipVerify: if true, server's certificate is not verified.
-	InsecureSkipVerify bool
-
-	// BufferRequests: if true, requests to the proxy will be buffered and sent
-	// with identity encoding.  If false, they'll be streamed with chunked
-	// encoding.
-	BufferRequests bool
-
-	// DialTimeoutMillis: how long to wait on dialing server before timing out
-	// (defaults to 5 seconds)
-	DialTimeoutMillis int
-
-	// RedialAttempts: number of times to try redialing. The total number of
-	// dial attempts will be 1 + RedialAttempts.
-	RedialAttempts int
-
-	// Weight: relative weight versus other servers (for round-robin)
-	Weight int
-
-	// QOS: relative quality of service offered. Should be >= 0, with higher
-	// values indicating higher QOS.
-	QOS int
-}
-
-func (s *FrontedServerInfo) Dialer(masqueradeSets map[string][]*fronted.Masquerade) *balancer.Dialer {
-	return &balancer.Dialer{
-		Weight: s.Weight,
-		QOS:    s.QOS,
-		Dial: fronted.NewDialer(&fronted.Config{
-			Host:               s.Host,
-			Port:               s.Port,
-			InsecureSkipVerify: s.InsecureSkipVerify,
-			BufferRequests:     s.BufferRequests,
-			DialTimeoutMillis:  s.DialTimeoutMillis,
-			RedialAttempts:     s.RedialAttempts,
-			OnDialStats:        s.OnDialStats,
-			Masquerades:        masqueradeSets[s.MasqueradeSet],
-			RootCAs:            globals.TrustedCAs,
-		}).Dial,
-	}
-}
-
-func (s *FrontedServerInfo) OnDialStats(success bool, domain, addr string, resolutionTime, connectTime, handshakeTime time.Duration) {
-	if resolutionTime > 0 {
-		s.recordTiming("DNSLookup", resolutionTime)
-		if resolutionTime > 1*time.Second {
-			log.Debugf("DNS lookup for %s (%s) took %s", domain, addr, resolutionTime)
-		}
-	}
-
-	if connectTime > 0 {
-		s.recordTiming("TCPConnect", connectTime)
-		if connectTime > 5*time.Second {
-			log.Debugf("TCP connecting to %s (%s) took %s", domain, addr, connectTime)
-		}
-	}
-
-	if handshakeTime > 0 {
-		s.recordTiming("TLSHandshake", handshakeTime)
-		if handshakeTime > 5*time.Second {
-			log.Debugf("TLS handshake to %s (%s) took %s", domain, addr, handshakeTime)
-		}
-	}
-}
-
-// recordTimings records timing information for the given step in establishing
-// a connection. It always records that the step happened, and it records the
-// highest timing threshold exceeded by the step.  Thresholds are 1, 2, 4, 8,
-// and 16 seconds.
-//
-// For example, if calling this with step = "DNSLookup" and duration = 2.5
-// seconds, we will increment two gauges, "DNSLookup" and
-// "DNSLookupOver2Sec".
-//
-// The stats are qualified by MasqueradeSet (if specified), otherwise they're
-// qualified by host. For example, if the MasqueradeSet is "cloudflare", the
-// above stats would be recorded as "DNSLookupTocloudflare" and
-// "DNSLookupTocloudflareOver2Sec". If the MasqueradeSet is "" and the host is
-// "localhost", the stats would be recorded as "DNSLookupTolocalhost" and
-// "DNSLookupTolocalhostOver2Sec".
-func (s *FrontedServerInfo) recordTiming(step string, duration time.Duration) {
-	if s.MasqueradeSet != "" {
-		step = fmt.Sprintf("%sTo%s", step, s.MasqueradeSet)
-	} else {
-		step = fmt.Sprintf("%sTo%s", step, s.Host)
-	}
-	dims := statreporter.Dim("country", globals.Country)
-	dims.Gauge(step).Add(1)
-	for i := 4; i >= 0; i-- {
-		seconds := int(math.Pow(float64(2), float64(i)))
-		if duration > time.Duration(seconds)*time.Second {
-			key := fmt.Sprintf("%sOver%dSec", step, seconds)
-			dims.Gauge(key).Add(1)
-			return
-		}
-	}
 }
 
 // SortServers sorts the Servers array in place, ordered by host
