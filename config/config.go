@@ -232,6 +232,16 @@ func (cfg *Config) applyClientDefaults() {
 		}
 	}
 
+	// Always make sure we have a map of ChainedServers
+	if cfg.Client.ChainedServers == nil {
+		cfg.Client.ChainedServers = make(map[string]*client.ChainedServerInfo)
+	}
+
+	// Always make sure that we have a map of Peers
+	if cfg.Client.Peers == nil {
+		cfg.Client.Peers = make(map[string]*nattywad.ServerPeer)
+	}
+
 	// Sort servers so that they're always in a predictable order
 	cfg.Client.SortServers()
 }
