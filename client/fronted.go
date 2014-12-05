@@ -50,21 +50,27 @@ type FrontedServerInfo struct {
 }
 
 func (s *FrontedServerInfo) dialer(masqueradeSets map[string][]*fronted.Masquerade) *balancer.Dialer {
-	// TODO: need to makea sure that the fronted.Dialer gets closed when the dialer is closed.
+	fd := fronted.NewDialer(&fronted.Config{
+		Host:               s.Host,
+		Port:               s.Port,
+		InsecureSkipVerify: s.InsecureSkipVerify,
+		BufferRequests:     s.BufferRequests,
+		DialTimeoutMillis:  s.DialTimeoutMillis,
+		RedialAttempts:     s.RedialAttempts,
+		OnDialStats:        s.onDialStats,
+		Masquerades:        masqueradeSets[s.MasqueradeSet],
+		RootCAs:            globals.TrustedCAs,
+	})
 	return &balancer.Dialer{
 		Weight: s.Weight,
 		QOS:    s.QOS,
-		Dial: fronted.NewDialer(&fronted.Config{
-			Host:               s.Host,
-			Port:               s.Port,
-			InsecureSkipVerify: s.InsecureSkipVerify,
-			BufferRequests:     s.BufferRequests,
-			DialTimeoutMillis:  s.DialTimeoutMillis,
-			RedialAttempts:     s.RedialAttempts,
-			OnDialStats:        s.onDialStats,
-			Masquerades:        masqueradeSets[s.MasqueradeSet],
-			RootCAs:            globals.TrustedCAs,
-		}).Dial,
+		Dial:   fd.Dial,
+		OnClose: func() {
+			err := fd.Close
+			if err != nil {
+				log.Debugf("Unable to close fronted dialer: %s", err)
+			}
+		},
 	}
 }
 
