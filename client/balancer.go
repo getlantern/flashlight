@@ -35,7 +35,11 @@ func (client *Client) initBalancer(cfg *ClientConfig) *balancer.Balancer {
 	if client.balInitialized {
 		log.Trace("Draining balancer channel")
 		old := <-client.balCh
-		go old.Close()
+		// Close old balancer on a goroutine to avoid blocking here
+		go func() {
+			old.Close()
+			log.Debug("Closed old balancer")
+		}()
 	} else {
 		log.Trace("Creating balancer channel")
 		client.balCh = make(chan *balancer.Balancer, 1)

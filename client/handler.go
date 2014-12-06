@@ -15,7 +15,8 @@ const (
 )
 
 // ServeHTTP implements the method from interface http.Handler using the latest
-// handler available from getHandler().
+// handler available from getHandler() and latest ReverseProxy available from
+// getReverseProxy().
 func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	if req.Method == CONNECT {
 		client.intercept(resp, req)
