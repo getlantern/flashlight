@@ -10,6 +10,7 @@ import (
 
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/nattywad"
 	"github.com/getlantern/yaml"
 	"github.com/getlantern/yamlconf"
 

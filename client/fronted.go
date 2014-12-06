@@ -66,7 +66,7 @@ func (s *FrontedServerInfo) dialer(masqueradeSets map[string][]*fronted.Masquera
 		QOS:    s.QOS,
 		Dial:   fd.Dial,
 		OnClose: func() {
-			err := fd.Close
+			err := fd.Close()
 			if err != nil {
 				log.Debugf("Unable to close fronted dialer: %s", err)
 			}
