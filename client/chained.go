@@ -79,6 +79,7 @@ func (s *ChainedServerInfo) dialer() (*balancer.Dialer, error) {
 		}
 	}
 	return &balancer.Dialer{
+		Label:  fmt.Sprintf("chained proxy at %s", s.Addr),
 		Weight: s.Weight,
 		QOS:    s.QOS,
 		Dial:   d.Dial,
