@@ -63,7 +63,7 @@ func (s *FrontedServerInfo) dialer(masqueradeSets map[string][]*fronted.Masquera
 	})
 	masqueradeQualifier := ""
 	if s.MasqueradeSet != "" {
-		masqueradeQualifier = fmt.Sprintf(" with masquerade set %s", s.MasqueradeSet)
+		masqueradeQualifier = fmt.Sprintf(" using masquerade set %s", s.MasqueradeSet)
 	}
 	return &balancer.Dialer{
 		Label:  fmt.Sprintf("fronted proxy at %s:%d%s", s.Host, s.Port, masqueradeQualifier),
