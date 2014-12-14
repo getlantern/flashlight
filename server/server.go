@@ -45,7 +45,6 @@ type Server struct {
 
 	CertContext                *fronted.CertContext // context for certificate management
 	AllowNonGlobalDestinations bool                 // if true, requests to LAN, Loopback, etc. will be allowed
-	StatServer                 *statserver.Server   // optional server of stats
 
 	waddellClient  *waddell.Client
 	nattywadServer *nattywad.Server
@@ -117,21 +116,14 @@ func (server *Server) ListenAndServe() error {
 		AllowNonGlobalDestinations: server.AllowNonGlobalDestinations,
 	}
 
-	// Hook into stats reporting if necessary
-	servingStats := server.startServingStatsIfNecessary()
-
 	// Add callbacks to track bytes given
 	fs.OnBytesReceived = func(ip string, bytes int64) {
 		onBytesGiven(bytes)
-		if servingStats {
-			server.StatServer.OnBytesReceived(ip, bytes)
-		}
+		statserver.OnBytesReceived(ip, bytes)
 	}
 	fs.OnBytesSent = func(ip string, bytes int64) {
 		onBytesGiven(bytes)
-		if servingStats {
-			server.StatServer.OnBytesSent(ip, bytes)
-		}
+		statserver.OnBytesSent(ip, bytes)
 	}
 
 	l, err := fs.Listen()
@@ -233,17 +225,6 @@ func determineInternalIP() (string, error) {
 	}
 	defer conn.Close()
 	return strings.Split(conn.LocalAddr().String(), ":")[0], nil
-}
-
-func (server *Server) startServingStatsIfNecessary() bool {
-	if server.StatServer != nil {
-		log.Debugf("Serving stats at address: %s", server.StatServer.Addr)
-		go server.StatServer.ListenAndServe()
-		return true
-	} else {
-		log.Debug("Not serving stats (no statsaddr specified)")
-		return false
-	}
 }
 
 func onBytesGiven(bytes int64) {

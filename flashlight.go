@@ -100,6 +100,12 @@ func configureStats(cfg *config.Config, failOnError bool) {
 			os.Exit(ConfigError)
 		}
 	}
+
+	if cfg.StatsAddr != "" {
+		statserver.Start(cfg.StatsAddr)
+	} else {
+		statserver.Stop()
+	}
 }
 
 // Runs the client-side proxy
@@ -143,14 +149,8 @@ func runServerProxy(cfg *config.Config) {
 		},
 	}
 
-	if cfg.StatsAddr != "" {
-		// Serve stats
-		srv.StatServer = &statserver.Server{
-			Addr: cfg.StatsAddr,
-		}
-	}
-
 	srv.Configure(cfg.Server)
+
 	// Continually poll for config updates and update server accordingly
 	go func() {
 		for {
