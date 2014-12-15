@@ -34,7 +34,7 @@ type FrontedServerInfo struct {
 	BufferRequests bool
 
 	// DialTimeoutMillis: how long to wait on dialing server before timing out
-	// (defaults to 20 seconds)
+	// (defaults to 5 seconds)
 	DialTimeoutMillis int
 
 	// RedialAttempts: number of times to try redialing. The total number of
@@ -57,6 +57,7 @@ func (s *FrontedServerInfo) dialer(masqueradeSets map[string][]*fronted.Masquera
 		BufferRequests:     s.BufferRequests,
 		DialTimeoutMillis:  s.DialTimeoutMillis,
 		RedialAttempts:     s.RedialAttempts,
+		OnDial:             withStats,
 		OnDialStats:        s.onDialStats,
 		Masquerades:        masqueradeSets[s.MasqueradeSet],
 		RootCAs:            globals.TrustedCAs,

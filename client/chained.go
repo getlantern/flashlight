@@ -78,10 +78,13 @@ func (s *ChainedServerInfo) dialer() (*balancer.Dialer, error) {
 			req.Header.Set("X-LANTERN-AUTH-TOKEN", s.AuthToken)
 		}
 	}
+
 	return &balancer.Dialer{
 		Label:  fmt.Sprintf("chained proxy at %s", s.Addr),
 		Weight: s.Weight,
 		QOS:    s.QOS,
-		Dial:   d.Dial,
+		Dial: func(network, addr string) (net.Conn, error) {
+			return withStats(d.Dial(network, addr))
+		},
 	}, nil
 }
