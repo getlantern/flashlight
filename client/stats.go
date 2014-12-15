@@ -6,6 +6,7 @@ import (
 
 	"github.com/getlantern/bytecounting"
 
+	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/statserver"
 )
 
@@ -25,4 +26,9 @@ func withStats(conn net.Conn, err error) (net.Conn, error) {
 			statserver.OnBytesSent(ip, bytes)
 		},
 	}, nil
+}
+
+func onBytesGotten(bytes int64) {
+	dims := statreporter.CountryDim()
+	dims.Increment("bytesGotten").Add(bytes)
 }
