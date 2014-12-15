@@ -20,9 +20,11 @@ func withStats(conn net.Conn, err error) (net.Conn, error) {
 	return &bytecounting.Conn{
 		Orig: conn,
 		OnRead: func(bytes int64) {
+			onBytesGotten(bytes)
 			statserver.OnBytesReceived(ip, bytes)
 		},
 		OnWrite: func(bytes int64) {
+			onBytesGotten(bytes)
 			statserver.OnBytesSent(ip, bytes)
 		},
 	}, nil
