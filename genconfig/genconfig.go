@@ -14,7 +14,7 @@ import (
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
-	"gopkg.in/getlantern/tlsdialer.v2"
+	"github.com/getlantern/tlsdialer"
 )
 
 const (

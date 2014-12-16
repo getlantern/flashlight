@@ -15,8 +15,8 @@ import (
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/util"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/yaml"
 	"github.com/getlantern/yamlconf"
-	"gopkg.in/getlantern/yaml.v1"
 )
 
 const (
