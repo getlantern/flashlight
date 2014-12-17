@@ -7,6 +7,7 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"time"
 
 	"github.com/getlantern/connpool"
@@ -14,9 +15,7 @@ import (
 	"github.com/getlantern/flashlight/globals"
 	"github.com/getlantern/flashlight/proxy"
 	"github.com/getlantern/flashlight/statreporter"
-	"net/http/httputil"
-
-	"gopkg.in/getlantern/tlsdialer.v2"
+	"github.com/getlantern/tlsdialer"
 )
 
 type server struct {

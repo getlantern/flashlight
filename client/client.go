@@ -18,6 +18,7 @@ import (
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/nattywad"
+	"github.com/getlantern/waddell"
 )
 
 const (
@@ -150,13 +151,15 @@ func (client *Client) Configure(cfg *ClientConfig, enproxyConfigs []*enproxy.Con
 
 	if client.nattywadClient == nil {
 		client.nattywadClient = &nattywad.Client{
-			DialWaddell: func(addr string) (net.Conn, error) {
-				// Clients always connect to waddell via a proxy to prevent the
-				// waddell connection from being blocked by censors.
-				server := client.randomServerForQOS(HighQOS)
-				return server.dialWithEnproxy("tcp", addr)
+			ClientMgr: &waddell.ClientMgr{
+				Dial: func(addr string) (net.Conn, error) {
+					// Clients always connect to waddell via a proxy to prevent the
+					// waddell connection from being blocked by censors.
+					server := client.randomServerForQOS(HighQOS)
+					return server.dialWithEnproxy("tcp", addr)
+				},
+				ServerCert: globals.WaddellCert,
 			},
-			ServerCert: globals.WaddellCert,
 			OnSuccess: func(info *nattywad.TraversalInfo) {
 				log.Debugf("NAT traversal Succeeded: %s", info)
 				log.Tracef("Peer Country: %s", info.Peer.Extras["country"])

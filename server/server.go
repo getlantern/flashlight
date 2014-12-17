@@ -22,6 +22,7 @@ import (
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/nattywad"
+	"github.com/getlantern/waddell"
 )
 
 const (
@@ -72,6 +73,7 @@ type Server struct {
 	StatServer                 *statserver.Server // optional server of stats
 
 	host           string
+	waddellClient  *waddell.Client
 	nattywadServer *nattywad.Server
 	cfg            *ServerConfig
 	cfgMutex       sync.Mutex
@@ -113,20 +115,17 @@ func (server *Server) Configure(newCfg *ServerConfig) {
 		}
 	}
 
-	if newCfg.WaddellAddr != "" || server.nattywadServer != nil {
-		if server.nattywadServer == nil {
-			server.nattywadServer = &nattywad.Server{
-				OnSuccess: func(local *net.UDPAddr, remote *net.UDPAddr) bool {
-					err := nattest.Serve(local)
-					if err != nil {
-						log.Error(err.Error())
-						return false
-					}
-					return true
-				},
-			}
+	nattywadIsEnabled := newCfg.WaddellAddr != ""
+	nattywadWasEnabled := server.nattywadServer != nil
+	waddellAddrChanged := oldCfg == nil && newCfg.WaddellAddr != "" || oldCfg != nil && oldCfg.WaddellAddr != newCfg.WaddellAddr
+
+	if waddellAddrChanged {
+		if nattywadWasEnabled {
+			server.stopNattywad()
 		}
-		server.nattywadServer.Configure(newCfg.WaddellAddr, globals.WaddellCert)
+		if nattywadIsEnabled {
+			server.startNattywad(newCfg.WaddellAddr)
+		}
 	}
 
 	server.cfg = newCfg
@@ -199,6 +198,47 @@ func (server *Server) ListenAndServe() error {
 	// the CDNs seem to like keeping lots of connections open indefinitely.
 	idleTimingListener := idletiming.Listener(listener, httpIdleTimeout, nil)
 	return httpServer.Serve(idleTimingListener)
+}
+
+func (server *Server) startNattywad(waddellAddr string) {
+	log.Debugf("Connecting to waddell at: %s", waddellAddr)
+	var err error
+	server.waddellClient, err = waddell.NewClient(&waddell.ClientConfig{
+		Dial: func() (net.Conn, error) {
+			return net.Dial("tcp", waddellAddr)
+		},
+		ServerCert:        globals.WaddellCert,
+		ReconnectAttempts: 10,
+		OnId: func(id waddell.PeerId) {
+			log.Debugf("Connected to Waddell!! Id is: %s", id)
+		},
+	})
+	if err != nil {
+		log.Errorf("Unable to connect to waddell: %s", err)
+		server.waddellClient = nil
+		return
+	}
+	server.nattywadServer = &nattywad.Server{
+		Client: server.waddellClient,
+		OnSuccess: func(local *net.UDPAddr, remote *net.UDPAddr) bool {
+			err := nattest.Serve(local)
+			if err != nil {
+				log.Error(err.Error())
+				return false
+			}
+			return true
+		},
+	}
+	server.nattywadServer.Start()
+}
+
+func (server *Server) stopNattywad() {
+	log.Debug("Stopping nattywad server")
+	server.nattywadServer.Stop()
+	server.nattywadServer = nil
+	log.Debug("Stopping waddell client")
+	server.waddellClient.Close()
+	server.waddellClient = nil
 }
 
 // dialDestination dials the destination server and wraps the resulting net.Conn

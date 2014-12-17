@@ -1,6 +1,7 @@
 package config
 
 import (
+	"compress/gzip"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -14,8 +15,8 @@ import (
 	"github.com/getlantern/flashlight/statreporter"
 	"github.com/getlantern/flashlight/util"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/yaml"
 	"github.com/getlantern/yamlconf"
-	"gopkg.in/getlantern/yaml.v1"
 )
 
 const (
@@ -285,7 +286,11 @@ func (cfg Config) doFetchCloudConfig(proxyAddr string) ([]byte, error) {
 		return nil, fmt.Errorf("Unexpected response status: %d", resp.StatusCode)
 	}
 	lastCloudConfigETag = resp.Header.Get(etag)
-	return ioutil.ReadAll(resp.Body)
+	gzReader, err := gzip.NewReader(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to open gzip reader: %s", err)
+	}
+	return ioutil.ReadAll(gzReader)
 }
 
 // updateFrom creates a new Config by merging the given yaml into this Config.
