@@ -1,10 +1,4 @@
-// Package packaged provided access to ration embedded directly in Lantern installation
-// packages. On OSX, that means data embedded in the Lantern.app app bundle in
-// Lantern.app/Contents/Resources/.lantern.yaml, while on Windows that means data embedded
-// in AppData/Roaming/Lantern/.lantern.yaml. This allows customization embedded in the
-// installer outside of the auto-updated binary that should only be used under special
-// circumstances.
-package client
+package config
 
 import (
 	"errors"
@@ -15,12 +9,13 @@ import (
 	"strings"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/tarfs"
 	"github.com/getlantern/yaml"
 )
 
 var (
-	name        = ".packaged-lantern.yaml"
-	chainedName = "chained.yaml"
+	name            = ".packaged-lantern.yaml"
+	lanternYamlName = "lantern.yaml"
 
 	// This is the local copy of our embedded ration file. This is necessary
 	// to ensure we remember the embedded ration across auto-updated
@@ -30,19 +25,20 @@ var (
 	local = appdir.General("Lantern") + "/" + name
 )
 
-// BootstrapSettings provided access to configuration embedded in the package.
+// BootstrapSettings provides access to configuration embedded directly in Lantern installation
+// packages. On OSX, that means data embedded in the Lantern.app app bundle in
+// Lantern.app/Contents/Resources/.lantern.yaml, while on Windows that means data embedded
+// in AppData/Roaming/Lantern/.lantern.yaml. This allows customization embedded in the
+// installer outside of the auto-updated binary that should only be used under special
+// circumstances.
 type BootstrapSettings struct {
 	StartupUrl string
-}
-
-type BootstrapServers struct {
-	ChainedServers map[string]*ChainedServerInfo
 }
 
 // ReadSettings reads packaged settings from pre-determined paths
 // on the various OSes.
 func ReadSettings() (*BootstrapSettings, error) {
-	yamlPath, err := bootstrapPath(name)
+	_, yamlPath, err := bootstrapPath(name)
 	if err != nil {
 		return &BootstrapSettings{}, err
 	}
@@ -50,19 +46,6 @@ func ReadSettings() (*BootstrapSettings, error) {
 	ps, er := readSettingsFromFile(yamlPath)
 	if er != nil {
 		return readSettingsFromFile(local)
-	}
-	return ps, nil
-}
-
-func ReadChained() (*BootstrapServers, error) {
-	yamlPath, err := bootstrapPath(chainedName)
-	if err != nil {
-		return &BootstrapServers{}, err
-	}
-
-	ps, er := readBootstrapServers(yamlPath)
-	if er != nil {
-		return readBootstrapServers(local)
 	}
 	return ps, nil
 }
@@ -96,40 +79,41 @@ func readSettingsFromFile(yamlPath string) (*BootstrapSettings, error) {
 	return &s, nil
 }
 
-// readBootstrapServers reads BootstrapServers from the yaml file at the specified
-// path.
-func readBootstrapServers(yamlPath string) (*BootstrapServers, error) {
-	log.Debugf("Opening file at: %v", yamlPath)
-	data, err := ioutil.ReadFile(yamlPath)
+// MakeInitialConfig save baked-in config to the file specified by configPath
+func MakeInitialConfig(configPath string) error {
+	dir, _, err := bootstrapPath(lanternYamlName)
 	if err != nil {
-		// This will happen whenever there's no packaged settings, which is often
-		log.Debugf("Error reading file %v", err)
-		return &BootstrapServers{}, err
+		log.Errorf("Could not get bootstrap path %v", err)
+		return err
 	}
 
-	trimmed := strings.TrimSpace(string(data))
-
-	log.Debugf("Read bytes: %v", trimmed)
-
-	if trimmed == "" {
-		log.Debugf("Ignoring empty string")
-		return &BootstrapServers{}, errors.New("Empty string")
-	}
-	var s BootstrapServers
-	err = yaml.Unmarshal([]byte(trimmed), &s)
-
+	// We need to use tarfs here because the lantern.yaml needs to embedded
+	// in the binary for auto-updates to work. We also want the flexibility,
+	// however, to embed it in installers to change various settings.
+	fs, err := tarfs.New(Resources, dir)
 	if err != nil {
-		log.Errorf("Could not read yaml: %v", err)
-		return &BootstrapServers{}, err
+		log.Errorf("Could not read resources? %v", err)
+		return err
 	}
-	return &s, nil
+
+	bytes, err := fs.Get("lantern.yaml")
+	if err != nil {
+		log.Errorf("Could not read bootstrap file %v", err)
+		return err
+	}
+	err = ioutil.WriteFile(configPath, bytes, 0644)
+	if err != nil {
+		log.Errorf("Could not write bootstrap file %v", err)
+		return err
+	}
+	return nil
 }
 
-func bootstrapPath(fileName string) (string, error) {
+func bootstrapPath(fileName string) (string, string, error) {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		log.Errorf("Could not get current directory %v", err)
-		return "", err
+		return "", "", err
 	}
 	var yamldir string
 	if runtime.GOOS == "windows" {
@@ -150,7 +134,7 @@ func bootstrapPath(fileName string) (string, error) {
 	}
 	fullPath := filepath.Join(yamldir, fileName)
 	log.Debugf("Opening bootstrap file from: %v", fullPath)
-	return fullPath, nil
+	return yamldir, fullPath, nil
 }
 
 func writeToDisk(ps *BootstrapSettings) (string, error) {
