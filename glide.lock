@@ -1,5 +1,5 @@
 hash: e2f10548ea8ae0e4562649b502729ab9b43839811b6341b0f2aec9ad5c00df9b
-updated: 2016-08-24T16:06:27.839892171-05:00
+updated: 2016-08-24T16:33:21.670468429-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 15d8df1cd780ddb0bb1710b08a5546f2a8f027bf
@@ -127,8 +127,6 @@ imports:
   version: 02f928aad224fbccd50d66edd776fc9d1e9f2f2b
 - name: github.com/getlantern/systray
   version: d4e9a9f70a92790dbb0d1cee3569282d6af0cf31
-  subpackages:
-  - example/icon
 - name: github.com/getlantern/tarfs
   version: 0bd66ee44f77434741c17540b0f804617969dd8a
 - name: github.com/getlantern/testify
@@ -180,35 +178,6 @@ imports:
   - tea
   - twofish
   - xtea
-- name: golang.org/x/exp
-  version: 325d5821a8d876702cbc82b93fec4ede356d498b
-  subpackages:
-  - shiny/driver/gldriver
-  - shiny/driver/internal/drawer
-  - shiny/driver/internal/errscreen
-  - shiny/driver/internal/event
-  - shiny/driver/internal/lifecycler
-  - shiny/driver/internal/win32
-  - shiny/driver/internal/x11key
-  - shiny/screen
-- name: golang.org/x/image
-  version: 9f8d0d45877da31f672995d10677ae6a586e31a5
-  subpackages:
-  - math/f64
-- name: golang.org/x/mobile
-  version: ed036a869f333e824f4e287e75d236d7afb58972
-  subpackages:
-  - app
-  - app/internal/callfn
-  - event/key
-  - event/lifecycle
-  - event/mouse
-  - event/paint
-  - event/size
-  - event/touch
-  - geom
-  - gl
-  - internal/mobileinit
 - name: golang.org/x/net
   version: 7394c112eae4dba7e96bfcfe738e6373d61772b4
   subpackages:
@@ -221,7 +190,6 @@ imports:
   subpackages:
   - windows
   - windows/registry
-  - windows/svc/mgr
 testImports:
 - name: github.com/getlantern/http-proxy
   version: 3ced6a60f6ca50302288b0814141f26544fa5d15
@@ -232,7 +200,6 @@ testImports:
   - forward
   - httpconnect
   - listeners
-  - logging
   - ratelimiter
   - server
   - utils
@@ -247,6 +214,7 @@ testImports:
   - devicefilter
   - kcplistener
   - listeners
+  - metrics
   - mimic
   - obfs4listener
   - opsfilter
@@ -289,14 +257,10 @@ testImports:
   - difflib
 - name: github.com/rcrowley/go-metrics
   version: bdb33529eca3e55eac7328e07c57012a797af602
-- name: github.com/stathat/go
-  version: 74669b9f388d9d788c97399a0824adbfee78400e
 - name: github.com/stretchr/testify
   version: d77da356e56a7428ad25149ca77381849a6a5232
   subpackages:
   - assert
-- name: github.com/vharitonsky/iniflags
-  version: 743d6901e7ca8ab61ac533a8c49939ac8b560e72
 - name: github.com/vulcand/oxy
   version: 40720199a16cdfb3854ff58ad91d290a7dd56de0
   subpackages:
