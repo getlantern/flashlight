@@ -9,3 +9,4 @@ autoupdate-prod.go
 certs/errors.txt
 flashlight.yaml
 genconfig/genconfig
+vendor

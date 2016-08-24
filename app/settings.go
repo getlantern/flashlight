@@ -11,10 +11,9 @@ import (
 	"strings"
 	"sync"
 
-	"code.google.com/p/go-uuid/uuid"
-
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/launcher"
+	"github.com/getlantern/uuid"
 	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/logging"

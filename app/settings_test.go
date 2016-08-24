@@ -8,8 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"code.google.com/p/go-uuid/uuid"
-
+	"github.com/getlantern/uuid"
 	"github.com/stretchr/testify/assert"
 )
 

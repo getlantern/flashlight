@@ -1,0 +1,73 @@
+package: github.com/getlantern/flashlight
+import:
+- package: git.torproject.org/pluggable-transports/goptlib.git
+- package: git.torproject.org/pluggable-transports/obfs4.git
+  subpackages:
+  - transports/obfs4
+- package: github.com/armon/go-socks5
+- package: github.com/davecgh/go-spew
+  subpackages:
+  - spew
+- package: github.com/getlantern/appdir
+- package: github.com/getlantern/autoupdate
+- package: github.com/getlantern/balancer
+- package: github.com/getlantern/bandwidth
+- package: github.com/getlantern/borda
+  subpackages:
+  - client
+- package: github.com/getlantern/chained
+- package: github.com/getlantern/detour
+- package: github.com/getlantern/edgedetect
+- package: github.com/getlantern/errors
+- package: github.com/getlantern/eventual
+- package: github.com/getlantern/filepersist
+- package: github.com/getlantern/fronted
+- package: github.com/getlantern/geolookup
+- package: github.com/getlantern/go-loggly
+- package: github.com/getlantern/golog
+- package: github.com/getlantern/hidden
+- package: github.com/getlantern/i18n
+- package: github.com/getlantern/idletiming
+- package: github.com/getlantern/jibber_jabber
+- package: github.com/getlantern/keyman
+- package: github.com/getlantern/launcher
+- package: github.com/getlantern/netx
+- package: github.com/getlantern/notifier
+- package: github.com/getlantern/ops
+- package: github.com/getlantern/osversion
+- package: github.com/getlantern/pac
+- package: github.com/getlantern/pro-server-client
+  subpackages:
+  - go-client
+- package: github.com/getlantern/profiling
+- package: github.com/getlantern/proxiedsites
+- package: github.com/getlantern/proxybench
+- package: github.com/getlantern/rot13
+- package: github.com/getlantern/rotator
+- package: github.com/getlantern/systray
+- package: github.com/getlantern/tarfs
+- package: github.com/getlantern/tlsdialer
+- package: github.com/getlantern/uuid
+- package: github.com/getlantern/wfilter
+- package: github.com/getlantern/withtimeout
+- package: github.com/getlantern/yaml
+- package: github.com/gorilla/websocket
+- package: github.com/kardianos/osext
+- package: github.com/mitchellh/panicwrap
+- package: github.com/oxtoacart/bpool
+- package: github.com/skratchdot/open-golang
+  subpackages:
+  - open
+- package: golang.org/x/net
+  subpackages:
+  - context
+testImport:
+- package: github.com/getlantern/http-proxy-lantern
+- package: github.com/getlantern/tlsdefaults
+- package: github.com/getlantern/waitforserver
+- package: github.com/mailgun/oxy
+  subpackages:
+  - forward
+- package: github.com/stretchr/testify
+  subpackages:
+  - assert
