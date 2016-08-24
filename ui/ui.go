@@ -4,23 +4,20 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"path/filepath"
-	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	"github.com/getlantern/edgedetect"
+	"github.com/getlantern/eventual"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/tarfs"
-	"github.com/getlantern/edgedetect"
 	"github.com/skratchdot/open-golang/open"
 
 	"github.com/getlantern/flashlight/client"
-)
-
-const (
-	LocalUIDir = "../../../lantern-ui/app"
+	"github.com/getlantern/flashlight/feed"
+	"github.com/getlantern/flashlight/util"
 )
 
 var (
@@ -28,55 +25,32 @@ var (
 
 	l               net.Listener
 	fs              *tarfs.FileSystem
-	Translations    *tarfs.FileSystem
+	translations    = eventual.NewValue()
 	server          *http.Server
 	uiaddr          string
 	proxiedUIAddr   string
 	preferProxiedUI int32
 
 	openedExternal = false
-	externalUrl    string
+	externalURL    string
 	r              = http.NewServeMux()
 )
 
-func init() {
-	// Assume the default directory containing UI assets is
-	// a sibling directory to this file's directory.
-	localResourcesPath := ""
-	_, curDir, _, ok := runtime.Caller(1)
-	if !ok {
-		log.Errorf("Unable to determine caller directory")
-	} else {
-		localResourcesPath = filepath.Join(curDir, LocalUIDir)
-		absLocalResourcesPath, err := filepath.Abs(localResourcesPath)
-		if err != nil {
-			absLocalResourcesPath = localResourcesPath
-		}
-		log.Debugf("Creating tarfs filesystem that prefers local resources at %v", absLocalResourcesPath)
-	}
-
-	var err error
-	fs, err = tarfs.New(Resources, localResourcesPath)
-	if err != nil {
-		// Panicking here because this shouldn't happen at runtime unless the
-		// resources were incorrectly embedded.
-		panic(fmt.Errorf("Unable to open tarfs filesystem: %v", err))
-	}
-	Translations = fs.SubDir("locale")
-}
-
+// Handle is the http server handler function.
 func Handle(p string, handler http.Handler) string {
 	r.Handle(p, handler)
 	return uiaddr + p
 }
 
-func Start(requestedAddr string, allowRemote bool, extUrl string) (string, error) {
+// Start starts serving the UI.
+func Start(requestedAddr string, allowRemote bool, extURL string) (string, error) {
+	unpackUI()
 	addr, err := net.ResolveTCPAddr("tcp4", requestedAddr)
 	if err != nil {
 		return "", fmt.Errorf("Unable to resolve UI address: %v", err)
 	}
 
-	externalUrl = extUrl
+	externalURL = extURL
 	if allowRemote {
 		// If we want to allow remote connections, we have to bind all interfaces
 		addr = &net.TCPAddr{Port: addr.Port}
@@ -95,8 +69,19 @@ func Start(requestedAddr string, allowRemote bool, extUrl string) (string, error
 		}
 		resp.WriteHeader(http.StatusOK)
 	}
-	r.Handle("/startup", http.HandlerFunc(handler))
-	r.Handle("/", http.FileServer(fs))
+
+	// We use the backend to detect the user's country and redirect the browser
+	// to the correct URL that will itself be proxied over Lantern.
+	feedHandler := func(resp http.ResponseWriter, req *http.Request) {
+		vals := req.URL.Query()
+		defaultLang := vals.Get("lang")
+		url := feed.GetFeedURL(defaultLang)
+		http.Redirect(resp, req, url, http.StatusFound)
+	}
+
+	r.Handle("/startup", util.NoCacheHandler(http.HandlerFunc(handler)))
+	r.Handle("/feed", util.NoCacheHandler(http.HandlerFunc(feedHandler)))
+	r.Handle("/", util.NoCacheHandler(http.FileServer(fs)))
 
 	server = &http.Server{
 		Handler:  r,
@@ -108,7 +93,8 @@ func Start(requestedAddr string, allowRemote bool, extUrl string) (string, error
 			log.Errorf("Error serving: %v", err)
 		}
 	}()
-	uiaddr = fmt.Sprintf("http://%v", l.Addr().String())
+	listenAddr := l.Addr().String()
+	uiaddr = fmt.Sprintf("http://%v", listenAddr)
 
 	// Note - we display the UI using the LanternSpecialDomain. This is necessary
 	// for Microsoft Edge on Windows 10 because, being a Windows Modern App, its
@@ -122,9 +108,34 @@ func Start(requestedAddr string, allowRemote bool, extUrl string) (string, error
 	proxiedUIAddr = fmt.Sprintf("http://%v", client.LanternSpecialDomain)
 	log.Debugf("UI available at %v", uiaddr)
 
-	return l.Addr().String(), nil
+	return listenAddr, nil
 }
 
+func unpackUI() {
+	var err error
+	fs, err = tarfs.New(Resources, "")
+	if err != nil {
+		// Panicking here because this shouldn't happen at runtime unless the
+		// resources were incorrectly embedded.
+		panic(fmt.Errorf("Unable to open tarfs filesystem: %v", err))
+	}
+	translations.Set(fs.SubDir("locale"))
+}
+
+// Translations returns the translations for a given locale file.
+func Translations(filename string) ([]byte, error) {
+	log.Debugf("Accessing translations")
+	tr, ok := translations.Get(30 * time.Second)
+	if !ok || tr == nil {
+		return nil, fmt.Errorf("Could not get traslation for file name: %v", filename)
+	}
+	return tr.(*tarfs.FileSystem).Get(filename)
+}
+
+// PreferProxiedUI returns the preferred address to serve the UI based on
+// whether or not the user's default browser is Edge. This is because Edge
+// will not allow connections to localhost by default, but we can work
+// around it with our speciial domain.
 func PreferProxiedUI(val bool) (newAddr string, addrChanged bool) {
 	previousPreferredUIAddr := getPreferredUIAddr()
 	updated := int32(0)
@@ -144,9 +155,8 @@ func getPreferredUIAddr() string {
 	// We only use the proxied UI address if the default browser is Microsoft Edge
 	if edgedetect.DefaultBrowserIsEdge() && shouldPreferProxiedUI() {
 		return proxiedUIAddr
-	} else {
-		return uiaddr
 	}
+	return uiaddr
 }
 
 // Show opens the UI in a browser. Note we know the UI server is
@@ -156,14 +166,14 @@ func getPreferredUIAddr() string {
 // asynchronously is not a problem.
 func Show() {
 	go func() {
-		addr := getPreferredUIAddr()
+		addr := getPreferredUIAddr() + "?1"
 		err := open.Run(addr)
 		if err != nil {
 			log.Errorf("Error opening page to `%v`: %v", addr, err)
 		}
 
 		onceBody := func() {
-			openExternalUrl(externalUrl)
+			openExternalURL(externalURL)
 		}
 		var run sync.Once
 		run.Do(onceBody)
@@ -173,7 +183,7 @@ func Show() {
 // openExternalUrl opens an external URL of one of our partners automatically
 // at startup if configured to do so. It should only open the first time in
 // a given session that Lantern is opened.
-func openExternalUrl(u string) {
+func openExternalURL(u string) {
 	var url string
 	if u == "" {
 		return
