@@ -1,8 +1,6 @@
 GLIDE_BIN    ?= $(shell which glide)
 BUILD_DIR    ?= bin
 
-.PHONY: dist build require-glide
-
 require-glide:
 	@if [ "$(GLIDE_BIN)" = "" ]; then \
 		echo 'Missing "glide" command. See https://github.com/Masterminds/glide' && exit 1; \
@@ -14,7 +12,7 @@ SHELL := /bin/bash
 
 OSX_MIN_VERSION := 10.9
 
-SOURCES := $(shell find src -name '*[^_test].go')
+SOURCES := $(shell find . -name '*[^_test].go')
 
 get-command = $(shell which="$$(which $(1) 2> /dev/null)" && if [[ ! -z "$$which" ]]; then printf %q "$$which"; fi)
 
@@ -118,7 +116,7 @@ LANTERN_YAML_PATH := installer-resources/lantern.yaml
 
 BUILD_TAGS ?=
 
-.PHONY: packages clean tun2socks android-lib android-sdk android-testbed android-debug android-release android-install docker-run lantern require-glide vendor
+.PHONY: packages clean tun2socks android-lib android-sdk android-testbed android-debug android-release android-install docker-run require-glide
 
 define require-node
 	if [[ -z "$(NODE)" ]]; then echo 'Missing "node" command.'; exit 1; fi

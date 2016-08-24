@@ -11,3 +11,5 @@ flashlight.yaml
 genconfig/genconfig
 vendor
 lantern
+lantern_darwin_amd64
+*.exe
