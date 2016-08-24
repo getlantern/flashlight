@@ -7,6 +7,10 @@ require-glide:
 	fi
 
 vendor: require-glide
+	$(GLIDE_BIN) install
+
+novendor:
+	rm -Rf vendor
 
 SHELL := /bin/bash
 
@@ -116,7 +120,7 @@ LANTERN_YAML_PATH := installer-resources/lantern.yaml
 
 BUILD_TAGS ?=
 
-.PHONY: packages clean tun2socks android-lib android-sdk android-testbed android-debug android-release android-install docker-run require-glide
+.PHONY: packages clean tun2socks android-lib android-sdk android-testbed android-debug android-release android-install docker-run require-glide novendor
 
 define require-node
 	if [[ -z "$(NODE)" ]]; then echo 'Missing "node" command.'; exit 1; fi
@@ -361,7 +365,7 @@ ifeq ($(OS),Windows_NT)
 		BUILD_RACE = '-x'
 endif
 
-lantern: $(SOURCES) vendor
+lantern: $(SOURCES) novendor
 	@echo "Building development lantern" && \
 	$(call build-tags) && \
 	CGO_ENABLED=1 go build $(BUILD_RACE) -o lantern -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main; \
