@@ -61,13 +61,3 @@ import:
 - package: golang.org/x/net
   subpackages:
   - context
-testImport:
-- package: github.com/getlantern/http-proxy-lantern
-- package: github.com/getlantern/tlsdefaults
-- package: github.com/getlantern/waitforserver
-- package: github.com/mailgun/oxy
-  subpackages:
-  - forward
-- package: github.com/stretchr/testify
-  subpackages:
-  - assert
