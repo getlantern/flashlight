@@ -1,5 +1,5 @@
-hash: eb108bc74710dbd9b959650701c612793302a77838ffff5e671ce2961eb46198
-updated: 2016-08-29T12:25:43.084869578-05:00
+hash: 936a8d06cb70a89cdad1d671461b61f6e11db87303d1e684acbb8a6ccecf6a40
+updated: 2016-08-29T12:26:55.05189497-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 15d8df1cd780ddb0bb1710b08a5546f2a8f027bf
@@ -161,6 +161,10 @@ imports:
   - open
 - name: github.com/visionmedia/go-debug
   version: ff4a55a20a86994118644bbddc6a216da193cc13
+- name: github.com/vulcand/oxy
+  version: 40720199a16cdfb3854ff58ad91d290a7dd56de0
+  subpackages:
+  - utils
 - name: golang.org/x/crypto
   version: 351dc6a5bf92a5f2ae22fadeee08eb6a45aa2d93
   subpackages:

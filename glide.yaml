@@ -64,3 +64,6 @@ import:
 - package: github.com/mailgun/oxy
   subpackages:
   - forward
+- package: github.com/vulcand/oxy
+  subpackages:
+  - utils
