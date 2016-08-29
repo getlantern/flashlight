@@ -61,3 +61,6 @@ import:
 - package: golang.org/x/net
   subpackages:
   - context
+- package: github.com/mailgun/oxy
+  subpackages:
+  - forward
