@@ -1,5 +1,5 @@
-hash: a360ccf15c42795f9fb3276b4d928e55b3ec333a76acbafdd20da2541d2b2a04
-updated: 2016-08-30T06:13:22.987364976-05:00
+hash: 8606011f234a01f50936014997be62bbf38ebb98c7b110dd634347bc4a45bfcb
+updated: 2016-08-30T06:15:28.813759656-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 15d8df1cd780ddb0bb1710b08a5546f2a8f027bf
@@ -193,6 +193,8 @@ imports:
   - flowrate
 - name: github.com/oxtoacart/bpool
   version: 4e1c5567d7c2dd59fa4c7c83d34c2f3528b025d6
+- name: github.com/rcrowley/go-metrics
+  version: bdb33529eca3e55eac7328e07c57012a797af602
 - name: github.com/skratchdot/open-golang
   version: 75fb7ed4208cf72d323d7d02fd1a5964a7a9073c
   subpackages:

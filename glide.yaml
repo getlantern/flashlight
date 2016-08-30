@@ -91,3 +91,4 @@ import:
 - package: github.com/mxk/go-flowrate
   subpackages:
   - flowrate
+- package: github.com/rcrowley/go-metrics
