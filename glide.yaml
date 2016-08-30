@@ -92,3 +92,4 @@ import:
   subpackages:
   - flowrate
 - package: github.com/rcrowley/go-metrics
+- package: github.com/xtaci/kcp-go
