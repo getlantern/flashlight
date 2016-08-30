@@ -19,7 +19,6 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/logging"
-	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/flashlight/proxiedsites"
 	"github.com/getlantern/flashlight/ui"
 )
@@ -172,16 +171,6 @@ func (app *App) beforeStart() bool {
 		return false
 	}
 	client.UIAddr = actualUIAddr
-
-	var stage bool
-	if s, ok := app.Flags["staging"].(bool); ok {
-		stage = s
-	}
-
-	go func() {
-		proAddr := app.proProxyAddr(client.UIAddr)
-		log.Fatal(pro.InitProxy(proAddr, stage))
-	}()
 
 	err = serveBandwidth(app.uiaddr())
 	if err != nil {

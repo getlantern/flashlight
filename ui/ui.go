@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/getlantern/edgedetect"
 	"github.com/getlantern/eventual"
+	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/tarfs"
 	"github.com/skratchdot/open-golang/open"
@@ -23,41 +25,110 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.ui")
 
-	l               net.Listener
-	fs              *tarfs.FileSystem
-	translations    = eventual.NewValue()
-	server          *http.Server
-	uiaddr          string
-	proxiedUIAddr   string
-	preferProxiedUI int32
+	l                  net.Listener
+	fs                 *tarfs.FileSystem
+	translations       = eventual.NewValue()
+	server             *http.Server
+	uiaddr             string
+	allowRemoteClients bool
+	proxiedUIAddr      string
+	preferProxiedUI    int32
 
 	openedExternal = false
 	externalURL    string
 	r              = http.NewServeMux()
 )
 
+func noCacheHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate") // HTTP 1.1.
+		w.Header().Set("Pragma", "no-cache")                                   // HTTP 1.0.
+		w.Header().Set("Expires", "0")                                         // Proxies.
+		h.ServeHTTP(w, r)
+	})
+}
+
+func checkOrigin(h http.Handler) http.Handler {
+	check := func(w http.ResponseWriter, r *http.Request) {
+		var clientAddr string
+
+		referer := r.Header.Get("Referer")
+		if referer != "" {
+			clientAddr = referer
+		}
+
+		origin := r.Header.Get("Origin")
+		if origin != "" {
+			clientAddr = origin
+		}
+
+		if clientAddr != "" {
+			originURL, err := url.Parse(clientAddr)
+			expectedURL, _ := url.Parse(uiaddr)
+			if err == nil {
+				if allowRemoteClients {
+					// At least check if same port.
+					_, originPort, _ := net.SplitHostPort(originURL.Host)
+					_, expectedPort, _ := net.SplitHostPort(expectedURL.Host)
+					if originPort != expectedPort {
+						log.Debugf("Expecting clients connect on port: %s, but got: %s", expectedPort, originPort)
+						return
+					}
+				} else {
+					if getPreferredUIAddr() != "http://"+originURL.Host {
+						log.Debugf("Origin was: %s, expecting: %s", originURL, expectedURL)
+						return
+					}
+				}
+			}
+		}
+
+		h.ServeHTTP(w, r)
+	}
+	return http.HandlerFunc(check)
+}
+
 // Handle is the http server handler function.
-func Handle(p string, handler http.Handler) string {
-	r.Handle(p, handler)
-	return uiaddr + p
+func Handle(handler http.Handler) string {
+	path := pacPath()
+	r.Handle(path, handler)
+	return uiaddr + path
+}
+
+// UIAddr returns the current UI address.
+func UIAddr() string {
+	return uiaddr
 }
 
 // Start starts serving the UI.
 func Start(requestedAddr string, allowRemote bool, extURL string) (string, error) {
-	unpackUI()
+	if requestedAddr == "" {
+		requestedAddr = defaultUIAddress
+	}
+
 	addr, err := net.ResolveTCPAddr("tcp4", requestedAddr)
 	if err != nil {
 		return "", fmt.Errorf("Unable to resolve UI address: %v", err)
 	}
-
-	externalURL = extURL
 	if allowRemote {
 		// If we want to allow remote connections, we have to bind all interfaces
 		addr = &net.TCPAddr{Port: addr.Port}
 	}
-	if l, err = net.ListenTCP("tcp4", addr); err != nil {
-		return "", fmt.Errorf("Unable to listen at %v: %v. Error is: %v", addr, l, err)
+
+	l, err := net.ListenTCP("tcp4", addr)
+	if err != nil {
+		return "", fmt.Errorf("Unable to listen at %v. Error is: %v", requestedAddr, err)
 	}
+
+	// Setting port (case when port was 0)
+	addr.Port = l.Addr().(*net.TCPAddr).Port
+
+	// Updating listenAddr
+	listenAddr := addr.String()
+
+	unpackUI()
+
+	externalURL = extURL
 
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
@@ -70,6 +141,8 @@ func Start(requestedAddr string, allowRemote bool, extURL string) (string, error
 		resp.WriteHeader(http.StatusOK)
 	}
 
+	allowRemoteClients = allowRemote
+
 	// We use the backend to detect the user's country and redirect the browser
 	// to the correct URL that will itself be proxied over Lantern.
 	feedHandler := func(resp http.ResponseWriter, req *http.Request) {
@@ -79,9 +152,14 @@ func Start(requestedAddr string, allowRemote bool, extURL string) (string, error
 		http.Redirect(resp, req, url, http.StatusFound)
 	}
 
-	r.Handle("/startup", util.NoCacheHandler(http.HandlerFunc(handler)))
-	r.Handle("/feed", util.NoCacheHandler(http.HandlerFunc(feedHandler)))
-	r.Handle("/", util.NoCacheHandler(http.FileServer(fs)))
+	applyMiddleware := func(h http.Handler) http.Handler {
+		return checkOrigin(util.NoCacheHandler(h))
+	}
+
+	r.Handle("/pro/", applyMiddleware(pro.APIHandler()))
+	r.Handle("/startup", applyMiddleware(http.HandlerFunc(handler)))
+	r.Handle("/feed", applyMiddleware(http.HandlerFunc(feedHandler)))
+	r.Handle("/", applyMiddleware(http.FileServer(fs)))
 
 	server = &http.Server{
 		Handler:  r,
@@ -93,7 +171,6 @@ func Start(requestedAddr string, allowRemote bool, extURL string) (string, error
 			log.Errorf("Error serving: %v", err)
 		}
 	}()
-	listenAddr := l.Addr().String()
 	uiaddr = fmt.Sprintf("http://%v", listenAddr)
 
 	// Note - we display the UI using the LanternSpecialDomain. This is necessary
@@ -105,8 +182,11 @@ func Start(requestedAddr string, allowRemote bool, extURL string) (string, error
 	// detects this and reroutes the traffic to the local UI server. The proxy is
 	// allowed to connect to loopback because it doesn't have the same restriction
 	// as Microsoft Edge.
-	proxiedUIAddr = fmt.Sprintf("http://%v", client.LanternSpecialDomain)
-	log.Debugf("UI available at %v", uiaddr)
+	proxiedAddr := proxyDomain()
+	proxiedUIAddr = fmt.Sprintf("http://%v", proxiedAddr)
+	client.SetProxyUIAddr(proxiedAddr, listenAddr)
+
+	log.Debugf("UI available at %v and %v", uiaddr, proxiedUIAddr)
 
 	return listenAddr, nil
 }
