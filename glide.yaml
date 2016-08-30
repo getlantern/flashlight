@@ -79,3 +79,6 @@ import:
 - package: github.com/getlantern/measured
 - package: github.com/getlantern/tlsdefaults
 - package: github.com/getlantern/waitforserver
+- package: github.com/stretchr/testify
+  subpackages:
+  - assert
