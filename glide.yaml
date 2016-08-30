@@ -82,3 +82,7 @@ import:
 - package: github.com/stretchr/testify
   subpackages:
   - assert
+- package: github.com/getlantern/grtrack
+- package: github.com/golang/groupcache
+  subpackages:
+  - lru

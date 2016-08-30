@@ -1,5 +1,5 @@
-hash: 8fa151dd52e958be68fee4aeb57e56811bdecba16e963da5f2c05848b194c534
-updated: 2016-08-30T05:45:12.581608524-05:00
+hash: 1fb41e07cee0c56be0178f2509155360ae207588d7d05e62c21f9104c0f86ff7
+updated: 2016-08-30T06:01:53.748320326-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 15d8df1cd780ddb0bb1710b08a5546f2a8f027bf
@@ -90,6 +90,8 @@ imports:
   version: e69a4a00c012e476efd814128cdcd4e04e641dc7
 - name: github.com/getlantern/gowin
   version: 88fa116ddffcff84b63f35044e2a49f6bdde71b9
+- name: github.com/getlantern/grtrack
+  version: cbf67d3fa0fd7789243f89a5bc12e666fc8a7698
 - name: github.com/getlantern/hex
   version: 083fba3033ad473db3dd31c9bb368473d37581a7
 - name: github.com/getlantern/hidden
@@ -105,7 +107,7 @@ imports:
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
 - name: github.com/getlantern/keyman
-  version: 068a9b24f9af425a6f662a8fe5dcc032e4001897
+  version: 27a13a8da00afce6b6b7e4b4b486a440b4629718
   subpackages:
   - certimporter
 - name: github.com/getlantern/launcher
@@ -165,6 +167,10 @@ imports:
   version: 511f017cd91361be75ad73fee96e466a5d790312
 - name: github.com/getlantern/yaml
   version: 97d86b60f57eeca9d70c02763ed2565bafc17585
+- name: github.com/golang/groupcache
+  version: a6b377e3400b08991b80d6805d627f347f983866
+  subpackages:
+  - lru
 - name: github.com/gorilla/websocket
   version: a69d25be2fe2923a97c2af6849b2f52426f68fc0
 - name: github.com/kardianos/osext
