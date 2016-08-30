@@ -1,5 +1,5 @@
-hash: 7e9e26002555dbc234407a9e9fa40df11a2e8875691cebbd40df45dedb09544e
-updated: 2016-08-30T06:42:01.365193138-05:00
+hash: 28bb73a478e85388d7a49a26a5f7905feb666e84a1bce12ba13507e1978ef18c
+updated: 2016-08-30T06:52:17.374900815-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 15d8df1cd780ddb0bb1710b08a5546f2a8f027bf
@@ -234,4 +234,6 @@ imports:
   subpackages:
   - windows/registry
   - windows
+- name: gopkg.in/redis.v3
+  version: b5e368500d0a508ef8f16e9c2d4025a8a46bcc29
 devImports: []
