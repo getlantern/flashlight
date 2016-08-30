@@ -1,5 +1,5 @@
-hash: 209d6636f816e610dc9e635b604d8a018fd026cc659f8e359ca3489ff9265c41
-updated: 2016-08-30T06:08:44.581879303-05:00
+hash: b157716035649500e7173263fa3a5112e5d9c8d31784ef713b61e551fcc70397
+updated: 2016-08-30T06:11:29.673884789-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 15d8df1cd780ddb0bb1710b08a5546f2a8f027bf
@@ -175,6 +175,8 @@ imports:
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/websocket
   version: a69d25be2fe2923a97c2af6849b2f52426f68fc0
+- name: github.com/hashicorp/golang-lru
+  version: 0a025b7e63adc15a622f29b0b2c4c3848243bbf6
 - name: github.com/kardianos/osext
   version: c2c54e542fb797ad986b31721e1baedf214ca413
 - name: github.com/kr/binarydist

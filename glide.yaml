@@ -87,3 +87,4 @@ import:
   subpackages:
   - lru
 - package: github.com/gorilla/context
+- package: github.com/hashicorp/golang-lru
