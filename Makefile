@@ -1,8 +1,7 @@
 GLIDE_BIN    ?= $(shell which glide)
-BUILD_DIR    ?= bin
 
 SHELL := /bin/bash
-LANTERN_SOURCES := $(shell find $(GOPATH)/src/github.com/getlantern/flashlight -name '*[^_test].go')
+SOURCES := $(shell find . -name '*[^_test].go')
 
 BUILD_RACE := '-race'
 
@@ -33,14 +32,13 @@ endef
 
 .PHONY: require-glide vendor novendor
 
-lantern: $(LANTERN_SOURCES)
+lantern: $(SOURCES)
 	@$(call build-tags) && \
 	CGO_ENABLED=1 go build $(BUILD_RACE) -o lantern -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
 
 # vendor installs vendored dependencies using Glide
 vendor: require-glide
-	@cd $(GOPATH)/src/github.com/getlantern/flashlight && \
-	$(GLIDE_BIN) install
+	@$(GLIDE_BIN) install
 
 require-glide:
 	@if [ "$(GLIDE_BIN)" = "" ]; then \
@@ -50,7 +48,7 @@ require-glide:
 # novendor removes the vendor folder to allow building with whatever is on your
 # GOPATH
 novendor:
-	@rm -Rf $(GOPATH)/src/github.com/getlantern/flashlight/vendor
+	@rm -Rf vendor
 
 clean:
-	rm $(GOPATH)/src/github.com/getlantern/flashlight/lantern
+	rm lantern
