@@ -1,5 +1,5 @@
-hash: 1fb41e07cee0c56be0178f2509155360ae207588d7d05e62c21f9104c0f86ff7
-updated: 2016-08-30T06:01:53.748320326-05:00
+hash: 209d6636f816e610dc9e635b604d8a018fd026cc659f8e359ca3489ff9265c41
+updated: 2016-08-30T06:08:44.581879303-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 15d8df1cd780ddb0bb1710b08a5546f2a8f027bf
@@ -107,7 +107,7 @@ imports:
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
 - name: github.com/getlantern/keyman
-  version: 27a13a8da00afce6b6b7e4b4b486a440b4629718
+  version: 068a9b24f9af425a6f662a8fe5dcc032e4001897
   subpackages:
   - certimporter
 - name: github.com/getlantern/launcher
@@ -171,6 +171,8 @@ imports:
   version: a6b377e3400b08991b80d6805d627f347f983866
   subpackages:
   - lru
+- name: github.com/gorilla/context
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/websocket
   version: a69d25be2fe2923a97c2af6849b2f52426f68fc0
 - name: github.com/kardianos/osext
