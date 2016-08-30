@@ -1,98 +1,101 @@
 package client
 
 import (
-	"crypto/tls"
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/getlantern/balancer"
 	"github.com/getlantern/chained"
+	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
-	"github.com/getlantern/keyman"
-	"github.com/getlantern/tlsdialer"
+	"github.com/getlantern/netx"
+	"github.com/getlantern/withtimeout"
 )
 
-// Close connections idle for a period to avoid dangling connections.
-// 1 hour is long enough to avoid interrupt normal connections but short enough
-// to eliminate "too many open files" error.
-var idleTimeout = 1 * time.Hour
+// Close connections idle for a period to avoid dangling connections. 45 seconds
+// is long enough to avoid interrupt normal connections but shorter than the
+// idle timeout on the server to avoid running into closed connection problems.
+// 45 seconds is also longer than the MaxIdleTime on our http.Transport, so it
+// doesn't interfere with that.
+var idleTimeout = 45 * time.Second
 
-// If specified, all proxying will go through this address
+// Lantern internal sites won't be used as check target.
+var internalSiteSuffixes = []string{"getlantern.org", "getiantem.org", "lantern.io"}
+
+// ForceChainedProxyAddr - If specified, all proxying will go through this address
 var ForceChainedProxyAddr string
 
-// If specified, auth token will be forced to this
+// ForceAuthToken - If specified, auth token will be forced to this
 var ForceAuthToken string
 
-// ChainedServerInfo provides identity information for a chained server.
+// ChainedServerInfo contains all the data for connecting to a given chained
+// server.
 type ChainedServerInfo struct {
 	// Addr: the host:port of the upstream proxy server
 	Addr string
 
-	// Pipelined: If true, requests to the chained server will be pipelined
-	Pipelined bool
-
 	// Cert: optional PEM encoded certificate for the server. If specified,
 	// server will be dialed using TLS over tcp. Otherwise, server will be
-	// dialed using plain tcp.
+	// dialed using plain tcp. For OBFS4 proxies, this is the Base64-encoded obfs4
+	// certificate.
 	Cert string
 
 	// AuthToken: the authtoken to present to the upstream server.
 	AuthToken string
 
-	// Weight: relative weight versus other servers (for round-robin)
-	Weight int
-
-	// QOS: relative quality of service offered. Should be >= 0, with higher
-	// values indicating higher QOS.
-	QOS int
-
 	// Trusted: Determines if a host can be trusted with plain HTTP traffic.
 	Trusted bool
+
+	// PluggableTransport: If specified, a pluggable transport will be used
+	PluggableTransport string
+
+	// PluggableTransportSettings: Settings for pluggable transport
+	PluggableTransportSettings map[string]string
 }
 
-// Dialer creates a *balancer.Dialer backed by a chained server.
-func (s *ChainedServerInfo) Dialer(deviceID string) (*balancer.Dialer, error) {
-	netd := &net.Dialer{Timeout: chainedDialTimeout}
+// ChainedDialer creates a *balancer.Dialer backed by a chained server.
+func ChainedDialer(si *ChainedServerInfo, deviceID string, proTokenGetter func() string) (*balancer.Dialer, error) {
+	s, err := newServer(si)
+	if err != nil {
+		return nil, err
+	}
+	return s.dialer(deviceID, proTokenGetter)
+}
 
-	forceProxy := ForceChainedProxyAddr != ""
-	addr := s.Addr
-	if forceProxy {
-		log.Errorf("Forcing proxying to server at %v instead of configured server at %v", ForceChainedProxyAddr, s.Addr)
-		addr = ForceChainedProxyAddr
+type chainedServer struct {
+	*ChainedServerInfo
+	df dialFactory
+	//  A fixed length list of host:port used to check this server. Recently
+	//  dialed plain HTTP sites (port == 80) will be added until the list is
+	//  full, except those has internalSiteSuffixes.
+	checkTargets siteList
+}
+
+func newServer(si *ChainedServerInfo) (*chainedServer, error) {
+	if si.PluggableTransport != "" {
+		log.Debugf("Using pluggable transport %v for server at %v", si.PluggableTransport, si.Addr)
 	}
 
-	var dial func() (net.Conn, error)
-	if s.Cert == "" && !forceProxy {
-		log.Error("No Cert configured for chained server, will dial with plain tcp")
-		dial = func() (net.Conn, error) {
-			return netd.Dial("tcp", addr)
-		}
-	} else {
-		log.Trace("Cert configured for chained server, will dial with tls over tcp")
-		cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
-		if err != nil {
-			return nil, fmt.Errorf("Unable to parse certificate: %s", err)
-		}
-		x509cert := cert.X509()
-		sessionCache := tls.NewLRUClientSessionCache(1000)
-		dial = func() (net.Conn, error) {
-			conn, err := tlsdialer.DialWithDialer(netd, "tcp", addr, false, &tls.Config{
-				ClientSessionCache: sessionCache,
-				InsecureSkipVerify: true,
-			})
-			if err != nil {
-				return nil, err
-			}
-			if !forceProxy && !conn.ConnectionState().PeerCertificates[0].Equal(x509cert) {
-				if err := conn.Close(); err != nil {
-					log.Debugf("Error closing chained server connection: %s", err)
-				}
-				return nil, fmt.Errorf("Server's certificate didn't match expected!")
-			}
-			return conn, err
-		}
+	dialFactory := pluggableTransports[si.PluggableTransport]
+	if dialFactory == nil {
+		return nil, fmt.Errorf("No dial factory defined for transport: %v", si.PluggableTransport)
+	}
+
+	s := &chainedServer{ChainedServerInfo: si,
+		df:           dialFactory,
+		checkTargets: newSiteList(10), // keep at most 10 sites to check, ignore others.
+	}
+
+	return s, nil
+}
+
+func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*balancer.Dialer, error) {
+	dial, err := s.df(s.ChainedServerInfo, deviceID)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to construct dialFN: %v", err)
 	}
 
 	// Is this a trusted proxy that we could use for HTTP traffic?
@@ -100,42 +103,163 @@ func (s *ChainedServerInfo) Dialer(deviceID string) (*balancer.Dialer, error) {
 	if s.Trusted {
 		trusted = "(trusted) "
 	}
-	label := fmt.Sprintf("%schained proxy at %s", trusted, addr)
+	label := fmt.Sprintf("%schained proxy at %s [%v]", trusted, s.Addr, s.PluggableTransport)
 
 	ccfg := chained.Config{
 		DialServer: dial,
 		Label:      label,
-	}
-
-	authToken := s.AuthToken
-	if ForceAuthToken != "" {
-		authToken = ForceAuthToken
-	}
-
-	ccfg.OnRequest = func(req *http.Request) {
-		if authToken != "" {
-			req.Header.Set("X-LANTERN-AUTH-TOKEN", authToken)
-		}
-		req.Header.Set("X-LANTERN-DEVICE-ID", deviceID)
+		OnRequest: func(req *http.Request) {
+			s.attachHeaders(req, deviceID, proTokenGetter)
+		},
 	}
 	d := chained.NewDialer(ccfg)
-
 	return &balancer.Dialer{
 		Label:   label,
 		Trusted: s.Trusted,
 		DialFN: func(network, addr string) (net.Conn, error) {
-			conn, err := d.Dial(network, addr)
+			var conn net.Conn
+			var err error
+
+			op := ops.Begin("dial_for_balancer").ProxyType(ops.ProxyChained).ProxyAddr(s.Addr)
+			defer op.End()
+
+			if addr == s.Addr {
+				// Check if we are trying to connect to our own server and bypass proxying if so
+				// This accounts for the case w/ multiple instances of Lantern running on mobile
+				// Whenever full-device VPN mode is enabled, we need to make sure we ignore proxy
+				// requests from the first instance.
+				log.Debugf("Attempted to dial ourselves. Dialing directly to %s instead", addr)
+				conn, err = netx.DialTimeout(network, addr, 1*time.Minute)
+			} else {
+				// Yeah any site visited through Lantern can be a check target
+				s.addCheckTarget(addr)
+				conn, err = d(network, addr)
+			}
+
 			if err != nil {
-				return conn, err
+				return nil, op.FailIf(err)
 			}
 			conn = idletiming.Conn(conn, idleTimeout, func() {
-				log.Debugf("Proxy connection to %s via %s idle for %v, closing", addr, conn.RemoteAddr(), idleTimeout)
-				if err := conn.Close(); err != nil {
-					log.Debugf("Unable to close connection: %v", err)
-				}
+				log.Debugf("Proxy connection to %s via %s idle for %v, closed", addr, conn.RemoteAddr(), idleTimeout)
 			})
 			return conn, nil
 		},
-		AuthToken: authToken,
+		Check: func() bool {
+			return s.check(d, deviceID, proTokenGetter)
+		},
+		OnRequest: ccfg.OnRequest,
 	}, nil
+}
+
+func (s *chainedServer) attachHeaders(req *http.Request, deviceID string, proTokenGetter func() string) {
+	authToken := s.AuthToken
+	if ForceAuthToken != "" {
+		authToken = ForceAuthToken
+	}
+	if authToken != "" {
+		req.Header.Add("X-Lantern-Auth-Token", authToken)
+	} else {
+		log.Errorf("No auth token for request to %v", req.URL)
+	}
+	req.Header.Set("X-Lantern-Device-Id", deviceID)
+	if token := proTokenGetter(); token != "" {
+		req.Header.Set("X-Lantern-Pro-Token", token)
+	}
+}
+
+func (s *chainedServer) check(dial func(string, string) (net.Conn, error), deviceID string, proTokenGetter func() string) bool {
+	rt := &http.Transport{
+		DisableKeepAlives: true,
+		Dial:              dial,
+	}
+	var url string
+	checkTarget := s.checkTargets.get()
+	if checkTarget == "" {
+		url = "http://ping-chained-server"
+	} else {
+		url = fmt.Sprintf("http://%s/index.html", checkTarget)
+	}
+	req, err := http.NewRequest("HEAD", url, nil)
+	if err != nil {
+		log.Errorf("Could not create HTTP request: %v", err)
+		return false
+	}
+	if checkTarget == "" {
+		req.Header.Set("X-Lantern-Ping", "small")
+	}
+
+	s.attachHeaders(req, deviceID, proTokenGetter)
+	ok, timedOut, _ := withtimeout.Do(60*time.Second, func() (interface{}, error) {
+		resp, err := rt.RoundTrip(req)
+		if err != nil {
+			log.Debugf("Error testing dialer %s to %s: %s", s.Addr, url, err)
+			return false, nil
+		}
+		if err := resp.Body.Close(); err != nil {
+			log.Debugf("Unable to close response body: %v", err)
+		}
+		msg := fmt.Sprintf("HEAD %s through chained server at %s, status code %d", url, s.Addr, resp.StatusCode)
+		// < 500 means the check target is at least reachable through this
+		// chained server, no matter what the HTTP status code is.
+		//
+		// The only exception is that if chained server rejects current client
+		// because of invalid token, etc., we can't differentiate it from an
+		// status code from target site.
+		if reachable := resp.StatusCode < 500; !reachable {
+			log.Debug(msg)
+			return false, nil
+		}
+		log.Trace(msg)
+		if checkTarget != "" {
+			// can be used as check target again if no new sites is added
+			s.checkTargets.add(checkTarget)
+		}
+		return true, nil
+	})
+	if timedOut {
+		log.Errorf("Timed out checking dialer at: %v", s.Addr)
+	}
+	return !timedOut && ok.(bool)
+}
+
+func (s *chainedServer) addCheckTarget(addr string) {
+	host, port, e := net.SplitHostPort(addr)
+	if e != nil {
+		log.Errorf("failed to split port from %s", addr)
+		return
+	}
+	if port != "80" {
+		log.Tracef("Skip setting non-HTTP site %s as check target", addr)
+		return
+	}
+	for _, s := range internalSiteSuffixes {
+		if strings.HasSuffix(host, s) {
+			log.Tracef("Skip setting internal site %s as check target", addr)
+			return
+		}
+	}
+	s.checkTargets.add(addr)
+}
+
+type siteList struct {
+	ch chan string
+}
+
+func newSiteList(size int) siteList {
+	return siteList{make(chan string, size)}
+}
+
+func (q siteList) add(addr string) {
+	select {
+	case q.ch <- addr:
+	default:
+	}
+}
+
+func (q siteList) get() (addr string) {
+	select {
+	case addr = <-q.ch:
+	default:
+	}
+	return
 }

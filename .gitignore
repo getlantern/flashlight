@@ -9,3 +9,7 @@ autoupdate-prod.go
 certs/errors.txt
 flashlight.yaml
 genconfig/genconfig
+vendor
+lantern
+lantern_darwin_amd64
+*.exe

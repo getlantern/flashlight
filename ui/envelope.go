@@ -1,11 +1,12 @@
 package ui
 
+// EnvelopeType is the type of the message envelope.
 type EnvelopeType struct {
-	Type string
+	Type string `json:"type,inline"`
 }
 
 // Envelope is a struct that wraps messages and associates them with a type.
 type Envelope struct {
 	EnvelopeType
-	Message interface{}
+	Message interface{} `json:"message"`
 }

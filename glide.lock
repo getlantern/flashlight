@@ -1,0 +1,185 @@
+hash: 936a8d06cb70a89cdad1d671461b61f6e11db87303d1e684acbb8a6ccecf6a40
+updated: 2016-08-29T12:26:55.05189497-05:00
+imports:
+- name: git.torproject.org/pluggable-transports/goptlib.git
+  version: 15d8df1cd780ddb0bb1710b08a5546f2a8f027bf
+- name: git.torproject.org/pluggable-transports/obfs4.git
+  version: 62057625eaba2a555967b9615039d43dda071360
+  subpackages:
+  - transports/obfs4
+  - common/csrand
+  - common/drbg
+  - common/ntor
+  - common/probdist
+  - common/replayfilter
+  - transports/base
+  - transports/obfs4/framing
+- name: github.com/agl/ed25519
+  version: 278e1ec8e8a6e017cd07577924d6766039146ced
+  subpackages:
+  - extra25519
+  - edwards25519
+- name: github.com/armon/go-socks5
+  version: b34cad17d2fdbb038116de97a36d76995393b87a
+- name: github.com/blang/semver
+  version: 60ec3488bfea7cca02b021d106d9911120d25fe9
+- name: github.com/davecgh/go-spew
+  version: 6cf5744a041a0022271cefed95ba843f6d87fd51
+  subpackages:
+  - spew
+- name: github.com/dchest/siphash
+  version: 6d8617816bb5d8268011ffbfb8720f17ce9af63c
+- name: github.com/fatih/set
+  version: 27c40922c40b43fe04554d8223a402af3ea333f3
+- name: github.com/getlantern/appdir
+  version: 1592e4bff1cc767eaa8999484f0dce85ec364553
+- name: github.com/getlantern/autoupdate
+  version: 922d89a582aa49b39c596a709f7495fccd09631b
+- name: github.com/getlantern/balancer
+  version: 70e3aff550185f805d2f40933c2bc8c29aefa28d
+- name: github.com/getlantern/bandwidth
+  version: 96de96fff16cf1aa844edc1b4a72c906add83180
+- name: github.com/getlantern/borda
+  version: 6af58869de1e413c24bda8582a25335e389c19e4
+  subpackages:
+  - client
+- name: github.com/getlantern/byteexec
+  version: 61c05c54847bc0130938da161dc45178a4acfea4
+- name: github.com/getlantern/chained
+  version: 333b0f12504a0ddb5f2680117c190843d931bec4
+- name: github.com/getlantern/context
+  version: 624d99b1798d7c5375ea1d3ca4c5b04d58f7c775
+- name: github.com/getlantern/detour
+  version: 62ef5bcad02d11b5879dc1b9ccb7f43934fc307a
+- name: github.com/getlantern/edgedetect
+  version: 5ad57dc79c5da6824e563abf07fe20f6408aa35d
+- name: github.com/getlantern/elevate
+  version: a1e4813b4e263a37d95b569a21cf5a2943acfd26
+  subpackages:
+  - bin
+- name: github.com/getlantern/errors
+  version: 99fa440517e8f3d1e4cd8d6dbed6b41f4c1ed3d6
+- name: github.com/getlantern/eventual
+  version: 8a3a062ff1605f65e4d710e016c39bb69e91b6f8
+- name: github.com/getlantern/filepersist
+  version: c5f0cd24e7991579ba6f5f1bd20a1ad2c9f06cd4
+- name: github.com/getlantern/fronted
+  version: 0fa5677c45d4bac8311197a2962e630eda1304a8
+- name: github.com/getlantern/geolookup
+  version: 823d7ff3e6eb74dd6aae38a4b52207b19abfbf66
+- name: github.com/getlantern/go-loggly
+  version: d15e28ab7389ed5d644ccb891d9d54154e43cd27
+- name: github.com/getlantern/go-update
+  version: e90f56159fa71d592191425cbcb327533cd13d43
+  subpackages:
+  - check
+  - download
+- name: github.com/getlantern/golog
+  version: e69a4a00c012e476efd814128cdcd4e04e641dc7
+- name: github.com/getlantern/gowin
+  version: 88fa116ddffcff84b63f35044e2a49f6bdde71b9
+- name: github.com/getlantern/hex
+  version: 083fba3033ad473db3dd31c9bb368473d37581a7
+- name: github.com/getlantern/hidden
+  version: d52a649ab33af200943bb599898dbdcfdbc94cb7
+- name: github.com/getlantern/i18n
+  version: 931e337788965f3dfafa20fa793242c2cacd5b09
+- name: github.com/getlantern/idletiming
+  version: 7e0189052a9c7fec39114edd1b6e5f1093394415
+- name: github.com/getlantern/jibber_jabber
+  version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
+- name: github.com/getlantern/keyman
+  version: 068a9b24f9af425a6f662a8fe5dcc032e4001897
+  subpackages:
+  - certimporter
+- name: github.com/getlantern/launcher
+  version: bc9fc3b11894e839c3fcb049f12e8974d7e48497
+- name: github.com/getlantern/netx
+  version: dd9af75d5bfdc86fa35f3aeadb42945db1c1e56a
+- name: github.com/getlantern/notifier
+  version: 5acd0ccf0e6c29710d332a42f580e92c3b04ae7b
+  subpackages:
+  - osx
+  - win
+- name: github.com/getlantern/ops
+  version: b70875f5d689a9438bca72aefd7142a2af889b18
+- name: github.com/getlantern/osversion
+  version: be69dba4f81c192909a03c49fa4e4ecf51c5ee76
+- name: github.com/getlantern/pac
+  version: 7b589f85d4d59088e97a9a93f5f7a6062a2348f6
+- name: github.com/getlantern/pro-server-client
+  version: eff4f02ea8508a64a8b3e045b390ef6de7517665
+  subpackages:
+  - go-client
+- name: github.com/getlantern/profiling
+  version: 2a15afbadcff99bac017e17af273b31d4510ddb8
+- name: github.com/getlantern/proxiedsites
+  version: 996122c1374578a85a536445d7d7ae88d3ee5a35
+- name: github.com/getlantern/proxybench
+  version: 79964216eee9a91ae6d162b1bc832308289c794a
+- name: github.com/getlantern/rot13
+  version: 33f93fc1fe85c042c0667a1814e6379bd5e7eb40
+- name: github.com/getlantern/rotator
+  version: 013d4f8e36a2f6369b2435d89866056b5b74c69e
+- name: github.com/getlantern/stack
+  version: 02f928aad224fbccd50d66edd776fc9d1e9f2f2b
+- name: github.com/getlantern/systray
+  version: 71538570be8aeed38327ddb5fbd7acc688750ad7
+- name: github.com/getlantern/tarfs
+  version: d77b63c04dbe74646c5f8f46c5c1e5523ef22415
+- name: github.com/getlantern/tlsdialer
+  version: b257e0a5981a7770c8286c8e2472f1c614371928
+- name: github.com/getlantern/uuid
+  version: 1318e7614b82cd38041b0b0bd3692d71f3901fb8
+- name: github.com/getlantern/wfilter
+  version: 69cc8585ee9c5b4e0b55110ea2c219921f954ba3
+- name: github.com/getlantern/winsvc
+  version: 8bb3a5dbcc1dd85fbb701d3dc316bf5cc3d02689
+  subpackages:
+  - winapi
+- name: github.com/getlantern/withtimeout
+  version: 511f017cd91361be75ad73fee96e466a5d790312
+- name: github.com/getlantern/yaml
+  version: 97d86b60f57eeca9d70c02763ed2565bafc17585
+- name: github.com/gorilla/websocket
+  version: a69d25be2fe2923a97c2af6849b2f52426f68fc0
+- name: github.com/kardianos/osext
+  version: c2c54e542fb797ad986b31721e1baedf214ca413
+- name: github.com/kr/binarydist
+  version: 3035450ff8b987ec4373f65c40767f096b35f2d2
+- name: github.com/mailgun/oxy
+  version: 40720199a16cdfb3854ff58ad91d290a7dd56de0
+  subpackages:
+  - forward
+- name: github.com/mitchellh/panicwrap
+  version: a1e50bc201f387747a45ffff020f1af2d8759e88
+- name: github.com/oxtoacart/bpool
+  version: 4e1c5567d7c2dd59fa4c7c83d34c2f3528b025d6
+- name: github.com/skratchdot/open-golang
+  version: 75fb7ed4208cf72d323d7d02fd1a5964a7a9073c
+  subpackages:
+  - open
+- name: github.com/visionmedia/go-debug
+  version: ff4a55a20a86994118644bbddc6a216da193cc13
+- name: github.com/vulcand/oxy
+  version: 40720199a16cdfb3854ff58ad91d290a7dd56de0
+  subpackages:
+  - utils
+- name: golang.org/x/crypto
+  version: 351dc6a5bf92a5f2ae22fadeee08eb6a45aa2d93
+  subpackages:
+  - curve25519
+  - hkdf
+  - nacl/secretbox
+  - poly1305
+  - salsa20/salsa
+- name: golang.org/x/net
+  version: 6250b412798208e6c90b03b7c4f226de5aa299e2
+  subpackages:
+  - context
+- name: golang.org/x/sys
+  version: a646d33e2ee3172a661fc09bca23bb4889a41bc8
+  subpackages:
+  - windows/registry
+  - windows
+devImports: []

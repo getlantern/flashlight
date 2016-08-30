@@ -1,0 +1,7 @@
+autoLaunch: true
+autoReport: true
+language: en
+proxyAll: false
+systemProxy: true
+userID: 1
+userToken: ""
