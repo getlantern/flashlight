@@ -107,7 +107,7 @@ imports:
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
 - name: github.com/getlantern/keyman
-  version: 068a9b24f9af425a6f662a8fe5dcc032e4001897
+  version: 27a13a8da00afce6b6b7e4b4b486a440b4629718
   subpackages:
   - certimporter
 - name: github.com/getlantern/launcher
