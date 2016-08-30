@@ -1,5 +1,5 @@
-hash: 936a8d06cb70a89cdad1d671461b61f6e11db87303d1e684acbb8a6ccecf6a40
-updated: 2016-08-29T12:26:55.05189497-05:00
+hash: 020f096c3194cc772a8bda065ca582c611509a0104749bcb99134027c3dd657b
+updated: 2016-08-29T20:33:05.629678202-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 15d8df1cd780ddb0bb1710b08a5546f2a8f027bf
@@ -82,6 +82,10 @@ imports:
   version: 083fba3033ad473db3dd31c9bb368473d37581a7
 - name: github.com/getlantern/hidden
   version: d52a649ab33af200943bb599898dbdcfdbc94cb7
+- name: github.com/getlantern/http-proxy
+  version: 3ced6a60f6ca50302288b0814141f26544fa5d15
+- name: github.com/getlantern/http-proxy-lantern
+  version: b308b4981648b84e7c78e98658a7faea4b0aff98
 - name: github.com/getlantern/i18n
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
@@ -108,7 +112,7 @@ imports:
 - name: github.com/getlantern/pac
   version: 7b589f85d4d59088e97a9a93f5f7a6062a2348f6
 - name: github.com/getlantern/pro-server-client
-  version: eff4f02ea8508a64a8b3e045b390ef6de7517665
+  version: ec2c8513f449f233368938c96f31014b54856b83
   subpackages:
   - go-client
 - name: github.com/getlantern/profiling
@@ -124,7 +128,7 @@ imports:
 - name: github.com/getlantern/stack
   version: 02f928aad224fbccd50d66edd776fc9d1e9f2f2b
 - name: github.com/getlantern/systray
-  version: 71538570be8aeed38327ddb5fbd7acc688750ad7
+  version: cdae0bdf2aeae3ffb5ffe0cd2e2f83443ca9d104
 - name: github.com/getlantern/tarfs
   version: d77b63c04dbe74646c5f8f46c5c1e5523ef22415
 - name: github.com/getlantern/tlsdialer

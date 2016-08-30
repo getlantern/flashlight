@@ -67,3 +67,5 @@ import:
 - package: github.com/vulcand/oxy
   subpackages:
   - utils
+- package: github.com/getlantern/http-proxy-lantern
+- package: github.com/getlantern/http-proxy
