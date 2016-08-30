@@ -98,3 +98,4 @@ import:
 - package: github.com/pkg/errors
 - package: gopkg.in/redis.v3
 - package: gopkg.in/bsm/ratelimit.v1
+- package: github.com/klauspost/cpuid
