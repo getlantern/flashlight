@@ -1,5 +1,5 @@
-hash: 020f096c3194cc772a8bda065ca582c611509a0104749bcb99134027c3dd657b
-updated: 2016-08-29T20:33:05.629678202-05:00
+hash: 90e7c9987e2b13036be7d8b7bb8be2c509eb5cc0b4c6e759bc0f40666c28cd03
+updated: 2016-08-29T22:40:38.823016366-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 15d8df1cd780ddb0bb1710b08a5546f2a8f027bf
@@ -43,12 +43,22 @@ imports:
   version: 6af58869de1e413c24bda8582a25335e389c19e4
   subpackages:
   - client
+- name: github.com/getlantern/buuid
+  version: 8f1445676cf4bd5e47dd8202e8afc85f3f80b8b3
+- name: github.com/getlantern/bytecounting
+  version: 4a7f76bdd5e28d1d72a8a8287927daeaa3316820
 - name: github.com/getlantern/byteexec
   version: 61c05c54847bc0130938da161dc45178a4acfea4
 - name: github.com/getlantern/chained
   version: 333b0f12504a0ddb5f2680117c190843d931bec4
+- name: github.com/getlantern/checkfallbacks
+  version: bee841637e5faa029ff7d8d8c4a0c6055e72aa67
+- name: github.com/getlantern/connpool
+  version: d04ff90bba7bdee0d9627a687b79fb0cb407d001
 - name: github.com/getlantern/context
   version: 624d99b1798d7c5375ea1d3ca4c5b04d58f7c775
+- name: github.com/getlantern/deepcopy
+  version: 7f45deb8130a0acc553242eb0e009e3f6f3d9ce3
 - name: github.com/getlantern/detour
   version: 62ef5bcad02d11b5879dc1b9ccb7f43934fc307a
 - name: github.com/getlantern/edgedetect
@@ -61,6 +71,8 @@ imports:
   version: 99fa440517e8f3d1e4cd8d6dbed6b41f4c1ed3d6
 - name: github.com/getlantern/eventual
   version: 8a3a062ff1605f65e4d710e016c39bb69e91b6f8
+- name: github.com/getlantern/fdcount
+  version: d6d72794ae1dc13beaa2f0d4b690f1ea20be4600
 - name: github.com/getlantern/filepersist
   version: c5f0cd24e7991579ba6f5f1bd20a1ad2c9f06cd4
 - name: github.com/getlantern/fronted
@@ -98,6 +110,8 @@ imports:
   - certimporter
 - name: github.com/getlantern/launcher
   version: bc9fc3b11894e839c3fcb049f12e8974d7e48497
+- name: github.com/getlantern/measured
+  version: 9abc2622c88edcbe1436a80e69f912b3ccfc73bf
 - name: github.com/getlantern/netx
   version: dd9af75d5bfdc86fa35f3aeadb42945db1c1e56a
 - name: github.com/getlantern/notifier
@@ -111,6 +125,8 @@ imports:
   version: be69dba4f81c192909a03c49fa4e4ecf51c5ee76
 - name: github.com/getlantern/pac
   version: 7b589f85d4d59088e97a9a93f5f7a6062a2348f6
+- name: github.com/getlantern/pathreflect
+  version: b02f4864048a236150ca17c2c526158f2b3133c4
 - name: github.com/getlantern/pro-server-client
   version: ec2c8513f449f233368938c96f31014b54856b83
   subpackages:
@@ -131,10 +147,14 @@ imports:
   version: cdae0bdf2aeae3ffb5ffe0cd2e2f83443ca9d104
 - name: github.com/getlantern/tarfs
   version: d77b63c04dbe74646c5f8f46c5c1e5523ef22415
+- name: github.com/getlantern/tlsdefaults
+  version: e9da92daa10f62c8a1aa59188e64317cb3beebb0
 - name: github.com/getlantern/tlsdialer
   version: b257e0a5981a7770c8286c8e2472f1c614371928
 - name: github.com/getlantern/uuid
   version: 1318e7614b82cd38041b0b0bd3692d71f3901fb8
+- name: github.com/getlantern/waitforserver
+  version: 381a5878bd8ecb7001c361f2d5dcc3358460aa3e
 - name: github.com/getlantern/wfilter
   version: 69cc8585ee9c5b4e0b55110ea2c219921f954ba3
 - name: github.com/getlantern/winsvc
