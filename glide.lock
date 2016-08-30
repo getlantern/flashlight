@@ -1,5 +1,5 @@
-hash: 166c7257825ba7705886055afb2467c5ea2d34a6f0f4b796aa056d5d800f458c
-updated: 2016-08-30T06:17:28.566945035-05:00
+hash: ce72e54b5efb6314c92e9d8149c30f4b64e2c0e84df44d19a38b9364ef2e4e10
+updated: 2016-08-30T06:19:32.083352463-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 15d8df1cd780ddb0bb1710b08a5546f2a8f027bf
@@ -179,6 +179,8 @@ imports:
   version: 0a025b7e63adc15a622f29b0b2c4c3848243bbf6
 - name: github.com/kardianos/osext
   version: c2c54e542fb797ad986b31721e1baedf214ca413
+- name: github.com/klauspost/crc32
+  version: 19b0b332c9e4516a6370a0456e6182c3b5036720
 - name: github.com/kr/binarydist
   version: 3035450ff8b987ec4373f65c40767f096b35f2d2
 - name: github.com/mailgun/oxy

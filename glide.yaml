@@ -93,3 +93,4 @@ import:
   - flowrate
 - package: github.com/rcrowley/go-metrics
 - package: github.com/xtaci/kcp-go
+- package: github.com/klauspost/crc32
