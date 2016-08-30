@@ -1,5 +1,5 @@
-hash: b157716035649500e7173263fa3a5112e5d9c8d31784ef713b61e551fcc70397
-updated: 2016-08-30T06:11:29.673884789-05:00
+hash: a360ccf15c42795f9fb3276b4d928e55b3ec333a76acbafdd20da2541d2b2a04
+updated: 2016-08-30T06:13:22.987364976-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 15d8df1cd780ddb0bb1710b08a5546f2a8f027bf
@@ -187,6 +187,10 @@ imports:
   - forward
 - name: github.com/mitchellh/panicwrap
   version: a1e50bc201f387747a45ffff020f1af2d8759e88
+- name: github.com/mxk/go-flowrate
+  version: cca7078d478f8520f85629ad7c68962d31ed7682
+  subpackages:
+  - flowrate
 - name: github.com/oxtoacart/bpool
   version: 4e1c5567d7c2dd59fa4c7c83d34c2f3528b025d6
 - name: github.com/skratchdot/open-golang

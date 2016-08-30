@@ -88,3 +88,6 @@ import:
   - lru
 - package: github.com/gorilla/context
 - package: github.com/hashicorp/golang-lru
+- package: github.com/mxk/go-flowrate
+  subpackages:
+  - flowrate
