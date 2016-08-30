@@ -91,12 +91,12 @@ func (app *App) Run() error {
 
 		listenAddr := app.Flags["addr"].(string)
 		if listenAddr == "" {
-			listenAddr = "127.0.0.1:8787"
+			listenAddr = defaultHTTPProxyAddress
 		}
 
 		err := flashlight.Run(
 			listenAddr,
-			"127.0.0.1:8788",
+			defaultSOCKSProxyAddress,
 			app.Flags["configdir"].(string),
 			app.Flags["stickyconfig"].(bool),
 			settings.GetProxyAll,
