@@ -18,6 +18,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/ua-parser/uap-go/uaparser"
+
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
@@ -41,6 +43,11 @@ var (
 	proxyAddrMutex sync.RWMutex
 	proxyAddr      = eventual.DefaultUnsetGetter()
 
+	muUserAgent sync.RWMutex
+	userAgent   string
+
+	uaParser = uaparser.NewFromSaved()
+
 	// ErrChainedProxyUnavailable indicates that we weren't able to find a chained
 	// proxy.
 	ErrChainedProxyUnavailable = "chained proxy unavailable"
@@ -54,6 +61,25 @@ var (
 
 func success(resp *http.Response) bool {
 	return resp.StatusCode > 199 && resp.StatusCode < 400
+}
+
+// SetUserAgent sets the User-Agent header sent with each proxied requests
+func SetUserAgent(ua string) {
+	muUserAgent.Lock()
+	userAgent = ua
+	muUserAgent.Unlock()
+}
+
+func changeUserAgent(req *http.Request) {
+	muUserAgent.RLock()
+	ua := userAgent
+	muUserAgent.RUnlock()
+
+	secondary := req.Header.Get("User-Agent")
+	if secondary != "" {
+		ua += " " + uaParser.Parse(secondary).UserAgent.ToString()
+	}
+	req.Header.Set("User-Agent", ua)
 }
 
 // SetProxyAddr sets the eventual.Getter that's used to determine the proxy's
@@ -142,6 +168,7 @@ func (cf *chainedAndFronted) setFetcher(fetcher http.RoundTripper) {
 
 // RoundTrip will attempt to execute the specified HTTP request using only a chained fetcher
 func (cf *chainedAndFronted) RoundTrip(req *http.Request) (*http.Response, error) {
+	changeUserAgent(req)
 	op := ops.Begin("chainedandfronted").Request(req)
 	defer op.End()
 
@@ -466,6 +493,7 @@ func chained(rootCA string, persistent bool) (http.RoundTripper, error) {
 	}
 
 	return AsRoundTripper(func(req *http.Request) (*http.Response, error) {
+		changeUserAgent(req)
 		op := ops.Begin("chained").ProxyType(ops.ProxyChained).Request(req)
 		defer op.End()
 		resp, err := tr.RoundTrip(req)

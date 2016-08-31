@@ -2,7 +2,9 @@ package flashlight
 
 import (
 	"crypto/x509"
+	"fmt"
 	"path/filepath"
+	"runtime"
 	"sync"
 
 	"github.com/getlantern/appdir"
@@ -90,6 +92,7 @@ func Run(httpProxyAddr string,
 
 	cl := client.NewClient(proxyAll, userConfig.GetToken)
 	proxied.SetProxyAddr(cl.Addr)
+	proxied.SetUserAgent(fmt.Sprintf("Lantern/%s (%s/%s)", Version, runtime.GOOS, runtime.GOARCH))
 
 	proxiesDispatch := func(conf interface{}) {
 		proxyMap := conf.(map[string]*client.ChainedServerInfo)
