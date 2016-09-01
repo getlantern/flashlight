@@ -82,7 +82,7 @@ imports:
 - name: github.com/getlantern/go-loggly
   version: d15e28ab7389ed5d644ccb891d9d54154e43cd27
 - name: github.com/getlantern/go-update
-  version: e90f56159fa71d592191425cbcb327533cd13d43
+  version: cb048f77e108c397a3c19752bf7778ea4bae2dc7
   subpackages:
   - check
   - download
