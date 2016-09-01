@@ -13,7 +13,7 @@ import (
 
 var (
 	log             = golog.LoggerFor("flashlight.autoupdate")
-	updateServerURL = "https://update.getlantern.org"
+	UpdateServerURL = "https://update.getlantern.org"
 	PublicKey       = []byte(autoupdate.PackagePublicKey)
 	Version         string
 
@@ -39,13 +39,13 @@ func setUpdateURL(url string) {
 	}
 	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
-	updateServerURL = url
+	UpdateServerURL = url
 }
 
 func getUpdateURL() string {
 	cfgMutex.RLock()
 	defer cfgMutex.RUnlock()
-	return updateServerURL + "/update"
+	return UpdateServerURL + "/update"
 }
 
 func enableAutoupdate(updateCA string) {

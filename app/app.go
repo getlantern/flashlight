@@ -34,7 +34,10 @@ var (
 
 func init() {
 	log.Debugf("****************************** stagingMode: %v", stagingMode)
+
 	autoupdate.Version = flashlight.PackageVersion
+	autoupdate.PublicKey = []byte(packagePublicKey)
+
 	rand.Seed(time.Now().UnixNano())
 }
 
