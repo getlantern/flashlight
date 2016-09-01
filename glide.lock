@@ -48,7 +48,7 @@ imports:
 - name: github.com/getlantern/bytecounting
   version: 4a7f76bdd5e28d1d72a8a8287927daeaa3316820
 - name: github.com/getlantern/byteexec
-  version: 61c05c54847bc0130938da161dc45178a4acfea4
+  version: 2e21fedeb225921a8dc40321cbd114ffd0a302f3
 - name: github.com/getlantern/chained
   version: 333b0f12504a0ddb5f2680117c190843d931bec4
 - name: github.com/getlantern/checkfallbacks
