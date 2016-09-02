@@ -14,7 +14,7 @@ build:
 # http://devcenter.wercker.com/docs/steps/index.html
   steps:
     - add-ssh-key:
-      keyname: github_private
+      keyname: flashlight_key
       host: github.com
     - add-to-known_hosts:
       hostname: github.com
