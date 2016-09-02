@@ -33,6 +33,10 @@ build:
         curl -L https://github.com/Masterminds/glide/releases/download/0.10.2/glide-0.10.2-linux-amd64.tar.gz -o glide.tar.gz
         tar -xf glide.tar.gz
         sudo mv linux-amd64/glide /usr/local/bin/
+    - script:
+      name: glide install
+      code: |
+        glide install
     - install-packages:
       packages: lsof # required by fdcount
     # - script:
