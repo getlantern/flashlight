@@ -35,8 +35,8 @@ build:
     #   name: prepare keys
     #   code: |
     #     openssl aes-256-cbc -K $encrypted_f217260732a9_key -iv $encrypted_f217260732a9_iv -in $WERCKER_ROOT/envvars.bash.enc -out $WERCKER_ROOT/envvars.bash -d
-    - tcnksm/goveralls:
-      token: $COVERALLS_TOKEN
+    #- tcnksm/goveralls:
+    #  token: $COVERALLS_TOKEN
     - script:
       name: get goveralls
       code: |
@@ -44,4 +44,4 @@ build:
         go get -v github.com/mattn/goveralls
     - script:
       name: go test
-      code: make test-and-cover
+      code: go test -race -v -tags="headless" -covermode=atomic -coverprofile=profile_tmp.cov
