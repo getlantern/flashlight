@@ -35,7 +35,8 @@ build:
     #   name: prepare keys
     #   code: |
     #     openssl aes-256-cbc -K $encrypted_f217260732a9_key -iv $encrypted_f217260732a9_iv -in $WERCKER_ROOT/envvars.bash.enc -out $WERCKER_ROOT/envvars.bash -d
-
+    - tcnksm/goveralls:
+      token: $COVERALLS_TOKEN
     - script:
       name: get goveralls
       code: |
