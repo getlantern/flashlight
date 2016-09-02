@@ -359,7 +359,9 @@ func buildModel(cas map[string]*castat, masquerades []*masquerade, useFallbacks 
 			fb["cert"] = strings.Replace(cert, "\n", "\\n", -1)
 
 			info := f
-			dialer, err := client.ChainedDialer(info, defaultDeviceID)
+			dialer, err := client.ChainedDialer(info, defaultDeviceID, func() string {
+				return ""
+			})
 			if err != nil {
 				log.Debugf("Skipping fallback %v because of error building dialer: %v", f.Addr, err)
 				continue
