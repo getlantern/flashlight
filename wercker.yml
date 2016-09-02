@@ -41,7 +41,7 @@ build:
       name: get goveralls
       code: |-
         go get golang.org/x/tools/cmd/cover
-        #    go get -v github.com/mattn/goveralls
+        go get -v github.com/mattn/goveralls
     #- script:
     #  name: go test
     #  code: go test -race -v -tags="headless" -covermode=atomic -coverprofile=profile_tmp.cov
