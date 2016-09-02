@@ -15,8 +15,8 @@ build:
   steps:
     # Sets the go workspace and places you package
     # at the right place in the workspace tree
-    - wercker/setup-go-workspace:
-      package-dir: github.com/getlantern/flashlight
+    #- wercker/setup-go-workspace:
+    #  package-dir: github.com/getlantern/flashlight
     - add-ssh-key:
       keyname: flashlight_key
       host: github.com
