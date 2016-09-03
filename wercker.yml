@@ -33,10 +33,10 @@ build:
         curl -L https://github.com/Masterminds/glide/releases/download/0.10.2/glide-0.10.2-linux-amd64.tar.gz -o glide.tar.gz
         tar -xf glide.tar.gz
         sudo mv linux-amd64/glide /usr/local/bin/
-    - script:
-      name: git-config
-      code: |
-        git config --global url."git@github.com:".insteadOf "https://github.com/"
+  #    - script:
+  #    name: git-config
+  #    code: |
+  #      git config --global url."git@github.com:".insteadOf "https://github.com/"
     - script:
       name: glide install
       code: |
