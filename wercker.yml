@@ -38,9 +38,13 @@ build:
   #    code: |
   #      git config --global url."git@github.com:".insteadOf "https://github.com/"
     - script:
-      name: glide install
+      name: glide update
       code: |
-        glide install
+        glide update
+  #  - script:
+  #    name: glide install
+  #    code: |
+  #      glide install
     - install-packages:
       packages: lsof # required by fdcount
     - script:
