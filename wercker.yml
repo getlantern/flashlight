@@ -50,7 +50,7 @@ build:
     - script:
       name: make-lantern
       code: |
-        make novendor lantern
+        make vendor lantern
       
   # - script:
     #   name: prepare keys
