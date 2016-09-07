@@ -7,11 +7,13 @@ package proxied
 import (
 	"bytes"
 	"crypto/tls"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -43,10 +45,9 @@ var (
 	proxyAddrMutex sync.RWMutex
 	proxyAddr      = eventual.DefaultUnsetGetter()
 
-	muUserAgent sync.RWMutex
-	userAgent   string
-
-	uaParser = uaparser.NewFromSaved()
+	// compileTimePackageVersion is set at compile-time for production builds
+	compileTimePackageVersion = "development"
+	uaParser                  = uaparser.NewFromSaved()
 
 	// ErrChainedProxyUnavailable indicates that we weren't able to find a chained
 	// proxy.
@@ -63,22 +64,18 @@ func success(resp *http.Response) bool {
 	return resp.StatusCode > 199 && resp.StatusCode < 400
 }
 
-// SetUserAgent sets the User-Agent header sent with each proxied requests
-func SetUserAgent(ua string) {
-	muUserAgent.Lock()
-	userAgent = ua
-	muUserAgent.Unlock()
-}
-
+// changeUserAgent prepends Lantern version and OSARCH to the User-Agent header
+// of req to facilitate debugging on server side. It also compacts the original
+// UA string to a more concise and readable one if possible.
 func changeUserAgent(req *http.Request) {
-	muUserAgent.RLock()
-	ua := userAgent
-	muUserAgent.RUnlock()
-
 	secondary := req.Header.Get("User-Agent")
 	if secondary != "" {
-		ua += " " + uaParser.Parse(secondary).UserAgent.ToString()
+		parsed := uaParser.Parse(secondary).UserAgent.ToString()
+		if parsed != "Other" {
+			secondary = parsed
+		}
 	}
+	ua := fmt.Sprintf("Lantern/%s (%s/%s) %s", compileTimePackageVersion, runtime.GOOS, runtime.GOARCH, secondary)
 	req.Header.Set("User-Agent", ua)
 }
 
@@ -168,7 +165,6 @@ func (cf *chainedAndFronted) setFetcher(fetcher http.RoundTripper) {
 
 // RoundTrip will attempt to execute the specified HTTP request using only a chained fetcher
 func (cf *chainedAndFronted) RoundTrip(req *http.Request) (*http.Response, error) {
-	changeUserAgent(req)
 	op := ops.Begin("chainedandfronted").Request(req)
 	defer op.End()
 
@@ -209,6 +205,7 @@ type frontedRT struct{}
 // the application is starting up
 func (f frontedRT) RoundTrip(req *http.Request) (*http.Response, error) {
 	rt := fronted.NewDirect(5 * time.Minute)
+	changeUserAgent(req)
 	return rt.RoundTrip(req)
 }
 
