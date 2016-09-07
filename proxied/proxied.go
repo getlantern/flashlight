@@ -75,7 +75,8 @@ func changeUserAgent(req *http.Request) {
 			secondary = parsed
 		}
 	}
-	ua := fmt.Sprintf("Lantern/%s (%s/%s) %s", compileTimePackageVersion, runtime.GOOS, runtime.GOARCH, secondary)
+	ua := strings.TrimSpace(fmt.Sprintf("Lantern/%s (%s/%s) %s",
+		compileTimePackageVersion, runtime.GOOS, runtime.GOARCH, secondary))
 	req.Header.Set("User-Agent", ua)
 }
 
