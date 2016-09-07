@@ -29,22 +29,19 @@ build:
     - script:
       name: get glide
       code: |
-        cd /tmp
-        curl -L https://github.com/Masterminds/glide/releases/download/0.10.2/glide-0.10.2-linux-amd64.tar.gz -o glide.tar.gz
-        tar -xf glide.tar.gz
-        sudo mv linux-amd64/glide /usr/local/bin/
+        curl https://glide.sh/get | sh
     - script:
       name: git-config
       code: |
         git config --global url."git@github.com:".insteadOf "https://github.com/"
-    - script:
-      name: glide update
-      code: |
-        glide update
   #  - script:
-  #    name: glide install
+  #    name: glide update
   #    code: |
-  #      glide install
+  #      glide update
+    - script:
+      name: glide install
+      code: |
+        glide install
     - install-packages:
       packages: lsof # required by fdcount
     - script:
@@ -70,4 +67,4 @@ build:
     - script:
       name: go test -race
       code: |
-        go test -race
+        go test -race -v -tags="headless" $(glide novendor)
