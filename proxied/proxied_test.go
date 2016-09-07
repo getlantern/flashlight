@@ -229,3 +229,11 @@ func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
 		_ = resp.Body.Close()
 	}
 }
+
+func TestChangeUserAgent(t *testing.T) {
+	SetUserAgent("Lantern/9.99 (darwin/386)")
+	req, _ := http.NewRequest("GET", "abc.com", nil)
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36")
+	changeUserAgent(req)
+	assert.Equal(t, "Lantern/9.99 (darwin/386) Chrome 41.0.2228", req.Header.Get("User-Agent"))
+}
