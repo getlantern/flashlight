@@ -29,7 +29,10 @@ build:
     - script:
       name: get glide
       code: |
-        curl https://glide.sh/get | sh
+        cd /tmp
+        curl -L https://github.com/Masterminds/glide/releases/download/v0.12.1/glide-v0.12.1-linux-amd64.tar.gz -o glide.tar.gz
+        tar -xf glide.tar.gz
+        sudo mv linux-amd64/glide /usr/local/bin/
     - script:
       name: git-config
       code: |
