@@ -29,6 +29,7 @@ build:
     - script:
       name: get glide
       code: |
+        # Note the standard glide install of piping through sh isn't supported for the test os, arch.
         cd /tmp
         curl -L https://github.com/Masterminds/glide/releases/download/v0.12.1/glide-v0.12.1-linux-amd64.tar.gz -o glide.tar.gz
         tar -xf glide.tar.gz
@@ -37,10 +38,6 @@ build:
       name: git-config
       code: |
         git config --global url."git@github.com:".insteadOf "https://github.com/"
-  #  - script:
-  #    name: glide update
-  #    code: |
-  #      glide update
     - script:
       name: glide install
       code: |
@@ -50,15 +47,7 @@ build:
     - script:
       name: make-lantern
       code: |
-        #        sudo apt-get -y install libgtk-3-dev libappindicator3-dev
         HEADLESS=true make vendor lantern
-      
-  # - script:
-    #   name: prepare keys
-    #   code: |
-    #     openssl aes-256-cbc -K $encrypted_f217260732a9_key -iv $encrypted_f217260732a9_iv -in $WERCKER_ROOT/envvars.bash.enc -out $WERCKER_ROOT/envvars.bash -d
-    #- tcnksm/goveralls:
-    #  token: $COVERALLS_TOKEN
     #- script:
     #  name: get goveralls
     #  code: |-
