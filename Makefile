@@ -4,6 +4,8 @@ GLIDE_BIN    ?= $(shell which glide)
 SHELL := /bin/bash
 SOURCES := $(shell find . -name '*[^_test].go')
 
+.PHONY: lantern
+
 BUILD_RACE := '-race'
 
 ifeq ($(OS),Windows_NT)
