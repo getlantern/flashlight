@@ -50,8 +50,8 @@ build:
     - script:
       name: make-lantern
       code: |
-        sudo apt-get -y install libgtk-3-dev libappindicator3-dev
-        make vendor lantern
+        #        sudo apt-get -y install libgtk-3-dev libappindicator3-dev
+        HEADLESS=true make vendor lantern
       
   # - script:
     #   name: prepare keys
