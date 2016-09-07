@@ -257,7 +257,14 @@ func (app *App) showExistingUI(addr string) error {
 	}
 	url := "http://" + host + ":" + port + "/startup"
 	log.Debugf("Hitting local URL: %v", url)
-	resp, err := http.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Debugf("Could not build request: %s", err)
+		return err
+	}
+	req.Header.Set("Origin", url)
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Debugf("Could not hit local lantern: %s", err)
 		return err
