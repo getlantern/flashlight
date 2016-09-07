@@ -70,4 +70,4 @@ build:
     - script:
       name: go test -race
       code: |
-        go test -race $(glide novendor)
+        go test -race
