@@ -3,6 +3,7 @@
 ### Prerequisites
 
 * [Go 1.7](https://golang.org/dl/) is the minimum supported version of Go
+* [Glide](https://github.com/Masterminds/glide) On OSX and Linux: `curl https://glide.sh/get | sh`
 * [GNU Make](https://www.gnu.org/software/make/) if you want to use the Makefile
 * Force git to use ssh instead of https by running
   `git config --global url."git@github.com:".insteadOf "https://github.com/"`
