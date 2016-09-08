@@ -1,7 +1,10 @@
+DISABLE_PORT_RANDOMIZATION ?=
 GLIDE_BIN    ?= $(shell which glide)
 
 SHELL := /bin/bash
 SOURCES := $(shell find . -name '*[^_test].go')
+
+.PHONY: lantern
 
 BUILD_RACE := '-race'
 
@@ -22,6 +25,9 @@ define build-tags
 	fi && \
 	if [[ ! -z "$$HEADLESS" ]]; then \
 		BUILD_TAGS="$$BUILD_TAGS headless"; \
+	fi && \
+	if [[ ! -z "$$DISABLE_PORT_RANDOMIZATION" ]]; then \
+		BUILD_TAGS="$$BUILD_TAGS disableresourcerandomization"; \
 	fi && \
 	if [[ ! -z "$$STAGING" ]]; then \
 		BUILD_TAGS="$$BUILD_TAGS staging"; \

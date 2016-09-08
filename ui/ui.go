@@ -62,27 +62,42 @@ func checkOrigin(h http.Handler) http.Handler {
 			clientAddr = origin
 		}
 
-		if clientAddr != "" {
-			originURL, err := url.Parse(clientAddr)
-			expectedURL, _ := url.Parse(uiaddr)
-			if err == nil {
-				if allowRemoteClients {
-					// At least check if same port.
-					_, originPort, _ := net.SplitHostPort(originURL.Host)
-					_, expectedPort, _ := net.SplitHostPort(expectedURL.Host)
-					if originPort != expectedPort {
-						log.Debugf("Expecting clients connect on port: %s, but got: %s", expectedPort, originPort)
-						return
-					}
-				} else {
-					if getPreferredUIAddr() != "http://"+originURL.Host {
-						log.Debugf("Origin was: %s, expecting: %s", originURL, expectedURL)
-						return
-					}
-				}
+		if clientAddr == "" {
+			switch r.URL.Path {
+			case "/": // Whitelist skips any further checks.
+				h.ServeHTTP(w, r)
+				return
+			default:
+				log.Debugf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
+				return
 			}
 		}
 
+		expectedURL, err := url.Parse(uiaddr)
+		if err != nil {
+			log.Fatalf("Could not parse own uiaddr: %v", err)
+		}
+
+		originURL, err := url.Parse(clientAddr)
+		if err != nil {
+			log.Debugf("Could not parse client addr", clientAddr)
+			return
+		}
+
+		if allowRemoteClients {
+			// At least check if same port.
+			_, originPort, _ := net.SplitHostPort(originURL.Host)
+			_, expectedPort, _ := net.SplitHostPort(expectedURL.Host)
+			if originPort != expectedPort {
+				log.Debugf("Expecting clients connect on port: %s, but got: %s", expectedPort, originPort)
+				return
+			}
+		} else {
+			if getPreferredUIAddr() != "http://"+originURL.Host {
+				log.Debugf("Origin was: %s, expecting: %s", originURL, expectedURL)
+				return
+			}
+		}
 		h.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(check)
