@@ -1,4 +1,4 @@
-# Lantern
+# Lantern [![wercker status](https://app.wercker.com/status/51826d53d0eeedd6efce16085874d82c/s/devel "wercker status")](https://app.wercker.com/project/byKey/51826d53d0eeedd6efce16085874d82c)
 
 ### Prerequisites
 
