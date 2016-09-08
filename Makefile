@@ -53,4 +53,4 @@ novendor:
 	@rm -Rf vendor
 
 clean:
-	rm lantern
+	rm -f lantern
