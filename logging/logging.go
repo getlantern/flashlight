@@ -130,6 +130,12 @@ func Configure(cloudConfigCA string, deviceID string,
 	logglySamplePercentage float64) (success chan bool) {
 	success = make(chan bool, 1)
 
+	if bordaReportInterval > 0 {
+		enableBordaAndProxyBench(bordaReportInterval, bordaSamplePercentage, deviceID)
+	} else {
+		log.Debug("Will not report to borda")
+	}
+
 	// Note: Returning from this function must always add a result to the
 	// success channel.
 	if logglyToken == "" {
@@ -159,12 +165,6 @@ func Configure(cloudConfigCA string, deviceID string,
 		// Won't block, but will allow optional blocking on receiver
 		success <- true
 	}()
-
-	if bordaReportInterval > 0 {
-		enableBordaAndProxyBench(bordaReportInterval, bordaSamplePercentage, deviceID)
-	} else {
-		log.Debug("Will not report to borda")
-	}
 
 	return
 }
@@ -420,7 +420,7 @@ func enableBordaAndProxyBench(bordaReportInterval time.Duration, bordaSamplePerc
 		return
 	}
 
-	log.Debugf("DeviceID %v will be sampeld for Borda", deviceID)
+	log.Debugf("DeviceID %v will be sampled for Borda", deviceID)
 	reporter := func(failure error, ctx map[string]interface{}) {
 		if !isReportingEnabled() {
 			return
@@ -430,6 +430,11 @@ func enableBordaAndProxyBench(bordaReportInterval time.Duration, bordaSamplePerc
 			values["error_count"] = 1
 		} else {
 			values["success_count"] = 1
+		}
+		dialTime, found := ctx["dial_time"]
+		if found {
+			delete(ctx, "dial_time")
+			values["dial_time"] = dialTime.(float64)
 		}
 		reportErr := reportToBorda(values, ctx)
 		if reportErr != nil {
