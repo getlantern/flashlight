@@ -33,7 +33,7 @@ func servePACFile() {
 	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
 	if pacURL == "" {
-		pacURL = ui.Handle("/proxy_on.pac", http.HandlerFunc(pacFileHandler))
+		pacURL = ui.Handle(http.HandlerFunc(pacFileHandler))
 	}
 }
 
@@ -179,7 +179,7 @@ func doPACOn(pacURL string) {
 	//
 	// Lantern changes the system's proxy settings a sets an URL like:
 	//
-	//   http://127.0.0.1:16823/proxy_on.pac
+	//   http://127.0.0.1:16823/path_to.pac
 	//
 	// This URL is verified by Windows, and if it works then the system sets it
 	// as system proxy.

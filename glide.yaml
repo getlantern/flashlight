@@ -99,3 +99,6 @@ import:
 - package: gopkg.in/redis.v3
 - package: gopkg.in/bsm/ratelimit.v1
 - package: github.com/klauspost/cpuid
+- package: github.com/ua-parser/uap-go
+  subpackages:
+  - uaparser
