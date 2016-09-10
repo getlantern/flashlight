@@ -39,5 +39,19 @@ func TestKnownResourceWithNoOrigin(t *testing.T) {
 	var rw httptest.ResponseRecorder
 	req, _ := http.NewRequest("GET", "/js/bundle.js", nil)
 	r.ServeHTTP(&rw, req)
-	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"), "We're not providing Origin, that means this request wasn't made from a browser.")
+	assert.Equal(t, "", rw.HeaderMap.Get("Cache-Control"), "Expecting no reply")
+}
+
+func TestKnownResourceWithNoOriginButWithToken(t *testing.T) {
+	var rw httptest.ResponseRecorder
+	req, _ := http.NewRequest("GET", "/js/bundle.js?token="+SessionToken(), nil)
+	r.ServeHTTP(&rw, req)
+	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
+}
+
+func TestLanternLogoWithToken(t *testing.T) {
+	var rw httptest.ResponseRecorder
+	req, _ := http.NewRequest("GET", "/img/lantern_logo.png?token="+SessionToken(), nil)
+	r.ServeHTTP(&rw, req)
+	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
 }

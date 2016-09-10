@@ -26,3 +26,7 @@ func pacPath() string {
 func proxyDomain() string {
 	return fmt.Sprintf("%s.lantern.io", randRead(4))
 }
+
+func token() string {
+	return randRead(16)
+}

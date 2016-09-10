@@ -12,3 +12,7 @@ func pacPath() string {
 func proxyDomain() string {
 	return "ui.lantern.io"
 }
+
+func token() string {
+	return ""
+}

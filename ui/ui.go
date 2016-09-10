@@ -29,6 +29,7 @@ var (
 	translations       = eventual.NewValue()
 	server             *http.Server
 	uiaddr             string
+	sessionToken       string
 	allowRemoteClients bool
 	proxiedUIAddr      string
 	preferProxiedUI    int32
@@ -67,8 +68,14 @@ func checkOrigin(h http.Handler) http.Handler {
 				h.ServeHTTP(w, r)
 				return
 			default:
-				log.Debugf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
-				return
+				r.ParseForm()
+				token := r.Form.Get("token")
+				if token == SessionToken() {
+					clientAddr = uiaddr // Bypass further checks if the token is legit.
+				} else {
+					log.Debugf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
+					return
+				}
 			}
 		}
 
@@ -109,6 +116,11 @@ func Handle(handler http.Handler) string {
 	return uiaddr + path
 }
 
+// SessionToken returns the current session token
+func SessionToken() string {
+	return sessionToken
+}
+
 // UIAddr returns the current UI address.
 func UIAddr() string {
 	return uiaddr
@@ -116,6 +128,8 @@ func UIAddr() string {
 
 // Start starts serving the UI.
 func Start(requestedAddr string, allowRemote bool, extURL string) (string, error) {
+	sessionToken = token()
+
 	if requestedAddr == "" {
 		requestedAddr = defaultUIAddress
 	}
