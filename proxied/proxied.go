@@ -7,16 +7,20 @@ package proxied
 import (
 	"bytes"
 	"crypto/tls"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/ua-parser/uap-go/uaparser"
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
@@ -41,6 +45,10 @@ var (
 	proxyAddrMutex sync.RWMutex
 	proxyAddr      = eventual.DefaultUnsetGetter()
 
+	// compileTimePackageVersion is set at compile-time for production builds
+	compileTimePackageVersion = "development"
+	uaParser                  = uaparser.NewFromSaved()
+
 	// ErrChainedProxyUnavailable indicates that we weren't able to find a chained
 	// proxy.
 	ErrChainedProxyUnavailable = "chained proxy unavailable"
@@ -54,6 +62,22 @@ var (
 
 func success(resp *http.Response) bool {
 	return resp.StatusCode > 199 && resp.StatusCode < 400
+}
+
+// changeUserAgent prepends Lantern version and OSARCH to the User-Agent header
+// of req to facilitate debugging on server side. It also compacts the original
+// UA string to a more concise and readable one if possible.
+func changeUserAgent(req *http.Request) {
+	secondary := req.Header.Get("User-Agent")
+	if secondary != "" {
+		parsed := uaParser.Parse(secondary).UserAgent.ToString()
+		if parsed != "Other" {
+			secondary = parsed
+		}
+	}
+	ua := strings.TrimSpace(fmt.Sprintf("Lantern/%s (%s/%s) %s",
+		compileTimePackageVersion, runtime.GOOS, runtime.GOARCH, secondary))
+	req.Header.Set("User-Agent", ua)
 }
 
 // SetProxyAddr sets the eventual.Getter that's used to determine the proxy's
@@ -182,6 +206,7 @@ type frontedRT struct{}
 // the application is starting up
 func (f frontedRT) RoundTrip(req *http.Request) (*http.Response, error) {
 	rt := fronted.NewDirect(5 * time.Minute)
+	changeUserAgent(req)
 	return rt.RoundTrip(req)
 }
 
@@ -466,6 +491,7 @@ func chained(rootCA string, persistent bool) (http.RoundTripper, error) {
 	}
 
 	return AsRoundTripper(func(req *http.Request) (*http.Response, error) {
+		changeUserAgent(req)
 		op := ops.Begin("chained").ProxyType(ops.ProxyChained).Request(req)
 		defer op.End()
 		resp, err := tr.RoundTrip(req)

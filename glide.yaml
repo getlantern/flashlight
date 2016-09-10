@@ -79,3 +79,26 @@ import:
 - package: github.com/getlantern/measured
 - package: github.com/getlantern/tlsdefaults
 - package: github.com/getlantern/waitforserver
+- package: github.com/stretchr/testify
+  subpackages:
+  - assert
+- package: github.com/getlantern/grtrack
+- package: github.com/golang/groupcache
+  subpackages:
+  - lru
+- package: github.com/gorilla/context
+- package: github.com/hashicorp/golang-lru
+- package: github.com/mxk/go-flowrate
+  subpackages:
+  - flowrate
+- package: github.com/rcrowley/go-metrics
+- package: github.com/xtaci/kcp-go
+- package: github.com/klauspost/crc32
+- package: github.com/klauspost/reedsolomon
+- package: github.com/pkg/errors
+- package: gopkg.in/redis.v3
+- package: gopkg.in/bsm/ratelimit.v1
+- package: github.com/klauspost/cpuid
+- package: github.com/ua-parser/uap-go
+  subpackages:
+  - uaparser

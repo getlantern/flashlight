@@ -5,6 +5,7 @@ package ops
 import (
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/getlantern/ops"
 )
@@ -148,4 +149,11 @@ func (op *Op) Origin(v string) *Op {
 		op.Set("origin_host", host).Set("origin_port", port)
 	}
 	return op
+}
+
+// DialTime records a dial time relative to a given start time (in milliseconds)
+// and records whether or not the dial succeeded (based on err being nil).
+func (op *Op) DialTime(start time.Time, err error) *Op {
+	delta := time.Now().Sub(start)
+	return op.Set("dial_time", float64(delta.Nanoseconds())/1000000).Set("dial_succeeded", err == nil)
 }
