@@ -21,7 +21,8 @@ func TestProxy(t *testing.T) {
 	ddfURL := fmt.Sprintf("http://%s/abc", proAPIDDFHost)
 	go func() {
 		t.Logf("Launching test server at %s", url)
-		InitProxy(addr, false)
+		http.Handle("/", APIHandler())
+		http.ListenAndServe(addr, nil)
 	}()
 	// Give InitProxy a chance to run
 	runtime.Gosched()
