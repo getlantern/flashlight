@@ -39,6 +39,10 @@ var (
 	r              = http.NewServeMux()
 )
 
+func init() {
+	sessionToken = token()
+}
+
 func noCacheHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate") // HTTP 1.1.
@@ -70,7 +74,7 @@ func checkOrigin(h http.Handler) http.Handler {
 			default:
 				r.ParseForm()
 				token := r.Form.Get("token")
-				if token == SessionToken() {
+				if token == sessionToken {
 					clientAddr = uiaddr // Bypass further checks if the token is legit.
 				} else {
 					log.Debugf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
@@ -116,11 +120,6 @@ func Handle(handler http.Handler) string {
 	return uiaddr + path
 }
 
-// SessionToken returns the current session token
-func SessionToken() string {
-	return sessionToken
-}
-
 // UIAddr returns the current UI address.
 func UIAddr() string {
 	return uiaddr
@@ -128,8 +127,6 @@ func UIAddr() string {
 
 // Start starts serving the UI.
 func Start(requestedAddr string, allowRemote bool, extURL string) (string, error) {
-	sessionToken = token()
-
 	if requestedAddr == "" {
 		requestedAddr = defaultUIAddress
 	}
@@ -296,4 +293,18 @@ func openExternalURL(u string) {
 	if err != nil {
 		log.Errorf("Error opening external page to `%v`: %v", uiaddr, err)
 	}
+}
+
+func AddToken(in string) string {
+	out, err := url.Parse(in)
+	if err != nil {
+		return in
+	}
+	values, err := url.ParseQuery(out.RawQuery)
+	if err != nil {
+		return in
+	}
+	values.Set("token", sessionToken)
+	out.RawQuery = values.Encode()
+	return out.String()
 }

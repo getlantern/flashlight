@@ -44,14 +44,14 @@ func TestKnownResourceWithNoOrigin(t *testing.T) {
 
 func TestKnownResourceWithNoOriginButWithToken(t *testing.T) {
 	var rw httptest.ResponseRecorder
-	req, _ := http.NewRequest("GET", "/js/bundle.js?token="+SessionToken(), nil)
+	req, _ := http.NewRequest("GET", AddToken("/js/bundle.js"), nil)
 	r.ServeHTTP(&rw, req)
 	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
 }
 
 func TestLanternLogoWithToken(t *testing.T) {
 	var rw httptest.ResponseRecorder
-	req, _ := http.NewRequest("GET", "/img/lantern_logo.png?token="+SessionToken(), nil)
+	req, _ := http.NewRequest("GET", AddToken("/img/lantern_logo.png?foo=1"), nil)
 	r.ServeHTTP(&rw, req)
 	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
 }

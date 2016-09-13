@@ -118,7 +118,7 @@ func (s *notifyStatus) notifyFreeUser(n notify.Notifier, uiaddr, title, msg stri
 	}
 
 	addr := "http://" + uiaddr
-	logo := addr + "/img/lantern_logo.png?token=" + ui.SessionToken()
+	logo := ui.AddToken(addr + "/img/lantern_logo.png")
 	note := &notify.Notification{
 		Title:    title,
 		Message:  msg,
