@@ -266,7 +266,7 @@ func (s *Settings) setString(name SettingName, v interface{}) {
 
 // Save saves settings to disk.
 func (s *Settings) save() {
-	log.Debugf("Saving settings")
+	log.Tracef("Saving settings")
 	toBeSaved := s.mapToSave()
 	if bytes, err := yaml.Marshal(toBeSaved); err != nil {
 		log.Errorf("Could not create yaml from settings %v", err)
