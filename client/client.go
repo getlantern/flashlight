@@ -30,9 +30,6 @@ var (
 var (
 	log = golog.LoggerFor("flashlight.client")
 
-	// UIAddr is the address at which UI is to be found
-	UIAddr string
-
 	addr                = eventual.NewValue()
 	socksAddr           = eventual.NewValue()
 	proxiedCONNECTPorts = []int{
