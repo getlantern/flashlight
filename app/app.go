@@ -16,7 +16,6 @@ import (
 
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/autoupdate"
-	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxiedsites"
@@ -164,15 +163,14 @@ func (app *App) beforeStart() bool {
 	}
 
 	log.Debugf("Starting client UI at %v", app.uiaddr())
-	actualUIAddr, err := ui.Start(app.uiaddr(), !app.ShowUI, startupURL)
+	err = ui.Start(app.uiaddr(), !app.ShowUI, startupURL)
 	if err != nil {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 	}
-	client.UIAddr = actualUIAddr
 
-	settings.SetUIAddr(client.UIAddr)
+	settings.SetUIAddr(ui.UIAddr())
 
-	err = serveBandwidth(client.UIAddr)
+	err = serveBandwidth(ui.UIAddr())
 	if err != nil {
 		log.Errorf("Unable to serve bandwidth to UI: %v", err)
 	}

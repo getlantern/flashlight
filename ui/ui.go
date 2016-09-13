@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"net/url"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -29,111 +28,34 @@ var (
 	translations       = eventual.NewValue()
 	server             *http.Server
 	uiaddr             string
-	sessionToken       string
 	allowRemoteClients bool
 	proxiedUIAddr      string
 	preferProxiedUI    int32
 
 	openedExternal = false
 	externalURL    string
-	r              = http.NewServeMux()
+	r              = NewServeMux()
+	sessionToken   = token()
 )
-
-func init() {
-	sessionToken = token()
-}
-
-func noCacheHandler(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate") // HTTP 1.1.
-		w.Header().Set("Pragma", "no-cache")                                   // HTTP 1.0.
-		w.Header().Set("Expires", "0")                                         // Proxies.
-		h.ServeHTTP(w, r)
-	})
-}
-
-func checkOrigin(h http.Handler) http.Handler {
-	check := func(w http.ResponseWriter, r *http.Request) {
-		var clientAddr string
-
-		referer := r.Header.Get("Referer")
-		if referer != "" {
-			clientAddr = referer
-		}
-
-		origin := r.Header.Get("Origin")
-		if origin != "" {
-			clientAddr = origin
-		}
-
-		if clientAddr == "" {
-			switch r.URL.Path {
-			case "/": // Whitelist skips any further checks.
-				h.ServeHTTP(w, r)
-				return
-			default:
-				r.ParseForm()
-				token := r.Form.Get("token")
-				if token == sessionToken {
-					clientAddr = uiaddr // Bypass further checks if the token is legit.
-				} else {
-					log.Debugf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
-					return
-				}
-			}
-		}
-
-		expectedURL, err := url.Parse(uiaddr)
-		if err != nil {
-			log.Fatalf("Could not parse own uiaddr: %v", err)
-		}
-
-		originURL, err := url.Parse(clientAddr)
-		if err != nil {
-			log.Debugf("Could not parse client addr", clientAddr)
-			return
-		}
-
-		if allowRemoteClients {
-			// At least check if same port.
-			_, originPort, _ := net.SplitHostPort(originURL.Host)
-			_, expectedPort, _ := net.SplitHostPort(expectedURL.Host)
-			if originPort != expectedPort {
-				log.Debugf("Expecting clients connect on port: %s, but got: %s", expectedPort, originPort)
-				return
-			}
-		} else {
-			if getPreferredUIAddr() != "http://"+originURL.Host {
-				log.Debugf("Origin was: %s, expecting: %s", originURL, expectedURL)
-				return
-			}
-		}
-		h.ServeHTTP(w, r)
-	}
-	return http.HandlerFunc(check)
-}
-
-// Handle is the http server handler function.
-func Handle(handler http.Handler) string {
-	path := pacPath()
-	r.Handle(path, handler)
-	return uiaddr + path
-}
 
 // UIAddr returns the current UI address.
 func UIAddr() string {
 	return uiaddr
 }
 
+func Handle(pattern string, handler http.Handler) {
+	r.Handle(pattern, handler)
+}
+
 // Start starts serving the UI.
-func Start(requestedAddr string, allowRemote bool, extURL string) (string, error) {
+func Start(requestedAddr string, allowRemote bool, extURL string) error {
 	if requestedAddr == "" {
 		requestedAddr = defaultUIAddress
 	}
 
 	addr, err := net.ResolveTCPAddr("tcp4", requestedAddr)
 	if err != nil {
-		return "", fmt.Errorf("Unable to resolve UI address: %v", err)
+		return fmt.Errorf("Unable to resolve UI address: %v", err)
 	}
 	if allowRemote {
 		// If we want to allow remote connections, we have to bind all interfaces
@@ -142,7 +64,7 @@ func Start(requestedAddr string, allowRemote bool, extURL string) (string, error
 
 	l, err := net.ListenTCP("tcp4", addr)
 	if err != nil {
-		return "", fmt.Errorf("Unable to listen at %v. Error is: %v", requestedAddr, err)
+		return fmt.Errorf("Unable to listen at %v. Error is: %v", requestedAddr, err)
 	}
 
 	// Setting port (case when port was 0)
@@ -155,9 +77,11 @@ func Start(requestedAddr string, allowRemote bool, extURL string) (string, error
 
 	externalURL = extURL
 
+	allowRemoteClients = allowRemote
+
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
-	handler := func(resp http.ResponseWriter, req *http.Request) {
+	startupHandler := func(resp http.ResponseWriter, req *http.Request) {
 		// If we're allowing remote, we're in practice not showing the UI on this
 		// typically headless system, so don't allow triggering of the UI.
 		if !allowRemote {
@@ -166,15 +90,9 @@ func Start(requestedAddr string, allowRemote bool, extURL string) (string, error
 		resp.WriteHeader(http.StatusOK)
 	}
 
-	allowRemoteClients = allowRemote
-
-	applyMiddleware := func(h http.Handler) http.Handler {
-		return checkOrigin(util.NoCacheHandler(h))
-	}
-
-	r.Handle("/pro/", applyMiddleware(pro.APIHandler()))
-	r.Handle("/startup", applyMiddleware(http.HandlerFunc(handler)))
-	r.Handle("/", applyMiddleware(http.FileServer(fs)))
+	r.Handle("/pro/", pro.APIHandler())
+	r.Handle("/startup", http.HandlerFunc(startupHandler))
+	r.Handle("/", http.FileServer(fs))
 
 	server = &http.Server{
 		Handler:  r,
@@ -186,7 +104,15 @@ func Start(requestedAddr string, allowRemote bool, extURL string) (string, error
 			log.Errorf("Error serving: %v", err)
 		}
 	}()
-	uiaddr = fmt.Sprintf("http://%v", listenAddr)
+
+	host, port, err := net.SplitHostPort(listenAddr)
+	if err != nil {
+		log.Fatalf("Could not parse host:port on %q", listenAddr)
+	}
+	if host == "" {
+		host = "127.0.0.1"
+	}
+	uiaddr = fmt.Sprintf("http://%s:%s", host, port)
 
 	// Note - we display the UI using the LanternSpecialDomain. This is necessary
 	// for Microsoft Edge on Windows 10 because, being a Windows Modern App, its
@@ -198,12 +124,11 @@ func Start(requestedAddr string, allowRemote bool, extURL string) (string, error
 	// allowed to connect to loopback because it doesn't have the same restriction
 	// as Microsoft Edge.
 	proxiedAddr := proxyDomain()
-	proxiedUIAddr = fmt.Sprintf("http://%v", proxiedAddr)
 	client.SetProxyUIAddr(proxiedAddr, listenAddr)
 
-	log.Debugf("UI available at %v and %v", uiaddr, proxiedUIAddr)
+	log.Debugf("UI available at %v and http://%v", uiaddr, proxiedAddr)
 
-	return listenAddr, nil
+	return nil
 }
 
 func unpackUI() {
@@ -296,15 +221,5 @@ func openExternalURL(u string) {
 }
 
 func AddToken(in string) string {
-	out, err := url.Parse(in)
-	if err != nil {
-		return in
-	}
-	values, err := url.ParseQuery(out.RawQuery)
-	if err != nil {
-		return in
-	}
-	values.Set("token", sessionToken)
-	out.RawQuery = values.Encode()
-	return out.String()
+	return util.SetURLParam(in, "token", sessionToken)
 }

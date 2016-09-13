@@ -19,6 +19,7 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/icons"
 	"github.com/getlantern/flashlight/ui"
+	"github.com/getlantern/flashlight/util"
 )
 
 var (
@@ -33,7 +34,8 @@ func servePACFile() {
 	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
 	if pacURL == "" {
-		pacURL = ui.Handle(http.HandlerFunc(pacFileHandler))
+		ui.Handle("/proxy_on.pac", http.HandlerFunc(pacFileHandler))
+		pacURL = ui.AddToken(ui.UIAddr() + "/proxy_on.pac")
 	}
 }
 
@@ -197,23 +199,26 @@ func doPACOn(pacURL string) {
 	//
 	// By changing the URL here we are forcing the OS to check the URL whenever
 	// Lantern starts.
-	noCache := fmt.Sprintf("?%d", time.Now().UnixNano())
-	pacURLNoCache.Store(noCache)
+	s := addNoCache(pacURL)
+	pacURLNoCache.Store(s)
 
-	err := pac.On(pacURL + noCache)
+	err := pac.On(s)
 	if err != nil {
 		log.Errorf("Unable to set lantern as system proxy: %v", err)
 	}
 }
 
 func doPACOff(pacURL string) {
-	var noCache string
-	_noCache := pacURLNoCache.Load()
-	if _noCache != nil {
-		noCache = _noCache.(string)
+	s := pacURLNoCache.Load()
+	if s == nil {
+		return
 	}
-	err := pac.Off(pacURL + noCache)
+	err := pac.Off(s.(string))
 	if err != nil {
 		log.Errorf("Unable to unset lantern as system proxy: %v", err)
 	}
+}
+
+func addNoCache(in string) string {
+	return util.SetURLParam(in, "nocache", fmt.Sprintf("%v", time.Now().UnixNano()))
 }

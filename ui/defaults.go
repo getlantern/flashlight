@@ -20,7 +20,7 @@ func randRead(size int) string {
 
 // pacPath returns a random path for the PAC file.
 func pacPath() string {
-	return fmt.Sprintf("/%s/proxy_on.pac", randRead(16))
+	return AddToken("/proxy_on.pac")
 }
 
 func proxyDomain() string {

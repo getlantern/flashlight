@@ -264,12 +264,6 @@ func (s *Settings) setString(name SettingName, v interface{}) {
 	s.setVal(name, str)
 }
 
-func (s *Settings) Save() {
-	s.Lock()
-	defer s.Unlock()
-	s.save()
-}
-
 // Save saves settings to disk.
 func (s *Settings) save() {
 	log.Debugf("Saving settings")
