@@ -39,6 +39,8 @@ const (
 	SNVersion      SettingName = "version"
 	SNBuildDate    SettingName = "buildDate"
 	SNRevisionDate SettingName = "revisionDate"
+
+	SNUIAddr SettingName = "uiAddr"
 )
 
 type settingType byte
@@ -67,8 +69,9 @@ var settingMeta = map[SettingName]struct {
 	SNLanguage: {stString, true, true},
 
 	// SNDeviceID: intentionally omit, to avoid setting it from UI
-	SNUserID:       {stNumber, true, true},
-	SNUserToken:    {stString, true, true},
+	SNUserID:    {stNumber, true, true},
+	SNUserToken: {stString, true, true},
+	SNUIAddr:    {stString, true, true},
 	SNTakenSurveys: {stStringArray, true, true},
 
 	SNVersion:      {stString, false, false},
@@ -353,6 +356,11 @@ func (s *Settings) GetProxyAll() bool {
 	return s.getBool(SNProxyAll)
 }
 
+// SetUIAddr sets the last known UI address.
+func (s *Settings) SetUIAddr(uiaddr string) {
+	s.setVal(SNUIAddr, uiaddr)
+}
+
 // SetProxyAll sets whether or not to proxy all traffic.
 func (s *Settings) SetProxyAll(proxyAll bool) {
 	s.setVal(SNProxyAll, proxyAll)
@@ -374,6 +382,11 @@ func (s *Settings) IsAutoLaunch() bool {
 // SetLanguage sets the user language
 func (s *Settings) SetLanguage(language string) {
 	s.setVal(SNLanguage, language)
+}
+
+// GetLanguage returns the user language
+func (s *Settings) GetUIAddr() string {
+	return s.getString(SNUIAddr)
 }
 
 // GetLanguage returns the user language

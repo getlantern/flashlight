@@ -11,6 +11,7 @@ import (
 
 	"github.com/getlantern/edgedetect"
 	"github.com/getlantern/eventual"
+	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/tarfs"
 	"github.com/skratchdot/open-golang/open"
@@ -22,45 +23,65 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.ui")
 
-	l               net.Listener
-	fs              *tarfs.FileSystem
-	translations    = eventual.NewValue()
-	server          *http.Server
-	uiaddr          string
-	proxiedUIAddr   string
-	preferProxiedUI int32
+	l                  net.Listener
+	fs                 *tarfs.FileSystem
+	translations       = eventual.NewValue()
+	server             *http.Server
+	uiaddr             string
+	allowRemoteClients bool
+	proxiedUIAddr      string
+	preferProxiedUI    int32
 
 	openedExternal = false
 	externalURL    string
-	r              = http.NewServeMux()
+	r              = NewServeMux()
+	sessionToken   = token()
 )
 
-// Handle is the http server handler function.
-func Handle(p string, handler http.Handler) string {
-	r.Handle(p, handler)
-	return uiaddr + p
+// UIAddr returns the current UI address.
+func UIAddr() string {
+	return uiaddr
+}
+
+func Handle(pattern string, handler http.Handler) {
+	r.Handle(pattern, handler)
 }
 
 // Start starts serving the UI.
-func Start(requestedAddr string, allowRemote bool, extURL string) (string, error) {
-	unpackUI()
-	addr, err := net.ResolveTCPAddr("tcp4", requestedAddr)
-	if err != nil {
-		return "", fmt.Errorf("Unable to resolve UI address: %v", err)
+func Start(requestedAddr string, allowRemote bool, extURL string) error {
+	if requestedAddr == "" {
+		requestedAddr = defaultUIAddress
 	}
 
-	externalURL = extURL
+	addr, err := net.ResolveTCPAddr("tcp4", requestedAddr)
+	if err != nil {
+		return fmt.Errorf("Unable to resolve UI address: %v", err)
+	}
 	if allowRemote {
 		// If we want to allow remote connections, we have to bind all interfaces
 		addr = &net.TCPAddr{Port: addr.Port}
 	}
-	if l, err = net.ListenTCP("tcp4", addr); err != nil {
-		return "", fmt.Errorf("Unable to listen at %v: %v. Error is: %v", addr, l, err)
+
+	l, err := net.ListenTCP("tcp4", addr)
+	if err != nil {
+		return fmt.Errorf("Unable to listen at %v. Error is: %v", requestedAddr, err)
 	}
+
+	// Setting port (case when port was 0)
+	addr.Port = l.Addr().(*net.TCPAddr).Port
+
+	// Updating listenAddr
+	listenAddr := addr.String()
+
+	unpackUI()
+
+	externalURL = extURL
+
+	allowRemoteClients = allowRemote
 
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
-	handler := func(resp http.ResponseWriter, req *http.Request) {
+	startupHandler := func(resp http.ResponseWriter, req *http.Request) {
 		// If we're allowing remote, we're in practice not showing the UI on this
 		// typically headless system, so don't allow triggering of the UI.
 		if !allowRemote {
@@ -69,8 +90,9 @@ func Start(requestedAddr string, allowRemote bool, extURL string) (string, error
 		resp.WriteHeader(http.StatusOK)
 	}
 
-	r.Handle("/startup", util.NoCacheHandler(http.HandlerFunc(handler)))
-	r.Handle("/", util.NoCacheHandler(http.FileServer(fs)))
+	r.Handle("/pro/", pro.APIHandler())
+	r.Handle("/startup", http.HandlerFunc(startupHandler))
+	r.Handle("/", http.FileServer(fs))
 
 	server = &http.Server{
 		Handler:  r,
@@ -82,8 +104,15 @@ func Start(requestedAddr string, allowRemote bool, extURL string) (string, error
 			log.Errorf("Error serving: %v", err)
 		}
 	}()
-	listenAddr := l.Addr().String()
-	uiaddr = fmt.Sprintf("http://%v", listenAddr)
+
+	host, port, err := net.SplitHostPort(listenAddr)
+	if err != nil {
+		log.Fatalf("Could not parse host:port on %q", listenAddr)
+	}
+	if host == "" {
+		host = "127.0.0.1"
+	}
+	uiaddr = fmt.Sprintf("http://%s:%s", host, port)
 
 	// Note - we display the UI using the LanternSpecialDomain. This is necessary
 	// for Microsoft Edge on Windows 10 because, being a Windows Modern App, its
@@ -94,10 +123,12 @@ func Start(requestedAddr string, allowRemote bool, extURL string) (string, error
 	// detects this and reroutes the traffic to the local UI server. The proxy is
 	// allowed to connect to loopback because it doesn't have the same restriction
 	// as Microsoft Edge.
-	proxiedUIAddr = fmt.Sprintf("http://%v", client.LanternSpecialDomain)
-	log.Debugf("UI available at %v", uiaddr)
+	proxiedAddr := proxyDomain()
+	client.SetProxyUIAddr(proxiedAddr, listenAddr)
 
-	return listenAddr, nil
+	log.Debugf("UI available at %v and http://%v", uiaddr, proxiedAddr)
+
+	return nil
 }
 
 func unpackUI() {
@@ -187,4 +218,8 @@ func openExternalURL(u string) {
 	if err != nil {
 		log.Errorf("Error opening external page to `%v`: %v", uiaddr, err)
 	}
+}
+
+func AddToken(in string) string {
+	return util.SetURLParam(in, "token", sessionToken)
 }
