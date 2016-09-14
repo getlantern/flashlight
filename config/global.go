@@ -36,9 +36,7 @@ func newGlobal() *Global {
 		Client: client.NewConfig(),
 		ProxiedSites: &proxiedsites.Config{
 			Delta: &proxiedsites.Delta{},
-			Cloud: make([]string, 0),
 		},
-		TrustedCAs: make([]*fronted.CA, 0),
 	}
 }
 
