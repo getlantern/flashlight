@@ -64,18 +64,20 @@ func checkOrigin(h http.Handler) http.Handler {
 			return
 		}
 
-		if allowRemoteClients {
-			// At least check if same port.
-			_, originPort, _ := net.SplitHostPort(originURL.Host)
-			_, expectedPort, _ := net.SplitHostPort(expectedURL.Host)
-			if originPort != expectedPort && strictOriginCheck {
-				log.Debugf("Expecting clients connect on port: %s, but got: %s", expectedPort, originPort)
-				return
-			}
-		} else {
-			if getPreferredUIAddr() != "http://"+originURL.Host {
-				log.Debugf("Origin was: %s, expecting: %s", originURL, expectedURL)
-				return
+		if strictOriginCheck {
+			if allowRemoteClients {
+				// At least check if same port.
+				_, originPort, _ := net.SplitHostPort(originURL.Host)
+				_, expectedPort, _ := net.SplitHostPort(expectedURL.Host)
+				if originPort != expectedPort {
+					log.Debugf("Expecting clients connect on port: %s, but got: %s", expectedPort, originPort)
+					return
+				}
+			} else {
+				if getPreferredUIAddr() != "http://"+originURL.Host {
+					log.Debugf("Origin was: %s, expecting: %s", originURL, expectedURL)
+					return
+				}
 			}
 		}
 
