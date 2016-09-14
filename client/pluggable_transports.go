@@ -24,6 +24,10 @@ var pluggableTransports = map[string]dialFactory{
 	"obfs4": obfs4DialFactory,
 }
 
+var (
+	chainedDialTimeout = 10 * time.Second
+)
+
 func defaultDialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
 	forceProxy := ForceChainedProxyAddr != ""
 	addr := s.Addr
