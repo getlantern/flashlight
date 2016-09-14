@@ -10,6 +10,8 @@ import (
 
 const defaultUIAddress = "127.0.0.1:0"
 
+const strictOriginCheck = true
+
 func randRead(size int) string {
 	buf := make([]byte, size)
 	if _, err := rand.Read(buf); err != nil {

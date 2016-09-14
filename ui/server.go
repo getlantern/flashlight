@@ -68,7 +68,7 @@ func checkOrigin(h http.Handler) http.Handler {
 			// At least check if same port.
 			_, originPort, _ := net.SplitHostPort(originURL.Host)
 			_, expectedPort, _ := net.SplitHostPort(expectedURL.Host)
-			if originPort != expectedPort {
+			if originPort != expectedPort && strictOriginCheck {
 				log.Debugf("Expecting clients connect on port: %s, but got: %s", expectedPort, originPort)
 				return
 			}
