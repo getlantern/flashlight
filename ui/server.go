@@ -79,7 +79,7 @@ func checkOrigin(h http.Handler) http.Handler {
 			}
 		}
 
-		r.Header.Set("Access-Control-Allow-Origin", origin)
+		w.Header().Set("Access-Control-Allow-Origin", origin)
 		h.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(check)
