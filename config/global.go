@@ -37,6 +37,10 @@ func (cfg *Global) applyFlags(flags map[string]interface{}) {
 		cfg.Client = &client.ClientConfig{}
 	}
 
+	if cfg.ProxiedSites == nil {
+		cfg.ProxiedSites = &proxiedsites.Config{Delta: &proxiedsites.Delta{}}
+	}
+
 	// Visit all flags that have been set and copy to config
 	for key, value := range flags {
 		switch key {
