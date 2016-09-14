@@ -16,10 +16,8 @@ import (
 
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/autoupdate"
-	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/logging"
-	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/flashlight/proxiedsites"
 	"github.com/getlantern/flashlight/ui"
 )
@@ -92,12 +90,12 @@ func (app *App) Run() error {
 
 		listenAddr := app.Flags["addr"].(string)
 		if listenAddr == "" {
-			listenAddr = "127.0.0.1:8787"
+			listenAddr = defaultHTTPProxyAddress
 		}
 
 		err := flashlight.Run(
 			listenAddr,
-			"127.0.0.1:8788",
+			defaultSOCKSProxyAddress,
 			app.Flags["configdir"].(string),
 			app.Flags["stickyconfig"].(bool),
 			settings.GetProxyAll,
@@ -156,34 +154,23 @@ func (app *App) beforeStart() bool {
 		startupURL = bootstrap.StartupUrl
 	}
 
-	log.Debugf("Starting client UI at %v", app.uiaddr())
-	actualUIAddr, err := ui.Start(app.uiaddr(), !app.ShowUI, startupURL)
-	if err != nil {
-		// This very likely means Lantern is already running on our port. Tell
-		// it to open a browser. This is useful, for example, when the user
-		// clicks the Lantern desktop shortcut when Lantern is already running.
-		err2 := app.showExistingUI(app.uiaddr())
-		if err2 != nil {
-			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
-		} else {
+	if lastUIAddr := settings.GetUIAddr(); lastUIAddr != "" {
+		// Is something listening on that port?
+		if err := app.showExistingUI(lastUIAddr); err == nil {
 			log.Debug("Lantern already running, showing existing UI")
 			app.Exit(nil)
 		}
-		return false
-	}
-	client.UIAddr = actualUIAddr
-
-	var stage bool
-	if s, ok := app.Flags["staging"].(bool); ok {
-		stage = s
 	}
 
-	go func() {
-		proAddr := app.proProxyAddr(client.UIAddr)
-		log.Fatal(pro.InitProxy(proAddr, stage))
-	}()
+	log.Debugf("Starting client UI at %v", app.uiaddr())
+	err = ui.Start(app.uiaddr(), !app.ShowUI, startupURL)
+	if err != nil {
+		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
+	}
 
-	err = serveBandwidth(app.uiaddr())
+	settings.SetUIAddr(ui.UIAddr())
+
+	err = serveBandwidth(ui.UIAddr())
 	if err != nil {
 		log.Errorf("Unable to serve bandwidth to UI: %v", err)
 	}
@@ -262,9 +249,20 @@ func (app *App) onConfigUpdate(cfg *config.Global) {
 // showExistingUi triggers an existing Lantern running on the same system to
 // open a browser to the Lantern start page.
 func (app *App) showExistingUI(addr string) error {
-	url := "http://" + addr + "/startup"
+	host, port, err := net.SplitHostPort(addr)
+	if host == "" {
+		host = "127.0.0.1"
+	}
+	url := "http://" + host + ":" + port + "/startup"
 	log.Debugf("Hitting local URL: %v", url)
-	resp, err := http.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Debugf("Could not build request: %s", err)
+		return err
+	}
+	req.Header.Set("Origin", url)
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Debugf("Could not hit local lantern: %s", err)
 		return err
@@ -308,12 +306,4 @@ func (app *App) waitForExit() error {
 
 func (app *App) uiaddr() string {
 	return app.Flags["uiaddr"].(string)
-}
-
-func (app *App) proProxyAddr(addr string) string {
-	host, _, _ := net.SplitHostPort(addr)
-	if host == "" {
-		host = "127.0.0.1"
-	}
-	return fmt.Sprintf("%s:1233", host)
 }
