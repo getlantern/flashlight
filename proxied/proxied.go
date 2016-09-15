@@ -355,17 +355,28 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 }
 
 func cloneRequestForFronted(req *http.Request) (*http.Request, error) {
-	frontedURL := req.Header.Get(lanternFrontedURL)
+	frontedURLVal := req.Header.Get(lanternFrontedURL)
 
-	if frontedURL == "" {
+	if frontedURLVal == "" {
 		return nil, errors.New("Callers MUST specify the fronted URL in the Lantern-Fronted-URL header")
 	}
 
 	req.Header.Del(lanternFrontedURL)
-	frontedReq, err := http.NewRequest(req.Method, frontedURL, nil)
+
+	frontedURL, err := url.Parse(frontedURLVal)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Could not parse fronted URL %v", err)
 	}
+
+	// We need to copy the query parameters from the original.
+	frontedURL.RawQuery = req.URL.RawQuery
+
+	frontedReq := &http.Request{
+		Method: req.Method,
+		URL:    frontedURL,
+		Header: http.Header{},
+	}
+
 	if req.Body != nil {
 		//Replicate the body. Attach a new copy to original request as body can
 		//only be read once
