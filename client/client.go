@@ -262,6 +262,7 @@ func (client *Client) portForAddress(addr string) (int, error) {
 }
 
 func isLanternSpecialDomain(addr string) bool {
+	log.Debugf("Checking if '%v' has special domain prefix '%v'", addr, uiProxiedAddr+":")
 	return strings.HasPrefix(addr, uiProxiedAddr+":")
 }
 
