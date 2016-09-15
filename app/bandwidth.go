@@ -77,7 +77,7 @@ func (s *notifyStatus) checkPercent(quota *bandwidth.Quota, percent float64) boo
 	return (float64(quota.MiBUsed) / float64(quota.MiBAllowed)) > percent
 }
 
-func (s *notifyStatus) notifyEighty(n notify.Notifierg) {
+func (s *notifyStatus) notifyEighty(n notify.Notifier) {
 	s.notifyPercent(80, n)
 }
 
