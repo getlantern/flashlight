@@ -21,7 +21,7 @@ func randRead(size int) string {
 }
 
 func proxyDomain() string {
-	return fmt.Sprintf("http://%s.lantern.io", randRead(4))
+	return fmt.Sprintf("%s.lantern.io", randRead(4))
 }
 
 func token() string {
