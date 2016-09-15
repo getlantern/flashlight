@@ -27,7 +27,7 @@ var (
 type notifyStatus struct {
 }
 
-func serveBandwidth(uiaddr string) error {
+func serveBandwidth() error {
 	helloFn := func(write func(interface{}) error) error {
 		log.Debugf("Sending current bandwidth quota to new client")
 		return write(bandwidth.GetQuota())
@@ -44,15 +44,15 @@ func serveBandwidth(uiaddr string) error {
 				service.Out <- quota
 				if ns.isFull(quota) {
 					oneFull.Do(func() {
-						go ns.notifyCapHit(n, uiaddr)
+						go ns.notifyCapHit(n)
 					})
 				} else if ns.isEightyOrMore(quota) {
 					oneEighty.Do(func() {
-						go ns.notifyEighty(n, uiaddr)
+						go ns.notifyEighty(n)
 					})
 				} else if ns.isFiftyOrMore(quota) {
 					oneFifty.Do(func() {
-						go ns.notifyFifty(n, uiaddr)
+						go ns.notifyFifty(n)
 					})
 				}
 			}
@@ -77,12 +77,12 @@ func (s *notifyStatus) checkPercent(quota *bandwidth.Quota, percent float64) boo
 	return (float64(quota.MiBUsed) / float64(quota.MiBAllowed)) > percent
 }
 
-func (s *notifyStatus) notifyEighty(n notify.Notifier, uiaddr string) {
-	s.notifyPercent(80, n, uiaddr)
+func (s *notifyStatus) notifyEighty(n notify.Notifierg) {
+	s.notifyPercent(80, n)
 }
 
-func (s *notifyStatus) notifyFifty(n notify.Notifier, uiaddr string) {
-	s.notifyPercent(50, n, uiaddr)
+func (s *notifyStatus) notifyFifty(n notify.Notifier) {
+	s.notifyPercent(50, n)
 }
 
 func (s *notifyStatus) percentMsg(msg string, percent int) string {
@@ -90,21 +90,21 @@ func (s *notifyStatus) percentMsg(msg string, percent int) string {
 	return fmt.Sprintf(msg, str)
 }
 
-func (s *notifyStatus) notifyPercent(percent int, n notify.Notifier, uiaddr string) {
+func (s *notifyStatus) notifyPercent(percent int, n notify.Notifier) {
 	title := s.percentMsg(i18n.T("BACKEND_DATA_PERCENT_TITLE"), percent)
 	msg := s.percentMsg(i18n.T("BACKEND_DATA_PERCENT_MESSAGE"), percent)
 
-	s.notifyFreeUser(n, uiaddr, title, msg)
+	s.notifyFreeUser(n, title, msg)
 }
 
-func (s *notifyStatus) notifyCapHit(n notify.Notifier, uiaddr string) {
+func (s *notifyStatus) notifyCapHit(n notify.Notifier) {
 	title := i18n.T("BACKEND_DATA_TITLE")
 	msg := i18n.T("BACKEND_DATA_MESSAGE")
 
-	s.notifyFreeUser(n, uiaddr, title, msg)
+	s.notifyFreeUser(n, title, msg)
 }
 
-func (s *notifyStatus) notifyFreeUser(n notify.Notifier, uiaddr, title, msg string) {
+func (s *notifyStatus) notifyFreeUser(n notify.Notifier, title, msg string) {
 	userID := settings.GetUserID()
 	status, err := s.userStatus(settings.GetDeviceID(), int(userID), settings.GetToken())
 	if err != nil {
@@ -117,11 +117,11 @@ func (s *notifyStatus) notifyFreeUser(n notify.Notifier, uiaddr, title, msg stri
 		return
 	}
 
-	logo := ui.AddToken(uiaddr + "/img/lantern_logo.png")
+	logo := ui.AddToken("/img/lantern_logo.png")
 	note := &notify.Notification{
 		Title:    title,
 		Message:  msg,
-		ClickURL: uiaddr,
+		ClickURL: ui.GetPreferredUIAddr(),
 		IconURL:  logo,
 	}
 

@@ -20,11 +20,6 @@ func randRead(size int) string {
 	return hex.EncodeToString(buf)
 }
 
-// pacPath returns a random path for the PAC file.
-func pacPath() string {
-	return AddToken("/proxy_on.pac")
-}
-
 func proxyDomain() string {
 	return fmt.Sprintf("%s.lantern.io", randRead(4))
 }
