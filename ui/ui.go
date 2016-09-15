@@ -123,10 +123,10 @@ func Start(requestedAddr string, allowRemote bool, extURL string) error {
 	// detects this and reroutes the traffic to the local UI server. The proxy is
 	// allowed to connect to loopback because it doesn't have the same restriction
 	// as Microsoft Edge.
-	proxiedAddr := proxyDomain()
-	client.SetProxyUIAddr(proxiedAddr, listenAddr)
+	proxiedUIAddr = proxyDomain()
+	client.SetProxyUIAddr(proxiedUIAddr, listenAddr)
 
-	log.Debugf("UI available at %v and http://%v", uiaddr, proxiedAddr)
+	log.Debugf("UI available at %v and http://%v", uiaddr, proxiedUIAddr)
 
 	return nil
 }
