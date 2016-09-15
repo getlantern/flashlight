@@ -174,8 +174,10 @@ func shouldPreferProxiedUI() bool {
 func getPreferredUIAddr() string {
 	// We only use the proxied UI address if the default browser is Microsoft Edge
 	if edgedetect.DefaultBrowserIsEdge() && shouldPreferProxiedUI() {
+		log.Debugf("Returning '%v' for proxied UI addr", proxiedUIAddr)
 		return proxiedUIAddr
 	}
+	log.Debugf("Returning plain uiaddr %v", uiaddr)
 	return uiaddr
 }
 
