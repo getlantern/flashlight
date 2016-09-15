@@ -189,6 +189,7 @@ func getPreferredUIAddr() string {
 func Show() {
 	go func() {
 		addr := getPreferredUIAddr() + "?1"
+		log.Debugf("Opening browser at %v", addr)
 		err := open.Run(addr)
 		if err != nil {
 			log.Errorf("Error opening page to `%v`: %v", addr, err)
