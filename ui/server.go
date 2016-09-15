@@ -36,6 +36,8 @@ func checkOrigin(h http.Handler) http.Handler {
 			clientAddr = origin
 		}
 
+		tokenMatch := false
+
 		if clientAddr == "" {
 			switch r.URL.Path {
 			case "/": // Whitelist skips any further checks.
@@ -46,6 +48,7 @@ func checkOrigin(h http.Handler) http.Handler {
 				token := r.Form.Get("token")
 				if token == sessionToken {
 					clientAddr = uiaddr // Bypass further checks if the token is legit.
+					tokenMatch = true
 				} else {
 					log.Errorf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
 					return
@@ -64,7 +67,7 @@ func checkOrigin(h http.Handler) http.Handler {
 			return
 		}
 
-		if strictOriginCheck {
+		if strictOriginCheck && !tokenMatch {
 			if allowRemoteClients {
 				// At least check if same port.
 				_, originPort, _ := net.SplitHostPort(originURL.Host)
@@ -74,7 +77,8 @@ func checkOrigin(h http.Handler) http.Handler {
 					return
 				}
 			} else {
-				if GetPreferredUIAddr() != "http://"+originURL.Host {
+				uri := "http://" + originURL.Host
+				if (GetPreferredUIAddr() != uri) && (UIAddr() != uri) {
 					log.Errorf("Origin was '%v' but expecting: '%v'", "http://"+originURL.Host, GetPreferredUIAddr())
 					log.Errorf("Call to %v", r.URL)
 					return

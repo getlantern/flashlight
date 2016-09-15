@@ -229,5 +229,5 @@ func openExternalURL(u string) {
 // request path. Without that token, the backend will reject the request to
 // avoid web sites detecting Lantern.
 func AddToken(in string) string {
-	return util.SetURLParam(GetPreferredUIAddr()+in, "token", sessionToken)
+	return util.SetURLParam(UIAddr()+in, "token", sessionToken)
 }
