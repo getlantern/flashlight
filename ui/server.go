@@ -79,7 +79,6 @@ func checkOrigin(h http.Handler) http.Handler {
 			} else {
 				if GetPreferredUIAddr() != "http://"+originURL.Host {
 					log.Errorf("Origin was '%v' but expecting: '%v'", "http://"+originURL.Host, GetPreferredUIAddr())
-					log.Errorf("Call to %v", r.URL)
 					return
 				}
 			}
