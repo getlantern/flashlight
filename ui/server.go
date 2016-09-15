@@ -75,7 +75,7 @@ func checkOrigin(h http.Handler) http.Handler {
 				}
 			} else {
 				if getPreferredUIAddr() != "http://"+originURL.Host {
-					log.Errorf("Origin was: '%s', expecting: '%s'", getPreferredUIAddr(), expectedURL)
+					log.Errorf("Origin was: '%s', expecting: '%s'", "http://"+originURL.Host, getPreferredUIAddr())
 					return
 				}
 			}
