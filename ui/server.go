@@ -60,7 +60,7 @@ func checkOrigin(h http.Handler) http.Handler {
 
 		originURL, err := url.Parse(clientAddr)
 		if err != nil {
-			log.Errorf("Could not parse client addr", clientAddr)
+			log.Errorf("Could not parse client addr %v", clientAddr)
 			return
 		}
 
@@ -75,7 +75,7 @@ func checkOrigin(h http.Handler) http.Handler {
 				}
 			} else {
 				if getPreferredUIAddr() != "http://"+originURL.Host {
-					log.Errorf("Origin was: %s, expecting: %s", originURL, expectedURL)
+					log.Errorf("Origin was: '%s', expecting: '%s'", getPreferredUIAddr(), expectedURL)
 					return
 				}
 			}

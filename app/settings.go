@@ -170,6 +170,7 @@ func newSettings(filePath string) *Settings {
 			SNSystemProxy: true,
 			SNLanguage:    "",
 			SNUserToken:   "",
+			SNUIAddr:      "",
 		},
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
@@ -358,7 +359,7 @@ func (s *Settings) SetLanguage(language string) {
 	s.setVal(SNLanguage, language)
 }
 
-// GetLanguage returns the user language
+// GetUIAddr returns the user language
 func (s *Settings) GetUIAddr() string {
 	return s.getString(SNUIAddr)
 }
