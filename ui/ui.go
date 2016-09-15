@@ -190,7 +190,7 @@ func GetPreferredUIAddr() string {
 // asynchronously is not a problem.
 func Show() {
 	go func() {
-		addr := GetPreferredUIAddr() + "?1"
+		addr := uiaddr + "?1"
 		log.Debugf("Opening browser at %v", addr)
 		err := open.Run(addr)
 		if err != nil {
