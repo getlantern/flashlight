@@ -20,8 +20,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ua-parser/uap-go/uaparser"
-
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
@@ -47,7 +45,6 @@ var (
 
 	// compileTimePackageVersion is set at compile-time for production builds
 	compileTimePackageVersion = "development"
-	uaParser                  = uaparser.NewFromSaved()
 
 	// ErrChainedProxyUnavailable indicates that we weren't able to find a chained
 	// proxy.
@@ -65,16 +62,9 @@ func success(resp *http.Response) bool {
 }
 
 // changeUserAgent prepends Lantern version and OSARCH to the User-Agent header
-// of req to facilitate debugging on server side. It also compacts the original
-// UA string to a more concise and readable one if possible.
+// of req to facilitate debugging on server side.
 func changeUserAgent(req *http.Request) {
 	secondary := req.Header.Get("User-Agent")
-	if secondary != "" {
-		parsed := uaParser.Parse(secondary).UserAgent.ToString()
-		if parsed != "Other" {
-			secondary = parsed
-		}
-	}
 	ua := strings.TrimSpace(fmt.Sprintf("Lantern/%s (%s/%s) %s",
 		compileTimePackageVersion, runtime.GOOS, runtime.GOARCH, secondary))
 	req.Header.Set("User-Agent", ua)
