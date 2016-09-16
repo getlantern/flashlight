@@ -166,7 +166,7 @@ imports:
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxybench
-  version: 79964216eee9a91ae6d162b1bc832308289c794a
+  version: 512a7d80f0225ed7e1d64c840ce9918b1c8ca990
 - name: github.com/getlantern/rot13
   version: 33f93fc1fe85c042c0667a1814e6379bd5e7eb40
 - name: github.com/getlantern/rotator
