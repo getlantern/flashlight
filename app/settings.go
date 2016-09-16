@@ -31,9 +31,10 @@ const (
 
 	SNLanguage SettingName = "language"
 
-	SNDeviceID  SettingName = "deviceID"
-	SNUserID    SettingName = "userID"
-	SNUserToken SettingName = "userToken"
+	SNDeviceID     SettingName = "deviceID"
+	SNUserID       SettingName = "userID"
+	SNUserToken    SettingName = "userToken"
+	SNTakenSurveys SettingName = "takenSurveys"
 
 	SNVersion      SettingName = "version"
 	SNBuildDate    SettingName = "buildDate"
@@ -48,6 +49,7 @@ const (
 	stBool settingType = iota
 	stNumber
 	stString
+	stStringArray
 )
 
 const (
@@ -67,9 +69,10 @@ var settingMeta = map[SettingName]struct {
 	SNLanguage: {stString, true, true},
 
 	// SNDeviceID: intentionally omit, to avoid setting it from UI
-	SNUserID:    {stNumber, true, true},
-	SNUserToken: {stString, true, true},
-	SNUIAddr:    {stString, true, true},
+	SNUserID:       {stNumber, true, true},
+	SNUserToken:    {stString, true, true},
+	SNTakenSurveys: {stStringArray, true, true},
+	SNUIAddr:       {stString, true, true},
 
 	SNVersion:      {stString, false, false},
 	SNBuildDate:    {stString, false, false},
@@ -223,6 +226,8 @@ func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {
 				s.setString(name, v)
 			case stNumber:
 				s.setNum(name, v)
+			case stStringArray:
+				s.setStringArray(name, v)
 			}
 		}
 
@@ -254,6 +259,19 @@ func (s *Settings) setNum(name SettingName, v interface{}) {
 		return
 	}
 	s.setVal(name, bigint)
+}
+
+func (s *Settings) setStringArray(name SettingName, v interface{}) {
+	var sa []string
+	ss, ok := v.([]interface{})
+	if !ok {
+		log.Errorf("Could not convert %s(%v) to array", name, v)
+		return
+	}
+	for i := range ss {
+		sa = append(sa, fmt.Sprintf("%v", ss[i]))
+	}
+	s.setVal(name, sa)
 }
 
 func (s *Settings) setString(name SettingName, v interface{}) {
@@ -316,6 +334,10 @@ func (s *Settings) uiMap() map[string]interface{} {
 				if v != "" {
 					m[k] = v
 				}
+			case stStringArray:
+				if a, ok := v.([]string); ok {
+					m[k] = a
+				}
 			case stNumber:
 				if v != 0 {
 					m[k] = v
@@ -324,6 +346,17 @@ func (s *Settings) uiMap() map[string]interface{} {
 		}
 	}
 	return m
+}
+
+func (s *Settings) GetTakenSurveys() []string {
+	if val, err := s.getVal(SNTakenSurveys); err == nil {
+		return val.([]string)
+	}
+	return nil
+}
+
+func (s *Settings) SetTakenSurveys(campaigns []string) {
+	s.setVal(SNTakenSurveys, campaigns)
 }
 
 // GetProxyAll returns whether or not to proxy all traffic.
