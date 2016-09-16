@@ -15,7 +15,7 @@ var (
 	country                = flag.String("country", "xx", "2 digit country code under which to report stats. Defaults to xx.")
 	cpuprofile             = flag.String("cpuprofile", "", "write cpu profile to given file")
 	memprofile             = flag.String("memprofile", "", "write heap profile to given file")
-	uiaddr                 = flag.String("uiaddr", "127.0.0.1:16823", "if specified, indicates host:port the UI HTTP server should be started on")
+	uiaddr                 = flag.String("uiaddr", "", "if specified, indicates host:port the UI HTTP server should be started on")
 	proxyAll               = flag.Bool("proxyall", false, "set to true to proxy all traffic through Lantern network")
 	stickyConfig           = flag.Bool("stickyconfig", false, "set to true to only use the local config file")
 	headless               = flag.Bool("headless", false, "if true, lantern will run with no ui")

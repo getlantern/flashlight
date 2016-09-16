@@ -75,7 +75,7 @@ func Init(configDir string, flags map[string]interface{},
 		urls:       checkOverrides(flags, getGlobalURLs(staging), "global.yaml.gz"),
 		userConfig: userConfig,
 		yamlTemplater: func() interface{} {
-			gl := &Global{}
+			gl := newGlobal()
 			gl.applyFlags(flags)
 			return gl
 		},

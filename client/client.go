@@ -22,18 +22,13 @@ import (
 	"golang.org/x/net/context"
 )
 
-const (
-	// LanternSpecialDomain is a special domain for use by lantern that gets
-	// resolved to localhost by the proxy
-	LanternSpecialDomain          = "ui.lantern.io"
-	lanternSpecialDomainWithColon = "ui.lantern.io:"
+var (
+	uiAddr        string
+	uiProxiedAddr string
 )
 
 var (
 	log = golog.LoggerFor("flashlight.client")
-
-	// UIAddr is the address at which UI is to be found
-	UIAddr string
 
 	addr                = eventual.NewValue()
 	socksAddr           = eventual.NewValue()
@@ -72,6 +67,11 @@ type Client struct {
 
 	proxyAll       func() bool
 	proTokenGetter func() string
+}
+
+// SetProxyUIAddr sets the vanity proxy domain name and its translation.
+func SetProxyUIAddr(proxyAddr string, realAddr string) {
+	uiAddr, uiProxiedAddr = realAddr, proxyAddr
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -262,16 +262,17 @@ func (client *Client) portForAddress(addr string) (int, error) {
 }
 
 func isLanternSpecialDomain(addr string) bool {
-	return strings.HasPrefix(addr, lanternSpecialDomainWithColon)
+	log.Debugf("Checking if '%v' has special domain prefix '%v'", addr, uiProxiedAddr+":")
+	return strings.HasPrefix(addr, uiProxiedAddr+":")
 }
 
 func rewriteLanternSpecialDomain(addr string) string {
-	if addr == lanternSpecialDomainWithColon+"80" {
+	if addr == uiProxiedAddr+":80" {
 		// This is a special replacement for the ui.lantern.io:80 case.
-		return "127.0.0.1:16823"
+		return uiAddr
 	}
 	// Let any other port pass as is.
-	addr = strings.Replace(addr, lanternSpecialDomainWithColon, "127.0.0.1:", 1)
+	addr = strings.Replace(addr, uiProxiedAddr, "127.0.0.1:", 1)
 	return addr
 }
 

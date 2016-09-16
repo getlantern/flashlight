@@ -6,10 +6,8 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"strings"
-	"time"
 
 	"github.com/getlantern/flashlight/proxied"
-	"github.com/getlantern/flashlight/util"
 	"github.com/getlantern/golog"
 )
 
@@ -18,31 +16,18 @@ var (
 	httpClient = &http.Client{Transport: proxied.ChainedThenFronted()}
 	// Respond sooner if chained proxy is blocked, but only for idempotent requests (GETs)
 	httpClientForGET = &http.Client{Transport: proxied.ParallelPreferChained()}
-	proAPIHost       = "api.getiantem.org"
-	proAPIDDFHost    = "d2n32kma9hyo9f.cloudfront.net"
 )
 
 type proxyTransport struct {
 	// Satisfies http.RoundTripper
 }
 
-// InitProxy starts the proxy listening on the specified host and port.
-func InitProxy(addr string, staging bool) error {
-	if staging {
-		proAPIHost = "api-staging.getiantem.org"
-		proAPIDDFHost = "d16igwq64x5e11.cloudfront.net"
-	}
-	srv := &http.Server{
-		Addr:         addr,
-		Handler:      util.NoCacheHandler(proxyHandler),
-		ReadTimeout:  20 * time.Second,
-		WriteTimeout: 30 * time.Second,
-	}
-	return srv.ListenAndServe()
-}
-
 func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	origin := req.Header.Get("Origin")
+	// Strip /pro from path.
+	if strings.HasPrefix(req.URL.Path, "/pro/") {
+		req.URL.Path = req.URL.Path[4:]
+	}
 	if req.Method == "OPTIONS" {
 		// No need to proxy the OPTIONS request.
 		resp = &http.Response{
@@ -72,14 +57,16 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	return
 }
 
-var proxyHandler = &httputil.ReverseProxy{
-	Transport: &proxyTransport{},
-	Director: func(r *http.Request) {
-		r.URL.Scheme = "https"
-		r.URL.Host = proAPIHost
-		r.Host = r.URL.Host
-		r.RequestURI = "" // http: Request.RequestURI can't be set in client requests.
-		r.Header.Set("Lantern-Fronted-URL", fmt.Sprintf("http://%s%s", proAPIDDFHost, r.URL.Path))
-		r.Header.Set("Access-Control-Allow-Headers", "X-Lantern-Device-Id, X-Lantern-Pro-Token, X-Lantern-User-Id")
-	},
+func APIHandler() http.Handler {
+	return &httputil.ReverseProxy{
+		Transport: &proxyTransport{},
+		Director: func(r *http.Request) {
+			r.URL.Scheme = "https"
+			r.URL.Host = proAPIHost
+			r.Host = r.URL.Host
+			r.RequestURI = "" // http: Request.RequestURI can't be set in client requests.
+			r.Header.Set("Lantern-Fronted-URL", fmt.Sprintf("http://%s%s", proAPIDDFHost, r.URL.Path))
+			r.Header.Set("Access-Control-Allow-Headers", "X-Lantern-Device-Id, X-Lantern-Pro-Token, X-Lantern-User-Id")
+		},
+	}
 }

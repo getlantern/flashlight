@@ -8,10 +8,64 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestStartServer(t *testing.T) {
+	Start(":0", false, "")
+}
+
 func TestNoCache(t *testing.T) {
 	var rw httptest.ResponseRecorder
-	Start(":0", false, "")
 	req, _ := http.NewRequest("GET", "/", nil)
+	r.ServeHTTP(&rw, req)
+	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
+}
+
+func TestProAPI(t *testing.T) {
+	var rw httptest.ResponseRecorder
+	req, _ := http.NewRequest("GET", "/pro/user-data", nil)
+	req.Header.Set("Origin", "example.com")
+	r.ServeHTTP(&rw, req)
+	assert.Equal(t, "", rw.HeaderMap.Get("Cache-Control"), "The cache middleware should not be executed.")
+}
+
+func TestKnownResource(t *testing.T) {
+	var rw httptest.ResponseRecorder
+	req, _ := http.NewRequest("GET", "/js/bundle.js", nil)
+	req.Header.Set("Origin", "example.com")
+	r.ServeHTTP(&rw, req)
+	assert.Equal(t, "", rw.HeaderMap.Get("Cache-Control"), "The cache middleware should not be executed.")
+}
+
+func TestKnownResourceWithNoOrigin(t *testing.T) {
+	var rw httptest.ResponseRecorder
+	req, _ := http.NewRequest("GET", "/js/bundle.js", nil)
+	r.ServeHTTP(&rw, req)
+	assert.Equal(t, "", rw.HeaderMap.Get("Cache-Control"), "Expecting no reply")
+}
+
+func TestProxyPACWithNoToken(t *testing.T) {
+	var rw httptest.ResponseRecorder
+	req, _ := http.NewRequest("GET", "/proxy_on.pac", nil)
+	r.ServeHTTP(&rw, req)
+	assert.Equal(t, "", rw.HeaderMap.Get("Cache-Control"), "Expecting no reply")
+}
+
+func TestKnownResourceWithNoOriginButWithToken(t *testing.T) {
+	var rw httptest.ResponseRecorder
+	req, _ := http.NewRequest("GET", AddToken("/js/bundle.js"), nil)
+	r.ServeHTTP(&rw, req)
+	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
+}
+
+func TestLanternLogoWithToken(t *testing.T) {
+	var rw httptest.ResponseRecorder
+	req, _ := http.NewRequest("GET", AddToken("/img/lantern_logo.png?foo=1"), nil)
+	r.ServeHTTP(&rw, req)
+	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
+}
+
+func TestLanternPACURL(t *testing.T) {
+	var rw httptest.ResponseRecorder
+	req, _ := http.NewRequest("GET", AddToken("/proxy_on.pac"), nil)
 	r.ServeHTTP(&rw, req)
 	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
 }
