@@ -348,6 +348,13 @@ func (s *Settings) uiMap() map[string]interface{} {
 	return m
 }
 
+func (s *Settings) GetTakenSurveys() []string {
+	if val, err := s.getVal(SNTakenSurveys); err == nil {
+		return val.([]string)
+	}
+	return nil
+}
+
 func (s *Settings) SetTakenSurveys(campaigns []string) {
 	s.setVal(SNTakenSurveys, campaigns)
 }
