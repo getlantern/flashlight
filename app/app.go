@@ -168,9 +168,9 @@ func (app *App) beforeStart() bool {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 	}
 
-	settings.SetUIAddr(ui.UIAddr())
+	settings.SetUIAddr(ui.GetPreferredUIAddr())
 
-	err = serveBandwidth(ui.UIAddr())
+	err = serveBandwidth()
 	if err != nil {
 		log.Errorf("Unable to serve bandwidth to UI: %v", err)
 	}

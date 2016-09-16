@@ -36,6 +36,8 @@ func checkOrigin(h http.Handler) http.Handler {
 			clientAddr = origin
 		}
 
+		tokenMatch := false
+
 		if clientAddr == "" {
 			switch r.URL.Path {
 			case "/": // Whitelist skips any further checks.
@@ -46,8 +48,9 @@ func checkOrigin(h http.Handler) http.Handler {
 				token := r.Form.Get("token")
 				if token == sessionToken {
 					clientAddr = uiaddr // Bypass further checks if the token is legit.
+					tokenMatch = true
 				} else {
-					log.Debugf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
+					log.Errorf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
 					return
 				}
 			}
@@ -60,24 +63,27 @@ func checkOrigin(h http.Handler) http.Handler {
 
 		originURL, err := url.Parse(clientAddr)
 		if err != nil {
-			log.Debugf("Could not parse client addr", clientAddr)
+			log.Errorf("Could not parse client addr %v", clientAddr)
 			return
 		}
 
-		if allowRemoteClients {
-			// At least check if same port.
-			_, originPort, _ := net.SplitHostPort(originURL.Host)
-			_, expectedPort, _ := net.SplitHostPort(expectedURL.Host)
-			if originPort != expectedPort {
-				log.Debugf("Expecting clients connect on port: %s, but got: %s", expectedPort, originPort)
-				return
-			}
-		} else {
-			if getPreferredUIAddr() != "http://"+originURL.Host {
-				log.Debugf("Origin was: %s, expecting: %s", originURL, expectedURL)
-				return
+		if strictOriginCheck && !tokenMatch {
+			if allowRemoteClients {
+				// At least check if same port.
+				_, originPort, _ := net.SplitHostPort(originURL.Host)
+				_, expectedPort, _ := net.SplitHostPort(expectedURL.Host)
+				if originPort != expectedPort {
+					log.Errorf("Expecting clients connect on port: %s, but got: %s", expectedPort, originPort)
+					return
+				}
+			} else {
+				if GetPreferredUIAddr() != "http://"+originURL.Host {
+					log.Errorf("Origin was '%v' but expecting: '%v'", "http://"+originURL.Host, GetPreferredUIAddr())
+					return
+				}
 			}
 		}
+
 		h.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(check)

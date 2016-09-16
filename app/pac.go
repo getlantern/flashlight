@@ -35,7 +35,7 @@ func servePACFile() {
 	defer cfgMutex.Unlock()
 	if pacURL == "" {
 		ui.Handle("/proxy_on.pac", http.HandlerFunc(pacFileHandler))
-		pacURL = ui.AddToken(ui.UIAddr() + "/proxy_on.pac")
+		pacURL = ui.AddToken("/proxy_on.pac")
 	}
 }
 

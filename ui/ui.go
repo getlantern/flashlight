@@ -123,10 +123,11 @@ func Start(requestedAddr string, allowRemote bool, extURL string) error {
 	// detects this and reroutes the traffic to the local UI server. The proxy is
 	// allowed to connect to loopback because it doesn't have the same restriction
 	// as Microsoft Edge.
-	proxiedAddr := proxyDomain()
-	client.SetProxyUIAddr(proxiedAddr, listenAddr)
+	domain := proxyDomain()
+	proxiedUIAddr = "http://" + domain
+	client.SetProxyUIAddr(domain, listenAddr)
 
-	log.Debugf("UI available at %v and http://%v", uiaddr, proxiedAddr)
+	log.Debugf("UI available at %v and http://%v", uiaddr, proxiedUIAddr)
 
 	return nil
 }
@@ -157,13 +158,13 @@ func Translations(filename string) ([]byte, error) {
 // will not allow connections to localhost by default, but we can work
 // around it with our speciial domain.
 func PreferProxiedUI(val bool) (newAddr string, addrChanged bool) {
-	previousPreferredUIAddr := getPreferredUIAddr()
+	previousPreferredUIAddr := GetPreferredUIAddr()
 	updated := int32(0)
 	if val {
 		updated = 1
 	}
 	atomic.StoreInt32(&preferProxiedUI, updated)
-	newPreferredUIAddr := getPreferredUIAddr()
+	newPreferredUIAddr := GetPreferredUIAddr()
 	return newPreferredUIAddr, newPreferredUIAddr != previousPreferredUIAddr
 }
 
@@ -171,11 +172,15 @@ func shouldPreferProxiedUI() bool {
 	return atomic.LoadInt32(&preferProxiedUI) == 1
 }
 
-func getPreferredUIAddr() string {
+// GetPreferredUIAddr returns the address to access the UI on, which depends
+// on whether or not we're running on Edge essgentially.
+func GetPreferredUIAddr() string {
 	// We only use the proxied UI address if the default browser is Microsoft Edge
 	if edgedetect.DefaultBrowserIsEdge() && shouldPreferProxiedUI() {
+		log.Debugf("Returning '%v' for proxied UI addr", proxiedUIAddr)
 		return proxiedUIAddr
 	}
+	log.Debugf("Returning plain uiaddr %v", uiaddr)
 	return uiaddr
 }
 
@@ -186,7 +191,8 @@ func getPreferredUIAddr() string {
 // asynchronously is not a problem.
 func Show() {
 	go func() {
-		addr := getPreferredUIAddr() + "?1"
+		addr := GetPreferredUIAddr() + "?1"
+		log.Debugf("Opening browser at %v", addr)
 		err := open.Run(addr)
 		if err != nil {
 			log.Errorf("Error opening page to `%v`: %v", addr, err)
@@ -220,6 +226,9 @@ func openExternalURL(u string) {
 	}
 }
 
+// AddToken adds the UI domain and custom request token to the specified
+// request path. Without that token, the backend will reject the request to
+// avoid web sites detecting Lantern.
 func AddToken(in string) string {
-	return util.SetURLParam(in, "token", sessionToken)
+	return util.SetURLParam(UIAddr()+in, "token", sessionToken)
 }

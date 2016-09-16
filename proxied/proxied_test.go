@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"strings"
 	"testing"
 	"time"
@@ -235,5 +236,31 @@ func TestChangeUserAgent(t *testing.T) {
 	req, _ := http.NewRequest("GET", "abc.com", nil)
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36")
 	changeUserAgent(req)
-	assert.Regexp(t, "^Lantern/9.99 (.*) Chrome 41.0.2228$", req.Header.Get("User-Agent"))
+	assert.Regexp(t, "^Lantern/9.99 (.*) .*", req.Header.Get("User-Agent"))
+}
+
+// TestCloneRequestForFronted tests to make sure cloning requests is working
+// correctly.
+func TestCloneRequestForFronted(t *testing.T) {
+	req, _ := http.NewRequest("POST", "https://test.com?q1=test1&q2=test2", nil)
+	req.Header.Add("Lantern-Fronted-URL", "http://test.tldr")
+
+	dump, er := httputil.DumpRequestOut(req, false)
+	assert.Nil(t, er)
+	log.Debugf("%v", string(dump))
+
+	r, err := cloneRequestForFronted(req)
+	assert.Nil(t, err)
+
+	dump, er = httputil.DumpRequestOut(r, false)
+	assert.Nil(t, er)
+	log.Debugf("%v", string(dump))
+
+	param1 := r.URL.Query().Get("q1")
+	param2 := r.URL.Query().Get("q2")
+	assert.Equal(t, "test1", param1)
+	assert.Equal(t, "test2", param2)
+
+	assert.Equal(t, "test.tldr", r.URL.Host)
+	assert.Equal(t, req.Header.Get("Content-Length"), r.Header.Get("Content-Length"))
 }
