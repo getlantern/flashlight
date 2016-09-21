@@ -3,5 +3,6 @@ autoReport: true
 language: en
 proxyAll: false
 systemProxy: true
+uiAddr: ""
 userID: 1
 userToken: ""
