@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"path"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -37,11 +38,6 @@ var (
 	r              = NewServeMux()
 	sessionToken   = token()
 )
-
-// UIAddr returns the current UI address.
-func UIAddr() string {
-	return uiaddr
-}
 
 func Handle(pattern string, handler http.Handler) {
 	r.Handle(pattern, handler)
@@ -112,7 +108,7 @@ func Start(requestedAddr string, allowRemote bool, extURL string) error {
 	if host == "" {
 		host = "127.0.0.1"
 	}
-	uiaddr = fmt.Sprintf("http://%s:%s", host, port)
+	uiaddr = fmt.Sprintf("%s:%s", host, port)
 
 	// Note - we display the UI using the LanternSpecialDomain. This is necessary
 	// for Microsoft Edge on Windows 10 because, being a Windows Modern App, its
@@ -123,11 +119,10 @@ func Start(requestedAddr string, allowRemote bool, extURL string) error {
 	// detects this and reroutes the traffic to the local UI server. The proxy is
 	// allowed to connect to loopback because it doesn't have the same restriction
 	// as Microsoft Edge.
-	domain := proxyDomain()
-	proxiedUIAddr = "http://" + domain
-	client.SetProxyUIAddr(domain, listenAddr)
+	proxiedUIAddr = proxyDomain()
+	client.SetProxyUIAddr(proxiedUIAddr, listenAddr)
 
-	log.Debugf("UI available at %v and http://%v", uiaddr, proxiedUIAddr)
+	log.Debugf("UI available at http://%v and http://%v", uiaddr, proxiedUIAddr)
 
 	return nil
 }
@@ -191,7 +186,7 @@ func GetPreferredUIAddr() string {
 // asynchronously is not a problem.
 func Show() {
 	go func() {
-		addr := GetPreferredUIAddr() + "?1"
+		addr := fmt.Sprintf("http://%s/?1", GetPreferredUIAddr())
 		log.Debugf("Opening browser at %v", addr)
 		err := open.Run(addr)
 		if err != nil {
@@ -230,5 +225,5 @@ func openExternalURL(u string) {
 // request path. Without that token, the backend will reject the request to
 // avoid web sites detecting Lantern.
 func AddToken(in string) string {
-	return util.SetURLParam(UIAddr()+in, "token", sessionToken)
+	return util.SetURLParam("http://"+path.Join(uiaddr, in), "token", sessionToken)
 }
