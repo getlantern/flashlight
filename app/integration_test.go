@@ -28,8 +28,9 @@ import (
 
 const (
 	LocalProxyAddr  = "localhost:18345"
-	ProxyServerAddr = "localhost:18346"
-	OBFS4ServerAddr = "localhost:18347"
+	SocksProxyAddr  = "localhost:18346"
+	ProxyServerAddr = "localhost:18347"
+	OBFS4ServerAddr = "localhost:18348"
 
 	Content  = "THIS IS SOME STATIC CONTENT FROM THE WEB SERVER"
 	Token    = "AF325DF3432FDS"
@@ -315,6 +316,7 @@ func startApp(t *testing.T, configAddr string) error {
 		"cloudconfig":          configURL,
 		"frontedconfig":        configURL,
 		"addr":                 LocalProxyAddr,
+		"socksaddr":            SocksProxyAddr,
 		"headless":             true,
 		"proxyall":             true,
 		"configdir":            ".",

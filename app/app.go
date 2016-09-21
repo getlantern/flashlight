@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/golog"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/autoupdate"
+	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxiedsites"
@@ -87,12 +89,23 @@ func (app *App) Run() error {
 
 		listenAddr := app.Flags["addr"].(string)
 		if listenAddr == "" {
+			listenAddr = settings.getString(SNAddr)
+		}
+		if listenAddr == "" {
 			listenAddr = defaultHTTPProxyAddress
+		}
+
+		socksAddr := app.Flags["socksaddr"].(string)
+		if socksAddr == "" {
+			socksAddr = settings.getString(SNSOCKSAddr)
+		}
+		if socksAddr == "" {
+			socksAddr = defaultSOCKSProxyAddress
 		}
 
 		err := flashlight.Run(
 			listenAddr,
-			defaultSOCKSProxyAddress,
+			socksAddr,
 			app.Flags["configdir"].(string),
 			app.Flags["stickyconfig"].(bool),
 			settings.GetProxyAll,
@@ -131,6 +144,11 @@ func (app *App) beforeStart() bool {
 		app.Exit(err)
 	}
 
+	uiaddr := app.Flags["uiaddr"].(string)
+	if uiaddr == "" {
+		uiaddr = settings.GetUIAddr() // stick with the last one
+	}
+
 	if app.Flags["clear-proxy-settings"].(bool) {
 		// This is a workaround that attempts to fix a Windows-only problem where
 		// Lantern was unable to clean the system's proxy settings before logging
@@ -138,7 +156,7 @@ func (app *App) beforeStart() bool {
 		//
 		// See: https://github.com/getlantern/lantern/issues/2776
 		log.Debug("Clearing proxy settings")
-		doPACOff(fmt.Sprintf("http://%s/proxy_on.pac", app.uiaddr()))
+		doPACOff(fmt.Sprintf("http://%s/proxy_on.pac", uiaddr))
 		app.Exit(nil)
 	}
 
@@ -151,21 +169,21 @@ func (app *App) beforeStart() bool {
 		startupURL = bootstrap.StartupUrl
 	}
 
-	if lastUIAddr := settings.GetUIAddr(); lastUIAddr != "" {
+	if uiaddr != "" {
 		// Is something listening on that port?
-		if err := app.showExistingUI(lastUIAddr); err == nil {
+		if err := app.showExistingUI(uiaddr); err == nil {
 			log.Debug("Lantern already running, showing existing UI")
 			app.Exit(nil)
 		}
 	}
 
-	log.Debugf("Starting client UI at %v", app.uiaddr())
-	err = ui.Start(app.uiaddr(), !app.ShowUI, startupURL)
+	log.Debugf("Starting client UI at %v", uiaddr)
+	err = ui.Start(uiaddr, !app.ShowUI, startupURL)
 	if err != nil {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 	}
 
-	settings.SetUIAddr(ui.GetPreferredUIAddr())
+	settings.SetUIAddr(ui.GetDirectUIAddr())
 
 	err = serveBandwidth()
 	if err != nil {
@@ -236,6 +254,14 @@ func (app *App) afterStart() {
 	} else {
 		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
 	}
+	addr, ok := client.Addr(1 * time.Second)
+	if ok {
+		settings.setString(SNAddr, addr)
+	}
+	socksAddr, ok := client.Socks5Addr(1 * time.Second)
+	if ok {
+		settings.setString(SNSOCKSAddr, socksAddr)
+	}
 }
 
 func (app *App) onConfigUpdate(cfg *config.Global) {
@@ -299,8 +325,4 @@ func (app *App) Exit(err error) {
 // WaitForExit waits for a request to exit the application.
 func (app *App) waitForExit() error {
 	return <-app.exitCh
-}
-
-func (app *App) uiaddr() string {
-	return app.Flags["uiaddr"].(string)
 }

@@ -179,6 +179,11 @@ func GetPreferredUIAddr() string {
 	return uiaddr
 }
 
+// GetDirectUIAddr returns the current UI address when accessing directly.
+func GetDirectUIAddr() string {
+	return uiaddr
+}
+
 // Show opens the UI in a browser. Note we know the UI server is
 // *listening* at this point as long as Start is correctly called prior
 // to this method. It may not be reading yet, but since we're the only
