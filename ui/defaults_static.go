@@ -6,7 +6,7 @@ const defaultUIAddress = "127.0.0.1:16823"
 
 const strictOriginCheck = false
 
-func proxyDomain() string {
+func proxyDomainFor(addr string) string {
 	return "ui.lantern.io"
 }
 
