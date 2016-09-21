@@ -3,6 +3,7 @@ package app
 
 import (
 	"fmt"
+	"math/rand"
 	"net"
 	"net/http"
 	"strconv"
@@ -33,6 +34,7 @@ var (
 func init() {
 	log.Debugf("****************************** stagingMode: %v", stagingMode)
 	autoupdate.Version = flashlight.PackageVersion
+	rand.Seed(time.Now().UnixNano())
 }
 
 // App is the core of the Lantern desktop application, in the form of a library.
