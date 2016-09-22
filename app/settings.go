@@ -36,11 +36,13 @@ const (
 	SNUserToken    SettingName = "userToken"
 	SNTakenSurveys SettingName = "takenSurveys"
 
+	SNAddr      SettingName = "addr"
+	SNSOCKSAddr SettingName = "socksAddr"
+	SNUIAddr    SettingName = "uiAddr"
+
 	SNVersion      SettingName = "version"
 	SNBuildDate    SettingName = "buildDate"
 	SNRevisionDate SettingName = "revisionDate"
-
-	SNUIAddr SettingName = "uiAddr"
 )
 
 type settingType byte
@@ -72,7 +74,10 @@ var settingMeta = map[SettingName]struct {
 	SNUserID:       {stNumber, true, true},
 	SNUserToken:    {stString, true, true},
 	SNTakenSurveys: {stStringArray, true, true},
-	SNUIAddr:       {stString, true, true},
+
+	SNAddr:      {stString, true, true},
+	SNSOCKSAddr: {stString, true, true},
+	SNUIAddr:    {stString, true, true},
 
 	SNVersion:      {stString, false, false},
 	SNBuildDate:    {stString, false, false},
