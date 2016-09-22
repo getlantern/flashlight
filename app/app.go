@@ -256,12 +256,12 @@ func (app *App) afterStart() {
 	} else {
 		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
 	}
-	if addr, ok := client.Addr(1 * time.Second); ok {
+	if addr, ok := client.Addr(6 * time.Second); ok {
 		settings.setString(SNAddr, addr)
 	} else {
 		log.Errorf("Couldn't retrieve HTTP proxy addr in time")
 	}
-	if socksAddr, ok := client.Socks5Addr(1 * time.Second); ok {
+	if socksAddr, ok := client.Socks5Addr(6 * time.Second); ok {
 		settings.setString(SNSOCKSAddr, socksAddr)
 	} else {
 		log.Errorf("Couldn't retrieve SOCKS proxy addr in time")
