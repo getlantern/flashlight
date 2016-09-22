@@ -313,6 +313,7 @@ func (app *App) AddExitFunc(exitFunc func()) {
 // Exit tells the application to exit, optionally supplying an error that caused
 // the exit.
 func (app *App) Exit(err error) {
+	log.Errorf("Exiting app because of %v", err)
 	defer func() { app.exitCh <- err }()
 	for {
 		select {
