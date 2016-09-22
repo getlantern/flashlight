@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
+	"time"
 
 	"git.torproject.org/pluggable-transports/goptlib.git"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
@@ -23,6 +24,10 @@ var pluggableTransports = map[string]dialFactory{
 	"obfs4": obfs4DialFactory,
 }
 
+var (
+	chainedDialTimeout = 10 * time.Second
+)
+
 func defaultDialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
 	forceProxy := ForceChainedProxyAddr != ""
 	addr := s.Addr
@@ -38,7 +43,9 @@ func defaultDialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
 		dial = func() (net.Conn, error) {
 			op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "http")
 			defer op.End()
+			start := time.Now()
 			conn, err := netx.DialTimeout("tcp", addr, chainedDialTimeout)
+			op.DialTime(start, err)
 			return conn, op.FailIf(err)
 		}
 	} else {
@@ -53,11 +60,13 @@ func defaultDialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
 			op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "https")
 			defer op.End()
 
+			start := time.Now()
 			conn, err := tlsdialer.DialTimeout(netx.DialTimeout, chainedDialTimeout,
 				"tcp", addr, false, &tls.Config{
 					ClientSessionCache: sessionCache,
 					InsecureSkipVerify: true,
 				})
+			op.DialTime(start, err)
 			if err != nil {
 				return nil, op.FailIf(err)
 			}
@@ -98,7 +107,9 @@ func obfs4DialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
 	return func() (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "obfs4")
 		defer op.End()
+		start := time.Now()
 		conn, err := cf.Dial("tcp", s.Addr, netx.Dial, args)
+		op.DialTime(start, err)
 		return conn, op.FailIf(err)
 	}, nil
 }

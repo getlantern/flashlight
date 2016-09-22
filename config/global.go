@@ -30,13 +30,19 @@ type Global struct {
 	TrustedCAs []*fronted.CA
 }
 
+// newGlobal creates a new global config with otherwise nil values set.
+func newGlobal() *Global {
+	return &Global{
+		Client: client.NewConfig(),
+		ProxiedSites: &proxiedsites.Config{
+			Delta: &proxiedsites.Delta{},
+		},
+	}
+}
+
 // applyFlags updates this config from any command-line flags that were passed
 // in.
 func (cfg *Global) applyFlags(flags map[string]interface{}) {
-	if cfg.Client == nil {
-		cfg.Client = &client.ClientConfig{}
-	}
-
 	// Visit all flags that have been set and copy to config
 	for key, value := range flags {
 		switch key {

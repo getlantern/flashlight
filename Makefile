@@ -1,7 +1,10 @@
+DISABLE_PORT_RANDOMIZATION ?=
 GLIDE_BIN    ?= $(shell which glide)
 
 SHELL := /bin/bash
 SOURCES := $(shell find . -name '*[^_test].go')
+
+.PHONY: lantern
 
 BUILD_RACE := '-race'
 
@@ -15,12 +18,17 @@ define build-tags
 	BUILD_TAGS="$(BUILD_TAGS)" && \
 	EXTRA_LDFLAGS="" && \
 	if [[ ! -z "$$VERSION" ]]; then \
-		EXTRA_LDFLAGS="-X github.com/getlantern/lantern.compileTimePackageVersion=$$VERSION -X github.com/getlantern/flashlight.compileTimePackageVersion=$$VERSION"; \
+		EXTRA_LDFLAGS="-X github.com/getlantern/lantern.compileTimePackageVersion=$$VERSION"; \
+		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight.compileTimePackageVersion=$$VERSION"; \
+		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/proxied.compileTimePackageVersion=$$VERSION"; \
 	else \
 		echo "** VERSION was not set, using default version. This is OK while in development."; \
 	fi && \
 	if [[ ! -z "$$HEADLESS" ]]; then \
 		BUILD_TAGS="$$BUILD_TAGS headless"; \
+	fi && \
+	if [[ ! -z "$$DISABLE_PORT_RANDOMIZATION" ]]; then \
+		BUILD_TAGS="$$BUILD_TAGS disableresourcerandomization"; \
 	fi && \
 	if [[ ! -z "$$STAGING" ]]; then \
 		BUILD_TAGS="$$BUILD_TAGS staging"; \
@@ -51,4 +59,4 @@ novendor:
 	@rm -Rf vendor
 
 clean:
-	rm lantern
+	rm -f lantern

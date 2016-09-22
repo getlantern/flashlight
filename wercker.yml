@@ -1,0 +1,62 @@
+# This references the default golang container from
+# the Docker Hub: https://registry.hub.docker.com/u/library/golang/
+# If you want Google's container you would reference google/golang
+# Read more about containers on our dev center
+# http://devcenter.wercker.com/docs/containers/index.html
+box: golang:1.7
+# This is the build pipeline. Pipelines are the core of wercker
+# Read more about pipelines on our dev center
+# http://devcenter.wercker.com/docs/pipelines/index.html
+build:
+# The steps that will be executed on build
+# Steps make up the actions in your pipeline
+# Read more about steps on our dev center:
+# http://devcenter.wercker.com/docs/steps/index.html
+  steps:
+    # Sets the go workspace and places you package
+    # at the right place in the workspace tree
+    - wercker/setup-go-workspace:
+      package-dir: github.com/getlantern/flashlight
+    - add-ssh-key:
+      keyname: flashlight_key
+      host: github.com
+    - add-to-known_hosts:
+      hostname: github.com
+      fingerprint: 16:27:ac:a5:76:28:2d:36:63:1b:56:4d:eb:df:a6:48
+    - script:
+      name: force git paths
+      code: git config --global url."git@github.com:".insteadOf "https://github.com/"
+    - script:
+      name: get glide
+      code: |
+        # Note the standard glide install of piping through sh isn't supported for the test os, arch.
+        cd /tmp
+        curl -L https://github.com/Masterminds/glide/releases/download/v0.12.1/glide-v0.12.1-linux-amd64.tar.gz -o glide.tar.gz
+        tar -xf glide.tar.gz
+        sudo mv linux-amd64/glide /usr/local/bin/
+    - script:
+      name: git-config
+      code: |
+        git config --global url."git@github.com:".insteadOf "https://github.com/"
+    - script:
+      name: glide install
+      code: |
+        glide install
+    - install-packages:
+      packages: lsof # required by fdcount
+    - script:
+      name: make-lantern
+      code: |
+        HEADLESS=true make vendor lantern
+    #- script:
+    #  name: get goveralls
+    #  code: |-
+    #    go get golang.org/x/tools/cmd/cover
+    #    go get -v github.com/mattn/goveralls
+    #- script:
+    #  name: go test
+    #  code: go test -race -v -tags="headless" -covermode=atomic -coverprofile=profile_tmp.cov
+    - script:
+      name: go test -race
+      code: |
+        go test -race -v -tags="headless" $(glide novendor)

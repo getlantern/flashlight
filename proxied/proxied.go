@@ -7,11 +7,13 @@ package proxied
 import (
 	"bytes"
 	"crypto/tls"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -41,6 +43,9 @@ var (
 	proxyAddrMutex sync.RWMutex
 	proxyAddr      = eventual.DefaultUnsetGetter()
 
+	// compileTimePackageVersion is set at compile-time for production builds
+	compileTimePackageVersion = "development"
+
 	// ErrChainedProxyUnavailable indicates that we weren't able to find a chained
 	// proxy.
 	ErrChainedProxyUnavailable = "chained proxy unavailable"
@@ -54,6 +59,15 @@ var (
 
 func success(resp *http.Response) bool {
 	return resp.StatusCode > 199 && resp.StatusCode < 400
+}
+
+// changeUserAgent prepends Lantern version and OSARCH to the User-Agent header
+// of req to facilitate debugging on server side.
+func changeUserAgent(req *http.Request) {
+	secondary := req.Header.Get("User-Agent")
+	ua := strings.TrimSpace(fmt.Sprintf("Lantern/%s (%s/%s) %s",
+		compileTimePackageVersion, runtime.GOOS, runtime.GOARCH, secondary))
+	req.Header.Set("User-Agent", ua)
 }
 
 // SetProxyAddr sets the eventual.Getter that's used to determine the proxy's
@@ -182,6 +196,7 @@ type frontedRT struct{}
 // the application is starting up
 func (f frontedRT) RoundTrip(req *http.Request) (*http.Response, error) {
 	rt := fronted.NewDirect(5 * time.Minute)
+	changeUserAgent(req)
 	return rt.RoundTrip(req)
 }
 
@@ -330,17 +345,28 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 }
 
 func cloneRequestForFronted(req *http.Request) (*http.Request, error) {
-	frontedURL := req.Header.Get(lanternFrontedURL)
+	frontedURLVal := req.Header.Get(lanternFrontedURL)
 
-	if frontedURL == "" {
+	if frontedURLVal == "" {
 		return nil, errors.New("Callers MUST specify the fronted URL in the Lantern-Fronted-URL header")
 	}
 
 	req.Header.Del(lanternFrontedURL)
-	frontedReq, err := http.NewRequest(req.Method, frontedURL, nil)
+
+	frontedURL, err := url.Parse(frontedURLVal)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Could not parse fronted URL %v", err)
 	}
+
+	// We need to copy the query parameters from the original.
+	frontedURL.RawQuery = req.URL.RawQuery
+
+	frontedReq := &http.Request{
+		Method: req.Method,
+		URL:    frontedURL,
+		Header: http.Header{},
+	}
+
 	if req.Body != nil {
 		//Replicate the body. Attach a new copy to original request as body can
 		//only be read once
@@ -466,6 +492,7 @@ func chained(rootCA string, persistent bool) (http.RoundTripper, error) {
 	}
 
 	return AsRoundTripper(func(req *http.Request) (*http.Response, error) {
+		changeUserAgent(req)
 		op := ops.Begin("chained").ProxyType(ops.ProxyChained).Request(req)
 		defer op.End()
 		resp, err := tr.RoundTrip(req)
