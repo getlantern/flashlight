@@ -191,11 +191,11 @@ func GetDirectUIAddr() string {
 // asynchronously is not a problem.
 func Show() {
 	go func() {
-		addr := fmt.Sprintf("http://%s/?1", GetPreferredUIAddr())
-		log.Debugf("Opening browser at %v", addr)
-		err := open.Run(addr)
+		uiURL := fmt.Sprintf("http://%s/?1", GetPreferredUIAddr())
+		log.Debugf("Opening browser at %v", uiURL)
+		err := open.Run(uiURL)
 		if err != nil {
-			log.Errorf("Error opening page to `%v`: %v", addr, err)
+			log.Errorf("Error opening page to `%v`: %v", uiURL, err)
 		}
 
 		onceBody := func() {
