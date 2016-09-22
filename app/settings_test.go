@@ -160,3 +160,12 @@ func TestOnChange(t *testing.T) {
 	assert.Equal(t, "en", c1, "should call OnChange callback")
 	assert.Equal(t, "en", c2, "should call all OnChange callbacks")
 }
+
+func TestInvalidType(t *testing.T) {
+	set := newSettings("/dev/null")
+	set.setVal("test", nil)
+	assert.Equal(t, "", set.getString("test"))
+	assert.Equal(t, false, set.getBool("test"))
+	assert.Equal(t, int64(0), set.getInt64("test"))
+	assert.Equal(t, []string(nil), set.getStringArray("test"))
+}
