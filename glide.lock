@@ -1,5 +1,5 @@
-hash: beb72b7ac0303b173b3ba14101a69aefa4e31d53ec7e1a4b684b9ef6f078e81f
-updated: 2016-09-26T08:56:35.751758342-05:00
+hash: 36879dea463dc3171e4d543501ca509ad5dbd607b274f2db404c5d3e4426f71b
+updated: 2016-09-26T14:42:37.272811432-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -40,7 +40,7 @@ imports:
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda
-  version: c406af8a221ba7dc7b96ca08b759a8ac70e742c4
+  version: 49d716c6f0a075c94b1fd449bd6aebed8d48a5b1
   subpackages:
   - client
 - name: github.com/getlantern/buuid
@@ -203,6 +203,8 @@ imports:
   version: a887431f7f6ef7687b556dbf718d9f351d4858a0
 - name: github.com/rcrowley/go-metrics
   version: ab2277b1c5d15c3cba104e9cbddbdfc622df5ad8
+- name: github.com/Sirupsen/logrus
+  version: 3ec0642a7fb6488f65b06f9040adc67e3990296a
 - name: github.com/skratchdot/open-golang
   version: 75fb7ed4208cf72d323d7d02fd1a5964a7a9073c
   subpackages:
