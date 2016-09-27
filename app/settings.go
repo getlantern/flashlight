@@ -4,8 +4,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -291,16 +293,24 @@ func (s *Settings) setString(name SettingName, v interface{}) {
 	s.setVal(name, str)
 }
 
-// Save saves settings to disk.
+// save saves settings to disk.
 func (s *Settings) save() {
 	log.Trace("Saving settings")
+	if f, err := os.Create(s.filePath); err != nil {
+		log.Errorf("Could not open settings file for writing: %v", err)
+	} else if _, err := s.writeTo(f); err != nil {
+		log.Errorf("Could not save settings file: %v", err)
+	} else {
+		log.Tracef("Saved settings to %s", s.filePath)
+	}
+}
+
+func (s *Settings) writeTo(w io.Writer) (int, error) {
 	toBeSaved := s.mapToSave()
 	if bytes, err := yaml.Marshal(toBeSaved); err != nil {
-		log.Errorf("Could not create yaml from settings %v", err)
-	} else if err := ioutil.WriteFile(s.filePath, bytes, 0644); err != nil {
-		log.Errorf("Could not write settings file %v", err)
+		return 0, nil
 	} else {
-		log.Tracef("Saved settings to %s with contents %v", s.filePath, string(bytes))
+		return w.Write(bytes)
 	}
 }
 
