@@ -60,7 +60,7 @@ novendor:
 
 test-and-cover: $(SOURCES)
 	@echo "mode: count" > profile.cov && \
-	TP=$$(cat testpackages.txt) && \
+	TP=$$(glide novendor -x) && \
 	CP=$$(echo -n $$TP | tr ' ', ',') && \
 	set -x && \
 	for pkg in $$TP; do \
@@ -69,7 +69,7 @@ test-and-cover: $(SOURCES)
 	done
 
 test: $(SOURCES)
-	TP=$$(cat testpackages.txt) && \
+	@TP=$$(glide novendor -x) && \
 	go test -race -v -tags="headless" $$TP || exit 1; \
 
 clean:
