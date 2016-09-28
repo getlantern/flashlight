@@ -345,37 +345,19 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 }
 
 func cloneRequestForFronted(req *http.Request) (*http.Request, error) {
-	frontedURLVal := req.Header.Get(lanternFrontedURL)
-
-	if frontedURLVal == "" {
+	frontedURL := req.Header.Get(lanternFrontedURL)
+	if frontedURL == "" {
 		return nil, errors.New("Callers MUST specify the fronted URL in the Lantern-Fronted-URL header")
 	}
-
 	req.Header.Del(lanternFrontedURL)
 
-	frontedURL, err := url.Parse(frontedURLVal)
+	frontedReq, err := http.NewRequest(req.Method, frontedURL, nil)
 	if err != nil {
-		return nil, fmt.Errorf("Could not parse fronted URL %v", err)
+		return nil, err
 	}
 
 	// We need to copy the query parameters from the original.
-	frontedURL.RawQuery = req.URL.RawQuery
-
-	frontedReq := &http.Request{
-		Method: req.Method,
-		URL:    frontedURL,
-		Header: http.Header{},
-	}
-
-	if req.Body != nil {
-		//Replicate the body. Attach a new copy to original request as body can
-		//only be read once
-		buf, _ := ioutil.ReadAll(req.Body)
-		_ = req.Body.Close()
-		req.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
-		frontedReq.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
-	}
-
+	frontedReq.URL.RawQuery = req.URL.RawQuery
 	// Make a copy of the original request headers to include in the
 	// fronted request. This will ensure that things like the caching
 	// headers are included in both requests.
@@ -389,6 +371,17 @@ func cloneRequestForFronted(req *http.Request) (*http.Request, error) {
 		copy(vv2, vv)
 		frontedReq.Header[k] = vv2
 	}
+
+	if req.Body != nil {
+		//Replicate the body. Attach a new copy to original request as body can
+		//only be read once
+		buf, _ := ioutil.ReadAll(req.Body)
+		_ = req.Body.Close()
+		req.Body = ioutil.NopCloser(bytes.NewReader(buf))
+		frontedReq.Body = ioutil.NopCloser(bytes.NewReader(buf))
+		frontedReq.ContentLength = int64(len(buf))
+	}
+
 	return frontedReq, nil
 }
 
