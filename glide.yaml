@@ -102,3 +102,4 @@ import:
 - package: github.com/ua-parser/uap-go
   subpackages:
   - uaparser
+- package: github.com/Sirupsen/logrus
