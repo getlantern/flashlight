@@ -439,7 +439,9 @@ func startBordaAndProxyBench(bordaReportInterval time.Duration) {
 	})
 
 	reporter := func(failure error, ctx map[string]interface{}) {
+		log.Debugf("Reporting %v", ctx)
 		if !isReportingEnabled() {
+			log.Debug("Reporting not enabled")
 			return
 		}
 
@@ -470,6 +472,7 @@ func startBordaAndProxyBench(bordaReportInterval time.Duration) {
 
 func includeInSample(deviceID string, samplePercentage float64) bool {
 	if samplePercentage == 0 {
+		log.Debug("Sampling off")
 		return false
 	}
 
@@ -487,7 +490,9 @@ func includeInSample(deviceID string, samplePercentage float64) bool {
 	// Pad and decode to int
 	paddedDeviceIDBytes := append(deviceIDBytes, 0, 0)
 	deviceIDInt := binary.BigEndian.Uint64(paddedDeviceIDBytes)
-	return deviceIDInt%uint64(1/samplePercentage) == 0
+	include := deviceIDInt%uint64(1/samplePercentage) == 0
+	log.Debugf("Including: %v", include)
+	return include
 }
 
 func getCfg() *config {
