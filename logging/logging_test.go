@@ -57,6 +57,16 @@ func TestLoggly(t *testing.T) {
 	SetReportingEnabled(true)
 	var buf bytes.Buffer
 	var result map[string]interface{}
+
+	cfigMx.Lock()
+	cfig = &config{logglySamplePercentage: 1, deviceID: "MTIzNDU2"}
+	cfigMx.Unlock()
+	defer func() {
+		cfigMx.Lock()
+		cfig = &config{}
+		cfigMx.Unlock()
+	}()
+
 	loggly := loggly.New("token not required")
 	loggly.Writer = &buf
 	r := logglyErrorReporter{client: loggly}

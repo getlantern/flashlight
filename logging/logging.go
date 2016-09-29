@@ -36,11 +36,19 @@ const (
 	logTimestampFormat = "Jan 02 15:04:05.000"
 )
 
+type config struct {
+	deviceID               string
+	logglySamplePercentage float64
+	bordaSamplePercentage  float64
+}
+
 var (
 	log          = golog.LoggerFor("flashlight.logging")
 	processStart = time.Now()
 
 	reportingEnabled = uint32(0)
+	cfig             = &config{}
+	cfigMx           sync.RWMutex
 	logFile          *rotator.SizeRotator
 
 	// logglyToken is populated at build time by crosscompile.bash. During
@@ -70,6 +78,10 @@ var (
 		"timezone":        "timeZone",
 		"app_version":     "version",
 	}
+
+	contextOnce sync.Once
+	logglyOnce  sync.Once
+	bordaOnce   sync.Once
 )
 
 func init() {
@@ -130,10 +142,22 @@ func Configure(cloudConfigCA string, deviceID string,
 	logglySamplePercentage float64) (success chan bool) {
 	success = make(chan bool, 1)
 
+	contextOnce.Do(func() {
+		initContext(deviceID, version, revisionDate)
+	})
+
+	cfigMx.Lock()
+	cfig = &config{
+		deviceID,
+		logglySamplePercentage,
+		bordaSamplePercentage,
+	}
+	cfigMx.Unlock()
+
 	if bordaReportInterval > 0 {
-		enableBordaAndProxyBench(bordaReportInterval, bordaSamplePercentage, deviceID)
-	} else {
-		log.Debug("Will not report to borda")
+		bordaOnce.Do(func() {
+			startBordaAndProxyBench(bordaReportInterval)
+		})
 	}
 
 	// Note: Returning from this function must always add a result to the
@@ -156,12 +180,12 @@ func Configure(cloudConfigCA string, deviceID string,
 		return
 	}
 
-	initContext(deviceID, version, revisionDate)
-
 	// Using a goroutine because we'll be using waitforserver and at this time
 	// the proxy is not yet ready.
 	go func() {
-		enableLoggly(cloudConfigCA, logglySamplePercentage, deviceID)
+		logglyOnce.Do(func() {
+			startLoggly(cloudConfigCA)
+		})
 		// Won't block, but will allow optional blocking on receiver
 		success <- true
 	}()
@@ -238,13 +262,7 @@ func timestamped(orig io.Writer) io.Writer {
 	})
 }
 
-func enableLoggly(cloudConfigCA string, logglySamplePercentage float64, deviceID string) {
-	if !includeInSample(deviceID, logglySamplePercentage) {
-		log.Debugf("DeviceID %v not being sampled for Loggly", deviceID)
-		return
-	}
-	log.Debugf("DeviceID %v will report errors to Loggly", deviceID)
-
+func startLoggly(cloudConfigCA string) {
 	rt, err := proxied.ChainedPersistent(cloudConfigCA)
 	if err != nil {
 		log.Errorf("Could not create HTTP client, not logging to Loggly: %v", err)
@@ -268,6 +286,11 @@ type logglyErrorReporter struct {
 }
 
 func (r logglyErrorReporter) Report(err error, location string, ctx map[string]interface{}) {
+	cfg := getCfg()
+	if !includeInSample(cfg.deviceID, cfg.logglySamplePercentage) {
+		return
+	}
+
 	// Remove hidden errors info
 	fullMessage := hidden.Clean(err.Error())
 	if !shouldReport(location) {
@@ -386,7 +409,7 @@ func (t *nonStopWriter) flush() {
 	}
 }
 
-func enableBordaAndProxyBench(bordaReportInterval time.Duration, bordaSamplePercentage float64, deviceID string) {
+func startBordaAndProxyBench(bordaReportInterval time.Duration) {
 	rt := proxied.ChainedThenFronted()
 
 	bordaClient = borda.NewClient(&borda.Options{
@@ -415,16 +438,16 @@ func enableBordaAndProxyBench(bordaReportInterval time.Duration, bordaSamplePerc
 		}
 	})
 
-	if !includeInSample(deviceID, bordaSamplePercentage) {
-		log.Debugf("DeviceID %v not being sampled for Borda", deviceID)
-		return
-	}
-
-	log.Debugf("DeviceID %v will be sampled for Borda", deviceID)
 	reporter := func(failure error, ctx map[string]interface{}) {
 		if !isReportingEnabled() {
 			return
 		}
+
+		cfg := getCfg()
+		if !includeInSample(cfg.deviceID, cfg.bordaSamplePercentage) {
+			return
+		}
+
 		values := map[string]float64{}
 		if failure != nil {
 			values["error_count"] = 1
@@ -465,4 +488,11 @@ func includeInSample(deviceID string, samplePercentage float64) bool {
 	paddedDeviceIDBytes := append(deviceIDBytes, 0, 0)
 	deviceIDInt := binary.BigEndian.Uint64(paddedDeviceIDBytes)
 	return deviceIDInt%uint64(1/samplePercentage) == 0
+}
+
+func getCfg() *config {
+	cfigMx.RLock()
+	cfg := cfig
+	cfigMx.RUnlock()
+	return cfg
 }
