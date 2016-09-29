@@ -50,9 +50,6 @@ var (
 	// proxy.
 	ErrChainedProxyUnavailable = "chained proxy unavailable"
 
-	// ErrUnsuccessfulResponseStatus indicates that a response status was unsuccessful
-	ErrUnsuccessfulResponseStatus = "unsuccessful response status"
-
 	// Shared client session cache for all connections
 	clientSessionCache = tls.NewLRUClientSessionCache(1000)
 )
@@ -166,7 +163,7 @@ func (cf *chainedAndFronted) RoundTrip(req *http.Request) (*http.Response, error
 		// If there's an error, switch back to using the dual fetcher.
 		cf.setFetcher(&dualFetcher{cf})
 	} else if !success(resp) {
-		log.Error(ErrUnsuccessfulResponseStatus)
+		log.Error(resp.Status)
 		cf.setFetcher(&dualFetcher{cf})
 	}
 	return resp, err
@@ -244,7 +241,7 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 		}
 		// If the local proxy can't connect to any upstream proxies, for example,
 		// it will return a 502.
-		err = errors.New(ErrUnsuccessfulResponseStatus)
+		err = errors.New(resp.Status)
 		if resp.Body != nil {
 			_ = resp.Body.Close()
 		}

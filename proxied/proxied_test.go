@@ -242,8 +242,8 @@ func TestChangeUserAgent(t *testing.T) {
 // TestCloneRequestForFronted tests to make sure cloning requests is working
 // correctly.
 func TestCloneRequestForFronted(t *testing.T) {
-	req, _ := http.NewRequest("POST", "https://chained.com?q1=test1&q2=test2", strings.NewReader("abc"))
-	req.Header.Add("Lantern-Fronted-URL", "http://fronted.tldr")
+	req, _ := http.NewRequest("POST", "https://chained.com/path1?q1=test1&q2=test2", strings.NewReader("abc"))
+	req.Header.Add("Lantern-Fronted-URL", "http://fronted.tldr/path2")
 
 	r, err := cloneRequestForFronted(req)
 	assert.Nil(t, err)
@@ -262,6 +262,7 @@ func TestCloneRequestForFronted(t *testing.T) {
 	assert.Equal(t, "test2", param2)
 
 	assert.Equal(t, "fronted.tldr", r.URL.Host)
+	assert.Equal(t, "/path2", r.URL.Path)
 	assert.Equal(t, req.ContentLength, r.ContentLength)
 	b, _ := ioutil.ReadAll(r.Body)
 	assert.Equal(t, "abc", string(b), "should have body")
