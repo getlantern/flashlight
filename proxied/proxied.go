@@ -379,7 +379,7 @@ func cloneRequestForFronted(req *http.Request) (*http.Request, error) {
 		_ = req.Body.Close()
 		req.Body = ioutil.NopCloser(bytes.NewReader(buf))
 		frontedReq.Body = ioutil.NopCloser(bytes.NewReader(buf))
-		frontedReq.ContentLength = int64(len(buf))
+		frontedReq.ContentLength = req.ContentLength
 	}
 
 	return frontedReq, nil
