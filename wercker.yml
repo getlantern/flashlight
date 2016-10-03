@@ -48,15 +48,13 @@ build:
       name: make-lantern
       code: |
         HEADLESS=true make vendor lantern
-    #- script:
-    #  name: get goveralls
-    #  code: |-
-    #    go get golang.org/x/tools/cmd/cover
-    #    go get -v github.com/mattn/goveralls
-    #- script:
-    #  name: go test
-    #  code: go test -race -v -tags="headless" -covermode=atomic -coverprofile=profile_tmp.cov
+    - script:
+      name: get goveralls
+      code: |-
+        go get golang.org/x/tools/cmd/cover
+        go get -v github.com/mattn/goveralls
     - script:
       name: go test -race
-      code: |
-        go test -race -v -tags="headless" $(glide novendor)
+      code: make test-and-cover
+    - tcnksm/goveralls:
+      token: 19Nno28mzRG0nIrWOc92flFUhZF2ty4Rc
