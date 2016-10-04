@@ -6,7 +6,12 @@ import (
 	"github.com/getlantern/balancer"
 )
 
-var bal = balancer.New(balancer.QualityFirst)
+var (
+	bal = balancer.New(&balancer.Opts{
+		Strategy:  balancer.QualityFirst,
+		CheckData: func() interface{} { return checkTargets.top(10) },
+	})
+)
 
 // initBalancer takes hosts from cfg.ChainedServers and it uses them to create a
 // balancer.
