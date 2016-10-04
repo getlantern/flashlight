@@ -242,25 +242,28 @@ func TestChangeUserAgent(t *testing.T) {
 // TestCloneRequestForFronted tests to make sure cloning requests is working
 // correctly.
 func TestCloneRequestForFronted(t *testing.T) {
-	req, _ := http.NewRequest("POST", "https://test.com?q1=test1&q2=test2", nil)
-	req.Header.Add("Lantern-Fronted-URL", "http://test.tldr")
-
-	dump, er := httputil.DumpRequestOut(req, false)
-	assert.Nil(t, er)
-	log.Debugf("%v", string(dump))
+	req, _ := http.NewRequest("POST", "https://chained.com/path1?q1=test1&q2=test2", strings.NewReader("abc"))
+	req.Header.Add("Lantern-Fronted-URL", "http://fronted.tldr/path2")
 
 	r, err := cloneRequestForFronted(req)
 	assert.Nil(t, err)
 
-	dump, er = httputil.DumpRequestOut(r, false)
+	dump, er := httputil.DumpRequestOut(req, true)
 	assert.Nil(t, er)
-	log.Debugf("%v", string(dump))
+	t.Log("%v", string(dump))
+
+	dump, er = httputil.DumpRequestOut(r, true)
+	assert.Nil(t, er)
+	t.Log("%v", string(dump))
 
 	param1 := r.URL.Query().Get("q1")
 	param2 := r.URL.Query().Get("q2")
 	assert.Equal(t, "test1", param1)
 	assert.Equal(t, "test2", param2)
 
-	assert.Equal(t, "test.tldr", r.URL.Host)
-	assert.Equal(t, req.Header.Get("Content-Length"), r.Header.Get("Content-Length"))
+	assert.Equal(t, "fronted.tldr", r.URL.Host)
+	assert.Equal(t, "/path2", r.URL.Path)
+	assert.Equal(t, req.ContentLength, r.ContentLength)
+	b, _ := ioutil.ReadAll(r.Body)
+	assert.Equal(t, "abc", string(b), "should have body")
 }
