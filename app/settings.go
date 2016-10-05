@@ -353,10 +353,12 @@ func (s *Settings) uiMap() map[string]interface{} {
 	return m
 }
 
+// GetTakenSurveys returns the IDs of surveys the user has already taken.
 func (s *Settings) GetTakenSurveys() []string {
 	return s.getStringArray(SNTakenSurveys)
 }
 
+// SetTakenSurveys sets the IDs of taken surveys.
 func (s *Settings) SetTakenSurveys(campaigns []string) {
 	s.setVal(SNTakenSurveys, campaigns)
 }
