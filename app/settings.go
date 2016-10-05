@@ -353,13 +353,12 @@ func (s *Settings) uiMap() map[string]interface{} {
 	return m
 }
 
+// GetTakenSurveys returns the IDs of surveys the user has already taken.
 func (s *Settings) GetTakenSurveys() []string {
-	if val, err := s.getVal(SNTakenSurveys); err == nil {
-		return val.([]string)
-	}
-	return nil
+	return s.getStringArray(SNTakenSurveys)
 }
 
+// SetTakenSurveys sets the IDs of taken surveys.
 func (s *Settings) SetTakenSurveys(campaigns []string) {
 	s.setVal(SNTakenSurveys, campaigns)
 }
@@ -434,21 +433,36 @@ func (s *Settings) GetSystemProxy() bool {
 
 func (s *Settings) getBool(name SettingName) bool {
 	if val, err := s.getVal(name); err == nil {
-		return val.(bool)
+		if v, ok := val.(bool); ok {
+			return v
+		}
 	}
 	return false
 }
 
+func (s *Settings) getStringArray(name SettingName) []string {
+	if val, err := s.getVal(name); err == nil {
+		if v, ok := val.([]string); ok {
+			return v
+		}
+	}
+	return nil
+}
+
 func (s *Settings) getString(name SettingName) string {
 	if val, err := s.getVal(name); err == nil {
-		return val.(string)
+		if v, ok := val.(string); ok {
+			return v
+		}
 	}
 	return ""
 }
 
 func (s *Settings) getInt64(name SettingName) int64 {
 	if val, err := s.getVal(name); err == nil {
-		return val.(int64)
+		if v, ok := val.(int64); ok {
+			return v
+		}
 	}
 	return int64(0)
 }
