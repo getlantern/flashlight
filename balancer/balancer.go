@@ -99,7 +99,6 @@ func (b *Balancer) copyDialers() []*dialer {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
 	ds := make([]*dialer, 0, len(b.dialers.dialers))
-	log.Debugf("Copying %v dialers", len(b.dialers.dialers))
 	for _, d := range b.dialers.dialers {
 		if d.Check == nil {
 			log.Errorf("No check function provided for dialer %s, not checking", d.Label)
@@ -107,8 +106,6 @@ func (b *Balancer) copyDialers() []*dialer {
 		}
 		ds = append(ds, d)
 	}
-
-	log.Debugf("Copied %v dialers", len(ds))
 	return ds
 }
 
