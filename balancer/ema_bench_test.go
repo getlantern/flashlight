@@ -24,33 +24,33 @@ import (
 )
 
 func BenchmarkEMA(b *testing.B) {
-	total_A := 0
-	ema_alpha_0_5_A := &emaDuration{ia: 2}
-	ema_alpha_0_2_A := &emaDuration{ia: 5}
-	ema_alpha_0_1_A := &emaDuration{ia: 10}
+	totalA := 0
+	emaAlpha05A := &emaDuration{ia: 2}
+	emaAlpha02A := &emaDuration{ia: 5}
+	emaAlpha01A := &emaDuration{ia: 10}
 
-	total_B := 0
-	ema_alpha_0_5_B := &emaDuration{ia: 2}
-	ema_alpha_0_2_B := &emaDuration{ia: 5}
-	ema_alpha_0_1_B := &emaDuration{ia: 10}
+	totalB := 0
+	emaAlpha05B := &emaDuration{ia: 2}
+	emaAlpha02B := &emaDuration{ia: 5}
+	emaAlpha01B := &emaDuration{ia: 10}
 
 	for i := 0; i < b.N; i++ { //use b.N for looping
-		d_A := rand.Intn(1000)
-		total_A = total_A + d_A
-		ema_alpha_0_5_A.UpdateWith(time.Duration(d_A))
-		ema_alpha_0_2_A.UpdateWith(time.Duration(d_A))
-		ema_alpha_0_1_A.UpdateWith(time.Duration(d_A))
+		dA := rand.Intn(1000)
+		totalA = totalA + dA
+		emaAlpha05A.UpdateWith(time.Duration(dA))
+		emaAlpha02A.UpdateWith(time.Duration(dA))
+		emaAlpha01A.UpdateWith(time.Duration(dA))
 
-		d_B := rand.Intn(400)
-		total_B = total_B + d_B
-		ema_alpha_0_5_B.UpdateWith(time.Duration(d_B))
-		ema_alpha_0_2_B.UpdateWith(time.Duration(d_B))
-		ema_alpha_0_1_B.UpdateWith(time.Duration(d_B))
+		dB := rand.Intn(400)
+		totalB = totalB + dB
+		emaAlpha05B.UpdateWith(time.Duration(dB))
+		emaAlpha02B.UpdateWith(time.Duration(dB))
+		emaAlpha01B.UpdateWith(time.Duration(dB))
 
 		if i > 1000 {
 			b.Logf("d:%d\tavg:%d\tα=0.5: %d\tα=0.2: %d\tα=0.1: %d\t||\td:%d\tavg:%d\tα=0.5: %d\tα=0.2: %d\tα=0.1: %d",
-				d_A, total_A/(i+1), ema_alpha_0_5_A.GetInt64(), ema_alpha_0_2_A.GetInt64(), ema_alpha_0_1_A.GetInt64(),
-				d_B, total_B/(i+1), ema_alpha_0_5_B.GetInt64(), ema_alpha_0_2_B.GetInt64(), ema_alpha_0_1_B.GetInt64())
+				dA, totalA/(i+1), emaAlpha05A.GetInt64(), emaAlpha02A.GetInt64(), emaAlpha01A.GetInt64(),
+				dB, totalB/(i+1), emaAlpha05B.GetInt64(), emaAlpha02B.GetInt64(), emaAlpha01B.GetInt64())
 		}
 	}
 }
