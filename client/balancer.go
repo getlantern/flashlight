@@ -8,8 +8,7 @@ import (
 
 var (
 	bal = balancer.New(&balancer.Opts{
-		Strategy:  balancer.QualityFirst,
-		CheckData: func() interface{} { return checkTargets.top(10) },
+		Strategy: balancer.QualityFirst,
 	})
 )
 

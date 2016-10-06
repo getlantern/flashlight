@@ -6,9 +6,6 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"sort"
-	"strings"
-	"sync"
 	"time"
 
 	"github.com/getlantern/chained"
@@ -27,19 +24,11 @@ var (
 	// doesn't interfere with that.
 	idleTimeout = 45 * time.Second
 
-	// Lantern internal sites won't be used as check target.
-	internalSiteSuffixes = []string{"getlantern.org", "getiantem.org", "lantern.io"}
-
 	// ForceChainedProxyAddr - If specified, all proxying will go through this address
 	ForceChainedProxyAddr string
 
 	// ForceAuthToken - If specified, auth token will be forced to this
 	ForceAuthToken string
-
-	// A fixed length list of full urls used to check this server. We would like
-	// to include sites accessed by the user, but at the moment we just use a
-	// canned set of popular sites.
-	checkTargets = newURLList()
 )
 
 // ChainedServerInfo contains all the data for connecting to a given chained
@@ -138,7 +127,7 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 				conn, err = netx.DialTimeout(network, addr, 1*time.Minute)
 			} else {
 				// Yeah any site visited through Lantern can be a check target
-				addCheckTarget(addr)
+				balancer.AddCheckTarget(addr)
 				conn, err = d(network, addr)
 			}
 
@@ -150,8 +139,8 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 			})
 			return conn, nil
 		},
-		Check: func(checkData interface{}) (bool, time.Duration) {
-			return s.check(d, checkData.([]string), deviceID, proTokenGetter)
+		Check: func(checkData interface{}, onFailure func(string)) (bool, time.Duration) {
+			return s.check(d, checkData.([]string), deviceID, proTokenGetter, onFailure)
 		},
 		OnRequest: ccfg.OnRequest,
 	}, nil
@@ -174,7 +163,10 @@ func (s *chainedServer) attachHeaders(req *http.Request, deviceID string, proTok
 }
 
 // check pings the 10 most popular sites in the user's history
-func (s *chainedServer) check(dial func(string, string) (net.Conn, error), urls []string, deviceID string, proTokenGetter func() string) (bool, time.Duration) {
+func (s *chainedServer) check(dial func(string, string) (net.Conn, error),
+	urls []string, deviceID string,
+	proTokenGetter func() string,
+	onFailure func(string)) (bool, time.Duration) {
 	rt := &http.Transport{
 		DisableKeepAlives: true,
 		Dial:              dial,
@@ -216,7 +208,7 @@ func (s *chainedServer) check(dial func(string, string) (net.Conn, error), urls 
 			if success {
 				totalLatency += time.Now().Sub(start)
 			} else {
-				checkTargets.checkFailed(url)
+				onFailure(url)
 			}
 			return success, nil
 		})
@@ -230,80 +222,3 @@ func (s *chainedServer) check(dial func(string, string) (net.Conn, error), urls 
 
 	return allPassed, totalLatency
 }
-
-func addCheckTarget(addr string) {
-	host, port, e := net.SplitHostPort(addr)
-	if e != nil {
-		log.Errorf("failed to split port from %s", addr)
-		return
-	}
-	if port != "80" {
-		log.Tracef("Skip setting non-HTTP site %s as check target", addr)
-		return
-	}
-	for _, s := range internalSiteSuffixes {
-		if strings.HasSuffix(host, s) {
-			log.Tracef("Skip setting internal site %s as check target", addr)
-			return
-		}
-	}
-	checkTargets.hit(fmt.Sprintf("http://%s/index.html", addr))
-}
-
-type urlList struct {
-	urls        map[string]int
-	uncheckable map[string]bool
-	mx          sync.RWMutex
-}
-
-func newURLList() *urlList {
-	l := &urlList{urls: make(map[string]int, 5), uncheckable: make(map[string]bool)}
-	// Prepopulate list with popular URLs
-	// TODO: persist the url list to disk and use the hit counts from prior runs
-	// to better match this specific user's patterns.
-	l.hit("https://www.google.com/favicon.ico")
-	l.hit("https://www.facebook.com/humans.txt")
-	l.hit("https://www.tumblr.com/humans.txt")
-	l.hit("https://www.youtube.com/robots.txt")
-	return l
-}
-
-func (l *urlList) hit(url string) {
-	l.mx.Lock()
-	l.urls[url] = l.urls[url] + 1
-	l.mx.Unlock()
-}
-
-func (l *urlList) checkFailed(url string) {
-	l.mx.Lock()
-	l.uncheckable[url] = true
-	l.mx.Unlock()
-}
-
-func (l *urlList) top(n int) []string {
-	l.mx.RLock()
-	sorted := make(byCount, 0, len(l.urls))
-	for url, count := range l.urls {
-		if !l.uncheckable[url] {
-			sorted = append(sorted, &pair{url, count})
-		}
-	}
-	l.mx.RUnlock()
-	sort.Sort(sorted)
-	topN := make([]string, 0, n)
-	for i := 0; i < n && i < len(sorted); i++ {
-		topN = append(topN, sorted[i].url)
-	}
-	return topN
-}
-
-type pair struct {
-	url   string
-	count int
-}
-
-type byCount []*pair
-
-func (a byCount) Len() int           { return len(a) }
-func (a byCount) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a byCount) Less(i, j int) bool { return a[i].count > a[j].count }

@@ -21,9 +21,6 @@ const (
 
 	// reasonable but slightly larger than the timeout of all dialers
 	initialTimeout = 1 * time.Minute
-
-	defaultMinCheckInterval = 10 * time.Second
-	defaultMaxCheckInterval = 1 * time.Hour
 )
 
 var (
@@ -38,10 +35,6 @@ type Opts struct {
 	// Dialers are the Dialers amongst which the Balancer will balance.
 	Dialers []*Dialer
 
-	// CheckData returns data to be used by each dialer's Check function on a
-	// given checking pass.
-	CheckData func() interface{}
-
 	// MinCheckInterval controls the minimum check interval when scheduling dialer
 	// checks. Defaults to 10 seconds.
 	MinCheckInterval time.Duration
@@ -53,47 +46,67 @@ type Opts struct {
 
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
-	lastDialTime     int64 // not used anymore, but makes sure we're aligned on 64bit boundary
-	nextTimeout      *emaDuration
-	st               Strategy
-	mu               sync.RWMutex
-	dialers          dialerHeap
-	trusted          dialerHeap
-	checkData        func() interface{}
-	minCheckInterval time.Duration
-	maxCheckInterval time.Duration
-	resetCheckCh     chan bool
-	closeCh          chan bool
-	stopStats        chan bool
+	lastDialTime   int64 // not used anymore, but makes sure we're aligned on 64bit boundary
+	nextTimeout    *emaDuration
+	st             Strategy
+	mu             sync.RWMutex
+	dialers        dialerHeap
+	trusted        dialerHeap
+	closeCh        chan bool
+	resetCheckCh   chan bool
+	stopStats      chan bool
+	checkerCloseCh chan bool
 }
 
 // New creates a new Balancer using the supplied Strategy and Dialers.
 func New(opts *Opts) *Balancer {
+	resetCheckCh := make(chan bool, 1)
+	checkerCloseCh := make(chan bool)
 	// a small alpha to gradually adjust timeout based on performance of all
 	// dialers
 	b := &Balancer{
-		st:               opts.Strategy,
-		nextTimeout:      newEMADuration(initialTimeout, 0.2),
-		checkData:        opts.CheckData,
+		st:             opts.Strategy,
+		nextTimeout:    newEMADuration(initialTimeout, 0.2),
+		closeCh:        make(chan bool),
+		stopStats:      make(chan bool, 1),
+		resetCheckCh:   resetCheckCh,
+		checkerCloseCh: checkerCloseCh,
+	}
+
+	checker := &checker{
 		minCheckInterval: opts.MinCheckInterval,
 		maxCheckInterval: opts.MaxCheckInterval,
-		resetCheckCh:     make(chan bool, 1),
-		closeCh:          make(chan bool, 1),
-		stopStats:        make(chan bool, 0),
+		resetCheckCh:     resetCheckCh,
+		closeCh:          checkerCloseCh,
+		dialers:          b.copyDialers,
 	}
-	if b.checkData == nil {
-		b.checkData = func() interface{} { return nil }
+
+	if checker.minCheckInterval <= 0 {
+		checker.minCheckInterval = defaultMinCheckInterval
 	}
-	if b.minCheckInterval <= 0 {
-		b.minCheckInterval = defaultMinCheckInterval
+	if checker.maxCheckInterval <= 0 {
+		checker.maxCheckInterval = defaultMaxCheckInterval
 	}
-	if b.maxCheckInterval <= 0 {
-		b.maxCheckInterval = defaultMaxCheckInterval
-	}
+
 	b.Reset(opts.Dialers...)
-	ops.Go(b.runChecks)
+	ops.Go(checker.runChecks)
 	ops.Go(b.printStats)
+	ops.Go(b.run)
 	return b
+}
+
+func (b *Balancer) copyDialers() []*dialer {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+	ds := make([]*dialer, 0, len(b.dialers.dialers))
+	for _, d := range b.dialers.dialers {
+		if d.Check == nil {
+			log.Errorf("No check function provided for dialer %s, not checking", d.Label)
+			continue
+		}
+		ds = append(ds, d)
+	}
+	return ds
 }
 
 // Reset closes existing dialers and replaces them with new ones.
@@ -121,6 +134,15 @@ func (b *Balancer) Reset(dialers ...*Dialer) {
 		d.Stop()
 	}
 	b.forceRecheck()
+}
+
+func (b *Balancer) forceRecheck() {
+	select {
+	case b.resetCheckCh <- true:
+		log.Debug("Forced recheck")
+	default:
+		// Pending reset, ignore subsequent request
+	}
 }
 
 // OnRequest calls Dialer.OnRequest for every dialer in this balancer.
@@ -213,34 +235,40 @@ func (b *Balancer) dialWithTimeout(d *dialer, network, addr string) (net.Conn, e
 	}
 }
 
+func (b *Balancer) run() {
+	for {
+		select {
+		case <-b.closeCh:
+			b.stopStats <- true
+
+			b.checkerCloseCh <- true
+			// Make sure it actually finishes.
+			<-b.checkerCloseCh
+
+			b.mu.Lock()
+			oldDialers := b.dialers
+			b.dialers.dialers = nil
+			b.mu.Unlock()
+			for _, d := range oldDialers.dialers {
+				d.Stop()
+			}
+			// Make sure everything is actually cleaned up before the caller continues.
+			b.closeCh <- true
+			return
+		}
+	}
+}
+
 // Close closes this Balancer, stopping all background processing. You must call
 // Close to avoid leaking goroutines.
 func (b *Balancer) Close() {
 	select {
 	case b.closeCh <- true:
 		// Submitted close request
+		<-b.closeCh
 	default:
 		// already closing
 	}
-}
-
-func (b *Balancer) pickDialer(trustedOnly bool) (*dialer, error) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	dialers := &b.dialers
-	if trustedOnly {
-		dialers = &b.trusted
-	}
-	if dialers.Len() == 0 {
-		if trustedOnly {
-			return nil, fmt.Errorf("No trusted dialers")
-		}
-		return nil, fmt.Errorf("No dialers")
-	}
-	// heap will re-adjust based on new metrics
-	d := heap.Pop(dialers).(*dialer)
-	heap.Push(dialers, d)
-	return d, nil
 }
 
 // printStats periodically prints out stats for all dialers
@@ -261,6 +289,25 @@ func (b *Balancer) printStats() {
 			}
 		}
 	}
+}
+
+func (b *Balancer) pickDialer(trustedOnly bool) (*dialer, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	dialers := &b.dialers
+	if trustedOnly {
+		dialers = &b.trusted
+	}
+	if dialers.Len() == 0 {
+		if trustedOnly {
+			return nil, fmt.Errorf("No trusted dialers")
+		}
+		return nil, fmt.Errorf("No dialers")
+	}
+	// heap will re-adjust based on new metrics
+	d := heap.Pop(dialers).(*dialer)
+	heap.Push(dialers, d)
+	return d, nil
 }
 
 type dialerHeap struct {

@@ -34,7 +34,7 @@ type Dialer struct {
 	// MinCheckInterval and start backing off again.
 	//
 	// checkData is data from the balancer's CheckData() function.
-	Check func(checkData interface{}) (bool, time.Duration)
+	Check func(checkData interface{}, onFailure func(string)) (bool, time.Duration)
 
 	// Determines whether a dialer can be trusted with unencrypted traffic.
 	Trusted bool
@@ -74,52 +74,6 @@ func (d *dialer) Start() {
 			d.OnClose()
 		}
 	})
-}
-
-func (d *dialer) check(checkData interface{}) {
-	if d.doCheck(checkData) {
-		// If the check succeeded, we mark down a success.
-		d.markSuccess()
-		d.lastCheckSucceeded = true
-	} else {
-		if d.lastCheckSucceeded {
-			// On first failure after success, force recheck
-			d.forceRecheck()
-		}
-		d.lastCheckSucceeded = false
-		// Note - we do not mark failures because the failure may have been due to
-		// something unrelated to the dialer. For example, the check function may
-		// try fetching resources from a remote site via the dialed proxy, and may
-		// fail if the remote site is down. We don't want to count this against the
-		// dialer as a failure because it's not a problem specific to that dialer.
-	}
-}
-
-func (d *dialer) doCheck(checkData interface{}) bool {
-	ok, latency := d.Check(checkData)
-	if ok {
-		d.markSuccess()
-		oldLatency := d.emaLatency.Get()
-		if oldLatency > 0 {
-			cap := oldLatency * 2
-			if latency > cap {
-				// To avoid random large fluctuations in latency, keep change in latency
-				// to within 2x of existing latency. If this happens, force a recheck.
-				latency = cap
-				d.forceRecheck()
-			} else if latency < oldLatency/2 {
-				// On major reduction in latency, force a recheck to see if this is a
-				// more permanent change.
-				d.forceRecheck()
-			}
-		}
-		newEMA := d.emaLatency.UpdateWith(latency)
-		log.Tracef("Updated dialer %s emaLatency to %v", d.Label, newEMA)
-	} else {
-		log.Tracef("Dialer %s failed check", d.Label)
-	}
-
-	return ok
 }
 
 func (d *dialer) Stop() {
