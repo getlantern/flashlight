@@ -139,8 +139,8 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 			})
 			return conn, nil
 		},
-		Check: func(checkData interface{}) (bool, time.Duration) {
-			return s.check(d, checkData.([]string), deviceID, proTokenGetter)
+		Check: func(checkData interface{}, onFailure func(string)) (bool, time.Duration) {
+			return s.check(d, checkData.([]string), deviceID, proTokenGetter, onFailure)
 		},
 		OnRequest: ccfg.OnRequest,
 	}, nil
@@ -163,7 +163,10 @@ func (s *chainedServer) attachHeaders(req *http.Request, deviceID string, proTok
 }
 
 // check pings the 10 most popular sites in the user's history
-func (s *chainedServer) check(dial func(string, string) (net.Conn, error), urls []string, deviceID string, proTokenGetter func() string) (bool, time.Duration) {
+func (s *chainedServer) check(dial func(string, string) (net.Conn, error),
+	urls []string, deviceID string,
+	proTokenGetter func() string,
+	onFailure func(string)) (bool, time.Duration) {
 	rt := &http.Transport{
 		DisableKeepAlives: true,
 		Dial:              dial,
@@ -204,6 +207,8 @@ func (s *chainedServer) check(dial func(string, string) (net.Conn, error), urls 
 			success := resp.StatusCode >= 200 && resp.StatusCode <= 299
 			if success {
 				totalLatency += time.Now().Sub(start)
+			} else {
+				onFailure(url)
 			}
 			return success, nil
 		})

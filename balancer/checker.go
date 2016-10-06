@@ -89,7 +89,9 @@ func (c *checker) check(dialer *dialer, checkData interface{}) {
 }
 
 func (c *checker) doCheck(dialer *dialer, checkData interface{}) bool {
-	ok, latency := dialer.Check(checkData)
+	ok, latency := dialer.Check(checkData, func(url string) {
+		checkTargets.checkFailed(url)
+	})
 	if ok {
 		dialer.markSuccess()
 		oldLatency := dialer.emaLatency.Get()

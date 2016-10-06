@@ -34,7 +34,7 @@ type Dialer struct {
 	// MinCheckInterval and start backing off again.
 	//
 	// checkData is data from the balancer's CheckData() function.
-	Check func(checkData interface{}) (bool, time.Duration)
+	Check func(checkData interface{}, onFailure func(string)) (bool, time.Duration)
 
 	// Determines whether a dialer can be trusted with unencrypted traffic.
 	Trusted bool

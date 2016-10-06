@@ -196,7 +196,7 @@ func TestCheck(t *testing.T) {
 		DialFN: func(network, addr string) (net.Conn, error) {
 			return nil, nil
 		},
-		Check: func(checkData interface{}) (bool, time.Duration) {
+		Check: func(checkData interface{}, onFailure func(string)) (bool, time.Duration) {
 			newCount := atomic.AddUint32(&checkCount, 1)
 			log.Debugf("Check() called %d times", newCount)
 			return true, 1 * time.Second
