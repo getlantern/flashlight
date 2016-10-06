@@ -215,6 +215,8 @@ func (s *chainedServer) check(dial func(string, string) (net.Conn, error), urls 
 			success := resp.StatusCode >= 200 && resp.StatusCode <= 299
 			if success {
 				totalLatency += time.Now().Sub(start)
+			} else {
+				checkTargets.checkFailed(url)
 			}
 			return success, nil
 		})
