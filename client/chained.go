@@ -261,8 +261,8 @@ func newURLList() *urlList {
 	// to better match this specific user's patterns.
 	l.hit("https://www.google.com/favicon.ico")
 	l.hit("https://www.facebook.com/humans.txt")
-	l.hit("https://67.media.tumblr.com/avatar_4adfafc4c768_48.png")
-	l.hit("http://s.ytimg.com/yts/cssbin/www-pageframe-webp-vfl37g48Z.css")
+	l.hit("https://www.tumblr.com/humans.txt")
+	l.hit("https://www.youtube.com/robots.txt")
 	return l
 }
 
