@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/balancer"
 	"github.com/getlantern/chained"
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/netx"

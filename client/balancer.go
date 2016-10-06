@@ -3,7 +3,7 @@ package client
 import (
 	"fmt"
 
-	"github.com/getlantern/balancer"
+	"github.com/getlantern/flashlight/balancer"
 )
 
 var (
