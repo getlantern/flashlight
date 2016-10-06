@@ -2,6 +2,8 @@ package client
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"sort"
@@ -200,12 +202,14 @@ func (s *chainedServer) check(dial func(string, string) (net.Conn, error), urls 
 				return false, nil
 			}
 			if resp.Body != nil {
-				// Read the body to include this in our timing
+				// Read the body to include this in our timing.
+				// Note - for bandwidth saving reasons, the server may not send the body
+				// but if it does, we'll read it.
 				defer resp.Body.Close()
-				// _, err = io.Copy(ioutil.Discard, resp.Body)
-				// if err != nil {
-				// 	return false, fmt.Errorf("Unable to read response body: %v", err)
-				// }
+				_, err = io.Copy(ioutil.Discard, resp.Body)
+				if err != nil {
+					return false, fmt.Errorf("Unable to read response body: %v", err)
+				}
 			}
 			log.Tracef("PING %s through chained server at %s, status code %d", url, s.Addr, resp.StatusCode)
 			success := resp.StatusCode >= 200 && resp.StatusCode <= 299
