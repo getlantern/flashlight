@@ -45,7 +45,7 @@ var (
 
 	// logglyToken is populated at build time by crosscompile.bash. During
 	// development time, logglyToken will be empty and we won't log to Loggly.
-	logglyToken string
+	LogglyToken string
 	// to show client logs in separate Loggly source group
 	logglyTag = "lantern-client"
 
@@ -132,7 +132,7 @@ func Configure(cloudConfigCA string, deviceID string,
 
 	// Note: Returning from this function must always add a result to the
 	// success channel.
-	if logglyToken == "" {
+	if LogglyToken == "" {
 		log.Debugf("No logglyToken, not reporting errors")
 		success <- false
 		return
@@ -251,7 +251,7 @@ func enableLoggly(cloudConfigCA string, logglySamplePercentage float64, deviceID
 		return
 	}
 
-	client := loggly.New(logglyToken, logglyTag)
+	client := loggly.New(LogglyToken, logglyTag)
 	client.SetHTTPClient(&http.Client{Transport: rt})
 	le := &logglyErrorReporter{client}
 	golog.RegisterReporter(le.Report)
