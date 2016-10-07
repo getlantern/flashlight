@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/getlantern/chained"
 	"github.com/getlantern/flashlight/balancer"
+	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/netx"
