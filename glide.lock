@@ -35,8 +35,6 @@ imports:
   version: 659a155d06e8f3dd8b9f79d6147445897499b56b
 - name: github.com/getlantern/autoupdate
   version: e4cadd309031a4c04c1098c08623c800f4b0d8e0
-- name: github.com/getlantern/balancer
-  version: 70e3aff550185f805d2f40933c2bc8c29aefa28d
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda

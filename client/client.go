@@ -212,7 +212,9 @@ func (client *Client) proxiedDialer(orig func(network, addr string) (net.Conn, e
 		}
 		start := time.Now()
 		conn, err := proxied(network, addr)
-		log.Debugf("Dialing proxy takes %v for %s", time.Since(start), addr)
+		if log.IsTraceEnabled() {
+			log.Tracef("Dialing proxy takes %v for %s", time.Since(start), addr)
+		}
 		return conn, op.FailIf(err)
 	}
 }
@@ -262,7 +264,9 @@ func (client *Client) portForAddress(addr string) (int, error) {
 }
 
 func isLanternSpecialDomain(addr string) bool {
-	log.Debugf("Checking if '%v' has special domain prefix '%v'", addr, uiProxiedAddr+":")
+	if log.IsTraceEnabled() {
+		log.Tracef("Checking if '%v' has special domain prefix '%v'", addr, uiProxiedAddr+":")
+	}
 	return strings.HasPrefix(addr, uiProxiedAddr+":")
 }
 
