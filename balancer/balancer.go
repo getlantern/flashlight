@@ -78,7 +78,7 @@ func New(opts *Opts) *Balancer {
 		maxCheckInterval: opts.MaxCheckInterval,
 		resetCheckCh:     resetCheckCh,
 		closeCh:          checkerCloseCh,
-		dialers:          b.copyDialers,
+		dialers:          b.dialersToCheck,
 	}
 
 	if checker.minCheckInterval <= 0 {
@@ -95,7 +95,7 @@ func New(opts *Opts) *Balancer {
 	return b
 }
 
-func (b *Balancer) copyDialers() []*dialer {
+func (b *Balancer) dialersToCheck() []*dialer {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
 	ds := make([]*dialer, 0, len(b.dialers.dialers))
