@@ -55,9 +55,16 @@ func (c *checker) runChecks() {
 			checkData := checkTargets.top(10)
 			dialers := c.dialers()
 			log.Debugf("Checking %d dialers using %v", len(dialers), checkData)
+			var wg sync.WaitGroup
+			wg.Add(len(dialers))
 			for _, dialer := range dialers {
-				c.check(dialer, checkData)
+				d := dialer
+				go func() {
+					c.check(d, checkData)
+					wg.Done()
+				}()
 			}
+			wg.Wait()
 			// Exponentially back off checkInterval capped to MaxCheckInterval
 			checkInterval *= 2
 			if checkInterval > c.maxCheckInterval {
