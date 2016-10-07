@@ -463,11 +463,15 @@ func includeInSample(deviceID string, samplePercentage float64) bool {
 		return false
 	}
 	// Pad and decode to int
+	log.Debugf("deviceId %v deviceIdBytes %v", deviceID, deviceIDBytes)
 	paddedDeviceIDBytes := append(deviceIDBytes, 0, 0)
+	log.Debugf("paddedDeviceIDBytes %v", paddedDeviceIDBytes)
 	deviceIDInt := binary.BigEndian.Uint64(paddedDeviceIDBytes)
 	log.Debugf("Device ID Int %d", deviceIDInt)
-	log.Debugf("%d", deviceIDInt%100)
-	res := deviceIDInt%uint64(1/samplePercentage) == 0
+	rt := uint64(1 / samplePercentage)
+	log.Debugf("1/sample % -> %d", rt)
+	log.Debugf("%d", deviceIDInt%rt)
+	res := deviceIDInt%rt == 0
 	log.Debugf("include in sample: %v", res)
 	return res
 }
