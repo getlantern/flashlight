@@ -35,7 +35,6 @@ import:
 - package: github.com/getlantern/notifier
 - package: github.com/getlantern/ops
 - package: github.com/getlantern/osversion
-- package: github.com/getlantern/pac
 - package: github.com/getlantern/pro-server-client
   subpackages:
   - go-client
@@ -103,3 +102,4 @@ import:
   subpackages:
   - uaparser
 - package: github.com/Sirupsen/logrus
+- package: github.com/getlantern/sysproxy

@@ -1,5 +1,5 @@
-hash: 36879dea463dc3171e4d543501ca509ad5dbd607b274f2db404c5d3e4426f71b
-updated: 2016-09-26T14:42:37.272811432-05:00
+hash: ad1d1eb465040be281939ce9365fe9f836d91faee7a0ce113a24c5f89d737e81
+updated: 2016-10-06T22:10:04.616986523-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -99,7 +99,7 @@ imports:
 - name: github.com/getlantern/http-proxy
   version: 3ced6a60f6ca50302288b0814141f26544fa5d15
 - name: github.com/getlantern/http-proxy-lantern
-  version: b308b4981648b84e7c78e98658a7faea4b0aff98
+  version: 3c920ec230bf7af08090aeb6092f28de52f4c47d
 - name: github.com/getlantern/i18n
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
@@ -125,8 +125,6 @@ imports:
   version: b70875f5d689a9438bca72aefd7142a2af889b18
 - name: github.com/getlantern/osversion
   version: ab3020f4c80ef3f5ee296bf734c5ccd5aba1099a
-- name: github.com/getlantern/pac
-  version: 7b589f85d4d59088e97a9a93f5f7a6062a2348f6
 - name: github.com/getlantern/pathreflect
   version: b02f4864048a236150ca17c2c526158f2b3133c4
 - name: github.com/getlantern/pro-server-client
@@ -138,13 +136,15 @@ imports:
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxybench
-  version: 512a7d80f0225ed7e1d64c840ce9918b1c8ca990
+  version: 2c89ec80427864c6f038a56f8486705155d103cb
 - name: github.com/getlantern/rot13
   version: 33f93fc1fe85c042c0667a1814e6379bd5e7eb40
 - name: github.com/getlantern/rotator
   version: 013d4f8e36a2f6369b2435d89866056b5b74c69e
 - name: github.com/getlantern/stack
   version: 02f928aad224fbccd50d66edd776fc9d1e9f2f2b
+- name: github.com/getlantern/sysproxy
+  version: 1246779dcd6d19a3dad566125e9f4132244b559e
 - name: github.com/getlantern/systray
   version: cdae0bdf2aeae3ffb5ffe0cd2e2f83443ca9d104
 - name: github.com/getlantern/tarfs
@@ -200,7 +200,7 @@ imports:
 - name: github.com/oxtoacart/bpool
   version: 4e1c5567d7c2dd59fa4c7c83d34c2f3528b025d6
 - name: github.com/pkg/errors
-  version: a887431f7f6ef7687b556dbf718d9f351d4858a0
+  version: 839d9e913e063e28dfd0e6c7b7512793e0a48be9
 - name: github.com/rcrowley/go-metrics
   version: ab2277b1c5d15c3cba104e9cbddbdfc622df5ad8
 - name: github.com/Sirupsen/logrus
@@ -226,7 +226,7 @@ imports:
 - name: github.com/xtaci/kcp-go
   version: e9c2f49ea6a99f8889f5c2ef192c499f8c0aa772
 - name: golang.org/x/crypto
-  version: 8e06e8ddd9629eb88639aba897641bff8031f1d3
+  version: d172538b2cfce0c13cee31e647d0367aa8cd2486
   subpackages:
   - curve25519
   - hkdf
@@ -234,11 +234,11 @@ imports:
   - poly1305
   - salsa20/salsa
 - name: golang.org/x/net
-  version: f09c4662a0bd6bd8943ac7b4931e185df9471da4
+  version: 88c1a61b3dd4d98651f24775ca288fac5d2544ce
   subpackages:
   - context
 - name: golang.org/x/sys
-  version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
+  version: 8d1157a435470616f975ff9bb013bea8d0962067
   subpackages:
   - windows/registry
   - windows

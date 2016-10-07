@@ -11,7 +11,6 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.proxiedsites")
 
-	PACURL     string
 	startMutex sync.Mutex
 )
 

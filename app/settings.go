@@ -376,8 +376,11 @@ func (s *Settings) SetUIAddr(uiaddr string) {
 // SetProxyAll sets whether or not to proxy all traffic.
 func (s *Settings) SetProxyAll(proxyAll bool) {
 	s.setVal(SNProxyAll, proxyAll)
-	// Cycle the PAC file so that browser picks up changes
-	cyclePAC()
+	if proxyAll {
+		sysproxyOn()
+	} else {
+		sysproxyOff()
+	}
 }
 
 // IsAutoReport returns whether or not to auto-report debugging and analytics data.

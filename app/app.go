@@ -112,7 +112,7 @@ func (app *App) Run() error {
 			app.Flags["stickyconfig"].(bool),
 			settings.GetProxyAll,
 			app.Flags,
-			app.beforeStart,
+			app.beforeStart(listenAddr),
 			app.afterStart,
 			app.onConfigUpdate,
 			settings,
@@ -127,79 +127,80 @@ func (app *App) Run() error {
 	return app.waitForExit()
 }
 
-func (app *App) beforeStart() bool {
-	log.Debug("Got first config")
-	var cpuProf, memProf string
-	if cpu, cok := app.Flags["cpuprofile"]; cok {
-		cpuProf = cpu.(string)
-	}
-	if mem, cok := app.Flags["memprofile"]; cok {
-		memProf = mem.(string)
-	}
-	if cpuProf != "" || memProf != "" {
-		log.Debugf("Start profiling with cpu file %s and mem file %s", cpuProf, memProf)
-		finishProfiling := profiling.Start(cpuProf, memProf)
-		app.AddExitFunc(finishProfiling)
-	}
+func (app *App) beforeStart(listenAddr string) func() bool {
+	return func() bool {
+		log.Debug("Got first config")
+		var cpuProf, memProf string
+		if cpu, cok := app.Flags["cpuprofile"]; cok {
+			cpuProf = cpu.(string)
+		}
+		if mem, cok := app.Flags["memprofile"]; cok {
+			memProf = mem.(string)
+		}
+		if cpuProf != "" || memProf != "" {
+			log.Debugf("Start profiling with cpu file %s and mem file %s", cpuProf, memProf)
+			finishProfiling := profiling.Start(cpuProf, memProf)
+			app.AddExitFunc(finishProfiling)
+		}
 
-	if err := setUpPacTool(); err != nil {
-		app.Exit(err)
-	}
+		if err := setUpSysproxyTool(); err != nil {
+			app.Exit(err)
+		}
 
-	uiaddr := app.Flags["uiaddr"].(string)
-	if uiaddr == "" {
-		uiaddr = settings.GetUIAddr() // stick with the last one
-	}
+		uiaddr := app.Flags["uiaddr"].(string)
+		if uiaddr == "" {
+			uiaddr = settings.GetUIAddr() // stick with the last one
+		}
 
-	if app.Flags["clear-proxy-settings"].(bool) {
-		// This is a workaround that attempts to fix a Windows-only problem where
-		// Lantern was unable to clean the system's proxy settings before logging
-		// off.
-		//
-		// See: https://github.com/getlantern/lantern/issues/2776
-		log.Debug("Clearing proxy settings")
-		doPACOff(fmt.Sprintf("http://%s/proxy_on.pac", uiaddr))
-		app.Exit(nil)
-	}
-
-	bootstrap, err := config.ReadBootstrapSettings()
-	var startupURL string
-	if err != nil {
-		log.Errorf("Could not read settings? %v", err)
-		startupURL = ""
-	} else {
-		startupURL = bootstrap.StartupUrl
-	}
-
-	if uiaddr != "" {
-		// Is something listening on that port?
-		if err := app.showExistingUI(uiaddr); err == nil {
-			log.Debug("Lantern already running, showing existing UI")
+		if app.Flags["clear-proxy-settings"].(bool) {
+			// This is a workaround that attempts to fix a Windows-only problem where
+			// Lantern was unable to clean the system's proxy settings before logging
+			// off.
+			//
+			// See: https://github.com/getlantern/lantern/issues/2776
+			log.Debug("Clearing proxy settings")
+			doSysproxyOff(listenAddr)
 			app.Exit(nil)
 		}
+
+		bootstrap, err := config.ReadBootstrapSettings()
+		var startupURL string
+		if err != nil {
+			log.Errorf("Could not read settings? %v", err)
+			startupURL = ""
+		} else {
+			startupURL = bootstrap.StartupUrl
+		}
+
+		if uiaddr != "" {
+			// Is something listening on that port?
+			if err := app.showExistingUI(uiaddr); err == nil {
+				log.Debug("Lantern already running, showing existing UI")
+				app.Exit(nil)
+			}
+		}
+
+		log.Debugf("Starting client UI at %v", uiaddr)
+		err = ui.Start(uiaddr, !app.ShowUI, startupURL)
+		if err != nil {
+			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
+		}
+
+		settings.SetUIAddr(ui.GetDirectUIAddr())
+
+		err = serveBandwidth()
+		if err != nil {
+			log.Errorf("Unable to serve bandwidth to UI: %v", err)
+		}
+
+		// Only run analytics once on startup.
+		if settings.IsAutoReport() {
+			stopAnalytics := analytics.Start(settings.GetDeviceID(), flashlight.Version)
+			app.AddExitFunc(stopAnalytics)
+		}
+
+		return true
 	}
-
-	log.Debugf("Starting client UI at %v", uiaddr)
-	err = ui.Start(uiaddr, !app.ShowUI, startupURL)
-	if err != nil {
-		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
-	}
-
-	settings.SetUIAddr(ui.GetDirectUIAddr())
-
-	err = serveBandwidth()
-	if err != nil {
-		log.Errorf("Unable to serve bandwidth to UI: %v", err)
-	}
-
-	// Only run analytics once on startup.
-	if settings.IsAutoReport() {
-		stopAnalytics := analytics.Start(settings.GetDeviceID(), flashlight.Version)
-		app.AddExitFunc(stopAnalytics)
-	}
-	watchDirectAddrs()
-
-	return true
 }
 
 // GetSetting gets the in memory setting with the name specified by attr
@@ -228,16 +229,15 @@ func (app *App) OnSettingChange(attr SettingName, cb func(interface{})) {
 }
 
 func (app *App) afterStart() {
-	servePACFile()
 	if settings.GetSystemProxy() {
-		pacOn()
+		sysproxyOn()
 	}
 	app.OnSettingChange(SNSystemProxy, func(val interface{}) {
 		enable := val.(bool)
 		if enable {
-			pacOn()
+			sysproxyOn()
 		} else {
-			pacOff()
+			sysproxyOff()
 		}
 	})
 
@@ -246,7 +246,9 @@ func (app *App) afterStart() {
 		go launcher.CreateLaunchFile(enable)
 	})
 
-	app.AddExitFunc(pacOff)
+	app.AddExitFunc(func() {
+		sysproxyOff()
+	})
 	if app.ShowUI && !app.Flags["startup"].(bool) {
 		// Launch a browser window with Lantern but only after the pac
 		// URL and the proxy server are all up and running to avoid
