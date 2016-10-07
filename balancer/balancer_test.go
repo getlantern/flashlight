@@ -5,6 +5,7 @@ import (
 	"io"
 	"math/rand"
 	"net"
+	"net/http"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -241,6 +242,36 @@ func TestResetDailers(t *testing.T) {
 	assert.NoError(t, err, "Should have no error dialing with resetted balancer")
 	assert.Equal(t, int32(1), atomic.LoadInt32(&bad), "should dial bad dialer only once")
 	assert.Equal(t, int32(1), atomic.LoadInt32(&good), "should dial good dialer only once")
+}
+
+func TestOnRequest(t *testing.T) {
+	reqs := make(chan bool, 1)
+	dialer := &Dialer{
+		Label: "OnRequestTestDialer",
+		DialFN: func(network, addr string) (net.Conn, error) {
+			return net.Dial(network, addr)
+		},
+		OnRequest: func(req *http.Request) {
+			reqs <- true
+		},
+	}
+
+	b := newBalancer(Sticky, dialer)
+	defer b.Close()
+
+	req, _ := http.NewRequest("GET", "http://example.com", nil)
+	b.OnRequest(req)
+
+	received := 0
+	select {
+	case <-reqs:
+		received++
+		break
+	case <-time.After(time.Second * 4):
+		break
+	}
+
+	assert.Equal(t, 1, received)
 }
 
 func newDialer(id int) *Dialer {
