@@ -3,10 +3,14 @@ package client
 import (
 	"fmt"
 
-	"github.com/getlantern/balancer"
+	"github.com/getlantern/flashlight/balancer"
 )
 
-var bal = balancer.New(balancer.QualityFirst)
+var (
+	bal = balancer.New(&balancer.Opts{
+		Strategy: balancer.QualityFirst,
+	})
+)
 
 // initBalancer takes hosts from cfg.ChainedServers and it uses them to create a
 // balancer.

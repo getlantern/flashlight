@@ -35,8 +35,6 @@ imports:
   version: 659a155d06e8f3dd8b9f79d6147445897499b56b
 - name: github.com/getlantern/autoupdate
   version: e4cadd309031a4c04c1098c08623c800f4b0d8e0
-- name: github.com/getlantern/balancer
-  version: 70e3aff550185f805d2f40933c2bc8c29aefa28d
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda
@@ -60,7 +58,7 @@ imports:
 - name: github.com/getlantern/deepcopy
   version: 7f45deb8130a0acc553242eb0e009e3f6f3d9ce3
 - name: github.com/getlantern/detour
-  version: 62ef5bcad02d11b5879dc1b9ccb7f43934fc307a
+  version: 94bfe54f978406b0074459fe3e59df558bf0aa1e
 - name: github.com/getlantern/edgedetect
   version: 5ad57dc79c5da6824e563abf07fe20f6408aa35d
 - name: github.com/getlantern/elevate

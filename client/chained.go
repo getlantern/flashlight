@@ -2,34 +2,34 @@ package client
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
-	"strings"
 	"time"
 
-	"github.com/getlantern/balancer"
 	"github.com/getlantern/chained"
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/withtimeout"
 )
 
-// Close connections idle for a period to avoid dangling connections. 45 seconds
-// is long enough to avoid interrupt normal connections but shorter than the
-// idle timeout on the server to avoid running into closed connection problems.
-// 45 seconds is also longer than the MaxIdleTime on our http.Transport, so it
-// doesn't interfere with that.
-var idleTimeout = 45 * time.Second
+var (
+	// Close connections idle for a period to avoid dangling connections. 45 seconds
+	// is long enough to avoid interrupt normal connections but shorter than the
+	// idle timeout on the server to avoid running into closed connection problems.
+	// 45 seconds is also longer than the MaxIdleTime on our http.Transport, so it
+	// doesn't interfere with that.
+	idleTimeout = 45 * time.Second
 
-// Lantern internal sites won't be used as check target.
-var internalSiteSuffixes = []string{"getlantern.org", "getiantem.org", "lantern.io"}
+	// ForceChainedProxyAddr - If specified, all proxying will go through this address
+	ForceChainedProxyAddr string
 
-// ForceChainedProxyAddr - If specified, all proxying will go through this address
-var ForceChainedProxyAddr string
-
-// ForceAuthToken - If specified, auth token will be forced to this
-var ForceAuthToken string
+	// ForceAuthToken - If specified, auth token will be forced to this
+	ForceAuthToken string
+)
 
 // ChainedServerInfo contains all the data for connecting to a given chained
 // server.
@@ -68,10 +68,6 @@ func ChainedDialer(si *ChainedServerInfo, deviceID string, proTokenGetter func()
 type chainedServer struct {
 	*ChainedServerInfo
 	df dialFactory
-	//  A fixed length list of host:port used to check this server. Recently
-	//  dialed plain HTTP sites (port == 80) will be added until the list is
-	//  full, except those has internalSiteSuffixes.
-	checkTargets siteList
 }
 
 func newServer(si *ChainedServerInfo) (*chainedServer, error) {
@@ -79,14 +75,13 @@ func newServer(si *ChainedServerInfo) (*chainedServer, error) {
 		log.Debugf("Using pluggable transport %v for server at %v", si.PluggableTransport, si.Addr)
 	}
 
-	dialFactory := pluggableTransports[si.PluggableTransport]
-	if dialFactory == nil {
+	df := pluggableTransports[si.PluggableTransport]
+	if df == nil {
 		return nil, fmt.Errorf("No dial factory defined for transport: %v", si.PluggableTransport)
 	}
 
 	s := &chainedServer{ChainedServerInfo: si,
-		df:           dialFactory,
-		checkTargets: newSiteList(10), // keep at most 10 sites to check, ignore others.
+		df: df,
 	}
 
 	return s, nil
@@ -132,7 +127,7 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 				conn, err = netx.DialTimeout(network, addr, 1*time.Minute)
 			} else {
 				// Yeah any site visited through Lantern can be a check target
-				s.addCheckTarget(addr)
+				balancer.AddCheckTarget(addr)
 				conn, err = d(network, addr)
 			}
 
@@ -144,8 +139,8 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 			})
 			return conn, nil
 		},
-		Check: func() bool {
-			return s.check(d, deviceID, proTokenGetter)
+		Check: func(checkData interface{}, onFailure func(string)) (bool, time.Duration) {
+			return s.check(d, checkData.([]string), deviceID, proTokenGetter, onFailure)
 		},
 		OnRequest: ccfg.OnRequest,
 	}, nil
@@ -167,99 +162,63 @@ func (s *chainedServer) attachHeaders(req *http.Request, deviceID string, proTok
 	}
 }
 
-func (s *chainedServer) check(dial func(string, string) (net.Conn, error), deviceID string, proTokenGetter func() string) bool {
+// check pings the 10 most popular sites in the user's history
+func (s *chainedServer) check(dial func(string, string) (net.Conn, error),
+	urls []string, deviceID string,
+	proTokenGetter func() string,
+	onFailure func(string)) (bool, time.Duration) {
 	rt := &http.Transport{
 		DisableKeepAlives: true,
 		Dial:              dial,
 	}
-	var url string
-	checkTarget := s.checkTargets.get()
-	if checkTarget == "" {
-		url = "http://ping-chained-server"
-	} else {
-		url = fmt.Sprintf("http://%s/index.html", checkTarget)
-	}
-	req, err := http.NewRequest("HEAD", url, nil)
-	if err != nil {
-		log.Errorf("Could not create HTTP request: %v", err)
-		return false
-	}
-	if checkTarget == "" {
-		req.Header.Set("X-Lantern-Ping", "small")
-	}
-
-	s.attachHeaders(req, deviceID, proTokenGetter)
-	ok, timedOut, _ := withtimeout.Do(60*time.Second, func() (interface{}, error) {
-		resp, err := rt.RoundTrip(req)
+	allPassed := true
+	totalLatency := time.Duration(0)
+	for _, url := range urls {
+		start := time.Now()
+		// We ping the URLs through the proxy to get timings
+		req, err := http.NewRequest("GET", "http://ping-chained-server", nil)
 		if err != nil {
-			log.Debugf("Error testing dialer %s to %s: %s", s.Addr, url, err)
-			return false, nil
+			log.Errorf("Could not create HTTP request: %v", err)
+			return false, 0
 		}
-		if err := resp.Body.Close(); err != nil {
-			log.Debugf("Unable to close response body: %v", err)
-		}
-		msg := fmt.Sprintf("HEAD %s through chained server at %s, status code %d", url, s.Addr, resp.StatusCode)
-		// < 500 means the check target is at least reachable through this
-		// chained server, no matter what the HTTP status code is.
-		//
-		// The only exception is that if chained server rejects current client
-		// because of invalid token, etc., we can't differentiate it from an
-		// status code from target site.
-		if reachable := resp.StatusCode < 500; !reachable {
-			log.Debug(msg)
-			return false, nil
-		}
-		log.Trace(msg)
-		if checkTarget != "" {
-			// can be used as check target again if no new sites is added
-			s.checkTargets.add(checkTarget)
-		}
-		return true, nil
-	})
-	if timedOut {
-		log.Errorf("Timed out checking dialer at: %v", s.Addr)
-	}
-	return !timedOut && ok.(bool)
-}
+		req.Header.Set("X-Lantern-PingURL", url)
+		// We set X-Lantern-Ping in case we're hitting an old http-server that
+		// doesn't support pinging URLs.
+		req.Header.Set("X-Lantern-Ping", "small")
 
-func (s *chainedServer) addCheckTarget(addr string) {
-	host, port, e := net.SplitHostPort(addr)
-	if e != nil {
-		log.Errorf("failed to split port from %s", addr)
-		return
-	}
-	if port != "80" {
-		log.Tracef("Skip setting non-HTTP site %s as check target", addr)
-		return
-	}
-	for _, s := range internalSiteSuffixes {
-		if strings.HasSuffix(host, s) {
-			log.Tracef("Skip setting internal site %s as check target", addr)
-			return
+		s.attachHeaders(req, deviceID, proTokenGetter)
+		ok, timedOut, _ := withtimeout.Do(60*time.Second, func() (interface{}, error) {
+			resp, err := rt.RoundTrip(req)
+			if err != nil {
+				log.Debugf("Error testing dialer %s to %s: %s", s.Addr, url, err)
+				return false, nil
+			}
+			if resp.Body != nil {
+				// Read the body to include this in our timing.
+				// Note - for bandwidth saving reasons, the server may not send the body
+				// but if it does, we'll read it.
+				defer resp.Body.Close()
+				_, err = io.Copy(ioutil.Discard, resp.Body)
+				if err != nil {
+					return false, fmt.Errorf("Unable to read response body: %v", err)
+				}
+			}
+			log.Tracef("PING %s through chained server at %s, status code %d", url, s.Addr, resp.StatusCode)
+			success := resp.StatusCode >= 200 && resp.StatusCode <= 299
+			if success {
+				totalLatency += time.Now().Sub(start)
+			} else {
+				onFailure(url)
+			}
+			return success, nil
+		})
+		if !ok.(bool) {
+			if timedOut {
+				log.Errorf("Timed out checking dialer at: %v", s.Addr)
+			}
+			allPassed = false
 		}
 	}
-	s.checkTargets.add(addr)
-}
 
-type siteList struct {
-	ch chan string
-}
-
-func newSiteList(size int) siteList {
-	return siteList{make(chan string, size)}
-}
-
-func (q siteList) add(addr string) {
-	select {
-	case q.ch <- addr:
-	default:
-	}
-}
-
-func (q siteList) get() (addr string) {
-	select {
-	case addr = <-q.ch:
-	default:
-	}
-	return
+	return allPassed, totalLatency
 }
