@@ -90,10 +90,6 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 		Dial:      client.dial,
 		GetBuffer: buffers.Get,
 		PutBuffer: buffers.Put,
-		OnRequest: func(req *http.Request) *http.Request {
-			bal.OnRequest(req)
-			return req
-		},
 		OnResponse: func(resp *http.Response, initialReq *http.Request) *http.Response {
 			trackBandwidth(resp)
 			return resp
