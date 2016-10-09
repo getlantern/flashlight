@@ -212,7 +212,7 @@ func (s *chainedServer) check(dial func(string, string) (net.Conn, error),
 			}
 			return success, nil
 		})
-		if !ok.(bool) {
+		if timedOut || !ok.(bool) {
 			if timedOut {
 				log.Errorf("Timed out checking dialer at: %v", s.Addr)
 			}
