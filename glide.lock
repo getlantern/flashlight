@@ -1,5 +1,5 @@
-hash: 36879dea463dc3171e4d543501ca509ad5dbd607b274f2db404c5d3e4426f71b
-updated: 2016-10-06T22:37:59.860913278-05:00
+hash: 01749c4b333882f3bcc75945c2c49031275929fc43e8f1457cb5993fa27ec870
+updated: 2016-10-08T20:24:47.628487444-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -40,7 +40,7 @@ imports:
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda
-  version: 49d716c6f0a075c94b1fd449bd6aebed8d48a5b1
+  version: fbb1bc83cc7b0bc0f0406f786cbd84ee8814e2f5
   subpackages:
   - client
 - name: github.com/getlantern/buuid
@@ -49,8 +49,6 @@ imports:
   version: 4a7f76bdd5e28d1d72a8a8287927daeaa3316820
 - name: github.com/getlantern/byteexec
   version: 2e21fedeb225921a8dc40321cbd114ffd0a302f3
-- name: github.com/getlantern/chained
-  version: 333b0f12504a0ddb5f2680117c190843d931bec4
 - name: github.com/getlantern/checkfallbacks
   version: bee841637e5faa029ff7d8d8c4a0c6055e72aa67
 - name: github.com/getlantern/connpool
@@ -104,6 +102,8 @@ imports:
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
   version: 7e0189052a9c7fec39114edd1b6e5f1093394415
+- name: github.com/getlantern/interceptor
+  version: 14754c30ee790ddec5db8749d1dad951d65da4ab
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
 - name: github.com/getlantern/keyman
@@ -234,7 +234,7 @@ imports:
   - poly1305
   - salsa20/salsa
 - name: golang.org/x/net
-  version: 88c1a61b3dd4d98651f24775ca288fac5d2544ce
+  version: f4b625ec9b21d620bb5ce57f2dfc3e08ca97fce6
   subpackages:
   - context
 - name: golang.org/x/sys
