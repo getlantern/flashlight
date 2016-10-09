@@ -25,7 +25,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodConnect {
 		// CONNECT requests are often used for HTTPS requests.
 		log.Tracef("Intercepting CONNECT %s", req.URL)
-		client.ic.Intercept(resp, req, false, op.Wrapped(), 443)
+		client.ic.Intercept(resp, req, true, op.Wrapped(), 443)
 	} else {
 		// Direct proxying can only be used for plain HTTP connections.
 		log.Debugf("Intercepting HTTP request %s %v", req.Method, req.URL)
