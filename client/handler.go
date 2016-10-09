@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"io"
 	"io/ioutil"
 	"net/http"
 
@@ -36,7 +37,7 @@ func trackBandwidth(resp *http.Response) {
 	bandwidth.Track(resp)
 }
 
-func errorResponse(w http.ResponseWriter, req *http.Request, err error) {
+func errorResponse(w io.Writer, req *http.Request, err error) {
 	var htmlerr []byte
 
 	// If the request has an 'Accept' header preferring HTML, or

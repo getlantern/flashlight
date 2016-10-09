@@ -90,8 +90,11 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 		Dial:      client.dial,
 		GetBuffer: buffers.Get,
 		PutBuffer: buffers.Put,
-		OnResponse: func(resp *http.Response, initialReq *http.Request) *http.Response {
-			trackBandwidth(resp)
+		OnResponse: func(resp *http.Response, initialReq *http.Request, responseNumber int) *http.Response {
+			firstResponse := responseNumber == 0
+			if firstResponse {
+				trackBandwidth(resp)
+			}
 			return resp
 		},
 		OnReadResponseError: errorResponse,
@@ -173,8 +176,8 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 			if portErr != nil {
 				return nil, portErr
 			}
-			conn, _, err := client.doDial(true, addr, port)
-			return conn, err
+			conn, _, dialErr := client.doDial(true, addr, port)
+			return conn, dialErr
 		},
 	}
 	server, err := socks5.New(conf)
