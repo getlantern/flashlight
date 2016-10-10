@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/status"
 )
@@ -31,10 +30,6 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		log.Debugf("Intercepting HTTP request %s %v", req.Method, req.URL)
 		client.ic.Intercept(resp, req, true, op.Wrapped(), 80)
 	}
-}
-
-func trackBandwidth(resp *http.Response) {
-	bandwidth.Track(resp)
 }
 
 func errorResponse(w io.Writer, req *http.Request, err error) {

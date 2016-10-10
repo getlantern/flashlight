@@ -186,11 +186,12 @@ func (s *chainedServer) check(dial func(string, string) (net.Conn, error),
 		// doesn't support pinging URLs.
 		req.Header.Set("X-Lantern-Ping", "small")
 
+		checkedUrl := url
 		s.attachHeaders(req, deviceID, proTokenGetter)
 		ok, timedOut, _ := withtimeout.Do(60*time.Second, func() (interface{}, error) {
 			resp, err := rt.RoundTrip(req)
 			if err != nil {
-				log.Debugf("Error testing dialer %s to %s: %s", s.Addr, url, err)
+				log.Debugf("Error testing dialer %s to %s: %s", s.Addr, checkedUrl, err)
 				return false, nil
 			}
 			if resp.Body != nil {
