@@ -180,7 +180,7 @@ func (app *App) beforeStart() bool {
 	}
 
 	log.Debugf("Starting client UI at %v", uiaddr)
-	err = ui.Start(uiaddr, !app.ShowUI, startupURL)
+	err = ui.Start(uiaddr, !app.ShowUI, startupURL, localHTTPToken())
 	if err != nil {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 	}
@@ -200,6 +200,18 @@ func (app *App) beforeStart() bool {
 	watchDirectAddrs()
 
 	return true
+}
+
+// localHTTPToken fetches the local HTTP token from disk if it's there, and
+// otherwise creates a new one and stores it.
+func localHTTPToken() string {
+	tok := settings.GetLocalHTTPToken()
+	if tok == "" {
+		t := ui.LocalHTTPToken()
+		settings.SetLocalHTTPToken(t)
+		return t
+	}
+	return tok
 }
 
 // GetSetting gets the in memory setting with the name specified by attr

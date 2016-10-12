@@ -26,6 +26,7 @@ func randRead(size int) string {
 	return hex.EncodeToString(buf)
 }
 
-func token() string {
+// LocalHTTPToken returns the local HTTP token for accessing the proxy.
+func LocalHTTPToken() string {
 	return randRead(16)
 }

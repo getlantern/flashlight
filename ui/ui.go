@@ -36,7 +36,7 @@ var (
 	openedExternal = false
 	externalURL    string
 	r              = NewServeMux()
-	sessionToken   = token()
+	localHTTPToken string
 )
 
 func Handle(pattern string, handler http.Handler) {
@@ -44,7 +44,9 @@ func Handle(pattern string, handler http.Handler) {
 }
 
 // Start starts serving the UI.
-func Start(requestedAddr string, allowRemote bool, extURL string) error {
+func Start(requestedAddr string, allowRemote bool, extURL, localHTTPTok string) error {
+	disableAutoProxyCache()
+	localHTTPToken = localHTTPTok
 	if requestedAddr == "" {
 		requestedAddr = defaultUIAddress
 	}
@@ -230,5 +232,5 @@ func openExternalURL(u string) {
 // request path. Without that token, the backend will reject the request to
 // avoid web sites detecting Lantern.
 func AddToken(in string) string {
-	return util.SetURLParam("http://"+path.Join(uiaddr, in), "token", sessionToken)
+	return util.SetURLParam("http://"+path.Join(uiaddr, in), "token", localHTTPToken)
 }

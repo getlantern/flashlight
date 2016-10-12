@@ -30,7 +30,8 @@ func TestRead(t *testing.T) {
 	assert.Equal(t, s.GetLanguage(), "")
 	assert.Equal(t, s.GetLanguage(), "")
 	assert.Equal(t, s.GetUIAddr(), "")
-	assert.Equal(t, s.GetTakenSurveys(), []string(nil))
+	assert.Equal(t, make([]string, 0), s.GetTakenSurveys())
+	assert.Equal(t, s.GetLocalHTTPToken(), "")
 
 	// Start with raw JSON so we actually decode the map from scratch, as that
 	// will then simulate real world use where we rely on Go to generate the
@@ -41,11 +42,11 @@ func TestRead(t *testing.T) {
 		"proxyAll": true,
 		"autoLaunch": false,
 		"systemProxy": false,
-		"deviceID": "8208fja09493",
 		"userID": 890238588,
 		"language": "en-US",
 		"takenSurveys": ["foo", "bar"],
 		"uiAddr": "127.0.0.1:1234"
+		"localHTTPToken": "4789DIOD1990",
 	}`
 
 	var m map[string]interface{}
@@ -71,6 +72,7 @@ func TestRead(t *testing.T) {
 	assert.Equal(t, s.GetLanguage(), "en-US")
 	assert.Equal(t, s.GetUIAddr(), "127.0.0.1:1234")
 	assert.Equal(t, s.GetTakenSurveys(), []string{"foo", "bar"})
+	assert.Equal(t, "4789DIOD1990", s.GetLocalHTTPToken())
 
 	// Test that setting something random doesn't break stuff.
 	m["randomjfdklajfla"] = "fadldjfdla"
