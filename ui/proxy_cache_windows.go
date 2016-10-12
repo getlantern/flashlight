@@ -14,8 +14,7 @@ func disableAutoProxyCache() {
 		log.Errorf("Could not open key %v", err)
 	}
 	defer k.Close()
-
-	s, _, err := k.SetDWordValue(0)
+	err = k.SetDWordValue("EnableAutoproxyResultCache", 0)
 	if err != nil {
 		log.Errorf("Could not set dword value %v", err)
 	}
