@@ -182,7 +182,6 @@ func newSettings(filePath string) *Settings {
 			SNUserToken:      "",
 			SNUIAddr:         "",
 			SNLocalHTTPToken: "",
-			SNTakenSurveys:   make([]string, 0),
 		},
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),

@@ -180,7 +180,7 @@ func (app *App) beforeStart() bool {
 	}
 
 	log.Debugf("Starting client UI at %v", uiaddr)
-	err = ui.Start(uiaddr, !app.ShowUI, startupURL, localHTTPToken())
+	err = ui.Start(uiaddr, !app.ShowUI, startupURL, localHTTPToken(settings))
 	if err != nil {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 	}
@@ -204,11 +204,11 @@ func (app *App) beforeStart() bool {
 
 // localHTTPToken fetches the local HTTP token from disk if it's there, and
 // otherwise creates a new one and stores it.
-func localHTTPToken() string {
-	tok := settings.GetLocalHTTPToken()
+func localHTTPToken(set *Settings) string {
+	tok := set.GetLocalHTTPToken()
 	if tok == "" {
 		t := ui.LocalHTTPToken()
-		settings.SetLocalHTTPToken(t)
+		set.SetLocalHTTPToken(t)
 		return t
 	}
 	return tok
