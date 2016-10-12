@@ -45,7 +45,6 @@ func Handle(pattern string, handler http.Handler) {
 
 // Start starts serving the UI.
 func Start(requestedAddr string, allowRemote bool, extURL, localHTTPTok string) error {
-	disableAutoProxyCache()
 	localHTTPToken = localHTTPTok
 	if requestedAddr == "" {
 		requestedAddr = defaultUIAddress
