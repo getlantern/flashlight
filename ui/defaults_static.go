@@ -13,4 +13,5 @@ func proxyDomainFor(addr string) string {
 // LocalHTTPToken is a no-op without resource randomization.
 func LocalHTTPToken() string {
 	// no-op.
+	return ""
 }
