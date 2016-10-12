@@ -46,8 +46,10 @@ func checkOrigin(h http.Handler) http.Handler {
 			default:
 				r.ParseForm()
 				token := r.Form.Get("token")
-				if token == sessionToken {
+				if token == localHTTPToken {
 					tokenMatch = true
+				} else if token != "" {
+					log.Errorf("Token '%v' did not match the expected '%v'", token, localHTTPToken)
 				} else {
 					log.Errorf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
 					return
