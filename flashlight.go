@@ -141,9 +141,7 @@ func applyClientConfig(client *client.Client, cfg *config.Global, deviceID strin
 	} else if cfg.Client != nil {
 		fronted.Configure(certs, cfg.Client.MasqueradeSets, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
 	}
-	configureLoggingOnce.Do(func() {
-		logging.Configure(cfg.CloudConfigCA, deviceID, Version, RevisionDate, cfg.BordaReportInterval, cfg.BordaSamplePercentage, cfg.LogglySamplePercentage)
-	})
+	logging.Configure(cfg.CloudConfigCA, deviceID, Version, RevisionDate, cfg.BordaReportInterval, cfg.BordaSamplePercentage, cfg.LogglySamplePercentage)
 }
 
 func getTrustedCACerts(cfg *config.Global) (pool *x509.CertPool, err error) {

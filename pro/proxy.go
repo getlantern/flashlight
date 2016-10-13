@@ -24,10 +24,6 @@ type proxyTransport struct {
 
 func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	origin := req.Header.Get("Origin")
-	// Strip /pro from path.
-	if strings.HasPrefix(req.URL.Path, "/pro/") {
-		req.URL.Path = req.URL.Path[4:]
-	}
 	if req.Method == "OPTIONS" {
 		// No need to proxy the OPTIONS request.
 		resp = &http.Response{
@@ -61,6 +57,10 @@ func APIHandler() http.Handler {
 	return &httputil.ReverseProxy{
 		Transport: &proxyTransport{},
 		Director: func(r *http.Request) {
+			// Strip /pro from path.
+			if strings.HasPrefix(r.URL.Path, "/pro/") {
+				r.URL.Path = r.URL.Path[4:]
+			}
 			r.URL.Scheme = "https"
 			r.URL.Host = proAPIHost
 			r.Host = r.URL.Host

@@ -58,5 +58,19 @@ require-glide:
 novendor:
 	@rm -Rf vendor
 
+test-and-cover: $(SOURCES)
+	@echo "mode: count" > profile.cov && \
+	TP=$$(glide novendor -x) && \
+	CP=$$(echo -n $$TP | tr ' ', ',') && \
+	set -x && \
+	for pkg in $$TP; do \
+		go test -race -v -tags="headless" -covermode=atomic -coverprofile=profile_tmp.cov $$pkg || exit 1; \
+		tail -n +2 profile_tmp.cov >> profile.cov; \
+	done
+
+test: $(SOURCES)
+	@TP=$$(glide novendor -x) && \
+	go test -race -v -tags="headless" $$TP || exit 1; \
+
 clean:
 	rm -f lantern

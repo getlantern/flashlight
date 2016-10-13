@@ -30,6 +30,7 @@ func TestRead(t *testing.T) {
 	assert.Equal(t, s.GetLanguage(), "")
 	assert.Equal(t, s.GetLanguage(), "")
 	assert.Equal(t, s.GetUIAddr(), "")
+	assert.Equal(t, s.GetLocalHTTPToken(), "")
 	assert.Equal(t, s.GetTakenSurveys(), []string(nil))
 
 	// Start with raw JSON so we actually decode the map from scratch, as that
@@ -45,6 +46,7 @@ func TestRead(t *testing.T) {
 		"userID": 890238588,
 		"language": "en-US",
 		"takenSurveys": ["foo", "bar"],
+		"localHTTPToken": "0jafdjlka",
 		"uiAddr": "127.0.0.1:1234"
 	}`
 
@@ -70,6 +72,7 @@ func TestRead(t *testing.T) {
 	assert.Equal(t, s.GetDeviceID(), base64.StdEncoding.EncodeToString(uuid.NodeID()))
 	assert.Equal(t, s.GetLanguage(), "en-US")
 	assert.Equal(t, s.GetUIAddr(), "127.0.0.1:1234")
+	assert.Equal(t, s.GetLocalHTTPToken(), "0jafdjlka")
 	assert.Equal(t, s.GetTakenSurveys(), []string{"foo", "bar"})
 
 	// Test that setting something random doesn't break stuff.
@@ -159,4 +162,13 @@ func TestOnChange(t *testing.T) {
 	_ = <-out
 	assert.Equal(t, "en", c1, "should call OnChange callback")
 	assert.Equal(t, "en", c2, "should call all OnChange callbacks")
+}
+
+func TestInvalidType(t *testing.T) {
+	set := newSettings("/dev/null")
+	set.setVal("test", nil)
+	assert.Equal(t, "", set.getString("test"))
+	assert.Equal(t, false, set.getBool("test"))
+	assert.Equal(t, int64(0), set.getInt64("test"))
+	assert.Equal(t, []string(nil), set.getStringArray("test"))
 }

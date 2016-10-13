@@ -24,21 +24,21 @@ func (s *ServeMux) Handle(pattern string, handler http.Handler) {
 
 func checkOrigin(h http.Handler) http.Handler {
 	check := func(w http.ResponseWriter, r *http.Request) {
-		var clientAddr string
+		var clientURL string
 
 		referer := r.Header.Get("Referer")
 		if referer != "" {
-			clientAddr = referer
+			clientURL = referer
 		}
 
 		origin := r.Header.Get("Origin")
 		if origin != "" {
-			clientAddr = origin
+			clientURL = origin
 		}
 
 		tokenMatch := false
 
-		if clientAddr == "" {
+		if clientURL == "" {
 			switch r.URL.Path {
 			case "/": // Whitelist skips any further checks.
 				h.ServeHTTP(w, r)
@@ -46,9 +46,10 @@ func checkOrigin(h http.Handler) http.Handler {
 			default:
 				r.ParseForm()
 				token := r.Form.Get("token")
-				if token == sessionToken {
-					clientAddr = uiaddr // Bypass further checks if the token is legit.
+				if token == localHTTPToken {
 					tokenMatch = true
+				} else if token != "" {
+					log.Errorf("Token '%v' did not match the expected '%v'", token, localHTTPToken)
 				} else {
 					log.Errorf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
 					return
@@ -56,29 +57,26 @@ func checkOrigin(h http.Handler) http.Handler {
 			}
 		}
 
-		expectedURL, err := url.Parse(uiaddr)
-		if err != nil {
-			log.Fatalf("Could not parse own uiaddr: %v", err)
-		}
-
-		originURL, err := url.Parse(clientAddr)
-		if err != nil {
-			log.Errorf("Could not parse client addr %v", clientAddr)
-			return
-		}
-
 		if strictOriginCheck && !tokenMatch {
+			var originHost string
+			if originURL, err := url.Parse(clientURL); err != nil {
+				log.Errorf("Could not parse client URL %v", clientURL)
+				return
+			} else {
+				originHost = originURL.Host
+			}
+
 			if allowRemoteClients {
 				// At least check if same port.
-				_, originPort, _ := net.SplitHostPort(originURL.Host)
-				_, expectedPort, _ := net.SplitHostPort(expectedURL.Host)
+				_, originPort, _ := net.SplitHostPort(originHost)
+				_, expectedPort, _ := net.SplitHostPort(uiaddr)
 				if originPort != expectedPort {
 					log.Errorf("Expecting clients connect on port: %s, but got: %s", expectedPort, originPort)
 					return
 				}
 			} else {
-				if GetPreferredUIAddr() != "http://"+originURL.Host {
-					log.Errorf("Origin was '%v' but expecting: '%v'", "http://"+originURL.Host, GetPreferredUIAddr())
+				if GetPreferredUIAddr() != originHost {
+					log.Errorf("Origin was '%v' but expecting: '%v'", originHost, GetPreferredUIAddr())
 					return
 				}
 			}

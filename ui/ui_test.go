@@ -9,7 +9,7 @@ import (
 )
 
 func TestStartServer(t *testing.T) {
-	Start(":0", false, "")
+	Start(":0", false, "", "948318")
 }
 
 func TestNoCache(t *testing.T) {

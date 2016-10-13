@@ -132,6 +132,7 @@ func (s *notifyStatus) notifyFreeUser(n notify.Notifier, title, msg string) {
 }
 
 func (s *notifyStatus) userStatus(deviceID string, userID int, proToken string) (string, error) {
+	log.Debugf("Fetching user status with user ID '%v' and pro token '%v'", userID, proToken)
 	user := proClient.User{Auth: proClient.Auth{
 		DeviceID: deviceID,
 		ID:       userID,

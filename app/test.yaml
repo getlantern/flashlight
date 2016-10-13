@@ -1,7 +1,10 @@
 autoLaunch: true
 autoReport: true
 language: en
+localHTTPToken: ""
 proxyAll: false
 systemProxy: true
+takenSurveys: []
+uiAddr: ""
 userID: 1
 userToken: ""

@@ -45,7 +45,7 @@ type ConnectFunc func(write func([]byte) error) error
 // messages for this UIChannel. The given onConnect function is called anytime
 // that the UI connects.
 func NewChannel(p string, onConnect ConnectFunc) *UIChannel {
-	c := newUIChannel(path.Join(uiaddr, p))
+	c := newUIChannel("http://" + path.Join(uiaddr, p))
 
 	r.HandleFunc(p, func(resp http.ResponseWriter, req *http.Request) {
 		log.Tracef("Got connection to %v", c.URL)

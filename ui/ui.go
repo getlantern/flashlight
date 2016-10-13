@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"path"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -35,20 +36,16 @@ var (
 	openedExternal = false
 	externalURL    string
 	r              = NewServeMux()
-	sessionToken   = token()
+	localHTTPToken string
 )
-
-// UIAddr returns the current UI address.
-func UIAddr() string {
-	return uiaddr
-}
 
 func Handle(pattern string, handler http.Handler) {
 	r.Handle(pattern, handler)
 }
 
 // Start starts serving the UI.
-func Start(requestedAddr string, allowRemote bool, extURL string) error {
+func Start(requestedAddr string, allowRemote bool, extURL, localHTTPTok string) error {
+	localHTTPToken = localHTTPTok
 	if requestedAddr == "" {
 		requestedAddr = defaultUIAddress
 	}
@@ -112,7 +109,7 @@ func Start(requestedAddr string, allowRemote bool, extURL string) error {
 	if host == "" {
 		host = "127.0.0.1"
 	}
-	uiaddr = fmt.Sprintf("http://%s:%s", host, port)
+	uiaddr = fmt.Sprintf("%s:%s", host, port)
 
 	// Note - we display the UI using the LanternSpecialDomain. This is necessary
 	// for Microsoft Edge on Windows 10 because, being a Windows Modern App, its
@@ -123,11 +120,10 @@ func Start(requestedAddr string, allowRemote bool, extURL string) error {
 	// detects this and reroutes the traffic to the local UI server. The proxy is
 	// allowed to connect to loopback because it doesn't have the same restriction
 	// as Microsoft Edge.
-	domain := proxyDomain()
-	proxiedUIAddr = "http://" + domain
-	client.SetProxyUIAddr(domain, listenAddr)
+	proxiedUIAddr = proxyDomainFor(listenAddr)
+	client.SetProxyUIAddr(proxiedUIAddr, listenAddr)
 
-	log.Debugf("UI available at %v and http://%v", uiaddr, proxiedUIAddr)
+	log.Debugf("UI available at http://%v and http://%v", uiaddr, proxiedUIAddr)
 
 	return nil
 }
@@ -184,6 +180,11 @@ func GetPreferredUIAddr() string {
 	return uiaddr
 }
 
+// GetDirectUIAddr returns the current UI address when accessing directly.
+func GetDirectUIAddr() string {
+	return uiaddr
+}
+
 // Show opens the UI in a browser. Note we know the UI server is
 // *listening* at this point as long as Start is correctly called prior
 // to this method. It may not be reading yet, but since we're the only
@@ -191,11 +192,11 @@ func GetPreferredUIAddr() string {
 // asynchronously is not a problem.
 func Show() {
 	go func() {
-		addr := GetPreferredUIAddr() + "?1"
-		log.Debugf("Opening browser at %v", addr)
-		err := open.Run(addr)
+		uiURL := fmt.Sprintf("http://%s/?1", GetPreferredUIAddr())
+		log.Debugf("Opening browser at %v", uiURL)
+		err := open.Run(uiURL)
 		if err != nil {
-			log.Errorf("Error opening page to `%v`: %v", addr, err)
+			log.Errorf("Error opening page to `%v`: %v", uiURL, err)
 		}
 
 		onceBody := func() {
@@ -230,5 +231,5 @@ func openExternalURL(u string) {
 // request path. Without that token, the backend will reject the request to
 // avoid web sites detecting Lantern.
 func AddToken(in string) string {
-	return util.SetURLParam(UIAddr()+in, "token", sessionToken)
+	return util.SetURLParam("http://"+path.Join(uiaddr, in), "token", localHTTPToken)
 }
