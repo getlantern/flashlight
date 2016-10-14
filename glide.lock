@@ -1,24 +1,24 @@
 hash: 36879dea463dc3171e4d543501ca509ad5dbd607b274f2db404c5d3e4426f71b
-updated: 2016-10-13T15:43:55.818268787-05:00
+updated: 2016-10-14T09:10:38.558086379-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
 - name: git.torproject.org/pluggable-transports/obfs4.git
   version: 62057625eaba2a555967b9615039d43dda071360
   subpackages:
-  - transports/obfs4
   - common/csrand
   - common/drbg
   - common/ntor
   - common/probdist
   - common/replayfilter
   - transports/base
+  - transports/obfs4
   - transports/obfs4/framing
 - name: github.com/agl/ed25519
   version: 278e1ec8e8a6e017cd07577924d6766039146ced
   subpackages:
-  - extra25519
   - edwards25519
+  - extra25519
 - name: github.com/armon/go-socks5
   version: e75332964ef517daa070d7c38a9466a0d687e0a5
 - name: github.com/blang/semver
@@ -98,8 +98,36 @@ imports:
   version: d52a649ab33af200943bb599898dbdcfdbc94cb7
 - name: github.com/getlantern/http-proxy
   version: 3ced6a60f6ca50302288b0814141f26544fa5d15
+  subpackages:
+  - buffers
+  - commonfilter
+  - filters
+  - forward
+  - httpconnect
+  - listeners
+  - ratelimiter
+  - server
+  - utils
 - name: github.com/getlantern/http-proxy-lantern
   version: 2c79768088394a184d84f5e9124bbfcbeb2140a7
+  subpackages:
+  - analytics
+  - blacklist
+  - borda
+  - common
+  - configserverfilter
+  - devicefilter
+  - kcplistener
+  - listeners
+  - metrics
+  - mimic
+  - obfs4listener
+  - opsfilter
+  - ping
+  - profilter
+  - redis
+  - tokenfilter
+  - usage
 - name: github.com/getlantern/i18n
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
@@ -177,6 +205,8 @@ imports:
   version: 2d1e4548da234d9cb742cc3628556fef86aafbac
 - name: github.com/hashicorp/golang-lru
   version: 0a025b7e63adc15a622f29b0b2c4c3848243bbf6
+  subpackages:
+  - simplelru
 - name: github.com/kardianos/osext
   version: c2c54e542fb797ad986b31721e1baedf214ca413
 - name: github.com/klauspost/cpuid
@@ -228,22 +258,43 @@ imports:
 - name: golang.org/x/crypto
   version: 5f31782cfb2b6373211f8f9fbf31283fa234b570
   subpackages:
+  - blowfish
+  - cast5
   - curve25519
   - hkdf
   - nacl/secretbox
+  - pbkdf2
   - poly1305
+  - salsa20
   - salsa20/salsa
+  - tea
+  - twofish
+  - xtea
 - name: golang.org/x/net
   version: 8b4af36cd21a1f85a7484b49feb7c79363106d8e
   subpackages:
+  - bpf
   - context
+  - internal/iana
+  - internal/netreflect
+  - ipv4
 - name: golang.org/x/sys
   version: 9bb9f0998d48b31547d975974935ae9b48c7a03c
   subpackages:
-  - windows/registry
+  - unix
   - windows
+  - windows/registry
 - name: gopkg.in/bsm/ratelimit.v1
   version: db14e161995a5177acef654cb0dd785e8ee8bc22
 - name: gopkg.in/redis.v3
   version: b5e368500d0a508ef8f16e9c2d4025a8a46bcc29
-devImports: []
+  subpackages:
+  - internal
+  - internal/consistenthash
+  - internal/hashtag
+  - internal/pool
+testImports:
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib
