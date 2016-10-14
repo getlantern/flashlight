@@ -1,5 +1,5 @@
 hash: 36879dea463dc3171e4d543501ca509ad5dbd607b274f2db404c5d3e4426f71b
-updated: 2016-10-06T22:37:59.860913278-05:00
+updated: 2016-10-13T15:43:55.818268787-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -40,7 +40,7 @@ imports:
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda
-  version: 49d716c6f0a075c94b1fd449bd6aebed8d48a5b1
+  version: fbb1bc83cc7b0bc0f0406f786cbd84ee8814e2f5
   subpackages:
   - client
 - name: github.com/getlantern/buuid
@@ -99,7 +99,7 @@ imports:
 - name: github.com/getlantern/http-proxy
   version: 3ced6a60f6ca50302288b0814141f26544fa5d15
 - name: github.com/getlantern/http-proxy-lantern
-  version: 3c920ec230bf7af08090aeb6092f28de52f4c47d
+  version: 2c79768088394a184d84f5e9124bbfcbeb2140a7
 - name: github.com/getlantern/i18n
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
@@ -130,7 +130,7 @@ imports:
 - name: github.com/getlantern/pathreflect
   version: b02f4864048a236150ca17c2c526158f2b3133c4
 - name: github.com/getlantern/pro-server-client
-  version: f46d9f774b3e76d700029d10d794fd82cccba043
+  version: 85210b8b31af269cf6f93cda64ac7c7a650b17b3
   subpackages:
   - go-client
 - name: github.com/getlantern/profiling
@@ -226,7 +226,7 @@ imports:
 - name: github.com/xtaci/kcp-go
   version: e9c2f49ea6a99f8889f5c2ef192c499f8c0aa772
 - name: golang.org/x/crypto
-  version: d172538b2cfce0c13cee31e647d0367aa8cd2486
+  version: 5f31782cfb2b6373211f8f9fbf31283fa234b570
   subpackages:
   - curve25519
   - hkdf
@@ -234,11 +234,11 @@ imports:
   - poly1305
   - salsa20/salsa
 - name: golang.org/x/net
-  version: 88c1a61b3dd4d98651f24775ca288fac5d2544ce
+  version: 8b4af36cd21a1f85a7484b49feb7c79363106d8e
   subpackages:
   - context
 - name: golang.org/x/sys
-  version: 8d1157a435470616f975ff9bb013bea8d0962067
+  version: 9bb9f0998d48b31547d975974935ae9b48c7a03c
   subpackages:
   - windows/registry
   - windows
