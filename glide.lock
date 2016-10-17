@@ -34,7 +34,7 @@ imports:
 - name: github.com/getlantern/appdir
   version: 659a155d06e8f3dd8b9f79d6147445897499b56b
 - name: github.com/getlantern/autoupdate
-  version: e4cadd309031a4c04c1098c08623c800f4b0d8e0
+  version: d6108d5b0026b59769de8eb4cb73c382a9882dbc
 - name: github.com/getlantern/balancer
   version: 70e3aff550185f805d2f40933c2bc8c29aefa28d
 - name: github.com/getlantern/bandwidth
@@ -82,7 +82,7 @@ imports:
 - name: github.com/getlantern/go-loggly
   version: d15e28ab7389ed5d644ccb891d9d54154e43cd27
 - name: github.com/getlantern/go-update
-  version: 03a42014e1be975299298be78a05b272c4de9903
+  version: 966d00048f69ee4ba05f43a32298075a63fcf2d3
   subpackages:
   - check
   - download
