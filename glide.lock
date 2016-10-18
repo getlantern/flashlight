@@ -95,9 +95,9 @@ imports:
 - name: github.com/getlantern/hidden
   version: d52a649ab33af200943bb599898dbdcfdbc94cb7
 - name: github.com/getlantern/http-proxy
-  version: 3ced6a60f6ca50302288b0814141f26544fa5d15
+  version: 4648a2283acc3890a2eb56b95de3170819f3ea83
 - name: github.com/getlantern/http-proxy-lantern
-  version: 3c920ec230bf7af08090aeb6092f28de52f4c47d
+  version: 411a34a33c2eecb4642f759dd564639cc4b96d12
 - name: github.com/getlantern/i18n
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
