@@ -10,6 +10,8 @@ func proxyDomainFor(addr string) string {
 	return "ui.lantern.io"
 }
 
-func token() string {
+// LocalHTTPToken is a no-op without resource randomization.
+func LocalHTTPToken() string {
+	// no-op.
 	return ""
 }

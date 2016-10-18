@@ -40,9 +40,10 @@ const (
 	SNSOCKSAddr SettingName = "socksAddr"
 	SNUIAddr    SettingName = "uiAddr"
 
-	SNVersion      SettingName = "version"
-	SNBuildDate    SettingName = "buildDate"
-	SNRevisionDate SettingName = "revisionDate"
+	SNVersion        SettingName = "version"
+	SNBuildDate      SettingName = "buildDate"
+	SNRevisionDate   SettingName = "revisionDate"
+	SNLocalHTTPToken SettingName = "localHTTPToken"
 )
 
 type settingType byte
@@ -71,9 +72,10 @@ var settingMeta = map[SettingName]struct {
 	SNLanguage: {stString, true, true},
 
 	// SNDeviceID: intentionally omit, to avoid setting it from UI
-	SNUserID:       {stNumber, true, true},
-	SNUserToken:    {stString, true, true},
-	SNTakenSurveys: {stStringArray, true, true},
+	SNUserID:         {stNumber, true, true},
+	SNUserToken:      {stString, true, true},
+	SNTakenSurveys:   {stStringArray, true, true},
+	SNLocalHTTPToken: {stString, true, true},
 
 	SNAddr:      {stString, true, true},
 	SNSOCKSAddr: {stString, true, true},
@@ -171,14 +173,15 @@ func toCamelCase(m map[SettingName]interface{}) {
 func newSettings(filePath string) *Settings {
 	return &Settings{
 		m: map[SettingName]interface{}{
-			SNUserID:      int64(0),
-			SNAutoReport:  true,
-			SNAutoLaunch:  true,
-			SNProxyAll:    false,
-			SNSystemProxy: true,
-			SNLanguage:    "",
-			SNUserToken:   "",
-			SNUIAddr:      "",
+			SNUserID:         int64(0),
+			SNAutoReport:     true,
+			SNAutoLaunch:     true,
+			SNProxyAll:       false,
+			SNSystemProxy:    true,
+			SNLanguage:       "",
+			SNUserToken:      "",
+			SNUIAddr:         "",
+			SNLocalHTTPToken: "",
 		},
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
@@ -396,14 +399,27 @@ func (s *Settings) SetLanguage(language string) {
 	s.setVal(SNLanguage, language)
 }
 
-// GetUIAddr returns the user language
-func (s *Settings) GetUIAddr() string {
-	return s.getString(SNUIAddr)
-}
-
 // GetLanguage returns the user language
 func (s *Settings) GetLanguage() string {
 	return s.getString(SNLanguage)
+}
+
+// SetLocalHTTPToken sets the local HTTP token, stored on disk because we've
+// seen weird issues on Windows where the OS remembers old, inactive PAC URLs
+// with old tokens and uses them, breaking Edge and IE.
+func (s *Settings) SetLocalHTTPToken(token string) {
+	s.setVal(SNLocalHTTPToken, token)
+}
+
+// GetLocalHTTPToken returns the local HTTP token.
+func (s *Settings) GetLocalHTTPToken() string {
+	return s.getString(SNLocalHTTPToken)
+}
+
+// GetUIAddr returns the address of the UI, stored across runs to avoid a
+// different port on each run, which breaks things like local storage in the UI.
+func (s *Settings) GetUIAddr() string {
+	return s.getString(SNUIAddr)
 }
 
 // GetDeviceID returns the unique ID of this device.
@@ -468,6 +484,7 @@ func (s *Settings) getInt64(name SettingName) int64 {
 }
 
 func (s *Settings) getVal(name SettingName) (interface{}, error) {
+	log.Debugf("Getting value for %v", name)
 	s.RLock()
 	defer s.RUnlock()
 	if val, ok := s.m[name]; ok {

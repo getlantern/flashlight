@@ -33,7 +33,10 @@ var (
 
 func init() {
 	log.Debugf("****************************** stagingMode: %v", stagingMode)
+
 	autoupdate.Version = flashlight.PackageVersion
+	autoupdate.PublicKey = []byte(packagePublicKey)
+
 	rand.Seed(time.Now().UnixNano())
 }
 
@@ -180,7 +183,7 @@ func (app *App) beforeStart() bool {
 	}
 
 	log.Debugf("Starting client UI at %v", uiaddr)
-	err = ui.Start(uiaddr, !app.ShowUI, startupURL)
+	err = ui.Start(uiaddr, !app.ShowUI, startupURL, localHTTPToken(settings))
 	if err != nil {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 	}
@@ -200,6 +203,18 @@ func (app *App) beforeStart() bool {
 	watchDirectAddrs()
 
 	return true
+}
+
+// localHTTPToken fetches the local HTTP token from disk if it's there, and
+// otherwise creates a new one and stores it.
+func localHTTPToken(set *Settings) string {
+	tok := set.GetLocalHTTPToken()
+	if tok == "" {
+		t := ui.LocalHTTPToken()
+		set.SetLocalHTTPToken(t)
+		return t
+	}
+	return tok
 }
 
 // GetSetting gets the in memory setting with the name specified by attr
