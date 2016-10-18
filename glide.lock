@@ -132,6 +132,8 @@ imports:
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
   version: 7e0189052a9c7fec39114edd1b6e5f1093394415
+- name: github.com/getlantern/interceptor
+  version: 9e4c17dd30a895e512b53041bb080f89fc62966a
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
 - name: github.com/getlantern/keyman
