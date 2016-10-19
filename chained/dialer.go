@@ -129,7 +129,7 @@ func (d *dialer) initStatefulConnection(network, addr string, conn net.Conn) err
 	if d.OnRequest != nil {
 		d.OnRequest(req)
 	}
-	req.Header.Set("X-Lantern-Stateful", "true")
+	req.Header.Set("X-Lantern-Persistent", "true")
 	writeErr := req.Write(conn)
 	if writeErr != nil {
 		return fmt.Errorf("Unable to write initial request: %v", writeErr)

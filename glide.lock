@@ -1,5 +1,5 @@
-hash: 36879dea463dc3171e4d543501ca509ad5dbd607b274f2db404c5d3e4426f71b
-updated: 2016-10-14T09:10:38.558086379-07:00
+hash: c344558346fb22a7a648ba0a67bdfb6cc5ed58d3608e1db3812decef3034e2f1
+updated: 2016-10-19T15:01:53.897311347-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -34,7 +34,7 @@ imports:
 - name: github.com/getlantern/appdir
   version: 659a155d06e8f3dd8b9f79d6147445897499b56b
 - name: github.com/getlantern/autoupdate
-  version: d6108d5b0026b59769de8eb4cb73c382a9882dbc
+  version: e4cadd309031a4c04c1098c08623c800f4b0d8e0
 - name: github.com/getlantern/balancer
   version: 70e3aff550185f805d2f40933c2bc8c29aefa28d
 - name: github.com/getlantern/bandwidth
@@ -49,8 +49,6 @@ imports:
   version: 4a7f76bdd5e28d1d72a8a8287927daeaa3316820
 - name: github.com/getlantern/byteexec
   version: 2e21fedeb225921a8dc40321cbd114ffd0a302f3
-- name: github.com/getlantern/chained
-  version: 333b0f12504a0ddb5f2680117c190843d931bec4
 - name: github.com/getlantern/checkfallbacks
   version: bee841637e5faa029ff7d8d8c4a0c6055e72aa67
 - name: github.com/getlantern/connpool
@@ -82,7 +80,7 @@ imports:
 - name: github.com/getlantern/go-loggly
   version: d15e28ab7389ed5d644ccb891d9d54154e43cd27
 - name: github.com/getlantern/go-update
-  version: 966d00048f69ee4ba05f43a32298075a63fcf2d3
+  version: 03a42014e1be975299298be78a05b272c4de9903
   subpackages:
   - check
   - download
@@ -107,6 +105,7 @@ imports:
   - listeners
   - ratelimiter
   - server
+  - stateful
   - utils
 - name: github.com/getlantern/http-proxy-lantern
   version: 411a34a33c2eecb4642f759dd564639cc4b96d12
@@ -133,7 +132,7 @@ imports:
 - name: github.com/getlantern/idletiming
   version: 7e0189052a9c7fec39114edd1b6e5f1093394415
 - name: github.com/getlantern/interceptor
-  version: 9e4c17dd30a895e512b53041bb080f89fc62966a
+  version: bc80946d4aa305ba155e0f3740d8d147ea63233c
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
 - name: github.com/getlantern/keyman
