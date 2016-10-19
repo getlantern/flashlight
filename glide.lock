@@ -1,5 +1,5 @@
 hash: 36879dea463dc3171e4d543501ca509ad5dbd607b274f2db404c5d3e4426f71b
-updated: 2016-10-14T09:10:38.558086379-07:00
+updated: 2016-10-19T07:43:53.165246603-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -34,7 +34,7 @@ imports:
 - name: github.com/getlantern/appdir
   version: 659a155d06e8f3dd8b9f79d6147445897499b56b
 - name: github.com/getlantern/autoupdate
-  version: d6108d5b0026b59769de8eb4cb73c382a9882dbc
+  version: e4cadd309031a4c04c1098c08623c800f4b0d8e0
 - name: github.com/getlantern/balancer
   version: 70e3aff550185f805d2f40933c2bc8c29aefa28d
 - name: github.com/getlantern/bandwidth
@@ -62,7 +62,7 @@ imports:
 - name: github.com/getlantern/detour
   version: 30cb163a67fb772d45f58c732ae5769bb0614d79
 - name: github.com/getlantern/edgedetect
-  version: 5ad57dc79c5da6824e563abf07fe20f6408aa35d
+  version: f58e865f680868c70f5d114b620b682a39fdaff7
 - name: github.com/getlantern/elevate
   version: a1e4813b4e263a37d95b569a21cf5a2943acfd26
   subpackages:
@@ -82,7 +82,7 @@ imports:
 - name: github.com/getlantern/go-loggly
   version: d15e28ab7389ed5d644ccb891d9d54154e43cd27
 - name: github.com/getlantern/go-update
-  version: 966d00048f69ee4ba05f43a32298075a63fcf2d3
+  version: 03a42014e1be975299298be78a05b272c4de9903
   subpackages:
   - check
   - download
