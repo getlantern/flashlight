@@ -1,5 +1,5 @@
-hash: 36879dea463dc3171e4d543501ca509ad5dbd607b274f2db404c5d3e4426f71b
-updated: 2016-10-14T09:10:38.558086379-07:00
+hash: 626bff5796f1cbaa05edd34ca1603d6945cd1def68d425a515462fedb07ed904
+updated: 2016-10-18T21:33:00.043691705-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -62,7 +62,7 @@ imports:
 - name: github.com/getlantern/detour
   version: 30cb163a67fb772d45f58c732ae5769bb0614d79
 - name: github.com/getlantern/edgedetect
-  version: 5ad57dc79c5da6824e563abf07fe20f6408aa35d
+  version: f58e865f680868c70f5d114b620b682a39fdaff7
 - name: github.com/getlantern/elevate
   version: a1e4813b4e263a37d95b569a21cf5a2943acfd26
   subpackages:
@@ -284,6 +284,11 @@ imports:
   - unix
   - windows
   - windows/registry
+testImports:
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib
 - name: gopkg.in/bsm/ratelimit.v1
   version: db14e161995a5177acef654cb0dd785e8ee8bc22
 - name: gopkg.in/redis.v3
@@ -293,8 +298,3 @@ imports:
   - internal/consistenthash
   - internal/hashtag
   - internal/pool
-testImports:
-- name: github.com/pmezard/go-difflib
-  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
-  subpackages:
-  - difflib
