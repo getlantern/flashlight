@@ -4,7 +4,7 @@ imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
 - name: git.torproject.org/pluggable-transports/obfs4.git
-  version: 62057625eaba2a555967b9615039d43dda071360
+  version: a9e8a62f9b914d872f0b83528c60f22bada0fcd1
   subpackages:
   - common/csrand
   - common/drbg
