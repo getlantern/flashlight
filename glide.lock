@@ -1,10 +1,10 @@
 hash: c344558346fb22a7a648ba0a67bdfb6cc5ed58d3608e1db3812decef3034e2f1
-updated: 2016-10-19T15:07:47.809283886-05:00
+updated: 2016-10-19T20:53:07.242546644-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
 - name: git.torproject.org/pluggable-transports/obfs4.git
-  version: 62057625eaba2a555967b9615039d43dda071360
+  version: a9e8a62f9b914d872f0b83528c60f22bada0fcd1
   subpackages:
   - common/csrand
   - common/drbg
@@ -60,7 +60,7 @@ imports:
 - name: github.com/getlantern/detour
   version: 30cb163a67fb772d45f58c732ae5769bb0614d79
 - name: github.com/getlantern/edgedetect
-  version: f58e865f680868c70f5d114b620b682a39fdaff7
+  version: 5ad57dc79c5da6824e563abf07fe20f6408aa35d
 - name: github.com/getlantern/elevate
   version: a1e4813b4e263a37d95b569a21cf5a2943acfd26
   subpackages:
