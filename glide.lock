@@ -284,6 +284,11 @@ imports:
   - unix
   - windows
   - windows/registry
+testImports:
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib
 - name: gopkg.in/bsm/ratelimit.v1
   version: db14e161995a5177acef654cb0dd785e8ee8bc22
 - name: gopkg.in/redis.v3
@@ -293,8 +298,3 @@ imports:
   - internal/consistenthash
   - internal/hashtag
   - internal/pool
-testImports:
-- name: github.com/pmezard/go-difflib
-  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
-  subpackages:
-  - difflib
