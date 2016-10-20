@@ -238,7 +238,7 @@ func (client *Client) doDial(isCONNECT bool, addr string, port int) (conn net.Co
 		pipe = isCONNECT
 		log.Debugf("Proxying request for %v", addr)
 		d := client.proxiedDialer(func(network, addr string) (net.Conn, error) {
-			proto := "stateful"
+			proto := "persistent"
 			if isCONNECT {
 				// UGLY HACK ALERT! In this case, we know we need to send a CONNECT request
 				// to the chained server. We need to send that request from chained/dialer.go

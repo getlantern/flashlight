@@ -56,9 +56,9 @@ func (d *dialer) Dial(network, addr string) (net.Conn, error) {
 			conn.Close()
 			return nil, err
 		}
-	} else if network == "stateful" {
-		log.Tracef("Sending stateful GET request")
-		err := d.initStatefulConnection("tcp", addr, conn)
+	} else if network == "persistent" {
+		log.Tracef("Sending GET request to establish persistent HTTP connection")
+		err := d.initPersistentConnection("tcp", addr, conn)
 		if err != nil {
 			conn.Close()
 			return nil, err
@@ -117,7 +117,7 @@ func sameStatusCodeClass(statusCode1 int, statusCode2 int) bool {
 	return statusCode1/classRange == statusCode2/classRange
 }
 
-func (d *dialer) initStatefulConnection(network, addr string, conn net.Conn) error {
+func (d *dialer) initPersistentConnection(network, addr string, conn net.Conn) error {
 	if !strings.Contains(network, "tcp") {
 		return fmt.Errorf("%s connections are not supported, only tcp is supported", network)
 	}
