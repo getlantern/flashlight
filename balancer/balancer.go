@@ -25,6 +25,8 @@ const (
 
 var (
 	log = golog.LoggerFor("balancer")
+
+	impossiblySmallLatency = int64(1 * time.Millisecond)
 )
 
 // Opts are options for the balancer.
@@ -353,5 +355,16 @@ func (d byLatency) Len() int { return len(d) }
 func (d byLatency) Swap(i, j int) { d[i], d[j] = d[j], d[i] }
 
 func (d byLatency) Less(i, j int) bool {
-	return d[i].EMALatency() < d[j].EMALatency()
+	di, dj := d[i], d[j]
+	li, lj := di.EMALatency(), dj.EMALatency()
+	if li == lj {
+		// Use label as tie-breaker
+		return di.Label < dj.Label
+	}
+	if li < impossiblySmallLatency {
+		// Never treat a proxy with impossibly small latency as fast, because we
+		// just don't know how good it is yet
+		return false
+	}
+	return li < lj
 }
