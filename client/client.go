@@ -48,7 +48,7 @@ var (
 		19305, 19306, 19307, 19308, 19309,
 	}
 
-	buffers = bpool.NewBytePool(100, 32768)
+	buffers = bpool.NewBytePool(1000, 32768)
 )
 
 // Client is an HTTP proxy that accepts connections from local programs and
