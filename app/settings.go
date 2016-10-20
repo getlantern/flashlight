@@ -484,7 +484,7 @@ func (s *Settings) getInt64(name SettingName) int64 {
 }
 
 func (s *Settings) getVal(name SettingName) (interface{}, error) {
-	log.Debugf("Getting value for %v", name)
+	log.Tracef("Getting value for %v", name)
 	s.RLock()
 	defer s.RUnlock()
 	if val, ok := s.m[name]; ok {
