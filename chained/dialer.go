@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strings"
 
 	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/errors"
@@ -50,7 +49,7 @@ func (d *dialer) Dial(network, addr string) (net.Conn, error) {
 	// that.
 	if network == "connect" {
 		log.Tracef("Sending CONNECT request")
-		err := d.sendCONNECT("tcp", addr, conn)
+		err := d.sendCONNECT(addr, conn)
 		if err != nil {
 			// We discard this error, since we are only interested in sendCONNECT
 			conn.Close()
@@ -58,7 +57,7 @@ func (d *dialer) Dial(network, addr string) (net.Conn, error) {
 		}
 	} else if network == "persistent" {
 		log.Tracef("Sending GET request to establish persistent HTTP connection")
-		err := d.initPersistentConnection("tcp", addr, conn)
+		err := d.initPersistentConnection(addr, conn)
 		if err != nil {
 			conn.Close()
 			return nil, err
@@ -67,11 +66,7 @@ func (d *dialer) Dial(network, addr string) (net.Conn, error) {
 	return conn, nil
 }
 
-func (d *dialer) sendCONNECT(network, addr string, conn net.Conn) error {
-	if !strings.Contains(network, "tcp") {
-		return fmt.Errorf("%s connections are not supported, only tcp is supported", network)
-	}
-
+func (d *dialer) sendCONNECT(addr string, conn net.Conn) error {
 	req, err := buildCONNECTRequest(addr, d.OnRequest)
 	if err != nil {
 		return fmt.Errorf("Unable to construct CONNECT request: %s", err)
@@ -117,11 +112,7 @@ func sameStatusCodeClass(statusCode1 int, statusCode2 int) bool {
 	return statusCode1/classRange == statusCode2/classRange
 }
 
-func (d *dialer) initPersistentConnection(network, addr string, conn net.Conn) error {
-	if !strings.Contains(network, "tcp") {
-		return fmt.Errorf("%s connections are not supported, only tcp is supported", network)
-	}
-
+func (d *dialer) initPersistentConnection(addr string, conn net.Conn) error {
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%v", addr), nil)
 	if err != nil {
 		return err
