@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -305,13 +304,19 @@ func (b *Balancer) printStats() {
 
 func (b *Balancer) doPrintStats() {
 	b.mu.RLock()
-	sortedDialers := make(byLatency, len(b.dialers.dialers))
-	copy(sortedDialers, b.dialers.dialers)
-	b.mu.RUnlock()
-	sort.Sort(sortedDialers)
-	for _, d := range sortedDialers {
+	dialersCopy := make([]*dialer, len(b.dialers.dialers))
+	copy(dialersCopy, b.dialers.dialers)
+	sortedDialers := b.st(dialersCopy)
+	log.Debug("-------------------------- Dialer Stats -----------------------")
+	for {
+		if sortedDialers.Len() == 0 {
+			break
+		}
+		d := heap.Pop(&sortedDialers).(*dialer)
 		log.Debug(d.stats.String(d))
 	}
+	log.Debug("------------------------ End Dialer Stats ---------------------")
+	b.mu.RUnlock()
 }
 
 func (b *Balancer) forceStats() {
@@ -376,27 +381,4 @@ func (s *dialerHeap) onRequest(req *http.Request) {
 		}
 	}
 	return
-}
-
-type byLatency []*dialer
-
-func (d byLatency) Len() int { return len(d) }
-
-func (d byLatency) Swap(i, j int) { d[i], d[j] = d[j], d[i] }
-
-func (d byLatency) Less(i, j int) bool {
-	di, dj := d[i], d[j]
-	li, lj := di.EMALatency(), dj.EMALatency()
-	if li == lj {
-		// Use label as tie-breaker
-		return di.Label < dj.Label
-	}
-	if li < impossiblySmallLatency {
-		// Never treat a proxy with impossibly small latency as fast, because we
-		// just don't know how good it is yet
-		return false
-	} else if lj < impossiblySmallLatency {
-		return true
-	}
-	return li < lj
 }

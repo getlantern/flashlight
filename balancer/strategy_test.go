@@ -20,10 +20,11 @@ func TestStickyStrategy(t *testing.T) {
 func TestFastestStrategy(t *testing.T) {
 	d1 := &dialer{emaLatency: newEMADuration(100*time.Millisecond, 0.5)}
 	d2 := &dialer{emaLatency: newEMADuration(99*time.Millisecond, 0.5)}
+	d3 := &dialer{emaLatency: newEMADuration(0, 0.5)}
 
-	h := Fastest([]*dialer{d1, d2})
+	h := Fastest([]*dialer{d1, d2, d3})
 	heap.Init(&h)
-	assert.Equal(t, heap.Pop(&h), d2, "should select faster dialer")
+	assert.Equal(t, heap.Pop(&h), d2, "should select faster dialer with non-zero dial time")
 }
 
 func TestQualityFirstStrategy(t *testing.T) {
