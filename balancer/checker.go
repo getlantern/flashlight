@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/getlantern/ops"
 )
 
 const (
@@ -26,12 +28,12 @@ var (
 )
 
 type checker struct {
+	b                *Balancer
 	checkInterval    time.Duration
 	minCheckInterval time.Duration
 	maxCheckInterval time.Duration
 	resetCheckCh     chan bool
 	closeCh          chan bool
-	dialers          func() []*dialer
 }
 
 func (c *checker) runChecks() {
@@ -53,16 +55,17 @@ func (c *checker) runChecks() {
 			// check data. This ensures that if the specific checks vary over time,
 			// we get an apples to apples comparison across all dialers.
 			checkData := checkTargets.top(10)
-			dialers := c.dialers()
+			dialers := c.b.dialersToCheck()
 			log.Debugf("Checking %d dialers using %v", len(dialers), checkData)
 			var wg sync.WaitGroup
 			wg.Add(len(dialers))
 			for _, dialer := range dialers {
 				d := dialer
-				go func() {
+				ops.Go(func() {
 					c.check(d, checkData)
 					wg.Done()
-				}()
+					c.b.forceStats()
+				})
 			}
 			wg.Wait()
 			// Exponentially back off checkInterval capped to MaxCheckInterval
@@ -71,7 +74,7 @@ func (c *checker) runChecks() {
 				checkInterval = c.maxCheckInterval
 			}
 			checkTimer.Reset(randomize(checkInterval))
-			log.Debugf("Finished checking dialers")
+			log.Debugf("Finished checking %d dialers", len(dialers))
 		}
 	}
 }
@@ -87,11 +90,9 @@ func (c *checker) check(dialer *dialer, checkData interface{}) {
 			dialer.forceRecheck()
 		}
 		dialer.lastCheckSucceeded = false
-		// Note - we do not mark failures because the failure may have been due to
-		// something unrelated to the dialer. For example, the check function may
-		// try fetching resources from a remote site via the dialed proxy, and may
-		// fail if the remote site is down. We don't want to count this against the
-		// dialer as a failure because it's not a problem specific to that dialer.
+		// we call doMarkFailure so as not to trigger a recheck, since this failure
+		// might just be due to the target we checked
+		dialer.doMarkFailure()
 	}
 }
 
@@ -132,8 +133,8 @@ func AddCheckTarget(addr string) {
 		log.Errorf("failed to split port from %s", addr)
 		return
 	}
-	if port != "80" {
-		log.Tracef("Skip setting non-HTTP site %s as check target", addr)
+	if port != "443" {
+		log.Tracef("Skip setting non-HTTPS site %s as check target", addr)
 		return
 	}
 	for _, s := range internalSiteSuffixes {
@@ -142,7 +143,7 @@ func AddCheckTarget(addr string) {
 			return
 		}
 	}
-	checkTargets.hit(fmt.Sprintf("http://%s/index.html", addr))
+	checkTargets.hit(fmt.Sprintf("https://%s/index.html", addr))
 }
 
 // adds randomization to make requests less distinguishable on the network.

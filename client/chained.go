@@ -188,7 +188,7 @@ func (s *chainedServer) check(dial func(string, string) (net.Conn, error),
 
 		checkedUrl := url
 		s.attachHeaders(req, deviceID, proTokenGetter)
-		ok, timedOut, _ := withtimeout.Do(60*time.Second, func() (interface{}, error) {
+		ok, timedOut, _ := withtimeout.Do(10*time.Second, func() (interface{}, error) {
 			resp, err := rt.RoundTrip(req)
 			if err != nil {
 				log.Debugf("Error testing dialer %s to %s: %s", s.Addr, checkedUrl, err)
