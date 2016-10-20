@@ -64,7 +64,6 @@ func (c *checker) runChecks() {
 				ops.Go(func() {
 					c.check(d, checkData)
 					wg.Done()
-					c.b.forceStats()
 				})
 			}
 			wg.Wait()
@@ -75,6 +74,7 @@ func (c *checker) runChecks() {
 			}
 			checkTimer.Reset(randomize(checkInterval))
 			log.Debugf("Finished checking %d dialers", len(dialers))
+			c.b.forceStats()
 		}
 	}
 }
