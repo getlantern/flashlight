@@ -90,6 +90,7 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 		Dial:                client.dial,
 		GetBuffer:           buffers.Get,
 		PutBuffer:           buffers.Put,
+		OnResponse:          successResponse,
 		OnReadResponseError: errorResponse,
 	})
 

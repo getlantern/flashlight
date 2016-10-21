@@ -2,12 +2,17 @@ package client
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/status"
+)
+
+var (
+	keepaliveIdleTimeout = fmt.Sprintf("timeout: %d", int(idleTimeout.Seconds())-2)
 )
 
 // ServeHTTP implements the method from interface http.Handler using the latest
@@ -30,6 +35,12 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		log.Debugf("Intercepting HTTP request %s %v", req.Method, req.URL)
 		client.ic.Intercept(resp, req, true, op.Wrapped(), 80)
 	}
+}
+
+func successResponse(resp *http.Response, req *http.Request, responseNumber int) *http.Response {
+	// Tell the client when we're going to time out due to idle connections
+	resp.Header.Set("Keep-Alive", keepaliveIdleTimeout)
+	return resp
 }
 
 func errorResponse(w io.Writer, req *http.Request, err error) {
