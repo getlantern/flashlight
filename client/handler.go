@@ -37,7 +37,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func successResponse(resp *http.Response, req *http.Request, responseNumber int) *http.Response {
+func addIdleKeepAliveHeader(resp *http.Response) *http.Response {
 	// Tell the client when we're going to time out due to idle connections
 	resp.Header.Set("Keep-Alive", keepaliveIdleTimeout)
 	return resp

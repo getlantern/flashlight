@@ -87,10 +87,15 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 	}
 
 	client.ic = interceptor.New(&interceptor.Opts{
-		Dial:                client.dial,
-		GetBuffer:           buffers.Get,
-		PutBuffer:           buffers.Put,
-		OnResponse:          successResponse,
+		Dial:      client.dial,
+		GetBuffer: buffers.Get,
+		PutBuffer: buffers.Put,
+		OnInitialOK: func(resp *http.Response, req *http.Request) *http.Response {
+			return addIdleKeepAliveHeader(resp)
+		},
+		OnResponse: func(resp *http.Response, req *http.Request, responseNumber int) *http.Response {
+			return addIdleKeepAliveHeader(resp)
+		},
 		OnReadResponseError: errorResponse,
 	})
 
