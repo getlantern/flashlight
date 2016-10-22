@@ -1,5 +1,5 @@
-hash: 36879dea463dc3171e4d543501ca509ad5dbd607b274f2db404c5d3e4426f71b
-updated: 2016-10-19T07:43:53.165246603-07:00
+hash: b7760a94188a063de630afdd93d1528d788b143d3f34af28bdbe8e89ed815338
+updated: 2016-10-21T00:27:44.516979717-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -154,7 +154,7 @@ imports:
 - name: github.com/getlantern/osversion
   version: ab3020f4c80ef3f5ee296bf734c5ccd5aba1099a
 - name: github.com/getlantern/pac
-  version: 63a6d977cf1c696585ee1ba81285fac3f5aed51f
+  version: 5534aa917168bd068e494e81ae6da91cfc3e2a95
 - name: github.com/getlantern/pathreflect
   version: b02f4864048a236150ca17c2c526158f2b3133c4
 - name: github.com/getlantern/pro-server-client
