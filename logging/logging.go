@@ -137,8 +137,8 @@ func EnableFileLogging(logdir string) error {
 
 // ZipLogFiles zip the Lantern log files under logdir to the writer. All files
 // is placed under the folder in the archieve.  It will stop and return if the
-// newly added file would make the extracted files exceed 10MB in total.
-func ZipLogFiles(logdir string, underFolder string, w io.Writer) error {
+// newly added file would make the extracted files exceed maxBytes in total.
+func ZipLogFiles(w io.Writer, logdir string, underFolder string, maxBytes int64) error {
 	if logdir == "" {
 		logdir = appdir.Logs("Lantern")
 	}
@@ -146,7 +146,7 @@ func ZipLogFiles(logdir string, underFolder string, w io.Writer) error {
 		Glob:     "lantern.log*",
 		Dir:      logdir,
 		NewRoot:  underFolder,
-		MaxBytes: 10 * util.MB,
+		MaxBytes: maxBytes,
 	})
 }
 
