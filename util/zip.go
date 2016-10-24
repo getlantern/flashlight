@@ -2,12 +2,15 @@ package util
 
 import (
 	"archive/zip"
+	"errors"
 	"fmt"
 	"io"
 	"math"
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -32,6 +35,27 @@ type ZipOptions struct {
 	// The limit of total bytes of all the files in the archive.
 	// All remaining files will be ignored if the limit would be hit.
 	MaxBytes int64
+}
+
+var (
+	sizeRegexp = regexp.MustCompile("^(\\d+)([k|m|g|K|M|G][b|B])?$")
+	units      = map[string]int64{
+		"":   1,
+		"KB": KB,
+		"MB": MB,
+		"GB": GB,
+	}
+)
+
+// ParseFileSize converts a string contains a positive integer and an optional
+// KB/MB/GB unit to int64, or returns error.
+func ParseFileSize(s string) (int64, error) {
+	matched := sizeRegexp.FindStringSubmatch(s)
+	if len(matched) == 0 {
+		return 0, errors.New("malformed string")
+	}
+	i, _ := strconv.ParseInt(matched[1], 10, 64)
+	return i * units[strings.ToUpper(matched[2])], nil
 }
 
 // ZipFile creates a zip archive per the options and writes to the writer.
