@@ -1,5 +1,5 @@
-hash: b7760a94188a063de630afdd93d1528d788b143d3f34af28bdbe8e89ed815338
-updated: 2016-10-21T00:27:44.516979717-07:00
+hash: 04724d19e74cea5633814dcdf05c60525731e73a9f6b6a40fb9fd7a6a3104cb7
+updated: 2016-10-24T06:48:41.875173487-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -209,6 +209,8 @@ imports:
   - simplelru
 - name: github.com/kardianos/osext
   version: c2c54e542fb797ad986b31721e1baedf214ca413
+- name: github.com/keighl/mandrill
+  version: 5d7133fb578a9504f8ab549737c993422f65a000
 - name: github.com/klauspost/cpuid
   version: 09cded8978dc9e80714c4d85b0322337b0a1e5e0
 - name: github.com/klauspost/crc32
@@ -278,17 +280,17 @@ imports:
   - internal/iana
   - internal/netreflect
   - ipv4
-- name: golang.org/x/sys
-  version: 9bb9f0998d48b31547d975974935ae9b48c7a03c
-  subpackages:
-  - unix
-  - windows
-  - windows/registry
+- name: golang.org/x/sys/windows/registry
+  version: c200b10b5d5e122be351b67af224adc6128af5bf
 testImports:
 - name: github.com/pmezard/go-difflib
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
   - difflib
+- name: golang.org/x/sys
+  version: 9bb9f0998d48b31547d975974935ae9b48c7a03c
+  subpackages:
+  - unix
 - name: gopkg.in/bsm/ratelimit.v1
   version: db14e161995a5177acef654cb0dd785e8ee8bc22
 - name: gopkg.in/redis.v3
