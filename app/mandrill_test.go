@@ -2,7 +2,6 @@ package app
 
 import (
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/getlantern/flashlight/ui"
@@ -16,8 +15,8 @@ func TestSendFromWS(t *testing.T) {
 	settings = loadSettings("version", "revisionDate", "buildDate")
 	err := serveMandrill()
 	assert.NoError(t, err, "should start UI service")
-	ui.Start("localhost:", false, "")
-	wsURL := strings.Replace(ui.UIAddr(), "http", "ws", 1) + "/data"
+	ui.Start("localhost:", false, "", "")
+	wsURL := "ws://" + ui.GetPreferredUIAddr() + "/data"
 	conn, _, err := websocket.DefaultDialer.Dial(wsURL, http.Header{})
 	assert.NoError(t, err, "should connect to Websocket")
 	defer func() { _ = conn.Close() }()
