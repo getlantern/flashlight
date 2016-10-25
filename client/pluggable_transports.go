@@ -137,6 +137,9 @@ func dialKCP(network, addr string) (net.Conn, error) {
 	// At some point, it would be nice to make these tunable via the server pt
 	// properties, but these defaults work well for now.
 	conn, err := kcp.DialWithOptions(addr, block, 10, 3)
+	if err != nil {
+		return nil, err
+	}
 	conn.SetStreamMode(true)
 	conn.SetNoDelay(0, 20, 2, 1)
 	conn.SetWindowSize(128, 1024)
@@ -147,8 +150,4 @@ func dialKCP(network, addr string) (net.Conn, error) {
 	conn.SetReadBuffer(4194304)
 	conn.SetWriteBuffer(4194304)
 	return snappyconn.Wrap(conn), nil
-}
-
-func dialLocal(network, addr string) (net.Conn, error) {
-	return netx.Dial(network, "localhost:12948")
 }

@@ -1,5 +1,5 @@
 hash: af594d336bb7c6b6827d4cc88dd05455032c08a9200b95dbbd06aaa19c34bd90
-updated: 2016-10-24T19:44:02.536042366-05:00
+updated: 2016-10-24T22:14:40.458563036-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -52,7 +52,7 @@ imports:
 - name: github.com/getlantern/checkfallbacks
   version: bee841637e5faa029ff7d8d8c4a0c6055e72aa67
 - name: github.com/getlantern/cmux
-  version: 9297b0dc48ed2af0f2409e7240b65c582ed409f5
+  version: 5a083cd73164d269c91fd0fab052158f572ae8c5
 - name: github.com/getlantern/connpool
   version: d04ff90bba7bdee0d9627a687b79fb0cb407d001
 - name: github.com/getlantern/context
@@ -175,7 +175,7 @@ imports:
 - name: github.com/getlantern/rotator
   version: 013d4f8e36a2f6369b2435d89866056b5b74c69e
 - name: github.com/getlantern/snappyconn
-  version: 7a91380e185bef5f6bb80783ddd755bd2f30a59d
+  version: c416973f31b99654695a79328208cf3772ee5646
 - name: github.com/getlantern/stack
   version: 02f928aad224fbccd50d66edd776fc9d1e9f2f2b
 - name: github.com/getlantern/systray
