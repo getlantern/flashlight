@@ -14,6 +14,7 @@ import (
 	"github.com/getlantern/tlsdialer"
 	"github.com/xtaci/kcp-go"
 	"net"
+	"strconv"
 	"time"
 )
 
@@ -22,7 +23,7 @@ type dialFactory func(*ChainedServerInfo, string) (dialFN, error)
 
 var pluggableTransports = map[string]dialFactory{
 	"":       defaultDialFactory,
-	"tobfs4": tcpOBFS4DialFactory,
+	"obfs4":  hackKCPOBFS4DialFactory,
 	"kobfs4": kcpOBFS4DialFactory,
 }
 
@@ -90,10 +91,20 @@ func tcpOBFS4DialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) 
 	return obfs4DialFactory(s, deviceID, netx.Dial)
 }
 
+func hackKCPOBFS4DialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
+	// TODO: this is a temporary hack to divert traffic to kcp
+	host, _port, _ := net.SplitHostPort(s.Addr)
+	port, _ := strconv.Atoi(_port)
+	kcpPort := port + 1
+	s.Addr = fmt.Sprintf("%v:%d", host, kcpPort)
+	return kcpOBFS4DialFactory(s, deviceID)
+}
+
 func kcpOBFS4DialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
 	// TODO: parameterize inputs to KCP
 	var dial func(network, addr string) (net.Conn, error) = cmux.Dialer(&cmux.DialerOpts{
-		Dial: dialKCP,
+		Dial:     dialKCP,
+		PoolSize: 1,
 	})
 	return obfs4DialFactory(s, deviceID, dial)
 }
