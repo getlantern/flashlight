@@ -262,7 +262,7 @@ func buildProxies(obfs4 bool) ([]byte, error) {
 	srv.AuthToken = Token
 	if obfs4 {
 		srv.Addr = OBFS4ServerAddr
-		srv.PluggableTransport = "obfs4"
+		srv.PluggableTransport = "tobfs4"
 		srv.PluggableTransportSettings = map[string]string{
 			"iat-mode": "0",
 		}
