@@ -1,5 +1,5 @@
 hash: c344558346fb22a7a648ba0a67bdfb6cc5ed58d3608e1db3812decef3034e2f1
-updated: 2016-10-19T21:25:07.650153369-05:00
+updated: 2016-10-24T19:36:02.786073029-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -51,6 +51,8 @@ imports:
   version: 2e21fedeb225921a8dc40321cbd114ffd0a302f3
 - name: github.com/getlantern/checkfallbacks
   version: bee841637e5faa029ff7d8d8c4a0c6055e72aa67
+- name: github.com/getlantern/cmux
+  version: 9297b0dc48ed2af0f2409e7240b65c582ed409f5
 - name: github.com/getlantern/connpool
   version: d04ff90bba7bdee0d9627a687b79fb0cb407d001
 - name: github.com/getlantern/context
@@ -108,7 +110,7 @@ imports:
   - server
   - utils
 - name: github.com/getlantern/http-proxy-lantern
-  version: c5b711c09ac1fdc0ebfc5f11fac0484f5a35e834
+  version: c42af7e0fefdf3959b529d29fbf8934172e322b5
   subpackages:
   - analytics
   - blacklist
@@ -132,7 +134,7 @@ imports:
 - name: github.com/getlantern/idletiming
   version: 7e0189052a9c7fec39114edd1b6e5f1093394415
 - name: github.com/getlantern/interceptor
-  version: 543a72df0938f2b5e8af43cf939dbee030f56d16
+  version: bc80946d4aa305ba155e0f3740d8d147ea63233c
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
 - name: github.com/getlantern/keyman
@@ -172,6 +174,8 @@ imports:
   version: 33f93fc1fe85c042c0667a1814e6379bd5e7eb40
 - name: github.com/getlantern/rotator
   version: 013d4f8e36a2f6369b2435d89866056b5b74c69e
+- name: github.com/getlantern/snappyconn
+  version: 7a91380e185bef5f6bb80783ddd755bd2f30a59d
 - name: github.com/getlantern/stack
   version: 02f928aad224fbccd50d66edd776fc9d1e9f2f2b
 - name: github.com/getlantern/systray
@@ -200,10 +204,12 @@ imports:
   version: a6b377e3400b08991b80d6805d627f347f983866
   subpackages:
   - lru
+- name: github.com/golang/snappy
+  version: d9eb7a3d35ec988b8585d4a0068e462c27d28380
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/websocket
-  version: 5df680c89f2a84ad9cb16cf143557a0853cfaabc
+  version: 0b847f2facc24ec406130a05bb1bb72d41993b05
 - name: github.com/hashicorp/golang-lru
   version: 0a025b7e63adc15a622f29b0b2c4c3848243bbf6
   subpackages:
@@ -256,6 +262,8 @@ imports:
   - utils
 - name: github.com/xtaci/kcp-go
   version: 5c61c4984f4a70a4a140c0d791e460276a082527
+- name: github.com/xtaci/smux
+  version: 3f1c00c8d60dfb42089107eeafbb33406bede830
 - name: golang.org/x/crypto
   version: c367d6eeb7c6158125f2f47e049f7eb7e251c09a
   subpackages:
@@ -280,7 +288,7 @@ imports:
   - internal/netreflect
   - ipv4
 - name: golang.org/x/sys
-  version: 002cbb5f952456d0c50e0d2aff17ea5eca716979
+  version: c200b10b5d5e122be351b67af224adc6128af5bf
   subpackages:
   - unix
   - windows
