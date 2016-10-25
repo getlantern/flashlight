@@ -1,5 +1,5 @@
 hash: af594d336bb7c6b6827d4cc88dd05455032c08a9200b95dbbd06aaa19c34bd90
-updated: 2016-10-24T22:14:40.458563036-05:00
+updated: 2016-10-25T08:44:56.794016744-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -52,7 +52,7 @@ imports:
 - name: github.com/getlantern/checkfallbacks
   version: bee841637e5faa029ff7d8d8c4a0c6055e72aa67
 - name: github.com/getlantern/cmux
-  version: 5a083cd73164d269c91fd0fab052158f572ae8c5
+  version: f3db3bd29713a11b225b357650d7de1818442d26
 - name: github.com/getlantern/connpool
   version: d04ff90bba7bdee0d9627a687b79fb0cb407d001
 - name: github.com/getlantern/context
@@ -110,7 +110,7 @@ imports:
   - server
   - utils
 - name: github.com/getlantern/http-proxy-lantern
-  version: c42af7e0fefdf3959b529d29fbf8934172e322b5
+  version: 6a4bd3b32b1a276895211e3e930e47f0cfdf2182
   subpackages:
   - analytics
   - blacklist
@@ -155,7 +155,7 @@ imports:
 - name: github.com/getlantern/ops
   version: b70875f5d689a9438bca72aefd7142a2af889b18
 - name: github.com/getlantern/osversion
-  version: ab3020f4c80ef3f5ee296bf734c5ccd5aba1099a
+  version: ef22e31dc5225ca17ab1d295e9ffd1b313727199
 - name: github.com/getlantern/pac
   version: 5534aa917168bd068e494e81ae6da91cfc3e2a95
 - name: github.com/getlantern/pathreflect
@@ -175,7 +175,7 @@ imports:
 - name: github.com/getlantern/rotator
   version: 013d4f8e36a2f6369b2435d89866056b5b74c69e
 - name: github.com/getlantern/snappyconn
-  version: c416973f31b99654695a79328208cf3772ee5646
+  version: d99ceb334e5503f023b658b83083aff6521d67ed
 - name: github.com/getlantern/stack
   version: 02f928aad224fbccd50d66edd776fc9d1e9f2f2b
 - name: github.com/getlantern/systray
@@ -263,7 +263,7 @@ imports:
 - name: github.com/xtaci/kcp-go
   version: 5c61c4984f4a70a4a140c0d791e460276a082527
 - name: github.com/xtaci/smux
-  version: 3f1c00c8d60dfb42089107eeafbb33406bede830
+  version: 6250093011e71f1c87986c575cad1184c717c0ef
 - name: golang.org/x/crypto
   version: c367d6eeb7c6158125f2f47e049f7eb7e251c09a
   subpackages:
