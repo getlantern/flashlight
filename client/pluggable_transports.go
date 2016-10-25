@@ -22,9 +22,10 @@ type dialFN func() (net.Conn, error)
 type dialFactory func(*ChainedServerInfo, string) (dialFN, error)
 
 var pluggableTransports = map[string]dialFactory{
-	"":       defaultDialFactory,
-	"obfs4":  hackKCPOBFS4DialFactory,
-	"kobfs4": kcpOBFS4DialFactory,
+	"":          defaultDialFactory,
+	"obfs4":     hackKCPOBFS4DialFactory,
+	"obsf4-tcp": tcpOBFS4DialFactory,
+	"obfs4-kcp": kcpOBFS4DialFactory,
 }
 
 var (
