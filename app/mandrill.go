@@ -3,11 +3,13 @@ package app
 import (
 	"bytes"
 	"encoding/base64"
+	"fmt"
 	"time"
 
 	"github.com/keighl/mandrill"
 
 	"github.com/getlantern/errors"
+	"github.com/getlantern/osversion"
 
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ui"
@@ -51,7 +53,7 @@ func read(service *ui.Service) {
 			log.Errorf("Malformatted message %v", message)
 			continue
 		}
-
+		fillDefaults(data)
 		if err := sendTemplate(data); err != nil {
 			service.Out <- err.Error()
 		} else {
@@ -109,6 +111,21 @@ func sendTemplate(data *mandrillMessage) error {
 		}
 	}
 	return nil
+}
+
+func fillDefaults(msg *mandrillMessage) {
+	msg.Vars["userID"] = settings.GetUserID()
+	msg.Vars["deviceID"] = settings.GetDeviceID()
+	msg.Vars["proToken"] = settings.GetToken()
+	os, err := osversion.GetHumanReadable()
+	if err != nil {
+		log.Error(err)
+	} else {
+		msg.Vars["os"] = os
+	}
+	msg.Vars["version"] = fmt.Sprintf("%v (%v)",
+		settings.getString(SNVersion),
+		settings.getString(SNRevisionDate))
 }
 
 func prefix(msg *mandrillMessage) string {
