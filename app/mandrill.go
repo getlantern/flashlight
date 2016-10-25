@@ -24,7 +24,7 @@ type mandrillMessage struct {
 	// If attach the settings file to the email or not
 	WithSettings bool `json:"withSettings",omitempty`
 	// Specify the maximum size of the log files attached to the email, can be
-	// in "KB/MB/GB" fromat. Not attaching logs if it's zero or an empty string.
+	// in "KB/MB/GB" fromat. Not attaching logs if it's an empty string.
 	MaxLogSize string `json:"maxLogSize",omitempty`
 }
 
@@ -52,14 +52,15 @@ func read(service *ui.Service) {
 			continue
 		}
 
-		if err := send(data); err != nil {
+		if err := sendTemplate(data); err != nil {
 			service.Out <- err.Error()
+		} else {
+			service.Out <- "success"
 		}
-		service.Out <- "success"
 	}
 }
 
-func send(data *mandrillMessage) error {
+func sendTemplate(data *mandrillMessage) error {
 	client := mandrill.ClientWithKey(mandrillAPIKey)
 	msg := &mandrill.Message{
 		To: []*mandrill.To{&mandrill.To{Email: data.To}},
@@ -67,7 +68,9 @@ func send(data *mandrillMessage) error {
 	msg.GlobalMergeVars = mandrill.MapToVars(data.Vars)
 	var buf bytes.Buffer
 	if data.WithSettings {
-		if _, err := settings.writeTo(&buf); err == nil {
+		if _, err := settings.writeTo(&buf); err != nil {
+			log.Error(err)
+		} else {
 			msg.Attachments = append(msg.Attachments, &mandrill.Attachment{
 				Type:    "application/x-yaml",
 				Name:    prefix(data) + "_settings.yaml",
@@ -76,7 +79,9 @@ func send(data *mandrillMessage) error {
 		}
 	}
 	if data.MaxLogSize != "" {
-		if size, err := util.ParseFileSize(data.MaxLogSize); err == nil {
+		if size, err := util.ParseFileSize(data.MaxLogSize); err != nil {
+			log.Error(err)
+		} else {
 			buf.Reset()
 			folder := prefix(data) + "_logs"
 			if logging.ZipLogFiles(&buf, "", folder, size) == nil {

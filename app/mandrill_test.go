@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bytes"
 	"net/http"
 	"testing"
 
@@ -10,32 +11,48 @@ import (
 )
 
 func TestSendFromWS(t *testing.T) {
-	// intialize package level var, to avoid panicking when attaching settings
-	// to the email.
-	settings = loadSettings("version", "revisionDate", "buildDate")
-	err := serveMandrill()
-	assert.NoError(t, err, "should start UI service")
-	ui.Start("localhost:", false, "", "")
-	wsURL := "ws://" + ui.GetPreferredUIAddr() + "/data"
+	addr := ui.GetDirectUIAddr()
+	// ugly hack to co-exist with integration test: only start services if not
+	// already started.
+	if addr == "" {
+		// avoid panicking when attaching settings to the email.
+		settings = loadSettings("version", "revisionDate", "buildDate")
+		err := serveMandrill()
+		assert.NoError(t, err, "should start UI service")
+		ui.Start("localhost:", false, "", "")
+		addr = ui.GetDirectUIAddr()
+	}
+	wsURL := "ws://" + addr + "/data"
 	conn, _, err := websocket.DefaultDialer.Dial(wsURL, http.Header{})
 	assert.NoError(t, err, "should connect to Websocket")
 	defer func() { _ = conn.Close() }()
-	// ignore the first message sent to client: the settings
-	_, p, err := conn.ReadMessage()
 
 	mandrillAPIKey = "SANDBOX_SUCCESS"
 	err = sendTemplateVia(conn)
 	assert.NoError(t, err, "should write to ws")
-	_, p, err = conn.ReadMessage()
-	assert.NoError(t, err, "should read from ws")
-	assert.Equal(t, `{"type":"mandrill","message":"success"}`, string(p))
+	// When running with integration test, there're some other WebSocket
+	// messages sent to client. Filter mandrill specific message to verify. If
+	// there's no such message, the test hangs as an indication. Same below.
+	for {
+		_, p, err := conn.ReadMessage()
+		assert.NoError(t, err, "should read from ws")
+		if bytes.Contains(p, []byte("mandrill")) {
+			assert.Equal(t, `{"type":"mandrill","message":"success"}`, string(p))
+			break
+		}
+	}
 
 	mandrillAPIKey = "SANDBOX_ERROR"
 	err = sendTemplateVia(conn)
 	assert.NoError(t, err, "should write to ws")
-	_, p, err = conn.ReadMessage()
-	assert.NoError(t, err, "should read from ws")
-	assert.Equal(t, `{"type":"mandrill","message":"SANDBOX_ERROR"}`, string(p))
+	for {
+		_, p, err := conn.ReadMessage()
+		assert.NoError(t, err, "should read from ws")
+		if bytes.Contains(p, []byte("mandrill")) {
+			assert.Equal(t, `{"type":"mandrill","message":"SANDBOX_ERROR"}`, string(p))
+			break
+		}
+	}
 }
 
 func sendTemplateVia(conn *websocket.Conn) error {
