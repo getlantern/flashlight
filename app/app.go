@@ -160,8 +160,9 @@ func (app *App) beforeStart() bool {
 		// off.
 		//
 		// See: https://github.com/getlantern/lantern/issues/2776
-		log.Debug("Clearing proxy settings")
-		doPACOff(fmt.Sprintf("http://%s/proxy_on.pac", uiaddr))
+		url := fmt.Sprintf("http://%s/proxy_on.pac", uiaddr)
+		log.Debugf("Will clear proxy settings if it is prefixed with %s", url)
+		doPACOff(url)
 		app.Exit(nil)
 	}
 

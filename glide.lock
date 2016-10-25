@@ -1,5 +1,5 @@
-hash: c344558346fb22a7a648ba0a67bdfb6cc5ed58d3608e1db3812decef3034e2f1
-updated: 2016-10-24T19:36:02.786073029-05:00
+hash: af594d336bb7c6b6827d4cc88dd05455032c08a9200b95dbbd06aaa19c34bd90
+updated: 2016-10-24T19:44:02.536042366-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -293,6 +293,11 @@ imports:
   - unix
   - windows
   - windows/registry
+testImports:
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib
 - name: gopkg.in/bsm/ratelimit.v1
   version: db14e161995a5177acef654cb0dd785e8ee8bc22
 - name: gopkg.in/redis.v3
@@ -302,8 +307,3 @@ imports:
   - internal/consistenthash
   - internal/hashtag
   - internal/pool
-testImports:
-- name: github.com/pmezard/go-difflib
-  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
-  subpackages:
-  - difflib
