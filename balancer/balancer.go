@@ -304,6 +304,7 @@ func (b *Balancer) printStats() {
 
 func (b *Balancer) doPrintStats() {
 	b.mu.RLock()
+	defer b.mu.RUnlock()
 	dialersCopy := make([]*dialer, len(b.dialers.dialers))
 	copy(dialersCopy, b.dialers.dialers)
 	sortedDialers := b.st(dialersCopy)
@@ -316,7 +317,6 @@ func (b *Balancer) doPrintStats() {
 		log.Debug(d.stats.String(d))
 	}
 	log.Debug("------------------------ End Dialer Stats ---------------------")
-	b.mu.RUnlock()
 }
 
 func (b *Balancer) forceStats() {
