@@ -47,7 +47,8 @@ func (d *dialer) Dial(network, addr string) (net.Conn, error) {
 	// Look for our special hacked "connect" transport used to signal
 	// that we should send a CONNECT request and tunnel all traffic through
 	// that.
-	if network == "connect" {
+	switch network {
+	case "connect":
 		log.Tracef("Sending CONNECT request")
 		err := d.sendCONNECT(addr, conn)
 		if err != nil {
@@ -55,13 +56,15 @@ func (d *dialer) Dial(network, addr string) (net.Conn, error) {
 			conn.Close()
 			return nil, err
 		}
-	} else if network == "persistent" {
+	case "persistent":
 		log.Tracef("Sending GET request to establish persistent HTTP connection")
 		err := d.initPersistentConnection(addr, conn)
 		if err != nil {
 			conn.Close()
 			return nil, err
 		}
+	default:
+		return nil, errors.New("Unsupported scheme: %v", network)
 	}
 	return conn, nil
 }
