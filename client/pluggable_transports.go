@@ -3,25 +3,27 @@ package client
 import (
 	"crypto/tls"
 	"fmt"
-	"net"
-	"time"
-
 	"git.torproject.org/pluggable-transports/goptlib.git"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
-
+	"github.com/getlantern/cmux"
+	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/netx"
+	"github.com/getlantern/snappyconn"
 	"github.com/getlantern/tlsdialer"
-
-	"github.com/getlantern/flashlight/ops"
+	"github.com/xtaci/kcp-go"
+	"net"
+	"time"
 )
 
 type dialFN func() (net.Conn, error)
 type dialFactory func(*ChainedServerInfo, string) (dialFN, error)
 
 var pluggableTransports = map[string]dialFactory{
-	"":      defaultDialFactory,
-	"obfs4": obfs4DialFactory,
+	"":          defaultDialFactory,
+	"obfs4-tcp": tcpOBFS4DialFactory,
+	"obfs4-kcp": kcpOBFS4DialFactory,
 }
 
 var (
@@ -84,7 +86,19 @@ func defaultDialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
 	return dial, nil
 }
 
-func obfs4DialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
+func tcpOBFS4DialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
+	return obfs4DialFactory(s, deviceID, netx.Dial)
+}
+
+func kcpOBFS4DialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
+	// TODO: parameterize inputs to KCP
+	var dial func(network, addr string) (net.Conn, error) = cmux.Dialer(&cmux.DialerOpts{
+		Dial: dialKCP,
+	})
+	return obfs4DialFactory(s, deviceID, dial)
+}
+
+func obfs4DialFactory(s *ChainedServerInfo, deviceID string, dial func(network, error string) (net.Conn, error)) (dialFN, error) {
 	if s.Cert == "" {
 		return nil, fmt.Errorf("No Cert configured for obfs4 server, can't connect")
 	}
@@ -108,8 +122,32 @@ func obfs4DialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "obfs4")
 		defer op.End()
 		start := time.Now()
-		conn, err := cf.Dial("tcp", s.Addr, netx.Dial, args)
+		conn, err := cf.Dial("tcp", s.Addr, dial, args)
 		op.DialTime(start, err)
 		return conn, op.FailIf(err)
 	}, nil
+}
+
+func dialKCP(network, addr string) (net.Conn, error) {
+	block, err := kcp.NewNoneBlockCrypt(nil)
+	if err != nil {
+		return nil, errors.New("Unable to initialize AES-128 cipher: %v", err)
+	}
+	// TODO: the below options are hardcoded based on the defaults in kcptun.
+	// At some point, it would be nice to make these tunable via the server pt
+	// properties, but these defaults work well for now.
+	conn, err := kcp.DialWithOptions(addr, block, 10, 3)
+	if err != nil {
+		return nil, err
+	}
+	conn.SetStreamMode(true)
+	conn.SetNoDelay(0, 20, 2, 1)
+	conn.SetWindowSize(128, 1024)
+	conn.SetMtu(1350)
+	conn.SetACKNoDelay(false)
+	conn.SetKeepAlive(10)
+	conn.SetDSCP(0)
+	conn.SetReadBuffer(4194304)
+	conn.SetWriteBuffer(4194304)
+	return snappyconn.Wrap(conn), nil
 }
