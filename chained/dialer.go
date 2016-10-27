@@ -63,8 +63,6 @@ func (d *dialer) Dial(network, addr string) (net.Conn, error) {
 			conn.Close()
 			return nil, err
 		}
-	default:
-		return nil, errors.New("Unsupported scheme: %v", network)
 	}
 	return conn, nil
 }

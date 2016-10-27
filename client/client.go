@@ -242,7 +242,6 @@ func (client *Client) doDial(isCONNECT bool, addr string, port int) (conn net.Co
 	// Establish outbound connection
 	if client.shouldSendToProxy(addr, port) {
 		pipe = isCONNECT
-		log.Debugf("Proxying request for %v", addr)
 		d := client.proxiedDialer(func(network, addr string) (net.Conn, error) {
 			proto := "persistent"
 			if isCONNECT {

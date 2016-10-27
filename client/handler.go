@@ -9,6 +9,7 @@ import (
 
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/status"
+	"github.com/getlantern/hidden"
 )
 
 var (
@@ -32,7 +33,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		client.ic.Intercept(resp, req, true, op.Wrapped(), 443)
 	} else {
 		// Direct proxying can only be used for plain HTTP connections.
-		log.Debugf("Intercepting HTTP request %s %v", req.Method, req.URL)
+		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
 		client.ic.Intercept(resp, req, true, op.Wrapped(), 80)
 	}
 }
@@ -61,11 +62,11 @@ func errorResponse(w io.Writer, req *http.Request, err error) {
 		if err != nil {
 			log.Debugf("Got error while generating status page: %q", err)
 		}
-	default:
-		// We know for sure that the requested resource is not HTML page,
-		// wrap the error message in http content, or http.ReverseProxy
-		// will response 500 Internal Server Error instead.
-		htmlerr = []byte(err.Error())
+	}
+
+	if htmlerr == nil {
+		// Default value for htmlerr
+		htmlerr = []byte(hidden.Clean(err.Error()))
 	}
 
 	res := &http.Response{
