@@ -6,12 +6,14 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/netx"
@@ -223,7 +225,12 @@ func (s *chainedServer) doCheck(url string,
 		log.Tracef("PING %s through chained server at %s, status code %d", url, s.Addr, resp.StatusCode)
 		success := resp.StatusCode >= 200 && resp.StatusCode <= 299
 		if success {
-			atomic.AddInt64(totalLatency, int64(time.Now().Sub(start)))
+			delta := int64(time.Now().Sub(start))
+			if strings.HasSuffix(s.PluggableTransport, "kcp") && inChina() {
+				// Heavily bias kcp results to essentially force kcp protocol
+				delta = int64(float64(delta) / 10)
+			}
+			atomic.AddInt64(totalLatency, delta)
 		} else {
 			onFailure(url)
 		}
@@ -236,4 +243,8 @@ func (s *chainedServer) doCheck(url string,
 		return false
 	}
 	return true
+}
+
+func inChina() bool {
+	return geolookup.GetCountry(50*time.Millisecond) == "CN"
 }
