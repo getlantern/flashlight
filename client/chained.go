@@ -25,12 +25,6 @@ var (
 	// 45 seconds is also longer than the MaxIdleTime on our http.Transport, so it
 	// doesn't interfere with that.
 	idleTimeout = 45 * time.Second
-
-	// ForceChainedProxyAddr - If specified, all proxying will go through this address
-	ForceChainedProxyAddr string
-
-	// ForceAuthToken - If specified, auth token will be forced to this
-	ForceAuthToken string
 )
 
 // ChainedServerInfo contains all the data for connecting to a given chained
@@ -150,9 +144,6 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 
 func (s *chainedServer) attachHeaders(req *http.Request, deviceID string, proTokenGetter func() string) {
 	authToken := s.AuthToken
-	if ForceAuthToken != "" {
-		authToken = ForceAuthToken
-	}
 	if authToken != "" {
 		req.Header.Add("X-Lantern-Auth-Token", authToken)
 	} else {

@@ -77,8 +77,9 @@ func main() {
 		}()
 	}
 
-	client.ForceChainedProxyAddr = *forceProxyAddr
-	client.ForceAuthToken = *forceAuthToken
+	if *forceProxyAddr != "" {
+		client.ForceProxy(*forceProxyAddr, *forceAuthToken)
+	}
 
 	if a.ShowUI {
 		runOnSystrayReady(_main(a))
