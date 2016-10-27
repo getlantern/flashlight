@@ -196,7 +196,7 @@ func (app *App) beforeStart() bool {
 		log.Errorf("Unable to serve bandwidth to UI: %v", err)
 	}
 
-	err = serveMandrill()
+	err = serveEmailProxy()
 	if err != nil {
 		log.Errorf("Unable to serve mandrill to UI: %v", err)
 	}

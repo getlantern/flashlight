@@ -35,8 +35,13 @@ var (
 	mandrillAPIKey = "fmYlUdjEpGGonI4NDx9xeA"
 )
 
-func serveMandrill() error {
-	service, err := ui.RegisterWithMsgInitializer("mandrill", nil,
+// A proxy that accept requests from WebSocket and send email via 3rd party
+// service (mandrill atm). With optionally attached settings and Lantern logs.
+// It intentionally uses direct connection to the 3rd party service, to serve
+// as an out-of-band channel when Lantern doesn't work well, say, when user
+// wants to report an issue.
+func serveEmailProxy() error {
+	service, err := ui.RegisterWithMsgInitializer("email-proxy", nil,
 		func() interface{} { return &mandrillMessage{} })
 	if err != nil {
 		log.Errorf("Error registering with UI? %v", err)

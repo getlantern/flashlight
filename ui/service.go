@@ -115,6 +115,13 @@ func Unregister(t string) {
 	}
 }
 
+// To facilitate test
+func unregisterAll() {
+	for t, _ := range services {
+		Unregister(t)
+	}
+}
+
 func start() {
 	// Establish a channel to the UI for sending and receiving updates
 	defaultUIChannel = NewChannel("/data", func(write func([]byte) error) error {

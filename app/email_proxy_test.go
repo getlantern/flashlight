@@ -10,16 +10,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSendFromWS(t *testing.T) {
-	addr := ui.GetDirectUIAddr()
+func TestEmailProxy(t *testing.T) {
 	// ugly hack to co-exist with integration test: only start services if not
 	// already started.
+	addr := ui.GetDirectUIAddr()
 	if addr == "" {
 		// avoid panicking when attaching settings to the email.
 		settings = loadSettings("version", "revisionDate", "buildDate")
-		err := serveMandrill()
+		err := serveEmailProxy()
 		assert.NoError(t, err, "should start UI service")
 		ui.Start("localhost:", false, "", "")
+		defer func() { ui.Stop() }()
 		addr = ui.GetDirectUIAddr()
 	}
 	wsURL := "ws://" + addr + "/data"
@@ -36,8 +37,8 @@ func TestSendFromWS(t *testing.T) {
 	for {
 		_, p, err := conn.ReadMessage()
 		assert.NoError(t, err, "should read from ws")
-		if bytes.Contains(p, []byte("mandrill")) {
-			assert.Equal(t, `{"type":"mandrill","message":"success"}`, string(p))
+		if bytes.Contains(p, []byte("email-proxy")) {
+			assert.Equal(t, `{"type":"email-proxy","message":"success"}`, string(p))
 			break
 		}
 	}
@@ -48,8 +49,8 @@ func TestSendFromWS(t *testing.T) {
 	for {
 		_, p, err := conn.ReadMessage()
 		assert.NoError(t, err, "should read from ws")
-		if bytes.Contains(p, []byte("mandrill")) {
-			assert.Equal(t, `{"type":"mandrill","message":"SANDBOX_ERROR"}`, string(p))
+		if bytes.Contains(p, []byte("email-proxy")) {
+			assert.Equal(t, `{"type":"email-proxy","message":"SANDBOX_ERROR"}`, string(p))
 			break
 		}
 	}
@@ -58,7 +59,7 @@ func TestSendFromWS(t *testing.T) {
 func sendTemplateVia(conn *websocket.Conn) error {
 	return conn.WriteJSON(ui.Envelope{
 		EnvelopeType: ui.EnvelopeType{
-			Type: "mandrill",
+			Type: "email-proxy",
 		},
 		Message: mandrillMessage{
 			Template:     "user-send-logs-desktop",
