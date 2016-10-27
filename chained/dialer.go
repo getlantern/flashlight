@@ -50,19 +50,14 @@ func (d *dialer) Dial(network, addr string) (net.Conn, error) {
 	switch network {
 	case "connect":
 		log.Tracef("Sending CONNECT request")
-		err := d.sendCONNECT(addr, conn)
-		if err != nil {
-			// We discard this error, since we are only interested in sendCONNECT
-			conn.Close()
-			return nil, err
-		}
+		err = d.sendCONNECT(addr, conn)
 	case "persistent":
 		log.Tracef("Sending GET request to establish persistent HTTP connection")
-		err := d.initPersistentConnection(addr, conn)
-		if err != nil {
-			conn.Close()
-			return nil, err
-		}
+		err = d.initPersistentConnection(addr, conn)
+	}
+	if err != nil {
+		conn.Close()
+		return nil, err
 	}
 	return conn, nil
 }
