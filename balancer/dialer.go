@@ -117,6 +117,7 @@ func (d *dialer) markSuccess() {
 func (d *dialer) markFailure() {
 	atomic.AddInt64(&d.stats.attempts, 1)
 	atomic.AddInt64(&d.stats.failures, 1)
+	atomic.StoreInt32(&d.consecSuccesses, 0)
 	newCF := atomic.AddInt32(&d.consecFailures, 1)
 	d.forceRecheck()
 	log.Tracef("Dialer %s consecutive failures: %d -> %d", d.Label, newCF-1, newCF)
