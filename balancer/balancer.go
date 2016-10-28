@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"sort"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/errors"
@@ -25,6 +25,8 @@ const (
 
 var (
 	log = golog.LoggerFor("balancer")
+
+	impossiblySmallLatency = int64(1 * time.Millisecond)
 )
 
 // Opts are options for the balancer.
@@ -54,7 +56,8 @@ type Balancer struct {
 	trusted        dialerHeap
 	closeCh        chan bool
 	resetCheckCh   chan bool
-	stopStats      chan bool
+	stopStatsCh    chan bool
+	forceStatsCh   chan bool
 	checkerCloseCh chan bool
 }
 
@@ -68,17 +71,18 @@ func New(opts *Opts) *Balancer {
 		st:             opts.Strategy,
 		nextTimeout:    newEMADuration(initialTimeout, 0.2),
 		closeCh:        make(chan bool),
-		stopStats:      make(chan bool, 1),
+		stopStatsCh:    make(chan bool, 1),
+		forceStatsCh:   make(chan bool, 1),
 		resetCheckCh:   resetCheckCh,
 		checkerCloseCh: checkerCloseCh,
 	}
 
 	checker := &checker{
+		b:                b,
 		minCheckInterval: opts.MinCheckInterval,
 		maxCheckInterval: opts.MaxCheckInterval,
 		resetCheckCh:     resetCheckCh,
 		closeCh:          checkerCloseCh,
-		dialers:          b.dialersToCheck,
 	}
 
 	if checker.minCheckInterval <= 0 {
@@ -111,11 +115,25 @@ func (b *Balancer) dialersToCheck() []*dialer {
 
 // Reset closes existing dialers and replaces them with new ones.
 func (b *Balancer) Reset(dialers ...*Dialer) {
+	log.Debug("Resetting")
 	var dls []*dialer
 	var tdls []*dialer
 
+	b.mu.Lock()
+	oldDialers := b.dialers.dialers
 	for _, d := range dialers {
 		dl := &dialer{Dialer: d, forceRecheck: b.forceRecheck}
+		for _, od := range oldDialers {
+			if d.Label == od.Label {
+				// Existing dialer, keep stats
+				log.Debugf("Keeping stats from old dialer %p", od.emaLatency)
+				dl.consecSuccesses = atomic.LoadInt32(&od.consecSuccesses)
+				dl.consecFailures = atomic.LoadInt32(&od.consecFailures)
+				dl.emaLatency = od.emaLatency
+				dl.stats = od.stats
+				break
+			}
+		}
 		dl.Start()
 		dls = append(dls, dl)
 
@@ -123,14 +141,12 @@ func (b *Balancer) Reset(dialers ...*Dialer) {
 			tdls = append(tdls, dl)
 		}
 	}
-	b.mu.Lock()
-	oldDialers := b.dialers
 	b.dialers = b.st(dls)
 	b.trusted = b.st(tdls)
 	heap.Init(&b.dialers)
 	heap.Init(&b.trusted)
 	b.mu.Unlock()
-	for _, d := range oldDialers.dialers {
+	for _, d := range oldDialers {
 		d.Stop()
 	}
 	b.forceRecheck()
@@ -141,7 +157,7 @@ func (b *Balancer) forceRecheck() {
 	case b.resetCheckCh <- true:
 		log.Debug("Forced recheck")
 	default:
-		// Pending reset, ignore subsequent request
+		// Pending recheck, ignore subsequent request
 	}
 }
 
@@ -239,7 +255,7 @@ func (b *Balancer) run() {
 	for {
 		select {
 		case <-b.closeCh:
-			b.stopStats <- true
+			b.stopStatsCh <- true
 
 			b.checkerCloseCh <- true
 			// Make sure it actually finishes.
@@ -276,18 +292,39 @@ func (b *Balancer) printStats() {
 	t := time.NewTicker(30 * time.Second)
 	for {
 		select {
-		case <-b.stopStats:
+		case <-b.stopStatsCh:
 			return
+		case <-b.forceStatsCh:
+			b.doPrintStats()
 		case <-t.C:
-			b.mu.RLock()
-			sortedDialers := make(byLatency, len(b.dialers.dialers))
-			copy(sortedDialers, b.dialers.dialers)
-			b.mu.RUnlock()
-			sort.Sort(sortedDialers)
-			for _, d := range sortedDialers {
-				log.Debug(d.stats.String(d))
-			}
+			b.doPrintStats()
 		}
+	}
+}
+
+func (b *Balancer) doPrintStats() {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+	dialersCopy := make([]*dialer, len(b.dialers.dialers))
+	copy(dialersCopy, b.dialers.dialers)
+	sortedDialers := b.st(dialersCopy)
+	log.Debug("-------------------------- Dialer Stats -----------------------")
+	for {
+		if sortedDialers.Len() == 0 {
+			break
+		}
+		d := heap.Pop(&sortedDialers).(*dialer)
+		log.Debug(d.stats.String(d))
+	}
+	log.Debug("------------------------ End Dialer Stats ---------------------")
+}
+
+func (b *Balancer) forceStats() {
+	select {
+	case b.forceStatsCh <- true:
+		// okay
+	default:
+		// already pending
 	}
 }
 
@@ -344,14 +381,4 @@ func (s *dialerHeap) onRequest(req *http.Request) {
 		}
 	}
 	return
-}
-
-type byLatency []*dialer
-
-func (d byLatency) Len() int { return len(d) }
-
-func (d byLatency) Swap(i, j int) { d[i], d[j] = d[j], d[i] }
-
-func (d byLatency) Less(i, j int) bool {
-	return d[i].EMALatency() < d[j].EMALatency()
 }

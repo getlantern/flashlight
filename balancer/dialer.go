@@ -61,11 +61,15 @@ const longDuration = 100000 * time.Hour
 
 func (d *dialer) Start() {
 	d.consecSuccesses = 1 // be optimistic
-	// assuming all dialers super fast initially
-	// use large alpha to reflect network changes quickly
-	d.emaLatency = newEMADuration(0, 0.5)
+	if d.emaLatency == nil {
+		// assuming all dialers super fast initially
+		// use large alpha to reflect network changes quickly
+		d.emaLatency = newEMADuration(0, 0.5)
+	}
+	if d.stats == nil {
+		d.stats = &stats{}
+	}
 	d.closeCh = make(chan struct{}, 1)
-	d.stats = &stats{}
 
 	ops.Go(func() {
 		<-d.closeCh
@@ -115,9 +119,13 @@ func (d *dialer) markSuccess() {
 }
 
 func (d *dialer) markFailure() {
+	d.doMarkFailure()
+	d.forceRecheck()
+}
+
+func (d *dialer) doMarkFailure() {
 	atomic.AddInt64(&d.stats.attempts, 1)
 	atomic.AddInt64(&d.stats.failures, 1)
 	newCF := atomic.AddInt32(&d.consecFailures, 1)
-	d.forceRecheck()
 	log.Tracef("Dialer %s consecutive failures: %d -> %d", d.Label, newCF-1, newCF)
 }

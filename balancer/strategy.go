@@ -28,7 +28,7 @@ func Sticky(dialers []*dialer) dialerHeap {
 // Fastest strategy always pick the dialer with lowest recent average connect time
 func Fastest(dialers []*dialer) dialerHeap {
 	return dialerHeap{dialers: dialers, lessFunc: func(i, j int) bool {
-		return dialers[i].EMALatency() < dialers[j].EMALatency()
+		return faster(dialers[i], dialers[j])
 	}}
 }
 
@@ -36,13 +36,26 @@ func Fastest(dialers []*dialer) dialerHeap {
 // are good recently, and falls back to Sticky strategy in other cases.
 func QualityFirst(dialers []*dialer) dialerHeap {
 	return dialerHeap{dialers: dialers, lessFunc: func(i, j int) bool {
-		q1 := dialers[i].ConsecSuccesses() - dialers[i].ConsecFailures()
-		q2 := dialers[j].ConsecSuccesses() - dialers[j].ConsecFailures()
+		di, dj := dialers[i], dialers[j]
+		q1 := di.ConsecSuccesses() - di.ConsecFailures()
+		q2 := dj.ConsecSuccesses() - dj.ConsecFailures()
 		if q1 > 0 && q2 > 0 {
-			return dialers[i].EMALatency() < dialers[j].EMALatency()
+			return faster(di, dj)
 		}
 		return q1 > q2
 	}}
+}
+
+func faster(di *dialer, dj *dialer) bool {
+	li, lj := di.EMALatency(), dj.EMALatency()
+	if li == 0 {
+		// Never treat a zero dial time as fast, since it just means we don't know
+		return false
+	}
+	if lj == 0 {
+		return true
+	}
+	return li < lj
 }
 
 // TODO: still need to implement algorithm correctly.

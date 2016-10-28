@@ -1,5 +1,5 @@
-hash: 626bff5796f1cbaa05edd34ca1603d6945cd1def68d425a515462fedb07ed904
-updated: 2016-10-25T07:45:30.225068661-05:00
+hash: af594d336bb7c6b6827d4cc88dd05455032c08a9200b95dbbd06aaa19c34bd90
+updated: 2016-10-26T13:18:33.722877418-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -49,10 +49,8 @@ imports:
   version: 4a7f76bdd5e28d1d72a8a8287927daeaa3316820
 - name: github.com/getlantern/byteexec
   version: 2e21fedeb225921a8dc40321cbd114ffd0a302f3
-- name: github.com/getlantern/chained
-  version: 333b0f12504a0ddb5f2680117c190843d931bec4
 - name: github.com/getlantern/checkfallbacks
-  version: bee841637e5faa029ff7d8d8c4a0c6055e72aa67
+  version: d866a037bd1f6cd613f5e9af32b9cfbcc5b9967a
 - name: github.com/getlantern/cmux
   version: f3db3bd29713a11b225b357650d7de1818442d26
 - name: github.com/getlantern/connpool
@@ -99,7 +97,7 @@ imports:
 - name: github.com/getlantern/hidden
   version: d52a649ab33af200943bb599898dbdcfdbc94cb7
 - name: github.com/getlantern/http-proxy
-  version: e7bb763c2a4fc53570f85797943eb5ac8292aba8
+  version: 0e79c8d01f68686df669834d1b0fda360c359335
   subpackages:
   - buffers
   - commonfilter
@@ -112,7 +110,7 @@ imports:
   - server
   - utils
 - name: github.com/getlantern/http-proxy-lantern
-  version: c42af7e0fefdf3959b529d29fbf8934172e322b5
+  version: 6a4bd3b32b1a276895211e3e930e47f0cfdf2182
   subpackages:
   - analytics
   - blacklist
@@ -135,10 +133,12 @@ imports:
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
   version: 7e0189052a9c7fec39114edd1b6e5f1093394415
+- name: github.com/getlantern/interceptor
+  version: 543a72df0938f2b5e8af43cf939dbee030f56d16
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
 - name: github.com/getlantern/keyman
-  version: 27a13a8da00afce6b6b7e4b4b486a440b4629718
+  version: 2920ae3bb58d86b9170877b7ba75d78857354b8a
   subpackages:
   - certimporter
 - name: github.com/getlantern/launcher
@@ -155,7 +155,7 @@ imports:
 - name: github.com/getlantern/ops
   version: b70875f5d689a9438bca72aefd7142a2af889b18
 - name: github.com/getlantern/osversion
-  version: ef22e31dc5225ca17ab1d295e9ffd1b313727199
+  version: 3e32bd574d362a5fffe8f14459dea41636db2498
 - name: github.com/getlantern/pac
   version: 5534aa917168bd068e494e81ae6da91cfc3e2a95
 - name: github.com/getlantern/pathreflect
@@ -209,7 +209,7 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/websocket
-  version: 0b847f2facc24ec406130a05bb1bb72d41993b05
+  version: 6257d10a8b2ac6825fa94294e088dc9890ab73d3
 - name: github.com/hashicorp/golang-lru
   version: 0a025b7e63adc15a622f29b0b2c4c3848243bbf6
   subpackages:
@@ -225,7 +225,7 @@ imports:
 - name: github.com/kr/binarydist
   version: 3035450ff8b987ec4373f65c40767f096b35f2d2
 - name: github.com/mailgun/oxy
-  version: cf724ef3fc60a49914f76c6171e95ed1db6a5bf8
+  version: 9dd01504c4a133f42a424c63ff0fdd92661d3e30
   subpackages:
   - forward
 - name: github.com/mitchellh/panicwrap
@@ -257,15 +257,15 @@ imports:
 - name: github.com/visionmedia/go-debug
   version: ff4a55a20a86994118644bbddc6a216da193cc13
 - name: github.com/vulcand/oxy
-  version: cf724ef3fc60a49914f76c6171e95ed1db6a5bf8
+  version: 9dd01504c4a133f42a424c63ff0fdd92661d3e30
   subpackages:
   - utils
 - name: github.com/xtaci/kcp-go
-  version: 5c61c4984f4a70a4a140c0d791e460276a082527
+  version: 78ff4f50bb82a531cec2e11a6cfbc22e14d7738e
 - name: github.com/xtaci/smux
   version: 6250093011e71f1c87986c575cad1184c717c0ef
 - name: golang.org/x/crypto
-  version: c367d6eeb7c6158125f2f47e049f7eb7e251c09a
+  version: ca7e7f10cb9fd9c1a6ff7f60436c086d73714180
   subpackages:
   - blowfish
   - cast5
@@ -280,7 +280,7 @@ imports:
   - twofish
   - xtea
 - name: golang.org/x/net
-  version: 3bafa3320efdf0c95d056586aa9abdd05ad72ee1
+  version: 65dfc08770ce66f74becfdff5f8ab01caef4e946
   subpackages:
   - bpf
   - context
@@ -294,8 +294,6 @@ imports:
   - windows
   - windows/registry
 testImports:
-- name: github.com/getlantern/interceptor
-  version: bc80946d4aa305ba155e0f3740d8d147ea63233c
 - name: github.com/pmezard/go-difflib
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:

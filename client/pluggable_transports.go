@@ -30,23 +30,36 @@ var (
 	chainedDialTimeout = 10 * time.Second
 )
 
-func defaultDialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
-	forceProxy := ForceChainedProxyAddr != ""
-	addr := s.Addr
-	if forceProxy {
-		log.Debugf("Forcing proxying to server at %v instead of configured server at %v", ForceChainedProxyAddr, s.Addr)
-		addr = ForceChainedProxyAddr
+// ForceProxy forces everything through the HTTP proxy at forceAddr using
+// forceToken.
+func ForceProxy(forceAddr string, forceToken string) {
+	log.Debugf("Forcing proxying through proxy at %v using token %v", forceAddr, forceToken)
+	forcedFactory := forceProxyDialFactory(forceAddr, forceToken)
+	for key := range pluggableTransports {
+		pluggableTransports[key] = forcedFactory
 	}
+}
 
+func forceProxyDialFactory(forceAddr string, forceToken string) func(s *ChainedServerInfo, deviceID string) (dialFN, error) {
+	return func(s *ChainedServerInfo, deviceID string) (dialFN, error) {
+		s.Addr = forceAddr
+		s.AuthToken = forceToken
+		s.Cert = ""
+		s.PluggableTransport = ""
+		return defaultDialFactory(s, deviceID)
+	}
+}
+
+func defaultDialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
 	var dial dialFN
 
-	if s.Cert == "" && !forceProxy {
+	if s.Cert == "" {
 		log.Error("No Cert configured for chained server, will dial with plain tcp")
 		dial = func() (net.Conn, error) {
 			op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "http")
 			defer op.End()
 			start := time.Now()
-			conn, err := netx.DialTimeout("tcp", addr, chainedDialTimeout)
+			conn, err := netx.DialTimeout("tcp", s.Addr, chainedDialTimeout)
 			op.DialTime(start, err)
 			return conn, op.FailIf(err)
 		}
@@ -64,7 +77,7 @@ func defaultDialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
 
 			start := time.Now()
 			conn, err := tlsdialer.DialTimeout(netx.DialTimeout, chainedDialTimeout,
-				"tcp", addr, false, &tls.Config{
+				"tcp", s.Addr, false, &tls.Config{
 					ClientSessionCache: sessionCache,
 					InsecureSkipVerify: true,
 				})
@@ -72,7 +85,7 @@ func defaultDialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
 			if err != nil {
 				return nil, op.FailIf(err)
 			}
-			if !forceProxy && !conn.ConnectionState().PeerCertificates[0].Equal(x509cert) {
+			if !conn.ConnectionState().PeerCertificates[0].Equal(x509cert) {
 				if closeErr := conn.Close(); closeErr != nil {
 					log.Debugf("Error closing chained server connection: %s", closeErr)
 				}

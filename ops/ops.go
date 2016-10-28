@@ -27,6 +27,10 @@ type Op struct {
 	wrapped ops.Op
 }
 
+func (op *Op) Wrapped() ops.Op {
+	return op.wrapped
+}
+
 // Begin mimics the similar method from ops.Op
 func (op *Op) Begin(name string) *Op {
 	return &Op{op.wrapped.Begin(name)}
