@@ -1,5 +1,5 @@
 hash: af594d336bb7c6b6827d4cc88dd05455032c08a9200b95dbbd06aaa19c34bd90
-updated: 2016-10-27T20:29:20.326141126-07:00
+updated: 2016-10-28T08:27:50.923296855-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -52,7 +52,7 @@ imports:
 - name: github.com/getlantern/checkfallbacks
   version: d866a037bd1f6cd613f5e9af32b9cfbcc5b9967a
 - name: github.com/getlantern/cmux
-  version: f3db3bd29713a11b225b357650d7de1818442d26
+  version: 1eaddb98c7e2b48caa22bf2035a00126e2344bff
 - name: github.com/getlantern/connpool
   version: d04ff90bba7bdee0d9627a687b79fb0cb407d001
 - name: github.com/getlantern/context
@@ -110,7 +110,7 @@ imports:
   - server
   - utils
 - name: github.com/getlantern/http-proxy-lantern
-  version: 6a4bd3b32b1a276895211e3e930e47f0cfdf2182
+  version: fdc183e97c5d1dccbc51ee53b76edce555624834
   subpackages:
   - analytics
   - blacklist
@@ -132,7 +132,7 @@ imports:
 - name: github.com/getlantern/i18n
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
-  version: 7e0189052a9c7fec39114edd1b6e5f1093394415
+  version: 3fc7b11a989b5fe9a3a29f2f8d2e50c42a6e8a3f
 - name: github.com/getlantern/interceptor
   version: 543a72df0938f2b5e8af43cf939dbee030f56d16
 - name: github.com/getlantern/jibber_jabber
@@ -209,7 +209,7 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/websocket
-  version: 6257d10a8b2ac6825fa94294e088dc9890ab73d3
+  version: 2aff870ef83507abb46472eae82449f7a4c464c5
 - name: github.com/hashicorp/golang-lru
   version: 0a025b7e63adc15a622f29b0b2c4c3848243bbf6
   subpackages:
@@ -221,7 +221,7 @@ imports:
 - name: github.com/klauspost/crc32
   version: cb6bfca970f6908083f26f39a79009d608efd5cd
 - name: github.com/klauspost/reedsolomon
-  version: c54154da9e35cab25232314cf69ab9d78447f9a5
+  version: d0a56f72c0d40a6cdde43a1575ad9686a0098b70
 - name: github.com/kr/binarydist
   version: 3035450ff8b987ec4373f65c40767f096b35f2d2
 - name: github.com/mailgun/oxy
@@ -261,7 +261,7 @@ imports:
   subpackages:
   - utils
 - name: github.com/xtaci/kcp-go
-  version: 26294ea4d8b8ce3eeffa1611f25365bcf9f37fb2
+  version: 2220e8c7f84f347d2000b002fd5bc3b88658f346
 - name: github.com/xtaci/smux
   version: 9d1cf796b3fb4b1a19d67b41d6660cd9d2d15c6f
 - name: golang.org/x/crypto
