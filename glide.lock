@@ -1,5 +1,5 @@
 hash: af594d336bb7c6b6827d4cc88dd05455032c08a9200b95dbbd06aaa19c34bd90
-updated: 2016-10-26T13:18:33.722877418-05:00
+updated: 2016-10-27T20:29:20.326141126-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -261,9 +261,9 @@ imports:
   subpackages:
   - utils
 - name: github.com/xtaci/kcp-go
-  version: 78ff4f50bb82a531cec2e11a6cfbc22e14d7738e
+  version: 26294ea4d8b8ce3eeffa1611f25365bcf9f37fb2
 - name: github.com/xtaci/smux
-  version: 6250093011e71f1c87986c575cad1184c717c0ef
+  version: 9d1cf796b3fb4b1a19d67b41d6660cd9d2d15c6f
 - name: golang.org/x/crypto
   version: ca7e7f10cb9fd9c1a6ff7f60436c086d73714180
   subpackages:
@@ -280,7 +280,7 @@ imports:
   - twofish
   - xtea
 - name: golang.org/x/net
-  version: 65dfc08770ce66f74becfdff5f8ab01caef4e946
+  version: b336a971b799939dd16ae9b1df8334cb8b977c4d
   subpackages:
   - bpf
   - context
