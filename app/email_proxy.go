@@ -24,10 +24,10 @@ type mandrillMessage struct {
 	// Any global vars defined in the template
 	Vars map[string]interface{}
 	// If attach the settings file to the email or not
-	WithSettings bool `json:"withSettings",omitempty`
+	WithSettings bool `json:"withSettings,omitempty"`
 	// Specify the maximum size of the log files attached to the email, can be
 	// in "KB/MB/GB" fromat. Not attaching logs if it's an empty string.
-	MaxLogSize string `json:"maxLogSize",omitempty`
+	MaxLogSize string `json:"maxLogSize,omitempty"`
 }
 
 var (
