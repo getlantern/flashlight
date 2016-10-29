@@ -10,10 +10,10 @@ import (
 func TestFronted(t *testing.T) {
 	fronted.ConfigureForTest(t)
 	Refresh()
-	country := GetCountry(5 * time.Second)
+	country := GetCountry(15 * time.Second)
 	ip := GetIP(5 * time.Second)
 	if len(country) != 2 {
-		t.Fatalf("Bad country %v for ip %v", country, ip)
+		t.Fatalf("Bad country '%v' for ip %v", country, ip)
 	}
 
 	if len(ip) < 7 {

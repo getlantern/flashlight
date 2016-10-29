@@ -6,10 +6,14 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
-	"github.com/getlantern/chained"
 	"github.com/getlantern/flashlight/balancer"
+	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/netx"
@@ -23,12 +27,6 @@ var (
 	// 45 seconds is also longer than the MaxIdleTime on our http.Transport, so it
 	// doesn't interfere with that.
 	idleTimeout = 45 * time.Second
-
-	// ForceChainedProxyAddr - If specified, all proxying will go through this address
-	ForceChainedProxyAddr string
-
-	// ForceAuthToken - If specified, auth token will be forced to this
-	ForceAuthToken string
 )
 
 // ChainedServerInfo contains all the data for connecting to a given chained
@@ -148,9 +146,6 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 
 func (s *chainedServer) attachHeaders(req *http.Request, deviceID string, proTokenGetter func() string) {
 	authToken := s.AuthToken
-	if ForceAuthToken != "" {
-		authToken = ForceAuthToken
-	}
 	if authToken != "" {
 		req.Header.Add("X-Lantern-Auth-Token", authToken)
 	} else {
@@ -171,54 +166,85 @@ func (s *chainedServer) check(dial func(string, string) (net.Conn, error),
 		DisableKeepAlives: true,
 		Dial:              dial,
 	}
-	allPassed := true
-	totalLatency := time.Duration(0)
-	for _, url := range urls {
-		start := time.Now()
-		// We ping the URLs through the proxy to get timings
-		req, err := http.NewRequest("GET", "http://ping-chained-server", nil)
-		if err != nil {
-			log.Errorf("Could not create HTTP request: %v", err)
-			return false, 0
-		}
-		req.Header.Set("X-Lantern-PingURL", url)
-		// We set X-Lantern-Ping in case we're hitting an old http-server that
-		// doesn't support pinging URLs.
-		req.Header.Set("X-Lantern-Ping", "small")
 
-		s.attachHeaders(req, deviceID, proTokenGetter)
-		ok, timedOut, _ := withtimeout.Do(60*time.Second, func() (interface{}, error) {
-			resp, err := rt.RoundTrip(req)
-			if err != nil {
-				log.Debugf("Error testing dialer %s to %s: %s", s.Addr, url, err)
-				return false, nil
+	allPassed := int32(1)
+	totalLatency := int64(0)
+	var wg sync.WaitGroup
+	wg.Add(len(urls))
+	for _, _url := range urls {
+		url := _url
+		ops.Go(func() {
+			passed := s.doCheck(url, &totalLatency, rt, deviceID, proTokenGetter, onFailure)
+			if !passed {
+				atomic.StoreInt32(&allPassed, 0)
 			}
-			if resp.Body != nil {
-				// Read the body to include this in our timing.
-				// Note - for bandwidth saving reasons, the server may not send the body
-				// but if it does, we'll read it.
-				defer resp.Body.Close()
-				_, err = io.Copy(ioutil.Discard, resp.Body)
-				if err != nil {
-					return false, fmt.Errorf("Unable to read response body: %v", err)
-				}
-			}
-			log.Tracef("PING %s through chained server at %s, status code %d", url, s.Addr, resp.StatusCode)
-			success := resp.StatusCode >= 200 && resp.StatusCode <= 299
-			if success {
-				totalLatency += time.Now().Sub(start)
-			} else {
-				onFailure(url)
-			}
-			return success, nil
+			wg.Done()
 		})
-		if timedOut || !ok.(bool) {
-			if timedOut {
-				log.Errorf("Timed out checking dialer at: %v", s.Addr)
-			}
-			allPassed = false
-		}
 	}
+	wg.Wait()
 
-	return allPassed, totalLatency
+	return atomic.LoadInt32(&allPassed) == 1, time.Duration(atomic.LoadInt64(&totalLatency))
+}
+
+func (s *chainedServer) doCheck(url string,
+	totalLatency *int64,
+	rt *http.Transport,
+	deviceID string,
+	proTokenGetter func() string,
+	onFailure func(string)) bool {
+	start := time.Now()
+	// We ping the URLs through the proxy to get timings
+	req, err := http.NewRequest("GET", "http://ping-chained-server", nil)
+	if err != nil {
+		log.Errorf("Could not create HTTP request: %v", err)
+		return false
+	}
+	req.Header.Set("X-Lantern-PingURL", url)
+	// We set X-Lantern-Ping in case we're hitting an old http-server that
+	// doesn't support pinging URLs.
+	req.Header.Set("X-Lantern-Ping", "small")
+
+	checkedUrl := url
+	s.attachHeaders(req, deviceID, proTokenGetter)
+	ok, timedOut, _ := withtimeout.Do(10*time.Second, func() (interface{}, error) {
+		resp, err := rt.RoundTrip(req)
+		if err != nil {
+			log.Debugf("Error testing dialer %s to %s: %s", s.Addr, checkedUrl, err)
+			return false, nil
+		}
+		if resp.Body != nil {
+			// Read the body to include this in our timing.
+			// Note - for bandwidth saving reasons, the server may not send the body
+			// but if it does, we'll read it.
+			defer resp.Body.Close()
+			_, err = io.Copy(ioutil.Discard, resp.Body)
+			if err != nil {
+				return false, fmt.Errorf("Unable to read response body: %v", err)
+			}
+		}
+		log.Tracef("PING %s through chained server at %s, status code %d", url, s.Addr, resp.StatusCode)
+		success := resp.StatusCode >= 200 && resp.StatusCode <= 299
+		if success {
+			delta := int64(time.Now().Sub(start))
+			if strings.HasSuffix(s.PluggableTransport, "kcp") && inChina() {
+				// Heavily bias kcp results to essentially force kcp protocol
+				delta = int64(float64(delta) / 10)
+			}
+			atomic.AddInt64(totalLatency, delta)
+		} else {
+			onFailure(url)
+		}
+		return success, nil
+	})
+	if timedOut || !ok.(bool) {
+		if timedOut {
+			log.Errorf("Timed out checking dialer at: %v", s.Addr)
+		}
+		return false
+	}
+	return true
+}
+
+func inChina() bool {
+	return geolookup.GetCountry(50*time.Millisecond) == "CN"
 }

@@ -23,7 +23,7 @@ var (
 	startup                = flag.Bool("startup", false, "if true, Lantern was automatically run on system startup")
 	clearProxySettings     = flag.Bool("clear-proxy-settings", false, "if true, Lantern removes proxy settings from the system.")
 	pprofAddr              = flag.String("pprofaddr", "", "pprof address to listen on, not activate pprof if empty")
-	forceProxyAddr         = flag.String("force-proxy-addr", "", "if specified, force chained proxying to use this address instead of the configured one")
+	forceProxyAddr         = flag.String("force-proxy-addr", "", "if specified, force chained proxying to use this address instead of the configured one, assuming an HTTP proxy")
 	forceAuthToken         = flag.String("force-auth-token", "", "if specified, force chained proxying to use this auth token instead of the configured one")
 	readableconfig         = flag.Bool("readableconfig", false, "if specified, disables obfuscation of the config yaml so that it remains human readable")
 	staging                = flag.Bool("staging", false, "if true, run Lantern against our staging infrastructure")

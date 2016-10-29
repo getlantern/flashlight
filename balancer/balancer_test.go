@@ -146,6 +146,38 @@ func TestSuccessWithCondDialer(t *testing.T) {
 	}
 }
 
+func TestUpdateConsecSuccessesAndFailures(t *testing.T) {
+	addr, l := echoServer()
+	defer func() { _ = l.Close() }()
+	f1Attempts := int32(0)
+	f2Attempts := int32(0)
+	fail1Times := newCondDialer(1, func() bool { return atomic.AddInt32(&f1Attempts, 1) <= 1 })
+	fail2Times := newCondDialer(2, func() bool { return atomic.AddInt32(&f2Attempts, 1) <= 2 })
+
+	b := newBalancer(Sticky, fail2Times, fail1Times)
+	for _, d := range b.dialers.dialers {
+		assert.EqualValues(t, 1, d.ConsecSuccesses(), "dialers should preset 1 success initially")
+		assert.EqualValues(t, 0, d.ConsecFailures(), "dialers should have no failure initially")
+	}
+
+	_, err := b.Dial("tcp", addr)
+	assert.Error(t, err, "Dialing should fail when all dialers fail")
+	for _, d := range b.dialers.dialers {
+		assert.EqualValues(t, 0, d.ConsecSuccesses(), "failed dailers should reset ConsecSuccesses to zero")
+		assert.EqualValues(t, 1, d.ConsecFailures(), "failed dailers should increase ConsecFailures")
+	}
+
+	_, err = b.Dial("tcp", addr)
+	assert.NoError(t, err, "Dialing should have succeeded as we have 2nd try")
+	for _, d := range b.dialers.dialers {
+		if d.Label == "Dialer 1" {
+			assert.EqualValues(t, 1, d.ConsecSuccesses(), "Successful dialer should increase ConsecSuccesses")
+			assert.EqualValues(t, 0, d.ConsecFailures(), "Successful dialer should reset ConsecFailures")
+		}
+	}
+
+}
+
 func TestRecheck(t *testing.T) {
 	addr, l := echoServer()
 	defer func() { _ = l.Close() }()
