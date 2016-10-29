@@ -60,6 +60,7 @@ func read(service *ui.Service) {
 		}
 		fillDefaults(data)
 		if err := sendTemplate(data); err != nil {
+			log.Error(err)
 			service.Out <- err.Error()
 		} else {
 			service.Out <- "success"
