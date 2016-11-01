@@ -100,4 +100,4 @@ import:
   subpackages:
   - uaparser
 - package: github.com/Sirupsen/logrus
-- package: github.com/getlantern/interceptor
+- package: github.com/getlantern/proxy
