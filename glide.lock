@@ -144,7 +144,7 @@ imports:
 - name: github.com/getlantern/measured
   version: 9abc2622c88edcbe1436a80e69f912b3ccfc73bf
 - name: github.com/getlantern/netx
-  version: 70375a276c57e76c1fe1e2fbdb4c2d2714a67b39
+  version: e726e612d833a52f90298426a283fa7b30f29d17
 - name: github.com/getlantern/notifier
   version: 5acd0ccf0e6c29710d332a42f580e92c3b04ae7b
   subpackages:
