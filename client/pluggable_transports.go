@@ -12,6 +12,7 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/snappyconn"
 	"github.com/getlantern/tlsdialer"
+	"github.com/getlantern/withtimeout"
 	"github.com/xtaci/kcp-go"
 	"net"
 	"time"
@@ -135,8 +136,14 @@ func obfs4DialFactory(s *ChainedServerInfo, deviceID string, dial func(network, 
 		op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "obfs4")
 		defer op.End()
 		start := time.Now()
-		conn, err := cf.Dial("tcp", s.Addr, dial, args)
+		_conn, _, err := withtimeout.Do(chainedDialTimeout, func() (interface{}, error) {
+			return cf.Dial("tcp", s.Addr, dial, args)
+		})
 		op.DialTime(start, err)
+		var conn net.Conn
+		if err == nil {
+			conn = _conn.(net.Conn)
+		}
 		return conn, op.FailIf(err)
 	}, nil
 }
