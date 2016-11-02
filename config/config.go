@@ -186,7 +186,7 @@ func (conf *config) poll(uc UserConfig,
 
 	for {
 		if bytes, err := fetcher.fetch(); err != nil {
-			log.Errorf("Could not read fetched config %v", err)
+			log.Errorf("Error fetching config: %v", err)
 		} else if bytes == nil {
 			// This is what fetcher returns for not-modified.
 			log.Debug("Ignoring not modified response")

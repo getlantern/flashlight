@@ -14,11 +14,10 @@ import (
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/detour"
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/interceptor"
 	"github.com/getlantern/netx"
-	"github.com/oxtoacart/bpool"
+
+	"github.com/getlantern/flashlight/ops"
 
 	"golang.org/x/net/context"
 )
@@ -47,8 +46,6 @@ var (
 		// Google Hangouts TCP Ports (see https://support.google.com/a/answer/1279090?hl=en)
 		19305, 19306, 19307, 19308, 19309,
 	}
-
-	buffers = bpool.NewBytePool(1000, 32768)
 )
 
 // Client is an HTTP proxy that accepts connections from local programs and
@@ -63,7 +60,8 @@ type Client struct {
 	// Balanced CONNECT dialers.
 	bal eventual.Value
 
-	ic interceptor.Interceptor
+	// Reverse proxy
+	rp eventual.Value
 
 	l net.Listener
 
@@ -80,26 +78,12 @@ func SetProxyUIAddr(proxyAddr string, realAddr string) {
 // SOCKS proxies. It take a function for determing whether or not to proxy
 // all traffic, and another function to get Lantern Pro token when required.
 func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
-	client := &Client{
+	return &Client{
 		bal:            eventual.NewValue(),
+		rp:             eventual.NewValue(),
 		proxyAll:       proxyAll,
 		proTokenGetter: proTokenGetter,
 	}
-
-	client.ic = interceptor.New(&interceptor.Opts{
-		Dial:      client.dial,
-		GetBuffer: buffers.Get,
-		PutBuffer: buffers.Put,
-		OnInitialOK: func(resp *http.Response, req *http.Request) *http.Response {
-			return addIdleKeepAliveHeader(resp)
-		},
-		OnResponse: func(resp *http.Response, req *http.Request, responseNumber int) *http.Response {
-			return addIdleKeepAliveHeader(resp)
-		},
-		OnReadResponseError: errorResponse,
-	})
-
-	return client
 }
 
 // Addr returns the address at which the client is listening with HTTP, blocking
@@ -175,8 +159,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 			if portErr != nil {
 				return nil, portErr
 			}
-			conn, _, dialErr := client.doDial(true, addr, port)
-			return conn, dialErr
+			return client.dialCONNECT(addr, port)
 		},
 	}
 	server, err := socks5.New(conf)
@@ -195,6 +178,8 @@ func (client *Client) Configure(proxies map[string]*ChainedServerInfo, deviceID 
 	err := client.initBalancer(proxies, deviceID)
 	if err != nil {
 		log.Error(err)
+	} else {
+		client.rp.Set(client.newReverseProxy())
 	}
 }
 
@@ -227,44 +212,29 @@ func (client *Client) proxiedDialer(orig func(network, addr string) (net.Conn, e
 		}
 		start := time.Now()
 		conn, err := proxied(network, addr)
-		if log.IsTraceEnabled() {
-			log.Tracef("Dialing proxy takes %v for %s", time.Since(start), addr)
-		}
+		log.Debugf("Dialing proxy takes %v for %s", time.Since(start), addr)
 		return conn, op.FailIf(err)
 	}
 }
 
-func (client *Client) dial(req *http.Request, addr string, port int) (conn net.Conn, pipe bool, err error) {
-	return client.doDial(req.Method == "CONNECT", addr, port)
-}
-
-func (client *Client) doDial(isCONNECT bool, addr string, port int) (conn net.Conn, pipe bool, err error) {
+func (client *Client) dialCONNECT(addr string, port int) (net.Conn, error) {
 	// Establish outbound connection
 	if client.shouldSendToProxy(addr, port) {
-		pipe = isCONNECT
+		log.Debugf("Proxying CONNECT request for %v", addr)
 		d := client.proxiedDialer(func(network, addr string) (net.Conn, error) {
-			proto := "persistent"
-			if isCONNECT {
-				// UGLY HACK ALERT! In this case, we know we need to send a CONNECT request
-				// to the chained server. We need to send that request from chained/dialer.go
-				// though because only it knows about the authentication token to use.
-				// We signal it to send the CONNECT here using the network transport argument
-				// that is effectively always "tcp" in the end, but we look for this
-				// special "transport" in the dialer and send a CONNECT request in that
-				// case.
-				proto = "connect"
-			}
-			return bal.Dial(proto, addr)
+			// UGLY HACK ALERT! In this case, we know we need to send a CONNECT request
+			// to the chained server. We need to send that request from chained/dialer.go
+			// though because only it knows about the authentication token to use.
+			// We signal it to send the CONNECT here using the network transport argument
+			// that is effectively always "tcp" in the end, but we look for this
+			// special "transport" in the dialer and send a CONNECT request in that
+			// case.
+			return bal.Dial("connect", addr)
 		})
-		conn, err = d("tcp", addr)
-		return
+		return d("tcp", addr)
 	}
-
-	// Force piping for anything that bypasses proxy, including regular HTTP requests
-	pipe = true
-	log.Tracef("Port not allowed, bypassing proxy and sending request directly to %v", addr)
-	conn, err = netx.DialTimeout("tcp", addr, 1*time.Minute)
-	return
+	log.Tracef("Port not allowed, bypassing proxy and sending CONNECT request directly to %v", addr)
+	return netx.DialTimeout("tcp", addr, 1*time.Minute)
 }
 
 func (client *Client) shouldSendToProxy(addr string, port int) bool {
@@ -292,9 +262,7 @@ func (client *Client) portForAddress(addr string) (int, error) {
 }
 
 func isLanternSpecialDomain(addr string) bool {
-	if log.IsTraceEnabled() {
-		log.Tracef("Checking if '%v' has special domain prefix '%v'", addr, uiProxiedAddr+":")
-	}
+	log.Debugf("Checking if '%v' has special domain prefix '%v'", addr, uiProxiedAddr+":")
 	return strings.HasPrefix(addr, uiProxiedAddr+":")
 }
 
