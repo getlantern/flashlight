@@ -86,7 +86,7 @@ func newServer(si *ChainedServerInfo) (*chainedServer, error) {
 }
 
 func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*balancer.Dialer, error) {
-	dial, err := s.df(s.ChainedServerInfo, deviceID)
+	dial, err := s.df(s.ChainedServerInfo)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to construct dialFN: %v", err)
 	}

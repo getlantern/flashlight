@@ -19,7 +19,7 @@ import (
 )
 
 type dialFN func() (net.Conn, error)
-type dialFactory func(*ChainedServerInfo, string) (dialFN, error)
+type dialFactory func(*ChainedServerInfo) (dialFN, error)
 
 var pluggableTransports = map[string]dialFactory{
 	"":          defaultDialFactory,
@@ -41,17 +41,17 @@ func ForceProxy(forceAddr string, forceToken string) {
 	}
 }
 
-func forceProxyDialFactory(forceAddr string, forceToken string) func(s *ChainedServerInfo, deviceID string) (dialFN, error) {
-	return func(s *ChainedServerInfo, deviceID string) (dialFN, error) {
+func forceProxyDialFactory(forceAddr string, forceToken string) func(s *ChainedServerInfo) (dialFN, error) {
+	return func(s *ChainedServerInfo) (dialFN, error) {
 		s.Addr = forceAddr
 		s.AuthToken = forceToken
 		s.Cert = ""
 		s.PluggableTransport = ""
-		return defaultDialFactory(s, deviceID)
+		return defaultDialFactory(s)
 	}
 }
 
-func defaultDialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
+func defaultDialFactory(s *ChainedServerInfo) (dialFN, error) {
 	var dial dialFN
 
 	if s.Cert == "" {
@@ -100,19 +100,19 @@ func defaultDialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
 	return dial, nil
 }
 
-func tcpOBFS4DialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
-	return obfs4DialFactory(s, deviceID, netx.Dial)
+func tcpOBFS4DialFactory(s *ChainedServerInfo) (dialFN, error) {
+	return obfs4DialFactory(s, netx.Dial)
 }
 
-func kcpOBFS4DialFactory(s *ChainedServerInfo, deviceID string) (dialFN, error) {
+func kcpOBFS4DialFactory(s *ChainedServerInfo) (dialFN, error) {
 	// TODO: parameterize inputs to KCP
 	var dial func(network, addr string) (net.Conn, error) = cmux.Dialer(&cmux.DialerOpts{
 		Dial: dialKCP,
 	})
-	return obfs4DialFactory(s, deviceID, dial)
+	return obfs4DialFactory(s, dial)
 }
 
-func obfs4DialFactory(s *ChainedServerInfo, deviceID string, dial func(network, error string) (net.Conn, error)) (dialFN, error) {
+func obfs4DialFactory(s *ChainedServerInfo, dial func(network, error string) (net.Conn, error)) (dialFN, error) {
 	if s.Cert == "" {
 		return nil, fmt.Errorf("No Cert configured for obfs4 server, can't connect")
 	}
