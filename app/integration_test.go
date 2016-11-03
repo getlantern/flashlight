@@ -20,7 +20,7 @@ import (
 	"github.com/getlantern/waitforserver"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/client"
+	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config"
 
 	"github.com/stretchr/testify/assert"
@@ -252,7 +252,7 @@ func buildProxies(obfs4 bool) ([]byte, error) {
 		return nil, fmt.Errorf("Could not read config %v", err)
 	}
 
-	cfg := make(map[string]*client.ChainedServerInfo)
+	cfg := make(map[string]*chained.ChainedServerInfo)
 	err = yaml.Unmarshal(bytes, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("Could not unmarshal config %v", err)

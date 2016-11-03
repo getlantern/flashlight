@@ -8,7 +8,7 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/getlantern/flashlight/client"
+	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config/generated"
 )
 
@@ -30,13 +30,13 @@ func TestObfuscated(t *testing.T) {
 // TestSaved tests reading stored proxies from disk
 func TestSaved(t *testing.T) {
 	cfg := newConfig("./test-proxies.yaml", false, func() interface{} {
-		return make(map[string]*client.ChainedServerInfo)
+		return make(map[string]*chained.ChainedServerInfo)
 	})
 
 	pr, err := cfg.saved()
 	assert.Nil(t, err)
 
-	proxies := pr.(map[string]*client.ChainedServerInfo)
+	proxies := pr.(map[string]*chained.ChainedServerInfo)
 	chained := proxies["fallback-1.1.1.1"]
 	assert.True(t, chained != nil)
 	assert.Equal(t, "1.1.1.1:443", chained.Addr)
@@ -45,13 +45,13 @@ func TestSaved(t *testing.T) {
 // TestEmbedded tests reading stored proxies from disk
 func TestEmbedded(t *testing.T) {
 	cfg := newConfig("./test-proxies.yaml", false, func() interface{} {
-		return make(map[string]*client.ChainedServerInfo)
+		return make(map[string]*chained.ChainedServerInfo)
 	})
 
 	pr, err := cfg.embedded(generated.EmbeddedProxies, "proxies.yaml")
 	assert.Nil(t, err)
 
-	proxies := pr.(map[string]*client.ChainedServerInfo)
+	proxies := pr.(map[string]*chained.ChainedServerInfo)
 	assert.Equal(t, 4, len(proxies))
 	for _, val := range proxies {
 		assert.True(t, val != nil)
@@ -64,18 +64,20 @@ func TestPollProxies(t *testing.T) {
 	proxyChan := make(chan interface{})
 	file := "./fetched-proxies.yaml"
 	cfg := newConfig(file, false, func() interface{} {
-		return make(map[string]*client.ChainedServerInfo)
+		return make(map[string]*chained.ChainedServerInfo)
 	})
 
 	fi, err := os.Stat(file)
-	assert.Nil(t, err)
+	if !assert.Nil(t, err) {
+		return
+	}
 	mtime := fi.ModTime()
 	tempName := fi.Name() + ".stored"
 	os.Rename(fi.Name(), tempName)
 
 	urls := proxiesURLs
 	go cfg.poll(&userConfig{}, proxyChan, urls, 1*time.Hour)
-	proxies := (<-proxyChan).(map[string]*client.ChainedServerInfo)
+	proxies := (<-proxyChan).(map[string]*chained.ChainedServerInfo)
 
 	assert.True(t, len(proxies) > 0)
 	for _, val := range proxies {
@@ -115,7 +117,9 @@ func TestPollGlobal(t *testing.T) {
 	})
 
 	fi, err := os.Stat(file)
-	assert.Nil(t, err)
+	if !assert.Nil(t, err) {
+		return
+	}
 	mtime := fi.ModTime()
 	tempName := fi.Name() + ".stored"
 	os.Rename(fi.Name(), tempName)

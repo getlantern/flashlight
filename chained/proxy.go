@@ -1,4 +1,4 @@
-package client
+package chained
 
 import (
 	"crypto/tls"
@@ -20,7 +20,6 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/snappyconn"
 	"github.com/getlantern/tlsdialer"
-	"github.com/getlantern/withtimeout"
 )
 
 var (
@@ -52,24 +51,24 @@ func CreateProxy(s *ChainedServerInfo) (Proxy, error) {
 		forceProxy(s)
 	}
 	// TODO: respect s.AuthToken and s.Trusted when creating proxy instance
-	var base Proxy
-	var err error
-	if s.Cert == "" {
-		log.Error("No Cert configured for chained server, will dial with plain tcp")
-		base = newHTTPProxy(s)
-	} else {
-		log.Trace("Cert configured for chained server, will dial with tls")
-		base, err = newHTTPSProxy(s)
-	}
 	switch s.PluggableTransport {
 	case "":
+		var base Proxy
+		var err error
+		if s.Cert == "" {
+			log.Errorf("No Cert configured for %s, will dial with plain tcp", s.Addr)
+			base = newHTTPProxy(s)
+		} else {
+			log.Tracef("Cert configured for  %s, will dial with tls", s.Addr)
+			base, err = newHTTPSProxy(s)
+		}
 		return base, err
 	case "obfs4-tcp":
 		return newOBFS4Wrapper(newHTTPProxy(s), s)
 	case "obfs4-kcp":
 		return newOBFS4Wrapper(newKCPProxy(s), s)
 	default:
-		return nil, errors.New("Unknown transport").With("plugabble-transport", s.PluggableTransport)
+		return nil, errors.New("Unknown transport").With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
 	}
 }
 
@@ -113,7 +112,7 @@ type httpsProxy struct {
 func newHTTPSProxy(s *ChainedServerInfo) (Proxy, error) {
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
-		return nil, log.Errorf("Unable to parse certificate: %s", err)
+		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 	}
 	return &httpsProxy{
 		baseProxy:    baseProxy{network: "tcp", addr: s.Addr},
@@ -227,14 +226,9 @@ func (p obfs4Wrapper) DialServer() (net.Conn, error) {
 		// the inner DailServer uses.
 		return p.Proxy.DialServer()
 	}
-	_conn, _, err := withtimeout.Do(chainedDialTimeout, func() (interface{}, error) {
-		return p.cf.Dial("tcp", p.Addr(), dialFn, p.args)
-	})
+	// The proxy it wrapped already has timeout applied.
+	conn, err := p.cf.Dial("tcp", p.Addr(), dialFn, p.args)
 	op.DialTime(start, err)
-	var conn net.Conn
-	if err == nil {
-		conn = _conn.(net.Conn)
-	}
 	return conn, op.FailIf(err)
 }
 

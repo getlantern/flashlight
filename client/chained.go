@@ -28,33 +28,8 @@ var (
 	idleTimeout = 45 * time.Second
 )
 
-// ChainedServerInfo contains all the data for connecting to a given chained
-// server.
-type ChainedServerInfo struct {
-	// Addr: the host:port of the upstream proxy server
-	Addr string
-
-	// Cert: optional PEM encoded certificate for the server. If specified,
-	// server will be dialed using TLS over tcp. Otherwise, server will be
-	// dialed using plain tcp. For OBFS4 proxies, this is the Base64-encoded obfs4
-	// certificate.
-	Cert string
-
-	// AuthToken: the authtoken to present to the upstream server.
-	AuthToken string
-
-	// Trusted: Determines if a host can be trusted with plain HTTP traffic.
-	Trusted bool
-
-	// PluggableTransport: If specified, a pluggable transport will be used
-	PluggableTransport string
-
-	// PluggableTransportSettings: Settings for pluggable transport
-	PluggableTransportSettings map[string]string
-}
-
 // ChainedDialer creates a *balancer.Dialer backed by a chained server.
-func ChainedDialer(si *ChainedServerInfo, deviceID string, proTokenGetter func() string) (*balancer.Dialer, error) {
+func ChainedDialer(si *chained.ChainedServerInfo, deviceID string, proTokenGetter func() string) (*balancer.Dialer, error) {
 	s, err := newServer(si)
 	if err != nil {
 		return nil, err
@@ -63,12 +38,12 @@ func ChainedDialer(si *ChainedServerInfo, deviceID string, proTokenGetter func()
 }
 
 type chainedServer struct {
-	Proxy
-	si *ChainedServerInfo
+	chained.Proxy
+	si *chained.ChainedServerInfo
 }
 
-func newServer(si *ChainedServerInfo) (*chainedServer, error) {
-	p, err := CreateProxy(si)
+func newServer(si *chained.ChainedServerInfo) (*chainedServer, error) {
+	p, err := chained.CreateProxy(si)
 	if err != nil {
 		return nil, err
 	}

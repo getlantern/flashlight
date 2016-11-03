@@ -5,7 +5,7 @@ import (
 
 	"github.com/getlantern/golog"
 
-	"github.com/getlantern/flashlight/client"
+	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config/generated"
 )
 
@@ -58,7 +58,7 @@ func Init(configDir string, flags map[string]interface{},
 		urls:       checkOverrides(flags, getProxyURLs(staging), "proxies.yaml.gz"),
 		userConfig: userConfig,
 		yamlTemplater: func() interface{} {
-			return make(map[string]*client.ChainedServerInfo)
+			return make(map[string]*chained.ChainedServerInfo)
 		},
 		dispatch:     proxiesDispatch,
 		embeddedData: generated.EmbeddedProxies,
