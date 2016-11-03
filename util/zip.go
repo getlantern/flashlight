@@ -22,7 +22,7 @@ const (
 
 // ZipOptions is a set of options for ZipFiles.
 type ZipOptions struct {
-	// The search pattern of the files / directories to be zipped, tranversed
+	// The search pattern of the files / directories to be zipped, traversed
 	// in lexical order.
 	// The search pattern is described at the comments of path/filepath.Match.
 	// As a special note, "**/*" doesn't match files not under a subdirectory.
@@ -72,35 +72,34 @@ func ZipFiles(writer io.Writer, opts ZipOptions) (err error) {
 		}
 	}()
 
-	var totalBytes int64
 	maxBytes := opts.MaxBytes
 	if maxBytes == 0 {
 		maxBytes = math.MaxInt64
 	}
+	var totalBytes int64
 	for _, source := range matched {
-		if e := zipFile(w, source, opts.Dir, opts.NewRoot, maxBytes, &totalBytes); e != nil {
+		nextTotal, e := zipFile(w, source, opts.Dir, opts.NewRoot, maxBytes, totalBytes)
+		if e != nil || nextTotal > maxBytes {
 			return e
 		}
-		if totalBytes > maxBytes {
-			return
-		}
+		totalBytes = nextTotal
 	}
 	return
 }
 
-func zipFile(w *zip.Writer, source string, baseDir string, newRoot string, limit int64, size *int64) error {
-	_, err := os.Stat(source)
-	if err != nil {
-		return fmt.Errorf("%s: stat: %v", source, err)
+func zipFile(w *zip.Writer, source string, baseDir string, newRoot string, limit int64, prevBytes int64) (newBytes int64, err error) {
+	_, e := os.Stat(source)
+	if e != nil {
+		return prevBytes, fmt.Errorf("%s: stat: %v", source, e)
 	}
 
-	err = filepath.Walk(source, func(fpath string, info os.FileInfo, err error) error {
+	walkErr := filepath.Walk(source, func(fpath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("walking to %s: %v", fpath, err)
 		}
 
-		*size = *size + info.Size()
-		if *size > limit {
+		newBytes = prevBytes + info.Size()
+		if newBytes > limit {
 			return filepath.SkipDir
 		}
 		header, err := zip.FileInfoHeader(info)
@@ -129,25 +128,24 @@ func zipFile(w *zip.Writer, source string, baseDir string, newRoot string, limit
 			return nil
 		}
 
-		if header.Mode().IsRegular() {
-			file, err := os.Open(fpath)
-			if err != nil {
-				return fmt.Errorf("%s: opening: %v", fpath, err)
-			}
-			defer file.Close()
-
-			_, err = io.CopyN(writer, file, info.Size())
-			if err != nil && err != io.EOF {
-				return fmt.Errorf("%s: copying contents: %v", fpath, err)
-			}
+		if !header.Mode().IsRegular() {
+			return nil
 		}
+		file, err := os.Open(fpath)
+		if err != nil {
+			return fmt.Errorf("%s: opening: %v", fpath, err)
+		}
+		defer file.Close()
 
-		w.Flush()
+		_, err = io.Copy(writer, file)
+		if err != nil && err != io.EOF {
+			return fmt.Errorf("%s: copying contents: %v", fpath, err)
+		}
 		return nil
 	})
 
-	if err != filepath.SkipDir {
-		return err
+	if walkErr != filepath.SkipDir {
+		return newBytes, walkErr
 	}
-	return nil
+	return newBytes, nil
 }
