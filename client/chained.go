@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -64,59 +63,38 @@ func ChainedDialer(si *ChainedServerInfo, deviceID string, proTokenGetter func()
 }
 
 type chainedServer struct {
-	*ChainedServerInfo
-	df dialFactory
+	Proxy
+	si *ChainedServerInfo
 }
 
 func newServer(si *ChainedServerInfo) (*chainedServer, error) {
-	if si.PluggableTransport != "" {
-		log.Debugf("Using pluggable transport %v for server at %v", si.PluggableTransport, si.Addr)
+	p, err := CreateProxy(si)
+	if err != nil {
+		return nil, err
 	}
-
-	df := pluggableTransports[si.PluggableTransport]
-	if df == nil {
-		return nil, fmt.Errorf("No dial factory defined for transport: %v", si.PluggableTransport)
-	}
-
-	s := &chainedServer{ChainedServerInfo: si,
-		df: df,
-	}
-
-	return s, nil
+	return &chainedServer{Proxy: p, si: si}, nil
 }
 
 func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*balancer.Dialer, error) {
-	dial, err := s.df(s.ChainedServerInfo)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to construct dialFN: %v", err)
-	}
-
-	// Is this a trusted proxy that we could use for HTTP traffic?
-	var trusted string
-	if s.Trusted {
-		trusted = "(trusted) "
-	}
-	label := fmt.Sprintf("%schained proxy at %s [%v]", trusted, s.Addr, s.PluggableTransport)
-
 	ccfg := chained.Config{
-		DialServer: dial,
-		Label:      label,
+		DialServer: s.Proxy.DialServer,
+		Label:      s.Label(),
 		OnRequest: func(req *http.Request) {
 			s.attachHeaders(req, deviceID, proTokenGetter)
 		},
 	}
 	d := chained.NewDialer(ccfg)
 	return &balancer.Dialer{
-		Label:   label,
-		Trusted: s.Trusted,
+		Label:   s.Label(),
+		Trusted: s.si.Trusted,
 		DialFN: func(network, addr string) (net.Conn, error) {
 			var conn net.Conn
 			var err error
 
-			op := ops.Begin("dial_for_balancer").ProxyType(ops.ProxyChained).ProxyAddr(s.Addr)
+			op := ops.Begin("dial_for_balancer").ProxyType(ops.ProxyChained).ProxyAddr(s.Addr())
 			defer op.End()
 
-			if addr == s.Addr {
+			if addr == s.Addr() {
 				// Check if we are trying to connect to our own server and bypass proxying if so
 				// This accounts for the case w/ multiple instances of Lantern running on mobile
 				// Whenever full-device VPN mode is enabled, we need to make sure we ignore proxy
@@ -145,7 +123,7 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 }
 
 func (s *chainedServer) attachHeaders(req *http.Request, deviceID string, proTokenGetter func() string) {
-	authToken := s.AuthToken
+	authToken := s.si.AuthToken
 	if authToken != "" {
 		req.Header.Add("X-Lantern-Auth-Token", authToken)
 	} else {
@@ -209,7 +187,7 @@ func (s *chainedServer) doCheck(url string,
 	ok, timedOut, _ := withtimeout.Do(10*time.Second, func() (interface{}, error) {
 		resp, err := rt.RoundTrip(req)
 		if err != nil {
-			log.Debugf("Error testing dialer %s to %s: %s", s.Addr, checkedUrl, err)
+			log.Debugf("Error testing dialer %s to %s: %s", s.Addr(), checkedUrl, err)
 			return false, nil
 		}
 		if resp.Body != nil {
@@ -222,11 +200,11 @@ func (s *chainedServer) doCheck(url string,
 				return false, fmt.Errorf("Unable to read response body: %v", err)
 			}
 		}
-		log.Tracef("PING %s through chained server at %s, status code %d", url, s.Addr, resp.StatusCode)
+		log.Tracef("PING %s through chained server at %s, status code %d", url, s.Addr(), resp.StatusCode)
 		success := resp.StatusCode >= 200 && resp.StatusCode <= 299
 		if success {
 			delta := int64(time.Now().Sub(start))
-			if strings.HasSuffix(s.PluggableTransport, "kcp") && inChina() {
+			if s.Network() == "kcp" && inChina() {
 				// Heavily bias kcp results to essentially force kcp protocol
 				delta = int64(float64(delta) / 10)
 			}
@@ -238,7 +216,7 @@ func (s *chainedServer) doCheck(url string,
 	})
 	if timedOut || !ok.(bool) {
 		if timedOut {
-			log.Errorf("Timed out checking dialer at: %v", s.Addr)
+			log.Errorf("Timed out checking %v", s.Label())
 		}
 		return false
 	}
