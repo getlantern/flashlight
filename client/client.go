@@ -1,7 +1,9 @@
 package client
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -15,9 +17,11 @@ import (
 	"github.com/getlantern/detour"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/status"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/interceptor"
+	"github.com/getlantern/hidden"
 	"github.com/getlantern/netx"
+	"github.com/getlantern/proxy"
 	"github.com/oxtoacart/bpool"
 
 	"golang.org/x/net/context"
@@ -63,7 +67,8 @@ type Client struct {
 	// Balanced CONNECT dialers.
 	bal eventual.Value
 
-	ic interceptor.Interceptor
+	interceptCONNECT proxy.Interceptor
+	interceptHTTP    proxy.Interceptor
 
 	l net.Listener
 
@@ -86,19 +91,9 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 		proTokenGetter: proTokenGetter,
 	}
 
-	client.ic = interceptor.New(&interceptor.Opts{
-		Dial:      client.dial,
-		GetBuffer: buffers.Get,
-		PutBuffer: buffers.Put,
-		OnInitialOK: func(resp *http.Response, req *http.Request) *http.Response {
-			return addIdleKeepAliveHeader(resp)
-		},
-		OnResponse: func(resp *http.Response, req *http.Request, responseNumber int) *http.Response {
-			return addIdleKeepAliveHeader(resp)
-		},
-		OnReadResponseError: errorResponse,
-	})
-
+	keepAliveIdleTimeout := idleTimeout - 5*time.Second
+	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers, client.dialCONNECT)
+	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
 	return client
 }
 
@@ -175,8 +170,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 			if portErr != nil {
 				return nil, portErr
 			}
-			conn, _, dialErr := client.doDial(true, addr, port)
-			return conn, dialErr
+			return client.doDial(true, addr, port)
 		},
 	}
 	server, err := socks5.New(conf)
@@ -234,14 +228,25 @@ func (client *Client) proxiedDialer(orig func(network, addr string) (net.Conn, e
 	}
 }
 
-func (client *Client) dial(req *http.Request, addr string, port int) (conn net.Conn, pipe bool, err error) {
-	return client.doDial(req.Method == "CONNECT", addr, port)
+func (client *Client) dialCONNECT(network, addr string) (conn net.Conn, err error) {
+	return client.dial(true, network, addr)
 }
 
-func (client *Client) doDial(isCONNECT bool, addr string, port int) (conn net.Conn, pipe bool, err error) {
+func (client *Client) dialHTTP(network, addr string) (conn net.Conn, err error) {
+	return client.dial(false, network, addr)
+}
+
+func (client *Client) dial(isConnect bool, network, addr string) (conn net.Conn, err error) {
+	port, err := client.portForAddress(addr)
+	if err != nil {
+		return nil, err
+	}
+	return client.doDial(isConnect, addr, port)
+}
+
+func (client *Client) doDial(isCONNECT bool, addr string, port int) (net.Conn, error) {
 	// Establish outbound connection
 	if client.shouldSendToProxy(addr, port) {
-		pipe = isCONNECT
 		d := client.proxiedDialer(func(network, addr string) (net.Conn, error) {
 			proto := "persistent"
 			if isCONNECT {
@@ -256,15 +261,11 @@ func (client *Client) doDial(isCONNECT bool, addr string, port int) (conn net.Co
 			}
 			return bal.Dial(proto, addr)
 		})
-		conn, err = d("tcp", addr)
-		return
+		return d("tcp", addr)
 	}
 
-	// Force piping for anything that bypasses proxy, including regular HTTP requests
-	pipe = true
 	log.Tracef("Port not allowed, bypassing proxy and sending request directly to %v", addr)
-	conn, err = netx.DialTimeout("tcp", addr, 1*time.Minute)
-	return
+	return netx.DialTimeout("tcp", addr, 1*time.Minute)
 }
 
 func (client *Client) shouldSendToProxy(addr string, port int) bool {
@@ -329,4 +330,36 @@ func InConfigDir(configDir string, filename string) (string, error) {
 	}
 
 	return filepath.Join(cdir, filename), nil
+}
+
+func errorResponse(req *http.Request, err error) *http.Response {
+	var htmlerr []byte
+
+	// If the request has an 'Accept' header preferring HTML, or
+	// doesn't have that header at all, render the error page.
+	switch req.Header.Get("Accept") {
+	case "text/html":
+		fallthrough
+	case "application/xhtml+xml":
+		fallthrough
+	case "":
+		// It is likely we will have lots of different errors to handle but for now
+		// we will only return a ErrorAccessingPage error.  This prevents the user
+		// from getting just a blank screen.
+		htmlerr, err = status.ErrorAccessingPage(req.Host, err)
+		if err != nil {
+			log.Debugf("Got error while generating status page: %q", err)
+		}
+	}
+
+	if htmlerr == nil {
+		// Default value for htmlerr
+		htmlerr = []byte(hidden.Clean(err.Error()))
+	}
+
+	res := &http.Response{
+		Body: ioutil.NopCloser(bytes.NewBuffer(htmlerr)),
+	}
+	res.StatusCode = http.StatusServiceUnavailable
+	return res
 }

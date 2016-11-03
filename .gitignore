@@ -9,6 +9,7 @@ autoupdate-prod.go
 certs/errors.txt
 flashlight.yaml
 genconfig/genconfig
+genconfig/cloud.yaml
 vendor
 lantern
 lantern_darwin_amd64
@@ -17,3 +18,4 @@ proxies.yaml
 global.yaml
 .glide
 config/fetched-proxies.yaml.stored
+config/generated/masquerades.go
