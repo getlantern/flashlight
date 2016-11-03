@@ -55,8 +55,8 @@ type ChainedServerInfo struct {
 }
 
 // ChainedDialer creates a *balancer.Dialer backed by a chained server.
-func ChainedDialer(si *ChainedServerInfo, deviceID string, proTokenGetter func() string) (*balancer.Dialer, error) {
-	s, err := newServer(si)
+func ChainedDialer(name string, si *ChainedServerInfo, deviceID string, proTokenGetter func() string) (*balancer.Dialer, error) {
+	s, err := newServer(name, si)
 	if err != nil {
 		return nil, err
 	}
@@ -64,11 +64,19 @@ func ChainedDialer(si *ChainedServerInfo, deviceID string, proTokenGetter func()
 }
 
 type chainedServer struct {
+	name string
 	*ChainedServerInfo
 	df dialFactory
 }
 
-func newServer(si *ChainedServerInfo) (*chainedServer, error) {
+func newServer(name string, si *ChainedServerInfo) (*chainedServer, error) {
+	// Backwards-compatibility for clients that still have old obfs4
+	// configurations on disk.
+	if si.PluggableTransport == "obfs4" && !strings.HasSuffix(name, "obfs4") {
+		log.Debugf("Converting old-style obfs4 server %v to obfs4-tcp", name)
+		si.PluggableTransport = "obfs4-tcp"
+	}
+
 	if si.PluggableTransport != "" {
 		log.Debugf("Using pluggable transport %v for server at %v", si.PluggableTransport, si.Addr)
 	}
@@ -79,7 +87,8 @@ func newServer(si *ChainedServerInfo) (*chainedServer, error) {
 	}
 
 	s := &chainedServer{ChainedServerInfo: si,
-		df: df,
+		name: name,
+		df:   df,
 	}
 
 	return s, nil
@@ -91,12 +100,7 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 		return nil, fmt.Errorf("Unable to construct dialFN: %v", err)
 	}
 
-	// Is this a trusted proxy that we could use for HTTP traffic?
-	var trusted string
-	if s.Trusted {
-		trusted = "(trusted) "
-	}
-	label := fmt.Sprintf("%schained proxy at %s [%v]", trusted, s.Addr, s.PluggableTransport)
+	label := fmt.Sprintf("%v at %s [%v]", s.name, s.Addr, s.PluggableTransport)
 
 	ccfg := chained.Config{
 		DialServer: dial,
@@ -204,12 +208,12 @@ func (s *chainedServer) doCheck(url string,
 	// doesn't support pinging URLs.
 	req.Header.Set("X-Lantern-Ping", "small")
 
-	checkedUrl := url
+	checkedURL := url
 	s.attachHeaders(req, deviceID, proTokenGetter)
 	ok, timedOut, _ := withtimeout.Do(10*time.Second, func() (interface{}, error) {
 		resp, err := rt.RoundTrip(req)
 		if err != nil {
-			log.Debugf("Error testing dialer %s to %s: %s", s.Addr, checkedUrl, err)
+			log.Debugf("Error testing dialer %s to %s: %s", s.Addr, checkedURL, err)
 			return false, nil
 		}
 		if resp.Body != nil {
