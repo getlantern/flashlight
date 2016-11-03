@@ -25,8 +25,10 @@ type mandrillMessage struct {
 	Vars map[string]interface{}
 	// If attach the settings file to the email or not
 	WithSettings bool `json:"withSettings,omitempty"`
-	// Specify the maximum size of the log files attached to the email, can be
-	// in "KB/MB/GB" fromat. Not attaching logs if it's an empty string.
+	// Specify the maximum size of the not-compressed log files attached to the
+	// email, can be in "KB/MB/GB" fromat. Not attaching logs if it's an empty
+	// string.  Make sure the compressed files doesn't cause the message to exceed
+	// the limit of Mandrill message size, which is 25MB.
 	MaxLogSize string `json:"maxLogSize,omitempty"`
 }
 
