@@ -349,7 +349,7 @@ func buildModel(cas map[string]*castat, masquerades []*masquerade, useFallbacks 
 	sort.Strings(ps)
 	fbs := make([]map[string]interface{}, 0, len(fallbacks))
 	if useFallbacks {
-		for _, f := range fallbacks {
+		for name, f := range fallbacks {
 			fb := make(map[string]interface{})
 			fb["ip"] = f.Addr
 			fb["auth_token"] = f.AuthToken
@@ -359,7 +359,7 @@ func buildModel(cas map[string]*castat, masquerades []*masquerade, useFallbacks 
 			fb["cert"] = strings.Replace(cert, "\n", "\\n", -1)
 
 			info := f
-			dialer, err := client.ChainedDialer(info, defaultDeviceID, func() string {
+			dialer, err := client.ChainedDialer(name, info, defaultDeviceID, func() string {
 				return ""
 			})
 			if err != nil {
