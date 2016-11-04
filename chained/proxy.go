@@ -227,7 +227,7 @@ func (p obfs4Wrapper) Trusted() bool {
 }
 
 func (p obfs4Wrapper) Label() string {
-	label := "obfs4-" + p.Proxy.Network() + p.Proxy.Addr()
+	label := "obfs4-" + p.Proxy.Network() + " " + p.Proxy.Addr()
 	if p.trusted {
 		label = label + " (trusted)"
 	}
