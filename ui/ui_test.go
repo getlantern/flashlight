@@ -8,6 +8,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestNormalizeAddr(t *testing.T) {
+	endpoint := "127.0.0.1:1892"
+	addr, _ := normalizeAddr("http://" + endpoint)
+	assert.Equal(t, endpoint, addr.String())
+
+	addr, _ = normalizeAddr("")
+	assert.Equal(t, defaultUIAddress, addr.String())
+
+	addr, _ = normalizeAddr(endpoint)
+	assert.Equal(t, endpoint, addr.String())
+}
+
 func TestStartServer(t *testing.T) {
 	Start(":0", false, "", "948318")
 }
