@@ -93,7 +93,6 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 		Check: func(checkData interface{}, onFailure func(string)) (bool, time.Duration) {
 			return s.check(d, checkData.([]string), deviceID, proTokenGetter, onFailure)
 		},
-		OnRequest: ccfg.OnRequest,
 	}, nil
 }
 
