@@ -35,6 +35,8 @@ type Proxy interface {
 	Addr() string
 	// A human friendly string to identify the proxy
 	Label() string
+	// Is it ok to proxy non-encrypted traffic over it?
+	Trusted() bool
 	// How can we dial this proxy directly
 	DialServer() (net.Conn, error)
 	// Check the reachibility of the proxy
@@ -91,7 +93,7 @@ type httpProxy struct {
 }
 
 func newHTTPProxy(s *ChainedServerInfo) Proxy {
-	return &httpProxy{baseProxy: baseProxy{network: "tcp", addr: s.Addr}}
+	return &httpProxy{baseProxy: baseProxy{network: "tcp", addr: s.Addr, trusted: false}}
 }
 
 func (d httpProxy) DialServer() (net.Conn, error) {
@@ -115,7 +117,7 @@ func newHTTPSProxy(s *ChainedServerInfo) (Proxy, error) {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 	}
 	return &httpsProxy{
-		baseProxy:    baseProxy{network: "tcp", addr: s.Addr},
+		baseProxy:    baseProxy{network: "tcp", addr: s.Addr, trusted: true},
 		x509cert:     cert.X509(),
 		sessionCache: tls.NewLRUClientSessionCache(1000),
 	}, nil
@@ -152,7 +154,7 @@ type kcpProxy struct {
 
 func newKCPProxy(s *ChainedServerInfo) Proxy {
 	return &kcpProxy{
-		baseProxy: baseProxy{network: "kcp", addr: s.Addr},
+		baseProxy: baseProxy{network: "kcp", addr: s.Addr, trusted: false},
 		// TODO: parameterize inputs to KCP
 		dialFN: cmux.Dialer(&cmux.DialerOpts{Dial: dialKCP}),
 	}
@@ -213,8 +215,13 @@ func newOBFS4Wrapper(p Proxy, s *ChainedServerInfo) (Proxy, error) {
 	return obfs4Wrapper{p, cf, args}, nil
 }
 
+func (p obfs4Wrapper) Trusted() bool {
+	// override the trusted flag of wrapped proxy, as obfs4 is always encrypted.
+	return true
+}
+
 func (p obfs4Wrapper) Label() string {
-	return "obfs4-" + p.Proxy.Label()
+	return "obfs4-" + p.Proxy.Network() + p.Proxy.Addr() + " (trusted)"
 }
 
 func (p obfs4Wrapper) DialServer() (net.Conn, error) {
@@ -251,6 +258,7 @@ type baseProxy struct {
 	extraHeaders http.Header
 	network      string
 	addr         string
+	trusted      bool
 }
 
 func (p baseProxy) DialServer() (net.Conn, error) {
@@ -267,7 +275,15 @@ func (p baseProxy) Addr() string {
 }
 
 func (p baseProxy) Label() string {
-	return p.Network() + " " + p.Addr()
+	label := p.Network() + " " + p.Addr()
+	if p.trusted {
+		label = label + " (trusted)"
+	}
+	return label
+}
+
+func (p baseProxy) Trusted() bool {
+	return p.trusted
 }
 
 func (p baseProxy) Check() bool {

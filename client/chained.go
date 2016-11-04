@@ -61,7 +61,7 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 	d := chained.NewDialer(ccfg)
 	return &balancer.Dialer{
 		Label:   s.Label(),
-		Trusted: s.si.Trusted,
+		Trusted: s.Trusted(),
 		DialFN: func(network, addr string) (net.Conn, error) {
 			var conn net.Conn
 			var err error
