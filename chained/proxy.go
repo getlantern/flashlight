@@ -39,10 +39,10 @@ type Proxy interface {
 	Trusted() bool
 	// How can we dial this proxy directly
 	DialServer() (net.Conn, error)
+	// Adapt HTTP request sent over to the proxy
+	AdaptRequest(*http.Request)
 	// Check the reachibility of the proxy
 	Check() bool
-	// Set extra headers sent along with each proxy request.
-	SetExtraHeaders(headers http.Header)
 	// Clean up resources, if any
 	Close()
 }
@@ -52,7 +52,12 @@ func CreateProxy(s *ChainedServerInfo) (Proxy, error) {
 	if theForceAddr != "" && theForceToken != "" {
 		forceProxy(s)
 	}
-	// TODO: respect s.AuthToken and s.Trusted when creating proxy instance
+	if s.Addr == "" {
+		return nil, errors.New("Empty addr")
+	}
+	if s.AuthToken == "" {
+		return nil, errors.New("No auth token").With("addr", s.Addr)
+	}
 	switch s.PluggableTransport {
 	case "":
 		var base Proxy
@@ -93,7 +98,7 @@ type httpProxy struct {
 }
 
 func newHTTPProxy(s *ChainedServerInfo) Proxy {
-	return &httpProxy{baseProxy: baseProxy{network: "tcp", addr: s.Addr, trusted: false}}
+	return &httpProxy{baseProxy: baseProxy{network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: false}}
 }
 
 func (d httpProxy) DialServer() (net.Conn, error) {
@@ -117,7 +122,7 @@ func newHTTPSProxy(s *ChainedServerInfo) (Proxy, error) {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 	}
 	return &httpsProxy{
-		baseProxy:    baseProxy{network: "tcp", addr: s.Addr, trusted: true},
+		baseProxy:    baseProxy{network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted},
 		x509cert:     cert.X509(),
 		sessionCache: tls.NewLRUClientSessionCache(1000),
 	}, nil
@@ -154,7 +159,7 @@ type kcpProxy struct {
 
 func newKCPProxy(s *ChainedServerInfo) Proxy {
 	return &kcpProxy{
-		baseProxy: baseProxy{network: "kcp", addr: s.Addr, trusted: false},
+		baseProxy: baseProxy{network: "kcp", addr: s.Addr, authToken: s.AuthToken, trusted: false},
 		// TODO: parameterize inputs to KCP
 		dialFN: cmux.Dialer(&cmux.DialerOpts{Dial: dialKCP}),
 	}
@@ -190,8 +195,9 @@ func dialKCP(network, address string) (net.Conn, error) {
 
 type obfs4Wrapper struct {
 	Proxy
-	cf   base.ClientFactory
-	args interface{}
+	trusted bool
+	cf      base.ClientFactory
+	args    interface{}
 }
 
 func newOBFS4Wrapper(p Proxy, s *ChainedServerInfo) (Proxy, error) {
@@ -212,16 +218,20 @@ func newOBFS4Wrapper(p Proxy, s *ChainedServerInfo) (Proxy, error) {
 	if err != nil {
 		return nil, log.Errorf("Unable to parse client args: %v", err)
 	}
-	return obfs4Wrapper{p, cf, args}, nil
+	return obfs4Wrapper{p, s.Trusted, cf, args}, nil
 }
 
 func (p obfs4Wrapper) Trusted() bool {
-	// override the trusted flag of wrapped proxy, as obfs4 is always encrypted.
-	return true
+	// override the trusted flag of wrapped proxy.
+	return p.trusted
 }
 
 func (p obfs4Wrapper) Label() string {
-	return "obfs4-" + p.Proxy.Network() + p.Proxy.Addr() + " (trusted)"
+	label := "obfs4-" + p.Proxy.Network() + p.Proxy.Addr()
+	if p.trusted {
+		label = label + " (trusted)"
+	}
+	return label
 }
 
 func (p obfs4Wrapper) DialServer() (net.Conn, error) {
@@ -255,15 +265,10 @@ func (d nullDialer) DialServer() (net.Conn, error) {
 }
 
 type baseProxy struct {
-	extraHeaders http.Header
-	network      string
-	addr         string
-	trusted      bool
-}
-
-func (p baseProxy) DialServer() (net.Conn, error) {
-	panic("should implement DialServer")
-	return nil, nil
+	network   string
+	addr      string
+	trusted   bool
+	authToken string
 }
 
 func (p baseProxy) Network() string {
@@ -286,12 +291,17 @@ func (p baseProxy) Trusted() bool {
 	return p.trusted
 }
 
-func (p baseProxy) Check() bool {
-	return false
+func (p baseProxy) DialServer() (net.Conn, error) {
+	panic("should implement DialServer")
+	return nil, nil
 }
 
-func (p baseProxy) SetExtraHeaders(headers http.Header) {
-	p.extraHeaders = headers
+func (p baseProxy) AdaptRequest(req *http.Request) {
+	req.Header.Add("X-Lantern-Auth-Token", p.authToken)
+}
+
+func (p baseProxy) Check() bool {
+	return false
 }
 
 func (p baseProxy) Close() {

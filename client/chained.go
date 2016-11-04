@@ -39,7 +39,6 @@ func ChainedDialer(si *chained.ChainedServerInfo, deviceID string, proTokenGette
 
 type chainedServer struct {
 	chained.Proxy
-	si *chained.ChainedServerInfo
 }
 
 func newServer(si *chained.ChainedServerInfo) (*chainedServer, error) {
@@ -47,7 +46,7 @@ func newServer(si *chained.ChainedServerInfo) (*chainedServer, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &chainedServer{Proxy: p, si: si}, nil
+	return &chainedServer{p}, nil
 }
 
 func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*balancer.Dialer, error) {
@@ -97,12 +96,7 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 }
 
 func (s *chainedServer) attachHeaders(req *http.Request, deviceID string, proTokenGetter func() string) {
-	authToken := s.si.AuthToken
-	if authToken != "" {
-		req.Header.Add("X-Lantern-Auth-Token", authToken)
-	} else {
-		log.Errorf("No auth token for request to %v", req.URL)
-	}
+	s.Proxy.AdaptRequest(req)
 	req.Header.Set("X-Lantern-Device-Id", deviceID)
 	if token := proTokenGetter(); token != "" {
 		req.Header.Set("X-Lantern-Pro-Token", token)
