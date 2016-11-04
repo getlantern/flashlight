@@ -32,6 +32,7 @@ var (
 	allowRemoteClients bool
 	proxiedUIAddr      string
 	preferProxiedUI    int32
+	edge               = edgedetect.DefaultBrowserIsEdge()
 
 	openedExternal = false
 	externalURL    string
@@ -182,7 +183,7 @@ func shouldPreferProxiedUI() bool {
 // on whether or not we're running on Edge essgentially.
 func GetPreferredUIAddr() string {
 	// We only use the proxied UI address if the default browser is Microsoft Edge
-	if edgedetect.DefaultBrowserIsEdge() && shouldPreferProxiedUI() {
+	if edge && shouldPreferProxiedUI() {
 		log.Debugf("Returning '%v' for proxied UI addr", proxiedUIAddr)
 		return proxiedUIAddr
 	}
