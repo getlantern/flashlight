@@ -3,10 +3,33 @@ package ui
 import (
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestGetPreferredUIAddr(t *testing.T) {
+	addr := GetPreferredUIAddr()
+	assert.Equal(t, "", addr)
+
+	atomic.StoreInt32(&preferProxiedUI, 1)
+	edge = true
+
+	// There's a bit of a squirrely initialization issue here where proxiedUIAddr
+	// and uiaddr aren't intialized until Start is called.
+	addr = GetPreferredUIAddr()
+	assert.Equal(t, "", addr)
+}
+
+func TestPreferProxiedUI(t *testing.T) {
+	addr, changed := PreferProxiedUI(true)
+	assert.False(t, changed)
+	assert.Equal(t, "", addr)
+
+	addr, changed = PreferProxiedUI(true)
+	assert.False(t, changed)
+}
 
 func TestNormalizeAddr(t *testing.T) {
 	endpoint := "127.0.0.1:1892"
