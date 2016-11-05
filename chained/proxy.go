@@ -41,10 +41,6 @@ type Proxy interface {
 	DialServer() (net.Conn, error)
 	// Adapt HTTP request sent over to the proxy
 	AdaptRequest(*http.Request)
-	// Check the reachibility of the proxy
-	Check() bool
-	// Clean up resources, if any
-	Close()
 }
 
 // CreateProxy creates a Proxy with supplied server info.
@@ -298,11 +294,4 @@ func (p BaseProxy) DialServer() (net.Conn, error) {
 
 func (p BaseProxy) AdaptRequest(req *http.Request) {
 	req.Header.Add("X-Lantern-Auth-Token", p.authToken)
-}
-
-func (p BaseProxy) Check() bool {
-	return false
-}
-
-func (p BaseProxy) Close() {
 }
