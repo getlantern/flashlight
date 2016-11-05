@@ -56,8 +56,9 @@ type proxyWrapper func(chained.Proxy) chained.Proxy
 var theProxyWrapper atomic.Value
 
 func startBordaAndProxyBench(deviceID string, reportInterval time.Duration, enabled func() bool) {
-	bordaClient := createBordaClient(reportInterval)
-	_, wrapper := newTrafficReporter(bordaClient, reportInterval, deviceID, enabled)
+	bordaClient = createBordaClient(reportInterval)
+	var wrapper proxyWrapper
+	tr, wrapper = newTrafficReporter(bordaClient, reportInterval, deviceID, enabled)
 	theProxyWrapper.Store(wrapper)
 
 	reportToBorda := bordaClient.ReducingSubmitter("client_results", 1000, func(existingValues map[string]float64, newValues map[string]float64) {
