@@ -1,8 +1,6 @@
 package logging
 
 import (
-	"encoding/base64"
-	"encoding/binary"
 	"fmt"
 	"io"
 	"math"
@@ -12,7 +10,6 @@ import (
 	"runtime"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/appdir"
@@ -34,20 +31,11 @@ const (
 	logTimestampFormat = "Jan 02 15:04:05.000"
 )
 
-type config struct {
-	deviceID               string
-	logglySamplePercentage float64
-	bordaSamplePercentage  float64
-}
-
 var (
 	log          = golog.LoggerFor("flashlight.logging")
 	processStart = time.Now()
 
-	reportingEnabled = uint32(0)
-	cfig             = &config{}
-	cfigMx           sync.RWMutex
-	logFile          *rotator.SizeRotator
+	logFile *rotator.SizeRotator
 
 	// logglyToken is populated at build time by crosscompile.bash. During
 	// development time, logglyToken will be empty and we won't log to Loggly.
@@ -60,9 +48,7 @@ var (
 	errorOut io.Writer
 	debugOut io.Writer
 
-	logglyRateLimit  = 5 * time.Minute
-	lastReported     = make(map[string]time.Time)
-	lastReportedLock sync.Mutex
+	logglyRateLimit = 5 * time.Minute
 
 	logglyKeyTranslations = map[string]string{
 		"device_id":       "instanceid",
@@ -77,7 +63,6 @@ var (
 
 	contextOnce sync.Once
 	logglyOnce  sync.Once
-	bordaOnce   sync.Once
 )
 
 func init() {
@@ -85,22 +70,6 @@ func init() {
 	// moreover, golog always writes each line in whole, so we need not to care
 	// about line breaks.
 	initLogging()
-}
-
-// SetReportingEnabled sets whether or not to report to external systems like
-// Loggly and Borda.
-func SetReportingEnabled(newEnabled bool) {
-	if newEnabled {
-		log.Debug("Enabling log reporting")
-		atomic.StoreUint32(&reportingEnabled, 1)
-	} else {
-		log.Debug("Disabling log reporting")
-		atomic.StoreUint32(&reportingEnabled, 0)
-	}
-}
-
-func isReportingEnabled() bool {
-	return atomic.LoadUint32(&reportingEnabled) == 1
 }
 
 // EnableFileLogging enables sending Lantern logs to a file.
@@ -130,31 +99,16 @@ func EnableFileLogging(logdir string) error {
 	return nil
 }
 
-// Configure will set up logging. An empty "addr" will configure logging without a proxy
-// Returns a bool channel for optional blocking.
+// Configure will set up logging. An empty "addr" will configure logging
+// without a proxy. Returns a bool channel for optional blocking.
 func Configure(cloudConfigCA string, deviceID string,
 	version string, revisionDate string,
-	bordaReportInterval time.Duration, bordaSamplePercentage float64,
-	logglySamplePercentage float64) (success chan bool) {
+	isReportingEnabled func() bool) (success chan bool) {
 	success = make(chan bool, 1)
 
 	contextOnce.Do(func() {
 		initContext(deviceID, version, revisionDate)
 	})
-
-	cfigMx.Lock()
-	cfig = &config{
-		deviceID,
-		logglySamplePercentage,
-		bordaSamplePercentage,
-	}
-	cfigMx.Unlock()
-
-	if bordaReportInterval > 0 {
-		bordaOnce.Do(func() {
-			startBordaAndProxyBench(bordaReportInterval)
-		})
-	}
 
 	// Note: Returning from this function must always add a result to the
 	// success channel.
@@ -180,7 +134,7 @@ func Configure(cloudConfigCA string, deviceID string,
 	// the proxy is not yet ready.
 	go func() {
 		logglyOnce.Do(func() {
-			startLoggly(cloudConfigCA)
+			startLoggly(cloudConfigCA, isReportingEnabled)
 		})
 		// Won't block, but will allow optional blocking on receiver
 		success <- true
@@ -231,9 +185,6 @@ func Flush() {
 
 // Close stops logging.
 func Close() error {
-	if bordaClient != nil {
-		bordaClient.Flush()
-	}
 	initLogging()
 	if logFile != nil {
 		return logFile.Close()
@@ -258,7 +209,7 @@ func timestamped(orig io.Writer) io.Writer {
 	})
 }
 
-func startLoggly(cloudConfigCA string) {
+func startLoggly(cloudConfigCA string, isReportingEnabled func() bool) {
 	rt, err := proxied.ChainedPersistent(cloudConfigCA)
 	if err != nil {
 		log.Errorf("Could not create HTTP client, not logging to Loggly: %v", err)
@@ -267,7 +218,10 @@ func startLoggly(cloudConfigCA string) {
 
 	client := loggly.New(logglyToken, logglyTag)
 	client.SetHTTPClient(&http.Client{Transport: rt})
-	le := &logglyErrorReporter{client}
+	le := &logglyErrorReporter{client: client,
+		lastReported:       make(map[string]time.Time),
+		isReportingEnabled: isReportingEnabled,
+	}
 	golog.RegisterReporter(le.Report)
 }
 
@@ -278,18 +232,19 @@ type flushable interface {
 }
 
 type logglyErrorReporter struct {
-	client *loggly.Client
+	client             *loggly.Client
+	lastReported       map[string]time.Time
+	lastReportedLock   sync.Mutex
+	isReportingEnabled func() bool
 }
 
 func (r logglyErrorReporter) Report(err error, location string, ctx map[string]interface{}) {
-	cfg := getCfg()
-	if !includeInSample(cfg.deviceID, cfg.logglySamplePercentage) {
+	if !r.isReportingEnabled() {
 		return
 	}
-
 	// Remove hidden errors info
 	fullMessage := hidden.Clean(err.Error())
-	if !shouldReport(location) {
+	if r.hitRateLimit(location) {
 		log.Debugf("Not reporting duplicate at %v to Loggly: %v", location, fullMessage)
 		return
 	}
@@ -353,18 +308,15 @@ func (r logglyErrorReporter) Report(err error, location string, ctx map[string]i
 	}
 }
 
-func shouldReport(location string) bool {
-	if !isReportingEnabled() {
-		return false
-	}
+func (r *logglyErrorReporter) hitRateLimit(location string) bool {
 	now := time.Now()
-	lastReportedLock.Lock()
-	defer lastReportedLock.Unlock()
-	shouldReport := now.Sub(lastReported[location]) > logglyRateLimit
-	if shouldReport {
-		lastReported[location] = now
+	r.lastReportedLock.Lock()
+	defer r.lastReportedLock.Unlock()
+	hit := now.Sub(r.lastReported[location]) <= logglyRateLimit
+	if !hit {
+		r.lastReported[location] = now
 	}
-	return shouldReport
+	return hit
 }
 
 // flush forces output, since it normally flushes based on an interval
@@ -403,33 +355,4 @@ func (t *nonStopWriter) flush() {
 			w.flush()
 		}
 	}
-}
-
-func includeInSample(deviceID string, samplePercentage float64) bool {
-	if samplePercentage == 0 {
-		return false
-	}
-
-	// Sample a subset of device IDs.
-	// DeviceID is expected to be a Base64 encoded 48-bit (6 byte) MAC address
-	deviceIDBytes, base64Err := base64.StdEncoding.DecodeString(deviceID)
-	if base64Err != nil {
-		log.Debugf("Error decoding base64 deviceID %v: %v", deviceID, base64Err)
-		return false
-	}
-	if len(deviceIDBytes) != 6 {
-		log.Debugf("Unexpected DeviceID length %v: %d", deviceID, len(deviceIDBytes))
-		return false
-	}
-	// Pad and decode to int
-	paddedDeviceIDBytes := append(deviceIDBytes, 0, 0)
-	deviceIDInt := binary.BigEndian.Uint64(paddedDeviceIDBytes)
-	return deviceIDInt%uint64(1/samplePercentage) == 0
-}
-
-func getCfg() *config {
-	cfigMx.RLock()
-	cfg := cfig
-	cfigMx.RUnlock()
-	return cfg
 }

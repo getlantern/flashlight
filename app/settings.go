@@ -16,7 +16,6 @@ import (
 	"github.com/getlantern/uuid"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ui"
 )
 
@@ -248,9 +247,6 @@ func (s *Settings) setBool(name SettingName, v interface{}) {
 	if !ok {
 		log.Errorf("Could not convert %s(%v) to bool", name, v)
 		return
-	}
-	if name == SNAutoReport {
-		logging.SetReportingEnabled(b)
 	}
 	s.setVal(name, b)
 }

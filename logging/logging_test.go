@@ -2,8 +2,6 @@ package logging
 
 import (
 	"bytes"
-	"encoding/base64"
-	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -54,22 +52,15 @@ func TestNonStopWriter(t *testing.T) {
 }
 
 func TestLoggly(t *testing.T) {
-	SetReportingEnabled(true)
 	var buf bytes.Buffer
 	var result map[string]interface{}
 
-	cfigMx.Lock()
-	cfig = &config{logglySamplePercentage: 1, deviceID: "MTIzNDU2"}
-	cfigMx.Unlock()
-	defer func() {
-		cfigMx.Lock()
-		cfig = &config{}
-		cfigMx.Unlock()
-	}()
-
 	loggly := loggly.New("token not required")
 	loggly.Writer = &buf
-	r := logglyErrorReporter{client: loggly}
+	r := logglyErrorReporter{client: loggly,
+		lastReported:       make(map[string]time.Time),
+		isReportingEnabled: func() bool { return true },
+	}
 	golog.RegisterReporter(r.Report)
 	log := golog.LoggerFor("test")
 
@@ -136,17 +127,4 @@ func TestLoggly(t *testing.T) {
 		assert.Regexp(t, regexp.MustCompile(longPrefix+"(o+)"), result["message"])
 		assert.Equal(t, 100, len(result["message"].(string)))
 	}
-}
-
-func TestIncludeInSample(t *testing.T) {
-	included := 0
-	b := make([]byte, 8)
-	for i := uint64(0); i < 100; i++ {
-		binary.BigEndian.PutUint64(b, i)
-		if includeInSample(base64.StdEncoding.EncodeToString(b[2:]), 0.01) {
-			included++
-		}
-	}
-	// TODO: yes, this is wrong, but we are sampling
-	assert.Equal(t, 4, included, "4% should have been included")
 }
