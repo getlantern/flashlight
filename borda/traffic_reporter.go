@@ -11,7 +11,7 @@ import (
 )
 
 func newTrafficReporter(bc *borda.Client, submitInterval time.Duration, deviceID string, enabled func() bool) (*trafficReporter, proxyWrapper) {
-	submitter := bc.ReducingSubmitter("proxy_traffic", 1000, func(existingValues map[string]float64, newValues map[string]float64) {
+	submitter := bc.ReducingSubmitter("client_traffic", 1000, func(existingValues map[string]float64, newValues map[string]float64) {
 		for key, value := range newValues {
 			existingValues[key] += value
 		}

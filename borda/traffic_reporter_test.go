@@ -70,7 +70,7 @@ func TestReportTraffic(t *testing.T) {
 	var obj []map[string]interface{}
 	err = json.Unmarshal(payload, &obj)
 	assert.NoError(t, err, "should unmarshal")
-	assert.Equal(t, "proxy_traffic", obj[0]["name"])
+	assert.Equal(t, "client_traffic", obj[0]["name"])
 	values := obj[0]["values"].(map[string]interface{})
 	assert.EqualValues(t, 4, values["bytes_in"])
 	assert.EqualValues(t, 4, values["bytes_out"])
