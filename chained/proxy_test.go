@@ -11,7 +11,7 @@ var (
 )
 
 func TestTrusted(t *testing.T) {
-	p, _ := CreateProxy(&ChainedServerInfo{Addr: "1.1.1.1", AuthToken: "abcd", Cert: "", PluggableTransport: ""})
+	p, _ := CreateProxy("test-proxy", &ChainedServerInfo{Addr: "1.1.1.1", AuthToken: "abcd", Cert: "", PluggableTransport: ""})
 	assert.False(t, p.Trusted(), "HTTP proxy should not be trusted")
 	assert.NotContains(t, p.Label(), "(trusted)")
 
@@ -21,12 +21,12 @@ func TestTrusted(t *testing.T) {
 			"iat-mode": "0",
 		},
 	}
-	p, _ = CreateProxy(si)
+	p, _ = CreateProxy("test-proxy", si)
 	assert.False(t, p.Trusted(), "OBFS4 proxy should not be trusted by default")
 	assert.NotContains(t, p.Label(), "(trusted)")
 
 	si.Trusted = true
-	p, _ = CreateProxy(si)
+	p, _ = CreateProxy("test-proxy", si)
 	assert.True(t, p.Trusted(), "OBFS4 proxy should be trusted if explicitly declared")
 	assert.Contains(t, p.Label(), "(trusted)")
 }
