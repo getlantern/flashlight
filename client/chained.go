@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -30,8 +31,8 @@ var (
 )
 
 // ChainedDialer creates a *balancer.Dialer backed by a chained server.
-func ChainedDialer(si *chained.ChainedServerInfo, deviceID string, proTokenGetter func() string) (*balancer.Dialer, error) {
-	s, err := newServer(si)
+func ChainedDialer(name string, si *chained.ChainedServerInfo, deviceID string, proTokenGetter func() string) (*balancer.Dialer, error) {
+	s, err := newServer(name, si)
 	if err != nil {
 		return nil, err
 	}
@@ -42,8 +43,15 @@ type chainedServer struct {
 	chained.Proxy
 }
 
-func newServer(si *chained.ChainedServerInfo) (*chainedServer, error) {
-	p, err := chained.CreateProxy(si)
+func newServer(name string, si *chained.ChainedServerInfo) (*chainedServer, error) {
+	// Backwards-compatibility for clients that still have old obfs4
+	// configurations on disk.
+	if si.PluggableTransport == "obfs4" && !strings.HasSuffix(name, "obfs4") {
+		log.Debugf("Converting old-style obfs4 server %v to obfs4-tcp", name)
+		si.PluggableTransport = "obfs4-tcp"
+	}
+
+	p, err := chained.CreateProxy(name, si)
 	if err != nil {
 		return nil, err
 	}
@@ -151,12 +159,12 @@ func (s *chainedServer) doCheck(url string,
 	// doesn't support pinging URLs.
 	req.Header.Set("X-Lantern-Ping", "small")
 
-	checkedUrl := url
+	checkedURL := url
 	s.attachHeaders(req, deviceID, proTokenGetter)
 	ok, timedOut, _ := withtimeout.Do(10*time.Second, func() (interface{}, error) {
 		resp, err := rt.RoundTrip(req)
 		if err != nil {
-			log.Debugf("Error testing dialer %s to %s: %s", s.Addr(), checkedUrl, err)
+			log.Debugf("Error testing dialer %s to %s: %s", s.Addr(), checkedURL, err)
 			return false, nil
 		}
 		if resp.Body != nil {

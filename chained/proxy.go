@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
@@ -44,7 +45,7 @@ type Proxy interface {
 }
 
 // CreateProxy creates a Proxy with supplied server info.
-func CreateProxy(s *ChainedServerInfo) (Proxy, error) {
+func CreateProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 	if theForceAddr != "" && theForceToken != "" {
 		forceProxy(s)
 	}
@@ -60,16 +61,16 @@ func CreateProxy(s *ChainedServerInfo) (Proxy, error) {
 		var err error
 		if s.Cert == "" {
 			log.Errorf("No Cert configured for %s, will dial with plain tcp", s.Addr)
-			base = newHTTPProxy(s)
+			base = newHTTPProxy(name, s)
 		} else {
 			log.Tracef("Cert configured for  %s, will dial with tls", s.Addr)
-			base, err = newHTTPSProxy(s)
+			base, err = newHTTPSProxy(name, s)
 		}
 		return base, err
 	case "obfs4-tcp":
-		return newOBFS4Wrapper(newHTTPProxy(s), s)
+		return newOBFS4Wrapper(newHTTPProxy(name, s), s)
 	case "obfs4-kcp":
-		return newOBFS4Wrapper(newKCPProxy(s), s)
+		return newOBFS4Wrapper(newKCPProxy(name, s), s)
 	default:
 		return nil, errors.New("Unknown transport").With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
 	}
@@ -93,8 +94,8 @@ type httpProxy struct {
 	BaseProxy
 }
 
-func newHTTPProxy(s *ChainedServerInfo) Proxy {
-	return &httpProxy{BaseProxy: BaseProxy{network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: false}}
+func newHTTPProxy(name string, s *ChainedServerInfo) Proxy {
+	return &httpProxy{BaseProxy: BaseProxy{name: name, network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: false}}
 }
 
 func (d httpProxy) DialServer() (net.Conn, error) {
@@ -112,13 +113,13 @@ type httpsProxy struct {
 	sessionCache tls.ClientSessionCache
 }
 
-func newHTTPSProxy(s *ChainedServerInfo) (Proxy, error) {
+func newHTTPSProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 	}
 	return &httpsProxy{
-		BaseProxy:    BaseProxy{network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted},
+		BaseProxy:    BaseProxy{name: name, network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted},
 		x509cert:     cert.X509(),
 		sessionCache: tls.NewLRUClientSessionCache(1000),
 	}, nil
@@ -153,9 +154,9 @@ type kcpProxy struct {
 	dialFN func(network, address string) (net.Conn, error)
 }
 
-func newKCPProxy(s *ChainedServerInfo) Proxy {
+func newKCPProxy(name string, s *ChainedServerInfo) Proxy {
 	return &kcpProxy{
-		BaseProxy: BaseProxy{network: "kcp", addr: s.Addr, authToken: s.AuthToken, trusted: false},
+		BaseProxy: BaseProxy{name: name, network: "kcp", addr: s.Addr, authToken: s.AuthToken, trusted: false},
 		// TODO: parameterize inputs to KCP
 		dialFN: cmux.Dialer(&cmux.DialerOpts{Dial: dialKCP}),
 	}
@@ -223,8 +224,8 @@ func (p obfs4Wrapper) Trusted() bool {
 }
 
 func (p obfs4Wrapper) Label() string {
-	label := "obfs4-" + p.Proxy.Network() + " " + p.Proxy.Addr()
-	if p.trusted {
+	label := p.Proxy.Label()
+	if p.trusted && !strings.HasSuffix(label, " (trusted)") {
 		label = label + " (trusted)"
 	}
 	return label
@@ -245,22 +246,8 @@ func (p obfs4Wrapper) DialServer() (net.Conn, error) {
 	return conn, op.FailIf(err)
 }
 
-type obfs4OverTCP struct {
-	BaseProxy
-}
-
-type obfs4OverKCP struct {
-	Proxy
-}
-
-type nullDialer struct{}
-
-func (d nullDialer) DialServer() (net.Conn, error) {
-	panic("should implement DialServer")
-	return nil, nil
-}
-
 type BaseProxy struct {
+	name      string
 	network   string
 	addr      string
 	trusted   bool
@@ -276,7 +263,7 @@ func (p BaseProxy) Addr() string {
 }
 
 func (p BaseProxy) Label() string {
-	label := p.Network() + " " + p.Addr()
+	label := p.name
 	if p.trusted {
 		label = label + " (trusted)"
 	}

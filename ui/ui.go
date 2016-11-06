@@ -32,6 +32,7 @@ var (
 	allowRemoteClients bool
 	proxiedUIAddr      string
 	preferProxiedUI    int32
+	edge               = edgedetect.DefaultBrowserIsEdge()
 
 	openedExternal = false
 	externalURL    string
@@ -46,11 +47,7 @@ func Handle(pattern string, handler http.Handler) {
 // Start starts serving the UI.
 func Start(requestedAddr string, allowRemote bool, extURL, localHTTPTok string) error {
 	localHTTPToken = localHTTPTok
-	if requestedAddr == "" {
-		requestedAddr = defaultUIAddress
-	}
-
-	addr, err := net.ResolveTCPAddr("tcp4", requestedAddr)
+	addr, err := normalizeAddr(requestedAddr)
 	if err != nil {
 		return fmt.Errorf("Unable to resolve UI address: %v", err)
 	}
@@ -61,7 +58,7 @@ func Start(requestedAddr string, allowRemote bool, extURL, localHTTPTok string) 
 
 	l, err := net.ListenTCP("tcp4", addr)
 	if err != nil {
-		return fmt.Errorf("Unable to listen at %v. Error is: %v", requestedAddr, err)
+		return fmt.Errorf("Unable to listen at %v. Error is: %v", addr, err)
 	}
 
 	// Setting port (case when port was 0)
@@ -128,6 +125,20 @@ func Start(requestedAddr string, allowRemote bool, extURL, localHTTPTok string) 
 	return nil
 }
 
+func normalizeAddr(requestedAddr string) (*net.TCPAddr, error) {
+	var addr string
+	if requestedAddr == "" {
+		addr = defaultUIAddress
+	} else if strings.HasPrefix(requestedAddr, "http://") {
+		log.Errorf("Client tried to start at bad address: %v", requestedAddr)
+		addr = strings.TrimPrefix(requestedAddr, "http://")
+	} else {
+		addr = requestedAddr
+	}
+
+	return net.ResolveTCPAddr("tcp4", addr)
+}
+
 func unpackUI() {
 	var err error
 	fs, err = tarfs.New(Resources, "")
@@ -172,7 +183,7 @@ func shouldPreferProxiedUI() bool {
 // on whether or not we're running on Edge essgentially.
 func GetPreferredUIAddr() string {
 	// We only use the proxied UI address if the default browser is Microsoft Edge
-	if edgedetect.DefaultBrowserIsEdge() && shouldPreferProxiedUI() {
+	if edge && shouldPreferProxiedUI() {
 		log.Debugf("Returning '%v' for proxied UI addr", proxiedUIAddr)
 		return proxiedUIAddr
 	}
