@@ -10,14 +10,14 @@ import (
 	"github.com/getlantern/flashlight/chained"
 )
 
-func newTrafficReporter(bc *borda.Client, submitInterval time.Duration, deviceID string, enabled func() bool) (*trafficReporter, proxyWrapper) {
-	submitter := bc.ReducingSubmitter("client_traffic", 1000, func(existingValues map[string]float64, newValues map[string]float64) {
+func newTrafficReporter(bc *borda.Client, submitInterval time.Duration, enabled func() bool) (*trafficReporter, proxyWrapper) {
+	submitter := bc.ReducingSubmitter("client_results", 1000, func(existingValues map[string]float64, newValues map[string]float64) {
 		for key, value := range newValues {
 			existingValues[key] += value
 		}
 	})
 	collectInterval := submitInterval / 10
-	r := &trafficReporter{enabled, measured.New(100), submitter, collectInterval, deviceID}
+	r := &trafficReporter{enabled, measured.New(100), submitter, collectInterval}
 	r.m.Start(submitInterval, r)
 	return r, r.WrapProxy
 }
@@ -27,22 +27,18 @@ type trafficReporter struct {
 	m               *measured.Measured
 	submitter       borda.Submitter
 	collectInterval time.Duration
-	deviceID        string
 }
 
 func (r trafficReporter) ReportTraffic(tt map[string]*measured.TrafficTracker) error {
 	if !r.enabled() {
 		return nil
 	}
-	for id, ti := range tt {
+	for _, ti := range tt {
 		err := r.submitter(map[string]float64{
-			"bytes_in":  float64(ti.TotalIn),
-			"bytes_out": float64(ti.TotalOut),
+			"client_bytes_recv": float64(ti.TotalIn),
+			"client_bytes_sent": float64(ti.TotalOut),
 		},
-			map[string]interface{}{
-				"device_id":  r.deviceID,
-				"proxy_addr": id,
-			})
+			map[string]interface{}{})
 		if err != nil {
 			return err
 		}

@@ -25,10 +25,10 @@ var (
 // Configure starts borda reporting and proxy bench if reportInterval > 0. The
 // service never stops once enabled. The service will check enabled each
 // time before it reports to borda, however.
-func Configure(deviceID string, reportInterval time.Duration, enabled func() bool) {
+func Configure(reportInterval time.Duration, enabled func() bool) {
 	if reportInterval > 0 {
 		once.Do(func() {
-			startBordaAndProxyBench(deviceID, reportInterval, enabled)
+			startBordaAndProxyBench(reportInterval, enabled)
 		})
 	}
 }
@@ -55,10 +55,10 @@ type proxyWrapper func(chained.Proxy) chained.Proxy
 
 var theProxyWrapper atomic.Value
 
-func startBordaAndProxyBench(deviceID string, reportInterval time.Duration, enabled func() bool) {
+func startBordaAndProxyBench(reportInterval time.Duration, enabled func() bool) {
 	bordaClient = createBordaClient(reportInterval)
 	var wrapper proxyWrapper
-	tr, wrapper = newTrafficReporter(bordaClient, reportInterval, deviceID, enabled)
+	tr, wrapper = newTrafficReporter(bordaClient, reportInterval, enabled)
 	theProxyWrapper.Store(wrapper)
 
 	reportToBorda := bordaClient.ReducingSubmitter("client_results", 1000, func(existingValues map[string]float64, newValues map[string]float64) {

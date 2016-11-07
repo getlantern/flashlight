@@ -4,13 +4,19 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/binary"
+	"fmt"
 	"path/filepath"
+	"runtime"
 	"sync"
+	"time"
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/jibber_jabber"
 	"github.com/getlantern/keyman"
+	"github.com/getlantern/ops"
+	"github.com/getlantern/osversion"
 
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
@@ -92,6 +98,7 @@ func Run(httpProxyAddr string,
 	onError func(err error),
 	deviceID string) error {
 	displayVersion()
+	initContext(deviceID, Version, RevisionDate)
 
 	cl := client.NewClient(proxyAll, userConfig.GetToken)
 	proxied.SetProxyAddr(cl.Addr)
@@ -149,11 +156,11 @@ func applyClientConfig(client *client.Client, cfg *config.Global, deviceID strin
 
 	canEnableLoggly := includeInSample(deviceID, cfg.LogglySamplePercentage)
 	enableLoggly := func() bool { return canEnableLoggly && autoReport() }
-	logging.Configure(cfg.CloudConfigCA, deviceID, Version, RevisionDate, enableLoggly)
+	logging.Configure(cfg.CloudConfigCA, enableLoggly)
 
 	canEnableBorda := includeInSample(deviceID, cfg.BordaSamplePercentage)
 	enableBorda := func() bool { return canEnableBorda && autoReport() }
-	borda.Configure(deviceID, cfg.BordaReportInterval, enableBorda)
+	borda.Configure(cfg.BordaReportInterval, enableBorda)
 }
 
 func getTrustedCACerts(cfg *config.Global) (pool *x509.CertPool, err error) {
@@ -192,4 +199,30 @@ func includeInSample(deviceID string, samplePercentage float64) bool {
 	paddedDeviceIDBytes := append(deviceIDBytes, 0, 0)
 	deviceIDInt := binary.BigEndian.Uint64(paddedDeviceIDBytes)
 	return deviceIDInt%uint64(1/samplePercentage) == 0
+}
+
+func initContext(deviceID string, version string, revisionDate string) {
+	// Using "application" allows us to distinguish between errors from the
+	// lantern client vs other sources like the http-proxy, etop.
+	ops.SetGlobal("app", "lantern-client")
+	ops.SetGlobal("app_version", fmt.Sprintf("%v (%v)", version, revisionDate))
+	ops.SetGlobal("go_version", runtime.Version())
+	ops.SetGlobal("os_name", runtime.GOOS)
+	ops.SetGlobal("os_arch", runtime.GOARCH)
+	ops.SetGlobal("device_id", deviceID)
+	ops.SetGlobalDynamic("geo_country", func() interface{} { return geolookup.GetCountry(0) })
+	ops.SetGlobalDynamic("client_ip", func() interface{} { return geolookup.GetIP(0) })
+	ops.SetGlobalDynamic("timezone", func() interface{} { return time.Now().Format("MST") })
+	ops.SetGlobalDynamic("locale_language", func() interface{} {
+		lang, _ := jibber_jabber.DetectLanguage()
+		return lang
+	})
+	ops.SetGlobalDynamic("locale_country", func() interface{} {
+		country, _ := jibber_jabber.DetectTerritory()
+		return country
+	})
+
+	if osStr, err := osversion.GetHumanReadable(); err == nil {
+		ops.SetGlobal("os_version", osStr)
+	}
 }

@@ -70,8 +70,7 @@ func (app *App) LogPanicAndExit(msg string) {
 		panic("Error initializing logging")
 	}
 
-	<-logging.Configure("", "dummy-device-id-for-panic",
-		flashlight.Version, flashlight.RevisionDate,
+	<-logging.Configure("",
 		// Reporting to Loggly is not possible at this point
 		func() bool { return false },
 	)

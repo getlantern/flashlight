@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -17,12 +16,9 @@ import (
 	"github.com/getlantern/go-loggly"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
-	"github.com/getlantern/jibber_jabber"
-	"github.com/getlantern/osversion"
 	"github.com/getlantern/rotator"
 	"github.com/getlantern/wfilter"
 
-	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
 )
@@ -61,8 +57,7 @@ var (
 		"app_version":     "version",
 	}
 
-	contextOnce sync.Once
-	logglyOnce  sync.Once
+	logglyOnce sync.Once
 )
 
 func init() {
@@ -101,31 +96,13 @@ func EnableFileLogging(logdir string) error {
 
 // Configure will set up logging. An empty "addr" will configure logging
 // without a proxy. Returns a bool channel for optional blocking.
-func Configure(cloudConfigCA string, deviceID string,
-	version string, revisionDate string,
-	isReportingEnabled func() bool) (success chan bool) {
+func Configure(cloudConfigCA string, isReportingEnabled func() bool) (success chan bool) {
 	success = make(chan bool, 1)
-
-	contextOnce.Do(func() {
-		initContext(deviceID, version, revisionDate)
-	})
 
 	// Note: Returning from this function must always add a result to the
 	// success channel.
 	if logglyToken == "" {
 		log.Debugf("No logglyToken, not reporting errors")
-		success <- false
-		return
-	}
-
-	if version == "" {
-		log.Error("No version configured, not reporting errors")
-		success <- false
-		return
-	}
-
-	if revisionDate == "" {
-		log.Error("No build date configured, not reporting errors")
 		success <- false
 		return
 	}
@@ -141,32 +118,6 @@ func Configure(cloudConfigCA string, deviceID string,
 	}()
 
 	return
-}
-
-func initContext(deviceID string, version string, revisionDate string) {
-	// Using "application" allows us to distinguish between errors from the
-	// lantern client vs other sources like the http-proxy, etop.
-	ops.SetGlobal("app", "lantern-client")
-	ops.SetGlobal("app_version", fmt.Sprintf("%v (%v)", version, revisionDate))
-	ops.SetGlobal("go_version", runtime.Version())
-	ops.SetGlobal("os_name", runtime.GOOS)
-	ops.SetGlobal("os_arch", runtime.GOARCH)
-	ops.SetGlobal("device_id", deviceID)
-	ops.SetGlobalDynamic("geo_country", func() interface{} { return geolookup.GetCountry(0) })
-	ops.SetGlobalDynamic("client_ip", func() interface{} { return geolookup.GetIP(0) })
-	ops.SetGlobalDynamic("timezone", func() interface{} { return time.Now().Format("MST") })
-	ops.SetGlobalDynamic("locale_language", func() interface{} {
-		lang, _ := jibber_jabber.DetectLanguage()
-		return lang
-	})
-	ops.SetGlobalDynamic("locale_country", func() interface{} {
-		country, _ := jibber_jabber.DetectTerritory()
-		return country
-	})
-
-	if osStr, err := osversion.GetHumanReadable(); err == nil {
-		ops.SetGlobal("os_version", osStr)
-	}
 }
 
 // SetExtraLogglyInfo supports setting an extra info value to include in Loggly

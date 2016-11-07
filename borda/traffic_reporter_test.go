@@ -43,7 +43,7 @@ func TestReportTraffic(t *testing.T) {
 			Transport: &mockRT{ch},
 		},
 	})
-	tr, wrapper := newTrafficReporter(bc, 100*time.Millisecond, "fake-device-id", func() bool { return true })
+	tr, wrapper := newTrafficReporter(bc, 100*time.Millisecond, func() bool { return true })
 	defer tr.Stop()
 	defer bc.Flush()
 	l, _ := net.Listen("tcp", ":0")
@@ -70,10 +70,8 @@ func TestReportTraffic(t *testing.T) {
 	var obj []map[string]interface{}
 	err = json.Unmarshal(payload, &obj)
 	assert.NoError(t, err, "should unmarshal")
-	assert.Equal(t, "client_traffic", obj[0]["name"])
+	assert.Equal(t, "client_results", obj[0]["name"])
 	values := obj[0]["values"].(map[string]interface{})
-	assert.EqualValues(t, 4, values["bytes_in"])
-	assert.EqualValues(t, 4, values["bytes_out"])
-	dimensions := obj[0]["dimensions"].(map[string]interface{})
-	assert.EqualValues(t, "fake-device-id", dimensions["device_id"])
+	assert.EqualValues(t, 4, values["client_bytes_recv"])
+	assert.EqualValues(t, 4, values["client_bytes_sent"])
 }
