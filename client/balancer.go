@@ -24,10 +24,10 @@ func (client *Client) initBalancer(proxies map[string]*ChainedServerInfo, device
 
 	// Add chained (CONNECT proxy) servers.
 	log.Debugf("Adding %d chained servers", len(proxies))
-	for _, s := range proxies {
-		dialer, err := ChainedDialer(s, deviceID, client.proTokenGetter)
+	for name, s := range proxies {
+		dialer, err := ChainedDialer(name, s, deviceID, client.proTokenGetter)
 		if err != nil {
-			log.Errorf("Unable to configure chained server. Received error: %v", err)
+			log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)
 			continue
 		}
 		log.Debugf("Adding chained server: %v", s.Addr)
