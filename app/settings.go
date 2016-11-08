@@ -308,7 +308,7 @@ func (s *Settings) save() {
 func (s *Settings) writeTo(w io.Writer) (int, error) {
 	toBeSaved := s.mapToSave()
 	if bytes, err := yaml.Marshal(toBeSaved); err != nil {
-		return 0, nil
+		return 0, err
 	} else {
 		return w.Write(bytes)
 	}
