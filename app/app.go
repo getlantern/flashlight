@@ -169,7 +169,7 @@ func (app *App) beforeStart() bool {
 	bootstrap, err := config.ReadBootstrapSettings()
 	var startupURL string
 	if err != nil {
-		log.Errorf("Could not read settings? %v", err)
+		log.Debugf("Could not read bootstrap settings: %v", err)
 		startupURL = ""
 	} else {
 		startupURL = bootstrap.StartupUrl
