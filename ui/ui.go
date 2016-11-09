@@ -125,6 +125,17 @@ func Start(requestedAddr string, allowRemote bool, extURL, localHTTPTok string) 
 	return nil
 }
 
+// Stop stops the UI listener and all services. To facilitate test.
+func Stop() {
+	unregisterAll()
+	// Reset it here instead of changing how r is initialized, to avoid
+	// bringing in unexpected bugs.
+	r = NewServeMux()
+	if l != nil {
+		l.Close()
+	}
+}
+
 func normalizeAddr(requestedAddr string) (*net.TCPAddr, error) {
 	var addr string
 	if requestedAddr == "" {

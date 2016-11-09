@@ -100,4 +100,6 @@ import:
   subpackages:
   - uaparser
 - package: github.com/Sirupsen/logrus
+- package: github.com/keighl/mandrill
+  version: ^1.1.0
 - package: github.com/getlantern/proxy

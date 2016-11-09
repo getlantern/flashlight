@@ -32,33 +32,32 @@ func serveBandwidth() error {
 		log.Debugf("Sending current bandwidth quota to new client")
 		return write(bandwidth.GetQuota())
 	}
-
-	if service, err := ui.Register("bandwidth", helloFn); err != nil {
+	service, err := ui.Register("bandwidth", helloFn)
+	if err != nil {
 		log.Errorf("Error registering with UI? %v", err)
 		return err
-	} else {
-		go func() {
-			n := notify.NewNotifications()
-			for quota := range bandwidth.Updates {
-				log.Debugf("Sending update...")
-				service.Out <- quota
-				if ns.isFull(quota) {
-					oneFull.Do(func() {
-						go ns.notifyCapHit(n)
-					})
-				} else if ns.isEightyOrMore(quota) {
-					oneEighty.Do(func() {
-						go ns.notifyEighty(n)
-					})
-				} else if ns.isFiftyOrMore(quota) {
-					oneFifty.Do(func() {
-						go ns.notifyFifty(n)
-					})
-				}
-			}
-		}()
-		return nil
 	}
+	go func() {
+		n := notify.NewNotifications()
+		for quota := range bandwidth.Updates {
+			log.Debugf("Sending update...")
+			service.Out <- quota
+			if ns.isFull(quota) {
+				oneFull.Do(func() {
+					go ns.notifyCapHit(n)
+				})
+			} else if ns.isEightyOrMore(quota) {
+				oneEighty.Do(func() {
+					go ns.notifyEighty(n)
+				})
+			} else if ns.isFiftyOrMore(quota) {
+				oneFifty.Do(func() {
+					go ns.notifyFifty(n)
+				})
+			}
+		}
+	}()
+	return nil
 }
 
 func (s *notifyStatus) isEightyOrMore(quota *bandwidth.Quota) bool {
