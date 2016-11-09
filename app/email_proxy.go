@@ -107,10 +107,15 @@ func sendTemplate(data *mandrillMessage) error {
 	if err != nil {
 		return err
 	}
+
+	return readResponses(responses)
+}
+
+func readResponses(responses []*mandrill.Response) error {
 	// There's exactly one response, use "for" loop for simpler code.
 	for _, resp := range responses {
 		switch resp.Status {
-		case "sent", "queued":
+		case "sent", "queued", "scheduled":
 			return nil
 		case "rejected":
 			return errors.New("rejected: " + resp.RejectionReason)

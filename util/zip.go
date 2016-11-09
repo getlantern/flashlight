@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	KB int64 = 1024
-	MB int64 = 1024 * 1024
-	GB int64 = 1024 * 1024 * 1024
+	kb int64 = 1024
+	mb int64 = 1024 * 1024
+	gb int64 = 1024 * 1024 * 1024
 )
 
 // ZipOptions is a set of options for ZipFiles.
@@ -41,9 +41,9 @@ var (
 	sizeRegexp = regexp.MustCompile("^(\\d+)([k|m|g|K|M|G][b|B])?$")
 	units      = map[string]int64{
 		"":   1,
-		"KB": KB,
-		"MB": MB,
-		"GB": GB,
+		"KB": kb,
+		"MB": mb,
+		"GB": gb,
 	}
 )
 
@@ -58,7 +58,7 @@ func ParseFileSize(s string) (int64, error) {
 	return i * units[strings.ToUpper(matched[2])], nil
 }
 
-// ZipFile creates a zip archive per the options and writes to the writer.
+// ZipFiles creates a zip archive per the options and writes to the writer.
 func ZipFiles(writer io.Writer, opts ZipOptions) (err error) {
 	glob := filepath.Join(opts.Dir, opts.Glob)
 	matched, e := filepath.Glob(glob)

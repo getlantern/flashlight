@@ -18,9 +18,9 @@ func TestParseFileSize(t *testing.T) {
 	}{
 		{"1", false, 1},
 		{"-1", true, 0},
-		{"1kb", false, 1 * KB},
-		{"1Kb", false, 1 * KB},
-		{"1GB", false, 1 * GB},
+		{"1kb", false, 1 * kb},
+		{"1Kb", false, 1 * kb},
+		{"1GB", false, 1 * gb},
 
 		{"1KB2", true, 0},
 		{"-1kB", true, 0},
@@ -69,7 +69,7 @@ func TestZipFilesWithDir(t *testing.T) {
 
 func TestZipFilesWithMaxBytes(t *testing.T) {
 	var buf bytes.Buffer
-	err := ZipFiles(&buf, ZipOptions{Glob: "*.txt*", Dir: "test_zip_src", MaxBytes: 1 * KB})
+	err := ZipFiles(&buf, ZipOptions{Glob: "*.txt*", Dir: "test_zip_src", MaxBytes: 1 * kb})
 	if !assert.NoError(t, err) {
 		return
 	}
