@@ -221,6 +221,8 @@ func Show() {
 			log.Errorf("Error opening page to `%v`: %v", uiURL, err)
 		}
 
+		// This is for opening exernal URLs in a new browser window for partners
+		// such as Manoto.
 		onceBody := func() {
 			openExternalURL(externalURL)
 		}
