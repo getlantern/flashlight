@@ -75,8 +75,9 @@ func checkOrigin(h http.Handler) http.Handler {
 					return
 				}
 			} else {
-				if GetPreferredUIAddr() != originHost {
-					log.Errorf("Origin was '%v' but expecting: '%v'", originHost, GetPreferredUIAddr())
+				// allow access from both direct and lantern.io origin when default browser is Edge.
+				if GetDirectUIAddr() != originHost || GetPreferredUIAddr() != originHost {
+					log.Errorf("Origin was '%v' but expecting: '%v' or '%v'", originHost, GetDirectUIAddr(), GetPreferredUIAddr())
 					return
 				}
 			}
