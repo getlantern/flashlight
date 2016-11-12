@@ -1,5 +1,5 @@
 hash: 61e045f955574216a7a6acfbf0f9e72ec273b0cddae432119f6f03185cb63060
-updated: 2016-11-10T21:02:22.67191514-08:00
+updated: 2016-11-11T16:42:08.649024878-08:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -243,7 +243,7 @@ imports:
 - name: github.com/rcrowley/go-metrics
   version: ab2277b1c5d15c3cba104e9cbddbdfc622df5ad8
 - name: github.com/Sirupsen/logrus
-  version: 1445b7a38228c041834afc69231b7966b9943397
+  version: abc6f20dabf4b10195f233ad21ea6c5ba33acae0
 - name: github.com/skratchdot/open-golang
   version: 75fb7ed4208cf72d323d7d02fd1a5964a7a9073c
   subpackages:
@@ -263,7 +263,7 @@ imports:
   subpackages:
   - utils
 - name: github.com/xtaci/kcp-go
-  version: e5eae44fad899b0f7568e82f703c40940c5fa9e9
+  version: 3f35e454a331a5ad69b071fbd2d927d003470509
 - name: github.com/xtaci/smux
   version: 60c611f2ff7411e1493071745a7f3f89e25ac624
 - name: golang.org/x/crypto
