@@ -180,7 +180,7 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 		},
 	}
 
-	h, err := mitm.Wrap(client, cryptoConfig)
+	h, err := mitm.Wrap(rp, cryptoConfig)
 	if err != nil {
 		log.Fatalf("Unable to wrap reverse proxy: %s", err)
 	}
