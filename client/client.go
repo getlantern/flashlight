@@ -2,10 +2,12 @@ package client
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -18,6 +20,7 @@ import (
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/status"
+	"github.com/getlantern/go-mitm/mitm"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
 	"github.com/getlantern/netx"
@@ -142,10 +145,43 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 	addr.Set(listenAddr)
 	onListeningFn()
 
+	cryptoConfig := &CryptoConfig{
+		PKFile:   "proxypk.pem",
+		CertFile: "proxycert.pem",
+		ServerTLSConfig: &tls.Config{
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+				tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+				tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+				tls.TLS_RSA_WITH_RC4_128_SHA,
+				tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+				tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+				tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+			},
+			PreferServerCipherSuites: true,
+		},
+	}
+
+	rp := &httputil.ReverseProxy{
+		Director: func(req *http.Request) {
+			log.Debugf("Processing request to: %s", req.URL)
+		},
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				// Use a TLS session cache to minimize TLS connection establishment
+				// Requires Go 1.3+
+				ClientSessionCache: tls.NewLRUClientSessionCache(SESSIONS_TO_CACHE),
+			},
+		},
+	}
+
 	httpServer := &http.Server{
 		ReadTimeout:  client.readTimeout,
 		WriteTimeout: client.writeTimeout,
-		Handler:      client,
+		Handler:      mitm.Wrap(client, cryptoConfig),
 		ErrorLog:     log.AsStdLogger(),
 	}
 
