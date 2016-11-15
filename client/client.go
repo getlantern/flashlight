@@ -55,6 +55,8 @@ var (
 		19305, 19306, 19307, 19308, 19309,
 	}
 
+	SESSIONS_TO_CACHE = 10000
+
 	buffers = bpool.NewBytePool(1000, 32768)
 )
 
@@ -145,7 +147,7 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 	addr.Set(listenAddr)
 	onListeningFn()
 
-	cryptoConfig := &CryptoConfig{
+	cryptoConfig := &mitm.CryptoConfig{
 		PKFile:   "proxypk.pem",
 		CertFile: "proxycert.pem",
 		ServerTLSConfig: &tls.Config{
@@ -178,10 +180,15 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 		},
 	}
 
+	h, err := mitm.Wrap(client, cryptoConfig)
+	if err != nil {
+		log.Fatalf("Unable to wrap reverse proxy: %s", err)
+	}
+
 	httpServer := &http.Server{
 		ReadTimeout:  client.readTimeout,
 		WriteTimeout: client.writeTimeout,
-		Handler:      mitm.Wrap(client, cryptoConfig),
+		Handler:      h,
 		ErrorLog:     log.AsStdLogger(),
 	}
 
