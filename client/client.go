@@ -79,6 +79,8 @@ type Client struct {
 
 	proxyAll       func() bool
 	proTokenGetter func() string
+
+	reverseProxy *httputil.ReverseProxy
 }
 
 // SetProxyUIAddr sets the vanity proxy domain name and its translation.
@@ -99,6 +101,39 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 	keepAliveIdleTimeout := idleTimeout - 5*time.Second
 	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers, client.dialCONNECT)
 	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
+
+	cryptoConfig := &mitm.CryptoConfig{
+		PKFile:   "proxypk.pem",
+		CertFile: "proxycert.pem",
+		ServerTLSConfig: &tls.Config{
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+				tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+				tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+				tls.TLS_RSA_WITH_RC4_128_SHA,
+				tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+				tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+				tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+			},
+			PreferServerCipherSuites: true,
+		},
+	}
+
+	client.reverseProxy = &httputil.ReverseProxy{
+		Director: func(req *http.Request) {
+			log.Debugf("Processing request to: %s", req.URL)
+		},
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				// Use a TLS session cache to minimize TLS connection establishment
+				// Requires Go 1.3+
+				ClientSessionCache: tls.NewLRUClientSessionCache(SESSIONS_TO_CACHE),
+			},
+		},
+	}
 	return client
 }
 
@@ -147,40 +182,7 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 	addr.Set(listenAddr)
 	onListeningFn()
 
-	cryptoConfig := &mitm.CryptoConfig{
-		PKFile:   "proxypk.pem",
-		CertFile: "proxycert.pem",
-		ServerTLSConfig: &tls.Config{
-			CipherSuites: []uint16{
-				tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-				tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
-				tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
-				tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
-				tls.TLS_RSA_WITH_RC4_128_SHA,
-				tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
-				tls.TLS_RSA_WITH_AES_128_CBC_SHA,
-				tls.TLS_RSA_WITH_AES_256_CBC_SHA,
-				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-			},
-			PreferServerCipherSuites: true,
-		},
-	}
-
-	rp := &httputil.ReverseProxy{
-		Director: func(req *http.Request) {
-			log.Debugf("Processing request to: %s", req.URL)
-		},
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				// Use a TLS session cache to minimize TLS connection establishment
-				// Requires Go 1.3+
-				ClientSessionCache: tls.NewLRUClientSessionCache(SESSIONS_TO_CACHE),
-			},
-		},
-	}
-
-	h, err := mitm.Wrap(rp, cryptoConfig)
+	h, err := mitm.Wrap(client, cryptoConfig)
 	if err != nil {
 		log.Fatalf("Unable to wrap reverse proxy: %s", err)
 	}
