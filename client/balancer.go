@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/getlantern/flashlight/balancer"
+	"runtime"
+	"strings"
 )
 
 var (
@@ -25,6 +27,10 @@ func (client *Client) initBalancer(proxies map[string]*ChainedServerInfo, device
 	// Add chained (CONNECT proxy) servers.
 	log.Debugf("Adding %d chained servers", len(proxies))
 	for name, s := range proxies {
+		if strings.HasSuffix(s.PluggableTransport, "kcp") && runtime.GOOS == "android" {
+			log.Debugf("Ignoring KCP on android for now.")
+			continue
+		}
 		dialer, err := ChainedDialer(name, s, deviceID, client.proTokenGetter)
 		if err != nil {
 			log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)
