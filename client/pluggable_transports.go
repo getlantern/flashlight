@@ -8,12 +8,12 @@ import (
 	"github.com/getlantern/cmux"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/kcp-go"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/snappyconn"
 	"github.com/getlantern/tlsdialer"
 	"github.com/getlantern/withtimeout"
-	"github.com/xtaci/kcp-go"
 	"net"
 	"time"
 )
@@ -156,7 +156,9 @@ func dialKCP(network, addr string) (net.Conn, error) {
 	// TODO: the below options are hardcoded based on the defaults in kcptun.
 	// At some point, it would be nice to make these tunable via the server pt
 	// properties, but these defaults work well for now.
-	conn, err := kcp.DialWithOptions(addr, block, 10, 3)
+	conn, err := kcp.DialWithDialer(func() (net.Conn, error) {
+		return netx.DialTimeout("udp", addr, chainedDialTimeout)
+	}, block, 10, 3)
 	if err != nil {
 		return nil, err
 	}
