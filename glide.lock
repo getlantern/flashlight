@@ -1,5 +1,5 @@
 hash: cc64346dc4e368fbad6fe2b8e9b0e8d5af82966b8b3510995dbf9078163ab5ae
-updated: 2016-11-15T19:21:19.954695634-08:00
+updated: 2016-11-16T00:00:29.487536154-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -135,6 +135,8 @@ imports:
   version: e4b1cdde2256c2bb3871a7490bef9bd13532108f
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
+- name: github.com/getlantern/kcp-go
+  version: c868f164cee00eff60f2aa06e235a6cd33b09b26
 - name: github.com/getlantern/keyman
   version: 2920ae3bb58d86b9170877b7ba75d78857354b8a
   subpackages:
