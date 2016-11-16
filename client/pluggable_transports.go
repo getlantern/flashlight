@@ -24,7 +24,6 @@ type dialFactory func(*ChainedServerInfo, string) (dialFN, error)
 var pluggableTransports = map[string]dialFactory{
 	"":          defaultDialFactory,
 	"obfs4":     tcpOBFS4DialFactory,
-	"obfs4-tcp": tcpOBFS4DialFactory,
 	"obfs4-kcp": kcpOBFS4DialFactory,
 }
 
