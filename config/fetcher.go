@@ -99,11 +99,17 @@ func (cf *fetcher) fetch() ([]byte, error) {
 	// successive requests
 	req.Close = true
 
+	dump, dumperr := httputil.DumpRequest(req, false)
 	resp, err := cf.rt.RoundTrip(req)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to fetch cloud config at %s: %s", url, err)
 	}
-	dump, dumperr := httputil.DumpResponse(resp, false)
+	if dumperr != nil {
+		log.Errorf("Could not dump request: %v", dumperr)
+	} else {
+		log.Debugf("Request:\n%v", string(dump))
+	}
+	dump, dumperr = httputil.DumpResponse(resp, false)
 	if dumperr != nil {
 		log.Errorf("Could not dump response: %v", dumperr)
 	} else {
