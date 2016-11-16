@@ -20,7 +20,7 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/getlantern/go-socks5
-  version: d43a57d19a9a4c923ba7ab3a4a123f8914e378d7
+  version: 3f476a80db4ee5eeb28a7af7426f85b06ce33147
 - name: github.com/blang/semver
   version: 60ec3488bfea7cca02b021d106d9911120d25fe9
 - name: github.com/davecgh/go-spew
