@@ -19,8 +19,8 @@ imports:
   subpackages:
   - edwards25519
   - extra25519
-- name: github.com/armon/go-socks5
-  version: e75332964ef517daa070d7c38a9466a0d687e0a5
+- name: github.com/getlantern/go-socks5
+  version: 3f476a80db4ee5eeb28a7af7426f85b06ce33147
 - name: github.com/blang/semver
   version: 60ec3488bfea7cca02b021d106d9911120d25fe9
 - name: github.com/davecgh/go-spew

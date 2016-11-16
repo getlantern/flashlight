@@ -12,12 +12,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/armon/go-socks5"
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/detour"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/status"
+	"github.com/getlantern/go-socks5"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
 	"github.com/getlantern/netx"
