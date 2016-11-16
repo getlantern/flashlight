@@ -7,17 +7,15 @@ import (
 	"path"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
-	"github.com/getlantern/edgedetect"
-	"github.com/getlantern/eventual"
-	"github.com/getlantern/flashlight/pro"
-	"github.com/getlantern/golog"
-	"github.com/getlantern/tarfs"
 	"github.com/skratchdot/open-golang/open"
 
-	"github.com/getlantern/flashlight/client"
+	"github.com/getlantern/eventual"
+	"github.com/getlantern/golog"
+	"github.com/getlantern/tarfs"
+
+	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/flashlight/util"
 )
 
@@ -30,9 +28,6 @@ var (
 	server             *http.Server
 	uiaddr             string
 	allowRemoteClients bool
-	proxiedUIAddr      string
-	preferProxiedUI    int32
-	edge               = edgedetect.DefaultBrowserIsEdge()
 
 	openedExternal = false
 	externalURL    string
@@ -108,19 +103,7 @@ func Start(requestedAddr string, allowRemote bool, extURL, localHTTPTok string) 
 	}
 	uiaddr = fmt.Sprintf("%s:%s", host, port)
 
-	// Note - we display the UI using the LanternSpecialDomain. This is necessary
-	// for Microsoft Edge on Windows 10 because, being a Windows Modern App, its
-	// default network isolation settings prevent it from opening websites on the
-	// loopback address. We get around this by exploiting the fact that Edge will
-	// happily connect to our proxy server running on the loopback interface. So,
-	// we use what looks like a real domain for the UI (ui.lantern.io), the proxy
-	// detects this and reroutes the traffic to the local UI server. The proxy is
-	// allowed to connect to loopback because it doesn't have the same restriction
-	// as Microsoft Edge.
-	proxiedUIAddr = proxyDomainFor(listenAddr)
-	client.SetProxyUIAddr(proxiedUIAddr, listenAddr)
-
-	log.Debugf("UI available at http://%v and http://%v", uiaddr, proxiedUIAddr)
+	log.Debugf("UI available at http://%v", uiaddr)
 
 	return nil
 }
@@ -171,37 +154,6 @@ func Translations(filename string) ([]byte, error) {
 	return tr.(*tarfs.FileSystem).Get(filename)
 }
 
-// PreferProxiedUI returns the preferred address to serve the UI based on
-// whether or not the user's default browser is Edge. This is because Edge
-// will not allow connections to localhost by default, but we can work
-// around it with our speciial domain.
-func PreferProxiedUI(val bool) (newAddr string, addrChanged bool) {
-	previousPreferredUIAddr := GetPreferredUIAddr()
-	updated := int32(0)
-	if val {
-		updated = 1
-	}
-	atomic.StoreInt32(&preferProxiedUI, updated)
-	newPreferredUIAddr := GetPreferredUIAddr()
-	return newPreferredUIAddr, newPreferredUIAddr != previousPreferredUIAddr
-}
-
-func shouldPreferProxiedUI() bool {
-	return atomic.LoadInt32(&preferProxiedUI) == 1
-}
-
-// GetPreferredUIAddr returns the address to access the UI on, which depends
-// on whether or not we're running on Edge essgentially.
-func GetPreferredUIAddr() string {
-	// We only use the proxied UI address if the default browser is Microsoft Edge
-	if edge && shouldPreferProxiedUI() {
-		log.Debugf("Returning '%v' for proxied UI addr", proxiedUIAddr)
-		return proxiedUIAddr
-	}
-	log.Debugf("Returning plain uiaddr %v", uiaddr)
-	return uiaddr
-}
-
 // GetDirectUIAddr returns the current UI address when accessing directly.
 func GetDirectUIAddr() string {
 	return uiaddr
@@ -214,7 +166,7 @@ func GetDirectUIAddr() string {
 // asynchronously is not a problem.
 func Show() {
 	go func() {
-		uiURL := fmt.Sprintf("http://%s/?1", GetPreferredUIAddr())
+		uiURL := fmt.Sprintf("http://%s/?1", GetDirectUIAddr())
 		log.Debugf("Opening browser at %v", uiURL)
 		err := open.Run(uiURL)
 		if err != nil {

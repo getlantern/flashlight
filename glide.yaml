@@ -15,7 +15,6 @@ import:
   subpackages:
   - client
 - package: github.com/getlantern/detour
-- package: github.com/getlantern/edgedetect
 - package: github.com/getlantern/errors
 - package: github.com/getlantern/eventual
 - package: github.com/getlantern/filepersist

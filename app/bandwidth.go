@@ -120,7 +120,7 @@ func (s *notifyStatus) notifyFreeUser(n notify.Notifier, title, msg string) {
 	note := &notify.Notification{
 		Title:    title,
 		Message:  msg,
-		ClickURL: ui.GetPreferredUIAddr(),
+		ClickURL: ui.GetDirectUIAddr(),
 		IconURL:  logo,
 	}
 

@@ -11,9 +11,8 @@ import (
 func TestCheckOrigin(t *testing.T) {
 	localHTTPToken = "a-token"
 	uiaddr = "127.0.0.1:9999"
-	proxiedUIAddr = proxyDomainFor(uiaddr)
 	defer func() {
-		uiaddr, proxiedUIAddr = "", ""
+		uiaddr = ""
 	}()
 
 	var hit bool
@@ -42,11 +41,4 @@ func TestCheckOrigin(t *testing.T) {
 	req.Header.Set("Origin", "http://"+uiaddr+"/")
 	h.ServeHTTP(w, req)
 	assert.True(t, hit, "request with the same origin should pass the check")
-
-	hit = false
-	edge = true
-	PreferProxiedUI(true)
-	req.Header.Set("Origin", "http://"+proxiedUIAddr+"/")
-	h.ServeHTTP(w, req)
-	assert.True(t, hit, "request with proxied domain as origin should pass the check")
 }

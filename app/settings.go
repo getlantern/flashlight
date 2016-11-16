@@ -192,23 +192,14 @@ func newSettings(filePath string) *Settings {
 
 // start the settings service that synchronizes Lantern's configuration with every UI client
 func (s *Settings) start() error {
-	var err error
-
-	ui.PreferProxiedUI(s.GetSystemProxy())
 	helloFn := func(write func(interface{}) error) error {
 		log.Debugf("Sending Lantern settings to new client")
 		uiMap := s.uiMap()
 		return write(uiMap)
 	}
+
+	var err error
 	service, err = ui.Register(messageType, helloFn)
-	s.OnChange(SNSystemProxy, func(val interface{}) {
-		enable := val.(bool)
-		preferredUIAddr, addrChanged := ui.PreferProxiedUI(enable)
-		if !enable && addrChanged {
-			log.Debugf("System proxying disabled, redirect UI to: %v", preferredUIAddr)
-			service.Out <- map[string]string{"redirectTo": preferredUIAddr}
-		}
-	})
 	return err
 }
 
