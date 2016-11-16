@@ -1,10 +1,10 @@
-hash: 61e045f955574216a7a6acfbf0f9e72ec273b0cddae432119f6f03185cb63060
-updated: 2016-11-11T16:42:08.649024878-08:00
+hash: cc64346dc4e368fbad6fe2b8e9b0e8d5af82966b8b3510995dbf9078163ab5ae
+updated: 2016-11-15T19:21:19.954695634-08:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
 - name: git.torproject.org/pluggable-transports/obfs4.git
-  version: a9e8a62f9b914d872f0b83528c60f22bada0fcd1
+  version: 97a875ec3c0afa629405c78e750d27e4e1f851ca
   subpackages:
   - common/csrand
   - common/drbg
@@ -19,8 +19,6 @@ imports:
   subpackages:
   - edwards25519
   - extra25519
-- name: github.com/getlantern/go-socks5
-  version: 3f476a80db4ee5eeb28a7af7426f85b06ce33147
 - name: github.com/blang/semver
   version: 60ec3488bfea7cca02b021d106d9911120d25fe9
 - name: github.com/davecgh/go-spew
@@ -81,6 +79,8 @@ imports:
   version: 823d7ff3e6eb74dd6aae38a4b52207b19abfbf66
 - name: github.com/getlantern/go-loggly
   version: d15e28ab7389ed5d644ccb891d9d54154e43cd27
+- name: github.com/getlantern/go-socks5
+  version: 3f476a80db4ee5eeb28a7af7426f85b06ce33147
 - name: github.com/getlantern/go-update
   version: 4a06dc59e593012c831198e423894d2da1d091c0
   subpackages:
@@ -209,7 +209,7 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/websocket
-  version: 9fbf129ff2a3cf2467f7d0021de2eb4d3aecc109
+  version: e8f0f8aaa98dfb6586cbdf2978d511e3199a960a
 - name: github.com/hashicorp/golang-lru
   version: 0a025b7e63adc15a622f29b0b2c4c3848243bbf6
   subpackages:
@@ -231,7 +231,7 @@ imports:
   subpackages:
   - forward
 - name: github.com/mitchellh/panicwrap
-  version: ae5fab3b59df0f095ecfacb9c6443ddc78f4f69e
+  version: 168f3680ad986108df63bae07da2978f51c4ac8e
 - name: github.com/mxk/go-flowrate
   version: cca7078d478f8520f85629ad7c68962d31ed7682
   subpackages:
@@ -265,7 +265,7 @@ imports:
 - name: github.com/xtaci/kcp-go
   version: 3f35e454a331a5ad69b071fbd2d927d003470509
 - name: github.com/xtaci/smux
-  version: 60c611f2ff7411e1493071745a7f3f89e25ac624
+  version: b4a6fb87c6ff61e88833b551ce9247e09c9d71d2
 - name: golang.org/x/crypto
   version: 9477e0b78b9ac3d0b03822fd95422e2fe07627cd
   subpackages:
@@ -282,7 +282,7 @@ imports:
   - twofish
   - xtea
 - name: golang.org/x/net
-  version: 0e2717dc3cc05907dc23096ef3a9086ea93f567f
+  version: e57319ce2bbbdc638169d4756554fbaedc805399
   subpackages:
   - bpf
   - context
