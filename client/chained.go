@@ -73,7 +73,6 @@ func newServer(name string, si *ChainedServerInfo) (*chainedServer, error) {
 	// Backwards-compatibility for clients that still have old obfs4
 	// configurations on disk.
 	if si.PluggableTransport == "obfs4-tcp" {
-		log.Debugf("Converting old-style obfs4-tcp server %v to obfs4", name)
 		si.PluggableTransport = "obfs4"
 	}
 
