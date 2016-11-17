@@ -75,8 +75,8 @@ func checkOrigin(h http.Handler) http.Handler {
 					return
 				}
 			} else {
-				if GetDirectUIAddr() != originHost {
-					log.Errorf("Origin was '%v' but expecting: '%v'", originHost, GetDirectUIAddr())
+				if GetUIAddr() != originHost {
+					log.Errorf("Origin was '%v' but expecting: '%v'", originHost, GetUIAddr())
 					return
 				}
 			}

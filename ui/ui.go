@@ -154,8 +154,8 @@ func Translations(filename string) ([]byte, error) {
 	return tr.(*tarfs.FileSystem).Get(filename)
 }
 
-// GetDirectUIAddr returns the current UI address when accessing directly.
-func GetDirectUIAddr() string {
+// GetUIAddr returns the current UI address.
+func GetUIAddr() string {
 	return uiaddr
 }
 
@@ -166,7 +166,7 @@ func GetDirectUIAddr() string {
 // asynchronously is not a problem.
 func Show() {
 	go func() {
-		uiURL := fmt.Sprintf("http://%s/?1", GetDirectUIAddr())
+		uiURL := fmt.Sprintf("http://%s/?1", GetUIAddr())
 		log.Debugf("Opening browser at %v", uiURL)
 		err := open.Run(uiURL)
 		if err != nil {

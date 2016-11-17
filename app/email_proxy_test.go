@@ -37,7 +37,7 @@ func TestReadResponses(t *testing.T) {
 func TestEmailProxy(t *testing.T) {
 	// ugly hack to co-exist with integration test: only start services if not
 	// already started.
-	addr := ui.GetDirectUIAddr()
+	addr := ui.GetUIAddr()
 	if addr == "" {
 		// avoid panicking when attaching settings to the email.
 		settings = loadSettings("version", "revisionDate", "buildDate")
@@ -45,7 +45,7 @@ func TestEmailProxy(t *testing.T) {
 		assert.NoError(t, err, "should start UI service")
 		ui.Start("localhost:", false, "", "")
 		defer func() { ui.Stop() }()
-		addr = ui.GetDirectUIAddr()
+		addr = ui.GetUIAddr()
 	}
 	wsURL := "ws://" + addr + "/data"
 	conn, _, err := websocket.DefaultDialer.Dial(wsURL, http.Header{})
