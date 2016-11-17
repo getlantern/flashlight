@@ -2,6 +2,8 @@ package client
 
 import (
 	"fmt"
+	"runtime"
+	"strings"
 
 	"github.com/getlantern/flashlight/balancer"
 )
