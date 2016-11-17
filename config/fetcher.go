@@ -85,13 +85,11 @@ func (cf *fetcher) fetch() ([]byte, error) {
 	proxied.PrepareForFronting(req, cf.frontedURL)
 
 	id := cf.user.GetUserID()
-	log.Debugf("User ID %v", id)
 	if id != 0 {
 		strID := strconv.FormatInt(id, 10)
 		req.Header.Set(userIDHeader, strID)
 	}
 	tok := cf.user.GetToken()
-	log.Debugf("token %v", tok)
 	if tok != "" {
 		req.Header.Set(tokenHeader, tok)
 	}
