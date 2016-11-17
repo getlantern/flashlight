@@ -5,18 +5,11 @@ package ui
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"fmt"
-	"hash/crc32"
 )
 
 const defaultUIAddress = "127.0.0.1:0"
 
 const strictOriginCheck = true
-
-func proxyDomainFor(addr string) string {
-	cksm := crc32.Checksum([]byte(addr), crc32.MakeTable(crc32.IEEE))
-	return fmt.Sprintf("%x.lantern.io", cksm)
-}
 
 func randRead(size int) string {
 	buf := make([]byte, size)
