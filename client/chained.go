@@ -70,6 +70,12 @@ type chainedServer struct {
 }
 
 func newServer(name string, si *ChainedServerInfo) (*chainedServer, error) {
+	// Backwards-compatibility for clients that still have old obfs4
+	// configurations on disk.
+	if si.PluggableTransport == "obfs4-tcp" {
+		si.PluggableTransport = "obfs4"
+	}
+
 	if si.PluggableTransport != "" {
 		log.Debugf("Using pluggable transport %v for server at %v", si.PluggableTransport, si.Addr)
 	}
