@@ -20,6 +20,7 @@ import (
 	"github.com/getlantern/go-socks5"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
+	"github.com/getlantern/mitm"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 	"github.com/oxtoacart/bpool"
@@ -92,7 +93,19 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 	}
 
 	keepAliveIdleTimeout := idleTimeout - 5*time.Second
-	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers, client.dialCONNECT)
+	var mitmErr error
+	client.interceptCONNECT, mitmErr = proxy.CONNECT(keepAliveIdleTimeout, buffers, &proxy.MITMOpts{
+		Opts: mitm.Opts{
+			PKFile:       filepath.Join(appdir.General("Lantern"), "mitmkey.pem"),
+			CertFile:     filepath.Join(appdir.General("Lantern"), "mitmcert.pem"),
+			Organization: "Lantern",
+			CommonName:   "lantern",
+		},
+		OnError: errorResponse,
+	}, client.dialCONNECT)
+	if mitmErr != nil {
+		log.Errorf("Unable to initialize MITM'ing, continuing without MITM support: %v", mitmErr)
+	}
 	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
 	return client
 }
