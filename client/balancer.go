@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/getlantern/flashlight/balancer"
+	"github.com/getlantern/flashlight/chained"
 )
 
 var (
@@ -14,7 +15,7 @@ var (
 
 // initBalancer takes hosts from cfg.ChainedServers and it uses them to create a
 // balancer.
-func (client *Client) initBalancer(proxies map[string]*ChainedServerInfo, deviceID string) error {
+func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo, deviceID string) error {
 	if len(proxies) == 0 {
 		return fmt.Errorf("No chained servers configured, not initializing balancer")
 	}

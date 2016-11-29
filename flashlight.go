@@ -10,6 +10,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
 
+	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
@@ -92,7 +93,7 @@ func Run(httpProxyAddr string,
 	proxied.SetProxyAddr(cl.Addr)
 
 	proxiesDispatch := func(conf interface{}) {
-		proxyMap := conf.(map[string]*client.ChainedServerInfo)
+		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
 		cl.Configure(proxyMap, deviceID)
 	}

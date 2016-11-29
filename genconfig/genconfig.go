@@ -24,6 +24,7 @@ import (
 	"github.com/getlantern/tlsdialer"
 	"github.com/getlantern/yaml"
 
+	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
 )
 
@@ -53,7 +54,7 @@ var (
 
 	blacklist    = make(filter)
 	proxiedSites = make(filter)
-	fallbacks    map[string]*client.ChainedServerInfo
+	fallbacks    map[string]*chained.ChainedServerInfo
 	ftVersion    string
 	showAds      = false
 

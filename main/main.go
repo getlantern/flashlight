@@ -17,7 +17,7 @@ import (
 	"github.com/mitchellh/panicwrap"
 
 	"github.com/getlantern/flashlight/app"
-	"github.com/getlantern/flashlight/client"
+	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ui"
 )
@@ -78,7 +78,7 @@ func main() {
 	}
 
 	if *forceProxyAddr != "" {
-		client.ForceProxy(*forceProxyAddr, *forceAuthToken)
+		chained.ForceProxy(*forceProxyAddr, *forceAuthToken)
 	}
 
 	if a.ShowUI {

@@ -15,6 +15,7 @@ import (
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/detour"
 	"github.com/getlantern/eventual"
+	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/status"
 	"github.com/getlantern/go-socks5"
@@ -184,7 +185,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 
 // Configure updates the client's configuration. Configure can be called
 // before or after ListenAndServe, and can be called multiple times.
-func (client *Client) Configure(proxies map[string]*ChainedServerInfo, deviceID string) {
+func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo, deviceID string) {
 	log.Debug("Configure() called")
 	err := client.initBalancer(proxies, deviceID)
 	if err != nil {

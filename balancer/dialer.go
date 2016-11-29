@@ -2,7 +2,6 @@ package balancer
 
 import (
 	"net"
-	"net/http"
 	"sync/atomic"
 	"time"
 
@@ -38,9 +37,6 @@ type Dialer struct {
 
 	// Determines whether a dialer can be trusted with unencrypted traffic.
 	Trusted bool
-
-	// Modifies any HTTP requests made using connections from this dialer.
-	OnRequest func(req *http.Request)
 }
 
 type dialer struct {

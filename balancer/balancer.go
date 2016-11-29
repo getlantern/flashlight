@@ -6,7 +6,6 @@ import (
 	"container/heap"
 	"fmt"
 	"net"
-	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -159,13 +158,6 @@ func (b *Balancer) forceRecheck() {
 	default:
 		// Pending recheck, ignore subsequent request
 	}
-}
-
-// OnRequest calls Dialer.OnRequest for every dialer in this balancer.
-func (b *Balancer) OnRequest(req *http.Request) {
-	b.mu.RLock()
-	b.dialers.onRequest(req)
-	b.mu.RUnlock()
 }
 
 // Dial dials (network, addr) using one of the currently active configured
@@ -372,13 +364,4 @@ func (s *dialerHeap) Pop() interface{} {
 	x := old[n-1]
 	s.dialers = old[0 : n-1]
 	return x
-}
-
-func (s *dialerHeap) onRequest(req *http.Request) {
-	for _, d := range s.dialers {
-		if d.OnRequest != nil {
-			d.OnRequest(req)
-		}
-	}
-	return
 }

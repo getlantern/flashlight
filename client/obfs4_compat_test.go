@@ -1,8 +1,10 @@
 package client
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/getlantern/flashlight/chained"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestOBFS4BackwardCompatibility(t *testing.T) {
@@ -10,7 +12,9 @@ func TestOBFS4BackwardCompatibility(t *testing.T) {
 }
 
 func buildDialer() error {
-	s := &ChainedServerInfo{
+	s := &chained.ChainedServerInfo{
+		Addr:               "1.1.1.1",
+		AuthToken:          "fake-token",
 		PluggableTransport: "obfs4-tcp",
 		Cert:               "1o+SteGwt6onzK3pEhu1C2XDcKm3x6hgFuH89paQY7noEG7/O9wBtEfwvCPwUXN5MJrMaA",
 		PluggableTransportSettings: map[string]string{

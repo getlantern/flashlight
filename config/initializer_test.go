@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/flashlight/client"
+	"github.com/getlantern/flashlight/chained"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,7 +18,7 @@ func TestInit(t *testing.T) {
 	// Note these dispatch functions will receive multiple configs -- local ones,
 	// embedded ones, and remote ones.
 	proxiesDispatch := func(cfg interface{}) {
-		proxies := cfg.(map[string]*client.ChainedServerInfo)
+		proxies := cfg.(map[string]*chained.ChainedServerInfo)
 		assert.True(t, len(proxies) > 0)
 		configChan <- true
 	}
