@@ -71,7 +71,7 @@ func CreateProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 			base, err = newHTTPSProxy(name, s)
 		}
 		return base, err
-	case "obfs4-tcp":
+	case "obfs4":
 		return newOBFS4Wrapper(newHTTPProxy(name, s), s)
 	case "obfs4-kcp":
 		return newOBFS4Wrapper(newKCPProxy(name, s), s)

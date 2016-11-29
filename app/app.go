@@ -149,12 +149,26 @@ func (app *App) beforeStart() bool {
 		app.Exit(err)
 	}
 
-	uiaddr := app.Flags["uiaddr"].(string)
-	if uiaddr == "" {
-		uiaddr = settings.GetUIAddr() // stick with the last one
+	var startupURL string
+	bootstrap, err := config.ReadBootstrapSettings()
+	if err != nil {
+		log.Debugf("Could not read bootstrap settings: %v", err)
+	} else {
+		startupURL = bootstrap.StartupUrl
 	}
 
-	if app.Flags["clear-proxy-settings"].(bool) {
+	uiaddr := app.Flags["uiaddr"].(string)
+	if uiaddr == "" {
+		// stick with the last one if not specified from command line.
+		if uiaddr = settings.GetUIAddr(); uiaddr != "" {
+			if _, _, err := net.SplitHostPort(uiaddr); err != nil {
+				log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
+				uiaddr = ""
+			}
+		}
+	}
+
+	if uiaddr != "" && app.Flags["clear-proxy-settings"].(bool) {
 		// This is a workaround that attempts to fix a Windows-only problem where
 		// Lantern was unable to clean the system's proxy settings before logging
 		// off.
@@ -166,15 +180,6 @@ func (app *App) beforeStart() bool {
 		app.Exit(nil)
 	}
 
-	bootstrap, err := config.ReadBootstrapSettings()
-	var startupURL string
-	if err != nil {
-		log.Errorf("Could not read settings? %v", err)
-		startupURL = ""
-	} else {
-		startupURL = bootstrap.StartupUrl
-	}
-
 	if uiaddr != "" {
 		// Is something listening on that port?
 		if err := app.showExistingUI(uiaddr); err == nil {
@@ -184,6 +189,7 @@ func (app *App) beforeStart() bool {
 	}
 
 	log.Debugf("Starting client UI at %v", uiaddr)
+	// ui will handle empty uiaddr correctly
 	err = ui.Start(uiaddr, !app.ShowUI, startupURL, localHTTPToken(settings))
 	if err != nil {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
@@ -194,6 +200,11 @@ func (app *App) beforeStart() bool {
 	err = serveBandwidth()
 	if err != nil {
 		log.Errorf("Unable to serve bandwidth to UI: %v", err)
+	}
+
+	err = serveEmailProxy()
+	if err != nil {
+		log.Errorf("Unable to serve mandrill to UI: %v", err)
 	}
 
 	// Only run analytics once on startup.
@@ -292,11 +303,7 @@ func (app *App) onConfigUpdate(cfg *config.Global) {
 // showExistingUi triggers an existing Lantern running on the same system to
 // open a browser to the Lantern start page.
 func (app *App) showExistingUI(addr string) error {
-	host, port, err := net.SplitHostPort(addr)
-	if host == "" {
-		host = "127.0.0.1"
-	}
-	url := "http://" + host + ":" + port + "/startup"
+	url := "http://" + addr + "/startup"
 	log.Debugf("Hitting local URL: %v", url)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
