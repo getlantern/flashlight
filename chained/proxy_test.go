@@ -16,7 +16,7 @@ func TestTrusted(t *testing.T) {
 	assert.NotContains(t, p.Label(), "(trusted)")
 
 	si := &ChainedServerInfo{Addr: "1.1.1.1", AuthToken: "abcd", Cert: obfs4Cert,
-		PluggableTransport: "obfs4-tcp",
+		PluggableTransport: "obfs4",
 		PluggableTransportSettings: map[string]string{
 			"iat-mode": "0",
 		},

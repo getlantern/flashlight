@@ -21,6 +21,7 @@ import (
 
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/util"
 )
 
 const (
@@ -92,6 +93,21 @@ func EnableFileLogging(logdir string) error {
 	golog.SetOutputs(errorOut, debugOut)
 
 	return nil
+}
+
+// ZipLogFiles zip the Lantern log files under logdir to the writer. All files
+// is placed under the folder in the archieve.  It will stop and return if the
+// newly added file would make the extracted files exceed maxBytes in total.
+func ZipLogFiles(w io.Writer, logdir string, underFolder string, maxBytes int64) error {
+	if logdir == "" {
+		logdir = appdir.Logs("Lantern")
+	}
+	return util.ZipFiles(w, util.ZipOptions{
+		Glob:     "lantern.log*",
+		Dir:      logdir,
+		NewRoot:  underFolder,
+		MaxBytes: maxBytes,
+	})
 }
 
 // Configure will set up logging. An empty "addr" will configure logging

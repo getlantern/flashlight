@@ -9,14 +9,17 @@ import (
 
 type helloFnType func(func(interface{}) error) error
 
+type newMsgFnType func() interface{}
+
 type Service struct {
-	Type    string
-	In      <-chan interface{}
-	Out     chan<- interface{}
-	in      chan interface{}
-	out     chan interface{}
-	stopCh  chan bool
-	helloFn helloFnType
+	Type     string
+	In       <-chan interface{}
+	Out      chan<- interface{}
+	in       chan interface{}
+	out      chan interface{}
+	stopCh   chan bool
+	helloFn  helloFnType
+	newMsgFn newMsgFnType
 }
 
 var (
@@ -45,7 +48,16 @@ func (s *Service) write() {
 	}
 }
 
+// Register registers a WebSocket based service with an optional helloFn to
+// send initial message to connected clients.
 func Register(t string, helloFn helloFnType) (*Service, error) {
+	return RegisterWithMsgInitializer(t, helloFn, nil)
+}
+
+// RegisterWithMsgInitializer is similar to Register, but with an additional
+// newMsgFn to initialize the message type to-be received from WebSocket
+// client, instead of letting JSON unmarshaler to guess the type.
+func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFnType) (*Service, error) {
 	log.Tracef("Registering UI service %s", t)
 	mu.Lock()
 
@@ -61,11 +73,12 @@ func Register(t string, helloFn helloFnType) (*Service, error) {
 	}
 
 	s := &Service{
-		Type:    t,
-		in:      make(chan interface{}, 100),
-		out:     make(chan interface{}, 100),
-		stopCh:  make(chan bool),
-		helloFn: helloFn,
+		Type:     t,
+		in:       make(chan interface{}, 100),
+		out:      make(chan interface{}, 100),
+		stopCh:   make(chan bool),
+		helloFn:  helloFn,
+		newMsgFn: newMsgFn,
 	}
 	s.In, s.Out = s.in, s.out
 
@@ -99,6 +112,13 @@ func Unregister(t string) {
 	if services[t] != nil {
 		services[t].stopCh <- true
 		delete(services, t)
+	}
+}
+
+// To facilitate test
+func unregisterAll() {
+	for t, _ := range services {
+		Unregister(t)
 	}
 }
 
@@ -146,12 +166,16 @@ func read() {
 		}
 
 		// Delegating response to the service that registered with the given type.
-		if services[envType.Type] == nil {
+		service := services[envType.Type]
+		if service == nil {
 			log.Errorf("Message type %v belongs to an unknown service.", envType.Type)
 			continue
 		}
 
 		env := &Envelope{}
+		if service.newMsgFn != nil {
+			env.Message = service.newMsgFn()
+		}
 		d := json.NewDecoder(strings.NewReader(string(b)))
 		d.UseNumber()
 		err = d.Decode(env)
@@ -161,7 +185,7 @@ func read() {
 		}
 		log.Tracef("Forwarding message: %v", env)
 		// Pass this message and continue reading another one.
-		services[env.Type].in <- env.Message
+		service.in <- env.Message
 	}
 }
 

@@ -4,7 +4,6 @@ import:
 - package: git.torproject.org/pluggable-transports/obfs4.git
   subpackages:
   - transports/obfs4
-- package: github.com/armon/go-socks5
 - package: github.com/davecgh/go-spew
   subpackages:
   - spew
@@ -23,6 +22,7 @@ import:
 - package: github.com/getlantern/fronted
 - package: github.com/getlantern/geolookup
 - package: github.com/getlantern/go-loggly
+- package: github.com/getlantern/go-socks5
 - package: github.com/getlantern/golog
 - package: github.com/getlantern/hidden
 - package: github.com/getlantern/i18n
@@ -100,4 +100,6 @@ import:
   subpackages:
   - uaparser
 - package: github.com/Sirupsen/logrus
+- package: github.com/keighl/mandrill
+  version: ^1.1.0
 - package: github.com/getlantern/proxy
