@@ -78,6 +78,10 @@ type options struct {
 
 	// sleep the time to sleep between config fetches.
 	sleep time.Duration
+
+	// sticky specifies whether or not to only use the local config and not
+	// update it with remote data.
+	sticky bool
 }
 
 // pipeConfig creates a new config pipeline for reading a specified type of
@@ -111,17 +115,21 @@ func pipeConfig(opts *options) {
 		if embedded, errr := conf.embedded(opts.embeddedData, opts.name); errr != nil {
 			log.Errorf("Could not load embedded config %v", errr)
 		} else {
-			log.Debugf("Sending embedded config for %v", name)
+			log.Debugf("Sending embedded config for %v", opts.name)
 			configChan <- embedded
 		}
 	} else {
-		log.Debugf("Sending saved config for %v", name)
+		log.Debugf("Sending saved config for %v", opts.name)
 		configChan <- saved
 	}
 
 	// Now continually poll for new configs and pipe them back to the dispatch
 	// function.
-	go conf.poll(opts.userConfig, configChan, opts.urls, opts.sleep)
+	if !opts.sticky {
+		go conf.poll(opts.userConfig, configChan, opts.urls, opts.sleep)
+	} else {
+		log.Debugf("Using sticky config")
+	}
 }
 
 // newConfig create a new ProxyConfig instance that saves and looks for

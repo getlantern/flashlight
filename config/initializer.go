@@ -63,6 +63,7 @@ func Init(configDir string, flags map[string]interface{},
 		dispatch:     proxiesDispatch,
 		embeddedData: generated.EmbeddedProxies,
 		sleep:        1 * time.Minute,
+		sticky:       isSticky(flags),
 	}
 
 	pipeConfig(proxyOptions)
@@ -82,6 +83,7 @@ func Init(configDir string, flags map[string]interface{},
 		dispatch:     globalDispatch,
 		embeddedData: generated.GlobalConfig,
 		sleep:        24 * time.Hour,
+		sticky:       false,
 	}
 
 	pipeConfig(globalOptions)
@@ -92,7 +94,15 @@ func obfuscate(flags map[string]interface{}) bool {
 }
 
 func isStaging(flags map[string]interface{}) bool {
-	if s, ok := flags["staging"].(bool); ok {
+	return checkBool(flags, "staging")
+}
+
+func isSticky(flags map[string]interface{}) bool {
+	return checkBool(flags, "stickyconfig")
+}
+
+func checkBool(flags map[string]interface{}, key string) bool {
+	if s, ok := flags[key].(bool); ok {
 		return s
 	}
 	return false
