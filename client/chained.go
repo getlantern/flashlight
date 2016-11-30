@@ -41,7 +41,10 @@ type chainedServer struct {
 	chained.Proxy
 }
 
-func newServer(name string, si *chained.ChainedServerInfo) (*chainedServer, error) {
+func newServer(name string, _si *chained.ChainedServerInfo) (*chainedServer, error) {
+	// Copy server info to allow modifying
+	si := &chained.ChainedServerInfo{}
+	*si = *_si
 	// Backwards-compatibility for clients that still have old obfs4
 	// configurations on disk.
 	if si.PluggableTransport == "obfs4-tcp" {
