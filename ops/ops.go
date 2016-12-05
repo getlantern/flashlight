@@ -102,6 +102,7 @@ func (op *Op) Request(r *http.Request) *Op {
 	op.Set("http_method", r.Method).
 		Set("http_proto", r.Proto).
 		Set("origin", r.Host)
+	op.Origin(r)
 	host, port, err := net.SplitHostPort(r.Host)
 	if err == nil {
 		op.Set("origin_host", host).Set("origin_port", port)
@@ -147,11 +148,15 @@ func (op *Op) ProxyProtocol(v string) *Op {
 }
 
 // Origin attaches the origin to the Contetx
-func (op *Op) Origin(v string) *Op {
-	host, port, err := net.SplitHostPort(v)
-	if err == nil {
-		op.Set("origin_host", host).Set("origin_port", port)
+func (op *Op) Origin(req *http.Request) *Op {
+	host, port, err := net.SplitHostPort(req.Host)
+	if err != nil {
+		host = req.Host
 	}
+	if (port == "0" || port == "") && req.Method != http.MethodConnect {
+		port = "80"
+	}
+	op.Set("origin_host", host).Set("origin_port", port)
 	return op
 }
 
