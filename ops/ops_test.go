@@ -2,7 +2,7 @@ package ops
 
 import (
 	"fmt"
-	"github.com/getlantern/testify/assert"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
 )
