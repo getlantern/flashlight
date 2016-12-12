@@ -10,7 +10,7 @@ type locationData struct {
 	Code string `json:"code"`
 }
 
-func serveLocation() error {
+func serveLocation() {
 	helloFn := func(write func(interface{}) error) error {
 		return write(locationData{
 			Code: geolookup.GetCountry(time.Second * 30),
@@ -20,7 +20,5 @@ func serveLocation() error {
 	_, err := ui.Register("location", helloFn)
 	if err != nil {
 		log.Errorf("Error registering with UI? %v", err)
-		return err
 	}
-	return nil
 }
