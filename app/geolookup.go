@@ -1,9 +1,10 @@
 package app
 
 import (
+	"time"
+
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/ui"
-	"time"
 )
 
 type locationData struct {
@@ -12,9 +13,16 @@ type locationData struct {
 
 func serveLocation() {
 	helloFn := func(write func(interface{}) error) error {
-		return write(locationData{
-			Code: geolookup.GetCountry(time.Second * 30),
-		})
+		// avoid geolookup from blocking the application.
+		go func() {
+			err := write(locationData{
+				Code: geolookup.GetCountry(time.Second * 30),
+			})
+			if err != nil {
+				log.Error(err)
+			}
+		}()
+		return nil
 	}
 
 	_, err := ui.Register("location", helloFn)

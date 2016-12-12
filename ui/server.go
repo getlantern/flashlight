@@ -87,6 +87,7 @@ func (s *Server) Start() error {
 	}
 	ch := make(chan error, 1)
 	go func() {
+		log.Debugf("UI serving at %+v", l.Addr())
 		err := server.Serve(l)
 		log.Errorf("Error serving: %v", err)
 		ch <- err

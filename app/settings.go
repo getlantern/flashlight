@@ -57,10 +57,6 @@ const (
 	stStringArray
 )
 
-const (
-	messageType = `settings`
-)
-
 var settingMeta = map[SettingName]struct {
 	sType     settingType
 	persist   bool
@@ -147,18 +143,6 @@ func loadSettingsFrom(version, revisionDate, buildDate, path string) *Settings {
 	set[SNVersion] = version
 	set[SNBuildDate] = buildDate
 	set[SNRevisionDate] = revisionDate
-
-	// Only configure the UI once. This will typically be the case in the normal
-	// application flow, but tests might call Load twice, for example, which we
-	// want to allow.
-	once.Do(func() {
-		err := sett.start()
-		if err != nil {
-			log.Errorf("Unable to register settings service: %q", err)
-			return
-		}
-		go sett.read(service.In, service.Out)
-	})
 	return sett
 }
 
@@ -188,19 +172,6 @@ func newSettings(filePath string) *Settings {
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
 	}
-}
-
-// start the settings service that synchronizes Lantern's configuration with every UI client
-func (s *Settings) start() error {
-	helloFn := func(write func(interface{}) error) error {
-		log.Debugf("Sending Lantern settings to new client")
-		uiMap := s.uiMap()
-		return write(uiMap)
-	}
-
-	var err error
-	service, err = ui.Register(messageType, helloFn)
-	return err
 }
 
 func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {

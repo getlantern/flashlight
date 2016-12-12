@@ -62,7 +62,6 @@ func (app *App) Init() {
 	// use buffered channel to avoid blocking the caller of 'AddExitFunc'
 	// the number 10 is arbitrary
 	app.chExitFuncs = make(chan func(), 10)
-	setupUserSignal()
 }
 
 // LogPanicAndExit logs a panic and then exits the application.
@@ -194,8 +193,10 @@ func (app *App) beforeStart() bool {
 	if err != nil {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 	}
-
+	startSettingsService()
 	settings.SetUIAddr(ui.GetUIAddr())
+
+	setupUserSignal()
 
 	err = serveBandwidth()
 	if err != nil {
@@ -218,6 +219,24 @@ func (app *App) beforeStart() bool {
 	watchDirectAddrs()
 
 	return true
+}
+
+// start the settings service that synchronizes Lantern's configuration with every UI client
+func startSettingsService() {
+	messageType := `settings`
+	helloFn := func(write func(interface{}) error) error {
+		log.Debugf("Sending Lantern settings to new client")
+		uiMap := settings.uiMap()
+		return write(uiMap)
+	}
+
+	var err error
+	service, err = ui.Register(messageType, helloFn)
+	if err != nil {
+		log.Errorf("Unable to register settings service: %q", err)
+		return
+	}
+	go settings.read(service.In, service.Out)
 }
 
 // localHTTPToken fetches the local HTTP token from disk if it's there, and

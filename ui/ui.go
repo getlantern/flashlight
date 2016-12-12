@@ -23,13 +23,13 @@ var (
 
 // Start starts serving the UI.
 func Start(requestedAddr string, allowRemote bool, extURL, localHTTPTok string) error {
-	s := NewServer(requestedAddr, allowRemote, extURL, localHTTPTok)
-	attachHandlers(s, allowRemote)
+	server = NewServer(requestedAddr, allowRemote, extURL, localHTTPTok)
+	attachHandlers(server, allowRemote)
+	startUIChannel()
 
-	if err := s.Start(); err != nil {
+	if err := server.Start(); err != nil {
 		return err
 	}
-	server = s
 	return nil
 }
 

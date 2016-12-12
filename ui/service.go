@@ -69,7 +69,7 @@ func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFn
 
 	if defaultUIChannel == nil {
 		// Don't start until a service is registered.
-		start()
+		startUIChannel()
 	}
 
 	s := &Service{
@@ -122,7 +122,7 @@ func unregisterAll() {
 	}
 }
 
-func start() {
+func startUIChannel() {
 	// Establish a channel to the UI for sending and receiving updates
 	defaultUIChannel = NewChannel("/data", func(write func([]byte) error) error {
 		// Sending hello messages.
