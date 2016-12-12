@@ -67,11 +67,6 @@ func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFn
 		panic("Service was already registered.")
 	}
 
-	if defaultUIChannel == nil {
-		// Don't start until a service is registered.
-		startUIChannel()
-	}
-
 	s := &Service{
 		Type:     t,
 		in:       make(chan interface{}, 100),
@@ -128,16 +123,16 @@ func startUIChannel() {
 		// Sending hello messages.
 		mu.RLock()
 		for _, s := range services {
-			writer := func(msg interface{}) error {
-				b, err := newEnvelope(s.Type, msg)
-				if err != nil {
-					return err
-				}
-				return write(b)
-			}
-
 			// Delegating task...
 			if s.helloFn != nil {
+				writer := func(msg interface{}) error {
+					b, err := newEnvelope(s.Type, msg)
+					if err != nil {
+						return err
+					}
+					return write(b)
+				}
+
 				if err := s.helloFn(writer); err != nil {
 					log.Errorf("Error writing to socket: %q", err)
 				}
@@ -147,15 +142,13 @@ func startUIChannel() {
 		return nil
 	})
 
-	go read()
+	go readLoop(defaultUIChannel.In)
 
 	log.Debugf("Accepting websocket connections at: %s", defaultUIChannel.URL)
 }
 
-func read() {
-	// Reading from the combined input.
-	for b := range defaultUIChannel.In {
-		log.Tracef("Got incoming message from UI for %v", defaultUIChannel.URL)
+func readLoop(in <-chan []byte) {
+	for b := range in {
 		// Determining message type.
 		var envType EnvelopeType
 		err := json.Unmarshal(b, &envType)
