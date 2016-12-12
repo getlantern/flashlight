@@ -83,27 +83,14 @@ func Translations(filename string) ([]byte, error) {
 	return tr.(*tarfs.FileSystem).Get(filename)
 }
 
-// GetUIAddr returns the current UI address.
 func GetUIAddr() string {
-	if server == nil {
-		return ""
-	}
 	return server.GetUIAddr()
 }
 
 func Show() {
-	if server == nil {
-		return
-	}
 	server.Show()
 }
 
-// AddToken adds the UI domain and custom request token to the specified
-// request path. Without that token, the backend will reject the request to
-// avoid web sites detecting Lantern.
 func AddToken(in string) string {
-	if server == nil {
-		return ""
-	}
 	return server.AddToken(in)
 }

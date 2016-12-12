@@ -135,6 +135,7 @@ func (s *Server) Show() {
 	}()
 }
 
+// GetUIAddr returns the current UI address.
 func (s *Server) GetUIAddr() string {
 	return s.accessAddr
 }
