@@ -263,7 +263,7 @@ func (p BaseProxy) Addr() string {
 }
 
 func (p BaseProxy) Label() string {
-	label := p.name
+	label := fmt.Sprintf("%v at %v", p.name, p.addr)
 	if p.trusted {
 		label = label + " (trusted)"
 	}
