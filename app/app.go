@@ -207,10 +207,8 @@ func (app *App) beforeStart() bool {
 		log.Errorf("Unable to serve mandrill to UI: %v", err)
 	}
 
-	err = serveLocation()
-	if err != nil {
-		log.Errorf("Unable to serve location to UI: %v", err)
-	}
+	// Don't block on fetching the location for the UI.
+	go startLocationServing()
 
 	// Only run analytics once on startup.
 	if settings.IsAutoReport() {
@@ -220,6 +218,13 @@ func (app *App) beforeStart() bool {
 	watchDirectAddrs()
 
 	return true
+}
+
+func startLocationServing() {
+	err := serveLocation()
+	if err != nil {
+		log.Errorf("Unable to serve location to UI: %v", err)
+	}
 }
 
 // localHTTPToken fetches the local HTTP token from disk if it's there, and
