@@ -1,10 +1,12 @@
 package app
 
 import (
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/getlantern/flashlight/ui"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLocalHTTPToken(t *testing.T) {
@@ -16,6 +18,8 @@ func TestLocalHTTPToken(t *testing.T) {
 
 	defer os.Remove(tmpfile.Name()) // clean up
 
+	ui.Start(":", false, "", "")
+	defer ui.Stop()
 	set := loadSettingsFrom("1", "1/1/1", "1/1/1", tmpfile.Name())
 
 	// Just make sure we correctly set the token.

@@ -39,19 +39,19 @@ func TestEmailProxy(t *testing.T) {
 	// already started.
 	addr := ui.GetUIAddr()
 	if addr == "" {
+		ui.Start("localhost:", false, "", "")
 		// avoid panicking when attaching settings to the email.
 		settings = loadSettings("version", "revisionDate", "buildDate")
 		err := serveEmailProxy()
 		assert.NoError(t, err, "should start UI service")
-		ui.Start("localhost:", false, "", "")
-		defer func() { ui.Stop() }()
-		addr = ui.GetUIAddr()
 	}
-	wsURL := "ws://" + addr + "/data"
+	wsURL := "ws://" + ui.GetUIAddr() + "/data"
 	conn, _, err := websocket.DefaultDialer.Dial(wsURL, http.Header{})
-	assert.NoError(t, err, "should connect to Websocket")
-	defer func() { _ = conn.Close() }()
+	if !assert.NoError(t, err, "should connect to Websocket") {
+		return
+	}
 
+	defer func() { _ = conn.Close() }()
 	mandrillAPIKey = "SANDBOX_SUCCESS"
 	err = sendTemplateVia(conn)
 	assert.NoError(t, err, "should write to ws")

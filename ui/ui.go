@@ -2,135 +2,64 @@ package ui
 
 import (
 	"fmt"
-	"net"
 	"net/http"
-	"path"
-	"strings"
-	"sync"
 	"time"
-
-	"github.com/skratchdot/open-golang/open"
 
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/tarfs"
 
 	"github.com/getlantern/flashlight/pro"
-	"github.com/getlantern/flashlight/util"
 )
 
 var (
 	log = golog.LoggerFor("flashlight.ui")
 
-	l                  net.Listener
-	fs                 *tarfs.FileSystem
-	translations       = eventual.NewValue()
-	server             *http.Server
-	uiaddr             string
-	allowRemoteClients bool
+	fs           *tarfs.FileSystem
+	translations = eventual.NewValue()
 
-	openedExternal = false
-	externalURL    string
-	r              = NewServeMux()
-	localHTTPToken string
+	server *Server
 )
-
-func Handle(pattern string, handler http.Handler) {
-	r.Handle(pattern, handler)
-}
 
 // Start starts serving the UI.
 func Start(requestedAddr string, allowRemote bool, extURL, localHTTPTok string) error {
-	localHTTPToken = localHTTPTok
-	addr, err := normalizeAddr(requestedAddr)
-	if err != nil {
-		return fmt.Errorf("Unable to resolve UI address: %v", err)
+	s := NewServer(requestedAddr, allowRemote, extURL, localHTTPTok)
+	attachHandlers(s, allowRemote)
+
+	if err := s.Start(); err != nil {
+		return err
 	}
-	if allowRemote {
-		// If we want to allow remote connections, we have to bind all interfaces
-		addr = &net.TCPAddr{Port: addr.Port}
-	}
+	server = s
+	return nil
+}
 
-	l, err := net.ListenTCP("tcp4", addr)
-	if err != nil {
-		return fmt.Errorf("Unable to listen at %v. Error is: %v", addr, err)
-	}
-
-	// Setting port (case when port was 0)
-	addr.Port = l.Addr().(*net.TCPAddr).Port
-
-	// Updating listenAddr
-	listenAddr := addr.String()
-
-	unpackUI()
-
-	externalURL = extURL
-
-	allowRemoteClients = allowRemote
-
+func attachHandlers(s *Server, allowRemote bool) {
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
 	startupHandler := func(resp http.ResponseWriter, req *http.Request) {
 		// If we're allowing remote, we're in practice not showing the UI on this
 		// typically headless system, so don't allow triggering of the UI.
 		if !allowRemote {
-			Show()
+			s.Show()
 		}
 		resp.WriteHeader(http.StatusOK)
 	}
 
-	r.Handle("/pro/", pro.APIHandler())
-	r.Handle("/startup", http.HandlerFunc(startupHandler))
-	r.Handle("/", http.FileServer(fs))
+	s.Handle("/pro/", pro.APIHandler())
+	s.Handle("/startup", http.HandlerFunc(startupHandler))
+	unpackUI()
+	s.Handle("/", http.FileServer(fs))
 
-	server = &http.Server{
-		Handler:  r,
-		ErrorLog: log.AsStdLogger(),
-	}
-	go func() {
-		err := server.Serve(l)
-		if err != nil {
-			log.Errorf("Error serving: %v", err)
-		}
-	}()
+}
 
-	host, port, err := net.SplitHostPort(listenAddr)
-	if err != nil {
-		log.Fatalf("Could not parse host:port on %q", listenAddr)
-	}
-	if host == "" {
-		host = "127.0.0.1"
-	}
-	uiaddr = fmt.Sprintf("%s:%s", host, port)
-
-	log.Debugf("UI available at http://%v", uiaddr)
-
-	return nil
+func Handle(pattern string, handler http.Handler) {
+	server.Handle(pattern, handler)
 }
 
 // Stop stops the UI listener and all services. To facilitate test.
 func Stop() {
 	unregisterAll()
-	// Reset it here instead of changing how r is initialized, to avoid
-	// bringing in unexpected bugs.
-	r = NewServeMux()
-	if l != nil {
-		l.Close()
-	}
-}
-
-func normalizeAddr(requestedAddr string) (*net.TCPAddr, error) {
-	var addr string
-	if requestedAddr == "" {
-		addr = defaultUIAddress
-	} else if strings.HasPrefix(requestedAddr, "http://") {
-		log.Errorf("Client tried to start at bad address: %v", requestedAddr)
-		addr = strings.TrimPrefix(requestedAddr, "http://")
-	} else {
-		addr = requestedAddr
-	}
-
-	return net.ResolveTCPAddr("tcp4", addr)
+	server.Stop()
 }
 
 func unpackUI() {
@@ -156,56 +85,25 @@ func Translations(filename string) ([]byte, error) {
 
 // GetUIAddr returns the current UI address.
 func GetUIAddr() string {
-	return uiaddr
+	if server == nil {
+		return ""
+	}
+	return server.GetUIAddr()
 }
 
-// Show opens the UI in a browser. Note we know the UI server is
-// *listening* at this point as long as Start is correctly called prior
-// to this method. It may not be reading yet, but since we're the only
-// ones reading from those incoming sockets the fact that reading starts
-// asynchronously is not a problem.
 func Show() {
-	go func() {
-		uiURL := fmt.Sprintf("http://%s/?1", GetUIAddr())
-		log.Debugf("Opening browser at %v", uiURL)
-		err := open.Run(uiURL)
-		if err != nil {
-			log.Errorf("Error opening page to `%v`: %v", uiURL, err)
-		}
-
-		// This is for opening exernal URLs in a new browser window for partners
-		// such as Manoto.
-		onceBody := func() {
-			openExternalURL(externalURL)
-		}
-		var run sync.Once
-		run.Do(onceBody)
-	}()
-}
-
-// openExternalUrl opens an external URL of one of our partners automatically
-// at startup if configured to do so. It should only open the first time in
-// a given session that Lantern is opened.
-func openExternalURL(u string) {
-	var url string
-	if u == "" {
+	if server == nil {
 		return
-	} else if strings.HasPrefix(u, "https://www.manoto1.com/") || strings.HasPrefix(u, "https://www.facebook.com/manototv") {
-		// Here we make sure to override any old manoto URLs with the latest.
-		url = "https://www.manototv.com/iran?utm_campaign=manotolantern"
-	} else {
-		url = u
 	}
-	time.Sleep(4 * time.Second)
-	err := open.Run(url)
-	if err != nil {
-		log.Errorf("Error opening external page to `%v`: %v", uiaddr, err)
-	}
+	server.Show()
 }
 
 // AddToken adds the UI domain and custom request token to the specified
 // request path. Without that token, the backend will reject the request to
 // avoid web sites detecting Lantern.
 func AddToken(in string) string {
-	return util.SetURLParam("http://"+path.Join(uiaddr, in), "token", localHTTPToken)
+	if server == nil {
+		return ""
+	}
+	return server.AddToken(in)
 }

@@ -1,28 +1,155 @@
 package ui
 
 import (
-	"github.com/getlantern/flashlight/util"
+	"fmt"
 	"net"
 	"net/http"
 	"net/url"
+	"path"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/getlantern/flashlight/util"
+	"github.com/skratchdot/open-golang/open"
 )
 
-type ServeMux struct {
-	*http.ServeMux
+type Server struct {
+	listenAddr     string
+	accessAddr     string
+	externalURL    string
+	localHTTPToken string
+	listener       net.Listener
+	mux            *http.ServeMux
+	onceOpenExtURL sync.Once
 }
 
-func NewServeMux() *ServeMux {
-	return &ServeMux{ServeMux: http.NewServeMux()}
-}
-
-func (s *ServeMux) Handle(pattern string, handler http.Handler) {
-	applyMiddleware := func(h http.Handler) http.Handler {
-		return checkOrigin(util.NoCacheHandler(h))
+// NewServer creates a new UI server listen at addr in host:port format, or
+// arbitrary local port if addr is empty.
+// allInterfaces: when true, server will listen on all local interfaces.
+// extURL: when supplied, open the URL in addition to the UI address.
+// localHTTPToken: if set, close client connection directly if the request
+// doesn't bring the token in query parameters nor have the same origin.
+func NewServer(addr string, allInterfaces bool, extURL, localHTTPToken string) *Server {
+	addr = normalizeAddr(addr)
+	if allInterfaces {
+		_, port, err := net.SplitHostPort(addr)
+		if err != nil {
+			log.Errorf("invalid address %v", addr)
+			port = "0"
+		}
+		addr = ":" + port
 	}
-	s.ServeMux.Handle(pattern, applyMiddleware(handler))
+
+	return &Server{listenAddr: addr,
+		externalURL:    overrideManotoURL(extURL),
+		localHTTPToken: localHTTPToken,
+		mux:            http.NewServeMux(),
+	}
 }
 
-func checkOrigin(h http.Handler) http.Handler {
+func overrideManotoURL(u string) string {
+	if strings.HasPrefix(u, "https://www.manoto1.com/") || strings.HasPrefix(u, "https://www.facebook.com/manototv") {
+		// Here we make sure to override any old manoto URLs with the latest.
+		return "https://www.manototv.com/iran?utm_campaign=manotolantern"
+	} else {
+		return u
+	}
+}
+
+// Handle let the Server to handle the path with pattern using handler.
+// It should be called before Start.
+func (s *Server) Handle(pattern string, handler http.Handler) {
+	s.mux.Handle(pattern, handler)
+}
+
+func (s *Server) Start() error {
+	l, err := net.Listen("tcp", s.listenAddr)
+	if err != nil {
+		return fmt.Errorf("Unable to listen at %v. Error is: %v", s.listenAddr, err)
+	}
+
+	host, _, err := net.SplitHostPort(s.listenAddr)
+	if err != nil {
+		log.Errorf("invalid address %v", s.listenAddr)
+	}
+	if host == "" {
+		host = "localhost"
+	}
+	port := l.Addr().(*net.TCPAddr).Port
+	s.accessAddr = net.JoinHostPort(host, strconv.Itoa(port))
+	s.listener = l
+
+	server := &http.Server{
+		Handler:  s.getHandler(),
+		ErrorLog: log.AsStdLogger(),
+	}
+	ch := make(chan error, 1)
+	go func() {
+		err := server.Serve(l)
+		log.Errorf("Error serving: %v", err)
+		ch <- err
+	}()
+
+	// to capture the error starting the server
+	select {
+	case err := <-ch:
+		return err
+	case <-time.After(100 * time.Millisecond):
+		log.Debugf("UI available at http://%v", s.accessAddr)
+		return nil
+	}
+}
+
+func (s *Server) getHandler() http.Handler {
+	return checkOrigin(util.NoCacheHandler(s.mux), s.localHTTPToken, s.listenAddr)
+}
+
+// Show opens the UI in a browser. Note we know the UI server is
+// *listening* at this point as long as Start is correctly called prior
+// to this method. It may not be reading yet, but since we're the only
+// ones reading from those incoming sockets the fact that reading starts
+// asynchronously is not a problem.
+func (s *Server) Show() {
+	go func() {
+		uiURL := fmt.Sprintf("http://%s/?1", s.accessAddr)
+		log.Debugf("Opening browser at %v", uiURL)
+		err := open.Run(uiURL)
+		if err != nil {
+			log.Errorf("Error opening page to `%v`: %v", uiURL, err)
+		}
+
+		// This is for opening exernal URLs in a new browser window for
+		// partners such as Manoto.
+		if s.externalURL != "" {
+			s.onceOpenExtURL.Do(func() {
+				time.Sleep(4 * time.Second)
+				err := open.Run(s.externalURL)
+				if err != nil {
+					log.Errorf("Error opening external page to `%v`: %v", s.externalURL, err)
+				}
+			})
+		}
+	}()
+}
+
+func (s *Server) GetUIAddr() string {
+	return s.accessAddr
+}
+
+func (s *Server) Stop() error {
+	return s.listener.Close()
+}
+
+// AddToken adds the UI domain and custom request token to the specified
+// request path. Without that token, the backend will reject the request to
+// avoid web sites detecting Lantern.
+func (s *Server) AddToken(in string) string {
+	return util.SetURLParam("http://"+path.Join(s.accessAddr, in), "token", s.localHTTPToken)
+}
+
+func checkOrigin(h http.Handler, localHTTPToken, listenAddr string) http.Handler {
 	check := func(w http.ResponseWriter, r *http.Request) {
 		var clientURL string
 
@@ -58,31 +185,29 @@ func checkOrigin(h http.Handler) http.Handler {
 		}
 
 		if strictOriginCheck && !tokenMatch {
-			var originHost string
-			if originURL, err := url.Parse(clientURL); err != nil {
+			originURL, err := url.Parse(clientURL)
+			if err != nil {
 				log.Errorf("Could not parse client URL %v", clientURL)
 				return
-			} else {
-				originHost = originURL.Host
 			}
-
-			if allowRemoteClients {
-				// At least check if same port.
-				_, originPort, _ := net.SplitHostPort(originHost)
-				_, expectedPort, _ := net.SplitHostPort(uiaddr)
-				if originPort != expectedPort {
-					log.Errorf("Expecting clients connect on port: %s, but got: %s", expectedPort, originPort)
-					return
-				}
-			} else {
-				if GetUIAddr() != originHost {
-					log.Errorf("Origin was '%v' but expecting: '%v'", originHost, GetUIAddr())
-					return
-				}
+			originHost := originURL.Host
+			if !strings.HasSuffix(originHost, listenAddr) {
+				log.Errorf("Origin was '%v' but expecting: '%v'", originHost, listenAddr)
+				return
 			}
 		}
 
 		h.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(check)
+}
+
+func normalizeAddr(addr string) string {
+	if addr == "" {
+		return defaultUIAddress
+	} else if strings.HasPrefix(addr, "http://") {
+		log.Errorf("Client tried to start at bad address: %v", addr)
+		return strings.TrimPrefix(addr, "http://")
+	}
+	return addr
 }
