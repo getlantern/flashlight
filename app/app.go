@@ -207,10 +207,8 @@ func (app *App) beforeStart() bool {
 		log.Errorf("Unable to serve mandrill to UI: %v", err)
 	}
 
-	err = serveLocation()
-	if err != nil {
-		log.Errorf("Unable to serve location to UI: %v", err)
-	}
+	// Don't block on fetching the location for the UI.
+	go serveLocation()
 
 	// Only run analytics once on startup.
 	if settings.IsAutoReport() {
