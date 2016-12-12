@@ -1,5 +1,5 @@
 hash: cc64346dc4e368fbad6fe2b8e9b0e8d5af82966b8b3510995dbf9078163ab5ae
-updated: 2016-12-07T13:03:24.777736895-08:00
+updated: 2016-12-12T11:36:13.244594867-08:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -38,7 +38,7 @@ imports:
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda
-  version: 6902e0924975d5f5d230df9b2b8907b0d96cd084
+  version: eaec6a1bff74b4de41e721e869341c3624e4e798
   subpackages:
   - client
 - name: github.com/getlantern/buuid
@@ -159,7 +159,7 @@ imports:
 - name: github.com/getlantern/pathreflect
   version: b02f4864048a236150ca17c2c526158f2b3133c4
 - name: github.com/getlantern/pro-server-client
-  version: e8c294a69c60b7bfac7f1c9928556d947f248519
+  version: 35359203128874ed42d6194728c002950d67df59
   subpackages:
   - go-client
 - name: github.com/getlantern/profiling
@@ -209,7 +209,7 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/websocket
-  version: e8f0f8aaa98dfb6586cbdf2978d511e3199a960a
+  version: 0868951cdb8e69bc42df4598bdc6164ff2f1a072
 - name: github.com/hashicorp/golang-lru
   version: 0a025b7e63adc15a622f29b0b2c4c3848243bbf6
   subpackages:
@@ -231,7 +231,7 @@ imports:
   subpackages:
   - forward
 - name: github.com/mitchellh/panicwrap
-  version: fde185d0dfb5ecac6e6b201e8855da798ebcd76f
+  version: ba9e1a65e0f7975f055d50a2c0201c50d941c24c
 - name: github.com/mxk/go-flowrate
   version: cca7078d478f8520f85629ad7c68962d31ed7682
   subpackages:
@@ -267,7 +267,7 @@ imports:
 - name: github.com/xtaci/smux
   version: 427dd804ce9fb0a9e7b27a628f68a124fb0d67a6
 - name: golang.org/x/crypto
-  version: 3f77d695175f990a2967385c493939f380ee40a3
+  version: 9a6f0a01987842989747adff311d80750ba25530
   subpackages:
   - blowfish
   - cast5
@@ -282,7 +282,7 @@ imports:
   - twofish
   - xtea
 - name: golang.org/x/net
-  version: 9773060888fba93b172cedcd70127db1ab739bd1
+  version: b1a2d6e8c8b5fc8f601ead62536f02a8e1b6217d
   subpackages:
   - bpf
   - context
