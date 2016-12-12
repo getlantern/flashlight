@@ -12,7 +12,6 @@ import (
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
-	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/netx"
@@ -181,10 +180,6 @@ func (s *chainedServer) doCheck(url string,
 		success := resp.StatusCode >= 200 && resp.StatusCode <= 299
 		if success {
 			delta := int64(time.Now().Sub(start))
-			if s.Network() == "kcp" && inChina() {
-				// Heavily bias kcp results to essentially force kcp protocol
-				delta = int64(float64(delta) / 10)
-			}
 			atomic.AddInt64(totalLatency, delta)
 		} else {
 			onFailure(url)
@@ -198,8 +193,4 @@ func (s *chainedServer) doCheck(url string,
 		return false
 	}
 	return true
-}
-
-func inChina() bool {
-	return geolookup.GetCountry(50*time.Millisecond) == "CN"
 }
