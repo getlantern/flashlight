@@ -10,10 +10,12 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/detour"
+	"github.com/getlantern/easylist"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/ops"
@@ -75,6 +77,9 @@ type Client struct {
 
 	proxyAll       func() bool
 	proTokenGetter func() string
+
+	easylist   easylist.List
+	easylistMx sync.RWMutex
 }
 
 // SetProxyUIAddr sets the vanity proxy domain name and its translation.
@@ -95,7 +100,26 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 	keepAliveIdleTimeout := idleTimeout - 5*time.Second
 	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers, client.dialCONNECT)
 	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
+	go client.initEasyList()
 	return client
+}
+
+func (client *Client) initEasyList() {
+	list, err := easylist.Open(appdir.InHomeDir("easylist.txt"), 10*time.Minute)
+	if err != nil {
+		log.Errorf("Unable to open easylist: %v", err)
+		return
+	}
+	client.easylistMx.Lock()
+	client.easylist = list
+	client.easylistMx.Unlock()
+}
+
+func (client *Client) getEasyList() easylist.List {
+	client.easylistMx.RLock()
+	list := client.easylist
+	client.easylistMx.RUnlock()
+	return list
 }
 
 // Addr returns the address at which the client is listening with HTTP, blocking

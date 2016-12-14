@@ -1,5 +1,5 @@
 hash: cc64346dc4e368fbad6fe2b8e9b0e8d5af82966b8b3510995dbf9078163ab5ae
-updated: 2016-12-12T11:36:13.244594867-08:00
+updated: 2016-12-14T11:48:06.371584343-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -22,7 +22,7 @@ imports:
 - name: github.com/blang/semver
   version: 3a37c301dda64cbe17f16f661b4c976803c0e2d2
 - name: github.com/davecgh/go-spew
-  version: 346938d642f2ec3594ed81d874461961cd0faa76
+  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
   subpackages:
   - spew
 - name: github.com/dchest/siphash
@@ -38,7 +38,7 @@ imports:
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda
-  version: eaec6a1bff74b4de41e721e869341c3624e4e798
+  version: 6902e0924975d5f5d230df9b2b8907b0d96cd084
   subpackages:
   - client
 - name: github.com/getlantern/buuid
@@ -59,6 +59,8 @@ imports:
   version: 7f45deb8130a0acc553242eb0e009e3f6f3d9ce3
 - name: github.com/getlantern/detour
   version: 30cb163a67fb772d45f58c732ae5769bb0614d79
+- name: github.com/getlantern/easylist
+  version: 1db041d08d400d6303914bb46ccca3cc92aeeace
 - name: github.com/getlantern/edgedetect
   version: f58e865f680868c70f5d114b620b682a39fdaff7
 - name: github.com/getlantern/elevate
@@ -159,7 +161,7 @@ imports:
 - name: github.com/getlantern/pathreflect
   version: b02f4864048a236150ca17c2c526158f2b3133c4
 - name: github.com/getlantern/pro-server-client
-  version: 35359203128874ed42d6194728c002950d67df59
+  version: e8c294a69c60b7bfac7f1c9928556d947f248519
   subpackages:
   - go-client
 - name: github.com/getlantern/profiling
@@ -186,6 +188,8 @@ imports:
   version: f047fcda194525bddaa2d26da43c1b5400aaed6c
 - name: github.com/getlantern/tlsdialer
   version: b257e0a5981a7770c8286c8e2472f1c614371928
+- name: github.com/getlantern/urlcache
+  version: c7b8a015e51e7c3dd3bdb2e089b4deb9f4e326c1
 - name: github.com/getlantern/uuid
   version: 1318e7614b82cd38041b0b0bd3692d71f3901fb8
 - name: github.com/getlantern/waitforserver
@@ -209,7 +213,7 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/websocket
-  version: 0868951cdb8e69bc42df4598bdc6164ff2f1a072
+  version: e8f0f8aaa98dfb6586cbdf2978d511e3199a960a
 - name: github.com/hashicorp/golang-lru
   version: 0a025b7e63adc15a622f29b0b2c4c3848243bbf6
   subpackages:
@@ -231,7 +235,7 @@ imports:
   subpackages:
   - forward
 - name: github.com/mitchellh/panicwrap
-  version: ba9e1a65e0f7975f055d50a2c0201c50d941c24c
+  version: fde185d0dfb5ecac6e6b201e8855da798ebcd76f
 - name: github.com/mxk/go-flowrate
   version: cca7078d478f8520f85629ad7c68962d31ed7682
   subpackages:
@@ -240,6 +244,10 @@ imports:
   version: 4e1c5567d7c2dd59fa4c7c83d34c2f3528b025d6
 - name: github.com/pkg/errors
   version: 248dadf4e9068a0b3e79f02ed0a610d935de5302
+- name: github.com/pmezard/adblock
+  version: 37ad9ab7e321cb9028746165fd17c3e803bfb4e6
+  subpackages:
+  - adblock
 - name: github.com/rcrowley/go-metrics
   version: 1f30fe9094a513ce4c700b9a54458bbb0c96996c
 - name: github.com/Sirupsen/logrus
@@ -267,7 +275,7 @@ imports:
 - name: github.com/xtaci/smux
   version: 427dd804ce9fb0a9e7b27a628f68a124fb0d67a6
 - name: golang.org/x/crypto
-  version: 9a6f0a01987842989747adff311d80750ba25530
+  version: 3f77d695175f990a2967385c493939f380ee40a3
   subpackages:
   - blowfish
   - cast5
@@ -282,7 +290,7 @@ imports:
   - twofish
   - xtea
 - name: golang.org/x/net
-  version: b1a2d6e8c8b5fc8f601ead62536f02a8e1b6217d
+  version: 9773060888fba93b172cedcd70127db1ab739bd1
   subpackages:
   - bpf
   - context

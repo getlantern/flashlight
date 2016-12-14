@@ -12,6 +12,20 @@ import (
 func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	userAgent := req.Header.Get("User-Agent")
 
+	easylist := client.getEasyList()
+	if easylist != nil && !easylist.Allow(req) {
+		log.Debugf("Blocking %v on %v", req.URL, req.Host)
+		if req.Method == http.MethodConnect {
+			// For CONNECT requests, we pretend that it's okay but then we don't do
+			// anything afterwards. We have to do this because otherwise Chrome marks
+			// us as a bad proxy.
+			resp.WriteHeader(http.StatusOK)
+		} else {
+			resp.WriteHeader(http.StatusForbidden)
+		}
+		return
+	}
+
 	op := ops.Begin("proxy").
 		UserAgent(userAgent).
 		Origin(req)
