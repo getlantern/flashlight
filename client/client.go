@@ -105,7 +105,7 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 }
 
 func (client *Client) initEasyList() {
-	list, err := easylist.Open(appdir.InHomeDir("easylist.txt"), 10*time.Minute)
+	list, err := easylist.Open(appdir.InHomeDir("easylist.txt"), 1*time.Hour)
 	if err != nil {
 		log.Errorf("Unable to open easylist: %v", err)
 		return
