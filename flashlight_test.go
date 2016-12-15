@@ -3,6 +3,8 @@ package flashlight
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
+	"encoding/binary"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -116,4 +118,17 @@ func waitForServer(addr string, limit time.Duration, t *testing.T) {
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
+}
+
+func TestIncludeInSample(t *testing.T) {
+	included := 0
+	b := make([]byte, 8)
+	for i := uint64(0); i < 100; i++ {
+		binary.BigEndian.PutUint64(b, i)
+		if includeInSample(base64.StdEncoding.EncodeToString(b[2:]), 0.01) {
+			included++
+		}
+	}
+	// TODO: yes, this is wrong, but we are sampling
+	assert.Equal(t, 4, included, "4% should have been included")
 }

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/balancer"
+	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
@@ -54,7 +55,7 @@ func newServer(name string, _si *chained.ChainedServerInfo) (*chainedServer, err
 	if err != nil {
 		return nil, err
 	}
-	return &chainedServer{p}, nil
+	return &chainedServer{borda.WrapProxy(p)}, nil
 }
 
 func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*balancer.Dialer, error) {
