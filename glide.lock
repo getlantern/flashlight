@@ -80,7 +80,7 @@ imports:
 - name: github.com/getlantern/go-loggly
   version: d15e28ab7389ed5d644ccb891d9d54154e43cd27
 - name: github.com/getlantern/go-socks5
-  version: 3f476a80db4ee5eeb28a7af7426f85b06ce33147
+  version: 7996e9d8211eef5d9319eb589ddd2557a2d2a23c
 - name: github.com/getlantern/go-update
   version: 4a06dc59e593012c831198e423894d2da1d091c0
   subpackages:
@@ -167,7 +167,7 @@ imports:
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxy
-  version: 24caf02f302602f57f8202834d5c87e1203b29f3
+  version: 7e28e3519af14373ea8ef327f6be865d02256305
 - name: github.com/getlantern/proxybench
   version: 93604a4e1637ba8063f22f478d302bd883f89127
 - name: github.com/getlantern/rot13

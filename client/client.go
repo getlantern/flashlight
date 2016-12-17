@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -21,11 +22,8 @@ import (
 	"github.com/getlantern/go-socks5"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
-	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 	"github.com/oxtoacart/bpool"
-
-	"golang.org/x/net/context"
 )
 
 var (
@@ -171,7 +169,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 			if portErr != nil {
 				return nil, portErr
 			}
-			return client.doDial(true, addr, port)
+			return client.doDial(ctx, true, addr, port)
 		},
 	}
 	server, err := socks5.New(conf)
@@ -229,23 +227,23 @@ func (client *Client) proxiedDialer(orig func(network, addr string) (net.Conn, e
 	}
 }
 
-func (client *Client) dialCONNECT(network, addr string) (conn net.Conn, err error) {
-	return client.dial(true, network, addr)
+func (client *Client) dialCONNECT(ctx context.Context, network, addr string) (conn net.Conn, err error) {
+	return client.dial(ctx, true, network, addr)
 }
 
-func (client *Client) dialHTTP(network, addr string) (conn net.Conn, err error) {
-	return client.dial(false, network, addr)
+func (client *Client) dialHTTP(ctx context.Context, network, addr string) (conn net.Conn, err error) {
+	return client.dial(ctx, false, network, addr)
 }
 
-func (client *Client) dial(isConnect bool, network, addr string) (conn net.Conn, err error) {
+func (client *Client) dial(ctx context.Context, isConnect bool, network, addr string) (conn net.Conn, err error) {
 	port, err := client.portForAddress(addr)
 	if err != nil {
 		return nil, err
 	}
-	return client.doDial(isConnect, addr, port)
+	return client.doDial(ctx, isConnect, addr, port)
 }
 
-func (client *Client) doDial(isCONNECT bool, addr string, port int) (net.Conn, error) {
+func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, port int) (net.Conn, error) {
 	// Establish outbound connection
 	if client.shouldSendToProxy(addr, port) {
 		d := client.proxiedDialer(func(network, addr string) (net.Conn, error) {
@@ -262,11 +260,32 @@ func (client *Client) doDial(isCONNECT bool, addr string, port int) (net.Conn, e
 			}
 			return bal.Dial(proto, addr)
 		})
-		return d("tcp", addr)
+		// TODO: pass context down to all layers.
+		chDone := make(chan bool)
+		var conn net.Conn
+		var err error
+		go func() {
+			conn, err = d("tcp", addr)
+			chDone <- true
+		}()
+		select {
+		case <-chDone:
+			return conn, err
+		case <-ctx.Done():
+			go func() {
+				<-chDone
+				if conn != nil {
+					log.Debugf("Connection to %s established too late, closing", addr)
+					conn.Close()
+				}
+			}()
+			return nil, ctx.Err()
+		}
 	}
 
 	log.Tracef("Port not allowed, bypassing proxy and sending request directly to %v", addr)
-	return netx.DialTimeout("tcp", addr, 1*time.Minute)
+	var d net.Dialer
+	return d.DialContext(ctx, "tcp", addr)
 }
 
 func (client *Client) shouldSendToProxy(addr string, port int) bool {

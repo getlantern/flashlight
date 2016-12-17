@@ -23,6 +23,7 @@ import:
 - package: github.com/getlantern/geolookup
 - package: github.com/getlantern/go-loggly
 - package: github.com/getlantern/go-socks5
+  version: 7996e9d
 - package: github.com/getlantern/golog
 - package: github.com/getlantern/hidden
 - package: github.com/getlantern/i18n
@@ -103,3 +104,4 @@ import:
 - package: github.com/keighl/mandrill
   version: ^1.1.0
 - package: github.com/getlantern/proxy
+  version: 7e28e35
