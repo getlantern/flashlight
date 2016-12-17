@@ -97,7 +97,7 @@ imports:
 - name: github.com/getlantern/hidden
   version: d52a649ab33af200943bb599898dbdcfdbc94cb7
 - name: github.com/getlantern/http-proxy
-  version: dfb6e25419435357f4fbaffc5aab4041caee5038
+  version: 9b6dca52596c9fb9461eb1d685d1f1109339eab0
   subpackages:
   - buffers
   - commonfilter
@@ -144,7 +144,7 @@ imports:
 - name: github.com/getlantern/measured
   version: 9abc2622c88edcbe1436a80e69f912b3ccfc73bf
 - name: github.com/getlantern/netx
-  version: 70375a276c57e76c1fe1e2fbdb4c2d2714a67b39
+  version: 73cb70f5b027da6ee8c87c4c5a21b78e7cf8e9ce
 - name: github.com/getlantern/notifier
   version: 5acd0ccf0e6c29710d332a42f580e92c3b04ae7b
   subpackages:

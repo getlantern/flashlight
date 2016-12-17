@@ -22,6 +22,7 @@ import (
 	"github.com/getlantern/go-socks5"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
+	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 	"github.com/oxtoacart/bpool"
 )
@@ -284,8 +285,8 @@ func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, p
 	}
 
 	log.Tracef("Port not allowed, bypassing proxy and sending request directly to %v", addr)
-	var d net.Dialer
-	return d.DialContext(ctx, "tcp", addr)
+	// Use netx because on Android, we need a special protected dialer
+	return netx.DialContext(ctx, "tcp", addr)
 }
 
 func (client *Client) shouldSendToProxy(addr string, port int) bool {

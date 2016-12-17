@@ -32,6 +32,7 @@ import:
 - package: github.com/getlantern/keyman
 - package: github.com/getlantern/launcher
 - package: github.com/getlantern/netx
+  version: 73cb70f
 - package: github.com/getlantern/notifier
 - package: github.com/getlantern/ops
 - package: github.com/getlantern/osversion
@@ -69,6 +70,7 @@ import:
   - utils
 - package: github.com/getlantern/http-proxy-lantern
 - package: github.com/getlantern/http-proxy
+  version: 9b6dca5
 - package: github.com/getlantern/fdcount
 - package: github.com/getlantern/buuid
 - package: github.com/getlantern/bytecounting
