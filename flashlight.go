@@ -2,14 +2,23 @@ package flashlight
 
 import (
 	"crypto/x509"
+	"encoding/base64"
+	"encoding/binary"
+	"fmt"
 	"path/filepath"
+	"runtime"
 	"sync"
+	"time"
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/jibber_jabber"
 	"github.com/getlantern/keyman"
+	"github.com/getlantern/ops"
+	"github.com/getlantern/osversion"
 
+	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config"
@@ -80,6 +89,7 @@ func Run(httpProxyAddr string,
 	configDir string,
 	stickyConfig bool,
 	proxyAll func() bool,
+	autoReport func() bool,
 	flagsAsMap map[string]interface{},
 	beforeStart func() bool,
 	afterStart func(),
@@ -88,6 +98,7 @@ func Run(httpProxyAddr string,
 	onError func(err error),
 	deviceID string) error {
 	displayVersion()
+	initContext(deviceID, Version, RevisionDate)
 
 	cl := client.NewClient(proxyAll, userConfig.GetToken)
 	proxied.SetProxyAddr(cl.Addr)
@@ -102,7 +113,7 @@ func Run(httpProxyAddr string,
 		// the type in the factory method above.
 		cfg := conf.(*config.Global)
 		log.Debugf("Applying global config")
-		applyClientConfig(cl, cfg, deviceID)
+		applyClientConfig(cl, cfg, deviceID, autoReport)
 		onConfigUpdate(cfg)
 	}
 	config.Init(configDir, flagsAsMap, userConfig, proxiesDispatch, globalDispatch)
@@ -135,14 +146,21 @@ func Run(httpProxyAddr string,
 	return nil
 }
 
-func applyClientConfig(client *client.Client, cfg *config.Global, deviceID string) {
+func applyClientConfig(client *client.Client, cfg *config.Global, deviceID string, autoReport func() bool) {
 	certs, err := getTrustedCACerts(cfg)
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
 	} else if cfg.Client != nil {
 		fronted.Configure(certs, cfg.Client.MasqueradeSets, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
 	}
-	logging.Configure(cfg.CloudConfigCA, deviceID, Version, RevisionDate, cfg.BordaReportInterval, cfg.BordaSamplePercentage, cfg.LogglySamplePercentage)
+
+	canEnableLoggly := includeInSample(deviceID, cfg.LogglySamplePercentage)
+	enableLoggly := func() bool { return canEnableLoggly && autoReport() }
+	logging.Configure(cfg.CloudConfigCA, enableLoggly)
+
+	canEnableBorda := includeInSample(deviceID, cfg.BordaSamplePercentage)
+	enableBorda := func() bool { return canEnableBorda && autoReport() }
+	borda.Configure(cfg.BordaReportInterval, enableBorda)
 }
 
 func getTrustedCACerts(cfg *config.Global) (pool *x509.CertPool, err error) {
@@ -159,4 +177,52 @@ func getTrustedCACerts(cfg *config.Global) (pool *x509.CertPool, err error) {
 
 func displayVersion() {
 	log.Debugf("---- flashlight version: %s, release: %s, build revision date: %s ----", Version, PackageVersion, RevisionDate)
+}
+
+func includeInSample(deviceID string, samplePercentage float64) bool {
+	if samplePercentage == 0 {
+		return false
+	}
+
+	// Sample a subset of device IDs.
+	// DeviceID is expected to be a Base64 encoded 48-bit (6 byte) MAC address
+	deviceIDBytes, base64Err := base64.StdEncoding.DecodeString(deviceID)
+	if base64Err != nil {
+		log.Debugf("Error decoding base64 deviceID %v: %v", deviceID, base64Err)
+		return false
+	}
+	if len(deviceIDBytes) != 6 {
+		log.Debugf("Unexpected DeviceID length %v: %d", deviceID, len(deviceIDBytes))
+		return false
+	}
+	// Pad and decode to int
+	paddedDeviceIDBytes := append(deviceIDBytes, 0, 0)
+	deviceIDInt := binary.BigEndian.Uint64(paddedDeviceIDBytes)
+	return deviceIDInt%uint64(1/samplePercentage) == 0
+}
+
+func initContext(deviceID string, version string, revisionDate string) {
+	// Using "application" allows us to distinguish between errors from the
+	// lantern client vs other sources like the http-proxy, etop.
+	ops.SetGlobal("app", "lantern-client")
+	ops.SetGlobal("app_version", fmt.Sprintf("%v (%v)", version, revisionDate))
+	ops.SetGlobal("go_version", runtime.Version())
+	ops.SetGlobal("os_name", runtime.GOOS)
+	ops.SetGlobal("os_arch", runtime.GOARCH)
+	ops.SetGlobal("device_id", deviceID)
+	ops.SetGlobalDynamic("geo_country", func() interface{} { return geolookup.GetCountry(0) })
+	ops.SetGlobalDynamic("client_ip", func() interface{} { return geolookup.GetIP(0) })
+	ops.SetGlobalDynamic("timezone", func() interface{} { return time.Now().Format("MST") })
+	ops.SetGlobalDynamic("locale_language", func() interface{} {
+		lang, _ := jibber_jabber.DetectLanguage()
+		return lang
+	})
+	ops.SetGlobalDynamic("locale_country", func() interface{} {
+		country, _ := jibber_jabber.DetectTerritory()
+		return country
+	})
+
+	if osStr, err := osversion.GetHumanReadable(); err == nil {
+		ops.SetGlobal("os_version", osStr)
+	}
 }
