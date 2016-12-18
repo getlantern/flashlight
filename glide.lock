@@ -1,5 +1,5 @@
-hash: cc64346dc4e368fbad6fe2b8e9b0e8d5af82966b8b3510995dbf9078163ab5ae
-updated: 2016-12-12T11:36:13.244594867-08:00
+hash: 896fe64452b150ed51dd7fac43c3d0ccc612692a7402666712786a3dbb546be7
+updated: 2016-12-17T22:48:11.807182407-08:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -143,6 +143,8 @@ imports:
   version: bc9fc3b11894e839c3fcb049f12e8974d7e48497
 - name: github.com/getlantern/measured
   version: 9abc2622c88edcbe1436a80e69f912b3ccfc73bf
+- name: github.com/getlantern/mockconn
+  version: 8c509fe01ae0443e11db44f94435507daad53a73
 - name: github.com/getlantern/netx
   version: 73cb70f5b027da6ee8c87c4c5a21b78e7cf8e9ce
 - name: github.com/getlantern/notifier

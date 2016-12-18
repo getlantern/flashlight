@@ -107,3 +107,4 @@ import:
   version: ^1.1.0
 - package: github.com/getlantern/proxy
   version: 7e28e35
+- package: github.com/getlantern/mockconn

@@ -21,13 +21,14 @@ func isBrowser(ua string) bool {
 // handler available from getHandler() and latest ReverseProxy available from
 // getReverseProxy().
 func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	userAgent := req.Header.Get("User-Agent")
+	client.serveHTTPWithContext(context.Background(), resp, req)
+}
 
-	ctx := context.Background()
+func (client *Client) serveHTTPWithContext(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	userAgent := req.Header.Get("User-Agent")
 	if isBrowser(userAgent) {
 		ctx, _ = context.WithTimeout(ctx, BrowserTimeout)
 	}
-
 	op := ops.Begin("proxy").
 		UserAgent(userAgent).
 		Origin(req)
