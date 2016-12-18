@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -28,6 +29,11 @@ import (
 	"github.com/oxtoacart/bpool"
 
 	"golang.org/x/net/context"
+)
+
+const (
+	headerReferer       = "Referer"
+	headerXFrameOptions = "X-Frame-Options"
 )
 
 var (
@@ -56,6 +62,8 @@ var (
 	}
 
 	buffers = bpool.NewBytePool(1000, 32768)
+
+	isMobile = runtime.GOOS == "android"
 )
 
 // Client is an HTTP proxy that accepts connections from local programs and
@@ -99,8 +107,10 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 
 	keepAliveIdleTimeout := idleTimeout - 5*time.Second
 	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers, client.dialCONNECT)
-	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
-	go client.initEasyList()
+	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, fixXFrameOptions, errorResponse, client.dialHTTP)
+	if !isMobile {
+		go client.initEasyList()
+	}
 	return client
 }
 
@@ -355,6 +365,44 @@ func InConfigDir(configDir string, filename string) (string, error) {
 	}
 
 	return filepath.Join(cdir, filename), nil
+}
+
+// addLanternBanner generates a page with an IFrame that loads the original page
+// under a Lantern advertising banner.
+func addLanternBanner(resp http.ResponseWriter, req *http.Request) {
+	u := req.URL
+	if u.Host == "" {
+		u.Host = req.Host
+	}
+
+	// TODO: use decent design for this
+	// TODO: load Lantern image and other resources locally
+	resp.WriteHeader(http.StatusOK)
+	fmt.Fprint(resp, `
+			<html>
+<body style="padding: 0px; margin: 0px;">
+<div style="width: 100%; height: 50px; background-color: #00c1d7; font-size: 20px; padding-top: 10px; text-align: center; color: #FFFFFF;">
+    This page brought to you by <img src="https://getlantern.org/static/images/logo.png" height="30px"></img>, buy Pro!
+</div>
+<iframe src="`)
+	fmt.Fprint(resp, u.String())
+	fmt.Fprint(resp, `" width="100%" height="100%"></iframe>
+</body>
+</html>
+`)
+}
+
+func fixXFrameOptions(resp *http.Response) *http.Response {
+	if strings.EqualFold(resp.Header.Get(headerXFrameOptions), "DENY") {
+		// We need to remove X-Frame-Options DENY so that we can display content in
+		// our IFrame. See
+		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
+		// for description of options.
+		// TODO: might need to handle ALLOW-FROM, not sure ...
+		resp.Header.Set(headerXFrameOptions, "SAMEORIGIN")
+	}
+
+	return resp
 }
 
 func errorResponse(req *http.Request, err error) *http.Response {

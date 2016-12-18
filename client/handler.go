@@ -12,18 +12,20 @@ import (
 func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	userAgent := req.Header.Get("User-Agent")
 
-	easylist := client.getEasyList()
-	if easylist != nil && !easylist.Allow(req) {
-		log.Debugf("Blocking %v on %v", req.URL, req.Host)
-		if req.Method == http.MethodConnect {
-			// For CONNECT requests, we pretend that it's okay but then we don't do
-			// anything afterwards. We have to do this because otherwise Chrome marks
-			// us as a bad proxy.
-			resp.WriteHeader(http.StatusOK)
-		} else {
-			resp.WriteHeader(http.StatusForbidden)
+	if !isMobile {
+		easylist := client.getEasyList()
+		if easylist != nil && !easylist.Allow(req) {
+			log.Debugf("Blocking %v on %v", req.URL, req.Host)
+			if req.Method == http.MethodConnect {
+				// For CONNECT requests, we pretend that it's okay but then we don't do
+				// anything afterwards. We have to do this because otherwise Chrome marks
+				// us as a bad proxy.
+				resp.WriteHeader(http.StatusOK)
+			} else {
+				resp.WriteHeader(http.StatusForbidden)
+			}
+			return
 		}
-		return
 	}
 
 	op := ops.Begin("proxy").
@@ -39,8 +41,15 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 			log.Error(op.FailIf(err))
 		}
 	} else {
+		if !isMobile && req.Method == http.MethodGet && req.Header.Get(headerReferer) == "" {
+			// Show a frame that contains the Lantern header
+			addLanternBanner(resp, req)
+			return
+		}
+
 		// Direct proxying can only be used for plain HTTP connections.
 		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
+		log.Debugf("************* %v Referer: %v", req.URL, req.Header.Get("Referer"))
 		err := client.interceptHTTP(resp, req)
 		if err != nil {
 			log.Error(op.FailIf(err))

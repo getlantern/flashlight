@@ -1,5 +1,5 @@
 hash: cc64346dc4e368fbad6fe2b8e9b0e8d5af82966b8b3510995dbf9078163ab5ae
-updated: 2016-12-14T11:48:06.371584343-06:00
+updated: 2016-12-18T08:07:37.75374865-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -60,7 +60,7 @@ imports:
 - name: github.com/getlantern/detour
   version: 30cb163a67fb772d45f58c732ae5769bb0614d79
 - name: github.com/getlantern/easylist
-  version: 1db041d08d400d6303914bb46ccca3cc92aeeace
+  version: f52d2757bdf209ef1e84245ae2c0aab386883f5b
 - name: github.com/getlantern/edgedetect
   version: f58e865f680868c70f5d114b620b682a39fdaff7
 - name: github.com/getlantern/elevate
@@ -189,7 +189,7 @@ imports:
 - name: github.com/getlantern/tlsdialer
   version: b257e0a5981a7770c8286c8e2472f1c614371928
 - name: github.com/getlantern/urlcache
-  version: c7b8a015e51e7c3dd3bdb2e089b4deb9f4e326c1
+  version: ca8b08b841e90807738a71c836fa69c57730b6b9
 - name: github.com/getlantern/uuid
   version: 1318e7614b82cd38041b0b0bd3692d71f3901fb8
 - name: github.com/getlantern/waitforserver
