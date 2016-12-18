@@ -49,7 +49,6 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 
 		// Direct proxying can only be used for plain HTTP connections.
 		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
-		log.Debugf("************* %v Referer: %v", req.URL, req.Header.Get("Referer"))
 		err := client.interceptHTTP(resp, req)
 		if err != nil {
 			log.Error(op.FailIf(err))
