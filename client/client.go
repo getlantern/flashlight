@@ -393,13 +393,13 @@ func addLanternBanner(resp http.ResponseWriter, req *http.Request) {
 }
 
 func fixXFrameOptions(resp *http.Response) *http.Response {
-	if strings.EqualFold(resp.Header.Get(headerXFrameOptions), "DENY") {
+	if resp.Header.Get(headerXFrameOptions) != "" {
 		// We need to remove X-Frame-Options DENY so that we can display content in
 		// our IFrame. See
 		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
 		// for description of options.
 		// TODO: might need to handle ALLOW-FROM, not sure ...
-		resp.Header.Set(headerXFrameOptions, "SAMEORIGIN")
+		resp.Header.Set(headerXFrameOptions, "ALLOW")
 	}
 
 	return resp
