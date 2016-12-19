@@ -379,15 +379,15 @@ func addLanternBanner(resp http.ResponseWriter, req *http.Request) {
 	// TODO: load Lantern image and other resources locally
 	resp.WriteHeader(http.StatusOK)
 	fmt.Fprint(resp, `
-			<html>
-<body style="padding: 0px; margin: 0px;">
-<div style="width: 100%; height: 50px; background-color: #00c1d7; font-size: 20px; padding-top: 10px; text-align: center; color: #FFFFFF;">
-    This page brought to you by <img src="https://getlantern.org/static/images/logo.png" height="30px"></img>, buy Pro!
-</div>
-<iframe src="`)
+<html>
+	<body style="padding: 0px; margin: 0px;">
+	<div style="width: 100%; height: 30px; background-color: rgba(0, 193, 215, 1); font-size: 20px; padding-top: 10px; text-align: center; background-image: url(file:///Users/ox.to.a.cart/logo.png); background-repeat: no-repeat; background-position: 5px 5px; color: #ffffff">
+      This page brought to you by Lantern, buy Pro!
+  </div>
+	<iframe src="`)
 	fmt.Fprint(resp, u.String())
 	fmt.Fprint(resp, `" width="100%" height="100%"></iframe>
-</body>
+	</body>
 </html>
 `)
 }
