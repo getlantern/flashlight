@@ -81,9 +81,6 @@ import:
 - package: github.com/getlantern/measured
 - package: github.com/getlantern/tlsdefaults
 - package: github.com/getlantern/waitforserver
-- package: github.com/stretchr/testify
-  subpackages:
-  - assert
 - package: github.com/getlantern/grtrack
 - package: github.com/golang/groupcache
   subpackages:
@@ -108,3 +105,10 @@ import:
 - package: github.com/getlantern/proxy
   version: 7e28e35
 - package: github.com/getlantern/mockconn
+testImport:
+- package: github.com/stretchr/testify
+  subpackages:
+  - assert
+- package: golang.org/x/net
+  subpackages:
+  - proxy

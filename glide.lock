@@ -1,5 +1,5 @@
-hash: 896fe64452b150ed51dd7fac43c3d0ccc612692a7402666712786a3dbb546be7
-updated: 2016-12-21T09:56:05.880086475-08:00
+hash: 725e555a27219ba56b4b8cf7f77427b932d8bd185fda04f48c7aed35a9900a7b
+updated: 2016-12-21T10:10:46.910473177-08:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -252,10 +252,6 @@ imports:
   version: 75fb7ed4208cf72d323d7d02fd1a5964a7a9073c
   subpackages:
   - open
-- name: github.com/stretchr/testify
-  version: 2402e8e7a02fc811447d11f881aa9746cdc57983
-  subpackages:
-  - assert
 - name: github.com/ua-parser/uap-go
   version: 08c9ab17c54f06ccfe5256695a9f715a47404cfe
   subpackages:
@@ -304,6 +300,10 @@ testImports:
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
   - difflib
+- name: github.com/stretchr/testify
+  version: 2402e8e7a02fc811447d11f881aa9746cdc57983
+  subpackages:
+  - assert
 - name: gopkg.in/bsm/ratelimit.v1
   version: db14e161995a5177acef654cb0dd785e8ee8bc22
 - name: gopkg.in/redis.v3
