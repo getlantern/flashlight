@@ -1,5 +1,5 @@
 hash: 896fe64452b150ed51dd7fac43c3d0ccc612692a7402666712786a3dbb546be7
-updated: 2016-12-17T22:48:11.807182407-08:00
+updated: 2016-12-21T09:56:05.880086475-08:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -38,7 +38,7 @@ imports:
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda
-  version: eaec6a1bff74b4de41e721e869341c3624e4e798
+  version: 7f4e9eb4a9257ac45a31b1d9c8de0d602c43d6a2
   subpackages:
   - client
 - name: github.com/getlantern/buuid
@@ -50,7 +50,7 @@ imports:
 - name: github.com/getlantern/checkfallbacks
   version: 16263f2c042a0dd5366bccb3364d31ab1c4bb9a0
 - name: github.com/getlantern/cmux
-  version: d5cfc0da5b6953f5feba862455df741c204db719
+  version: 28e8bb95109fb227116226ae6f3a0890a3bd78e3
 - name: github.com/getlantern/connpool
   version: d04ff90bba7bdee0d9627a687b79fb0cb407d001
 - name: github.com/getlantern/context
@@ -161,7 +161,7 @@ imports:
 - name: github.com/getlantern/pathreflect
   version: b02f4864048a236150ca17c2c526158f2b3133c4
 - name: github.com/getlantern/pro-server-client
-  version: 35359203128874ed42d6194728c002950d67df59
+  version: 518a454821272e2d0f5372f7958ac2f84243938d
   subpackages:
   - go-client
 - name: github.com/getlantern/profiling
@@ -171,11 +171,13 @@ imports:
 - name: github.com/getlantern/proxy
   version: 7e28e3519af14373ea8ef327f6be865d02256305
 - name: github.com/getlantern/proxybench
-  version: 93604a4e1637ba8063f22f478d302bd883f89127
+  version: 9eb1a7eb9ee31fccec14a89db42863e10c51460f
 - name: github.com/getlantern/rot13
   version: 33f93fc1fe85c042c0667a1814e6379bd5e7eb40
 - name: github.com/getlantern/rotator
   version: 013d4f8e36a2f6369b2435d89866056b5b74c69e
+- name: github.com/getlantern/smux
+  version: c1f29b44d895837d941715ec7248896693c177fc
 - name: github.com/getlantern/snappyconn
   version: d99ceb334e5503f023b658b83083aff6521d67ed
 - name: github.com/getlantern/stack
@@ -203,7 +205,7 @@ imports:
 - name: github.com/getlantern/yaml
   version: 97d86b60f57eeca9d70c02763ed2565bafc17585
 - name: github.com/golang/groupcache
-  version: a6b377e3400b08991b80d6805d627f347f983866
+  version: d092608c065831f1984ac9d332ca5b2c95a11f57
   subpackages:
   - lru
 - name: github.com/golang/snappy
@@ -211,7 +213,7 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/websocket
-  version: 0868951cdb8e69bc42df4598bdc6164ff2f1a072
+  version: 3ab3a8b8831546bd18fd182c20687ca853b2bb13
 - name: github.com/hashicorp/golang-lru
   version: 0a025b7e63adc15a622f29b0b2c4c3848243bbf6
   subpackages:
@@ -251,7 +253,7 @@ imports:
   subpackages:
   - open
 - name: github.com/stretchr/testify
-  version: 18a02ba4a312f95da08ff4cfc0055750ce50ae9e
+  version: 2402e8e7a02fc811447d11f881aa9746cdc57983
   subpackages:
   - assert
 - name: github.com/ua-parser/uap-go
@@ -265,11 +267,9 @@ imports:
   subpackages:
   - utils
 - name: github.com/xtaci/kcp-go
-  version: 1a8d8c1d4fb43cee8cfc32fa464d2592a2923f1a
-- name: github.com/xtaci/smux
-  version: 427dd804ce9fb0a9e7b27a628f68a124fb0d67a6
+  version: a67e3a7cf5693b99b8b5415b66e4c0d067631dac
 - name: golang.org/x/crypto
-  version: 9a6f0a01987842989747adff311d80750ba25530
+  version: f5719d24587163700c5f7fa625ef3e05d9b372e7
   subpackages:
   - blowfish
   - cast5
@@ -284,7 +284,7 @@ imports:
   - twofish
   - xtea
 - name: golang.org/x/net
-  version: b1a2d6e8c8b5fc8f601ead62536f02a8e1b6217d
+  version: 45e771701b814666a7eb299e6c7a57d0b1799e91
   subpackages:
   - bpf
   - context
@@ -292,7 +292,7 @@ imports:
   - internal/netreflect
   - ipv4
 - name: golang.org/x/sys
-  version: 478fcf54317e52ab69f40bb4c7a1520288d7f7ea
+  version: d75a52659825e75fff6158388dddc6a5b04f9ba5
   repo: https://github.com/golang/sys
   vcs: git
   subpackages:
