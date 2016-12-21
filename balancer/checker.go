@@ -48,8 +48,9 @@ func (c *checker) runChecks() {
 			c.closeCh <- true
 			return
 		case <-c.resetCheckCh:
-			checkInterval = c.minCheckInterval
-			checkTimer.Reset(c.checkInterval)
+			// Disable temporarily for https://github.com/getlantern/lantern-internal/issues/511
+			// checkInterval = c.minCheckInterval
+			// checkTimer.Reset(c.checkInterval)
 		case <-checkTimer.C:
 			// Obtain check data and then run checks for all using the same
 			// check data. This ensures that if the specific checks vary over time,
@@ -72,8 +73,9 @@ func (c *checker) runChecks() {
 			if checkInterval > c.maxCheckInterval {
 				checkInterval = c.maxCheckInterval
 			}
-			checkTimer.Reset(randomize(checkInterval))
-			log.Debugf("Finished checking %d dialers", len(dialers))
+			nextCheck := randomize(checkInterval)
+			checkTimer.Reset(nextCheck)
+			log.Debugf("Finished checking %d dialers, next check: %v", len(dialers), nextCheck)
 			c.b.forceStats()
 		}
 	}
