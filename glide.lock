@@ -1,5 +1,5 @@
-hash: cf8d28a92d01f7c244982da50adcb9cf3318b6d71c2c4469297d00455432225f
-updated: 2016-12-21T10:25:07.919246129-08:00
+hash: 3ef233440908b6420eee4b1e2a3388cb5448d1271e1137790e9ece03fc227388
+updated: 2016-12-21T12:07:57.440097597-08:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -80,7 +80,7 @@ imports:
 - name: github.com/getlantern/go-loggly
   version: d15e28ab7389ed5d644ccb891d9d54154e43cd27
 - name: github.com/getlantern/go-socks5
-  version: 7996e9d8211eef5d9319eb589ddd2557a2d2a23c
+  version: 84bc9224d653efa66ce1f5f01097b9d38fcc3f34
 - name: github.com/getlantern/go-update
   version: 4a06dc59e593012c831198e423894d2da1d091c0
   subpackages:
@@ -146,7 +146,7 @@ imports:
 - name: github.com/getlantern/mockconn
   version: 8c509fe01ae0443e11db44f94435507daad53a73
 - name: github.com/getlantern/netx
-  version: 73cb70f5b027da6ee8c87c4c5a21b78e7cf8e9ce
+  version: 567ea9d35c92e4ba2b7bf054298b6d12b092a7df
 - name: github.com/getlantern/notifier
   version: 5acd0ccf0e6c29710d332a42f580e92c3b04ae7b
   subpackages:
@@ -169,7 +169,7 @@ imports:
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxy
-  version: 7e28e3519af14373ea8ef327f6be865d02256305
+  version: c8f6ac63518c52fde7f627aeafd04ed968f6a9ff
 - name: github.com/getlantern/proxybench
   version: 9eb1a7eb9ee31fccec14a89db42863e10c51460f
 - name: github.com/getlantern/rot13

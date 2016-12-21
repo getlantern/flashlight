@@ -23,7 +23,6 @@ import:
 - package: github.com/getlantern/geolookup
 - package: github.com/getlantern/go-loggly
 - package: github.com/getlantern/go-socks5
-  version: 7996e9d
 - package: github.com/getlantern/golog
 - package: github.com/getlantern/hidden
 - package: github.com/getlantern/i18n
@@ -32,7 +31,6 @@ import:
 - package: github.com/getlantern/keyman
 - package: github.com/getlantern/launcher
 - package: github.com/getlantern/netx
-  version: 73cb70f
 - package: github.com/getlantern/notifier
 - package: github.com/getlantern/ops
 - package: github.com/getlantern/osversion
@@ -100,7 +98,6 @@ import:
 - package: github.com/keighl/mandrill
   version: ^1.1.0
 - package: github.com/getlantern/proxy
-  version: 7e28e35
 - package: github.com/getlantern/mockconn
 testImport:
 - package: github.com/stretchr/testify
