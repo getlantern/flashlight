@@ -3,32 +3,29 @@ package client
 import (
 	"context"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/getlantern/flashlight/ops"
 )
 
-// set a hard limit when processing requests from browser. Chrome has a 30s
-// timeout.
-const BrowserTimeout = 29 * time.Second
-
-func isBrowser(ua string) bool {
-	return strings.HasPrefix(ua, "Mozilla") || strings.HasPrefix(ua, "Opera")
-}
+// Set a hard limit when processing proxy requests. Should be short enough to
+// avoid applications bypassing Lantern.
+// Chrome has a 30s timeout before marking proxy as bad.
+// Firefox: network.proxy.failover_timeout defaults to 1800.
+const requestTimeout = 20 * time.Second
 
 // ServeHTTP implements the method from interface http.Handler using the latest
 // handler available from getHandler() and latest ReverseProxy available from
 // getReverseProxy().
 func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	client.serveHTTPWithContext(context.Background(), resp, req)
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	client.serveHTTPWithContext(ctx, resp, req)
+	// To release resources, see https://golang.org/pkg/context/#WithTimeout
+	cancel()
 }
 
 func (client *Client) serveHTTPWithContext(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	userAgent := req.Header.Get("User-Agent")
-	if isBrowser(userAgent) {
-		ctx, _ = context.WithTimeout(ctx, BrowserTimeout)
-	}
 	op := ops.Begin("proxy").
 		UserAgent(userAgent).
 		Origin(req)
