@@ -59,9 +59,6 @@ import:
 - package: github.com/skratchdot/open-golang
   subpackages:
   - open
-- package: golang.org/x/net
-  subpackages:
-  - context
 - package: github.com/mailgun/oxy
   subpackages:
   - forward
@@ -109,6 +106,3 @@ testImport:
 - package: github.com/stretchr/testify
   subpackages:
   - assert
-- package: golang.org/x/net
-  subpackages:
-  - proxy

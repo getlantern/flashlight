@@ -1,5 +1,5 @@
-hash: 725e555a27219ba56b4b8cf7f77427b932d8bd185fda04f48c7aed35a9900a7b
-updated: 2016-12-21T10:10:46.910473177-08:00
+hash: cf8d28a92d01f7c244982da50adcb9cf3318b6d71c2c4469297d00455432225f
+updated: 2016-12-21T10:25:07.919246129-08:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -281,6 +281,8 @@ imports:
   - xtea
 - name: golang.org/x/net
   version: 45e771701b814666a7eb299e6c7a57d0b1799e91
+  repo: https://github.com/golang/net
+  vcs: git
   subpackages:
   - bpf
   - context
