@@ -19,6 +19,7 @@ const requestTimeout = 20 * time.Second
 // getReverseProxy().
 func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	req = req.WithContext(ctx)
 	client.serveHTTPWithContext(ctx, resp, req)
 	// To release resources, see https://golang.org/pkg/context/#WithTimeout
 	cancel()
