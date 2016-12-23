@@ -29,7 +29,7 @@ func (client *Client) serveHTTPWithContext(ctx context.Context, resp http.Respon
 	userAgent := req.Header.Get("User-Agent")
 	op := ops.Begin("proxy").
 		UserAgent(userAgent).
-		Origin(req)
+		OriginFromRequest(req)
 	defer op.End()
 
 	if req.Method == http.MethodConnect {

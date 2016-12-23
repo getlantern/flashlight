@@ -5,7 +5,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/getlantern/ops"
+	"github.com/getlantern/flashlight/ops"
 )
 
 // Dialer captures the configuration for dialing arbitrary addresses.
@@ -15,6 +15,10 @@ type Dialer struct {
 
 	// DialFN: this function dials the given network, addr.
 	DialFN func(network, addr string) (net.Conn, error)
+
+	// OnFinish: optional function that gets called when finishe the tracking of
+	// xfer operations, allows adding additional data to op context.
+	OnFinish func(op *ops.Op)
 
 	// OnClose: (optional) callback for when this dialer is stopped.
 	OnClose func()

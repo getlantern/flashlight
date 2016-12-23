@@ -197,7 +197,7 @@ func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 		// Please leave this at Debug level, as it helps us understand performance
 		// issues caused by a poor proxy being selected.
 		log.Debugf("Successfully dialed via %v to %v://%v on pass %v", d.Label, network, addr, i)
-		return conn, nil
+		return wrap(conn, addr, d.OnFinish), nil
 	}
 	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", network, addr, dialAttempts)
 }
