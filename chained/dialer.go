@@ -3,6 +3,7 @@ package chained
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 
@@ -96,7 +97,12 @@ func checkCONNECTResponse(r *bufio.Reader, req *http.Request) error {
 		return fmt.Errorf("Error reading CONNECT response: %s", err)
 	}
 	if !sameStatusCodeClass(http.StatusOK, resp.StatusCode) {
-		log.Errorf("Bad status code on CONNECT response: %d", resp.StatusCode)
+		var body []byte
+		if resp.Body != nil {
+			defer resp.Body.Close()
+			body, _ = ioutil.ReadAll(resp.Body)
+		}
+		log.Errorf("Bad status code on CONNECT response %d: %v", resp.StatusCode, string(body))
 		return balancer.ErrUpstream
 	}
 	bandwidth.Track(resp)
