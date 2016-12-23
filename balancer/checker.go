@@ -28,17 +28,46 @@ var (
 )
 
 type checker struct {
-	b                *Balancer
-	checkInterval    time.Duration
-	minCheckInterval time.Duration
-	maxCheckInterval time.Duration
-	resetCheckCh     chan bool
-	closeCh          chan bool
+	b                  *Balancer
+	checkInterval      time.Duration
+	minCheckInterval   time.Duration
+	resetCheckInterval time.Duration
+	maxCheckInterval   time.Duration
+	resetCheckCh       chan bool
+	closeCh            chan bool
 }
 
 func (c *checker) runChecks() {
 	checkInterval := c.minCheckInterval
 	checkTimer := time.NewTimer(0) // check immediately on Start
+
+	doChecks := func() {
+		// Obtain check data and then run checks for all using the same
+		// check data. This ensures that if the specific checks vary over time,
+		// we get an apples to apples comparison across all dialers.
+		checkData := checkTargets.top(5)
+		dialers := c.b.dialersToCheck()
+		log.Debugf("Checking %d dialers using %v", len(dialers), checkData)
+		var wg sync.WaitGroup
+		wg.Add(len(dialers))
+		for _, dialer := range dialers {
+			d := dialer
+			ops.Go(func() {
+				c.check(d, checkData)
+				wg.Done()
+			})
+		}
+		wg.Wait()
+		// Exponentially back off checkInterval capped to MaxCheckInterval
+		checkInterval *= 2
+		if checkInterval > c.maxCheckInterval {
+			checkInterval = c.maxCheckInterval
+		}
+		nextCheck := randomize(checkInterval)
+		checkTimer.Reset(nextCheck)
+		log.Debugf("Finished checking %d dialers, next check: %v", len(dialers), nextCheck)
+		c.b.forceStats()
+	}
 
 	for {
 		select {
@@ -48,35 +77,10 @@ func (c *checker) runChecks() {
 			c.closeCh <- true
 			return
 		case <-c.resetCheckCh:
-			// Disable temporarily for https://github.com/getlantern/lantern-internal/issues/511
-			// checkInterval = c.minCheckInterval
-			// checkTimer.Reset(c.checkInterval)
+			checkInterval = c.minCheckInterval
+			doChecks()
 		case <-checkTimer.C:
-			// Obtain check data and then run checks for all using the same
-			// check data. This ensures that if the specific checks vary over time,
-			// we get an apples to apples comparison across all dialers.
-			checkData := checkTargets.top(10)
-			dialers := c.b.dialersToCheck()
-			log.Debugf("Checking %d dialers using %v", len(dialers), checkData)
-			var wg sync.WaitGroup
-			wg.Add(len(dialers))
-			for _, dialer := range dialers {
-				d := dialer
-				ops.Go(func() {
-					c.check(d, checkData)
-					wg.Done()
-				})
-			}
-			wg.Wait()
-			// Exponentially back off checkInterval capped to MaxCheckInterval
-			checkInterval *= 2
-			if checkInterval > c.maxCheckInterval {
-				checkInterval = c.maxCheckInterval
-			}
-			nextCheck := randomize(checkInterval)
-			checkTimer.Reset(nextCheck)
-			log.Debugf("Finished checking %d dialers, next check: %v", len(dialers), nextCheck)
-			c.b.forceStats()
+			doChecks()
 		}
 	}
 }

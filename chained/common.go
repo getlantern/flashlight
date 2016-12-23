@@ -6,6 +6,8 @@
 package chained
 
 import (
+	"reflect"
+
 	"github.com/getlantern/golog"
 )
 
@@ -36,4 +38,35 @@ type ChainedServerInfo struct {
 
 	// PluggableTransportSettings: Settings for pluggable transport
 	PluggableTransportSettings map[string]string
+}
+
+func (a *ChainedServerInfo) Equals(b *ChainedServerInfo) bool {
+	if a.Addr != b.Addr {
+		return false
+	}
+	if a.Cert != b.Cert {
+		return false
+	}
+	if a.AuthToken != b.AuthToken {
+		return false
+	}
+	pta := a.PluggableTransport
+	ptb := b.PluggableTransport
+	if pta == "obfs4" {
+		pta = "obfs4-tcp"
+	}
+	if pta == "obfs4" {
+		ptb = "obfs4-tcp"
+	}
+	if pta != ptb {
+		return false
+	}
+
+	if a.PluggableTransportSettings == nil {
+		return b.PluggableTransportSettings != nil
+	} else if b.PluggableTransportSettings == nil {
+		return false
+	}
+
+	return reflect.DeepEqual(a.PluggableTransportSettings, b.PluggableTransportSettings)
 }

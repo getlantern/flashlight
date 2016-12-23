@@ -53,7 +53,7 @@ func faster(di *dialer, dj *dialer) bool {
 		return false
 	}
 	if lj == 0 {
-		return true
+		return false
 	}
 	return li < lj
 }
