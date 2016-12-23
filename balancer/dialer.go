@@ -1,11 +1,19 @@
 package balancer
 
 import (
+	"errors"
 	"net"
 	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/ops"
+)
+
+var (
+	// ErrUpstream is an error that indicates there was a problem upstream of a
+	// proxy. Such errors are not counted as failures but do allow failover to
+	// other proxies.
+	ErrUpstream = errors.New("Upstream error")
 )
 
 // Dialer captures the configuration for dialing arbitrary addresses.
@@ -95,7 +103,8 @@ func (d *dialer) ConsecFailures() int32 {
 
 func (d *dialer) dial(network, addr string) (net.Conn, error) {
 	conn, err := d.DialFN(network, addr)
-	if err != nil {
+	if err != nil && err != ErrUpstream {
+		log.Debugf("Marking failure due to: %v", err)
 		d.markFailure()
 	} else {
 		d.markSuccess()

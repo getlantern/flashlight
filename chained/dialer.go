@@ -8,6 +8,7 @@ import (
 
 	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/balancer"
 )
 
 // Config is a configuration for a Dialer.
@@ -95,7 +96,8 @@ func checkCONNECTResponse(r *bufio.Reader, req *http.Request) error {
 		return fmt.Errorf("Error reading CONNECT response: %s", err)
 	}
 	if !sameStatusCodeClass(http.StatusOK, resp.StatusCode) {
-		return fmt.Errorf("Bad status code on CONNECT response: %d", resp.StatusCode)
+		log.Errorf("Bad status code on CONNECT response: %d", resp.StatusCode)
+		return balancer.ErrUpstream
 	}
 	bandwidth.Track(resp)
 	return nil
