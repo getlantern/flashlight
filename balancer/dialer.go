@@ -125,8 +125,12 @@ func (d *dialer) markSuccess() {
 }
 
 func (d *dialer) markFailure() {
+	needsRecheck := d.consecSuccesses > 20
 	d.doMarkFailure()
-	d.forceRecheck()
+	if needsRecheck {
+		log.Debugf("Forcing recheck due to dialer newly failing")
+		d.forceRecheck()
+	}
 }
 
 func (d *dialer) doMarkFailure() {

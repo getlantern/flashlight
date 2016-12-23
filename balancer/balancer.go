@@ -148,6 +148,7 @@ func (b *Balancer) Reset(dialers ...*Dialer) {
 	for _, d := range oldDialers {
 		d.Stop()
 	}
+	log.Debug("Forcing recheck due to changed configuration")
 	b.forceRecheck()
 }
 

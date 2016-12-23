@@ -89,16 +89,8 @@ func (c *checker) check(dialer *dialer, checkData interface{}) {
 	if c.doCheck(dialer, checkData) {
 		// If the check succeeded, we mark down a success.
 		dialer.markSuccess()
-		dialer.lastCheckSucceeded = true
 	} else {
-		if dialer.lastCheckSucceeded {
-			// On first failure after success, force recheck
-			dialer.forceRecheck()
-		}
-		dialer.lastCheckSucceeded = false
-		// we call doMarkFailure so as not to trigger a recheck, since this failure
-		// might just be due to the target we checked
-		dialer.doMarkFailure()
+		dialer.markFailure()
 	}
 }
 
@@ -115,11 +107,6 @@ func (c *checker) doCheck(dialer *dialer, checkData interface{}) bool {
 				// To avoid random large fluctuations in latency, keep change in latency
 				// to within 2x of existing latency. If this happens, force a recheck.
 				latency = cap
-				dialer.forceRecheck()
-			} else if latency < oldLatency/2 {
-				// On major reduction in latency, force a recheck to see if this is a
-				// more permanent change.
-				dialer.forceRecheck()
 			}
 		}
 		newEMA := dialer.emaLatency.UpdateWith(latency)
