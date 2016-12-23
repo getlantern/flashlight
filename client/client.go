@@ -92,7 +92,7 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 	}
 
 	keepAliveIdleTimeout := idleTimeout - 5*time.Second
-	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers, client.dialCONNECT)
+	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers, false, client.dialCONNECT)
 	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
 	return client
 }
