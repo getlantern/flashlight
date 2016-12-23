@@ -20,7 +20,7 @@ func TestConnMetrics(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	conn := wrap(wrapped, "origin:443")
+	conn := wrap(wrapped, "origin:443", nil)
 	n, err := conn.Write([]byte("12345678"))
 	if !assert.NoError(t, err) {
 		return

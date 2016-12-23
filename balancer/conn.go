@@ -15,6 +15,8 @@ const (
 	nanosPerSecond  = 1000 * 1000
 )
 
+// conn wraps a net.Conn and tracks statistics on data transfer, throughput and
+// success of connection.
 type conn struct {
 	net.Conn
 	origin    string
