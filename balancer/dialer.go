@@ -103,8 +103,10 @@ func (d *dialer) ConsecFailures() int32 {
 
 func (d *dialer) dial(network, addr string) (net.Conn, error) {
 	conn, err := d.DialFN(network, addr)
-	if err != nil && err != ErrUpstream {
-		d.markFailure()
+	if err != nil {
+		if err != ErrUpstream {
+			d.markFailure()
+		}
 	} else {
 		d.markSuccess()
 	}
