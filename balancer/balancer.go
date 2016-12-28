@@ -47,52 +47,32 @@ type Opts struct {
 
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
-	lastDialTime   int64 // not used anymore, but makes sure we're aligned on 64bit boundary
-	nextTimeout    *emaDuration
-	st             Strategy
-	mu             sync.RWMutex
-	dialers        dialerHeap
-	trusted        dialerHeap
-	closeCh        chan bool
-	resetCheckCh   chan bool
-	stopStatsCh    chan bool
-	forceStatsCh   chan bool
-	checkerCloseCh chan bool
+	opts         *Opts
+	lastDialTime int64 // not used anymore, but makes sure we're aligned on 64bit boundary
+	nextTimeout  *emaDuration
+	st           Strategy
+	mu           sync.RWMutex
+	dialers      dialerHeap
+	trusted      dialerHeap
+	closeCh      chan bool
+	stopStatsCh  chan bool
+	forceStatsCh chan bool
 }
 
 // New creates a new Balancer using the supplied Strategy and Dialers.
 func New(opts *Opts) *Balancer {
-	resetCheckCh := make(chan bool, 1)
-	checkerCloseCh := make(chan bool)
 	// a small alpha to gradually adjust timeout based on performance of all
 	// dialers
 	b := &Balancer{
-		st:             opts.Strategy,
-		nextTimeout:    newEMADuration(initialTimeout, 0.2),
-		closeCh:        make(chan bool),
-		stopStatsCh:    make(chan bool, 1),
-		forceStatsCh:   make(chan bool, 1),
-		resetCheckCh:   resetCheckCh,
-		checkerCloseCh: checkerCloseCh,
-	}
-
-	checker := &checker{
-		b:                b,
-		minCheckInterval: opts.MinCheckInterval,
-		maxCheckInterval: opts.MaxCheckInterval,
-		resetCheckCh:     resetCheckCh,
-		closeCh:          checkerCloseCh,
-	}
-
-	if checker.minCheckInterval <= 0 {
-		checker.minCheckInterval = defaultMinCheckInterval
-	}
-	if checker.maxCheckInterval <= 0 {
-		checker.maxCheckInterval = defaultMaxCheckInterval
+		opts:         opts,
+		st:           opts.Strategy,
+		nextTimeout:  newEMADuration(initialTimeout, 0.2),
+		closeCh:      make(chan bool),
+		stopStatsCh:  make(chan bool, 1),
+		forceStatsCh: make(chan bool, 1),
 	}
 
 	b.Reset(opts.Dialers...)
-	ops.Go(checker.runChecks)
 	ops.Go(b.printStats)
 	ops.Go(b.run)
 	return b
@@ -121,7 +101,8 @@ func (b *Balancer) Reset(dialers ...*Dialer) {
 	b.mu.Lock()
 	oldDialers := b.dialers.dialers
 	for _, d := range dialers {
-		dl := &dialer{Dialer: d, forceRecheck: b.forceRecheck}
+		dl := &dialer{Dialer: d}
+		dl.checker = newChecker(dl, b.opts)
 		for _, od := range oldDialers {
 			if d.Label == od.Label {
 				// Existing dialer, keep stats
@@ -149,16 +130,6 @@ func (b *Balancer) Reset(dialers ...*Dialer) {
 		d.Stop()
 	}
 	log.Debug("Forcing recheck due to changed configuration")
-	b.forceRecheck()
-}
-
-func (b *Balancer) forceRecheck() {
-	select {
-	case b.resetCheckCh <- true:
-		log.Debug("Forced recheck")
-	default:
-		// Pending recheck, ignore subsequent request
-	}
 }
 
 // Dial dials (network, addr) using one of the currently active configured
@@ -249,10 +220,6 @@ func (b *Balancer) run() {
 		select {
 		case <-b.closeCh:
 			b.stopStatsCh <- true
-
-			b.checkerCloseCh <- true
-			// Make sure it actually finishes.
-			<-b.checkerCloseCh
 
 			b.mu.Lock()
 			oldDialers := b.dialers

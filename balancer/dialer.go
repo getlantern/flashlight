@@ -40,8 +40,8 @@ type Dialer struct {
 	// checks fail for some reason, the exponential cascade will reset to the
 	// MinCheckInterval and start backing off again.
 	//
-	// checkData is data from the balancer's CheckData() function.
-	Check func(checkData interface{}, onFailure func(string)) (bool, time.Duration)
+	// urls are the urls to check
+	Check func(urls []string) (bool, time.Duration)
 
 	// Determines whether a dialer can be trusted with unencrypted traffic.
 	Trusted bool
@@ -50,7 +50,6 @@ type Dialer struct {
 type dialer struct {
 	emaLatency         *emaDuration
 	lastCheckSucceeded bool
-	forceRecheck       func()
 
 	*Dialer
 	closeCh chan struct{}
@@ -58,7 +57,8 @@ type dialer struct {
 	consecSuccesses int32
 	consecFailures  int32
 
-	stats *stats
+	checker *checker
+	stats   *stats
 }
 
 const longDuration = 100000 * time.Hour
@@ -75,6 +75,9 @@ func (d *dialer) Start() {
 	}
 	d.closeCh = make(chan struct{}, 1)
 
+	if d.Check != nil {
+		ops.Go(d.checker.runChecks)
+	}
 	ops.Go(func() {
 		<-d.closeCh
 		log.Tracef("Dialer %s stopped", d.Label)
@@ -85,8 +88,10 @@ func (d *dialer) Start() {
 }
 
 func (d *dialer) Stop() {
-	log.Tracef("Stopping dialer %s", d.Label)
+	log.Debugf("Stopping dialer %s", d.Label)
+	d.checker.stop()
 	d.closeCh <- struct{}{}
+
 }
 
 func (d *dialer) EMALatency() int64 {
@@ -139,4 +144,13 @@ func (d *dialer) doMarkFailure() {
 	atomic.StoreInt32(&d.consecSuccesses, 0)
 	newCF := atomic.AddInt32(&d.consecFailures, 1)
 	log.Tracef("Dialer %s consecutive failures: %d -> %d", d.Label, newCF-1, newCF)
+}
+
+func (d *dialer) forceRecheck() {
+	select {
+	case d.checker.resetCh <- true:
+		// accepted
+	default:
+		// recheck already pending
+	}
 }

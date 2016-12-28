@@ -85,12 +85,7 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 				log.Debugf("Attempted to dial ourselves. Dialing directly to %s instead", addr)
 				conn, err = netx.DialTimeout(network, addr, 1*time.Minute)
 			} else {
-				conn, err = d(network, addr)
-				if err == nil {
-					// Yeah any site visited through Lantern can be a check target, but
-					// only check it if the dial was successful.
-					balancer.AddCheckTarget(addr)
-				}
+				return d(network, addr)
 			}
 
 			if err != nil {
@@ -101,8 +96,8 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 			})
 			return conn, nil
 		},
-		Check: func(checkData interface{}, onFailure func(string)) (bool, time.Duration) {
-			return s.check(d, checkData.([]string), deviceID, proTokenGetter, onFailure)
+		Check: func(urls []string) (bool, time.Duration) {
+			return s.check(d, urls, deviceID, proTokenGetter)
 		},
 	}, nil
 }
@@ -118,8 +113,7 @@ func (s *chainedServer) attachHeaders(req *http.Request, deviceID string, proTok
 // check pings the 10 most popular sites in the user's history
 func (s *chainedServer) check(dial func(string, string) (net.Conn, error),
 	urls []string, deviceID string,
-	proTokenGetter func() string,
-	onFailure func(string)) (bool, time.Duration) {
+	proTokenGetter func() string) (bool, time.Duration) {
 	rt := &http.Transport{
 		DisableKeepAlives: true,
 		Dial:              dial,
@@ -132,7 +126,7 @@ func (s *chainedServer) check(dial func(string, string) (net.Conn, error),
 	for _, _url := range urls {
 		url := _url
 		ops.Go(func() {
-			passed := s.doCheck(url, &totalLatency, rt, deviceID, proTokenGetter, onFailure)
+			passed := s.doCheck(url, &totalLatency, rt, deviceID, proTokenGetter)
 			if !passed {
 				atomic.StoreInt32(&allPassed, 0)
 			}
@@ -148,8 +142,7 @@ func (s *chainedServer) doCheck(url string,
 	totalLatency *int64,
 	rt *http.Transport,
 	deviceID string,
-	proTokenGetter func() string,
-	onFailure func(string)) bool {
+	proTokenGetter func() string) bool {
 	start := time.Now()
 	// We ping the URLs through the proxy to get timings
 	req, err := http.NewRequest("GET", "http://ping-chained-server", nil)
@@ -185,8 +178,6 @@ func (s *chainedServer) doCheck(url string,
 		if success {
 			delta := int64(time.Now().Sub(start))
 			atomic.AddInt64(totalLatency, delta)
-		} else {
-			onFailure(url)
 		}
 		return success, nil
 	})
