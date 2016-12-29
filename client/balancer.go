@@ -7,12 +7,6 @@ import (
 	"github.com/getlantern/flashlight/chained"
 )
 
-var (
-	bal = balancer.New(&balancer.Opts{
-		Strategy: balancer.QualityFirst,
-	})
-)
-
 // initBalancer takes hosts from cfg.ChainedServers and it uses them to create a
 // balancer.
 func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo, deviceID string) error {
@@ -35,6 +29,6 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 		dialers = append(dialers, dialer)
 	}
 
-	bal.Reset(dialers...)
+	client.bal.Reset(dialers...)
 	return nil
 }
