@@ -2,6 +2,7 @@ package balancer
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"net"
 	"sort"
@@ -10,14 +11,21 @@ import (
 	"time"
 
 	"github.com/getlantern/ops"
+	"github.com/getlantern/reachability"
 )
 
 const (
-	defaultMinCheckInterval = 10 * time.Second
-	defaultMaxCheckInterval = 1 * time.Hour
+	reachabilityInterval = 5 * time.Second
+	minCheckInterval     = 10 * time.Second
+	maxCheckInterval     = 1 * time.Hour
+
+	avoidDivideByZero = 0.000001
 )
 
 var (
+	// Targets to use for testing reachability
+	reachabilityTargets = []string{"aws.amazon.com", "www.microsoft.com", "www.Hsbc.com.hk"}
+
 	// A fixed length list of full urls used to check this server. We would like
 	// to include sites accessed by the user, but at the moment we just use a
 	// canned set of popular sites.
@@ -28,17 +36,50 @@ var (
 )
 
 type checker struct {
-	b                *Balancer
-	checkInterval    time.Duration
-	minCheckInterval time.Duration
-	maxCheckInterval time.Duration
-	resetCheckCh     chan bool
-	closeCh          chan bool
+	b             *Balancer
+	checkInterval time.Duration
+	resetCheckCh  chan time.Time
+	closeCh       chan bool
 }
 
 func (c *checker) runChecks() {
-	checkInterval := c.minCheckInterval
+	checkReachability := reachability.NewChecker(2, 200*time.Millisecond, 5*time.Second, reachabilityTargets...)
+	priorPLR := float64(0)                             // assume no packet loss to start
+	emaRTT := newEMADuration(30*time.Millisecond, 0.5) // assume fast initially, large alpha to reflect changes quickly
+	reachabilityTimer := time.NewTimer(0)              // check reachability immediately
+
+	checkInterval := minCheckInterval
 	checkTimer := time.NewTimer(0) // check immediately on Start
+
+	var lastFinishedRecheck time.Time
+
+	runChecks := func() {
+		// Obtain check data and then run checks for all using the same
+		// check data. This ensures that if the specific checks vary over time,
+		// we get an apples to apples comparison across all dialers.
+		checkData := checkTargets.top(10)
+		dialers := c.b.dialersToCheck()
+		log.Debugf("Checking %d dialers using %v", len(dialers), checkData)
+		var wg sync.WaitGroup
+		wg.Add(len(dialers))
+		for _, dialer := range dialers {
+			d := dialer
+			ops.Go(func() {
+				c.check(d, checkData)
+				wg.Done()
+			})
+		}
+		wg.Wait()
+		// Exponentially back off checkInterval capped to MaxCheckInterval
+		checkInterval *= 2
+		if checkInterval > maxCheckInterval {
+			checkInterval = maxCheckInterval
+		}
+		nextCheck := randomize(checkInterval)
+		checkTimer.Reset(nextCheck)
+		log.Debugf("Finished checking %d dialers, next check: %v", len(dialers), nextCheck)
+		c.b.forceStats()
+	}
 
 	for {
 		select {
@@ -47,36 +88,31 @@ func (c *checker) runChecks() {
 			checkTimer.Stop()
 			c.closeCh <- true
 			return
-		case <-c.resetCheckCh:
-			// Disable temporarily for https://github.com/getlantern/lantern-internal/issues/511
-			// checkInterval = c.minCheckInterval
-			// checkTimer.Reset(c.checkInterval)
+		case <-reachabilityTimer.C:
+			rtt, plr := checkReachability()
+			log.Debugf("RTT: %v  PLR: %v", rtt, plr)
+			priorRTT := emaRTT.Get()
+			bigChangeInRTT := math.Abs(float64(rtt-priorRTT)/(float64(priorRTT)+avoidDivideByZero)) > 2
+			bigChangeInPLR := math.Abs((plr-priorPLR)/(priorPLR+avoidDivideByZero)) > 2
+			dramaticReachabilityChange := bigChangeInPLR || bigChangeInRTT
+			emaRTT.UpdateWith(rtt)
+			priorPLR = plr
+			if dramaticReachabilityChange {
+				// The purpose of this is to deal with situations like temporary
+				// connectivity losses, temporary network congestion, etc.
+				log.Debug("Dramatic change in reachability, force recheck")
+				c.b.forceRecheck()
+			}
+			reachabilityTimer.Reset(randomize(reachabilityInterval))
+		case recheckAt := <-c.resetCheckCh:
+			if recheckAt.After(lastFinishedRecheck) {
+				log.Debug("Forced recheck")
+				checkInterval = minCheckInterval
+				runChecks()
+				lastFinishedRecheck = time.Now()
+			}
 		case <-checkTimer.C:
-			// Obtain check data and then run checks for all using the same
-			// check data. This ensures that if the specific checks vary over time,
-			// we get an apples to apples comparison across all dialers.
-			checkData := checkTargets.top(10)
-			dialers := c.b.dialersToCheck()
-			log.Debugf("Checking %d dialers using %v", len(dialers), checkData)
-			var wg sync.WaitGroup
-			wg.Add(len(dialers))
-			for _, dialer := range dialers {
-				d := dialer
-				ops.Go(func() {
-					c.check(d, checkData)
-					wg.Done()
-				})
-			}
-			wg.Wait()
-			// Exponentially back off checkInterval capped to MaxCheckInterval
-			checkInterval *= 2
-			if checkInterval > c.maxCheckInterval {
-				checkInterval = c.maxCheckInterval
-			}
-			nextCheck := randomize(checkInterval)
-			checkTimer.Reset(nextCheck)
-			log.Debugf("Finished checking %d dialers, next check: %v", len(dialers), nextCheck)
-			c.b.forceStats()
+			runChecks()
 		}
 	}
 }
@@ -85,16 +121,10 @@ func (c *checker) check(dialer *dialer, checkData interface{}) {
 	if c.doCheck(dialer, checkData) {
 		// If the check succeeded, we mark down a success.
 		dialer.markSuccess()
-		dialer.lastCheckSucceeded = true
 	} else {
-		if dialer.lastCheckSucceeded {
-			// On first failure after success, force recheck
-			dialer.forceRecheck()
-		}
-		dialer.lastCheckSucceeded = false
 		// we call doMarkFailure so as not to trigger a recheck, since this failure
 		// might just be due to the target we checked
-		dialer.doMarkFailure()
+		dialer.markFailure()
 	}
 }
 
@@ -109,13 +139,8 @@ func (c *checker) doCheck(dialer *dialer, checkData interface{}) bool {
 			cap := oldLatency * 2
 			if latency > cap {
 				// To avoid random large fluctuations in latency, keep change in latency
-				// to within 2x of existing latency. If this happens, force a recheck.
+				// to within 2x of existing latency.
 				latency = cap
-				dialer.forceRecheck()
-			} else if latency < oldLatency/2 {
-				// On major reduction in latency, force a recheck to see if this is a
-				// more permanent change.
-				dialer.forceRecheck()
 			}
 		}
 		newEMA := dialer.emaLatency.UpdateWith(latency)

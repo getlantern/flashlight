@@ -1,5 +1,5 @@
 hash: 3ef233440908b6420eee4b1e2a3388cb5448d1271e1137790e9ece03fc227388
-updated: 2016-12-23T11:07:42.645929257-08:00
+updated: 2016-12-29T08:20:49.27826788-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -22,7 +22,7 @@ imports:
 - name: github.com/blang/semver
   version: 3a37c301dda64cbe17f16f661b4c976803c0e2d2
 - name: github.com/davecgh/go-spew
-  version: 346938d642f2ec3594ed81d874461961cd0faa76
+  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
   subpackages:
   - spew
 - name: github.com/dchest/siphash
@@ -146,7 +146,7 @@ imports:
 - name: github.com/getlantern/mockconn
   version: 8c509fe01ae0443e11db44f94435507daad53a73
 - name: github.com/getlantern/netx
-  version: 567ea9d35c92e4ba2b7bf054298b6d12b092a7df
+  version: 73cb70f5b027da6ee8c87c4c5a21b78e7cf8e9ce
 - name: github.com/getlantern/notifier
   version: 5acd0ccf0e6c29710d332a42f580e92c3b04ae7b
   subpackages:
@@ -172,6 +172,8 @@ imports:
   version: a63bbdfe501ac74ac8bb4927d75c8c34bad55e79
 - name: github.com/getlantern/proxybench
   version: 9eb1a7eb9ee31fccec14a89db42863e10c51460f
+- name: github.com/getlantern/reachability
+  version: 793a1d9ff1ba20bbb1967cf6fbf69c43bb203eed
 - name: github.com/getlantern/rot13
   version: 33f93fc1fe85c042c0667a1814e6379bd5e7eb40
 - name: github.com/getlantern/rotator
@@ -213,7 +215,7 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/websocket
-  version: 3ab3a8b8831546bd18fd182c20687ca853b2bb13
+  version: 5ddbd28fbd5a0179960f2bcaa989e0925356dc7f
 - name: github.com/hashicorp/golang-lru
   version: 0a025b7e63adc15a622f29b0b2c4c3848243bbf6
   subpackages:
@@ -252,6 +254,8 @@ imports:
   version: 75fb7ed4208cf72d323d7d02fd1a5964a7a9073c
   subpackages:
   - open
+- name: github.com/sparrc/go-ping
+  version: 416e72114cd1edce2f287648f935a60dfe6cf40e
 - name: github.com/ua-parser/uap-go
   version: 08c9ab17c54f06ccfe5256695a9f715a47404cfe
   subpackages:
@@ -286,9 +290,11 @@ imports:
   subpackages:
   - bpf
   - context
+  - icmp
   - internal/iana
   - internal/netreflect
   - ipv4
+  - ipv6
 - name: golang.org/x/sys
   version: d75a52659825e75fff6158388dddc6a5b04f9ba5
   repo: https://github.com/golang/sys

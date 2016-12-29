@@ -41,6 +41,7 @@ import:
 - package: github.com/getlantern/profiling
 - package: github.com/getlantern/proxiedsites
 - package: github.com/getlantern/proxybench
+- package: github.com/getlantern/reachability
 - package: github.com/getlantern/rot13
 - package: github.com/getlantern/rotator
 - package: github.com/getlantern/systray

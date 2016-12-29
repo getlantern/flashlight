@@ -48,9 +48,7 @@ type Dialer struct {
 }
 
 type dialer struct {
-	emaLatency         *emaDuration
-	lastCheckSucceeded bool
-	forceRecheck       func()
+	emaLatency *emaDuration
 
 	*Dialer
 	closeCh chan struct{}
@@ -125,11 +123,6 @@ func (d *dialer) markSuccess() {
 }
 
 func (d *dialer) markFailure() {
-	d.doMarkFailure()
-	d.forceRecheck()
-}
-
-func (d *dialer) doMarkFailure() {
 	atomic.AddInt64(&d.stats.attempts, 1)
 	atomic.AddInt64(&d.stats.failures, 1)
 	atomic.StoreInt32(&d.consecSuccesses, 0)

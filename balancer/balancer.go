@@ -35,14 +35,6 @@ type Opts struct {
 
 	// Dialers are the Dialers amongst which the Balancer will balance.
 	Dialers []*Dialer
-
-	// MinCheckInterval controls the minimum check interval when scheduling dialer
-	// checks. Defaults to 10 seconds.
-	MinCheckInterval time.Duration
-
-	// MaxCheckInterval controls the maximum check interval when scheduling dialer
-	// checks. Defaults to 1 minute.
-	MaxCheckInterval time.Duration
 }
 
 // Balancer balances connections among multiple Dialers.
@@ -54,7 +46,7 @@ type Balancer struct {
 	dialers        dialerHeap
 	trusted        dialerHeap
 	closeCh        chan bool
-	resetCheckCh   chan bool
+	resetCheckCh   chan time.Time
 	stopStatsCh    chan bool
 	forceStatsCh   chan bool
 	checkerCloseCh chan bool
@@ -62,7 +54,7 @@ type Balancer struct {
 
 // New creates a new Balancer using the supplied Strategy and Dialers.
 func New(opts *Opts) *Balancer {
-	resetCheckCh := make(chan bool, 1)
+	resetCheckCh := make(chan time.Time, 1)
 	checkerCloseCh := make(chan bool)
 	// a small alpha to gradually adjust timeout based on performance of all
 	// dialers
@@ -77,18 +69,9 @@ func New(opts *Opts) *Balancer {
 	}
 
 	checker := &checker{
-		b:                b,
-		minCheckInterval: opts.MinCheckInterval,
-		maxCheckInterval: opts.MaxCheckInterval,
-		resetCheckCh:     resetCheckCh,
-		closeCh:          checkerCloseCh,
-	}
-
-	if checker.minCheckInterval <= 0 {
-		checker.minCheckInterval = defaultMinCheckInterval
-	}
-	if checker.maxCheckInterval <= 0 {
-		checker.maxCheckInterval = defaultMaxCheckInterval
+		b:            b,
+		closeCh:      checkerCloseCh,
+		resetCheckCh: resetCheckCh,
 	}
 
 	b.Reset(opts.Dialers...)
@@ -121,7 +104,7 @@ func (b *Balancer) Reset(dialers ...*Dialer) {
 	b.mu.Lock()
 	oldDialers := b.dialers.dialers
 	for _, d := range dialers {
-		dl := &dialer{Dialer: d, forceRecheck: b.forceRecheck}
+		dl := &dialer{Dialer: d}
 		for _, od := range oldDialers {
 			if d.Label == od.Label {
 				// Existing dialer, keep stats
@@ -153,8 +136,8 @@ func (b *Balancer) Reset(dialers ...*Dialer) {
 
 func (b *Balancer) forceRecheck() {
 	select {
-	case b.resetCheckCh <- true:
-		log.Debug("Forced recheck")
+	case b.resetCheckCh <- time.Now():
+		// Requested force recheck
 	default:
 		// Pending recheck, ignore subsequent request
 	}
