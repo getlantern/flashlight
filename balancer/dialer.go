@@ -48,6 +48,7 @@ type Dialer struct {
 }
 
 type dialer struct {
+	pingLatency        *emaDuration
 	emaLatency         *emaDuration
 	lastCheckSucceeded bool
 
@@ -65,6 +66,11 @@ const longDuration = 100000 * time.Hour
 
 func (d *dialer) Start() {
 	d.consecSuccesses = 1 // be optimistic
+	if d.pingLatency == nil {
+		// assuming all dialers super fast initially
+		// use large alpha to reflect network changes quickly
+		d.pingLatency = newEMADuration(0, 0.5)
+	}
 	if d.emaLatency == nil {
 		// assuming all dialers super fast initially
 		// use large alpha to reflect network changes quickly
@@ -130,7 +136,7 @@ func (d *dialer) markSuccess() {
 }
 
 func (d *dialer) markFailure() {
-	needsRecheck := d.consecSuccesses > 20
+	needsRecheck := atomic.LoadInt32(&d.consecSuccesses) > 20
 	d.doMarkFailure()
 	if needsRecheck {
 		log.Debugf("Forcing recheck due to dialer newly failing")
@@ -144,13 +150,4 @@ func (d *dialer) doMarkFailure() {
 	atomic.StoreInt32(&d.consecSuccesses, 0)
 	newCF := atomic.AddInt32(&d.consecFailures, 1)
 	log.Tracef("Dialer %s consecutive failures: %d -> %d", d.Label, newCF-1, newCF)
-}
-
-func (d *dialer) forceRecheck() {
-	select {
-	case d.checker.resetCh <- true:
-		// accepted
-	default:
-		// recheck already pending
-	}
 }

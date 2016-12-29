@@ -3,14 +3,20 @@ package balancer
 import (
 	"math/rand"
 	"time"
+
+	"github.com/sparrc/go-ping"
 )
 
 const (
-	defaultMinCheckInterval = 10 * time.Second
-	defaultMaxCheckInterval = 1 * time.Hour
+	pingInterval     = 10 * time.Second
+	minCheckInterval = 10 * time.Second
+	maxCheckInterval = 1 * time.Hour
 )
 
 var (
+	// Whom to ping to check network reachability
+	pingTarget = "github.com"
+
 	// Hardcoded list of URLs to check latency
 	checkTargets = []string{
 		"https://www.google.com/favicon.ico",
@@ -21,44 +27,31 @@ var (
 )
 
 type checker struct {
-	d                *dialer
-	checkInterval    time.Duration
-	minCheckInterval time.Duration
-	maxCheckInterval time.Duration
-	resetCh          chan bool
-	stopCh           chan bool
+	d             *dialer
+	checkInterval time.Duration
+	stopCh        chan bool
 }
 
 func newChecker(d *dialer, opts *Opts) *checker {
-	c := &checker{
-		d:                d,
-		minCheckInterval: opts.MinCheckInterval,
-		maxCheckInterval: opts.MaxCheckInterval,
-		resetCh:          make(chan bool, 1),
-		stopCh:           make(chan bool, 1),
+	return &checker{
+		d:      d,
+		stopCh: make(chan bool, 1),
 	}
-
-	if c.minCheckInterval <= 0 {
-		c.minCheckInterval = defaultMinCheckInterval
-	}
-	if c.maxCheckInterval <= 0 {
-		c.maxCheckInterval = defaultMaxCheckInterval
-	}
-
-	return c
 }
 
 func (c *checker) runChecks() {
 	checkInterval := c.minCheckInterval
+	pingTimer := time.newTimer(0)  // ping immediately on start
 	checkTimer := time.NewTimer(0) // check immediately on Start
 
 	check := func() {
-		checkInterval = c.minCheckInterval
-		c.check()
-		// Exponentially back off checkInterval capped to MaxCheckInterval
-		checkInterval *= 2
-		if checkInterval > c.maxCheckInterval {
-			checkInterval = c.maxCheckInterval
+		successful := c.check()
+		if successful {
+			// Exponentially back off checkInterval capped to maxCheckInterval
+			checkInterval *= 2
+			if checkInterval > c.maxCheckInterval {
+				checkInterval = c.maxCheckInterval
+			}
 		}
 		nextCheck := randomize(checkInterval)
 		checkTimer.Reset(nextCheck)
@@ -67,6 +60,13 @@ func (c *checker) runChecks() {
 	for {
 		select {
 		case <-c.resetCh:
+			log.Debugf("Recheck forced for %v", c.d.Label)
+			checkInterval = c.minCheckInterval
+			latency := c.d.emaLatency.Get()
+			if latency > checkInterval {
+				// Don't check more frequently than it takes to actually run the check
+				checkInterval = latency
+			}
 			check()
 		case <-checkTimer.C:
 			check()
@@ -87,9 +87,10 @@ func (c *checker) stop() {
 	}
 }
 
-func (c *checker) check() {
+func (c *checker) check() bool {
 	log.Debugf("Checking dialer: %v", c.d.Label)
-	if c.doCheck() {
+	successful := c.doCheck()
+	if successful {
 		log.Debugf("Succeeded Checking dialer: %v", c.d.Label)
 		// If the check succeeded, we mark down a success.
 		c.d.markSuccess()
@@ -97,6 +98,7 @@ func (c *checker) check() {
 		log.Debugf("Failed Checking dialer: %v", c.d.Label)
 		c.d.markFailure()
 	}
+	return successful
 }
 
 func (c *checker) doCheck() bool {
@@ -108,8 +110,12 @@ func (c *checker) doCheck() bool {
 			cap := oldLatency * 2
 			if latency > cap {
 				// To avoid random large fluctuations in latency, keep change in latency
-				// to within 2x of existing latency. If this happens, force a recheck.
+				// to within 2x of existing latency.
 				latency = cap
+			} else if latency < oldLatency/2 {
+				// On major reduction in latency, force a recheck to see if this is a
+				// more permanent change.
+				c.forceRecheck()
 			}
 		}
 		newEMA := c.d.emaLatency.UpdateWith(latency)

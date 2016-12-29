@@ -35,14 +35,6 @@ type Opts struct {
 
 	// Dialers are the Dialers amongst which the Balancer will balance.
 	Dialers []*Dialer
-
-	// MinCheckInterval controls the minimum check interval when scheduling dialer
-	// checks. Defaults to 10 seconds.
-	MinCheckInterval time.Duration
-
-	// MaxCheckInterval controls the maximum check interval when scheduling dialer
-	// checks. Defaults to 1 minute.
-	MaxCheckInterval time.Duration
 }
 
 // Balancer balances connections among multiple Dialers.
@@ -109,6 +101,7 @@ func (b *Balancer) Reset(dialers ...*Dialer) {
 				log.Debugf("Keeping stats from old dialer %p", od.emaLatency)
 				dl.consecSuccesses = atomic.LoadInt32(&od.consecSuccesses)
 				dl.consecFailures = atomic.LoadInt32(&od.consecFailures)
+				dl.pingLatency = od.pingLatency
 				dl.emaLatency = od.emaLatency
 				dl.stats = od.stats
 				break
@@ -129,7 +122,6 @@ func (b *Balancer) Reset(dialers ...*Dialer) {
 	for _, d := range oldDialers {
 		d.Stop()
 	}
-	log.Debug("Forcing recheck due to changed configuration")
 }
 
 // Dial dials (network, addr) using one of the currently active configured
