@@ -73,12 +73,6 @@ func TestServeHTTPOk(t *testing.T) {
 }
 
 func TestServeHTTPTimeout(t *testing.T) {
-	origRequestTimeout := requestTimeout
-	requestTimeout = 100 * time.Millisecond
-	defer func() {
-		requestTimeout = origRequestTimeout
-	}()
-
 	client := NewClient(func() bool { return true },
 		func() string { return "proToken" })
 	d := mockconn.SucceedingDialer([]byte{})
