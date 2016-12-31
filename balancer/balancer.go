@@ -48,7 +48,7 @@ type Opts struct {
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
 	lastDialTime   int64 // not used anymore, but makes sure we're aligned on 64bit boundary
-	nextTimeout    *emaDuration
+	nextTimeout    *ema
 	st             Strategy
 	mu             sync.RWMutex
 	dialers        dialerHeap
@@ -203,7 +203,7 @@ func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 }
 
 func (b *Balancer) dialWithTimeout(d *dialer, network, addr string) (net.Conn, error) {
-	limit := b.nextTimeout.Get()
+	limit := b.nextTimeout.getDuration()
 	timer := time.NewTimer(limit)
 	var conn net.Conn
 	var err error
@@ -213,7 +213,7 @@ func (b *Balancer) dialWithTimeout(d *dialer, network, addr string) (net.Conn, e
 	ops.Go(func() {
 		conn, err = d.dial(network, addr)
 		if err == nil {
-			newTimeout := b.nextTimeout.UpdateWith(3 * time.Since(t))
+			newTimeout := b.nextTimeout.updateDuration(3 * time.Since(t))
 			log.Tracef("Updated nextTimeout to %v", newTimeout)
 		}
 		chDone <- true
@@ -225,7 +225,7 @@ func (b *Balancer) dialWithTimeout(d *dialer, network, addr string) (net.Conn, e
 			// take part in.
 			if d.ConsecSuccesses() > 0 {
 				log.Debugf("Reset balancer dial timeout because dialer %s suddenly slows down", d.Label)
-				b.nextTimeout.Set(initialTimeout)
+				b.nextTimeout.setDuration(initialTimeout)
 				timer.Reset(initialTimeout)
 				continue
 			}

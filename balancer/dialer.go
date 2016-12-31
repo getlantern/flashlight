@@ -44,7 +44,7 @@ type Dialer struct {
 }
 
 type dialer struct {
-	emaLatency         *emaDuration
+	emaLatency         *ema
 	lastCheckSucceeded bool
 	forceRecheck       func()
 
@@ -86,7 +86,7 @@ func (d *dialer) Stop() {
 }
 
 func (d *dialer) EMALatency() int64 {
-	return d.emaLatency.GetInt64()
+	return int64(d.emaLatency.get())
 }
 
 func (d *dialer) ConsecSuccesses() int32 {
