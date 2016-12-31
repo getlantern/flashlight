@@ -27,11 +27,6 @@ import (
 	"github.com/oxtoacart/bpool"
 )
 
-// Set a hard limit when processing proxy requests. Should be short enough to
-// avoid applications bypassing Lantern.
-// Chrome has a 30s timeout before marking proxy as bad.
-const requestTimeout = 20 * time.Second
-
 var (
 	uiAddr        string
 	uiProxiedAddr string
@@ -58,6 +53,11 @@ var (
 	}
 
 	buffers = bpool.NewBytePool(1000, 32768)
+
+	// Set a hard limit when processing proxy requests. Should be short enough to
+	// avoid applications bypassing Lantern.
+	// Chrome has a 30s timeout before marking proxy as bad.
+	requestTimeout = 20 * time.Second
 )
 
 // Client is an HTTP proxy that accepts connections from local programs and
