@@ -14,7 +14,9 @@ type stats struct {
 
 func (s *stats) String(d *dialer) string {
 	successes := atomic.LoadInt64(&s.successes)
+	consecSuccesses := d.ConsecSuccesses()
 	failures := atomic.LoadInt64(&s.failures)
+	consecFailures := d.ConsecFailures()
 	attempts := atomic.LoadInt64(&s.attempts)
-	return fmt.Sprintf("Dialer Stats for %v\t\tSuccess: %7d / %7d\t\tFailure: %7d / %7d\t\tEMA Latency: %v", d.Label, successes, attempts, failures, attempts, d.emaLatency.Get())
+	return fmt.Sprintf("Dialer Stats for %v\t\tSuccess: %7d / %7d (%7d)\t\tFailure: %7d / %7d (%7d)\t\tEMA Latency: %v", d.Label, successes, attempts, consecSuccesses, failures, attempts, consecFailures, d.emaLatency.Get())
 }
