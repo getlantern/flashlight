@@ -27,6 +27,11 @@ import (
 	"github.com/oxtoacart/bpool"
 )
 
+// Set a hard limit when processing proxy requests. Should be short enough to
+// avoid applications bypassing Lantern.
+// Chrome has a 30s timeout before marking proxy as bad.
+const requestTimeout = 20 * time.Second
+
 var (
 	uiAddr        string
 	uiProxiedAddr string
@@ -228,15 +233,17 @@ func (client *Client) proxiedDialer(orig func(network, addr string) (net.Conn, e
 	}
 }
 
-func (client *Client) dialCONNECT(ctx context.Context, network, addr string) (conn net.Conn, err error) {
-	return client.dial(ctx, true, network, addr)
+func (client *Client) dialCONNECT(network, addr string) (conn net.Conn, err error) {
+	return client.dial(true, network, addr)
 }
 
-func (client *Client) dialHTTP(ctx context.Context, network, addr string) (conn net.Conn, err error) {
-	return client.dial(ctx, false, network, addr)
+func (client *Client) dialHTTP(network, addr string) (conn net.Conn, err error) {
+	return client.dial(false, network, addr)
 }
 
-func (client *Client) dial(ctx context.Context, isConnect bool, network, addr string) (conn net.Conn, err error) {
+func (client *Client) dial(isConnect bool, network, addr string) (conn net.Conn, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	defer cancel()
 	port, err := client.portForAddress(addr)
 	if err != nil {
 		return nil, err
