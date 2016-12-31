@@ -73,19 +73,11 @@ func (c *conn) Close() error {
 		recv := float64(atomic.LoadInt64(&c.recv))
 		sendNanos := float64(atomic.LoadInt64(&c.sendEnd) - atomic.LoadInt64(&c.sendStart))
 		recvNanos := float64(atomic.LoadInt64(&c.recvEnd) - atomic.LoadInt64(&c.recvStart))
-		sentPerSecond := float64(0)
-		if sendNanos > 0 {
-			sentPerSecond = sent * nanosPerSecond / sendNanos
-		}
-		recvPerSecond := float64(0)
-		if recvNanos > 0 {
-			recvPerSecond = recv * nanosPerSecond / recvNanos
-		}
 		op := ops.Begin("xfer").
 			Set("client_bytes_sent", sent).
-			Set("client_conn_bytes_sent_per_second", sentPerSecond).
+			Set("client_send_seconds", float64(sendNanos)/float64(time.Second)).
 			Set("client_bytes_recv", recv).
-			Set("client_conn_bytes_recv_per_second", recvPerSecond).
+			Set("client_recv_seconds", float64(recvNanos)/float64(time.Second)).
 			Origin(c.origin, "")
 		if c.onFinish != nil {
 			c.onFinish(op)

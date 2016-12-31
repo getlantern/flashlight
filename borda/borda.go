@@ -64,9 +64,9 @@ func startBordaAndProxyBench(reportInterval time.Duration, enabled func() bool) 
 		}
 		dimToValue("dial_time", ctx, values)
 		dimToValue("client_bytes_sent", ctx, values)
-		dimToValue("client_conn_bytes_sent_per_second", ctx, values)
+		dimToValue("client_send_seconds", ctx, values)
 		dimToValue("client_bytes_recv", ctx, values)
-		dimToValue("client_conn_bytes_recv_per_second", ctx, values)
+		dimToValue("client_recv_seconds", ctx, values)
 
 		reportErr := reportToBorda(values, ctx)
 		if reportErr != nil {

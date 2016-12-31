@@ -42,6 +42,6 @@ func TestConnMetrics(t *testing.T) {
 	assert.Equal(t, "xfer", finalCtx["op"])
 	assert.Equal(t, float64(8), finalCtx["client_bytes_sent"])
 	assert.Equal(t, float64(10), finalCtx["client_bytes_recv"])
-	assert.True(t, finalCtx["client_conn_bytes_sent_per_second"].(float64) > 0)
-	assert.True(t, finalCtx["client_conn_bytes_recv_per_second"].(float64) > 0)
+	assert.True(t, finalCtx["client_send_seconds"].(float64) > 0)
+	assert.True(t, finalCtx["client_recv_seconds"].(float64) > 0)
 }
