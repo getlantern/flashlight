@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -73,11 +74,17 @@ func TestServeHTTPOk(t *testing.T) {
 }
 
 func TestServeHTTPTimeout(t *testing.T) {
+	originalRequestTimeout := getRequestTimeout()
+	atomic.StoreInt64(&requestTimeout, int64(50*time.Millisecond))
+	defer func() {
+		atomic.StoreInt64(&requestTimeout, int64(originalRequestTimeout))
+	}()
+
 	client := NewClient(func() bool { return true },
 		func() string { return "proToken" })
 	d := mockconn.SucceedingDialer([]byte{})
 	resetBalancer(func(network, addr string) (net.Conn, error) {
-		<-time.After(requestTimeout * 2)
+		<-time.After(getRequestTimeout() * 2)
 		return d.Dial(network, addr)
 	})
 

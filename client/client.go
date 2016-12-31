@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/appdir"
@@ -25,13 +26,6 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 	"github.com/oxtoacart/bpool"
-)
-
-const (
-	// Set a hard limit when processing proxy requests. Should be short enough to
-	// avoid applications bypassing Lantern.
-	// Chrome has a 30s timeout before marking proxy as bad.
-	requestTimeout = 20 * time.Second
 )
 
 var (
@@ -60,6 +54,11 @@ var (
 	}
 
 	buffers = bpool.NewBytePool(1000, 32768)
+
+	// Set a hard limit when processing proxy requests. Should be short enough to
+	// avoid applications bypassing Lantern.
+	// Chrome has a 30s timeout before marking proxy as bad.
+	requestTimeout = int64(20 * time.Second)
 )
 
 // Client is an HTTP proxy that accepts connections from local programs and
@@ -244,7 +243,7 @@ func (client *Client) dialHTTP(network, addr string) (conn net.Conn, err error) 
 }
 
 func (client *Client) dial(isConnect bool, network, addr string) (conn net.Conn, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), getRequestTimeout())
 	defer cancel()
 	port, err := client.portForAddress(addr)
 	if err != nil {
@@ -392,4 +391,8 @@ func errorResponse(req *http.Request, err error) *http.Response {
 	}
 	res.StatusCode = http.StatusServiceUnavailable
 	return res
+}
+
+func getRequestTimeout() time.Duration {
+	return time.Duration(atomic.LoadInt64(&requestTimeout))
 }
