@@ -76,6 +76,9 @@ func (c *conn) report() {
 	op.FailIf(c.firstErr)
 	c.errMx.RUnlock()
 
+	// The below is a little verbose, but it allows us to see the transfer rates
+	// right within a user's logs, which is useful when someone submits their logs
+	// together with a complaint of Lantern being slow.
 	log.Debug("Finished xfer")
 	op.End()
 }
