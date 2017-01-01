@@ -87,9 +87,12 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 				log.Debugf("Attempted to dial ourselves. Dialing directly to %s instead", addr)
 				conn, err = netx.DialTimeout(network, addr, 1*time.Minute)
 			} else {
-				// Yeah any site visited through Lantern can be a check target
-				balancer.AddCheckTarget(addr)
 				conn, err = d(network, addr)
+				if err == nil {
+					// Yeah any site visited through Lantern can be a check target, but
+					// only check it if the dial was successful.
+					balancer.AddCheckTarget(addr)
+				}
 			}
 
 			if err != nil {

@@ -3,11 +3,11 @@ package client
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -61,7 +61,7 @@ func TestServeHTTPOk(t *testing.T) {
 	req, _ := http.NewRequest("CONNECT", "https://b.com:443", nil)
 	client.ServeHTTP(w, req)
 	assert.Equal(t, "hijacked", w.Dialer.LastDialed())
-	assert.Equal(t, "HTTP/1.1 200 OK\r\nKeep-Alive: timeout: 38\r\nContent-Length: 0\r\n\r\nHTTP/1.1 404 Not Found\r\n\r\n", string(w.Dialer.Received()))
+	assert.Equal(t, "HTTP/1.1 200 OK\r\nKeep-Alive: timeout=38\r\nContent-Length: 0\r\n\r\nHTTP/1.1 404 Not Found\r\n\r\n", string(w.Dialer.Received()))
 
 	// disable the test temporarily. It has weird error "readLoopPeekFailLocked <nil>" when run with `go test -race`
 	/*w = mockWriter{ResponseWriter: httptest.NewRecorder(), Dialer: mockconn.SucceedingDialer([]byte{})}
@@ -74,25 +74,29 @@ func TestServeHTTPOk(t *testing.T) {
 }
 
 func TestServeHTTPTimeout(t *testing.T) {
+	originalRequestTimeout := getRequestTimeout()
+	atomic.StoreInt64(&requestTimeout, int64(50*time.Millisecond))
+	defer func() {
+		atomic.StoreInt64(&requestTimeout, int64(originalRequestTimeout))
+	}()
+
 	client := NewClient(func() bool { return true },
 		func() string { return "proToken" })
 	d := mockconn.SucceedingDialer([]byte{})
 	resetBalancer(func(network, addr string) (net.Conn, error) {
-		<-time.After(200 * time.Millisecond)
+		<-time.After(getRequestTimeout() * 2)
 		return d.Dial(network, addr)
 	})
 
 	w := mockWriter{ResponseWriter: httptest.NewRecorder(), Dialer: d}
 	req, _ := http.NewRequest("CONNECT", "https://a.com:443", nil)
-	ctx, _ := context.WithTimeout(context.Background(), 100*time.Millisecond)
-	client.serveHTTPWithContext(ctx, w, req)
-	assert.Equal(t, 502, w.Status(), "It should respond bad gateway when couldn't dial via proxy timely")
+	client.ServeHTTP(w, req)
+	assert.Equal(t, 200, w.Status(), "CONNECT requests should always succeed")
 
 	w = mockWriter{ResponseWriter: httptest.NewRecorder(), Dialer: d}
 	req, _ = http.NewRequest("GET", "http://b.com/action", nil)
 	req.Header.Set("Accept", "not-html")
-	ctx, _ = context.WithTimeout(context.Background(), 100*time.Millisecond)
-	client.serveHTTPWithContext(ctx, w, req)
+	client.ServeHTTP(w, req)
 	assert.Equal(t, 200, w.Status(), "It should respond 200 OK with error page")
 	assert.Contains(t, string(w.Dialer.Received()), "context deadline exceeded", "should be with context error")
 }
