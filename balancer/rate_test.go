@@ -43,7 +43,7 @@ func TestRate(t *testing.T) {
 	r.begin(func() time.Time {
 		return ts
 	})
-	r.update(5, ts)
+	r.update(4, ts)
 	r.snapshot()
 	assert.EqualValues(t, 1, r.min)
 	assert.EqualValues(t, 1.5, r.max)

@@ -25,9 +25,9 @@ func (r *rate) begin(ts func() time.Time) {
 	r.mx.Unlock()
 }
 
-func (r *rate) update(newTotal int, ts time.Time) {
+func (r *rate) update(n int, ts time.Time) {
 	r.mx.Lock()
-	r.total = newTotal
+	r.total += n
 	r.end = ts
 	r.mx.Unlock()
 }
