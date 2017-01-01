@@ -15,8 +15,10 @@ func TestConnMetrics(t *testing.T) {
 	var finalCtx map[string]interface{}
 	ops.RegisterReporter(func(failure error, ctx map[string]interface{}) {
 		mx.Lock()
-		finalErr = failure
-		finalCtx = ctx
+		if ctx["metric_client_bytes_sent"] == 8.0 {
+			finalErr = failure
+			finalCtx = ctx
+		}
 		mx.Unlock()
 	})
 
