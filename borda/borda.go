@@ -2,6 +2,7 @@ package borda
 
 import (
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -62,11 +63,14 @@ func startBordaAndProxyBench(reportInterval time.Duration, enabled func() bool) 
 		} else {
 			values["success_count"] = 1
 		}
-		dimToValue("dial_time", ctx, values)
-		dimToValue("client_bytes_sent", ctx, values)
-		dimToValue("client_send_seconds", ctx, values)
-		dimToValue("client_bytes_recv", ctx, values)
-		dimToValue("client_recv_seconds", ctx, values)
+
+		// Convert metrics to values
+		for dim, val := range ctx {
+			if strings.HasPrefix(dim, "metric_") {
+				delete(ctx, dim)
+				values[dim[7:]] = val.(float64)
+			}
+		}
 
 		reportErr := reportToBorda(values, ctx)
 		if reportErr != nil {
@@ -94,7 +98,7 @@ func createBordaClient(reportInterval time.Duration) *borda.Client {
 	})
 }
 
-func dimToValue(dim string, ctx map[string]interface{}, values map[string]float64) {
+func metricToValue(dim string, ctx map[string]interface{}, values map[string]float64) {
 	val, found := ctx[dim]
 	if found {
 		delete(ctx, dim)

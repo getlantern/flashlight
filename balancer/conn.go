@@ -19,34 +19,71 @@ const (
 // success of connection.
 type conn struct {
 	net.Conn
-	origin    string
-	onFinish  func(op *ops.Op)
-	sent      int64
-	sendStart int64
-	sendEnd   int64
-	recvStart int64
-	recvEnd   int64
-	recv      int64
-	firstErr  error
-	closed    int32
-	errMx     sync.RWMutex
+	origin   string
+	onFinish func(op *ops.Op)
+	sent     *rate
+	recv     *rate
+	firstErr error
+	closed   int32
+	errMx    sync.RWMutex
 }
 
 func wrap(wrapped net.Conn, origin string, onFinish func(op *ops.Op)) net.Conn {
-	return &conn{
+	c := &conn{
 		Conn:     wrapped,
 		origin:   origin,
 		onFinish: onFinish,
+		sent:     &rate{},
+		recv:     &rate{},
+	}
+	go c.track()
+	return c
+}
+
+func (c *conn) track() {
+	for {
+		c.sent.snapshot()
+		c.recv.snapshot()
+		if atomic.LoadInt32(&c.closed) == 1 {
+			c.report()
+			return
+		}
+		time.Sleep(1 * time.Second)
 	}
 }
 
-func (c *conn) Write(b []byte) (int, error) {
-	atomic.CompareAndSwapInt64(&c.sendStart, 0, time.Now().UnixNano())
-	n, err := c.Conn.Write(b)
-	if n > 0 {
-		atomic.StoreInt64(&c.sendEnd, time.Now().UnixNano())
-		atomic.AddInt64(&c.sent, int64(n))
+func (c *conn) report() {
+	op := ops.Begin("xfer").Origin(c.origin, "")
+
+	c.sent.mx.Lock()
+	op.SetMetric("client_bytes_sent", float64(c.sent.total)).
+		SetMetric("client_bps_sent_min", c.sent.min).
+		SetMetric("client_bps_sent_max", c.sent.max).
+		SetMetric("client_bps_sent_avg", c.sent.average())
+	c.sent.mx.Unlock()
+
+	c.recv.mx.Lock()
+	op.SetMetric("client_bytes_recv", float64(c.recv.total)).
+		SetMetric("client_bps_recv_min", c.recv.min).
+		SetMetric("client_bps_recv_max", c.recv.max).
+		SetMetric("client_bps_recv_avg", c.recv.average())
+	c.recv.mx.Unlock()
+
+	if c.onFinish != nil {
+		c.onFinish(op)
 	}
+	c.errMx.RLock()
+	op.FailIf(c.firstErr)
+	c.errMx.RUnlock()
+
+	log.Debug("Finished xfer")
+	op.End()
+}
+
+func (c *conn) Write(b []byte) (int, error) {
+	c.sent.begin(time.Now)
+	n, err := c.Conn.Write(b)
+	c.sent.update(n, time.Now())
 	if err != nil && !isTimeout(err) {
 		c.storeError(err)
 	}
@@ -54,12 +91,9 @@ func (c *conn) Write(b []byte) (int, error) {
 }
 
 func (c *conn) Read(b []byte) (int, error) {
-	atomic.CompareAndSwapInt64(&c.recvStart, 0, time.Now().UnixNano())
+	c.recv.begin(time.Now)
 	n, err := c.Conn.Read(b)
-	if n > 0 {
-		atomic.StoreInt64(&c.recvEnd, time.Now().UnixNano())
-		atomic.AddInt64(&c.recv, int64(n))
-	}
+	c.recv.update(n, time.Now())
 	if err != nil && !isTimeout(err) && err != io.EOF {
 		c.storeError(err)
 	}
@@ -68,25 +102,7 @@ func (c *conn) Read(b []byte) (int, error) {
 
 func (c *conn) Close() error {
 	if atomic.CompareAndSwapInt32(&c.closed, 0, 1) {
-		err := c.Conn.Close()
-		sent := float64(atomic.LoadInt64(&c.sent))
-		recv := float64(atomic.LoadInt64(&c.recv))
-		sendNanos := float64(atomic.LoadInt64(&c.sendEnd) - atomic.LoadInt64(&c.sendStart))
-		recvNanos := float64(atomic.LoadInt64(&c.recvEnd) - atomic.LoadInt64(&c.recvStart))
-		op := ops.Begin("xfer").
-			Set("client_bytes_sent", sent).
-			Set("client_send_seconds", float64(sendNanos)/float64(time.Second)).
-			Set("client_bytes_recv", recv).
-			Set("client_recv_seconds", float64(recvNanos)/float64(time.Second)).
-			Origin(c.origin, "")
-		if c.onFinish != nil {
-			c.onFinish(op)
-		}
-		c.errMx.RLock()
-		op.FailIf(c.firstErr)
-		c.errMx.RUnlock()
-		op.End()
-		return err
+		return c.Conn.Close()
 	}
 	return nil
 }

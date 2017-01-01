@@ -4,15 +4,20 @@ import (
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/mockconn"
 	"github.com/stretchr/testify/assert"
+	"sync"
 	"testing"
+	"time"
 )
 
 func TestConnMetrics(t *testing.T) {
+	var mx sync.Mutex
 	var finalErr error
 	var finalCtx map[string]interface{}
 	ops.RegisterReporter(func(failure error, ctx map[string]interface{}) {
+		mx.Lock()
 		finalErr = failure
 		finalCtx = ctx
+		mx.Unlock()
 	})
 
 	sd := mockconn.SucceedingDialer([]byte("1234567890"))
@@ -34,14 +39,25 @@ func TestConnMetrics(t *testing.T) {
 	assert.Equal(t, 10, n)
 	conn.Close()
 
+	// Wait for tracking to finish
+	time.Sleep(2 * time.Second)
+
+	mx.Lock()
+	defer mx.Unlock()
 	assert.Nil(t, finalErr)
 	if !assert.NotNil(t, finalCtx) {
 		return
 	}
 
 	assert.Equal(t, "xfer", finalCtx["op"])
-	assert.Equal(t, float64(8), finalCtx["client_bytes_sent"])
-	assert.Equal(t, float64(10), finalCtx["client_bytes_recv"])
-	assert.True(t, finalCtx["client_send_seconds"].(float64) > 0)
-	assert.True(t, finalCtx["client_recv_seconds"].(float64) > 0)
+
+	assert.Equal(t, float64(8), finalCtx["metric_client_bytes_sent"])
+	assert.True(t, finalCtx["metric_client_bps_sent_min"].(float64) > 0)
+	assert.True(t, finalCtx["metric_client_bps_sent_max"].(float64) > 0)
+	assert.True(t, finalCtx["metric_client_bps_sent_avg"].(float64) > 0)
+
+	assert.Equal(t, float64(10), finalCtx["metric_client_bytes_recv"])
+	assert.True(t, finalCtx["metric_client_bps_recv_min"].(float64) > 0)
+	assert.True(t, finalCtx["metric_client_bps_recv_max"].(float64) > 0)
+	assert.True(t, finalCtx["metric_client_bps_recv_avg"].(float64) > 0)
 }

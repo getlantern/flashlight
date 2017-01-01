@@ -176,5 +176,11 @@ func (op *Op) Origin(origin string, defaultPort string) *Op {
 // and records whether or not the dial succeeded (based on err being nil).
 func (op *Op) DialTime(start time.Time, err error) *Op {
 	delta := time.Now().Sub(start)
-	return op.Set("dial_time", float64(delta.Nanoseconds())/1000000).Set("dial_succeeded", err == nil)
+	return op.SetMetric("dial_time", float64(delta.Nanoseconds())/1000000).Set("dial_succeeded", err == nil)
+}
+
+// SetMetric sets a named metric. Metrics will be reported as borda values
+// rather than dimensions.
+func (op *Op) SetMetric(name string, value float64) *Op {
+	return op.Set("metric_"+name, value)
 }
