@@ -97,7 +97,7 @@ imports:
 - name: github.com/getlantern/hidden
   version: d52a649ab33af200943bb599898dbdcfdbc94cb7
 - name: github.com/getlantern/http-proxy
-  version: 9b6dca52596c9fb9461eb1d685d1f1109339eab0
+  version: 80fe020621503a9bdc241dd2c20c34088926b4a0
   subpackages:
   - buffers
   - commonfilter
@@ -110,7 +110,7 @@ imports:
   - server
   - utils
 - name: github.com/getlantern/http-proxy-lantern
-  version: 6c9135e57466f70853c035ba67fbfd3bcda60601
+  version: 2d93c276a2d082dcfcba65c1319dc85f5f10cd6a
   subpackages:
   - analytics
   - blacklist
@@ -169,7 +169,7 @@ imports:
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxy
-  version: 10918aeb0aa91dd11f869b81a57a48de73182c90
+  version: 876829e39cf8243d123b02f02efe8da1266effb4
 - name: github.com/getlantern/proxybench
   version: 9eb1a7eb9ee31fccec14a89db42863e10c51460f
 - name: github.com/getlantern/rot13
