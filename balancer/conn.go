@@ -21,8 +21,8 @@ type conn struct {
 	net.Conn
 	origin   string
 	onFinish func(op *ops.Op)
-	sent     *rate
-	recv     *rate
+	sent     *rater
+	recv     *rater
 	firstErr error
 	closed   int32
 	errMx    sync.RWMutex
@@ -33,8 +33,8 @@ func wrap(wrapped net.Conn, origin string, onFinish func(op *ops.Op)) net.Conn {
 		Conn:     wrapped,
 		origin:   origin,
 		onFinish: onFinish,
-		sent:     &rate{},
-		recv:     &rate{},
+		sent:     &rater{},
+		recv:     &rater{},
 	}
 	go c.track()
 	return c
@@ -42,8 +42,8 @@ func wrap(wrapped net.Conn, origin string, onFinish func(op *ops.Op)) net.Conn {
 
 func (c *conn) track() {
 	for {
-		c.sent.snapshot()
-		c.recv.snapshot()
+		c.sent.calc()
+		c.recv.calc()
 		if atomic.LoadInt32(&c.closed) == 1 {
 			c.report()
 			return
@@ -55,19 +55,17 @@ func (c *conn) track() {
 func (c *conn) report() {
 	op := ops.Begin("xfer").Origin(c.origin, "")
 
-	c.sent.mx.Lock()
-	op.SetMetric("client_bytes_sent", float64(c.sent.total)).
-		SetMetric("client_bps_sent_min", c.sent.min).
-		SetMetric("client_bps_sent_max", c.sent.max).
-		SetMetric("client_bps_sent_avg", c.sent.average())
-	c.sent.mx.Unlock()
+	total, min, max, average := c.sent.get()
+	op.SetMetric("client_bytes_sent", total).
+		SetMetric("client_bps_sent_min", min).
+		SetMetric("client_bps_sent_max", max).
+		SetMetric("client_bps_sent_avg", average)
 
-	c.recv.mx.Lock()
-	op.SetMetric("client_bytes_recv", float64(c.recv.total)).
-		SetMetric("client_bps_recv_min", c.recv.min).
-		SetMetric("client_bps_recv_max", c.recv.max).
-		SetMetric("client_bps_recv_avg", c.recv.average())
-	c.recv.mx.Unlock()
+	total, min, max, average = c.recv.get()
+	op.SetMetric("client_bytes_recv", total).
+		SetMetric("client_bps_recv_min", min).
+		SetMetric("client_bps_recv_max", max).
+		SetMetric("client_bps_recv_avg", average)
 
 	if c.onFinish != nil {
 		c.onFinish(op)
@@ -86,7 +84,7 @@ func (c *conn) report() {
 func (c *conn) Write(b []byte) (int, error) {
 	c.sent.begin(time.Now)
 	n, err := c.Conn.Write(b)
-	c.sent.update(n, time.Now())
+	c.sent.advance(n, time.Now())
 	if err != nil && !isTimeout(err) {
 		c.storeError(err)
 	}
@@ -96,7 +94,7 @@ func (c *conn) Write(b []byte) (int, error) {
 func (c *conn) Read(b []byte) (int, error) {
 	c.recv.begin(time.Now)
 	n, err := c.Conn.Read(b)
-	c.recv.update(n, time.Now())
+	c.recv.advance(n, time.Now())
 	if err != nil && !isTimeout(err) && err != io.EOF {
 		c.storeError(err)
 	}
