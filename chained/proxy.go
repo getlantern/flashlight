@@ -23,6 +23,10 @@ import (
 	"github.com/getlantern/tlsdialer"
 )
 
+const (
+	trustedSuffix = " (t)"
+)
+
 var (
 	chainedDialTimeout          = 10 * time.Second
 	theForceAddr, theForceToken string
@@ -225,8 +229,8 @@ func (p obfs4Wrapper) Trusted() bool {
 
 func (p obfs4Wrapper) Label() string {
 	label := p.Proxy.Label()
-	if p.trusted && !strings.HasSuffix(label, " (trusted)") {
-		label = label + " (trusted)"
+	if p.trusted && !strings.HasSuffix(label, trustedSuffix) {
+		label = label + trustedSuffix
 	}
 	return label
 }
@@ -263,9 +267,9 @@ func (p BaseProxy) Addr() string {
 }
 
 func (p BaseProxy) Label() string {
-	label := fmt.Sprintf("%v at %v", p.name, p.addr)
+	label := fmt.Sprintf("%-38v at %21v", p.name, p.addr)
 	if p.trusted {
-		label = label + " (trusted)"
+		label = label + trustedSuffix
 	}
 	return label
 }
