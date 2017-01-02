@@ -1,5 +1,5 @@
 hash: 3ef233440908b6420eee4b1e2a3388cb5448d1271e1137790e9ece03fc227388
-updated: 2016-12-31T13:33:33.438311711-06:00
+updated: 2017-01-02T09:51:07.230504791-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -110,7 +110,7 @@ imports:
   - server
   - utils
 - name: github.com/getlantern/http-proxy-lantern
-  version: 6c9135e57466f70853c035ba67fbfd3bcda60601
+  version: 2d93c276a2d082dcfcba65c1319dc85f5f10cd6a
   subpackages:
   - analytics
   - blacklist
@@ -144,7 +144,7 @@ imports:
 - name: github.com/getlantern/measured
   version: 9abc2622c88edcbe1436a80e69f912b3ccfc73bf
 - name: github.com/getlantern/mockconn
-  version: 8c509fe01ae0443e11db44f94435507daad53a73
+  version: 422a5afd4432dd82b1389333d5352da003d898a6
 - name: github.com/getlantern/netx
   version: ea33fe66744c0da3cc939893acc5962da35fbd9c
 - name: github.com/getlantern/notifier
@@ -169,9 +169,9 @@ imports:
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxy
-  version: 10918aeb0aa91dd11f869b81a57a48de73182c90
+  version: 876829e39cf8243d123b02f02efe8da1266effb4
 - name: github.com/getlantern/proxybench
-  version: 9eb1a7eb9ee31fccec14a89db42863e10c51460f
+  version: a341b7f04dcd840aa790940396152bd108bfd1e4
 - name: github.com/getlantern/rot13
   version: 33f93fc1fe85c042c0667a1814e6379bd5e7eb40
 - name: github.com/getlantern/rotator
@@ -213,7 +213,7 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/websocket
-  version: 3ab3a8b8831546bd18fd182c20687ca853b2bb13
+  version: adf16b31781325cbd41085c5be901d95b4d1f33d
 - name: github.com/hashicorp/golang-lru
   version: 0a025b7e63adc15a622f29b0b2c4c3848243bbf6
   subpackages:
@@ -263,7 +263,7 @@ imports:
   subpackages:
   - utils
 - name: github.com/xtaci/kcp-go
-  version: 7765e3eac25f292b6974bc23e5ac4c2245b9cefe
+  version: 1a20d38aba9b713cbf9088d04b39207be1ca4d58
 - name: golang.org/x/crypto
   version: f6b343c37ca80bfa8ea539da67a0b621f84fab1d
   subpackages:
@@ -280,7 +280,7 @@ imports:
   - twofish
   - xtea
 - name: golang.org/x/net
-  version: 45e771701b814666a7eb299e6c7a57d0b1799e91
+  version: 8fd7f25955530b92e73e9e1932a41b522b22ccd9
   repo: https://github.com/golang/net
   vcs: git
   subpackages:
