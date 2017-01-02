@@ -65,7 +65,6 @@ import:
   - utils
 - package: github.com/getlantern/http-proxy-lantern
 - package: github.com/getlantern/http-proxy
-  version: 9b6dca5
 - package: github.com/getlantern/fdcount
 - package: github.com/getlantern/buuid
 - package: github.com/getlantern/bytecounting
