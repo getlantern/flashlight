@@ -12,7 +12,7 @@ import (
 const (
 	ioTimeout       = "i/o timeout"
 	ioTimeoutLength = 11
-	nanosPerSecond  = 1000 * 1000
+	rateInterval    = 1 * time.Second
 )
 
 // rtconn wraps a net.Conn and tracks statistics on data transfer, throughput
@@ -46,7 +46,7 @@ func (c *rtconn) track() {
 			c.report()
 			return
 		}
-		time.Sleep(5 * time.Second)
+		time.Sleep(rateInterval)
 	}
 }
 

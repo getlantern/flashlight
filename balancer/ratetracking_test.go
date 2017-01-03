@@ -40,11 +40,11 @@ func TestRateTracking(t *testing.T) {
 	}
 	assert.Equal(t, 10, n)
 	// Be inactive for a bit
-	time.Sleep(3 * time.Second)
+	time.Sleep(3 * rateInterval)
 	conn.Close()
 
 	// Wait for tracking to finish
-	time.Sleep(2 * time.Second)
+	time.Sleep(2 * rateInterval)
 
 	mx.Lock()
 	defer mx.Unlock()
