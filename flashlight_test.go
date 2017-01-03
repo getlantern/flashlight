@@ -3,8 +3,6 @@ package flashlight
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/base64"
-	"encoding/binary"
 	"io/ioutil"
 	"net"
 	"net/http"
