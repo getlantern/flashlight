@@ -28,8 +28,8 @@ var (
 	readableconfig         = flag.Bool("readableconfig", false, "if specified, disables obfuscation of the config yaml so that it remains human readable")
 	staging                = flag.Bool("staging", false, "if true, run Lantern against our staging infrastructure")
 	bordaReportInterval    = flag.Duration("borda-report-interval", 5*time.Minute, "How frequently to report errors to borda. Set to 0 to disable reporting.")
-	bordaSamplePercentage  = flag.Float64("borda-sample-percentage", 0.001, "The percentage of activity to report to Borda (0.001 = 0.1%)")
-	logglySamplePercentage = flag.Float64("loggly-sample-percentage", 0.001, "The percentage of activity to report to Loggly (0.001 = 0.1%)")
+	bordaSamplePercentage  = flag.Float64("borda-sample-percentage", 0.01, "The percentage of activity to report to Borda (0.01 = 1%)")
+	logglySamplePercentage = flag.Float64("loggly-sample-percentage", 0.01, "The percentage of activity to report to Loggly (0.01 = 1%)")
 	help                   = flag.Bool("help", false, "Get usage help")
 )
 
