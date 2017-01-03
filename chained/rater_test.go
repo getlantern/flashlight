@@ -1,4 +1,4 @@
-package balancer
+package chained
 
 import (
 	"github.com/stretchr/testify/assert"
