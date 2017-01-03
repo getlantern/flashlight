@@ -6,9 +6,8 @@ import (
 )
 
 // rater provides a mechanism for accumulating a count over time and tracking
-// the rate at which that count is changing. The rate itself is tracked as an
-// exponential moving average, and we remember the min and max of this rate over
-// time.
+// the rate at which that count is changing. We remember the min and max of this
+// rate over time.
 //
 // Time begins with a call to begin().
 //
@@ -25,7 +24,6 @@ type rater struct {
 	lastSnapshotted  time.Time
 	min              float64
 	max              float64
-	avg              *ema
 	mx               sync.Mutex
 }
 
@@ -69,19 +67,11 @@ func (r *rater) calc() {
 	delta := float64(r.total - r.snapshottedTotal)
 	newRate := delta / deltaSeconds
 
-	var avg float64
-	if r.avg == nil {
-		r.avg = newEMA(newRate, 0.5)
-		avg = newRate
-	} else {
-		avg = r.avg.update(newRate)
+	if !hasSnapshotted || newRate < r.min {
+		r.min = newRate
 	}
-
-	if !hasSnapshotted || avg < r.min {
-		r.min = avg
-	}
-	if !hasSnapshotted || avg > r.max {
-		r.max = avg
+	if !hasSnapshotted || newRate > r.max {
+		r.max = newRate
 	}
 	r.snapshottedTotal = r.total
 	r.lastSnapshotted = r.end

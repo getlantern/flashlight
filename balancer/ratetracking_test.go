@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func TestConnMetrics(t *testing.T) {
+func TestRateTracking(t *testing.T) {
 	var mx sync.Mutex
 	var finalErr error
 	var finalCtx map[string]interface{}
@@ -27,7 +27,7 @@ func TestConnMetrics(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	conn := wrap(wrapped, "origin:443", nil)
+	conn := withRateTracking(wrapped, "origin:443", nil)
 	n, err := conn.Write([]byte("12345678"))
 	if !assert.NoError(t, err) {
 		return
@@ -39,6 +39,8 @@ func TestConnMetrics(t *testing.T) {
 		return
 	}
 	assert.Equal(t, 10, n)
+	// Be inactive for a bit
+	time.Sleep(3 * time.Second)
 	conn.Close()
 
 	// Wait for tracking to finish

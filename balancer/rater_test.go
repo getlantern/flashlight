@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func TestRate(t *testing.T) {
+func TestRater(t *testing.T) {
 	r := &rater{}
 	r.calc()
 
@@ -56,6 +56,16 @@ func TestRate(t *testing.T) {
 	total, min, max, average = r.get()
 	assert.EqualValues(t, 5, total)
 	assert.EqualValues(t, 1, min)
-	assert.EqualValues(t, 1.5, max)
+	assert.EqualValues(t, 2, max)
 	assert.EqualValues(t, 5.0/3.0, average)
+
+	// Simulate period of inactivity
+	ts = ts.Add(3 * time.Second)
+	r.advance(0, ts)
+	r.calc()
+	total, min, max, average = r.get()
+	assert.EqualValues(t, 5, total)
+	assert.EqualValues(t, 0, min)
+	assert.EqualValues(t, 2, max)
+	assert.EqualValues(t, 5.0/6.0, average)
 }

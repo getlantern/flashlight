@@ -15,32 +15,30 @@ const (
 	nanosPerSecond  = 1000 * 1000
 )
 
-// conn wraps a net.Conn and tracks statistics on data transfer, throughput and
-// success of connection.
-type conn struct {
+// rtconn wraps a net.Conn and tracks statistics on data transfer, throughput
+// and success of connection.
+type rtconn struct {
 	net.Conn
 	origin   string
 	onFinish func(op *ops.Op)
-	sent     *rater
-	recv     *rater
+	sent     rater
+	recv     rater
 	firstErr error
 	closed   int32
 	errMx    sync.RWMutex
 }
 
-func wrap(wrapped net.Conn, origin string, onFinish func(op *ops.Op)) net.Conn {
-	c := &conn{
+func withRateTracking(wrapped net.Conn, origin string, onFinish func(op *ops.Op)) net.Conn {
+	c := &rtconn{
 		Conn:     wrapped,
 		origin:   origin,
 		onFinish: onFinish,
-		sent:     &rater{},
-		recv:     &rater{},
 	}
 	go c.track()
 	return c
 }
 
-func (c *conn) track() {
+func (c *rtconn) track() {
 	for {
 		c.sent.calc()
 		c.recv.calc()
@@ -52,7 +50,7 @@ func (c *conn) track() {
 	}
 }
 
-func (c *conn) report() {
+func (c *rtconn) report() {
 	op := ops.Begin("xfer").Origin(c.origin, "")
 
 	total, min, max, average := c.sent.get()
@@ -81,7 +79,7 @@ func (c *conn) report() {
 	op.End()
 }
 
-func (c *conn) Write(b []byte) (int, error) {
+func (c *rtconn) Write(b []byte) (int, error) {
 	c.sent.begin(time.Now)
 	n, err := c.Conn.Write(b)
 	c.sent.advance(n, time.Now())
@@ -91,7 +89,7 @@ func (c *conn) Write(b []byte) (int, error) {
 	return n, err
 }
 
-func (c *conn) Read(b []byte) (int, error) {
+func (c *rtconn) Read(b []byte) (int, error) {
 	c.recv.begin(time.Now)
 	n, err := c.Conn.Read(b)
 	c.recv.advance(n, time.Now())
@@ -101,14 +99,14 @@ func (c *conn) Read(b []byte) (int, error) {
 	return n, err
 }
 
-func (c *conn) Close() error {
+func (c *rtconn) Close() error {
 	if atomic.CompareAndSwapInt32(&c.closed, 0, 1) {
 		return c.Conn.Close()
 	}
 	return nil
 }
 
-func (c *conn) storeError(err error) {
+func (c *rtconn) storeError(err error) {
 	c.errMx.Lock()
 	if c.firstErr == nil {
 		c.firstErr = err
