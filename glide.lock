@@ -148,7 +148,7 @@ imports:
 - name: github.com/getlantern/mockconn
   version: 422a5afd4432dd82b1389333d5352da003d898a6
 - name: github.com/getlantern/netx
-  version: 73cb70f5b027da6ee8c87c4c5a21b78e7cf8e9ce
+  version: ea33fe66744c0da3cc939893acc5962da35fbd9c
 - name: github.com/getlantern/notifier
   version: 5acd0ccf0e6c29710d332a42f580e92c3b04ae7b
   subpackages:
