@@ -300,6 +300,7 @@ func (b *Balancer) doPrintStats() {
 	dialersCopy := make([]*dialer, len(b.dialers.dialers))
 	copy(dialersCopy, b.dialers.dialers)
 	sortedDialers := b.st(dialersCopy)
+	heap.Init(&sortedDialers)
 	log.Debug("-------------------------- Dialer Stats -----------------------")
 	for {
 		if sortedDialers.Len() == 0 {
