@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/appdir"
@@ -23,8 +25,6 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 	"github.com/oxtoacart/bpool"
-
-	"golang.org/x/net/context"
 )
 
 var (
@@ -48,6 +48,11 @@ var (
 	}
 
 	buffers = bpool.NewBytePool(1000, 32768)
+
+	// Set a hard limit when processing proxy requests. Should be short enough to
+	// avoid applications bypassing Lantern.
+	// Chrome has a 30s timeout before marking proxy as bad.
+	requestTimeout = int64(20 * time.Second)
 )
 
 // Client is an HTTP proxy that accepts connections from local programs and
@@ -82,7 +87,7 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 	}
 
 	keepAliveIdleTimeout := idleTimeout - 5*time.Second
-	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers, client.dialCONNECT)
+	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers, false, client.dialCONNECT)
 	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
 	return client
 }
@@ -160,7 +165,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 			if portErr != nil {
 				return nil, portErr
 			}
-			return client.doDial(true, addr, port)
+			return client.doDial(ctx, true, addr, port)
 		},
 	}
 	server, err := socks5.New(conf)
@@ -222,14 +227,16 @@ func (client *Client) dialHTTP(network, addr string) (conn net.Conn, err error) 
 }
 
 func (client *Client) dial(isConnect bool, network, addr string) (conn net.Conn, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), getRequestTimeout())
+	defer cancel()
 	port, err := client.portForAddress(addr)
 	if err != nil {
 		return nil, err
 	}
-	return client.doDial(isConnect, addr, port)
+	return client.doDial(ctx, isConnect, addr, port)
 }
 
-func (client *Client) doDial(isCONNECT bool, addr string, port int) (net.Conn, error) {
+func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, port int) (net.Conn, error) {
 	// Establish outbound connection
 	if client.shouldSendToProxy(addr, port) {
 		d := client.proxiedDialer(func(network, addr string) (net.Conn, error) {
@@ -246,11 +253,32 @@ func (client *Client) doDial(isCONNECT bool, addr string, port int) (net.Conn, e
 			}
 			return bal.Dial(proto, addr)
 		})
-		return d("tcp", addr)
+		// TODO: pass context down to all layers.
+		chDone := make(chan bool)
+		var conn net.Conn
+		var err error
+		go func() {
+			conn, err = d("tcp", addr)
+			chDone <- true
+		}()
+		select {
+		case <-chDone:
+			return conn, err
+		case <-ctx.Done():
+			go func() {
+				<-chDone
+				if conn != nil {
+					log.Debugf("Connection to %s established too late, closing", addr)
+					conn.Close()
+				}
+			}()
+			return nil, ctx.Err()
+		}
 	}
 
 	log.Tracef("Port not allowed, bypassing proxy and sending request directly to %v", addr)
-	return netx.DialTimeout("tcp", addr, 1*time.Minute)
+	// Use netx because on Android, we need a special protected dialer
+	return netx.DialContext(ctx, "tcp", addr)
 }
 
 func (client *Client) shouldSendToProxy(addr string, port int) bool {
@@ -327,4 +355,8 @@ func errorResponse(req *http.Request, err error) *http.Response {
 	}
 	res.StatusCode = http.StatusServiceUnavailable
 	return res
+}
+
+func getRequestTimeout() time.Duration {
+	return time.Duration(atomic.LoadInt64(&requestTimeout))
 }

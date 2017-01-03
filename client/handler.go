@@ -11,7 +11,6 @@ import (
 // getReverseProxy().
 func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	userAgent := req.Header.Get("User-Agent")
-
 	op := ops.Begin("proxy").
 		UserAgent(userAgent).
 		Origin(req)

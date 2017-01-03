@@ -57,7 +57,6 @@ func (app *App) Init() {
 		app.Flags["staging"] = false
 	}
 	settings = loadSettings(flashlight.Version, flashlight.RevisionDate, flashlight.BuildDate)
-	logging.SetReportingEnabled(settings.IsAutoReport())
 	app.exitCh = make(chan error, 1)
 	// use buffered channel to avoid blocking the caller of 'AddExitFunc'
 	// the number 10 is arbitrary
@@ -70,7 +69,10 @@ func (app *App) LogPanicAndExit(msg string) {
 		panic("Error initializing logging")
 	}
 
-	<-logging.Configure("", "dummy-device-id-for-panic", flashlight.Version, flashlight.RevisionDate, 0, 0, 0)
+	<-logging.Configure("",
+		// Reporting to Loggly is not possible at this point
+		func() bool { return false },
+	)
 
 	log.Error(msg)
 
@@ -113,6 +115,7 @@ func (app *App) Run() error {
 			app.Flags["configdir"].(string),
 			app.Flags["stickyconfig"].(bool),
 			settings.GetProxyAll,
+			settings.IsAutoReport,
 			app.Flags,
 			app.beforeStart,
 			app.afterStart,
