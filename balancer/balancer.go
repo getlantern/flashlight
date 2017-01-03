@@ -69,7 +69,7 @@ func New(opts *Opts) *Balancer {
 	// dialers
 	b := &Balancer{
 		st:             opts.Strategy,
-		nextTimeout:    ema.NewEMADuration(initialTimeout, 0.2),
+		nextTimeout:    ema.NewDuration(initialTimeout, 0.2),
 		closeCh:        make(chan bool),
 		stopStatsCh:    make(chan bool, 1),
 		forceStatsCh:   make(chan bool, 1),

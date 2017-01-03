@@ -118,8 +118,8 @@ func (c *checker) doCheck(dialer *dialer, checkData interface{}) bool {
 				dialer.forceRecheck()
 			}
 		}
-		newEMA := dialer.emaLatency.UpdateDuration(latency)
-		log.Tracef("Updated dialer %s emaLatency to %v", dialer.Label, newEMA)
+		New := dialer.emaLatency.UpdateDuration(latency)
+		log.Tracef("Updated dialer %s emaLatency to %v", dialer.Label, New)
 	} else {
 		log.Tracef("Dialer %s failed check", dialer.Label)
 	}

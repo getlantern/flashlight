@@ -19,9 +19,9 @@ func TestStickyStrategy(t *testing.T) {
 }
 
 func TestFastestStrategy(t *testing.T) {
-	d1 := &dialer{emaLatency: ema.NewEMADuration(100*time.Millisecond, 0.5)}
-	d2 := &dialer{emaLatency: ema.NewEMADuration(99*time.Millisecond, 0.5)}
-	d3 := &dialer{emaLatency: ema.NewEMADuration(0, 0.5)}
+	d1 := &dialer{emaLatency: ema.NewDuration(100*time.Millisecond, 0.5)}
+	d2 := &dialer{emaLatency: ema.NewDuration(99*time.Millisecond, 0.5)}
+	d3 := &dialer{emaLatency: ema.NewDuration(0, 0.5)}
 
 	h := Fastest([]*dialer{d1, d2, d3})
 	heap.Init(&h)
@@ -29,9 +29,9 @@ func TestFastestStrategy(t *testing.T) {
 }
 
 func TestQualityFirstStrategy(t *testing.T) {
-	d1 := &dialer{consecSuccesses: 3, consecFailures: 0, emaLatency: ema.NewEMADuration(10*time.Millisecond, 0.5)}
-	d2 := &dialer{consecSuccesses: 4, consecFailures: 0, emaLatency: ema.NewEMADuration(100*time.Millisecond, 0.5)}
-	d3 := &dialer{consecSuccesses: 0, consecFailures: 1, emaLatency: ema.NewEMADuration(10*time.Millisecond, 0.5)}
+	d1 := &dialer{consecSuccesses: 3, consecFailures: 0, emaLatency: ema.NewDuration(10*time.Millisecond, 0.5)}
+	d2 := &dialer{consecSuccesses: 4, consecFailures: 0, emaLatency: ema.NewDuration(100*time.Millisecond, 0.5)}
+	d3 := &dialer{consecSuccesses: 0, consecFailures: 1, emaLatency: ema.NewDuration(10*time.Millisecond, 0.5)}
 
 	h := QualityFirst([]*dialer{d1, d2})
 	heap.Init(&h)
@@ -43,10 +43,10 @@ func TestQualityFirstStrategy(t *testing.T) {
 }
 
 func TestWeightedStrategy(t *testing.T) {
-	d1 := &dialer{consecSuccesses: 3, consecFailures: 0, emaLatency: ema.NewEMADuration(100*time.Millisecond, 0.5)}
-	d2 := &dialer{consecSuccesses: 4, consecFailures: 0, emaLatency: ema.NewEMADuration(100*time.Millisecond, 0.5)}
-	d3 := &dialer{consecSuccesses: 0, consecFailures: 1, emaLatency: ema.NewEMADuration(10*time.Millisecond, 0.5)}
-	d4 := &dialer{consecSuccesses: 4, consecFailures: 0, emaLatency: ema.NewEMADuration(150*time.Millisecond, 0.5)}
+	d1 := &dialer{consecSuccesses: 3, consecFailures: 0, emaLatency: ema.NewDuration(100*time.Millisecond, 0.5)}
+	d2 := &dialer{consecSuccesses: 4, consecFailures: 0, emaLatency: ema.NewDuration(100*time.Millisecond, 0.5)}
+	d3 := &dialer{consecSuccesses: 0, consecFailures: 1, emaLatency: ema.NewDuration(10*time.Millisecond, 0.5)}
+	d4 := &dialer{consecSuccesses: 4, consecFailures: 0, emaLatency: ema.NewDuration(150*time.Millisecond, 0.5)}
 
 	h := Weighted(9, 1)([]*dialer{d1, d2})
 	heap.Init(&h)

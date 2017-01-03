@@ -73,7 +73,7 @@ func (d *dialer) Start() {
 	if d.emaLatency == nil {
 		// assuming all dialers super fast initially
 		// use large alpha to reflect network changes quickly
-		d.emaLatency = ema.NewEMADuration(0, 0.5)
+		d.emaLatency = ema.NewDuration(0, 0.5)
 	}
 	if d.stats == nil {
 		d.stats = &stats{}
