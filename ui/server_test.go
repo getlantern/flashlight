@@ -32,7 +32,32 @@ func TestStartServer(t *testing.T) {
 }
 
 func TestCheckOrigin(t *testing.T) {
-	s := NewServer("localhost:9898", false, "", "token")
+	localhost := NewServer("localhost:9898", false, "", "token")
+	doTestCheckOrigin(t, localhost, map[string]bool{
+		"localhost:9898": true,
+		"localhost:1243": false,
+		"127.0.0.1:9898": false,
+		"anyhost:9898":   false,
+	})
+
+	localIP := NewServer("127.0.0.1:9898", false, "", "token")
+	doTestCheckOrigin(t, localIP, map[string]bool{
+		"127.0.0.1:9898": true,
+		"localhost:9898": false,
+		"127.0.0.1:1243": false,
+		"anyhost:9898":   false,
+	})
+
+	allowRemote := NewServer("localhost:9898", true, "", "token")
+	doTestCheckOrigin(t, allowRemote, map[string]bool{
+		"localhost:9898": true,
+		"127.0.0.1:9898": true,
+		"localhost:1243": false,
+		"anyhost:9898":   true,
+	})
+}
+
+func doTestCheckOrigin(t *testing.T, s *Server, testOrigins map[string]bool) {
 	var hit bool
 	var basic http.HandlerFunc = func(http.ResponseWriter, *http.Request) {
 		hit = true
@@ -59,4 +84,16 @@ func TestCheckOrigin(t *testing.T) {
 	req.Header.Set("Origin", "http://"+s.listenAddr+"/")
 	h.ServeHTTP(w, req)
 	assert.True(t, hit, "request with the same origin should pass the check")
+
+	for origin, allow := range testOrigins {
+		hit = false
+		req, _ = http.NewRequest("GET", "/abc", nil)
+		req.Header.Set("Origin", "http://"+origin+"/")
+		h.ServeHTTP(w, req)
+		if allow {
+			assert.True(t, hit, "origin "+origin+" should pass the check")
+		} else {
+			assert.False(t, hit, "origin "+origin+" should not pass the check")
+		}
+	}
 }

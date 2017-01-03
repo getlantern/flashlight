@@ -16,7 +16,9 @@ import (
 )
 
 type Server struct {
-	listenAddr     string
+	// The address to listen on, in ":port" form if listen on all interfaces.
+	listenAddr string
+	// The address client should access. Available only if the server is started.
 	accessAddr     string
 	externalURL    string
 	localHTTPToken string
@@ -27,7 +29,8 @@ type Server struct {
 
 // NewServer creates a new UI server listen at addr in host:port format, or
 // arbitrary local port if addr is empty.
-// allInterfaces: when true, server will listen on all local interfaces.
+// allInterfaces: when true, server will listen on all local interfaces,
+// regardless of what the addr parameter is.
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
@@ -65,6 +68,7 @@ func (s *Server) Handle(pattern string, handler http.Handler) {
 }
 
 func (s *Server) Start() error {
+	log.Debugf("Lantern UI server start listening at %v", s.listenAddr)
 	l, err := net.Listen("tcp", s.listenAddr)
 	if err != nil {
 		return fmt.Errorf("Unable to listen at %v. Error is: %v", s.listenAddr, err)
@@ -85,17 +89,17 @@ func (s *Server) Start() error {
 		Handler:  s.getHandler(),
 		ErrorLog: log.AsStdLogger(),
 	}
-	ch := make(chan error, 1)
+	ch := make(chan error)
 	go func() {
-		log.Debugf("UI serving at %+v", l.Addr())
+		log.Debugf("UI serving at %v", l.Addr())
 		err := server.Serve(l)
-		log.Errorf("Error serving: %v", err)
 		ch <- err
 	}()
 
 	// to capture the error starting the server
 	select {
 	case err := <-ch:
+		log.Errorf("Error serving: %v", err)
 		return err
 	case <-time.After(100 * time.Millisecond):
 		log.Debugf("UI available at http://%v", s.accessAddr)
@@ -193,6 +197,8 @@ func checkOrigin(h http.Handler, localHTTPToken, listenAddr string) http.Handler
 				return
 			}
 			originHost := originURL.Host
+			// when Lantern is listening on all interfaces, e.g., allow remote
+			// connections, listenAddr is in ":port" form. Using HasSuffix
 			if !strings.HasSuffix(originHost, listenAddr) {
 				log.Errorf("Origin was '%v' but expecting: '%v'", originHost, listenAddr)
 				return
