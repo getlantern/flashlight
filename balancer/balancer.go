@@ -10,6 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/getlantern/ema"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/ops"
@@ -48,7 +49,7 @@ type Opts struct {
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
 	lastDialTime   int64 // not used anymore, but makes sure we're aligned on 64bit boundary
-	nextTimeout    *emaDuration
+	nextTimeout    *ema.EMA
 	st             Strategy
 	mu             sync.RWMutex
 	dialers        dialerHeap
@@ -68,7 +69,7 @@ func New(opts *Opts) *Balancer {
 	// dialers
 	b := &Balancer{
 		st:             opts.Strategy,
-		nextTimeout:    newEMADuration(initialTimeout, 0.2),
+		nextTimeout:    ema.NewDuration(initialTimeout, 0.2),
 		closeCh:        make(chan bool),
 		stopStatsCh:    make(chan bool, 1),
 		forceStatsCh:   make(chan bool, 1),
@@ -197,13 +198,13 @@ func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 		// Please leave this at Debug level, as it helps us understand performance
 		// issues caused by a poor proxy being selected.
 		log.Debugf("Successfully dialed via %v to %v://%v on pass %v", d.Label, network, addr, i)
-		return conn, nil
+		return withRateTracking(conn, addr, d.OnFinish), nil
 	}
 	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", network, addr, dialAttempts)
 }
 
 func (b *Balancer) dialWithTimeout(d *dialer, network, addr string) (net.Conn, error) {
-	limit := b.nextTimeout.Get()
+	limit := b.nextTimeout.GetDuration()
 	timer := time.NewTimer(limit)
 	var conn net.Conn
 	var err error
@@ -213,7 +214,7 @@ func (b *Balancer) dialWithTimeout(d *dialer, network, addr string) (net.Conn, e
 	ops.Go(func() {
 		conn, err = d.dial(network, addr)
 		if err == nil {
-			newTimeout := b.nextTimeout.UpdateWith(3 * time.Since(t))
+			newTimeout := b.nextTimeout.UpdateDuration(3 * time.Since(t))
 			log.Tracef("Updated nextTimeout to %v", newTimeout)
 		}
 		chDone <- true
@@ -225,7 +226,7 @@ func (b *Balancer) dialWithTimeout(d *dialer, network, addr string) (net.Conn, e
 			// take part in.
 			if d.ConsecSuccesses() > 0 {
 				log.Debugf("Reset balancer dial timeout because dialer %s suddenly slows down", d.Label)
-				b.nextTimeout.Set(initialTimeout)
+				b.nextTimeout.SetDuration(initialTimeout)
 				timer.Reset(initialTimeout)
 				continue
 			}

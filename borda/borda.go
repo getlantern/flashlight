@@ -2,15 +2,14 @@ package borda
 
 import (
 	"net/http"
+	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	borda "github.com/getlantern/borda/client"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/proxybench"
 
-	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
 )
@@ -18,7 +17,6 @@ import (
 var (
 	log         = golog.LoggerFor("flashlight.borda")
 	bordaClient *borda.Client
-	tr          *trafficReporter
 	once        sync.Once
 )
 
@@ -33,33 +31,14 @@ func Configure(reportInterval time.Duration, enabled func() bool) {
 	}
 }
 
-// Wraps a proxy to track traffic and report to borda if borda reporting
-// enabled.
-func WrapProxy(p chained.Proxy) chained.Proxy {
-	if v := theProxyWrapper.Load(); v != nil {
-		return v.(proxyWrapper)(p)
-	}
-	return p
-}
-
 func Close() {
-	if tr != nil {
-		tr.Stop()
-	}
 	if bordaClient != nil {
 		bordaClient.Flush()
 	}
 }
 
-type proxyWrapper func(chained.Proxy) chained.Proxy
-
-var theProxyWrapper atomic.Value
-
 func startBordaAndProxyBench(reportInterval time.Duration, enabled func() bool) {
 	bordaClient = createBordaClient(reportInterval)
-	var wrapper proxyWrapper
-	tr, wrapper = newTrafficReporter(bordaClient, reportInterval, enabled)
-	theProxyWrapper.Store(wrapper)
 
 	reportToBorda := bordaClient.ReducingSubmitter("client_results", 1000, func(existingValues map[string]float64, newValues map[string]float64) {
 		for key, value := range newValues {
@@ -84,11 +63,15 @@ func startBordaAndProxyBench(reportInterval time.Duration, enabled func() bool) 
 		} else {
 			values["success_count"] = 1
 		}
-		dialTime, found := ctx["dial_time"]
-		if found {
-			delete(ctx, "dial_time")
-			values["dial_time"] = dialTime.(float64)
+
+		// Convert metrics to values
+		for dim, val := range ctx {
+			if strings.HasPrefix(dim, "metric_") {
+				delete(ctx, dim)
+				values[dim[7:]] = val.(float64)
+			}
 		}
+
 		reportErr := reportToBorda(values, ctx)
 		if reportErr != nil {
 			log.Errorf("Error reporting error to borda: %v", reportErr)
@@ -113,4 +96,12 @@ func createBordaClient(reportInterval time.Duration) *borda.Client {
 			}),
 		},
 	})
+}
+
+func metricToValue(dim string, ctx map[string]interface{}, values map[string]float64) {
+	val, found := ctx[dim]
+	if found {
+		delete(ctx, dim)
+		values[dim] = val.(float64)
+	}
 }

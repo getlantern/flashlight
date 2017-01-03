@@ -34,7 +34,9 @@ var (
 
 // Proxy represents a proxy Lantern client can connect to.
 type Proxy interface {
-	// Proxy server's network
+	// Proxy server's protocol (http, https or obfs4)
+	Protocol() string
+	// Proxy server's network (tcp or kcp)
 	Network() string
 	// Proxy server's address in host:port format
 	Addr() string
@@ -99,11 +101,11 @@ type httpProxy struct {
 }
 
 func newHTTPProxy(name string, s *ChainedServerInfo) Proxy {
-	return &httpProxy{BaseProxy: BaseProxy{name: name, network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: false}}
+	return &httpProxy{BaseProxy: BaseProxy{name: name, protocol: "http", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: false}}
 }
 
 func (d httpProxy) DialServer() (net.Conn, error) {
-	op := ops.Begin("dial_to_chained").ChainedProxy(d.Addr(), "http")
+	op := ops.Begin("dial_to_chained").ChainedProxy(d.Addr(), d.Protocol(), d.Network())
 	defer op.End()
 	start := time.Now()
 	conn, err := netx.DialTimeout("tcp", d.Addr(), chainedDialTimeout)
@@ -123,14 +125,14 @@ func newHTTPSProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 	}
 	return &httpsProxy{
-		BaseProxy:    BaseProxy{name: name, network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted},
+		BaseProxy:    BaseProxy{name: name, protocol: "https", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted},
 		x509cert:     cert.X509(),
 		sessionCache: tls.NewLRUClientSessionCache(1000),
 	}, nil
 }
 
 func (d httpsProxy) DialServer() (net.Conn, error) {
-	op := ops.Begin("dial_to_chained").ChainedProxy(d.Addr(), "https")
+	op := ops.Begin("dial_to_chained").ChainedProxy(d.Addr(), d.Protocol(), d.Network())
 	defer op.End()
 
 	start := time.Now()
@@ -160,7 +162,7 @@ type kcpProxy struct {
 
 func newKCPProxy(name string, s *ChainedServerInfo) Proxy {
 	return &kcpProxy{
-		BaseProxy: BaseProxy{name: name, network: "kcp", addr: s.Addr, authToken: s.AuthToken, trusted: false},
+		BaseProxy: BaseProxy{name: name, protocol: "obfs4", network: "kcp", addr: s.Addr, authToken: s.AuthToken, trusted: false},
 		// TODO: parameterize inputs to KCP
 		dialFN: cmux.Dialer(&cmux.DialerOpts{Dial: dialKCP}),
 	}
@@ -222,6 +224,10 @@ func newOBFS4Wrapper(p Proxy, s *ChainedServerInfo) (Proxy, error) {
 	return obfs4Wrapper{p, s.Trusted, cf, args}, nil
 }
 
+func (p obfs4Wrapper) Protocol() string {
+	return "obfs4"
+}
+
 func (p obfs4Wrapper) Trusted() bool {
 	// override the trusted flag of wrapped proxy.
 	return p.trusted
@@ -236,7 +242,7 @@ func (p obfs4Wrapper) Label() string {
 }
 
 func (p obfs4Wrapper) DialServer() (net.Conn, error) {
-	op := ops.Begin("dial_to_chained").ChainedProxy(p.Addr(), "obfs4")
+	op := ops.Begin("dial_to_chained").ChainedProxy(p.Addr(), p.Protocol(), p.Network())
 	defer op.End()
 	start := time.Now()
 	dialFn := func(network, address string) (net.Conn, error) {
@@ -252,10 +258,15 @@ func (p obfs4Wrapper) DialServer() (net.Conn, error) {
 
 type BaseProxy struct {
 	name      string
+	protocol  string
 	network   string
 	addr      string
 	trusted   bool
 	authToken string
+}
+
+func (p BaseProxy) Protocol() string {
+	return p.protocol
 }
 
 func (p BaseProxy) Network() string {
@@ -280,7 +291,6 @@ func (p BaseProxy) Trusted() bool {
 
 func (p BaseProxy) DialServer() (net.Conn, error) {
 	panic("should implement DialServer")
-	return nil, nil
 }
 
 func (p BaseProxy) AdaptRequest(req *http.Request) {
