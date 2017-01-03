@@ -1,5 +1,5 @@
-hash: 3ef233440908b6420eee4b1e2a3388cb5448d1271e1137790e9ece03fc227388
-updated: 2017-01-02T09:51:07.230504791-06:00
+hash: f07b66755b1659b2fc60efd49ee7b30357ad1a9b79902549736712d8f417386a
+updated: 2017-01-03T07:13:19.0271911-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -22,7 +22,7 @@ imports:
 - name: github.com/blang/semver
   version: 3a37c301dda64cbe17f16f661b4c976803c0e2d2
 - name: github.com/davecgh/go-spew
-  version: 346938d642f2ec3594ed81d874461961cd0faa76
+  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
   subpackages:
   - spew
 - name: github.com/dchest/siphash
@@ -65,6 +65,8 @@ imports:
   version: a1e4813b4e263a37d95b569a21cf5a2943acfd26
   subpackages:
   - bin
+- name: github.com/getlantern/ema
+  version: d1779dcfb929ca9c80a3bbbf8707462c964e4fdf
 - name: github.com/getlantern/errors
   version: 99fa440517e8f3d1e4cd8d6dbed6b41f4c1ed3d6
 - name: github.com/getlantern/eventual
@@ -146,7 +148,7 @@ imports:
 - name: github.com/getlantern/mockconn
   version: 422a5afd4432dd82b1389333d5352da003d898a6
 - name: github.com/getlantern/netx
-  version: ea33fe66744c0da3cc939893acc5962da35fbd9c
+  version: 73cb70f5b027da6ee8c87c4c5a21b78e7cf8e9ce
 - name: github.com/getlantern/notifier
   version: 5acd0ccf0e6c29710d332a42f580e92c3b04ae7b
   subpackages:
