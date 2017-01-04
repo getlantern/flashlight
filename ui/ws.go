@@ -22,6 +22,8 @@ var (
 	}
 )
 
+type ConnectFunc func(write func([]byte) error) error
+
 // UIChannel represents a data channel to/from the UI. UIChannel will have one
 // underlying websocket connection for each connected browser window. All
 // messages from any browser window are available via In and all messages sent
@@ -36,79 +38,80 @@ type UIChannel struct {
 	nextId int
 	conns  map[int]*wsconn
 	m      sync.Mutex
-}
 
-type ConnectFunc func(write func([]byte) error) error
+	onConnect ConnectFunc
+}
 
 // NewChannel establishes a new channel to the UI at the given path. When the UI
 // connects to this path, we will establish a websocket to the UI to carry
 // messages for this UIChannel. The given onConnect function is called anytime
 // that the UI connects.
 func NewChannel(p string, onConnect ConnectFunc) *UIChannel {
-	c := newUIChannel("http://" + path.Join(uiaddr, p))
-
-	r.HandleFunc(p, func(resp http.ResponseWriter, req *http.Request) {
-		log.Tracef("Got connection to %v", c.URL)
-		var err error
-
-		if req.Method != "GET" {
-			http.Error(resp, "Method not allowed", 405)
-			return
-		}
-		// Upgrade with a HTTP request returns a websocket connection
-		ws, err := upgrader.Upgrade(resp, req, nil)
-		if err != nil {
-			log.Errorf("Unable to upgrade %v to websocket: %v", p, err)
-			return
-		}
-
-		log.Tracef("Upgraded to websocket at %v", c.URL)
-		c.m.Lock()
-		if onConnect != nil {
-			err = onConnect(func(b []byte) error {
-				log.Tracef("Writing initial message: %q", b)
-				return ws.WriteMessage(websocket.TextMessage, b)
-			})
-			if err != nil {
-				log.Errorf("Error processing onConnect, disconnecting websocket: %v", err)
-				if err := ws.Close(); err != nil {
-					log.Debugf("Error closing WebSockets connection: %s", err)
-				}
-				c.m.Unlock()
-				return
-			}
-		}
-		c.nextId += 1
-		conn := &wsconn{
-			id: c.nextId,
-			c:  c,
-			ws: ws,
-		}
-		c.conns[conn.id] = conn
-		c.m.Unlock()
-		log.Tracef("About to read from connection to %v", c.URL)
-		conn.read()
-	})
-
+	c := newUIChannel("http://"+path.Join(GetUIAddr(), p), onConnect)
+	server.Handle(p, c)
 	return c
 }
 
-func newUIChannel(url string) *UIChannel {
+func newUIChannel(url string, onConnect ConnectFunc) *UIChannel {
 	in := make(chan []byte, 100)
 	out := make(chan []byte)
 
 	c := &UIChannel{
-		URL:    url,
-		In:     in,
-		in:     in,
-		Out:    out,
-		out:    out,
-		nextId: 0,
-		conns:  make(map[int]*wsconn),
+		URL:       url,
+		In:        in,
+		in:        in,
+		Out:       out,
+		out:       out,
+		nextId:    0,
+		conns:     make(map[int]*wsconn),
+		onConnect: onConnect,
 	}
 
 	go c.write()
 	return c
+}
+
+func (c *UIChannel) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+	log.Tracef("Got connection to %v", c.URL)
+	var err error
+
+	if req.Method != "GET" {
+		http.Error(resp, "Method not allowed", 405)
+		return
+	}
+	// Upgrade with a HTTP request returns a websocket connection
+	ws, err := upgrader.Upgrade(resp, req, nil)
+	if err != nil {
+		log.Errorf("Unable to upgrade %v to websocket: %v", c.URL, err)
+		return
+	}
+
+	log.Tracef("Upgraded to websocket at %v", c.URL)
+	c.m.Lock()
+	if c.onConnect != nil {
+		err = c.onConnect(func(b []byte) error {
+			log.Tracef("Writing initial message: %q", b)
+			return ws.WriteMessage(websocket.TextMessage, b)
+		})
+		if err != nil {
+			log.Errorf("Error processing onConnect, disconnecting websocket: %v", err)
+			if err := ws.Close(); err != nil {
+				log.Debugf("Error closing WebSockets connection: %s", err)
+			}
+			c.m.Unlock()
+			return
+		}
+	}
+	c.nextId += 1
+	conn := &wsconn{
+		id: c.nextId,
+		c:  c,
+		ws: ws,
+	}
+	c.conns[conn.id] = conn
+	c.m.Unlock()
+	log.Tracef("About to read from connection to %v", c.URL)
+	conn.read()
 }
 
 func (c *UIChannel) write() {

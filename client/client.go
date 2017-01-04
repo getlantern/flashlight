@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"sync/atomic"
 	"time"
 
@@ -26,11 +25,6 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 	"github.com/oxtoacart/bpool"
-)
-
-var (
-	uiAddr        string
-	uiProxiedAddr string
 )
 
 var (
@@ -80,11 +74,6 @@ type Client struct {
 
 	proxyAll       func() bool
 	proTokenGetter func() string
-}
-
-// SetProxyUIAddr sets the vanity proxy domain name and its translation.
-func SetProxyUIAddr(proxyAddr string, realAddr string) {
-	uiAddr, uiProxiedAddr = realAddr, proxyAddr
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -220,11 +209,6 @@ func (client *Client) proxiedDialer(orig func(network, addr string) (net.Conn, e
 			proxied = detourDialer
 		}
 
-		if isLanternSpecialDomain(addr) {
-			rewritten := rewriteLanternSpecialDomain(addr)
-			log.Tracef("Rewriting %v to %v", addr, rewritten)
-			return net.Dial(network, rewritten)
-		}
 		start := time.Now()
 		conn, err := proxied(network, addr)
 		if log.IsTraceEnabled() {
@@ -298,9 +282,6 @@ func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, p
 }
 
 func (client *Client) shouldSendToProxy(addr string, port int) bool {
-	if isLanternSpecialDomain(addr) {
-		return true
-	}
 	for _, proxiedPort := range proxiedCONNECTPorts {
 		if port == proxiedPort {
 			return true
@@ -319,23 +300,6 @@ func (client *Client) portForAddress(addr string) (int, error) {
 		return 0, fmt.Errorf("Unable to parse port %v for address %v: %v", addr, port, err)
 	}
 	return port, nil
-}
-
-func isLanternSpecialDomain(addr string) bool {
-	if log.IsTraceEnabled() {
-		log.Tracef("Checking if '%v' has special domain prefix '%v'", addr, uiProxiedAddr+":")
-	}
-	return strings.HasPrefix(addr, uiProxiedAddr+":")
-}
-
-func rewriteLanternSpecialDomain(addr string) string {
-	if addr == uiProxiedAddr+":80" {
-		// This is a special replacement for the ui.lantern.io:80 case.
-		return uiAddr
-	}
-	// Let any other port pass as is.
-	addr = strings.Replace(addr, uiProxiedAddr, "127.0.0.1:", 1)
-	return addr
 }
 
 // InConfigDir returns the path of the specified file name in the Lantern

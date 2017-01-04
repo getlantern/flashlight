@@ -35,23 +35,19 @@ func TestReadResponses(t *testing.T) {
 }
 
 func TestEmailProxy(t *testing.T) {
-	// ugly hack to co-exist with integration test: only start services if not
-	// already started.
-	addr := ui.GetDirectUIAddr()
-	if addr == "" {
-		// avoid panicking when attaching settings to the email.
-		settings = loadSettings("version", "revisionDate", "buildDate")
-		err := serveEmailProxy()
-		assert.NoError(t, err, "should start UI service")
-		ui.Start("localhost:", false, "", "")
-		defer func() { ui.Stop() }()
-		addr = ui.GetDirectUIAddr()
-	}
-	wsURL := "ws://" + addr + "/data"
+	ui.Start("localhost:", false, "", "")
+	defer ui.Stop()
+	// avoid panicking when attaching settings to the email.
+	settings = loadSettings("version", "revisionDate", "buildDate")
+	err := serveEmailProxy()
+	assert.NoError(t, err, "should start UI service")
+	wsURL := "ws://" + ui.GetUIAddr() + "/data"
 	conn, _, err := websocket.DefaultDialer.Dial(wsURL, http.Header{})
-	assert.NoError(t, err, "should connect to Websocket")
-	defer func() { _ = conn.Close() }()
+	if !assert.NoError(t, err, "should connect to Websocket") {
+		return
+	}
 
+	defer func() { _ = conn.Close() }()
 	mandrillAPIKey = "SANDBOX_SUCCESS"
 	err = sendTemplateVia(conn)
 	assert.NoError(t, err, "should write to ws")
