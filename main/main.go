@@ -101,10 +101,6 @@ func _main(a *app.App) func() {
 }
 
 func doMain(a *app.App) error {
-	if err := logging.EnableFileLogging(""); err != nil {
-		return err
-	}
-
 	// Schedule cleanup actions
 	handleSignals(a)
 	a.AddExitFunc(func() {
