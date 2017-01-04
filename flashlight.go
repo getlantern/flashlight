@@ -53,8 +53,7 @@ var (
 	// BuildDate is the date the code was actually built.
 	BuildDate string // The actual date and time the binary was built.
 
-	cfgMutex             sync.Mutex
-	configureLoggingOnce sync.Once
+	cfgMutex sync.Mutex
 )
 
 func bestPackageVersion() string {
