@@ -23,6 +23,9 @@ import (
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/proxied"
+
+	// Make sure logging is initialized
+	_ "github.com/getlantern/flashlight/logging"
 )
 
 const (

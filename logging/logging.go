@@ -1,3 +1,5 @@
+// package logging configures the golog subsystem for use with Lantern
+// Import this to make sure golog is initialized before you log.
 package logging
 
 import (
@@ -31,20 +33,18 @@ var (
 )
 
 func init() {
-	initLogging()
+	enableFileLogging()
 }
 
-// EnableFileLogging enables sending Lantern logs to a file.
-func EnableFileLogging(logdir string) error {
-	if logdir == "" {
-		logdir = appdir.Logs("Lantern")
-	}
+func enableFileLogging() {
+	logdir := appdir.Logs("Lantern")
 	log.Debugf("Placing logs in %v", logdir)
 	if _, err := os.Stat(logdir); err != nil {
 		if os.IsNotExist(err) {
 			// Create log dir
 			if err := os.MkdirAll(logdir, 0755); err != nil {
-				return fmt.Errorf("Unable to create logdir at %s: %s", logdir, err)
+				log.Errorf("Unable to create logdir at %s: %s", logdir, err)
+				return
 			}
 		}
 	}
@@ -57,8 +57,6 @@ func EnableFileLogging(logdir string) error {
 	errorOut = timestamped(NonStopWriter(os.Stderr, logFile))
 	debugOut = timestamped(NonStopWriter(os.Stdout, logFile))
 	golog.SetOutputs(errorOut, debugOut)
-
-	return nil
 }
 
 // ZipLogFiles zip the Lantern log files under logdir to the writer. All files
