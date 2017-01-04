@@ -64,14 +64,14 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 		OnRequest: func(req *http.Request) {
 			s.attachHeaders(req, deviceID, proTokenGetter)
 		},
+		OnFinish: func(op *ops.Op) {
+			op.ChainedProxy(s.Addr(), s.Proxy.Protocol(), s.Proxy.Network())
+		},
 	}
 	d := chained.NewDialer(ccfg)
 	return &balancer.Dialer{
 		Label:   s.Label(),
 		Trusted: s.Trusted(),
-		OnFinish: func(op *ops.Op) {
-			op.ChainedProxy(s.Addr(), s.Proxy.Protocol(), s.Proxy.Network())
-		},
 		DialFN: func(network, addr string) (net.Conn, error) {
 			var conn net.Conn
 			var err error
