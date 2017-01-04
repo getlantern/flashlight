@@ -69,16 +69,8 @@ func (app *App) LogPanicAndExit(msg string) {
 		panic("Error initializing logging")
 	}
 
-	<-logging.Configure("",
-		// Reporting to Loggly is not possible at this point
-		func() bool { return false },
-	)
-
 	log.Error(msg)
-
-	logging.Flush()
 	_ = logging.Close()
-
 	app.Exit(nil)
 }
 

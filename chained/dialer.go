@@ -10,6 +10,7 @@ import (
 	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/balancer"
+	"github.com/getlantern/flashlight/ops"
 )
 
 // Config is a configuration for a Dialer.
@@ -21,6 +22,10 @@ type Config struct {
 	// the server and is allowed to modify the http.Request before it passes to
 	// the server.
 	OnRequest func(req *http.Request)
+
+	// OnFinish: optional function that gets called when finishe the tracking of
+	// xfer operations, allows adding additional data to op context.
+	OnFinish func(op *ops.Op)
 
 	// Label: a optional label for debugging.
 	Label string
@@ -61,7 +66,7 @@ func (d *dialer) Dial(network, addr string) (net.Conn, error) {
 		conn.Close()
 		return nil, err
 	}
-	return conn, nil
+	return withRateTracking(conn, addr, d.OnFinish), nil
 }
 
 func (d *dialer) sendCONNECT(addr string, conn net.Conn) error {

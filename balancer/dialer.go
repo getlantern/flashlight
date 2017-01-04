@@ -6,7 +6,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/getlantern/ops"
+	"github.com/getlantern/ema"
+	"github.com/getlantern/flashlight/ops"
 )
 
 var (
@@ -48,7 +49,7 @@ type Dialer struct {
 }
 
 type dialer struct {
-	emaLatency         *emaDuration
+	emaLatency         *ema.EMA
 	lastCheckSucceeded bool
 	forceRecheck       func()
 
@@ -68,7 +69,7 @@ func (d *dialer) Start() {
 	if d.emaLatency == nil {
 		// assuming all dialers super fast initially
 		// use large alpha to reflect network changes quickly
-		d.emaLatency = newEMADuration(0, 0.5)
+		d.emaLatency = ema.NewDuration(0, 0.5)
 	}
 	if d.stats == nil {
 		d.stats = &stats{}
@@ -90,7 +91,7 @@ func (d *dialer) Stop() {
 }
 
 func (d *dialer) EMALatency() int64 {
-	return d.emaLatency.GetInt64()
+	return int64(d.emaLatency.Get())
 }
 
 func (d *dialer) ConsecSuccesses() int32 {

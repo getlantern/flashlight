@@ -2,9 +2,8 @@ package flashlight
 
 import (
 	"crypto/x509"
-	"encoding/base64"
-	"encoding/binary"
 	"fmt"
+	"math/rand"
 	"path/filepath"
 	"runtime"
 	"sync"
@@ -23,7 +22,6 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
-	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxied"
 )
 
@@ -55,8 +53,7 @@ var (
 	// BuildDate is the date the code was actually built.
 	BuildDate string // The actual date and time the binary was built.
 
-	cfgMutex             sync.Mutex
-	configureLoggingOnce sync.Once
+	cfgMutex sync.Mutex
 )
 
 func bestPackageVersion() string {
@@ -154,12 +151,7 @@ func applyClientConfig(client *client.Client, cfg *config.Global, deviceID strin
 		fronted.Configure(certs, cfg.Client.MasqueradeSets, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
 	}
 
-	canEnableLoggly := includeInSample(deviceID, cfg.LogglySamplePercentage)
-	enableLoggly := func() bool { return canEnableLoggly && autoReport() }
-	logging.Configure(cfg.CloudConfigCA, enableLoggly)
-
-	canEnableBorda := includeInSample(deviceID, cfg.BordaSamplePercentage)
-	enableBorda := func() bool { return canEnableBorda && autoReport() }
+	enableBorda := func() bool { return rand.Float64() <= cfg.BordaSamplePercentage/100 && autoReport() }
 	borda.Configure(cfg.BordaReportInterval, enableBorda)
 }
 
@@ -177,28 +169,6 @@ func getTrustedCACerts(cfg *config.Global) (pool *x509.CertPool, err error) {
 
 func displayVersion() {
 	log.Debugf("---- flashlight version: %s, release: %s, build revision date: %s ----", Version, PackageVersion, RevisionDate)
-}
-
-func includeInSample(deviceID string, samplePercentage float64) bool {
-	if samplePercentage == 0 {
-		return false
-	}
-
-	// Sample a subset of device IDs.
-	// DeviceID is expected to be a Base64 encoded 48-bit (6 byte) MAC address
-	deviceIDBytes, base64Err := base64.StdEncoding.DecodeString(deviceID)
-	if base64Err != nil {
-		log.Debugf("Error decoding base64 deviceID %v: %v", deviceID, base64Err)
-		return false
-	}
-	if len(deviceIDBytes) != 6 {
-		log.Debugf("Unexpected DeviceID length %v: %d", deviceID, len(deviceIDBytes))
-		return false
-	}
-	// Pad and decode to int
-	paddedDeviceIDBytes := append(deviceIDBytes, 0, 0)
-	deviceIDInt := binary.BigEndian.Uint64(paddedDeviceIDBytes)
-	return deviceIDInt%uint64(1/samplePercentage) == 0
 }
 
 func initContext(deviceID string, version string, revisionDate string) {
