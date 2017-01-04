@@ -22,7 +22,6 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
-	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxied"
 )
 
@@ -152,9 +151,6 @@ func applyClientConfig(client *client.Client, cfg *config.Global, deviceID strin
 	} else if cfg.Client != nil {
 		fronted.Configure(certs, cfg.Client.MasqueradeSets, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
 	}
-
-	enableLoggly := func() bool { return rand.Float64() <= cfg.LogglySamplePercentage/100 && autoReport() }
-	logging.Configure(cfg.CloudConfigCA, enableLoggly)
 
 	enableBorda := func() bool { return rand.Float64() <= cfg.BordaSamplePercentage/100 && autoReport() }
 	borda.Configure(cfg.BordaReportInterval, enableBorda)

@@ -1,16 +1,11 @@
 package logging
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/getlantern/go-loggly"
-	"github.com/getlantern/golog"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -49,82 +44,4 @@ func TestNonStopWriter(t *testing.T) {
 	ns := NonStopWriter(&b, &g)
 	ns.Write([]byte("1234"))
 	assert.Equal(t, 4, g.counter, "Should write to all writers even when error encountered")
-}
-
-func TestLoggly(t *testing.T) {
-	var buf bytes.Buffer
-	var result map[string]interface{}
-
-	loggly := loggly.New("token not required")
-	loggly.Writer = &buf
-	r := logglyErrorReporter{client: loggly,
-		lastReported:       make(map[string]time.Time),
-		isReportingEnabled: func() bool { return true },
-	}
-	golog.RegisterReporter(r.Report)
-	log := golog.LoggerFor("test")
-
-	origLogglyRateLimit := logglyRateLimit
-	defer func() {
-		logglyRateLimit = origLogglyRateLimit
-	}()
-	logglyRateLimit = 100 * time.Millisecond
-	for i := 0; i < 2; i++ {
-		buf.Reset()
-		log.Error("short message")
-		if i == 1 {
-			assert.Equal(t, 0, buf.Len(), "duplicate shouldn't have been reported")
-			time.Sleep(logglyRateLimit)
-		} else {
-			if assert.NoError(t, json.Unmarshal(buf.Bytes(), &result), "Unmarshal error") {
-				assert.Regexp(t, "test: logging_test.go:([0-9]+)", result["locationInfo"])
-				assert.Equal(t, "short message", result["message"])
-			}
-		}
-	}
-
-	buf.Reset()
-	log.Error("")
-	log.Debugf("**************** %v", buf.String())
-	if assert.NoError(t, json.Unmarshal(buf.Bytes(), &result), "Unmarshal error") {
-		assert.Regexp(t, "test: logging_test.go:([0-9]+)", result["locationInfo"])
-		assert.Equal(t, "", result["message"])
-	}
-
-	buf.Reset()
-	log.Error("message with: reason")
-	if assert.NoError(t, json.Unmarshal(buf.Bytes(), &result), "Unmarshal error") {
-		assert.Regexp(t, "test: logging_test.go:([0-9]+)", result["locationInfo"])
-		assert.Equal(t, "message with: reason", result["message"], "message should be last 2 chunks")
-	}
-
-	buf.Reset()
-	log.Error("deep reason: message with: reason")
-	if assert.NoError(t, json.Unmarshal(buf.Bytes(), &result), "Unmarshal error") {
-		assert.Regexp(t, "test: logging_test.go:([0-9]+)", result["locationInfo"])
-		assert.Equal(t, "message with: reason", result["message"], "message should be last 2 chunks")
-	}
-
-	buf.Reset()
-	log.Error("deep reason: an url https://a.com in message: reason")
-	if assert.NoError(t, json.Unmarshal(buf.Bytes(), &result), "Unmarshal error") {
-		assert.Equal(t, "an url https://a.com in message: reason", result["message"], "should not truncate url")
-	}
-
-	buf.Reset()
-	log.Error("deep reason: an url 127.0.0.1:8787 in message: reason")
-	if assert.NoError(t, json.Unmarshal(buf.Bytes(), &result), "Unmarshal error") {
-		assert.Regexp(t, "test: logging_test.go:([0-9]+)", result["locationInfo"])
-		assert.Equal(t, "an url 127.0.0.1:8787 in message: reason", result["message"], "should not truncate url")
-	}
-
-	buf.Reset()
-	longPrefix := "message with: really l"
-	longMsg := longPrefix + strings.Repeat("o", 100) + "ng reason"
-	log.Error(longMsg)
-	if assert.NoError(t, json.Unmarshal(buf.Bytes(), &result), "Unmarshal error") {
-		assert.Regexp(t, "test: logging_test.go:([0-9]+)", result["locationInfo"])
-		assert.Regexp(t, regexp.MustCompile(longPrefix+"(o+)"), result["message"])
-		assert.Equal(t, 100, len(result["message"].(string)))
-	}
 }
