@@ -74,15 +74,21 @@ func (s *Server) Start() error {
 		return fmt.Errorf("Unable to listen at %v. Error is: %v", s.listenAddr, err)
 	}
 
-	host, _, err := net.SplitHostPort(s.listenAddr)
+	actualPort := l.Addr().(*net.TCPAddr).Port
+
+	host, port, err := net.SplitHostPort(s.listenAddr)
 	if err != nil {
 		log.Errorf("invalid address %v", s.listenAddr)
+	}
+	if port == "0" {
+		// On first run, we pick an arbitrary port, update our listenAddr to reflect
+		// the assigned port
+		s.listenAddr = fmt.Sprintf("%v:%v", host, actualPort)
 	}
 	if host == "" {
 		host = "localhost"
 	}
-	port := l.Addr().(*net.TCPAddr).Port
-	s.accessAddr = net.JoinHostPort(host, strconv.Itoa(port))
+	s.accessAddr = net.JoinHostPort(host, strconv.Itoa(actualPort))
 	s.listener = l
 
 	server := &http.Server{
