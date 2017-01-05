@@ -222,7 +222,6 @@ func (app *App) beforeStart() bool {
 
 // start the settings service that synchronizes Lantern's configuration with every UI client
 func startSettingsService() {
-	messageType := `settings`
 	helloFn := func(write func(interface{}) error) error {
 		log.Debugf("Sending Lantern settings to new client")
 		uiMap := settings.uiMap()
@@ -230,7 +229,7 @@ func startSettingsService() {
 	}
 
 	var err error
-	service, err = ui.Register(messageType, helloFn)
+	service, err = ui.Register("settings", helloFn)
 	if err != nil {
 		log.Errorf("Unable to register settings service: %q", err)
 		return
