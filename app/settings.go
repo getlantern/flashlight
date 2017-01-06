@@ -30,21 +30,22 @@ const (
 	SNProxyAll    SettingName = "proxyAll"
 	SNSystemProxy SettingName = "systemProxy"
 
-	SNLanguage SettingName = "language"
+	SNLanguage       SettingName = "language"
+	SNLocalHTTPToken SettingName = "localHTTPToken"
 
-	SNDeviceID     SettingName = "deviceID"
-	SNUserID       SettingName = "userID"
-	SNUserToken    SettingName = "userToken"
-	SNTakenSurveys SettingName = "takenSurveys"
+	SNDeviceID          SettingName = "deviceID"
+	SNUserID            SettingName = "userID"
+	SNUserToken         SettingName = "userToken"
+	SNTakenSurveys      SettingName = "takenSurveys"
+	SNPastAnnouncements SettingName = "pastAnnouncements"
 
 	SNAddr      SettingName = "addr"
 	SNSOCKSAddr SettingName = "socksAddr"
 	SNUIAddr    SettingName = "uiAddr"
 
-	SNVersion        SettingName = "version"
-	SNBuildDate      SettingName = "buildDate"
-	SNRevisionDate   SettingName = "revisionDate"
-	SNLocalHTTPToken SettingName = "localHTTPToken"
+	SNVersion      SettingName = "version"
+	SNBuildDate    SettingName = "buildDate"
+	SNRevisionDate SettingName = "revisionDate"
 )
 
 type settingType byte
@@ -66,13 +67,14 @@ var settingMeta = map[SettingName]struct {
 	SNProxyAll:    {stBool, true, false},
 	SNSystemProxy: {stBool, true, false},
 
-	SNLanguage: {stString, true, true},
+	SNLanguage:       {stString, true, true},
+	SNLocalHTTPToken: {stString, true, true},
 
 	// SNDeviceID: intentionally omit, to avoid setting it from UI
-	SNUserID:         {stNumber, true, true},
-	SNUserToken:      {stString, true, true},
-	SNTakenSurveys:   {stStringArray, true, true},
-	SNLocalHTTPToken: {stString, true, true},
+	SNUserID:            {stNumber, true, true},
+	SNUserToken:         {stString, true, true},
+	SNTakenSurveys:      {stStringArray, true, true},
+	SNPastAnnouncements: {stStringArray, true, true},
 
 	SNAddr:      {stString, true, true},
 	SNSOCKSAddr: {stString, true, true},
@@ -164,9 +166,9 @@ func newSettings(filePath string) *Settings {
 			SNProxyAll:       false,
 			SNSystemProxy:    true,
 			SNLanguage:       "",
+			SNLocalHTTPToken: "",
 			SNUserToken:      "",
 			SNUIAddr:         "",
-			SNLocalHTTPToken: "",
 		},
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),

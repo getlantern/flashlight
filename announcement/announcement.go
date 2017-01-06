@@ -1,4 +1,4 @@
-package app
+package announcement
 
 import (
 	"encoding/json"
@@ -7,9 +7,6 @@ import (
 	"time"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/notifier"
-
-	"github.com/getlantern/flashlight/ui"
 )
 
 const loConfURL = "https://raw.githubusercontent.com/getlantern/loconf/master/desktop-ui.json"
@@ -32,18 +29,7 @@ type announcement struct {
 	Announcement
 }
 
-func a(title, msg string) {
-	logo := ui.AddToken("/img/lantern_logo.png")
-	note := &notify.Notification{
-		Title:    title,
-		Message:  msg,
-		ClickURL: ui.GetUIAddr(),
-		IconURL:  logo,
-	}
-	_ = note
-}
-
-func GetAnnouncement(hc *http.Client, lang string, isPro bool, isStaging bool) (*Announcement, error) {
+func Get(hc *http.Client, lang string, isPro bool, isStaging bool) (*Announcement, error) {
 	u := loConfURL
 	if isStaging {
 		u = stagingLoConfURL

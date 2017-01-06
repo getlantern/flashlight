@@ -1,4 +1,4 @@
-package app
+package announcement
 
 import (
 	"io/ioutil"
@@ -117,30 +117,30 @@ func hcWithBody(body string) *http.Client {
 }
 
 func TestUserType(t *testing.T) {
-	_, err := GetAnnouncement(hcWithBody(normalBody), "en-US", false, false)
+	_, err := Get(hcWithBody(normalBody), "en-US", false, false)
 	assert.NoError(t, err,
 		"getting announcement for free should have no error")
-	_, err = GetAnnouncement(hcWithBody(normalBody), "en-US", true, false)
+	_, err = Get(hcWithBody(normalBody), "en-US", true, false)
 	assert.NoError(t, err,
 		"getting announcement for pro should have no error")
 
 	notForPro := strings.Replace(normalBody, `"pro": true`, `"pro": false`, 1)
-	_, err = GetAnnouncement(hcWithBody(notForPro), "en-US", false, false)
+	_, err = Get(hcWithBody(notForPro), "en-US", false, false)
 	assert.NoError(t, err,
 		"getting announcement for free should have no error")
-	_, err = GetAnnouncement(hcWithBody(notForPro), "en-US", true, false)
+	_, err = Get(hcWithBody(notForPro), "en-US", true, false)
 	if assert.Error(t, err,
 		"getting announcement for pro should have error") {
 		assert.Contains(t, err.Error(), "No announcement available")
 	}
 
 	notForFree := strings.Replace(normalBody, `"free": true`, `"free": false`, 1)
-	_, err = GetAnnouncement(hcWithBody(notForFree), "en-US", false, false)
+	_, err = Get(hcWithBody(notForFree), "en-US", false, false)
 	if assert.Error(t, err,
 		"getting announcement for free should have error") {
 		assert.Contains(t, err.Error(), "No announcement available")
 	}
-	_, err = GetAnnouncement(hcWithBody(notForFree), "en-US", true, false)
+	_, err = Get(hcWithBody(notForFree), "en-US", true, false)
 	assert.NoError(t, err,
 		"getting announcement for pro should have no error")
 }
@@ -148,7 +148,7 @@ func TestUserType(t *testing.T) {
 func TestExpiry(t *testing.T) {
 	today := `"expiry": "` + time.Now().Format("2006-01-02") + `"`
 	expired := strings.Replace(normalBody, `"expiry": ""`, today, 1)
-	_, err := GetAnnouncement(hcWithBody(expired), "en-US", false, false)
+	_, err := Get(hcWithBody(expired), "en-US", false, false)
 	if assert.Error(t, err,
 		"expired announcement should have error") {
 		assert.Contains(t, err.Error(), "No announcement available")
@@ -156,12 +156,12 @@ func TestExpiry(t *testing.T) {
 
 	nextDay := `"expiry": "` + time.Now().Add(24*time.Hour).Format("2006-01-02") + `"`
 	valid := strings.Replace(normalBody, `"expiry": ""`, nextDay, 1)
-	_, err = GetAnnouncement(hcWithBody(valid), "en-US", false, false)
+	_, err = Get(hcWithBody(valid), "en-US", false, false)
 	assert.NoError(t, err,
 		"not expired announcement should have no error")
 
 	invalid := strings.Replace(normalBody, `"expiry": ""`, `"expiry": "9999-12-32"`, 1)
-	_, err = GetAnnouncement(hcWithBody(invalid), "en-US", false, false)
+	_, err = Get(hcWithBody(invalid), "en-US", false, false)
 	assert.Error(t, err,
 		"announcement with invalid expiry format should have error")
 }
