@@ -1,5 +1,5 @@
 hash: c683a576abff4e384db86b0b3cf8a949b924dcf490b8f7d164ddc2bf2560ccf4
-updated: 2017-01-05T21:28:33.8962549-06:00
+updated: 2017-01-06T13:56:37.444000869-08:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -70,13 +70,13 @@ imports:
   subpackages:
   - bin
 - name: github.com/getlantern/ema
-  version: d1779dcfb929ca9c80a3bbbf8707462c964e4fdf
+  version: dc05f6bb97276a219b5766209d734561b54ff505
 - name: github.com/getlantern/errors
   version: 99fa440517e8f3d1e4cd8d6dbed6b41f4c1ed3d6
 - name: github.com/getlantern/eventual
   version: 8a3a062ff1605f65e4d710e016c39bb69e91b6f8
 - name: github.com/getlantern/fdcount
-  version: d6d72794ae1dc13beaa2f0d4b690f1ea20be4600
+  version: 6a6cb5839bc58a0e32ff20b505a848516836145e
 - name: github.com/getlantern/filepersist
   version: c5f0cd24e7991579ba6f5f1bd20a1ad2c9f06cd4
 - name: github.com/getlantern/fronted
@@ -114,7 +114,7 @@ imports:
   - server
   - utils
 - name: github.com/getlantern/http-proxy-lantern
-  version: 2d93c276a2d082dcfcba65c1319dc85f5f10cd6a
+  version: b4d5d3640444853f186f4df78a44f781e433a241
   subpackages:
   - analytics
   - blacklist
@@ -136,7 +136,7 @@ imports:
 - name: github.com/getlantern/i18n
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
-  version: e4b1cdde2256c2bb3871a7490bef9bd13532108f
+  version: 521cf3c8fb0ab598655e9357f2e7dedde9557ffc
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
 - name: github.com/getlantern/keyman
@@ -146,7 +146,7 @@ imports:
 - name: github.com/getlantern/launcher
   version: bc9fc3b11894e839c3fcb049f12e8974d7e48497
 - name: github.com/getlantern/measured
-  version: 9abc2622c88edcbe1436a80e69f912b3ccfc73bf
+  version: 9b2ba905af5464caf33ca8a1599ab3f4d5cd48d6
 - name: github.com/getlantern/mockconn
   version: 422a5afd4432dd82b1389333d5352da003d898a6
 - name: github.com/getlantern/mtime
@@ -177,7 +177,7 @@ imports:
 - name: github.com/getlantern/proxy
   version: 876829e39cf8243d123b02f02efe8da1266effb4
 - name: github.com/getlantern/proxybench
-  version: 1a066df1c135fde177d538937d17b11434f7cdb2
+  version: 11296a9d690d5b0dbf7b6927cc3e529ab6c46471
 - name: github.com/getlantern/rot13
   version: 33f93fc1fe85c042c0667a1814e6379bd5e7eb40
 - name: github.com/getlantern/rotator
@@ -195,7 +195,7 @@ imports:
 - name: github.com/getlantern/tlsdefaults
   version: f047fcda194525bddaa2d26da43c1b5400aaed6c
 - name: github.com/getlantern/tlsdialer
-  version: b257e0a5981a7770c8286c8e2472f1c614371928
+  version: b4d0a731957c4658f2e281e1ae8653781719a55b
 - name: github.com/getlantern/uuid
   version: 1318e7614b82cd38041b0b0bd3692d71f3901fb8
 - name: github.com/getlantern/waitforserver
@@ -233,7 +233,7 @@ imports:
 - name: github.com/klauspost/crc32
   version: cb6bfca970f6908083f26f39a79009d608efd5cd
 - name: github.com/klauspost/reedsolomon
-  version: d0a56f72c0d40a6cdde43a1575ad9686a0098b70
+  version: c056598956acbb4a085b3c23914415937b3335e5
 - name: github.com/kr/binarydist
   version: 3035450ff8b987ec4373f65c40767f096b35f2d2
 - name: github.com/mailgun/oxy
@@ -241,7 +241,7 @@ imports:
   subpackages:
   - forward
 - name: github.com/mitchellh/panicwrap
-  version: ba9e1a65e0f7975f055d50a2c0201c50d941c24c
+  version: fce601fe55579125e1b3cb0b992287e7290f7b83
 - name: github.com/mxk/go-flowrate
   version: cca7078d478f8520f85629ad7c68962d31ed7682
   subpackages:
@@ -269,7 +269,7 @@ imports:
 - name: github.com/xtaci/kcp-go
   version: 1a20d38aba9b713cbf9088d04b39207be1ca4d58
 - name: golang.org/x/crypto
-  version: 5b4074c2c416448b5d06e287167144493aabda43
+  version: cb497ae8f18e3c55f81bc9f3876c8f4c3d8a2813
   subpackages:
   - blowfish
   - cast5
@@ -284,7 +284,7 @@ imports:
   - twofish
   - xtea
 - name: golang.org/x/net
-  version: 69d4b8aa71caaaa75c3dfc11211d1be495abec7c
+  version: 905989bd20b7c354fd28a61074eed1c8f49ebc89
   repo: https://github.com/golang/net
   vcs: git
   subpackages:
