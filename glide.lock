@@ -1,5 +1,5 @@
-hash: b1943392bcd8429c4dcaed37918190052888a3f9c64d035be02c655eca730696
-updated: 2017-01-04T15:59:30.140041458-08:00
+hash: c683a576abff4e384db86b0b3cf8a949b924dcf490b8f7d164ddc2bf2560ccf4
+updated: 2017-01-05T21:28:33.8962549-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -19,6 +19,10 @@ imports:
   subpackages:
   - edwards25519
   - extra25519
+- name: github.com/aristanetworks/goarista
+  version: 34c98d5e5f9b0c0a627fb48fd28ec6392dae5dbf
+  subpackages:
+  - monotime
 - name: github.com/blang/semver
   version: 3a37c301dda64cbe17f16f661b4c976803c0e2d2
 - name: github.com/davecgh/go-spew
@@ -145,6 +149,8 @@ imports:
   version: 9abc2622c88edcbe1436a80e69f912b3ccfc73bf
 - name: github.com/getlantern/mockconn
   version: 422a5afd4432dd82b1389333d5352da003d898a6
+- name: github.com/getlantern/mtime
+  version: 71f584d474c0cafc89ee919784b44e4ca79c124e
 - name: github.com/getlantern/netx
   version: ea33fe66744c0da3cc939893acc5962da35fbd9c
 - name: github.com/getlantern/notifier
