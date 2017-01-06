@@ -232,14 +232,16 @@ func (s *Settings) setNum(name SettingName, v interface{}) {
 }
 
 func (s *Settings) setStringArray(name SettingName, v interface{}) {
-	var sa []string
-	ss, ok := v.([]interface{})
+	sa, ok := v.([]string)
 	if !ok {
-		log.Errorf("Could not convert %s(%v) to array", name, v)
-		return
-	}
-	for i := range ss {
-		sa = append(sa, fmt.Sprintf("%v", ss[i]))
+		ss, ok := v.([]interface{})
+		if !ok {
+			log.Errorf("Could not convert %s(%v) to array", name, v)
+			return
+		}
+		for i := range ss {
+			sa = append(sa, fmt.Sprintf("%v", ss[i]))
+		}
 	}
 	s.setVal(name, sa)
 }
@@ -333,7 +335,7 @@ func (s *Settings) GetTakenSurveys() []string {
 
 // SetTakenSurveys sets the IDs of taken surveys.
 func (s *Settings) SetTakenSurveys(campaigns []string) {
-	s.setVal(SNTakenSurveys, campaigns)
+	s.setStringArray(SNTakenSurveys, campaigns)
 }
 
 // GetProxyAll returns whether or not to proxy all traffic.
@@ -430,6 +432,13 @@ func (s *Settings) getStringArray(name SettingName) []string {
 	if val, err := s.getVal(name); err == nil {
 		if v, ok := val.([]string); ok {
 			return v
+		}
+		if v, ok := val.([]interface{}); ok {
+			var sa []string
+			for _, item := range v {
+				sa = append(sa, fmt.Sprintf("%v", item))
+			}
+			return sa
 		}
 	}
 	return nil

@@ -1,7 +1,6 @@
 package app
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"sync"
@@ -9,9 +8,7 @@ import (
 	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/notifier"
-	proClient "github.com/getlantern/pro-server-client/go-client"
 
-	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/ui"
 )
 
@@ -104,14 +101,10 @@ func (s *notifyStatus) notifyCapHit(n notify.Notifier) {
 }
 
 func (s *notifyStatus) notifyFreeUser(n notify.Notifier, title, msg string) {
-	userID := settings.GetUserID()
-	status, err := s.userStatus(settings.GetDeviceID(), int(userID), settings.GetToken())
-	if err != nil {
-		log.Errorf("Error getting user status? %v", err)
+	if isPro, ok := isProUser(); !ok {
+		log.Debugf("user status is unknown, skip showing notification")
 		return
-	}
-	log.Debugf("User %d is %v", userID, status)
-	if status == "active" {
+	} else if isPro {
 		log.Debugf("Not showing desktop notification for pro user")
 		return
 	}
@@ -124,32 +117,8 @@ func (s *notifyStatus) notifyFreeUser(n notify.Notifier, title, msg string) {
 		IconURL:  logo,
 	}
 
-	if err = n.Notify(note); err != nil {
+	if err := n.Notify(note); err != nil {
 		log.Errorf("Could not notify? %v", err)
 		return
 	}
-}
-
-func (s *notifyStatus) userStatus(deviceID string, userID int, proToken string) (string, error) {
-	log.Debugf("Fetching user status with user ID '%v' and pro token '%v'", userID, proToken)
-	user := proClient.User{Auth: proClient.Auth{
-		DeviceID: deviceID,
-		ID:       userID,
-		Token:    proToken,
-	}}
-	http, err := proxied.GetHTTPClient(true)
-	if err != nil {
-		log.Errorf("Unable to get proxied HTTP client: %v", err)
-		return "", err
-	}
-	client := proClient.NewClient(http)
-	resp, err := client.UserData(user)
-	if err != nil {
-		log.Errorf("Fail to get user data: %v", err)
-		return "", err
-	}
-	if resp.Status == "error" {
-		return "", errors.New(resp.Error)
-	}
-	return resp.User.UserStatus, nil
 }

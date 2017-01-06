@@ -12,8 +12,9 @@ import (
 const loConfURL = "https://raw.githubusercontent.com/getlantern/loconf/master/desktop-ui.json"
 const stagingLoConfURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui-staging.json"
 
+var ENoAvailable error = errors.New("No announcement available")
+
 var eIncorrectType error = errors.New("Incorrect type")
-var eNoAvailable error = errors.New("No announcement available")
 
 type Announcement struct {
 	Campaign string `json:"campaign"`
@@ -50,14 +51,14 @@ func Get(hc *http.Client, lang string, isPro bool, isStaging bool) (*Announcemen
 		}
 		y, m, d := time.Now().Date()
 		if !expiry.After(time.Date(y, m, d, 0, 0, 0, 0, time.UTC)) {
-			return nil, eNoAvailable
+			return nil, ENoAvailable
 		}
 	}
 
 	if isPro && parsed.Pro || !isPro && parsed.Free {
 		return &parsed.Announcement, nil
 	}
-	return nil, eNoAvailable
+	return nil, ENoAvailable
 }
 
 func fetch(hc *http.Client, u string) ([]byte, error) {

@@ -20,33 +20,39 @@ import (
 // show the announcement or not).
 //
 // Returns a function to stop the loop.
-func AnnouncementsLoop(interval time.Duration, proChecker func() bool) (stop func()) {
-	isStaging := stagingMode == "true"
-
+func AnnouncementsLoop(interval time.Duration, proChecker func() (bool, bool)) (stop func()) {
 	chStop := make(chan bool)
 	t := time.NewTicker(interval)
+	isStaging := stagingMode == "true"
+	checker := func() {
+		isPro, ok := proChecker()
+		if !ok {
+			log.Debugf("Skip checking announcement as user status is unknown")
+			return
+		}
+		lang := settings.getString(SNLanguage)
+		current, err := announcement.Get(http.DefaultClient, lang, isPro, isStaging)
+		if err != nil {
+			if err == announcement.ENoAvailable {
+				log.Debugf("No available announcement")
+			} else {
+				log.Error(err)
+			}
+			return
+		}
+		past := settings.getStringArray(SNPastAnnouncements)
+		if in(current.Campaign, past) {
+			log.Debugf("Skip announcement %s", current.Campaign)
+			return
+		}
+		if show(current) {
+			past = append(past, current.Campaign)
+			settings.setStringArray(SNPastAnnouncements, past)
+		}
+	}
 	go func() {
 		for {
-			isPro := proChecker()
-			lang := settings.getString(SNLanguage)
-			var past []string
-			current, err := announcement.Get(http.DefaultClient, lang, isPro, isStaging)
-			if err != nil {
-				// An error can simply mean no announcement available. Consider
-				// the low frequence, treat all as errors for simplification.
-				log.Error(err)
-				goto wait
-			}
-			past = settings.getStringArray(SNPastAnnouncements)
-			if in(current, past) {
-				goto wait
-			}
-			if show(current) {
-				past = append(past, current.Campaign)
-				settings.setStringArray(SNPastAnnouncements, past)
-			}
-
-		wait:
+			checker()
 			select {
 			case <-t.C:
 			case <-chStop:
@@ -61,9 +67,9 @@ func AnnouncementsLoop(interval time.Duration, proChecker func() bool) (stop fun
 	}
 }
 
-func in(current *announcement.Announcement, past []string) bool {
-	for _, c := range past {
-		if current.Campaign == c {
+func in(s string, coll []string) bool {
+	for _, v := range coll {
+		if s == v {
 			return true
 		}
 	}
