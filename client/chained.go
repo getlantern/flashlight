@@ -83,7 +83,7 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 				// Whenever full-device VPN mode is enabled, we need to make sure we ignore proxy
 				// requests from the first instance.
 				log.Debugf("Attempted to dial ourselves. Dialing directly to %s instead", addr)
-				conn, err = netx.DialTimeout(network, addr, 1*time.Minute)
+				conn, err = netx.DialTimeout("tcp", addr, 1*time.Minute)
 			} else {
 				conn, err = d(network, addr)
 				if err == nil {
