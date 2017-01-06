@@ -1,9 +1,11 @@
 package chained
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/getlantern/mtime"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRater(t *testing.T) {
@@ -17,8 +19,8 @@ func TestRater(t *testing.T) {
 	assert.EqualValues(t, 0, max)
 	assert.EqualValues(t, 0, average)
 
-	ts := time.Now()
-	r.begin(func() time.Time {
+	ts := mtime.Now()
+	r.begin(func() mtime.Instant {
 		return ts
 	})
 	total, min, max, average = r.get()
@@ -29,7 +31,7 @@ func TestRater(t *testing.T) {
 
 	ts = ts.Add(1 * time.Second)
 	// begin should have no effect after first call
-	r.begin(func() time.Time {
+	r.begin(func() mtime.Instant {
 		return ts
 	})
 	r.advance(1, ts)
@@ -48,7 +50,7 @@ func TestRater(t *testing.T) {
 
 	ts = ts.Add(2 * time.Second)
 	// begin should have no effect after first call
-	r.begin(func() time.Time {
+	r.begin(func() mtime.Instant {
 		return ts
 	})
 	r.advance(4, ts)

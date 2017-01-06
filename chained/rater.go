@@ -2,7 +2,8 @@ package chained
 
 import (
 	"sync"
-	"time"
+
+	"github.com/getlantern/mtime"
 )
 
 // rater provides a mechanism for accumulating a count over time and tracking
@@ -17,27 +18,27 @@ import (
 //
 // The final values can be obtained atomically using get().
 type rater struct {
-	start            time.Time
-	end              time.Time
+	start            mtime.Instant
+	end              mtime.Instant
 	total            int
 	snapshottedTotal int
-	lastSnapshotted  time.Time
+	lastSnapshotted  mtime.Instant
 	min              float64
 	max              float64
 	mx               sync.Mutex
 }
 
 // begin sets the start time for calculating rates.
-func (r *rater) begin(ts func() time.Time) {
+func (r *rater) begin(ts func() mtime.Instant) {
 	r.mx.Lock()
-	if r.start.IsZero() {
+	if r.start == 0 {
 		r.start = ts()
 	}
 	r.mx.Unlock()
 }
 
 // advance adds n to the internal count as of ts.
-func (r *rater) advance(n int, ts time.Time) {
+func (r *rater) advance(n int, ts mtime.Instant) {
 	r.mx.Lock()
 	r.total += n
 	r.end = ts
@@ -47,13 +48,13 @@ func (r *rater) advance(n int, ts time.Time) {
 // calc recalculates the internal EMA rate and updates the min/max accordingly.
 func (r *rater) calc() {
 	r.mx.Lock()
-	if r.start.IsZero() || r.end.IsZero() {
+	if r.start == 0 || r.end == 0 {
 		// Not yet started or nothing recorded, can't snapshot yet
 		r.mx.Unlock()
 		return
 	}
 
-	hasSnapshotted := !r.lastSnapshotted.IsZero()
+	hasSnapshotted := r.lastSnapshotted != 0
 	if !hasSnapshotted {
 		r.lastSnapshotted = r.start
 	}

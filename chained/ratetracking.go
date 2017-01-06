@@ -1,12 +1,14 @@
 package chained
 
 import (
-	"github.com/getlantern/flashlight/ops"
 	"io"
 	"net"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/mtime"
 )
 
 const (
@@ -80,9 +82,9 @@ func (c *rtconn) report() {
 }
 
 func (c *rtconn) Write(b []byte) (int, error) {
-	c.sent.begin(time.Now)
+	c.sent.begin(mtime.Now)
 	n, err := c.Conn.Write(b)
-	c.sent.advance(n, time.Now())
+	c.sent.advance(n, mtime.Now())
 	if err != nil && !isTimeout(err) {
 		c.storeError(err)
 	}
@@ -90,9 +92,9 @@ func (c *rtconn) Write(b []byte) (int, error) {
 }
 
 func (c *rtconn) Read(b []byte) (int, error) {
-	c.recv.begin(time.Now)
+	c.recv.begin(mtime.Now)
 	n, err := c.Conn.Read(b)
-	c.recv.advance(n, time.Now())
+	c.recv.advance(n, mtime.Now())
 	if err != nil && !isTimeout(err) && err != io.EOF {
 		c.storeError(err)
 	}

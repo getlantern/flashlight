@@ -18,6 +18,7 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/keyman"
+	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/snappyconn"
 	"github.com/getlantern/tlsdialer"
@@ -107,9 +108,9 @@ func newHTTPProxy(name string, s *ChainedServerInfo) Proxy {
 func (d httpProxy) DialServer() (net.Conn, error) {
 	op := ops.Begin("dial_to_chained").ChainedProxy(d.Addr(), d.Protocol(), d.Network())
 	defer op.End()
-	start := time.Now()
+	elapsed := mtime.Stopwatch()
 	conn, err := netx.DialTimeout("tcp", d.Addr(), chainedDialTimeout)
-	op.DialTime(start, err)
+	op.DialTime(elapsed, err)
 	return conn, op.FailIf(err)
 }
 
@@ -135,13 +136,13 @@ func (d httpsProxy) DialServer() (net.Conn, error) {
 	op := ops.Begin("dial_to_chained").ChainedProxy(d.Addr(), d.Protocol(), d.Network())
 	defer op.End()
 
-	start := time.Now()
+	elapsed := mtime.Stopwatch()
 	conn, err := tlsdialer.DialTimeout(netx.DialTimeout, chainedDialTimeout,
 		"tcp", d.Addr(), false, &tls.Config{
 			ClientSessionCache: d.sessionCache,
 			InsecureSkipVerify: true,
 		})
-	op.DialTime(start, err)
+	op.DialTime(elapsed, err)
 	if err != nil {
 		return nil, op.FailIf(err)
 	}
@@ -244,7 +245,7 @@ func (p obfs4Wrapper) Label() string {
 func (p obfs4Wrapper) DialServer() (net.Conn, error) {
 	op := ops.Begin("dial_to_chained").ChainedProxy(p.Addr(), p.Protocol(), p.Network())
 	defer op.End()
-	start := time.Now()
+	elapsed := mtime.Stopwatch()
 	dialFn := func(network, address string) (net.Conn, error) {
 		// We know for sure the network and address are the same as what
 		// the inner DailServer uses.
@@ -252,7 +253,7 @@ func (p obfs4Wrapper) DialServer() (net.Conn, error) {
 	}
 	// The proxy it wrapped already has timeout applied.
 	conn, err := p.cf.Dial("tcp", p.Addr(), dialFn, p.args)
-	op.DialTime(start, err)
+	op.DialTime(elapsed, err)
 	return conn, op.FailIf(err)
 }
 
