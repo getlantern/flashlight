@@ -1,5 +1,5 @@
 hash: c683a576abff4e384db86b0b3cf8a949b924dcf490b8f7d164ddc2bf2560ccf4
-updated: 2017-01-06T13:56:37.444000869-08:00
+updated: 2017-01-09T12:23:24.897262009-08:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -42,7 +42,7 @@ imports:
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda
-  version: 7f4e9eb4a9257ac45a31b1d9c8de0d602c43d6a2
+  version: 63461b2f3d1bc81be17e7f1a86e3fd6513baffa4
   subpackages:
   - client
 - name: github.com/getlantern/buuid
@@ -114,7 +114,7 @@ imports:
   - server
   - utils
 - name: github.com/getlantern/http-proxy-lantern
-  version: b4d5d3640444853f186f4df78a44f781e433a241
+  version: 73bac2f204a62627151b112c4e808e7265fe48e2
   subpackages:
   - analytics
   - blacklist
@@ -177,7 +177,7 @@ imports:
 - name: github.com/getlantern/proxy
   version: 876829e39cf8243d123b02f02efe8da1266effb4
 - name: github.com/getlantern/proxybench
-  version: 11296a9d690d5b0dbf7b6927cc3e529ab6c46471
+  version: 55a333803136d8208b30e9cb721cd01094b78232
 - name: github.com/getlantern/rot13
   version: 33f93fc1fe85c042c0667a1814e6379bd5e7eb40
 - name: github.com/getlantern/rotator
@@ -253,7 +253,7 @@ imports:
 - name: github.com/rcrowley/go-metrics
   version: 1f30fe9094a513ce4c700b9a54458bbb0c96996c
 - name: github.com/Sirupsen/logrus
-  version: 881bee4e20a5d11a6a88a5667c6f292072ac1963
+  version: 9b48ece7fc373043054858f8c0d362665e866004
 - name: github.com/skratchdot/open-golang
   version: 75fb7ed4208cf72d323d7d02fd1a5964a7a9073c
   subpackages:
@@ -267,9 +267,9 @@ imports:
   subpackages:
   - utils
 - name: github.com/xtaci/kcp-go
-  version: 1a20d38aba9b713cbf9088d04b39207be1ca4d58
+  version: a56e81a416a264ce329129e598280df6711b475b
 - name: golang.org/x/crypto
-  version: cb497ae8f18e3c55f81bc9f3876c8f4c3d8a2813
+  version: c3b1d0d6d8690eaebe3064711b026770cc37efa3
   subpackages:
   - blowfish
   - cast5
@@ -284,7 +284,7 @@ imports:
   - twofish
   - xtea
 - name: golang.org/x/net
-  version: 905989bd20b7c354fd28a61074eed1c8f49ebc89
+  version: b03f0d9a164ac99fff690e1e0bb0af36f760322b
   repo: https://github.com/golang/net
   vcs: git
   subpackages:
