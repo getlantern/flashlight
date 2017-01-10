@@ -23,10 +23,9 @@ type Service struct {
 }
 
 var (
-	mu               sync.RWMutex
 	defaultUIChannel *UIChannel
-
-	services = make(map[string]*Service)
+	muServices       sync.RWMutex
+	services         = make(map[string]*Service)
 )
 
 func (s *Service) write() {
@@ -59,7 +58,8 @@ func Register(t string, helloFn helloFnType) (*Service, error) {
 // client, instead of letting JSON unmarshaler to guess the type.
 func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFnType) (*Service, error) {
 	log.Tracef("Registering UI service %s", t)
-	mu.Lock()
+	muServices.Lock()
+	defer muServices.Unlock()
 
 	if services[t] != nil {
 		// Using panic because this would be a developer error rather that
@@ -71,7 +71,7 @@ func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFn
 		Type:     t,
 		in:       make(chan interface{}, 100),
 		out:      make(chan interface{}, 100),
-		stopCh:   make(chan bool),
+		stopCh:   make(chan bool, 1), // buffered to avoid blocking `Unregister()`
 		helloFn:  helloFn,
 		newMsgFn: newMsgFn,
 	}
@@ -95,7 +95,6 @@ func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFn
 
 	// Adding new service to service map.
 	services[t] = s
-	mu.Unlock()
 
 	log.Tracef("Registered UI service %s", t)
 	go s.write()
@@ -104,13 +103,15 @@ func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFn
 
 func Unregister(t string) {
 	log.Tracef("Unregistering service: %v", t)
+	muServices.Lock()
+	muServices.Unlock()
 	if services[t] != nil {
 		services[t].stopCh <- true
 		delete(services, t)
 	}
 }
 
-// To facilitate test
+// To facilitate test, no bother protecting with mutex
 func unregisterAll() {
 	for t, _ := range services {
 		Unregister(t)
@@ -121,7 +122,8 @@ func startUIChannel(path string) *UIChannel {
 	// Establish a channel to the UI for sending and receiving updates
 	defaultUIChannel = NewChannel(path, func(write func([]byte) error) error {
 		// Sending hello messages.
-		mu.RLock()
+		muServices.RLock()
+		defer muServices.RUnlock()
 		for _, s := range services {
 			// Delegating task...
 			if s.helloFn != nil {
@@ -138,7 +140,6 @@ func startUIChannel(path string) *UIChannel {
 				}
 			}
 		}
-		mu.RUnlock()
 		return nil
 	})
 
@@ -160,7 +161,9 @@ func readLoop(in <-chan []byte) {
 		}
 
 		// Delegating response to the service that registered with the given type.
+		muServices.RLock()
 		service := services[envType.Type]
+		muServices.RUnlock()
 		if service == nil {
 			log.Errorf("Message type %v belongs to an unknown service.", envType.Type)
 			continue
