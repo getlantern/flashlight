@@ -45,7 +45,8 @@ func NewServer(addr string, allInterfaces bool, extURL, localHTTPToken string) *
 		addr = ":" + port
 	}
 
-	return &Server{listenAddr: addr,
+	return &Server{
+		listenAddr:     addr,
 		externalURL:    overrideManotoURL(extURL),
 		localHTTPToken: localHTTPToken,
 		mux:            http.NewServeMux(),
@@ -61,10 +62,14 @@ func overrideManotoURL(u string) string {
 	}
 }
 
-// Handle let the Server to handle the path with pattern using handler.
-// It should be called before Start.
+// Handle let the Server to handle the pattern using handler.
 func (s *Server) Handle(pattern string, handler http.Handler) {
-	s.mux.Handle(pattern, handler)
+	log.Debugf("Adding handler for %v", pattern)
+	s.mux.Handle(pattern,
+		checkOrigin(
+			util.NoCacheHandler(handler),
+			s.localHTTPToken,
+			s.listenAddr))
 }
 
 func (s *Server) Start() error {
@@ -92,7 +97,7 @@ func (s *Server) Start() error {
 	s.listener = l
 
 	server := &http.Server{
-		Handler:  s.getHandler(),
+		Handler:  s.mux,
 		ErrorLog: log.AsStdLogger(),
 	}
 	ch := make(chan error)
@@ -111,10 +116,6 @@ func (s *Server) Start() error {
 		log.Debugf("UI available at http://%v", s.accessAddr)
 		return nil
 	}
-}
-
-func (s *Server) getHandler() http.Handler {
-	return checkOrigin(util.NoCacheHandler(s.mux), s.localHTTPToken, s.listenAddr)
 }
 
 // Show opens the UI in a browser. Note we know the UI server is

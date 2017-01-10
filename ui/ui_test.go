@@ -21,7 +21,7 @@ func TestNormalizeAddr(t *testing.T) {
 }
 
 func getTestHandler() http.Handler {
-	return getTestServer("some-token").getHandler()
+	return getTestServer("some-token").mux
 }
 
 func getTestServer(token string) *Server {
@@ -72,7 +72,7 @@ func TestKnownResourceWithNoOriginButWithToken(t *testing.T) {
 	var rw httptest.ResponseRecorder
 	s := getTestServer("token")
 	req, _ := http.NewRequest("GET", s.AddToken("/js/bundle.js"), nil)
-	s.getHandler().ServeHTTP(&rw, req)
+	s.mux.ServeHTTP(&rw, req)
 	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
 }
 
@@ -80,7 +80,7 @@ func TestLanternLogoWithToken(t *testing.T) {
 	var rw httptest.ResponseRecorder
 	s := getTestServer("token")
 	req, _ := http.NewRequest("GET", s.AddToken("/img/lantern_logo.png?foo=1"), nil)
-	s.getHandler().ServeHTTP(&rw, req)
+	s.mux.ServeHTTP(&rw, req)
 	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
 }
 
@@ -88,6 +88,6 @@ func TestLanternPACURL(t *testing.T) {
 	var rw httptest.ResponseRecorder
 	s := getTestServer("token")
 	req, _ := http.NewRequest("GET", s.AddToken("/proxy_on.pac"), nil)
-	s.getHandler().ServeHTTP(&rw, req)
+	s.mux.ServeHTTP(&rw, req)
 	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
 }
