@@ -16,6 +16,7 @@ import (
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/detour"
 	"github.com/getlantern/eventual"
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/status"
@@ -65,7 +66,7 @@ type Client struct {
 	writeTimeout time.Duration
 
 	// Balanced CONNECT dialers.
-	bal eventual.Value
+	bal *balancer.Balancer
 
 	interceptCONNECT proxy.Interceptor
 	interceptHTTP    proxy.Interceptor
@@ -81,7 +82,9 @@ type Client struct {
 // all traffic, and another function to get Lantern Pro token when required.
 func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 	client := &Client{
-		bal:            eventual.NewValue(),
+		bal: balancer.New(&balancer.Opts{
+			Strategy: balancer.QualityFirst,
+		}),
 		proxyAll:       proxyAll,
 		proTokenGetter: proTokenGetter,
 	}
@@ -190,7 +193,9 @@ func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo, d
 // Stop is called when the client is no longer needed. It closes the
 // client listener and underlying dialer connection pool
 func (client *Client) Stop() error {
-	return client.l.Close()
+	err := client.l.Close()
+	client.bal.Close()
+	return err
 }
 
 func (client *Client) proxiedDialer(orig func(network, addr string) (net.Conn, error)) func(network, addr string) (net.Conn, error) {
@@ -251,7 +256,7 @@ func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, p
 				// case.
 				proto = "connect"
 			}
-			return bal.Dial(proto, addr)
+			return client.bal.Dial(proto, addr)
 		})
 		// TODO: pass context down to all layers.
 		chDone := make(chan bool)
