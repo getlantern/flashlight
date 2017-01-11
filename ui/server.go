@@ -114,7 +114,7 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) getHandler() http.Handler {
-	return checkOrigin(util.NoCacheHandler(s.mux), s.localHTTPToken, s.listenAddr)
+	return checkOrigin(util.NoCacheHandler(s.mux), s.localHTTPToken, s.accessAddr)
 }
 
 // Show opens the UI in a browser. Note we know the UI server is
