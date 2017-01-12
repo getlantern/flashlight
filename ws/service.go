@@ -122,9 +122,9 @@ func Unregister(t string) {
 	}
 }
 
-func StartUIChannel(path string) *UIChannel {
-	// Establish a channel to the UI for sending and receiving updates
-	defaultUIChannel = NewChannel(path, func(write func([]byte) error) error {
+// Establish a channel to the UI for sending and receiving updates
+func StartUIChannel() *UIChannel {
+	defaultUIChannel = NewChannel(func(write func([]byte) error) error {
 		// Sending hello messages.
 		muServices.RLock()
 		defer muServices.RUnlock()
@@ -149,7 +149,7 @@ func StartUIChannel(path string) *UIChannel {
 
 	go readLoop(defaultUIChannel.In)
 
-	log.Debugf("Accepting websocket connections at %s", path)
+	log.Debugf("Accepting WebSocket connections")
 	return defaultUIChannel
 }
 
