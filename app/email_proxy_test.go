@@ -3,13 +3,14 @@ package app
 import (
 	"bytes"
 	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gorilla/websocket"
 	"github.com/keighl/mandrill"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
 )
 
@@ -37,15 +38,14 @@ func TestReadResponses(t *testing.T) {
 }
 
 func TestEmailProxy(t *testing.T) {
-	ui.Start("localhost:", false, "", "")
-	defer ui.Stop()
-	ui.Handle("/data", ws.StartUIChannel("/data"))
+	s := httptest.NewServer(ws.StartUIChannel("/data"))
+	defer s.Close()
 	defer ws.UnregisterAll()
 	// avoid panicking when attaching settings to the email.
 	settings = loadSettings("version", "revisionDate", "buildDate")
 	err := serveEmailProxy()
 	assert.NoError(t, err, "should start UI service")
-	wsURL := "ws://" + ui.GetUIAddr() + "/data"
+	wsURL := strings.Replace(s.URL, "http://", "ws://", -1)
 	conn, _, err := websocket.DefaultDialer.Dial(wsURL, http.Header{})
 	if !assert.NoError(t, err, "should connect to Websocket") {
 		return
