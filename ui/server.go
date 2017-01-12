@@ -100,7 +100,7 @@ func (s *Server) Start() error {
 		Handler:  s.mux,
 		ErrorLog: log.AsStdLogger(),
 	}
-	ch := make(chan error)
+	ch := make(chan error, 1)
 	go func() {
 		log.Debugf("UI serving at %v", l.Addr())
 		err := server.Serve(l)

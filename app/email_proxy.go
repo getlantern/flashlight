@@ -127,6 +127,10 @@ func readResponses(responses []*mandrill.Response) error {
 }
 
 func fillDefaults(msg *mandrillMessage) {
+	if msg.Vars == nil {
+		// avoid panicking in case the message is malformed
+		msg.Vars = make(map[string]interface{})
+	}
 	msg.Vars["userID"] = settings.GetUserID()
 	msg.Vars["deviceID"] = settings.GetDeviceID()
 	msg.Vars["proToken"] = settings.GetToken()

@@ -81,20 +81,18 @@ func TestEmailProxy(t *testing.T) {
 }
 
 func sendTemplateVia(conn *websocket.Conn) error {
-	return conn.WriteJSON(ws.Envelope{
-		EnvelopeType: ws.EnvelopeType{
-			Type: "email-proxy",
-		},
-		Message: mandrillMessage{
-			Template:     "user-send-logs-desktop",
-			To:           "fffw@getlantern.org",
-			WithSettings: true,
-			MaxLogSize:   "5MB",
-			Vars: map[string]interface{}{
+	return conn.WriteMessage(websocket.TextMessage, []byte(`{
+		"type":"email-proxy",
+		"message": {
+			"template":     "user-send-logs-desktop",
+			"to":           "fffw@getlantern.org",
+			"withSettings": true,
+			"maxLogSize":   "5MB",
+			"vars": {
 				"userID": "1234",
 				"email":  "user@lantern.org",
-				"OS":     "Windows",
-			},
-		},
-	})
+				"OS":     "Windows"
+			}
+		}
+	}`))
 }

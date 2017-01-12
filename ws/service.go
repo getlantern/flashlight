@@ -7,6 +7,17 @@ import (
 	"sync"
 )
 
+// envelopType is the type of the message envelope.
+type envelopType struct {
+	Type string `json:"type,inline"`
+}
+
+// envelope is a struct that wraps messages and associates them with a type.
+type envelope struct {
+	envelopType
+	Message interface{} `json:"message"`
+}
+
 type helloFnType func(func(interface{}) error) error
 
 type newMsgFnType func() interface{}
@@ -145,7 +156,7 @@ func StartUIChannel(path string) *UIChannel {
 func readLoop(in <-chan []byte) {
 	for b := range in {
 		// Determining message type.
-		var envType EnvelopeType
+		var envType envelopType
 		err := json.Unmarshal(b, &envType)
 
 		if err != nil {
@@ -162,7 +173,7 @@ func readLoop(in <-chan []byte) {
 			continue
 		}
 
-		env := &Envelope{}
+		env := &envelope{}
 		if service.newMsgFn != nil {
 			env.Message = service.newMsgFn()
 		}
@@ -180,9 +191,9 @@ func readLoop(in <-chan []byte) {
 }
 
 func newEnvelope(t string, msg interface{}) ([]byte, error) {
-	b, err := json.Marshal(&Envelope{
-		EnvelopeType: EnvelopeType{t},
-		Message:      msg,
+	b, err := json.Marshal(&envelope{
+		envelopType: envelopType{t},
+		Message:     msg,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Unable to marshal message of type %v: %v", t, msg)
