@@ -1,11 +1,11 @@
-package ui
+package ws
 
 import (
 	"io"
 	"net/http"
-	"path"
 	"sync"
 
+	"github.com/getlantern/golog"
 	"github.com/gorilla/websocket"
 )
 
@@ -15,6 +15,7 @@ const (
 )
 
 var (
+	log      = golog.LoggerFor("flashlight.ws")
 	upgrader = &websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: MaxMessageSize,
@@ -29,7 +30,6 @@ type ConnectFunc func(write func([]byte) error) error
 // messages from any browser window are available via In and all messages sent
 // to Out will be published to all browser windows.
 type UIChannel struct {
-	URL string
 	In  <-chan []byte
 	Out chan<- []byte
 
@@ -42,22 +42,15 @@ type UIChannel struct {
 	onConnect ConnectFunc
 }
 
-// NewChannel establishes a new channel to the UI at the given path. When the UI
-// connects to this path, we will establish a websocket to the UI to carry
+// NewChannel establishes a new channel acts as an http.Handler. When the UI
+// connects to the handler, we will establish a websocket to the UI to carry
 // messages for this UIChannel. The given onConnect function is called anytime
 // that the UI connects.
-func NewChannel(p string, onConnect ConnectFunc) *UIChannel {
-	c := newUIChannel("http://"+path.Join(GetUIAddr(), p), onConnect)
-	server.Handle(p, c)
-	return c
-}
-
-func newUIChannel(url string, onConnect ConnectFunc) *UIChannel {
+func NewChannel(onConnect ConnectFunc) *UIChannel {
 	in := make(chan []byte, 100)
 	out := make(chan []byte)
 
 	c := &UIChannel{
-		URL:       url,
 		In:        in,
 		in:        in,
 		Out:       out,
@@ -72,7 +65,7 @@ func newUIChannel(url string, onConnect ConnectFunc) *UIChannel {
 }
 
 func (c *UIChannel) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	log.Tracef("Got connection to %v", c.URL)
+	log.Debugf("Got connection to the UI channel")
 	var err error
 
 	if req.Method != "GET" {
@@ -82,11 +75,11 @@ func (c *UIChannel) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	// Upgrade with a HTTP request returns a websocket connection
 	ws, err := upgrader.Upgrade(resp, req, nil)
 	if err != nil {
-		log.Errorf("Unable to upgrade %v to websocket: %v", c.URL, err)
+		log.Errorf("Unable to upgrade to websocket: %v", err)
 		return
 	}
 
-	log.Tracef("Upgraded to websocket at %v", c.URL)
+	log.Debugf("Upgraded to websocket")
 	c.m.Lock()
 	if c.onConnect != nil {
 		err = c.onConnect(func(b []byte) error {
@@ -110,13 +103,13 @@ func (c *UIChannel) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}
 	c.conns[conn.id] = conn
 	c.m.Unlock()
-	log.Tracef("About to read from connection to %v", c.URL)
+	log.Tracef("About to read from websocket connection")
 	conn.read()
 }
 
 func (c *UIChannel) write() {
 	defer func() {
-		log.Tracef("Closing all websockets to %v", c.URL)
+		log.Tracef("Closing all websockets")
 		c.m.Lock()
 		for _, conn := range c.conns {
 			if err := conn.ws.Close(); err != nil {
@@ -132,7 +125,7 @@ func (c *UIChannel) write() {
 		for _, conn := range c.conns {
 			err := conn.ws.WriteMessage(websocket.TextMessage, msg)
 			if err != nil {
-				log.Debugf("Error writing to UI %v for: %v", err, c.URL)
+				log.Debugf("Error writing to WebSocket: %v", err)
 				delete(c.conns, conn.id)
 			}
 		}

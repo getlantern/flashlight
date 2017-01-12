@@ -25,8 +25,6 @@ var (
 func Start(requestedAddr string, allowRemote bool, extURL, localHTTPTok string) error {
 	server = NewServer(requestedAddr, allowRemote, extURL, localHTTPTok)
 	attachHandlers(server, allowRemote)
-	startUIChannel()
-
 	if err := server.Start(); err != nil {
 		return err
 	}
@@ -44,9 +42,8 @@ func attachHandlers(s *Server, allowRemote bool) {
 		}
 		resp.WriteHeader(http.StatusOK)
 	}
-
-	s.Handle("/pro/", pro.APIHandler())
 	s.Handle("/startup", http.HandlerFunc(startupHandler))
+	s.Handle("/pro/", pro.APIHandler())
 	unpackUI()
 	s.Handle("/", http.FileServer(fs))
 
@@ -58,7 +55,6 @@ func Handle(pattern string, handler http.Handler) {
 
 // Stop stops the UI listener and all services. To facilitate test.
 func Stop() {
-	unregisterAll()
 	server.Stop()
 }
 
@@ -75,7 +71,7 @@ func unpackUI() {
 
 // Translations returns the translations for a given locale file.
 func Translations(filename string) ([]byte, error) {
-	log.Debugf("Accessing translations")
+	log.Tracef("Accessing translations %v", filename)
 	tr, ok := translations.Get(30 * time.Second)
 	if !ok || tr == nil {
 		return nil, fmt.Errorf("Could not get traslation for file name: %v", filename)
