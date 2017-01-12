@@ -195,7 +195,9 @@ func (app *App) beforeStart() bool {
 	}
 	ui.Handle("/data", ws.StartUIChannel("/data"))
 
-	startSettingsService()
+	if e := settings.StartService(); e != nil {
+		app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
+	}
 	settings.SetUIAddr(ui.GetUIAddr())
 
 	setupUserSignal()
@@ -221,23 +223,6 @@ func (app *App) beforeStart() bool {
 	watchDirectAddrs()
 
 	return true
-}
-
-// start the settings service that synchronizes Lantern's configuration with every UI client
-func startSettingsService() {
-	helloFn := func(write func(interface{}) error) error {
-		log.Debugf("Sending Lantern settings to new client")
-		uiMap := settings.uiMap()
-		return write(uiMap)
-	}
-
-	var err error
-	service, err = ws.Register("settings", helloFn)
-	if err != nil {
-		log.Errorf("Unable to register settings service: %q", err)
-		return
-	}
-	go settings.read(service.In, service.Out)
 }
 
 // localHTTPToken fetches the local HTTP token from disk if it's there, and
