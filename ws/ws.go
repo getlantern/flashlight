@@ -1,10 +1,11 @@
-package ui
+package ws
 
 import (
 	"io"
 	"net/http"
 	"sync"
 
+	"github.com/getlantern/golog"
 	"github.com/gorilla/websocket"
 )
 
@@ -14,6 +15,7 @@ const (
 )
 
 var (
+	log      = golog.LoggerFor("flashlight.ws")
 	upgrader = &websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: MaxMessageSize,

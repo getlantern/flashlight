@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/getlantern/flashlight/geolookup"
-	"github.com/getlantern/flashlight/ui"
+	"github.com/getlantern/flashlight/ws"
 	"time"
 )
 
@@ -17,7 +17,7 @@ func serveLocation() {
 		})
 	}
 
-	_, err := ui.Register("location", helloFn)
+	_, err := ws.Register("location", helloFn)
 	if err != nil {
 		log.Errorf("Error registering with UI? %v", err)
 	}

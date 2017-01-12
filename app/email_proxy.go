@@ -12,8 +12,8 @@ import (
 	"github.com/getlantern/osversion"
 
 	"github.com/getlantern/flashlight/logging"
-	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/util"
+	"github.com/getlantern/flashlight/ws"
 )
 
 type mandrillMessage struct {
@@ -43,7 +43,7 @@ var (
 // as an out-of-band channel when Lantern doesn't work well, say, when user
 // wants to report an issue.
 func serveEmailProxy() error {
-	service, err := ui.RegisterWithMsgInitializer("email-proxy", nil,
+	service, err := ws.RegisterWithMsgInitializer("email-proxy", nil,
 		func() interface{} { return &mandrillMessage{} })
 	if err != nil {
 		log.Errorf("Error registering with UI? %v", err)
@@ -53,7 +53,7 @@ func serveEmailProxy() error {
 	return nil
 }
 
-func read(service *ui.Service) {
+func read(service *ws.Service) {
 	for message := range service.In {
 		data, ok := message.(*mandrillMessage)
 		if !ok {

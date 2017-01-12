@@ -1,4 +1,4 @@
-package ui
+package ws
 
 // EnvelopeType is the type of the message envelope.
 type EnvelopeType struct {

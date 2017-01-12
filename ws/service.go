@@ -1,4 +1,4 @@
-package ui
+package ws
 
 import (
 	"encoding/json"
@@ -112,13 +112,13 @@ func Unregister(t string) {
 }
 
 // To facilitate test, no bother protecting with mutex
-func unregisterAll() {
+func UnregisterAll() {
 	for t, _ := range services {
 		Unregister(t)
 	}
 }
 
-func startUIChannel(path string) *UIChannel {
+func StartUIChannel(path string) *UIChannel {
 	// Establish a channel to the UI for sending and receiving updates
 	defaultUIChannel = NewChannel(path, func(write func([]byte) error) error {
 		// Sending hello messages.

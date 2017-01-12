@@ -18,7 +18,7 @@ import (
 	"github.com/getlantern/uuid"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/ui"
+	"github.com/getlantern/flashlight/ws"
 )
 
 // SettingName is the name of a setting.
@@ -84,7 +84,7 @@ var settingMeta = map[SettingName]struct {
 }
 
 var (
-	service     *ui.Service
+	service     *ws.Service
 	httpClient  *http.Client
 	defaultPath = filepath.Join(appdir.General("Lantern"), "settings.yaml")
 	once        = &sync.Once{}

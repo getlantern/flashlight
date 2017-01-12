@@ -21,6 +21,7 @@ import (
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxiedsites"
 	"github.com/getlantern/flashlight/ui"
+	"github.com/getlantern/flashlight/ws"
 )
 
 var (
@@ -192,6 +193,8 @@ func (app *App) beforeStart() bool {
 	if err != nil {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 	}
+	ui.Handle("/data", ws.StartUIChannel("/data"))
+
 	startSettingsService()
 	settings.SetUIAddr(ui.GetUIAddr())
 
@@ -229,7 +232,7 @@ func startSettingsService() {
 	}
 
 	var err error
-	service, err = ui.Register("settings", helloFn)
+	service, err = ws.Register("settings", helloFn)
 	if err != nil {
 		log.Errorf("Unable to register settings service: %q", err)
 		return

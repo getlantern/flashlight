@@ -5,10 +5,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/getlantern/flashlight/ui"
 	"github.com/gorilla/websocket"
 	"github.com/keighl/mandrill"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/getlantern/flashlight/ui"
+	"github.com/getlantern/flashlight/ws"
 )
 
 func TestReadResponses(t *testing.T) {
@@ -37,6 +39,8 @@ func TestReadResponses(t *testing.T) {
 func TestEmailProxy(t *testing.T) {
 	ui.Start("localhost:", false, "", "")
 	defer ui.Stop()
+	ui.Handle("/data", ws.StartUIChannel("/data"))
+	defer ws.UnregisterAll()
 	// avoid panicking when attaching settings to the email.
 	settings = loadSettings("version", "revisionDate", "buildDate")
 	err := serveEmailProxy()
@@ -77,8 +81,8 @@ func TestEmailProxy(t *testing.T) {
 }
 
 func sendTemplateVia(conn *websocket.Conn) error {
-	return conn.WriteJSON(ui.Envelope{
-		EnvelopeType: ui.EnvelopeType{
+	return conn.WriteJSON(ws.Envelope{
+		EnvelopeType: ws.EnvelopeType{
 			Type: "email-proxy",
 		},
 		Message: mandrillMessage{

@@ -44,7 +44,6 @@ func attachHandlers(s *Server, allowRemote bool) {
 	}
 	s.Handle("/startup", http.HandlerFunc(startupHandler))
 	s.Handle("/pro/", pro.APIHandler())
-	s.Handle("/data", startUIChannel("/data"))
 	unpackUI()
 	s.Handle("/", http.FileServer(fs))
 
@@ -56,7 +55,6 @@ func Handle(pattern string, handler http.Handler) {
 
 // Stop stops the UI listener and all services. To facilitate test.
 func Stop() {
-	unregisterAll()
 	server.Stop()
 }
 
