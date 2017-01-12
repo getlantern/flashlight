@@ -7,14 +7,14 @@ import (
 	"sync"
 )
 
-// envelopType is the type of the message envelope.
-type envelopType struct {
+// envelopeType is the type of the message envelope.
+type envelopeType struct {
 	Type string `json:"type,inline"`
 }
 
 // envelope is a struct that wraps messages and associates them with a type.
 type envelope struct {
-	envelopType
+	envelopeType
 	Message interface{} `json:"message"`
 }
 
@@ -115,14 +115,15 @@ func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFn
 func Unregister(t string) {
 	log.Tracef("Unregistering service: %v", t)
 	muServices.Lock()
-	muServices.Unlock()
+	defer muServices.Unlock()
 	if services[t] != nil {
 		services[t].stopCh <- true
 		delete(services, t)
 	}
 }
 
-// Establish a channel to the UI for sending and receiving updates
+// StartUIChannel establishes a channel to the UI for sending and receiving
+// updates
 func StartUIChannel() *UIChannel {
 	defaultUIChannel = NewChannel(func(write func([]byte) error) error {
 		// Sending hello messages.
@@ -156,7 +157,7 @@ func StartUIChannel() *UIChannel {
 func readLoop(in <-chan []byte) {
 	for b := range in {
 		// Determining message type.
-		var envType envelopType
+		var envType envelopeType
 		err := json.Unmarshal(b, &envType)
 
 		if err != nil {
@@ -192,8 +193,8 @@ func readLoop(in <-chan []byte) {
 
 func newEnvelope(t string, msg interface{}) ([]byte, error) {
 	b, err := json.Marshal(&envelope{
-		envelopType: envelopType{t},
-		Message:     msg,
+		envelopeType: envelopeType{t},
+		Message:      msg,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Unable to marshal message of type %v: %v", t, msg)
