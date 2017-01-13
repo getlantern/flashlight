@@ -5,6 +5,7 @@ package ops
 import (
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	borda "github.com/getlantern/borda/client"
@@ -162,8 +163,8 @@ func (op *Op) OriginFromRequest(req *http.Request) *Op {
 // Origin attaches the origin to the Context
 func (op *Op) Origin(origin string, defaultPort string) *Op {
 	op.Set("origin", origin)
-	host, port, err := net.SplitHostPort(origin)
-	if err != nil {
+	host, port, _ := net.SplitHostPort(origin)
+	if host == "" && !strings.Contains(origin, ":") {
 		host = origin
 	}
 	if port == "0" || port == "" {
