@@ -146,7 +146,7 @@ imports:
 - name: github.com/getlantern/launcher
   version: bc9fc3b11894e839c3fcb049f12e8974d7e48497
 - name: github.com/getlantern/measured
-  version: 9b2ba905af5464caf33ca8a1599ab3f4d5cd48d6
+  version: 0bc4cd76a00cf14e0d82d90b46d5cc1a12f8857e
 - name: github.com/getlantern/mockconn
   version: 422a5afd4432dd82b1389333d5352da003d898a6
 - name: github.com/getlantern/mtime
