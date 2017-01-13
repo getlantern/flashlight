@@ -85,10 +85,11 @@ func (s *Server) Start() error {
 	if err != nil {
 		log.Errorf("invalid address %v", s.listenAddr)
 	}
-	if port == "0" {
-		// On first run, we pick an arbitrary port, update our listenAddr to reflect
-		// the assigned port
+	if port == "" || port == "0" {
+		// On first run, we pick an arbitrary port, update our listenAddr to
+		// reflect the assigned port
 		s.listenAddr = fmt.Sprintf("%v:%v", host, actualPort)
+		log.Debugf("rewrote listen address to %v", s.listenAddr)
 	}
 	if host == "" {
 		host = "localhost"
