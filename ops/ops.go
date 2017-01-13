@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	borda "github.com/getlantern/borda/client"
 	"github.com/getlantern/ops"
 )
 
@@ -175,11 +176,11 @@ func (op *Op) Origin(origin string, defaultPort string) *Op {
 // DialTime records a dial time relative to a given start time (in milliseconds)
 // and records whether or not the dial succeeded (based on err being nil).
 func (op *Op) DialTime(elapsed func() time.Duration, err error) *Op {
-	return op.SetMetric("dial_time", float64(elapsed().Nanoseconds())/1000000).Set("dial_succeeded", err == nil)
+	return op.SetMetric("dial_time", borda.Avg(float64(elapsed().Nanoseconds())/1000000)).Set("dial_succeeded", err == nil)
 }
 
 // SetMetric sets a named metric. Metrics will be reported as borda values
 // rather than dimensions.
-func (op *Op) SetMetric(name string, value float64) *Op {
-	return op.Set("metric_"+name, value)
+func (op *Op) SetMetric(name string, value borda.Val) *Op {
+	return op.Set(name, value)
 }

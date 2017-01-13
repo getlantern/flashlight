@@ -4,6 +4,7 @@ import (
 	"net"
 	"time"
 
+	borda "github.com/getlantern/borda/client"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/measured"
 )
@@ -17,14 +18,14 @@ func withRateTracking(wrapped net.Conn, origin string, onFinish func(op *ops.Op)
 		op := ops.Begin("xfer").Origin(origin, "")
 
 		stats := conn.Stats()
-		op.SetMetric("client_bytes_sent", float64(stats.SentTotal)).
-			SetMetric("client_bps_sent_min", stats.SentMin).
-			SetMetric("client_bps_sent_max", stats.SentMax).
-			SetMetric("client_bps_sent_avg", stats.SentAvg).
-			SetMetric("client_bytes_recv", float64(stats.RecvTotal)).
-			SetMetric("client_bps_recv_min", stats.RecvMin).
-			SetMetric("client_bps_recv_max", stats.RecvMax).
-			SetMetric("client_bps_recv_avg", stats.RecvAvg)
+		op.SetMetric("client_bytes_sent", borda.Float(stats.SentTotal)).
+			SetMetric("client_bps_sent_min", borda.Min(stats.SentMin)).
+			SetMetric("client_bps_sent_max", borda.Max(stats.SentMax)).
+			SetMetric("client_bps_sent_avg", borda.WeightedAvg(stats.SentAvg, float64(stats.SentTotal))).
+			SetMetric("client_bytes_recv", borda.Float(stats.RecvTotal)).
+			SetMetric("client_bps_recv_min", borda.Min(stats.RecvMin)).
+			SetMetric("client_bps_recv_max", borda.Max(stats.RecvMax)).
+			SetMetric("client_bps_recv_avg", borda.WeightedAvg(stats.RecvAvg, float64(stats.RecvTotal)))
 
 		if onFinish != nil {
 			onFinish(op)
