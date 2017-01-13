@@ -221,31 +221,6 @@ func TestTrusted(t *testing.T) {
 	assert.Equal(t, dialCount, 2, "should dial untrusted dialer")
 }
 
-func TestCheck(t *testing.T) {
-	minCheckInterval := 50 * time.Millisecond
-	var checkCount uint32
-	d := &Dialer{
-		DialFN: func(network, addr string) (net.Conn, error) {
-			return nil, nil
-		},
-		Check: func(checkData interface{}, onFailure func(string)) (bool, time.Duration) {
-			newCount := atomic.AddUint32(&checkCount, 1)
-			log.Debugf("Check() called %d times", newCount)
-			return true, 1 * time.Second
-		},
-		Trusted: true,
-	}
-	New(&Opts{
-		Strategy:         Sticky,
-		Dialers:          []*Dialer{d},
-		MinCheckInterval: minCheckInterval,
-		MaxCheckInterval: minCheckInterval,
-	})
-
-	time.Sleep(minCheckInterval * 2)
-	assert.True(t, atomic.LoadUint32(&checkCount) >= 2)
-}
-
 func TestResetDailers(t *testing.T) {
 	addr, l := echoServer()
 	defer func() { _ = l.Close() }()

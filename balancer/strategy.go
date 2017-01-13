@@ -47,35 +47,6 @@ func QualityFirst(dialers []*dialer) dialerHeap {
 }
 
 func faster(di *dialer, dj *dialer) bool {
-	li, lj := di.EMALatency(), dj.EMALatency()
-	if li == 0 {
-		// Never treat a zero dial time as fast, since it just means we don't know
-		return false
-	}
-	if lj == 0 {
-		return true
-	}
-	return li < lj
-}
-
-// TODO: still need to implement algorithm correctly.
-// ptQuality: the percentage network quality contributes to total weight.
-// the rest (100 - ptQuality) will be contributed by recent average connect time.
-func Weighted(ptQuality int, ptSpeed int) Strategy {
-	log.Error("Using the Weighted balancer strategy.  This strategy is incomplete and may not work as expected.")
-	return func(dialers []*dialer) dialerHeap {
-		pq := float64(ptQuality)
-		pt := float64(ptSpeed)
-		return dialerHeap{dialers: dialers, lessFunc: func(i, j int) bool {
-			q1 := float64(dialers[i].ConsecSuccesses() - dialers[i].ConsecFailures())
-			q2 := float64(dialers[j].ConsecSuccesses() - dialers[j].ConsecFailures())
-			t1 := float64(dialers[i].EMALatency())
-			t2 := float64(dialers[i].EMALatency())
-
-			w1 := q2/(q1+q2)*pq + t1/(t1+t2)*pt
-			w2 := q1/(q1+q2)*pq + t2/(t1+t2)*pt
-			log.Tracef("q1=%f, q2=%f, t1=%f, t2=%f, w1=%f, w2=%f", q1, q2, t1, t2, w1, w2)
-			return w1 < w2
-		}}
-	}
+	li, lj := di.EstimatedThroughput(), dj.EstimatedThroughput()
+	return li > lj
 }

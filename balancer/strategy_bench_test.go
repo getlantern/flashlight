@@ -30,11 +30,6 @@ func BenchmarkQualityFirst(b *testing.B) {
 	benchmarkWithRandomlyFailWithVariedDelay(b, QualityFirst)
 }
 
-func BenchmarkWeighted(b *testing.B) {
-	benchmarkWithRandomlyFail(b, Weighted(9, 1))
-	benchmarkWithRandomlyFailWithVariedDelay(b, Weighted(9, 1))
-}
-
 func benchmarkWithRandomlyFail(b *testing.B, s Strategy) {
 	d1 := RandomlyFail(1)
 	d2 := RandomlyFail(10)

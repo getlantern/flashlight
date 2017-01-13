@@ -18,5 +18,5 @@ func (s *stats) String(d *dialer) string {
 	failures := atomic.LoadInt64(&s.failures)
 	consecFailures := d.ConsecFailures()
 	attempts := atomic.LoadInt64(&s.attempts)
-	return fmt.Sprintf("%s  S: %4d / %4d (%d)\tF: %4d / %4d (%d)\tL: %3.2fs", d.Label, successes, attempts, consecSuccesses, failures, attempts, consecFailures, d.emaLatency.GetDuration().Seconds())
+	return fmt.Sprintf("%s  S: %4d / %4d (%d)\tF: %4d / %4d (%d)\tRTT: %v\tPLR: %1.2f%%\tT: %3.2fmbps", d.Label, successes, attempts, consecSuccesses, failures, attempts, consecFailures, d.emaRTT.GetDuration(), d.emaPLR.Get(), float64(atomic.LoadInt64(&d.estimatedThroughput))/1000000)
 }

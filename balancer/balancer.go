@@ -6,12 +6,14 @@ import (
 	"container/heap"
 	"fmt"
 	"net"
+	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/ema"
 	"github.com/getlantern/errors"
+	"github.com/getlantern/go-ping"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/ops"
 )
@@ -25,8 +27,6 @@ const (
 
 var (
 	log = golog.LoggerFor("balancer")
-
-	impossiblySmallLatency = int64(1 * time.Millisecond)
 )
 
 // Opts are options for the balancer.
@@ -37,13 +37,13 @@ type Opts struct {
 	// Dialers are the Dialers amongst which the Balancer will balance.
 	Dialers []*Dialer
 
-	// MinCheckInterval controls the minimum check interval when scheduling dialer
-	// checks. Defaults to 10 seconds.
-	MinCheckInterval time.Duration
+	// FastCheckInterval controls the rate at which the top dialer is checked.
+	// Defaults to 15 seconds.
+	FastCheckInterval time.Duration
 
-	// MaxCheckInterval controls the maximum check interval when scheduling dialer
-	// checks. Defaults to 1 minute.
-	MaxCheckInterval time.Duration
+	// SlowCheckInterval controls the rate at which all dialers are checked.
+	// Defaults to 5 minutes.
+	SlowCheckInterval time.Duration
 }
 
 // Balancer balances connections among multiple Dialers.
@@ -77,19 +77,25 @@ func New(opts *Opts) *Balancer {
 		checkerCloseCh: checkerCloseCh,
 	}
 
-	checker := &checker{
-		b:                b,
-		minCheckInterval: opts.MinCheckInterval,
-		maxCheckInterval: opts.MaxCheckInterval,
-		resetCheckCh:     resetCheckCh,
-		closeCh:          checkerCloseCh,
+	pinger, err := ping.NewPinger(false)
+	if err != nil {
+		panic(fmt.Sprintf("Unable to create pinger: %v", err))
 	}
 
-	if checker.minCheckInterval <= 0 {
-		checker.minCheckInterval = defaultMinCheckInterval
+	checker := &checker{
+		b:                 b,
+		pinger:            pinger,
+		fastCheckInterval: opts.FastCheckInterval,
+		slowCheckInterval: opts.SlowCheckInterval,
+		resetCheckCh:      resetCheckCh,
+		closeCh:           checkerCloseCh,
 	}
-	if checker.maxCheckInterval <= 0 {
-		checker.maxCheckInterval = defaultMaxCheckInterval
+
+	if checker.fastCheckInterval <= 0 {
+		checker.fastCheckInterval = defaultFastCheckInterval
+	}
+	if checker.slowCheckInterval <= 0 {
+		checker.slowCheckInterval = defaultSlowCheckInterval
 	}
 
 	b.Reset(opts.Dialers...)
@@ -97,20 +103,6 @@ func New(opts *Opts) *Balancer {
 	ops.Go(b.printStats)
 	ops.Go(b.run)
 	return b
-}
-
-func (b *Balancer) dialersToCheck() []*dialer {
-	b.mu.RLock()
-	defer b.mu.RUnlock()
-	ds := make([]*dialer, 0, len(b.dialers.dialers))
-	for _, d := range b.dialers.dialers {
-		if d.Check == nil {
-			log.Errorf("No check function provided for dialer %s, not checking", d.Label)
-			continue
-		}
-		ds = append(ds, d)
-	}
-	return ds
 }
 
 // Reset closes existing dialers and replaces them with new ones.
@@ -126,10 +118,11 @@ func (b *Balancer) Reset(dialers ...*Dialer) {
 		for _, od := range oldDialers {
 			if d.Label == od.Label {
 				// Existing dialer, keep stats
-				log.Debugf("Keeping stats from old dialer %p", od.emaLatency)
 				dl.consecSuccesses = atomic.LoadInt32(&od.consecSuccesses)
 				dl.consecFailures = atomic.LoadInt32(&od.consecFailures)
-				dl.emaLatency = od.emaLatency
+				dl.estimatedThroughput = atomic.LoadInt64(&od.estimatedThroughput)
+				dl.emaRTT = od.emaRTT
+				dl.emaPLR = od.emaPLR
 				dl.stats = od.stats
 				break
 			}
@@ -296,21 +289,22 @@ func (b *Balancer) printStats() {
 }
 
 func (b *Balancer) doPrintStats() {
-	b.mu.RLock()
-	defer b.mu.RUnlock()
-	dialersCopy := make([]*dialer, len(b.dialers.dialers))
-	copy(dialersCopy, b.dialers.dialers)
-	sortedDialers := b.st(dialersCopy)
-	heap.Init(&sortedDialers)
+	sortedDialers := b.sortedDialers()
 	log.Debug("-------------------------- Dialer Stats -----------------------")
-	for {
-		if sortedDialers.Len() == 0 {
-			break
-		}
-		d := heap.Pop(&sortedDialers).(*dialer)
+	for _, d := range sortedDialers {
 		log.Debug(d.stats.String(d))
 	}
 	log.Debug("------------------------ End Dialer Stats ---------------------")
+}
+
+func (b *Balancer) sortedDialers() []*dialer {
+	b.mu.RLock()
+	dialersCopy := make([]*dialer, len(b.dialers.dialers))
+	copy(dialersCopy, b.dialers.dialers)
+	b.mu.RUnlock()
+	sortedDialers := b.st(dialersCopy)
+	sort.Sort(sortedDialers)
+	return sortedDialers.dialers
 }
 
 func (b *Balancer) forceStats() {
@@ -346,21 +340,21 @@ type dialerHeap struct {
 	lessFunc func(i, j int) bool
 }
 
-func (s *dialerHeap) Len() int { return len(s.dialers) }
+func (s dialerHeap) Len() int { return len(s.dialers) }
 
-func (s *dialerHeap) Swap(i, j int) {
+func (s dialerHeap) Swap(i, j int) {
 	s.dialers[i], s.dialers[j] = s.dialers[j], s.dialers[i]
 }
 
-func (s *dialerHeap) Less(i, j int) bool {
+func (s dialerHeap) Less(i, j int) bool {
 	return s.lessFunc(i, j)
 }
 
-func (s *dialerHeap) Push(x interface{}) {
+func (s dialerHeap) Push(x interface{}) {
 	s.dialers = append(s.dialers, x.(*dialer))
 }
 
-func (s *dialerHeap) Pop() interface{} {
+func (s dialerHeap) Pop() interface{} {
 	old := s.dialers
 	n := len(old)
 	x := old[n-1]

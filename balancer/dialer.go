@@ -28,30 +28,18 @@ type Dialer struct {
 	// OnClose: (optional) callback for when this dialer is stopped.
 	OnClose func()
 
-	// Check: - a function that's used to periodically test reachibility metrics.
-	//
-	// It should return true for a successful check. It should also return a
-	// time.Duration measuring latency via this dialer. How "latency" is measured
-	// is up to the check function. Dialers with the lowest latencies are
-	// prioritized over those with higher latencies. Latencies for failed checks
-	// are ignored.
-	//
-	// Checks are performed immediately at startup and then periodically
-	// thereafter, with an exponential back-off capped at MaxCheckInterval. If the
-	// checks fail for some reason, the exponential cascade will reset to the
-	// MinCheckInterval and start backing off again.
-	//
-	// checkData is data from the balancer's CheckData() function.
-	Check func(checkData interface{}, onFailure func(string)) (bool, time.Duration)
+	// Host holds the host IP address or name for this dialer
+	Host string
 
 	// Determines whether a dialer can be trusted with unencrypted traffic.
 	Trusted bool
 }
 
 type dialer struct {
-	emaLatency         *ema.EMA
-	lastCheckSucceeded bool
-	forceRecheck       func()
+	emaRTT              *ema.EMA
+	emaPLR              *ema.EMA
+	estimatedThroughput int64
+	forceRecheck        func()
 
 	*Dialer
 	closeCh chan struct{}
@@ -66,10 +54,12 @@ const longDuration = 100000 * time.Hour
 
 func (d *dialer) Start() {
 	d.consecSuccesses = 1 // be optimistic
-	if d.emaLatency == nil {
-		// assuming all dialers super fast initially
+	if d.emaRTT == nil {
+		// Assume okay RTT and 0 packet loss to start
 		// use large alpha to reflect network changes quickly
-		d.emaLatency = ema.NewDuration(0, 0.5)
+		d.emaRTT = ema.NewDuration(250*time.Millisecond, 0.5)
+		d.emaPLR = ema.New(0, 0.5)
+		atomic.StoreInt64(&d.estimatedThroughput, mathisThroughput(d.emaRTT.GetDuration(), d.emaPLR.Get()))
 	}
 	if d.stats == nil {
 		d.stats = &stats{}
@@ -90,8 +80,8 @@ func (d *dialer) Stop() {
 	d.closeCh <- struct{}{}
 }
 
-func (d *dialer) EMALatency() int64 {
-	return int64(d.emaLatency.Get())
+func (d *dialer) EstimatedThroughput() int64 {
+	return atomic.LoadInt64(&d.estimatedThroughput)
 }
 
 func (d *dialer) ConsecSuccesses() int32 {

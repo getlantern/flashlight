@@ -1,212 +1,99 @@
 package balancer
 
 import (
-	"fmt"
 	"math/rand"
-	"net"
-	"sort"
-	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
-	"github.com/getlantern/ops"
+	"github.com/getlantern/go-ping"
 )
 
 const (
-	defaultMinCheckInterval = 10 * time.Second
-	defaultMaxCheckInterval = 1 * time.Hour
-)
-
-var (
-	// A fixed length list of full urls used to check this server. We would like
-	// to include sites accessed by the user, but at the moment we just use a
-	// canned set of popular sites.
-	checkTargets = newURLList()
-
-	// Lantern internal sites won't be used as check target.
-	internalSiteSuffixes = []string{"getlantern.org", "getiantem.org", "lantern.io"}
+	defaultFastCheckInterval = 15 * time.Second
+	defaultSlowCheckInterval = 5 * time.Minute
 )
 
 type checker struct {
-	b                *Balancer
-	checkInterval    time.Duration
-	minCheckInterval time.Duration
-	maxCheckInterval time.Duration
-	resetCheckCh     chan bool
-	closeCh          chan bool
+	b                 *Balancer
+	pinger            *ping.Pinger
+	slowCheckInterval time.Duration
+	fastCheckInterval time.Duration
+	resetCheckCh      chan bool
+	closeCh           chan bool
 }
 
 func (c *checker) runChecks() {
-	checkInterval := c.minCheckInterval
-	checkTimer := time.NewTimer(0) // check immediately on Start
+	// check immediately on start
+	fastCheckTimer := time.NewTimer(c.fastCheckInterval)
+	slowCheckTimer := time.NewTimer(0)
 
 	for {
 		select {
 		case <-c.closeCh:
 			log.Trace("Balancer stopped")
-			checkTimer.Stop()
+			fastCheckTimer.Stop()
+			slowCheckTimer.Stop()
 			c.closeCh <- true
 			return
-		case <-c.resetCheckCh:
-			// Disable temporarily for https://github.com/getlantern/lantern-internal/issues/511
-			// checkInterval = c.minCheckInterval
-			// checkTimer.Reset(c.checkInterval)
-		case <-checkTimer.C:
-			// Obtain check data and then run checks for all using the same
-			// check data. This ensures that if the specific checks vary over time,
-			// we get an apples to apples comparison across all dialers.
-			checkData := checkTargets.top(10)
-			dialers := c.b.dialersToCheck()
-			log.Debugf("Checking %d dialers using %v", len(dialers), checkData)
-			var wg sync.WaitGroup
-			wg.Add(len(dialers))
-			for _, dialer := range dialers {
-				d := dialer
-				ops.Go(func() {
-					c.check(d, checkData)
-					wg.Done()
-				})
+		case <-fastCheckTimer.C:
+			// Check the top dialer on a fast schedule
+			dialers := c.b.sortedDialers()
+			// Only check if we have more than 1 dialer
+			if len(dialers) < 1 {
+				top := dialers[0]
+				c.check(top, 10)
 			}
-			wg.Wait()
-			// Exponentially back off checkInterval capped to MaxCheckInterval
-			checkInterval *= 2
-			if checkInterval > c.maxCheckInterval {
-				checkInterval = c.maxCheckInterval
+			fastCheckTimer.Reset(randomize(c.fastCheckInterval))
+		case <-slowCheckTimer.C:
+			dialers := c.b.sortedDialers()
+			// Only check if we have more than 1 dialer
+			if len(dialers) > 1 {
+				log.Debugf("Checking %d dialers", len(dialers))
+				var wg sync.WaitGroup
+				wg.Add(len(dialers))
+				for _, dialer := range dialers {
+					d := dialer
+					go func() {
+						c.check(d, 200)
+						wg.Done()
+					}()
+				}
+				wg.Wait()
+				log.Debugf("Finished checking %d dialers", len(dialers))
 			}
-			nextCheck := randomize(checkInterval)
-			checkTimer.Reset(nextCheck)
-			log.Debugf("Finished checking %d dialers, next check: %v", len(dialers), nextCheck)
+			slowCheckTimer.Reset(randomize(c.slowCheckInterval))
 			c.b.forceStats()
+		case <-c.resetCheckCh:
+			log.Debugf("Forced immediate rechecks")
+			slowCheckTimer.Reset(0)
 		}
 	}
 }
 
-func (c *checker) check(dialer *dialer, checkData interface{}) {
-	if c.doCheck(dialer, checkData) {
-		// If the check succeeded, we mark down a success.
-		dialer.markSuccess()
-		dialer.lastCheckSucceeded = true
-	} else {
-		if dialer.lastCheckSucceeded {
-			// On first failure after success, force recheck
-			dialer.forceRecheck()
-		}
-		dialer.lastCheckSucceeded = false
-		// we call doMarkFailure so as not to trigger a recheck, since this failure
-		// might just be due to the target we checked
-		dialer.doMarkFailure()
-	}
-}
+func (c *checker) check(dialer *dialer, iterations int) {
+	defer func() {
+		atomic.StoreInt64(&dialer.estimatedThroughput, mathisThroughput(dialer.emaRTT.GetDuration(), dialer.emaPLR.Get()))
+	}()
 
-func (c *checker) doCheck(dialer *dialer, checkData interface{}) bool {
-	ok, latency := dialer.Check(checkData, func(url string) {
-		checkTargets.checkFailed(url)
-	})
-	if ok {
-		dialer.markSuccess()
-		oldLatency := dialer.emaLatency.GetDuration()
-		if oldLatency > 0 {
-			cap := oldLatency * 2
-			if latency > cap {
-				// To avoid random large fluctuations in latency, keep change in latency
-				// to within 2x of existing latency. If this happens, force a recheck.
-				latency = cap
-				dialer.forceRecheck()
-			} else if latency < oldLatency/2 {
-				// On major reduction in latency, force a recheck to see if this is a
-				// more permanent change.
-				dialer.forceRecheck()
-			}
-		}
-		New := dialer.emaLatency.UpdateDuration(latency)
-		log.Tracef("Updated dialer %s emaLatency to %v", dialer.Label, New)
-	} else {
-		log.Tracef("Dialer %s failed check", dialer.Label)
-	}
-
-	return ok
-}
-
-// AddCheckTarget records another targeting of the specified address, allowing
-// Lantern to run metrics on the most visited addresses.
-func AddCheckTarget(addr string) {
-	host, port, e := net.SplitHostPort(addr)
-	if e != nil {
-		log.Errorf("failed to split port from %s", addr)
+	stats, err := c.pinger.Ping(dialer.Host, iterations, 200*time.Millisecond, time.Duration(iterations)*500*time.Millisecond)
+	if err != nil {
+		log.Errorf("Unable to ping %v: %v", dialer.Host, err)
+		dialer.emaPLR.Update(1)
 		return
 	}
-	if port != "443" {
-		log.Tracef("Skip setting non-HTTPS site %s as check target", addr)
+	dialer.emaPLR.Update(stats.PacketLoss)
+	if stats.PacketsRecv == 0 {
 		return
 	}
-	for _, s := range internalSiteSuffixes {
-		if strings.HasSuffix(host, s) {
-			log.Tracef("Skip setting internal site %s as check target", addr)
-			return
-		}
+	dialer.emaRTT.UpdateDuration(stats.AvgRtt)
+	if stats.PacketLoss == 0 {
+		dialer.markSuccess()
 	}
-	checkTargets.hit(fmt.Sprintf("https://%s/index.html", addr))
+	return
 }
 
 // adds randomization to make requests less distinguishable on the network.
 func randomize(d time.Duration) time.Duration {
 	return time.Duration((d.Nanoseconds() / 2) + rand.Int63n(d.Nanoseconds()))
 }
-
-type urlList struct {
-	urls        map[string]int
-	uncheckable map[string]bool
-	mx          sync.RWMutex
-}
-
-func newURLList() *urlList {
-	l := &urlList{urls: make(map[string]int, 5), uncheckable: make(map[string]bool)}
-	// Prepopulate list with popular URLs
-	// TODO: persist the url list to disk and use the hit counts from prior runs
-	// to better match this specific user's patterns.
-	l.hit("https://www.google.com/favicon.ico")
-	l.hit("https://www.facebook.com/humans.txt")
-	l.hit("https://www.tumblr.com/humans.txt")
-	l.hit("https://www.youtube.com/robots.txt")
-	return l
-}
-
-func (l *urlList) hit(url string) {
-	l.mx.Lock()
-	l.urls[url] = l.urls[url] + 1
-	l.mx.Unlock()
-}
-
-func (l *urlList) checkFailed(url string) {
-	l.mx.Lock()
-	l.uncheckable[url] = true
-	l.mx.Unlock()
-}
-
-func (l *urlList) top(n int) []string {
-	l.mx.RLock()
-	sorted := make(byCount, 0, len(l.urls))
-	for url, count := range l.urls {
-		if !l.uncheckable[url] {
-			sorted = append(sorted, &pair{url, count})
-		}
-	}
-	l.mx.RUnlock()
-	sort.Sort(sorted)
-	topN := make([]string, 0, n)
-	for i := 0; i < n && i < len(sorted); i++ {
-		topN = append(topN, sorted[i].url)
-	}
-	return topN
-}
-
-type pair struct {
-	url   string
-	count int
-}
-
-type byCount []*pair
-
-func (a byCount) Len() int           { return len(a) }
-func (a byCount) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a byCount) Less(i, j int) bool { return a[i].count > a[j].count }
