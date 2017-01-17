@@ -12,7 +12,6 @@ import (
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/mtime"
 	"github.com/getlantern/rotator"
 	"github.com/getlantern/wfilter"
 
@@ -25,7 +24,7 @@ const (
 
 var (
 	log          = golog.LoggerFor("flashlight.logging")
-	processStart = mtime.Now()
+	processStart = time.Now()
 
 	logFile *rotator.SizeRotator
 
@@ -93,11 +92,11 @@ func initLogging() {
 // timestamped adds a timestamp to the beginning of log lines
 func timestamped(orig io.Writer) io.Writer {
 	return wfilter.SimplePrepender(orig, func(w io.Writer) (int, error) {
-		ts := mtime.Now()
+		ts := time.Now()
 		runningSecs := ts.Sub(processStart).Seconds()
 		secs := int(math.Mod(runningSecs, 60))
 		mins := int(runningSecs / 60)
-		return fmt.Fprintf(w, "%s - %dm%ds ", ts.Time().In(time.UTC).Format(logTimestampFormat), mins, secs)
+		return fmt.Fprintf(w, "%s - %dm%ds ", ts.In(time.UTC).Format(logTimestampFormat), mins, secs)
 	})
 }
 
