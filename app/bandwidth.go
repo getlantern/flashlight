@@ -13,6 +13,7 @@ import (
 
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/ui"
+	"github.com/getlantern/flashlight/ws"
 )
 
 var (
@@ -32,7 +33,7 @@ func serveBandwidth() error {
 		log.Debugf("Sending current bandwidth quota to new client")
 		return write(bandwidth.GetQuota())
 	}
-	bservice, err := ui.Register("bandwidth", helloFn)
+	bservice, err := ws.Register("bandwidth", helloFn)
 	if err != nil {
 		log.Errorf("Error registering with UI? %v", err)
 		return err

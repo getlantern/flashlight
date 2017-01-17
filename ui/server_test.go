@@ -15,19 +15,62 @@ func TestStartServer(t *testing.T) {
 		return s
 	}
 	s := startServer("")
-	assert.Regexp(t, "localhost:\\d+$", s.GetUIAddr())
+	// make sure the port is non-zero, same below
+	assert.Regexp(t, "localhost:\\d{2,}$", s.listenAddr)
+	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr())
+	s.Stop()
+	s = startServer(":")
+	assert.Regexp(t, ":\\d{2,}$", s.listenAddr)
+	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr())
 	s.Stop()
 	s = startServer(":0")
-	assert.Regexp(t, "localhost:\\d+$", s.GetUIAddr())
+	assert.Regexp(t, ":\\d{2,}$", s.listenAddr)
+	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr())
 	s.Stop()
 	s = startServer("localhost:0")
-	assert.Regexp(t, "localhost:\\d+$", s.GetUIAddr())
+	assert.Regexp(t, "localhost:\\d{2,}$", s.listenAddr)
+	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr())
 	s.Stop()
 	s = startServer("localhost:9898")
+	assert.Equal(t, "localhost:9898", s.listenAddr)
 	assert.Equal(t, "localhost:9898", s.GetUIAddr())
 	s.Stop()
 	s = startServer("127.0.0.1:0")
-	assert.Regexp(t, "127.0.0.1:\\d+$", s.GetUIAddr())
+	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.listenAddr)
+	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.GetUIAddr())
+	s.Stop()
+}
+
+func TestStartServerAllowRemote(t *testing.T) {
+	startServer := func(addr string) *Server {
+		s := NewServer(addr, true, "", "local-http-token")
+		assert.NoError(t, s.Start(), "should start server")
+		return s
+	}
+	s := startServer("")
+	// make sure the port is non-zero, same below
+	assert.Regexp(t, ":\\d{2,}$", s.listenAddr)
+	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr())
+	s.Stop()
+	s = startServer(":")
+	assert.Regexp(t, ":\\d{2,}$", s.listenAddr)
+	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr())
+	s.Stop()
+	s = startServer(":0")
+	assert.Regexp(t, ":\\d{2,}$", s.listenAddr)
+	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr())
+	s.Stop()
+	s = startServer("localhost:0")
+	assert.Regexp(t, ":\\d{2,}$", s.listenAddr)
+	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr())
+	s.Stop()
+	s = startServer("localhost:9898")
+	assert.Equal(t, ":9898", s.listenAddr)
+	assert.Equal(t, "localhost:9898", s.GetUIAddr())
+	s.Stop()
+	s = startServer("127.0.0.1:0")
+	assert.Regexp(t, ":\\d{2,}$", s.listenAddr)
+	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr())
 	s.Stop()
 }
 
