@@ -1,5 +1,5 @@
 hash: c683a576abff4e384db86b0b3cf8a949b924dcf490b8f7d164ddc2bf2560ccf4
-updated: 2017-01-17T08:17:12.214613696-06:00
+updated: 2017-01-19T16:34:27.567520993-08:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -46,7 +46,7 @@ imports:
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda
-  version: 3d1a1ad86876edb41451d89d2ca727109bf49bd6
+  version: 5c08a233063e117b03279dd032f59cb2dbf66e65
   subpackages:
   - client
 - name: github.com/getlantern/buuid
@@ -126,7 +126,7 @@ imports:
   - server
   - utils
 - name: github.com/getlantern/http-proxy-lantern
-  version: 9198fb5dddd54960bced096840af929e10db1267
+  version: ffed409d9d8b8ff1dfe2b3178cc975c2a662eb1e
   subpackages:
   - analytics
   - blacklist
@@ -162,7 +162,7 @@ imports:
 - name: github.com/getlantern/mockconn
   version: 422a5afd4432dd82b1389333d5352da003d898a6
 - name: github.com/getlantern/mtime
-  version: 71f584d474c0cafc89ee919784b44e4ca79c124e
+  version: ba114e4a82b0d453c15c505073a5896453b5cbd2
 - name: github.com/getlantern/netx
   version: ea33fe66744c0da3cc939893acc5962da35fbd9c
 - name: github.com/getlantern/notifier
@@ -189,7 +189,7 @@ imports:
 - name: github.com/getlantern/proxy
   version: 876829e39cf8243d123b02f02efe8da1266effb4
 - name: github.com/getlantern/proxybench
-  version: 272dfade18ab5fd9fdf72975c894c0dbcc378731
+  version: 7f2618cbbe1b32186001f31284cb81c58c302330
 - name: github.com/getlantern/rot13
   version: 33f93fc1fe85c042c0667a1814e6379bd5e7eb40
 - name: github.com/getlantern/rotator
@@ -247,11 +247,11 @@ imports:
   subpackages:
   - proto
 - name: github.com/golang/snappy
-  version: d9eb7a3d35ec988b8585d4a0068e462c27d28380
+  version: 7db9049039a047d955fe8c19b83c8ff5abd765c7
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/websocket
-  version: bb547c6c5c59732c29a3266d7125a84f6c3fce32
+  version: 2257eda00b2084c1351cd672aa5476daa9f5e463
 - name: github.com/hashicorp/golang-lru
   version: 0a025b7e63adc15a622f29b0b2c4c3848243bbf6
   subpackages:
@@ -269,7 +269,7 @@ imports:
 - name: github.com/kr/binarydist
   version: 3035450ff8b987ec4373f65c40767f096b35f2d2
 - name: github.com/mailgun/oxy
-  version: 9d07313adea3bb9c7817ea887df6ac79648675f9
+  version: 12aa65630360a8ab1827975bd46491a358094cd9
   subpackages:
   - forward
 - name: github.com/mitchellh/panicwrap
@@ -305,11 +305,11 @@ imports:
   subpackages:
   - uaparser
 - name: github.com/vulcand/oxy
-  version: 9d07313adea3bb9c7817ea887df6ac79648675f9
+  version: 12aa65630360a8ab1827975bd46491a358094cd9
   subpackages:
   - utils
 - name: github.com/xtaci/kcp-go
-  version: 86aa2c98d150a7cd252ea3f50b3f96cfe8a8c98b
+  version: b0e1333c5ef48f535eb3339cabf755548def52fc
 - name: github.com/xwb1989/sqlparser
   version: dbfc8580724c42e86a20e9586b75a65b806cd88b
   subpackages:
@@ -318,7 +318,7 @@ imports:
   - dependency/hack
   - dependency/sqltypes
 - name: golang.org/x/crypto
-  version: 91902e332b9d47760598861512d2ae148f94ca58
+  version: b8a2a83acfe6e6770b75de42d5ff4c67596675c0
   subpackages:
   - blowfish
   - cast5
