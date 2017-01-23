@@ -10,11 +10,11 @@ import (
 	"time"
 
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
-	"git.torproject.org/pluggable-transports/obfs4.git/transports/base"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
 	kcp "github.com/xtaci/kcp-go"
 
 	"github.com/getlantern/cmux"
+	"github.com/getlantern/connmux"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/keyman"
@@ -200,8 +200,7 @@ func dialKCP(network, address string) (net.Conn, error) {
 type obfs4Wrapper struct {
 	Proxy
 	trusted bool
-	cf      base.ClientFactory
-	args    interface{}
+	dial    func() (net.Conn, error)
 }
 
 func newOBFS4Wrapper(p Proxy, s *ChainedServerInfo) (Proxy, error) {
@@ -222,7 +221,19 @@ func newOBFS4Wrapper(p Proxy, s *ChainedServerInfo) (Proxy, error) {
 	if err != nil {
 		return nil, log.Errorf("Unable to parse client args: %v", err)
 	}
-	return obfs4Wrapper{p, s.Trusted, cf, args}, nil
+
+	pool := connmux.NewBufferPool(500) // TODO: make sure this is a good size
+	dial := connmux.Dialer(10, pool, func() (net.Conn, error) {
+		dialFn := func(network, address string) (net.Conn, error) {
+			// We know for sure the network and address are the same as what
+			// the inner DailServer uses.
+			return p.DialServer()
+		}
+		// The proxy it wrapped already has timeout applied.
+		return cf.Dial("tcp", p.Addr(), dialFn, args)
+	})
+
+	return obfs4Wrapper{p, s.Trusted, dial}, nil
 }
 
 func (p obfs4Wrapper) Protocol() string {
@@ -246,13 +257,7 @@ func (p obfs4Wrapper) DialServer() (net.Conn, error) {
 	op := ops.Begin("dial_to_chained").ChainedProxy(p.Addr(), p.Protocol(), p.Network())
 	defer op.End()
 	elapsed := mtime.Stopwatch()
-	dialFn := func(network, address string) (net.Conn, error) {
-		// We know for sure the network and address are the same as what
-		// the inner DailServer uses.
-		return p.Proxy.DialServer()
-	}
-	// The proxy it wrapped already has timeout applied.
-	conn, err := p.cf.Dial("tcp", p.Addr(), dialFn, p.args)
+	conn, err := p.dial()
 	op.DialTime(elapsed, err)
 	return conn, op.FailIf(err)
 }

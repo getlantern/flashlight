@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/connmux"
 	"github.com/getlantern/detour"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/chained"
@@ -24,7 +25,6 @@ import (
 	"github.com/getlantern/hidden"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
-	"github.com/oxtoacart/bpool"
 )
 
 var (
@@ -47,7 +47,7 @@ var (
 		19305, 19306, 19307, 19308, 19309,
 	}
 
-	buffers = bpool.NewBytePool(1000, 32768)
+	buffers = connmux.NewBufferPool(1000)
 
 	// Set a hard limit when processing proxy requests. Should be short enough to
 	// avoid applications bypassing Lantern.
