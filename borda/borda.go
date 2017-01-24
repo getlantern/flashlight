@@ -42,9 +42,7 @@ func startBordaAndProxyBench(reportInterval time.Duration, enabled func() bool) 
 	reportToBorda := bordaClient.ReducingSubmitter("client_results", 1000)
 
 	proxybench.Start(&proxybench.Opts{}, func(timing time.Duration, ctx map[string]interface{}) {
-		if enabled() {
-			reportToBorda(map[string]borda.Val{"response_time": borda.Avg(timing.Seconds())}, ctx)
-		}
+		// No need to do anything, this is now handled with the regular op reporting
 	})
 
 	reporter := func(failure error, ctx map[string]interface{}) {
