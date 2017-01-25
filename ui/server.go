@@ -66,10 +66,7 @@ func overrideManotoURL(u string) string {
 func (s *Server) Handle(pattern string, handler http.Handler) {
 	log.Debugf("Adding handler for %v", pattern)
 	s.mux.Handle(pattern,
-		checkOrigin(
-			util.NoCacheHandler(handler),
-			s.localHTTPToken,
-			s.listenAddr))
+		s.checkOrigin(util.NoCacheHandler(handler)))
 }
 
 func (s *Server) Start() error {
@@ -163,7 +160,7 @@ func (s *Server) AddToken(in string) string {
 	return util.SetURLParam("http://"+path.Join(s.accessAddr, in), "token", s.localHTTPToken)
 }
 
-func checkOrigin(h http.Handler, localHTTPToken, listenAddr string) http.Handler {
+func (s *Server) checkOrigin(h http.Handler) http.Handler {
 	check := func(w http.ResponseWriter, r *http.Request) {
 		var clientURL string
 
@@ -187,10 +184,10 @@ func checkOrigin(h http.Handler, localHTTPToken, listenAddr string) http.Handler
 			default:
 				r.ParseForm()
 				token := r.Form.Get("token")
-				if token == localHTTPToken {
+				if token == s.localHTTPToken {
 					tokenMatch = true
 				} else if token != "" {
-					log.Errorf("Token '%v' did not match the expected '%v'", token, localHTTPToken)
+					log.Errorf("Token '%v' did not match the expected '%v'", token, s.localHTTPToken)
 				} else {
 					log.Errorf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
 					return
@@ -207,8 +204,8 @@ func checkOrigin(h http.Handler, localHTTPToken, listenAddr string) http.Handler
 			originHost := originURL.Host
 			// when Lantern is listening on all interfaces, e.g., allow remote
 			// connections, listenAddr is in ":port" form. Using HasSuffix
-			if !strings.HasSuffix(originHost, listenAddr) {
-				log.Errorf("Origin was '%v' but expecting: '%v'", originHost, listenAddr)
+			if !strings.HasSuffix(originHost, s.listenAddr) {
+				log.Errorf("Origin was '%v' but expecting: '%v'", originHost, s.listenAddr)
 				return
 			}
 		}
