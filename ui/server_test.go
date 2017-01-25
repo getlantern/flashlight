@@ -105,7 +105,7 @@ func doTestCheckOrigin(t *testing.T, s *Server, testOrigins map[string]bool) {
 	var basic http.HandlerFunc = func(http.ResponseWriter, *http.Request) {
 		hit = true
 	}
-	h := checkOrigin(basic, s.localHTTPToken, s.listenAddr)
+	h := s.checkOrigin(basic)
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
