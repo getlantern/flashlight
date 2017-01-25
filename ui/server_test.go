@@ -3,8 +3,10 @@ package ui
 import (
 	"net/http"
 	"net/http/httptest"
+	"path"
 	"testing"
 
+	"github.com/getlantern/flashlight/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -117,7 +119,13 @@ func doTestCheckOrigin(t *testing.T, s *Server, testOrigins map[string]bool) {
 	h.ServeHTTP(w, req)
 	assert.False(t, hit, "request without token should fail the check")
 
-	url := s.AddToken("/abc")
+	hit = false
+	url := util.SetURLParam("http://"+path.Join(s.accessAddr, "/abc"), "token", "wrong-token")
+	req, _ = http.NewRequest("GET", url, nil)
+	h.ServeHTTP(w, req)
+	assert.False(t, hit, "request with incorrect token should pass the check")
+
+	url = s.AddToken("/abc")
 	req, _ = http.NewRequest("GET", url, nil)
 	h.ServeHTTP(w, req)
 	assert.True(t, hit, "request with correct token should pass the check")
