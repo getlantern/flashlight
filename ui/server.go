@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"path"
 	"strconv"
@@ -187,9 +188,12 @@ func (s *Server) checkOrigin(h http.Handler) http.Handler {
 				if token == s.localHTTPToken {
 					tokenMatch = true
 				} else if token != "" {
-					log.Errorf("Token '%v' did not match the expected '%v'", token, s.localHTTPToken)
+					msg := fmt.Sprintf("Token '%v' did not match the expected '%v'", token, s.localHTTPToken)
+					s.forbidden(msg, w, r)
+					return
 				} else {
-					log.Errorf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
+					msg := fmt.Sprintf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
+					s.forbidden(msg, w, r)
 					return
 				}
 			}
@@ -205,7 +209,8 @@ func (s *Server) checkOrigin(h http.Handler) http.Handler {
 			// when Lantern is listening on all interfaces, e.g., allow remote
 			// connections, listenAddr is in ":port" form. Using HasSuffix
 			if !strings.HasSuffix(originHost, s.listenAddr) {
-				log.Errorf("Origin was '%v' but expecting: '%v'", originHost, s.listenAddr)
+				msg := fmt.Sprintf("Origin was '%v' but expecting: '%v'", originHost, s.listenAddr)
+				s.forbidden(msg, w, r)
 				return
 			}
 		}
@@ -213,6 +218,21 @@ func (s *Server) checkOrigin(h http.Handler) http.Handler {
 		h.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(check)
+}
+
+// forbidden returns a 403 forbidden response to the client while also dumping
+// headers and logs for debugging.
+func (s *Server) forbidden(msg string, w http.ResponseWriter, r *http.Request) {
+	log.Error(msg)
+	s.dumpRequestHeaders(r)
+	http.Error(w, msg, http.StatusForbidden)
+}
+
+func (s *Server) dumpRequestHeaders(r *http.Request) {
+	dump, err := httputil.DumpRequest(r, false)
+	if err == nil {
+		log.Debugf("Request:\n", string(dump))
+	}
 }
 
 func normalizeAddr(addr string) string {
