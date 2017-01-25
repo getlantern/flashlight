@@ -123,7 +123,7 @@ func doTestCheckOrigin(t *testing.T, s *Server, testOrigins map[string]bool) {
 	url := util.SetURLParam("http://"+path.Join(s.accessAddr, "/abc"), "token", "wrong-token")
 	req, _ = http.NewRequest("GET", url, nil)
 	h.ServeHTTP(w, req)
-	assert.False(t, hit, "request with incorrect token should pass the check")
+	assert.False(t, hit, "request with incorrect token should fail the check")
 
 	url = s.AddToken("/abc")
 	req, _ = http.NewRequest("GET", url, nil)
