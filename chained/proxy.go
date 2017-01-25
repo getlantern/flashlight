@@ -223,7 +223,7 @@ func newOBFS4Wrapper(p Proxy, s *ChainedServerInfo) (Proxy, error) {
 	}
 
 	pool := connmux.NewBufferPool(500) // TODO: make sure this is a good size
-	dial := connmux.Dialer(25, 0, pool, func() (net.Conn, error) {
+	dial := connmux.Dialer(50, 0, pool, func() (net.Conn, error) {
 		dialFn := func(network, address string) (net.Conn, error) {
 			// We know for sure the network and address are the same as what
 			// the inner DailServer uses.
