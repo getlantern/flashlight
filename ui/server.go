@@ -188,7 +188,11 @@ func (s *Server) checkOrigin(h http.Handler) http.Handler {
 				if token == s.localHTTPToken {
 					tokenMatch = true
 				} else if token != "" {
-					msg := fmt.Sprintf("Token '%v' did not match the expected '%v'", token, s.localHTTPToken)
+					prefix := len(s.localHTTPToken)
+					if prefix > 5 {
+						prefix = 5
+					}
+					msg := fmt.Sprintf("Token '%v' did not match the expected '%v...'", token, s.localHTTPToken[:prefix])
 					s.forbidden(msg, w, r)
 					return
 				} else {
