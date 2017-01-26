@@ -1,5 +1,5 @@
-hash: c683a576abff4e384db86b0b3cf8a949b924dcf490b8f7d164ddc2bf2560ccf4
-updated: 2017-01-20T20:56:10.578034565-08:00
+hash: ebb133aba2755375b0b9709150640e814e9543ccc2cd0ae614e84a71d07d0e74
+updated: 2017-01-26T01:16:57.522440593-08:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
@@ -61,6 +61,8 @@ imports:
   version: 16263f2c042a0dd5366bccb3364d31ab1c4bb9a0
 - name: github.com/getlantern/cmux
   version: 28e8bb95109fb227116226ae6f3a0890a3bd78e3
+- name: github.com/getlantern/connmux
+  version: 84d5a4d9d6f1a8e7e1ed52a7aace94f0f4520be9
 - name: github.com/getlantern/connpool
   version: d04ff90bba7bdee0d9627a687b79fb0cb407d001
 - name: github.com/getlantern/context
