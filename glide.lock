@@ -2,7 +2,7 @@ hash: ebb133aba2755375b0b9709150640e814e9543ccc2cd0ae614e84a71d07d0e74
 updated: 2017-01-26T01:16:57.522440593-08:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
-  version: 50915b3ba5ee27c0b2fcdad9edd51156fb55192c
+  version: f1569079ca898d54e52a26b0bd1b5cc869310608
 - name: git.torproject.org/pluggable-transports/obfs4.git
   version: 97a875ec3c0afa629405c78e750d27e4e1f851ca
   subpackages:
@@ -24,7 +24,7 @@ imports:
   subpackages:
   - monotime
 - name: github.com/blang/semver
-  version: 3a37c301dda64cbe17f16f661b4c976803c0e2d2
+  version: dfab6d0809cb872370374c3bbe5770e926187def
 - name: github.com/cloudfoundry/gosigar
   version: dfaa4d491586af21e1ce06028df3926389a99654
 - name: github.com/davecgh/go-spew
@@ -253,7 +253,7 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/websocket
-  version: 2257eda00b2084c1351cd672aa5476daa9f5e463
+  version: 0674c7c7968d9fac5f0f678325161ec31df406af
 - name: github.com/hashicorp/golang-lru
   version: 0a025b7e63adc15a622f29b0b2c4c3848243bbf6
   subpackages:
@@ -320,7 +320,7 @@ imports:
   - dependency/hack
   - dependency/sqltypes
 - name: golang.org/x/crypto
-  version: b8a2a83acfe6e6770b75de42d5ff4c67596675c0
+  version: 41d678d1df78cd0410143162dff954e6dc09300f
   subpackages:
   - blowfish
   - cast5

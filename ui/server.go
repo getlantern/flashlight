@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"path"
 	"strconv"
@@ -66,10 +67,7 @@ func overrideManotoURL(u string) string {
 func (s *Server) Handle(pattern string, handler http.Handler) {
 	log.Debugf("Adding handler for %v", pattern)
 	s.mux.Handle(pattern,
-		checkOrigin(
-			util.NoCacheHandler(handler),
-			s.localHTTPToken,
-			s.listenAddr))
+		s.checkOrigin(util.NoCacheHandler(handler)))
 }
 
 func (s *Server) Start() error {
@@ -163,7 +161,7 @@ func (s *Server) AddToken(in string) string {
 	return util.SetURLParam("http://"+path.Join(s.accessAddr, in), "token", s.localHTTPToken)
 }
 
-func checkOrigin(h http.Handler, localHTTPToken, listenAddr string) http.Handler {
+func (s *Server) checkOrigin(h http.Handler) http.Handler {
 	check := func(w http.ResponseWriter, r *http.Request) {
 		var clientURL string
 
@@ -187,12 +185,19 @@ func checkOrigin(h http.Handler, localHTTPToken, listenAddr string) http.Handler
 			default:
 				r.ParseForm()
 				token := r.Form.Get("token")
-				if token == localHTTPToken {
+				if token == s.localHTTPToken {
 					tokenMatch = true
 				} else if token != "" {
-					log.Errorf("Token '%v' did not match the expected '%v'", token, localHTTPToken)
+					prefix := len(s.localHTTPToken)
+					if prefix > 5 {
+						prefix = 5
+					}
+					msg := fmt.Sprintf("Token '%v' did not match the expected '%v...'", token, s.localHTTPToken[:prefix])
+					s.forbidden(msg, w, r)
+					return
 				} else {
-					log.Errorf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
+					msg := fmt.Sprintf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
+					s.forbidden(msg, w, r)
 					return
 				}
 			}
@@ -207,8 +212,9 @@ func checkOrigin(h http.Handler, localHTTPToken, listenAddr string) http.Handler
 			originHost := originURL.Host
 			// when Lantern is listening on all interfaces, e.g., allow remote
 			// connections, listenAddr is in ":port" form. Using HasSuffix
-			if !strings.HasSuffix(originHost, listenAddr) {
-				log.Errorf("Origin was '%v' but expecting: '%v'", originHost, listenAddr)
+			if !strings.HasSuffix(originHost, s.listenAddr) {
+				msg := fmt.Sprintf("Origin was '%v' but expecting: '%v'", originHost, s.listenAddr)
+				s.forbidden(msg, w, r)
 				return
 			}
 		}
@@ -216,6 +222,21 @@ func checkOrigin(h http.Handler, localHTTPToken, listenAddr string) http.Handler
 		h.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(check)
+}
+
+// forbidden returns a 403 forbidden response to the client while also dumping
+// headers and logs for debugging.
+func (s *Server) forbidden(msg string, w http.ResponseWriter, r *http.Request) {
+	log.Error(msg)
+	s.dumpRequestHeaders(r)
+	http.Error(w, msg, http.StatusForbidden)
+}
+
+func (s *Server) dumpRequestHeaders(r *http.Request) {
+	dump, err := httputil.DumpRequest(r, false)
+	if err == nil {
+		log.Debugf("Request:\n", string(dump))
+	}
 }
 
 func normalizeAddr(addr string) string {
