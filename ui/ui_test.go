@@ -24,9 +24,9 @@ func getTestHandler() http.Handler {
 	return getTestServer("some-token").mux
 }
 
-func getTestServer(token string) *Server {
+func getTestServer(token string) *server {
 	allowRemote := false
-	s := NewServer("localhost:", allowRemote, "", token)
+	s := newServer("localhost:", allowRemote, "", token)
 	attachHandlers(s, allowRemote)
 	return s
 }

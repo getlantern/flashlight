@@ -16,7 +16,7 @@ import (
 	"github.com/skratchdot/open-golang/open"
 )
 
-type Server struct {
+type server struct {
 	// The address to listen on, in ":port" form if listen on all interfaces.
 	listenAddr string
 	// The address client should access. Available only if the server is started.
@@ -28,14 +28,14 @@ type Server struct {
 	onceOpenExtURL sync.Once
 }
 
-// NewServer creates a new UI server listen at addr in host:port format, or
+// newServer creates a new UI server listen at addr in host:port format, or
 // arbitrary local port if addr is empty.
 // allInterfaces: when true, server will listen on all local interfaces,
 // regardless of what the addr parameter is.
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func NewServer(addr string, allInterfaces bool, extURL, localHTTPToken string) *Server {
+func newServer(addr string, allInterfaces bool, extURL, localHTTPToken string) *server {
 	addr = normalizeAddr(addr)
 	if allInterfaces {
 		_, port, err := net.SplitHostPort(addr)
@@ -46,7 +46,7 @@ func NewServer(addr string, allInterfaces bool, extURL, localHTTPToken string) *
 		addr = ":" + port
 	}
 
-	return &Server{
+	return &server{
 		listenAddr:     addr,
 		externalURL:    overrideManotoURL(extURL),
 		localHTTPToken: localHTTPToken,
@@ -58,19 +58,18 @@ func overrideManotoURL(u string) string {
 	if strings.HasPrefix(u, "https://www.manoto1.com/") || strings.HasPrefix(u, "https://www.facebook.com/manototv") {
 		// Here we make sure to override any old manoto URLs with the latest.
 		return "https://www.manototv.com/iran?utm_campaign=manotolantern"
-	} else {
-		return u
 	}
+	return u
 }
 
 // Handle let the Server to handle the pattern using handler.
-func (s *Server) Handle(pattern string, handler http.Handler) {
+func (s *server) Handle(pattern string, handler http.Handler) {
 	log.Debugf("Adding handler for %v", pattern)
 	s.mux.Handle(pattern,
 		s.checkOrigin(util.NoCacheHandler(handler)))
 }
 
-func (s *Server) Start() error {
+func (s *server) start() error {
 	log.Debugf("Lantern UI server start listening at %v", s.listenAddr)
 	l, err := net.Listen("tcp", s.listenAddr)
 	if err != nil {
@@ -122,7 +121,7 @@ func (s *Server) Start() error {
 // to this method. It may not be reading yet, but since we're the only
 // ones reading from those incoming sockets the fact that reading starts
 // asynchronously is not a problem.
-func (s *Server) show() {
+func (s *server) show() {
 	go func() {
 		uiURL := fmt.Sprintf("http://%s/?1", s.accessAddr)
 		log.Debugf("Opening browser at %v", uiURL)
@@ -146,22 +145,22 @@ func (s *Server) show() {
 }
 
 // getUIAddr returns the current UI address.
-func (s *Server) getUIAddr() string {
+func (s *server) getUIAddr() string {
 	return s.accessAddr
 }
 
-func (s *Server) stop() error {
+func (s *server) stop() error {
 	return s.listener.Close()
 }
 
 // addToken adds the UI domain and custom request token to the specified
 // request path. Without that token, the backend will reject the request to
 // avoid web sites detecting Lantern.
-func (s *Server) addToken(in string) string {
+func (s *server) addToken(in string) string {
 	return util.SetURLParam("http://"+path.Join(s.accessAddr, in), "token", s.localHTTPToken)
 }
 
-func (s *Server) checkOrigin(h http.Handler) http.Handler {
+func (s *server) checkOrigin(h http.Handler) http.Handler {
 	check := func(w http.ResponseWriter, r *http.Request) {
 		var clientURL string
 
@@ -226,14 +225,14 @@ func (s *Server) checkOrigin(h http.Handler) http.Handler {
 
 // forbidden returns a 403 forbidden response to the client while also dumping
 // headers and logs for debugging.
-func (s *Server) forbidden(msg string, w http.ResponseWriter, r *http.Request) {
+func (s *server) forbidden(msg string, w http.ResponseWriter, r *http.Request) {
 	log.Error(msg)
 	s.dumpRequestHeaders(r)
 	// Return forbidden but do not reveal any details in the body.
 	http.Error(w, "", http.StatusForbidden)
 }
 
-func (s *Server) dumpRequestHeaders(r *http.Request) {
+func (s *server) dumpRequestHeaders(r *http.Request) {
 	dump, err := httputil.DumpRequest(r, false)
 	if err == nil {
 		log.Debugf("Request:\n", string(dump))

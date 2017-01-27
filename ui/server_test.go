@@ -11,9 +11,9 @@ import (
 )
 
 func TestStartServer(t *testing.T) {
-	startServer := func(addr string) *Server {
-		s := NewServer(addr, false, "", "local-http-token")
-		assert.NoError(t, s.Start(), "should start server")
+	startServer := func(addr string) *server {
+		s := newServer(addr, false, "", "local-http-token")
+		assert.NoError(t, s.start(), "should start server")
 		return s
 	}
 	s := startServer("")
@@ -44,9 +44,9 @@ func TestStartServer(t *testing.T) {
 }
 
 func TestStartServerAllowRemote(t *testing.T) {
-	startServer := func(addr string) *Server {
-		s := NewServer(addr, true, "", "local-http-token")
-		assert.NoError(t, s.Start(), "should start server")
+	startServer := func(addr string) *server {
+		s := newServer(addr, true, "", "local-http-token")
+		assert.NoError(t, s.start(), "should start server")
 		return s
 	}
 	s := startServer("")
@@ -77,7 +77,7 @@ func TestStartServerAllowRemote(t *testing.T) {
 }
 
 func TestCheckOrigin(t *testing.T) {
-	localhost := NewServer("localhost:9898", false, "", "token")
+	localhost := newServer("localhost:9898", false, "", "token")
 	doTestCheckOrigin(t, localhost, map[string]bool{
 		"localhost:9898": true,
 		"localhost:1243": false,
@@ -85,7 +85,7 @@ func TestCheckOrigin(t *testing.T) {
 		"anyhost:9898":   false,
 	})
 
-	localIP := NewServer("127.0.0.1:9898", false, "", "token")
+	localIP := newServer("127.0.0.1:9898", false, "", "token")
 	doTestCheckOrigin(t, localIP, map[string]bool{
 		"127.0.0.1:9898": true,
 		"localhost:9898": false,
@@ -93,7 +93,7 @@ func TestCheckOrigin(t *testing.T) {
 		"anyhost:9898":   false,
 	})
 
-	allowRemote := NewServer("localhost:9898", true, "", "token")
+	allowRemote := newServer("localhost:9898", true, "", "token")
 	doTestCheckOrigin(t, allowRemote, map[string]bool{
 		"localhost:9898": true,
 		"127.0.0.1:9898": true,
@@ -102,7 +102,7 @@ func TestCheckOrigin(t *testing.T) {
 	})
 }
 
-func doTestCheckOrigin(t *testing.T, s *Server, testOrigins map[string]bool) {
+func doTestCheckOrigin(t *testing.T, s *server, testOrigins map[string]bool) {
 	var hit bool
 	var basic http.HandlerFunc = func(http.ResponseWriter, *http.Request) {
 		hit = true

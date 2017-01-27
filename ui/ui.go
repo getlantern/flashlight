@@ -18,20 +18,20 @@ var (
 	fs           *tarfs.FileSystem
 	translations = eventual.NewValue()
 
-	server *Server
+	serve *server
 )
 
 // Start starts serving the UI.
 func Start(requestedAddr string, allowRemote bool, extURL, localHTTPTok string) error {
-	server = NewServer(requestedAddr, allowRemote, extURL, localHTTPTok)
-	attachHandlers(server, allowRemote)
-	if err := server.Start(); err != nil {
+	serve = newServer(requestedAddr, allowRemote, extURL, localHTTPTok)
+	attachHandlers(serve, allowRemote)
+	if err := serve.start(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func attachHandlers(s *Server, allowRemote bool) {
+func attachHandlers(s *server, allowRemote bool) {
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
 	startupHandler := func(resp http.ResponseWriter, req *http.Request) {
@@ -50,12 +50,12 @@ func attachHandlers(s *Server, allowRemote bool) {
 }
 
 func Handle(pattern string, handler http.Handler) {
-	server.Handle(pattern, handler)
+	serve.Handle(pattern, handler)
 }
 
 // Stop stops the UI listener and all services. To facilitate test.
 func Stop() {
-	server.stop()
+	serve.stop()
 }
 
 func unpackUI() {
@@ -81,7 +81,7 @@ func Translations(filename string) ([]byte, error) {
 
 // GetUIAddr returns the current UI address.
 func GetUIAddr() string {
-	return server.getUIAddr()
+	return serve.getUIAddr()
 }
 
 // Show opens the UI in a browser. Note we know the UI server is
@@ -90,12 +90,12 @@ func GetUIAddr() string {
 // ones reading from those incoming sockets the fact that reading starts
 // asynchronously is not a problem.
 func Show() {
-	server.show()
+	serve.show()
 }
 
 // AddToken adds the UI domain and custom request token to the specified
 // request path. Without that token, the backend will reject the request to
 // avoid web sites detecting Lantern.
 func AddToken(in string) string {
-	return server.addToken(in)
+	return serve.addToken(in)
 }
