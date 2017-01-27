@@ -18,27 +18,27 @@ var (
 	fs           *tarfs.FileSystem
 	translations = eventual.NewValue()
 
-	server *Server
+	serve *server
 )
 
 // Start starts serving the UI.
 func Start(requestedAddr string, allowRemote bool, extURL, localHTTPTok string) error {
-	server = NewServer(requestedAddr, allowRemote, extURL, localHTTPTok)
-	attachHandlers(server, allowRemote)
-	if err := server.Start(); err != nil {
+	serve = newServer(requestedAddr, allowRemote, extURL, localHTTPTok)
+	attachHandlers(serve, allowRemote)
+	if err := serve.start(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func attachHandlers(s *Server, allowRemote bool) {
+func attachHandlers(s *server, allowRemote bool) {
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
 	startupHandler := func(resp http.ResponseWriter, req *http.Request) {
 		// If we're allowing remote, we're in practice not showing the UI on this
 		// typically headless system, so don't allow triggering of the UI.
 		if !allowRemote {
-			s.Show()
+			s.show()
 		}
 		resp.WriteHeader(http.StatusOK)
 	}
@@ -50,12 +50,12 @@ func attachHandlers(s *Server, allowRemote bool) {
 }
 
 func Handle(pattern string, handler http.Handler) {
-	server.Handle(pattern, handler)
+	serve.Handle(pattern, handler)
 }
 
 // Stop stops the UI listener and all services. To facilitate test.
 func Stop() {
-	server.Stop()
+	serve.stop()
 }
 
 func unpackUI() {
@@ -79,14 +79,23 @@ func Translations(filename string) ([]byte, error) {
 	return tr.(*tarfs.FileSystem).Get(filename)
 }
 
+// GetUIAddr returns the current UI address.
 func GetUIAddr() string {
-	return server.GetUIAddr()
+	return serve.getUIAddr()
 }
 
+// Show opens the UI in a browser. Note we know the UI server is
+// *listening* at this point as long as Start is correctly called prior
+// to this method. It may not be reading yet, but since we're the only
+// ones reading from those incoming sockets the fact that reading starts
+// asynchronously is not a problem.
 func Show() {
-	server.Show()
+	serve.show()
 }
 
+// AddToken adds the UI domain and custom request token to the specified
+// request path. Without that token, the backend will reject the request to
+// avoid web sites detecting Lantern.
 func AddToken(in string) string {
-	return server.AddToken(in)
+	return serve.addToken(in)
 }
