@@ -69,14 +69,6 @@ func Register(t string, helloFn helloFnType) (*Service, error) {
 // client, instead of letting JSON unmarshaler to guess the type.
 func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFnType) (*Service, error) {
 	log.Tracef("Registering UI service %s", t)
-	muServices.Lock()
-	defer muServices.Unlock()
-
-	if services[t] != nil {
-		// Using panic because this would be a developer error rather that
-		// something that could happen naturally.
-		panic("Service was already registered.")
-	}
 
 	s := &Service{
 		Type:     t,
@@ -102,6 +94,15 @@ func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFn
 		if err != nil {
 			log.Debugf("Error running Hello function", err)
 		}
+	}
+
+	muServices.Lock()
+	defer muServices.Unlock()
+
+	if services[t] != nil {
+		// Using panic because this would be a developer error rather that
+		// something that could happen naturally.
+		panic("Service was already registered.")
 	}
 
 	// Adding new service to service map.
