@@ -38,7 +38,7 @@ func attachHandlers(s *Server, allowRemote bool) {
 		// If we're allowing remote, we're in practice not showing the UI on this
 		// typically headless system, so don't allow triggering of the UI.
 		if !allowRemote {
-			s.Show()
+			s.show()
 		}
 		resp.WriteHeader(http.StatusOK)
 	}
@@ -55,7 +55,7 @@ func Handle(pattern string, handler http.Handler) {
 
 // Stop stops the UI listener and all services. To facilitate test.
 func Stop() {
-	server.Stop()
+	server.stop()
 }
 
 func unpackUI() {
@@ -79,14 +79,23 @@ func Translations(filename string) ([]byte, error) {
 	return tr.(*tarfs.FileSystem).Get(filename)
 }
 
+// GetUIAddr returns the current UI address.
 func GetUIAddr() string {
-	return server.GetUIAddr()
+	return server.getUIAddr()
 }
 
+// Show opens the UI in a browser. Note we know the UI server is
+// *listening* at this point as long as Start is correctly called prior
+// to this method. It may not be reading yet, but since we're the only
+// ones reading from those incoming sockets the fact that reading starts
+// asynchronously is not a problem.
 func Show() {
-	server.Show()
+	server.show()
 }
 
+// AddToken adds the UI domain and custom request token to the specified
+// request path. Without that token, the backend will reject the request to
+// avoid web sites detecting Lantern.
 func AddToken(in string) string {
-	return server.AddToken(in)
+	return server.addToken(in)
 }

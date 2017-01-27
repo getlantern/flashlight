@@ -117,12 +117,12 @@ func (s *Server) Start() error {
 	}
 }
 
-// Show opens the UI in a browser. Note we know the UI server is
+// show opens the UI in a browser. Note we know the UI server is
 // *listening* at this point as long as Start is correctly called prior
 // to this method. It may not be reading yet, but since we're the only
 // ones reading from those incoming sockets the fact that reading starts
 // asynchronously is not a problem.
-func (s *Server) Show() {
+func (s *Server) show() {
 	go func() {
 		uiURL := fmt.Sprintf("http://%s/?1", s.accessAddr)
 		log.Debugf("Opening browser at %v", uiURL)
@@ -145,19 +145,19 @@ func (s *Server) Show() {
 	}()
 }
 
-// GetUIAddr returns the current UI address.
-func (s *Server) GetUIAddr() string {
+// getUIAddr returns the current UI address.
+func (s *Server) getUIAddr() string {
 	return s.accessAddr
 }
 
-func (s *Server) Stop() error {
+func (s *Server) stop() error {
 	return s.listener.Close()
 }
 
-// AddToken adds the UI domain and custom request token to the specified
+// addToken adds the UI domain and custom request token to the specified
 // request path. Without that token, the backend will reject the request to
 // avoid web sites detecting Lantern.
-func (s *Server) AddToken(in string) string {
+func (s *Server) addToken(in string) string {
 	return util.SetURLParam("http://"+path.Join(s.accessAddr, in), "token", s.localHTTPToken)
 }
 
@@ -229,7 +229,8 @@ func (s *Server) checkOrigin(h http.Handler) http.Handler {
 func (s *Server) forbidden(msg string, w http.ResponseWriter, r *http.Request) {
 	log.Error(msg)
 	s.dumpRequestHeaders(r)
-	http.Error(w, msg, http.StatusForbidden)
+	// Return forbidden but do not reveal any details in the body.
+	http.Error(w, "", http.StatusForbidden)
 }
 
 func (s *Server) dumpRequestHeaders(r *http.Request) {
