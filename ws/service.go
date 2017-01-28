@@ -18,7 +18,7 @@ type envelope struct {
 	Message interface{} `json:"message"`
 }
 
-type helloFnType func(func(interface{}) error) error
+type helloFnType func(func(interface{}))
 
 type newMsgFnType func() interface{}
 
@@ -82,18 +82,15 @@ func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFn
 
 	// Sending existent clients the hello message of the new service.
 	if helloFn != nil {
-		err := helloFn(func(msg interface{}) error {
+		helloFn(func(msg interface{}) {
 			b, err := newEnvelope(s.Type, msg)
 			if err != nil {
-				return err
+				log.Errorf("Could not create envelope %v", err)
+				return
 			}
 			log.Tracef("Sending initial message to existent clients")
 			defaultUIChannel.Out <- b
-			return nil
 		})
-		if err != nil {
-			log.Debugf("Error running Hello function", err)
-		}
 	}
 
 	muServices.Lock()
@@ -126,27 +123,23 @@ func Unregister(t string) {
 // StartUIChannel establishes a channel to the UI for sending and receiving
 // updates
 func StartUIChannel() *UIChannel {
-	defaultUIChannel = NewChannel(func(write func([]byte) error) error {
-		// Sending hello messages.
+	defaultUIChannel = NewChannel(func() {
+		// This methos is the callback that gets called whenever there's a new
+		// incoming websocket connection.
 		muServices.RLock()
 		defer muServices.RUnlock()
 		for _, s := range services {
-			// Delegating task...
 			if s.helloFn != nil {
-				writer := func(msg interface{}) error {
-					b, err := newEnvelope(s.Type, msg)
-					if err != nil {
-						return err
-					}
-					return write(b)
-				}
-
-				if err := s.helloFn(writer); err != nil {
-					log.Errorf("Error writing to socket: %q", err)
-				}
+				// Do this asynchronously to make sure we don't hold up the websocket
+				// listening thread.
+				go func(ser *Service) {
+					ser.helloFn(func(msg interface{}) {
+						// Just queue the message up on our outgoing message channel.
+						ser.out <- msg
+					})
+				}(s)
 			}
 		}
-		return nil
 	})
 
 	go readLoop(defaultUIChannel.In)

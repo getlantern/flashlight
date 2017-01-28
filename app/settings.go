@@ -169,12 +169,12 @@ func newSettings(filePath string) *Settings {
 	}
 }
 
-// start the settings service that synchronizes Lantern's configuration with
-// every UI client
+// StartService starts the settings service that synchronizes Lantern's
+// configuration with every UI client.
 func (s *Settings) StartService() error {
-	helloFn := func(write func(interface{}) error) error {
+	helloFn := func(write func(interface{})) {
 		log.Debugf("Sending Lantern settings to new client")
-		return write(s.uiMap())
+		write(s.uiMap())
 	}
 
 	service, err := ws.Register("settings", helloFn)

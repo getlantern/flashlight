@@ -23,7 +23,7 @@ var (
 	}
 )
 
-type ConnectFunc func(write func([]byte) error) error
+type ConnectFunc func()
 
 // UIChannel represents a data channel to/from the UI. UIChannel will have one
 // underlying websocket connection for each connected browser window. All
@@ -87,14 +87,7 @@ func (c *UIChannel) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}()
 
 	if c.onConnect != nil {
-		err = c.onConnect(func(b []byte) error {
-			log.Tracef("Writing initial message: %q", b)
-			return ws.WriteMessage(websocket.TextMessage, b)
-		})
-		if err != nil {
-			log.Errorf("Error processing onConnect, disconnecting websocket: %v", err)
-			return
-		}
+		c.onConnect()
 	}
 
 	c.muConns.Lock()
