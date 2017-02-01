@@ -2,7 +2,6 @@ package chained
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"net"
 	"net/http"
@@ -31,6 +30,7 @@ const (
 var (
 	chainedDialTimeout          = 10 * time.Second
 	theForceAddr, theForceToken string
+	connmuxPool                 = connmux.NewBufferPool(500) // TODO: make sure this is a good size
 )
 
 // Proxy represents a proxy Lantern client can connect to.
@@ -68,14 +68,14 @@ func CreateProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 		var err error
 		if s.Cert == "" {
 			log.Errorf("No Cert configured for %s, will dial with plain tcp", s.Addr)
-			base = newHTTPProxy(name, s)
+			base = newHTTPProxy(name, s, true)
 		} else {
 			log.Tracef("Cert configured for  %s, will dial with tls", s.Addr)
 			base, err = newHTTPSProxy(name, s)
 		}
 		return base, err
 	case "obfs4":
-		return newOBFS4Wrapper(newHTTPProxy(name, s), s)
+		return newOBFS4Wrapper(newHTTPProxy(name, s, false), s)
 	case "obfs4-kcp":
 		return newOBFS4Wrapper(newKCPProxy(name, s), s)
 	default:
@@ -99,25 +99,31 @@ func forceProxy(s *ChainedServerInfo) {
 
 type httpProxy struct {
 	BaseProxy
+	dial func() (net.Conn, error)
 }
 
-func newHTTPProxy(name string, s *ChainedServerInfo) Proxy {
-	return &httpProxy{BaseProxy: BaseProxy{name: name, protocol: "http", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: false}}
+func newHTTPProxy(name string, s *ChainedServerInfo, multiplex bool) Proxy {
+	dial := func() (net.Conn, error) {
+		return netx.DialTimeout("tcp", s.Addr, chainedDialTimeout)
+	}
+	if multiplex {
+		dial = connmux.Dialer(50, 0, connmuxPool, dial)
+	}
+	return &httpProxy{BaseProxy: BaseProxy{name: name, protocol: "http", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: false}, dial: dial}
 }
 
 func (d httpProxy) DialServer() (net.Conn, error) {
 	op := ops.Begin("dial_to_chained").ChainedProxy(d.Addr(), d.Protocol(), d.Network())
 	defer op.End()
 	elapsed := mtime.Stopwatch()
-	conn, err := netx.DialTimeout("tcp", d.Addr(), chainedDialTimeout)
+	conn, err := d.dial()
 	op.DialTime(elapsed, err)
 	return conn, op.FailIf(err)
 }
 
 type httpsProxy struct {
 	BaseProxy
-	x509cert     *x509.Certificate
-	sessionCache tls.ClientSessionCache
+	dial func() (net.Conn, error)
 }
 
 func newHTTPSProxy(name string, s *ChainedServerInfo) (Proxy, error) {
@@ -125,35 +131,39 @@ func newHTTPSProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 	}
+	x509cert := cert.X509()
+	sessionCache := tls.NewLRUClientSessionCache(1000)
+	dial := connmux.Dialer(50, 0, connmuxPool, func() (net.Conn, error) {
+		op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "https", "tcp")
+		defer op.End()
+
+		elapsed := mtime.Stopwatch()
+		conn, err := tlsdialer.DialTimeout(netx.DialTimeout, chainedDialTimeout,
+			"tcp", s.Addr, false, &tls.Config{
+				ClientSessionCache: sessionCache,
+				InsecureSkipVerify: true,
+			})
+		op.DialTime(elapsed, err)
+		if err != nil {
+			return nil, op.FailIf(err)
+		}
+		if !conn.ConnectionState().PeerCertificates[0].Equal(x509cert) {
+			if closeErr := conn.Close(); closeErr != nil {
+				log.Debugf("Error closing chained server connection: %s", closeErr)
+			}
+			return nil, op.FailIf(log.Errorf("Server's certificate didn't match expected! Server had\n%v\nbut expected:\n%v",
+				conn.ConnectionState().PeerCertificates[0], x509cert))
+		}
+		return conn, nil
+	})
 	return &httpsProxy{
-		BaseProxy:    BaseProxy{name: name, protocol: "https", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted},
-		x509cert:     cert.X509(),
-		sessionCache: tls.NewLRUClientSessionCache(1000),
+		BaseProxy: BaseProxy{name: name, protocol: "https", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted},
+		dial:      dial,
 	}, nil
 }
 
 func (d httpsProxy) DialServer() (net.Conn, error) {
-	op := ops.Begin("dial_to_chained").ChainedProxy(d.Addr(), d.Protocol(), d.Network())
-	defer op.End()
-
-	elapsed := mtime.Stopwatch()
-	conn, err := tlsdialer.DialTimeout(netx.DialTimeout, chainedDialTimeout,
-		"tcp", d.Addr(), false, &tls.Config{
-			ClientSessionCache: d.sessionCache,
-			InsecureSkipVerify: true,
-		})
-	op.DialTime(elapsed, err)
-	if err != nil {
-		return nil, op.FailIf(err)
-	}
-	if !conn.ConnectionState().PeerCertificates[0].Equal(d.x509cert) {
-		if closeErr := conn.Close(); closeErr != nil {
-			log.Debugf("Error closing chained server connection: %s", closeErr)
-		}
-		return nil, op.FailIf(log.Errorf("Server's certificate didn't match expected! Server had\n%v\nbut expected:\n%v",
-			conn.ConnectionState().PeerCertificates[0], d.x509cert))
-	}
-	return conn, op.FailIf(err)
+	return d.dial()
 }
 
 type kcpProxy struct {
@@ -222,8 +232,8 @@ func newOBFS4Wrapper(p Proxy, s *ChainedServerInfo) (Proxy, error) {
 		return nil, log.Errorf("Unable to parse client args: %v", err)
 	}
 
-	pool := connmux.NewBufferPool(500) // TODO: make sure this is a good size
-	dial := connmux.Dialer(50, 0, pool, func() (net.Conn, error) {
+	// dial := connmux.Dialer(50, 0, connmuxPool, func() (net.Conn, error) {
+	dial := func() (net.Conn, error) {
 		dialFn := func(network, address string) (net.Conn, error) {
 			// We know for sure the network and address are the same as what
 			// the inner DailServer uses.
@@ -231,7 +241,7 @@ func newOBFS4Wrapper(p Proxy, s *ChainedServerInfo) (Proxy, error) {
 		}
 		// The proxy it wrapped already has timeout applied.
 		return cf.Dial("tcp", p.Addr(), dialFn, args)
-	})
+	}
 
 	return obfs4Wrapper{p, s.Trusted, dial}, nil
 }

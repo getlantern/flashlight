@@ -88,7 +88,7 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 
 	keepAliveIdleTimeout := idleTimeout - 5*time.Second
 	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers, false, client.dialCONNECT)
-	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
+	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, onResponse, errorResponse, client.dialHTTP)
 	return client
 }
 
@@ -359,4 +359,14 @@ func errorResponse(req *http.Request, err error) *http.Response {
 
 func getRequestTimeout() time.Duration {
 	return time.Duration(atomic.LoadInt64(&requestTimeout))
+}
+
+func onResponse(resp *http.Response) *http.Response {
+	log.Debugf("X-BBR-ABE: %v", resp.Header.Get("X-Bbr-Abe"))
+	log.Debugf("X-BBR-Sent: %v", resp.Header.Get("X-Bbr-Sent"))
+	log.Debug(resp.Header)
+	resp.Header.Del("X-Bbr-Abe")
+	resp.Header.Del("X-Bbr-Sent")
+	// TODO: remove our headers from trailer
+	return resp
 }

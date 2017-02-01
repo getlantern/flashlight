@@ -152,6 +152,9 @@ func (s *chainedServer) doCheck(url string,
 	deviceID string,
 	proTokenGetter func() string,
 	onFailure func(string)) bool {
+	if true {
+		return true
+	}
 	start := time.Now()
 	// We ping the URLs through the proxy to get timings
 	req, err := http.NewRequest("GET", "http://ping-chained-server", nil)
@@ -185,6 +188,7 @@ func (s *chainedServer) doCheck(url string,
 		log.Tracef("PING %s through chained server at %s, status code %d", url, s.Addr(), resp.StatusCode)
 		success := resp.StatusCode >= 200 && resp.StatusCode <= 299
 		if success {
+			onResponse(resp)
 			delta := int64(time.Now().Sub(start))
 			atomic.AddInt64(totalLatency, delta)
 		} else {
