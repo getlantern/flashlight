@@ -38,7 +38,7 @@ imports:
 - name: github.com/fatih/set
   version: 27c40922c40b43fe04554d8223a402af3ea333f3
 - name: github.com/getlantern/appdir
-  version: 659a155d06e8f3dd8b9f79d6147445897499b56b
+  version: aa971bc449f6106ecdc561fda1361ae5e89c2e3b
 - name: github.com/getlantern/autoupdate
   version: 6ba15a0dcde8113a700033b4e1f8c87c34df646b
 - name: github.com/getlantern/balancer
