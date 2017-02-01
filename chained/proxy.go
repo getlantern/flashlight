@@ -111,7 +111,7 @@ func (d httpProxy) DialServer() (net.Conn, error) {
 	elapsed := mtime.Stopwatch()
 	conn, err := netx.DialTimeout("tcp", d.Addr(), chainedDialTimeout)
 	op.DialTime(elapsed, err)
-	return conn, op.FailIf(err)
+	return wrapOverhead(false, conn), op.FailIf(err)
 }
 
 type httpsProxy struct {
@@ -137,7 +137,7 @@ func (d httpsProxy) DialServer() (net.Conn, error) {
 	defer op.End()
 
 	elapsed := mtime.Stopwatch()
-	conn, err := tlsdialer.DialTimeout(netx.DialTimeout, chainedDialTimeout,
+	conn, err := tlsdialer.DialTimeout(overheadDialer(false, netx.DialTimeout), chainedDialTimeout,
 		"tcp", d.Addr(), false, &tls.Config{
 			ClientSessionCache: d.sessionCache,
 			InsecureSkipVerify: true,
@@ -153,7 +153,7 @@ func (d httpsProxy) DialServer() (net.Conn, error) {
 		return nil, op.FailIf(log.Errorf("Server's certificate didn't match expected! Server had\n%v\nbut expected:\n%v",
 			conn.ConnectionState().PeerCertificates[0], d.x509cert))
 	}
-	return conn, op.FailIf(err)
+	return wrapOverhead(true, conn), op.FailIf(err)
 }
 
 type kcpProxy struct {
@@ -254,7 +254,7 @@ func (p obfs4Wrapper) DialServer() (net.Conn, error) {
 	// The proxy it wrapped already has timeout applied.
 	conn, err := p.cf.Dial("tcp", p.Addr(), dialFn, p.args)
 	op.DialTime(elapsed, err)
-	return conn, op.FailIf(err)
+	return wrapOverhead(true, conn), op.FailIf(err)
 }
 
 type BaseProxy struct {
