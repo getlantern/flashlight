@@ -1,4 +1,4 @@
-// Package mobile implements the mobile application functionality of flashlight
+// Package lantern implements the mobile application functionality of flashlight
 package lantern
 
 import (
