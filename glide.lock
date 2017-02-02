@@ -186,6 +186,8 @@ imports:
   version: 2a15afbadcff99bac017e17af273b31d4510ddb8
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
+- name: github.com/getlantern/protected
+  version: 55099e1fa38c5acf40b1f4445b1bac25cc43e6bc
 - name: github.com/getlantern/proxy
   version: 876829e39cf8243d123b02f02efe8da1266effb4
 - name: github.com/getlantern/proxybench
@@ -317,6 +319,10 @@ imports:
   - dependency/bytes2
   - dependency/hack
   - dependency/sqltypes
+- name: github.com/stripe/stripe-go
+  version: 87c04229ff0262e4e7dfc8af7dc97a471e955ba2
+  subpackages:
+  - orderitem
 - name: golang.org/x/crypto
   version: 41d678d1df78cd0410143162dff954e6dc09300f
   subpackages:

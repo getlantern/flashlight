@@ -40,10 +40,12 @@ import:
   subpackages:
   - go-client
 - package: github.com/getlantern/profiling
+- package: github.com/getlantern/protected
 - package: github.com/getlantern/proxiedsites
 - package: github.com/getlantern/proxybench
 - package: github.com/getlantern/rot13
 - package: github.com/getlantern/rotator
+- package: github.com/stripe/stripe-go
 - package: github.com/getlantern/systray
 - package: github.com/getlantern/tarfs
 - package: github.com/getlantern/tlsdialer
