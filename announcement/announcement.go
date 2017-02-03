@@ -12,8 +12,8 @@ import (
 const loConfURL = "https://raw.githubusercontent.com/getlantern/loconf/master/desktop-ui.json"
 const stagingLoConfURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui-staging.json"
 
-// ENoAvailable indicates that there's no valid announcement for current user.
-var ENoAvailable error = errors.New("No announcement available")
+// ErrNoAvailable indicates that there's no valid announcement for current user.
+var ErrNoAvailable error = errors.New("No announcement available")
 
 var eIncorrectType error = errors.New("Incorrect type")
 
@@ -54,14 +54,14 @@ func Get(hc *http.Client, lang string, isPro bool, isStaging bool) (*Announcemen
 		y, m, d := time.Now().UTC().Date()
 		today := time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
 		if !expiry.After(today) {
-			return nil, ENoAvailable
+			return nil, ErrNoAvailable
 		}
 	}
 
 	if isPro && parsed.Pro || !isPro && parsed.Free {
 		return &parsed.Announcement, nil
 	}
-	return nil, ENoAvailable
+	return nil, ErrNoAvailable
 }
 
 func fetch(hc *http.Client, u string) ([]byte, error) {

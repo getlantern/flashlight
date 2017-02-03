@@ -33,7 +33,7 @@ func AnnouncementsLoop(interval time.Duration, proChecker func() (bool, bool)) (
 		lang := settings.getString(SNLanguage)
 		current, err := announcement.Get(http.DefaultClient, lang, isPro, isStaging)
 		if err != nil {
-			if err == announcement.ENoAvailable {
+			if err == announcement.ErrNoAvailable {
 				log.Debugf("No available announcement")
 			} else {
 				log.Error(err)
