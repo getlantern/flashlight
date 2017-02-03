@@ -1,3 +1,25 @@
+// package announcement gets announcement from the loconf JSON endpoint. The
+// format is as follows:
+//
+// {
+//   "announcement": {
+//     "default": "en-US", # when there's no section for the specific user locale, fallback to default. Can be empty.
+//     "en-US": {
+//       "campaign": "20160801-new-feature", # uniquely identify an announcement.
+//       "pro": true, # true to show announcement for pro users.
+//       "free": true, # true to show announcement for free users.
+//       "expiry": "02 Feb 17 15:04 +0700", # in RFC822Z format, or leave empty if not expire at all.
+//       "title": "Try out the new feature",
+//       "message": "Believe or not, you'll definitely love it!",
+//       "url": ""
+//     },
+//     "zh-CN": {
+//       ...
+//     },
+//     ... # for other locales
+//   },
+//   ... # other parts of the JSON file
+// }
 package announcement
 
 import (
@@ -9,14 +31,21 @@ import (
 	"github.com/getlantern/errors"
 )
 
-const loConfURL = "https://raw.githubusercontent.com/getlantern/loconf/master/desktop-ui.json"
-const stagingLoConfURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui-staging.json"
+const (
+	loConfURL        = "https://raw.githubusercontent.com/getlantern/loconf/master/desktop-ui.json"
+	stagingLoConfURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui-staging.json"
+)
 
-// ErrNoAvailable indicates that there's no valid announcement for current user.
-var ErrNoAvailable error = errors.New("No announcement available")
+var (
+	// ErrNoAvailable indicates that there's no valid announcement for the
+	// current user.
+	ErrNoAvailable error = errors.New("No announcement available")
 
-var eIncorrectType error = errors.New("Incorrect type")
+	eIncorrectType error = errors.New("Incorrect type")
+)
 
+// Announcement is what caller get when there's not-expired announcement for
+// the current user.
 type Announcement struct {
 	Campaign string `json:"campaign"`
 	Title    string `json:"title"`
@@ -31,8 +60,8 @@ type announcement struct {
 	Announcement
 }
 
-// Get get announcement via the HTTP client, based on the lang, pro and staging flag.
-func Get(hc *http.Client, lang string, isPro bool, isStaging bool) (*Announcement, error) {
+// Get gets announcement via the HTTP client, based on the locale, pro and staging flag.
+func Get(hc *http.Client, locale string, isPro bool, isStaging bool) (*Announcement, error) {
 	u := loConfURL
 	if isStaging {
 		u = stagingLoConfURL
@@ -41,19 +70,17 @@ func Get(hc *http.Client, lang string, isPro bool, isStaging bool) (*Announcemen
 	if efetch != nil {
 		return nil, errors.Wrap(efetch)
 	}
-	parsed, eparse := parse(b, lang)
+	parsed, eparse := parse(b, locale)
 	if eparse != nil {
 		return nil, errors.Wrap(eparse)
 	}
 
 	if parsed.Expiry != "" {
-		expiry, eexpiry := time.Parse("2006-01-02", parsed.Expiry)
+		expiry, eexpiry := time.Parse(time.RFC822Z, parsed.Expiry)
 		if eexpiry != nil {
-			return nil, errors.Wrap(eexpiry)
+			return nil, errors.New("error parse expiry: %v", eexpiry)
 		}
-		y, m, d := time.Now().UTC().Date()
-		today := time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
-		if !expiry.After(today) {
+		if expiry.Before(time.Now()) {
 			return nil, ErrNoAvailable
 		}
 	}
@@ -79,7 +106,7 @@ func fetch(hc *http.Client, u string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-func parse(buf []byte, lang string) (*announcement, error) {
+func parse(buf []byte, locale string) (*announcement, error) {
 	obj := map[string]interface{}{}
 	if ejson := json.Unmarshal(buf, &obj); ejson != nil {
 		return nil, ejson
@@ -92,19 +119,19 @@ func parse(buf []byte, lang string) (*announcement, error) {
 	if !ok {
 		return nil, eIncorrectType
 	}
-	inLang, exist := announcement[lang]
+	inLoc, exist := announcement[locale]
 	if !exist {
 		defaultLoc := announcement["default"]
-		if defaultLang, ok := defaultLoc.(string); !ok {
-			return nil, errors.New("No announcement for %s", lang)
-		} else if inLang, exist = announcement[defaultLang]; !exist {
-			return nil, errors.New("No announcement for either %s or %s", lang, defaultLang)
+		if defaultLocale, ok := defaultLoc.(string); !ok {
+			return nil, errors.New("No announcement for %s", locale)
+		} else if inLoc, exist = announcement[defaultLocale]; !exist {
+			return nil, errors.New("No announcement for either %s or %s", locale, defaultLocale)
 		}
 	}
-	if inLang, ok := inLang.(map[string]interface{}); !ok {
+	if inLocale, ok := inLoc.(map[string]interface{}); !ok {
 		return nil, eIncorrectType
 	} else {
-		return mapToAnnouncement(inLang)
+		return mapToAnnouncement(inLocale)
 	}
 }
 

@@ -146,7 +146,7 @@ func TestUserType(t *testing.T) {
 }
 
 func TestExpiry(t *testing.T) {
-	today := `"expiry": "` + time.Now().Format("2006-01-02") + `"`
+	today := `"expiry": "` + time.Now().Format(time.RFC822Z) + `"`
 	expired := strings.Replace(normalBody, `"expiry": ""`, today, 1)
 	_, err := Get(hcWithBody(expired), "en-US", false, false)
 	if assert.Error(t, err,
@@ -154,7 +154,7 @@ func TestExpiry(t *testing.T) {
 		assert.Contains(t, err.Error(), "No announcement available")
 	}
 
-	nextDay := `"expiry": "` + time.Now().Add(24*time.Hour).Format("2006-01-02") + `"`
+	nextDay := `"expiry": "` + time.Now().Add(24*time.Hour).Format(time.RFC822Z) + `"`
 	valid := strings.Replace(normalBody, `"expiry": ""`, nextDay, 1)
 	_, err = Get(hcWithBody(valid), "en-US", false, false)
 	assert.NoError(t, err,
@@ -162,6 +162,8 @@ func TestExpiry(t *testing.T) {
 
 	invalid := strings.Replace(normalBody, `"expiry": ""`, `"expiry": "9999-12-32"`, 1)
 	_, err = Get(hcWithBody(invalid), "en-US", false, false)
-	assert.Error(t, err,
-		"announcement with invalid expiry format should have error")
+	if assert.Error(t, err,
+		"announcement with invalid expiry format should have error") {
+		assert.Contains(t, err.Error(), "error parse expiry")
+	}
 }
