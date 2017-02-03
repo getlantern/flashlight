@@ -91,7 +91,7 @@ func Get(hc *http.Client, locale string, isPro bool, isStaging bool) (*Announcem
 	return nil, ErrNoAvailable
 }
 
-func fetch(hc *http.Client, u string) ([]byte, error) {
+func fetch(hc *http.Client, u string) (b []byte, err error) {
 	req, ereq := http.NewRequest("GET", u, nil)
 	if ereq != nil {
 		return nil, ereq
@@ -103,7 +103,9 @@ func fetch(hc *http.Client, u string) ([]byte, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.New("Unexpected status %v", resp.StatusCode)
 	}
-	return ioutil.ReadAll(resp.Body)
+	b, err = ioutil.ReadAll(resp.Body)
+	_ = resp.Body.Close() // can do nothing about the error
+	return
 }
 
 func parse(buf []byte, locale string) (*announcement, error) {
