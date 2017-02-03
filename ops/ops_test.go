@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -34,6 +35,7 @@ func TestRequest(t *testing.T) {
 			assert.Equal(t, method, ctx["http_method"])
 			assert.Equal(t, "HTTP/1.1", ctx["http_proto"])
 			assert.Equal(t, host, ctx["origin"])
+			assert.Equal(t, strings.Split(host, ":")[0], ctx["origin_host"])
 			assert.Equal(t, port, ctx["origin_port"])
 		}
 	}

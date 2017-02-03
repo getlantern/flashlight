@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -18,7 +17,7 @@ import (
 	"github.com/getlantern/uuid"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/ui"
+	"github.com/getlantern/flashlight/ws"
 )
 
 // SettingName is the name of a setting.
@@ -86,10 +85,7 @@ var settingMeta = map[SettingName]struct {
 }
 
 var (
-	service     *ui.Service
-	httpClient  *http.Client
 	defaultPath = filepath.Join(appdir.General("Lantern"), "settings.yaml")
-	once        = &sync.Once{}
 )
 
 // Settings is a struct of all settings unique to this particular Lantern instance.
@@ -173,6 +169,26 @@ func newSettings(filePath string) *Settings {
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
 	}
+}
+
+// start the settings service that synchronizes Lantern's configuration with
+// every UI client
+func (s *Settings) StartService() error {
+	helloFn := func(write func(interface{}) error) error {
+		log.Debugf("Sending Lantern settings to new client")
+		return write(s.uiMap())
+	}
+
+	service, err := ws.Register("settings", helloFn)
+	if err != nil {
+		return err
+	}
+	go s.read(service.In, service.Out)
+	return nil
+}
+
+func (s *Settings) StopService() {
+	ws.Unregister("settings")
 }
 
 func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {

@@ -5,8 +5,10 @@ package ops
 import (
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
+	borda "github.com/getlantern/borda/client"
 	"github.com/getlantern/ops"
 )
 
@@ -161,8 +163,8 @@ func (op *Op) OriginFromRequest(req *http.Request) *Op {
 // Origin attaches the origin to the Context
 func (op *Op) Origin(origin string, defaultPort string) *Op {
 	op.Set("origin", origin)
-	host, port, err := net.SplitHostPort(origin)
-	if err != nil {
+	host, port, _ := net.SplitHostPort(origin)
+	if host == "" && !strings.Contains(origin, ":") {
 		host = origin
 	}
 	if port == "0" || port == "" {
@@ -174,13 +176,12 @@ func (op *Op) Origin(origin string, defaultPort string) *Op {
 
 // DialTime records a dial time relative to a given start time (in milliseconds)
 // and records whether or not the dial succeeded (based on err being nil).
-func (op *Op) DialTime(start time.Time, err error) *Op {
-	delta := time.Now().Sub(start)
-	return op.SetMetric("dial_time", float64(delta.Nanoseconds())/1000000).Set("dial_succeeded", err == nil)
+func (op *Op) DialTime(elapsed func() time.Duration, err error) *Op {
+	return op.SetMetric("dial_time", borda.Avg(float64(elapsed().Nanoseconds())/1000000)).Set("dial_succeeded", err == nil)
 }
 
 // SetMetric sets a named metric. Metrics will be reported as borda values
 // rather than dimensions.
-func (op *Op) SetMetric(name string, value float64) *Op {
-	return op.Set("metric_"+name, value)
+func (op *Op) SetMetric(name string, value borda.Val) *Op {
+	return op.Set(name, value)
 }

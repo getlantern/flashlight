@@ -1,4 +1,4 @@
-package ui
+package ws
 
 import (
 	"encoding/json"
@@ -6,6 +6,17 @@ import (
 	"strings"
 	"sync"
 )
+
+// envelopeType is the type of the message envelope.
+type envelopeType struct {
+	Type string `json:"type,inline"`
+}
+
+// envelope is a struct that wraps messages and associates them with a type.
+type envelope struct {
+	envelopeType
+	Message interface{} `json:"message"`
+}
 
 type helloFnType func(func(interface{}) error) error
 
@@ -23,10 +34,9 @@ type Service struct {
 }
 
 var (
-	mu               sync.RWMutex
 	defaultUIChannel *UIChannel
-
-	services = make(map[string]*Service)
+	muServices       sync.RWMutex
+	services         = make(map[string]*Service)
 )
 
 func (s *Service) write() {
@@ -59,19 +69,12 @@ func Register(t string, helloFn helloFnType) (*Service, error) {
 // client, instead of letting JSON unmarshaler to guess the type.
 func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFnType) (*Service, error) {
 	log.Tracef("Registering UI service %s", t)
-	mu.Lock()
-
-	if services[t] != nil {
-		// Using panic because this would be a developer error rather that
-		// something that could happen naturally.
-		panic("Service was already registered.")
-	}
 
 	s := &Service{
 		Type:     t,
 		in:       make(chan interface{}, 100),
 		out:      make(chan interface{}, 100),
-		stopCh:   make(chan bool),
+		stopCh:   make(chan bool, 1), // buffered to avoid blocking `Unregister()`
 		helloFn:  helloFn,
 		newMsgFn: newMsgFn,
 	}
@@ -93,9 +96,17 @@ func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFn
 		}
 	}
 
+	muServices.Lock()
+	defer muServices.Unlock()
+
+	if services[t] != nil {
+		// Using panic because this would be a developer error rather that
+		// something that could happen naturally.
+		panic("Service was already registered.")
+	}
+
 	// Adding new service to service map.
 	services[t] = s
-	mu.Unlock()
 
 	log.Tracef("Registered UI service %s", t)
 	go s.write()
@@ -104,24 +115,21 @@ func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFn
 
 func Unregister(t string) {
 	log.Tracef("Unregistering service: %v", t)
+	muServices.Lock()
+	defer muServices.Unlock()
 	if services[t] != nil {
 		services[t].stopCh <- true
 		delete(services, t)
 	}
 }
 
-// To facilitate test
-func unregisterAll() {
-	for t, _ := range services {
-		Unregister(t)
-	}
-}
-
-func startUIChannel() {
-	// Establish a channel to the UI for sending and receiving updates
-	defaultUIChannel = NewChannel("/data", func(write func([]byte) error) error {
+// StartUIChannel establishes a channel to the UI for sending and receiving
+// updates
+func StartUIChannel() *UIChannel {
+	defaultUIChannel = NewChannel(func(write func([]byte) error) error {
 		// Sending hello messages.
-		mu.RLock()
+		muServices.RLock()
+		defer muServices.RUnlock()
 		for _, s := range services {
 			// Delegating task...
 			if s.helloFn != nil {
@@ -138,19 +146,19 @@ func startUIChannel() {
 				}
 			}
 		}
-		mu.RUnlock()
 		return nil
 	})
 
 	go readLoop(defaultUIChannel.In)
 
-	log.Debugf("Accepting websocket connections at: %s", defaultUIChannel.URL)
+	log.Debugf("Accepting WebSocket connections")
+	return defaultUIChannel
 }
 
 func readLoop(in <-chan []byte) {
 	for b := range in {
 		// Determining message type.
-		var envType EnvelopeType
+		var envType envelopeType
 		err := json.Unmarshal(b, &envType)
 
 		if err != nil {
@@ -159,13 +167,15 @@ func readLoop(in <-chan []byte) {
 		}
 
 		// Delegating response to the service that registered with the given type.
+		muServices.RLock()
 		service := services[envType.Type]
+		muServices.RUnlock()
 		if service == nil {
 			log.Errorf("Message type %v belongs to an unknown service.", envType.Type)
 			continue
 		}
 
-		env := &Envelope{}
+		env := &envelope{}
 		if service.newMsgFn != nil {
 			env.Message = service.newMsgFn()
 		}
@@ -183,8 +193,8 @@ func readLoop(in <-chan []byte) {
 }
 
 func newEnvelope(t string, msg interface{}) ([]byte, error) {
-	b, err := json.Marshal(&Envelope{
-		EnvelopeType: EnvelopeType{t},
+	b, err := json.Marshal(&envelope{
+		envelopeType: envelopeType{t},
 		Message:      msg,
 	})
 	if err != nil {

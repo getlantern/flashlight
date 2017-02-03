@@ -10,6 +10,7 @@ import (
 	"github.com/getlantern/notifier"
 
 	"github.com/getlantern/flashlight/ui"
+	"github.com/getlantern/flashlight/ws"
 )
 
 var (
@@ -29,7 +30,7 @@ func serveBandwidth() error {
 		log.Debugf("Sending current bandwidth quota to new client")
 		return write(bandwidth.GetQuota())
 	}
-	service, err := ui.Register("bandwidth", helloFn)
+	bservice, err := ws.Register("bandwidth", helloFn)
 	if err != nil {
 		log.Errorf("Error registering with UI? %v", err)
 		return err
@@ -38,7 +39,7 @@ func serveBandwidth() error {
 		n := notify.NewNotifications()
 		for quota := range bandwidth.Updates {
 			log.Debugf("Sending update...")
-			service.Out <- quota
+			bservice.Out <- quota
 			if ns.isFull(quota) {
 				oneFull.Do(func() {
 					go ns.notifyCapHit(n)
@@ -113,7 +114,7 @@ func (s *notifyStatus) notifyFreeUser(n notify.Notifier, title, msg string) {
 	note := &notify.Notification{
 		Title:    title,
 		Message:  msg,
-		ClickURL: ui.GetUIAddr(),
+		ClickURL: "http://" + ui.GetUIAddr(),
 		IconURL:  logo,
 	}
 

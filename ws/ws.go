@@ -1,11 +1,11 @@
-package ui
+package ws
 
 import (
 	"io"
 	"net/http"
-	"path"
 	"sync"
 
+	"github.com/getlantern/golog"
 	"github.com/gorilla/websocket"
 )
 
@@ -15,6 +15,7 @@ const (
 )
 
 var (
+	log      = golog.LoggerFor("flashlight.ws")
 	upgrader = &websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: MaxMessageSize,
@@ -29,35 +30,27 @@ type ConnectFunc func(write func([]byte) error) error
 // messages from any browser window are available via In and all messages sent
 // to Out will be published to all browser windows.
 type UIChannel struct {
-	URL string
 	In  <-chan []byte
 	Out chan<- []byte
 
-	in     chan []byte
-	out    chan []byte
-	nextId int
-	conns  map[int]*wsconn
-	m      sync.Mutex
+	in  chan []byte
+	out chan []byte
+
+	muConns sync.Mutex
+	nextId  int
+	conns   map[int]*wsconn
 
 	onConnect ConnectFunc
 }
 
-// NewChannel establishes a new channel to the UI at the given path. When the UI
-// connects to this path, we will establish a websocket to the UI to carry
+// NewChannel establishes a new channel acts as an http.Handler. When the UI
+// connects to the handler, we will establish a websocket to the UI to carry
 // messages for this UIChannel. The given onConnect function is called anytime
 // that the UI connects.
-func NewChannel(p string, onConnect ConnectFunc) *UIChannel {
-	c := newUIChannel("http://"+path.Join(GetUIAddr(), p), onConnect)
-	server.Handle(p, c)
-	return c
-}
-
-func newUIChannel(url string, onConnect ConnectFunc) *UIChannel {
+func NewChannel(onConnect ConnectFunc) *UIChannel {
 	in := make(chan []byte, 100)
 	out := make(chan []byte)
-
 	c := &UIChannel{
-		URL:       url,
 		In:        in,
 		in:        in,
 		Out:       out,
@@ -72,7 +65,7 @@ func newUIChannel(url string, onConnect ConnectFunc) *UIChannel {
 }
 
 func (c *UIChannel) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	log.Tracef("Got connection to %v", c.URL)
+	log.Debugf("Got connection to the UI channel")
 	var err error
 
 	if req.Method != "GET" {
@@ -82,12 +75,17 @@ func (c *UIChannel) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	// Upgrade with a HTTP request returns a websocket connection
 	ws, err := upgrader.Upgrade(resp, req, nil)
 	if err != nil {
-		log.Errorf("Unable to upgrade %v to websocket: %v", c.URL, err)
+		log.Errorf("Unable to upgrade to websocket: %v", err)
 		return
 	}
 
-	log.Tracef("Upgraded to websocket at %v", c.URL)
-	c.m.Lock()
+	log.Debugf("Upgraded to websocket")
+	defer func() {
+		if err := ws.Close(); err != nil {
+			log.Debugf("Error closing WebSockets connection: %s", err)
+		}
+	}()
+
 	if c.onConnect != nil {
 		err = c.onConnect(func(b []byte) error {
 			log.Tracef("Writing initial message: %q", b)
@@ -95,13 +93,11 @@ func (c *UIChannel) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		})
 		if err != nil {
 			log.Errorf("Error processing onConnect, disconnecting websocket: %v", err)
-			if err := ws.Close(); err != nil {
-				log.Debugf("Error closing WebSockets connection: %s", err)
-			}
-			c.m.Unlock()
 			return
 		}
 	}
+
+	c.muConns.Lock()
 	c.nextId += 1
 	conn := &wsconn{
 		id: c.nextId,
@@ -109,39 +105,52 @@ func (c *UIChannel) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		ws: ws,
 	}
 	c.conns[conn.id] = conn
-	c.m.Unlock()
-	log.Tracef("About to read from connection to %v", c.URL)
+	c.muConns.Unlock()
+
+	log.Tracef("About to read from websocket connection")
 	conn.read()
 }
 
 func (c *UIChannel) write() {
 	defer func() {
-		log.Tracef("Closing all websockets to %v", c.URL)
-		c.m.Lock()
+		log.Debugf("Closing all websockets")
+		c.muConns.Lock()
 		for _, conn := range c.conns {
-			if err := conn.ws.Close(); err != nil {
-				log.Debugf("Error closing WebSockets connection", err)
-			}
-			delete(c.conns, conn.id)
+			c.doRemoveConn(conn)
 		}
-		c.m.Unlock()
+		c.muConns.Unlock()
 	}()
 
 	for msg := range c.out {
-		c.m.Lock()
-		for _, conn := range c.conns {
+		for _, conn := range c.clonedConns() {
 			err := conn.ws.WriteMessage(websocket.TextMessage, msg)
 			if err != nil {
-				log.Debugf("Error writing to UI %v for: %v", err, c.URL)
-				delete(c.conns, conn.id)
+				log.Debugf("Error writing to WebSocket, closing: %v", err)
+				c.doRemoveConn(conn)
 			}
 		}
-		c.m.Unlock()
 	}
 }
 
+func (c *UIChannel) clonedConns() map[int]*wsconn {
+	c.muConns.Lock()
+	defer c.muConns.Unlock()
+	clone := make(map[int]*wsconn)
+	for k, v := range c.conns {
+		clone[k] = v
+	}
+	return clone
+}
+
+func (c *UIChannel) doRemoveConn(conn *wsconn) {
+	if err := conn.ws.Close(); err != nil {
+		log.Debugf("Error closing WebSockets connection: %v", err)
+	}
+	delete(c.conns, conn.id)
+}
+
 func (c *UIChannel) Close() {
-	log.Tracef("Closing channel")
+	log.Debugf("Closing channel")
 	close(c.out)
 }
 
@@ -159,9 +168,6 @@ func (c *wsconn) read() {
 		if err != nil {
 			if err != io.EOF {
 				log.Debugf("Error reading from UI: %v", err)
-			}
-			if err := c.ws.Close(); err != nil {
-				log.Debugf("Error closing WebSockets connection", err)
 			}
 			return
 		}

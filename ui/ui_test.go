@@ -21,12 +21,12 @@ func TestNormalizeAddr(t *testing.T) {
 }
 
 func getTestHandler() http.Handler {
-	return getTestServer("some-token").getHandler()
+	return getTestServer("some-token").mux
 }
 
-func getTestServer(token string) *Server {
+func getTestServer(token string) *server {
 	allowRemote := false
-	s := NewServer("localhost:", allowRemote, "", token)
+	s := newServer("localhost:", allowRemote, "", token)
 	attachHandlers(s, allowRemote)
 	return s
 }
@@ -71,23 +71,23 @@ func TestProxyPACWithNoToken(t *testing.T) {
 func TestKnownResourceWithNoOriginButWithToken(t *testing.T) {
 	var rw httptest.ResponseRecorder
 	s := getTestServer("token")
-	req, _ := http.NewRequest("GET", s.AddToken("/js/bundle.js"), nil)
-	s.getHandler().ServeHTTP(&rw, req)
+	req, _ := http.NewRequest("GET", s.addToken("/js/bundle.js"), nil)
+	s.mux.ServeHTTP(&rw, req)
 	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
 }
 
 func TestLanternLogoWithToken(t *testing.T) {
 	var rw httptest.ResponseRecorder
 	s := getTestServer("token")
-	req, _ := http.NewRequest("GET", s.AddToken("/img/lantern_logo.png?foo=1"), nil)
-	s.getHandler().ServeHTTP(&rw, req)
+	req, _ := http.NewRequest("GET", s.addToken("/img/lantern_logo.png?foo=1"), nil)
+	s.mux.ServeHTTP(&rw, req)
 	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
 }
 
 func TestLanternPACURL(t *testing.T) {
 	var rw httptest.ResponseRecorder
 	s := getTestServer("token")
-	req, _ := http.NewRequest("GET", s.AddToken("/proxy_on.pac"), nil)
-	s.getHandler().ServeHTTP(&rw, req)
+	req, _ := http.NewRequest("GET", s.addToken("/proxy_on.pac"), nil)
+	s.mux.ServeHTTP(&rw, req)
 	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
 }

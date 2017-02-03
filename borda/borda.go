@@ -2,7 +2,6 @@ package borda
 
 import (
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 
@@ -40,16 +39,10 @@ func Close() {
 func startBordaAndProxyBench(reportInterval time.Duration, enabled func() bool) {
 	bordaClient = createBordaClient(reportInterval)
 
-	reportToBorda := bordaClient.ReducingSubmitter("client_results", 1000, func(existingValues map[string]float64, newValues map[string]float64) {
-		for key, value := range newValues {
-			existingValues[key] += value
-		}
-	})
+	reportToBorda := bordaClient.ReducingSubmitter("client_results", 1000)
 
 	proxybench.Start(&proxybench.Opts{}, func(timing time.Duration, ctx map[string]interface{}) {
-		if enabled() {
-			reportToBorda(map[string]float64{"response_time": timing.Seconds()}, ctx)
-		}
+		// No need to do anything, this is now handled with the regular op reporting
 	})
 
 	reporter := func(failure error, ctx map[string]interface{}) {
@@ -57,18 +50,19 @@ func startBordaAndProxyBench(reportInterval time.Duration, enabled func() bool) 
 			return
 		}
 
-		values := map[string]float64{}
+		values := map[string]borda.Val{}
 		if failure != nil {
-			values["error_count"] = 1
+			values["error_count"] = borda.Float(1)
 		} else {
-			values["success_count"] = 1
+			values["success_count"] = borda.Float(1)
 		}
 
 		// Convert metrics to values
 		for dim, val := range ctx {
-			if strings.HasPrefix(dim, "metric_") {
+			metric, ok := val.(borda.Val)
+			if ok {
 				delete(ctx, dim)
-				values[dim[7:]] = val.(float64)
+				values[dim] = metric
 			}
 		}
 
@@ -85,7 +79,7 @@ func createBordaClient(reportInterval time.Duration) *borda.Client {
 	rt := proxied.ChainedThenFronted()
 	return borda.NewClient(&borda.Options{
 		BatchInterval: reportInterval,
-		Client: &http.Client{
+		HTTPClient: &http.Client{
 			Transport: proxied.AsRoundTripper(func(req *http.Request) (*http.Response, error) {
 				frontedURL := *req.URL
 				frontedURL.Host = "d157vud77ygy87.cloudfront.net"
