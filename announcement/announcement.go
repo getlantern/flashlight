@@ -8,7 +8,7 @@
 //       "campaign": "20160801-new-feature", # uniquely identify an announcement.
 //       "pro": true, # true to show announcement for pro users.
 //       "free": true, # true to show announcement for free users.
-//       "expiry": "02 Feb 17 15:04 +0700", # in RFC822Z format, or leave empty if not expire at all.
+//       "expiry": "2018-02-02T15:00:00+07:00", # in RFC3339 format, or leave empty if not expire at all.
 //       "title": "Try out the new feature",
 //       "message": "Believe or not, you'll definitely love it!",
 //       "url": ""
@@ -39,9 +39,7 @@ const (
 var (
 	// ErrNoAvailable indicates that there's no valid announcement for the
 	// current user.
-	ErrNoAvailable error = errors.New("No announcement available")
-
-	eIncorrectType error = errors.New("Incorrect type")
+	ErrNoAvailable error = errors.New("no announcement available")
 )
 
 // Announcement is what caller get when there's not-expired announcement for
@@ -76,9 +74,9 @@ func Get(hc *http.Client, locale string, isPro bool, isStaging bool) (*Announcem
 	}
 
 	if parsed.Expiry != "" {
-		expiry, eexpiry := time.Parse(time.RFC822Z, parsed.Expiry)
+		expiry, eexpiry := time.Parse(time.RFC3339, parsed.Expiry)
 		if eexpiry != nil {
-			return nil, errors.New("error parse expiry: %v", eexpiry)
+			return nil, errors.New("error parsing expiry: %v", eexpiry)
 		}
 		if expiry.Before(time.Now()) {
 			return nil, ErrNoAvailable
@@ -101,77 +99,47 @@ func fetch(hc *http.Client, u string) (b []byte, err error) {
 		return nil, efetch
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("Unexpected status %v", resp.StatusCode)
+		return nil, errors.New("unexpected status %v", resp.StatusCode)
 	}
 	b, err = ioutil.ReadAll(resp.Body)
 	_ = resp.Body.Close() // can do nothing about the error
 	return
 }
 
+type loconf struct {
+	Announcement map[string]json.RawMessage `json:"announcement"`
+	// survey, etc, ignored.
+}
+
 func parse(buf []byte, locale string) (*announcement, error) {
-	obj := map[string]interface{}{}
+	obj := loconf{}
 	if ejson := json.Unmarshal(buf, &obj); ejson != nil {
-		return nil, ejson
+		return nil, errors.New("error parsing \"announcement\" section: %v", ejson)
 	}
-	section, ok := obj["announcement"]
-	if section == nil {
-		return nil, errors.New("No announcement section")
+	if len(obj.Announcement) == 0 {
+		return nil, errors.New("no announcement section")
 	}
-	announcement, ok := section.(map[string]interface{})
-	if !ok {
-		return nil, eIncorrectType
-	}
-	inLoc, exist := announcement[locale]
+	section, exist := obj.Announcement[locale]
 	if !exist {
-		defaultLoc := announcement["default"]
-		if defaultLocale, ok := defaultLoc.(string); !ok {
-			return nil, errors.New("No announcement for %s", locale)
-		} else if inLoc, exist = announcement[defaultLocale]; !exist {
-			return nil, errors.New("No announcement for either %s or %s", locale, defaultLocale)
+		defaultField, hasDefault := obj.Announcement["default"]
+		if !hasDefault {
+			return nil, ErrNoAvailable
 		}
-	}
-	if inLocale, ok := inLoc.(map[string]interface{}); !ok {
-		return nil, eIncorrectType
-	} else {
-		return mapToAnnouncement(inLocale)
-	}
-}
-
-func mapToAnnouncement(m map[string]interface{}) (*announcement, error) {
-	var errorFields []string
-	retval := &announcement{
-		Pro:    exactBool(m, "pro", &errorFields),
-		Free:   exactBool(m, "free", &errorFields),
-		Expiry: exactString(m, "expiry", &errorFields),
-		Announcement: Announcement{
-			Campaign: exactString(m, "campaign", &errorFields),
-			Title:    exactString(m, "title", &errorFields),
-			Message:  exactString(m, "message", &errorFields),
-			URL:      exactString(m, "url", &errorFields),
-		},
-	}
-	if len(errorFields) > 0 {
-		return nil, errors.New("Invalid fields %v", errorFields)
-	}
-	return retval, nil
-}
-
-func exactBool(m map[string]interface{}, key string, errorFields *[]string) bool {
-	if v, ok := m[key]; ok {
-		if b, ok := v.(bool); ok {
-			return b
+		var defaultLocale string
+		if e := json.Unmarshal(defaultField, &defaultLocale); e != nil {
+			return nil, errors.New("error parsing \"default\" field: %v", e)
 		}
-	}
-	*errorFields = append(*errorFields, key)
-	return false
-}
-
-func exactString(m map[string]interface{}, key string, errorFields *[]string) string {
-	if v, ok := m[key]; ok {
-		if s, ok := v.(string); ok {
-			return s
+		if defaultLocale == "" {
+			return nil, ErrNoAvailable
 		}
+		if section, exist = obj.Announcement[defaultLocale]; !exist {
+			return nil, errors.New("no announcement for either %s or %s", locale, defaultLocale)
+		}
+		locale = defaultLocale
 	}
-	*errorFields = append(*errorFields, key)
-	return ""
+	var inLocale announcement
+	if e := json.Unmarshal(section, &inLocale); e != nil {
+		return nil, errors.New("error parsing \"%v\" section: %v", locale, e)
+	}
+	return &inLocale, nil
 }

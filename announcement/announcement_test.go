@@ -34,31 +34,37 @@ func TestParseLoConf(t *testing.T) {
 		lang string
 		err  string
 	}{
-		{`{}`, "en-US", "No announcement section"},
-		{`{ "announcement": "" }`, "zh-CN", "Incorrect type"},
+		{`{}`, "en-US", "no announcement section"},
+		{`{ "announcement": "" }`, "zh-CN", "error parsing \"announcement\" section"},
 		{`{
 			"announcement": {
 				"en-US": {}
 			}
-		}`, "zh-CN", "No announcement for zh-CN"},
+		}`, "zh-CN", "no announcement available"},
+		{`{
+			"announcement": {
+				"default": "",
+				"en-US": {}
+			}
+		}`, "zh-CN", "no announcement available"},
 		{`{
 			"announcement": {
 				"default": "en-US",
 				"fr": ""
 			}
-		}`, "zh-CN", "No announcement for either zh-CN or en-US"},
+		}`, "zh-CN", "no announcement for either zh-CN or en-US"},
 		{`{
 			"announcement": {
 				"default": "en-US",
 				"en-US": ""
 			}
-		}`, "zh-CN", "Incorrect type"},
+		}`, "zh-CN", "error parsing \"en-US\" section"},
 		{`{
 			"announcement": {
 				"default": "en-US",
 				"zh-CN": ""
 			}
-		}`, "zh-CN", "Incorrect type"},
+		}`, "zh-CN", "error parsing \"zh-CN\" section"},
 		{normalBody, "en-US", ""},
 		{normalBody, "zh-CN", ""},
 	}
@@ -131,14 +137,14 @@ func TestUserType(t *testing.T) {
 	_, err = Get(hcWithBody(notForPro), "en-US", true, false)
 	if assert.Error(t, err,
 		"getting announcement for pro should have error") {
-		assert.Contains(t, err.Error(), "No announcement available")
+		assert.Equal(t, ErrNoAvailable, err)
 	}
 
 	notForFree := strings.Replace(normalBody, `"free": true`, `"free": false`, 1)
 	_, err = Get(hcWithBody(notForFree), "en-US", false, false)
 	if assert.Error(t, err,
 		"getting announcement for free should have error") {
-		assert.Contains(t, err.Error(), "No announcement available")
+		assert.Equal(t, ErrNoAvailable, err)
 	}
 	_, err = Get(hcWithBody(notForFree), "en-US", true, false)
 	assert.NoError(t, err,
@@ -146,15 +152,15 @@ func TestUserType(t *testing.T) {
 }
 
 func TestExpiry(t *testing.T) {
-	today := `"expiry": "` + time.Now().Format(time.RFC822Z) + `"`
-	expired := strings.Replace(normalBody, `"expiry": ""`, today, 1)
+	now := `"expiry": "` + time.Now().Format(time.RFC3339) + `"`
+	expired := strings.Replace(normalBody, `"expiry": ""`, now, 1)
 	_, err := Get(hcWithBody(expired), "en-US", false, false)
 	if assert.Error(t, err,
 		"expired announcement should have error") {
-		assert.Contains(t, err.Error(), "No announcement available")
+		assert.Equal(t, ErrNoAvailable, err)
 	}
 
-	nextDay := `"expiry": "` + time.Now().Add(24*time.Hour).Format(time.RFC822Z) + `"`
+	nextDay := `"expiry": "` + time.Now().Add(24*time.Hour).Format(time.RFC3339) + `"`
 	valid := strings.Replace(normalBody, `"expiry": ""`, nextDay, 1)
 	_, err = Get(hcWithBody(valid), "en-US", false, false)
 	assert.NoError(t, err,
@@ -164,6 +170,6 @@ func TestExpiry(t *testing.T) {
 	_, err = Get(hcWithBody(invalid), "en-US", false, false)
 	if assert.Error(t, err,
 		"announcement with invalid expiry format should have error") {
-		assert.Contains(t, err.Error(), "error parse expiry")
+		assert.Contains(t, err.Error(), "error parsing expiry")
 	}
 }
