@@ -6,14 +6,28 @@ import (
 	"github.com/getlantern/notifier"
 )
 
-var ch chan *notify.Notification = make(chan *notify.Notification)
-
-// showNotification submits the notification to the notificationsLoop to show.
-func showNotification(note *notify.Notification) {
-	ch <- note
+type notifierRequest struct {
+	note     *notify.Notification
+	chResult chan bool
 }
 
-// notificationsLoop starts a goroutine to show the desktop notifications submitted by showNotification one by one with a minimum 10 seconds interval.
+var ch chan notifierRequest = make(chan notifierRequest)
+
+// showNotification submits the notification to the notificationsLoop to show
+// and waits for the result.
+func showNotification(note *notify.Notification) bool {
+	chResult := make(chan bool)
+	ch <- notifierRequest{
+		note,
+		chResult,
+	}
+
+	return <-chResult
+
+}
+
+// notificationsLoop starts a goroutine to show the desktop notifications
+// submitted by showNotification one by one with a minimum 10 seconds interval.
 //
 // Returns a function to stop the loop.
 func notificationsLoop() (stop func()) {
@@ -24,9 +38,12 @@ func notificationsLoop() (stop func()) {
 	go func() {
 		for {
 			select {
-			case note := <-ch:
-				if err := notifier.Notify(note); err != nil {
+			case n := <-ch:
+				if err := notifier.Notify(n.note); err != nil {
 					log.Errorf("Could not notify? %v", err)
+					n.chResult <- false
+				} else {
+					n.chResult <- true
 				}
 				time.Sleep(10 * time.Second)
 			case <-chStop:

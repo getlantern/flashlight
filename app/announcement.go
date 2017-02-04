@@ -85,7 +85,5 @@ func showAnnouncement(a *announcement.Announcement) bool {
 		ClickURL:    a.URL,
 		IconURL:     logo,
 	}
-	showNotification(note)
-	// TODO: check result
-	return true
+	return showNotification(note)
 }

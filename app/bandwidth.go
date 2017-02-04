@@ -115,6 +115,5 @@ func (s *notifyStatus) notifyFreeUser(title, msg string) {
 		ClickURL: ui.GetUIAddr(),
 		IconURL:  logo,
 	}
-
-	showNotification(note)
+	_ = showNotification(note)
 }
