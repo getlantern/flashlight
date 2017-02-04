@@ -36,7 +36,7 @@ func isProUser() (isPro bool, ok bool) {
 		log.Errorf("Error getting user status? %v", err)
 		return false, false
 	}
-	log.Debugf("User %d is %v", userID, status)
+	log.Debugf("User %d is '%v'", userID, status)
 	return status == "active", true
 }
 

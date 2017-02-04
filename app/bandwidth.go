@@ -35,21 +35,20 @@ func serveBandwidth() error {
 		return err
 	}
 	go func() {
-		n := notify.NewNotifications()
 		for quota := range bandwidth.Updates {
 			log.Debugf("Sending update...")
 			service.Out <- quota
 			if ns.isFull(quota) {
 				oneFull.Do(func() {
-					go ns.notifyCapHit(n)
+					go ns.notifyCapHit()
 				})
 			} else if ns.isEightyOrMore(quota) {
 				oneEighty.Do(func() {
-					go ns.notifyEighty(n)
+					go ns.notifyEighty()
 				})
 			} else if ns.isFiftyOrMore(quota) {
 				oneFifty.Do(func() {
-					go ns.notifyFifty(n)
+					go ns.notifyFifty()
 				})
 			}
 		}
@@ -73,12 +72,12 @@ func (s *notifyStatus) checkPercent(quota *bandwidth.Quota, percent float64) boo
 	return (float64(quota.MiBUsed) / float64(quota.MiBAllowed)) > percent
 }
 
-func (s *notifyStatus) notifyEighty(n notify.Notifier) {
-	s.notifyPercent(80, n)
+func (s *notifyStatus) notifyEighty() {
+	s.notifyPercent(80)
 }
 
-func (s *notifyStatus) notifyFifty(n notify.Notifier) {
-	s.notifyPercent(50, n)
+func (s *notifyStatus) notifyFifty() {
+	s.notifyPercent(50)
 }
 
 func (s *notifyStatus) percentMsg(msg string, percent int) string {
@@ -86,21 +85,21 @@ func (s *notifyStatus) percentMsg(msg string, percent int) string {
 	return fmt.Sprintf(msg, str)
 }
 
-func (s *notifyStatus) notifyPercent(percent int, n notify.Notifier) {
+func (s *notifyStatus) notifyPercent(percent int) {
 	title := s.percentMsg(i18n.T("BACKEND_DATA_PERCENT_TITLE"), percent)
 	msg := s.percentMsg(i18n.T("BACKEND_DATA_PERCENT_MESSAGE"), percent)
 
-	s.notifyFreeUser(n, title, msg)
+	s.notifyFreeUser(title, msg)
 }
 
-func (s *notifyStatus) notifyCapHit(n notify.Notifier) {
+func (s *notifyStatus) notifyCapHit() {
 	title := i18n.T("BACKEND_DATA_TITLE")
 	msg := i18n.T("BACKEND_DATA_MESSAGE")
 
-	s.notifyFreeUser(n, title, msg)
+	s.notifyFreeUser(title, msg)
 }
 
-func (s *notifyStatus) notifyFreeUser(n notify.Notifier, title, msg string) {
+func (s *notifyStatus) notifyFreeUser(title, msg string) {
 	if isPro, ok := isProUser(); !ok {
 		log.Debugf("user status is unknown, skip showing notification")
 		return
@@ -117,8 +116,5 @@ func (s *notifyStatus) notifyFreeUser(n notify.Notifier, title, msg string) {
 		IconURL:  logo,
 	}
 
-	if err := n.Notify(note); err != nil {
-		log.Errorf("Could not notify? %v", err)
-		return
-	}
+	showNotification(note)
 }

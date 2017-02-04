@@ -45,7 +45,7 @@ func AnnouncementsLoop(interval time.Duration, proChecker func() (bool, bool)) (
 			log.Debugf("Skip announcement %s", current.Campaign)
 			return
 		}
-		if show(current) {
+		if showAnnouncement(current) {
 			past = append(past, current.Campaign)
 			settings.setStringArray(SNPastAnnouncements, past)
 		}
@@ -76,7 +76,7 @@ func in(s string, coll []string) bool {
 	return false
 }
 
-func show(a *announcement.Announcement) bool {
+func showAnnouncement(a *announcement.Announcement) bool {
 	logo := ui.AddToken("/img/lantern_logo.png")
 	note := &notify.Notification{
 		Title:       a.Title,
@@ -85,9 +85,7 @@ func show(a *announcement.Announcement) bool {
 		ClickURL:    a.URL,
 		IconURL:     logo,
 	}
-	if err := notify.NewNotifications().Notify(note); err != nil {
-		log.Errorf("Could not notify? %v", err)
-		return false
-	}
+	showNotification(note)
+	// TODO: check result
 	return true
 }

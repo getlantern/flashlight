@@ -217,6 +217,7 @@ func (app *App) beforeStart() bool {
 	}
 
 	app.AddExitFunc(AnnouncementsLoop(4*time.Hour, isProUser))
+	app.AddExitFunc(notificationsLoop())
 
 	watchDirectAddrs()
 
