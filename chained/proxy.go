@@ -232,8 +232,7 @@ func newOBFS4Wrapper(p Proxy, s *ChainedServerInfo) (Proxy, error) {
 		return nil, log.Errorf("Unable to parse client args: %v", err)
 	}
 
-	// dial := connmux.Dialer(50, 0, connmuxPool, func() (net.Conn, error) {
-	dial := func() (net.Conn, error) {
+	dial := connmux.Dialer(50, 0, connmuxPool, func() (net.Conn, error) {
 		dialFn := func(network, address string) (net.Conn, error) {
 			// We know for sure the network and address are the same as what
 			// the inner DailServer uses.
@@ -241,7 +240,7 @@ func newOBFS4Wrapper(p Proxy, s *ChainedServerInfo) (Proxy, error) {
 		}
 		// The proxy it wrapped already has timeout applied.
 		return cf.Dial("tcp", p.Addr(), dialFn, args)
-	}
+	})
 
 	return obfs4Wrapper{p, s.Trusted, dial}, nil
 }
