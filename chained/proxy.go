@@ -118,7 +118,7 @@ func (d httpProxy) DialServer() (net.Conn, error) {
 	elapsed := mtime.Stopwatch()
 	conn, err := d.dial()
 	op.DialTime(elapsed, err)
-	return conn, op.FailIf(err)
+	return wrapOverhead(false, conn), op.FailIf(err)
 }
 
 type httpsProxy struct {
@@ -133,12 +133,12 @@ func newHTTPSProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 	}
 	x509cert := cert.X509()
 	sessionCache := tls.NewLRUClientSessionCache(1000)
-	dial := connmux.Dialer(50, 0, connmuxPool, func() (net.Conn, error) {
+	doDial := connmux.Dialer(50, 0, connmuxPool, func() (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "https", "tcp")
 		defer op.End()
 
 		elapsed := mtime.Stopwatch()
-		conn, err := tlsdialer.DialTimeout(netx.DialTimeout, chainedDialTimeout,
+		conn, err := tlsdialer.DialTimeout(overheadDialer(false, netx.DialTimeout), chainedDialTimeout,
 			"tcp", s.Addr, false, &tls.Config{
 				ClientSessionCache: sessionCache,
 				InsecureSkipVerify: true,
@@ -154,8 +154,15 @@ func newHTTPSProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 			return nil, op.FailIf(log.Errorf("Server's certificate didn't match expected! Server had\n%v\nbut expected:\n%v",
 				conn.ConnectionState().PeerCertificates[0], x509cert))
 		}
-		return conn, nil
+		return wrapOverhead(false, conn), nil
 	})
+	dial := func() (net.Conn, error) {
+		conn, err := doDial()
+		if err == nil {
+			conn = wrapOverhead(true, conn)
+		}
+		return conn, err
+	}
 	return &httpsProxy{
 		BaseProxy: BaseProxy{name: name, protocol: "https", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted},
 		dial:      dial,
@@ -268,7 +275,7 @@ func (p obfs4Wrapper) DialServer() (net.Conn, error) {
 	elapsed := mtime.Stopwatch()
 	conn, err := p.dial()
 	op.DialTime(elapsed, err)
-	return conn, op.FailIf(err)
+	return wrapOverhead(true, conn), op.FailIf(err)
 }
 
 type BaseProxy struct {
