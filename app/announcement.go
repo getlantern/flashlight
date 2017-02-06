@@ -79,11 +79,10 @@ func in(s string, coll []string) bool {
 func showAnnouncement(a *announcement.Announcement) bool {
 	logo := ui.AddToken("/img/lantern_logo.png")
 	note := &notify.Notification{
-		Title:       a.Title,
-		Message:     a.Message,
-		IsClickable: a.URL != "",
-		ClickURL:    a.URL,
-		IconURL:     logo,
+		Title:    a.Title,
+		Message:  a.Message,
+		ClickURL: a.URL,
+		IconURL:  logo,
 	}
 	return showNotification(note)
 }
