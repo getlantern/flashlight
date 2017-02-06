@@ -20,6 +20,7 @@ import (
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mtime"
@@ -159,6 +160,8 @@ func run(configDir, locale string, user UserConfig) {
 		log.Errorf("Unable to create configDir at %v: %v", configDir, err)
 		return
 	}
+
+	logging.EnableFileLogging(configDir)
 
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
