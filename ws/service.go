@@ -48,13 +48,16 @@ func (s *Service) writeAll() {
 			log.Trace("Received message on stop channel")
 			return
 		case msg := <-s.out:
-			log.Tracef("Creating new envelope for %v", s.Type)
 			s.writeMsg(msg, clients.Out)
 		}
 	}
 }
 
+// writeMsg writes the specified message to the specified channel. The channel
+// could fan out to all connected clients or could write to a single client,
+// for example.
 func (s *Service) writeMsg(msg interface{}, out chan<- []byte) {
+	log.Tracef("Creating new envelope for %v", s.Type)
 	b, err := newEnvelope(s.Type, msg)
 	if err != nil {
 		log.Error(err)

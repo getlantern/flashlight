@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	// Determines the chunking size of messages used by gorilla
+	// MaxMessageSize determines the chunking size of messages used by gorilla
 	MaxMessageSize = 1024
 )
 
@@ -137,6 +137,7 @@ func (c *clientChannels) doRemoveConn(conn *wsconn) {
 	if err := conn.ws.Close(); err != nil {
 		log.Debugf("Error closing WebSockets connection: %v", err)
 	}
+	close(conn.out)
 	delete(c.conns, conn.id)
 }
 
