@@ -23,7 +23,7 @@ var (
 	}
 )
 
-type ConnectFunc func(out chan []byte)
+type ConnectFunc func(out chan<- []byte)
 
 // clientChannels represents a data channel to/from the UI. UIChannel will have one
 // underlying websocket connection for each connected browser window. All

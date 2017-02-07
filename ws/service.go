@@ -53,6 +53,16 @@ func (s *Service) writeAll() {
 	}
 }
 
+// writeHelloMsg writes the message created by helloFn (if exists) to the
+// specified channel.
+func (s *Service) writeHelloMsg(out chan<- []byte) {
+	if s.helloFn != nil {
+		s.helloFn(func(msg interface{}) {
+			s.writeMsg(msg, out)
+		})
+	}
+}
+
 // writeMsg writes the specified message to the specified channel. The channel
 // could fan out to all connected clients or could write to a single client,
 // for example.
@@ -87,19 +97,8 @@ func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFn
 		newMsgFn: newMsgFn,
 	}
 	s.In, s.Out = s.in, s.out
-
-	// Sending existent clients the hello message of the new service.
-	if helloFn != nil {
-		helloFn(func(msg interface{}) {
-			b, err := newEnvelope(s.Type, msg)
-			if err != nil {
-				log.Errorf("Could not create envelope %v", err)
-				return
-			}
-			log.Tracef("Sending initial message to existent clients")
-			clients.Out <- b
-		})
-	}
+	log.Tracef("Sending initial message to existent clients")
+	s.writeHelloMsg(clients.Out)
 
 	muServices.Lock()
 	defer muServices.Unlock()
@@ -131,19 +130,15 @@ func Unregister(t string) {
 // StartUIChannel establishes a channel to the UI for sending and receiving
 // updates
 func StartUIChannel() http.Handler {
-	clients = newClients(func(out chan []byte) {
-		// This methos is the callback that gets called whenever there's a new
+	clients = newClients(func(out chan<- []byte) {
+		// This method is the callback that gets called whenever there's a new
 		// incoming websocket connection.
 		muServices.RLock()
 		defer muServices.RUnlock()
 		for _, s := range services {
-			if s.helloFn != nil {
-				s.helloFn(func(msg interface{}) {
-					// Just queue the hello message for the given service for writing
-					// on the new incoming websocket.
-					s.writeMsg(msg, out)
-				})
-			}
+			// Just queue the hello message for the given service for writing
+			// on the new incoming websocket.
+			s.writeHelloMsg(out)
 		}
 	})
 
