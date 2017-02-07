@@ -138,7 +138,10 @@ func StartUIChannel() http.Handler {
 		for _, s := range services {
 			// Just queue the hello message for the given service for writing
 			// on the new incoming websocket.
-			s.writeHelloMsg(out)
+			// We put each call on a separate go routine to avoid any single hello
+			// function from blocking the others, which could result in the UI
+			// hanging.
+			go s.writeHelloMsg(out)
 		}
 	})
 

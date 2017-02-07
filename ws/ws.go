@@ -98,7 +98,7 @@ func (c *clientChannels) ServeHTTP(resp http.ResponseWriter, req *http.Request) 
 	c.muConns.Unlock()
 
 	if c.onConnect != nil {
-		go c.onConnect(conn.out)
+		c.onConnect(conn.out)
 	}
 	go conn.write()
 

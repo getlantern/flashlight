@@ -38,7 +38,7 @@ func TestStartServer(t *testing.T) {
 			Code: "US",
 		})
 	}
-	Register("hello", helloFn)
+	service, _ := Register("hello", helloFn)
 
 	u := url.URL{Scheme: "ws", Host: "127.0.0.1:" + strconv.Itoa(port), Path: "/data"}
 	log.Debugf("connecting to %s", u.String())
@@ -61,4 +61,17 @@ func TestStartServer(t *testing.T) {
 	// Just make sure we get the expected message back in response to the
 	// connection.
 	assert.True(t, strings.Contains(string(message), "US"))
+
+	msgBody := locationData{
+		Code: "CN",
+	}
+	msg, _ := newEnvelope("hello", msgBody)
+	err = c.WriteMessage(websocket.TextMessage, msg)
+	assert.Nil(t, err)
+
+	received := <-service.in
+	log.Debugf("recv: %s", received)
+	Unregister("hello")
+	close(service.in)
+	close(service.out)
 }
