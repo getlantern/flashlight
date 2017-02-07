@@ -131,7 +131,7 @@ func Unregister(t string) {
 // updates
 func StartUIChannel() http.Handler {
 	clients = newClients(func(out chan<- []byte) {
-		// This methos is the callback that gets called whenever there's a new
+		// This method is the callback that gets called whenever there's a new
 		// incoming websocket connection.
 		muServices.RLock()
 		defer muServices.RUnlock()
