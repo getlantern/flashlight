@@ -104,12 +104,23 @@ type httpProxy struct {
 
 func newHTTPProxy(name string, s *ChainedServerInfo, multiplex bool) Proxy {
 	dial := func() (net.Conn, error) {
-		return netx.DialTimeout("tcp", s.Addr, chainedDialTimeout)
+		conn, err := netx.DialTimeout("tcp", s.Addr, chainedDialTimeout)
+		if err == nil {
+			conn = wrapOverhead(false, conn)
+		}
+		return conn, err
 	}
 	if multiplex {
-		dial = connmux.Dialer(50, 0, connmuxPool, dial)
+		cdial := connmux.Dialer(50, 0, connmuxPool, dial)
+		dial = func() (net.Conn, error) {
+			conn, err := cdial()
+			if err == nil {
+				conn = wrapOverhead(true, conn)
+			}
+			return conn, err
+		}
 	}
-	return &httpProxy{BaseProxy: BaseProxy{name: name, protocol: "http", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: false}, dial: dial}
+	return &httpProxy{BaseProxy: BaseProxy{name: name, protocol: "http", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted}, dial: dial}
 }
 
 func (d httpProxy) DialServer() (net.Conn, error) {
@@ -118,7 +129,7 @@ func (d httpProxy) DialServer() (net.Conn, error) {
 	elapsed := mtime.Stopwatch()
 	conn, err := d.dial()
 	op.DialTime(elapsed, err)
-	return wrapOverhead(false, conn), op.FailIf(err)
+	return conn, op.FailIf(err)
 }
 
 type httpsProxy struct {
