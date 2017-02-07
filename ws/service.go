@@ -3,6 +3,7 @@ package ws
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 	"sync"
 )
@@ -34,12 +35,12 @@ type Service struct {
 }
 
 var (
-	defaultUIChannel *UIChannel
-	muServices       sync.RWMutex
-	services         = make(map[string]*Service)
+	clients    *clientChannels
+	muServices sync.RWMutex
+	services   = make(map[string]*Service)
 )
 
-func (s *Service) write() {
+func (s *Service) writeAll() {
 	// Watch for new messages and send them to the combined output.
 	for {
 		select {
@@ -48,14 +49,18 @@ func (s *Service) write() {
 			return
 		case msg := <-s.out:
 			log.Tracef("Creating new envelope for %v", s.Type)
-			b, err := newEnvelope(s.Type, msg)
-			if err != nil {
-				log.Error(err)
-				continue
-			}
-			defaultUIChannel.Out <- b
+			s.writeMsg(msg, clients.Out)
 		}
 	}
+}
+
+func (s *Service) writeMsg(msg interface{}, out chan<- []byte) {
+	b, err := newEnvelope(s.Type, msg)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	out <- b
 }
 
 // Register registers a WebSocket based service with an optional helloFn to
@@ -89,7 +94,7 @@ func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFn
 				return
 			}
 			log.Tracef("Sending initial message to existent clients")
-			defaultUIChannel.Out <- b
+			clients.Out <- b
 		})
 	}
 
@@ -106,7 +111,7 @@ func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFn
 	services[t] = s
 
 	log.Tracef("Registered UI service %s", t)
-	go s.write()
+	go s.writeAll()
 	return s, nil
 }
 
@@ -122,30 +127,27 @@ func Unregister(t string) {
 
 // StartUIChannel establishes a channel to the UI for sending and receiving
 // updates
-func StartUIChannel() *UIChannel {
-	defaultUIChannel = NewChannel(func() {
+func StartUIChannel() http.Handler {
+	clients = newClients(func(out chan []byte) {
 		// This methos is the callback that gets called whenever there's a new
 		// incoming websocket connection.
 		muServices.RLock()
 		defer muServices.RUnlock()
 		for _, s := range services {
 			if s.helloFn != nil {
-				// Do this asynchronously to make sure we don't hold up the websocket
-				// listening thread.
-				go func(ser *Service) {
-					ser.helloFn(func(msg interface{}) {
-						// Just queue the message up on our outgoing message channel.
-						ser.out <- msg
-					})
-				}(s)
+				s.helloFn(func(msg interface{}) {
+					// Just queue the hello message for the given service for writing
+					// on the new incoming websocket.
+					s.writeMsg(msg, out)
+				})
 			}
 		}
 	})
 
-	go readLoop(defaultUIChannel.In)
+	go readLoop(clients.In)
 
 	log.Debugf("Accepting WebSocket connections")
-	return defaultUIChannel
+	return clients
 }
 
 func readLoop(in <-chan []byte) {

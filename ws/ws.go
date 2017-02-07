@@ -23,13 +23,13 @@ var (
 	}
 )
 
-type ConnectFunc func()
+type ConnectFunc func(out chan []byte)
 
-// UIChannel represents a data channel to/from the UI. UIChannel will have one
+// clientChannels represents a data channel to/from the UI. UIChannel will have one
 // underlying websocket connection for each connected browser window. All
 // messages from any browser window are available via In and all messages sent
 // to Out will be published to all browser windows.
-type UIChannel struct {
+type clientChannels struct {
 	In  <-chan []byte
 	Out chan<- []byte
 
@@ -43,14 +43,14 @@ type UIChannel struct {
 	onConnect ConnectFunc
 }
 
-// NewChannel establishes a new channel acts as an http.Handler. When the UI
+// newClients establishes a new channel acts as an http.Handler. When the UI
 // connects to the handler, we will establish a websocket to the UI to carry
 // messages for this UIChannel. The given onConnect function is called anytime
 // that the UI connects.
-func NewChannel(onConnect ConnectFunc) *UIChannel {
+func newClients(onConnect ConnectFunc) *clientChannels {
 	in := make(chan []byte, 100)
 	out := make(chan []byte)
-	c := &UIChannel{
+	c := &clientChannels{
 		In:        in,
 		in:        in,
 		Out:       out,
@@ -60,11 +60,11 @@ func NewChannel(onConnect ConnectFunc) *UIChannel {
 		onConnect: onConnect,
 	}
 
-	go c.write()
+	go c.writeAll()
 	return c
 }
 
-func (c *UIChannel) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+func (c *clientChannels) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	log.Debugf("Got connection to the UI channel")
 	var err error
 
@@ -86,25 +86,27 @@ func (c *UIChannel) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		}
 	}()
 
-	if c.onConnect != nil {
-		c.onConnect()
-	}
-
 	c.muConns.Lock()
-	c.nextId += 1
+	c.nextId++
 	conn := &wsconn{
-		id: c.nextId,
-		c:  c,
-		ws: ws,
+		id:  c.nextId,
+		c:   c,
+		ws:  ws,
+		out: make(chan []byte, 100),
 	}
 	c.conns[conn.id] = conn
 	c.muConns.Unlock()
+
+	if c.onConnect != nil {
+		go c.onConnect(conn.out)
+	}
+	go conn.write()
 
 	log.Tracef("About to read from websocket connection")
 	conn.read()
 }
 
-func (c *UIChannel) write() {
+func (c *clientChannels) writeAll() {
 	defer func() {
 		log.Debugf("Closing all websockets")
 		c.muConns.Lock()
@@ -116,16 +118,12 @@ func (c *UIChannel) write() {
 
 	for msg := range c.out {
 		for _, conn := range c.clonedConns() {
-			err := conn.ws.WriteMessage(websocket.TextMessage, msg)
-			if err != nil {
-				log.Debugf("Error writing to WebSocket, closing: %v", err)
-				c.doRemoveConn(conn)
-			}
+			conn.out <- msg
 		}
 	}
 }
 
-func (c *UIChannel) clonedConns() map[int]*wsconn {
+func (c *clientChannels) clonedConns() map[int]*wsconn {
 	c.muConns.Lock()
 	defer c.muConns.Unlock()
 	clone := make(map[int]*wsconn)
@@ -135,23 +133,24 @@ func (c *UIChannel) clonedConns() map[int]*wsconn {
 	return clone
 }
 
-func (c *UIChannel) doRemoveConn(conn *wsconn) {
+func (c *clientChannels) doRemoveConn(conn *wsconn) {
 	if err := conn.ws.Close(); err != nil {
 		log.Debugf("Error closing WebSockets connection: %v", err)
 	}
 	delete(c.conns, conn.id)
 }
 
-func (c *UIChannel) Close() {
+func (c *clientChannels) Close() {
 	log.Debugf("Closing channel")
 	close(c.out)
 }
 
-// wsconn ties a websocket.Conn to a UIChannel
+// wsconn ties a websocket.Conn to a clientChannels
 type wsconn struct {
-	id int
-	c  *UIChannel
-	ws *websocket.Conn
+	id  int
+	c   *clientChannels
+	ws  *websocket.Conn
+	out chan []byte
 }
 
 func (c *wsconn) read() {
@@ -166,5 +165,15 @@ func (c *wsconn) read() {
 		}
 		log.Tracef("Sending to channel...")
 		c.c.in <- b
+	}
+}
+
+func (c *wsconn) write() {
+	for msg := range c.out {
+		err := c.ws.WriteMessage(websocket.TextMessage, msg)
+		if err != nil {
+			log.Debugf("Error writing to WebSocket, closing: %v", err)
+			c.c.doRemoveConn(c)
+		}
 	}
 }
