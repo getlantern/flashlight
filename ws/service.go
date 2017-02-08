@@ -3,6 +3,7 @@ package ws
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 	"sync"
 )
@@ -18,7 +19,7 @@ type envelope struct {
 	Message interface{} `json:"message"`
 }
 
-type helloFnType func(func(interface{}) error) error
+type helloFnType func(func(interface{}))
 
 type newMsgFnType func() interface{}
 
@@ -34,12 +35,12 @@ type Service struct {
 }
 
 var (
-	defaultUIChannel *UIChannel
-	muServices       sync.RWMutex
-	services         = make(map[string]*Service)
+	clients    *clientChannels
+	muServices sync.RWMutex
+	services   = make(map[string]*Service)
 )
 
-func (s *Service) write() {
+func (s *Service) writeAll() {
 	// Watch for new messages and send them to the combined output.
 	for {
 		select {
@@ -47,15 +48,33 @@ func (s *Service) write() {
 			log.Trace("Received message on stop channel")
 			return
 		case msg := <-s.out:
-			log.Tracef("Creating new envelope for %v", s.Type)
-			b, err := newEnvelope(s.Type, msg)
-			if err != nil {
-				log.Error(err)
-				continue
-			}
-			defaultUIChannel.Out <- b
+			s.writeMsg(msg, clients.Out)
 		}
 	}
+}
+
+// writeHelloMsg writes the message created by helloFn (if exists) to the
+// specified channel.
+func (s *Service) writeHelloMsg(out chan<- []byte) {
+	if s.helloFn != nil {
+		s.helloFn(func(msg interface{}) {
+			s.writeMsg(msg, out)
+		})
+	}
+}
+
+// writeMsg writes the specified message to the specified channel. The channel
+// could fan out to all connected clients or could write to a single client,
+// for example.
+func (s *Service) writeMsg(msg interface{}, out chan<- []byte) {
+	log.Tracef("Creating new envelope for %v", s.Type)
+	b, err := newEnvelope(s.Type, msg)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	log.Tracef("Sending message to clients: %v", string(b))
+	out <- b
 }
 
 // Register registers a WebSocket based service with an optional helloFn to
@@ -79,22 +98,7 @@ func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFn
 		newMsgFn: newMsgFn,
 	}
 	s.In, s.Out = s.in, s.out
-
-	// Sending existent clients the hello message of the new service.
-	if helloFn != nil {
-		err := helloFn(func(msg interface{}) error {
-			b, err := newEnvelope(s.Type, msg)
-			if err != nil {
-				return err
-			}
-			log.Tracef("Sending initial message to existent clients")
-			defaultUIChannel.Out <- b
-			return nil
-		})
-		if err != nil {
-			log.Debugf("Error running Hello function", err)
-		}
-	}
+	s.writeHelloMsg(clients.Out)
 
 	muServices.Lock()
 	defer muServices.Unlock()
@@ -109,7 +113,7 @@ func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFn
 	services[t] = s
 
 	log.Tracef("Registered UI service %s", t)
-	go s.write()
+	go s.writeAll()
 	return s, nil
 }
 
@@ -125,34 +129,26 @@ func Unregister(t string) {
 
 // StartUIChannel establishes a channel to the UI for sending and receiving
 // updates
-func StartUIChannel() *UIChannel {
-	defaultUIChannel = NewChannel(func(write func([]byte) error) error {
-		// Sending hello messages.
+func StartUIChannel() http.Handler {
+	clients = newClients(func(out chan<- []byte) {
+		// This method is the callback that gets called whenever there's a new
+		// incoming websocket connection.
 		muServices.RLock()
 		defer muServices.RUnlock()
 		for _, s := range services {
-			// Delegating task...
-			if s.helloFn != nil {
-				writer := func(msg interface{}) error {
-					b, err := newEnvelope(s.Type, msg)
-					if err != nil {
-						return err
-					}
-					return write(b)
-				}
-
-				if err := s.helloFn(writer); err != nil {
-					log.Errorf("Error writing to socket: %q", err)
-				}
-			}
+			// Just queue the hello message for the given service for writing
+			// on the new incoming websocket.
+			// We put each call on a separate go routine to avoid any single hello
+			// function from blocking the others, which could result in the UI
+			// hanging.
+			go s.writeHelloMsg(out)
 		}
-		return nil
 	})
 
-	go readLoop(defaultUIChannel.In)
+	go readLoop(clients.In)
 
 	log.Debugf("Accepting WebSocket connections")
-	return defaultUIChannel
+	return clients
 }
 
 func readLoop(in <-chan []byte) {

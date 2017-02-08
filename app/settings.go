@@ -29,21 +29,23 @@ const (
 	SNProxyAll    SettingName = "proxyAll"
 	SNSystemProxy SettingName = "systemProxy"
 
-	SNLanguage SettingName = "language"
+	SNLanguage       SettingName = "language"
+	SNLocalHTTPToken SettingName = "localHTTPToken"
 
-	SNDeviceID     SettingName = "deviceID"
-	SNUserID       SettingName = "userID"
-	SNUserToken    SettingName = "userToken"
-	SNTakenSurveys SettingName = "takenSurveys"
+	SNDeviceID          SettingName = "deviceID"
+	SNUserID            SettingName = "userID"
+	SNUserToken         SettingName = "userToken"
+	SNTakenSurveys      SettingName = "takenSurveys"
+	SNPastAnnouncements SettingName = "pastAnnouncements"
 
 	SNAddr      SettingName = "addr"
 	SNSOCKSAddr SettingName = "socksAddr"
 	SNUIAddr    SettingName = "uiAddr"
 
-	SNVersion        SettingName = "version"
-	SNBuildDate      SettingName = "buildDate"
-	SNRevisionDate   SettingName = "revisionDate"
-	SNLocalHTTPToken SettingName = "localHTTPToken"
+	SNVersion      SettingName = "version"
+	SNBuildDate    SettingName = "buildDate"
+	SNRevisionDate SettingName = "revisionDate"
+	SNPACURL       SettingName = "pacURL"
 )
 
 type settingType byte
@@ -65,13 +67,14 @@ var settingMeta = map[SettingName]struct {
 	SNProxyAll:    {stBool, true, false},
 	SNSystemProxy: {stBool, true, false},
 
-	SNLanguage: {stString, true, true},
+	SNLanguage:       {stString, true, true},
+	SNLocalHTTPToken: {stString, true, true},
 
 	// SNDeviceID: intentionally omit, to avoid setting it from UI
-	SNUserID:         {stNumber, true, true},
-	SNUserToken:      {stString, true, true},
-	SNTakenSurveys:   {stStringArray, true, true},
-	SNLocalHTTPToken: {stString, true, true},
+	SNUserID:            {stNumber, true, true},
+	SNUserToken:         {stString, true, true},
+	SNTakenSurveys:      {stStringArray, true, true},
+	SNPastAnnouncements: {stStringArray, true, true},
 
 	SNAddr:      {stString, true, true},
 	SNSOCKSAddr: {stString, true, true},
@@ -80,6 +83,7 @@ var settingMeta = map[SettingName]struct {
 	SNVersion:      {stString, false, false},
 	SNBuildDate:    {stString, false, false},
 	SNRevisionDate: {stString, false, false},
+	SNPACURL:       {stString, true, true},
 }
 
 var (
@@ -160,21 +164,22 @@ func newSettings(filePath string) *Settings {
 			SNProxyAll:       false,
 			SNSystemProxy:    true,
 			SNLanguage:       "",
+			SNLocalHTTPToken: "",
 			SNUserToken:      "",
 			SNUIAddr:         "",
-			SNLocalHTTPToken: "",
+			SNPACURL:         "",
 		},
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
 	}
 }
 
-// start the settings service that synchronizes Lantern's configuration with
+// StartService starts the settings service that synchronizes Lantern's configuration with
 // every UI client
 func (s *Settings) StartService() error {
-	helloFn := func(write func(interface{}) error) error {
+	helloFn := func(write func(interface{})) {
 		log.Debugf("Sending Lantern settings to new client")
-		return write(s.uiMap())
+		write(s.uiMap())
 	}
 
 	service, err := ws.Register("settings", helloFn)
@@ -218,7 +223,7 @@ func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {
 			}
 		}
 
-		out <- s
+		out <- s.uiMap()
 	}
 }
 
@@ -246,14 +251,16 @@ func (s *Settings) setNum(name SettingName, v interface{}) {
 }
 
 func (s *Settings) setStringArray(name SettingName, v interface{}) {
-	var sa []string
-	ss, ok := v.([]interface{})
+	sa, ok := v.([]string)
 	if !ok {
-		log.Errorf("Could not convert %s(%v) to array", name, v)
-		return
-	}
-	for i := range ss {
-		sa = append(sa, fmt.Sprintf("%v", ss[i]))
+		ss, ok := v.([]interface{})
+		if !ok {
+			log.Errorf("Could not convert %s(%v) to array", name, v)
+			return
+		}
+		for i := range ss {
+			sa = append(sa, fmt.Sprintf("%v", ss[i]))
+		}
 	}
 	s.setVal(name, sa)
 }
@@ -347,17 +354,12 @@ func (s *Settings) GetTakenSurveys() []string {
 
 // SetTakenSurveys sets the IDs of taken surveys.
 func (s *Settings) SetTakenSurveys(campaigns []string) {
-	s.setVal(SNTakenSurveys, campaigns)
+	s.setStringArray(SNTakenSurveys, campaigns)
 }
 
 // GetProxyAll returns whether or not to proxy all traffic.
 func (s *Settings) GetProxyAll() bool {
 	return s.getBool(SNProxyAll)
-}
-
-// SetUIAddr sets the last known UI address.
-func (s *Settings) SetUIAddr(uiaddr string) {
-	s.setVal(SNUIAddr, uiaddr)
 }
 
 // SetProxyAll sets whether or not to proxy all traffic.
@@ -400,6 +402,11 @@ func (s *Settings) GetLocalHTTPToken() string {
 	return s.getString(SNLocalHTTPToken)
 }
 
+// SetUIAddr sets the last known UI address.
+func (s *Settings) SetUIAddr(uiaddr string) {
+	s.setVal(SNUIAddr, uiaddr)
+}
+
 // GetUIAddr returns the address of the UI, stored across runs to avoid a
 // different port on each run, which breaks things like local storage in the UI.
 func (s *Settings) GetUIAddr() string {
@@ -431,6 +438,18 @@ func (s *Settings) GetSystemProxy() bool {
 	return s.getBool(SNSystemProxy)
 }
 
+// SetPACURL sets the last used PAC URL. Note this is used particularl on
+// Windows to make sure to turn off the PAC URL on startup in case it was not
+// turned off successfully. See https://github.com/getlantern/lantern/issues/2776
+func (s *Settings) SetPACURL(url string) {
+	s.setVal(SNPACURL, url)
+}
+
+// GetPACURL returns the last used PAC URL.
+func (s *Settings) GetPACURL() string {
+	return s.getString(SNPACURL)
+}
+
 func (s *Settings) getBool(name SettingName) bool {
 	if val, err := s.getVal(name); err == nil {
 		if v, ok := val.(bool); ok {
@@ -444,6 +463,13 @@ func (s *Settings) getStringArray(name SettingName) []string {
 	if val, err := s.getVal(name); err == nil {
 		if v, ok := val.([]string); ok {
 			return v
+		}
+		if v, ok := val.([]interface{}); ok {
+			var sa []string
+			for _, item := range v {
+				sa = append(sa, fmt.Sprintf("%v", item))
+			}
+			return sa
 		}
 	}
 	return nil
