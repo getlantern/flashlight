@@ -29,9 +29,9 @@ type notifyStatus struct {
 }
 
 func serveBandwidth() error {
-	helloFn := func(write func(interface{}) error) error {
+	helloFn := func(write func(interface{})) {
 		log.Debugf("Sending current bandwidth quota to new client")
-		return write(bandwidth.GetQuota())
+		write(bandwidth.GetQuota())
 	}
 	bservice, err := ws.Register("bandwidth", helloFn)
 	if err != nil {
