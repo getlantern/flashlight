@@ -11,6 +11,7 @@ flashlight.yaml
 genconfig/genconfig
 genconfig/cloud.yaml
 vendor
+lantern
 lantern_darwin_amd64
 *.exe
 proxies.yaml
