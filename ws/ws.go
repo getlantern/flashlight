@@ -133,6 +133,12 @@ func (c *clientChannels) clonedConns() map[int]*wsconn {
 	return clone
 }
 
+func (c *clientChannels) lockedRemoveConn(conn *wsconn) {
+	c.muConns.Lock()
+	defer c.muConns.Unlock()
+	c.doRemoveConn(conn)
+}
+
 func (c *clientChannels) doRemoveConn(conn *wsconn) {
 	if err := conn.ws.Close(); err != nil {
 		log.Debugf("Error closing WebSockets connection: %v", err)
@@ -174,7 +180,7 @@ func (c *wsconn) write() {
 		err := c.ws.WriteMessage(websocket.TextMessage, msg)
 		if err != nil {
 			log.Debugf("Error writing to WebSocket, closing: %v", err)
-			c.c.doRemoveConn(c)
+			c.c.lockedRemoveConn(c)
 		}
 	}
 }
