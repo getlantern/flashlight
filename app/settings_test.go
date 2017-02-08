@@ -117,6 +117,23 @@ func TestSetNum(t *testing.T) {
 	assert.Equal(t, expected, set.m[snTest])
 }
 
+func TestStringArray(t *testing.T) {
+	set := newSettings("/dev/null")
+	assert.Nil(t, set.getStringArray("key"), "string array should be nil initially")
+	set.setStringArray("key", []string{"value"})
+	assert.Equal(t, []string{"value"}, set.getStringArray("key"), "should set string array")
+	set.setStringArray("key", []string{"value2"})
+	assert.Equal(t, []string{"value2"}, set.getStringArray("key"),
+		"should replace existing array altogether")
+	set.setStringArray("key", []interface{}{"value3"})
+	assert.Equal(t, []string{"value3"}, set.getStringArray("key"),
+		"should accept []interface{}")
+
+	set.setVal("key", []interface{}{"value3"})
+	assert.Equal(t, []string{"value3"}, set.getStringArray("key"),
+		"should read value from []interface{} too")
+}
+
 func TestPersistAndLoad(t *testing.T) {
 	version := "version-not-on-disk"
 	revisionDate := "1970-1-1"
