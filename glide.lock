@@ -61,8 +61,8 @@ imports:
   version: 16263f2c042a0dd5366bccb3364d31ab1c4bb9a0
 - name: github.com/getlantern/cmux
   version: 28e8bb95109fb227116226ae6f3a0890a3bd78e3
-- name: github.com/getlantern/connmux
-  version: 84d5a4d9d6f1a8e7e1ed52a7aace94f0f4520be9
+- name: github.com/getlantern/lampshade
+  version: c2bf1546e37038b02e85fc50b107a4a5b56ec29c
 - name: github.com/getlantern/connpool
   version: d04ff90bba7bdee0d9627a687b79fb0cb407d001
 - name: github.com/getlantern/context
@@ -115,7 +115,7 @@ imports:
 - name: github.com/getlantern/hidden
   version: d52a649ab33af200943bb599898dbdcfdbc94cb7
 - name: github.com/getlantern/http-proxy
-  version: e5e037ec3ba762ed256624c9f73411d4e56c0bc5
+  version: fe43773b7173f9caede4750ee1e72ec4be57b78f
   subpackages:
   - buffers
   - commonfilter
@@ -128,15 +128,17 @@ imports:
   - server
   - utils
 - name: github.com/getlantern/http-proxy-lantern
-  version: ffed409d9d8b8ff1dfe2b3178cc975c2a662eb1e
+  version: 75014c8df9b95f19c5162a474e3a036e57d3ffd2
   subpackages:
   - analytics
   - blacklist
   - borda
+  - buffers
   - common
   - configserverfilter
   - devicefilter
   - kcplistener
+  - lampshade
   - listeners
   - metrics
   - mimic
@@ -189,7 +191,7 @@ imports:
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxy
-  version: 876829e39cf8243d123b02f02efe8da1266effb4
+  version: 346e6df86a86beb8add113b3bc18db120ae1b426
 - name: github.com/getlantern/proxybench
   version: a491977af73a8a23c4089f5c6bf6dae7775ff697
 - name: github.com/getlantern/rot13
