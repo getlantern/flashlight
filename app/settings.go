@@ -45,6 +45,7 @@ const (
 	SNVersion      SettingName = "version"
 	SNBuildDate    SettingName = "buildDate"
 	SNRevisionDate SettingName = "revisionDate"
+	SNPACURL       SettingName = "pacURL"
 )
 
 type settingType byte
@@ -82,6 +83,7 @@ var settingMeta = map[SettingName]struct {
 	SNVersion:      {stString, false, false},
 	SNBuildDate:    {stString, false, false},
 	SNRevisionDate: {stString, false, false},
+	SNPACURL:       {stString, true, true},
 }
 
 var (
@@ -165,18 +167,19 @@ func newSettings(filePath string) *Settings {
 			SNLocalHTTPToken: "",
 			SNUserToken:      "",
 			SNUIAddr:         "",
+			SNPACURL:         "",
 		},
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
 	}
 }
 
-// start the settings service that synchronizes Lantern's configuration with
+// StartService starts the settings service that synchronizes Lantern's configuration with
 // every UI client
 func (s *Settings) StartService() error {
-	helloFn := func(write func(interface{}) error) error {
+	helloFn := func(write func(interface{})) {
 		log.Debugf("Sending Lantern settings to new client")
-		return write(s.uiMap())
+		write(s.uiMap())
 	}
 
 	service, err := ws.Register("settings", helloFn)
@@ -220,7 +223,7 @@ func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {
 			}
 		}
 
-		out <- s
+		out <- s.uiMap()
 	}
 }
 
@@ -359,11 +362,6 @@ func (s *Settings) GetProxyAll() bool {
 	return s.getBool(SNProxyAll)
 }
 
-// SetUIAddr sets the last known UI address.
-func (s *Settings) SetUIAddr(uiaddr string) {
-	s.setVal(SNUIAddr, uiaddr)
-}
-
 // SetProxyAll sets whether or not to proxy all traffic.
 func (s *Settings) SetProxyAll(proxyAll bool) {
 	s.setVal(SNProxyAll, proxyAll)
@@ -404,6 +402,11 @@ func (s *Settings) GetLocalHTTPToken() string {
 	return s.getString(SNLocalHTTPToken)
 }
 
+// SetUIAddr sets the last known UI address.
+func (s *Settings) SetUIAddr(uiaddr string) {
+	s.setVal(SNUIAddr, uiaddr)
+}
+
 // GetUIAddr returns the address of the UI, stored across runs to avoid a
 // different port on each run, which breaks things like local storage in the UI.
 func (s *Settings) GetUIAddr() string {
@@ -433,6 +436,18 @@ func (s *Settings) GetUserID() int64 {
 // GetSystemProxy returns whether or not to set system proxy when lantern starts
 func (s *Settings) GetSystemProxy() bool {
 	return s.getBool(SNSystemProxy)
+}
+
+// SetPACURL sets the last used PAC URL. Note this is used particularl on
+// Windows to make sure to turn off the PAC URL on startup in case it was not
+// turned off successfully. See https://github.com/getlantern/lantern/issues/2776
+func (s *Settings) SetPACURL(url string) {
+	s.setVal(SNPACURL, url)
+}
+
+// GetPACURL returns the last used PAC URL.
+func (s *Settings) GetPACURL() string {
+	return s.getString(SNPACURL)
 }
 
 func (s *Settings) getBool(name SettingName) bool {
