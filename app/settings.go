@@ -221,7 +221,7 @@ func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {
 			}
 		}
 
-		out <- s
+		out <- s.uiMap()
 	}
 }
 

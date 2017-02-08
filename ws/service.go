@@ -73,6 +73,7 @@ func (s *Service) writeMsg(msg interface{}, out chan<- []byte) {
 		log.Error(err)
 		return
 	}
+	log.Tracef("Sending message to clients: %v", string(b))
 	out <- b
 }
 
@@ -97,7 +98,6 @@ func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFn
 		newMsgFn: newMsgFn,
 	}
 	s.In, s.Out = s.in, s.out
-	log.Tracef("Sending initial message to existent clients")
 	s.writeHelloMsg(clients.Out)
 
 	muServices.Lock()
