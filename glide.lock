@@ -1,5 +1,5 @@
 hash: c683a576abff4e384db86b0b3cf8a949b924dcf490b8f7d164ddc2bf2560ccf4
-updated: 2017-02-08T06:02:30.377433266-06:00
+updated: 2017-02-08T06:04:31.383441437-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: f1569079ca898d54e52a26b0bd1b5cc869310608
