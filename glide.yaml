@@ -36,9 +36,6 @@ import:
 - package: github.com/getlantern/ops
 - package: github.com/getlantern/osversion
 - package: github.com/getlantern/pac
-- package: github.com/getlantern/pro-server-client
-  subpackages:
-  - go-client
 - package: github.com/getlantern/profiling
 - package: github.com/getlantern/protected
 - package: github.com/getlantern/proxiedsites
