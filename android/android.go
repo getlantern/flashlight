@@ -28,7 +28,7 @@ import (
 	"github.com/getlantern/protected"
 	"github.com/getlantern/uuid"
 
-	proclient "github.com/getlantern/pro-server-client/go-client"
+	proclient "github.com/getlantern/flashlight/pro/client"
 )
 
 var (
