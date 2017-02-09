@@ -220,6 +220,10 @@ func (app *App) beforeStart() bool {
 		stopAnalytics := analytics.Start(settings.GetDeviceID(), flashlight.Version)
 		app.AddExitFunc(stopAnalytics)
 	}
+
+	app.AddExitFunc(AnnouncementsLoop(4*time.Hour, isProUser))
+	app.AddExitFunc(notificationsLoop())
+
 	watchDirectAddrs()
 
 	return true
