@@ -4,11 +4,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/errors"
 	proClient "github.com/getlantern/flashlight/pro/client"
 
 	"github.com/getlantern/flashlight"
-	"github.com/getlantern/flashlight/proxied"
 )
 
 var configureProClientOnce sync.Once
@@ -47,7 +45,11 @@ func userStatus(deviceID string, userID int, proToken string) (string, error) {
 		ID:       userID,
 		Token:    proToken,
 	}}
-	resp, err := proClient.UserStatus(true, user)
+	req, err := proCLient.NewRequest(true, user)
+	if err != nil {
+		return "", err
+	}
+	resp, err := proCLient.UserStatus(req)
 	if err != nil {
 		return "", err
 	}
