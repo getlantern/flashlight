@@ -178,10 +178,6 @@ imports:
   version: 5534aa917168bd068e494e81ae6da91cfc3e2a95
 - name: github.com/getlantern/pathreflect
   version: b02f4864048a236150ca17c2c526158f2b3133c4
-- name: github.com/getlantern/pro-server-client
-  version: 5bd34c563ce1a2d8f39f85ee2158af907a4edc84
-  subpackages:
-  - go-client
 - name: github.com/getlantern/profiling
   version: 2a15afbadcff99bac017e17af273b31d4510ddb8
 - name: github.com/getlantern/proxiedsites
