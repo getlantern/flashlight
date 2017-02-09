@@ -16,7 +16,7 @@ var (
 func init() {
 	go func() {
 		for {
-			time.Sleep(5 * time.Second)
+			time.Sleep(30 * time.Second)
 			wire := atomic.LoadUint64(&wireTraffic)
 			app := atomic.LoadUint64(&appTraffic)
 			log.Debugf("App Traffic: %v  Wire Traffic: %v  Overhead: %3.2f%%", humanize.Bytes(app), humanize.Bytes(wire), float64(wire-app)*100/float64(app))
