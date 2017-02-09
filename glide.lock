@@ -407,3 +407,5 @@ testImports:
   - internal/consistenthash
   - internal/hashtag
   - internal/pool
+- name: github.com/Yawning/chacha20
+  version: c91e78db502ff629614837aacb7aa4efa61c651a
