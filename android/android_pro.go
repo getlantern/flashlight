@@ -1,6 +1,7 @@
 package android
 
 import (
+	"github.com/getlantern/bandwidth"
 	client "github.com/getlantern/flashlight/pro/client"
 	"github.com/stripe/stripe-go"
 	"strings"
@@ -254,6 +255,23 @@ func RemoveDevice(shouldProxy bool, deviceId string, session Session) bool {
 }
 
 func ProRequest(shouldProxy bool, command string, session Session) bool {
+
+	if command == "survey" {
+		url, err := surveyRequest(shouldProxy, session.Locale())
+		if err == nil && url != "" {
+			session.ShowSurvey(url)
+			return true
+		} else {
+			log.Errorf("Error finding survey: %v", err)
+			return false
+		}
+	} else if command == "bandwidth" {
+		percent, remaining := getBandwidth(bandwidth.GetQuota())
+		if percent != 0 && remaining != 0 {
+			session.BandwidthUpdate(percent, remaining)
+		}
+		return true
+	}
 
 	user := client.User{
 		Auth: client.Auth{
