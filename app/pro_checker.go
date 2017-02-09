@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/getlantern/errors"
-	proClient "github.com/getlantern/pro-server-client/go-client"
+	proClient "github.com/getlantern/flashlight/pro/client"
 
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/flashlight/proxied"
@@ -47,17 +47,9 @@ func userStatus(deviceID string, userID int, proToken string) (string, error) {
 		ID:       userID,
 		Token:    proToken,
 	}}
-	http, err := proxied.GetHTTPClient(true)
+	resp, err := proClient.UserStatus(true, user)
 	if err != nil {
-		return "", errors.Wrap(err)
-	}
-	client := proClient.NewClient(http)
-	resp, err := client.UserData(user)
-	if err != nil {
-		return "", errors.Wrap(err)
-	}
-	if resp.Status == "error" {
-		return "", errors.New(resp.Error)
+		return "", err
 	}
 	return resp.User.UserStatus, nil
 }
