@@ -275,7 +275,6 @@ func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 	}
 	cipherCode := lampshade.Cipher(s.ptSettingInt(fmt.Sprintf("cipher_%v", runtime.GOARCH)))
-	log.Debugf("Configured lampshade cipher for arch %v: %v", runtime.GOARCH, cipherCode)
 	if cipherCode == 0 {
 		if runtime.GOARCH == "amd64" {
 			// On most 64 bit Intel so AES is hardware accelerated, use it
@@ -285,11 +284,29 @@ func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 			cipherCode = lampshade.ChaCha20
 		}
 	}
-	log.Debugf("Using lampshade cipher %v", cipherCode)
-	dial := lampshade.Dialer(50, 32, 0, buffers.Pool, cipherCode, cert.X509().PublicKey.(*rsa.PublicKey), func() (net.Conn, error) {
+	windowSize := s.ptSettingInt("window_size")
+	maxPadding := s.ptSettingInt("max_padding")
+	maxStreamsPerConn := uint16(s.ptSettingInt("streams"))
+	log.Debugf("Lampshade settings for %v - cipher")
+	doDial := lampshade.Dialer(windowSize, maxPadding, maxStreamsPerConn, buffers.Pool, cipherCode, cert.X509().PublicKey.(*rsa.PublicKey), func() (net.Conn, error) {
 		conn, err := netx.DialTimeout("tcp", s.Addr, chainedDialTimeout)
 		return overheadWrapper(false)(conn, err)
 	})
+	dial := func() (net.Conn, error) {
+		op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "lampshade", "tcp").
+			Set("ls_win", windowSize).
+			Set("ls_pad", maxPadding).
+			Set("ls_streams", int(maxStreamsPerConn)).
+			Set("ls_cipher", cipherCode.String())
+		defer op.End()
+
+		elapsed := mtime.Stopwatch()
+		conn, err := doDial()
+		op.DialTime(elapsed, err)
+		log.Debug("Dialed")
+		return overheadWrapper(true)(conn, op.FailIf(err))
+	}
+
 	return &lampshadeProxy{
 		BaseProxy: BaseProxy{name: name, protocol: "lampshade", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted},
 		dial:      dial,
@@ -297,16 +314,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 }
 
 func (d lampshadeProxy) DialServer() (net.Conn, error) {
-	op := ops.Begin("dial_to_chained").ChainedProxy(d.Addr(), d.Protocol(), d.Network())
-	defer op.End()
-
-	elapsed := mtime.Stopwatch()
-	conn, err := d.dial()
-	op.DialTime(elapsed, err)
-	if err != nil {
-		return nil, op.FailIf(err)
-	}
-	return overheadWrapper(true)(conn, op.FailIf(err))
+	return d.dial()
 }
 
 type BaseProxy struct {
