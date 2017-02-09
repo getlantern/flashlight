@@ -274,13 +274,18 @@ func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 	}
-	// By default, use ChaCha20 which is fast without hardware acceleration
-	cipherCode := lampshade.Cipher(lampshade.ChaCha20)
-	if runtime.GOARCH == "amd64" {
-		// On most 64 bit intel processeors, AES is hardware accelerated, so use it
-		log.Debugf("On Intel 64-bit, using AES128 with lampshade")
-		cipherCode = lampshade.AES128CTR
+	cipherCode := lampshade.Cipher(s.ptSettingInt(fmt.Sprintf("cipher_%v", runtime.GOARCH)))
+	log.Debugf("Configured lampshade cipher for arch %v: %v", runtime.GOARCH, cipherCode)
+	if cipherCode == 0 {
+		if runtime.GOARCH == "amd64" {
+			// On most 64 bit Intel so AES is hardware accelerated, use it
+			cipherCode = lampshade.AES128CTR
+		} else {
+			// Not on 64-bit Intel, use ChaCha20 which is fast without hardware accel
+			cipherCode = lampshade.ChaCha20
+		}
 	}
+	log.Debugf("Using lampshade cipher %v", cipherCode)
 	dial := lampshade.Dialer(50, 32, 0, buffers.Pool, cipherCode, cert.X509().PublicKey.(*rsa.PublicKey), func() (net.Conn, error) {
 		conn, err := netx.DialTimeout("tcp", s.Addr, chainedDialTimeout)
 		return overheadWrapper(false)(conn, err)

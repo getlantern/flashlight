@@ -7,6 +7,7 @@ package chained
 
 import (
 	"github.com/getlantern/golog"
+	"strconv"
 )
 
 var (
@@ -36,4 +37,37 @@ type ChainedServerInfo struct {
 
 	// PluggableTransportSettings: Settings for pluggable transport
 	PluggableTransportSettings map[string]string
+}
+
+func (s *ChainedServerInfo) ptSetting(name string) string {
+	if s.PluggableTransportSettings == nil {
+		return ""
+	}
+	return s.PluggableTransportSettings[name]
+}
+
+func (s *ChainedServerInfo) ptSettingInt(name string) int {
+	_val := s.ptSetting(name)
+	if _val == "" {
+		return 0
+	}
+	val, err := strconv.Atoi(_val)
+	if err != nil {
+		log.Errorf("Setting %v: %v is not an int", name, _val)
+		return 0
+	}
+	return val
+}
+
+func (s *ChainedServerInfo) ptSettingBool(name string) bool {
+	_val := s.ptSetting(name)
+	if _val == "" {
+		return false
+	}
+	val, err := strconv.ParseBool(_val)
+	if err != nil {
+		log.Errorf("Setting %v: %v is not a boolean", name, _val)
+		return false
+	}
+	return val
 }
