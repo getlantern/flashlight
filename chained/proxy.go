@@ -83,7 +83,6 @@ func CreateProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 	case "obfs4-kcp":
 		return newOBFS4Wrapper(newKCPProxy(name, s), s)
 	case "lampshade":
-		log.Debugf("Connecting with lampshade")
 		return newLampshadeProxy(name, s)
 	default:
 		return nil, errors.New("Unknown transport").With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
