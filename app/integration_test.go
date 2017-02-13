@@ -128,10 +128,7 @@ func startProxyServer(t *testing.T) error {
 		HTTPS:        true,
 	}
 
-	go func() {
-		err := s.ListenAndServe()
-		assert.NoError(t, err, "Proxy server should have been able to listen")
-	}()
+	go s.ListenAndServe()
 
 	err := waitforserver.WaitForServer("tcp", ProxyServerAddr, 10*time.Second)
 	if err != nil {
