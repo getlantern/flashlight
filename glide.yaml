@@ -15,6 +15,8 @@ import:
   subpackages:
   - client
 - package: github.com/getlantern/detour
+- package: github.com/getlantern/easylist
+  version: c98d96350ce3ca08efcc2378a5bf1fe731aed1cd
 - package: github.com/getlantern/edgedetect
 - package: github.com/getlantern/ema
 - package: github.com/getlantern/errors
@@ -106,6 +108,7 @@ import:
 - package: github.com/pmezard/adblock
   subpackages:
   - adblock
+- package: github.com/getlantern/connmux
 testImport:
 - package: github.com/stretchr/testify
   subpackages:
