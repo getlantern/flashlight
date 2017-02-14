@@ -152,7 +152,7 @@ imports:
   subpackages:
   - certimporter
 - name: github.com/getlantern/lampshade
-  version: 11752053c8252866e9811ac80f5d89b5655eebb0
+  version: 40c6a1d89f1be806aead41b6b8da2d7f50faeea6
 - name: github.com/getlantern/launcher
   version: bc9fc3b11894e839c3fcb049f12e8974d7e48497
 - name: github.com/getlantern/measured
