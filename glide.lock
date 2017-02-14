@@ -57,8 +57,6 @@ imports:
   version: 4dd4ecae18588644add452f16e5c5aa41a90bd00
 - name: github.com/getlantern/checkfallbacks
   version: 16263f2c042a0dd5366bccb3364d31ab1c4bb9a0
-- name: github.com/getlantern/cmux
-  version: 28e8bb95109fb227116226ae6f3a0890a3bd78e3
 - name: github.com/getlantern/connpool
   version: d04ff90bba7bdee0d9627a687b79fb0cb407d001
 - name: github.com/getlantern/context
@@ -133,7 +131,6 @@ imports:
   - configserverfilter
   - devicefilter
   - diffserv
-  - kcplistener
   - listeners
   - metrics
   - mimic
@@ -195,10 +192,6 @@ imports:
   version: 33f93fc1fe85c042c0667a1814e6379bd5e7eb40
 - name: github.com/getlantern/rotator
   version: 013d4f8e36a2f6369b2435d89866056b5b74c69e
-- name: github.com/getlantern/smux
-  version: c1f29b44d895837d941715ec7248896693c177fc
-- name: github.com/getlantern/snappyconn
-  version: d99ceb334e5503f023b658b83083aff6521d67ed
 - name: github.com/getlantern/sqlparser
   version: 813d09d4d8b3d70f253bc5b84bbb86e9407d8f04
 - name: github.com/getlantern/stack
@@ -302,10 +295,6 @@ imports:
   version: 12aa65630360a8ab1827975bd46491a358094cd9
   subpackages:
   - utils
-- name: github.com/xtaci/kcp-go
-  version: 6afc7fdf264eb75dcc3027e5a0c952e2e9e1d73c
-- name: github.com/xtaci/reedsolomon
-  version: 7bbd3662bdabfaafbe1552513e42a976fe7e7f55
 - name: github.com/xwb1989/sqlparser
   version: dbfc8580724c42e86a20e9586b75a65b806cd88b
   subpackages:
