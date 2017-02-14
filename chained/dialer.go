@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/errors"
@@ -85,9 +86,12 @@ func (d *dialer) sendCONNECT(addr string, conn net.Conn) error {
 }
 
 func buildCONNECTRequest(addr string, onRequest func(req *http.Request)) (*http.Request, error) {
-	req, err := http.NewRequest(http.MethodConnect, addr, nil)
+	req, err := http.NewRequest(http.MethodConnect, "/", nil)
 	if err != nil {
 		return nil, err
+	}
+	req.URL = &url.URL{
+		Host: addr,
 	}
 	req.Host = addr
 	if onRequest != nil {
