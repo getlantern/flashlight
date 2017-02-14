@@ -12,15 +12,12 @@ import (
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/base"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
-	kcp "github.com/xtaci/kcp-go"
 
-	"github.com/getlantern/cmux"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
-	"github.com/getlantern/snappyconn"
 	"github.com/getlantern/tlsdialer"
 )
 
@@ -37,7 +34,7 @@ var (
 type Proxy interface {
 	// Proxy server's protocol (http, https or obfs4)
 	Protocol() string
-	// Proxy server's network (tcp or kcp)
+	// Proxy server's network (tcp)
 	Network() string
 	// Proxy server's address in host:port format
 	Addr() string
@@ -76,8 +73,6 @@ func CreateProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 		return base, err
 	case "obfs4":
 		return newOBFS4Wrapper(newHTTPProxy(name, s), s)
-	case "obfs4-kcp":
-		return newOBFS4Wrapper(newKCPProxy(name, s), s)
 	default:
 		return nil, errors.New("Unknown transport").With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
 	}
@@ -154,47 +149,6 @@ func (d httpsProxy) DialServer() (net.Conn, error) {
 			conn.ConnectionState().PeerCertificates[0], d.x509cert))
 	}
 	return wrapOverhead(true, conn), op.FailIf(err)
-}
-
-type kcpProxy struct {
-	BaseProxy
-	dialFN func(network, address string) (net.Conn, error)
-}
-
-func newKCPProxy(name string, s *ChainedServerInfo) Proxy {
-	return &kcpProxy{
-		BaseProxy: BaseProxy{name: name, protocol: "obfs4", network: "kcp", addr: s.Addr, authToken: s.AuthToken, trusted: false},
-		// TODO: parameterize inputs to KCP
-		dialFN: cmux.Dialer(&cmux.DialerOpts{Dial: dialKCP}),
-	}
-}
-
-func (p kcpProxy) DialServer() (net.Conn, error) {
-	return p.dialFN(p.Network(), p.Addr())
-}
-
-func dialKCP(network, address string) (net.Conn, error) {
-	block, err := kcp.NewNoneBlockCrypt(nil)
-	if err != nil {
-		return nil, errors.New("Unable to initialize AES-128 cipher: %v", err)
-	}
-	// TODO: the below options are hardcoded based on the defaults in kcptun.
-	// At some point, it would be nice to make these tunable via the server pt
-	// properties, but these defaults work well for now.
-	conn, err := kcp.DialWithOptions(address, block, 10, 3)
-	if err != nil {
-		return nil, err
-	}
-	conn.SetStreamMode(true)
-	conn.SetNoDelay(0, 20, 2, 1)
-	conn.SetWindowSize(128, 1024)
-	conn.SetMtu(1350)
-	conn.SetACKNoDelay(false)
-	conn.SetKeepAlive(10)
-	conn.SetDSCP(0)
-	conn.SetReadBuffer(4194304)
-	conn.SetWriteBuffer(4194304)
-	return snappyconn.Wrap(conn), nil
 }
 
 type obfs4Wrapper struct {
