@@ -109,7 +109,7 @@ imports:
 - name: github.com/getlantern/hidden
   version: d52a649ab33af200943bb599898dbdcfdbc94cb7
 - name: github.com/getlantern/http-proxy
-  version: 92f405b689daaa9d7fb6b86883252fc2d66ff770
+  version: b617417c38a996a004fc497d57857db6c1ad3f21
   subpackages:
   - buffers
   - commonfilter
@@ -122,7 +122,7 @@ imports:
   - server
   - utils
 - name: github.com/getlantern/http-proxy-lantern
-  version: 80111fc2b3bfa78dbdd85207c1871b35fef9a535
+  version: 4a871402edb364726099e902017b5588fc88f45c
   subpackages:
   - analytics
   - blacklist
@@ -152,7 +152,7 @@ imports:
   subpackages:
   - certimporter
 - name: github.com/getlantern/lampshade
-  version: 40c6a1d89f1be806aead41b6b8da2d7f50faeea6
+  version: edfb6b6ad3b382a38d0b91092fd562f636d1454b
 - name: github.com/getlantern/launcher
   version: bc9fc3b11894e839c3fcb049f12e8974d7e48497
 - name: github.com/getlantern/measured
@@ -185,7 +185,7 @@ imports:
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxy
-  version: 876829e39cf8243d123b02f02efe8da1266effb4
+  version: 346e6df86a86beb8add113b3bc18db120ae1b426
 - name: github.com/getlantern/proxybench
   version: a491977af73a8a23c4089f5c6bf6dae7775ff697
 - name: github.com/getlantern/rot13
@@ -239,8 +239,6 @@ imports:
   version: 8ee79997227bf9b34611aee7946ae64735e6fd93
   subpackages:
   - proto
-- name: github.com/golang/snappy
-  version: 7db9049039a047d955fe8c19b83c8ff5abd765c7
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/websocket
