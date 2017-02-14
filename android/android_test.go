@@ -27,8 +27,10 @@ func (c testUserConfig) ConfigUpdate(bool)        {}
 func (c testUserConfig) ShowSurvey(survey string) {}
 func (c testUserConfig) GetUserID() int64         { return 0 }
 func (c testUserConfig) GetToken() string         { return "" }
+func (c testUserConfig) SetStaging(bool)          {}
 
 func TestProxying(t *testing.T) {
+
 	tmpDir, err := ioutil.TempDir("", "testconfig")
 	if assert.NoError(t, err, "Unable to create temp configDir") {
 		defer os.RemoveAll(tmpDir)
