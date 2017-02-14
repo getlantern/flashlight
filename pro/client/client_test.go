@@ -42,7 +42,7 @@ func generateCard() fakeCard {
 	return fakeCard{
 		Number: `4242424242424242`,
 		Month:  `12`,
-		Year:   `2016`,
+		Year:   `2020`,
 		CVC:    `123`,
 	}
 }
@@ -126,6 +126,7 @@ func TestPurchaseUserA(t *testing.T) {
 	pr := Purchase{
 		StripeToken:    token.ID,
 		StripeEmail:    userA.Email,
+		Email:          userA.Email,
 		IdempotencyKey: generateIdempotencyKey(),
 		Plan:           "2y-usd",
 		Currency:       "usd",
