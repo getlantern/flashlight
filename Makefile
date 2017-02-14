@@ -60,7 +60,7 @@ novendor:
 
 test-and-cover: $(SOURCES)
 	@echo "mode: count" > profile.cov && \
-	TP=$$(glide novendor -x) && \
+	TP=$$(find . -type d  | grep -v vendor | grep -v git | grep -v "./genconfig/proxiedsites") && \
 	CP=$$(echo -n $$TP | tr ' ', ',') && \
 	set -x && \
 	for pkg in $$TP; do \
