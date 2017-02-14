@@ -3,11 +3,11 @@ package app
 import (
 	"sync"
 
-	"github.com/getlantern/flashlight/ui"
+	"github.com/getlantern/flashlight/ws"
 )
 
 type UserSignal struct {
-	service *ui.Service
+	service *ws.Service
 	once    sync.Once
 }
 
@@ -27,10 +27,10 @@ func setupUserSignal() {
 // start the settings service that synchronizes Lantern's configuration with every UI client
 func (s *UserSignal) start() error {
 	var err error
-	helloFn := func(write func(interface{}) error) error {
-		return write("connected")
+	helloFn := func(write func(interface{})) {
+		write("connected")
 	}
-	s.service, err = ui.Register("signal", helloFn)
+	s.service, err = ws.Register("signal", helloFn)
 	return err
 }
 

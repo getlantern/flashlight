@@ -1,11 +1,20 @@
 package balancer
 
 import (
+	"errors"
 	"net"
 	"sync/atomic"
 	"time"
 
-	"github.com/getlantern/ops"
+	"github.com/getlantern/ema"
+	"github.com/getlantern/flashlight/ops"
+)
+
+var (
+	// ErrUpstream is an error that indicates there was a problem upstream of a
+	// proxy. Such errors are not counted as failures but do allow failover to
+	// other proxies.
+	ErrUpstream = errors.New("Upstream error")
 )
 
 // Dialer captures the configuration for dialing arbitrary addresses.
@@ -40,7 +49,7 @@ type Dialer struct {
 }
 
 type dialer struct {
-	emaLatency         *emaDuration
+	emaLatency         *ema.EMA
 	lastCheckSucceeded bool
 	forceRecheck       func()
 
@@ -60,7 +69,7 @@ func (d *dialer) Start() {
 	if d.emaLatency == nil {
 		// assuming all dialers super fast initially
 		// use large alpha to reflect network changes quickly
-		d.emaLatency = newEMADuration(0, 0.5)
+		d.emaLatency = ema.NewDuration(0, 0.5)
 	}
 	if d.stats == nil {
 		d.stats = &stats{}
@@ -82,7 +91,7 @@ func (d *dialer) Stop() {
 }
 
 func (d *dialer) EMALatency() int64 {
-	return d.emaLatency.GetInt64()
+	return int64(d.emaLatency.Get())
 }
 
 func (d *dialer) ConsecSuccesses() int32 {
@@ -96,7 +105,9 @@ func (d *dialer) ConsecFailures() int32 {
 func (d *dialer) dial(network, addr string) (net.Conn, error) {
 	conn, err := d.DialFN(network, addr)
 	if err != nil {
-		d.markFailure()
+		if err != ErrUpstream {
+			d.markFailure()
+		}
 	} else {
 		d.markSuccess()
 	}

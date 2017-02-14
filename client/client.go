@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -9,8 +10,8 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/appdir"
@@ -26,13 +27,6 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 	"github.com/oxtoacart/bpool"
-
-	"golang.org/x/net/context"
-)
-
-var (
-	uiAddr        string
-	uiProxiedAddr string
 )
 
 var (
@@ -56,6 +50,11 @@ var (
 	}
 
 	buffers = bpool.NewBytePool(1000, 32768)
+
+	// Set a hard limit when processing proxy requests. Should be short enough to
+	// avoid applications bypassing Lantern.
+	// Chrome has a 30s timeout before marking proxy as bad.
+	requestTimeout = int64(20 * time.Second)
 )
 
 // Client is an HTTP proxy that accepts connections from local programs and
@@ -82,11 +81,6 @@ type Client struct {
 	easylistMx sync.RWMutex
 }
 
-// SetProxyUIAddr sets the vanity proxy domain name and its translation.
-func SetProxyUIAddr(proxyAddr string, realAddr string) {
-	uiAddr, uiProxiedAddr = realAddr, proxyAddr
-}
-
 // NewClient creates a new client that does things like starts the HTTP and
 // SOCKS proxies. It take a function for determing whether or not to proxy
 // all traffic, and another function to get Lantern Pro token when required.
@@ -98,7 +92,7 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 	}
 
 	keepAliveIdleTimeout := idleTimeout - 5*time.Second
-	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers, client.dialCONNECT)
+	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers, false, client.dialCONNECT)
 	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
 	go client.initEasyList()
 	return client
@@ -195,7 +189,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 			if portErr != nil {
 				return nil, portErr
 			}
-			return client.doDial(true, addr, port)
+			return client.doDial(ctx, true, addr, port)
 		},
 	}
 	server, err := socks5.New(conf)
@@ -239,11 +233,6 @@ func (client *Client) proxiedDialer(orig func(network, addr string) (net.Conn, e
 			proxied = detourDialer
 		}
 
-		if isLanternSpecialDomain(addr) {
-			rewritten := rewriteLanternSpecialDomain(addr)
-			log.Tracef("Rewriting %v to %v", addr, rewritten)
-			return net.Dial(network, rewritten)
-		}
 		start := time.Now()
 		conn, err := proxied(network, addr)
 		if log.IsTraceEnabled() {
@@ -262,14 +251,16 @@ func (client *Client) dialHTTP(network, addr string) (conn net.Conn, err error) 
 }
 
 func (client *Client) dial(isConnect bool, network, addr string) (conn net.Conn, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), getRequestTimeout())
+	defer cancel()
 	port, err := client.portForAddress(addr)
 	if err != nil {
 		return nil, err
 	}
-	return client.doDial(isConnect, addr, port)
+	return client.doDial(ctx, isConnect, addr, port)
 }
 
-func (client *Client) doDial(isCONNECT bool, addr string, port int) (net.Conn, error) {
+func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, port int) (net.Conn, error) {
 	// Establish outbound connection
 	if client.shouldSendToProxy(addr, port) {
 		d := client.proxiedDialer(func(network, addr string) (net.Conn, error) {
@@ -286,17 +277,35 @@ func (client *Client) doDial(isCONNECT bool, addr string, port int) (net.Conn, e
 			}
 			return bal.Dial(proto, addr)
 		})
-		return d("tcp", addr)
+		// TODO: pass context down to all layers.
+		chDone := make(chan bool)
+		var conn net.Conn
+		var err error
+		go func() {
+			conn, err = d("tcp", addr)
+			chDone <- true
+		}()
+		select {
+		case <-chDone:
+			return conn, err
+		case <-ctx.Done():
+			go func() {
+				<-chDone
+				if conn != nil {
+					log.Debugf("Connection to %s established too late, closing", addr)
+					conn.Close()
+				}
+			}()
+			return nil, ctx.Err()
+		}
 	}
 
 	log.Tracef("Port not allowed, bypassing proxy and sending request directly to %v", addr)
-	return netx.DialTimeout("tcp", addr, 1*time.Minute)
+	// Use netx because on Android, we need a special protected dialer
+	return netx.DialContext(ctx, "tcp", addr)
 }
 
 func (client *Client) shouldSendToProxy(addr string, port int) bool {
-	if isLanternSpecialDomain(addr) {
-		return true
-	}
 	for _, proxiedPort := range proxiedCONNECTPorts {
 		if port == proxiedPort {
 			return true
@@ -315,23 +324,6 @@ func (client *Client) portForAddress(addr string) (int, error) {
 		return 0, fmt.Errorf("Unable to parse port %v for address %v: %v", addr, port, err)
 	}
 	return port, nil
-}
-
-func isLanternSpecialDomain(addr string) bool {
-	if log.IsTraceEnabled() {
-		log.Tracef("Checking if '%v' has special domain prefix '%v'", addr, uiProxiedAddr+":")
-	}
-	return strings.HasPrefix(addr, uiProxiedAddr+":")
-}
-
-func rewriteLanternSpecialDomain(addr string) string {
-	if addr == uiProxiedAddr+":80" {
-		// This is a special replacement for the ui.lantern.io:80 case.
-		return uiAddr
-	}
-	// Let any other port pass as is.
-	addr = strings.Replace(addr, uiProxiedAddr, "127.0.0.1:", 1)
-	return addr
 }
 
 // InConfigDir returns the path of the specified file name in the Lantern
@@ -387,4 +379,8 @@ func errorResponse(req *http.Request, err error) *http.Response {
 	}
 	res.StatusCode = http.StatusServiceUnavailable
 	return res
+}
+
+func getRequestTimeout() time.Duration {
+	return time.Duration(atomic.LoadInt64(&requestTimeout))
 }

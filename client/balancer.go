@@ -19,6 +19,7 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 	if len(proxies) == 0 {
 		return fmt.Errorf("No chained servers configured, not initializing balancer")
 	}
+
 	// The dialers slice must be large enough to handle all chained and obfs4
 	// servers.
 	dialers := make([]*balancer.Dialer, 0, len(proxies))
@@ -26,6 +27,10 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 	// Add chained (CONNECT proxy) servers.
 	log.Debugf("Adding %d chained servers", len(proxies))
 	for name, s := range proxies {
+		if s.PluggableTransport == "obfs4-tcp" {
+			// Ignore obfs4-tcp as these are already included as plain obfs4
+			continue
+		}
 		dialer, err := ChainedDialer(name, s, deviceID, client.proTokenGetter)
 		if err != nil {
 			log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)

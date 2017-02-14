@@ -28,7 +28,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 
 	op := ops.Begin("proxy").
 		UserAgent(userAgent).
-		Origin(req)
+		OriginFromRequest(req)
 	defer op.End()
 
 	if req.Method == http.MethodConnect {

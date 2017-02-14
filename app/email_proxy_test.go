@@ -3,12 +3,15 @@ package app
 import (
 	"bytes"
 	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
-	"github.com/getlantern/flashlight/ui"
 	"github.com/gorilla/websocket"
 	"github.com/keighl/mandrill"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/getlantern/flashlight/ws"
 )
 
 func TestReadResponses(t *testing.T) {
@@ -35,23 +38,20 @@ func TestReadResponses(t *testing.T) {
 }
 
 func TestEmailProxy(t *testing.T) {
-	// ugly hack to co-exist with integration test: only start services if not
-	// already started.
-	addr := ui.GetDirectUIAddr()
-	if addr == "" {
-		// avoid panicking when attaching settings to the email.
-		settings = loadSettings("version", "revisionDate", "buildDate")
-		err := serveEmailProxy()
-		assert.NoError(t, err, "should start UI service")
-		ui.Start("localhost:", false, "", "")
-		defer func() { ui.Stop() }()
-		addr = ui.GetDirectUIAddr()
-	}
-	wsURL := "ws://" + addr + "/data"
+	s := httptest.NewServer(ws.StartUIChannel())
+	defer s.Close()
+	// avoid panicking when attaching settings to the email.
+	settings = loadSettings("version", "revisionDate", "buildDate")
+	err := serveEmailProxy()
+	assert.NoError(t, err, "should start service")
+	defer ws.Unregister("email-proxy")
+	wsURL := strings.Replace(s.URL, "http://", "ws://", -1)
 	conn, _, err := websocket.DefaultDialer.Dial(wsURL, http.Header{})
-	assert.NoError(t, err, "should connect to Websocket")
-	defer func() { _ = conn.Close() }()
+	if !assert.NoError(t, err, "should connect to Websocket") {
+		return
+	}
 
+	defer func() { _ = conn.Close() }()
 	mandrillAPIKey = "SANDBOX_SUCCESS"
 	err = sendTemplateVia(conn)
 	assert.NoError(t, err, "should write to ws")
@@ -81,20 +81,18 @@ func TestEmailProxy(t *testing.T) {
 }
 
 func sendTemplateVia(conn *websocket.Conn) error {
-	return conn.WriteJSON(ui.Envelope{
-		EnvelopeType: ui.EnvelopeType{
-			Type: "email-proxy",
-		},
-		Message: mandrillMessage{
-			Template:     "user-send-logs-desktop",
-			To:           "fffw@getlantern.org",
-			WithSettings: true,
-			MaxLogSize:   "5MB",
-			Vars: map[string]interface{}{
+	return conn.WriteMessage(websocket.TextMessage, []byte(`{
+		"type":"email-proxy",
+		"message": {
+			"template":     "user-send-logs-desktop",
+			"to":           "fffw@getlantern.org",
+			"withSettings": true,
+			"maxLogSize":   "5MB",
+			"vars": {
 				"userID": "1234",
 				"email":  "user@lantern.org",
-				"OS":     "Windows",
-			},
-		},
-	})
+				"OS":     "Windows"
+			}
+		}
+	}`))
 }

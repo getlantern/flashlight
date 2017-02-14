@@ -3,11 +3,15 @@ package chained
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/balancer"
+	"github.com/getlantern/flashlight/ops"
 )
 
 // Config is a configuration for a Dialer.
@@ -19,6 +23,10 @@ type Config struct {
 	// the server and is allowed to modify the http.Request before it passes to
 	// the server.
 	OnRequest func(req *http.Request)
+
+	// OnFinish: optional function that gets called when finishe the tracking of
+	// xfer operations, allows adding additional data to op context.
+	OnFinish func(op *ops.Op)
 
 	// Label: a optional label for debugging.
 	Label string
@@ -59,7 +67,7 @@ func (d *dialer) Dial(network, addr string) (net.Conn, error) {
 		conn.Close()
 		return nil, err
 	}
-	return conn, nil
+	return withRateTracking(conn, addr, d.OnFinish), nil
 }
 
 func (d *dialer) sendCONNECT(addr string, conn net.Conn) error {
@@ -78,9 +86,12 @@ func (d *dialer) sendCONNECT(addr string, conn net.Conn) error {
 }
 
 func buildCONNECTRequest(addr string, onRequest func(req *http.Request)) (*http.Request, error) {
-	req, err := http.NewRequest(http.MethodConnect, addr, nil)
+	req, err := http.NewRequest(http.MethodConnect, "/", nil)
 	if err != nil {
 		return nil, err
+	}
+	req.URL = &url.URL{
+		Host: addr,
 	}
 	req.Host = addr
 	if onRequest != nil {
@@ -95,7 +106,13 @@ func checkCONNECTResponse(r *bufio.Reader, req *http.Request) error {
 		return fmt.Errorf("Error reading CONNECT response: %s", err)
 	}
 	if !sameStatusCodeClass(http.StatusOK, resp.StatusCode) {
-		return fmt.Errorf("Bad status code on CONNECT response: %d", resp.StatusCode)
+		var body []byte
+		if resp.Body != nil {
+			defer resp.Body.Close()
+			body, _ = ioutil.ReadAll(resp.Body)
+		}
+		log.Errorf("Bad status code on CONNECT response %d: %v", resp.StatusCode, string(body))
+		return balancer.ErrUpstream
 	}
 	bandwidth.Track(resp)
 	return nil

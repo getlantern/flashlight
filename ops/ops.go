@@ -5,8 +5,10 @@ package ops
 import (
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
+	borda "github.com/getlantern/borda/client"
 	"github.com/getlantern/ops"
 )
 
@@ -101,7 +103,7 @@ func (op *Op) Request(req *http.Request) *Op {
 	}
 	op.Set("http_method", req.Method).
 		Set("http_proto", req.Proto)
-	op.Origin(req)
+	op.OriginFromRequest(req)
 	return op
 }
 
@@ -117,10 +119,11 @@ func (op *Op) Response(r *http.Response) *Op {
 }
 
 // ChainedProxy attaches chained proxy information to the Context
-func (op *Op) ChainedProxy(addr string, protocol string) *Op {
+func (op *Op) ChainedProxy(addr string, protocol string, network string) *Op {
 	return op.ProxyType(ProxyChained).
 		ProxyAddr(addr).
-		ProxyProtocol(protocol)
+		ProxyProtocol(protocol).
+		ProxyNetwork(network)
 }
 
 // ProxyType attaches proxy type to the Context
@@ -137,20 +140,35 @@ func (op *Op) ProxyAddr(v string) *Op {
 	return op
 }
 
-// ProxyProtocol attaches proxy server's protocol to the Context
+// ProxyProtocol attaches proxy server's protocol (http, https or obfs4) to the Context
 func (op *Op) ProxyProtocol(v string) *Op {
 	return op.Set("proxy_protocol", v)
 }
 
-// Origin attaches the origin to the Contetx
-func (op *Op) Origin(req *http.Request) *Op {
-	op.Set("origin", req.Host)
-	host, port, err := net.SplitHostPort(req.Host)
-	if err != nil {
-		host = req.Host
+// ProxyNetwork attaches proxy server's network (tcp or kcp) to the Context
+func (op *Op) ProxyNetwork(v string) *Op {
+	return op.Set("proxy_network", v)
+}
+
+// OriginFromRequest attaches the origin to the Context based on the request's
+// Host property.
+func (op *Op) OriginFromRequest(req *http.Request) *Op {
+	defaultPort := ""
+	if req.Method != http.MethodConnect {
+		defaultPort = "80"
 	}
-	if (port == "0" || port == "") && req.Method != http.MethodConnect {
-		port = "80"
+	return op.Origin(req.Host, defaultPort)
+}
+
+// Origin attaches the origin to the Context
+func (op *Op) Origin(origin string, defaultPort string) *Op {
+	op.Set("origin", origin)
+	host, port, _ := net.SplitHostPort(origin)
+	if host == "" && !strings.Contains(origin, ":") {
+		host = origin
+	}
+	if port == "0" || port == "" {
+		port = defaultPort
 	}
 	op.Set("origin_host", host).Set("origin_port", port)
 	return op
@@ -158,7 +176,12 @@ func (op *Op) Origin(req *http.Request) *Op {
 
 // DialTime records a dial time relative to a given start time (in milliseconds)
 // and records whether or not the dial succeeded (based on err being nil).
-func (op *Op) DialTime(start time.Time, err error) *Op {
-	delta := time.Now().Sub(start)
-	return op.Set("dial_time", float64(delta.Nanoseconds())/1000000).Set("dial_succeeded", err == nil)
+func (op *Op) DialTime(elapsed func() time.Duration, err error) *Op {
+	return op.SetMetric("dial_time", borda.Avg(float64(elapsed().Nanoseconds())/1000000)).Set("dial_succeeded", err == nil)
+}
+
+// SetMetric sets a named metric. Metrics will be reported as borda values
+// rather than dimensions.
+func (op *Op) SetMetric(name string, value borda.Val) *Op {
+	return op.Set(name, value)
 }

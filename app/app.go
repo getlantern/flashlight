@@ -21,6 +21,7 @@ import (
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxiedsites"
 	"github.com/getlantern/flashlight/ui"
+	"github.com/getlantern/flashlight/ws"
 )
 
 var (
@@ -61,25 +62,12 @@ func (app *App) Init() {
 	// use buffered channel to avoid blocking the caller of 'AddExitFunc'
 	// the number 10 is arbitrary
 	app.chExitFuncs = make(chan func(), 10)
-	setupUserSignal()
 }
 
 // LogPanicAndExit logs a panic and then exits the application.
 func (app *App) LogPanicAndExit(msg string) {
-	if err := logging.EnableFileLogging(""); err != nil {
-		panic("Error initializing logging")
-	}
-
-	<-logging.Configure("",
-		// Reporting to Loggly is not possible at this point
-		func() bool { return false },
-	)
-
 	log.Error(msg)
-
-	logging.Flush()
 	_ = logging.Close()
-
 	app.Exit(nil)
 }
 
@@ -164,9 +152,17 @@ func (app *App) beforeStart() bool {
 	if uiaddr == "" {
 		// stick with the last one if not specified from command line.
 		if uiaddr = settings.GetUIAddr(); uiaddr != "" {
-			if _, _, err := net.SplitHostPort(uiaddr); err != nil {
+			host, port, err := net.SplitHostPort(uiaddr)
+			if err != nil {
 				log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
 				uiaddr = ""
+			}
+			// To allow Edge to open the UI, we force the UI address to be
+			// localhost if it's 127.0.0.1 (the default for previous versions).
+			// We do the same for all platforms for simplicity though it's only
+			// useful on Windows 10 and above.
+			if host == "127.0.0.1" {
+				uiaddr = "localhost:" + port
 			}
 		}
 	}
@@ -197,8 +193,14 @@ func (app *App) beforeStart() bool {
 	if err != nil {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 	}
+	ui.Handle("/data", ws.StartUIChannel())
 
-	settings.SetUIAddr(ui.GetDirectUIAddr())
+	if e := settings.StartService(); e != nil {
+		app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
+	}
+	settings.SetUIAddr(ui.GetUIAddr())
+
+	setupUserSignal()
 
 	err = serveBandwidth()
 	if err != nil {
@@ -218,6 +220,10 @@ func (app *App) beforeStart() bool {
 		stopAnalytics := analytics.Start(settings.GetDeviceID(), flashlight.Version)
 		app.AddExitFunc(stopAnalytics)
 	}
+
+	app.AddExitFunc(AnnouncementsLoop(4*time.Hour, isProUser))
+	app.AddExitFunc(notificationsLoop())
+
 	watchDirectAddrs()
 
 	return true
