@@ -1,2 +1,2 @@
 android:
-	gomobile bind -target=android github.com/getlantern/flashlight/pro/client/bindings
+	gomobile bind -target=android/arm github.com/getlantern/flashlight/pro/client/bindings
