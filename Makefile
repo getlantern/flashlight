@@ -63,7 +63,7 @@ novendor:
 
 test-and-cover: $(SOURCES)
 	@echo "mode: count" > profile.cov && \
-	TP=$$(find . -type d  | grep -v vendor | grep -v git | grep -v "./genconfig/proxiedsites" | grep -v "status_pages" | grep -v "test_zip_src") && \
+	TP=$$(find . -name "*_test.go" -printf '%h\n' | grep  -v vendor | sort -u) && \
 	CP=$$(echo -n $$TP | tr ' ', ',') && \
 	set -x && \
 	for pkg in $$TP; do \
