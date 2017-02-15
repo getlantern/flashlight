@@ -2,19 +2,19 @@ package bindings
 
 import (
 	"errors"
-	"github.com/getlantern/pro-server-client/go-client"
+	"github.com/getlantern/flashlight/pro/client"
 )
 
 // Status values.
 const (
 	STATUS_OK           = "ok"
-	PLAN_LANTERN_PRO_1Y = string(client.PlanLanternPro1Y)
+	PLAN_LANTERN_PRO_1Y = "1y-usd"
 )
 
 var proClient *client.Client
 
 func init() {
-	proClient = client.NewClient()
+	proClient = client.NewClient(nil)
 }
 
 // Code represents a User code.
@@ -48,7 +48,7 @@ func toClientPurchase(p *Purchase) client.Purchase {
 		StripeToken:    p.StripeToken,
 		IdempotencyKey: p.IdempotencyKey,
 		StripeEmail:    p.StripeEmail,
-		Plan:           client.Plan(p.Plan),
+		Plan:           "1y-usd",
 	}
 }
 
@@ -112,7 +112,7 @@ func UserLinkConfigure(u *User) (*User, error) {
 
 // UserLinkValidate validates the authentication code.
 func UserLinkValidate(u *User) (*User, error) {
-	v, err := proClient.UserLinkValidate(toClientUser(u))
+	v, err := proClient.UserLinkValidate(toClientUser(u), "12345")
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,8 @@ func UserLinkValidate(u *User) (*User, error) {
 
 // UserLinkRequest performs device linking or user recovery.
 func UserLinkRequest(u *User) (*User, error) {
-	v, err := proClient.UserLinkRequest(toClientUser(u))
+	v, err := proClient.UserLinkRequest(toClientUser(u),
+		"test@test.com", "testDevice")
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +139,12 @@ func UserLinkRequest(u *User) (*User, error) {
 
 // PurchasePlan performs a purchase.
 func PurchasePlan(u *User, p *Purchase) (*User, error) {
-	v, err := proClient.Purchase(toClientUser(u), toClientPurchase(p))
+	res, err := proClient.Plans(toClientUser(u))
+	if err != nil {
+		return nil, err
+	}
+	v, err := proClient.Purchase(toClientUser(u), "testDevice",
+		res.PubKey, toClientPurchase(p))
 	if err != nil {
 		return nil, err
 	}
