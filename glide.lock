@@ -72,7 +72,7 @@ imports:
 - name: github.com/getlantern/detour
   version: e326e9a1f33a0ecfaac6726cb78fc0c77aada064
 - name: github.com/getlantern/easylist
-  version: c98d96350ce3ca08efcc2378a5bf1fe731aed1cd
+  version: c42f1807d399f34590ec27bfa5135ae35767890d
 - name: github.com/getlantern/edgedetect
   version: f58e865f680868c70f5d114b620b682a39fdaff7
 - name: github.com/getlantern/elevate
