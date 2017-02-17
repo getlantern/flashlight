@@ -17,8 +17,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		req.URL.Scheme = "http"
 	}
 
-	easylist := client.getEasyList()
-	if easylist != nil && !easylist.Allow(req) {
+	if !client.easylist.Allow(req) {
 		log.Debugf("Blocking %v on %v", req.URL, req.Host)
 		if isConnect {
 			// For CONNECT requests, we pretend that it's okay but then we don't do

@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -77,8 +76,7 @@ type Client struct {
 	proxyAll       func() bool
 	proTokenGetter func() string
 
-	easylist   easylist.List
-	easylistMx sync.RWMutex
+	easylist easylist.List
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -94,11 +92,23 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 	keepAliveIdleTimeout := idleTimeout - 5*time.Second
 	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers, false, client.dialCONNECT)
 	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
-	go client.initEasyList()
+	client.initEasyList()
 	return client
 }
 
+type allowAllEasyList struct{}
+
+func (l allowAllEasyList) Allow(*http.Request) bool {
+	return true
+}
+
 func (client *Client) initEasyList() {
+	defer func() {
+		if client.easylist == nil {
+			log.Debugf("Not using easylist")
+			client.easylist = allowAllEasyList{}
+		}
+	}()
 	path, err := InConfigDir("", "easylist.txt")
 	if err != nil {
 		log.Errorf("Unable to get config path: %v", err)
@@ -109,16 +119,7 @@ func (client *Client) initEasyList() {
 		log.Errorf("Unable to open easylist: %v", err)
 		return
 	}
-	client.easylistMx.Lock()
 	client.easylist = list
-	client.easylistMx.Unlock()
-}
-
-func (client *Client) getEasyList() easylist.List {
-	client.easylistMx.RLock()
-	list := client.easylist
-	client.easylistMx.RUnlock()
-	return list
 }
 
 // Addr returns the address at which the client is listening with HTTP, blocking
