@@ -99,7 +99,12 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 }
 
 func (client *Client) initEasyList() {
-	list, err := easylist.Open(appdir.InHomeDir("easylist.txt"), 1*time.Hour)
+	path, err := InConfigDir("", "easylist.txt")
+	if err != nil {
+		log.Errorf("Unable to get config path: %v", err)
+		return
+	}
+	list, err := easylist.Open(path, 1*time.Hour)
 	if err != nil {
 		log.Errorf("Unable to open easylist: %v", err)
 		return
