@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/getlantern/appdir"
@@ -33,11 +34,15 @@ var (
 )
 
 func init() {
-	enableFileLogging()
+	if runtime.GOOS != "android" {
+		EnableFileLogging("")
+	}
 }
 
-func enableFileLogging() {
-	logdir := appdir.Logs("Lantern")
+func EnableFileLogging(logdir string) {
+	if logdir == "" {
+		logdir = appdir.Logs("Lantern")
+	}
 	log.Debugf("Placing logs in %v", logdir)
 	if _, err := os.Stat(logdir); err != nil {
 		if os.IsNotExist(err) {
