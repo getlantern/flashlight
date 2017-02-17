@@ -6,16 +6,21 @@ import (
 	"github.com/getlantern/flashlight/ops"
 )
 
-// ServeHTTP implements the method from interface http.Handler using the latest
-// handler available from getHandler() and latest ReverseProxy available from
-// getReverseProxy().
+// ServeHTTP implements the http.Handler interface.
 func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	userAgent := req.Header.Get("User-Agent")
+	isConnect := req.Method == http.MethodConnect
+	if isConnect {
+		// Add the scheme back for CONNECT requests. It is cleared
+		// intentionally by the standard library, see
+		// https://golang.org/src/net/http/request.go#L938. The easylist
+		// package and httputil.DumpRequest require the scheme to be present.
+		req.URL.Scheme = "http"
+	}
 
 	easylist := client.getEasyList()
 	if easylist != nil && !easylist.Allow(req) {
 		log.Debugf("Blocking %v on %v", req.URL, req.Host)
-		if req.Method == http.MethodConnect {
+		if isConnect {
 			// For CONNECT requests, we pretend that it's okay but then we don't do
 			// anything afterwards. We have to do this because otherwise Chrome marks
 			// us as a bad proxy.
@@ -26,12 +31,13 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	userAgent := req.Header.Get("User-Agent")
 	op := ops.Begin("proxy").
 		UserAgent(userAgent).
 		OriginFromRequest(req)
 	defer op.End()
 
-	if req.Method == http.MethodConnect {
+	if isConnect {
 		// CONNECT requests are often used for HTTPS requests.
 		log.Tracef("Intercepting CONNECT %s", req.URL)
 		err := client.interceptCONNECT(resp, req)
