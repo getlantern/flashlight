@@ -19,6 +19,7 @@ define build-tags
 	EXTRA_LDFLAGS="" && \
 	if [[ ! -z "$$VERSION" ]]; then \
 		EXTRA_LDFLAGS="-X github.com/getlantern/lantern.compileTimePackageVersion=$$VERSION"; \
+		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/android.compileTimePackageVersion=$$VERSION"; \
 		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight.compileTimePackageVersion=$$VERSION"; \
 		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/proxied.compileTimePackageVersion=$$VERSION"; \
 	else \
@@ -32,7 +33,9 @@ define build-tags
 	fi && \
 	if [[ ! -z "$$STAGING" ]]; then \
 		BUILD_TAGS="$$BUILD_TAGS staging"; \
-		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/app.stagingMode=$$STAGING -X github.com/getlantern/lantern.stagingMode=$$STAGING"; \
+		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/app.stagingMode=$$STAGING"; \
+		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/android.stagingMode=$$STAGING"; \
+		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/lantern.stagingMode=$$STAGING"; \
 	fi && \
 	BUILD_TAGS=$$(echo $$BUILD_TAGS | xargs) && echo "Build tags: $$BUILD_TAGS" && \
 	EXTRA_LDFLAGS=$$(echo $$EXTRA_LDFLAGS | xargs) && echo "Extra ldflags: $$EXTRA_LDFLAGS"
@@ -60,7 +63,7 @@ novendor:
 
 test-and-cover: $(SOURCES)
 	@echo "mode: count" > profile.cov && \
-	TP=$$(glide novendor -x) && \
+	TP=$$(find . -name "*_test.go" -printf '%h\n' | grep  -v vendor | grep -v glide | sort -u) && \
 	CP=$$(echo -n $$TP | tr ' ', ',') && \
 	set -x && \
 	for pkg in $$TP; do \
