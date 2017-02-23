@@ -1,16 +1,42 @@
 package config
 
 import (
+	"io/ioutil"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/getlantern/fronted"
+	"github.com/getlantern/golog"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config/generated"
 )
+
+// TestEmpty test an empty config file
+func TestEmpty(t *testing.T) {
+	logger := golog.LoggerFor("config-test")
+
+	tmpfile, err := ioutil.TempFile("", "empty-test-file")
+	if err != nil {
+		logger.Fatal(err)
+	}
+	defer os.Remove(tmpfile.Name()) // clean up
+
+	configPath := tmpfile.Name()
+
+	logger.Debugf("path: %v", configPath)
+	conf := newConfig(configPath, true, func() interface{} {
+		return nil
+	})
+
+	if _, proxyErr := conf.saved(); proxyErr != nil {
+		logger.Debugf("Got error: %v", proxyErr)
+	} else {
+		assert.Fail(t, "Got error %v", proxyErr)
+	}
+}
 
 // TestObfuscated tests reading obfuscated global config from disk
 func TestObfuscated(t *testing.T) {
@@ -88,19 +114,16 @@ func TestPollProxies(t *testing.T) {
 	for i := 1; i <= 400; i++ {
 		fi, err = os.Stat(file)
 		if err == nil && fi != nil && fi.ModTime().After(mtime) {
-			log.Debugf("Got newer mod time?")
+			//log.Debugf("Got newer mod time?")
 			break
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
 
 	fi, err = os.Stat(file)
-	if err != nil {
-		log.Debugf("Got error: %v", err)
-	}
 
 	assert.NotNil(t, fi)
-	assert.Nil(t, err)
+	assert.Nil(t, err, "Got error: %v", err)
 
 	assert.True(t, fi.ModTime().After(mtime))
 
@@ -130,7 +153,6 @@ func TestPollGlobal(t *testing.T) {
 	select {
 	case fetchedConfig := <-configChan:
 		fetched = fetchedConfig.(*Global)
-		log.Debug("Got config from chan")
 	case <-time.After(20 * time.Second):
 		break
 	}
@@ -143,17 +165,13 @@ func TestPollGlobal(t *testing.T) {
 	for i := 1; i <= 400; i++ {
 		fi, err = os.Stat(file)
 		if err == nil && fi != nil && fi.ModTime().After(mtime) {
-			log.Debugf("Got newer mod time?")
 			break
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
 
 	fi, err = os.Stat(file)
-	if err != nil {
-		log.Debugf("Got error: %v", err)
-	}
-	if assert.Nil(t, err) {
+	if assert.Nil(t, err, "Got error: %v", err) {
 		assert.NotNil(t, fi)
 		assert.True(t, fi.ModTime().After(mtime), "Incorrect modification times")
 	}

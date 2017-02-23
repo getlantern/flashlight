@@ -164,8 +164,11 @@ func (conf *config) saved() (interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error reading config from %v: %v", conf.filePath, err)
 	}
+	if len(bytes) == 0 {
+		return nil, fmt.Errorf("Config exists but is empty at %v", conf.filePath)
+	}
 
-	log.Tracef("Returning saved config at %v", conf.filePath)
+	log.Debugf("Returning saved config at %v", conf.filePath)
 	return conf.unmarshall(bytes)
 }
 
