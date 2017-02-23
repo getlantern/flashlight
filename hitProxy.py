@@ -7,6 +7,10 @@ import yaml
 import tempfile
 from subprocess import call
 
+if len(sys.argv) != 2:
+    print "Usage: %s <ip>" % sys.argv[0]
+    sys.exit(1)
+
 ip = sys.argv[1]
 call(["scp", "lantern@" + ip + ":access_data.json", "."])
 loaded = json.loads(open("access_data.json").read())
