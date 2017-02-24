@@ -6,6 +6,7 @@ import json
 import yaml
 import tempfile
 import subprocess
+import os.path
 
 if len(sys.argv) != 2:
     print "Usage: %s <ip>" % sys.argv[0]
@@ -36,4 +37,11 @@ f = open(p, "w")
 f.write(yaml.safe_dump(servers, encoding='utf-8', allow_unicode=True, default_flow_style=False))
 f.close()
 
-subprocess.call(["./lantern", "-stickyconfig", "-readableconfig", "-configdir="+tmpdir])
+
+path = ""
+if os.path.isfile("./lantern"):
+    path = "./lantern"
+else:
+    path = "/Applications/Lantern.app/Contents/MacOS/lantern"
+
+subprocess.call([path, "-stickyconfig", "-readableconfig", "-configdir="+tmpdir])
