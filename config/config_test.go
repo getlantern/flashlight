@@ -8,6 +8,7 @@ import (
 
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/flashlight/chained"
@@ -27,10 +28,7 @@ func TestEmpty(t *testing.T) {
 	configPath := tmpfile.Name()
 
 	logger.Debugf("path: %v", configPath)
-	conf := newConfig(configPath, true, func() interface{} {
-		return nil
-	})
-
+	conf := newConfig(configPath, &options{obfuscate: true})
 	if _, proxyErr := conf.saved(); proxyErr != nil {
 		logger.Debugf("Got error: %v", proxyErr)
 	} else {
@@ -40,8 +38,9 @@ func TestEmpty(t *testing.T) {
 
 // TestObfuscated tests reading obfuscated global config from disk
 func TestObfuscated(t *testing.T) {
-	config := newConfig("./obfuscated-global.yaml", true, func() interface{} {
-		return &Global{}
+	config := newConfig("./obfuscated-global.yaml", &options{
+		obfuscate:   true,
+		unmarshaler: globalUnmarshaler,
 	})
 
 	conf, err := config.saved()
@@ -55,8 +54,8 @@ func TestObfuscated(t *testing.T) {
 
 // TestSaved tests reading stored proxies from disk
 func TestSaved(t *testing.T) {
-	cfg := newConfig("./test-proxies.yaml", false, func() interface{} {
-		return make(map[string]*chained.ChainedServerInfo)
+	cfg := newConfig("./test-proxies.yaml", &options{
+		unmarshaler: proxiesUnmarshaler,
 	})
 
 	pr, err := cfg.saved()
@@ -70,8 +69,8 @@ func TestSaved(t *testing.T) {
 
 // TestEmbedded tests reading stored proxies from disk
 func TestEmbedded(t *testing.T) {
-	cfg := newConfig("./test-proxies.yaml", false, func() interface{} {
-		return make(map[string]*chained.ChainedServerInfo)
+	cfg := newConfig("./test-proxies.yaml", &options{
+		unmarshaler: proxiesUnmarshaler,
 	})
 
 	pr, err := cfg.embedded(generated.EmbeddedProxies, "proxies.yaml")
@@ -89,8 +88,8 @@ func TestPollProxies(t *testing.T) {
 	fronted.ConfigureForTest(t)
 	proxyChan := make(chan interface{})
 	file := "./fetched-proxies.yaml"
-	cfg := newConfig(file, false, func() interface{} {
-		return make(map[string]*chained.ChainedServerInfo)
+	cfg := newConfig(file, &options{
+		unmarshaler: proxiesUnmarshaler,
 	})
 
 	fi, err := os.Stat(file)
@@ -135,8 +134,8 @@ func TestPollGlobal(t *testing.T) {
 	fronted.ConfigureForTest(t)
 	configChan := make(chan interface{})
 	file := "./fetched-global.yaml"
-	cfg := newConfig(file, false, func() interface{} {
-		return &Global{}
+	cfg := newConfig(file, &options{
+		unmarshaler: globalUnmarshaler,
 	})
 
 	fi, err := os.Stat(file)
@@ -178,4 +177,16 @@ func TestPollGlobal(t *testing.T) {
 
 	// Just restore the original file.
 	os.Rename(tempName, file)
+}
+
+func globalUnmarshaler(b []byte) (interface{}, error) {
+	gl := &Global{}
+	err := yaml.Unmarshal(b, gl)
+	return gl, err
+}
+
+func proxiesUnmarshaler(b []byte) (interface{}, error) {
+	servers := make(map[string]*chained.ChainedServerInfo)
+	err := yaml.Unmarshal(b, servers)
+	return servers, err
 }

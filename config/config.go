@@ -1,17 +1,19 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"time"
 
-	"github.com/getlantern/flashlight/client"
-	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/rot13"
 	"github.com/getlantern/tarfs"
 	"github.com/getlantern/yaml"
+
+	"github.com/getlantern/flashlight/client"
+	"github.com/getlantern/flashlight/proxied"
 )
 
 // Config is an interface for getting proxy data saved locally, embedded
@@ -30,10 +32,11 @@ type Config interface {
 }
 
 type config struct {
-	filePath  string
-	obfuscate bool
-	saveChan  chan interface{}
-	factory   func() interface{}
+	filePath    string
+	obfuscate   bool
+	saveChan    chan interface{}
+	marshaler   func(interface{}) ([]byte, error)
+	unmarshaler func([]byte) (interface{}, error)
 }
 
 // chainedFrontedURLs contains a chained and a fronted URL for fetching a config.
@@ -65,9 +68,11 @@ type options struct {
 	// servers in HTTP headers, such as the pro token.
 	userConfig UserConfig
 
-	// yamlTemplater is a factory method for generating structs that will be used
-	// when unmarshalling yaml data.
-	yamlTemplater func() interface{}
+	// marshaler marshals application specific config to bytes, defaults to
+	// yaml.Marshal
+	marshaler func(interface{}) ([]byte, error)
+	//  unmarshaler unmarshals application specific data structure.
+	unmarshaler func([]byte) (interface{}, error)
 
 	// dispatch is essentially a callback function for processing retrieved
 	// yaml configs.
@@ -108,7 +113,7 @@ func pipeConfig(opts *options) {
 	}
 
 	log.Tracef("Obfuscating %v", opts.obfuscate)
-	conf := newConfig(configPath, opts.obfuscate, opts.yamlTemplater)
+	conf := newConfig(configPath, opts)
 
 	if saved, proxyErr := conf.saved(); proxyErr != nil {
 		log.Debugf("Could not load stored config %v", proxyErr)
@@ -134,13 +139,23 @@ func pipeConfig(opts *options) {
 
 // newConfig create a new ProxyConfig instance that saves and looks for
 // saved data at the specified path.
-func newConfig(filePath string, obfuscate bool,
-	factory func() interface{}) Config {
+func newConfig(filePath string,
+	opts *options,
+) Config {
 	cfg := &config{
-		filePath:  filePath,
-		obfuscate: obfuscate,
-		saveChan:  make(chan interface{}),
-		factory:   factory,
+		filePath:    filePath,
+		obfuscate:   opts.obfuscate,
+		saveChan:    make(chan interface{}),
+		marshaler:   opts.marshaler,
+		unmarshaler: opts.unmarshaler,
+	}
+	if cfg.marshaler == nil {
+		cfg.marshaler = yaml.Marshal
+	}
+	if cfg.unmarshaler == nil {
+		cfg.unmarshaler = func([]byte) (interface{}, error) {
+			return nil, errors.New("No unmarshaler")
+		}
 	}
 
 	// Start separate go routine that saves newly fetched proxies to disk.
@@ -169,7 +184,7 @@ func (conf *config) saved() (interface{}, error) {
 	}
 
 	log.Debugf("Returning saved config at %v", conf.filePath)
-	return conf.unmarshall(bytes)
+	return conf.unmarshaler(bytes)
 }
 
 func (conf *config) embedded(data []byte, fileName string) (interface{}, error) {
@@ -188,7 +203,7 @@ func (conf *config) embedded(data []byte, fileName string) (interface{}, error) 
 		return nil, err
 	}
 
-	return conf.unmarshall(bytes)
+	return conf.unmarshaler(bytes)
 }
 
 func (conf *config) poll(uc UserConfig,
@@ -201,7 +216,7 @@ func (conf *config) poll(uc UserConfig,
 		} else if bytes == nil {
 			// This is what fetcher returns for not-modified.
 			log.Debug("Ignoring not modified response")
-		} else if cfg, err := conf.unmarshall(bytes); err != nil {
+		} else if cfg, err := conf.unmarshaler(bytes); err != nil {
 			log.Errorf("Error fetching config: %v", err)
 		} else {
 			log.Debugf("Fetched config! %v", cfg)
@@ -216,14 +231,6 @@ func (conf *config) poll(uc UserConfig,
 	}
 }
 
-func (conf *config) unmarshall(bytes []byte) (interface{}, error) {
-	cfg := conf.factory()
-	if err := yaml.Unmarshal(bytes, cfg); err != nil {
-		return nil, fmt.Errorf("Error unmarshaling config yaml from %v: %v", string(bytes), err)
-	}
-	return cfg, nil
-}
-
 func (conf *config) save() {
 	for {
 		in := <-conf.saveChan
@@ -234,7 +241,7 @@ func (conf *config) save() {
 }
 
 func (conf *config) saveOne(in interface{}) error {
-	bytes, err := yaml.Marshal(in)
+	bytes, err := conf.marshaler(in)
 	if err != nil {
 		return fmt.Errorf("Unable to marshal config yaml: %v", err)
 	}
