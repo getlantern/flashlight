@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -15,11 +16,11 @@ import (
 	"github.com/getlantern/flashlight/config/generated"
 )
 
-// TestEmpty test an empty config file
-func TestEmpty(t *testing.T) {
+// TestInvalidFile test an empty or malformed config file
+func TestInvalidFile(t *testing.T) {
 	logger := golog.LoggerFor("config-test")
 
-	tmpfile, err := ioutil.TempFile("", "empty-test-file")
+	tmpfile, err := ioutil.TempFile("", "invalid-test-file")
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -28,12 +29,21 @@ func TestEmpty(t *testing.T) {
 	configPath := tmpfile.Name()
 
 	logger.Debugf("path: %v", configPath)
-	conf := newConfig(configPath, &options{obfuscate: true})
-	if _, proxyErr := conf.saved(); proxyErr != nil {
-		logger.Debugf("Got error: %v", proxyErr)
-	} else {
-		assert.Fail(t, "Got error %v", proxyErr)
-	}
+	conf := newConfig(configPath, &options{})
+	_, proxyErr := conf.saved()
+	assert.Error(t, proxyErr, "should get error if config file is empty")
+
+	tmpfile.WriteString("content: anything")
+	tmpfile.Sync()
+	var expectedError = errors.New("invalid content")
+	conf = newConfig(configPath, &options{
+		unmarshaler: func([]byte) (interface{}, error) {
+			return nil, expectedError
+		},
+	})
+	_, proxyErr = conf.saved()
+	assert.Equal(t, expectedError, proxyErr,
+		"should get application specific unmarshal error")
 }
 
 // TestObfuscated tests reading obfuscated global config from disk
