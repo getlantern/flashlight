@@ -35,7 +35,6 @@ type config struct {
 	filePath    string
 	obfuscate   bool
 	saveChan    chan interface{}
-	marshaler   func(interface{}) ([]byte, error)
 	unmarshaler func([]byte) (interface{}, error)
 }
 
@@ -146,11 +145,7 @@ func newConfig(filePath string,
 		filePath:    filePath,
 		obfuscate:   opts.obfuscate,
 		saveChan:    make(chan interface{}),
-		marshaler:   opts.marshaler,
 		unmarshaler: opts.unmarshaler,
-	}
-	if cfg.marshaler == nil {
-		cfg.marshaler = yaml.Marshal
 	}
 	if cfg.unmarshaler == nil {
 		cfg.unmarshaler = func([]byte) (interface{}, error) {
@@ -241,7 +236,7 @@ func (conf *config) save() {
 }
 
 func (conf *config) saveOne(in interface{}) error {
-	bytes, err := conf.marshaler(in)
+	bytes, err := yaml.Marshal(in)
 	if err != nil {
 		return fmt.Errorf("Unable to marshal config yaml: %v", err)
 	}
