@@ -106,6 +106,7 @@ func pipeConfig(opts *options) {
 	if err != nil {
 		log.Errorf("Could not get config path? %v", err)
 	}
+	log.Debugf("Config path: %s", configPath)
 
 	log.Tracef("Obfuscating %v", opts.obfuscate)
 	conf := newConfig(configPath, opts.obfuscate, opts.yamlTemplater)
@@ -151,7 +152,9 @@ func newConfig(filePath string, obfuscate bool,
 func (conf *config) saved() (interface{}, error) {
 	infile, err := os.Open(conf.filePath)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to open config file %v for reading: %v", conf.filePath, err)
+		err = fmt.Errorf("Unable to open config file %v for reading: %v", conf.filePath, err)
+		log.Error(err.Error())
+		return nil, err
 	}
 	defer infile.Close()
 
@@ -162,10 +165,12 @@ func (conf *config) saved() (interface{}, error) {
 
 	bytes, err := ioutil.ReadAll(in)
 	if err != nil {
-		return nil, fmt.Errorf("Error reading config from %v: %v", conf.filePath, err)
+		err = fmt.Errorf("Error reading config from %v: %v", conf.filePath, err)
+		log.Error(err.Error())
+		return nil, err
 	}
 
-	log.Tracef("Returning saved config at %v", conf.filePath)
+	log.Debugf("Returning saved config at %v", conf.filePath)
 	return conf.unmarshall(bytes)
 }
 

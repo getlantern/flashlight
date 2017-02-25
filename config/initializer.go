@@ -50,6 +50,7 @@ func Init(configDir string, flags map[string]interface{},
 	userConfig UserConfig, proxiesDispatch func(interface{}),
 	globalDispatch func(interface{})) {
 	staging := isStaging(flags)
+	log.Debugf("Obfuscated? %v", flags["readableconfig"])
 	// These are the options for fetching the per-user proxy config.
 	proxyOptions := &options{
 		saveDir:    configDir,

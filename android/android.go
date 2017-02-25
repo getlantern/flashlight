@@ -120,13 +120,15 @@ type Updater autoupdate.Updater
 // start to use it, even as it finishes its initialization sequence. However,
 // initial activity may be slow, so clients with low read timeouts may
 // time out.
-func Start(configDir string, locale string, timeoutMillis int, user UserConfig) (*StartResult, error) {
+func Start(configDir string, locale string,
+	stickyConfig bool,
+	timeoutMillis int, user UserConfig) (*StartResult, error) {
 
 	appdir.SetHomeDir(configDir)
 	user.SetStaging(staging)
 
 	startOnce.Do(func() {
-		go run(configDir, locale, user)
+		go run(configDir, locale, stickyConfig, user)
 	})
 
 	elapsed := mtime.Stopwatch()
@@ -147,7 +149,9 @@ func AddLoggingMetadata(key, value string) {
 	//logging.SetExtraLogglyInfo(key, value)
 }
 
-func run(configDir, locale string, user UserConfig) {
+func run(configDir, locale string,
+	stickyConfig bool, user UserConfig) {
+
 	flags := map[string]interface{}{
 		"borda-report-interval":    5 * time.Minute,
 		"borda-sample-percentage":  float64(0.01),
@@ -161,6 +165,11 @@ func run(configDir, locale string, user UserConfig) {
 		return
 	}
 
+	if stickyConfig {
+		flags["stickyconfig"] = true
+		flags["readableconfig"] = true
+	}
+
 	logging.EnableFileLogging(configDir)
 
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
@@ -168,7 +177,7 @@ func run(configDir, locale string, user UserConfig) {
 	flashlight.Run("127.0.0.1:0", // listen for HTTP on random address
 		"127.0.0.1:0", // listen for SOCKS on random address
 		configDir,     // place to store lantern configuration
-		false,         // don't make config sticky
+		stickyConfig,
 		func() bool { return true }, // proxy all requests
 		// TODO: allow configuring whether or not to enable reporting (just like we
 		// already have in desktop)
