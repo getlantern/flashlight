@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"time"
 
 	"github.com/getlantern/flashlight/client"
@@ -53,4 +54,13 @@ func (cfg *Global) applyFlags(flags map[string]interface{}) {
 			cfg.BordaSamplePercentage = value.(float64)
 		}
 	}
+}
+func (cfg *Global) validate() error {
+	if len(cfg.Client.MasqueradeSets) == 0 {
+		return errors.New("No masquerades")
+	}
+	if len(cfg.TrustedCAs) == 0 {
+		return errors.New("No trusted CAs")
+	}
+	return nil
 }
