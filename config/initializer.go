@@ -1,9 +1,11 @@
 package config
 
 import (
+	"errors"
 	"time"
 
 	"github.com/getlantern/golog"
+	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config/generated"
@@ -57,8 +59,15 @@ func Init(configDir string, flags map[string]interface{},
 		name:       "proxies.yaml",
 		urls:       checkOverrides(flags, getProxyURLs(staging), "proxies.yaml.gz"),
 		userConfig: userConfig,
-		yamlTemplater: func() interface{} {
-			return make(map[string]*chained.ChainedServerInfo)
+		unmarshaler: func(bytes []byte) (interface{}, error) {
+			servers := make(map[string]*chained.ChainedServerInfo)
+			if err := yaml.Unmarshal(bytes, servers); err != nil {
+				return nil, err
+			}
+			if len(servers) == 0 {
+				return nil, errors.New("No chained server")
+			}
+			return servers, nil
 		},
 		dispatch:     proxiesDispatch,
 		embeddedData: generated.EmbeddedProxies,
@@ -75,10 +84,16 @@ func Init(configDir string, flags map[string]interface{},
 		name:       "global.yaml",
 		urls:       checkOverrides(flags, getGlobalURLs(staging), "global.yaml.gz"),
 		userConfig: userConfig,
-		yamlTemplater: func() interface{} {
+		unmarshaler: func(bytes []byte) (interface{}, error) {
 			gl := newGlobal()
 			gl.applyFlags(flags)
-			return gl
+			if err := yaml.Unmarshal(bytes, gl); err != nil {
+				return nil, err
+			}
+			if err := gl.validate(); err != nil {
+				return nil, err
+			}
+			return gl, nil
 		},
 		dispatch:     globalDispatch,
 		embeddedData: generated.GlobalConfig,
