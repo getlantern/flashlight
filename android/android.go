@@ -124,9 +124,6 @@ func Start(configDir string, locale string,
 	stickyConfig bool,
 	timeoutMillis int, user UserConfig) (*StartResult, error) {
 
-	appdir.SetHomeDir(configDir)
-	user.SetStaging(staging)
-
 	startOnce.Do(func() {
 		go run(configDir, locale, stickyConfig, user)
 	})
@@ -139,8 +136,11 @@ func Start(configDir string, locale string,
 
 	socksAddr, ok := client.Socks5Addr((time.Duration(timeoutMillis) * time.Millisecond) - elapsed())
 	if !ok {
-		return nil, fmt.Errorf("SOCKS5 Proxy didn't start within given timeout")
+		err := fmt.Errorf("SOCKS5 Proxy didn't start within given timeout")
+		log.Error(err.Error())
+		return nil, err
 	}
+	log.Debugf("Starting socks proxy at %s", socksAddr)
 	return &StartResult{addr.(string), socksAddr.(string)}, nil
 }
 
@@ -151,6 +151,12 @@ func AddLoggingMetadata(key, value string) {
 
 func run(configDir, locale string,
 	stickyConfig bool, user UserConfig) {
+
+	appdir.SetHomeDir(configDir)
+	user.SetStaging(staging)
+
+	log.Debugf("Starting lantern: configDir %s locale %s sticky config %t",
+		configDir, locale, stickyConfig)
 
 	flags := map[string]interface{}{
 		"borda-report-interval":    5 * time.Minute,
