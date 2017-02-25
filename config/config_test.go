@@ -1,21 +1,56 @@
 package config
 
 import (
+	"errors"
+	"io/ioutil"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/getlantern/fronted"
+	"github.com/getlantern/golog"
+	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config/generated"
 )
 
+// TestInvalidFile test an empty or malformed config file
+func TestInvalidFile(t *testing.T) {
+	logger := golog.LoggerFor("config-test")
+
+	tmpfile, err := ioutil.TempFile("", "invalid-test-file")
+	if err != nil {
+		logger.Fatal(err)
+	}
+	defer os.Remove(tmpfile.Name()) // clean up
+
+	configPath := tmpfile.Name()
+
+	logger.Debugf("path: %v", configPath)
+	conf := newConfig(configPath, &options{})
+	_, proxyErr := conf.saved()
+	assert.Error(t, proxyErr, "should get error if config file is empty")
+
+	tmpfile.WriteString("content: anything")
+	tmpfile.Sync()
+	var expectedError = errors.New("invalid content")
+	conf = newConfig(configPath, &options{
+		unmarshaler: func([]byte) (interface{}, error) {
+			return nil, expectedError
+		},
+	})
+	_, proxyErr = conf.saved()
+	assert.Equal(t, expectedError, proxyErr,
+		"should get application specific unmarshal error")
+}
+
 // TestObfuscated tests reading obfuscated global config from disk
 func TestObfuscated(t *testing.T) {
-	config := newConfig("./obfuscated-global.yaml", true, func() interface{} {
-		return &Global{}
+	config := newConfig("./obfuscated-global.yaml", &options{
+		obfuscate:   true,
+		unmarshaler: globalUnmarshaler,
 	})
 
 	conf, err := config.saved()
@@ -29,8 +64,8 @@ func TestObfuscated(t *testing.T) {
 
 // TestSaved tests reading stored proxies from disk
 func TestSaved(t *testing.T) {
-	cfg := newConfig("./test-proxies.yaml", false, func() interface{} {
-		return make(map[string]*chained.ChainedServerInfo)
+	cfg := newConfig("./test-proxies.yaml", &options{
+		unmarshaler: proxiesUnmarshaler,
 	})
 
 	pr, err := cfg.saved()
@@ -44,8 +79,8 @@ func TestSaved(t *testing.T) {
 
 // TestEmbedded tests reading stored proxies from disk
 func TestEmbedded(t *testing.T) {
-	cfg := newConfig("./test-proxies.yaml", false, func() interface{} {
-		return make(map[string]*chained.ChainedServerInfo)
+	cfg := newConfig("./test-proxies.yaml", &options{
+		unmarshaler: proxiesUnmarshaler,
 	})
 
 	pr, err := cfg.embedded(generated.EmbeddedProxies, "proxies.yaml")
@@ -63,8 +98,8 @@ func TestPollProxies(t *testing.T) {
 	fronted.ConfigureForTest(t)
 	proxyChan := make(chan interface{})
 	file := "./fetched-proxies.yaml"
-	cfg := newConfig(file, false, func() interface{} {
-		return make(map[string]*chained.ChainedServerInfo)
+	cfg := newConfig(file, &options{
+		unmarshaler: proxiesUnmarshaler,
 	})
 
 	fi, err := os.Stat(file)
@@ -88,19 +123,16 @@ func TestPollProxies(t *testing.T) {
 	for i := 1; i <= 400; i++ {
 		fi, err = os.Stat(file)
 		if err == nil && fi != nil && fi.ModTime().After(mtime) {
-			log.Debugf("Got newer mod time?")
+			//log.Debugf("Got newer mod time?")
 			break
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
 
 	fi, err = os.Stat(file)
-	if err != nil {
-		log.Debugf("Got error: %v", err)
-	}
 
 	assert.NotNil(t, fi)
-	assert.Nil(t, err)
+	assert.Nil(t, err, "Got error: %v", err)
 
 	assert.True(t, fi.ModTime().After(mtime))
 
@@ -112,8 +144,8 @@ func TestPollGlobal(t *testing.T) {
 	fronted.ConfigureForTest(t)
 	configChan := make(chan interface{})
 	file := "./fetched-global.yaml"
-	cfg := newConfig(file, false, func() interface{} {
-		return &Global{}
+	cfg := newConfig(file, &options{
+		unmarshaler: globalUnmarshaler,
 	})
 
 	fi, err := os.Stat(file)
@@ -130,7 +162,6 @@ func TestPollGlobal(t *testing.T) {
 	select {
 	case fetchedConfig := <-configChan:
 		fetched = fetchedConfig.(*Global)
-		log.Debug("Got config from chan")
 	case <-time.After(20 * time.Second):
 		break
 	}
@@ -143,21 +174,29 @@ func TestPollGlobal(t *testing.T) {
 	for i := 1; i <= 400; i++ {
 		fi, err = os.Stat(file)
 		if err == nil && fi != nil && fi.ModTime().After(mtime) {
-			log.Debugf("Got newer mod time?")
 			break
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
 
 	fi, err = os.Stat(file)
-	if err != nil {
-		log.Debugf("Got error: %v", err)
-	}
-	if assert.Nil(t, err) {
+	if assert.Nil(t, err, "Got error: %v", err) {
 		assert.NotNil(t, fi)
 		assert.True(t, fi.ModTime().After(mtime), "Incorrect modification times")
 	}
 
 	// Just restore the original file.
 	os.Rename(tempName, file)
+}
+
+func globalUnmarshaler(b []byte) (interface{}, error) {
+	gl := &Global{}
+	err := yaml.Unmarshal(b, gl)
+	return gl, err
+}
+
+func proxiesUnmarshaler(b []byte) (interface{}, error) {
+	servers := make(map[string]*chained.ChainedServerInfo)
+	err := yaml.Unmarshal(b, servers)
+	return servers, err
 }
