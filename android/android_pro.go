@@ -230,7 +230,7 @@ func userUpdate(req *proRequest) (*client.Response, error) {
 	return res, err
 }
 
-func RemoveDevice(shouldProxy bool, deviceId string, session Session) bool {
+func RemoveDevice(deviceId string, session Session) bool {
 	user := client.User{
 		Auth: client.Auth{
 			DeviceID: session.DeviceId(),
@@ -239,7 +239,7 @@ func RemoveDevice(shouldProxy bool, deviceId string, session Session) bool {
 		},
 	}
 
-	req, err := client.NewRequest(shouldProxy, user)
+	req, err := client.NewRequest(user)
 	if err != nil {
 		log.Errorf("Error creating request: %v", err)
 		return false
@@ -254,10 +254,10 @@ func RemoveDevice(shouldProxy bool, deviceId string, session Session) bool {
 	return true
 }
 
-func ProRequest(shouldProxy bool, command string, session Session) bool {
+func ProRequest(command string, session Session) bool {
 
 	if command == "survey" {
-		url, err := surveyRequest(shouldProxy, session.Locale())
+		url, err := surveyRequest(session.Locale())
 		if err == nil && url != "" {
 			session.ShowSurvey(url)
 			return true
@@ -281,7 +281,7 @@ func ProRequest(shouldProxy bool, command string, session Session) bool {
 		},
 	}
 
-	req, err := client.NewRequest(shouldProxy, user)
+	req, err := client.NewRequest(user)
 	if err != nil {
 		log.Errorf("Error creating new request: %v", err)
 		return false

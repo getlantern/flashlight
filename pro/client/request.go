@@ -10,8 +10,8 @@ type ProRequest struct {
 	User   User
 }
 
-func NewRequest(shouldProxy bool, user User) (*ProRequest, error) {
-	httpClient, err := proxied.GetHTTPClient(shouldProxy)
+func NewRequest(user User) (*ProRequest, error) {
+	httpClient, err := proxied.GetHTTPClient()
 	if err != nil {
 		log.Errorf("Could not create HTTP client: %v", err)
 		return nil, err

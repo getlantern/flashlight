@@ -274,14 +274,14 @@ func extractUrl(surveys map[string]*json.RawMessage, locale string) (string, err
 	return "", nil
 }
 
-func surveyRequest(shouldProxy bool, locale string) (string, error) {
+func surveyRequest(locale string) (string, error) {
 	var err error
 	var req *http.Request
 	var res *http.Response
 
 	var surveyResp map[string]*json.RawMessage
 
-	httpClient, err := proxied.GetHTTPClient(shouldProxy)
+	httpClient, err := proxied.GetHTTPClient()
 	if err != nil {
 		handleError(err)
 		return "", err
@@ -330,13 +330,13 @@ func configUpdate(user UserConfig, cfg *config.Global) {
 }
 
 // CheckForUpdates checks to see if a new version of Lantern is available
-func CheckForUpdates(shouldProxy bool) (string, error) {
-	return autoupdate.CheckMobileUpdate(shouldProxy, updateServerURL,
+func CheckForUpdates() (string, error) {
+	return autoupdate.CheckMobileUpdate(updateServerURL,
 		compileTimePackageVersion)
 }
 
 // DownloadUpdate downloads the latest APK from the given url to the apkPath
 // file destination.
-func DownloadUpdate(url, apkPath string, shouldProxy bool, updater Updater) {
-	autoupdate.UpdateMobile(shouldProxy, url, apkPath, updater)
+func DownloadUpdate(url, apkPath string, updater Updater) {
+	autoupdate.UpdateMobile(url, apkPath, updater)
 }
