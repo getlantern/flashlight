@@ -98,7 +98,6 @@ type StartResult struct {
 
 type UserConfig interface {
 	config.UserConfig
-	ConfigUpdate(bool)
 	AfterStart()
 	SetStaging(bool)
 	ShowSurvey(string)
@@ -197,7 +196,6 @@ func run(configDir, locale string,
 			afterStart(user)
 		}, // afterStart()
 		func(cfg *config.Global) {
-			configUpdate(user, cfg)
 		}, // onConfigUpdate
 		user,
 		func(err error) {}, // onError
@@ -323,10 +321,6 @@ func surveyRequest(locale string) (string, error) {
 	}
 	log.Errorf("Error parsing survey response: missing from map")
 	return "", nil
-}
-
-func configUpdate(user UserConfig, cfg *config.Global) {
-	user.ConfigUpdate(cfg.Client.ShowAds)
 }
 
 // CheckForUpdates checks to see if a new version of Lantern is available
