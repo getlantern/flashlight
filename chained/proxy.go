@@ -236,10 +236,6 @@ func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 	maxPadding := s.ptSettingInt("max_padding")
 	maxStreamsPerConn := uint16(s.ptSettingInt("streams"))
 	doDial := lampshade.Dialer(windowSize, maxPadding, maxStreamsPerConn, buffers.Pool, cipherCode, cert.X509().PublicKey.(*rsa.PublicKey), func() (net.Conn, error) {
-		conn, err := netx.DialTimeout("tcp", s.Addr, chainedDialTimeout)
-		return overheadWrapper(false)(conn, err)
-	})
-	dial := func() (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "lampshade", "tcp").
 			Set("ls_win", windowSize).
 			Set("ls_pad", maxPadding).
@@ -248,10 +244,13 @@ func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 		defer op.End()
 
 		elapsed := mtime.Stopwatch()
-		conn, err := doDial()
+		conn, err := netx.DialTimeout("tcp", s.Addr, chainedDialTimeout)
 		op.DialTime(elapsed, err)
-		log.Debug("Dialed")
-		return overheadWrapper(true)(conn, op.FailIf(err))
+		return overheadWrapper(false)(conn, op.FailIf(err))
+	})
+	dial := func() (net.Conn, error) {
+		conn, err := doDial()
+		return overheadWrapper(true)(conn, err)
 	}
 
 	return &lampshadeProxy{
