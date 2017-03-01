@@ -1,5 +1,5 @@
-hash: b30919915ecdc4f02c209be808e4022ac5a596335621e6232580847240c94dc6
-updated: 2017-02-18T21:06:41.478778134-08:00
+hash: 29f3f757209a6a373b3887f246562529a284d900cf660f8e6236acbbb3b6b41b
+updated: 2017-03-01T16:05:38.759263887+08:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: f1569079ca898d54e52a26b0bd1b5cc869310608
@@ -189,6 +189,8 @@ imports:
   version: 33f93fc1fe85c042c0667a1814e6379bd5e7eb40
 - name: github.com/getlantern/rotator
   version: 013d4f8e36a2f6369b2435d89866056b5b74c69e
+- name: github.com/getlantern/shortcut
+  version: 3be041bd3297a1082b70304499a5224571dceef0
 - name: github.com/getlantern/sqlparser
   version: 813d09d4d8b3d70f253bc5b84bbb86e9407d8f04
 - name: github.com/getlantern/stack

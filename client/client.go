@@ -16,15 +16,17 @@ import (
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/detour"
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/flashlight/chained"
-	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/flashlight/status"
 	"github.com/getlantern/go-socks5"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 	"github.com/oxtoacart/bpool"
+
+	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/shortcut"
+	"github.com/getlantern/flashlight/status"
 )
 
 var (
@@ -238,47 +240,51 @@ func (client *Client) dial(isConnect bool, network, addr string) (conn net.Conn,
 
 func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, port int) (net.Conn, error) {
 	// Establish outbound connection
-	if client.shouldSendToProxy(addr, port) {
-		d := client.proxiedDialer(func(network, addr string) (net.Conn, error) {
-			proto := "persistent"
-			if isCONNECT {
-				// UGLY HACK ALERT! In this case, we know we need to send a CONNECT request
-				// to the chained server. We need to send that request from chained/dialer.go
-				// though because only it knows about the authentication token to use.
-				// We signal it to send the CONNECT here using the network transport argument
-				// that is effectively always "tcp" in the end, but we look for this
-				// special "transport" in the dialer and send a CONNECT request in that
-				// case.
-				proto = "connect"
-			}
-			return bal.Dial(proto, addr)
-		})
-		// TODO: pass context down to all layers.
-		chDone := make(chan bool)
-		var conn net.Conn
-		var err error
-		go func() {
-			conn, err = d("tcp", addr)
-			chDone <- true
-		}()
-		select {
-		case <-chDone:
-			return conn, err
-		case <-ctx.Done():
-			go func() {
-				<-chDone
-				if conn != nil {
-					log.Debugf("Connection to %s established too late, closing", addr)
-					conn.Close()
-				}
-			}()
-			return nil, ctx.Err()
-		}
+	if !client.shouldSendToProxy(addr, port) {
+		log.Tracef("Port not allowed, bypassing proxy and sending request directly to %v", addr)
+		// Use netx because on Android, we need a special protected dialer
+		return netx.DialContext(ctx, "tcp", addr)
+	}
+	if !client.proxyAll() && shortcut.Allow(addr) {
+		log.Tracef("Use shortcut (dial directly) for %v", addr)
+		return netx.DialContext(ctx, "tcp", addr)
 	}
 
-	log.Tracef("Port not allowed, bypassing proxy and sending request directly to %v", addr)
-	// Use netx because on Android, we need a special protected dialer
-	return netx.DialContext(ctx, "tcp", addr)
+	d := client.proxiedDialer(func(network, addr string) (net.Conn, error) {
+		proto := "persistent"
+		if isCONNECT {
+			// UGLY HACK ALERT! In this case, we know we need to send a CONNECT request
+			// to the chained server. We need to send that request from chained/dialer.go
+			// though because only it knows about the authentication token to use.
+			// We signal it to send the CONNECT here using the network transport argument
+			// that is effectively always "tcp" in the end, but we look for this
+			// special "transport" in the dialer and send a CONNECT request in that
+			// case.
+			proto = "connect"
+		}
+		return bal.Dial(proto, addr)
+	})
+	// TODO: pass context down to all layers.
+	chDone := make(chan bool)
+	var conn net.Conn
+	var err error
+	go func() {
+		conn, err = d("tcp", addr)
+		chDone <- true
+	}()
+	select {
+	case <-chDone:
+		return conn, err
+	case <-ctx.Done():
+		go func() {
+			<-chDone
+			if conn != nil {
+				log.Debugf("Connection to %s established too late, closing", addr)
+				conn.Close()
+			}
+		}()
+		return nil, ctx.Err()
+	}
 }
 
 func (client *Client) shouldSendToProxy(addr string, port int) bool {
