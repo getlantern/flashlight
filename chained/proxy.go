@@ -232,10 +232,15 @@ func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 		// default to ChaCha20 which is fast even without hardware acceleration
 		cipherCode = lampshade.ChaCha20
 	}
-	windowSize := s.ptSettingInt("window_size")
-	maxPadding := s.ptSettingInt("max_padding")
+	windowSize := s.ptSettingInt("windowsize")
+	maxPadding := s.ptSettingInt("maxpadding")
 	maxStreamsPerConn := uint16(s.ptSettingInt("streams"))
-	doDial := lampshade.Dialer(windowSize, maxPadding, maxStreamsPerConn, buffers.Pool, cipherCode, cert.X509().PublicKey.(*rsa.PublicKey), func() (net.Conn, error) {
+	pingInterval, parseErr := time.ParseDuration(s.ptSetting("pinginterval"))
+	if parseErr != nil || pingInterval <= 0 {
+		log.Debug("Defaulting pinginterval to 15 seconds")
+		pingInterval = 15 * time.Second
+	}
+	dialer := lampshade.NewDialer(windowSize, maxPadding, maxStreamsPerConn, pingInterval, buffers.Pool, cipherCode, cert.X509().PublicKey.(*rsa.PublicKey), func() (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "lampshade", "tcp").
 			Set("ls_win", windowSize).
 			Set("ls_pad", maxPadding).
@@ -248,8 +253,18 @@ func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 		op.DialTime(elapsed, err)
 		return overheadWrapper(false)(conn, op.FailIf(err))
 	})
+	go func() {
+		for {
+			time.Sleep(pingInterval * 2)
+			ttfa := dialer.EMARTT()
+			log.Debugf("EMA RTT: %v", ttfa)
+		}
+	}()
 	dial := func() (net.Conn, error) {
-		conn, err := doDial()
+		conn, err := dialer.Dial()
+		if err == nil {
+
+		}
 		return overheadWrapper(true)(conn, err)
 	}
 
