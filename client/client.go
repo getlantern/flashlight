@@ -16,6 +16,8 @@ import (
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/detour"
 	"github.com/getlantern/eventual"
+	"github.com/getlantern/flashlight/bbr"
+	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/status"
@@ -24,7 +26,6 @@ import (
 	"github.com/getlantern/hidden"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
-	"github.com/oxtoacart/bpool"
 )
 
 var (
@@ -46,8 +47,6 @@ var (
 		// Google Hangouts TCP Ports (see https://support.google.com/a/answer/1279090?hl=en)
 		19305, 19306, 19307, 19308, 19309,
 	}
-
-	buffers = bpool.NewBytePool(1000, 32768)
 
 	// Set a hard limit when processing proxy requests. Should be short enough to
 	// avoid applications bypassing Lantern.
@@ -87,8 +86,8 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 	}
 
 	keepAliveIdleTimeout := idleTimeout - 5*time.Second
-	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers, false, client.dialCONNECT)
-	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
+	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers.Pool, false, client.dialCONNECT)
+	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, bbr.OnResponse, errorResponse, client.dialHTTP)
 	return client
 }
 

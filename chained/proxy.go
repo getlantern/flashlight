@@ -1,11 +1,13 @@
 package chained
 
 import (
+	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
 	"net"
 	"net/http"
+	"runtime"
 	"strings"
 	"time"
 
@@ -14,8 +16,10 @@ import (
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
 
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/keyman"
+	"github.com/getlantern/lampshade"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/tlsdialer"
@@ -73,6 +77,8 @@ func CreateProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 		return base, err
 	case "obfs4":
 		return newOBFS4Wrapper(newHTTPProxy(name, s), s)
+	case "lampshade":
+		return newLampshadeProxy(name, s)
 	default:
 		return nil, errors.New("Unknown transport").With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
 	}
@@ -106,7 +112,7 @@ func (d httpProxy) DialServer() (net.Conn, error) {
 	elapsed := mtime.Stopwatch()
 	conn, err := netx.DialTimeout("tcp", d.Addr(), chainedDialTimeout)
 	op.DialTime(elapsed, err)
-	return wrapOverhead(false, conn), op.FailIf(err)
+	return conn, op.FailIf(err)
 }
 
 type httpsProxy struct {
@@ -148,7 +154,7 @@ func (d httpsProxy) DialServer() (net.Conn, error) {
 		return nil, op.FailIf(log.Errorf("Server's certificate didn't match expected! Server had\n%v\nbut expected:\n%v",
 			conn.ConnectionState().PeerCertificates[0], d.x509cert))
 	}
-	return wrapOverhead(true, conn), op.FailIf(err)
+	return overheadWrapper(true)(conn, op.FailIf(err))
 }
 
 type obfs4Wrapper struct {
@@ -208,7 +214,53 @@ func (p obfs4Wrapper) DialServer() (net.Conn, error) {
 	// The proxy it wrapped already has timeout applied.
 	conn, err := p.cf.Dial("tcp", p.Addr(), dialFn, p.args)
 	op.DialTime(elapsed, err)
-	return wrapOverhead(true, conn), op.FailIf(err)
+	return overheadWrapper(true)(conn, op.FailIf(err))
+}
+
+type lampshadeProxy struct {
+	BaseProxy
+	dial func() (net.Conn, error)
+}
+
+func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
+	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
+	if err != nil {
+		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
+	}
+	cipherCode := lampshade.Cipher(s.ptSettingInt(fmt.Sprintf("cipher_%v", runtime.GOARCH)))
+	if cipherCode == 0 {
+		// default to ChaCha20 which is fast even without hardware acceleration
+		cipherCode = lampshade.ChaCha20
+	}
+	windowSize := s.ptSettingInt("window_size")
+	maxPadding := s.ptSettingInt("max_padding")
+	maxStreamsPerConn := uint16(s.ptSettingInt("streams"))
+	doDial := lampshade.Dialer(windowSize, maxPadding, maxStreamsPerConn, buffers.Pool, cipherCode, cert.X509().PublicKey.(*rsa.PublicKey), func() (net.Conn, error) {
+		op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "lampshade", "tcp").
+			Set("ls_win", windowSize).
+			Set("ls_pad", maxPadding).
+			Set("ls_streams", int(maxStreamsPerConn)).
+			Set("ls_cipher", cipherCode.String())
+		defer op.End()
+
+		elapsed := mtime.Stopwatch()
+		conn, err := netx.DialTimeout("tcp", s.Addr, chainedDialTimeout)
+		op.DialTime(elapsed, err)
+		return overheadWrapper(false)(conn, op.FailIf(err))
+	})
+	dial := func() (net.Conn, error) {
+		conn, err := doDial()
+		return overheadWrapper(true)(conn, err)
+	}
+
+	return &lampshadeProxy{
+		BaseProxy: BaseProxy{name: name, protocol: "lampshade", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted},
+		dial:      dial,
+	}, nil
+}
+
+func (d lampshadeProxy) DialServer() (net.Conn, error) {
+	return d.dial()
 }
 
 type BaseProxy struct {
