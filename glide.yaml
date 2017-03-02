@@ -101,6 +101,7 @@ import:
 - package: github.com/getlantern/shortcut
 - package: github.com/getlantern/lampshade
 - package: github.com/Yawning/chacha20
+- package: github.com/armon/go-radix
 testImport:
 - package: github.com/stretchr/testify
   subpackages:
