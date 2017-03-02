@@ -3,7 +3,7 @@ package shortcut
 import (
 	"bytes"
 	"strings"
-	"sync/atomic"
+	"sync"
 
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/golog"
@@ -13,11 +13,11 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.shortcut")
 
-	sc atomic.Value
+	sc shortcut.Shortcut = &nullShortcut{}
+	mu sync.RWMutex
 )
 
 func init() {
-	sc.Store(&nullShortcut{})
 	go func() {
 		for <-geolookup.OnRefresh() {
 			configure(geolookup.GetCountry(0))
@@ -40,10 +40,18 @@ func configure(country string) {
 		return
 	}
 
-	sc.Store(shortcut.NewFromReader(
+	mu.Lock()
+	defer mu.Unlock()
+	sc = shortcut.NewFromReader(
 		bytes.NewReader(v4),
 		bytes.NewReader(v6),
-	))
+	)
+	log.Debugf("loaded shortcut list for country %s", country)
 }
 
-func Allow(addr string) bool { return sc.Load().(shortcut.Shortcut).Allow(addr) }
+func Allow(addr string) bool {
+	mu.RLock()
+	allow := sc.Allow(addr)
+	mu.RUnlock()
+	return allow
+}

@@ -80,7 +80,6 @@ func init() {
 func run() {
 	for _ = range refreshRequest {
 		gi := lookup()
-		log.Debugf("Got new geolocation info, IP: %v, country: %v", gi.ip, gi.city.Country.IsoCode)
 		if gi.ip == GetIP(0) {
 			log.Debug("public IP doesn't change, not update")
 			continue
@@ -113,7 +112,6 @@ func lookup() *geoInfo {
 			time.Sleep(wait)
 			consecutiveFailures++
 		} else {
-			log.Debugf("IP is %v", gi.ip)
 			return gi
 		}
 	}
