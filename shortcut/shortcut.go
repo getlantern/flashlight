@@ -5,9 +5,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/shortcut"
+
+	"github.com/getlantern/flashlight/geolookup"
 )
 
 var (
