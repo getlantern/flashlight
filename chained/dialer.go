@@ -11,6 +11,7 @@ import (
 	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/balancer"
+	"github.com/getlantern/flashlight/bbr"
 	"github.com/getlantern/flashlight/ops"
 )
 
@@ -114,6 +115,7 @@ func checkCONNECTResponse(r *bufio.Reader, req *http.Request) error {
 		log.Errorf("Bad status code on CONNECT response %d: %v", resp.StatusCode, string(body))
 		return balancer.ErrUpstream
 	}
+	bbr.OnResponse(resp)
 	bandwidth.Track(resp)
 	return nil
 }

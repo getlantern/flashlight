@@ -31,24 +31,22 @@ func overheadDialer(app bool, dial func(network, addr string, timeout time.Durat
 }
 
 func dialOverhead(network, addr string, timeout time.Duration, app bool, dial func(network, addr string, timeout time.Duration) (net.Conn, error)) (net.Conn, error) {
-	conn, err := dial(network, addr, timeout)
-	if err == nil {
-		conn = wrapOverhead(app, conn)
-	}
-	return conn, err
+	return overheadWrapper(app)(dial(network, addr, timeout))
 }
 
-func wrapOverhead(app bool, conn net.Conn) net.Conn {
-	if conn == nil {
-		return nil
+func overheadWrapper(app bool) func(net.Conn, error) (net.Conn, error) {
+	return func(conn net.Conn, err error) (net.Conn, error) {
+		if conn == nil || err != nil {
+			return conn, err
+		}
+		oc := &overheadconn{Conn: conn}
+		if app {
+			oc.traffic = &appTraffic
+		} else {
+			oc.traffic = &wireTraffic
+		}
+		return oc, err
 	}
-	oc := &overheadconn{Conn: conn}
-	if app {
-		oc.traffic = &appTraffic
-	} else {
-		oc.traffic = &wireTraffic
-	}
-	return oc
 }
 
 type overheadconn struct {

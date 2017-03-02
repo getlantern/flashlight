@@ -99,6 +99,8 @@ import:
 - package: github.com/getlantern/proxy
 - package: github.com/getlantern/mockconn
 - package: github.com/getlantern/shortcut
+- package: github.com/getlantern/lampshade
+- package: github.com/Yawning/chacha20
 testImport:
 - package: github.com/stretchr/testify
   subpackages:

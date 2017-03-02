@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/balancer"
+	"github.com/getlantern/flashlight/bbr"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
@@ -185,6 +186,7 @@ func (s *chainedServer) doCheck(url string,
 		log.Tracef("PING %s through chained server at %s, status code %d", url, s.Addr(), resp.StatusCode)
 		success := resp.StatusCode >= 200 && resp.StatusCode <= 299
 		if success {
+			bbr.OnResponse(resp)
 			delta := int64(time.Now().Sub(start))
 			atomic.AddInt64(totalLatency, delta)
 		} else {
