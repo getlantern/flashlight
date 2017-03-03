@@ -66,8 +66,8 @@ func Refresh() {
 // OnRefresh creates a channel that caller can receive on when new geolocation
 // information is got.
 func OnRefresh() <-chan bool {
-	muWatchers.Lock()
 	ch := make(chan bool, 1)
+	muWatchers.Lock()
 	watchers = append(watchers, ch)
 	muWatchers.Unlock()
 	return ch

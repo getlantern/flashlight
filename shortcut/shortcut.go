@@ -41,18 +41,19 @@ func configure(country string) {
 		return
 	}
 
-	mu.Lock()
-	defer mu.Unlock()
-	sc = shortcut.NewFromReader(
+	_sc := shortcut.NewFromReader(
 		bytes.NewReader(v4),
 		bytes.NewReader(v6),
 	)
+	mu.Lock()
+	sc = _sc
+	mu.Unlock()
 	log.Debugf("loaded shortcut list for country %s", country)
 }
 
 func Allow(addr string) bool {
 	mu.RLock()
-	allow := sc.Allow(addr)
+	_sc := sc
 	mu.RUnlock()
-	return allow
+	return _sc.Allow(addr)
 }
