@@ -106,7 +106,8 @@ import:
 - package: github.com/pmezard/adblock
   subpackages:
   - adblock
-- package: github.com/getlantern/connmux
+- package: github.com/getlantern/lampshade
+- package: github.com/Yawning/chacha20
 testImport:
 - package: github.com/stretchr/testify
   subpackages:
