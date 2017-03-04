@@ -254,11 +254,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 		return overheadWrapper(false)(conn, op.FailIf(err))
 	})
 	dial := func() (net.Conn, error) {
-		conn, err := dialer.Dial()
-		if err == nil {
-
-		}
-		return overheadWrapper(true)(conn, err)
+		return overheadWrapper(true)(dialer.Dial())
 	}
 
 	proxy := &lampshadeProxy{
