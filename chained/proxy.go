@@ -253,13 +253,6 @@ func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 		op.DialTime(elapsed, err)
 		return overheadWrapper(false)(conn, op.FailIf(err))
 	})
-	go func() {
-		for {
-			time.Sleep(pingInterval * 2)
-			ttfa := dialer.EMARTT()
-			log.Debugf("EMA RTT: %v", ttfa)
-		}
-	}()
 	dial := func() (net.Conn, error) {
 		conn, err := dialer.Dial()
 		if err == nil {
@@ -268,10 +261,20 @@ func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 		return overheadWrapper(true)(conn, err)
 	}
 
-	return &lampshadeProxy{
+	proxy := &lampshadeProxy{
 		BaseProxy: BaseProxy{name: name, protocol: "lampshade", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted},
 		dial:      dial,
-	}, nil
+	}
+
+	go func() {
+		for {
+			time.Sleep(pingInterval * 2)
+			ttfa := dialer.EMARTT()
+			log.Debugf("%v EMA RTT: %v", proxy.Label(), ttfa)
+		}
+	}()
+
+	return proxy, nil
 }
 
 func (d lampshadeProxy) DialServer() (net.Conn, error) {
