@@ -108,6 +108,7 @@ func (client *Client) initEasyList() {
 			client.easylist = allowAllEasyList{}
 		}
 	}()
+	log.Debug("Initializing easylist")
 	path, err := InConfigDir("", "easylist.txt")
 	if err != nil {
 		log.Errorf("Unable to get config path: %v", err)
@@ -119,6 +120,7 @@ func (client *Client) initEasyList() {
 		return
 	}
 	client.easylist = list
+	log.Debug("Initialized easylist")
 }
 
 // Addr returns the address at which the client is listening with HTTP, blocking
