@@ -15,6 +15,7 @@ import (
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/detour"
+	"github.com/getlantern/easylist"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/go-socks5"
 	"github.com/getlantern/golog"
@@ -75,6 +76,8 @@ type Client struct {
 
 	proxyAll       func() bool
 	proTokenGetter func() string
+
+	easylist easylist.List
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -90,7 +93,34 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 	keepAliveIdleTimeout := idleTimeout - 5*time.Second
 	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers.Pool, false, client.dialCONNECT)
 	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, bbr.OnResponse, errorResponse, client.dialHTTP)
+	client.initEasyList()
 	return client
+}
+
+type allowAllEasyList struct{}
+
+func (l allowAllEasyList) Allow(*http.Request) bool {
+	return true
+}
+
+func (client *Client) initEasyList() {
+	defer func() {
+		if client.easylist == nil {
+			log.Debugf("Not using easylist")
+			client.easylist = allowAllEasyList{}
+		}
+	}()
+	path, err := InConfigDir("", "easylist.txt")
+	if err != nil {
+		log.Errorf("Unable to get config path: %v", err)
+		return
+	}
+	list, err := easylist.Open(path, 1*time.Hour)
+	if err != nil {
+		log.Errorf("Unable to open easylist: %v", err)
+		return
+	}
+	client.easylist = list
 }
 
 // Addr returns the address at which the client is listening with HTTP, blocking
