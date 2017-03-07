@@ -229,8 +229,13 @@ func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 	}
 	cipherCode := lampshade.Cipher(s.ptSettingInt(fmt.Sprintf("cipher_%v", runtime.GOARCH)))
 	if cipherCode == 0 {
-		// default to ChaCha20 which is fast even without hardware acceleration
-		cipherCode = lampshade.ChaCha20
+		if runtime.GOARCH == "amd64" {
+			// On 64-bit Intel, default to AES128_GCM which is hardware accelerated
+			cipherCode = lampshade.AES128GCM
+		} else {
+			// default to ChaCha20Poly1305 which is fast even without hardware acceleration
+			cipherCode = lampshade.ChaCha20Poly1305
+		}
 	}
 	windowSize := s.ptSettingInt("windowsize")
 	maxPadding := s.ptSettingInt("maxpadding")
