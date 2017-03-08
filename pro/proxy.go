@@ -57,7 +57,7 @@ func GetHTTPClient() *http.Client {
 	return &http.Client{
 		Transport: proxied.AsRoundTripper(func(req *http.Request) (*http.Response, error) {
 			frontedURL := *req.URL
-			frontedURL.Host = "d157vud77ygy87.cloudfront.net"
+			frontedURL.Host = proAPIDDFHost
 			proxied.PrepareForFronting(req, frontedURL.String())
 			if req.Method == "GET" {
 				return httpClientForGET.Do(req)
