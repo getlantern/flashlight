@@ -2,7 +2,7 @@ package client
 
 import (
 	"errors"
-	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/pro"
 )
 
 type ProRequest struct {
@@ -11,11 +11,7 @@ type ProRequest struct {
 }
 
 func NewRequest(user User) (*ProRequest, error) {
-	httpClient, err := proxied.GetHTTPClient()
-	if err != nil {
-		log.Errorf("Could not create HTTP client: %v", err)
-		return nil, err
-	}
+	httpClient := pro.GetHTTPClient()
 
 	req := &ProRequest{
 		Client: NewClient(httpClient),

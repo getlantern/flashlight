@@ -37,9 +37,6 @@ const (
 var (
 	log = golog.LoggerFor("flashlight.proxied")
 
-	_httpClient     *http.Client
-	httpClientMutex sync.Mutex
-
 	proxyAddrMutex sync.RWMutex
 	proxyAddr      = eventual.DefaultUnsetGetter()
 
@@ -83,21 +80,6 @@ func getProxyAddr() (string, bool) {
 		return "", false
 	}
 	return addr.(string), true
-}
-
-func GetHTTPClient() (*http.Client, error) {
-	var err error
-
-	httpClientMutex.Lock()
-	if _httpClient == nil {
-		var rt http.RoundTripper
-		rt, err = ChainedNonPersistent("")
-		if err == nil {
-			_httpClient = &http.Client{Transport: rt}
-		}
-	}
-	httpClientMutex.Unlock()
-	return _httpClient, err
 }
 
 // ParallelPreferChained creates a new http.RoundTripper that attempts to send

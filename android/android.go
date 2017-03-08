@@ -22,7 +22,7 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/logging"
-	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
@@ -273,17 +273,13 @@ func extractUrl(surveys map[string]*json.RawMessage, locale string) (string, err
 }
 
 func surveyRequest(locale string) (string, error) {
-	var err error
 	var req *http.Request
 	var res *http.Response
+	var err error
 
 	var surveyResp map[string]*json.RawMessage
 
-	httpClient, err := proxied.GetHTTPClient()
-	if err != nil {
-		handleError(err)
-		return "", err
-	}
+	httpClient := pro.GetHTTPClient()
 
 	if req, err = http.NewRequest("GET", surveyURL, nil); err != nil {
 		handleError(fmt.Errorf("Error fetching survey: %v", err))
