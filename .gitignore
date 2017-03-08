@@ -21,3 +21,4 @@ config/fetched-proxies.yaml.stored
 config/generated/masquerades.go
 profile.cov
 profile_tmp.cov
+shortcut/resources/*

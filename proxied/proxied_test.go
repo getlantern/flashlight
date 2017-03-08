@@ -192,7 +192,7 @@ func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
 	body, err := ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	//log.Debugf("Got body: %v", string(body))
-	assert.True(t, strings.Contains(string(body), "New York"), "Unexpected response ")
+	assert.True(t, strings.Contains(string(body), "United States"), "Unexpected response ")
 	_ = resp.Body.Close()
 
 	// Now test with a bad cloudfront url that won't resolve and make sure even the
@@ -208,7 +208,7 @@ func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
 	log.Debugf("Got response in test")
 	body, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
-	assert.True(t, strings.Contains(string(body), "New York"), "Unexpected response ")
+	assert.True(t, strings.Contains(string(body), "United States"), "Unexpected response ")
 	_ = resp.Body.Close()
 
 	// Now give the bad url to the req server and make sure we still get the corret
@@ -224,7 +224,7 @@ func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
 		if assert.Equal(t, 200, resp.StatusCode) {
 			body, err = ioutil.ReadAll(resp.Body)
 			if assert.NoError(t, err) {
-				assert.True(t, strings.Contains(string(body), "New York"), "Unexpected response "+string(body))
+				assert.True(t, strings.Contains(string(body), "United States"), "Unexpected response "+string(body))
 			}
 		}
 		_ = resp.Body.Close()

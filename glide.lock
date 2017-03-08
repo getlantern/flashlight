@@ -1,5 +1,5 @@
-hash: 851c865df9e4e291213217415d64e958f2abe974a37d2b8a073680b00bdecfba
-updated: 2017-03-03T22:46:52.114411976-06:00
+hash: 35826ba7ffbf48721875748faebb3a64b280508f26915071d323a010160dc29e
+updated: 2017-03-06T14:20:13.373512847-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: f1569079ca898d54e52a26b0bd1b5cc869310608
@@ -191,11 +191,13 @@ imports:
 - name: github.com/getlantern/proxy
   version: 1130e137f623dde1d349c7083b806822ba04f7f9
 - name: github.com/getlantern/proxybench
-  version: b7fceec7f47878e0221fc6d37c3694d70b4b0aee
+  version: 432a0d7e8988480fd91daea3e29e73a1f1ee404e
 - name: github.com/getlantern/rot13
   version: 33f93fc1fe85c042c0667a1814e6379bd5e7eb40
 - name: github.com/getlantern/rotator
   version: 013d4f8e36a2f6369b2435d89866056b5b74c69e
+- name: github.com/getlantern/shortcut
+  version: 71f2e56d7c39e15a12b13a6d11c4b0830f8f97d9
 - name: github.com/getlantern/sqlparser
   version: 813d09d4d8b3d70f253bc5b84bbb86e9407d8f04
 - name: github.com/getlantern/stack
@@ -313,7 +315,7 @@ imports:
   subpackages:
   - utils
 - name: github.com/xtaci/kcp-go
-  version: e15201372fd72b502d843f7955b7f5d00faa5068
+  version: f198ac9e0e67cdd8d3eb95eea50d1839a9965810
 - name: github.com/xwb1989/sqlparser
   version: dbfc8580724c42e86a20e9586b75a65b806cd88b
   subpackages:
@@ -367,7 +369,7 @@ imports:
   - internal/modules
   - internal/remote_api
 - name: google.golang.org/grpc
-  version: 1dab93372523195731c738b0f0cb4e452228e959
+  version: 0e5ab0098fc546265db1576f601f6c48a9c03d34
   subpackages:
   - codes
   - credentials
@@ -380,7 +382,7 @@ imports:
   - tap
   - transport
 - name: gopkg.in/redis.v5
-  version: cbad034630445e15fbcaa7e9904064dd67bce69b
+  version: a16aeec10ff407b1e7be6dd35797ccf5426ef0f0
   subpackages:
   - internal
   - internal/consistenthash

@@ -99,6 +99,7 @@ import:
   version: ^1.1.0
 - package: github.com/getlantern/proxy
 - package: github.com/getlantern/mockconn
+- package: github.com/getlantern/shortcut
 - package: github.com/armon/go-radix
 - package: github.com/getlantern/zenodb
   subpackages:
@@ -108,6 +109,7 @@ import:
   - adblock
 - package: github.com/getlantern/lampshade
 - package: github.com/Yawning/chacha20
+- package: github.com/armon/go-radix
 testImport:
 - package: github.com/stretchr/testify
   subpackages:
