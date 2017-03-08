@@ -2,8 +2,10 @@ package chained
 
 import (
 	"net"
+	"sync/atomic"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	borda "github.com/getlantern/borda/client"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/measured"
@@ -12,6 +14,8 @@ import (
 const (
 	rateInterval = 1 * time.Second
 )
+
+var totalReceived = uint64(0)
 
 func withRateTracking(wrapped net.Conn, origin string, onFinish func(op *ops.Op)) net.Conn {
 	return measured.Wrap(wrapped, rateInterval, func(conn measured.Conn) {
@@ -36,6 +40,7 @@ func withRateTracking(wrapped net.Conn, origin string, onFinish func(op *ops.Op)
 		// right within a user's logs, which is useful when someone submits their logs
 		// together with a complaint of Lantern being slow.
 		log.Debug("Finished xfer")
+		log.Debugf("Total Received: %v", humanize.Bytes(atomic.AddUint64(&totalReceived, uint64(stats.RecvTotal))))
 		op.End()
 	})
 }
