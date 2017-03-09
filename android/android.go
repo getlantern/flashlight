@@ -26,6 +26,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
+	"github.com/getlantern/protected"
 	"github.com/getlantern/uuid"
 
 	proclient "github.com/getlantern/flashlight/pro/client"
@@ -68,8 +69,8 @@ type SocketProtector interface {
 // routing via a VPN. This is useful when running Lantern as a VPN on Android,
 // because it keeps Lantern's own connections from being captured by the VPN and
 // resulting in an infinite loop.
-func ProtectConnections(protector SocketProtector) {
-	p := protected.New(protector.ProtectConn)
+func ProtectConnections(dnsServer string, protector SocketProtector) {
+	p := protected.New(protector.ProtectConn, dnsServer)
 	netx.OverrideDial(p.DialContext)
 	netx.OverrideResolve(p.Resolve)
 }
