@@ -2,6 +2,7 @@ package geolookup
 
 import (
 	"math"
+	"sync"
 	"time"
 
 	"github.com/getlantern/eventual"
@@ -17,6 +18,8 @@ var (
 
 	refreshRequest = make(chan interface{}, 1)
 	currentGeoInfo = eventual.NewValue()
+	watchers       []chan bool
+	muWatchers     sync.RWMutex
 
 	waitForProxyTimeout = 1 * time.Minute
 	retryWaitMillis     = 100
@@ -60,6 +63,16 @@ func Refresh() {
 	}
 }
 
+// OnRefresh creates a channel that caller can receive on when new geolocation
+// information is got.
+func OnRefresh() <-chan bool {
+	ch := make(chan bool, 1)
+	muWatchers.Lock()
+	watchers = append(watchers, ch)
+	muWatchers.Unlock()
+	return ch
+}
+
 func init() {
 	go run()
 }
@@ -67,8 +80,20 @@ func init() {
 func run() {
 	for _ = range refreshRequest {
 		gi := lookup()
-		log.Debug("Got new geolocation info")
+		if gi.ip == GetIP(0) {
+			log.Debug("public IP doesn't change, not update")
+			continue
+		}
 		currentGeoInfo.Set(gi)
+		muWatchers.RLock()
+		w := watchers
+		muWatchers.RUnlock()
+		for _, ch := range w {
+			select {
+			case ch <- true:
+			default:
+			}
+		}
 	}
 }
 
@@ -87,7 +112,6 @@ func lookup() *geoInfo {
 			time.Sleep(wait)
 			consecutiveFailures++
 		} else {
-			log.Debugf("IP is %v", gi.ip)
 			return gi
 		}
 	}

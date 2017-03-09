@@ -1,5 +1,5 @@
-hash: 851c865df9e4e291213217415d64e958f2abe974a37d2b8a073680b00bdecfba
-updated: 2017-03-09T10:40:43.773630309-06:00
+hash: 35826ba7ffbf48721875748faebb3a64b280508f26915071d323a010160dc29e
+updated: 2017-03-09T11:19:27.767765148-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: f1569079ca898d54e52a26b0bd1b5cc869310608
@@ -126,7 +126,7 @@ imports:
   - server
   - utils
 - name: github.com/getlantern/http-proxy-lantern
-  version: 7b7e740dc69a7b247dc5126b14246fb23454316f
+  version: 0c0ba64e71cadec8dd0a0cfa761fba9f92ee3ff3
   subpackages:
   - analytics
   - bbr
@@ -196,6 +196,8 @@ imports:
   version: 33f93fc1fe85c042c0667a1814e6379bd5e7eb40
 - name: github.com/getlantern/rotator
   version: 013d4f8e36a2f6369b2435d89866056b5b74c69e
+- name: github.com/getlantern/shortcut
+  version: 71f2e56d7c39e15a12b13a6d11c4b0830f8f97d9
 - name: github.com/getlantern/sqlparser
   version: 813d09d4d8b3d70f253bc5b84bbb86e9407d8f04
 - name: github.com/getlantern/stack
