@@ -279,7 +279,7 @@ func surveyRequest(locale string) (string, error) {
 
 	var surveyResp map[string]*json.RawMessage
 
-	httpClient := proxied.GetHTTPClient()
+	httpClient := pro.GetHTTPClient()
 
 	if req, err = http.NewRequest("GET", surveyURL, nil); err != nil {
 		handleError(fmt.Errorf("Error fetching survey: %v", err))
