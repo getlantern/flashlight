@@ -285,6 +285,7 @@ func surveyRequest(locale string) (string, error) {
 		handleError(fmt.Errorf("Error fetching survey: %v", err))
 		return "", err
 	}
+	pro.PrepareForFronting(req)
 
 	if res, err = httpClient.Do(req); err != nil {
 		handleError(fmt.Errorf("Error fetching feed: %v", err))
