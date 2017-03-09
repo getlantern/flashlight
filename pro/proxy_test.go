@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"runtime"
 	"strings"
 	"testing"
 
@@ -16,20 +15,21 @@ func TestProxy(t *testing.T) {
 	m := &mockRoundTripper{msg: "GOOD"}
 	httpClient = &http.Client{Transport: m}
 	httpClientForGET = &http.Client{Transport: m}
-	addr := pickFreeAddr()
+	l, err := net.Listen("tcp", "localhost:0")
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	addr := l.Addr()
 	url := fmt.Sprintf("http://%s/pro/abc", addr)
-	go func() {
-		t.Logf("Launching test server at %s", url)
-		http.Handle("/", APIHandler())
-		http.ListenAndServe(addr, nil)
-	}()
-	// Give InitProxy a chance to run
-	runtime.Gosched()
+	t.Logf("Test server listening at %s", url)
+	go http.Serve(l, APIHandler())
 
 	req, err := http.NewRequest("OPTIONS", url, nil)
-	if err != nil {
-		panic(err)
+	if !assert.NoError(t, err) {
+		return
 	}
+
 	req.Header.Set("Origin", "a.com")
 	resp, err := (&http.Client{}).Do(req)
 	if assert.NoError(t, err, "OPTIONS request should succeed") {
@@ -40,6 +40,9 @@ func TestProxy(t *testing.T) {
 	assert.Nil(t, m.req, "should not pass the OPTIONS request to origin server")
 
 	req, err = http.NewRequest("GET", url, nil)
+	if !assert.NoError(t, err) {
+		return
+	}
 	req.Header.Set("Origin", "a.com")
 	resp, err = (&http.Client{}).Do(req)
 	if assert.NoError(t, err, "GET request should have no error") {
@@ -70,14 +73,4 @@ func (m *mockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) 
 		Body:       ioutil.NopCloser(strings.NewReader(m.msg)),
 	}
 	return resp, nil
-}
-
-func pickFreeAddr() (addr string) {
-	l, err := net.Listen("tcp", "localhost:0")
-	if err != nil {
-		panic(err)
-	}
-	addr = l.Addr().(*net.TCPAddr).String()
-	l.Close()
-	return
 }

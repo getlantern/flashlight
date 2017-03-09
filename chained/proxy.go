@@ -229,13 +229,23 @@ func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 	}
 	cipherCode := lampshade.Cipher(s.ptSettingInt(fmt.Sprintf("cipher_%v", runtime.GOARCH)))
 	if cipherCode == 0 {
-		// default to ChaCha20 which is fast even without hardware acceleration
-		cipherCode = lampshade.ChaCha20
+		if runtime.GOARCH == "amd64" {
+			// On 64-bit Intel, default to AES128_GCM which is hardware accelerated
+			cipherCode = lampshade.AES128GCM
+		} else {
+			// default to ChaCha20Poly1305 which is fast even without hardware acceleration
+			cipherCode = lampshade.ChaCha20Poly1305
+		}
 	}
-	windowSize := s.ptSettingInt("window_size")
-	maxPadding := s.ptSettingInt("max_padding")
+	windowSize := s.ptSettingInt("windowsize")
+	maxPadding := s.ptSettingInt("maxpadding")
 	maxStreamsPerConn := uint16(s.ptSettingInt("streams"))
-	doDial := lampshade.Dialer(windowSize, maxPadding, maxStreamsPerConn, buffers.Pool, cipherCode, cert.X509().PublicKey.(*rsa.PublicKey), func() (net.Conn, error) {
+	pingInterval, parseErr := time.ParseDuration(s.ptSetting("pinginterval"))
+	if parseErr != nil || pingInterval <= 0 {
+		log.Debug("Defaulting pinginterval to 15 seconds")
+		pingInterval = 15 * time.Second
+	}
+	dialer := lampshade.NewDialer(windowSize, maxPadding, maxStreamsPerConn, pingInterval, buffers.Pool, cipherCode, cert.X509().PublicKey.(*rsa.PublicKey), func() (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "lampshade", "tcp").
 			Set("ls_win", windowSize).
 			Set("ls_pad", maxPadding).
@@ -249,14 +259,23 @@ func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 		return overheadWrapper(false)(conn, op.FailIf(err))
 	})
 	dial := func() (net.Conn, error) {
-		conn, err := doDial()
-		return overheadWrapper(true)(conn, err)
+		return overheadWrapper(true)(dialer.Dial())
 	}
 
-	return &lampshadeProxy{
+	proxy := &lampshadeProxy{
 		BaseProxy: BaseProxy{name: name, protocol: "lampshade", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted},
 		dial:      dial,
-	}, nil
+	}
+
+	go func() {
+		for {
+			time.Sleep(pingInterval * 2)
+			ttfa := dialer.EMARTT()
+			log.Debugf("%v EMA RTT: %v", proxy.Label(), ttfa)
+		}
+	}()
+
+	return proxy, nil
 }
 
 func (d lampshadeProxy) DialServer() (net.Conn, error) {
