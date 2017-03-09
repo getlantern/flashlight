@@ -16,6 +16,17 @@ func GetHTTPClient() *http.Client {
 	return getHTTPClient(rtForGet, rt)
 }
 
+// PrepareForFronting prepares the given request to be used with domain-
+// fronting.
+func PrepareForFronting(req *http.Request) {
+	if req == nil {
+		return
+	}
+	frontedURL := *req.URL
+	frontedURL.Host = proAPIDDFHost
+	proxied.PrepareForFronting(req, frontedURL.String())
+}
+
 func getHTTPClient(getRt, otherRt http.RoundTripper) *http.Client {
 	log := golog.LoggerFor("flashlight.pro.http")
 	return &http.Client{
@@ -29,9 +40,6 @@ func getHTTPClient(getRt, otherRt http.RoundTripper) *http.Client {
 				},
 			}
 			req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
-			frontedURL := *req.URL
-			frontedURL.Host = proAPIDDFHost
-			proxied.PrepareForFronting(req, frontedURL.String())
 			if req.Method == "GET" || req.Method == "HEAD" {
 				return getRt.RoundTrip(req)
 			}
