@@ -250,11 +250,11 @@ func TestCloneRequestForFronted(t *testing.T) {
 
 	dump, er := httputil.DumpRequestOut(req, true)
 	assert.Nil(t, er)
-	t.Log("%v", string(dump))
+	t.Logf("%v", string(dump))
 
 	dump, er = httputil.DumpRequestOut(r, true)
 	assert.Nil(t, er)
-	t.Log("%v", string(dump))
+	t.Logf("%v", string(dump))
 
 	param1 := r.URL.Query().Get("q1")
 	param2 := r.URL.Query().Get("q2")
