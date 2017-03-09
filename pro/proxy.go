@@ -54,15 +54,17 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 }
 
 func GetHTTPClient() *http.Client {
+	rt := proxied.ChainedThenFronted()
+	rtForGet := proxied.ParallelPreferChained()
 	return &http.Client{
 		Transport: proxied.AsRoundTripper(func(req *http.Request) (*http.Response, error) {
 			frontedURL := *req.URL
 			frontedURL.Host = proAPIDDFHost
 			proxied.PrepareForFronting(req, frontedURL.String())
 			if req.Method == "GET" {
-				return httpClientForGET.Do(req)
+				return rtForGet.RoundTrip(req)
 			} else {
-				return httpClient.Do(req)
+				return rt.RoundTrip(req)
 			}
 		}),
 	}
