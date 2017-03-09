@@ -1,5 +1,5 @@
 hash: 851c865df9e4e291213217415d64e958f2abe974a37d2b8a073680b00bdecfba
-updated: 2017-03-06T11:00:51.626725599-06:00
+updated: 2017-03-09T07:48:00.883412326-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: f1569079ca898d54e52a26b0bd1b5cc869310608
@@ -20,7 +20,7 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/aristanetworks/goarista
-  version: 72539949cc5708ec9e7bd34bb32ca390bbac987a
+  version: bb27273187064031dca80a5a9d9ef2c3c661b11e
   subpackages:
   - monotime
 - name: github.com/armon/go-radix
@@ -68,7 +68,7 @@ imports:
 - name: github.com/getlantern/detour
   version: e326e9a1f33a0ecfaac6726cb78fc0c77aada064
 - name: github.com/getlantern/easylist
-  version: 1b75c0713597d758d29731aa4cf58f403a7939c7
+  version: 0f7dcc1ba36f836d4ed683da159581160fb35621
 - name: github.com/getlantern/edgedetect
   version: f58e865f680868c70f5d114b620b682a39fdaff7
 - name: github.com/getlantern/elevate
@@ -126,7 +126,7 @@ imports:
   - server
   - utils
 - name: github.com/getlantern/http-proxy-lantern
-  version: 28fe05033dbeecf0fa1f6873c7e05045d2b4ff80
+  version: 7b7e740dc69a7b247dc5126b14246fb23454316f
   subpackages:
   - analytics
   - bbr
@@ -158,7 +158,7 @@ imports:
   subpackages:
   - certimporter
 - name: github.com/getlantern/lampshade
-  version: 2d241d139554e0f6afee344d021dd4a46b7e932f
+  version: e7988f245626c26aa11a058c938916d307097250
 - name: github.com/getlantern/launcher
   version: bc9fc3b11894e839c3fcb049f12e8974d7e48497
 - name: github.com/getlantern/measured
@@ -191,7 +191,7 @@ imports:
 - name: github.com/getlantern/proxy
   version: 1130e137f623dde1d349c7083b806822ba04f7f9
 - name: github.com/getlantern/proxybench
-  version: 432a0d7e8988480fd91daea3e29e73a1f1ee404e
+  version: b8f435173c9d0c920f30e3eeb0c62d1e417a5e46
 - name: github.com/getlantern/rot13
   version: 33f93fc1fe85c042c0667a1814e6379bd5e7eb40
 - name: github.com/getlantern/rotator
@@ -242,7 +242,7 @@ imports:
   subpackages:
   - lru
 - name: github.com/golang/protobuf
-  version: 69b215d01a5606c843240eab4937eab3acee6530
+  version: c9c7427a2a70d2eb3bafa0ab2dc163e45f143317
   subpackages:
   - proto
 - name: github.com/golang/snappy
@@ -272,7 +272,7 @@ imports:
   subpackages:
   - forward
 - name: github.com/miekg/dns
-  version: eda6b320244f0700772bb765282381d17495e7d3
+  version: 59e593b27b929d65e24be12ff41e11cdd79347c4
 - name: github.com/mitchellh/panicwrap
   version: fce601fe55579125e1b3cb0b992287e7290f7b83
 - name: github.com/mxk/go-flowrate
@@ -294,13 +294,13 @@ imports:
 - name: github.com/rcrowley/go-metrics
   version: 1f30fe9094a513ce4c700b9a54458bbb0c96996c
 - name: github.com/Sirupsen/logrus
-  version: 0208149b40d863d2c1a2f8fe5753096a9cf2cc8b
+  version: 1deb2db2a6fff8a35532079061b903c3a25eed52
 - name: github.com/skratchdot/open-golang
   version: 75fb7ed4208cf72d323d7d02fd1a5964a7a9073c
   subpackages:
   - open
 - name: github.com/stripe/stripe-go
-  version: 9cc2162607f5e21aa59ca074c1eb4dd62f2605f4
+  version: ec94ac5485faaddd7d9ccfc1ec48e19667eb6b65
   subpackages:
   - orderitem
   - token
@@ -313,7 +313,7 @@ imports:
   subpackages:
   - utils
 - name: github.com/xtaci/kcp-go
-  version: f198ac9e0e67cdd8d3eb95eea50d1839a9965810
+  version: 947067cce2e8874efac6a89aa82273378a591617
 - name: github.com/xwb1989/sqlparser
   version: dbfc8580724c42e86a20e9586b75a65b806cd88b
   subpackages:
@@ -324,15 +324,17 @@ imports:
 - name: github.com/Yawning/chacha20
   version: c91e78db502ff629614837aacb7aa4efa61c651a
 - name: golang.org/x/crypto
-  version: 40541ccb1c6e64c947ed6f606b8a6cb4b67d7436
+  version: 728b753d0135da6801d45a38e6f43ff55779c5c2
   subpackages:
+  - chacha20poly1305
+  - chacha20poly1305/internal/chacha20
   - curve25519
   - hkdf
   - nacl/secretbox
   - poly1305
   - salsa20/salsa
 - name: golang.org/x/net
-  version: d379faa25cbdc04d653984913a2ceb43b0bc46d7
+  version: a6577fac2d73be281a500b310739095313165611
   repo: https://github.com/golang/net
   vcs: git
   subpackages:
@@ -349,14 +351,14 @@ imports:
   - proxy
   - trace
 - name: golang.org/x/sys
-  version: e48874b42435b4347fc52bdee0424a52abc974d7
+  version: 99f16d856c9836c42d24e7ab64ea72916925fa97
   repo: https://github.com/golang/sys
   vcs: git
   subpackages:
   - unix
   - windows
 - name: google.golang.org/appengine
-  version: 5403c08c6e8fb3b2dc1209d2d833d8e8ac8240de
+  version: b79c28f0197795b4050bfcd7c4c2209136c594b1
   subpackages:
   - datastore
   - internal
@@ -367,12 +369,13 @@ imports:
   - internal/modules
   - internal/remote_api
 - name: google.golang.org/grpc
-  version: 1dab93372523195731c738b0f0cb4e452228e959
+  version: 4eaacfed9779ee7568c9e72e9f763dbd3af8e0b4
   subpackages:
   - codes
   - credentials
   - grpclog
   - internal
+  - keepalive
   - metadata
   - naming
   - peer
