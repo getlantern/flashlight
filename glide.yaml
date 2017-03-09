@@ -38,7 +38,6 @@ import:
 - package: github.com/getlantern/osversion
 - package: github.com/getlantern/pac
 - package: github.com/getlantern/profiling
-- package: github.com/getlantern/protected
 - package: github.com/getlantern/proxiedsites
 - package: github.com/getlantern/proxybench
 - package: github.com/getlantern/rot13
