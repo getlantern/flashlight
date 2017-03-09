@@ -1,5 +1,5 @@
 hash: 851c865df9e4e291213217415d64e958f2abe974a37d2b8a073680b00bdecfba
-updated: 2017-03-09T07:48:00.883412326-06:00
+updated: 2017-03-09T10:40:43.773630309-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: f1569079ca898d54e52a26b0bd1b5cc869310608
@@ -158,7 +158,7 @@ imports:
   subpackages:
   - certimporter
 - name: github.com/getlantern/lampshade
-  version: e7988f245626c26aa11a058c938916d307097250
+  version: 18cb0b0fa9632079650321fe2caf46ba697f140b
 - name: github.com/getlantern/launcher
   version: bc9fc3b11894e839c3fcb049f12e8974d7e48497
 - name: github.com/getlantern/measured
