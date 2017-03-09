@@ -18,7 +18,6 @@ import (
 	"github.com/getlantern/autoupdate"
 	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/flashlight"
-	"github.com/getlantern/flashlight/android/protected"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/logging"
