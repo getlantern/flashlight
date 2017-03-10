@@ -68,8 +68,8 @@ type SocketProtector interface {
 // routing via a VPN. This is useful when running Lantern as a VPN on Android,
 // because it keeps Lantern's own connections from being captured by the VPN and
 // resulting in an infinite loop.
-func ProtectConnections(dnsServer string, protector SocketProtector) {
-	p := protected.New(protector.ProtectConn, dnsServer)
+func ProtectConnections(protector SocketProtector) {
+	p := protected.New(protector.ProtectConn)
 	netx.OverrideDial(p.DialContext)
 	netx.OverrideResolve(p.Resolve)
 }
