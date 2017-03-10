@@ -53,23 +53,6 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	return
 }
 
-func GetHTTPClient() *http.Client {
-	rt := proxied.ChainedThenFronted()
-	rtForGet := proxied.ParallelPreferChained()
-	return &http.Client{
-		Transport: proxied.AsRoundTripper(func(req *http.Request) (*http.Response, error) {
-			frontedURL := *req.URL
-			frontedURL.Host = proAPIDDFHost
-			proxied.PrepareForFronting(req, frontedURL.String())
-			if req.Method == "GET" {
-				return rtForGet.RoundTrip(req)
-			} else {
-				return rt.RoundTrip(req)
-			}
-		}),
-	}
-}
-
 // APIHandler returns an HTTP handler that specifically looks for and properly
 // handles pro server requests.
 func APIHandler() http.Handler {
