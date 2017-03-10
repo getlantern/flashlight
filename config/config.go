@@ -161,7 +161,9 @@ func newConfig(filePath string,
 func (conf *config) saved() (interface{}, error) {
 	infile, err := os.Open(conf.filePath)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to open config file %v for reading: %v", conf.filePath, err)
+		err = fmt.Errorf("Unable to open config file %v for reading: %v", conf.filePath, err)
+		log.Error(err.Error())
+		return nil, err
 	}
 	defer infile.Close()
 
@@ -172,7 +174,9 @@ func (conf *config) saved() (interface{}, error) {
 
 	bytes, err := ioutil.ReadAll(in)
 	if err != nil {
-		return nil, fmt.Errorf("Error reading config from %v: %v", conf.filePath, err)
+		err = fmt.Errorf("Error reading config from %v: %v", conf.filePath, err)
+		log.Error(err.Error())
+		return nil, err
 	}
 	if len(bytes) == 0 {
 		return nil, fmt.Errorf("Config exists but is empty at %v", conf.filePath)

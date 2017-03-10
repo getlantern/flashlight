@@ -45,7 +45,7 @@ func userStatus(deviceID string, userID int, proToken string) (string, error) {
 		ID:       userID,
 		Token:    proToken,
 	}}
-	req, err := proClient.NewRequest(true, user)
+	req, err := proClient.NewRequest(user)
 	if err != nil {
 		return "", err
 	}

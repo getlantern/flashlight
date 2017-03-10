@@ -21,7 +21,7 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/logging"
-	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
@@ -98,7 +98,6 @@ type StartResult struct {
 
 type UserConfig interface {
 	config.UserConfig
-	ConfigUpdate(bool)
 	AfterStart()
 	SetStaging(bool)
 	ShowSurvey(string)
@@ -120,13 +119,12 @@ type Updater autoupdate.Updater
 // start to use it, even as it finishes its initialization sequence. However,
 // initial activity may be slow, so clients with low read timeouts may
 // time out.
-func Start(configDir string, locale string, timeoutMillis int, user UserConfig) (*StartResult, error) {
-
-	appdir.SetHomeDir(configDir)
-	user.SetStaging(staging)
+func Start(configDir string, locale string,
+	stickyConfig bool,
+	timeoutMillis int, user UserConfig) (*StartResult, error) {
 
 	startOnce.Do(func() {
-		go run(configDir, locale, user)
+		go run(configDir, locale, stickyConfig, user)
 	})
 
 	elapsed := mtime.Stopwatch()
@@ -137,8 +135,11 @@ func Start(configDir string, locale string, timeoutMillis int, user UserConfig) 
 
 	socksAddr, ok := client.Socks5Addr((time.Duration(timeoutMillis) * time.Millisecond) - elapsed())
 	if !ok {
-		return nil, fmt.Errorf("SOCKS5 Proxy didn't start within given timeout")
+		err := fmt.Errorf("SOCKS5 Proxy didn't start within given timeout")
+		log.Error(err.Error())
+		return nil, err
 	}
+	log.Debugf("Starting socks proxy at %s", socksAddr)
 	return &StartResult{addr.(string), socksAddr.(string)}, nil
 }
 
@@ -147,7 +148,15 @@ func AddLoggingMetadata(key, value string) {
 	//logging.SetExtraLogglyInfo(key, value)
 }
 
-func run(configDir, locale string, user UserConfig) {
+func run(configDir, locale string,
+	stickyConfig bool, user UserConfig) {
+
+	appdir.SetHomeDir(configDir)
+	user.SetStaging(staging)
+
+	log.Debugf("Starting lantern: configDir %s locale %s sticky config %t",
+		configDir, locale, stickyConfig)
+
 	flags := map[string]interface{}{
 		"borda-report-interval":    5 * time.Minute,
 		"borda-sample-percentage":  float64(0.01),
@@ -161,6 +170,11 @@ func run(configDir, locale string, user UserConfig) {
 		return
 	}
 
+	if stickyConfig {
+		flags["stickyconfig"] = true
+		flags["readableconfig"] = true
+	}
+
 	logging.EnableFileLogging(configDir)
 
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
@@ -168,7 +182,7 @@ func run(configDir, locale string, user UserConfig) {
 	flashlight.Run("127.0.0.1:0", // listen for HTTP on random address
 		"127.0.0.1:0", // listen for SOCKS on random address
 		configDir,     // place to store lantern configuration
-		false,         // don't make config sticky
+		stickyConfig,
 		func() bool { return true }, // proxy all requests
 		// TODO: allow configuring whether or not to enable reporting (just like we
 		// already have in desktop)
@@ -182,7 +196,6 @@ func run(configDir, locale string, user UserConfig) {
 			afterStart(user)
 		}, // afterStart()
 		func(cfg *config.Global) {
-			configUpdate(user, cfg)
 		}, // onConfigUpdate
 		user,
 		func(err error) {}, // onError
@@ -259,23 +272,20 @@ func extractUrl(surveys map[string]*json.RawMessage, locale string) (string, err
 	return "", nil
 }
 
-func surveyRequest(shouldProxy bool, locale string) (string, error) {
+func surveyRequest(locale string) (string, error) {
 	var err error
 	var req *http.Request
 	var res *http.Response
 
 	var surveyResp map[string]*json.RawMessage
 
-	httpClient, err := proxied.GetHTTPClient(shouldProxy)
-	if err != nil {
-		handleError(err)
-		return "", err
-	}
+	httpClient := pro.GetHTTPClient()
 
 	if req, err = http.NewRequest("GET", surveyURL, nil); err != nil {
 		handleError(fmt.Errorf("Error fetching survey: %v", err))
 		return "", err
 	}
+	pro.PrepareForFronting(req)
 
 	if res, err = httpClient.Do(req); err != nil {
 		handleError(fmt.Errorf("Error fetching feed: %v", err))
@@ -310,18 +320,14 @@ func surveyRequest(shouldProxy bool, locale string) (string, error) {
 	return "", nil
 }
 
-func configUpdate(user UserConfig, cfg *config.Global) {
-	user.ConfigUpdate(cfg.Client.ShowAds)
-}
-
 // CheckForUpdates checks to see if a new version of Lantern is available
-func CheckForUpdates(shouldProxy bool) (string, error) {
-	return autoupdate.CheckMobileUpdate(shouldProxy, updateServerURL,
+func CheckForUpdates() (string, error) {
+	return autoupdate.CheckMobileUpdate(updateServerURL,
 		compileTimePackageVersion)
 }
 
 // DownloadUpdate downloads the latest APK from the given url to the apkPath
 // file destination.
-func DownloadUpdate(url, apkPath string, shouldProxy bool, updater Updater) {
-	autoupdate.UpdateMobile(shouldProxy, url, apkPath, updater)
+func DownloadUpdate(url, apkPath string, updater Updater) {
+	autoupdate.UpdateMobile(url, apkPath, updater)
 }
