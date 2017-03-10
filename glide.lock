@@ -1,5 +1,5 @@
 hash: 35826ba7ffbf48721875748faebb3a64b280508f26915071d323a010160dc29e
-updated: 2017-03-09T11:19:27.767765148-06:00
+updated: 2017-03-09T20:54:43.401138966-08:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: f1569079ca898d54e52a26b0bd1b5cc869310608
@@ -184,7 +184,7 @@ imports:
   version: b02f4864048a236150ca17c2c526158f2b3133c4
 - name: github.com/getlantern/profiling
   version: 2a15afbadcff99bac017e17af273b31d4510ddb8
-  name: github.com/getlantern/protected
+- name: github.com/getlantern/protected
   version: 55099e1fa38c5acf40b1f4445b1bac25cc43e6bc
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
