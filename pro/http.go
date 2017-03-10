@@ -19,27 +19,27 @@ func GetHTTPClient() *http.Client {
 // PrepareForFronting prepares the given request to be used with domain-
 // fronting.
 func PrepareForFronting(req *http.Request) {
+	log := golog.LoggerFor("flashlight.pro.http")
 	if req == nil {
 		return
 	}
 	frontedURL := *req.URL
 	frontedURL.Host = proAPIDDFHost
 	proxied.PrepareForFronting(req, frontedURL.String())
+	trace := &httptrace.ClientTrace{
+		DNSDone: func(info httptrace.DNSDoneInfo) {
+			log.Debugf("DNS Info: %+v\n", info)
+		},
+		GotConn: func(info httptrace.GotConnInfo) {
+			log.Debugf("Got Conn: %+v\n", info)
+		},
+	}
+	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 }
 
 func getHTTPClient(getRt, otherRt http.RoundTripper) *http.Client {
-	log := golog.LoggerFor("flashlight.pro.http")
 	return &http.Client{
 		Transport: proxied.AsRoundTripper(func(req *http.Request) (*http.Response, error) {
-			trace := &httptrace.ClientTrace{
-				DNSDone: func(info httptrace.DNSDoneInfo) {
-					log.Debugf("DNS Info: %+v\n", info)
-				},
-				GotConn: func(info httptrace.GotConnInfo) {
-					log.Debugf("Got Conn: %+v\n", info)
-				},
-			}
-			req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 			if req.Method == "GET" || req.Method == "HEAD" {
 				return getRt.RoundTrip(req)
 			}
