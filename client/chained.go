@@ -13,6 +13,7 @@ import (
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/bbr"
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/netx"
@@ -112,9 +113,9 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 
 func (s *chainedServer) attachHeaders(req *http.Request, deviceID string, proTokenGetter func() string) {
 	s.Proxy.AdaptRequest(req)
-	req.Header.Set("X-Lantern-Device-Id", deviceID)
+	req.Header.Set(common.DeviceIdHeader, deviceID)
 	if token := proTokenGetter(); token != "" {
-		req.Header.Set("X-Lantern-Pro-Token", token)
+		req.Header.Set(common.ProTokenHeader, token)
 	}
 }
 
@@ -160,10 +161,10 @@ func (s *chainedServer) doCheck(url string,
 		log.Errorf("Could not create HTTP request: %v", err)
 		return false
 	}
-	req.Header.Set("X-Lantern-PingURL", url)
+	req.Header.Set(common.PingURLHeader, url)
 	// We set X-Lantern-Ping in case we're hitting an old http-server that
 	// doesn't support pinging URLs.
-	req.Header.Set("X-Lantern-Ping", "small")
+	req.Header.Set(common.PingHeader, "small")
 
 	checkedURL := url
 	s.attachHeaders(req, deviceID, proTokenGetter)

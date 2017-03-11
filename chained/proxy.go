@@ -17,6 +17,7 @@ import (
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/buffers"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/lampshade"
@@ -320,5 +321,5 @@ func (p BaseProxy) DialServer() (net.Conn, error) {
 }
 
 func (p BaseProxy) AdaptRequest(req *http.Request) {
-	req.Header.Add("X-Lantern-Auth-Token", p.authToken)
+	req.Header.Add(common.TokenHeader, p.authToken)
 }

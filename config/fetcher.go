@@ -11,15 +11,9 @@ import (
 
 	"github.com/getlantern/detour"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
-)
-
-const (
-	etag         = "X-Lantern-Etag"
-	ifNoneMatch  = "X-Lantern-If-None-Match"
-	userIDHeader = "X-Lantern-User-Id"
-	tokenHeader  = "X-Lantern-Pro-Token"
 )
 
 // Fetcher is an interface for fetching config updates.
@@ -75,7 +69,7 @@ func (cf *fetcher) fetch() ([]byte, error) {
 	}
 	if cf.lastCloudConfigETag[url] != "" {
 		// Don't bother fetching if unchanged
-		req.Header.Set(ifNoneMatch, cf.lastCloudConfigETag[url])
+		req.Header.Set(common.IfNoneMatchHeader, cf.lastCloudConfigETag[url])
 	}
 
 	req.Header.Set("Accept", "application/x-gzip")
@@ -87,11 +81,11 @@ func (cf *fetcher) fetch() ([]byte, error) {
 	id := cf.user.GetUserID()
 	if id != 0 {
 		strID := strconv.FormatInt(id, 10)
-		req.Header.Set(userIDHeader, strID)
+		req.Header.Set(common.UserIdHeader, strID)
 	}
 	tok := cf.user.GetToken()
 	if tok != "" {
-		req.Header.Set(tokenHeader, tok)
+		req.Header.Set(common.ProTokenHeader, tok)
 	}
 
 	// make sure to close the connection after reading the Body
@@ -125,7 +119,7 @@ func (cf *fetcher) fetch() ([]byte, error) {
 		return nil, fmt.Errorf("Bad config resp:\n%v", string(dump))
 	}
 
-	cf.lastCloudConfigETag[url] = resp.Header.Get(etag)
+	cf.lastCloudConfigETag[url] = resp.Header.Get(common.EtagHeader)
 	gzReader, err := gzip.NewReader(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to open gzip reader: %s", err)
