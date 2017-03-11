@@ -26,6 +26,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 )
 
@@ -39,9 +40,6 @@ var (
 
 	proxyAddrMutex sync.RWMutex
 	proxyAddr      = eventual.DefaultUnsetGetter()
-
-	// compileTimePackageVersion is set at compile-time for production builds
-	compileTimePackageVersion = "development"
 
 	// ErrChainedProxyUnavailable indicates that we weren't able to find a chained
 	// proxy.
@@ -60,7 +58,7 @@ func success(resp *http.Response) bool {
 func changeUserAgent(req *http.Request) {
 	secondary := req.Header.Get("User-Agent")
 	ua := strings.TrimSpace(fmt.Sprintf("Lantern/%s (%s/%s) %s",
-		compileTimePackageVersion, runtime.GOOS, runtime.GOARCH, secondary))
+		common.Version, runtime.GOOS, runtime.GOARCH, secondary))
 	req.Header.Set("User-Agent", ua)
 }
 

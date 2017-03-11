@@ -232,11 +232,10 @@ func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
 }
 
 func TestChangeUserAgent(t *testing.T) {
-	compileTimePackageVersion = "9.99"
 	req, _ := http.NewRequest("GET", "abc.com", nil)
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36")
 	changeUserAgent(req)
-	assert.Regexp(t, "^Lantern/9.99 (.*) .*", req.Header.Get("User-Agent"))
+	assert.Regexp(t, "^Lantern/(.*) (.*) .*", req.Header.Get("User-Agent"))
 }
 
 // TestCloneRequestForFronted tests to make sure cloning requests is working
