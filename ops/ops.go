@@ -180,6 +180,15 @@ func (op *Op) DialTime(elapsed func() time.Duration, err error) *Op {
 	return op.SetMetric("dial_time", borda.Avg(float64(elapsed().Nanoseconds())/1000000)).Set("dial_succeeded", err == nil)
 }
 
+// TCPDialTime records a dial time relative to a given start time (in
+// milliseconds) and records whether or not the dial succeeded (based on err
+// being nil).
+func (op *Op) TCPDialTime(elapsed func() time.Duration, err error) time.Duration {
+	delta := elapsed()
+	op.SetMetric("tcp_dial_time", borda.Avg(float64(delta.Nanoseconds())/1000000)).Set("tcp_dial_succeeded", err == nil)
+	return delta
+}
+
 // SetMetric sets a named metric. Metrics will be reported as borda values
 // rather than dimensions.
 func (op *Op) SetMetric(name string, value borda.Val) *Op {

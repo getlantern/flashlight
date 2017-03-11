@@ -11,7 +11,6 @@ import (
 	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/balancer"
-	"github.com/getlantern/flashlight/bbr"
 	"github.com/getlantern/flashlight/ops"
 )
 
@@ -28,6 +27,8 @@ type Config struct {
 	// OnFinish: optional function that gets called when finishe the tracking of
 	// xfer operations, allows adding additional data to op context.
 	OnFinish func(op *ops.Op)
+
+	OnConnectResponse func(resp *http.Response)
 
 	// Label: a optional label for debugging.
 	Label string
@@ -72,7 +73,7 @@ func (d *dialer) Dial(network, addr string) (net.Conn, error) {
 }
 
 func (d *dialer) sendCONNECT(addr string, conn net.Conn) error {
-	req, err := buildCONNECTRequest(addr, d.OnRequest)
+	req, err := d.buildCONNECTRequest(addr, d.OnRequest)
 	if err != nil {
 		return fmt.Errorf("Unable to construct CONNECT request: %s", err)
 	}
@@ -82,11 +83,11 @@ func (d *dialer) sendCONNECT(addr string, conn net.Conn) error {
 	}
 
 	r := bufio.NewReader(conn)
-	err = checkCONNECTResponse(r, req)
+	err = d.checkCONNECTResponse(r, req)
 	return err
 }
 
-func buildCONNECTRequest(addr string, onRequest func(req *http.Request)) (*http.Request, error) {
+func (d *dialer) buildCONNECTRequest(addr string, onRequest func(req *http.Request)) (*http.Request, error) {
 	req, err := http.NewRequest(http.MethodConnect, "/", nil)
 	if err != nil {
 		return nil, err
@@ -98,10 +99,12 @@ func buildCONNECTRequest(addr string, onRequest func(req *http.Request)) (*http.
 	if onRequest != nil {
 		onRequest(req)
 	}
+	// Request BBR metrics
+	req.Header.Set("X-BBR", "y")
 	return req, nil
 }
 
-func checkCONNECTResponse(r *bufio.Reader, req *http.Request) error {
+func (d *dialer) checkCONNECTResponse(r *bufio.Reader, req *http.Request) error {
 	resp, err := http.ReadResponse(r, req)
 	if err != nil {
 		return fmt.Errorf("Error reading CONNECT response: %s", err)
@@ -115,7 +118,7 @@ func checkCONNECTResponse(r *bufio.Reader, req *http.Request) error {
 		log.Errorf("Bad status code on CONNECT response %d: %v", resp.StatusCode, string(body))
 		return balancer.ErrUpstream
 	}
-	bbr.OnResponse(resp)
+	d.OnConnectResponse(resp)
 	bandwidth.Track(resp)
 	return nil
 }

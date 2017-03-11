@@ -8,13 +8,16 @@ import (
 	"net"
 	"net/http"
 	"runtime"
+	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/base"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
 
+	"github.com/getlantern/ema"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/ops"
@@ -50,6 +53,12 @@ type Proxy interface {
 	DialServer() (net.Conn, error)
 	// Adapt HTTP request sent over to the proxy
 	AdaptRequest(*http.Request)
+	// Estimated latency
+	EstLatency() time.Duration
+	// Estimated bandwidth in mbps
+	EstBandwidth() float64
+	// CollectBBRInfo collects BBR info from an http response
+	CollectBBRInfo(*http.Response)
 }
 
 // CreateProxy creates a Proxy with supplied server info.
@@ -99,24 +108,24 @@ func forceProxy(s *ChainedServerInfo) {
 }
 
 type httpProxy struct {
-	BaseProxy
+	*BaseProxy
 }
 
 func newHTTPProxy(name string, s *ChainedServerInfo) Proxy {
-	return &httpProxy{BaseProxy: BaseProxy{name: name, protocol: "http", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: false}}
+	return &httpProxy{BaseProxy: &BaseProxy{name: name, protocol: "http", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: false, emaLatency: ema.NewDuration(0, 0.5)}}
 }
 
 func (d httpProxy) DialServer() (net.Conn, error) {
 	op := ops.Begin("dial_to_chained").ChainedProxy(d.Addr(), d.Protocol(), d.Network())
 	defer op.End()
 	elapsed := mtime.Stopwatch()
-	conn, err := netx.DialTimeout("tcp", d.Addr(), chainedDialTimeout)
+	conn, err := d.tcpDial(op)("tcp", d.Addr(), chainedDialTimeout)
 	op.DialTime(elapsed, err)
 	return conn, op.FailIf(err)
 }
 
 type httpsProxy struct {
-	BaseProxy
+	*BaseProxy
 	x509cert     *x509.Certificate
 	sessionCache tls.ClientSessionCache
 }
@@ -127,7 +136,7 @@ func newHTTPSProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 	}
 	return &httpsProxy{
-		BaseProxy:    BaseProxy{name: name, protocol: "https", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted},
+		BaseProxy:    &BaseProxy{name: name, protocol: "https", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted, emaLatency: ema.NewDuration(0, 0.5)},
 		x509cert:     cert.X509(),
 		sessionCache: tls.NewLRUClientSessionCache(1000),
 	}, nil
@@ -138,7 +147,7 @@ func (d httpsProxy) DialServer() (net.Conn, error) {
 	defer op.End()
 
 	elapsed := mtime.Stopwatch()
-	conn, err := tlsdialer.DialTimeout(overheadDialer(false, netx.DialTimeout), chainedDialTimeout,
+	conn, err := tlsdialer.DialTimeout(overheadDialer(false, d.tcpDial(op)), chainedDialTimeout,
 		"tcp", d.Addr(), false, &tls.Config{
 			ClientSessionCache: d.sessionCache,
 			InsecureSkipVerify: true,
@@ -218,7 +227,7 @@ func (p obfs4Wrapper) DialServer() (net.Conn, error) {
 }
 
 type lampshadeProxy struct {
-	BaseProxy
+	*BaseProxy
 	dial func() (net.Conn, error)
 }
 
@@ -263,17 +272,20 @@ func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 	}
 
 	proxy := &lampshadeProxy{
-		BaseProxy: BaseProxy{name: name, protocol: "lampshade", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted},
+		BaseProxy: &BaseProxy{name: name, protocol: "lampshade", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted, emaLatency: ema.NewDuration(0, 0.5)},
 		dial:      dial,
 	}
 
-	go func() {
-		for {
-			time.Sleep(pingInterval * 2)
-			ttfa := dialer.EMARTT()
-			log.Debugf("%v EMA RTT: %v", proxy.Label(), ttfa)
-		}
-	}()
+	if pingInterval > 0 {
+		go func() {
+			for {
+				time.Sleep(pingInterval * 2)
+				ttfa := dialer.EMARTT()
+				proxy.emaLatency.SetDuration(ttfa)
+				log.Debugf("%v EMA RTT: %v", proxy.Label(), ttfa)
+			}
+		}()
+	}
 
 	return proxy, nil
 }
@@ -283,27 +295,29 @@ func (d lampshadeProxy) DialServer() (net.Conn, error) {
 }
 
 type BaseProxy struct {
-	name      string
-	protocol  string
-	network   string
-	addr      string
-	trusted   bool
-	authToken string
+	name       string
+	protocol   string
+	network    string
+	addr       string
+	trusted    bool
+	authToken  string
+	emaLatency *ema.EMA
+	abe        int64 // Mbps scaled by 1000
 }
 
-func (p BaseProxy) Protocol() string {
+func (p *BaseProxy) Protocol() string {
 	return p.protocol
 }
 
-func (p BaseProxy) Network() string {
+func (p *BaseProxy) Network() string {
 	return p.network
 }
 
-func (p BaseProxy) Addr() string {
+func (p *BaseProxy) Addr() string {
 	return p.addr
 }
 
-func (p BaseProxy) Label() string {
+func (p *BaseProxy) Label() string {
 	label := fmt.Sprintf("%-38v at %21v", p.name, p.addr)
 	if p.trusted {
 		label = label + trustedSuffix
@@ -311,14 +325,46 @@ func (p BaseProxy) Label() string {
 	return label
 }
 
-func (p BaseProxy) Trusted() bool {
+func (p *BaseProxy) Trusted() bool {
 	return p.trusted
 }
 
-func (p BaseProxy) DialServer() (net.Conn, error) {
+func (p *BaseProxy) DialServer() (net.Conn, error) {
 	panic("should implement DialServer")
 }
 
-func (p BaseProxy) AdaptRequest(req *http.Request) {
+func (p *BaseProxy) AdaptRequest(req *http.Request) {
 	req.Header.Add("X-Lantern-Auth-Token", p.authToken)
+}
+
+func (p *BaseProxy) EstLatency() time.Duration {
+	return p.emaLatency.GetDuration()
+}
+
+func (p *BaseProxy) EstBandwidth() float64 {
+	return float64(atomic.LoadInt64(&p.abe)) / 1000
+}
+
+func (p *BaseProxy) CollectBBRInfo(resp *http.Response) {
+	_abe := resp.Header.Get("X-Bbr-Abe")
+	if _abe != "" {
+		resp.Header.Del("X-Bbr-Abe")
+		abe, err := strconv.ParseFloat(_abe, 64)
+		if err == nil {
+			log.Debugf("%v: X-BBR-ABE: %.2f Mbps", p.Label(), abe)
+		}
+		atomic.StoreInt64(&p.abe, int64(abe*1000))
+	}
+}
+
+func (p *BaseProxy) tcpDial(op *ops.Op) func(network, addr string, timeout time.Duration) (net.Conn, error) {
+	return func(network, addr string, timeout time.Duration) (net.Conn, error) {
+		elapsed := mtime.Stopwatch()
+		conn, err := netx.DialTimeout("tcp", addr, timeout)
+		delta := op.TCPDialTime(elapsed, err)
+		if err == nil {
+			p.emaLatency.UpdateDuration(delta)
+		}
+		return conn, err
+	}
 }

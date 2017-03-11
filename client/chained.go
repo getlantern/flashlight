@@ -1,22 +1,15 @@
 package client
 
 import (
-	"fmt"
-	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
-	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/flashlight/balancer"
-	"github.com/getlantern/flashlight/bbr"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/netx"
-	"github.com/getlantern/withtimeout"
 )
 
 var (
@@ -68,6 +61,7 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 		OnFinish: func(op *ops.Op) {
 			op.ChainedProxy(s.Addr(), s.Proxy.Protocol(), s.Proxy.Network())
 		},
+		OnConnectResponse: s.CollectBBRInfo,
 	}
 	d := chained.NewDialer(ccfg)
 	return &balancer.Dialer{
@@ -88,12 +82,7 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 				log.Debugf("Attempted to dial ourselves. Dialing directly to %s instead", addr)
 				conn, err = netx.DialTimeout("tcp", addr, 1*time.Minute)
 			} else {
-				conn, err = d(network, addr)
-				if err == nil {
-					// Yeah any site visited through Lantern can be a check target, but
-					// only check it if the dial was successful.
-					balancer.AddCheckTarget(addr)
-				}
+				return d(network, addr)
 			}
 
 			if err != nil {
@@ -104,9 +93,8 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 			})
 			return conn, nil
 		},
-		Check: func(checkData interface{}, onFailure func(string)) (bool, time.Duration) {
-			return s.check(d, checkData.([]string), deviceID, proTokenGetter, onFailure)
-		},
+		EstLatency:   s.Proxy.EstLatency,
+		EstBandwidth: s.Proxy.EstBandwidth,
 	}, nil
 }
 
@@ -116,89 +104,4 @@ func (s *chainedServer) attachHeaders(req *http.Request, deviceID string, proTok
 	if token := proTokenGetter(); token != "" {
 		req.Header.Set("X-Lantern-Pro-Token", token)
 	}
-}
-
-// check pings the 10 most popular sites in the user's history
-func (s *chainedServer) check(dial func(string, string) (net.Conn, error),
-	urls []string, deviceID string,
-	proTokenGetter func() string,
-	onFailure func(string)) (bool, time.Duration) {
-	rt := &http.Transport{
-		DisableKeepAlives: true,
-		Dial:              dial,
-	}
-
-	allPassed := int32(1)
-	totalLatency := int64(0)
-	var wg sync.WaitGroup
-	wg.Add(len(urls))
-	for _, _url := range urls {
-		url := _url
-		ops.Go(func() {
-			passed := s.doCheck(url, &totalLatency, rt, deviceID, proTokenGetter, onFailure)
-			if !passed {
-				atomic.StoreInt32(&allPassed, 0)
-			}
-			wg.Done()
-		})
-	}
-	wg.Wait()
-
-	return atomic.LoadInt32(&allPassed) == 1, time.Duration(atomic.LoadInt64(&totalLatency))
-}
-
-func (s *chainedServer) doCheck(url string,
-	totalLatency *int64,
-	rt *http.Transport,
-	deviceID string,
-	proTokenGetter func() string,
-	onFailure func(string)) bool {
-	start := time.Now()
-	// We ping the URLs through the proxy to get timings
-	req, err := http.NewRequest("GET", "http://ping-chained-server", nil)
-	if err != nil {
-		log.Errorf("Could not create HTTP request: %v", err)
-		return false
-	}
-	req.Header.Set("X-Lantern-PingURL", url)
-	// We set X-Lantern-Ping in case we're hitting an old http-server that
-	// doesn't support pinging URLs.
-	req.Header.Set("X-Lantern-Ping", "small")
-
-	checkedURL := url
-	s.attachHeaders(req, deviceID, proTokenGetter)
-	ok, timedOut, _ := withtimeout.Do(10*time.Second, func() (interface{}, error) {
-		resp, err := rt.RoundTrip(req)
-		if err != nil {
-			log.Debugf("Error testing dialer %s to %s: %s", s.Addr(), checkedURL, err)
-			return false, nil
-		}
-		if resp.Body != nil {
-			// Read the body to include this in our timing.
-			// Note - for bandwidth saving reasons, the server may not send the body
-			// but if it does, we'll read it.
-			defer resp.Body.Close()
-			_, err = io.Copy(ioutil.Discard, resp.Body)
-			if err != nil {
-				return false, fmt.Errorf("Unable to read response body: %v", err)
-			}
-		}
-		log.Tracef("PING %s through chained server at %s, status code %d", url, s.Addr(), resp.StatusCode)
-		success := resp.StatusCode >= 200 && resp.StatusCode <= 299
-		if success {
-			bbr.OnResponse(resp)
-			delta := int64(time.Now().Sub(start))
-			atomic.AddInt64(totalLatency, delta)
-		} else {
-			onFailure(url)
-		}
-		return success, nil
-	})
-	if timedOut || !ok.(bool) {
-		if timedOut {
-			log.Errorf("Timed out checking %v", s.Label())
-		}
-		return false
-	}
-	return true
 }

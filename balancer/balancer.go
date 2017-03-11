@@ -3,9 +3,11 @@
 package balancer
 
 import (
-	"container/heap"
 	"fmt"
+	"math/rand"
 	"net"
+	"sort"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -21,19 +23,27 @@ const (
 
 	// reasonable but slightly larger than the timeout of all dialers
 	initialTimeout = 1 * time.Minute
+
+	// anything at 4 Mbps or better is considered good, 2.5 Mbps or better fair
+	// See http://www.tomsguide.com/answers/id-2691891/spee-required-watch-1080p-youtube.html
+	goodBandwidth = 4
+
+	goodLatency = 100 * time.Millisecond
+
+	// consider 50% or more difference in bandwidth to be significant
+	significantBandwidthDifference = 0.5
 )
 
 var (
 	log = golog.LoggerFor("balancer")
 
-	impossiblySmallLatency = int64(1 * time.Millisecond)
+	// these are domains whose requests are processed in the background and for
+	// which it's okay to use slow servers.
+	backgroundDomains = []string{"config.getiantem.org", "geo.getiantem.org"}
 )
 
 // Opts are options for the balancer.
 type Opts struct {
-	// Strategy is the strategy to be used for load balancing between the dialers.
-	Strategy Strategy
-
 	// Dialers are the Dialers amongst which the Balancer will balance.
 	Dialers []*Dialer
 
@@ -48,52 +58,31 @@ type Opts struct {
 
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
-	lastDialTime   int64 // not used anymore, but makes sure we're aligned on 64bit boundary
-	nextTimeout    *ema.EMA
-	st             Strategy
-	mu             sync.RWMutex
-	dialers        dialerHeap
-	trusted        dialerHeap
-	closeCh        chan bool
-	resetCheckCh   chan bool
-	stopStatsCh    chan bool
-	forceStatsCh   chan bool
-	checkerCloseCh chan bool
+	lastDialTime int64 // not used anymore, but makes sure we're aligned on 64bit boundary
+	nextTimeout  *ema.EMA
+	mu           sync.RWMutex
+	dialers      sortedDialers
+	trusted      sortedDialers
+	closeCh      chan bool
+	resetCheckCh chan bool
+	stopStatsCh  chan bool
+	forceStatsCh chan bool
 }
 
 // New creates a new Balancer using the supplied Strategy and Dialers.
 func New(opts *Opts) *Balancer {
 	resetCheckCh := make(chan bool, 1)
-	checkerCloseCh := make(chan bool)
 	// a small alpha to gradually adjust timeout based on performance of all
 	// dialers
 	b := &Balancer{
-		st:             opts.Strategy,
-		nextTimeout:    ema.NewDuration(initialTimeout, 0.2),
-		closeCh:        make(chan bool),
-		stopStatsCh:    make(chan bool, 1),
-		forceStatsCh:   make(chan bool, 1),
-		resetCheckCh:   resetCheckCh,
-		checkerCloseCh: checkerCloseCh,
-	}
-
-	checker := &checker{
-		b:                b,
-		minCheckInterval: opts.MinCheckInterval,
-		maxCheckInterval: opts.MaxCheckInterval,
-		resetCheckCh:     resetCheckCh,
-		closeCh:          checkerCloseCh,
-	}
-
-	if checker.minCheckInterval <= 0 {
-		checker.minCheckInterval = defaultMinCheckInterval
-	}
-	if checker.maxCheckInterval <= 0 {
-		checker.maxCheckInterval = defaultMaxCheckInterval
+		nextTimeout:  ema.NewDuration(initialTimeout, 0.2),
+		closeCh:      make(chan bool),
+		stopStatsCh:  make(chan bool, 1),
+		forceStatsCh: make(chan bool, 1),
+		resetCheckCh: resetCheckCh,
 	}
 
 	b.Reset(opts.Dialers...)
-	ops.Go(checker.runChecks)
 	ops.Go(b.printStats)
 	ops.Go(b.run)
 	return b
@@ -102,12 +91,8 @@ func New(opts *Opts) *Balancer {
 func (b *Balancer) dialersToCheck() []*dialer {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
-	ds := make([]*dialer, 0, len(b.dialers.dialers))
-	for _, d := range b.dialers.dialers {
-		if d.Check == nil {
-			log.Errorf("No check function provided for dialer %s, not checking", d.Label)
-			continue
-		}
+	ds := make([]*dialer, 0, len(b.dialers))
+	for _, d := range b.dialers {
 		ds = append(ds, d)
 	}
 	return ds
@@ -115,21 +100,26 @@ func (b *Balancer) dialersToCheck() []*dialer {
 
 // Reset closes existing dialers and replaces them with new ones.
 func (b *Balancer) Reset(dialers ...*Dialer) {
+	// TODO: track estimated latency and estimated bandwidth on our dialer so that
+	// we can save and transfer accordingly.
+
+	// TODO: if dialing fails, start rechecking dials with exponential backoff
+
+	// TODO: report estimated bandwidth and estimated latency to borda sometimes
 	log.Debug("Resetting")
-	var dls []*dialer
-	var tdls []*dialer
+	var dls sortedDialers
+	var tdls sortedDialers
 
 	b.mu.Lock()
-	oldDialers := b.dialers.dialers
+	oldDialers := b.dialers
 	for _, d := range dialers {
 		dl := &dialer{Dialer: d, forceRecheck: b.forceRecheck}
 		for _, od := range oldDialers {
 			if d.Label == od.Label {
 				// Existing dialer, keep stats
-				log.Debugf("Keeping stats from old dialer %p", od.emaLatency)
+				log.Debugf("Keeping stats from old dialer")
 				dl.consecSuccesses = atomic.LoadInt32(&od.consecSuccesses)
 				dl.consecFailures = atomic.LoadInt32(&od.consecFailures)
-				dl.emaLatency = od.emaLatency
 				dl.stats = od.stats
 				break
 			}
@@ -141,10 +131,8 @@ func (b *Balancer) Reset(dialers ...*Dialer) {
 			tdls = append(tdls, dl)
 		}
 	}
-	b.dialers = b.st(dls)
-	b.trusted = b.st(tdls)
-	heap.Init(&b.dialers)
-	heap.Init(&b.trusted)
+	b.dialers = dls
+	b.trusted = tdls
 	b.mu.Unlock()
 	for _, d := range oldDialers {
 		d.Stop()
@@ -170,6 +158,7 @@ func (b *Balancer) forceRecheck() {
 // error.
 func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 	trustedOnly := false
+	slowOkay := false
 	_, port, _ := net.SplitHostPort(addr)
 	// We try to identify HTTP traffic (as opposed to HTTPS) by port and only
 	// send HTTP traffic to dialers marked as trusted.
@@ -177,9 +166,17 @@ func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 		trustedOnly = true
 	}
 
+	host, _, _ := net.SplitHostPort(addr)
+	for _, backgroundDomain := range backgroundDomains {
+		if strings.HasSuffix(host, backgroundDomain) {
+			slowOkay = true
+			break
+		}
+	}
+
 	var lastDialer *dialer
 	for i := 0; i < dialAttempts; i++ {
-		d, pickErr := b.pickDialer(trustedOnly)
+		d, pickErr := b.pickDialer(trustedOnly, slowOkay)
 		if pickErr != nil {
 			return nil, pickErr
 		}
@@ -250,15 +247,11 @@ func (b *Balancer) run() {
 		case <-b.closeCh:
 			b.stopStatsCh <- true
 
-			b.checkerCloseCh <- true
-			// Make sure it actually finishes.
-			<-b.checkerCloseCh
-
 			b.mu.Lock()
 			oldDialers := b.dialers
-			b.dialers.dialers = nil
+			b.dialers = nil
 			b.mu.Unlock()
-			for _, d := range oldDialers.dialers {
+			for _, d := range oldDialers {
 				d.Stop()
 			}
 			// Make sure everything is actually cleaned up before the caller continues.
@@ -282,7 +275,7 @@ func (b *Balancer) Close() {
 
 // printStats periodically prints out stats for all dialers
 func (b *Balancer) printStats() {
-	t := time.NewTicker(30 * time.Second)
+	t := time.NewTicker(5 * time.Second)
 	for {
 		select {
 		case <-b.stopStatsCh:
@@ -298,16 +291,11 @@ func (b *Balancer) printStats() {
 func (b *Balancer) doPrintStats() {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
-	dialersCopy := make([]*dialer, len(b.dialers.dialers))
-	copy(dialersCopy, b.dialers.dialers)
-	sortedDialers := b.st(dialersCopy)
-	heap.Init(&sortedDialers)
+	dialersCopy := make(sortedDialers, len(b.dialers))
+	copy(dialersCopy, b.dialers)
+	sort.Sort(dialersCopy)
 	log.Debug("-------------------------- Dialer Stats -----------------------")
-	for {
-		if sortedDialers.Len() == 0 {
-			break
-		}
-		d := heap.Pop(&sortedDialers).(*dialer)
+	for _, d := range dialersCopy {
 		log.Debug(d.stats.String(d))
 	}
 	log.Debug("------------------------ End Dialer Stats ---------------------")
@@ -322,12 +310,12 @@ func (b *Balancer) forceStats() {
 	}
 }
 
-func (b *Balancer) pickDialer(trustedOnly bool) (*dialer, error) {
+func (b *Balancer) pickDialer(trustedOnly bool, slowOkay bool) (*dialer, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	dialers := &b.dialers
+	dialers := b.dialers
 	if trustedOnly {
-		dialers = &b.trusted
+		dialers = b.trusted
 	}
 	if dialers.Len() == 0 {
 		if trustedOnly {
@@ -335,35 +323,73 @@ func (b *Balancer) pickDialer(trustedOnly bool) (*dialer, error) {
 		}
 		return nil, fmt.Errorf("No dialers")
 	}
-	// heap will re-adjust based on new metrics
-	d := heap.Pop(dialers).(*dialer)
-	heap.Push(dialers, d)
-	return d, nil
+	var chosenDialer *dialer
+	if slowOkay {
+		slowDialers := make([]*dialer, 0, len(dialers))
+		for _, d := range dialers {
+			if d.EstBandwidth() < goodBandwidth {
+				slowDialers = append(slowDialers, d)
+			}
+		}
+		chosenDialer = slowDialers[rand.Intn(len(slowDialers))]
+	}
+	if chosenDialer == nil {
+		sort.Sort(dialers)
+		chosenDialer = dialers[0]
+	}
+	return chosenDialer, nil
 }
 
-type dialerHeap struct {
-	dialers  []*dialer
-	lessFunc func(i, j int) bool
+type sortedDialers []*dialer
+
+func (d sortedDialers) Len() int { return len(d) }
+
+func (d sortedDialers) Swap(i, j int) {
+	d[i], d[j] = d[j], d[i]
 }
 
-func (s *dialerHeap) Len() int { return len(s.dialers) }
+func (d sortedDialers) Less(i, j int) bool {
+	// TODO: take into account availability/failure rate
 
-func (s *dialerHeap) Swap(i, j int) {
-	s.dialers[i], s.dialers[j] = s.dialers[j], s.dialers[i]
-}
+	// TODO: if a proxy has good latency and fewer than 20? successes, keep it in
+	// the rotation just to make sure it gets tested some
+	a, b := d[i], d[j]
+	eba, ebb := a.EstBandwidth(), b.EstBandwidth()
 
-func (s *dialerHeap) Less(i, j int) bool {
-	return s.lessFunc(i, j)
-}
+	// while proxies' bandwidth is unknown, they should get traffic
+	ebaKnown, ebbKnown := eba > 0, ebb > 0
+	if !ebaKnown && ebbKnown {
+		return true
+	}
+	if ebaKnown && !ebbKnown {
+		return false
+	}
+	if !ebaKnown && !ebbKnown {
+		// bandwidth is known for neither proxy, sort by label to keep sending
+		// traffic to same proxy until we know bandwidth.
+		return strings.Compare(a.Label, b.Label) < 0
+	}
 
-func (s *dialerHeap) Push(x interface{}) {
-	s.dialers = append(s.dialers, x.(*dialer))
-}
+	// proxies with good bandwidth are prioritized over those with poor bandwidth
+	ebaGood, ebbGood := eba >= goodBandwidth, ebb >= goodBandwidth
+	if ebaGood && !ebbGood {
+		return true
+	}
+	if !ebaGood && ebbGood {
+		return false
+	}
 
-func (s *dialerHeap) Pop() interface{} {
-	old := s.dialers
-	n := len(old)
-	x := old[n-1]
-	s.dialers = old[0 : n-1]
-	return x
+	ela := a.EstLatency()
+	elaGood := ela <= goodLatency
+	if elaGood {
+		ebDelta := eba - ebb
+		if ebDelta/ebb > significantBandwidthDifference {
+			// latency is good and bandwidth is so significantly different that we
+			// prioritze by bandwidth
+			return true
+		}
+	}
+
+	// all else being equal, prioritize by latency
+	return ela < b.EstLatency()
 }
