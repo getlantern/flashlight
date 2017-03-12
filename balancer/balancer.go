@@ -4,7 +4,6 @@ package balancer
 
 import (
 	"fmt"
-	"math/rand"
 	"net"
 	"sort"
 	"strings"
@@ -24,22 +23,15 @@ const (
 	// reasonable but slightly larger than the timeout of all dialers
 	initialTimeout = 1 * time.Minute
 
-	// anything at 4 Mbps or better is considered good, 2.5 Mbps or better fair
-	// See http://www.tomsguide.com/answers/id-2691891/spee-required-watch-1080p-youtube.html
-	goodBandwidth = 4
-
-	goodLatency = 100 * time.Millisecond
-
 	// consider 50% or more difference in bandwidth to be significant
 	significantBandwidthDifference = 0.5
+
+	// consider 25% or more difference in latency to be significant
+	significantLatencyDifference = -0.25
 )
 
 var (
 	log = golog.LoggerFor("balancer")
-
-	// these are domains whose requests are processed in the background and for
-	// which it's okay to use slow servers.
-	backgroundDomains = []string{"config.getiantem.org", "geo.getiantem.org"}
 )
 
 // Opts are options for the balancer.
@@ -158,25 +150,9 @@ func (b *Balancer) forceRecheck() {
 // error.
 func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 	trustedOnly := false
-	slowOkay := false
-	_, port, _ := net.SplitHostPort(addr)
-	// We try to identify HTTP traffic (as opposed to HTTPS) by port and only
-	// send HTTP traffic to dialers marked as trusted.
-	if port == "" || port == "80" || port == "8080" {
-		trustedOnly = true
-	}
-
-	host, _, _ := net.SplitHostPort(addr)
-	for _, backgroundDomain := range backgroundDomains {
-		if strings.HasSuffix(host, backgroundDomain) {
-			slowOkay = true
-			break
-		}
-	}
-
 	var lastDialer *dialer
 	for i := 0; i < dialAttempts; i++ {
-		d, pickErr := b.pickDialer(trustedOnly, slowOkay)
+		d, pickErr := b.pickDialer(trustedOnly)
 		if pickErr != nil {
 			return nil, pickErr
 		}
@@ -310,7 +286,7 @@ func (b *Balancer) forceStats() {
 	}
 }
 
-func (b *Balancer) pickDialer(trustedOnly bool, slowOkay bool) (*dialer, error) {
+func (b *Balancer) pickDialer(trustedOnly bool) (*dialer, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	dialers := b.dialers
@@ -323,21 +299,8 @@ func (b *Balancer) pickDialer(trustedOnly bool, slowOkay bool) (*dialer, error) 
 		}
 		return nil, fmt.Errorf("No dialers")
 	}
-	var chosenDialer *dialer
-	if slowOkay {
-		slowDialers := make([]*dialer, 0, len(dialers))
-		for _, d := range dialers {
-			if d.EstBandwidth() < goodBandwidth {
-				slowDialers = append(slowDialers, d)
-			}
-		}
-		chosenDialer = slowDialers[rand.Intn(len(slowDialers))]
-	}
-	if chosenDialer == nil {
-		sort.Sort(dialers)
-		chosenDialer = dialers[0]
-	}
-	return chosenDialer, nil
+	sort.Sort(dialers)
+	return dialers[0], nil
 }
 
 type sortedDialers []*dialer
@@ -351,12 +314,10 @@ func (d sortedDialers) Swap(i, j int) {
 func (d sortedDialers) Less(i, j int) bool {
 	// TODO: take into account availability/failure rate
 
-	// TODO: if a proxy has good latency and fewer than 20? successes, keep it in
-	// the rotation just to make sure it gets tested some
 	a, b := d[i], d[j]
 	eba, ebb := a.EstBandwidth(), b.EstBandwidth()
 
-	// while proxies' bandwidth is unknown, they should get traffic
+	// while proxy' bandwidth is unknown, it should get traffic
 	ebaKnown, ebbKnown := eba > 0, ebb > 0
 	if !ebaKnown && ebbKnown {
 		return true
@@ -370,26 +331,20 @@ func (d sortedDialers) Less(i, j int) bool {
 		return strings.Compare(a.Label, b.Label) < 0
 	}
 
-	// proxies with good bandwidth are prioritized over those with poor bandwidth
-	ebaGood, ebbGood := eba >= goodBandwidth, ebb >= goodBandwidth
-	if ebaGood && !ebbGood {
+	// pick proxy with significant throughput advantage if latency not much worse
+	ela, elb := a.EstLatency().Seconds(), b.EstLatency().Seconds()
+	aLowLatency := (elb-ela)/elb < significantLatencyDifference
+	bLowLatency := (ela-elb)/ela < significantLatencyDifference
+	aHighThroughput := (eba-ebb)/ebb > significantBandwidthDifference
+	bHighThroughput := (ebb-eba)/eba > significantBandwidthDifference
+
+	if aHighThroughput && !bLowLatency {
 		return true
 	}
-	if !ebaGood && ebbGood {
+	if bHighThroughput && !aLowLatency {
 		return false
 	}
 
-	ela := a.EstLatency()
-	elaGood := ela <= goodLatency
-	if elaGood {
-		ebDelta := eba - ebb
-		if ebDelta/ebb > significantBandwidthDifference {
-			// latency is good and bandwidth is so significantly different that we
-			// prioritze by bandwidth
-			return true
-		}
-	}
-
 	// all else being equal, prioritize by latency
-	return ela < b.EstLatency()
+	return ela < elb
 }
