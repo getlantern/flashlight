@@ -28,6 +28,7 @@ func (c testUserConfig) ShowSurvey(survey string) {}
 func (c testUserConfig) GetUserID() int64         { return 0 }
 func (c testUserConfig) GetToken() string         { return "" }
 func (c testUserConfig) SetStaging(bool)          {}
+func (c testUserConfig) SetCountry(string)        {}
 
 func TestProxying(t *testing.T) {
 

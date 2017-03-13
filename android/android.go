@@ -20,6 +20,7 @@ import (
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/golog"
@@ -99,6 +100,7 @@ type StartResult struct {
 type UserConfig interface {
 	config.UserConfig
 	AfterStart()
+	SetCountry(string)
 	SetStaging(bool)
 	ShowSurvey(string)
 	BandwidthUpdate(int, int)
@@ -189,7 +191,6 @@ func run(configDir, locale string,
 		func() bool { return true }, // auto report
 		flags,
 		func() bool {
-			//beforeStart(user)
 			return true
 		}, // beforeStart()
 		func() {
@@ -236,6 +237,14 @@ func getBandwidth(quota *bandwidth.Quota) (int, int) {
 func afterStart(user UserConfig) {
 	bandwidthUpdates(user)
 	user.AfterStart()
+
+	go func() {
+		if <-geolookup.OnRefresh() {
+			country := geolookup.GetCountry(0)
+			log.Debugf("Successful geolookup: country %s", country)
+			user.SetCountry(country)
+		}
+	}()
 }
 
 // handleError logs the given error message
