@@ -317,7 +317,7 @@ func (d sortedDialers) Less(i, j int) bool {
 	a, b := d[i], d[j]
 	eba, ebb := a.EstBandwidth(), b.EstBandwidth()
 
-	// while proxy' bandwidth is unknown, it should get traffic
+	// while proxy's bandwidth is unknown, it should get traffic
 	ebaKnown, ebbKnown := eba > 0, ebb > 0
 	if !ebaKnown && ebbKnown {
 		return true

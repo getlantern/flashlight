@@ -112,7 +112,7 @@ type httpProxy struct {
 }
 
 func newHTTPProxy(name string, s *ChainedServerInfo) Proxy {
-	return &httpProxy{BaseProxy: &BaseProxy{name: name, protocol: "http", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: false, emaLatency: ema.NewDuration(0, 0.5)}}
+	return &httpProxy{BaseProxy: &BaseProxy{name: name, protocol: "http", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: false, emaLatencyLongTerm: ema.NewDuration(0, 0.05), emaLatencyShortTerm: ema.NewDuration(0, 0.2)}}
 }
 
 func (d httpProxy) DialServer() (net.Conn, error) {
@@ -136,7 +136,7 @@ func newHTTPSProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 	}
 	return &httpsProxy{
-		BaseProxy:    &BaseProxy{name: name, protocol: "https", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted, emaLatency: ema.NewDuration(0, 0.5)},
+		BaseProxy:    &BaseProxy{name: name, protocol: "https", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted, emaLatencyLongTerm: ema.NewDuration(0, 0.05), emaLatencyShortTerm: ema.NewDuration(0, 0.2)},
 		x509cert:     cert.X509(),
 		sessionCache: tls.NewLRUClientSessionCache(1000),
 	}, nil
@@ -272,7 +272,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 	}
 
 	proxy := &lampshadeProxy{
-		BaseProxy: &BaseProxy{name: name, protocol: "lampshade", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted, emaLatency: ema.NewDuration(0, 0.5)},
+		BaseProxy: &BaseProxy{name: name, protocol: "lampshade", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted, emaLatencyLongTerm: ema.NewDuration(0, 0.05), emaLatencyShortTerm: ema.NewDuration(0, 0.2)},
 		dial:      dial,
 	}
 
@@ -281,7 +281,8 @@ func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 			for {
 				time.Sleep(pingInterval * 2)
 				ttfa := dialer.EMARTT()
-				proxy.emaLatency.SetDuration(ttfa)
+				proxy.emaLatencyLongTerm.SetDuration(ttfa)
+				proxy.emaLatencyShortTerm.SetDuration(ttfa)
 				log.Debugf("%v EMA RTT: %v", proxy.Label(), ttfa)
 			}
 		}()
@@ -295,14 +296,15 @@ func (d lampshadeProxy) DialServer() (net.Conn, error) {
 }
 
 type BaseProxy struct {
-	name       string
-	protocol   string
-	network    string
-	addr       string
-	trusted    bool
-	authToken  string
-	emaLatency *ema.EMA
-	abe        int64 // Mbps scaled by 1000
+	name                string
+	protocol            string
+	network             string
+	addr                string
+	trusted             bool
+	authToken           string
+	emaLatencyLongTerm  *ema.EMA
+	emaLatencyShortTerm *ema.EMA
+	abe                 int64 // Mbps scaled by 1000
 }
 
 func (p *BaseProxy) Protocol() string {
@@ -338,7 +340,7 @@ func (p *BaseProxy) AdaptRequest(req *http.Request) {
 }
 
 func (p *BaseProxy) EstLatency() time.Duration {
-	return p.emaLatency.GetDuration()
+	return p.emaLatencyShortTerm.GetDuration()
 }
 
 func (p *BaseProxy) EstBandwidth() float64 {
@@ -363,7 +365,18 @@ func (p *BaseProxy) tcpDial(op *ops.Op) func(network, addr string, timeout time.
 		conn, err := netx.DialTimeout("tcp", addr, timeout)
 		delta := op.TCPDialTime(elapsed, err)
 		if err == nil {
-			p.emaLatency.UpdateDuration(delta)
+			longTerm := p.emaLatencyLongTerm.UpdateDuration(delta)
+			shortTerm := p.emaLatencyShortTerm.UpdateDuration(delta)
+			ratio := float64(shortTerm) / float64(longTerm)
+			if ratio < 0.5 {
+				log.Debugf("Latency dropped dramatically, forget bandwidth")
+				atomic.StoreInt64(&p.abe, 0)
+				p.emaLatencyLongTerm.SetDuration(shortTerm)
+			} else if ratio > 2 {
+				log.Debugf("Latency increased dramatically, drop bandwidth")
+				atomic.StoreInt64(&p.abe, 1)
+				p.emaLatencyLongTerm.SetDuration(shortTerm)
+			}
 		}
 		return conn, err
 	}
