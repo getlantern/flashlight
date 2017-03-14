@@ -59,11 +59,24 @@ func (d *dialer) Start() {
 	}
 	d.closeCh = make(chan struct{}, 1)
 
+	// Periodically dial to see how it's doing
+	ticker := time.NewTicker(30 * time.Second)
 	ops.Go(func() {
-		<-d.closeCh
-		log.Tracef("Dialer %s stopped", d.Label)
-		if d.OnClose != nil {
-			d.OnClose()
+		for {
+			select {
+			case <-ticker.C:
+				conn, err := d.dial("tcp", "www.getlantern.org:80")
+				if err == nil {
+					conn.Close()
+				}
+			case <-d.closeCh:
+				log.Tracef("Dialer %s stopped", d.Label)
+				if d.OnClose != nil {
+					d.OnClose()
+				}
+				ticker.Stop()
+				return
+			}
 		}
 	})
 }
