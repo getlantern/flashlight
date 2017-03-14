@@ -114,6 +114,7 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 func (s *chainedServer) attachHeaders(req *http.Request, deviceID string, proTokenGetter func() string) {
 	s.Proxy.AdaptRequest(req)
 	req.Header.Set(common.DeviceIdHeader, deviceID)
+	req.Header.Set(common.VersionHeader, common.Version)
 	if token := proTokenGetter(); token != "" {
 		req.Header.Set(common.ProTokenHeader, token)
 	}
