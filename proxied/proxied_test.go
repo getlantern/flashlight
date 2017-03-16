@@ -243,9 +243,12 @@ func TestChangeUserAgent(t *testing.T) {
 // correctly.
 func TestCloneRequestForFronted(t *testing.T) {
 	req, _ := http.NewRequest("POST", "https://chained.com/path1?q1=test1&q2=test2", strings.NewReader("abc"))
-	req.Header.Add("Lantern-Fronted-URL", "http://fronted.tldr/path2")
 
 	r, err := cloneRequestForFronted(req)
+	assert.Error(t, err, "an request without fronted URL should fail")
+
+	req.Header.Add("Lantern-Fronted-URL", "http://fronted.tldr/path2")
+	r, err = cloneRequestForFronted(req)
 	assert.Nil(t, err)
 
 	dump, er := httputil.DumpRequestOut(req, true)
