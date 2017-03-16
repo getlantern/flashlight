@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/httpseverywhere"
 )
 
 // ServeHTTP implements the http.Handler interface.
@@ -44,6 +45,15 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 			log.Error(op.FailIf(err))
 		}
 	} else {
+		h := client.https.Load().(httpseverywhere.HTTPS)
+		url := req.URL.String()
+		log.Debugf("Checking for HTTP redirect for %v", url)
+		httpsURL, changed := h(url)
+		if changed {
+			log.Debugf("Redirecting to %v", httpsURL)
+			http.Redirect(resp, req, httpsURL, http.StatusMovedPermanently)
+			return
+		}
 		// Direct proxying can only be used for plain HTTP connections.
 		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
 		err := client.interceptHTTP(resp, req)
