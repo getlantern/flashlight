@@ -125,6 +125,18 @@ func TestChainedThenFronted(t *testing.T) {
 	doTestChainedAndFronted(t, ChainedThenFronted)
 }
 
+func TestInvalidRequest(t *testing.T) {
+	chained := &mockChainedRT{req: eventual.NewValue(), statusCode: 503}
+	fronted := &mockFrontedRT{req: eventual.NewValue()}
+	req, _ := http.NewRequest("GET", "http://chained", nil)
+	// intentionally omit Lantern-Fronted-URL
+
+	cf := ParallelPreferChained().(*chainedAndFronted)
+	_, err := cf.getFetcher().(*dualFetcher).do(req, chained, fronted)
+	assert.Error(t, err, "should fail instead of crash")
+	t.Log(err)
+}
+
 func TestSwitchingToChained(t *testing.T) {
 	chained := &mockChainedRT{req: eventual.NewValue(), statusCode: 503}
 	fronted := &mockFrontedRT{req: eventual.NewValue()}
