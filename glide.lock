@@ -1,5 +1,5 @@
-hash: 35826ba7ffbf48721875748faebb3a64b280508f26915071d323a010160dc29e
-updated: 2017-03-10T10:45:33.08816959-08:00
+hash: e92d65d860cd394789e433663be27ed3324cbf023153e73d4eff34fd95a83553
+updated: 2017-03-15T21:57:20.959887212-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: f1569079ca898d54e52a26b0bd1b5cc869310608
@@ -147,6 +147,8 @@ imports:
   - tlslistener
   - tokenfilter
   - usage
+- name: github.com/getlantern/httpseverywhere
+  version: 937e1297c055c292fe6a139aa0d0476738c67151
 - name: github.com/getlantern/i18n
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
