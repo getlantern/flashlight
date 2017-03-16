@@ -30,6 +30,10 @@ type Config struct {
 
 	OnConnectResponse func(resp *http.Response)
 
+	// ShouldResetBBR indicates whether the server should be told to reset BBR
+	// metrics.
+	ShouldResetBBR func() bool
+
 	// Label: a optional label for debugging.
 	Label string
 }
@@ -100,7 +104,11 @@ func (d *dialer) buildCONNECTRequest(addr string, onRequest func(req *http.Reque
 		onRequest(req)
 	}
 	// Request BBR metrics
-	req.Header.Set("X-BBR", "y")
+	bbrOption := "y"
+	if d.ShouldResetBBR() {
+		bbrOption = "clear"
+	}
+	req.Header.Set("X-BBR", bbrOption)
 	return req, nil
 }
 

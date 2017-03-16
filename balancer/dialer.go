@@ -67,7 +67,10 @@ func (d *dialer) Start() {
 			case <-ticker.C:
 				conn, err := d.dial("tcp", "www.getlantern.org:80")
 				if err == nil {
+					d.markSuccess()
 					conn.Close()
+				} else {
+					d.markFailure()
 				}
 			case <-d.closeCh:
 				log.Tracef("Dialer %s stopped", d.Label)

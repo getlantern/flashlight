@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -57,6 +58,8 @@ type Proxy interface {
 	EstLatency() time.Duration
 	// Estimated bandwidth in mbps
 	EstBandwidth() float64
+	// Indicates whether server should reset BBR metrics
+	ShouldResetBBR() bool
 	// CollectBBRInfo collects BBR info from an http response
 	CollectBBRInfo(*http.Response)
 }
@@ -112,7 +115,7 @@ type httpProxy struct {
 }
 
 func newHTTPProxy(name string, s *ChainedServerInfo) Proxy {
-	return &httpProxy{BaseProxy: &BaseProxy{name: name, protocol: "http", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: false, emaLatencyLongTerm: newLongTermLatency(), emaLatencyShortTerm: newShortTermLatency()}}
+	return &httpProxy{BaseProxy: newBaseProxy(name, "http", "tcp", s.Addr, s.AuthToken, false)}
 }
 
 func (d httpProxy) DialServer() (net.Conn, error) {
@@ -136,7 +139,7 @@ func newHTTPSProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 	}
 	return &httpsProxy{
-		BaseProxy:    &BaseProxy{name: name, protocol: "https", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted, emaLatencyLongTerm: newLongTermLatency(), emaLatencyShortTerm: newShortTermLatency()},
+		BaseProxy:    newBaseProxy(name, "https", "tcp", s.Addr, s.AuthToken, s.Trusted),
 		x509cert:     cert.X509(),
 		sessionCache: tls.NewLRUClientSessionCache(1000),
 	}, nil
@@ -272,7 +275,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 	}
 
 	proxy := &lampshadeProxy{
-		BaseProxy: &BaseProxy{name: name, protocol: "lampshade", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted, emaLatencyLongTerm: newLongTermLatency(), emaLatencyShortTerm: newShortTermLatency()},
+		BaseProxy: newBaseProxy(name, "lampshade", "tcp", s.Addr, s.AuthToken, s.Trusted),
 		dial:      dial,
 	}
 
@@ -305,6 +308,22 @@ type BaseProxy struct {
 	emaLatencyLongTerm  *ema.EMA
 	emaLatencyShortTerm *ema.EMA
 	abe                 int64 // Mbps scaled by 1000
+	bbrResetRequired    int64
+	mx                  sync.Mutex
+}
+
+func newBaseProxy(name, protocol, network, addr, authToken string, trusted bool) *BaseProxy {
+	return &BaseProxy{
+		name:                name,
+		protocol:            protocol,
+		network:             network,
+		addr:                addr,
+		authToken:           authToken,
+		trusted:             trusted,
+		emaLatencyLongTerm:  ema.NewDuration(0, 0.05),
+		emaLatencyShortTerm: ema.NewDuration(0, 0.5),
+		bbrResetRequired:    1,
+	}
 }
 
 func (p *BaseProxy) Protocol() string {
@@ -347,6 +366,10 @@ func (p *BaseProxy) EstBandwidth() float64 {
 	return float64(atomic.LoadInt64(&p.abe)) / 1000
 }
 
+func (p *BaseProxy) ShouldResetBBR() bool {
+	return atomic.CompareAndSwapInt64(&p.bbrResetRequired, 1, 0)
+}
+
 func (p *BaseProxy) CollectBBRInfo(resp *http.Response) {
 	_abe := resp.Header.Get("X-Bbr-Abe")
 	if _abe != "" {
@@ -365,28 +388,19 @@ func (p *BaseProxy) tcpDial(op *ops.Op) func(network, addr string, timeout time.
 		conn, err := netx.DialTimeout("tcp", addr, timeout)
 		delta := op.TCPDialTime(elapsed, err)
 		if err == nil {
+			p.mx.Lock()
 			longTerm := p.emaLatencyLongTerm.UpdateDuration(delta)
 			shortTerm := p.emaLatencyShortTerm.UpdateDuration(delta)
 			ratio := float64(shortTerm) / float64(longTerm)
 			if ratio < 0.5 {
-				log.Debugf("Latency fell dramatically from %v to %v, forget bandwidth", longTerm, shortTerm)
+				log.Debugf("Latency fell dramatically from %v to %v, reset bandwidth calculations", longTerm, shortTerm)
 				atomic.StoreInt64(&p.abe, 0)
 				p.emaLatencyLongTerm.SetDuration(shortTerm)
-			} else if ratio > 2 {
-				log.Debugf("Latency rose dramatically from %v to %v, lower bandwidth", longTerm, shortTerm)
-				atomic.StoreInt64(&p.abe, 1)
-				p.emaLatencyLongTerm.SetDuration(shortTerm)
+				atomic.StoreInt64(&p.bbrResetRequired, 1)
 			}
+			p.mx.Unlock()
 			// TODO: maybe forget bandwidth after a while so that if top choice falls, we retest everything else
 		}
 		return conn, err
 	}
-}
-
-func newLongTermLatency() *ema.EMA {
-	return ema.NewDuration(0, 0.05)
-}
-
-func newShortTermLatency() *ema.EMA {
-	return ema.NewDuration(0, 0.2)
 }

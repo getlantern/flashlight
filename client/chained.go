@@ -61,6 +61,7 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 		OnFinish: func(op *ops.Op) {
 			op.ChainedProxy(s.Addr(), s.Proxy.Protocol(), s.Proxy.Network())
 		},
+		ShouldResetBBR:    s.ShouldResetBBR,
 		OnConnectResponse: s.CollectBBRInfo,
 	}
 	d := chained.NewDialer(ccfg)

@@ -22,12 +22,6 @@ const (
 
 	// reasonable but slightly larger than the timeout of all dialers
 	initialTimeout = 1 * time.Minute
-
-	// consider 50% or more difference in bandwidth to be significant
-	significantBandwidthDifference = 0.5
-
-	// consider 25% or more difference in latency to be significant
-	significantLatencyDifference = -0.25
 )
 
 var (
@@ -315,9 +309,19 @@ func (d sortedDialers) Less(i, j int) bool {
 	// TODO: take into account availability/failure rate
 
 	a, b := d[i], d[j]
-	eba, ebb := a.EstBandwidth(), b.EstBandwidth()
+
+	// Prefer the successful proxy
+	qa, qb := a.ConsecSuccesses()-a.ConsecFailures(), b.ConsecSuccesses()-b.ConsecFailures()
+	aSucceeding, bSucceeding := qa > 0, qb > 0
+	if aSucceeding && !bSucceeding {
+		return true
+	}
+	if !aSucceeding && bSucceeding {
+		return false
+	}
 
 	// while proxy's bandwidth is unknown, it should get traffic
+	eba, ebb := a.EstBandwidth(), b.EstBandwidth()
 	ebaKnown, ebbKnown := eba > 0, ebb > 0
 	if !ebaKnown && ebbKnown {
 		return true
@@ -331,20 +335,7 @@ func (d sortedDialers) Less(i, j int) bool {
 		return strings.Compare(a.Label, b.Label) < 0
 	}
 
-	// pick proxy with significant throughput advantage if latency not much worse
+	// divide bandwidth by latency to determine how to sort
 	ela, elb := a.EstLatency().Seconds(), b.EstLatency().Seconds()
-	aLowLatency := (elb-ela)/elb < significantLatencyDifference
-	bLowLatency := (ela-elb)/ela < significantLatencyDifference
-	aHighThroughput := (eba-ebb)/ebb > significantBandwidthDifference
-	bHighThroughput := (ebb-eba)/eba > significantBandwidthDifference
-
-	if aHighThroughput && !bLowLatency {
-		return true
-	}
-	if bHighThroughput && !aLowLatency {
-		return false
-	}
-
-	// all else being equal, prioritize by latency
-	return ela < elb
+	return float64(eba)/ela > float64(ebb)/elb
 }
