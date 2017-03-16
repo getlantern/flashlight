@@ -11,7 +11,7 @@ import (
 
 const (
 	minCheckInterval = 10 * time.Second
-	maxCheckInterval = 1 * time.Hour
+	maxCheckInterval = 15 * time.Minute
 )
 
 var (
@@ -68,45 +68,36 @@ func (d *dialer) Start() {
 	d.closeCh = make(chan struct{}, 1)
 
 	// Periodically check our connectivity.
-	// With a 5 minute period, Lantern running 8 hours a day for 30 days and 148
+	// With a 15 minute period, Lantern running 8 hours a day for 30 days and 148
 	// bytes for a TCP connection setup and teardown, this check will consume
-	// approximately 416 KB per month assuming that it runs every time. In
-	// practice, it'll skip the checks most of the time so it should consume much
-	// less.
+	// approximately 138 KB per month per proxy.
 	checkInterval := maxCheckInterval
 	timer := time.NewTimer(checkInterval)
-
-	doCheck := func(forced bool) {
-		log.Debugf("Checking %v", d.Label)
-		conn, err := d.dial("tcp", "www.getlantern.org:80")
-		if err == nil {
-			d.markSuccess()
-			conn.Close()
-			// On success, don't bother rechecking anytime soon
-			checkInterval = maxCheckInterval
-		} else {
-			d.markFailure()
-			if forced {
-				checkInterval = minCheckInterval
-			} else {
-				// Exponentially back off while we're still failing
-				checkInterval *= 2
-				if checkInterval > maxCheckInterval {
-					checkInterval = maxCheckInterval
-				}
-			}
-		}
-		timer.Reset(checkInterval)
-	}
 
 	ops.Go(func() {
 		for {
 			select {
 			case <-timer.C:
-				doCheck(false)
+				log.Debugf("Checking %v", d.Label)
+				conn, err := d.dial("tcp", "www.getlantern.org:80")
+				if err == nil {
+					d.markSuccess()
+					conn.Close()
+					// On success, don't bother rechecking anytime soon
+					checkInterval = maxCheckInterval
+				} else {
+					d.markFailure()
+					// Exponentially back off while we're still failing
+					checkInterval *= 2
+					if checkInterval > maxCheckInterval {
+						checkInterval = maxCheckInterval
+					}
+				}
+				timer.Reset(checkInterval)
 			case <-d.ForceRecheckCh:
 				log.Debugf("Forcing recheck for %v", d.Label)
-				doCheck(true)
+				checkInterval := minCheckInterval
+				timer.Reset(checkInterval)
 			case <-d.closeCh:
 				log.Tracef("Dialer %v stopped", d.Label)
 				if d.OnClose != nil {

@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/errors"
@@ -28,7 +29,7 @@ type Config struct {
 	// xfer operations, allows adding additional data to op context.
 	OnFinish func(op *ops.Op)
 
-	OnConnectResponse func(resp *http.Response)
+	OnConnectResponse func(requestTime time.Time, resp *http.Response)
 
 	// ShouldResetBBR indicates whether the server should be told to reset BBR
 	// metrics.
@@ -77,6 +78,7 @@ func (d *dialer) Dial(network, addr string) (net.Conn, error) {
 }
 
 func (d *dialer) sendCONNECT(addr string, conn net.Conn) error {
+	reqTime := time.Now()
 	req, err := d.buildCONNECTRequest(addr, d.OnRequest)
 	if err != nil {
 		return fmt.Errorf("Unable to construct CONNECT request: %s", err)
@@ -87,7 +89,7 @@ func (d *dialer) sendCONNECT(addr string, conn net.Conn) error {
 	}
 
 	r := bufio.NewReader(conn)
-	err = d.checkCONNECTResponse(r, req)
+	err = d.checkCONNECTResponse(r, req, reqTime)
 	return err
 }
 
@@ -112,7 +114,7 @@ func (d *dialer) buildCONNECTRequest(addr string, onRequest func(req *http.Reque
 	return req, nil
 }
 
-func (d *dialer) checkCONNECTResponse(r *bufio.Reader, req *http.Request) error {
+func (d *dialer) checkCONNECTResponse(r *bufio.Reader, req *http.Request, reqTime time.Time) error {
 	resp, err := http.ReadResponse(r, req)
 	if err != nil {
 		return fmt.Errorf("Error reading CONNECT response: %s", err)
@@ -126,7 +128,7 @@ func (d *dialer) checkCONNECTResponse(r *bufio.Reader, req *http.Request) error 
 		log.Errorf("Bad status code on CONNECT response %d: %v", resp.StatusCode, string(body))
 		return balancer.ErrUpstream
 	}
-	d.OnConnectResponse(resp)
+	d.OnConnectResponse(reqTime, resp)
 	bandwidth.Track(resp)
 	return nil
 }

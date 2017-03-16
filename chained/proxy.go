@@ -60,8 +60,9 @@ type Proxy interface {
 	EstBandwidth() float64
 	// Indicates whether server should reset BBR metrics
 	ShouldResetBBR() bool
-	// CollectBBRInfo collects BBR info from an http response
-	CollectBBRInfo(*http.Response)
+	// CollectBBRInfo collects BBR info from an http response to a request made
+	// at the given time.
+	CollectBBRInfo(time.Time, *http.Response)
 	// ForceRecheckCh returns a channel that requests forced rechecks
 	ForceRecheckCh() chan bool
 }
@@ -309,6 +310,7 @@ type BaseProxy struct {
 	authToken           string
 	emaLatencyLongTerm  *ema.EMA
 	emaLatencyShortTerm *ema.EMA
+	mostRecentABETime   time.Time
 	abe                 int64 // Mbps scaled by 1000
 	bbrResetRequired    int64
 	forceRecheckCh      chan bool
@@ -324,7 +326,7 @@ func newBaseProxy(name, protocol, network, addr, authToken string, trusted bool)
 		authToken:           authToken,
 		trusted:             trusted,
 		emaLatencyLongTerm:  ema.NewDuration(0, 0.05),
-		emaLatencyShortTerm: ema.NewDuration(0, 0.5),
+		emaLatencyShortTerm: ema.NewDuration(0, 0.8),
 		bbrResetRequired:    1,
 		forceRecheckCh:      make(chan bool, 1),
 	}
@@ -370,15 +372,22 @@ func (p *BaseProxy) EstBandwidth() float64 {
 	return float64(atomic.LoadInt64(&p.abe)) / 1000
 }
 
-func (p *BaseProxy) CollectBBRInfo(resp *http.Response) {
+func (p *BaseProxy) CollectBBRInfo(reqTime time.Time, resp *http.Response) {
 	_abe := resp.Header.Get("X-Bbr-Abe")
 	if _abe != "" {
 		resp.Header.Del("X-Bbr-Abe")
 		abe, err := strconv.ParseFloat(_abe, 64)
 		if err == nil {
-			log.Debugf("%v: X-BBR-ABE: %.2f Mbps", p.Label(), abe)
+			// Only update ABE if the request was more recent than that for the prior
+			// value.
+			p.mx.Lock()
+			if reqTime.After(p.mostRecentABETime) {
+				log.Debugf("%v: X-BBR-ABE: %.2f Mbps", p.Label(), abe)
+				atomic.StoreInt64(&p.abe, int64(abe*1000))
+				p.mostRecentABETime = reqTime
+			}
+			p.mx.Unlock()
 		}
-		atomic.StoreInt64(&p.abe, int64(abe*1000))
 	}
 }
 
