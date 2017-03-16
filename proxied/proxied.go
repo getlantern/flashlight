@@ -237,6 +237,7 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 	}
 
 	doFronted := func() {
+		req = req.WithContext(req.Context())
 		frontedReq, err := cloneRequestForFronted(req)
 		op.FailIf(err)
 		if err != nil {
