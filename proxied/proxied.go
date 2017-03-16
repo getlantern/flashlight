@@ -240,6 +240,10 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 	op.FailIf(err)
 	doFronted := func() {
 		op.ProxyType(ops.ProxyFronted)
+		if err != nil {
+			log.Errorf("Error creating DDF request: %v", err)
+			return
+		}
 		log.Debugf("Sending DDF request. With body? %v", frontedReq.Body != nil)
 		start := time.Now()
 		if err := request(!df.cf.parallel, ddfRT, frontedReq); err == nil {
