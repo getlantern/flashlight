@@ -50,14 +50,12 @@ type Balancer struct {
 	dialers      sortedDialers
 	trusted      sortedDialers
 	closeCh      chan bool
-	resetCheckCh chan bool
 	stopStatsCh  chan bool
 	forceStatsCh chan bool
 }
 
 // New creates a new Balancer using the supplied Strategy and Dialers.
 func New(opts *Opts) *Balancer {
-	resetCheckCh := make(chan bool, 1)
 	// a small alpha to gradually adjust timeout based on performance of all
 	// dialers
 	b := &Balancer{
@@ -65,7 +63,6 @@ func New(opts *Opts) *Balancer {
 		closeCh:      make(chan bool),
 		stopStatsCh:  make(chan bool, 1),
 		forceStatsCh: make(chan bool, 1),
-		resetCheckCh: resetCheckCh,
 	}
 
 	b.Reset(opts.Dialers...)
@@ -99,7 +96,7 @@ func (b *Balancer) Reset(dialers ...*Dialer) {
 	b.mu.Lock()
 	oldDialers := b.dialers
 	for _, d := range dialers {
-		dl := &dialer{Dialer: d, forceRecheck: b.forceRecheck}
+		dl := &dialer{Dialer: d}
 		for _, od := range oldDialers {
 			if d.Label == od.Label {
 				// Existing dialer, keep stats
@@ -122,16 +119,6 @@ func (b *Balancer) Reset(dialers ...*Dialer) {
 	b.mu.Unlock()
 	for _, d := range oldDialers {
 		d.Stop()
-	}
-	b.forceRecheck()
-}
-
-func (b *Balancer) forceRecheck() {
-	select {
-	case b.resetCheckCh <- true:
-		log.Debug("Forced recheck")
-	default:
-		// Pending recheck, ignore subsequent request
 	}
 }
 
@@ -310,9 +297,8 @@ func (d sortedDialers) Less(i, j int) bool {
 
 	a, b := d[i], d[j]
 
-	// Prefer the successful proxy
-	qa, qb := a.ConsecSuccesses()-a.ConsecFailures(), b.ConsecSuccesses()-b.ConsecFailures()
-	aSucceeding, bSucceeding := qa > 0, qb > 0
+	// Prefer the succeeding proxy
+	aSucceeding, bSucceeding := a.Succeeding(), b.Succeeding()
 	if aSucceeding && !bSucceeding {
 		return true
 	}

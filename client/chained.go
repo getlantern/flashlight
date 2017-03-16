@@ -94,8 +94,9 @@ func (s *chainedServer) dialer(deviceID string, proTokenGetter func() string) (*
 			})
 			return conn, nil
 		},
-		EstLatency:   s.Proxy.EstLatency,
-		EstBandwidth: s.Proxy.EstBandwidth,
+		EstLatency:     s.Proxy.EstLatency,
+		EstBandwidth:   s.Proxy.EstBandwidth,
+		ForceRecheckCh: s.ForceRecheckCh(),
 	}, nil
 }
 

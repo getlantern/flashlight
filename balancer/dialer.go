@@ -9,6 +9,11 @@ import (
 	"github.com/getlantern/flashlight/ops"
 )
 
+const (
+	minCheckInterval = 10 * time.Second
+	maxCheckInterval = 1 * time.Hour
+)
+
 var (
 	// ErrUpstream is an error that indicates there was a problem upstream of a
 	// proxy. Such errors are not counted as failures but do allow failover to
@@ -35,11 +40,14 @@ type Dialer struct {
 
 	// EstBandwidth() provides the estimated bandwidth in Mbps
 	EstBandwidth func() float64
+
+	// ForceRecheckCh is a channel on which requests to force rechecking are
+	// received.
+	ForceRecheckCh chan bool
 }
 
 type dialer struct {
 	lastCheckSucceeded bool
-	forceRecheck       func()
 
 	*Dialer
 	closeCh chan struct{}
@@ -59,25 +67,52 @@ func (d *dialer) Start() {
 	}
 	d.closeCh = make(chan struct{}, 1)
 
-	// Periodically dial to see how it's doing
-	ticker := time.NewTicker(30 * time.Second)
+	// Periodically check our connectivity.
+	// With a 5 minute period, Lantern running 8 hours a day for 30 days and 148
+	// bytes for a TCP connection setup and teardown, this check will consume
+	// approximately 416 KB per month assuming that it runs every time. In
+	// practice, it'll skip the checks most of the time so it should consume much
+	// less.
+	checkInterval := maxCheckInterval
+	timer := time.NewTimer(checkInterval)
+
+	doCheck := func(forced bool) {
+		log.Debugf("Checking %v", d.Label)
+		conn, err := d.dial("tcp", "www.getlantern.org:80")
+		if err == nil {
+			d.markSuccess()
+			conn.Close()
+			// On success, don't bother rechecking anytime soon
+			checkInterval = maxCheckInterval
+		} else {
+			d.markFailure()
+			if forced {
+				checkInterval = minCheckInterval
+			} else {
+				// Exponentially back off while we're still failing
+				checkInterval *= 2
+				if checkInterval > maxCheckInterval {
+					checkInterval = maxCheckInterval
+				}
+			}
+		}
+		timer.Reset(checkInterval)
+	}
+
 	ops.Go(func() {
 		for {
 			select {
-			case <-ticker.C:
-				conn, err := d.dial("tcp", "www.getlantern.org:80")
-				if err == nil {
-					d.markSuccess()
-					conn.Close()
-				} else {
-					d.markFailure()
-				}
+			case <-timer.C:
+				doCheck(false)
+			case <-d.ForceRecheckCh:
+				log.Debugf("Forcing recheck for %v", d.Label)
+				doCheck(true)
 			case <-d.closeCh:
-				log.Tracef("Dialer %s stopped", d.Label)
+				log.Tracef("Dialer %v stopped", d.Label)
 				if d.OnClose != nil {
 					d.OnClose()
 				}
-				ticker.Stop()
+				timer.Stop()
 				return
 			}
 		}
@@ -95,6 +130,10 @@ func (d *dialer) ConsecSuccesses() int32 {
 
 func (d *dialer) ConsecFailures() int32 {
 	return atomic.LoadInt32(&d.consecFailures)
+}
+
+func (d *dialer) Succeeding() bool {
+	return d.ConsecSuccesses()-d.ConsecFailures() > 0
 }
 
 func (d *dialer) dial(network, addr string) (net.Conn, error) {
@@ -121,14 +160,26 @@ func (d *dialer) markSuccess() {
 }
 
 func (d *dialer) markFailure() {
-	d.doMarkFailure()
-	d.forceRecheck()
+	if d.doMarkFailure() == 1 {
+		// On new failure, force recheck
+		d.forceRecheck()
+	}
 }
 
-func (d *dialer) doMarkFailure() {
+func (d *dialer) doMarkFailure() int32 {
 	atomic.AddInt64(&d.stats.attempts, 1)
 	atomic.AddInt64(&d.stats.failures, 1)
 	atomic.StoreInt32(&d.consecSuccesses, 0)
 	newCF := atomic.AddInt32(&d.consecFailures, 1)
 	log.Tracef("Dialer %s consecutive failures: %d -> %d", d.Label, newCF-1, newCF)
+	return newCF
+}
+
+func (d *dialer) forceRecheck() {
+	select {
+	case d.ForceRecheckCh <- true:
+		// requested
+	default:
+		// recheck already requested, ignore
+	}
 }

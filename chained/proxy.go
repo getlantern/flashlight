@@ -62,6 +62,8 @@ type Proxy interface {
 	ShouldResetBBR() bool
 	// CollectBBRInfo collects BBR info from an http response
 	CollectBBRInfo(*http.Response)
+	// ForceRecheckCh returns a channel that requests forced rechecks
+	ForceRecheckCh() chan bool
 }
 
 // CreateProxy creates a Proxy with supplied server info.
@@ -309,6 +311,7 @@ type BaseProxy struct {
 	emaLatencyShortTerm *ema.EMA
 	abe                 int64 // Mbps scaled by 1000
 	bbrResetRequired    int64
+	forceRecheckCh      chan bool
 	mx                  sync.Mutex
 }
 
@@ -323,6 +326,7 @@ func newBaseProxy(name, protocol, network, addr, authToken string, trusted bool)
 		emaLatencyLongTerm:  ema.NewDuration(0, 0.05),
 		emaLatencyShortTerm: ema.NewDuration(0, 0.5),
 		bbrResetRequired:    1,
+		forceRecheckCh:      make(chan bool, 1),
 	}
 }
 
@@ -366,10 +370,6 @@ func (p *BaseProxy) EstBandwidth() float64 {
 	return float64(atomic.LoadInt64(&p.abe)) / 1000
 }
 
-func (p *BaseProxy) ShouldResetBBR() bool {
-	return atomic.CompareAndSwapInt64(&p.bbrResetRequired, 1, 0)
-}
-
 func (p *BaseProxy) CollectBBRInfo(resp *http.Response) {
 	_abe := resp.Header.Get("X-Bbr-Abe")
 	if _abe != "" {
@@ -379,6 +379,23 @@ func (p *BaseProxy) CollectBBRInfo(resp *http.Response) {
 			log.Debugf("%v: X-BBR-ABE: %.2f Mbps", p.Label(), abe)
 		}
 		atomic.StoreInt64(&p.abe, int64(abe*1000))
+	}
+}
+
+func (p *BaseProxy) ShouldResetBBR() bool {
+	return atomic.CompareAndSwapInt64(&p.bbrResetRequired, 1, 0)
+}
+
+func (p *BaseProxy) ForceRecheckCh() chan bool {
+	return p.forceRecheckCh
+}
+
+func (p *BaseProxy) forceRecheck() {
+	select {
+	case p.forceRecheckCh <- true:
+		// requested
+	default:
+		// recheck already requested, ignore
 	}
 }
 
@@ -397,9 +414,11 @@ func (p *BaseProxy) tcpDial(op *ops.Op) func(network, addr string, timeout time.
 				atomic.StoreInt64(&p.abe, 0)
 				p.emaLatencyLongTerm.SetDuration(shortTerm)
 				atomic.StoreInt64(&p.bbrResetRequired, 1)
+			} else if ratio > 2 {
+				log.Debugf("Latency rose dramatically from %v to %v, force proxy recheck", longTerm, shortTerm)
+				p.forceRecheck()
 			}
 			p.mx.Unlock()
-			// TODO: maybe forget bandwidth after a while so that if top choice falls, we retest everything else
 		}
 		return conn, err
 	}
