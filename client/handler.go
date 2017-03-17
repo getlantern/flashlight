@@ -45,7 +45,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 			log.Error(op.FailIf(err))
 		}
 	} else {
-		h := client.https.Load().(httpseverywhere.HTTPS)
+		h := client.https.Load().(httpseverywhere.Rewrite)
 		url := req.URL.String()
 		log.Debugf("Checking for HTTP redirect for %v", url)
 		httpsURL, changed := h(url)
