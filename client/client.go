@@ -94,7 +94,7 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 	}
 
 	// By default just turn of HTTPS (until rules are loaded)
-	var pass httpseverywhere.HTTPS = func(url string) (string, bool) { return url, false }
+	var pass httpseverywhere.Rewrite = func(url string) (string, bool) { return url, false }
 	client.https.Store(pass)
 
 	keepAliveIdleTimeout := idleTimeout - 5*time.Second
