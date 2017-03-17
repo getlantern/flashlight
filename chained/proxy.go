@@ -220,6 +220,15 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 }
 
 type proxy struct {
+	// Store int64's up front to ensure alignment of 64 bit words
+	// See https://golang.org/pkg/sync/atomic/#pkg-note-BUG
+	attempts            int64
+	successes           int64
+	consecSuccesses     int64
+	failures            int64
+	consecFailures      int64
+	abe                 int64 // Mbps scaled by 1000
+	bbrResetRequired    int64
 	name                string
 	protocol            string
 	network             string
@@ -229,16 +238,9 @@ type proxy struct {
 	proToken            func() string
 	trusted             bool
 	dialServer          func(*proxy) (net.Conn, error)
-	attempts            int64
-	successes           int64
-	consecSuccesses     int64
-	failures            int64
-	consecFailures      int64
 	emaLatencyLongTerm  *ema.EMA
 	emaLatencyShortTerm *ema.EMA
 	mostRecentABETime   time.Time
-	abe                 int64 // Mbps scaled by 1000
-	bbrResetRequired    int64
 	forceRecheckCh      chan bool
 	closeCh             chan bool
 	mx                  sync.Mutex
