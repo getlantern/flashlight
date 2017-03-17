@@ -60,7 +60,7 @@ func CreateDialer(name string, s *ChainedServerInfo, deviceID string, proToken f
 		}
 		return p, err
 	case "obfs4":
-		return newOBFS4Wrapper(newHTTPProxy(name, s, deviceID, proToken), name, s, deviceID, proToken)
+		return newOBFS4Proxy(name, s, deviceID, proToken)
 	case "lampshade":
 		return newLampshadeProxy(name, s, deviceID, proToken)
 	default:
@@ -87,7 +87,7 @@ func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken f
 		op := ops.Begin("dial_to_chained").ChainedProxy(p.addr, p.protocol, p.network)
 		defer op.End()
 		elapsed := mtime.Stopwatch()
-		conn, err := p.tcpDial(op)("tcp", p.addr, chainedDialTimeout)
+		conn, err := p.tcpDial(op)(chainedDialTimeout)
 		op.DialTime(elapsed, err)
 		return conn, op.FailIf(err)
 	})
@@ -105,7 +105,9 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 		defer op.End()
 
 		elapsed := mtime.Stopwatch()
-		conn, err := tlsdialer.DialTimeout(overheadDialer(false, p.tcpDial(op)), chainedDialTimeout,
+		conn, err := tlsdialer.DialTimeout(overheadDialer(false, func(network, addr string, timeout time.Duration) (net.Conn, error) {
+			return p.tcpDial(op)(timeout)
+		}), chainedDialTimeout,
 			"tcp", p.addr, false, &tls.Config{
 				ClientSessionCache: sessionCache,
 				InsecureSkipVerify: true,
@@ -125,7 +127,7 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 	}), nil
 }
 
-func newOBFS4Wrapper(wp *proxy, name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
+func newOBFS4Proxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
 	if s.Cert == "" {
 		return nil, fmt.Errorf("No Cert configured for obfs4 server, can't connect")
 	}
@@ -151,7 +153,7 @@ func newOBFS4Wrapper(wp *proxy, name string, s *ChainedServerInfo, deviceID stri
 		dialFn := func(network, address string) (net.Conn, error) {
 			// We know for sure the network and address are the same as what
 			// the inner DailServer uses.
-			return wp.DialServer()
+			return p.tcpDial(op)(chainedDialTimeout)
 		}
 		// The proxy it wrapped already has timeout applied.
 		conn, err := cf.Dial("tcp", p.addr, dialFn, args)
@@ -338,27 +340,33 @@ func (p *proxy) forceRecheck() {
 	}
 }
 
-func (p *proxy) tcpDial(op *ops.Op) func(network, addr string, timeout time.Duration) (net.Conn, error) {
-	return func(network, addr string, timeout time.Duration) (net.Conn, error) {
-		elapsed := mtime.Stopwatch()
-		conn, err := netx.DialTimeout("tcp", addr, timeout)
-		delta := op.TCPDialTime(elapsed, err)
-		if err == nil {
-			p.mx.Lock()
-			longTerm := p.emaLatencyLongTerm.UpdateDuration(delta)
-			shortTerm := p.emaLatencyShortTerm.UpdateDuration(delta)
-			ratio := float64(shortTerm) / float64(longTerm)
-			if ratio < 0.5 {
-				log.Debugf("Latency fell dramatically from %v to %v, reset bandwidth calculations", longTerm, shortTerm)
-				atomic.StoreInt64(&p.abe, 0)
-				p.emaLatencyLongTerm.SetDuration(shortTerm)
-				atomic.StoreInt64(&p.bbrResetRequired, 1)
-			} else if ratio > 2 {
-				log.Debugf("Latency rose dramatically from %v to %v, force proxy recheck", longTerm, shortTerm)
-				p.forceRecheck()
-			}
-			p.mx.Unlock()
-		}
-		return conn, err
+func (p *proxy) tcpDial(op *ops.Op) func(timeout time.Duration) (net.Conn, error) {
+	return func(timeout time.Duration) (net.Conn, error) {
+		conn, delta, err := p.dialTCP(timeout)
+		op.TCPDialTime(delta, err)
+		return overheadWrapper(false)(conn, err)
 	}
+}
+
+func (p *proxy) dialTCP(timeout time.Duration) (net.Conn, time.Duration, error) {
+	elapsed := mtime.Stopwatch()
+	conn, err := netx.DialTimeout("tcp", p.addr, timeout)
+	delta := elapsed()
+	if err == nil {
+		p.mx.Lock()
+		longTerm := p.emaLatencyLongTerm.UpdateDuration(delta)
+		shortTerm := p.emaLatencyShortTerm.UpdateDuration(delta)
+		ratio := float64(shortTerm) / float64(longTerm)
+		if ratio < 0.5 {
+			log.Debugf("Latency fell dramatically from %v to %v, reset bandwidth calculations", longTerm, shortTerm)
+			atomic.StoreInt64(&p.abe, 0)
+			p.emaLatencyLongTerm.SetDuration(shortTerm)
+			atomic.StoreInt64(&p.bbrResetRequired, 1)
+		} else if ratio > 2 {
+			log.Debugf("Latency rose dramatically from %v to %v, force proxy recheck", longTerm, shortTerm)
+			p.forceRecheck()
+		}
+		p.mx.Unlock()
+	}
+	return conn, delta, err
 }

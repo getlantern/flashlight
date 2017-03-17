@@ -20,6 +20,8 @@ import (
 const (
 	minCheckInterval = 10 * time.Second
 	maxCheckInterval = 15 * time.Minute
+	minCheckTimeout  = 1 * time.Second
+	maxCheckTimeout  = 10 * time.Second
 )
 
 var (
@@ -49,7 +51,13 @@ func (p *proxy) Start() {
 			select {
 			case <-timer.C:
 				log.Debugf("Checking %v", p.Label)
-				conn, err := p.Dial("tcp", "www.getlantern.org:80")
+				timeout := p.emaLatencyLongTerm.GetDuration() * 2
+				if timeout < minCheckTimeout {
+					timeout = minCheckTimeout
+				} else if timeout > maxCheckTimeout {
+					timeout = maxCheckTimeout
+				}
+				conn, _, err := p.dialTCP(timeout)
 				if err == nil {
 					p.markSuccess()
 					conn.Close()
