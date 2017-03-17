@@ -5,7 +5,6 @@ import (
 	"io"
 	"math/rand"
 	"net"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -22,10 +21,92 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
+type testDialer struct {
+	name      string
+	latency   time.Duration
+	bandwidth float64
+	untrusted bool
+	failing   bool
+	attempts  int64
+	successes int64
+	failures  int64
+	stopped   bool
+}
+
+// Name returns the name for this Dialer
+func (d *testDialer) Name() string {
+	return d.name
+}
+
+func (d *testDialer) Label() string {
+	return d.name
+}
+
+func (d *testDialer) Addr() string {
+	return ""
+}
+
+func (d *testDialer) Trusted() bool {
+	return !d.untrusted
+}
+
+func (d *testDialer) Dial(network, addr string) (net.Conn, error) {
+	var conn net.Conn
+	var err error
+	if !d.Succeeding() {
+		err = fmt.Errorf("Failing intentionally")
+	} else if network != "" {
+		conn, err = net.DialTimeout(network, addr, 250*time.Millisecond)
+	}
+	atomic.AddInt64(&d.attempts, 1)
+	if err == nil {
+		atomic.AddInt64(&d.successes, 1)
+	} else {
+		atomic.AddInt64(&d.failures, 1)
+	}
+	return conn, err
+}
+
+func (d *testDialer) EstLatency() time.Duration {
+	return d.latency
+}
+
+func (d *testDialer) EstBandwidth() float64 {
+	return d.bandwidth
+}
+
+func (d *testDialer) Attempts() int64 {
+	return atomic.LoadInt64(&d.attempts)
+}
+
+func (d *testDialer) Successes() int64 {
+	return atomic.LoadInt64(&d.successes)
+}
+
+func (d *testDialer) ConsecSuccesses() int64 {
+	return 0
+}
+
+func (d *testDialer) Failures() int64 {
+	return atomic.LoadInt64(&d.failures)
+}
+
+func (d *testDialer) ConsecFailures() int64 {
+	return 0
+}
+
+func (d *testDialer) Succeeding() bool {
+	return !d.failing
+}
+
+func (d *testDialer) Stop() {
+	d.stopped = true
+}
+
 func TestNoDialers(t *testing.T) {
 	addr, l := echoServer()
 	defer func() { _ = l.Close() }()
-	b := newBalancer(Sticky)
+	b := New()
 	_, err := b.Dial("tcp", addr)
 	assert.Error(t, err, "Dialing with no dialers should have failed")
 }
@@ -34,28 +115,28 @@ func TestSingleDialer(t *testing.T) {
 	addr, l := echoServer()
 	defer func() { _ = l.Close() }()
 
-	dialer := newDialer(1)
-	dialerClosed := int32(0)
-	dialer.OnClose = func() {
-		atomic.StoreInt32(&dialerClosed, 1)
+	dialer := &testDialer{
+		name:      "dialer1",
+		latency:   50 * time.Millisecond,
+		bandwidth: 10000,
 	}
 	// Test successful single dialer
-	b := newBalancer(Sticky, dialer)
+	b := New(dialer)
 	conn, err := b.Dial("tcp", addr)
 	if assert.NoError(t, err, "Dialing should have succeeded") {
 		doTestConn(t, conn)
 	}
 
-	if assert.Len(t, b.dialers.dialers, 1) {
-		assert.EqualValues(t, 1, b.dialers.dialers[0].stats.attempts)
-		assert.EqualValues(t, 1, b.dialers.dialers[0].stats.successes)
-		assert.EqualValues(t, 0, b.dialers.dialers[0].stats.failures)
+	if assert.Len(t, b.dialers, 1) {
+		assert.EqualValues(t, 1, b.dialers[0].Attempts())
+		assert.EqualValues(t, 1, b.dialers[0].Successes())
+		assert.EqualValues(t, 0, b.dialers[0].Failures())
 	}
 
 	// Test close balancer
 	b.Close()
 	time.Sleep(250 * time.Millisecond)
-	assert.Equal(t, int32(1), atomic.LoadInt32(&dialerClosed), "Dialer should have been closed")
+	assert.True(t, dialer.stopped)
 	_, err = b.Dial("tcp", addr)
 	if assert.Error(t, err, "Dialing on closed balancer should fail") {
 		assert.Contains(t, "No dialers", err.Error(), "Error should have mentioned that there were no dialers")
@@ -66,250 +147,51 @@ func TestRetryOnBadDialer(t *testing.T) {
 	addr, l := echoServer()
 	defer func() { _ = l.Close() }()
 
-	d1Attempts := int32(0)
-	dialer1 := newCondDialer(1, func() bool { atomic.AddInt32(&d1Attempts, 1); return true })
-	d2Attempts := int32(0)
-	dialer2 := newCondDialer(2, func() bool { atomic.AddInt32(&d2Attempts, 1); return true })
+	dialer1 := &testDialer{
+		name:      "dialer1",
+		latency:   50 * time.Millisecond,
+		bandwidth: 10000,
+		failing:   true,
+	}
+	dialer2 := &testDialer{
+		name:      "dialer1",
+		latency:   50 * time.Millisecond,
+		bandwidth: 10000,
+		failing:   true,
+	}
 
-	b := newBalancer(Sticky, dialer1)
+	b := New(dialer1)
 	_, err := b.Dial("tcp", addr)
 	if assert.Error(t, err, "Dialing bad dialer should fail") {
-		assert.EqualValues(t, 1, atomic.LoadInt32(&d1Attempts), "should try same dialer only once")
+		assert.EqualValues(t, 1, dialer1.Attempts(), "should try same dialer only once")
 	}
 	b.Reset(dialer1, dialer2)
 	_, err = b.Dial("tcp", addr)
 	if assert.Error(t, err, "Dialing bad dialer should fail") {
-		assert.EqualValues(t, dialAttempts, atomic.LoadInt32(&d1Attempts)+atomic.LoadInt32(&d2Attempts), "should try enough times when there are more then 1 dialer")
-	}
-}
-
-func TestRandomDialer(t *testing.T) {
-	addr, l := echoServer()
-	defer func() { _ = l.Close() }()
-	d1Attempts := int32(0)
-	// sleep for a while to avoid dial time from varying too much, same below
-	dialer1 := newCondDialer(1, func() bool {
-		time.Sleep(2 * time.Millisecond)
-		atomic.AddInt32(&d1Attempts, 1)
-		return false
-	})
-	d2Attempts := int32(0)
-	dialer2 := newCondDialer(2, func() bool {
-		time.Sleep(2 * time.Millisecond)
-		atomic.AddInt32(&d2Attempts, 1)
-		return false
-	})
-	d3Attempts := int32(0)
-	dialer3 := newCondDialer(3, func() bool {
-		time.Sleep(2 * time.Millisecond)
-		atomic.AddInt32(&d3Attempts, 1)
-		return false
-	})
-
-	b := newBalancer(Random, dialer1, dialer2, dialer3)
-	defer b.Close()
-	var wg sync.WaitGroup
-	for i := 0; i < 3; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for j := 0; j < 1000; j++ {
-				_, err := b.Dial("tcp", addr)
-				assert.NoError(t, err, "Dialing should have succeeded")
-			}
-		}()
-	}
-	wg.Wait()
-	assertWithinRangeOf(t, atomic.LoadInt32(&d1Attempts), 1000, 200)
-	assertWithinRangeOf(t, atomic.LoadInt32(&d2Attempts), 1000, 200)
-	assertWithinRangeOf(t, atomic.LoadInt32(&d3Attempts), 1000, 200)
-}
-
-func assertWithinRangeOf(t *testing.T, actual int32, expected int32, margin int32) {
-	assert.True(t, actual >= expected-margin && actual <= expected+margin, fmt.Sprintf("%v not within %v of %v", actual, margin, expected))
-}
-
-func TestSuccessWithCondDialer(t *testing.T) {
-	addr, l := echoServer()
-	defer func() { _ = l.Close() }()
-	dialer1 := newCondDialer(1, func() bool { return true })
-	dialer2 := newDialer(2)
-	dialer3 := newDialer(3)
-
-	// Test success with failing dialer
-	b := newBalancer(Sticky, dialer1, dialer2, dialer3)
-	defer b.Close()
-	conn, err := b.Dial("tcp", addr)
-	if assert.NoError(t, err, "Dialing should have succeeded") {
-		doTestConn(t, conn)
-	}
-}
-
-func TestUpdateConsecSuccessesAndFailures(t *testing.T) {
-	addr, l := echoServer()
-	defer func() { _ = l.Close() }()
-	f1Attempts := int32(0)
-	f2Attempts := int32(0)
-	fail1Times := newCondDialer(1, func() bool { return atomic.AddInt32(&f1Attempts, 1) <= 1 })
-	fail2Times := newCondDialer(2, func() bool { return atomic.AddInt32(&f2Attempts, 1) <= 2 })
-
-	b := newBalancer(Sticky, fail2Times, fail1Times)
-	for _, d := range b.dialers.dialers {
-		assert.EqualValues(t, 1, d.ConsecSuccesses(), "dialers should preset 1 success initially")
-		assert.EqualValues(t, 0, d.ConsecFailures(), "dialers should have no failure initially")
-	}
-
-	_, err := b.Dial("tcp", addr)
-	assert.Error(t, err, "Dialing should fail when all dialers fail")
-	for _, d := range b.dialers.dialers {
-		assert.EqualValues(t, 0, d.ConsecSuccesses(), "failed dailers should reset ConsecSuccesses to zero")
-		assert.EqualValues(t, 1, d.ConsecFailures(), "failed dailers should increase ConsecFailures")
-	}
-
-	_, err = b.Dial("tcp", addr)
-	assert.NoError(t, err, "Dialing should have succeeded as we have 2nd try")
-	for _, d := range b.dialers.dialers {
-		if d.Label == "Dialer 1" {
-			assert.EqualValues(t, 1, d.ConsecSuccesses(), "Successful dialer should increase ConsecSuccesses")
-			assert.EqualValues(t, 0, d.ConsecFailures(), "Successful dialer should reset ConsecFailures")
-		}
-	}
-
-}
-
-func TestRecheck(t *testing.T) {
-	addr, l := echoServer()
-	defer func() { _ = l.Close() }()
-	attempts := int32(0)
-	dialer := newCondDialer(1, func() bool { return atomic.AddInt32(&attempts, 1) <= 1 })
-	// Test failure
-	b := newBalancer(Sticky, dialer, dialer)
-	_, err := b.Dial("tcp", addr)
-	assert.NoError(t, err, "Dialing should have succeeded as we have 2nd try")
-	assert.EqualValues(t, 2, atomic.LoadInt32(&attempts), "Wrong number of dial attempts on failed dialer")
-
-	// Test success after successful retest using default check
-	conn, err := b.Dial("tcp", addr)
-	if assert.NoError(t, err, "Dialing should have succeeded") {
-		doTestConn(t, conn)
+		assert.EqualValues(t, 2, dialer1.Attempts()+dialer2.Attempts(), "should try once per dialer")
 	}
 }
 
 func TestTrusted(t *testing.T) {
-	dialCount := 0
-	dialer := &Dialer{
-		DialFN: func(network, addr string) (net.Conn, error) {
-			dialCount++
-			return nil, nil
-		},
+	dialer := &testDialer{
+		untrusted: true,
 	}
 
-	_, err := newBalancer(Sticky, dialer).Dial("tcp", "does-not-exist.com:80")
+	_, err := New(dialer).Dial("", "does-not-exist.com:80")
 	assert.Error(t, err, "Dialing with no trusted dialers should have failed")
-	assert.Equal(t, dialCount, 0, "should not dial untrusted dialer")
+	assert.EqualValues(t, 0, dialer.Attempts(), "should not dial untrusted dialer")
 
-	_, err = newBalancer(Sticky, dialer).Dial("tcp", "does-not-exist.com:8080")
+	_, err = New(dialer).Dial("", "does-not-exist.com:8080")
 	assert.Error(t, err, "Dialing with no trusted dialers should have failed")
-	assert.Equal(t, dialCount, 0, "should not dial untrusted dialer")
+	assert.EqualValues(t, 0, dialer.Attempts(), "should not dial untrusted dialer")
 
-	dialer.Trusted = true
-	_, err = newBalancer(Sticky, dialer).Dial("tcp", "does-not-exist.com:80")
+	dialer.untrusted = false
+	_, err = New(dialer).Dial("", "does-not-exist.com:80")
 	assert.NoError(t, err, "Dialing with trusted dialer should have succeeded")
-	assert.Equal(t, dialCount, 1, "should dial untrusted dialer")
-	_, err = newBalancer(Sticky, dialer).Dial("tcp", "does-not-exist.com:8080")
+	assert.EqualValues(t, 1, dialer.Attempts(), "should dial trusted dialer")
+	_, err = New(dialer).Dial("", "does-not-exist.com:8080")
 	assert.NoError(t, err, "Dialing with trusted dialer should have succeeded")
-	assert.Equal(t, dialCount, 2, "should dial untrusted dialer")
-}
-
-func TestCheck(t *testing.T) {
-	minCheckInterval := 50 * time.Millisecond
-	var checkCount uint32
-	d := &Dialer{
-		DialFN: func(network, addr string) (net.Conn, error) {
-			return nil, nil
-		},
-		Check: func(checkData interface{}, onFailure func(string)) (bool, time.Duration) {
-			newCount := atomic.AddUint32(&checkCount, 1)
-			log.Debugf("Check() called %d times", newCount)
-			return true, 1 * time.Second
-		},
-		Trusted: true,
-	}
-	New(&Opts{
-		Strategy:         Sticky,
-		Dialers:          []*Dialer{d},
-		MinCheckInterval: minCheckInterval,
-		MaxCheckInterval: minCheckInterval,
-	})
-
-	time.Sleep(minCheckInterval * 2)
-	assert.True(t, atomic.LoadUint32(&checkCount) >= 2)
-}
-
-func TestResetDailers(t *testing.T) {
-	addr, l := echoServer()
-	defer func() { _ = l.Close() }()
-	chReset := make(chan struct{})
-	chContinue := make(chan struct{})
-	bad := int32(0)
-	badDialer := newCondDialer(1, func() bool {
-		atomic.AddInt32(&bad, 1)
-		chReset <- struct{}{}
-		<-chContinue
-		return true
-	})
-	good := int32(0)
-	goodDialer := newCondDialer(2, func() bool {
-		atomic.AddInt32(&good, 1)
-		return false
-	})
-	b := newBalancer(Sticky, badDialer)
-	go func() {
-		<-chReset
-		b.Reset(goodDialer)
-		chContinue <- struct{}{}
-	}()
-	_, err := b.Dial("tcp", addr)
-	assert.NoError(t, err, "Should have no error dialing with resetted balancer")
-	assert.Equal(t, int32(1), atomic.LoadInt32(&bad), "should dial bad dialer only once")
-	assert.Equal(t, int32(1), atomic.LoadInt32(&good), "should dial good dialer only once")
-}
-
-func newDialer(id int) *Dialer {
-	dialer := &Dialer{
-		Label: fmt.Sprintf("Dialer %d", id),
-		DialFN: func(network, addr string) (net.Conn, error) {
-			return net.Dial(network, addr)
-		},
-	}
-	return dialer
-}
-
-func newLatencyDialer(id int, latency time.Duration, delta time.Duration, attempts *int32) *Dialer {
-	dialer := &Dialer{
-		Label: fmt.Sprintf("Dialer %d", id),
-		DialFN: func(network, addr string) (net.Conn, error) {
-			t := int64(latency) + rand.Int63n(int64(delta)*2) - int64(delta)
-			time.Sleep(time.Duration(t))
-			atomic.AddInt32(attempts, 1)
-			return net.Dial(network, addr)
-		},
-	}
-	return dialer
-}
-
-// newCondDialer creates a dialer that will fail if beforeDial returns true.
-func newCondDialer(id int32, beforeDial func() bool) *Dialer {
-	d := &Dialer{
-		Label: "Dialer " + strconv.Itoa(int(id)),
-		DialFN: func(network, addr string) (net.Conn, error) {
-			if beforeDial() {
-				return nil, fmt.Errorf("Failing intentionally")
-			}
-			return net.Dial(network, addr)
-		},
-	}
-	return d
+	assert.EqualValues(t, 2, dialer.Attempts(), "should dial trusted dialer")
 }
 
 func doTestConn(t *testing.T, conn net.Conn) {
@@ -333,8 +215,4 @@ func doTestConn(t *testing.T, conn net.Conn) {
 	wg.Wait()
 	err := conn.Close()
 	assert.NoError(t, err, "Should close conn")
-}
-
-func newBalancer(strategy Strategy, dialers ...*Dialer) *Balancer {
-	return New(&Opts{Strategy: strategy, Dialers: dialers})
 }

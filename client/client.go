@@ -85,7 +85,7 @@ type Client struct {
 // all traffic, and another function to get Lantern Pro token when required.
 func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 	client := &Client{
-		bal:            balancer.New(&balancer.Opts{}),
+		bal:            balancer.New(),
 		proxyAll:       proxyAll,
 		proTokenGetter: proTokenGetter,
 	}

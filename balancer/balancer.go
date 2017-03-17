@@ -27,6 +27,8 @@ var (
 	log = golog.LoggerFor("balancer")
 )
 
+// Dialer provides the ability to dial a proxy and obtain information needed to
+// effectively load balancer between dialers.
 type Dialer interface {
 	// Name returns the name for this Dialer
 	Name() string
@@ -71,20 +73,6 @@ type Dialer interface {
 	Stop()
 }
 
-// Opts are options for the balancer.
-type Opts struct {
-	// Dialers are the Dialers amongst which the Balancer will balance.
-	Dialers []Dialer
-
-	// MinCheckInterval controls the minimum check interval when scheduling dialer
-	// checks. Defaults to 10 seconds.
-	MinCheckInterval time.Duration
-
-	// MaxCheckInterval controls the maximum check interval when scheduling dialer
-	// checks. Defaults to 1 minute.
-	MaxCheckInterval time.Duration
-}
-
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
 	lastDialTime int64 // not used anymore, but makes sure we're aligned on 64bit boundary
@@ -98,7 +86,7 @@ type Balancer struct {
 }
 
 // New creates a new Balancer using the supplied Strategy and Dialers.
-func New(opts *Opts) *Balancer {
+func New(dialers ...Dialer) *Balancer {
 	// a small alpha to gradually adjust timeout based on performance of all
 	// dialers
 	b := &Balancer{
@@ -108,7 +96,7 @@ func New(opts *Opts) *Balancer {
 		forceStatsCh: make(chan bool, 1),
 	}
 
-	b.Reset(opts.Dialers...)
+	b.Reset(dialers...)
 	ops.Go(b.printStats)
 	ops.Go(b.run)
 	return b
@@ -162,6 +150,13 @@ func (b *Balancer) Reset(dialers ...Dialer) {
 // error.
 func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 	trustedOnly := false
+	_, port, _ := net.SplitHostPort(addr)
+	// We try to identify HTTP traffic (as opposed to HTTPS) by port and only
+	// send HTTP traffic to dialers marked as trusted.
+	if port == "" || port == "80" || port == "8080" {
+		trustedOnly = true
+	}
+
 	var lastDialer Dialer
 	for i := 0; i < dialAttempts; i++ {
 		d, pickErr := b.pickDialer(trustedOnly)
