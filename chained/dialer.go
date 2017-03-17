@@ -50,7 +50,7 @@ func (p *proxy) Start() {
 		for {
 			select {
 			case <-timer.C:
-				log.Debugf("Checking %v", p.Label)
+				log.Debugf("Checking %v", p.Label())
 				timeout := p.emaLatencyLongTerm.GetDuration() * 2
 				if timeout < minCheckTimeout {
 					timeout = minCheckTimeout
@@ -73,11 +73,11 @@ func (p *proxy) Start() {
 				}
 				timer.Reset(checkInterval)
 			case <-p.forceRecheckCh:
-				log.Debugf("Forcing recheck for %v", p.Label)
+				log.Debugf("Forcing recheck for %v", p.Label())
 				checkInterval := minCheckInterval
 				timer.Reset(checkInterval)
 			case <-p.closeCh:
-				log.Tracef("Dialer %v stopped", p.Label)
+				log.Tracef("Dialer %v stopped", p.Label())
 				timer.Stop()
 				return
 			}
@@ -86,7 +86,7 @@ func (p *proxy) Start() {
 }
 
 func (p *proxy) Stop() {
-	log.Tracef("Stopping dialer %s", p.Label)
+	log.Tracef("Stopping dialer %s", p.Label())
 	p.closeCh <- true
 }
 
@@ -131,7 +131,7 @@ func (p *proxy) markSuccess() {
 	atomic.AddInt64(&p.attempts, 1)
 	atomic.AddInt64(&p.successes, 1)
 	newCS := atomic.AddInt64(&p.consecSuccesses, 1)
-	log.Tracef("Dialer %s consecutive successes: %d -> %d", p.Label, newCS-1, newCS)
+	log.Tracef("Dialer %s consecutive successes: %d -> %d", p.Label(), newCS-1, newCS)
 	// only when state is changing
 	if newCS <= 2 {
 		atomic.StoreInt64(&p.consecFailures, 0)
@@ -150,7 +150,7 @@ func (p *proxy) doMarkFailure() int64 {
 	atomic.AddInt64(&p.failures, 1)
 	atomic.StoreInt64(&p.consecSuccesses, 0)
 	newCF := atomic.AddInt64(&p.consecFailures, 1)
-	log.Tracef("Dialer %s consecutive failures: %d -> %d", p.Label, newCF-1, newCF)
+	log.Tracef("Dialer %s consecutive failures: %d -> %d", p.Label(), newCF-1, newCF)
 	return newCF
 }
 
@@ -184,7 +184,7 @@ func (p *proxy) doDial(network, addr string) (net.Conn, error) {
 func (p *proxy) dialInternal(network, addr string) (net.Conn, error) {
 	conn, err := p.DialServer()
 	if err != nil {
-		return nil, errors.New("Unable to dial server %v: %s", p.Label, err)
+		return nil, errors.New("Unable to dial server %v: %s", p.Label(), err)
 	}
 	// Look for our special hacked "connect" transport used to signal
 	// that we should send a CONNECT request and tunnel all traffic through
