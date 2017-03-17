@@ -20,7 +20,7 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 
 	// The dialers slice must be large enough to handle all chained and obfs4
 	// servers.
-	dialers := make([]*balancer.Dialer, 0, len(proxies))
+	dialers := make([]balancer.Dialer, 0, len(proxies))
 
 	// Add chained (CONNECT proxy) servers.
 	log.Debugf("Adding %d chained servers", len(proxies))

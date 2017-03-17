@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/ema"
@@ -28,10 +27,51 @@ var (
 	log = golog.LoggerFor("balancer")
 )
 
+type Dialer interface {
+	// Label() returns a label for this Dialer
+	Label() string
+
+	// Trusted() indicates whether or not this dialer is trusted
+	Trusted() bool
+
+	// Dial with this dialer
+	Dial(network, addr string) (net.Conn, error)
+
+	// EstLatency() provides a latency estimate
+	EstLatency() time.Duration
+
+	// EstBandwidth() provides the estimated bandwidth in Mbps
+	EstBandwidth() float64
+
+	// Attempts returns the total number of dial attempts
+	Attempts() int64
+
+	// Successes returns the total number of dial successes
+	Successes() int64
+
+	// ConsecSuccesses returns the number of consecutive dial successes
+	ConsecSuccesses() int64
+
+	// Failures returns the total number of dial failures
+	Failures() int64
+
+	// ConsecFailures returns the number of consecutive dial failures
+	ConsecFailures() int64
+
+	// Succeeding indicates whether or not this dialer is currently good to use
+	Succeeding() bool
+
+	// Start starts background processing for this dialer
+	Start()
+
+	// Stop stops background processing for this Dialer.
+	Stop()
+}
+
 // Opts are options for the balancer.
 type Opts struct {
 	// Dialers are the Dialers amongst which the Balancer will balance.
-	Dialers []*Dialer
+	Dialers []Dialer
 
 	// MinCheckInterval controls the minimum check interval when scheduling dialer
 	// checks. Defaults to 10 seconds.
@@ -71,10 +111,10 @@ func New(opts *Opts) *Balancer {
 	return b
 }
 
-func (b *Balancer) dialersToCheck() []*dialer {
+func (b *Balancer) dialersToCheck() []Dialer {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
-	ds := make([]*dialer, 0, len(b.dialers))
+	ds := make([]Dialer, 0, len(b.dialers))
 	for _, d := range b.dialers {
 		ds = append(ds, d)
 	}
@@ -82,7 +122,7 @@ func (b *Balancer) dialersToCheck() []*dialer {
 }
 
 // Reset closes existing dialers and replaces them with new ones.
-func (b *Balancer) Reset(dialers ...*Dialer) {
+func (b *Balancer) Reset(dialers ...Dialer) {
 	// TODO: track estimated latency and estimated bandwidth on our dialer so that
 	// we can save and transfer accordingly.
 
@@ -95,30 +135,19 @@ func (b *Balancer) Reset(dialers ...*Dialer) {
 
 	b.mu.Lock()
 	oldDialers := b.dialers
-	for _, d := range dialers {
-		dl := &dialer{Dialer: d}
-		for _, od := range oldDialers {
-			if d.Label == od.Label {
-				// Existing dialer, keep stats
-				log.Debugf("Keeping stats from old dialer")
-				dl.consecSuccesses = atomic.LoadInt32(&od.consecSuccesses)
-				dl.consecFailures = atomic.LoadInt32(&od.consecFailures)
-				dl.stats = od.stats
-				break
-			}
-		}
+	for _, dl := range dialers {
 		dl.Start()
 		dls = append(dls, dl)
 
-		if dl.Trusted {
+		if dl.Trusted() {
 			tdls = append(tdls, dl)
 		}
 	}
 	b.dialers = dls
 	b.trusted = tdls
 	b.mu.Unlock()
-	for _, d := range oldDialers {
-		d.Stop()
+	for _, dl := range oldDialers {
+		dl.Stop()
 	}
 }
 
@@ -131,33 +160,33 @@ func (b *Balancer) Reset(dialers ...*Dialer) {
 // error.
 func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 	trustedOnly := false
-	var lastDialer *dialer
+	var lastDialer Dialer
 	for i := 0; i < dialAttempts; i++ {
 		d, pickErr := b.pickDialer(trustedOnly)
 		if pickErr != nil {
 			return nil, pickErr
 		}
 		if d == lastDialer {
-			log.Debugf("Skip dialing %s://%s with same dailer %s", network, addr, d.Label)
+			log.Debugf("Skip dialing %s://%s with same dailer %s", network, addr, d.Label())
 			continue
 		}
 		lastDialer = d
-		log.Tracef("Dialing %s://%s with %s", network, addr, d.Label)
+		log.Tracef("Dialing %s://%s with %s", network, addr, d.Label())
 
 		conn, err := b.dialWithTimeout(d, network, addr)
 		if err != nil {
-			log.Error(errors.New("Unable to dial via %v to %s://%s: %v on pass %v...continuing", d.Label, network, addr, err, i))
+			log.Error(errors.New("Unable to dial via %v to %s://%s: %v on pass %v...continuing", d.Label(), network, addr, err, i))
 			continue
 		}
 		// Please leave this at Debug level, as it helps us understand performance
 		// issues caused by a poor proxy being selected.
-		log.Debugf("Successfully dialed via %v to %v://%v on pass %v", d.Label, network, addr, i)
+		log.Debugf("Successfully dialed via %v to %v://%v on pass %v", d.Label(), network, addr, i)
 		return conn, nil
 	}
 	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", network, addr, dialAttempts)
 }
 
-func (b *Balancer) dialWithTimeout(d *dialer, network, addr string) (net.Conn, error) {
+func (b *Balancer) dialWithTimeout(d Dialer, network, addr string) (net.Conn, error) {
 	limit := b.nextTimeout.GetDuration()
 	timer := time.NewTimer(limit)
 	var conn net.Conn
@@ -166,7 +195,7 @@ func (b *Balancer) dialWithTimeout(d *dialer, network, addr string) (net.Conn, e
 	chDone := make(chan bool)
 	t := time.Now()
 	ops.Go(func() {
-		conn, err = d.dial(network, addr)
+		conn, err = d.Dial(network, addr)
 		if err == nil {
 			newTimeout := b.nextTimeout.UpdateDuration(3 * time.Since(t))
 			log.Tracef("Updated nextTimeout to %v", newTimeout)
@@ -179,7 +208,7 @@ func (b *Balancer) dialWithTimeout(d *dialer, network, addr string) (net.Conn, e
 			// give current dialer a chance to return/fail and other dialers to
 			// take part in.
 			if d.ConsecSuccesses() > 0 {
-				log.Debugf("Reset balancer dial timeout because dialer %s suddenly slows down", d.Label)
+				log.Debugf("Reset balancer dial timeout because dialer %s suddenly slows down", d.Label())
 				b.nextTimeout.SetDuration(initialTimeout)
 				timer.Reset(initialTimeout)
 				continue
@@ -254,7 +283,7 @@ func (b *Balancer) doPrintStats() {
 	sort.Sort(dialersCopy)
 	log.Debug("-------------------------- Dialer Stats -----------------------")
 	for _, d := range dialersCopy {
-		log.Debug(d.stats.String(d))
+		log.Debugf("%s  S: %4d / %4d (%d)\tF: %4d / %4d (%d)\tL: %5.0fms\tBW: %3.2fMbps", d.Label(), d.Successes(), d.Attempts(), d.ConsecSuccesses(), d.Failures(), d.Attempts(), d.ConsecFailures(), d.EstLatency().Seconds()*1000, d.EstBandwidth())
 	}
 	log.Debug("------------------------ End Dialer Stats ---------------------")
 }
@@ -268,7 +297,7 @@ func (b *Balancer) forceStats() {
 	}
 }
 
-func (b *Balancer) pickDialer(trustedOnly bool) (*dialer, error) {
+func (b *Balancer) pickDialer(trustedOnly bool) (Dialer, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	dialers := b.dialers
@@ -285,7 +314,7 @@ func (b *Balancer) pickDialer(trustedOnly bool) (*dialer, error) {
 	return dialers[0], nil
 }
 
-type sortedDialers []*dialer
+type sortedDialers []Dialer
 
 func (d sortedDialers) Len() int { return len(d) }
 
@@ -319,7 +348,7 @@ func (d sortedDialers) Less(i, j int) bool {
 	if !ebaKnown && !ebbKnown {
 		// bandwidth is known for neither proxy, sort by label to keep sending
 		// traffic to same proxy until we know bandwidth.
-		return strings.Compare(a.Label, b.Label) < 0
+		return strings.Compare(a.Label(), b.Label()) < 0
 	}
 
 	// divide bandwidth by latency to determine how to sort
