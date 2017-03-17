@@ -23,6 +23,7 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/ops"
@@ -66,7 +67,7 @@ type Client struct {
 	writeTimeout time.Duration
 
 	// Balanced CONNECT dialers.
-	bal eventual.Value
+	bal *balancer.Balancer
 
 	interceptCONNECT proxy.Interceptor
 	interceptHTTP    proxy.Interceptor
@@ -84,7 +85,7 @@ type Client struct {
 // all traffic, and another function to get Lantern Pro token when required.
 func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 	client := &Client{
-		bal:            eventual.NewValue(),
+		bal:            balancer.New(&balancer.Opts{}),
 		proxyAll:       proxyAll,
 		proTokenGetter: proTokenGetter,
 	}
@@ -292,7 +293,7 @@ func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, p
 			// case.
 			proto = "connect"
 		}
-		return bal.Dial(proto, addr)
+		return client.bal.Dial(proto, addr)
 	})
 	// TODO: pass context down to all layers.
 	chDone := make(chan bool)
