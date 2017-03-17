@@ -320,8 +320,6 @@ func (d sortedDialers) Swap(i, j int) {
 }
 
 func (d sortedDialers) Less(i, j int) bool {
-	// TODO: take into account availability/failure rate
-
 	a, b := d[i], d[j]
 
 	// Prefer the succeeding proxy

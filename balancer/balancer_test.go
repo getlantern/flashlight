@@ -5,6 +5,7 @@ import (
 	"io"
 	"math/rand"
 	"net"
+	"sort"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -192,6 +193,73 @@ func TestTrusted(t *testing.T) {
 	_, err = New(dialer).Dial("", "does-not-exist.com:8080")
 	assert.NoError(t, err, "Dialing with trusted dialer should have succeeded")
 	assert.EqualValues(t, 2, dialer.Attempts(), "should dial trusted dialer")
+}
+
+func TestSorting(t *testing.T) {
+	dialers := sortedDialers{
+		// Unknown bandwidth comes first
+		&testDialer{
+			name:      "1",
+			bandwidth: 0,
+		},
+		// Within unknown bandwidth, sort by name
+		&testDialer{
+			name:      "2",
+			bandwidth: 0,
+		},
+		// Order known dialers by bandwidth / latency
+		&testDialer{
+			name:      "3",
+			bandwidth: 1000,
+			latency:   1 * time.Millisecond,
+		},
+		&testDialer{
+			name:      "4",
+			bandwidth: 10000,
+			latency:   15 * time.Millisecond,
+		},
+		// Same ordering as above applies to failing proxies, which all come after
+		// succeeding ones
+		&testDialer{
+			name:      "5",
+			bandwidth: 0,
+			failing:   true,
+		},
+		&testDialer{
+			name:      "6",
+			bandwidth: 0,
+			failing:   true,
+		},
+		&testDialer{
+			name:      "7",
+			bandwidth: 1000,
+			latency:   1 * time.Millisecond,
+			failing:   true,
+		},
+		&testDialer{
+			name:      "8",
+			bandwidth: 10000,
+			latency:   15 * time.Millisecond,
+			failing:   true,
+		},
+	}
+
+	// Shuffle and sort multiple times to make sure that comparisons work in both
+	// directions
+	for i := 0; i < 500; i++ {
+		// shuffle
+		for i := range dialers {
+			j := rand.Intn(i + 1)
+			dialers[i], dialers[j] = dialers[j], dialers[i]
+		}
+
+		sort.Sort(dialers)
+		var order []string
+		for _, d := range dialers {
+			order = append(order, d.Name())
+		}
+		assert.EqualValues(t, []string{"1", "2", "3", "4", "5", "6", "7", "8"}, order)
+	}
 }
 
 func doTestConn(t *testing.T, conn net.Conn) {
