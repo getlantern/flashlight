@@ -22,3 +22,5 @@ config/generated/masquerades.go
 profile.cov
 profile_tmp.cov
 shortcut/resources/*
+lantern-linux
+lantern-windows.exe
