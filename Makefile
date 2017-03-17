@@ -47,6 +47,10 @@ lantern: $(SOURCES)
 	@$(call build-tags) && \
 	CGO_ENABLED=1 go build $(BUILD_RACE) -o lantern -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
 
+windowscli: $(SOURCES)
+	@$(call build-tags) && \
+	GOOS=windows GOARCH=386 CGO_ENABLED=1 go build -o lantern -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
+
 # vendor installs vendored dependencies using Glide
 vendor: require-glide
 	@$(GLIDE_BIN) install
