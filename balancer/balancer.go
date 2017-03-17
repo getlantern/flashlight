@@ -28,8 +28,14 @@ var (
 )
 
 type Dialer interface {
-	// Label() returns a label for this Dialer
+	// Name returns the name for this Dialer
+	Name() string
+
+	// Label() returns a label for this Dialer (includes Name plus more)
 	Label() string
+
+	// Addr returns the address for this Dialer
+	Addr() string
 
 	// Trusted() indicates whether or not this dialer is trusted
 	Trusted() bool
@@ -60,9 +66,6 @@ type Dialer interface {
 
 	// Succeeding indicates whether or not this dialer is currently good to use
 	Succeeding() bool
-
-	// Start starts background processing for this dialer
-	Start()
 
 	// Stop stops background processing for this Dialer.
 	Stop()
@@ -136,7 +139,6 @@ func (b *Balancer) Reset(dialers ...Dialer) {
 	b.mu.Lock()
 	oldDialers := b.dialers
 	for _, dl := range dialers {
-		dl.Start()
 		dls = append(dls, dl)
 
 		if dl.Trusted() {

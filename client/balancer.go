@@ -34,6 +34,8 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 		dialers = append(dialers, dialer)
 	}
 
+	chained.TrackStatsFor(dialers)
 	client.bal.Reset(dialers...)
+
 	return nil
 }

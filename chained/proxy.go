@@ -245,7 +245,7 @@ type proxy struct {
 }
 
 func newProxy(name, protocol, network string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(*proxy) (net.Conn, error)) *proxy {
-	return &proxy{
+	p := &proxy{
 		name:                name,
 		protocol:            protocol,
 		network:             network,
@@ -262,6 +262,8 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, deviceID str
 		closeCh:             make(chan bool, 1),
 		consecSuccesses:     1, // be optimistic
 	}
+	go p.runConnectivityChecks()
+	return p
 }
 
 func (p *proxy) Protocol() string {
@@ -274,6 +276,10 @@ func (p *proxy) Network() string {
 
 func (p *proxy) Addr() string {
 	return p.addr
+}
+
+func (p *proxy) Name() string {
+	return p.name
 }
 
 func (p *proxy) Label() string {
@@ -302,6 +308,20 @@ func (p *proxy) EstLatency() time.Duration {
 
 func (p *proxy) EstBandwidth() float64 {
 	return float64(atomic.LoadInt64(&p.abe)) / 1000
+}
+
+func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64, failures int64, consecFailures int64, emaLatencyLongTerm time.Duration, emaLatencyShortTerm time.Duration, mostRecentABETime time.Time, abe int64) {
+	p.mx.Lock()
+	atomic.StoreInt64(&p.attempts, attempts)
+	atomic.StoreInt64(&p.successes, successes)
+	atomic.StoreInt64(&p.consecSuccesses, consecSuccesses)
+	atomic.StoreInt64(&p.failures, failures)
+	atomic.StoreInt64(&p.consecFailures, consecFailures)
+	p.emaLatencyLongTerm.SetDuration(emaLatencyLongTerm)
+	p.emaLatencyShortTerm.SetDuration(emaLatencyShortTerm)
+	p.mostRecentABETime = mostRecentABETime
+	p.abe = abe
+	p.mx.Unlock()
 }
 
 func (p *proxy) CollectBBRInfo(reqTime time.Time, resp *http.Response) {

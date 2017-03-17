@@ -38,7 +38,7 @@ var (
 	errUpstream = errors.New("Upstream error")
 )
 
-func (p *proxy) Start() {
+func (p *proxy) runConnectivityChecks() {
 	// Periodically check our connectivity.
 	// With a 15 minute period, Lantern running 8 hours a day for 30 days and 148
 	// bytes for a TCP connection setup and teardown, this check will consume
