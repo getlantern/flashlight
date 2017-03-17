@@ -1,6 +1,7 @@
 package chained
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"net"
@@ -97,25 +98,33 @@ func TestBadMethodToServer(t *testing.T) {
 	}
 }
 
-// func TestBadAddressToServer(t *testing.T) {
-// 	l := startServer(t)
-// 	req, err := buildCONNECTRequest("somebadaddressasdfdasfds.asdfasdf.dfads:532400", nil)
-// 	if err != nil {
-// 		t.Fatalf("Unable to build request: %s", err)
-// 	}
-// 	conn, err := net.DialTimeout("tcp", l.Addr().String(), 10*time.Second)
-// 	if err != nil {
-// 		t.Fatalf("Unable to dial server: %s", err)
-// 	}
-// 	err = req.Write(conn)
-// 	if err != nil {
-// 		t.Fatalf("Unable to make request: %s", err)
-// 	}
-//
-// 	r := bufio.NewReader(conn)
-// 	err = checkCONNECTResponse(r, req)
-// 	assert.Error(t, err, "Connect response should be bad")
-// }
+func TestBadAddressToServer(t *testing.T) {
+	p := newProxy("test", "proto", "netw", &ChainedServerInfo{
+		Addr:      "addr:567",
+		AuthToken: "token",
+	}, "device", func() string {
+		return "protoken"
+	}, true, func(p *proxy) (net.Conn, error) {
+		return nil, nil
+	})
+	l := startServer(t)
+	req, err := p.buildCONNECTRequest("somebadaddressasdfdasfds.asdfasdf.dfads:532400")
+	if err != nil {
+		t.Fatalf("Unable to build request: %s", err)
+	}
+	conn, err := net.DialTimeout("tcp", l.Addr().String(), 10*time.Second)
+	if err != nil {
+		t.Fatalf("Unable to dial server: %s", err)
+	}
+	err = req.Write(conn)
+	if err != nil {
+		t.Fatalf("Unable to make request: %s", err)
+	}
+
+	r := bufio.NewReader(conn)
+	err = p.checkCONNECTResponse(r, req, time.Now())
+	assert.Error(t, err, "Connect response should be bad")
+}
 
 func TestSuccess(t *testing.T) {
 	l := startServer(t)
