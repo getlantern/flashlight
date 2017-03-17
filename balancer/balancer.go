@@ -259,7 +259,7 @@ func (b *Balancer) Close() {
 // printStats periodically prints out stats for all dialers
 func (b *Balancer) printStats() {
 	// TODO: print these less frequently
-	t := time.NewTicker(5 * time.Second)
+	t := time.NewTicker(30 * time.Second)
 	for {
 		select {
 		case <-b.stopStatsCh:
