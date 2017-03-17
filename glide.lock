@@ -1,5 +1,5 @@
 hash: 35826ba7ffbf48721875748faebb3a64b280508f26915071d323a010160dc29e
-updated: 2017-03-09T20:54:43.401138966-08:00
+updated: 2017-03-10T10:45:33.08816959-08:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: f1569079ca898d54e52a26b0bd1b5cc869310608
@@ -40,7 +40,7 @@ imports:
 - name: github.com/getlantern/appdir
   version: 659a155d06e8f3dd8b9f79d6147445897499b56b
 - name: github.com/getlantern/autoupdate
-  version: 3da98a4a217e2457c57a342d1c1fb332f3e563f8
+  version: 4e31f53f8e64d1cdb0b5734f1d29dd678e7f3a50
 - name: github.com/getlantern/balancer
   version: 70e3aff550185f805d2f40933c2bc8c29aefa28d
 - name: github.com/getlantern/bandwidth
@@ -185,7 +185,7 @@ imports:
 - name: github.com/getlantern/profiling
   version: 2a15afbadcff99bac017e17af273b31d4510ddb8
 - name: github.com/getlantern/protected
-  version: 55099e1fa38c5acf40b1f4445b1bac25cc43e6bc
+  version: 49d91b9e70690ca86ed370b02c09449e46160d59
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxy
@@ -258,7 +258,7 @@ imports:
   subpackages:
   - simplelru
 - name: github.com/kardianos/osext
-  version: 9b883c5eb462dd5cb1b0a7a104fe86bc6b9bd391
+  version: 9d302b58e975387d0b4d9be876622c86cefe64be
 - name: github.com/keighl/mandrill
   version: 5d7133fb578a9504f8ab549737c993422f65a000
 - name: github.com/klauspost/cpuid
@@ -315,7 +315,7 @@ imports:
   subpackages:
   - utils
 - name: github.com/xtaci/kcp-go
-  version: 947067cce2e8874efac6a89aa82273378a591617
+  version: 316a04f8c6828fed65852c9a1cc704980b5f8a58
 - name: github.com/xwb1989/sqlparser
   version: dbfc8580724c42e86a20e9586b75a65b806cd88b
   subpackages:

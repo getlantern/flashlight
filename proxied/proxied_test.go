@@ -125,6 +125,18 @@ func TestChainedThenFronted(t *testing.T) {
 	doTestChainedAndFronted(t, ChainedThenFronted)
 }
 
+func TestInvalidRequest(t *testing.T) {
+	chained := &mockChainedRT{req: eventual.NewValue(), statusCode: 503}
+	fronted := &mockFrontedRT{req: eventual.NewValue()}
+	req, _ := http.NewRequest("GET", "http://chained", nil)
+	// intentionally omit Lantern-Fronted-URL
+
+	cf := ParallelPreferChained().(*chainedAndFronted)
+	_, err := cf.getFetcher().(*dualFetcher).do(req, chained, fronted)
+	assert.Error(t, err, "should fail instead of crash")
+	t.Log(err)
+}
+
 func TestSwitchingToChained(t *testing.T) {
 	chained := &mockChainedRT{req: eventual.NewValue(), statusCode: 503}
 	fronted := &mockFrontedRT{req: eventual.NewValue()}
@@ -243,9 +255,12 @@ func TestChangeUserAgent(t *testing.T) {
 // correctly.
 func TestCloneRequestForFronted(t *testing.T) {
 	req, _ := http.NewRequest("POST", "https://chained.com/path1?q1=test1&q2=test2", strings.NewReader("abc"))
-	req.Header.Add("Lantern-Fronted-URL", "http://fronted.tldr/path2")
 
 	r, err := cloneRequestForFronted(req)
+	assert.Error(t, err, "an request without fronted URL should fail")
+
+	req.Header.Add("Lantern-Fronted-URL", "http://fronted.tldr/path2")
+	r, err = cloneRequestForFronted(req)
 	assert.Nil(t, err)
 
 	dump, er := httputil.DumpRequestOut(req, true)

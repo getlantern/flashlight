@@ -236,8 +236,13 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 		}
 	}
 
+	// cloneRequestForFronted modifies the req to remove Lantern-Fronted-URL
+	// header. We need to call it before make any requests.
 	frontedReq, err := cloneRequestForFronted(req)
-	op.FailIf(err)
+	if err != nil {
+		// Fail immediately as it's a program error.
+		return nil, op.FailIf(err)
+	}
 	doFronted := func() {
 		op.ProxyType(ops.ProxyFronted)
 		log.Debugf("Sending DDF request. With body? %v", frontedReq.Body != nil)
