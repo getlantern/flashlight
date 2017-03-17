@@ -322,6 +322,8 @@ func (d sortedDialers) Swap(i, j int) {
 func (d sortedDialers) Less(i, j int) bool {
 	a, b := d[i], d[j]
 
+	log.Debugf("a: %v   b: %v", a, b)
+
 	// Prefer the succeeding proxy
 	aSucceeding, bSucceeding := a.Succeeding(), b.Succeeding()
 	if aSucceeding && !bSucceeding {
