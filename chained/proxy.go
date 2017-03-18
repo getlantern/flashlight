@@ -360,6 +360,13 @@ func (p *proxy) forceRecheck() {
 
 func (p *proxy) tcpDial(op *ops.Op) func(timeout time.Duration) (net.Conn, error) {
 	return func(timeout time.Duration) (net.Conn, error) {
+		estLatency, estBandwidth := p.EstLatency(), p.EstBandwidth()
+		if estLatency > 0 {
+			op.Set("est_rtt", estLatency.Seconds()/1000)
+		}
+		if estBandwidth > 0 {
+			op.Set("est_mbps", estBandwidth)
+		}
 		conn, delta, err := p.dialTCP(timeout)
 		op.TCPDialTime(delta, err)
 		return overheadWrapper(false)(conn, err)
