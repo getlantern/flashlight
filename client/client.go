@@ -20,7 +20,6 @@ import (
 	"github.com/getlantern/go-socks5"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
-	"github.com/getlantern/httpseverywhere"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 
@@ -93,26 +92,11 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 		proTokenGetter: proTokenGetter,
 	}
 
-	// By default just turn of HTTPS (until rules are loaded)
-	var pass httpseverywhere.Rewrite = func(url string) (string, bool) { return url, false }
-	client.https.Store(pass)
-
 	keepAliveIdleTimeout := idleTimeout - 5*time.Second
 	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers.Pool, false, client.dialCONNECT)
 	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, bbr.OnResponse, errorResponse, client.dialHTTP)
 	client.initEasyList()
-	client.initHTTPSEverywhere()
 	return client
-}
-func (client *Client) initHTTPSEverywhere() {
-	go func() {
-		https, err := httpseverywhere.New()
-		if err != nil {
-			log.Errorf("Could not load HTTPS Everywhere? %v", err)
-			return
-		}
-		client.https.Store(https)
-	}()
 }
 
 type allowAllEasyList struct{}

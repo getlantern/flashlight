@@ -1,5 +1,5 @@
 hash: e92d65d860cd394789e433663be27ed3324cbf023153e73d4eff34fd95a83553
-updated: 2017-03-15T21:57:20.959887212-07:00
+updated: 2017-03-18T09:50:46.103172693-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: f1569079ca898d54e52a26b0bd1b5cc869310608
@@ -20,7 +20,7 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/aristanetworks/goarista
-  version: bb27273187064031dca80a5a9d9ef2c3c661b11e
+  version: f32b0a09e6165771259f49a6041179ddef239180
   subpackages:
   - monotime
 - name: github.com/armon/go-radix
@@ -97,7 +97,7 @@ imports:
   - check
   - download
 - name: github.com/getlantern/goexpr
-  version: c91d949be13cfb774cc8b2831c603fbff116cba0
+  version: d6b8955ca03d23c95e2954f9a9211e9284454d0f
   subpackages:
   - geo
   - isp
@@ -148,7 +148,7 @@ imports:
   - tokenfilter
   - usage
 - name: github.com/getlantern/httpseverywhere
-  version: bbfb305e34d29898b3beebfe99f549eeb57c24fe
+  version: aa0497470de5868a8e1ff69b98556e4bfe75753e
 - name: github.com/getlantern/i18n
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
@@ -208,6 +208,8 @@ imports:
   version: cdae0bdf2aeae3ffb5ffe0cd2e2f83443ca9d104
 - name: github.com/getlantern/tarfs
   version: d77b63c04dbe74646c5f8f46c5c1e5523ef22415
+- name: github.com/getlantern/tldextract
+  version: 8d28b6645dd080d55895c84264f3f60c0a6d4cdf
 - name: github.com/getlantern/tlsdefaults
   version: 55d0dd468a195a4c8cb99ee0c1a2878cb7e72155
 - name: github.com/getlantern/tlsdialer
@@ -219,7 +221,7 @@ imports:
 - name: github.com/getlantern/waitforserver
   version: 381a5878bd8ecb7001c361f2d5dcc3358460aa3e
 - name: github.com/getlantern/wal
-  version: 94824e5b616c1fbf3f47442aecde31e38f317c3a
+  version: b17dbdbead93a94e64755a23855663cd8ff194d5
 - name: github.com/getlantern/wfilter
   version: 69cc8585ee9c5b4e0b55110ea2c219921f954ba3
 - name: github.com/getlantern/winsvc
@@ -231,7 +233,7 @@ imports:
 - name: github.com/getlantern/yaml
   version: 97d86b60f57eeca9d70c02763ed2565bafc17585
 - name: github.com/getlantern/zenodb
-  version: 01847b750ffce11f3a332379e4a93d81d2a855c5
+  version: 24fe3f704014771a8608bbb1a88c33dfcdd86582
   subpackages:
   - bytetree
   - common
@@ -276,7 +278,7 @@ imports:
   subpackages:
   - forward
 - name: github.com/miekg/dns
-  version: 59e593b27b929d65e24be12ff41e11cdd79347c4
+  version: c862b7e359850847d4945cce311db2ea90cab7c0
 - name: github.com/mitchellh/panicwrap
   version: fce601fe55579125e1b3cb0b992287e7290f7b83
 - name: github.com/mxk/go-flowrate
@@ -284,13 +286,13 @@ imports:
   subpackages:
   - flowrate
 - name: github.com/oschwald/geoip2-golang
-  version: 706a710ce5129fb81dadba750aa80d53ca7ba2ca
+  version: 0fd242da7906550802871efe101abfdb1cc550a8
 - name: github.com/oschwald/maxminddb-golang
   version: 697da8075d2061aa8ed639346443f5d3e8c80b30
 - name: github.com/oxtoacart/bpool
   version: 4e1c5567d7c2dd59fa4c7c83d34c2f3528b025d6
 - name: github.com/pkg/errors
-  version: bfd5150e4e41705ded2129ec33379de1cb90b513
+  version: ff09b135c25aae272398c51a07235b90a75aa4f0
 - name: github.com/pmezard/adblock
   version: 7fe7ba573ef79b8c45d307526fd8ab6ab47772c9
   subpackages:
@@ -298,13 +300,13 @@ imports:
 - name: github.com/rcrowley/go-metrics
   version: 1f30fe9094a513ce4c700b9a54458bbb0c96996c
 - name: github.com/Sirupsen/logrus
-  version: 1deb2db2a6fff8a35532079061b903c3a25eed52
+  version: 10f801ebc38b33738c9d17d50860f484a0988ff5
 - name: github.com/skratchdot/open-golang
   version: 75fb7ed4208cf72d323d7d02fd1a5964a7a9073c
   subpackages:
   - open
 - name: github.com/stripe/stripe-go
-  version: ec94ac5485faaddd7d9ccfc1ec48e19667eb6b65
+  version: 4c90b459cd4d681a0d8540a6ec7cae54eb0f3d0f
   subpackages:
   - orderitem
   - token
@@ -317,7 +319,7 @@ imports:
   subpackages:
   - utils
 - name: github.com/xtaci/kcp-go
-  version: 316a04f8c6828fed65852c9a1cc704980b5f8a58
+  version: cd98e642cd74dcd3efa3b6a240db6bfcb189a057
 - name: github.com/xwb1989/sqlparser
   version: dbfc8580724c42e86a20e9586b75a65b806cd88b
   subpackages:
@@ -328,7 +330,7 @@ imports:
 - name: github.com/Yawning/chacha20
   version: c91e78db502ff629614837aacb7aa4efa61c651a
 - name: golang.org/x/crypto
-  version: 728b753d0135da6801d45a38e6f43ff55779c5c2
+  version: 459e26527287adbc2adcc5d0d49abff9a5f315a7
   subpackages:
   - chacha20poly1305
   - chacha20poly1305/internal/chacha20
@@ -373,7 +375,7 @@ imports:
   - internal/modules
   - internal/remote_api
 - name: google.golang.org/grpc
-  version: 4eaacfed9779ee7568c9e72e9f763dbd3af8e0b4
+  version: cdee119ee21e61eef7093a41ba148fa83585e143
   subpackages:
   - codes
   - credentials
@@ -395,7 +397,7 @@ imports:
   - internal/pool
   - internal/proto
 - name: gopkg.in/vmihailenco/msgpack.v2
-  version: a1382b1ce0c749733b814157c245e02cc1f41076
+  version: f784471e11a864303cc098fe5c48af8e79628f3e
   subpackages:
   - codes
 testImports:

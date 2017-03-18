@@ -45,12 +45,12 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 			log.Error(op.FailIf(err))
 		}
 	} else {
-		h := client.https.Load().(httpseverywhere.Rewrite)
 		url := req.URL.String()
 		log.Debugf("Checking for HTTP redirect for %v", url)
-		httpsURL, changed := h(url)
+		httpsURL, changed := httpseverywhere.Rewrite(url)
 		if changed {
 			log.Debugf("Redirecting to %v", httpsURL)
+			op.Set("forcedhttps", true)
 			http.Redirect(resp, req, httpsURL, http.StatusMovedPermanently)
 			return
 		}
