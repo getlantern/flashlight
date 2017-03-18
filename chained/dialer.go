@@ -244,7 +244,7 @@ func (p *proxy) buildCONNECTRequest(addr string) (*http.Request, error) {
 	p.onRequest(req)
 	// Request BBR metrics
 	bbrOption := "y"
-	if p.ShouldResetBBR() {
+	if p.shouldResetBBR() {
 		bbrOption = "clear"
 	}
 	req.Header.Set("X-BBR", bbrOption)
@@ -265,7 +265,7 @@ func (p *proxy) checkCONNECTResponse(r *bufio.Reader, req *http.Request, reqTime
 		log.Errorf("Bad status code on CONNECT response %d: %v", resp.StatusCode, string(body))
 		return errUpstream
 	}
-	p.CollectBBRInfo(reqTime, resp)
+	p.collectBBRInfo(reqTime, resp)
 	bandwidth.Track(resp)
 	return nil
 }

@@ -326,7 +326,7 @@ func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64,
 	p.mx.Unlock()
 }
 
-func (p *proxy) CollectBBRInfo(reqTime time.Time, resp *http.Response) {
+func (p *proxy) collectBBRInfo(reqTime time.Time, resp *http.Response) {
 	_abe := resp.Header.Get("X-Bbr-Abe")
 	if _abe != "" {
 		resp.Header.Del("X-Bbr-Abe")
@@ -345,12 +345,8 @@ func (p *proxy) CollectBBRInfo(reqTime time.Time, resp *http.Response) {
 	}
 }
 
-func (p *proxy) ShouldResetBBR() bool {
+func (p *proxy) shouldResetBBR() bool {
 	return atomic.CompareAndSwapInt64(&p.bbrResetRequired, 1, 0)
-}
-
-func (p *proxy) ForceRecheckCh() chan bool {
-	return p.forceRecheckCh
 }
 
 func (p *proxy) forceRecheck() {
