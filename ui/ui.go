@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"mime"
 	"net/http"
 	"time"
 
@@ -20,6 +21,13 @@ var (
 
 	serve *server
 )
+
+func init() {
+	// http.FileServer relies on OS to guess mime type, which can be wrong.
+	// Override system default for current process.
+	_ = mime.AddExtensionType(".css", "text/css")
+	_ = mime.AddExtensionType(".js", "application/javascript")
+}
 
 // Start starts serving the UI.
 func Start(requestedAddr string, allowRemote bool, extURL, localHTTPTok string) error {
