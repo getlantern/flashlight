@@ -483,7 +483,7 @@ imports:
   version: a3f3340b5840cee44f372bddb5880fcbc419b46a
 testImports:
 - name: github.com/getlantern/bbrconn
-  version: 7027edcb96a30afe6e446146fa6b7237853364a6
+  version: 24a7c1a27d22a794aca9cab9a8f115c6c5b22eb9
 - name: github.com/getlantern/tcpinfo
   version: 02c9abeb5f94610d1b5ed11e90431f482f5bdb80
 - name: github.com/mikioh/netreflect
