@@ -23,7 +23,6 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 
-	"github.com/getlantern/flashlight/bbr"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/ops"
@@ -92,7 +91,7 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 
 	keepAliveIdleTimeout := idleTimeout - 5*time.Second
 	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers.Pool, false, client.dialCONNECT)
-	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, bbr.OnResponse, errorResponse, client.dialHTTP)
+	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
 	client.initEasyList()
 	return client
 }

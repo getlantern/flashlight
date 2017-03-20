@@ -8,9 +8,7 @@ import (
 )
 
 var (
-	bal = balancer.New(&balancer.Opts{
-		Strategy: balancer.QualityFirst,
-	})
+	bal = balancer.New(&balancer.Opts{})
 )
 
 // initBalancer takes hosts from cfg.ChainedServers and it uses them to create a

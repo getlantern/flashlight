@@ -76,7 +76,7 @@ imports:
   subpackages:
   - bin
 - name: github.com/getlantern/ema
-  version: dc05f6bb97276a219b5766209d734561b54ff505
+  version: a5e9cc52904e28298cc0f8440c878ccb930eb808
 - name: github.com/getlantern/errors
   version: 99fa440517e8f3d1e4cd8d6dbed6b41f4c1ed3d6
 - name: github.com/getlantern/eventual

@@ -6,8 +6,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/getlantern/ema"
 	"github.com/getlantern/flashlight/ops"
+)
+
+const (
+	minCheckInterval = 10 * time.Second
+	maxCheckInterval = 15 * time.Minute
 )
 
 var (
@@ -28,30 +32,22 @@ type Dialer struct {
 	// OnClose: (optional) callback for when this dialer is stopped.
 	OnClose func()
 
-	// Check: - a function that's used to periodically test reachibility metrics.
-	//
-	// It should return true for a successful check. It should also return a
-	// time.Duration measuring latency via this dialer. How "latency" is measured
-	// is up to the check function. Dialers with the lowest latencies are
-	// prioritized over those with higher latencies. Latencies for failed checks
-	// are ignored.
-	//
-	// Checks are performed immediately at startup and then periodically
-	// thereafter, with an exponential back-off capped at MaxCheckInterval. If the
-	// checks fail for some reason, the exponential cascade will reset to the
-	// MinCheckInterval and start backing off again.
-	//
-	// checkData is data from the balancer's CheckData() function.
-	Check func(checkData interface{}, onFailure func(string)) (bool, time.Duration)
-
 	// Determines whether a dialer can be trusted with unencrypted traffic.
 	Trusted bool
+
+	// EstLatency() provides a latency estimate
+	EstLatency func() time.Duration
+
+	// EstBandwidth() provides the estimated bandwidth in Mbps
+	EstBandwidth func() float64
+
+	// ForceRecheckCh is a channel on which requests to force rechecking are
+	// received.
+	ForceRecheckCh chan bool
 }
 
 type dialer struct {
-	emaLatency         *ema.EMA
 	lastCheckSucceeded bool
-	forceRecheck       func()
 
 	*Dialer
 	closeCh chan struct{}
@@ -66,21 +62,50 @@ const longDuration = 100000 * time.Hour
 
 func (d *dialer) Start() {
 	d.consecSuccesses = 1 // be optimistic
-	if d.emaLatency == nil {
-		// assuming all dialers super fast initially
-		// use large alpha to reflect network changes quickly
-		d.emaLatency = ema.NewDuration(0, 0.5)
-	}
 	if d.stats == nil {
 		d.stats = &stats{}
 	}
 	d.closeCh = make(chan struct{}, 1)
 
+	// Periodically check our connectivity.
+	// With a 15 minute period, Lantern running 8 hours a day for 30 days and 148
+	// bytes for a TCP connection setup and teardown, this check will consume
+	// approximately 138 KB per month per proxy.
+	checkInterval := maxCheckInterval
+	timer := time.NewTimer(checkInterval)
+
 	ops.Go(func() {
-		<-d.closeCh
-		log.Tracef("Dialer %s stopped", d.Label)
-		if d.OnClose != nil {
-			d.OnClose()
+		for {
+			select {
+			case <-timer.C:
+				log.Debugf("Checking %v", d.Label)
+				conn, err := d.dial("tcp", "www.getlantern.org:80")
+				if err == nil {
+					d.markSuccess()
+					conn.Close()
+					// On success, don't bother rechecking anytime soon
+					checkInterval = maxCheckInterval
+				} else {
+					d.markFailure()
+					// Exponentially back off while we're still failing
+					checkInterval *= 2
+					if checkInterval > maxCheckInterval {
+						checkInterval = maxCheckInterval
+					}
+				}
+				timer.Reset(checkInterval)
+			case <-d.ForceRecheckCh:
+				log.Debugf("Forcing recheck for %v", d.Label)
+				checkInterval := minCheckInterval
+				timer.Reset(checkInterval)
+			case <-d.closeCh:
+				log.Tracef("Dialer %v stopped", d.Label)
+				if d.OnClose != nil {
+					d.OnClose()
+				}
+				timer.Stop()
+				return
+			}
 		}
 	})
 }
@@ -90,16 +115,16 @@ func (d *dialer) Stop() {
 	d.closeCh <- struct{}{}
 }
 
-func (d *dialer) EMALatency() int64 {
-	return int64(d.emaLatency.Get())
-}
-
 func (d *dialer) ConsecSuccesses() int32 {
 	return atomic.LoadInt32(&d.consecSuccesses)
 }
 
 func (d *dialer) ConsecFailures() int32 {
 	return atomic.LoadInt32(&d.consecFailures)
+}
+
+func (d *dialer) Succeeding() bool {
+	return d.ConsecSuccesses()-d.ConsecFailures() > 0
 }
 
 func (d *dialer) dial(network, addr string) (net.Conn, error) {
@@ -126,14 +151,26 @@ func (d *dialer) markSuccess() {
 }
 
 func (d *dialer) markFailure() {
-	d.doMarkFailure()
-	d.forceRecheck()
+	if d.doMarkFailure() == 1 {
+		// On new failure, force recheck
+		d.forceRecheck()
+	}
 }
 
-func (d *dialer) doMarkFailure() {
+func (d *dialer) doMarkFailure() int32 {
 	atomic.AddInt64(&d.stats.attempts, 1)
 	atomic.AddInt64(&d.stats.failures, 1)
 	atomic.StoreInt32(&d.consecSuccesses, 0)
 	newCF := atomic.AddInt32(&d.consecFailures, 1)
 	log.Tracef("Dialer %s consecutive failures: %d -> %d", d.Label, newCF-1, newCF)
+	return newCF
+}
+
+func (d *dialer) forceRecheck() {
+	select {
+	case d.ForceRecheckCh <- true:
+		// requested
+	default:
+		// recheck already requested, ignore
+	}
 }
