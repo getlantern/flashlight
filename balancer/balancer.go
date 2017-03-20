@@ -258,7 +258,8 @@ func (b *Balancer) Close() {
 
 // printStats periodically prints out stats for all dialers
 func (b *Balancer) printStats() {
-	// TODO: print these less frequently
+	time.Sleep(5 * time.Second)
+	b.doPrintStats()
 	t := time.NewTicker(30 * time.Second)
 	for {
 		select {
