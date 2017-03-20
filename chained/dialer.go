@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
@@ -25,11 +26,11 @@ const (
 )
 
 var (
-	// Close connections idle for a period to avoid dangling connections. 45 seconds
-	// is long enough to avoid interrupt normal connections but shorter than the
-	// idle timeout on the server to avoid running into closed connection problems.
-	// 45 seconds is also longer than the MaxIdleTime on our http.Transport, so it
-	// doesn't interfere with that.
+	// Close connections idle for a period to avoid dangling connections. 45
+	// seconds is long enough to avoid interrupt normal connections but shorter
+	// than the idle timeout on the server to avoid running into closed connection
+	// problems. 45 seconds is also longer than the MaxIdleTime on our
+	// http.Transport, so it doesn't interfere with that.
 	IdleTimeout = 45 * time.Second
 
 	// errUpstream is an error that indicates there was a problem upstream of a
@@ -57,12 +58,13 @@ func (p *proxy) runConnectivityChecks() {
 				} else if timeout > maxCheckTimeout {
 					timeout = maxCheckTimeout
 				}
-				conn, _, err := p.dialTCP(timeout)
+				_, _, err := p.dialTCP(timeout)
 				if err == nil {
 					p.markSuccess()
-					conn.Close()
 					// On success, don't bother rechecking anytime soon
 					checkInterval = maxCheckInterval
+					// We intentionally don't close the connection and instead let the
+					// server's idle timeout handle it to make this less fingerprintable.
 				} else {
 					p.markFailure()
 					// Exponentially back off while we're still failing
@@ -71,11 +73,11 @@ func (p *proxy) runConnectivityChecks() {
 						checkInterval = maxCheckInterval
 					}
 				}
-				timer.Reset(checkInterval)
+				timer.Reset(randomize(checkInterval))
 			case <-p.forceRecheckCh:
 				log.Debugf("Forcing recheck for %v", p.Label())
 				checkInterval := minCheckInterval
-				timer.Reset(checkInterval)
+				timer.Reset(randomize(checkInterval))
 			case <-p.closeCh:
 				log.Tracef("Dialer %v stopped", p.Label())
 				timer.Stop()
@@ -83,6 +85,10 @@ func (p *proxy) runConnectivityChecks() {
 			}
 		}
 	})
+}
+
+func randomize(d time.Duration) time.Duration {
+	return d/2 + time.Duration(rand.Int63n(int64(d)))
 }
 
 func (p *proxy) Stop() {
