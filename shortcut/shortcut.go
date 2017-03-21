@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/getlantern/golog"
+	"github.com/getlantern/netx"
 	"github.com/getlantern/shortcut"
 
 	"github.com/getlantern/flashlight/geolookup"
@@ -44,6 +45,7 @@ func configure(country string) {
 	_sc := shortcut.NewFromReader(
 		bytes.NewReader(v4),
 		bytes.NewReader(v6),
+		netx.Resolve,
 	)
 	mu.Lock()
 	sc = _sc

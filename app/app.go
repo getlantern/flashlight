@@ -93,7 +93,8 @@ func (app *App) Run() error {
 			listenAddr,
 			socksAddr,
 			app.Flags["configdir"].(string),
-			settings.GetProxyAll,
+			func() bool { return !settings.GetProxyAll() }, // use shortcut
+			func() bool { return !settings.GetProxyAll() }, // use detour
 			settings.IsAutoReport,
 			app.Flags,
 			app.beforeStart,

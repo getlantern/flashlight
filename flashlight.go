@@ -36,7 +36,8 @@ var (
 func Run(httpProxyAddr string,
 	socksProxyAddr string,
 	configDir string,
-	proxyAll func() bool,
+	useShortcut func() bool,
+	useDetour func() bool,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
 	beforeStart func() bool,
@@ -48,7 +49,7 @@ func Run(httpProxyAddr string,
 	displayVersion()
 	initContext(deviceID, common.Version, common.RevisionDate)
 
-	cl := client.NewClient(proxyAll, userConfig.GetToken)
+	cl := client.NewClient(useShortcut, useDetour, userConfig.GetToken)
 	proxied.SetProxyAddr(cl.Addr)
 
 	proxiesDispatch := func(conf interface{}) {
