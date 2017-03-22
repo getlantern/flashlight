@@ -48,7 +48,9 @@ func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, 
 
 func TestServeHTTPOk(t *testing.T) {
 	mockResponse := []byte("HTTP/1.1 404 Not Found\r\n\r\n")
-	client := NewClient(func() bool { return true },
+	client := NewClient(
+		func() bool { return true },
+		func() bool { return true },
 		func() string { return "proToken" })
 	d := mockconn.SucceedingDialer(mockResponse)
 	resetBalancer(client, d.Dial)
@@ -76,7 +78,9 @@ func TestServeHTTPTimeout(t *testing.T) {
 		atomic.StoreInt64(&requestTimeout, int64(originalRequestTimeout))
 	}()
 
-	client := NewClient(func() bool { return true },
+	client := NewClient(
+		func() bool { return true },
+		func() bool { return true },
 		func() string { return "proToken" })
 	d := mockconn.SucceedingDialer([]byte{})
 	resetBalancer(client, func(network, addr string) (net.Conn, error) {
