@@ -281,7 +281,7 @@ func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, p
 		return netx.DialContext(ctx, "tcp", addr)
 	}
 	if client.useShortcut() && shortcut.Allow(addr) {
-		log.Tracef("Use shortcut (dial directly) for %v", addr)
+		log.Debugf("Use shortcut (dial directly) for %v", addr)
 		return netx.DialContext(ctx, "tcp", addr)
 	}
 
