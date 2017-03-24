@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"path/filepath"
 	"runtime"
-	"sync"
 	"time"
 
 	"github.com/getlantern/appdir"
@@ -20,6 +19,7 @@ import (
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/proxied"
@@ -28,60 +28,9 @@ import (
 	_ "github.com/getlantern/flashlight/logging"
 )
 
-const (
-	// DefaultPackageVersion is the default version of the package for auto-update
-	// purposes. while in development mode we probably would not want auto-updates to be
-	// applied. Using a big number here prevents such auto-updates without
-	// disabling the feature completely. The "make package-*" tool will take care
-	// of bumping this version number so you don't have to do it by hand.
-	DefaultPackageVersion = "9999.99.99"
-)
-
 var (
 	log = golog.LoggerFor("flashlight")
-
-	// compileTimePackageVersion is set at compile-time for production builds
-	compileTimePackageVersion string
-
-	// PackageVersion is the version of the package to use depending on if we're
-	// in development, production, etc.
-	PackageVersion = bestPackageVersion()
-
-	// Version is the version of Lantern we're running.
-	Version string
-
-	// RevisionDate is the date of the most recent code revision.
-	RevisionDate string // The revision date and time that is associated with the version string.
-
-	// BuildDate is the date the code was actually built.
-	BuildDate string // The actual date and time the binary was built.
-
-	cfgMutex sync.Mutex
 )
-
-func bestPackageVersion() string {
-	if compileTimePackageVersion != "" {
-		return compileTimePackageVersion
-	}
-	return DefaultPackageVersion
-}
-
-func init() {
-	log.Debugf("****************************** Package Version: %v", PackageVersion)
-	if PackageVersion != DefaultPackageVersion {
-		// packageVersion has precedence over GIT revision. This will happen when
-		// packing a version intended for release.
-		Version = PackageVersion
-	}
-
-	if Version == "" {
-		Version = "development"
-	}
-
-	if RevisionDate == "" {
-		RevisionDate = "now"
-	}
-}
 
 // Run runs a client proxy. It blocks as long as the proxy is running.
 func Run(httpProxyAddr string,
@@ -98,7 +47,7 @@ func Run(httpProxyAddr string,
 	onError func(err error),
 	deviceID string) error {
 	displayVersion()
-	initContext(deviceID, Version, RevisionDate)
+	initContext(deviceID, common.Version, common.RevisionDate)
 
 	cl := client.NewClient(proxyAll, userConfig.GetToken)
 	proxied.SetProxyAddr(cl.Addr)
@@ -171,7 +120,7 @@ func getTrustedCACerts(cfg *config.Global) (pool *x509.CertPool, err error) {
 }
 
 func displayVersion() {
-	log.Debugf("---- flashlight version: %s, release: %s, build revision date: %s ----", Version, PackageVersion, RevisionDate)
+	log.Debugf("---- flashlight version: %s, release: %s, build revision date: %s ----", common.Version, common.PackageVersion, common.RevisionDate)
 }
 
 func initContext(deviceID string, version string, revisionDate string) {

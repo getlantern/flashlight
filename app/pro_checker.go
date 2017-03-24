@@ -4,9 +4,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/getlantern/flashlight/common"
 	proClient "github.com/getlantern/flashlight/pro/client"
-
-	"github.com/getlantern/flashlight"
 )
 
 var configureProClientOnce sync.Once
@@ -17,7 +16,7 @@ var configureProClientOnce sync.Once
 // the user ID becomes non-zero.
 func isProUser() (isPro bool, ok bool) {
 	configureProClientOnce.Do(func() {
-		proClient.Configure(stagingMode, flashlight.PackageVersion)
+		proClient.Configure(stagingMode, common.PackageVersion)
 	})
 
 	var userID int

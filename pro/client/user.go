@@ -1,6 +1,7 @@
 package client
 
 import (
+	"github.com/getlantern/flashlight/common"
 	"net/http"
 	"strconv"
 )
@@ -34,13 +35,13 @@ func (u User) headers() http.Header {
 	h := http.Header{}
 	// auto headers
 	if u.Auth.DeviceID != "" {
-		h[XLanternDeviceID] = []string{u.Auth.DeviceID}
+		h[common.DeviceIdHeader] = []string{u.Auth.DeviceID}
 	}
 	if u.ID != 0 {
-		h[XLanternUserID] = []string{strconv.Itoa(u.ID)}
+		h[common.UserIdHeader] = []string{strconv.Itoa(u.ID)}
 	}
 	if u.Auth.Token != "" {
-		h[XLanternProToken] = []string{u.Auth.Token}
+		h[common.ProTokenHeader] = []string{u.Auth.Token}
 	}
 	return h
 }

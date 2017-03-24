@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/golog"
 )
@@ -26,12 +27,6 @@ var (
 )
 
 const defaultLocale = "en_US"
-
-const (
-	XLanternDeviceID = "X-Lantern-Device-Id"
-	XLanternUserID   = "X-Lantern-User-Id"
-	XLanternProToken = "X-Lantern-Pro-Token"
-)
 
 var (
 	ErrAPIUnavailable = errors.New("API unavailable.")
@@ -169,7 +164,7 @@ func (c *Client) SetLocale(locale string) {
 func (c *Client) UserCreate(user User) (res *Response, err error) {
 	var payload []byte
 	payload, err = c.post(`/user-create`, http.Header{
-		XLanternDeviceID: {user.Auth.DeviceID},
+		common.DeviceIdHeader: {user.Auth.DeviceID},
 	}, nil)
 	if err != nil {
 		return nil, err

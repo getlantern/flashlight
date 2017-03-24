@@ -17,6 +17,7 @@ import (
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/autoupdate"
 	"github.com/getlantern/flashlight/client"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxiedsites"
@@ -35,7 +36,7 @@ var (
 func init() {
 	log.Debugf("****************************** stagingMode: %v", stagingMode)
 
-	autoupdate.Version = flashlight.PackageVersion
+	autoupdate.Version = common.PackageVersion
 	autoupdate.PublicKey = []byte(packagePublicKey)
 
 	rand.Seed(time.Now().UnixNano())
@@ -57,7 +58,7 @@ func (app *App) Init() {
 	} else {
 		app.Flags["staging"] = false
 	}
-	settings = loadSettings(flashlight.Version, flashlight.RevisionDate, flashlight.BuildDate)
+	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
 	app.exitCh = make(chan error, 1)
 	// use buffered channel to avoid blocking the caller of 'AddExitFunc'
 	// the number 10 is arbitrary
@@ -217,7 +218,7 @@ func (app *App) beforeStart() bool {
 
 	// Only run analytics once on startup.
 	if settings.IsAutoReport() {
-		stopAnalytics := analytics.Start(settings.GetDeviceID(), flashlight.Version)
+		stopAnalytics := analytics.Start(settings.GetDeviceID(), common.Version)
 		app.AddExitFunc(stopAnalytics)
 	}
 
