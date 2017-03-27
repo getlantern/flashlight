@@ -2,6 +2,7 @@ package client
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/httpseverywhere"
@@ -46,12 +47,18 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		}
 	} else {
 		url := req.URL.String()
-		log.Debugf("Checking for HTTP redirect for %v", url)
+		log.Tracef("Checking for HTTP redirect for %v", url)
 		httpsURL, changed := httpseverywhere.Rewrite(url)
 		if changed {
 			log.Debugf("Redirecting to %v", httpsURL)
 			op.Set("forcedhttps", true)
+			// Tell the browser to only cache the redirect for a day. The browser
+			// is supposed to cache permanent redirects indefinitley but will also
+			// follow caching rules.
+			resp.Header().Set("Cache-Control", "max-age:86400")
+			resp.Header().Set("Expires", time.Now().Add(time.Duration(24)*time.Hour).Format(http.TimeFormat))
 			http.Redirect(resp, req, httpsURL, http.StatusMovedPermanently)
+
 			return
 		}
 		// Direct proxying can only be used for plain HTTP connections.
