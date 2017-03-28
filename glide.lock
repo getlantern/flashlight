@@ -1,5 +1,5 @@
 hash: e92d65d860cd394789e433663be27ed3324cbf023153e73d4eff34fd95a83553
-updated: 2017-03-28T12:38:03.10984147-07:00
+updated: 2017-03-28T15:11:58.869917815-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: f1569079ca898d54e52a26b0bd1b5cc869310608
@@ -56,7 +56,7 @@ imports:
 - name: github.com/getlantern/byteexec
   version: 2e21fedeb225921a8dc40321cbd114ffd0a302f3
 - name: github.com/getlantern/bytemap
-  version: 4dd4ecae18588644add452f16e5c5aa41a90bd00
+  version: 807aefefeb0978ae9572ddfe7ec99b68f3da03e2
 - name: github.com/getlantern/checkfallbacks
   version: 16263f2c042a0dd5366bccb3364d31ab1c4bb9a0
 - name: github.com/getlantern/connpool
@@ -148,7 +148,7 @@ imports:
   - tokenfilter
   - usage
 - name: github.com/getlantern/httpseverywhere
-  version: b92b5b472e2843640940e5398b931ce8a7ecb0e9
+  version: 3a798cc50c3b227c445677d1f5f6ef467e28e7af
 - name: github.com/getlantern/i18n
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
@@ -208,8 +208,6 @@ imports:
   version: cdae0bdf2aeae3ffb5ffe0cd2e2f83443ca9d104
 - name: github.com/getlantern/tarfs
   version: d77b63c04dbe74646c5f8f46c5c1e5523ef22415
-- name: github.com/getlantern/tldextract
-  version: 8d28b6645dd080d55895c84264f3f60c0a6d4cdf
 - name: github.com/getlantern/tlsdefaults
   version: 55d0dd468a195a4c8cb99ee0c1a2878cb7e72155
 - name: github.com/getlantern/tlsdialer
@@ -355,6 +353,7 @@ imports:
   - ipv4
   - lex/httplex
   - proxy
+  - publicsuffix
   - trace
 - name: golang.org/x/sys
   version: afadfcc7779c1f4db0f6f6438afcb108d9c9c7cd
