@@ -78,8 +78,6 @@ type Client struct {
 	proTokenGetter func() string
 
 	easylist easylist.List
-
-	https atomic.Value
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -278,7 +276,6 @@ func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, p
 		// Use netx because on Android, we need a special protected dialer
 		return netx.DialContext(ctx, "tcp", addr)
 	}
-
 	if !client.proxyAll() && shortcut.Allow(addr) {
 		log.Tracef("Use shortcut (dial directly) for %v", addr)
 		return netx.DialContext(ctx, "tcp", addr)
