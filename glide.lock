@@ -511,5 +511,29 @@ testImports:
   - internal/consistenthash
   - internal/hashtag
   - internal/pool
+- name: github.com/gonum/blas
+  version: f6d28c18e71668e63984d0eec21fe11804c6fa30
+  subpackages:
+  - blas64
+  - native
+  - native/internal/math32
+- name: github.com/gonum/floats
+  version: a2cbc5c70616cd18491ef2843231f6ce28b2cb02
+- name: github.com/gonum/internal
+  version: aa14b654e75da6e47f3c563fbda889112fe5ac94
+  subpackages:
+  - asm/f32
+  - asm/f64
+- name: github.com/gonum/lapack
+  version: 346ec32616160a54c53d8f7230e403ca251885f5
+  subpackages:
+  - lapack64
+  - native
+- name: github.com/gonum/matrix
+  version: 1b010f5792b7006e929e4833b43628e6115c8988
+  subpackages:
+  - mat64
 - name: github.com/gonum/stat
   version: dfc45d0283f0a0e24e731d5eb788d90ebd491988
+- name: github.com/gorilla/context
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
