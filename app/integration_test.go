@@ -124,7 +124,7 @@ func startProxyServer(t *testing.T) error {
 		Token:        Token,
 		KeyFile:      KeyFile,
 		CertFile:     CertFile,
-		IdleClose:    30,
+		IdleTimeout:  30 * time.Second,
 		HTTPS:        true,
 	}
 
