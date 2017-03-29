@@ -126,7 +126,7 @@ imports:
   - server
   - utils
 - name: github.com/getlantern/http-proxy-lantern
-  version: 0bda258c0758e8ebd7fb14f00ecee44ce78aef9d
+  version: 2dface6a8bccdf2b3c7451fa66e32df020eef9b8 
   subpackages:
   - analytics
   - bbr
