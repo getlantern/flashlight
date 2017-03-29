@@ -13,6 +13,7 @@ import (
 
 	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/netx"
@@ -212,9 +213,10 @@ func (p *proxy) dialInternal(network, addr string) (net.Conn, error) {
 
 func (p *proxy) onRequest(req *http.Request) {
 	p.AdaptRequest(req)
-	req.Header.Set("X-Lantern-Device-Id", p.deviceID)
+	req.Header.Set(common.DeviceIdHeader, p.deviceID)
+	req.Header.Set(common.VersionHeader, common.Version)
 	if token := p.proToken(); token != "" {
-		req.Header.Set("X-Lantern-Pro-Token", token)
+		req.Header.Set(common.ProTokenHeader, token)
 	}
 }
 

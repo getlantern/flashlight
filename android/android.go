@@ -19,6 +19,7 @@ import (
 	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/flashlight/client"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
@@ -39,9 +40,6 @@ var (
 	defaultLocale   = `en-US`
 	surveyURL       = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
 
-	// compileTimePackageVersion is set at compile-time for production builds
-	compileTimePackageVersion string
-
 	// if true, run Lantern against our staging infrastructure
 	stagingMode = "false"
 	staging     = false
@@ -51,7 +49,7 @@ var (
 
 func init() {
 	var err error
-	proclient.Configure(stagingMode, compileTimePackageVersion)
+	proclient.Configure(stagingMode, common.CompileTimePackageVersion)
 
 	staging, err = strconv.ParseBool(stagingMode)
 	if err != nil {
@@ -332,7 +330,7 @@ func surveyRequest(locale string) (string, error) {
 // CheckForUpdates checks to see if a new version of Lantern is available
 func CheckForUpdates() (string, error) {
 	return autoupdate.CheckMobileUpdate(updateServerURL,
-		compileTimePackageVersion)
+		common.CompileTimePackageVersion)
 }
 
 // DownloadUpdate downloads the latest APK from the given url to the apkPath

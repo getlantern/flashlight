@@ -7,6 +7,7 @@ import (
 	"net/http/httputil"
 	"strings"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
 )
@@ -69,7 +70,11 @@ func APIHandler() http.Handler {
 			r.Host = r.URL.Host
 			r.RequestURI = "" // http: Request.RequestURI can't be set in client requests.
 			r.Header.Set("Lantern-Fronted-URL", fmt.Sprintf("http://%s%s", proAPIDDFHost, r.URL.Path))
-			r.Header.Set("Access-Control-Allow-Headers", "X-Lantern-Device-Id, X-Lantern-Pro-Token, X-Lantern-User-Id")
+			r.Header.Set("Access-Control-Allow-Headers", strings.Join([]string{
+				common.DeviceIdHeader,
+				common.ProTokenHeader,
+				common.UserIdHeader,
+			}, ", "))
 		},
 	}
 }

@@ -3,6 +3,7 @@ package client
 import (
 	"net/http"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 )
 
@@ -46,6 +47,8 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	} else {
 		// Direct proxying can only be used for plain HTTP connections.
 		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
+		// consumed and removed by http-proxy-lantern/versioncheck
+		req.Header.Set(common.VersionHeader, common.Version)
 		err := client.interceptHTTP(resp, req)
 		if err != nil {
 			log.Error(op.FailIf(err))
