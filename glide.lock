@@ -1,5 +1,5 @@
 hash: e92d65d860cd394789e433663be27ed3324cbf023153e73d4eff34fd95a83553
-updated: 2017-03-29T12:47:13.360303361-07:00
+updated: 2017-03-29T14:55:08.046048895-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: f1569079ca898d54e52a26b0bd1b5cc869310608
@@ -20,7 +20,7 @@ imports:
   - edwards25519
   - extra25519
 - name: github.com/aristanetworks/goarista
-  version: 3fa60dce8bcd3e86aae158b9d8ce4ff5cd3e27e0
+  version: 79baa1b1fe5f0e1dd4e6920d35180192939678c4
   subpackages:
   - monotime
 - name: github.com/armon/go-radix
@@ -148,7 +148,7 @@ imports:
   - tokenfilter
   - usage
 - name: github.com/getlantern/httpseverywhere
-  version: 57811bf8f67435f32187b3ba8822dfe23bfbeb14
+  version: cf1aa6ba5044a5d241a0ecab72dfb243931836ce
 - name: github.com/getlantern/i18n
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
@@ -276,7 +276,7 @@ imports:
   subpackages:
   - forward
 - name: github.com/miekg/dns
-  version: c1bdeb82b2ab425fc56b2f50ece8c7f5faa10b6c
+  version: 767422ac12884e2baed0afd7303cf06cff90fef6
 - name: github.com/mitchellh/panicwrap
   version: fce601fe55579125e1b3cb0b992287e7290f7b83
 - name: github.com/mxk/go-flowrate
