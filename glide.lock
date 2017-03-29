@@ -511,3 +511,5 @@ testImports:
   - internal/consistenthash
   - internal/hashtag
   - internal/pool
+- name: github.com/gonum/stat
+  version: dfc45d0283f0a0e24e731d5eb788d90ebd491988
