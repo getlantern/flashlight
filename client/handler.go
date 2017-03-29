@@ -46,19 +46,10 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 			log.Error(op.FailIf(err))
 		}
 	} else {
-		url := req.URL.String()
-		log.Tracef("Checking for HTTP redirect for %v", url)
-		httpsURL, changed := httpseverywhere.Rewrite(url)
-		if changed {
-			log.Debugf("Redirecting to %v", httpsURL)
-			op.Set("forcedhttps", true)
-			// Tell the browser to only cache the redirect for a day. The browser
-			// is supposed to cache permanent redirects indefinitley but will also
-			// follow caching rules.
-			resp.Header().Set("Cache-Control", "max-age:86400")
-			resp.Header().Set("Expires", time.Now().Add(time.Duration(24)*time.Hour).Format(http.TimeFormat))
-			http.Redirect(resp, req, httpsURL, http.StatusMovedPermanently)
-
+		//url := req.URL.String()
+		log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
+		if httpsURL, changed := httpseverywhere.Rewrite(req.URL); changed {
+			client.redirect(resp, req, httpsURL, op)
 			return
 		}
 		// Direct proxying can only be used for plain HTTP connections.
@@ -68,4 +59,15 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 			log.Error(op.FailIf(err))
 		}
 	}
+}
+
+func (client *Client) redirect(resp http.ResponseWriter, req *http.Request, httpsURL string, op *ops.Op) {
+	log.Debugf("Redirecting to %v", httpsURL)
+	op.Set("forcedhttps", true)
+	// Tell the browser to only cache the redirect for a day. The browser
+	// is generally caches permanent redirects, well, permanently but will also
+	// follow caching rules.
+	resp.Header().Set("Cache-Control", "max-age:86400")
+	resp.Header().Set("Expires", time.Now().Add(time.Duration(24)*time.Hour).Format(http.TimeFormat))
+	http.Redirect(resp, req, httpsURL, http.StatusMovedPermanently)
 }

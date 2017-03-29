@@ -1,5 +1,5 @@
 hash: e92d65d860cd394789e433663be27ed3324cbf023153e73d4eff34fd95a83553
-updated: 2017-03-28T15:11:58.869917815-07:00
+updated: 2017-03-29T11:36:34.748128573-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: f1569079ca898d54e52a26b0bd1b5cc869310608
@@ -46,7 +46,7 @@ imports:
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda
-  version: 3ed10c57db87bf75bbbc6a3ba86cd643de195eb8
+  version: fa87f3659d01b579508def74a321d77792d2c908
   subpackages:
   - client
 - name: github.com/getlantern/buuid
@@ -97,7 +97,7 @@ imports:
   - check
   - download
 - name: github.com/getlantern/goexpr
-  version: a78c78abd206a4e8b69008cda20c08750339bb4a
+  version: 5d0d42bc7cb5cb4c2bdfb4a33e8447865ec715ec
   subpackages:
   - geo
   - isp
@@ -148,7 +148,7 @@ imports:
   - tokenfilter
   - usage
 - name: github.com/getlantern/httpseverywhere
-  version: 3a798cc50c3b227c445677d1f5f6ef467e28e7af
+  version: d4e64bab583faa31466fb89ac2eef616ac041669
 - name: github.com/getlantern/i18n
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
@@ -231,7 +231,7 @@ imports:
 - name: github.com/getlantern/yaml
   version: 97d86b60f57eeca9d70c02763ed2565bafc17585
 - name: github.com/getlantern/zenodb
-  version: f8aa8604c486255f2a24408ba6c716ddee9823bf
+  version: afc39c88624e7a3842ce7dd59a827ce597717fbc
   subpackages:
   - bytetree
   - common
@@ -304,7 +304,7 @@ imports:
   subpackages:
   - open
 - name: github.com/stripe/stripe-go
-  version: 52316de96ca8c9120739b13cca17e36eb02c8737
+  version: babd8f00cc6253129ac19d6fc465a1eb79fc5614
   subpackages:
   - orderitem
   - token
@@ -317,7 +317,7 @@ imports:
   subpackages:
   - utils
 - name: github.com/xtaci/kcp-go
-  version: c4aa1e2a37aa54521a2941888a314b5753166364
+  version: f75e45921594f847a073eb5637b01a8fe5d21e43
 - name: github.com/xwb1989/sqlparser
   version: a9cdf22bd561e715bba34ee228cb1c06bfa2719c
   subpackages:
@@ -338,7 +338,7 @@ imports:
   - poly1305
   - salsa20/salsa
 - name: golang.org/x/net
-  version: 6c23252515492caf9b228a9d5cabcdbde29f7f82
+  version: ffcf1bedda3b04ebb15a168a59800a73d6dc0f4d
   repo: https://github.com/golang/net
   vcs: git
   subpackages:
@@ -356,7 +356,7 @@ imports:
   - publicsuffix
   - trace
 - name: golang.org/x/sys
-  version: afadfcc7779c1f4db0f6f6438afcb108d9c9c7cd
+  version: 9a7256cb28ed514b4e1e5f68959914c4c28a92e0
   repo: https://github.com/golang/sys
   vcs: git
   subpackages:
