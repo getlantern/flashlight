@@ -20,15 +20,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	if !client.easylist.Allow(req) {
-		log.Debugf("Blocking %v on %v", req.URL, req.Host)
-		if isConnect {
-			// For CONNECT requests, we pretend that it's okay but then we don't do
-			// anything afterwards. We have to do this because otherwise Chrome marks
-			// us as a bad proxy.
-			resp.WriteHeader(http.StatusOK)
-		} else {
-			resp.WriteHeader(http.StatusForbidden)
-		}
+		client.easyblock(resp, req, isConnect)
 		return
 	}
 
@@ -58,6 +50,18 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			log.Error(op.FailIf(err))
 		}
+	}
+}
+
+func (client *Client) easyblock(resp http.ResponseWriter, req *http.Request, isConnect bool) {
+	log.Debugf("Blocking %v on %v", req.URL, req.Host)
+	if isConnect {
+		// For CONNECT requests, we pretend that it's okay but then we don't do
+		// anything afterwards. We have to do this because otherwise Chrome marks
+		// us as a bad proxy.
+		resp.WriteHeader(http.StatusOK)
+	} else {
+		resp.WriteHeader(http.StatusForbidden)
 	}
 }
 
