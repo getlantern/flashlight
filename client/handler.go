@@ -66,7 +66,7 @@ func (client *Client) easyblock(resp http.ResponseWriter, req *http.Request, isC
 }
 
 func (client *Client) redirect(resp http.ResponseWriter, req *http.Request, httpsURL string, op *ops.Op) {
-	log.Debugf("Redirecting to %v", httpsURL)
+	log.Debugf("httpseverywhere redirecting to %v", httpsURL)
 	op.Set("forcedhttps", true)
 	// Tell the browser to only cache the redirect for a day. The browser
 	// is generally caches permanent redirects, well, permanently but will also
