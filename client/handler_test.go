@@ -22,6 +22,8 @@ func TestRedirect(t *testing.T) {
 	resp := w.Result()
 
 	assert.Equal(t, http.StatusMovedPermanently, resp.StatusCode)
+	assert.Equal(t, "max-age:86400", resp.Header.Get("Cache-Control"))
+	assert.True(t, len(resp.Header.Get("Expires")) > 0)
 }
 
 func TestEasylist(t *testing.T) {
