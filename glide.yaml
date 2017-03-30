@@ -109,7 +109,7 @@ import:
   - adblock
 - package: github.com/getlantern/lampshade
 - package: github.com/Yawning/chacha20
-- package: github.com/armon/go-radix
+- package: github.com/getlantern/httpseverywhere
 testImport:
 - package: github.com/stretchr/testify
   subpackages:
