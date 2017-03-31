@@ -133,6 +133,11 @@ func genPACFile(w io.Writer) (int, error) {
 			if (url.substring(0, 4) != 'http' && (url.substring(0, 2) != 'ws')) {
 				return "DIRECT";
 			}
+
+			// If it's any plain text traffic, always proxy it.
+			if (url.substring(0, 5) != 'https' && (url.substring(0, 2) != 'wss')) {
+				return "PROXY %s; DIRECT";
+			}
 			for (var d in bypassDomains) {
 				if (host == bypassDomains[d]) {
 					return "DIRECT";
@@ -146,7 +151,7 @@ func genPACFile(w io.Writer) (int, error) {
 	}
 	proxyAddrString := proxyAddr.(string)
 	log.Tracef("Setting proxy address to %v", proxyAddrString)
-	return fmt.Fprintf(w, formatter, hostsString, proxyAddrString)
+	return fmt.Fprintf(w, formatter, hostsString, proxyAddrString, proxyAddrString)
 }
 
 // watchDirectAddrs adds any site that has accessed directly without error to PAC file

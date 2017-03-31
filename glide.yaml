@@ -164,6 +164,7 @@ import:
   subpackages:
   - gomock
 - package: github.com/golang/glog
+- package: github.com/getlantern/httpseverywhere
 testImport:
 - package: github.com/stretchr/testify
   subpackages:

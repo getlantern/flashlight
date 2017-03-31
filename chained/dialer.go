@@ -45,7 +45,7 @@ func (p *proxy) runConnectivityChecks() {
 	// With a 15 minute period, Lantern running 8 hours a day for 30 days and 148
 	// bytes for a TCP connection setup and teardown, this check will consume
 	// approximately 138 KB per month per proxy.
-	checkInterval := maxCheckInterval
+	checkInterval := randomize(minCheckInterval)
 	timer := time.NewTimer(checkInterval)
 
 	ops.Go(func() {
