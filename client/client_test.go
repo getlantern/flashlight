@@ -176,6 +176,9 @@ func (d *testDialer) Succeeding() bool {
 	return !d.failing
 }
 
+func (d *testDialer) ProbePerformance() {
+}
+
 func (d *testDialer) Stop() {
 	d.stopped = true
 }
