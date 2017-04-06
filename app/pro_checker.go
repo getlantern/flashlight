@@ -16,7 +16,7 @@ var configureProClientOnce sync.Once
 // the user ID becomes non-zero.
 func isProUser() (isPro bool, ok bool) {
 	configureProClientOnce.Do(func() {
-		proClient.Configure(stagingMode, common.PackageVersion)
+		proClient.Configure(common.StagingMode, common.PackageVersion)
 	})
 
 	var userID int
