@@ -114,12 +114,6 @@ func (b *Balancer) dialersToCheck() []Dialer {
 
 // Reset closes existing dialers and replaces them with new ones.
 func (b *Balancer) Reset(dialers ...Dialer) {
-	// TODO: track estimated latency and estimated bandwidth on our dialer so that
-	// we can save and transfer accordingly.
-
-	// TODO: if dialing fails, start rechecking dials with exponential backoff
-
-	// TODO: report estimated bandwidth and estimated latency to borda sometimes
 	log.Debug("Resetting")
 	var dls sortedDialers
 	var tdls sortedDialers
