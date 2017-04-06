@@ -42,7 +42,7 @@ endef
 
 lantern: $(SOURCES)
 	@$(call build-tags) && \
-	CGO_ENABLED=1 go build $(BUILD_RACE) -o lantern -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
+	CGO_ENABLED=1 go build $(BUILD_RACE) -o lantern -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s" github.com/getlantern/flashlight/main;
 
 # vendor installs vendored dependencies using Glide
 vendor: require-glide
