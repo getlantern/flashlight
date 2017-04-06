@@ -218,6 +218,12 @@ func (p *proxy) onRequest(req *http.Request) {
 	if token := p.proToken(); token != "" {
 		req.Header.Set(common.ProTokenHeader, token)
 	}
+	// Request BBR metrics
+	bbrOption := "y"
+	if p.shouldResetBBR() {
+		bbrOption = "clear"
+	}
+	req.Header.Set("X-BBR", bbrOption)
 }
 
 func (p *proxy) onFinish(op *ops.Op) {
@@ -250,12 +256,6 @@ func (p *proxy) buildCONNECTRequest(addr string) (*http.Request, error) {
 	}
 	req.Host = addr
 	p.onRequest(req)
-	// Request BBR metrics
-	bbrOption := "y"
-	if p.shouldResetBBR() {
-		bbrOption = "clear"
-	}
-	req.Header.Set("X-BBR", bbrOption)
 	return req, nil
 }
 

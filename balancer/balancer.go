@@ -69,6 +69,10 @@ type Dialer interface {
 	// Succeeding indicates whether or not this dialer is currently good to use
 	Succeeding() bool
 
+	// ProbePerformance forces the dialer to actively probe to try to better
+	// understand its performance.
+	ProbePerformance()
+
 	// Stop stops background processing for this Dialer.
 	Stop()
 }
@@ -254,7 +258,7 @@ func (b *Balancer) Close() {
 func (b *Balancer) printStats() {
 	time.Sleep(5 * time.Second)
 	b.doPrintStats()
-	t := time.NewTicker(30 * time.Second)
+	t := time.NewTicker(15 * time.Second)
 	for {
 		select {
 		case <-b.stopStatsCh:

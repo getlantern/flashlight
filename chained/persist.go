@@ -32,6 +32,13 @@ func TrackStatsFor(dialers []balancer.Dialer) {
 	// Load existing stats
 	applyExistingStats(dialers)
 
+	for _, dialer := range dialers {
+		if dialer.Attempts() < 20 {
+			// relatively new dialer, probe performance
+			go dialer.ProbePerformance()
+		}
+	}
+
 	for _, d := range dialers {
 		statsTrackingDialers[d.Addr()] = d
 	}

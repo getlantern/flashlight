@@ -12,4 +12,5 @@ const (
 	BBRAvailableBandwidthEstimateHeader = "X-BBR-ABE"
 	EtagHeader                          = "X-Lantern-Etag"
 	IfNoneMatchHeader                   = "X-Lantern-If-None-Match"
+	PingHeader                          = "X-Lantern-Ping"
 )
