@@ -9,7 +9,6 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -40,21 +39,11 @@ var (
 	defaultLocale   = `en-US`
 	surveyURL       = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
 
-	// if true, run Lantern against our staging infrastructure
-	stagingMode = "false"
-	staging     = false
-
 	startOnce sync.Once
 )
 
 func init() {
-	var err error
-	proclient.Configure(stagingMode, common.CompileTimePackageVersion)
-
-	staging, err = strconv.ParseBool(stagingMode)
-	if err != nil {
-		log.Errorf("Error parsing boolean flag: %v", err)
-	}
+	proclient.Configure(common.StagingMode, common.CompileTimePackageVersion)
 }
 
 // SocketProtector is an interface for classes that can protect Android sockets,
@@ -152,7 +141,7 @@ func run(configDir, locale string,
 	stickyConfig bool, user UserConfig) {
 
 	appdir.SetHomeDir(configDir)
-	user.SetStaging(staging)
+	user.SetStaging(common.Staging)
 
 	log.Debugf("Starting lantern: configDir %s locale %s sticky config %t",
 		configDir, locale, stickyConfig)
@@ -161,7 +150,7 @@ func run(configDir, locale string,
 		"borda-report-interval":    5 * time.Minute,
 		"borda-sample-percentage":  float64(0.01),
 		"loggly-sample-percentage": float64(0.02),
-		"staging":                  staging,
+		"staging":                  common.Staging,
 	}
 
 	err := os.MkdirAll(configDir, 0755)

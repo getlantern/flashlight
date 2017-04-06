@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptrace"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
 )
@@ -24,7 +25,7 @@ func PrepareForFronting(req *http.Request) {
 		return
 	}
 	frontedURL := *req.URL
-	frontedURL.Host = proAPIDDFHost
+	frontedURL.Host = common.ProAPIDDFHost
 	proxied.PrepareForFronting(req, frontedURL.String())
 	trace := &httptrace.ClientTrace{
 		DNSDone: func(info httptrace.DNSDoneInfo) {
