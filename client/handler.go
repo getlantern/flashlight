@@ -6,7 +6,6 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/httpseverywhere"
 )
 
 // ServeHTTP implements the http.Handler interface.
@@ -41,7 +40,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	} else {
 		//url := req.URL.String()
 		log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
-		if httpsURL, changed := httpseverywhere.Rewrite(req.URL); changed {
+		if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
 			client.redirect(resp, req, httpsURL, op)
 			return
 		}
