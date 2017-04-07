@@ -23,28 +23,14 @@ var (
 	defaultTimeout = time.Second * 30
 	maxRetries     = 12
 	retryBaseTime  = time.Millisecond * 100
-	endpointPrefix = "https://api.getiantem.org"
+	endpointPrefix = "https://" + common.ProAPIHost
 )
 
 const defaultLocale = "en_US"
 
 var (
 	ErrAPIUnavailable = errors.New("API unavailable.")
-	version           string
 )
-
-func Configure(stagingMode, compileTimePackageVersion string) {
-	version = compileTimePackageVersion
-	staging, err := strconv.ParseBool(stagingMode)
-	if err == nil {
-		if staging {
-			endpointPrefix = "https://api-staging.getiantem.org"
-		}
-	} else {
-		log.Errorf("Error parsing boolean flag: %v", err)
-	}
-	log.Debugf("API endpoint is %s", endpointPrefix)
-}
 
 type Client struct {
 	httpClient *http.Client
@@ -87,7 +73,7 @@ func (c *Client) do(req *http.Request) ([]byte, error) {
 			return nil, err
 		}
 	}
-	req.Header.Set("User-Agent", "Lantern-Android-"+version)
+	req.Header.Set("User-Agent", "Lantern-Android-"+common.Version)
 	pro.PrepareForFronting(req)
 
 	for i := 0; i < maxRetries; i++ {

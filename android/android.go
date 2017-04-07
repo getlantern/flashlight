@@ -28,8 +28,6 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/protected"
 	"github.com/getlantern/uuid"
-
-	proclient "github.com/getlantern/flashlight/pro/client"
 )
 
 var (
@@ -41,10 +39,6 @@ var (
 
 	startOnce sync.Once
 )
-
-func init() {
-	proclient.Configure(common.StagingMode, common.CompileTimePackageVersion)
-}
 
 // SocketProtector is an interface for classes that can protect Android sockets,
 // meaning those sockets will not be passed through the VPN.
