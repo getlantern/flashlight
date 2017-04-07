@@ -163,9 +163,8 @@ func run(configDir, locale string,
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
 	flashlight.Run("127.0.0.1:0", // listen for HTTP on random address
-		"127.0.0.1:0", // listen for SOCKS on random address
-		configDir,     // place to store lantern configuration
-		stickyConfig,
+		"127.0.0.1:0",               // listen for SOCKS on random address
+		configDir,                   // place to store lantern configuration
 		func() bool { return true }, // proxy all requests
 		// TODO: allow configuring whether or not to enable reporting (just like we
 		// already have in desktop)
