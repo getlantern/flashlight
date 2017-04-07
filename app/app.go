@@ -107,7 +107,7 @@ func (app *App) Run() error {
 			settings.GetProxyAll,
 			settings.IsAutoReport,
 			app.Flags,
-			app.beforeStart,
+			app.beforeStart(listenAddr),
 			app.afterStart,
 			app.onConfigUpdate,
 			settings,
@@ -122,112 +122,112 @@ func (app *App) Run() error {
 	return app.waitForExit()
 }
 
-func (app *App) beforeStart() bool {
-	log.Debug("Got first config")
-	var cpuProf, memProf string
-	if cpu, cok := app.Flags["cpuprofile"]; cok {
-		cpuProf = cpu.(string)
-	}
-	if mem, cok := app.Flags["memprofile"]; cok {
-		memProf = mem.(string)
-	}
-	if cpuProf != "" || memProf != "" {
-		log.Debugf("Start profiling with cpu file %s and mem file %s", cpuProf, memProf)
-		finishProfiling := profiling.Start(cpuProf, memProf)
-		app.AddExitFunc(finishProfiling)
-	}
+func (app *App) beforeStart(listenAddr string) func() bool {
+	return func() bool {
+		log.Debug("Got first config")
+		var cpuProf, memProf string
+		if cpu, cok := app.Flags["cpuprofile"]; cok {
+			cpuProf = cpu.(string)
+		}
+		if mem, cok := app.Flags["memprofile"]; cok {
+			memProf = mem.(string)
+		}
+		if cpuProf != "" || memProf != "" {
+			log.Debugf("Start profiling with cpu file %s and mem file %s", cpuProf, memProf)
+			finishProfiling := profiling.Start(cpuProf, memProf)
+			app.AddExitFunc(finishProfiling)
+		}
 
-	if err := setUpPacTool(); err != nil {
-		app.Exit(err)
-	}
+		if err := setUpPacTool(listenAddr); err != nil {
+			app.Exit(err)
+		}
 
-	var startupURL string
-	bootstrap, err := config.ReadBootstrapSettings()
-	if err != nil {
-		log.Debugf("Could not read bootstrap settings: %v", err)
-	} else {
-		startupURL = bootstrap.StartupUrl
-	}
+		var startupURL string
+		bootstrap, err := config.ReadBootstrapSettings()
+		if err != nil {
+			log.Debugf("Could not read bootstrap settings: %v", err)
+		} else {
+			startupURL = bootstrap.StartupUrl
+		}
 
-	uiaddr := app.Flags["uiaddr"].(string)
-	if uiaddr == "" {
-		// stick with the last one if not specified from command line.
-		if uiaddr = settings.GetUIAddr(); uiaddr != "" {
-			host, port, err := net.SplitHostPort(uiaddr)
-			if err != nil {
-				log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
-				uiaddr = ""
-			}
-			// To allow Edge to open the UI, we force the UI address to be
-			// localhost if it's 127.0.0.1 (the default for previous versions).
-			// We do the same for all platforms for simplicity though it's only
-			// useful on Windows 10 and above.
-			if host == "127.0.0.1" {
-				uiaddr = "localhost:" + port
+		uiaddr := app.Flags["uiaddr"].(string)
+		if uiaddr == "" {
+			// stick with the last one if not specified from command line.
+			if uiaddr = settings.GetUIAddr(); uiaddr != "" {
+				host, port, err := net.SplitHostPort(uiaddr)
+				if err != nil {
+					log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
+					uiaddr = ""
+				}
+				// To allow Edge to open the UI, we force the UI address to be
+				// localhost if it's 127.0.0.1 (the default for previous versions).
+				// We do the same for all platforms for simplicity though it's only
+				// useful on Windows 10 and above.
+				if host == "127.0.0.1" {
+					uiaddr = "localhost:" + port
+				}
 			}
 		}
-	}
 
-	if uiaddr != "" && app.Flags["clear-proxy-settings"].(bool) {
-		// This is a workaround that attempts to fix a Windows-only problem where
-		// Lantern was unable to clean the system's proxy settings before logging
-		// off.
-		//
-		// See: https://github.com/getlantern/lantern/issues/2776
-		url := fmt.Sprintf("http://%s/proxy_on.pac", uiaddr)
-		log.Debugf("Will clear proxy settings if it is prefixed with %s", url)
-		doPACOff(url)
-		app.Exit(nil)
-	}
-
-	if uiaddr != "" {
-		// Is something listening on that port?
-		if err := app.showExistingUI(uiaddr); err == nil {
-			log.Debug("Lantern already running, showing existing UI")
+		if uiaddr != "" && app.Flags["clear-proxy-settings"].(bool) {
+			// This is a workaround that attempts to fix a Windows-only problem where
+			// Lantern was unable to clean the system's proxy settings before logging
+			// off.
+			//
+			// See: https://github.com/getlantern/lantern/issues/2776
+			url := fmt.Sprintf("http://%s/proxy_on.pac", uiaddr)
+			log.Debugf("Will clear proxy settings if it is prefixed with %s", url)
+			doPACOff()
 			app.Exit(nil)
 		}
+
+		if uiaddr != "" {
+			// Is something listening on that port?
+			if err := app.showExistingUI(uiaddr); err == nil {
+				log.Debug("Lantern already running, showing existing UI")
+				app.Exit(nil)
+			}
+		}
+
+		log.Debugf("Starting client UI at %v", uiaddr)
+		// ui will handle empty uiaddr correctly
+		err = ui.Start(uiaddr, !app.ShowUI, startupURL, localHTTPToken(settings))
+		if err != nil {
+			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
+		}
+		ui.Handle("/data", ws.StartUIChannel())
+
+		if e := settings.StartService(); e != nil {
+			app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
+		}
+		settings.SetUIAddr(ui.GetUIAddr())
+
+		setupUserSignal()
+
+		err = serveBandwidth()
+		if err != nil {
+			log.Errorf("Unable to serve bandwidth to UI: %v", err)
+		}
+
+		err = serveEmailProxy()
+		if err != nil {
+			log.Errorf("Unable to serve mandrill to UI: %v", err)
+		}
+
+		// Don't block on fetching the location for the UI.
+		go serveLocation()
+
+		// Only run analytics once on startup.
+		if settings.IsAutoReport() {
+			stopAnalytics := analytics.Start(settings.GetDeviceID(), common.Version)
+			app.AddExitFunc(stopAnalytics)
+		}
+
+		app.AddExitFunc(AnnouncementsLoop(4*time.Hour, isProUser))
+		app.AddExitFunc(notificationsLoop())
+
+		return true
 	}
-
-	log.Debugf("Starting client UI at %v", uiaddr)
-	// ui will handle empty uiaddr correctly
-	err = ui.Start(uiaddr, !app.ShowUI, startupURL, localHTTPToken(settings))
-	if err != nil {
-		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
-	}
-	ui.Handle("/data", ws.StartUIChannel())
-
-	if e := settings.StartService(); e != nil {
-		app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
-	}
-	settings.SetUIAddr(ui.GetUIAddr())
-
-	setupUserSignal()
-
-	err = serveBandwidth()
-	if err != nil {
-		log.Errorf("Unable to serve bandwidth to UI: %v", err)
-	}
-
-	err = serveEmailProxy()
-	if err != nil {
-		log.Errorf("Unable to serve mandrill to UI: %v", err)
-	}
-
-	// Don't block on fetching the location for the UI.
-	go serveLocation()
-
-	// Only run analytics once on startup.
-	if settings.IsAutoReport() {
-		stopAnalytics := analytics.Start(settings.GetDeviceID(), common.Version)
-		app.AddExitFunc(stopAnalytics)
-	}
-
-	app.AddExitFunc(AnnouncementsLoop(4*time.Hour, isProUser))
-	app.AddExitFunc(notificationsLoop())
-
-	watchDirectAddrs()
-
-	return true
 }
 
 // localHTTPToken fetches the local HTTP token from disk if it's there, and
@@ -268,7 +268,6 @@ func (app *App) OnSettingChange(attr SettingName, cb func(interface{})) {
 }
 
 func (app *App) afterStart() {
-	servePACFile()
 	if settings.GetSystemProxy() {
 		pacOn()
 	}

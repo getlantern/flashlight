@@ -180,8 +180,8 @@ imports:
   version: b70875f5d689a9438bca72aefd7142a2af889b18
 - name: github.com/getlantern/osversion
   version: 4aedc380e3bab4f0c97b1481492cb0b81c1d91f9
-- name: github.com/getlantern/pac
-  version: 5534aa917168bd068e494e81ae6da91cfc3e2a95
+- name: github.com/getlantern/sysproxy
+  version: 9c8e5dfa0f5be534259374d35afd21d5a07f84c9
 - name: github.com/getlantern/pathreflect
   version: b02f4864048a236150ca17c2c526158f2b3133c4
 - name: github.com/getlantern/profiling
