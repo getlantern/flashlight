@@ -45,11 +45,12 @@ func (p *proxy) runConnectivityChecks() {
 	// With a 15 minute period, Lantern running 8 hours a day for 30 days and 148
 	// bytes for a TCP connection setup and teardown, this check will consume
 	// approximately 138 KB per month per proxy.
-	checkInterval := randomize(minCheckInterval)
+	checkInterval := minCheckInterval
 	timer := time.NewTimer(checkInterval)
 
 	ops.Go(func() {
 		for {
+			timer.Reset(randomize(checkInterval))
 			select {
 			case <-timer.C:
 				log.Debugf("Checking %v", p.Label())
@@ -74,11 +75,9 @@ func (p *proxy) runConnectivityChecks() {
 						checkInterval = maxCheckInterval
 					}
 				}
-				timer.Reset(randomize(checkInterval))
 			case <-p.forceRecheckCh:
 				log.Debugf("Forcing recheck for %v", p.Label())
-				checkInterval := minCheckInterval
-				timer.Reset(randomize(checkInterval))
+				checkInterval = minCheckInterval
 			case <-p.closeCh:
 				log.Tracef("Dialer %v stopped", p.Label())
 				timer.Stop()

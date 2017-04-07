@@ -48,7 +48,7 @@ func (p *proxy) httpPing(kb int) error {
 	if err != nil {
 		return fmt.Errorf("Could not create HTTP request: %v", err)
 	}
-	req.Header.Set(common.PingHeader, fmt.Sprint(kb)) // ping for 100 KB of data
+	req.Header.Set(common.PingHeader, fmt.Sprint(kb))
 	p.onRequest(req)
 
 	_, _, err = withtimeout.Do(30*time.Second, func() (interface{}, error) {

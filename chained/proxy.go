@@ -69,7 +69,7 @@ func CreateDialer(name string, s *ChainedServerInfo, deviceID string, proToken f
 	}
 }
 
-// ForceProxy forces everything through the HTTp *proxy at forceAddr using
+// ForceProxy forces everything through the HTTP proxy at forceAddr using
 // forceToken.
 func ForceProxy(forceAddr string, forceToken string) {
 	log.Debugf("Forcing proxying through proxy at %v using token %v", forceAddr, forceToken)
@@ -309,6 +309,20 @@ func (p *proxy) EstLatency() time.Duration {
 	return p.emaLatencyShortTerm.GetDuration()
 }
 
+// EstBandwidth implements the method from the balancer.Dialer interface.
+//
+// Bandwidth estimates are provided to clients following the below protocol:
+//
+// 1. On every inbound connection, we interrogate BBR congestion control
+//    parameters to determine the estimated bandwidth, extrapolate this to what
+//    we would expected for a 2.5 MB transfer using a linear estimation based on
+//    how much data has actually been transferred on the connection and then
+//    maintain an exponential moving average (EMA) of these estimates per remote
+//    (client) IP.
+// 2. If a client includes HTTP header "X-BBR: <anything>", we include header
+//    X-BBR-ABE: <EMA bandwidth in Mbps> in the HTTP response.
+// 3. If a client includes HTTP header "X-BBR: clear", we clear stored estimate
+//    data for the client's IP.
 func (p *proxy) EstBandwidth() float64 {
 	return float64(atomic.LoadInt64(&p.abe)) / 1000
 }

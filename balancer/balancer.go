@@ -28,7 +28,7 @@ var (
 )
 
 // Dialer provides the ability to dial a proxy and obtain information needed to
-// effectively load balancer between dialers.
+// effectively load balance between dialers.
 type Dialer interface {
 	// Name returns the name for this Dialer
 	Name() string
@@ -89,7 +89,7 @@ type Balancer struct {
 	forceStatsCh chan bool
 }
 
-// New creates a new Balancer using the supplied Strategy and Dialers.
+// New creates a new Balancer using the supplied Dialers.
 func New(dialers ...Dialer) *Balancer {
 	// a small alpha to gradually adjust timeout based on performance of all
 	// dialers
@@ -109,16 +109,14 @@ func New(dialers ...Dialer) *Balancer {
 func (b *Balancer) dialersToCheck() []Dialer {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
-	ds := make([]Dialer, 0, len(b.dialers))
-	for _, d := range b.dialers {
-		ds = append(ds, d)
-	}
+	ds := make([]Dialer, len(b.dialers))
+	copy(ds, b.dialers)
 	return ds
 }
 
 // Reset closes existing dialers and replaces them with new ones.
 func (b *Balancer) Reset(dialers ...Dialer) {
-	log.Debug("Resetting")
+	log.Debugf("Resetting with %d dialers", len(dialers))
 	var dls sortedDialers
 	var tdls sortedDialers
 
@@ -140,8 +138,14 @@ func (b *Balancer) Reset(dialers ...Dialer) {
 }
 
 // Dial dials (network, addr) using one of the currently active configured
-// Dialers. The Dialer to choose depends on the Strategy when creating the
-// balancer. Only Trusted Dialers are used to dial HTTP hosts.
+// Dialers. The dialer is chosen based on the following ordering:
+//
+// - succeeding dialers are preferred to failing
+// - dialers whose bandwidth is unknown are preferred to those whose bandwidth
+//   is known (in order to collect data)
+// - faster dialers (based on bandwidth / latency) are preferred to slower ones
+//
+// Only Trusted Dialers are used to dial HTTP hosts.
 //
 // If a Dialer fails to connect, Dial will keep trying at most 3 times until it
 // either manages to connect, or runs out of dialers in which case it returns an
@@ -262,6 +266,7 @@ func (b *Balancer) printStats() {
 	for {
 		select {
 		case <-b.stopStatsCh:
+			t.Stop()
 			return
 		case <-b.forceStatsCh:
 			b.doPrintStats()
