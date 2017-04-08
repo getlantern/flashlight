@@ -249,6 +249,7 @@ func TestSorting(t *testing.T) {
 
 	// Shuffle and sort multiple times to make sure that comparisons work in both
 	// directions
+	failingSortedRandomlyAtLeastOnce := false
 	for i := 0; i < 500; i++ {
 		// shuffle
 		for i := range dialers {
@@ -261,8 +262,16 @@ func TestSorting(t *testing.T) {
 		for _, d := range dialers {
 			order = append(order, d.Name())
 		}
-		assert.EqualValues(t, []string{"1", "2", "3", "4", "5", "6", "7", "8"}, order)
+
+		assert.EqualValues(t, []string{"1", "2", "3", "4"}, order[:4], "Succeeding dialers should sort predictably")
+		for i := 4; i < len(order); i++ {
+			if fmt.Sprintf("%d", i+1) != order[i] {
+				failingSortedRandomlyAtLeastOnce = true
+			}
+		}
 	}
+
+	assert.True(t, failingSortedRandomlyAtLeastOnce)
 }
 
 func doTestConn(t *testing.T, conn net.Conn) {

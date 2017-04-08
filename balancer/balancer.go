@@ -4,6 +4,7 @@ package balancer
 
 import (
 	"fmt"
+	"math/rand"
 	"net"
 	"sort"
 	"strings"
@@ -333,6 +334,11 @@ func (d sortedDialers) Less(i, j int) bool {
 	}
 	if !aSucceeding && bSucceeding {
 		return false
+	}
+	if !aSucceeding && !bSucceeding {
+		// If both are failing, sort randomly so that we have the best chance of
+		// finding a dialer that works.
+		return rand.Float64() < 0.5
 	}
 
 	// while proxy's bandwidth is unknown, it should get traffic so that we can
