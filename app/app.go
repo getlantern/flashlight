@@ -93,7 +93,6 @@ func (app *App) Run() error {
 			listenAddr,
 			socksAddr,
 			app.Flags["configdir"].(string),
-			app.Flags["stickyconfig"].(bool),
 			settings.GetProxyAll,
 			settings.IsAutoReport,
 			app.Flags,
