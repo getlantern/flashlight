@@ -9,7 +9,6 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -29,8 +28,6 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/protected"
 	"github.com/getlantern/uuid"
-
-	proclient "github.com/getlantern/flashlight/pro/client"
 )
 
 var (
@@ -40,22 +37,8 @@ var (
 	defaultLocale   = `en-US`
 	surveyURL       = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
 
-	// if true, run Lantern against our staging infrastructure
-	stagingMode = "false"
-	staging     = false
-
 	startOnce sync.Once
 )
-
-func init() {
-	var err error
-	proclient.Configure(stagingMode, common.CompileTimePackageVersion)
-
-	staging, err = strconv.ParseBool(stagingMode)
-	if err != nil {
-		log.Errorf("Error parsing boolean flag: %v", err)
-	}
-}
 
 // SocketProtector is an interface for classes that can protect Android sockets,
 // meaning those sockets will not be passed through the VPN.
@@ -152,7 +135,7 @@ func run(configDir, locale string,
 	stickyConfig bool, user UserConfig) {
 
 	appdir.SetHomeDir(configDir)
-	user.SetStaging(staging)
+	user.SetStaging(common.Staging)
 
 	log.Debugf("Starting lantern: configDir %s locale %s sticky config %t",
 		configDir, locale, stickyConfig)
@@ -161,7 +144,7 @@ func run(configDir, locale string,
 		"borda-report-interval":    5 * time.Minute,
 		"borda-sample-percentage":  float64(0.01),
 		"loggly-sample-percentage": float64(0.02),
-		"staging":                  staging,
+		"staging":                  common.Staging,
 	}
 
 	err := os.MkdirAll(configDir, 0755)
@@ -180,9 +163,8 @@ func run(configDir, locale string,
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
 	flashlight.Run("127.0.0.1:0", // listen for HTTP on random address
-		"127.0.0.1:0", // listen for SOCKS on random address
-		configDir,     // place to store lantern configuration
-		stickyConfig,
+		"127.0.0.1:0",               // listen for SOCKS on random address
+		configDir,                   // place to store lantern configuration
 		func() bool { return true }, // proxy all requests
 		// TODO: allow configuring whether or not to enable reporting (just like we
 		// already have in desktop)

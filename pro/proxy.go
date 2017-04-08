@@ -57,7 +57,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 // APIHandler returns an HTTP handler that specifically looks for and properly
 // handles pro server requests.
 func APIHandler() http.Handler {
-	log.Debugf("Returning pro API handler hitting host: %v", proAPIHost)
+	log.Debugf("Returning pro API handler hitting host: %v", common.ProAPIHost)
 	return &httputil.ReverseProxy{
 		Transport: &proxyTransport{},
 		Director: func(r *http.Request) {
@@ -66,10 +66,10 @@ func APIHandler() http.Handler {
 				r.URL.Path = r.URL.Path[4:]
 			}
 			r.URL.Scheme = "https"
-			r.URL.Host = proAPIHost
+			r.URL.Host = common.ProAPIHost
 			r.Host = r.URL.Host
 			r.RequestURI = "" // http: Request.RequestURI can't be set in client requests.
-			r.Header.Set("Lantern-Fronted-URL", fmt.Sprintf("http://%s%s", proAPIDDFHost, r.URL.Path))
+			r.Header.Set("Lantern-Fronted-URL", fmt.Sprintf("http://%s%s", common.ProAPIDDFHost, r.URL.Path))
 			r.Header.Set("Access-Control-Allow-Headers", strings.Join([]string{
 				common.DeviceIdHeader,
 				common.ProTokenHeader,
