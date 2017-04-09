@@ -172,7 +172,7 @@ func TestRetryOnBadDialer(t *testing.T) {
 	b.Reset(dialer1, dialer2)
 	_, err = b.Dial("tcp", addr)
 	if assert.Error(t, err, "Dialing bad dialer should fail") {
-		assert.EqualValues(t, 2, dialer1.Attempts()+dialer2.Attempts(), "should try once per dialer")
+		assert.EqualValues(t, 3, dialer1.Attempts()+dialer2.Attempts(), "should try both dialers again")
 	}
 }
 

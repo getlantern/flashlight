@@ -160,17 +160,17 @@ func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 		trustedOnly = true
 	}
 
-	var lastDialer Dialer
-	for i := 0; i < dialAttempts; i++ {
-		d, pickErr := b.pickDialer(trustedOnly)
-		if pickErr != nil {
-			return nil, pickErr
-		}
-		if d == lastDialer {
-			log.Debugf("Skip dialing %s://%s with same dailer %s", network, addr, d.Label())
-			continue
-		}
-		lastDialer = d
+	dialers, pickErr := b.pickDialers(trustedOnly)
+	if pickErr != nil {
+		return nil, pickErr
+	}
+
+	attempts := dialAttempts
+	if attempts > len(dialers) {
+		attempts = len(dialers)
+	}
+	for i := 0; i < attempts; i++ {
+		d := dialers[i]
 		log.Tracef("Dialing %s://%s with %s", network, addr, d.Label())
 
 		conn, err := b.dialWithTimeout(d, network, addr)
@@ -299,7 +299,7 @@ func (b *Balancer) forceStats() {
 	}
 }
 
-func (b *Balancer) pickDialer(trustedOnly bool) (Dialer, error) {
+func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	dialers := b.dialers
@@ -313,7 +313,9 @@ func (b *Balancer) pickDialer(trustedOnly bool) (Dialer, error) {
 		return nil, fmt.Errorf("No dialers")
 	}
 	sort.Sort(dialers)
-	return dialers[0], nil
+	result := make([]Dialer, len(dialers))
+	copy(result, dialers)
+	return result, nil
 }
 
 type sortedDialers []Dialer
