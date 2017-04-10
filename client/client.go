@@ -20,6 +20,7 @@ import (
 	"github.com/getlantern/go-socks5"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
+	"github.com/getlantern/httpseverywhere"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 
@@ -77,7 +78,8 @@ type Client struct {
 	proxyAll       func() bool
 	proTokenGetter func() string
 
-	easylist easylist.List
+	easylist       easylist.List
+	rewriteToHTTPS httpseverywhere.Rewrite
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -88,6 +90,7 @@ func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 		bal:            balancer.New(),
 		proxyAll:       proxyAll,
 		proTokenGetter: proTokenGetter,
+		rewriteToHTTPS: httpseverywhere.Default(),
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second

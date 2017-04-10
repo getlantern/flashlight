@@ -76,7 +76,7 @@ imports:
 - name: github.com/getlantern/deepcopy
   version: 7f45deb8130a0acc553242eb0e009e3f6f3d9ce3
 - name: github.com/getlantern/detour
-  version: e326e9a1f33a0ecfaac6726cb78fc0c77aada064
+  version: 8d84e4ca5a88905bb1174611d63911e54531f2f1
 - name: github.com/getlantern/easylist
   version: 21cff4885389b3b970d7775c23c64ee55615b2e4
 - name: github.com/getlantern/edgedetect
@@ -160,7 +160,7 @@ imports:
   - tokenfilter
   - usage
 - name: github.com/getlantern/httpseverywhere
-  version: 00da9a7765853d3bb1bd3952cbdb4384ea943c41
+  version: 54f7a370d43bd5c05fc7afbb0e2c7ace153834d9
 - name: github.com/getlantern/i18n
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
@@ -192,8 +192,8 @@ imports:
   version: b70875f5d689a9438bca72aefd7142a2af889b18
 - name: github.com/getlantern/osversion
   version: 4aedc380e3bab4f0c97b1481492cb0b81c1d91f9
-- name: github.com/getlantern/pac
-  version: 5534aa917168bd068e494e81ae6da91cfc3e2a95
+- name: github.com/getlantern/sysproxy
+  version: 535bd45793c0abdde31d48b98460c4f4c36a82d1
 - name: github.com/getlantern/pathreflect
   version: b02f4864048a236150ca17c2c526158f2b3133c4
 - name: github.com/getlantern/profiling
