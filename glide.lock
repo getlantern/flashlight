@@ -160,7 +160,7 @@ imports:
   - tokenfilter
   - usage
 - name: github.com/getlantern/httpseverywhere
-  version: 00da9a7765853d3bb1bd3952cbdb4384ea943c41
+  version: 54f7a370d43bd5c05fc7afbb0e2c7ace153834d9
 - name: github.com/getlantern/i18n
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming

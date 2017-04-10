@@ -12,13 +12,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/getlantern/golog"
-	"github.com/getlantern/i18n"
-
 	"github.com/getlantern/flashlight/app"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ui"
+	"github.com/getlantern/golog"
+	"github.com/getlantern/i18n"
+	"github.com/mitchellh/panicwrap"
 )
 
 var (
@@ -36,6 +36,25 @@ func main() {
 		Flags:  flagsAsMap(),
 	}
 	a.Init()
+
+	// environmental variables, etc.) and monitoring the stderr of the program.
+	exitStatus, err := panicwrap.BasicWrap(
+		func(output string) {
+			a.LogPanicAndExit(output)
+		})
+	if err != nil {
+		// Something went wrong setting up the panic wrapper. This won't be
+		// captured by panicwrap
+		// At this point, continue execution without panicwrap support. There
+		// are known cases where panicwrap will fail to fork, such as Windows
+		// GUI app
+		log.Errorf("Error setting up panic wrapper: %v", err)
+	} else {
+		// If exitStatus >= 0, then we're the parent process.
+		if exitStatus >= 0 {
+			os.Exit(exitStatus)
+		}
+	}
 
 	if *help {
 		flag.Usage()
