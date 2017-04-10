@@ -199,7 +199,7 @@ imports:
 - name: github.com/getlantern/profiling
   version: 2a15afbadcff99bac017e17af273b31d4510ddb8
 - name: github.com/getlantern/protected
-  version: 2a636eb24159a25426d0633805a27ff8e0901856
+  version: 1b4bdf48ab4b66c0b05d931c65c29931fc0b63eb
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxy
@@ -213,7 +213,7 @@ imports:
 - name: github.com/getlantern/rotator
   version: 013d4f8e36a2f6369b2435d89866056b5b74c69e
 - name: github.com/getlantern/shortcut
-  version: f791e73b75c26c5aaaeda7eebb3121ab6ecef5e4
+  version: 71f2e56d7c39e15a12b13a6d11c4b0830f8f97d9
 - name: github.com/getlantern/sqlparser
   version: 813d09d4d8b3d70f253bc5b84bbb86e9407d8f04
 - name: github.com/getlantern/stack

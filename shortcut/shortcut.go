@@ -44,16 +44,6 @@ func configure(country string) {
 	_sc := shortcut.NewFromReader(
 		bytes.NewReader(v4),
 		bytes.NewReader(v6),
-		// Use the default net.ResolveTCPAddr.
-		//
-		// On Android, the DNS request will go through Tun device, and send via
-		// udpgw to whichever DNS server configured on the proxy. However, the
-		// host is already resolved before sending to Lantern client, so
-		// it's not used anyway.
-		//
-		// On desktop, it resolves using local DNS, which is exactly what
-		// shortcut requires.
-		nil,
 	)
 	mu.Lock()
 	sc = _sc
