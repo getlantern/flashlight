@@ -13,8 +13,6 @@ import (
 
 	"github.com/getlantern/mockconn"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/getlantern/flashlight/balancer"
 )
 
 type mockWriter struct {
@@ -41,12 +39,10 @@ func (w mockWriter) Dump() string {
 	return fmt.Sprintf("%+v", *w.ResponseWriter.(*httptest.ResponseRecorder).Result())
 }
 
-func resetBalancer(dialer func(network, addr string) (net.Conn, error)) {
-	bal.Reset(&balancer.Dialer{
-		Label:   "test-dialer",
-		DialFN:  dialer,
-		Check:   func(interface{}, func(string)) (bool, time.Duration) { return true, 10 * time.Millisecond },
-		Trusted: true,
+func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {
+	client.bal.Reset(&testDialer{
+		name: "test-dialer",
+		dial: dialer,
 	})
 }
 
@@ -55,7 +51,7 @@ func TestServeHTTPOk(t *testing.T) {
 	client := NewClient(func() bool { return true },
 		func() string { return "proToken" })
 	d := mockconn.SucceedingDialer(mockResponse)
-	resetBalancer(d.Dial)
+	resetBalancer(client, d.Dial)
 
 	w := mockWriter{ResponseWriter: httptest.NewRecorder(), Dialer: mockconn.SucceedingDialer(mockResponse)}
 	req, _ := http.NewRequest("CONNECT", "https://b.com:443", nil)
@@ -83,7 +79,7 @@ func TestServeHTTPTimeout(t *testing.T) {
 	client := NewClient(func() bool { return true },
 		func() string { return "proToken" })
 	d := mockconn.SucceedingDialer([]byte{})
-	resetBalancer(func(network, addr string) (net.Conn, error) {
+	resetBalancer(client, func(network, addr string) (net.Conn, error) {
 		<-time.After(getRequestTimeout() * 2)
 		return d.Dial(network, addr)
 	})
@@ -99,4 +95,90 @@ func TestServeHTTPTimeout(t *testing.T) {
 	client.ServeHTTP(w, req)
 	assert.Equal(t, 200, w.Status(), "It should respond 200 OK with error page")
 	assert.Contains(t, string(w.Dialer.Received()), "context deadline exceeded", "should be with context error")
+}
+
+type testDialer struct {
+	name      string
+	latency   time.Duration
+	dial      func(network, addr string) (net.Conn, error)
+	bandwidth float64
+	untrusted bool
+	failing   bool
+	attempts  int64
+	successes int64
+	failures  int64
+	stopped   bool
+}
+
+// Name returns the name for this Dialer
+func (d *testDialer) Name() string {
+	return d.name
+}
+
+func (d *testDialer) Label() string {
+	return d.name
+}
+
+func (d *testDialer) Addr() string {
+	return ""
+}
+
+func (d *testDialer) Trusted() bool {
+	return !d.untrusted
+}
+
+func (d *testDialer) Dial(network, addr string) (net.Conn, error) {
+	var conn net.Conn
+	var err error
+	if !d.Succeeding() {
+		err = fmt.Errorf("Failing intentionally")
+	} else if network != "" {
+		conn, err = d.dial(network, addr)
+	}
+	atomic.AddInt64(&d.attempts, 1)
+	if err == nil {
+		atomic.AddInt64(&d.successes, 1)
+	} else {
+		atomic.AddInt64(&d.failures, 1)
+	}
+	return conn, err
+}
+
+func (d *testDialer) EstLatency() time.Duration {
+	return d.latency
+}
+
+func (d *testDialer) EstBandwidth() float64 {
+	return d.bandwidth
+}
+
+func (d *testDialer) Attempts() int64 {
+	return atomic.LoadInt64(&d.attempts)
+}
+
+func (d *testDialer) Successes() int64 {
+	return atomic.LoadInt64(&d.successes)
+}
+
+func (d *testDialer) ConsecSuccesses() int64 {
+	return 0
+}
+
+func (d *testDialer) Failures() int64 {
+	return atomic.LoadInt64(&d.failures)
+}
+
+func (d *testDialer) ConsecFailures() int64 {
+	return 0
+}
+
+func (d *testDialer) Succeeding() bool {
+	return !d.failing
+}
+
+func (d *testDialer) ProbePerformance() {
+}
+
+func (d *testDialer) Stop() {
+	d.stopped = true
 }

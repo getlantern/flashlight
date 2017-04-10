@@ -3,19 +3,21 @@ package chained
 import (
 	"crypto/rsa"
 	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"net"
 	"net/http"
 	"runtime"
-	"strings"
+	"strconv"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
-	"git.torproject.org/pluggable-transports/obfs4.git/transports/base"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
 
+	"github.com/getlantern/ema"
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
@@ -35,26 +37,8 @@ var (
 	theForceAddr, theForceToken string
 )
 
-// Proxy represents a proxy Lantern client can connect to.
-type Proxy interface {
-	// Proxy server's protocol (http, https or obfs4)
-	Protocol() string
-	// Proxy server's network (tcp)
-	Network() string
-	// Proxy server's address in host:port format
-	Addr() string
-	// A human friendly string to identify the proxy
-	Label() string
-	// Is it ok to proxy non-encrypted traffic over it?
-	Trusted() bool
-	// How can we dial this proxy directly
-	DialServer() (net.Conn, error)
-	// Adapt HTTP request sent over to the proxy
-	AdaptRequest(*http.Request)
-}
-
-// CreateProxy creates a Proxy with supplied server info.
-func CreateProxy(name string, s *ChainedServerInfo) (Proxy, error) {
+// CreateDialer creates a Proxy (balancer.Dialer) with supplied server info.
+func CreateDialer(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (balancer.Dialer, error) {
 	if theForceAddr != "" && theForceToken != "" {
 		forceProxy(s)
 	}
@@ -66,20 +50,20 @@ func CreateProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 	}
 	switch s.PluggableTransport {
 	case "":
-		var base Proxy
+		var p *proxy
 		var err error
 		if s.Cert == "" {
 			log.Errorf("No Cert configured for %s, will dial with plain tcp", s.Addr)
-			base = newHTTPProxy(name, s)
+			p = newHTTPProxy(name, s, deviceID, proToken)
 		} else {
 			log.Tracef("Cert configured for  %s, will dial with tls", s.Addr)
-			base, err = newHTTPSProxy(name, s)
+			p, err = newHTTPSProxy(name, s, deviceID, proToken)
 		}
-		return base, err
+		return p, err
 	case "obfs4":
-		return newOBFS4Wrapper(newHTTPProxy(name, s), s)
+		return newOBFS4Proxy(name, s, deviceID, proToken)
 	case "lampshade":
-		return newLampshadeProxy(name, s)
+		return newLampshadeProxy(name, s, deviceID, proToken)
 	default:
 		return nil, errors.New("Unknown transport").With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
 	}
@@ -99,73 +83,52 @@ func forceProxy(s *ChainedServerInfo) {
 	s.PluggableTransport = ""
 }
 
-type httpProxy struct {
-	BaseProxy
+func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) *proxy {
+	return newProxy(name, "http", "tcp", s, deviceID, proToken, false, func(p *proxy) (net.Conn, error) {
+		op := ops.Begin("dial_to_chained").ChainedProxy(p.addr, p.protocol, p.network)
+		defer op.End()
+		elapsed := mtime.Stopwatch()
+		conn, err := p.tcpDial(op)(chainedDialTimeout)
+		op.DialTime(elapsed, err)
+		return conn, op.FailIf(err)
+	})
 }
 
-func newHTTPProxy(name string, s *ChainedServerInfo) Proxy {
-	return &httpProxy{BaseProxy: BaseProxy{name: name, protocol: "http", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: false}}
-}
-
-func (d httpProxy) DialServer() (net.Conn, error) {
-	op := ops.Begin("dial_to_chained").ChainedProxy(d.Addr(), d.Protocol(), d.Network())
-	defer op.End()
-	elapsed := mtime.Stopwatch()
-	conn, err := netx.DialTimeout("tcp", d.Addr(), chainedDialTimeout)
-	op.DialTime(elapsed, err)
-	return conn, op.FailIf(err)
-}
-
-type httpsProxy struct {
-	BaseProxy
-	x509cert     *x509.Certificate
-	sessionCache tls.ClientSessionCache
-}
-
-func newHTTPSProxy(name string, s *ChainedServerInfo) (Proxy, error) {
+func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 	}
-	return &httpsProxy{
-		BaseProxy:    BaseProxy{name: name, protocol: "https", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted},
-		x509cert:     cert.X509(),
-		sessionCache: tls.NewLRUClientSessionCache(1000),
-	}, nil
-}
+	x509cert := cert.X509()
+	sessionCache := tls.NewLRUClientSessionCache(1000)
+	return newProxy(name, "https", "tcp", s, deviceID, proToken, s.Trusted, func(p *proxy) (net.Conn, error) {
+		op := ops.Begin("dial_to_chained").ChainedProxy(p.addr, p.protocol, p.network)
+		defer op.End()
 
-func (d httpsProxy) DialServer() (net.Conn, error) {
-	op := ops.Begin("dial_to_chained").ChainedProxy(d.Addr(), d.Protocol(), d.Network())
-	defer op.End()
-
-	elapsed := mtime.Stopwatch()
-	conn, err := tlsdialer.DialTimeout(overheadDialer(false, netx.DialTimeout), chainedDialTimeout,
-		"tcp", d.Addr(), false, &tls.Config{
-			ClientSessionCache: d.sessionCache,
-			InsecureSkipVerify: true,
-		})
-	op.DialTime(elapsed, err)
-	if err != nil {
-		return nil, op.FailIf(err)
-	}
-	if !conn.ConnectionState().PeerCertificates[0].Equal(d.x509cert) {
-		if closeErr := conn.Close(); closeErr != nil {
-			log.Debugf("Error closing chained server connection: %s", closeErr)
+		elapsed := mtime.Stopwatch()
+		conn, err := tlsdialer.DialTimeout(overheadDialer(false, func(network, addr string, timeout time.Duration) (net.Conn, error) {
+			return p.tcpDial(op)(timeout)
+		}), chainedDialTimeout,
+			"tcp", p.addr, false, &tls.Config{
+				ClientSessionCache: sessionCache,
+				InsecureSkipVerify: true,
+			})
+		op.DialTime(elapsed, err)
+		if err != nil {
+			return nil, op.FailIf(err)
 		}
-		return nil, op.FailIf(log.Errorf("Server's certificate didn't match expected! Server had\n%v\nbut expected:\n%v",
-			conn.ConnectionState().PeerCertificates[0], d.x509cert))
-	}
-	return overheadWrapper(true)(conn, op.FailIf(err))
+		if !conn.ConnectionState().PeerCertificates[0].Equal(x509cert) {
+			if closeErr := conn.Close(); closeErr != nil {
+				log.Debugf("Error closing chained server connection: %s", closeErr)
+			}
+			return nil, op.FailIf(log.Errorf("Server's certificate didn't match expected! Server had\n%v\nbut expected:\n%v",
+				conn.ConnectionState().PeerCertificates[0], x509cert))
+		}
+		return overheadWrapper(true)(conn, op.FailIf(err))
+	}), nil
 }
 
-type obfs4Wrapper struct {
-	Proxy
-	trusted bool
-	cf      base.ClientFactory
-	args    interface{}
-}
-
-func newOBFS4Wrapper(p Proxy, s *ChainedServerInfo) (Proxy, error) {
+func newOBFS4Proxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
 	if s.Cert == "" {
 		return nil, fmt.Errorf("No Cert configured for obfs4 server, can't connect")
 	}
@@ -183,47 +146,24 @@ func newOBFS4Wrapper(p Proxy, s *ChainedServerInfo) (Proxy, error) {
 	if err != nil {
 		return nil, log.Errorf("Unable to parse client args: %v", err)
 	}
-	return obfs4Wrapper{p, s.Trusted, cf, args}, nil
+
+	return newProxy(name, "obfs4", "tcp", s, deviceID, proToken, s.Trusted, func(p *proxy) (net.Conn, error) {
+		op := ops.Begin("dial_to_chained").ChainedProxy(p.Addr(), p.Protocol(), p.Network())
+		defer op.End()
+		elapsed := mtime.Stopwatch()
+		dialFn := func(network, address string) (net.Conn, error) {
+			// We know for sure the network and address are the same as what
+			// the inner DailServer uses.
+			return p.tcpDial(op)(chainedDialTimeout)
+		}
+		// The proxy it wrapped already has timeout applied.
+		conn, err := cf.Dial("tcp", p.addr, dialFn, args)
+		op.DialTime(elapsed, err)
+		return overheadWrapper(true)(conn, op.FailIf(err))
+	}), nil
 }
 
-func (p obfs4Wrapper) Protocol() string {
-	return "obfs4"
-}
-
-func (p obfs4Wrapper) Trusted() bool {
-	// override the trusted flag of wrapped proxy.
-	return p.trusted
-}
-
-func (p obfs4Wrapper) Label() string {
-	label := p.Proxy.Label()
-	if p.trusted && !strings.HasSuffix(label, trustedSuffix) {
-		label = label + trustedSuffix
-	}
-	return label
-}
-
-func (p obfs4Wrapper) DialServer() (net.Conn, error) {
-	op := ops.Begin("dial_to_chained").ChainedProxy(p.Addr(), p.Protocol(), p.Network())
-	defer op.End()
-	elapsed := mtime.Stopwatch()
-	dialFn := func(network, address string) (net.Conn, error) {
-		// We know for sure the network and address are the same as what
-		// the inner DailServer uses.
-		return p.Proxy.DialServer()
-	}
-	// The proxy it wrapped already has timeout applied.
-	conn, err := p.cf.Dial("tcp", p.Addr(), dialFn, p.args)
-	op.DialTime(elapsed, err)
-	return overheadWrapper(true)(conn, op.FailIf(err))
-}
-
-type lampshadeProxy struct {
-	BaseProxy
-	dial func() (net.Conn, error)
-}
-
-func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
+func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
@@ -259,52 +199,93 @@ func newLampshadeProxy(name string, s *ChainedServerInfo) (Proxy, error) {
 		op.DialTime(elapsed, err)
 		return overheadWrapper(false)(conn, op.FailIf(err))
 	})
-	dial := func() (net.Conn, error) {
+	dial := func(p *proxy) (net.Conn, error) {
 		return overheadWrapper(true)(dialer.Dial())
 	}
 
-	proxy := &lampshadeProxy{
-		BaseProxy: BaseProxy{name: name, protocol: "lampshade", network: "tcp", addr: s.Addr, authToken: s.AuthToken, trusted: s.Trusted},
-		dial:      dial,
+	p := newProxy(name, "lampshade", "tcp", s, deviceID, proToken, s.Trusted, dial)
+
+	if pingInterval > 0 {
+		go func() {
+			for {
+				time.Sleep(pingInterval * 2)
+				ttfa := dialer.EMARTT()
+				p.emaLatencyLongTerm.SetDuration(ttfa)
+				p.emaLatencyShortTerm.SetDuration(ttfa)
+				log.Debugf("%v EMA RTT: %v", p.Label(), ttfa)
+			}
+		}()
 	}
 
-	go func() {
-		for {
-			time.Sleep(pingInterval * 2)
-			ttfa := dialer.EMARTT()
-			log.Debugf("%v EMA RTT: %v", proxy.Label(), ttfa)
-		}
-	}()
-
-	return proxy, nil
+	return p, nil
 }
 
-func (d lampshadeProxy) DialServer() (net.Conn, error) {
-	return d.dial()
+type proxy struct {
+	// Store int64's up front to ensure alignment of 64 bit words
+	// See https://golang.org/pkg/sync/atomic/#pkg-note-BUG
+	attempts            int64
+	successes           int64
+	consecSuccesses     int64
+	failures            int64
+	consecFailures      int64
+	abe                 int64 // Mbps scaled by 1000
+	bbrResetRequired    int64
+	name                string
+	protocol            string
+	network             string
+	addr                string
+	authToken           string
+	deviceID            string
+	proToken            func() string
+	trusted             bool
+	dialServer          func(*proxy) (net.Conn, error)
+	emaLatencyLongTerm  *ema.EMA
+	emaLatencyShortTerm *ema.EMA
+	mostRecentABETime   time.Time
+	forceRecheckCh      chan bool
+	closeCh             chan bool
+	mx                  sync.Mutex
 }
 
-type BaseProxy struct {
-	name      string
-	protocol  string
-	network   string
-	addr      string
-	trusted   bool
-	authToken string
+func newProxy(name, protocol, network string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(*proxy) (net.Conn, error)) *proxy {
+	p := &proxy{
+		name:                name,
+		protocol:            protocol,
+		network:             network,
+		addr:                s.Addr,
+		authToken:           s.AuthToken,
+		deviceID:            deviceID,
+		proToken:            proToken,
+		trusted:             trusted,
+		dialServer:          dialServer,
+		emaLatencyLongTerm:  ema.NewDuration(0, 0.05),
+		emaLatencyShortTerm: ema.NewDuration(0, 0.8),
+		bbrResetRequired:    1,
+		forceRecheckCh:      make(chan bool, 1),
+		closeCh:             make(chan bool, 1),
+		consecSuccesses:     1, // be optimistic
+	}
+	go p.runConnectivityChecks()
+	return p
 }
 
-func (p BaseProxy) Protocol() string {
+func (p *proxy) Protocol() string {
 	return p.protocol
 }
 
-func (p BaseProxy) Network() string {
+func (p *proxy) Network() string {
 	return p.network
 }
 
-func (p BaseProxy) Addr() string {
+func (p *proxy) Addr() string {
 	return p.addr
 }
 
-func (p BaseProxy) Label() string {
+func (p *proxy) Name() string {
+	return p.name
+}
+
+func (p *proxy) Label() string {
 	label := fmt.Sprintf("%-38v at %21v", p.name, p.addr)
 	if p.trusted {
 		label = label + trustedSuffix
@@ -312,14 +293,120 @@ func (p BaseProxy) Label() string {
 	return label
 }
 
-func (p BaseProxy) Trusted() bool {
+func (p *proxy) Trusted() bool {
 	return p.trusted
 }
 
-func (p BaseProxy) DialServer() (net.Conn, error) {
-	panic("should implement DialServer")
+func (p *proxy) AdaptRequest(req *http.Request) {
+	req.Header.Add(common.TokenHeader, p.authToken)
 }
 
-func (p BaseProxy) AdaptRequest(req *http.Request) {
-	req.Header.Add(common.TokenHeader, p.authToken)
+func (p *proxy) DialServer() (net.Conn, error) {
+	return p.dialServer(p)
+}
+
+func (p *proxy) EstLatency() time.Duration {
+	return p.emaLatencyShortTerm.GetDuration()
+}
+
+// EstBandwidth implements the method from the balancer.Dialer interface.
+//
+// Bandwidth estimates are provided to clients following the below protocol:
+//
+// 1. On every inbound connection, we interrogate BBR congestion control
+//    parameters to determine the estimated bandwidth, extrapolate this to what
+//    we would expected for a 2.5 MB transfer using a linear estimation based on
+//    how much data has actually been transferred on the connection and then
+//    maintain an exponential moving average (EMA) of these estimates per remote
+//    (client) IP.
+// 2. If a client includes HTTP header "X-BBR: <anything>", we include header
+//    X-BBR-ABE: <EMA bandwidth in Mbps> in the HTTP response.
+// 3. If a client includes HTTP header "X-BBR: clear", we clear stored estimate
+//    data for the client's IP.
+func (p *proxy) EstBandwidth() float64 {
+	return float64(atomic.LoadInt64(&p.abe)) / 1000
+}
+
+func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64, failures int64, consecFailures int64, emaLatencyLongTerm time.Duration, emaLatencyShortTerm time.Duration, mostRecentABETime time.Time, abe int64) {
+	p.mx.Lock()
+	atomic.StoreInt64(&p.attempts, attempts)
+	atomic.StoreInt64(&p.successes, successes)
+	atomic.StoreInt64(&p.consecSuccesses, consecSuccesses)
+	atomic.StoreInt64(&p.failures, failures)
+	atomic.StoreInt64(&p.consecFailures, consecFailures)
+	p.emaLatencyLongTerm.SetDuration(emaLatencyLongTerm)
+	p.emaLatencyShortTerm.SetDuration(emaLatencyShortTerm)
+	p.mostRecentABETime = mostRecentABETime
+	p.abe = abe
+	p.mx.Unlock()
+}
+
+func (p *proxy) collectBBRInfo(reqTime time.Time, resp *http.Response) {
+	_abe := resp.Header.Get("X-Bbr-Abe")
+	if _abe != "" {
+		resp.Header.Del("X-Bbr-Abe")
+		abe, err := strconv.ParseFloat(_abe, 64)
+		if err == nil {
+			// Only update ABE if the request was more recent than that for the prior
+			// value.
+			p.mx.Lock()
+			if reqTime.After(p.mostRecentABETime) {
+				log.Debugf("%v: X-BBR-ABE: %.2f Mbps", p.Label(), abe)
+				atomic.StoreInt64(&p.abe, int64(abe*1000))
+				p.mostRecentABETime = reqTime
+			}
+			p.mx.Unlock()
+		}
+	}
+}
+
+func (p *proxy) shouldResetBBR() bool {
+	return atomic.CompareAndSwapInt64(&p.bbrResetRequired, 1, 0)
+}
+
+func (p *proxy) forceRecheck() {
+	select {
+	case p.forceRecheckCh <- true:
+		// requested
+	default:
+		// recheck already requested, ignore
+	}
+}
+
+func (p *proxy) tcpDial(op *ops.Op) func(timeout time.Duration) (net.Conn, error) {
+	return func(timeout time.Duration) (net.Conn, error) {
+		estLatency, estBandwidth := p.EstLatency(), p.EstBandwidth()
+		if estLatency > 0 {
+			op.Set("est_rtt", estLatency.Seconds()/1000)
+		}
+		if estBandwidth > 0 {
+			op.Set("est_mbps", estBandwidth)
+		}
+		conn, delta, err := p.dialTCP(timeout)
+		op.TCPDialTime(delta, err)
+		return overheadWrapper(false)(conn, err)
+	}
+}
+
+func (p *proxy) dialTCP(timeout time.Duration) (net.Conn, time.Duration, error) {
+	elapsed := mtime.Stopwatch()
+	conn, err := netx.DialTimeout("tcp", p.addr, timeout)
+	delta := elapsed()
+	if err == nil {
+		p.mx.Lock()
+		longTerm := p.emaLatencyLongTerm.UpdateDuration(delta)
+		shortTerm := p.emaLatencyShortTerm.UpdateDuration(delta)
+		ratio := float64(shortTerm) / float64(longTerm)
+		if ratio < 0.5 {
+			log.Debugf("Latency fell dramatically from %v to %v, reset bandwidth calculations", longTerm, shortTerm)
+			atomic.StoreInt64(&p.abe, 0)
+			p.emaLatencyLongTerm.SetDuration(shortTerm)
+			atomic.StoreInt64(&p.bbrResetRequired, 1)
+		} else if ratio > 2 {
+			log.Debugf("Latency rose dramatically from %v to %v, force proxy recheck", longTerm, shortTerm)
+			p.forceRecheck()
+		}
+		p.mx.Unlock()
+	}
+	return conn, delta, err
 }

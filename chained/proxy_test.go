@@ -11,9 +11,9 @@ var (
 )
 
 func TestTrusted(t *testing.T) {
-	p, _ := CreateProxy("test-proxy", &ChainedServerInfo{Addr: "1.1.1.1", AuthToken: "abcd", Cert: "", PluggableTransport: ""})
-	assert.False(t, p.Trusted(), "HTTP proxy should not be trusted")
-	assert.NotContains(t, p.Label(), trustedSuffix)
+	d, _ := CreateDialer("test-proxy", &ChainedServerInfo{Addr: "1.1.1.1", AuthToken: "abcd", Cert: "", PluggableTransport: ""}, "deviceid", func() string { return "protoken" })
+	assert.False(t, d.Trusted(), "HTTP proxy should not be trusted")
+	assert.NotContains(t, d.Label(), trustedSuffix)
 
 	si := &ChainedServerInfo{Addr: "1.1.1.1", AuthToken: "abcd", Cert: obfs4Cert,
 		PluggableTransport: "obfs4",
@@ -21,12 +21,12 @@ func TestTrusted(t *testing.T) {
 			"iat-mode": "0",
 		},
 	}
-	p, _ = CreateProxy("test-proxy", si)
-	assert.False(t, p.Trusted(), "OBFS4 proxy should not be trusted by default")
-	assert.NotContains(t, p.Label(), trustedSuffix)
+	d, _ = CreateDialer("test-proxy", si, "deviceid", func() string { return "protoken" })
+	assert.False(t, d.Trusted(), "OBFS4 proxy should not be trusted by default")
+	assert.NotContains(t, d.Label(), trustedSuffix)
 
 	si.Trusted = true
-	p, _ = CreateProxy("test-proxy", si)
-	assert.True(t, p.Trusted(), "OBFS4 proxy should be trusted if explicitly declared")
-	assert.Contains(t, p.Label(), trustedSuffix)
+	d, _ = CreateDialer("test-proxy", si, "deviceid", func() string { return "protoken" })
+	assert.True(t, d.Trusted(), "OBFS4 proxy should be trusted if explicitly declared")
+	assert.Contains(t, d.Label(), trustedSuffix)
 }

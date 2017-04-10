@@ -7,12 +7,6 @@ import (
 	"github.com/getlantern/flashlight/chained"
 )
 
-var (
-	bal = balancer.New(&balancer.Opts{
-		Strategy: balancer.QualityFirst,
-	})
-)
-
 // initBalancer takes hosts from cfg.ChainedServers and it uses them to create a
 // balancer.
 func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo, deviceID string) error {
@@ -22,7 +16,7 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 
 	// The dialers slice must be large enough to handle all chained and obfs4
 	// servers.
-	dialers := make([]*balancer.Dialer, 0, len(proxies))
+	dialers := make([]balancer.Dialer, 0, len(proxies))
 
 	// Add chained (CONNECT proxy) servers.
 	log.Debugf("Adding %d chained servers", len(proxies))
@@ -40,6 +34,8 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 		dialers = append(dialers, dialer)
 	}
 
-	bal.Reset(dialers...)
+	chained.TrackStatsFor(dialers)
+	client.bal.Reset(dialers...)
+
 	return nil
 }
