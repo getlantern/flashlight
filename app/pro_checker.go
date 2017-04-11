@@ -1,24 +1,16 @@
 package app
 
 import (
-	"sync"
 	"time"
 
-	"github.com/getlantern/flashlight/common"
 	proClient "github.com/getlantern/flashlight/pro/client"
 )
-
-var configureProClientOnce sync.Once
 
 // isProUser blocks itself to check if current user is Pro, or !ok if error
 // happens getting user status from pro-server. The result is not cached
 // because the user can become Pro or free at any time. It waits until
 // the user ID becomes non-zero.
 func isProUser() (isPro bool, ok bool) {
-	configureProClientOnce.Do(func() {
-		proClient.Configure(stagingMode, common.PackageVersion)
-	})
-
 	var userID int
 	for {
 		userID = int(settings.GetUserID())

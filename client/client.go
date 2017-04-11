@@ -20,11 +20,10 @@ import (
 	"github.com/getlantern/go-socks5"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
-	"github.com/getlantern/httpseverywhere"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 
-	"github.com/getlantern/flashlight/bbr"
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/ops"
@@ -68,7 +67,7 @@ type Client struct {
 	writeTimeout time.Duration
 
 	// Balanced CONNECT dialers.
-	bal eventual.Value
+	bal *balancer.Balancer
 
 	interceptCONNECT proxy.Interceptor
 	interceptHTTP    proxy.Interceptor
@@ -78,8 +77,8 @@ type Client struct {
 	proxyAll       func() bool
 	proTokenGetter func() string
 
-	easylist       easylist.List
-	rewriteToHTTPS httpseverywhere.Rewrite
+	easylist easylist.List
+	// rewriteToHTTPS httpseverywhere.Rewrite
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -87,15 +86,15 @@ type Client struct {
 // all traffic, and another function to get Lantern Pro token when required.
 func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
 	client := &Client{
-		bal:            eventual.NewValue(),
+		bal:            balancer.New(),
 		proxyAll:       proxyAll,
 		proTokenGetter: proTokenGetter,
-		rewriteToHTTPS: httpseverywhere.Default(),
+		// rewriteToHTTPS: httpseverywhere.Default(),
 	}
 
-	keepAliveIdleTimeout := idleTimeout - 5*time.Second
+	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
 	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers.Pool, false, client.dialCONNECT)
-	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, bbr.OnResponse, errorResponse, client.dialHTTP)
+	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
 	client.initEasyList()
 	return client
 }
@@ -296,7 +295,7 @@ func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, p
 			// case.
 			proto = "connect"
 		}
-		return bal.Dial(proto, addr)
+		return client.bal.Dial(proto, addr)
 	})
 	// TODO: pass context down to all layers.
 	chDone := make(chan bool)

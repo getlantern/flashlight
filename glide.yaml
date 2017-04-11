@@ -109,8 +109,64 @@ import:
   - adblock
 - package: github.com/getlantern/lampshade
 - package: github.com/Yawning/chacha20
+- package: gopkg.in/gemnasium/logrus-airbrake-hook.v2
+  version: v2.1.1
+- package: github.com/aristanetworks/glog
+- package: github.com/openconfig/reference
+  subpackages:
+  - rpc/gnmi
+  - rpc/openconfig
+- package: github.com/Shopify/sarama
+  version: v1.11.0
+- package: gopkg.in/redis.v4
+- package: github.com/cloudfoundry/gosigar
+- package: github.com/getlantern/vtime
+- package: github.com/oxtoacart/emsort
+- package: github.com/rickar/props
+- package: github.com/shirou/gopsutil
+  version: v2.17.02
+  subpackages:
+  - process
+- package: github.com/spaolacci/murmur3
+- package: github.com/getlantern/redis
+- package: github.com/gorilla/mux
+- package: github.com/gorilla/securecookie
+- package: github.com/retailnext/hllpp
+- package: github.com/vharitonsky/iniflags
+- package: github.com/Workiva/go-datastructures
+  subpackages:
+  - trie/yfast
+- package: github.com/getlantern/go-loggly
+- package: github.com/chzyer/readline
+- package: github.com/mailgun/multibuf
+- package: github.com/vulcand/predicate
+- package: github.com/codahale/hdrhistogram
+- package: github.com/mailgun/timetools
+- package: github.com/mailgun/ttlmap
+- package: github.com/elazarl/goproxy
+- package: github.com/inconshreveable/go-vhost
+- package: github.com/stathat/go
+- package: github.com/streamrail/uap-go
+  subpackages:
+  - uaparser
+- package: gopkg.in/yaml.v2
+- package: golang.org/x/text
+  subpackages:
+  - encoding
+  - encoding/charmap
+  - encoding/htmlindex
+  - transform
+- package: golang.org/x/oauth2
+  subpackages:
+  - google
+  - jwt
+- package: github.com/golang/mock
+  subpackages:
+  - gomock
+- package: github.com/golang/glog
 - package: github.com/getlantern/httpseverywhere
 testImport:
 - package: github.com/stretchr/testify
   subpackages:
   - assert
+- package: github.com/gonum/stat

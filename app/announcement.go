@@ -7,6 +7,7 @@ import (
 	"github.com/getlantern/notifier"
 
 	"github.com/getlantern/flashlight/announcement"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ui"
 )
 
@@ -23,7 +24,7 @@ import (
 func AnnouncementsLoop(interval time.Duration, proChecker func() (bool, bool)) (stop func()) {
 	chStop := make(chan bool)
 	t := time.NewTicker(interval)
-	isStaging := stagingMode == "true"
+	isStaging := common.Staging
 	checker := func() {
 		isPro, ok := proChecker()
 		if !ok {
