@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/getlantern/flashlight"
@@ -28,13 +27,9 @@ import (
 var (
 	log      = golog.LoggerFor("flashlight.app")
 	settings *Settings
-	// if true, run Lantern against our staging infrastructure. This is set by
-	// the linker using -ldflags
-	stagingMode = "false"
 )
 
 func init() {
-	log.Debugf("****************************** stagingMode: %v", stagingMode)
 
 	autoupdate.Version = common.PackageVersion
 	autoupdate.PublicKey = []byte(packagePublicKey)
@@ -52,12 +47,7 @@ type App struct {
 
 // Init initializes the App's state
 func (app *App) Init() {
-	staging, err := strconv.ParseBool(stagingMode)
-	if err == nil {
-		app.Flags["staging"] = staging
-	} else {
-		app.Flags["staging"] = false
-	}
+	app.Flags["staging"] = common.Staging
 	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
 	app.exitCh = make(chan error, 1)
 	// use buffered channel to avoid blocking the caller of 'AddExitFunc'
@@ -103,7 +93,6 @@ func (app *App) Run() error {
 			listenAddr,
 			socksAddr,
 			app.Flags["configdir"].(string),
-			app.Flags["stickyconfig"].(bool),
 			settings.GetProxyAll,
 			settings.IsAutoReport,
 			app.Flags,

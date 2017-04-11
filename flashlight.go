@@ -36,7 +36,6 @@ var (
 func Run(httpProxyAddr string,
 	socksProxyAddr string,
 	configDir string,
-	stickyConfig bool,
 	proxyAll func() bool,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},

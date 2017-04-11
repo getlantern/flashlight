@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -55,7 +56,7 @@ func TestProxy(t *testing.T) {
 	if assert.NotNil(t, m.req, "should pass through non-OPTIONS requests to origin server") {
 		t.Log(m.req)
 		assert.Empty(t, m.req.Header.Get("Origin"), "should strip off Origin header")
-		ddfURL := fmt.Sprintf("http://%s/abc", proAPIDDFHost)
+		ddfURL := fmt.Sprintf("http://%s/abc", common.ProAPIDDFHost)
 		assert.Equal(t, ddfURL, m.req.Header.Get("Lantern-Fronted-URL"), "should set fronted URL")
 	}
 }
