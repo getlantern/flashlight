@@ -14,8 +14,6 @@ import (
 )
 
 var (
-	statsFile = filepath.Join(appdir.General("Lantern"), "proxystats.csv")
-
 	statsTrackingDialers = make(map[string]balancer.Dialer)
 
 	statsMx sync.Mutex
@@ -52,6 +50,8 @@ func TrackStatsFor(dialers []balancer.Dialer) {
 }
 
 func applyExistingStats(dialers []balancer.Dialer) {
+	statsFile := statsFilePath()
+
 	dialersMap := make(map[string]balancer.Dialer, len(dialers))
 	for _, d := range dialers {
 		dialersMap[d.Addr()] = d
@@ -155,6 +155,8 @@ func persistStats() {
 }
 
 func doPersistStats(dialers []balancer.Dialer) {
+	statsFile := statsFilePath()
+
 	out, err := os.OpenFile(fmt.Sprintf("%v.tmp", statsFile), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Errorf("Unable to create temp file to save proxystats.csv: %v", err)
@@ -188,4 +190,8 @@ func doPersistStats(dialers []balancer.Dialer) {
 	}
 
 	log.Debugf("Saved proxy stats to %v", statsFile)
+}
+
+func statsFilePath() string {
+	return filepath.Join(appdir.General("Lantern"), "proxystats.csv")
 }
