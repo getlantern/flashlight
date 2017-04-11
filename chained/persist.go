@@ -3,7 +3,6 @@ package chained
 import (
 	"encoding/csv"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -156,7 +155,7 @@ func persistStats() {
 }
 
 func doPersistStats(dialers []balancer.Dialer) {
-	out, err := ioutil.TempFile("", "proxystats")
+	out, err := os.OpenFile(fmt.Sprintf("%v.tmp", statsFile), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Errorf("Unable to create temp file to save proxystats.csv: %v", err)
 		return
