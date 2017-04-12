@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	isSysproxyOff = int32(0)
+	isSysproxyOn = int32(0)
 )
 
 func setUpSysproxyTool() error {
@@ -43,11 +43,11 @@ func setUpSysproxyTool() error {
 
 func sysproxyOn() {
 	doSysproxyOn()
-	atomic.StoreInt32(&isSysproxyOff, 1)
+	atomic.StoreInt32(&isSysproxyOn, 1)
 }
 
 func sysproxyOff() {
-	if atomic.CompareAndSwapInt32(&isSysproxyOff, 1, 0) {
+	if atomic.CompareAndSwapInt32(&isSysproxyOn, 1, 0) {
 		doSysproxyOff()
 	}
 }
