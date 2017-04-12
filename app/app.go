@@ -127,7 +127,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			app.AddExitFunc(finishProfiling)
 		}
 
-		if err := setUpPacTool(listenAddr); err != nil {
+		if err := setUpPacTool(); err != nil {
 			app.Exit(err)
 		}
 

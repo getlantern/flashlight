@@ -4,25 +4,21 @@ import (
 	"fmt"
 	"path/filepath"
 	"runtime"
-	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/getlantern/filepersist"
+	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/sysproxy"
 
 	"github.com/getlantern/flashlight/icons"
 )
 
 var (
-	isPacOn   = int32(0)
-	proxyAddr string
-	cfgMutex  sync.RWMutex
+	isPacOn = int32(0)
 )
 
-func setUpPacTool(addr string) error {
-	cfgMutex.Lock()
-	proxyAddr = addr
-	cfgMutex.Unlock()
+func setUpPacTool() error {
 	var iconFile string
 	if runtime.GOOS == "darwin" {
 		// We have to use a short filepath here because Cocoa won't display the
@@ -59,14 +55,24 @@ func pacOff() {
 }
 
 func doPACOn() {
-	err := sysproxy.On(getProxyAddr())
+	addr, found := getProxyAddr()
+	if !found {
+		log.Errorf("Unable to set lantern as system proxy, no proxy address available")
+		return
+	}
+	err := sysproxy.On(addr)
 	if err != nil {
 		log.Errorf("Unable to set lantern as system proxy: %v", err)
 	}
 }
 
 func doPACOff() {
-	err := sysproxy.Off(getProxyAddr())
+	addr, found := getProxyAddr()
+	if !found {
+		log.Errorf("Unable to unset lantern as system proxy, no proxy address available")
+		return
+	}
+	err := sysproxy.Off(addr)
 	if err != nil {
 		log.Errorf("Unable to unset lantern as system proxy: %v", err)
 		return
@@ -74,9 +80,11 @@ func doPACOff() {
 	log.Debug("Unset lantern as system proxy")
 }
 
-func getProxyAddr() string {
-	cfgMutex.RLock()
-	addr := proxyAddr
-	cfgMutex.RUnlock()
-	return addr
+func getProxyAddr() (addr string, found bool) {
+	var _addr interface{}
+	_addr, found = client.Addr(5 * time.Minute)
+	if found {
+		addr = _addr.(string)
+	}
+	return
 }
