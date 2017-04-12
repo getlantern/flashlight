@@ -58,7 +58,7 @@ func doSysproxyOn() {
 		log.Errorf("Unable to set lantern as system proxy, no proxy address available")
 		return
 	}
-	log.Debug("Setting lantern as system proxy at: %v", addr)
+	log.Debugf("Setting lantern as system proxy at: %v", addr)
 	err := sysproxy.On(addr)
 	if err != nil {
 		log.Errorf("Unable to set lantern as system proxy: %v", err)
