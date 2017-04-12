@@ -164,10 +164,13 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			// off.
 			//
 			// See: https://github.com/getlantern/lantern/issues/2776
+			log.Debug("Requested clearing of proxy settings")
 			_, port, splitErr := net.SplitHostPort(listenAddr)
 			if splitErr == nil && port != "0" {
 				log.Debugf("Clearing system proxy settings for: %v", listenAddr)
 				doSysproxyOffFor(listenAddr)
+			} else {
+				log.Debugf("Can't clear proxy settings for: %v", listenAddr)
 			}
 			app.Exit(nil)
 		}
