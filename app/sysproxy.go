@@ -15,10 +15,10 @@ import (
 )
 
 var (
-	isPacOn = int32(0)
+	isSysproxyOff = int32(0)
 )
 
-func setUpPacTool() error {
+func setUpSysproxyTool() error {
 	var iconFile string
 	if runtime.GOOS == "darwin" {
 		// We have to use a short filepath here because Cocoa won't display the
@@ -36,25 +36,25 @@ func setUpPacTool() error {
 	}
 	err := sysproxy.EnsureHelperToolPresent("sysproxy-cmd", "Lantern would like to be your system proxy", iconFile)
 	if err != nil {
-		return fmt.Errorf("Unable to set up pac setting tool: %v", err)
+		return fmt.Errorf("Unable to set up sysproxy setting tool: %v", err)
 	}
 	return nil
 }
 
-func pacOn() {
+func sysproxyOn() {
 	log.Debug("Setting lantern as system proxy")
-	doPACOn()
-	atomic.StoreInt32(&isPacOn, 1)
+	doSysproxyOn()
+	atomic.StoreInt32(&isSysproxyOff, 1)
 }
 
-func pacOff() {
-	if atomic.CompareAndSwapInt32(&isPacOn, 1, 0) {
+func sysproxyOff() {
+	if atomic.CompareAndSwapInt32(&isSysproxyOff, 1, 0) {
 		log.Debug("Unsetting lantern as system proxy")
-		doPACOff()
+		doSysproxyOff()
 	}
 }
 
-func doPACOn() {
+func doSysproxyOn() {
 	addr, found := getProxyAddr()
 	if !found {
 		log.Errorf("Unable to set lantern as system proxy, no proxy address available")
@@ -66,12 +66,16 @@ func doPACOn() {
 	}
 }
 
-func doPACOff() {
+func doSysproxyOff() {
 	addr, found := getProxyAddr()
 	if !found {
 		log.Errorf("Unable to unset lantern as system proxy, no proxy address available")
 		return
 	}
+	doSysproxyOffFor(addr)
+}
+
+func doSysproxyOffFor(addr string) {
 	err := sysproxy.Off(addr)
 	if err != nil {
 		log.Errorf("Unable to unset lantern as system proxy: %v", err)
