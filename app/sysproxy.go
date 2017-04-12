@@ -63,6 +63,7 @@ func doSysproxyOn() {
 	if err != nil {
 		log.Errorf("Unable to set lantern as system proxy: %v", err)
 	}
+	log.Debug("Finished setting lantern as system proxy")
 }
 
 func doSysproxyOff() {
