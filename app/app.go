@@ -127,7 +127,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			app.AddExitFunc(finishProfiling)
 		}
 
-		if err := setUpPacTool(); err != nil {
+		if err := setUpSysproxyTool(); err != nil {
 			app.Exit(err)
 		}
 
@@ -143,8 +143,8 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		if uiaddr == "" {
 			// stick with the last one if not specified from command line.
 			if uiaddr = settings.GetUIAddr(); uiaddr != "" {
-				host, port, err := net.SplitHostPort(uiaddr)
-				if err != nil {
+				host, port, splitErr := net.SplitHostPort(uiaddr)
+				if splitErr != nil {
 					log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
 					uiaddr = ""
 				}
@@ -158,21 +158,23 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			}
 		}
 
-		if uiaddr != "" && app.Flags["clear-proxy-settings"].(bool) {
+		if app.Flags["clear-proxy-settings"].(bool) {
 			// This is a workaround that attempts to fix a Windows-only problem where
 			// Lantern was unable to clean the system's proxy settings before logging
 			// off.
 			//
 			// See: https://github.com/getlantern/lantern/issues/2776
-			url := fmt.Sprintf("http://%s/proxy_on.pac", uiaddr)
-			log.Debugf("Will clear proxy settings if it is prefixed with %s", url)
-			doPACOff()
+			_, port, splitErr := net.SplitHostPort(listenAddr)
+			if splitErr == nil && port != "0" {
+				log.Debugf("Clearing system proxy settings for: %v", listenAddr)
+				doSysproxyOffFor(listenAddr)
+			}
 			app.Exit(nil)
 		}
 
 		if uiaddr != "" {
 			// Is something listening on that port?
-			if err := app.showExistingUI(uiaddr); err == nil {
+			if showErr := app.showExistingUI(uiaddr); showErr == nil {
 				log.Debug("Lantern already running, showing existing UI")
 				app.Exit(nil)
 			}
@@ -258,14 +260,14 @@ func (app *App) OnSettingChange(attr SettingName, cb func(interface{})) {
 
 func (app *App) afterStart() {
 	if settings.GetSystemProxy() {
-		pacOn()
+		sysproxyOn()
 	}
 	app.OnSettingChange(SNSystemProxy, func(val interface{}) {
 		enable := val.(bool)
 		if enable {
-			pacOn()
+			sysproxyOn()
 		} else {
-			pacOff()
+			sysproxyOff()
 		}
 	})
 
@@ -274,7 +276,7 @@ func (app *App) afterStart() {
 		go launcher.CreateLaunchFile(enable)
 	})
 
-	app.AddExitFunc(pacOff)
+	app.AddExitFunc(sysproxyOff)
 	if app.ShowUI && !app.Flags["startup"].(bool) {
 		// Launch a browser window with Lantern but only after the pac
 		// URL and the proxy server are all up and running to avoid
