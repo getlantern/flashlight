@@ -42,14 +42,12 @@ func setUpSysproxyTool() error {
 }
 
 func sysproxyOn() {
-	log.Debug("Setting lantern as system proxy")
 	doSysproxyOn()
 	atomic.StoreInt32(&isSysproxyOff, 1)
 }
 
 func sysproxyOff() {
 	if atomic.CompareAndSwapInt32(&isSysproxyOff, 1, 0) {
-		log.Debug("Unsetting lantern as system proxy")
 		doSysproxyOff()
 	}
 }
@@ -60,6 +58,7 @@ func doSysproxyOn() {
 		log.Errorf("Unable to set lantern as system proxy, no proxy address available")
 		return
 	}
+	log.Debug("Setting lantern as system proxy at: %v", addr)
 	err := sysproxy.On(addr)
 	if err != nil {
 		log.Errorf("Unable to set lantern as system proxy: %v", err)
@@ -76,6 +75,7 @@ func doSysproxyOff() {
 }
 
 func doSysproxyOffFor(addr string) {
+	log.Debugf("Unsetting lantern as system proxy at: %v", addr)
 	err := sysproxy.Off(addr)
 	if err != nil {
 		log.Errorf("Unable to unset lantern as system proxy: %v", err)
