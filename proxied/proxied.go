@@ -28,7 +28,6 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/flashlight/util"
 )
 
 const (
@@ -248,8 +247,9 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 		start := time.Now()
 		if resp, err := request(!df.cf.parallel, ddfRT, frontedReq); err == nil {
 			elapsed := time.Since(start)
-			log.Debugf("Fronted request succeeded in %v", elapsed)
-			util.DumpResponse(resp)
+			log.Debugf("Fronted request succeeded (%s) in %v",
+				resp.Status, elapsed)
+			// util.DumpResponse(resp) can be called here to examine the response
 			atomic.StoreInt64(&frontedRTT, int64(elapsed))
 			switchToChainedIfRequired()
 		}
