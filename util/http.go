@@ -6,7 +6,7 @@ import (
 )
 
 func DumpRequest(resp *http.Response) {
-	dump, err := httputil.DumpResponse(resp, true)
+	dump, err := httputil.DumpRequest(resp, true)
 	if err != nil {
 		log.Error(err)
 		return
