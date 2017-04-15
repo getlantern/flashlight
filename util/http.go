@@ -15,7 +15,7 @@ func DumpRequest(req *http.Request) {
 	log.Debugf("%q", dump)
 }
 
-func DumpResponse(resp *http.Response, body bool) {
+func DumpResponse(resp *http.Response) {
 	dump, err := httputil.DumpResponse(resp, true)
 	if err != nil {
 		log.Error(err)
