@@ -28,6 +28,7 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/util"
 )
 
 const (
@@ -197,21 +198,21 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 	responses := make(chan *http.Response, 2)
 	errs := make(chan error, 2)
 
-	request := func(asIs bool, rt http.RoundTripper, req *http.Request) error {
+	request := func(asIs bool, rt http.RoundTripper, req *http.Request) (*http.Response, error) {
 		resp, err := rt.RoundTrip(req)
 		if err != nil {
 			errs <- err
-			return err
+			return nil, err
 		}
 		op.Response(resp)
 		if asIs {
 			log.Debug("Passing response as is")
 			responses <- resp
-			return nil
+			return resp, nil
 		} else if success(resp) {
 			log.Debugf("Got successful HTTP call!")
 			responses <- resp
-			return nil
+			return resp, nil
 		}
 		// If the local proxy can't connect to any upstream proxies, for example,
 		// it will return a 502.
@@ -220,7 +221,7 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 			_ = resp.Body.Close()
 		}
 		errs <- err
-		return err
+		return nil, err
 	}
 
 	frontedRTT := int64(100000 * time.Hour)
@@ -245,9 +246,10 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 		op.ProxyType(ops.ProxyFronted)
 		log.Debugf("Sending DDF request. With body? %v", frontedReq.Body != nil)
 		start := time.Now()
-		if err := request(!df.cf.parallel, ddfRT, frontedReq); err == nil {
+		if resp, err := request(!df.cf.parallel, ddfRT, frontedReq); err == nil {
 			elapsed := time.Since(start)
 			log.Debugf("Fronted request succeeded in %v", elapsed)
+			util.DumpResponse(resp)
 			atomic.StoreInt64(&frontedRTT, int64(elapsed))
 			switchToChainedIfRequired()
 		}
@@ -257,7 +259,7 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 		op.ProxyType(ops.ProxyChained)
 		log.Debugf("Sending chained request. With body? %v", req.Body != nil)
 		start := time.Now()
-		if err := request(false, chainedRT, req); err == nil {
+		if _, err := request(false, chainedRT, req); err == nil {
 			elapsed := time.Since(start)
 			log.Debugf("Chained request succeeded in %v", elapsed)
 			atomic.StoreInt64(&chainedRTT, int64(elapsed))
