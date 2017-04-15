@@ -5,8 +5,8 @@ import (
 	"net/http/httputil"
 )
 
-func DumpRequest(resp *http.Response) {
-	dump, err := httputil.DumpRequest(resp, true)
+func DumpRequest(req *http.Request) {
+	dump, err := httputil.DumpRequest(req, true)
 	if err != nil {
 		log.Error(err)
 		return
