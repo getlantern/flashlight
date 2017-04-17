@@ -138,12 +138,17 @@ func (client *Client) initEasyList() {
 
 func (client *Client) reportProxyLocationLoop() {
 	ch := client.bal.OnActiveDialer()
+	var activeProxy string
 	go func() {
 		for {
 			proxy := <-ch
-			loc := proxyLoc(proxy.Name())
+			if proxy.Name() == activeProxy {
+				continue
+			}
+			activeProxy = proxy.Name()
+			loc := proxyLoc(activeProxy)
 			if loc == nil {
-				log.Errorf("Couldn't find location for %s", proxy.Name())
+				log.Errorf("Couldn't find location for %s", activeProxy)
 				continue
 			}
 			client.statsSink.SetActiveProxyLocation(

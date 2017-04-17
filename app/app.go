@@ -39,9 +39,11 @@ func init() {
 
 // App is the core of the Lantern desktop application, in the form of a library.
 type App struct {
-	ShowUI      bool
-	Flags       map[string]interface{}
-	exitCh      chan error
+	ShowUI    bool
+	Flags     map[string]interface{}
+	exitCh    chan error
+	statsSink *statsSink
+
 	chExitFuncs chan func()
 }
 
@@ -53,6 +55,7 @@ func (app *App) Init() {
 	// use buffered channel to avoid blocking the caller of 'AddExitFunc'
 	// the number 10 is arbitrary
 	app.chExitFuncs = make(chan func(), 10)
+	app.statsSink = &statsSink{}
 }
 
 // LogPanicAndExit logs a panic and then exits the application.
@@ -100,7 +103,7 @@ func (app *App) Run() error {
 			app.afterStart,
 			app.onConfigUpdate,
 			settings,
-			statsSink{},
+			app.statsSink,
 			app.Exit,
 			settings.GetDeviceID())
 		if err != nil {
@@ -190,6 +193,10 @@ func (app *App) beforeStart() bool {
 		app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
 	}
 	settings.SetUIAddr(ui.GetUIAddr())
+
+	if err = app.statsSink.StartService(); err != nil {
+		log.Errorf("Unable to serve stats sink to UI: %v", err)
+	}
 
 	setupUserSignal()
 

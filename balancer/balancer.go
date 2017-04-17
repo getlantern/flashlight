@@ -192,8 +192,8 @@ func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", network, addr, dialAttempts)
 }
 
-// OnActiveDialer gets a channel to get the last dialer the balancer was using
-// only one call is allowed.
+// OnActiveDialer returns the channel of the last dialer the balancer was using.
+// Can be called only once.
 func (b *Balancer) OnActiveDialer() <-chan Dialer {
 	return b.onActiveDialer
 }
