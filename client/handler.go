@@ -51,6 +51,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 
 func (client *Client) easyblock(resp http.ResponseWriter, req *http.Request, isConnect bool) {
 	log.Debugf("Blocking %v on %v", req.URL, req.Host)
+	client.statsSink.IncAdsBlocked()
 	if isConnect {
 		// For CONNECT requests, we pretend that it's okay but then we don't do
 		// anything afterwards. We have to do this because otherwise Chrome marks
@@ -64,6 +65,7 @@ func (client *Client) easyblock(resp http.ResponseWriter, req *http.Request, isC
 func (client *Client) redirect(resp http.ResponseWriter, req *http.Request, httpsURL string, op *ops.Op) {
 	log.Debugf("httpseverywhere redirecting to %v", httpsURL)
 	op.Set("forcedhttps", true)
+	client.statsSink.IncHTTPSUpgrades()
 	// Tell the browser to only cache the redirect for a day. The browser
 	// is generally caches permanent redirects, well, permanently but will also
 	// follow caching rules.

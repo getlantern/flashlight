@@ -100,6 +100,7 @@ func (app *App) Run() error {
 			app.afterStart,
 			app.onConfigUpdate,
 			settings,
+			statsSink{},
 			app.Exit,
 			settings.GetDeviceID())
 		if err != nil {

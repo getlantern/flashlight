@@ -80,14 +80,15 @@ type Dialer interface {
 
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
-	lastDialTime int64 // not used anymore, but makes sure we're aligned on 64bit boundary
-	nextTimeout  *ema.EMA
-	mu           sync.RWMutex
-	dialers      sortedDialers
-	trusted      sortedDialers
-	closeCh      chan bool
-	stopStatsCh  chan bool
-	forceStatsCh chan bool
+	lastDialTime   int64 // not used anymore, but makes sure we're aligned on 64bit boundary
+	nextTimeout    *ema.EMA
+	mu             sync.RWMutex
+	dialers        sortedDialers
+	trusted        sortedDialers
+	closeCh        chan bool
+	stopStatsCh    chan bool
+	forceStatsCh   chan bool
+	onActiveDialer chan Dialer
 }
 
 // New creates a new Balancer using the supplied Dialers.
@@ -95,10 +96,11 @@ func New(dialers ...Dialer) *Balancer {
 	// a small alpha to gradually adjust timeout based on performance of all
 	// dialers
 	b := &Balancer{
-		nextTimeout:  ema.NewDuration(initialTimeout, 0.2),
-		closeCh:      make(chan bool),
-		stopStatsCh:  make(chan bool, 1),
-		forceStatsCh: make(chan bool, 1),
+		nextTimeout:    ema.NewDuration(initialTimeout, 0.2),
+		closeCh:        make(chan bool),
+		stopStatsCh:    make(chan bool, 1),
+		forceStatsCh:   make(chan bool, 1),
+		onActiveDialer: make(chan Dialer, 1),
 	}
 
 	b.Reset(dialers...)
@@ -181,9 +183,19 @@ func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 		// Please leave this at Debug level, as it helps us understand performance
 		// issues caused by a poor proxy being selected.
 		log.Debugf("Successfully dialed via %v to %v://%v on pass %v", d.Label(), network, addr, i)
+		select {
+		case b.onActiveDialer <- d:
+		default:
+		}
 		return conn, nil
 	}
 	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", network, addr, dialAttempts)
+}
+
+// OnActiveDialer gets a channel to get the last dialer the balancer was using
+// only one call is allowed.
+func (b *Balancer) OnActiveDialer() <-chan Dialer {
+	return b.onActiveDialer
 }
 
 func (b *Balancer) dialWithTimeout(d Dialer, network, addr string) (net.Conn, error) {
