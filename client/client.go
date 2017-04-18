@@ -81,7 +81,7 @@ type Client struct {
 	easylist easylist.List
 	// rewriteToHTTPS httpseverywhere.Rewrite
 
-	statsSink common.StatsTracker
+	statsTracker common.StatsTracker
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -90,14 +90,14 @@ type Client struct {
 func NewClient(
 	proxyAll func() bool,
 	proTokenGetter func() string,
-	statsSink common.StatsTracker,
+	statsTracker common.StatsTracker,
 ) *Client {
 	client := &Client{
 		bal:            balancer.New(),
 		proxyAll:       proxyAll,
 		proTokenGetter: proTokenGetter,
 		// rewriteToHTTPS: httpseverywhere.Default(),
-		statsSink: statsSink,
+		statsTracker: statsTracker,
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -151,7 +151,7 @@ func (client *Client) reportProxyLocationLoop() {
 				log.Errorf("Couldn't find location for %s", activeProxy)
 				continue
 			}
-			client.statsSink.SetActiveProxyLocation(
+			client.statsTracker.SetActiveProxyLocation(
 				loc.city,
 				loc.country,
 				loc.countryCode,
