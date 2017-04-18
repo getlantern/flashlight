@@ -39,6 +39,12 @@ func (w mockWriter) Dump() string {
 	return fmt.Sprintf("%+v", *w.ResponseWriter.(*httptest.ResponseRecorder).Result())
 }
 
+type mockStatsTracker struct{}
+
+func (m mockStatsTracker) SetActiveProxyLocation(city, country, countryCode string) {}
+func (m mockStatsTracker) IncHTTPSUpgrades()                                        {}
+func (m mockStatsTracker) IncAdsBlocked()                                           {}
+
 func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {
 	client.bal.Reset(&testDialer{
 		name: "test-dialer",
@@ -46,10 +52,16 @@ func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, 
 	})
 }
 
+func newClient() *Client {
+	return NewClient(func() bool { return true },
+		func() string { return "proToken" },
+		mockStatsTracker{},
+	)
+}
+
 func TestServeHTTPOk(t *testing.T) {
 	mockResponse := []byte("HTTP/1.1 404 Not Found\r\n\r\n")
-	client := NewClient(func() bool { return true },
-		func() string { return "proToken" })
+	client := newClient()
 	d := mockconn.SucceedingDialer(mockResponse)
 	resetBalancer(client, d.Dial)
 
@@ -76,8 +88,7 @@ func TestServeHTTPTimeout(t *testing.T) {
 		atomic.StoreInt64(&requestTimeout, int64(originalRequestTimeout))
 	}()
 
-	client := NewClient(func() bool { return true },
-		func() string { return "proToken" })
+	client := newClient()
 	d := mockconn.SucceedingDialer([]byte{})
 	resetBalancer(client, func(network, addr string) (net.Conn, error) {
 		<-time.After(getRequestTimeout() * 2)
