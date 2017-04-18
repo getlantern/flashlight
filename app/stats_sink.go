@@ -14,35 +14,35 @@ type stats struct {
 	AdsBlocked    int    `json:"adsBlocked"`
 }
 
-type statsSink struct {
+type statsTracker struct {
 	mu      sync.Mutex
 	service ws.Service
 	stats   stats
 }
 
-func (s *statsSink) SetActiveProxyLocation(city, country, countryCode string) {
+func (s *statsTracker) SetActiveProxyLocation(city, country, countryCode string) {
 	s.mu.Lock()
 	s.stats.City, s.stats.Country, s.stats.CountryCode = city, country, countryCode
 	s.unlockAndBroadcast()
 }
-func (s *statsSink) IncHTTPSUpgrades() {
+func (s *statsTracker) IncHTTPSUpgrades() {
 	s.mu.Lock()
 	s.stats.HTTPSUpgrades++
 	s.unlockAndBroadcast()
 }
-func (s *statsSink) IncAdsBlocked() {
+func (s *statsTracker) IncAdsBlocked() {
 	s.mu.Lock()
 	s.stats.AdsBlocked++
 	s.unlockAndBroadcast()
 }
 
-func (s *statsSink) unlockAndBroadcast() {
+func (s *statsTracker) unlockAndBroadcast() {
 	st := s.stats
 	s.mu.Unlock()
 	s.service.Out <- st
 }
 
-func (s *statsSink) StartService() error {
+func (s *statsTracker) StartService() error {
 	helloFn := func(write func(interface{})) {
 		log.Debugf("Sending Lantern stats to new client")
 		s.mu.Lock()
@@ -55,6 +55,6 @@ func (s *statsSink) StartService() error {
 	return err
 }
 
-func (s *statsSink) StopService() {
+func (s *statsTracker) StopService() {
 	ws.Unregister("stats")
 }

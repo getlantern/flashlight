@@ -39,11 +39,11 @@ func (w mockWriter) Dump() string {
 	return fmt.Sprintf("%+v", *w.ResponseWriter.(*httptest.ResponseRecorder).Result())
 }
 
-type mockStatsSink struct{}
+type mockStatsTracker struct{}
 
-func (m mockStatsSink) SetActiveProxyLocation(city, country, countryCode string) {}
-func (m mockStatsSink) IncHTTPSUpgrades()                                        {}
-func (m mockStatsSink) IncAdsBlocked()                                           {}
+func (m mockStatsTracker) SetActiveProxyLocation(city, country, countryCode string) {}
+func (m mockStatsTracker) IncHTTPSUpgrades()                                        {}
+func (m mockStatsTracker) IncAdsBlocked()                                           {}
 
 func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {
 	client.bal.Reset(&testDialer{
@@ -55,7 +55,7 @@ func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, 
 func newClient() *Client {
 	return NewClient(func() bool { return true },
 		func() string { return "proToken" },
-		mockStatsSink{},
+		mockStatsTracker{},
 	)
 }
 

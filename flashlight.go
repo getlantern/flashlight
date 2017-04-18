@@ -43,14 +43,14 @@ func Run(httpProxyAddr string,
 	afterStart func(),
 	onConfigUpdate func(cfg *config.Global),
 	userConfig config.UserConfig,
-	statsSink common.StatsSink,
+	statsTracker common.StatsTracker,
 	onError func(err error),
 	deviceID string) error {
 
 	displayVersion()
 	initContext(deviceID, common.Version, common.RevisionDate)
 
-	cl := client.NewClient(proxyAll, userConfig.GetToken, statsSink)
+	cl := client.NewClient(proxyAll, userConfig.GetToken, statsTracker)
 	proxied.SetProxyAddr(cl.Addr)
 
 	proxiesDispatch := func(conf interface{}) {

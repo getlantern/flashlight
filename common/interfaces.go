@@ -1,7 +1,7 @@
 package common
 
-// StatsSink is a common interface to receive user perceptible Lantern stats
-type StatsSink interface {
+// StatsTracker is a common interface to receive user perceptible Lantern stats
+type StatsTracker interface {
 	// SetActiveProxyLocation updates the location of last successfully dialed
 	// proxy. countryCode is in ISO Alpha-2 form, see
 	// http://www.nationsonline.org/oneworld/country_code_list.htm

@@ -81,7 +81,7 @@ type Client struct {
 	easylist easylist.List
 	// rewriteToHTTPS httpseverywhere.Rewrite
 
-	statsSink common.StatsSink
+	statsSink common.StatsTracker
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -90,7 +90,7 @@ type Client struct {
 func NewClient(
 	proxyAll func() bool,
 	proTokenGetter func() string,
-	statsSink common.StatsSink,
+	statsSink common.StatsTracker,
 ) *Client {
 	client := &Client{
 		bal:            balancer.New(),

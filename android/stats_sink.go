@@ -1,7 +1,7 @@
 package android
 
-type statsSink struct{}
+type statsTracker struct{}
 
-func (m statsSink) SetActiveProxyLocation(city, country, countryCode string) {}
-func (m statsSink) IncHTTPSUpgrades()                                        {}
-func (m statsSink) IncAdsBlocked()                                           {}
+func (m statsTracker) SetActiveProxyLocation(city, country, countryCode string) {}
+func (m statsTracker) IncHTTPSUpgrades()                                        {}
+func (m statsTracker) IncAdsBlocked()                                           {}
