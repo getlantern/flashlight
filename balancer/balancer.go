@@ -34,8 +34,12 @@ type Dialer interface {
 	// Name returns the name for this Dialer
 	Name() string
 
-	// Label() returns a label for this Dialer (includes Name plus more)
+	// Label() returns a label for this Dialer (includes Name plus more).
 	Label() string
+
+	// JustifiedLabel() is like Label() but with elements justified for line-by
+	// -line display.
+	JustifiedLabel() string
 
 	// Addr returns the address for this Dialer
 	Addr() string
@@ -83,8 +87,8 @@ type Balancer struct {
 	lastDialTime   int64 // not used anymore, but makes sure we're aligned on 64bit boundary
 	nextTimeout    *ema.EMA
 	mu             sync.RWMutex
-	dialers        sortedDialers
-	trusted        sortedDialers
+	dialers        SortedDialers
+	trusted        SortedDialers
 	closeCh        chan bool
 	stopStatsCh    chan bool
 	forceStatsCh   chan bool
@@ -120,8 +124,8 @@ func (b *Balancer) dialersToCheck() []Dialer {
 // Reset closes existing dialers and replaces them with new ones.
 func (b *Balancer) Reset(dialers ...Dialer) {
 	log.Debugf("Resetting with %d dialers", len(dialers))
-	var dls sortedDialers
-	var tdls sortedDialers
+	var dls SortedDialers
+	var tdls SortedDialers
 
 	b.mu.Lock()
 	oldDialers := b.dialers
@@ -292,12 +296,12 @@ func (b *Balancer) printStats() {
 func (b *Balancer) doPrintStats() {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
-	dialersCopy := make(sortedDialers, len(b.dialers))
+	dialersCopy := make(SortedDialers, len(b.dialers))
 	copy(dialersCopy, b.dialers)
 	sort.Sort(dialersCopy)
 	log.Debug("-------------------------- Dialer Stats -----------------------")
 	for _, d := range dialersCopy {
-		log.Debugf("%s  S: %4d / %4d (%d)\tF: %4d / %4d (%d)\tL: %5.0fms\tBW: %3.2fMbps", d.Label(), d.Successes(), d.Attempts(), d.ConsecSuccesses(), d.Failures(), d.Attempts(), d.ConsecFailures(), d.EstLatency().Seconds()*1000, d.EstBandwidth())
+		log.Debugf("%s  S: %4d / %4d (%d)\tF: %4d / %4d (%d)\tL: %5.0fms\tBW: %3.2fMbps", d.JustifiedLabel(), d.Successes(), d.Attempts(), d.ConsecSuccesses(), d.Failures(), d.Attempts(), d.ConsecFailures(), d.EstLatency().Seconds()*1000, d.EstBandwidth())
 	}
 	log.Debug("------------------------ End Dialer Stats ---------------------")
 }
@@ -330,15 +334,15 @@ func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, error) {
 	return result, nil
 }
 
-type sortedDialers []Dialer
+type SortedDialers []Dialer
 
-func (d sortedDialers) Len() int { return len(d) }
+func (d SortedDialers) Len() int { return len(d) }
 
-func (d sortedDialers) Swap(i, j int) {
+func (d SortedDialers) Swap(i, j int) {
 	d[i], d[j] = d[j], d[i]
 }
 
-func (d sortedDialers) Less(i, j int) bool {
+func (d SortedDialers) Less(i, j int) bool {
 	a, b := d[i], d[j]
 
 	// Prefer the succeeding proxy

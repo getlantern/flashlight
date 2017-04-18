@@ -130,6 +130,10 @@ func (d *testDialer) Label() string {
 	return d.name
 }
 
+func (d *testDialer) JustifiedLabel() string {
+	return d.name
+}
+
 func (d *testDialer) Addr() string {
 	return ""
 }
