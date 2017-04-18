@@ -33,16 +33,13 @@ func TrackStatsFor(dialers []balancer.Dialer) {
 	if len(dialers) > 1 {
 		sorted := balancer.SortedDialers(dialers)
 		sort.Sort(sorted)
-		var latencyOfTopProxy time.Duration
+		latencyOfTopProxy := sorted[0].EstLatency()
 		for i, dialer := range sorted {
 			// probe is automatically required for relatively new dialers
 			probeRequired := dialer.Attempts() < 20
 			if probeRequired {
 				log.Debugf("%v is relatively new, will probe", dialer.Label())
-			}
-			if i == 0 {
-				latencyOfTopProxy = dialer.EstLatency()
-			} else if dialer.EstLatency() < latencyOfTopProxy && dialer.Successes() > 0 {
+			} else if i > 0 && dialer.Successes() > 0 && dialer.EstLatency() < latencyOfTopProxy {
 				// dialers whose latency is lower than the top proxy get checked on
 				// startup as well
 				log.Debugf("%v is lower latency than %v, will probe", dialer.Label(), sorted[0].Label())
