@@ -43,6 +43,10 @@ func (d *testDialer) Label() string {
 	return d.name
 }
 
+func (d *testDialer) JustifiedLabel() string {
+	return d.name
+}
+
 func (d *testDialer) Addr() string {
 	return ""
 }
@@ -199,7 +203,7 @@ func TestTrusted(t *testing.T) {
 }
 
 func TestSorting(t *testing.T) {
-	dialers := sortedDialers{
+	dialers := SortedDialers{
 		// Unknown bandwidth comes first
 		&testDialer{
 			name:      "1",
