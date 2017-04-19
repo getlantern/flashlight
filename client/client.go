@@ -26,6 +26,7 @@ import (
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/status"
@@ -79,23 +80,31 @@ type Client struct {
 
 	easylist easylist.List
 	// rewriteToHTTPS httpseverywhere.Rewrite
+
+	statsTracker common.StatsTracker
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
 // SOCKS proxies. It take a function for determing whether or not to proxy
 // all traffic, and another function to get Lantern Pro token when required.
-func NewClient(proxyAll func() bool, proTokenGetter func() string) *Client {
+func NewClient(
+	proxyAll func() bool,
+	proTokenGetter func() string,
+	statsTracker common.StatsTracker,
+) *Client {
 	client := &Client{
 		bal:            balancer.New(),
 		proxyAll:       proxyAll,
 		proTokenGetter: proTokenGetter,
 		// rewriteToHTTPS: httpseverywhere.Default(),
+		statsTracker: statsTracker,
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
 	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers.Pool, false, client.dialCONNECT)
 	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
 	client.initEasyList()
+	client.reportProxyLocationLoop()
 	return client
 }
 
@@ -125,6 +134,30 @@ func (client *Client) initEasyList() {
 	}
 	client.easylist = list
 	log.Debug("Initialized easylist")
+}
+
+func (client *Client) reportProxyLocationLoop() {
+	ch := client.bal.OnActiveDialer()
+	var activeProxy string
+	go func() {
+		for {
+			proxy := <-ch
+			if proxy.Name() == activeProxy {
+				continue
+			}
+			activeProxy = proxy.Name()
+			loc := proxyLoc(activeProxy)
+			if loc == nil {
+				log.Errorf("Couldn't find location for %s", activeProxy)
+				continue
+			}
+			client.statsTracker.SetActiveProxyLocation(
+				loc.city,
+				loc.country,
+				loc.countryCode,
+			)
+		}
+	}()
 }
 
 // Addr returns the address at which the client is listening with HTTP, blocking
