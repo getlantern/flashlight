@@ -193,7 +193,7 @@ imports:
 - name: github.com/getlantern/osversion
   version: 4aedc380e3bab4f0c97b1481492cb0b81c1d91f9
 - name: github.com/getlantern/sysproxy
-  version: c74deb44dc475f4fa6750c736502b4a400110831
+  version: da382e338104a12e6990fcfa009c6914b9d9a098
 - name: github.com/getlantern/pathreflect
   version: b02f4864048a236150ca17c2c526158f2b3133c4
 - name: github.com/getlantern/profiling
