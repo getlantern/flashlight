@@ -25,11 +25,13 @@ func (s *statsTracker) SetActiveProxyLocation(city, country, countryCode string)
 	s.stats.City, s.stats.Country, s.stats.CountryCode = city, country, countryCode
 	s.unlockAndBroadcast()
 }
+
 func (s *statsTracker) IncHTTPSUpgrades() {
 	s.mu.Lock()
 	s.stats.HTTPSUpgrades++
 	s.unlockAndBroadcast()
 }
+
 func (s *statsTracker) IncAdsBlocked() {
 	s.mu.Lock()
 	s.stats.AdsBlocked++
@@ -39,7 +41,12 @@ func (s *statsTracker) IncAdsBlocked() {
 func (s *statsTracker) unlockAndBroadcast() {
 	st := s.stats
 	s.mu.Unlock()
-	s.service.Out <- st
+	select {
+	case s.service.Out <- st:
+		// ok
+	default:
+		// don't block if no-one is listening
+	}
 }
 
 func (s *statsTracker) StartService() error {
