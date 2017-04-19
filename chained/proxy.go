@@ -286,6 +286,10 @@ func (p *proxy) Name() string {
 }
 
 func (p *proxy) Label() string {
+	return fmt.Sprintf("%v (%v)", p.name, p.addr)
+}
+
+func (p *proxy) JustifiedLabel() string {
 	label := fmt.Sprintf("%-38v at %21v", p.name, p.addr)
 	if p.trusted {
 		label = label + trustedSuffix
