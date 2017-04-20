@@ -22,7 +22,6 @@ import (
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
-	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mtime"
@@ -36,7 +35,12 @@ var (
 
 	updateServerURL = "https://update.getlantern.org"
 	defaultLocale   = `en-US`
-	surveyURL       = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
+
+	httpClient = &http.Client{
+		Transport: proxied.ChainedThenFronted(),
+	}
+
+	surveyURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
 
 	startOnce sync.Once
 )
@@ -268,8 +272,6 @@ func surveyRequest(locale string) (string, error) {
 	var res *http.Response
 
 	var surveyResp map[string]*json.RawMessage
-
-	httpClient := pro.GetHTTPClient()
 
 	if req, err = http.NewRequest("GET", surveyURL, nil); err != nil {
 		handleError(fmt.Errorf("Error fetching survey: %v", err))
