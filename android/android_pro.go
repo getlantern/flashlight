@@ -261,10 +261,8 @@ func ProRequest(command string, session Session) bool {
 		if err == nil && url != "" {
 			session.ShowSurvey(url)
 			return true
-		} else {
-			log.Errorf("Error finding survey: %v", err)
-			return false
 		}
+		return false
 	} else if command == "bandwidth" {
 		percent, remaining := getBandwidth(bandwidth.GetQuota())
 		if percent != 0 && remaining != 0 {
