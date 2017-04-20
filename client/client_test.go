@@ -53,10 +53,12 @@ func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, 
 }
 
 func newClient() *Client {
-	return NewClient(func() bool { return true },
+	client, _ := NewClient(func() bool { return true },
 		func() string { return "proToken" },
 		mockStatsTracker{},
+		true,
 	)
+	return client
 }
 
 func TestServeHTTPOk(t *testing.T) {

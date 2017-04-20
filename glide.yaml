@@ -28,6 +28,7 @@ import:
 - package: github.com/getlantern/hidden
 - package: github.com/getlantern/i18n
 - package: github.com/getlantern/idletiming
+- package: github.com/getlantern/iptool
 - package: github.com/getlantern/jibber_jabber
 - package: github.com/getlantern/keyman
 - package: github.com/getlantern/launcher

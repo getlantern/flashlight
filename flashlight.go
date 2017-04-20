@@ -50,7 +50,10 @@ func Run(httpProxyAddr string,
 	displayVersion()
 	initContext(deviceID, common.Version, common.RevisionDate)
 
-	cl := client.NewClient(proxyAll, userConfig.GetToken, statsTracker)
+	cl, err := client.NewClient(proxyAll, userConfig.GetToken, statsTracker, false)
+	if err != nil {
+		log.Fatalf("Unable to initialize client: %v", err)
+	}
 	proxied.SetProxyAddr(cl.Addr)
 
 	proxiesDispatch := func(conf interface{}) {
