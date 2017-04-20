@@ -121,8 +121,19 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 			if closeErr := conn.Close(); closeErr != nil {
 				log.Debugf("Error closing chained server connection: %s", closeErr)
 			}
+			var received interface{}
+			var expected interface{}
+			_received, err := keyman.LoadCertificateFromX509(conn.ConnectionState().PeerCertificates[0])
+			if err != nil {
+				log.Errorf("Unable to parse received certificate: %v", err)
+				received = conn.ConnectionState().PeerCertificates[0]
+				expected = x509cert
+			} else {
+				received = string(_received.PEMEncoded())
+				expected = string(cert.PEMEncoded())
+			}
 			return nil, op.FailIf(log.Errorf("Server's certificate didn't match expected! Server had\n%v\nbut expected:\n%v",
-				conn.ConnectionState().PeerCertificates[0], x509cert))
+				received, expected))
 		}
 		return overheadWrapper(true)(conn, op.FailIf(err))
 	}), nil
