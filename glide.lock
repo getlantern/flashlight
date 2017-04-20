@@ -50,7 +50,7 @@ imports:
 - name: github.com/getlantern/appdir
   version: 659a155d06e8f3dd8b9f79d6147445897499b56b
 - name: github.com/getlantern/autoupdate
-  version: 4e31f53f8e64d1cdb0b5734f1d29dd678e7f3a50
+  version: bc274493d619cb226079fd08fd5c606666e776a0
 - name: github.com/getlantern/balancer
   version: 70e3aff550185f805d2f40933c2bc8c29aefa28d
 - name: github.com/getlantern/bandwidth
@@ -104,7 +104,7 @@ imports:
 - name: github.com/getlantern/go-socks5
   version: 84bc9224d653efa66ce1f5f01097b9d38fcc3f34
 - name: github.com/getlantern/go-update
-  version: 4a06dc59e593012c831198e423894d2da1d091c0
+  version: 7c89b7b15dabc524706a1a9f0b4c367707aa3cb4
   subpackages:
   - check
   - download
