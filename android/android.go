@@ -22,7 +22,7 @@ import (
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
-	"github.com/getlantern/flashlight/pro"
+	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
@@ -35,7 +35,12 @@ var (
 
 	updateServerURL = "https://update.getlantern.org"
 	defaultLocale   = `en-US`
-	surveyURL       = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
+
+	httpClient = &http.Client{
+		Transport: proxied.ChainedThenFronted(),
+	}
+
+	surveyURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
 
 	startOnce sync.Once
 )
@@ -269,13 +274,15 @@ func surveyRequest(locale string) (string, error) {
 
 	var surveyResp map[string]*json.RawMessage
 
-	httpClient := pro.GetHTTPClient()
-
 	if req, err = http.NewRequest("GET", surveyURL, nil); err != nil {
 		handleError(fmt.Errorf("Error fetching survey: %v", err))
 		return "", err
 	}
-	pro.PrepareForFronting(req)
+
+	frontedURL := *req.URL
+	frontedURL.Host = "d38rvu630khj2q.cloudfront.net"
+
+	proxied.PrepareForFronting(req, frontedURL.String())
 
 	if res, err = httpClient.Do(req); err != nil {
 		handleError(fmt.Errorf("Error fetching feed: %v", err))
@@ -289,6 +296,8 @@ func surveyRequest(locale string) (string, error) {
 		handleError(fmt.Errorf("Error reading survey: %v", err))
 		return "", err
 	}
+
+	log.Debugf("Survey response: %s", string(contents))
 
 	err = json.Unmarshal(contents, &surveyResp)
 	if err != nil {
