@@ -20,17 +20,19 @@ var (
 	cfgMutex    sync.RWMutex
 	updateMutex sync.Mutex
 
-	httpClient *http.Client
-	watching   int32
+	watching int32
 
 	applyNextAttemptTime = time.Hour * 2
+
+	httpClient = &http.Client{
+		Transport: proxied.ChainedThenFrontedWith("d2yl1zps97e5mx.cloudfront.net"),
+	}
 )
 
 // Configure sets the CA certificate to pin for the TLS auto-update connection.
 func Configure(updateURL, updateCA string) {
 	setUpdateURL(updateURL)
-
-	enableAutoupdate(updateCA)
+	enableAutoupdate()
 }
 
 func setUpdateURL(url string) {
@@ -48,16 +50,7 @@ func getUpdateURL() string {
 	return updateServerURL + "/update"
 }
 
-func enableAutoupdate(updateCA string) {
-	rt, err := proxied.ChainedNonPersistent(updateCA)
-	if err != nil {
-		log.Errorf("Could not create proxied HTTP client, disabling auto-updates: %v", err)
-		return
-	}
-	httpClient = &http.Client{
-		Transport: rt,
-	}
-
+func enableAutoupdate() {
 	go watchForUpdate()
 }
 
@@ -81,17 +74,16 @@ func applyNext() {
 	updateMutex.Lock()
 	defer updateMutex.Unlock()
 
-	if httpClient != nil {
-		err := autoupdate.ApplyNext(&autoupdate.Config{
-			CurrentVersion: Version,
-			URL:            getUpdateURL(),
-			PublicKey:      PublicKey,
-			HTTPClient:     httpClient,
-		})
-		if err != nil {
-			log.Debugf("Error getting update: %v", err)
-			return
-		}
-		log.Debugf("Got update.")
+	err := autoupdate.ApplyNext(&autoupdate.Config{
+		CurrentVersion: Version,
+		URL:            getUpdateURL(),
+		PublicKey:      PublicKey,
+		HTTPClient:     httpClient,
+	})
+	if err != nil {
+		log.Debugf("Error getting update: %v", err)
+		return
 	}
+	log.Debugf("Got update.")
+
 }

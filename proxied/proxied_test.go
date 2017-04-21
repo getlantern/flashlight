@@ -169,8 +169,6 @@ func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
 	sleep := 0 * time.Second
 
 	forward := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		log.Debugf("Got request")
-
 		// The sleep can help the other request to complete faster.
 		time.Sleep(sleep)
 		fwd.ServeHTTP(w, req)
@@ -181,7 +179,6 @@ func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
 		Handler: forward,
 	}
 
-	log.Debug("Starting server")
 	l, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		assert.NoError(t, err, "Unable to listen")
@@ -217,7 +214,7 @@ func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
 	cf = build()
 	resp, err = cf.RoundTrip(req)
 	assert.NoError(t, err)
-	log.Debugf("Got response in test")
+	//log.Debugf("Got response in test")
 	body, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	assert.True(t, strings.Contains(string(body), "United States"), "Unexpected response ")
@@ -225,7 +222,7 @@ func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
 
 	// Now give the bad url to the req server and make sure we still get the corret
 	// result from the fronted server.
-	log.Debugf("Running test with bad URL in the req server")
+	//log.Debugf("Running test with bad URL in the req server")
 	bad = "http://48290.cloudfront.net/lookup/198.199.72.101"
 	req, err = http.NewRequest("GET", bad, nil)
 	req.Header.Set("Lantern-Fronted-URL", geo)
@@ -255,11 +252,15 @@ func TestChangeUserAgent(t *testing.T) {
 func TestCloneRequestForFronted(t *testing.T) {
 	req, _ := http.NewRequest("POST", "https://chained.com/path1?q1=test1&q2=test2", strings.NewReader("abc"))
 
-	r, err := cloneRequestForFronted(req)
+	cf := &chainedAndFronted{
+		parallel: true,
+	}
+
+	r, err := cf.cloneRequestForFronted(req)
 	assert.Error(t, err, "an request without fronted URL should fail")
 
 	req.Header.Add("Lantern-Fronted-URL", "http://fronted.tldr/path2")
-	r, err = cloneRequestForFronted(req)
+	r, err = cf.cloneRequestForFronted(req)
 	assert.Nil(t, err)
 
 	dump, er := httputil.DumpRequestOut(req, true)

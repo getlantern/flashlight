@@ -89,7 +89,7 @@ func ParallelPreferChained() http.RoundTripper {
 	cf := &chainedAndFronted{
 		parallel: true,
 	}
-	cf.setFetcher(&dualFetcher{cf})
+	cf.setFetcher(&dualFetcher{cf: cf})
 	return cf
 }
 
@@ -97,19 +97,29 @@ func ParallelPreferChained() http.RoundTripper {
 // requests first through a chained server and then falls back to using a
 // direct fronted server if the chained route didn't work.
 func ChainedThenFronted() http.RoundTripper {
+	return ChainedThenFrontedWith("")
+}
+
+// ChainedThenFrontedWith creates a new http.RoundTripper that attempts to send
+// requests first through a chained server and then falls back to using a
+// direct fronted server if the chained route didn't work. It also specifies
+// the fronted URL to use, overriding any URL specified in HTTP headers.
+func ChainedThenFrontedWith(frontedURL string) http.RoundTripper {
 	cf := &chainedAndFronted{
-		parallel: false,
+		parallel:   false,
+		frontedURL: frontedURL,
 	}
-	cf.setFetcher(&dualFetcher{cf})
+	cf.setFetcher(&dualFetcher{cf: cf})
 	return cf
 }
 
 // chainedAndFronted fetches HTTP data in parallel using both chained and fronted
 // servers.
 type chainedAndFronted struct {
-	parallel bool
-	_fetcher http.RoundTripper
-	mu       sync.RWMutex
+	parallel   bool
+	frontedURL string
+	_fetcher   http.RoundTripper
+	mu         sync.RWMutex
 }
 
 func (cf *chainedAndFronted) getFetcher() http.RoundTripper {
@@ -236,7 +246,7 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 
 	// cloneRequestForFronted modifies the req to remove Lantern-Fronted-URL
 	// header. We need to call it before make any requests.
-	frontedReq, err := cloneRequestForFronted(req)
+	frontedReq, err := df.cf.cloneRequestForFronted(req)
 	if err != nil {
 		// Fail immediately as it's a program error.
 		return nil, op.FailIf(err)
@@ -322,13 +332,21 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 	return resp, op.FailIf(err)
 }
 
-func cloneRequestForFronted(req *http.Request) (*http.Request, error) {
-	frontedURL := req.Header.Get(lanternFrontedURL)
-	if frontedURL == "" {
-		return nil, errors.New("Callers MUST specify the fronted URL in the Lantern-Fronted-URL header")
+func (cf *chainedAndFronted) cloneRequestForFronted(req *http.Request) (*http.Request, error) {
+	var frontedURL string
+	if cf.frontedURL != "" {
+		frontedURL = cf.frontedURL
+	} else {
+		frontedURL = req.Header.Get(lanternFrontedURL)
+		if frontedURL == "" {
+			return nil, errors.New("Callers MUST specify the fronted URL in the Lantern-Fronted-URL header")
+		}
+		req.Header.Del(lanternFrontedURL)
 	}
-	req.Header.Del(lanternFrontedURL)
+	return cloneRequestForFronted(req, frontedURL)
+}
 
+func cloneRequestForFronted(req *http.Request, frontedURL string) (*http.Request, error) {
 	frontedReq, err := http.NewRequest(req.Method, frontedURL, nil)
 	if err != nil {
 		return nil, err
