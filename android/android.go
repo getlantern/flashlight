@@ -173,6 +173,7 @@ func run(configDir, locale string,
 		func() bool { return true }, // proxy all requests
 		// TODO: allow configuring whether or not to enable reporting (just like we
 		// already have in desktop)
+		func() bool { return true }, // on Android, we allow private hosts
 		func() bool { return true }, // auto report
 		flags,
 		func() bool {

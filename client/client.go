@@ -86,7 +86,7 @@ type Client struct {
 	statsTracker common.StatsTracker
 
 	iptool            iptool.Tool
-	allowPrivateHosts bool
+	allowPrivateHosts func() bool
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -96,7 +96,7 @@ func NewClient(
 	proxyAll func() bool,
 	proTokenGetter func() string,
 	statsTracker common.StatsTracker,
-	allowPrivateHosts bool,
+	allowPrivateHosts func() bool,
 ) (*Client, error) {
 	client := &Client{
 		bal:            balancer.New(),
@@ -319,7 +319,7 @@ func (client *Client) dial(isConnect bool, network, addr string) (conn net.Conn,
 func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, port int) (net.Conn, error) {
 	// Establish outbound connection
 	if err := client.shouldSendToProxy(addr, port); err != nil {
-		log.Errorf("%v, sending directly to %v", err, addr)
+		log.Debugf("%v, sending directly to %v", err, addr)
 		// Use netx because on Android, we need a special protected dialer
 		return netx.DialContext(ctx, "tcp", addr)
 	}
@@ -383,7 +383,7 @@ func (client *Client) isPortProxyable(port int) error {
 }
 
 func (client *Client) isAddressProxyable(addr string) error {
-	if client.allowPrivateHosts {
+	if client.allowPrivateHosts() {
 		return nil
 	}
 	host, _, err := net.SplitHostPort(addr)

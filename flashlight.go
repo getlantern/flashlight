@@ -37,6 +37,7 @@ func Run(httpProxyAddr string,
 	socksProxyAddr string,
 	configDir string,
 	proxyAll func() bool,
+	allowPrivateHosts func() bool,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
 	beforeStart func() bool,
@@ -50,7 +51,7 @@ func Run(httpProxyAddr string,
 	displayVersion()
 	initContext(deviceID, common.Version, common.RevisionDate)
 
-	cl, err := client.NewClient(proxyAll, userConfig.GetToken, statsTracker, false)
+	cl, err := client.NewClient(proxyAll, userConfig.GetToken, statsTracker, allowPrivateHosts)
 	if err != nil {
 		log.Fatalf("Unable to initialize client: %v", err)
 	}
