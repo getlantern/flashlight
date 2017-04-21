@@ -97,6 +97,7 @@ func (app *App) Run() error {
 			socksAddr,
 			app.Flags["configdir"].(string),
 			settings.GetProxyAll,
+			func() bool { return false }, // on desktop, we do not allow private hosts
 			settings.IsAutoReport,
 			app.Flags,
 			app.beforeStart(listenAddr),
