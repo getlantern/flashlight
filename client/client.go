@@ -390,11 +390,22 @@ func (client *Client) isAddressProxyable(addr string) error {
 	if err != nil {
 		return fmt.Errorf("Unable to split host and port for %v, considering private: %v", addr, err)
 	}
-	resolved, err := net.ResolveIPAddr("ip", host)
-	if err != nil {
-		return fmt.Errorf("Unable to resolve IP address for %v, considering private: %v", host, err)
+
+	var ipAddrToCheck *net.IPAddr
+	if client.proxyAll() {
+		ip := net.ParseIP(host)
+		if ip == nil {
+			return errors.New("Don't resolve host when in proxy all mode")
+		}
+		ipAddrToCheck = &net.IPAddr{IP: ip}
+	} else {
+		ipAddrToCheck, err = net.ResolveIPAddr("ip", host)
+		if err != nil {
+			return fmt.Errorf("Unable to resolve IP address for %v, considering private: %v", host, err)
+		}
 	}
-	if client.iptool.IsPrivate(resolved) {
+
+	if client.iptool.IsPrivate(ipAddrToCheck) {
 		return fmt.Errorf("Address %v is private", addr)
 	}
 	return nil
