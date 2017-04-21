@@ -113,8 +113,13 @@ func (op *Op) Response(r *http.Response) *Op {
 	if r == nil {
 		return op
 	}
-	op.Set("http_response_status_code", r.StatusCode)
+	op.HTTPStatusCode(r.StatusCode)
 	op.Request(r.Request)
+	return op
+}
+
+func (op *Op) HTTPStatusCode(code int) *Op {
+	op.Set("http_status_code", code)
 	return op
 }
 

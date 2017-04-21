@@ -120,6 +120,7 @@ func (cf *fetcher) doFetch(op *ops.Op) ([]byte, error) {
 		log.Debug("Config unchanged in cloud")
 		return nil, nil
 	} else if resp.StatusCode != 200 {
+		op.HTTPStatusCode(resp.StatusCode)
 		if dumperr != nil {
 			return nil, fmt.Errorf("Bad config response code: %v", resp.StatusCode)
 		}
