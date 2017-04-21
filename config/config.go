@@ -13,6 +13,7 @@ import (
 	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/client"
+	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
 )
 
@@ -240,6 +241,12 @@ func (conf *config) save() {
 }
 
 func (conf *config) saveOne(in interface{}) error {
+	op := ops.Begin("save_config")
+	defer op.End()
+	return op.FailIf(conf.doSaveOne(in))
+}
+
+func (conf *config) doSaveOne(in interface{}) error {
 	bytes, err := yaml.Marshal(in)
 	if err != nil {
 		return fmt.Errorf("Unable to marshal config yaml: %v", err)

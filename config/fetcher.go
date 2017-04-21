@@ -59,7 +59,13 @@ func newFetcher(conf UserConfig, rt http.RoundTripper,
 }
 
 func (cf *fetcher) fetch() ([]byte, error) {
-	defer ops.Begin("fetch_config").End()
+	op := ops.Begin("fetch_config")
+	defer op.End()
+	result, err := cf.doFetch(op)
+	return result, op.FailIf(err)
+}
+
+func (cf *fetcher) doFetch(op *ops.Op) ([]byte, error) {
 	log.Debugf("Fetching cloud config from %v (%v)", cf.chainedURL, cf.frontedURL)
 
 	url := cf.chainedURL
@@ -110,15 +116,18 @@ func (cf *fetcher) fetch() ([]byte, error) {
 	}()
 
 	if resp.StatusCode == 304 {
+		op.Set("config_changed", false)
 		log.Debug("Config unchanged in cloud")
 		return nil, nil
 	} else if resp.StatusCode != 200 {
+		op.HTTPStatusCode(resp.StatusCode)
 		if dumperr != nil {
 			return nil, fmt.Errorf("Bad config response code: %v", resp.StatusCode)
 		}
 		return nil, fmt.Errorf("Bad config resp:\n%v", string(dump))
 	}
 
+	op.Set("config_changed", true)
 	cf.lastCloudConfigETag[url] = resp.Header.Get(common.EtagHeader)
 	gzReader, err := gzip.NewReader(resp.Body)
 	if err != nil {
