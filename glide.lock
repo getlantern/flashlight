@@ -166,7 +166,7 @@ imports:
 - name: github.com/getlantern/idletiming
   version: 7a71d2e71cf253f64b9610ce7aa9ddfc58aa9b2a
 - name: github.com/getlantern/iptool
-  version: 0c166be426b7c72b7e611554762fa0f255ded3d3
+  version: 8723ea29ea42bdb85682c242b8e803aa6f05c9db
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
 - name: github.com/getlantern/keyman
