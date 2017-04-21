@@ -9,7 +9,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -58,6 +60,9 @@ var (
 	// avoid applications bypassing Lantern.
 	// Chrome has a 30s timeout before marking proxy as bad.
 	requestTimeout = int64(20 * time.Second)
+
+	// See http://stackoverflow.com/questions/106179/regular-expression-to-match-dns-hostname-or-ip-address
+	validHostnameRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 )
 
 // Client is an HTTP proxy that accepts connections from local programs and
@@ -382,6 +387,7 @@ func (client *Client) isPortProxyable(port int) error {
 	return fmt.Errorf("Port %d not proxyable", port)
 }
 
+// isAddressProxyable largely replicates the logic in the old PAC file
 func (client *Client) isAddressProxyable(addr string) error {
 	if client.allowPrivateHosts() {
 		return nil
@@ -393,12 +399,22 @@ func (client *Client) isAddressProxyable(addr string) error {
 
 	ip := net.ParseIP(host)
 	if ip == nil {
-		// host is not an IP address, assuming not private.
+		// host is not an IP address
+		if validHostnameRegex.MatchString(host) {
+			if !strings.Contains(host, ".") {
+				return fmt.Errorf("%v is a plain hostname, considering private", host)
+			}
+			if strings.HasSuffix(host, ".local") {
+				return fmt.Errorf("%v ends in .local, considering private", host)
+			}
+		}
+		// assuming non-private
 		return nil
 	}
+
 	ipAddrToCheck := &net.IPAddr{IP: ip}
 	if client.iptool.IsPrivate(ipAddrToCheck) {
-		return fmt.Errorf("Address %v is private", addr)
+		return fmt.Errorf("IP %v is private", host)
 	}
 	return nil
 }

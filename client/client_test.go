@@ -116,17 +116,27 @@ func TestIsAddressProxyable(t *testing.T) {
 		"all addresses should be proxyable when allow private hosts")
 	assert.NoError(t, client.isAddressProxyable("localhost:80"),
 		"all addresses should be proxyable when allow private hosts")
-	client.allowPrivateHosts = false
+	client.allowPrivateHosts = func() bool {
+		return false
+	}
 	assert.Error(t, client.isAddressProxyable("192.168.1.1:9999"),
 		"private address should not be proxyable")
 	assert.Error(t, client.isAddressProxyable("192.168.1.1"),
 		"address without port should not be proxyable")
 	// Note that in reality, browser / OS may choose to never proxy localhost
 	// URLs.
-	assert.NoError(t, client.isAddressProxyable("localhost:80"),
-		"address should be proxyable if it's not an IP address")
+	assert.Error(t, client.isAddressProxyable("www.google.com"),
+		"address should not be proxyable if it's missing a port")
+	assert.Error(t, client.isAddressProxyable("localhost:80"),
+		"address should not be proxyable if it's a plain hostname")
+	assert.Error(t, client.isAddressProxyable("localhost"),
+		"address should not be proxyable if it's a plain hostname")
+	assert.Error(t, client.isAddressProxyable("plainhostname:80"),
+		"address should not be proxyable if it's a plain hostname")
+	assert.Error(t, client.isAddressProxyable("something.local:80"),
+		"address should not be proxyable if it ends in .local")
 	assert.NoError(t, client.isAddressProxyable("anysite.com:80"),
-		"address should be proxyable if it's not an IP address")
+		"address should be proxyable if it's not an IP address, not a plain hostname and does not end in .local")
 }
 
 type testDialer struct {
