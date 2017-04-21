@@ -20,7 +20,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	if !client.easylist.Allow(req) {
-		client.easyblock(resp, req, isConnect)
+		client.easyblock(resp, req)
 		return
 	}
 
@@ -49,17 +49,10 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (client *Client) easyblock(resp http.ResponseWriter, req *http.Request, isConnect bool) {
+func (client *Client) easyblock(resp http.ResponseWriter, req *http.Request) {
 	log.Debugf("Blocking %v on %v", req.URL, req.Host)
 	client.statsTracker.IncAdsBlocked()
-	if isConnect {
-		// For CONNECT requests, we pretend that it's okay but then we don't do
-		// anything afterwards. We have to do this because otherwise Chrome marks
-		// us as a bad proxy.
-		resp.WriteHeader(http.StatusOK)
-	} else {
-		resp.WriteHeader(http.StatusForbidden)
-	}
+	resp.WriteHeader(http.StatusForbidden)
 }
 
 func (client *Client) redirect(resp http.ResponseWriter, req *http.Request, httpsURL string, op *ops.Op) {

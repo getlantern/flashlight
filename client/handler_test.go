@@ -29,13 +29,13 @@ func TestEasylist(t *testing.T) {
 	client := newClient()
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "http://test.com", nil)
-	client.easyblock(w, req, true)
+	client.easyblock(w, req)
 	resp := w.Result()
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
 
 	w = httptest.NewRecorder()
 	req, _ = http.NewRequest("GET", "http://test.com", nil)
-	client.easyblock(w, req, false)
+	client.easyblock(w, req)
 	resp = w.Result()
 	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
 }

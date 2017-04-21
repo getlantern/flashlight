@@ -165,6 +165,8 @@ imports:
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
   version: 7a71d2e71cf253f64b9610ce7aa9ddfc58aa9b2a
+- name: github.com/getlantern/iptool
+  version: 8723ea29ea42bdb85682c242b8e803aa6f05c9db
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
 - name: github.com/getlantern/keyman
@@ -192,8 +194,8 @@ imports:
   version: b70875f5d689a9438bca72aefd7142a2af889b18
 - name: github.com/getlantern/osversion
   version: 4aedc380e3bab4f0c97b1481492cb0b81c1d91f9
-- name: github.com/getlantern/pac
-  version: 5534aa917168bd068e494e81ae6da91cfc3e2a95
+- name: github.com/getlantern/sysproxy
+  version: 7ce7d4fa4d4e184decc34c3317c6fda33d5c2f40
 - name: github.com/getlantern/pathreflect
   version: b02f4864048a236150ca17c2c526158f2b3133c4
 - name: github.com/getlantern/profiling
