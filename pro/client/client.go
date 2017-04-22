@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/golog"
 )
 
@@ -74,7 +73,6 @@ func (c *Client) do(req *http.Request) ([]byte, error) {
 		}
 	}
 	req.Header.Set("User-Agent", "Lantern-Android-"+common.Version)
-	pro.PrepareForFronting(req)
 
 	for i := 0; i < maxRetries; i++ {
 		client := c.httpClient
