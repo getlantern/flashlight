@@ -86,28 +86,40 @@ func getProxyAddr() (string, bool) {
 // servers unless and until a request fails, in which case we'll start trying
 // fronted requests again.
 func ParallelPreferChained() http.RoundTripper {
-	cf := &chainedAndFronted{
-		parallel: true,
-	}
-	cf.setFetcher(&dualFetcher{cf: cf})
-	return cf
+	return dual(true, "")
 }
 
 // ChainedThenFronted creates a new http.RoundTripper that attempts to send
 // requests first through a chained server and then falls back to using a
 // direct fronted server if the chained route didn't work.
 func ChainedThenFronted() http.RoundTripper {
-	return ChainedThenFrontedWith("")
+	return dual(false, "")
+}
+
+// ParallelPreferChainedWith creates a new http.RoundTripper that attempts to
+// send requests through both chained and direct fronted routes in parallel.
+// Once a chained request succeeds, subsequent requests will only go through
+// Chained servers unless and until a request fails, in which case we'll start
+// trying fronted requests again. This version specified the fronted URL
+// directly.
+func ParallelPreferChainedWith(frontedURL string) http.RoundTripper {
+	return dual(true, frontedURL)
 }
 
 // ChainedThenFrontedWith creates a new http.RoundTripper that attempts to send
 // requests first through a chained server and then falls back to using a
-// direct fronted server if the chained route didn't work. It also specifies
-// the fronted URL to use, overriding any URL specified in HTTP headers.
+// direct fronted server if the chained route didn't work.
+// This version specified the fronted URL directly.
 func ChainedThenFrontedWith(frontedURL string) http.RoundTripper {
+	return dual(false, frontedURL)
+}
+
+// dual creates a new http.RoundTripper that attempts to send
+// requests to both chained and fronted servers either in parallel or not.
+func dual(parallel bool, frontedURL string) http.RoundTripper {
 	cf := &chainedAndFronted{
-		parallel:   false,
-		frontedURL: frontedURL,
+		parallel:       parallel,
+		frontedURLHost: frontedURL,
 	}
 	cf.setFetcher(&dualFetcher{cf: cf})
 	return cf
@@ -116,10 +128,10 @@ func ChainedThenFrontedWith(frontedURL string) http.RoundTripper {
 // chainedAndFronted fetches HTTP data in parallel using both chained and fronted
 // servers.
 type chainedAndFronted struct {
-	parallel   bool
-	frontedURL string
-	_fetcher   http.RoundTripper
-	mu         sync.RWMutex
+	parallel       bool
+	frontedURLHost string
+	_fetcher       http.RoundTripper
+	mu             sync.RWMutex
 }
 
 func (cf *chainedAndFronted) getFetcher() http.RoundTripper {
@@ -334,8 +346,11 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 
 func (cf *chainedAndFronted) cloneRequestForFronted(req *http.Request) (*http.Request, error) {
 	var frontedURL string
-	if cf.frontedURL != "" {
-		frontedURL = cf.frontedURL
+	if cf.frontedURLHost != "" {
+		// Just swap the host while keeping the rest of the URL the same.
+		urlCopy := *req.URL
+		urlCopy.Host = cf.frontedURLHost
+		frontedURL = urlCopy.String()
 	} else {
 		frontedURL = req.Header.Get(lanternFrontedURL)
 		if frontedURL == "" {
@@ -354,6 +369,7 @@ func cloneRequestForFronted(req *http.Request, frontedURL string) (*http.Request
 
 	// We need to copy the query parameters from the original.
 	frontedReq.URL.RawQuery = req.URL.RawQuery
+
 	// Make a copy of the original request headers to include in the
 	// fronted request. This will ensure that things like the caching
 	// headers are included in both requests.
