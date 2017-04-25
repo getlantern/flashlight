@@ -98,8 +98,7 @@ func (app *App) Run() error {
 			app.Flags["configdir"].(string),
 			func() bool { return !settings.GetProxyAll() }, // use shortcut
 			func() bool { return !settings.GetProxyAll() }, // use detour
-			settings.GetProxyAll,
-			func() bool { return false }, // on desktop, we do not allow private hosts
+			func() bool { return false },                   // on desktop, we do not allow private hosts
 			settings.IsAutoReport,
 			app.Flags,
 			app.beforeStart(listenAddr),
