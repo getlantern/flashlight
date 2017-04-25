@@ -86,14 +86,14 @@ func getProxyAddr() (string, bool) {
 // servers unless and until a request fails, in which case we'll start trying
 // fronted requests again.
 func ParallelPreferChained() http.RoundTripper {
-	return dual(true, "")
+	return dual(true, "", "")
 }
 
 // ChainedThenFronted creates a new http.RoundTripper that attempts to send
 // requests first through a chained server and then falls back to using a
 // direct fronted server if the chained route didn't work.
 func ChainedThenFronted() http.RoundTripper {
-	return dual(false, "")
+	return dual(false, "", "")
 }
 
 // ParallelPreferChainedWith creates a new http.RoundTripper that attempts to
@@ -102,27 +102,32 @@ func ChainedThenFronted() http.RoundTripper {
 // Chained servers unless and until a request fails, in which case we'll start
 // trying fronted requests again. This version specified the fronted URL
 // directly.
-func ParallelPreferChainedWith(frontedURL string) http.RoundTripper {
-	return dual(true, frontedURL)
+func ParallelPreferChainedWith(frontedURL string, rootCA string) http.RoundTripper {
+	return dual(true, frontedURL, rootCA)
 }
 
 // ChainedThenFrontedWith creates a new http.RoundTripper that attempts to send
 // requests first through a chained server and then falls back to using a
 // direct fronted server if the chained route didn't work.
 // This version specified the fronted URL directly.
-func ChainedThenFrontedWith(frontedURL string) http.RoundTripper {
-	return dual(false, frontedURL)
+func ChainedThenFrontedWith(frontedURL, rootCA string) http.RoundTripper {
+	return dual(false, frontedURL, rootCA)
 }
 
 // dual creates a new http.RoundTripper that attempts to send
 // requests to both chained and fronted servers either in parallel or not.
-func dual(parallel bool, frontedURL string) http.RoundTripper {
+func dual(parallel bool, frontedURL, rootCA string) http.RoundTripper {
 	cf := &chainedAndFronted{
 		parallel:       parallel,
 		frontedURLHost: frontedURL,
+		rootCA:         rootCA,
 	}
-	cf.setFetcher(&dualFetcher{cf: cf})
+	cf.setFetcher(newDualFetcher(cf))
 	return cf
+}
+
+func newDualFetcher(cf *chainedAndFronted) http.RoundTripper {
+	return &dualFetcher{cf: cf, rootCA: cf.rootCA}
 }
 
 // chainedAndFronted fetches HTTP data in parallel using both chained and fronted
@@ -132,6 +137,7 @@ type chainedAndFronted struct {
 	frontedURLHost string
 	_fetcher       http.RoundTripper
 	mu             sync.RWMutex
+	rootCA         string
 }
 
 func (cf *chainedAndFronted) getFetcher() http.RoundTripper {
@@ -157,21 +163,22 @@ func (cf *chainedAndFronted) RoundTrip(req *http.Request) (*http.Response, error
 	if err != nil {
 		log.Error(err)
 		// If there's an error, switch back to using the dual fetcher.
-		cf.setFetcher(&dualFetcher{cf})
+		cf.setFetcher(newDualFetcher(cf))
 	} else if !success(resp) {
 		log.Error(resp.Status)
-		cf.setFetcher(&dualFetcher{cf})
+		cf.setFetcher(newDualFetcher(cf))
 	}
 	return resp, err
 }
 
 type chainedFetcher struct {
+	rootCA string
 }
 
 // RoundTrip will attempt to execute the specified HTTP request using only a chained fetcher
 func (cf *chainedFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
 	log.Debugf("Using chained fetcher")
-	rt, err := ChainedNonPersistent("")
+	rt, err := ChainedNonPersistent(cf.rootCA)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +186,8 @@ func (cf *chainedFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 type dualFetcher struct {
-	cf *chainedAndFronted
+	cf     *chainedAndFronted
+	rootCA string
 }
 
 type frontedRT struct{}
@@ -201,7 +209,7 @@ func (df *dualFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
 	if df.cf.parallel && !isIdempotentMethod(req) {
 		return nil, errors.New("Use ParallelPreferChained for non-idempotent method")
 	}
-	directRT, err := ChainedNonPersistent("")
+	directRT, err := ChainedNonPersistent(df.rootCA)
 	if err != nil {
 		return nil, errors.Wrap(err).Op("DFCreateChainedClient")
 	}
@@ -252,7 +260,7 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 		// comparing to fronted
 		if atomic.LoadInt64(&chainedRTT) <= 3*atomic.LoadInt64(&frontedRTT) {
 			log.Debug("Switching to chained fetcher for future requests since it is within 3 times of fronted response time")
-			df.cf.setFetcher(&chainedFetcher{})
+			df.cf.setFetcher(&chainedFetcher{rootCA: df.rootCA})
 		}
 	}
 

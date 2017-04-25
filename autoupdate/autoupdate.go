@@ -24,15 +24,17 @@ var (
 
 	applyNextAttemptTime = time.Hour * 2
 
-	httpClient = &http.Client{
-		Transport: proxied.ChainedThenFrontedWith("d2yl1zps97e5mx.cloudfront.net"),
-	}
+	httpClient atomic.Value
 )
 
 // Configure sets the CA certificate to pin for the TLS auto-update connection.
 func Configure(updateURL, updateCA string) {
 	setUpdateURL(updateURL)
 	enableAutoupdate()
+	httpClient.Store(
+		&http.Client{
+			Transport: proxied.ChainedThenFrontedWith("d2yl1zps97e5mx.cloudfront.net", updateCA),
+		})
 }
 
 func setUpdateURL(url string) {
@@ -78,7 +80,7 @@ func applyNext() {
 		CurrentVersion: Version,
 		URL:            getUpdateURL(),
 		PublicKey:      PublicKey,
-		HTTPClient:     httpClient,
+		HTTPClient:     httpClient.Load().(*http.Client),
 	})
 	if err != nil {
 		log.Debugf("Error getting update: %v", err)

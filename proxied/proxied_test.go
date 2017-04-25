@@ -73,7 +73,7 @@ func TestChainedAndFrontedHeaders(t *testing.T) {
 	req.Header.Set("X-Lantern-If-None-Match", etag)
 	req.Body = ioutil.NopCloser(bytes.NewBufferString("Hello"))
 
-	df := &dualFetcher{&chainedAndFronted{parallel: true}}
+	df := &dualFetcher{&chainedAndFronted{parallel: true}, ""}
 	crt := &mockChainedRT{req: eventual.NewValue(), statusCode: 503}
 	frt := &mockFrontedRT{req: eventual.NewValue()}
 	df.do(req, crt, frt)
