@@ -10,14 +10,13 @@ import (
 )
 
 func TestRedirect(t *testing.T) {
-	client := &Client{}
 	op := ops.Begin("client-test")
 	defer op.End()
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "http://test.com", nil)
 	httpsURL := "https://test.com"
-	client.redirect(w, req, httpsURL, op)
+	newClient().redirect(w, req, httpsURL, op)
 
 	resp := w.Result()
 
@@ -27,17 +26,16 @@ func TestRedirect(t *testing.T) {
 }
 
 func TestEasylist(t *testing.T) {
-	client := &Client{}
-
+	client := newClient()
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "http://test.com", nil)
-	client.easyblock(w, req, true)
+	client.easyblock(w, req)
 	resp := w.Result()
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
 
 	w = httptest.NewRecorder()
 	req, _ = http.NewRequest("GET", "http://test.com", nil)
-	client.easyblock(w, req, false)
+	client.easyblock(w, req)
 	resp = w.Result()
 	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
 }

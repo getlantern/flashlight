@@ -20,7 +20,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	if !client.easylist.Allow(req) {
-		client.easyblock(resp, req, isConnect)
+		client.easyblock(resp, req)
 		return
 	}
 
@@ -49,21 +49,16 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (client *Client) easyblock(resp http.ResponseWriter, req *http.Request, isConnect bool) {
+func (client *Client) easyblock(resp http.ResponseWriter, req *http.Request) {
 	log.Debugf("Blocking %v on %v", req.URL, req.Host)
-	if isConnect {
-		// For CONNECT requests, we pretend that it's okay but then we don't do
-		// anything afterwards. We have to do this because otherwise Chrome marks
-		// us as a bad proxy.
-		resp.WriteHeader(http.StatusOK)
-	} else {
-		resp.WriteHeader(http.StatusForbidden)
-	}
+	client.statsTracker.IncAdsBlocked()
+	resp.WriteHeader(http.StatusForbidden)
 }
 
 func (client *Client) redirect(resp http.ResponseWriter, req *http.Request, httpsURL string, op *ops.Op) {
 	log.Debugf("httpseverywhere redirecting to %v", httpsURL)
 	op.Set("forcedhttps", true)
+	client.statsTracker.IncHTTPSUpgrades()
 	// Tell the browser to only cache the redirect for a day. The browser
 	// is generally caches permanent redirects, well, permanently but will also
 	// follow caching rules.

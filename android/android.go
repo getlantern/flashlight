@@ -22,7 +22,7 @@ import (
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
-	"github.com/getlantern/flashlight/pro"
+	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
@@ -35,7 +35,12 @@ var (
 
 	updateServerURL = "https://update.getlantern.org"
 	defaultLocale   = `en-US`
-	surveyURL       = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
+
+	surveyHTTPClient = &http.Client{
+		Transport: proxied.ChainedThenFrontedWith("d38rvu630khj2q.cloudfront.net", ""),
+	}
+
+	surveyURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
 
 	startOnce sync.Once
 )
@@ -177,6 +182,7 @@ func run(configDir, locale string,
 		func() bool { return false }, // not use detour
 		// TODO: allow configuring whether or not to enable reporting (just like we
 		// already have in desktop)
+		func() bool { return true }, // on Android, we allow private hosts
 		func() bool { return true }, // auto report
 		flags,
 		func() bool {
@@ -188,6 +194,7 @@ func run(configDir, locale string,
 		func(cfg *config.Global) {
 		}, // onConfigUpdate
 		user,
+		statsTracker{},
 		func(err error) {}, // onError
 		base64.StdEncoding.EncodeToString(uuid.NodeID()),
 	)
@@ -277,15 +284,12 @@ func surveyRequest(locale string) (string, error) {
 
 	var surveyResp map[string]*json.RawMessage
 
-	httpClient := pro.GetHTTPClient()
-
 	if req, err = http.NewRequest("GET", surveyURL, nil); err != nil {
 		handleError(fmt.Errorf("Error fetching survey: %v", err))
 		return "", err
 	}
-	pro.PrepareForFronting(req)
 
-	if res, err = httpClient.Do(req); err != nil {
+	if res, err = surveyHTTPClient.Do(req); err != nil {
 		handleError(fmt.Errorf("Error fetching feed: %v", err))
 		return "", err
 	}
@@ -297,6 +301,8 @@ func surveyRequest(locale string) (string, error) {
 		handleError(fmt.Errorf("Error reading survey: %v", err))
 		return "", err
 	}
+
+	log.Debugf("Survey response: %s", string(contents))
 
 	err = json.Unmarshal(contents, &surveyResp)
 	if err != nil {

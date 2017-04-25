@@ -28,6 +28,7 @@ import:
 - package: github.com/getlantern/hidden
 - package: github.com/getlantern/i18n
 - package: github.com/getlantern/idletiming
+- package: github.com/getlantern/iptool
 - package: github.com/getlantern/jibber_jabber
 - package: github.com/getlantern/keyman
 - package: github.com/getlantern/launcher
@@ -36,7 +37,7 @@ import:
 - package: github.com/getlantern/notifier
 - package: github.com/getlantern/ops
 - package: github.com/getlantern/osversion
-- package: github.com/getlantern/pac
+- package: github.com/getlantern/sysproxy
 - package: github.com/getlantern/profiling
 - package: github.com/getlantern/protected
 - package: github.com/getlantern/proxiedsites

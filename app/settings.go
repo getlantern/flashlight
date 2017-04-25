@@ -365,8 +365,6 @@ func (s *Settings) GetProxyAll() bool {
 // SetProxyAll sets whether or not to proxy all traffic.
 func (s *Settings) SetProxyAll(proxyAll bool) {
 	s.setVal(SNProxyAll, proxyAll)
-	// Cycle the PAC file so that browser picks up changes
-	cyclePAC()
 }
 
 // IsAutoReport returns whether or not to auto-report debugging and analytics data.

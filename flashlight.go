@@ -38,18 +38,26 @@ func Run(httpProxyAddr string,
 	configDir string,
 	useShortcut func() bool,
 	useDetour func() bool,
+	proxyAll func() bool,
+	allowPrivateHosts func() bool,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
 	beforeStart func() bool,
 	afterStart func(),
 	onConfigUpdate func(cfg *config.Global),
 	userConfig config.UserConfig,
+	statsTracker common.StatsTracker,
 	onError func(err error),
 	deviceID string) error {
+
 	displayVersion()
 	initContext(deviceID, common.Version, common.RevisionDate)
 
-	cl := client.NewClient(useShortcut, useDetour, userConfig.GetToken)
+	cl, err := client.NewClient(useShortcut, useDetour,
+		proxyAll, userConfig.GetToken, statsTracker, allowPrivateHosts)
+	if err != nil {
+		log.Fatalf("Unable to initialize client: %v", err)
+	}
 	proxied.SetProxyAddr(cl.Addr)
 
 	proxiesDispatch := func(conf interface{}) {

@@ -39,9 +39,9 @@ func (s *UserSignal) read() {
 		log.Debugf("Read userSignal %v", message)
 		switch message {
 		case "disconnect":
-			pacOff()
+			sysproxyOff()
 		case "connect":
-			pacOn()
+			sysproxyOn()
 		default:
 			continue
 		}

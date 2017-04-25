@@ -39,6 +39,12 @@ func (w mockWriter) Dump() string {
 	return fmt.Sprintf("%+v", *w.ResponseWriter.(*httptest.ResponseRecorder).Result())
 }
 
+type mockStatsTracker struct{}
+
+func (m mockStatsTracker) SetActiveProxyLocation(city, country, countryCode string) {}
+func (m mockStatsTracker) IncHTTPSUpgrades()                                        {}
+func (m mockStatsTracker) IncAdsBlocked()                                           {}
+
 func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {
 	client.bal.Reset(&testDialer{
 		name: "test-dialer",
@@ -46,12 +52,21 @@ func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, 
 	})
 }
 
+func newClient() *Client {
+	client, _ := NewClient(
+		func() bool { return true },
+		func() bool { return true },
+		func() bool { return true },
+		func() string { return "proToken" },
+		mockStatsTracker{},
+		func() bool { return true },
+	)
+	return client
+}
+
 func TestServeHTTPOk(t *testing.T) {
 	mockResponse := []byte("HTTP/1.1 404 Not Found\r\n\r\n")
-	client := NewClient(
-		func() bool { return true },
-		func() bool { return true },
-		func() string { return "proToken" })
+	client := newClient()
 	d := mockconn.SucceedingDialer(mockResponse)
 	resetBalancer(client, d.Dial)
 
@@ -78,10 +93,7 @@ func TestServeHTTPTimeout(t *testing.T) {
 		atomic.StoreInt64(&requestTimeout, int64(originalRequestTimeout))
 	}()
 
-	client := NewClient(
-		func() bool { return true },
-		func() bool { return true },
-		func() string { return "proToken" })
+	client := newClient()
 	d := mockconn.SucceedingDialer([]byte{})
 	resetBalancer(client, func(network, addr string) (net.Conn, error) {
 		<-time.After(getRequestTimeout() * 2)
@@ -99,6 +111,35 @@ func TestServeHTTPTimeout(t *testing.T) {
 	client.ServeHTTP(w, req)
 	assert.Equal(t, 200, w.Status(), "It should respond 200 OK with error page")
 	assert.Contains(t, string(w.Dialer.Received()), "context deadline exceeded", "should be with context error")
+}
+
+func TestIsAddressProxyable(t *testing.T) {
+	client := newClient()
+	assert.NoError(t, client.isAddressProxyable("192.168.1.1:9999"),
+		"all addresses should be proxyable when allow private hosts")
+	assert.NoError(t, client.isAddressProxyable("localhost:80"),
+		"all addresses should be proxyable when allow private hosts")
+	client.allowPrivateHosts = func() bool {
+		return false
+	}
+	assert.Error(t, client.isAddressProxyable("192.168.1.1:9999"),
+		"private address should not be proxyable")
+	assert.Error(t, client.isAddressProxyable("192.168.1.1"),
+		"address without port should not be proxyable")
+	// Note that in reality, browser / OS may choose to never proxy localhost
+	// URLs.
+	assert.Error(t, client.isAddressProxyable("www.google.com"),
+		"address should not be proxyable if it's missing a port")
+	assert.Error(t, client.isAddressProxyable("localhost:80"),
+		"address should not be proxyable if it's a plain hostname")
+	assert.Error(t, client.isAddressProxyable("localhost"),
+		"address should not be proxyable if it's a plain hostname")
+	assert.Error(t, client.isAddressProxyable("plainhostname:80"),
+		"address should not be proxyable if it's a plain hostname")
+	assert.Error(t, client.isAddressProxyable("something.local:80"),
+		"address should not be proxyable if it ends in .local")
+	assert.NoError(t, client.isAddressProxyable("anysite.com:80"),
+		"address should be proxyable if it's not an IP address, not a plain hostname and does not end in .local")
 }
 
 type testDialer struct {
@@ -120,6 +161,10 @@ func (d *testDialer) Name() string {
 }
 
 func (d *testDialer) Label() string {
+	return d.name
+}
+
+func (d *testDialer) JustifiedLabel() string {
 	return d.name
 }
 

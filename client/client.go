@@ -9,23 +9,28 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/detour"
 	"github.com/getlantern/easylist"
+	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/go-socks5"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
+	"github.com/getlantern/iptool"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/status"
@@ -55,6 +60,9 @@ var (
 	// avoid applications bypassing Lantern.
 	// Chrome has a 30s timeout before marking proxy as bad.
 	requestTimeout = int64(20 * time.Second)
+
+	// See http://stackoverflow.com/questions/106179/regular-expression-to-match-dns-hostname-or-ip-address
+	validHostnameRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 )
 
 // Client is an HTTP proxy that accepts connections from local programs and
@@ -80,25 +88,45 @@ type Client struct {
 
 	easylist easylist.List
 	// rewriteToHTTPS httpseverywhere.Rewrite
+
+	statsTracker common.StatsTracker
+
+	iptool            iptool.Tool
+	allowPrivateHosts func() bool
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
 // SOCKS proxies. It take a function for determing whether or not to proxy
 // all traffic, and another function to get Lantern Pro token when required.
-func NewClient(useShortcut func() bool, useDetour func() bool, proTokenGetter func() string) *Client {
+func NewClient(
+	useShortcut func() bool,
+	useDetour func() bool,
+	proxyAll func() bool,
+	proTokenGetter func() string,
+	statsTracker common.StatsTracker,
+	allowPrivateHosts func() bool,
+) (*Client, error) {
 	client := &Client{
 		bal:            balancer.New(),
 		useShortcut:    useShortcut,
 		useDetour:      useDetour,
 		proTokenGetter: proTokenGetter,
 		// rewriteToHTTPS: httpseverywhere.Default(),
+		statsTracker:      statsTracker,
+		allowPrivateHosts: allowPrivateHosts,
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
 	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers.Pool, false, client.dialCONNECT)
 	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
 	client.initEasyList()
-	return client
+	client.reportProxyLocationLoop()
+	var err error
+	client.iptool, err = iptool.New()
+	if err != nil {
+		return nil, errors.New("Unable to initialize iptool: %v", err)
+	}
+	return client, nil
 }
 
 type allowAllEasyList struct{}
@@ -127,6 +155,30 @@ func (client *Client) initEasyList() {
 	}
 	client.easylist = list
 	log.Debug("Initialized easylist")
+}
+
+func (client *Client) reportProxyLocationLoop() {
+	ch := client.bal.OnActiveDialer()
+	var activeProxy string
+	go func() {
+		for {
+			proxy := <-ch
+			if proxy.Name() == activeProxy {
+				continue
+			}
+			activeProxy = proxy.Name()
+			loc := proxyLoc(activeProxy)
+			if loc == nil {
+				log.Errorf("Couldn't find location for %s", activeProxy)
+				continue
+			}
+			client.statsTracker.SetActiveProxyLocation(
+				loc.city,
+				loc.country,
+				loc.countryCode,
+			)
+		}
+	}()
 }
 
 // Addr returns the address at which the client is listening with HTTP, blocking
@@ -275,8 +327,8 @@ func (client *Client) dial(isConnect bool, network, addr string) (conn net.Conn,
 
 func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, port int) (net.Conn, error) {
 	// Establish outbound connection
-	if !client.shouldSendToProxy(addr, port) {
-		log.Tracef("Port not allowed, bypassing proxy and sending request directly to %v", addr)
+	if err := client.shouldSendToProxy(addr, port); err != nil {
+		log.Debugf("%v, sending directly to %v", err, addr)
 		// Use netx because on Android, we need a special protected dialer
 		return netx.DialContext(ctx, "tcp", addr)
 	}
@@ -322,13 +374,53 @@ func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, p
 	}
 }
 
-func (client *Client) shouldSendToProxy(addr string, port int) bool {
+func (client *Client) shouldSendToProxy(addr string, port int) error {
+	err := client.isPortProxyable(port)
+	if err == nil {
+		err = client.isAddressProxyable(addr)
+	}
+	return err
+}
+
+func (client *Client) isPortProxyable(port int) error {
 	for _, proxiedPort := range proxiedCONNECTPorts {
 		if port == proxiedPort {
-			return true
+			return nil
 		}
 	}
-	return false
+	return fmt.Errorf("Port %d not proxyable", port)
+}
+
+// isAddressProxyable largely replicates the logic in the old PAC file
+func (client *Client) isAddressProxyable(addr string) error {
+	if client.allowPrivateHosts() {
+		return nil
+	}
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		return fmt.Errorf("Unable to split host and port for %v, considering private: %v", addr, err)
+	}
+
+	ip := net.ParseIP(host)
+	if ip == nil {
+		// host is not an IP address
+		if validHostnameRegex.MatchString(host) {
+			if !strings.Contains(host, ".") {
+				return fmt.Errorf("%v is a plain hostname, considering private", host)
+			}
+			if strings.HasSuffix(host, ".local") {
+				return fmt.Errorf("%v ends in .local, considering private", host)
+			}
+		}
+		// assuming non-private
+		return nil
+	}
+
+	ipAddrToCheck := &net.IPAddr{IP: ip}
+	if client.iptool.IsPrivate(ipAddrToCheck) {
+		return fmt.Errorf("IP %v is private", host)
+	}
+	return nil
 }
 
 func (client *Client) portForAddress(addr string) (int, error) {
