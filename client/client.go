@@ -101,7 +101,6 @@ type Client struct {
 func NewClient(
 	useShortcut func() bool,
 	useDetour func() bool,
-	proxyAll func() bool,
 	proTokenGetter func() string,
 	statsTracker common.StatsTracker,
 	allowPrivateHosts func() bool,
