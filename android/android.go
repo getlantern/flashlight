@@ -36,8 +36,8 @@ var (
 	updateServerURL = "https://update.getlantern.org"
 	defaultLocale   = `en-US`
 
-	httpClient = &http.Client{
-		Transport: proxied.ChainedThenFronted(),
+	surveyHTTPClient = &http.Client{
+		Transport: proxied.ChainedThenFrontedWith("d38rvu630khj2q.cloudfront.net", ""),
 	}
 
 	surveyURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
@@ -280,12 +280,7 @@ func surveyRequest(locale string) (string, error) {
 		return "", err
 	}
 
-	frontedURL := *req.URL
-	frontedURL.Host = "d38rvu630khj2q.cloudfront.net"
-
-	proxied.PrepareForFronting(req, frontedURL.String())
-
-	if res, err = httpClient.Do(req); err != nil {
+	if res, err = surveyHTTPClient.Do(req); err != nil {
 		handleError(fmt.Errorf("Error fetching feed: %v", err))
 		return "", err
 	}
