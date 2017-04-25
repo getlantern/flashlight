@@ -37,7 +37,7 @@ var (
 	defaultLocale   = `en-US`
 
 	surveyHTTPClient = &http.Client{
-		Transport: proxied.ChainedThenFrontedWith("d38rvu630khj2q.cloudfront.net"),
+		Transport: proxied.ChainedThenFrontedWith("d38rvu630khj2q.cloudfront.net", ""),
 	}
 
 	surveyURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
