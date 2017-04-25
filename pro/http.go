@@ -10,8 +10,8 @@ import (
 // GetHTTPClient creates a new http.Client that uses domain fronting and direct
 // proxies.
 func GetHTTPClient() *http.Client {
-	rt := proxied.ChainedThenFrontedWith(common.ProAPIDDFHost)
-	rtForGet := proxied.ParallelPreferChainedWith(common.ProAPIDDFHost)
+	rt := proxied.ChainedThenFrontedWith(common.ProAPIDDFHost, "")
+	rtForGet := proxied.ParallelPreferChainedWith(common.ProAPIDDFHost, "")
 	return getHTTPClient(rtForGet, rt)
 }
 
