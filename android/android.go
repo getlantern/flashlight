@@ -58,13 +58,9 @@ type SocketProtector interface {
 
 // The DNS server is used to resolve host only when dialing a protected connection
 // from within Lantern client.
-func ProtectConnections(protector SocketProtector, dnsServer string) error {
-	p, err := protected.New(protector.ProtectConn, dnsServer)
-	if err != nil {
-		return err
-	}
+func ProtectConnections(protector SocketProtector, dnsServer string) {
+	p := protected.New(protector.ProtectConn, dnsServer)
 	netx.OverrideDial(p.DialContext)
-	return nil
 }
 
 // RemoveOverrides removes the protected tlsdialer overrides
