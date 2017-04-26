@@ -38,6 +38,11 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 			log.Error(op.FailIf(err))
 		}
 	} else {
+		log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
+		if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
+			client.redirect(resp, req, httpsURL, op)
+			return
+		}
 		// Direct proxying can only be used for plain HTTP connections.
 		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
 		// consumed and removed by http-proxy-lantern/versioncheck

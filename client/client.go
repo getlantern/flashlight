@@ -23,6 +23,7 @@ import (
 	"github.com/getlantern/go-socks5"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
+	"github.com/getlantern/httpseverywhere"
 	"github.com/getlantern/iptool"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
@@ -86,8 +87,8 @@ type Client struct {
 	useDetour      func() bool
 	proTokenGetter func() string
 
-	easylist easylist.List
-	// rewriteToHTTPS httpseverywhere.Rewrite
+	easylist       easylist.List
+	rewriteToHTTPS httpseverywhere.Rewrite
 
 	statsTracker common.StatsTracker
 
@@ -106,11 +107,11 @@ func NewClient(
 	allowPrivateHosts func() bool,
 ) (*Client, error) {
 	client := &Client{
-		bal:            balancer.New(),
-		useShortcut:    useShortcut,
-		useDetour:      useDetour,
-		proTokenGetter: proTokenGetter,
-		// rewriteToHTTPS: httpseverywhere.Default(),
+		bal:               balancer.New(),
+		useShortcut:       useShortcut,
+		useDetour:         useDetour,
+		proTokenGetter:    proTokenGetter,
+		rewriteToHTTPS:    httpseverywhere.Default(),
 		statsTracker:      statsTracker,
 		allowPrivateHosts: allowPrivateHosts,
 	}

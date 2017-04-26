@@ -38,7 +38,6 @@ func Run(httpProxyAddr string,
 	configDir string,
 	useShortcut func() bool,
 	useDetour func() bool,
-	proxyAll func() bool,
 	allowPrivateHosts func() bool,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
@@ -54,7 +53,7 @@ func Run(httpProxyAddr string,
 	initContext(deviceID, common.Version, common.RevisionDate)
 
 	cl, err := client.NewClient(useShortcut, useDetour,
-		proxyAll, userConfig.GetToken, statsTracker, allowPrivateHosts)
+		userConfig.GetToken, statsTracker, allowPrivateHosts)
 	if err != nil {
 		log.Fatalf("Unable to initialize client: %v", err)
 	}
