@@ -83,7 +83,8 @@ type Client struct {
 
 	l net.Listener
 
-	proxyAll       func() bool
+	useShortcut    func() bool
+	useDetour      func() bool
 	proTokenGetter func() string
 
 	easylist       easylist.List
@@ -99,14 +100,16 @@ type Client struct {
 // SOCKS proxies. It take a function for determing whether or not to proxy
 // all traffic, and another function to get Lantern Pro token when required.
 func NewClient(
-	proxyAll func() bool,
+	useShortcut func() bool,
+	useDetour func() bool,
 	proTokenGetter func() string,
 	statsTracker common.StatsTracker,
 	allowPrivateHosts func() bool,
 ) (*Client, error) {
 	client := &Client{
 		bal:               balancer.New(),
-		proxyAll:          proxyAll,
+		useShortcut:       useShortcut,
+		useDetour:         useDetour,
 		proTokenGetter:    proTokenGetter,
 		rewriteToHTTPS:    httpseverywhere.Default(),
 		statsTracker:      statsTracker,
@@ -287,12 +290,12 @@ func (client *Client) proxiedDialer(orig func(network, addr string) (net.Conn, e
 		defer op.End()
 
 		var proxied func(network, addr string) (net.Conn, error)
-		if client.proxyAll() {
-			op.Set("detour", false)
-			proxied = orig
-		} else {
+		if client.useDetour() {
 			op.Set("detour", true)
 			proxied = detourDialer
+		} else {
+			op.Set("detour", false)
+			proxied = orig
 		}
 
 		start := time.Now()
@@ -329,8 +332,8 @@ func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, p
 		// Use netx because on Android, we need a special protected dialer
 		return netx.DialContext(ctx, "tcp", addr)
 	}
-	if !client.proxyAll() && shortcut.Allow(addr) {
-		log.Tracef("Use shortcut (dial directly) for %v", addr)
+	if client.useShortcut() && shortcut.Allow(addr) {
+		log.Debugf("Use shortcut (dial directly) for %v", addr)
 		return netx.DialContext(ctx, "tcp", addr)
 	}
 

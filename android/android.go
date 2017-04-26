@@ -55,10 +55,12 @@ type SocketProtector interface {
 // routing via a VPN. This is useful when running Lantern as a VPN on Android,
 // because it keeps Lantern's own connections from being captured by the VPN and
 // resulting in an infinite loop.
-func ProtectConnections(protector SocketProtector) {
-	p := protected.New(protector.ProtectConn)
+
+// The DNS server is used to resolve host only when dialing a protected connection
+// from within Lantern client.
+func ProtectConnections(protector SocketProtector, dnsServer string) {
+	p := protected.New(protector.ProtectConn, dnsServer)
 	netx.OverrideDial(p.DialContext)
-	netx.OverrideResolve(p.Resolve)
 }
 
 // RemoveOverrides removes the protected tlsdialer overrides
@@ -168,9 +170,12 @@ func run(configDir, locale string,
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
 	flashlight.Run("127.0.0.1:0", // listen for HTTP on random address
-		"127.0.0.1:0",               // listen for SOCKS on random address
-		configDir,                   // place to store lantern configuration
-		func() bool { return true }, // proxy all requests
+		"127.0.0.1:0", // listen for SOCKS on random address
+		configDir,     // place to store lantern configuration
+		// TODO: allow configuring whether or not to enable shortcut depends on
+		// proxyAll option (just like we already have in desktop)
+		func() bool { return true },  // use shortcut
+		func() bool { return false }, // not use detour
 		// TODO: allow configuring whether or not to enable reporting (just like we
 		// already have in desktop)
 		func() bool { return true }, // on Android, we allow private hosts
