@@ -9,10 +9,12 @@ import (
 	"time"
 
 	"github.com/getlantern/appdir"
+	fops "github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/jibber_jabber"
 	"github.com/getlantern/keyman"
+	"github.com/getlantern/mtime"
 	"github.com/getlantern/ops"
 	"github.com/getlantern/osversion"
 
@@ -30,6 +32,8 @@ import (
 
 var (
 	log = golog.LoggerFor("flashlight")
+
+	fullyReportedOps = []string{"client_started", "client_stopped", "hourly_usage", "fatal_error"}
 )
 
 // Run runs a client proxy. It blocks as long as the proxy is running.
@@ -48,12 +52,16 @@ func Run(httpProxyAddr string,
 	onError func(err error),
 	deviceID string) error {
 
+	elapsed := mtime.Stopwatch()
 	displayVersion()
 	initContext(deviceID, common.Version, common.RevisionDate)
+	op := fops.Begin("client_started")
 
 	cl, err := client.NewClient(proxyAll, userConfig.GetToken, statsTracker, allowPrivateHosts)
 	if err != nil {
-		log.Fatalf("Unable to initialize client: %v", err)
+		fatalErr := fmt.Errorf("Unable to initialize client: %v", err)
+		op.FailIf(fatalErr)
+		op.End()
 	}
 	proxied.SetProxyAddr(cl.Addr)
 
@@ -89,6 +97,8 @@ func Run(httpProxyAddr string,
 		log.Debug("Starting client HTTP proxy")
 		err := cl.ListenAndServeHTTP(httpProxyAddr, func() {
 			log.Debug("Started client HTTP proxy")
+			op.SetMetricSum("startup_time", float64(elapsed()))
+			op.End()
 			afterStart()
 		})
 		if err != nil {
@@ -108,7 +118,31 @@ func applyClientConfig(client *client.Client, cfg *config.Global, deviceID strin
 		fronted.Configure(certs, cfg.Client.MasqueradeSets, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
 	}
 
-	enableBorda := func() bool { return rand.Float64() <= cfg.BordaSamplePercentage/100 && autoReport() }
+	enableBorda := func(ctx map[string]interface{}) bool {
+		if !autoReport() {
+			return false
+		}
+
+		if rand.Float64() <= cfg.BordaSamplePercentage/100 {
+			// Randomly included in sample
+			return true
+		}
+
+		// For some ops, we don't randomly sample, we include all of them
+		op := ctx["op"]
+		switch t := op.(type) {
+		case string:
+			for _, fullyIncludedOp := range fullyReportedOps {
+				if t == fullyIncludedOp {
+					return true
+				}
+			}
+			return false
+		default:
+			log.Errorf("Received borda report with missing or non-string op: %v", op)
+			return false
+		}
+	}
 	borda.Configure(cfg.BordaReportInterval, enableBorda)
 }
 

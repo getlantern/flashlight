@@ -197,3 +197,18 @@ func (op *Op) TCPDialTime(elapsed time.Duration, err error) {
 func (op *Op) SetMetric(name string, value borda.Val) *Op {
 	return op.Set(name, value)
 }
+
+func (op *Op) SetMetricSum(name string, value float64) *Op {
+	return op.Set(name, borda.Float(value))
+}
+
+func (op *Op) SetMetricMin(name string, value float64) *Op {
+	return op.Set(name, borda.Min(value))
+}
+
+func (op *Op) SetMetricMax(name string, value float64) *Op {
+	return op.Set(name, borda.Max(value))
+}
+func (op *Op) SetMetricAvg(name string, value float64) *Op {
+	return op.Set(name, borda.Avg(value))
+}

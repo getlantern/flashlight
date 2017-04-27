@@ -11,6 +11,7 @@ import (
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
+	"github.com/getlantern/mtime"
 	"github.com/getlantern/profiling"
 
 	"github.com/getlantern/flashlight/analytics"
@@ -19,6 +20,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/logging"
+	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxiedsites"
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
@@ -27,9 +29,12 @@ import (
 var (
 	log      = golog.LoggerFor("flashlight.app")
 	settings *Settings
+
+	elapsed func() time.Duration
 )
 
 func init() {
+	elapsed = mtime.Stopwatch()
 
 	autoupdate.Version = common.PackageVersion
 	autoupdate.PublicKey = []byte(packagePublicKey)
@@ -60,13 +65,19 @@ func (app *App) Init() {
 
 // LogPanicAndExit logs a panic and then exits the application.
 func (app *App) LogPanicAndExit(msg string) {
+	op := ops.Begin("fatal_error")
+	op.FailIf(fmt.Errorf(msg))
+	op.End()
 	log.Error(msg)
 	_ = logging.Close()
 	app.Exit(nil)
+	recordStopped()
 }
 
 // Run starts the app. It will block until the app exits.
 func (app *App) Run() error {
+	app.AddExitFunc(recordStopped)
+
 	// Run below in separate goroutine as config.Init() can potentially block when Lantern runs
 	// for the first time. User can still quit Lantern through systray menu when it happens.
 	go func() {
@@ -368,4 +379,10 @@ func (app *App) Exit(err error) {
 // WaitForExit waits for a request to exit the application.
 func (app *App) waitForExit() error {
 	return <-app.exitCh
+}
+
+func recordStopped() {
+	ops.Begin("client_stopped").
+		SetMetricSum("uptime", float64(elapsed())).
+		End()
 }

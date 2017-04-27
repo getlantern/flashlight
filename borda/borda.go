@@ -22,7 +22,7 @@ var (
 // Configure starts borda reporting and proxy bench if reportInterval > 0. The
 // service never stops once enabled. The service will check enabled each
 // time before it reports to borda, however.
-func Configure(reportInterval time.Duration, enabled func() bool) {
+func Configure(reportInterval time.Duration, enabled func(ctx map[string]interface{}) bool) {
 	if reportInterval > 0 {
 		once.Do(func() {
 			startBordaAndProxyBench(reportInterval, enabled)
@@ -36,7 +36,7 @@ func Close() {
 	}
 }
 
-func startBordaAndProxyBench(reportInterval time.Duration, enabled func() bool) {
+func startBordaAndProxyBench(reportInterval time.Duration, enabled func(ctx map[string]interface{}) bool) {
 	bordaClient = createBordaClient(reportInterval)
 
 	reportToBorda := bordaClient.ReducingSubmitter("client_results", 1000)
@@ -46,7 +46,7 @@ func startBordaAndProxyBench(reportInterval time.Duration, enabled func() bool) 
 	})
 
 	reporter := func(failure error, ctx map[string]interface{}) {
-		if !enabled() {
+		if !enabled(ctx) {
 			return
 		}
 
