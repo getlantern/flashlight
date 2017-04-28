@@ -91,6 +91,7 @@ type UserConfig interface {
 	SetCountry(string)
 	SetStaging(bool)
 	ShowSurvey(string)
+	ProxyAll() bool
 	BandwidthUpdate(int, int)
 }
 
@@ -174,8 +175,8 @@ func run(configDir, locale string,
 		configDir,     // place to store lantern configuration
 		// TODO: allow configuring whether or not to enable shortcut depends on
 		// proxyAll option (just like we already have in desktop)
-		func() bool { return true },  // use shortcut
-		func() bool { return false }, // not use detour
+		func() bool { return !user.ProxyAll() }, // use shortcut
+		func() bool { return false },            // not use detour
 		// TODO: allow configuring whether or not to enable reporting (just like we
 		// already have in desktop)
 		func() bool { return true }, // on Android, we allow private hosts
