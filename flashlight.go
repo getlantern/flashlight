@@ -36,7 +36,7 @@ var (
 	// 100% of the below ops are reported to borda, irrespective of the borda
 	// sample percentage. This should all be low-volume operations, otherwise we
 	// will utilize too much bandwidth on the client.
-	fullyReportedOps = []string{"client_started", "client_stopped", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off"}
+	FullyReportedOps = []string{"client_started", "client_stopped", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off"}
 )
 
 // Run runs a client proxy. It blocks as long as the proxy is running.
@@ -154,7 +154,7 @@ func applyClientConfig(client *client.Client, cfg *config.Global, deviceID strin
 		op := ctx["op"]
 		switch t := op.(type) {
 		case string:
-			for _, fullyReportedOp := range fullyReportedOps {
+			for _, fullyReportedOp := range FullyReportedOps {
 				if t == fullyReportedOp {
 					log.Tracef("Including fully reported op %v in borda sample", fullyReportedOp)
 					return true

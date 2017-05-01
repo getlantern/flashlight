@@ -394,6 +394,6 @@ func (app *App) waitForExit() error {
 
 func recordStopped() {
 	ops.Begin("client_stopped").
-		SetMetricSum("uptime", float64(elapsed())).
+		SetMetricSum("uptime", elapsed().Seconds()).
 		End()
 }
