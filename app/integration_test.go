@@ -138,6 +138,7 @@ func TestProxying(t *testing.T) {
 
 	log.Fatal("test fatal error")
 	go a.Exit(nil)
+	log.Debug("Waiting for exit")
 	a.waitForExit()
 
 	log.Debug("Exited, waiting for geolocation response")
