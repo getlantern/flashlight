@@ -109,6 +109,8 @@ func Run(httpProxyAddr string,
 			log.Debug("Started client HTTP proxy")
 			op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
 			ops.Go(func() {
+				// wait for geo info before reporting so that we know the client ip and
+				// country
 				select {
 				case <-onGeo:
 					// okay, we've got geolocation info
