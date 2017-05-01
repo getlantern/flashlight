@@ -85,35 +85,33 @@ func startBordaAndProxyBench(reportInterval time.Duration, enabled func(ctx map[
 	}
 
 	ops.RegisterReporter(reporter)
-	if false {
-		golog.RegisterReporter(func(err error, linePrefix string, severity golog.Severity, ctx map[string]interface{}) {
-			// This code catches all logged errors that didn't happen inside an op
-			if ctx["op"] == nil {
-				var ctxErr errors.Error
-				switch e := err.(type) {
-				case errors.Error:
-					ctxErr = e
-				case error:
-					ctxErr = errors.Wrap(e)
-				default:
-					ctxErr = errors.New(e.Error())
-				}
-
-				ctxErr.Fill(ctx)
-				flushImmediately := false
-				op := "catchall"
-				if severity == golog.FATAL {
-					op = op + "_fatal"
-					flushImmediately = true
-				}
-				ctx["op"] = op
-				reporter(err, ctx)
-				if flushImmediately {
-					Flush()
-				}
+	golog.RegisterReporter(func(err error, linePrefix string, severity golog.Severity, ctx map[string]interface{}) {
+		// This code catches all logged errors that didn't happen inside an op
+		if ctx["op"] == nil {
+			var ctxErr errors.Error
+			switch e := err.(type) {
+			case errors.Error:
+				ctxErr = e
+			case error:
+				ctxErr = errors.Wrap(e)
+			default:
+				ctxErr = errors.New(e.Error())
 			}
-		})
-	}
+
+			ctxErr.Fill(ctx)
+			flushImmediately := false
+			op := "catchall"
+			if severity == golog.FATAL {
+				op = op + "_fatal"
+				flushImmediately = true
+			}
+			ctx["op"] = op
+			reporter(err, ctx)
+			if flushImmediately {
+				Flush()
+			}
+		}
+	})
 }
 
 func createBordaClient(reportInterval time.Duration) *borda.Client {

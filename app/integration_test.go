@@ -137,9 +137,7 @@ func TestProxying(t *testing.T) {
 	testRequest(t, httpAddr, httpsAddr)
 
 	log.Fatal("test fatal error")
-	go a.Exit(nil)
-	log.Debug("Waiting for exit")
-	a.waitForExit()
+	a.Exit(nil)
 
 	log.Debug("Exited, waiting for geolocation response")
 	select {
@@ -397,6 +395,9 @@ func startApp(t *testing.T, configAddr string) (*App, error) {
 		Flags:  flags,
 	}
 	a.Init()
+	// Set a non-zero User ID to make prochecker happytrips
+	settings.SetUserID(1)
+
 	go func() {
 		err := a.Run()
 		assert.NoError(t, err, "Unable to run app")

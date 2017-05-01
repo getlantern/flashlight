@@ -34,7 +34,10 @@ func notificationsLoop() (stop func()) {
 	notifier := notify.NewNotifications()
 	// buffered channel to avoid blocking stop() when goroutine is sleeping
 	chStop := make(chan bool, 1)
-	stop = func() { chStop <- true }
+	stop = func() {
+		log.Debug("Requested stop of notifications loop")
+		chStop <- true
+	}
 	go func() {
 		for {
 			select {
@@ -47,6 +50,7 @@ func notificationsLoop() (stop func()) {
 				}
 				time.Sleep(10 * time.Second)
 			case <-chStop:
+				log.Debug("Stopped notifications loop")
 				return
 			}
 		}
