@@ -33,7 +33,7 @@ import (
 var (
 	log = golog.LoggerFor("flashlight")
 
-	fullyReportedOps = []string{"client_started", "client_stopped", "hourly_usage", "fatal_error"}
+	fullyReportedOps = []string{"client_started", "client_stopped", "hourly_usage", "catchall_fatal", "sysproxy_on", "sysproxy_off"}
 )
 
 // Run runs a client proxy. It blocks as long as the proxy is running.

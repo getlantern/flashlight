@@ -31,8 +31,10 @@ func Configure(reportInterval time.Duration, enabled func(ctx map[string]interfa
 	}
 }
 
-func Close() {
+// Flush flushes any pending submission
+func Flush() {
 	if bordaClient != nil {
+		log.Debugf("Flushing pending borda submissions")
 		bordaClient.Flush()
 	}
 }
@@ -75,6 +77,13 @@ func startBordaAndProxyBench(reportInterval time.Duration, enabled func(ctx map[
 
 	ops.RegisterReporter(reporter)
 	golog.RegisterReporter(func(err error, linePrefix string, severity golog.Severity, ctx map[string]interface{}) {
+		if ctx["op"] == nil {
+			op := "catchall"
+			if severity == golog.FATAL {
+				op = op + "_fatal"
+			}
+			ctx["op"] = op
+		}
 		reporter(err, ctx)
 	})
 }
