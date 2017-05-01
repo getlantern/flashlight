@@ -137,7 +137,8 @@ func TestProxying(t *testing.T) {
 	testRequest(t, httpAddr, httpsAddr)
 
 	log.Fatal("test fatal error")
-	a.Exit(nil)
+	go a.Exit(nil)
+	a.waitForExit()
 
 	log.Debug("Exited, waiting for geolocation response")
 	select {

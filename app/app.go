@@ -374,7 +374,10 @@ func (app *App) AddExitFunc(exitFunc func()) {
 // the exit.
 func (app *App) Exit(err error) {
 	log.Errorf("Exiting app because of %v", err)
-	defer func() { app.exitCh <- err }()
+	defer func() {
+		app.exitCh <- err
+		log.Debug("Finished exiting app")
+	}()
 	for {
 		select {
 		case f := <-app.chExitFuncs:
