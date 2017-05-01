@@ -46,19 +46,3 @@ func withRateTracking(wrapped net.Conn, origin string, onFinish func(op *ops.Op)
 		op.End()
 	})
 }
-
-func setDetails(conn measured.Conn, stats *measured.Stats, onFinish func(op *ops.Op), op *ops.Op) {
-	op.SetMetric("client_bytes_sent", borda.Float(stats.SentTotal)).
-		SetMetric("client_bps_sent_min", borda.Min(stats.SentMin)).
-		SetMetric("client_bps_sent_max", borda.Max(stats.SentMax)).
-		SetMetric("client_bps_sent_avg", borda.WeightedAvg(stats.SentAvg, float64(stats.SentTotal))).
-		SetMetric("client_bytes_recv", borda.Float(stats.RecvTotal)).
-		SetMetric("client_bps_recv_min", borda.Min(stats.RecvMin)).
-		SetMetric("client_bps_recv_max", borda.Max(stats.RecvMax)).
-		SetMetric("client_bps_recv_avg", borda.WeightedAvg(stats.RecvAvg, float64(stats.RecvTotal)))
-
-	if onFinish != nil {
-		onFinish(op)
-	}
-	op.FailIf(conn.FirstError())
-}
