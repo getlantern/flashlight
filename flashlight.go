@@ -36,7 +36,7 @@ var (
 	// 100% of the below ops are reported to borda, irrespective of the borda
 	// sample percentage. This should all be low-volume operations, otherwise we
 	// will utilize too much bandwidth on the client.
-	fullyReportedOps = []string{"client_started", "client_stopped", "hourly_usage", "catchall_fatal", "sysproxy_on", "sysproxy_off"}
+	fullyReportedOps = []string{"client_started", "client_stopped", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off"}
 )
 
 // Run runs a client proxy. It blocks as long as the proxy is running.
@@ -56,11 +56,16 @@ func Run(httpProxyAddr string,
 	onError func(err error),
 	deviceID string) error {
 
+	go func() {
+		time.Sleep(15 * time.Second)
+		log.Fatal("Test fatal")
+	}()
 	elapsed := mtime.Stopwatch()
 	displayVersion()
 	initContext(deviceID, common.Version, common.RevisionDate)
 	op := fops.Begin("client_started")
 
+	onGeo := geolookup.OnRefresh()
 	cl, err := client.NewClient(useShortcut, useDetour,
 		userConfig.GetToken, statsTracker, allowPrivateHosts)
 	if err != nil {
@@ -102,8 +107,17 @@ func Run(httpProxyAddr string,
 		log.Debug("Starting client HTTP proxy")
 		err := cl.ListenAndServeHTTP(httpProxyAddr, func() {
 			log.Debug("Started client HTTP proxy")
-			op.SetMetricSum("startup_time", float64(elapsed()))
-			op.End()
+			op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
+			ops.Go(func() {
+				select {
+				case <-onGeo:
+					// okay, we've got geolocation info
+				case <-time.After(5 * time.Minute):
+					// failed to get geolocation info within 5 minutes, just record end of
+					// startup anyway
+				}
+				op.End()
+			})
 			afterStart()
 		})
 		if err != nil {

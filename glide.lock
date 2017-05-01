@@ -115,7 +115,7 @@ imports:
   - isp
   - redis
 - name: github.com/getlantern/golog
-  version: 6032b0320cb6f968d68be464650c98c262e7e263
+  version: cd3fbdd6bad097609c7202d0c2d25f2c4f1ea8e5
 - name: github.com/getlantern/gowin
   version: 88fa116ddffcff84b63f35044e2a49f6bdde71b9
 - name: github.com/getlantern/grtrack

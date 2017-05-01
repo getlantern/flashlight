@@ -1,6 +1,7 @@
 package borda
 
 import (
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -77,14 +78,20 @@ func startBordaAndProxyBench(reportInterval time.Duration, enabled func(ctx map[
 
 	ops.RegisterReporter(reporter)
 	golog.RegisterReporter(func(err error, linePrefix string, severity golog.Severity, ctx map[string]interface{}) {
+		fmt.Printf("Reporting error: %v\n", err)
 		// This code catches all logged errors that didn't happen inside an op
 		if ctx["op"] == nil {
+			flushImmediately := false
 			op := "catchall"
 			if severity == golog.FATAL {
 				op = op + "_fatal"
+				flushImmediately = true
 			}
 			ctx["op"] = op
 			reporter(err, ctx)
+			if flushImmediately {
+				Flush()
+			}
 		}
 	})
 }

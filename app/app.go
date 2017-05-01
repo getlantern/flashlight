@@ -55,6 +55,7 @@ type App struct {
 
 // Init initializes the App's state
 func (app *App) Init() {
+	golog.OnFatal(app.exitOnFatal)
 	app.Flags["staging"] = common.Staging
 	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
 	app.exitCh = make(chan error, 1)
@@ -65,17 +66,25 @@ func (app *App) Init() {
 }
 
 // LogPanicAndExit logs a panic and then exits the application.
-func (app *App) LogPanicAndExit(msg string) {
-	op := ops.Begin("fatal_error")
-	op.FailIf(fmt.Errorf(msg))
-	op.End()
-	log.Error(msg)
+func (app *App) LogPanicAndExit(msg interface{}) {
+	// Turn off system proxy on panic
+	// Reload settings to make sure we have an up-to-date addr
+	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
+	setUpSysproxyTool()
+	app.AddExitFunc(func() {
+		doSysproxyOffFor(settings.GetAddr())
+	})
+	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
+}
+
+func (app *App) exitOnFatal(err error) {
 	_ = logging.Close()
 	app.Exit(nil)
 }
 
 // Run starts the app. It will block until the app exits.
 func (app *App) Run() error {
+	golog.OnFatal(app.exitOnFatal)
 	app.AddExitFunc(recordStopped)
 
 	// Run below in separate goroutine as config.Init() can potentially block when Lantern runs
