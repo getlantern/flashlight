@@ -140,6 +140,7 @@ func applyClientConfig(client *client.Client, cfg *config.Global, deviceID strin
 		case string:
 			for _, fullyReportedOp := range fullyReportedOps {
 				if t == fullyReportedOp {
+					log.Debugf("Including fully reported op %v in borda sample", fullyReportedOp)
 					return true
 				}
 			}
