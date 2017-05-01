@@ -25,6 +25,9 @@ func withRateTracking(wrapped net.Conn, origin string, onFinish func(op *ops.Op)
 		op.SetMetric("client_bytes_sent", borda.Float(stats.SentTotal)).
 			SetMetric("client_bytes_recv", borda.Float(stats.RecvTotal))
 		op.FailIf(conn.FirstError())
+		if onFinish != nil {
+			onFinish(op)
+		}
 		op.End()
 
 		// record xfer data with origin
@@ -38,6 +41,10 @@ func withRateTracking(wrapped net.Conn, origin string, onFinish func(op *ops.Op)
 			SetMetric("client_bps_recv_max", borda.Max(stats.RecvMax)).
 			SetMetric("client_bps_recv_avg", borda.WeightedAvg(stats.RecvAvg, float64(stats.RecvTotal)))
 		op.FailIf(conn.FirstError())
+
+		if onFinish != nil {
+			onFinish(op)
+		}
 		// The below is a little verbose, but it allows us to see the transfer rates
 		// right within a user's logs, which is useful when someone submits their logs
 		// together with a complaint of Lantern being slow.

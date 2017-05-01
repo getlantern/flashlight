@@ -391,7 +391,7 @@ func startApp(t *testing.T, configAddr string) (*App, error) {
 		Flags:  flags,
 	}
 	a.Init()
-	// Set a non-zero User ID to make prochecker happytrips
+	// Set a non-zero User ID to make prochecker happy
 	settings.SetUserID(1)
 
 	go func() {

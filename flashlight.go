@@ -56,10 +56,6 @@ func Run(httpProxyAddr string,
 	onError func(err error),
 	deviceID string) error {
 
-	go func() {
-		time.Sleep(15 * time.Second)
-		log.Fatal("Test fatal")
-	}()
 	elapsed := mtime.Stopwatch()
 	displayVersion()
 	initContext(deviceID, common.Version, common.RevisionDate)
