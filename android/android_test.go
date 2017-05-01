@@ -29,6 +29,7 @@ func (c testUserConfig) GetUserID() int64         { return 0 }
 func (c testUserConfig) GetToken() string         { return "" }
 func (c testUserConfig) SetStaging(bool)          {}
 func (c testUserConfig) SetCountry(string)        {}
+func (c testUserConfig) ProxyAll() bool           { return true }
 
 func TestProxying(t *testing.T) {
 

@@ -36,8 +36,8 @@ var (
 	updateServerURL = "https://update.getlantern.org"
 	defaultLocale   = `en-US`
 
-	httpClient = &http.Client{
-		Transport: proxied.ChainedThenFronted(),
+	surveyHTTPClient = &http.Client{
+		Transport: proxied.ChainedThenFrontedWith("d38rvu630khj2q.cloudfront.net", ""),
 	}
 
 	surveyURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
@@ -55,10 +55,12 @@ type SocketProtector interface {
 // routing via a VPN. This is useful when running Lantern as a VPN on Android,
 // because it keeps Lantern's own connections from being captured by the VPN and
 // resulting in an infinite loop.
-func ProtectConnections(protector SocketProtector) {
-	p := protected.New(protector.ProtectConn)
+
+// The DNS server is used to resolve host only when dialing a protected connection
+// from within Lantern client.
+func ProtectConnections(protector SocketProtector, dnsServer string) {
+	p := protected.New(protector.ProtectConn, dnsServer)
 	netx.OverrideDial(p.DialContext)
-	netx.OverrideResolve(p.Resolve)
 }
 
 // RemoveOverrides removes the protected tlsdialer overrides
@@ -89,6 +91,7 @@ type UserConfig interface {
 	SetCountry(string)
 	SetStaging(bool)
 	ShowSurvey(string)
+	ProxyAll() bool
 	BandwidthUpdate(int, int)
 }
 
@@ -168,9 +171,12 @@ func run(configDir, locale string,
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
 	flashlight.Run("127.0.0.1:0", // listen for HTTP on random address
-		"127.0.0.1:0",               // listen for SOCKS on random address
-		configDir,                   // place to store lantern configuration
-		func() bool { return true }, // proxy all requests
+		"127.0.0.1:0", // listen for SOCKS on random address
+		configDir,     // place to store lantern configuration
+		// TODO: allow configuring whether or not to enable shortcut depends on
+		// proxyAll option (just like we already have in desktop)
+		func() bool { return !user.ProxyAll() }, // use shortcut
+		func() bool { return false },            // not use detour
 		// TODO: allow configuring whether or not to enable reporting (just like we
 		// already have in desktop)
 		func() bool { return true }, // on Android, we allow private hosts
@@ -280,12 +286,7 @@ func surveyRequest(locale string) (string, error) {
 		return "", err
 	}
 
-	frontedURL := *req.URL
-	frontedURL.Host = "d38rvu630khj2q.cloudfront.net"
-
-	proxied.PrepareForFronting(req, frontedURL.String())
-
-	if res, err = httpClient.Do(req); err != nil {
+	if res, err = surveyHTTPClient.Do(req); err != nil {
 		handleError(fmt.Errorf("Error fetching feed: %v", err))
 		return "", err
 	}

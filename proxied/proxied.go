@@ -86,30 +86,58 @@ func getProxyAddr() (string, bool) {
 // servers unless and until a request fails, in which case we'll start trying
 // fronted requests again.
 func ParallelPreferChained() http.RoundTripper {
-	cf := &chainedAndFronted{
-		parallel: true,
-	}
-	cf.setFetcher(&dualFetcher{cf})
-	return cf
+	return dual(true, "", "")
 }
 
 // ChainedThenFronted creates a new http.RoundTripper that attempts to send
 // requests first through a chained server and then falls back to using a
 // direct fronted server if the chained route didn't work.
 func ChainedThenFronted() http.RoundTripper {
+	return dual(false, "", "")
+}
+
+// ParallelPreferChainedWith creates a new http.RoundTripper that attempts to
+// send requests through both chained and direct fronted routes in parallel.
+// Once a chained request succeeds, subsequent requests will only go through
+// Chained servers unless and until a request fails, in which case we'll start
+// trying fronted requests again. This version specified the fronted URL
+// directly.
+func ParallelPreferChainedWith(frontedURL string, rootCA string) http.RoundTripper {
+	return dual(true, frontedURL, rootCA)
+}
+
+// ChainedThenFrontedWith creates a new http.RoundTripper that attempts to send
+// requests first through a chained server and then falls back to using a
+// direct fronted server if the chained route didn't work.
+// This version specified the fronted URL directly.
+func ChainedThenFrontedWith(frontedURL, rootCA string) http.RoundTripper {
+	return dual(false, frontedURL, rootCA)
+}
+
+// dual creates a new http.RoundTripper that attempts to send
+// requests to both chained and fronted servers either in parallel or not.
+func dual(parallel bool, frontedURL, rootCA string) http.RoundTripper {
 	cf := &chainedAndFronted{
-		parallel: false,
+		parallel:       parallel,
+		frontedURLHost: frontedURL,
+		rootCA:         rootCA,
 	}
-	cf.setFetcher(&dualFetcher{cf})
+	cf.setFetcher(newDualFetcher(cf))
 	return cf
+}
+
+func newDualFetcher(cf *chainedAndFronted) http.RoundTripper {
+	return &dualFetcher{cf: cf, rootCA: cf.rootCA}
 }
 
 // chainedAndFronted fetches HTTP data in parallel using both chained and fronted
 // servers.
 type chainedAndFronted struct {
-	parallel bool
-	_fetcher http.RoundTripper
-	mu       sync.RWMutex
+	parallel       bool
+	frontedURLHost string
+	_fetcher       http.RoundTripper
+	mu             sync.RWMutex
+	rootCA         string
 }
 
 func (cf *chainedAndFronted) getFetcher() http.RoundTripper {
@@ -135,21 +163,22 @@ func (cf *chainedAndFronted) RoundTrip(req *http.Request) (*http.Response, error
 	if err != nil {
 		log.Error(err)
 		// If there's an error, switch back to using the dual fetcher.
-		cf.setFetcher(&dualFetcher{cf})
+		cf.setFetcher(newDualFetcher(cf))
 	} else if !success(resp) {
 		log.Error(resp.Status)
-		cf.setFetcher(&dualFetcher{cf})
+		cf.setFetcher(newDualFetcher(cf))
 	}
 	return resp, err
 }
 
 type chainedFetcher struct {
+	rootCA string
 }
 
 // RoundTrip will attempt to execute the specified HTTP request using only a chained fetcher
 func (cf *chainedFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
 	log.Debugf("Using chained fetcher")
-	rt, err := ChainedNonPersistent("")
+	rt, err := ChainedNonPersistent(cf.rootCA)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +186,8 @@ func (cf *chainedFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 type dualFetcher struct {
-	cf *chainedAndFronted
+	cf     *chainedAndFronted
+	rootCA string
 }
 
 type frontedRT struct{}
@@ -179,7 +209,7 @@ func (df *dualFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
 	if df.cf.parallel && !isIdempotentMethod(req) {
 		return nil, errors.New("Use ParallelPreferChained for non-idempotent method")
 	}
-	directRT, err := ChainedNonPersistent("")
+	directRT, err := ChainedNonPersistent(df.rootCA)
 	if err != nil {
 		return nil, errors.Wrap(err).Op("DFCreateChainedClient")
 	}
@@ -230,13 +260,13 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 		// comparing to fronted
 		if atomic.LoadInt64(&chainedRTT) <= 3*atomic.LoadInt64(&frontedRTT) {
 			log.Debug("Switching to chained fetcher for future requests since it is within 3 times of fronted response time")
-			df.cf.setFetcher(&chainedFetcher{})
+			df.cf.setFetcher(&chainedFetcher{rootCA: df.rootCA})
 		}
 	}
 
 	// cloneRequestForFronted modifies the req to remove Lantern-Fronted-URL
 	// header. We need to call it before make any requests.
-	frontedReq, err := cloneRequestForFronted(req)
+	frontedReq, err := df.cf.cloneRequestForFronted(req)
 	if err != nil {
 		// Fail immediately as it's a program error.
 		return nil, op.FailIf(err)
@@ -322,13 +352,24 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 	return resp, op.FailIf(err)
 }
 
-func cloneRequestForFronted(req *http.Request) (*http.Request, error) {
-	frontedURL := req.Header.Get(lanternFrontedURL)
-	if frontedURL == "" {
-		return nil, errors.New("Callers MUST specify the fronted URL in the Lantern-Fronted-URL header")
+func (cf *chainedAndFronted) cloneRequestForFronted(req *http.Request) (*http.Request, error) {
+	var frontedURL string
+	if cf.frontedURLHost != "" {
+		// Just swap the host while keeping the rest of the URL the same.
+		urlCopy := *req.URL
+		urlCopy.Host = cf.frontedURLHost
+		frontedURL = urlCopy.String()
+	} else {
+		frontedURL = req.Header.Get(lanternFrontedURL)
+		if frontedURL == "" {
+			return nil, errors.New("Callers MUST specify the fronted URL in the Lantern-Fronted-URL header")
+		}
+		req.Header.Del(lanternFrontedURL)
 	}
-	req.Header.Del(lanternFrontedURL)
+	return cloneRequestForFronted(req, frontedURL)
+}
 
+func cloneRequestForFronted(req *http.Request, frontedURL string) (*http.Request, error) {
 	frontedReq, err := http.NewRequest(req.Method, frontedURL, nil)
 	if err != nil {
 		return nil, err
@@ -336,6 +377,7 @@ func cloneRequestForFronted(req *http.Request) (*http.Request, error) {
 
 	// We need to copy the query parameters from the original.
 	frontedReq.URL.RawQuery = req.URL.RawQuery
+
 	// Make a copy of the original request headers to include in the
 	// fronted request. This will ensure that things like the caching
 	// headers are included in both requests.

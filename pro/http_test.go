@@ -14,7 +14,6 @@ func TestClient(t *testing.T) {
 	if err != nil {
 		assert.Fail(t, "Could not get request")
 	}
-	PrepareForFronting(req)
 
 	// Just use the default transport since otherwise test setup is difficult.
 	// This means it does not actually touch the proxying code, but that should
