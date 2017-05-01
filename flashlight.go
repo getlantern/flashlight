@@ -33,6 +33,9 @@ import (
 var (
 	log = golog.LoggerFor("flashlight")
 
+	// 100% of the below ops are reported to borda, irrespective of the borda
+	// sample percentage. This should all be low-volume operations, otherwise we
+	// will utilize too much bandwidth on the client.
 	fullyReportedOps = []string{"client_started", "client_stopped", "hourly_usage", "catchall_fatal", "sysproxy_on", "sysproxy_off"}
 )
 
