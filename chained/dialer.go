@@ -54,7 +54,7 @@ func (p *proxy) runConnectivityChecks() {
 			select {
 			case <-timer.C:
 				log.Debugf("Checking %v", p.Label())
-				timeout := p.emaLatencyLongTerm.GetDuration() * 2
+				timeout := p.emaLatency.GetDuration() * 2
 				if timeout < minCheckTimeout {
 					timeout = minCheckTimeout
 				} else if timeout > maxCheckTimeout {
@@ -85,6 +85,24 @@ func (p *proxy) runConnectivityChecks() {
 			}
 		}
 	})
+}
+
+func (p *proxy) CheckConnectivity() bool {
+	timeout := p.emaLatency.GetDuration() * 2
+	if timeout < minCheckTimeout {
+		timeout = minCheckTimeout
+	} else if timeout > maxCheckTimeout {
+		timeout = maxCheckTimeout
+	}
+	_, _, err := p.dialTCP(timeout)
+	if err == nil {
+		p.markSuccess()
+		return true
+	}
+	p.markFailure()
+	return false
+	// We intentionally don't close the connection and instead let the
+	// server's idle timeout handle it to make this less fingerprintable.
 }
 
 func randomize(d time.Duration) time.Duration {
