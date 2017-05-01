@@ -78,11 +78,11 @@ func TestProxying(t *testing.T) {
 		case "client_started":
 			startupTime := getVal("startup_time")
 			assert.True(t, startupTime > 0)
-			assert.True(t, startupTime < 1)
+			assert.True(t, startupTime < 10)
 		case "client_stopped":
 			uptime := getVal("uptime")
 			assert.True(t, uptime > 0)
-			assert.True(t, uptime < 10)
+			assert.True(t, uptime < 30)
 		case "traffic":
 			sent := getVal("client_bytes_sent")
 			recv := getVal("client_bytes_recv")
