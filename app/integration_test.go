@@ -139,10 +139,8 @@ func TestProxying(t *testing.T) {
 	log.Fatal("test fatal error")
 	a.Exit(nil)
 
-	log.Debug("Exited, waiting for geolocation response")
 	select {
 	case <-onGeo:
-		log.Debug("Got geolocation response")
 		opsMx.RLock()
 		for _, op := range flashlight.FullyReportedOps {
 			assert.True(t, reportedOps[op], "Op %v wasn't reported", op)
@@ -151,8 +149,6 @@ func TestProxying(t *testing.T) {
 	case <-time.After(1 * time.Minute):
 		assert.Fail(t, "Geolookup never succeeded")
 	}
-
-	log.Debug("Finished running Proxying test")
 }
 
 func startWebServer(t *testing.T) (string, string, error) {
