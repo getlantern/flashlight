@@ -14,7 +14,8 @@ import (
 )
 
 var (
-	log         = golog.LoggerFor("flashlight.borda")
+	log = golog.LoggerFor("flashlight.borda")
+
 	bordaClient *borda.Client
 	once        sync.Once
 )
@@ -73,6 +74,9 @@ func startBordaAndProxyBench(reportInterval time.Duration, enabled func(ctx map[
 	}
 
 	ops.RegisterReporter(reporter)
+	golog.RegisterReporter(func(err error, linePrefix string, severity golog.Severity, ctx map[string]interface{}) {
+		reporter(err, ctx)
+	})
 }
 
 func createBordaClient(reportInterval time.Duration) *borda.Client {

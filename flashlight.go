@@ -122,6 +122,7 @@ func applyClientConfig(client *client.Client, cfg *config.Global, deviceID strin
 
 	enableBorda := func(ctx map[string]interface{}) bool {
 		if !autoReport() {
+			// User has chosen not to automatically submit data
 			return false
 		}
 
@@ -134,14 +135,13 @@ func applyClientConfig(client *client.Client, cfg *config.Global, deviceID strin
 		op := ctx["op"]
 		switch t := op.(type) {
 		case string:
-			for _, fullyIncludedOp := range fullyReportedOps {
-				if t == fullyIncludedOp {
+			for _, fullyReportedOp := range fullyReportedOps {
+				if t == fullyReportedOp {
 					return true
 				}
 			}
 			return false
 		default:
-			log.Errorf("Received borda report with missing or non-string op: %v", op)
 			return false
 		}
 	}
