@@ -65,7 +65,6 @@ func Run(httpProxyAddr string,
 	initContext(deviceID, common.Version, common.RevisionDate)
 	op := fops.Begin("client_started")
 
-	onGeo := geolookup.OnRefresh()
 	cl, err := client.NewClient(useShortcut, useDetour,
 		userConfig.GetToken, statsTracker, allowPrivateHosts)
 	if err != nil {
@@ -92,6 +91,7 @@ func Run(httpProxyAddr string,
 
 	if beforeStart() {
 		log.Debug("Preparing to start client proxy")
+		onGeo := geolookup.OnRefresh()
 		geolookup.Refresh()
 
 		if socksProxyAddr != "" {
