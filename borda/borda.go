@@ -64,9 +64,9 @@ func startBordaAndProxyBench(reportInterval time.Duration, enabled func(ctx map[
 
 		values := map[string]borda.Val{}
 		if failure != nil {
-			values["error_count"] = borda.Float(1)
+			values["error_count"] = borda.Sum(1)
 		} else {
-			values["success_count"] = borda.Float(1)
+			values["success_count"] = borda.Sum(1)
 		}
 
 		// Convert metrics to values

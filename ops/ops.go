@@ -199,7 +199,7 @@ func (op *Op) SetMetric(name string, value borda.Val) *Op {
 }
 
 func (op *Op) SetMetricSum(name string, value float64) *Op {
-	return op.Set(name, borda.Float(value))
+	return op.Set(name, borda.Sum(value))
 }
 
 func (op *Op) SetMetricMin(name string, value float64) *Op {

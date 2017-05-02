@@ -22,8 +22,8 @@ func withRateTracking(wrapped net.Conn, origin string, onFinish func(op *ops.Op)
 		stats := conn.Stats()
 		// record simple traffic without origin
 		op := ops.Begin("traffic")
-		op.SetMetric("client_bytes_sent", borda.Float(stats.SentTotal)).
-			SetMetric("client_bytes_recv", borda.Float(stats.RecvTotal))
+		op.SetMetric("client_bytes_sent", borda.Sum(stats.SentTotal)).
+			SetMetric("client_bytes_recv", borda.Sum(stats.RecvTotal))
 		op.FailIf(conn.FirstError())
 		if onFinish != nil {
 			onFinish(op)
@@ -32,11 +32,11 @@ func withRateTracking(wrapped net.Conn, origin string, onFinish func(op *ops.Op)
 
 		// record xfer data with origin
 		op = ops.Begin("xfer").Origin(origin, "")
-		op.SetMetric("client_bytes_sent", borda.Float(stats.SentTotal)).
+		op.SetMetric("client_bytes_sent", borda.Sum(stats.SentTotal)).
 			SetMetric("client_bps_sent_min", borda.Min(stats.SentMin)).
 			SetMetric("client_bps_sent_max", borda.Max(stats.SentMax)).
 			SetMetric("client_bps_sent_avg", borda.WeightedAvg(stats.SentAvg, float64(stats.SentTotal))).
-			SetMetric("client_bytes_recv", borda.Float(stats.RecvTotal)).
+			SetMetric("client_bytes_recv", borda.Sum(stats.RecvTotal)).
 			SetMetric("client_bps_recv_min", borda.Min(stats.RecvMin)).
 			SetMetric("client_bps_recv_max", borda.Max(stats.RecvMax)).
 			SetMetric("client_bps_recv_avg", borda.WeightedAvg(stats.RecvAvg, float64(stats.RecvTotal)))
