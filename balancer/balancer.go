@@ -18,7 +18,8 @@ import (
 )
 
 const (
-	dialAttempts = 3
+	dialAttempts         = 3
+	connectivityRechecks = 3
 
 	// reasonable but slightly larger than the timeout of all dialers
 	initialTimeout = 1 * time.Minute
@@ -28,6 +29,8 @@ const (
 
 var (
 	log = golog.LoggerFor("balancer")
+
+	recheckInterval = 2 * time.Second
 )
 
 // Dialer provides the ability to dial a proxy and obtain information needed to
@@ -92,13 +95,15 @@ type Dialer interface {
 
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
-	lastDialTime   int64 // not used anymore, but makes sure we're aligned on 64bit boundary
-	nextTimeout    *ema.EMA
-	mu             sync.RWMutex
-	dialers        SortedDialers
-	trusted        SortedDialers
-	closeCh        chan bool
-	onActiveDialer chan Dialer
+	lastDialTime                    int64 // not used anymore, but makes sure we're aligned on 64bit boundary
+	nextTimeout                     *ema.EMA
+	mu                              sync.RWMutex
+	dialers                         SortedDialers
+	trusted                         SortedDialers
+	closeCh                         chan bool
+	onActiveDialer                  chan Dialer
+	priorTopDialer                  Dialer
+	bandwidthKnownForPriorTopDialer bool
 }
 
 // New creates a new Balancer using the supplied Dialers.
@@ -262,19 +267,23 @@ func (b *Balancer) evalDialers() {
 		return
 	}
 
-	priorTopDialer := dialers[0]
 	sort.Sort(dialers)
 	newTopDialer := dialers[0]
+	bandwidthKnownForNewTopDialer := newTopDialer.EstBandwidth() > 0
 
-	checkNeeded := newTopDialer != priorTopDialer && bandwidthKnownForAllSucceeding(dialers)
+	checkNeeded := b.bandwidthKnownForPriorTopDialer &&
+		bandwidthKnownForNewTopDialer &&
+		newTopDialer != b.priorTopDialer
 	if checkNeeded {
-		log.Debugf("Top dialer changed from %v to %v, checking connectivity for all dialers to get updated latencies", priorTopDialer.Name(), newTopDialer.Name())
+		log.Debugf("Top dialer changed from %v to %v, checking connectivity for all dialers to get updated latencies", b.priorTopDialer.Name(), newTopDialer.Name())
 		checkConnectivityForAll(dialers)
 		sort.Sort(dialers)
 		log.Debugf("Finished checking connectivity for all dialers, resulting in top dialer: %v", dialers[0].Name())
 	}
 
 	b.sortDialers()
+	b.priorTopDialer = newTopDialer
+	b.bandwidthKnownForPriorTopDialer = bandwidthKnownForNewTopDialer
 }
 
 func checkConnectivityForAll(dialers SortedDialers) {
@@ -291,9 +300,9 @@ func checkConnectivityForAll(dialers SortedDialers) {
 }
 
 func checkConnectivityFor(d Dialer) {
-	for i := 0; i < 3; i++ {
+	for i := 0; i < connectivityRechecks; i++ {
 		d.CheckConnectivity()
-		time.Sleep(randomize(2 * time.Second))
+		time.Sleep(randomize(recheckInterval))
 	}
 }
 
@@ -357,15 +366,6 @@ func (b *Balancer) copyOfDialers() SortedDialers {
 	dialers := make(SortedDialers, len(_dialers))
 	copy(dialers, _dialers)
 	return dialers
-}
-
-func bandwidthKnownForAllSucceeding(dialers SortedDialers) bool {
-	for _, d := range dialers {
-		if d.Succeeding() && d.EstBandwidth() == 0 {
-			return false
-		}
-	}
-	return true
 }
 
 func (b *Balancer) sortDialers() SortedDialers {

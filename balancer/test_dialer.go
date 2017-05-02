@@ -7,16 +7,22 @@ import (
 	"time"
 )
 
+var (
+	latencyMultiplier = time.Duration(1)
+)
+
 type testDialer struct {
-	name      string
-	latency   time.Duration
-	bandwidth float64
-	untrusted bool
-	failing   bool
-	attempts  int64
-	successes int64
-	failures  int64
-	stopped   bool
+	name               string
+	baseLatency        time.Duration
+	latency            time.Duration
+	bandwidth          float64
+	untrusted          bool
+	failing            bool
+	attempts           int64
+	successes          int64
+	failures           int64
+	stopped            bool
+	connectivityChecks int
 }
 
 // Name returns the name for this Dialer
@@ -57,12 +63,6 @@ func (d *testDialer) Dial(network, addr string) (net.Conn, error) {
 	return conn, err
 }
 
-func (d *testDialer) attemptsSinceLast() int {
-	attempts := d.Attempts()
-	atomic.StoreInt64(&d.attempts, 0)
-	return int(attempts)
-}
-
 func (d *testDialer) EstLatency() time.Duration {
 	return d.latency
 }
@@ -96,7 +96,21 @@ func (d *testDialer) Succeeding() bool {
 }
 
 func (d *testDialer) CheckConnectivity() bool {
+	d.recalcLatency()
+	d.connectivityChecks++
 	return true
+}
+
+func (d *testDialer) recalcLatency() {
+	if d.baseLatency != 0 {
+		d.latency = d.baseLatency * latencyMultiplier
+	}
+}
+
+func (d *testDialer) connectivityChecksSinceLast() int {
+	result := d.connectivityChecks
+	d.connectivityChecks = 0
+	return result
 }
 
 func (d *testDialer) ProbePerformance() {
