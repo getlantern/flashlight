@@ -54,7 +54,7 @@ func sysproxyOff() {
 }
 
 func doSysproxyOn() {
-	op := ops.Begin("sysproxyon")
+	op := ops.Begin("sysproxy_on")
 	defer op.End()
 	addr, found := getProxyAddr()
 	if !found {
@@ -80,7 +80,7 @@ func doSysproxyOff() {
 }
 
 func doSysproxyOffFor(addr string) {
-	op := ops.Begin("sysproxyoff")
+	op := ops.Begin("sysproxy_off")
 	defer op.End()
 	log.Debugf("Unsetting lantern as system proxy at: %v", addr)
 	err := sysproxy.Off(addr)

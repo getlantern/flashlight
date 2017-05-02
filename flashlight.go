@@ -9,10 +9,12 @@ import (
 	"time"
 
 	"github.com/getlantern/appdir"
+	fops "github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/jibber_jabber"
 	"github.com/getlantern/keyman"
+	"github.com/getlantern/mtime"
 	"github.com/getlantern/ops"
 	"github.com/getlantern/osversion"
 
@@ -30,6 +32,11 @@ import (
 
 var (
 	log = golog.LoggerFor("flashlight")
+
+	// 100% of the below ops are reported to borda, irrespective of the borda
+	// sample percentage. This should all be low-volume operations, otherwise we
+	// will utilize too much bandwidth on the client.
+	FullyReportedOps = []string{"client_started", "client_stopped", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off"}
 )
 
 // Run runs a client proxy. It blocks as long as the proxy is running.
@@ -49,13 +56,17 @@ func Run(httpProxyAddr string,
 	onError func(err error),
 	deviceID string) error {
 
+	elapsed := mtime.Stopwatch()
 	displayVersion()
 	initContext(deviceID, common.Version, common.RevisionDate)
+	op := fops.Begin("client_started")
 
 	cl, err := client.NewClient(useShortcut, useDetour,
 		userConfig.GetToken, statsTracker, allowPrivateHosts)
 	if err != nil {
-		log.Fatalf("Unable to initialize client: %v", err)
+		fatalErr := fmt.Errorf("Unable to initialize client: %v", err)
+		op.FailIf(fatalErr)
+		op.End()
 	}
 	proxied.SetProxyAddr(cl.Addr)
 
@@ -76,6 +87,7 @@ func Run(httpProxyAddr string,
 
 	if beforeStart() {
 		log.Debug("Preparing to start client proxy")
+		onGeo := geolookup.OnRefresh()
 		geolookup.Refresh()
 
 		if socksProxyAddr != "" {
@@ -91,6 +103,19 @@ func Run(httpProxyAddr string,
 		log.Debug("Starting client HTTP proxy")
 		err := cl.ListenAndServeHTTP(httpProxyAddr, func() {
 			log.Debug("Started client HTTP proxy")
+			op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
+			ops.Go(func() {
+				// wait for geo info before reporting so that we know the client ip and
+				// country
+				select {
+				case <-onGeo:
+					// okay, we've got geolocation info
+				case <-time.After(5 * time.Minute):
+					// failed to get geolocation info within 5 minutes, just record end of
+					// startup anyway
+				}
+				op.End()
+			})
 			afterStart()
 		})
 		if err != nil {
@@ -110,7 +135,32 @@ func applyClientConfig(client *client.Client, cfg *config.Global, deviceID strin
 		fronted.Configure(certs, cfg.Client.MasqueradeSets, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
 	}
 
-	enableBorda := func() bool { return rand.Float64() <= cfg.BordaSamplePercentage/100 && autoReport() }
+	enableBorda := func(ctx map[string]interface{}) bool {
+		if !autoReport() {
+			// User has chosen not to automatically submit data
+			return false
+		}
+
+		if rand.Float64() <= cfg.BordaSamplePercentage/100 {
+			// Randomly included in sample
+			return true
+		}
+
+		// For some ops, we don't randomly sample, we include all of them
+		op := ctx["op"]
+		switch t := op.(type) {
+		case string:
+			for _, fullyReportedOp := range FullyReportedOps {
+				if t == fullyReportedOp {
+					log.Tracef("Including fully reported op %v in borda sample", fullyReportedOp)
+					return true
+				}
+			}
+			return false
+		default:
+			return false
+		}
+	}
 	borda.Configure(cfg.BordaReportInterval, enableBorda)
 }
 

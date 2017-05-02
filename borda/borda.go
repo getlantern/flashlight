@@ -6,6 +6,7 @@ import (
 	"time"
 
 	borda "github.com/getlantern/borda/client"
+	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/proxybench"
 
@@ -14,29 +15,40 @@ import (
 )
 
 var (
-	log         = golog.LoggerFor("flashlight.borda")
+	log = golog.LoggerFor("flashlight.borda")
+
+	// BeforeSubmit is an optional callback to capture when borda batches are
+	// submitted. It's mostly useful for unit testing.
+	BeforeSubmit func(name string, key string, ts time.Time, values map[string]borda.Val, dimensions map[string]interface{})
+
 	bordaClient *borda.Client
-	once        sync.Once
+
+	once sync.Once
 )
 
 // Configure starts borda reporting and proxy bench if reportInterval > 0. The
 // service never stops once enabled. The service will check enabled each
 // time before it reports to borda, however.
-func Configure(reportInterval time.Duration, enabled func() bool) {
+func Configure(reportInterval time.Duration, enabled func(ctx map[string]interface{}) bool) {
 	if reportInterval > 0 {
+		log.Debug("Enabling borda")
 		once.Do(func() {
 			startBordaAndProxyBench(reportInterval, enabled)
 		})
+	} else {
+		log.Debug("Borda not enabled")
 	}
 }
 
-func Close() {
+// Flush flushes any pending submission
+func Flush() {
 	if bordaClient != nil {
+		log.Debugf("Flushing pending borda submissions")
 		bordaClient.Flush()
 	}
 }
 
-func startBordaAndProxyBench(reportInterval time.Duration, enabled func() bool) {
+func startBordaAndProxyBench(reportInterval time.Duration, enabled func(ctx map[string]interface{}) bool) {
 	bordaClient = createBordaClient(reportInterval)
 
 	reportToBorda := bordaClient.ReducingSubmitter("client_results", 1000)
@@ -46,15 +58,15 @@ func startBordaAndProxyBench(reportInterval time.Duration, enabled func() bool) 
 	})
 
 	reporter := func(failure error, ctx map[string]interface{}) {
-		if !enabled() {
+		if !enabled(ctx) {
 			return
 		}
 
 		values := map[string]borda.Val{}
 		if failure != nil {
-			values["error_count"] = borda.Float(1)
+			values["error_count"] = borda.Sum(1)
 		} else {
-			values["success_count"] = borda.Float(1)
+			values["success_count"] = borda.Sum(1)
 		}
 
 		// Convert metrics to values
@@ -73,6 +85,33 @@ func startBordaAndProxyBench(reportInterval time.Duration, enabled func() bool) 
 	}
 
 	ops.RegisterReporter(reporter)
+	golog.RegisterReporter(func(err error, linePrefix string, severity golog.Severity, ctx map[string]interface{}) {
+		// This code catches all logged errors that didn't happen inside an op
+		if ctx["op"] == nil {
+			var ctxErr errors.Error
+			switch e := err.(type) {
+			case errors.Error:
+				ctxErr = e
+			case error:
+				ctxErr = errors.Wrap(e)
+			default:
+				ctxErr = errors.New(e.Error())
+			}
+
+			ctxErr.Fill(ctx)
+			flushImmediately := false
+			op := "catchall"
+			if severity == golog.FATAL {
+				op = op + "_fatal"
+				flushImmediately = true
+			}
+			ctx["op"] = op
+			reporter(err, ctx)
+			if flushImmediately {
+				Flush()
+			}
+		}
+	})
 }
 
 func createBordaClient(reportInterval time.Duration) *borda.Client {
@@ -89,6 +128,7 @@ func createBordaClient(reportInterval time.Duration) *borda.Client {
 				return rt.RoundTrip(req)
 			}),
 		},
+		BeforeSubmit: BeforeSubmit,
 	})
 }
 

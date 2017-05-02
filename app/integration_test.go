@@ -11,17 +11,22 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	bclient "github.com/getlantern/borda/client"
 	"github.com/getlantern/http-proxy-lantern"
 	"github.com/getlantern/tlsdefaults"
 	"github.com/getlantern/waitforserver"
 	"github.com/getlantern/yaml"
 
+	"github.com/getlantern/flashlight"
+	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/geolookup"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -46,6 +51,48 @@ var (
 )
 
 func TestProxying(t *testing.T) {
+	onGeo := geolookup.OnRefresh()
+
+	var opsMx sync.RWMutex
+	reportedOps := make(map[string]bool)
+	borda.BeforeSubmit = func(name string, key string, ts time.Time, values map[string]bclient.Val, dimensions map[string]interface{}) {
+		_op, found := dimensions["op"]
+		if !found {
+			return
+		}
+		op := _op.(string)
+
+		getVal := func(name string) float64 {
+			val := values[name]
+			if val == nil {
+				return 0
+			}
+			return val.Get()
+		}
+
+		opsMx.Lock()
+		reportedOps[op] = true
+		opsMx.Unlock()
+
+		switch op {
+		case "client_started":
+			startupTime := getVal("startup_time")
+			assert.True(t, startupTime > 0)
+			assert.True(t, startupTime < 10)
+		case "client_stopped":
+			uptime := getVal("uptime")
+			assert.True(t, uptime > 0)
+			assert.True(t, uptime < 30)
+		case "traffic":
+			sent := getVal("client_bytes_sent")
+			recv := getVal("client_bytes_recv")
+			assert.True(t, sent > 0)
+			assert.True(t, recv > 0)
+		case "catchall_fatal":
+			assert.Equal(t, "test fatal error", dimensions["error"])
+			assert.Equal(t, "test fatal error", dimensions["error_text"])
+		}
+	}
 	//config.CloudConfigPollInterval = 100 * time.Millisecond
 
 	// Web server serves known content for testing
@@ -76,7 +123,7 @@ func TestProxying(t *testing.T) {
 	}
 
 	// Starts the Lantern App
-	err = startApp(t, configAddr)
+	a, err := startApp(t, configAddr)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -88,6 +135,20 @@ func TestProxying(t *testing.T) {
 	atomic.StoreUint32(&useOBFS4, 1)
 	time.Sleep(2 * time.Second)
 	testRequest(t, httpAddr, httpsAddr)
+
+	log.Fatal("test fatal error")
+	a.Exit(nil)
+
+	select {
+	case <-onGeo:
+		opsMx.RLock()
+		for _, op := range flashlight.FullyReportedOps {
+			assert.True(t, reportedOps[op], "Op %v wasn't reported", op)
+		}
+		opsMx.RUnlock()
+	case <-time.After(1 * time.Minute):
+		assert.Fail(t, "Geolookup never succeeded")
+	}
 }
 
 func startWebServer(t *testing.T) (string, string, error) {
@@ -307,20 +368,22 @@ func buildGlobal() ([]byte, error) {
 	return out, nil
 }
 
-func startApp(t *testing.T, configAddr string) error {
+func startApp(t *testing.T, configAddr string) (*App, error) {
 	configURL := "http://" + configAddr
 	flags := map[string]interface{}{
-		"cloudconfig":          configURL,
-		"frontedconfig":        configURL,
-		"addr":                 LocalProxyAddr,
-		"socksaddr":            SocksProxyAddr,
-		"headless":             true,
-		"proxyall":             true,
-		"configdir":            ".",
-		"stickyconfig":         false,
-		"clear-proxy-settings": false,
-		"readableconfig":       true,
-		"uiaddr":               "127.0.0.1:16823",
+		"cloudconfig":             configURL,
+		"frontedconfig":           configURL,
+		"addr":                    LocalProxyAddr,
+		"socksaddr":               SocksProxyAddr,
+		"headless":                true,
+		"proxyall":                true,
+		"configdir":               ".",
+		"stickyconfig":            false,
+		"clear-proxy-settings":    false,
+		"readableconfig":          true,
+		"uiaddr":                  "127.0.0.1:16823",
+		"borda-report-interval":   5 * time.Minute,
+		"borda-sample-percentage": 0.0, // this is 0 to disable random sampling, allowing us to test fully reported ops
 	}
 
 	a := &App{
@@ -328,12 +391,15 @@ func startApp(t *testing.T, configAddr string) error {
 		Flags:  flags,
 	}
 	a.Init()
+	// Set a non-zero User ID to make prochecker happy
+	settings.SetUserID(1)
+
 	go func() {
 		err := a.Run()
 		assert.NoError(t, err, "Unable to run app")
 	}()
 
-	return waitforserver.WaitForServer("tcp", LocalProxyAddr, 10*time.Second)
+	return a, waitforserver.WaitForServer("tcp", LocalProxyAddr, 10*time.Second)
 }
 
 func testRequest(t *testing.T, httpAddr string, httpsAddr string) {

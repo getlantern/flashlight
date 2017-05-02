@@ -56,7 +56,7 @@ imports:
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda
-  version: 6b58d52260dca7267a97b815188556131013f8c0
+  version: 78a6aeb0c03a535139d53f8405276f8247f96246
   subpackages:
   - client
 - name: github.com/getlantern/buuid
@@ -115,7 +115,7 @@ imports:
   - isp
   - redis
 - name: github.com/getlantern/golog
-  version: e69a4a00c012e476efd814128cdcd4e04e641dc7
+  version: cd3fbdd6bad097609c7202d0c2d25f2c4f1ea8e5
 - name: github.com/getlantern/gowin
   version: 88fa116ddffcff84b63f35044e2a49f6bdde71b9
 - name: github.com/getlantern/grtrack
