@@ -1,5 +1,5 @@
 hash: 7f4e9dbab945a57f1c93bbd0bc394b57e659ce9ce6727621fa4bd5348ef78a5c
-updated: 2017-04-21T09:45:35.742570174-07:00
+updated: 2017-04-28T18:47:12.387386414-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a6aba3a6314be3a8ef518d5d4269a8459af9c789
@@ -22,7 +22,7 @@ imports:
 - name: github.com/aristanetworks/glog
   version: b0d951ca530387842f35331df6fd8d9b501d5f90
 - name: github.com/aristanetworks/goarista
-  version: 79baa1b1fe5f0e1dd4e6920d35180192939678c4
+  version: 7cab74c910ac9045682a070fe1a444f85828c74e
   subpackages:
   - monotime
 - name: github.com/armon/go-radix
@@ -50,13 +50,13 @@ imports:
 - name: github.com/getlantern/appdir
   version: 659a155d06e8f3dd8b9f79d6147445897499b56b
 - name: github.com/getlantern/autoupdate
-  version: e7ae7fc9a0c621ea23cbe2ab13ed4c81eb81e549
+  version: ca465e3b8c5bb24690b8e2521e1bb73da96c93da
 - name: github.com/getlantern/balancer
   version: 70e3aff550185f805d2f40933c2bc8c29aefa28d
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda
-  version: 0f112ec481a96c046f68c0331db0b089153b5fd6
+  version: 6b58d52260dca7267a97b815188556131013f8c0
   subpackages:
   - client
 - name: github.com/getlantern/buuid
@@ -109,7 +109,7 @@ imports:
   - check
   - download
 - name: github.com/getlantern/goexpr
-  version: d7965b886a714b67bf4ec23308512613105649c6
+  version: 382edab23338c571d8e9205f53881aa929b3dc8b
   subpackages:
   - geo
   - isp
@@ -199,7 +199,7 @@ imports:
 - name: github.com/getlantern/profiling
   version: 2a15afbadcff99bac017e17af273b31d4510ddb8
 - name: github.com/getlantern/protected
-  version: a9c6d8e429b9c48cacc555294f9e89c67cf2492b
+  version: e51dba395be6e5f6c1aadaf36d809399e5fb4b0a
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxy
@@ -229,7 +229,7 @@ imports:
 - name: github.com/getlantern/tlsdialer
   version: b4d0a731957c4658f2e281e1ae8653781719a55b
 - name: github.com/getlantern/urlcache
-  version: 1dda18e10894aa09f022f7e438b28c1d77bc7461
+  version: cf9a7866aa8239f7cc71a098bed5e3bc08fbd5bb
 - name: github.com/getlantern/uuid
   version: 1318e7614b82cd38041b0b0bd3692d71f3901fb8
 - name: github.com/getlantern/vtime
@@ -249,7 +249,7 @@ imports:
 - name: github.com/getlantern/yaml
   version: 97d86b60f57eeca9d70c02763ed2565bafc17585
 - name: github.com/getlantern/zenodb
-  version: a301993b246d5f0b8967e4e519a7a9752a689e44
+  version: 8afb6dd4c519ea0cd336cdcc9e8a00ef3581c2c0
   subpackages:
   - bytetree
   - common
@@ -270,7 +270,7 @@ imports:
   subpackages:
   - gomock
 - name: github.com/golang/protobuf
-  version: 2bba0603135d7d7f5cb73b2125beeda19c09f4ef
+  version: 18c9bb3261723cd5401db4d0c9fbc5c3b6c70fe8
   subpackages:
   - proto
   - ptypes/any
@@ -279,7 +279,7 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
-  version: 599cba5e7b6137d46ddf58fb1765f5d928e69604
+  version: 4c1c3952b7d9d0a061a3fa7b36fd373ba0398ebc
 - name: github.com/gorilla/securecookie
   version: e59506cc896acb7f7bf732d4fdf5e25f7ccd8983
 - name: github.com/gorilla/websocket
@@ -305,7 +305,7 @@ imports:
 - name: github.com/mailgun/multibuf
   version: 565402cd71fbd9c12aa7e295324ea357e970a61e
 - name: github.com/mailgun/oxy
-  version: d839fdc1080a1425ff469c87b81485d2236abedb
+  version: 22b8db69af63ed27e65daa2fdc428d9d1cb2d1c6
   subpackages:
   - forward
 - name: github.com/mailgun/timetools
@@ -313,7 +313,7 @@ imports:
 - name: github.com/mailgun/ttlmap
   version: 8210f93bcb6393a9f36a22ac02fb3c4f53289850
 - name: github.com/miekg/dns
-  version: 6ebcb714d36901126ee2807031543b38c56de963
+  version: 113c7538ea6d8f429071f901bd26af59cc9676fe
 - name: github.com/mitchellh/panicwrap
   version: fce601fe55579125e1b3cb0b992287e7290f7b83
 - name: github.com/mxk/go-flowrate
@@ -321,14 +321,14 @@ imports:
   subpackages:
   - flowrate
 - name: github.com/openconfig/reference
-  version: 106b57ecf5bb092eef62207dda2eccf437cec1cd
+  version: 72a5ea411e0fb333f7b7c71f29345a17f90398bd
   subpackages:
   - rpc/gnmi
   - rpc/openconfig
 - name: github.com/oschwald/geoip2-golang
-  version: 0fd242da7906550802871efe101abfdb1cc550a8
+  version: 5b1dc16861f81d05d9836bb21c2d0d65282fc0b8
 - name: github.com/oschwald/maxminddb-golang
-  version: 697da8075d2061aa8ed639346443f5d3e8c80b30
+  version: f6c93ffae8caa8c38fb52468c7af9006d7baeb8e
 - name: github.com/oxtoacart/bpool
   version: 4e1c5567d7c2dd59fa4c7c83d34c2f3528b025d6
 - name: github.com/oxtoacart/emsort
@@ -375,9 +375,9 @@ imports:
   subpackages:
   - uaparser
 - name: github.com/vharitonsky/iniflags
-  version: 94db042d45d83a94a8cfc494a6800ce1b5edd5e4
+  version: cb8c755d54931a2734279d5495f44d1bcabef14c
 - name: github.com/vulcand/oxy
-  version: d839fdc1080a1425ff469c87b81485d2236abedb
+  version: 22b8db69af63ed27e65daa2fdc428d9d1cb2d1c6
   subpackages:
   - utils
 - name: github.com/vulcand/predicate
@@ -396,9 +396,9 @@ imports:
   - dependency/hack
   - dependency/sqltypes
 - name: github.com/Yawning/chacha20
-  version: c91e78db502ff629614837aacb7aa4efa61c651a
+  version: ef489547eb633de948515845c9c3226969f1de2a
 - name: golang.org/x/crypto
-  version: 96846453c37f0876340a66a47f3f75b1f3a6cd2d
+  version: c7af5bf2638a1164f2eb5467c39c6cffbd13a02e
   subpackages:
   - chacha20poly1305
   - chacha20poly1305/internal/chacha20
@@ -408,7 +408,7 @@ imports:
   - poly1305
   - salsa20/salsa
 - name: golang.org/x/net
-  version: c8c74377599bd978aee1cf3b9b63a8634051cec2
+  version: da118f7b8e5954f39d0d2130ab35d4bf0e3cb344
   repo: https://github.com/golang/net
   vcs: git
   subpackages:
@@ -430,14 +430,14 @@ imports:
   - google
   - jwt
 - name: golang.org/x/sys
-  version: ea9bcade75cb975a0b9738936568ab388b845617
+  version: 9ccfe848b9db8435a24c424abbc07a921adf1df5
   repo: https://github.com/golang/sys
   vcs: git
   subpackages:
   - unix
   - windows
 - name: golang.org/x/text
-  version: 19e3104b43db45fca0303f489a9536087b184802
+  version: 470f45bf29f4147d6fbd7dfd0a02a848e49f5bf4
   subpackages:
   - encoding
   - encoding/charmap
@@ -462,10 +462,11 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: 6914ab1e338c92da4218a23d27fcd03d0ad78d46
+  version: 0eb507a2ca07f13baf499f89d66cc566bf644643
   subpackages:
   - codes
   - credentials
+  - grpclb/grpc_lb_v1
   - grpclog
   - internal
   - keepalive
@@ -508,12 +509,12 @@ testImports:
 - name: github.com/gonum/floats
   version: a2cbc5c70616cd18491ef2843231f6ce28b2cb02
 - name: github.com/gonum/internal
-  version: 54ff12b7ee06fd360723943c1cb5e9838da4f98e
+  version: 48973465e5b9dba40047f2c6ba0e879613029fdb
   subpackages:
   - asm/f32
   - asm/f64
 - name: github.com/gonum/lapack
-  version: cbbc7c6464179082632adea15fd7b7ac5fb5220d
+  version: b2c45d0a904f3d18ef419fd1c65c22f3749046fe
   subpackages:
   - lapack64
   - native
@@ -522,7 +523,7 @@ testImports:
   subpackages:
   - mat64
 - name: github.com/gonum/stat
-  version: 7db91b7f13374f53fbe2513766a3b055ab9c2cf1
+  version: ea7b7bc3024a3245300f5f1476d5bdd63063048a
 - name: github.com/mikioh/netreflect
   version: ed3bfaafd83195ce61f274eec0bd97aebbb7c3be
 - name: github.com/mikioh/tcp
