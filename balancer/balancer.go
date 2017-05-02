@@ -98,8 +98,6 @@ type Balancer struct {
 	dialers        SortedDialers
 	trusted        SortedDialers
 	closeCh        chan bool
-	stopStatsCh    chan bool
-	forceStatsCh   chan bool
 	onActiveDialer chan Dialer
 }
 
@@ -110,13 +108,10 @@ func New(dialers ...Dialer) *Balancer {
 	b := &Balancer{
 		nextTimeout:    ema.NewDuration(initialTimeout, 0.2),
 		closeCh:        make(chan bool),
-		stopStatsCh:    make(chan bool, 1),
-		forceStatsCh:   make(chan bool, 1),
 		onActiveDialer: make(chan Dialer, 1),
 	}
 
 	b.Reset(dialers...)
-	ops.Go(b.printStats)
 	ops.Go(b.run)
 	return b
 }
@@ -257,11 +252,9 @@ func (b *Balancer) run() {
 				sort.Sort(dialers)
 				log.Debugf("Finished checking connectivity for all dialers, resulting in top dialer: %v", dialers[0].Name())
 			}
-			b.sortDialers()
+			b.printStats(b.sortDialers())
 
 		case <-b.closeCh:
-			b.stopStatsCh <- true
-
 			b.mu.Lock()
 			oldDialers := b.dialers
 			b.dialers = nil
@@ -308,40 +301,12 @@ func (b *Balancer) Close() {
 	}
 }
 
-// printStats periodically prints out stats for all dialers
-func (b *Balancer) printStats() {
-	time.Sleep(5 * time.Second)
-	b.doPrintStats()
-	t := time.NewTicker(15 * time.Second)
-	for {
-		select {
-		case <-b.stopStatsCh:
-			t.Stop()
-			return
-		case <-b.forceStatsCh:
-			b.doPrintStats()
-		case <-t.C:
-			b.doPrintStats()
-		}
-	}
-}
-
-func (b *Balancer) doPrintStats() {
-	dialers := b.copyOfDialers()
+func (b *Balancer) printStats(dialers SortedDialers) {
 	log.Debug("-------------------------- Dialer Stats -----------------------")
 	for _, d := range dialers {
 		log.Debugf("%s  S: %4d / %4d (%d)\tF: %4d / %4d (%d)\tL: %5.0fms\tBW: %3.2fMbps", d.JustifiedLabel(), d.Successes(), d.Attempts(), d.ConsecSuccesses(), d.Failures(), d.Attempts(), d.ConsecFailures(), d.EstLatency().Seconds()*1000, d.EstBandwidth())
 	}
 	log.Debug("------------------------ End Dialer Stats ---------------------")
-}
-
-func (b *Balancer) forceStats() {
-	select {
-	case b.forceStatsCh <- true:
-		// okay
-	default:
-		// already pending
-	}
 }
 
 func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, error) {
@@ -378,13 +343,14 @@ func bandwidthKnownForAllSucceeding(dialers SortedDialers) bool {
 	return true
 }
 
-func (b *Balancer) sortDialers() {
+func (b *Balancer) sortDialers() SortedDialers {
 	b.mu.RLock()
 	_dialers := b.dialers
 	b.mu.RUnlock()
 
 	dialers := make(SortedDialers, len(_dialers))
 	copy(dialers, _dialers)
+	sort.Sort(dialers)
 
 	trusted := make(SortedDialers, 0, len(dialers))
 	for _, d := range dialers {
@@ -397,6 +363,8 @@ func (b *Balancer) sortDialers() {
 	b.dialers = dialers
 	b.trusted = trusted
 	b.mu.Unlock()
+
+	return dialers
 }
 
 type SortedDialers []Dialer
