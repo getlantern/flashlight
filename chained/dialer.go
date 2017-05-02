@@ -16,7 +16,6 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
-	"github.com/getlantern/netx"
 )
 
 const (
@@ -167,16 +166,7 @@ func (p *proxy) doDial(network, addr string) (net.Conn, error) {
 	op := ops.Begin("dial_for_balancer").ProxyType(ops.ProxyChained).ProxyAddr(p.addr)
 	defer op.End()
 
-	if addr == p.addr {
-		// Check if we are trying to connect to our own server and bypass proxying if so
-		// This accounts for the case w/ multiple instances of Lantern running on mobile
-		// Whenever full-device VPN mode is enabled, we need to make sure we ignore proxy
-		// requests from the first instance.
-		log.Debugf("Attempted to dial ourselves. Dialing directly to %s instead", addr)
-		conn, err = netx.DialTimeout("tcp", addr, 1*time.Minute)
-	} else {
-		conn, err = p.dialInternal(network, addr)
-	}
+	conn, err = p.dialInternal(network, addr)
 
 	if err != nil {
 		return nil, op.FailIf(err)
