@@ -36,26 +36,26 @@ type Dialer interface {
 	// Name returns the name for this Dialer
 	Name() string
 
-	// Label() returns a label for this Dialer (includes Name plus more).
+	// Label returns a label for this Dialer (includes Name plus more).
 	Label() string
 
-	// JustifiedLabel() is like Label() but with elements justified for line-by
+	// JustifiedLabel is like Label() but with elements justified for line-by
 	// -line display.
 	JustifiedLabel() string
 
 	// Addr returns the address for this Dialer
 	Addr() string
 
-	// Trusted() indicates whether or not this dialer is trusted
+	// Trusted indicates whether or not this dialer is trusted
 	Trusted() bool
 
 	// Dial with this dialer
 	Dial(network, addr string) (net.Conn, error)
 
-	// EstLatency() provides a latency estimate
+	// EstLatency provides a latency estimate
 	EstLatency() time.Duration
 
-	// EstBandwidth() provides the estimated bandwidth in Mbps
+	// EstBandwidth provides the estimated bandwidth in Mbps
 	EstBandwidth() float64
 
 	// Attempts returns the total number of dial attempts
@@ -239,20 +239,7 @@ func (b *Balancer) run() {
 	for {
 		select {
 		case <-ticker.C:
-			dialers := b.copyOfDialers()
-
-			priorTopDialer := dialers[0]
-			sort.Sort(dialers)
-			newTopDialer := dialers[0]
-
-			checkNeeded := newTopDialer != priorTopDialer && bandwidthKnownForAllSucceeding(dialers)
-			if checkNeeded {
-				log.Debugf("Top dialer changed from %v to %v, checking connectivity for all dialers to get updated latencies", priorTopDialer.Name(), newTopDialer.Name())
-				checkConnectivityForAll(dialers)
-				sort.Sort(dialers)
-				log.Debugf("Finished checking connectivity for all dialers, resulting in top dialer: %v", dialers[0].Name())
-			}
-			b.printStats(b.sortDialers())
+			b.evalDialers()
 
 		case <-b.closeCh:
 			b.mu.Lock()
@@ -267,6 +254,27 @@ func (b *Balancer) run() {
 			return
 		}
 	}
+}
+
+func (b *Balancer) evalDialers() {
+	dialers := b.copyOfDialers()
+	if len(dialers) == 0 {
+		return
+	}
+
+	priorTopDialer := dialers[0]
+	sort.Sort(dialers)
+	newTopDialer := dialers[0]
+
+	checkNeeded := newTopDialer != priorTopDialer && bandwidthKnownForAllSucceeding(dialers)
+	if checkNeeded {
+		log.Debugf("Top dialer changed from %v to %v, checking connectivity for all dialers to get updated latencies", priorTopDialer.Name(), newTopDialer.Name())
+		checkConnectivityForAll(dialers)
+		sort.Sort(dialers)
+		log.Debugf("Finished checking connectivity for all dialers, resulting in top dialer: %v", dialers[0].Name())
+	}
+
+	b.sortDialers()
 }
 
 func checkConnectivityForAll(dialers SortedDialers) {
@@ -322,6 +330,23 @@ func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, error) {
 		}
 		return nil, fmt.Errorf("No dialers")
 	}
+
+	topDialer := dialers[0]
+	for i := 1; i < len(dialers); i++ {
+		dialer := dialers[i]
+		if dialer.Succeeding() && dialer.EstLatency().Seconds()/topDialer.EstLatency().Seconds() < 0.75 && rand.Float64() < 0.05 {
+			log.Debugf("Dialer %v has a dramatically lower latency than top dialer %v, randomly moving it to the top of the line", dialer.Name(), topDialer.Name())
+			randomized := make([]Dialer, 0, len(dialers))
+			randomized = append(randomized, dialer)
+			for j, other := range dialers {
+				if j != i {
+					randomized = append(randomized, other)
+				}
+			}
+			return randomized, nil
+		}
+	}
+
 	return dialers, nil
 }
 
@@ -364,6 +389,7 @@ func (b *Balancer) sortDialers() SortedDialers {
 	b.trusted = trusted
 	b.mu.Unlock()
 
+	b.printStats(dialers)
 	return dialers
 }
 
