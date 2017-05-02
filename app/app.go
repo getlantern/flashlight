@@ -65,7 +65,8 @@ func (app *App) Init() {
 	app.statsTracker = &statsTracker{}
 }
 
-// LogPanicAndExit logs a panic and then exits the application.
+// LogPanicAndExit logs a panic and then exits the application. This function
+// is only used in the panicwrap parent process.
 func (app *App) LogPanicAndExit(msg interface{}) {
 	// Turn off system proxy on panic
 	// Reload settings to make sure we have an up-to-date addr
