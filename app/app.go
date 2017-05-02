@@ -309,8 +309,8 @@ func (app *App) afterStart() {
 		go launcher.CreateLaunchFile(enable)
 	})
 
-	app.AddExitFunc(borda.Flush)
 	app.AddExitFunc(doSysproxyOff)
+	app.AddExitFunc(borda.Flush)
 	if app.ShowUI && !app.Flags["startup"].(bool) {
 		// Launch a browser window with Lantern but only after the pac
 		// URL and the proxy server are all up and running to avoid
