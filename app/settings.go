@@ -405,6 +405,11 @@ func (s *Settings) SetUIAddr(uiaddr string) {
 	s.setVal(SNUIAddr, uiaddr)
 }
 
+// GetAddr gets the HTTP proxy address.
+func (s *Settings) GetAddr() string {
+	return s.getString(SNAddr)
+}
+
 // GetUIAddr returns the address of the UI, stored across runs to avoid a
 // different port on each run, which breaks things like local storage in the UI.
 func (s *Settings) GetUIAddr() string {

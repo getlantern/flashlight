@@ -11,14 +11,17 @@ import (
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
+	"github.com/getlantern/mtime"
 	"github.com/getlantern/profiling"
 
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/autoupdate"
+	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/logging"
+	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxiedsites"
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
@@ -27,9 +30,12 @@ import (
 var (
 	log      = golog.LoggerFor("flashlight.app")
 	settings *Settings
+
+	elapsed func() time.Duration
 )
 
 func init() {
+	elapsed = mtime.Stopwatch()
 
 	autoupdate.Version = common.PackageVersion
 	autoupdate.PublicKey = []byte(packagePublicKey)
@@ -49,6 +55,7 @@ type App struct {
 
 // Init initializes the App's state
 func (app *App) Init() {
+	golog.OnFatal(app.exitOnFatal)
 	app.Flags["staging"] = common.Staging
 	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
 	app.exitCh = make(chan error, 1)
@@ -58,15 +65,29 @@ func (app *App) Init() {
 	app.statsTracker = &statsTracker{}
 }
 
-// LogPanicAndExit logs a panic and then exits the application.
-func (app *App) LogPanicAndExit(msg string) {
-	log.Error(msg)
+// LogPanicAndExit logs a panic and then exits the application. This function
+// is only used in the panicwrap parent process.
+func (app *App) LogPanicAndExit(msg interface{}) {
+	// Turn off system proxy on panic
+	// Reload settings to make sure we have an up-to-date addr
+	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
+	setUpSysproxyTool()
+	app.AddExitFunc(func() {
+		doSysproxyOffFor(settings.GetAddr())
+	})
+	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
+}
+
+func (app *App) exitOnFatal(err error) {
 	_ = logging.Close()
 	app.Exit(nil)
 }
 
 // Run starts the app. It will block until the app exits.
 func (app *App) Run() error {
+	golog.OnFatal(app.exitOnFatal)
+	app.AddExitFunc(recordStopped)
+
 	// Run below in separate goroutine as config.Init() can potentially block when Lantern runs
 	// for the first time. User can still quit Lantern through systray menu when it happens.
 	go func() {
@@ -290,6 +311,7 @@ func (app *App) afterStart() {
 	})
 
 	app.AddExitFunc(doSysproxyOff)
+	app.AddExitFunc(borda.Flush)
 	if app.ShowUI && !app.Flags["startup"].(bool) {
 		// Launch a browser window with Lantern but only after the pac
 		// URL and the proxy server are all up and running to avoid
@@ -353,7 +375,10 @@ func (app *App) AddExitFunc(exitFunc func()) {
 // the exit.
 func (app *App) Exit(err error) {
 	log.Errorf("Exiting app because of %v", err)
-	defer func() { app.exitCh <- err }()
+	defer func() {
+		app.exitCh <- err
+		log.Debug("Finished exiting app")
+	}()
 	for {
 		select {
 		case f := <-app.chExitFuncs:
@@ -369,4 +394,10 @@ func (app *App) Exit(err error) {
 // WaitForExit waits for a request to exit the application.
 func (app *App) waitForExit() error {
 	return <-app.exitCh
+}
+
+func recordStopped() {
+	ops.Begin("client_stopped").
+		SetMetricSum("uptime", elapsed().Seconds()).
+		End()
 }
