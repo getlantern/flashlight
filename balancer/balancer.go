@@ -376,13 +376,8 @@ func (b *Balancer) copyOfDialers() SortedDialers {
 	return dialers
 }
 
-func (b *Balancer) sortDialers() SortedDialers {
-	b.mu.RLock()
-	_dialers := b.dialers
-	b.mu.RUnlock()
-
-	dialers := make(SortedDialers, len(_dialers))
-	copy(dialers, _dialers)
+func (b *Balancer) sortDialers() {
+	dialers := b.copyOfDialers()
 	sort.Sort(dialers)
 
 	trusted := make(SortedDialers, 0, len(dialers))
@@ -398,7 +393,6 @@ func (b *Balancer) sortDialers() SortedDialers {
 	b.mu.Unlock()
 
 	b.printStats(dialers)
-	return dialers
 }
 
 type SortedDialers []Dialer
