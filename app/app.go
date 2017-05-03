@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/getlantern/flashlight"
@@ -50,6 +51,7 @@ type App struct {
 	exitCh       chan error
 	statsTracker *statsTracker
 
+	exitOnce    sync.Once
 	chExitFuncs chan func()
 }
 
@@ -374,6 +376,12 @@ func (app *App) AddExitFunc(exitFunc func()) {
 // Exit tells the application to exit, optionally supplying an error that caused
 // the exit.
 func (app *App) Exit(err error) {
+	app.exitOnce.Do(func() {
+		app.doExit(err)
+	})
+}
+
+func (app *App) doExit(err error) {
 	log.Errorf("Exiting app because of %v", err)
 	defer func() {
 		app.exitCh <- err

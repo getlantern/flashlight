@@ -4,7 +4,7 @@ package main
 
 import "github.com/getlantern/flashlight/app"
 
-func runOnSystrayReady(f func()) {
+func runOnSystrayReady(a *app.App, f func()) {
 	f()
 }
 
