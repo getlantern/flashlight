@@ -5,10 +5,12 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/getlantern/golog"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestClient(t *testing.T) {
+	log := golog.LoggerFor("pro-http-test")
 	url := "https://api.getiantem.org/plans"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -20,7 +22,10 @@ func TestClient(t *testing.T) {
 	// be tested separately.
 	client := getHTTPClient(http.DefaultTransport, http.DefaultTransport)
 	res, e := client.Do(req)
+
+	log.Debugf("Got responsde code: %v", res.StatusCode)
 	assert.Nil(t, e)
+	assert.NotNil(t, res.Body, "nil plans response body?")
 
 	body, bodyErr := ioutil.ReadAll(res.Body)
 	assert.Nil(t, bodyErr)
