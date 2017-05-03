@@ -219,7 +219,7 @@ imports:
 - name: github.com/getlantern/stack
   version: 02f928aad224fbccd50d66edd776fc9d1e9f2f2b
 - name: github.com/getlantern/sysproxy
-  version: e5ffd4c79c631b4fbf52b4c1f04439583d3a6b15
+  version: febfa42c9ebf30cddf46eeaa474d7f0e2497e9cc
 - name: github.com/getlantern/systray
   version: cdae0bdf2aeae3ffb5ffe0cd2e2f83443ca9d104
 - name: github.com/getlantern/tarfs
