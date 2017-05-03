@@ -123,9 +123,9 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 			}
 			var received interface{}
 			var expected interface{}
-			_received, err := keyman.LoadCertificateFromX509(conn.ConnectionState().PeerCertificates[0])
-			if err != nil {
-				log.Errorf("Unable to parse received certificate: %v", err)
+			_received, certErr := keyman.LoadCertificateFromX509(conn.ConnectionState().PeerCertificates[0])
+			if certErr != nil {
+				log.Errorf("Unable to parse received certificate: %v", certErr)
 				received = conn.ConnectionState().PeerCertificates[0]
 				expected = x509cert
 			} else {
@@ -221,8 +221,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 			for {
 				time.Sleep(pingInterval * 2)
 				ttfa := dialer.EMARTT()
-				p.emaLatencyLongTerm.SetDuration(ttfa)
-				p.emaLatencyShortTerm.SetDuration(ttfa)
+				p.emaLatency.SetDuration(ttfa)
 				log.Debugf("%v EMA RTT: %v", p.Label(), ttfa)
 			}
 		}()
@@ -234,47 +233,45 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 type proxy struct {
 	// Store int64's up front to ensure alignment of 64 bit words
 	// See https://golang.org/pkg/sync/atomic/#pkg-note-BUG
-	attempts            int64
-	successes           int64
-	consecSuccesses     int64
-	failures            int64
-	consecFailures      int64
-	abe                 int64 // Mbps scaled by 1000
-	bbrResetRequired    int64
-	name                string
-	protocol            string
-	network             string
-	addr                string
-	authToken           string
-	deviceID            string
-	proToken            func() string
-	trusted             bool
-	dialServer          func(*proxy) (net.Conn, error)
-	emaLatencyLongTerm  *ema.EMA
-	emaLatencyShortTerm *ema.EMA
-	mostRecentABETime   time.Time
-	forceRecheckCh      chan bool
-	closeCh             chan bool
-	mx                  sync.Mutex
+	attempts          int64
+	successes         int64
+	consecSuccesses   int64
+	failures          int64
+	consecFailures    int64
+	abe               int64 // Mbps scaled by 1000
+	bbrResetRequired  int64
+	name              string
+	protocol          string
+	network           string
+	addr              string
+	authToken         string
+	deviceID          string
+	proToken          func() string
+	trusted           bool
+	dialServer        func(*proxy) (net.Conn, error)
+	emaLatency        *ema.EMA
+	mostRecentABETime time.Time
+	forceRecheckCh    chan bool
+	closeCh           chan bool
+	mx                sync.Mutex
 }
 
 func newProxy(name, protocol, network string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(*proxy) (net.Conn, error)) *proxy {
 	p := &proxy{
-		name:                name,
-		protocol:            protocol,
-		network:             network,
-		addr:                s.Addr,
-		authToken:           s.AuthToken,
-		deviceID:            deviceID,
-		proToken:            proToken,
-		trusted:             trusted,
-		dialServer:          dialServer,
-		emaLatencyLongTerm:  ema.NewDuration(0, 0.05),
-		emaLatencyShortTerm: ema.NewDuration(0, 0.8),
-		bbrResetRequired:    1,
-		forceRecheckCh:      make(chan bool, 1),
-		closeCh:             make(chan bool, 1),
-		consecSuccesses:     1, // be optimistic
+		name:             name,
+		protocol:         protocol,
+		network:          network,
+		addr:             s.Addr,
+		authToken:        s.AuthToken,
+		deviceID:         deviceID,
+		proToken:         proToken,
+		trusted:          trusted,
+		dialServer:       dialServer,
+		emaLatency:       ema.NewDuration(0, 0.8),
+		bbrResetRequired: 1, // reset on every start
+		forceRecheckCh:   make(chan bool, 1),
+		closeCh:          make(chan bool, 1),
+		consecSuccesses:  1, // be optimistic
 	}
 	go p.runConnectivityChecks()
 	return p
@@ -321,7 +318,7 @@ func (p *proxy) DialServer() (net.Conn, error) {
 }
 
 func (p *proxy) EstLatency() time.Duration {
-	return p.emaLatencyShortTerm.GetDuration()
+	return p.emaLatency.GetDuration()
 }
 
 // EstBandwidth implements the method from the balancer.Dialer interface.
@@ -342,15 +339,14 @@ func (p *proxy) EstBandwidth() float64 {
 	return float64(atomic.LoadInt64(&p.abe)) / 1000
 }
 
-func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64, failures int64, consecFailures int64, emaLatencyLongTerm time.Duration, emaLatencyShortTerm time.Duration, mostRecentABETime time.Time, abe int64) {
+func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64, failures int64, consecFailures int64, emaLatency time.Duration, mostRecentABETime time.Time, abe int64) {
 	p.mx.Lock()
 	atomic.StoreInt64(&p.attempts, attempts)
 	atomic.StoreInt64(&p.successes, successes)
 	atomic.StoreInt64(&p.consecSuccesses, consecSuccesses)
 	atomic.StoreInt64(&p.failures, failures)
 	atomic.StoreInt64(&p.consecFailures, consecFailures)
-	p.emaLatencyLongTerm.SetDuration(emaLatencyLongTerm)
-	p.emaLatencyShortTerm.SetDuration(emaLatencyShortTerm)
+	p.emaLatency.SetDuration(emaLatency)
 	p.mostRecentABETime = mostRecentABETime
 	p.abe = abe
 	p.mx.Unlock()
@@ -367,8 +363,14 @@ func (p *proxy) collectBBRInfo(reqTime time.Time, resp *http.Response) {
 			p.mx.Lock()
 			if reqTime.After(p.mostRecentABETime) {
 				log.Debugf("%v: X-BBR-ABE: %.2f Mbps", p.Label(), abe)
-				atomic.StoreInt64(&p.abe, int64(abe*1000))
-				p.mostRecentABETime = reqTime
+				intABE := int64(abe * 1000)
+				if intABE > 0 {
+					// We check for a positive ABE here because in some scenarios (like
+					// server restart) we can get 0 ABEs. In that case, we want to just
+					// stick with whatever we've got so far.
+					atomic.StoreInt64(&p.abe, intABE)
+					p.mostRecentABETime = reqTime
+				}
 			}
 			p.mx.Unlock()
 		}
@@ -409,18 +411,7 @@ func (p *proxy) dialTCP(timeout time.Duration) (net.Conn, time.Duration, error) 
 	delta := elapsed()
 	if err == nil {
 		p.mx.Lock()
-		longTerm := p.emaLatencyLongTerm.UpdateDuration(delta)
-		shortTerm := p.emaLatencyShortTerm.UpdateDuration(delta)
-		ratio := float64(shortTerm) / float64(longTerm)
-		if ratio < 0.5 {
-			log.Debugf("Latency fell dramatically from %v to %v, reset bandwidth calculations", longTerm, shortTerm)
-			atomic.StoreInt64(&p.abe, 0)
-			p.emaLatencyLongTerm.SetDuration(shortTerm)
-			atomic.StoreInt64(&p.bbrResetRequired, 1)
-		} else if ratio > 2 {
-			log.Debugf("Latency rose dramatically from %v to %v, force proxy recheck", longTerm, shortTerm)
-			p.forceRecheck()
-		}
+		p.emaLatency.UpdateDuration(delta)
 		p.mx.Unlock()
 	}
 	return conn, delta, err

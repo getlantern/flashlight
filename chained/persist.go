@@ -109,8 +109,8 @@ func applyExistingStats(dialers []balancer.Dialer) {
 }
 
 func updateStats(p *proxy, row []string) error {
-	if len(row) < 11 {
-		return fmt.Errorf("Too little data in row")
+	if len(row) != 10 {
+		return fmt.Errorf("Wrong number of fields in row")
 	}
 
 	attempts, err := strconv.ParseInt(row[2], 10, 64)
@@ -133,24 +133,20 @@ func updateStats(p *proxy, row []string) error {
 	if err != nil {
 		return err
 	}
-	emaLatencyLongTerm, err := time.ParseDuration(row[7])
+	emaLatency, err := time.ParseDuration(row[7])
 	if err != nil {
 		return err
 	}
-	emaLatencyShortTerm, err := time.ParseDuration(row[8])
+	mostRecentABETime, err := time.Parse(time.RFC3339Nano, row[8])
 	if err != nil {
 		return err
 	}
-	mostRecentABETime, err := time.Parse(time.RFC3339Nano, row[9])
-	if err != nil {
-		return err
-	}
-	abe, err := strconv.ParseInt(row[10], 10, 64)
+	abe, err := strconv.ParseInt(row[9], 10, 64)
 	if err != nil {
 		return err
 	}
 
-	p.setStats(attempts, successes, consecSuccesses, failures, consecFailures, emaLatencyLongTerm, emaLatencyShortTerm, mostRecentABETime, abe)
+	p.setStats(attempts, successes, consecSuccesses, failures, consecFailures, emaLatency, mostRecentABETime, abe)
 	return nil
 }
 
@@ -178,11 +174,11 @@ func doPersistStats(dialers []balancer.Dialer) {
 	defer out.Close()
 
 	csvOut := csv.NewWriter(out)
-	csvOut.Write([]string{"addr", "label", "attempts", "successes", "consec successes", "failures", "consec failures", "est latency long term", "est latency short term", "most recent bandwidth estimate", "est bandwidth"})
+	csvOut.Write([]string{"addr", "label", "attempts", "successes", "consec successes", "failures", "consec failures", "est latency", "most recent bandwidth estimate", "est bandwidth"})
 	for _, d := range dialers {
 		p := d.(*proxy)
 		p.mx.Lock()
-		err = csvOut.Write([]string{d.Addr(), d.Label(), fmt.Sprint(d.Attempts()), fmt.Sprint(d.Successes()), fmt.Sprint(d.ConsecSuccesses()), fmt.Sprint(d.Failures()), fmt.Sprint(d.ConsecFailures()), p.emaLatencyLongTerm.GetDuration().String(), p.emaLatencyShortTerm.GetDuration().String(), p.mostRecentABETime.Format(time.RFC3339Nano), fmt.Sprint(p.abe)})
+		err = csvOut.Write([]string{d.Addr(), d.Label(), fmt.Sprint(d.Attempts()), fmt.Sprint(d.Successes()), fmt.Sprint(d.ConsecSuccesses()), fmt.Sprint(d.Failures()), fmt.Sprint(d.ConsecFailures()), p.emaLatency.GetDuration().String(), p.mostRecentABETime.Format(time.RFC3339Nano), fmt.Sprint(p.abe)})
 		p.mx.Unlock()
 		if err != nil {
 			log.Errorf("Error writing to proxystats.csv: %v", err)

@@ -224,6 +224,10 @@ func (d *testDialer) Succeeding() bool {
 	return !d.failing
 }
 
+func (d *testDialer) CheckConnectivity() bool {
+	return true
+}
+
 func (d *testDialer) ProbePerformance() {
 }
 

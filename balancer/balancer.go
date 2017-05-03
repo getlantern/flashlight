@@ -18,14 +18,19 @@ import (
 )
 
 const (
-	dialAttempts = 3
+	dialAttempts         = 3
+	connectivityRechecks = 3
 
 	// reasonable but slightly larger than the timeout of all dialers
 	initialTimeout = 1 * time.Minute
+
+	evalDialersInterval = 10 * time.Second
 )
 
 var (
 	log = golog.LoggerFor("balancer")
+
+	recheckInterval = 2 * time.Second
 )
 
 // Dialer provides the ability to dial a proxy and obtain information needed to
@@ -34,26 +39,26 @@ type Dialer interface {
 	// Name returns the name for this Dialer
 	Name() string
 
-	// Label() returns a label for this Dialer (includes Name plus more).
+	// Label returns a label for this Dialer (includes Name plus more).
 	Label() string
 
-	// JustifiedLabel() is like Label() but with elements justified for line-by
+	// JustifiedLabel is like Label() but with elements justified for line-by
 	// -line display.
 	JustifiedLabel() string
 
 	// Addr returns the address for this Dialer
 	Addr() string
 
-	// Trusted() indicates whether or not this dialer is trusted
+	// Trusted indicates whether or not this dialer is trusted
 	Trusted() bool
 
 	// Dial with this dialer
 	Dial(network, addr string) (net.Conn, error)
 
-	// EstLatency() provides a latency estimate
+	// EstLatency provides a latency estimate
 	EstLatency() time.Duration
 
-	// EstBandwidth() provides the estimated bandwidth in Mbps
+	// EstBandwidth provides the estimated bandwidth in Mbps
 	EstBandwidth() float64
 
 	// Attempts returns the total number of dial attempts
@@ -74,6 +79,12 @@ type Dialer interface {
 	// Succeeding indicates whether or not this dialer is currently good to use
 	Succeeding() bool
 
+	// CheckConnectivity checks connectivity to proxy and updates latency and
+	// attempts, successes and failures accordingly. It returns true if the check
+	// was successful. It should use a timeout internally to avoid blocking
+	// indefinitely.
+	CheckConnectivity() bool
+
 	// ProbePerformance forces the dialer to actively probe to try to better
 	// understand its performance.
 	ProbePerformance()
@@ -84,15 +95,15 @@ type Dialer interface {
 
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
-	lastDialTime   int64 // not used anymore, but makes sure we're aligned on 64bit boundary
-	nextTimeout    *ema.EMA
-	mu             sync.RWMutex
-	dialers        SortedDialers
-	trusted        SortedDialers
-	closeCh        chan bool
-	stopStatsCh    chan bool
-	forceStatsCh   chan bool
-	onActiveDialer chan Dialer
+	lastDialTime                    int64 // not used anymore, but makes sure we're aligned on 64bit boundary
+	nextTimeout                     *ema.EMA
+	mu                              sync.RWMutex
+	dialers                         SortedDialers
+	trusted                         SortedDialers
+	closeCh                         chan bool
+	onActiveDialer                  chan Dialer
+	priorTopDialer                  Dialer
+	bandwidthKnownForPriorTopDialer bool
 }
 
 // New creates a new Balancer using the supplied Dialers.
@@ -102,43 +113,26 @@ func New(dialers ...Dialer) *Balancer {
 	b := &Balancer{
 		nextTimeout:    ema.NewDuration(initialTimeout, 0.2),
 		closeCh:        make(chan bool),
-		stopStatsCh:    make(chan bool, 1),
-		forceStatsCh:   make(chan bool, 1),
 		onActiveDialer: make(chan Dialer, 1),
 	}
 
 	b.Reset(dialers...)
-	ops.Go(b.printStats)
 	ops.Go(b.run)
 	return b
-}
-
-func (b *Balancer) dialersToCheck() []Dialer {
-	b.mu.RLock()
-	defer b.mu.RUnlock()
-	ds := make([]Dialer, len(b.dialers))
-	copy(ds, b.dialers)
-	return ds
 }
 
 // Reset closes existing dialers and replaces them with new ones.
 func (b *Balancer) Reset(dialers ...Dialer) {
 	log.Debugf("Resetting with %d dialers", len(dialers))
-	var dls SortedDialers
-	var tdls SortedDialers
+	dls := make(SortedDialers, len(dialers))
+	copy(dls, dialers)
 
 	b.mu.Lock()
 	oldDialers := b.dialers
-	for _, dl := range dialers {
-		dls = append(dls, dl)
-
-		if dl.Trusted() {
-			tdls = append(tdls, dl)
-		}
-	}
 	b.dialers = dls
-	b.trusted = tdls
 	b.mu.Unlock()
+	b.sortDialers()
+
 	for _, dl := range oldDialers {
 		dl.Stop()
 	}
@@ -244,11 +238,15 @@ func (b *Balancer) dialWithTimeout(d Dialer, network, addr string) (net.Conn, er
 }
 
 func (b *Balancer) run() {
+	ticker := time.NewTicker(evalDialersInterval)
+	defer ticker.Stop()
+
 	for {
 		select {
-		case <-b.closeCh:
-			b.stopStatsCh <- true
+		case <-ticker.C:
+			b.evalDialers()
 
+		case <-b.closeCh:
 			b.mu.Lock()
 			oldDialers := b.dialers
 			b.dialers = nil
@@ -260,6 +258,55 @@ func (b *Balancer) run() {
 			b.closeCh <- true
 			return
 		}
+	}
+}
+
+func (b *Balancer) evalDialers() {
+	dialers := b.copyOfDialers()
+	if len(dialers) == 0 {
+		return
+	}
+
+	// First do a tentative sort
+	sort.Sort(dialers)
+	newTopDialer := dialers[0]
+	bandwidthKnownForNewTopDialer := newTopDialer.EstBandwidth() > 0
+
+	// If we've had a change at the top of the order, let's recheck latencies to
+	// see if it's just due to general network conditions degrading.
+	checkNeeded := b.bandwidthKnownForPriorTopDialer &&
+		bandwidthKnownForNewTopDialer &&
+		newTopDialer != b.priorTopDialer
+	if checkNeeded {
+		log.Debugf("Top dialer changed from %v to %v, checking connectivity for all dialers to get updated latencies", b.priorTopDialer.Name(), newTopDialer.Name())
+		checkConnectivityForAll(dialers)
+		sort.Sort(dialers)
+		log.Debugf("Finished checking connectivity for all dialers, resulting in top dialer: %v", dialers[0].Name())
+	}
+
+	// Now that we have updated metrics, sort dialers for real
+	b.sortDialers()
+	b.priorTopDialer = newTopDialer
+	b.bandwidthKnownForPriorTopDialer = bandwidthKnownForNewTopDialer
+}
+
+func checkConnectivityForAll(dialers SortedDialers) {
+	var wg sync.WaitGroup
+	wg.Add(len(dialers))
+	for _, _d := range dialers {
+		d := _d
+		ops.Go(func() {
+			checkConnectivityFor(d)
+			wg.Done()
+		})
+	}
+	wg.Wait()
+}
+
+func checkConnectivityFor(d Dialer) {
+	for i := 0; i < connectivityRechecks; i++ {
+		d.CheckConnectivity()
+		time.Sleep(randomize(recheckInterval))
 	}
 }
 
@@ -275,63 +322,77 @@ func (b *Balancer) Close() {
 	}
 }
 
-// printStats periodically prints out stats for all dialers
-func (b *Balancer) printStats() {
-	time.Sleep(5 * time.Second)
-	b.doPrintStats()
-	t := time.NewTicker(15 * time.Second)
-	for {
-		select {
-		case <-b.stopStatsCh:
-			t.Stop()
-			return
-		case <-b.forceStatsCh:
-			b.doPrintStats()
-		case <-t.C:
-			b.doPrintStats()
-		}
-	}
-}
-
-func (b *Balancer) doPrintStats() {
-	b.mu.RLock()
-	defer b.mu.RUnlock()
-	dialersCopy := make(SortedDialers, len(b.dialers))
-	copy(dialersCopy, b.dialers)
-	sort.Sort(dialersCopy)
+func (b *Balancer) printStats(dialers SortedDialers) {
 	log.Debug("-------------------------- Dialer Stats -----------------------")
-	for _, d := range dialersCopy {
+	for _, d := range dialers {
 		log.Debugf("%s  S: %4d / %4d (%d)\tF: %4d / %4d (%d)\tL: %5.0fms\tBW: %3.2fMbps", d.JustifiedLabel(), d.Successes(), d.Attempts(), d.ConsecSuccesses(), d.Failures(), d.Attempts(), d.ConsecFailures(), d.EstLatency().Seconds()*1000, d.EstBandwidth())
 	}
 	log.Debug("------------------------ End Dialer Stats ---------------------")
 }
 
-func (b *Balancer) forceStats() {
-	select {
-	case b.forceStatsCh <- true:
-		// okay
-	default:
-		// already pending
-	}
-}
-
 func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, error) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
+	b.mu.RLock()
 	dialers := b.dialers
 	if trustedOnly {
 		dialers = b.trusted
 	}
+	b.mu.RUnlock()
 	if dialers.Len() == 0 {
 		if trustedOnly {
 			return nil, fmt.Errorf("No trusted dialers")
 		}
 		return nil, fmt.Errorf("No dialers")
 	}
+
+	topDialer := dialers[0]
+	for i := 1; i < len(dialers); i++ {
+		dialer := dialers[i]
+		if dialer.Succeeding() && dialer.EstLatency().Seconds()/topDialer.EstLatency().Seconds() < 0.75 && rand.Float64() < 0.05 {
+			// We generally assume that dialers with lower latency could be faster
+			// overall, so send a little traffic to them to find out if that's true.
+			// Amongst other things, this allows the fastest dialer to eventually
+			// recover after a temporary hiccup.
+			log.Debugf("Dialer %v has a dramatically lower latency than top dialer %v, randomly moving it to the top of the line", dialer.Name(), topDialer.Name())
+			randomized := make([]Dialer, 0, len(dialers))
+			randomized = append(randomized, dialer)
+			for j, other := range dialers {
+				if j != i {
+					randomized = append(randomized, other)
+				}
+			}
+			return randomized, nil
+		}
+	}
+
+	return dialers, nil
+}
+
+func (b *Balancer) copyOfDialers() SortedDialers {
+	b.mu.RLock()
+	_dialers := b.dialers
+	b.mu.RUnlock()
+	dialers := make(SortedDialers, len(_dialers))
+	copy(dialers, _dialers)
+	return dialers
+}
+
+func (b *Balancer) sortDialers() {
+	dialers := b.copyOfDialers()
 	sort.Sort(dialers)
-	result := make([]Dialer, len(dialers))
-	copy(result, dialers)
-	return result, nil
+
+	trusted := make(SortedDialers, 0, len(dialers))
+	for _, d := range dialers {
+		if d.Trusted() {
+			trusted = append(trusted, d)
+		}
+	}
+
+	b.mu.Lock()
+	b.dialers = dialers
+	b.trusted = trusted
+	b.mu.Unlock()
+
+	b.printStats(dialers)
 }
 
 type SortedDialers []Dialer
@@ -378,4 +439,8 @@ func (d SortedDialers) Less(i, j int) bool {
 	// divide bandwidth by latency to determine how to sort
 	ela, elb := a.EstLatency().Seconds(), b.EstLatency().Seconds()
 	return float64(eba)/ela > float64(ebb)/elb
+}
+
+func randomize(d time.Duration) time.Duration {
+	return d/2 + time.Duration(rand.Int63n(int64(d)))
 }
