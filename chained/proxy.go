@@ -269,6 +269,8 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, deviceID str
 		dialServer:       dialServer,
 		emaLatency:       ema.NewDuration(0, 0.8),
 		bbrResetRequired: 1, // reset on every start
+		forceRecheckCh:   make(chan bool, 1),
+		closeCh:          make(chan bool, 1),
 		consecSuccesses:  1, // be optimistic
 	}
 	return p
