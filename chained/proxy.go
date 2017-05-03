@@ -268,7 +268,7 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, deviceID str
 		trusted:          trusted,
 		dialServer:       dialServer,
 		emaLatency:       ema.NewDuration(0, 0.8),
-		bbrResetRequired: 0,
+		bbrResetRequired: 1, // reset on every start
 		consecSuccesses:  1, // be optimistic
 	}
 	return p
@@ -360,8 +360,11 @@ func (p *proxy) collectBBRInfo(reqTime time.Time, resp *http.Response) {
 			p.mx.Lock()
 			if reqTime.After(p.mostRecentABETime) {
 				log.Debugf("%v: X-BBR-ABE: %.2f Mbps", p.Label(), abe)
-				atomic.StoreInt64(&p.abe, int64(abe*1000))
-				p.mostRecentABETime = reqTime
+				intABE := int64(abe * 1000)
+				if intABE > 0 {
+					atomic.StoreInt64(&p.abe, intABE)
+					p.mostRecentABETime = reqTime
+				}
 			}
 			p.mx.Unlock()
 		}
