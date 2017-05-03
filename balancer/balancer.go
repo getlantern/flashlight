@@ -348,6 +348,10 @@ func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, error) {
 	for i := 1; i < len(dialers); i++ {
 		dialer := dialers[i]
 		if dialer.Succeeding() && dialer.EstLatency().Seconds()/topDialer.EstLatency().Seconds() < 0.75 && rand.Float64() < 0.05 {
+			// We generally assume that dialers with lower latency could be faster
+			// overall, so send a little traffic to them to find out if that's true.
+			// Amongst other things, this allows the fastest dialer to eventually
+			// recover after a temporary hiccup.
 			log.Debugf("Dialer %v has a dramatically lower latency than top dialer %v, randomly moving it to the top of the line", dialer.Name(), topDialer.Name())
 			randomized := make([]Dialer, 0, len(dialers))
 			randomized = append(randomized, dialer)

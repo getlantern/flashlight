@@ -365,6 +365,9 @@ func (p *proxy) collectBBRInfo(reqTime time.Time, resp *http.Response) {
 				log.Debugf("%v: X-BBR-ABE: %.2f Mbps", p.Label(), abe)
 				intABE := int64(abe * 1000)
 				if intABE > 0 {
+					// We check for a positive ABE here because in some scenarios (like
+					// server restart) we can get 0 ABEs. In that case, we want to just
+					// stick with whatever we've got so far.
 					atomic.StoreInt64(&p.abe, intABE)
 					p.mostRecentABETime = reqTime
 				}
