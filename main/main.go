@@ -86,7 +86,7 @@ func main() {
 	}
 
 	if a.ShowUI {
-		runOnSystrayReady(_main(a))
+		runOnSystrayReady(a, _main(a))
 	} else {
 		log.Debug("Running headless")
 		_main(a)()

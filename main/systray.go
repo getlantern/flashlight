@@ -19,8 +19,9 @@ var menu struct {
 	quit   *systray.MenuItem
 }
 
-func runOnSystrayReady(f func()) {
+func runOnSystrayReady(a *app.App, f func()) {
 	systray.Run(f)
+	a.Exit(nil)
 }
 
 func quitSystray() {
