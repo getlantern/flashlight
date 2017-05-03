@@ -273,6 +273,7 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, deviceID str
 		closeCh:          make(chan bool, 1),
 		consecSuccesses:  1, // be optimistic
 	}
+	go p.runConnectivityChecks()
 	return p
 }
 
