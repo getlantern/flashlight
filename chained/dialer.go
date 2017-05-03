@@ -53,21 +53,10 @@ func (p *proxy) runConnectivityChecks() {
 			select {
 			case <-timer.C:
 				log.Debugf("Checking %v", p.Label())
-				timeout := p.emaLatency.GetDuration() * 2
-				if timeout < minCheckTimeout {
-					timeout = minCheckTimeout
-				} else if timeout > maxCheckTimeout {
-					timeout = maxCheckTimeout
-				}
-				_, _, err := p.dialTCP(timeout)
-				if err == nil {
-					p.markSuccess()
+				if p.CheckConnectivity() {
 					// On success, don't bother rechecking anytime soon
 					checkInterval = maxCheckInterval
-					// We intentionally don't close the connection and instead let the
-					// server's idle timeout handle it to make this less fingerprintable.
 				} else {
-					p.markFailure()
 					// Exponentially back off while we're still failing
 					checkInterval *= 2
 					if checkInterval > maxCheckInterval {
