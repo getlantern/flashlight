@@ -3,6 +3,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -36,6 +37,7 @@ func main() {
 		Flags:  flagsAsMap(),
 	}
 	a.Init()
+	wrapperC := handleWrapperSignals(a)
 
 	// environmental variables, etc.) and monitoring the stderr of the program.
 	exitStatus, err := panicwrap.BasicWrap(
@@ -55,6 +57,10 @@ func main() {
 			os.Exit(exitStatus)
 		}
 	}
+
+	// We're in the child (wrapped) process
+	// Stop wrapper signal handling
+	signal.Stop(wrapperC)
 
 	if *help {
 		flag.Usage()
@@ -150,6 +156,22 @@ func parseFlags() {
 	// Note - we can ignore the returned error because CommandLine.Parse() will
 	// exit if it fails.
 	_ = flag.CommandLine.Parse(args)
+}
+
+// Handle system signals in panicwrap wrapper process for clean exit
+func handleWrapperSignals(a *app.App) chan os.Signal {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT,
+		syscall.SIGPIPE) // it's okay to trap SIGPIPE in the wrapper but not in the main process because we can get it from failed network connections
+	go func() {
+		s := <-c
+		a.LogPanicAndExit(fmt.Sprintf("Panicwrapper received signal %v", s))
+	}()
+	return c
 }
 
 // Handle system signals for clean exit
