@@ -267,10 +267,13 @@ func (b *Balancer) evalDialers() {
 		return
 	}
 
+	// First do a tentative sort
 	sort.Sort(dialers)
 	newTopDialer := dialers[0]
 	bandwidthKnownForNewTopDialer := newTopDialer.EstBandwidth() > 0
 
+	// If we've had a change at the top of the order, let's recheck latencies to
+	// see if it's just due to general network conditions degrading.
 	checkNeeded := b.bandwidthKnownForPriorTopDialer &&
 		bandwidthKnownForNewTopDialer &&
 		newTopDialer != b.priorTopDialer
@@ -281,6 +284,7 @@ func (b *Balancer) evalDialers() {
 		log.Debugf("Finished checking connectivity for all dialers, resulting in top dialer: %v", dialers[0].Name())
 	}
 
+	// Now that we have updated metrics, sort dialers for real
 	b.sortDialers()
 	b.priorTopDialer = newTopDialer
 	b.bandwidthKnownForPriorTopDialer = bandwidthKnownForNewTopDialer
