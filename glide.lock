@@ -1,5 +1,5 @@
 hash: 7f4e9dbab945a57f1c93bbd0bc394b57e659ce9ce6727621fa4bd5348ef78a5c
-updated: 2017-04-28T18:47:12.387386414-07:00
+updated: 2017-05-04T11:04:26.134314403-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a6aba3a6314be3a8ef518d5d4269a8459af9c789
@@ -431,11 +431,10 @@ imports:
   - jwt
 - name: golang.org/x/sys
   version: 9ccfe848b9db8435a24c424abbc07a921adf1df5
-  repo: https://github.com/golang/sys
-  vcs: git
   subpackages:
   - unix
   - windows
+  - windows/registry
 - name: golang.org/x/text
   version: 470f45bf29f4147d6fbd7dfd0a02a848e49f5bf4
   subpackages:

@@ -13,6 +13,7 @@ import (
 	"sync"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/uuid"
 	"github.com/getlantern/yaml"
@@ -98,6 +99,8 @@ type Settings struct {
 	m map[SettingName]interface{}
 	sync.RWMutex
 	filePath string
+
+	log golog.Logger
 }
 
 func loadSettings(version, revisionDate, buildDate string) *Settings {
@@ -114,12 +117,12 @@ func loadSettingsFrom(version, revisionDate, buildDate, path string) *Settings {
 
 	// Use settings from disk if they're available.
 	if bytes, err := ioutil.ReadFile(path); err != nil {
-		log.Debugf("Could not read file %v", err)
+		sett.log.Debugf("Could not read file %v", err)
 	} else if err := yaml.Unmarshal(bytes, set); err != nil {
-		log.Errorf("Could not load yaml %v", err)
+		sett.log.Errorf("Could not load yaml %v", err)
 		// Just keep going with the original settings not from disk.
 	} else {
-		log.Debugf("Loaded settings from %v", path)
+		sett.log.Debugf("Loaded settings from %v", path)
 	}
 	// old lantern persist settings with all lower case, convert them to camel cased.
 	toCamelCase(set)
@@ -171,6 +174,7 @@ func newSettings(filePath string) *Settings {
 		},
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
+		log:             golog.LoggerFor("app.settings"),
 	}
 }
 
@@ -178,7 +182,7 @@ func newSettings(filePath string) *Settings {
 // every UI client
 func (s *Settings) StartService() error {
 	helloFn := func(write func(interface{})) {
-		log.Debugf("Sending Lantern settings to new client")
+		s.log.Debugf("Sending Lantern settings to new client")
 		write(s.uiMap())
 	}
 
@@ -195,9 +199,9 @@ func (s *Settings) StopService() {
 }
 
 func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {
-	log.Debugf("Start reading settings messages!!")
+	s.log.Debugf("Start reading settings messages!!")
 	for message := range in {
-		log.Debugf("Read settings message %v", message)
+		s.log.Debugf("Read settings message %v", message)
 
 		data, ok := (message).(map[string]interface{})
 		if !ok {
@@ -208,7 +212,7 @@ func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {
 			name := SettingName(k)
 			t, exists := settingMeta[name]
 			if !exists {
-				log.Errorf("Unknown settings name %s", k)
+				s.log.Errorf("Unknown settings name %s", k)
 				continue
 			}
 			switch t.sType {
@@ -230,7 +234,7 @@ func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {
 func (s *Settings) setBool(name SettingName, v interface{}) {
 	b, ok := v.(bool)
 	if !ok {
-		log.Errorf("Could not convert %s(%v) to bool", name, v)
+		s.log.Errorf("Could not convert %s(%v) to bool", name, v)
 		return
 	}
 	s.setVal(name, b)
@@ -239,12 +243,12 @@ func (s *Settings) setBool(name SettingName, v interface{}) {
 func (s *Settings) setNum(name SettingName, v interface{}) {
 	number, ok := v.(json.Number)
 	if !ok {
-		log.Errorf("Could not convert %v of type %v", name, reflect.TypeOf(v))
+		s.log.Errorf("Could not convert %v of type %v", name, reflect.TypeOf(v))
 		return
 	}
 	bigint, err := number.Int64()
 	if err != nil {
-		log.Errorf("Could not get int64 value for %v with error %v", name, err)
+		s.log.Errorf("Could not get int64 value for %v with error %v", name, err)
 		return
 	}
 	s.setVal(name, bigint)
@@ -255,7 +259,7 @@ func (s *Settings) setStringArray(name SettingName, v interface{}) {
 	if !ok {
 		ss, ok := v.([]interface{})
 		if !ok {
-			log.Errorf("Could not convert %s(%v) to array", name, v)
+			s.log.Errorf("Could not convert %s(%v) to array", name, v)
 			return
 		}
 		for i := range ss {
@@ -268,7 +272,7 @@ func (s *Settings) setStringArray(name SettingName, v interface{}) {
 func (s *Settings) setString(name SettingName, v interface{}) {
 	str, ok := v.(string)
 	if !ok {
-		log.Errorf("Could not convert %s(%v) to string", name, v)
+		s.log.Errorf("Could not convert %s(%v) to string", name, v)
 		return
 	}
 	s.setVal(name, str)
@@ -278,9 +282,9 @@ func (s *Settings) setString(name SettingName, v interface{}) {
 func (s *Settings) save() {
 	log.Trace("Saving settings")
 	if f, err := os.Create(s.filePath); err != nil {
-		log.Errorf("Could not open settings file for writing: %v", err)
+		s.log.Errorf("Could not open settings file for writing: %v", err)
 	} else if _, err := s.writeTo(f); err != nil {
-		log.Errorf("Could not save settings file: %v", err)
+		s.log.Errorf("Could not save settings file: %v", err)
 	} else {
 		log.Tracef("Saved settings to %s", s.filePath)
 	}
@@ -381,6 +385,8 @@ func (s *Settings) IsAutoLaunch() bool {
 // SetLanguage sets the user language
 func (s *Settings) SetLanguage(language string) {
 	s.setVal(SNLanguage, language)
+	s.log.Debugf("Setting language to %v", language)
+	s.setLanguageInRegistry(language)
 }
 
 // GetLanguage returns the user language
@@ -503,12 +509,12 @@ func (s *Settings) getVal(name SettingName) (interface{}, error) {
 	if val, ok := s.m[name]; ok {
 		return val, nil
 	}
-	log.Errorf("Could not get value for %s", name)
+	s.log.Errorf("Could not get value for %s", name)
 	return nil, fmt.Errorf("No value for %v", name)
 }
 
 func (s *Settings) setVal(name SettingName, val interface{}) {
-	log.Debugf("Setting %v to %v in %v", name, val, s.m)
+	s.log.Debugf("Setting %v to %v in %v", name, val, s.m)
 	s.Lock()
 	s.m[name] = val
 	// Need to unlock here because s.save() will lock again.
