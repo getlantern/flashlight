@@ -30,11 +30,11 @@ var (
 // Configure sets the CA certificate to pin for the TLS auto-update connection.
 func Configure(updateURL, updateCA string) {
 	setUpdateURL(updateURL)
-	enableAutoupdate()
 	httpClient.Store(
 		&http.Client{
 			Transport: proxied.ChainedThenFrontedWith("d2yl1zps97e5mx.cloudfront.net", updateCA),
 		})
+	enableAutoupdate()
 }
 
 func setUpdateURL(url string) {
