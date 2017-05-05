@@ -385,8 +385,6 @@ func (s *Settings) IsAutoLaunch() bool {
 // SetLanguage sets the user language
 func (s *Settings) SetLanguage(language string) {
 	s.setVal(SNLanguage, language)
-	s.log.Debugf("Setting language to %v", language)
-	s.setLanguageInRegistry(language)
 }
 
 // GetLanguage returns the user language

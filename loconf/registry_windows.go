@@ -1,9 +1,9 @@
-package app
+package loconf
 
 import "golang.org/x/sys/windows/registry"
 
-// setLanguageInRegistry sets the user language
-func (s *Settings) setLanguageInRegistry(language string) {
+// SetUninstallURLInRegistry sets the URL of the uninstall survey.
+func (lc *LoConf) SetUninstallURLInRegistry(url string) {
 	k, err := registry.OpenKey(registry.CURRENT_USER,
 		`Software\Microsoft\Windows\CurrentVersion\Uninstall\Lantern`,
 		registry.QUERY_VALUE)
@@ -13,12 +13,6 @@ func (s *Settings) setLanguageInRegistry(language string) {
 	}
 	defer k.Close()
 
-	var url string
-	if language == "en_US" {
-		url = "https://www.surveymonkey.com/r/HLZ5WBS"
-	} else {
-		url = "https://www.surveymonkey.com/r/HPJWRNP"
-	}
 	if err = k.SetStringValue("UninstallSurveyURL", url); err != nil {
 		s.log.Errorf("Could not set string value? %v", err)
 	}

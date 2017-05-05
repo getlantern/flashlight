@@ -250,7 +250,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			app.AddExitFunc(stopAnalytics)
 		}
 
-		app.AddExitFunc(AnnouncementsLoop(4*time.Hour, isProUser))
+		app.AddExitFunc(LoconfScanner(4*time.Hour, isProUser))
 		app.AddExitFunc(notificationsLoop())
 
 		return true
