@@ -3,6 +3,7 @@ package loconf
 import (
 	"encoding/json"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"time"
 
@@ -21,6 +22,8 @@ var (
 	ErrNoAvailable error = errors.New("no announcement available")
 
 	log = golog.LoggerFor("loconf")
+
+	r = rand.New(rand.NewSource(time.Now().UnixNano()))
 )
 
 // LoConf is a struct representing the locale-based configuration file data.
@@ -116,7 +119,10 @@ func parse(buf []byte) (*LoConf, error) {
 func (lc *LoConf) GetSurvey(locale string, isPro bool) (*Survey, error) {
 	if val, ok := lc.Surveys[locale]; ok {
 		if val.Enabled && (isPro && val.Pro || !isPro && val.Free) {
-			return &val, nil
+			if val.Probability > r.Float64() {
+				return &val, nil
+			}
+			return nil, errors.New("Survey not shown probabalistically")
 		}
 		return nil, errors.New("Survey for %v not active when pro==%v", locale, isPro)
 	}
@@ -128,7 +134,10 @@ func (lc *LoConf) GetSurvey(locale string, isPro bool) (*Survey, error) {
 func (lc *LoConf) GetUninstallSurvey(locale string, isPro bool) (*UninstallSurvey, error) {
 	if val, ok := lc.UninstallSurveys[locale]; ok {
 		if val.Enabled && (isPro && val.Pro || !isPro && val.Free) {
-			return &val, nil
+			if val.Probability > r.Float64() {
+				return &val, nil
+			}
+			return nil, errors.New("Survey not shown probabalistically")
 		}
 		return nil, errors.New("Survey for %v not active when pro==%v", locale, isPro)
 	}

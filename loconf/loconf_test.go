@@ -50,7 +50,7 @@ func TestUninstallSurvey(t *testing.T) {
     "uninstall-survey": {
       "en-US": {
         "enabled": true,
-        "probability": 0.00,
+        "probability": 1.00,
         "pro": false
       }
     }
@@ -70,7 +70,7 @@ func TestUninstallSurvey(t *testing.T) {
     "uninstall-survey": {
       "en-US": {
         "enabled": false,
-        "probability": 0.00,
+        "probability": 1.00,
         "pro": true
       }
     }
@@ -90,7 +90,7 @@ func TestUninstallSurvey(t *testing.T) {
     "uninstall-survey": {
       "en-US": {
         "enabled": true,
-        "probability": 0.00,
+        "probability": 1.00,
         "pro": true
       }
     }
@@ -111,7 +111,7 @@ func TestSurvey(t *testing.T) {
     "survey": {
       "en-US": {
         "enabled": true,
-        "probability": 0.00,
+        "probability": 1.0,
         "message": "Lantern is hiring an engineer in India! For more info, and to apply",
         "thanks": "Thanks for your application!",
         "button": "Click Here",
