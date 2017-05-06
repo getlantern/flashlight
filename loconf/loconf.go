@@ -69,15 +69,19 @@ type Announcement struct {
 
 // Get gets announcement via the HTTP client, based on the locale and staging flags.
 func Get(hc *http.Client, isStaging bool) (*LoConf, error) {
-	u := loConfURL
+	return get(hc, isStaging, loConfURL, stagingLoConfURL)
+}
+
+// get gets announcement via the HTTP client, based on the locale and staging flags.
+func get(hc *http.Client, isStaging bool, prodURL, stagingURL string) (*LoConf, error) {
+	u := prodURL
 	if isStaging {
-		u = stagingLoConfURL
+		u = stagingURL
 	}
 	b, efetch := fetch(hc, u)
 	if efetch != nil {
 		return nil, errors.Wrap(efetch)
 	}
-	//log.Debugf("Got loconf: %v", string(b))
 	parsed, eparse := parse(b)
 	if eparse != nil {
 		return nil, errors.Wrap(eparse)
