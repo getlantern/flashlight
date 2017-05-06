@@ -28,9 +28,10 @@ var (
 
 // LoConf is a struct representing the locale-based configuration file data.
 type LoConf struct {
-	Surveys          map[string]Survey          `json:"survey,omitempty"`
-	Announcements    map[string]json.RawMessage `json:"announcement,omitempty"`
-	UninstallSurveys map[string]UninstallSurvey `json:"uninstall-survey,omitempty"`
+	Surveys          map[string]*Survey          `json:"survey,omitempty"`
+	Announcements    map[string]json.RawMessage  `json:"announcement,omitempty"`
+	UninstallSurveys map[string]*UninstallSurvey `json:"uninstall-survey,omitempty"`
+	log              golog.Logger
 }
 
 // BaseSurvey contains the core elements of any survey type.
@@ -106,7 +107,7 @@ func fetch(hc *http.Client, u string) (b []byte, err error) {
 }
 
 func parse(buf []byte) (*LoConf, error) {
-	obj := LoConf{}
+	obj := LoConf{log: golog.LoggerFor("flashlight.loconf")}
 	if ejson := json.Unmarshal(buf, &obj); ejson != nil {
 		log.Errorf("Could not parse JSON %v", ejson)
 		return nil, errors.New("error parsing loconf section: %v", ejson)
@@ -116,32 +117,16 @@ func parse(buf []byte) (*LoConf, error) {
 
 // GetSurvey returns the uninstall survey for the specified locale and
 // pro state, or an error if no match exists.
-func (lc *LoConf) GetSurvey(locale string, isPro bool) (*Survey, error) {
-	if val, ok := lc.Surveys[locale]; ok {
-		if val.Enabled && (isPro && val.Pro || !isPro && val.Free) {
-			if val.Probability > r.Float64() {
-				return &val, nil
-			}
-			return nil, errors.New("Survey not shown probabalistically")
-		}
-		return nil, errors.New("Survey for %v not active when pro==%v", locale, isPro)
-	}
-	return nil, errors.New("No survey for locale %v", locale)
+func (lc *LoConf) GetSurvey(locale string) (*Survey, bool) {
+	val, ok := lc.Surveys[locale]
+	return val, ok
 }
 
 // GetUninstallSurvey returns the uninstall survey for the specified locale and
 // pro state, or an error if no match exists.
-func (lc *LoConf) GetUninstallSurvey(locale string, isPro bool) (*UninstallSurvey, error) {
-	if val, ok := lc.UninstallSurveys[locale]; ok {
-		if val.Enabled && (isPro && val.Pro || !isPro && val.Free) {
-			if val.Probability > r.Float64() {
-				return &val, nil
-			}
-			return nil, errors.New("Survey not shown probabalistically")
-		}
-		return nil, errors.New("Survey for %v not active when pro==%v", locale, isPro)
-	}
-	return nil, errors.New("No survey for locale %v", locale)
+func (lc *LoConf) GetUninstallSurvey(locale string) (*UninstallSurvey, bool) {
+	val, ok := lc.UninstallSurveys[locale]
+	return val, ok
 }
 
 // GetAnnouncement returns the announcement for the specified locale, pro, etc

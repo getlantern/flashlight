@@ -7,7 +7,6 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/notifier"
 
-	"github.com/getlantern/flashlight/announcement"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/loconf"
 	"github.com/getlantern/flashlight/ui"
@@ -36,14 +35,14 @@ func (loc *loconfer) scan(interval time.Duration, proChecker func() (bool, bool)
 	t := time.NewTicker(interval)
 	isStaging := common.Staging
 	checker := func() {
-		isPro, ok := proChecker()
-		if !ok {
-			loc.log.Debugf("Skip checking announcement as user status is unknown")
-			return
-		}
 		lc, err := loconf.Get(http.DefaultClient, isStaging)
 		if err != nil {
 			loc.log.Error(err)
+			return
+		}
+		isPro, ok := proChecker()
+		if !ok {
+			loc.log.Debugf("Skip checking announcement as user status is unknown")
 			return
 		}
 		onLoconf(lc, isPro)
@@ -85,19 +84,19 @@ func (loc *loconfer) onLoconf(lc *loconf.LoConf, isPro bool) {
 
 func (loc *loconfer) setUninstallURL(lc *loconf.LoConf, isPro bool) {
 	lang := settings.GetLanguage()
-	survey, err := lc.GetUninstallSurvey(lang, isPro)
-	if err != nil {
+	survey, ok := lc.GetUninstallSurvey(lang)
+	if !ok {
 		loc.log.Debugf("No available uninstall survey")
 		return
 	}
-	lc.SetUninstallURLInRegistry(survey.URL)
+	lc.SetUninstallURLInRegistry(survey, isPro)
 }
 
 func (loc *loconfer) makeAnnouncements(lc *loconf.LoConf, isPro bool) {
 	lang := settings.GetLanguage()
 	current, err := lc.GetAnnouncement(lang, isPro)
 	if err != nil {
-		if err == announcement.ErrNoAvailable {
+		if err == loconf.ErrNoAvailable {
 			loc.log.Debugf("No available announcement")
 		} else {
 			loc.log.Error(err)

@@ -31,17 +31,17 @@ func TestParsing(t *testing.T) {
 	//log.Debugf("Got loconf: %+v", lc)
 	assert.NotNil(t, lc)
 
-	us, err := lc.GetUninstallSurvey("zh-CN", true)
+	us, ok := lc.GetUninstallSurvey("zh-CN")
 
 	assert.NotNil(t, us)
-	assert.Nil(t, err)
+	assert.True(t, ok)
 
 	log.Debugf("Got uninstall survey: %+v", us)
 
-	us, err = lc.GetUninstallSurvey("nothereatall", true)
+	us, ok = lc.GetUninstallSurvey("nothereatall")
 
 	assert.Nil(t, us)
-	assert.NotNil(t, err)
+	assert.False(t, ok)
 }
 
 func TestUninstallSurvey(t *testing.T) {
@@ -60,10 +60,10 @@ func TestUninstallSurvey(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, lc)
 
-	sur, err := lc.GetUninstallSurvey("en-US", true)
+	sur, ok := lc.GetUninstallSurvey("en-US")
 
-	assert.Nil(t, sur)
-	assert.NotNil(t, err)
+	assert.True(t, ok)
+	assert.NotNil(t, sur)
 
 	buf = `
   {
@@ -80,10 +80,10 @@ func TestUninstallSurvey(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, lc)
 
-	sur, err = lc.GetUninstallSurvey("en-US", true)
+	sur, ok = lc.GetUninstallSurvey("en-US")
 
-	assert.Nil(t, sur)
-	assert.NotNil(t, err)
+	assert.True(t, ok)
+	assert.NotNil(t, sur)
 
 	buf = `
   {
@@ -98,10 +98,32 @@ func TestUninstallSurvey(t *testing.T) {
   `
 	lc, err = parse([]byte(buf))
 	assert.NotNil(t, lc)
-
-	sur, err = lc.GetUninstallSurvey("en-US", true)
-
 	assert.Nil(t, err)
+
+	sur, ok = lc.GetUninstallSurvey("en-US")
+
+	assert.True(t, ok)
+	assert.NotNil(t, sur)
+
+	// Make sure we don't return the survey with 0 probability
+	buf = `
+  {
+    "uninstall-survey": {
+      "en-US": {
+        "enabled": true,
+        "probability": 0.00,
+        "pro": true
+      }
+    }
+  }
+  `
+	lc, err = parse([]byte(buf))
+	assert.NotNil(t, lc)
+	assert.Nil(t, err)
+
+	sur, ok = lc.GetUninstallSurvey("en-US")
+
+	assert.True(t, ok)
 	assert.NotNil(t, sur)
 }
 
@@ -124,17 +146,38 @@ func TestSurvey(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, lc)
 
-	sur, err := lc.GetSurvey("en-US", true)
+	sur, ok := lc.GetSurvey("en-US")
 
-	assert.Nil(t, err)
+	assert.True(t, ok)
 	assert.NotNil(t, sur)
 
 	assert.Equal(t, "Click Here", sur.Button)
 
-	sur, err = lc.GetSurvey("nothereatall", true)
+	sur, ok = lc.GetSurvey("nothereatall")
 
 	assert.Nil(t, sur)
-	assert.NotNil(t, err)
+	assert.False(t, ok)
+
+	// Make sure we don't return the survey with 0 probability
+	buf = `
+  {
+    "survey": {
+      "en-US": {
+        "enabled": true,
+        "probability": 0.00,
+        "pro": true
+      }
+    }
+  }
+  `
+	lc, err = parse([]byte(buf))
+	assert.NotNil(t, lc)
+	assert.Nil(t, err)
+
+	sur, ok = lc.GetSurvey("en-US")
+
+	assert.True(t, ok)
+	assert.NotNil(t, sur)
 }
 
 func TestAnnouncements(t *testing.T) {
