@@ -90,16 +90,18 @@ func (s *analytics) HandleCall(params service.CallParams) {
 // Start starts the GA session with the given data.
 func Start(deviceID, version string) func() {
 	service := New()
-	ip := geolookup.GetIP(maxWaitForIP)
-	if ip == "" {
-		log.Errorf("No IP found within %v", maxWaitForIP)
-	}
-	service.Reconfigure(nil, &ConfigOpts{
-		Version:  version,
-		DeviceID: deviceID,
-		IP:       ip,
-	})
-	service.Start()
+	go func() {
+		ip := geolookup.GetIP(maxWaitForIP)
+		if ip == "" {
+			log.Errorf("No IP found within %v", maxWaitForIP)
+		}
+		service.Reconfigure(nil, &ConfigOpts{
+			Version:  version,
+			DeviceID: deviceID,
+			IP:       ip,
+		})
+		service.Start()
+	}()
 	return service.Stop
 }
 
