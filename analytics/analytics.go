@@ -8,11 +8,11 @@ import (
 	"net/url"
 	"runtime"
 	"strconv"
-	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/flashlight/util"
 	"github.com/kardianos/osext"
 
@@ -29,51 +29,90 @@ const (
 var (
 	log = golog.LoggerFor("flashlight.analytics")
 
-	maxWaitForIP = math.MaxInt32 * time.Second
+	serviceType service.Type = "flashlight.analytics"
 
-	// Hash of the executable
-	hash = getExecutableHash()
+	maxWaitForIP = math.MaxInt32 * time.Second
 )
+
+// analytics satisfies the service.Service interface
+type analytics struct {
+	hash      string
+	deviceID  string
+	version   string
+	ip        string
+	transport func(string)
+}
+
+type ConfigOpts struct {
+	DeviceID string
+	Version  string
+	IP       string
+}
+
+func New() service.Impl {
+	return &analytics{
+		hash: getExecutableHash(),
+	}
+}
+
+func (o *ConfigOpts) ValidConfigOptsFor(t service.Type) bool {
+	return t == serviceType
+}
+
+func (s *analytics) GetType() service.Type {
+	return serviceType
+}
+
+func (s *analytics) Reconfigure(r *service.Registry, opts service.ConfigOpts) {
+	o := opts.(*ConfigOpts)
+	s.version = o.Version
+	s.deviceID = o.DeviceID
+	s.ip = o.IP
+	s.transport = trackSession
+}
+
+func (s *analytics) Start() {
+	log.Debugf("Starting analytics session with ip %v", s.ip)
+	args := s.sessionVals("start")
+	s.transport(args)
+}
+
+func (s *analytics) Stop() {
+	log.Debugf("Ending analytics session with ip %v", s.ip)
+	args := s.sessionVals("end")
+	s.transport(args)
+}
+
+func (s *analytics) HandleCall(params service.CallParams) {
+	panic("not support")
+}
 
 // Start starts the GA session with the given data.
 func Start(deviceID, version string) func() {
-	return start(deviceID, version, geolookup.GetIP, trackSession)
-}
-
-// start starts the GA session with the given data.
-func start(deviceID, version string, ipFunc func(time.Duration) string,
-	transport func(string)) func() {
-	var addr atomic.Value
-	go func() {
-		ip := ipFunc(maxWaitForIP)
-		if ip == "" {
-			log.Errorf("No IP found within %v", maxWaitForIP)
-		}
-		addr.Store(ip)
-		log.Debugf("Starting analytics session with ip %v", ip)
-		startSession(ip, version, deviceID, transport)
-	}()
-
-	stop := func() {
-		if addr.Load() != nil {
-			ip := addr.Load().(string)
-			log.Debugf("Ending analytics session with ip %v", ip)
-			endSession(ip, version, deviceID, transport)
-		}
+	service := New()
+	ip := geolookup.GetIP(maxWaitForIP)
+	if ip == "" {
+		log.Errorf("No IP found within %v", maxWaitForIP)
 	}
-	return stop
+	service.Reconfigure(nil, &ConfigOpts{
+		Version:  version,
+		DeviceID: deviceID,
+		IP:       ip,
+	})
+	service.Start()
+	return service.Stop
 }
 
-func sessionVals(ip, version, clientID, sc string) string {
+func (s *analytics) sessionVals(sc string) string {
 	vals := make(url.Values, 0)
 
 	vals.Add("v", "1")
-	vals.Add("cid", clientID)
+	vals.Add("cid", s.deviceID)
 	vals.Add("tid", trackingID)
 
-	if ip != "" {
+	if s.ip != "" {
 		// Override the users IP so we get accurate geo data.
-		vals.Add("uip", ip)
+		vals.Add("uip", s.ip)
 	}
 
 	// Make call to anonymize the user's IP address -- basically a policy thing where
@@ -84,11 +123,11 @@ func sessionVals(ip, version, clientID, sc string) string {
 	vals.Add("t", "pageview")
 
 	// Custom dimension for the Lantern version
-	vals.Add("cd1", version)
+	vals.Add("cd1", s.version)
 
 	// Custom dimension for the hash of the executable. We combine the version
 	// to make it easier to interpret in GA.
-	vals.Add("cd2", version+"-"+hash)
+	vals.Add("cd2", s.version+"-"+s.hash)
 
 	// This forces the recording of the session duration. It must be either
 	// "start" or "end". See:
@@ -117,18 +156,6 @@ func getExecutableHash() string {
 			return b
 		}
 	}
-}
-
-func endSession(ip string, version string,
-	clientID string, transport func(string)) {
-	args := sessionVals(ip, version, clientID, "end")
-	transport(args)
-}
-
-func startSession(ip string, version string,
-	clientID string, transport func(string)) {
-	args := sessionVals(ip, version, clientID, "start")
-	transport(args)
 }
 
 func trackSession(args string) {
