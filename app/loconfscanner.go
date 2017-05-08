@@ -1,12 +1,15 @@
 package app
 
 import (
+	"math/rand"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/notifier"
 
+	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/loconf"
 	"github.com/getlantern/flashlight/ui"
@@ -26,6 +29,7 @@ import (
 func LoconfScanner(interval time.Duration, proChecker func() (bool, bool)) (stop func()) {
 	loc := &loconfer{
 		log: golog.LoggerFor("loconfer"),
+		r:   rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 	return loc.scan(interval, proChecker, loc.onLoconf)
 }
@@ -75,6 +79,7 @@ func in(s string, coll []string) bool {
 
 type loconfer struct {
 	log golog.Logger
+	r   *rand.Rand
 }
 
 func (loc *loconfer) onLoconf(lc *loconf.LoConf, isPro bool) {
@@ -83,13 +88,41 @@ func (loc *loconfer) onLoconf(lc *loconf.LoConf, isPro bool) {
 }
 
 func (loc *loconfer) setUninstallURL(lc *loconf.LoConf, isPro bool) {
+	path, err := client.InConfigDir("", "uninstall_url.txt")
+	if err != nil {
+		loc.log.Errorf("Could not get config path? %v", err)
+		return
+	}
 	lang := settings.GetLanguage()
 	survey, ok := lc.GetUninstallSurvey(lang)
 	if !ok {
 		loc.log.Debugf("No available uninstall survey")
 		return
 	}
-	lc.SetUninstallURLInRegistry(survey, isPro)
+	loc.writeURL(path, survey, isPro)
+}
+
+func (loc *loconfer) writeURL(path string, survey *loconf.UninstallSurvey, isPro bool) {
+	var url string
+	if survey.Enabled && (isPro && survey.Pro || !isPro && survey.Free) {
+		if survey.Probability > loc.r.Float64() {
+			url = survey.URL
+		} else {
+			loc.log.Debugf("Turning survey off probabalistically")
+		}
+	}
+	outfile, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	if err != nil {
+		loc.log.Errorf("Unable to open file %v for writing: %v", path, err)
+		return
+	}
+	defer outfile.Close()
+
+	loc.log.Debugf("Writing to %v", path)
+	_, err = outfile.Write([]byte(url))
+	if err != nil {
+		loc.log.Errorf("Unable to write url to file %v: %v", path, err)
+	}
 }
 
 func (loc *loconfer) makeAnnouncements(lc *loconf.LoConf, isPro bool) {

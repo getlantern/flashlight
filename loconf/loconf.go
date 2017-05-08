@@ -3,7 +3,6 @@ package loconf
 import (
 	"encoding/json"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"time"
 
@@ -22,8 +21,6 @@ var (
 	ErrNoAvailable error = errors.New("no announcement available")
 
 	log = golog.LoggerFor("loconf")
-
-	r = rand.New(rand.NewSource(time.Now().UnixNano()))
 )
 
 // LoConf is a struct representing the locale-based configuration file data.
