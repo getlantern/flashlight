@@ -55,6 +55,10 @@ type Dialer interface {
 	// Dial with this dialer
 	Dial(network, addr string) (net.Conn, error)
 
+	// EMADialTime is the exponential moving average app protocol dial time (e.g.
+	// https or obfs4) for successful dials.
+	EMADialTime() time.Duration
+
 	// EstLatency provides a latency estimate
 	EstLatency() time.Duration
 
@@ -325,7 +329,7 @@ func (b *Balancer) Close() {
 func (b *Balancer) printStats(dialers SortedDialers) {
 	log.Debug("-------------------------- Dialer Stats -----------------------")
 	for _, d := range dialers {
-		log.Debugf("%s  S: %4d / %4d (%d)\tF: %4d / %4d (%d)\tL: %5.0fms\tBW: %3.2fMbps", d.JustifiedLabel(), d.Successes(), d.Attempts(), d.ConsecSuccesses(), d.Failures(), d.Attempts(), d.ConsecFailures(), d.EstLatency().Seconds()*1000, d.EstBandwidth())
+		log.Debugf("%s  S: %4d / %4d (%d)\tF: %4d / %4d (%d)\tL: %5.0fms\tBW: %3.2fMbps\tDT: %5.0fms", d.JustifiedLabel(), d.Successes(), d.Attempts(), d.ConsecSuccesses(), d.Failures(), d.Attempts(), d.ConsecFailures(), d.EstLatency().Seconds()*1000, d.EstBandwidth(), d.EMADialTime().Seconds()*1000)
 	}
 	log.Debug("------------------------ End Dialer Stats ---------------------")
 }

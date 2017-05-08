@@ -181,8 +181,8 @@ func (op *Op) Origin(origin string, defaultPort string) *Op {
 
 // DialTime records a dial time relative to a given start time (in milliseconds)
 // and records whether or not the dial succeeded (based on err being nil).
-func (op *Op) DialTime(elapsed func() time.Duration, err error) *Op {
-	return op.SetMetric("dial_time", borda.Avg(float64(elapsed().Nanoseconds())/1000000)).Set("dial_succeeded", err == nil)
+func (op *Op) DialTime(elapsed time.Duration, err error) *Op {
+	return op.SetMetric("dial_time", borda.Avg(float64(elapsed.Nanoseconds())/1000000)).Set("dial_succeeded", err == nil)
 }
 
 // TCPDialTime records a dial time relative to a given start time (in
