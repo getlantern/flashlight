@@ -1,5 +1,5 @@
-hash: 7f4e9dbab945a57f1c93bbd0bc394b57e659ce9ce6727621fa4bd5348ef78a5c
-updated: 2017-05-04T11:04:26.134314403-07:00
+chash: 7f4e9dbab945a57f1c93bbd0bc394b57e659ce9ce6727621fa4bd5348ef78a5c
+updated: 2017-04-28T18:47:12.387386414-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a6aba3a6314be3a8ef518d5d4269a8459af9c789
@@ -78,7 +78,7 @@ imports:
 - name: github.com/getlantern/detour
   version: 36801cb3f46d22d4e07ef7a8c123bba1991a73a1
 - name: github.com/getlantern/easylist
-  version: 25b9c8260994c786daa2a385f3ec521a259e342f
+  version: 26a66dad1863b7e093838067d27d2a46627e1552
 - name: github.com/getlantern/edgedetect
   version: f58e865f680868c70f5d114b620b682a39fdaff7
 - name: github.com/getlantern/elevate
@@ -431,10 +431,11 @@ imports:
   - jwt
 - name: golang.org/x/sys
   version: 9ccfe848b9db8435a24c424abbc07a921adf1df5
+  repo: https://github.com/golang/sys
+  vcs: git
   subpackages:
   - unix
   - windows
-  - windows/registry
 - name: golang.org/x/text
   version: 470f45bf29f4147d6fbd7dfd0a02a848e49f5bf4
   subpackages:
