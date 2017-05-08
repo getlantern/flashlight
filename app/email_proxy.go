@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/keighl/mandrill"
@@ -12,6 +14,7 @@ import (
 	"github.com/getlantern/osversion"
 
 	"github.com/getlantern/flashlight/logging"
+	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/util"
 	"github.com/getlantern/flashlight/ws"
 )
@@ -60,13 +63,31 @@ func read(service *ws.Service) {
 			log.Errorf("Malformatted message %v", message)
 			continue
 		}
-		fillDefaults(data)
-		if err := sendTemplate(data); err != nil {
-			log.Error(err)
-			service.Out <- err.Error()
-		} else {
-			service.Out <- "success"
-		}
+		handleMessage(service, data)
+	}
+}
+
+func handleMessage(service *ws.Service, data *mandrillMessage) {
+	var op *ops.Op
+	if strings.HasPrefix(data.Template, "user-send-logs") {
+		isPro, _ := strconv.ParseBool(fmt.Sprint(data.Vars["proUser"]))
+		op = ops.Begin("report_issue").
+			UserAgent(fmt.Sprint(data.Vars["userAgent"])).
+			Set("pro", isPro).
+			Set("issue_type", data.Vars["issueType"]).
+			Set("issue_note", data.Vars["note"]).
+			Set("email", data.Vars["email"])
+		log.Debug("Reporting issue")
+	} else {
+		op = ops.Begin("send_email").Set("template", data.Template)
+	}
+	defer op.End()
+	fillDefaults(data)
+	if err := sendTemplate(data); err != nil {
+		log.Error(op.FailIf(err))
+		service.Out <- err.Error()
+	} else {
+		service.Out <- "success"
 	}
 }
 
