@@ -23,8 +23,10 @@ func TestClient(t *testing.T) {
 	client := getHTTPClient(http.DefaultTransport, http.DefaultTransport)
 	res, e := client.Do(req)
 
+	if !assert.NoError(t, e) {
+		return
+	}
 	log.Debugf("Got responsde code: %v", res.StatusCode)
-	assert.Nil(t, e)
 	assert.NotNil(t, res.Body, "nil plans response body?")
 
 	body, bodyErr := ioutil.ReadAll(res.Body)
