@@ -89,7 +89,7 @@ func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken f
 		defer op.End()
 		elapsed := mtime.Stopwatch()
 		conn, err := p.tcpDial(op)(chainedDialTimeout)
-		op.DialTime(elapsed, err)
+		p.dialTime(op, elapsed, err)
 		return conn, op.FailIf(err)
 	})
 }
@@ -113,7 +113,7 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 				ClientSessionCache: sessionCache,
 				InsecureSkipVerify: true,
 			})
-		op.DialTime(elapsed, err)
+		p.dialTime(op, elapsed, err)
 		if err != nil {
 			return nil, op.FailIf(err)
 		}
@@ -169,7 +169,7 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 		}
 		// The proxy it wrapped already has timeout applied.
 		conn, err := cf.Dial("tcp", p.addr, dialFn, args)
-		op.DialTime(elapsed, err)
+		p.dialTime(op, elapsed, err)
 		return overheadWrapper(true)(conn, op.FailIf(err))
 	}), nil
 }
@@ -198,6 +198,9 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 		pingInterval = 15 * time.Second
 	}
 	dialer := lampshade.NewDialer(windowSize, maxPadding, maxStreamsPerConn, pingInterval, buffers.Pool, cipherCode, cert.X509().PublicKey.(*rsa.PublicKey), func() (net.Conn, error) {
+		return overheadWrapper(false)(netx.DialTimeout("tcp", s.Addr, chainedDialTimeout))
+	})
+	dial := func(p *proxy) (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "lampshade", "tcp").
 			Set("ls_win", windowSize).
 			Set("ls_pad", maxPadding).
@@ -206,12 +209,9 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 		defer op.End()
 
 		elapsed := mtime.Stopwatch()
-		conn, err := netx.DialTimeout("tcp", s.Addr, chainedDialTimeout)
-		op.DialTime(elapsed, err)
-		return overheadWrapper(false)(conn, op.FailIf(err))
-	})
-	dial := func(p *proxy) (net.Conn, error) {
-		return overheadWrapper(true)(dialer.Dial())
+		conn, err := dialer.Dial()
+		p.dialTime(op, elapsed, err)
+		return overheadWrapper(true)(conn, op.FailIf(err))
 	}
 
 	p := newProxy(name, "lampshade", "tcp", s, deviceID, proToken, s.Trusted, dial)
@@ -249,6 +249,7 @@ type proxy struct {
 	proToken          func() string
 	trusted           bool
 	dialServer        func(*proxy) (net.Conn, error)
+	emaDialTime       *ema.EMA
 	emaLatency        *ema.EMA
 	mostRecentABETime time.Time
 	forceRecheckCh    chan bool
@@ -267,6 +268,7 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, deviceID str
 		proToken:         proToken,
 		trusted:          trusted,
 		dialServer:       dialServer,
+		emaDialTime:      ema.NewDuration(0, 0.8),
 		emaLatency:       ema.NewDuration(0, 0.8),
 		bbrResetRequired: 1, // reset on every start
 		forceRecheckCh:   make(chan bool, 1),
@@ -315,6 +317,18 @@ func (p *proxy) AdaptRequest(req *http.Request) {
 
 func (p *proxy) DialServer() (net.Conn, error) {
 	return p.dialServer(p)
+}
+
+func (p *proxy) dialTime(op *ops.Op, elapsed func() time.Duration, err error) {
+	delta := elapsed()
+	op.DialTime(delta, err)
+	if err == nil {
+		p.emaDialTime.UpdateDuration(delta)
+	}
+}
+
+func (p *proxy) EMADialTime() time.Duration {
+	return p.emaLatency.GetDuration()
 }
 
 func (p *proxy) EstLatency() time.Duration {
