@@ -34,7 +34,7 @@ var (
 	maxWaitForIP = math.MaxInt32 * time.Second
 )
 
-// analytics satisfies the service.Service interface
+// analytics satisfies the service.Impl interface
 type analytics struct {
 	hash      string
 	deviceID  string
@@ -63,7 +63,7 @@ func (s *analytics) GetType() service.Type {
 	return serviceType
 }
 
-func (s *analytics) Reconfigure(r *service.Registry, opts service.ConfigOpts) {
+func (s *analytics) Reconfigure(p service.Publisher, opts service.ConfigOpts) {
 	o := opts.(*ConfigOpts)
 	s.version = o.Version
 	s.deviceID = o.DeviceID
@@ -83,7 +83,11 @@ func (s *analytics) Stop() {
 	s.transport(args)
 }
 
-func (s *analytics) HandleCall(params service.CallParams) {
+func (s *analytics) HandleCall(params service.Params) service.RetVal {
+	panic("not support")
+}
+
+func (s *analytics) HandleCast(params service.Params) {
 	panic("not support")
 }
 

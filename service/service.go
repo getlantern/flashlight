@@ -8,28 +8,38 @@ type ConfigOpts interface {
 	ValidConfigOptsFor(t Type) bool
 }
 
-type CallParams interface {
-	ValidCallParamsFor(t Type) bool
+type Params interface {
+	ValidParamsFor(t Type) bool
+}
+
+type RetVal interface {
+	ValidRetValFor(t Type) bool
 }
 
 type Message interface {
 	ValidMessageFrom(t Type) bool
 }
 
-type Impl interface {
-	GetType() Type
-	Start()
-	Stop()
-	Reconfigure(r *Registry, opts ConfigOpts)
-	HandleCall(params CallParams)
-}
-
 type Service interface {
 	Start()
 	Stop()
 	Reconfigure(opts ConfigOpts)
-	Call(params CallParams)
+	Call(params Params) RetVal
+	Cast(params Params)
 	Subscribe() chan<- Message
+}
+
+type Publisher interface {
+	Publish(Type, Message)
+}
+
+type Impl interface {
+	GetType() Type
+	Start()
+	Stop()
+	Reconfigure(p Publisher, opts ConfigOpts)
+	HandleCall(params Params) RetVal
+	HandleCast(params Params)
 }
 
 type Registry struct {
@@ -47,4 +57,7 @@ func (r *Registry) MustLookup(t Type) Service {
 		return s
 	}
 	panic(fmt.Sprintf("MustLookup service type '%s'", string(t)))
+}
+
+func (r *Registry) Publish(Type, Message) {
 }
