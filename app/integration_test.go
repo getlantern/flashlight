@@ -143,6 +143,10 @@ func TestProxying(t *testing.T) {
 	case <-onGeo:
 		opsMx.RLock()
 		for _, op := range flashlight.FullyReportedOps {
+			if op == "report_issue" {
+				// ignore this, as we don't do this during the integration test
+				continue
+			}
 			assert.True(t, reportedOps[op], "Op %v wasn't reported", op)
 		}
 		opsMx.RUnlock()
