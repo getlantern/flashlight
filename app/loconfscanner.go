@@ -106,6 +106,7 @@ func (loc *loconfer) writeURL(path string, survey *loconf.UninstallSurvey, isPro
 	var url string
 	if survey.Enabled && (isPro && survey.Pro || !isPro && survey.Free) {
 		if survey.Probability > loc.r.Float64() {
+			loc.log.Debugf("Enabling survey at URL %v", survey.URL)
 			url = survey.URL
 		} else {
 			loc.log.Debugf("Turning survey off probabalistically")
@@ -118,7 +119,6 @@ func (loc *loconfer) writeURL(path string, survey *loconf.UninstallSurvey, isPro
 	}
 	defer outfile.Close()
 
-	loc.log.Debugf("Writing to %v", path)
 	_, err = outfile.Write([]byte(url))
 	if err != nil {
 		loc.log.Errorf("Unable to write url to file %v: %v", path, err)
