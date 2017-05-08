@@ -329,7 +329,7 @@ func (b *Balancer) Close() {
 func (b *Balancer) printStats(dialers SortedDialers) {
 	log.Debug("-------------------------- Dialer Stats -----------------------")
 	for _, d := range dialers {
-		log.Debugf("%s  S: %4d / %4d (%d)\tF: %4d / %4d (%d)\tL: %5.0fms\tBW: %3.2fMbps\tDL: %5.0fms", d.JustifiedLabel(), d.Successes(), d.Attempts(), d.ConsecSuccesses(), d.Failures(), d.Attempts(), d.ConsecFailures(), d.EstLatency().Seconds()*1000, d.EstBandwidth(), d.EMADialTime().Seconds()*1000)
+		log.Debugf("%s  S: %4d / %4d (%d)\tF: %4d / %4d (%d)\tL: %5.0fms\tBW: %3.2fMbps\tDT: %5.0fms", d.JustifiedLabel(), d.Successes(), d.Attempts(), d.ConsecSuccesses(), d.Failures(), d.Attempts(), d.ConsecFailures(), d.EstLatency().Seconds()*1000, d.EstBandwidth(), d.EMADialTime().Seconds()*1000)
 	}
 	log.Debug("------------------------ End Dialer Stats ---------------------")
 }

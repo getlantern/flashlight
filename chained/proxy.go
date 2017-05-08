@@ -210,6 +210,9 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 
 		elapsed := mtime.Stopwatch()
 		conn, err := dialer.Dial()
+		// note - because lampshade is multiplexed, this dial time will often be
+		// lower than other protocols since there's often nothing to be done for
+		// opening up a new multiplexed connection.
 		p.dialTime(op, elapsed, err)
 		return overheadWrapper(true)(conn, op.FailIf(err))
 	}
