@@ -1,5 +1,5 @@
 hash: 7f4e9dbab945a57f1c93bbd0bc394b57e659ce9ce6727621fa4bd5348ef78a5c
-updated: 2017-05-08T14:30:30.929308367-07:00
+updated: 2017-05-08T14:43:17.495122535-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a6aba3a6314be3a8ef518d5d4269a8459af9c789
@@ -115,7 +115,7 @@ imports:
   - isp
   - redis
 - name: github.com/getlantern/golog
-  version: e69a4a00c012e476efd814128cdcd4e04e641dc7
+  version: cca714f7feb5df8e455f409b549d384441ac4578
 - name: github.com/getlantern/gowin
   version: 88fa116ddffcff84b63f35044e2a49f6bdde71b9
 - name: github.com/getlantern/grtrack
