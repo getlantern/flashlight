@@ -1,5 +1,5 @@
 hash: 7f4e9dbab945a57f1c93bbd0bc394b57e659ce9ce6727621fa4bd5348ef78a5c
-updated: 2017-05-08T14:43:17.495122535-07:00
+updated: 2017-05-08T16:07:14.553441982-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a6aba3a6314be3a8ef518d5d4269a8459af9c789
@@ -219,7 +219,7 @@ imports:
 - name: github.com/getlantern/stack
   version: 02f928aad224fbccd50d66edd776fc9d1e9f2f2b
 - name: github.com/getlantern/sysproxy
-  version: febfa42c9ebf30cddf46eeaa474d7f0e2497e9cc
+  version: 59c45cb6b3c35ed3ac4a410b4f9c16ab764d3a5a
 - name: github.com/getlantern/systray
   version: cdae0bdf2aeae3ffb5ffe0cd2e2f83443ca9d104
 - name: github.com/getlantern/tarfs
