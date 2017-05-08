@@ -2,6 +2,8 @@ package app
 
 import (
 	"fmt"
+	"net/url"
+	"runtime"
 	"strconv"
 	"sync"
 
@@ -113,7 +115,7 @@ func (s *notifyStatus) notifyFreeUser(title, msg string) {
 	note := &notify.Notification{
 		Title:    title,
 		Message:  msg,
-		ClickURL: "http://" + ui.GetUIAddr(),
+		ClickURL: "http://" + ui.GetUIAddr() + "?utm_source=" + runtime.GOOS + "&utm_medium=notification&utm_campaign=50-80-100&utm_content=" + url.QueryEscape(title+"-"+msg),
 		IconURL:  logo,
 	}
 	_ = showNotification(note)
