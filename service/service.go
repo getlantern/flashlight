@@ -8,14 +8,6 @@ type ConfigOpts interface {
 	ValidConfigOptsFor(t Type) bool
 }
 
-type Params interface {
-	ValidParamsFor(t Type) bool
-}
-
-type RetVal interface {
-	ValidRetValFor(t Type) bool
-}
-
 type Message interface {
 	ValidMessageFrom(t Type) bool
 }
@@ -24,8 +16,6 @@ type Service interface {
 	Start()
 	Stop()
 	Reconfigure(opts ConfigOpts)
-	Call(params Params) RetVal
-	Cast(params Params)
 	Subscribe() chan<- Message
 }
 
@@ -38,8 +28,6 @@ type Impl interface {
 	Start()
 	Stop()
 	Reconfigure(p Publisher, opts ConfigOpts)
-	HandleCall(params Params) RetVal
-	HandleCast(params Params)
 }
 
 type Registry struct {

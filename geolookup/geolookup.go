@@ -17,17 +17,14 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.geolookup")
 
-	refreshRequest = make(chan interface{}, 1)
-	currentGeoInfo = eventual.NewValue()
-	watchers       []chan bool
-	muWatchers     sync.RWMutex
+	watchers   []chan bool
+	muWatchers sync.RWMutex
 
-	waitForProxyTimeout = 1 * time.Minute
-	retryWaitMillis     = 100
-	maxRetryWait        = 30 * time.Second
+	retryWaitMillis = 100
+	maxRetryWait    = 30 * time.Second
 
 	serviceType = service.Type("flashlight.geolookup")
-	geoService  service.Impl
+	geoService  *GeoLookup
 )
 
 type geoInfo struct {
@@ -72,14 +69,6 @@ func (s *GeoLookup) Stop() {
 	log.Debugf("Stopping geolookup service")
 	s.chStop <- true
 	log.Debugf("Stopped")
-}
-
-func (s *GeoLookup) HandleCall(params service.Params) service.RetVal {
-	panic("not support")
-}
-
-func (s *GeoLookup) HandleCast(params service.Params) {
-	panic("not support")
 }
 
 // GetIP gets the IP.
@@ -140,13 +129,13 @@ func (p publisher) Publish(t service.Type, m service.Message) {
 // GetIP gets the IP. If the IP hasn't been determined yet, waits up to the
 // given timeout for an IP to become available.
 func GetIP(timeout time.Duration) string {
-	return geoService.(*GeoLookup).GetIP(timeout)
+	return geoService.GetIP(timeout)
 }
 
 // GetCountry gets the country. If the country hasn't been determined yet, waits
 // up to the given timeout for a country to become available.
 func GetCountry(timeout time.Duration) string {
-	return geoService.(*GeoLookup).GetCountry(timeout)
+	return geoService.GetCountry(timeout)
 }
 
 // Refresh refreshes the GeoLookup information by calling the remote GeoLookup
@@ -154,7 +143,7 @@ func GetCountry(timeout time.Duration) string {
 // and country.
 func Refresh() {
 	select {
-	case geoService.(*GeoLookup).chRefreshRequest <- true:
+	case geoService.chRefreshRequest <- true:
 		log.Debug("Requested refresh")
 	default:
 		log.Debug("Refresh already in progress")
@@ -172,7 +161,7 @@ func OnRefresh() <-chan bool {
 }
 
 func init() {
-	geoService = New()
+	geoService = New().(*GeoLookup)
 	geoService.Reconfigure(publisher{}, nil)
 	geoService.Start()
 }

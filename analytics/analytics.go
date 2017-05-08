@@ -83,14 +83,6 @@ func (s *analytics) Stop() {
 	s.transport(args)
 }
 
-func (s *analytics) HandleCall(params service.Params) service.RetVal {
-	panic("not support")
-}
-
-func (s *analytics) HandleCast(params service.Params) {
-	panic("not support")
-}
-
 // Start starts the GA session with the given data.
 func Start(deviceID, version string) func() {
 	service := New()

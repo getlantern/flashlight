@@ -17,11 +17,5 @@ func (i *mockImpl) Stop() {
 }
 func (i *mockImpl) Reconfigure(r *Registry, opts ConfigOpts) {
 }
-func (i *mockImpl) HandleCall(params Params) RetVal {
-	return nil
-}
-func (i *mockImpl) HandleCast(params Params) {
-}
-
 func TestRegister(t *testing.T) {
 }
