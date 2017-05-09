@@ -71,7 +71,8 @@ func (s *GeoLookup) Stop() {
 	log.Debugf("Stopped")
 }
 
-// GetIP gets the IP.
+// GetIP gets the IP. If the IP hasn't been determined yet, waits up to the
+// given timeout for an IP to become available.
 func (s *GeoLookup) GetIP(timeout time.Duration) string {
 	gi, ok := s.gi.Get(timeout)
 	if !ok || gi == nil {
@@ -80,7 +81,8 @@ func (s *GeoLookup) GetIP(timeout time.Duration) string {
 	return gi.(*geoInfo).ip
 }
 
-// GetCountry gets the country.
+// GetCountry gets the country. If the country hasn't been determined yet, waits
+// up to the given timeout for a country to become available.
 func (s *GeoLookup) GetCountry(timeout time.Duration) string {
 	gi, ok := s.gi.Get(timeout)
 	if !ok || gi == nil {
@@ -138,7 +140,7 @@ func GetCountry(timeout time.Duration) string {
 	return geoService.GetCountry(timeout)
 }
 
-// Refresh refreshes the GeoLookup information by calling the remote GeoLookup
+// Refresh refreshes the geolookup information by calling the remote geolookup
 // service. It will keep calling the service until it's able to determine an IP
 // and country.
 func Refresh() {
