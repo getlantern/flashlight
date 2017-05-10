@@ -277,7 +277,6 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		go serveLocation()
 
 		app.AddExitFunc(LoconfScanner(4*time.Hour, isProUser))
-		app.AddExitFunc(AnnouncementsLoop(4*time.Hour, isProUser))
 		app.AddExitFunc(notificationsLoop())
 
 		service.GetRegistry().StartAll()

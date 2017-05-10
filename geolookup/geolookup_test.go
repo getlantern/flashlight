@@ -13,6 +13,7 @@ func TestFronted(t *testing.T) {
 	ch := s.Subscribe()
 	s.Start()
 	instance := s.GetImpl().(*GeoLookup)
+	instance.Refresh()
 	fronted.ConfigureForTest(t)
 	country := instance.GetCountry(15 * time.Second)
 	ip := instance.GetIP(0)

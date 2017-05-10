@@ -103,7 +103,7 @@ func TestPollProxies(t *testing.T) {
 	})
 
 	fi, err := os.Stat(file)
-	if !assert.Nil(t, err) {
+	if !assert.NoError(t, err) {
 		return
 	}
 	mtime := fi.ModTime()

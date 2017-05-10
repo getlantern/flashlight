@@ -183,9 +183,7 @@ func run(configDir, locale string,
 		func() bool { return true }, // on Android, we allow private hosts
 		func() bool { return true }, // auto report
 		flags,
-		func() bool {
-			return true
-		}, // beforeStart()
+		beforeStart,
 		func() {
 			afterStart(user)
 		}, // afterStart()
@@ -228,10 +226,15 @@ func getBandwidth(quota *bandwidth.Quota) (int, int) {
 	return percent, remaining
 }
 
+func beforeStart() bool {
+	service.GetRegistry().MustRegister(geolookup.New, nil, true, nil)
+	return true
+}
+
 func afterStart(user UserConfig) {
 	bandwidthUpdates(user)
 	user.AfterStart()
-	geoService := service.GetRegistry().MustRegister(geolookup.New, nil, true, nil)
+	geoService := service.GetRegistry().MustLookup(geolookup.ServiceType)
 	chGeoService := geoService.Subscribe()
 	lookup := geoService.GetImpl().(*geolookup.GeoLookup)
 	go func() {

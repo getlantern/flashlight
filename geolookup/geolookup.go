@@ -63,8 +63,6 @@ func (s *GeoLookup) Reconfigure(p service.Publisher, opts service.ConfigOpts) {
 func (s *GeoLookup) Start() {
 	log.Debugf("Starting geolookup service")
 	go s.loop()
-	s.chRefreshRequest <- true
-	log.Debugf("Started geolookup service")
 }
 
 func (s *GeoLookup) Stop() {
@@ -91,6 +89,10 @@ func (s *GeoLookup) GetCountry(timeout time.Duration) string {
 		return ""
 	}
 	return gi.(*geoInfo).city.Country.IsoCode
+}
+
+func (s *GeoLookup) Refresh() {
+	s.chRefreshRequest <- true
 }
 
 func (s *GeoLookup) loop() {

@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/flashlight/geolookup"
 	fops "github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/jibber_jabber"
@@ -100,6 +102,21 @@ func Run(httpProxyAddr string,
 		err := cl.ListenAndServeHTTP(httpProxyAddr, func() {
 			log.Debug("Started client HTTP proxy")
 			op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
+			ops.Go(func() {
+				geoService := service.GetRegistry().MustLookup(geolookup.ServiceType)
+				onGeo := geoService.Subscribe()
+				geoService.GetImpl().(*geolookup.GeoLookup).Refresh()
+				// wait for geo info before reporting so that we know the client ip and
+				// country
+				select {
+				case <-onGeo:
+					// okay, we've got geolocation info
+				case <-time.After(5 * time.Minute):
+					// failed to get geolocation info within 5 minutes, just record end of
+					// startup anyway
+				}
+				op.End()
+			})
 			afterStart()
 		})
 		if err != nil {
