@@ -23,7 +23,7 @@ var (
 	retryWaitMillis = 100
 	maxRetryWait    = 30 * time.Second
 
-	serviceType = service.Type("flashlight.geolookup")
+	ServiceType = service.Type("flashlight.geolookup")
 	geoService  *GeoLookup
 )
 
@@ -33,7 +33,7 @@ type geoInfo struct {
 }
 
 func (i *geoInfo) ValidMessageFrom(t service.Type) bool {
-	return t == serviceType
+	return t == ServiceType
 }
 
 // GeoLookup satisfies the service.Impl interface
@@ -53,7 +53,7 @@ func New() service.Impl {
 }
 
 func (s *GeoLookup) GetType() service.Type {
-	return serviceType
+	return ServiceType
 }
 
 func (s *GeoLookup) Reconfigure(p service.Publisher, opts service.ConfigOpts) {
@@ -63,12 +63,14 @@ func (s *GeoLookup) Reconfigure(p service.Publisher, opts service.ConfigOpts) {
 func (s *GeoLookup) Start() {
 	log.Debugf("Starting geolookup service")
 	go s.loop()
+	s.chRefreshRequest <- true
+	log.Debugf("Started geolookup service")
 }
 
 func (s *GeoLookup) Stop() {
 	log.Debugf("Stopping geolookup service")
 	s.chStop <- true
-	log.Debugf("Stopped")
+	log.Debugf("Stopped geolookup service")
 }
 
 // GetIP gets the IP. If the IP hasn't been determined yet, waits up to the
@@ -104,68 +106,11 @@ func (s *GeoLookup) loop() {
 				continue
 			}
 			s.gi.Set(gi)
-			s.p.Publish(serviceType, gi)
+			s.p.Publish(gi)
 		case <-s.chStop:
 			return
 		}
 	}
-}
-
-type publisher struct{}
-
-func (p publisher) Publish(t service.Type, m service.Message) {
-	if t != serviceType {
-		panic("invalid type")
-	}
-	muWatchers.RLock()
-	w := watchers
-	muWatchers.RUnlock()
-	for _, ch := range w {
-		select {
-		case ch <- true:
-		default:
-		}
-	}
-}
-
-// GetIP gets the IP. If the IP hasn't been determined yet, waits up to the
-// given timeout for an IP to become available.
-func GetIP(timeout time.Duration) string {
-	return geoService.GetIP(timeout)
-}
-
-// GetCountry gets the country. If the country hasn't been determined yet, waits
-// up to the given timeout for a country to become available.
-func GetCountry(timeout time.Duration) string {
-	return geoService.GetCountry(timeout)
-}
-
-// Refresh refreshes the geolookup information by calling the remote geolookup
-// service. It will keep calling the service until it's able to determine an IP
-// and country.
-func Refresh() {
-	select {
-	case geoService.chRefreshRequest <- true:
-		log.Debug("Requested refresh")
-	default:
-		log.Debug("Refresh already in progress")
-	}
-}
-
-// OnRefresh creates a channel that caller can receive on when new geolocation
-// information is got.
-func OnRefresh() <-chan bool {
-	ch := make(chan bool, 1)
-	muWatchers.Lock()
-	watchers = append(watchers, ch)
-	muWatchers.Unlock()
-	return ch
-}
-
-func init() {
-	geoService = New().(*GeoLookup)
-	geoService.Reconfigure(publisher{}, nil)
-	geoService.Start()
 }
 
 func lookup() *geoInfo {

@@ -23,7 +23,6 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/proxied"
 
 	// Make sure logging is initialized
@@ -87,9 +86,6 @@ func Run(httpProxyAddr string,
 
 	if beforeStart() {
 		log.Debug("Preparing to start client proxy")
-		onGeo := geolookup.OnRefresh()
-		geolookup.Refresh()
-
 		if socksProxyAddr != "" {
 			go func() {
 				log.Debug("Starting client SOCKS5 proxy")
@@ -104,18 +100,6 @@ func Run(httpProxyAddr string,
 		err := cl.ListenAndServeHTTP(httpProxyAddr, func() {
 			log.Debug("Started client HTTP proxy")
 			op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
-			ops.Go(func() {
-				// wait for geo info before reporting so that we know the client ip and
-				// country
-				select {
-				case <-onGeo:
-					// okay, we've got geolocation info
-				case <-time.After(5 * time.Minute):
-					// failed to get geolocation info within 5 minutes, just record end of
-					// startup anyway
-				}
-				op.End()
-			})
 			afterStart()
 		})
 		if err != nil {
@@ -189,8 +173,7 @@ func initContext(deviceID string, version string, revisionDate string) {
 	ops.SetGlobal("os_name", runtime.GOOS)
 	ops.SetGlobal("os_arch", runtime.GOARCH)
 	ops.SetGlobal("device_id", deviceID)
-	ops.SetGlobalDynamic("geo_country", func() interface{} { return geolookup.GetCountry(0) })
-	ops.SetGlobalDynamic("client_ip", func() interface{} { return geolookup.GetIP(0) })
+	// TODO: add back setting geo info in flashlight
 	ops.SetGlobalDynamic("timezone", func() interface{} { return time.Now().Format("MST") })
 	ops.SetGlobalDynamic("locale_language", func() interface{} {
 		lang, _ := jibber_jabber.DetectLanguage()

@@ -7,8 +7,6 @@ import (
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/shortcut"
-
-	"github.com/getlantern/flashlight/geolookup"
 )
 
 var (
@@ -18,21 +16,13 @@ var (
 	mu sync.RWMutex
 )
 
-func init() {
-	go func() {
-		for <-geolookup.OnRefresh() {
-			configure(geolookup.GetCountry(0))
-		}
-	}()
-}
-
 type nullShortcut struct{}
 
 func (s *nullShortcut) Allow(string) bool {
 	return false
 }
 
-func configure(country string) {
+func Configure(country string) {
 	country = strings.ToLower(country)
 	v4, v4err := Asset("resources/" + country + "_ipv4.txt")
 	v6, v6err := Asset("resources/" + country + "_ipv6.txt")

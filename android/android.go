@@ -23,6 +23,7 @@ import (
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
@@ -230,14 +231,18 @@ func getBandwidth(quota *bandwidth.Quota) (int, int) {
 func afterStart(user UserConfig) {
 	bandwidthUpdates(user)
 	user.AfterStart()
-
+	geoService := service.GetRegistry().MustRegister(geolookup.New, nil, true, nil)
+	chGeoService := geoService.Subscribe()
+	lookup := geoService.GetImpl().(*geolookup.GeoLookup)
 	go func() {
-		if <-geolookup.OnRefresh() {
-			country := geolookup.GetCountry(0)
+		for {
+			<-chGeoService
+			country := lookup.GetCountry(0)
 			log.Debugf("Successful geolookup: country %s", country)
 			user.SetCountry(country)
 		}
 	}()
+	service.GetRegistry().StartAll()
 }
 
 // handleError logs the given error message

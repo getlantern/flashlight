@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/flashlight/util"
@@ -29,7 +28,7 @@ const (
 var (
 	log = golog.LoggerFor("flashlight.analytics")
 
-	serviceType service.Type = "flashlight.analytics"
+	ServiceType service.Type = "flashlight.analytics"
 
 	maxWaitForIP = math.MaxInt32 * time.Second
 )
@@ -56,14 +55,14 @@ func New() service.Impl {
 }
 
 func (o *ConfigOpts) ValidConfigOptsFor(t service.Type) bool {
-	return t == serviceType
+	return t == ServiceType
 }
 
 func (s *analytics) GetType() service.Type {
-	return serviceType
+	return ServiceType
 }
 
-func (s *analytics) Reconfigure(p service.Publisher, opts service.ConfigOpts) {
+func (s *analytics) Reconfigure(_p service.Publisher, opts service.ConfigOpts) {
 	o := opts.(*ConfigOpts)
 	s.version = o.Version
 	s.deviceID = o.DeviceID
@@ -81,24 +80,6 @@ func (s *analytics) Stop() {
 	log.Debugf("Ending analytics session with ip %v", s.ip)
 	args := s.sessionVals("end")
 	s.transport(args)
-}
-
-// Start starts the GA session with the given data.
-func Start(deviceID, version string) func() {
-	service := New()
-	go func() {
-		ip := geolookup.GetIP(maxWaitForIP)
-		if ip == "" {
-			log.Errorf("No IP found within %v", maxWaitForIP)
-		}
-		service.Reconfigure(nil, &ConfigOpts{
-			Version:  version,
-			DeviceID: deviceID,
-			IP:       ip,
-		})
-		service.Start()
-	}()
-	return service.Stop
 }
 
 func (s *analytics) sessionVals(sc string) string {

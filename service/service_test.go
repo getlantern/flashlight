@@ -50,12 +50,13 @@ func (i *mockImpl) Reconfigure(p Publisher, opts ConfigOpts) {
 
 func TestRegister(t *testing.T) {
 	registry := NewRegistry()
-	assert.Error(t, registry.Register(New1, nil, true, []Type{serviceType2}),
+	_, err := registry.Register(New1, nil, true, []Type{serviceType2})
+	assert.Error(t, err,
 		"should not register if any of the dependencies is not found")
-	assert.NoError(t, registry.Register(New1, nil, true, nil))
-	assert.NoError(t, registry.Register(New2, nil, true, []Type{serviceType1}))
-	assert.Error(t, registry.Register(New2, nil, true, nil),
-		"each service should be registered only once")
+	registry.MustRegister(New1, nil, true, nil)
+	registry.MustRegister(New2, nil, true, []Type{serviceType1})
+	_, err = registry.Register(New2, nil, true, nil)
+	assert.Error(t, err, "each service should be registered only once")
 	s1 := registry.MustLookup(serviceType1)
 	s2 := registry.MustLookup(serviceType2)
 	registry.StartAll()
@@ -70,12 +71,9 @@ func TestRegister(t *testing.T) {
 
 func TestAutoStart(t *testing.T) {
 	registry := NewRegistry()
-	assert.NoError(t, registry.Register(New1, nil, true, nil))
-	assert.NoError(t, registry.Register(New2, nil, false, []Type{serviceType1}))
-	assert.NoError(t, registry.Register(New3, nil, true, []Type{serviceType2}))
-	s1 := registry.MustLookup(serviceType1)
-	s2 := registry.MustLookup(serviceType2)
-	s3 := registry.MustLookup(serviceType3)
+	s1 := registry.MustRegister(New1, nil, true, nil)
+	s2 := registry.MustRegister(New2, nil, false, []Type{serviceType1})
+	s3 := registry.MustRegister(New3, nil, true, []Type{serviceType2})
 	registry.StartAll()
 	assert.True(t, s1.GetImpl().(*mockImpl).started)
 	assert.False(t, s2.GetImpl().(*mockImpl).started,
@@ -117,8 +115,8 @@ func TestSubscribe(t *testing.T) {
 		return &mockWithPublisher{New1().(*mockImpl), make(chan bool)}
 	}
 	registry := NewRegistry()
-	assert.NoError(t, registry.Register(new1, nil, true, nil))
-	s1 := registry.MustLookup(serviceType1)
+	s1, err := registry.Register(new1, nil, true, nil)
+	assert.NoError(t, err)
 	ch1 := s1.Subscribe()
 	ch2 := s1.Subscribe()
 	s1.Start()
@@ -146,9 +144,7 @@ func (o *mockConfigOpts) ValidConfigOptsFor(t Type) bool {
 }
 
 func TestReconfigure(t *testing.T) {
-	registry := NewRegistry()
-	assert.NoError(t, registry.Register(New1, &mockConfigOpts{}, true, nil))
-	s1 := registry.MustLookup(serviceType1)
+	s1 := NewRegistry().MustRegister(New1, &mockConfigOpts{}, true, nil)
 	err := s1.Reconfigure(map[string]interface{}{
 		"OptInt":      1,
 		"OptString":   "abc",

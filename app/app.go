@@ -21,9 +21,12 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxiedsites"
+	"github.com/getlantern/flashlight/service"
+	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
 )
@@ -241,17 +244,43 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			log.Errorf("Unable to serve mandrill to UI: %v", err)
 		}
 
+		geoService := service.GetRegistry().MustRegister(
+			geolookup.New,
+			nil, // no ConfigOpts for geolookup
+			true,
+			nil)
+		analyticsService := service.GetRegistry().MustRegister(
+			analytics.New,
+			&analytics.ConfigOpts{DeviceID: settings.GetDeviceID(), Version: common.Version},
+			false, /* not auto start as it requires geolookup*/
+			[]service.Type{geolookup.ServiceType})
+
+		go func() {
+			chGeoService := geoService.Subscribe()
+			lookup := geoService.GetImpl().(*geolookup.GeoLookup)
+			for {
+				<-chGeoService
+				shortcut.Configure(lookup.GetCountry(0))
+				analyticsService.Reconfigure(map[string]interface{}{"IP": lookup.GetIP(0)})
+				if settings.IsAutoReport() {
+					analyticsService.Start()
+				} else {
+					analyticsService.Stop()
+				}
+				ops.SetGlobal("geo_country", lookup.GetCountry(0))
+				ops.SetGlobal("client_ip", lookup.GetIP(0))
+
+			}
+		}()
+
 		// Don't block on fetching the location for the UI.
 		go serveLocation()
 
-		// Only run analytics once on startup.
-		if settings.IsAutoReport() {
-			stopAnalytics := analytics.Start(settings.GetDeviceID(), common.Version)
-			app.AddExitFunc(stopAnalytics)
-		}
-
 		app.AddExitFunc(LoconfScanner(4*time.Hour, isProUser))
+		app.AddExitFunc(AnnouncementsLoop(4*time.Hour, isProUser))
 		app.AddExitFunc(notificationsLoop())
+
+		service.GetRegistry().StartAll()
 
 		return true
 	}
@@ -384,6 +413,7 @@ func (app *App) Exit(err error) {
 func (app *App) doExit(err error) {
 	log.Errorf("Exiting app because of %v", err)
 	defer func() {
+		service.GetRegistry().StopAll()
 		app.exitCh <- err
 		log.Debug("Finished exiting app")
 	}()

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/geolookup"
+	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/flashlight/ws"
 )
 
@@ -12,9 +13,10 @@ type locationData struct {
 }
 
 func serveLocation() {
+	geoService := service.GetRegistry().MustLookup(geolookup.ServiceType).GetImpl().(*geolookup.GeoLookup)
 	helloFn := func(write func(interface{})) {
 		write(locationData{
-			Code: geolookup.GetCountry(time.Second * 30),
+			Code: geoService.GetCountry(time.Second * 30),
 		})
 	}
 

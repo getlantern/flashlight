@@ -42,12 +42,14 @@ type Service interface {
 	Started() bool
 	// Stop stops a started service. Stopping an unstarted service is a noop.
 	Stop()
-	// Reconfigure updates a portion of the effective config options. The key
-	// is the full path to the field to update, e.g., to update `Bar` in
-	// `struct Opts { Foo: struct { Bar int } }`, key should be `Foo.Bar`.  It
-	// returns error without update anything if the field doesn't exist or type
-	// mismatches, calls Reconfigure() of the Impl otherwise. It's up to the
-	// Impl to restart itself when required (service status is not affected).
+	// Reconfigure updates part of the effective config options and calls
+	// Reconfigure() of the Impl.
+	//
+	// The key of the map is the full path to the field to update, e.g., to
+	// update `Bar` in `struct Opts { Foo: struct { Bar int } }`, key should be
+	// `Foo.Bar`.  It returns error without doing anything if the field doesn't
+	// exist or type mismatches. It's up to the Impl to restart itself when
+	// required (service status is not affected).
 	Reconfigure(fields map[string]interface{}) error
 	// Subscribe gets a channel to receive any message the service published.
 	// Messages are discarded if no one is listening on the channel.
@@ -85,12 +87,35 @@ type Registry struct {
 	channels   map[Type][]chan Message
 }
 
+var singleton *Registry
+
+func init() {
+	singleton = NewRegistry()
+}
+
 // NewRegistry creates a new Registry
 func NewRegistry() *Registry {
 	return &Registry{
 		dag:      newDag(),
 		channels: make(map[Type][]chan Message),
 	}
+}
+
+func GetRegistry() *Registry {
+	return singleton
+}
+
+// MustRegister panics if fail to register the service.
+func (r *Registry) MustRegister(
+	instantiator func() Impl,
+	defaultOpts ConfigOpts,
+	autoStart bool,
+	dependencies []Type) Service {
+	service, err := r.Register(instantiator, defaultOpts, autoStart, dependencies)
+	if err != nil {
+		panic(err.Error())
+	}
+	return service
 }
 
 // Register register a service. It requires:
@@ -104,28 +129,28 @@ func (r *Registry) Register(
 	instantiator func() Impl,
 	defaultOpts ConfigOpts,
 	autoStart bool,
-	dependencies []Type) error {
+	dependencies []Type) (Service, error) {
 	instance := instantiator()
 	t := instance.GetType()
 	r.muDag.Lock()
 	defer r.muDag.Unlock()
 	if r.dag.Lookup(t) != nil {
-		return fmt.Errorf("service '%s' is already registered", t)
+		return nil, fmt.Errorf("service '%s' is already registered", t)
 	}
 	if defaultOpts != nil && !defaultOpts.ValidConfigOptsFor(t) {
-		return fmt.Errorf("invalid default config options type for %s", t)
+		return nil, fmt.Errorf("invalid default config options type for %s", t)
 	}
 	for _, d := range dependencies {
 		node := r.dag.Lookup(d)
 		if node == nil {
-			return fmt.Errorf("service '%s' depends on not-registered service '%s'", t, d)
+			return nil, fmt.Errorf("service '%s' depends on not-registered service '%s'", t, d)
 		}
 	}
 	r.dag.AddVertex(t, instance, defaultOpts, autoStart)
 	for _, d := range dependencies {
 		r.dag.AddEdge(d, t)
 	}
-	return nil
+	return service{instance, r}, nil
 }
 
 // MustLookup returns the service reference of type t, or panics.
@@ -174,10 +199,13 @@ func (r *Registry) start(t Type) {
 	r.startNoLock(n)
 }
 
+// TODO: enforce timeout
 func (r *Registry) startNoLock(n *node) {
-	n.instance.Reconfigure(publisher{n.t, r}, n.opts)
-	n.instance.Start()
-	n.started = true
+	if !n.started {
+		n.instance.Reconfigure(publisher{n.t, r}, n.opts)
+		n.instance.Start()
+		n.started = true
+	}
 }
 
 func (r *Registry) StopAll() {
@@ -197,11 +225,15 @@ func (r *Registry) stop(t Type) {
 	r.stopNoLock(n)
 }
 
+// TODO: enforce timeout
 func (r *Registry) stopNoLock(n *node) {
-	n.instance.Stop()
-	n.started = false
+	if n.started {
+		n.instance.Stop()
+		n.started = false
+	}
 }
 
+// TODO: enforce timeout
 func (r *Registry) reconfigure(t Type, fields map[string]interface{}) error {
 	r.muDag.Lock()
 	defer r.muDag.Unlock()

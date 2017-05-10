@@ -27,6 +27,7 @@ import (
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
+	"github.com/getlantern/flashlight/service"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -51,8 +52,6 @@ var (
 )
 
 func TestProxying(t *testing.T) {
-	onGeo := geolookup.OnRefresh()
-
 	var opsMx sync.RWMutex
 	reportedOps := make(map[string]bool)
 	borda.BeforeSubmit = func(name string, key string, ts time.Time, values map[string]bclient.Val, dimensions map[string]interface{}) {
@@ -127,6 +126,7 @@ func TestProxying(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
+	onGeo := service.GetRegistry().MustLookup(geolookup.ServiceType).Subscribe()
 
 	// Makes a test request
 	testRequest(t, httpAddr, httpsAddr)

@@ -23,20 +23,18 @@ func TestClient(t *testing.T) {
 	client := getHTTPClient(http.DefaultTransport, http.DefaultTransport)
 	res, e := client.Do(req)
 
-	if !assert.NoError(t, e) {
-		return
+	if assert.NoError(t, e) {
+		log.Debugf("Got responsde code: %v", res.StatusCode)
+		assert.NotNil(t, res.Body, "nil plans response body?")
+		body, bodyErr := ioutil.ReadAll(res.Body)
+		assert.Nil(t, bodyErr)
+		assert.True(t, len(body) > 0, "Should have received some body")
 	}
-	log.Debugf("Got responsde code: %v", res.StatusCode)
-	assert.NotNil(t, res.Body, "nil plans response body?")
-
-	body, bodyErr := ioutil.ReadAll(res.Body)
-	assert.Nil(t, bodyErr)
-	assert.True(t, len(body) > 0, "Should have received some body")
 
 	res, e = client.Do(req)
-	assert.Nil(t, e)
-
-	body, bodyErr = ioutil.ReadAll(res.Body)
-	assert.Nil(t, bodyErr)
-	assert.True(t, len(body) > 0, "Should have received some body")
+	if assert.NoError(t, e) {
+		body, bodyErr := ioutil.ReadAll(res.Body)
+		assert.Nil(t, bodyErr)
+		assert.True(t, len(body) > 0, "Should have received some body")
+	}
 }
