@@ -34,7 +34,8 @@ type notifyStatus struct {
 func serveBandwidth(proChecker func() (bool, bool),
 	uiAddr func() string,
 	logoURL func() string,
-	notifyFunc func(*notify.Notification)) error {
+	notifyFunc func(*notify.Notification),
+	wsName string) error {
 	logger := golog.LoggerFor("app.bandwidth")
 	ns := notifyStatus{log: logger,
 		pro:        proChecker,
@@ -46,7 +47,7 @@ func serveBandwidth(proChecker func() (bool, bool),
 		logger.Debugf("Sending current bandwidth quota to new client")
 		write(bandwidth.GetQuota())
 	}
-	bservice, err := ws.Register("bandwidth", helloFn)
+	bservice, err := ws.Register(wsName, helloFn)
 	if err != nil {
 		logger.Errorf("Error registering with UI? %v", err)
 		return err

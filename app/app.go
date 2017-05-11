@@ -241,7 +241,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			return ui.AddToken("/img/lantern_logo.png")
 		}, func(note *notify.Notification) {
 			showNotification(note)
-		})
+		}, "bandwidth")
 		if err != nil {
 			app.log.Errorf("Unable to serve bandwidth to UI: %v", err)
 		}

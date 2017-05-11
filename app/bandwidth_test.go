@@ -76,7 +76,7 @@ func TestPercents(t *testing.T) {
 		return "http://127.0.0.1:7777/img/lantern_logo.png"
 	}, func(note *notify.Notification) {
 		notified.Store(note)
-	})
+	}, "bandwidth-test")
 
 	assert.NoError(t, err, "Unexpected error")
 }
