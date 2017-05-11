@@ -27,6 +27,7 @@ import (
 	"github.com/getlantern/flashlight/proxiedsites"
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
+	"github.com/getlantern/notifier"
 )
 
 var (
@@ -236,7 +237,11 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		setupUserSignal(app.sp)
 
 		pc := newProChecker(app.settings)
-		err = serveBandwidth(pc)
+		err = serveBandwidth(pc.IsProUser, ui.GetUIAddr, func() string {
+			return ui.AddToken("/img/lantern_logo.png")
+		}, func(note *notify.Notification) {
+			showNotification(note)
+		})
 		if err != nil {
 			app.log.Errorf("Unable to serve bandwidth to UI: %v", err)
 		}

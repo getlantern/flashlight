@@ -12,7 +12,6 @@ import (
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/notifier"
 
-	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
 )
 
@@ -25,13 +24,24 @@ var (
 )
 
 type notifyStatus struct {
-	log golog.Logger
-	pro ProChecker
+	log        golog.Logger
+	pro        func() (bool, bool)
+	uiAddr     func() string
+	logoURL    func() string
+	notifyFunc func(*notify.Notification)
 }
 
-func serveBandwidth(proChecker ProChecker) error {
+func serveBandwidth(proChecker func() (bool, bool),
+	uiAddr func() string,
+	logoURL func() string,
+	notifyFunc func(*notify.Notification)) error {
 	logger := golog.LoggerFor("app.bandwidth")
-	ns := notifyStatus{log: logger, pro: proChecker}
+	ns := notifyStatus{log: logger,
+		pro:        proChecker,
+		uiAddr:     uiAddr,
+		logoURL:    logoURL,
+		notifyFunc: notifyFunc,
+	}
 	helloFn := func(write func(interface{})) {
 		logger.Debugf("Sending current bandwidth quota to new client")
 		write(bandwidth.GetQuota())
@@ -107,7 +117,7 @@ func (s *notifyStatus) notifyCapHit() {
 }
 
 func (s *notifyStatus) notifyFreeUser(title, msg string) {
-	if isPro, ok := s.pro.IsProUser(); !ok {
+	if isPro, ok := s.pro(); !ok {
 		s.log.Debugf("user status is unknown, skip showing notification")
 		return
 	} else if isPro {
@@ -115,16 +125,15 @@ func (s *notifyStatus) notifyFreeUser(title, msg string) {
 		return
 	}
 
-	clickURL := "http://" + ui.GetUIAddr() + "?utm_source=" + runtime.GOOS +
+	clickURL := "http://" + s.uiAddr() + "?utm_source=" + runtime.GOOS +
 		"&utm_medium=notification&utm_campaign=50-80-100&utm_content=" +
 		url.QueryEscape(title+"-"+msg)
 	s.log.Debugf("Click URL: %v", clickURL)
-	logo := ui.AddToken("/img/lantern_logo.png")
 	note := &notify.Notification{
 		Title:    title,
 		Message:  msg,
 		ClickURL: clickURL,
-		IconURL:  logo,
+		IconURL:  s.logoURL(),
 	}
-	_ = showNotification(note)
+	s.notifyFunc(note)
 }
