@@ -4,11 +4,12 @@ import (
 	"testing"
 
 	"github.com/getlantern/bandwidth"
+	"github.com/getlantern/golog"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPercents(t *testing.T) {
-	ns = notifyStatus{}
+	ns := notifyStatus{log: golog.LoggerFor("bandwidth-test")}
 
 	quota := &bandwidth.Quota{
 		MiBAllowed: 1000,

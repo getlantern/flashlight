@@ -5,6 +5,7 @@ import (
 
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/ws"
+	"github.com/getlantern/golog"
 )
 
 type locationData struct {
@@ -12,6 +13,7 @@ type locationData struct {
 }
 
 func serveLocation() {
+	log := golog.LoggerFor("app.geolookup")
 	helloFn := func(write func(interface{})) {
 		write(locationData{
 			Code: geolookup.GetCountry(time.Second * 30),

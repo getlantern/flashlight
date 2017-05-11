@@ -22,16 +22,19 @@ func TestLocalHTTPToken(t *testing.T) {
 	defer ui.Stop()
 	set := loadSettingsFrom("1", "1/1/1", "1/1/1", tmpfile.Name())
 
+	app := &App{
+		settings: set,
+	}
 	// Just make sure we correctly set the token.
 	set.SetLocalHTTPToken("fdada")
-	tok := localHTTPToken(set)
+	tok := app.localHTTPToken()
 	assert.Equal(t, "fdada", tok, "Unexpected token")
 	assert.True(t, len(tok) > 4, "Unexpected token length for tok: "+tok)
 	assert.Equal(t, tok, set.GetLocalHTTPToken(), "Unexpected token")
 
 	// If the token is blank, it should generate and save a new one.
 	set.SetLocalHTTPToken("")
-	tok = localHTTPToken(set)
+	tok = app.localHTTPToken()
 	assert.NotEqual(t, "fdada", tok, "Unexpected token")
 	assert.True(t, len(tok) > 4, "Unexpected token length for tok: "+tok)
 	assert.Equal(t, tok, set.GetLocalHTTPToken(), "Unexpected token")

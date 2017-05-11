@@ -26,12 +26,25 @@ import (
 // show the announcement or not).
 //
 // Returns a function to stop the loop.
-func LoconfScanner(interval time.Duration, proChecker func() (bool, bool)) (stop func()) {
+func LoconfScanner(interval time.Duration, proChecker func() (bool, bool), settings loconfSettings) (stop func()) {
 	loc := &loconfer{
-		log: golog.LoggerFor("loconfer"),
-		r:   rand.New(rand.NewSource(time.Now().UnixNano())),
+		log:      golog.LoggerFor("loconfer"),
+		r:        rand.New(rand.NewSource(time.Now().UnixNano())),
+		settings: settings,
 	}
 	return loc.scan(interval, proChecker, loc.onLoconf)
+}
+
+type loconfer struct {
+	log      golog.Logger
+	r        *rand.Rand
+	settings loconfSettings
+}
+
+type loconfSettings interface {
+	GetLanguage() string
+	getStringArray(SettingName) []string
+	setStringArray(SettingName, interface{})
 }
 
 func (loc *loconfer) scan(interval time.Duration, proChecker func() (bool, bool), onLoconf func(*loconf.LoConf, bool)) (stop func()) {
@@ -77,11 +90,6 @@ func in(s string, coll []string) bool {
 	return false
 }
 
-type loconfer struct {
-	log golog.Logger
-	r   *rand.Rand
-}
-
 func (loc *loconfer) onLoconf(lc *loconf.LoConf, isPro bool) {
 	go loc.setUninstallURL(lc, isPro)
 	go loc.makeAnnouncements(lc, isPro)
@@ -93,7 +101,7 @@ func (loc *loconfer) setUninstallURL(lc *loconf.LoConf, isPro bool) {
 		loc.log.Errorf("Could not get config path? %v", err)
 		return
 	}
-	lang := settings.GetLanguage()
+	lang := loc.settings.GetLanguage()
 	survey, ok := lc.GetUninstallSurvey(lang)
 	if !ok {
 		loc.log.Debugf("No available uninstall survey")
@@ -126,7 +134,7 @@ func (loc *loconfer) writeURL(path string, survey *loconf.UninstallSurvey, isPro
 }
 
 func (loc *loconfer) makeAnnouncements(lc *loconf.LoConf, isPro bool) {
-	lang := settings.GetLanguage()
+	lang := loc.settings.GetLanguage()
 	current, err := lc.GetAnnouncement(lang, isPro)
 	if err != nil {
 		if err == loconf.ErrNoAvailable {
@@ -136,14 +144,14 @@ func (loc *loconfer) makeAnnouncements(lc *loconf.LoConf, isPro bool) {
 		}
 		return
 	}
-	past := settings.getStringArray(SNPastAnnouncements)
+	past := loc.settings.getStringArray(SNPastAnnouncements)
 	if in(current.Campaign, past) {
 		loc.log.Debugf("Skip announcement %s", current.Campaign)
 		return
 	}
 	if loc.showAnnouncement(current) {
 		past = append(past, current.Campaign)
-		settings.setStringArray(SNPastAnnouncements, past)
+		loc.settings.setStringArray(SNPastAnnouncements, past)
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/getlantern/flashlight/ws"
+	"github.com/getlantern/golog"
 )
 
 type stats struct {
@@ -50,6 +51,7 @@ func (s *statsTracker) unlockAndBroadcast() {
 }
 
 func (s *statsTracker) StartService() error {
+	log := golog.LoggerFor("app.stats")
 	helloFn := func(write func(interface{})) {
 		log.Debugf("Sending Lantern stats to new client")
 		s.mu.Lock()

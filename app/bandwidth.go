@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/getlantern/bandwidth"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/notifier"
 
@@ -21,25 +22,28 @@ var (
 	oneFifty  = &sync.Once{}
 	oneEighty = &sync.Once{}
 	oneFull   = &sync.Once{}
-	ns        = notifyStatus{}
 )
 
 type notifyStatus struct {
+	log golog.Logger
+	pro ProChecker
 }
 
-func serveBandwidth() error {
+func serveBandwidth(proChecker ProChecker) error {
+	logger := golog.LoggerFor("app.bandwidth")
+	ns := notifyStatus{log: logger, pro: proChecker}
 	helloFn := func(write func(interface{})) {
-		log.Debugf("Sending current bandwidth quota to new client")
+		logger.Debugf("Sending current bandwidth quota to new client")
 		write(bandwidth.GetQuota())
 	}
 	bservice, err := ws.Register("bandwidth", helloFn)
 	if err != nil {
-		log.Errorf("Error registering with UI? %v", err)
+		logger.Errorf("Error registering with UI? %v", err)
 		return err
 	}
 	go func() {
 		for quota := range bandwidth.Updates {
-			log.Debugf("Sending update...")
+			logger.Debugf("Sending update...")
 			bservice.Out <- quota
 			if ns.isFull(quota) {
 				oneFull.Do(func() {
@@ -103,19 +107,23 @@ func (s *notifyStatus) notifyCapHit() {
 }
 
 func (s *notifyStatus) notifyFreeUser(title, msg string) {
-	if isPro, ok := isProUser(); !ok {
-		log.Debugf("user status is unknown, skip showing notification")
+	if isPro, ok := s.pro.IsProUser(); !ok {
+		s.log.Debugf("user status is unknown, skip showing notification")
 		return
 	} else if isPro {
-		log.Debugf("Not showing desktop notification for pro user")
+		s.log.Debugf("Not showing desktop notification for pro user")
 		return
 	}
 
+	clickURL := "http://" + ui.GetUIAddr() + "?utm_source=" + runtime.GOOS +
+		"&utm_medium=notification&utm_campaign=50-80-100&utm_content=" +
+		url.QueryEscape(title+"-"+msg)
+	s.log.Debugf("Click URL: %v", clickURL)
 	logo := ui.AddToken("/img/lantern_logo.png")
 	note := &notify.Notification{
 		Title:    title,
 		Message:  msg,
-		ClickURL: "http://" + ui.GetUIAddr() + "?utm_source=" + runtime.GOOS + "&utm_medium=notification&utm_campaign=50-80-100&utm_content=" + url.QueryEscape(title+"-"+msg),
+		ClickURL: clickURL,
 		IconURL:  logo,
 	}
 	_ = showNotification(note)

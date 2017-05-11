@@ -3,6 +3,7 @@ package app
 import (
 	"time"
 
+	"github.com/getlantern/golog"
 	"github.com/getlantern/notifier"
 )
 
@@ -31,6 +32,7 @@ func showNotification(note *notify.Notification) bool {
 //
 // Returns a function to stop the loop.
 func notificationsLoop() (stop func()) {
+	log := golog.LoggerFor("app.notifications")
 	notifier := notify.NewNotifications()
 	// buffered channel to avoid blocking stop() when goroutine is sleeping
 	chStop := make(chan bool, 1)
