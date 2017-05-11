@@ -8,10 +8,10 @@ import (
 	"sync"
 
 	"github.com/getlantern/bandwidth"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/notifier"
 
-	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
 )
 
@@ -21,25 +21,40 @@ var (
 	oneFifty  = &sync.Once{}
 	oneEighty = &sync.Once{}
 	oneFull   = &sync.Once{}
-	ns        = notifyStatus{}
 )
 
 type notifyStatus struct {
+	log        golog.Logger
+	pro        func() (bool, bool)
+	uiAddr     func() string
+	logoURL    func() string
+	notifyFunc func(*notify.Notification)
 }
 
-func serveBandwidth() error {
+func serveBandwidth(proChecker func() (bool, bool),
+	uiAddr func() string,
+	logoURL func() string,
+	notifyFunc func(*notify.Notification),
+	wsName string) error {
+	logger := golog.LoggerFor("app.bandwidth")
+	ns := notifyStatus{log: logger,
+		pro:        proChecker,
+		uiAddr:     uiAddr,
+		logoURL:    logoURL,
+		notifyFunc: notifyFunc,
+	}
 	helloFn := func(write func(interface{})) {
-		log.Debugf("Sending current bandwidth quota to new client")
+		logger.Debugf("Sending current bandwidth quota to new client")
 		write(bandwidth.GetQuota())
 	}
-	bservice, err := ws.Register("bandwidth", helloFn)
+	bservice, err := ws.Register(wsName, helloFn)
 	if err != nil {
-		log.Errorf("Error registering with UI? %v", err)
+		logger.Errorf("Error registering with UI? %v", err)
 		return err
 	}
 	go func() {
 		for quota := range bandwidth.Updates {
-			log.Debugf("Sending update...")
+			logger.Debugf("Sending update...")
 			bservice.Out <- quota
 			if ns.isFull(quota) {
 				oneFull.Do(func() {
@@ -103,20 +118,23 @@ func (s *notifyStatus) notifyCapHit() {
 }
 
 func (s *notifyStatus) notifyFreeUser(title, msg string) {
-	if isPro, ok := isProUser(); !ok {
-		log.Debugf("user status is unknown, skip showing notification")
+	if isPro, ok := s.pro(); !ok {
+		s.log.Debugf("user status is unknown, skip showing notification")
 		return
 	} else if isPro {
-		log.Debugf("Not showing desktop notification for pro user")
+		s.log.Debugf("Not showing desktop notification for pro user")
 		return
 	}
 
-	logo := ui.AddToken("/img/lantern_logo.png")
+	clickURL := "http://" + s.uiAddr() + "?utm_source=" + runtime.GOOS +
+		"&utm_medium=notification&utm_campaign=50-80-100&utm_content=" +
+		url.QueryEscape(title+"-"+msg)
+	s.log.Debugf("Click URL: %v", clickURL)
 	note := &notify.Notification{
 		Title:    title,
 		Message:  msg,
-		ClickURL: "http://" + ui.GetUIAddr() + "?utm_source=" + runtime.GOOS + "&utm_medium=notification&utm_campaign=50-80-100&utm_content=" + url.QueryEscape(title+"-"+msg),
-		IconURL:  logo,
+		ClickURL: clickURL,
+		IconURL:  s.logoURL(),
 	}
-	_ = showNotification(note)
+	s.notifyFunc(note)
 }

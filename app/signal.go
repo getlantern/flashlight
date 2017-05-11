@@ -4,20 +4,25 @@ import (
 	"sync"
 
 	"github.com/getlantern/flashlight/ws"
+	"github.com/getlantern/golog"
 )
 
 type UserSignal struct {
 	service *ws.Service
 	once    sync.Once
+	log     golog.Logger
+	sp      *systemproxy
 }
 
 var userSignal UserSignal
 
-func setupUserSignal() {
+func setupUserSignal(sp *systemproxy) {
+	userSignal.log = golog.LoggerFor("app.usersignal")
+	userSignal.sp = sp
 	userSignal.once.Do(func() {
 		err := userSignal.start()
 		if err != nil {
-			log.Errorf("Unable to register signal service: %q", err)
+			userSignal.log.Errorf("Unable to register signal service: %q", err)
 			return
 		}
 		go userSignal.read()
@@ -36,12 +41,12 @@ func (s *UserSignal) start() error {
 
 func (s *UserSignal) read() {
 	for message := range s.service.In {
-		log.Debugf("Read userSignal %v", message)
+		s.log.Debugf("Read userSignal %v", message)
 		switch message {
 		case "disconnect":
-			sysproxyOff()
+			s.sp.sysproxyOff()
 		case "connect":
-			sysproxyOn()
+			s.sp.sysproxyOn()
 		default:
 			continue
 		}

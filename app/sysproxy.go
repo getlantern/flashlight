@@ -10,16 +10,23 @@ import (
 	"github.com/getlantern/filepersist"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/sysproxy"
 
 	"github.com/getlantern/flashlight/icons"
 )
 
-var (
-	isSysproxyOn = int32(0)
-)
+type systemproxy struct {
+	isSysproxyOn int32
+	log          golog.Logger
+}
 
-func setUpSysproxyTool() error {
+// newSystemProxy creates a new systemproxy
+func newSystemProxy() *systemproxy {
+	return &systemproxy{log: golog.LoggerFor("app.sysproxy")}
+}
+
+func (sp *systemproxy) setUpSysproxyTool() error {
 	var iconFile string
 	if runtime.GOOS == "darwin" {
 		// We have to use a short filepath here because Cocoa won't display the
@@ -33,7 +40,7 @@ func setUpSysproxyTool() error {
 		if err != nil {
 			return fmt.Errorf("Unable to persist icon to disk: %v", err)
 		}
-		log.Debugf("Saved icon file to: %v", iconFile)
+		sp.log.Debugf("Saved icon file to: %v", iconFile)
 	}
 	err := sysproxy.EnsureHelperToolPresent("sysproxy-cmd", "Lantern would like to be your system proxy", iconFile)
 	if err != nil {
@@ -42,56 +49,56 @@ func setUpSysproxyTool() error {
 	return nil
 }
 
-func sysproxyOn() {
-	doSysproxyOn()
-	atomic.StoreInt32(&isSysproxyOn, 1)
+func (sp *systemproxy) sysproxyOn() {
+	sp.doSysproxyOn()
+	atomic.StoreInt32(&sp.isSysproxyOn, 1)
 }
 
-func sysproxyOff() {
-	if atomic.CompareAndSwapInt32(&isSysproxyOn, 1, 0) {
-		doSysproxyOff()
+func (sp *systemproxy) sysproxyOff() {
+	if atomic.CompareAndSwapInt32(&sp.isSysproxyOn, 1, 0) {
+		sp.doSysproxyOff()
 	}
 }
 
-func doSysproxyOn() {
+func (sp *systemproxy) doSysproxyOn() {
 	op := ops.Begin("sysproxy_on")
 	defer op.End()
-	addr, found := getProxyAddr()
+	addr, found := sp.getProxyAddr()
 	if !found {
-		op.FailIf(log.Errorf("Unable to set lantern as system proxy, no proxy address available"))
+		op.FailIf(sp.log.Errorf("Unable to set lantern as system proxy, no proxy address available"))
 		return
 	}
-	log.Debugf("Setting lantern as system proxy at: %v", addr)
+	sp.log.Debugf("Setting lantern as system proxy at: %v", addr)
 	err := sysproxy.On(addr)
 	if err != nil {
-		op.FailIf(log.Errorf("Unable to set lantern as system proxy: %v", err))
+		op.FailIf(sp.log.Errorf("Unable to set lantern as system proxy: %v", err))
 		return
 	}
-	log.Debug("Finished setting lantern as system proxy")
+	sp.log.Debug("Finished setting lantern as system proxy")
 }
 
-func doSysproxyOff() {
-	addr, found := getProxyAddr()
+func (sp *systemproxy) doSysproxyOff() {
+	addr, found := sp.getProxyAddr()
 	if !found {
-		log.Errorf("Unable to unset lantern as system proxy, no proxy address available")
+		sp.log.Errorf("Unable to unset lantern as system proxy, no proxy address available")
 		return
 	}
-	doSysproxyOffFor(addr)
+	sp.doSysproxyOffFor(addr)
 }
 
-func doSysproxyOffFor(addr string) {
+func (sp *systemproxy) doSysproxyOffFor(addr string) {
 	op := ops.Begin("sysproxy_off")
 	defer op.End()
-	log.Debugf("Unsetting lantern as system proxy at: %v", addr)
+	sp.log.Debugf("Unsetting lantern as system proxy at: %v", addr)
 	err := sysproxy.Off(addr)
 	if err != nil {
-		op.FailIf(log.Errorf("Unable to unset lantern as system proxy: %v", err))
+		op.FailIf(sp.log.Errorf("Unable to unset lantern as system proxy: %v", err))
 		return
 	}
-	log.Debug("Unset lantern as system proxy")
+	sp.log.Debug("Unset lantern as system proxy")
 }
 
-func getProxyAddr() (addr string, found bool) {
+func (sp *systemproxy) getProxyAddr() (addr string, found bool) {
 	var _addr interface{}
 	_addr, found = client.Addr(5 * time.Minute)
 	if found {

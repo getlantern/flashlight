@@ -11,6 +11,7 @@ import (
 	"github.com/keighl/mandrill"
 
 	"github.com/getlantern/errors"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/osversion"
 
 	"github.com/getlantern/flashlight/logging"
@@ -35,6 +36,11 @@ type mandrillMessage struct {
 	MaxLogSize string `json:"maxLogSize,omitempty"`
 }
 
+type emailProxy struct {
+	log      golog.Logger
+	settings *Settings
+}
+
 var (
 	// Only allowed to call /send_template
 	mandrillAPIKey = "fmYlUdjEpGGonI4NDx9xeA"
@@ -45,29 +51,30 @@ var (
 // It intentionally uses direct connection to the 3rd party service, to serve
 // as an out-of-band channel when Lantern doesn't work well, say, when user
 // wants to report an issue.
-func serveEmailProxy() error {
+func serveEmailProxy(settings *Settings) error {
+	ep := &emailProxy{log: golog.LoggerFor("email-proxy"), settings: settings}
 	service, err := ws.RegisterWithMsgInitializer("email-proxy", nil,
 		func() interface{} { return &mandrillMessage{} })
 	if err != nil {
-		log.Errorf("Error registering with UI? %v", err)
+		ep.log.Errorf("Error registering with UI? %v", err)
 		return err
 	}
-	go read(service)
+	go ep.read(service)
 	return nil
 }
 
-func read(service *ws.Service) {
+func (ep *emailProxy) read(service *ws.Service) {
 	for message := range service.In {
 		data, ok := message.(*mandrillMessage)
 		if !ok {
-			log.Errorf("Malformatted message %v", message)
+			ep.log.Errorf("Malformatted message %v", message)
 			continue
 		}
-		handleMessage(service, data)
+		ep.handleMessage(service, data)
 	}
 }
 
-func handleMessage(service *ws.Service, data *mandrillMessage) {
+func (ep *emailProxy) handleMessage(service *ws.Service, data *mandrillMessage) {
 	var op *ops.Op
 	if strings.HasPrefix(data.Template, "user-send-logs") {
 		isPro, _ := strconv.ParseBool(fmt.Sprint(data.Vars["proUser"]))
@@ -77,21 +84,21 @@ func handleMessage(service *ws.Service, data *mandrillMessage) {
 			Set("issue_type", data.Vars["issueType"]).
 			Set("issue_note", data.Vars["note"]).
 			Set("email", data.Vars["email"])
-		log.Debug("Reporting issue")
+		ep.log.Debug("Reporting issue")
 	} else {
 		op = ops.Begin("send_email").Set("template", data.Template)
 	}
 	defer op.End()
-	fillDefaults(data)
-	if err := sendTemplate(data); err != nil {
-		log.Error(op.FailIf(err))
+	ep.fillDefaults(data)
+	if err := ep.sendTemplate(data); err != nil {
+		ep.log.Error(op.FailIf(err))
 		service.Out <- err.Error()
 	} else {
 		service.Out <- "success"
 	}
 }
 
-func sendTemplate(data *mandrillMessage) error {
+func (ep *emailProxy) sendTemplate(data *mandrillMessage) error {
 	client := mandrill.ClientWithKey(mandrillAPIKey)
 	msg := &mandrill.Message{
 		To: []*mandrill.To{&mandrill.To{Email: data.To}},
@@ -99,8 +106,8 @@ func sendTemplate(data *mandrillMessage) error {
 	msg.GlobalMergeVars = mandrill.MapToVars(data.Vars)
 	var buf bytes.Buffer
 	if data.WithSettings {
-		if _, err := settings.writeTo(&buf); err != nil {
-			log.Error(err)
+		if _, err := ep.settings.writeTo(&buf); err != nil {
+			ep.log.Error(err)
 		} else {
 			msg.Attachments = append(msg.Attachments, &mandrill.Attachment{
 				Type:    "application/x-yaml",
@@ -111,7 +118,7 @@ func sendTemplate(data *mandrillMessage) error {
 	}
 	if data.MaxLogSize != "" {
 		if size, err := util.ParseFileSize(data.MaxLogSize); err != nil {
-			log.Error(err)
+			ep.log.Error(err)
 		} else {
 			buf.Reset()
 			folder := prefix(data) + "_logs"
@@ -129,10 +136,10 @@ func sendTemplate(data *mandrillMessage) error {
 		return err
 	}
 
-	return readResponses(responses)
+	return ep.readResponses(responses)
 }
 
-func readResponses(responses []*mandrill.Response) error {
+func (ep *emailProxy) readResponses(responses []*mandrill.Response) error {
 	// There's exactly one response, use "for" loop for simpler code.
 	for _, resp := range responses {
 		switch resp.Status {
@@ -147,23 +154,23 @@ func readResponses(responses []*mandrill.Response) error {
 	return nil
 }
 
-func fillDefaults(msg *mandrillMessage) {
+func (ep *emailProxy) fillDefaults(msg *mandrillMessage) {
 	if msg.Vars == nil {
 		// avoid panicking in case the message is malformed
 		msg.Vars = make(map[string]interface{})
 	}
-	msg.Vars["userID"] = settings.GetUserID()
-	msg.Vars["deviceID"] = settings.GetDeviceID()
-	msg.Vars["proToken"] = settings.GetToken()
+	msg.Vars["userID"] = ep.settings.GetUserID()
+	msg.Vars["deviceID"] = ep.settings.GetDeviceID()
+	msg.Vars["proToken"] = ep.settings.GetToken()
 	os, err := osversion.GetHumanReadable()
 	if err != nil {
-		log.Error(err)
+		ep.log.Error(err)
 	} else {
 		msg.Vars["os"] = os
 	}
 	msg.Vars["version"] = fmt.Sprintf("%v (%v)",
-		settings.getString(SNVersion),
-		settings.getString(SNRevisionDate))
+		ep.settings.getString(SNVersion),
+		ep.settings.getString(SNRevisionDate))
 }
 
 func prefix(msg *mandrillMessage) string {

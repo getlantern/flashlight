@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight"
+
 	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/mtime"
@@ -26,12 +27,10 @@ import (
 	"github.com/getlantern/flashlight/proxiedsites"
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
+	"github.com/getlantern/notifier"
 )
 
 var (
-	log      = golog.LoggerFor("flashlight.app")
-	settings *Settings
-
 	elapsed func() time.Duration
 )
 
@@ -46,6 +45,7 @@ func init() {
 
 // App is the core of the Lantern desktop application, in the form of a library.
 type App struct {
+	log          golog.Logger
 	ShowUI       bool
 	Flags        map[string]interface{}
 	exitCh       chan error
@@ -53,18 +53,22 @@ type App struct {
 
 	exitOnce    sync.Once
 	chExitFuncs chan func()
+	settings    *Settings
+	sp          *systemproxy
 }
 
 // Init initializes the App's state
 func (app *App) Init() {
 	golog.OnFatal(app.exitOnFatal)
+	app.log = golog.LoggerFor("flashlight.app")
 	app.Flags["staging"] = common.Staging
-	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
+	app.settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
 	app.exitCh = make(chan error, 1)
 	// use buffered channel to avoid blocking the caller of 'AddExitFunc'
 	// the number 10 is arbitrary
 	app.chExitFuncs = make(chan func(), 10)
 	app.statsTracker = &statsTracker{}
+	app.sp = newSystemProxy()
 }
 
 // LogPanicAndExit logs a panic and then exits the application. This function
@@ -72,12 +76,13 @@ func (app *App) Init() {
 func (app *App) LogPanicAndExit(msg interface{}) {
 	// Turn off system proxy on panic
 	// Reload settings to make sure we have an up-to-date addr
-	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
-	setUpSysproxyTool()
+	app.settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
+	app.sp = newSystemProxy()
+	app.sp.setUpSysproxyTool()
 	app.AddExitFunc(func() {
-		doSysproxyOffFor(settings.GetAddr())
+		app.sp.doSysproxyOffFor(app.settings.GetAddr())
 	})
-	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
+	app.log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
 }
 
 func (app *App) exitOnFatal(err error) {
@@ -93,15 +98,15 @@ func (app *App) Run() error {
 	// Run below in separate goroutine as config.Init() can potentially block when Lantern runs
 	// for the first time. User can still quit Lantern through systray menu when it happens.
 	go func() {
-		log.Debug(app.Flags)
+		app.log.Debug(app.Flags)
 		if app.Flags["proxyall"].(bool) {
 			// If proxyall flag was supplied, force proxying of all
-			settings.SetProxyAll(true)
+			app.settings.SetProxyAll(true)
 		}
 
 		listenAddr := app.Flags["addr"].(string)
 		if listenAddr == "" {
-			listenAddr = settings.getString(SNAddr)
+			listenAddr = app.settings.getString(SNAddr)
 		}
 		if listenAddr == "" {
 			listenAddr = defaultHTTPProxyAddress
@@ -109,7 +114,7 @@ func (app *App) Run() error {
 
 		socksAddr := app.Flags["socksaddr"].(string)
 		if socksAddr == "" {
-			socksAddr = settings.getString(SNSOCKSAddr)
+			socksAddr = app.settings.getString(SNSOCKSAddr)
 		}
 		if socksAddr == "" {
 			socksAddr = defaultSOCKSProxyAddress
@@ -119,18 +124,18 @@ func (app *App) Run() error {
 			listenAddr,
 			socksAddr,
 			app.Flags["configdir"].(string),
-			func() bool { return !settings.GetProxyAll() }, // use shortcut
-			func() bool { return !settings.GetProxyAll() }, // use detour
-			func() bool { return false },                   // on desktop, we do not allow private hosts
-			settings.IsAutoReport,
+			func() bool { return !app.settings.GetProxyAll() }, // use shortcut
+			func() bool { return !app.settings.GetProxyAll() }, // use detour
+			func() bool { return false },                       // on desktop, we do not allow private hosts
+			app.settings.IsAutoReport,
 			app.Flags,
 			app.beforeStart(listenAddr),
 			app.afterStart,
 			app.onConfigUpdate,
-			settings,
+			app.settings,
 			app.statsTracker,
 			app.Exit,
-			settings.GetDeviceID())
+			app.settings.GetDeviceID())
 		if err != nil {
 			app.Exit(err)
 			return
@@ -142,7 +147,7 @@ func (app *App) Run() error {
 
 func (app *App) beforeStart(listenAddr string) func() bool {
 	return func() bool {
-		log.Debug("Got first config")
+		app.log.Debug("Got first config")
 		var cpuProf, memProf string
 		if cpu, cok := app.Flags["cpuprofile"]; cok {
 			cpuProf = cpu.(string)
@@ -151,19 +156,19 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			memProf = mem.(string)
 		}
 		if cpuProf != "" || memProf != "" {
-			log.Debugf("Start profiling with cpu file %s and mem file %s", cpuProf, memProf)
+			app.log.Debugf("Start profiling with cpu file %s and mem file %s", cpuProf, memProf)
 			finishProfiling := profiling.Start(cpuProf, memProf)
 			app.AddExitFunc(finishProfiling)
 		}
 
-		if err := setUpSysproxyTool(); err != nil {
+		if err := app.sp.setUpSysproxyTool(); err != nil {
 			app.Exit(err)
 		}
 
 		var startupURL string
 		bootstrap, err := config.ReadBootstrapSettings()
 		if err != nil {
-			log.Debugf("Could not read bootstrap settings: %v", err)
+			app.log.Debugf("Could not read bootstrap settings: %v", err)
 		} else {
 			startupURL = bootstrap.StartupUrl
 		}
@@ -171,10 +176,10 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		uiaddr := app.Flags["uiaddr"].(string)
 		if uiaddr == "" {
 			// stick with the last one if not specified from command line.
-			if uiaddr = settings.GetUIAddr(); uiaddr != "" {
+			if uiaddr = app.settings.GetUIAddr(); uiaddr != "" {
 				host, port, splitErr := net.SplitHostPort(uiaddr)
 				if splitErr != nil {
-					log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
+					app.log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
 					uiaddr = ""
 				}
 				// To allow Edge to open the UI, we force the UI address to be
@@ -193,13 +198,13 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			// off.
 			//
 			// See: https://github.com/getlantern/lantern/issues/2776
-			log.Debug("Requested clearing of proxy settings")
+			app.log.Debug("Requested clearing of proxy settings")
 			_, port, splitErr := net.SplitHostPort(listenAddr)
 			if splitErr == nil && port != "0" {
-				log.Debugf("Clearing system proxy settings for: %v", listenAddr)
-				doSysproxyOffFor(listenAddr)
+				app.log.Debugf("Clearing system proxy settings for: %v", listenAddr)
+				app.sp.doSysproxyOffFor(listenAddr)
 			} else {
-				log.Debugf("Can't clear proxy settings for: %v", listenAddr)
+				app.log.Debugf("Can't clear proxy settings for: %v", listenAddr)
 			}
 			app.Exit(nil)
 		}
@@ -207,50 +212,55 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		if uiaddr != "" {
 			// Is something listening on that port?
 			if showErr := app.showExistingUI(uiaddr); showErr == nil {
-				log.Debug("Lantern already running, showing existing UI")
+				app.log.Debug("Lantern already running, showing existing UI")
 				app.Exit(nil)
 			}
 		}
 
-		log.Debugf("Starting client UI at %v", uiaddr)
+		app.log.Debugf("Starting client UI at %v", uiaddr)
 		// ui will handle empty uiaddr correctly
-		err = ui.Start(uiaddr, !app.ShowUI, startupURL, localHTTPToken(settings))
+		err = ui.Start(uiaddr, !app.ShowUI, startupURL, app.localHTTPToken())
 		if err != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		}
 		ui.Handle("/data", ws.StartUIChannel())
 
-		if e := settings.StartService(); e != nil {
+		if e := app.settings.StartService(); e != nil {
 			app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
 		}
-		settings.SetUIAddr(ui.GetUIAddr())
+		app.settings.SetUIAddr(ui.GetUIAddr())
 
 		if err = app.statsTracker.StartService(); err != nil {
-			log.Errorf("Unable to serve stats to UI: %v", err)
+			app.log.Errorf("Unable to serve stats to UI: %v", err)
 		}
 
-		setupUserSignal()
+		setupUserSignal(app.sp)
 
-		err = serveBandwidth()
+		pc := newProChecker(app.settings)
+		err = serveBandwidth(pc.IsProUser, ui.GetUIAddr, func() string {
+			return ui.AddToken("/img/lantern_logo.png")
+		}, func(note *notify.Notification) {
+			showNotification(note)
+		}, "bandwidth")
 		if err != nil {
-			log.Errorf("Unable to serve bandwidth to UI: %v", err)
+			app.log.Errorf("Unable to serve bandwidth to UI: %v", err)
 		}
 
-		err = serveEmailProxy()
+		err = serveEmailProxy(app.settings)
 		if err != nil {
-			log.Errorf("Unable to serve mandrill to UI: %v", err)
+			app.log.Errorf("Unable to serve mandrill to UI: %v", err)
 		}
 
 		// Don't block on fetching the location for the UI.
 		go serveLocation()
 
 		// Only run analytics once on startup.
-		if settings.IsAutoReport() {
-			stopAnalytics := analytics.Start(settings.GetDeviceID(), common.Version)
+		if app.settings.IsAutoReport() {
+			stopAnalytics := analytics.Start(app.settings.GetDeviceID(), common.Version)
 			app.AddExitFunc(stopAnalytics)
 		}
 
-		app.AddExitFunc(LoconfScanner(4*time.Hour, isProUser))
+		app.AddExitFunc(LoconfScanner(4*time.Hour, pc.IsProUser, app.settings))
 		app.AddExitFunc(notificationsLoop())
 
 		return true
@@ -259,11 +269,11 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 // localHTTPToken fetches the local HTTP token from disk if it's there, and
 // otherwise creates a new one and stores it.
-func localHTTPToken(set *Settings) string {
-	tok := set.GetLocalHTTPToken()
+func (app *App) localHTTPToken() string {
+	tok := app.settings.GetLocalHTTPToken()
 	if tok == "" {
 		t := ui.LocalHTTPToken()
-		set.SetLocalHTTPToken(t)
+		app.settings.SetLocalHTTPToken(t)
 		return t
 	}
 	return tok
@@ -274,14 +284,14 @@ func (app *App) GetSetting(name SettingName) interface{} {
 	if val, ok := settingMeta[name]; ok {
 		switch val.sType {
 		case stBool:
-			return settings.getBool(name)
+			return app.settings.getBool(name)
 		case stNumber:
-			return settings.getInt64(name)
+			return app.settings.getInt64(name)
 		case stString:
-			return settings.getString(name)
+			return app.settings.getString(name)
 		}
 	} else {
-		log.Errorf("Looking for non-existent setting? %v", name)
+		app.log.Errorf("Looking for non-existent setting? %v", name)
 	}
 
 	// should never reach here.
@@ -291,19 +301,19 @@ func (app *App) GetSetting(name SettingName) interface{} {
 // OnSettingChange sets a callback cb to get called when attr is changed from UI.
 // When calling multiple times for same attr, only the last one takes effect.
 func (app *App) OnSettingChange(attr SettingName, cb func(interface{})) {
-	settings.OnChange(attr, cb)
+	app.settings.OnChange(attr, cb)
 }
 
 func (app *App) afterStart() {
-	if settings.GetSystemProxy() {
-		sysproxyOn()
+	if app.settings.GetSystemProxy() {
+		app.sp.sysproxyOn()
 	}
 	app.OnSettingChange(SNSystemProxy, func(val interface{}) {
 		enable := val.(bool)
 		if enable {
-			sysproxyOn()
+			app.sp.sysproxyOn()
 		} else {
-			sysproxyOff()
+			app.sp.sysproxyOff()
 		}
 	})
 
@@ -312,7 +322,7 @@ func (app *App) afterStart() {
 		go launcher.CreateLaunchFile(enable)
 	})
 
-	app.AddExitFunc(doSysproxyOff)
+	app.AddExitFunc(app.sp.doSysproxyOff)
 	app.AddExitFunc(borda.Flush)
 	if app.ShowUI && !app.Flags["startup"].(bool) {
 		// Launch a browser window with Lantern but only after the pac
@@ -321,17 +331,17 @@ func (app *App) afterStart() {
 		// UI server and proxy server are still coming up.
 		ui.Show()
 	} else {
-		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
+		app.log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
 	}
 	if addr, ok := client.Addr(6 * time.Second); ok {
-		settings.setString(SNAddr, addr)
+		app.settings.setString(SNAddr, addr)
 	} else {
-		log.Errorf("Couldn't retrieve HTTP proxy addr in time")
+		app.log.Errorf("Couldn't retrieve HTTP proxy addr in time")
 	}
 	if socksAddr, ok := client.Socks5Addr(6 * time.Second); ok {
-		settings.setString(SNSOCKSAddr, socksAddr)
+		app.settings.setString(SNSOCKSAddr, socksAddr)
 	} else {
-		log.Errorf("Couldn't retrieve SOCKS proxy addr in time")
+		app.log.Errorf("Couldn't retrieve SOCKS proxy addr in time")
 	}
 }
 
@@ -344,22 +354,22 @@ func (app *App) onConfigUpdate(cfg *config.Global) {
 // open a browser to the Lantern start page.
 func (app *App) showExistingUI(addr string) error {
 	url := "http://" + addr + "/startup"
-	log.Debugf("Hitting local URL: %v", url)
+	app.log.Debugf("Hitting local URL: %v", url)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Debugf("Could not build request: %s", err)
+		app.log.Debugf("Could not build request: %s", err)
 		return err
 	}
 	req.Header.Set("Origin", url)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Debugf("Could not hit local lantern: %s", err)
+		app.log.Debugf("Could not hit local lantern: %s", err)
 		return err
 	}
 	if resp.Body != nil {
 		if err = resp.Body.Close(); err != nil {
-			log.Debugf("Error closing body! %s", err)
+			app.log.Debugf("Error closing body! %s", err)
 		}
 	}
 	if resp.StatusCode != http.StatusOK {
@@ -382,18 +392,18 @@ func (app *App) Exit(err error) {
 }
 
 func (app *App) doExit(err error) {
-	log.Errorf("Exiting app because of %v", err)
+	app.log.Errorf("Exiting app because of %v", err)
 	defer func() {
 		app.exitCh <- err
-		log.Debug("Finished exiting app")
+		app.log.Debug("Finished exiting app")
 	}()
 	for {
 		select {
 		case f := <-app.chExitFuncs:
-			log.Debugf("Calling exit func")
+			app.log.Debugf("Calling exit func")
 			f()
 		default:
-			log.Debugf("No exit func remaining, exit now")
+			app.log.Debugf("No exit func remaining, exit now")
 			return
 		}
 	}

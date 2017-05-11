@@ -36,15 +36,30 @@ func TestWriteURL(t *testing.T) {
 	assert.Equal(t, testURL, string(dat))
 }
 
+type set struct {
+}
+
+func (s *set) GetLanguage() string {
+	return ""
+}
+
+func (s *set) getStringArray(name SettingName) []string {
+	return make([]string, 0)
+}
+
+func (s *set) setStringArray(name SettingName, vals interface{}) {
+}
+
 func TestParsing(t *testing.T) {
 	logger := golog.LoggerFor("loconfloop-test")
+	settings := &set{}
 	stop := LoconfScanner(4*time.Hour, func() (bool, bool) {
 		return true, false
-	})
+	}, settings)
 	stop()
 	stop = LoconfScanner(4*time.Hour, func() (bool, bool) {
 		return true, true
-	})
+	}, settings)
 	logger.Debug("Stopping")
 	stop()
 

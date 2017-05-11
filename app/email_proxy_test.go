@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/flashlight/ws"
+	"github.com/getlantern/golog"
 )
 
 func TestReadResponses(t *testing.T) {
@@ -23,11 +24,12 @@ func TestReadResponses(t *testing.T) {
 	statuses := []string{
 		"sent", "queued", "scheduled", "rejected", "invalid",
 	}
+	ep := &emailProxy{log: golog.LoggerFor("email-proxy")}
 
 	for _, status := range statuses {
 		var responses []*mandrill.Response
 		responses = append(responses, &mandrill.Response{Status: status})
-		err := readResponses(responses)
+		err := ep.readResponses(responses)
 		if status == "sent" || status == "queued" || status == "scheduled" {
 			assert.Nil(t, err, "Expected no error for status "+status)
 		} else if status == "rejected" || status == "invalid" {
@@ -40,9 +42,7 @@ func TestReadResponses(t *testing.T) {
 func TestEmailProxy(t *testing.T) {
 	s := httptest.NewServer(ws.StartUIChannel())
 	defer s.Close()
-	// avoid panicking when attaching settings to the email.
-	settings = loadSettings("version", "revisionDate", "buildDate")
-	err := serveEmailProxy()
+	err := serveEmailProxy(loadSettings("version", "revisionDate", "buildDate"))
 	assert.NoError(t, err, "should start service")
 	defer ws.Unregister("email-proxy")
 	wsURL := strings.Replace(s.URL, "http://", "ws://", -1)
@@ -59,8 +59,8 @@ func TestEmailProxy(t *testing.T) {
 	// messages sent to client. Filter mandrill specific message to verify. If
 	// there's no such message, the test hangs as an indication. Same below.
 	for {
-		_, p, err := conn.ReadMessage()
-		assert.NoError(t, err, "should read from ws")
+		_, p, errr := conn.ReadMessage()
+		assert.NoError(t, errr, "should read from ws")
 		if bytes.Contains(p, []byte("email-proxy")) {
 			assert.Equal(t, `{"type":"email-proxy","message":"success"}`, string(p))
 			break

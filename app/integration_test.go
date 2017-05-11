@@ -17,6 +17,7 @@ import (
 	"time"
 
 	bclient "github.com/getlantern/borda/client"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/http-proxy-lantern"
 	"github.com/getlantern/tlsdefaults"
 	"github.com/getlantern/waitforserver"
@@ -48,6 +49,7 @@ const (
 
 var (
 	useOBFS4 = uint32(0)
+	testlog  = golog.LoggerFor("integration-test")
 )
 
 func TestProxying(t *testing.T) {
@@ -136,7 +138,7 @@ func TestProxying(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	testRequest(t, httpAddr, httpsAddr)
 
-	log.Fatal("test fatal error")
+	testlog.Fatal("test fatal error")
 	a.Exit(nil)
 
 	select {
@@ -225,20 +227,20 @@ func startConfigServer(t *testing.T) (string, error) {
 
 func serveConfig(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		log.Debugf("Reading request path: %v", req.URL.String())
+		testlog.Debugf("Reading request path: %v", req.URL.String())
 		if strings.Contains(req.URL.String(), "global") {
 			writeGlobalConfig(t, resp, req)
 		} else if strings.Contains(req.URL.String(), "prox") {
 			writeProxyConfig(t, resp, req)
 		} else {
-			log.Errorf("Not requesting global or proxies in %v", req.URL.String())
+			testlog.Errorf("Not requesting global or proxies in %v", req.URL.String())
 			resp.WriteHeader(http.StatusBadRequest)
 		}
 	}
 }
 
 func writeGlobalConfig(t *testing.T, resp http.ResponseWriter, req *http.Request) {
-	log.Debug("Writing global config")
+	testlog.Debug("Writing global config")
 	obfs4 := atomic.LoadUint32(&useOBFS4) == 1
 	version := "1"
 	if obfs4 {
@@ -266,7 +268,7 @@ func writeGlobalConfig(t *testing.T, resp http.ResponseWriter, req *http.Request
 }
 
 func writeProxyConfig(t *testing.T, resp http.ResponseWriter, req *http.Request) {
-	log.Debug("Writing proxy config")
+	testlog.Debug("Writing proxy config")
 	obfs4 := atomic.LoadUint32(&useOBFS4) == 1
 	version := "1"
 	if obfs4 {
@@ -396,7 +398,7 @@ func startApp(t *testing.T, configAddr string) (*App, error) {
 	}
 	a.Init()
 	// Set a non-zero User ID to make prochecker happy
-	settings.SetUserID(1)
+	a.settings.SetUserID(1)
 
 	go func() {
 		err := a.Run()
