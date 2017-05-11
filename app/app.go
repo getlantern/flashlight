@@ -244,12 +244,12 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			log.Errorf("Unable to serve mandrill to UI: %v", err)
 		}
 
-		geoService := service.GetRegistry().MustRegister(
+		geoService, geo := service.GetRegistry().MustRegister(
 			geolookup.New,
 			nil, // no ConfigOpts for geolookup
 			true,
 			nil)
-		analyticsService := service.GetRegistry().MustRegister(
+		analyticsService, _ := service.GetRegistry().MustRegister(
 			analytics.New,
 			&analytics.ConfigOpts{DeviceID: settings.GetDeviceID(), Version: common.Version},
 			false, /* not auto start as it requires geolookup*/
@@ -257,7 +257,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 		go func() {
 			chGeoService := geoService.Subscribe()
-			lookup := geoService.GetImpl().(*geolookup.GeoLookup)
+			lookup := geo.(*geolookup.GeoLookup)
 			for {
 				<-chGeoService
 				shortcut.Configure(lookup.GetCountry(0))
@@ -272,14 +272,13 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 			}
 		}()
+		service.GetRegistry().StartAll()
 
 		// Don't block on fetching the location for the UI.
 		go serveLocation()
 
 		app.AddExitFunc(LoconfScanner(4*time.Hour, isProUser))
 		app.AddExitFunc(notificationsLoop())
-
-		service.GetRegistry().StartAll()
 
 		return true
 	}

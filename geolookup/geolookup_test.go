@@ -9,10 +9,10 @@ import (
 )
 
 func TestFronted(t *testing.T) {
-	s := service.NewRegistry().MustRegister(New, nil, true, nil)
+	s, i := service.NewRegistry().MustRegister(New, nil, true, nil)
 	ch := s.Subscribe()
 	s.Start()
-	instance := s.GetImpl().(*GeoLookup)
+	instance := i.(*GeoLookup)
 	instance.Refresh()
 	fronted.ConfigureForTest(t)
 	country := instance.GetCountry(15 * time.Second)

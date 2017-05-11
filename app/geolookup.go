@@ -13,7 +13,8 @@ type locationData struct {
 }
 
 func serveLocation() {
-	geoService := service.GetRegistry().MustLookup(geolookup.ServiceType).GetImpl().(*geolookup.GeoLookup)
+	_, instance := service.GetRegistry().MustLookup(geolookup.ServiceType)
+	geoService := instance.(*geolookup.GeoLookup)
 	helloFn := func(write func(interface{})) {
 		write(locationData{
 			Code: geoService.GetCountry(time.Second * 30),

@@ -50,35 +50,35 @@ func (i *mockImpl) Reconfigure(p Publisher, opts ConfigOpts) {
 
 func TestRegister(t *testing.T) {
 	registry := NewRegistry()
-	_, err := registry.Register(New1, nil, true, []Type{serviceType2})
+	_, _, err := registry.Register(New1, nil, true, []Type{serviceType2})
 	assert.Error(t, err,
 		"should not register if any of the dependencies is not found")
 	registry.MustRegister(New1, nil, true, nil)
 	registry.MustRegister(New2, nil, true, []Type{serviceType1})
-	_, err = registry.Register(New2, nil, true, nil)
+	_, _, err = registry.Register(New2, nil, true, nil)
 	assert.Error(t, err, "each service should be registered only once")
-	s1 := registry.MustLookup(serviceType1)
-	s2 := registry.MustLookup(serviceType2)
+	_, i1 := registry.MustLookup(serviceType1)
+	_, i2 := registry.MustLookup(serviceType2)
 	registry.StartAll()
-	assert.True(t, s1.GetImpl().(*mockImpl).started)
-	assert.True(t, s2.GetImpl().(*mockImpl).started)
+	assert.True(t, i1.(*mockImpl).started)
+	assert.True(t, i2.(*mockImpl).started)
 	registry.StopAll()
-	assert.False(t, s1.GetImpl().(*mockImpl).started)
-	assert.False(t, s2.GetImpl().(*mockImpl).started)
-	assert.True(t, s1.GetImpl().(*mockImpl).stopped)
-	assert.True(t, s2.GetImpl().(*mockImpl).stopped)
+	assert.False(t, i1.(*mockImpl).started)
+	assert.False(t, i2.(*mockImpl).started)
+	assert.True(t, i1.(*mockImpl).stopped)
+	assert.True(t, i2.(*mockImpl).stopped)
 }
 
 func TestAutoStart(t *testing.T) {
 	registry := NewRegistry()
-	s1 := registry.MustRegister(New1, nil, true, nil)
-	s2 := registry.MustRegister(New2, nil, false, []Type{serviceType1})
-	s3 := registry.MustRegister(New3, nil, true, []Type{serviceType2})
+	_, i1 := registry.MustRegister(New1, nil, true, nil)
+	_, i2 := registry.MustRegister(New2, nil, false, []Type{serviceType1})
+	_, i3 := registry.MustRegister(New3, nil, true, []Type{serviceType2})
 	registry.StartAll()
-	assert.True(t, s1.GetImpl().(*mockImpl).started)
-	assert.False(t, s2.GetImpl().(*mockImpl).started,
+	assert.True(t, i1.(*mockImpl).started)
+	assert.False(t, i2.(*mockImpl).started,
 		"should not auto start if autoStart is false")
-	assert.False(t, s3.GetImpl().(*mockImpl).started,
+	assert.False(t, i3.(*mockImpl).started,
 		"should not auto start if one of the dependencies doesn't auto start")
 	registry.StopAll()
 }
@@ -115,7 +115,7 @@ func TestSubscribe(t *testing.T) {
 		return &mockWithPublisher{New1().(*mockImpl), make(chan bool)}
 	}
 	registry := NewRegistry()
-	s1, err := registry.Register(new1, nil, true, nil)
+	s1, _, err := registry.Register(new1, nil, true, nil)
 	assert.NoError(t, err)
 	ch1 := s1.Subscribe()
 	ch2 := s1.Subscribe()
@@ -144,7 +144,7 @@ func (o *mockConfigOpts) ValidConfigOptsFor(t Type) bool {
 }
 
 func TestReconfigure(t *testing.T) {
-	s1 := NewRegistry().MustRegister(New1, &mockConfigOpts{}, true, nil)
+	s1, i1 := NewRegistry().MustRegister(New1, &mockConfigOpts{}, true, nil)
 	err := s1.Reconfigure(map[string]interface{}{
 		"OptInt":      1,
 		"OptString":   "abc",
@@ -154,7 +154,7 @@ func TestReconfigure(t *testing.T) {
 		"OptStruct.B": "cde",
 	})
 	if assert.NoError(t, err) {
-		opts := s1.GetImpl().(*mockImpl).opts.(*mockConfigOpts)
+		opts := i1.(*mockImpl).opts.(*mockConfigOpts)
 		assert.Equal(t, 1, opts.OptInt)
 		assert.Equal(t, "abc", opts.OptString)
 		assert.Equal(t, true, opts.OptBool)

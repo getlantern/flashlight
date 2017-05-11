@@ -103,9 +103,9 @@ func Run(httpProxyAddr string,
 			log.Debug("Started client HTTP proxy")
 			op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
 			ops.Go(func() {
-				geoService := service.GetRegistry().MustLookup(geolookup.ServiceType)
+				geoService, geo := service.GetRegistry().MustLookup(geolookup.ServiceType)
 				onGeo := geoService.Subscribe()
-				geoService.GetImpl().(*geolookup.GeoLookup).Refresh()
+				geo.(*geolookup.GeoLookup).Refresh()
 				// wait for geo info before reporting so that we know the client ip and
 				// country
 				select {

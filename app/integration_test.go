@@ -126,9 +126,9 @@ func TestProxying(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	geoService := service.GetRegistry().MustLookup(geolookup.ServiceType)
+	geoService, geo := service.GetRegistry().MustLookup(geolookup.ServiceType)
 	onGeo := geoService.Subscribe()
-	geoService.GetImpl().(*geolookup.GeoLookup).Refresh()
+	geo.(*geolookup.GeoLookup).Refresh()
 
 	// Makes a test request
 	testRequest(t, httpAddr, httpsAddr)

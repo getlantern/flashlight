@@ -234,9 +234,9 @@ func beforeStart() bool {
 func afterStart(user UserConfig) {
 	bandwidthUpdates(user)
 	user.AfterStart()
-	geoService := service.GetRegistry().MustLookup(geolookup.ServiceType)
+	geoService, geo := service.GetRegistry().MustLookup(geolookup.ServiceType)
 	chGeoService := geoService.Subscribe()
-	lookup := geoService.GetImpl().(*geolookup.GeoLookup)
+	lookup := geo.(*geolookup.GeoLookup)
 	go func() {
 		for {
 			<-chGeoService

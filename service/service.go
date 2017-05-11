@@ -110,12 +110,12 @@ func (r *Registry) MustRegister(
 	instantiator func() Impl,
 	defaultOpts ConfigOpts,
 	autoStart bool,
-	dependencies []Type) Service {
-	service, err := r.Register(instantiator, defaultOpts, autoStart, dependencies)
+	dependencies []Type) (Service, Impl) {
+	s, i, err := r.Register(instantiator, defaultOpts, autoStart, dependencies)
 	if err != nil {
 		panic(err.Error())
 	}
-	return service
+	return s, i
 }
 
 // Register register a service. It requires:
@@ -129,45 +129,45 @@ func (r *Registry) Register(
 	instantiator func() Impl,
 	defaultOpts ConfigOpts,
 	autoStart bool,
-	dependencies []Type) (Service, error) {
+	dependencies []Type) (Service, Impl, error) {
 	instance := instantiator()
 	t := instance.GetType()
 	r.muDag.Lock()
 	defer r.muDag.Unlock()
 	if r.dag.Lookup(t) != nil {
-		return nil, fmt.Errorf("service '%s' is already registered", t)
+		return nil, nil, fmt.Errorf("service '%s' is already registered", t)
 	}
 	if defaultOpts != nil && !defaultOpts.ValidConfigOptsFor(t) {
-		return nil, fmt.Errorf("invalid default config options type for %s", t)
+		return nil, nil, fmt.Errorf("invalid default config options type for %s", t)
 	}
 	for _, d := range dependencies {
 		node := r.dag.Lookup(d)
 		if node == nil {
-			return nil, fmt.Errorf("service '%s' depends on not-registered service '%s'", t, d)
+			return nil, nil, fmt.Errorf("service '%s' depends on not-registered service '%s'", t, d)
 		}
 	}
 	r.dag.AddVertex(t, instance, defaultOpts, autoStart)
 	for _, d := range dependencies {
 		r.dag.AddEdge(d, t)
 	}
-	return service{instance, r}, nil
+	return service{instance, r}, instance, nil
 }
 
 // MustLookup returns the service reference of type t, or panics.
-func (r *Registry) MustLookup(t Type) Service {
-	if s := r.Lookup(t); s != nil {
-		return s
+func (r *Registry) MustLookup(t Type) (Service, Impl) {
+	if s, i := r.Lookup(t); s != nil {
+		return s, i
 	}
 	panic(fmt.Sprintf("service type '%s' is not registered", string(t)))
 }
 
 // Lookup returns the service reference of type t, or nil if not found.
-func (r *Registry) Lookup(t Type) Service {
+func (r *Registry) Lookup(t Type) (Service, Impl) {
 	n := r.lookup(t)
 	if n == nil {
-		return nil
+		return nil, nil
 	}
-	return service{n.instance, r}
+	return service{n.instance, r}, n.instance
 }
 
 func (r *Registry) lookup(t Type) *node {
