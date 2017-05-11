@@ -9,8 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"google.golang.org/appengine/log"
-
 	"github.com/getlantern/flashlight"
 
 	"github.com/getlantern/golog"
@@ -232,7 +230,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		app.settings.SetUIAddr(ui.GetUIAddr())
 
 		if err = app.statsTracker.StartService(); err != nil {
-			log.Errorf("Unable to serve stats to UI: %v", err)
+			app.log.Errorf("Unable to serve stats to UI: %v", err)
 		}
 
 		setupUserSignal(app.sp)
@@ -240,12 +238,12 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		pc := newProChecker(app.settings)
 		err = serveBandwidth(pc)
 		if err != nil {
-			log.Errorf("Unable to serve bandwidth to UI: %v", err)
+			app.log.Errorf("Unable to serve bandwidth to UI: %v", err)
 		}
 
 		err = serveEmailProxy(app.settings)
 		if err != nil {
-			log.Errorf("Unable to serve mandrill to UI: %v", err)
+			app.log.Errorf("Unable to serve mandrill to UI: %v", err)
 		}
 
 		// Don't block on fetching the location for the UI.
@@ -288,7 +286,7 @@ func (app *App) GetSetting(name SettingName) interface{} {
 			return app.settings.getString(name)
 		}
 	} else {
-		log.Errorf("Looking for non-existent setting? %v", name)
+		app.log.Errorf("Looking for non-existent setting? %v", name)
 	}
 
 	// should never reach here.
@@ -333,12 +331,12 @@ func (app *App) afterStart() {
 	if addr, ok := client.Addr(6 * time.Second); ok {
 		app.settings.setString(SNAddr, addr)
 	} else {
-		log.Errorf("Couldn't retrieve HTTP proxy addr in time")
+		app.log.Errorf("Couldn't retrieve HTTP proxy addr in time")
 	}
 	if socksAddr, ok := client.Socks5Addr(6 * time.Second); ok {
 		app.settings.setString(SNSOCKSAddr, socksAddr)
 	} else {
-		log.Errorf("Couldn't retrieve SOCKS proxy addr in time")
+		app.log.Errorf("Couldn't retrieve SOCKS proxy addr in time")
 	}
 }
 
@@ -389,7 +387,7 @@ func (app *App) Exit(err error) {
 }
 
 func (app *App) doExit(err error) {
-	log.Errorf("Exiting app because of %v", err)
+	app.log.Errorf("Exiting app because of %v", err)
 	defer func() {
 		app.exitCh <- err
 		app.log.Debug("Finished exiting app")
