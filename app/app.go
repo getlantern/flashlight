@@ -9,8 +9,10 @@ import (
 	"sync"
 	"time"
 
+	"google.golang.org/appengine/log"
+
 	"github.com/getlantern/flashlight"
-	"github.com/getlantern/flashlight-build-git-clone/src/github.com/getlantern/flashlight/log"
+
 	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/mtime"
@@ -178,7 +180,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			if uiaddr = app.settings.GetUIAddr(); uiaddr != "" {
 				host, port, splitErr := net.SplitHostPort(uiaddr)
 				if splitErr != nil {
-					log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
+					app.log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
 					uiaddr = ""
 				}
 				// To allow Edge to open the UI, we force the UI address to be
