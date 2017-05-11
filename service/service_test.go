@@ -145,7 +145,7 @@ func (o *mockConfigOpts) ValidConfigOptsFor(t Type) bool {
 
 func TestReconfigure(t *testing.T) {
 	s1, i1 := NewRegistry().MustRegister(New1, &mockConfigOpts{}, true, nil)
-	err := s1.Reconfigure(map[string]interface{}{
+	err := s1.Reconfigure(ConfigUpdates{
 		"OptInt":      1,
 		"OptString":   "abc",
 		"OptBool":     true,
@@ -162,4 +162,10 @@ func TestReconfigure(t *testing.T) {
 		assert.Equal(t, 1, opts.OptStruct.A)
 		assert.Equal(t, "cde", opts.OptStruct.B)
 	}
+	err = s1.Reconfigure(ConfigUpdates{"OptNotExist": 1})
+	assert.Error(t, err)
+	err = s1.Reconfigure(ConfigUpdates{"OptString": 1})
+	assert.Error(t, err)
+	err = s1.Reconfigure(ConfigUpdates{"OptNotExistStruct.C": 1})
+	assert.Error(t, err)
 }

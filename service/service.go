@@ -16,8 +16,12 @@ import (
 // level constant ServiceType with an unique string.
 type Type string
 
-// ConfigOpts represents arbitray config options passed to
+// ConfigUpdates represents arbitray config options passed to
 // Service.Reconfigure()
+type ConfigUpdates map[string]interface{}
+
+// ConfigOpts represents arbitray config options passed to
+// Impl.Reconfigure()
 type ConfigOpts interface {
 	// ValidConfigOptsFor is called by Registry to make sure passing correct
 	// options to a service.
@@ -50,7 +54,7 @@ type Service interface {
 	// `Foo.Bar`.  It returns error without doing anything if the field doesn't
 	// exist or type mismatches. It's up to the Impl to restart itself when
 	// required (service status is not affected).
-	Reconfigure(fields map[string]interface{}) error
+	Reconfigure(fields ConfigUpdates) error
 	// Subscribe gets a channel to receive any message the service published.
 	// Messages are discarded if no one is listening on the channel.
 	Subscribe() <-chan Message
@@ -110,8 +114,8 @@ func (r *Registry) MustRegister(
 	instantiator func() Impl,
 	defaultOpts ConfigOpts,
 	autoStart bool,
-	dependencies []Type) (Service, Impl) {
-	s, i, err := r.Register(instantiator, defaultOpts, autoStart, dependencies)
+	deps []Type) (Service, Impl) {
+	s, i, err := r.Register(instantiator, defaultOpts, autoStart, deps)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -129,7 +133,7 @@ func (r *Registry) Register(
 	instantiator func() Impl,
 	defaultOpts ConfigOpts,
 	autoStart bool,
-	dependencies []Type) (Service, Impl, error) {
+	deps []Type) (Service, Impl, error) {
 	instance := instantiator()
 	t := instance.GetType()
 	r.muDag.Lock()
@@ -140,15 +144,15 @@ func (r *Registry) Register(
 	if defaultOpts != nil && !defaultOpts.ValidConfigOptsFor(t) {
 		return nil, nil, fmt.Errorf("invalid default config options type for %s", t)
 	}
-	for _, d := range dependencies {
-		node := r.dag.Lookup(d)
+	for _, dt := range deps {
+		node := r.dag.Lookup(dt)
 		if node == nil {
-			return nil, nil, fmt.Errorf("service '%s' depends on not-registered service '%s'", t, d)
+			return nil, nil, fmt.Errorf("service '%s' depends on not-registered service '%s'", t, dt)
 		}
 	}
 	r.dag.AddVertex(t, instance, defaultOpts, autoStart)
-	for _, d := range dependencies {
-		r.dag.AddEdge(d, t)
+	for _, dt := range deps {
+		r.dag.AddEdge(dt, t)
 	}
 	return service{instance, r}, instance, nil
 }
@@ -234,7 +238,7 @@ func (r *Registry) stopNoLock(n *node) {
 }
 
 // TODO: enforce timeout
-func (r *Registry) reconfigure(t Type, fields map[string]interface{}) error {
+func (r *Registry) reconfigure(t Type, fields ConfigUpdates) error {
 	r.muDag.Lock()
 	defer r.muDag.Unlock()
 	n := r.dag.Lookup(t)
@@ -249,7 +253,7 @@ func (r *Registry) reconfigure(t Type, fields map[string]interface{}) error {
 	return nil
 }
 
-func (r *Registry) update(dest reflect.Value, fields map[string]interface{}) error {
+func (r *Registry) update(dest reflect.Value, fields ConfigUpdates) error {
 	srcFields := make([]reflect.Value, 0, len(fields))
 	destFields := make([]reflect.Value, 0, len(fields))
 	for k, v := range fields {
@@ -322,7 +326,7 @@ func (s service) Stop() {
 	s.r.stop(s.impl.GetType())
 }
 
-func (s service) Reconfigure(fields map[string]interface{}) error {
+func (s service) Reconfigure(fields ConfigUpdates) error {
 	return s.r.reconfigure(s.impl.GetType(), fields)
 }
 
