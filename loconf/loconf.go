@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/getlantern/errors"
@@ -113,20 +114,42 @@ func parse(buf []byte) (*LoConf, error) {
 		log.Errorf("Could not parse JSON %v", ejson)
 		return nil, errors.New("error parsing loconf section: %v", ejson)
 	}
+
+	// Normalize all keys to lowercase.
+	for k, v := range obj.UninstallSurveys {
+		delete(obj.UninstallSurveys, k)
+		obj.UninstallSurveys[strings.ToLower(k)] = v
+	}
+	for k, v := range obj.Surveys {
+		delete(obj.Surveys, k)
+		obj.Surveys[strings.ToLower(k)] = v
+	}
+
+	for k, v := range obj.Announcements {
+		delete(obj.Announcements, k)
+		obj.Announcements[strings.ToLower(k)] = v
+	}
+
 	return &obj, nil
 }
 
 // GetSurvey returns the uninstall survey for the specified locale and
-// pro state, or an error if no match exists.
-func (lc *LoConf) GetSurvey(locale string) (*Survey, bool) {
-	val, ok := lc.Surveys[locale]
+// country or nil and false if no match exists.
+func (lc *LoConf) GetSurvey(locale, country string) (*Survey, bool) {
+	if val, ok := lc.Surveys[strings.ToLower(country)]; ok {
+		return val, ok
+	}
+	val, ok := lc.Surveys[strings.ToLower(locale)]
 	return val, ok
 }
 
-// GetUninstallSurvey returns the uninstall survey for the specified locale and
-// pro state, or an error if no match exists.
-func (lc *LoConf) GetUninstallSurvey(locale string) (*UninstallSurvey, bool) {
-	val, ok := lc.UninstallSurveys[locale]
+// GetUninstallSurvey  returns the uninstall survey for the specified locale and
+// country or nil and false if no match exists.
+func (lc *LoConf) GetUninstallSurvey(locale, country string) (*UninstallSurvey, bool) {
+	if val, ok := lc.UninstallSurveys[strings.ToLower(country)]; ok {
+		return val, ok
+	}
+	val, ok := lc.UninstallSurveys[strings.ToLower(locale)]
 	return val, ok
 }
 
@@ -136,7 +159,7 @@ func (lc *LoConf) GetAnnouncement(locale string, isPro bool) (*Announcement, err
 	if len(lc.Announcements) == 0 {
 		return nil, errors.New("no announcement section")
 	}
-	section, exist := lc.Announcements[locale]
+	section, exist := lc.Announcements[strings.ToLower(locale)]
 	if !exist {
 		defaultField, hasDefault := lc.Announcements["default"]
 		if !hasDefault {
@@ -149,7 +172,7 @@ func (lc *LoConf) GetAnnouncement(locale string, isPro bool) (*Announcement, err
 		if defaultLocale == "" {
 			return nil, ErrNoAvailable
 		}
-		if section, exist = lc.Announcements[defaultLocale]; !exist {
+		if section, exist = lc.Announcements[strings.ToLower(defaultLocale)]; !exist {
 			return nil, errors.New("no announcement for either %s or %s", locale, defaultLocale)
 		}
 		locale = defaultLocale
