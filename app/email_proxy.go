@@ -52,7 +52,7 @@ var (
 // as an out-of-band channel when Lantern doesn't work well, say, when user
 // wants to report an issue.
 func serveEmailProxy(settings *Settings) error {
-	ep := &emailProxy{log: golog.LoggerFor("email-proxy"), settings: settings}
+	ep := &emailProxy{log: golog.LoggerFor("flashlight.app.email-proxy"), settings: settings}
 	service, err := ws.RegisterWithMsgInitializer("email-proxy", nil,
 		func() interface{} { return &mandrillMessage{} })
 	if err != nil {

@@ -49,7 +49,7 @@ const (
 
 var (
 	useOBFS4 = uint32(0)
-	testlog  = golog.LoggerFor("integration-test")
+	testlog  = golog.LoggerFor("flashlight.app.integration-test")
 )
 
 func TestProxying(t *testing.T) {

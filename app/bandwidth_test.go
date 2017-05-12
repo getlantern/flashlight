@@ -9,7 +9,7 @@ import (
 )
 
 func TestPercents(t *testing.T) {
-	ns := notifyStatus{log: golog.LoggerFor("bandwidth-test")}
+	ns := notifyStatus{log: golog.LoggerFor("flashlight.app.bandwidth-test")}
 
 	quota := &bandwidth.Quota{
 		MiBAllowed: 1000,

@@ -13,7 +13,7 @@ type locationData struct {
 }
 
 func serveLocation() {
-	log := golog.LoggerFor("app.geolookup")
+	log := golog.LoggerFor("flashlight.app.geolookup")
 	helloFn := func(write func(interface{})) {
 		write(locationData{
 			Code: geolookup.GetCountry(time.Second * 30),

@@ -174,7 +174,7 @@ func newSettings(filePath string) *Settings {
 		},
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
-		log:             golog.LoggerFor("app.settings"),
+		log:             golog.LoggerFor("flashlight.app.settings"),
 	}
 }
 

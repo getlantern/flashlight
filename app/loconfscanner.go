@@ -28,7 +28,7 @@ import (
 // Returns a function to stop the loop.
 func LoconfScanner(interval time.Duration, proChecker func() (bool, bool), settings loconfSettings) (stop func()) {
 	loc := &loconfer{
-		log:      golog.LoggerFor("loconfer"),
+		log:      golog.LoggerFor("flashlight.app.loconfer"),
 		r:        rand.New(rand.NewSource(time.Now().UnixNano())),
 		settings: settings,
 	}

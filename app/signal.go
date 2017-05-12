@@ -17,7 +17,7 @@ type UserSignal struct {
 var userSignal UserSignal
 
 func setupUserSignal(sp *systemproxy) {
-	userSignal.log = golog.LoggerFor("app.usersignal")
+	userSignal.log = golog.LoggerFor("flashlight.app.usersignal")
 	userSignal.sp = sp
 	userSignal.once.Do(func() {
 		err := userSignal.start()

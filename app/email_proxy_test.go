@@ -24,7 +24,7 @@ func TestReadResponses(t *testing.T) {
 	statuses := []string{
 		"sent", "queued", "scheduled", "rejected", "invalid",
 	}
-	ep := &emailProxy{log: golog.LoggerFor("email-proxy")}
+	ep := &emailProxy{log: golog.LoggerFor("flashlight.app.email-proxy")}
 
 	for _, status := range statuses {
 		var responses []*mandrill.Response

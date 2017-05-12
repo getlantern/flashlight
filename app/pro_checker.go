@@ -19,7 +19,7 @@ type proChecker struct {
 
 // newProChecker creates a new pro checker with the specified settings.
 func newProChecker(settings *Settings) ProChecker {
-	return &proChecker{settings: settings, log: golog.LoggerFor("pro-checker")}
+	return &proChecker{settings: settings, log: golog.LoggerFor("flashlight.app.pro-checker")}
 }
 
 // IsProUser blocks itself to check if current user is Pro, or !ok if error

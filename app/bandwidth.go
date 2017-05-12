@@ -30,7 +30,7 @@ type notifyStatus struct {
 }
 
 func serveBandwidth(proChecker ProChecker) error {
-	logger := golog.LoggerFor("app.bandwidth")
+	logger := golog.LoggerFor("flashlight.app.bandwidth")
 	ns := notifyStatus{log: logger, pro: proChecker}
 	helloFn := func(write func(interface{})) {
 		logger.Debugf("Sending current bandwidth quota to new client")

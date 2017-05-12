@@ -14,12 +14,11 @@ import (
 
 func TestWriteURL(t *testing.T) {
 	loc := &loconfer{
-		log: golog.LoggerFor("loconfer"),
+		log: golog.LoggerFor("flashlight.app.loconfer"),
 		r:   rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 	testURL := "https://testtesttest"
 	us := &loconf.UninstallSurvey{
-		//log: golog.LoggerFor("loconfer"),
 		URL:         testURL,
 		Probability: 1.0,
 		Pro:         true,
@@ -51,7 +50,7 @@ func (s *set) setStringArray(name SettingName, vals interface{}) {
 }
 
 func TestParsing(t *testing.T) {
-	logger := golog.LoggerFor("loconfloop-test")
+	logger := golog.LoggerFor("flashlight.app.loconfloop-test")
 	settings := &set{}
 	stop := LoconfScanner(4*time.Hour, func() (bool, bool) {
 		return true, false
@@ -64,7 +63,7 @@ func TestParsing(t *testing.T) {
 	stop()
 
 	loc := &loconfer{
-		log: golog.LoggerFor("loconfer"),
+		log: golog.LoggerFor("flashlight.app.loconfer-test"),
 	}
 
 	loc.scan(4*time.Hour, func() (bool, bool) {

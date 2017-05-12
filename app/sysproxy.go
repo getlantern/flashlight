@@ -23,7 +23,7 @@ type systemproxy struct {
 
 // newSystemProxy creates a new systemproxy
 func newSystemProxy() *systemproxy {
-	return &systemproxy{log: golog.LoggerFor("app.sysproxy")}
+	return &systemproxy{log: golog.LoggerFor("flashlight.app.sysproxy")}
 }
 
 func (sp *systemproxy) setUpSysproxyTool() error {

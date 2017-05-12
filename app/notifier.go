@@ -12,7 +12,7 @@ type notifierRequest struct {
 	chResult chan bool
 }
 
-var ch chan notifierRequest = make(chan notifierRequest)
+var ch = make(chan notifierRequest)
 
 // showNotification submits the notification to the notificationsLoop to show
 // and waits for the result.
@@ -32,7 +32,7 @@ func showNotification(note *notify.Notification) bool {
 //
 // Returns a function to stop the loop.
 func notificationsLoop() (stop func()) {
-	log := golog.LoggerFor("app.notifications")
+	log := golog.LoggerFor("flashlight.app.notifications")
 	notifier := notify.NewNotifications()
 	// buffered channel to avoid blocking stop() when goroutine is sleeping
 	chStop := make(chan bool, 1)
