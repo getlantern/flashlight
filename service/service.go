@@ -1,6 +1,7 @@
 // Package service provides mechanism and interfaces to declare, register,
 // lookup, and manage the lifecycle of a group of services, i.e., long-running
 // tasks.
+//
 package service
 
 import (
@@ -16,20 +17,20 @@ import (
 // level constant ServiceType with an unique string.
 type Type string
 
-// ConfigUpdates represents arbitray config options passed to
-// Service.Reconfigure()
+// ConfigUpdates represents a portion of the config options of a service. See
+// Service.Reconfigure() for details.
 type ConfigUpdates map[string]interface{}
 
-// ConfigOpts represents arbitray config options passed to
-// Impl.Reconfigure()
+// ConfigOpts represents all of the config options required to start a service.
 type ConfigOpts interface {
-	// ValidConfigOptsFor is called by Registry to make sure passing correct
-	// options to a service.
+	// ValidConfigOptsFor is called by Registry to check if the opts is for the
+	// specific service and complete to start the service.
 	ValidConfigOptsFor(t Type) bool
 }
 
-// Message is what Service.Subscribe(). service Implementations call
-// Publisher.Publish to broadcast the message to all subscribers.
+// Message represents anything a service wants to update with the rest of the
+// world. Call Service.Subscribe() for any messages. service implementations
+// call Publisher.Publish to broadcast the message to all subscribers.
 type Message interface {
 	// ValidMessageFrom is called by Registry to make sure the message is
 	// received from the correct service.
@@ -39,15 +40,18 @@ type Message interface {
 // Service is the reference to a service. The only way to obtain such a
 // reference is by calling Registry.Lookup().
 type Service interface {
-	// Start configure a service with current effective config options and
-	// starts the service.  Starting an already started service is a noop.
-	Start()
+	// Start checks if the effective config options is valid, reconfigure the
+	// service with it and starts the service.  It returns if the service is
+	// currently started.  Starting an already started service is a noop and
+	// returns true.
+	Start() bool
 	// Started returns true if service is started, false otherwise.
 	Started() bool
 	// Stop stops a started service. Stopping an unstarted service is a noop.
 	Stop()
-	// Reconfigure updates part of the effective config options and calls
-	// Reconfigure() of the Impl.
+	// Reconfigure updates part of the effective config options. If the option
+	// is valid, it calls Reconfigure() of the Impl and start the service if
+	// not already started.
 	//
 	// The key of the map is the full path to the field to update, e.g., to
 	// update `Bar` in `struct Opts { Foo: struct { Bar int } }`, key should be
@@ -105,11 +109,12 @@ func NewRegistry() *Registry {
 	}
 }
 
+// GetRegistry gets the singleton registry
 func GetRegistry() *Registry {
 	return singleton
 }
 
-// MustRegister panics if fail to register the service.
+// MustRegister is same as Register but panics if fail to register the service.
 func (r *Registry) MustRegister(
 	instantiator func() Impl,
 	defaultOpts ConfigOpts,
@@ -134,6 +139,7 @@ func (r *Registry) Register(
 	defaultOpts ConfigOpts,
 	autoStart bool,
 	deps []Type) (Service, Impl, error) {
+
 	instance := instantiator()
 	t := instance.GetType()
 	r.muDag.Lock()
@@ -198,18 +204,23 @@ func (r *Registry) started(t Type) bool {
 	return n.started
 }
 
-func (r *Registry) start(t Type) {
+func (r *Registry) start(t Type) bool {
+	r.muDag.RLock()
+	defer r.muDag.RUnlock()
 	n := r.dag.Lookup(t)
-	r.startNoLock(n)
+	return r.startNoLock(n)
 }
 
 // TODO: enforce timeout
-func (r *Registry) startNoLock(n *node) {
+func (r *Registry) startNoLock(n *node) bool {
 	if !n.started {
-		n.instance.Reconfigure(publisher{n.t, r}, n.opts)
-		n.instance.Start()
-		n.started = true
+		if n.opts == nil || n.opts.ValidConfigOptsFor(n.t) {
+			n.instance.Reconfigure(publisher{n.t, r}, n.opts)
+			n.instance.Start()
+			n.started = true
+		}
 	}
+	return n.started
 }
 
 func (r *Registry) StopAll() {
@@ -249,7 +260,7 @@ func (r *Registry) reconfigure(t Type, fields ConfigUpdates) error {
 	if err := r.update(dest, fields); err != nil {
 		return err
 	}
-	n.instance.Reconfigure(publisher{t, r}, n.opts)
+	r.startNoLock(n)
 	return nil
 }
 
@@ -314,8 +325,8 @@ type service struct {
 	r    *Registry
 }
 
-func (s service) Start() {
-	s.r.start(s.impl.GetType())
+func (s service) Start() bool {
+	return s.r.start(s.impl.GetType())
 }
 
 func (s service) Started() bool {
