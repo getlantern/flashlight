@@ -3,7 +3,12 @@ package app
 import (
 	"time"
 
+	"github.com/getlantern/i18n"
 	"github.com/getlantern/notifier"
+)
+
+const (
+	notificationTimeout = 15 * time.Second
 )
 
 type notifierRequest struct {
@@ -39,13 +44,16 @@ func notificationsLoop() (stop func()) {
 		for {
 			select {
 			case n := <-ch:
+				n.note.Sender = "com.getlantern.lantern"
+				n.note.AutoDismissAfter = notificationTimeout
+				n.note.ClickLabel = i18n.T("BACKEND_CLICK_LABEL")
 				if err := notifier.Notify(n.note); err != nil {
 					log.Errorf("Could not notify? %v", err)
 					n.chResult <- false
 				} else {
 					n.chResult <- true
 				}
-				time.Sleep(10 * time.Second)
+				time.Sleep(notificationTimeout)
 			case <-chStop:
 				return
 			}
