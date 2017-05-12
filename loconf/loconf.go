@@ -116,19 +116,23 @@ func parse(buf []byte) (*LoConf, error) {
 	}
 
 	// Normalize all keys to lowercase.
+	us := make(map[string]*UninstallSurvey)
 	for k, v := range obj.UninstallSurveys {
-		delete(obj.UninstallSurveys, k)
-		obj.UninstallSurveys[strings.ToLower(k)] = v
+		us[strings.ToLower(k)] = v
 	}
-	for k, v := range obj.Surveys {
-		delete(obj.Surveys, k)
-		obj.Surveys[strings.ToLower(k)] = v
-	}
+	obj.UninstallSurveys = us
 
-	for k, v := range obj.Announcements {
-		delete(obj.Announcements, k)
-		obj.Announcements[strings.ToLower(k)] = v
+	surveys := make(map[string]*Survey)
+	for k, v := range obj.Surveys {
+		surveys[strings.ToLower(k)] = v
 	}
+	obj.Surveys = surveys
+
+	ann := make(map[string]json.RawMessage)
+	for k, v := range obj.Announcements {
+		ann[strings.ToLower(k)] = v
+	}
+	obj.Announcements = ann
 
 	return &obj, nil
 }
