@@ -59,8 +59,8 @@ func TestEmailProxy(t *testing.T) {
 	// messages sent to client. Filter mandrill specific message to verify. If
 	// there's no such message, the test hangs as an indication. Same below.
 	for {
-		_, p, errr := conn.ReadMessage()
-		assert.NoError(t, errr, "should read from ws")
+		_, p, readErr := conn.ReadMessage()
+		assert.NoError(t, readErr, "should read from ws")
 		if bytes.Contains(p, []byte("email-proxy")) {
 			assert.Equal(t, `{"type":"email-proxy","message":"success"}`, string(p))
 			break
