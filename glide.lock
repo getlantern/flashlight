@@ -186,7 +186,7 @@ imports:
 - name: github.com/getlantern/netx
   version: c704f69db48c8406d722f6e9ea9b0ad266975fe6
 - name: github.com/getlantern/notifier
-  version: f828554b1b2713333c3497aea606794863555d07
+  version: ec5ce3f631be162c0cb3c05383261983b2dbd1a5
   subpackages:
   - osx
   - win
