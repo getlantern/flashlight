@@ -139,22 +139,22 @@ func parse(buf []byte) (*LoConf, error) {
 
 // GetSurvey returns the uninstall survey for the specified locale and
 // country or nil and false if no match exists.
-func (lc *LoConf) GetSurvey(locale, country string) (*Survey, bool) {
-	if val, ok := lc.Surveys[strings.ToLower(country)]; ok {
-		return val, ok
+func (lc *LoConf) GetSurvey(locale, country string) *Survey {
+	if val, ok := lc.Surveys[strings.ToLower(country)]; ok && val != nil {
+		return val
 	}
-	val, ok := lc.Surveys[strings.ToLower(locale)]
-	return val, ok
+	val, _ := lc.Surveys[strings.ToLower(locale)]
+	return val
 }
 
 // GetUninstallSurvey  returns the uninstall survey for the specified locale and
 // country or nil and false if no match exists.
-func (lc *LoConf) GetUninstallSurvey(locale, country string) (*UninstallSurvey, bool) {
-	if val, ok := lc.UninstallSurveys[strings.ToLower(country)]; ok {
-		return val, ok
+func (lc *LoConf) GetUninstallSurvey(locale, country string) *UninstallSurvey {
+	if val, ok := lc.UninstallSurveys[strings.ToLower(country)]; ok && val != nil {
+		return val
 	}
-	val, ok := lc.UninstallSurveys[strings.ToLower(locale)]
-	return val, ok
+	val, _ := lc.UninstallSurveys[strings.ToLower(locale)]
+	return val
 }
 
 // GetAnnouncement returns the announcement for the specified locale, pro, etc

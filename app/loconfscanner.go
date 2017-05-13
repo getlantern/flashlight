@@ -94,8 +94,8 @@ func (loc *loconfer) setUninstallURL(lc *loconf.LoConf, isPro bool) {
 		loc.log.Errorf("Could not get config path? %v", err)
 		return
 	}
-	survey, ok := lc.GetUninstallSurvey(settings.GetLanguage(), geolookup.GetCountry(time.Second*30))
-	if !ok {
+	survey := lc.GetUninstallSurvey(settings.GetLanguage(), geolookup.GetCountry(time.Second*30))
+	if survey == nil {
 		loc.log.Debugf("No available uninstall survey")
 		return
 	}
