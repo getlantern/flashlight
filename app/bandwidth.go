@@ -12,6 +12,7 @@ import (
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/notifier"
 
+	"github.com/getlantern/flashlight/app/notifier"
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
 )
@@ -126,5 +127,5 @@ func (s *notifyStatus) notifyFreeUser(title, msg string) {
 		ClickURL: clickURL,
 		IconURL:  logo,
 	}
-	_ = showNotification(note)
+	_ = notifier.ShowNotification(note)
 }

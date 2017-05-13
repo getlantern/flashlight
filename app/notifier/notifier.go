@@ -1,4 +1,4 @@
-package app
+package notifier
 
 import (
 	"time"
@@ -19,9 +19,9 @@ type notifierRequest struct {
 
 var ch = make(chan notifierRequest)
 
-// showNotification submits the notification to the notificationsLoop to show
+// ShowNotification submits the notification to the notificationsLoop to show
 // and waits for the result.
-func showNotification(note *notify.Notification) bool {
+func ShowNotification(note *notify.Notification) bool {
 	chResult := make(chan bool)
 	ch <- notifierRequest{
 		note,
@@ -32,17 +32,17 @@ func showNotification(note *notify.Notification) bool {
 
 }
 
-// notificationsLoop starts a goroutine to show the desktop notifications
+// NotificationsLoop starts a goroutine to show the desktop notifications
 // submitted by showNotification one by one with a minimum 10 seconds interval.
 //
 // Returns a function to stop the loop.
-func notificationsLoop() (stop func()) {
+func NotificationsLoop() (stop func()) {
 	log := golog.LoggerFor("flashlight.app.notifications")
 	notifier := notify.NewNotifications()
 	// buffered channel to avoid blocking stop() when goroutine is sleeping
 	chStop := make(chan bool, 1)
-	stop = func() { chStop <- true }
 	go func() {
+		defer close(ch)
 		for {
 			select {
 			case n := <-ch:
@@ -57,9 +57,14 @@ func notificationsLoop() (stop func()) {
 				}
 				time.Sleep(notificationTimeout)
 			case <-chStop:
+				log.Debug("Got val")
 				return
 			}
 		}
 	}()
-	return
+	return func() {
+		log.Debugf("Stopping")
+		//chStop <- true
+		close(chStop)
+	}
 }

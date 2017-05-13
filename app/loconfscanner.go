@@ -9,6 +9,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/notifier"
 
+	"github.com/getlantern/flashlight/app/notifier"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/loconf"
@@ -163,5 +164,5 @@ func (loc *loconfer) showAnnouncement(a *loconf.Announcement) bool {
 		ClickURL: a.URL,
 		IconURL:  logo,
 	}
-	return showNotification(note)
+	return notifier.ShowNotification(note)
 }
