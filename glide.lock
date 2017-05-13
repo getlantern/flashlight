@@ -1,5 +1,5 @@
 hash: 7f4e9dbab945a57f1c93bbd0bc394b57e659ce9ce6727621fa4bd5348ef78a5c
-updated: 2017-05-08T16:07:14.553441982-07:00
+updated: 2017-05-10T16:21:56.238638618-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a6aba3a6314be3a8ef518d5d4269a8459af9c789
@@ -68,7 +68,7 @@ imports:
 - name: github.com/getlantern/bytemap
   version: 807aefefeb0978ae9572ddfe7ec99b68f3da03e2
 - name: github.com/getlantern/checkfallbacks
-  version: 3771f22d1efad67c0f2f4f65ecd8aa1bd738d55f
+  version: aa43618fc9b46877c242ac9518f2bae928bf9678
 - name: github.com/getlantern/connpool
   version: d04ff90bba7bdee0d9627a687b79fb0cb407d001
 - name: github.com/getlantern/context
@@ -138,7 +138,7 @@ imports:
   - server
   - utils
 - name: github.com/getlantern/http-proxy-lantern
-  version: ac883ac5b7cb8320f9b546db6ad04e0c02b6c611
+  version: dadc5a34e0853414f514ce871457b541064940ec
   subpackages:
   - analytics
   - bbr
@@ -186,7 +186,7 @@ imports:
 - name: github.com/getlantern/netx
   version: c704f69db48c8406d722f6e9ea9b0ad266975fe6
 - name: github.com/getlantern/notifier
-  version: f828554b1b2713333c3497aea606794863555d07
+  version: ec5ce3f631be162c0cb3c05383261983b2dbd1a5
   subpackages:
   - osx
   - win
@@ -219,9 +219,9 @@ imports:
 - name: github.com/getlantern/stack
   version: 02f928aad224fbccd50d66edd776fc9d1e9f2f2b
 - name: github.com/getlantern/sysproxy
-  version: 59c45cb6b3c35ed3ac4a410b4f9c16ab764d3a5a
+  version: 0d64245fcb63e0d65c5844fa8e17c57d53469f59
 - name: github.com/getlantern/systray
-  version: cdae0bdf2aeae3ffb5ffe0cd2e2f83443ca9d104
+  version: 0068f6ae40ea39bfd683043e8452024097fff0e4
 - name: github.com/getlantern/tarfs
   version: d77b63c04dbe74646c5f8f46c5c1e5523ef22415
 - name: github.com/getlantern/tlsdefaults
@@ -270,7 +270,7 @@ imports:
   subpackages:
   - gomock
 - name: github.com/golang/protobuf
-  version: 18c9bb3261723cd5401db4d0c9fbc5c3b6c70fe8
+  version: b50ceb1fa9818fa4d78b016c2d4ae025593a7ce3
   subpackages:
   - proto
   - ptypes/any
@@ -291,7 +291,7 @@ imports:
 - name: github.com/inconshreveable/go-vhost
   version: 06d84117953b22058c096b49a429ebd4f3d3d97b
 - name: github.com/kardianos/osext
-  version: 9d302b58e975387d0b4d9be876622c86cefe64be
+  version: ae77be60afb1dcacde03767a8c37337fad28ac14
 - name: github.com/keighl/mandrill
   version: 5d7133fb578a9504f8ab549737c993422f65a000
 - name: github.com/klauspost/cpuid
@@ -321,7 +321,7 @@ imports:
   subpackages:
   - flowrate
 - name: github.com/openconfig/reference
-  version: 3120b719554db3ee8cc02017517582e59e2fc3f0
+  version: aabdb1a46895913dc1ca130151b91ddddc6a9b74
   subpackages:
   - rpc/gnmi
   - rpc/openconfig
@@ -408,7 +408,7 @@ imports:
   - poly1305
   - salsa20/salsa
 - name: golang.org/x/net
-  version: feeb485667d1fdabe727840fe00adc22431bc86e
+  version: c9b681d35165f1995d6f3034e61f8761d4b90c99
   repo: https://github.com/golang/net
   vcs: git
   subpackages:
@@ -425,7 +425,7 @@ imports:
   - proxy
   - trace
 - name: golang.org/x/oauth2
-  version: e7a48207996f497ea86f5736d08d99d45c0b6461
+  version: ad516a297a9f2a74ecc244861b298c94bdd28b9d
   subpackages:
   - google
   - jwt
@@ -462,7 +462,7 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: ffa4ec7da24e8f4ee690d9aad2afad973e721d7b
+  version: 4013f8d559720d4d0087cca0a3f18e0fdf25093d
   subpackages:
   - codes
   - credentials
@@ -523,7 +523,7 @@ testImports:
   subpackages:
   - mat64
 - name: github.com/gonum/stat
-  version: cd3537419d189410d273f890c4e8950c64b92df5
+  version: 7689386cc541c591a7cf28c5f487091756aa97b2
 - name: github.com/mikioh/netreflect
   version: ed3bfaafd83195ce61f274eec0bd97aebbb7c3be
 - name: github.com/mikioh/tcp
