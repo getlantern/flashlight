@@ -29,6 +29,8 @@ import (
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
+
+	"github.com/getlantern/flashlight/app/location"
 )
 
 var (
@@ -253,11 +255,19 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		service.GetRegistry().MustRegister(
 			analytics.New,
 			&analytics.ConfigOpts{DeviceID: settings.GetDeviceID(), Version: common.Version, Enabled: settings.IsAutoReport()},
-			false, // either true or false should be ok as the ConfigOpts won't be valid until reconfigured with IP
+			true, // either true or false should be ok as the ConfigOpts won't be valid until reconfigured with IP
 			service.Deps{geolookup.ServiceType: func(m service.Message, self service.Service) {
 				info := m.(*geolookup.GeoInfo)
 				self.Reconfigure(
 					map[string]interface{}{"IP": info.GetIP()})
+			}})
+		service.GetRegistry().MustRegister(
+			location.New,
+			&location.ConfigOpts{},
+			true,
+			service.Deps{geolookup.ServiceType: func(m service.Message, self service.Service) {
+				info := m.(*geolookup.GeoInfo)
+				self.Reconfigure(map[string]interface{}{"Code": info.GetCountry()})
 			}})
 
 		chGeoService := geoService.Subscribe()
@@ -270,10 +280,8 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 				ops.SetGlobal("client_ip", ip)
 			}
 		}()
-		service.GetRegistry().StartAll()
 
-		// Don't block on fetching the location for the UI.
-		go serveLocation()
+		service.GetRegistry().StartAll()
 
 		app.AddExitFunc(LoconfScanner(4*time.Hour, isProUser))
 		app.AddExitFunc(notificationsLoop())
