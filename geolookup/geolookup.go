@@ -27,13 +27,21 @@ var (
 	geoService  *GeoLookup
 )
 
-type geoInfo struct {
+type GeoInfo struct {
 	ip   string
 	city *geo.City
 }
 
-func (i *geoInfo) ValidMessageFrom(t service.Type) bool {
+func (i *GeoInfo) ValidMessageFrom(t service.Type) bool {
 	return t == ServiceType
+}
+
+func (i *GeoInfo) GetIP() string {
+	return i.ip
+}
+
+func (i *GeoInfo) GetCountry() string {
+	return i.city.Country.IsoCode
 }
 
 // GeoLookup satisfies the service.Impl interface
@@ -78,7 +86,7 @@ func (s *GeoLookup) GetIP(timeout time.Duration) string {
 	if !ok || gi == nil {
 		return ""
 	}
-	return gi.(*geoInfo).ip
+	return gi.(*GeoInfo).ip
 }
 
 // GetCountry gets the country. If the country hasn't been determined yet, waits
@@ -88,7 +96,7 @@ func (s *GeoLookup) GetCountry(timeout time.Duration) string {
 	if !ok || gi == nil {
 		return ""
 	}
-	return gi.(*geoInfo).city.Country.IsoCode
+	return gi.(*GeoInfo).city.Country.IsoCode
 }
 
 func (s *GeoLookup) Refresh() {
@@ -103,7 +111,7 @@ func (s *GeoLookup) loop() {
 			current, ok := s.gi.Get(0)
 			if !ok || current == nil {
 			}
-			if ok && current != nil && gi.ip == current.(*geoInfo).ip {
+			if ok && current != nil && gi.ip == current.(*GeoInfo).ip {
 				log.Debug("public IP doesn't change, not update")
 				continue
 			}
@@ -115,7 +123,7 @@ func (s *GeoLookup) loop() {
 	}
 }
 
-func lookup() *geoInfo {
+func lookup() *GeoInfo {
 	consecutiveFailures := 0
 
 	for {
@@ -135,7 +143,7 @@ func lookup() *geoInfo {
 	}
 }
 
-func doLookup() (*geoInfo, error) {
+func doLookup() (*GeoInfo, error) {
 	op := ops.Begin("geolookup")
 	defer op.End()
 	city, ip, err := geo.LookupIP("", proxied.ParallelPreferChained())
@@ -144,5 +152,5 @@ func doLookup() (*geoInfo, error) {
 		log.Errorf("Could not lookup IP %v", err)
 		return nil, op.FailIf(err)
 	}
-	return &geoInfo{ip, city}, nil
+	return &GeoInfo{ip, city}, nil
 }

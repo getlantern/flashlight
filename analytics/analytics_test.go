@@ -21,6 +21,7 @@ func TestAnalytics(t *testing.T) {
 		"1",
 		"2.2.0",
 		"127.0.0.1",
+		true,
 	})
 	// override for test purpose
 	service.transport = func(args string) {

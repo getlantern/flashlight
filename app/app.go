@@ -244,32 +244,30 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			log.Errorf("Unable to serve mandrill to UI: %v", err)
 		}
 
-		geoService, geo := service.GetRegistry().MustRegister(
+		geoService, _ := service.GetRegistry().MustRegister(
 			geolookup.New,
 			nil, // no ConfigOpts for geolookup
 			true,
 			nil)
-		analyticsService, _ := service.GetRegistry().MustRegister(
+
+		service.GetRegistry().MustRegister(
 			analytics.New,
-			&analytics.ConfigOpts{DeviceID: settings.GetDeviceID(), Version: common.Version},
-			false, /* not auto start as it requires geolookup*/
-			[]service.Type{geolookup.ServiceType})
+			&analytics.ConfigOpts{DeviceID: settings.GetDeviceID(), Version: common.Version, Enabled: settings.IsAutoReport()},
+			false, // either true or false should be ok as the ConfigOpts won't be valid until reconfigured with IP
+			service.Deps{geolookup.ServiceType: func(m service.Message, self service.Service) {
+				info := m.(*geolookup.GeoInfo)
+				self.Reconfigure(
+					map[string]interface{}{"IP": info.GetIP()})
+			}})
 
+		chGeoService := geoService.Subscribe()
 		go func() {
-			chGeoService := geoService.Subscribe()
-			lookup := geo.(*geolookup.GeoLookup)
-			for {
-				<-chGeoService
-				shortcut.Configure(lookup.GetCountry(0))
-				analyticsService.Reconfigure(map[string]interface{}{"IP": lookup.GetIP(0)})
-				if settings.IsAutoReport() {
-					analyticsService.Start()
-				} else {
-					analyticsService.Stop()
-				}
-				ops.SetGlobal("geo_country", lookup.GetCountry(0))
-				ops.SetGlobal("client_ip", lookup.GetIP(0))
-
+			for m := range chGeoService {
+				info := m.(*geolookup.GeoInfo)
+				ip, country := info.GetIP(), info.GetCountry()
+				shortcut.Configure(country)
+				ops.SetGlobal("geo_country", country)
+				ops.SetGlobal("client_ip", ip)
 			}
 		}()
 		service.GetRegistry().StartAll()

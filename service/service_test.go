@@ -50,11 +50,11 @@ func (i *mockImpl) Reconfigure(p Publisher, opts ConfigOpts) {
 
 func TestRegister(t *testing.T) {
 	registry := NewRegistry()
-	_, _, err := registry.Register(New1, nil, true, []Type{serviceType2})
+	_, _, err := registry.Register(New1, nil, true, Deps{serviceType2: nil})
 	assert.Error(t, err,
 		"should not register if any of the dependencies is not found")
 	registry.MustRegister(New1, nil, true, nil)
-	registry.MustRegister(New2, nil, true, []Type{serviceType1})
+	registry.MustRegister(New2, nil, true, Deps{serviceType1: nil})
 	_, _, err = registry.Register(New2, nil, true, nil)
 	assert.Error(t, err, "each service should be registered only once")
 	_, i1 := registry.MustLookup(serviceType1)
@@ -72,8 +72,8 @@ func TestRegister(t *testing.T) {
 func TestAutoStart(t *testing.T) {
 	registry := NewRegistry()
 	_, i1 := registry.MustRegister(New1, nil, true, nil)
-	_, i2 := registry.MustRegister(New2, nil, false, []Type{serviceType1})
-	_, i3 := registry.MustRegister(New3, nil, true, []Type{serviceType2})
+	_, i2 := registry.MustRegister(New2, nil, false, Deps{serviceType1: nil})
+	_, i3 := registry.MustRegister(New3, nil, true, Deps{serviceType2: nil})
 	registry.StartAll()
 	assert.True(t, i1.(*mockImpl).started)
 	assert.False(t, i2.(*mockImpl).started,
@@ -139,8 +139,12 @@ type mockConfigOpts struct {
 	}
 }
 
-func (o *mockConfigOpts) ValidConfigOptsFor(t Type) bool {
-	return t == serviceType1
+func (o *mockConfigOpts) For() Type {
+	return serviceType1
+}
+
+func (o *mockConfigOpts) Complete() bool {
+	return true
 }
 
 func TestReconfigure(t *testing.T) {

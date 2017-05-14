@@ -17,15 +17,21 @@ import (
 // level constant ServiceType with an unique string.
 type Type string
 
+// Deps represents the services on which one service depends, and optional
+// handler to process message from the depended service. Typically, the handler
+// reconfigure the service itself based on the message.
+type Deps map[Type]func(m Message, self Service)
+
 // ConfigUpdates represents a portion of the config options of a service. See
 // Service.Reconfigure() for details.
 type ConfigUpdates map[string]interface{}
 
 // ConfigOpts represents all of the config options required to start a service.
 type ConfigOpts interface {
-	// ValidConfigOptsFor is called by Registry to check if the opts is for the
-	// specific service and complete to start the service.
-	ValidConfigOptsFor(t Type) bool
+	// For returns the service type to which the ConfigOpts apply
+	For() Type
+	// Complete checks if the ConfigOpts is complete to start the service
+	Complete() bool
 }
 
 // Message represents anything a service wants to update with the rest of the
@@ -119,7 +125,7 @@ func (r *Registry) MustRegister(
 	instantiator func() Impl,
 	defaultOpts ConfigOpts,
 	autoStart bool,
-	deps []Type) (Service, Impl) {
+	deps Deps) (Service, Impl) {
 	s, i, err := r.Register(instantiator, defaultOpts, autoStart, deps)
 	if err != nil {
 		panic(err.Error())
@@ -138,7 +144,7 @@ func (r *Registry) Register(
 	instantiator func() Impl,
 	defaultOpts ConfigOpts,
 	autoStart bool,
-	deps []Type) (Service, Impl, error) {
+	deps Deps) (Service, Impl, error) {
 
 	instance := instantiator()
 	t := instance.GetType()
@@ -147,20 +153,29 @@ func (r *Registry) Register(
 	if r.dag.Lookup(t) != nil {
 		return nil, nil, fmt.Errorf("service '%s' is already registered", t)
 	}
-	if defaultOpts != nil && !defaultOpts.ValidConfigOptsFor(t) {
+	if defaultOpts != nil && defaultOpts.For() != t {
 		return nil, nil, fmt.Errorf("invalid default config options type for %s", t)
 	}
-	for _, dt := range deps {
+	for dt, _ := range deps {
 		node := r.dag.Lookup(dt)
 		if node == nil {
 			return nil, nil, fmt.Errorf("service '%s' depends on not-registered service '%s'", t, dt)
 		}
 	}
 	r.dag.AddVertex(t, instance, defaultOpts, autoStart)
-	for _, dt := range deps {
+	s := service{instance, r}
+	for dt, df := range deps {
 		r.dag.AddEdge(dt, t)
+		if df != nil {
+			ch := r.subscribe(dt)
+			go func() {
+				for m := range ch {
+					df(m, s)
+				}
+			}()
+		}
 	}
-	return service{instance, r}, instance, nil
+	return s, instance, nil
 }
 
 // MustLookup returns the service reference of type t, or panics.
@@ -214,7 +229,7 @@ func (r *Registry) start(t Type) bool {
 // TODO: enforce timeout
 func (r *Registry) startNoLock(n *node) bool {
 	if !n.started {
-		if n.opts == nil || n.opts.ValidConfigOptsFor(n.t) {
+		if n.opts == nil || n.opts.Complete() {
 			n.instance.Reconfigure(publisher{n.t, r}, n.opts)
 			n.instance.Start()
 			n.started = true
@@ -223,13 +238,31 @@ func (r *Registry) startNoLock(n *node) bool {
 	return n.started
 }
 
+// StopAll stops all services registered and started. It closes all channels subscribed to the services.
 func (r *Registry) StopAll() {
+	r.stopServices()
+	r.closeChannels()
+}
+
+func (r *Registry) stopServices() {
 	r.muDag.RLock()
 	defer r.muDag.RUnlock()
 	flatten := r.dag.Flatten(false)
 	// Stop in reverse order
 	for i := len(flatten) - 1; i >= 0; i-- {
 		r.stopNoLock(flatten[i])
+	}
+}
+
+func (r *Registry) closeChannels() {
+	r.muChannels.Lock()
+	allChannels := r.channels
+	r.channels = make(map[Type][]chan Message)
+	r.muChannels.Unlock()
+	for _, channels := range allChannels {
+		for _, ch := range channels {
+			close(ch)
+		}
 	}
 }
 
@@ -297,6 +330,9 @@ func (r *Registry) subscribe(t Type) <-chan Message {
 }
 
 func (r *Registry) publish(t Type, msg Message) {
+	if !msg.ValidMessageFrom(t) {
+		panic(fmt.Sprintf("Received invalid message from %s", t))
+	}
 	r.muChannels.RLock()
 	channels := r.channels[t]
 	r.muChannels.RUnlock()
