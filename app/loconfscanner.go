@@ -12,6 +12,7 @@ import (
 	"github.com/getlantern/flashlight/app/notifier"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/loconf"
 	"github.com/getlantern/flashlight/ui"
 )
@@ -102,9 +103,8 @@ func (loc *loconfer) setUninstallURL(lc *loconf.LoConf, isPro bool) {
 		loc.log.Errorf("Could not get config path? %v", err)
 		return
 	}
-	lang := loc.settings.GetLanguage()
-	survey, ok := lc.GetUninstallSurvey(lang)
-	if !ok {
+	survey := lc.GetUninstallSurvey(loc.settings.GetLanguage(), geolookup.GetCountry(time.Second*30))
+	if survey == nil {
 		loc.log.Debugf("No available uninstall survey")
 		return
 	}
