@@ -184,7 +184,7 @@ func (c *Client) UserUpdate(user User, email string) (res *Response, userId int,
 
 func (c *Client) EmailExists(user User, email string) (res *Response, err error) {
 	var payload []byte
-	payload, err = c.post(`/email-exists`, user.headers(),
+	payload, err = c.get(`/email-exists`, user.headers(),
 		url.Values{
 			"email": {email},
 		},

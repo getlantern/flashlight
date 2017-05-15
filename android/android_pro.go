@@ -185,6 +185,16 @@ func plans(req *proRequest) (*client.Response, error) {
 	return res, err
 }
 
+// Used to confirm an email isn't already associated with a Pro
+// account
+func emailExists(req *proRequest) (*client.Response, error) {
+	res, err := req.Client.EmailExists(req.User, req.session.Email())
+	if err != nil {
+		log.Errorf("Error checking if email exists: %v", err)
+	}
+	return res, err
+}
+
 func userData(req *proRequest) (*client.Response, error) {
 
 	res, err := client.UserStatus(req.ProRequest)
@@ -289,6 +299,7 @@ func ProRequest(command string, session Session) bool {
 	log.Debugf("Received a %s pro request", command)
 
 	commands := map[string]proFunc{
+		"emailexists": emailExists,
 		"newuser":     newUser,
 		"purchase":    purchase,
 		"plans":       plans,
