@@ -3,7 +3,10 @@ package app
 import (
 	"sync"
 
+	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/flashlight/ws"
+
+	"github.com/getlantern/flashlight/app/sysproxy"
 )
 
 type UserSignal struct {
@@ -35,13 +38,14 @@ func (s *UserSignal) start() error {
 }
 
 func (s *UserSignal) read() {
+	p, _ := service.GetRegistry().MustLookup(sysproxy.ServiceType)
 	for message := range s.service.In {
 		log.Debugf("Read userSignal %v", message)
 		switch message {
 		case "disconnect":
-			sysproxyOff()
+			p.Stop()
 		case "connect":
-			sysproxyOn()
+			p.Start()
 		default:
 			continue
 		}

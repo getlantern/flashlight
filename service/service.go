@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/getlantern/errors"
+	"github.com/getlantern/golog"
 )
 
 // Type uniquely identify a service. Typically, each service defines a package
@@ -101,7 +102,10 @@ type Registry struct {
 	channels   map[Type][]chan Message
 }
 
-var singleton *Registry
+var (
+	singleton *Registry
+	log       = golog.LoggerFor("flashlight.service")
+)
 
 func init() {
 	singleton = NewRegistry()
@@ -175,6 +179,7 @@ func (r *Registry) Register(
 			}()
 		}
 	}
+	log.Debugf("Registered service %s", t)
 	return s, instance, nil
 }
 
@@ -228,12 +233,16 @@ func (r *Registry) start(t Type) bool {
 
 // TODO: enforce timeout
 func (r *Registry) startNoLock(n *node) bool {
-	if !n.started {
-		if n.opts == nil || n.opts.Complete() {
-			n.instance.Reconfigure(publisher{n.t, r}, n.opts)
-			n.instance.Start()
-			n.started = true
-		}
+	if n.started {
+		log.Debugf("Not start already started service %s", n.t)
+	} else if n.opts != nil && !n.opts.Complete() {
+		log.Debugf("Opts not complete, skip starting service %s", n.t)
+	} else {
+		log.Debugf("Starting service %s", n.t)
+		n.instance.Reconfigure(publisher{n.t, r}, n.opts)
+		n.instance.Start()
+		n.started = true
+		log.Debugf("Started service %s", n.t)
 	}
 	return n.started
 }
@@ -278,6 +287,7 @@ func (r *Registry) stopNoLock(n *node) {
 	if n.started {
 		n.instance.Stop()
 		n.started = false
+		log.Debugf("Stopped service %s", n.t)
 	}
 }
 
@@ -303,9 +313,15 @@ func (r *Registry) update(dest reflect.Value, fields ConfigUpdates) error {
 	for k, v := range fields {
 		d := dest
 		for _, part := range strings.Split(k, ".") {
+			if d.Kind() != reflect.Struct {
+				return errors.New("'%s' is not a struct", d.String())
+			}
 			d = d.FieldByName(part)
 			if !d.IsValid() {
 				return errors.New("invalid field %s", part)
+			}
+			if !d.CanSet() {
+				return errors.New("'%s' is not setable", d.String())
 			}
 		}
 		s := reflect.ValueOf(v)
@@ -340,7 +356,7 @@ func (r *Registry) publish(t Type, msg Message) {
 		select {
 		case ch <- msg:
 		default:
-			fmt.Println("Warning: message discarded")
+			log.Error("Warning: message discarded")
 		}
 	}
 }

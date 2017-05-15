@@ -1,23 +1,77 @@
-package app
+package sysproxy
 
 import (
 	"fmt"
 	"path/filepath"
 	"runtime"
-	"sync/atomic"
-	"time"
+	"sync"
 
 	"github.com/getlantern/filepersist"
-	"github.com/getlantern/flashlight/client"
-	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/sysproxy"
 
 	"github.com/getlantern/flashlight/icons"
+	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/service"
 )
 
 var (
-	isSysproxyOn = int32(0)
+	ServiceType service.Type = "app.sysproxy"
+	log                      = golog.LoggerFor("app.sysproxy")
 )
+
+type ConfigOpts struct {
+	ProxyAddr string
+}
+
+func (o *ConfigOpts) For() service.Type {
+	return ServiceType
+}
+
+func (o *ConfigOpts) Complete() bool {
+	return o.ProxyAddr != ""
+}
+
+type Sysproxy struct {
+	mu          sync.Mutex
+	on          bool
+	initialized bool
+	proxyAddr   string
+}
+
+func New() service.Impl {
+	return &Sysproxy{}
+}
+
+func (p *Sysproxy) GetType() service.Type {
+	return ServiceType
+}
+
+func (p *Sysproxy) Reconfigure(_ service.Publisher, opts service.ConfigOpts) {
+	p.proxyAddr = opts.(*ConfigOpts).ProxyAddr
+}
+
+func (p *Sysproxy) Start() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if !p.initialized {
+		err := setUpSysproxyTool()
+		if err != nil {
+			log.Error(err)
+			return
+		}
+		p.initialized = true
+	}
+	doSysproxyOn(p.proxyAddr)
+	p.on = true
+}
+
+func (p *Sysproxy) Stop() {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	doSysproxyOff(p.proxyAddr)
+	p.on = false
+}
 
 func setUpSysproxyTool() error {
 	var iconFile string
@@ -42,25 +96,9 @@ func setUpSysproxyTool() error {
 	return nil
 }
 
-func sysproxyOn() {
-	doSysproxyOn()
-	atomic.StoreInt32(&isSysproxyOn, 1)
-}
-
-func sysproxyOff() {
-	if atomic.CompareAndSwapInt32(&isSysproxyOn, 1, 0) {
-		doSysproxyOff()
-	}
-}
-
-func doSysproxyOn() {
+func doSysproxyOn(addr string) {
 	op := ops.Begin("sysproxy_on")
 	defer op.End()
-	addr, found := getProxyAddr()
-	if !found {
-		op.FailIf(log.Errorf("Unable to set lantern as system proxy, no proxy address available"))
-		return
-	}
 	log.Debugf("Setting lantern as system proxy at: %v", addr)
 	err := sysproxy.On(addr)
 	if err != nil {
@@ -70,16 +108,7 @@ func doSysproxyOn() {
 	log.Debug("Finished setting lantern as system proxy")
 }
 
-func doSysproxyOff() {
-	addr, found := getProxyAddr()
-	if !found {
-		log.Errorf("Unable to unset lantern as system proxy, no proxy address available")
-		return
-	}
-	doSysproxyOffFor(addr)
-}
-
-func doSysproxyOffFor(addr string) {
+func doSysproxyOff(addr string) {
 	op := ops.Begin("sysproxy_off")
 	defer op.End()
 	log.Debugf("Unsetting lantern as system proxy at: %v", addr)
@@ -89,13 +118,4 @@ func doSysproxyOffFor(addr string) {
 		return
 	}
 	log.Debug("Unset lantern as system proxy")
-}
-
-func getProxyAddr() (addr string, found bool) {
-	var _addr interface{}
-	_addr, found = client.Addr(5 * time.Minute)
-	if found {
-		addr = _addr.(string)
-	}
-	return
 }

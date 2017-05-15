@@ -31,6 +31,7 @@ import (
 	"github.com/getlantern/flashlight/ws"
 
 	"github.com/getlantern/flashlight/app/location"
+	"github.com/getlantern/flashlight/app/sysproxy"
 )
 
 var (
@@ -75,14 +76,13 @@ func (app *App) Init() {
 // LogPanicAndExit logs a panic and then exits the application. This function
 // is only used in the panicwrap parent process.
 func (app *App) LogPanicAndExit(msg interface{}) {
+	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
 	// Turn off system proxy on panic
 	// Reload settings to make sure we have an up-to-date addr
 	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
-	setUpSysproxyTool()
-	app.AddExitFunc(func() {
-		doSysproxyOffFor(settings.GetAddr())
-	})
-	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
+	p := sysproxy.New()
+	p.Reconfigure(nil, &sysproxy.ConfigOpts{settings.GetAddr()})
+	p.Stop()
 }
 
 func (app *App) exitOnFatal(err error) {
@@ -161,10 +161,6 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			app.AddExitFunc(finishProfiling)
 		}
 
-		if err := setUpSysproxyTool(); err != nil {
-			app.Exit(err)
-		}
-
 		var startupURL string
 		bootstrap, err := config.ReadBootstrapSettings()
 		if err != nil {
@@ -202,7 +198,9 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			_, port, splitErr := net.SplitHostPort(listenAddr)
 			if splitErr == nil && port != "0" {
 				log.Debugf("Clearing system proxy settings for: %v", listenAddr)
-				doSysproxyOffFor(listenAddr)
+				p := sysproxy.New()
+				p.Reconfigure(nil, &sysproxy.ConfigOpts{listenAddr})
+				p.Stop()
 			} else {
 				log.Debugf("Can't clear proxy settings for: %v", listenAddr)
 			}
@@ -233,8 +231,6 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		if err = app.statsTracker.StartService(); err != nil {
 			log.Errorf("Unable to serve stats to UI: %v", err)
 		}
-
-		setupUserSignal()
 
 		err = serveBandwidth()
 		if err != nil {
@@ -269,6 +265,12 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 				info := m.(*geolookup.GeoInfo)
 				self.Reconfigure(map[string]interface{}{"Code": info.GetCountry()})
 			}})
+		service.GetRegistry().MustRegister(
+			sysproxy.New,
+			&sysproxy.ConfigOpts{},
+			false,
+			nil, // TODO: depends on settings and client
+		)
 
 		chGeoService := geoService.Subscribe()
 		go func() {
@@ -282,6 +284,8 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		}()
 
 		service.GetRegistry().StartAll()
+
+		setupUserSignal()
 
 		app.AddExitFunc(LoconfScanner(4*time.Hour, isProUser))
 		app.AddExitFunc(notificationsLoop())
@@ -328,24 +332,11 @@ func (app *App) OnSettingChange(attr SettingName, cb func(interface{})) {
 }
 
 func (app *App) afterStart() {
-	if settings.GetSystemProxy() {
-		sysproxyOn()
-	}
-	app.OnSettingChange(SNSystemProxy, func(val interface{}) {
-		enable := val.(bool)
-		if enable {
-			sysproxyOn()
-		} else {
-			sysproxyOff()
-		}
-	})
-
 	app.OnSettingChange(SNAutoLaunch, func(val interface{}) {
 		enable := val.(bool)
 		go launcher.CreateLaunchFile(enable)
 	})
 
-	app.AddExitFunc(doSysproxyOff)
 	app.AddExitFunc(borda.Flush)
 	if app.ShowUI && !app.Flags["startup"].(bool) {
 		// Launch a browser window with Lantern but only after the pac
@@ -356,7 +347,8 @@ func (app *App) afterStart() {
 	} else {
 		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
 	}
-	if addr, ok := client.Addr(6 * time.Second); ok {
+	addr, ok := client.Addr(6 * time.Second)
+	if ok {
 		settings.setString(SNAddr, addr)
 	} else {
 		log.Errorf("Couldn't retrieve HTTP proxy addr in time")
@@ -366,6 +358,20 @@ func (app *App) afterStart() {
 	} else {
 		log.Errorf("Couldn't retrieve SOCKS proxy addr in time")
 	}
+	s, _ := service.GetRegistry().MustLookup(sysproxy.ServiceType)
+	s.Reconfigure(service.ConfigUpdates{"ProxyAddr": addr})
+	if settings.GetSystemProxy() {
+		s.Start()
+	}
+	app.OnSettingChange(SNSystemProxy, func(val interface{}) {
+		enable := val.(bool)
+		if enable {
+			s.Start()
+		} else {
+			s.Stop()
+		}
+	})
+
 }
 
 func (app *App) onConfigUpdate(cfg *config.Global) {

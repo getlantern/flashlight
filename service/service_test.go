@@ -166,10 +166,14 @@ func TestReconfigure(t *testing.T) {
 		assert.Equal(t, 1, opts.OptStruct.A)
 		assert.Equal(t, "cde", opts.OptStruct.B)
 	}
+	err = s1.Reconfigure(ConfigUpdates{"": 1})
+	assert.Error(t, err)
 	err = s1.Reconfigure(ConfigUpdates{"OptNotExist": 1})
 	assert.Error(t, err)
 	err = s1.Reconfigure(ConfigUpdates{"OptString": 1})
 	assert.Error(t, err)
 	err = s1.Reconfigure(ConfigUpdates{"OptNotExistStruct.C": 1})
+	assert.Error(t, err)
+	err = s1.Reconfigure(ConfigUpdates{"OptString.A": 1})
 	assert.Error(t, err)
 }
