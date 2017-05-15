@@ -26,6 +26,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
+	"github.com/getlantern/overture/core"
 	"github.com/getlantern/protected"
 	"github.com/getlantern/uuid"
 )
@@ -43,6 +44,47 @@ var (
 	surveyURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
 
 	startOnce sync.Once
+
+	overtureConfig = `
+	{
+  "BindAddress": ":3838",
+  "PrimaryDNS": [
+    {
+      "Name": "Google",
+      "Address": "8.8.8.8:53",
+      "Protocol": "udp",
+      "SOCKS5Address": "",
+      "Timeout": 6,
+      "EDNSClientSubnet": {
+        "Policy": "disable",
+        "ExternalIP": ""
+      }
+    }
+  ],
+  "AlternativeDNS": [
+    {
+      "Name": "OpenDNS",
+      "Address": "208.67.222.222:443",
+      "Protocol": "tcp",
+      "SOCKS5Address": "",
+      "Timeout": 6,
+      "EDNSClientSubnet": {
+        "Policy": "disable",
+        "ExternalIP": ""
+      }
+    }
+  ],
+  "OnlyPrimaryDNS": false,
+  "RedirectIPv6Record": true,
+  "IPNetworkFile": "./ip_network_sample",
+  "DomainFile": "./domain_sample",
+  "DomainBase64Decode": true,
+  "HostsFile": "./hosts_sample",
+  "MinimumTTL": 3600,
+  "CacheSize" : 4096,
+  "RejectQtype": [255]
+}
+`
 )
 
 // SocketProtector is an interface for classes that can protect Android sockets,
@@ -131,6 +173,9 @@ func Start(configDir string, locale string,
 		return nil, err
 	}
 	log.Debugf("Starting socks proxy at %s", socksAddr)
+
+	go core.InitServer(overtureConfig)
+
 	return &StartResult{addr.(string), socksAddr.(string)}, nil
 }
 
