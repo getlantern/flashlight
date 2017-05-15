@@ -1,6 +1,7 @@
 package notifier
 
 import (
+	"runtime"
 	"testing"
 	"time"
 
@@ -39,7 +40,7 @@ func TestNormalizeClickURL(t *testing.T) {
 	err := normalizeClickURL(note, "test-campaign")
 	assert.NoError(t, err, "unexpected error")
 	log.Debugf("url: %v", note.ClickURL)
-	assert.Equal(t, "https://test.com?utm_campaign=test-campaign&utm_content=test-test&utm_medium=notification&utm_source=darwin", note.ClickURL)
+	assert.Equal(t, "https://test.com?utm_campaign=test-campaign&utm_content=test-test&utm_medium=notification&utm_source="+runtime.GOOS, note.ClickURL)
 
 	note.ClickURL = ":"
 	log.Debugf("url: %v", note.ClickURL)
