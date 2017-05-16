@@ -13,6 +13,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/loconf"
+	"github.com/getlantern/flashlight/notifier"
 	"github.com/getlantern/flashlight/ui"
 )
 
@@ -155,5 +156,5 @@ func (loc *loconfer) showAnnouncement(a *loconf.Announcement) bool {
 		ClickURL: a.URL,
 		IconURL:  logo,
 	}
-	return showNotification(note)
+	return notifier.ShowNotification(note, "global-announcement")
 }

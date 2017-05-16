@@ -22,6 +22,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/logging"
+	"github.com/getlantern/flashlight/notifier"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxiedsites"
 	"github.com/getlantern/flashlight/ui"
@@ -251,7 +252,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		}
 
 		app.AddExitFunc(LoconfScanner(4*time.Hour, isProUser))
-		app.AddExitFunc(notificationsLoop())
+		app.AddExitFunc(notifier.NotificationsLoop())
 
 		return true
 	}
