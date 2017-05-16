@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -119,7 +120,12 @@ func NewClient(
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
 	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers.Pool, false, client.dialCONNECT)
 	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
-	client.initEasyList()
+	// TODO: turn it to a config option
+	if runtime.GOOS == "android" {
+		client.easylist = allowAllEasyList{}
+	} else {
+		client.initEasyList()
+	}
 	client.reportProxyLocationLoop()
 	var err error
 	client.iptool, err = iptool.New()
