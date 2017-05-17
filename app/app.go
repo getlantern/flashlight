@@ -120,20 +120,22 @@ func (app *App) Run() error {
 			socksAddr = defaultSOCKSProxyAddress
 		}
 
-		err := flashlight.Run(
+		flashlight.Register(
 			listenAddr,
 			socksAddr,
-			app.Flags["configdir"].(string),
 			func() bool { return !settings.GetProxyAll() }, // use shortcut
 			func() bool { return !settings.GetProxyAll() }, // use detour
 			func() bool { return false },                   // on desktop, we do not allow private hosts
+			settings,
+			app.statsTracker)
+		err := flashlight.Run(
+			app.Flags["configdir"].(string),
 			settings.IsAutoReport,
 			app.Flags,
 			app.beforeStart(listenAddr),
 			app.afterStart,
 			app.onConfigUpdate,
 			settings,
-			app.statsTracker,
 			app.Exit,
 			settings.GetDeviceID())
 		if err != nil {
@@ -147,7 +149,7 @@ func (app *App) Run() error {
 
 func (app *App) beforeStart(listenAddr string) func() bool {
 	return func() bool {
-		log.Debug("Got first config")
+		log.Debug("Before start")
 		var cpuProf, memProf string
 		if cpu, cok := app.Flags["cpuprofile"]; cok {
 			cpuProf = cpu.(string)
@@ -283,6 +285,37 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			}
 		}()
 
+		cl, _ := service.GetRegistry().MustLookup(client.ServiceType)
+		ch := cl.Subscribe()
+		go func() {
+			for m := range ch {
+				log.Debugf("Got message %+v", m)
+				msg := m.(client.Message)
+				switch msg.ProxyType {
+				case client.HTTPProxy:
+					log.Debugf("Got HTTP proxy address: %v", msg.Addr)
+					settings.setString(SNAddr, msg.Addr)
+					s, _ := service.GetRegistry().MustLookup(sysproxy.ServiceType)
+					s.MustReconfigure(service.ConfigUpdates{"ProxyAddr": msg.Addr})
+					if settings.GetSystemProxy() {
+						s.Start()
+					}
+					app.OnSettingChange(SNSystemProxy, func(val interface{}) {
+						enable := val.(bool)
+						if enable {
+							s.Start()
+						} else {
+							s.Stop()
+						}
+					})
+
+				case client.Socks5Proxy:
+					log.Debugf("Got Socks5 proxy address: %v", msg.Addr)
+					settings.setString(SNSOCKSAddr, msg.Addr)
+				}
+			}
+		}()
+
 		service.GetRegistry().StartAll()
 
 		setupUserSignal()
@@ -347,31 +380,6 @@ func (app *App) afterStart() {
 	} else {
 		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
 	}
-	addr, ok := client.Addr(6 * time.Second)
-	if ok {
-		settings.setString(SNAddr, addr)
-	} else {
-		log.Errorf("Couldn't retrieve HTTP proxy addr in time")
-	}
-	if socksAddr, ok := client.Socks5Addr(6 * time.Second); ok {
-		settings.setString(SNSOCKSAddr, socksAddr)
-	} else {
-		log.Errorf("Couldn't retrieve SOCKS proxy addr in time")
-	}
-	s, _ := service.GetRegistry().MustLookup(sysproxy.ServiceType)
-	s.Reconfigure(service.ConfigUpdates{"ProxyAddr": addr})
-	if settings.GetSystemProxy() {
-		s.Start()
-	}
-	app.OnSettingChange(SNSystemProxy, func(val interface{}) {
-		enable := val.(bool)
-		if enable {
-			s.Start()
-		} else {
-			s.Stop()
-		}
-	})
-
 }
 
 func (app *App) onConfigUpdate(cfg *config.Global) {

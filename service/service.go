@@ -66,6 +66,8 @@ type Service interface {
 	// exist or type mismatches. It's up to the Impl to restart itself when
 	// required (service status is not affected).
 	Reconfigure(fields ConfigUpdates) error
+	// MustReconfigure is the same as Reconfigure, but panics if error happens.
+	MustReconfigure(fields ConfigUpdates)
 	// Subscribe gets a channel to receive any message the service published.
 	// Messages are discarded if no one is listening on the channel.
 	Subscribe() <-chan Message
@@ -237,6 +239,7 @@ func (r *Registry) startNoLock(n *node) bool {
 		log.Debugf("Not start already started service %s", n.t)
 	} else if n.opts != nil && !n.opts.Complete() {
 		log.Debugf("Opts not complete, skip starting service %s", n.t)
+		log.Tracef("%+v", n.opts)
 	} else {
 		log.Debugf("Starting service %s", n.t)
 		n.instance.Reconfigure(publisher{n.t, r}, n.opts)
@@ -338,25 +341,27 @@ func (r *Registry) update(dest reflect.Value, fields ConfigUpdates) error {
 }
 
 func (r *Registry) subscribe(t Type) <-chan Message {
-	ch := make(chan Message, 1)
+	ch := make(chan Message, 10)
 	r.muChannels.Lock()
 	r.channels[t] = append(r.channels[t], ch)
 	r.muChannels.Unlock()
+	log.Tracef("Subscribed to %v", t)
 	return ch
 }
 
 func (r *Registry) publish(t Type, msg Message) {
 	if !msg.ValidMessageFrom(t) {
-		panic(fmt.Sprintf("Received invalid message from %s", t))
+		log.Errorf("Received invalid message from %s", t)
 	}
 	r.muChannels.RLock()
 	channels := r.channels[t]
 	r.muChannels.RUnlock()
+	log.Tracef("Publishing message to %d subscribers of %v", len(channels), t)
 	for _, ch := range channels {
 		select {
 		case ch <- msg:
 		default:
-			log.Error("Warning: message discarded")
+			log.Errorf("Warning: message from %s discarded: %+v", t, msg)
 		}
 	}
 }
@@ -387,6 +392,12 @@ func (s service) Started() bool {
 
 func (s service) Stop() {
 	s.r.stop(s.impl.GetType())
+}
+
+func (s service) MustReconfigure(fields ConfigUpdates) {
+	if err := s.Reconfigure(fields); err != nil {
+		panic(err)
+	}
 }
 
 func (s service) Reconfigure(fields ConfigUpdates) error {

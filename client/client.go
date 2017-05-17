@@ -18,8 +18,6 @@ import (
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/detour"
 	"github.com/getlantern/easylist"
-	"github.com/getlantern/errors"
-	"github.com/getlantern/eventual"
 	"github.com/getlantern/go-socks5"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
@@ -33,6 +31,7 @@ import (
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/status"
 )
@@ -40,8 +39,8 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.client")
 
-	addr                = eventual.NewValue()
-	socksAddr           = eventual.NewValue()
+	ServiceType service.Type = "flashlight.client"
+
 	proxiedCONNECTPorts = []int{
 		// Standard HTTP(S) ports
 		80, 443,
@@ -66,6 +65,45 @@ var (
 	validHostnameRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 )
 
+type ConfigOpts struct {
+	UseShortcut       bool
+	UseDetour         bool
+	AllowPrivateHosts bool
+	ProToken          string
+	DeviceID          string
+	HTTPProxyAddr     string
+	Socks5ProxyAddr   string
+	Proxies           map[string]*chained.ChainedServerInfo
+
+	StatsTracker common.StatsTracker
+}
+
+func (o *ConfigOpts) For() service.Type {
+	return ServiceType
+}
+
+func (o *ConfigOpts) Complete() bool {
+	return o.StatsTracker != nil &&
+		o.HTTPProxyAddr != "" && o.Socks5ProxyAddr != "" &&
+		o.DeviceID != "" && len(o.Proxies) > 0
+}
+
+type ProxyType string
+
+var (
+	HTTPProxy   ProxyType = "http-proxy"
+	Socks5Proxy ProxyType = "socks5-proxy"
+)
+
+type Message struct {
+	ProxyType ProxyType
+	Addr      string
+}
+
+func (m Message) ValidMessageFrom(t service.Type) bool {
+	return t == ServiceType && m.Addr != ""
+}
+
 // Client is an HTTP proxy that accepts connections from local programs and
 // proxies these via remote flashlight servers.
 type Client struct {
@@ -81,52 +119,90 @@ type Client struct {
 	interceptCONNECT proxy.Interceptor
 	interceptHTTP    proxy.Interceptor
 
-	l net.Listener
+	httpListener   net.Listener
+	socks5Listener net.Listener
 
-	useShortcut    func() bool
-	useDetour      func() bool
-	proTokenGetter func() string
+	useShortcut       bool
+	useDetour         bool
+	proToken          string
+	allowPrivateHosts bool
+
+	httpProxyAddr   string
+	socks5ProxyAddr string
 
 	easylist       easylist.List
 	rewriteToHTTPS httpseverywhere.Rewrite
+	statsTracker   common.StatsTracker
+	publisher      service.Publisher
+	isPrivateAddr  func(*net.IPAddr) bool
 
-	statsTracker common.StatsTracker
-
-	iptool            iptool.Tool
-	allowPrivateHosts func() bool
+	chStop chan bool
 }
 
-// NewClient creates a new client that does things like starts the HTTP and
-// SOCKS proxies. It take a function for determing whether or not to proxy
-// all traffic, and another function to get Lantern Pro token when required.
-func NewClient(
-	useShortcut func() bool,
-	useDetour func() bool,
-	proTokenGetter func() string,
-	statsTracker common.StatsTracker,
-	allowPrivateHosts func() bool,
-) (*Client, error) {
-	client := &Client{
-		bal:               balancer.New(),
-		useShortcut:       useShortcut,
-		useDetour:         useDetour,
-		proTokenGetter:    proTokenGetter,
-		rewriteToHTTPS:    httpseverywhere.Default(),
-		statsTracker:      statsTracker,
-		allowPrivateHosts: allowPrivateHosts,
+func New() service.Impl {
+	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
+	c := &Client{
+		bal:            balancer.New(),
+		rewriteToHTTPS: httpseverywhere.Default(),
+		chStop:         make(chan bool),
 	}
 
-	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
-	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers.Pool, false, client.dialCONNECT)
-	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
-	client.initEasyList()
-	client.reportProxyLocationLoop()
-	var err error
-	client.iptool, err = iptool.New()
+	c.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers.Pool, false, c.dialCONNECT)
+	c.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, c.dialHTTP)
+	iptool, err := iptool.New()
 	if err != nil {
-		return nil, errors.New("Unable to initialize iptool: %v", err)
+		log.Errorf("Error creating iptool, assuming all addresses non-private: %v", err)
+		c.isPrivateAddr = func(*net.IPAddr) bool { return false }
+	} else {
+		c.isPrivateAddr = iptool.IsPrivate
 	}
-	return client, nil
+	return c
+
+}
+
+func (c *Client) GetType() service.Type {
+	return ServiceType
+}
+
+func (c *Client) Reconfigure(p service.Publisher, opts service.ConfigOpts) {
+	c.publisher = p
+	o := opts.(*ConfigOpts)
+	c.useShortcut = o.UseShortcut
+	c.useDetour = o.UseDetour
+	c.proToken = o.ProToken
+	c.statsTracker = o.StatsTracker
+	c.allowPrivateHosts = o.AllowPrivateHosts
+	c.httpProxyAddr = o.HTTPProxyAddr
+	c.socks5ProxyAddr = o.Socks5ProxyAddr
+	c.initEasyList()
+	err := c.initBalancer(o.Proxies, o.DeviceID)
+	if err != nil {
+		log.Error(err)
+	}
+}
+
+func (c *Client) Start() {
+	c.reportProxyLocationLoop()
+	go func() {
+		err := c.listenAndServeHTTP()
+		if err != nil {
+			log.Error(err)
+		}
+	}()
+	go func() {
+		err := c.listenAndServeSOCKS5()
+		if err != nil {
+			log.Error(err)
+		}
+	}()
+}
+
+// Stop is called when the client is no longer needed. It closes the
+// client listener and underlying dialer connection pool
+func (c *Client) Stop() {
+	close(c.chStop)
+	c.httpListener.Close()
+	c.socks5Listener.Close()
 }
 
 type allowAllEasyList struct{}
@@ -135,11 +211,11 @@ func (l allowAllEasyList) Allow(*http.Request) bool {
 	return true
 }
 
-func (client *Client) initEasyList() {
+func (c *Client) initEasyList() {
 	defer func() {
-		if client.easylist == nil {
+		if c.easylist == nil {
 			log.Debugf("Not using easylist")
-			client.easylist = allowAllEasyList{}
+			c.easylist = allowAllEasyList{}
 		}
 	}()
 	log.Debug("Initializing easylist")
@@ -153,83 +229,56 @@ func (client *Client) initEasyList() {
 		log.Errorf("Unable to open easylist: %v", err)
 		return
 	}
-	client.easylist = list
+	c.easylist = list
 	log.Debug("Initialized easylist")
 }
 
-func (client *Client) reportProxyLocationLoop() {
-	ch := client.bal.OnActiveDialer()
+func (c *Client) reportProxyLocationLoop() {
+	ch := c.bal.OnActiveDialer()
 	var activeProxy string
 	go func() {
 		for {
-			proxy := <-ch
-			if proxy.Name() == activeProxy {
-				continue
+			select {
+			case proxy := <-ch:
+				if proxy.Name() == activeProxy {
+					continue
+				}
+				activeProxy = proxy.Name()
+				loc := proxyLoc(activeProxy)
+				if loc == nil {
+					log.Errorf("Couldn't find location for %s", activeProxy)
+					continue
+				}
+				c.statsTracker.SetActiveProxyLocation(
+					loc.city,
+					loc.country,
+					loc.countryCode,
+				)
+			case <-c.chStop:
+				return
 			}
-			activeProxy = proxy.Name()
-			loc := proxyLoc(activeProxy)
-			if loc == nil {
-				log.Errorf("Couldn't find location for %s", activeProxy)
-				continue
-			}
-			client.statsTracker.SetActiveProxyLocation(
-				loc.city,
-				loc.country,
-				loc.countryCode,
-			)
 		}
 	}()
 }
 
-// Addr returns the address at which the client is listening with HTTP, blocking
-// until the given timeout for an address to become available.
-func Addr(timeout time.Duration) (interface{}, bool) {
-	return addr.Get(timeout)
-}
-
-// Addr returns the address at which the client is listening with HTTP, blocking
-// until the given timeout for an address to become available.
-func (client *Client) Addr(timeout time.Duration) (interface{}, bool) {
-	return Addr(timeout)
-}
-
-// Socks5Addr returns the address at which the client is listening with SOCKS5,
-// blocking until the given timeout for an address to become available.
-func Socks5Addr(timeout time.Duration) (interface{}, bool) {
-	return socksAddr.Get(timeout)
-}
-
-// Socks5Addr returns the address at which the client is listening with SOCKS5,
-// blocking until the given timeout for an address to become available.
-func (client *Client) Socks5Addr(timeout time.Duration) (interface{}, bool) {
-	return Socks5Addr(timeout)
-}
-
-// ListenAndServeHTTP makes the client listen for HTTP connections at a the given
+// listenAndServeHTTP makes the client listen for HTTP connections at a the given
 // address or, if a blank address is given, at a random port on localhost.
 // onListeningFn is a callback that gets invoked as soon as the server is
 // accepting TCP connections.
-func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn func()) error {
-	log.Debug("About to listen")
-	if requestedAddr == "" {
-		requestedAddr = "127.0.0.1:0"
-	}
-
+func (c *Client) listenAndServeHTTP() error {
 	var err error
 	var l net.Listener
-	if l, err = net.Listen("tcp", requestedAddr); err != nil {
+	if l, err = net.Listen("tcp", c.httpProxyAddr); err != nil {
 		return fmt.Errorf("Unable to listen: %q", err)
 	}
 
-	client.l = l
+	c.httpListener = l
 	listenAddr := l.Addr().String()
-	addr.Set(listenAddr)
-	onListeningFn()
-
+	c.publisher.Publish(Message{HTTPProxy, listenAddr})
 	httpServer := &http.Server{
-		ReadTimeout:  client.readTimeout,
-		WriteTimeout: client.writeTimeout,
-		Handler:      client,
+		ReadTimeout:  c.readTimeout,
+		WriteTimeout: c.writeTimeout,
+		Handler:      c,
 		ErrorLog:     log.AsStdLogger(),
 	}
 
@@ -237,24 +286,25 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 	return httpServer.Serve(l)
 }
 
-// ListenAndServeSOCKS5 starts the SOCKS server listening at the specified
+// listenAndServeSOCKS5 starts the SOCKS server listening at the specified
 // address.
-func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
+func (c *Client) listenAndServeSOCKS5() error {
 	var err error
 	var l net.Listener
-	if l, err = net.Listen("tcp", requestedAddr); err != nil {
+	if l, err = net.Listen("tcp", c.socks5ProxyAddr); err != nil {
 		return fmt.Errorf("Unable to listen: %q", err)
 	}
+	c.socks5Listener = l
 	listenAddr := l.Addr().String()
-	socksAddr.Set(listenAddr)
+	c.publisher.Publish(Message{Socks5Proxy, listenAddr})
 
 	conf := &socks5.Config{
 		Dial: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			port, portErr := client.portForAddress(addr)
+			port, portErr := c.portForAddress(addr)
 			if portErr != nil {
 				return nil, portErr
 			}
-			return client.doDial(ctx, true, addr, port)
+			return c.doDial(ctx, true, addr, port)
 		},
 	}
 	server, err := socks5.New(conf)
@@ -266,23 +316,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 	return server.Serve(l)
 }
 
-// Configure updates the client's configuration. Configure can be called
-// before or after ListenAndServe, and can be called multiple times.
-func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo, deviceID string) {
-	log.Debug("Configure() called")
-	err := client.initBalancer(proxies, deviceID)
-	if err != nil {
-		log.Error(err)
-	}
-}
-
-// Stop is called when the client is no longer needed. It closes the
-// client listener and underlying dialer connection pool
-func (client *Client) Stop() error {
-	return client.l.Close()
-}
-
-func (client *Client) proxiedDialer(orig func(network, addr string) (net.Conn, error)) func(network, addr string) (net.Conn, error) {
+func (c *Client) proxiedDialer(orig func(network, addr string) (net.Conn, error)) func(network, addr string) (net.Conn, error) {
 	detourDialer := detour.Dialer(orig)
 
 	return func(network, addr string) (net.Conn, error) {
@@ -290,7 +324,7 @@ func (client *Client) proxiedDialer(orig func(network, addr string) (net.Conn, e
 		defer op.End()
 
 		var proxied func(network, addr string) (net.Conn, error)
-		if client.useDetour() {
+		if c.useDetour {
 			op.Set("detour", true)
 			proxied = detourDialer
 		} else {
@@ -307,37 +341,37 @@ func (client *Client) proxiedDialer(orig func(network, addr string) (net.Conn, e
 	}
 }
 
-func (client *Client) dialCONNECT(network, addr string) (conn net.Conn, err error) {
-	return client.dial(true, network, addr)
+func (c *Client) dialCONNECT(network, addr string) (conn net.Conn, err error) {
+	return c.dial(true, network, addr)
 }
 
-func (client *Client) dialHTTP(network, addr string) (conn net.Conn, err error) {
-	return client.dial(false, network, addr)
+func (c *Client) dialHTTP(network, addr string) (conn net.Conn, err error) {
+	return c.dial(false, network, addr)
 }
 
-func (client *Client) dial(isConnect bool, network, addr string) (conn net.Conn, err error) {
+func (c *Client) dial(isConnect bool, network, addr string) (conn net.Conn, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), getRequestTimeout())
 	defer cancel()
-	port, err := client.portForAddress(addr)
+	port, err := c.portForAddress(addr)
 	if err != nil {
 		return nil, err
 	}
-	return client.doDial(ctx, isConnect, addr, port)
+	return c.doDial(ctx, isConnect, addr, port)
 }
 
-func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, port int) (net.Conn, error) {
+func (c *Client) doDial(ctx context.Context, isCONNECT bool, addr string, port int) (net.Conn, error) {
 	// Establish outbound connection
-	if err := client.shouldSendToProxy(addr, port); err != nil {
+	if err := c.shouldSendToProxy(addr, port); err != nil {
 		log.Debugf("%v, sending directly to %v", err, addr)
 		// Use netx because on Android, we need a special protected dialer
 		return netx.DialContext(ctx, "tcp", addr)
 	}
-	if client.useShortcut() && shortcut.Allow(addr) {
+	if c.useShortcut && shortcut.Allow(addr) {
 		log.Debugf("Use shortcut (dial directly) for %v", addr)
 		return netx.DialContext(ctx, "tcp", addr)
 	}
 
-	d := client.proxiedDialer(func(network, addr string) (net.Conn, error) {
+	d := c.proxiedDialer(func(network, addr string) (net.Conn, error) {
 		proto := "persistent"
 		if isCONNECT {
 			// UGLY HACK ALERT! In this case, we know we need to send a CONNECT request
@@ -349,7 +383,7 @@ func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, p
 			// case.
 			proto = "connect"
 		}
-		return client.bal.Dial(proto, addr)
+		return c.bal.Dial(proto, addr)
 	})
 	// TODO: pass context down to all layers.
 	chDone := make(chan bool)
@@ -374,15 +408,15 @@ func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, p
 	}
 }
 
-func (client *Client) shouldSendToProxy(addr string, port int) error {
-	err := client.isPortProxyable(port)
+func (c *Client) shouldSendToProxy(addr string, port int) error {
+	err := c.isPortProxyable(port)
 	if err == nil {
-		err = client.isAddressProxyable(addr)
+		err = c.isAddressProxyable(addr)
 	}
 	return err
 }
 
-func (client *Client) isPortProxyable(port int) error {
+func (c *Client) isPortProxyable(port int) error {
 	for _, proxiedPort := range proxiedCONNECTPorts {
 		if port == proxiedPort {
 			return nil
@@ -392,8 +426,8 @@ func (client *Client) isPortProxyable(port int) error {
 }
 
 // isAddressProxyable largely replicates the logic in the old PAC file
-func (client *Client) isAddressProxyable(addr string) error {
-	if client.allowPrivateHosts() {
+func (c *Client) isAddressProxyable(addr string) error {
+	if c.allowPrivateHosts {
 		return nil
 	}
 	host, _, err := net.SplitHostPort(addr)
@@ -417,13 +451,13 @@ func (client *Client) isAddressProxyable(addr string) error {
 	}
 
 	ipAddrToCheck := &net.IPAddr{IP: ip}
-	if client.iptool.IsPrivate(ipAddrToCheck) {
+	if c.isPrivateAddr(ipAddrToCheck) {
 		return fmt.Errorf("IP %v is private", host)
 	}
 	return nil
 }
 
-func (client *Client) portForAddress(addr string) (int, error) {
+func (c *Client) portForAddress(addr string) (int, error) {
 	_, portString, err := net.SplitHostPort(addr)
 	if err != nil {
 		return 0, fmt.Errorf("Unable to determine port for address %v: %v", addr, err)

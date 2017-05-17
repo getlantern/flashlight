@@ -25,7 +25,7 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 			// Ignore obfs4-tcp as these are already included as plain obfs4
 			continue
 		}
-		dialer, err := ChainedDialer(name, s, deviceID, client.proTokenGetter)
+		dialer, err := ChainedDialer(name, s, deviceID, func() string { return client.proToken })
 		if err != nil {
 			log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)
 			continue

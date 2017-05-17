@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/geolookup"
 	fops "github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/service"
@@ -40,20 +41,36 @@ var (
 	FullyReportedOps = []string{"client_started", "client_stopped", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "report_issue"}
 )
 
-// Run runs a client proxy. It blocks as long as the proxy is running.
-func Run(httpProxyAddr string,
+func Register(httpProxyAddr string,
 	socksProxyAddr string,
-	configDir string,
 	useShortcut func() bool,
 	useDetour func() bool,
 	allowPrivateHosts func() bool,
+	userConfig config.UserConfig,
+	statsTracker common.StatsTracker,
+) {
+	service.GetRegistry().MustRegister(client.New,
+		&client.ConfigOpts{
+			UseShortcut:       useShortcut(),
+			UseDetour:         useDetour(),
+			AllowPrivateHosts: allowPrivateHosts(),
+			ProToken:          userConfig.GetToken(),
+			StatsTracker:      statsTracker,
+			HTTPProxyAddr:     httpProxyAddr,
+			Socks5ProxyAddr:   socksProxyAddr,
+		},
+		true,
+		nil)
+}
+
+// Run runs a client proxy. It blocks as long as the proxy is running.
+func Run(configDir string,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
 	beforeStart func() bool,
 	afterStart func(),
 	onConfigUpdate func(cfg *config.Global),
 	userConfig config.UserConfig,
-	statsTracker common.StatsTracker,
 	onError func(err error),
 	deviceID string) error {
 
@@ -62,73 +79,60 @@ func Run(httpProxyAddr string,
 	initContext(deviceID, common.Version, common.RevisionDate)
 	op := fops.Begin("client_started")
 
-	cl, err := client.NewClient(useShortcut, useDetour,
-		userConfig.GetToken, statsTracker, allowPrivateHosts)
-	if err != nil {
-		fatalErr := fmt.Errorf("Unable to initialize client: %v", err)
-		op.FailIf(fatalErr)
-		op.End()
-	}
-	proxied.SetProxyAddr(cl.Addr)
+	cl, _ := service.GetRegistry().MustLookup(client.ServiceType)
+	ch := cl.Subscribe()
+	beforeStart()
+	go func() {
+		for m := range ch {
+			msg := m.(client.Message)
+			if msg.ProxyType == client.HTTPProxy {
+				proxied.SetProxyAddr(eventual.DefaultGetter(msg.Addr))
+				log.Debug("Started client HTTP proxy")
+				op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
+				geoService, geo := service.GetRegistry().MustLookup(geolookup.ServiceType)
+				onGeo := geoService.Subscribe()
+				geo.(*geolookup.GeoLookup).Refresh()
+				ops.Go(func() {
+					// wait for geo info before reporting so that we know the client ip and
+					// country
+					select {
+					case <-onGeo:
+						// okay, we've got geolocation info
+					case <-time.After(5 * time.Minute):
+						// failed to get geolocation info within 5 minutes, just record end of
+						// startup anyway
+					}
+					op.End()
+				})
+				afterStart()
+			}
+		}
+	}()
 
 	proxiesDispatch := func(conf interface{}) {
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
-		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
-		cl.Configure(proxyMap, deviceID)
+		if len(proxyMap) > 0 {
+			log.Debugf("Applying proxy config with proxies: %v", proxyMap)
+			cl.MustReconfigure(service.ConfigUpdates{
+				"Proxies":  proxyMap,
+				"DeviceID": deviceID,
+			})
+		}
 	}
 	globalDispatch := func(conf interface{}) {
 		// Don't love the straight cast here, but we're also the ones defining
 		// the type in the factory method above.
 		cfg := conf.(*config.Global)
 		log.Debugf("Applying global config")
-		applyClientConfig(cl, cfg, deviceID, autoReport)
+		applyClientConfig(cfg, deviceID, autoReport)
 		onConfigUpdate(cfg)
 	}
 	config.Init(configDir, flagsAsMap, userConfig, proxiesDispatch, globalDispatch)
 
-	if beforeStart() {
-		log.Debug("Preparing to start client proxy")
-		if socksProxyAddr != "" {
-			go func() {
-				log.Debug("Starting client SOCKS5 proxy")
-				err := cl.ListenAndServeSOCKS5(socksProxyAddr)
-				if err != nil {
-					log.Errorf("Unable to start SOCKS5 proxy: %v", err)
-				}
-			}()
-		}
-
-		log.Debug("Starting client HTTP proxy")
-		err := cl.ListenAndServeHTTP(httpProxyAddr, func() {
-			log.Debug("Started client HTTP proxy")
-			op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
-			ops.Go(func() {
-				geoService, geo := service.GetRegistry().MustLookup(geolookup.ServiceType)
-				onGeo := geoService.Subscribe()
-				geo.(*geolookup.GeoLookup).Refresh()
-				// wait for geo info before reporting so that we know the client ip and
-				// country
-				select {
-				case <-onGeo:
-					// okay, we've got geolocation info
-				case <-time.After(5 * time.Minute):
-					// failed to get geolocation info within 5 minutes, just record end of
-					// startup anyway
-				}
-				op.End()
-			})
-			afterStart()
-		})
-		if err != nil {
-			log.Errorf("Error starting client proxy: %v", err)
-			onError(err)
-		}
-	}
-
 	return nil
 }
 
-func applyClientConfig(client *client.Client, cfg *config.Global, deviceID string, autoReport func() bool) {
+func applyClientConfig(cfg *config.Global, deviceID string, autoReport func() bool) {
 	certs, err := getTrustedCACerts(cfg)
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)

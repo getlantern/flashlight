@@ -25,7 +25,6 @@ import (
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/protected"
 	"github.com/getlantern/uuid"
@@ -43,7 +42,8 @@ var (
 
 	surveyURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
 
-	startOnce sync.Once
+	startOnce   sync.Once
+	startResult StartResult
 )
 
 // SocketProtector is an interface for classes that can protect Android sockets,
@@ -116,23 +116,45 @@ func Start(configDir string, locale string,
 	timeoutMillis int, user UserConfig) (*StartResult, error) {
 
 	startOnce.Do(func() {
-		go run(configDir, locale, stickyConfig, user)
+		user.SetStaging(common.Staging)
+		flashlight.Register("127.0.0.1:0", // listen for HTTP on random address
+			"127.0.0.1:0", // listen for SOCKS on random address
+			// TODO: allow configuring whether or not to enable shortcut depends on
+			// proxyAll option (just like we already have in desktop)
+			func() bool { return !user.ProxyAll() }, // use shortcut
+			func() bool { return false },            // not use detour
+			// TODO: allow configuring whether or not to enable reporting (just like we
+			// already have in desktop)
+			func() bool { return true }, // on Android, we allow private hosts
+			user,
+			statsTracker{},
+		)
+		cl, _ := service.GetRegistry().MustLookup(client.ServiceType)
+		ch := cl.Subscribe()
+		run(configDir, locale, stickyConfig, user)
+		// TODO: fix CI by subscribing before starting the client, i.e., break
+		// flashlight.Run into pieces
+		var wg sync.WaitGroup
+		wg.Add(2)
+		go func() {
+			for m := range ch {
+				msg := m.(client.Message)
+				switch msg.ProxyType {
+				case client.HTTPProxy:
+					log.Debugf("Started client HTTP proxy at %v", msg.Addr)
+					startResult.HTTPAddr = msg.Addr
+					wg.Done()
+				case client.Socks5Proxy:
+					log.Debugf("Started client SOCKS5 proxy at %v", msg.Addr)
+					startResult.SOCKS5Addr = msg.Addr
+					wg.Done()
+				}
+			}
+		}()
+		wg.Wait()
 	})
 
-	elapsed := mtime.Stopwatch()
-	addr, ok := client.Addr(time.Duration(timeoutMillis) * time.Millisecond)
-	if !ok {
-		return nil, fmt.Errorf("HTTP Proxy didn't start within given timeout")
-	}
-
-	socksAddr, ok := client.Socks5Addr((time.Duration(timeoutMillis) * time.Millisecond) - elapsed())
-	if !ok {
-		err := fmt.Errorf("SOCKS5 Proxy didn't start within given timeout")
-		log.Error(err.Error())
-		return nil, err
-	}
-	log.Debugf("Starting socks proxy at %s", socksAddr)
-	return &StartResult{addr.(string), socksAddr.(string)}, nil
+	return &startResult, nil
 }
 
 // AddLoggingMetadata adds metadata for reporting to cloud logging services
@@ -144,7 +166,6 @@ func run(configDir, locale string,
 	stickyConfig bool, user UserConfig) {
 
 	appdir.SetHomeDir(configDir)
-	user.SetStaging(common.Staging)
 
 	log.Debugf("Starting lantern: configDir %s locale %s sticky config %t",
 		configDir, locale, stickyConfig)
@@ -171,16 +192,8 @@ func run(configDir, locale string,
 
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
-	flashlight.Run("127.0.0.1:0", // listen for HTTP on random address
-		"127.0.0.1:0", // listen for SOCKS on random address
-		configDir,     // place to store lantern configuration
-		// TODO: allow configuring whether or not to enable shortcut depends on
-		// proxyAll option (just like we already have in desktop)
-		func() bool { return !user.ProxyAll() }, // use shortcut
-		func() bool { return false },            // not use detour
-		// TODO: allow configuring whether or not to enable reporting (just like we
-		// already have in desktop)
-		func() bool { return true }, // on Android, we allow private hosts
+	flashlight.Run(
+		configDir,                   // place to store lantern configuration
 		func() bool { return true }, // auto report
 		flags,
 		beforeStart,
@@ -190,7 +203,6 @@ func run(configDir, locale string,
 		func(cfg *config.Global) {
 		}, // onConfigUpdate
 		user,
-		statsTracker{},
 		func(err error) {}, // onError
 		base64.StdEncoding.EncodeToString(uuid.NodeID()),
 	)

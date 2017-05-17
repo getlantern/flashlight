@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/mockconn"
 	"github.com/stretchr/testify/assert"
 )
@@ -45,6 +46,10 @@ func (m mockStatsTracker) SetActiveProxyLocation(city, country, countryCode stri
 func (m mockStatsTracker) IncHTTPSUpgrades()                                        {}
 func (m mockStatsTracker) IncAdsBlocked()                                           {}
 
+type mockPublisher struct{}
+
+func (m mockPublisher) Publish(service.Message) {}
+
 func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {
 	client.bal.Reset(&testDialer{
 		name: "test-dialer",
@@ -53,13 +58,14 @@ func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, 
 }
 
 func newClient() *Client {
-	client, _ := NewClient(
-		func() bool { return true },
-		func() bool { return true },
-		func() string { return "proToken" },
-		mockStatsTracker{},
-		func() bool { return true },
-	)
+	client := New().(*Client)
+	client.Reconfigure(mockPublisher{}, &ConfigOpts{
+		UseDetour:         true,
+		UseShortcut:       true,
+		ProToken:          "proToken",
+		StatsTracker:      mockStatsTracker{},
+		AllowPrivateHosts: true,
+	})
 	return client
 }
 
@@ -118,9 +124,7 @@ func TestIsAddressProxyable(t *testing.T) {
 		"all addresses should be proxyable when allow private hosts")
 	assert.NoError(t, client.isAddressProxyable("localhost:80"),
 		"all addresses should be proxyable when allow private hosts")
-	client.allowPrivateHosts = func() bool {
-		return false
-	}
+	client.allowPrivateHosts = false
 	assert.Error(t, client.isAddressProxyable("192.168.1.1:9999"),
 		"private address should not be proxyable")
 	assert.Error(t, client.isAddressProxyable("192.168.1.1"),
