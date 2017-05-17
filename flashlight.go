@@ -49,7 +49,7 @@ func Register(httpProxyAddr string,
 	userConfig config.UserConfig,
 	statsTracker common.StatsTracker,
 ) {
-	service.GetRegistry().MustRegister(client.New,
+	service.MustRegister(client.New,
 		&client.ConfigOpts{
 			UseShortcut:       useShortcut(),
 			UseDetour:         useDetour(),
@@ -79,8 +79,7 @@ func Run(configDir string,
 	initContext(deviceID, common.Version, common.RevisionDate)
 	op := fops.Begin("client_started")
 
-	cl, _ := service.GetRegistry().MustLookup(client.ServiceType)
-	ch := cl.Subscribe()
+	ch := service.Subscribe(client.ServiceType)
 	beforeStart()
 	go func() {
 		for m := range ch {
@@ -89,8 +88,8 @@ func Run(configDir string,
 				proxied.SetProxyAddr(eventual.DefaultGetter(msg.Addr))
 				log.Debug("Started client HTTP proxy")
 				op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
-				geoService, geo := service.GetRegistry().MustLookup(geolookup.ServiceType)
-				onGeo := geoService.Subscribe()
+				onGeo := service.Subscribe(geolookup.ServiceType)
+				_, geo := service.MustLookup(geolookup.ServiceType)
 				geo.(*geolookup.GeoLookup).Refresh()
 				ops.Go(func() {
 					// wait for geo info before reporting so that we know the client ip and
@@ -113,7 +112,7 @@ func Run(configDir string,
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
 		if len(proxyMap) > 0 {
 			log.Debugf("Applying proxy config with proxies: %v", proxyMap)
-			cl.MustReconfigure(service.ConfigUpdates{
+			service.MustReconfigure(client.ServiceType, service.ConfigUpdates{
 				"Proxies":  proxyMap,
 				"DeviceID": deviceID,
 			})

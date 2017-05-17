@@ -129,8 +129,7 @@ func Start(configDir string, locale string,
 			user,
 			statsTracker{},
 		)
-		cl, _ := service.GetRegistry().MustLookup(client.ServiceType)
-		ch := cl.Subscribe()
+		ch := service.Subscribe(client.ServiceType)
 		run(configDir, locale, stickyConfig, user)
 		// TODO: fix CI by subscribing before starting the client, i.e., break
 		// flashlight.Run into pieces
@@ -239,15 +238,15 @@ func getBandwidth(quota *bandwidth.Quota) (int, int) {
 }
 
 func beforeStart() bool {
-	service.GetRegistry().MustRegister(geolookup.New, nil, true, nil)
+	service.MustRegister(geolookup.New, nil, true, nil)
 	return true
 }
 
 func afterStart(user UserConfig) {
 	bandwidthUpdates(user)
 	user.AfterStart()
-	geoService, geo := service.GetRegistry().MustLookup(geolookup.ServiceType)
-	chGeoService := geoService.Subscribe()
+	chGeoService := service.Subscribe(geolookup.ServiceType)
+	_, geo := service.MustLookup(geolookup.ServiceType)
 	lookup := geo.(*geolookup.GeoLookup)
 	go func() {
 		for {
@@ -257,7 +256,7 @@ func afterStart(user UserConfig) {
 			user.SetCountry(country)
 		}
 	}()
-	service.GetRegistry().StartAll()
+	service.StartAll()
 }
 
 // handleError logs the given error message

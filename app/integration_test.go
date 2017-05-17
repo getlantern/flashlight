@@ -126,7 +126,7 @@ func TestProxying(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	geoService, geo := service.GetRegistry().MustLookup(geolookup.ServiceType)
+	geoService, geo := service.MustLookup(geolookup.ServiceType)
 	onGeo := geoService.Subscribe()
 	geo.(*geolookup.GeoLookup).Refresh()
 

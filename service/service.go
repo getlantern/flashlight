@@ -113,17 +113,65 @@ func init() {
 	singleton = NewRegistry()
 }
 
+// MustRegister registers the service to the singleton registry, or panics.
+func MustRegister(
+	instantiator func() Impl,
+	defaultOpts ConfigOpts,
+	autoStart bool,
+	deps Deps) (Service, Impl) {
+	return singleton.MustRegister(instantiator, defaultOpts, autoStart, deps)
+}
+
+// Register registers the service to the singleton registry
+func Register(
+	instantiator func() Impl,
+	defaultOpts ConfigOpts,
+	autoStart bool,
+	deps Deps) (Service, Impl, error) {
+	return singleton.Register(instantiator, defaultOpts, autoStart, deps)
+}
+
+// MustLookup looks up a service from the singleton registry, or panics.
+func MustLookup(t Type) (Service, Impl) {
+	return singleton.MustLookup(t)
+}
+
+// Lookup looks up a service from the singleton registry, or nil.
+func Lookup(t Type) (Service, Impl) {
+	return singleton.Lookup(t)
+}
+
+// MustReconfigure configures a service from the singleton registry, or panics.
+func MustReconfigure(t Type, updates ConfigUpdates) {
+	singleton.MustReconfigure(t, updates)
+}
+
+// Reconfigure configures  a service from the singleton registry.
+func Reconfigure(t Type, updates ConfigUpdates) error {
+	return singleton.Reconfigure(t, updates)
+}
+
+// Subscribe subscribes message of a service from the singleton registry.
+func Subscribe(t Type) <-chan Message {
+	return singleton.Subscribe(t)
+}
+
+// StartAll starts all services registered to the singleton registry.
+func StartAll() {
+	singleton.StartAll()
+}
+
+// StopAll stops all started services registered to the singleton registry.
+func StopAll() {
+	singleton.StopAll()
+}
+
 // NewRegistry creates a new Registry
 func NewRegistry() *Registry {
 	return &Registry{
 		dag:      newDag(),
 		channels: make(map[Type][]chan Message),
 	}
-}
-
-// GetRegistry gets the singleton registry
-func GetRegistry() *Registry {
-	return singleton
 }
 
 // MustRegister is same as Register but panics if fail to register the service.
@@ -173,7 +221,7 @@ func (r *Registry) Register(
 	for dt, df := range deps {
 		r.dag.AddEdge(dt, t)
 		if df != nil {
-			ch := r.subscribe(dt)
+			ch := r.Subscribe(dt)
 			go func() {
 				for m := range ch {
 					df(m, s)
@@ -294,8 +342,14 @@ func (r *Registry) stopNoLock(n *node) {
 	}
 }
 
+func (r *Registry) MustReconfigure(t Type, fields ConfigUpdates) {
+	if err := r.Reconfigure(t, fields); err != nil {
+		panic(err)
+	}
+}
+
 // TODO: enforce timeout
-func (r *Registry) reconfigure(t Type, fields ConfigUpdates) error {
+func (r *Registry) Reconfigure(t Type, fields ConfigUpdates) error {
 	r.muDag.Lock()
 	defer r.muDag.Unlock()
 	n := r.dag.Lookup(t)
@@ -340,7 +394,7 @@ func (r *Registry) update(dest reflect.Value, fields ConfigUpdates) error {
 	return nil
 }
 
-func (r *Registry) subscribe(t Type) <-chan Message {
+func (r *Registry) Subscribe(t Type) <-chan Message {
 	ch := make(chan Message, 10)
 	r.muChannels.Lock()
 	r.channels[t] = append(r.channels[t], ch)
@@ -401,11 +455,11 @@ func (s service) MustReconfigure(fields ConfigUpdates) {
 }
 
 func (s service) Reconfigure(fields ConfigUpdates) error {
-	return s.r.reconfigure(s.impl.GetType(), fields)
+	return s.r.Reconfigure(s.impl.GetType(), fields)
 }
 
 func (s service) Subscribe() <-chan Message {
-	return s.r.subscribe(s.impl.GetType())
+	return s.r.Subscribe(s.impl.GetType())
 }
 
 func (s service) GetImpl() Impl {

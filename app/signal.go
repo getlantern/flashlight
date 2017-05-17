@@ -38,7 +38,7 @@ func (s *UserSignal) start() error {
 }
 
 func (s *UserSignal) read() {
-	p, _ := service.GetRegistry().MustLookup(sysproxy.ServiceType)
+	p, _ := service.MustLookup(sysproxy.ServiceType)
 	for message := range s.service.In {
 		log.Debugf("Read userSignal %v", message)
 		switch message {

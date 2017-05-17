@@ -244,13 +244,13 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			log.Errorf("Unable to serve mandrill to UI: %v", err)
 		}
 
-		geoService, _ := service.GetRegistry().MustRegister(
+		geoService, _ := service.MustRegister(
 			geolookup.New,
 			nil, // no ConfigOpts for geolookup
 			true,
 			nil)
 
-		service.GetRegistry().MustRegister(
+		service.MustRegister(
 			analytics.New,
 			&analytics.ConfigOpts{DeviceID: settings.GetDeviceID(), Version: common.Version, Enabled: settings.IsAutoReport()},
 			true, // either true or false should be ok as the ConfigOpts won't be valid until reconfigured with IP
@@ -259,7 +259,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 				self.Reconfigure(
 					map[string]interface{}{"IP": info.GetIP()})
 			}})
-		service.GetRegistry().MustRegister(
+		service.MustRegister(
 			location.New,
 			&location.ConfigOpts{},
 			true,
@@ -267,7 +267,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 				info := m.(*geolookup.GeoInfo)
 				self.Reconfigure(map[string]interface{}{"Code": info.GetCountry()})
 			}})
-		service.GetRegistry().MustRegister(
+		service.MustRegister(
 			sysproxy.New,
 			&sysproxy.ConfigOpts{},
 			false,
@@ -285,8 +285,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			}
 		}()
 
-		cl, _ := service.GetRegistry().MustLookup(client.ServiceType)
-		ch := cl.Subscribe()
+		ch := service.Subscribe(client.ServiceType)
 		go func() {
 			for m := range ch {
 				log.Debugf("Got message %+v", m)
@@ -295,7 +294,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 				case client.HTTPProxy:
 					log.Debugf("Got HTTP proxy address: %v", msg.Addr)
 					settings.setString(SNAddr, msg.Addr)
-					s, _ := service.GetRegistry().MustLookup(sysproxy.ServiceType)
+					s, _ := service.MustLookup(sysproxy.ServiceType)
 					s.MustReconfigure(service.ConfigUpdates{"ProxyAddr": msg.Addr})
 					if settings.GetSystemProxy() {
 						s.Start()
@@ -316,7 +315,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			}
 		}()
 
-		service.GetRegistry().StartAll()
+		service.StartAll()
 
 		setupUserSignal()
 
@@ -431,7 +430,7 @@ func (app *App) Exit(err error) {
 func (app *App) doExit(err error) {
 	log.Errorf("Exiting app because of %v", err)
 	defer func() {
-		service.GetRegistry().StopAll()
+		service.StopAll()
 		app.exitCh <- err
 		log.Debug("Finished exiting app")
 	}()
