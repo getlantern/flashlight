@@ -96,12 +96,13 @@ func Run(configDir string,
 					// country
 					select {
 					case <-onGeo:
-						// okay, we've got geolocation info
+						log.Debug("Got geolocation")
 					case <-time.After(5 * time.Minute):
 						// failed to get geolocation info within 5 minutes, just record end of
 						// startup anyway
 					}
 					op.End()
+					log.Debug("Lantern client started")
 				})
 				afterStart()
 			}

@@ -26,8 +26,6 @@ import (
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/flashlight/geolookup"
-	"github.com/getlantern/flashlight/service"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -126,35 +124,28 @@ func TestProxying(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	geoService, geo := service.MustLookup(geolookup.ServiceType)
-	onGeo := geoService.Subscribe()
-	geo.(*geolookup.GeoLookup).Refresh()
-
 	// Makes a test request
 	testRequest(t, httpAddr, httpsAddr)
 
 	// Switch to obfs4, wait for a new config and test request again
 	atomic.StoreUint32(&useOBFS4, 1)
-	time.Sleep(2 * time.Second)
+	time.Sleep(5 * time.Second)
 	testRequest(t, httpAddr, httpsAddr)
 
 	log.Fatal("test fatal error")
 	a.Exit(nil)
 
-	select {
-	case <-onGeo:
-		opsMx.RLock()
-		for _, op := range flashlight.FullyReportedOps {
-			if op == "report_issue" {
-				// ignore this, as we don't do this during the integration test
-				continue
-			}
-			assert.True(t, reportedOps[op], "Op %v wasn't reported", op)
+	// TODO: more reliable test
+	time.Sleep(2 * time.Second)
+	opsMx.RLock()
+	for _, op := range flashlight.FullyReportedOps {
+		if op == "report_issue" {
+			// ignore this, as we don't do this during the integration test
+			continue
 		}
-		opsMx.RUnlock()
-	case <-time.After(1 * time.Minute):
-		assert.Fail(t, "Geolookup never succeeded")
+		assert.True(t, reportedOps[op], "Op %v wasn't reported", op)
 	}
+	opsMx.RUnlock()
 }
 
 func startWebServer(t *testing.T) (string, string, error) {
