@@ -85,6 +85,7 @@ func startBordaAndProxyBench(reportInterval time.Duration, enabled func(ctx map[
 	}
 
 	ops.RegisterReporter(reporter)
+	log.Debug("Registered borda reporter")
 	golog.RegisterReporter(func(err error, linePrefix string, severity golog.Severity, ctx map[string]interface{}) {
 		// This code catches all logged errors that didn't happen inside an op
 		if ctx["op"] == nil {

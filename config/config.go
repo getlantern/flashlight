@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/getlantern/golog"
 	"github.com/getlantern/rot13"
 	"github.com/getlantern/tarfs"
 	"github.com/getlantern/yaml"
@@ -15,23 +16,70 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/service"
 )
 
-// Config is an interface for getting proxy data saved locally, embedded
-// in the binary, or fetched over the network.
-type Config interface {
+var (
+	log = golog.LoggerFor("flashlight.config")
 
-	// Saved returns a yaml config from disk.
-	saved() (interface{}, error)
+	ServiceType service.Type = "flashlight.config"
+)
 
-	// Embedded retrieves a yaml config embedded in the binary.
-	embedded([]byte, string) (interface{}, error)
-
-	// Poll polls for new configs from a remote server and saves them to disk for
-	// future runs.
-	poll(UserConfig, chan interface{}, *chainedFrontedURLs, time.Duration)
+type ConfigOpts struct {
+	// SaveDir is the directory where we should save new configs and also look
+	// for existing saved configs.
+	SaveDir string
+	// Obfuscate specifies whether or not to obfuscate the config on disk.
+	Obfuscate bool
+	// UserID specifies the user ID header to send to when fetching config.
+	UserID string
+	// Token specifies the token header to send to when fetching config.
+	Token string
+	// Sticky specifies whether or not fetch config. If true, don't fetch.
+	Sticky bool
+	// Global specifies the options to fetch global config.
+	Global FetchOpts
+	// Proxies specifies the options to fetch proxies config.
+	Proxies FetchOpts
 }
 
+func (o *ConfigOpts) For() service.Type {
+	return ServiceType
+}
+
+func (o *ConfigOpts) Complete() bool {
+	return o.SaveDir != "" &&
+		o.UserID != "" &&
+		o.Token != "" &&
+		o.Global.Complete() &&
+		o.Proxies.Complete()
+}
+
+type FetchOpts struct {
+	// YAMLName specifies the name of the config file both on disk and in the
+	// embedded config that uses tarfs (the same in the interest of using
+	// configuration by convention).
+	YAMLName string
+	// ChainedURL is the chained URL to use for fetching this config.
+	ChainedURL string
+	// FrontedURL is the fronted URL to use for fetching this config.
+	FrontedURL string
+	// EmbeddedData is the data for embedded configs, using tarfs.
+	EmbeddedData []byte
+	// FetchInteval is the time between config fetches.
+	FetchInteval time.Duration
+}
+
+func (o *FetchOpts) Complete() bool {
+	return o.YAMLName != "" &&
+		o.ChainedURL != "" &&
+		o.FrontedURL != "" &&
+		o.EmbeddedData != nil &&
+		o.FetchInteval > 0
+}
+
+// config gets proxy data saved locally, embedded in the binary, or fetched
+// over the network.
 type config struct {
 	filePath    string
 	obfuscate   bool
@@ -68,9 +116,6 @@ type options struct {
 	// servers in HTTP headers, such as the pro token.
 	userConfig UserConfig
 
-	// marshaler marshals application specific config to bytes, defaults to
-	// yaml.Marshal
-	marshaler func(interface{}) ([]byte, error)
 	//  unmarshaler unmarshals application specific data structure.
 	unmarshaler func([]byte) (interface{}, error)
 
@@ -141,7 +186,7 @@ func pipeConfig(opts *options) {
 // saved data at the specified path.
 func newConfig(filePath string,
 	opts *options,
-) Config {
+) *config {
 	cfg := &config{
 		filePath:    filePath,
 		obfuscate:   opts.obfuscate,
@@ -159,6 +204,7 @@ func newConfig(filePath string,
 	return cfg
 }
 
+// saved returns a yaml config from disk.
 func (conf *config) saved() (interface{}, error) {
 	infile, err := os.Open(conf.filePath)
 	if err != nil {
@@ -187,6 +233,7 @@ func (conf *config) saved() (interface{}, error) {
 	return conf.unmarshaler(bytes)
 }
 
+// embedded retrieves a yaml config embedded in the binary.
 func (conf *config) embedded(data []byte, fileName string) (interface{}, error) {
 	fs, err := tarfs.New(data, "")
 	if err != nil {
@@ -206,6 +253,8 @@ func (conf *config) embedded(data []byte, fileName string) (interface{}, error) 
 	return conf.unmarshaler(bytes)
 }
 
+// Poll polls for new configs from a remote server and saves them to disk for
+// future runs.
 func (conf *config) poll(uc UserConfig,
 	configChan chan interface{}, urls *chainedFrontedURLs, sleep time.Duration) {
 	fetcher := newFetcher(uc, proxied.ParallelPreferChained(), urls)

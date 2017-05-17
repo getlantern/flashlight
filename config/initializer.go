@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/getlantern/golog"
 	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/chained"
@@ -12,8 +11,6 @@ import (
 )
 
 var (
-	log = golog.LoggerFor("flashlight.config")
-
 	// globalURLs are the chained and fronted URLs for fetching the global config.
 	globalURLs = &chainedFrontedURLs{
 		chained: "https://globalconfig.flashlightproxy.com/global.yaml.gz",
