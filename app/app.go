@@ -256,8 +256,9 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			true, // either true or false should be ok as the ConfigOpts won't be valid until reconfigured with IP
 			service.Deps{geolookup.ServiceType: func(m service.Message, self service.Service) {
 				info := m.(*geolookup.GeoInfo)
-				self.Reconfigure(
-					map[string]interface{}{"IP": info.GetIP()})
+				self.MustReconfigure(func(opts service.ConfigOpts) {
+					opts.(*analytics.ConfigOpts).IP = info.GetIP()
+				})
 			}})
 		service.MustRegister(
 			location.New,
@@ -265,7 +266,9 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			true,
 			service.Deps{geolookup.ServiceType: func(m service.Message, self service.Service) {
 				info := m.(*geolookup.GeoInfo)
-				self.Reconfigure(map[string]interface{}{"Code": info.GetCountry()})
+				self.MustReconfigure(func(opts service.ConfigOpts) {
+					opts.(*location.ConfigOpts).Code = info.GetCountry()
+				})
 			}})
 		service.MustRegister(
 			sysproxy.New,
@@ -295,7 +298,9 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 					log.Debugf("Got HTTP proxy address: %v", msg.Addr)
 					settings.setString(SNAddr, msg.Addr)
 					s, _ := service.MustLookup(sysproxy.ServiceType)
-					s.MustReconfigure(service.ConfigUpdates{"ProxyAddr": msg.Addr})
+					s.MustReconfigure(func(opts service.ConfigOpts) {
+						opts.(*sysproxy.ConfigOpts).ProxyAddr = msg.Addr
+					})
 					if settings.GetSystemProxy() {
 						s.Start()
 					}

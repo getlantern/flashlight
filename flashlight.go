@@ -113,9 +113,10 @@ func Run(configDir string,
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
 		if len(proxyMap) > 0 {
 			log.Debugf("Applying proxy config with proxies: %v", proxyMap)
-			service.MustReconfigure(client.ServiceType, service.ConfigUpdates{
-				"Proxies":  proxyMap,
-				"DeviceID": deviceID,
+			service.MustReconfigure(client.ServiceType, func(opts service.ConfigOpts) {
+				o := opts.(*client.ConfigOpts)
+				o.Proxies = proxyMap
+				o.DeviceID = deviceID
 			})
 		}
 	}

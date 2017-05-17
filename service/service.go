@@ -6,8 +6,6 @@ package service
 
 import (
 	"fmt"
-	"reflect"
-	"strings"
 	"sync"
 
 	"github.com/getlantern/errors"
@@ -22,10 +20,6 @@ type Type string
 // handler to process message from the depended service. Typically, the handler
 // reconfigure the service itself based on the message.
 type Deps map[Type]func(m Message, self Service)
-
-// ConfigUpdates represents a portion of the config options of a service. See
-// Service.Reconfigure() for details.
-type ConfigUpdates map[string]interface{}
 
 // ConfigOpts represents all of the config options required to start a service.
 type ConfigOpts interface {
@@ -65,9 +59,9 @@ type Service interface {
 	// `Foo.Bar`.  It returns error without doing anything if the field doesn't
 	// exist or type mismatches. It's up to the Impl to restart itself when
 	// required (service status is not affected).
-	Reconfigure(fields ConfigUpdates) error
+	Reconfigure(func(opts ConfigOpts)) error
 	// MustReconfigure is the same as Reconfigure, but panics if error happens.
-	MustReconfigure(fields ConfigUpdates)
+	MustReconfigure(func(opts ConfigOpts))
 	// Subscribe gets a channel to receive any message the service published.
 	// Messages are discarded if no one is listening on the channel.
 	Subscribe() <-chan Message
@@ -142,13 +136,13 @@ func Lookup(t Type) (Service, Impl) {
 }
 
 // MustReconfigure configures a service from the singleton registry, or panics.
-func MustReconfigure(t Type, updates ConfigUpdates) {
-	singleton.MustReconfigure(t, updates)
+func MustReconfigure(t Type, op func(opts ConfigOpts)) {
+	singleton.MustReconfigure(t, op)
 }
 
 // Reconfigure configures  a service from the singleton registry.
-func Reconfigure(t Type, updates ConfigUpdates) error {
-	return singleton.Reconfigure(t, updates)
+func Reconfigure(t Type, op func(opts ConfigOpts)) error {
+	return singleton.Reconfigure(t, op)
 }
 
 // Subscribe subscribes message of a service from the singleton registry.
@@ -342,55 +336,22 @@ func (r *Registry) stopNoLock(n *node) {
 	}
 }
 
-func (r *Registry) MustReconfigure(t Type, fields ConfigUpdates) {
-	if err := r.Reconfigure(t, fields); err != nil {
+func (r *Registry) MustReconfigure(t Type, op func(ConfigOpts)) {
+	if err := r.Reconfigure(t, op); err != nil {
 		panic(err)
 	}
 }
 
 // TODO: enforce timeout
-func (r *Registry) Reconfigure(t Type, fields ConfigUpdates) error {
+func (r *Registry) Reconfigure(t Type, op func(ConfigOpts)) error {
 	r.muDag.Lock()
 	defer r.muDag.Unlock()
 	n := r.dag.Lookup(t)
 	if n.opts == nil {
 		return errors.New("%s service doesn't allow config options", t)
 	}
-	dest := reflect.Indirect(reflect.ValueOf(n.opts))
-	if err := r.update(dest, fields); err != nil {
-		return err
-	}
+	op(n.opts)
 	r.startNoLock(n)
-	return nil
-}
-
-func (r *Registry) update(dest reflect.Value, fields ConfigUpdates) error {
-	srcFields := make([]reflect.Value, 0, len(fields))
-	destFields := make([]reflect.Value, 0, len(fields))
-	for k, v := range fields {
-		d := dest
-		for _, part := range strings.Split(k, ".") {
-			if d.Kind() != reflect.Struct {
-				return errors.New("'%s' is not a struct", d.String())
-			}
-			d = d.FieldByName(part)
-			if !d.IsValid() {
-				return errors.New("invalid field %s", part)
-			}
-			if !d.CanSet() {
-				return errors.New("'%s' is not setable", d.String())
-			}
-		}
-		s := reflect.ValueOf(v)
-		if d.Type() != s.Type() {
-			return errors.New("type mismatch for %s: expect %s, got %s", k, d.Type(), s.Type())
-		}
-		srcFields = append(srcFields, s)
-		destFields = append(destFields, d)
-	}
-	for i := 0; i < len(srcFields); i++ {
-		destFields[i].Set(srcFields[i])
-	}
 	return nil
 }
 
@@ -448,14 +409,14 @@ func (s service) Stop() {
 	s.r.stop(s.impl.GetType())
 }
 
-func (s service) MustReconfigure(fields ConfigUpdates) {
-	if err := s.Reconfigure(fields); err != nil {
+func (s service) MustReconfigure(op func(ConfigOpts)) {
+	if err := s.Reconfigure(op); err != nil {
 		panic(err)
 	}
 }
 
-func (s service) Reconfigure(fields ConfigUpdates) error {
-	return s.r.Reconfigure(s.impl.GetType(), fields)
+func (s service) Reconfigure(op func(ConfigOpts)) error {
+	return s.r.Reconfigure(s.impl.GetType(), op)
 }
 
 func (s service) Subscribe() <-chan Message {
