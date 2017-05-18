@@ -2,61 +2,46 @@ package config
 
 import (
 	"net/http"
+	"net/http/httputil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-//userConfig supplies user data for fetching user-specific configuration.
-type userConfig struct {
+type dumpRequestRT struct {
+	wrapped http.RoundTripper
+	t       *testing.T
 }
 
-func (uc *userConfig) GetToken() string {
-	return "token"
+func (rt dumpRequestRT) RoundTrip(req *http.Request) (*http.Response, error) {
+	dump, _ := httputil.DumpRequestOut(req, false)
+	rt.t.Log(string(dump))
+	return rt.wrapped.RoundTrip(req)
 }
 
-func (uc *userConfig) GetUserID() int64 {
-	return 10
+func TestFetchGlobal(t *testing.T) {
+	// global config is hosted on S3, use the standard ETag
+	testFetch(t, false, globalChained, globalFronted)
 }
 
-// TestFetcher actually fetches a config file over the network.
-func TestFetcher(t *testing.T) {
-	// This will actually fetch the cloud config over the network.
-	rt := &http.Transport{}
-	configFetcher := newFetcher(&userConfig{}, rt, globalURLs)
+func TestFetchProxies(t *testing.T) {
+	// fetching proxies goes all the way to config-server
+	testFetch(t, true, proxiesChained, proxiesFronted)
+}
 
-	bytes, err := configFetcher.fetch()
+// testFetch actually fetches a config file over the network.
+func testFetch(t *testing.T, useLanternEtag bool, chained string, fronted string) {
+	rt := dumpRequestRT{&http.Transport{}, t}
+	cf := newFetcher(rt, useLanternEtag, "id", "token", chained, fronted)
+
+	bytes, err := cf.fetch()
 	assert.Nil(t, err)
 	assert.True(t, len(bytes) > 200)
-}
 
-// TestStagingSetup tests to make sure our staging config flag sets the
-// appropriate URLs for staging servers.
-func TestStagingSetup(t *testing.T) {
-	flags := make(map[string]interface{})
-	flags["staging"] = false
-
-	rt := &http.Transport{}
-
-	var fetch *fetcher
-	fetch = newFetcher(&userConfig{}, rt, proxiesURLs).(*fetcher)
-
-	assert.Equal(t, "http://config.getiantem.org/proxies.yaml.gz", fetch.chainedURL)
-	assert.Equal(t, "http://d2wi0vwulmtn99.cloudfront.net/proxies.yaml.gz", fetch.frontedURL)
-
-	urls := proxiesURLs
-
-	// Blank flags should mean we use the default
-	flags["cloudconfig"] = ""
-	flags["frontedconfig"] = ""
-	fetch = newFetcher(&userConfig{}, rt, urls).(*fetcher)
-
-	assert.Equal(t, "http://config.getiantem.org/proxies.yaml.gz", fetch.chainedURL)
-	assert.Equal(t, "http://d2wi0vwulmtn99.cloudfront.net/proxies.yaml.gz", fetch.frontedURL)
-
-	stagingURLs := proxiesStagingURLs
-	flags["staging"] = true
-	fetch = newFetcher(&userConfig{}, rt, stagingURLs).(*fetcher)
-	assert.Equal(t, "http://config-staging.getiantem.org/proxies.yaml.gz", fetch.chainedURL)
-	assert.Equal(t, "http://d33pfmbpauhmvd.cloudfront.net/proxies.yaml.gz", fetch.frontedURL)
+	lastETag := cf.(*fetcher).lastCloudConfigETag[chained]
+	t.Log(lastETag)
+	assert.NotNil(t, lastETag, "should save ETag")
+	bytes, err = cf.fetch()
+	assert.Nil(t, err)
+	assert.Nil(t, bytes, "fetching again should get unchanged content")
 }

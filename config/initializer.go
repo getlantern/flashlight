@@ -1,160 +1,86 @@
 package config
 
 import (
-	"errors"
 	"time"
 
-	"github.com/getlantern/yaml"
-
-	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config/generated"
 )
 
-var (
-	// globalURLs are the chained and fronted URLs for fetching the global config.
-	globalURLs = &chainedFrontedURLs{
-		chained: "https://globalconfig.flashlightproxy.com/global.yaml.gz",
-		fronted: "https://d24ykmup0867cj.cloudfront.net/global.yaml.gz",
-	}
+const (
+	globalChained = "https://globalconfig.flashlightproxy.com/global.yaml.gz"
+	globalFronted = "https://d24ykmup0867cj.cloudfront.net/global.yaml.gz"
 
-	// globalStagingURLs are the chained and fronted URLs for fetching the global
-	// config in a staging environment.
-	globalStagingURLs = &chainedFrontedURLs{
-		chained: "https://globalconfig.flashlightproxy.com/global.yaml.gz",
-		fronted: "https://d24ykmup0867cj.cloudfront.net/global.yaml.gz",
-	}
+	globalChainedStaging = "https://globalconfig.flashlightproxy.com/global.yaml.gz"
+	globalFrontedStaging = "https://d24ykmup0867cj.cloudfront.net/global.yaml.gz"
 
-	// The following are over HTTP because proxies do not forward X-Forwarded-For
-	// with HTTPS and because we only support falling back to direct domain
-	// fronting through the local proxy for HTTP.
+	// Note: we keep using HTTP so the proxy / CDN can inject headers required
+	// by the config-server.
+	// Data is always encrypted when transfering on the wire because:
+	// 1) The requests to proxy / CDN are over encrypted tunnel,
+	// 2) The CDN is configured to fetch origin via HTTPS, and
+	// 3) The proxy rewrites config-server requests to HTTPS.
+	proxiesChained = "http://config.getiantem.org/proxies.yaml.gz"
+	proxiesFronted = "http://d2wi0vwulmtn99.cloudfront.net/proxies.yaml.gz"
 
-	// proxiesURLs are the chained and fronted URLs for fetching the per user
-	// proxy config.
-	proxiesURLs = &chainedFrontedURLs{
-		chained: "http://config.getiantem.org/proxies.yaml.gz",
-		fronted: "http://d2wi0vwulmtn99.cloudfront.net/proxies.yaml.gz",
-	}
+	proxiesChainedStaging = "http://config-staging.getiantem.org/proxies.yaml.gz"
+	proxiesFrontedStaging = "http://d33pfmbpauhmvd.cloudfront.net/proxies.yaml.gz"
 
-	// proxiesStagingURLs are the chained and fronted URLs for fetching the per user
-	// proxy config in a staging environment.
-	proxiesStagingURLs = &chainedFrontedURLs{
-		chained: "http://config-staging.getiantem.org/proxies.yaml.gz",
-		fronted: "http://d33pfmbpauhmvd.cloudfront.net/proxies.yaml.gz",
-	}
+	globalYAML  = "global.yaml"
+	proxiesYAML = "proxies.yaml"
+
+	globalYAMLStaging  = "global-staging.yaml"
+	proxiesYAMLStaging = "proxies-staging.yaml"
 )
 
-// Init initializes the config setup for both fetching per-user proxies as well
-// as the global config.
-func Init(configDir string, flags map[string]interface{},
-	userConfig UserConfig, proxiesDispatch func(interface{}),
-	globalDispatch func(interface{})) {
-	staging := isStaging(flags)
-	// These are the options for fetching the per-user proxy config.
-	proxyOptions := &options{
-		saveDir:    configDir,
-		obfuscate:  obfuscate(flags),
-		name:       "proxies.yaml",
-		urls:       checkOverrides(flags, getProxyURLs(staging), "proxies.yaml.gz"),
-		userConfig: userConfig,
-		unmarshaler: func(bytes []byte) (interface{}, error) {
-			servers := make(map[string]*chained.ChainedServerInfo)
-			if err := yaml.Unmarshal(bytes, servers); err != nil {
-				return nil, err
-			}
-			if len(servers) == 0 {
-				return nil, errors.New("No chained server")
-			}
-			return servers, nil
+func DefaultConfigOpts() *ConfigOpts {
+	opts := &ConfigOpts{
+		Global: FetchOpts{
+			FileName:     globalYAML,
+			EmbeddedName: globalYAML,
+			EmbeddedData: generated.GlobalConfig,
+			ChainedURL:   globalChained,
+			FrontedURL:   globalFronted,
+			FetchInteval: 24 * time.Hour,
 		},
-		dispatch:     proxiesDispatch,
-		embeddedData: generated.EmbeddedProxies,
-		sleep:        1 * time.Minute,
-		sticky:       isSticky(flags),
-	}
-
-	pipeConfig(proxyOptions)
-
-	// These are the options for fetching the global config.
-	globalOptions := &options{
-		saveDir:    configDir,
-		obfuscate:  obfuscate(flags),
-		name:       "global.yaml",
-		urls:       checkOverrides(flags, getGlobalURLs(staging), "global.yaml.gz"),
-		userConfig: userConfig,
-		unmarshaler: func(bytes []byte) (interface{}, error) {
-			gl := newGlobal()
-			gl.applyFlags(flags)
-			if err := yaml.Unmarshal(bytes, gl); err != nil {
-				return nil, err
-			}
-			if err := gl.validate(); err != nil {
-				return nil, err
-			}
-			return gl, nil
+		Proxies: FetchOpts{
+			FileName:     proxiesYAML,
+			EmbeddedName: proxiesYAML,
+			EmbeddedData: generated.EmbeddedProxies,
+			ChainedURL:   proxiesChained,
+			FrontedURL:   proxiesFronted,
+			FetchInteval: 1 * time.Minute,
 		},
-		dispatch:     globalDispatch,
-		embeddedData: generated.GlobalConfig,
-		sleep:        24 * time.Hour,
-		sticky:       false,
 	}
+	if common.Staging {
+		opts.Global.FileName = globalYAMLStaging
+		opts.Global.ChainedURL = globalChainedStaging
+		opts.Global.FrontedURL = globalFrontedStaging
 
-	pipeConfig(globalOptions)
-}
-
-func obfuscate(flags map[string]interface{}) bool {
-	return flags["readableconfig"] == nil || !flags["readableconfig"].(bool)
-}
-
-func isStaging(flags map[string]interface{}) bool {
-	return checkBool(flags, "staging")
-}
-
-func isSticky(flags map[string]interface{}) bool {
-	return checkBool(flags, "stickyconfig")
-}
-
-func checkBool(flags map[string]interface{}, key string) bool {
-	if s, ok := flags[key].(bool); ok {
-		return s
+		opts.Proxies.FileName = proxiesYAMLStaging
+		opts.Proxies.ChainedURL = proxiesChainedStaging
+		opts.Proxies.FrontedURL = proxiesFrontedStaging
 	}
-	return false
+	return opts
 }
 
-func checkOverrides(flags map[string]interface{},
-	urls *chainedFrontedURLs, name string) *chainedFrontedURLs {
-	if s, ok := flags["cloudconfig"].(string); ok {
-		if len(s) > 0 {
-			log.Debugf("Overridding chained URL from the command line '%v'", s)
-			urls.chained = s + "/" + name
-		}
-	}
-	if s, ok := flags["frontedconfig"].(string); ok {
-		if len(s) > 0 {
-			log.Debugf("Overridding fronted URL from the command line '%v'", s)
-			urls.fronted = s + "/" + name
-		}
-	}
-	return urls
-}
+// func obfuscate(flags map[string]interface{}) bool {
+// 	return flags["readableconfig"] == nil || !flags["readableconfig"].(bool)
+// }
 
-// getProxyURLs returns the proxy URLs to use depending on whether or not
-// we're in staging.
-func getProxyURLs(staging bool) *chainedFrontedURLs {
-	if staging {
-		log.Debug("Configuring for staging")
-		return proxiesStagingURLs
-	}
-	log.Debugf("Not configuring for staging.")
-	return proxiesURLs
-}
-
-// getGlobalURLs returns the global URLs to use depending on whether or not
-// we're in staging.
-func getGlobalURLs(staging bool) *chainedFrontedURLs {
-	if staging {
-		log.Debug("Configuring for staging")
-		return globalStagingURLs
-	}
-	log.Debugf("Not configuring for staging.")
-	return globalURLs
-}
+// func checkOverrides(flags map[string]interface{},
+// 	urls *chainedFrontedURLs, name string) *chainedFrontedURLs {
+// 	if s, ok := flags["cloudconfig"].(string); ok {
+// 		if len(s) > 0 {
+// 			log.Debugf("Overridding chained URL from the command line '%v'", s)
+// 			urls.chained = s + "/" + name
+// 		}
+// 	}
+// 	if s, ok := flags["frontedconfig"].(string); ok {
+// 		if len(s) > 0 {
+// 			log.Debugf("Overridding fronted URL from the command line '%v'", s)
+// 			urls.fronted = s + "/" + name
+// 		}
+// 	}
+// 	return urls
+// }
