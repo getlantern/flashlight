@@ -3,6 +3,7 @@ package loconf
 import (
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/getlantern/golog"
@@ -11,7 +12,7 @@ import (
 
 func TestRoundTrip(t *testing.T) {
 	lc, err := Get(http.DefaultClient, false)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.True(t, len(lc.Surveys) > 0)
 
 	lc, err = Get(http.DefaultClient, true)
@@ -40,17 +41,17 @@ func TestParsing(t *testing.T) {
 	//log.Debugf("Got loconf: %+v", lc)
 	assert.NotNil(t, lc)
 
-	us := lc.GetUninstallSurvey("zh-CN", "US")
+	us := lc.GetUninstallSurvey("zh-CN", "US", false)
 
 	assert.NotNil(t, us)
 
 	log.Debugf("Got uninstall survey: %+v", us)
 
-	us = lc.GetUninstallSurvey("nothereatall", "notthere")
+	us = lc.GetUninstallSurvey("nothereatall", "notthere", false)
 
 	assert.Nil(t, us)
 
-	us = lc.GetUninstallSurvey("first-arg-not-there", "zh-CN")
+	us = lc.GetUninstallSurvey("first-arg-not-there", "zh-CN", false)
 
 	assert.NotNil(t, us)
 
@@ -58,6 +59,16 @@ func TestParsing(t *testing.T) {
 }
 
 func TestUninstallSurvey(t *testing.T) {
+	testUninstallSurvey(t, "free", func(lc *LoConf, locale, country string) *UninstallSurvey {
+		return lc.GetUninstallSurvey(locale, country, false)
+	})
+
+	testUninstallSurvey(t, "pro", func(lc *LoConf, locale, country string) *UninstallSurvey {
+		return lc.GetUninstallSurvey(locale, country, true)
+	})
+}
+
+func testUninstallSurvey(t *testing.T, suffix string, getUninstallSurvey func(lc *LoConf, locale, country string) *UninstallSurvey) {
 	buf := `
   {
     "uninstall-survey": {
@@ -69,11 +80,12 @@ func TestUninstallSurvey(t *testing.T) {
     }
   }
   `
+	buf = strings.Replace(buf, "uninstall-survey", "uninstall-survey-"+suffix, 1)
 	lc, err := parse([]byte(buf))
 	assert.Nil(t, err)
 	assert.NotNil(t, lc)
 
-	sur := lc.GetUninstallSurvey("en-US", "US")
+	sur := getUninstallSurvey(lc, "en-US", "US")
 
 	assert.NotNil(t, sur)
 
@@ -88,11 +100,12 @@ func TestUninstallSurvey(t *testing.T) {
     }
   }
   `
+	buf = strings.Replace(buf, "uninstall-survey", "uninstall-survey-"+suffix, 1)
 	lc, err = parse([]byte(buf))
 	assert.Nil(t, err)
 	assert.NotNil(t, lc)
 
-	sur = lc.GetUninstallSurvey("en-US", "US")
+	sur = getUninstallSurvey(lc, "en-US", "US")
 
 	assert.NotNil(t, sur)
 
@@ -107,11 +120,12 @@ func TestUninstallSurvey(t *testing.T) {
     }
   }
   `
+	buf = strings.Replace(buf, "uninstall-survey", "uninstall-survey-"+suffix, 1)
 	lc, err = parse([]byte(buf))
 	assert.NotNil(t, lc)
 	assert.Nil(t, err)
 
-	sur = lc.GetUninstallSurvey("en-US", "US")
+	sur = getUninstallSurvey(lc, "en-US", "US")
 
 	assert.NotNil(t, sur)
 
@@ -127,11 +141,12 @@ func TestUninstallSurvey(t *testing.T) {
     }
   }
   `
+	buf = strings.Replace(buf, "uninstall-survey", "uninstall-survey-"+suffix, 1)
 	lc, err = parse([]byte(buf))
 	assert.NotNil(t, lc)
 	assert.Nil(t, err)
 
-	sur = lc.GetUninstallSurvey("en-US", "US")
+	sur = getUninstallSurvey(lc, "en-US", "US")
 
 	assert.NotNil(t, sur)
 }
