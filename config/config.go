@@ -53,8 +53,6 @@ func (o *ConfigOpts) For() service.Type {
 
 func (o *ConfigOpts) Complete() bool {
 	return o.SaveDir != "" &&
-		o.UserID != "" &&
-		o.Token != "" &&
 		o.Global.Complete() &&
 		o.Proxies.Complete()
 }

@@ -201,8 +201,12 @@ func (c *Client) Start() {
 // client listener and underlying dialer connection pool
 func (c *Client) Stop() {
 	close(c.chStop)
-	c.httpListener.Close()
-	c.socks5Listener.Close()
+	if c.httpListener != nil {
+		c.httpListener.Close()
+	}
+	if c.socks5Listener != nil {
+		c.socks5Listener.Close()
+	}
 }
 
 type allowAllEasyList struct{}

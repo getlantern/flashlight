@@ -95,39 +95,113 @@ func (app *App) Run() error {
 	golog.OnFatal(app.exitOnFatal)
 	app.AddExitFunc(recordStopped)
 
-	// Run below in separate goroutine as config.Init() can potentially block when Lantern runs
-	// for the first time. User can still quit Lantern through systray menu when it happens.
+	app.startProfiling()
+
+	listenAddr := app.Flags["addr"].(string)
+	if listenAddr == "" {
+		listenAddr = settings.getString(SNAddr)
+	}
+	if listenAddr == "" {
+		listenAddr = defaultHTTPProxyAddress
+	}
+
+	socksAddr := app.Flags["socksaddr"].(string)
+	if socksAddr == "" {
+		socksAddr = settings.getString(SNSOCKSAddr)
+	}
+	if socksAddr == "" {
+		socksAddr = defaultSOCKSProxyAddress
+	}
+
+	uiaddr := app.Flags["uiaddr"].(string)
+	if uiaddr == "" {
+		// stick with the last one if not specified from command line.
+		if uiaddr = settings.GetUIAddr(); uiaddr != "" {
+			host, port, splitErr := net.SplitHostPort(uiaddr)
+			if splitErr != nil {
+				log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
+				uiaddr = ""
+			}
+			// To allow Edge to open the UI, we force the UI address to be
+			// localhost if it's 127.0.0.1 (the default for previous versions).
+			// We do the same for all platforms for simplicity though it's only
+			// useful on Windows 10 and above.
+			if host == "127.0.0.1" {
+				uiaddr = "localhost:" + port
+			}
+		}
+	}
+
+	if app.Flags["clear-proxy-settings"].(bool) {
+		// This is a workaround that attempts to fix a Windows-only problem where
+		// Lantern was unable to clean the system's proxy settings before logging
+		// off.
+		//
+		// See: https://github.com/getlantern/lantern/issues/2776
+		log.Debug("Requested clearing of proxy settings")
+		_, port, splitErr := net.SplitHostPort(listenAddr)
+		if splitErr == nil && port != "0" {
+			log.Debugf("Clearing system proxy settings for: %v", listenAddr)
+			p := sysproxy.New()
+			p.Reconfigure(nil, &sysproxy.ConfigOpts{listenAddr})
+			p.Stop()
+		} else {
+			log.Debugf("Can't clear proxy settings for: %v", listenAddr)
+		}
+		app.Exit(nil)
+	}
+
+	if uiaddr != "" {
+		// Is something listening on that port?
+		if showErr := app.showExistingUI(uiaddr); showErr == nil {
+			log.Debug("Lantern already running, showing existing UI")
+			app.Exit(nil)
+		}
+	}
+
+	service.MustRegister(client.New,
+		&client.ConfigOpts{
+			UseShortcut: !settings.GetProxyAll(),
+			UseDetour:   !settings.GetProxyAll(),
+			// on desktop, we do not allow private hosts
+			AllowPrivateHosts: false,
+			StatsTracker:      app.statsTracker,
+			HTTPProxyAddr:     listenAddr,
+			Socks5ProxyAddr:   socksAddr,
+			ProToken:          settings.GetToken(),
+			DeviceID:          settings.GetDeviceID(),
+		},
+		true,
+		nil)
+
+	var startupURL string
+	bootstrap, err := config.ReadBootstrapSettings()
+	if err != nil {
+		log.Debugf("Could not read bootstrap settings: %v", err)
+	} else {
+		startupURL = bootstrap.StartupUrl
+	}
+
+	log.Debugf("Starting client UI at %v", uiaddr)
+	// ui will handle empty uiaddr correctly
+	err = ui.Start(uiaddr, !app.ShowUI, startupURL, localHTTPToken(settings))
+	if err != nil {
+		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
+	}
+	ui.Handle("/data", ws.StartUIChannel())
+
+	if e := settings.StartService(); e != nil {
+		app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
+	}
+	settings.SetUIAddr(ui.GetUIAddr())
+
+	log.Debug(app.Flags)
+	if app.Flags["proxyall"].(bool) {
+		// If proxyall flag was supplied, force proxying of all
+		settings.SetProxyAll(true)
+	}
+
 	go func() {
-		log.Debug(app.Flags)
-		if app.Flags["proxyall"].(bool) {
-			// If proxyall flag was supplied, force proxying of all
-			settings.SetProxyAll(true)
-		}
-
-		listenAddr := app.Flags["addr"].(string)
-		if listenAddr == "" {
-			listenAddr = settings.getString(SNAddr)
-		}
-		if listenAddr == "" {
-			listenAddr = defaultHTTPProxyAddress
-		}
-
-		socksAddr := app.Flags["socksaddr"].(string)
-		if socksAddr == "" {
-			socksAddr = settings.getString(SNSOCKSAddr)
-		}
-		if socksAddr == "" {
-			socksAddr = defaultSOCKSProxyAddress
-		}
-
-		flashlight.Register(
-			listenAddr,
-			socksAddr,
-			func() bool { return !settings.GetProxyAll() }, // use shortcut
-			func() bool { return !settings.GetProxyAll() }, // use detour
-			func() bool { return false },                   // on desktop, we do not allow private hosts
-			settings,
-			app.statsTracker)
 		err := flashlight.Run(
 			app.Flags["configdir"].(string),
 			settings.IsAutoReport,
@@ -135,7 +209,6 @@ func (app *App) Run() error {
 			app.beforeStart(listenAddr),
 			app.afterStart,
 			app.onConfigUpdate,
-			settings,
 			app.Exit,
 			settings.GetDeviceID())
 		if err != nil {
@@ -147,90 +220,26 @@ func (app *App) Run() error {
 	return app.waitForExit()
 }
 
+func (app *App) startProfiling() {
+	var cpuProf, memProf string
+	if cpu, cok := app.Flags["cpuprofile"]; cok {
+		cpuProf = cpu.(string)
+	}
+	if mem, cok := app.Flags["memprofile"]; cok {
+		memProf = mem.(string)
+	}
+	if cpuProf != "" || memProf != "" {
+		log.Debugf("Start profiling with cpu file %s and mem file %s", cpuProf, memProf)
+		finishProfiling := profiling.Start(cpuProf, memProf)
+		app.AddExitFunc(finishProfiling)
+	}
+}
+
 func (app *App) beforeStart(listenAddr string) func() bool {
 	return func() bool {
 		log.Debug("Before start")
-		var cpuProf, memProf string
-		if cpu, cok := app.Flags["cpuprofile"]; cok {
-			cpuProf = cpu.(string)
-		}
-		if mem, cok := app.Flags["memprofile"]; cok {
-			memProf = mem.(string)
-		}
-		if cpuProf != "" || memProf != "" {
-			log.Debugf("Start profiling with cpu file %s and mem file %s", cpuProf, memProf)
-			finishProfiling := profiling.Start(cpuProf, memProf)
-			app.AddExitFunc(finishProfiling)
-		}
-
-		var startupURL string
-		bootstrap, err := config.ReadBootstrapSettings()
+		err := app.statsTracker.StartService()
 		if err != nil {
-			log.Debugf("Could not read bootstrap settings: %v", err)
-		} else {
-			startupURL = bootstrap.StartupUrl
-		}
-
-		uiaddr := app.Flags["uiaddr"].(string)
-		if uiaddr == "" {
-			// stick with the last one if not specified from command line.
-			if uiaddr = settings.GetUIAddr(); uiaddr != "" {
-				host, port, splitErr := net.SplitHostPort(uiaddr)
-				if splitErr != nil {
-					log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
-					uiaddr = ""
-				}
-				// To allow Edge to open the UI, we force the UI address to be
-				// localhost if it's 127.0.0.1 (the default for previous versions).
-				// We do the same for all platforms for simplicity though it's only
-				// useful on Windows 10 and above.
-				if host == "127.0.0.1" {
-					uiaddr = "localhost:" + port
-				}
-			}
-		}
-
-		if app.Flags["clear-proxy-settings"].(bool) {
-			// This is a workaround that attempts to fix a Windows-only problem where
-			// Lantern was unable to clean the system's proxy settings before logging
-			// off.
-			//
-			// See: https://github.com/getlantern/lantern/issues/2776
-			log.Debug("Requested clearing of proxy settings")
-			_, port, splitErr := net.SplitHostPort(listenAddr)
-			if splitErr == nil && port != "0" {
-				log.Debugf("Clearing system proxy settings for: %v", listenAddr)
-				p := sysproxy.New()
-				p.Reconfigure(nil, &sysproxy.ConfigOpts{listenAddr})
-				p.Stop()
-			} else {
-				log.Debugf("Can't clear proxy settings for: %v", listenAddr)
-			}
-			app.Exit(nil)
-		}
-
-		if uiaddr != "" {
-			// Is something listening on that port?
-			if showErr := app.showExistingUI(uiaddr); showErr == nil {
-				log.Debug("Lantern already running, showing existing UI")
-				app.Exit(nil)
-			}
-		}
-
-		log.Debugf("Starting client UI at %v", uiaddr)
-		// ui will handle empty uiaddr correctly
-		err = ui.Start(uiaddr, !app.ShowUI, startupURL, localHTTPToken(settings))
-		if err != nil {
-			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
-		}
-		ui.Handle("/data", ws.StartUIChannel())
-
-		if e := settings.StartService(); e != nil {
-			app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
-		}
-		settings.SetUIAddr(ui.GetUIAddr())
-
-		if err = app.statsTracker.StartService(); err != nil {
 			log.Errorf("Unable to serve stats to UI: %v", err)
 		}
 

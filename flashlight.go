@@ -22,7 +22,6 @@ import (
 	"github.com/getlantern/osversion"
 
 	"github.com/getlantern/flashlight/borda"
-	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
@@ -41,28 +40,6 @@ var (
 	FullyReportedOps = []string{"client_started", "client_stopped", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "report_issue"}
 )
 
-func Register(httpProxyAddr string,
-	socksProxyAddr string,
-	useShortcut func() bool,
-	useDetour func() bool,
-	allowPrivateHosts func() bool,
-	userConfig config.UserConfig,
-	statsTracker common.StatsTracker,
-) {
-	service.MustRegister(client.New,
-		&client.ConfigOpts{
-			UseShortcut:       useShortcut(),
-			UseDetour:         useDetour(),
-			AllowPrivateHosts: allowPrivateHosts(),
-			ProToken:          userConfig.GetToken(),
-			StatsTracker:      statsTracker,
-			HTTPProxyAddr:     httpProxyAddr,
-			Socks5ProxyAddr:   socksProxyAddr,
-		},
-		true,
-		nil)
-}
-
 // Run runs a client proxy. It blocks as long as the proxy is running.
 func Run(configDir string,
 	autoReport func() bool,
@@ -70,7 +47,6 @@ func Run(configDir string,
 	beforeStart func() bool,
 	afterStart func(),
 	onConfigUpdate func(cfg *config.Global),
-	userConfig config.UserConfig,
 	onError func(err error),
 	deviceID string) error {
 
@@ -79,8 +55,31 @@ func Run(configDir string,
 	initContext(deviceID, common.Version, common.RevisionDate)
 	op := fops.Begin("client_started")
 
-	ch := service.Subscribe(client.ServiceType)
+	waitForStart(op, elapsed, afterStart)
+	registerConfigService(flagsAsMap)
+	ch := service.Subscribe(config.ServiceType)
+	go func() {
+		for msg := range ch {
+			switch c := msg.(type) {
+			case config.Proxies:
+				log.Debugf("Applying proxy config with proxies: %v", c)
+				service.MustReconfigure(client.ServiceType, func(opts service.ConfigOpts) {
+					opts.(*client.ConfigOpts).Proxies = c
+				})
+			case *config.Global:
+				log.Debugf("Applying global config")
+				applyClientConfig(c, deviceID, autoReport)
+				onConfigUpdate(c)
+			}
+		}
+	}()
+
 	beforeStart()
+	return nil
+}
+
+func waitForStart(op *fops.Op, elapsed func() time.Duration, afterStart func()) {
+	ch := service.Subscribe(client.ServiceType)
 	go func() {
 		for m := range ch {
 			msg := m.(client.Message)
@@ -109,28 +108,35 @@ func Run(configDir string,
 		}
 	}()
 
-	proxiesDispatch := func(conf interface{}) {
-		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
-		if len(proxyMap) > 0 {
-			log.Debugf("Applying proxy config with proxies: %v", proxyMap)
-			service.MustReconfigure(client.ServiceType, func(opts service.ConfigOpts) {
-				o := opts.(*client.ConfigOpts)
-				o.Proxies = proxyMap
-				o.DeviceID = deviceID
-			})
+}
+
+func registerConfigService(flagsAsMap map[string]interface{}) {
+	opts := config.DefaultConfigOpts()
+	if v, ok := flagsAsMap["cloudconfig"]; ok {
+		opts.Proxies.ChainedURL = v.(string)
+	}
+	if v, ok := flagsAsMap["frontedconfig"]; ok {
+		opts.Proxies.FrontedURL = v.(string)
+	}
+	if v, ok := flagsAsMap["stickyconfig"]; ok {
+		opts.Sticky = v.(bool)
+	}
+	if v, ok := flagsAsMap["readableconfig"]; ok {
+		opts.Obfuscate = !v.(bool)
+	}
+	opts.SaveDir = appdir.General("Lantern")
+	if v, ok := flagsAsMap["configdir"]; ok {
+		opts.SaveDir = v.(string)
+	}
+	opts.OverrideGlobal = func(gl *config.Global) {
+		if v, ok := flagsAsMap["borda-report-interval"]; ok {
+			gl.BordaReportInterval = v.(time.Duration)
+		}
+		if v, ok := flagsAsMap["borda-sample-percentage"]; ok {
+			gl.BordaSamplePercentage = v.(float64)
 		}
 	}
-	globalDispatch := func(conf interface{}) {
-		// Don't love the straight cast here, but we're also the ones defining
-		// the type in the factory method above.
-		cfg := conf.(*config.Global)
-		log.Debugf("Applying global config")
-		applyClientConfig(cfg, deviceID, autoReport)
-		onConfigUpdate(cfg)
-	}
-	config.Init(configDir, flagsAsMap, userConfig, proxiesDispatch, globalDispatch)
-
-	return nil
+	service.MustRegister(config.New, opts, true, nil)
 }
 
 func applyClientConfig(cfg *config.Global, deviceID string, autoReport func() bool) {

@@ -87,7 +87,8 @@ type StartResult struct {
 }
 
 type UserConfig interface {
-	config.UserConfig
+	GetUserID() int64
+	GetToken() string
 	AfterStart()
 	SetCountry(string)
 	SetStaging(bool)
@@ -117,20 +118,65 @@ func Start(configDir string, locale string,
 
 	startOnce.Do(func() {
 		user.SetStaging(common.Staging)
-		flashlight.Register("127.0.0.1:0", // listen for HTTP on random address
-			"127.0.0.1:0", // listen for SOCKS on random address
-			// TODO: allow configuring whether or not to enable shortcut depends on
-			// proxyAll option (just like we already have in desktop)
-			func() bool { return !user.ProxyAll() }, // use shortcut
-			func() bool { return false },            // not use detour
-			// TODO: allow configuring whether or not to enable reporting (just like we
-			// already have in desktop)
-			func() bool { return true }, // on Android, we allow private hosts
-			user,
-			statsTracker{},
-		)
+
+		// TODO: persist device ID across system reboot
+		deviceID := base64.StdEncoding.EncodeToString(uuid.NodeID())
+		service.MustRegister(client.New,
+			&client.ConfigOpts{
+				UseShortcut: !user.ProxyAll(),
+				UseDetour:   false,
+				// on android, we allow private hosts
+				AllowPrivateHosts: true,
+				StatsTracker:      &statsTracker{},
+				HTTPProxyAddr:     "127.0.0.1:0", // listen for HTTP on random address
+				Socks5ProxyAddr:   "127.0.0.1:0", // listen for SOCKS on random address
+				ProToken:          user.GetToken(),
+				DeviceID:          deviceID,
+			},
+			true,
+			nil)
 		ch := service.Subscribe(client.ServiceType)
-		run(configDir, locale, stickyConfig, user)
+		appdir.SetHomeDir(configDir)
+
+		log.Debugf("Starting lantern: configDir %s locale %s sticky config %t",
+			configDir, locale, stickyConfig)
+
+		flags := map[string]interface{}{
+			"borda-report-interval":    5 * time.Minute,
+			"borda-sample-percentage":  float64(0.01),
+			"loggly-sample-percentage": float64(0.02),
+			"staging":                  common.Staging,
+		}
+
+		err := os.MkdirAll(configDir, 0755)
+		if os.IsExist(err) {
+			log.Errorf("Unable to create configDir at %v: %v", configDir, err)
+			return
+		}
+
+		if stickyConfig {
+			flags["stickyconfig"] = true
+			flags["readableconfig"] = true
+		}
+
+		logging.EnableFileLogging(configDir)
+
+		log.Debugf("Writing log messages to %s/lantern.log", configDir)
+
+		flashlight.Run(
+			configDir,                   // place to store lantern configuration
+			func() bool { return true }, // auto report
+			flags,
+			beforeStart,
+			func() {
+				afterStart(user)
+			}, // afterStart()
+			func(cfg *config.Global) {
+			}, // onConfigUpdate
+			func(err error) {}, // onError
+			deviceID,
+		)
+
 		// TODO: fix CI by subscribing before starting the client, i.e., break
 		// flashlight.Run into pieces
 		var wg sync.WaitGroup
@@ -154,57 +200,6 @@ func Start(configDir string, locale string,
 	})
 
 	return &startResult, nil
-}
-
-// AddLoggingMetadata adds metadata for reporting to cloud logging services
-func AddLoggingMetadata(key, value string) {
-	//logging.SetExtraLogglyInfo(key, value)
-}
-
-func run(configDir, locale string,
-	stickyConfig bool, user UserConfig) {
-
-	appdir.SetHomeDir(configDir)
-
-	log.Debugf("Starting lantern: configDir %s locale %s sticky config %t",
-		configDir, locale, stickyConfig)
-
-	flags := map[string]interface{}{
-		"borda-report-interval":    5 * time.Minute,
-		"borda-sample-percentage":  float64(0.01),
-		"loggly-sample-percentage": float64(0.02),
-		"staging":                  common.Staging,
-	}
-
-	err := os.MkdirAll(configDir, 0755)
-	if os.IsExist(err) {
-		log.Errorf("Unable to create configDir at %v: %v", configDir, err)
-		return
-	}
-
-	if stickyConfig {
-		flags["stickyconfig"] = true
-		flags["readableconfig"] = true
-	}
-
-	logging.EnableFileLogging(configDir)
-
-	log.Debugf("Writing log messages to %s/lantern.log", configDir)
-
-	flashlight.Run(
-		configDir,                   // place to store lantern configuration
-		func() bool { return true }, // auto report
-		flags,
-		beforeStart,
-		func() {
-			afterStart(user)
-		}, // afterStart()
-		func(cfg *config.Global) {
-		}, // onConfigUpdate
-		user,
-		func(err error) {}, // onError
-		base64.StdEncoding.EncodeToString(uuid.NodeID()),
-	)
 }
 
 func bandwidthUpdates(user UserConfig) {
@@ -239,6 +234,7 @@ func getBandwidth(quota *bandwidth.Quota) (int, int) {
 
 func beforeStart() bool {
 	service.MustRegister(geolookup.New, nil, true, nil)
+	service.StartAll()
 	return true
 }
 

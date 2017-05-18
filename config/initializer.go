@@ -35,6 +35,7 @@ const (
 
 func DefaultConfigOpts() *ConfigOpts {
 	opts := &ConfigOpts{
+		Obfuscate: true,
 		Global: FetchOpts{
 			FileName:     globalYAML,
 			EmbeddedName: globalYAML,
@@ -63,24 +64,3 @@ func DefaultConfigOpts() *ConfigOpts {
 	}
 	return opts
 }
-
-// func obfuscate(flags map[string]interface{}) bool {
-// 	return flags["readableconfig"] == nil || !flags["readableconfig"].(bool)
-// }
-
-// func checkOverrides(flags map[string]interface{},
-// 	urls *chainedFrontedURLs, name string) *chainedFrontedURLs {
-// 	if s, ok := flags["cloudconfig"].(string); ok {
-// 		if len(s) > 0 {
-// 			log.Debugf("Overridding chained URL from the command line '%v'", s)
-// 			urls.chained = s + "/" + name
-// 		}
-// 	}
-// 	if s, ok := flags["frontedconfig"].(string); ok {
-// 		if len(s) > 0 {
-// 			log.Debugf("Overridding fronted URL from the command line '%v'", s)
-// 			urls.fronted = s + "/" + name
-// 		}
-// 	}
-// 	return urls
-// }
