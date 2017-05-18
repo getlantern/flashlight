@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -75,7 +76,7 @@ func get(hc *http.Client, isStaging bool, prodURL, stagingURL string) (*LoConf, 
 	if isStaging {
 		u = stagingURL
 	}
-	b, efetch := fetch(hc, u)
+	b, efetch := fetch(hc, bustCache(u))
 	if efetch != nil {
 		return nil, errors.Wrap(efetch)
 	}
@@ -84,6 +85,10 @@ func get(hc *http.Client, isStaging bool, prodURL, stagingURL string) (*LoConf, 
 		return nil, errors.Wrap(eparse)
 	}
 	return parsed, nil
+}
+
+func bustCache(u string) string {
+	return u + "?time=" + strconv.Itoa(time.Now().Nanosecond())
 }
 
 func fetch(hc *http.Client, u string) (b []byte, err error) {
