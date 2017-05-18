@@ -78,7 +78,7 @@ imports:
 - name: github.com/getlantern/detour
   version: 36801cb3f46d22d4e07ef7a8c123bba1991a73a1
 - name: github.com/getlantern/easylist
-  version: 26a66dad1863b7e093838067d27d2a46627e1552
+  version: 21cf8de29202241c29943e7a7b0b451f3a9e8f8d
 - name: github.com/getlantern/edgedetect
   version: f58e865f680868c70f5d114b620b682a39fdaff7
 - name: github.com/getlantern/elevate
@@ -219,7 +219,7 @@ imports:
 - name: github.com/getlantern/stack
   version: 02f928aad224fbccd50d66edd776fc9d1e9f2f2b
 - name: github.com/getlantern/sysproxy
-  version: 0d64245fcb63e0d65c5844fa8e17c57d53469f59
+  version: eaf903f586f11454b05518fc77b1b478448be9a2
 - name: github.com/getlantern/systray
   version: 0068f6ae40ea39bfd683043e8452024097fff0e4
 - name: github.com/getlantern/tarfs
