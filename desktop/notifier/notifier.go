@@ -20,7 +20,7 @@ type notifierRequest struct {
 }
 
 var (
-	log = golog.LoggerFor("flashlight.app.notifier")
+	log = golog.LoggerFor("flashlight.desktop.notifier")
 
 	ch chan notifierRequest = make(chan notifierRequest)
 )

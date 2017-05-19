@@ -14,7 +14,7 @@ import (
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
 
-	"github.com/getlantern/flashlight/app/notifier"
+	"github.com/getlantern/flashlight/desktop/notifier"
 )
 
 var (
@@ -25,7 +25,7 @@ var (
 	oneFull   = &sync.Once{}
 	ns        = notifyStatus{}
 
-	log = golog.LoggerFor("flashlight.app.bandwidth")
+	log = golog.LoggerFor("flashlight.desktop.bandwidth")
 )
 
 type notifyStatus struct {

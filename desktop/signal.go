@@ -1,4 +1,4 @@
-package app
+package desktop
 
 import (
 	"sync"
@@ -6,7 +6,7 @@ import (
 	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/flashlight/ws"
 
-	"github.com/getlantern/flashlight/app/sysproxy"
+	"github.com/getlantern/flashlight/desktop/sysproxy"
 )
 
 type UserSignal struct {

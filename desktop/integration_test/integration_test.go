@@ -1,4 +1,4 @@
-package app
+package integration_test
 
 import (
 	"compress/gzip"
@@ -17,6 +17,7 @@ import (
 	"time"
 
 	bclient "github.com/getlantern/borda/client"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/http-proxy-lantern"
 	"github.com/getlantern/tlsdefaults"
 	"github.com/getlantern/waitforserver"
@@ -26,6 +27,7 @@ import (
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/desktop"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -47,6 +49,8 @@ const (
 
 var (
 	useOBFS4 = uint32(0)
+
+	log = golog.LoggerFor("flashlight.desktop.integration_test")
 )
 
 func TestProxying(t *testing.T) {
@@ -365,7 +369,7 @@ func buildGlobal() ([]byte, error) {
 	return out, nil
 }
 
-func startApp(t *testing.T, configAddr string) (*App, error) {
+func startApp(t *testing.T, configAddr string) (*desktop.App, error) {
 	configURL := "http://" + configAddr
 	flags := map[string]interface{}{
 		"cloudconfig":             configURL,
@@ -383,13 +387,11 @@ func startApp(t *testing.T, configAddr string) (*App, error) {
 		"borda-sample-percentage": 0.0, // this is 0 to disable random sampling, allowing us to test fully reported ops
 	}
 
-	a := &App{
+	a := &desktop.App{
 		ShowUI: false,
 		Flags:  flags,
 	}
 	a.Init()
-	// Set a non-zero User ID to make prochecker happy
-	a.settings.SetUserID(1)
 
 	go func() {
 		err := a.Run()

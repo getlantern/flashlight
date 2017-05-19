@@ -8,7 +8,7 @@ import (
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/systray"
 
-	"github.com/getlantern/flashlight/app"
+	"github.com/getlantern/flashlight/desktop"
 	"github.com/getlantern/flashlight/icons"
 	"github.com/getlantern/flashlight/ui"
 )
@@ -19,7 +19,7 @@ var menu struct {
 	quit   *systray.MenuItem
 }
 
-func runOnSystrayReady(a *app.App, f func()) {
+func runOnSystrayReady(a *desktop.App, f func()) {
 	systray.Run(f)
 	a.Exit(nil)
 }
@@ -29,7 +29,7 @@ func quitSystray() {
 	systray.Quit()
 }
 
-func configureSystemTray(a *app.App) error {
+func configureSystemTray(a *desktop.App) error {
 	menu.enable = a.ShowUI
 	if !menu.enable {
 		return nil

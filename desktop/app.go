@@ -1,5 +1,5 @@
 // Package app implements the desktop application functionality of flashlight
-package app
+package desktop
 
 import (
 	"fmt"
@@ -31,19 +31,20 @@ import (
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
 
-	"github.com/getlantern/flashlight/app/bandwidth"
-	"github.com/getlantern/flashlight/app/emailproxy"
-	"github.com/getlantern/flashlight/app/location"
-	"github.com/getlantern/flashlight/app/loconfscanner"
-	"github.com/getlantern/flashlight/app/notifier"
-	"github.com/getlantern/flashlight/app/settings"
-	"github.com/getlantern/flashlight/app/sysproxy"
+	"github.com/getlantern/flashlight/desktop/bandwidth"
+	"github.com/getlantern/flashlight/desktop/emailproxy"
+	"github.com/getlantern/flashlight/desktop/location"
+	"github.com/getlantern/flashlight/desktop/loconfscanner"
+	"github.com/getlantern/flashlight/desktop/notifier"
+	"github.com/getlantern/flashlight/desktop/settings"
+	"github.com/getlantern/flashlight/desktop/sysproxy"
 )
 
 var (
-	log = golog.LoggerFor("flashlight.app")
+	log = golog.LoggerFor("flashlight.desktop")
 
-	settingsPath = filepath.Join(appdir.General("Lantern"), "settings.yaml")
+	settingsName        = "settings.yaml"
+	settingsNameStaging = "settings-staging.yaml"
 
 	elapsed func() time.Duration
 )
@@ -73,8 +74,20 @@ type App struct {
 func (app *App) Init() {
 	golog.OnFatal(app.exitOnFatal)
 	app.Flags["staging"] = common.Staging
+	_, ok := app.Flags["configdir"].(string)
+	if !ok {
+		app.Flags["configdir"] = appdir.General("Lantern")
+	}
+	if common.Staging {
+		settingsName = settingsNameStaging
+	}
 	app.settings = settings.New()
-	app.settings.Reconfigure(nil, &settings.ConfigOpts{common.Version, common.RevisionDate, common.BuildDate, settingsPath})
+	app.settings.Reconfigure(nil, &settings.ConfigOpts{
+		common.Version,
+		common.RevisionDate,
+		common.BuildDate,
+		app.settingsPath(),
+	})
 	app.exitCh = make(chan error, 1)
 	// use buffered channel to avoid blocking the caller of 'AddExitFunc'
 	// the number 10 is arbitrary
@@ -88,7 +101,11 @@ func (app *App) LogPanicAndExit(msg interface{}) {
 	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
 	// Turn off system proxy on panic
 	// Reload settings to make sure we have an up-to-date addr
-	app.settings.Reconfigure(nil, &settings.ConfigOpts{common.Version, common.RevisionDate, common.BuildDate, settingsPath})
+	app.settings.Reconfigure(nil, &settings.ConfigOpts{common.Version,
+		common.RevisionDate,
+		common.BuildDate,
+		app.settingsPath(),
+	})
 	p := sysproxy.New()
 	p.Reconfigure(nil, &sysproxy.ConfigOpts{app.settings.GetAddr()})
 	p.Stop()
@@ -212,7 +229,6 @@ func (app *App) Run() error {
 
 	go func() {
 		err := flashlight.Run(
-			app.Flags["configdir"].(string),
 			app.settings.IsAutoReport,
 			app.Flags,
 			app.beforeStart(listenAddr),
@@ -227,6 +243,15 @@ func (app *App) Run() error {
 	}()
 
 	return app.waitForExit()
+}
+
+func (app *App) settingsPath() string {
+	name := settingsName
+	if common.Staging {
+		name = settingsNameStaging
+	}
+	configDir := app.Flags["configdir"].(string)
+	return filepath.Join(configDir, name)
 }
 
 func (app *App) startProfiling() {

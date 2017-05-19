@@ -1,6 +1,6 @@
 // +build disableresourcerandomization
 
-package app
+package desktop
 
 const (
 	defaultHTTPProxyAddress  = "127.0.0.1:8787"

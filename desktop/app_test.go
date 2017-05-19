@@ -1,4 +1,4 @@
-package app
+package desktop
 
 import (
 	"io/ioutil"
@@ -8,7 +8,7 @@ import (
 	"github.com/getlantern/flashlight/ui"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/getlantern/flashlight/app/settings"
+	"github.com/getlantern/flashlight/desktop/settings"
 )
 
 func TestLocalHTTPToken(t *testing.T) {

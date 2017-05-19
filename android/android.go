@@ -146,6 +146,7 @@ func Start(configDir string, locale string,
 			"borda-sample-percentage":  float64(0.01),
 			"loggly-sample-percentage": float64(0.02),
 			"staging":                  common.Staging,
+			"configdir":                configDir,
 		}
 
 		err := os.MkdirAll(configDir, 0755)
@@ -164,7 +165,6 @@ func Start(configDir string, locale string,
 		log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
 		flashlight.Run(
-			configDir,                   // place to store lantern configuration
 			func() bool { return true }, // auto report
 			flags,
 			beforeStart,

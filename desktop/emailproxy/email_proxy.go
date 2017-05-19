@@ -38,7 +38,7 @@ type mandrillMessage struct {
 }
 
 var (
-	log = golog.LoggerFor("flashlight.app.emailproxy")
+	log = golog.LoggerFor("flashlight.desktop.emailproxy")
 
 	// Only allowed to call /send_template
 	mandrillAPIKey = "fmYlUdjEpGGonI4NDx9xeA"

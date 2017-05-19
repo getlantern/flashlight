@@ -41,8 +41,7 @@ var (
 )
 
 // Run runs a client proxy. It blocks as long as the proxy is running.
-func Run(configDir string,
-	autoReport func() bool,
+func Run(autoReport func() bool,
 	flagsAsMap map[string]interface{},
 	beforeStart func() bool,
 	afterStart func(),

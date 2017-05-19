@@ -85,9 +85,9 @@ var settingMeta = map[SettingName]struct {
 }
 
 var (
-	log = golog.LoggerFor("flashlight.app.settings")
+	log = golog.LoggerFor("flashlight.desktop.settings")
 
-	ServiceType service.Type = "flashlight.app.settings"
+	ServiceType service.Type = "flashlight.desktop.settings"
 )
 
 // Settings is a struct of all settings unique to this particular Lantern instance.

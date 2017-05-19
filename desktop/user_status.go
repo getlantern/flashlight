@@ -1,4 +1,4 @@
-package app
+package desktop
 
 import (
 	proClient "github.com/getlantern/flashlight/pro/client"

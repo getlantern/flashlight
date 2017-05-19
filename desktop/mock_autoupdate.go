@@ -1,6 +1,6 @@
 // +build mockupdate
 
-package app
+package desktop
 
 // This is a public key derived from a private key that is freely available.
 // Don't use in production.
