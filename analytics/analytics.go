@@ -57,8 +57,11 @@ func (o *ConfigOpts) For() service.Type {
 	return ServiceType
 }
 
-func (o *ConfigOpts) Complete() bool {
-	return o.IP != ""
+func (o *ConfigOpts) Complete() string {
+	if o.IP == "" {
+		return "missing IP"
+	}
+	return ""
 }
 
 func (s *analytics) GetType() service.Type {

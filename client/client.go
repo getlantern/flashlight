@@ -82,10 +82,23 @@ func (o *ConfigOpts) For() service.Type {
 	return ServiceType
 }
 
-func (o *ConfigOpts) Complete() bool {
-	return o.StatsTracker != nil &&
-		o.HTTPProxyAddr != "" && o.Socks5ProxyAddr != "" &&
-		o.DeviceID != "" && len(o.Proxies) > 0
+func (o *ConfigOpts) Complete() string {
+	if o.StatsTracker == nil {
+		return "missing StatsTracker"
+	}
+	if o.HTTPProxyAddr == "" {
+		return "missing HTTPProxyAddr"
+	}
+	if o.Socks5ProxyAddr == "" {
+		return "missing Socks5ProxyAddr"
+	}
+	if o.DeviceID == "" {
+		return "missing DeviceID"
+	}
+	if len(o.Proxies) == 0 {
+		return "missing Proxies"
+	}
+	return ""
 }
 
 type ProxyType string

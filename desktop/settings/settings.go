@@ -113,11 +113,23 @@ func (c *ConfigOpts) For() service.Type {
 	return ServiceType
 }
 
-func (c *ConfigOpts) Complete() bool {
-	return c.Version != "" &&
-		c.RevisionDate != "" &&
-		c.BuildDate != "" &&
-		c.FilePath != ""
+func (c *ConfigOpts) Complete() string {
+	if c.Version == "" {
+		return "missing Version"
+	}
+
+	if c.RevisionDate == "" {
+		return "missing RevisionDate"
+	}
+
+	if c.BuildDate == "" {
+		return "missing BuildDate"
+	}
+
+	if c.FilePath == "" {
+		return "missing FilePath"
+	}
+	return ""
 }
 
 func New() *Settings {

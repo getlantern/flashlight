@@ -28,8 +28,11 @@ func (o *ConfigOpts) For() service.Type {
 	return ServiceType
 }
 
-func (o *ConfigOpts) Complete() bool {
-	return o.ProxyAddr != ""
+func (o *ConfigOpts) Complete() string {
+	if o.ProxyAddr == "" {
+		return "missing ProxyAddr"
+	}
+	return ""
 }
 
 type Sysproxy struct {

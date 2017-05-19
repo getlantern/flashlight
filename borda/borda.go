@@ -35,13 +35,16 @@ func (c *ConfigOpts) For() service.Type {
 	return ServiceType
 }
 
-func (c *ConfigOpts) Complete() bool {
-	return c.ReportInterval > 0
+func (c *ConfigOpts) Complete() string {
+	if c.ReportInterval == 0 {
+		return "ReportInterval is zero"
+	}
+	return ""
 }
 
 type bordaService struct {
 	muOpts      sync.RWMutex
-	opts        *ConfigOpts
+	opts        ConfigOpts
 	bordaClient *borda.Client
 }
 
@@ -57,10 +60,10 @@ func (s *bordaService) Reconfigure(p service.Publisher, opts service.ConfigOpts)
 	o := opts.(*ConfigOpts)
 	shouldRestart := false
 	s.muOpts.Lock()
-	if s.opts != nil && s.opts.ReportInterval != o.ReportInterval {
+	if s.opts.ReportInterval > 0 && s.opts.ReportInterval != o.ReportInterval {
 		shouldRestart = true
 	}
-	s.opts = o
+	s.opts = *o
 	s.muOpts.Unlock()
 	if shouldRestart {
 		s.Stop()

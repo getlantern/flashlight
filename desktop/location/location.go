@@ -20,8 +20,11 @@ func (d ConfigOpts) For() service.Type {
 	return ServiceType
 }
 
-func (d ConfigOpts) Complete() bool {
-	return d.Code != ""
+func (d ConfigOpts) Complete() string {
+	if d.Code == "" {
+		return "missing Code"
+	}
+	return ""
 }
 
 type locationService struct {

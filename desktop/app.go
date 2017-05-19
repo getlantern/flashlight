@@ -43,15 +43,15 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.desktop")
 
+	elapsed = mtime.Stopwatch()
+)
+
+const (
 	settingsName        = "settings.yaml"
 	settingsNameStaging = "settings-staging.yaml"
-
-	elapsed func() time.Duration
 )
 
 func init() {
-	elapsed = mtime.Stopwatch()
-
 	autoupdate.Version = common.PackageVersion
 	autoupdate.PublicKey = []byte(packagePublicKey)
 
@@ -77,9 +77,6 @@ func (app *App) Init() {
 	_, ok := app.Flags["configdir"].(string)
 	if !ok {
 		app.Flags["configdir"] = appdir.General("Lantern")
-	}
-	if common.Staging {
-		settingsName = settingsNameStaging
 	}
 	app.settings = settings.New()
 	app.settings.Reconfigure(nil, &settings.ConfigOpts{

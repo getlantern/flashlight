@@ -51,10 +51,17 @@ func (o *ConfigOpts) For() service.Type {
 	return ServiceType
 }
 
-func (o *ConfigOpts) Complete() bool {
-	return o.SaveDir != "" &&
-		o.Global.Complete() &&
-		o.Proxies.Complete()
+func (o *ConfigOpts) Complete() string {
+	if o.SaveDir == "" {
+		return "missing SaveDir"
+	}
+	if e := o.Global.Complete(); e != "" {
+		return "Global " + e
+	}
+	if e := o.Proxies.Complete(); e != "" {
+		return "Proxies " + e
+	}
+	return ""
 }
 
 type FetchOpts struct {
@@ -81,13 +88,31 @@ type FetchOpts struct {
 	fullPath string
 }
 
-func (o *FetchOpts) Complete() bool {
-	return o.FileName != "" &&
-		o.EmbeddedName != "" &&
-		o.EmbeddedData != nil &&
-		o.ChainedURL != "" &&
-		o.FrontedURL != "" &&
-		o.FetchInteval > 0
+func (o *FetchOpts) Complete() string {
+	if o.FileName == "" {
+		return "missing FileName"
+	}
+
+	if o.EmbeddedName == "" {
+		return "missing EmbeddedName"
+	}
+
+	if o.EmbeddedData == nil {
+		return "missing EmbeddedData"
+	}
+
+	if o.ChainedURL == "" {
+		return "missing ChainedURL"
+	}
+
+	if o.FrontedURL == "" {
+		return "missing FrontedURL"
+	}
+
+	if o.FetchInteval == 0 {
+		return "missing FetchInteval"
+	}
+	return ""
 }
 
 type Proxies map[string]*chained.ChainedServerInfo

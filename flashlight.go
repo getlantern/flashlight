@@ -106,14 +106,14 @@ func waitForStart(op *fops.Op, elapsed func() time.Duration, afterStart func()) 
 				_, geo := service.MustLookup(geolookup.ServiceType)
 				geo.(*geolookup.GeoLookup).Refresh()
 				ops.Go(func() {
-					// wait for geo info before reporting so that we know the client ip and
-					// country
+					// wait for geo info before reporting so that we know the
+					// client ip and country
 					select {
 					case <-onGeo:
 						log.Debug("Got geolocation")
 					case <-time.After(5 * time.Minute):
-						// failed to get geolocation info within 5 minutes, just record end of
-						// startup anyway
+						// failed to get geolocation info within 5 minutes,
+						// just record end of startup anyway
 					}
 					op.End()
 					log.Debug("Lantern client started")
