@@ -56,6 +56,11 @@ func Run(configDir string,
 	op := fops.Begin("client_started")
 
 	waitForStart(op, elapsed, afterStart)
+	service.MustRegister(borda.New,
+		&borda.ConfigOpts{FullyReportedOps: FullyReportedOps},
+		true,
+		nil)
+
 	registerConfigService(flagsAsMap)
 	ch := service.Subscribe(config.ServiceType)
 	go func() {
@@ -68,7 +73,18 @@ func Run(configDir string,
 				})
 			case *config.Global:
 				log.Debugf("Applying global config")
-				applyClientConfig(c, deviceID, autoReport)
+				service.MustReconfigure(borda.ServiceType, func(opts service.ConfigOpts) {
+					enableBorda := autoReport() && rand.Float64() <= c.BordaSamplePercentage/100
+					o := opts.(*borda.ConfigOpts)
+					o.ReportInterval = c.BordaReportInterval
+					o.ReportAllOps = enableBorda
+				})
+				certs, err := getTrustedCACerts(c)
+				if err != nil {
+					log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
+				} else if c.Client != nil {
+					fronted.Configure(certs, c.Client.MasqueradeSets, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
+				}
 				onConfigUpdate(c)
 			}
 		}
@@ -137,43 +153,6 @@ func registerConfigService(flagsAsMap map[string]interface{}) {
 		}
 	}
 	service.MustRegister(config.New, opts, true, nil)
-}
-
-func applyClientConfig(cfg *config.Global, deviceID string, autoReport func() bool) {
-	certs, err := getTrustedCACerts(cfg)
-	if err != nil {
-		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
-	} else if cfg.Client != nil {
-		fronted.Configure(certs, cfg.Client.MasqueradeSets, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
-	}
-
-	enableBorda := func(ctx map[string]interface{}) bool {
-		if !autoReport() {
-			// User has chosen not to automatically submit data
-			return false
-		}
-
-		if rand.Float64() <= cfg.BordaSamplePercentage/100 {
-			// Randomly included in sample
-			return true
-		}
-
-		// For some ops, we don't randomly sample, we include all of them
-		op := ctx["op"]
-		switch t := op.(type) {
-		case string:
-			for _, fullyReportedOp := range FullyReportedOps {
-				if t == fullyReportedOp {
-					log.Tracef("Including fully reported op %v in borda sample", fullyReportedOp)
-					return true
-				}
-			}
-			return false
-		default:
-			return false
-		}
-	}
-	borda.Configure(cfg.BordaReportInterval, enableBorda)
 }
 
 func getTrustedCACerts(cfg *config.Global) (pool *x509.CertPool, err error) {

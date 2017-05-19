@@ -17,7 +17,6 @@ import (
 
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/autoupdate"
-	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
@@ -383,7 +382,6 @@ func (app *App) afterStart() {
 		go launcher.CreateLaunchFile(enable)
 	})
 
-	app.AddExitFunc(borda.Flush)
 	if app.ShowUI && !app.Flags["startup"].(bool) {
 		// Launch a browser window with Lantern but only after the pac
 		// URL and the proxy server are all up and running to avoid

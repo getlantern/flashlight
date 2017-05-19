@@ -12,53 +12,84 @@ import (
 
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/service"
 )
 
 var (
 	log = golog.LoggerFor("flashlight.borda")
 
+	ServiceType service.Type = "flashlight.borda"
+
 	// BeforeSubmit is an optional callback to capture when borda batches are
 	// submitted. It's mostly useful for unit testing.
 	BeforeSubmit func(name string, key string, ts time.Time, values map[string]borda.Val, dimensions map[string]interface{})
-
-	bordaClient *borda.Client
-
-	once sync.Once
 )
 
-// Configure starts borda reporting and proxy bench if reportInterval > 0. The
-// service never stops once enabled. The service will check enabled each
-// time before it reports to borda, however.
-func Configure(reportInterval time.Duration, enabled func(ctx map[string]interface{}) bool) {
-	if reportInterval > 0 {
-		log.Debug("Enabling borda")
-		once.Do(func() {
-			startBordaAndProxyBench(reportInterval, enabled)
-		})
-	} else {
-		log.Debug("Borda not enabled")
+type ConfigOpts struct {
+	ReportInterval   time.Duration
+	ReportAllOps     bool
+	FullyReportedOps []string
+}
+
+func (c *ConfigOpts) For() service.Type {
+	return ServiceType
+}
+
+func (c *ConfigOpts) Complete() bool {
+	return c.ReportInterval > 0
+}
+
+type bordaService struct {
+	muOpts      sync.RWMutex
+	opts        *ConfigOpts
+	bordaClient *borda.Client
+}
+
+func New() service.Impl {
+	return &bordaService{}
+}
+
+func (s *bordaService) GetType() service.Type {
+	return ServiceType
+}
+
+func (s *bordaService) Reconfigure(p service.Publisher, opts service.ConfigOpts) {
+	o := opts.(*ConfigOpts)
+	shouldRestart := false
+	s.muOpts.Lock()
+	if s.opts != nil && s.opts.ReportInterval != o.ReportInterval {
+		shouldRestart = true
+	}
+	s.opts = o
+	s.muOpts.Unlock()
+	if shouldRestart {
+		s.Stop()
+		s.Start()
 	}
 }
 
-// Flush flushes any pending submission
-func Flush() {
-	if bordaClient != nil {
+func (s *bordaService) Start() {
+	s.startBordaAndProxyBench()
+}
+
+func (s *bordaService) Stop() {
+	if s.bordaClient != nil {
 		log.Debugf("Flushing pending borda submissions")
-		bordaClient.Flush()
+		s.bordaClient.Flush()
 	}
 }
 
-func startBordaAndProxyBench(reportInterval time.Duration, enabled func(ctx map[string]interface{}) bool) {
-	bordaClient = createBordaClient(reportInterval)
+func (s *bordaService) startBordaAndProxyBench() {
+	s.bordaClient = createBordaClient(s.opts.ReportInterval)
 
-	reportToBorda := bordaClient.ReducingSubmitter("client_results", 1000)
+	reportToBorda := s.bordaClient.ReducingSubmitter("client_results", 1000)
 
 	proxybench.Start(&proxybench.Opts{}, func(timing time.Duration, ctx map[string]interface{}) {
 		// No need to do anything, this is now handled with the regular op reporting
 	})
 
 	reporter := func(failure error, ctx map[string]interface{}) {
-		if !enabled(ctx) {
+		if !s.shouldReport(ctx) {
 			return
 		}
 
@@ -109,10 +140,32 @@ func startBordaAndProxyBench(reportInterval time.Duration, enabled func(ctx map[
 			ctx["op"] = op
 			reporter(err, ctx)
 			if flushImmediately {
-				Flush()
+				s.bordaClient.Flush()
 			}
 		}
 	})
+}
+
+func (s *bordaService) shouldReport(ctx map[string]interface{}) bool {
+	s.muOpts.RLock()
+	should, ops := s.opts.ReportAllOps, s.opts.FullyReportedOps
+	s.muOpts.RUnlock()
+	if should {
+		return true
+	}
+	// For some ops, we don't randomly sample, we include all of them
+	switch t := ctx["op"].(type) {
+	case string:
+		for _, op := range ops {
+			if t == op {
+				log.Tracef("Including fully reported op %v in borda sample", op)
+				return true
+			}
+		}
+		return false
+	default:
+		return false
+	}
 }
 
 func createBordaClient(reportInterval time.Duration) *borda.Client {
