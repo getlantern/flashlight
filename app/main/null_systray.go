@@ -2,7 +2,7 @@
 
 package main
 
-import "github.com/getlantern/flashlight/desktop"
+import "github.com/getlantern/flashlight/app"
 
 func runOnSystrayReady(a *desktop.App, f func()) {
 	f()

@@ -14,14 +14,14 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/chained"
-	"github.com/getlantern/flashlight/desktop"
+	"github.com/getlantern/flashlight/app"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/mitchellh/panicwrap"
 
-	"github.com/getlantern/flashlight/desktop/settings"
+	"github.com/getlantern/flashlight/app/settings"
 )
 
 var (

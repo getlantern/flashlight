@@ -8,7 +8,7 @@ import (
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/systray"
 
-	"github.com/getlantern/flashlight/desktop"
+	"github.com/getlantern/flashlight/app"
 	"github.com/getlantern/flashlight/icons"
 	"github.com/getlantern/flashlight/ui"
 )

@@ -8,7 +8,7 @@ import (
 	"github.com/getlantern/flashlight/ui"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/getlantern/flashlight/desktop/settings"
+	"github.com/getlantern/flashlight/app/settings"
 )
 
 func TestLocalHTTPToken(t *testing.T) {

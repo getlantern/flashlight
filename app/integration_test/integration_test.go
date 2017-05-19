@@ -27,7 +27,7 @@ import (
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/flashlight/desktop"
+	"github.com/getlantern/flashlight/app"
 
 	"github.com/stretchr/testify/assert"
 )

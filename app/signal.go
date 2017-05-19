@@ -6,7 +6,7 @@ import (
 	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/flashlight/ws"
 
-	"github.com/getlantern/flashlight/desktop/sysproxy"
+	"github.com/getlantern/flashlight/app/sysproxy"
 )
 
 type UserSignal struct {

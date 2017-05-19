@@ -11,7 +11,7 @@ import (
 	"github.com/keighl/mandrill"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/getlantern/flashlight/desktop/settings"
+	"github.com/getlantern/flashlight/app/settings"
 	"github.com/getlantern/flashlight/ws"
 )
 

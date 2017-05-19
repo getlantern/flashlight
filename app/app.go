@@ -31,13 +31,13 @@ import (
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
 
-	"github.com/getlantern/flashlight/desktop/bandwidth"
-	"github.com/getlantern/flashlight/desktop/emailproxy"
-	"github.com/getlantern/flashlight/desktop/location"
-	"github.com/getlantern/flashlight/desktop/loconfscanner"
-	"github.com/getlantern/flashlight/desktop/notifier"
-	"github.com/getlantern/flashlight/desktop/settings"
-	"github.com/getlantern/flashlight/desktop/sysproxy"
+	"github.com/getlantern/flashlight/app/bandwidth"
+	"github.com/getlantern/flashlight/app/emailproxy"
+	"github.com/getlantern/flashlight/app/location"
+	"github.com/getlantern/flashlight/app/loconfscanner"
+	"github.com/getlantern/flashlight/app/notifier"
+	"github.com/getlantern/flashlight/app/settings"
+	"github.com/getlantern/flashlight/app/sysproxy"
 )
 
 var (

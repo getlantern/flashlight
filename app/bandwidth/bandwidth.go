@@ -14,7 +14,7 @@ import (
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
 
-	"github.com/getlantern/flashlight/desktop/notifier"
+	"github.com/getlantern/flashlight/app/notifier"
 )
 
 var (
