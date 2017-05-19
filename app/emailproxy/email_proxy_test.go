@@ -1,4 +1,4 @@
-package app
+package emailproxy
 
 import (
 	"bytes"
@@ -11,6 +11,7 @@ import (
 	"github.com/keighl/mandrill"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/getlantern/flashlight/app/settings"
 	"github.com/getlantern/flashlight/ws"
 )
 
@@ -40,9 +41,8 @@ func TestReadResponses(t *testing.T) {
 func TestEmailProxy(t *testing.T) {
 	s := httptest.NewServer(ws.StartUIChannel())
 	defer s.Close()
-	// avoid panicking when attaching settings to the email.
-	settings = loadSettings("version", "revisionDate", "buildDate")
-	err := serveEmailProxy()
+	// settings = ("version", "revisionDate", "buildDate")
+	err := Start(settings.New(), "devID", "version", "revisionDate")
 	assert.NoError(t, err, "should start service")
 	defer ws.Unregister("email-proxy")
 	wsURL := strings.Replace(s.URL, "http://", "ws://", -1)

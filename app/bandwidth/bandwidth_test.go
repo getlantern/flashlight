@@ -1,4 +1,4 @@
-package app
+package bandwidth
 
 import (
 	"testing"

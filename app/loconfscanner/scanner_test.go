@@ -1,4 +1,4 @@
-package app
+package loconfscanner
 
 import (
 	"io/ioutil"
@@ -38,13 +38,21 @@ func TestWriteURL(t *testing.T) {
 
 func TestParsing(t *testing.T) {
 	logger := golog.LoggerFor("loconfloop-test")
-	stop := LoconfScanner(4*time.Hour, func() (bool, bool) {
-		return true, false
-	})
+	stop := Scanner(4*time.Hour,
+		func() (bool, bool) {
+			return true, false
+		},
+		func() string { return "lang" },
+		nil,
+	)
 	stop()
-	stop = LoconfScanner(4*time.Hour, func() (bool, bool) {
-		return true, true
-	})
+	stop = Scanner(4*time.Hour,
+		func() (bool, bool) {
+			return true, true
+		},
+		func() string { return "lang" },
+		nil,
+	)
 	logger.Debug("Stopping")
 	stop()
 

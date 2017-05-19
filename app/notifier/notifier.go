@@ -1,8 +1,9 @@
-package app
+package notifier
 
 import (
 	"time"
 
+	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/notifier"
 )
@@ -11,19 +12,25 @@ const (
 	notificationTimeout = 15 * time.Second
 )
 
+type Notification notify.Notification
+
 type notifierRequest struct {
 	note     *notify.Notification
 	chResult chan bool
 }
 
-var ch chan notifierRequest = make(chan notifierRequest)
+var (
+	log = golog.LoggerFor("flashlight.app.notifier")
 
-// showNotification submits the notification to the notificationsLoop to show
+	ch chan notifierRequest = make(chan notifierRequest)
+)
+
+// Show submits the notification to the notificationsLoop to show
 // and waits for the result.
-func showNotification(note *notify.Notification) bool {
+func Show(note *Notification) bool {
 	chResult := make(chan bool)
 	ch <- notifierRequest{
-		note,
+		(*notify.Notification)(note),
 		chResult,
 	}
 
@@ -31,11 +38,11 @@ func showNotification(note *notify.Notification) bool {
 
 }
 
-// notificationsLoop starts a goroutine to show the desktop notifications
+// Start starts a goroutine to show the desktop notifications
 // submitted by showNotification one by one with a minimum 10 seconds interval.
 //
 // Returns a function to stop the loop.
-func notificationsLoop() (stop func()) {
+func Start() (stop func()) {
 	notifier := notify.NewNotifications()
 	// buffered channel to avoid blocking stop() when goroutine is sleeping
 	chStop := make(chan bool, 1)

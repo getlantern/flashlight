@@ -6,9 +6,11 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"path/filepath"
 	"sync"
 	"time"
 
+	"github.com/getlantern/appdir"
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
@@ -29,13 +31,19 @@ import (
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
 
+	"github.com/getlantern/flashlight/app/bandwidth"
+	"github.com/getlantern/flashlight/app/emailproxy"
 	"github.com/getlantern/flashlight/app/location"
+	"github.com/getlantern/flashlight/app/loconfscanner"
+	"github.com/getlantern/flashlight/app/notifier"
+	"github.com/getlantern/flashlight/app/settings"
 	"github.com/getlantern/flashlight/app/sysproxy"
 )
 
 var (
-	log      = golog.LoggerFor("flashlight.app")
-	settings *Settings
+	log = golog.LoggerFor("flashlight.app")
+
+	settingsPath = filepath.Join(appdir.General("Lantern"), "settings.yaml")
 
 	elapsed func() time.Duration
 )
@@ -58,13 +66,15 @@ type App struct {
 
 	exitOnce    sync.Once
 	chExitFuncs chan func()
+	settings    *settings.Settings
 }
 
 // Init initializes the App's state
 func (app *App) Init() {
 	golog.OnFatal(app.exitOnFatal)
 	app.Flags["staging"] = common.Staging
-	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
+	app.settings = settings.New()
+	app.settings.Reconfigure(nil, &settings.ConfigOpts{common.Version, common.RevisionDate, common.BuildDate, settingsPath})
 	app.exitCh = make(chan error, 1)
 	// use buffered channel to avoid blocking the caller of 'AddExitFunc'
 	// the number 10 is arbitrary
@@ -78,9 +88,9 @@ func (app *App) LogPanicAndExit(msg interface{}) {
 	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
 	// Turn off system proxy on panic
 	// Reload settings to make sure we have an up-to-date addr
-	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
+	app.settings.Reconfigure(nil, &settings.ConfigOpts{common.Version, common.RevisionDate, common.BuildDate, settingsPath})
 	p := sysproxy.New()
-	p.Reconfigure(nil, &sysproxy.ConfigOpts{settings.GetAddr()})
+	p.Reconfigure(nil, &sysproxy.ConfigOpts{app.settings.GetAddr()})
 	p.Stop()
 }
 
@@ -98,7 +108,7 @@ func (app *App) Run() error {
 
 	listenAddr := app.Flags["addr"].(string)
 	if listenAddr == "" {
-		listenAddr = settings.getString(SNAddr)
+		listenAddr = app.settings.GetString(settings.SNAddr)
 	}
 	if listenAddr == "" {
 		listenAddr = defaultHTTPProxyAddress
@@ -106,7 +116,7 @@ func (app *App) Run() error {
 
 	socksAddr := app.Flags["socksaddr"].(string)
 	if socksAddr == "" {
-		socksAddr = settings.getString(SNSOCKSAddr)
+		socksAddr = app.settings.GetString(settings.SNSOCKSAddr)
 	}
 	if socksAddr == "" {
 		socksAddr = defaultSOCKSProxyAddress
@@ -115,7 +125,7 @@ func (app *App) Run() error {
 	uiaddr := app.Flags["uiaddr"].(string)
 	if uiaddr == "" {
 		// stick with the last one if not specified from command line.
-		if uiaddr = settings.GetUIAddr(); uiaddr != "" {
+		if uiaddr = app.settings.GetUIAddr(); uiaddr != "" {
 			host, port, splitErr := net.SplitHostPort(uiaddr)
 			if splitErr != nil {
 				log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
@@ -160,15 +170,15 @@ func (app *App) Run() error {
 
 	service.MustRegister(client.New,
 		&client.ConfigOpts{
-			UseShortcut: !settings.GetProxyAll(),
-			UseDetour:   !settings.GetProxyAll(),
+			UseShortcut: !app.settings.GetProxyAll(),
+			UseDetour:   !app.settings.GetProxyAll(),
 			// on desktop, we do not allow private hosts
 			AllowPrivateHosts: false,
 			StatsTracker:      app.statsTracker,
 			HTTPProxyAddr:     listenAddr,
 			Socks5ProxyAddr:   socksAddr,
-			ProToken:          settings.GetToken(),
-			DeviceID:          settings.GetDeviceID(),
+			ProToken:          app.settings.GetToken(),
+			DeviceID:          app.settings.GetDeviceID(),
 		},
 		true,
 		nil)
@@ -183,33 +193,33 @@ func (app *App) Run() error {
 
 	log.Debugf("Starting client UI at %v", uiaddr)
 	// ui will handle empty uiaddr correctly
-	err = ui.Start(uiaddr, !app.ShowUI, startupURL, localHTTPToken(settings))
+	err = ui.Start(uiaddr, !app.ShowUI, startupURL, localHTTPToken(app.settings))
 	if err != nil {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 	}
 	ui.Handle("/data", ws.StartUIChannel())
 
-	if e := settings.StartService(); e != nil {
+	if e := app.settings.StartService(); e != nil {
 		app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
 	}
-	settings.SetUIAddr(ui.GetUIAddr())
+	app.settings.SetUIAddr(ui.GetUIAddr())
 
 	log.Debug(app.Flags)
 	if app.Flags["proxyall"].(bool) {
 		// If proxyall flag was supplied, force proxying of all
-		settings.SetProxyAll(true)
+		app.settings.SetProxyAll(true)
 	}
 
 	go func() {
 		err := flashlight.Run(
 			app.Flags["configdir"].(string),
-			settings.IsAutoReport,
+			app.settings.IsAutoReport,
 			app.Flags,
 			app.beforeStart(listenAddr),
 			app.afterStart,
 			app.onConfigUpdate,
 			app.Exit,
-			settings.GetDeviceID())
+			app.settings.GetDeviceID())
 		if err != nil {
 			app.Exit(err)
 			return
@@ -234,6 +244,20 @@ func (app *App) startProfiling() {
 	}
 }
 
+type pastAnnouncements struct {
+	s *settings.Settings
+}
+
+func (p *pastAnnouncements) Get() []string {
+	return p.s.GetStringArray(settings.SNPastAnnouncements)
+}
+
+func (p *pastAnnouncements) Add(s string) {
+	past := p.s.GetStringArray(settings.SNPastAnnouncements)
+	past = append(past, s)
+	p.s.SetStringArray(settings.SNPastAnnouncements, past)
+}
+
 func (app *App) beforeStart(listenAddr string) func() bool {
 	return func() bool {
 		log.Debug("Before start")
@@ -242,12 +266,16 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			log.Errorf("Unable to serve stats to UI: %v", err)
 		}
 
-		err = serveBandwidth()
+		err = bandwidth.Start(app.isProUser)
 		if err != nil {
 			log.Errorf("Unable to serve bandwidth to UI: %v", err)
 		}
 
-		err = serveEmailProxy()
+		err = emailproxy.Start(app.settings,
+			app.settings.GetDeviceID(),
+			app.settings.GetString(settings.SNVersion),
+			app.settings.GetString(settings.SNRevisionDate),
+		)
 		if err != nil {
 			log.Errorf("Unable to serve mandrill to UI: %v", err)
 		}
@@ -260,7 +288,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 		service.MustRegister(
 			analytics.New,
-			&analytics.ConfigOpts{DeviceID: settings.GetDeviceID(), Version: common.Version, Enabled: settings.IsAutoReport()},
+			&analytics.ConfigOpts{DeviceID: app.settings.GetDeviceID(), Version: common.Version, Enabled: app.settings.IsAutoReport()},
 			true, // either true or false should be ok as the ConfigOpts won't be valid until reconfigured with IP
 			service.Deps{geolookup.ServiceType: func(m service.Message, self service.Service) {
 				info := m.(*geolookup.GeoInfo)
@@ -304,15 +332,15 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 				switch msg.ProxyType {
 				case client.HTTPProxy:
 					log.Debugf("Got HTTP proxy address: %v", msg.Addr)
-					settings.setString(SNAddr, msg.Addr)
+					app.settings.SetString(settings.SNAddr, msg.Addr)
 					s, _ := service.MustLookup(sysproxy.ServiceType)
 					s.MustReconfigure(func(opts service.ConfigOpts) {
 						opts.(*sysproxy.ConfigOpts).ProxyAddr = msg.Addr
 					})
-					if settings.GetSystemProxy() {
+					if app.settings.GetSystemProxy() {
 						s.Start()
 					}
-					app.OnSettingChange(SNSystemProxy, func(val interface{}) {
+					app.OnSettingChange(settings.SNSystemProxy, func(val interface{}) {
 						enable := val.(bool)
 						if enable {
 							s.Start()
@@ -323,7 +351,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 				case client.Socks5Proxy:
 					log.Debugf("Got Socks5 proxy address: %v", msg.Addr)
-					settings.setString(SNSOCKSAddr, msg.Addr)
+					app.settings.SetString(settings.SNSOCKSAddr, msg.Addr)
 				}
 			}
 		}()
@@ -332,16 +360,39 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 		setupUserSignal()
 
-		app.AddExitFunc(LoconfScanner(4*time.Hour, isProUser))
-		app.AddExitFunc(notificationsLoop())
+		app.AddExitFunc(notifier.Start())
+		app.AddExitFunc(loconfscanner.Scanner(
+			4*time.Hour,
+			app.isProUser,
+			app.settings.GetLanguage,
+			&pastAnnouncements{app.settings}))
 
 		return true
 	}
 }
 
+func (app *App) isProUser() (isPro bool, ok bool) {
+	var userID int
+	for {
+		userID = int(app.settings.GetUserID())
+		if userID > 0 {
+			break
+		}
+		log.Debugf("Waiting for user ID to become non-zero")
+		time.Sleep(10 * time.Second)
+	}
+	status, err := userStatus(app.settings.GetDeviceID(), userID, app.settings.GetToken())
+	if err != nil {
+		log.Errorf("Error getting user status? %v", err)
+		return false, false
+	}
+	log.Debugf("User %d is '%v'", userID, status)
+	return status == "active", true
+}
+
 // localHTTPToken fetches the local HTTP token from disk if it's there, and
 // otherwise creates a new one and stores it.
-func localHTTPToken(set *Settings) string {
+func localHTTPToken(set *settings.Settings) string {
 	tok := set.GetLocalHTTPToken()
 	if tok == "" {
 		t := ui.LocalHTTPToken()
@@ -352,32 +403,18 @@ func localHTTPToken(set *Settings) string {
 }
 
 // GetSetting gets the in memory setting with the name specified by attr
-func (app *App) GetSetting(name SettingName) interface{} {
-	if val, ok := settingMeta[name]; ok {
-		switch val.sType {
-		case stBool:
-			return settings.getBool(name)
-		case stNumber:
-			return settings.getInt64(name)
-		case stString:
-			return settings.getString(name)
-		}
-	} else {
-		log.Errorf("Looking for non-existent setting? %v", name)
-	}
-
-	// should never reach here.
-	return nil
+func (app *App) GetSetting(name settings.SettingName) interface{} {
+	return app.settings.GetSetting(name)
 }
 
 // OnSettingChange sets a callback cb to get called when attr is changed from UI.
 // When calling multiple times for same attr, only the last one takes effect.
-func (app *App) OnSettingChange(attr SettingName, cb func(interface{})) {
-	settings.OnChange(attr, cb)
+func (app *App) OnSettingChange(attr settings.SettingName, cb func(interface{})) {
+	app.settings.OnChange(attr, cb)
 }
 
 func (app *App) afterStart() {
-	app.OnSettingChange(SNAutoLaunch, func(val interface{}) {
+	app.OnSettingChange(settings.SNAutoLaunch, func(val interface{}) {
 		enable := val.(bool)
 		go launcher.CreateLaunchFile(enable)
 	})

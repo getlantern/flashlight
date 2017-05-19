@@ -389,7 +389,7 @@ func startApp(t *testing.T, configAddr string) (*App, error) {
 	}
 	a.Init()
 	// Set a non-zero User ID to make prochecker happy
-	settings.SetUserID(1)
+	a.settings.SetUserID(1)
 
 	go func() {
 		err := a.Run()

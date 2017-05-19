@@ -20,6 +20,8 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/mitchellh/panicwrap"
+
+	"github.com/getlantern/flashlight/app/settings"
 )
 
 var (
@@ -116,12 +118,12 @@ func doMain(a *app.App) error {
 
 	if a.ShowUI {
 		go func() {
-			lang := a.GetSetting(app.SNLanguage).(string)
+			lang := a.GetSetting(settings.SNLanguage).(string)
 			i18nInit(lang)
 			if err := configureSystemTray(a); err != nil {
 				return
 			}
-			a.OnSettingChange(app.SNLanguage, func(lang interface{}) {
+			a.OnSettingChange(settings.SNLanguage, func(lang interface{}) {
 				refreshSystray(lang.(string))
 			})
 		}()

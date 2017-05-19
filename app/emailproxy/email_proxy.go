@@ -1,9 +1,10 @@
-package app
+package emailproxy
 
 import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/keighl/mandrill"
 
 	"github.com/getlantern/errors"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/osversion"
 
 	"github.com/getlantern/flashlight/logging"
@@ -36,16 +38,29 @@ type mandrillMessage struct {
 }
 
 var (
+	log = golog.LoggerFor("flashlight.app.emailproxy")
+
 	// Only allowed to call /send_template
 	mandrillAPIKey = "fmYlUdjEpGGonI4NDx9xeA"
+
+	defaultVars map[string]interface{}
+	st          Settings
 )
+
+type Settings interface {
+	GetUserID() int64
+	GetToken() string
+	WriteTo(w io.Writer) (int, error)
+}
 
 // A proxy that accept requests from WebSocket and send email via 3rd party
 // service (mandrill atm). With optionally attached settings and Lantern logs.
 // It intentionally uses direct connection to the 3rd party service, to serve
 // as an out-of-band channel when Lantern doesn't work well, say, when user
 // wants to report an issue.
-func serveEmailProxy() error {
+func Start(s Settings, deviceID string, version string, revisionDate string) error {
+	st = s
+	defaultVars = defaults(deviceID, version, revisionDate)
 	service, err := ws.RegisterWithMsgInitializer("email-proxy", nil,
 		func() interface{} { return &mandrillMessage{} })
 	if err != nil {
@@ -54,6 +69,19 @@ func serveEmailProxy() error {
 	}
 	go read(service)
 	return nil
+}
+
+func defaults(deviceID string, version string, revisionDate string) map[string]interface{} {
+	vars := make(map[string]interface{})
+	vars["deviceID"] = deviceID
+	os, err := osversion.GetHumanReadable()
+	if err != nil {
+		log.Error(err)
+	} else {
+		vars["os"] = os
+	}
+	vars["version"] = fmt.Sprintf("%v (%v)", version, revisionDate)
+	return vars
 }
 
 func read(service *ws.Service) {
@@ -82,7 +110,15 @@ func handleMessage(service *ws.Service, data *mandrillMessage) {
 		op = ops.Begin("send_email").Set("template", data.Template)
 	}
 	defer op.End()
-	fillDefaults(data)
+	if data.Vars == nil {
+		// avoid panicking in case the message is malformed
+		data.Vars = make(map[string]interface{})
+	}
+	data.Vars["userID"] = st.GetUserID()
+	data.Vars["proToken"] = st.GetToken()
+	for k, v := range defaultVars {
+		data.Vars[k] = v
+	}
 	if err := sendTemplate(data); err != nil {
 		log.Error(op.FailIf(err))
 		service.Out <- err.Error()
@@ -99,7 +135,7 @@ func sendTemplate(data *mandrillMessage) error {
 	msg.GlobalMergeVars = mandrill.MapToVars(data.Vars)
 	var buf bytes.Buffer
 	if data.WithSettings {
-		if _, err := settings.writeTo(&buf); err != nil {
+		if _, err := st.WriteTo(&buf); err != nil {
 			log.Error(err)
 		} else {
 			msg.Attachments = append(msg.Attachments, &mandrill.Attachment{
@@ -145,25 +181,6 @@ func readResponses(responses []*mandrill.Response) error {
 		}
 	}
 	return nil
-}
-
-func fillDefaults(msg *mandrillMessage) {
-	if msg.Vars == nil {
-		// avoid panicking in case the message is malformed
-		msg.Vars = make(map[string]interface{})
-	}
-	msg.Vars["userID"] = settings.GetUserID()
-	msg.Vars["deviceID"] = settings.GetDeviceID()
-	msg.Vars["proToken"] = settings.GetToken()
-	os, err := osversion.GetHumanReadable()
-	if err != nil {
-		log.Error(err)
-	} else {
-		msg.Vars["os"] = os
-	}
-	msg.Vars["version"] = fmt.Sprintf("%v (%v)",
-		settings.getString(SNVersion),
-		settings.getString(SNRevisionDate))
 }
 
 func prefix(msg *mandrillMessage) string {

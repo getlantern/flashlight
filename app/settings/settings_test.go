@@ -1,4 +1,4 @@
-package app
+package settings
 
 import (
 	"encoding/base64"
@@ -18,11 +18,11 @@ func TestRead(t *testing.T) {
 	if err != nil {
 		t.Errorf("Could not create temp file %v", err)
 	}
-
-	defer os.Remove(tmpfile.Name()) // clean up
+	defer os.Remove(tmpfile.Name())
 
 	var uid int64
-	s := loadSettingsFrom("1", "1/1/1", "1/1/1", tmpfile.Name())
+	s := New()
+	s.Reconfigure(nil, &ConfigOpts{"1", "1/1/1", "1/1/1", tmpfile.Name()})
 	assert.Equal(t, s.GetProxyAll(), false)
 	assert.Equal(t, s.GetUserID(), uid)
 	assert.Equal(t, s.GetSystemProxy(), true)
@@ -98,13 +98,13 @@ func TestRead(t *testing.T) {
 
 func TestSetNum(t *testing.T) {
 	snTest := SettingName("test")
-	set := newSettings("/dev/null")
+	set := New()
 	var val json.Number = "4809"
 	var expected int64 = 4809
 	set.setNum(snTest, val)
 	assert.Equal(t, expected, set.m[snTest])
 
-	set.setString(snTest, val)
+	set.SetString(snTest, val)
 
 	// The above should not have worked since it's not a string -- should
 	// still be an int64
@@ -118,19 +118,19 @@ func TestSetNum(t *testing.T) {
 }
 
 func TestStringArray(t *testing.T) {
-	set := newSettings("/dev/null")
-	assert.Nil(t, set.getStringArray("key"), "string array should be nil initially")
-	set.setStringArray("key", []string{"value"})
-	assert.Equal(t, []string{"value"}, set.getStringArray("key"), "should set string array")
-	set.setStringArray("key", []string{"value2"})
-	assert.Equal(t, []string{"value2"}, set.getStringArray("key"),
+	set := New()
+	assert.Nil(t, set.GetStringArray("key"), "string array should be nil initially")
+	set.SetStringArray("key", []string{"value"})
+	assert.Equal(t, []string{"value"}, set.GetStringArray("key"), "should set string array")
+	set.SetStringArray("key", []string{"value2"})
+	assert.Equal(t, []string{"value2"}, set.GetStringArray("key"),
 		"should replace existing array altogether")
-	set.setStringArray("key", []interface{}{"value3"})
-	assert.Equal(t, []string{"value3"}, set.getStringArray("key"),
+	set.SetStringArray("key", []interface{}{"value3"})
+	assert.Equal(t, []string{"value3"}, set.GetStringArray("key"),
 		"should accept []interface{}")
 
 	set.setVal("key", []interface{}{"value3"})
-	assert.Equal(t, []string{"value3"}, set.getStringArray("key"),
+	assert.Equal(t, []string{"value3"}, set.GetStringArray("key"),
 		"should read value from []interface{} too")
 }
 
@@ -139,30 +139,33 @@ func TestPersistAndLoad(t *testing.T) {
 	revisionDate := "1970-1-1"
 	buildDate := "1970-1-1"
 	yamlFile := "./test.yaml"
-	set := loadSettingsFrom(version, revisionDate, buildDate, yamlFile)
-	assert.Equal(t, version, set.m["version"], "Should be set to version")
-	assert.Equal(t, revisionDate, set.m["revisionDate"], "Should be set to revisionDate")
-	assert.Equal(t, buildDate, set.m["buildDate"], "Should be set to buildDate")
-	assert.Equal(t, "en", set.GetLanguage(), "Should load language from file")
-	assert.Equal(t, int64(1), set.GetUserID(), "Should load user id from file")
+	s := New()
+	s.Reconfigure(nil, &ConfigOpts{version, revisionDate, buildDate, yamlFile})
+	assert.Equal(t, version, s.m["version"], "Should be set to version")
+	assert.Equal(t, revisionDate, s.m["revisionDate"], "Should be set to revisionDate")
+	assert.Equal(t, buildDate, s.m["buildDate"], "Should be set to buildDate")
+	assert.Equal(t, "en", s.GetLanguage(), "Should load language from file")
+	assert.Equal(t, int64(1), s.GetUserID(), "Should load user id from file")
 
-	set.SetLanguage("leet")
-	set.SetUserID(1234)
-	set2 := loadSettingsFrom(version, revisionDate, buildDate, yamlFile)
-	assert.Equal(t, "leet", set2.GetLanguage(), "Should save language to file and reload")
-	assert.Equal(t, int64(1234), set2.GetUserID(), "Should save user id to file and reload")
-	set2.SetLanguage("en")
-	set2.SetUserID(1)
+	s.SetLanguage("leet")
+	s.SetUserID(1234)
+	s2 := New()
+	s2.Reconfigure(nil, &ConfigOpts{version, revisionDate, buildDate, yamlFile})
+	assert.Equal(t, "leet", s2.GetLanguage(), "Should save language to file and reload")
+	assert.Equal(t, int64(1234), s2.GetUserID(), "Should save user id to file and reload")
+	s2.SetLanguage("en")
+	s2.SetUserID(1)
 }
 
 func TestLoadLowerCased(t *testing.T) {
-	set := loadSettingsFrom("", "", "", "./lowercased.yaml")
-	assert.Equal(t, int64(1234), set.GetUserID(), "Should load user id from lower cased yaml")
-	assert.Equal(t, "abcd", set.GetToken(), "Should load user token from lower cased yaml")
+	s := New()
+	s.Reconfigure(nil, &ConfigOpts{"", "", "", "./lowercased.yaml"})
+	assert.Equal(t, int64(1234), s.GetUserID(), "Should load user id from lower cased yaml")
+	assert.Equal(t, "abcd", s.GetToken(), "Should load user token from lower cased yaml")
 }
 
 func TestOnChange(t *testing.T) {
-	set := newSettings("/dev/null")
+	set := New()
 	in := make(chan interface{})
 	out := make(chan interface{})
 	var c1, c2 string
@@ -182,10 +185,10 @@ func TestOnChange(t *testing.T) {
 }
 
 func TestInvalidType(t *testing.T) {
-	set := newSettings("/dev/null")
+	set := New()
 	set.setVal("test", nil)
-	assert.Equal(t, "", set.getString("test"))
-	assert.Equal(t, false, set.getBool("test"))
-	assert.Equal(t, int64(0), set.getInt64("test"))
-	assert.Equal(t, []string(nil), set.getStringArray("test"))
+	assert.Equal(t, "", set.GetString("test"))
+	assert.Equal(t, false, set.GetBool("test"))
+	assert.Equal(t, int64(0), set.GetInt64("test"))
+	assert.Equal(t, []string(nil), set.GetStringArray("test"))
 }

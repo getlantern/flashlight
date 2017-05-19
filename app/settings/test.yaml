@@ -2,7 +2,6 @@ autoLaunch: true
 autoReport: true
 language: en
 localHTTPToken: ""
-pacURL: ""
 proxyAll: false
 systemProxy: true
 takenSurveys: []

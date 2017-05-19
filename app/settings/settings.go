@@ -1,4 +1,4 @@
-package app
+package settings
 
 import (
 	"encoding/base64"
@@ -7,17 +7,16 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"sync"
 
-	"github.com/getlantern/appdir"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/uuid"
 	"github.com/getlantern/yaml"
 
+	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/flashlight/ws"
 )
 
@@ -46,7 +45,6 @@ const (
 	SNVersion      SettingName = "version"
 	SNBuildDate    SettingName = "buildDate"
 	SNRevisionDate SettingName = "revisionDate"
-	SNPACURL       SettingName = "pacURL"
 )
 
 type settingType byte
@@ -84,11 +82,12 @@ var settingMeta = map[SettingName]struct {
 	SNVersion:      {stString, false, false},
 	SNBuildDate:    {stString, false, false},
 	SNRevisionDate: {stString, false, false},
-	SNPACURL:       {stString, true, true},
 }
 
 var (
-	defaultPath = filepath.Join(appdir.General("Lantern"), "settings.yaml")
+	log = golog.LoggerFor("flashlight.app.settings")
+
+	ServiceType service.Type = "flashlight.app.settings"
 )
 
 // Settings is a struct of all settings unique to this particular Lantern instance.
@@ -103,62 +102,25 @@ type Settings struct {
 	log golog.Logger
 }
 
-func loadSettings(version, revisionDate, buildDate string) *Settings {
-	return loadSettingsFrom(version, revisionDate, buildDate, defaultPath)
+type ConfigOpts struct {
+	Version      string
+	RevisionDate string
+	BuildDate    string
+	FilePath     string
 }
 
-// loadSettings loads the initial settings at startup, either from disk or using defaults.
-func loadSettingsFrom(version, revisionDate, buildDate, path string) *Settings {
-	log.Debug("Loading settings")
-	// Create default settings that may or may not be overridden from an existing file
-	// on disk.
-	sett := newSettings(path)
-	set := sett.m
-
-	// Use settings from disk if they're available.
-	if bytes, err := ioutil.ReadFile(path); err != nil {
-		sett.log.Debugf("Could not read file %v", err)
-	} else if err := yaml.Unmarshal(bytes, set); err != nil {
-		sett.log.Errorf("Could not load yaml %v", err)
-		// Just keep going with the original settings not from disk.
-	} else {
-		sett.log.Debugf("Loaded settings from %v", path)
-	}
-	// old lantern persist settings with all lower case, convert them to camel cased.
-	toCamelCase(set)
-
-	// We always just set the device ID to the MAC address on the system. Note
-	// this ignores what's on disk, if anything.
-	set[SNDeviceID] = base64.StdEncoding.EncodeToString(uuid.NodeID())
-
-	// SNUserID may be unmarshalled as int, which causes panic when GetUserID().
-	// Make sure to store it as int64.
-	switch id := set[SNUserID].(type) {
-	case int:
-		set[SNUserID] = int64(id)
-	}
-
-	// Always just sync the auto-launch configuration on startup.
-	go launcher.CreateLaunchFile(sett.IsAutoLaunch())
-
-	// always override below 3 attributes as they are not meant to be persisted across versions
-	set[SNVersion] = version
-	set[SNBuildDate] = buildDate
-	set[SNRevisionDate] = revisionDate
-	return sett
+func (c *ConfigOpts) For() service.Type {
+	return ServiceType
 }
 
-func toCamelCase(m map[SettingName]interface{}) {
-	for k := range settingMeta {
-		lowerCased := SettingName(strings.ToLower(string(k)))
-		if v, exists := m[lowerCased]; exists {
-			delete(m, lowerCased)
-			m[k] = v
-		}
-	}
+func (c *ConfigOpts) Complete() bool {
+	return c.Version != "" &&
+		c.RevisionDate != "" &&
+		c.BuildDate != "" &&
+		c.FilePath != ""
 }
 
-func newSettings(filePath string) *Settings {
+func New() *Settings {
 	return &Settings{
 		m: map[SettingName]interface{}{
 			SNUserID:         int64(0),
@@ -170,12 +132,47 @@ func newSettings(filePath string) *Settings {
 			SNLocalHTTPToken: "",
 			SNUserToken:      "",
 			SNUIAddr:         "",
-			SNPACURL:         "",
 		},
-		filePath:        filePath,
+		filePath:        "/dev/null",
 		changeNotifiers: make(map[SettingName][]func(interface{})),
 		log:             golog.LoggerFor("app.settings"),
 	}
+}
+
+func (s *Settings) Reconfigure(p service.Publisher, opts service.ConfigOpts) {
+	o := opts.(*ConfigOpts)
+	s.filePath = o.FilePath
+	log.Debug("Loading settings")
+	// Use s.settings from disk if they're available.
+	if bytes, err := ioutil.ReadFile(s.filePath); err != nil {
+		s.log.Debugf("Could not read file %v", err)
+	} else if err := yaml.Unmarshal(bytes, s.m); err != nil {
+		s.log.Errorf("Could not load yaml %v", err)
+		// Just keep going with the original s.settings not from disk.
+	} else {
+		s.log.Debugf("Loaded s.settings from %v", o.FilePath)
+	}
+	// old lantern persist s.settings with all lower case, convert them to camel cased.
+	toCamelCase(s.m)
+
+	// We always just s.m the device ID to the MAC address on the system. Note
+	// this ignores what's on disk, if anything.
+	s.m[SNDeviceID] = base64.StdEncoding.EncodeToString(uuid.NodeID())
+	// always override below 3 attributes as they are not meant to be persisted across versions
+	s.m[SNVersion] = o.Version
+	s.m[SNBuildDate] = o.BuildDate
+	s.m[SNRevisionDate] = o.RevisionDate
+
+	// SNUserID may be unmarshalled as int, which causes panic when GetUserID().
+	// Make sure to store it as int64.
+	if id, ok := s.m[SNUserID].(int); ok {
+		s.m[SNUserID] = int64(id)
+	}
+}
+
+func (s *Settings) Start() {
+	// Always just sync the auto-launch configuration on startup.
+	go launcher.CreateLaunchFile(s.IsAutoLaunch())
 }
 
 // StartService starts the settings service that synchronizes Lantern's configuration with
@@ -219,11 +216,11 @@ func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {
 			case stBool:
 				s.setBool(name, v)
 			case stString:
-				s.setString(name, v)
+				s.SetString(name, v)
 			case stNumber:
 				s.setNum(name, v)
 			case stStringArray:
-				s.setStringArray(name, v)
+				s.SetStringArray(name, v)
 			}
 		}
 
@@ -254,7 +251,7 @@ func (s *Settings) setNum(name SettingName, v interface{}) {
 	s.setVal(name, bigint)
 }
 
-func (s *Settings) setStringArray(name SettingName, v interface{}) {
+func (s *Settings) SetStringArray(name SettingName, v interface{}) {
 	sa, ok := v.([]string)
 	if !ok {
 		ss, ok := v.([]interface{})
@@ -269,7 +266,7 @@ func (s *Settings) setStringArray(name SettingName, v interface{}) {
 	s.setVal(name, sa)
 }
 
-func (s *Settings) setString(name SettingName, v interface{}) {
+func (s *Settings) SetString(name SettingName, v interface{}) {
 	str, ok := v.(string)
 	if !ok {
 		s.log.Errorf("Could not convert %s(%v) to string", name, v)
@@ -283,14 +280,14 @@ func (s *Settings) save() {
 	log.Trace("Saving settings")
 	if f, err := os.Create(s.filePath); err != nil {
 		s.log.Errorf("Could not open settings file for writing: %v", err)
-	} else if _, err := s.writeTo(f); err != nil {
+	} else if _, err := s.WriteTo(f); err != nil {
 		s.log.Errorf("Could not save settings file: %v", err)
 	} else {
 		log.Tracef("Saved settings to %s", s.filePath)
 	}
 }
 
-func (s *Settings) writeTo(w io.Writer) (int, error) {
+func (s *Settings) WriteTo(w io.Writer) (int, error) {
 	toBeSaved := s.mapToSave()
 	if bytes, err := yaml.Marshal(toBeSaved); err != nil {
 		return 0, err
@@ -353,17 +350,17 @@ func (s *Settings) uiMap() map[string]interface{} {
 
 // GetTakenSurveys returns the IDs of surveys the user has already taken.
 func (s *Settings) GetTakenSurveys() []string {
-	return s.getStringArray(SNTakenSurveys)
+	return s.GetStringArray(SNTakenSurveys)
 }
 
 // SetTakenSurveys sets the IDs of taken surveys.
 func (s *Settings) SetTakenSurveys(campaigns []string) {
-	s.setStringArray(SNTakenSurveys, campaigns)
+	s.SetStringArray(SNTakenSurveys, campaigns)
 }
 
 // GetProxyAll returns whether or not to proxy all traffic.
 func (s *Settings) GetProxyAll() bool {
-	return s.getBool(SNProxyAll)
+	return s.GetBool(SNProxyAll)
 }
 
 // SetProxyAll sets whether or not to proxy all traffic.
@@ -373,13 +370,13 @@ func (s *Settings) SetProxyAll(proxyAll bool) {
 
 // IsAutoReport returns whether or not to auto-report debugging and analytics data.
 func (s *Settings) IsAutoReport() bool {
-	return s.getBool(SNAutoReport)
+	return s.GetBool(SNAutoReport)
 }
 
 // IsAutoLaunch returns whether or not to automatically launch on system
 // startup.
 func (s *Settings) IsAutoLaunch() bool {
-	return s.getBool(SNAutoLaunch)
+	return s.GetBool(SNAutoLaunch)
 }
 
 // SetLanguage sets the user language
@@ -389,7 +386,7 @@ func (s *Settings) SetLanguage(language string) {
 
 // GetLanguage returns the user language
 func (s *Settings) GetLanguage() string {
-	return s.getString(SNLanguage)
+	return s.GetString(SNLanguage)
 }
 
 // SetLocalHTTPToken sets the local HTTP token, stored on disk because we've
@@ -401,7 +398,7 @@ func (s *Settings) SetLocalHTTPToken(token string) {
 
 // GetLocalHTTPToken returns the local HTTP token.
 func (s *Settings) GetLocalHTTPToken() string {
-	return s.getString(SNLocalHTTPToken)
+	return s.GetString(SNLocalHTTPToken)
 }
 
 // SetUIAddr sets the last known UI address.
@@ -411,23 +408,23 @@ func (s *Settings) SetUIAddr(uiaddr string) {
 
 // GetAddr gets the HTTP proxy address.
 func (s *Settings) GetAddr() string {
-	return s.getString(SNAddr)
+	return s.GetString(SNAddr)
 }
 
 // GetUIAddr returns the address of the UI, stored across runs to avoid a
 // different port on each run, which breaks things like local storage in the UI.
 func (s *Settings) GetUIAddr() string {
-	return s.getString(SNUIAddr)
+	return s.GetString(SNUIAddr)
 }
 
 // GetDeviceID returns the unique ID of this device.
 func (s *Settings) GetDeviceID() string {
-	return s.getString(SNDeviceID)
+	return s.GetString(SNDeviceID)
 }
 
 // GetToken returns the user token
 func (s *Settings) GetToken() string {
-	return s.getString(SNUserToken)
+	return s.GetString(SNUserToken)
 }
 
 // SetUserID sets the user ID
@@ -437,27 +434,15 @@ func (s *Settings) SetUserID(id int64) {
 
 // GetUserID returns the user ID
 func (s *Settings) GetUserID() int64 {
-	return s.getInt64(SNUserID)
+	return s.GetInt64(SNUserID)
 }
 
 // GetSystemProxy returns whether or not to set system proxy when lantern starts
 func (s *Settings) GetSystemProxy() bool {
-	return s.getBool(SNSystemProxy)
+	return s.GetBool(SNSystemProxy)
 }
 
-// SetPACURL sets the last used PAC URL. Note this is used particularl on
-// Windows to make sure to turn off the PAC URL on startup in case it was not
-// turned off successfully. See https://github.com/getlantern/lantern/issues/2776
-func (s *Settings) SetPACURL(url string) {
-	s.setVal(SNPACURL, url)
-}
-
-// GetPACURL returns the last used PAC URL.
-func (s *Settings) GetPACURL() string {
-	return s.getString(SNPACURL)
-}
-
-func (s *Settings) getBool(name SettingName) bool {
+func (s *Settings) GetBool(name SettingName) bool {
 	if val, err := s.getVal(name); err == nil {
 		if v, ok := val.(bool); ok {
 			return v
@@ -466,7 +451,7 @@ func (s *Settings) getBool(name SettingName) bool {
 	return false
 }
 
-func (s *Settings) getStringArray(name SettingName) []string {
+func (s *Settings) GetStringArray(name SettingName) []string {
 	if val, err := s.getVal(name); err == nil {
 		if v, ok := val.([]string); ok {
 			return v
@@ -482,7 +467,7 @@ func (s *Settings) getStringArray(name SettingName) []string {
 	return nil
 }
 
-func (s *Settings) getString(name SettingName) string {
+func (s *Settings) GetString(name SettingName) string {
 	if val, err := s.getVal(name); err == nil {
 		if v, ok := val.(string); ok {
 			return v
@@ -491,7 +476,7 @@ func (s *Settings) getString(name SettingName) string {
 	return ""
 }
 
-func (s *Settings) getInt64(name SettingName) int64 {
+func (s *Settings) GetInt64(name SettingName) int64 {
 	if val, err := s.getVal(name); err == nil {
 		if v, ok := val.(int64); ok {
 			return v
@@ -521,6 +506,25 @@ func (s *Settings) setVal(name SettingName, val interface{}) {
 	s.onChange(name, val)
 }
 
+// GetSetting gets the in memory setting with the name specified by attr
+func (s *Settings) GetSetting(name SettingName) interface{} {
+	if val, ok := settingMeta[name]; ok {
+		switch val.sType {
+		case stBool:
+			return s.GetBool(name)
+		case stNumber:
+			return s.GetInt64(name)
+		case stString:
+			return s.GetString(name)
+		}
+	} else {
+		s.log.Errorf("Looking for non-existent setting? %v", name)
+	}
+
+	// should never reach here.
+	return nil
+}
+
 // OnChange sets a callback cb to get called when attr is changed from UI.
 func (s *Settings) OnChange(attr SettingName, cb func(interface{})) {
 	s.muNotifiers.Lock()
@@ -535,5 +539,15 @@ func (s *Settings) onChange(attr SettingName, value interface{}) {
 	s.muNotifiers.RUnlock()
 	for _, fn := range notifiers {
 		fn(value)
+	}
+}
+
+func toCamelCase(m map[SettingName]interface{}) {
+	for k := range settingMeta {
+		lowerCased := SettingName(strings.ToLower(string(k)))
+		if v, exists := m[lowerCased]; exists {
+			delete(m, lowerCased)
+			m[k] = v
+		}
 	}
 }

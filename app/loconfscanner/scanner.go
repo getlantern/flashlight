@@ -1,4 +1,4 @@
-package app
+package loconfscanner
 
 import (
 	"math/rand"
@@ -7,15 +7,21 @@ import (
 	"time"
 
 	"github.com/getlantern/golog"
-	"github.com/getlantern/notifier"
 
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/loconf"
 	"github.com/getlantern/flashlight/ui"
+
+	"github.com/getlantern/flashlight/app/notifier"
 )
 
-// LoconfScanner starts a goroutine to periodically check for new loconf files.
+type PastAnnouncements interface {
+	Get() []string
+	Add(string)
+}
+
+// Scanner starts a goroutine to periodically check for new loconf files.
 // This will show announcements via desktop notification. Each announcement
 // is shown only once. It will also do things like check for updates to
 // uninstall survey config
@@ -26,10 +32,16 @@ import (
 // show the announcement or not).
 //
 // Returns a function to stop the loop.
-func LoconfScanner(interval time.Duration, proChecker func() (bool, bool)) (stop func()) {
+func Scanner(interval time.Duration,
+	proChecker func() (bool, bool),
+	lang func() string,
+	past PastAnnouncements,
+) (stop func()) {
 	loc := &loconfer{
-		log: golog.LoggerFor("loconfer"),
-		r:   rand.New(rand.NewSource(time.Now().UnixNano())),
+		log:  golog.LoggerFor("loconfer"),
+		r:    rand.New(rand.NewSource(time.Now().UnixNano())),
+		lang: lang,
+		past: past,
 	}
 	return loc.scan(interval, proChecker, loc.onLoconf)
 }
@@ -78,8 +90,10 @@ func in(s string, coll []string) bool {
 }
 
 type loconfer struct {
-	log golog.Logger
-	r   *rand.Rand
+	log  golog.Logger
+	r    *rand.Rand
+	lang func() string
+	past PastAnnouncements
 }
 
 func (loc *loconfer) onLoconf(lc *loconf.LoConf, isPro bool) {
@@ -93,8 +107,7 @@ func (loc *loconfer) setUninstallURL(lc *loconf.LoConf, isPro bool) {
 		loc.log.Errorf("Could not get config path? %v", err)
 		return
 	}
-	lang := settings.GetLanguage()
-	survey, ok := lc.GetUninstallSurvey(lang)
+	survey, ok := lc.GetUninstallSurvey(loc.lang())
 	if !ok {
 		loc.log.Debugf("No available uninstall survey")
 		return
@@ -126,8 +139,7 @@ func (loc *loconfer) writeURL(path string, survey *loconf.UninstallSurvey, isPro
 }
 
 func (loc *loconfer) makeAnnouncements(lc *loconf.LoConf, isPro bool) {
-	lang := settings.GetLanguage()
-	current, err := lc.GetAnnouncement(lang, isPro)
+	current, err := lc.GetAnnouncement(loc.lang(), isPro)
 	if err != nil {
 		if err == loconf.ErrNoAvailable {
 			loc.log.Debugf("No available announcement")
@@ -136,24 +148,22 @@ func (loc *loconfer) makeAnnouncements(lc *loconf.LoConf, isPro bool) {
 		}
 		return
 	}
-	past := settings.getStringArray(SNPastAnnouncements)
-	if in(current.Campaign, past) {
+	if in(current.Campaign, loc.past.Get()) {
 		loc.log.Debugf("Skip announcement %s", current.Campaign)
 		return
 	}
 	if loc.showAnnouncement(current) {
-		past = append(past, current.Campaign)
-		settings.setStringArray(SNPastAnnouncements, past)
+		loc.past.Add(current.Campaign)
 	}
 }
 
 func (loc *loconfer) showAnnouncement(a *loconf.Announcement) bool {
 	logo := ui.AddToken("/img/lantern_logo.png")
-	note := &notify.Notification{
+	note := &notifier.Notification{
 		Title:    a.Title,
 		Message:  a.Message,
 		ClickURL: a.URL,
 		IconURL:  logo,
 	}
-	return showNotification(note)
+	return notifier.Show(note)
 }

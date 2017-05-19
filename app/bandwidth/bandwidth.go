@@ -1,4 +1,4 @@
-package app
+package bandwidth
 
 import (
 	"fmt"
@@ -7,12 +7,14 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/getlantern/bandwidth"
+	gp "github.com/getlantern/bandwidth"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
-	"github.com/getlantern/notifier"
 
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
+
+	"github.com/getlantern/flashlight/app/notifier"
 )
 
 var (
@@ -22,15 +24,19 @@ var (
 	oneEighty = &sync.Once{}
 	oneFull   = &sync.Once{}
 	ns        = notifyStatus{}
+
+	log = golog.LoggerFor("flashlight.app.bandwidth")
 )
 
 type notifyStatus struct {
+	proChecker func() (bool, bool)
 }
 
-func serveBandwidth() error {
+func Start(proChecker func() (bool, bool)) error {
+	ns.proChecker = proChecker
 	helloFn := func(write func(interface{})) {
 		log.Debugf("Sending current bandwidth quota to new client")
-		write(bandwidth.GetQuota())
+		write(gp.GetQuota())
 	}
 	bservice, err := ws.Register("bandwidth", helloFn)
 	if err != nil {
@@ -38,7 +44,7 @@ func serveBandwidth() error {
 		return err
 	}
 	go func() {
-		for quota := range bandwidth.Updates {
+		for quota := range gp.Updates {
 			log.Debugf("Sending update...")
 			bservice.Out <- quota
 			if ns.isFull(quota) {
@@ -59,19 +65,19 @@ func serveBandwidth() error {
 	return nil
 }
 
-func (s *notifyStatus) isEightyOrMore(quota *bandwidth.Quota) bool {
+func (s *notifyStatus) isEightyOrMore(quota *gp.Quota) bool {
 	return s.checkPercent(quota, 0.8)
 }
 
-func (s *notifyStatus) isFiftyOrMore(quota *bandwidth.Quota) bool {
+func (s *notifyStatus) isFiftyOrMore(quota *gp.Quota) bool {
 	return s.checkPercent(quota, 0.5)
 }
 
-func (s *notifyStatus) isFull(quota *bandwidth.Quota) bool {
+func (s *notifyStatus) isFull(quota *gp.Quota) bool {
 	return (quota.MiBAllowed <= quota.MiBUsed)
 }
 
-func (s *notifyStatus) checkPercent(quota *bandwidth.Quota, percent float64) bool {
+func (s *notifyStatus) checkPercent(quota *gp.Quota, percent float64) bool {
 	return (float64(quota.MiBUsed) / float64(quota.MiBAllowed)) > percent
 }
 
@@ -103,7 +109,7 @@ func (s *notifyStatus) notifyCapHit() {
 }
 
 func (s *notifyStatus) notifyFreeUser(title, msg string) {
-	if isPro, ok := isProUser(); !ok {
+	if isPro, ok := s.proChecker(); !ok {
 		log.Debugf("user status is unknown, skip showing notification")
 		return
 	} else if isPro {
@@ -112,11 +118,11 @@ func (s *notifyStatus) notifyFreeUser(title, msg string) {
 	}
 
 	logo := ui.AddToken("/img/lantern_logo.png")
-	note := &notify.Notification{
+	note := &notifier.Notification{
 		Title:    title,
 		Message:  msg,
 		ClickURL: "http://" + ui.GetUIAddr() + "?utm_source=" + runtime.GOOS + "&utm_medium=notification&utm_campaign=50-80-100&utm_content=" + url.QueryEscape(title+"-"+msg),
 		IconURL:  logo,
 	}
-	_ = showNotification(note)
+	_ = notifier.Show(note)
 }

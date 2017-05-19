@@ -7,6 +7,8 @@ import (
 
 	"github.com/getlantern/flashlight/ui"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/getlantern/flashlight/app/settings"
 )
 
 func TestLocalHTTPToken(t *testing.T) {
@@ -20,7 +22,8 @@ func TestLocalHTTPToken(t *testing.T) {
 
 	ui.Start(":", false, "", "")
 	defer ui.Stop()
-	set := loadSettingsFrom("1", "1/1/1", "1/1/1", tmpfile.Name())
+	set := settings.New()
+	set.Reconfigure(nil, &settings.ConfigOpts{"1", "1/1/1", "1/1/1", tmpfile.Name()})
 
 	// Just make sure we correctly set the token.
 	set.SetLocalHTTPToken("fdada")
