@@ -76,7 +76,7 @@ func (app *App) LogPanicAndExit(msg interface{}) {
 	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
 	setUpSysproxyTool()
 	app.AddExitFunc(func() {
-		doSysproxyOffFor(settings.GetAddr())
+		sysproxyOffFor(settings.GetAddr())
 	})
 	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
 }
@@ -198,7 +198,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			_, port, splitErr := net.SplitHostPort(listenAddr)
 			if splitErr == nil && port != "0" {
 				log.Debugf("Clearing system proxy settings for: %v", listenAddr)
-				doSysproxyOffFor(listenAddr)
+				clearSysproxyFor(listenAddr)
 			} else {
 				log.Debugf("Can't clear proxy settings for: %v", listenAddr)
 			}
