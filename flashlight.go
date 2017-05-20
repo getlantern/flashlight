@@ -36,7 +36,7 @@ var (
 	// 100% of the below ops are reported to borda, irrespective of the borda
 	// sample percentage. This should all be low-volume operations, otherwise we
 	// will utilize too much bandwidth on the client.
-	FullyReportedOps = []string{"client_started", "client_stopped", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "report_issue"}
+	FullyReportedOps = []string{"client_started", "client_stopped", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "sysproxy_clear", "report_issue"}
 )
 
 // Run runs a client proxy. It blocks as long as the proxy is running.
