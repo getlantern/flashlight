@@ -50,7 +50,7 @@ func (p *Sysproxy) GetType() service.Type {
 	return ServiceType
 }
 
-func (p *Sysproxy) Reconfigure(_ service.Publisher, opts service.ConfigOpts) {
+func (p *Sysproxy) Reconfigure(opts service.ConfigOpts) {
 	p.proxyAddr = opts.(*ConfigOpts).ProxyAddr
 }
 

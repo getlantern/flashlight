@@ -60,8 +60,11 @@ func (s *GeoLookup) GetType() service.Type {
 	return ServiceType
 }
 
-func (s *GeoLookup) Reconfigure(p service.Publisher, opts service.ConfigOpts) {
+func (s *GeoLookup) SetPublisher(p service.Publisher) {
 	s.p = p
+}
+
+func (s *GeoLookup) Reconfigure(_ service.ConfigOpts) {
 }
 
 func (s *GeoLookup) Start() {

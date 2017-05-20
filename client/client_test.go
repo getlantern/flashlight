@@ -45,10 +45,6 @@ func (m mockStatsTracker) SetActiveProxyLocation(city, country, countryCode stri
 func (m mockStatsTracker) IncHTTPSUpgrades()                                        {}
 func (m mockStatsTracker) IncAdsBlocked()                                           {}
 
-type mockPublisher struct{}
-
-func (m mockPublisher) Publish(interface{}) {}
-
 func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {
 	client.bal.Reset(&testDialer{
 		name: "test-dialer",
@@ -58,7 +54,7 @@ func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, 
 
 func newClient() *Client {
 	client := New().(*Client)
-	client.Reconfigure(mockPublisher{}, &ConfigOpts{
+	client.Reconfigure(&ConfigOpts{
 		UseDetour:         true,
 		UseShortcut:       true,
 		ProToken:          "proToken",

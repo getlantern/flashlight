@@ -24,8 +24,8 @@ type ConfigOpts interface {
 	Complete() string
 }
 
-// Service is the reference to a service. The only way to obtain such a
-// reference is by calling Registry.Lookup().
+// Service is the reference to a service, which is return by
+// Registry.Register() or Registry.Lookup().
 type Service interface {
 	// Start checks if the effective config options is valid, reconfigure the
 	// service with it and starts the service.  It returns if the service is
@@ -39,22 +39,13 @@ type Service interface {
 	// Reconfigure updates part of the effective config options. If the option
 	// is valid, it calls Reconfigure() of the Impl and start the service if
 	// not already started.
-	//
-	// The key of the map is the full path to the field to update, e.g., to
-	// update `Bar` in `struct Opts { Foo: struct { Bar int } }`, key should be
-	// `Foo.Bar`.  It returns error without doing anything if the field doesn't
-	// exist or type mismatches. It's up to the Impl to restart itself when
-	// required (service status is not affected).
 	Reconfigure(func(opts ConfigOpts)) error
 	// MustReconfigure is the same as Reconfigure, but panics if error happens.
 	MustReconfigure(func(opts ConfigOpts))
-	// Subscribe returns a channel to receive any message the service published.
-	// Messages are discarded if no one is listening on the channel.
-	Subscribe() <-chan interface{}
 	// GetImpl gets the implementation of the service. Caller usually casts it
 	// to a concrete type to call its specific methods. Be aware that one
 	// should always Start(), Stop(), or Reconfigure() via the Service, instead
-	// of the Impl.
+	// of the methods of the Impl.
 	GetImpl() Impl
 }
 
@@ -67,14 +58,24 @@ type Publisher interface {
 
 // Impl actually implemetents the service.
 type Impl interface {
-	// GetType returns the type of the service
+	// GetType returns the type of the service.
 	GetType() Type
-	// Start actually starts the service
+	// Start actually starts the service. The Registry calls it only once until
+	// it's stopped.
 	Start()
-	// Stop actually stops the service
+	// Stop actually stops the service. The Registry calls it only if the
+	// service was started.
 	Stop()
-	// Reconfigure configures the service with current effective config options.
-	Reconfigure(p Publisher, opts ConfigOpts)
+	// Reconfigure configures the service with current effective config
+	// options. Registry only calls this when the ConfigOpts are Complete().
+	// Implement carefully To avoid data races. The implementation can choose
+	// to restart the service internally when some configuration changes, but
+	// it doesn't affect the service status from the outside.
+	Reconfigure(opts ConfigOpts)
+}
+
+type WillPublish interface {
+	SetPublisher(p Publisher)
 }
 
 var (
@@ -175,10 +176,6 @@ func (s service) MustReconfigure(op func(ConfigOpts)) {
 
 func (s service) Reconfigure(op func(ConfigOpts)) error {
 	return s.r.Reconfigure(s.impl.GetType(), op)
-}
-
-func (s service) Subscribe() <-chan interface{} {
-	return s.r.Subscribe(s.impl.GetType())
 }
 
 func (s service) GetImpl() Impl {

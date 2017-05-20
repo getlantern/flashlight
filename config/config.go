@@ -133,8 +133,11 @@ func (c *config) GetType() service.Type {
 	return ServiceType
 }
 
-func (c *config) Reconfigure(p service.Publisher, opts service.ConfigOpts) {
+func (c *config) SetPublisher(p service.Publisher) {
 	c.publisher = p
+}
+
+func (c *config) Reconfigure(opts service.ConfigOpts) {
 	c.opts = opts.(*ConfigOpts)
 }
 

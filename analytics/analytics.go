@@ -68,7 +68,7 @@ func (s *analytics) GetType() service.Type {
 	return ServiceType
 }
 
-func (s *analytics) Reconfigure(_p service.Publisher, opts service.ConfigOpts) {
+func (s *analytics) Reconfigure(opts service.ConfigOpts) {
 	s.opts = opts.(*ConfigOpts)
 	s.transport = trackSession
 }

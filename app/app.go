@@ -79,7 +79,7 @@ func (app *App) Init() {
 		app.Flags["configdir"] = appdir.General("Lantern")
 	}
 	app.settings = settings.New()
-	app.settings.Reconfigure(nil, &settings.ConfigOpts{
+	app.settings.Reconfigure(&settings.ConfigOpts{
 		common.Version,
 		common.RevisionDate,
 		common.BuildDate,
@@ -98,13 +98,13 @@ func (app *App) LogPanicAndExit(msg interface{}) {
 	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
 	// Turn off system proxy on panic
 	// Reload settings to make sure we have an up-to-date addr
-	app.settings.Reconfigure(nil, &settings.ConfigOpts{common.Version,
+	app.settings.Reconfigure(&settings.ConfigOpts{common.Version,
 		common.RevisionDate,
 		common.BuildDate,
 		app.settingsPath(),
 	})
 	p := sysproxy.New()
-	p.Reconfigure(nil, &sysproxy.ConfigOpts{app.settings.GetAddr()})
+	p.Reconfigure(&sysproxy.ConfigOpts{app.settings.GetAddr()})
 	p.Stop()
 }
 
@@ -166,7 +166,7 @@ func (app *App) Run() error {
 		if splitErr == nil && port != "0" {
 			log.Debugf("Clearing system proxy settings for: %v", listenAddr)
 			p := sysproxy.New()
-			p.Reconfigure(nil, &sysproxy.ConfigOpts{listenAddr})
+			p.Reconfigure(&sysproxy.ConfigOpts{listenAddr})
 			p.Stop()
 		} else {
 			log.Debugf("Can't clear proxy settings for: %v", listenAddr)
@@ -302,7 +302,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			log.Errorf("Unable to serve mandrill to UI: %v", err)
 		}
 
-		geoService, _ := service.MustRegister(
+		service.MustRegister(
 			geolookup.New,
 			nil, // no ConfigOpts for geolookup
 			true,
@@ -335,7 +335,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			nil, // TODO: depends on settings and client
 		)
 
-		chGeoService := geoService.Subscribe()
+		chGeoService := service.Subscribe(geolookup.ServiceType)
 		go func() {
 			for m := range chGeoService {
 				info := m.(*geolookup.GeoInfo)

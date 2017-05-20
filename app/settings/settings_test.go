@@ -22,7 +22,7 @@ func TestRead(t *testing.T) {
 
 	var uid int64
 	s := New()
-	s.Reconfigure(nil, &ConfigOpts{"1", "1/1/1", "1/1/1", tmpfile.Name()})
+	s.Reconfigure(&ConfigOpts{"1", "1/1/1", "1/1/1", tmpfile.Name()})
 	assert.Equal(t, s.GetProxyAll(), false)
 	assert.Equal(t, s.GetUserID(), uid)
 	assert.Equal(t, s.GetSystemProxy(), true)
@@ -140,7 +140,7 @@ func TestPersistAndLoad(t *testing.T) {
 	buildDate := "1970-1-1"
 	yamlFile := "./test.yaml"
 	s := New()
-	s.Reconfigure(nil, &ConfigOpts{version, revisionDate, buildDate, yamlFile})
+	s.Reconfigure(&ConfigOpts{version, revisionDate, buildDate, yamlFile})
 	assert.Equal(t, version, s.m["version"], "Should be set to version")
 	assert.Equal(t, revisionDate, s.m["revisionDate"], "Should be set to revisionDate")
 	assert.Equal(t, buildDate, s.m["buildDate"], "Should be set to buildDate")
@@ -150,7 +150,7 @@ func TestPersistAndLoad(t *testing.T) {
 	s.SetLanguage("leet")
 	s.SetUserID(1234)
 	s2 := New()
-	s2.Reconfigure(nil, &ConfigOpts{version, revisionDate, buildDate, yamlFile})
+	s2.Reconfigure(&ConfigOpts{version, revisionDate, buildDate, yamlFile})
 	assert.Equal(t, "leet", s2.GetLanguage(), "Should save language to file and reload")
 	assert.Equal(t, int64(1234), s2.GetUserID(), "Should save user id to file and reload")
 	s2.SetLanguage("en")
@@ -159,7 +159,7 @@ func TestPersistAndLoad(t *testing.T) {
 
 func TestLoadLowerCased(t *testing.T) {
 	s := New()
-	s.Reconfigure(nil, &ConfigOpts{"", "", "", "./lowercased.yaml"})
+	s.Reconfigure(&ConfigOpts{"", "", "", "./lowercased.yaml"})
 	assert.Equal(t, int64(1234), s.GetUserID(), "Should load user id from lower cased yaml")
 	assert.Equal(t, "abcd", s.GetToken(), "Should load user token from lower cased yaml")
 }

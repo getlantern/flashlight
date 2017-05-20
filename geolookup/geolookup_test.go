@@ -9,8 +9,9 @@ import (
 )
 
 func TestFronted(t *testing.T) {
-	s, i := service.NewRegistry().MustRegister(New, nil, true, nil)
-	ch := s.Subscribe()
+	r := service.NewRegistry()
+	s, i := r.MustRegister(New, nil, true, nil)
+	ch := r.Subscribe(ServiceType)
 	s.Start()
 	instance := i.(*GeoLookup)
 	instance.Refresh()

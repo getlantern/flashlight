@@ -67,6 +67,9 @@ func (r *Registry) Register(
 	}
 	r.dag.AddVertex(t, instance, defaultOpts, autoStart)
 	s := service{instance, r}
+	if p, ok := instance.(WillPublish); ok {
+		p.SetPublisher(publisher{t, r})
+	}
 	for dt, df := range deps {
 		r.dag.AddEdge(dt, t)
 		if df != nil {
@@ -144,7 +147,7 @@ func (r *Registry) startNoLock(n *node) bool {
 		}
 	}
 	log.Debugf("Starting service %s", n.t)
-	n.instance.Reconfigure(publisher{n.t, r}, n.opts)
+	n.instance.Reconfigure(n.opts)
 	n.instance.Start()
 	n.started = true
 	log.Debugf("Started service %s", n.t)
@@ -214,6 +217,10 @@ func (r *Registry) Reconfigure(t Type, op func(ConfigOpts)) error {
 	return nil
 }
 
+// Subscribe returns a channel to receive any message the service published.
+// Messages are discarded if no one is listening on the channel.
+// If the service doesn't implement WillPublish interface, the channel never
+// sends anything.
 func (r *Registry) Subscribe(t Type) <-chan interface{} {
 	ch := make(chan interface{}, 10)
 	r.muChannels.Lock()
