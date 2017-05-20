@@ -43,7 +43,7 @@ func (i *mockImpl) Stop() {
 	i.started = false
 	i.stopped = true
 }
-func (i *mockImpl) Reconfigure(opts ConfigOpts) {
+func (i *mockImpl) Configure(opts ConfigOpts) {
 	i.opts = opts
 }
 

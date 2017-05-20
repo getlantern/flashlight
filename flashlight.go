@@ -67,12 +67,12 @@ func Run(autoReport func() bool,
 			switch c := msg.(type) {
 			case config.Proxies:
 				log.Debugf("Applying proxy config with proxies: %v", c)
-				service.MustReconfigure(client.ServiceType, func(opts service.ConfigOpts) {
+				service.MustConfigure(client.ServiceType, func(opts service.ConfigOpts) {
 					opts.(*client.ConfigOpts).Proxies = c
 				})
 			case *config.Global:
 				log.Debugf("Applying global config")
-				service.MustReconfigure(borda.ServiceType, func(opts service.ConfigOpts) {
+				service.MustConfigure(borda.ServiceType, func(opts service.ConfigOpts) {
 					enableBorda := autoReport() && rand.Float64() <= c.BordaSamplePercentage/100
 					o := opts.(*borda.ConfigOpts)
 					o.ReportInterval = c.BordaReportInterval

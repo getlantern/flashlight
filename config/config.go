@@ -137,7 +137,7 @@ func (c *config) SetPublisher(p service.Publisher) {
 	c.publisher = p
 }
 
-func (c *config) Reconfigure(opts service.ConfigOpts) {
+func (c *config) Configure(opts service.ConfigOpts) {
 	c.opts = opts.(*ConfigOpts)
 }
 

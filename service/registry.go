@@ -147,7 +147,7 @@ func (r *Registry) startNoLock(n *node) bool {
 		}
 	}
 	log.Debugf("Starting service %s", n.t)
-	n.instance.Reconfigure(n.opts)
+	n.instance.Configure(n.opts)
 	n.instance.Start()
 	n.started = true
 	log.Debugf("Started service %s", n.t)
@@ -198,14 +198,14 @@ func (r *Registry) stopNoLock(n *node) {
 	}
 }
 
-func (r *Registry) MustReconfigure(t Type, op func(ConfigOpts)) {
-	if err := r.Reconfigure(t, op); err != nil {
+func (r *Registry) MustConfigure(t Type, op func(ConfigOpts)) {
+	if err := r.Configure(t, op); err != nil {
 		panic(err)
 	}
 }
 
 // TODO: enforce timeout
-func (r *Registry) Reconfigure(t Type, op func(ConfigOpts)) error {
+func (r *Registry) Configure(t Type, op func(ConfigOpts)) error {
 	r.muDag.Lock()
 	defer r.muDag.Unlock()
 	n := r.dag.Lookup(t)

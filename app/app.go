@@ -79,7 +79,7 @@ func (app *App) Init() {
 		app.Flags["configdir"] = appdir.General("Lantern")
 	}
 	app.settings = settings.New()
-	app.settings.Reconfigure(&settings.ConfigOpts{
+	app.settings.Configure(&settings.ConfigOpts{
 		common.Version,
 		common.RevisionDate,
 		common.BuildDate,
@@ -98,13 +98,13 @@ func (app *App) LogPanicAndExit(msg interface{}) {
 	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
 	// Turn off system proxy on panic
 	// Reload settings to make sure we have an up-to-date addr
-	app.settings.Reconfigure(&settings.ConfigOpts{common.Version,
+	app.settings.Configure(&settings.ConfigOpts{common.Version,
 		common.RevisionDate,
 		common.BuildDate,
 		app.settingsPath(),
 	})
 	p := sysproxy.New()
-	p.Reconfigure(&sysproxy.ConfigOpts{app.settings.GetAddr()})
+	p.Configure(&sysproxy.ConfigOpts{app.settings.GetAddr()})
 	p.Stop()
 }
 
@@ -166,7 +166,7 @@ func (app *App) Run() error {
 		if splitErr == nil && port != "0" {
 			log.Debugf("Clearing system proxy settings for: %v", listenAddr)
 			p := sysproxy.New()
-			p.Reconfigure(&sysproxy.ConfigOpts{listenAddr})
+			p.Configure(&sysproxy.ConfigOpts{listenAddr})
 			p.Stop()
 		} else {
 			log.Debugf("Can't clear proxy settings for: %v", listenAddr)
@@ -314,7 +314,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			true, // either true or false should be ok as the ConfigOpts won't be valid until reconfigured with IP
 			service.Deps{geolookup.ServiceType: func(m interface{}, self service.Service) {
 				info := m.(*geolookup.GeoInfo)
-				self.MustReconfigure(func(opts service.ConfigOpts) {
+				self.MustConfigure(func(opts service.ConfigOpts) {
 					opts.(*analytics.ConfigOpts).IP = info.GetIP()
 				})
 			}})
@@ -324,7 +324,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			true,
 			service.Deps{geolookup.ServiceType: func(m interface{}, self service.Service) {
 				info := m.(*geolookup.GeoInfo)
-				self.MustReconfigure(func(opts service.ConfigOpts) {
+				self.MustConfigure(func(opts service.ConfigOpts) {
 					opts.(*location.ConfigOpts).Code = info.GetCountry()
 				})
 			}})
@@ -356,7 +356,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 					log.Debugf("Got HTTP proxy address: %v", msg.Addr)
 					app.settings.SetString(settings.SNAddr, msg.Addr)
 					s, _ := service.MustLookup(sysproxy.ServiceType)
-					s.MustReconfigure(func(opts service.ConfigOpts) {
+					s.MustConfigure(func(opts service.ConfigOpts) {
 						opts.(*sysproxy.ConfigOpts).ProxyAddr = msg.Addr
 					})
 					if app.settings.GetSystemProxy() {

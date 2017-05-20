@@ -151,7 +151,7 @@ func New() *Settings {
 	}
 }
 
-func (s *Settings) Reconfigure(opts service.ConfigOpts) {
+func (s *Settings) Configure(opts service.ConfigOpts) {
 	o := opts.(*ConfigOpts)
 	s.filePath = o.FilePath
 	log.Debug("Loading settings")

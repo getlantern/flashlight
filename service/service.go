@@ -12,7 +12,7 @@ type Type string
 
 // Deps represents the services on which one service depends, and optional
 // handler to process message from the depended service. Typically, the handler
-// reconfigure the service itself based on the message.
+// configure the service itself based on the message.
 type Deps map[Type]func(msg interface{}, self Service)
 
 // ConfigOpts represents all of the config options required to start a service.
@@ -27,7 +27,7 @@ type ConfigOpts interface {
 // Service is the reference to a service, which is return by
 // Registry.Register() or Registry.Lookup().
 type Service interface {
-	// Start checks if the effective config options is valid, reconfigure the
+	// Start checks if the effective config options is valid, configure the
 	// service with it and starts the service.  It returns if the service is
 	// currently started.  Starting an already started service is a noop and
 	// returns true.
@@ -36,15 +36,15 @@ type Service interface {
 	Started() bool
 	// Stop stops a started service. Stopping an unstarted service is a noop.
 	Stop()
-	// Reconfigure updates part of the effective config options. If the option
-	// is valid, it calls Reconfigure() of the Impl and start the service if
+	// Configure updates part of the effective config options. If the option
+	// is valid, it calls Configure() of the Impl and start the service if
 	// not already started.
-	Reconfigure(func(opts ConfigOpts)) error
-	// MustReconfigure is the same as Reconfigure, but panics if error happens.
-	MustReconfigure(func(opts ConfigOpts))
+	Configure(func(opts ConfigOpts)) error
+	// MustConfigure is the same as Configure, but panics if error happens.
+	MustConfigure(func(opts ConfigOpts))
 	// GetImpl gets the implementation of the service. Caller usually casts it
 	// to a concrete type to call its specific methods. Be aware that one
-	// should always Start(), Stop(), or Reconfigure() via the Service, instead
+	// should always Start(), Stop(), or Configure() via the Service, instead
 	// of the methods of the Impl.
 	GetImpl() Impl
 }
@@ -66,12 +66,12 @@ type Impl interface {
 	// Stop actually stops the service. The Registry calls it only if the
 	// service was started.
 	Stop()
-	// Reconfigure configures the service with current effective config
+	// Configure configures the service with current effective config
 	// options. Registry only calls this when the ConfigOpts are Complete().
 	// Implement carefully To avoid data races. The implementation can choose
 	// to restart the service internally when some configuration changes, but
 	// it doesn't affect the service status from the outside.
-	Reconfigure(opts ConfigOpts)
+	Configure(opts ConfigOpts)
 }
 
 type WillPublish interface {
@@ -115,14 +115,14 @@ func Lookup(t Type) (Service, Impl) {
 	return singleton.Lookup(t)
 }
 
-// MustReconfigure configures a service from the singleton registry, or panics.
-func MustReconfigure(t Type, op func(opts ConfigOpts)) {
-	singleton.MustReconfigure(t, op)
+// MustConfigure configures a service from the singleton registry, or panics.
+func MustConfigure(t Type, op func(opts ConfigOpts)) {
+	singleton.MustConfigure(t, op)
 }
 
-// Reconfigure configures  a service from the singleton registry.
-func Reconfigure(t Type, op func(opts ConfigOpts)) error {
-	return singleton.Reconfigure(t, op)
+// Configure configures  a service from the singleton registry.
+func Configure(t Type, op func(opts ConfigOpts)) error {
+	return singleton.Configure(t, op)
 }
 
 // Subscribe subscribes message of a service from the singleton registry.
@@ -168,14 +168,14 @@ func (s service) Stop() {
 	s.r.stop(s.impl.GetType())
 }
 
-func (s service) MustReconfigure(op func(ConfigOpts)) {
-	if err := s.Reconfigure(op); err != nil {
+func (s service) MustConfigure(op func(ConfigOpts)) {
+	if err := s.Configure(op); err != nil {
 		panic(err)
 	}
 }
 
-func (s service) Reconfigure(op func(ConfigOpts)) error {
-	return s.r.Reconfigure(s.impl.GetType(), op)
+func (s service) Configure(op func(ConfigOpts)) error {
+	return s.r.Configure(s.impl.GetType(), op)
 }
 
 func (s service) GetImpl() Impl {

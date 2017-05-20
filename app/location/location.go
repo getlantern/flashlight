@@ -35,7 +35,7 @@ func (s *locationService) GetType() service.Type {
 	return ServiceType
 }
 
-func (s *locationService) Reconfigure(loc service.ConfigOpts) {
+func (s *locationService) Configure(loc service.ConfigOpts) {
 	s.loc = loc.(*ConfigOpts)
 }
 

@@ -17,7 +17,7 @@ func TestAnalytics(t *testing.T) {
 
 	params := eventual.NewValue()
 	service := New().(*analytics)
-	service.Reconfigure(&ConfigOpts{
+	service.Configure(&ConfigOpts{
 		"1",
 		"2.2.0",
 		"127.0.0.1",

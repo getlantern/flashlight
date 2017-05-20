@@ -177,7 +177,7 @@ func (c *Client) SetPublisher(p service.Publisher) {
 	c.publisher = p
 }
 
-func (c *Client) Reconfigure(opts service.ConfigOpts) {
+func (c *Client) Configure(opts service.ConfigOpts) {
 	o := opts.(*ConfigOpts)
 	c.useShortcut = o.UseShortcut
 	c.useDetour = o.UseDetour

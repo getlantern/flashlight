@@ -26,7 +26,7 @@ func TestInvalidFile(t *testing.T) {
 
 	t.Log("path: %v", configPath)
 	c := &config{}
-	c.Reconfigure(&ConfigOpts{})
+	c.Configure(&ConfigOpts{})
 	_, err = c.saved(&FetchOpts{fullPath: configPath})
 	assert.Error(t, err, "should get error if config file is empty")
 
@@ -43,7 +43,7 @@ func TestInvalidFile(t *testing.T) {
 // TestObfuscated tests reading obfuscated global config from disk
 func TestObfuscated(t *testing.T) {
 	c := &config{}
-	c.Reconfigure(&ConfigOpts{
+	c.Configure(&ConfigOpts{
 		Obfuscate: true,
 	})
 	conf, err := c.saved(&FetchOpts{
@@ -60,7 +60,7 @@ func TestObfuscated(t *testing.T) {
 
 func TestOverrideGlobal(t *testing.T) {
 	c := &config{}
-	c.Reconfigure(&ConfigOpts{
+	c.Configure(&ConfigOpts{
 		Obfuscate: true,
 		OverrideGlobal: func(gl *Global) {
 			gl.AutoUpdateCA = "overriden"
@@ -77,7 +77,7 @@ func TestOverrideGlobal(t *testing.T) {
 // TestSaved tests reading stored proxies from disk
 func TestSaved(t *testing.T) {
 	c := &config{}
-	c.Reconfigure(&ConfigOpts{})
+	c.Configure(&ConfigOpts{})
 	pr, err := c.saved(&FetchOpts{
 		fullPath:    "./test-proxies.yaml",
 		unmarshaler: c.unmarshalProxies,
@@ -93,7 +93,7 @@ func TestSaved(t *testing.T) {
 // TestEmbedded tests reading stored proxies from disk
 func TestEmbedded(t *testing.T) {
 	c := &config{}
-	c.Reconfigure(&ConfigOpts{Obfuscate: true})
+	c.Configure(&ConfigOpts{Obfuscate: true})
 	pr, err := c.embedded(&FetchOpts{
 		EmbeddedName: "proxies.yaml",
 		EmbeddedData: generated.EmbeddedProxies,
@@ -141,7 +141,7 @@ func TestPoll(t *testing.T) {
 	opts.Global.FileName = globalFile
 	c := New().(*config)
 	c.SetPublisher(p)
-	c.Reconfigure(opts)
+	c.Configure(opts)
 
 	start := time.Now()
 	renameBack := renameFile(t, proxiesFile)

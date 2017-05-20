@@ -54,7 +54,7 @@ func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, 
 
 func newClient() *Client {
 	client := New().(*Client)
-	client.Reconfigure(&ConfigOpts{
+	client.Configure(&ConfigOpts{
 		UseDetour:         true,
 		UseShortcut:       true,
 		ProToken:          "proToken",

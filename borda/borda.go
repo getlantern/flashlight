@@ -56,7 +56,7 @@ func (s *bordaService) GetType() service.Type {
 	return ServiceType
 }
 
-func (s *bordaService) Reconfigure(opts service.ConfigOpts) {
+func (s *bordaService) Configure(opts service.ConfigOpts) {
 	o := opts.(*ConfigOpts)
 	shouldRestart := false
 	s.muOpts.Lock()

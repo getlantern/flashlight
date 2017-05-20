@@ -23,7 +23,7 @@ func TestLocalHTTPToken(t *testing.T) {
 	ui.Start(":", false, "", "")
 	defer ui.Stop()
 	set := settings.New()
-	set.Reconfigure(&settings.ConfigOpts{"1", "1/1/1", "1/1/1", tmpfile.Name()})
+	set.Configure(&settings.ConfigOpts{"1", "1/1/1", "1/1/1", tmpfile.Name()})
 
 	// Just make sure we correctly set the token.
 	set.SetLocalHTTPToken("fdada")
