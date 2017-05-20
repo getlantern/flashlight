@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/mockconn"
 	"github.com/stretchr/testify/assert"
 )
@@ -48,7 +47,7 @@ func (m mockStatsTracker) IncAdsBlocked()                                       
 
 type mockPublisher struct{}
 
-func (m mockPublisher) Publish(service.Message) {}
+func (m mockPublisher) Publish(interface{}) {}
 
 func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {
 	client.bal.Reset(&testDialer{

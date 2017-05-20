@@ -88,12 +88,6 @@ type mockWithPublisher struct {
 	chStop chan bool
 }
 
-type mockMessage time.Time
-
-func (m mockMessage) ValidMessageFrom(t Type) bool {
-	return t == serviceType1
-}
-
 func (i *mockWithPublisher) Start() {
 	i.mockImpl.Start()
 	go func() {
@@ -101,7 +95,7 @@ func (i *mockWithPublisher) Start() {
 		for {
 			select {
 			case ts := <-t.C:
-				i.mockImpl.p.Publish(mockMessage(ts))
+				i.mockImpl.p.Publish(ts)
 			case <-i.chStop:
 				fmt.Print("stopping\n")
 				return

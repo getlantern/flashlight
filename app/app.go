@@ -312,7 +312,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			analytics.New,
 			&analytics.ConfigOpts{DeviceID: app.settings.GetDeviceID(), Version: common.Version, Enabled: app.settings.IsAutoReport()},
 			true, // either true or false should be ok as the ConfigOpts won't be valid until reconfigured with IP
-			service.Deps{geolookup.ServiceType: func(m service.Message, self service.Service) {
+			service.Deps{geolookup.ServiceType: func(m interface{}, self service.Service) {
 				info := m.(*geolookup.GeoInfo)
 				self.MustReconfigure(func(opts service.ConfigOpts) {
 					opts.(*analytics.ConfigOpts).IP = info.GetIP()
@@ -322,7 +322,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			location.New,
 			&location.ConfigOpts{},
 			true,
-			service.Deps{geolookup.ServiceType: func(m service.Message, self service.Service) {
+			service.Deps{geolookup.ServiceType: func(m interface{}, self service.Service) {
 				info := m.(*geolookup.GeoInfo)
 				self.MustReconfigure(func(opts service.ConfigOpts) {
 					opts.(*location.ConfigOpts).Code = info.GetCountry()

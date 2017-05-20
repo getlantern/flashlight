@@ -32,10 +32,6 @@ type GeoInfo struct {
 	city *geo.City
 }
 
-func (i *GeoInfo) ValidMessageFrom(t service.Type) bool {
-	return t == ServiceType
-}
-
 func (i *GeoInfo) GetIP() string {
 	return i.ip
 }

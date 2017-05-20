@@ -80,10 +80,10 @@ type FetchOpts struct {
 	// If true, hit all the way to the origin server which handles Lantern
 	// special Etag.
 	useLanternEtag bool
-	unmarshaler    func(bytes []byte) (service.Message, error)
+	unmarshaler    func(bytes []byte) (interface{}, error)
 	// shared channel between fetcher and saver. Closed by the fetcher when
 	// stopping.
-	saveChan chan service.Message
+	saveChan chan interface{}
 	// fullPath of the file on disk.
 	fullPath string
 }
@@ -117,10 +117,6 @@ func (o *FetchOpts) Complete() string {
 
 type Proxies map[string]*chained.ChainedServerInfo
 
-func (m Proxies) ValidMessageFrom(t service.Type) bool {
-	return t == ServiceType
-}
-
 // config gets proxy data saved locally, embedded in the binary, or fetched
 // over the network.
 type config struct {
@@ -145,12 +141,12 @@ func (c *config) Reconfigure(p service.Publisher, opts service.ConfigOpts) {
 func (c *config) Start() {
 	c.chStop = make(chan bool)
 	c.opts.Global.unmarshaler = c.unmarshalGlobal
-	c.opts.Global.saveChan = make(chan service.Message)
+	c.opts.Global.saveChan = make(chan interface{})
 	c.opts.Global.fullPath = path.Join(c.opts.SaveDir, c.opts.Global.FileName)
 	c.loadInitial(&c.opts.Global)
 
 	c.opts.Proxies.unmarshaler = c.unmarshalProxies
-	c.opts.Proxies.saveChan = make(chan service.Message)
+	c.opts.Proxies.saveChan = make(chan interface{})
 	c.opts.Proxies.fullPath = path.Join(c.opts.SaveDir, c.opts.Proxies.FileName)
 	c.opts.Proxies.useLanternEtag = true
 	c.loadInitial(&c.opts.Proxies)
@@ -190,7 +186,7 @@ func (c *config) loadInitial(opts *FetchOpts) {
 }
 
 // saved returns a yaml config from disk.
-func (c *config) saved(opts *FetchOpts) (service.Message, error) {
+func (c *config) saved(opts *FetchOpts) (interface{}, error) {
 	infile, err := os.Open(opts.fullPath)
 	if err != nil {
 		err = fmt.Errorf("Unable to open config file %v for reading: %v", opts.fullPath, err)
@@ -219,7 +215,7 @@ func (c *config) saved(opts *FetchOpts) (service.Message, error) {
 }
 
 // embedded retrieves a yaml config embedded in the binary.
-func (c *config) embedded(opts *FetchOpts) (service.Message, error) {
+func (c *config) embedded(opts *FetchOpts) (interface{}, error) {
 	fs, err := tarfs.New(opts.EmbeddedData, "")
 	if err != nil {
 		log.Errorf("Could not read resources? %v", err)
@@ -273,7 +269,7 @@ func (c *config) poll(opts *FetchOpts) {
 	}
 }
 
-func (c *config) unmarshalGlobal(bytes []byte) (service.Message, error) {
+func (c *config) unmarshalGlobal(bytes []byte) (interface{}, error) {
 	gl := newGlobal()
 	if err := yaml.Unmarshal(bytes, gl); err != nil {
 		return nil, err
@@ -287,7 +283,7 @@ func (c *config) unmarshalGlobal(bytes []byte) (service.Message, error) {
 	return gl, nil
 }
 
-func (c *config) unmarshalProxies(bytes []byte) (service.Message, error) {
+func (c *config) unmarshalProxies(bytes []byte) (interface{}, error) {
 	servers := make(map[string]*chained.ChainedServerInfo)
 	if err := yaml.Unmarshal(bytes, servers); err != nil {
 		return nil, err
@@ -299,7 +295,7 @@ func (c *config) unmarshalProxies(bytes []byte) (service.Message, error) {
 }
 
 type saver struct {
-	ch        chan service.Message
+	ch        chan interface{}
 	fullPath  string
 	obfuscate bool
 }
@@ -312,13 +308,13 @@ func (s *saver) run() {
 	}
 }
 
-func (s *saver) saveOne(in service.Message) error {
+func (s *saver) saveOne(in interface{}) error {
 	op := ops.Begin("save_config")
 	defer op.End()
 	return op.FailIf(s.doSaveOne(in))
 }
 
-func (s *saver) doSaveOne(in service.Message) error {
+func (s *saver) doSaveOne(in interface{}) error {
 	bytes, err := yaml.Marshal(in)
 	if err != nil {
 		return fmt.Errorf("Unable to marshal config yaml: %v", err)

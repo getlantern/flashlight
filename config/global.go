@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/client"
-	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/proxiedsites"
 )
@@ -29,10 +28,6 @@ type Global struct {
 
 	// TrustedCAs are trusted CAs for domain fronting domains only.
 	TrustedCAs []*fronted.CA
-}
-
-func (m *Global) ValidMessageFrom(t service.Type) bool {
-	return t == ServiceType
 }
 
 // newGlobal creates a new global config with otherwise nil values set.

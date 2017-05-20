@@ -13,7 +13,7 @@ type Type string
 // Deps represents the services on which one service depends, and optional
 // handler to process message from the depended service. Typically, the handler
 // reconfigure the service itself based on the message.
-type Deps map[Type]func(m Message, self Service)
+type Deps map[Type]func(msg interface{}, self Service)
 
 // ConfigOpts represents all of the config options required to start a service.
 type ConfigOpts interface {
@@ -22,15 +22,6 @@ type ConfigOpts interface {
 	// Complete checks if the ConfigOpts is complete to start the service. If
 	// not, return the reason.
 	Complete() string
-}
-
-// Message represents anything a service wants to update with the rest of the
-// world. Call Service.Subscribe() for any messages. service implementations
-// call Publisher.Publish to broadcast the message to all subscribers.
-type Message interface {
-	// ValidMessageFrom is called by Registry to make sure the message is
-	// received from the correct service.
-	ValidMessageFrom(t Type) bool
 }
 
 // Service is the reference to a service. The only way to obtain such a
@@ -57,9 +48,9 @@ type Service interface {
 	Reconfigure(func(opts ConfigOpts)) error
 	// MustReconfigure is the same as Reconfigure, but panics if error happens.
 	MustReconfigure(func(opts ConfigOpts))
-	// Subscribe gets a channel to receive any message the service published.
+	// Subscribe returns a channel to receive any message the service published.
 	// Messages are discarded if no one is listening on the channel.
-	Subscribe() <-chan Message
+	Subscribe() <-chan interface{}
 	// GetImpl gets the implementation of the service. Caller usually casts it
 	// to a concrete type to call its specific methods. Be aware that one
 	// should always Start(), Stop(), or Reconfigure() via the Service, instead
@@ -67,10 +58,11 @@ type Service interface {
 	GetImpl() Impl
 }
 
-// Publisher is an interface the service impletation to publish a message, when required.
+// Publisher is an interface for the service impletation to publish a message,
+// when required.
 type Publisher interface {
-	// Publish publishes the message to all of the subscribers.
-	Publish(Message)
+	// Publish publishes any message to all of the subscribers.
+	Publish(msg interface{})
 }
 
 // Impl actually implemetents the service.
@@ -133,7 +125,7 @@ func Reconfigure(t Type, op func(opts ConfigOpts)) error {
 }
 
 // Subscribe subscribes message of a service from the singleton registry.
-func Subscribe(t Type) <-chan Message {
+func Subscribe(t Type) <-chan interface{} {
 	return singleton.Subscribe(t)
 }
 
@@ -152,8 +144,8 @@ type publisher struct {
 	r *Registry
 }
 
-func (p publisher) Publish(m Message) {
-	p.r.publish(p.t, m)
+func (p publisher) Publish(msg interface{}) {
+	p.r.publish(p.t, msg)
 }
 
 // service satisfies the Service interface, it forwards all methods to the
@@ -185,7 +177,7 @@ func (s service) Reconfigure(op func(ConfigOpts)) error {
 	return s.r.Reconfigure(s.impl.GetType(), op)
 }
 
-func (s service) Subscribe() <-chan Message {
+func (s service) Subscribe() <-chan interface{} {
 	return s.r.Subscribe(s.impl.GetType())
 }
 

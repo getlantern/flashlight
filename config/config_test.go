@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/flashlight/config/generated"
-	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/fronted"
 )
 
@@ -34,7 +33,7 @@ func TestInvalidFile(t *testing.T) {
 	tmpfile.WriteString("content: anything")
 	tmpfile.Sync()
 	var expectedError = errors.New("invalid content")
-	_, err = c.saved(&FetchOpts{fullPath: configPath, unmarshaler: func([]byte) (service.Message, error) {
+	_, err = c.saved(&FetchOpts{fullPath: configPath, unmarshaler: func([]byte) (interface{}, error) {
 		return nil, expectedError
 	}})
 	assert.Equal(t, expectedError, err,
@@ -116,7 +115,7 @@ type publisher struct {
 	global  *Global
 }
 
-func (p *publisher) Publish(m service.Message) {
+func (p *publisher) Publish(m interface{}) {
 	switch actual := m.(type) {
 	case Proxies:
 		p.proxies = actual

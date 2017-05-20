@@ -113,10 +113,6 @@ type Message struct {
 	Addr      string
 }
 
-func (m Message) ValidMessageFrom(t service.Type) bool {
-	return t == ServiceType && m.Addr != ""
-}
-
 // Client is an HTTP proxy that accepts connections from local programs and
 // proxies these via remote flashlight servers.
 type Client struct {

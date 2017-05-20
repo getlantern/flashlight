@@ -12,14 +12,14 @@ type Registry struct {
 	muDag      sync.RWMutex
 	dag        *dag
 	muChannels sync.RWMutex
-	channels   map[Type][]chan Message
+	channels   map[Type][]chan interface{}
 }
 
 // NewRegistry creates a new Registry
 func NewRegistry() *Registry {
 	return &Registry{
 		dag:      newDag(),
-		channels: make(map[Type][]chan Message),
+		channels: make(map[Type][]chan interface{}),
 	}
 }
 
@@ -170,7 +170,7 @@ func (r *Registry) stopServices() {
 func (r *Registry) closeChannels() {
 	r.muChannels.Lock()
 	allChannels := r.channels
-	r.channels = make(map[Type][]chan Message)
+	r.channels = make(map[Type][]chan interface{})
 	r.muChannels.Unlock()
 	for _, channels := range allChannels {
 		for _, ch := range channels {
@@ -214,8 +214,8 @@ func (r *Registry) Reconfigure(t Type, op func(ConfigOpts)) error {
 	return nil
 }
 
-func (r *Registry) Subscribe(t Type) <-chan Message {
-	ch := make(chan Message, 10)
+func (r *Registry) Subscribe(t Type) <-chan interface{} {
+	ch := make(chan interface{}, 10)
 	r.muChannels.Lock()
 	r.channels[t] = append(r.channels[t], ch)
 	r.muChannels.Unlock()
@@ -223,10 +223,7 @@ func (r *Registry) Subscribe(t Type) <-chan Message {
 	return ch
 }
 
-func (r *Registry) publish(t Type, msg Message) {
-	if !msg.ValidMessageFrom(t) {
-		log.Errorf("Received invalid message from %s", t)
-	}
+func (r *Registry) publish(t Type, msg interface{}) {
 	r.muChannels.RLock()
 	channels := r.channels[t]
 	r.muChannels.RUnlock()
