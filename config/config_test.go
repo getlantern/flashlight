@@ -25,8 +25,7 @@ func TestInvalidFile(t *testing.T) {
 	configPath := tmpfile.Name()
 
 	t.Log("path: %v", configPath)
-	c := &config{}
-	c.Configure(&ConfigOpts{})
+	c := &config{opts: &ConfigOpts{}}
 	_, err = c.saved(&FetchOpts{fullPath: configPath})
 	assert.Error(t, err, "should get error if config file is empty")
 
@@ -42,10 +41,9 @@ func TestInvalidFile(t *testing.T) {
 
 // TestObfuscated tests reading obfuscated global config from disk
 func TestObfuscated(t *testing.T) {
-	c := &config{}
-	c.Configure(&ConfigOpts{
+	c := &config{opts: &ConfigOpts{
 		Obfuscate: true,
-	})
+	}}
 	conf, err := c.saved(&FetchOpts{
 		fullPath:    "./obfuscated-global.yaml",
 		unmarshaler: c.unmarshalGlobal,
@@ -59,13 +57,12 @@ func TestObfuscated(t *testing.T) {
 }
 
 func TestOverrideGlobal(t *testing.T) {
-	c := &config{}
-	c.Configure(&ConfigOpts{
+	c := &config{opts: &ConfigOpts{
 		Obfuscate: true,
 		OverrideGlobal: func(gl *Global) {
 			gl.AutoUpdateCA = "overriden"
 		},
-	})
+	}}
 	conf, err := c.saved(&FetchOpts{
 		fullPath:    "./obfuscated-global.yaml",
 		unmarshaler: c.unmarshalGlobal,
@@ -76,8 +73,7 @@ func TestOverrideGlobal(t *testing.T) {
 
 // TestSaved tests reading stored proxies from disk
 func TestSaved(t *testing.T) {
-	c := &config{}
-	c.Configure(&ConfigOpts{})
+	c := &config{opts: &ConfigOpts{}}
 	pr, err := c.saved(&FetchOpts{
 		fullPath:    "./test-proxies.yaml",
 		unmarshaler: c.unmarshalProxies,
@@ -92,8 +88,7 @@ func TestSaved(t *testing.T) {
 
 // TestEmbedded tests reading stored proxies from disk
 func TestEmbedded(t *testing.T) {
-	c := &config{}
-	c.Configure(&ConfigOpts{Obfuscate: true})
+	c := &config{opts: &ConfigOpts{Obfuscate: true}}
 	pr, err := c.embedded(&FetchOpts{
 		EmbeddedName: "proxies.yaml",
 		EmbeddedData: generated.EmbeddedProxies,
@@ -139,9 +134,8 @@ func TestPoll(t *testing.T) {
 	opts := DefaultConfigOpts()
 	opts.Proxies.FileName = proxiesFile
 	opts.Global.FileName = globalFile
-	c := New().(*config)
+	c := &config{opts: opts}
 	c.SetPublisher(p)
-	c.Configure(opts)
 
 	start := time.Now()
 	renameBack := renameFile(t, proxiesFile)

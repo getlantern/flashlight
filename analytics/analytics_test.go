@@ -16,13 +16,8 @@ func TestAnalytics(t *testing.T) {
 	logger := golog.LoggerFor("flashlight.analytics_test")
 
 	params := eventual.NewValue()
-	service := New().(*analytics)
-	service.Configure(&ConfigOpts{
-		"1",
-		"2.2.0",
-		"127.0.0.1",
-		true,
-	})
+	service := New(true, "deviceID", "2.2.0").(*analytics)
+	service.Configure(&ConfigOpts{"127.0.0.1"})
 	// override for test purpose
 	service.transport = func(args string) {
 		logger.Debugf("Got args %v", args)

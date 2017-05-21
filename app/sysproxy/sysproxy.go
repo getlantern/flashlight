@@ -21,7 +21,9 @@ var (
 )
 
 type ConfigOpts struct {
-	ProxyAddr string
+	// Enable is the only dynamic config of the sysproxy service. It turns on/off
+	// system's proxy setting accordingly.
+	Enable bool
 }
 
 func (o *ConfigOpts) For() service.Type {
@@ -29,21 +31,24 @@ func (o *ConfigOpts) For() service.Type {
 }
 
 func (o *ConfigOpts) Complete() string {
-	if o.ProxyAddr == "" {
-		return "missing ProxyAddr"
-	}
 	return ""
 }
 
 type Sysproxy struct {
-	mu          sync.Mutex
-	on          bool
-	initialized bool
-	proxyAddr   string
+	proxyAddr string
+
+	mu     sync.Mutex
+	enable bool
+	on     bool
 }
 
-func New() service.Impl {
-	return &Sysproxy{}
+func New(proxyAddr string, enable bool) *Sysproxy {
+	p := &Sysproxy{proxyAddr: proxyAddr, enable: enable}
+	err := setUpSysproxyTool()
+	if err != nil {
+		log.Error(err) // report once and do nothing else
+	}
+	return p
 }
 
 func (p *Sysproxy) GetType() service.Type {
@@ -51,29 +56,39 @@ func (p *Sysproxy) GetType() service.Type {
 }
 
 func (p *Sysproxy) Configure(opts service.ConfigOpts) {
-	p.proxyAddr = opts.(*ConfigOpts).ProxyAddr
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.enable = opts.(*ConfigOpts).Enable
+	p.do(p.enable)
 }
 
 func (p *Sysproxy) Start() {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	if !p.initialized {
-		err := setUpSysproxyTool()
-		if err != nil {
-			log.Error(err)
-			return
-		}
-		p.initialized = true
-	}
-	doSysproxyOn(p.proxyAddr)
-	p.on = true
+	p.do(p.enable)
 }
 
 func (p *Sysproxy) Stop() {
 	p.mu.Lock()
 	defer p.mu.Unlock()
+	p.enable = false
+	p.do(false)
+}
+
+// Clear clears the system proxy setting regardless if it was started by this
+// instance.
+func (p *Sysproxy) Clear() {
 	doSysproxyOff(p.proxyAddr)
-	p.on = false
+}
+
+func (p *Sysproxy) do(turnOn bool) {
+	if turnOn && !p.on {
+		doSysproxyOn(p.proxyAddr)
+		p.on = true
+	} else if p.on {
+		doSysproxyOff(p.proxyAddr)
+		p.on = false
+	}
 }
 
 func setUpSysproxyTool() error {

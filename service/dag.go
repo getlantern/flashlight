@@ -6,7 +6,6 @@ type dag struct {
 
 type node struct {
 	t            Type
-	autoStart    bool
 	started      bool
 	opts         ConfigOpts
 	instance     Impl
@@ -19,8 +18,8 @@ func newDag() *dag {
 	return &dag{nodes: make(map[Type]*node)}
 }
 
-func (this *dag) AddVertex(t Type, instance Impl, opts ConfigOpts, autoStart bool) *node {
-	n := &node{t: t, instance: instance, autoStart: autoStart, opts: opts}
+func (this *dag) AddVertex(t Type, instance Impl, opts ConfigOpts) *node {
+	n := &node{t: t, instance: instance, opts: opts}
 	this.nodes[t] = n
 	return n
 }
@@ -35,7 +34,7 @@ func (this *dag) AddEdge(from, to Type) {
 func (this *dag) Lookup(t Type) *node {
 	return this.nodes[t]
 }
-func (this *dag) Flatten(onlyAutoStart bool) []*node {
+func (this *dag) Flatten() []*node {
 	candidate := make([]*node, 0, len(this.nodes))
 	result := make([]*node, 0, len(this.nodes))
 	for _, n := range this.nodes {
@@ -48,9 +47,6 @@ func (this *dag) Flatten(onlyAutoStart bool) []*node {
 	var n *node
 	for len(candidate) > 0 {
 		n, candidate = candidate[0], candidate[1:]
-		if onlyAutoStart && !n.autoStart {
-			continue
-		}
 		result = append(result, n)
 		for _, c := range n.children {
 			c.pendingVisit--

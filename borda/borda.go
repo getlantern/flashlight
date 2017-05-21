@@ -26,9 +26,8 @@ var (
 )
 
 type ConfigOpts struct {
-	ReportInterval   time.Duration
-	ReportAllOps     bool
-	FullyReportedOps []string
+	ReportInterval time.Duration
+	ReportAllOps   bool
 }
 
 func (c *ConfigOpts) For() service.Type {
@@ -43,13 +42,14 @@ func (c *ConfigOpts) Complete() string {
 }
 
 type bordaService struct {
-	muOpts      sync.RWMutex
-	opts        ConfigOpts
-	bordaClient *borda.Client
+	muOpts           sync.RWMutex
+	opts             ConfigOpts
+	fullyReportedOps []string
+	bordaClient      *borda.Client
 }
 
-func New() service.Impl {
-	return &bordaService{}
+func New(fullyReportedOps []string) service.Impl {
+	return &bordaService{fullyReportedOps: fullyReportedOps}
 }
 
 func (s *bordaService) GetType() service.Type {
@@ -151,7 +151,7 @@ func (s *bordaService) startBordaAndProxyBench() {
 
 func (s *bordaService) shouldReport(ctx map[string]interface{}) bool {
 	s.muOpts.RLock()
-	should, ops := s.opts.ReportAllOps, s.opts.FullyReportedOps
+	should := s.opts.ReportAllOps
 	s.muOpts.RUnlock()
 	if should {
 		return true
@@ -159,7 +159,7 @@ func (s *bordaService) shouldReport(ctx map[string]interface{}) bool {
 	// For some ops, we don't randomly sample, we include all of them
 	switch t := ctx["op"].(type) {
 	case string:
-		for _, op := range ops {
+		for _, op := range s.fullyReportedOps {
 			if t == op {
 				log.Tracef("Including fully reported op %v in borda sample", op)
 				return true

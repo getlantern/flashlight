@@ -64,9 +64,6 @@ func (s *GeoLookup) SetPublisher(p service.Publisher) {
 	s.p = p
 }
 
-func (s *GeoLookup) Configure(_ service.ConfigOpts) {
-}
-
 func (s *GeoLookup) Start() {
 	log.Debugf("Starting geolookup service")
 	go s.loop()

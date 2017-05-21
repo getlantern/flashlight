@@ -17,7 +17,6 @@ type mockImpl struct {
 	p       Publisher
 	started bool
 	stopped bool
-	opts    ConfigOpts
 }
 
 func New1() Impl {
@@ -43,9 +42,6 @@ func (i *mockImpl) Stop() {
 	i.started = false
 	i.stopped = true
 }
-func (i *mockImpl) Configure(opts ConfigOpts) {
-	i.opts = opts
-}
 
 func (i *mockImpl) SetPublisher(p Publisher) {
 	i.p = p
@@ -53,12 +49,12 @@ func (i *mockImpl) SetPublisher(p Publisher) {
 
 func TestRegister(t *testing.T) {
 	registry := NewRegistry()
-	_, _, err := registry.Register(New1, nil, true, Deps{serviceType2: nil})
+	_, _, err := registry.Register(New1(), nil, Deps{serviceType2: nil})
 	assert.Error(t, err,
 		"should not register if any of the dependencies is not found")
-	registry.MustRegister(New1, nil, true, nil)
-	registry.MustRegister(New2, nil, true, Deps{serviceType1: nil})
-	_, _, err = registry.Register(New2, nil, true, nil)
+	registry.MustRegister(New1(), nil, nil)
+	registry.MustRegister(New2(), nil, nil)
+	_, _, err = registry.Register(New2(), nil, nil)
 	assert.Error(t, err, "each service should be registered only once")
 	_, i1 := registry.MustLookup(serviceType1)
 	_, i2 := registry.MustLookup(serviceType2)
@@ -70,20 +66,6 @@ func TestRegister(t *testing.T) {
 	assert.False(t, i2.(*mockImpl).started)
 	assert.True(t, i1.(*mockImpl).stopped)
 	assert.True(t, i2.(*mockImpl).stopped)
-}
-
-func TestAutoStart(t *testing.T) {
-	registry := NewRegistry()
-	_, i1 := registry.MustRegister(New1, nil, true, nil)
-	_, i2 := registry.MustRegister(New2, nil, false, Deps{serviceType1: nil})
-	_, i3 := registry.MustRegister(New3, nil, true, Deps{serviceType2: nil})
-	registry.StartAll()
-	assert.True(t, i1.(*mockImpl).started)
-	assert.False(t, i2.(*mockImpl).started,
-		"should not auto start if autoStart is false")
-	assert.False(t, i3.(*mockImpl).started,
-		"should not auto start if one of the dependencies doesn't auto start")
-	registry.StopAll()
 }
 
 type mockWithPublisher struct {
@@ -112,7 +94,7 @@ func TestSubscribe(t *testing.T) {
 		return &mockWithPublisher{New1().(*mockImpl), make(chan bool)}
 	}
 	registry := NewRegistry()
-	s1, _, err := registry.Register(new1, nil, true, nil)
+	s1, _, err := registry.Register(new1(), nil, nil)
 	assert.NoError(t, err)
 	ch1 := registry.Subscribe(serviceType1)
 	ch2 := registry.Subscribe(serviceType1)

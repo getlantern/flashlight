@@ -121,19 +121,18 @@ func Start(configDir string, locale string,
 
 		// TODO: persist device ID across system reboot
 		deviceID := base64.StdEncoding.EncodeToString(uuid.NodeID())
-		service.MustRegister(client.New,
+		service.MustRegister(
+			client.New(deviceID,
+				true, //on android, we allow private hosts
+				&statsTracker{},
+			),
 			&client.ConfigOpts{
-				UseShortcut: !user.ProxyAll(),
-				UseDetour:   false,
-				// on android, we allow private hosts
-				AllowPrivateHosts: true,
-				StatsTracker:      &statsTracker{},
-				HTTPProxyAddr:     "127.0.0.1:0", // listen for HTTP on random address
-				Socks5ProxyAddr:   "127.0.0.1:0", // listen for SOCKS on random address
-				ProToken:          user.GetToken(),
-				DeviceID:          deviceID,
+				UseShortcut:     !user.ProxyAll(),
+				UseDetour:       false,
+				HTTPProxyAddr:   "127.0.0.1:0", // listen for HTTP on random address
+				Socks5ProxyAddr: "127.0.0.1:0", // listen for SOCKS on random address
+				ProToken:        user.GetToken(),
 			},
-			true,
 			nil)
 		ch := service.Subscribe(client.ServiceType)
 		appdir.SetHomeDir(configDir)
@@ -233,7 +232,7 @@ func getBandwidth(quota *bandwidth.Quota) (int, int) {
 }
 
 func beforeStart() bool {
-	service.MustRegister(geolookup.New, nil, true, nil)
+	service.MustRegister(geolookup.New(), nil, nil)
 	service.StartAll()
 	return true
 }

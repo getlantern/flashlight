@@ -120,13 +120,14 @@ type Proxies map[string]*chained.ChainedServerInfo
 // config gets proxy data saved locally, embedded in the binary, or fetched
 // over the network.
 type config struct {
-	publisher service.Publisher
 	opts      *ConfigOpts
-	chStop    chan bool
+	publisher service.Publisher
+	// It's created in each Start() and closed in Stop()
+	chStop chan bool
 }
 
-func New() service.Impl {
-	return &config{}
+func New(opts *ConfigOpts) service.Impl {
+	return &config{opts: opts}
 }
 
 func (c *config) GetType() service.Type {
@@ -135,10 +136,6 @@ func (c *config) GetType() service.Type {
 
 func (c *config) SetPublisher(p service.Publisher) {
 	c.publisher = p
-}
-
-func (c *config) Configure(opts service.ConfigOpts) {
-	c.opts = opts.(*ConfigOpts)
 }
 
 func (c *config) Start() {

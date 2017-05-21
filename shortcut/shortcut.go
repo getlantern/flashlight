@@ -11,39 +11,64 @@ import (
 
 var (
 	log = golog.LoggerFor("flashlight.shortcut")
-
-	sc shortcut.Shortcut = &nullShortcut{}
-	mu sync.RWMutex
 )
+
+type Shortcut struct {
+	// sc is the shortcut actually in use. It's the same as configured if
+	// enableSC is true.
+	sc shortcut.Shortcut
+	// configured is the shortcut loaded based on the country.
+	configured shortcut.Shortcut
+	enableSC   bool
+	mu         sync.RWMutex
+}
 
 type nullShortcut struct{}
 
-func (s *nullShortcut) Allow(string) bool {
+func (s nullShortcut) Allow(string) bool {
 	return false
 }
 
-func Configure(country string) {
+func New() *Shortcut {
+	return &Shortcut{sc: nullShortcut{}, configured: nullShortcut{}}
+}
+
+func (s *Shortcut) Enable(enable bool) {
+	s.mu.Lock()
+	s.enableSC = enable
+	if enable {
+		s.sc = s.configured
+	} else {
+		s.sc = nullShortcut{}
+	}
+	s.mu.Unlock()
+	log.Debugf("Done enable/disable shortcut. Enabled %v", enable)
+}
+
+func (s *Shortcut) Configure(country string) {
 	country = strings.ToLower(country)
 	v4, v4err := Asset("resources/" + country + "_ipv4.txt")
 	v6, v6err := Asset("resources/" + country + "_ipv6.txt")
 	if v4err != nil || v6err != nil {
-		log.Debugf("no shortcut list for country %s", country)
+		log.Debugf("No shortcut list for country %s", country)
 		return
 	}
 
-	_sc := shortcut.NewFromReader(
+	s.configured = shortcut.NewFromReader(
 		bytes.NewReader(v4),
 		bytes.NewReader(v6),
 	)
-	mu.Lock()
-	sc = _sc
-	mu.Unlock()
-	log.Debugf("loaded shortcut list for country %s", country)
+	s.mu.Lock()
+	if s.enableSC {
+		s.sc = s.configured
+		log.Debugf("Loaded shortcut list for country %s", country)
+	}
+	s.mu.Unlock()
 }
 
-func Allow(addr string) bool {
-	mu.RLock()
-	_sc := sc
-	mu.RUnlock()
+func (s *Shortcut) Allow(addr string) bool {
+	s.mu.RLock()
+	_sc := s.sc
+	s.mu.RUnlock()
 	return _sc.Allow(addr)
 }

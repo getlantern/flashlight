@@ -27,7 +27,6 @@ import (
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxiedsites"
 	"github.com/getlantern/flashlight/service"
-	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
 
@@ -109,9 +108,7 @@ func (app *App) LogPanicAndExit(msg interface{}) {
 		common.BuildDate,
 		app.settingsPath(),
 	})
-	p := sysproxy.New()
-	p.Configure(&sysproxy.ConfigOpts{app.settings.GetAddr()})
-	p.Stop()
+	sysproxy.New(app.settings.GetAddr(), false).Clear()
 }
 
 func (app *App) exitOnFatal(err error) {
@@ -170,9 +167,7 @@ func (app *App) Run() error {
 		_, port, splitErr := net.SplitHostPort(listenAddr)
 		if splitErr == nil && port != "0" {
 			log.Debugf("Clearing system proxy settings for: %v", listenAddr)
-			p := sysproxy.New()
-			p.Configure(&sysproxy.ConfigOpts{listenAddr})
-			p.Stop()
+			sysproxy.New(listenAddr, false).Clear()
 		} else {
 			log.Debugf("Can't clear proxy settings for: %v", listenAddr)
 		}
@@ -187,19 +182,18 @@ func (app *App) Run() error {
 		}
 	}
 
-	service.MustRegister(client.New,
+	service.MustRegister(client.New(
+		app.settings.GetDeviceID(),
+		false, // on desktop, we do not allow private hosts
+		app.statsTracker,
+	),
 		&client.ConfigOpts{
-			UseShortcut: !app.settings.GetProxyAll(),
-			UseDetour:   !app.settings.GetProxyAll(),
-			// on desktop, we do not allow private hosts
-			AllowPrivateHosts: false,
-			StatsTracker:      app.statsTracker,
-			HTTPProxyAddr:     listenAddr,
-			Socks5ProxyAddr:   socksAddr,
-			ProToken:          app.settings.GetToken(),
-			DeviceID:          app.settings.GetDeviceID(),
+			UseShortcut:     !app.settings.GetProxyAll(),
+			UseDetour:       !app.settings.GetProxyAll(),
+			HTTPProxyAddr:   listenAddr,
+			Socks5ProxyAddr: socksAddr,
+			ProToken:        app.settings.GetToken(),
 		},
-		true,
 		nil)
 
 	var startupURL string
@@ -307,45 +301,31 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			log.Errorf("Unable to serve mandrill to UI: %v", err)
 		}
 
+		service.MustRegister(geolookup.New(), nil, nil)
 		service.MustRegister(
-			geolookup.New,
-			nil, // no ConfigOpts for geolookup
-			true,
-			nil)
-
-		service.MustRegister(
-			analytics.New,
-			&analytics.ConfigOpts{DeviceID: app.settings.GetDeviceID(), Version: common.Version, Enabled: app.settings.IsAutoReport()},
-			true, // either true or false should be ok as the ConfigOpts won't be valid until reconfigured with IP
+			analytics.New(app.settings.IsAutoReport(), app.settings.GetDeviceID(), common.Version),
+			&analytics.ConfigOpts{},
 			service.Deps{geolookup.ServiceType: func(m interface{}, self service.Service) {
-				info := m.(*geolookup.GeoInfo)
 				self.MustConfigure(func(opts service.ConfigOpts) {
-					opts.(*analytics.ConfigOpts).IP = info.GetIP()
+					opts.(*analytics.ConfigOpts).GeoIP = m.(*geolookup.GeoInfo).GetIP()
 				})
 			}})
 		service.MustRegister(
-			location.New,
+			location.New(),
 			&location.ConfigOpts{},
-			true,
 			service.Deps{geolookup.ServiceType: func(m interface{}, self service.Service) {
-				info := m.(*geolookup.GeoInfo)
 				self.MustConfigure(func(opts service.ConfigOpts) {
-					opts.(*location.ConfigOpts).Code = info.GetCountry()
+					opts.(*location.ConfigOpts).Code = m.(*geolookup.GeoInfo).GetCountry()
 				})
 			}})
-		service.MustRegister(
-			sysproxy.New,
-			&sysproxy.ConfigOpts{},
-			false,
-			nil, // TODO: depends on settings and client
-		)
-
 		chGeoService := service.Subscribe(geolookup.ServiceType)
 		go func() {
 			for m := range chGeoService {
 				info := m.(*geolookup.GeoInfo)
 				ip, country := info.GetIP(), info.GetCountry()
-				shortcut.Configure(country)
+				service.Configure(client.ServiceType, func(opts service.ConfigOpts) {
+					opts.(*client.ConfigOpts).GeoCountry = country
+				})
 				ops.SetGlobal("geo_country", country)
 				ops.SetGlobal("client_ip", ip)
 			}
@@ -360,20 +340,16 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 				case client.HTTPProxy:
 					log.Debugf("Got HTTP proxy address: %v", msg.Addr)
 					app.settings.SetString(settings.SNAddr, msg.Addr)
-					s, _ := service.MustLookup(sysproxy.ServiceType)
-					s.MustConfigure(func(opts service.ConfigOpts) {
-						opts.(*sysproxy.ConfigOpts).ProxyAddr = msg.Addr
-					})
-					if app.settings.GetSystemProxy() {
-						s.Start()
-					}
+					setProxy := app.settings.GetSystemProxy()
+					s, _ := service.MustRegister(sysproxy.New(msg.Addr, setProxy),
+						&sysproxy.ConfigOpts{setProxy},
+						nil)
+					s.Start()
+					setupUserSignal() // it depends on sysproxy service being registered.
 					app.OnSettingChange(settings.SNSystemProxy, func(val interface{}) {
-						enable := val.(bool)
-						if enable {
-							s.Start()
-						} else {
-							s.Stop()
-						}
+						service.Configure(sysproxy.ServiceType, func(o service.ConfigOpts) {
+							o.(*sysproxy.ConfigOpts).Enable = val.(bool)
+						})
 					})
 
 				case client.Socks5Proxy:
@@ -384,8 +360,6 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		}()
 
 		service.StartAll()
-
-		setupUserSignal()
 
 		app.AddExitFunc(notifier.Start())
 		app.AddExitFunc(loconfscanner.Scanner(

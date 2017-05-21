@@ -55,10 +55,7 @@ func Run(autoReport func() bool,
 	op := fops.Begin("client_started")
 
 	waitForStart(op, elapsed, afterStart)
-	service.MustRegister(borda.New,
-		&borda.ConfigOpts{FullyReportedOps: FullyReportedOps},
-		true,
-		nil)
+	service.MustRegister(borda.New(FullyReportedOps), &borda.ConfigOpts{}, nil)
 
 	registerConfigService(flagsAsMap)
 	ch := service.Subscribe(config.ServiceType)
@@ -73,10 +70,9 @@ func Run(autoReport func() bool,
 			case *config.Global:
 				log.Debugf("Applying global config")
 				service.MustConfigure(borda.ServiceType, func(opts service.ConfigOpts) {
-					enableBorda := autoReport() && rand.Float64() <= c.BordaSamplePercentage/100
 					o := opts.(*borda.ConfigOpts)
 					o.ReportInterval = c.BordaReportInterval
-					o.ReportAllOps = enableBorda
+					o.ReportAllOps = autoReport() && rand.Float64() <= c.BordaSamplePercentage/100
 				})
 				certs, err := getTrustedCACerts(c)
 				if err != nil {
@@ -127,31 +123,31 @@ func waitForStart(op *fops.Op, elapsed func() time.Duration, afterStart func()) 
 
 func registerConfigService(flagsAsMap map[string]interface{}) {
 	opts := config.DefaultConfigOpts()
-	if v, ok := flagsAsMap["cloudconfig"]; ok {
-		opts.Proxies.ChainedURL = v.(string)
+	if v, ok := flagsAsMap["cloudconfig"].(string); ok {
+		opts.Proxies.ChainedURL = v
 	}
-	if v, ok := flagsAsMap["frontedconfig"]; ok {
-		opts.Proxies.FrontedURL = v.(string)
+	if v, ok := flagsAsMap["frontedconfig"].(string); ok {
+		opts.Proxies.FrontedURL = v
 	}
-	if v, ok := flagsAsMap["stickyconfig"]; ok {
-		opts.Sticky = v.(bool)
+	if v, ok := flagsAsMap["stickyconfig"].(bool); ok {
+		opts.Sticky = v
 	}
-	if v, ok := flagsAsMap["readableconfig"]; ok {
-		opts.Obfuscate = !v.(bool)
+	if v, ok := flagsAsMap["readableconfig"].(bool); ok {
+		opts.Obfuscate = !v
 	}
 	opts.SaveDir = appdir.General("Lantern")
-	if v, ok := flagsAsMap["configdir"]; ok {
-		opts.SaveDir = v.(string)
+	if v, ok := flagsAsMap["configdir"].(string); ok {
+		opts.SaveDir = v
 	}
 	opts.OverrideGlobal = func(gl *config.Global) {
-		if v, ok := flagsAsMap["borda-report-interval"]; ok {
-			gl.BordaReportInterval = v.(time.Duration)
+		if v, ok := flagsAsMap["borda-report-interval"].(time.Duration); ok {
+			gl.BordaReportInterval = v
 		}
-		if v, ok := flagsAsMap["borda-sample-percentage"]; ok {
-			gl.BordaSamplePercentage = v.(float64)
+		if v, ok := flagsAsMap["borda-sample-percentage"].(float64); ok {
+			gl.BordaSamplePercentage = v
 		}
 	}
-	service.MustRegister(config.New, opts, true, nil)
+	service.MustRegister(config.New(opts), nil, nil)
 }
 
 func getTrustedCACerts(cfg *config.Global) (pool *x509.CertPool, err error) {

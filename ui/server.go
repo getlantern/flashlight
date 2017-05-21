@@ -231,7 +231,7 @@ func (s *server) forbidden(msg string, w http.ResponseWriter, r *http.Request) {
 func (s *server) dumpRequestHeaders(r *http.Request) {
 	dump, err := httputil.DumpRequest(r, false)
 	if err == nil {
-		log.Debugf("Request:\n", string(dump))
+		log.Debugf("Request: %s\n", string(dump))
 	}
 }
 

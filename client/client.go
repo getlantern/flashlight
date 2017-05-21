@@ -66,16 +66,14 @@ var (
 )
 
 type ConfigOpts struct {
-	UseShortcut       bool
-	UseDetour         bool
-	AllowPrivateHosts bool
-	ProToken          string
-	DeviceID          string
-	HTTPProxyAddr     string
-	Socks5ProxyAddr   string
-	Proxies           map[string]*chained.ChainedServerInfo
-
-	StatsTracker common.StatsTracker
+	UseShortcut     bool
+	UseDetour       bool
+	BlockAds        bool
+	ProToken        string
+	HTTPProxyAddr   string
+	Socks5ProxyAddr string
+	GeoCountry      string
+	Proxies         map[string]*chained.ChainedServerInfo
 }
 
 func (o *ConfigOpts) For() service.Type {
@@ -83,17 +81,11 @@ func (o *ConfigOpts) For() service.Type {
 }
 
 func (o *ConfigOpts) Complete() string {
-	if o.StatsTracker == nil {
-		return "missing StatsTracker"
-	}
 	if o.HTTPProxyAddr == "" {
 		return "missing HTTPProxyAddr"
 	}
 	if o.Socks5ProxyAddr == "" {
 		return "missing Socks5ProxyAddr"
-	}
-	if o.DeviceID == "" {
-		return "missing DeviceID"
 	}
 	if len(o.Proxies) == 0 {
 		return "missing Proxies"
@@ -118,7 +110,6 @@ type Message struct {
 type Client struct {
 	// readTimeout: (optional) timeout for read ops
 	readTimeout time.Duration
-
 	// writeTimeout: (optional) timeout for write ops
 	writeTimeout time.Duration
 
@@ -128,32 +119,44 @@ type Client struct {
 	interceptCONNECT proxy.Interceptor
 	interceptHTTP    proxy.Interceptor
 
-	httpListener   net.Listener
-	socks5Listener net.Listener
-
-	useShortcut       bool
-	useDetour         bool
-	proToken          string
 	allowPrivateHosts bool
+	isPrivateAddr     func(*net.IPAddr) bool
+
+	useShortcut bool
+	useDetour   bool
+	proToken    string
+	deviceID    string
+	geoCountry  string
+	publisher   service.Publisher
 
 	httpProxyAddr   string
 	socks5ProxyAddr string
 
+	httpListener   net.Listener
+	socks5Listener net.Listener
+
 	easylist       easylist.List
+	sc             *shortcut.Shortcut
 	rewriteToHTTPS httpseverywhere.Rewrite
 	statsTracker   common.StatsTracker
-	publisher      service.Publisher
-	isPrivateAddr  func(*net.IPAddr) bool
 
 	chStop chan bool
 }
 
-func New() service.Impl {
+func New(
+	deviceID string,
+	allowPrivateHosts bool,
+	statsTracker common.StatsTracker,
+) *Client {
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
 	c := &Client{
-		bal:            balancer.New(),
-		rewriteToHTTPS: httpseverywhere.Default(),
-		chStop:         make(chan bool),
+		bal:               balancer.New(),
+		rewriteToHTTPS:    httpseverywhere.Default(),
+		chStop:            make(chan bool),
+		deviceID:          deviceID,
+		allowPrivateHosts: allowPrivateHosts,
+		sc:                shortcut.New(),
+		statsTracker:      statsTracker,
 	}
 
 	c.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers.Pool, false, c.dialCONNECT)
@@ -165,6 +168,8 @@ func New() service.Impl {
 	} else {
 		c.isPrivateAddr = iptool.IsPrivate
 	}
+	c.initEasyList()
+
 	return c
 
 }
@@ -179,15 +184,19 @@ func (c *Client) SetPublisher(p service.Publisher) {
 
 func (c *Client) Configure(opts service.ConfigOpts) {
 	o := opts.(*ConfigOpts)
-	c.useShortcut = o.UseShortcut
+	if c.useShortcut != o.UseShortcut {
+		c.useShortcut = o.UseShortcut
+		c.sc.Enable(c.useShortcut)
+	}
+	if o.GeoCountry != "" && c.geoCountry != o.GeoCountry {
+		c.geoCountry = o.GeoCountry
+		c.sc.Configure(c.geoCountry)
+	}
 	c.useDetour = o.UseDetour
 	c.proToken = o.ProToken
-	c.statsTracker = o.StatsTracker
-	c.allowPrivateHosts = o.AllowPrivateHosts
 	c.httpProxyAddr = o.HTTPProxyAddr
 	c.socks5ProxyAddr = o.Socks5ProxyAddr
-	c.initEasyList()
-	err := c.initBalancer(o.Proxies, o.DeviceID)
+	err := c.resetBalancer(o.Proxies, c.deviceID)
 	if err != nil {
 		log.Error(err)
 	}
@@ -382,7 +391,7 @@ func (c *Client) doDial(ctx context.Context, isCONNECT bool, addr string, port i
 		// Use netx because on Android, we need a special protected dialer
 		return netx.DialContext(ctx, "tcp", addr)
 	}
-	if c.useShortcut && shortcut.Allow(addr) {
+	if c.sc.Allow(addr) {
 		log.Debugf("Use shortcut (dial directly) for %v", addr)
 		return netx.DialContext(ctx, "tcp", addr)
 	}

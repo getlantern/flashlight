@@ -36,21 +36,28 @@ var (
 // analytics satisfies the service.Impl interface
 type analytics struct {
 	hash      string
-	opts      *ConfigOpts
+	deviceID  string
+	version   string
+	enable    bool
+	geoIP     string
 	transport func(string)
 }
 
-type ConfigOpts struct {
-	DeviceID string
-	Version  string
-	IP       string
-	Enabled  bool
+func New(enable bool, deviceID string, version string) service.Impl {
+	a := &analytics{
+		enable:   enable,
+		deviceID: deviceID,
+		version:  version,
+	}
+	// not bother getting hash if analytics is not enabled.
+	if enable {
+		a.hash = getExecutableHash()
+	}
+	return a
 }
 
-func New() service.Impl {
-	return &analytics{
-		hash: getExecutableHash(),
-	}
+type ConfigOpts struct {
+	GeoIP string
 }
 
 func (o *ConfigOpts) For() service.Type {
@@ -58,9 +65,6 @@ func (o *ConfigOpts) For() service.Type {
 }
 
 func (o *ConfigOpts) Complete() string {
-	if o.IP == "" {
-		return "missing IP"
-	}
 	return ""
 }
 
@@ -69,21 +73,21 @@ func (s *analytics) GetType() service.Type {
 }
 
 func (s *analytics) Configure(opts service.ConfigOpts) {
-	s.opts = opts.(*ConfigOpts)
+	s.geoIP = opts.(*ConfigOpts).GeoIP
 	s.transport = trackSession
 }
 
 func (s *analytics) Start() {
-	if s.opts.Enabled {
-		log.Debugf("Starting analytics session with ip %v", s.opts.IP)
+	if s.enable {
+		log.Debugf("Starting analytics session with ip %v", s.geoIP)
 		args := s.sessionVals("start")
 		s.transport(args)
 	}
 }
 
 func (s *analytics) Stop() {
-	if s.opts.Enabled {
-		log.Debugf("Ending analytics session with ip %v", s.opts.IP)
+	if s.enable {
+		log.Debugf("Ending analytics session with ip %v", s.geoIP)
 		args := s.sessionVals("end")
 		s.transport(args)
 	}
@@ -93,12 +97,12 @@ func (s *analytics) sessionVals(sc string) string {
 	vals := make(url.Values, 0)
 
 	vals.Add("v", "1")
-	vals.Add("cid", s.opts.DeviceID)
+	vals.Add("cid", s.deviceID)
 	vals.Add("tid", trackingID)
 
-	if s.opts.IP != "" {
+	if s.geoIP != "" {
 		// Override the users IP so we get accurate geo data.
-		vals.Add("uip", s.opts.IP)
+		vals.Add("uip", s.geoIP)
 	}
 
 	// Make call to anonymize the user's IP address -- basically a policy thing where
@@ -109,11 +113,11 @@ func (s *analytics) sessionVals(sc string) string {
 	vals.Add("t", "pageview")
 
 	// Custom dimension for the Lantern version
-	vals.Add("cd1", s.opts.Version)
+	vals.Add("cd1", s.version)
 
 	// Custom dimension for the hash of the executable. We combine the version
 	// to make it easier to interpret in GA.
-	vals.Add("cd2", s.opts.Version+"-"+s.hash)
+	vals.Add("cd2", s.version+"-"+s.hash)
 
 	// This forces the recording of the session duration. It must be either
 	// "start" or "end". See:

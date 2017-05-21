@@ -25,11 +25,10 @@ func NewRegistry() *Registry {
 
 // MustRegister is same as Register but panics if fail to register the service.
 func (r *Registry) MustRegister(
-	instantiator func() Impl,
+	instance Impl,
 	defaultOpts ConfigOpts,
-	autoStart bool,
 	deps Deps) (Service, Impl) {
-	s, i, err := r.Register(instantiator, defaultOpts, autoStart, deps)
+	s, i, err := r.Register(instance, defaultOpts, deps)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -44,13 +43,18 @@ func (r *Registry) MustRegister(
 // 4. A set of services on which it depends, or nil if no dependence at all.
 // Registry.StartAll() will resolve the startup order.
 func (r *Registry) Register(
-	instantiator func() Impl,
+	instance Impl,
 	defaultOpts ConfigOpts,
-	autoStart bool,
 	deps Deps) (Service, Impl, error) {
-
-	instance := instantiator()
+	if instance == nil {
+		return nil, nil, errors.New("nil instance")
+	}
 	t := instance.GetType()
+	if _, ok := instance.(Configurable); ok {
+		if defaultOpts == nil {
+			return nil, nil, fmt.Errorf("Configurable service '%s' must be registered with default ConfigOpts", t)
+		}
+	}
 	r.muDag.Lock()
 	defer r.muDag.Unlock()
 	if r.dag.Lookup(t) != nil {
@@ -65,7 +69,7 @@ func (r *Registry) Register(
 			return nil, nil, fmt.Errorf("service '%s' depends on not-registered service '%s'", t, dt)
 		}
 	}
-	r.dag.AddVertex(t, instance, defaultOpts, autoStart)
+	r.dag.AddVertex(t, instance, defaultOpts)
 	s := service{instance, r}
 	if p, ok := instance.(WillPublish); ok {
 		p.SetPublisher(publisher{t, r})
@@ -109,12 +113,12 @@ func (r *Registry) lookup(t Type) *node {
 	return n
 }
 
-// StartAll starts all the services with autoStart flag, unless one of the
-// dependencies doesn't autoStart.
+// StartAll starts all the services unless any of the dependencies doesn't
+// start.
 func (r *Registry) StartAll() {
 	r.muDag.RLock()
 	defer r.muDag.RUnlock()
-	for _, n := range r.dag.Flatten(true) {
+	for _, n := range r.dag.Flatten() {
 		r.startNoLock(n)
 	}
 }
@@ -139,15 +143,15 @@ func (r *Registry) startNoLock(n *node) bool {
 		log.Debugf("Not start already started service %s", n.t)
 		return true
 	}
-	if n.opts != nil {
+	if c, ok := n.instance.(Configurable); ok {
 		if reason := n.opts.Complete(); reason != "" {
 			log.Debugf("%s, skip starting service %s", reason, n.t)
 			log.Tracef("%+v", n.opts)
 			return false
 		}
+		c.Configure(n.opts)
 	}
 	log.Debugf("Starting service %s", n.t)
-	n.instance.Configure(n.opts)
 	n.instance.Start()
 	n.started = true
 	log.Debugf("Started service %s", n.t)
@@ -163,7 +167,7 @@ func (r *Registry) StopAll() {
 func (r *Registry) stopServices() {
 	r.muDag.RLock()
 	defer r.muDag.RUnlock()
-	flatten := r.dag.Flatten(false)
+	flatten := r.dag.Flatten()
 	// Stop in reverse order
 	for i := len(flatten) - 1; i >= 0; i-- {
 		r.stopNoLock(flatten[i])

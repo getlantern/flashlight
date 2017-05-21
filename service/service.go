@@ -66,6 +66,11 @@ type Impl interface {
 	// Stop actually stops the service. The Registry calls it only if the
 	// service was started.
 	Stop()
+}
+
+// Configurable is an interface that service can choose to implement to
+// configure itself in runtime.
+type Configurable interface {
 	// Configure configures the service with current effective config
 	// options. Registry only calls this when the ConfigOpts are Complete().
 	// Implement carefully To avoid data races. The implementation can choose
@@ -89,20 +94,18 @@ func init() {
 
 // MustRegister registers the service to the singleton registry, or panics.
 func MustRegister(
-	instantiator func() Impl,
+	instance Impl,
 	defaultOpts ConfigOpts,
-	autoStart bool,
 	deps Deps) (Service, Impl) {
-	return singleton.MustRegister(instantiator, defaultOpts, autoStart, deps)
+	return singleton.MustRegister(instance, defaultOpts, deps)
 }
 
 // Register registers the service to the singleton registry
 func Register(
-	instantiator func() Impl,
+	instance Impl,
 	defaultOpts ConfigOpts,
-	autoStart bool,
 	deps Deps) (Service, Impl, error) {
-	return singleton.Register(instantiator, defaultOpts, autoStart, deps)
+	return singleton.Register(instance, defaultOpts, deps)
 }
 
 // MustLookup looks up a service from the singleton registry, or panics.
