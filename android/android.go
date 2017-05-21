@@ -134,7 +134,7 @@ func Start(configDir string, locale string,
 				ProToken:        user.GetToken(),
 			},
 			nil)
-		ch := service.Subscribe(client.ServiceType)
+		ch := service.Sub(client.ServiceType)
 		appdir.SetHomeDir(configDir)
 
 		log.Debugf("Starting lantern: configDir %s locale %s sticky config %t",
@@ -240,7 +240,7 @@ func beforeStart() bool {
 func afterStart(user UserConfig) {
 	bandwidthUpdates(user)
 	user.AfterStart()
-	chGeoService := service.Subscribe(geolookup.ServiceType)
+	chGeoService := service.Sub(geolookup.ServiceType)
 	_, geo := service.MustLookup(geolookup.ServiceType)
 	lookup := geo.(*geolookup.GeoLookup)
 	go func() {

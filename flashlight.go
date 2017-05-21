@@ -58,7 +58,7 @@ func Run(autoReport func() bool,
 	service.MustRegister(borda.New(FullyReportedOps), &borda.ConfigOpts{}, nil)
 
 	registerConfigService(flagsAsMap)
-	ch := service.Subscribe(config.ServiceType)
+	ch := service.Sub(config.ServiceType)
 	go func() {
 		for msg := range ch {
 			switch c := msg.(type) {
@@ -90,7 +90,7 @@ func Run(autoReport func() bool,
 }
 
 func waitForStart(op *fops.Op, elapsed func() time.Duration, afterStart func()) {
-	ch := service.Subscribe(client.ServiceType)
+	ch := service.Sub(client.ServiceType)
 	go func() {
 		for m := range ch {
 			msg := m.(client.Message)
@@ -98,7 +98,7 @@ func waitForStart(op *fops.Op, elapsed func() time.Duration, afterStart func()) 
 				proxied.SetProxyAddr(eventual.DefaultGetter(msg.Addr))
 				log.Debug("Started client HTTP proxy")
 				op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
-				onGeo := service.Subscribe(geolookup.ServiceType)
+				onGeo := service.Sub(geolookup.ServiceType)
 				_, geo := service.MustLookup(geolookup.ServiceType)
 				geo.(*geolookup.GeoLookup).Refresh()
 				ops.Go(func() {

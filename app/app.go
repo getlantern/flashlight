@@ -294,7 +294,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 					opts.(*location.ConfigOpts).Code = m.(*geolookup.GeoInfo).GetCountry()
 				})
 			}})
-		chGeoService := service.Subscribe(geolookup.ServiceType)
+		chGeoService := service.Sub(geolookup.ServiceType)
 		go func() {
 			for m := range chGeoService {
 				info := m.(*geolookup.GeoInfo)
@@ -307,7 +307,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			}
 		}()
 
-		ch := service.Subscribe(client.ServiceType)
+		ch := service.Sub(client.ServiceType)
 		go func() {
 			for m := range ch {
 				log.Debugf("Got message %+v", m)

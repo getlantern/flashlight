@@ -96,8 +96,8 @@ func TestSubscribe(t *testing.T) {
 	registry := NewRegistry()
 	s1, _, err := registry.Register(new1(), nil, nil)
 	assert.NoError(t, err)
-	ch1 := registry.Subscribe(serviceType1)
-	ch2 := registry.Subscribe(serviceType1)
+	ch1 := registry.Sub(serviceType1)
+	ch2 := registry.Sub(serviceType1)
 	s1.Start()
 	ts1 := <-ch1
 	ts2 := <-ch2

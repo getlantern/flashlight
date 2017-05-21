@@ -77,7 +77,7 @@ func (r *Registry) Register(
 	for dt, df := range deps {
 		r.dag.AddEdge(dt, t)
 		if df != nil {
-			ch := r.Subscribe(dt)
+			ch := r.Sub(dt)
 			go func() {
 				for m := range ch {
 					df(m, s)
@@ -221,11 +221,11 @@ func (r *Registry) Configure(t Type, op func(ConfigOpts)) error {
 	return nil
 }
 
-// Subscribe returns a channel to receive any message the service published.
+// Sub returns a channel to receive any message the service published.
 // Messages are discarded if no one is listening on the channel.
 // If the service doesn't implement WillPublish interface, the channel never
 // sends anything.
-func (r *Registry) Subscribe(t Type) <-chan interface{} {
+func (r *Registry) Sub(t Type) <-chan interface{} {
 	ch := make(chan interface{}, 10)
 	r.muChannels.Lock()
 	r.channels[t] = append(r.channels[t], ch)
