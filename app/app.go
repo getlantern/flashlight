@@ -60,36 +60,42 @@ func init() {
 
 // App is the core of the Lantern desktop application, in the form of a library.
 type App struct {
-	ShowUI       bool
-	Flags        map[string]interface{}
+	// keep it public the caller need access to it.
+	Headless     bool
+	flags        map[string]interface{}
 	exitCh       chan error
 	statsTracker *statsTracker
-
-	exitOnce    sync.Once
-	chExitFuncs chan func()
-	settings    *settings.Settings
+	exitOnce     sync.Once
+	chExitFuncs  chan func()
+	settings     *settings.Settings
 }
 
-// Init initializes the App's state
-func (app *App) Init() {
-	golog.OnFatal(app.exitOnFatal)
-	app.Flags["staging"] = common.Staging
-	_, ok := app.Flags["configdir"].(string)
-	if !ok {
-		app.Flags["configdir"] = appdir.General("Lantern")
+// NewApp creates a new App instance given a set of flags
+func NewApp(flags map[string]interface{}) *App {
+	headless, _ := flags["headless"].(bool)
+	app := &App{
+		Headless: headless,
+		flags:    flags,
+		settings: settings.New(),
+		exitCh:   make(chan error, 1),
+		// use buffered channel to avoid blocking the caller of 'AddExitFunc'
+		// the number 10 is arbitrary
+		chExitFuncs:  make(chan func(), 10),
+		statsTracker: &statsTracker{},
 	}
-	app.settings = settings.New()
+	golog.OnFatal(app.exitOnFatal)
+	app.flags["staging"] = common.Staging
+	_, ok := app.flags["configdir"].(string)
+	if !ok {
+		app.flags["configdir"] = appdir.General("Lantern")
+	}
 	app.settings.Configure(&settings.ConfigOpts{
 		common.Version,
 		common.RevisionDate,
 		common.BuildDate,
 		app.settingsPath(),
 	})
-	app.exitCh = make(chan error, 1)
-	// use buffered channel to avoid blocking the caller of 'AddExitFunc'
-	// the number 10 is arbitrary
-	app.chExitFuncs = make(chan func(), 10)
-	app.statsTracker = &statsTracker{}
+	return app
 }
 
 // LogPanicAndExit logs a panic and then exits the application. This function
@@ -117,10 +123,9 @@ func (app *App) exitOnFatal(err error) {
 func (app *App) Run() error {
 	golog.OnFatal(app.exitOnFatal)
 	app.AddExitFunc(recordStopped)
-
 	app.startProfiling()
 
-	listenAddr := app.Flags["addr"].(string)
+	listenAddr := app.flags["addr"].(string)
 	if listenAddr == "" {
 		listenAddr = app.settings.GetString(settings.SNAddr)
 	}
@@ -128,7 +133,7 @@ func (app *App) Run() error {
 		listenAddr = defaultHTTPProxyAddress
 	}
 
-	socksAddr := app.Flags["socksaddr"].(string)
+	socksAddr := app.flags["socksaddr"].(string)
 	if socksAddr == "" {
 		socksAddr = app.settings.GetString(settings.SNSOCKSAddr)
 	}
@@ -136,7 +141,7 @@ func (app *App) Run() error {
 		socksAddr = defaultSOCKSProxyAddress
 	}
 
-	uiaddr := app.Flags["uiaddr"].(string)
+	uiaddr := app.flags["uiaddr"].(string)
 	if uiaddr == "" {
 		// stick with the last one if not specified from command line.
 		if uiaddr = app.settings.GetUIAddr(); uiaddr != "" {
@@ -155,7 +160,7 @@ func (app *App) Run() error {
 		}
 	}
 
-	if app.Flags["clear-proxy-settings"].(bool) {
+	if app.flags["clear-proxy-settings"].(bool) {
 		// This is a workaround that attempts to fix a Windows-only problem where
 		// Lantern was unable to clean the system's proxy settings before logging
 		// off.
@@ -207,7 +212,7 @@ func (app *App) Run() error {
 
 	log.Debugf("Starting client UI at %v", uiaddr)
 	// ui will handle empty uiaddr correctly
-	err = ui.Start(uiaddr, !app.ShowUI, startupURL, localHTTPToken(app.settings))
+	err = ui.Start(uiaddr, app.Headless, startupURL, localHTTPToken(app.settings))
 	if err != nil {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 	}
@@ -218,8 +223,8 @@ func (app *App) Run() error {
 	}
 	app.settings.SetUIAddr(ui.GetUIAddr())
 
-	log.Debug(app.Flags)
-	if app.Flags["proxyall"].(bool) {
+	log.Debug(app.flags)
+	if app.flags["proxyall"].(bool) {
 		// If proxyall flag was supplied, force proxying of all
 		app.settings.SetProxyAll(true)
 	}
@@ -227,7 +232,7 @@ func (app *App) Run() error {
 	go func() {
 		err := flashlight.Run(
 			app.settings.IsAutoReport,
-			app.Flags,
+			app.flags,
 			app.beforeStart(listenAddr),
 			app.afterStart,
 			app.onConfigUpdate,
@@ -247,16 +252,16 @@ func (app *App) settingsPath() string {
 	if common.Staging {
 		name = settingsNameStaging
 	}
-	configDir := app.Flags["configdir"].(string)
+	configDir := app.flags["configdir"].(string)
 	return filepath.Join(configDir, name)
 }
 
 func (app *App) startProfiling() {
 	var cpuProf, memProf string
-	if cpu, cok := app.Flags["cpuprofile"]; cok {
+	if cpu, cok := app.flags["cpuprofile"]; cok {
 		cpuProf = cpu.(string)
 	}
-	if mem, cok := app.Flags["memprofile"]; cok {
+	if mem, cok := app.flags["memprofile"]; cok {
 		memProf = mem.(string)
 	}
 	if cpuProf != "" || memProf != "" {
@@ -441,14 +446,14 @@ func (app *App) afterStart() {
 		go launcher.CreateLaunchFile(enable)
 	})
 
-	if app.ShowUI && !app.Flags["startup"].(bool) {
+	if app.Headless || app.flags["startup"].(bool) {
+		log.Debugf("Not opening browser. Startup is: %v", app.flags["startup"])
+	} else {
 		// Launch a browser window with Lantern but only after the pac
 		// URL and the proxy server are all up and running to avoid
 		// race conditions where we change the proxy setup while the
 		// UI server and proxy server are still coming up.
 		ui.Show()
-	} else {
-		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
 	}
 }
 

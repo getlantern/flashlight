@@ -30,7 +30,7 @@ func quitSystray() {
 }
 
 func configureSystemTray(a *desktop.App) error {
-	menu.enable = a.ShowUI
+	menu.enable = !a.Headless
 	if !menu.enable {
 		return nil
 	}

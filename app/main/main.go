@@ -13,8 +13,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/app"
+	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/golog"
@@ -34,13 +34,10 @@ func main() {
 	runtime.LockOSThread()
 	parseFlags()
 
-	a := &desktop.App{
-		ShowUI: !*headless,
-		Flags:  flagsAsMap(),
-	}
-	a.Init()
-	wrapperC := handleWrapperSignals(a)
+	a := desktop.NewApp(flagsAsMap())
+	wrapperC := handleWrapperSignals(a.LogPanicAndExit)
 
+	// panicwrap works by re-executing the running program (retaining arguments,
 	// environmental variables, etc.) and monitoring the stderr of the program.
 	exitStatus, err := panicwrap.BasicWrap(
 		func(output string) {
@@ -87,11 +84,11 @@ func main() {
 		chained.ForceProxy(*forceProxyAddr, *forceAuthToken)
 	}
 
-	if a.ShowUI {
-		runOnSystrayReady(a, _main(a))
-	} else {
+	if a.Headless {
 		log.Debug("Running headless")
 		_main(a)()
+	} else {
+		runOnSystrayReady(a, _main(a))
 	}
 }
 
@@ -116,7 +113,7 @@ func doMain(a *desktop.App) error {
 	})
 	a.AddExitFunc(quitSystray)
 
-	if a.ShowUI {
+	if !a.Headless {
 		go func() {
 			lang := a.GetSetting(settings.SNLanguage).(string)
 			i18nInit(lang)
@@ -161,7 +158,7 @@ func parseFlags() {
 }
 
 // Handle system signals in panicwrap wrapper process for clean exit
-func handleWrapperSignals(a *desktop.App) chan os.Signal {
+func handleWrapperSignals(onSingnal func(msg interface{})) chan os.Signal {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c,
 		syscall.SIGHUP,
@@ -171,7 +168,7 @@ func handleWrapperSignals(a *desktop.App) chan os.Signal {
 		syscall.SIGPIPE) // it's okay to trap SIGPIPE in the wrapper but not in the main process because we can get it from failed network connections
 	go func() {
 		s := <-c
-		a.LogPanicAndExit(fmt.Sprintf("Panicwrapper received signal %v", s))
+		onSingnal(fmt.Sprintf("Panicwrapper received signal %v", s))
 	}()
 	return c
 }

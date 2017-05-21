@@ -24,10 +24,10 @@ import (
 	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight"
+	"github.com/getlantern/flashlight/app"
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/flashlight/app"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -387,12 +387,7 @@ func startApp(t *testing.T, configAddr string) (*desktop.App, error) {
 		"borda-sample-percentage": 0.0, // this is 0 to disable random sampling, allowing us to test fully reported ops
 	}
 
-	a := &desktop.App{
-		ShowUI: false,
-		Flags:  flags,
-	}
-	a.Init()
-
+	a := desktop.NewApp(flags)
 	go func() {
 		err := a.Run()
 		assert.NoError(t, err, "Unable to run app")
