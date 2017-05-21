@@ -120,7 +120,6 @@ func (app *App) exitOnFatal(err error) {
 func (app *App) Run() error {
 	golog.OnFatal(app.exitOnFatal)
 	app.AddExitFunc(recordStopped)
-	app.startProfiling()
 
 	listenAddr := app.flags["addr"].(string)
 	if listenAddr == "" {
@@ -138,55 +137,23 @@ func (app *App) Run() error {
 		socksAddr = defaultSOCKSProxyAddress
 	}
 
-	uiaddr := app.flags["uiaddr"].(string)
-	if uiaddr == "" {
-		// stick with the last one if not specified from command line.
-		if uiaddr = app.settings.GetUIAddr(); uiaddr != "" {
-			host, port, splitErr := net.SplitHostPort(uiaddr)
-			if splitErr != nil {
-				log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
-				uiaddr = ""
-			}
-			// To allow Edge to open the UI, we force the UI address to be
-			// localhost if it's 127.0.0.1 (the default for previous versions).
-			// We do the same for all platforms for simplicity though it's only
-			// useful on Windows 10 and above.
-			if host == "127.0.0.1" {
-				uiaddr = "localhost:" + port
-			}
-		}
-	}
-
 	if app.flags["clear-proxy-settings"].(bool) {
-		// This is a workaround that attempts to fix a Windows-only problem where
-		// Lantern was unable to clean the system's proxy settings before logging
-		// off.
-		//
-		// See: https://github.com/getlantern/lantern/issues/2776
-		log.Debug("Requested clearing of proxy settings")
-		_, port, splitErr := net.SplitHostPort(listenAddr)
-		if splitErr == nil && port != "0" {
-			log.Debugf("Clearing system proxy settings for: %v", listenAddr)
-			sysproxy.New(listenAddr, false).Clear()
-		} else {
-			log.Debugf("Can't clear proxy settings for: %v", listenAddr)
-		}
+		clearProxySetting(listenAddr)
 		app.Exit(nil)
 	}
 
-	if uiaddr != "" {
-		// Is something listening on that port?
-		if showErr := app.showExistingUI(uiaddr); showErr == nil {
-			log.Debug("Lantern already running, showing existing UI")
-			app.Exit(nil)
-		}
+	app.startProfiling()
+	app.startUI()
+	log.Debug(app.flags)
+	if app.flags["proxyall"].(bool) {
+		// If proxyall flag was supplied, force proxying of all
+		app.settings.SetProxyAll(true)
 	}
 
 	service.MustRegister(client.New(
 		app.settings.GetDeviceID(),
 		false, // on desktop, we do not allow private hosts
-		app.statsTracker,
-	),
+		app.statsTracker),
 		&client.ConfigOpts{
 			UseShortcut:     !app.settings.GetProxyAll(),
 			UseDetour:       !app.settings.GetProxyAll(),
@@ -195,33 +162,6 @@ func (app *App) Run() error {
 			ProToken:        app.settings.GetToken(),
 		},
 		nil)
-
-	var startupURL string
-	bootstrap, err := config.ReadBootstrapSettings()
-	if err != nil {
-		log.Debugf("Could not read bootstrap settings: %v", err)
-	} else {
-		startupURL = bootstrap.StartupUrl
-	}
-
-	log.Debugf("Starting client UI at %v", uiaddr)
-	// ui will handle empty uiaddr correctly
-	err = ui.Start(uiaddr, app.Headless, startupURL, localHTTPToken(app.settings))
-	if err != nil {
-		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
-	}
-	ui.Handle("/data", ws.StartUIChannel())
-
-	if e := app.settings.StartService(); e != nil {
-		app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
-	}
-	app.settings.SetUIAddr(ui.GetUIAddr())
-
-	log.Debug(app.flags)
-	if app.flags["proxyall"].(bool) {
-		// If proxyall flag was supplied, force proxying of all
-		app.settings.SetProxyAll(true)
-	}
 
 	go func() {
 		err := flashlight.Run(
@@ -241,13 +181,54 @@ func (app *App) Run() error {
 	return app.waitForExit()
 }
 
-func (app *App) settingsPath() string {
-	name := settingsName
-	if common.Staging {
-		name = settingsNameStaging
+func (app *App) startUI() {
+	uiaddr := app.flags["uiaddr"].(string)
+	if uiaddr == "" {
+		// stick with the last one if not specified from command line.
+		if uiaddr = app.settings.GetUIAddr(); uiaddr != "" {
+			host, port, splitErr := net.SplitHostPort(uiaddr)
+			if splitErr != nil {
+				log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
+				uiaddr = ""
+			}
+			// To allow Edge to open the UI, we force the UI address to be
+			// localhost if it's 127.0.0.1 (the default for previous versions).
+			// We do the same for all platforms for simplicity though it's only
+			// useful on Windows 10 and above.
+			if host == "127.0.0.1" {
+				uiaddr = "localhost:" + port
+			}
+		}
 	}
-	configDir := app.flags["configdir"].(string)
-	return filepath.Join(configDir, name)
+
+	if uiaddr != "" {
+		// Is something listening on that port?
+		if showErr := app.showExistingUI(uiaddr); showErr == nil {
+			log.Debug("Lantern already running, showing existing UI")
+			app.Exit(nil)
+		}
+	}
+
+	var startupURL string
+	bootstrap, err := config.ReadBootstrapSettings()
+	if err != nil {
+		log.Debugf("Could not read bootstrap settings: %v", err)
+	} else {
+		startupURL = bootstrap.StartupUrl
+	}
+
+	log.Debugf("Starting client UI at %v", uiaddr)
+	// ui will handle empty uiaddr correctly
+	err = ui.Start(uiaddr, app.Headless, startupURL, localHTTPToken(app.settings))
+	if err != nil {
+		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
+	}
+	app.settings.SetUIAddr(ui.GetUIAddr())
+	ui.Handle("/data", ws.StartUIChannel())
+
+	if e := app.settings.StartService(); e != nil {
+		app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
+	}
 }
 
 func (app *App) startProfiling() {
@@ -265,18 +246,13 @@ func (app *App) startProfiling() {
 	}
 }
 
-type pastAnnouncements struct {
-	s *settings.Settings
-}
-
-func (p *pastAnnouncements) Get() []string {
-	return p.s.GetStringArray(settings.SNPastAnnouncements)
-}
-
-func (p *pastAnnouncements) Add(s string) {
-	past := p.s.GetStringArray(settings.SNPastAnnouncements)
-	past = append(past, s)
-	p.s.SetStringArray(settings.SNPastAnnouncements, past)
+func (app *App) settingsPath() string {
+	name := settingsName
+	if common.Staging {
+		name = settingsNameStaging
+	}
+	configDir := app.flags["configdir"].(string)
+	return filepath.Join(configDir, name)
 }
 
 func (app *App) beforeStart(listenAddr string) func() bool {
@@ -391,18 +367,6 @@ func (app *App) isProUser() (isPro bool, ok bool) {
 	return status == "active", true
 }
 
-// localHTTPToken fetches the local HTTP token from disk if it's there, and
-// otherwise creates a new one and stores it.
-func localHTTPToken(set *settings.Settings) string {
-	tok := set.GetLocalHTTPToken()
-	if tok == "" {
-		t := ui.LocalHTTPToken()
-		set.SetLocalHTTPToken(t)
-		return t
-	}
-	return tok
-}
-
 // GetSetting gets the in memory setting with the name specified by attr
 func (app *App) GetSetting(name settings.SettingName) interface{} {
 	return app.settings.GetSetting(name)
@@ -505,4 +469,46 @@ func recordStopped() {
 	ops.Begin("client_stopped").
 		SetMetricSum("uptime", elapsed().Seconds()).
 		End()
+}
+
+type pastAnnouncements struct {
+	s *settings.Settings
+}
+
+func (p *pastAnnouncements) Get() []string {
+	return p.s.GetStringArray(settings.SNPastAnnouncements)
+}
+
+func (p *pastAnnouncements) Add(s string) {
+	past := p.s.GetStringArray(settings.SNPastAnnouncements)
+	past = append(past, s)
+	p.s.SetStringArray(settings.SNPastAnnouncements, past)
+}
+
+// localHTTPToken fetches the local HTTP token from disk if it's there, and
+// otherwise creates a new one and stores it.
+func localHTTPToken(set *settings.Settings) string {
+	tok := set.GetLocalHTTPToken()
+	if tok == "" {
+		t := ui.LocalHTTPToken()
+		set.SetLocalHTTPToken(t)
+		return t
+	}
+	return tok
+}
+
+func clearProxySetting(listenAddr string) {
+	// This is a workaround that attempts to fix a Windows-only problem where
+	// Lantern was unable to clean the system's proxy settings before logging
+	// off.
+	//
+	// See: https://github.com/getlantern/lantern/issues/2776
+	log.Debug("Requested clearing of proxy settings")
+	_, port, splitErr := net.SplitHostPort(listenAddr)
+	if splitErr == nil && port != "0" {
+		log.Debugf("Clearing system proxy settings for: %v", listenAddr)
+		sysproxy.New(listenAddr, false).Clear()
+	} else {
+		log.Debugf("Can't clear proxy settings for: %v", listenAddr)
+	}
 }

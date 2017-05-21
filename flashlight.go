@@ -118,7 +118,6 @@ func waitForStart(op *fops.Op, elapsed func() time.Duration, afterStart func()) 
 			}
 		}
 	}()
-
 }
 
 func registerConfigService(flagsAsMap map[string]interface{}) {
