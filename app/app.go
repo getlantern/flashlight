@@ -294,46 +294,40 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 					opts.(*location.ConfigOpts).Code = m.(*geolookup.GeoInfo).GetCountry()
 				})
 			}})
-		chGeoService := service.Sub(geolookup.ServiceType)
-		go func() {
-			for m := range chGeoService {
-				info := m.(*geolookup.GeoInfo)
-				ip, country := info.GetIP(), info.GetCountry()
-				service.Configure(client.ServiceType, func(opts service.ConfigOpts) {
-					opts.(*client.ConfigOpts).GeoCountry = country
-				})
-				ops.SetGlobal("geo_country", country)
-				ops.SetGlobal("client_ip", ip)
-			}
-		}()
+		service.Sub(geolookup.ServiceType, func(m interface{}) {
+			info := m.(*geolookup.GeoInfo)
+			ip, country := info.GetIP(), info.GetCountry()
+			service.Configure(client.ServiceType, func(opts service.ConfigOpts) {
+				opts.(*client.ConfigOpts).GeoCountry = country
+			})
+			ops.SetGlobal("geo_country", country)
+			ops.SetGlobal("client_ip", ip)
+		})
 
-		ch := service.Sub(client.ServiceType)
-		go func() {
-			for m := range ch {
-				log.Debugf("Got message %+v", m)
-				msg := m.(client.Message)
-				switch msg.ProxyType {
-				case client.HTTPProxy:
-					log.Debugf("Got HTTP proxy address: %v", msg.Addr)
-					app.settings.SetString(settings.SNAddr, msg.Addr)
-					setProxy := app.settings.GetSystemProxy()
-					s, _ := service.MustRegister(sysproxy.New(msg.Addr, setProxy),
-						&sysproxy.ConfigOpts{setProxy},
-						nil)
-					s.Start()
-					setupUserSignal() // it depends on sysproxy service being registered.
-					app.OnSettingChange(settings.SNSystemProxy, func(val interface{}) {
-						service.Configure(sysproxy.ServiceType, func(o service.ConfigOpts) {
-							o.(*sysproxy.ConfigOpts).Enable = val.(bool)
-						})
+		service.Sub(client.ServiceType, func(m interface{}) {
+			log.Debugf("Got message %+v", m)
+			msg := m.(client.Message)
+			switch msg.ProxyType {
+			case client.HTTPProxy:
+				log.Debugf("Got HTTP proxy address: %v", msg.Addr)
+				app.settings.SetString(settings.SNAddr, msg.Addr)
+				setProxy := app.settings.GetSystemProxy()
+				s, _ := service.MustRegister(sysproxy.New(msg.Addr, setProxy),
+					&sysproxy.ConfigOpts{setProxy},
+					nil)
+				s.Start()
+				setupUserSignal() // it depends on sysproxy service being registered.
+				app.OnSettingChange(settings.SNSystemProxy, func(val interface{}) {
+					service.Configure(sysproxy.ServiceType, func(o service.ConfigOpts) {
+						o.(*sysproxy.ConfigOpts).Enable = val.(bool)
 					})
+				})
 
-				case client.Socks5Proxy:
-					log.Debugf("Got Socks5 proxy address: %v", msg.Addr)
-					app.settings.SetString(settings.SNSOCKSAddr, msg.Addr)
-				}
+			case client.Socks5Proxy:
+				log.Debugf("Got Socks5 proxy address: %v", msg.Addr)
+				app.settings.SetString(settings.SNSOCKSAddr, msg.Addr)
 			}
-		}()
+		})
 
 		service.StartAll()
 

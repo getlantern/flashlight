@@ -77,12 +77,9 @@ func (r *Registry) Register(
 	for dt, df := range deps {
 		r.dag.AddEdge(dt, t)
 		if df != nil {
-			ch := r.Sub(dt)
-			go func() {
-				for m := range ch {
-					df(m, s)
-				}
-			}()
+			r.Sub(dt, func(m interface{}) {
+				df(m, s)
+			})
 		}
 	}
 	log.Debugf("Registered service %s", t)
@@ -111,6 +108,57 @@ func (r *Registry) lookup(t Type) *node {
 	n := r.dag.Lookup(t)
 	r.muDag.RUnlock()
 	return n
+}
+
+// TODO: enforce timeout
+func (r *Registry) Configure(t Type, op func(ConfigOpts)) error {
+	r.muDag.Lock()
+	defer r.muDag.Unlock()
+	n := r.dag.Lookup(t)
+	if n.opts == nil {
+		return errors.New("%s service doesn't allow config options", t)
+	}
+	op(n.opts)
+	r.startNoLock(n)
+	return nil
+}
+
+// SubCh returns a channel to receive any message the service published.
+// Messages are discarded if no one is listening on the channel.
+// If the service doesn't implement WillPublish interface, the channel never
+// sends anything.
+func (r *Registry) SubCh(t Type) <-chan interface{} {
+	ch := make(chan interface{}, 10)
+	r.muChannels.Lock()
+	r.channels[t] = append(r.channels[t], ch)
+	r.muChannels.Unlock()
+	log.Tracef("Subscribed to %v", t)
+	return ch
+}
+
+// Sub subscribes the specific service and spawns a goroutine to calls the
+// callback for any messsage received.
+func (r *Registry) Sub(t Type, cb func(m interface{})) {
+	ch := r.SubCh(t)
+	go func() {
+		for m := range ch {
+			cb(m)
+		}
+	}()
+}
+
+func (r *Registry) publish(t Type, msg interface{}) {
+	r.muChannels.RLock()
+	channels := r.channels[t]
+	r.muChannels.RUnlock()
+	log.Tracef("Publishing message to %d subscribers of %v", len(channels), t)
+	for _, ch := range channels {
+		select {
+		case ch <- msg:
+		default:
+			log.Errorf("Warning: message from %s discarded: %+v", t, msg)
+		}
+	}
 }
 
 // StartAll starts all the services unless any of the dependencies doesn't
@@ -205,45 +253,5 @@ func (r *Registry) stopNoLock(n *node) {
 func (r *Registry) MustConfigure(t Type, op func(ConfigOpts)) {
 	if err := r.Configure(t, op); err != nil {
 		panic(err)
-	}
-}
-
-// TODO: enforce timeout
-func (r *Registry) Configure(t Type, op func(ConfigOpts)) error {
-	r.muDag.Lock()
-	defer r.muDag.Unlock()
-	n := r.dag.Lookup(t)
-	if n.opts == nil {
-		return errors.New("%s service doesn't allow config options", t)
-	}
-	op(n.opts)
-	r.startNoLock(n)
-	return nil
-}
-
-// Sub returns a channel to receive any message the service published.
-// Messages are discarded if no one is listening on the channel.
-// If the service doesn't implement WillPublish interface, the channel never
-// sends anything.
-func (r *Registry) Sub(t Type) <-chan interface{} {
-	ch := make(chan interface{}, 10)
-	r.muChannels.Lock()
-	r.channels[t] = append(r.channels[t], ch)
-	r.muChannels.Unlock()
-	log.Tracef("Subscribed to %v", t)
-	return ch
-}
-
-func (r *Registry) publish(t Type, msg interface{}) {
-	r.muChannels.RLock()
-	channels := r.channels[t]
-	r.muChannels.RUnlock()
-	log.Tracef("Publishing message to %d subscribers of %v", len(channels), t)
-	for _, ch := range channels {
-		select {
-		case ch <- msg:
-		default:
-			log.Errorf("Warning: message from %s discarded: %+v", t, msg)
-		}
 	}
 }

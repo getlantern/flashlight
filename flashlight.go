@@ -58,66 +58,60 @@ func Run(autoReport func() bool,
 	service.MustRegister(borda.New(FullyReportedOps), &borda.ConfigOpts{}, nil)
 
 	registerConfigService(flagsAsMap)
-	ch := service.Sub(config.ServiceType)
-	go func() {
-		for msg := range ch {
-			switch c := msg.(type) {
-			case config.Proxies:
-				log.Debugf("Applying proxy config with proxies: %v", c)
-				service.MustConfigure(client.ServiceType, func(opts service.ConfigOpts) {
-					opts.(*client.ConfigOpts).Proxies = c
-				})
-			case *config.Global:
-				log.Debugf("Applying global config")
-				service.MustConfigure(borda.ServiceType, func(opts service.ConfigOpts) {
-					o := opts.(*borda.ConfigOpts)
-					o.ReportInterval = c.BordaReportInterval
-					o.ReportAllOps = autoReport() && rand.Float64() <= c.BordaSamplePercentage/100
-				})
-				certs, err := getTrustedCACerts(c)
-				if err != nil {
-					log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
-				} else if c.Client != nil {
-					fronted.Configure(certs, c.Client.MasqueradeSets, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
-				}
-				onConfigUpdate(c)
+	service.Sub(config.ServiceType, func(msg interface{}) {
+		switch c := msg.(type) {
+		case config.Proxies:
+			log.Debugf("Applying proxy config with proxies: %v", c)
+			service.MustConfigure(client.ServiceType, func(opts service.ConfigOpts) {
+				opts.(*client.ConfigOpts).Proxies = c
+			})
+		case *config.Global:
+			log.Debugf("Applying global config")
+			service.MustConfigure(borda.ServiceType, func(opts service.ConfigOpts) {
+				o := opts.(*borda.ConfigOpts)
+				o.ReportInterval = c.BordaReportInterval
+				o.ReportAllOps = autoReport() && rand.Float64() <= c.BordaSamplePercentage/100
+			})
+			certs, err := getTrustedCACerts(c)
+			if err != nil {
+				log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
+			} else if c.Client != nil {
+				fronted.Configure(certs, c.Client.MasqueradeSets, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
 			}
+			onConfigUpdate(c)
 		}
-	}()
+	})
 
 	beforeStart()
 	return nil
 }
 
 func waitForStart(op *fops.Op, elapsed func() time.Duration, afterStart func()) {
-	ch := service.Sub(client.ServiceType)
-	go func() {
-		for m := range ch {
-			msg := m.(client.Message)
-			if msg.ProxyType == client.HTTPProxy {
-				proxied.SetProxyAddr(eventual.DefaultGetter(msg.Addr))
-				log.Debug("Started client HTTP proxy")
-				op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
-				onGeo := service.Sub(geolookup.ServiceType)
-				_, geo := service.MustLookup(geolookup.ServiceType)
-				geo.(*geolookup.GeoLookup).Refresh()
-				ops.Go(func() {
-					// wait for geo info before reporting so that we know the
-					// client ip and country
-					select {
-					case <-onGeo:
-						log.Debug("Got geolocation")
-					case <-time.After(5 * time.Minute):
-						// failed to get geolocation info within 5 minutes,
-						// just record end of startup anyway
-					}
-					op.End()
-					log.Debug("Lantern client started")
-				})
-				afterStart()
-			}
+	service.Sub(client.ServiceType, func(m interface{}) {
+		msg := m.(client.Message)
+		if msg.ProxyType == client.HTTPProxy {
+			proxied.SetProxyAddr(eventual.DefaultGetter(msg.Addr))
+			log.Debug("Started client HTTP proxy")
+			op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
+			onGeo := service.SubCh(geolookup.ServiceType)
+			_, geo := service.MustLookup(geolookup.ServiceType)
+			geo.(*geolookup.GeoLookup).Refresh()
+			ops.Go(func() {
+				// wait for geo info before reporting so that we know the
+				// client ip and country
+				select {
+				case <-onGeo:
+					log.Debug("Got geolocation")
+				case <-time.After(5 * time.Minute):
+					// failed to get geolocation info within 5 minutes,
+					// just record end of startup anyway
+				}
+				op.End()
+				log.Debug("Lantern client started")
+			})
+			afterStart()
 		}
-	}()
+	})
 }
 
 func registerConfigService(flagsAsMap map[string]interface{}) {

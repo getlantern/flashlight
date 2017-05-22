@@ -128,9 +128,14 @@ func Configure(t Type, op func(opts ConfigOpts)) error {
 	return singleton.Configure(t, op)
 }
 
-// Sub subscribes message of a service from the singleton registry.
-func Sub(t Type) <-chan interface{} {
-	return singleton.Sub(t)
+// SubCh calls SubCh of the singleton registry.
+func SubCh(t Type) <-chan interface{} {
+	return singleton.SubCh(t)
+}
+
+// Sub calls Sub of the singleton registry.
+func Sub(t Type, cb func(m interface{})) {
+	singleton.Sub(t, cb)
 }
 
 // StartAll starts all services registered to the singleton registry.
