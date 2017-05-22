@@ -16,7 +16,6 @@ import (
 	"github.com/getlantern/uuid"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/flashlight/ws"
 )
 
@@ -84,12 +83,6 @@ var settingMeta = map[SettingName]struct {
 	SNRevisionDate: {stString, false, false},
 }
 
-var (
-	log = golog.LoggerFor("flashlight.desktop.settings")
-
-	ServiceType service.Type = "flashlight.desktop.settings"
-)
-
 // Settings is a struct of all settings unique to this particular Lantern instance.
 type Settings struct {
 	muNotifiers     sync.RWMutex
@@ -102,38 +95,8 @@ type Settings struct {
 	log golog.Logger
 }
 
-type ConfigOpts struct {
-	Version      string
-	RevisionDate string
-	BuildDate    string
-	FilePath     string
-}
-
-func (c *ConfigOpts) For() service.Type {
-	return ServiceType
-}
-
-func (c *ConfigOpts) Complete() string {
-	if c.Version == "" {
-		return "missing Version"
-	}
-
-	if c.RevisionDate == "" {
-		return "missing RevisionDate"
-	}
-
-	if c.BuildDate == "" {
-		return "missing BuildDate"
-	}
-
-	if c.FilePath == "" {
-		return "missing FilePath"
-	}
-	return ""
-}
-
-func New() *Settings {
-	return &Settings{
+func New(version, buildDate, revisionDate string, filePath string) *Settings {
+	s := &Settings{
 		m: map[SettingName]interface{}{
 			SNUserID:         int64(0),
 			SNAutoReport:     true,
@@ -144,17 +107,16 @@ func New() *Settings {
 			SNLocalHTTPToken: "",
 			SNUserToken:      "",
 			SNUIAddr:         "",
+			SNVersion:        version,
+			SNBuildDate:      buildDate,
+			SNRevisionDate:   revisionDate,
 		},
-		filePath:        "/dev/null",
+		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
-		log:             golog.LoggerFor("app.settings"),
+		log:             golog.LoggerFor("flashlight.desktop.settings"),
 	}
-}
 
-func (s *Settings) Configure(opts service.ConfigOpts) {
-	o := opts.(*ConfigOpts)
-	s.filePath = o.FilePath
-	log.Debug("Loading settings")
+	s.log.Debug("Loading settings")
 	// Use s.settings from disk if they're available.
 	if bytes, err := ioutil.ReadFile(s.filePath); err != nil {
 		s.log.Debugf("Could not read file %v", err)
@@ -162,24 +124,20 @@ func (s *Settings) Configure(opts service.ConfigOpts) {
 		s.log.Errorf("Could not load yaml %v", err)
 		// Just keep going with the original s.settings not from disk.
 	} else {
-		s.log.Debugf("Loaded s.settings from %v", o.FilePath)
+		s.log.Debugf("Loaded settings from %v", s.filePath)
 	}
 	// old lantern persist s.settings with all lower case, convert them to camel cased.
 	toCamelCase(s.m)
 
-	// We always just s.m the device ID to the MAC address on the system. Note
+	// We always just set the device ID to the MAC address on the system. Note
 	// this ignores what's on disk, if anything.
 	s.m[SNDeviceID] = base64.StdEncoding.EncodeToString(uuid.NodeID())
-	// always override below 3 attributes as they are not meant to be persisted across versions
-	s.m[SNVersion] = o.Version
-	s.m[SNBuildDate] = o.BuildDate
-	s.m[SNRevisionDate] = o.RevisionDate
-
 	// SNUserID may be unmarshalled as int, which causes panic when GetUserID().
 	// Make sure to store it as int64.
 	if id, ok := s.m[SNUserID].(int); ok {
 		s.m[SNUserID] = int64(id)
 	}
+	return s
 }
 
 func (s *Settings) Start() {
@@ -289,13 +247,13 @@ func (s *Settings) SetString(name SettingName, v interface{}) {
 
 // save saves settings to disk.
 func (s *Settings) save() {
-	log.Trace("Saving settings")
+	s.log.Trace("Saving settings")
 	if f, err := os.Create(s.filePath); err != nil {
 		s.log.Errorf("Could not open settings file for writing: %v", err)
 	} else if _, err := s.WriteTo(f); err != nil {
 		s.log.Errorf("Could not save settings file: %v", err)
 	} else {
-		log.Tracef("Saved settings to %s", s.filePath)
+		s.log.Tracef("Saved settings to %s", s.filePath)
 	}
 }
 
@@ -498,7 +456,7 @@ func (s *Settings) GetInt64(name SettingName) int64 {
 }
 
 func (s *Settings) getVal(name SettingName) (interface{}, error) {
-	log.Tracef("Getting value for %v", name)
+	s.log.Tracef("Getting value for %v", name)
 	s.RLock()
 	defer s.RUnlock()
 	if val, ok := s.m[name]; ok {

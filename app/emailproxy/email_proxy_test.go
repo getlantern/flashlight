@@ -41,8 +41,8 @@ func TestReadResponses(t *testing.T) {
 func TestEmailProxy(t *testing.T) {
 	s := httptest.NewServer(ws.StartUIChannel())
 	defer s.Close()
-	// settings = ("version", "revisionDate", "buildDate")
-	err := Start(settings.New(), "devID", "version", "revisionDate")
+	err := Start(settings.New("", "", "", "/dev/null"),
+		"devID", "version", "revisionDate")
 	assert.NoError(t, err, "should start service")
 	defer ws.Unregister("email-proxy")
 	wsURL := strings.Replace(s.URL, "http://", "ws://", -1)

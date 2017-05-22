@@ -1,4 +1,4 @@
-// Package app implements the desktop application functionality of flashlight
+// Package desktop implements the desktop application functionality of flashlight
 package desktop
 
 import (
@@ -59,7 +59,7 @@ func init() {
 
 // App is the core of the Lantern desktop application, in the form of a library.
 type App struct {
-	// keep it public the caller need access to it.
+	// keep it public as the caller need access to it.
 	Headless     bool
 	flags        map[string]interface{}
 	exitCh       chan error
@@ -75,7 +75,6 @@ func NewApp(flags map[string]interface{}) *App {
 	app := &App{
 		Headless: headless,
 		flags:    flags,
-		settings: settings.New(),
 		exitCh:   make(chan error, 1),
 		// use buffered channel to avoid blocking the caller of 'AddExitFunc'
 		// the number 50 is arbitrary
@@ -88,27 +87,32 @@ func NewApp(flags map[string]interface{}) *App {
 	if !ok {
 		app.flags["configdir"] = appdir.General("Lantern")
 	}
-	app.settings.Configure(&settings.ConfigOpts{
+	app.settings = settings.New(
 		common.Version,
-		common.RevisionDate,
 		common.BuildDate,
+		common.RevisionDate,
 		app.settingsPath(),
-	})
+	)
+	if app.flags["proxyall"].(bool) {
+		// If proxyall flag was supplied, force proxying of all
+		app.settings.SetProxyAll(true)
+	}
+	log.Debugf("Created desktop app with flags %v", app.flags)
 	return app
 }
 
 // LogPanicAndExit logs a panic and then exits the application. This function
 // is only used in the panicwrap parent process.
 func (app *App) LogPanicAndExit(msg interface{}) {
-	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
 	// Turn off system proxy on panic
 	// Reload settings to make sure we have an up-to-date addr
-	app.settings.Configure(&settings.ConfigOpts{common.Version,
+	s := settings.New(common.Version,
 		common.RevisionDate,
 		common.BuildDate,
 		app.settingsPath(),
-	})
-	sysproxy.New(app.settings.GetAddr(), false).Clear()
+	)
+	sysproxy.New(s.GetAddr(), false).Clear()
+	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
 }
 
 func (app *App) exitOnFatal(err error) {
@@ -144,11 +148,6 @@ func (app *App) Run() error {
 
 	app.startProfiling()
 	app.startUIServices()
-	log.Debug(app.flags)
-	if app.flags["proxyall"].(bool) {
-		// If proxyall flag was supplied, force proxying of all
-		app.settings.SetProxyAll(true)
-	}
 
 	go func() {
 		err := flashlight.Run(
