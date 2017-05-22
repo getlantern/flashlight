@@ -10,11 +10,6 @@ import "github.com/getlantern/golog"
 // level constant ServiceType with an unique string.
 type Type string
 
-// Deps represents the services on which one service depends, and optional
-// handler to process message from the depended service. Typically, the handler
-// configure the service itself based on the message.
-type Deps map[Type]func(msg interface{}, self Service)
-
 // ConfigOpts represents all of the config options required to start a service.
 type ConfigOpts interface {
 	// For returns the service type to which the ConfigOpts apply
@@ -93,19 +88,13 @@ func init() {
 }
 
 // MustRegister registers the service to the singleton registry, or panics.
-func MustRegister(
-	instance Impl,
-	defaultOpts ConfigOpts,
-	deps Deps) (Service, Impl) {
-	return singleton.MustRegister(instance, defaultOpts, deps)
+func MustRegister(instance Impl, defaultOpts ConfigOpts) Service {
+	return singleton.MustRegister(instance, defaultOpts)
 }
 
 // Register registers the service to the singleton registry
-func Register(
-	instance Impl,
-	defaultOpts ConfigOpts,
-	deps Deps) (Service, Impl, error) {
-	return singleton.Register(instance, defaultOpts, deps)
+func Register(instance Impl, defaultOpts ConfigOpts) (Service, error) {
+	return singleton.Register(instance, defaultOpts)
 }
 
 // MustLookup looks up a service from the singleton registry, or panics.

@@ -67,11 +67,10 @@ func Run(
 		&client.ConfigOpts{
 			HTTPProxyAddr:   httpProxyAddr,
 			Socks5ProxyAddr: socks5ProxyAddr,
-		},
-		nil)
+		})
 
 	waitForStart(op, elapsed, afterStart)
-	service.MustRegister(borda.New(FullyReportedOps), &borda.ConfigOpts{}, nil)
+	service.MustRegister(borda.New(FullyReportedOps), &borda.ConfigOpts{})
 
 	registerConfigService(flagsAsMap)
 	service.Sub(config.ServiceType, func(msg interface{}) {
@@ -96,7 +95,12 @@ func Run(
 			}
 		}
 	})
-	service.MustRegister(geolookup.New(), nil, nil)
+	service.MustRegister(geolookup.New(), nil)
+	service.Sub(geolookup.ServiceType, func(m interface{}) {
+		service.Configure(client.ServiceType, func(opts service.ConfigOpts) {
+			opts.(*client.ConfigOpts).GeoCountry = m.(*geolookup.GeoInfo).GetCountry()
+		})
+	})
 
 	beforeStart()
 	return nil
@@ -156,7 +160,7 @@ func registerConfigService(flagsAsMap map[string]interface{}) {
 			gl.BordaSamplePercentage = v
 		}
 	}
-	service.MustRegister(config.New(opts), nil, nil)
+	service.MustRegister(config.New(opts), nil)
 }
 
 func getTrustedCACerts(cfg *config.Global) (pool *x509.CertPool, err error) {

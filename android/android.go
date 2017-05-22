@@ -231,9 +231,9 @@ func afterStart(user UserConfig) {
 	bandwidthUpdates(user)
 	user.AfterStart()
 	service.Sub(geolookup.ServiceType, func(m interface{}) {
-		geo := m.(*geolookup.GeoInfo)
-		log.Debugf("Successful geolookup: country %s", geo.GetCountry())
-		user.SetCountry(geo.GetCountry())
+		country := m.(*geolookup.GeoInfo).GetCountry()
+		log.Debugf("Successful geolookup: country %s", country)
+		user.SetCountry(country)
 	})
 	service.StartAll()
 }

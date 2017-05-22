@@ -42,8 +42,8 @@ type Sysproxy struct {
 	on     bool
 }
 
-func New(proxyAddr string, enable bool) *Sysproxy {
-	p := &Sysproxy{proxyAddr: proxyAddr, enable: enable}
+func New(proxyAddr string) *Sysproxy {
+	p := &Sysproxy{proxyAddr: proxyAddr}
 	err := setUpSysproxyTool()
 	if err != nil {
 		log.Error(err) // report once and do nothing else

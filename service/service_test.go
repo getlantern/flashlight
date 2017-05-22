@@ -49,12 +49,9 @@ func (i *mockImpl) SetPublisher(p Publisher) {
 
 func TestRegister(t *testing.T) {
 	registry := NewRegistry()
-	_, _, err := registry.Register(New1(), nil, Deps{serviceType2: nil})
-	assert.Error(t, err,
-		"should not register if any of the dependencies is not found")
-	registry.MustRegister(New1(), nil, nil)
-	registry.MustRegister(New2(), nil, nil)
-	_, _, err = registry.Register(New2(), nil, nil)
+	registry.MustRegister(New1(), nil)
+	registry.MustRegister(New2(), nil)
+	_, err := registry.Register(New2(), nil)
 	assert.Error(t, err, "each service should be registered only once")
 	_, i1 := registry.MustLookup(serviceType1)
 	_, i2 := registry.MustLookup(serviceType2)
@@ -94,7 +91,7 @@ func TestSubscribe(t *testing.T) {
 		return &mockWithPublisher{New1().(*mockImpl), make(chan bool)}
 	}
 	registry := NewRegistry()
-	s1, _, err := registry.Register(new1(), nil, nil)
+	s1, err := registry.Register(new1(), nil)
 	assert.NoError(t, err)
 	ch1 := registry.SubCh(serviceType1)
 	ch2 := registry.SubCh(serviceType1)

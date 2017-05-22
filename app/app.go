@@ -111,7 +111,7 @@ func (app *App) LogPanicAndExit(msg interface{}) {
 		common.BuildDate,
 		app.settingsPath(),
 	)
-	sysproxy.New(s.GetAddr(), false).Clear()
+	sysproxy.New(s.GetAddr()).Clear()
 	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
 }
 
@@ -180,27 +180,20 @@ func (app *App) Run() error {
 
 func (app *App) beforeStart() bool {
 	log.Debug("Before start")
-	service.MustRegister(
+	analyticsService := service.MustRegister(
 		analytics.New(app.settings.IsAutoReport(), app.settings.GetDeviceID(), common.Version),
-		&analytics.ConfigOpts{},
-		service.Deps{geolookup.ServiceType: func(m interface{}, self service.Service) {
-			self.MustConfigure(func(opts service.ConfigOpts) {
-				opts.(*analytics.ConfigOpts).GeoIP = m.(*geolookup.GeoInfo).GetIP()
-			})
-		}})
-	service.MustRegister(
+		&analytics.ConfigOpts{})
+	locationService := service.MustRegister(
 		location.New(),
-		&location.ConfigOpts{},
-		service.Deps{geolookup.ServiceType: func(m interface{}, self service.Service) {
-			self.MustConfigure(func(opts service.ConfigOpts) {
-				opts.(*location.ConfigOpts).Code = m.(*geolookup.GeoInfo).GetCountry()
-			})
-		}})
+		&location.ConfigOpts{})
 	service.Sub(geolookup.ServiceType, func(m interface{}) {
 		info := m.(*geolookup.GeoInfo)
 		ip, country := info.GetIP(), info.GetCountry()
-		service.Configure(client.ServiceType, func(opts service.ConfigOpts) {
-			opts.(*client.ConfigOpts).GeoCountry = country
+		analyticsService.MustConfigure(func(opts service.ConfigOpts) {
+			opts.(*analytics.ConfigOpts).GeoIP = ip
+		})
+		locationService.MustConfigure(func(opts service.ConfigOpts) {
+			opts.(*location.ConfigOpts).Code = country
 		})
 		ops.SetGlobal("geo_country", country)
 		ops.SetGlobal("client_ip", ip)
@@ -214,9 +207,8 @@ func (app *App) beforeStart() bool {
 			log.Debugf("Got HTTP proxy address: %v", msg.Addr)
 			app.settings.SetString(settings.SNAddr, msg.Addr)
 			setProxy := app.settings.GetSystemProxy()
-			s, _ := service.MustRegister(sysproxy.New(msg.Addr, setProxy),
-				&sysproxy.ConfigOpts{setProxy},
-				nil)
+			s := service.MustRegister(sysproxy.New(msg.Addr),
+				&sysproxy.ConfigOpts{setProxy})
 			s.Start()
 			setupUserSignal() // it depends on sysproxy service being registered.
 			app.OnSettingChange(settings.SNSystemProxy, func(val interface{}) {
@@ -490,7 +482,7 @@ func clearProxySetting(listenAddr string) {
 	_, port, splitErr := net.SplitHostPort(listenAddr)
 	if splitErr == nil && port != "0" {
 		log.Debugf("Clearing system proxy settings for: %v", listenAddr)
-		sysproxy.New(listenAddr, false).Clear()
+		sysproxy.New(listenAddr).Clear()
 	} else {
 		log.Debugf("Can't clear proxy settings for: %v", listenAddr)
 	}

@@ -24,66 +24,44 @@ func NewRegistry() *Registry {
 }
 
 // MustRegister is same as Register but panics if fail to register the service.
-func (r *Registry) MustRegister(
-	instance Impl,
-	defaultOpts ConfigOpts,
-	deps Deps) (Service, Impl) {
-	s, i, err := r.Register(instance, defaultOpts, deps)
+func (r *Registry) MustRegister(instance Impl, defaultOpts ConfigOpts) Service {
+	s, err := r.Register(instance, defaultOpts)
 	if err != nil {
 		panic(err.Error())
 	}
-	return s, i
+	return s
 }
 
 // Register register a service. It requires:
 // 1. A method to create the service instance, typically New();
 // 2. The default config options to start the service, or nil if the service
 // doesn't need config.
-// 3. Whether start the service when calling Registry.StartAll().
-// 4. A set of services on which it depends, or nil if no dependence at all.
 // Registry.StartAll() will resolve the startup order.
-func (r *Registry) Register(
-	instance Impl,
-	defaultOpts ConfigOpts,
-	deps Deps) (Service, Impl, error) {
+func (r *Registry) Register(instance Impl, defaultOpts ConfigOpts) (Service, error) {
 	if instance == nil {
-		return nil, nil, errors.New("nil instance")
+		return nil, errors.New("nil instance")
 	}
 	t := instance.GetType()
 	if _, ok := instance.(Configurable); ok {
 		if defaultOpts == nil {
-			return nil, nil, fmt.Errorf("Configurable service '%s' must be registered with default ConfigOpts", t)
+			return nil, fmt.Errorf("Configurable service '%s' must be registered with default ConfigOpts", t)
 		}
 	}
 	r.muDag.Lock()
 	defer r.muDag.Unlock()
 	if r.dag.Lookup(t) != nil {
-		return nil, nil, fmt.Errorf("service '%s' is already registered", t)
+		return nil, fmt.Errorf("service '%s' is already registered", t)
 	}
 	if defaultOpts != nil && defaultOpts.For() != t {
-		return nil, nil, fmt.Errorf("invalid default config options type for %s", t)
-	}
-	for dt, _ := range deps {
-		node := r.dag.Lookup(dt)
-		if node == nil {
-			return nil, nil, fmt.Errorf("service '%s' depends on not-registered service '%s'", t, dt)
-		}
+		return nil, fmt.Errorf("invalid default config options type for %s", t)
 	}
 	r.dag.AddVertex(t, instance, defaultOpts)
 	s := service{instance, r}
 	if p, ok := instance.(WillPublish); ok {
 		p.SetPublisher(publisher{t, r})
 	}
-	for dt, df := range deps {
-		r.dag.AddEdge(dt, t)
-		if df != nil {
-			r.Sub(dt, func(m interface{}) {
-				df(m, s)
-			})
-		}
-	}
 	log.Debugf("Registered service %s", t)
-	return s, instance, nil
+	return s, nil
 }
 
 // MustLookup returns the service reference of type t, or panics.
