@@ -12,7 +12,6 @@ import (
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
-	"github.com/getlantern/mtime"
 	"github.com/getlantern/profiling"
 
 	"github.com/getlantern/flashlight/analytics"
@@ -33,12 +32,10 @@ var (
 	log      = golog.LoggerFor("flashlight.app")
 	settings *Settings
 
-	elapsed func() time.Duration
+	startTime = time.Now()
 )
 
 func init() {
-	elapsed = mtime.Stopwatch()
-
 	autoupdate.Version = common.PackageVersion
 	autoupdate.PublicKey = []byte(packagePublicKey)
 
@@ -407,6 +404,6 @@ func (app *App) waitForExit() error {
 
 func recordStopped() {
 	ops.Begin("client_stopped").
-		SetMetricSum("uptime", elapsed().Seconds()).
+		SetMetricSum("uptime", time.Now().Sub(startTime).Seconds()).
 		End()
 }
