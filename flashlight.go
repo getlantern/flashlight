@@ -41,11 +41,14 @@ var (
 )
 
 // Run runs a client proxy. It blocks as long as the proxy is running.
-func Run(autoReport func() bool,
+func Run(settings common.Settings,
+	userConfig common.UserConfig,
+	statsTracker common.StatsTracker,
+	httpProxyAddr string,
+	socks5ProxyAddr string,
 	flagsAsMap map[string]interface{},
 	beforeStart func() bool,
 	afterStart func(),
-	onConfigUpdate func(cfg *config.Global),
 	onError func(err error),
 	deviceID string) error {
 
@@ -53,6 +56,18 @@ func Run(autoReport func() bool,
 	displayVersion()
 	initContext(deviceID, common.Version, common.RevisionDate)
 	op := fops.Begin("client_started")
+
+	service.MustRegister(client.New(
+		deviceID,
+		false, // on desktop, we do not allow private hosts
+		settings,
+		userConfig,
+		statsTracker),
+		&client.ConfigOpts{
+			HTTPProxyAddr:   httpProxyAddr,
+			Socks5ProxyAddr: socks5ProxyAddr,
+		},
+		nil)
 
 	waitForStart(op, elapsed, afterStart)
 	service.MustRegister(borda.New(FullyReportedOps), &borda.ConfigOpts{}, nil)
@@ -70,7 +85,7 @@ func Run(autoReport func() bool,
 			service.MustConfigure(borda.ServiceType, func(opts service.ConfigOpts) {
 				o := opts.(*borda.ConfigOpts)
 				o.ReportInterval = c.BordaReportInterval
-				o.ReportAllOps = autoReport() && rand.Float64() <= c.BordaSamplePercentage/100
+				o.ReportAllOps = settings.IsAutoReport() && rand.Float64() <= c.BordaSamplePercentage/100
 			})
 			certs, err := getTrustedCACerts(c)
 			if err != nil {
@@ -78,9 +93,9 @@ func Run(autoReport func() bool,
 			} else if c.Client != nil {
 				fronted.Configure(certs, c.Client.MasqueradeSets, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
 			}
-			onConfigUpdate(c)
 		}
 	})
+	service.MustRegister(geolookup.New(), nil, nil)
 
 	beforeStart()
 	return nil

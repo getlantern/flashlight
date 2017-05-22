@@ -19,7 +19,6 @@ import (
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxied"
@@ -87,8 +86,7 @@ type StartResult struct {
 }
 
 type UserConfig interface {
-	GetUserID() int64
-	GetToken() string
+	common.UserConfig
 	AfterStart()
 	SetCountry(string)
 	SetStaging(bool)
@@ -121,20 +119,6 @@ func Start(configDir string, locale string,
 
 		// TODO: persist device ID across system reboot
 		deviceID := base64.StdEncoding.EncodeToString(uuid.NodeID())
-		service.MustRegister(
-			client.New(deviceID,
-				true, //on android, we allow private hosts
-				&statsTracker{},
-			),
-			&client.ConfigOpts{
-				UseShortcut:     !user.ProxyAll(),
-				UseDetour:       false,
-				HTTPProxyAddr:   "127.0.0.1:0", // listen for HTTP on random address
-				Socks5ProxyAddr: "127.0.0.1:0", // listen for SOCKS on random address
-				ProToken:        user.GetToken(),
-			},
-			nil)
-		ch := service.SubCh(client.ServiceType)
 		appdir.SetHomeDir(configDir)
 
 		log.Debugf("Starting lantern: configDir %s locale %s sticky config %t",
@@ -164,20 +148,27 @@ func Start(configDir string, locale string,
 		log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
 		flashlight.Run(
-			func() bool { return true }, // auto report
+			common.WrapSettings(
+				common.Not(user.ProxyAll),    // UseShortcut
+				func() bool { return false }, // UseDetour
+				func() bool { return true },  // IsAutoReport
+			),
+			user, //common.UserConfig
+			statsTracker{},
+			"127.0.0.1:0", // listen for HTTP on random address
+			"127.0.0.1:0", // listen for SOCKS on random address
 			flags,
 			beforeStart,
 			func() {
 				afterStart(user)
 			}, // afterStart()
-			func(cfg *config.Global) {
-			}, // onConfigUpdate
 			func(err error) {}, // onError
 			deviceID,
 		)
 
 		// TODO: fix CI by subscribing before starting the client, i.e., break
 		// flashlight.Run into pieces
+		ch := service.SubCh(client.ServiceType)
 		var wg sync.WaitGroup
 		wg.Add(2)
 		go func() {
@@ -232,7 +223,6 @@ func getBandwidth(quota *bandwidth.Quota) (int, int) {
 }
 
 func beforeStart() bool {
-	service.MustRegister(geolookup.New(), nil, nil)
 	service.StartAll()
 	return true
 }

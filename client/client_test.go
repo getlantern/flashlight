@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/mockconn"
 	"github.com/stretchr/testify/assert"
 )
@@ -53,12 +54,18 @@ func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, 
 }
 
 func newClient() *Client {
-	client := New("deviceID", true, mockStatsTracker{})
-	client.Configure(&ConfigOpts{
-		UseDetour:   true,
-		UseShortcut: true,
-		ProToken:    "proToken",
-	})
+	client := New("deviceID", true,
+		common.WrapSettings(
+			func() bool { return true },
+			func() bool { return true },
+			func() bool { return true },
+		),
+		common.WrapUserConfig(
+			func() int64 { return 0 },
+			func() string { return "proToken" },
+		),
+		mockStatsTracker{},
+	)
 	return client
 }
 

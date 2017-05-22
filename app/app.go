@@ -78,8 +78,8 @@ func NewApp(flags map[string]interface{}) *App {
 		settings: settings.New(),
 		exitCh:   make(chan error, 1),
 		// use buffered channel to avoid blocking the caller of 'AddExitFunc'
-		// the number 10 is arbitrary
-		chExitFuncs:  make(chan func(), 10),
+		// the number 50 is arbitrary
+		chExitFuncs:  make(chan func(), 50),
 		statsTracker: &statsTracker{},
 	}
 	golog.OnFatal(app.exitOnFatal)
@@ -143,45 +143,46 @@ func (app *App) Run() error {
 	}
 
 	app.startProfiling()
-	app.startUI()
+	app.startUIServices()
 	log.Debug(app.flags)
 	if app.flags["proxyall"].(bool) {
 		// If proxyall flag was supplied, force proxying of all
 		app.settings.SetProxyAll(true)
 	}
 
-	service.MustRegister(client.New(
-		app.settings.GetDeviceID(),
-		false, // on desktop, we do not allow private hosts
-		app.statsTracker),
-		&client.ConfigOpts{
-			UseShortcut:     !app.settings.GetProxyAll(),
-			UseDetour:       !app.settings.GetProxyAll(),
-			HTTPProxyAddr:   listenAddr,
-			Socks5ProxyAddr: socksAddr,
-			ProToken:        app.settings.GetToken(),
-		},
-		nil)
-
 	go func() {
 		err := flashlight.Run(
-			app.settings.IsAutoReport,
+			common.WrapSettings(
+				common.Not(app.settings.GetProxyAll), // UseShortcut
+				common.Not(app.settings.GetProxyAll), // UseDetour
+				app.settings.IsAutoReport,
+			),
+			app.settings, // common.UserConfig
+			app.statsTracker,
+			listenAddr,
+			socksAddr,
 			app.flags,
-			app.beforeStart(listenAddr),
-			app.afterStart,
-			app.onConfigUpdate,
+			app.beforeStart,
+			app.showUI,
 			app.Exit,
 			app.settings.GetDeviceID())
 		if err != nil {
 			app.Exit(err)
 			return
 		}
+		service.Sub(config.ServiceType, func(msg interface{}) {
+			switch c := msg.(type) {
+			case *config.Global:
+				proxiedsites.Configure(c.ProxiedSites)
+				autoupdate.Configure(c.UpdateServerURL, c.AutoUpdateCA)
+			}
+		})
 	}()
 
 	return app.waitForExit()
 }
 
-func (app *App) startUI() {
+func (app *App) startUIServices() {
 	uiaddr := app.flags["uiaddr"].(string)
 	if uiaddr == "" {
 		// stick with the last one if not specified from command line.
@@ -226,8 +227,32 @@ func (app *App) startUI() {
 	app.settings.SetUIAddr(ui.GetUIAddr())
 	ui.Handle("/data", ws.StartUIChannel())
 
-	if e := app.settings.StartService(); e != nil {
-		app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
+	err = app.settings.StartService()
+	if err != nil {
+		app.Exit(fmt.Errorf("Unable to register settings service: %q", err))
+	}
+	app.OnSettingChange(settings.SNAutoLaunch, func(val interface{}) {
+		enable := val.(bool)
+		go launcher.CreateLaunchFile(enable)
+	})
+
+	err = app.statsTracker.StartService()
+	if err != nil {
+		log.Errorf("Unable to serve stats to UI: %v", err)
+	}
+
+	err = bandwidth.Start(app.isProUser)
+	if err != nil {
+		log.Errorf("Unable to serve bandwidth to UI: %v", err)
+	}
+
+	err = emailproxy.Start(app.settings,
+		app.settings.GetDeviceID(),
+		app.settings.GetString(settings.SNVersion),
+		app.settings.GetString(settings.SNRevisionDate),
+	)
+	if err != nil {
+		log.Errorf("Unable to serve mandrill to UI: %v", err)
 	}
 }
 
@@ -255,91 +280,69 @@ func (app *App) settingsPath() string {
 	return filepath.Join(configDir, name)
 }
 
-func (app *App) beforeStart(listenAddr string) func() bool {
-	return func() bool {
-		log.Debug("Before start")
-		err := app.statsTracker.StartService()
-		if err != nil {
-			log.Errorf("Unable to serve stats to UI: %v", err)
-		}
-
-		err = bandwidth.Start(app.isProUser)
-		if err != nil {
-			log.Errorf("Unable to serve bandwidth to UI: %v", err)
-		}
-
-		err = emailproxy.Start(app.settings,
-			app.settings.GetDeviceID(),
-			app.settings.GetString(settings.SNVersion),
-			app.settings.GetString(settings.SNRevisionDate),
-		)
-		if err != nil {
-			log.Errorf("Unable to serve mandrill to UI: %v", err)
-		}
-
-		service.MustRegister(geolookup.New(), nil, nil)
-		service.MustRegister(
-			analytics.New(app.settings.IsAutoReport(), app.settings.GetDeviceID(), common.Version),
-			&analytics.ConfigOpts{},
-			service.Deps{geolookup.ServiceType: func(m interface{}, self service.Service) {
-				self.MustConfigure(func(opts service.ConfigOpts) {
-					opts.(*analytics.ConfigOpts).GeoIP = m.(*geolookup.GeoInfo).GetIP()
-				})
-			}})
-		service.MustRegister(
-			location.New(),
-			&location.ConfigOpts{},
-			service.Deps{geolookup.ServiceType: func(m interface{}, self service.Service) {
-				self.MustConfigure(func(opts service.ConfigOpts) {
-					opts.(*location.ConfigOpts).Code = m.(*geolookup.GeoInfo).GetCountry()
-				})
-			}})
-		service.Sub(geolookup.ServiceType, func(m interface{}) {
-			info := m.(*geolookup.GeoInfo)
-			ip, country := info.GetIP(), info.GetCountry()
-			service.Configure(client.ServiceType, func(opts service.ConfigOpts) {
-				opts.(*client.ConfigOpts).GeoCountry = country
+func (app *App) beforeStart() bool {
+	log.Debug("Before start")
+	service.MustRegister(
+		analytics.New(app.settings.IsAutoReport(), app.settings.GetDeviceID(), common.Version),
+		&analytics.ConfigOpts{},
+		service.Deps{geolookup.ServiceType: func(m interface{}, self service.Service) {
+			self.MustConfigure(func(opts service.ConfigOpts) {
+				opts.(*analytics.ConfigOpts).GeoIP = m.(*geolookup.GeoInfo).GetIP()
 			})
-			ops.SetGlobal("geo_country", country)
-			ops.SetGlobal("client_ip", ip)
+		}})
+	service.MustRegister(
+		location.New(),
+		&location.ConfigOpts{},
+		service.Deps{geolookup.ServiceType: func(m interface{}, self service.Service) {
+			self.MustConfigure(func(opts service.ConfigOpts) {
+				opts.(*location.ConfigOpts).Code = m.(*geolookup.GeoInfo).GetCountry()
+			})
+		}})
+	service.Sub(geolookup.ServiceType, func(m interface{}) {
+		info := m.(*geolookup.GeoInfo)
+		ip, country := info.GetIP(), info.GetCountry()
+		service.Configure(client.ServiceType, func(opts service.ConfigOpts) {
+			opts.(*client.ConfigOpts).GeoCountry = country
 		})
+		ops.SetGlobal("geo_country", country)
+		ops.SetGlobal("client_ip", ip)
+	})
 
-		service.Sub(client.ServiceType, func(m interface{}) {
-			log.Debugf("Got message %+v", m)
-			msg := m.(client.Message)
-			switch msg.ProxyType {
-			case client.HTTPProxy:
-				log.Debugf("Got HTTP proxy address: %v", msg.Addr)
-				app.settings.SetString(settings.SNAddr, msg.Addr)
-				setProxy := app.settings.GetSystemProxy()
-				s, _ := service.MustRegister(sysproxy.New(msg.Addr, setProxy),
-					&sysproxy.ConfigOpts{setProxy},
-					nil)
-				s.Start()
-				setupUserSignal() // it depends on sysproxy service being registered.
-				app.OnSettingChange(settings.SNSystemProxy, func(val interface{}) {
-					service.Configure(sysproxy.ServiceType, func(o service.ConfigOpts) {
-						o.(*sysproxy.ConfigOpts).Enable = val.(bool)
-					})
+	service.Sub(client.ServiceType, func(m interface{}) {
+		log.Debugf("Got message %+v", m)
+		msg := m.(client.Message)
+		switch msg.ProxyType {
+		case client.HTTPProxy:
+			log.Debugf("Got HTTP proxy address: %v", msg.Addr)
+			app.settings.SetString(settings.SNAddr, msg.Addr)
+			setProxy := app.settings.GetSystemProxy()
+			s, _ := service.MustRegister(sysproxy.New(msg.Addr, setProxy),
+				&sysproxy.ConfigOpts{setProxy},
+				nil)
+			s.Start()
+			setupUserSignal() // it depends on sysproxy service being registered.
+			app.OnSettingChange(settings.SNSystemProxy, func(val interface{}) {
+				service.Configure(sysproxy.ServiceType, func(o service.ConfigOpts) {
+					o.(*sysproxy.ConfigOpts).Enable = val.(bool)
 				})
+			})
 
-			case client.Socks5Proxy:
-				log.Debugf("Got Socks5 proxy address: %v", msg.Addr)
-				app.settings.SetString(settings.SNSOCKSAddr, msg.Addr)
-			}
-		})
+		case client.Socks5Proxy:
+			log.Debugf("Got Socks5 proxy address: %v", msg.Addr)
+			app.settings.SetString(settings.SNSOCKSAddr, msg.Addr)
+		}
+	})
 
-		service.StartAll()
+	service.StartAll()
 
-		app.AddExitFunc(notifier.Start())
-		app.AddExitFunc(loconfscanner.Scanner(
-			4*time.Hour,
-			app.isProUser,
-			app.settings.GetLanguage,
-			&pastAnnouncements{app.settings}))
+	app.AddExitFunc(notifier.Start())
+	app.AddExitFunc(loconfscanner.Scanner(
+		4*time.Hour,
+		app.isProUser,
+		app.settings.GetLanguage,
+		&pastAnnouncements{app.settings}))
 
-		return true
-	}
+	return true
 }
 
 func (app *App) isProUser() (isPro bool, ok bool) {
@@ -372,12 +375,7 @@ func (app *App) OnSettingChange(attr settings.SettingName, cb func(interface{}))
 	app.settings.OnChange(attr, cb)
 }
 
-func (app *App) afterStart() {
-	app.OnSettingChange(settings.SNAutoLaunch, func(val interface{}) {
-		enable := val.(bool)
-		go launcher.CreateLaunchFile(enable)
-	})
-
+func (app *App) showUI() {
 	if app.Headless || app.flags["startup"].(bool) {
 		log.Debugf("Not opening browser. Startup is: %v", app.flags["startup"])
 	} else {
@@ -387,11 +385,6 @@ func (app *App) afterStart() {
 		// UI server and proxy server are still coming up.
 		ui.Show()
 	}
-}
-
-func (app *App) onConfigUpdate(cfg *config.Global) {
-	proxiedsites.Configure(cfg.ProxiedSites)
-	autoupdate.Configure(cfg.UpdateServerURL, cfg.AutoUpdateCA)
 }
 
 // showExistingUi triggers an existing Lantern running on the same system to

@@ -66,10 +66,6 @@ var (
 )
 
 type ConfigOpts struct {
-	UseShortcut     bool
-	UseDetour       bool
-	BlockAds        bool
-	ProToken        string
 	HTTPProxyAddr   string
 	Socks5ProxyAddr string
 	GeoCountry      string
@@ -122,12 +118,12 @@ type Client struct {
 	allowPrivateHosts bool
 	isPrivateAddr     func(*net.IPAddr) bool
 
-	useShortcut bool
-	useDetour   bool
-	proToken    string
-	deviceID    string
-	geoCountry  string
-	publisher   service.Publisher
+	proTokenGetter func() string
+	useDetour      func() bool
+
+	deviceID   string
+	geoCountry string
+	publisher  service.Publisher
 
 	httpProxyAddr   string
 	socks5ProxyAddr string
@@ -146,6 +142,8 @@ type Client struct {
 func New(
 	deviceID string,
 	allowPrivateHosts bool,
+	settings common.Settings,
+	userConfig common.UserConfig,
 	statsTracker common.StatsTracker,
 ) *Client {
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -155,8 +153,10 @@ func New(
 		chStop:            make(chan bool),
 		deviceID:          deviceID,
 		allowPrivateHosts: allowPrivateHosts,
-		sc:                shortcut.New(),
+		sc:                shortcut.New(settings.UseShortcut),
+		useDetour:         settings.UseDetour,
 		statsTracker:      statsTracker,
+		proTokenGetter:    userConfig.GetToken,
 	}
 
 	c.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers.Pool, false, c.dialCONNECT)
@@ -184,16 +184,10 @@ func (c *Client) SetPublisher(p service.Publisher) {
 
 func (c *Client) Configure(opts service.ConfigOpts) {
 	o := opts.(*ConfigOpts)
-	if c.useShortcut != o.UseShortcut {
-		c.useShortcut = o.UseShortcut
-		c.sc.Enable(c.useShortcut)
-	}
 	if o.GeoCountry != "" && c.geoCountry != o.GeoCountry {
 		c.geoCountry = o.GeoCountry
 		c.sc.Configure(c.geoCountry)
 	}
-	c.useDetour = o.UseDetour
-	c.proToken = o.ProToken
 	c.httpProxyAddr = o.HTTPProxyAddr
 	c.socks5ProxyAddr = o.Socks5ProxyAddr
 	err := c.resetBalancer(o.Proxies, c.deviceID)
@@ -349,7 +343,7 @@ func (c *Client) proxiedDialer(orig func(network, addr string) (net.Conn, error)
 		defer op.End()
 
 		var proxied func(network, addr string) (net.Conn, error)
-		if c.useDetour {
+		if c.useDetour() {
 			op.Set("detour", true)
 			proxied = detourDialer
 		} else {

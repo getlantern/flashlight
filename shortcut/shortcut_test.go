@@ -13,26 +13,26 @@ var (
 )
 
 func TestConfigureThenEnable(t *testing.T) {
-	sc := New()
+	enable := false
+	sc := New(func() bool { return enable })
 	assert.IsType(t, nullShortcut{}, sc.sc, "should be disabled by default")
 	assert.False(t, sc.Allow(cnIP), "should not allow any address when disabled")
 	sc.Configure("cn")
-	assert.IsType(t, loadedType, sc.configured, "should load the shortcut list")
-	assert.IsType(t, nullShortcut{}, sc.sc, "should still be disabled")
+	assert.IsType(t, loadedType, sc.sc, "should load the shortcut list")
 	assert.False(t, sc.Allow(cnIP), "should not allow any address when disabled")
-	sc.Enable(true)
+	enable = true
 	assert.IsType(t, loadedType, sc.sc, "should enable")
 	assert.True(t, sc.Allow(cnIP), "should allow address in the list")
 }
 func TestEnableThenConfigure(t *testing.T) {
-	sc := New()
+	enable := false
+	sc := New(func() bool { return enable })
 	assert.IsType(t, nullShortcut{}, sc.sc, "should be disabled by default")
 	assert.False(t, sc.Allow(cnIP), "should not allow any address when disabled")
-	sc.Enable(true)
+	enable = true
 	assert.IsType(t, nullShortcut{}, sc.sc, "should still be disabled if not configured")
 	assert.False(t, sc.Allow(cnIP), "should not allow any address when disabled")
 	sc.Configure("cn")
-	assert.IsType(t, loadedType, sc.configured, "should load the shortcut list")
 	assert.IsType(t, loadedType, sc.sc, "should enable")
 	assert.True(t, sc.Allow(cnIP), "should allow address in the list")
 }

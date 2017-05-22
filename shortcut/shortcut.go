@@ -16,11 +16,9 @@ var (
 type Shortcut struct {
 	// sc is the shortcut actually in use. It's the same as configured if
 	// enableSC is true.
-	sc shortcut.Shortcut
-	// configured is the shortcut loaded based on the country.
-	configured shortcut.Shortcut
-	enableSC   bool
-	mu         sync.RWMutex
+	sc     shortcut.Shortcut
+	mu     sync.RWMutex
+	enable func() bool
 }
 
 type nullShortcut struct{}
@@ -29,20 +27,8 @@ func (s nullShortcut) Allow(string) bool {
 	return false
 }
 
-func New() *Shortcut {
-	return &Shortcut{sc: nullShortcut{}, configured: nullShortcut{}}
-}
-
-func (s *Shortcut) Enable(enable bool) {
-	s.mu.Lock()
-	s.enableSC = enable
-	if enable {
-		s.sc = s.configured
-	} else {
-		s.sc = nullShortcut{}
-	}
-	s.mu.Unlock()
-	log.Debugf("Done enable/disable shortcut. Enabled %v", enable)
+func New(enable func() bool) *Shortcut {
+	return &Shortcut{sc: nullShortcut{}, enable: enable}
 }
 
 func (s *Shortcut) Configure(country string) {
@@ -54,19 +40,20 @@ func (s *Shortcut) Configure(country string) {
 		return
 	}
 
-	s.configured = shortcut.NewFromReader(
+	sc := shortcut.NewFromReader(
 		bytes.NewReader(v4),
 		bytes.NewReader(v6),
 	)
 	s.mu.Lock()
-	if s.enableSC {
-		s.sc = s.configured
-		log.Debugf("Loaded shortcut list for country %s", country)
-	}
+	s.sc = sc
+	log.Debugf("Loaded shortcut list for country %s", country)
 	s.mu.Unlock()
 }
 
 func (s *Shortcut) Allow(addr string) bool {
+	if !s.enable() {
+		return false
+	}
 	s.mu.RLock()
 	_sc := s.sc
 	s.mu.RUnlock()
