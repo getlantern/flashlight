@@ -41,11 +41,12 @@ var (
 )
 
 // Run runs a client proxy. It blocks as long as the proxy is running.
-func Run(settings common.Settings,
-	userConfig common.UserConfig,
-	statsTracker common.StatsTracker,
+func Run(
 	httpProxyAddr string,
 	socks5ProxyAddr string,
+	settings common.Settings,
+	userConfig common.UserConfig,
+	statsTracker common.StatsTracker,
 	flagsAsMap map[string]interface{},
 	beforeStart func() bool,
 	afterStart func(),

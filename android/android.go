@@ -148,6 +148,8 @@ func Start(configDir string, locale string,
 		log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
 		flashlight.Run(
+			"127.0.0.1:0", // listen for HTTP on random address
+			"127.0.0.1:0", // listen for SOCKS on random address
 			common.WrapSettings(
 				common.Not(user.ProxyAll),    // UseShortcut
 				func() bool { return false }, // UseDetour
@@ -155,8 +157,6 @@ func Start(configDir string, locale string,
 			),
 			user, //common.UserConfig
 			statsTracker{},
-			"127.0.0.1:0", // listen for HTTP on random address
-			"127.0.0.1:0", // listen for SOCKS on random address
 			flags,
 			beforeStart,
 			func() {

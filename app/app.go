@@ -149,36 +149,98 @@ func (app *App) Run() error {
 	app.startProfiling()
 	app.startUIServices()
 
-	go func() {
-		err := flashlight.Run(
-			common.WrapSettings(
-				common.Not(app.settings.GetProxyAll), // UseShortcut
-				common.Not(app.settings.GetProxyAll), // UseDetour
-				app.settings.IsAutoReport,
-			),
-			app.settings, // common.UserConfig
-			app.statsTracker,
-			listenAddr,
-			socksAddr,
-			app.flags,
-			app.beforeStart,
-			app.showUI,
-			app.Exit,
-			app.settings.GetDeviceID())
-		if err != nil {
-			app.Exit(err)
-			return
-		}
-		service.Sub(config.ServiceType, func(msg interface{}) {
-			switch c := msg.(type) {
-			case *config.Global:
-				proxiedsites.Configure(c.ProxiedSites)
-				autoupdate.Configure(c.UpdateServerURL, c.AutoUpdateCA)
-			}
-		})
-	}()
+	err := flashlight.Run(
+		listenAddr,
+		socksAddr,
+		common.WrapSettings(
+			common.Not(app.settings.GetProxyAll), // UseShortcut
+			common.Not(app.settings.GetProxyAll), // UseDetour
+			app.settings.IsAutoReport,
+		),
+		app.settings, // common.UserConfig
+		app.statsTracker,
+		app.flags,
+		app.beforeStart,
+		app.showUI,
+		app.Exit,
+		app.settings.GetDeviceID())
+	if err != nil {
+		app.Exit(err)
+	}
 
+	service.Sub(config.ServiceType, func(msg interface{}) {
+		switch c := msg.(type) {
+		case *config.Global:
+			proxiedsites.Configure(c.ProxiedSites)
+			autoupdate.Configure(c.UpdateServerURL, c.AutoUpdateCA)
+		}
+	})
 	return app.waitForExit()
+}
+
+func (app *App) beforeStart() bool {
+	log.Debug("Before start")
+	service.MustRegister(
+		analytics.New(app.settings.IsAutoReport(), app.settings.GetDeviceID(), common.Version),
+		&analytics.ConfigOpts{},
+		service.Deps{geolookup.ServiceType: func(m interface{}, self service.Service) {
+			self.MustConfigure(func(opts service.ConfigOpts) {
+				opts.(*analytics.ConfigOpts).GeoIP = m.(*geolookup.GeoInfo).GetIP()
+			})
+		}})
+	service.MustRegister(
+		location.New(),
+		&location.ConfigOpts{},
+		service.Deps{geolookup.ServiceType: func(m interface{}, self service.Service) {
+			self.MustConfigure(func(opts service.ConfigOpts) {
+				opts.(*location.ConfigOpts).Code = m.(*geolookup.GeoInfo).GetCountry()
+			})
+		}})
+	service.Sub(geolookup.ServiceType, func(m interface{}) {
+		info := m.(*geolookup.GeoInfo)
+		ip, country := info.GetIP(), info.GetCountry()
+		service.Configure(client.ServiceType, func(opts service.ConfigOpts) {
+			opts.(*client.ConfigOpts).GeoCountry = country
+		})
+		ops.SetGlobal("geo_country", country)
+		ops.SetGlobal("client_ip", ip)
+	})
+
+	service.Sub(client.ServiceType, func(m interface{}) {
+		log.Debugf("Got message %+v", m)
+		msg := m.(client.Message)
+		switch msg.ProxyType {
+		case client.HTTPProxy:
+			log.Debugf("Got HTTP proxy address: %v", msg.Addr)
+			app.settings.SetString(settings.SNAddr, msg.Addr)
+			setProxy := app.settings.GetSystemProxy()
+			s, _ := service.MustRegister(sysproxy.New(msg.Addr, setProxy),
+				&sysproxy.ConfigOpts{setProxy},
+				nil)
+			s.Start()
+			setupUserSignal() // it depends on sysproxy service being registered.
+			app.OnSettingChange(settings.SNSystemProxy, func(val interface{}) {
+				service.Configure(sysproxy.ServiceType, func(o service.ConfigOpts) {
+					o.(*sysproxy.ConfigOpts).Enable = val.(bool)
+				})
+			})
+
+		case client.Socks5Proxy:
+			log.Debugf("Got Socks5 proxy address: %v", msg.Addr)
+			app.settings.SetString(settings.SNSOCKSAddr, msg.Addr)
+		}
+	})
+
+	service.StartAll()
+
+	app.AddExitFunc(notifier.Start())
+	app.AddExitFunc(loconfscanner.Scanner(
+		4*time.Hour,
+		app.isProUser,
+		app.settings.GetLanguage,
+		&pastAnnouncements{app.settings}))
+
+	return true
 }
 
 func (app *App) startUIServices() {
@@ -277,71 +339,6 @@ func (app *App) settingsPath() string {
 	}
 	configDir := app.flags["configdir"].(string)
 	return filepath.Join(configDir, name)
-}
-
-func (app *App) beforeStart() bool {
-	log.Debug("Before start")
-	service.MustRegister(
-		analytics.New(app.settings.IsAutoReport(), app.settings.GetDeviceID(), common.Version),
-		&analytics.ConfigOpts{},
-		service.Deps{geolookup.ServiceType: func(m interface{}, self service.Service) {
-			self.MustConfigure(func(opts service.ConfigOpts) {
-				opts.(*analytics.ConfigOpts).GeoIP = m.(*geolookup.GeoInfo).GetIP()
-			})
-		}})
-	service.MustRegister(
-		location.New(),
-		&location.ConfigOpts{},
-		service.Deps{geolookup.ServiceType: func(m interface{}, self service.Service) {
-			self.MustConfigure(func(opts service.ConfigOpts) {
-				opts.(*location.ConfigOpts).Code = m.(*geolookup.GeoInfo).GetCountry()
-			})
-		}})
-	service.Sub(geolookup.ServiceType, func(m interface{}) {
-		info := m.(*geolookup.GeoInfo)
-		ip, country := info.GetIP(), info.GetCountry()
-		service.Configure(client.ServiceType, func(opts service.ConfigOpts) {
-			opts.(*client.ConfigOpts).GeoCountry = country
-		})
-		ops.SetGlobal("geo_country", country)
-		ops.SetGlobal("client_ip", ip)
-	})
-
-	service.Sub(client.ServiceType, func(m interface{}) {
-		log.Debugf("Got message %+v", m)
-		msg := m.(client.Message)
-		switch msg.ProxyType {
-		case client.HTTPProxy:
-			log.Debugf("Got HTTP proxy address: %v", msg.Addr)
-			app.settings.SetString(settings.SNAddr, msg.Addr)
-			setProxy := app.settings.GetSystemProxy()
-			s, _ := service.MustRegister(sysproxy.New(msg.Addr, setProxy),
-				&sysproxy.ConfigOpts{setProxy},
-				nil)
-			s.Start()
-			setupUserSignal() // it depends on sysproxy service being registered.
-			app.OnSettingChange(settings.SNSystemProxy, func(val interface{}) {
-				service.Configure(sysproxy.ServiceType, func(o service.ConfigOpts) {
-					o.(*sysproxy.ConfigOpts).Enable = val.(bool)
-				})
-			})
-
-		case client.Socks5Proxy:
-			log.Debugf("Got Socks5 proxy address: %v", msg.Addr)
-			app.settings.SetString(settings.SNSOCKSAddr, msg.Addr)
-		}
-	})
-
-	service.StartAll()
-
-	app.AddExitFunc(notifier.Start())
-	app.AddExitFunc(loconfscanner.Scanner(
-		4*time.Hour,
-		app.isProUser,
-		app.settings.GetLanguage,
-		&pastAnnouncements{app.settings}))
-
-	return true
 }
 
 func (app *App) isProUser() (isPro bool, ok bool) {
