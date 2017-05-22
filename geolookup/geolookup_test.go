@@ -15,19 +15,19 @@ func TestFronted(t *testing.T) {
 	ch := r.SubCh(ServiceType)
 	s.Start()
 	instance := i.(*GeoLookup)
-	instance.Refresh()
 	fronted.ConfigureForTest(t)
-	country := instance.GetCountry(15 * time.Second)
-	ip := instance.GetIP(0)
-	if len(country) != 2 {
-		t.Fatalf("Bad country '%v' for ip %v", country, ip)
-	}
-	if len(ip) < 7 {
-		t.Fatalf("Bad IP %s", ip)
-	}
+	instance.Refresh()
 	select {
-	case <-ch:
-	case <-time.After(1 * time.Second):
+	case m := <-ch:
+		info := m.(*GeoInfo)
+		country, ip := info.GetCountry(), info.GetIP()
+		if len(country) != 2 {
+			t.Fatalf("Bad country '%v' for ip %v", country, ip)
+		}
+		if len(ip) < 7 {
+			t.Fatalf("Bad IP %s", ip)
+		}
+	case <-time.After(1 * time.Minute):
 		t.Error("should update watcher")
 	}
 }

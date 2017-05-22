@@ -143,8 +143,8 @@ func TestProxying(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	opsMx.RLock()
 	for _, op := range flashlight.FullyReportedOps {
-		if op == "report_issue" {
-			// ignore this, as we don't do this during the integration test
+		if op == "report_issue" || op == "sysproxy_clear" {
+			// ignore these, as we don't do them during the integration test
 			continue
 		}
 		assert.True(t, reportedOps[op], "Op %v wasn't reported", op)

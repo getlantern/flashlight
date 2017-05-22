@@ -111,7 +111,7 @@ func (app *App) LogPanicAndExit(msg interface{}) {
 		common.BuildDate,
 		app.settingsPath(),
 	)
-	sysproxy.New(s.GetAddr()).Clear()
+	sysproxy.New(s.GetAddr()).Stop()
 	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
 }
 
@@ -183,11 +183,18 @@ func (app *App) beforeStart() bool {
 	locationService := service.MustRegister(
 		location.New(),
 		&location.ConfigOpts{})
+	loconfService := service.MustRegister(loconfscanner.New(
+		4*time.Hour,
+		app.isProUser,
+		&pastAnnouncements{app.settings}), &loconfscanner.ConfigOpts{Lang: app.settings.GetLanguage()})
 	service.Sub(geolookup.ServiceType, func(m interface{}) {
 		info := m.(*geolookup.GeoInfo)
 		ip, country := info.GetIP(), info.GetCountry()
 		locationService.MustConfigure(func(opts service.ConfigOpts) {
 			opts.(*location.ConfigOpts).Code = country
+		})
+		loconfService.MustConfigure(func(opts service.ConfigOpts) {
+			opts.(*loconfscanner.ConfigOpts).Country = country
 		})
 		ops.SetGlobal("geo_country", country)
 		ops.SetGlobal("client_ip", ip)
@@ -219,12 +226,6 @@ func (app *App) beforeStart() bool {
 	service.StartAll()
 
 	app.AddExitFunc(notifier.Start())
-	app.AddExitFunc(loconfscanner.Scanner(
-		4*time.Hour,
-		app.isProUser,
-		app.settings.GetLanguage,
-		&pastAnnouncements{app.settings}))
-
 	return true
 }
 

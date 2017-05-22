@@ -75,26 +75,6 @@ func (s *GeoLookup) Stop() {
 	log.Debugf("Stopped geolookup service")
 }
 
-// GetIP gets the IP. If the IP hasn't been determined yet, waits up to the
-// given timeout for an IP to become available.
-func (s *GeoLookup) GetIP(timeout time.Duration) string {
-	gi, ok := s.gi.Get(timeout)
-	if !ok || gi == nil {
-		return ""
-	}
-	return gi.(*GeoInfo).ip
-}
-
-// GetCountry gets the country. If the country hasn't been determined yet, waits
-// up to the given timeout for a country to become available.
-func (s *GeoLookup) GetCountry(timeout time.Duration) string {
-	gi, ok := s.gi.Get(timeout)
-	if !ok || gi == nil {
-		return ""
-	}
-	return gi.(*GeoInfo).city.Country.IsoCode
-}
-
 func (s *GeoLookup) Refresh() {
 	s.chRefreshRequest <- true
 }

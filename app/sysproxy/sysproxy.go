@@ -68,6 +68,8 @@ func (p *Sysproxy) Start() {
 	p.do(p.enable)
 }
 
+// Stop attempts to turn off Lantern as the system proxy and records
+// the success/failure as the sysproxy_off op.
 func (p *Sysproxy) Stop() {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -76,9 +78,12 @@ func (p *Sysproxy) Stop() {
 }
 
 // Clear clears the system proxy setting regardless if it was started by this
-// instance.
+// instance, and records its activity under the sysproxy_clear op instead of
+// the sysproxy_off op.
 func (p *Sysproxy) Clear() {
-	doSysproxyOff(p.proxyAddr)
+	op := ops.Begin("sysproxy_clear")
+	defer op.End()
+	op.FailIf(doSysproxyOffFor(p.proxyAddr))
 }
 
 func (p *Sysproxy) do(turnOn bool) {
@@ -129,11 +134,15 @@ func doSysproxyOn(addr string) {
 func doSysproxyOff(addr string) {
 	op := ops.Begin("sysproxy_off")
 	defer op.End()
+	op.FailIf(doSysproxyOffFor(addr))
+}
+
+func doSysproxyOffFor(addr string) error {
 	log.Debugf("Unsetting lantern as system proxy at: %v", addr)
 	err := sysproxy.Off(addr)
 	if err != nil {
-		op.FailIf(log.Errorf("Unable to unset lantern as system proxy: %v", err))
-		return
+		return log.Errorf("Unable to unset lantern as system proxy: %v", err)
 	}
 	log.Debug("Unset lantern as system proxy")
+	return nil
 }

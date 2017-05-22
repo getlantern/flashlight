@@ -2,8 +2,6 @@ package bandwidth
 
 import (
 	"fmt"
-	"net/url"
-	"runtime"
 	"strconv"
 	"sync"
 
@@ -98,17 +96,17 @@ func (s *notifyStatus) notifyPercent(percent int) {
 	title := s.percentMsg(i18n.T("BACKEND_DATA_PERCENT_TITLE"), percent)
 	msg := s.percentMsg(i18n.T("BACKEND_DATA_PERCENT_MESSAGE"), percent)
 
-	s.notifyFreeUser(title, msg)
+	s.notifyFreeUser(title, msg, "data-cap-"+strconv.Itoa(percent))
 }
 
 func (s *notifyStatus) notifyCapHit() {
 	title := i18n.T("BACKEND_DATA_TITLE")
 	msg := i18n.T("BACKEND_DATA_MESSAGE")
 
-	s.notifyFreeUser(title, msg)
+	s.notifyFreeUser(title, msg, "data-cap-100")
 }
 
-func (s *notifyStatus) notifyFreeUser(title, msg string) {
+func (s *notifyStatus) notifyFreeUser(title, msg, campaign string) {
 	if isPro, ok := s.proChecker(); !ok {
 		log.Debugf("user status is unknown, skip showing notification")
 		return
@@ -121,8 +119,8 @@ func (s *notifyStatus) notifyFreeUser(title, msg string) {
 	note := &notifier.Notification{
 		Title:    title,
 		Message:  msg,
-		ClickURL: "http://" + ui.GetUIAddr() + "?utm_source=" + runtime.GOOS + "&utm_medium=notification&utm_campaign=50-80-100&utm_content=" + url.QueryEscape(title+"-"+msg),
+		ClickURL: "http://" + ui.GetUIAddr(),
 		IconURL:  logo,
 	}
-	_ = notifier.Show(note)
+	_ = notifier.Show(note, campaign)
 }

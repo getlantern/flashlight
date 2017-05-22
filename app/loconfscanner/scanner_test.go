@@ -22,7 +22,6 @@ func TestWriteURL(t *testing.T) {
 		//log: golog.LoggerFor("loconfer"),
 		URL:         testURL,
 		Probability: 1.0,
-		Pro:         true,
 		Enabled:     true,
 	}
 	file, err := ioutil.TempFile(os.TempDir(), "urlfiletest")
@@ -38,31 +37,36 @@ func TestWriteURL(t *testing.T) {
 
 func TestParsing(t *testing.T) {
 	logger := golog.LoggerFor("loconfloop-test")
-	stop := Scanner(4*time.Hour,
+	s := New(4*time.Hour,
 		func() (bool, bool) {
 			return true, false
 		},
-		func() string { return "lang" },
 		nil,
-	)
-	stop()
-	stop = Scanner(4*time.Hour,
+	).(*loconfer)
+	s.Start()
+	s.Stop()
+
+	s = New(4*time.Hour,
 		func() (bool, bool) {
 			return true, true
 		},
-		func() string { return "lang" },
 		nil,
-	)
+	).(*loconfer)
+	s.Start()
 	logger.Debug("Stopping")
-	stop()
+	s.Stop()
 
 	loc := &loconfer{
-		log: golog.LoggerFor("loconfer"),
+		log:      golog.LoggerFor("loconfer"),
+		interval: time.Millisecond,
+		proChecker: func() (bool, bool) {
+			return true, true
+		},
 	}
 
-	loc.scan(4*time.Hour, func() (bool, bool) {
-		return true, true
-	}, func(lc *loconf.LoConf, isPro bool) {
-		logger.Debugf("lc %+v", lc)
-	})
+	loc.scan(
+		func(lc *loconf.LoConf, isPro bool) {
+			logger.Debugf("lc %+v", lc)
+		})
+	time.Sleep(1 * time.Second)
 }

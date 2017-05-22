@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/getlantern/errors"
@@ -25,10 +27,11 @@ var (
 
 // LoConf is a struct representing the locale-based configuration file data.
 type LoConf struct {
-	Surveys          map[string]*Survey          `json:"survey,omitempty"`
-	Announcements    map[string]json.RawMessage  `json:"announcement,omitempty"`
-	UninstallSurveys map[string]*UninstallSurvey `json:"uninstall-survey,omitempty"`
-	log              golog.Logger
+	Surveys              map[string]*Survey          `json:"survey,omitempty"`
+	Announcements        map[string]json.RawMessage  `json:"announcement,omitempty"`
+	UninstallSurveysPro  map[string]*UninstallSurvey `json:"uninstall-survey-pro,omitempty"`
+	UninstallSurveysFree map[string]*UninstallSurvey `json:"uninstall-survey-free,omitempty"`
+	log                  golog.Logger
 }
 
 // BaseSurvey contains the core elements of any survey type.
@@ -37,8 +40,6 @@ type BaseSurvey struct {
 	Probability float64 `json:"probability,omitempty"`
 	Campaign    string  `json:"campaign,omitempty"`
 	URL         string  `json:"url,omitempty"`
-	Pro         bool    `json:"pro,omitempty"`
-	Free        bool    `json:"free,omitempty"`
 }
 
 // UninstallSurvey contains all elements of uninstall surveys.
@@ -75,7 +76,7 @@ func get(hc *http.Client, isStaging bool, prodURL, stagingURL string) (*LoConf, 
 	if isStaging {
 		u = stagingURL
 	}
-	b, efetch := fetch(hc, u)
+	b, efetch := fetch(hc, bustCache(u))
 	if efetch != nil {
 		return nil, errors.Wrap(efetch)
 	}
@@ -84,6 +85,10 @@ func get(hc *http.Client, isStaging bool, prodURL, stagingURL string) (*LoConf, 
 		return nil, errors.Wrap(eparse)
 	}
 	return parsed, nil
+}
+
+func bustCache(u string) string {
+	return u + "?time=" + strconv.Itoa(time.Now().Nanosecond())
 }
 
 func fetch(hc *http.Client, u string) (b []byte, err error) {
@@ -113,21 +118,62 @@ func parse(buf []byte) (*LoConf, error) {
 		log.Errorf("Could not parse JSON %v", ejson)
 		return nil, errors.New("error parsing loconf section: %v", ejson)
 	}
+
+	// Normalize all keys to lowercase.
+	uFree := make(map[string]*UninstallSurvey)
+	for k, v := range obj.UninstallSurveysFree {
+		uFree[strings.ToLower(k)] = v
+	}
+	obj.UninstallSurveysFree = uFree
+
+	uPro := make(map[string]*UninstallSurvey)
+	for k, v := range obj.UninstallSurveysPro {
+		uPro[strings.ToLower(k)] = v
+	}
+	obj.UninstallSurveysPro = uPro
+
+	surveys := make(map[string]*Survey)
+	for k, v := range obj.Surveys {
+		surveys[strings.ToLower(k)] = v
+	}
+	obj.Surveys = surveys
+
+	ann := make(map[string]json.RawMessage)
+	for k, v := range obj.Announcements {
+		ann[strings.ToLower(k)] = v
+	}
+	obj.Announcements = ann
+
 	return &obj, nil
 }
 
 // GetSurvey returns the uninstall survey for the specified locale and
-// pro state, or an error if no match exists.
-func (lc *LoConf) GetSurvey(locale string) (*Survey, bool) {
-	val, ok := lc.Surveys[locale]
-	return val, ok
+// country or nil and false if no match exists.
+func (lc *LoConf) GetSurvey(locale, country string) *Survey {
+	if val, ok := lc.Surveys[strings.ToLower(country)]; ok && val != nil {
+		return val
+	}
+	val, _ := lc.Surveys[strings.ToLower(locale)]
+	return val
 }
 
 // GetUninstallSurvey returns the uninstall survey for the specified locale and
-// pro state, or an error if no match exists.
-func (lc *LoConf) GetUninstallSurvey(locale string) (*UninstallSurvey, bool) {
-	val, ok := lc.UninstallSurveys[locale]
-	return val, ok
+// country or nil and false if no match exists.
+func (lc *LoConf) GetUninstallSurvey(locale, country string, pro bool) *UninstallSurvey {
+	if pro {
+		return lc.getUninstallSurvey(lc.UninstallSurveysPro, locale, country)
+	}
+	return lc.getUninstallSurvey(lc.UninstallSurveysFree, locale, country)
+}
+
+// getUninstallSurvey returns the uninstall survey for the specified locale and
+// country or nil and false if no match exists.
+func (lc *LoConf) getUninstallSurvey(surveys map[string]*UninstallSurvey, locale, country string) *UninstallSurvey {
+	if val, ok := surveys[strings.ToLower(country)]; ok && val != nil {
+		return val
+	}
+	val, _ := surveys[strings.ToLower(locale)]
+	return val
 }
 
 // GetAnnouncement returns the announcement for the specified locale, pro, etc
@@ -136,7 +182,7 @@ func (lc *LoConf) GetAnnouncement(locale string, isPro bool) (*Announcement, err
 	if len(lc.Announcements) == 0 {
 		return nil, errors.New("no announcement section")
 	}
-	section, exist := lc.Announcements[locale]
+	section, exist := lc.Announcements[strings.ToLower(locale)]
 	if !exist {
 		defaultField, hasDefault := lc.Announcements["default"]
 		if !hasDefault {
@@ -149,7 +195,7 @@ func (lc *LoConf) GetAnnouncement(locale string, isPro bool) (*Announcement, err
 		if defaultLocale == "" {
 			return nil, ErrNoAvailable
 		}
-		if section, exist = lc.Announcements[defaultLocale]; !exist {
+		if section, exist = lc.Announcements[strings.ToLower(defaultLocale)]; !exist {
 			return nil, errors.New("no announcement for either %s or %s", locale, defaultLocale)
 		}
 		locale = defaultLocale

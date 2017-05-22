@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -168,7 +169,12 @@ func New(
 	} else {
 		c.isPrivateAddr = iptool.IsPrivate
 	}
-	c.initEasyList()
+	// TODO: turn it to a config option
+	if runtime.GOOS == "android" {
+		c.easylist = allowAllEasyList{}
+	} else {
+		c.initEasyList()
+	}
 
 	return c
 

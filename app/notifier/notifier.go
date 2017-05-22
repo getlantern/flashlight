@@ -1,15 +1,13 @@
 package notifier
 
 import (
+	"net/url"
+	"runtime"
 	"time"
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/notifier"
-)
-
-const (
-	notificationTimeout = 15 * time.Second
 )
 
 type Notification notify.Notification
@@ -20,14 +18,19 @@ type notifierRequest struct {
 }
 
 var (
-	log = golog.LoggerFor("flashlight.desktop.notifier")
+	log = golog.LoggerFor("flashlight.notifier")
+	ch  = make(chan notifierRequest)
 
-	ch chan notifierRequest = make(chan notifierRequest)
+	notificationTimeout = 15 * time.Second
 )
 
 // Show submits the notification to the notificationsLoop to show
 // and waits for the result.
-func Show(note *Notification) bool {
+func Show(note *Notification, campaign string) bool {
+	err := normalizeClickURL(note, campaign)
+	if err != nil {
+		return false
+	}
 	chResult := make(chan bool)
 	ch <- notifierRequest{
 		(*notify.Notification)(note),
@@ -35,7 +38,24 @@ func Show(note *Notification) bool {
 	}
 
 	return <-chResult
+}
 
+func normalizeClickURL(note *Notification, campaign string) error {
+	u, err := url.Parse(note.ClickURL)
+	if err != nil {
+		log.Errorf("Could not parse click URL: %v", err)
+		return err
+	}
+
+	q := u.Query()
+	q.Set("utm_source", runtime.GOOS)
+	q.Set("utm_medium", "notification")
+	q.Set("utm_campaign", campaign)
+	q.Set("utm_content", note.Title+"-"+note.Message)
+	u.RawQuery = q.Encode()
+
+	note.ClickURL = u.String()
+	return nil
 }
 
 // Start starts a goroutine to show the desktop notifications

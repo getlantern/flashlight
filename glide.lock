@@ -1,5 +1,5 @@
 hash: 7f4e9dbab945a57f1c93bbd0bc394b57e659ce9ce6727621fa4bd5348ef78a5c
-updated: 2017-05-10T16:21:56.238638618-07:00
+updated: 2017-05-12T12:40:33.8903347-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a6aba3a6314be3a8ef518d5d4269a8459af9c789
@@ -56,7 +56,7 @@ imports:
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda
-  version: 15cc49b4d459c28f0a79aa46abdcb48e0cf75d7b
+  version: 2d6dc11d00a7e1867dbf0623bdc98da7e29bcc4f
   subpackages:
   - client
 - name: github.com/getlantern/buuid
@@ -205,7 +205,7 @@ imports:
 - name: github.com/getlantern/proxy
   version: 1130e137f623dde1d349c7083b806822ba04f7f9
 - name: github.com/getlantern/proxybench
-  version: f833165653178d8eccb86aa4d2fd794af5048d95
+  version: a39accd0458fb4ef37a51dbac02422be47a4c30d
 - name: github.com/getlantern/redis
   version: 54bdaa768b91d5b3fb4ef99b4e186aefcae9ec79
 - name: github.com/getlantern/rot13
@@ -219,7 +219,7 @@ imports:
 - name: github.com/getlantern/stack
   version: 02f928aad224fbccd50d66edd776fc9d1e9f2f2b
 - name: github.com/getlantern/sysproxy
-  version: 0d64245fcb63e0d65c5844fa8e17c57d53469f59
+  version: eaf903f586f11454b05518fc77b1b478448be9a2
 - name: github.com/getlantern/systray
   version: 0068f6ae40ea39bfd683043e8452024097fff0e4
 - name: github.com/getlantern/tarfs
@@ -249,7 +249,7 @@ imports:
 - name: github.com/getlantern/yaml
   version: 97d86b60f57eeca9d70c02763ed2565bafc17585
 - name: github.com/getlantern/zenodb
-  version: e4847466e49009e031ac71d575fbd96266bf3926
+  version: 769e4d90a0dfd30802cd1e98fa294d769d765f2f
   subpackages:
   - bytetree
   - common
@@ -270,7 +270,7 @@ imports:
   subpackages:
   - gomock
 - name: github.com/golang/protobuf
-  version: b50ceb1fa9818fa4d78b016c2d4ae025593a7ce3
+  version: fec3b39b059c0f88fa6b20f5ed012b1aa203a8b4
   subpackages:
   - proto
   - ptypes/any
@@ -352,7 +352,7 @@ imports:
 - name: github.com/Shopify/sarama
   version: 0fb560e5f7fbcaee2f75e3c34174320709f69944
 - name: github.com/Sirupsen/logrus
-  version: 5b60b3d3ee017ed00bcd0225fcca7acab767844b
+  version: acfabf31db8f45a9174f54a0d48ea4d15627af4d
 - name: github.com/skratchdot/open-golang
   version: 75fb7ed4208cf72d323d7d02fd1a5964a7a9073c
   subpackages:
@@ -366,7 +366,7 @@ imports:
   subpackages:
   - uaparser
 - name: github.com/stripe/stripe-go
-  version: dae3028901626f0e6cb17149bd977c706a480c67
+  version: 339ff3ba4d4b26f9179e31f958d8f68c5fd07b43
   subpackages:
   - orderitem
   - token
@@ -398,7 +398,7 @@ imports:
 - name: github.com/Yawning/chacha20
   version: 2524561b8ee24c13b0aa1526d827571ab3061eac
 - name: golang.org/x/crypto
-  version: 122d919ec1efcfb58483215da23f815853e24b81
+  version: ab89591268e0c8b748cbe4047b00197516011af5
   subpackages:
   - chacha20poly1305
   - chacha20poly1305/internal/chacha20
@@ -430,14 +430,14 @@ imports:
   - google
   - jwt
 - name: golang.org/x/sys
-  version: 9ccfe848b9db8435a24c424abbc07a921adf1df5
+  version: f845067cf72a21fb4929b0e6a35273bd83b56396
   repo: https://github.com/golang/sys
   vcs: git
   subpackages:
   - unix
   - windows
 - name: golang.org/x/text
-  version: 470f45bf29f4147d6fbd7dfd0a02a848e49f5bf4
+  version: 19e51611da83d6be54ddafce4a4af510cb3e9ea4
   subpackages:
   - encoding
   - encoding/charmap
@@ -462,7 +462,7 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: 4013f8d559720d4d0087cca0a3f18e0fdf25093d
+  version: a0c3e72252b6fbf4826bb143e450eb05588a9d6d
   subpackages:
   - codes
   - credentials

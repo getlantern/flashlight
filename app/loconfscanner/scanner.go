@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/getlantern/golog"
@@ -11,14 +12,33 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/loconf"
+	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/flashlight/ui"
 
 	"github.com/getlantern/flashlight/app/notifier"
 )
 
+var serviceType service.Type = "flashlight.desktop.loconfscanner"
+
 type PastAnnouncements interface {
 	Get() []string
 	Add(string)
+}
+
+type ConfigOpts struct {
+	Lang    string
+	Country string
+}
+
+func (c *ConfigOpts) For() service.Type {
+	return serviceType
+}
+
+func (c *ConfigOpts) Complete() string {
+	if c.Lang == "" {
+		return "missing Lang"
+	}
+	return ""
 }
 
 // Scanner starts a goroutine to periodically check for new loconf files.
@@ -32,68 +52,78 @@ type PastAnnouncements interface {
 // show the announcement or not).
 //
 // Returns a function to stop the loop.
-func Scanner(interval time.Duration,
-	proChecker func() (bool, bool),
-	lang func() string,
-	past PastAnnouncements,
-) (stop func()) {
-	loc := &loconfer{
-		log:  golog.LoggerFor("loconfer"),
-		r:    rand.New(rand.NewSource(time.Now().UnixNano())),
-		lang: lang,
-		past: past,
-	}
-	return loc.scan(interval, proChecker, loc.onLoconf)
+
+type loconfer struct {
+	log        golog.Logger
+	r          *rand.Rand
+	proChecker func() (bool, bool)
+	past       PastAnnouncements
+	interval   time.Duration
+	chStop     chan bool
+
+	mu   sync.RWMutex
+	opts ConfigOpts
 }
 
-func (loc *loconfer) scan(interval time.Duration, proChecker func() (bool, bool), onLoconf func(*loconf.LoConf, bool)) (stop func()) {
-	chStop := make(chan bool)
-	t := time.NewTicker(interval)
-	isStaging := common.Staging
+func New(
+	interval time.Duration,
+	proChecker func() (bool, bool),
+	past PastAnnouncements,
+) service.Impl {
+	return &loconfer{
+		log:        golog.LoggerFor("loconfer"),
+		r:          rand.New(rand.NewSource(time.Now().UnixNano())),
+		past:       past,
+		interval:   interval,
+		proChecker: proChecker,
+	}
+}
+
+func (loc *loconfer) GetType() service.Type {
+	return serviceType
+}
+
+func (loc *loconfer) Configure(opts service.ConfigOpts) {
+	loc.mu.Lock()
+	defer loc.mu.Unlock()
+	loc.opts = *opts.(*ConfigOpts)
+}
+
+func (loc *loconfer) Start() {
+	loc.chStop = make(chan bool)
+	loc.scan(loc.onLoconf)
+}
+func (loc *loconfer) scan(onLoconf func(*loconf.LoConf, bool)) {
+	t := time.NewTicker(loc.interval)
 	checker := func() {
-		lc, err := loconf.Get(http.DefaultClient, isStaging)
+		lc, err := loconf.Get(http.DefaultClient, common.Staging)
 		if err != nil {
 			loc.log.Error(err)
 			return
 		}
-		isPro, ok := proChecker()
+		isPro, ok := loc.proChecker()
 		if !ok {
 			loc.log.Debugf("Skip checking announcement as user status is unknown")
 			return
 		}
-		onLoconf(lc, isPro)
+		loc.onLoconf(lc, isPro)
 	}
 	go func() {
 		for {
 			checker()
 			select {
 			case <-t.C:
-			case <-chStop:
+			case <-loc.chStop:
 				t.Stop()
 				return
 			}
 		}
 	}()
-
-	return func() {
-		chStop <- true
-	}
 }
 
-func in(s string, coll []string) bool {
-	for _, v := range coll {
-		if s == v {
-			return true
-		}
-	}
-	return false
-}
-
-type loconfer struct {
-	log  golog.Logger
-	r    *rand.Rand
-	lang func() string
-	past PastAnnouncements
+func (loc *loconfer) Stop() {
+	close(loc.chStop)
+	loc.chStop = nil
 }
 
 func (loc *loconfer) onLoconf(lc *loconf.LoConf, isPro bool) {
@@ -107,8 +137,11 @@ func (loc *loconfer) setUninstallURL(lc *loconf.LoConf, isPro bool) {
 		loc.log.Errorf("Could not get config path? %v", err)
 		return
 	}
-	survey, ok := lc.GetUninstallSurvey(loc.lang())
-	if !ok {
+	loc.mu.RLock()
+	lang, country := loc.opts.Lang, loc.opts.Country
+	loc.mu.RUnlock()
+	survey := lc.GetUninstallSurvey(lang, country, isPro)
+	if survey == nil {
 		loc.log.Debugf("No available uninstall survey")
 		return
 	}
@@ -117,7 +150,7 @@ func (loc *loconfer) setUninstallURL(lc *loconf.LoConf, isPro bool) {
 
 func (loc *loconfer) writeURL(path string, survey *loconf.UninstallSurvey, isPro bool) {
 	var url string
-	if survey.Enabled && (isPro && survey.Pro || !isPro && survey.Free) {
+	if survey.Enabled {
 		if survey.Probability > loc.r.Float64() {
 			loc.log.Debugf("Enabling survey at URL %v", survey.URL)
 			url = survey.URL
@@ -139,7 +172,10 @@ func (loc *loconfer) writeURL(path string, survey *loconf.UninstallSurvey, isPro
 }
 
 func (loc *loconfer) makeAnnouncements(lc *loconf.LoConf, isPro bool) {
-	current, err := lc.GetAnnouncement(loc.lang(), isPro)
+	loc.mu.RLock()
+	lang := loc.opts.Lang
+	loc.mu.RUnlock()
+	current, err := lc.GetAnnouncement(lang, isPro)
 	if err != nil {
 		if err == loconf.ErrNoAvailable {
 			loc.log.Debugf("No available announcement")
@@ -165,5 +201,14 @@ func (loc *loconfer) showAnnouncement(a *loconf.Announcement) bool {
 		ClickURL: a.URL,
 		IconURL:  logo,
 	}
-	return notifier.Show(note)
+	return notifier.Show(note, "global-announcement")
+}
+
+func in(s string, coll []string) bool {
+	for _, v := range coll {
+		if s == v {
+			return true
+		}
+	}
+	return false
 }
