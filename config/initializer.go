@@ -33,8 +33,9 @@ const (
 	proxiesYAMLStaging = "proxies-staging.yaml"
 )
 
-func DefaultConfigOpts() *ConfigOpts {
+func DefaultConfigOpts(saveDir string) *ConfigOpts {
 	opts := &ConfigOpts{
+		SaveDir:   saveDir,
 		Obfuscate: true,
 		Global: FetchOpts{
 			FileName:     globalYAML,

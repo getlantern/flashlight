@@ -127,8 +127,8 @@ func (r *Registry) Sub(t Type, cb func(m interface{})) {
 
 func (r *Registry) publish(t Type, msg interface{}) {
 	r.muChannels.RLock()
+	defer r.muChannels.RUnlock()
 	channels := r.channels[t]
-	r.muChannels.RUnlock()
 	log.Tracef("Publishing message to %d subscribers of %v", len(channels), t)
 	for _, ch := range channels {
 		select {
@@ -202,9 +202,9 @@ func (r *Registry) stopServices() {
 
 func (r *Registry) closeChannels() {
 	r.muChannels.Lock()
+	defer r.muChannels.Unlock()
 	allChannels := r.channels
 	r.channels = make(map[Type][]chan interface{})
-	r.muChannels.Unlock()
 	for _, channels := range allChannels {
 		for _, ch := range channels {
 			close(ch)

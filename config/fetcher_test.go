@@ -5,6 +5,7 @@ import (
 	"net/http/httputil"
 	"testing"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -32,7 +33,11 @@ func TestFetchProxies(t *testing.T) {
 // testFetch actually fetches a config file over the network.
 func testFetch(t *testing.T, useLanternEtag bool, chained string, fronted string) {
 	rt := dumpRequestRT{&http.Transport{}, t}
-	cf := newFetcher(rt, useLanternEtag, "id", "token", chained, fronted)
+	cf := newFetcher(rt, useLanternEtag,
+		common.WrapUserConfig(
+			func() int64 { return 1 },
+			func() string { return "token" },
+		), chained, fronted)
 
 	bytes, err := cf.fetch()
 	assert.Nil(t, err)

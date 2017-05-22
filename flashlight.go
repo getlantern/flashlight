@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/getlantern/appdir"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/geolookup"
 	fops "github.com/getlantern/flashlight/ops"
@@ -72,7 +71,7 @@ func Run(
 	waitForStart(op, elapsed, afterStart)
 	service.MustRegister(borda.New(FullyReportedOps), &borda.ConfigOpts{})
 
-	registerConfigService(flagsAsMap)
+	registerConfigService(flagsAsMap, userConfig)
 	service.Sub(config.ServiceType, func(msg interface{}) {
 		switch c := msg.(type) {
 		case config.Proxies:
@@ -91,7 +90,8 @@ func Run(
 			if err != nil {
 				log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
 			} else if c.Client != nil {
-				fronted.Configure(certs, c.Client.MasqueradeSets, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
+				cacheFile := filepath.Join(flagsAsMap["configdir"].(string), "masquerade_cache")
+				fronted.Configure(certs, c.Client.MasqueradeSets, cacheFile)
 			}
 		}
 	})
@@ -134,32 +134,29 @@ func waitForStart(op *fops.Op, elapsed func() time.Duration, afterStart func()) 
 	})
 }
 
-func registerConfigService(flagsAsMap map[string]interface{}) {
-	opts := config.DefaultConfigOpts()
-	if v, ok := flagsAsMap["cloudconfig"].(string); ok {
+func registerConfigService(flagsAsMap map[string]interface{}, userConfig common.UserConfig) {
+	opts := config.DefaultConfigOpts(flagsAsMap["configdir"].(string))
+	if v, _ := flagsAsMap["cloudconfig"].(string); v != "" {
 		opts.Proxies.ChainedURL = v
 	}
-	if v, ok := flagsAsMap["frontedconfig"].(string); ok {
+	if v, _ := flagsAsMap["frontedconfig"].(string); v != "" {
 		opts.Proxies.FrontedURL = v
 	}
-	if v, ok := flagsAsMap["stickyconfig"].(bool); ok {
+	if v, _ := flagsAsMap["stickyconfig"].(bool); v {
 		opts.Sticky = v
 	}
-	if v, ok := flagsAsMap["readableconfig"].(bool); ok {
+	if v, _ := flagsAsMap["readableconfig"].(bool); v {
 		opts.Obfuscate = !v
 	}
-	opts.SaveDir = appdir.General("Lantern")
-	if v, ok := flagsAsMap["configdir"].(string); ok {
-		opts.SaveDir = v
-	}
 	opts.OverrideGlobal = func(gl *config.Global) {
-		if v, ok := flagsAsMap["borda-report-interval"].(time.Duration); ok {
+		if v, _ := flagsAsMap["borda-report-interval"].(time.Duration); v > 0 {
 			gl.BordaReportInterval = v
 		}
-		if v, ok := flagsAsMap["borda-sample-percentage"].(float64); ok {
+		if v, _ := flagsAsMap["borda-sample-percentage"].(float64); v > 0 {
 			gl.BordaSamplePercentage = v
 		}
 	}
+	opts.UserConfig = userConfig
 	service.MustRegister(config.New(opts), nil)
 }
 

@@ -43,12 +43,12 @@ type Sysproxy struct {
 }
 
 func New(proxyAddr string) *Sysproxy {
-	p := &Sysproxy{proxyAddr: proxyAddr}
 	err := setUpSysproxyTool()
 	if err != nil {
 		log.Error(err) // report once and do nothing else
 	}
-	return p
+	log.Debugf("Create sysproxy service with proxy address %v", proxyAddr)
+	return &Sysproxy{proxyAddr: proxyAddr}
 }
 
 func (p *Sysproxy) GetType() service.Type {
@@ -85,7 +85,7 @@ func (p *Sysproxy) do(turnOn bool) {
 	if turnOn && !p.on {
 		doSysproxyOn(p.proxyAddr)
 		p.on = true
-	} else if p.on {
+	} else if !turnOn && p.on {
 		doSysproxyOff(p.proxyAddr)
 		p.on = false
 	}

@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config/generated"
 	"github.com/getlantern/fronted"
 )
@@ -131,10 +132,14 @@ func TestPoll(t *testing.T) {
 	p.wg.Add(4)
 	proxiesFile := "./fetched-proxies.yaml"
 	globalFile := "./fetched-global.yaml"
-	opts := DefaultConfigOpts()
+	opts := DefaultConfigOpts(".")
+	opts.UserConfig = common.WrapUserConfig(
+		func() int64 { return 1 },
+		func() string { return "token" },
+	)
 	opts.Proxies.FileName = proxiesFile
 	opts.Global.FileName = globalFile
-	c := &config{opts: opts}
+	c := New(opts).(*config)
 	c.SetPublisher(p)
 
 	start := time.Now()

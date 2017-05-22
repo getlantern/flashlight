@@ -15,6 +15,7 @@ import (
 	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/service"
@@ -32,12 +33,9 @@ type ConfigOpts struct {
 	SaveDir string
 	// Obfuscate specifies whether or not to obfuscate the config on disk.
 	Obfuscate bool
-	// UserID specifies the user ID header to send to when fetching config.
-	UserID string
-	// Token specifies the token header to send to when fetching config.
-	Token string
 	// Sticky specifies whether or not fetch config. If true, don't fetch.
-	Sticky bool
+	Sticky     bool
+	UserConfig common.UserConfig
 	// OverrideGlobal, if supplied, alters the global config before publishing
 	// it.
 	OverrideGlobal func(*Global)
@@ -47,13 +45,12 @@ type ConfigOpts struct {
 	Proxies FetchOpts
 }
 
-func (o *ConfigOpts) For() service.Type {
-	return ServiceType
-}
-
 func (o *ConfigOpts) Complete() string {
 	if o.SaveDir == "" {
 		return "missing SaveDir"
+	}
+	if o.UserConfig == nil {
+		return "missing UserConfig"
 	}
 	if e := o.Global.Complete(); e != "" {
 		return "Global " + e
@@ -127,6 +124,10 @@ type config struct {
 }
 
 func New(opts *ConfigOpts) service.Impl {
+	reason := opts.Complete()
+	if reason != "" {
+		panic(fmt.Sprintf("Invalid config options: %s", reason))
+	}
 	return &config{opts: opts}
 }
 
@@ -239,8 +240,7 @@ func (c *config) embedded(opts *FetchOpts) (interface{}, error) {
 func (c *config) poll(opts *FetchOpts) {
 	fetcher := newFetcher(proxied.ParallelPreferChained(),
 		opts.useLanternEtag,
-		c.opts.UserID,
-		c.opts.Token,
+		c.opts.UserConfig,
 		opts.ChainedURL,
 		opts.FrontedURL)
 

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strconv"
 
 	"github.com/getlantern/detour"
 
@@ -24,8 +25,7 @@ type Fetcher interface {
 type fetcher struct {
 	lastCloudConfigETag map[string]string
 	useLanternEtag      bool
-	userID              string
-	token               string
+	userConfig          common.UserConfig
 	rt                  http.RoundTripper
 	chainedURL          string
 	frontedURL          string
@@ -36,8 +36,7 @@ type fetcher struct {
 // origin server, otherwise the CDN decides if the content is changed.
 func newFetcher(rt http.RoundTripper,
 	useLanternEtag bool,
-	userID string,
-	token string,
+	userConfig common.UserConfig,
 	chainedURL string,
 	frontedURL string) Fetcher {
 	log.Debugf("Will poll for config at %v (%v)", chainedURL, frontedURL)
@@ -52,8 +51,7 @@ func newFetcher(rt http.RoundTripper,
 	return &fetcher{
 		lastCloudConfigETag: map[string]string{},
 		useLanternEtag:      useLanternEtag,
-		userID:              userID,
-		token:               token,
+		userConfig:          userConfig,
 		rt:                  rt,
 		chainedURL:          chainedURL,
 		frontedURL:          frontedURL,
@@ -130,8 +128,9 @@ func (cf *fetcher) prepareRequest(req *http.Request) {
 	req.Header.Set("Cache-Control", "no-cache")
 	// Set the fronted URL to lookup the config in parallel using chained and domain fronted servers.
 	proxied.PrepareForFronting(req, cf.frontedURL)
-	req.Header.Set(common.UserIdHeader, cf.userID)
-	req.Header.Set(common.ProTokenHeader, cf.token)
+	userID := strconv.FormatInt(cf.userConfig.GetUserID(), 10)
+	req.Header.Set(common.UserIdHeader, userID)
+	req.Header.Set(common.ProTokenHeader, cf.userConfig.GetToken())
 
 	// make sure to close the connection after reading the Body
 	// this prevents the occasional EOFs errors we're seeing with
