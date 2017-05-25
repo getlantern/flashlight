@@ -171,7 +171,6 @@ func (app *App) Run() error {
 		app.flags,
 		app.beforeStart,
 		app.afterStart,
-		app.Exit,
 		app.settings.GetDeviceID())
 	if err != nil {
 		app.Exit(err)

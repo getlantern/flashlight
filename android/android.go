@@ -162,7 +162,6 @@ func Start(configDir string, locale string,
 			func() {
 				afterStart(user)
 			}, // afterStart()
-			func(err error) {}, // onError
 			deviceID,
 		)
 

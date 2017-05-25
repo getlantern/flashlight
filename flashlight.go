@@ -49,7 +49,6 @@ func Run(
 	flagsAsMap map[string]interface{},
 	beforeStart func() bool,
 	afterStart func(),
-	onError func(err error),
 	deviceID string) error {
 
 	elapsed := mtime.Stopwatch()
