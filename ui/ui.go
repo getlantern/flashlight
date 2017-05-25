@@ -46,7 +46,7 @@ func attachHandlers(s *server, allowRemote bool) {
 		// If we're allowing remote, we're in practice not showing the UI on this
 		// typically headless system, so don't allow triggering of the UI.
 		if !allowRemote {
-			s.show("existing", "", "lantern")
+			s.show("existing", "lantern")
 		}
 		resp.WriteHeader(http.StatusOK)
 	}
@@ -97,8 +97,8 @@ func GetUIAddr() string {
 // to this method. It may not be reading yet, but since we're the only
 // ones reading from those incoming sockets the fact that reading starts
 // asynchronously is not a problem.
-func Show(campaign, content, medium string) {
-	serve.show(campaign, content, medium)
+func Show(campaign, medium string) {
+	serve.show(campaign, medium)
 }
 
 // AddToken adds the UI domain and custom request token to the specified

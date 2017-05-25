@@ -122,7 +122,7 @@ func (s *server) start() error {
 // to this method. It may not be reading yet, but since we're the only
 // ones reading from those incoming sockets the fact that reading starts
 // asynchronously is not a problem.
-func (s *server) show(campaign, content, medium string) {
+func (s *server) show(campaign, medium string) {
 	open := func(u string, t time.Duration) {
 		go func() {
 			time.Sleep(t)
@@ -132,7 +132,7 @@ func (s *server) show(campaign, content, medium string) {
 			}
 		}()
 	}
-	s.doShow(campaign, content, medium, open)
+	s.doShow(campaign, medium, open)
 }
 
 // doShow opens the UI in a browser. Note we know the UI server is
@@ -140,9 +140,9 @@ func (s *server) show(campaign, content, medium string) {
 // to this method. It may not be reading yet, but since we're the only
 // ones reading from those incoming sockets the fact that reading starts
 // asynchronously is not a problem.
-func (s *server) doShow(campaign, content, medium string, open func(string, time.Duration)) {
+func (s *server) doShow(campaign, medium string, open func(string, time.Duration)) {
 	tempURL := fmt.Sprintf("http://%s/", s.accessAddr)
-	campaignURL, err := analytics.AddCampaign(tempURL, campaign, content, medium)
+	campaignURL, err := analytics.AddCampaign(tempURL, campaign, "", medium)
 	var uiURL string
 	if err != nil {
 		uiURL = tempURL
