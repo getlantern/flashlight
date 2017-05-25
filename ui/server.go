@@ -141,7 +141,7 @@ func (s *server) show(campaign, content, medium string) {
 // ones reading from those incoming sockets the fact that reading starts
 // asynchronously is not a problem.
 func (s *server) doShow(campaign, content, medium string, open func(string, time.Duration)) {
-	tempURL := fmt.Sprintf("http://%s/?1", s.accessAddr)
+	tempURL := fmt.Sprintf("http://%s/", s.accessAddr)
 	campaignURL, err := analytics.AddCampaign(tempURL, campaign, content, medium)
 	var uiURL string
 	if err != nil {
