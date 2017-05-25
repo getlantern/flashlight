@@ -67,10 +67,8 @@ var (
 )
 
 type ConfigOpts struct {
-	HTTPProxyAddr   string
-	Socks5ProxyAddr string
-	GeoCountry      string
-	Proxies         map[string]*chained.ChainedServerInfo
+	GeoCountry string
+	Proxies    map[string]*chained.ChainedServerInfo
 }
 
 func (o *ConfigOpts) For() service.Type {
@@ -78,12 +76,6 @@ func (o *ConfigOpts) For() service.Type {
 }
 
 func (o *ConfigOpts) Complete() string {
-	if o.HTTPProxyAddr == "" {
-		return "missing HTTPProxyAddr"
-	}
-	if o.Socks5ProxyAddr == "" {
-		return "missing Socks5ProxyAddr"
-	}
 	if len(o.Proxies) == 0 {
 		return "missing Proxies"
 	}
@@ -141,6 +133,8 @@ type Client struct {
 }
 
 func New(
+	httpProxyAddr string,
+	socks5ProxyAddr string,
 	deviceID string,
 	allowPrivateHosts bool,
 	settings common.Settings,
@@ -149,6 +143,8 @@ func New(
 ) *Client {
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
 	c := &Client{
+		httpProxyAddr:     httpProxyAddr,
+		socks5ProxyAddr:   socks5ProxyAddr,
 		bal:               balancer.New(),
 		rewriteToHTTPS:    httpseverywhere.Default(),
 		chStop:            make(chan bool),
@@ -194,8 +190,6 @@ func (c *Client) Configure(opts service.ConfigOpts) {
 		c.geoCountry = o.GeoCountry
 		c.sc.Configure(c.geoCountry)
 	}
-	c.httpProxyAddr = o.HTTPProxyAddr
-	c.socks5ProxyAddr = o.Socks5ProxyAddr
 	err := c.resetBalancer(o.Proxies, c.deviceID)
 	if err != nil {
 		log.Error(err)

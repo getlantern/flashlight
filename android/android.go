@@ -110,9 +110,11 @@ type Updater autoupdate.Updater
 // start to use it, even as it finishes its initialization sequence. However,
 // initial activity may be slow, so clients with low read timeouts may
 // time out.
-func Start(configDir string, locale string,
+func Start(configDir string,
+	locale string,
 	stickyConfig bool,
-	timeoutMillis int, user UserConfig) (*StartResult, error) {
+	timeoutMillis int,
+	user UserConfig) (*StartResult, error) {
 
 	startOnce.Do(func() {
 		user.SetStaging(common.Staging)
@@ -157,14 +159,16 @@ func Start(configDir string, locale string,
 			})
 		}
 
-		flashlight.Run(
+		flashlight.ComposeServices(
 			"127.0.0.1:0", // listen for HTTP on random address
 			"127.0.0.1:0", // listen for SOCKS on random address
 			deviceID,
+			true, // allow private hosts on mobile
 			common.WrapSettings(
 				common.Not(user.ProxyAll),    // UseShortcut
-				func() bool { return false }, // UseDetour
-				func() bool { return true },  // IsAutoReport
+				func() bool { return false }, // not use detour on mobile
+				// TODO: set auto report from android UI
+				func() bool { return true }, // always auto report
 			),
 			user, //common.UserConfig
 			statsTracker{},
@@ -172,11 +176,8 @@ func Start(configDir string, locale string,
 			afterStart,
 		)
 
-		service.StartAll()
-
-		// TODO: fix CI by subscribing before starting the client, i.e., break
-		// flashlight.Run into pieces
 		ch := service.SubCh(client.ServiceType)
+		service.StartAll()
 		var wg sync.WaitGroup
 		wg.Add(2)
 		go func() {

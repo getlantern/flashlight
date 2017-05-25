@@ -90,7 +90,6 @@ func NewApp(flags map[string]interface{}) *App {
 		chExitFuncs:  make(chan exitFunc, 50),
 		statsTracker: &stats.Tracker{},
 	}
-	golog.OnFatal(app.exitOnFatal)
 	app.flags["staging"] = common.Staging
 	configdir := app.flags["configdir"].(string)
 	if configdir == "" {
@@ -124,14 +123,12 @@ func (app *App) LogPanicAndExit(msg interface{}) {
 	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
 }
 
-func (app *App) exitOnFatal(err error) {
-	_ = logging.Close()
-	app.Exit(nil)
-}
-
 // Run starts the app. It will block until the app exits.
 func (app *App) Run() error {
-	golog.OnFatal(app.exitOnFatal)
+	golog.OnFatal(func(err error) {
+		_ = logging.Close()
+		app.Exit(nil)
+	})
 	app.AddExitFunc(recordStopped)
 
 	listenAddr := app.flags["addr"].(string)
@@ -158,10 +155,11 @@ func (app *App) Run() error {
 	app.startProfiling()
 	app.startUIServices()
 
-	err := flashlight.Run(
+	flashlight.ComposeServices(
 		listenAddr,
 		socksAddr,
 		app.settings.GetDeviceID(),
+		false, // do not allow private hosts on desktop
 		common.WrapSettings(
 			common.Not(app.settings.GetProxyAll), // UseShortcut
 			common.Not(app.settings.GetProxyAll), // UseDetour
@@ -170,15 +168,15 @@ func (app *App) Run() error {
 		app.settings, // common.UserConfig
 		app.statsTracker,
 		app.flags,
-		app.afterStart)
-	if err != nil {
-		app.Exit(err)
-	}
-	app.beforeStart()
+		app.afterStart,
+	)
+
+	app.composeRestServices()
+	service.StartAll()
 	return app.waitForExit()
 }
 
-func (app *App) beforeStart() bool {
+func (app *App) composeRestServices() {
 	log.Debug("Before start")
 	service.Sub(config.ServiceType, func(msg interface{}) {
 		switch c := msg.(type) {
@@ -192,16 +190,13 @@ func (app *App) beforeStart() bool {
 		loconfscanner.New(4*time.Hour, app.isProUser, &pastAnnouncements{app.settings}),
 		&loconfscanner.ConfigOpts{Lang: app.settings.GetLanguage()})
 	service.Sub(geolookup.ServiceType, func(m interface{}) {
-		info := m.(*geolookup.GeoInfo)
-		ip, country := info.GetIP(), info.GetCountry()
+		country := m.(*geolookup.GeoInfo).GetCountry()
 		service.MustConfigure(location.ServiceType, func(opts service.ConfigOpts) {
 			opts.(*location.ConfigOpts).Code = country
 		})
 		service.MustConfigure(loconfscanner.ServiceType, func(opts service.ConfigOpts) {
 			opts.(*loconfscanner.ConfigOpts).Country = country
 		})
-		ops.SetGlobal("geo_country", country)
-		ops.SetGlobal("client_ip", ip)
 	})
 
 	service.Sub(client.ServiceType, func(m interface{}) {
@@ -226,11 +221,7 @@ func (app *App) beforeStart() bool {
 			app.settings.SetString(settings.SNSOCKSAddr, msg.Addr)
 		}
 	})
-
-	service.StartAll()
-
 	app.AddExitFunc(notifier.Start())
-	return true
 }
 
 func (app *App) startUIServices() {

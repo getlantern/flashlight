@@ -39,36 +39,41 @@ var (
 	FullyReportedOps = []string{"client_started", "client_stopped", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "sysproxy_clear", "report_issue"}
 )
 
-// Run runs a client proxy. It blocks as long as the proxy is running.
-func Run(
+// ComposeServices register and subscribe the common services used by both
+// desktop and mobile. It panics when any error happens.
+//
+// Note: Lantern client has the freedom to listen on a HTTP/SOCKS5 proxy
+// address different from what passed in. Caller should subscribe to client to
+// receive the final addresses.
+func ComposeServices(
 	httpProxyAddr string,
 	socks5ProxyAddr string,
 	deviceID string,
+	allowPrivateHosts bool,
 	settings common.Settings,
 	userConfig common.UserConfig,
 	statsTracker common.StatsTracker,
 	flagsAsMap map[string]interface{},
 	afterStart func(),
-) error {
+) {
 
 	elapsed := mtime.Stopwatch()
 	displayVersion()
-	initContext(deviceID, common.Version, common.RevisionDate)
+	initContext(deviceID)
 	op := fops.Begin("client_started")
 
 	service.MustRegister(client.New(
+		httpProxyAddr,
+		socks5ProxyAddr,
 		deviceID,
-		false, // on desktop, we do not allow private hosts
+		allowPrivateHosts,
 		settings,
 		userConfig,
 		statsTracker),
-		&client.ConfigOpts{
-			HTTPProxyAddr:   httpProxyAddr,
-			Socks5ProxyAddr: socks5ProxyAddr,
-		})
+		&client.ConfigOpts{})
 
-	service.MustRegister(borda.New(FullyReportedOps), &borda.ConfigOpts{})
 	registerConfigService(flagsAsMap, userConfig)
+	service.MustRegister(borda.New(FullyReportedOps), &borda.ConfigOpts{})
 	service.Sub(config.ServiceType, func(msg interface{}) {
 		switch c := msg.(type) {
 		case config.Proxies:
@@ -92,12 +97,18 @@ func Run(
 			}
 		}
 	})
+
 	service.MustRegister(geolookup.New(), nil)
 	service.Sub(geolookup.ServiceType, func(m interface{}) {
+		info := m.(*geolookup.GeoInfo)
+		ip, country := info.GetIP(), info.GetCountry()
+		ops.SetGlobal("geo_country", country)
+		ops.SetGlobal("client_ip", ip)
 		service.Configure(client.ServiceType, func(opts service.ConfigOpts) {
-			opts.(*client.ConfigOpts).GeoCountry = m.(*geolookup.GeoInfo).GetCountry()
+			opts.(*client.ConfigOpts).GeoCountry = country
 		})
 	})
+
 	service.Sub(client.ServiceType, func(m interface{}) {
 		msg := m.(client.Message)
 		if msg.ProxyType == client.HTTPProxy {
@@ -123,7 +134,6 @@ func Run(
 			afterStart()
 		}
 	})
-	return nil
 }
 
 func registerConfigService(flagsAsMap map[string]interface{}, userConfig common.UserConfig) {
@@ -168,16 +178,15 @@ func displayVersion() {
 	log.Debugf("---- flashlight version: %s, release: %s, build revision date: %s ----", common.Version, common.PackageVersion, common.RevisionDate)
 }
 
-func initContext(deviceID string, version string, revisionDate string) {
-	// Using "application" allows us to distinguish between errors from the
-	// lantern client vs other sources like the http-proxy, etop.
+func initContext(deviceID string) {
+	// Using "app" allows us to distinguish between errors from the lantern
+	// client vs other sources like the http-proxy, etc.
 	ops.SetGlobal("app", "lantern-client")
-	ops.SetGlobal("app_version", fmt.Sprintf("%v (%v)", version, revisionDate))
+	ops.SetGlobal("app_version", fmt.Sprintf("%v (%v)", common.Version, common.RevisionDate))
 	ops.SetGlobal("go_version", runtime.Version())
 	ops.SetGlobal("os_name", runtime.GOOS)
 	ops.SetGlobal("os_arch", runtime.GOARCH)
 	ops.SetGlobal("device_id", deviceID)
-	// TODO: add back setting geo info in flashlight
 	ops.SetGlobalDynamic("timezone", func() interface{} { return time.Now().Format("MST") })
 	ops.SetGlobalDynamic("locale_language", func() interface{} {
 		lang, _ := jibber_jabber.DetectLanguage()

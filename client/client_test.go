@@ -54,7 +54,11 @@ func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, 
 }
 
 func newClient() *Client {
-	client := New("deviceID", true,
+	client := New(
+		":0",
+		":0",
+		"deviceID",
+		true,
 		common.WrapSettings(
 			func() bool { return true },
 			func() bool { return true },
