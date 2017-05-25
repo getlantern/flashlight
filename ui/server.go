@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/util"
 	"github.com/skratchdot/open-golang/open"
 )
@@ -121,27 +122,43 @@ func (s *server) start() error {
 // to this method. It may not be reading yet, but since we're the only
 // ones reading from those incoming sockets the fact that reading starts
 // asynchronously is not a problem.
-func (s *server) show() {
-	go func() {
-		uiURL := fmt.Sprintf("http://%s/?1", s.accessAddr)
-		log.Debugf("Opening browser at %v", uiURL)
-		err := open.Run(uiURL)
-		if err != nil {
-			log.Errorf("Error opening page to `%v`: %v", uiURL, err)
-		}
+func (s *server) show(campaign, content, medium string) {
+	open := func(u string, t time.Duration) {
+		go func() {
+			time.Sleep(t)
+			err := open.Run(u)
+			if err != nil {
+				log.Errorf("Error opening external page to `%v`: %v", s.externalURL, err)
+			}
+		}()
+	}
+	s.doShow(campaign, content, medium, open)
+}
 
-		// This is for opening exernal URLs in a new browser window for
-		// partners such as Manoto.
-		if s.externalURL != "" {
-			s.onceOpenExtURL.Do(func() {
-				time.Sleep(4 * time.Second)
-				err := open.Run(s.externalURL)
-				if err != nil {
-					log.Errorf("Error opening external page to `%v`: %v", s.externalURL, err)
-				}
-			})
-		}
-	}()
+// doShow opens the UI in a browser. Note we know the UI server is
+// *listening* at this point as long as Start is correctly called prior
+// to this method. It may not be reading yet, but since we're the only
+// ones reading from those incoming sockets the fact that reading starts
+// asynchronously is not a problem.
+func (s *server) doShow(campaign, content, medium string, open func(string, time.Duration)) {
+	tempURL := fmt.Sprintf("http://%s/?1", s.accessAddr)
+	campaignURL, err := analytics.AddCampaign(tempURL, campaign, content, medium)
+	var uiURL string
+	if err != nil {
+		uiURL = tempURL
+	} else {
+		uiURL = campaignURL
+	}
+	log.Debugf("Opening browser at %v", uiURL)
+	open(uiURL, 0*time.Second)
+
+	// This is for opening exernal URLs in a new browser window for
+	// partners such as Manoto.
+	if s.externalURL != "" {
+		s.onceOpenExtURL.Do(func() {
+			open(s.externalURL, 4*time.Second)
+		})
+	}
 }
 
 // getUIAddr returns the current UI address.

@@ -46,7 +46,7 @@ func configureSystemTray(a *app.App) error {
 		for {
 			select {
 			case <-menu.show.ClickedCh:
-				ui.Show()
+				ui.Show("show-lantern", "", "tray")
 			case <-menu.quit.ClickedCh:
 				a.Exit(nil)
 				return
