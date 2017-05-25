@@ -20,6 +20,7 @@ type Session interface {
 	Plan() string
 	Provider() string
 	ResellerCode() string
+	SetSignature(string)
 	StripeToken() string
 	StripeApiKey() string
 	Email() string
@@ -297,6 +298,16 @@ func ProRequest(command string, session Session) bool {
 	req.Client.SetLocale(session.Locale())
 
 	log.Debugf("Received a %s pro request", command)
+
+	if command == "payment-gateway" {
+		sig, err := req.Client.PaymentGateway(req.User, session.Plan())
+		if err != nil {
+			log.Errorf("Error trying to generate pw signature: %v", err)
+			return false
+		}
+		session.SetSignature(sig)
+		return true
+	}
 
 	commands := map[string]proFunc{
 		"emailexists": emailExists,

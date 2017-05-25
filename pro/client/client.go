@@ -381,6 +381,19 @@ func (c *Client) UserData(user User) (res *Response, err error) {
 	return
 }
 
+func (c *Client) PaymentGateway(user User, planId string) (string, error) {
+
+	payload, err := c.get(`/paymentwall-mobile-signature`, user.headers(), url.Values{
+		"plan": {planId},
+	})
+	if err != nil {
+		return "", err
+	}
+	sig := string(payload)
+	log.Debugf("Response from pro server: %s", sig)
+	return sig, nil
+}
+
 // Plans creates an user without asking for any payment.
 func (c *Client) Plans(user User) (res *Response, err error) {
 	var payload []byte
