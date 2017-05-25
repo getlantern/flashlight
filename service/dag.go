@@ -8,7 +8,7 @@ type node struct {
 	t            Type
 	started      bool
 	opts         ConfigOpts
-	instance     Impl
+	instance     Service
 	indegree     int
 	pendingVisit int
 	children     []*node
@@ -18,7 +18,7 @@ func newDag() *dag {
 	return &dag{nodes: make(map[Type]*node)}
 }
 
-func (this *dag) AddVertex(t Type, instance Impl, opts ConfigOpts) *node {
+func (this *dag) AddVertex(t Type, instance Service, opts ConfigOpts) *node {
 	n := &node{t: t, instance: instance, opts: opts}
 	this.nodes[t] = n
 	return n

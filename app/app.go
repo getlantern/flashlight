@@ -180,20 +180,17 @@ func (app *App) Run() error {
 
 func (app *App) beforeStart() bool {
 	log.Debug("Before start")
-	locationService := service.MustRegister(
-		location.New(),
-		&location.ConfigOpts{})
-	loconfService := service.MustRegister(loconfscanner.New(
-		4*time.Hour,
-		app.isProUser,
-		&pastAnnouncements{app.settings}), &loconfscanner.ConfigOpts{Lang: app.settings.GetLanguage()})
+	service.MustRegister(location.New(), &location.ConfigOpts{})
+	service.MustRegister(
+		loconfscanner.New(4*time.Hour, app.isProUser, &pastAnnouncements{app.settings}),
+		&loconfscanner.ConfigOpts{Lang: app.settings.GetLanguage()})
 	service.Sub(geolookup.ServiceType, func(m interface{}) {
 		info := m.(*geolookup.GeoInfo)
 		ip, country := info.GetIP(), info.GetCountry()
-		locationService.MustConfigure(func(opts service.ConfigOpts) {
+		service.MustConfigure(location.ServiceType, func(opts service.ConfigOpts) {
 			opts.(*location.ConfigOpts).Code = country
 		})
-		loconfService.MustConfigure(func(opts service.ConfigOpts) {
+		service.MustConfigure(loconfscanner.ServiceType, func(opts service.ConfigOpts) {
 			opts.(*loconfscanner.ConfigOpts).Country = country
 		})
 		ops.SetGlobal("geo_country", country)
@@ -207,9 +204,9 @@ func (app *App) beforeStart() bool {
 			log.Debugf("Got HTTP proxy address: %v", msg.Addr)
 			app.settings.SetString(settings.SNAddr, msg.Addr)
 			setProxy := app.settings.GetSystemProxy()
-			s := service.MustRegister(sysproxy.New(msg.Addr),
+			service.MustRegister(sysproxy.New(msg.Addr),
 				&sysproxy.ConfigOpts{setProxy})
-			s.Start()
+			service.Start(sysproxy.ServiceType)
 			setupUserSignal() // it depends on sysproxy service being registered.
 			app.OnSettingChange(settings.SNSystemProxy, func(val interface{}) {
 				service.Configure(sysproxy.ServiceType, func(o service.ConfigOpts) {
@@ -369,14 +366,16 @@ func (app *App) afterStart() {
 	}
 	// register it until client is started because it requires proxied package
 	// TODO: add explicit dependency to proxied package
-	analyticsService := service.MustRegister(
+	service.MustRegister(
 		analytics.New(app.settings.IsAutoReport(), app.settings.GetDeviceID(), common.Version),
 		&analytics.ConfigOpts{})
-	analyticsService.Start()
+	service.Start(analytics.ServiceType)
 	service.Sub(geolookup.ServiceType, func(m interface{}) {
-		analyticsService.MustConfigure(func(opts service.ConfigOpts) {
-			opts.(*analytics.ConfigOpts).GeoIP = m.(*geolookup.GeoInfo).GetIP()
-		})
+		ip := m.(*geolookup.GeoInfo).GetIP()
+		service.MustConfigure(analytics.ServiceType,
+			func(opts service.ConfigOpts) {
+				opts.(*analytics.ConfigOpts).GeoIP = ip
+			})
 	})
 }
 

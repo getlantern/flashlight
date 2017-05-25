@@ -48,7 +48,7 @@ type bordaService struct {
 	bordaClient      *borda.Client
 }
 
-func New(fullyReportedOps []string) service.Impl {
+func New(fullyReportedOps []string) service.Service {
 	return &bordaService{fullyReportedOps: fullyReportedOps}
 }
 

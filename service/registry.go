@@ -24,12 +24,11 @@ func NewRegistry() *Registry {
 }
 
 // MustRegister is same as Register but panics if fail to register the service.
-func (r *Registry) MustRegister(instance Impl, defaultOpts ConfigOpts) Service {
-	s, err := r.Register(instance, defaultOpts)
+func (r *Registry) MustRegister(instance Service, defaultOpts ConfigOpts) {
+	err := r.Register(instance, defaultOpts)
 	if err != nil {
 		panic(err.Error())
 	}
-	return s
 }
 
 // Register register a service. It requires:
@@ -37,48 +36,47 @@ func (r *Registry) MustRegister(instance Impl, defaultOpts ConfigOpts) Service {
 // 2. The default config options to start the service, or nil if the service
 // doesn't need config.
 // Registry.StartAll() will resolve the startup order.
-func (r *Registry) Register(instance Impl, defaultOpts ConfigOpts) (Service, error) {
+func (r *Registry) Register(instance Service, defaultOpts ConfigOpts) error {
 	if instance == nil {
-		return nil, errors.New("nil instance")
+		return errors.New("nil instance")
 	}
 	t := instance.GetType()
 	if _, ok := instance.(Configurable); ok {
 		if defaultOpts == nil {
-			return nil, fmt.Errorf("Configurable service '%s' must be registered with default ConfigOpts", t)
+			return fmt.Errorf("Configurable service '%s' must be registered with default ConfigOpts", t)
 		}
 	}
 	r.muDag.Lock()
 	defer r.muDag.Unlock()
 	if r.dag.Lookup(t) != nil {
-		return nil, fmt.Errorf("service '%s' is already registered", t)
+		return fmt.Errorf("service '%s' is already registered", t)
 	}
 	if defaultOpts != nil && defaultOpts.For() != t {
-		return nil, fmt.Errorf("invalid default config options type for %s", t)
+		return fmt.Errorf("invalid default config options type for %s", t)
 	}
 	r.dag.AddVertex(t, instance, defaultOpts)
-	s := service{instance, r}
 	if p, ok := instance.(WillPublish); ok {
 		p.SetPublisher(publisher{t, r})
 	}
 	log.Debugf("Registered service %s", t)
-	return s, nil
+	return nil
 }
 
 // MustLookup returns the service reference of type t, or panics.
-func (r *Registry) MustLookup(t Type) (Service, Impl) {
-	if s, i := r.Lookup(t); s != nil {
-		return s, i
+func (r *Registry) MustLookup(t Type) Service {
+	if i := r.Lookup(t); i != nil {
+		return i
 	}
 	panic(fmt.Sprintf("service type '%s' is not registered", string(t)))
 }
 
 // Lookup returns the service reference of type t, or nil if not found.
-func (r *Registry) Lookup(t Type) (Service, Impl) {
+func (r *Registry) Lookup(t Type) Service {
 	n := r.lookup(t)
 	if n == nil {
-		return nil, nil
+		return nil
 	}
-	return service{n.instance, r}, n.instance
+	return n.instance
 }
 
 func (r *Registry) lookup(t Type) *node {
@@ -156,7 +154,7 @@ func (r *Registry) started(t Type) bool {
 	return n.started
 }
 
-func (r *Registry) start(t Type) bool {
+func (r *Registry) Start(t Type) bool {
 	r.muDag.RLock()
 	defer r.muDag.RUnlock()
 	n := r.dag.Lookup(t)
@@ -212,7 +210,7 @@ func (r *Registry) closeChannels() {
 	}
 }
 
-func (r *Registry) stop(t Type) {
+func (r *Registry) Stop(t Type) {
 	r.muDag.RLock()
 	defer r.muDag.RUnlock()
 	n := r.dag.Lookup(t)

@@ -40,7 +40,7 @@ func (i *GeoInfo) GetCountry() string {
 	return i.city.Country.IsoCode
 }
 
-// GeoLookup satisfies the service.Impl interface
+// GeoLookup satisfies the service.Service interface
 type GeoLookup struct {
 	chStop           chan bool
 	chRefreshRequest chan bool
@@ -48,7 +48,7 @@ type GeoLookup struct {
 	p                service.Publisher
 }
 
-func New() service.Impl {
+func New() service.Service {
 	return &GeoLookup{
 		chStop:           make(chan bool),
 		chRefreshRequest: make(chan bool, 1),

@@ -8,7 +8,7 @@ import (
 var ServiceType service.Type = "ws.location"
 var wsServiceType = "location"
 
-func New() service.Impl {
+func New() service.Service {
 	return &locationService{}
 }
 

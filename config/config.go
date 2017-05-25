@@ -123,7 +123,7 @@ type config struct {
 	chStop chan bool
 }
 
-func New(opts *ConfigOpts) service.Impl {
+func New(opts *ConfigOpts) service.Service {
 	reason := opts.Complete()
 	if reason != "" {
 		panic(fmt.Sprintf("Invalid config options: %s", reason))

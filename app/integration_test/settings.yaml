@@ -6,6 +6,6 @@ localHTTPToken: f7d2fa987e88b95d3c622b38b890b627
 proxyAll: true
 socksAddr: 127.0.0.1:18346
 systemProxy: true
-uiAddr: localhost:16823
+uiAddr: ""
 userID: 1
 userToken: ""

@@ -114,7 +114,7 @@ func waitForStart(op *fops.Op, elapsed func() time.Duration, afterStart func()) 
 			log.Debug("Started client HTTP proxy")
 			op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
 			onGeo := service.SubCh(geolookup.ServiceType)
-			_, geo := service.MustLookup(geolookup.ServiceType)
+			geo := service.MustLookup(geolookup.ServiceType)
 			geo.(*geolookup.GeoLookup).Refresh()
 			ops.Go(func() {
 				// wait for geo info before reporting so that we know the

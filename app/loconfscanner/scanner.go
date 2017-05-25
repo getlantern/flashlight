@@ -18,7 +18,7 @@ import (
 	"github.com/getlantern/flashlight/app/notifier"
 )
 
-var serviceType service.Type = "flashlight.desktop.loconfscanner"
+var ServiceType service.Type = "flashlight.desktop.loconfscanner"
 
 type PastAnnouncements interface {
 	Get() []string
@@ -31,7 +31,7 @@ type ConfigOpts struct {
 }
 
 func (c *ConfigOpts) For() service.Type {
-	return serviceType
+	return ServiceType
 }
 
 func (c *ConfigOpts) Complete() string {
@@ -69,7 +69,7 @@ func New(
 	interval time.Duration,
 	proChecker func() (bool, bool),
 	past PastAnnouncements,
-) service.Impl {
+) service.Service {
 	return &loconfer{
 		log:        golog.LoggerFor("loconfer"),
 		r:          rand.New(rand.NewSource(time.Now().UnixNano())),
@@ -80,7 +80,7 @@ func New(
 }
 
 func (loc *loconfer) GetType() service.Type {
-	return serviceType
+	return ServiceType
 }
 
 func (loc *loconfer) Configure(opts service.ConfigOpts) {

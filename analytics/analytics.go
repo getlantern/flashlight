@@ -33,7 +33,7 @@ var (
 	maxWaitForIP = math.MaxInt32 * time.Second
 )
 
-// analytics satisfies the service.Impl interface
+// analytics satisfies the service.Service interface
 type analytics struct {
 	hash      string
 	deviceID  string
@@ -43,7 +43,7 @@ type analytics struct {
 	transport func(string)
 }
 
-func New(enable bool, deviceID string, version string) service.Impl {
+func New(enable bool, deviceID string, version string) service.Service {
 	a := &analytics{
 		enable:   enable,
 		deviceID: deviceID,

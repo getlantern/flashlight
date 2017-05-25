@@ -19,31 +19,6 @@ type ConfigOpts interface {
 	Complete() string
 }
 
-// Service is the reference to a service, which is return by
-// Registry.Register() or Registry.Lookup().
-type Service interface {
-	// Start checks if the effective config options is valid, configure the
-	// service with it and starts the service.  It returns if the service is
-	// currently started.  Starting an already started service is a noop and
-	// returns true.
-	Start() bool
-	// Started returns true if service is started, false otherwise.
-	Started() bool
-	// Stop stops a started service. Stopping an unstarted service is a noop.
-	Stop()
-	// Configure updates part of the effective config options. If the option
-	// is valid, it calls Configure() of the Impl and start the service if
-	// not already started.
-	Configure(func(opts ConfigOpts)) error
-	// MustConfigure is the same as Configure, but panics if error happens.
-	MustConfigure(func(opts ConfigOpts))
-	// GetImpl gets the implementation of the service. Caller usually casts it
-	// to a concrete type to call its specific methods. Be aware that one
-	// should always Start(), Stop(), or Configure() via the Service, instead
-	// of the methods of the Impl.
-	GetImpl() Impl
-}
-
 // Publisher is an interface for the service impletation to publish a message,
 // when required.
 type Publisher interface {
@@ -51,8 +26,8 @@ type Publisher interface {
 	Publish(msg interface{})
 }
 
-// Impl actually implemetents the service.
-type Impl interface {
+// Service actually implemetents the service.
+type Service interface {
 	// GetType returns the type of the service.
 	GetType() Type
 	// Start actually starts the service. The Registry calls it only once until
@@ -68,7 +43,7 @@ type Impl interface {
 type Configurable interface {
 	// Configure configures the service with current effective config
 	// options. Registry only calls this when the ConfigOpts are Complete().
-	// Implement carefully To avoid data races. The implementation can choose
+	// Serviceement carefully To avoid data races. The implementation can choose
 	// to restart the service internally when some configuration changes, but
 	// it doesn't affect the service status from the outside.
 	Configure(opts ConfigOpts)
@@ -88,22 +63,22 @@ func init() {
 }
 
 // MustRegister registers the service to the singleton registry, or panics.
-func MustRegister(instance Impl, defaultOpts ConfigOpts) Service {
-	return singleton.MustRegister(instance, defaultOpts)
+func MustRegister(instance Service, defaultOpts ConfigOpts) {
+	singleton.MustRegister(instance, defaultOpts)
 }
 
 // Register registers the service to the singleton registry
-func Register(instance Impl, defaultOpts ConfigOpts) (Service, error) {
+func Register(instance Service, defaultOpts ConfigOpts) error {
 	return singleton.Register(instance, defaultOpts)
 }
 
 // MustLookup looks up a service from the singleton registry, or panics.
-func MustLookup(t Type) (Service, Impl) {
+func MustLookup(t Type) Service {
 	return singleton.MustLookup(t)
 }
 
 // Lookup looks up a service from the singleton registry, or nil.
-func Lookup(t Type) (Service, Impl) {
+func Lookup(t Type) Service {
 	return singleton.Lookup(t)
 }
 
@@ -127,6 +102,14 @@ func Sub(t Type, cb func(m interface{})) {
 	singleton.Sub(t, cb)
 }
 
+func Start(t Type) bool {
+	return singleton.Start(t)
+}
+
+func Stop(t Type) {
+	singleton.Stop(t)
+}
+
 // StartAll starts all services registered to the singleton registry.
 func StartAll() {
 	singleton.StartAll()
@@ -144,37 +127,4 @@ type publisher struct {
 
 func (p publisher) Publish(msg interface{}) {
 	p.r.publish(p.t, msg)
-}
-
-// service satisfies the Service interface, it forwards all methods to the
-// registry.
-type service struct {
-	impl Impl
-	r    *Registry
-}
-
-func (s service) Start() bool {
-	return s.r.start(s.impl.GetType())
-}
-
-func (s service) Started() bool {
-	return s.r.started(s.impl.GetType())
-}
-
-func (s service) Stop() {
-	s.r.stop(s.impl.GetType())
-}
-
-func (s service) MustConfigure(op func(ConfigOpts)) {
-	if err := s.Configure(op); err != nil {
-		panic(err)
-	}
-}
-
-func (s service) Configure(op func(ConfigOpts)) error {
-	return s.r.Configure(s.impl.GetType(), op)
-}
-
-func (s service) GetImpl() Impl {
-	return s.impl
 }

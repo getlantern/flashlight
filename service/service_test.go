@@ -12,38 +12,38 @@ var serviceType1 = Type("service.type1")
 var serviceType2 = Type("service.type2")
 var serviceType3 = Type("service.type3")
 
-type mockImpl struct {
+type mockService struct {
 	t       Type
 	p       Publisher
 	started bool
 	stopped bool
 }
 
-func New1() Impl {
-	return &mockImpl{t: serviceType1}
+func New1() Service {
+	return &mockService{t: serviceType1}
 }
 
-func New2() Impl {
-	return &mockImpl{t: serviceType2}
+func New2() Service {
+	return &mockService{t: serviceType2}
 }
 
-func New3() Impl {
-	return &mockImpl{t: serviceType3}
+func New3() Service {
+	return &mockService{t: serviceType3}
 }
 
-func (i *mockImpl) GetType() Type {
+func (i *mockService) GetType() Type {
 	return i.t
 }
-func (i *mockImpl) Start() {
+func (i *mockService) Start() {
 	i.started = true
 	i.stopped = false
 }
-func (i *mockImpl) Stop() {
+func (i *mockService) Stop() {
 	i.started = false
 	i.stopped = true
 }
 
-func (i *mockImpl) SetPublisher(p Publisher) {
+func (i *mockService) SetPublisher(p Publisher) {
 	i.p = p
 }
 
@@ -51,33 +51,33 @@ func TestRegister(t *testing.T) {
 	registry := NewRegistry()
 	registry.MustRegister(New1(), nil)
 	registry.MustRegister(New2(), nil)
-	_, err := registry.Register(New2(), nil)
+	err := registry.Register(New2(), nil)
 	assert.Error(t, err, "each service should be registered only once")
-	_, i1 := registry.MustLookup(serviceType1)
-	_, i2 := registry.MustLookup(serviceType2)
+	i1 := registry.MustLookup(serviceType1)
+	i2 := registry.MustLookup(serviceType2)
 	registry.StartAll()
-	assert.True(t, i1.(*mockImpl).started)
-	assert.True(t, i2.(*mockImpl).started)
+	assert.True(t, i1.(*mockService).started)
+	assert.True(t, i2.(*mockService).started)
 	registry.StopAll()
-	assert.False(t, i1.(*mockImpl).started)
-	assert.False(t, i2.(*mockImpl).started)
-	assert.True(t, i1.(*mockImpl).stopped)
-	assert.True(t, i2.(*mockImpl).stopped)
+	assert.False(t, i1.(*mockService).started)
+	assert.False(t, i2.(*mockService).started)
+	assert.True(t, i1.(*mockService).stopped)
+	assert.True(t, i2.(*mockService).stopped)
 }
 
 type mockWithPublisher struct {
-	*mockImpl
+	*mockService
 	chStop chan bool
 }
 
 func (i *mockWithPublisher) Start() {
-	i.mockImpl.Start()
+	i.mockService.Start()
 	go func() {
 		t := time.NewTicker(100 * time.Millisecond)
 		for {
 			select {
 			case ts := <-t.C:
-				i.mockImpl.p.Publish(ts)
+				i.mockService.p.Publish(ts)
 			case <-i.chStop:
 				fmt.Print("stopping\n")
 				return
@@ -87,15 +87,15 @@ func (i *mockWithPublisher) Start() {
 }
 
 func TestSubscribe(t *testing.T) {
-	new1 := func() Impl {
-		return &mockWithPublisher{New1().(*mockImpl), make(chan bool)}
+	new1 := func() Service {
+		return &mockWithPublisher{New1().(*mockService), make(chan bool)}
 	}
 	registry := NewRegistry()
-	s1, err := registry.Register(new1(), nil)
+	err := registry.Register(new1(), nil)
 	assert.NoError(t, err)
 	ch1 := registry.SubCh(serviceType1)
 	ch2 := registry.SubCh(serviceType1)
-	s1.Start()
+	registry.Start(serviceType1)
 	ts1 := <-ch1
 	ts2 := <-ch2
 	assert.Equal(t, ts1, ts2)
