@@ -123,7 +123,6 @@ func (loc *loconfer) scan(onLoconf func(*loconf.LoConf, bool)) {
 
 func (loc *loconfer) Stop() {
 	close(loc.chStop)
-	loc.chStop = nil
 }
 
 func (loc *loconfer) onLoconf(lc *loconf.LoConf, isPro bool) {
