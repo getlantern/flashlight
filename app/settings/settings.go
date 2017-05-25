@@ -145,9 +145,9 @@ func (s *Settings) Start() {
 	go launcher.CreateLaunchFile(s.IsAutoLaunch())
 }
 
-// StartService starts the settings service that synchronizes Lantern's configuration with
-// every UI client
-func (s *Settings) StartService() error {
+// StartUIService starts the settings service that synchronizes Lantern's
+// configuration with every UI client
+func (s *Settings) StartUIService() error {
 	helloFn := func(write func(interface{})) {
 		s.log.Debugf("Sending Lantern settings to new client")
 		write(s.uiMap())

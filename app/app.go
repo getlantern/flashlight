@@ -37,6 +37,7 @@ import (
 	"github.com/getlantern/flashlight/app/notifier"
 	"github.com/getlantern/flashlight/app/settings"
 	"github.com/getlantern/flashlight/app/signal"
+	"github.com/getlantern/flashlight/app/stats"
 	"github.com/getlantern/flashlight/app/sysproxy"
 )
 
@@ -64,7 +65,7 @@ type App struct {
 	Headless     bool
 	flags        map[string]interface{}
 	exitCh       chan error
-	statsTracker *statsTracker
+	statsTracker *stats.Tracker
 	exitOnce     sync.Once
 	chExitFuncs  chan func()
 	settings     *settings.Settings
@@ -80,7 +81,7 @@ func NewApp(flags map[string]interface{}) *App {
 		// use buffered channel to avoid blocking the caller of 'AddExitFunc'
 		// the number 50 is arbitrary
 		chExitFuncs:  make(chan func(), 50),
-		statsTracker: &statsTracker{},
+		statsTracker: &stats.Tracker{},
 	}
 	golog.OnFatal(app.exitOnFatal)
 	app.flags["staging"] = common.Staging
@@ -272,7 +273,7 @@ func (app *App) startUIServices() {
 	app.settings.SetUIAddr(ui.GetUIAddr())
 	ui.Handle("/data", ws.StartUIChannel())
 
-	err = app.settings.StartService()
+	err = app.settings.StartUIService()
 	if err != nil {
 		app.Exit(fmt.Errorf("Unable to register settings service: %q", err))
 	}
@@ -281,7 +282,7 @@ func (app *App) startUIServices() {
 		go launcher.CreateLaunchFile(enable)
 	})
 
-	err = app.statsTracker.StartService()
+	err = app.statsTracker.StartUIService()
 	if err != nil {
 		log.Errorf("Unable to serve stats to UI: %v", err)
 	}

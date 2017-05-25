@@ -1,4 +1,4 @@
-package desktop
+package stats
 
 import (
 	"sync"
@@ -14,54 +14,56 @@ type stats struct {
 	AdsBlocked    int    `json:"adsBlocked"`
 }
 
-type statsTracker struct {
+// Tracker implements common.StatsTracker interface and publishes
+type Tracker struct {
 	mu      sync.Mutex
-	service ws.Service
+	service *ws.Service
 	stats   stats
 }
 
-func (s *statsTracker) SetActiveProxyLocation(city, country, countryCode string) {
+func (s *Tracker) SetActiveProxyLocation(city, country, countryCode string) {
 	s.mu.Lock()
 	s.stats.City, s.stats.Country, s.stats.CountryCode = city, country, countryCode
 	s.unlockAndBroadcast()
 }
 
-func (s *statsTracker) IncHTTPSUpgrades() {
+func (s *Tracker) IncHTTPSUpgrades() {
 	s.mu.Lock()
 	s.stats.HTTPSUpgrades++
 	s.unlockAndBroadcast()
 }
 
-func (s *statsTracker) IncAdsBlocked() {
+func (s *Tracker) IncAdsBlocked() {
 	s.mu.Lock()
 	s.stats.AdsBlocked++
 	s.unlockAndBroadcast()
 }
 
-func (s *statsTracker) unlockAndBroadcast() {
+func (s *Tracker) unlockAndBroadcast() {
 	st := s.stats
 	s.mu.Unlock()
-	select {
-	case s.service.Out <- st:
-		// ok
-	default:
-		// don't block if no-one is listening
+	if s.service != nil {
+		select {
+		case s.service.Out <- st:
+			// ok
+		default:
+			// don't block if no-one is listening
+		}
 	}
 }
 
-func (s *statsTracker) StartService() error {
+func (s *Tracker) StartUIService() (err error) {
 	helloFn := func(write func(interface{})) {
-		log.Debugf("Sending Lantern stats to new client")
 		s.mu.Lock()
 		st := s.stats
 		s.mu.Unlock()
 		write(st)
 	}
 
-	_, err := ws.Register("stats", helloFn)
-	return err
+	s.service, err = ws.Register("stats", helloFn)
+	return
 }
 
-func (s *statsTracker) StopService() {
+func (s *Tracker) StopUIService() {
 	ws.Unregister("stats")
 }
