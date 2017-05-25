@@ -7,6 +7,8 @@ import (
 	"net"
 	"net/http"
 	"path/filepath"
+	"reflect"
+	"runtime"
 	"sync"
 	"time"
 
@@ -59,6 +61,11 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
+type exitFunc struct {
+	name string
+	f    func()
+}
+
 // App is the core of the Lantern desktop application, in the form of a library.
 type App struct {
 	// keep it public as the caller need access to it.
@@ -67,7 +74,7 @@ type App struct {
 	exitCh       chan error
 	statsTracker *stats.Tracker
 	exitOnce     sync.Once
-	chExitFuncs  chan func()
+	chExitFuncs  chan exitFunc
 	settings     *settings.Settings
 }
 
@@ -80,7 +87,7 @@ func NewApp(flags map[string]interface{}) *App {
 		exitCh:   make(chan error, 1),
 		// use buffered channel to avoid blocking the caller of 'AddExitFunc'
 		// the number 50 is arbitrary
-		chExitFuncs:  make(chan func(), 50),
+		chExitFuncs:  make(chan exitFunc, 50),
 		statsTracker: &stats.Tracker{},
 	}
 	golog.OnFatal(app.exitOnFatal)
@@ -410,8 +417,11 @@ func (app *App) showExistingUI(addr string) error {
 }
 
 // AddExitFunc adds a function to be called before the application exits.
-func (app *App) AddExitFunc(exitFunc func()) {
-	app.chExitFuncs <- exitFunc
+func (app *App) AddExitFunc(f func()) {
+	// Note that runtime.FuncForPC can return nil but only if the parameter is
+	// not an uintptr to a function, which never happens in this case.
+	name := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
+	app.chExitFuncs <- exitFunc{name, f}
 }
 
 // Exit tells the application to exit, optionally supplying an error that caused
@@ -423,17 +433,21 @@ func (app *App) Exit(err error) {
 }
 
 func (app *App) doExit(err error) {
-	log.Errorf("Exiting app because of %v", err)
+	if err != nil {
+		log.Errorf("Exiting app because of %v", err)
+	} else {
+		log.Debug("Exiting app normally")
+	}
+	service.StopAll()
 	defer func() {
-		service.StopAll()
 		app.exitCh <- err
 		log.Debug("Finished exiting app")
 	}()
 	for {
 		select {
-		case f := <-app.chExitFuncs:
-			log.Debugf("Calling exit func")
-			f()
+		case ef := <-app.chExitFuncs:
+			log.Debugf("Calling exit func %s", ef.name)
+			ef.f()
 		default:
 			log.Debugf("No exit func remaining, exit now")
 			return
