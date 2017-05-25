@@ -43,13 +43,13 @@ var (
 func Run(
 	httpProxyAddr string,
 	socks5ProxyAddr string,
+	deviceID string,
 	settings common.Settings,
 	userConfig common.UserConfig,
 	statsTracker common.StatsTracker,
 	flagsAsMap map[string]interface{},
-	beforeStart func() bool,
 	afterStart func(),
-	deviceID string) error {
+) error {
 
 	elapsed := mtime.Stopwatch()
 	displayVersion()
@@ -67,9 +67,7 @@ func Run(
 			Socks5ProxyAddr: socks5ProxyAddr,
 		})
 
-	waitForStart(op, elapsed, afterStart)
 	service.MustRegister(borda.New(FullyReportedOps), &borda.ConfigOpts{})
-
 	registerConfigService(flagsAsMap, userConfig)
 	service.Sub(config.ServiceType, func(msg interface{}) {
 		switch c := msg.(type) {
@@ -100,12 +98,6 @@ func Run(
 			opts.(*client.ConfigOpts).GeoCountry = m.(*geolookup.GeoInfo).GetCountry()
 		})
 	})
-
-	beforeStart()
-	return nil
-}
-
-func waitForStart(op *fops.Op, elapsed func() time.Duration, afterStart func()) {
 	service.Sub(client.ServiceType, func(m interface{}) {
 		msg := m.(client.Message)
 		if msg.ProxyType == client.HTTPProxy {
@@ -131,6 +123,7 @@ func waitForStart(op *fops.Op, elapsed func() time.Duration, afterStart func()) 
 			afterStart()
 		}
 	})
+	return nil
 }
 
 func registerConfigService(flagsAsMap map[string]interface{}, userConfig common.UserConfig) {

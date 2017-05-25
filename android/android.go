@@ -147,9 +147,20 @@ func Start(configDir string, locale string,
 
 		log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
+		afterStart := func() {
+			bandwidthUpdates(user)
+			user.AfterStart()
+			service.Sub(geolookup.ServiceType, func(m interface{}) {
+				country := m.(*geolookup.GeoInfo).GetCountry()
+				log.Debugf("Successful geolookup: country %s", country)
+				user.SetCountry(country)
+			})
+		}
+
 		flashlight.Run(
 			"127.0.0.1:0", // listen for HTTP on random address
 			"127.0.0.1:0", // listen for SOCKS on random address
+			deviceID,
 			common.WrapSettings(
 				common.Not(user.ProxyAll),    // UseShortcut
 				func() bool { return false }, // UseDetour
@@ -158,12 +169,10 @@ func Start(configDir string, locale string,
 			user, //common.UserConfig
 			statsTracker{},
 			flags,
-			beforeStart,
-			func() {
-				afterStart(user)
-			}, // afterStart()
-			deviceID,
+			afterStart,
 		)
+
+		service.StartAll()
 
 		// TODO: fix CI by subscribing before starting the client, i.e., break
 		// flashlight.Run into pieces
@@ -219,22 +228,6 @@ func getBandwidth(quota *bandwidth.Quota) (int, int) {
 		remaining = int(quota.MiBAllowed - quota.MiBUsed)
 	}
 	return percent, remaining
-}
-
-func beforeStart() bool {
-	service.StartAll()
-	return true
-}
-
-func afterStart(user UserConfig) {
-	bandwidthUpdates(user)
-	user.AfterStart()
-	service.Sub(geolookup.ServiceType, func(m interface{}) {
-		country := m.(*geolookup.GeoInfo).GetCountry()
-		log.Debugf("Successful geolookup: country %s", country)
-		user.SetCountry(country)
-	})
-	service.StartAll()
 }
 
 // handleError logs the given error message

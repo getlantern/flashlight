@@ -161,6 +161,7 @@ func (app *App) Run() error {
 	err := flashlight.Run(
 		listenAddr,
 		socksAddr,
+		app.settings.GetDeviceID(),
 		common.WrapSettings(
 			common.Not(app.settings.GetProxyAll), // UseShortcut
 			common.Not(app.settings.GetProxyAll), // UseDetour
@@ -169,13 +170,16 @@ func (app *App) Run() error {
 		app.settings, // common.UserConfig
 		app.statsTracker,
 		app.flags,
-		app.beforeStart,
-		app.afterStart,
-		app.settings.GetDeviceID())
+		app.afterStart)
 	if err != nil {
 		app.Exit(err)
 	}
+	app.beforeStart()
+	return app.waitForExit()
+}
 
+func (app *App) beforeStart() bool {
+	log.Debug("Before start")
 	service.Sub(config.ServiceType, func(msg interface{}) {
 		switch c := msg.(type) {
 		case *config.Global:
@@ -183,11 +187,6 @@ func (app *App) Run() error {
 			autoupdate.Configure(c.UpdateServerURL, c.AutoUpdateCA)
 		}
 	})
-	return app.waitForExit()
-}
-
-func (app *App) beforeStart() bool {
-	log.Debug("Before start")
 	service.MustRegister(location.New(), &location.ConfigOpts{})
 	service.MustRegister(
 		loconfscanner.New(4*time.Hour, app.isProUser, &pastAnnouncements{app.settings}),
