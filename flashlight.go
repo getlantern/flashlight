@@ -54,7 +54,6 @@ func ComposeServices(
 	userConfig common.UserConfig,
 	statsTracker common.StatsTracker,
 	flagsAsMap map[string]interface{},
-	afterStart func(),
 ) {
 
 	elapsed := mtime.Stopwatch()
@@ -131,7 +130,6 @@ func ComposeServices(
 				op.End()
 				log.Debug("Lantern client started")
 			})
-			afterStart()
 		}
 	})
 }

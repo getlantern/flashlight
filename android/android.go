@@ -4,13 +4,14 @@ package android
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
 	"strings"
-	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/appdir"
@@ -41,8 +42,7 @@ var (
 
 	surveyURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
 
-	startOnce   sync.Once
-	startResult StartResult
+	startResult atomic.Value
 )
 
 // SocketProtector is an interface for classes that can protect Android sockets,
@@ -111,94 +111,106 @@ type Updater autoupdate.Updater
 // initial activity may be slow, so clients with low read timeouts may
 // time out.
 func Start(configDir string,
-	locale string,
+	locale string, // TODO: parameter not used
 	stickyConfig bool,
 	timeoutMillis int,
 	user UserConfig) (*StartResult, error) {
 
-	startOnce.Do(func() {
-		user.SetStaging(common.Staging)
+	result := startResult.Load()
+	if result != nil {
+		return result.(*StartResult), nil
+	}
 
-		// TODO: persist device ID across system reboot
-		deviceID := base64.StdEncoding.EncodeToString(uuid.NodeID())
-		appdir.SetHomeDir(configDir)
+	user.SetStaging(common.Staging)
 
-		log.Debugf("Starting lantern: configDir %s locale %s sticky config %t",
-			configDir, locale, stickyConfig)
+	// TODO: persist device ID across system reboot
+	deviceID := base64.StdEncoding.EncodeToString(uuid.NodeID())
+	appdir.SetHomeDir(configDir)
 
-		flags := map[string]interface{}{
-			"borda-report-interval":    5 * time.Minute,
-			"borda-sample-percentage":  float64(0.01),
-			"loggly-sample-percentage": float64(0.02),
-			"staging":                  common.Staging,
-			"configdir":                configDir,
-		}
+	log.Debugf("Starting lantern: configDir %s locale %s sticky config %t",
+		configDir, locale, stickyConfig)
 
-		err := os.MkdirAll(configDir, 0755)
-		if os.IsExist(err) {
-			log.Errorf("Unable to create configDir at %v: %v", configDir, err)
-			return
-		}
+	flags := map[string]interface{}{
+		"borda-report-interval":    5 * time.Minute,
+		"borda-sample-percentage":  float64(0.01),
+		"loggly-sample-percentage": float64(0.02),
+		"staging":                  common.Staging,
+		"configdir":                configDir,
+	}
 
-		if stickyConfig {
-			flags["stickyconfig"] = true
-			flags["readableconfig"] = true
-		}
+	err := os.MkdirAll(configDir, 0755)
+	if os.IsExist(err) {
+		return nil, fmt.Errorf("Unable to create configDir at %v: %v", configDir, err)
+	}
 
-		logging.EnableFileLogging(configDir)
+	if stickyConfig {
+		flags["stickyconfig"] = true
+		flags["readableconfig"] = true
+	}
 
-		log.Debugf("Writing log messages to %s/lantern.log", configDir)
+	logging.EnableFileLogging(configDir)
 
-		afterStart := func() {
-			bandwidthUpdates(user)
-			user.AfterStart()
-			service.Sub(geolookup.ServiceType, func(m interface{}) {
-				country := m.(*geolookup.GeoInfo).GetCountry()
-				log.Debugf("Successful geolookup: country %s", country)
-				user.SetCountry(country)
-			})
-		}
+	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
-		flashlight.ComposeServices(
-			"127.0.0.1:0", // listen for HTTP on random address
-			"127.0.0.1:0", // listen for SOCKS on random address
-			deviceID,
-			true, // allow private hosts on mobile
-			common.WrapSettings(
-				common.Not(user.ProxyAll),    // UseShortcut
-				func() bool { return false }, // not use detour on mobile
-				// TODO: set auto report from android UI
-				func() bool { return true }, // always auto report
-			),
-			user, //common.UserConfig
-			statsTracker{},
-			flags,
-			afterStart,
-		)
+	flashlight.ComposeServices(
+		"127.0.0.1:0", // listen for HTTP on random address
+		"127.0.0.1:0", // listen for SOCKS on random address
+		deviceID,
+		true, // allow private hosts on mobile
+		common.WrapSettings(
+			common.Not(user.ProxyAll),    // UseShortcut
+			func() bool { return false }, // not use detour on mobile
+			// TODO: set auto report from android UI
+			func() bool { return true }, // always auto report
+		),
+		user, //common.UserConfig
+		statsTracker{},
+		flags,
+	)
 
-		ch := service.SubCh(client.ServiceType)
-		service.StartAll()
-		var wg sync.WaitGroup
-		wg.Add(2)
-		go func() {
-			for m := range ch {
+	service.Sub(geolookup.ServiceType, func(m interface{}) {
+		country := m.(*geolookup.GeoInfo).GetCountry()
+		log.Debugf("Successful geolookup: country %s", country)
+		user.SetCountry(country)
+	})
+
+	ch := service.SubCh(client.ServiceType)
+	chFinish := make(chan bool)
+	go func() {
+		timeout := time.After(time.Duration(timeoutMillis) * time.Millisecond)
+		var result StartResult
+		for got := 0; got < 2; {
+			select {
+			case <-timeout:
+				chFinish <- false
+				return
+			case m := <-ch:
+				if m == nil {
+					return
+				}
 				msg := m.(client.Message)
 				switch msg.ProxyType {
 				case client.HTTPProxy:
 					log.Debugf("Started client HTTP proxy at %v", msg.Addr)
-					startResult.HTTPAddr = msg.Addr
-					wg.Done()
+					result.HTTPAddr = msg.Addr
 				case client.Socks5Proxy:
 					log.Debugf("Started client SOCKS5 proxy at %v", msg.Addr)
-					startResult.SOCKS5Addr = msg.Addr
-					wg.Done()
+					result.SOCKS5Addr = msg.Addr
 				}
+				got++
 			}
-		}()
-		wg.Wait()
-	})
+		}
+		startResult.Store(&result)
+		bandwidthUpdates(user)
+		user.AfterStart()
+		chFinish <- true
+	}()
 
-	return &startResult, nil
+	service.StartAll()
+	if !<-chFinish {
+		return nil, errors.New("Lantern does not come up in time")
+	}
+	return startResult.Load().(*StartResult), nil
 }
 
 func bandwidthUpdates(user UserConfig) {

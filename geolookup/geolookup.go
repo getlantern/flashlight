@@ -51,7 +51,7 @@ type GeoLookup struct {
 func New() service.Service {
 	return &GeoLookup{
 		chStop:           make(chan bool),
-		chRefreshRequest: make(chan bool, 1),
+		chRefreshRequest: make(chan bool),
 		gi:               eventual.NewValue(),
 	}
 }
@@ -65,18 +65,19 @@ func (s *GeoLookup) SetPublisher(p service.Publisher) {
 }
 
 func (s *GeoLookup) Start() {
-	log.Debugf("Starting geolookup service")
 	go s.loop()
 }
 
 func (s *GeoLookup) Stop() {
-	log.Debugf("Stopping geolookup service")
 	s.chStop <- true
-	log.Debugf("Stopped geolookup service")
 }
 
 func (s *GeoLookup) Refresh() {
-	s.chRefreshRequest <- true
+	select {
+	case s.chRefreshRequest <- true:
+	default:
+		log.Debugf("geolookup in progress, skipping")
+	}
 }
 
 func (s *GeoLookup) loop() {

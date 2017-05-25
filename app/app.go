@@ -168,7 +168,6 @@ func (app *App) Run() error {
 		app.settings, // common.UserConfig
 		app.statsTracker,
 		app.flags,
-		app.afterStart,
 	)
 
 	app.composeRestServices()
@@ -205,22 +204,44 @@ func (app *App) composeRestServices() {
 		case client.HTTPProxy:
 			log.Debugf("Got HTTP proxy address: %v", msg.Addr)
 			app.settings.SetString(settings.SNAddr, msg.Addr)
-			setProxy := app.settings.GetSystemProxy()
+			sysproxyOn := app.settings.GetSystemProxy()
 			service.MustRegister(sysproxy.New(msg.Addr),
-				&sysproxy.ConfigOpts{setProxy})
+				&sysproxy.ConfigOpts{sysproxyOn})
 			service.Start(sysproxy.ServiceType)
-			signal.Start() // it depends on sysproxy service being registered.
 			app.OnSettingChange(settings.SNSystemProxy, func(val interface{}) {
 				service.Configure(sysproxy.ServiceType, func(o service.ConfigOpts) {
 					o.(*sysproxy.ConfigOpts).Enable = val.(bool)
 				})
 			})
+			signal.Start() // it depends on sysproxy service being registered.
+
+			// register and start analytics until client is started because it
+			// requires proxied package.
+			// TODO: add explicit dependency to proxied package
+			service.MustRegister(analytics.New(
+				app.settings.IsAutoReport(),
+				app.settings.GetDeviceID(),
+				common.Version,
+			), &analytics.ConfigOpts{})
+			service.Start(analytics.ServiceType)
+			service.Sub(geolookup.ServiceType, func(m interface{}) {
+				ip := m.(*geolookup.GeoInfo).GetIP()
+				service.MustConfigure(analytics.ServiceType,
+					func(opts service.ConfigOpts) {
+						opts.(*analytics.ConfigOpts).GeoIP = ip
+					})
+			})
+			geo := service.MustLookup(geolookup.ServiceType)
+			geo.(*geolookup.GeoLookup).Refresh()
+
+			app.showUI()
 
 		case client.Socks5Proxy:
 			log.Debugf("Got Socks5 proxy address: %v", msg.Addr)
 			app.settings.SetString(settings.SNSOCKSAddr, msg.Addr)
 		}
 	})
+
 	app.AddExitFunc(notifier.Start())
 }
 
@@ -352,7 +373,7 @@ func (app *App) OnSettingChange(attr settings.SettingName, cb func(interface{}))
 	app.settings.OnChange(attr, cb)
 }
 
-func (app *App) afterStart() {
+func (app *App) showUI() {
 	if app.Headless || app.flags["startup"].(bool) {
 		log.Debugf("Not opening browser. Startup is: %v", app.flags["startup"])
 	} else {
@@ -362,19 +383,6 @@ func (app *App) afterStart() {
 		// UI server and proxy server are still coming up.
 		ui.Show()
 	}
-	// register it until client is started because it requires proxied package
-	// TODO: add explicit dependency to proxied package
-	service.MustRegister(
-		analytics.New(app.settings.IsAutoReport(), app.settings.GetDeviceID(), common.Version),
-		&analytics.ConfigOpts{})
-	service.Start(analytics.ServiceType)
-	service.Sub(geolookup.ServiceType, func(m interface{}) {
-		ip := m.(*geolookup.GeoInfo).GetIP()
-		service.MustConfigure(analytics.ServiceType,
-			func(opts service.ConfigOpts) {
-				opts.(*analytics.ConfigOpts).GeoIP = ip
-			})
-	})
 }
 
 // showExistingUi triggers an existing Lantern running on the same system to
