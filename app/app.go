@@ -36,6 +36,7 @@ import (
 	"github.com/getlantern/flashlight/app/loconfscanner"
 	"github.com/getlantern/flashlight/app/notifier"
 	"github.com/getlantern/flashlight/app/settings"
+	"github.com/getlantern/flashlight/app/signal"
 	"github.com/getlantern/flashlight/app/sysproxy"
 )
 
@@ -207,7 +208,7 @@ func (app *App) beforeStart() bool {
 			service.MustRegister(sysproxy.New(msg.Addr),
 				&sysproxy.ConfigOpts{setProxy})
 			service.Start(sysproxy.ServiceType)
-			setupUserSignal() // it depends on sysproxy service being registered.
+			signal.Start() // it depends on sysproxy service being registered.
 			app.OnSettingChange(settings.SNSystemProxy, func(val interface{}) {
 				service.Configure(sysproxy.ServiceType, func(o service.ConfigOpts) {
 					o.(*sysproxy.ConfigOpts).Enable = val.(bool)

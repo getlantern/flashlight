@@ -1,10 +1,11 @@
-package desktop
+package signal
 
 import (
 	"sync"
 
 	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/flashlight/ws"
+	"github.com/getlantern/golog"
 
 	"github.com/getlantern/flashlight/app/sysproxy"
 )
@@ -14,9 +15,13 @@ type UserSignal struct {
 	once    sync.Once
 }
 
-var userSignal UserSignal
+var (
+	log = golog.LoggerFor("flashlight.desktop.signal")
 
-func setupUserSignal() {
+	userSignal UserSignal
+)
+
+func Start() {
 	userSignal.once.Do(func() {
 		err := userSignal.start()
 		if err != nil {
