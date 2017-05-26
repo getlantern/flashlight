@@ -5,6 +5,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/getlantern/flashlight-build-git-clone/src/github.com/getlantern/flashlight/log"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/systray"
 
@@ -46,7 +47,7 @@ func configureSystemTray(a *app.App) error {
 		for {
 			select {
 			case <-menu.show.ClickedCh:
-				ui.Show()
+				ui.Show("show-lantern", "tray")
 			case <-menu.quit.ClickedCh:
 				a.Exit(nil)
 				return
