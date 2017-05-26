@@ -20,13 +20,13 @@ func TestDoShow(t *testing.T) {
 	s := newServer("127.0.0.1:7777", false, "", "test-http-token")
 
 	assert.Equal(t, "", urlToShow)
-	s.doShow("campaign", "content", "medium", show)
+	s.doShow("campaign", "medium", show)
 
 	assert.NotEqual(t, "", urlToShow)
 
 	s.externalURL = "test"
 
-	s.doShow("campaign", "content", "medium", show)
+	s.doShow("campaign", "medium", show)
 
 	assert.Equal(t, "test", urlToShow)
 }
