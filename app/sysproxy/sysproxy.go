@@ -90,7 +90,9 @@ func (p *Sysproxy) do(turnOn bool) {
 	if turnOn && !p.on {
 		doSysproxyOn(p.proxyAddr)
 		p.on = true
-	} else if !turnOn && p.on {
+	} else if !turnOn {
+		// turn off regardless if it was turned on by the current service or
+		// not, to be fail safe.
 		doSysproxyOff(p.proxyAddr)
 		p.on = false
 	}
