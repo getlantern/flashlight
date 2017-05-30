@@ -106,9 +106,9 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 		defer op.End()
 
 		elapsed := mtime.Stopwatch()
-		conn, err := tlsdialer.DialTimeout(overheadDialer(false, func(network, addr string, timeout time.Duration) (net.Conn, error) {
+		conn, err := tlsdialer.DialTimeout(func(network, addr string, timeout time.Duration) (net.Conn, error) {
 			return p.tcpDial(op)(timeout)
-		}), chainedDialTimeout,
+		}, chainedDialTimeout,
 			"tcp", p.addr, false, &tls.Config{
 				ClientSessionCache: sessionCache,
 				InsecureSkipVerify: true,
