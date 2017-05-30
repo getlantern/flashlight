@@ -2,7 +2,6 @@ package geolookup
 
 import (
 	"math"
-	"sync"
 	"time"
 
 	"github.com/getlantern/eventual"
@@ -17,14 +16,11 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.geolookup")
 
-	watchers   []chan bool
-	muWatchers sync.RWMutex
-
 	retryWaitMillis = 100
 	maxRetryWait    = 30 * time.Second
 
-	ServiceID = service.ID("flashlight.geolookup")
-	geoService  *GeoLookup
+	ServiceID  = service.ID("flashlight.geolookup")
+	geoService *GeoLookup
 )
 
 type GeoInfo struct {

@@ -40,7 +40,7 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.client")
 
-	ServiceID service.ID     = "flashlight.client"
+	ServiceID service.ID = "flashlight.client"
 
 	proxiedCONNECTPorts = []int{
 		// Standard HTTP(S) ports
@@ -280,7 +280,7 @@ func (c *Client) reportProxyLocationLoop() {
 	}()
 }
 
-// listenAndServeHTTP makes the client listen for HTTP connections at a the given
+// listenAndServeHTTP makes the client listen for HTTP connections at the given
 // address or, if a blank address is given, at a random port on localhost.
 // onListeningFn is a callback that gets invoked as soon as the server is
 // accepting TCP connections.
