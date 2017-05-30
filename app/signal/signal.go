@@ -47,9 +47,9 @@ func (s *UserSignal) read() {
 		log.Debugf("Read userSignal %v", message)
 		switch message {
 		case "disconnect":
-			service.Start(sysproxy.ServiceID)
-		case "connect":
 			service.Stop(sysproxy.ServiceID)
+		case "connect":
+			service.Start(sysproxy.ServiceID)
 		default:
 			continue
 		}
