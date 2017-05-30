@@ -133,14 +133,16 @@ func TestProxying(t *testing.T) {
 
 	// Switch to obfs4, wait for a new config and test request again
 	atomic.StoreUint32(&useOBFS4, 1)
-	time.Sleep(5 * time.Second)
+	time.Sleep(2 * time.Second)
 	testRequest(t, httpAddr, httpsAddr)
 
 	log.Fatal("test fatal error")
 	a.Exit(nil)
 
+	// give the ops some time to populate
 	// TODO: more reliable test
-	time.Sleep(2 * time.Second)
+	time.Sleep(1 * time.Second)
+
 	opsMx.RLock()
 	for _, op := range flashlight.FullyReportedOps {
 		if op == "report_issue" || op == "sysproxy_clear" {
