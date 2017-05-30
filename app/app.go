@@ -177,7 +177,7 @@ func (app *App) Run() error {
 
 func (app *App) composeRestServices() {
 	log.Debug("Before start")
-	service.Sub(config.ServiceID, func(msg interface{}) {
+	service.MustSub(config.ServiceID, func(msg interface{}) {
 		switch c := msg.(type) {
 		case *config.Global:
 			proxiedsites.Configure(c.ProxiedSites)
@@ -188,7 +188,7 @@ func (app *App) composeRestServices() {
 	service.MustRegister(
 		loconfscanner.New(4*time.Hour, app.isProUser, &pastAnnouncements{app.settings}),
 		&loconfscanner.ConfigOpts{Lang: app.settings.GetLanguage()})
-	service.Sub(geolookup.ServiceID, func(m interface{}) {
+	service.MustSub(geolookup.ServiceID, func(m interface{}) {
 		country := m.(*geolookup.GeoInfo).GetCountry()
 		service.MustConfigure(location.ServiceID, func(opts service.ConfigOpts) {
 			opts.(*location.ConfigOpts).Code = country
@@ -198,7 +198,7 @@ func (app *App) composeRestServices() {
 		})
 	})
 
-	service.Sub(client.ServiceID, func(m interface{}) {
+	service.MustSub(client.ServiceID, func(m interface{}) {
 		msg := m.(client.Message)
 		switch msg.ProxyType {
 		case client.HTTPProxy:
@@ -224,7 +224,7 @@ func (app *App) composeRestServices() {
 				common.Version,
 			), &analytics.ConfigOpts{})
 			service.Start(analytics.ServiceID)
-			service.Sub(geolookup.ServiceID, func(m interface{}) {
+			service.MustSub(geolookup.ServiceID, func(m interface{}) {
 				ip := m.(*geolookup.GeoInfo).GetIP()
 				service.MustConfigure(analytics.ServiceID,
 					func(opts service.ConfigOpts) {

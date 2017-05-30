@@ -24,7 +24,7 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.config")
 
-	ServiceID service.ID     = "flashlight.config"
+	ServiceID service.ID = "flashlight.config"
 )
 
 type ConfigOpts struct {
@@ -34,7 +34,9 @@ type ConfigOpts struct {
 	// Obfuscate specifies whether or not to obfuscate the config on disk.
 	Obfuscate bool
 	// Sticky specifies whether or not fetch config. If true, don't fetch.
-	Sticky     bool
+	Sticky bool
+	// UserConfig is to get authentication headers in realtime when fetching
+	// configs remotely.
 	UserConfig common.UserConfig
 	// OverrideGlobal, if supplied, alters the global config before publishing
 	// it.
@@ -112,6 +114,7 @@ func (o *FetchOpts) Complete() string {
 	return ""
 }
 
+// Proxies is the proxy info the config service publishes.
 type Proxies map[string]*chained.ChainedServerInfo
 
 // config gets proxy data saved locally, embedded in the binary, or fetched
@@ -144,13 +147,14 @@ func (c *config) Start() {
 	c.opts.Global.unmarshaler = c.unmarshalGlobal
 	c.opts.Global.saveChan = make(chan interface{})
 	c.opts.Global.fullPath = path.Join(c.opts.SaveDir, c.opts.Global.FileName)
-	c.loadInitial(&c.opts.Global)
 
 	c.opts.Proxies.unmarshaler = c.unmarshalProxies
 	c.opts.Proxies.saveChan = make(chan interface{})
 	c.opts.Proxies.fullPath = path.Join(c.opts.SaveDir, c.opts.Proxies.FileName)
 	c.opts.Proxies.useLanternEtag = true
-	c.loadInitial(&c.opts.Proxies)
+
+	go c.loadInitial(&c.opts.Global)
+	go c.loadInitial(&c.opts.Proxies)
 
 	if !c.opts.Sticky {
 		err := os.MkdirAll(c.opts.SaveDir, 0750)

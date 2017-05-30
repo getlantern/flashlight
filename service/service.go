@@ -15,15 +15,17 @@ type Service interface {
 	// GetID returns the id of the service. It should uniquely identify a server.
 	GetID() ID
 	// Start actually starts the service. The Registry calls it only once until
-	// it's stopped.
+	// it's stopped. To avoid deadlock, Start should return as soon as possible
+	// and should not call methods in this package.
 	Start()
 	// Stop actually stops the service. The Registry calls it only if the
-	// service was started.
+	// service was started. To avoid deadlock, Stop should return as soon as
+	// possible and should not call methods in this package.
 	Stop()
 }
 
 // Configurable is an interface that service can choose to implement to
-// configure itself in runtime.
+// configure itself dynamically.
 type Configurable interface {
 	// Configure configures the service with current effective config
 	// options. Registry only calls this when the ConfigOpts are Complete().
@@ -94,14 +96,24 @@ func Configure(id ID, op func(opts ConfigOpts)) error {
 	return singleton.Configure(id, op)
 }
 
+// MustSubCh calls MustSubCh of the singleton registry.
+func MustSubCh(id ID) <-chan interface{} {
+	return singleton.MustSubCh(id)
+}
+
 // SubCh calls SubCh of the singleton registry.
-func SubCh(id ID) <-chan interface{} {
+func SubCh(id ID) (<-chan interface{}, error) {
 	return singleton.SubCh(id)
 }
 
+// MustSub calls MustSub of the singleton registry.
+func MustSub(id ID, cb func(m interface{})) {
+	singleton.MustSub(id, cb)
+}
+
 // Sub calls Sub of the singleton registry.
-func Sub(id ID, cb func(m interface{})) {
-	singleton.Sub(id, cb)
+func Sub(id ID, cb func(m interface{})) error {
+	return singleton.Sub(id, cb)
 }
 
 // Start calls Start of the singleton registry.

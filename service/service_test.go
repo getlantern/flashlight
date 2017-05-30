@@ -98,10 +98,14 @@ func (i *mockWithPublisher) SetPublisher(p Publisher) {
 func TestSubscribe(t *testing.T) {
 	reg := NewRegistry()
 	inst := &mockWithPublisher{&mockService{t: st1}, nil, make(chan bool)}
-	err := reg.Register(inst, nil)
-	assert.NoError(t, err)
-	ch1 := reg.SubCh(st1)
-	ch2 := reg.SubCh(st1)
+	reg.MustRegister(inst, nil)
+	reg.MustRegister(&mockService{t: st2}, nil)
+	_, err := reg.SubCh(st3)
+	assert.Error(t, err, "subscribing to not registered service should fail")
+	_, err = reg.SubCh(st2)
+	assert.Error(t, err, "subscribing should fail if service doesn't publish")
+	ch1 := reg.MustSubCh(st1)
+	ch2 := reg.MustSubCh(st1)
 	reg.Start(st1)
 	ts1 := <-ch1
 	ts2 := <-ch2

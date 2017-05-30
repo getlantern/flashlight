@@ -11,17 +11,22 @@ import (
 
 // Registry registers, lookups, and manages the dependencies of all services.
 type Registry struct {
-	muDag      sync.RWMutex
-	dag        *dag
-	muChannels sync.RWMutex
-	channels   map[ID][]chan interface{}
+	mu    sync.RWMutex
+	nodes map[ID]*node
+}
+
+type node struct {
+	id       ID
+	opts     ConfigOpts
+	instance Service
+	channels []chan interface{}
+	started  bool
 }
 
 // NewRegistry creates a new Registry
 func NewRegistry() *Registry {
 	return &Registry{
-		dag:      newDag(),
-		channels: make(map[ID][]chan interface{}),
+		nodes: make(map[ID]*node),
 	}
 }
 
@@ -42,27 +47,27 @@ func (r *Registry) Register(instance Service, defaultOpts ConfigOpts) error {
 	if instance == nil {
 		return errors.New("nil instance")
 	}
-	t := instance.GetID()
+	id := instance.GetID()
 	if _, ok := instance.(Configurable); ok {
 		if defaultOpts == nil {
-			return fmt.Errorf("configurable service '%s' must be registered with default ConfigOpts", t)
+			return fmt.Errorf("configurable service '%s' must be registered with default ConfigOpts", id)
 		}
-		if defaultOpts.For() != t {
-			return fmt.Errorf("invalid default config options id for %s", t)
+		if defaultOpts.For() != id {
+			return fmt.Errorf("invalid default config options for %s", id)
 		}
 	} else if defaultOpts != nil {
-		return fmt.Errorf("service '%s' is not configurable", t)
+		return fmt.Errorf("service '%s' is not configurable", id)
 	}
-	r.muDag.Lock()
-	defer r.muDag.Unlock()
-	if r.dag.Lookup(t) != nil {
-		return fmt.Errorf("service '%s' is already registered", t)
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.nodes[id] != nil {
+		return fmt.Errorf("service '%s' is already registered", id)
 	}
-	r.dag.AddVertex(t, instance, defaultOpts)
+	r.nodes[id] = &node{id: id, instance: instance, opts: defaultOpts}
 	if p, ok := instance.(WillPublish); ok {
-		p.SetPublisher(publisher{t, r})
+		p.SetPublisher(publisher{id, r})
 	}
-	log.Debugf("Registered service %s", t)
+	log.Debugf("Registered service %s", id)
 	return nil
 }
 
@@ -84,9 +89,9 @@ func (r *Registry) Lookup(id ID) Service {
 }
 
 func (r *Registry) lookup(id ID) *node {
-	r.muDag.RLock()
-	n := r.dag.Lookup(id)
-	r.muDag.RUnlock()
+	r.mu.RLock()
+	n := r.nodes[id]
+	r.mu.RUnlock()
 	return n
 }
 
@@ -102,9 +107,12 @@ func (r *Registry) MustConfigure(id ID, op func(ConfigOpts)) {
 // automatically. If the service is not configurable, it does nothing and
 // returns error.
 func (r *Registry) Configure(id ID, op func(ConfigOpts)) error {
-	r.muDag.Lock()
-	defer r.muDag.Unlock()
-	n := r.dag.Lookup(id)
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	n := r.nodes[id]
+	if n == nil {
+		return errors.New("%s service doesn't exist", id)
+	}
 	if n.opts == nil {
 		return errors.New("%s service doesn't allow config options", id)
 	}
@@ -113,40 +121,69 @@ func (r *Registry) Configure(id ID, op func(ConfigOpts)) error {
 	return nil
 }
 
-// SubCh returns a channel to receive any message the service published.
-// Messages are discarded if no one is listening on the channel. If the
+// MustSubCh calls SubCh and panics if there's any error.
+func (r *Registry) MustSubCh(id ID) <-chan interface{} {
+	ch, err := r.SubCh(id)
+	if err != nil {
+		panic(err)
+	}
+	return ch
+}
+
+// SubCh returns a channel to receive any message the service published. The channel has 1 buffer in case , but messages are discarded if no one is listening on the channel. If the
 // service doesn't implement WillPublish interface, the channel never sends
 // anything. The channel will be closed by CloseAll().
-func (r *Registry) SubCh(id ID) <-chan interface{} {
-	ch := make(chan interface{}, 10)
-	r.muChannels.Lock()
-	r.channels[id] = append(r.channels[id], ch)
-	r.muChannels.Unlock()
+func (r *Registry) SubCh(id ID) (<-chan interface{}, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	n := r.nodes[id]
+	if n == nil {
+		return nil, errors.New("%s service doesn't exist", id)
+	}
+	if _, ok := n.instance.(WillPublish); !ok {
+		return nil, errors.New("%s service doesn't publish anything", id)
+	}
+	ch := make(chan interface{}, 1)
+	n.channels = append(n.channels, ch)
 	log.Tracef("Subscribed to %v", id)
-	return ch
+	return ch, nil
+}
+
+// MustSub calls Sub and panics if there's any error.
+func (r *Registry) MustSub(id ID, cb func(m interface{})) {
+	if err := r.Sub(id, cb); err != nil {
+		panic(err)
+	}
 }
 
 // Sub calls SubCh with the the specific service id spawns a goroutine to
 // call the callback for any messsage received.
-func (r *Registry) Sub(id ID, cb func(m interface{})) {
-	ch := r.SubCh(id)
+func (r *Registry) Sub(id ID, cb func(m interface{})) error {
+	ch, err := r.SubCh(id)
+	if err != nil {
+		return err
+	}
 	go func() {
 		for m := range ch {
 			cb(m)
 		}
 	}()
+
+	return nil
 }
 
 func (r *Registry) publish(id ID, msg interface{}) {
-	r.muChannels.RLock()
-	defer r.muChannels.RUnlock()
-	channels := r.channels[id]
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	// Note that there is no nil checking as the only way to call publish is
+	// via a Publisher, which guarantees that the service is registered.
+	channels := r.nodes[id].channels
 	log.Tracef("Publishing message to %d subscribers of %v", len(channels), id)
 	for _, ch := range channels {
 		select {
 		case ch <- msg:
 		default:
-			log.Errorf("Warning: message from %s discarded: %+v", id, msg)
+			log.Debugf("Warning: message from %s discarded: %+v", id, msg)
 		}
 	}
 }
@@ -154,18 +191,11 @@ func (r *Registry) publish(id ID, msg interface{}) {
 // StartAll starts all the services unless any of the dependencies doesn't
 // start.
 func (r *Registry) StartAll() {
-	r.muDag.RLock()
-	defer r.muDag.RUnlock()
-	for _, n := range r.dag.Flatten() {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	for _, n := range r.nodes {
 		r.startNoLock(n)
 	}
-}
-
-func (r *Registry) started(id ID) bool {
-	r.muDag.RLock()
-	defer r.muDag.RUnlock()
-	n := r.dag.Lookup(id)
-	return n.started
 }
 
 type serviceWrapper struct {
@@ -201,66 +231,54 @@ func (r *Registry) StartFunc(f func() func()) {
 // no-op. The return value indicates whether the service is started or not
 // after this function call.
 func (r *Registry) Start(id ID) bool {
-	r.muDag.RLock()
-	defer r.muDag.RUnlock()
-	n := r.dag.Lookup(id)
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	n := r.nodes[id]
 	return r.startNoLock(n)
 }
 
 func (r *Registry) startNoLock(n *node) bool {
 	if n.started {
-		log.Debugf("Not start already started service %s", n.t)
+		log.Debugf("Not start already started service %s", n.id)
 		return true
 	}
 	if c, ok := n.instance.(Configurable); ok {
 		if reason := n.opts.Complete(); reason != "" {
-			log.Debugf("%s, skip starting service %s", reason, n.t)
+			log.Debugf("%s, skip starting service %s", reason, n.id)
 			log.Tracef("%+v", n.opts)
 			return false
 		}
 		c.Configure(n.opts)
 	}
-	log.Debugf("Starting service %s", n.t)
+	log.Debugf("Starting service %s", n.id)
 	n.instance.Start()
 	n.started = true
-	log.Debugf("Started service %s", n.t)
+	log.Debugf("Started service %s", n.id)
 	return true
 }
 
 // CloseAll stops all services registered and started. It closes all channels
 // subscribed to the services.
 func (r *Registry) CloseAll() {
-	r.stopServices()
-	r.closeChannels()
-}
-
-func (r *Registry) stopServices() {
-	r.muDag.RLock()
-	defer r.muDag.RUnlock()
-	flatten := r.dag.Flatten()
-	// Stop in reverse order
-	for i := len(flatten) - 1; i >= 0; i-- {
-		r.stopNoLock(flatten[i])
-	}
-}
-
-func (r *Registry) closeChannels() {
-	r.muChannels.Lock()
-	defer r.muChannels.Unlock()
-	allChannels := r.channels
-	r.channels = make(map[ID][]chan interface{})
-	for _, channels := range allChannels {
-		for _, ch := range channels {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	for _, n := range r.nodes {
+		r.stopNoLock(n)
+		for _, ch := range n.channels {
 			close(ch)
 		}
+		n.channels = nil
 	}
 }
 
 // Stop stops a service but does nothing if the service was not already started.
 func (r *Registry) Stop(id ID) {
-	r.muDag.RLock()
-	defer r.muDag.RUnlock()
-	n := r.dag.Lookup(id)
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	n := r.nodes[id]
+	if n == nil {
+		log.Errorf("Stopping not registered service %s", id)
+	}
 	r.stopNoLock(n)
 }
 
@@ -270,5 +288,5 @@ func (r *Registry) stopNoLock(n *node) {
 	}
 	n.instance.Stop()
 	n.started = false
-	log.Debugf("Stopped service %s", n.t)
+	log.Debugf("Stopped service %s", n.id)
 }

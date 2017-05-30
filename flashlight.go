@@ -73,7 +73,7 @@ func ComposeServices(
 
 	registerConfigService(flagsAsMap, userConfig)
 	service.MustRegister(borda.New(FullyReportedOps), &borda.ConfigOpts{})
-	service.Sub(config.ServiceID, func(msg interface{}) {
+	service.MustSub(config.ServiceID, func(msg interface{}) {
 		switch c := msg.(type) {
 		case config.Proxies:
 			log.Debugf("Applying proxy config with proxies: %v", c)
@@ -98,7 +98,7 @@ func ComposeServices(
 	})
 
 	service.MustRegister(geolookup.New(), nil)
-	service.Sub(geolookup.ServiceID, func(m interface{}) {
+	service.MustSub(geolookup.ServiceID, func(m interface{}) {
 		info := m.(*geolookup.GeoInfo)
 		ip, country := info.GetIP(), info.GetCountry()
 		ops.SetGlobal("geo_country", country)
@@ -108,13 +108,13 @@ func ComposeServices(
 		})
 	})
 
-	service.Sub(client.ServiceID, func(m interface{}) {
+	service.MustSub(client.ServiceID, func(m interface{}) {
 		msg := m.(client.Message)
 		if msg.ProxyType == client.HTTPProxy {
 			proxied.SetProxyAddr(eventual.DefaultGetter(msg.Addr))
 			log.Debug("Started client HTTP proxy")
 			op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
-			onGeo := service.SubCh(geolookup.ServiceID)
+			onGeo := service.MustSubCh(geolookup.ServiceID)
 			geo := service.MustLookup(geolookup.ServiceID)
 			geo.(*geolookup.GeoLookup).Refresh()
 			ops.Go(func() {

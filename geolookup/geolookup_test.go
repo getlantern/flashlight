@@ -12,7 +12,7 @@ func TestFronted(t *testing.T) {
 	r := service.NewRegistry()
 	i := New()
 	r.MustRegister(i, nil)
-	ch := r.SubCh(ServiceID)
+	ch := r.MustSubCh(ServiceID)
 	r.Start(ServiceID)
 	instance := i.(*GeoLookup)
 	fronted.ConfigureForTest(t)
