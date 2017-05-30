@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"sync"
 
-	gp "github.com/getlantern/bandwidth"
+	bw "github.com/getlantern/bandwidth"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 
@@ -34,7 +34,7 @@ func Start(proChecker func() (bool, bool)) error {
 	ns.proChecker = proChecker
 	helloFn := func(write func(interface{})) {
 		log.Debugf("Sending current bandwidth quota to new client")
-		write(gp.GetQuota())
+		write(bw.GetQuota())
 	}
 	bservice, err := ws.Register("bandwidth", helloFn)
 	if err != nil {
@@ -42,7 +42,7 @@ func Start(proChecker func() (bool, bool)) error {
 		return err
 	}
 	go func() {
-		for quota := range gp.Updates {
+		for quota := range bw.Updates {
 			log.Debugf("Sending update...")
 			bservice.Out <- quota
 			if ns.isFull(quota) {
@@ -63,19 +63,19 @@ func Start(proChecker func() (bool, bool)) error {
 	return nil
 }
 
-func (s *notifyStatus) isEightyOrMore(quota *gp.Quota) bool {
+func (s *notifyStatus) isEightyOrMore(quota *bw.Quota) bool {
 	return s.checkPercent(quota, 0.8)
 }
 
-func (s *notifyStatus) isFiftyOrMore(quota *gp.Quota) bool {
+func (s *notifyStatus) isFiftyOrMore(quota *bw.Quota) bool {
 	return s.checkPercent(quota, 0.5)
 }
 
-func (s *notifyStatus) isFull(quota *gp.Quota) bool {
+func (s *notifyStatus) isFull(quota *bw.Quota) bool {
 	return (quota.MiBAllowed <= quota.MiBUsed)
 }
 
-func (s *notifyStatus) checkPercent(quota *gp.Quota, percent float64) bool {
+func (s *notifyStatus) checkPercent(quota *bw.Quota, percent float64) bool {
 	return (float64(quota.MiBUsed) / float64(quota.MiBAllowed)) > percent
 }
 
