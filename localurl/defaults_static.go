@@ -1,13 +1,13 @@
 // +build disableresourcerandomization
 
-package ui
+package localurl
 
 const defaultUIAddress = "localhost:16823"
 
 const strictOriginCheck = false
 
-// LocalHTTPToken is a no-op without resource randomization.
-func LocalHTTPToken() string {
+// localHTTPToken is a no-op without resource randomization.
+func localHTTPToken() string {
 	// no-op.
 	return ""
 }

@@ -1,11 +1,15 @@
 // +build !disableresourcerandomization
 
-package ui
+package localurl
 
 import (
 	"crypto/rand"
 	"encoding/hex"
+
+	"github.com/getlantern/golog"
 )
+
+var log = golog.LoggerFor("flashlight.localurl")
 
 const defaultUIAddress = "localhost:0"
 
@@ -19,7 +23,7 @@ func randRead(size int) string {
 	return hex.EncodeToString(buf)
 }
 
-// LocalHTTPToken returns the local HTTP token for accessing the proxy.
-func LocalHTTPToken() string {
+// localHTTPToken returns the local HTTP token for accessing the proxy.
+func localHTTPToken() string {
 	return randRead(16)
 }

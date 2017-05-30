@@ -170,8 +170,9 @@ func doTrackSession(args string, rt http.RoundTripper) {
 
 // AddCampaign adds Google Analytics campaign tracking to a URL and returns
 // that URL.
-func AddCampaign(urlStr, campaign, content, medium string) (string, error) {
-	u, err := url.Parse(urlStr)
+func AddCampaign(urlStr, campaign, content, medium string, addToken func(string) string) (string, error) {
+	tokenized := addToken(urlStr)
+	u, err := url.Parse(tokenized)
 	if err != nil {
 		log.Errorf("Could not parse click URL: %v", err)
 		return "", err

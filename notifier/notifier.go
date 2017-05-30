@@ -25,8 +25,8 @@ var (
 
 // ShowNotification submits the notification to the notificationsLoop to show
 // and waits for the result.
-func ShowNotification(note *notify.Notification, campaign string) bool {
-	err := normalizeClickURL(note, campaign)
+func ShowNotification(note *notify.Notification, campaign string, addToken func(string) string) bool {
+	err := normalizeClickURL(note, campaign, addToken)
 	if err != nil {
 		return false
 	}
@@ -39,8 +39,8 @@ func ShowNotification(note *notify.Notification, campaign string) bool {
 	return <-chResult
 }
 
-func normalizeClickURL(note *notify.Notification, campaign string) error {
-	ga, err := analytics.AddCampaign(note.ClickURL, campaign, note.Title+"-"+note.Message, "notification")
+func normalizeClickURL(note *notify.Notification, campaign string, addToken func(string) string) error {
+	ga, err := analytics.AddCampaign(note.ClickURL, campaign, note.Title+"-"+note.Message, "notification", addToken)
 	if err != nil {
 		return err
 	}

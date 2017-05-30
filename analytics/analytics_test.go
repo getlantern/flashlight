@@ -55,13 +55,16 @@ func TestRoundTrip(t *testing.T) {
 
 func TestAddCampaign(t *testing.T) {
 	startURL := "https://test.com"
-	campaignURL, err := AddCampaign(startURL, "test-campaign", "test-content", "test-medium")
+	f := func(url string) string {
+		return url
+	}
+	campaignURL, err := AddCampaign(startURL, "test-campaign", "test-content", "test-medium", f)
 	assert.NoError(t, err, "unexpected error")
 	assert.Equal(t, "https://test.com?utm_campaign=test-campaign&utm_content=test-content&utm_medium=test-medium&utm_source="+runtime.GOOS, campaignURL)
 
 	// Now test a URL that will produce an error
 	startURL = ":"
-	_, err = AddCampaign(startURL, "test-campaign", "test-content", "test-medium")
+	_, err = AddCampaign(startURL, "test-campaign", "test-content", "test-medium", f)
 	assert.Error(t, err)
 }
 

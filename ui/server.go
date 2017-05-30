@@ -6,13 +6,12 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"path"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/getlantern/flashlight/analytics"
+	"github.com/getlantern/flashlight/localurl"
 	"github.com/getlantern/flashlight/util"
 	"github.com/skratchdot/open-golang/open"
 )
@@ -23,7 +22,7 @@ type server struct {
 	// The address client should access. Available only if the server is started.
 	accessAddr     string
 	externalURL    string
-	localHTTPToken string
+	localURL       localurl.LocalURL
 	listener       net.Listener
 	mux            *http.ServeMux
 	onceOpenExtURL sync.Once
@@ -36,7 +35,7 @@ type server struct {
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func newServer(addr string, allInterfaces bool, extURL, localHTTPToken string) *server {
+func newServer(addr string, allInterfaces bool, extURL string, localURL localurl.LocalURL) *server {
 	addr = normalizeAddr(addr)
 	if allInterfaces {
 		_, port, err := net.SplitHostPort(addr)
@@ -48,10 +47,10 @@ func newServer(addr string, allInterfaces bool, extURL, localHTTPToken string) *
 	}
 
 	return &server{
-		listenAddr:     addr,
-		externalURL:    overrideManotoURL(extURL),
-		localHTTPToken: localHTTPToken,
-		mux:            http.NewServeMux(),
+		listenAddr:  addr,
+		externalURL: overrideManotoURL(extURL),
+		localURL:    localURL,
+		mux:         http.NewServeMux(),
 	}
 }
 
@@ -142,7 +141,7 @@ func (s *server) show(campaign, medium string) {
 // asynchronously is not a problem.
 func (s *server) doShow(campaign, medium string, open func(string, time.Duration)) {
 	tempURL := fmt.Sprintf("http://%s/", s.accessAddr)
-	campaignURL, err := analytics.AddCampaign(tempURL, campaign, "", medium)
+	campaignURL, err := s.localURL(tempURL, campaign, "", medium)
 	var uiURL string
 	if err != nil {
 		uiURL = tempURL
@@ -168,13 +167,6 @@ func (s *server) getUIAddr() string {
 
 func (s *server) stop() error {
 	return s.listener.Close()
-}
-
-// addToken adds the UI domain and custom request token to the specified
-// request path. Without that token, the backend will reject the request to
-// avoid web sites detecting Lantern.
-func (s *server) addToken(in string) string {
-	return util.SetURLParam("http://"+path.Join(s.accessAddr, in), "token", s.localHTTPToken)
 }
 
 func (s *server) checkOrigin(h http.Handler) http.Handler {

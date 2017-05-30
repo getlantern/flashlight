@@ -4,6 +4,8 @@ import (
 	"net/url"
 )
 
+// SetURLParam adds the given key/value pair to the query string of the
+// specified URL.
 func SetURLParam(in string, key string, value string) string {
 	out, err := url.Parse(in)
 	if err != nil {
