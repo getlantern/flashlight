@@ -40,22 +40,6 @@ func newGlobal() *Global {
 	}
 }
 
-// // applyFlags updates this config from any command-line flags that were passed
-// // in.
-// func (cfg *Global) applyFlags(flags map[string]interface{}) {
-// 	// Visit all flags that have been set and copy to config
-// 	for key, value := range flags {
-// 		switch key {
-// 		case "cloudconfigca":
-// 			cfg.CloudConfigCA = value.(string)
-// 		case "borda-report-interval":
-// 			cfg.BordaReportInterval = value.(time.Duration)
-// 		case "borda-sample-percentage":
-// 			cfg.BordaSamplePercentage = value.(float64)
-// 		}
-// 	}
-// }
-
 func (cfg *Global) validate() error {
 	if len(cfg.Client.MasqueradeSets) == 0 {
 		return errors.New("No masquerades")

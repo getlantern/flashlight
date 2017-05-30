@@ -28,7 +28,7 @@ const (
 var (
 	log = golog.LoggerFor("flashlight.analytics")
 
-	ServiceID service.ID     = "flashlight.analytics"
+	ServiceID service.ID = "flashlight.analytics"
 
 	maxWaitForIP = math.MaxInt32 * time.Second
 )
