@@ -40,7 +40,7 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.client")
 
-	ServiceType service.Type = "flashlight.client"
+	ServiceID service.ID     = "flashlight.client"
 
 	proxiedCONNECTPorts = []int{
 		// Standard HTTP(S) ports
@@ -71,8 +71,8 @@ type ConfigOpts struct {
 	Proxies    map[string]*chained.ChainedServerInfo
 }
 
-func (o *ConfigOpts) For() service.Type {
-	return ServiceType
+func (o *ConfigOpts) For() service.ID {
+	return ServiceID
 }
 
 func (o *ConfigOpts) Complete() string {
@@ -176,8 +176,8 @@ func New(
 
 }
 
-func (c *Client) GetType() service.Type {
-	return ServiceType
+func (c *Client) GetID() service.ID {
+	return ServiceID
 }
 
 func (c *Client) SetPublisher(p service.Publisher) {

@@ -177,7 +177,7 @@ func (app *App) Run() error {
 
 func (app *App) composeRestServices() {
 	log.Debug("Before start")
-	service.Sub(config.ServiceType, func(msg interface{}) {
+	service.Sub(config.ServiceID, func(msg interface{}) {
 		switch c := msg.(type) {
 		case *config.Global:
 			proxiedsites.Configure(c.ProxiedSites)
@@ -188,17 +188,17 @@ func (app *App) composeRestServices() {
 	service.MustRegister(
 		loconfscanner.New(4*time.Hour, app.isProUser, &pastAnnouncements{app.settings}),
 		&loconfscanner.ConfigOpts{Lang: app.settings.GetLanguage()})
-	service.Sub(geolookup.ServiceType, func(m interface{}) {
+	service.Sub(geolookup.ServiceID, func(m interface{}) {
 		country := m.(*geolookup.GeoInfo).GetCountry()
-		service.MustConfigure(location.ServiceType, func(opts service.ConfigOpts) {
+		service.MustConfigure(location.ServiceID, func(opts service.ConfigOpts) {
 			opts.(*location.ConfigOpts).Code = country
 		})
-		service.MustConfigure(loconfscanner.ServiceType, func(opts service.ConfigOpts) {
+		service.MustConfigure(loconfscanner.ServiceID, func(opts service.ConfigOpts) {
 			opts.(*loconfscanner.ConfigOpts).Country = country
 		})
 	})
 
-	service.Sub(client.ServiceType, func(m interface{}) {
+	service.Sub(client.ServiceID, func(m interface{}) {
 		msg := m.(client.Message)
 		switch msg.ProxyType {
 		case client.HTTPProxy:
@@ -207,9 +207,9 @@ func (app *App) composeRestServices() {
 			sysproxyOn := app.settings.GetSystemProxy()
 			service.MustRegister(sysproxy.New(msg.Addr),
 				&sysproxy.ConfigOpts{sysproxyOn})
-			service.Start(sysproxy.ServiceType)
+			service.Start(sysproxy.ServiceID)
 			app.OnSettingChange(settings.SNSystemProxy, func(val interface{}) {
-				service.Configure(sysproxy.ServiceType, func(o service.ConfigOpts) {
+				service.Configure(sysproxy.ServiceID, func(o service.ConfigOpts) {
 					o.(*sysproxy.ConfigOpts).Enable = val.(bool)
 				})
 			})
@@ -223,15 +223,15 @@ func (app *App) composeRestServices() {
 				app.settings.GetDeviceID(),
 				common.Version,
 			), &analytics.ConfigOpts{})
-			service.Start(analytics.ServiceType)
-			service.Sub(geolookup.ServiceType, func(m interface{}) {
+			service.Start(analytics.ServiceID)
+			service.Sub(geolookup.ServiceID, func(m interface{}) {
 				ip := m.(*geolookup.GeoInfo).GetIP()
-				service.MustConfigure(analytics.ServiceType,
+				service.MustConfigure(analytics.ServiceID,
 					func(opts service.ConfigOpts) {
 						opts.(*analytics.ConfigOpts).GeoIP = ip
 					})
 			})
-			geo := service.MustLookup(geolookup.ServiceType)
+			geo := service.MustLookup(geolookup.ServiceID)
 			geo.(*geolookup.GeoLookup).Refresh()
 
 			app.showUI()
@@ -435,7 +435,7 @@ func (app *App) doExit(err error) {
 	} else {
 		log.Debug("Exiting app normally")
 	}
-	service.StopAll()
+	service.CloseAll()
 	defer func() {
 		app.exitCh <- err
 		log.Debug("Finished exiting app")

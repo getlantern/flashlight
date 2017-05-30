@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	ServiceType service.Type = "app.sysproxy"
+	ServiceID service.ID     = "app.sysproxy"
 	log                      = golog.LoggerFor("app.sysproxy")
 )
 
@@ -26,8 +26,8 @@ type ConfigOpts struct {
 	Enable bool
 }
 
-func (o *ConfigOpts) For() service.Type {
-	return ServiceType
+func (o *ConfigOpts) For() service.ID {
+	return ServiceID
 }
 
 func (o *ConfigOpts) Complete() string {
@@ -51,8 +51,8 @@ func New(proxyAddr string) *Sysproxy {
 	return &Sysproxy{proxyAddr: proxyAddr}
 }
 
-func (p *Sysproxy) GetType() service.Type {
-	return ServiceType
+func (p *Sysproxy) GetID() service.ID {
+	return ServiceID
 }
 
 func (p *Sysproxy) Configure(opts service.ConfigOpts) {

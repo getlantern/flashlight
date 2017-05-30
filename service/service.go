@@ -6,30 +6,14 @@ package service
 
 import "github.com/getlantern/golog"
 
-// Type uniquely identify a service. Typically, each service defines a package
-// level constant ServiceType with an unique string.
-type Type string
+// ID uniquely identify a service. Typically, each service defines a package
+// level constant ServiceID with an unique string.
+type ID string
 
-// ConfigOpts represents all of the config options required to start a service.
-type ConfigOpts interface {
-	// For returns the service type to which the ConfigOpts apply
-	For() Type
-	// Complete checks if the ConfigOpts is complete to start the service. If
-	// not, return the reason.
-	Complete() string
-}
-
-// Publisher is an interface for the service impletation to publish a message,
-// when required.
-type Publisher interface {
-	// Publish publishes any message to all of the subscribers.
-	Publish(msg interface{})
-}
-
-// Service actually implemetents the service.
+// Service is the minimum interface to implemetent a service.
 type Service interface {
-	// GetType returns the type of the service.
-	GetType() Type
+	// GetID returns the id of the service. It should uniquely identify a server.
+	GetID() ID
 	// Start actually starts the service. The Registry calls it only once until
 	// it's stopped.
 	Start()
@@ -49,8 +33,26 @@ type Configurable interface {
 	Configure(opts ConfigOpts)
 }
 
+// ConfigOpts represents all of the config options required to start a service.
+type ConfigOpts interface {
+	// For returns the service id to which the ConfigOpts apply.
+	For() ID
+	// Complete checks if the ConfigOpts is complete to start the service. If
+	// not, return the reason.
+	Complete() string
+}
+
+// WillPublish is an interface the service can optionally implement to publish
+// any message.
 type WillPublish interface {
+	// SetPublisher is for services to store the publisher for further reference.
 	SetPublisher(p Publisher)
+}
+
+// Publisher is what a service can optionally use to publish a message.
+type Publisher interface {
+	// Publish publishes any message to all of the subscribers.
+	Publish(msg interface{})
 }
 
 var (
@@ -62,52 +64,54 @@ func init() {
 	singleton = NewRegistry()
 }
 
-// MustRegister registers the service to the singleton registry, or panics.
+// MustRegister calls MustRegister of the singleton registry
 func MustRegister(instance Service, defaultOpts ConfigOpts) {
 	singleton.MustRegister(instance, defaultOpts)
 }
 
-// Register registers the service to the singleton registry
+// Register calls Register of the singleton registry
 func Register(instance Service, defaultOpts ConfigOpts) error {
 	return singleton.Register(instance, defaultOpts)
 }
 
-// MustLookup looks up a service from the singleton registry, or panics.
-func MustLookup(t Type) Service {
-	return singleton.MustLookup(t)
+// MustLookup calls MustLookup of the singleton registry
+func MustLookup(id ID) Service {
+	return singleton.MustLookup(id)
 }
 
-// Lookup looks up a service from the singleton registry, or nil.
-func Lookup(t Type) Service {
-	return singleton.Lookup(t)
+// Lookup calls Lookup of the singleton registry
+func Lookup(id ID) Service {
+	return singleton.Lookup(id)
 }
 
-// MustConfigure configures a service from the singleton registry, or panics.
-func MustConfigure(t Type, op func(opts ConfigOpts)) {
-	singleton.MustConfigure(t, op)
+// MustConfigure calls MustConfigure of the singleton registry
+func MustConfigure(id ID, op func(opts ConfigOpts)) {
+	singleton.MustConfigure(id, op)
 }
 
-// Configure configures  a service from the singleton registry.
-func Configure(t Type, op func(opts ConfigOpts)) error {
-	return singleton.Configure(t, op)
+// Configure calls Configure of the singleton registry
+func Configure(id ID, op func(opts ConfigOpts)) error {
+	return singleton.Configure(id, op)
 }
 
 // SubCh calls SubCh of the singleton registry.
-func SubCh(t Type) <-chan interface{} {
-	return singleton.SubCh(t)
+func SubCh(id ID) <-chan interface{} {
+	return singleton.SubCh(id)
 }
 
 // Sub calls Sub of the singleton registry.
-func Sub(t Type, cb func(m interface{})) {
-	singleton.Sub(t, cb)
+func Sub(id ID, cb func(m interface{})) {
+	singleton.Sub(id, cb)
 }
 
-func Start(t Type) bool {
-	return singleton.Start(t)
+// Start calls Start of the singleton registry.
+func Start(id ID) bool {
+	return singleton.Start(id)
 }
 
-func Stop(t Type) {
-	singleton.Stop(t)
+// Stop calls Stop of the singleton registry.
+func Stop(id ID) {
+	singleton.Stop(id)
 }
 
 // StartAll starts all services registered to the singleton registry.
@@ -115,16 +119,17 @@ func StartAll() {
 	singleton.StartAll()
 }
 
-// StopAll stops all started services registered to the singleton registry.
-func StopAll() {
-	singleton.StopAll()
+// CloseAll stops all started services registered to the singleton registry and
+// close all subscribed channels.
+func CloseAll() {
+	singleton.CloseAll()
 }
 
 type publisher struct {
-	t Type
-	r *Registry
+	id ID
+	r  *Registry
 }
 
 func (p publisher) Publish(msg interface{}) {
-	p.r.publish(p.t, msg)
+	p.r.publish(p.id, msg)
 }

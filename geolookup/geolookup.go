@@ -23,7 +23,7 @@ var (
 	retryWaitMillis = 100
 	maxRetryWait    = 30 * time.Second
 
-	ServiceType = service.Type("flashlight.geolookup")
+	ServiceID = service.ID("flashlight.geolookup")
 	geoService  *GeoLookup
 )
 
@@ -56,8 +56,8 @@ func New() service.Service {
 	}
 }
 
-func (s *GeoLookup) GetType() service.Type {
-	return ServiceType
+func (s *GeoLookup) GetID() service.ID {
+	return ServiceID
 }
 
 func (s *GeoLookup) SetPublisher(p service.Publisher) {

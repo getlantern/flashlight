@@ -73,16 +73,16 @@ func ComposeServices(
 
 	registerConfigService(flagsAsMap, userConfig)
 	service.MustRegister(borda.New(FullyReportedOps), &borda.ConfigOpts{})
-	service.Sub(config.ServiceType, func(msg interface{}) {
+	service.Sub(config.ServiceID, func(msg interface{}) {
 		switch c := msg.(type) {
 		case config.Proxies:
 			log.Debugf("Applying proxy config with proxies: %v", c)
-			service.MustConfigure(client.ServiceType, func(opts service.ConfigOpts) {
+			service.MustConfigure(client.ServiceID, func(opts service.ConfigOpts) {
 				opts.(*client.ConfigOpts).Proxies = c
 			})
 		case *config.Global:
 			log.Debugf("Applying global config")
-			service.MustConfigure(borda.ServiceType, func(opts service.ConfigOpts) {
+			service.MustConfigure(borda.ServiceID, func(opts service.ConfigOpts) {
 				o := opts.(*borda.ConfigOpts)
 				o.ReportInterval = c.BordaReportInterval
 				o.ReportAllOps = settings.IsAutoReport() && rand.Float64() <= c.BordaSamplePercentage/100
@@ -98,24 +98,24 @@ func ComposeServices(
 	})
 
 	service.MustRegister(geolookup.New(), nil)
-	service.Sub(geolookup.ServiceType, func(m interface{}) {
+	service.Sub(geolookup.ServiceID, func(m interface{}) {
 		info := m.(*geolookup.GeoInfo)
 		ip, country := info.GetIP(), info.GetCountry()
 		ops.SetGlobal("geo_country", country)
 		ops.SetGlobal("client_ip", ip)
-		service.Configure(client.ServiceType, func(opts service.ConfigOpts) {
+		service.Configure(client.ServiceID, func(opts service.ConfigOpts) {
 			opts.(*client.ConfigOpts).GeoCountry = country
 		})
 	})
 
-	service.Sub(client.ServiceType, func(m interface{}) {
+	service.Sub(client.ServiceID, func(m interface{}) {
 		msg := m.(client.Message)
 		if msg.ProxyType == client.HTTPProxy {
 			proxied.SetProxyAddr(eventual.DefaultGetter(msg.Addr))
 			log.Debug("Started client HTTP proxy")
 			op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
-			onGeo := service.SubCh(geolookup.ServiceType)
-			geo := service.MustLookup(geolookup.ServiceType)
+			onGeo := service.SubCh(geolookup.ServiceID)
+			geo := service.MustLookup(geolookup.ServiceID)
 			geo.(*geolookup.GeoLookup).Refresh()
 			ops.Go(func() {
 				// wait for geo info before reporting so that we know the

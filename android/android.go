@@ -168,13 +168,13 @@ func Start(configDir string,
 		flags,
 	)
 
-	service.Sub(geolookup.ServiceType, func(m interface{}) {
+	service.Sub(geolookup.ServiceID, func(m interface{}) {
 		country := m.(*geolookup.GeoInfo).GetCountry()
 		log.Debugf("Successful geolookup: country %s", country)
 		user.SetCountry(country)
 	})
 
-	ch := service.SubCh(client.ServiceType)
+	ch := service.SubCh(client.ServiceID)
 	chFinish := make(chan bool)
 	go func() {
 		timeout := time.After(time.Duration(timeoutMillis) * time.Millisecond)

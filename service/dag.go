@@ -1,11 +1,11 @@
 package service
 
 type dag struct {
-	nodes map[Type]*node
+	nodes map[ID]*node
 }
 
 type node struct {
-	t            Type
+	t            ID
 	started      bool
 	opts         ConfigOpts
 	instance     Service
@@ -15,23 +15,23 @@ type node struct {
 }
 
 func newDag() *dag {
-	return &dag{nodes: make(map[Type]*node)}
+	return &dag{nodes: make(map[ID]*node)}
 }
 
-func (this *dag) AddVertex(t Type, instance Service, opts ConfigOpts) *node {
+func (this *dag) AddVertex(t ID, instance Service, opts ConfigOpts) *node {
 	n := &node{t: t, instance: instance, opts: opts}
 	this.nodes[t] = n
 	return n
 }
 
-func (this *dag) AddEdge(from, to Type) {
+func (this *dag) AddEdge(from, to ID) {
 	fromNode := this.nodes[from]
 	toNode := this.nodes[to]
 	fromNode.children = append(fromNode.children, toNode)
 	toNode.indegree++
 }
 
-func (this *dag) Lookup(t Type) *node {
+func (this *dag) Lookup(t ID) *node {
 	return this.nodes[t]
 }
 func (this *dag) Flatten() []*node {

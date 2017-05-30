@@ -24,7 +24,7 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.config")
 
-	ServiceType service.Type = "flashlight.config"
+	ServiceID service.ID     = "flashlight.config"
 )
 
 type ConfigOpts struct {
@@ -131,8 +131,8 @@ func New(opts *ConfigOpts) service.Service {
 	return &config{opts: opts}
 }
 
-func (c *config) GetType() service.Type {
-	return ServiceType
+func (c *config) GetID() service.ID {
+	return ServiceID
 }
 
 func (c *config) SetPublisher(p service.Publisher) {

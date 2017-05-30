@@ -18,7 +18,7 @@ import (
 	"github.com/getlantern/flashlight/app/notifier"
 )
 
-var ServiceType service.Type = "flashlight.desktop.loconfscanner"
+var ServiceID service.ID     = "flashlight.desktop.loconfscanner"
 
 type PastAnnouncements interface {
 	Get() []string
@@ -30,8 +30,8 @@ type ConfigOpts struct {
 	Country string
 }
 
-func (c *ConfigOpts) For() service.Type {
-	return ServiceType
+func (c *ConfigOpts) For() service.ID {
+	return ServiceID
 }
 
 func (c *ConfigOpts) Complete() string {
@@ -79,8 +79,8 @@ func New(
 	}
 }
 
-func (loc *loconfer) GetType() service.Type {
-	return ServiceType
+func (loc *loconfer) GetID() service.ID {
+	return ServiceID
 }
 
 func (loc *loconfer) Configure(opts service.ConfigOpts) {
