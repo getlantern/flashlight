@@ -498,7 +498,7 @@ imports:
   version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 testImports:
 - name: github.com/getlantern/bbrconn
-  version: 02b1f22722cfc5afd58f9234e65c18a401a1ad22
+  version: 9a5594c63329cf77582eccae41a8a75240a078fe
 - name: github.com/getlantern/tcpinfo
   version: 02c9abeb5f94610d1b5ed11e90431f482f5bdb80
 - name: github.com/gonum/blas
