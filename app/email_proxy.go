@@ -61,6 +61,12 @@ func fillDefaults(msg *mandrillMessage) {
 	msg.Vars["version"] = fmt.Sprintf("%v (%v)",
 		settings.getString(SNVersion),
 		settings.getString(SNRevisionDate))
+	os, err := osversion.GetHumanReadable()
+	if err != nil {
+		log.Errorf("Unable to get version: %v", err)
+	} else {
+		msg.Vars["os"] = os
+	}
 	if msg.WithSettings {
 		buf := &bytes.Buffer{}
 		_, err := settings.writeTo(buf)

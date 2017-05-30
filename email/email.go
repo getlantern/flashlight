@@ -13,7 +13,6 @@ import (
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/osversion"
 
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ops"
@@ -47,19 +46,28 @@ type Message struct {
 func Send(msg *Message) error {
 	var op *ops.Op
 	if strings.HasPrefix(msg.Template, "user-send-logs") {
-		isPro, _ := strconv.ParseBool(fmt.Sprint(msg.Vars["proUser"]))
-		op = ops.Begin("report_issue").
-			UserAgent(fmt.Sprint(msg.Vars["userAgent"])).
-			Set("pro", isPro).
-			Set("issue_type", msg.Vars["issueType"]).
-			Set("issue_note", msg.Vars["note"]).
-			Set("email", msg.Vars["email"])
+		op = ops.Begin("report_issue")
+		if msg.Template == "user-send-logs-desktop" {
+			// get parameters from desktop template vars
+			isPro, _ := strconv.ParseBool(fmt.Sprint(msg.Vars["proUser"]))
+			op.UserAgent(fmt.Sprint(msg.Vars["userAgent"])).
+				Set("pro", isPro).
+				Set("issue_type", msg.Vars["issueType"]).
+				Set("issue_note", msg.Vars["note"]).
+				Set("email", msg.Vars["email"])
+		} else {
+			// get parameters from mobile template vars
+			isPro, _ := strconv.ParseBool(fmt.Sprint(msg.Vars["prouser"]))
+			op.Set("pro", isPro).
+				Set("issue_type", msg.Vars["issue"]).
+				Set("issue_note", msg.Vars["report"]).
+				Set("email", msg.Vars["emailaddress"])
+		}
 		log.Debug("Reporting issue")
 	} else {
 		op = ops.Begin("send_email").Set("template", msg.Template)
 	}
 	defer op.End()
-	fillDefaults(msg)
 	err := sendTemplate(msg)
 	if err != nil {
 		return log.Error(op.FailIf(err))
@@ -116,19 +124,6 @@ func readResponses(responses []*mandrill.Response) error {
 		}
 	}
 	return nil
-}
-
-func fillDefaults(msg *Message) {
-	if msg.Vars == nil {
-		// avoid panicking in case the message is malformed
-		msg.Vars = make(map[string]interface{})
-	}
-	os, err := osversion.GetHumanReadable()
-	if err != nil {
-		log.Errorf("Unable to get version: %v", err)
-	} else {
-		msg.Vars["os"] = os
-	}
 }
 
 func prefix(msg *Message) string {
