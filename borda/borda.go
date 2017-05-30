@@ -18,7 +18,7 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.borda")
 
-	ServiceID service.ID     = "flashlight.borda"
+	ServiceID service.ID = "flashlight.borda"
 
 	// BeforeSubmit is an optional callback to capture when borda batches are
 	// submitted. It's mostly useful for unit testing.
@@ -58,17 +58,12 @@ func (s *bordaService) GetID() service.ID {
 
 func (s *bordaService) Configure(opts service.ConfigOpts) {
 	o := opts.(*ConfigOpts)
-	shouldRestart := false
 	s.muOpts.Lock()
 	if s.opts.ReportInterval > 0 && s.opts.ReportInterval != o.ReportInterval {
-		shouldRestart = true
+		// TODO: figure out what to do when report interval changes or becomes zero
 	}
 	s.opts = *o
 	s.muOpts.Unlock()
-	if shouldRestart {
-		s.Stop()
-		s.Start()
-	}
 }
 
 func (s *bordaService) Start() {

@@ -16,8 +16,8 @@ import (
 )
 
 var (
-	ServiceID service.ID     = "app.sysproxy"
-	log                      = golog.LoggerFor("app.sysproxy")
+	ServiceID service.ID = "app.sysproxy"
+	log                  = golog.LoggerFor("app.sysproxy")
 )
 
 type ConfigOpts struct {
