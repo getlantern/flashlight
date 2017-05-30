@@ -139,7 +139,7 @@ func Start(configDir string,
 	}
 
 	err := os.MkdirAll(configDir, 0755)
-	if os.IsExist(err) {
+	if err != nil && !os.IsExist(err) {
 		return nil, fmt.Errorf("Unable to create configDir at %v: %v", configDir, err)
 	}
 
