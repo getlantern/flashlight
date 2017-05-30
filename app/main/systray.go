@@ -5,7 +5,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/getlantern/flashlight-build-git-clone/src/github.com/getlantern/flashlight/log"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/systray"
 
