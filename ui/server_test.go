@@ -5,10 +5,31 @@ import (
 	"net/http/httptest"
 	"path"
 	"testing"
+	"time"
 
 	"github.com/getlantern/flashlight/util"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestDoShow(t *testing.T) {
+	var urlToShow string
+	show := func(u string, t time.Duration) {
+		urlToShow = u
+	}
+
+	s := newServer("127.0.0.1:7777", false, "", "test-http-token")
+
+	assert.Equal(t, "", urlToShow)
+	s.doShow("campaign", "medium", show)
+
+	assert.NotEqual(t, "", urlToShow)
+
+	s.externalURL = "test"
+
+	s.doShow("campaign", "medium", show)
+
+	assert.Equal(t, "test", urlToShow)
+}
 
 func TestStartServer(t *testing.T) {
 	startServer := func(addr string) *server {

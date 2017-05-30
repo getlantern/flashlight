@@ -1,5 +1,5 @@
 hash: 7f4e9dbab945a57f1c93bbd0bc394b57e659ce9ce6727621fa4bd5348ef78a5c
-updated: 2017-05-12T12:40:33.8903347-07:00
+updated: 2017-05-22T13:34:31.624830217-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a6aba3a6314be3a8ef518d5d4269a8459af9c789
@@ -56,7 +56,7 @@ imports:
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda
-  version: 2d6dc11d00a7e1867dbf0623bdc98da7e29bcc4f
+  version: 0e4a1fbb2051b1ae0d2775bdd983e64e704e07bc
   subpackages:
   - client
 - name: github.com/getlantern/buuid
@@ -109,7 +109,7 @@ imports:
   - check
   - download
 - name: github.com/getlantern/goexpr
-  version: 382edab23338c571d8e9205f53881aa929b3dc8b
+  version: bbdd260b22517d4513d8042fdd080c6c299b0adf
   subpackages:
   - geo
   - isp
@@ -148,6 +148,7 @@ imports:
   - configserverfilter
   - devicefilter
   - diffserv
+  - googlefilter
   - lampshade
   - listeners
   - mimic
@@ -160,7 +161,7 @@ imports:
   - usage
   - versioncheck
 - name: github.com/getlantern/httpseverywhere
-  version: 57586aea7893a551c068dd416efc40b9725c3249
+  version: 23b14c8e119df202a4b6acaeb6071b5bf824808b
 - name: github.com/getlantern/i18n
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
@@ -186,14 +187,14 @@ imports:
 - name: github.com/getlantern/netx
   version: c704f69db48c8406d722f6e9ea9b0ad266975fe6
 - name: github.com/getlantern/notifier
-  version: ec5ce3f631be162c0cb3c05383261983b2dbd1a5
+  version: 9d71672e9d5d137e06fffc4ac957565cd90a628f
   subpackages:
   - osx
   - win
 - name: github.com/getlantern/ops
   version: b70875f5d689a9438bca72aefd7142a2af889b18
 - name: github.com/getlantern/osversion
-  version: 4aedc380e3bab4f0c97b1481492cb0b81c1d91f9
+  version: 15282d3e6ba182319e7cbe155e60527e6e0515a8
 - name: github.com/getlantern/pathreflect
   version: b02f4864048a236150ca17c2c526158f2b3133c4
 - name: github.com/getlantern/profiling
@@ -219,7 +220,7 @@ imports:
 - name: github.com/getlantern/stack
   version: 02f928aad224fbccd50d66edd776fc9d1e9f2f2b
 - name: github.com/getlantern/sysproxy
-  version: eaf903f586f11454b05518fc77b1b478448be9a2
+  version: 106235fad51e8df3666475a811137d76a4755bc9
 - name: github.com/getlantern/systray
   version: 0068f6ae40ea39bfd683043e8452024097fff0e4
 - name: github.com/getlantern/tarfs
@@ -249,7 +250,7 @@ imports:
 - name: github.com/getlantern/yaml
   version: 97d86b60f57eeca9d70c02763ed2565bafc17585
 - name: github.com/getlantern/zenodb
-  version: 769e4d90a0dfd30802cd1e98fa294d769d765f2f
+  version: 7ca9b4aef854c9335c41d21568ced7da403e52ca
   subpackages:
   - bytetree
   - common
@@ -279,7 +280,7 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
-  version: 4c1c3952b7d9d0a061a3fa7b36fd373ba0398ebc
+  version: 456bcfa82d672db7cae587c9b541463f65bc2718
 - name: github.com/gorilla/securecookie
   version: e59506cc896acb7f7bf732d4fdf5e25f7ccd8983
 - name: github.com/gorilla/websocket
@@ -352,7 +353,7 @@ imports:
 - name: github.com/Shopify/sarama
   version: 0fb560e5f7fbcaee2f75e3c34174320709f69944
 - name: github.com/Sirupsen/logrus
-  version: acfabf31db8f45a9174f54a0d48ea4d15627af4d
+  version: 5e5dc898656f695e2a086b8e12559febbfc01562
 - name: github.com/skratchdot/open-golang
   version: 75fb7ed4208cf72d323d7d02fd1a5964a7a9073c
   subpackages:
@@ -366,7 +367,7 @@ imports:
   subpackages:
   - uaparser
 - name: github.com/stripe/stripe-go
-  version: 339ff3ba4d4b26f9179e31f958d8f68c5fd07b43
+  version: ebb464e72f7a61c02355a409e6e6e1c0fb4010ce
   subpackages:
   - orderitem
   - token
@@ -387,7 +388,7 @@ imports:
   subpackages:
   - trie/yfast
 - name: github.com/xtaci/kcp-go
-  version: f5698319f717814ce0f5a23783907736b6c67cf6
+  version: 046e70a5d264539b9a176766f2535c1828b10606
 - name: github.com/xwb1989/sqlparser
   version: a9cdf22bd561e715bba34ee228cb1c06bfa2719c
   subpackages:
@@ -398,7 +399,7 @@ imports:
 - name: github.com/Yawning/chacha20
   version: 2524561b8ee24c13b0aa1526d827571ab3061eac
 - name: golang.org/x/crypto
-  version: ab89591268e0c8b748cbe4047b00197516011af5
+  version: 6c586e17d90a7d08bbbc4069984180dce3b04117
   subpackages:
   - chacha20poly1305
   - chacha20poly1305/internal/chacha20
@@ -408,7 +409,7 @@ imports:
   - poly1305
   - salsa20/salsa
 - name: golang.org/x/net
-  version: c9b681d35165f1995d6f3034e61f8761d4b90c99
+  version: 0d772244c73d752bbe0c729ff997a09d6a6fdaf1
   repo: https://github.com/golang/net
   vcs: git
   subpackages:
@@ -425,12 +426,12 @@ imports:
   - proxy
   - trace
 - name: golang.org/x/oauth2
-  version: ad516a297a9f2a74ecc244861b298c94bdd28b9d
+  version: f047394b6d14284165300fd82dad67edb3a4d7f6
   subpackages:
   - google
   - jwt
 - name: golang.org/x/sys
-  version: f845067cf72a21fb4929b0e6a35273bd83b56396
+  version: dbc2be9168a660ef302e04b6ff6406de6f967473
   repo: https://github.com/golang/sys
   vcs: git
   subpackages:
@@ -458,11 +459,11 @@ imports:
   - internal/modules
   - internal/remote_api
 - name: google.golang.org/genproto
-  version: 411e09b969b1170a9f0c467558eb4c4c110d9c77
+  version: bb3573be0c484136831138976d444b8754777aff
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: a0c3e72252b6fbf4826bb143e450eb05588a9d6d
+  version: 5e42b6f37e5b25783958f860f80c275d5e505c06
   subpackages:
   - codes
   - credentials
@@ -509,12 +510,12 @@ testImports:
 - name: github.com/gonum/floats
   version: a2cbc5c70616cd18491ef2843231f6ce28b2cb02
 - name: github.com/gonum/internal
-  version: abbe1115275b8ef5f1c4b73e2360c9e8177edcb2
+  version: 4c20688f849035792bcee8a94ec93b5c277c919f
   subpackages:
   - asm/f32
   - asm/f64
 - name: github.com/gonum/lapack
-  version: b2c45d0a904f3d18ef419fd1c65c22f3749046fe
+  version: 219cfcc2cee77e21a618f07d65d14edbe4975c58
   subpackages:
   - lapack64
   - native

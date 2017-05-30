@@ -16,7 +16,6 @@ import (
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
-	"github.com/getlantern/mtime"
 	"github.com/getlantern/profiling"
 
 	"github.com/getlantern/flashlight/analytics"
@@ -46,7 +45,7 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.desktop")
 
-	elapsed = mtime.Stopwatch()
+	startTime = time.Now()
 )
 
 const (
@@ -383,7 +382,7 @@ func (app *App) showUI() {
 		// URL and the proxy server are all up and running to avoid
 		// race conditions where we change the proxy setup while the
 		// UI server and proxy server are still coming up.
-		ui.Show()
+		ui.Show("startup", "lantern")
 	}
 }
 
@@ -461,7 +460,7 @@ func (app *App) waitForExit() error {
 
 func recordStopped() {
 	ops.Begin("client_stopped").
-		SetMetricSum("uptime", elapsed().Seconds()).
+		SetMetricSum("uptime", time.Now().Sub(startTime).Seconds()).
 		End()
 }
 

@@ -127,7 +127,7 @@ func (s *analytics) sessionVals(sc string) string {
 	return vals.Encode()
 }
 
-// GetExecutableHash returns the hash of the currently running executable.
+// getExecutableHash returns the hash of the currently running executable.
 // If there's an error getting the hash, this returns
 func getExecutableHash() string {
 	// We don't know how to get a useful hash here for Android but also this
@@ -149,6 +149,15 @@ func getExecutableHash() string {
 }
 
 func trackSession(args string) {
+	rt, err := proxied.ChainedNonPersistent("")
+	if err != nil {
+		log.Errorf("Could not create HTTP client: %s", err)
+		return
+	}
+	doTrackSession(args, rt)
+}
+
+func doTrackSession(args string, rt http.RoundTripper) {
 	r, err := http.NewRequest("POST", endpoint, bytes.NewBufferString(args))
 
 	if err != nil {
@@ -165,11 +174,6 @@ func trackSession(args string) {
 		log.Debugf("Full analytics request: %v", string(req))
 	}
 
-	rt, err := proxied.ChainedNonPersistent("")
-	if err != nil {
-		log.Errorf("Could not create HTTP client: %s", err)
-		return
-	}
 	resp, err := rt.RoundTrip(r)
 	if err != nil {
 		log.Errorf("Could not send HTTP request to GA: %s", err)
@@ -179,4 +183,22 @@ func trackSession(args string) {
 	if err := resp.Body.Close(); err != nil {
 		log.Debugf("Unable to close response body: %v", err)
 	}
+}
+
+// AddCampaign adds Google Analytics campaign tracking to a URL and returns
+// that URL.
+func AddCampaign(urlStr, campaign, content, medium string) (string, error) {
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		log.Errorf("Could not parse click URL: %v", err)
+		return "", err
+	}
+
+	q := u.Query()
+	q.Set("utm_source", runtime.GOOS)
+	q.Set("utm_medium", medium)
+	q.Set("utm_campaign", campaign)
+	q.Set("utm_content", content)
+	u.RawQuery = q.Encode()
+	return u.String(), nil
 }
