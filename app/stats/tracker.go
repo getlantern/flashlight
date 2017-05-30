@@ -14,7 +14,8 @@ type stats struct {
 	AdsBlocked    int    `json:"adsBlocked"`
 }
 
-// Tracker implements common.StatsTracker interface and publishes
+// Tracker implements common.StatsTracker interface and publishes any changes
+// to websocket.
 type Tracker struct {
 	mu      sync.Mutex
 	service *ws.Service
