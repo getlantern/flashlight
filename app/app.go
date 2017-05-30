@@ -204,6 +204,7 @@ func (app *App) composeRestServices() {
 		case client.HTTPProxy:
 			log.Debugf("Got HTTP proxy address: %v", msg.Addr)
 			app.settings.SetString(settings.SNAddr, msg.Addr)
+
 			sysproxyOn := app.settings.GetSystemProxy()
 			service.MustRegister(sysproxy.New(msg.Addr),
 				&sysproxy.ConfigOpts{sysproxyOn})
@@ -232,6 +233,7 @@ func (app *App) composeRestServices() {
 					})
 			})
 			geo := service.MustLookup(geolookup.ServiceID)
+			// to trigger analytics reconfiguration above
 			geo.(*geolookup.GeoLookup).Refresh()
 
 			app.showUI()

@@ -13,20 +13,26 @@ import (
 type Registry struct {
 	mu    sync.RWMutex
 	nodes map[ID]*node
+
+	// Note: we use separate mutex and map to avoid deadlock when publishing
+	// message in Service.Start, which is useful in certain cases to publish
+	// initial messages.
+	muChannels sync.RWMutex
+	channels   map[ID][]chan interface{}
 }
 
 type node struct {
 	id       ID
 	opts     ConfigOpts
 	instance Service
-	channels []chan interface{}
 	started  bool
 }
 
 // NewRegistry creates a new Registry
 func NewRegistry() *Registry {
 	return &Registry{
-		nodes: make(map[ID]*node),
+		nodes:    make(map[ID]*node),
+		channels: make(map[ID][]chan interface{}),
 	}
 }
 
@@ -135,8 +141,8 @@ func (r *Registry) MustSubCh(id ID) <-chan interface{} {
 // anything. The channel will be closed by CloseAll().
 func (r *Registry) SubCh(id ID) (<-chan interface{}, error) {
 	r.mu.Lock()
-	defer r.mu.Unlock()
 	n := r.nodes[id]
+	r.mu.Unlock()
 	if n == nil {
 		return nil, errors.New("%s service doesn't exist", id)
 	}
@@ -144,7 +150,9 @@ func (r *Registry) SubCh(id ID) (<-chan interface{}, error) {
 		return nil, errors.New("%s service doesn't publish anything", id)
 	}
 	ch := make(chan interface{}, 1)
-	n.channels = append(n.channels, ch)
+	r.muChannels.Lock()
+	r.channels[id] = append(r.channels[id], ch)
+	r.muChannels.Unlock()
 	log.Tracef("Subscribed to %v", id)
 	return ch, nil
 }
@@ -173,11 +181,9 @@ func (r *Registry) Sub(id ID, cb func(m interface{})) error {
 }
 
 func (r *Registry) publish(id ID, msg interface{}) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	// Note that there is no nil checking as the only way to call publish is
-	// via a Publisher, which guarantees that the service is registered.
-	channels := r.nodes[id].channels
+	r.muChannels.RLock()
+	defer r.muChannels.RUnlock()
+	channels := r.channels[id]
 	log.Tracef("Publishing message to %d subscribers of %v", len(channels), id)
 	for _, ch := range channels {
 		select {
@@ -260,15 +266,28 @@ func (r *Registry) startNoLock(n *node) bool {
 // CloseAll stops all services registered and started. It closes all channels
 // subscribed to the services.
 func (r *Registry) CloseAll() {
+	r.stopServices()
+	r.closeChannels()
+}
+
+func (r *Registry) stopServices() {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	for _, n := range r.nodes {
 		r.stopNoLock(n)
-		for _, ch := range n.channels {
+	}
+}
+
+func (r *Registry) closeChannels() {
+	r.muChannels.Lock()
+	defer r.muChannels.Unlock()
+	for _, channels := range r.channels {
+		for _, ch := range channels {
 			close(ch)
 		}
-		n.channels = nil
 	}
+	// to avoid sending to closed channel
+	r.channels = make(map[ID][]chan interface{})
 }
 
 // Stop stops a service but does nothing if the service was not already started.

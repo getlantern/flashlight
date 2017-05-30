@@ -147,14 +147,13 @@ func (c *config) Start() {
 	c.opts.Global.unmarshaler = c.unmarshalGlobal
 	c.opts.Global.saveChan = make(chan interface{})
 	c.opts.Global.fullPath = path.Join(c.opts.SaveDir, c.opts.Global.FileName)
+	c.loadInitial(&c.opts.Global)
 
 	c.opts.Proxies.unmarshaler = c.unmarshalProxies
 	c.opts.Proxies.saveChan = make(chan interface{})
 	c.opts.Proxies.fullPath = path.Join(c.opts.SaveDir, c.opts.Proxies.FileName)
 	c.opts.Proxies.useLanternEtag = true
-
-	go c.loadInitial(&c.opts.Global)
-	go c.loadInitial(&c.opts.Proxies)
+	c.loadInitial(&c.opts.Proxies)
 
 	if !c.opts.Sticky {
 		err := os.MkdirAll(c.opts.SaveDir, 0750)
