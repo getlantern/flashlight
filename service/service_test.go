@@ -13,9 +13,10 @@ var st2 = ID("service.id2")
 var st3 = ID("service.id3")
 
 type mockService struct {
-	t          ID
-	startCount int
-	stopCount  int
+	t              ID
+	startCount     int
+	stopCount      int
+	configureCount int
 }
 
 func (i *mockService) GetID() ID {
@@ -67,6 +68,35 @@ func TestLifeCycle(t *testing.T) {
 	reg.CloseAll()
 	assert.Equal(t, 1, i1.stopCount, "should stop only once")
 	assert.Equal(t, 1, i2.stopCount)
+}
+
+type configurable struct {
+	mockService
+	configureCount int
+}
+
+func (i *configurable) Configure(opts ConfigOpts) {
+	i.configureCount++
+}
+
+func TestConfigure(t *testing.T) {
+	reg := NewRegistry()
+	opts := mockOpts{t: st1, s: "not complete"}
+	s := configurable{mockService: mockService{t: st1}}
+	reg.MustRegister(&s, &opts)
+	reg.StartAll()
+	assert.Equal(t, 0, s.startCount, "should not start if ConfigOpts are incomplete")
+	assert.Equal(t, 0, s.configureCount, "should not configure if ConfigOpts are incomplete")
+	reg.Configure(st1, func(opts ConfigOpts) {
+		opts.(*mockOpts).s = ""
+	})
+	assert.Equal(t, 1, s.startCount, "should start once ConfigOpts are complete")
+	assert.Equal(t, 1, s.configureCount, "should configure once ConfigOpts are complete")
+	reg.Configure(st1, func(opts ConfigOpts) {
+		opts.(*mockOpts).s = ""
+	})
+	assert.Equal(t, 1, s.startCount, "should start only once")
+	assert.Equal(t, 2, s.configureCount, "should configure service each time Configure is called")
 }
 
 type mockWithPublisher struct {

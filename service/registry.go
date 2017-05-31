@@ -244,17 +244,17 @@ func (r *Registry) Start(id ID) bool {
 }
 
 func (r *Registry) startNoLock(n *node) bool {
-	if n.started {
-		log.Debugf("Not start already started service %s", n.id)
-		return true
-	}
 	if c, ok := n.instance.(Configurable); ok {
 		if reason := n.opts.Complete(); reason != "" {
-			log.Debugf("%s, skip starting service %s", reason, n.id)
+			log.Debugf("%s, skip configuring/starting service %s", reason, n.id)
 			log.Tracef("%+v", n.opts)
 			return false
 		}
 		c.Configure(n.opts)
+	}
+	if n.started {
+		log.Debugf("Not start already started service %s", n.id)
+		return true
 	}
 	log.Debugf("Starting service %s", n.id)
 	n.instance.Start()
