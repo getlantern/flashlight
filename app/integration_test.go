@@ -32,10 +32,11 @@ import (
 )
 
 const (
-	LocalProxyAddr  = "localhost:18345"
-	SocksProxyAddr  = "localhost:18346"
-	ProxyServerAddr = "localhost:18347"
-	OBFS4ServerAddr = "localhost:18348"
+	LocalProxyAddr      = "localhost:18345"
+	SocksProxyAddr      = "localhost:18346"
+	ProxyServerAddr     = "localhost:18347"
+	OBFS4ServerAddr     = "localhost:18348"
+	LampshadeServerAddr = "localhost:18349"
 
 	Content  = "THIS IS SOME STATIC CONTENT FROM THE WEB SERVER"
 	Token    = "AF325DF3432FDS"
@@ -47,8 +48,12 @@ const (
 )
 
 var (
-	useOBFS4 = uint32(0)
+	protocol atomic.Value
 )
+
+func init() {
+	protocol.Store("https")
+}
 
 func TestProxying(t *testing.T) {
 	onGeo := geolookup.OnRefresh()
@@ -93,7 +98,7 @@ func TestProxying(t *testing.T) {
 			assert.Equal(t, "test fatal error", dimensions["error_text"])
 		}
 	}
-	//config.CloudConfigPollInterval = 100 * time.Millisecond
+	config.ProxyConfigPollInterval = 100 * time.Millisecond
 
 	// Web server serves known content for testing
 	httpAddr, httpsAddr, err := startWebServer(t)
@@ -132,7 +137,12 @@ func TestProxying(t *testing.T) {
 	testRequest(t, httpAddr, httpsAddr)
 
 	// Switch to obfs4, wait for a new config and test request again
-	atomic.StoreUint32(&useOBFS4, 1)
+	protocol.Store("obfs4")
+	time.Sleep(2 * time.Second)
+	testRequest(t, httpAddr, httpsAddr)
+
+	// Switch to lampshade, wait for a new config and test request again
+	protocol.Store("lampshade")
 	time.Sleep(2 * time.Second)
 	testRequest(t, httpAddr, httpsAddr)
 
@@ -182,15 +192,16 @@ func serveContent(resp http.ResponseWriter, req *http.Request) {
 
 func startProxyServer(t *testing.T) error {
 	s := &proxy.Proxy{
-		TestingLocal: true,
-		Addr:         ProxyServerAddr,
-		Obfs4Addr:    OBFS4ServerAddr,
-		Obfs4Dir:     ".",
-		Token:        Token,
-		KeyFile:      KeyFile,
-		CertFile:     CertFile,
-		IdleTimeout:  30 * time.Second,
-		HTTPS:        true,
+		TestingLocal:  true,
+		Addr:          ProxyServerAddr,
+		Obfs4Addr:     OBFS4ServerAddr,
+		Obfs4Dir:      ".",
+		LampshadeAddr: LampshadeServerAddr,
+		Token:         Token,
+		KeyFile:       KeyFile,
+		CertFile:      CertFile,
+		IdleTimeout:   30 * time.Second,
+		HTTPS:         true,
 	}
 
 	go s.ListenAndServe()
@@ -239,10 +250,12 @@ func serveConfig(t *testing.T) func(http.ResponseWriter, *http.Request) {
 
 func writeGlobalConfig(t *testing.T, resp http.ResponseWriter, req *http.Request) {
 	log.Debug("Writing global config")
-	obfs4 := atomic.LoadUint32(&useOBFS4) == 1
+	proto := protocol.Load().(string)
 	version := "1"
-	if obfs4 {
+	if proto == "obfs4" {
 		version = "2"
+	} else if proto == "lampshade" {
+		version = "3"
 	}
 
 	if req.Header.Get(IfNoneMatch) == version {
@@ -267,10 +280,12 @@ func writeGlobalConfig(t *testing.T, resp http.ResponseWriter, req *http.Request
 
 func writeProxyConfig(t *testing.T, resp http.ResponseWriter, req *http.Request) {
 	log.Debug("Writing proxy config")
-	obfs4 := atomic.LoadUint32(&useOBFS4) == 1
+	proto := protocol.Load().(string)
 	version := "1"
-	if obfs4 {
+	if proto == "obfs4" {
 		version = "2"
+	} else if proto == "lampshade" {
+		version = "3"
 	}
 
 	if req.Header.Get(IfNoneMatch) == version {
@@ -278,7 +293,7 @@ func writeProxyConfig(t *testing.T, resp http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	cfg, err := buildProxies(obfs4)
+	cfg, err := buildProxies(proto)
 	if err != nil {
 		t.Error(err)
 		resp.WriteHeader(http.StatusInternalServerError)
@@ -300,7 +315,8 @@ func writeConfig() error {
 		return fmt.Errorf("Unable to delete existing yaml config: %v", err)
 	}
 
-	cfg, err := buildProxies(false)
+	proto := protocol.Load().(string)
+	cfg, err := buildProxies(proto)
 	if err != nil {
 		return err
 	}
@@ -308,7 +324,7 @@ func writeConfig() error {
 	return ioutil.WriteFile(filename, cfg, 0644)
 }
 
-func buildProxies(obfs4 bool) ([]byte, error) {
+func buildProxies(proto string) ([]byte, error) {
 	bytes, err := ioutil.ReadFile("./proxies-template.yaml")
 	if err != nil {
 		return nil, fmt.Errorf("Could not read config %v", err)
@@ -322,9 +338,9 @@ func buildProxies(obfs4 bool) ([]byte, error) {
 
 	srv := cfg["fallback-template"]
 	srv.AuthToken = Token
-	if obfs4 {
+	if proto == "obfs4" {
 		srv.Addr = OBFS4ServerAddr
-		srv.PluggableTransport = "tobfs4"
+		srv.PluggableTransport = "obfs4"
 		srv.PluggableTransportSettings = map[string]string{
 			"iat-mode": "0",
 		}
@@ -336,13 +352,17 @@ func buildProxies(obfs4 bool) ([]byte, error) {
 		obfs4extract := regexp.MustCompile(".+cert=([^\\s]+).+")
 		srv.Cert = string(obfs4extract.FindSubmatch(bridgelineFile)[1])
 	} else {
-		srv.Addr = ProxyServerAddr
-
 		cert, err2 := ioutil.ReadFile(CertFile)
 		if err2 != nil {
 			return nil, fmt.Errorf("Could not read cert %v", err2)
 		}
 		srv.Cert = string(cert)
+		if proto == "lampshade" {
+			srv.Addr = LampshadeServerAddr
+			srv.PluggableTransport = "lampshade"
+		} else {
+			srv.Addr = ProxyServerAddr
+		}
 	}
 	out, err := yaml.Marshal(cfg)
 	if err != nil {

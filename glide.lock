@@ -175,7 +175,7 @@ imports:
   subpackages:
   - certimporter
 - name: github.com/getlantern/lampshade
-  version: 28e675fb0d5fa0ed745ee7e7336fbcce460da46c
+  version: 981a41cdfbea3f9aa0db35b6499822a4ea7fa3ad
 - name: github.com/getlantern/launcher
   version: bc9fc3b11894e839c3fcb049f12e8974d7e48497
 - name: github.com/getlantern/measured
@@ -206,7 +206,7 @@ imports:
 - name: github.com/getlantern/proxy
   version: 1130e137f623dde1d349c7083b806822ba04f7f9
 - name: github.com/getlantern/proxybench
-  version: a39accd0458fb4ef37a51dbac02422be47a4c30d
+  version: aaf4401d6164b5c5f14efc17cf6f30620dcc038a
 - name: github.com/getlantern/redis
   version: 54bdaa768b91d5b3fb4ef99b4e186aefcae9ec79
 - name: github.com/getlantern/rot13
