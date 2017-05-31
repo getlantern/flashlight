@@ -21,6 +21,7 @@ import (
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/idletiming"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/lampshade"
 	"github.com/getlantern/mtime"
@@ -192,12 +193,17 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 	windowSize := s.ptSettingInt("windowsize")
 	maxPadding := s.ptSettingInt("maxpadding")
 	maxStreamsPerConn := uint16(s.ptSettingInt("streams"))
+	idleInterval, parseErr := time.ParseDuration(s.ptSetting("idleinterval"))
+	if parseErr != nil || idleInterval < 0 {
+		idleInterval = IdleTimeout * 2
+		log.Debugf("Defaulted lampshade idleinterval to %v", idleInterval)
+	}
 	pingInterval, parseErr := time.ParseDuration(s.ptSetting("pinginterval"))
 	if parseErr != nil || pingInterval < 0 {
-		log.Debug("Defaulting pinginterval to 15 seconds")
 		pingInterval = 15 * time.Second
+		log.Debugf("Defaulted lampshade pinginterval to %v", pingInterval)
 	}
-	dialer := lampshade.NewDialer(windowSize, maxPadding, maxStreamsPerConn, pingInterval, buffers.Pool, cipherCode, cert.X509().PublicKey.(*rsa.PublicKey))
+	dialer := lampshade.NewDialer(windowSize, maxPadding, maxStreamsPerConn, idleInterval, pingInterval, buffers.Pool, cipherCode, cert.X509().PublicKey.(*rsa.PublicKey))
 	dial := func(p *proxy) (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "lampshade", "tcp").
 			Set("ls_win", windowSize).
@@ -208,7 +214,13 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 
 		elapsed := mtime.Stopwatch()
 		conn, err := dialer.Dial(func() (net.Conn, error) {
-			return p.tcpDial(op)(chainedDialTimeout)
+			conn, err := p.tcpDial(op)(chainedDialTimeout)
+			if err == nil && idleInterval > 0 {
+				conn = idletiming.Conn(conn, idleInterval, func() {
+					log.Debug("lampshade TCP connection idled")
+				})
+			}
+			return conn, err
 		})
 		// note - because lampshade is multiplexed, this dial time will often be
 		// lower than other protocols since there's often nothing to be done for
