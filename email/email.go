@@ -32,6 +32,8 @@ type Message struct {
 	Template string
 	// The email address to which the message is sent
 	To string
+	// An optional email address to carbon copy
+	CC string `json:"omitempty"`
 	// Any global vars defined in the template
 	Vars map[string]interface{}
 	// Serialized settings data
@@ -80,6 +82,9 @@ func sendTemplate(msg *Message) error {
 	mmsg := &mandrill.Message{
 		To: []*mandrill.To{&mandrill.To{Email: msg.To}},
 	}
+	if msg.CC != "" {
+		mmsg.To = append(mmsg.To, &mandrill.To{Email: msg.CC, Type: "cc"})
+	}
 	mmsg.GlobalMergeVars = mandrill.MapToVars(msg.Vars)
 	if msg.SettingsData != nil {
 		mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
@@ -94,7 +99,7 @@ func sendTemplate(msg *Message) error {
 		} else {
 			buf := &bytes.Buffer{}
 			folder := prefix(msg) + "_logs"
-			if logging.ZipLogFiles(buf, "", folder, size) == nil {
+			if logging.ZipLogFiles(buf, folder, size) == nil {
 				mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
 					Type:    "application/zip",
 					Name:    folder + ".zip",
