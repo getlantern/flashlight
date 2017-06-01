@@ -2,7 +2,6 @@
 package android
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -26,7 +25,6 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/protected"
-	"github.com/getlantern/uuid"
 )
 
 var (
@@ -92,6 +90,7 @@ type UserConfig interface {
 	ShowSurvey(string)
 	ProxyAll() bool
 	BandwidthUpdate(int, int)
+	DeviceId() string
 }
 
 type Updater autoupdate.Updater
@@ -121,9 +120,6 @@ func Start(configDir string,
 	}
 
 	user.SetStaging(common.Staging)
-
-	// TODO: persist device ID across system reboot
-	deviceID := base64.StdEncoding.EncodeToString(uuid.NodeID())
 	appdir.SetHomeDir(configDir)
 
 	log.Debugf("Starting lantern: configDir %s locale %s sticky config %t",
@@ -154,7 +150,7 @@ func Start(configDir string,
 	reg := flashlight.ComposeServices(
 		"127.0.0.1:0", // listen for HTTP on random address
 		"127.0.0.1:0", // listen for SOCKS on random address
-		deviceID,
+		user.DeviceId(),
 		true, // allow private hosts on mobile
 		common.WrapSettings(
 			common.Not(user.ProxyAll),    // UseShortcut

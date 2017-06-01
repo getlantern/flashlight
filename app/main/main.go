@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"runtime/debug"
 	"strings"
 	"syscall"
 	"time"
@@ -32,6 +33,9 @@ func main() {
 	// systray requires the goroutine locked with main thread, or the whole
 	// application will crash.
 	runtime.LockOSThread()
+	// Since Go 1.6, panic prints only the stack trace of current goroutine by
+	// default, which may not reveal the root cause. Switch to all goroutines.
+	debug.SetTraceback("all")
 	parseFlags()
 
 	a := desktop.NewApp(flagsAsMap())
