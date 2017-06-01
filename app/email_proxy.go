@@ -6,6 +6,7 @@ import (
 
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/ws"
+	"github.com/getlantern/osversion"
 )
 
 type mandrillMessage struct {
