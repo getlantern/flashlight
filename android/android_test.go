@@ -30,6 +30,7 @@ func (c testUserConfig) GetToken() string         { return "" }
 func (c testUserConfig) SetStaging(bool)          {}
 func (c testUserConfig) SetCountry(string)        {}
 func (c testUserConfig) ProxyAll() bool           { return true }
+func (c testUserConfig) DeviceId() string         { return "123456789" }
 
 func TestProxying(t *testing.T) {
 
