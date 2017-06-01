@@ -54,14 +54,15 @@ func ComposeServices(
 	userConfig common.UserConfig,
 	statsTracker common.StatsTracker,
 	flagsAsMap map[string]interface{},
-) {
+) *service.Registry {
 
 	elapsed := mtime.Stopwatch()
 	displayVersion()
 	initContext(deviceID)
 	op := fops.Begin("client_started")
 
-	service.MustRegister(client.New(
+	reg := service.NewRegistry()
+	reg.MustRegister(client.New(
 		httpProxyAddr,
 		socks5ProxyAddr,
 		deviceID,
@@ -71,18 +72,18 @@ func ComposeServices(
 		statsTracker),
 		&client.ConfigOpts{})
 
-	registerConfigService(flagsAsMap, userConfig)
-	service.MustRegister(borda.New(FullyReportedOps), &borda.ConfigOpts{})
-	service.MustSub(config.ServiceID, func(msg interface{}) {
+	registerConfigService(reg, flagsAsMap, userConfig)
+	reg.MustRegister(borda.New(FullyReportedOps), &borda.ConfigOpts{})
+	reg.MustSub(config.ServiceID, func(msg interface{}) {
 		switch c := msg.(type) {
 		case config.Proxies:
 			log.Debugf("Applying proxy config with proxies: %v", c)
-			service.MustConfigure(client.ServiceID, func(opts service.ConfigOpts) {
+			reg.MustConfigure(client.ServiceID, func(opts service.ConfigOpts) {
 				opts.(*client.ConfigOpts).Proxies = c
 			})
 		case *config.Global:
 			log.Debugf("Applying global config")
-			service.MustConfigure(borda.ServiceID, func(opts service.ConfigOpts) {
+			reg.MustConfigure(borda.ServiceID, func(opts service.ConfigOpts) {
 				o := opts.(*borda.ConfigOpts)
 				o.ReportInterval = c.BordaReportInterval
 				o.ReportAllOps = settings.IsAutoReport() && rand.Float64() <= c.BordaSamplePercentage/100
@@ -97,25 +98,25 @@ func ComposeServices(
 		}
 	})
 
-	service.MustRegister(geolookup.New(), nil)
-	service.MustSub(geolookup.ServiceID, func(m interface{}) {
+	reg.MustRegister(geolookup.New(), nil)
+	reg.MustSub(geolookup.ServiceID, func(m interface{}) {
 		info := m.(*geolookup.GeoInfo)
 		ip, country := info.GetIP(), info.GetCountry()
 		ops.SetGlobal("geo_country", country)
 		ops.SetGlobal("client_ip", ip)
-		service.Configure(client.ServiceID, func(opts service.ConfigOpts) {
+		reg.MustConfigure(client.ServiceID, func(opts service.ConfigOpts) {
 			opts.(*client.ConfigOpts).GeoCountry = country
 		})
 	})
 
-	service.MustSub(client.ServiceID, func(m interface{}) {
+	reg.MustSub(client.ServiceID, func(m interface{}) {
 		msg := m.(client.Message)
 		if msg.ProxyType == client.HTTPProxy {
 			proxied.SetProxyAddr(eventual.DefaultGetter(msg.Addr))
 			log.Debug("Started client HTTP proxy")
 			op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
-			onGeo := service.MustSubCh(geolookup.ServiceID)
-			geo := service.MustLookup(geolookup.ServiceID)
+			onGeo := reg.MustSubCh(geolookup.ServiceID)
+			geo := reg.MustLookup(geolookup.ServiceID)
 			geo.(*geolookup.GeoLookup).Refresh()
 			ops.Go(func() {
 				// wait for geo info before reporting so that we know the
@@ -132,9 +133,10 @@ func ComposeServices(
 			})
 		}
 	})
+	return reg
 }
 
-func registerConfigService(flagsAsMap map[string]interface{}, userConfig common.UserConfig) {
+func registerConfigService(reg *service.Registry, flagsAsMap map[string]interface{}, userConfig common.UserConfig) {
 	opts := config.DefaultConfigOpts(flagsAsMap["configdir"].(string))
 	if v, _ := flagsAsMap["cloudconfig"].(string); v != "" {
 		opts.Proxies.ChainedURL = v
@@ -157,7 +159,7 @@ func registerConfigService(flagsAsMap map[string]interface{}, userConfig common.
 		}
 	}
 	opts.UserConfig = userConfig
-	service.MustRegister(config.New(opts), nil)
+	reg.MustRegister(config.New(opts), nil)
 }
 
 func getTrustedCACerts(cfg *config.Global) (pool *x509.CertPool, err error) {

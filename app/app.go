@@ -75,6 +75,7 @@ type App struct {
 	exitOnce     sync.Once
 	chExitFuncs  chan exitFunc
 	settings     *settings.Settings
+	reg          *service.Registry
 }
 
 // NewApp creates a new App instance given a set of flags
@@ -154,7 +155,7 @@ func (app *App) Run() error {
 	app.startProfiling()
 	app.startUIServices()
 
-	flashlight.ComposeServices(
+	app.reg = flashlight.ComposeServices(
 		listenAddr,
 		socksAddr,
 		app.settings.GetDeviceID(),
@@ -170,34 +171,34 @@ func (app *App) Run() error {
 	)
 
 	app.composeRestServices()
-	service.StartAll()
+	app.reg.StartAll()
 	return app.waitForExit()
 }
 
 func (app *App) composeRestServices() {
 	log.Debug("Before start")
-	service.MustSub(config.ServiceID, func(msg interface{}) {
+	app.reg.MustSub(config.ServiceID, func(msg interface{}) {
 		switch c := msg.(type) {
 		case *config.Global:
 			proxiedsites.Configure(c.ProxiedSites)
 			autoupdate.Configure(c.UpdateServerURL, c.AutoUpdateCA)
 		}
 	})
-	service.MustRegister(location.New(), &location.ConfigOpts{})
-	service.MustRegister(
+	app.reg.MustRegister(location.New(), &location.ConfigOpts{})
+	app.reg.MustRegister(
 		loconfscanner.New(4*time.Hour, app.isProUser, &pastAnnouncements{app.settings}),
 		&loconfscanner.ConfigOpts{Lang: app.settings.GetLanguage()})
-	service.MustSub(geolookup.ServiceID, func(m interface{}) {
+	app.reg.MustSub(geolookup.ServiceID, func(m interface{}) {
 		country := m.(*geolookup.GeoInfo).GetCountry()
-		service.MustConfigure(location.ServiceID, func(opts service.ConfigOpts) {
+		app.reg.MustConfigure(location.ServiceID, func(opts service.ConfigOpts) {
 			opts.(*location.ConfigOpts).Code = country
 		})
-		service.MustConfigure(loconfscanner.ServiceID, func(opts service.ConfigOpts) {
+		app.reg.MustConfigure(loconfscanner.ServiceID, func(opts service.ConfigOpts) {
 			opts.(*loconfscanner.ConfigOpts).Country = country
 		})
 	})
 
-	service.MustSub(client.ServiceID, func(m interface{}) {
+	app.reg.MustSub(client.ServiceID, func(m interface{}) {
 		msg := m.(client.Message)
 		switch msg.ProxyType {
 		case client.HTTPProxy:
@@ -205,33 +206,39 @@ func (app *App) composeRestServices() {
 			app.settings.SetString(settings.SNAddr, msg.Addr)
 
 			sysproxyOn := app.settings.GetSystemProxy()
-			service.MustRegister(sysproxy.New(msg.Addr),
+			app.reg.MustRegister(sysproxy.New(msg.Addr),
 				&sysproxy.ConfigOpts{sysproxyOn})
-			service.Start(sysproxy.ServiceID)
+			app.reg.Start(sysproxy.ServiceID)
 			app.OnSettingChange(settings.SNSystemProxy, func(val interface{}) {
-				service.Configure(sysproxy.ServiceID, func(o service.ConfigOpts) {
+				app.reg.MustConfigure(sysproxy.ServiceID, func(o service.ConfigOpts) {
 					o.(*sysproxy.ConfigOpts).Enable = val.(bool)
 				})
 			})
-			signal.Start() // it depends on sysproxy service being registered.
+			app.reg.MustRegister(signal.New(), nil)
+			app.reg.MustSub(signal.ServiceID, func(m interface{}) {
+				app.reg.MustConfigure(sysproxy.ServiceID, func(o service.ConfigOpts) {
+					o.(*sysproxy.ConfigOpts).Enable = m.(bool)
+				})
+			})
+			app.reg.Start(signal.ServiceID)
 
 			// register and start analytics until client is started because it
 			// requires proxied package.
 			// TODO: add explicit dependency to proxied package
-			service.MustRegister(analytics.New(
+			app.reg.MustRegister(analytics.New(
 				app.settings.IsAutoReport(),
 				app.settings.GetDeviceID(),
 				common.Version,
 			), &analytics.ConfigOpts{})
-			service.Start(analytics.ServiceID)
-			service.MustSub(geolookup.ServiceID, func(m interface{}) {
+			app.reg.Start(analytics.ServiceID)
+			app.reg.MustSub(geolookup.ServiceID, func(m interface{}) {
 				ip := m.(*geolookup.GeoInfo).GetIP()
-				service.MustConfigure(analytics.ServiceID,
+				app.reg.MustConfigure(analytics.ServiceID,
 					func(opts service.ConfigOpts) {
 						opts.(*analytics.ConfigOpts).GeoIP = ip
 					})
 			})
-			geo := service.MustLookup(geolookup.ServiceID)
+			geo := app.reg.MustLookup(geolookup.ServiceID)
 			// to trigger analytics reconfiguration above
 			geo.(*geolookup.GeoLookup).Refresh()
 
@@ -436,7 +443,9 @@ func (app *App) doExit(err error) {
 	} else {
 		log.Debug("Exiting app normally")
 	}
-	service.CloseAll()
+	if app.reg != nil {
+		app.reg.CloseAll()
+	}
 	defer func() {
 		app.exitCh <- err
 		log.Debug("Finished exiting app")

@@ -23,7 +23,6 @@ import (
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxied"
-	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/protected"
@@ -152,7 +151,7 @@ func Start(configDir string,
 
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
-	flashlight.ComposeServices(
+	reg := flashlight.ComposeServices(
 		"127.0.0.1:0", // listen for HTTP on random address
 		"127.0.0.1:0", // listen for SOCKS on random address
 		deviceID,
@@ -168,13 +167,13 @@ func Start(configDir string,
 		flags,
 	)
 
-	service.MustSub(geolookup.ServiceID, func(m interface{}) {
+	reg.MustSub(geolookup.ServiceID, func(m interface{}) {
 		country := m.(*geolookup.GeoInfo).GetCountry()
 		log.Debugf("Successful geolookup: country %s", country)
 		user.SetCountry(country)
 	})
 
-	ch := service.MustSubCh(client.ServiceID)
+	ch := reg.MustSubCh(client.ServiceID)
 	chFinish := make(chan bool)
 	go func() {
 		timeout := time.After(time.Duration(timeoutMillis) * time.Millisecond)
@@ -206,7 +205,7 @@ func Start(configDir string,
 		chFinish <- true
 	}()
 
-	service.StartAll()
+	reg.StartAll()
 	if !<-chFinish {
 		return nil, errors.New("Lantern does not come up in time")
 	}

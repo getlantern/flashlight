@@ -1,58 +1,71 @@
 package signal
 
 import (
-	"sync"
-
 	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/flashlight/ws"
 	"github.com/getlantern/golog"
-
-	"github.com/getlantern/flashlight/app/sysproxy"
 )
-
-type UserSignal struct {
-	service *ws.Service
-	once    sync.Once
-}
 
 var (
 	log = golog.LoggerFor("flashlight.desktop.signal")
 
-	userSignal UserSignal
+	ServiceID service.ID = "flashlight.desktop.signal"
 )
 
-func Start() {
-	userSignal.once.Do(func() {
-		err := userSignal.start()
-		if err != nil {
-			log.Errorf("Unable to register signal service: %q", err)
+type userSignal struct {
+	service *ws.Service
+	chStop  chan struct{}
+	p       service.Publisher
+}
+
+func New() service.Service {
+	return &userSignal{}
+}
+
+func (s *userSignal) GetID() service.ID {
+	return ServiceID
+}
+
+func (s *userSignal) SetPublisher(p service.Publisher) {
+	s.p = p
+}
+
+func (s *userSignal) Start() {
+	s.chStop = make(chan struct{})
+	var err error
+	s.service, err = ws.Register("signal", func(write func(interface{})) {
+		write("connected")
+	})
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	go s.read()
+}
+
+func (s *userSignal) Stop() {
+	s.chStop <- struct{}{}
+}
+
+func (s *userSignal) read() {
+	for {
+		select {
+		case message := <-s.service.In:
+			if message == nil { // when channel is closed
+				return
+			}
+			log.Debugf("Read userSignal %v", message)
+			switch message {
+			case "disconnect":
+				s.p.Publish(false)
+			case "connect":
+				s.p.Publish(true)
+			default:
+				continue
+			}
+			s.service.Out <- message
+		case <-s.chStop:
 			return
 		}
-		go userSignal.read()
-	})
-}
-
-// start the settings service that synchronizes Lantern's configuration with every UI client
-func (s *UserSignal) start() error {
-	var err error
-	helloFn := func(write func(interface{})) {
-		write("connected")
-	}
-	s.service, err = ws.Register("signal", helloFn)
-	return err
-}
-
-func (s *UserSignal) read() {
-	for message := range s.service.In {
-		log.Debugf("Read userSignal %v", message)
-		switch message {
-		case "disconnect":
-			service.Stop(sysproxy.ServiceID)
-		case "connect":
-			service.Start(sysproxy.ServiceID)
-		default:
-			continue
-		}
-		s.service.Out <- message
 	}
 }

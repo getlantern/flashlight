@@ -18,7 +18,7 @@ import (
 	"github.com/getlantern/flashlight/app/notifier"
 )
 
-var ServiceID service.ID     = "flashlight.desktop.loconfscanner"
+var ServiceID service.ID = "flashlight.desktop.loconfscanner"
 
 type PastAnnouncements interface {
 	Get() []string
@@ -93,6 +93,7 @@ func (loc *loconfer) Start() {
 	loc.chStop = make(chan bool)
 	loc.scan(loc.onLoconf)
 }
+
 func (loc *loconfer) scan(onLoconf func(*loconf.LoConf, bool)) {
 	t := time.NewTicker(loc.interval)
 	checker := func() {
