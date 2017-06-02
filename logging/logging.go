@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
 	"time"
 
 	"github.com/getlantern/appdir"
@@ -31,6 +32,9 @@ var (
 
 	errorOut io.Writer
 	debugOut io.Writer
+
+	actualLogDir   string
+	actualLogDirMx sync.RWMutex
 )
 
 func init() {
@@ -43,6 +47,10 @@ func EnableFileLogging(logdir string) {
 	if logdir == "" {
 		logdir = appdir.Logs("Lantern")
 	}
+	actualLogDirMx.Lock()
+	actualLogDir = logdir
+	actualLogDirMx.Unlock()
+
 	log.Debugf("Placing logs in %v", logdir)
 	if _, err := os.Stat(logdir); err != nil {
 		if os.IsNotExist(err) {
@@ -64,13 +72,14 @@ func EnableFileLogging(logdir string) {
 	golog.SetOutputs(errorOut, debugOut)
 }
 
-// ZipLogFiles zip the Lantern log files under logdir to the writer. All files
-// is placed under the folder in the archieve.  It will stop and return if the
+// ZipLogFiles zip the Lantern log files to the writer. All files will be
+// placed under the folder in the archieve.  It will stop and return if the
 // newly added file would make the extracted files exceed maxBytes in total.
-func ZipLogFiles(w io.Writer, logdir string, underFolder string, maxBytes int64) error {
-	if logdir == "" {
-		logdir = appdir.Logs("Lantern")
-	}
+func ZipLogFiles(w io.Writer, underFolder string, maxBytes int64) error {
+	actualLogDirMx.RLock()
+	logdir := actualLogDir
+	actualLogDirMx.RUnlock()
+
 	return util.ZipFiles(w, util.ZipOptions{
 		Glob:     "lantern.log*",
 		Dir:      logdir,
