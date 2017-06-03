@@ -46,7 +46,10 @@ build:
         go get golang.org/x/tools/cmd/cover
         go get -v github.com/mattn/goveralls
     - script:
-      name: go test -race
+      name: adjust race detector
+      code: export GORACE=history_size=7
+    - script:
+      name: test-and-cover
       code: make test-and-cover
     - tcnksm/goveralls:
       token: 19Nno28mzRG0nIrWOc92flFUhZF2ty4Rc

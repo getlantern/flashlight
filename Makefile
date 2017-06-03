@@ -68,10 +68,10 @@ novendor:
 test-and-cover: $(SOURCES)
 	@echo "mode: count" > profile.cov && \
 	TP=$$(find . -name "*_test.go" -printf '%h\n' | grep  -v vendor | grep -v glide | sort -u) && \
-	CP=$$(echo -n $$TP | tr ' ', ',') && \
+	CP=$$(echo $$TP | tr ' ', ',') && \
 	set -x && \
 	for pkg in $$TP; do \
-		go test -race -v -tags="headless" -covermode=atomic -coverprofile=profile_tmp.cov $$pkg || exit 1; \
+		go test -race -v -tags="headless" -covermode=atomic -coverprofile=profile_tmp.cov -coverpkg "$$CP" $$pkg || exit 1; \
 		tail -n +2 profile_tmp.cov >> profile.cov; \
 	done
 

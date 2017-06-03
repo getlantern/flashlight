@@ -33,10 +33,10 @@ import (
 var (
 	log = golog.LoggerFor("flashlight")
 
-	// 100% of the below ops are reported to borda, irrespective of the borda
-	// sample percentage. This should all be low-volume operations, otherwise we
-	// will utilize too much bandwidth on the client.
-	FullyReportedOps = []string{"client_started", "client_stopped", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "report_issue"}
+	// FullyReportedOps are ops which are reported at 100% to borda, irrespective
+	// of the borda sample percentage. This should all be low-volume operations,
+	// otherwise we will utilize too much bandwidth on the client.
+	FullyReportedOps = []string{"client_started", "client_stopped", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "sysproxy_clear", "report_issue", "proxy_rank"}
 )
 
 // Run runs a client proxy. It blocks as long as the proxy is running.

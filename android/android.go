@@ -2,7 +2,6 @@
 package android
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -27,7 +26,6 @@ import (
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/protected"
-	"github.com/getlantern/uuid"
 )
 
 var (
@@ -93,6 +91,7 @@ type UserConfig interface {
 	ShowSurvey(string)
 	ProxyAll() bool
 	BandwidthUpdate(int, int)
+	DeviceId() string
 }
 
 type Updater autoupdate.Updater
@@ -193,7 +192,7 @@ func run(configDir, locale string,
 		user,
 		statsTracker{},
 		func(err error) {}, // onError
-		base64.StdEncoding.EncodeToString(uuid.NodeID()),
+		user.DeviceId(),
 	)
 }
 

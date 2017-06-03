@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -26,10 +27,11 @@ var (
 
 // LoConf is a struct representing the locale-based configuration file data.
 type LoConf struct {
-	Surveys          map[string]*Survey          `json:"survey,omitempty"`
-	Announcements    map[string]json.RawMessage  `json:"announcement,omitempty"`
-	UninstallSurveys map[string]*UninstallSurvey `json:"uninstall-survey,omitempty"`
-	log              golog.Logger
+	Surveys              map[string]*Survey          `json:"survey,omitempty"`
+	Announcements        map[string]json.RawMessage  `json:"announcement,omitempty"`
+	UninstallSurveysPro  map[string]*UninstallSurvey `json:"uninstall-survey-pro,omitempty"`
+	UninstallSurveysFree map[string]*UninstallSurvey `json:"uninstall-survey-free,omitempty"`
+	log                  golog.Logger
 }
 
 // BaseSurvey contains the core elements of any survey type.
@@ -38,8 +40,6 @@ type BaseSurvey struct {
 	Probability float64 `json:"probability,omitempty"`
 	Campaign    string  `json:"campaign,omitempty"`
 	URL         string  `json:"url,omitempty"`
-	Pro         bool    `json:"pro,omitempty"`
-	Free        bool    `json:"free,omitempty"`
 }
 
 // UninstallSurvey contains all elements of uninstall surveys.
@@ -76,7 +76,7 @@ func get(hc *http.Client, isStaging bool, prodURL, stagingURL string) (*LoConf, 
 	if isStaging {
 		u = stagingURL
 	}
-	b, efetch := fetch(hc, u)
+	b, efetch := fetch(hc, bustCache(u))
 	if efetch != nil {
 		return nil, errors.Wrap(efetch)
 	}
@@ -85,6 +85,10 @@ func get(hc *http.Client, isStaging bool, prodURL, stagingURL string) (*LoConf, 
 		return nil, errors.Wrap(eparse)
 	}
 	return parsed, nil
+}
+
+func bustCache(u string) string {
+	return u + "?time=" + strconv.Itoa(time.Now().Nanosecond())
 }
 
 func fetch(hc *http.Client, u string) (b []byte, err error) {
@@ -116,11 +120,17 @@ func parse(buf []byte) (*LoConf, error) {
 	}
 
 	// Normalize all keys to lowercase.
-	us := make(map[string]*UninstallSurvey)
-	for k, v := range obj.UninstallSurveys {
-		us[strings.ToLower(k)] = v
+	uFree := make(map[string]*UninstallSurvey)
+	for k, v := range obj.UninstallSurveysFree {
+		uFree[strings.ToLower(k)] = v
 	}
-	obj.UninstallSurveys = us
+	obj.UninstallSurveysFree = uFree
+
+	uPro := make(map[string]*UninstallSurvey)
+	for k, v := range obj.UninstallSurveysPro {
+		uPro[strings.ToLower(k)] = v
+	}
+	obj.UninstallSurveysPro = uPro
 
 	surveys := make(map[string]*Survey)
 	for k, v := range obj.Surveys {
@@ -147,13 +157,22 @@ func (lc *LoConf) GetSurvey(locale, country string) *Survey {
 	return val
 }
 
-// GetUninstallSurvey  returns the uninstall survey for the specified locale and
+// GetUninstallSurvey returns the uninstall survey for the specified locale and
 // country or nil and false if no match exists.
-func (lc *LoConf) GetUninstallSurvey(locale, country string) *UninstallSurvey {
-	if val, ok := lc.UninstallSurveys[strings.ToLower(country)]; ok && val != nil {
+func (lc *LoConf) GetUninstallSurvey(locale, country string, pro bool) *UninstallSurvey {
+	if pro {
+		return lc.getUninstallSurvey(lc.UninstallSurveysPro, locale, country)
+	}
+	return lc.getUninstallSurvey(lc.UninstallSurveysFree, locale, country)
+}
+
+// getUninstallSurvey returns the uninstall survey for the specified locale and
+// country or nil and false if no match exists.
+func (lc *LoConf) getUninstallSurvey(surveys map[string]*UninstallSurvey, locale, country string) *UninstallSurvey {
+	if val, ok := surveys[strings.ToLower(country)]; ok && val != nil {
 		return val
 	}
-	val, _ := lc.UninstallSurveys[strings.ToLower(locale)]
+	val, _ := surveys[strings.ToLower(locale)]
 	return val
 }
 
