@@ -13,8 +13,8 @@ import (
 
 	"github.com/getlantern/ema"
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/ops"
 )
 
 const (
@@ -328,8 +328,22 @@ func (b *Balancer) Close() {
 
 func (b *Balancer) printStats(dialers SortedDialers) {
 	log.Debug("-------------------------- Dialer Stats -----------------------")
+	rank := float64(1)
 	for _, d := range dialers {
-		log.Debugf("%s  S: %4d / %4d (%d)\tF: %4d / %4d (%d)\tL: %5.0fms\tBW: %3.2fMbps\tDT: %5.0fms", d.JustifiedLabel(), d.Successes(), d.Attempts(), d.ConsecSuccesses(), d.Failures(), d.Attempts(), d.ConsecFailures(), d.EstLatency().Seconds()*1000, d.EstBandwidth(), d.EMADialTime().Seconds()*1000)
+		estLatency := d.EstLatency().Seconds()
+		estBandwidth := d.EstBandwidth()
+		log.Debugf("%s  S: %4d / %4d (%d)\tF: %4d / %4d (%d)\tL: %5.0fms\tBW: %3.2fMbps\tDT: %5.0fms", d.JustifiedLabel(), d.Successes(), d.Attempts(), d.ConsecSuccesses(), d.Failures(), d.Attempts(), d.ConsecFailures(), estLatency*1000, estBandwidth, d.EMADialTime().Seconds()*1000)
+		host, _, _ := net.SplitHostPort(d.Addr())
+		// Report stats to borda
+		op := ops.Begin("proxy_rank").
+			Set("proxy_host", host).
+			SetMetricAvg("rank", rank).
+			SetMetricAvg("est_rtt", estLatency)
+		if estBandwidth > 0 {
+			op.SetMetricAvg("est_mbps", estBandwidth)
+		}
+		op.End()
+		rank++
 	}
 	log.Debug("------------------------ End Dialer Stats ---------------------")
 }

@@ -209,6 +209,7 @@ func (op *Op) SetMetricMin(name string, value float64) *Op {
 func (op *Op) SetMetricMax(name string, value float64) *Op {
 	return op.Set(name, borda.Max(value))
 }
+
 func (op *Op) SetMetricAvg(name string, value float64) *Op {
 	return op.Set(name, borda.Avg(value))
 }

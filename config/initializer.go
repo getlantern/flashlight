@@ -44,6 +44,9 @@ var (
 		chained: "http://config-staging.getiantem.org/proxies.yaml.gz",
 		fronted: "http://d33pfmbpauhmvd.cloudfront.net/proxies.yaml.gz",
 	}
+
+	// ProxyConfigPollInterval determines how frequently to fetch proxies.yaml
+	ProxyConfigPollInterval = 1 * time.Minute
 )
 
 // Init initializes the config setup for both fetching per-user proxies as well
@@ -71,7 +74,7 @@ func Init(configDir string, flags map[string]interface{},
 		},
 		dispatch:     proxiesDispatch,
 		embeddedData: generated.EmbeddedProxies,
-		sleep:        1 * time.Minute,
+		sleep:        ProxyConfigPollInterval,
 		sticky:       isSticky(flags),
 	}
 
