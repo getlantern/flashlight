@@ -500,7 +500,7 @@ testImports:
 - name: github.com/getlantern/bbrconn
   version: 9a5594c63329cf77582eccae41a8a75240a078fe
 - name: github.com/getlantern/tcpinfo
-  version: c2c464e492705e425941f0625cb3c2fcc0bfd705
+  version: ba0bf2d3cb84c294cb2bd22f78b220296242cca8
 - name: github.com/gonum/blas
   version: 430a98d0f42f5d7b9a9535580771233386034848
   subpackages:
