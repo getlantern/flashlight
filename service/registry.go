@@ -96,9 +96,11 @@ func (r *Registry) register(instance Service, defaultOpts ConfigOpts) error {
 		return fmt.Errorf("service '%s' is already registered", id)
 	}
 	r.nodes[id] = &node{id: id, instance: instance, opts: defaultOpts}
-	if p, ok := instance.(Subscribable); ok {
-		p.SetPublisher(publisher{id, r})
-	}
+	/*
+		if p, ok := instance.(Subscribable); ok {
+			p.SetPublisher(publisher{id, r})
+		}
+	*/
 	log.Debugf("Registered service %s", id)
 	return nil
 }
@@ -154,6 +156,7 @@ func (r *Registry) Configure(id ID, op func(ConfigOpts)) error {
 }
 
 // MustSubCh calls SubCh and panics if there's any error.
+/*
 func (r *Registry) MustSubCh(id ID) <-chan interface{} {
 	ch, err := r.SubCh(id)
 	if err != nil {
@@ -219,6 +222,7 @@ func (r *Registry) publish(id ID, msg interface{}) {
 		}
 	}
 }
+*/
 
 // StartAll starts all the services unless any of the dependencies doesn't
 // start.

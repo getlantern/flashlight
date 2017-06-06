@@ -57,6 +57,7 @@ type Subscribable interface {
 	// SetPublisher is for services to store the publisher for further reference.
 	SetPublisher(p Publisher)
 	Sub(cb func(m interface{}))
+	SubCh() <-chan interface{}
 }
 
 // Subscriber is a struct implementing Subscribable
@@ -79,13 +80,22 @@ var (
 	log       = golog.LoggerFor("flashlight.service")
 )
 
-// Sub calls SubCh with the the specific service id spawns a goroutine to
-// call the callback for any messsage received.
-func (s *Subscriber) Sub(cb func(m interface{})) {
+// SubCh returns a channel to receive any message the service published. The channel has 1 buffer in case , but messages are discarded if no one is listening on the channel. If the
+// service doesn't implement WillPublish interface, the channel never sends
+// anything. The channel will be closed by CloseAll().
+func (s *Subscriber) SubCh() <-chan interface{} {
 	ch := make(chan interface{}, 1)
 	s.muChannels.Lock()
 	s.channels = append(s.channels, ch)
 	s.muChannels.Unlock()
+	log.Tracef("Subscribed...")
+	return ch
+}
+
+// Sub calls SubCh with the the specific service id spawns a goroutine to
+// call the callback for any messsage received.
+func (s *Subscriber) Sub(cb func(m interface{})) {
+	s.SubCh()
 
 	go func() {
 		for m := range s.channels {
@@ -94,7 +104,7 @@ func (s *Subscriber) Sub(cb func(m interface{})) {
 	}()
 }
 
-func (s *Subscriber) publish(msg interface{}) {
+func (s *Subscriber) Publish(msg interface{}) {
 	s.muChannels.RLock()
 	defer s.muChannels.RUnlock()
 	log.Tracef("Publishing message to %d subscribers", len(s.channels))
@@ -137,6 +147,7 @@ func Configure(id ID, op func(opts ConfigOpts)) error {
 	return singleton.Configure(id, op)
 }
 
+/*
 // MustSubCh calls MustSubCh of the singleton registry.
 func MustSubCh(id ID) <-chan interface{} {
 	return singleton.MustSubCh(id)
@@ -156,6 +167,7 @@ func MustSub(id ID, cb func(m interface{})) {
 func Sub(id ID, cb func(m interface{})) error {
 	return singleton.Sub(id, cb)
 }
+*/
 
 // Start calls Start of the singleton registry.
 func Start(id ID) bool {
@@ -178,6 +190,7 @@ func CloseAll() {
 	singleton.CloseAll()
 }
 
+/*
 type publisher struct {
 	id ID
 	r  *Registry
@@ -186,3 +199,4 @@ type publisher struct {
 func (p publisher) Publish(msg interface{}) {
 	p.r.publish(p.id, msg)
 }
+*/
