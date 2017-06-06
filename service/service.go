@@ -4,7 +4,11 @@
 //
 package service
 
-import "github.com/getlantern/golog"
+import (
+	"sync"
+
+	"github.com/getlantern/golog"
+)
 
 // ID uniquely identify a service. Typically, each service defines a package
 // level constant ServiceID with an unique string.
@@ -27,6 +31,7 @@ type Service interface {
 // Configurable is an interface that service can choose to implement to
 // configure itself dynamically.
 type Configurable interface {
+	Service
 	// Configure configures the service with current effective config
 	// options. Registry only calls this when the ConfigOpts are Complete().
 	// Serviceement carefully To avoid data races. The implementation can choose
@@ -44,11 +49,23 @@ type ConfigOpts interface {
 	Complete() string
 }
 
-// WillPublish is an interface the service can optionally implement to publish
+// Subscribable is an interface the service can optionally implement to publish
 // any message.
-type WillPublish interface {
+type Subscribable interface {
+	Service
+
 	// SetPublisher is for services to store the publisher for further reference.
 	SetPublisher(p Publisher)
+	Sub(cb func(m interface{}))
+}
+
+// Subscriber is a struct implementing Subscribable
+type Subscriber struct {
+	// Note: we use separate mutex and map to avoid deadlock when publishing
+	// message in Service.Start, which is useful in certain cases to publish
+	// initial messages.
+	muChannels sync.RWMutex
+	channels   []chan interface{}
 }
 
 // Publisher is what a service can optionally use to publish a message.
@@ -58,22 +75,46 @@ type Publisher interface {
 }
 
 var (
-	singleton *Registry
+	singleton = NewRegistry()
 	log       = golog.LoggerFor("flashlight.service")
 )
 
-func init() {
-	singleton = NewRegistry()
+// Sub calls SubCh with the the specific service id spawns a goroutine to
+// call the callback for any messsage received.
+func (s *Subscriber) Sub(cb func(m interface{})) {
+	ch := make(chan interface{}, 1)
+	s.muChannels.Lock()
+	s.channels = append(s.channels, ch)
+	s.muChannels.Unlock()
+
+	go func() {
+		for m := range s.channels {
+			cb(m)
+		}
+	}()
+}
+
+func (s *Subscriber) publish(msg interface{}) {
+	s.muChannels.RLock()
+	defer s.muChannels.RUnlock()
+	log.Tracef("Publishing message to %d subscribers", len(s.channels))
+	for _, ch := range s.channels {
+		select {
+		case ch <- msg:
+		default:
+			log.Debugf("Warning: message discarded: %+v", msg)
+		}
+	}
 }
 
 // MustRegister calls MustRegister of the singleton registry
-func MustRegister(instance Service, defaultOpts ConfigOpts) {
-	singleton.MustRegister(instance, defaultOpts)
+func MustRegister(instance Service) {
+	singleton.Register(instance)
 }
 
-// Register calls Register of the singleton registry
-func Register(instance Service, defaultOpts ConfigOpts) error {
-	return singleton.Register(instance, defaultOpts)
+// RegisterConfigurable calls Register of the singleton registry
+func RegisterConfigurable(instance Configurable, defaultOpts ConfigOpts) error {
+	return singleton.RegisterConfigurable(instance, defaultOpts)
 }
 
 // MustLookup calls MustLookup of the singleton registry

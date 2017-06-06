@@ -19,6 +19,10 @@ type mockService struct {
 	configureCount int
 }
 
+type mockConfigurable struct {
+	*mockService
+}
+
 func (i *mockService) GetID() ID {
 	return i.t
 }
@@ -29,6 +33,9 @@ func (i *mockService) Start() {
 
 func (i *mockService) Stop() {
 	i.stopCount++
+}
+
+func (i *mockConfigurable) Configure(opts ConfigOpts) {
 }
 
 type mockOpts struct {
@@ -46,14 +53,12 @@ func (o *mockOpts) Complete() string {
 
 func TestLifeCycle(t *testing.T) {
 	reg := NewRegistry()
-	err := reg.Register(nil, nil)
+	err := reg.Register(nil)
 	assert.Error(t, err, "registering nil service should fail")
-	reg.MustRegister(&mockService{t: st1}, nil)
-	err = reg.Register(&mockService{t: st1}, nil)
+	reg.MustRegister(&mockService{t: st1})
+	err = reg.Register(&mockService{t: st1})
 	assert.Error(t, err, "each service should be registered only once")
-	err = reg.Register(&mockService{t: st2}, &mockOpts{st2, ""})
-	assert.Error(t, err, "registering non-configurable service with opts should fail")
-	reg.MustRegister(&mockService{t: st2}, nil)
+	reg.MustRegister(&mockService{t: st2})
 	i1 := reg.MustLookup(st1).(*mockService)
 	i2 := reg.MustLookup(st2).(*mockService)
 	reg.Start(st1)
@@ -83,7 +88,7 @@ func TestConfigure(t *testing.T) {
 	reg := NewRegistry()
 	opts := mockOpts{t: st1, s: "not complete"}
 	s := configurable{mockService: mockService{t: st1}}
-	reg.MustRegister(&s, &opts)
+	reg.MustRegisterConfigurable(&s, &opts)
 	reg.StartAll()
 	assert.Equal(t, 0, s.startCount, "should not start if ConfigOpts are incomplete")
 	assert.Equal(t, 0, s.configureCount, "should not configure if ConfigOpts are incomplete")
@@ -128,8 +133,8 @@ func (i *mockWithPublisher) SetPublisher(p Publisher) {
 func TestSubscribe(t *testing.T) {
 	reg := NewRegistry()
 	inst := &mockWithPublisher{&mockService{t: st1}, nil, make(chan bool)}
-	reg.MustRegister(inst, nil)
-	reg.MustRegister(&mockService{t: st2}, nil)
+	reg.MustRegister(inst)
+	reg.MustRegister(&mockService{t: st2})
 	_, err := reg.SubCh(st3)
 	assert.Error(t, err, "subscribing to not registered service should fail")
 	_, err = reg.SubCh(st2)

@@ -62,18 +62,18 @@ func ComposeServices(
 	op := fops.Begin("client_started")
 
 	reg := service.NewRegistry()
-	reg.MustRegister(client.New(
+	cl := client.New(
 		httpProxyAddr,
 		socks5ProxyAddr,
 		deviceID,
 		allowPrivateHosts,
 		settings,
 		userConfig,
-		statsTracker),
-		&client.ConfigOpts{})
+		statsTracker)
+	reg.MustRegisterConfigurable(cl, &client.ConfigOpts{})
 
 	registerConfigService(reg, flagsAsMap, userConfig)
-	reg.MustRegister(borda.New(FullyReportedOps), &borda.ConfigOpts{})
+	reg.MustRegister(borda.New(FullyReportedOps))
 	reg.MustSub(config.ServiceID, func(msg interface{}) {
 		switch c := msg.(type) {
 		case config.Proxies:
@@ -98,8 +98,9 @@ func ComposeServices(
 		}
 	})
 
-	reg.MustRegister(geolookup.New(), nil)
-	reg.MustSub(geolookup.ServiceID, func(m interface{}) {
+	geo := geolookup.New()
+	reg.MustRegister(geo)
+	geo.Sub(func(m interface{}) {
 		info := m.(*geolookup.GeoInfo)
 		ip, country := info.GetIP(), info.GetCountry()
 		ops.SetGlobal("geo_country", country)
@@ -109,7 +110,7 @@ func ComposeServices(
 		})
 	})
 
-	reg.MustSub(client.ServiceID, func(m interface{}) {
+	cl.Sub(func(m interface{}) {
 		msg := m.(client.Message)
 		if msg.ProxyType == client.HTTPProxy {
 			proxied.SetProxyAddr(eventual.DefaultGetter(msg.Addr))
@@ -159,7 +160,7 @@ func registerConfigService(reg *service.Registry, flagsAsMap map[string]interfac
 		}
 	}
 	opts.UserConfig = userConfig
-	reg.MustRegister(config.New(opts), nil)
+	reg.MustRegister(config.New(opts))
 }
 
 func getTrustedCACerts(cfg *config.Global) (pool *x509.CertPool, err error) {

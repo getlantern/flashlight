@@ -37,40 +37,66 @@ func NewRegistry() *Registry {
 }
 
 // MustRegister is same as Register but panics if fail to register the service.
-func (r *Registry) MustRegister(instance Service, defaultOpts ConfigOpts) {
-	err := r.Register(instance, defaultOpts)
+func (r *Registry) MustRegister(instance Service) {
+	err := r.Register(instance)
 	if err != nil {
 		panic(err.Error())
 	}
 }
 
-// Register register a service. It requires:
+// MustRegisterConfigurable is same as RegisterConfigurable but panics if it
+// fails to register the service.
+func (r *Registry) MustRegisterConfigurable(instance Configurable, defaultOpts ConfigOpts) {
+	err := r.RegisterConfigurable(instance, defaultOpts)
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
+// Register registers a service. It requires:
 // 1. A method to create the service instance, typically New();
 // 2. The default config options to start the service, or nil if the service
 // doesn't need config.
 // Registry.StartAll() will resolve the startup order.
-func (r *Registry) Register(instance Service, defaultOpts ConfigOpts) error {
+func (r *Registry) Register(instance Service) error {
+	return r.register(instance, nil)
+}
+
+// RegisterConfigurable registers a Configurable. It requires:
+// 1. A method to create the service instance, typically New();
+// 2. The default config options to start the service.
+// Registry.StartAll() will resolve the startup order.
+func (r *Registry) RegisterConfigurable(instance Configurable, defaultOpts ConfigOpts) error {
 	if instance == nil {
 		return errors.New("nil instance")
 	}
 	id := instance.GetID()
-	if _, ok := instance.(Configurable); ok {
-		if defaultOpts == nil {
-			return fmt.Errorf("configurable service '%s' must be registered with default ConfigOpts", id)
-		}
-		if defaultOpts.For() != id {
-			return fmt.Errorf("invalid default config options for %s", id)
-		}
-	} else if defaultOpts != nil {
-		return fmt.Errorf("service '%s' is not configurable", id)
+	if defaultOpts == nil {
+		return fmt.Errorf("configurable service '%s' must be registered with default ConfigOpts", id)
 	}
+	if defaultOpts.For() != id {
+		return fmt.Errorf("invalid default config options for %s", id)
+	}
+	return r.register(instance, defaultOpts)
+}
+
+// register registers a service. It requires:
+// 1. A method to create the service instance, typically New();
+// 2. The default config options to start the service, or nil if the service
+// doesn't need config.
+// Registry.StartAll() will resolve the startup order.
+func (r *Registry) register(instance Service, defaultOpts ConfigOpts) error {
+	if instance == nil {
+		return errors.New("nil instance")
+	}
+	id := instance.GetID()
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if r.nodes[id] != nil {
 		return fmt.Errorf("service '%s' is already registered", id)
 	}
 	r.nodes[id] = &node{id: id, instance: instance, opts: defaultOpts}
-	if p, ok := instance.(WillPublish); ok {
+	if p, ok := instance.(Subscribable); ok {
 		p.SetPublisher(publisher{id, r})
 	}
 	log.Debugf("Registered service %s", id)
@@ -146,7 +172,7 @@ func (r *Registry) SubCh(id ID) (<-chan interface{}, error) {
 	if n == nil {
 		return nil, errors.New("%s service doesn't exist", id)
 	}
-	if _, ok := n.instance.(WillPublish); !ok {
+	if _, ok := n.instance.(Subscribable); !ok {
 		return nil, errors.New("%s service doesn't publish anything", id)
 	}
 	ch := make(chan interface{}, 1)
@@ -227,7 +253,7 @@ func (s *serviceWrapper) Stop() {
 func (r *Registry) StartFunc(f func() func()) {
 	name := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
 	st := ID(name)
-	r.Register(&serviceWrapper{st: st, f: f}, nil)
+	r.Register(&serviceWrapper{st: st, f: f})
 	r.Start(st)
 }
 

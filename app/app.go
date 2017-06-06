@@ -184,10 +184,11 @@ func (app *App) composeRestServices() {
 			autoupdate.Configure(c.UpdateServerURL, c.AutoUpdateCA)
 		}
 	})
-	app.reg.MustRegister(location.New(), &location.ConfigOpts{})
-	app.reg.MustRegister(
+	app.reg.MustRegisterConfigurable(location.New(), &location.ConfigOpts{})
+	app.reg.MustRegisterConfigurable(
 		loconfscanner.New(4*time.Hour, app.isProUser, &pastAnnouncements{app.settings}),
 		&loconfscanner.ConfigOpts{Lang: app.settings.GetLanguage()})
+
 	app.reg.MustSub(geolookup.ServiceID, func(m interface{}) {
 		country := m.(*geolookup.GeoInfo).GetCountry()
 		app.reg.MustConfigure(location.ServiceID, func(opts service.ConfigOpts) {
@@ -206,7 +207,7 @@ func (app *App) composeRestServices() {
 			app.settings.SetString(settings.SNAddr, msg.Addr)
 
 			sysproxyOn := app.settings.GetSystemProxy()
-			app.reg.MustRegister(sysproxy.New(msg.Addr),
+			app.reg.MustRegisterConfigurable(sysproxy.New(msg.Addr),
 				&sysproxy.ConfigOpts{sysproxyOn})
 			app.reg.Start(sysproxy.ServiceID)
 			app.OnSettingChange(settings.SNSystemProxy, func(val interface{}) {
@@ -214,7 +215,7 @@ func (app *App) composeRestServices() {
 					o.(*sysproxy.ConfigOpts).Enable = val.(bool)
 				})
 			})
-			app.reg.MustRegister(signal.New(), nil)
+			app.reg.MustRegister(signal.New())
 			app.reg.MustSub(signal.ServiceID, func(m interface{}) {
 				app.reg.MustConfigure(sysproxy.ServiceID, func(o service.ConfigOpts) {
 					o.(*sysproxy.ConfigOpts).Enable = m.(bool)
@@ -225,7 +226,7 @@ func (app *App) composeRestServices() {
 			// register and start analytics until client is started because it
 			// requires proxied package.
 			// TODO: add explicit dependency to proxied package
-			app.reg.MustRegister(analytics.New(
+			app.reg.MustRegisterConfigurable(analytics.New(
 				app.settings.IsAutoReport(),
 				app.settings.GetDeviceID(),
 				common.Version,

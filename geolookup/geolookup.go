@@ -42,9 +42,10 @@ type GeoLookup struct {
 	chRefreshRequest chan bool
 	gi               eventual.Value
 	p                service.Publisher
+	service.Subscribable
 }
 
-func New() service.Service {
+func New() service.Subscribable {
 	return &GeoLookup{
 		chStop:           make(chan bool),
 		chRefreshRequest: make(chan bool),

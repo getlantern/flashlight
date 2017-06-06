@@ -130,6 +130,7 @@ type Client struct {
 	statsTracker   common.StatsTracker
 
 	chStop chan bool
+	service.Subscribable
 }
 
 func New(
