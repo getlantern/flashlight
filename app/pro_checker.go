@@ -18,8 +18,7 @@ func isProUser() (isPro bool, ok bool) {
 		if userID > 0 {
 			break
 		}
-		log.Debugf("Waiting for user ID to become non-zero")
-		time.Sleep(10 * time.Second)
+		time.Sleep(250 * time.Millisecond)
 	}
 	return proclient.IsProUser(userID, settings.GetToken(), settings.GetDeviceID())
 }
