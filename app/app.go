@@ -131,8 +131,9 @@ func (app *App) Run() error {
 			settings.GetDeviceID(),
 			settings.GetLanguage,
 			func() string {
-				if settings.GetToken() != "" {
-					// pro user, don't ad swap
+				isPro, statusKnown := isProUserFast()
+				if isPro || !statusKnown {
+					// pro user (or status unknown), don't ad swap
 					return ""
 				}
 				return ui.AddToken("/") + "#/plans"
