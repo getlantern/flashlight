@@ -1,12 +1,19 @@
 package client
 
 import (
+	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 )
+
+var adSwapJavaScriptInjections = map[string]string{
+	"http://www.googletagservices.com/tag/js/gpt.js": "http://localhost:8080/v1/js/www.googletagservices.com/tag/js/gpt.js",
+}
 
 // ServeHTTP implements the http.Handler interface.
 func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
@@ -38,9 +45,16 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 			log.Error(op.FailIf(err))
 		}
 	} else {
-		log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
+		urlString := req.URL.String()
+		adSwapJavaScriptInjection, adSwappingEnabled := adSwapJavaScriptInjections[strings.ToLower(urlString)]
+		if adSwappingEnabled {
+			if client.redirectAdSwap(resp, req, urlString, adSwapJavaScriptInjection, op) {
+				return
+			}
+		}
+		log.Tracef("Checking for HTTP redirect for %v", urlString)
 		if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
-			client.redirect(resp, req, httpsURL, op)
+			client.redirectHTTPS(resp, req, httpsURL, op)
 			return
 		}
 		// Direct proxying can only be used for plain HTTP connections.
@@ -60,14 +74,29 @@ func (client *Client) easyblock(resp http.ResponseWriter, req *http.Request) {
 	resp.WriteHeader(http.StatusForbidden)
 }
 
-func (client *Client) redirect(resp http.ResponseWriter, req *http.Request, httpsURL string, op *ops.Op) {
+func (client *Client) redirectHTTPS(resp http.ResponseWriter, req *http.Request, httpsURL string, op *ops.Op) {
 	log.Debugf("httpseverywhere redirecting to %v", httpsURL)
 	op.Set("forcedhttps", true)
 	client.statsTracker.IncHTTPSUpgrades()
 	// Tell the browser to only cache the redirect for a day. The browser
-	// is generally caches permanent redirects, well, permanently but will also
-	// follow caching rules.
+	// generally caches permanent redirects permanently, but it will obey caching
+	// directives if set.
 	resp.Header().Set("Cache-Control", "max-age:86400")
 	resp.Header().Set("Expires", time.Now().Add(time.Duration(24)*time.Hour).Format(http.TimeFormat))
 	http.Redirect(resp, req, httpsURL, http.StatusMovedPermanently)
+}
+
+func (client *Client) redirectAdSwap(resp http.ResponseWriter, req *http.Request, origURL string, jsURL string, op *ops.Op) bool {
+	targetURL := client.adSwapTargetURL()
+	if targetURL == "" {
+		// not ad swapping
+		return false
+	}
+
+	log.Debugf("Swapping javascript for %v to %v", origURL, jsURL)
+	op.Set("adswapped", true)
+	lang := client.lang()
+	fullURL := fmt.Sprintf("%v?lang=%v&url=%v", jsURL, url.QueryEscape(lang), url.QueryEscape(targetURL))
+	http.Redirect(resp, req, fullURL, http.StatusTemporaryRedirect)
+	return true
 }

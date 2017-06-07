@@ -191,7 +191,9 @@ func (s *server) checkOrigin(h http.Handler) http.Handler {
 			clientURL = origin
 		}
 
-		tokenMatch := false
+		r.ParseForm()
+		token := r.Form.Get("token")
+		tokenMatch := token == s.localHTTPToken
 
 		if clientURL == "" {
 			switch r.URL.Path {
@@ -199,9 +201,7 @@ func (s *server) checkOrigin(h http.Handler) http.Handler {
 				h.ServeHTTP(w, r)
 				return
 			default:
-				r.ParseForm()
-				token := r.Form.Get("token")
-				if token == s.localHTTPToken {
+				if tokenMatch {
 					tokenMatch = true
 				} else if token != "" {
 					msg := fmt.Sprintf("Token '%v' did not match the expected '%v...'", token, s.localHTTPToken)

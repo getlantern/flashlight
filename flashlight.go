@@ -54,7 +54,9 @@ func Run(httpProxyAddr string,
 	userConfig config.UserConfig,
 	statsTracker common.StatsTracker,
 	onError func(err error),
-	deviceID string) error {
+	deviceID string,
+	lang func() string,
+	adSwapTargetURL func() string) error {
 
 	elapsed := mtime.Stopwatch()
 	displayVersion()
@@ -62,7 +64,7 @@ func Run(httpProxyAddr string,
 	op := fops.Begin("client_started")
 
 	cl, err := client.NewClient(useShortcut, useDetour,
-		userConfig.GetToken, statsTracker, allowPrivateHosts)
+		userConfig.GetToken, statsTracker, allowPrivateHosts, lang, adSwapTargetURL)
 	if err != nil {
 		fatalErr := fmt.Errorf("Unable to initialize client: %v", err)
 		op.FailIf(fatalErr)

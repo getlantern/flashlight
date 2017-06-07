@@ -128,7 +128,15 @@ func (app *App) Run() error {
 			settings,
 			app.statsTracker,
 			app.Exit,
-			settings.GetDeviceID())
+			settings.GetDeviceID(),
+			settings.GetLanguage,
+			func() string {
+				if settings.GetToken() != "" {
+					// pro user, don't ad swap
+					return ""
+				}
+				return ui.AddToken("/") + "#/plans"
+			})
 		if err != nil {
 			app.Exit(err)
 			return
