@@ -191,8 +191,7 @@ func (s *server) checkOrigin(h http.Handler) http.Handler {
 			clientURL = origin
 		}
 
-		r.ParseForm()
-		token := r.Form.Get("token")
+		token := r.URL.Query().Get("token")
 		tokenMatch := token == s.localHTTPToken
 
 		if clientURL == "" {
