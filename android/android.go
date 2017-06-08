@@ -87,6 +87,7 @@ type UserConfig interface {
 	config.UserConfig
 	AfterStart()
 	SetCountry(string)
+	SetProxyLocation(string, string, string)
 	SetStaging(bool)
 	ShowSurvey(string)
 	ProxyAll() bool
@@ -169,6 +170,9 @@ func run(configDir, locale string,
 
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
+	st := statsTracker{}
+	st.Configure(user)
+
 	flashlight.Run("127.0.0.1:0", // listen for HTTP on random address
 		"127.0.0.1:0", // listen for SOCKS on random address
 		configDir,     // place to store lantern configuration
@@ -190,7 +194,7 @@ func run(configDir, locale string,
 		func(cfg *config.Global) {
 		}, // onConfigUpdate
 		user,
-		statsTracker{},
+		st,
 		func(err error) {}, // onError
 		user.DeviceId(),
 	)
