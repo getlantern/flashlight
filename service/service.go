@@ -5,6 +5,7 @@
 package service
 
 import (
+	"reflect"
 	"sync"
 
 	"github.com/getlantern/golog"
@@ -12,12 +13,10 @@ import (
 
 // ID uniquely identify a service. Typically, each service defines a package
 // level constant ServiceID with an unique string.
-type ID string
+type ID reflect.Type
 
 // Service is the minimum interface to implemetent a service.
 type Service interface {
-	// GetID returns the id of the service. It should uniquely identify a server.
-	GetID() ID
 	// Start actually starts the service. The Registry calls it only once until
 	// it's stopped. To avoid deadlock, Start should return as soon as possible
 	// and should not call methods in this package.
@@ -42,26 +41,28 @@ type Configurable interface {
 
 // ConfigOpts represents all of the config options required to start a service.
 type ConfigOpts interface {
-	// For returns the service id to which the ConfigOpts apply.
-	For() ID
 	// Complete checks if the ConfigOpts is complete to start the service. If
 	// not, return the reason.
 	Complete() string
 }
 
-// Subscribable is an interface the service can optionally implement to publish
+// PubSub is an interface the service can optionally implement to publish
 // any message.
-type Subscribable interface {
-	Service
-
-	// SetPublisher is for services to store the publisher for further reference.
-	SetPublisher(p Publisher)
+type PubSub interface {
 	Sub(cb func(m interface{}))
 	SubCh() <-chan interface{}
+	Pub(msg interface{})
 }
 
-// Subscriber is a struct implementing Subscribable
-type Subscriber struct {
+// PubSubService is an interface for system wide services that are also capable
+// of PubSub.
+type PubSubService interface {
+	Service
+	PubSub
+}
+
+// pubSub is a struct implementing PubSub
+type pubSub struct {
 	// Note: we use separate mutex and map to avoid deadlock when publishing
 	// message in Service.Start, which is useful in certain cases to publish
 	// initial messages.
@@ -69,11 +70,17 @@ type Subscriber struct {
 	channels   []chan interface{}
 }
 
-// Publisher is what a service can optionally use to publish a message.
-type Publisher interface {
-	// Publish publishes any message to all of the subscribers.
-	Publish(msg interface{})
+func NewPubSub() PubSub {
+	return &pubSub{
+		channels: make([]chan interface{}, 1),
+	}
 }
+
+// Publisher is what a service can optionally use to publish a message.
+//type Publisher interface {
+// Publish publishes any message to all of the subscribers.
+//Publish(msg interface{})
+//}
 
 var (
 	singleton = NewRegistry()
@@ -83,7 +90,7 @@ var (
 // SubCh returns a channel to receive any message the service published. The channel has 1 buffer in case , but messages are discarded if no one is listening on the channel. If the
 // service doesn't implement WillPublish interface, the channel never sends
 // anything. The channel will be closed by CloseAll().
-func (s *Subscriber) SubCh() <-chan interface{} {
+func (s *pubSub) SubCh() <-chan interface{} {
 	ch := make(chan interface{}, 1)
 	s.muChannels.Lock()
 	s.channels = append(s.channels, ch)
@@ -94,7 +101,7 @@ func (s *Subscriber) SubCh() <-chan interface{} {
 
 // Sub calls SubCh with the the specific service id spawns a goroutine to
 // call the callback for any messsage received.
-func (s *Subscriber) Sub(cb func(m interface{})) {
+func (s *pubSub) Sub(cb func(m interface{})) {
 	s.SubCh()
 
 	go func() {
@@ -104,17 +111,19 @@ func (s *Subscriber) Sub(cb func(m interface{})) {
 	}()
 }
 
-func (s *Subscriber) Publish(msg interface{}) {
-	s.muChannels.RLock()
-	defer s.muChannels.RUnlock()
-	log.Tracef("Publishing message to %d subscribers", len(s.channels))
-	for _, ch := range s.channels {
-		select {
-		case ch <- msg:
-		default:
-			log.Debugf("Warning: message discarded: %+v", msg)
+func (s *pubSub) Pub(msg interface{}) {
+	go func() {
+		s.muChannels.RLock()
+		defer s.muChannels.RUnlock()
+		log.Tracef("Publishing message to %d subscribers", len(s.channels))
+		for _, ch := range s.channels {
+			select {
+			case ch <- msg:
+			default:
+				log.Debugf("Warning: message discarded: %+v", msg)
+			}
 		}
-	}
+	}()
 }
 
 // MustRegister calls MustRegister of the singleton registry

@@ -54,7 +54,7 @@ func ComposeServices(
 	userConfig common.UserConfig,
 	statsTracker common.StatsTracker,
 	flagsAsMap map[string]interface{},
-) *service.Registry {
+) (*service.Registry, service.PubSubService, service.PubSubService) {
 
 	elapsed := mtime.Stopwatch()
 	displayVersion()
@@ -72,9 +72,10 @@ func ComposeServices(
 		statsTracker)
 	reg.MustRegisterConfigurable(cl, &client.ConfigOpts{})
 
-	registerConfigService(reg, flagsAsMap, userConfig)
+	conf := registerConfigService(reg, flagsAsMap, userConfig)
 	reg.MustRegister(borda.New(FullyReportedOps))
-	reg.MustSub(config.ServiceID, func(msg interface{}) {
+
+	conf.Sub(func(msg interface{}) {
 		switch c := msg.(type) {
 		case config.Proxies:
 			log.Debugf("Applying proxy config with proxies: %v", c)
@@ -116,8 +117,7 @@ func ComposeServices(
 			proxied.SetProxyAddr(eventual.DefaultGetter(msg.Addr))
 			log.Debug("Started client HTTP proxy")
 			op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
-			onGeo := reg.MustSubCh(geolookup.ServiceID)
-			geo := reg.MustLookup(geolookup.ServiceID)
+			onGeo := geo.SubCh()
 			geo.(*geolookup.GeoLookup).Refresh()
 			ops.Go(func() {
 				// wait for geo info before reporting so that we know the
@@ -134,10 +134,10 @@ func ComposeServices(
 			})
 		}
 	})
-	return reg
+	return reg, geo, cl
 }
 
-func registerConfigService(reg *service.Registry, flagsAsMap map[string]interface{}, userConfig common.UserConfig) {
+func registerConfigService(reg *service.Registry, flagsAsMap map[string]interface{}, userConfig common.UserConfig) service.PubSubService {
 	opts := config.DefaultConfigOpts(flagsAsMap["configdir"].(string))
 	if v, _ := flagsAsMap["cloudconfig"].(string); v != "" {
 		opts.Proxies.ChainedURL = v
@@ -160,7 +160,9 @@ func registerConfigService(reg *service.Registry, flagsAsMap map[string]interfac
 		}
 	}
 	opts.UserConfig = userConfig
-	reg.MustRegister(config.New(opts))
+	conf := config.New(opts)
+	reg.MustRegister(conf)
+	return conf
 }
 
 func getTrustedCACerts(cfg *config.Global) (pool *x509.CertPool, err error) {

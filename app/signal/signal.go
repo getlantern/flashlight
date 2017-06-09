@@ -1,6 +1,8 @@
 package signal
 
 import (
+	"reflect"
+
 	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/flashlight/ws"
 	"github.com/getlantern/golog"
@@ -8,26 +10,20 @@ import (
 
 var (
 	log = golog.LoggerFor("flashlight.desktop.signal")
-
-	ServiceID service.ID = "flashlight.desktop.signal"
 )
 
 type userSignal struct {
 	service *ws.Service
 	chStop  chan struct{}
-	p       service.Publisher
+	service.PubSub
 }
 
-func New() service.Service {
+func New() service.PubSubService {
 	return &userSignal{}
 }
 
 func (s *userSignal) GetID() service.ID {
-	return ServiceID
-}
-
-func (s *userSignal) SetPublisher(p service.Publisher) {
-	s.p = p
+	return reflect.TypeOf(s)
 }
 
 func (s *userSignal) Start() {
@@ -57,9 +53,9 @@ func (s *userSignal) read() {
 			log.Debugf("Read userSignal %v", message)
 			switch message {
 			case "disconnect":
-				s.p.Publish(false)
+				s.Pub(false)
 			case "connect":
-				s.p.Publish(true)
+				s.Pub(true)
 			default:
 				continue
 			}

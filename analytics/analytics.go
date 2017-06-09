@@ -28,8 +28,6 @@ const (
 var (
 	log = golog.LoggerFor("flashlight.analytics")
 
-	ServiceID service.ID = "flashlight.analytics"
-
 	maxWaitForIP = math.MaxInt32 * time.Second
 )
 
@@ -60,16 +58,8 @@ type ConfigOpts struct {
 	GeoIP string
 }
 
-func (o *ConfigOpts) For() service.ID {
-	return ServiceID
-}
-
 func (o *ConfigOpts) Complete() string {
 	return ""
-}
-
-func (s *analytics) GetID() service.ID {
-	return ServiceID
 }
 
 func (s *analytics) Configure(opts service.ConfigOpts) {

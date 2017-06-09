@@ -1,6 +1,7 @@
 package geolookup
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -12,8 +13,8 @@ func TestFronted(t *testing.T) {
 	r := service.NewRegistry()
 	i := New()
 	r.MustRegister(i)
-	ch := r.MustSubCh(ServiceID)
-	r.Start(ServiceID)
+	ch := i.SubCh()
+	r.Start(reflect.TypeOf(i))
 	instance := i.(*GeoLookup)
 	fronted.ConfigureForTest(t)
 	instance.Refresh()

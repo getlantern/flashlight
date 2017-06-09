@@ -19,7 +19,6 @@ var (
 	retryWaitMillis = 100
 	maxRetryWait    = 30 * time.Second
 
-	ServiceID  = service.ID("flashlight.geolookup")
 	geoService *GeoLookup
 )
 
@@ -41,24 +40,17 @@ type GeoLookup struct {
 	chStop           chan bool
 	chRefreshRequest chan bool
 	gi               eventual.Value
-	p                service.Publisher
-	service.Subscribable
+	service.PubSub
+	service.Service
 }
 
-func New() service.Subscribable {
+func New() service.PubSubService {
 	return &GeoLookup{
 		chStop:           make(chan bool),
 		chRefreshRequest: make(chan bool),
 		gi:               eventual.NewValue(),
+		PubSub:           service.NewPubSub(),
 	}
-}
-
-func (s *GeoLookup) GetID() service.ID {
-	return ServiceID
-}
-
-func (s *GeoLookup) SetPublisher(p service.Publisher) {
-	s.p = p
 }
 
 func (s *GeoLookup) Start() {
@@ -90,7 +82,7 @@ func (s *GeoLookup) loop() {
 				continue
 			}
 			s.gi.Set(gi)
-			s.p.Publish(gi)
+			s.Pub(gi)
 		case <-s.chStop:
 			return
 		}

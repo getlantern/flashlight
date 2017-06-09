@@ -18,8 +18,6 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.borda")
 
-	ServiceID service.ID = "flashlight.borda"
-
 	// BeforeSubmit is an optional callback to capture when borda batches are
 	// submitted. It's mostly useful for unit testing.
 	BeforeSubmit func(name string, key string, ts time.Time, values map[string]borda.Val, dimensions map[string]interface{})
@@ -28,10 +26,6 @@ var (
 type ConfigOpts struct {
 	ReportInterval time.Duration
 	ReportAllOps   bool
-}
-
-func (c *ConfigOpts) For() service.ID {
-	return ServiceID
 }
 
 func (c *ConfigOpts) Complete() string {
@@ -50,10 +44,6 @@ type bordaService struct {
 
 func New(fullyReportedOps []string) service.Service {
 	return &bordaService{fullyReportedOps: fullyReportedOps}
-}
-
-func (s *bordaService) GetID() service.ID {
-	return ServiceID
 }
 
 func (s *bordaService) Configure(opts service.ConfigOpts) {

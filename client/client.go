@@ -40,8 +40,6 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.client")
 
-	ServiceID service.ID = "flashlight.client"
-
 	proxiedCONNECTPorts = []int{
 		// Standard HTTP(S) ports
 		80, 443,
@@ -69,10 +67,6 @@ var (
 type ConfigOpts struct {
 	GeoCountry string
 	Proxies    map[string]*chained.ChainedServerInfo
-}
-
-func (o *ConfigOpts) For() service.ID {
-	return ServiceID
 }
 
 func (o *ConfigOpts) Complete() string {
@@ -116,7 +110,6 @@ type Client struct {
 
 	deviceID   string
 	geoCountry string
-	publisher  service.Publisher
 
 	httpProxyAddr   string
 	socks5ProxyAddr string
@@ -130,7 +123,7 @@ type Client struct {
 	statsTracker   common.StatsTracker
 
 	chStop chan bool
-	service.Subscribable
+	service.PubSub
 }
 
 func New(
@@ -155,6 +148,7 @@ func New(
 		useDetour:         settings.UseDetour,
 		statsTracker:      statsTracker,
 		proTokenGetter:    userConfig.GetToken,
+		PubSub:            service.NewPubSub(),
 	}
 
 	c.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers.Pool, false, c.dialCONNECT)
@@ -175,14 +169,6 @@ func New(
 
 	return c
 
-}
-
-func (c *Client) GetID() service.ID {
-	return ServiceID
-}
-
-func (c *Client) SetPublisher(p service.Publisher) {
-	c.publisher = p
 }
 
 func (c *Client) Configure(opts service.ConfigOpts) {
@@ -294,7 +280,7 @@ func (c *Client) listenAndServeHTTP() error {
 
 	c.httpListener = l
 	listenAddr := l.Addr().String()
-	c.publisher.Publish(Message{HTTPProxy, listenAddr})
+	c.Pub(Message{HTTPProxy, listenAddr})
 	httpServer := &http.Server{
 		ReadTimeout:  c.readTimeout,
 		WriteTimeout: c.writeTimeout,
@@ -316,7 +302,7 @@ func (c *Client) listenAndServeSOCKS5() error {
 	}
 	c.socks5Listener = l
 	listenAddr := l.Addr().String()
-	c.publisher.Publish(Message{Socks5Proxy, listenAddr})
+	c.Pub(Message{Socks5Proxy, listenAddr})
 
 	conf := &socks5.Config{
 		Dial: func(ctx context.Context, network, addr string) (net.Conn, error) {

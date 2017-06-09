@@ -140,7 +140,6 @@ func TestPoll(t *testing.T) {
 	opts.Proxies.FileName = proxiesFile
 	opts.Global.FileName = globalFile
 	c := New(opts).(*config)
-	c.SetPublisher(p)
 
 	start := time.Now()
 	renameBack := renameFile(t, proxiesFile)

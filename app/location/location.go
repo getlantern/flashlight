@@ -1,15 +1,19 @@
 package location
 
 import (
+	"reflect"
+
 	"github.com/getlantern/flashlight/service"
 	"github.com/getlantern/flashlight/ws"
 )
 
-var ServiceID service.ID = "ws.location"
+var ServiceID service.ID
 var wsServiceID = "location"
 
 func New() service.Service {
-	return &locationService{}
+	ls := &locationService{}
+	ServiceID = reflect.TypeOf(ls)
+	return ls
 }
 
 type ConfigOpts struct {

@@ -23,8 +23,6 @@ import (
 
 var (
 	log = golog.LoggerFor("flashlight.config")
-
-	ServiceID service.ID = "flashlight.config"
 )
 
 type ConfigOpts struct {
@@ -120,26 +118,22 @@ type Proxies map[string]*chained.ChainedServerInfo
 // config gets proxy data saved locally, embedded in the binary, or fetched
 // over the network.
 type config struct {
-	opts      *ConfigOpts
-	publisher service.Publisher
+	opts *ConfigOpts
 	// It's created in each Start() and closed in Stop()
 	chStop chan bool
+
+	service.PubSub
 }
 
-func New(opts *ConfigOpts) service.Service {
+func New(opts *ConfigOpts) service.PubSubService {
 	reason := opts.Complete()
 	if reason != "" {
 		panic(fmt.Sprintf("Invalid config options: %s", reason))
 	}
-	return &config{opts: opts}
-}
-
-func (c *config) GetID() service.ID {
-	return ServiceID
-}
-
-func (c *config) SetPublisher(p service.Publisher) {
-	c.publisher = p
+	return &config{
+		opts:   opts,
+		PubSub: service.NewPubSub(),
+	}
 }
 
 func (c *config) Start() {
@@ -177,7 +171,7 @@ func (c *config) loadInitial(opts *FetchOpts) {
 	msg, err := c.saved(opts)
 	if err == nil {
 		log.Debugf("Sending saved config for %v", opts.fullPath)
-		c.publisher.Publish(msg)
+		c.Pub(msg)
 		return
 	}
 	log.Debugf("Could not load stored config %v", err)
@@ -186,7 +180,7 @@ func (c *config) loadInitial(opts *FetchOpts) {
 		panic(fmt.Sprintf("Could not load embedded config %v", err))
 	}
 	log.Debugf("Sending saved config for %v", opts.EmbeddedName)
-	c.publisher.Publish(msg)
+	c.Pub(msg)
 }
 
 // saved returns a yaml config from disk.
@@ -262,7 +256,7 @@ func (c *config) poll(opts *FetchOpts) {
 			// we did these on goroutines, for example.
 			opts.saveChan <- cfg
 			log.Debugf("Sent to save chan")
-			c.publisher.Publish(cfg)
+			c.Pub(cfg)
 		}
 		select {
 		case <-c.chStop:

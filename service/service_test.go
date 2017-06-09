@@ -2,15 +2,20 @@ package service
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
-var st1 = ID("service.id1")
-var st2 = ID("service.id2")
-var st3 = ID("service.id3")
+type testType1 struct{}
+type testType2 struct{}
+type testType3 struct{}
+
+var st1 = ID(reflect.TypeOf(testType1{}))
+var st2 = ID(reflect.TypeOf(testType2{}))
+var st3 = ID(reflect.TypeOf(testType3{}))
 
 type mockService struct {
 	t              ID
@@ -21,6 +26,12 @@ type mockService struct {
 
 type mockConfigurable struct {
 	*mockService
+}
+
+type mockPubSub struct {
+	*mockService
+
+	chStop chan bool
 }
 
 func (i *mockService) GetID() ID {
@@ -36,6 +47,9 @@ func (i *mockService) Stop() {
 }
 
 func (i *mockConfigurable) Configure(opts ConfigOpts) {
+}
+
+func (i *mockPubSub) Pub(msg interface{}) {
 }
 
 type mockOpts struct {
@@ -104,20 +118,14 @@ func TestConfigure(t *testing.T) {
 	assert.Equal(t, 2, s.configureCount, "should configure service each time Configure is called")
 }
 
-type mockWithPublisher struct {
-	*mockService
-	p      Publisher
-	chStop chan bool
-}
-
-func (i *mockWithPublisher) Start() {
+func (i *mockPubSub) Start() {
 	i.mockService.Start()
 	go func() {
 		t := time.NewTicker(100 * time.Millisecond)
 		for {
 			select {
 			case ts := <-t.C:
-				i.p.Publish(ts)
+				i.Pub(ts)
 			case <-i.chStop:
 				fmt.Print("stopping\n")
 				return
@@ -126,9 +134,11 @@ func (i *mockWithPublisher) Start() {
 	}()
 }
 
+/*
 func (i *mockWithPublisher) SetPublisher(p Publisher) {
 	i.p = p
 }
+*/
 
 /*
 func TestSubscribe(t *testing.T) {

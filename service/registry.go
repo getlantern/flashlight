@@ -3,7 +3,6 @@ package service
 import (
 	"fmt"
 	"reflect"
-	"runtime"
 	"sync"
 
 	"github.com/getlantern/errors"
@@ -70,13 +69,6 @@ func (r *Registry) RegisterConfigurable(instance Configurable, defaultOpts Confi
 	if instance == nil {
 		return errors.New("nil instance")
 	}
-	id := instance.GetID()
-	if defaultOpts == nil {
-		return fmt.Errorf("configurable service '%s' must be registered with default ConfigOpts", id)
-	}
-	if defaultOpts.For() != id {
-		return fmt.Errorf("invalid default config options for %s", id)
-	}
 	return r.register(instance, defaultOpts)
 }
 
@@ -89,18 +81,20 @@ func (r *Registry) register(instance Service, defaultOpts ConfigOpts) error {
 	if instance == nil {
 		return errors.New("nil instance")
 	}
-	id := instance.GetID()
+	id := reflect.TypeOf(instance)
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if r.nodes[id] != nil {
 		return fmt.Errorf("service '%s' is already registered", id)
 	}
 	r.nodes[id] = &node{id: id, instance: instance, opts: defaultOpts}
+
 	/*
 		if p, ok := instance.(Subscribable); ok {
 			p.SetPublisher(publisher{id, r})
 		}
 	*/
+
 	log.Debugf("Registered service %s", id)
 	return nil
 }
@@ -110,7 +104,7 @@ func (r *Registry) MustLookup(id ID) Service {
 	if i := r.Lookup(id); i != nil {
 		return i
 	}
-	panic(fmt.Sprintf("service id '%s' is not registered", string(id)))
+	panic(fmt.Sprintf("service id '%s' is not registered", id.String()))
 }
 
 // Lookup returns the service reference of id t, or nil if not found.
@@ -255,8 +249,7 @@ func (s *serviceWrapper) Stop() {
 // StartFunc registers an anonymous service and starts it immediately. The
 // service runs until CloseAll() is called.
 func (r *Registry) StartFunc(f func() func()) {
-	name := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
-	st := ID(name)
+	st := ID(reflect.TypeOf(r))
 	r.Register(&serviceWrapper{st: st, f: f})
 	r.Start(st)
 }

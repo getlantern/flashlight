@@ -16,18 +16,13 @@ import (
 )
 
 var (
-	ServiceID service.ID = "app.sysproxy"
-	log                  = golog.LoggerFor("app.sysproxy")
+	log = golog.LoggerFor("app.sysproxy")
 )
 
 type ConfigOpts struct {
 	// Enable is the only dynamic config of the sysproxy service. It turns on/off
 	// system's proxy setting accordingly.
 	Enable bool
-}
-
-func (o *ConfigOpts) For() service.ID {
-	return ServiceID
 }
 
 func (o *ConfigOpts) Complete() string {
@@ -49,10 +44,6 @@ func New(proxyAddr string) *Sysproxy {
 	}
 	log.Debugf("Create sysproxy service with proxy address %v", proxyAddr)
 	return &Sysproxy{proxyAddr: proxyAddr}
-}
-
-func (p *Sysproxy) GetID() service.ID {
-	return ServiceID
 }
 
 func (p *Sysproxy) Configure(opts service.ConfigOpts) {

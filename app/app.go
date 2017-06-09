@@ -155,7 +155,7 @@ func (app *App) Run() error {
 	app.startProfiling()
 	app.startUIServices()
 
-	app.reg = flashlight.ComposeServices(
+	reg, geo, cl := flashlight.ComposeServices(
 		listenAddr,
 		socksAddr,
 		app.settings.GetDeviceID(),
@@ -169,13 +169,14 @@ func (app *App) Run() error {
 		app.statsTracker,
 		app.flags,
 	)
+	app.reg = reg
 
-	app.composeRestServices()
+	app.composeRestServices(geo, cl)
 	app.reg.StartAll()
 	return app.waitForExit()
 }
 
-func (app *App) composeRestServices() {
+func (app *App) composeRestServices(geo service.PubSub, cl service.PubSub) {
 	log.Debug("Before start")
 	app.reg.MustSub(config.ServiceID, func(msg interface{}) {
 		switch c := msg.(type) {
@@ -186,10 +187,9 @@ func (app *App) composeRestServices() {
 	})
 	app.reg.MustRegisterConfigurable(location.New(), &location.ConfigOpts{})
 	app.reg.MustRegisterConfigurable(
-		loconfscanner.New(4*time.Hour, app.isProUser, &pastAnnouncements{app.settings}),
-		&loconfscanner.ConfigOpts{Lang: app.settings.GetLanguage()})
+		loconfscanner.New(4*time.Hour, app.isProUser, &pastAnnouncements{app.settings}))
 
-	app.reg.MustSub(geolookup.ServiceID, func(m interface{}) {
+	geo.Sub(func(m interface{}) {
 		country := m.(*geolookup.GeoInfo).GetCountry()
 		app.reg.MustConfigure(location.ServiceID, func(opts service.ConfigOpts) {
 			opts.(*location.ConfigOpts).Code = country
@@ -199,7 +199,7 @@ func (app *App) composeRestServices() {
 		})
 	})
 
-	app.reg.MustSub(client.ServiceID, func(m interface{}) {
+	cl.Sub(func(m interface{}) {
 		msg := m.(client.Message)
 		switch msg.ProxyType {
 		case client.HTTPProxy:
@@ -215,8 +215,10 @@ func (app *App) composeRestServices() {
 					o.(*sysproxy.ConfigOpts).Enable = val.(bool)
 				})
 			})
-			app.reg.MustRegister(signal.New())
-			app.reg.MustSub(signal.ServiceID, func(m interface{}) {
+			sig := signal.New()
+			app.reg.MustRegister(sig)
+
+			sig.Sub(signal.ServiceID, func(m interface{}) {
 				app.reg.MustConfigure(sysproxy.ServiceID, func(o service.ConfigOpts) {
 					o.(*sysproxy.ConfigOpts).Enable = m.(bool)
 				})
@@ -226,11 +228,11 @@ func (app *App) composeRestServices() {
 			// register and start analytics until client is started because it
 			// requires proxied package.
 			// TODO: add explicit dependency to proxied package
-			app.reg.MustRegisterConfigurable(analytics.New(
+			app.reg.MustRegister(analytics.New(
 				app.settings.IsAutoReport(),
 				app.settings.GetDeviceID(),
 				common.Version,
-			), &analytics.ConfigOpts{})
+			))
 			app.reg.Start(analytics.ServiceID)
 			app.reg.MustSub(geolookup.ServiceID, func(m interface{}) {
 				ip := m.(*geolookup.GeoInfo).GetIP()
