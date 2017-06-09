@@ -8,16 +8,22 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNormalizeAddr(t *testing.T) {
+func TestAddrCandidates(t *testing.T) {
 	endpoint := "127.0.0.1:1892"
-	addr := normalizeAddr("http://" + endpoint)
-	assert.Equal(t, endpoint, addr)
+	candidates := addrCandidates("http://"+endpoint, false)
+	assert.Equal(t, append([]string{endpoint}, defaultUIAddresses...), candidates)
 
-	addr = normalizeAddr("")
-	assert.Equal(t, defaultUIAddress, addr)
+	candidates = addrCandidates(endpoint, false)
+	assert.Equal(t, append([]string{endpoint}, defaultUIAddresses...), candidates)
 
-	addr = normalizeAddr(endpoint)
-	assert.Equal(t, endpoint, addr)
+	candidates = addrCandidates(endpoint, true)
+	assert.Equal(t, []string{":1892", ":0"}, candidates)
+
+	candidates = addrCandidates("", true)
+	assert.Equal(t, []string{":0"}, candidates)
+
+	candidates = addrCandidates("", false)
+	assert.Equal(t, defaultUIAddresses, candidates)
 }
 
 func getTestHandler() http.Handler {
@@ -26,8 +32,9 @@ func getTestHandler() http.Handler {
 
 func getTestServer(token string) *server {
 	allowRemote := false
-	s := newServer("localhost:", allowRemote, "", token)
+	s := newServer("", token)
 	attachHandlers(s, allowRemote)
+	s.start("localhost:", allowRemote)
 	return s
 }
 

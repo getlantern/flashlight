@@ -31,9 +31,9 @@ func init() {
 
 // Start starts serving the UI.
 func Start(requestedAddr string, allowRemote bool, extURL, localHTTPTok string) error {
-	serve = newServer(requestedAddr, allowRemote, extURL, localHTTPTok)
+	serve = newServer(extURL, localHTTPTok)
 	attachHandlers(serve, allowRemote)
-	if err := serve.start(); err != nil {
+	if err := serve.start(requestedAddr, allowRemote); err != nil {
 		return err
 	}
 	return nil
