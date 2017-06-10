@@ -58,9 +58,9 @@ func TestStartServer(t *testing.T) {
 	assert.Equal(t, "localhost:9898", s.listenAddr)
 	assert.Equal(t, "localhost:9898", s.getUIAddr())
 	s.stop()
-	s = startServer("127.0.0.1:9898")
-	assert.Equal(t, "127.0.0.1:9898", s.listenAddr)
-	assert.Equal(t, "127.0.0.1:9898", s.getUIAddr())
+	s = startServer("127.0.0.1:9897")
+	assert.Equal(t, "127.0.0.1:9897", s.listenAddr)
+	assert.Equal(t, "127.0.0.1:9897", s.getUIAddr())
 	s.stop()
 	s = startServer("127.0.0.1:0")
 	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.listenAddr)
@@ -149,21 +149,21 @@ func TestCheckOrigin(t *testing.T) {
 	})
 	s.stop()
 
-	s.start("127.0.0.1:9898", false)
+	s.start("127.0.0.1:9897", false)
 	doTestCheckOrigin(t, s, map[string]bool{
-		"127.0.0.1:9898": true,
-		"localhost:9898": false,
+		"127.0.0.1:9897": true,
+		"localhost:9897": false,
 		"127.0.0.1:1243": false,
-		"anyhost:9898":   false,
+		"anyhost:9897":   false,
 	})
 	s.stop()
 
-	s.start("localhost:9898", true)
+	s.start("localhost:9896", true)
 	doTestCheckOrigin(t, s, map[string]bool{
-		"localhost:9898": true,
-		"127.0.0.1:9898": true,
+		"localhost:9896": true,
+		"127.0.0.1:9896": true,
 		"localhost:1243": false,
-		"anyhost:9898":   true,
+		"anyhost:9896":   true,
 	})
 	s.stop()
 }
