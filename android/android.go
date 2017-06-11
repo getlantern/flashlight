@@ -87,7 +87,7 @@ type UserConfig interface {
 	config.UserConfig
 	AfterStart()
 	SetCountry(string)
-	SetProxyLocation(string, string, string)
+	UpdateStats(string, string, string, int, int)
 	SetStaging(bool)
 	ShowSurvey(string)
 	ProxyAll() bool
