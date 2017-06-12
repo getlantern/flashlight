@@ -5,7 +5,7 @@ import (
 )
 
 type statsTracker struct {
-	stats.StatsTracker
+	stats.Tracker
 	user UserConfig
 }
 

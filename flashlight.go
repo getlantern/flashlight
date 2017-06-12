@@ -25,6 +25,7 @@ import (
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/stats"
 
 	// Make sure logging is initialized
 	_ "github.com/getlantern/flashlight/logging"
@@ -52,7 +53,7 @@ func Run(httpProxyAddr string,
 	afterStart func(),
 	onConfigUpdate func(cfg *config.Global),
 	userConfig config.UserConfig,
-	statsTracker common.StatsTracker,
+	statsTracker stats.StatsTracker,
 	onError func(err error),
 	deviceID string) error {
 

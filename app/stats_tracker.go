@@ -1,8 +1,6 @@
 package app
 
 import (
-	"sync"
-
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ws"
 )
@@ -12,11 +10,10 @@ type statsTracker struct {
 	service ws.Service
 }
 
-func New() *statsTracker {
-	st := &statsTracker{}
-	st.Broadcast = func(s stats.Stats) {
+func (s *statsTracker) Configure() {
+	s.Broadcast = func(st stats.Stats) {
 		select {
-		case st.service.out <- s:
+		case s.service.Out <- st:
 			// ok
 		default:
 			// don't block if no-one is listening
@@ -27,10 +24,7 @@ func New() *statsTracker {
 func (s *statsTracker) StartService() error {
 	helloFn := func(write func(interface{})) {
 		log.Debugf("Sending Lantern stats to new client")
-		s.mu.Lock()
-		st := s.stats
-		s.mu.Unlock()
-		write(st)
+		write(s.Latest())
 	}
 
 	_, err := ws.Register("stats", helloFn)
