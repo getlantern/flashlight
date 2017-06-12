@@ -10,7 +10,8 @@ type statsTracker struct {
 	service ws.Service
 }
 
-func (s *statsTracker) Configure() {
+func NewStatsTracker() *statsTracker {
+	s := &statsTracker{}
 	s.Broadcast = func(st stats.Stats) {
 		select {
 		case s.service.Out <- st:
@@ -19,6 +20,7 @@ func (s *statsTracker) Configure() {
 			// don't block if no-one is listening
 		}
 	}
+	return s
 }
 
 func (s *statsTracker) StartService() error {

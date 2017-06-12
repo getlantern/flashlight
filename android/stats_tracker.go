@@ -9,10 +9,13 @@ type statsTracker struct {
 	user UserConfig
 }
 
-func (s *statsTracker) Configure(user UserConfig) {
-	s.user = user
+func NewStatsTracker(user UserConfig) *statsTracker {
+	s := &statsTracker{
+		user: user,
+	}
 	s.Broadcast = func(st stats.Stats) {
 		s.user.UpdateStats(st.City, st.Country,
 			st.CountryCode, st.HTTPSUpgrades, st.AdsBlocked)
 	}
+	return s
 }
