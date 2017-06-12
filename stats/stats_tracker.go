@@ -59,5 +59,7 @@ func (s Tracker) IncAdsBlocked() {
 func (s *Tracker) unlockAndBroadcast() {
 	st := s.stats
 	s.mu.Unlock()
-	s.Broadcast(st)
+	if s.Broadcast != nil {
+		s.Broadcast(st)
+	}
 }
