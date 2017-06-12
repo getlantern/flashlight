@@ -216,7 +216,7 @@ imports:
 - name: github.com/getlantern/rotator
   version: 013d4f8e36a2f6369b2435d89866056b5b74c69e
 - name: github.com/getlantern/shortcut
-  version: 71f2e56d7c39e15a12b13a6d11c4b0830f8f97d9
+  version: b9ec6713300865cf6c6b63a27cf32f608675cee3
 - name: github.com/getlantern/sqlparser
   version: 57225f75cf94afde1b3a886b6376c7e5f0aef240
 - name: github.com/getlantern/stack
