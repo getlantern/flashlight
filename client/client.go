@@ -338,9 +338,11 @@ func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, p
 		// Use netx because on Android, we need a special protected dialer
 		return netx.DialContext(ctx, "tcp", addr)
 	}
-	if client.useShortcut() && shortcut.Allow(addr) {
-		log.Debugf("Use shortcut (dial directly) for %v", addr)
-		return netx.DialContext(ctx, "tcp", addr)
+	if client.useShortcut() {
+		if allow, ip := shortcut.Allow(addr); allow {
+			log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
+			return netx.DialContext(ctx, "tcp", addr)
+		}
 	}
 
 	d := client.proxiedDialer(func(network, addr string) (net.Conn, error) {

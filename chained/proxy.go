@@ -203,7 +203,16 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 		pingInterval = 15 * time.Second
 		log.Debugf("Defaulted lampshade pinginterval to %v", pingInterval)
 	}
-	dialer := lampshade.NewDialer(windowSize, maxPadding, maxStreamsPerConn, idleInterval, pingInterval, buffers.Pool, cipherCode, cert.X509().PublicKey.(*rsa.PublicKey))
+	dialer := lampshade.NewDialer(&lampshade.DialerOpts{
+		WindowSize:        windowSize,
+		MaxPadding:        maxPadding,
+		MaxStreamsPerConn: maxStreamsPerConn,
+		IdleInterval:      idleInterval,
+		PingInterval:      pingInterval,
+		Pool:              buffers.Pool,
+		Cipher:            cipherCode,
+		ServerPublicKey:   cert.X509().PublicKey.(*rsa.PublicKey),
+	})
 	dial := func(p *proxy) (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "lampshade", "tcp").
 			Set("ls_win", windowSize).
