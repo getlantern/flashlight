@@ -500,7 +500,7 @@ testImports:
 - name: github.com/getlantern/bbrconn
   version: 9a5594c63329cf77582eccae41a8a75240a078fe
 - name: github.com/getlantern/tcpinfo
-  version: ba0bf2d3cb84c294cb2bd22f78b220296242cca8
+  version: c475b171ec955019a7906187bf6f4011d7d791fe
 - name: github.com/gonum/blas
   version: 430a98d0f42f5d7b9a9535580771233386034848
   subpackages:
@@ -525,12 +525,10 @@ testImports:
   - mat64
 - name: github.com/gonum/stat
   version: 7689386cc541c591a7cf28c5f487091756aa97b2
-- name: github.com/mikioh/netreflect
-  version: ed3bfaafd83195ce61f274eec0bd97aebbb7c3be
 - name: github.com/mikioh/tcp
-  version: 27ffbc4a017440bebf7efb5a6a47dc80037b2ea1
+  version: 23fd0a6f46f45d5d8214bdfa20a0c92b3db37e43
 - name: github.com/mikioh/tcpopt
-  version: 5f015213053d9037e94643d462e4b4d7d01015bc
+  version: f3d19c8d060bb26aa45d5386ddf30a731e33aa37
 - name: github.com/pborman/uuid
   version: 1b00554d822231195d1babd97ff4a781231955c9
 - name: github.com/pmezard/go-difflib

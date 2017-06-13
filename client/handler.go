@@ -27,7 +27,9 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		req.URL.Scheme = "http"
 	}
 
-	if !client.easylist.Allow(req) {
+	adSwapURL := client.adSwapURL(resp, req)
+
+	if adSwapURL == "" && !client.easylist.Allow(req) {
 		client.easyblock(resp, req)
 		return
 	}
@@ -38,6 +40,11 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		OriginFromRequest(req)
 	defer op.End()
 
+	if adSwapURL != "" {
+		client.redirectAdSwap(resp, req, adSwapURL, op)
+		return
+	}
+
 	if isConnect {
 		// CONNECT requests are often used for HTTPS requests.
 		log.Tracef("Intercepting CONNECT %s", req.URL)
@@ -46,14 +53,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 			log.Error(op.FailIf(err))
 		}
 	} else {
-		urlString := req.URL.String()
-		adSwapJavaScriptInjection, adSwappingEnabled := adSwapJavaScriptInjections[strings.ToLower(urlString)]
-		if adSwappingEnabled {
-			if client.redirectAdSwap(resp, req, urlString, adSwapJavaScriptInjection, op) {
-				return
-			}
-		}
-		log.Tracef("Checking for HTTP redirect for %v", urlString)
+		log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
 		if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
 			client.redirectHTTPS(resp, req, httpsURL, op)
 			return
@@ -87,17 +87,23 @@ func (client *Client) redirectHTTPS(resp http.ResponseWriter, req *http.Request,
 	http.Redirect(resp, req, httpsURL, http.StatusMovedPermanently)
 }
 
-func (client *Client) redirectAdSwap(resp http.ResponseWriter, req *http.Request, origURL string, jsURL string, op *ops.Op) bool {
+func (client *Client) adSwapURL(resp http.ResponseWriter, req *http.Request) string {
+	urlString := req.URL.String()
+	log.Debugf("URL string is: %v", urlString)
+	jsURL, urlFound := adSwapJavaScriptInjections[strings.ToLower(urlString)]
+	if !urlFound {
+		return ""
+	}
 	targetURL := client.adSwapTargetURL()
 	if targetURL == "" {
-		// not ad swapping
-		return false
+		return ""
 	}
-
-	log.Debugf("Swapping javascript for %v to %v", origURL, jsURL)
-	op.Set("adswapped", true)
 	lang := client.lang()
-	fullURL := fmt.Sprintf("%v?lang=%v&url=%v", jsURL, url.QueryEscape(lang), url.QueryEscape(targetURL))
-	http.Redirect(resp, req, fullURL, http.StatusTemporaryRedirect)
-	return true
+	log.Debugf("Swapping javascript for %v to %v", urlString, jsURL)
+	return fmt.Sprintf("%v?lang=%v&url=%v", jsURL, url.QueryEscape(lang), url.QueryEscape(targetURL))
+}
+
+func (client *Client) redirectAdSwap(resp http.ResponseWriter, req *http.Request, adSwapURL string, op *ops.Op) {
+	op.Set("adswapped", true)
+	http.Redirect(resp, req, adSwapURL, http.StatusTemporaryRedirect)
 }
