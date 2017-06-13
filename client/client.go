@@ -32,9 +32,9 @@ import (
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
-	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/shortcut"
+	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/status"
 )
 
@@ -91,7 +91,7 @@ type Client struct {
 	easylist       easylist.List
 	rewriteToHTTPS httpseverywhere.Rewrite
 
-	statsTracker common.StatsTracker
+	statsTracker stats.StatsTracker
 
 	iptool            iptool.Tool
 	allowPrivateHosts func() bool
@@ -104,7 +104,7 @@ func NewClient(
 	useShortcut func() bool,
 	useDetour func() bool,
 	proTokenGetter func() string,
-	statsTracker common.StatsTracker,
+	statsTracker stats.StatsTracker,
 	allowPrivateHosts func() bool,
 ) (*Client, error) {
 	client := &Client{
