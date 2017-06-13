@@ -13,6 +13,7 @@ import (
 
 var adSwapJavaScriptInjections = map[string]string{
 	"http://www.googletagservices.com/tag/js/gpt.js": "https://ads.getlantern.org/v1/js/www.googletagservices.com/tag/js/gpt.js",
+	"http://cpro.baidustatic.com/cpro/ui/c.js":       "https://ads.getlantern.org/v1/js/cpro.baidustatic.com/cpro/ui/c.js",
 }
 
 // ServeHTTP implements the http.Handler interface.
