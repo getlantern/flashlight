@@ -25,32 +25,34 @@ type Stats struct {
 	AdsBlocked    int    `json:"adsBlocked"`
 }
 
+// Tracker is an implementation of StatsTracker which calls the Broadcast
+// whenever the stats change.
 type Tracker struct {
 	mu        sync.Mutex
 	stats     Stats
 	Broadcast func(Stats)
 }
 
-func (s Tracker) Latest() Stats {
+func (s *Tracker) Latest() Stats {
 	s.mu.Lock()
 	st := s.stats
 	s.mu.Unlock()
 	return st
 }
 
-func (s Tracker) SetActiveProxyLocation(city, country, countryCode string) {
+func (s *Tracker) SetActiveProxyLocation(city, country, countryCode string) {
 	s.mu.Lock()
 	s.stats.City, s.stats.Country, s.stats.CountryCode = city, country, countryCode
 	s.unlockAndBroadcast()
 }
 
-func (s Tracker) IncHTTPSUpgrades() {
+func (s *Tracker) IncHTTPSUpgrades() {
 	s.mu.Lock()
 	s.stats.HTTPSUpgrades++
 	s.unlockAndBroadcast()
 }
 
-func (s Tracker) IncAdsBlocked() {
+func (s *Tracker) IncAdsBlocked() {
 	s.mu.Lock()
 	s.stats.AdsBlocked++
 	s.unlockAndBroadcast()

@@ -6,8 +6,8 @@ import (
 )
 
 type statsTracker struct {
-	stats.StatsTracker
-	service ws.Service
+	stats.Tracker
+	service *ws.Service
 }
 
 func NewStatsTracker() *statsTracker {
@@ -23,14 +23,14 @@ func NewStatsTracker() *statsTracker {
 	return s
 }
 
-func (s *statsTracker) StartService() error {
+func (s *statsTracker) StartService() (err error) {
 	helloFn := func(write func(interface{})) {
 		log.Debugf("Sending Lantern stats to new client")
 		write(s.Latest())
 	}
 
-	_, err := ws.Register("stats", helloFn)
-	return err
+	s.service, err = ws.Register("stats", helloFn)
+	return
 }
 
 func (s *statsTracker) StopService() {
