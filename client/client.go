@@ -32,9 +32,9 @@ import (
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
-	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/shortcut"
+	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/status"
 )
 
@@ -91,7 +91,7 @@ type Client struct {
 	easylist       easylist.List
 	rewriteToHTTPS httpseverywhere.Rewrite
 
-	statsTracker common.StatsTracker
+	statsTracker stats.StatsTracker
 
 	iptool            iptool.Tool
 	allowPrivateHosts func() bool
@@ -106,7 +106,7 @@ func NewClient(
 	useShortcut func() bool,
 	useDetour func() bool,
 	proTokenGetter func() string,
-	statsTracker common.StatsTracker,
+	statsTracker stats.StatsTracker,
 	allowPrivateHosts func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
@@ -344,9 +344,11 @@ func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, p
 		// Use netx because on Android, we need a special protected dialer
 		return netx.DialContext(ctx, "tcp", addr)
 	}
-	if client.useShortcut() && shortcut.Allow(addr) {
-		log.Debugf("Use shortcut (dial directly) for %v", addr)
-		return netx.DialContext(ctx, "tcp", addr)
+	if client.useShortcut() {
+		if allow, ip := shortcut.Allow(addr); allow {
+			log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
+			return netx.DialContext(ctx, "tcp", addr)
+		}
 	}
 
 	d := client.proxiedDialer(func(network, addr string) (net.Conn, error) {

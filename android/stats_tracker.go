@@ -1,7 +1,21 @@
 package android
 
-type statsTracker struct{}
+import (
+	"github.com/getlantern/flashlight/stats"
+)
 
-func (m statsTracker) SetActiveProxyLocation(city, country, countryCode string) {}
-func (m statsTracker) IncHTTPSUpgrades()                                        {}
-func (m statsTracker) IncAdsBlocked()                                           {}
+type statsTracker struct {
+	stats.Tracker
+	user UserConfig
+}
+
+func NewStatsTracker(user UserConfig) *statsTracker {
+	s := &statsTracker{
+		user: user,
+	}
+	s.Broadcast = func(st stats.Stats) {
+		s.user.UpdateStats(st.City, st.Country,
+			st.CountryCode, st.HTTPSUpgrades, st.AdsBlocked)
+	}
+	return s
+}

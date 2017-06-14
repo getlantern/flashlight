@@ -1,65 +1,36 @@
 package app
 
 import (
-	"sync"
-
+	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ws"
 )
 
-type stats struct {
-	City          string `json:"city"`
-	Country       string `json:"country"`
-	CountryCode   string `json:"countryCode"`
-	HTTPSUpgrades int    `json:"httpsUpgrades"`
-	AdsBlocked    int    `json:"adsBlocked"`
-}
-
 type statsTracker struct {
-	mu      sync.Mutex
-	service ws.Service
-	stats   stats
+	stats.Tracker
+	service *ws.Service
 }
 
-func (s *statsTracker) SetActiveProxyLocation(city, country, countryCode string) {
-	s.mu.Lock()
-	s.stats.City, s.stats.Country, s.stats.CountryCode = city, country, countryCode
-	s.unlockAndBroadcast()
-}
-
-func (s *statsTracker) IncHTTPSUpgrades() {
-	s.mu.Lock()
-	s.stats.HTTPSUpgrades++
-	s.unlockAndBroadcast()
-}
-
-func (s *statsTracker) IncAdsBlocked() {
-	s.mu.Lock()
-	s.stats.AdsBlocked++
-	s.unlockAndBroadcast()
-}
-
-func (s *statsTracker) unlockAndBroadcast() {
-	st := s.stats
-	s.mu.Unlock()
-	select {
-	case s.service.Out <- st:
-		// ok
-	default:
-		// don't block if no-one is listening
+func NewStatsTracker() *statsTracker {
+	s := &statsTracker{}
+	s.Broadcast = func(st stats.Stats) {
+		select {
+		case s.service.Out <- st:
+			// ok
+		default:
+			// don't block if no-one is listening
+		}
 	}
+	return s
 }
 
-func (s *statsTracker) StartService() error {
+func (s *statsTracker) StartService() (err error) {
 	helloFn := func(write func(interface{})) {
 		log.Debugf("Sending Lantern stats to new client")
-		s.mu.Lock()
-		st := s.stats
-		s.mu.Unlock()
-		write(st)
+		write(s.Latest())
 	}
 
-	_, err := ws.Register("stats", helloFn)
-	return err
+	s.service, err = ws.Register("stats", helloFn)
+	return
 }
 
 func (s *statsTracker) StopService() {
