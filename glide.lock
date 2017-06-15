@@ -173,7 +173,7 @@ imports:
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
 - name: github.com/getlantern/keyman
-  version: 10caeb5133f874e91d12e9b256f6e316dfaa5ae0
+  version: 447d74a996c431bce79d734b6c5490ecd9ff75ff
   subpackages:
   - certimporter
 - name: github.com/getlantern/lampshade
@@ -184,6 +184,8 @@ imports:
   version: 0582bf799783fba9a890459155817f1cbcf00f17
 - name: github.com/getlantern/mockconn
   version: 422a5afd4432dd82b1389333d5352da003d898a6
+- name: github.com/getlantern/mitm
+  version: 2a48823bc025d859febeff62e8500739bebef948
 - name: github.com/getlantern/mtime
   version: ba114e4a82b0d453c15c505073a5896453b5cbd2
 - name: github.com/getlantern/netx
@@ -206,7 +208,7 @@ imports:
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxy
-  version: 9612d21f2b56edd016380bed7bc0314415bf581e
+  version: 3946edd9cb52da35f321a8cb50e0eb95c2bae669
 - name: github.com/getlantern/proxybench
   version: a341721680ecf6de6f7a7aaa6010a4e82fc7f45f
 - name: github.com/getlantern/redis
