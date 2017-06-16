@@ -133,14 +133,15 @@ func NewClient(
 			Organization: "Lantern",
 			CommonName:   "lantern",
 		},
-		MITMDomains: []string{"google.com", "www.google.com", "baidu.com", "www.baidu.com"},
-		OnResponse:  client.searchSwap,
-		OnError:     errorResponse,
+		MITMDomains:  []string{"google.com", "www.google.com", "baidu.com", "www.baidu.com", "www.googletagservices.com", "cpro.baidustatic.com"},
+		ShortCircuit: client.shortCircuit,
+		OnResponse:   client.searchSwap,
+		OnError:      errorResponse,
 	}, client.dialCONNECT)
 	if mitmErr != nil {
 		log.Errorf("Unable to initialize MITM'ing, continuing without MITM support: %v", mitmErr)
 	}
-	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
+	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, client.shortCircuit, nil, errorResponse, client.dialHTTP)
 	// TODO: turn it to a config option
 	if runtime.GOOS == "android" {
 		client.easylist = allowAllEasyList{}
