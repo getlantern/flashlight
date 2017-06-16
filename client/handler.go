@@ -89,7 +89,6 @@ func (client *Client) redirectHTTPS(resp http.ResponseWriter, req *http.Request,
 
 func (client *Client) adSwapURL(resp http.ResponseWriter, req *http.Request) string {
 	urlString := req.URL.String()
-	log.Debugf("URL string is: %v", urlString)
 	jsURL, urlFound := adSwapJavaScriptInjections[strings.ToLower(urlString)]
 	if !urlFound {
 		return ""

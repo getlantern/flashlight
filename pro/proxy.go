@@ -55,7 +55,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 		}
 	}
 	resp.Header.Set("Access-Control-Allow-Origin", origin)
-	if req.URL.Path != "/user-data" || resp.StatusCode == http.StatusOK {
+	if req.URL.Path != "/user-data" || resp.StatusCode != http.StatusOK {
 		return
 	}
 	// Try to update user status implicitly
@@ -76,12 +76,14 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	if readErr != nil {
 		return
 	}
-	udr := &UserDataResponse{}
+	udr := &struct {
+		UserStatus string `json:"userStatus"`
+	}{}
 	readErr = json.NewDecoder(gzr).Decode(udr)
 	if readErr != nil {
 		return
 	}
-	log.Debugf("Updating pro status implicitly")
+	log.Debugf("Updating pro status implicitly to '%v'", udr.UserStatus)
 	SetProStatus(userID, udr.UserStatus)
 	return
 }
@@ -109,8 +111,4 @@ func APIHandler() http.Handler {
 			}, ", "))
 		},
 	}
-}
-
-type UserDataResponse struct {
-	UserStatus string `json:"userStatus"`
 }
