@@ -95,6 +95,8 @@ type Client struct {
 
 	iptool            iptool.Tool
 	allowPrivateHosts func() bool
+	lang              func() string
+	adSwapTargetURL   func() string
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -106,6 +108,8 @@ func NewClient(
 	proTokenGetter func() string,
 	statsTracker stats.StatsTracker,
 	allowPrivateHosts func() bool,
+	lang func() string,
+	adSwapTargetURL func() string,
 ) (*Client, error) {
 	client := &Client{
 		bal:               balancer.New(),
@@ -115,6 +119,8 @@ func NewClient(
 		rewriteToHTTPS:    httpseverywhere.Default(),
 		statsTracker:      statsTracker,
 		allowPrivateHosts: allowPrivateHosts,
+		lang:              lang,
+		adSwapTargetURL:   adSwapTargetURL,
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second

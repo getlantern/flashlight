@@ -59,6 +59,8 @@ func newClient() *Client {
 		func() string { return "proToken" },
 		mockStatsTracker{},
 		func() bool { return true },
+		func() string { return "" },
+		func() string { return "" },
 	)
 	return client
 }

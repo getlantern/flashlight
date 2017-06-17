@@ -78,7 +78,7 @@ imports:
 - name: github.com/getlantern/detour
   version: 36801cb3f46d22d4e07ef7a8c123bba1991a73a1
 - name: github.com/getlantern/easylist
-  version: 21cf8de29202241c29943e7a7b0b451f3a9e8f8d
+  version: 1635650b3ed817f2bcc82cf42433eb309673fe53
 - name: github.com/getlantern/edgedetect
   version: f58e865f680868c70f5d114b620b682a39fdaff7
 - name: github.com/getlantern/elevate
@@ -502,7 +502,7 @@ testImports:
 - name: github.com/getlantern/bbrconn
   version: 9a5594c63329cf77582eccae41a8a75240a078fe
 - name: github.com/getlantern/tcpinfo
-  version: 1eada12b515b6267baa9454004f40e3777172fe2
+  version: c475b171ec955019a7906187bf6f4011d7d791fe
 - name: github.com/gonum/blas
   version: 430a98d0f42f5d7b9a9535580771233386034848
   subpackages:

@@ -194,6 +194,8 @@ func run(configDir, locale string,
 		NewStatsTracker(user),
 		func(err error) {}, // onError
 		user.DeviceId(),
+		func() string { return "" }, // only used for desktop
+		func() string { return "" }, // only used for desktop
 	)
 }
 
