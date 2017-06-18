@@ -36,7 +36,9 @@ type Configurable interface {
 	// Serviceement carefully To avoid data races. The implementation can choose
 	// to restart the service internally when some configuration changes, but
 	// it doesn't affect the service status from the outside.
-	Configure(opts ConfigOpts)
+	//Configure(opts ConfigOpts)
+
+	Configure(func(ConfigOpts))
 }
 
 // ConfigOpts represents all of the config options required to start a service.
@@ -146,6 +148,7 @@ func Lookup(id ID) Service {
 	return singleton.Lookup(id)
 }
 
+/*
 // MustConfigure calls MustConfigure of the singleton registry
 func MustConfigure(id ID, op func(opts ConfigOpts)) {
 	singleton.MustConfigure(id, op)
@@ -155,6 +158,7 @@ func MustConfigure(id ID, op func(opts ConfigOpts)) {
 func Configure(id ID, op func(opts ConfigOpts)) error {
 	return singleton.Configure(id, op)
 }
+*/
 
 /*
 // MustSubCh calls MustSubCh of the singleton registry.

@@ -185,7 +185,8 @@ func (app *App) composeRestServices(geo service.PubSub, cl service.PubSub) {
 			autoupdate.Configure(c.UpdateServerURL, c.AutoUpdateCA)
 		}
 	})
-	app.reg.MustRegisterConfigurable(location.New(), &location.ConfigOpts{})
+	loc := location.New()
+	app.reg.MustRegisterConfigurable(loc, &location.ConfigOpts{})
 	app.reg.MustRegisterConfigurable(
 		loconfscanner.New(4*time.Hour, app.isProUser, &pastAnnouncements{app.settings}))
 

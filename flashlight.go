@@ -84,7 +84,7 @@ func ComposeServices(
 			})
 		case *config.Global:
 			log.Debugf("Applying global config")
-			reg.MustConfigure(borda.ServiceID, func(opts service.ConfigOpts) {
+			cl.Configure(opts)func(opts service.ConfigOpts) {
 				o := opts.(*borda.ConfigOpts)
 				o.ReportInterval = c.BordaReportInterval
 				o.ReportAllOps = settings.IsAutoReport() && rand.Float64() <= c.BordaSamplePercentage/100
@@ -106,9 +106,12 @@ func ComposeServices(
 		ip, country := info.GetIP(), info.GetCountry()
 		ops.SetGlobal("geo_country", country)
 		ops.SetGlobal("client_ip", ip)
-		reg.MustConfigure(client.ServiceID, func(opts service.ConfigOpts) {
+		cl.Configure(func(opts service.ConfigOpts) {
 			opts.(*client.ConfigOpts).GeoCountry = country
 		})
+		//reg.MustConfigure(client.ServiceID, func(opts service.ConfigOpts) {
+			//opts.(*client.ConfigOpts).GeoCountry = country
+		//})
 	})
 
 	cl.Sub(func(m interface{}) {

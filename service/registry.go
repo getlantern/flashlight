@@ -124,6 +124,7 @@ func (r *Registry) lookup(id ID) *node {
 }
 
 // MustConfigure configures the service, or panics.
+/*
 func (r *Registry) MustConfigure(id ID, op func(ConfigOpts)) {
 	if err := r.Configure(id, op); err != nil {
 		panic(err)
@@ -148,6 +149,7 @@ func (r *Registry) Configure(id ID, op func(ConfigOpts)) error {
 	r.startNoLock(n)
 	return nil
 }
+*/
 
 // MustSubCh calls SubCh and panics if there's any error.
 /*
