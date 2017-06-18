@@ -5,6 +5,7 @@ import (
 	client "github.com/getlantern/flashlight/pro/client"
 	"github.com/stripe/stripe-go"
 	"strings"
+	"time"
 )
 
 type Session interface {
@@ -29,7 +30,7 @@ type Session interface {
 	SetDeviceCode(string, int64)
 	ShowSurvey(string)
 	BandwidthUpdate(int, int)
-	UserData(bool, int64, string, string)
+	UserData(bool, int64, int64, string, string)
 	SetCode(string)
 	SetError(string, string)
 	SetErrorId(string, string)
@@ -222,8 +223,14 @@ func userData(req *proRequest) (*client.Response, error) {
 		req.session.AddDevice(device.Id, device.Name)
 	}
 
+	expiry := time.Unix(res.User.Expiration, 0)
+	dur := expiry.Sub(time.Now())
+	years := dur.Hours() / 24 / 365
+	monthsLeft := int64(years * 12)
+
 	req.session.UserData(isActive && deviceLinked,
-		res.User.Expiration, res.User.Subscription, res.User.Email)
+		res.User.Expiration, monthsLeft,
+		res.User.Subscription, res.User.Email)
 
 	return res, err
 }
