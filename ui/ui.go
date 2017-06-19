@@ -30,22 +30,20 @@ func init() {
 }
 
 // Start starts serving the UI.
-func Start(requestedAddr string, showUI bool, extURL, localHTTPTok string) error {
+func Start(requestedAddr, extURL, localHTTPTok string) error {
 	serve = newServer(extURL, localHTTPTok)
-	attachHandlers(serve, showUI)
+	attachHandlers(serve)
 	if err := serve.start(requestedAddr); err != nil {
 		return err
 	}
 	return nil
 }
 
-func attachHandlers(s *server, showUI bool) {
+func attachHandlers(s *server) {
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
 	startupHandler := func(resp http.ResponseWriter, req *http.Request) {
-		if showUI {
-			s.show("existing", "lantern")
-		}
+		s.show("existing", "lantern")
 		resp.WriteHeader(http.StatusOK)
 	}
 	s.Handle("/startup", http.HandlerFunc(startupHandler))
