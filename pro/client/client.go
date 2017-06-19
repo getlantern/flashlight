@@ -390,7 +390,6 @@ func (c *Client) PaymentGateway(user User, planId string) (string, error) {
 		return "", err
 	}
 	sig := string(payload)
-	log.Debugf("Response from pro server: %s", sig)
 	return sig, nil
 }
 
