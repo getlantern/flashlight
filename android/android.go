@@ -136,7 +136,7 @@ func Start(configDir string, locale string,
 	}
 	log.Debugf("Starting socks proxy at %s", socksAddr)
 
-	go core.InitServer(filepath.Join(configDir, overtureConfig))
+	go core.InitServer(filepath.Join(configDir, overtureConfig), socksAddr.(string))
 
 	return &StartResult{addr.(string), socksAddr.(string)}, nil
 }
