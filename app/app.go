@@ -12,7 +12,6 @@ import (
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
-	"github.com/getlantern/mtime"
 	"github.com/getlantern/profiling"
 
 	"github.com/getlantern/flashlight/analytics"
@@ -33,12 +32,10 @@ var (
 	log      = golog.LoggerFor("flashlight.app")
 	settings *Settings
 
-	elapsed func() time.Duration
+	startTime = time.Now()
 )
 
 func init() {
-	elapsed = mtime.Stopwatch()
-
 	autoupdate.Version = common.PackageVersion
 	autoupdate.PublicKey = []byte(packagePublicKey)
 
@@ -65,7 +62,7 @@ func (app *App) Init() {
 	// use buffered channel to avoid blocking the caller of 'AddExitFunc'
 	// the number 10 is arbitrary
 	app.chExitFuncs = make(chan func(), 10)
-	app.statsTracker = &statsTracker{}
+	app.statsTracker = NewStatsTracker()
 }
 
 // LogPanicAndExit logs a panic and then exits the application. This function
@@ -76,7 +73,7 @@ func (app *App) LogPanicAndExit(msg interface{}) {
 	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
 	setUpSysproxyTool()
 	app.AddExitFunc(func() {
-		doSysproxyOffFor(settings.GetAddr())
+		sysproxyOffFor(settings.GetAddr())
 	})
 	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
 }
@@ -131,7 +128,16 @@ func (app *App) Run() error {
 			settings,
 			app.statsTracker,
 			app.Exit,
-			settings.GetDeviceID())
+			settings.GetDeviceID(),
+			settings.GetLanguage,
+			func() string {
+				isPro, statusKnown := isProUserFast()
+				if isPro || !statusKnown {
+					// pro user (or status unknown), don't ad swap
+					return ""
+				}
+				return ui.AddToken("/") + "#/plans"
+			})
 		if err != nil {
 			app.Exit(err)
 			return
@@ -198,7 +204,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			_, port, splitErr := net.SplitHostPort(listenAddr)
 			if splitErr == nil && port != "0" {
 				log.Debugf("Clearing system proxy settings for: %v", listenAddr)
-				doSysproxyOffFor(listenAddr)
+				clearSysproxyFor(listenAddr)
 			} else {
 				log.Debugf("Can't clear proxy settings for: %v", listenAddr)
 			}
@@ -320,7 +326,7 @@ func (app *App) afterStart() {
 		// URL and the proxy server are all up and running to avoid
 		// race conditions where we change the proxy setup while the
 		// UI server and proxy server are still coming up.
-		ui.Show()
+		ui.Show("startup", "lantern")
 	} else {
 		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
 	}
@@ -407,6 +413,6 @@ func (app *App) waitForExit() error {
 
 func recordStopped() {
 	ops.Begin("client_stopped").
-		SetMetricSum("uptime", elapsed().Seconds()).
+		SetMetricSum("uptime", time.Now().Sub(startTime).Seconds()).
 		End()
 }

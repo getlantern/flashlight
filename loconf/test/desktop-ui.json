@@ -28,7 +28,25 @@
       "button": "请告诉我们"
     }
   },
-  "uninstall-survey": {
+  "uninstall-survey-free": {
+    "en": {
+      "enabled": true,
+      "probability": 1.00,
+      "campaign": "20170227",
+      "pro": true, 
+      "free": true, 
+      "url": "https://www.surveymonkey.com/r/JGZ9CD7"
+    },
+    "zh-CN": {
+      "enabled": true,
+      "probability": 1.00,
+      "campaign": "CN20170405",
+      "pro": true, 
+      "free": true, 
+      "url": " https://www.surveymonkey.com/r/W6CZYJW"
+    }
+  },
+  "uninstall-survey-pro": {
     "en": {
       "enabled": true,
       "probability": 1.00,

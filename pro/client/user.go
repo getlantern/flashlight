@@ -1,9 +1,10 @@
 package client
 
 import (
-	"github.com/getlantern/flashlight/common"
 	"net/http"
 	"strconv"
+
+	"github.com/getlantern/flashlight/common"
 )
 
 type Device struct {

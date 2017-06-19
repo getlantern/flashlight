@@ -3,7 +3,8 @@ package app
 import (
 	"time"
 
-	proClient "github.com/getlantern/flashlight/pro/client"
+	"github.com/getlantern/flashlight/pro"
+	proclient "github.com/getlantern/flashlight/pro/client"
 )
 
 // isProUser blocks itself to check if current user is Pro, or !ok if error
@@ -17,32 +18,18 @@ func isProUser() (isPro bool, ok bool) {
 		if userID > 0 {
 			break
 		}
-		log.Debugf("Waiting for user ID to become non-zero")
-		time.Sleep(10 * time.Second)
+		time.Sleep(250 * time.Millisecond)
 	}
-	status, err := userStatus(settings.GetDeviceID(), userID, settings.GetToken())
-	if err != nil {
-		log.Errorf("Error getting user status? %v", err)
-		return false, false
-	}
-	log.Debugf("User %d is '%v'", userID, status)
-	return status == "active", true
+	return proclient.IsProUser(userID, settings.GetToken(), settings.GetDeviceID())
 }
 
-func userStatus(deviceID string, userID int, proToken string) (string, error) {
-	log.Debugf("Fetching user status with device ID '%v', user ID '%v' and proToken %v", deviceID, userID, proToken)
-	user := proClient.User{Auth: proClient.Auth{
-		DeviceID: deviceID,
-		ID:       userID,
-		Token:    proToken,
-	}}
-	req, err := proClient.NewRequest(user)
-	if err != nil {
-		return "", err
+// isProUserFast checks a cached value for the pro status and doesn't wait for
+// an answer. It assumes that isProUser is called somewhere along the line in
+// order to update the status.
+func isProUserFast() (isPro bool, statusKnown bool) {
+	userID := int(settings.GetUserID())
+	if userID == 0 {
+		return false, false
 	}
-	resp, err := proClient.UserStatus(req)
-	if err != nil {
-		return "", err
-	}
-	return resp.User.UserStatus, nil
+	return pro.IsProUserFast(userID)
 }

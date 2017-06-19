@@ -2,6 +2,7 @@ package shortcut
 
 import (
 	"bytes"
+	"net"
 	"strings"
 	"sync"
 
@@ -28,8 +29,8 @@ func init() {
 
 type nullShortcut struct{}
 
-func (s *nullShortcut) Allow(string) bool {
-	return false
+func (s *nullShortcut) Allow(string) (bool, net.IP) {
+	return false, nil
 }
 
 func configure(country string) {
@@ -51,7 +52,7 @@ func configure(country string) {
 	log.Debugf("loaded shortcut list for country %s", country)
 }
 
-func Allow(addr string) bool {
+func Allow(addr string) (bool, net.IP) {
 	mu.RLock()
 	_sc := sc
 	mu.RUnlock()

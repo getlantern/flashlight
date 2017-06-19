@@ -1,10 +1,14 @@
 package pro
 
 import (
+	"bytes"
+	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
+	"strconv"
 	"strings"
 
 	"github.com/getlantern/flashlight/common"
@@ -51,6 +55,36 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 		}
 	}
 	resp.Header.Set("Access-Control-Allow-Origin", origin)
+	if req.URL.Path != "/user-data" || resp.StatusCode != http.StatusOK {
+		return
+	}
+	// Try to update user status implicitly
+	_userID := req.Header.Get("X-Lantern-User-Id")
+	if _userID == "" {
+		return
+	}
+	userID, parseErr := strconv.Atoi(_userID)
+	if parseErr != nil {
+		return
+	}
+	gzbody, readErr := ioutil.ReadAll(resp.Body)
+	if readErr != nil {
+		return
+	}
+	resp.Body = ioutil.NopCloser(bytes.NewReader(gzbody))
+	gzr, readErr := gzip.NewReader(bytes.NewReader(gzbody))
+	if readErr != nil {
+		return
+	}
+	udr := &struct {
+		UserStatus string `json:"userStatus"`
+	}{}
+	readErr = json.NewDecoder(gzr).Decode(udr)
+	if readErr != nil {
+		return
+	}
+	log.Debugf("Updating pro status implicitly to '%v'", udr.UserStatus)
+	SetProStatus(userID, udr.UserStatus)
 	return
 }
 

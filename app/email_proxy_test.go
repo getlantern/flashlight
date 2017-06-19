@@ -8,34 +8,11 @@ import (
 	"testing"
 
 	"github.com/gorilla/websocket"
-	"github.com/keighl/mandrill"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/ws"
 )
-
-func TestReadResponses(t *testing.T) {
-
-	// Here are the various response statuses from
-	// https://github.com/keighl/mandrill/blob/master/mandrill.go#L186
-	// the sending status of the recipient - either "sent", "queued", "scheduled", "rejected", or "invalid"
-
-	statuses := []string{
-		"sent", "queued", "scheduled", "rejected", "invalid",
-	}
-
-	for _, status := range statuses {
-		var responses []*mandrill.Response
-		responses = append(responses, &mandrill.Response{Status: status})
-		err := readResponses(responses)
-		if status == "sent" || status == "queued" || status == "scheduled" {
-			assert.Nil(t, err, "Expected no error for status "+status)
-		} else if status == "rejected" || status == "invalid" {
-			assert.False(t, err == nil)
-		}
-	}
-
-}
 
 func TestEmailProxy(t *testing.T) {
 	s := httptest.NewServer(ws.StartUIChannel())
@@ -52,7 +29,7 @@ func TestEmailProxy(t *testing.T) {
 	}
 
 	defer func() { _ = conn.Close() }()
-	mandrillAPIKey = "SANDBOX_SUCCESS"
+	email.MandrillAPIKey = "SANDBOX_SUCCESS"
 	err = sendTemplateVia(conn)
 	assert.NoError(t, err, "should write to ws")
 	// When running with integration test, there're some other WebSocket
@@ -67,7 +44,7 @@ func TestEmailProxy(t *testing.T) {
 		}
 	}
 
-	mandrillAPIKey = "SANDBOX_ERROR"
+	email.MandrillAPIKey = "SANDBOX_ERROR"
 	err = sendTemplateVia(conn)
 	assert.NoError(t, err, "should write to ws")
 	for {

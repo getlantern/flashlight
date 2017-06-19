@@ -2,7 +2,6 @@
 package android
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -29,7 +28,6 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/overture/core"
 	"github.com/getlantern/protected"
-	"github.com/getlantern/uuid"
 )
 
 var (
@@ -93,10 +91,12 @@ type UserConfig interface {
 	config.UserConfig
 	AfterStart()
 	SetCountry(string)
+	UpdateStats(string, string, string, int, int)
 	SetStaging(bool)
 	ShowSurvey(string)
 	ProxyAll() bool
 	BandwidthUpdate(int, int)
+	DeviceId() string
 }
 
 type Updater autoupdate.Updater
@@ -198,9 +198,11 @@ func run(configDir, locale string,
 		func(cfg *config.Global) {
 		}, // onConfigUpdate
 		user,
-		statsTracker{},
+		NewStatsTracker(user),
 		func(err error) {}, // onError
-		base64.StdEncoding.EncodeToString(uuid.NodeID()),
+		user.DeviceId(),
+		func() string { return "" }, // only used for desktop
+		func() string { return "" }, // only used for desktop
 	)
 }
 

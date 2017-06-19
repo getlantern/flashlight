@@ -114,7 +114,7 @@ func (s *notifyStatus) notifyFreeUser(title, msg, campaign string) {
 	note := &notify.Notification{
 		Title:    title,
 		Message:  msg,
-		ClickURL: "http://" + ui.GetUIAddr(),
+		ClickURL: "http://" + ui.GetUIAddr() + "#/plans",
 		IconURL:  logo,
 	}
 	_ = notifier.ShowNotification(note, campaign)

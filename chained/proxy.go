@@ -21,6 +21,7 @@ import (
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/idletiming"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/lampshade"
 	"github.com/getlantern/mtime"
@@ -106,9 +107,9 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 		defer op.End()
 
 		elapsed := mtime.Stopwatch()
-		conn, err := tlsdialer.DialTimeout(overheadDialer(false, func(network, addr string, timeout time.Duration) (net.Conn, error) {
+		conn, err := tlsdialer.DialTimeout(func(network, addr string, timeout time.Duration) (net.Conn, error) {
 			return p.tcpDial(op)(timeout)
-		}), chainedDialTimeout,
+		}, chainedDialTimeout,
 			"tcp", p.addr, false, &tls.Config{
 				ClientSessionCache: sessionCache,
 				InsecureSkipVerify: true,
@@ -192,13 +193,25 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 	windowSize := s.ptSettingInt("windowsize")
 	maxPadding := s.ptSettingInt("maxpadding")
 	maxStreamsPerConn := uint16(s.ptSettingInt("streams"))
-	pingInterval, parseErr := time.ParseDuration(s.ptSetting("pinginterval"))
-	if parseErr != nil || pingInterval <= 0 {
-		log.Debug("Defaulting pinginterval to 15 seconds")
-		pingInterval = 15 * time.Second
+	idleInterval, parseErr := time.ParseDuration(s.ptSetting("idleinterval"))
+	if parseErr != nil || idleInterval < 0 {
+		idleInterval = IdleTimeout * 2
+		log.Debugf("Defaulted lampshade idleinterval to %v", idleInterval)
 	}
-	dialer := lampshade.NewDialer(windowSize, maxPadding, maxStreamsPerConn, pingInterval, buffers.Pool, cipherCode, cert.X509().PublicKey.(*rsa.PublicKey), func() (net.Conn, error) {
-		return overheadWrapper(false)(netx.DialTimeout("tcp", s.Addr, chainedDialTimeout))
+	pingInterval, parseErr := time.ParseDuration(s.ptSetting("pinginterval"))
+	if parseErr != nil || pingInterval < 0 {
+		pingInterval = 15 * time.Second
+		log.Debugf("Defaulted lampshade pinginterval to %v", pingInterval)
+	}
+	dialer := lampshade.NewDialer(&lampshade.DialerOpts{
+		WindowSize:        windowSize,
+		MaxPadding:        maxPadding,
+		MaxStreamsPerConn: maxStreamsPerConn,
+		IdleInterval:      idleInterval,
+		PingInterval:      pingInterval,
+		Pool:              buffers.Pool,
+		Cipher:            cipherCode,
+		ServerPublicKey:   cert.X509().PublicKey.(*rsa.PublicKey),
 	})
 	dial := func(p *proxy) (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "lampshade", "tcp").
@@ -209,7 +222,15 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 		defer op.End()
 
 		elapsed := mtime.Stopwatch()
-		conn, err := dialer.Dial()
+		conn, err := dialer.Dial(func() (net.Conn, error) {
+			conn, err := p.tcpDial(op)(chainedDialTimeout)
+			if err == nil && idleInterval > 0 {
+				conn = idletiming.Conn(conn, idleInterval, func() {
+					log.Debug("lampshade TCP connection idled")
+				})
+			}
+			return conn, err
+		})
 		// note - because lampshade is multiplexed, this dial time will often be
 		// lower than other protocols since there's often nothing to be done for
 		// opening up a new multiplexed connection.

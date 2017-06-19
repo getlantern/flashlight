@@ -1,10 +1,9 @@
 package notifier
 
 import (
-	"net/url"
-	"runtime"
 	"time"
 
+	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/notifier"
@@ -41,20 +40,12 @@ func ShowNotification(note *notify.Notification, campaign string) bool {
 }
 
 func normalizeClickURL(note *notify.Notification, campaign string) error {
-	u, err := url.Parse(note.ClickURL)
+	ga, err := analytics.AddCampaign(note.ClickURL, campaign, note.Title+"-"+note.Message, "notification")
 	if err != nil {
-		log.Errorf("Could not parse click URL: %v", err)
 		return err
 	}
 
-	q := u.Query()
-	q.Set("utm_source", runtime.GOOS)
-	q.Set("utm_medium", "notification")
-	q.Set("utm_campaign", campaign)
-	q.Set("utm_content", note.Title+"-"+note.Message)
-	u.RawQuery = q.Encode()
-
-	note.ClickURL = u.String()
+	note.ClickURL = ga
 	return nil
 }
 

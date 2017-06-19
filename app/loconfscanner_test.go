@@ -22,7 +22,6 @@ func TestWriteURL(t *testing.T) {
 		//log: golog.LoggerFor("loconfer"),
 		URL:         testURL,
 		Probability: 1.0,
-		Pro:         true,
 		Enabled:     true,
 	}
 	file, err := ioutil.TempFile(os.TempDir(), "urlfiletest")
