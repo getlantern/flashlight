@@ -16,7 +16,7 @@ func TestRedirect(t *testing.T) {
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "http://test.com", nil)
 	httpsURL := "https://test.com"
-	newClient().redirect(w, req, httpsURL, op)
+	newClient().redirectHTTPS(w, req, httpsURL, op)
 
 	resp := w.Result()
 

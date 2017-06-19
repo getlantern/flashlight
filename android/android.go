@@ -87,6 +87,7 @@ type UserConfig interface {
 	config.UserConfig
 	AfterStart()
 	SetCountry(string)
+	UpdateStats(string, string, string, int, int)
 	SetStaging(bool)
 	ShowSurvey(string)
 	ProxyAll() bool
@@ -190,9 +191,11 @@ func run(configDir, locale string,
 		func(cfg *config.Global) {
 		}, // onConfigUpdate
 		user,
-		statsTracker{},
+		NewStatsTracker(user),
 		func(err error) {}, // onError
 		user.DeviceId(),
+		func() string { return "" }, // only used for desktop
+		func() string { return "" }, // only used for desktop
 	)
 }
 

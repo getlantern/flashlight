@@ -191,27 +191,26 @@ func (s *server) checkOrigin(h http.Handler) http.Handler {
 			clientURL = origin
 		}
 
-		tokenMatch := false
+		token := r.URL.Query().Get("token")
+		tokenMatch := token == s.localHTTPToken
 
 		if clientURL == "" {
-			switch r.URL.Path {
-			case "/": // Whitelist skips any further checks.
+			switch {
+			case r.URL.Path == "/":
+				// we don't bother with additional checks for root URL
 				h.ServeHTTP(w, r)
 				return
+			case tokenMatch:
+				h.ServeHTTP(w, r)
+				return
+			case token != "":
+				msg := fmt.Sprintf("Token '%v' did not match the expected '%v...'", token, s.localHTTPToken)
+				s.forbidden(msg, w, r)
+				return
 			default:
-				r.ParseForm()
-				token := r.Form.Get("token")
-				if token == s.localHTTPToken {
-					tokenMatch = true
-				} else if token != "" {
-					msg := fmt.Sprintf("Token '%v' did not match the expected '%v...'", token, s.localHTTPToken)
-					s.forbidden(msg, w, r)
-					return
-				} else {
-					msg := fmt.Sprintf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
-					s.forbidden(msg, w, r)
-					return
-				}
+				msg := fmt.Sprintf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
+				s.forbidden(msg, w, r)
+				return
 			}
 		}
 

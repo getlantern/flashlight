@@ -25,6 +25,7 @@ import (
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/stats"
 
 	// Make sure logging is initialized
 	_ "github.com/getlantern/flashlight/logging"
@@ -52,9 +53,11 @@ func Run(httpProxyAddr string,
 	afterStart func(),
 	onConfigUpdate func(cfg *config.Global),
 	userConfig config.UserConfig,
-	statsTracker common.StatsTracker,
+	statsTracker stats.StatsTracker,
 	onError func(err error),
-	deviceID string) error {
+	deviceID string,
+	lang func() string,
+	adSwapTargetURL func() string) error {
 
 	elapsed := mtime.Stopwatch()
 	displayVersion()
@@ -62,7 +65,7 @@ func Run(httpProxyAddr string,
 	op := fops.Begin("client_started")
 
 	cl, err := client.NewClient(useShortcut, useDetour,
-		userConfig.GetToken, statsTracker, allowPrivateHosts)
+		userConfig.GetToken, statsTracker, allowPrivateHosts, lang, adSwapTargetURL)
 	if err != nil {
 		fatalErr := fmt.Errorf("Unable to initialize client: %v", err)
 		op.FailIf(fatalErr)
