@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
@@ -166,21 +167,30 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			startupURL = bootstrap.StartupUrl
 		}
 
-		uiaddr := app.Flags["uiaddr"].(string)
-		if uiaddr == "" {
-			// stick with the last one if not specified from command line.
-			if uiaddr = settings.GetUIAddr(); uiaddr != "" {
-				host, port, splitErr := net.SplitHostPort(uiaddr)
-				if splitErr != nil {
-					log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
-					uiaddr = ""
-				}
-				// To allow Edge to open the UI, we force the UI address to be
-				// localhost if it's 127.0.0.1 (the default for previous versions).
-				// We do the same for all platforms for simplicity though it's only
-				// useful on Windows 10 and above.
-				if host == "127.0.0.1" {
-					uiaddr = "localhost:" + port
+		uiaddr := &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 0}
+		cliAddr := app.Flags["uiaddr"].(string)
+		var strAddr string
+		if cliAddr != "" {
+			strAddr = cliAddr
+		} else {
+			strAddr = settings.GetUIAddr()
+		}
+
+		// Stick with the previously specificed address and port if not specified
+		// from command line. We use the stored address because some users set
+		// Lantern as the proxy from things like Chrome extensions, which would
+		// make constantly changing the port annoying.
+		if strAddr != "" {
+			host, portStr, splitErr := net.SplitHostPort(strAddr)
+			if splitErr != nil {
+				log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
+			} else {
+				ip := net.ParseIP(host)
+				port, err := strconv.Atoi(portStr)
+				if err != nil {
+					uiaddr = &net.TCPAddr{IP: ip, Port: 0}
+				} else {
+					uiaddr = &net.TCPAddr{IP: ip, Port: port}
 				}
 			}
 		}
@@ -202,9 +212,9 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			app.Exit(nil)
 		}
 
-		if uiaddr != "" {
+		if uiaddr.Port != 0 {
 			// Is something listening on that port?
-			if showErr := app.showExistingUI(uiaddr); showErr == nil {
+			if showErr := app.showExistingUI(uiaddr.String()); showErr == nil {
 				log.Debug("Lantern already running, showing existing UI")
 				app.Exit(nil)
 			}

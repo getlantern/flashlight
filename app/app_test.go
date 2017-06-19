@@ -2,6 +2,7 @@ package app
 
 import (
 	"io/ioutil"
+	"net"
 	"os"
 	"testing"
 
@@ -18,7 +19,7 @@ func TestLocalHTTPToken(t *testing.T) {
 
 	defer os.Remove(tmpfile.Name()) // clean up
 
-	ui.Start(":", false, "", "")
+	ui.Start(&net.TCPAddr{}, false, "", "")
 	defer ui.Stop()
 	set := loadSettingsFrom("1", "1/1/1", "1/1/1", tmpfile.Name())
 

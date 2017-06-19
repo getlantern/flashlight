@@ -2,6 +2,7 @@ package client
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/getlantern/flashlight/common"
@@ -17,6 +18,18 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		// https://golang.org/src/net/http/request.go#L938. The easylist
 		// package and httputil.DumpRequest require the scheme to be present.
 		req.URL.Scheme = "http"
+	}
+
+	log.Debugf("Serving HTTP for request %v", req)
+	log.Debugf("Serving HTTP for request %v", req.URL.Host)
+	if req.URL.Host == "ui.lantern.io" {
+		log.Debug("GOT LANTERN UI!!!")
+	}
+
+	if strings.HasPrefix(req.URL.Host, "ui.lantern.io") {
+		log.Debug("GOT LANTERN UI PREFIX!!!")
+		req.URL.Host = "127.0.0.1"
+		req.Header.Set("Host", "127.0.0.1")
 	}
 
 	if !client.easylist.Allow(req) {
@@ -38,13 +51,13 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 			log.Error(op.FailIf(err))
 		}
 	} else {
-		log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
+		log.Debugf("Checking for HTTP redirect for %v", req.URL.String())
 		if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
 			client.redirect(resp, req, httpsURL, op)
 			return
 		}
 		// Direct proxying can only be used for plain HTTP connections.
-		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
+		log.Debugf("Intercepting HTTP request %s %v", req.Method, req.URL)
 		// consumed and removed by http-proxy-lantern/versioncheck
 		req.Header.Set(common.VersionHeader, common.Version)
 		err := client.interceptHTTP(resp, req)

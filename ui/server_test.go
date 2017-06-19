@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"path"
@@ -32,115 +33,84 @@ func TestDoShow(t *testing.T) {
 }
 
 func TestStartServer(t *testing.T) {
-	startServer := func(addr string) *server {
+	startServer := func(addr *net.TCPAddr) *server {
 		s := newServer("", "local-http-token")
 		assert.NoError(t, s.start(addr, false), "should start server")
 		return s
 	}
-	s := startServer("")
+	s := startServer(&net.TCPAddr{})
 	// make sure the port is non-zero, same below
-	assert.Regexp(t, "localhost:\\d{2,}$", s.listenAddr)
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr())
+	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.listenAddr.String())
+	assert.Regexp(t, "ui.lantern.io:\\d{2,}$", s.getUIAddr())
 	s.stop()
-	s = startServer(":")
-	assert.Regexp(t, ":\\d{2,}$", s.listenAddr)
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr())
+	s = startServer(&net.TCPAddr{})
+	assert.Regexp(t, ":\\d{2,}$", s.listenAddr.String())
+	assert.Regexp(t, "ui.lantern.io:\\d{2,}$", s.getUIAddr())
 	s.stop()
-	s = startServer(":0")
-	assert.Regexp(t, ":\\d{2,}$", s.listenAddr)
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr())
+	s = startServer(&net.TCPAddr{Port: 0})
+	assert.Regexp(t, ":\\d{2,}$", s.listenAddr.String())
+	assert.Regexp(t, "ui.lantern.io:\\d{2,}$", s.getUIAddr())
 	s.stop()
-	s = startServer("localhost:0")
-	assert.Regexp(t, "localhost:\\d{2,}$", s.listenAddr)
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr())
+	s = startServer(&net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 9897})
+	assert.Equal(t, "127.0.0.1:9897", s.listenAddr.String())
+	assert.Equal(t, "ui.lantern.io:9897", s.getUIAddr())
 	s.stop()
-	s = startServer("localhost:9898")
-	assert.Equal(t, "localhost:9898", s.listenAddr)
-	assert.Equal(t, "localhost:9898", s.getUIAddr())
+	s = startServer(&net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 0})
+	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.listenAddr.String())
+	assert.Regexp(t, "ui.lantern.io:\\d{2,}$", s.getUIAddr())
 	s.stop()
-	s = startServer("127.0.0.1:9897")
-	assert.Equal(t, "127.0.0.1:9897", s.listenAddr)
-	assert.Equal(t, "127.0.0.1:9897", s.getUIAddr())
-	s.stop()
-	s = startServer("127.0.0.1:0")
-	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.listenAddr)
-	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.getUIAddr())
-	s.stop()
-
-	// Simulate the case when unable to listen on saved uiaddr.
-	s = startServer("invalid-addr:9898")
-	assert.NotEqual(t, "invalid-addr:9898", s.listenAddr,
-		"should not listen on invalid host")
-	assert.Regexp(t, "localhost:\\d{2,}$", s.listenAddr,
-		"passing invalid port should fallback to default addresses")
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr(),
-		"passing invalid port should fallback to default addresses")
-	s.stop()
-
-	oldDefault := defaultUIAddresses
-	defer func() { defaultUIAddresses = oldDefault }()
-	// Simulate the case when unable to listen on localhost.
-	defaultUIAddresses = []string{"localhost:999999", "127.0.0.1:0"}
-	s = startServer("invalid-addr:9898")
-	assert.NotEqual(t, "invalid-addr:9898", s.listenAddr,
-		"should not listen on invalid host")
-	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.listenAddr,
-		"passing invalid port should fallback to default addresses")
-	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.getUIAddr(),
-		"passing invalid port should fallback to default addresses")
-	s.stop()
-
 }
 
 func TestStartServerAllowRemote(t *testing.T) {
-	startServer := func(addr string) *server {
+	startServer := func(addr *net.TCPAddr) *server {
 		s := newServer("", "local-http-token")
 		assert.NoError(t, s.start(addr, true), "should start server")
 		return s
 	}
-	s := startServer("")
+
+	s := startServer(&net.TCPAddr{})
 	// make sure the port is non-zero, same below
 	assert.Regexp(t, "^:\\d{2,}$", s.listenAddr)
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr())
+	assert.Regexp(t, "ui.lantern.io:\\d{2,}$", s.getUIAddr())
 	s.stop()
-	s = startServer(":")
+	s = startServer(&net.TCPAddr{})
 	assert.Regexp(t, "^:\\d{2,}$", s.listenAddr)
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr())
+	assert.Regexp(t, "ui.lantern.io:\\d{2,}$", s.getUIAddr())
 	s.stop()
-	s = startServer(":0")
+	s = startServer(&net.TCPAddr{Port: 0})
 	assert.Regexp(t, "^:\\d{2,}$", s.listenAddr)
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr())
+	assert.Regexp(t, "ui.lantern.io:\\d{2,}$", s.getUIAddr())
 	s.stop()
-	s = startServer("localhost:0")
+	s = startServer(&net.TCPAddr{Port: 0})
 	assert.Regexp(t, "^:\\d{2,}$", s.listenAddr)
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr())
+	assert.Regexp(t, "ui.lantern.io:\\d{2,}$", s.getUIAddr())
 	s.stop()
-	s = startServer("localhost:9898")
-	assert.Equal(t, ":9898", s.listenAddr)
-	assert.Equal(t, "localhost:9898", s.getUIAddr())
+	s = startServer(&net.TCPAddr{Port: 9898})
+	assert.Equal(t, ":9898", s.listenAddr.String())
+	assert.Equal(t, "ui.lantern.io:9898", s.getUIAddr())
 	s.stop()
-	s = startServer("127.0.0.1:0")
+	s = startServer(&net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 0})
 	assert.Regexp(t, "^:\\d{2,}$", s.listenAddr)
 	// For simplicity, ignore the case when localhost is unavailable and
 	// allowRemote is true. It hardly happen in field, and skilled user can
 	// work around it by replacing localhost to the address of any interfaces
 	// in browser.
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr())
+	assert.Regexp(t, "ui.lantern.io:\\d{2,}$", s.getUIAddr())
 	s.stop()
 	// Simulate the case when unable to listen on saved uiaddr.
-	s = startServer("invalid-addr:98980000")
+	s = startServer(&net.TCPAddr{Port: 98980000})
 	assert.NotEqual(t, ":98980000", s.listenAddr,
 		"should not listen on invalid port")
 	assert.Regexp(t, "^:\\d{2,}$", s.listenAddr,
 		"passing invalid port should fallback to default addresses")
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr(),
+	assert.Regexp(t, "ui.lantern.io:\\d{2,}$", s.getUIAddr(),
 		"passing invalid port should fallback to default addresses")
 	s.stop()
 }
 
 func TestCheckOrigin(t *testing.T) {
 	s := newServer("", "token")
-	s.start("localhost:9898", false)
+	s.start(&net.TCPAddr{Port: 9898}, false)
 	doTestCheckOrigin(t, s, map[string]bool{
 		"localhost:9898": true,
 		"localhost:1243": false,
@@ -149,7 +119,7 @@ func TestCheckOrigin(t *testing.T) {
 	})
 	s.stop()
 
-	s.start("127.0.0.1:9897", false)
+	s.start(&net.TCPAddr{Port: 9897}, false)
 	doTestCheckOrigin(t, s, map[string]bool{
 		"127.0.0.1:9897": true,
 		"localhost:9897": false,
@@ -158,7 +128,7 @@ func TestCheckOrigin(t *testing.T) {
 	})
 	s.stop()
 
-	s.start("localhost:9896", true)
+	s.start(&net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 9896}, true)
 	doTestCheckOrigin(t, s, map[string]bool{
 		"localhost:9896": true,
 		"127.0.0.1:9896": true,
@@ -198,7 +168,7 @@ func doTestCheckOrigin(t *testing.T, s *server, testOrigins map[string]bool) {
 
 	hit = false
 	req, _ = http.NewRequest("GET", "/abc", nil)
-	req.Header.Set("Origin", "http://"+s.listenAddr+"/")
+	req.Header.Set("Origin", "http://"+s.listenAddr.String()+"/")
 	h.ServeHTTP(w, req)
 	assert.True(t, hit, "request with the same origin should pass the check")
 

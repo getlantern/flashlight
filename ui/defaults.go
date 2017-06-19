@@ -5,9 +5,10 @@ package ui
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"net"
 )
 
-var defaultUIAddresses = []string{"localhost:0", "127.0.0.1:0"}
+var defaultUIAddresses = []*net.TCPAddr{&net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 0}}
 
 const strictOriginCheck = true
 

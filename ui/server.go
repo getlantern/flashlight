@@ -17,9 +17,11 @@ import (
 	"github.com/skratchdot/open-golang/open"
 )
 
+const uiHost = "ui.lantern.io"
+
 type server struct {
 	// The address to listen on, in ":port" form if listen on all interfaces.
-	listenAddr string
+	listenAddr *net.TCPAddr
 	// The address client should access. Available only if the server is started.
 	accessAddr     string
 	externalURL    string
@@ -58,13 +60,14 @@ func (s *server) Handle(pattern string, handler http.Handler) {
 
 // starts server listen at addr in host:port format, or arbitrary local port if
 // addr is empty.
-// allInterfaces: when true, server will listen on all local interfaces,
-// regardless of what the addr parameter is.
-func (s *server) start(requestedAddr string, allInterfaces bool) error {
+// nonLocalhost: when true, server will listen on the private network instead
+// of only on localhost regardless of what the requestedAddr parameter is.
+func (s *server) start(requestedAddr *net.TCPAddr, nonLocalhost bool) error {
 	var listenErr error
-	for _, addr := range addrCandidates(requestedAddr, allInterfaces) {
+	candidates := addrCandidates(requestedAddr, nonLocalhost)
+	for _, addr := range candidates {
 		log.Debugf("Lantern UI server start listening at %v", addr)
-		l, err := net.Listen("tcp", addr)
+		l, err := net.ListenTCP("tcp4", addr)
 		if err != nil {
 			listenErr = fmt.Errorf("unable to listen at %v: %v", addr, err)
 			log.Debug(listenErr)
@@ -79,20 +82,17 @@ func (s *server) start(requestedAddr string, allInterfaces bool) error {
 
 serve:
 	actualPort := s.listener.Addr().(*net.TCPAddr).Port
-	host, port, err := net.SplitHostPort(s.listenAddr)
-	if err != nil {
-		panic("impossible")
-	}
-	if port == "" || port == "0" {
+
+	if s.listenAddr.Port == 0 {
 		// On first run, we pick an arbitrary port, update our listenAddr to
 		// reflect the assigned port
-		s.listenAddr = fmt.Sprintf("%v:%v", host, actualPort)
+		s.listenAddr.Port = actualPort
 		log.Debugf("rewrote listen address to %v", s.listenAddr)
 	}
-	if host == "" {
-		host = "localhost"
-	}
-	s.accessAddr = net.JoinHostPort(host, strconv.Itoa(actualPort))
+	//if s.listenAddr.IP == nil {
+	//host = "localhost"
+	//}
+	s.accessAddr = net.JoinHostPort(uiHost, strconv.Itoa(actualPort))
 
 	server := &http.Server{
 		Handler:  s.mux,
@@ -221,9 +221,10 @@ func (s *server) checkOrigin(h http.Handler) http.Handler {
 				return
 			}
 			originHost := originURL.Host
+
 			// when Lantern is listening on all interfaces, e.g., allow remote
 			// connections, listenAddr is in ":port" form. Using HasSuffix
-			if !strings.HasSuffix(originHost, s.listenAddr) {
+			if !strings.HasSuffix(originHost, ":"+strconv.Itoa(s.listenAddr.Port)) {
 				msg := fmt.Sprintf("Origin was '%v' but expecting: '%v'", originHost, s.listenAddr)
 				s.forbidden(msg, w, r)
 				return
@@ -251,24 +252,13 @@ func (s *server) dumpRequestHeaders(r *http.Request) {
 	}
 }
 
-func addrCandidates(requested string, allInterfaces bool) []string {
-	if strings.HasPrefix(requested, "http://") {
-		log.Errorf("Client tried to start at bad address: %v", requested)
-		requested = strings.TrimPrefix(requested, "http://")
+func addrCandidates(requested *net.TCPAddr, nonLocalhost bool) []*net.TCPAddr {
+	if nonLocalhost {
+		return []*net.TCPAddr{&net.TCPAddr{Port: requested.Port}, &net.TCPAddr{Port: 0}}
 	}
-
-	if allInterfaces {
-		_, port, err := net.SplitHostPort(requested)
-		if err != nil {
-			log.Errorf("invalid address %v", requested)
-			return []string{":0"}
-		}
-		requested = ":" + port
-		return []string{requested, ":0"}
-	}
-	candidates := []string{}
-	if requested != "" {
-		candidates = append(candidates, requested)
+	candidates := make([]*net.TCPAddr, 0)
+	if requested != nil {
+		candidates = append(candidates, &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: requested.Port})
 	}
 	candidates = append(candidates, defaultUIAddresses...)
 	return candidates

@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -8,21 +9,28 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestListenTCP(t *testing.T) {
+	addr := &net.TCPAddr{Port: 0}
+	_, err := net.ListenTCP("tcp4", addr)
+
+	assert.NoError(t, err, "unexpected error")
+}
+
 func TestAddrCandidates(t *testing.T) {
-	endpoint := "127.0.0.1:1892"
-	candidates := addrCandidates("http://"+endpoint, false)
-	assert.Equal(t, append([]string{endpoint}, defaultUIAddresses...), candidates)
+	endpoint := &net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 1892}
+	candidates := addrCandidates(endpoint, false)
+	assert.Equal(t, append([]*net.TCPAddr{endpoint}, defaultUIAddresses...), candidates)
 
 	candidates = addrCandidates(endpoint, false)
-	assert.Equal(t, append([]string{endpoint}, defaultUIAddresses...), candidates)
+	assert.Equal(t, append([]*net.TCPAddr{endpoint}, defaultUIAddresses...), candidates)
 
 	candidates = addrCandidates(endpoint, true)
-	assert.Equal(t, []string{":1892", ":0"}, candidates)
+	assert.Equal(t, []*net.TCPAddr{&net.TCPAddr{Port: 1892}, &net.TCPAddr{Port: 0}}, candidates)
 
-	candidates = addrCandidates("", true)
-	assert.Equal(t, []string{":0"}, candidates)
+	candidates = addrCandidates(&net.TCPAddr{}, true)
+	assert.Equal(t, []*net.TCPAddr{&net.TCPAddr{Port: 0}}, candidates)
 
-	candidates = addrCandidates("", false)
+	candidates = addrCandidates(&net.TCPAddr{}, false)
 	assert.Equal(t, defaultUIAddresses, candidates)
 }
 
@@ -34,7 +42,7 @@ func getTestServer(token string) *server {
 	allowRemote := false
 	s := newServer("", token)
 	attachHandlers(s, allowRemote)
-	s.start("localhost:", allowRemote)
+	s.start(&net.TCPAddr{IP: net.IPv4(127, 0, 0, 1)}, allowRemote)
 	return s
 }
 

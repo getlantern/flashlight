@@ -318,6 +318,9 @@ func (client *Client) dialCONNECT(network, addr string) (conn net.Conn, err erro
 }
 
 func (client *Client) dialHTTP(network, addr string) (conn net.Conn, err error) {
+	if strings.HasPrefix(addr, "ui.lantern.io") {
+		return client.dial(false, network, strings.Replace(addr, "ui.lantern.io", "127.0.0.1", 1))
+	}
 	return client.dial(false, network, addr)
 }
 
