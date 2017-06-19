@@ -58,11 +58,9 @@ func (s *server) Handle(pattern string, handler http.Handler) {
 
 // starts server listen at addr in host:port format, or arbitrary local port if
 // addr is empty.
-// allInterfaces: when true, server will listen on all local interfaces,
-// regardless of what the addr parameter is.
-func (s *server) start(requestedAddr string, allInterfaces bool) error {
+func (s *server) start(requestedAddr string) error {
 	var listenErr error
-	for _, addr := range addrCandidates(requestedAddr, allInterfaces) {
+	for _, addr := range addrCandidates(requestedAddr) {
 		log.Debugf("Lantern UI server start listening at %v", addr)
 		l, err := net.Listen("tcp", addr)
 		if err != nil {
@@ -251,25 +249,14 @@ func (s *server) dumpRequestHeaders(r *http.Request) {
 	}
 }
 
-func addrCandidates(requested string, allInterfaces bool) []string {
+func addrCandidates(requested string) []string {
 	if strings.HasPrefix(requested, "http://") {
 		log.Errorf("Client tried to start at bad address: %v", requested)
 		requested = strings.TrimPrefix(requested, "http://")
 	}
 
-	if allInterfaces {
-		_, port, err := net.SplitHostPort(requested)
-		if err != nil {
-			log.Errorf("invalid address %v", requested)
-			return []string{":0"}
-		}
-		requested = ":" + port
-		return []string{requested, ":0"}
-	}
-	candidates := []string{}
 	if requested != "" {
-		candidates = append(candidates, requested)
+		return append([]string{requested}, defaultUIAddresses...)
 	}
-	candidates = append(candidates, defaultUIAddresses...)
-	return candidates
+	return defaultUIAddresses
 }

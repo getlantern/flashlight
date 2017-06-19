@@ -10,19 +10,13 @@ import (
 
 func TestAddrCandidates(t *testing.T) {
 	endpoint := "127.0.0.1:1892"
-	candidates := addrCandidates("http://"+endpoint, false)
+	candidates := addrCandidates("http://" + endpoint)
 	assert.Equal(t, append([]string{endpoint}, defaultUIAddresses...), candidates)
 
-	candidates = addrCandidates(endpoint, false)
+	candidates = addrCandidates(endpoint)
 	assert.Equal(t, append([]string{endpoint}, defaultUIAddresses...), candidates)
 
-	candidates = addrCandidates(endpoint, true)
-	assert.Equal(t, []string{":1892", ":0"}, candidates)
-
-	candidates = addrCandidates("", true)
-	assert.Equal(t, []string{":0"}, candidates)
-
-	candidates = addrCandidates("", false)
+	candidates = addrCandidates("")
 	assert.Equal(t, defaultUIAddresses, candidates)
 }
 
@@ -31,10 +25,9 @@ func getTestHandler() http.Handler {
 }
 
 func getTestServer(token string) *server {
-	allowRemote := false
 	s := newServer("", token)
-	attachHandlers(s, allowRemote)
-	s.start("localhost:", allowRemote)
+	attachHandlers(s, true)
+	s.start("localhost:")
 	return s
 }
 
