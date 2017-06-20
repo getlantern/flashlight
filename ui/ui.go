@@ -30,24 +30,20 @@ func init() {
 }
 
 // Start starts serving the UI.
-func Start(requestedAddr string, allowRemote bool, extURL, localHTTPTok string) error {
-	serve = newServer(requestedAddr, allowRemote, extURL, localHTTPTok)
-	attachHandlers(serve, allowRemote)
-	if err := serve.start(); err != nil {
+func Start(requestedAddr, extURL, localHTTPTok string) error {
+	serve = newServer(extURL, localHTTPTok)
+	attachHandlers(serve)
+	if err := serve.start(requestedAddr); err != nil {
 		return err
 	}
 	return nil
 }
 
-func attachHandlers(s *server, allowRemote bool) {
+func attachHandlers(s *server) {
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
 	startupHandler := func(resp http.ResponseWriter, req *http.Request) {
-		// If we're allowing remote, we're in practice not showing the UI on this
-		// typically headless system, so don't allow triggering of the UI.
-		if !allowRemote {
-			s.show("existing", "lantern")
-		}
+		s.show("existing", "lantern")
 		resp.WriteHeader(http.StatusOK)
 	}
 	s.Handle("/startup", http.HandlerFunc(startupHandler))
