@@ -2,7 +2,7 @@
 
 package ui
 
-const defaultUIAddress = "localhost:16823"
+var defaultUIAddresses = []string{"localhost:16823"}
 
 const strictOriginCheck = false
 

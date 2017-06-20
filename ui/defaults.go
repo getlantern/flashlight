@@ -7,7 +7,7 @@ import (
 	"encoding/hex"
 )
 
-const defaultUIAddress = "localhost:0"
+var defaultUIAddresses = []string{"localhost:0", "127.0.0.1:0"}
 
 const strictOriginCheck = true
 
