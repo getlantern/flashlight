@@ -83,18 +83,6 @@ type StartResult struct {
 	SOCKS5Addr string
 }
 
-type UserConfig interface {
-	config.UserConfig
-	AfterStart()
-	SetCountry(string)
-	UpdateStats(string, string, string, int, int)
-	SetStaging(bool)
-	ShowSurvey(string)
-	ProxyAll() bool
-	BandwidthUpdate(int, int)
-	DeviceId() string
-}
-
 type Updater autoupdate.Updater
 
 // Start starts a HTTP and SOCKS proxies at random addresses. It blocks up till
@@ -140,7 +128,7 @@ func AddLoggingMetadata(key, value string) {
 }
 
 func run(configDir, locale string,
-	stickyConfig bool, user UserConfig) {
+	stickyConfig bool, user Session) {
 
 	appdir.SetHomeDir(configDir)
 	user.SetStaging(common.Staging)
@@ -199,7 +187,7 @@ func run(configDir, locale string,
 	)
 }
 
-func bandwidthUpdates(user UserConfig) {
+func bandwidthUpdates(user Session) {
 	go func() {
 		for quota := range bandwidth.Updates {
 			user.BandwidthUpdate(getBandwidth(quota))
@@ -229,9 +217,21 @@ func getBandwidth(quota *bandwidth.Quota) (int, int) {
 	return percent, remaining
 }
 
-func afterStart(user UserConfig) {
-	bandwidthUpdates(user)
+func createUser(user Session) {
+	if user.GetUserID() == 0 {
+		req := newRequest(user)
+		_, err := newUser(req)
+		if err != nil {
+			log.Errorf("Could not create new pro user")
+		}
+	}
 	user.AfterStart()
+}
+
+func afterStart(user Session) {
+	bandwidthUpdates(user)
+
+	go createUser(user)
 
 	go func() {
 		if <-geolookup.OnRefresh() {

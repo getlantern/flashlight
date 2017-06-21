@@ -1,42 +1,53 @@
 package android
 
 import (
+	"errors"
 	"github.com/getlantern/bandwidth"
+	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/pro"
 	client "github.com/getlantern/flashlight/pro/client"
 	"github.com/stripe/stripe-go"
 	"strings"
 )
 
-type Session interface {
-	GetUserID() int
+type UserConfig interface {
+	config.UserConfig
+	AfterStart()
+	SetCountry(string)
+	UpdateStats(string, string, string, int, int)
+	SetStaging(bool)
+	ShowSurvey(string)
+	ProxyAll() bool
+	BandwidthUpdate(int, int)
+	AccountId() string
+	DeviceId() string
+	Locale() string
+	AddDevice(string, string)
+	AddPlan(string, string, string, bool, int, int)
 	Code() string
 	VerifyCode() string
 	DeviceCode() string
-	DeviceId() string
 	DeviceName() string
-	Locale() string
 	Referral() string
-	GetToken() string
 	Plan() string
 	Provider() string
 	ResellerCode() string
 	StripeToken() string
 	StripeApiKey() string
 	Email() string
-	AccountId() string
 	SetToken(string)
-	SetUserId(int)
+	SetUserId(int64)
 	SetDeviceCode(string, int64)
-	ShowSurvey(string)
-	BandwidthUpdate(int, int)
 	UserData(bool, int64, string, string)
 	SetCode(string)
 	SetError(string, string)
 	SetErrorId(string, string)
 	Currency() string
 	SetStripePubKey(string)
-	AddPlan(string, string, string, bool, int, int)
-	AddDevice(string, string)
+}
+
+type Session interface {
+	UserConfig
 }
 
 const (
@@ -44,11 +55,48 @@ const (
 )
 
 type proRequest struct {
-	*client.ProRequest
+	Client  *client.Client
+	User    client.User
 	session Session
 }
 
 type proFunc func(*proRequest) (*client.Response, error)
+
+func userStatus(req *proRequest) (*client.Response, error) {
+
+	res, err := req.Client.UserData(req.User)
+	if err != nil {
+		log.Errorf("Failed to get user data: %v", err)
+		return nil, err
+	}
+
+	if res.Status == "error" {
+		return nil, errors.New(res.Error)
+	}
+	return res, nil
+}
+
+func newRequest(session Session) *proRequest {
+
+	user := client.User{
+		Auth: client.Auth{
+			DeviceID: session.DeviceId(),
+			ID:       session.GetUserID(),
+			Token:    session.GetToken(),
+		},
+	}
+
+	httpClient := pro.GetHTTPClient()
+
+	req := &proRequest{
+		Client:  client.NewClient(httpClient),
+		User:    user,
+		session: session,
+	}
+	req.Client.SetLocale(session.Locale())
+
+	return req
+}
 
 func newUser(req *proRequest) (*client.Response, error) {
 
@@ -197,7 +245,7 @@ func emailExists(req *proRequest) (*client.Response, error) {
 
 func userData(req *proRequest) (*client.Response, error) {
 
-	res, err := client.UserStatus(req.ProRequest)
+	res, err := userStatus(req)
 	if err != nil {
 		log.Errorf("Error getting Pro user data: %v", err)
 		return res, err
@@ -241,19 +289,7 @@ func userUpdate(req *proRequest) (*client.Response, error) {
 }
 
 func RemoveDevice(deviceId string, session Session) bool {
-	user := client.User{
-		Auth: client.Auth{
-			DeviceID: session.DeviceId(),
-			ID:       session.GetUserID(),
-			Token:    session.GetToken(),
-		},
-	}
-
-	req, err := client.NewRequest(user)
-	if err != nil {
-		log.Errorf("Error creating request: %v", err)
-		return false
-	}
+	req := newRequest(session)
 	log.Debugf("Calling user link remove on device %s", deviceId)
 	res, err := req.Client.UserLinkRemove(req.User, deviceId)
 	if err != nil || res.Status != "ok" {
@@ -280,21 +316,7 @@ func ProRequest(command string, session Session) bool {
 		}
 		return true
 	}
-
-	user := client.User{
-		Auth: client.Auth{
-			DeviceID: session.DeviceId(),
-			ID:       session.GetUserID(),
-			Token:    session.GetToken(),
-		},
-	}
-
-	req, err := client.NewRequest(user)
-	if err != nil {
-		log.Errorf("Error creating new request: %v", err)
-		return false
-	}
-	req.Client.SetLocale(session.Locale())
+	req := newRequest(session)
 
 	log.Debugf("Received a %s pro request", command)
 
@@ -320,7 +342,7 @@ func ProRequest(command string, session Session) bool {
 		session.SetError(command, "Command not found")
 		return false
 	}
-	res, err := cmd(&proRequest{req, session})
+	res, err := cmd(req)
 	if err != nil || res.Status != "ok" {
 		log.Errorf("Error making %s request to Pro server: %v response: %v", command, err, res)
 		if res != nil {
