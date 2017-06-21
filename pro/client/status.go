@@ -28,11 +28,8 @@ func userStatus(userID int, proToken string, deviceID string) (string, error) {
 		ID:       userID,
 		Token:    proToken,
 	}}
-	req, err := NewRequest(user)
-	if err != nil {
-		return "", err
-	}
-	resp, err := UserStatus(req)
+	client := NewClient(pro.GetHTTPClient())
+	resp, err := client.UserStatus(user)
 	if err != nil {
 		return "", err
 	}
