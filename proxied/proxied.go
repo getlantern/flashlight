@@ -468,7 +468,7 @@ func chained(rootCA string, persistent bool) (http.RoundTripper, error) {
 			Timeout:   60 * time.Second,
 			KeepAlive: 30 * time.Second,
 		}).Dial,
-		TLSHandshakeTimeout: 10 * time.Second,
+		TLSHandshakeTimeout: 20 * time.Second,
 
 		// This method is typically used for creating a one-off HTTP client
 		// that we don't want to keep around for future calls, making
