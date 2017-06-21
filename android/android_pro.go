@@ -57,19 +57,17 @@ type proFunc func(*proRequest) (*client.Response, error)
 
 func newRequest(session UserConfig) *proRequest {
 
-	user := client.User{
-		Auth: client.Auth{
-			DeviceID: session.DeviceId(),
-			ID:       session.GetUserID(),
-			Token:    session.GetToken(),
-		},
-	}
-
 	httpClient := pro.GetHTTPClient()
 
 	req := &proRequest{
-		client:  client.NewClient(httpClient),
-		user:    user,
+		client: client.NewClient(httpClient),
+		user: client.User{
+			Auth: client.Auth{
+				DeviceID: session.DeviceId(),
+				ID:       session.GetUserID(),
+				Token:    session.GetToken(),
+			},
+		},
 		session: session,
 	}
 	req.client.SetLocale(session.Locale())

@@ -225,17 +225,21 @@ func setBandwidth(session UserConfig) {
 }
 
 func initSession(user UserConfig) {
-	req := newRequest(user)
 	if user.GetUserID() == 0 {
 		// create new user first if we have no valid user id
-		_, err := newUser(req)
+		_, err := newUser(newRequest(user))
 		if err != nil {
 			log.Errorf("Could not create new pro user")
+			return
 		}
 	}
 
+	log.Debugf("New Lantern session with user id %d", user.GetUserID())
+
 	setBandwidth(user)
 	setSurvey(user)
+
+	req := newRequest(user)
 
 	for _, proFn := range []proFunc{plans, userData} {
 		_, err := proFn(req)
