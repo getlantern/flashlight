@@ -18,13 +18,9 @@ type UserConfig interface {
 	BandwidthUpdate(int, int)
 	DeviceId() string
 	AccountId() string
-}
-
-type Session interface {
-	UserConfig
-	Locale() string
 	AddDevice(string, string)
 	AddPlan(string, string, string, bool, int, int)
+	Locale() string
 	Code() string
 	VerifyCode() string
 	DeviceCode() string
@@ -54,12 +50,12 @@ const (
 type proRequest struct {
 	client  *client.Client
 	user    client.User
-	session Session
+	session UserConfig
 }
 
 type proFunc func(*proRequest) (*client.Response, error)
 
-func newRequest(session Session) *proRequest {
+func newRequest(session UserConfig) *proRequest {
 
 	user := client.User{
 		Auth: client.Auth{
@@ -271,7 +267,7 @@ func userUpdate(req *proRequest) (*client.Response, error) {
 	return res, err
 }
 
-func RemoveDevice(deviceId string, session Session) bool {
+func RemoveDevice(deviceId string, session UserConfig) bool {
 	req := newRequest(session)
 	log.Debugf("Calling user link remove on device %s", deviceId)
 	res, err := req.client.UserLinkRemove(req.user, deviceId)
@@ -283,7 +279,7 @@ func RemoveDevice(deviceId string, session Session) bool {
 	return true
 }
 
-func ProRequest(command string, session Session) bool {
+func ProRequest(command string, session UserConfig) bool {
 
 	req := newRequest(session)
 

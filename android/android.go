@@ -187,7 +187,7 @@ func run(configDir, locale string,
 	)
 }
 
-func bandwidthUpdates(user Session) {
+func bandwidthUpdates(user UserConfig) {
 	go func() {
 		for quota := range bandwidth.Updates {
 			user.BandwidthUpdate(getBandwidth(quota))
@@ -217,16 +217,16 @@ func getBandwidth(quota *bandwidth.Quota) (int, int) {
 	return percent, remaining
 }
 
-func setBandwidth(session Session) {
+func setBandwidth(session UserConfig) {
 	percent, remaining := getBandwidth(bandwidth.GetQuota())
 	if percent != 0 && remaining != 0 {
 		session.BandwidthUpdate(percent, remaining)
 	}
 }
 
-func initUser(session Session) {
-	req := newRequest(session)
-	if session.GetUserID() == 0 {
+func initSession(user UserConfig) {
+	req := newRequest(user)
+	if user.GetUserID() == 0 {
 		// create new user first if we have no valid user id
 		_, err := newUser(req)
 		if err != nil {
@@ -234,8 +234,8 @@ func initUser(session Session) {
 		}
 	}
 
-	setBandwidth(session)
-	setSurvey(session)
+	setBandwidth(user)
+	setSurvey(user)
 
 	for _, proFn := range []proFunc{plans, userData} {
 		_, err := proFn(req)
@@ -247,11 +247,9 @@ func initUser(session Session) {
 
 func afterStart(user UserConfig) {
 
-	session := user.(Session)
+	bandwidthUpdates(user)
 
-	bandwidthUpdates(session)
-
-	go initUser(session)
+	go initSession(user)
 
 	go func() {
 		if <-geolookup.OnRefresh() {
@@ -296,7 +294,7 @@ func extractUrl(surveys map[string]*json.RawMessage, locale string) (string, err
 	return "", nil
 }
 
-func setSurvey(session Session) {
+func setSurvey(session UserConfig) {
 	url, err := surveyRequest(session.Locale())
 	if err == nil && url != "" {
 		log.Debugf("Setting survey url to %s", url)
