@@ -369,6 +369,19 @@ func (c *Client) UserLinkRemove(user User, deviceId string) (res *Response, err 
 	return
 }
 
+func (c *Client) UserStatus(user User) (*Response, error) {
+	res, err := c.UserData(user)
+	if err != nil {
+		log.Errorf("Failed to get user data: %v", err)
+		return nil, err
+	}
+
+	if res.Status == "error" {
+		return nil, errors.New(res.Error)
+	}
+	return res, nil
+}
+
 // UserData Returns all user data, including payments, referrals and all
 // available fields.
 func (c *Client) UserData(user User) (res *Response, err error) {

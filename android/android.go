@@ -128,7 +128,7 @@ func AddLoggingMetadata(key, value string) {
 }
 
 func run(configDir, locale string,
-	stickyConfig bool, user Session) {
+	stickyConfig bool, user UserConfig) {
 
 	appdir.SetHomeDir(configDir)
 	user.SetStaging(common.Staging)
