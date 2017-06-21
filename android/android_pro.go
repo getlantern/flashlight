@@ -1,7 +1,6 @@
 package android
 
 import (
-	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/pro"
 	client "github.com/getlantern/flashlight/pro/client"
@@ -9,17 +8,20 @@ import (
 	"strings"
 )
 
-type Session interface {
+type UserConfig interface {
 	config.UserConfig
-	AfterStart()
 	SetCountry(string)
 	UpdateStats(string, string, string, int, int)
 	SetStaging(bool)
 	ShowSurvey(string)
 	ProxyAll() bool
 	BandwidthUpdate(int, int)
-	AccountId() string
 	DeviceId() string
+	AccountId() string
+}
+
+type Session interface {
+	UserConfig
 	Locale() string
 	AddDevice(string, string)
 	AddPlan(string, string, string, bool, int, int)
@@ -44,8 +46,6 @@ type Session interface {
 	Currency() string
 	SetStripePubKey(string)
 }
-
-type UserConfig Session
 
 const (
 	defaultCurrencyCode = `usd`
@@ -285,20 +285,6 @@ func RemoveDevice(deviceId string, session Session) bool {
 
 func ProRequest(command string, session Session) bool {
 
-	if command == "survey" {
-		url, err := surveyRequest(session.Locale())
-		if err == nil && url != "" {
-			session.ShowSurvey(url)
-			return true
-		}
-		return false
-	} else if command == "bandwidth" {
-		percent, remaining := getBandwidth(bandwidth.GetQuota())
-		if percent != 0 && remaining != 0 {
-			session.BandwidthUpdate(percent, remaining)
-		}
-		return true
-	}
 	req := newRequest(session)
 
 	log.Debugf("Received a %s pro request", command)

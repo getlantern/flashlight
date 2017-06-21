@@ -5,12 +5,12 @@ import (
 )
 
 var (
-	proStatusByUserID = make(map[int]string)
+	proStatusByUserID = make(map[int64]string)
 	proStatusMx       sync.RWMutex
 )
 
 // SetProStatus updates the pro status for the given userID.
-func SetProStatus(userID int, status string) {
+func SetProStatus(userID int64, status string) {
 	proStatusMx.Lock()
 	proStatusByUserID[userID] = status
 	proStatusMx.Unlock()
@@ -18,7 +18,7 @@ func SetProStatus(userID int, status string) {
 
 // IsProUserFast indicates whether or not the user is pro and whether or not the
 // user's status is know, never calling the Pro API to determine the status.
-func IsProUserFast(userID int) (isPro bool, statusKnown bool) {
+func IsProUserFast(userID int64) (isPro bool, statusKnown bool) {
 	proStatusMx.RLock()
 	status, found := proStatusByUserID[userID]
 	proStatusMx.RUnlock()

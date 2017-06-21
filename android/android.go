@@ -217,21 +217,41 @@ func getBandwidth(quota *bandwidth.Quota) (int, int) {
 	return percent, remaining
 }
 
-func createUser(user Session) {
-	if user.GetUserID() == 0 {
-		req := newRequest(user)
+func setBandwidth(session Session) {
+	percent, remaining := getBandwidth(bandwidth.GetQuota())
+	if percent != 0 && remaining != 0 {
+		session.BandwidthUpdate(percent, remaining)
+	}
+}
+
+func initUser(session Session) {
+	req := newRequest(session)
+	if session.GetUserID() == 0 {
+		// create new user first if we have no valid user id
 		_, err := newUser(req)
 		if err != nil {
 			log.Errorf("Could not create new pro user")
 		}
 	}
-	user.AfterStart()
+
+	setBandwidth(session)
+	setSurvey(session)
+
+	for _, proFn := range []proFunc{plans, userData} {
+		_, err := proFn(req)
+		if err != nil {
+			log.Errorf("Error making pro request: %v", err)
+		}
+	}
 }
 
-func afterStart(user Session) {
-	bandwidthUpdates(user)
+func afterStart(user UserConfig) {
 
-	go createUser(user)
+	session := user.(Session)
+
+	bandwidthUpdates(session)
+
+	go initUser(session)
 
 	go func() {
 		if <-geolookup.OnRefresh() {
@@ -274,6 +294,14 @@ func extractUrl(surveys map[string]*json.RawMessage, locale string) (string, err
 		return extractUrl(surveys, defaultLocale)
 	}
 	return "", nil
+}
+
+func setSurvey(session Session) {
+	url, err := surveyRequest(session.Locale())
+	if err == nil && url != "" {
+		log.Debugf("Setting survey url to %s", url)
+		session.ShowSurvey(url)
+	}
 }
 
 func surveyRequest(locale string) (string, error) {

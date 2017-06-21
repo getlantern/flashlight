@@ -6,7 +6,7 @@ import (
 
 // IsProUser indicates whether or not the user is pro, calling the Pro API if
 // necessary to determine the status.
-func IsProUser(userID int, proToken string, deviceID string) (isPro bool, statusKnown bool) {
+func IsProUser(userID int64, proToken string, deviceID string) (isPro bool, statusKnown bool) {
 	isPro, statusKnown = pro.IsProUserFast(userID)
 	if statusKnown {
 		return
@@ -21,7 +21,7 @@ func IsProUser(userID int, proToken string, deviceID string) (isPro bool, status
 	return pro.IsActive(status), true
 }
 
-func userStatus(userID int, proToken string, deviceID string) (string, error) {
+func userStatus(userID int64, proToken string, deviceID string) (string, error) {
 	log.Debugf("Fetching user status with device ID '%v', user ID '%v' and proToken %v", deviceID, userID, proToken)
 	user := User{Auth: Auth{
 		DeviceID: deviceID,
