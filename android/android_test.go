@@ -19,7 +19,10 @@ import (
 const expectedBody = "Google is built by a large team of engineers, designers, researchers, robots, and others in many different sites across the globe. It is updated continuously, and built with more tools and technologies than we can shake a stick at. If you'd like to help us out, see google.com/careers.\n"
 
 type testProtector struct{}
-type testUserConfig struct{}
+
+type testUserConfig struct {
+	UserConfig
+}
 
 func (c testUserConfig) AfterStart()              {}
 func (c testUserConfig) BandwidthUpdate(int, int) {}
@@ -32,6 +35,10 @@ func (c testUserConfig) SetCountry(string)        {}
 func (c testUserConfig) ProxyAll() bool           { return true }
 func (c testUserConfig) DeviceId() string         { return "123456789" }
 func (c testUserConfig) AccountId() string        { return "1234" }
+func (c testUserConfig) Locale() string           { return "en-US" }
+func (c testUserConfig) SetUserId(int64)          {}
+func (c testUserConfig) SetToken(string)          {}
+func (c testUserConfig) SetCode(string)           {}
 
 func (c testUserConfig) UpdateStats(string, string, string, int, int) {}
 
