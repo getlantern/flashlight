@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"flag"
@@ -19,6 +20,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/tlsdialer"
@@ -99,6 +101,7 @@ func main() {
 
 	go feedMasquerades()
 	cas, masqs := coalesceMasquerades()
+	masqs = vetMasquerades(cas, masqs)
 	model := buildModel(cas, masqs, false)
 	generateTemplate(model, yamlTmpl, "cloud.yaml")
 	model = buildModel(cas, masqs, true)
@@ -291,6 +294,8 @@ func grabCerts() {
 			CommonName: rootCA.Subject.CommonName,
 			Cert:       strings.Replace(string(rootCert.PEMEncoded()), "\n", "\\n", -1),
 		}
+
+		log.Debugf("Successfully grabbed certs for: %v", domain)
 		masqueradesCh <- &masquerade{
 			Domain:    domain,
 			IpAddress: ip,
@@ -334,6 +339,58 @@ func coalesceMasquerades() (map[string]*castat, []*masquerade) {
 	}
 
 	return trustedCAs, trustedMasquerades
+}
+
+func vetMasquerades(cas map[string]*castat, masquerades []*masquerade) []*masquerade {
+	certPool := x509.NewCertPool()
+	for _, ca := range cas {
+		cert, err := keyman.LoadCertificateFromPEMBytes([]byte(strings.Replace(ca.Cert, `\n`, "\n", -1)))
+		if err != nil {
+			log.Errorf("Unable to parse certificate: %v", err)
+			continue
+		}
+		certPool.AddCert(cert.X509())
+		log.Debug("Added cert to pool")
+	}
+
+	wg.Add(numberOfWorkers)
+	inCh := make(chan *masquerade, len(masquerades))
+	outCh := make(chan *masquerade, len(masquerades))
+	for _, masquerade := range masquerades {
+		inCh <- masquerade
+	}
+	close(inCh)
+
+	for i := 0; i < numberOfWorkers; i++ {
+		go doVetMasquerades(certPool, inCh, outCh)
+	}
+
+	wg.Wait()
+	close(outCh)
+
+	result := make([]*masquerade, 0, len(masquerades))
+	for masquerade := range outCh {
+		result = append(result, masquerade)
+	}
+	return result
+}
+
+func doVetMasquerades(certPool *x509.CertPool, inCh chan *masquerade, outCh chan *masquerade) {
+	log.Debug("Starting to vet masquerades")
+	for _m := range inCh {
+		m := &fronted.Masquerade{
+			Domain:    _m.Domain,
+			IpAddress: _m.IpAddress,
+		}
+		if fronted.Vet(m, certPool) {
+			log.Debugf("Successfully vetted %v (%v)", m.Domain, m.IpAddress)
+			outCh <- _m
+		} else {
+			log.Debugf("%v (%v) failed to vet", m.Domain, m.IpAddress)
+		}
+	}
+	log.Debug("Done vetting masquerades")
+	wg.Done()
 }
 
 func buildModel(cas map[string]*castat, masquerades []*masquerade, useFallbacks bool) map[string]interface{} {
