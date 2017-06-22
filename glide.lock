@@ -96,7 +96,7 @@ imports:
 - name: github.com/getlantern/filepersist
   version: c5f0cd24e7991579ba6f5f1bd20a1ad2c9f06cd4
 - name: github.com/getlantern/fronted
-  version: 17c90c8d5118b68c51e18638825fcb580f7b76c9
+  version: 2214e5cef1a477c9c3e12a0916e7afbffafb7a9b
 - name: github.com/getlantern/geolookup
   version: 823d7ff3e6eb74dd6aae38a4b52207b19abfbf66
 - name: github.com/getlantern/go-loggly
