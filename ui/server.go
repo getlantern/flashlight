@@ -29,26 +29,12 @@ type server struct {
 	onceOpenExtURL sync.Once
 }
 
-// newServer creates a new UI server listen at addr in host:port format, or
-// arbitrary local port if addr is empty.
-// allInterfaces: when true, server will listen on all local interfaces,
-// regardless of what the addr parameter is.
+// newServer creates a new UI server.
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func newServer(addr string, allInterfaces bool, extURL, localHTTPToken string) *server {
-	addr = normalizeAddr(addr)
-	if allInterfaces {
-		_, port, err := net.SplitHostPort(addr)
-		if err != nil {
-			log.Errorf("invalid address %v", addr)
-			port = "0"
-		}
-		addr = ":" + port
-	}
-
+func newServer(extURL, localHTTPToken string) *server {
 	return &server{
-		listenAddr:     addr,
 		externalURL:    overrideManotoURL(extURL),
 		localHTTPToken: localHTTPToken,
 		mux:            http.NewServeMux(),
@@ -70,18 +56,30 @@ func (s *server) Handle(pattern string, handler http.Handler) {
 		s.checkOrigin(util.NoCacheHandler(handler)))
 }
 
-func (s *server) start() error {
-	log.Debugf("Lantern UI server start listening at %v", s.listenAddr)
-	l, err := net.Listen("tcp", s.listenAddr)
-	if err != nil {
-		return fmt.Errorf("Unable to listen at %v. Error is: %v", s.listenAddr, err)
+// starts server listen at addr in host:port format, or arbitrary local port if
+// addr is empty.
+func (s *server) start(requestedAddr string) error {
+	var listenErr error
+	for _, addr := range addrCandidates(requestedAddr) {
+		log.Debugf("Lantern UI server start listening at %v", addr)
+		l, err := net.Listen("tcp", addr)
+		if err != nil {
+			listenErr = fmt.Errorf("unable to listen at %v: %v", addr, err)
+			log.Debug(listenErr)
+			continue
+		}
+		s.listenAddr = addr
+		s.listener = l
+		goto serve
 	}
+	// couldn't start on any of the candidates.
+	return listenErr
 
-	actualPort := l.Addr().(*net.TCPAddr).Port
-
+serve:
+	actualPort := s.listener.Addr().(*net.TCPAddr).Port
 	host, port, err := net.SplitHostPort(s.listenAddr)
 	if err != nil {
-		log.Errorf("invalid address %v", s.listenAddr)
+		panic("impossible")
 	}
 	if port == "" || port == "0" {
 		// On first run, we pick an arbitrary port, update our listenAddr to
@@ -93,7 +91,6 @@ func (s *server) start() error {
 		host = "localhost"
 	}
 	s.accessAddr = net.JoinHostPort(host, strconv.Itoa(actualPort))
-	s.listener = l
 
 	server := &http.Server{
 		Handler:  s.mux,
@@ -101,8 +98,8 @@ func (s *server) start() error {
 	}
 	ch := make(chan error, 1)
 	go func() {
-		log.Debugf("UI serving at %v", l.Addr())
-		err := server.Serve(l)
+		log.Debugf("UI serving at %v", s.listener.Addr())
+		err := server.Serve(s.listener)
 		ch <- err
 	}()
 
@@ -247,16 +244,18 @@ func (s *server) forbidden(msg string, w http.ResponseWriter, r *http.Request) {
 func (s *server) dumpRequestHeaders(r *http.Request) {
 	dump, err := httputil.DumpRequest(r, false)
 	if err == nil {
-		log.Debugf("Request:\n", string(dump))
+		log.Debugf("Request:\n%s", string(dump))
 	}
 }
 
-func normalizeAddr(addr string) string {
-	if addr == "" {
-		return defaultUIAddress
-	} else if strings.HasPrefix(addr, "http://") {
-		log.Errorf("Client tried to start at bad address: %v", addr)
-		return strings.TrimPrefix(addr, "http://")
+func addrCandidates(requested string) []string {
+	if strings.HasPrefix(requested, "http://") {
+		log.Errorf("Client tried to start at bad address: %v", requested)
+		requested = strings.TrimPrefix(requested, "http://")
 	}
-	return addr
+
+	if requested != "" {
+		return append([]string{requested}, defaultUIAddresses...)
+	}
+	return defaultUIAddresses
 }
