@@ -17,7 +17,7 @@ func TestDoShow(t *testing.T) {
 		urlToShow = u
 	}
 
-	s := newServer("127.0.0.1:7777", false, "", "test-http-token")
+	s := newServer("", "test-http-token")
 
 	assert.Equal(t, "", urlToShow)
 	s.doShow("campaign", "medium", show)
@@ -33,8 +33,8 @@ func TestDoShow(t *testing.T) {
 
 func TestStartServer(t *testing.T) {
 	startServer := func(addr string) *server {
-		s := newServer(addr, false, "", "local-http-token")
-		assert.NoError(t, s.start(), "should start server")
+		s := newServer("", "local-http-token")
+		assert.NoError(t, s.start(addr), "should start server")
 		return s
 	}
 	s := startServer("")
@@ -58,69 +58,58 @@ func TestStartServer(t *testing.T) {
 	assert.Equal(t, "localhost:9898", s.listenAddr)
 	assert.Equal(t, "localhost:9898", s.getUIAddr())
 	s.stop()
+	s = startServer("127.0.0.1:9897")
+	assert.Equal(t, "127.0.0.1:9897", s.listenAddr)
+	assert.Equal(t, "127.0.0.1:9897", s.getUIAddr())
+	s.stop()
 	s = startServer("127.0.0.1:0")
 	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.listenAddr)
 	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.getUIAddr())
 	s.stop()
-}
 
-func TestStartServerAllowRemote(t *testing.T) {
-	startServer := func(addr string) *server {
-		s := newServer(addr, true, "", "local-http-token")
-		assert.NoError(t, s.start(), "should start server")
-		return s
-	}
-	s := startServer("")
-	// make sure the port is non-zero, same below
-	assert.Regexp(t, ":\\d{2,}$", s.listenAddr)
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr())
+	// Simulate the case when unable to listen on saved uiaddr.
+	s = startServer("invalid-addr:9898")
+	assert.NotEqual(t, "invalid-addr:9898", s.listenAddr,
+		"should not listen on invalid host")
+	assert.Regexp(t, "localhost:\\d{2,}$", s.listenAddr,
+		"passing invalid port should fallback to default addresses")
+	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr(),
+		"passing invalid port should fallback to default addresses")
 	s.stop()
-	s = startServer(":")
-	assert.Regexp(t, ":\\d{2,}$", s.listenAddr)
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr())
-	s.stop()
-	s = startServer(":0")
-	assert.Regexp(t, ":\\d{2,}$", s.listenAddr)
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr())
-	s.stop()
-	s = startServer("localhost:0")
-	assert.Regexp(t, ":\\d{2,}$", s.listenAddr)
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr())
-	s.stop()
-	s = startServer("localhost:9898")
-	assert.Equal(t, ":9898", s.listenAddr)
-	assert.Equal(t, "localhost:9898", s.getUIAddr())
-	s.stop()
-	s = startServer("127.0.0.1:0")
-	assert.Regexp(t, ":\\d{2,}$", s.listenAddr)
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr())
+
+	oldDefault := defaultUIAddresses
+	defer func() { defaultUIAddresses = oldDefault }()
+	// Simulate the case when unable to listen on localhost.
+	defaultUIAddresses = []string{"localhost:999999", "127.0.0.1:0"}
+	s = startServer("invalid-addr:9898")
+	assert.NotEqual(t, "invalid-addr:9898", s.listenAddr,
+		"should not listen on invalid host")
+	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.listenAddr,
+		"passing invalid port should fallback to default addresses")
+	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.getUIAddr(),
+		"passing invalid port should fallback to default addresses")
 	s.stop()
 }
 
 func TestCheckOrigin(t *testing.T) {
-	localhost := newServer("localhost:9898", false, "", "token")
-	doTestCheckOrigin(t, localhost, map[string]bool{
+	s := newServer("", "token")
+	s.start("localhost:9898")
+	doTestCheckOrigin(t, s, map[string]bool{
 		"localhost:9898": true,
 		"localhost:1243": false,
 		"127.0.0.1:9898": false,
 		"anyhost:9898":   false,
 	})
+	s.stop()
 
-	localIP := newServer("127.0.0.1:9898", false, "", "token")
-	doTestCheckOrigin(t, localIP, map[string]bool{
-		"127.0.0.1:9898": true,
-		"localhost:9898": false,
+	s.start("127.0.0.1:9897")
+	doTestCheckOrigin(t, s, map[string]bool{
+		"127.0.0.1:9897": true,
+		"localhost:9897": false,
 		"127.0.0.1:1243": false,
-		"anyhost:9898":   false,
+		"anyhost:9897":   false,
 	})
-
-	allowRemote := newServer("localhost:9898", true, "", "token")
-	doTestCheckOrigin(t, allowRemote, map[string]bool{
-		"localhost:9898": true,
-		"127.0.0.1:9898": true,
-		"localhost:1243": false,
-		"anyhost:9898":   true,
-	})
+	s.stop()
 }
 
 func doTestCheckOrigin(t *testing.T, s *server, testOrigins map[string]bool) {
