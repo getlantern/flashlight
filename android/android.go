@@ -8,7 +8,6 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -26,7 +25,6 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
-	"github.com/getlantern/overture/core"
 	"github.com/getlantern/protected"
 )
 
@@ -43,8 +41,6 @@ var (
 	surveyURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
 
 	startOnce sync.Once
-
-	overtureConfig = "config.json"
 )
 
 // SocketProtector is an interface for classes that can protect Android sockets,
@@ -135,8 +131,6 @@ func Start(configDir string, locale string,
 		return nil, err
 	}
 	log.Debugf("Starting socks proxy at %s", socksAddr)
-
-	go core.InitServer(filepath.Join(configDir, overtureConfig), socksAddr.(string))
 
 	return &StartResult{addr.(string), socksAddr.(string)}, nil
 }
