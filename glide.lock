@@ -173,7 +173,7 @@ imports:
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
 - name: github.com/getlantern/keyman
-  version: 447d74a996c431bce79d734b6c5490ecd9ff75ff
+  version: 92cbbdcae453b5e6cff5fed4d51c0780111b0715
   subpackages:
   - certimporter
 - name: github.com/getlantern/lampshade
@@ -185,7 +185,7 @@ imports:
 - name: github.com/getlantern/mockconn
   version: 422a5afd4432dd82b1389333d5352da003d898a6
 - name: github.com/getlantern/mitm
-  version: 2a48823bc025d859febeff62e8500739bebef948
+  version: 0c50d0b2502527cb0f43fab40bc53075f34b50e4
 - name: github.com/getlantern/mtime
   version: ba114e4a82b0d453c15c505073a5896453b5cbd2
 - name: github.com/getlantern/netx

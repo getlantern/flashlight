@@ -132,6 +132,7 @@ func NewClient(
 			CertFile:     filepath.Join(appdir.General("Lantern"), "mitmcert.pem"),
 			Organization: "Lantern",
 			CommonName:   "lantern",
+			InstallCert:  true,
 		},
 		MITMDomains:  []string{"google.com", "www.google.com", "baidu.com", "www.baidu.com", "www.googletagservices.com", "cpro.baidustatic.com"},
 		ShortCircuit: client.shortCircuit,
