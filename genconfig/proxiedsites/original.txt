@@ -45,7 +45,6 @@ github.com
 gizmodo.com
 google.com
 googleusercontent.com
-googlevideo.com
 greatfire.org
 # Human Rights Watch
 hrw.org
