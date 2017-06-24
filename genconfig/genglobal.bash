@@ -7,6 +7,7 @@ function die() {
 
 
 go run genconfig.go \
+   -numworkers=100 \
    -blacklist="blacklist.txt" \
    -masquerades="masquerades.txt" \
    -masquerades-out="../config/generated/masquerades.go" \

@@ -31,7 +31,6 @@ import (
 )
 
 const (
-	numberOfWorkers = 50
 	ftVersionFile   = `https://raw.githubusercontent.com/firetweet/downloads/master/version.txt`
 	defaultDeviceID = "555"
 )
@@ -44,6 +43,7 @@ var (
 	proxiedSitesDir     = flag.String("proxiedsites", "proxiedsites", "Path to directory containing proxied site lists, which will be combined and proxied by Lantern")
 	proxiedSitesOutFile = flag.String("proxiedsites-out", "", "Path, if any, to write the go-formatted proxied sites configuration.")
 	minFreq             = flag.Float64("minfreq", 3.0, "Minimum frequency (percentage) for including CA cert in list of trusted certs, defaults to 3.0%")
+	numberOfWorkers     = flag.Int("numworkers", 50, "Number of worker threads")
 
 	fallbacksFile    = flag.String("fallbacks", "fallbacks.yaml", "File containing yaml dict of fallback information")
 	fallbacksOutFile = flag.String("fallbacks-out", "", "Path, if any, to write the go-formatted fallback configuration.")
@@ -241,8 +241,8 @@ func loadTemplate(name string) string {
 }
 
 func feedMasquerades() {
-	wg.Add(numberOfWorkers)
-	for i := 0; i < numberOfWorkers; i++ {
+	wg.Add(*numberOfWorkers)
+	for i := 0; i < *numberOfWorkers; i++ {
 		go grabCerts()
 	}
 
@@ -353,7 +353,7 @@ func vetMasquerades(cas map[string]*castat, masquerades []*masquerade) []*masque
 		log.Debug("Added cert to pool")
 	}
 
-	wg.Add(numberOfWorkers)
+	wg.Add(*numberOfWorkers)
 	inCh := make(chan *masquerade, len(masquerades))
 	outCh := make(chan *masquerade, len(masquerades))
 	for _, masquerade := range masquerades {
@@ -361,7 +361,7 @@ func vetMasquerades(cas map[string]*castat, masquerades []*masquerade) []*masque
 	}
 	close(inCh)
 
-	for i := 0; i < numberOfWorkers; i++ {
+	for i := 0; i < *numberOfWorkers; i++ {
 		go doVetMasquerades(certPool, inCh, outCh)
 	}
 
