@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-type UserConfig interface {
+type Session interface {
 	config.UserConfig
 	SetCountry(string)
 	UpdateStats(string, string, string, int, int)
@@ -50,12 +50,12 @@ const (
 type proRequest struct {
 	client  *client.Client
 	user    client.User
-	session UserConfig
+	session Session
 }
 
 type proFunc func(*proRequest) (*client.Response, error)
 
-func newRequest(session UserConfig) *proRequest {
+func newRequest(session Session) *proRequest {
 
 	httpClient := pro.GetHTTPClient()
 
@@ -265,7 +265,7 @@ func userUpdate(req *proRequest) (*client.Response, error) {
 	return res, err
 }
 
-func RemoveDevice(deviceId string, session UserConfig) bool {
+func RemoveDevice(deviceId string, session Session) bool {
 	req := newRequest(session)
 	log.Debugf("Calling user link remove on device %s", deviceId)
 	res, err := req.client.UserLinkRemove(req.user, deviceId)
@@ -277,7 +277,7 @@ func RemoveDevice(deviceId string, session UserConfig) bool {
 	return true
 }
 
-func ProRequest(command string, session UserConfig) bool {
+func ProRequest(command string, session Session) bool {
 
 	req := newRequest(session)
 

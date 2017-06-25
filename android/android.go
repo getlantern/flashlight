@@ -100,7 +100,7 @@ type Updater autoupdate.Updater
 // time out.
 func Start(configDir string, locale string,
 	stickyConfig bool,
-	timeoutMillis int, user UserConfig) (*StartResult, error) {
+	timeoutMillis int, user Session) (*StartResult, error) {
 
 	startOnce.Do(func() {
 		go run(configDir, locale, stickyConfig, user)
@@ -128,7 +128,7 @@ func AddLoggingMetadata(key, value string) {
 }
 
 func run(configDir, locale string,
-	stickyConfig bool, user UserConfig) {
+	stickyConfig bool, user Session) {
 
 	appdir.SetHomeDir(configDir)
 	user.SetStaging(common.Staging)
@@ -187,7 +187,7 @@ func run(configDir, locale string,
 	)
 }
 
-func bandwidthUpdates(user UserConfig) {
+func bandwidthUpdates(user Session) {
 	go func() {
 		for quota := range bandwidth.Updates {
 			user.BandwidthUpdate(getBandwidth(quota))
@@ -217,14 +217,14 @@ func getBandwidth(quota *bandwidth.Quota) (int, int) {
 	return percent, remaining
 }
 
-func setBandwidth(session UserConfig) {
+func setBandwidth(session Session) {
 	percent, remaining := getBandwidth(bandwidth.GetQuota())
 	if percent != 0 && remaining != 0 {
 		session.BandwidthUpdate(percent, remaining)
 	}
 }
 
-func initSession(user UserConfig) {
+func initSession(user Session) {
 	if user.GetUserID() == 0 {
 		// create new user first if we have no valid user id
 		_, err := newUser(newRequest(user))
@@ -249,7 +249,7 @@ func initSession(user UserConfig) {
 	}
 }
 
-func afterStart(user UserConfig) {
+func afterStart(user Session) {
 
 	bandwidthUpdates(user)
 
@@ -298,7 +298,7 @@ func extractUrl(surveys map[string]*json.RawMessage, locale string) (string, err
 	return "", nil
 }
 
-func setSurvey(session UserConfig) {
+func setSurvey(session Session) {
 	url, err := surveyRequest(session.Locale())
 	if err == nil && url != "" {
 		log.Debugf("Setting survey url to %s", url)
