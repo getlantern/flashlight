@@ -100,10 +100,10 @@ type Updater autoupdate.Updater
 // time out.
 func Start(configDir string, locale string,
 	stickyConfig bool,
-	timeoutMillis int, user Session) (*StartResult, error) {
+	timeoutMillis int, session Session) (*StartResult, error) {
 
 	startOnce.Do(func() {
-		go run(configDir, locale, stickyConfig, user)
+		go run(configDir, locale, stickyConfig, session)
 	})
 
 	elapsed := mtime.Stopwatch()
@@ -128,10 +128,10 @@ func AddLoggingMetadata(key, value string) {
 }
 
 func run(configDir, locale string,
-	stickyConfig bool, user Session) {
+	stickyConfig bool, session Session) {
 
 	appdir.SetHomeDir(configDir)
-	user.SetStaging(common.Staging)
+	session.SetStaging(common.Staging)
 
 	log.Debugf("Starting lantern: configDir %s locale %s sticky config %t",
 		configDir, locale, stickyConfig)
@@ -163,8 +163,8 @@ func run(configDir, locale string,
 		configDir,     // place to store lantern configuration
 		// TODO: allow configuring whether or not to enable shortcut depends on
 		// proxyAll option (just like we already have in desktop)
-		func() bool { return !user.ProxyAll() }, // use shortcut
-		func() bool { return false },            // not use detour
+		func() bool { return !session.ProxyAll() }, // use shortcut
+		func() bool { return false },               // not use detour
 		// TODO: allow configuring whether or not to enable reporting (just like we
 		// already have in desktop)
 		func() bool { return true }, // on Android, we allow private hosts
@@ -174,23 +174,23 @@ func run(configDir, locale string,
 			return true
 		}, // beforeStart()
 		func() {
-			afterStart(user)
+			afterStart(session)
 		}, // afterStart()
 		func(cfg *config.Global) {
 		}, // onConfigUpdate
-		user,
-		NewStatsTracker(user),
+		session,
+		NewStatsTracker(session),
 		func(err error) {}, // onError
-		user.DeviceId(),
+		session.DeviceId(),
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
 	)
 }
 
-func bandwidthUpdates(user Session) {
+func bandwidthUpdates(session Session) {
 	go func() {
 		for quota := range bandwidth.Updates {
-			user.BandwidthUpdate(getBandwidth(quota))
+			session.BandwidthUpdate(getBandwidth(quota))
 		}
 	}()
 }
@@ -224,22 +224,22 @@ func setBandwidth(session Session) {
 	}
 }
 
-func initSession(user Session) {
-	if user.GetUserID() == 0 {
+func initSession(session Session) {
+	if session.GetUserID() == 0 {
 		// create new user first if we have no valid user id
-		_, err := newUser(newRequest(user))
+		_, err := newUser(newRequest(session))
 		if err != nil {
 			log.Errorf("Could not create new pro user")
 			return
 		}
 	}
 
-	log.Debugf("New Lantern session with user id %d", user.GetUserID())
+	log.Debugf("New Lantern session with user id %d", session.GetUserID())
 
-	setBandwidth(user)
-	setSurvey(user)
+	setBandwidth(session)
+	setSurvey(session)
 
-	req := newRequest(user)
+	req := newRequest(session)
 
 	for _, proFn := range []proFunc{plans, userData} {
 		_, err := proFn(req)
@@ -249,17 +249,17 @@ func initSession(user Session) {
 	}
 }
 
-func afterStart(user Session) {
+func afterStart(session Session) {
 
-	bandwidthUpdates(user)
+	bandwidthUpdates(session)
 
-	go initSession(user)
+	go initSession(session)
 
 	go func() {
 		if <-geolookup.OnRefresh() {
 			country := geolookup.GetCountry(0)
 			log.Debugf("Successful geolookup: country %s", country)
-			user.SetCountry(country)
+			session.SetCountry(country)
 		}
 	}()
 }
