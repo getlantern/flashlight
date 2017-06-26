@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
@@ -39,6 +40,7 @@ var (
 	help                = flag.Bool("help", false, "Get usage help")
 	masqueradesInFile   = flag.String("masquerades", "", "Path to file containing list of pasquerades to use, with one space-separated 'ip domain' pair per line (e.g. masquerades.txt)")
 	masqueradesOutFile  = flag.String("masquerades-out", "", "Path, if any, to write the go-formatted masquerades configuration.")
+	maxMasquerades      = flag.Int("max-masquerades", 1000, "Limit the number of masquerades to include in config")
 	blacklistFile       = flag.String("blacklist", "", "Path to file containing list of blacklisted domains, which will be excluded from the configuration even if present in the masquerades file (e.g. blacklist.txt)")
 	proxiedSitesDir     = flag.String("proxiedsites", "proxiedsites", "Path to directory containing proxied site lists, which will be combined and proxied by Lantern")
 	proxiedSitesOutFile = flag.String("proxiedsites-out", "", "Path, if any, to write the go-formatted proxied sites configuration.")
@@ -246,7 +248,10 @@ func feedMasquerades() {
 		go grabCerts()
 	}
 
-	for _, masq := range masquerades {
+	// feed masquerades in random order to get different order each time we run
+	randomOrder := rand.Perm(len(masquerades))
+	for _, i := range randomOrder {
+		masq := masquerades[i]
 		if masq != "" {
 			inputCh <- masq
 		}
@@ -368,9 +373,14 @@ func vetMasquerades(cas map[string]*castat, masquerades []*masquerade) []*masque
 	wg.Wait()
 	close(outCh)
 
-	result := make([]*masquerade, 0, len(masquerades))
+	result := make([]*masquerade, 0, *maxMasquerades)
+	count := 0
 	for masquerade := range outCh {
 		result = append(result, masquerade)
+		count++
+		if count == *maxMasquerades {
+			break
+		}
 	}
 	return result
 }
