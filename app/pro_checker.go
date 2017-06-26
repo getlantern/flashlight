@@ -12,9 +12,9 @@ import (
 // because the user can become Pro or free at any time. It waits until
 // the user ID becomes non-zero.
 func isProUser() (isPro bool, ok bool) {
-	var userID int
+	var userID int64
 	for {
-		userID = int(settings.GetUserID())
+		userID = settings.GetUserID()
 		if userID > 0 {
 			break
 		}
@@ -27,7 +27,7 @@ func isProUser() (isPro bool, ok bool) {
 // an answer. It assumes that isProUser is called somewhere along the line in
 // order to update the status.
 func isProUserFast() (isPro bool, statusKnown bool) {
-	userID := int(settings.GetUserID())
+	userID := settings.GetUserID()
 	if userID == 0 {
 		return false, false
 	}
