@@ -36,8 +36,6 @@ type Session interface {
 	SetToken(string)
 	SetUserId(int64)
 	SetDeviceCode(string, int64)
-	ShowSurvey(string)
-	BandwidthUpdate(int, int)
 	UserData(bool, int64, int64, string, string)
 	SetCode(string)
 	SetError(string, string)
