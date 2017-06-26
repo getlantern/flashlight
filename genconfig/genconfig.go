@@ -2,11 +2,13 @@ package main
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
@@ -19,6 +21,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/tlsdialer"
@@ -29,7 +32,6 @@ import (
 )
 
 const (
-	numberOfWorkers = 50
 	ftVersionFile   = `https://raw.githubusercontent.com/firetweet/downloads/master/version.txt`
 	defaultDeviceID = "555"
 )
@@ -38,10 +40,12 @@ var (
 	help                = flag.Bool("help", false, "Get usage help")
 	masqueradesInFile   = flag.String("masquerades", "", "Path to file containing list of pasquerades to use, with one space-separated 'ip domain' pair per line (e.g. masquerades.txt)")
 	masqueradesOutFile  = flag.String("masquerades-out", "", "Path, if any, to write the go-formatted masquerades configuration.")
+	maxMasquerades      = flag.Int("max-masquerades", 1000, "Limit the number of masquerades to include in config")
 	blacklistFile       = flag.String("blacklist", "", "Path to file containing list of blacklisted domains, which will be excluded from the configuration even if present in the masquerades file (e.g. blacklist.txt)")
 	proxiedSitesDir     = flag.String("proxiedsites", "proxiedsites", "Path to directory containing proxied site lists, which will be combined and proxied by Lantern")
 	proxiedSitesOutFile = flag.String("proxiedsites-out", "", "Path, if any, to write the go-formatted proxied sites configuration.")
 	minFreq             = flag.Float64("minfreq", 3.0, "Minimum frequency (percentage) for including CA cert in list of trusted certs, defaults to 3.0%")
+	numberOfWorkers     = flag.Int("numworkers", 50, "Number of worker threads")
 
 	fallbacksFile    = flag.String("fallbacks", "fallbacks.yaml", "File containing yaml dict of fallback information")
 	fallbacksOutFile = flag.String("fallbacks-out", "", "Path, if any, to write the go-formatted fallback configuration.")
@@ -99,6 +103,7 @@ func main() {
 
 	go feedMasquerades()
 	cas, masqs := coalesceMasquerades()
+	masqs = vetMasquerades(cas, masqs)
 	model := buildModel(cas, masqs, false)
 	generateTemplate(model, yamlTmpl, "cloud.yaml")
 	model = buildModel(cas, masqs, true)
@@ -238,12 +243,15 @@ func loadTemplate(name string) string {
 }
 
 func feedMasquerades() {
-	wg.Add(numberOfWorkers)
-	for i := 0; i < numberOfWorkers; i++ {
+	wg.Add(*numberOfWorkers)
+	for i := 0; i < *numberOfWorkers; i++ {
 		go grabCerts()
 	}
 
-	for _, masq := range masquerades {
+	// feed masquerades in random order to get different order each time we run
+	randomOrder := rand.Perm(len(masquerades))
+	for _, i := range randomOrder {
+		masq := masquerades[i]
 		if masq != "" {
 			inputCh <- masq
 		}
@@ -291,6 +299,8 @@ func grabCerts() {
 			CommonName: rootCA.Subject.CommonName,
 			Cert:       strings.Replace(string(rootCert.PEMEncoded()), "\n", "\\n", -1),
 		}
+
+		log.Debugf("Successfully grabbed certs for: %v", domain)
 		masqueradesCh <- &masquerade{
 			Domain:    domain,
 			IpAddress: ip,
@@ -334,6 +344,63 @@ func coalesceMasquerades() (map[string]*castat, []*masquerade) {
 	}
 
 	return trustedCAs, trustedMasquerades
+}
+
+func vetMasquerades(cas map[string]*castat, masquerades []*masquerade) []*masquerade {
+	certPool := x509.NewCertPool()
+	for _, ca := range cas {
+		cert, err := keyman.LoadCertificateFromPEMBytes([]byte(strings.Replace(ca.Cert, `\n`, "\n", -1)))
+		if err != nil {
+			log.Errorf("Unable to parse certificate: %v", err)
+			continue
+		}
+		certPool.AddCert(cert.X509())
+		log.Debug("Added cert to pool")
+	}
+
+	wg.Add(*numberOfWorkers)
+	inCh := make(chan *masquerade, len(masquerades))
+	outCh := make(chan *masquerade, len(masquerades))
+	for _, masquerade := range masquerades {
+		inCh <- masquerade
+	}
+	close(inCh)
+
+	for i := 0; i < *numberOfWorkers; i++ {
+		go doVetMasquerades(certPool, inCh, outCh)
+	}
+
+	wg.Wait()
+	close(outCh)
+
+	result := make([]*masquerade, 0, *maxMasquerades)
+	count := 0
+	for masquerade := range outCh {
+		result = append(result, masquerade)
+		count++
+		if count == *maxMasquerades {
+			break
+		}
+	}
+	return result
+}
+
+func doVetMasquerades(certPool *x509.CertPool, inCh chan *masquerade, outCh chan *masquerade) {
+	log.Debug("Starting to vet masquerades")
+	for _m := range inCh {
+		m := &fronted.Masquerade{
+			Domain:    _m.Domain,
+			IpAddress: _m.IpAddress,
+		}
+		if fronted.Vet(m, certPool) {
+			log.Debugf("Successfully vetted %v (%v)", m.Domain, m.IpAddress)
+			outCh <- _m
+		} else {
+			log.Debugf("%v (%v) failed to vet", m.Domain, m.IpAddress)
+		}
+	}
+	log.Debug("Done vetting masquerades")
+	wg.Done()
 }
 
 func buildModel(cas map[string]*castat, masquerades []*masquerade, useFallbacks bool) map[string]interface{} {

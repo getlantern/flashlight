@@ -1,7 +1,8 @@
 package android
 
 import (
-	"github.com/getlantern/bandwidth"
+	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/pro"
 	client "github.com/getlantern/flashlight/pro/client"
 	"github.com/stripe/stripe-go"
 	"strings"
@@ -9,24 +10,31 @@ import (
 )
 
 type Session interface {
-	GetUserID() int
+	config.UserConfig
+	SetCountry(string)
+	UpdateStats(string, string, string, int, int)
+	SetStaging(bool)
+	ShowSurvey(string)
+	ProxyAll() bool
+	BandwidthUpdate(int, int)
+	DeviceId() string
+	AccountId() string
+	AddDevice(string, string)
+	AddPlan(string, string, string, bool, int, int)
+	Locale() string
 	Code() string
 	VerifyCode() string
 	DeviceCode() string
-	DeviceId() string
 	DeviceName() string
-	Locale() string
 	Referral() string
-	GetToken() string
 	Plan() string
 	Provider() string
 	ResellerCode() string
 	StripeToken() string
 	StripeApiKey() string
 	Email() string
-	AccountId() string
 	SetToken(string)
-	SetUserId(int)
+	SetUserId(int64)
 	SetDeviceCode(string, int64)
 	ShowSurvey(string)
 	BandwidthUpdate(int, int)
@@ -36,8 +44,6 @@ type Session interface {
 	SetErrorId(string, string)
 	Currency() string
 	SetStripePubKey(string)
-	AddPlan(string, string, string, bool, int, int)
-	AddDevice(string, string)
 }
 
 const (
@@ -45,15 +51,36 @@ const (
 )
 
 type proRequest struct {
-	*client.ProRequest
+	client  *client.Client
+	user    client.User
 	session Session
 }
 
 type proFunc func(*proRequest) (*client.Response, error)
 
+func newRequest(session Session) *proRequest {
+
+	httpClient := pro.GetHTTPClient()
+
+	req := &proRequest{
+		client: client.NewClient(httpClient),
+		user: client.User{
+			Auth: client.Auth{
+				DeviceID: session.DeviceId(),
+				ID:       session.GetUserID(),
+				Token:    session.GetToken(),
+			},
+		},
+		session: session,
+	}
+	req.client.SetLocale(session.Locale())
+
+	return req
+}
+
 func newUser(req *proRequest) (*client.Response, error) {
 
-	res, err := req.Client.UserCreate(req.User)
+	res, err := req.client.UserCreate(req.user)
 	if err != nil {
 		log.Errorf("Could not create new Pro user: %v", err)
 	} else {
@@ -80,12 +107,12 @@ func purchase(req *proRequest) (*client.Response, error) {
 	pubKey := req.session.StripeApiKey()
 	deviceName := req.session.DeviceName()
 
-	return req.Client.Purchase(req.User, deviceName, pubKey, purchase)
+	return req.client.Purchase(req.user, deviceName, pubKey, purchase)
 }
 
 func requestCode(req *proRequest) (*client.Response, error) {
 
-	res, err := req.Client.RequestLinkCode(req.User,
+	res, err := req.client.RequestLinkCode(req.user,
 		req.session.DeviceName())
 	if err != nil {
 		log.Errorf("Could not request link code: %v", err)
@@ -98,8 +125,8 @@ func requestCode(req *proRequest) (*client.Response, error) {
 
 func redeemCode(req *proRequest) (*client.Response, error) {
 
-	req.User.Code = req.session.DeviceCode()
-	res, err := req.Client.RedeemLinkCode(req.User,
+	req.user.Code = req.session.DeviceCode()
+	res, err := req.client.RedeemLinkCode(req.user,
 		req.session.DeviceName())
 	if err != nil || res.Status != "ok" {
 		log.Errorf("Could not redeem code: %v", err)
@@ -111,7 +138,7 @@ func redeemCode(req *proRequest) (*client.Response, error) {
 }
 
 func userRecover(req *proRequest) (*client.Response, error) {
-	res, err := req.Client.UserRecover(req.User,
+	res, err := req.client.UserRecover(req.user,
 		req.session.AccountId())
 	if err != nil || res.Status != "ok" {
 		log.Errorf("Could not recover user account: %v", err)
@@ -125,7 +152,7 @@ func userRecover(req *proRequest) (*client.Response, error) {
 func verifyCode(req *proRequest) (*client.Response, error) {
 	verifyCode := req.session.VerifyCode()
 	log.Debugf("Verify code is %s", verifyCode)
-	res, err := req.Client.UserLinkValidate(req.User, verifyCode)
+	res, err := req.client.UserLinkValidate(req.user, verifyCode)
 	if err != nil || res.Status != "ok" {
 		log.Errorf("Could not verify user account: %v", err)
 	} else {
@@ -136,7 +163,7 @@ func verifyCode(req *proRequest) (*client.Response, error) {
 }
 
 func linkRequest(req *proRequest) (*client.Response, error) {
-	res, err := req.Client.UserLinkRequest(req.User,
+	res, err := req.client.UserLinkRequest(req.user,
 		req.session.Email(), req.session.DeviceName())
 	if err != nil || res.Status != "ok" {
 		log.Errorf("Could not send user email: %v", err)
@@ -146,8 +173,8 @@ func linkRequest(req *proRequest) (*client.Response, error) {
 
 func signin(req *proRequest) (*client.Response, error) {
 
-	req.User.Code = req.session.VerifyCode()
-	res, err := req.Client.ApplyLinkCode(req.User)
+	req.user.Code = req.session.VerifyCode()
+	res, err := req.client.ApplyLinkCode(req.user)
 	if err != nil {
 		log.Errorf("Could not complete signin: %v", err)
 	}
@@ -155,16 +182,16 @@ func signin(req *proRequest) (*client.Response, error) {
 }
 
 func referral(req *proRequest) (*client.Response, error) {
-	return req.Client.RedeemReferralCode(req.User,
+	return req.client.RedeemReferralCode(req.user,
 		req.session.Referral())
 }
 
 func cancel(req *proRequest) (*client.Response, error) {
-	return req.Client.CancelSubscription(req.User)
+	return req.client.CancelSubscription(req.user)
 }
 
 func plans(req *proRequest) (*client.Response, error) {
-	res, err := req.Client.Plans(req.User)
+	res, err := req.client.Plans(req.user)
 	if err != nil || len(res.Plans) == 0 {
 		return res, err
 	}
@@ -189,7 +216,7 @@ func plans(req *proRequest) (*client.Response, error) {
 // Used to confirm an email isn't already associated with a Pro
 // account
 func emailExists(req *proRequest) (*client.Response, error) {
-	res, err := req.Client.EmailExists(req.User, req.session.Email())
+	res, err := req.client.EmailExists(req.user, req.session.Email())
 	if err != nil {
 		log.Errorf("Error checking if email exists: %v", err)
 	}
@@ -198,7 +225,7 @@ func emailExists(req *proRequest) (*client.Response, error) {
 
 func userData(req *proRequest) (*client.Response, error) {
 
-	res, err := client.UserStatus(req.ProRequest)
+	res, err := req.client.UserStatus(req.user)
 	if err != nil {
 		log.Errorf("Error getting Pro user data: %v", err)
 		return res, err
@@ -236,7 +263,7 @@ func userData(req *proRequest) (*client.Response, error) {
 }
 
 func userUpdate(req *proRequest) (*client.Response, error) {
-	res, userId, err := req.Client.UserUpdate(req.User,
+	res, userId, err := req.client.UserUpdate(req.user,
 		req.session.Email())
 	if err != nil {
 		log.Errorf("Error making user update request: %v", err)
@@ -248,21 +275,9 @@ func userUpdate(req *proRequest) (*client.Response, error) {
 }
 
 func RemoveDevice(deviceId string, session Session) bool {
-	user := client.User{
-		Auth: client.Auth{
-			DeviceID: session.DeviceId(),
-			ID:       session.GetUserID(),
-			Token:    session.GetToken(),
-		},
-	}
-
-	req, err := client.NewRequest(user)
-	if err != nil {
-		log.Errorf("Error creating request: %v", err)
-		return false
-	}
+	req := newRequest(session)
 	log.Debugf("Calling user link remove on device %s", deviceId)
-	res, err := req.Client.UserLinkRemove(req.User, deviceId)
+	res, err := req.client.UserLinkRemove(req.user, deviceId)
 	if err != nil || res.Status != "ok" {
 		log.Errorf("Error removing device: %v status: %s", err, res.Status)
 		return false
@@ -273,35 +288,7 @@ func RemoveDevice(deviceId string, session Session) bool {
 
 func ProRequest(command string, session Session) bool {
 
-	if command == "survey" {
-		url, err := surveyRequest(session.Locale())
-		if err == nil && url != "" {
-			session.ShowSurvey(url)
-			return true
-		}
-		return false
-	} else if command == "bandwidth" {
-		percent, remaining := getBandwidth(bandwidth.GetQuota())
-		if percent != 0 && remaining != 0 {
-			session.BandwidthUpdate(percent, remaining)
-		}
-		return true
-	}
-
-	user := client.User{
-		Auth: client.Auth{
-			DeviceID: session.DeviceId(),
-			ID:       session.GetUserID(),
-			Token:    session.GetToken(),
-		},
-	}
-
-	req, err := client.NewRequest(user)
-	if err != nil {
-		log.Errorf("Error creating new request: %v", err)
-		return false
-	}
-	req.Client.SetLocale(session.Locale())
+	req := newRequest(session)
 
 	log.Debugf("Received a %s pro request", command)
 
@@ -327,7 +314,7 @@ func ProRequest(command string, session Session) bool {
 		session.SetError(command, "Command not found")
 		return false
 	}
-	res, err := cmd(&proRequest{req, session})
+	res, err := cmd(req)
 	if err != nil || res.Status != "ok" {
 		log.Errorf("Error making %s request to Pro server: %v response: %v", command, err, res)
 		if res != nil {

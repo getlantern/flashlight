@@ -157,7 +157,7 @@ func (c *Client) UserCreate(user User) (res *Response, err error) {
 	return
 }
 
-func (c *Client) UserUpdate(user User, email string) (res *Response, userId int, err error) {
+func (c *Client) UserUpdate(user User, email string) (res *Response, userId int64, err error) {
 	var payload []byte
 	var updatedId UserId
 	payload, err = c.post(`/user-update`, user.headers(),
@@ -174,7 +174,7 @@ func (c *Client) UserUpdate(user User, email string) (res *Response, userId int,
 		// convert it here (if possible)
 		err = json.Unmarshal(payload, &updatedId)
 		if err == nil {
-			userId, _ = strconv.Atoi(updatedId.UserId)
+			userId, _ = strconv.ParseInt(updatedId.UserId, 10, 64)
 		} else {
 			return res, 0, nil
 		}
@@ -367,6 +367,19 @@ func (c *Client) UserLinkRemove(user User, deviceId string) (res *Response, err 
 	}
 	err = json.Unmarshal(payload, &res)
 	return
+}
+
+func (c *Client) UserStatus(user User) (*Response, error) {
+	res, err := c.UserData(user)
+	if err != nil {
+		log.Errorf("Failed to get user data: %v", err)
+		return nil, err
+	}
+
+	if res.Status == "error" {
+		return nil, errors.New(res.Error)
+	}
+	return res, nil
 }
 
 // UserData Returns all user data, including payments, referrals and all
