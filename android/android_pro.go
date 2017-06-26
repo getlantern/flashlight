@@ -266,6 +266,16 @@ func userUpdate(req *proRequest) (*client.Response, error) {
 	return res, err
 }
 
+func pwSignature(req *proRequest) (*client.Response, error) {
+	sig, err := req.client.PWSignature(req.user, req.session.Plan())
+	if err != nil {
+		log.Errorf("Error trying to generate pw signature: %v", err)
+		return nil, err
+	}
+	req.session.SetSignature(sig)
+	return nil, nil
+}
+
 func RemoveDevice(deviceId string, session Session) bool {
 	req := newRequest(session)
 	log.Debugf("Calling user link remove on device %s", deviceId)
@@ -284,31 +294,22 @@ func ProRequest(command string, session Session) bool {
 
 	log.Debugf("Received a %s pro request", command)
 
-	if command == "payment-gateway" {
-		sig, err := req.Client.PaymentGateway(req.User, session.Plan())
-		if err != nil {
-			log.Errorf("Error trying to generate pw signature: %v", err)
-			return false
-		}
-		session.SetSignature(sig)
-		return true
-	}
-
 	commands := map[string]proFunc{
-		"emailexists": emailExists,
-		"newuser":     newUser,
-		"purchase":    purchase,
-		"plans":       plans,
-		"signin":      signin,
-		"linkrequest": linkRequest,
-		"redeemcode":  redeemCode,
-		"requestcode": requestCode,
-		"userdata":    userData,
-		"userrecover": userRecover,
-		"userupdate":  userUpdate,
-		"verifycode":  verifyCode,
-		"referral":    referral,
-		"cancel":      cancel,
+		"emailexists":       emailExists,
+		"newuser":           newUser,
+		"payment-signature": pwSignature,
+		"purchase":          purchase,
+		"plans":             plans,
+		"signin":            signin,
+		"linkrequest":       linkRequest,
+		"redeemcode":        redeemCode,
+		"requestcode":       requestCode,
+		"userdata":          userData,
+		"userrecover":       userRecover,
+		"userupdate":        userUpdate,
+		"verifycode":        verifyCode,
+		"referral":          referral,
+		"cancel":            cancel,
 	}
 
 	cmd, cmdFound := commands[command]
@@ -317,7 +318,7 @@ func ProRequest(command string, session Session) bool {
 		return false
 	}
 	res, err := cmd(req)
-	if err != nil || res.Status != "ok" {
+	if err != nil || (res != nil && res.Status != "ok") {
 		log.Errorf("Error making %s request to Pro server: %v response: %v", command, err, res)
 		if res != nil {
 			session.SetError(command, res.Error)

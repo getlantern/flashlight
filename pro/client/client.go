@@ -394,7 +394,7 @@ func (c *Client) UserData(user User) (res *Response, err error) {
 	return
 }
 
-func (c *Client) PaymentGateway(user User, planId string) (string, error) {
+func (c *Client) PWSignature(user User, planId string) (string, error) {
 
 	payload, err := c.get(`/paymentwall-mobile-signature`, user.headers(), url.Values{
 		"plan": {planId},
