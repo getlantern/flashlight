@@ -223,8 +223,6 @@ func emailExists(req *proRequest) (*client.Response, error) {
 
 func userData(req *proRequest) (*client.Response, error) {
 
-	var monthsLeft int
-
 	res, err := req.client.UserStatus(req.user)
 	if err != nil {
 		log.Errorf("Error getting Pro user data: %v", err)
@@ -238,6 +236,8 @@ func userData(req *proRequest) (*client.Response, error) {
 
 	isActive := res.User.UserStatus == "active"
 
+	monthsLeft := 0
+
 	if isActive {
 		// user is Pro but device may no longer be linked
 		deviceLinked = false
@@ -245,7 +245,7 @@ func userData(req *proRequest) (*client.Response, error) {
 		expiry := time.Unix(res.User.Expiration, 0)
 		dur := expiry.Sub(time.Now())
 		years := dur.Hours() / 24 / 365
-		monthsLeft = int64(years * 12)
+		monthsLeft = years * 12
 	}
 
 	for _, device := range res.User.Devices {
@@ -256,7 +256,7 @@ func userData(req *proRequest) (*client.Response, error) {
 	}
 
 	req.session.UserData(isActive && deviceLinked,
-		res.User.Expiration, monthsLeft,
+		res.User.Expiration, int64(monthsLeft),
 		res.User.Subscription, res.User.Email)
 
 	return res, err
