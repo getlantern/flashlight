@@ -236,8 +236,7 @@ func userData(req *proRequest) (*client.Response, error) {
 
 	isActive := res.User.UserStatus == "active"
 
-	monthsLeft := 0
-
+	var monthsLeft int64
 	if isActive {
 		// user is Pro but device may no longer be linked
 		deviceLinked = false
@@ -245,7 +244,7 @@ func userData(req *proRequest) (*client.Response, error) {
 		expiry := time.Unix(res.User.Expiration, 0)
 		dur := expiry.Sub(time.Now())
 		years := dur.Hours() / 24 / 365
-		monthsLeft = years * 12
+		monthsLeft = int64(years * 12)
 	}
 
 	for _, device := range res.User.Devices {
@@ -256,7 +255,7 @@ func userData(req *proRequest) (*client.Response, error) {
 	}
 
 	req.session.UserData(isActive && deviceLinked,
-		res.User.Expiration, int64(monthsLeft),
+		res.User.Expiration, monthsLeft,
 		res.User.Subscription, res.User.Email)
 
 	return res, err
