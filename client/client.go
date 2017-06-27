@@ -262,7 +262,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 
 	conf := &socks5.Config{
 		Dial: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			op := ops.Begin("dial_for_local_proxy")
+			op := ops.Begin("proxied_dialer")
 			op.Set("local_proxy_type", "socks5")
 			defer op.End()
 			return client.doDial(op, ctx, true, addr)
@@ -324,7 +324,7 @@ func (client *Client) dialHTTP(network, addr string) (conn net.Conn, err error) 
 }
 
 func (client *Client) dial(isConnect bool, network, addr string) (conn net.Conn, err error) {
-	op := ops.Begin("dial_for_local_proxy")
+	op := ops.Begin("proxied_dialer")
 	op.Set("local_proxy_type", "http")
 	defer op.End()
 	ctx, cancel := context.WithTimeout(context.Background(), getRequestTimeout())
@@ -337,7 +337,8 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 	if err != nil {
 		return nil, err
 	}
-	// Establish outbound connection
+
+	op.Origin(addr, "")
 	if err := client.shouldSendToProxy(addr, port); err != nil {
 		log.Debugf("%v, sending directly to %v", err, addr)
 		op.Set("force_direct", true)
