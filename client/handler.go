@@ -27,7 +27,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		req.URL.Scheme = "http"
 	}
 
-	adSwapURL := client.adSwapURL(req)
+	adSwapURL := client.adSwapURL(fullUrl(req))
 
 	if adSwapURL == "" && !client.easylist.Allow(req) {
 		client.easyblock(resp, req)
@@ -76,7 +76,27 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 }
 
 func (client *Client) shortCircuit(req *http.Request) *http.Response {
-	adSwapURL := client.adSwapURL(req)
+	urlString := fullUrl(req)
+
+	if urlString == "http://www.google.com/" {
+		return &http.Response{
+			StatusCode: http.StatusTemporaryRedirect,
+			Header: http.Header{
+				"Location": []string{"https://googlecustomsearch.appspot.com/elementv2/two-column_v2.html"},
+			},
+		}
+	}
+
+	if strings.HasPrefix(urlString, "http://www.google.com/search?") {
+		return &http.Response{
+			StatusCode: http.StatusTemporaryRedirect,
+			Header: http.Header{
+				"Location": []string{"https://googlecustomsearch.appspot.com/elementv2/two-column_v2.html?" + req.URL.RawQuery},
+			},
+		}
+	}
+
+	adSwapURL := client.adSwapURL(urlString)
 	if adSwapURL != "" {
 		return &http.Response{
 			StatusCode: http.StatusTemporaryRedirect,
@@ -107,16 +127,7 @@ func (client *Client) redirectHTTPS(resp http.ResponseWriter, req *http.Request,
 	http.Redirect(resp, req, httpsURL, http.StatusMovedPermanently)
 }
 
-func (client *Client) adSwapURL(req *http.Request) string {
-	urlCopy := &url.URL{}
-	*urlCopy = *req.URL
-	if urlCopy.Host == "" {
-		urlCopy.Host = req.Host
-	}
-	if urlCopy.Scheme == "" {
-		urlCopy.Scheme = "http"
-	}
-	urlString := urlCopy.String()
+func (client *Client) adSwapURL(urlString string) string {
 	jsURL, urlFound := adSwapJavaScriptInjections[strings.ToLower(urlString)]
 	if !urlFound {
 		return ""
@@ -133,4 +144,16 @@ func (client *Client) adSwapURL(req *http.Request) string {
 func (client *Client) redirectAdSwap(resp http.ResponseWriter, req *http.Request, adSwapURL string, op *ops.Op) {
 	op.Set("adswapped", true)
 	http.Redirect(resp, req, adSwapURL, http.StatusTemporaryRedirect)
+}
+
+func fullUrl(req *http.Request) string {
+	urlCopy := &url.URL{}
+	*urlCopy = *req.URL
+	if urlCopy.Host == "" {
+		urlCopy.Host = req.Host
+	}
+	if urlCopy.Scheme == "" {
+		urlCopy.Scheme = "http"
+	}
+	return urlCopy.String()
 }

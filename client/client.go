@@ -136,7 +136,6 @@ func NewClient(
 		},
 		MITMDomains:  []string{"google.com", "www.google.com", "baidu.com", "www.baidu.com", "www.googletagservices.com", "cpro.baidustatic.com"},
 		ShortCircuit: client.shortCircuit,
-		OnResponse:   client.searchSwap,
 		OnError:      errorResponse,
 	}, client.dialCONNECT)
 	if mitmErr != nil {
