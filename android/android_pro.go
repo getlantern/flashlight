@@ -273,7 +273,7 @@ func pwSignature(req *proRequest) (*client.Response, error) {
 		return nil, err
 	}
 	req.session.SetSignature(sig)
-	return nil, nil
+	return &client.Response{Status: "ok"}, nil
 }
 
 func RemoveDevice(deviceId string, session Session) bool {
@@ -318,7 +318,7 @@ func ProRequest(command string, session Session) bool {
 		return false
 	}
 	res, err := cmd(req)
-	if err != nil || (res != nil && res.Status != "ok") {
+	if err != nil || res.Status != "ok" {
 		log.Errorf("Error making %s request to Pro server: %v response: %v", command, err, res)
 		if res != nil {
 			session.SetError(command, res.Error)
