@@ -79,6 +79,16 @@ func (client *Client) redirectHTTPS(resp http.ResponseWriter, req *http.Request,
 	log.Debugf("httpseverywhere redirecting to %v", httpsURL)
 	op.Set("forcedhttps", true)
 	client.statsTracker.IncHTTPSUpgrades()
+
+	// Handle CORS requests
+	if origin := req.Header.Get("Origin"); origin != "" {
+		resp.Header().Set("Access-Control-Allow-Origin", origin)
+		// Don't bother adding other CORS headers. Most browsers don't
+		// support redirects of preflight requests. In case the browser
+		// supports, it's the redirected URL to respond relevant headers.
+		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS#Preflighted_requests_and_redirects
+	}
+
 	// Tell the browser to only cache the redirect for a day. The browser
 	// generally caches permanent redirects permanently, but it will obey caching
 	// directives if set.
