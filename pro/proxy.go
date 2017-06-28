@@ -63,7 +63,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	if _userID == "" {
 		return
 	}
-	userID, parseErr := strconv.Atoi(_userID)
+	userID, parseErr := strconv.ParseInt(_userID, 10, 64)
 	if parseErr != nil {
 		return
 	}

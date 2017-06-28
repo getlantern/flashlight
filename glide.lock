@@ -96,7 +96,7 @@ imports:
 - name: github.com/getlantern/filepersist
   version: c5f0cd24e7991579ba6f5f1bd20a1ad2c9f06cd4
 - name: github.com/getlantern/fronted
-  version: 5de028cdbf15d647dfce3c6e59f090eda8320fea
+  version: 737a13098dda0b72df09888866228ab23f640a2f
 - name: github.com/getlantern/geolookup
   version: 823d7ff3e6eb74dd6aae38a4b52207b19abfbf66
 - name: github.com/getlantern/go-loggly
@@ -163,7 +163,7 @@ imports:
   - usage
   - versioncheck
 - name: github.com/getlantern/httpseverywhere
-  version: 2fd4dce238753905fc6b5d7de84fae77a1365b3e
+  version: 95087f9126d6532e06bc8b30743b78a8e0ffb1c9
 - name: github.com/getlantern/i18n
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
@@ -545,3 +545,5 @@ testImports:
   version: f6abca593680b2315d2075e0f5e2a9751e3f431a
   subpackages:
   - assert
+- name: github.com/getlantern/httptest
+  version: 4b40f4c7e590b2afa94729ca7f738e0b14b13749
