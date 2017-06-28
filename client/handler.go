@@ -55,8 +55,14 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	} else {
 		log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
 		if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
-			client.redirectHTTPS(resp, req, httpsURL, op)
-			return
+			// Don't redirect CORS requests as it means the HTML pages that
+			// initiate the requests were not HTTPS redirected. Redirecting
+			// them adds few benefits, but may break some sites.
+			if origin := req.Header.Get("Origin"); origin == "" {
+				client.redirectHTTPS(resp, req, httpsURL, op)
+				return
+			}
+
 		}
 		// Direct proxying can only be used for plain HTTP connections.
 		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
@@ -79,16 +85,6 @@ func (client *Client) redirectHTTPS(resp http.ResponseWriter, req *http.Request,
 	log.Debugf("httpseverywhere redirecting to %v", httpsURL)
 	op.Set("forcedhttps", true)
 	client.statsTracker.IncHTTPSUpgrades()
-
-	// Handle CORS requests
-	if origin := req.Header.Get("Origin"); origin != "" {
-		resp.Header().Set("Access-Control-Allow-Origin", origin)
-		// Don't bother adding other CORS headers. Most browsers don't
-		// support redirects of preflight requests. In case the browser
-		// supports, it's the redirected URL to respond relevant headers.
-		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS#Preflighted_requests_and_redirects
-	}
-
 	// Tell the browser to only cache the redirect for a day. The browser
 	// generally caches permanent redirects permanently, but it will obey caching
 	// directives if set.
