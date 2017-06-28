@@ -15,6 +15,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	testLang            = "en"
+	testAdSwapTargetURL = "http://localhost/purchase"
+)
+
 type mockWriter struct {
 	http.ResponseWriter
 	http.Hijacker
@@ -59,8 +64,8 @@ func newClient() *Client {
 		func() string { return "proToken" },
 		mockStatsTracker{},
 		func() bool { return true },
-		func() string { return "" },
-		func() string { return "" },
+		func() string { return testLang },
+		func() string { return testAdSwapTargetURL },
 	)
 	return client
 }

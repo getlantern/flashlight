@@ -262,11 +262,10 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 
 	conf := &socks5.Config{
 		Dial: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			port, portErr := client.portForAddress(addr)
-			if portErr != nil {
-				return nil, portErr
-			}
-			return client.doDial(ctx, true, addr, port)
+			op := ops.Begin("proxied_dialer")
+			op.Set("local_proxy_type", "socks5")
+			defer op.End()
+			return client.doDial(op, ctx, true, addr)
 		},
 	}
 	server, err := socks5.New(conf)
@@ -294,13 +293,10 @@ func (client *Client) Stop() error {
 	return client.l.Close()
 }
 
-func (client *Client) proxiedDialer(orig func(network, addr string) (net.Conn, error)) func(network, addr string) (net.Conn, error) {
+func (client *Client) proxiedDialer(op *ops.Op, orig func(network, addr string) (net.Conn, error)) func(network, addr string) (net.Conn, error) {
 	detourDialer := detour.Dialer(orig)
 
 	return func(network, addr string) (net.Conn, error) {
-		op := ops.Begin("proxied_dialer")
-		defer op.End()
-
 		var proxied func(network, addr string) (net.Conn, error)
 		if client.useDetour() {
 			op.Set("detour", true)
@@ -328,30 +324,38 @@ func (client *Client) dialHTTP(network, addr string) (conn net.Conn, err error) 
 }
 
 func (client *Client) dial(isConnect bool, network, addr string) (conn net.Conn, err error) {
+	op := ops.Begin("proxied_dialer")
+	op.Set("local_proxy_type", "http")
+	defer op.End()
 	ctx, cancel := context.WithTimeout(context.Background(), getRequestTimeout())
 	defer cancel()
+	return client.doDial(op, ctx, isConnect, addr)
+}
+
+func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, addr string) (net.Conn, error) {
 	port, err := client.portForAddress(addr)
 	if err != nil {
 		return nil, err
 	}
-	return client.doDial(ctx, isConnect, addr, port)
-}
 
-func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, port int) (net.Conn, error) {
-	// Establish outbound connection
+	op.Origin(addr, "")
 	if err := client.shouldSendToProxy(addr, port); err != nil {
 		log.Debugf("%v, sending directly to %v", err, addr)
+		op.Set("force_direct", true)
+		op.Set("force_direct_reason", err.Error())
 		// Use netx because on Android, we need a special protected dialer
 		return netx.DialContext(ctx, "tcp", addr)
 	}
 	if client.useShortcut() {
 		if allow, ip := shortcut.Allow(addr); allow {
 			log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
+			op.Set("shortcut_direct", true)
+			op.Set("shortcut_direct_ip", ip)
 			return netx.DialContext(ctx, "tcp", addr)
 		}
 	}
 
-	d := client.proxiedDialer(func(network, addr string) (net.Conn, error) {
+	d := client.proxiedDialer(op, func(network, addr string) (net.Conn, error) {
 		proto := "persistent"
 		if isCONNECT {
 			// UGLY HACK ALERT! In this case, we know we need to send a CONNECT request
@@ -368,7 +372,6 @@ func (client *Client) doDial(ctx context.Context, isCONNECT bool, addr string, p
 	// TODO: pass context down to all layers.
 	chDone := make(chan bool)
 	var conn net.Conn
-	var err error
 	go func() {
 		conn, err = d("tcp", addr)
 		chDone <- true

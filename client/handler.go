@@ -55,8 +55,14 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	} else {
 		log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
 		if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
-			client.redirectHTTPS(resp, req, httpsURL, op)
-			return
+			// Don't redirect CORS requests as it means the HTML pages that
+			// initiate the requests were not HTTPS redirected. Redirecting
+			// them adds few benefits, but may break some sites.
+			if origin := req.Header.Get("Origin"); origin == "" {
+				client.redirectHTTPS(resp, req, httpsURL, op)
+				return
+			}
+
 		}
 		// Direct proxying can only be used for plain HTTP connections.
 		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)

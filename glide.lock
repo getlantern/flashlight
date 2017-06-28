@@ -163,7 +163,7 @@ imports:
   - usage
   - versioncheck
 - name: github.com/getlantern/httpseverywhere
-  version: 2fd4dce238753905fc6b5d7de84fae77a1365b3e
+  version: 95087f9126d6532e06bc8b30743b78a8e0ffb1c9
 - name: github.com/getlantern/i18n
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
@@ -543,3 +543,5 @@ testImports:
   version: f6abca593680b2315d2075e0f5e2a9751e3f431a
   subpackages:
   - assert
+- name: github.com/getlantern/httptest
+  version: 4b40f4c7e590b2afa94729ca7f738e0b14b13749
