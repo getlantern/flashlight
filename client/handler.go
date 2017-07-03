@@ -105,7 +105,11 @@ func (client *Client) adSwapURL(resp http.ResponseWriter, req *http.Request) str
 	}
 	lang := client.lang()
 	log.Debugf("Swapping javascript for %v to %v", urlString, jsURL)
-	return fmt.Sprintf("%v?lang=%v&url=%v", jsURL, url.QueryEscape(lang), url.QueryEscape(targetURL))
+	extra := ""
+	if common.Version == "development" {
+		extra = "&force=true"
+	}
+	return fmt.Sprintf("%v?lang=%v&url=%v%v", jsURL, url.QueryEscape(lang), url.QueryEscape(targetURL), extra)
 }
 
 func (client *Client) redirectAdSwap(resp http.ResponseWriter, req *http.Request, adSwapURL string, op *ops.Op) {

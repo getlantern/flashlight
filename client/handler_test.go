@@ -52,7 +52,7 @@ func TestAdSwap(t *testing.T) {
 		client.ServeHTTP(w, req)
 		resp := w.Result()
 		assert.Equal(t, http.StatusTemporaryRedirect, resp.StatusCode)
-		expectedLocation := fmt.Sprintf("%v?lang=%v&url=%v", updated, url.QueryEscape(testLang), url.QueryEscape(testAdSwapTargetURL))
+		expectedLocation := fmt.Sprintf("%v?lang=%v&url=%v&force=true", updated, url.QueryEscape(testLang), url.QueryEscape(testAdSwapTargetURL))
 		assert.Equal(t, expectedLocation, resp.Header.Get("Location"))
 	}
 }
