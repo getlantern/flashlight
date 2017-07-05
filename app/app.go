@@ -132,7 +132,7 @@ func (app *App) Run() error {
 			settings.GetLanguage,
 			func() string {
 				isPro, statusKnown := isProUserFast()
-				if isPro || !statusKnown {
+				if (isPro || !statusKnown) && !common.ForceAds() {
 					// pro user (or status unknown), don't ad swap
 					return ""
 				}

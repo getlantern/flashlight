@@ -20,3 +20,10 @@ unless you want to switch to/from using vendored dependencies.  After that, you
 can just use `make`.
 
 You can also just build using the usual `go install` etc.
+
+### Forcing Ad Swapping
+
+By default, only a small percentage of web ads are swapped and only if the user
+is free (not pro), making it difficult to test ad swapping. However, you can
+force 100% of eligible ads to be swapped even when pro by setting the
+environment variable `FORCEADS=true`.

@@ -1,6 +1,7 @@
 package common
 
 import (
+	"os"
 	"strconv"
 
 	"github.com/getlantern/golog"
@@ -17,6 +18,8 @@ var (
 	ProAPIDDFHost = "d2n32kma9hyo9f.cloudfront.net"
 
 	log = golog.LoggerFor("flashlight.common")
+
+	forceAds bool
 )
 
 func init() {
@@ -31,4 +34,10 @@ func init() {
 		ProAPIHost = "api-staging.getiantem.org"
 		ProAPIDDFHost = "d16igwq64x5e11.cloudfront.net"
 	}
+	forceAds, _ = strconv.ParseBool(os.Getenv("FORCEADS"))
+}
+
+// ForceAds indicates whether adswapping should be forced to 100%
+func ForceAds() bool {
+	return forceAds
 }
