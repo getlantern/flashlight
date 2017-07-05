@@ -1,9 +1,11 @@
 package client
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -238,15 +240,46 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 	addr.Set(listenAddr)
 	onListeningFn()
 
-	httpServer := &http.Server{
-		ReadTimeout:  client.readTimeout,
-		WriteTimeout: client.writeTimeout,
-		Handler:      client,
-		ErrorLog:     log.AsStdLogger(),
-	}
-
 	log.Debugf("About to start HTTP client proxy at %v", listenAddr)
-	return httpServer.Serve(l)
+	for {
+		conn, err := l.Accept()
+		if err != nil {
+			return fmt.Errorf("Unable to accept connection: %v", err)
+		}
+		go client.serve(conn)
+	}
+}
+
+func (client *Client) serve(conn net.Conn) {
+	defer conn.Close()
+
+	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn)) // todo: pool these to avoid allocations
+	for {
+		req, err := http.ReadRequest(rw.Reader)
+		if err != nil {
+			if err != io.EOF {
+				log.Errorf("Unable to read request: %v", err)
+				rw.Write([]byte("HTTP/1.1 400 Bad Request\r\n"))
+				rw.Flush()
+			}
+			return
+		}
+
+		resp := newResponseWriter(conn, rw)
+		client.ServeHTTP(resp, req)
+		err = resp.flush()
+		if err != nil {
+			log.Errorf("Error flushing response: %v", err)
+			return
+		}
+		if req.Header.Get("Connection") == "Close" {
+			conn.Close()
+			return
+		}
+		if resp.hijacked {
+			return
+		}
+	}
 }
 
 // ListenAndServeSOCKS5 starts the SOCKS server listening at the specified
