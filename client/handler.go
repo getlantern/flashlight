@@ -106,7 +106,7 @@ func (client *Client) adSwapURL(resp http.ResponseWriter, req *http.Request) str
 	lang := client.lang()
 	log.Debugf("Swapping javascript for %v to %v", urlString, jsURL)
 	extra := ""
-	if common.Version == "development" {
+	if common.ForceAds() {
 		extra = "&force=true"
 	}
 	return fmt.Sprintf("%v?lang=%v&url=%v%v", jsURL, url.QueryEscape(lang), url.QueryEscape(targetURL), extra)
