@@ -26,6 +26,7 @@ import (
 	"github.com/getlantern/hidden"
 	"github.com/getlantern/httpseverywhere"
 	"github.com/getlantern/iptool"
+	"github.com/getlantern/mitm"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 
@@ -124,8 +125,24 @@ func NewClient(
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
-	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers.Pool, false, client.dialCONNECT)
-	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
+	var mitmErr error
+	client.interceptCONNECT, mitmErr = proxy.CONNECT(keepAliveIdleTimeout, buffers.Pool, false, &proxy.MITMOpts{
+		Opts: mitm.Opts{
+			PKFile:       filepath.Join(appdir.General("Lantern"), "mitmkey.pem"),
+			CertFile:     filepath.Join(appdir.General("Lantern"), "mitmcert.pem"),
+			Organization: "Lantern",
+			CommonName:   "lantern",
+			InstallCert:  true,
+		},
+		MITMDomains:  []string{"google.com", "www.google.com", "baidu.com", "www.baidu.com", "www.googletagservices.com", "cpro.baidustatic.com"},
+		ShortCircuit: client.shortCircuit,
+		OnResponse:   client.searchSwap,
+		OnError:      errorResponse,
+	}, client.dialCONNECT)
+	if mitmErr != nil {
+		log.Errorf("Unable to initialize MITM'ing, continuing without MITM support: %v", mitmErr)
+	}
+	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, client.shortCircuit, nil, errorResponse, client.dialHTTP)
 	// TODO: turn it to a config option
 	if runtime.GOOS == "android" {
 		client.easylist = allowAllEasyList{}
@@ -476,6 +493,8 @@ func InConfigDir(configDir string, filename string) (string, error) {
 }
 
 func errorResponse(req *http.Request, err error) *http.Response {
+	log.Debugf("Responding with error: %v", err)
+
 	var htmlerr []byte
 
 	// If the request has an 'Accept' header preferring HTML, or

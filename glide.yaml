@@ -32,6 +32,7 @@ import:
 - package: github.com/getlantern/jibber_jabber
 - package: github.com/getlantern/keyman
 - package: github.com/getlantern/launcher
+- package: github.com/getlantern/mitm
 - package: github.com/getlantern/mtime
 - package: github.com/getlantern/netx
 - package: github.com/getlantern/notifier

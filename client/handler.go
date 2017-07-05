@@ -27,7 +27,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		req.URL.Scheme = "http"
 	}
 
-	adSwapURL := client.adSwapURL(resp, req)
+	adSwapURL := client.adSwapURL(req)
 
 	if adSwapURL == "" && !client.easylist.Allow(req) {
 		client.easyblock(resp, req)
@@ -75,6 +75,20 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func (client *Client) shortCircuit(req *http.Request) *http.Response {
+	adSwapURL := client.adSwapURL(req)
+	if adSwapURL != "" {
+		return &http.Response{
+			StatusCode: http.StatusTemporaryRedirect,
+			Header: http.Header{
+				"Location": []string{adSwapURL},
+			},
+		}
+	}
+
+	return nil
+}
+
 func (client *Client) easyblock(resp http.ResponseWriter, req *http.Request) {
 	log.Debugf("Blocking %v on %v", req.URL, req.Host)
 	client.statsTracker.IncAdsBlocked()
@@ -93,8 +107,16 @@ func (client *Client) redirectHTTPS(resp http.ResponseWriter, req *http.Request,
 	http.Redirect(resp, req, httpsURL, http.StatusMovedPermanently)
 }
 
-func (client *Client) adSwapURL(resp http.ResponseWriter, req *http.Request) string {
-	urlString := req.URL.String()
+func (client *Client) adSwapURL(req *http.Request) string {
+	urlCopy := &url.URL{}
+	*urlCopy = *req.URL
+	if urlCopy.Host == "" {
+		urlCopy.Host = req.Host
+	}
+	if urlCopy.Scheme == "" {
+		urlCopy.Scheme = "http"
+	}
+	urlString := urlCopy.String()
 	jsURL, urlFound := adSwapJavaScriptInjections[strings.ToLower(urlString)]
 	if !urlFound {
 		return ""
