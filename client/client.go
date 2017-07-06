@@ -1,11 +1,9 @@
 package client
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -81,8 +79,7 @@ type Client struct {
 	// Balanced CONNECT dialers.
 	bal *balancer.Balancer
 
-	interceptCONNECT proxy.Interceptor
-	interceptHTTP    proxy.Interceptor
+	proxy proxy.Proxy
 
 	l net.Listener
 
@@ -126,8 +123,14 @@ func NewClient(
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
-	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers.Pool, false, client.dialCONNECT)
-	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
+	client.proxy = proxy.New(&proxy.Opts{
+		IdleTimeout:  keepAliveIdleTimeout,
+		BufferSource: buffers.Pool,
+		OnRequest:    client.onRequest,
+		OnCONNECT:    client.onCONNECT,
+		OnError:      errorResponse,
+		Dial:         client.dial,
+	})
 	// TODO: turn it to a config option
 	if runtime.GOOS == "android" {
 		client.easylist = allowAllEasyList{}
@@ -246,39 +249,7 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 		if err != nil {
 			return fmt.Errorf("Unable to accept connection: %v", err)
 		}
-		go client.serve(conn)
-	}
-}
-
-func (client *Client) serve(conn net.Conn) {
-	defer conn.Close()
-
-	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn)) // todo: pool these to avoid allocations
-	for {
-		req, err := http.ReadRequest(rw.Reader)
-		if err != nil {
-			if err != io.EOF {
-				log.Errorf("Unable to read request: %v", err)
-				rw.Write([]byte("HTTP/1.1 400 Bad Request\r\n"))
-				rw.Flush()
-			}
-			return
-		}
-
-		resp := newResponseWriter(conn, rw)
-		client.ServeHTTP(resp, req)
-		err = resp.flush()
-		if err != nil {
-			log.Errorf("Error flushing response: %v", err)
-			return
-		}
-		if req.Header.Get("Connection") == "Close" {
-			conn.Close()
-			return
-		}
-		if resp.hijacked {
-			return
-		}
+		go client.handle(conn)
 	}
 }
 
@@ -346,14 +317,6 @@ func (client *Client) proxiedDialer(op *ops.Op, orig func(network, addr string) 
 		}
 		return conn, op.FailIf(err)
 	}
-}
-
-func (client *Client) dialCONNECT(network, addr string) (conn net.Conn, err error) {
-	return client.dial(true, network, addr)
-}
-
-func (client *Client) dialHTTP(network, addr string) (conn net.Conn, err error) {
-	return client.dial(false, network, addr)
 }
 
 func (client *Client) dial(isConnect bool, network, addr string) (conn net.Conn, err error) {
@@ -508,7 +471,10 @@ func InConfigDir(configDir string, filename string) (string, error) {
 	return filepath.Join(cdir, filename), nil
 }
 
-func errorResponse(req *http.Request, err error) *http.Response {
+func errorResponse(ctx context.Context, req *http.Request, err error) *http.Response {
+	if req == nil {
+		return nil
+	}
 	var htmlerr []byte
 
 	// If the request has an 'Accept' header preferring HTML, or
@@ -533,11 +499,10 @@ func errorResponse(req *http.Request, err error) *http.Response {
 		htmlerr = []byte(hidden.Clean(err.Error()))
 	}
 
-	res := &http.Response{
-		Body: ioutil.NopCloser(bytes.NewBuffer(htmlerr)),
+	return &http.Response{
+		Body:       ioutil.NopCloser(bytes.NewBuffer(htmlerr)),
+		StatusCode: http.StatusServiceUnavailable,
 	}
-	res.StatusCode = http.StatusServiceUnavailable
-	return res
 }
 
 func getRequestTimeout() time.Duration {

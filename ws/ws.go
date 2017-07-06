@@ -136,7 +136,10 @@ func (c *clientChannels) clonedConns() map[int]*wsconn {
 func (c *clientChannels) lockedRemoveConn(conn *wsconn) {
 	c.muConns.Lock()
 	defer c.muConns.Unlock()
-	c.doRemoveConn(conn)
+	conn = c.conns[conn.id]
+	if conn != nil {
+		c.doRemoveConn(conn)
+	}
 }
 
 func (c *clientChannels) doRemoveConn(conn *wsconn) {

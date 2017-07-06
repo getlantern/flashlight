@@ -1,7 +1,9 @@
 package client
 
 import (
+	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -11,47 +13,63 @@ import (
 	"github.com/getlantern/flashlight/ops"
 )
 
+type contextKey string
+
+const (
+	ctxKeyOp = contextKey("op")
+)
+
 var adSwapJavaScriptInjections = map[string]string{
 	"http://www.googletagservices.com/tag/js/gpt.js": "https://ads.getlantern.org/v1/js/www.googletagservices.com/tag/js/gpt.js",
 	"http://cpro.baidustatic.com/cpro/ui/c.js":       "https://ads.getlantern.org/v1/js/cpro.baidustatic.com/cpro/ui/c.js",
 }
 
+func (client *Client) handle(conn net.Conn) error {
+	op := ops.Begin("proxy")
+	ctx := context.WithValue(context.Background(), ctxKeyOp, op)
+	err := client.proxy.Handle(ctx, conn)
+	if err != nil {
+		log.Error(op.FailIf(err))
+	}
+	op.End()
+	return err
+}
+
 // ServeHTTP implements the http.Handler interface.
-func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	isConnect := req.Method == http.MethodConnect
-	if isConnect {
-		// Add the scheme back for CONNECT requests. It is cleared
-		// intentionally by the standard library, see
-		// https://golang.org/src/net/http/request.go#L938. The easylist
-		// package and httputil.DumpRequest require the scheme to be present.
-		req.URL.Scheme = "http"
-	}
+func (client *Client) onRequest(ctx context.Context, req *http.Request) (*http.Request, *http.Response) {
+	return client.doOnRequest(ctx, false, req)
+}
 
-	adSwapURL := client.adSwapURL(resp, req)
+func (client *Client) onCONNECT(ctx context.Context, req *http.Request) (*http.Request, *http.Response) {
+	return client.doOnRequest(ctx, true, req)
+}
 
+func (client *Client) doOnRequest(ctx context.Context, isConnect bool, req *http.Request) (*http.Request, *http.Response) {
+	// Add the scheme back for CONNECT requests. It is cleared
+	// intentionally by the standard library, see
+	// https://golang.org/src/net/http/request.go#L938. The easylist
+	// package and httputil.DumpRequest require the scheme to be present.
+	req.URL.Scheme = "http"
+	req.URL.Host = req.Host
+
+	op := ctx.Value(ctxKeyOp).(*ops.Op)
+
+	adSwapURL := client.adSwapURL(req)
 	if adSwapURL == "" && !client.easylist.Allow(req) {
-		client.easyblock(resp, req)
-		return
+		// Don't record this as proxying
+		op.Cancel()
+		return client.easyblock(req)
 	}
 
-	userAgent := req.Header.Get("User-Agent")
-	op := ops.Begin("proxy").
-		UserAgent(userAgent).
-		OriginFromRequest(req)
-	defer op.End()
+	op.UserAgent(req.Header.Get("User-Agent")).OriginFromRequest(req)
 
 	if adSwapURL != "" {
-		client.redirectAdSwap(resp, req, adSwapURL, op)
-		return
+		return client.redirectAdSwap(req, adSwapURL, op)
 	}
 
 	if isConnect {
 		// CONNECT requests are often used for HTTPS requests.
 		log.Tracef("Intercepting CONNECT %s", req.URL)
-		err := client.interceptCONNECT(resp, req)
-		if err != nil {
-			log.Error(op.FailIf(err))
-		}
 	} else {
 		log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
 		if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
@@ -59,8 +77,7 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 			// initiate the requests were not HTTPS redirected. Redirecting
 			// them adds few benefits, but may break some sites.
 			if origin := req.Header.Get("Origin"); origin == "" {
-				client.redirectHTTPS(resp, req, httpsURL, op)
-				return
+				return client.redirectHTTPS(req, httpsURL, op)
 			}
 
 		}
@@ -68,32 +85,39 @@ func (client *Client) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
 		// consumed and removed by http-proxy-lantern/versioncheck
 		req.Header.Set(common.VersionHeader, common.Version)
-		err := client.interceptHTTP(resp, req)
-		if err != nil {
-			log.Error(op.FailIf(err))
-		}
+	}
+
+	return req, nil
+}
+
+func (client *Client) easyblock(req *http.Request) (*http.Request, *http.Response) {
+	log.Debugf("Blocking %v on %v", req.URL, req.Host)
+	client.statsTracker.IncAdsBlocked()
+	return req, &http.Response{
+		StatusCode: http.StatusForbidden,
+		Close:      true,
 	}
 }
 
-func (client *Client) easyblock(resp http.ResponseWriter, req *http.Request) {
-	log.Debugf("Blocking %v on %v", req.URL, req.Host)
-	client.statsTracker.IncAdsBlocked()
-	resp.WriteHeader(http.StatusForbidden)
-}
-
-func (client *Client) redirectHTTPS(resp http.ResponseWriter, req *http.Request, httpsURL string, op *ops.Op) {
+func (client *Client) redirectHTTPS(req *http.Request, httpsURL string, op *ops.Op) (*http.Request, *http.Response) {
 	log.Debugf("httpseverywhere redirecting to %v", httpsURL)
 	op.Set("forcedhttps", true)
 	client.statsTracker.IncHTTPSUpgrades()
 	// Tell the browser to only cache the redirect for a day. The browser
 	// generally caches permanent redirects permanently, but it will obey caching
 	// directives if set.
-	resp.Header().Set("Cache-Control", "max-age:86400")
-	resp.Header().Set("Expires", time.Now().Add(time.Duration(24)*time.Hour).Format(http.TimeFormat))
-	http.Redirect(resp, req, httpsURL, http.StatusMovedPermanently)
+	resp := &http.Response{
+		StatusCode: http.StatusMovedPermanently,
+		Header:     make(http.Header, 3),
+		Close:      true,
+	}
+	resp.Header.Set("Location", httpsURL)
+	resp.Header.Set("Cache-Control", "max-age:86400")
+	resp.Header.Set("Expires", time.Now().Add(time.Duration(24)*time.Hour).Format(http.TimeFormat))
+	return req, resp
 }
 
-func (client *Client) adSwapURL(resp http.ResponseWriter, req *http.Request) string {
+func (client *Client) adSwapURL(req *http.Request) string {
 	urlString := req.URL.String()
 	jsURL, urlFound := adSwapJavaScriptInjections[strings.ToLower(urlString)]
 	if !urlFound {
@@ -112,7 +136,13 @@ func (client *Client) adSwapURL(resp http.ResponseWriter, req *http.Request) str
 	return fmt.Sprintf("%v?lang=%v&url=%v%v", jsURL, url.QueryEscape(lang), url.QueryEscape(targetURL), extra)
 }
 
-func (client *Client) redirectAdSwap(resp http.ResponseWriter, req *http.Request, adSwapURL string, op *ops.Op) {
+func (client *Client) redirectAdSwap(req *http.Request, adSwapURL string, op *ops.Op) (*http.Request, *http.Response) {
 	op.Set("adswapped", true)
-	http.Redirect(resp, req, adSwapURL, http.StatusTemporaryRedirect)
+	resp := &http.Response{
+		StatusCode: http.StatusTemporaryRedirect,
+		Header:     make(http.Header, 1),
+		Close:      true,
+	}
+	resp.Header.Set("Location", adSwapURL)
+	return req, resp
 }

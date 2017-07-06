@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -76,20 +77,14 @@ func TestServeHTTPOk(t *testing.T) {
 	d := mockconn.SucceedingDialer(mockResponse)
 	resetBalancer(client, d.Dial)
 
-	w := mockWriter{ResponseWriter: httptest.NewRecorder(), Dialer: mockconn.SucceedingDialer(mockResponse)}
 	req, _ := http.NewRequest("CONNECT", "https://b.com:443", nil)
-	client.ServeHTTP(w, req)
-	assert.Equal(t, "hijacked", w.Dialer.LastDialed())
-	assert.Equal(t, "HTTP/1.1 200 OK\r\nKeep-Alive: timeout=38\r\nContent-Length: 0\r\n\r\nHTTP/1.1 404 Not Found\r\n\r\n", string(w.Dialer.Received()))
-
-	// disable the test temporarily. It has weird error "readLoopPeekFailLocked <nil>" when run with `go test -race`
-	/*w = mockWriter{ResponseWriter: httptest.NewRecorder(), Dialer: mockconn.SucceedingDialer([]byte{})}
-	req, _ = http.NewRequest("GET", "http://a.com/page.html", nil)
-	req.Header.Set("Accept", "not-html")
-	client.ServeHTTP(w, req)
-	time.Sleep(100 * time.Millisecond)
-	assert.Equal(t, "a.com:80", d.LastDialed())
-	assert.Contains(t, string(w.Dialer.Received()), "HTTP/1.1 404 Not Found")*/
+	resp, err := roundTrip(client, req)
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, "timeout=38", resp.Header.Get("Keep-Alive"))
+	assert.Equal(t, "0", resp.Header.Get("Content-Length"))
 }
 
 func TestServeHTTPTimeout(t *testing.T) {
@@ -106,17 +101,19 @@ func TestServeHTTPTimeout(t *testing.T) {
 		return d.Dial(network, addr)
 	})
 
-	w := mockWriter{ResponseWriter: httptest.NewRecorder(), Dialer: d}
 	req, _ := http.NewRequest("CONNECT", "https://a.com:443", nil)
-	client.ServeHTTP(w, req)
-	assert.Equal(t, 200, w.Status(), "CONNECT requests should always succeed")
+	resp, _ := roundTrip(client, req)
+	assert.Equal(t, http.StatusOK, resp.StatusCode, "CONNECT requests should always succeed")
 
-	w = mockWriter{ResponseWriter: httptest.NewRecorder(), Dialer: d}
 	req, _ = http.NewRequest("GET", "http://b.com/action", nil)
 	req.Header.Set("Accept", "not-html")
-	client.ServeHTTP(w, req)
-	assert.Equal(t, 200, w.Status(), "It should respond 200 OK with error page")
-	assert.Contains(t, string(w.Dialer.Received()), "context deadline exceeded", "should be with context error")
+	resp, _ = roundTrip(client, req)
+	assert.Equal(t, http.StatusServiceUnavailable, resp.StatusCode, "It should respond 503 Service Unavailable with error page")
+	body, err := ioutil.ReadAll(resp.Body)
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Contains(t, string(body), "context deadline exceeded", "should be with context error")
 }
 
 func TestIsAddressProxyable(t *testing.T) {
@@ -244,4 +241,22 @@ func (d *testDialer) ProbePerformance() {
 
 func (d *testDialer) Stop() {
 	d.stopped = true
+}
+
+func roundTrip(client *Client, req *http.Request) (*http.Response, error) {
+	toSend := &bytes.Buffer{}
+	err := req.Write(toSend)
+	if err != nil {
+		return nil, err
+	}
+	received := &bytes.Buffer{}
+	err = client.handle(mockconn.New(received, toSend))
+	if err != nil {
+		log.Errorf("Error handling: %v", err)
+	}
+	resp, err2 := http.ReadResponse(bufio.NewReader(bytes.NewReader(received.Bytes())), req)
+	if err == nil {
+		err = err2
+	}
+	return resp, err
 }

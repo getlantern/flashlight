@@ -194,7 +194,7 @@ imports:
   - osx
   - win
 - name: github.com/getlantern/ops
-  version: b70875f5d689a9438bca72aefd7142a2af889b18
+  version: d9c5d09356894d6f942b7c17e4bc2f93b201e479
 - name: github.com/getlantern/osversion
   version: 15282d3e6ba182319e7cbe155e60527e6e0515a8
 - name: github.com/getlantern/pathreflect
@@ -206,7 +206,7 @@ imports:
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxy
-  version: 9612d21f2b56edd016380bed7bc0314415bf581e
+  version: 78c48c2b403c6ade1962932ae2f51c044a29b366
 - name: github.com/getlantern/proxybench
   version: 5b3bd1c06980376052721879e14d5178ef98ec65
 - name: github.com/getlantern/redis
