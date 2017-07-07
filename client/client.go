@@ -28,6 +28,7 @@ import (
 	"github.com/getlantern/iptool"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
+	"github.com/getlantern/proxy/filters"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
@@ -126,8 +127,7 @@ func NewClient(
 	client.proxy = proxy.New(&proxy.Opts{
 		IdleTimeout:  keepAliveIdleTimeout,
 		BufferSource: buffers.Pool,
-		OnRequest:    client.onRequest,
-		OnCONNECT:    client.onCONNECT,
+		Filter:       filters.FilterFunc(client.filter),
 		OnError:      errorResponse,
 		Dial:         client.dial,
 	})

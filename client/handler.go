@@ -11,6 +11,7 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/proxy/filters"
 )
 
 type contextKey string
@@ -35,16 +36,7 @@ func (client *Client) handle(conn net.Conn) error {
 	return err
 }
 
-// ServeHTTP implements the http.Handler interface.
-func (client *Client) onRequest(ctx context.Context, req *http.Request) (*http.Request, *http.Response) {
-	return client.doOnRequest(ctx, false, req)
-}
-
-func (client *Client) onCONNECT(ctx context.Context, req *http.Request) (*http.Request, *http.Response) {
-	return client.doOnRequest(ctx, true, req)
-}
-
-func (client *Client) doOnRequest(ctx context.Context, isConnect bool, req *http.Request) (*http.Request, *http.Response) {
+func (client *Client) filter(ctx context.Context, req *http.Request, next filters.Next) (*http.Response, error) {
 	// Add the scheme back for CONNECT requests. It is cleared
 	// intentionally by the standard library, see
 	// https://golang.org/src/net/http/request.go#L938. The easylist
@@ -67,6 +59,7 @@ func (client *Client) doOnRequest(ctx context.Context, isConnect bool, req *http
 		return client.redirectAdSwap(req, adSwapURL, op)
 	}
 
+	isConnect := req.Method == http.MethodConnect
 	if isConnect {
 		// CONNECT requests are often used for HTTPS requests.
 		log.Tracef("Intercepting CONNECT %s", req.URL)
@@ -87,19 +80,20 @@ func (client *Client) doOnRequest(ctx context.Context, isConnect bool, req *http
 		req.Header.Set(common.VersionHeader, common.Version)
 	}
 
-	return req, nil
+	return next(ctx, req)
 }
 
-func (client *Client) easyblock(req *http.Request) (*http.Request, *http.Response) {
+func (client *Client) easyblock(req *http.Request) (*http.Response, error) {
 	log.Debugf("Blocking %v on %v", req.URL, req.Host)
 	client.statsTracker.IncAdsBlocked()
-	return req, &http.Response{
+	resp := &http.Response{
 		StatusCode: http.StatusForbidden,
 		Close:      true,
 	}
+	return filters.ShortCircuit(req, resp)
 }
 
-func (client *Client) redirectHTTPS(req *http.Request, httpsURL string, op *ops.Op) (*http.Request, *http.Response) {
+func (client *Client) redirectHTTPS(req *http.Request, httpsURL string, op *ops.Op) (*http.Response, error) {
 	log.Debugf("httpseverywhere redirecting to %v", httpsURL)
 	op.Set("forcedhttps", true)
 	client.statsTracker.IncHTTPSUpgrades()
@@ -114,7 +108,7 @@ func (client *Client) redirectHTTPS(req *http.Request, httpsURL string, op *ops.
 	resp.Header.Set("Location", httpsURL)
 	resp.Header.Set("Cache-Control", "max-age:86400")
 	resp.Header.Set("Expires", time.Now().Add(time.Duration(24)*time.Hour).Format(http.TimeFormat))
-	return req, resp
+	return filters.ShortCircuit(req, resp)
 }
 
 func (client *Client) adSwapURL(req *http.Request) string {
@@ -136,7 +130,7 @@ func (client *Client) adSwapURL(req *http.Request) string {
 	return fmt.Sprintf("%v?lang=%v&url=%v%v", jsURL, url.QueryEscape(lang), url.QueryEscape(targetURL), extra)
 }
 
-func (client *Client) redirectAdSwap(req *http.Request, adSwapURL string, op *ops.Op) (*http.Request, *http.Response) {
+func (client *Client) redirectAdSwap(req *http.Request, adSwapURL string, op *ops.Op) (*http.Response, error) {
 	op.Set("adswapped", true)
 	resp := &http.Response{
 		StatusCode: http.StatusTemporaryRedirect,
@@ -144,5 +138,5 @@ func (client *Client) redirectAdSwap(req *http.Request, adSwapURL string, op *op
 		Close:      true,
 	}
 	resp.Header.Set("Location", adSwapURL)
-	return req, resp
+	return filters.ShortCircuit(req, resp)
 }
