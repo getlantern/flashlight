@@ -471,11 +471,12 @@ func InConfigDir(configDir string, filename string) (string, error) {
 	return filepath.Join(cdir, filename), nil
 }
 
-func errorResponse(ctx context.Context, req *http.Request, err error) *http.Response {
+func errorResponse(ctx context.Context, req *http.Request, read bool, err error) *http.Response {
+	var htmlerr []byte
+
 	if req == nil {
 		return nil
 	}
-	var htmlerr []byte
 
 	// If the request has an 'Accept' header preferring HTML, or
 	// doesn't have that header at all, render the error page.
