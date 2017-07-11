@@ -125,9 +125,9 @@ imports:
 - name: github.com/getlantern/hidden
   version: d52a649ab33af200943bb599898dbdcfdbc94cb7
 - name: github.com/getlantern/http-proxy
-  version: eef786bee8fa8fad09a00e2b2f6a649340484586
+  version: 33233da8d39bb78ed811dcd07d68ba6849d86483
 - name: github.com/getlantern/http-proxy-lantern
-  version: 5c22ed0091137adf315246be925485b70ec3d5ad
+  version: 7b05d5b2b423de37ca76407c1e924b3cde3c97df
 - name: github.com/getlantern/httpseverywhere
   version: b1d8887aaf3b03b9c2eb1ce90a641495a200c7bf
 - name: github.com/getlantern/i18n
@@ -172,7 +172,7 @@ imports:
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxy
-  version: 7e20de95d7a4ab1f3b5612f74051f6d7b0b36393
+  version: c50b38e165d7ff63b5f58f521f04dd87407e9193
 - name: github.com/getlantern/proxybench
   version: 5b3bd1c06980376052721879e14d5178ef98ec65
 - name: github.com/getlantern/redis
