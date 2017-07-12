@@ -4,13 +4,16 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/getlantern/detour"
 	"github.com/getlantern/mockconn"
 	"github.com/stretchr/testify/assert"
 )
@@ -21,13 +24,12 @@ const (
 )
 
 type mockWriter struct {
-	http.ResponseWriter
+	http.ResponseWriter // it's to fullfill ServeHTTP but never accessed, as the connection is always hijacked
 	http.Hijacker
 	mockconn.Dialer
 }
 
 func (w mockWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
-	log.Debug("Hijacking")
 	conn, err := w.Dialer.Dial("net", "hijacked")
 	return conn,
 		bufio.NewReadWriter(
@@ -36,12 +38,8 @@ func (w mockWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 		err
 }
 
-func (w mockWriter) Status() int {
-	return w.ResponseWriter.(*httptest.ResponseRecorder).Code
-}
-
-func (w mockWriter) Dump() string {
-	return fmt.Sprintf("%+v", *w.ResponseWriter.(*httptest.ResponseRecorder).Result())
+func (w mockWriter) ReadResponse() (*http.Response, error) {
+	return http.ReadResponse(bufio.NewReader(bytes.NewReader(w.Dialer.Received())), nil)
 }
 
 type mockStatsTracker struct{}
@@ -59,7 +57,7 @@ func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, 
 
 func newClient() *Client {
 	client, _ := NewClient(
-		func() bool { return true },
+		func(addr string) (bool, net.IP) { return false, nil },
 		func() bool { return true },
 		func() string { return "proToken" },
 		mockStatsTracker{},
@@ -73,10 +71,9 @@ func newClient() *Client {
 func TestServeHTTPOk(t *testing.T) {
 	mockResponse := []byte("HTTP/1.1 404 Not Found\r\n\r\n")
 	client := newClient()
-	d := mockconn.SucceedingDialer(mockResponse)
-	resetBalancer(client, d.Dial)
+	resetBalancer(client, mockconn.SucceedingDialer(mockResponse).Dial)
 
-	w := mockWriter{ResponseWriter: httptest.NewRecorder(), Dialer: mockconn.SucceedingDialer(mockResponse)}
+	w := mockWriter{ResponseWriter: httptest.NewRecorder(), Dialer: mockconn.SucceedingDialer(nil)}
 	req, _ := http.NewRequest("CONNECT", "https://b.com:443", nil)
 	client.ServeHTTP(w, req)
 	assert.Equal(t, "hijacked", w.Dialer.LastDialed())
@@ -100,23 +97,26 @@ func TestServeHTTPTimeout(t *testing.T) {
 	}()
 
 	client := newClient()
-	d := mockconn.SucceedingDialer([]byte{})
 	resetBalancer(client, func(network, addr string) (net.Conn, error) {
 		<-time.After(getRequestTimeout() * 2)
-		return d.Dial(network, addr)
+		return mockconn.SucceedingDialer(nil).Dial(network, addr)
 	})
 
-	w := mockWriter{ResponseWriter: httptest.NewRecorder(), Dialer: d}
+	w := mockWriter{ResponseWriter: httptest.NewRecorder(), Dialer: mockconn.SucceedingDialer(nil)}
 	req, _ := http.NewRequest("CONNECT", "https://a.com:443", nil)
 	client.ServeHTTP(w, req)
-	assert.Equal(t, 200, w.Status(), "CONNECT requests should always succeed")
+	res, _ := w.ReadResponse()
+	assert.Equal(t, 200, res.StatusCode, "CONNECT requests should still succeed")
 
-	w = mockWriter{ResponseWriter: httptest.NewRecorder(), Dialer: d}
+	w = mockWriter{ResponseWriter: httptest.NewRecorder(), Dialer: mockconn.SucceedingDialer(nil)}
 	req, _ = http.NewRequest("GET", "http://b.com/action", nil)
-	req.Header.Set("Accept", "not-html")
+	req.Header.Set("Accept", "text/html")
 	client.ServeHTTP(w, req)
-	assert.Equal(t, 200, w.Status(), "It should respond 200 OK with error page")
-	assert.Contains(t, string(w.Dialer.Received()), "context deadline exceeded", "should be with context error")
+	res, _ = w.ReadResponse()
+	assert.Equal(t, 503, res.StatusCode, "non-CONNECT requests should get 503 response")
+	body, _ := ioutil.ReadAll(res.Body)
+	assert.Contains(t, string(body), "<title>Lantern: Error Accessing Page</title>", "should respond with error page")
+	assert.Contains(t, string(body), "context deadline exceeded", "should include the detailed error")
 }
 
 func TestIsAddressProxyable(t *testing.T) {
@@ -146,6 +146,56 @@ func TestIsAddressProxyable(t *testing.T) {
 		"address should not be proxyable if it ends in .local")
 	assert.NoError(t, client.isAddressProxyable("anysite.com:80"),
 		"address should be proxyable if it's not an IP address, not a plain hostname and does not end in .local")
+}
+
+func TestDialShortcut(t *testing.T) {
+	site := httptest.NewServer(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("abc"))
+		}),
+	)
+	addr := site.Listener.Addr().String()
+	_, p, _ := net.SplitHostPort(addr)
+	port, _ := strconv.Atoi(p)
+	proxiedCONNECTPorts = append(proxiedCONNECTPorts, port)
+
+	client := newClient()
+	shortcutVisited := false
+	client.allowShortcut = func(addr string) (bool, net.IP) {
+		shortcutVisited = true
+		return true, net.ParseIP(addr)
+	}
+	mockResponse := []byte("HTTP/1.1 404 Not Found\r\n\r\n")
+	resetBalancer(client, mockconn.SucceedingDialer(mockResponse).Dial)
+
+	w := mockWriter{Dialer: mockconn.SucceedingDialer(nil)}
+	req, _ := http.NewRequest("GET", site.URL, nil)
+	client.ServeHTTP(w, req)
+	assert.True(t, shortcutVisited)
+	assert.Equal(t, "hijacked", w.Dialer.LastDialed())
+	res, _ := w.ReadResponse()
+	assert.Equal(t, 200, res.StatusCode, "should respond with 200 when a shortcutted site is reachable")
+	body, _ := ioutil.ReadAll(res.Body)
+	assert.Equal(t, "abc", string(body), "should respond with correct content")
+
+	w = mockWriter{Dialer: mockconn.SucceedingDialer(nil)}
+	req, _ = http.NewRequest("GET", "http://unknown:80", nil)
+	shortcutVisited = false
+	client.ServeHTTP(w, req)
+	assert.True(t, shortcutVisited)
+	res, _ = w.ReadResponse()
+	assert.Equal(t, 404, res.StatusCode, "should dial proxy if the shortcutted site is unreachable")
+
+	detour.AddToWl("unknown:80", true)
+	defer detour.RemoveFromWl("unknown:80")
+	w = mockWriter{Dialer: mockconn.SucceedingDialer(nil)}
+	req, _ = http.NewRequest("GET", "http://unknown:80", nil)
+	shortcutVisited = false
+	client.ServeHTTP(w, req)
+	assert.False(t, shortcutVisited, "should not check shortcut list if the site is whitelisted")
+	res, _ = w.ReadResponse()
+	assert.Equal(t, 404, res.StatusCode, "should dial proxy if the shortcutted site is unreachable")
+
 }
 
 type testDialer struct {

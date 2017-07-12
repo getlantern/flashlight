@@ -33,7 +33,6 @@ import (
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/status"
 )
@@ -84,7 +83,7 @@ type Client struct {
 
 	l net.Listener
 
-	useShortcut    func() bool
+	allowShortcut  func(addr string) (bool, net.IP)
 	useDetour      func() bool
 	proTokenGetter func() string
 
@@ -103,7 +102,7 @@ type Client struct {
 // SOCKS proxies. It take a function for determing whether or not to proxy
 // all traffic, and another function to get Lantern Pro token when required.
 func NewClient(
-	useShortcut func() bool,
+	allowShortcut func(addr string) (bool, net.IP),
 	useDetour func() bool,
 	proTokenGetter func() string,
 	statsTracker stats.StatsTracker,
@@ -113,7 +112,7 @@ func NewClient(
 ) (*Client, error) {
 	client := &Client{
 		bal:               balancer.New(),
-		useShortcut:       useShortcut,
+		allowShortcut:     allowShortcut,
 		useDetour:         useDetour,
 		proTokenGetter:    proTokenGetter,
 		rewriteToHTTPS:    httpseverywhere.Default(),
@@ -293,28 +292,6 @@ func (client *Client) Stop() error {
 	return client.l.Close()
 }
 
-func (client *Client) proxiedDialer(op *ops.Op, orig func(network, addr string) (net.Conn, error)) func(network, addr string) (net.Conn, error) {
-	detourDialer := detour.Dialer(orig)
-
-	return func(network, addr string) (net.Conn, error) {
-		var proxied func(network, addr string) (net.Conn, error)
-		if client.useDetour() {
-			op.Set("detour", true)
-			proxied = detourDialer
-		} else {
-			op.Set("detour", false)
-			proxied = orig
-		}
-
-		start := time.Now()
-		conn, err := proxied(network, addr)
-		if log.IsTraceEnabled() {
-			log.Tracef("Dialing proxy takes %v for %s", time.Since(start), addr)
-		}
-		return conn, op.FailIf(err)
-	}
-}
-
 func (client *Client) dialCONNECT(network, addr string) (conn net.Conn, err error) {
 	return client.dial(true, network, addr)
 }
@@ -343,19 +320,22 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		log.Debugf("%v, sending directly to %v", err, addr)
 		op.Set("force_direct", true)
 		op.Set("force_direct_reason", err.Error())
-		// Use netx because on Android, we need a special protected dialer
+		// Use netx because on Android, we need a special protected dialer, same below
 		return netx.DialContext(ctx, "tcp", addr)
 	}
-	if client.useShortcut() {
-		if allow, ip := shortcut.Allow(addr); allow {
+
+	directDialer := func(ctx context.Context, network, addr string) (net.Conn, error) {
+		if allow, ip := client.allowShortcut(addr); allow {
 			log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
 			op.Set("shortcut_direct", true)
 			op.Set("shortcut_direct_ip", ip)
 			return netx.DialContext(ctx, "tcp", addr)
 		}
+		newCTX, _ := context.WithTimeout(ctx, 3*time.Second)
+		return netx.DialContext(newCTX, "tcp", addr)
 	}
 
-	d := client.proxiedDialer(op, func(network, addr string) (net.Conn, error) {
+	proxiedDialer := func(ctx context.Context, network, addr string) (net.Conn, error) {
 		proto := "persistent"
 		if isCONNECT {
 			// UGLY HACK ALERT! In this case, we know we need to send a CONNECT request
@@ -367,28 +347,43 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 			// case.
 			proto = "connect"
 		}
-		return client.bal.Dial(proto, addr)
-	})
-	// TODO: pass context down to all layers.
-	chDone := make(chan bool)
-	var conn net.Conn
-	go func() {
-		conn, err = d("tcp", addr)
-		chDone <- true
-	}()
-	select {
-	case <-chDone:
-		return conn, err
-	case <-ctx.Done():
+		// TODO: pass context down to all layers.
+		chDone := make(chan bool)
+		var conn net.Conn
 		go func() {
-			<-chDone
-			if conn != nil {
-				log.Debugf("Connection to %s established too late, closing", addr)
-				conn.Close()
+			start := time.Now()
+			conn, err = client.bal.Dial(proto, addr)
+			if log.IsTraceEnabled() {
+				log.Tracef("Dialing proxy takes %v for %s", time.Since(start), addr)
 			}
+			chDone <- true
 		}()
-		return nil, ctx.Err()
+		select {
+		case <-chDone:
+			return conn, err
+		case <-ctx.Done():
+			go func() {
+				<-chDone
+				if conn != nil {
+					log.Debugf("Connection to %s established too late, closing", addr)
+					conn.Close()
+				}
+			}()
+			return nil, ctx.Err()
+		}
 	}
+
+	var dialer func(ctx context.Context, network, addr string) (net.Conn, error)
+	if client.useDetour() {
+		op.Set("detour", true)
+		dialer = detour.Dialer(directDialer, proxiedDialer)
+	} else {
+		op.Set("detour", false)
+		dialer = proxiedDialer
+	}
+
+	c, e := dialer(ctx, "tcp", addr)
+	return c, op.FailIf(e)
 }
 
 func (client *Client) shouldSendToProxy(addr string, port int) error {
