@@ -217,10 +217,12 @@ func (client *Client) Socks5Addr(timeout time.Duration) (interface{}, bool) {
 	return Socks5Addr(timeout)
 }
 
-// ListenAndServeHTTP makes the client listen for HTTP connections at a the given
+// ListenAndServeHTTP makes the client listen for HTTP connections at the given
 // address or, if a blank address is given, at a random port on localhost.
 // onListeningFn is a callback that gets invoked as soon as the server is
 // accepting TCP connections.
+// Sometimes on Windows, http.Server may fail to accept new connections after
+// running for a random period. This method will try serve again.
 func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn func()) error {
 	log.Debug("About to listen")
 	if requestedAddr == "" {
@@ -246,7 +248,14 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 	}
 
 	log.Debugf("About to start HTTP client proxy at %v", listenAddr)
-	return httpServer.Serve(l)
+	for {
+		start := time.Now()
+		err := httpServer.Serve(l)
+		if time.Since(start) < 10*time.Second {
+			return err
+		}
+		log.Debugf("Error serving HTTP client proxy at %v, restarting: %v", listenAddr, err)
+	}
 }
 
 // ListenAndServeSOCKS5 starts the SOCKS server listening at the specified

@@ -122,7 +122,7 @@ func Run(httpProxyAddr string,
 			afterStart()
 		})
 		if err != nil {
-			log.Errorf("Error starting client proxy: %v", err)
+			log.Errorf("Error running client proxy: %v", err)
 			onError(err)
 		}
 	}
