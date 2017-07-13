@@ -331,7 +331,14 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 			op.Set("shortcut_direct_ip", ip)
 			return netx.DialContext(ctx, "tcp", addr)
 		}
-		newCTX, _ := context.WithTimeout(ctx, 3*time.Second)
+		// A reasonable default. Never be used as ctx always has a deadline.
+		timeout := 3 * time.Second
+		if dl, ok := ctx.Deadline(); ok {
+			// It's roughly requestTimeout (20s) / 5 = 4s to leave enough time
+			// to try detour.
+			timeout = dl.Sub(time.Now()) / 5
+		}
+		newCTX, _ := context.WithTimeout(ctx, timeout)
 		return netx.DialContext(newCTX, "tcp", addr)
 	}
 
