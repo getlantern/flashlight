@@ -267,7 +267,12 @@ func userUpdate(req *proRequest) (*client.Response, error) {
 }
 
 func pwSignature(req *proRequest) (*client.Response, error) {
-	sig, err := req.client.PWSignature(req.user, req.session.Plan())
+	sig, err := req.client.PWSignature(req.user,
+		req.session.Email(),
+		strings.ToLower(req.session.Currency()),
+		req.session.DeviceName(),
+		req.session.Plan())
+
 	if err != nil {
 		log.Errorf("Error trying to generate pw signature: %v", err)
 		return nil, err
