@@ -19,7 +19,7 @@ type Session interface {
 	DeviceId() string
 	AccountId() string
 	AddDevice(string, string)
-	AddPlan(string, string, string, bool, int, int)
+	AddPlan(string, string, string, bool, int, float64)
 	Locale() string
 	Code() string
 	VerifyCode() string
@@ -195,13 +195,11 @@ func plans(req *proRequest) (*client.Response, error) {
 	}
 	req.session.SetStripePubKey(res.PubKey)
 	for _, plan := range res.Plans {
-		var currency string
-		var price int
-		for currency, price = range plan.Price {
-			break
-		}
-		if currency != "" {
-			log.Debugf("Calling add plan with %s currency %s desc: %s best value %t price %d",
+		for currency, price := range plan.Price {
+			if currency == "" {
+				continue
+			}
+			log.Debugf("Calling add plan with %s currency %s desc: %s best value %t price %f",
 				plan.Id, currency, plan.Description, plan.BestValue, price)
 			req.session.AddPlan(plan.Id, plan.Description,
 				currency, plan.BestValue, plan.Duration.Years, price)
