@@ -1,11 +1,11 @@
-package android
+package pro
 
 import (
+	"strings"
+
 	"github.com/getlantern/flashlight/config"
-	"github.com/getlantern/flashlight/pro"
 	client "github.com/getlantern/flashlight/pro/client"
 	"github.com/stripe/stripe-go"
-	"strings"
 )
 
 type Session interface {
@@ -60,7 +60,7 @@ type proFunc func(*proRequest) (*client.Response, error)
 
 func newRequest(session Session) *proRequest {
 
-	httpClient := pro.GetHTTPClient()
+	httpClient := GetHTTPClient()
 
 	req := &proRequest{
 		client: client.NewClient(httpClient),

@@ -1,15 +1,16 @@
 package android
 
 import (
+	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/flashlight/stats"
 )
 
 type statsTracker struct {
 	stats.Tracker
-	session Session
+	session pro.Session
 }
 
-func NewStatsTracker(session Session) *statsTracker {
+func NewStatsTracker(session pro.Session) *statsTracker {
 	s := &statsTracker{
 		session: session,
 	}

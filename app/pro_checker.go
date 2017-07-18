@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/pro"
-	proclient "github.com/getlantern/flashlight/pro/client"
 )
 
 // isProUser blocks itself to check if current user is Pro, or !ok if error
@@ -20,7 +19,7 @@ func isProUser() (isPro bool, ok bool) {
 		}
 		time.Sleep(250 * time.Millisecond)
 	}
-	return proclient.IsProUser(userID, settings.GetToken(), settings.GetDeviceID())
+	return pro.IsProUser(userID, settings.GetToken(), settings.GetDeviceID())
 }
 
 // isProUserFast checks a cached value for the pro status and doesn't wait for

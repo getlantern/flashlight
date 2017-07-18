@@ -13,6 +13,7 @@ import (
 
 	"golang.org/x/net/proxy"
 
+	"github.com/getlantern/flashlight/pro"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,7 +22,7 @@ const expectedBody = "Google is built by a large team of engineers, designers, r
 type testProtector struct{}
 
 type testSession struct {
-	Session
+	pro.Session
 }
 
 func (c testSession) AfterStart()              {}

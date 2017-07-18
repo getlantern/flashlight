@@ -15,17 +15,19 @@ import (
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/autoupdate"
 	"github.com/getlantern/bandwidth"
+	"github.com/getlantern/golog"
+	"github.com/getlantern/mtime"
+	"github.com/getlantern/netx"
+	"github.com/getlantern/protected"
+
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
+	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/flashlight/proxied"
-	"github.com/getlantern/golog"
-	"github.com/getlantern/mtime"
-	"github.com/getlantern/netx"
-	"github.com/getlantern/protected"
 )
 
 var (
@@ -100,7 +102,7 @@ type Updater autoupdate.Updater
 // time out.
 func Start(configDir string, locale string,
 	stickyConfig bool,
-	timeoutMillis int, session Session) (*StartResult, error) {
+	timeoutMillis int, session pro.Session) (*StartResult, error) {
 
 	startOnce.Do(func() {
 		go run(configDir, locale, stickyConfig, session)
@@ -128,7 +130,7 @@ func AddLoggingMetadata(key, value string) {
 }
 
 func run(configDir, locale string,
-	stickyConfig bool, session Session) {
+	stickyConfig bool, session pro.Session) {
 
 	appdir.SetHomeDir(configDir)
 	session.SetStaging(common.Staging)
@@ -187,7 +189,7 @@ func run(configDir, locale string,
 	)
 }
 
-func bandwidthUpdates(session Session) {
+func bandwidthUpdates(session pro.Session) {
 	go func() {
 		for quota := range bandwidth.Updates {
 			session.BandwidthUpdate(getBandwidth(quota))
@@ -217,19 +219,18 @@ func getBandwidth(quota *bandwidth.Quota) (int, int) {
 	return percent, remaining
 }
 
-func setBandwidth(session Session) {
+func setBandwidth(session pro.Session) {
 	percent, remaining := getBandwidth(bandwidth.GetQuota())
 	if percent != 0 && remaining != 0 {
 		session.BandwidthUpdate(percent, remaining)
 	}
 }
 
-func initSession(session Session) {
+func initSession(session pro.Session) {
 	if session.GetUserID() == 0 {
 		// create new user first if we have no valid user id
-		_, err := newUser(newRequest(session))
-		if err != nil {
-			log.Errorf("Could not create new pro user")
+		if !pro.ProRequest("newuser", session) {
+			log.Error("Could not create new pro user")
 			return
 		}
 	}
@@ -239,17 +240,14 @@ func initSession(session Session) {
 	setBandwidth(session)
 	setSurvey(session)
 
-	req := newRequest(session)
-
-	for _, proFn := range []proFunc{plans, userData} {
-		_, err := proFn(req)
-		if err != nil {
-			log.Errorf("Error making pro request: %v", err)
+	for _, cmd := range []string{"plans", "userdata"} {
+		if !pro.ProRequest(cmd, session) {
+			log.Error("Error making pro request")
 		}
 	}
 }
 
-func afterStart(session Session) {
+func afterStart(session pro.Session) {
 
 	bandwidthUpdates(session)
 
@@ -298,7 +296,7 @@ func extractUrl(surveys map[string]*json.RawMessage, locale string) (string, err
 	return "", nil
 }
 
-func setSurvey(session Session) {
+func setSurvey(session pro.Session) {
 	url, err := surveyRequest(session.Locale())
 	if err == nil && url != "" {
 		log.Debugf("Setting survey url to %s", url)
