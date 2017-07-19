@@ -30,6 +30,7 @@ type Session interface {
 	Provider() string
 	ResellerCode() string
 	SetSignature(string)
+	SetPaymentProvider(string)
 	StripeToken() string
 	StripeApiKey() string
 	Email() string
@@ -41,6 +42,7 @@ type Session interface {
 	SetError(string, string)
 	SetErrorId(string, string)
 	Currency() string
+	DeviceOS() string
 	SetStripePubKey(string)
 }
 
@@ -281,6 +283,16 @@ func pwSignature(req *proRequest) (*client.Response, error) {
 	return &client.Response{Status: "ok"}, nil
 }
 
+func userPaymentGateway(req *proRequest) (*client.Response, error) {
+	provider, err := req.client.UserPaymentGateway(req.user, req.session.DeviceOS())
+	if err != nil {
+		log.Errorf("Error trying to determine payment provider: %v", err)
+		return nil, err
+	}
+	req.session.SetPaymentProvider(provider)
+	return &client.Response{Status: "ok"}, nil
+}
+
 func RemoveDevice(deviceId string, session Session) bool {
 	req := newRequest(session)
 	log.Debugf("Calling user link remove on device %s", deviceId)
@@ -300,21 +312,22 @@ func ProRequest(command string, session Session) bool {
 	log.Debugf("Received a %s pro request", command)
 
 	commands := map[string]proFunc{
-		"emailexists":       emailExists,
-		"newuser":           newUser,
-		"payment-signature": pwSignature,
-		"purchase":          purchase,
-		"plans":             plans,
-		"signin":            signin,
-		"linkrequest":       linkRequest,
-		"redeemcode":        redeemCode,
-		"requestcode":       requestCode,
-		"userdata":          userData,
-		"userrecover":       userRecover,
-		"userupdate":        userUpdate,
-		"verifycode":        verifyCode,
-		"referral":          referral,
-		"cancel":            cancel,
+		"emailexists":          emailExists,
+		"newuser":              newUser,
+		"payment-signature":    pwSignature,
+		"user-payment-gateway": userPaymentGateway,
+		"purchase":             purchase,
+		"plans":                plans,
+		"signin":               signin,
+		"linkrequest":          linkRequest,
+		"redeemcode":           redeemCode,
+		"requestcode":          requestCode,
+		"userdata":             userData,
+		"userrecover":          userRecover,
+		"userupdate":           userUpdate,
+		"verifycode":           verifyCode,
+		"referral":             referral,
+		"cancel":               cancel,
 	}
 
 	cmd, cmdFound := commands[command]

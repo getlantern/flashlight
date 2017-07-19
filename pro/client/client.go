@@ -409,6 +409,24 @@ func (c *Client) PWSignature(user User, email, currency, deviceName, planId stri
 	return sig, nil
 }
 
+func (c *Client) UserPaymentGateway(user User, deviceOS string) (provider string, err error) {
+	var res Response
+	payload, err := c.get(`/user-payment-gateway`, user.headers(), url.Values{
+		"deviceOS": {deviceOS},
+	})
+	if err != nil {
+		return "", err
+	}
+	err = json.Unmarshal(payload, &res)
+	if err == nil {
+		provider = res.Provider
+		log.Debugf("Payment provider is " + provider)
+	} else {
+		log.Errorf("Could not get payment provider: %v", err)
+	}
+	return
+}
+
 // Plans creates an user without asking for any payment.
 func (c *Client) Plans(user User) (res *Response, err error) {
 	var payload []byte
