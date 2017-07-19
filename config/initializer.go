@@ -148,7 +148,7 @@ func checkOverrides(flags map[string]interface{},
 func getProxyURLs(staging bool) *chainedFrontedURLs {
 	if staging {
 		log.Debug("Configuring for staging")
-		//return proxiesStagingURLs
+		return proxiesStagingURLs
 	}
 	log.Debugf("Not configuring for staging.")
 	return proxiesURLs
