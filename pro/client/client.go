@@ -420,7 +420,6 @@ func (c *Client) UserPaymentGateway(user User, deviceOS string) (provider string
 	err = json.Unmarshal(payload, &res)
 	if err == nil {
 		provider = res.Provider
-		log.Debugf("Payment provider is " + provider)
 	} else {
 		log.Errorf("Could not get payment provider: %v", err)
 	}
