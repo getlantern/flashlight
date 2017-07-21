@@ -10,12 +10,6 @@ import (
 
 type Session interface {
 	config.UserConfig
-	SetCountry(string)
-	UpdateStats(string, string, string, int, int)
-	SetStaging(bool)
-	ShowSurvey(string)
-	ProxyAll() bool
-	BandwidthUpdate(int, int)
 	DeviceId() string
 	AccountId() string
 	AddDevice(string, string)
@@ -346,4 +340,20 @@ func ProRequest(command string, session Session) bool {
 	}
 
 	return true
+}
+
+func InitSession(session Session) {
+	if session.GetUserID() == 0 {
+		// create new user first if we have no valid user id
+		if !ProRequest("newuser", session) {
+			log.Error("Could not create new pro user")
+			return
+		}
+	}
+	log.Debugf("New Lantern session with user id %d", session.GetUserID())
+	for _, cmd := range []string{"plans", "userdata"} {
+		if !ProRequest(cmd, session) {
+			log.Error("Error making pro request")
+		}
+	}
 }

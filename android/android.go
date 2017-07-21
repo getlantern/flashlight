@@ -79,6 +79,16 @@ type SurveyInfo struct {
 	Button      string  `json:"button"`
 }
 
+type Session interface {
+	pro.Session
+	SetCountry(string)
+	UpdateStats(string, string, string, int, int)
+	SetStaging(bool)
+	ShowSurvey(string)
+	ProxyAll() bool
+	BandwidthUpdate(int, int)
+}
+
 // StartResult provides information about the started Lantern
 type StartResult struct {
 	HTTPAddr   string
@@ -102,7 +112,7 @@ type Updater autoupdate.Updater
 // time out.
 func Start(configDir string, locale string,
 	stickyConfig bool,
-	timeoutMillis int, session pro.Session) (*StartResult, error) {
+	timeoutMillis int, session Session) (*StartResult, error) {
 
 	startOnce.Do(func() {
 		go run(configDir, locale, stickyConfig, session)
@@ -130,7 +140,7 @@ func AddLoggingMetadata(key, value string) {
 }
 
 func run(configDir, locale string,
-	stickyConfig bool, session pro.Session) {
+	stickyConfig bool, session Session) {
 
 	appdir.SetHomeDir(configDir)
 	session.SetStaging(common.Staging)
@@ -189,7 +199,7 @@ func run(configDir, locale string,
 	)
 }
 
-func bandwidthUpdates(session pro.Session) {
+func bandwidthUpdates(session Session) {
 	go func() {
 		for quota := range bandwidth.Updates {
 			session.BandwidthUpdate(getBandwidth(quota))
@@ -219,40 +229,20 @@ func getBandwidth(quota *bandwidth.Quota) (int, int) {
 	return percent, remaining
 }
 
-func setBandwidth(session pro.Session) {
+func setBandwidth(session Session) {
 	percent, remaining := getBandwidth(bandwidth.GetQuota())
 	if percent != 0 && remaining != 0 {
 		session.BandwidthUpdate(percent, remaining)
 	}
 }
 
-func initSession(session pro.Session) {
-	if session.GetUserID() == 0 {
-		// create new user first if we have no valid user id
-		if !pro.ProRequest("newuser", session) {
-			log.Error("Could not create new pro user")
-			return
-		}
-	}
-
-	log.Debugf("New Lantern session with user id %d", session.GetUserID())
-
-	setBandwidth(session)
-	setSurvey(session)
-
-	for _, cmd := range []string{"plans", "userdata"} {
-		if !pro.ProRequest(cmd, session) {
-			log.Error("Error making pro request")
-		}
-	}
-}
-
-func afterStart(session pro.Session) {
-
+func afterStart(session Session) {
 	bandwidthUpdates(session)
-
-	go initSession(session)
-
+	go func() {
+		pro.InitSession(session)
+		setBandwidth(session)
+		setSurvey(session)
+	}()
 	go func() {
 		if <-geolookup.OnRefresh() {
 			country := geolookup.GetCountry(0)
@@ -296,7 +286,7 @@ func extractUrl(surveys map[string]*json.RawMessage, locale string) (string, err
 	return "", nil
 }
 
-func setSurvey(session pro.Session) {
+func setSurvey(session Session) {
 	url, err := surveyRequest(session.Locale())
 	if err == nil && url != "" {
 		log.Debugf("Setting survey url to %s", url)
