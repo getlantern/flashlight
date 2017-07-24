@@ -43,16 +43,21 @@ type user struct {
 //session implements the Session interface of package flashlight/pro.
 //It is also unmarshalled to json and send to desktop UI.
 type session struct {
-	User                     user                `json:"user"`
-	Providers                map[string]provider `json:"providers"`
-	CurrentProviderSignature string              `json:"signature"`
-	Plans                    []client.Plan       `json:"plans"`
-	IsPro                    bool                `json:"isPro"`
-	CmdErrors                map[string]string   `json:"cmdErrors"`
-	CmdErrorIDs              map[string]string   `json:"cmdErrorIds"`
+	GotUserData bool `json:"gotUserData"`
+	User        user `json:"user"`
 
-	signal chan struct{} `json:"-"`
-	mu     sync.RWMutex  `json:"-"`
+	// Providers                map[string]provider `json:"providers"`
+	StripePubKey             string        `json:"stripePubKey"`
+	CurrentProviderSignature string        `json:"signature"`
+	Plans                    []client.Plan `json:"plans"`
+	IsPro                    bool          `json:"isPro"`
+
+	CmdErrors   map[string]string `json:"cmdErrors"`
+	CmdErrorIDs map[string]string `json:"cmdErrorIds"`
+
+	cmdParams map[string]interface{} `json:"-"`
+	signal    chan struct{}          `json:"-"`
+	mu        sync.RWMutex           `json:"-"`
 }
 
 var theSession = &session{
@@ -114,6 +119,10 @@ func (s *session) DeviceCode() string {
 	return ""
 }
 
+func (s *session) DeviceOS() string {
+	return ""
+}
+
 func (s *session) DeviceName() string {
 	return ""
 }
@@ -134,6 +143,10 @@ func (s *session) ResellerCode() string {
 	return ""
 }
 
+func (s *session) SetPaymentProvider(string) {
+	s.notify()
+}
+
 func (s *session) SetSignature(string) {
 	s.notify()
 }
@@ -143,11 +156,20 @@ func (s *session) StripeToken() string {
 }
 
 func (s *session) StripeApiKey() string {
-	return ""
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.StripePubKey
 }
 
 func (s *session) Email() string {
-	return s.User.Email
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if v, exists := s.cmdParams["email"]; exists {
+		if email, ok := v.(string); ok {
+			return email
+		}
+	}
+	return ""
 }
 
 func (s *session) SetToken(token string) {
@@ -157,6 +179,9 @@ func (s *session) SetToken(token string) {
 
 func (s *session) SetUserId(id int64) {
 	settings.SetUserID(id)
+	s.mu.Lock()
+	s.User.UserID = id
+	s.mu.Unlock()
 	s.notify()
 }
 
@@ -165,10 +190,13 @@ func (s *session) SetDeviceCode(string, int64) {
 }
 
 func (s *session) UserData(isPro bool, expiration int64, subscription string, email string) {
+	s.mu.Lock()
+	s.GotUserData = true
 	s.IsPro = isPro
 	s.User.Expiration = expiration
 	// s.User.Subscription = subscription
 	s.User.Email = email
+	s.mu.Unlock()
 }
 
 func (s *session) SetCode(string) {
@@ -176,12 +204,16 @@ func (s *session) SetCode(string) {
 }
 
 func (s *session) SetError(cmd string, err string) {
+	s.mu.Lock()
 	s.CmdErrors[cmd] = err
+	s.mu.Unlock()
 	s.notify()
 }
 
 func (s *session) SetErrorId(cmd string, id string) {
+	s.mu.Lock()
 	s.CmdErrorIDs[cmd] = id
+	s.mu.Unlock()
 	s.notify()
 }
 
@@ -189,7 +221,10 @@ func (s *session) Currency() string {
 	return ""
 }
 
-func (s *session) SetStripePubKey(string) {
+func (s *session) SetStripePubKey(key string) {
+	s.mu.Lock()
+	s.StripePubKey = key
+	s.mu.Unlock()
 	s.notify()
 }
 
@@ -197,9 +232,30 @@ func (s *session) notify() {
 	s.signal <- struct{}{}
 }
 
+func (s *session) clearError(cmd string) {
+	s.mu.Lock()
+	s.CmdErrors[cmd] = ""
+	s.CmdErrorIDs[cmd] = ""
+	s.mu.Unlock()
+}
+
+func (s *session) setParams(params map[string]interface{}) {
+	s.mu.Lock()
+	s.cmdParams = params
+	s.mu.Unlock()
+}
+
 func (s *session) copy() (ret session) {
 	s.mu.RLock()
 	ret = *s
+	ret.CmdErrors = make(map[string]string)
+	for k, v := range s.CmdErrors {
+		ret.CmdErrors[k] = v
+	}
+	ret.CmdErrorIDs = make(map[string]string)
+	for k, v := range s.CmdErrorIDs {
+		ret.CmdErrorIDs[k] = v
+	}
 	s.mu.RUnlock()
 	return
 }
@@ -220,10 +276,28 @@ func servePro() error {
 		}
 	}()
 	go func() {
-		for cmd := range service.In {
-			pro.ProRequest(cmd.(string), theSession)
+		for m := range service.In {
+			message, ok := m.(map[string]interface{})
+			if !ok {
+				log.Errorf("Unrecognized pro message %v", m)
+				continue
+			}
+			cmd, ok := message["cmd"].(string)
+			if !ok {
+				log.Errorf("Unrecognized pro command %v", message["cmd"])
+				continue
+			}
+			theSession.clearError(cmd)
+			params, _ := message["params"].(map[string]interface{})
+			if params != nil {
+				log.Debugf("Setting pro parameters to %v", params)
+				theSession.setParams(params)
+			}
+			pro.ProRequest(cmd, theSession)
 		}
 	}()
+	// pro package doesn't call SetUserID() by default
+	theSession.User.UserID = theSession.GetUserID()
 	pro.InitSession(theSession)
 
 	return nil

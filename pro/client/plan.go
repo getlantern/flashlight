@@ -1,7 +1,9 @@
 package client
 
 type Duration struct {
-	Days, Months, Years int
+	Days   int `json:"days"`
+	Months int `json:"months"`
+	Years  int `json:"years"`
 }
 
 type Plan struct {
