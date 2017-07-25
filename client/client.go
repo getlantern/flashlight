@@ -255,6 +255,7 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 			return err
 		}
 		log.Debugf("Error serving HTTP client proxy at %v, restarting: %v", listenAddr, err)
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
