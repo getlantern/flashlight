@@ -304,9 +304,7 @@ func (client *Client) dial(isConnect bool, network, addr string) (conn net.Conn,
 	op := ops.Begin("proxied_dialer")
 	op.Set("local_proxy_type", "http")
 	defer op.End()
-	ctx, cancel := context.WithTimeout(context.Background(), getRequestTimeout())
-	defer cancel()
-	return client.doDial(op, ctx, isConnect, addr)
+	return client.doDial(op, context.Background(), isConnect, addr)
 }
 
 func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, addr string) (net.Conn, error) {
@@ -315,15 +313,24 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		return nil, err
 	}
 
+	newCTX, cancel := context.WithTimeout(ctx, getRequestTimeout())
+	defer cancel()
 	op.Origin(addr, "")
+
 	if err := client.shouldSendToProxy(addr, port); err != nil {
 		log.Debugf("%v, sending directly to %v", err, addr)
 		op.Set("force_direct", true)
 		op.Set("force_direct_reason", err.Error())
 		// Use netx because on Android, we need a special protected dialer, same below
-		return netx.DialContext(ctx, "tcp", addr)
+		return netx.DialContext(newCTX, "tcp", addr)
 	}
 
+	dialer := client.getDialer(op, isCONNECT)
+	c, e := dialer(newCTX, "tcp", addr)
+	return c, op.FailIf(e)
+}
+
+func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Context, network, addr string) (net.Conn, error) {
 	directDialer := func(ctx context.Context, network, addr string) (net.Conn, error) {
 		if allow, ip := client.allowShortcut(addr); allow {
 			log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
@@ -331,14 +338,16 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 			op.Set("shortcut_direct_ip", ip)
 			return netx.DialContext(ctx, "tcp", addr)
 		}
-		// A reasonable default. Never be used as ctx always has a deadline.
-		timeout := 3 * time.Second
-		if dl, ok := ctx.Deadline(); ok {
-			// It's roughly requestTimeout (20s) / 5 = 4s to leave enough time
-			// to try detour.
-			timeout = dl.Sub(time.Now()) / 5
+		dl, ok := ctx.Deadline()
+		if !ok {
+			return nil, errors.New("context has no deadline")
 		}
-		newCTX, _ := context.WithTimeout(ctx, timeout)
+		// It's roughly requestTimeout (20s) / 5 = 4s to leave enough time
+		// to try detour. Not hardcode to 4s to avoid break test code which may
+		// have a shorter requestTimeout.
+		timeout := dl.Sub(time.Now()) / 5
+		newCTX, cancel := context.WithTimeout(ctx, timeout)
+		defer cancel()
 		return netx.DialContext(newCTX, "tcp", addr)
 	}
 
@@ -357,6 +366,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		// TODO: pass context down to all layers.
 		chDone := make(chan bool)
 		var conn net.Conn
+		var err error
 		go func() {
 			start := time.Now()
 			conn, err = client.bal.Dial(proto, addr)
@@ -388,9 +398,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		op.Set("detour", false)
 		dialer = proxiedDialer
 	}
-
-	c, e := dialer(ctx, "tcp", addr)
-	return c, op.FailIf(e)
+	return dialer
 }
 
 func (client *Client) shouldSendToProxy(addr string, port int) error {
