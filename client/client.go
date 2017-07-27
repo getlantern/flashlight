@@ -307,6 +307,12 @@ func (client *Client) dial(isConnect bool, network, addr string) (conn net.Conn,
 	return client.doDial(op, context.Background(), isConnect, addr)
 }
 
+// doDial is the ultimate place to dial an origin site. It takes following steps:
+// * If the addr is in the proxied sites list or previously detected by detour as blocked, dial the site through proxies.
+// * If proxyAll is on, dial the site through proxies.
+// * If the host or port is configured not proxyable, dial directly.
+// * If the site is allowed by shortcut, dial directly. If it failed before the deadline, try proxying.
+// * Try dial the site directly with 1/5th of the requestTimeout, then try proxying.
 func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, addr string) (net.Conn, error) {
 	port, err := client.portForAddress(addr)
 	if err != nil {
