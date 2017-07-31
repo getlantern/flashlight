@@ -319,7 +319,7 @@ func (client *Client) proxiedDialer(op *ops.Op, orig func(network, addr string) 
 	}
 }
 
-func (client *Client) dial(isConnect bool, network, addr string) (conn net.Conn, err error) {
+func (client *Client) dial(ctx context.Context, isConnect bool, network, addr string) (conn net.Conn, err error) {
 	op := ops.Begin("proxied_dialer")
 	op.Set("local_proxy_type", "http")
 	defer op.End()
@@ -471,7 +471,7 @@ func InConfigDir(configDir string, filename string) (string, error) {
 	return filepath.Join(cdir, filename), nil
 }
 
-func errorResponse(ctx context.Context, req *http.Request, read bool, err error) *http.Response {
+func errorResponse(ctx filters.Context, req *http.Request, read bool, err error) *http.Response {
 	var htmlerr []byte
 
 	if req == nil {

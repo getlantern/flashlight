@@ -36,7 +36,7 @@ func (client *Client) handle(conn net.Conn) error {
 	return err
 }
 
-func (client *Client) filter(ctx context.Context, req *http.Request, next filters.Next) (*http.Response, context.Context, error) {
+func (client *Client) filter(ctx filters.Context, req *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
 	// Add the scheme back for CONNECT requests. It is cleared
 	// intentionally by the standard library, see
 	// https://golang.org/src/net/http/request.go#L938. The easylist
@@ -83,7 +83,7 @@ func (client *Client) filter(ctx context.Context, req *http.Request, next filter
 	return next(ctx, req)
 }
 
-func (client *Client) easyblock(ctx context.Context, req *http.Request) (*http.Response, context.Context, error) {
+func (client *Client) easyblock(ctx filters.Context, req *http.Request) (*http.Response, filters.Context, error) {
 	log.Debugf("Blocking %v on %v", req.URL, req.Host)
 	client.statsTracker.IncAdsBlocked()
 	resp := &http.Response{
@@ -93,7 +93,7 @@ func (client *Client) easyblock(ctx context.Context, req *http.Request) (*http.R
 	return filters.ShortCircuit(ctx, req, resp)
 }
 
-func (client *Client) redirectHTTPS(ctx context.Context, req *http.Request, httpsURL string, op *ops.Op) (*http.Response, context.Context, error) {
+func (client *Client) redirectHTTPS(ctx filters.Context, req *http.Request, httpsURL string, op *ops.Op) (*http.Response, filters.Context, error) {
 	log.Debugf("httpseverywhere redirecting to %v", httpsURL)
 	op.Set("forcedhttps", true)
 	client.statsTracker.IncHTTPSUpgrades()
@@ -130,7 +130,7 @@ func (client *Client) adSwapURL(req *http.Request) string {
 	return fmt.Sprintf("%v?lang=%v&url=%v%v", jsURL, url.QueryEscape(lang), url.QueryEscape(targetURL), extra)
 }
 
-func (client *Client) redirectAdSwap(ctx context.Context, req *http.Request, adSwapURL string, op *ops.Op) (*http.Response, context.Context, error) {
+func (client *Client) redirectAdSwap(ctx filters.Context, req *http.Request, adSwapURL string, op *ops.Op) (*http.Response, filters.Context, error) {
 	op.Set("adswapped", true)
 	resp := &http.Response{
 		StatusCode: http.StatusTemporaryRedirect,
