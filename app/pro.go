@@ -104,61 +104,68 @@ func (s *session) AddPlan(id string, desc string, currency string,
 }
 
 func (s *session) Locale() string {
-	return ""
+	return settings.GetLanguage()
 }
 
 func (s *session) Code() string {
-	return ""
+	panic("not implemented")
 }
 
 func (s *session) VerifyCode() string {
-	return ""
+	panic("not implemented")
 }
 
 func (s *session) DeviceCode() string {
-	return ""
+	panic("not implemented")
 }
 
 func (s *session) DeviceOS() string {
-	return ""
+	panic("not implemented")
 }
 
 func (s *session) DeviceName() string {
-	return ""
+	panic("not implemented")
 }
 
 func (s *session) Referral() string {
-	return ""
+	panic("not implemented")
 }
 
 func (s *session) Plan() string {
-	return ""
+	panic("not implemented")
 }
 
 func (s *session) Provider() string {
-	return ""
+	panic("not implemented")
 }
 
 func (s *session) ResellerCode() string {
-	return ""
+	panic("not implemented")
 }
 
 func (s *session) SetPaymentProvider(string) {
-	s.notify()
+	panic("not implemented")
 }
 
 func (s *session) SetSignature(string) {
-	s.notify()
+	panic("not implemented")
 }
 
 func (s *session) StripeToken() string {
-	return ""
+	panic("not implemented")
 }
 
 func (s *session) StripeApiKey() string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.StripePubKey
+}
+
+func (s *session) SetStripePubKey(key string) {
+	s.mu.Lock()
+	s.StripePubKey = key
+	s.mu.Unlock()
+	s.notify()
 }
 
 func (s *session) Email() string {
@@ -186,7 +193,7 @@ func (s *session) SetUserId(id int64) {
 }
 
 func (s *session) SetDeviceCode(string, int64) {
-	s.notify()
+	panic("not implemented")
 }
 
 func (s *session) UserData(isPro bool, expiration int64, subscription string, email string) {
@@ -200,7 +207,7 @@ func (s *session) UserData(isPro bool, expiration int64, subscription string, em
 }
 
 func (s *session) SetCode(string) {
-	s.notify()
+	panic("not implemented")
 }
 
 func (s *session) SetError(cmd string, err string) {
@@ -218,14 +225,7 @@ func (s *session) SetErrorId(cmd string, id string) {
 }
 
 func (s *session) Currency() string {
-	return ""
-}
-
-func (s *session) SetStripePubKey(key string) {
-	s.mu.Lock()
-	s.StripePubKey = key
-	s.mu.Unlock()
-	s.notify()
+	panic("not implemented")
 }
 
 func (s *session) notify() {
@@ -275,27 +275,29 @@ func servePro() error {
 			service.Out <- theSession.copy()
 		}
 	}()
-	go func() {
-		for m := range service.In {
-			message, ok := m.(map[string]interface{})
-			if !ok {
-				log.Errorf("Unrecognized pro message %v", m)
-				continue
-			}
-			cmd, ok := message["cmd"].(string)
-			if !ok {
-				log.Errorf("Unrecognized pro command %v", message["cmd"])
-				continue
-			}
-			theSession.clearError(cmd)
-			params, _ := message["params"].(map[string]interface{})
-			if params != nil {
-				log.Debugf("Setting pro parameters to %v", params)
-				theSession.setParams(params)
-			}
-			pro.ProRequest(cmd, theSession)
-		}
-	}()
+	// Not accept client commands at this moment
+	// go func() {
+	// 	for m := range service.In {
+	// 		message, ok := m.(map[string]interface{})
+	// 		if !ok {
+	// 			log.Errorf("Unrecognized pro message %v", m)
+	// 			continue
+	// 		}
+	// 		cmd, ok := message["cmd"].(string)
+	// 		if !ok {
+	// 			log.Errorf("Unrecognized pro command %v", message["cmd"])
+	// 			continue
+	// 		}
+	// 		theSession.clearError(cmd)
+	// 		params, _ := message["params"].(map[string]interface{})
+	// 		if params != nil {
+	// 			log.Debugf("Setting pro parameters to %v", params)
+	// 			theSession.setParams(params)
+	// 		}
+	// 		pro.ProRequest(cmd, theSession)
+	// 	}
+	// }()
+
 	// pro package doesn't call SetUserID() by default
 	theSession.User.UserID = theSession.GetUserID()
 	pro.InitSession(theSession)
