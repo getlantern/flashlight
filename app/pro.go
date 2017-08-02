@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/pro"
+	"github.com/getlantern/flashlight/ws"
 )
 
 // isProUser blocks itself to check if current user is Pro, or !ok if error
@@ -33,20 +34,34 @@ func isProUserFast() (isPro bool, statusKnown bool) {
 	return pro.IsProUserFast(userID)
 }
 
-// func servePro() error {
-// 	helloFn := func(write func(interface{})) {
-// 		isPro, statusKnown := isProUserFast()
-// 		log.Debugf("Sending current user data to new client: %v", theSession)
-// 		write(theSession)
-// 	}
-// 	service, err := ws.Register("pro", helloFn)
-// 	if err != nil {
-// 		log.Errorf("Error registering with UI? %v", err)
-// 		return err
-// 	}
-// 	go func() {
-// 		for _ = range theSession.signal {
-// 			service.Out <- theSession.copy()
-// 		}
-// 	}()
-// }
+func servePro() error {
+	go func() {
+		for {
+			userID := settings.GetUserID()
+			if userID == 0 {
+				user, err := pro.NewUser(settings.GetDeviceID())
+				if err != nil {
+					log.Errorf("Could not create new Pro user: %v", err)
+				} else {
+					settings.SetUserID(user.Auth.ID)
+					return
+				}
+			}
+			_, err := pro.GetUserData(userID, settings.GetToken(), settings.GetDeviceID())
+			if err != nil {
+				log.Errorf("Could not get user data for %v: %v", userID, err)
+			} else {
+				return
+			}
+		}
+	}()
+	helloFn := func(write func(interface{})) {
+		go func() {
+			user := pro.WaitForUserData(settings.GetUserID())
+			log.Debugf("Sending current user data to new client: %v", user)
+			write(user)
+		}()
+	}
+	_, err := ws.Register("pro", helloFn)
+	return err
+}
