@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/pro/client"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
 )
@@ -76,15 +77,13 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	if readErr != nil {
 		return
 	}
-	udr := &struct {
-		UserStatus string `json:"userStatus"`
-	}{}
-	readErr = json.NewDecoder(gzr).Decode(udr)
+	user := client.User{}
+	readErr = json.NewDecoder(gzr).Decode(&user)
 	if readErr != nil {
 		return
 	}
-	log.Debugf("Updating pro status implicitly to '%v'", udr.UserStatus)
-	SetProStatus(userID, udr.UserStatus)
+	log.Debugf("Updating user data implicitly for user %v", userID)
+	SetUserData(userID, user)
 	return
 }
 

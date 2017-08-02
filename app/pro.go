@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/pro"
-	proclient "github.com/getlantern/flashlight/pro/client"
 )
 
 // isProUser blocks itself to check if current user is Pro, or !ok if error
@@ -20,7 +19,7 @@ func isProUser() (isPro bool, ok bool) {
 		}
 		time.Sleep(250 * time.Millisecond)
 	}
-	return proclient.IsProUser(userID, settings.GetToken(), settings.GetDeviceID())
+	return pro.IsProUser(userID, settings.GetToken(), settings.GetDeviceID())
 }
 
 // isProUserFast checks a cached value for the pro status and doesn't wait for
@@ -33,3 +32,21 @@ func isProUserFast() (isPro bool, statusKnown bool) {
 	}
 	return pro.IsProUserFast(userID)
 }
+
+// func servePro() error {
+// 	helloFn := func(write func(interface{})) {
+// 		isPro, statusKnown := isProUserFast()
+// 		log.Debugf("Sending current user data to new client: %v", theSession)
+// 		write(theSession)
+// 	}
+// 	service, err := ws.Register("pro", helloFn)
+// 	if err != nil {
+// 		log.Errorf("Error registering with UI? %v", err)
+// 		return err
+// 	}
+// 	go func() {
+// 		for _ = range theSession.signal {
+// 			service.Out <- theSession.copy()
+// 		}
+// 	}()
+// }
