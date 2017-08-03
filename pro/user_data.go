@@ -51,13 +51,14 @@ func (m *userMap) wait(userID int64) *client.User {
 	return u.(*client.User)
 }
 
-// GetUserDataFast gets the user data for the given userID if found.
-func GetUserDataFast(userID int64) (*client.User, bool) {
-	return userData.get(userID)
-}
-
-func WaitForUserData(userID int64) *client.User {
-	return userData.wait(userID)
+// IsProUser indicates whether or not the user is pro, calling the Pro API if
+// necessary to determine the status.
+func IsProUser(userID int64, proToken string, deviceID string) (isPro bool, statusKnown bool) {
+	user, err := GetUserData(userID, proToken, deviceID)
+	if err != nil {
+		return false, false
+	}
+	return IsActive(user.UserStatus), true
 }
 
 // IsProUserFast indicates whether or not the user is pro and whether or not the
@@ -73,6 +74,17 @@ func IsProUserFast(userID int64) (isPro bool, statusKnown bool) {
 // IsActive determines whether the given status is an active status
 func IsActive(status string) bool {
 	return status == "active"
+}
+
+// GetUserDataFast gets the user data for the given userID if found.
+func GetUserDataFast(userID int64) (*client.User, bool) {
+	return userData.get(userID)
+}
+
+// WaitForUserData blocks itself to get the user data for the given userID
+// until it's available.
+func WaitForUserData(userID int64) *client.User {
+	return userData.wait(userID)
 }
 
 //NewUser creates a new user via Pro API, and updates local cache.
@@ -92,7 +104,8 @@ func NewUser(deviceID string) (*client.User, error) {
 	return &user, nil
 }
 
-//GetUserData gets user data from Pro API, and updates local cache.
+//GetUserData retrieves local cache first. If the data for the userID is not
+//there, fetches from Pro API, and updates local cache.
 func GetUserData(userID int64, proToken string, deviceID string) (*client.User, error) {
 	user, found := GetUserDataFast(userID)
 	if found {
@@ -114,5 +127,6 @@ func GetUserData(userID int64, proToken string, deviceID string) (*client.User, 
 }
 
 func setUserData(userID int64, user *client.User) {
+	log.Debugf("Storing user data for user %v", userID)
 	userData.save(userID, user)
 }

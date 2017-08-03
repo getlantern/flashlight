@@ -102,7 +102,7 @@ func (s *notifyStatus) notifyCapHit() {
 }
 
 func (s *notifyStatus) notifyFreeUser(title, msg, campaign string) {
-	if isPro, ok := isProUserFast(); !ok {
+	if isPro, ok := isProUser(); !ok {
 		log.Debugf("user status is unknown, skip showing notification")
 		return
 	} else if isPro {
