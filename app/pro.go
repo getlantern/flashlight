@@ -6,8 +6,9 @@ import (
 )
 
 // isProUserFast checks a cached value for the pro status and doesn't wait for
-// an answer. It assumes that isProUser is called somewhere along the line in
-// order to update the status.
+// an answer. It works because servePro below fetches user data / create new
+// user when starts up. The pro proxy also updates user data implicitly for
+// '/userData' calls initiated from desktop UI.
 func isProUserFast() (isPro bool, statusKnown bool) {
 	userID := settings.GetUserID()
 	if userID == 0 {
@@ -16,6 +17,8 @@ func isProUserFast() (isPro bool, statusKnown bool) {
 	return pro.IsProUserFast(userID)
 }
 
+// servePro fetches user data or creates new user, and serves user data to all
+// connected WebSocket clients via the "pro" channel.
 func servePro() error {
 	go func() {
 		for {
@@ -28,12 +31,13 @@ func servePro() error {
 					settings.SetUserID(user.Auth.ID)
 					return
 				}
-			}
-			_, err := pro.GetUserData(userID, settings.GetToken(), settings.GetDeviceID())
-			if err != nil {
-				log.Errorf("Could not get user data for %v: %v", userID, err)
 			} else {
-				return
+				_, err := pro.GetUserData(userID, settings.GetToken(), settings.GetDeviceID())
+				if err != nil {
+					log.Errorf("Could not get user data for %v: %v", userID, err)
+				} else {
+					return
+				}
 			}
 		}
 	}()
