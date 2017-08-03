@@ -125,9 +125,9 @@ imports:
 - name: github.com/getlantern/hidden
   version: d52a649ab33af200943bb599898dbdcfdbc94cb7
 - name: github.com/getlantern/http-proxy
-  version: fe9ddb05d18127dd7f4e6c46abac271f719afc65
+  version: ec5810616467f60356cbca25ed5a120fe40aed65
 - name: github.com/getlantern/http-proxy-lantern
-  version: 270365f3a597d017ce0f3fcfef922a20b9f70d05
+  version: 1e0c377bb96878307b1dc13aa01e798758e55509
 - name: github.com/getlantern/httpseverywhere
   version: b1d8887aaf3b03b9c2eb1ce90a641495a200c7bf
 - name: github.com/getlantern/i18n
