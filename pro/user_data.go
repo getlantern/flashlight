@@ -58,7 +58,7 @@ func IsProUser(userID int64, proToken string, deviceID string) (isPro bool, stat
 	if err != nil {
 		return false, false
 	}
-	return IsActive(user.UserStatus), true
+	return isActive(user.UserStatus), true
 }
 
 // IsProUserFast indicates whether or not the user is pro and whether or not the
@@ -68,11 +68,11 @@ func IsProUserFast(userID int64) (isPro bool, statusKnown bool) {
 	if !found {
 		return false, false
 	}
-	return IsActive(user.UserStatus), found
+	return isActive(user.UserStatus), found
 }
 
-// IsActive determines whether the given status is an active status
-func IsActive(status string) bool {
+// isActive determines whether the given status is an active status
+func isActive(status string) bool {
 	return status == "active"
 }
 
