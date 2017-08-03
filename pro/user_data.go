@@ -60,17 +60,6 @@ func WaitForUserData(userID int64) *client.User {
 	return userData.wait(userID)
 }
 
-// IsProUser indicates whether or not the user is pro, calling the Pro API if
-// necessary to determine the status.
-func IsProUser(userID int64, proToken string, deviceID string) (isPro bool, statusKnown bool) {
-	user, err := GetUserData(userID, proToken, deviceID)
-	if err != nil {
-		log.Errorf("Error getting user status: %v", err)
-		return false, false
-	}
-	return IsActive(user.UserStatus), true
-}
-
 // IsProUserFast indicates whether or not the user is pro and whether or not the
 // user's status is know, never calling the Pro API to determine the status.
 func IsProUserFast(userID int64) (isPro bool, statusKnown bool) {
