@@ -37,16 +37,19 @@ func isProUserFast() (isPro bool, statusKnown bool) {
 
 // servePro fetches user data or creates new user, and serves user data to all
 // connected WebSocket clients via the "pro" channel.
+// It loops forever in 10 seconds interval until the user is fetched or
+// created, as it's fundamental for the UI to work.
 func servePro() error {
 	go func() {
+		userID := settings.GetUserID()
 		for {
-			userID := settings.GetUserID()
 			if userID == 0 {
 				user, err := pro.NewUser(settings.GetDeviceID())
 				if err != nil {
 					log.Errorf("Could not create new Pro user: %v", err)
 				} else {
 					settings.SetUserID(user.Auth.ID)
+					settings.SetToken(user.Auth.Token)
 					return
 				}
 			} else {
@@ -57,6 +60,7 @@ func servePro() error {
 					return
 				}
 			}
+			time.Sleep(10 * time.Second)
 		}
 	}()
 	helloFn := func(write func(interface{})) {

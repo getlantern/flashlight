@@ -425,6 +425,11 @@ func (s *Settings) GetDeviceID() string {
 	return s.getString(SNDeviceID)
 }
 
+// SetToken sets the user token
+func (s *Settings) SetToken(token string) {
+	s.setString(SNUserToken, token)
+}
+
 // GetToken returns the user token
 func (s *Settings) GetToken() string {
 	return s.getString(SNUserToken)
