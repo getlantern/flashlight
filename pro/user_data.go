@@ -64,6 +64,9 @@ func WaitForUserData(userID int64) *client.User {
 // user's status is know, never calling the Pro API to determine the status.
 func IsProUserFast(userID int64) (isPro bool, statusKnown bool) {
 	user, found := GetUserDataFast(userID)
+	if !found {
+		return false, false
+	}
 	return IsActive(user.UserStatus), found
 }
 
