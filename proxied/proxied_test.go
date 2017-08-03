@@ -33,7 +33,7 @@ func (rt *mockChainedRT) statusCode() int {
 	return int(atomic.LoadUint32(&rt.sc))
 }
 
-func (rt mockChainedRT) RoundTrip(req *http.Request) (*http.Response, error) {
+func (rt *mockChainedRT) RoundTrip(req *http.Request) (*http.Response, error) {
 	rt.req.Set(req)
 	return &http.Response{
 		Status:     fmt.Sprintf("%d OK", rt.statusCode()),
