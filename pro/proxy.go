@@ -83,7 +83,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 		return
 	}
 	log.Debugf("Updating user data implicitly for user %v", userID)
-	setUserData(userID, user)
+	setUserData(userID, &user)
 	return
 }
 

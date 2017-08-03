@@ -3,31 +3,61 @@ package pro
 import (
 	"sync"
 
+	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/pro/client"
 )
 
-var (
-	channelsByUserID = make(map[int64]chan client.User)
-	channelsMx       sync.RWMutex
-)
-
-// GetUserDataFast gets the user data for the given userID if found.
-func GetUserDataFast(userID int64) (client.User, bool) {
-	ch := channelForUser(userID)
-	select {
-	case user := <-ch:
-		sendNoBlock(ch, user)
-		return user, true
-	default:
-		return client.User{}, false
-	}
+type userMap struct {
+	sync.RWMutex
+	data map[int64]eventual.Value
 }
 
-func WaitForUserData(userID int64) client.User {
-	ch := channelForUser(userID)
-	user := <-ch
-	sendNoBlock(ch, user)
-	return user
+var userData = userMap{data: make(map[int64]eventual.Value)}
+
+func (m *userMap) save(userID int64, u *client.User) {
+	m.Lock()
+	v := m.data[userID]
+	if v == nil {
+		v = eventual.NewValue()
+	}
+	v.Set(u)
+	m.data[userID] = v
+	m.Unlock()
+}
+
+func (m *userMap) get(userID int64) (*client.User, bool) {
+	m.RLock()
+	v := m.data[userID]
+	m.RUnlock()
+	if v == nil {
+		return nil, false
+	}
+	u, valid := v.Get(0)
+	if !valid {
+		return nil, false
+	}
+	return u.(*client.User), true
+}
+
+func (m *userMap) wait(userID int64) *client.User {
+	m.Lock()
+	v := m.data[userID]
+	if v == nil {
+		v = eventual.NewValue()
+		m.data[userID] = v
+	}
+	m.Unlock()
+	u, _ := v.Get(-1)
+	return u.(*client.User)
+}
+
+// GetUserDataFast gets the user data for the given userID if found.
+func GetUserDataFast(userID int64) (*client.User, bool) {
+	return userData.get(userID)
+}
+
+func WaitForUserData(userID int64) *client.User {
+	return userData.wait(userID)
 }
 
 // IsProUser indicates whether or not the user is pro, calling the Pro API if
@@ -65,7 +95,7 @@ func NewUser(deviceID string) (*client.User, error) {
 	}
 	user = resp.User
 	userID := user.Auth.ID
-	setUserData(userID, user)
+	setUserData(userID, &user)
 	log.Debugf("created user %d", userID)
 	return &user, nil
 }
@@ -74,42 +104,23 @@ func NewUser(deviceID string) (*client.User, error) {
 func GetUserData(userID int64, proToken string, deviceID string) (*client.User, error) {
 	user, found := GetUserDataFast(userID)
 	if found {
-		return &user, nil
+		return user, nil
 	}
 	log.Debugf("Fetching user status with device ID '%v', user ID '%v' and proToken %v", deviceID, userID, proToken)
-	user = client.User{Auth: client.Auth{
+	user = &client.User{Auth: client.Auth{
 		DeviceID: deviceID,
 		ID:       userID,
 		Token:    proToken,
 	}}
-	resp, err := client.NewClient(GetHTTPClient()).UserStatus(user)
+	resp, err := client.NewClient(GetHTTPClient()).UserStatus(*user)
 	if err != nil {
 		return nil, err
 	}
-	setUserData(userID, resp.User)
+	setUserData(userID, &resp.User)
 	log.Debugf("User %d is '%v'", userID, resp.User.UserStatus)
 	return &resp.User, nil
 }
 
-func setUserData(userID int64, user client.User) {
-	ch := channelForUser(userID)
-	sendNoBlock(ch, user)
-}
-
-func sendNoBlock(ch chan client.User, user client.User) {
-	select {
-	case ch <- user:
-	default:
-	}
-}
-
-func channelForUser(userID int64) chan client.User {
-	channelsMx.Lock()
-	ch, found := channelsByUserID[userID]
-	if !found {
-		ch = make(chan client.User, 1)
-		channelsByUserID[userID] = ch
-	}
-	channelsMx.Unlock()
-	return ch
+func setUserData(userID int64, user *client.User) {
+	userData.save(userID, user)
 }
