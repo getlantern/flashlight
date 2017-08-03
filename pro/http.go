@@ -11,6 +11,7 @@ import (
 // proxies.
 func GetHTTPClient() *http.Client {
 	rt := proxied.ChainedThenFrontedWith(common.ProAPIDDFHost, "")
+	// Respond sooner if chained proxy is blocked, but only for idempotent requests (GETs)
 	rtForGet := proxied.ParallelPreferChainedWith(common.ProAPIDDFHost, "")
 	return getHTTPClient(rtForGet, rt)
 }

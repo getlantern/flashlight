@@ -93,7 +93,7 @@ func NewUser(deviceID string) (*client.User, error) {
 	user := client.User{Auth: client.Auth{
 		DeviceID: deviceID,
 	}}
-	resp, err := client.NewClient(GetHTTPClient()).UserCreate(user)
+	resp, err := client.NewClient(httpClient).UserCreate(user)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func GetUserData(userID int64, proToken string, deviceID string) (*client.User, 
 		ID:       userID,
 		Token:    proToken,
 	}}
-	resp, err := client.NewClient(GetHTTPClient()).UserStatus(*user)
+	resp, err := client.NewClient(httpClient).UserStatus(*user)
 	if err != nil {
 		return nil, err
 	}
