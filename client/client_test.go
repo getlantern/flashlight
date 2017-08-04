@@ -155,14 +155,18 @@ func TestDialShortcut(t *testing.T) {
 	// shortcutVisited = false
 	// client.ServeHTTP(w, req)
 	// assert.True(t, shortcutVisited)
-	// res, _ = w.ReadResponse()
+	// res, = w.ReadResponse()
 	// assert.Equal(t, 404, res.StatusCode, "should dial proxy if the shortcutted site is unreachable")
 
 	req, _ = http.NewRequest("CONNECT", "http://unknown2:80", nil)
 	shortcutVisited = false
 	res, _ = roundTrip(client, req)
 	assert.True(t, shortcutVisited)
-	assert.Equal(t, 404, res.StatusCode, "should dial proxy if the shortcutted site is unreachable")
+	nestedResp, err := res.nested()
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, 404, nestedResp.StatusCode, "should dial proxy if the shortcutted site is unreachable")
 
 	client.allowShortcut = func(addr string) (bool, net.IP) {
 		shortcutVisited = true
@@ -172,7 +176,11 @@ func TestDialShortcut(t *testing.T) {
 	shortcutVisited = false
 	res, _ = roundTrip(client, req)
 	assert.True(t, shortcutVisited)
-	assert.Equal(t, 404, res.StatusCode, "should dial proxy if the site is not shortcutted")
+	nestedResp, err = res.nested()
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, 404, nestedResp.StatusCode, "should dial proxy if the site is not shortcutted")
 
 	// disable the test temporarily. It has weird error "readLoopPeekFailLocked <nil>" when run with `go test -race`
 	// detour.AddToWl("unknown4:80", true)
@@ -182,7 +190,7 @@ func TestDialShortcut(t *testing.T) {
 	// shortcutVisited = false
 	// client.ServeHTTP(w, req)
 	// assert.False(t, shortcutVisited, "should not check shortcut list if the site is whitelisted")
-	// res, _ = w.ReadResponse()
+	// res, = w.ReadResponse()
 	// assert.Equal(t, 404, res.StatusCode, "should dial proxy if the site is whitelisted")
 
 	detour.AddToWl("unknown5:80", true)
@@ -191,7 +199,11 @@ func TestDialShortcut(t *testing.T) {
 	shortcutVisited = false
 	res, _ = roundTrip(client, req)
 	assert.False(t, shortcutVisited, "should not check shortcut list if the site is whitelisted")
-	assert.Equal(t, 404, res.StatusCode, "should dial proxy if the site is whitelisted")
+	nestedResp, err = res.nested()
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, 404, nestedResp.StatusCode, "should dial proxy if the site is whitelisted")
 }
 
 type testDialer struct {
@@ -292,7 +304,7 @@ func (d *testDialer) Stop() {
 	d.stopped = true
 }
 
-func roundTrip(client *Client, req *http.Request) (*http.Response, error) {
+func roundTrip(client *Client, req *http.Request) (*response, error) {
 	toSend := &bytes.Buffer{}
 	err := req.Write(toSend)
 	if err != nil {
@@ -303,9 +315,20 @@ func roundTrip(client *Client, req *http.Request) (*http.Response, error) {
 	if err != nil {
 		log.Errorf("Error handling: %v", err)
 	}
-	resp, err2 := http.ReadResponse(bufio.NewReader(bytes.NewReader(received.Bytes())), req)
+	br := bufio.NewReader(bytes.NewReader(received.Bytes()))
+	resp, err2 := http.ReadResponse(br, req)
 	if err == nil {
 		err = err2
 	}
-	return resp, err
+	return &response{*resp, req, br}, err
+}
+
+type response struct {
+	http.Response
+	req *http.Request
+	br  *bufio.Reader
+}
+
+func (r *response) nested() (*http.Response, error) {
+	return http.ReadResponse(r.br, r.req)
 }
