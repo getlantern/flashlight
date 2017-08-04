@@ -46,7 +46,7 @@ func servePro() error {
 		userID := settings.GetUserID()
 		for {
 			if userID == 0 {
-				user, err := pro.NewUser(settings.GetDeviceID(), httpClient)
+				user, err := pro.NewUser(settings.GetDeviceID())
 				if err != nil {
 					logger.Errorf("Could not create new Pro user: %v", err)
 				} else {
