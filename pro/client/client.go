@@ -394,16 +394,36 @@ func (c *Client) UserData(user User) (res *Response, err error) {
 	return
 }
 
-func (c *Client) PWSignature(user User, planId string) (string, error) {
+func (c *Client) PWSignature(user User, email, currency, deviceName, planId string) (string, error) {
 
 	payload, err := c.get(`/paymentwall-mobile-signature`, user.headers(), url.Values{
-		"plan": {planId},
+		"plan":         {planId},
+		"email":        {email},
+		"userCurrency": {currency},
+		"deviceName":   {deviceName},
 	})
 	if err != nil {
 		return "", err
 	}
 	sig := string(payload)
 	return sig, nil
+}
+
+func (c *Client) UserPaymentGateway(user User, deviceOS string) (provider string, err error) {
+	var res Response
+	payload, err := c.get(`/user-payment-gateway`, user.headers(), url.Values{
+		"deviceOS": {deviceOS},
+	})
+	if err != nil {
+		return "", err
+	}
+	err = json.Unmarshal(payload, &res)
+	if err == nil {
+		provider = res.Provider
+	} else {
+		log.Errorf("Could not get payment provider: %v", err)
+	}
+	return
 }
 
 // Plans creates an user without asking for any payment.

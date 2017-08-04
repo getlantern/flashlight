@@ -4,12 +4,14 @@ import (
 	"crypto/x509"
 	"fmt"
 	"math/rand"
+	"net"
 	"path/filepath"
 	"runtime"
 	"time"
 
 	"github.com/getlantern/appdir"
 	fops "github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/jibber_jabber"
@@ -64,8 +66,19 @@ func Run(httpProxyAddr string,
 	initContext(deviceID, common.Version, common.RevisionDate)
 	op := fops.Begin("client_started")
 
-	cl, err := client.NewClient(useShortcut, useDetour,
-		userConfig.GetToken, statsTracker, allowPrivateHosts, lang, adSwapTargetURL)
+	cl, err := client.NewClient(
+		func(addr string) (bool, net.IP) {
+			if useShortcut() {
+				return shortcut.Allow(addr)
+			}
+			return false, nil
+		},
+		useDetour,
+		userConfig.GetToken,
+		statsTracker,
+		allowPrivateHosts,
+		lang,
+		adSwapTargetURL)
 	if err != nil {
 		fatalErr := fmt.Errorf("Unable to initialize client: %v", err)
 		op.FailIf(fatalErr)
@@ -122,7 +135,7 @@ func Run(httpProxyAddr string,
 			afterStart()
 		})
 		if err != nil {
-			log.Errorf("Error starting client proxy: %v", err)
+			log.Errorf("Error running client proxy: %v", err)
 			onError(err)
 		}
 	}
