@@ -5,6 +5,7 @@ import (
 
 	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/flashlight/ws"
+	"github.com/getlantern/golog"
 )
 
 // isProUser blocks itself to check if current user is Pro, or !ok if error
@@ -40,13 +41,14 @@ func isProUserFast() (isPro bool, statusKnown bool) {
 // It loops forever in 10 seconds interval until the user is fetched or
 // created, as it's fundamental for the UI to work.
 func servePro() error {
+	logger := golog.LoggerFor("flashlight.app.pro")
 	go func() {
 		userID := settings.GetUserID()
 		for {
 			if userID == 0 {
-				user, err := pro.NewUser(settings.GetDeviceID())
+				user, err := pro.NewUser(settings.GetDeviceID(), httpClient)
 				if err != nil {
-					log.Errorf("Could not create new Pro user: %v", err)
+					logger.Errorf("Could not create new Pro user: %v", err)
 				} else {
 					settings.SetUserID(user.Auth.ID)
 					settings.SetToken(user.Auth.Token)
@@ -55,7 +57,7 @@ func servePro() error {
 			} else {
 				_, err := pro.GetUserData(userID, settings.GetToken(), settings.GetDeviceID())
 				if err != nil {
-					log.Errorf("Could not get user data for %v: %v", userID, err)
+					logger.Errorf("Could not get user data for %v: %v", userID, err)
 				} else {
 					return
 				}
@@ -66,7 +68,7 @@ func servePro() error {
 	helloFn := func(write func(interface{})) {
 		go func() {
 			user := pro.WaitForUserData(settings.GetUserID())
-			log.Debugf("Sending current user data to new client: %v", user)
+			logger.Debugf("Sending current user data to new client: %v", user)
 			write(user)
 		}()
 	}
