@@ -15,7 +15,7 @@ func TestNewUser(t *testing.T) {
 	assert.NoError(t, err, "Unexpected error")
 	assert.NotNil(t, u, "Should have gotten a user")
 
-	u, err = getUserDataWithClient(u.ID, u.AutoconfToken, deviceID, nil)
+	u, err = getUserDataWithClient(u.ID, u.Token, deviceID, nil)
 	assert.NoError(t, err, "Unexpected error")
 	assert.NotNil(t, u, "Should have gotten a user")
 }
