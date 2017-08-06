@@ -97,11 +97,9 @@ func NewUser(deviceID string) (*client.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	user = resp.User
-	userID := user.Auth.ID
-	setUserData(userID, &user)
-	log.Debugf("created user %d", userID)
-	return &user, nil
+	setUserData(resp.User.Auth.ID, &resp.User)
+	log.Debugf("created user %+v", resp.User)
+	return &resp.User, nil
 }
 
 //GetUserData retrieves local cache first. If the data for the userID is not
