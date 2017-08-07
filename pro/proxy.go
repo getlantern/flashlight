@@ -12,15 +12,11 @@ import (
 	"strings"
 
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
 )
 
 var (
-	log        = golog.LoggerFor("flashlight.pro")
-	httpClient = &http.Client{Transport: proxied.ChainedThenFronted()}
-	// Respond sooner if chained proxy is blocked, but only for idempotent requests (GETs)
-	httpClientForGET = &http.Client{Transport: proxied.ParallelPreferChained()}
+	log = golog.LoggerFor("flashlight.pro")
 )
 
 type proxyTransport struct {
@@ -44,11 +40,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	} else {
 		// Workaround for https://github.com/getlantern/pro-server/issues/192
 		req.Header.Del("Origin")
-		if req.Method == "GET" {
-			resp, err = httpClientForGET.Do(req)
-		} else {
-			resp, err = httpClient.Do(req)
-		}
+		resp, err = GetHTTPClient().Do(req)
 		if err != nil {
 			log.Errorf("Could not issue HTTP request? %v", err)
 			return
