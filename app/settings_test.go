@@ -6,23 +6,71 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/getlantern/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRead(t *testing.T) {
-	// Avoid polluting real settings.
-	tmpfile, err := ioutil.TempFile("", "test")
-	if err != nil {
-		t.Errorf("Could not create temp file %v", err)
-	}
+func TestGetInt64Eventually(t *testing.T) {
+	s := loadTemp()
+	id := s.GetUserID()
+	assert.Equal(t, int64(0), id)
 
+	var aid atomic.Value
+	go func() {
+		uid, err := s.GetInt64Eventually(SNUserID)
+		if err == nil {
+			aid.Store(uid)
+		}
+	}()
+
+	s.SetUserID(77)
+	time.Sleep(100 * time.Millisecond)
+
+	assert.Equal(t, int64(77), aid.Load().(int64))
+
+	uid, err := s.GetInt64Eventually(SNUserID)
+	assert.NoError(t, err)
+	assert.Equal(t, 77, uid)
+}
+
+func TestGetStringEventually(t *testing.T) {
+	s := loadTemp()
+	id := s.GetToken()
+	assert.Equal(t, "", id)
+
+	var aid atomic.Value
+	go func() {
+		uid, err := s.GetStringEventually(SNUserToken)
+		if err == nil {
+			aid.Store(uid)
+		}
+	}()
+
+	s.SetToken("77")
+	time.Sleep(100 * time.Millisecond)
+
+	assert.Equal(t, "77", aid.Load().(string))
+
+	uid, err := s.GetStringEventually(SNUserToken)
+	assert.NoError(t, err)
+	assert.Equal(t, "77", uid)
+}
+
+func loadTemp() *Settings {
+	// Avoid polluting real settings.
+	tmpfile, _ := ioutil.TempFile("", "test")
 	defer os.Remove(tmpfile.Name()) // clean up
 
+	return loadSettingsFrom("1", "1/1/1", "1/1/1", tmpfile.Name())
+}
+
+func TestRead(t *testing.T) {
+	s := loadTemp()
 	var uid int64
-	s := loadSettingsFrom("1", "1/1/1", "1/1/1", tmpfile.Name())
 	assert.Equal(t, s.GetProxyAll(), false)
 	assert.Equal(t, s.GetUserID(), uid)
 	assert.Equal(t, s.GetSystemProxy(), true)
@@ -55,7 +103,8 @@ func TestRead(t *testing.T) {
 
 	// Make sure to use json.Number here to avoid issues with 64 bit integers.
 	d.UseNumber()
-	err = d.Decode(&m)
+	err := d.Decode(&m)
+	assert.NoError(t, err)
 
 	in := make(chan interface{}, 100)
 	in <- m

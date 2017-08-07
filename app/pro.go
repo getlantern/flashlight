@@ -13,15 +13,11 @@ import (
 // because the user can become Pro or free at any time. It waits until
 // the user ID becomes non-zero.
 func isProUser() (isPro bool, ok bool) {
-	var userID int64
-	for {
-		userID = settings.GetUserID()
-		if userID > 0 {
-			break
-		}
-		time.Sleep(250 * time.Millisecond)
+	uid, err := settings.GetInt64Eventually(SNUserID)
+	if err != nil {
+		return false, false
 	}
-	return pro.IsProUser(userID, settings.GetToken(), settings.GetDeviceID())
+	return pro.IsProUser(uid, settings.GetToken(), settings.GetDeviceID())
 }
 
 // isProUserFast checks a cached value for the pro status and doesn't wait for

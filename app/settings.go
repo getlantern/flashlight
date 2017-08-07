@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -13,6 +14,7 @@ import (
 	"sync"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/eventual"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/uuid"
@@ -524,6 +526,48 @@ func (s *Settings) setVal(name SettingName, val interface{}) {
 	s.Unlock()
 	s.save()
 	s.onChange(name, val)
+}
+
+// GetInt64Eventually blocks returning an int64 until the int has a value
+// other than the defualt.
+func (s *Settings) GetInt64Eventually(name SettingName) (int64, error) {
+	nval := eventual.NewValue()
+	s.OnChange(name, func(val interface{}) {
+		nval.Set(val)
+	})
+
+	val := s.getInt64(name)
+	if val > 0 {
+		return val, nil
+	}
+
+	eid, _ := nval.Get(-1)
+	intVal, ok := eid.(int64)
+	if !ok {
+		return int64(0), errors.New("Could not cast to int64?")
+	}
+	return intVal, nil
+}
+
+// GetStringEventually blocks returning a string until the string has a value
+// other than the defualt.
+func (s *Settings) GetStringEventually(name SettingName) (string, error) {
+	nval := eventual.NewValue()
+	s.OnChange(name, func(val interface{}) {
+		nval.Set(val)
+	})
+
+	val := s.getString(name)
+	if val != "" {
+		return val, nil
+	}
+
+	eid, _ := nval.Get(-1)
+	castedVal, ok := eid.(string)
+	if !ok {
+		return "", errors.New("Could not cast to int64?")
+	}
+	return castedVal, nil
 }
 
 // OnChange sets a callback cb to get called when attr is changed from UI.
