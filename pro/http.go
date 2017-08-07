@@ -2,26 +2,26 @@ package pro
 
 import (
 	"net/http"
-	"sync/atomic"
+	"sync"
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/proxied"
 )
 
 var (
-	httpClient atomic.Value
+	once       sync.Once
+	httpClient *http.Client
 )
-
-func init() {
-	rt := proxied.ChainedThenFrontedWith(common.ProAPIDDFHost, "")
-	rtForGet := proxied.ParallelPreferChainedWith(common.ProAPIDDFHost, "")
-	httpClient.Store(getHTTPClient(rtForGet, rt))
-}
 
 // GetHTTPClient creates a new http.Client that uses domain fronting and direct
 // proxies.
 func GetHTTPClient() *http.Client {
-	return httpClient.Load().(*http.Client)
+	once.Do(func() {
+		rt := proxied.ChainedThenFrontedWith(common.ProAPIDDFHost, "")
+		rtForGet := proxied.ParallelPreferChainedWith(common.ProAPIDDFHost, "")
+		httpClient = getHTTPClient(rtForGet, rt)
+	})
+	return httpClient
 }
 
 func getHTTPClient(getRt, otherRt http.RoundTripper) *http.Client {
