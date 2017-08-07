@@ -1,11 +1,14 @@
 package android
 
 import (
+	"net/http"
+	"strings"
+	"sync/atomic"
+
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/pro"
 	client "github.com/getlantern/flashlight/pro/client"
 	"github.com/stripe/stripe-go"
-	"strings"
 )
 
 type Session interface {
@@ -50,6 +53,10 @@ const (
 	defaultCurrencyCode = `usd`
 )
 
+var (
+	httpClient atomic.Value
+)
+
 type proRequest struct {
 	client  *client.Client
 	user    client.User
@@ -58,12 +65,13 @@ type proRequest struct {
 
 type proFunc func(*proRequest) (*client.Response, error)
 
+func init() {
+	httpClient.Store(pro.GetHTTPClient())
+}
+
 func newRequest(session Session) *proRequest {
-
-	httpClient := pro.GetHTTPClient()
-
 	req := &proRequest{
-		client: client.NewClient(httpClient),
+		client: client.NewClient(httpClient.Load().(*http.Client)),
 		user: client.User{
 			Auth: client.Auth{
 				DeviceID: session.DeviceId(),
