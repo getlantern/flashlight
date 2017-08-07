@@ -7,12 +7,15 @@ import (
 	"github.com/getlantern/flashlight/proxied"
 )
 
+var (
+	httpClient = getHTTPClient(proxied.ParallelPreferChainedWith(common.ProAPIDDFHost, ""),
+		proxied.ChainedThenFrontedWith(common.ProAPIDDFHost, ""))
+)
+
 // GetHTTPClient creates a new http.Client that uses domain fronting and direct
 // proxies.
 func GetHTTPClient() *http.Client {
-	rt := proxied.ChainedThenFrontedWith(common.ProAPIDDFHost, "")
-	rtForGet := proxied.ParallelPreferChainedWith(common.ProAPIDDFHost, "")
-	return getHTTPClient(rtForGet, rt)
+	return httpClient
 }
 
 func getHTTPClient(getRt, otherRt http.RoundTripper) *http.Client {
