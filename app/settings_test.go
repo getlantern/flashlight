@@ -34,7 +34,7 @@ func TestGetInt64Eventually(t *testing.T) {
 
 	uid, err := s.GetInt64Eventually(SNUserID)
 	assert.NoError(t, err)
-	assert.Equal(t, 77, uid)
+	assert.Equal(t, int64(77), uid)
 }
 
 func TestGetStringEventually(t *testing.T) {
