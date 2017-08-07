@@ -107,11 +107,8 @@ func newUserWithClient(deviceID string, hc *http.Client) (*client.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	user = resp.User
-	userID := user.Auth.ID
-
-	setUserData(userID, &user)
-	logger.Debugf("created user %d", userID)
+	setUserData(user.Auth.ID, &resp.User)
+	logger.Debugf("created user %+v", resp.User)
 	return &user, nil
 }
 
