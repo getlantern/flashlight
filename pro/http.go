@@ -2,25 +2,19 @@ package pro
 
 import (
 	"net/http"
-	"sync"
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/proxied"
 )
 
 var (
-	once       sync.Once
-	httpClient *http.Client
+	httpClient = getHTTPClient(proxied.ParallelPreferChainedWith(common.ProAPIDDFHost, ""),
+		proxied.ChainedThenFrontedWith(common.ProAPIDDFHost, ""))
 )
 
 // GetHTTPClient creates a new http.Client that uses domain fronting and direct
 // proxies.
 func GetHTTPClient() *http.Client {
-	once.Do(func() {
-		rt := proxied.ChainedThenFrontedWith(common.ProAPIDDFHost, "")
-		rtForGet := proxied.ParallelPreferChainedWith(common.ProAPIDDFHost, "")
-		httpClient = getHTTPClient(rtForGet, rt)
-	})
 	return httpClient
 }
 
