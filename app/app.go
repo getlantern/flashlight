@@ -340,6 +340,10 @@ func (app *App) afterStart() {
 	} else {
 		log.Errorf("Couldn't retrieve SOCKS proxy addr in time")
 	}
+	err := servePro()
+	if err != nil {
+		log.Errorf("Unable to serve pro data to UI: %v", err)
+	}
 }
 
 func (app *App) onConfigUpdate(cfg *config.Global) {
