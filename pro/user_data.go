@@ -1,11 +1,15 @@
 package pro
 
 import (
+	"net/http"
 	"sync"
 
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/pro/client"
+	"github.com/getlantern/golog"
 )
+
+var logger = golog.LoggerFor("flashlight.app.pro")
 
 type userMap struct {
 	sync.RWMutex
@@ -89,11 +93,17 @@ func WaitForUserData(userID int64) *client.User {
 
 //NewUser creates a new user via Pro API, and updates local cache.
 func NewUser(deviceID string) (*client.User, error) {
-	log.Debugf("Creating new user with device ID '%v'", deviceID)
+	return newUserWithClient(deviceID, httpClient)
+}
+
+// newUserWithClient creates a new user via Pro API, and updates local cache
+// using the specified http client.
+func newUserWithClient(deviceID string, hc *http.Client) (*client.User, error) {
+	logger.Debugf("Creating new user with device ID '%v'", deviceID)
 	user := client.User{Auth: client.Auth{
 		DeviceID: deviceID,
 	}}
-	resp, err := client.NewClient(httpClient).UserCreate(user)
+	resp, err := client.NewClient(hc).UserCreate(user)
 	if err != nil {
 		return nil, err
 	}
@@ -105,26 +115,32 @@ func NewUser(deviceID string) (*client.User, error) {
 //GetUserData retrieves local cache first. If the data for the userID is not
 //there, fetches from Pro API, and updates local cache.
 func GetUserData(userID int64, proToken string, deviceID string) (*client.User, error) {
+	return getUserDataWithClient(userID, proToken, deviceID, httpClient)
+}
+
+//getUserDataWithClient retrieves local cache first. If the data for the userID is not
+//there, fetches from Pro API, and updates local cache.
+func getUserDataWithClient(userID int64, proToken string, deviceID string, hc *http.Client) (*client.User, error) {
 	user, found := GetUserDataFast(userID)
 	if found {
 		return user, nil
 	}
-	log.Debugf("Fetching user status with device ID '%v', user ID '%v' and proToken %v", deviceID, userID, proToken)
+	logger.Debugf("Fetching user status with device ID '%v', user ID '%v' and proToken %v", deviceID, userID, proToken)
 	user = &client.User{Auth: client.Auth{
 		DeviceID: deviceID,
 		ID:       userID,
 		Token:    proToken,
 	}}
-	resp, err := client.NewClient(httpClient).UserStatus(*user)
+	resp, err := client.NewClient(hc).UserStatus(*user)
 	if err != nil {
 		return nil, err
 	}
 	setUserData(userID, &resp.User)
-	log.Debugf("User %d is '%v'", userID, resp.User.UserStatus)
+	logger.Debugf("User %d is '%v'", userID, resp.User.UserStatus)
 	return &resp.User, nil
 }
 
 func setUserData(userID int64, user *client.User) {
-	log.Debugf("Storing user data for user %v", userID)
+	logger.Debugf("Storing user data for user %v", userID)
 	userData.save(userID, user)
 }

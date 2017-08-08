@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	// if true, run Lantern against our staging infrastructure. This is set by
-	// the linker using -ldflags
+	// StagingMode if true, run Lantern against our staging infrastructure.
+	// This is set by the linker using -ldflags
 	StagingMode = "false"
 
 	Staging = false
@@ -23,6 +23,16 @@ var (
 )
 
 func init() {
+	initInternal()
+}
+
+// ForceStaging forces staging mode.
+func ForceStaging() {
+	StagingMode = "true"
+	initInternal()
+}
+
+func initInternal() {
 	var err error
 	log.Debugf("****************************** stagingMode: %v", StagingMode)
 	Staging, err = strconv.ParseBool(StagingMode)
