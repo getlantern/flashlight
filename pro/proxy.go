@@ -16,8 +16,7 @@ import (
 )
 
 var (
-	log        = golog.LoggerFor("flashlight.pro")
-	httpClient = GetHTTPClient()
+	log = golog.LoggerFor("flashlight.pro")
 )
 
 type proxyTransport struct {
