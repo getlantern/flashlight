@@ -13,7 +13,7 @@ import (
 
 func TestProxy(t *testing.T) {
 	m := &mockRoundTripper{msg: "GOOD"}
-	httpClient = getHTTPClient(m, m)
+	httpClient = &http.Client{Transport: m}
 	l, err := net.Listen("tcp", "localhost:0")
 	if !assert.NoError(t, err) {
 		return

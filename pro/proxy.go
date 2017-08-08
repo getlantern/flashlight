@@ -41,7 +41,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	} else {
 		// Workaround for https://github.com/getlantern/pro-server/issues/192
 		req.Header.Del("Origin")
-		resp, err = httpClient.Do(req)
+		resp, err = GetHTTPClient().Do(req)
 		if err != nil {
 			log.Errorf("Could not issue HTTP request? %v", err)
 			return
