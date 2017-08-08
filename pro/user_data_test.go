@@ -6,21 +6,18 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/golog"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestUsers(t *testing.T) {
-	common.StagingMode = "true"
-	common.Init()
+	common.ForceStaging()
 
-	var log = golog.LoggerFor("flashlight.app.pro")
 	deviceID := "77777777"
 	u, err := newUserWithClient(deviceID, nil)
 
 	assert.NoError(t, err, "Unexpected error")
 	assert.NotNil(t, u, "Should have gotten a user")
-	log.Debugf("user: %+v", u)
+	t.Logf("user: %+v", u)
 
 	u, err = getUserDataWithClient(u.ID, u.Token, deviceID, nil)
 	assert.NoError(t, err, "Unexpected error")

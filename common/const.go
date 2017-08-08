@@ -26,8 +26,9 @@ func init() {
 	initInternal()
 }
 
-// Init is a public init function that's useful in tests.
-func Init() {
+// ForceStaging forces staging mode.
+func ForceStaging() {
+	StagingMode = "true"
 	initInternal()
 }
 
