@@ -5,11 +5,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/golog"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestUsers(t *testing.T) {
+	common.StagingMode = "true"
+	common.Init()
+
 	var log = golog.LoggerFor("flashlight.app.pro")
 	deviceID := "77777777"
 	u, err := newUserWithClient(deviceID, nil)
