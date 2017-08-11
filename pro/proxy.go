@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
@@ -12,15 +11,12 @@ import (
 	"strings"
 
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/pro/client"
 	"github.com/getlantern/golog"
 )
 
 var (
-	log        = golog.LoggerFor("flashlight.pro")
-	httpClient = &http.Client{Transport: proxied.ChainedThenFronted()}
-	// Respond sooner if chained proxy is blocked, but only for idempotent requests (GETs)
-	httpClientForGET = &http.Client{Transport: proxied.ParallelPreferChained()}
+	log = golog.LoggerFor("flashlight.pro")
 )
 
 type proxyTransport struct {
@@ -44,11 +40,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	} else {
 		// Workaround for https://github.com/getlantern/pro-server/issues/192
 		req.Header.Del("Origin")
-		if req.Method == "GET" {
-			resp, err = httpClientForGET.Do(req)
-		} else {
-			resp, err = httpClient.Do(req)
-		}
+		resp, err = GetHTTPClient().Do(req)
 		if err != nil {
 			log.Errorf("Could not issue HTTP request? %v", err)
 			return
@@ -58,7 +50,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	if req.URL.Path != "/user-data" || resp.StatusCode != http.StatusOK {
 		return
 	}
-	// Try to update user status implicitly
+	// Try to update user data implicitly
 	_userID := req.Header.Get("X-Lantern-User-Id")
 	if _userID == "" {
 		return
@@ -76,15 +68,13 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	if readErr != nil {
 		return
 	}
-	udr := &struct {
-		UserStatus string `json:"userStatus"`
-	}{}
-	readErr = json.NewDecoder(gzr).Decode(udr)
+	user := client.User{}
+	readErr = json.NewDecoder(gzr).Decode(&user)
 	if readErr != nil {
 		return
 	}
-	log.Debugf("Updating pro status implicitly to '%v'", udr.UserStatus)
-	SetProStatus(userID, udr.UserStatus)
+	log.Debugf("Updating user data implicitly for user %v", userID)
+	setUserData(userID, &user)
 	return
 }
 
@@ -103,7 +93,6 @@ func APIHandler() http.Handler {
 			r.URL.Host = common.ProAPIHost
 			r.Host = r.URL.Host
 			r.RequestURI = "" // http: Request.RequestURI can't be set in client requests.
-			r.Header.Set("Lantern-Fronted-URL", fmt.Sprintf("http://%s%s", common.ProAPIDDFHost, r.URL.Path))
 			r.Header.Set("Access-Control-Allow-Headers", strings.Join([]string{
 				common.DeviceIdHeader,
 				common.ProTokenHeader,

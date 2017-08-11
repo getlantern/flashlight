@@ -76,7 +76,7 @@ imports:
 - name: github.com/getlantern/deepcopy
   version: 7f45deb8130a0acc553242eb0e009e3f6f3d9ce3
 - name: github.com/getlantern/detour
-  version: 36801cb3f46d22d4e07ef7a8c123bba1991a73a1
+  version: 6f6bfa0e54bfa66c7b231c4dfa0bcaf08fca5f7a
 - name: github.com/getlantern/easylist
   version: 1635650b3ed817f2bcc82cf42433eb309673fe53
 - name: github.com/getlantern/edgedetect
