@@ -244,7 +244,7 @@ func userData(req *proRequest) (*client.Response, error) {
 
 		expiry := time.Unix(res.User.Expiration, 0)
 		dur := expiry.Sub(time.Now())
-		daysLeft := dur.Hours() / 24
+		daysLeft = dur.Hours() / 24
 		years := daysLeft / 365
 		monthsLeft = int64(years * 12)
 	}
