@@ -2,6 +2,7 @@ package android
 
 import (
 	"strings"
+	"time"
 
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/pro"
@@ -38,7 +39,7 @@ type Session interface {
 	SetToken(string)
 	SetUserId(int64)
 	SetDeviceCode(string, int64)
-	UserData(bool, int64, string, string)
+	UserData(bool, int64, int64, int64, string, string)
 	SetCode(string)
 	SetError(string, string)
 	SetErrorId(string, string)
@@ -236,9 +237,16 @@ func userData(req *proRequest) (*client.Response, error) {
 
 	isActive := res.User.UserStatus == "active"
 
+	var monthsLeft, daysLeft int64
 	if isActive {
 		// user is Pro but device may no longer be linked
 		deviceLinked = false
+
+		expiry := time.Unix(res.User.Expiration, 0)
+		dur := expiry.Sub(time.Now())
+		daysLeft = int64(dur.Hours() / 24)
+		years := dur.Hours() / 24 / 365
+		monthsLeft = int64(years * 12)
 	}
 
 	for _, device := range res.User.Devices {
@@ -249,7 +257,8 @@ func userData(req *proRequest) (*client.Response, error) {
 	}
 
 	req.session.UserData(isActive && deviceLinked,
-		res.User.Expiration, res.User.Subscription, res.User.Email)
+		res.User.Expiration, monthsLeft, daysLeft,
+		res.User.Subscription, res.User.Email)
 
 	return res, err
 }

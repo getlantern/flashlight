@@ -119,6 +119,7 @@ func Start(configDir string, locale string,
 		return nil, err
 	}
 	log.Debugf("Starting socks proxy at %s", socksAddr)
+
 	return &StartResult{addr.(string), socksAddr.(string)}, nil
 }
 
