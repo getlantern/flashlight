@@ -11,6 +11,7 @@ go run genconfig.go \
    -blacklist="blacklist.txt" \
    -masquerades="masquerades.txt" \
    -masquerades-out="../config/generated/masquerades.go" \
+   -min-masquerades=1000 \
    -max-masquerades=1000 \
    -proxiedsites="proxiedsites" \
    -proxiedsites-out="../config/generated/proxiedsites.go" \

@@ -40,6 +40,7 @@ var (
 	help                = flag.Bool("help", false, "Get usage help")
 	masqueradesInFile   = flag.String("masquerades", "", "Path to file containing list of pasquerades to use, with one space-separated 'ip domain' pair per line (e.g. masquerades.txt)")
 	masqueradesOutFile  = flag.String("masquerades-out", "", "Path, if any, to write the go-formatted masquerades configuration.")
+	minMasquerades      = flag.Int("min-masquerades", 1000, "Require that the resulting config contain at least this many masquerades")
 	maxMasquerades      = flag.Int("max-masquerades", 1000, "Limit the number of masquerades to include in config")
 	blacklistFile       = flag.String("blacklist", "", "Path to file containing list of blacklisted domains, which will be excluded from the configuration even if present in the masquerades file (e.g. blacklist.txt)")
 	proxiedSitesDir     = flag.String("proxiedsites", "proxiedsites", "Path to directory containing proxied site lists, which will be combined and proxied by Lantern")
@@ -381,6 +382,10 @@ func vetMasquerades(cas map[string]*castat, masquerades []*masquerade) []*masque
 		if count == *maxMasquerades {
 			break
 		}
+	}
+
+	if len(result) < *minMasquerades {
+		log.Fatalf("%d masquerades was fewer than minimum of %d", len(result), *minMasquerades)
 	}
 	return result
 }
