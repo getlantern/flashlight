@@ -118,7 +118,11 @@ func (c *clientChannels) writeAll() {
 
 	for msg := range c.out {
 		for _, conn := range c.clonedConns() {
-			conn.out <- msg
+			select {
+			case conn.out <- msg:
+			default:
+				log.Errorf("Failed to send message %v to websocket connection", msg)
+			}
 		}
 	}
 }
