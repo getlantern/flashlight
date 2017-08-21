@@ -22,18 +22,19 @@ var (
 func setUpSysproxyTool() error {
 	var iconFile string
 	if runtime.GOOS == "darwin" {
-		// We have to use a short filepath here because Cocoa won't display the
-		// icon if the path is too long.
-		iconFile = filepath.Join("/tmp", "escalatelantern.ico")
 		icon, err := icons.Asset("icons/32on.ico")
 		if err != nil {
 			return fmt.Errorf("Unable to load escalation prompt icon: %v", err)
 		}
+		// We have to use a short filepath here because Cocoa won't display the
+		// icon if the path is too long.
+		iconFile = filepath.Join("/tmp", "escalatelantern.ico")
 		err = filepersist.Save(iconFile, icon, 0644)
 		if err != nil {
-			return fmt.Errorf("Unable to persist icon to disk: %v", err)
+			log.Errorf("Unable to persist icon to disk, fallback to default icon: %v", err)
+		} else {
+			log.Debugf("Saved icon file to: %v", iconFile)
 		}
-		log.Debugf("Saved icon file to: %v", iconFile)
 	}
 	err := sysproxy.EnsureHelperToolPresent("sysproxy-cmd", "Lantern would like to be your system proxy", iconFile)
 	if err != nil {
