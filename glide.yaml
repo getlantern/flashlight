@@ -24,6 +24,7 @@ import:
 - package: github.com/getlantern/fronted
 - package: github.com/getlantern/geolookup
 - package: github.com/getlantern/go-socks5
+- package: github.com/getlantern/overture
 - package: github.com/getlantern/golog
 - package: github.com/getlantern/hidden
 - package: github.com/getlantern/i18n
