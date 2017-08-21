@@ -1,3 +1,4 @@
+innovatelabs.io
 lantern.io
 i-scmp.com
 getiantem.org
@@ -45,7 +46,6 @@ github.com
 gizmodo.com
 google.com
 googleusercontent.com
-googlevideo.com
 greatfire.org
 # Human Rights Watch
 hrw.org
@@ -215,3 +215,6 @@ amazonaws.com
 
 # 1.4.7
 thepiratebay.org
+
+dohanews.co
+doha.news

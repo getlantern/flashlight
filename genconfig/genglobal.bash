@@ -7,9 +7,11 @@ function die() {
 
 
 go run genconfig.go \
+   -numworkers=100 \
    -blacklist="blacklist.txt" \
    -masquerades="masquerades.txt" \
    -masquerades-out="../config/generated/masquerades.go" \
+   -max-masquerades=1000 \
    -proxiedsites="proxiedsites" \
    -proxiedsites-out="../config/generated/proxiedsites.go" \
    -fallbacks="fallbacks.yaml" \

@@ -132,7 +132,7 @@ func (app *App) Run() error {
 			settings.GetLanguage,
 			func() string {
 				isPro, statusKnown := isProUserFast()
-				if isPro || !statusKnown {
+				if (isPro || !statusKnown) && !common.ForceAds() {
 					// pro user (or status unknown), don't ad swap
 					return ""
 				}
@@ -339,6 +339,10 @@ func (app *App) afterStart() {
 		settings.setString(SNSOCKSAddr, socksAddr)
 	} else {
 		log.Errorf("Couldn't retrieve SOCKS proxy addr in time")
+	}
+	err := servePro()
+	if err != nil {
+		log.Errorf("Unable to serve pro data to UI: %v", err)
 	}
 }
 

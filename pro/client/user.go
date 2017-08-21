@@ -39,7 +39,7 @@ func (u User) headers() http.Header {
 		h[common.DeviceIdHeader] = []string{u.Auth.DeviceID}
 	}
 	if u.ID != 0 {
-		h[common.UserIdHeader] = []string{strconv.Itoa(u.ID)}
+		h[common.UserIdHeader] = []string{strconv.FormatInt(u.ID, 10)}
 	}
 	if u.Auth.Token != "" {
 		h[common.ProTokenHeader] = []string{u.Auth.Token}

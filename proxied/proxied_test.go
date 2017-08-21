@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -20,15 +21,23 @@ import (
 )
 
 type mockChainedRT struct {
-	req        eventual.Value
-	statusCode int
+	req eventual.Value
+	sc  uint32
 }
 
-func (rt mockChainedRT) RoundTrip(req *http.Request) (*http.Response, error) {
+func (rt *mockChainedRT) setStatusCode(code uint32) {
+	atomic.StoreUint32(&rt.sc, code)
+}
+
+func (rt *mockChainedRT) statusCode() int {
+	return int(atomic.LoadUint32(&rt.sc))
+}
+
+func (rt *mockChainedRT) RoundTrip(req *http.Request) (*http.Response, error) {
 	rt.req.Set(req)
 	return &http.Response{
-		Status:     fmt.Sprintf("%d OK", rt.statusCode),
-		StatusCode: rt.statusCode,
+		Status:     fmt.Sprintf("%d OK", rt.statusCode()),
+		StatusCode: rt.statusCode(),
 		Body:       ioutil.NopCloser(bytes.NewBufferString("Chained")),
 	}, nil
 }
@@ -74,7 +83,7 @@ func TestChainedAndFrontedHeaders(t *testing.T) {
 	req.Body = ioutil.NopCloser(bytes.NewBufferString("Hello"))
 
 	df := &dualFetcher{&chainedAndFronted{parallel: true}, ""}
-	crt := &mockChainedRT{req: eventual.NewValue(), statusCode: 503}
+	crt := &mockChainedRT{req: eventual.NewValue(), sc: 503}
 	frt := &mockFrontedRT{req: eventual.NewValue()}
 	df.do(req, crt, frt)
 	t.Log("Checking chained roundtripper")
@@ -126,7 +135,7 @@ func TestChainedThenFronted(t *testing.T) {
 }
 
 func TestInvalidRequest(t *testing.T) {
-	chained := &mockChainedRT{req: eventual.NewValue(), statusCode: 503}
+	chained := &mockChainedRT{req: eventual.NewValue(), sc: 503}
 	fronted := &mockFrontedRT{req: eventual.NewValue()}
 	req, _ := http.NewRequest("GET", "http://chained", nil)
 	// intentionally omit Lantern-Fronted-URL
@@ -138,7 +147,7 @@ func TestInvalidRequest(t *testing.T) {
 }
 
 func TestSwitchingToChained(t *testing.T) {
-	chained := &mockChainedRT{req: eventual.NewValue(), statusCode: 503}
+	chained := &mockChainedRT{req: eventual.NewValue(), sc: 503}
 	fronted := &mockFrontedRT{req: eventual.NewValue()}
 	req, _ := http.NewRequest("GET", "http://chained", nil)
 	req.Header.Set("Lantern-Fronted-URL", "http://fronted")
@@ -149,7 +158,7 @@ func TestSwitchingToChained(t *testing.T) {
 	_, valid := cf.getFetcher().(*dualFetcher)
 	assert.True(t, valid, "should not switch fetcher if chained failed")
 
-	chained.statusCode = 200
+	chained.setStatusCode(200)
 	req.Header.Set("Lantern-Fronted-URL", "http://fronted")
 	cf.getFetcher().(*dualFetcher).do(req, &delayedRT{chained, 1 * time.Second}, fronted)
 	time.Sleep(100 * time.Millisecond)

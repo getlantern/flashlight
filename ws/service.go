@@ -74,7 +74,12 @@ func (s *Service) writeMsg(msg interface{}, out chan<- []byte) {
 		return
 	}
 	log.Tracef("Sending message to clients: %v", string(b))
-	out <- b
+	select {
+	case out <- b:
+	default:
+		log.Errorf("Failed to send message %v to clients", msg)
+	}
+
 }
 
 // Register registers a WebSocket based service with an optional helloFn to

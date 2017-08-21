@@ -6,15 +6,15 @@ import (
 
 type statsTracker struct {
 	stats.Tracker
-	user UserConfig
+	session Session
 }
 
-func NewStatsTracker(user UserConfig) *statsTracker {
+func NewStatsTracker(session Session) *statsTracker {
 	s := &statsTracker{
-		user: user,
+		session: session,
 	}
 	s.Broadcast = func(st stats.Stats) {
-		s.user.UpdateStats(st.City, st.Country,
+		s.session.UpdateStats(st.City, st.Country,
 			st.CountryCode, st.HTTPSUpgrades, st.AdsBlocked)
 	}
 	return s

@@ -19,29 +19,37 @@ import (
 const expectedBody = "Google is built by a large team of engineers, designers, researchers, robots, and others in many different sites across the globe. It is updated continuously, and built with more tools and technologies than we can shake a stick at. If you'd like to help us out, see google.com/careers.\n"
 
 type testProtector struct{}
-type testUserConfig struct{}
 
-func (c testUserConfig) AfterStart()              {}
-func (c testUserConfig) BandwidthUpdate(int, int) {}
-func (c testUserConfig) ConfigUpdate(bool)        {}
-func (c testUserConfig) ShowSurvey(survey string) {}
-func (c testUserConfig) GetUserID() int64         { return 0 }
-func (c testUserConfig) GetToken() string         { return "" }
-func (c testUserConfig) SetStaging(bool)          {}
-func (c testUserConfig) SetCountry(string)        {}
-func (c testUserConfig) ProxyAll() bool           { return true }
-func (c testUserConfig) DeviceId() string         { return "123456789" }
+type testSession struct {
+	Session
+}
 
-func (c testUserConfig) UpdateStats(string, string, string, int, int) {}
+func (c testSession) AfterStart()              {}
+func (c testSession) BandwidthUpdate(int, int) {}
+func (c testSession) ConfigUpdate(bool)        {}
+func (c testSession) ShowSurvey(survey string) {}
+func (c testSession) GetUserID() int64         { return 0 }
+func (c testSession) GetToken() string         { return "" }
+func (c testSession) SetStaging(bool)          {}
+func (c testSession) SetCountry(string)        {}
+func (c testSession) ProxyAll() bool           { return true }
+func (c testSession) DeviceId() string         { return "123456789" }
+func (c testSession) AccountId() string        { return "1234" }
+func (c testSession) Locale() string           { return "en-US" }
+func (c testSession) SetUserId(int64)          {}
+func (c testSession) SetToken(string)          {}
+func (c testSession) SetCode(string)           {}
+
+func (c testSession) UpdateStats(string, string, string, int, int) {}
 
 func TestProxying(t *testing.T) {
 
 	tmpDir, err := ioutil.TempDir("", "testconfig")
 	if assert.NoError(t, err, "Unable to create temp configDir") {
 		defer os.RemoveAll(tmpDir)
-		result, err := Start(tmpDir, "en_US", false, 5000, testUserConfig{})
+		result, err := Start(tmpDir, "en_US", false, 5000, testSession{})
 		if assert.NoError(t, err, "Should have been able to start lantern") {
-			newResult, err := Start("testapp", "en_US", false, 5000, testUserConfig{})
+			newResult, err := Start("testapp", "en_US", false, 5000, testSession{})
 			if assert.NoError(t, err, "Should have been able to start lantern twice") {
 				if assert.Equal(t, result.HTTPAddr, newResult.HTTPAddr, "2nd start should have resulted in the same address") {
 					err := testProxiedRequest(result.HTTPAddr, false)
