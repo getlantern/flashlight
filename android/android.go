@@ -183,6 +183,10 @@ func run(configDir, locale string,
 		NewStatsTracker(session),
 		func(err error) {}, // onError
 		session.DeviceId(),
+		func() bool {
+			isPro, _ := isProUserFast(session)
+			return isPro
+		},
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
 	)
