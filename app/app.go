@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -209,6 +210,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 				log.Debugf("Can't clear proxy settings for: %v", listenAddr)
 			}
 			app.Exit(nil)
+			os.Exit(0)
 		}
 
 		if uiaddr != "" {
@@ -393,7 +395,11 @@ func (app *App) Exit(err error) {
 }
 
 func (app *App) doExit(err error) {
-	log.Errorf("Exiting app because of %v", err)
+	if err != nil {
+		log.Errorf("Exiting app because of %v", err)
+	} else {
+		log.Error("Exiting app")
+	}
 	defer func() {
 		app.exitCh <- err
 		log.Debug("Finished exiting app")

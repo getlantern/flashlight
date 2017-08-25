@@ -89,11 +89,16 @@ func main() {
 		chained.ForceProxy(*forceProxyAddr, *forceAuthToken)
 	}
 
+	main := _main(a)
+
 	if a.ShowUI {
-		runOnSystrayReady(a, _main(a))
+		runOnSystrayReady(a, func() {
+			go main()
+		})
 	} else {
 		log.Debug("Running headless")
-		_main(a)()
+		main()
+		os.Exit(0)
 	}
 }
 
@@ -103,8 +108,6 @@ func _main(a *app.App) func() {
 			log.Error(err)
 		}
 		log.Debug("Lantern stopped")
-
-		os.Exit(0)
 	}
 }
 
@@ -116,8 +119,6 @@ func doMain(a *app.App) error {
 			log.Errorf("Error closing log: %v", err)
 		}
 	})
-	a.AddExitFunc(quitSystray)
-
 	if a.ShowUI {
 		go func() {
 			lang := a.GetSetting(app.SNLanguage).(string)
@@ -190,5 +191,6 @@ func handleSignals(a *app.App) {
 		s := <-c
 		log.Debugf("Got signal \"%s\", exiting...", s)
 		a.Exit(nil)
+		os.Exit(0)
 	}()
 }

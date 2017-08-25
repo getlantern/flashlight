@@ -20,13 +20,11 @@ var menu struct {
 }
 
 func runOnSystrayReady(a *app.App, f func()) {
-	systray.Run(f)
-	a.Exit(nil)
-}
-
-func quitSystray() {
-	log.Debug("quitSystray")
-	systray.Quit()
+	systray.Run(f, func() {
+		log.Debug("Exiting")
+		a.Exit(nil)
+		log.Debug("Done exiting")
+	})
 }
 
 func configureSystemTray(a *app.App) error {
@@ -48,7 +46,7 @@ func configureSystemTray(a *app.App) error {
 			case <-menu.show.ClickedCh:
 				ui.Show("show-lantern", "tray")
 			case <-menu.quit.ClickedCh:
-				a.Exit(nil)
+				systray.Quit()
 				return
 			}
 		}
