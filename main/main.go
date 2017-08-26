@@ -114,7 +114,7 @@ func _main(a *app.App) func() {
 func doMain(a *app.App) error {
 	// Schedule cleanup actions
 	handleSignals(a)
-	a.AddExitFunc(func() {
+	a.AddExitFuncToEnd(func() {
 		if err := logging.Close(); err != nil {
 			log.Errorf("Error closing log: %v", err)
 		}

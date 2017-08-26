@@ -3,6 +3,7 @@ package app
 
 import (
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
@@ -50,8 +51,9 @@ type App struct {
 	exitCh       chan error
 	statsTracker *statsTracker
 
-	exitOnce    sync.Once
-	chExitFuncs chan func()
+	exitOnce        sync.Once
+	chExitFuncs     chan func()
+	chLastExitFuncs chan func()
 }
 
 // Init initializes the App's state
@@ -61,8 +63,9 @@ func (app *App) Init() {
 	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
 	app.exitCh = make(chan error, 1)
 	// use buffered channel to avoid blocking the caller of 'AddExitFunc'
-	// the number 10 is arbitrary
-	app.chExitFuncs = make(chan func(), 10)
+	// the number 100 is arbitrary
+	app.chExitFuncs = make(chan func(), 100)
+	app.chLastExitFuncs = make(chan func(), 100)
 	app.statsTracker = NewStatsTracker()
 }
 
@@ -81,7 +84,8 @@ func (app *App) LogPanicAndExit(msg interface{}) {
 
 func (app *App) exitOnFatal(err error) {
 	_ = logging.Close()
-	app.Exit(nil)
+	app.Exit(err)
+	os.Exit(0)
 }
 
 // Run starts the app. It will block until the app exits.
@@ -386,6 +390,12 @@ func (app *App) AddExitFunc(exitFunc func()) {
 	app.chExitFuncs <- exitFunc
 }
 
+// AddExitFuncToEnd adds a function to be called before the application exits
+// but after exit functions added with AddExitFunc.
+func (app *App) AddExitFuncToEnd(exitFunc func()) {
+	app.chLastExitFuncs <- exitFunc
+}
+
 // Exit tells the application to exit, optionally supplying an error that caused
 // the exit.
 func (app *App) Exit(err error) {
@@ -395,6 +405,8 @@ func (app *App) Exit(err error) {
 }
 
 func (app *App) doExit(err error) {
+	now := time.Now()
+	ioutil.WriteFile(fmt.Sprintf(`c:\Users\Ox Cart\before_exit_%d.txt`, now.UnixNano()), []byte(now.String()), 0644)
 	if err != nil {
 		log.Errorf("Exiting app because of %v", err)
 	} else {
@@ -403,16 +415,33 @@ func (app *App) doExit(err error) {
 	defer func() {
 		app.exitCh <- err
 		log.Debug("Finished exiting app")
+		ioutil.WriteFile(fmt.Sprintf(`c:\Users\Ox Cart\after_exit_%d.txt`, now.UnixNano()), []byte(now.String()), 0644)
 	}()
+
+	// call plain exit funcs in order
+loop:
 	for {
 		select {
 		case f := <-app.chExitFuncs:
-			log.Debugf("Calling exit func")
 			f()
 		default:
-			log.Debugf("No exit func remaining, exit now")
-			return
+			break loop
 		}
+	}
+
+	// call last exit funcs in reverse order
+	lastExitFuncs := make([]func(), 0)
+loop2:
+	for {
+		select {
+		case f := <-app.chLastExitFuncs:
+			lastExitFuncs = append(lastExitFuncs, f)
+		default:
+			break loop2
+		}
+	}
+	for i := len(lastExitFuncs) - 1; i >= 0; i-- {
+		lastExitFuncs[i]()
 	}
 }
 
