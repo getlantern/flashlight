@@ -3,7 +3,6 @@ package app
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
@@ -72,13 +71,8 @@ func (app *App) Init() {
 // LogPanicAndExit logs a panic and then exits the application. This function
 // is only used in the panicwrap parent process.
 func (app *App) LogPanicAndExit(msg interface{}) {
-	// Turn off system proxy on panic
 	// Reload settings to make sure we have an up-to-date addr
 	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
-	setUpSysproxyTool()
-	app.AddExitFunc(func() {
-		sysproxyOffFor(settings.GetAddr())
-	})
 	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
 }
 
@@ -325,7 +319,7 @@ func (app *App) afterStart() {
 		go launcher.CreateLaunchFile(enable)
 	})
 
-	app.AddExitFunc(doSysproxyOff)
+	app.AddExitFunc(sysproxyOff)
 	app.AddExitFunc(borda.Flush)
 	if app.ShowUI && !app.Flags["startup"].(bool) {
 		// Launch a browser window with Lantern but only after the pac
@@ -405,8 +399,6 @@ func (app *App) Exit(err error) {
 }
 
 func (app *App) doExit(err error) {
-	now := time.Now()
-	ioutil.WriteFile(fmt.Sprintf(`c:\Users\Ox Cart\before_exit_%d.txt`, now.UnixNano()), []byte(now.String()), 0644)
 	if err != nil {
 		log.Errorf("Exiting app because of %v", err)
 	} else {
@@ -415,7 +407,6 @@ func (app *App) doExit(err error) {
 	defer func() {
 		app.exitCh <- err
 		log.Debug("Finished exiting app")
-		ioutil.WriteFile(fmt.Sprintf(`c:\Users\Ox Cart\after_exit_%d.txt`, now.UnixNano()), []byte(now.String()), 0644)
 	}()
 
 	// call plain exit funcs in order
