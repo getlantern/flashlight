@@ -224,7 +224,7 @@ imports:
 - name: github.com/getlantern/sysproxy
   version: ad0f21a9a5f6187262a5a335c9b452a6b5a5149d
 - name: github.com/getlantern/systray
-  version: f328fc3e81eb9ae48f27810bc6df210111e97743
+  version: 98b24bc00bf9f94d20a776253ee5086f2ae5b00c
 - name: github.com/getlantern/tarfs
   version: d77b63c04dbe74646c5f8f46c5c1e5523ef22415
 - name: github.com/getlantern/tlsdefaults
