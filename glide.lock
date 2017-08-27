@@ -196,7 +196,7 @@ imports:
 - name: github.com/getlantern/ops
   version: b70875f5d689a9438bca72aefd7142a2af889b18
 - name: github.com/getlantern/osversion
-  version: 15282d3e6ba182319e7cbe155e60527e6e0515a8
+  version: fabe6e5a4717c2cd2fee0036b24b25aee563aa5c
 - name: github.com/getlantern/pathreflect
   version: b02f4864048a236150ca17c2c526158f2b3133c4
 - name: github.com/getlantern/profiling
