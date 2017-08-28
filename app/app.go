@@ -79,7 +79,7 @@ func (app *App) LogPanicAndExit(msg interface{}) {
 func (app *App) exitOnFatal(err error) {
 	_ = logging.Close()
 	app.Exit(err)
-	os.Exit(0)
+	// os.Exit(0)
 }
 
 // Run starts the app. It will block until the app exits.
