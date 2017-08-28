@@ -409,30 +409,39 @@ func (app *App) doExit(err error) {
 		log.Debug("Finished exiting app")
 	}()
 
+	app.runExitFuncs()
+	app.runLastExitFuncs()
+}
+
+func (app *App) runExitFuncs() {
 	// call plain exit funcs in order
-loop:
 	for {
 		select {
 		case f := <-app.chExitFuncs:
 			f()
 		default:
-			break loop
+			return
 		}
 	}
+}
 
+func (app *App) runLastExitFuncs() {
 	// call last exit funcs in reverse order
+	lastExitFuncs := app.collectLastExitFuncs()
+	for i := len(lastExitFuncs) - 1; i >= 0; i-- {
+		lastExitFuncs[i]()
+	}
+}
+
+func (app *App) collectLastExitFuncs() []func() {
 	lastExitFuncs := make([]func(), 0)
-loop2:
 	for {
 		select {
 		case f := <-app.chLastExitFuncs:
 			lastExitFuncs = append(lastExitFuncs, f)
 		default:
-			break loop2
+			return lastExitFuncs
 		}
-	}
-	for i := len(lastExitFuncs) - 1; i >= 0; i-- {
-		lastExitFuncs[i]()
 	}
 }
 
