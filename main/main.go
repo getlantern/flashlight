@@ -90,34 +90,29 @@ func main() {
 	}
 
 	if a.ShowUI {
-		runOnSystrayReady(a, _main(a))
+		runOnSystrayReady(a, func() {
+			runApp(a)
+		})
 	} else {
 		log.Debug("Running headless")
-		_main(a)()
-	}
-}
-
-func _main(a *app.App) func() {
-	return func() {
-		if err := doMain(a); err != nil {
+		runApp(a)
+		err := a.WaitForExit()
+		if err != nil {
 			log.Error(err)
 		}
 		log.Debug("Lantern stopped")
-
 		os.Exit(0)
 	}
 }
 
-func doMain(a *app.App) error {
+func runApp(a *app.App) {
 	// Schedule cleanup actions
 	handleSignals(a)
-	a.AddExitFunc(func() {
+	a.AddExitFuncToEnd(func() {
 		if err := logging.Close(); err != nil {
 			log.Errorf("Error closing log: %v", err)
 		}
 	})
-	a.AddExitFunc(quitSystray)
-
 	if a.ShowUI {
 		go func() {
 			lang := a.GetSetting(app.SNLanguage).(string)
@@ -131,7 +126,7 @@ func doMain(a *app.App) error {
 		}()
 	}
 
-	return a.Run()
+	a.Run()
 }
 
 func i18nInit(locale string) {
@@ -190,5 +185,6 @@ func handleSignals(a *app.App) {
 		s := <-c
 		log.Debugf("Got signal \"%s\", exiting...", s)
 		a.Exit(nil)
+		os.Exit(0)
 	}()
 }
