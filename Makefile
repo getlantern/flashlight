@@ -45,7 +45,11 @@ lantern: $(SOURCES)
 
 windowscli: $(SOURCES)
 	@$(call build-tags) && \
-	GOOS=windows GOARCH=386 CGO_ENABLED=1 go build -o lantern-windows.exe -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
+	GOOS=windows GOARCH=386 CGO_ENABLED=1 go build -o lantern.exe -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
+
+windowsgui: $(SOURCES)
+	@$(call build-tags) && \
+	GOOS=windows GOARCH=386 CGO_ENABLED=1 go build -a -o lantern.exe -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS -H=windowsgui" github.com/getlantern/flashlight/main;
 
 linux: $(SOURCES)
 	@$(call build-tags) && \
