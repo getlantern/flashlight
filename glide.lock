@@ -172,7 +172,7 @@ imports:
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxy
-  version: 074e74c4aae248e83ea6fb3d15991d9fabee0945
+  version: b76cb379d0ade5097d53aff2808e1bd9aeb1e51b
 - name: github.com/getlantern/proxybench
   version: 5b3bd1c06980376052721879e14d5178ef98ec65
 - name: github.com/getlantern/redis
