@@ -79,11 +79,10 @@ func (app *App) LogPanicAndExit(msg interface{}) {
 func (app *App) exitOnFatal(err error) {
 	_ = logging.Close()
 	app.Exit(err)
-	// os.Exit(0)
 }
 
 // Run starts the app. It will block until the app exits.
-func (app *App) Run() error {
+func (app *App) Run() {
 	golog.OnFatal(app.exitOnFatal)
 	app.AddExitFunc(recordStopped)
 
@@ -142,8 +141,6 @@ func (app *App) Run() error {
 			return
 		}
 	}()
-
-	return app.waitForExit()
 }
 
 func (app *App) beforeStart(listenAddr string) func() bool {
@@ -446,7 +443,7 @@ func (app *App) collectLastExitFuncs() []func() {
 }
 
 // WaitForExit waits for a request to exit the application.
-func (app *App) waitForExit() error {
+func (app *App) WaitForExit() error {
 	return <-app.exitCh
 }
 

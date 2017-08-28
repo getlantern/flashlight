@@ -89,29 +89,23 @@ func main() {
 		chained.ForceProxy(*forceProxyAddr, *forceAuthToken)
 	}
 
-	main := _main(a)
-
 	if a.ShowUI {
 		runOnSystrayReady(a, func() {
-			go main()
+			runApp(a)
 		})
 	} else {
 		log.Debug("Running headless")
-		main()
+		runApp(a)
+		err := a.WaitForExit()
+		if err != nil {
+			log.Error(err)
+		}
+		log.Debug("Lantern stopped")
 		os.Exit(0)
 	}
 }
 
-func _main(a *app.App) func() {
-	return func() {
-		if err := doMain(a); err != nil {
-			log.Error(err)
-		}
-		log.Debug("Lantern stopped")
-	}
-}
-
-func doMain(a *app.App) error {
+func runApp(a *app.App) {
 	// Schedule cleanup actions
 	handleSignals(a)
 	a.AddExitFuncToEnd(func() {
@@ -132,7 +126,7 @@ func doMain(a *app.App) error {
 		}()
 	}
 
-	return a.Run()
+	a.Run()
 }
 
 func i18nInit(locale string) {

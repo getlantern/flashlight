@@ -20,10 +20,19 @@ var menu struct {
 }
 
 func runOnSystrayReady(a *app.App, f func()) {
+	// Typically, systray.Quit will actually be what causes the app to exit, but
+	// in the case of an uncaught Fatal error, the app will exit before the
+	// systray and we need it to call systray.Quit().
+	a.AddExitFuncToEnd(func() {
+		systray.Quit()
+	})
+
 	systray.Run(f, func() {
-		log.Debug("Exiting")
 		a.Exit(nil)
-		log.Debug("Done exiting")
+		err := a.WaitForExit()
+		if err != nil {
+			log.Errorf("Error exiting app: %v", err)
+		}
 	})
 }
 
