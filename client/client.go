@@ -33,6 +33,7 @@ import (
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/directip"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/status"
@@ -87,6 +88,8 @@ type Client struct {
 	useDetour      func() bool
 	proTokenGetter func() string
 
+	directIP *directip.DialerFactory
+
 	easylist       easylist.List
 	rewriteToHTTPS httpseverywhere.Rewrite
 
@@ -115,6 +118,7 @@ func NewClient(
 		allowShortcut:     allowShortcut,
 		useDetour:         useDetour,
 		proTokenGetter:    proTokenGetter,
+		directIP:          directip.NewDialerFactory(),
 		rewriteToHTTPS:    httpseverywhere.Default(),
 		statsTracker:      statsTracker,
 		allowPrivateHosts: allowPrivateHosts,
@@ -408,7 +412,8 @@ func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Con
 		op.Set("detour", false)
 		dialer = proxiedDialer
 	}
-	return dialer
+
+	return client.directIP.NewDialer(dialer)
 }
 
 func (client *Client) shouldSendToProxy(addr string, port int) error {
