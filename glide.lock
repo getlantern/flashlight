@@ -125,43 +125,9 @@ imports:
 - name: github.com/getlantern/hidden
   version: d52a649ab33af200943bb599898dbdcfdbc94cb7
 - name: github.com/getlantern/http-proxy
-  version: 3ea54b5c2050c1680e1398ef5a1ad173c91ae1d7
-  subpackages:
-  - buffers
-  - commonfilter
-  - filters
-  - forward
-  - httpconnect
-  - listeners
-  - pforward
-  - ratelimiter
-  - server
-  - utils
+  version: ec5810616467f60356cbca25ed5a120fe40aed65
 - name: github.com/getlantern/http-proxy-lantern
-  version: 5c68adab3f48924eef7b98bf0e005457a2df4c4b
-  subpackages:
-  - analytics
-  - bbr
-  - blacklist
-  - borda
-  - common
-  - configserverfilter
-  - devicefilter
-  - diffserv
-  - geo
-  - googlefilter
-  - lampshade
-  - listeners
-  - mimic
-  - obfs4listener
-  - opsfilter
-  - ping
-  - redis
-  - throttle
-  - tlslistener
-  - tokenfilter
-  - usage
-  - versioncheck
+  version: 1e0c377bb96878307b1dc13aa01e798758e55509
 - name: github.com/getlantern/httpseverywhere
   version: b1d8887aaf3b03b9c2eb1ce90a641495a200c7bf
 - name: github.com/getlantern/i18n
@@ -194,7 +160,7 @@ imports:
   - osx
   - win
 - name: github.com/getlantern/ops
-  version: b70875f5d689a9438bca72aefd7142a2af889b18
+  version: d9c5d09356894d6f942b7c17e4bc2f93b201e479
 - name: github.com/getlantern/osversion
   version: fabe6e5a4717c2cd2fee0036b24b25aee563aa5c
 - name: github.com/getlantern/pathreflect
@@ -206,7 +172,7 @@ imports:
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxy
-  version: 9612d21f2b56edd016380bed7bc0314415bf581e
+  version: 8e99bdfb62f6261a17ad6d033356f7d0123edf0c
 - name: github.com/getlantern/proxybench
   version: 5b3bd1c06980376052721879e14d5178ef98ec65
 - name: github.com/getlantern/redis
