@@ -96,7 +96,7 @@ imports:
 - name: github.com/getlantern/filepersist
   version: c5f0cd24e7991579ba6f5f1bd20a1ad2c9f06cd4
 - name: github.com/getlantern/fronted
-  version: 243f3d182de14fdc3f2bf45bda95cfb1940f3043
+  version: e380c024c455fb2fd96ceae0857f1f41dd0c582d
 - name: github.com/getlantern/geolookup
   version: 823d7ff3e6eb74dd6aae38a4b52207b19abfbf66
 - name: github.com/getlantern/go-loggly
@@ -162,7 +162,7 @@ imports:
 - name: github.com/getlantern/ops
   version: d9c5d09356894d6f942b7c17e4bc2f93b201e479
 - name: github.com/getlantern/osversion
-  version: 15282d3e6ba182319e7cbe155e60527e6e0515a8
+  version: fabe6e5a4717c2cd2fee0036b24b25aee563aa5c
 - name: github.com/getlantern/pathreflect
   version: b02f4864048a236150ca17c2c526158f2b3133c4
 - name: github.com/getlantern/profiling
@@ -172,7 +172,7 @@ imports:
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxy
-  version: 7761ad9445c0af93ed10ad8b1a1295ff0a4a2695
+  version: 8e99bdfb62f6261a17ad6d033356f7d0123edf0c
 - name: github.com/getlantern/proxybench
   version: 5b3bd1c06980376052721879e14d5178ef98ec65
 - name: github.com/getlantern/redis
@@ -188,9 +188,9 @@ imports:
 - name: github.com/getlantern/stack
   version: 02f928aad224fbccd50d66edd776fc9d1e9f2f2b
 - name: github.com/getlantern/sysproxy
-  version: 5538da5675d14758fd6ddc6d5ef0343f81e6e565
+  version: 1d42f56cc2f72f41056932f6f8a5c8a22d4a06d4
 - name: github.com/getlantern/systray
-  version: 0068f6ae40ea39bfd683043e8452024097fff0e4
+  version: 66e6fad5eea92d7adda31abfae7a5a52070dfae5
 - name: github.com/getlantern/tarfs
   version: d77b63c04dbe74646c5f8f46c5c1e5523ef22415
 - name: github.com/getlantern/tlsdefaults

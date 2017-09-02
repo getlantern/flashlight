@@ -20,13 +20,20 @@ var menu struct {
 }
 
 func runOnSystrayReady(a *app.App, f func()) {
-	systray.Run(f)
-	a.Exit(nil)
-}
+	// Typically, systray.Quit will actually be what causes the app to exit, but
+	// in the case of an uncaught Fatal error, the app will exit before the
+	// systray and we need it to call systray.Quit().
+	a.AddExitFuncToEnd(func() {
+		systray.Quit()
+	})
 
-func quitSystray() {
-	log.Debug("quitSystray")
-	systray.Quit()
+	systray.Run(f, func() {
+		a.Exit(nil)
+		err := a.WaitForExit()
+		if err != nil {
+			log.Errorf("Error exiting app: %v", err)
+		}
+	})
 }
 
 func configureSystemTray(a *app.App) error {
@@ -48,7 +55,7 @@ func configureSystemTray(a *app.App) error {
 			case <-menu.show.ClickedCh:
 				ui.Show("show-lantern", "tray")
 			case <-menu.quit.ClickedCh:
-				a.Exit(nil)
+				systray.Quit()
 				return
 			}
 		}
