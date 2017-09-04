@@ -160,7 +160,7 @@ imports:
   - osx
   - win
 - name: github.com/getlantern/ops
-  version: d9c5d09356894d6f942b7c17e4bc2f93b201e479
+  version: 37353306c90844c8e0591956f56611f46299d202
 - name: github.com/getlantern/osversion
   version: fabe6e5a4717c2cd2fee0036b24b25aee563aa5c
 - name: github.com/getlantern/pathreflect
