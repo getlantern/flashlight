@@ -43,15 +43,16 @@ func TestRewriteHTTPSRedirectLoop(t *testing.T) {
 	httpsRewriteInterval = 100 * time.Millisecond
 	client := newClient()
 	client.rewriteToHTTPS = httpseverywhere.Eager()
+	testURL := "http://www.nytimes.com/2011/08/21/magazine/do-you-suffer-from-decision-fatigue.html?pagewanted=all&name=dude"
 
-	req, _ := http.NewRequest("GET", "http://www.chinafile.com/", nil)
+	req, _ := http.NewRequest("GET", testURL, nil)
 	resp, err := roundTrip(client, req)
 	if !assert.NoError(t, err) {
 		return
 	}
 	assert.Equal(t, http.StatusMovedPermanently, resp.StatusCode, "should rewrite to HTTPS at first")
 
-	req, _ = http.NewRequest("GET", "http://www.chinafile.com/", nil)
+	req, _ = http.NewRequest("GET", testURL, nil)
 	resp, err = roundTrip(client, req)
 	if !assert.NoError(t, err) {
 		return
@@ -59,7 +60,7 @@ func TestRewriteHTTPSRedirectLoop(t *testing.T) {
 	assert.NotEqual(t, http.StatusMovedPermanently, resp.StatusCode, "second request with same URL should not rewrite to avoid redirect loop")
 
 	time.Sleep(2 * httpsRewriteInterval)
-	req, _ = http.NewRequest("GET", "http://www.chinafile.com/", nil)
+	req, _ = http.NewRequest("GET", testURL, nil)
 	resp, err = roundTrip(client, req)
 	if !assert.NoError(t, err) {
 		return
