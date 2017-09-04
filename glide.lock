@@ -129,7 +129,7 @@ imports:
 - name: github.com/getlantern/http-proxy-lantern
   version: 1e0c377bb96878307b1dc13aa01e798758e55509
 - name: github.com/getlantern/httpseverywhere
-  version: b1d8887aaf3b03b9c2eb1ce90a641495a200c7bf
+  version: 9673775eec1bdb6ccb59fbb645fa0ce34df6f900
 - name: github.com/getlantern/i18n
   version: 931e337788965f3dfafa20fa793242c2cacd5b09
 - name: github.com/getlantern/idletiming
