@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/getlantern/httpseverywhere"
 	"github.com/stretchr/testify/assert"
@@ -34,6 +35,36 @@ func TestRewriteHTTPSCORS(t *testing.T) {
 		return
 	}
 	assert.NotEqual(t, http.StatusMovedPermanently, resp.StatusCode)
+}
+
+func TestRewriteHTTPSRedirectLoop(t *testing.T) {
+	old := httpsRewriteInterval
+	defer func() { httpsRewriteInterval = old }()
+	httpsRewriteInterval = 100 * time.Millisecond
+	client := newClient()
+	client.rewriteToHTTPS = httpseverywhere.Eager()
+
+	req, _ := http.NewRequest("GET", "http://www.chinafile.com/", nil)
+	resp, err := roundTrip(client, req)
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, http.StatusMovedPermanently, resp.StatusCode, "should rewrite to HTTPS at first")
+
+	req, _ = http.NewRequest("GET", "http://www.chinafile.com/", nil)
+	resp, err = roundTrip(client, req)
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.NotEqual(t, http.StatusMovedPermanently, resp.StatusCode, "second request with same URL should not rewrite to avoid redirect loop")
+
+	time.Sleep(2 * httpsRewriteInterval)
+	req, _ = http.NewRequest("GET", "http://www.chinafile.com/", nil)
+	resp, err = roundTrip(client, req)
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, http.StatusMovedPermanently, resp.StatusCode, "should rewrite to HTTPS some time later")
 }
 
 func TestEasylist(t *testing.T) {
