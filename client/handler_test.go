@@ -14,14 +14,14 @@ import (
 func TestRewriteHTTPSSuccess(t *testing.T) {
 	client := newClient()
 	client.rewriteToHTTPS = httpseverywhere.Eager()
-	req, _ := http.NewRequest("GET", "http://www.adaptec.com/", nil)
+	req, _ := http.NewRequest("GET", "http://www.nytimes.com/", nil)
 	resp, err := roundTrip(client, req)
 	if !assert.NoError(t, err) {
 		return
 	}
 	assert.Equal(t, http.StatusMovedPermanently, resp.StatusCode)
 	assert.Equal(t, "max-age:86400", resp.Header.Get("Cache-Control"))
-	assert.Equal(t, "https://www.adaptec.com/", resp.Header.Get("Location"))
+	assert.Equal(t, "https://www.nytimes.com/", resp.Header.Get("Location"))
 	assert.True(t, len(resp.Header.Get("Expires")) > 0)
 }
 
