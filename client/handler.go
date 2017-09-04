@@ -70,7 +70,13 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 			// initiate the requests were not HTTPS redirected. Redirecting
 			// them adds few benefits, but may break some sites.
 			if origin := req.Header.Get("Origin"); origin == "" {
-				return client.redirectHTTPS(ctx, req, httpsURL, op)
+				// Not rewrite recently rewritten URL to avoid redirect loop.
+				if t, ok := client.rewriteLRU.Get(httpsURL); ok && time.Since(t.(time.Time)) < httpsRewriteInterval {
+					log.Debugf("Not httpseverywhere redirecting to %v to avoid redirect loop", httpsURL)
+				} else {
+					client.rewriteLRU.Add(httpsURL, time.Now())
+					return client.redirectHTTPS(ctx, req, httpsURL, op)
+				}
 			}
 
 		}

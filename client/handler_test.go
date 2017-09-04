@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/getlantern/httpseverywhere"
 	"github.com/stretchr/testify/assert"
@@ -13,14 +14,14 @@ import (
 func TestRewriteHTTPSSuccess(t *testing.T) {
 	client := newClient()
 	client.rewriteToHTTPS = httpseverywhere.Eager()
-	req, _ := http.NewRequest("GET", "http://www.adaptec.com/", nil)
+	req, _ := http.NewRequest("GET", "http://www.nytimes.com/", nil)
 	resp, err := roundTrip(client, req)
 	if !assert.NoError(t, err) {
 		return
 	}
 	assert.Equal(t, http.StatusMovedPermanently, resp.StatusCode)
 	assert.Equal(t, "max-age:86400", resp.Header.Get("Cache-Control"))
-	assert.Equal(t, "https://www.adaptec.com/", resp.Header.Get("Location"))
+	assert.Equal(t, "https://www.nytimes.com/", resp.Header.Get("Location"))
 	assert.True(t, len(resp.Header.Get("Expires")) > 0)
 }
 
@@ -34,6 +35,37 @@ func TestRewriteHTTPSCORS(t *testing.T) {
 		return
 	}
 	assert.NotEqual(t, http.StatusMovedPermanently, resp.StatusCode)
+}
+
+func TestRewriteHTTPSRedirectLoop(t *testing.T) {
+	old := httpsRewriteInterval
+	defer func() { httpsRewriteInterval = old }()
+	httpsRewriteInterval = 100 * time.Millisecond
+	client := newClient()
+	client.rewriteToHTTPS = httpseverywhere.Eager()
+	testURL := "http://www.nytimes.com/2011/08/21/magazine/do-you-suffer-from-decision-fatigue.html?pagewanted=all&name=dude"
+
+	req, _ := http.NewRequest("GET", testURL, nil)
+	resp, err := roundTrip(client, req)
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, http.StatusMovedPermanently, resp.StatusCode, "should rewrite to HTTPS at first")
+
+	req, _ = http.NewRequest("GET", testURL, nil)
+	resp, err = roundTrip(client, req)
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.NotEqual(t, http.StatusMovedPermanently, resp.StatusCode, "second request with same URL should not rewrite to avoid redirect loop")
+
+	time.Sleep(2 * httpsRewriteInterval)
+	req, _ = http.NewRequest("GET", testURL, nil)
+	resp, err = roundTrip(client, req)
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, http.StatusMovedPermanently, resp.StatusCode, "should rewrite to HTTPS some time later")
 }
 
 func TestEasylist(t *testing.T) {
