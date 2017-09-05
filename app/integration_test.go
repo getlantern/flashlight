@@ -153,7 +153,7 @@ func TestProxying(t *testing.T) {
 	case <-onGeo:
 		opsMx.RLock()
 		for _, op := range flashlight.FullyReportedOps {
-			if op == "report_issue" || op == "sysproxy_clear" {
+			if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_clear" {
 				// ignore these, as we don't do them during the integration test
 				continue
 			}
@@ -419,8 +419,8 @@ func startApp(t *testing.T, configAddr string) (*App, error) {
 	settings.SetUserID(1)
 
 	go func() {
-		err := a.Run()
-		assert.NoError(t, err, "Unable to run app")
+		a.Run()
+		a.WaitForExit()
 	}()
 
 	return a, waitforserver.WaitForServer("tcp", LocalProxyAddr, 10*time.Second)

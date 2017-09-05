@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -49,8 +50,9 @@ type App struct {
 	exitCh       chan error
 	statsTracker *statsTracker
 
-	exitOnce    sync.Once
-	chExitFuncs chan func()
+	exitOnce        sync.Once
+	chExitFuncs     chan func()
+	chLastExitFuncs chan func()
 }
 
 // Init initializes the App's state
@@ -60,31 +62,27 @@ func (app *App) Init() {
 	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
 	app.exitCh = make(chan error, 1)
 	// use buffered channel to avoid blocking the caller of 'AddExitFunc'
-	// the number 10 is arbitrary
-	app.chExitFuncs = make(chan func(), 10)
+	// the number 100 is arbitrary
+	app.chExitFuncs = make(chan func(), 100)
+	app.chLastExitFuncs = make(chan func(), 100)
 	app.statsTracker = NewStatsTracker()
 }
 
 // LogPanicAndExit logs a panic and then exits the application. This function
 // is only used in the panicwrap parent process.
 func (app *App) LogPanicAndExit(msg interface{}) {
-	// Turn off system proxy on panic
 	// Reload settings to make sure we have an up-to-date addr
 	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
-	setUpSysproxyTool()
-	app.AddExitFunc(func() {
-		sysproxyOffFor(settings.GetAddr())
-	})
 	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
 }
 
 func (app *App) exitOnFatal(err error) {
 	_ = logging.Close()
-	app.Exit(nil)
+	app.Exit(err)
 }
 
 // Run starts the app. It will block until the app exits.
-func (app *App) Run() error {
+func (app *App) Run() {
 	golog.OnFatal(app.exitOnFatal)
 	app.AddExitFunc(recordStopped)
 
@@ -143,8 +141,6 @@ func (app *App) Run() error {
 			return
 		}
 	}()
-
-	return app.waitForExit()
 }
 
 func (app *App) beforeStart(listenAddr string) func() bool {
@@ -209,6 +205,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 				log.Debugf("Can't clear proxy settings for: %v", listenAddr)
 			}
 			app.Exit(nil)
+			os.Exit(0)
 		}
 
 		if uiaddr != "" {
@@ -319,7 +316,7 @@ func (app *App) afterStart() {
 		go launcher.CreateLaunchFile(enable)
 	})
 
-	app.AddExitFunc(doSysproxyOff)
+	app.AddExitFunc(sysproxyOff)
 	app.AddExitFunc(borda.Flush)
 	if app.ShowUI && !app.Flags["startup"].(bool) {
 		// Launch a browser window with Lantern but only after the pac
@@ -384,6 +381,12 @@ func (app *App) AddExitFunc(exitFunc func()) {
 	app.chExitFuncs <- exitFunc
 }
 
+// AddExitFuncToEnd adds a function to be called before the application exits
+// but after exit functions added with AddExitFunc.
+func (app *App) AddExitFuncToEnd(exitFunc func()) {
+	app.chLastExitFuncs <- exitFunc
+}
+
 // Exit tells the application to exit, optionally supplying an error that caused
 // the exit.
 func (app *App) Exit(err error) {
@@ -393,25 +396,54 @@ func (app *App) Exit(err error) {
 }
 
 func (app *App) doExit(err error) {
-	log.Errorf("Exiting app because of %v", err)
+	if err != nil {
+		log.Errorf("Exiting app because of %v", err)
+	} else {
+		log.Error("Exiting app")
+	}
 	defer func() {
 		app.exitCh <- err
 		log.Debug("Finished exiting app")
 	}()
+
+	app.runExitFuncs()
+	app.runLastExitFuncs()
+}
+
+func (app *App) runExitFuncs() {
+	// call plain exit funcs in order
 	for {
 		select {
 		case f := <-app.chExitFuncs:
-			log.Debugf("Calling exit func")
 			f()
 		default:
-			log.Debugf("No exit func remaining, exit now")
 			return
 		}
 	}
 }
 
+func (app *App) runLastExitFuncs() {
+	// call last exit funcs in reverse order
+	lastExitFuncs := app.collectLastExitFuncs()
+	for i := len(lastExitFuncs) - 1; i >= 0; i-- {
+		lastExitFuncs[i]()
+	}
+}
+
+func (app *App) collectLastExitFuncs() []func() {
+	lastExitFuncs := make([]func(), 0)
+	for {
+		select {
+		case f := <-app.chLastExitFuncs:
+			lastExitFuncs = append(lastExitFuncs, f)
+		default:
+			return lastExitFuncs
+		}
+	}
+}
+
 // WaitForExit waits for a request to exit the application.
-func (app *App) waitForExit() error {
+func (app *App) WaitForExit() error {
 	return <-app.exitCh
 }
 
