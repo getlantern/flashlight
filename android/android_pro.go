@@ -46,6 +46,7 @@ type Session interface {
 	Currency() string
 	DeviceOS() string
 	SetStripePubKey(string)
+	IsProUser() bool
 }
 
 const (
@@ -354,12 +355,4 @@ func ProRequest(command string, session Session) bool {
 	}
 
 	return true
-}
-
-func isProUserFast(session Session) (isPro bool, statusKnown bool) {
-	userID := session.GetUserID()
-	if userID == 0 {
-		return false, false
-	}
-	return pro.IsProUserFast(userID)
 }
