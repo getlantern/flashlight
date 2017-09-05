@@ -95,7 +95,12 @@ import:
 - package: github.com/ua-parser/uap-go
   subpackages:
   - uaparser
+- package: github.com/sirupsen/logrus
+  version: master
 - package: github.com/Sirupsen/logrus
+  repo: git@github.com:/sirupsen/logrus
+  vcs: git
+  version: master
 - package: github.com/keighl/mandrill
   version: ^1.1.0
 - package: github.com/getlantern/proxy

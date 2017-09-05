@@ -23,40 +23,6 @@ const (
 	testAdSwapTargetURL = "http://localhost/purchase"
 )
 
-func newMockWriter() *mockWriter {
-	return &mockWriter{
-		ResponseWriter: httptest.NewRecorder(),
-		Dialer:         mockconn.SucceedingDialer(nil),
-	}
-}
-
-type mockWriter struct {
-	// client.ServeHTTP requires the interface but never used, as the
-	// connection is always hijacked
-	http.ResponseWriter
-	http.Hijacker
-	mockconn.Dialer
-}
-
-func (w *mockWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
-	conn, err := w.Dialer.Dial("net", "hijacked")
-	return conn,
-		bufio.NewReadWriter(
-			bufio.NewReader(bytes.NewBuffer(nil)), // don't read request anyway
-			bufio.NewWriter(conn)),
-		err
-}
-
-func (w *mockWriter) ReadResponse() (*http.Response, error) {
-	return http.ReadResponse(bufio.NewReader(bytes.NewReader(w.Dialer.Received())), nil)
-}
-
-func (w *mockWriter) ReadTunneledResponse() (*http.Response, error) {
-	r := bufio.NewReader(bytes.NewReader(w.Dialer.Received()))
-	_, _ = http.ReadResponse(r, nil)
-	return http.ReadResponse(r, nil)
-}
-
 type mockStatsTracker struct{}
 
 func (m mockStatsTracker) SetActiveProxyLocation(city, country, countryCode string) {}
@@ -88,21 +54,14 @@ func TestServeHTTPOk(t *testing.T) {
 	client := newClient()
 	resetBalancer(client, mockconn.SucceedingDialer(mockResponse).Dial)
 
-	w := newMockWriter()
 	req, _ := http.NewRequest("CONNECT", "https://b.com:443", nil)
-	client.ServeHTTP(w, req)
-	assert.Equal(t, "hijacked", w.Dialer.LastDialed())
-	res, _ := w.ReadTunneledResponse()
-	assert.Equal(t, 404, res.StatusCode, "CONNECT requests should get 404 Not Found in tunnel")
-
-	// disable the test temporarily. It has weird error "readLoopPeekFailLocked <nil>" when run with `go test -race`
-	// w = newMockWriter()
-	// req, _ = http.NewRequest("GET", "http://a.com/page.html", nil)
-	// req.Header.Set("Accept", "not-html")
-	// client.ServeHTTP(w, req)
-	// assert.Equal(t, "hijacked", w.Dialer.LastDialed())
-	// res, _ = w.ReadResponse()
-	// assert.Equal(t, 404, res.StatusCode, "non-CONNECT requests should get 404 Not Found")
+	resp, err := roundTrip(client, req)
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, "timeout=38", resp.Header.Get("Keep-Alive"))
+	assert.Equal(t, "0", resp.Header.Get("Content-Length"))
 }
 
 func TestServeHTTPTimeout(t *testing.T) {
@@ -118,21 +77,20 @@ func TestServeHTTPTimeout(t *testing.T) {
 		return mockconn.SucceedingDialer(nil).Dial(network, addr)
 	})
 
-	w := newMockWriter()
 	req, _ := http.NewRequest("CONNECT", "https://a.com:443", nil)
-	client.ServeHTTP(w, req)
-	res, _ := w.ReadResponse()
-	assert.Equal(t, 200, res.StatusCode, "CONNECT requests should still succeed")
+	resp, _ := roundTrip(client, req)
+	assert.Equal(t, http.StatusOK, resp.StatusCode, "CONNECT requests should always succeed")
 
-	w = newMockWriter()
 	req, _ = http.NewRequest("GET", "http://b.com/action", nil)
 	req.Header.Set("Accept", "text/html")
-	client.ServeHTTP(w, req)
-	res, _ = w.ReadResponse()
-	assert.Equal(t, 503, res.StatusCode, "non-CONNECT requests should get 503 response")
-	body, _ := ioutil.ReadAll(res.Body)
+	resp, _ = roundTrip(client, req)
+	assert.Equal(t, http.StatusServiceUnavailable, resp.StatusCode, "It should respond 503 Service Unavailable with error page")
+	body, err := ioutil.ReadAll(resp.Body)
+	if !assert.NoError(t, err) {
+		return
+	}
 	assert.Contains(t, string(body), "<title>Lantern: Error Accessing Page</title>", "should respond with error page")
-	assert.Contains(t, string(body), "context deadline exceeded", "should include the detailed error")
+	assert.Contains(t, string(body), "context deadline exceeded", "should be with context error")
 }
 
 func TestIsAddressProxyable(t *testing.T) {
@@ -184,12 +142,9 @@ func TestDialShortcut(t *testing.T) {
 	mockResponse := []byte("HTTP/1.1 404 Not Found\r\n\r\n") // used as a sign that the request is sent to proxy
 	resetBalancer(client, mockconn.SucceedingDialer(mockResponse).Dial)
 
-	w := newMockWriter()
 	req, _ := http.NewRequest("GET", site.URL, nil)
-	client.ServeHTTP(w, req)
+	res, _ := roundTrip(client, req)
 	assert.True(t, shortcutVisited)
-	assert.Equal(t, "hijacked", w.Dialer.LastDialed())
-	res, _ := w.ReadResponse()
 	assert.Equal(t, 200, res.StatusCode, "should respond with 200 when a shortcutted site is reachable")
 	body, _ := ioutil.ReadAll(res.Body)
 	assert.Equal(t, "abc", string(body), "should respond with correct content")
@@ -200,28 +155,32 @@ func TestDialShortcut(t *testing.T) {
 	// shortcutVisited = false
 	// client.ServeHTTP(w, req)
 	// assert.True(t, shortcutVisited)
-	// res, _ = w.ReadResponse()
+	// res, = w.ReadResponse()
 	// assert.Equal(t, 404, res.StatusCode, "should dial proxy if the shortcutted site is unreachable")
 
-	w = newMockWriter()
 	req, _ = http.NewRequest("CONNECT", "http://unknown2:80", nil)
 	shortcutVisited = false
-	client.ServeHTTP(w, req)
+	res, _ = roundTrip(client, req)
 	assert.True(t, shortcutVisited)
-	res, _ = w.ReadTunneledResponse()
-	assert.Equal(t, 404, res.StatusCode, "should dial proxy if the shortcutted site is unreachable")
+	nestedResp, err := res.nested()
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, 404, nestedResp.StatusCode, "should dial proxy if the shortcutted site is unreachable")
 
 	client.allowShortcut = func(addr string) (bool, net.IP) {
 		shortcutVisited = true
 		return false, nil
 	}
-	w = newMockWriter()
 	req, _ = http.NewRequest("CONNECT", "http://unknown3:80", nil)
 	shortcutVisited = false
-	client.ServeHTTP(w, req)
+	res, _ = roundTrip(client, req)
 	assert.True(t, shortcutVisited)
-	res, _ = w.ReadTunneledResponse()
-	assert.Equal(t, 404, res.StatusCode, "should dial proxy if the site is not shortcutted")
+	nestedResp, err = res.nested()
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, 404, nestedResp.StatusCode, "should dial proxy if the site is not shortcutted")
 
 	// disable the test temporarily. It has weird error "readLoopPeekFailLocked <nil>" when run with `go test -race`
 	// detour.AddToWl("unknown4:80", true)
@@ -231,19 +190,20 @@ func TestDialShortcut(t *testing.T) {
 	// shortcutVisited = false
 	// client.ServeHTTP(w, req)
 	// assert.False(t, shortcutVisited, "should not check shortcut list if the site is whitelisted")
-	// res, _ = w.ReadResponse()
+	// res, = w.ReadResponse()
 	// assert.Equal(t, 404, res.StatusCode, "should dial proxy if the site is whitelisted")
 
 	detour.AddToWl("unknown5:80", true)
 	defer detour.RemoveFromWl("unknown5:80")
-	w = newMockWriter()
 	req, _ = http.NewRequest("CONNECT", "http://unknown5:80", nil)
 	shortcutVisited = false
-	client.ServeHTTP(w, req)
+	res, _ = roundTrip(client, req)
 	assert.False(t, shortcutVisited, "should not check shortcut list if the site is whitelisted")
-	res, _ = w.ReadTunneledResponse()
-	assert.Equal(t, 404, res.StatusCode, "should dial proxy if the site is whitelisted")
-
+	nestedResp, err = res.nested()
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, 404, nestedResp.StatusCode, "should dial proxy if the site is whitelisted")
 }
 
 type testDialer struct {
@@ -342,4 +302,33 @@ func (d *testDialer) ProbePerformance() {
 
 func (d *testDialer) Stop() {
 	d.stopped = true
+}
+
+func roundTrip(client *Client, req *http.Request) (*response, error) {
+	toSend := &bytes.Buffer{}
+	err := req.Write(toSend)
+	if err != nil {
+		return nil, err
+	}
+	received := &bytes.Buffer{}
+	err = client.handle(mockconn.New(received, toSend))
+	if err != nil {
+		log.Errorf("Error handling: %v", err)
+	}
+	br := bufio.NewReader(bytes.NewReader(received.Bytes()))
+	resp, err2 := http.ReadResponse(br, req)
+	if err == nil {
+		err = err2
+	}
+	return &response{*resp, req, br}, err
+}
+
+type response struct {
+	http.Response
+	req *http.Request
+	br  *bufio.Reader
+}
+
+func (r *response) nested() (*http.Response, error) {
+	return http.ReadResponse(r.br, r.req)
 }

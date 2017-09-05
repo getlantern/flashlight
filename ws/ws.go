@@ -36,9 +36,10 @@ type clientChannels struct {
 	in  chan []byte
 	out chan []byte
 
-	muConns sync.Mutex
-	nextId  int
-	conns   map[int]*wsconn
+	muConns       sync.Mutex
+	nextId        int
+	conns         map[int]*wsconn
+	connsToRemove chan *wsconn
 
 	onConnect ConnectFunc
 }
@@ -51,13 +52,14 @@ func newClients(onConnect ConnectFunc) *clientChannels {
 	in := make(chan []byte, 100)
 	out := make(chan []byte)
 	c := &clientChannels{
-		In:        in,
-		in:        in,
-		Out:       out,
-		out:       out,
-		nextId:    0,
-		conns:     make(map[int]*wsconn),
-		onConnect: onConnect,
+		In:            in,
+		in:            in,
+		Out:           out,
+		out:           out,
+		nextId:        0,
+		conns:         make(map[int]*wsconn),
+		connsToRemove: make(chan *wsconn, 100),
+		onConnect:     onConnect,
 	}
 
 	go c.writeAll()
@@ -116,13 +118,23 @@ func (c *clientChannels) writeAll() {
 		c.muConns.Unlock()
 	}()
 
-	for msg := range c.out {
-		for _, conn := range c.clonedConns() {
-			select {
-			case conn.out <- msg:
-			default:
-				log.Errorf("Failed to send message %v to websocket connection", msg)
+	for {
+		select {
+		case msg, ok := <-c.out:
+			if !ok {
+				// channel closed, we're done sending
+				return
 			}
+			for _, conn := range c.clonedConns() {
+				select {
+				case conn.out <- msg:
+				default:
+					log.Errorf("Failed to send message %v to websocket connection", msg)
+				}
+			}
+		case conn := <-c.connsToRemove:
+			log.Debugf("Removing single conn")
+			c.lockedRemoveConn(conn)
 		}
 	}
 }
@@ -140,7 +152,10 @@ func (c *clientChannels) clonedConns() map[int]*wsconn {
 func (c *clientChannels) lockedRemoveConn(conn *wsconn) {
 	c.muConns.Lock()
 	defer c.muConns.Unlock()
-	c.doRemoveConn(conn)
+	conn = c.conns[conn.id]
+	if conn != nil {
+		c.doRemoveConn(conn)
+	}
 }
 
 func (c *clientChannels) doRemoveConn(conn *wsconn) {
@@ -184,7 +199,8 @@ func (c *wsconn) write() {
 		err := c.ws.WriteMessage(websocket.TextMessage, msg)
 		if err != nil {
 			log.Debugf("Error writing to WebSocket, closing: %v", err)
-			c.c.lockedRemoveConn(c)
+			c.c.connsToRemove <- c
+			return
 		}
 	}
 }
