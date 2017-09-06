@@ -16,6 +16,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	lru "github.com/hashicorp/golang-lru"
+
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/detour"
 	"github.com/getlantern/easylist"
@@ -63,6 +65,8 @@ var (
 	// avoid applications bypassing Lantern.
 	// Chrome has a 30s timeout before marking proxy as bad.
 	requestTimeout = int64(20 * time.Second)
+	// interval before rewriting the same URL to HTTPS, to avoid redirect loop.
+	httpsRewriteInterval = 10 * time.Second
 
 	// See http://stackoverflow.com/questions/106179/regular-expression-to-match-dns-hostname-or-ip-address
 	validHostnameRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
@@ -92,6 +96,7 @@ type Client struct {
 
 	easylist       easylist.List
 	rewriteToHTTPS httpseverywhere.Rewrite
+	rewriteLRU     *lru.Cache
 
 	statsTracker stats.StatsTracker
 
@@ -113,6 +118,11 @@ func NewClient(
 	lang func() string,
 	adSwapTargetURL func() string,
 ) (*Client, error) {
+	// A small LRU to detect redirect loop
+	rewriteLRU, err := lru.New(100)
+	if err != nil {
+		return nil, errors.New("Unable to create rewrite LRU: %v", err)
+	}
 	client := &Client{
 		bal:               balancer.New(),
 		allowShortcut:     allowShortcut,
@@ -120,6 +130,7 @@ func NewClient(
 		proTokenGetter:    proTokenGetter,
 		directIP:          directip.NewDialerFactory(),
 		rewriteToHTTPS:    httpseverywhere.Default(),
+		rewriteLRU:        rewriteLRU,
 		statsTracker:      statsTracker,
 		allowPrivateHosts: allowPrivateHosts,
 		lang:              lang,
@@ -141,7 +152,6 @@ func NewClient(
 		client.initEasyList()
 	}
 	client.reportProxyLocationLoop()
-	var err error
 	client.iptool, err = iptool.New()
 	if err != nil {
 		return nil, errors.New("Unable to initialize iptool: %v", err)
