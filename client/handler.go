@@ -3,15 +3,19 @@ package client
 import (
 	"context"
 	"fmt"
+	"mime"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/proxy/filters"
+	"github.com/getlantern/tarfs"
 )
 
 type contextKey string
@@ -23,6 +27,19 @@ const (
 var adSwapJavaScriptInjections = map[string]string{
 	"http://www.googletagservices.com/tag/js/gpt.js": "https://ads.getlantern.org/v1/js/www.googletagservices.com/tag/js/gpt.js",
 	"http://cpro.baidustatic.com/cpro/ui/c.js":       "https://ads.getlantern.org/v1/js/cpro.baidustatic.com/cpro/ui/c.js",
+}
+
+var (
+	fs           *tarfs.FileSystem
+	translations = eventual.NewValue()
+)
+
+func init() {
+	// http.FileServer relies on OS to guess mime type, which can be wrong.
+	// Override system default for current process.
+	_ = mime.AddExtensionType(".css", "text/css")
+	_ = mime.AddExtensionType(".js", "application/javascript")
+	unpackUI()
 }
 
 func (client *Client) handle(conn net.Conn) error {
@@ -64,6 +81,10 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 		// CONNECT requests are often used for HTTPS requests.
 		log.Tracef("Intercepting CONNECT %s", req.URL)
 	} else {
+		if req.URL.Hostname() == "search.lantern.io" {
+			//return client.serveFromLocalUI(ctx, req, httpsURL, op)
+			log.Debug("Found search.lantern.io")
+		}
 		log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
 		if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
 			// Don't redirect CORS requests as it means the HTML pages that
@@ -87,6 +108,33 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 	}
 
 	return next(ctx, req)
+}
+
+func (client *Client) serveFromLocalUI(ctx filters.Context, req *http.Request) (*http.Response, filters.Context, error) {
+	log.Debugf("Serving local UI for %v on %v", req.URL, req.Host)
+
+	rt := http.NewFileTransport(fs)
+	resp, err := rt.RoundTrip(req)
+	if err != nil {
+		resp = &http.Response{
+			StatusCode: http.StatusNotFound,
+			Close:      true,
+		}
+		return filters.ShortCircuit(ctx, req, resp)
+	}
+	return filters.ShortCircuit(ctx, req, resp)
+}
+
+func unpackUI() (*tarfs.FileSystem, error) {
+	var err error
+	fs, err = tarfs.New(ui.Resources, "")
+	if err != nil {
+		// Panicking here because this shouldn't happen at runtime unless the
+		// resources were incorrectly embedded.
+		panic(fmt.Errorf("Unable to open tarfs filesystem: %v", err))
+	}
+	translations.Set(fs.SubDir("locale"))
+	return fs, err
 }
 
 func (client *Client) easyblock(ctx filters.Context, req *http.Request) (*http.Response, filters.Context, error) {
