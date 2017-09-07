@@ -81,9 +81,9 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 		// CONNECT requests are often used for HTTPS requests.
 		log.Tracef("Intercepting CONNECT %s", req.URL)
 	} else {
-		if req.URL.Hostname() == "search.lantern.io" {
-			//return client.serveFromLocalUI(ctx, req, httpsURL, op)
+		if req.URL.Host == "search.lantern.io" {
 			log.Debug("Found search.lantern.io")
+			return client.serveFromLocalUI(ctx, req, op)
 		}
 		log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
 		if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
@@ -110,7 +110,7 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 	return next(ctx, req)
 }
 
-func (client *Client) serveFromLocalUI(ctx filters.Context, req *http.Request) (*http.Response, filters.Context, error) {
+func (client *Client) serveFromLocalUI(ctx filters.Context, req *http.Request, op *ops.Op) (*http.Response, filters.Context, error) {
 	log.Debugf("Serving local UI for %v on %v", req.URL, req.Host)
 
 	rt := http.NewFileTransport(fs)
