@@ -1,5 +1,5 @@
-hash: d4d20c441b49dc473ec542ec84239c68b3027de0899dd4a38417e7b3c2d65544
-updated: 2017-09-04T11:26:45.467087617-07:00
+hash: c58257efe2a67f6ee9f882eee79d3a62c0f558f2e7fc7741f4b809f1ac2d4e2e
+updated: 2017-09-08T16:38:41.433622173+08:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a3ad5df6c9e7dc8117f55958b4ce99bf1e0fe291
@@ -272,10 +272,7 @@ imports:
   version: 17ce1425424ab154092bbb43af630bd647f3bb0d
   subpackages:
   - proto
-  - ptypes
   - ptypes/any
-  - ptypes/duration
-  - ptypes/timestamp
 - name: github.com/golang/snappy
   version: 553a641470496b2327abcac10b36396bd98e45c9
 - name: github.com/gorilla/context
@@ -539,6 +536,8 @@ testImports:
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
   - difflib
+- name: github.com/sirupsen/logrus
+  version: 89742aefa4b206dcf400792f3bd35b542998eb3b
 - name: github.com/stretchr/testify
   version: 890a5c3458b43e6104ff5da8dfa139d013d77544
   subpackages:

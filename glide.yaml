@@ -166,6 +166,7 @@ import:
 - package: github.com/golang/glog
 - package: github.com/getlantern/httpseverywhere
 testImport:
+- package: github.com/sirupsen/logrus
 - package: github.com/stretchr/testify
   subpackages:
   - assert
