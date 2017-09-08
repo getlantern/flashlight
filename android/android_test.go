@@ -39,6 +39,7 @@ func (c testSession) Locale() string           { return "en-US" }
 func (c testSession) SetUserId(int64)          {}
 func (c testSession) SetToken(string)          {}
 func (c testSession) SetCode(string)           {}
+func (c testSession) IsProUser() bool          { return true }
 
 func (c testSession) UpdateStats(string, string, string, int, int) {}
 

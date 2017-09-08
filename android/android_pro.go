@@ -46,6 +46,7 @@ type Session interface {
 	Currency() string
 	DeviceOS() string
 	SetStripePubKey(string)
+	IsProUser() bool
 }
 
 const (
