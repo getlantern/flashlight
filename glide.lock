@@ -218,7 +218,7 @@ imports:
 - name: github.com/getlantern/stack
   version: 02f928aad224fbccd50d66edd776fc9d1e9f2f2b
 - name: github.com/getlantern/sysproxy
-  version: d83c0da5df2fe0c039d78cd32210f0e4180e9557
+  version: 35386ddd7c5ba67608969c38ea0b0d25150bce7d
 - name: github.com/getlantern/systray
   version: 66e6fad5eea92d7adda31abfae7a5a52070dfae5
 - name: github.com/getlantern/tarfs
@@ -353,12 +353,6 @@ imports:
   - process
 - name: github.com/Shopify/sarama
   version: 0fb560e5f7fbcaee2f75e3c34174320709f69944
-- name: github.com/Sirupsen/logrus
-  version: 89742aefa4b206dcf400792f3bd35b542998eb3b
-  repo: git@github.com:/sirupsen/logrus
-  vcs: git
-- name: github.com/sirupsen/logrus
-  version: 89742aefa4b206dcf400792f3bd35b542998eb3b
 - name: github.com/skratchdot/open-golang
   version: 75fb7ed4208cf72d323d7d02fd1a5964a7a9073c
   subpackages:
