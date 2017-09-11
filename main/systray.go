@@ -10,6 +10,7 @@ import (
 
 	"github.com/getlantern/flashlight/app"
 	"github.com/getlantern/flashlight/icons"
+	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/flashlight/ui"
 )
 
@@ -43,29 +44,43 @@ func configureSystemTray(a *app.App) error {
 	if !menu.enable {
 		return nil
 	}
-	icon, err := icons.Asset("icons/16on.ico")
+	onIcon, err := icons.Asset("icons/16on.ico")
 	if err != nil {
-		return fmt.Errorf("Unable to load icon for system tray: %v", err)
+		return fmt.Errorf("Unable to load on icon for system tray: %v", err)
 	}
-	systray.SetIcon(icon)
+	offIcon, err := icons.Asset("icons/16off.ico")
+	if err != nil {
+		return fmt.Errorf("Unable to load off icon for system tray: %v", err)
+	}
 	systray.SetTooltip("Lantern")
 	menu.on = a.IsOn()
 	if menu.on {
 		menu.toggle = systray.AddMenuItem(i18n.T("TRAY_TURN_OFF"), i18n.T("TRAY_TURN_OFF"))
+		systray.SetIcon(onIcon)
 	} else {
 		menu.toggle = systray.AddMenuItem(i18n.T("TRAY_TURN_ON"), i18n.T("TRAY_TURN_ON"))
+		systray.SetIcon(offIcon)
 	}
 	menu.show = systray.AddMenuItem(i18n.T("TRAY_SHOW_LANTERN"), i18n.T("TRAY_SHOW_LANTERN"))
 	menu.upgrade = systray.AddMenuItem(i18n.T("TRAY_UPGRADE_TO_PRO"), i18n.T("TRAY_UPGRADE_TO_PRO"))
+	pro.OnProStatusChange(func(isPro bool) {
+		if isPro {
+			menu.upgrade.Disable()
+		} else {
+			menu.upgrade.Enable()
+		}
+	})
 	go func() {
 		for {
 			select {
 			case <-menu.toggle.ClickedCh:
 				if menu.on {
 					a.TurnOff()
+					systray.SetIcon(offIcon)
 					menu.on = false
 				} else {
 					a.TurnOn()
+					systray.SetIcon(onIcon)
 					menu.on = true
 				}
 				setOnOffLabels()

@@ -133,10 +133,7 @@ func (app *App) Run() {
 			app.statsTracker,
 			app.Exit,
 			settings.GetDeviceID(),
-			func() bool {
-				isPro, _ := isProUserFast()
-				return isPro
-			},
+			app.IsPro,
 			settings.GetLanguage,
 			func() string {
 				isPro, statusKnown := isProUserFast()
@@ -482,6 +479,12 @@ func (app *App) collectLastExitFuncs() []func() {
 // WaitForExit waits for a request to exit the application.
 func (app *App) WaitForExit() error {
 	return <-app.exitCh
+}
+
+// Indicates whether or not the app is pro
+func (app *App) IsPro() bool {
+	isPro, _ := isProUserFast()
+	return isPro
 }
 
 func recordStopped() {
