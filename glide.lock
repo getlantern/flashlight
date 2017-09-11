@@ -159,7 +159,7 @@ imports:
 - name: github.com/getlantern/httpseverywhere
   version: dbb3401e2cd058a29e4d8d045ba6f69e5b905df7
 - name: github.com/getlantern/i18n
-  version: 931e337788965f3dfafa20fa793242c2cacd5b09
+  version: 62fda4bd4d89f9a5ec61584f764896e48fe346c7
 - name: github.com/getlantern/idletiming
   version: 7a71d2e71cf253f64b9610ce7aa9ddfc58aa9b2a
 - name: github.com/getlantern/iptool

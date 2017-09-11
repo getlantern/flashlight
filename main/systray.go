@@ -15,8 +15,9 @@ import (
 
 var menu struct {
 	enable bool
+	on     bool
+	toggle *systray.MenuItem
 	show   *systray.MenuItem
-	quit   *systray.MenuItem
 }
 
 func runOnSystrayReady(a *app.App, f func()) {
@@ -47,16 +48,27 @@ func configureSystemTray(a *app.App) error {
 	}
 	systray.SetIcon(icon)
 	systray.SetTooltip("Lantern")
+	menu.on = a.IsOn()
+	if menu.on {
+		menu.toggle = systray.AddMenuItem(i18n.T("TRAY_TURN_OFF"), i18n.T("TURN_OFF"))
+	} else {
+		menu.toggle = systray.AddMenuItem(i18n.T("TRAY_TURN_ON"), i18n.T("TURN_ON"))
+	}
 	menu.show = systray.AddMenuItem(i18n.T("TRAY_SHOW_LANTERN"), i18n.T("SHOW"))
-	menu.quit = systray.AddMenuItem(i18n.T("TRAY_QUIT"), i18n.T("QUIT"))
 	go func() {
 		for {
 			select {
+			case <-menu.toggle.ClickedCh:
+				if menu.on {
+					a.TurnOff()
+					menu.on = false
+				} else {
+					a.TurnOn()
+					menu.on = true
+				}
+				setOnOffLabels()
 			case <-menu.show.ClickedCh:
 				ui.Show("show-lantern", "tray")
-			case <-menu.quit.ClickedCh:
-				systray.Quit()
-				return
 			}
 		}
 	}()
@@ -74,6 +86,15 @@ func refreshSystray(language string) {
 	}
 	menu.show.SetTitle(i18n.T("TRAY_SHOW_LANTERN"))
 	menu.show.SetTooltip(i18n.T("SHOW"))
-	menu.quit.SetTitle(i18n.T("TRAY_QUIT"))
-	menu.quit.SetTooltip(i18n.T("QUIT"))
+	setOnOffLabels()
+}
+
+func setOnOffLabels() {
+	if menu.on {
+		menu.toggle.SetTitle(i18n.T("TRAY_TURN_OFF"))
+		menu.toggle.SetTooltip(i18n.T("TURN_OFF"))
+	} else {
+		menu.toggle.SetTitle(i18n.T("TRAY_TURN_ON"))
+		menu.toggle.SetTooltip(i18n.T("TURN_ON"))
+	}
 }

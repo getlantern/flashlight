@@ -38,6 +38,7 @@ func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, 
 
 func newClient() *Client {
 	client, _ := NewClient(
+		func() bool { return true },
 		func(addr string) (bool, net.IP) { return false, nil },
 		func() bool { return true },
 		func() string { return "proToken" },
