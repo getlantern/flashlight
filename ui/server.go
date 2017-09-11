@@ -114,12 +114,17 @@ serve:
 	}
 }
 
+// showRoot is like show using the root (/) URL of the UI.
+func (s *server) showRoot(campaign, medium string) {
+	s.show(s.rootURL(), campaign, medium)
+}
+
 // show opens the UI in a browser. Note we know the UI server is
 // *listening* at this point as long as Start is correctly called prior
 // to this method. It may not be reading yet, but since we're the only
 // ones reading from those incoming sockets the fact that reading starts
-// asynchronously is not a problem.
-func (s *server) show(campaign, medium string) {
+// asynchronously is not a problem. destURL indicates which URL to open.
+func (s *server) show(destURL, campaign, medium string) {
 	open := func(u string, t time.Duration) {
 		go func() {
 			time.Sleep(t)
@@ -129,7 +134,7 @@ func (s *server) show(campaign, medium string) {
 			}
 		}()
 	}
-	s.doShow(campaign, medium, open)
+	s.doShow(destURL, campaign, medium, open)
 }
 
 // doShow opens the UI in a browser. Note we know the UI server is
@@ -137,12 +142,11 @@ func (s *server) show(campaign, medium string) {
 // to this method. It may not be reading yet, but since we're the only
 // ones reading from those incoming sockets the fact that reading starts
 // asynchronously is not a problem.
-func (s *server) doShow(campaign, medium string, open func(string, time.Duration)) {
-	tempURL := fmt.Sprintf("http://%s/", s.accessAddr)
-	campaignURL, err := analytics.AddCampaign(tempURL, campaign, "", medium)
+func (s *server) doShow(destURL, campaign, medium string, open func(string, time.Duration)) {
+	campaignURL, err := analytics.AddCampaign(destURL, campaign, "", medium)
 	var uiURL string
 	if err != nil {
-		uiURL = tempURL
+		uiURL = destURL
 	} else {
 		uiURL = campaignURL
 	}
@@ -161,6 +165,10 @@ func (s *server) doShow(campaign, medium string, open func(string, time.Duration
 // getUIAddr returns the current UI address.
 func (s *server) getUIAddr() string {
 	return s.accessAddr
+}
+
+func (s *server) rootURL() string {
+	return fmt.Sprintf("http://%s/", s.accessAddr)
 }
 
 func (s *server) stop() error {

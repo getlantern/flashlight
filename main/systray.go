@@ -14,10 +14,11 @@ import (
 )
 
 var menu struct {
-	enable bool
-	on     bool
-	toggle *systray.MenuItem
-	show   *systray.MenuItem
+	enable  bool
+	on      bool
+	toggle  *systray.MenuItem
+	show    *systray.MenuItem
+	upgrade *systray.MenuItem
 }
 
 func runOnSystrayReady(a *app.App, f func()) {
@@ -50,11 +51,12 @@ func configureSystemTray(a *app.App) error {
 	systray.SetTooltip("Lantern")
 	menu.on = a.IsOn()
 	if menu.on {
-		menu.toggle = systray.AddMenuItem(i18n.T("TRAY_TURN_OFF"), i18n.T("TURN_OFF"))
+		menu.toggle = systray.AddMenuItem(i18n.T("TRAY_TURN_OFF"), i18n.T("TRAY_TURN_OFF"))
 	} else {
-		menu.toggle = systray.AddMenuItem(i18n.T("TRAY_TURN_ON"), i18n.T("TURN_ON"))
+		menu.toggle = systray.AddMenuItem(i18n.T("TRAY_TURN_ON"), i18n.T("TRAY_TURN_ON"))
 	}
-	menu.show = systray.AddMenuItem(i18n.T("TRAY_SHOW_LANTERN"), i18n.T("SHOW"))
+	menu.show = systray.AddMenuItem(i18n.T("TRAY_SHOW_LANTERN"), i18n.T("TRAY_SHOW_LANTERN"))
+	menu.upgrade = systray.AddMenuItem(i18n.T("TRAY_UPGRADE_TO_PRO"), i18n.T("TRAY_UPGRADE_TO_PRO"))
 	go func() {
 		for {
 			select {
@@ -68,7 +70,9 @@ func configureSystemTray(a *app.App) error {
 				}
 				setOnOffLabels()
 			case <-menu.show.ClickedCh:
-				ui.Show("show-lantern", "tray")
+				ui.ShowRoot("show-lantern", "tray")
+			case <-menu.upgrade.ClickedCh:
+				ui.Show(ui.AddToken("/")+"#/plans", "proupgrade", "tray")
 			}
 		}
 	}()
@@ -92,9 +96,9 @@ func refreshSystray(language string) {
 func setOnOffLabels() {
 	if menu.on {
 		menu.toggle.SetTitle(i18n.T("TRAY_TURN_OFF"))
-		menu.toggle.SetTooltip(i18n.T("TURN_OFF"))
+		menu.toggle.SetTooltip(i18n.T("TRAY_TURN_OFF"))
 	} else {
 		menu.toggle.SetTitle(i18n.T("TRAY_TURN_ON"))
-		menu.toggle.SetTooltip(i18n.T("TURN_ON"))
+		menu.toggle.SetTooltip(i18n.T("TRAY_TURN_ON"))
 	}
 }

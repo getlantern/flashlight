@@ -31,6 +31,7 @@ const (
 	SNAutoLaunch  SettingName = "autoLaunch"
 	SNProxyAll    SettingName = "proxyAll"
 	SNSystemProxy SettingName = "systemProxy"
+	SNOn          SettingName = "on"
 
 	SNLanguage       SettingName = "language"
 	SNLocalHTTPToken SettingName = "localHTTPToken"
@@ -69,6 +70,7 @@ var settingMeta = map[SettingName]struct {
 	SNAutoLaunch:  {stBool, true, false},
 	SNProxyAll:    {stBool, true, false},
 	SNSystemProxy: {stBool, true, false},
+	SNOn:          {stBool, false, false},
 
 	SNLanguage:       {stString, true, true},
 	SNLocalHTTPToken: {stString, true, true},
@@ -97,6 +99,7 @@ var (
 type Settings struct {
 	muNotifiers     sync.RWMutex
 	changeNotifiers map[SettingName][]func(interface{})
+	wsOut           chan<- interface{}
 
 	m map[SettingName]interface{}
 	sync.RWMutex
@@ -168,6 +171,7 @@ func newSettings(filePath string) *Settings {
 			SNAutoLaunch:     true,
 			SNProxyAll:       false,
 			SNSystemProxy:    true,
+			SNOn:             true,
 			SNLanguage:       "",
 			SNLocalHTTPToken: "",
 			SNUserToken:      "",
@@ -192,6 +196,9 @@ func (s *Settings) StartService() error {
 	if err != nil {
 		return err
 	}
+	s.muNotifiers.Lock()
+	s.wsOut = service.Out
+	s.muNotifiers.Unlock()
 	go s.read(service.In, service.Out)
 	return nil
 }
@@ -581,8 +588,13 @@ func (s *Settings) OnChange(attr SettingName, cb func(interface{})) {
 func (s *Settings) onChange(attr SettingName, value interface{}) {
 	s.muNotifiers.RLock()
 	notifiers := s.changeNotifiers[attr]
+	wsOut := s.wsOut
 	s.muNotifiers.RUnlock()
 	for _, fn := range notifiers {
 		fn(value)
+	}
+	if wsOut != nil {
+		// notify UI of changed settings
+		wsOut <- s.uiMap()
 	}
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/profiling"
+	"github.com/getlantern/systray"
 
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/autoupdate"
@@ -242,7 +243,9 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			log.Errorf("Unable to serve stats to UI: %v", err)
 		}
 
-		setupUserSignal()
+		setupUserSignal(func() {
+			systray.Quit()
+		})
 
 		err = serveBandwidth()
 		if err != nil {
@@ -289,13 +292,13 @@ func (app *App) IsOn() bool {
 
 // TurnOff turns off the app
 func (app *App) TurnOff() {
-	atomic.StoreInt64(&app.on, 0)
+	settings.setBool(SNOn, false)
 }
 
 // TurnOn turns on the app
 // TurnOff turns off the app
 func (app *App) TurnOn() {
-	atomic.StoreInt64(&app.on, 1)
+	settings.setBool(SNOn, true)
 }
 
 // GetSetting gets the in memory setting with the name specified by attr
@@ -327,6 +330,15 @@ func (app *App) afterStart() {
 	if settings.GetSystemProxy() {
 		sysproxyOn()
 	}
+
+	app.OnSettingChange(SNOn, func(val interface{}) {
+		on := int64(0)
+		if val.(bool) {
+			on = 1
+		}
+		atomic.StoreInt64(&app.on, on)
+	})
+
 	app.OnSettingChange(SNSystemProxy, func(val interface{}) {
 		enable := val.(bool)
 		if enable {
@@ -348,7 +360,7 @@ func (app *App) afterStart() {
 		// URL and the proxy server are all up and running to avoid
 		// race conditions where we change the proxy setup while the
 		// UI server and proxy server are still coming up.
-		ui.Show("startup", "lantern")
+		ui.ShowRoot("startup", "lantern")
 	} else {
 		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
 	}
