@@ -16,6 +16,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	lru "github.com/hashicorp/golang-lru"
+
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/detour"
 	"github.com/getlantern/easylist"
@@ -28,6 +30,7 @@ import (
 	"github.com/getlantern/iptool"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
+	"github.com/getlantern/proxy/filters"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
@@ -61,6 +64,8 @@ var (
 	// avoid applications bypassing Lantern.
 	// Chrome has a 30s timeout before marking proxy as bad.
 	requestTimeout = int64(20 * time.Second)
+	// interval before rewriting the same URL to HTTPS, to avoid redirect loop.
+	httpsRewriteInterval = 10 * time.Second
 
 	// See http://stackoverflow.com/questions/106179/regular-expression-to-match-dns-hostname-or-ip-address
 	validHostnameRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
@@ -78,8 +83,7 @@ type Client struct {
 	// Balanced CONNECT dialers.
 	bal *balancer.Balancer
 
-	interceptCONNECT proxy.Interceptor
-	interceptHTTP    proxy.Interceptor
+	proxy proxy.Proxy
 
 	l net.Listener
 
@@ -89,6 +93,7 @@ type Client struct {
 
 	easylist       easylist.List
 	rewriteToHTTPS httpseverywhere.Rewrite
+	rewriteLRU     *lru.Cache
 
 	statsTracker stats.StatsTracker
 
@@ -110,12 +115,18 @@ func NewClient(
 	lang func() string,
 	adSwapTargetURL func() string,
 ) (*Client, error) {
+	// A small LRU to detect redirect loop
+	rewriteLRU, err := lru.New(100)
+	if err != nil {
+		return nil, errors.New("Unable to create rewrite LRU: %v", err)
+	}
 	client := &Client{
 		bal:               balancer.New(),
 		allowShortcut:     allowShortcut,
 		useDetour:         useDetour,
 		proTokenGetter:    proTokenGetter,
 		rewriteToHTTPS:    httpseverywhere.Default(),
+		rewriteLRU:        rewriteLRU,
 		statsTracker:      statsTracker,
 		allowPrivateHosts: allowPrivateHosts,
 		lang:              lang,
@@ -123,8 +134,13 @@ func NewClient(
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
-	client.interceptCONNECT = proxy.CONNECT(keepAliveIdleTimeout, buffers.Pool, false, client.dialCONNECT)
-	client.interceptHTTP = proxy.HTTP(false, keepAliveIdleTimeout, nil, nil, errorResponse, client.dialHTTP)
+	client.proxy = proxy.New(&proxy.Opts{
+		IdleTimeout:  keepAliveIdleTimeout,
+		BufferSource: buffers.Pool,
+		Filter:       filters.FilterFunc(client.filter),
+		OnError:      errorResponse,
+		Dial:         client.dial,
+	})
 	// TODO: turn it to a config option
 	if runtime.GOOS == "android" {
 		client.easylist = allowAllEasyList{}
@@ -132,7 +148,6 @@ func NewClient(
 		client.initEasyList()
 	}
 	client.reportProxyLocationLoop()
-	var err error
 	client.iptool, err = iptool.New()
 	if err != nil {
 		return nil, errors.New("Unable to initialize iptool: %v", err)
@@ -239,22 +254,19 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 	addr.Set(listenAddr)
 	onListeningFn()
 
-	httpServer := &http.Server{
-		ReadTimeout:  client.readTimeout,
-		WriteTimeout: client.writeTimeout,
-		Handler:      client,
-		ErrorLog:     log.AsStdLogger(),
-	}
-
 	log.Debugf("About to start HTTP client proxy at %v", listenAddr)
 	for {
 		start := time.Now()
-		err := httpServer.Serve(l)
-		if time.Since(start) < 10*time.Second {
-			return err
+		conn, err := l.Accept()
+		if err != nil {
+			if time.Since(start) >= 10*time.Second {
+				log.Debugf("Error serving HTTP client proxy at %v, restarting: %v", listenAddr, err)
+				time.Sleep(100 * time.Millisecond)
+				continue
+			}
+			return fmt.Errorf("Unable to accept connection: %v", err)
 		}
-		log.Debugf("Error serving HTTP client proxy at %v, restarting: %v", listenAddr, err)
-		time.Sleep(100 * time.Millisecond)
+		go client.handle(conn)
 	}
 }
 
@@ -302,15 +314,7 @@ func (client *Client) Stop() error {
 	return client.l.Close()
 }
 
-func (client *Client) dialCONNECT(network, addr string) (conn net.Conn, err error) {
-	return client.dial(true, network, addr)
-}
-
-func (client *Client) dialHTTP(network, addr string) (conn net.Conn, err error) {
-	return client.dial(false, network, addr)
-}
-
-func (client *Client) dial(isConnect bool, network, addr string) (conn net.Conn, err error) {
+func (client *Client) dial(ctx context.Context, isConnect bool, network, addr string) (conn net.Conn, err error) {
 	op := ops.Begin("proxied_dialer")
 	op.Set("local_proxy_type", "http")
 	defer op.End()
@@ -501,8 +505,12 @@ func InConfigDir(configDir string, filename string) (string, error) {
 	return filepath.Join(cdir, filename), nil
 }
 
-func errorResponse(req *http.Request, err error) *http.Response {
+func errorResponse(ctx filters.Context, req *http.Request, read bool, err error) *http.Response {
 	var htmlerr []byte
+
+	if req == nil {
+		return nil
+	}
 
 	// If the request has an 'Accept' header preferring HTML, or
 	// doesn't have that header at all, render the error page.
@@ -526,11 +534,10 @@ func errorResponse(req *http.Request, err error) *http.Response {
 		htmlerr = []byte(hidden.Clean(err.Error()))
 	}
 
-	res := &http.Response{
-		Body: ioutil.NopCloser(bytes.NewBuffer(htmlerr)),
+	return &http.Response{
+		Body:       ioutil.NopCloser(bytes.NewBuffer(htmlerr)),
+		StatusCode: http.StatusServiceUnavailable,
 	}
-	res.StatusCode = http.StatusServiceUnavailable
-	return res
 }
 
 func getRequestTimeout() time.Duration {

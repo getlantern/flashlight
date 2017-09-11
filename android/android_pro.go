@@ -39,13 +39,14 @@ type Session interface {
 	SetToken(string)
 	SetUserId(int64)
 	SetDeviceCode(string, int64)
-	UserData(bool, int64, int64, int64, string, string)
+	UserData(bool, bool, int64, int64, int64, string, string)
 	SetCode(string)
 	SetError(string, string)
 	SetErrorId(string, string)
 	Currency() string
 	DeviceOS() string
 	SetStripePubKey(string)
+	IsProUser() bool
 }
 
 const (
@@ -236,6 +237,7 @@ func userData(req *proRequest) (*client.Response, error) {
 	deviceId := req.session.DeviceId()
 
 	isActive := res.User.UserStatus == "active"
+	expired := res.User.UserStatus == "expired"
 
 	var monthsLeft, daysLeft int64
 	if isActive {
@@ -256,7 +258,7 @@ func userData(req *proRequest) (*client.Response, error) {
 		req.session.AddDevice(device.Id, device.Name)
 	}
 
-	req.session.UserData(isActive && deviceLinked,
+	req.session.UserData(isActive && deviceLinked, expired,
 		res.User.Expiration, monthsLeft, daysLeft,
 		res.User.Subscription, res.User.Email)
 

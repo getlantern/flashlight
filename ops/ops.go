@@ -58,6 +58,11 @@ func Go(fn func()) {
 	ops.Go(fn)
 }
 
+// Cancel mimics the similar method from ops.Op
+func (op *Op) Cancel() {
+	op.wrapped.Cancel()
+}
+
 // End mimics the similar method from ops.Op
 func (op *Op) End() {
 	op.wrapped.End()

@@ -127,6 +127,10 @@ func (app *App) Run() {
 			app.statsTracker,
 			app.Exit,
 			settings.GetDeviceID(),
+			func() bool {
+				isPro, _ := isProUserFast()
+				return isPro
+			},
 			settings.GetLanguage,
 			func() string {
 				isPro, statusKnown := isProUserFast()

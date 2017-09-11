@@ -39,7 +39,7 @@ var (
 	// FullyReportedOps are ops which are reported at 100% to borda, irrespective
 	// of the borda sample percentage. This should all be low-volume operations,
 	// otherwise we will utilize too much bandwidth on the client.
-	FullyReportedOps = []string{"client_started", "client_stopped", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "sysproxy_clear", "report_issue", "proxy_rank"}
+	FullyReportedOps = []string{"client_started", "client_stopped", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "sysproxy_off_force", "sysproxy_clear", "report_issue", "proxy_rank"}
 )
 
 // Run runs a client proxy. It blocks as long as the proxy is running.
@@ -58,12 +58,13 @@ func Run(httpProxyAddr string,
 	statsTracker stats.StatsTracker,
 	onError func(err error),
 	deviceID string,
+	isPro func() bool,
 	lang func() string,
 	adSwapTargetURL func() string) error {
 
 	elapsed := mtime.Stopwatch()
 	displayVersion()
-	initContext(deviceID, common.Version, common.RevisionDate)
+	initContext(deviceID, common.Version, common.RevisionDate, isPro)
 	op := fops.Begin("client_started")
 
 	cl, err := client.NewClient(
@@ -196,7 +197,7 @@ func displayVersion() {
 	log.Debugf("---- flashlight version: %s, release: %s, build revision date: %s ----", common.Version, common.PackageVersion, common.RevisionDate)
 }
 
-func initContext(deviceID string, version string, revisionDate string) {
+func initContext(deviceID string, version string, revisionDate string, isPro func() bool) {
 	// Using "application" allows us to distinguish between errors from the
 	// lantern client vs other sources like the http-proxy, etop.
 	ops.SetGlobal("app", "lantern-client")
@@ -215,6 +216,9 @@ func initContext(deviceID string, version string, revisionDate string) {
 	ops.SetGlobalDynamic("locale_country", func() interface{} {
 		country, _ := jibber_jabber.DetectTerritory()
 		return country
+	})
+	ops.SetGlobalDynamic("is_pro", func() interface{} {
+		return isPro()
 	})
 
 	if osStr, err := osversion.GetHumanReadable(); err == nil {
