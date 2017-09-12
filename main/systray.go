@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/systray"
@@ -15,13 +16,22 @@ import (
 )
 
 var menu struct {
-	enable  bool
-	on      bool
-	toggle  *systray.MenuItem
-	show    *systray.MenuItem
-	upgrade *systray.MenuItem
-	quit    *systray.MenuItem
+	enable     bool
+	on         bool
+	hitDataCap bool
+	isPro      bool
+	statusMx   sync.RWMutex
+	status     *systray.MenuItem
+	toggle     *systray.MenuItem
+	show       *systray.MenuItem
+	upgrade    *systray.MenuItem
+	quit       *systray.MenuItem
 }
+
+var (
+	onIcon  []byte
+	offIcon []byte
+)
 
 func runOnSystrayReady(a *app.App, f func()) {
 	// Typically, systray.Quit will actually be what causes the app to exit, but
@@ -43,48 +53,51 @@ func configureSystemTray(a *app.App) error {
 	if !menu.enable {
 		return nil
 	}
-	onIcon, err := icons.Asset("icons/16on.ico")
+	var err error
+	onIcon, err = icons.Asset("icons/16on.ico")
 	if err != nil {
 		return fmt.Errorf("Unable to load on icon for system tray: %v", err)
 	}
-	offIcon, err := icons.Asset("icons/16off.ico")
+	offIcon, err = icons.Asset("icons/16off.ico")
 	if err != nil {
 		return fmt.Errorf("Unable to load off icon for system tray: %v", err)
 	}
 	systray.SetTooltip("Lantern")
+	menu.status = systray.AddMenuItem("", "")
+	menu.status.Disable()
 	menu.on = a.IsOn()
-	if menu.on {
-		menu.toggle = systray.AddMenuItem(i18n.T("TRAY_TURN_OFF"), i18n.T("TRAY_TURN_OFF"))
-		systray.SetIcon(onIcon)
-	} else {
-		menu.toggle = systray.AddMenuItem(i18n.T("TRAY_TURN_ON"), i18n.T("TRAY_TURN_ON"))
-		systray.SetIcon(offIcon)
-	}
+	menu.toggle = systray.AddMenuItem("", "")
 	menu.show = systray.AddMenuItem(i18n.T("TRAY_SHOW_LANTERN"), i18n.T("TRAY_SHOW_LANTERN"))
 	menu.upgrade = systray.AddMenuItem(i18n.T("TRAY_UPGRADE_TO_PRO"), i18n.T("TRAY_UPGRADE_TO_PRO"))
 	systray.AddSeparator()
 	menu.quit = systray.AddMenuItem(i18n.T("TRAY_QUIT"), i18n.T("TRAY_QUIT"))
-	pro.OnProStatusChange(func(isPro bool) {
-		if isPro {
-			menu.upgrade.Hide()
-		} else {
-			menu.upgrade.Show()
-		}
+	app.AddDataCapListener(func() {
+		menu.statusMx.Lock()
+		menu.hitDataCap = true
+		menu.statusMx.Unlock()
+		updateStatus()
 	})
+	pro.OnProStatusChange(func(isPro bool) {
+		menu.statusMx.Lock()
+		menu.isPro = isPro
+		menu.statusMx.Unlock()
+		updateStatus()
+	})
+	updateStatus()
 	go func() {
 		for {
 			select {
 			case <-menu.toggle.ClickedCh:
-				if menu.on {
-					a.TurnOff()
-					systray.SetIcon(offIcon)
-					menu.on = false
-				} else {
+				menu.statusMx.Lock()
+				menu.on = !menu.on
+				on := menu.on
+				menu.statusMx.Unlock()
+				if on {
 					a.TurnOn()
-					systray.SetIcon(onIcon)
-					menu.on = true
+				} else {
+					a.TurnOff()
 				}
-				setOnOffLabels()
+				updateStatus()
 			case <-menu.show.ClickedCh:
 				ui.ShowRoot("show-lantern", "tray")
 			case <-menu.upgrade.ClickedCh:
@@ -108,14 +121,39 @@ func refreshSystray(language string) {
 	}
 	menu.show.SetTitle(i18n.T("TRAY_SHOW_LANTERN"))
 	menu.show.SetTooltip(i18n.T("SHOW"))
-	setOnOffLabels()
+	updateStatus()
 }
 
-func setOnOffLabels() {
-	if menu.on {
+func updateStatus() {
+	menu.statusMx.RLock()
+	on := menu.on
+	hitDataCap := menu.hitDataCap
+	isPro := menu.isPro
+	menu.statusMx.RUnlock()
+
+	var status string
+	if hitDataCap && !isPro {
+		status = i18n.T("TRAY_STATUS", i18n.T("TRAY_STATUS_BANDWIDTH_LIMITED"))
+	} else if on {
+		status = i18n.T("TRAY_STATUS", i18n.T("TRAY_STATUS_CONNECTED"))
+	} else {
+		status = i18n.T("TRAY_STATUS", i18n.T("TRAY_STATUS_DISCONNECTED"))
+	}
+	menu.status.SetTitle(status)
+	menu.status.SetTooltip(status)
+
+	if isPro {
+		menu.upgrade.Hide()
+	} else {
+		menu.upgrade.Show()
+	}
+
+	if on {
+		systray.SetIcon(onIcon)
 		menu.toggle.SetTitle(i18n.T("TRAY_TURN_OFF"))
 		menu.toggle.SetTooltip(i18n.T("TRAY_TURN_OFF"))
 	} else {
+		systray.SetIcon(offIcon)
 		menu.toggle.SetTitle(i18n.T("TRAY_TURN_ON"))
 		menu.toggle.SetTooltip(i18n.T("TRAY_TURN_ON"))
 	}
