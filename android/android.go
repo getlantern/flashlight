@@ -162,6 +162,7 @@ func run(configDir, locale string,
 	flashlight.Run("127.0.0.1:0", // listen for HTTP on random address
 		"127.0.0.1:0", // listen for SOCKS on random address
 		configDir,     // place to store lantern configuration
+		func() bool { return true },
 		// TODO: allow configuring whether or not to enable shortcut depends on
 		// proxyAll option (just like we already have in desktop)
 		func() bool { return !session.ProxyAll() }, // use shortcut
