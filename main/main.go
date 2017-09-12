@@ -14,12 +14,15 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/getlantern/golog"
+	"github.com/getlantern/i18n"
+	"github.com/getlantern/systray"
+
 	"github.com/getlantern/flashlight/app"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ui"
-	"github.com/getlantern/golog"
-	"github.com/getlantern/i18n"
+
 	"github.com/mitchellh/panicwrap"
 )
 
@@ -91,11 +94,15 @@ func main() {
 
 	if a.ShowUI {
 		runOnSystrayReady(a, func() {
-			runApp(a)
+			runApp(a, func() {
+				systray.Quit()
+			})
 		})
 	} else {
 		log.Debug("Running headless")
-		runApp(a)
+		runApp(a, func() {
+			a.Exit(nil)
+		})
 		err := a.WaitForExit()
 		if err != nil {
 			log.Error(err)
@@ -105,7 +112,7 @@ func main() {
 	}
 }
 
-func runApp(a *app.App) {
+func runApp(a *app.App, exit func()) {
 	// Schedule cleanup actions
 	handleSignals(a)
 	a.AddExitFuncToEnd(func() {
@@ -126,7 +133,7 @@ func runApp(a *app.App) {
 		}()
 	}
 
-	a.Run()
+	a.Run(exit)
 }
 
 func i18nInit(locale string) {

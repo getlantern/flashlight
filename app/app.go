@@ -15,7 +15,6 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/profiling"
-	"github.com/getlantern/systray"
 
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/autoupdate"
@@ -87,7 +86,7 @@ func (app *App) exitOnFatal(err error) {
 }
 
 // Run starts the app. It will block until the app exits.
-func (app *App) Run() {
+func (app *App) Run(exit func()) {
 	golog.OnFatal(app.exitOnFatal)
 	app.AddExitFunc(recordStopped)
 
@@ -126,7 +125,7 @@ func (app *App) Run() {
 			func() bool { return false },                   // on desktop, we do not allow private hosts
 			settings.IsAutoReport,
 			app.Flags,
-			app.beforeStart(listenAddr),
+			app.beforeStart(listenAddr, exit),
 			app.afterStart,
 			app.onConfigUpdate,
 			settings,
@@ -150,7 +149,7 @@ func (app *App) Run() {
 	}()
 }
 
-func (app *App) beforeStart(listenAddr string) func() bool {
+func (app *App) beforeStart(listenAddr string, exit func()) func() bool {
 	return func() bool {
 		log.Debug("Got first config")
 		var cpuProf, memProf string
@@ -240,9 +239,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			log.Errorf("Unable to serve stats to UI: %v", err)
 		}
 
-		setupUserSignal(func() {
-			systray.Quit()
-		})
+		setupUserSignal(exit)
 
 		err = serveBandwidth()
 		if err != nil {
