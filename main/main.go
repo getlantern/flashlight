@@ -16,7 +16,6 @@ import (
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
-	"github.com/getlantern/systray"
 
 	"github.com/getlantern/flashlight/app"
 	"github.com/getlantern/flashlight/chained"
@@ -93,10 +92,8 @@ func main() {
 	}
 
 	if a.ShowUI {
-		runOnSystrayReady(a, func() {
-			runApp(a, func() {
-				systray.Quit()
-			})
+		runOnSystrayReady(a, func(quit func()) {
+			runApp(a, quit)
 		})
 	} else {
 		log.Debug("Running headless")

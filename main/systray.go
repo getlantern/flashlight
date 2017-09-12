@@ -22,15 +22,15 @@ var menu struct {
 	upgrade *systray.MenuItem
 }
 
-func runOnSystrayReady(a *app.App, f func()) {
+func runOnSystrayReady(a *app.App, f func(quit func())) {
 	// Typically, systray.Quit will actually be what causes the app to exit, but
 	// in the case of an uncaught Fatal error, the app will exit before the
 	// systray and we need it to call systray.Quit().
-	a.AddExitFuncToEnd(func() {
-		systray.Quit()
-	})
+	a.AddExitFuncToEnd(systray.Quit)
 
-	systray.Run(f, func() {
+	systray.Run(func() {
+		f(systray.Quit)
+	}, func() {
 		a.Exit(nil)
 		err := a.WaitForExit()
 		if err != nil {
