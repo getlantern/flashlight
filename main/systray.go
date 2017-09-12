@@ -65,9 +65,9 @@ func configureSystemTray(a *app.App) error {
 	menu.upgrade = systray.AddMenuItem(i18n.T("TRAY_UPGRADE_TO_PRO"), i18n.T("TRAY_UPGRADE_TO_PRO"))
 	pro.OnProStatusChange(func(isPro bool) {
 		if isPro {
-			menu.upgrade.Disable()
+			menu.upgrade.Hide()
 		} else {
-			menu.upgrade.Enable()
+			menu.upgrade.Show()
 		}
 	})
 	go func() {
