@@ -46,6 +46,7 @@ func init() {
 
 // App is the core of the Lantern desktop application, in the form of a library.
 type App struct {
+	on           int64
 	ShowUI       bool
 	Flags        map[string]interface{}
 	exitCh       chan error
@@ -54,8 +55,6 @@ type App struct {
 	exitOnce        sync.Once
 	chExitFuncs     chan func()
 	chLastExitFuncs chan func()
-
-	on int64
 }
 
 // Init initializes the App's state
