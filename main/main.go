@@ -92,14 +92,12 @@ func main() {
 	}
 
 	if a.ShowUI {
-		runOnSystrayReady(a, func(quit func()) {
-			runApp(a, quit)
+		runOnSystrayReady(a, func() {
+			runApp(a)
 		})
 	} else {
 		log.Debug("Running headless")
-		runApp(a, func() {
-			a.Exit(nil)
-		})
+		runApp(a)
 		err := a.WaitForExit()
 		if err != nil {
 			log.Error(err)
@@ -109,7 +107,7 @@ func main() {
 	}
 }
 
-func runApp(a *app.App, exit func()) {
+func runApp(a *app.App) {
 	// Schedule cleanup actions
 	handleSignals(a)
 	a.AddExitFuncToEnd(func() {
@@ -130,7 +128,7 @@ func runApp(a *app.App, exit func()) {
 		}()
 	}
 
-	a.Run(exit)
+	a.Run()
 }
 
 func i18nInit(locale string) {

@@ -20,17 +20,16 @@ var menu struct {
 	toggle  *systray.MenuItem
 	show    *systray.MenuItem
 	upgrade *systray.MenuItem
+	quit    *systray.MenuItem
 }
 
-func runOnSystrayReady(a *app.App, f func(quit func())) {
+func runOnSystrayReady(a *app.App, f func()) {
 	// Typically, systray.Quit will actually be what causes the app to exit, but
 	// in the case of an uncaught Fatal error, the app will exit before the
 	// systray and we need it to call systray.Quit().
 	a.AddExitFuncToEnd(systray.Quit)
 
-	systray.Run(func() {
-		f(systray.Quit)
-	}, func() {
+	systray.Run(f, func() {
 		a.Exit(nil)
 		err := a.WaitForExit()
 		if err != nil {
@@ -63,6 +62,8 @@ func configureSystemTray(a *app.App) error {
 	}
 	menu.show = systray.AddMenuItem(i18n.T("TRAY_SHOW_LANTERN"), i18n.T("TRAY_SHOW_LANTERN"))
 	menu.upgrade = systray.AddMenuItem(i18n.T("TRAY_UPGRADE_TO_PRO"), i18n.T("TRAY_UPGRADE_TO_PRO"))
+	systray.AddSeparator()
+	menu.quit = systray.AddMenuItem(i18n.T("TRAY_QUIT"), i18n.T("TRAY_QUIT"))
 	pro.OnProStatusChange(func(isPro bool) {
 		if isPro {
 			menu.upgrade.Hide()
@@ -88,6 +89,8 @@ func configureSystemTray(a *app.App) error {
 				ui.ShowRoot("show-lantern", "tray")
 			case <-menu.upgrade.ClickedCh:
 				ui.Show(ui.AddToken("/")+"#/plans", "proupgrade", "tray")
+			case <-menu.quit.ClickedCh:
+				systray.Quit()
 			}
 		}
 	}()

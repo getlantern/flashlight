@@ -8,10 +8,8 @@ import (
 	"github.com/getlantern/flashlight/app"
 )
 
-func runOnSystrayReady(a *app.App, f func(quit func())) {
-	f(func() {
-		a.Exit(nil)
-	})
+func runOnSystrayReady(a *app.App, f func()) {
+	f()
 	err := a.WaitForExit()
 	if err != nil {
 		log.Error(err)

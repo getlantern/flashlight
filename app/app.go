@@ -85,7 +85,7 @@ func (app *App) exitOnFatal(err error) {
 }
 
 // Run starts the app. It will block until the app exits.
-func (app *App) Run(exit func()) {
+func (app *App) Run() {
 	golog.OnFatal(app.exitOnFatal)
 	app.AddExitFunc(recordStopped)
 
@@ -124,7 +124,7 @@ func (app *App) Run(exit func()) {
 			func() bool { return false },                   // on desktop, we do not allow private hosts
 			settings.IsAutoReport,
 			app.Flags,
-			app.beforeStart(listenAddr, exit),
+			app.beforeStart(listenAddr),
 			app.afterStart,
 			app.onConfigUpdate,
 			settings,
@@ -148,7 +148,7 @@ func (app *App) Run(exit func()) {
 	}()
 }
 
-func (app *App) beforeStart(listenAddr string, exit func()) func() bool {
+func (app *App) beforeStart(listenAddr string) func() bool {
 	return func() bool {
 		log.Debug("Got first config")
 		var cpuProf, memProf string
@@ -238,7 +238,7 @@ func (app *App) beforeStart(listenAddr string, exit func()) func() bool {
 			log.Errorf("Unable to serve stats to UI: %v", err)
 		}
 
-		setupUserSignal(exit)
+		setupUserSignal()
 
 		err = serveBandwidth()
 		if err != nil {

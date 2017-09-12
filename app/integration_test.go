@@ -419,7 +419,7 @@ func startApp(t *testing.T, configAddr string) (*App, error) {
 	settings.SetUserID(1)
 
 	go func() {
-		a.Run(func() {})
+		a.Run()
 		a.WaitForExit()
 	}()
 
