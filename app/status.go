@@ -76,10 +76,10 @@ func (s *status) dispatch() {
 func (s Status) String() string {
 	if !s.On {
 		return STATUS_DISCONNECTED
-	} else if s.HitDataCap && !s.IsPro {
-		return STATUS_THROTTLED
 	} else if !s.HasSucceedingProxy {
 		return STATUS_CONNECTING
+	} else if s.HitDataCap && !s.IsPro {
+		return STATUS_THROTTLED
 	}
 	return STATUS_CONNECTED
 }

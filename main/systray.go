@@ -127,21 +127,17 @@ func statusUpdated() {
 	st := menu.st
 	menu.stMx.RUnlock()
 
-	var status string
 	switch st.String() {
 	case app.STATUS_CONNECTING:
-		status = i18n.T("TRAY_STATUS", i18n.T("TRAY_STATUS_BANDWIDTH_LIMITED"))
 		systray.SetIcon(iconDisconnected)
 	case app.STATUS_CONNECTED:
-		status = i18n.T("TRAY_STATUS", i18n.T("TRAY_STATUS_CONNECTED"))
 		systray.SetIcon(iconConnected)
 	case app.STATUS_DISCONNECTED:
-		status = i18n.T("TRAY_STATUS", i18n.T("TRAY_STATUS_DISCONNECTED"))
 		systray.SetIcon(iconDisconnected)
 	case app.STATUS_THROTTLED:
-		status = i18n.T("TRAY_STATUS", i18n.T("TRAY_STATUS_BANDWIDTH_LIMITED"))
 		systray.SetIcon(iconIssue)
 	}
+	status := i18n.T("TRAY_STATUS", i18n.T("status."+st.String()))
 	menu.status.SetTitle(status)
 	menu.status.SetTooltip(status)
 
