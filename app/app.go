@@ -51,6 +51,7 @@ type App struct {
 	Flags        map[string]interface{}
 	exitCh       chan error
 	statsTracker *statsTracker
+	status       *status
 
 	exitOnce        sync.Once
 	chExitFuncs     chan func()
@@ -68,6 +69,7 @@ func (app *App) Init() {
 	app.chExitFuncs = make(chan func(), 100)
 	app.chLastExitFuncs = make(chan func(), 100)
 	app.statsTracker = NewStatsTracker()
+	app.status = newStatus()
 	atomic.StoreInt64(&app.on, 1)
 }
 
@@ -140,6 +142,13 @@ func (app *App) Run() {
 					return ""
 				}
 				return ui.AddToken("/") + "#/plans"
+			},
+			func(hasSucceedingProxy bool) {
+				app.status.mx.Lock()
+				app.status.HasSucceedingProxy = hasSucceedingProxy
+				app.status.mx.Unlock()
+				log.Debugf("Has succeeding proxy: %v", hasSucceedingProxy)
+				app.status.dispatch()
 			})
 		if err != nil {
 			app.Exit(err)
@@ -292,23 +301,6 @@ func (app *App) TurnOff() {
 // TurnOff turns off the app
 func (app *App) TurnOn() {
 	settings.setBool(SNOn, true)
-}
-
-// AddConnectedStatusListener adds a listener for connected status updates.
-func (app *App) AddConnectedStatusListener(l func(connected bool)) {
-	settings.OnChange(SNOn, func(on interface{}) {
-		l(on.(bool))
-	})
-	l(atomic.LoadInt64(&app.on) == 1)
-}
-
-// OnDisconnected reigsters a listener for when we're disconnected
-func (app *App) OnDisconnected(l func()) {
-	settings.OnChange(SNOn, func(on interface{}) {
-		if !on.(bool) {
-			l()
-		}
-	})
 }
 
 // GetSetting gets the in memory setting with the name specified by attr

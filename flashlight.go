@@ -61,7 +61,8 @@ func Run(httpProxyAddr string,
 	deviceID string,
 	isPro func() bool,
 	lang func() string,
-	adSwapTargetURL func() string) error {
+	adSwapTargetURL func() string,
+	onHasSucceedingProxy func(hasSucceding bool)) error {
 
 	elapsed := mtime.Stopwatch()
 	displayVersion()
@@ -87,6 +88,15 @@ func Run(httpProxyAddr string,
 		op.FailIf(fatalErr)
 		op.End()
 	}
+
+	if onHasSucceedingProxy != nil {
+		go func() {
+			for hasSucceeding := range cl.HasSucceedingProxy() {
+				onHasSucceedingProxy(hasSucceeding)
+			}
+		}()
+	}
+
 	proxied.SetProxyAddr(cl.Addr)
 
 	proxiesDispatch := func(conf interface{}) {

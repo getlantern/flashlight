@@ -50,6 +50,8 @@ const (
 	SNBuildDate    SettingName = "buildDate"
 	SNRevisionDate SettingName = "revisionDate"
 	SNPACURL       SettingName = "pacURL"
+
+	SNStatus SettingName = "status"
 )
 
 type settingType byte
@@ -89,6 +91,8 @@ var settingMeta = map[SettingName]struct {
 	SNBuildDate:    {stString, false, false},
 	SNRevisionDate: {stString, false, false},
 	SNPACURL:       {stString, true, true},
+
+	SNStatus: {stString, false, false},
 }
 
 var (

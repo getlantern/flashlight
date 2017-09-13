@@ -11,21 +11,18 @@ import (
 
 	"github.com/getlantern/flashlight/app"
 	"github.com/getlantern/flashlight/icons"
-	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/flashlight/ui"
 )
 
 var menu struct {
-	enable     bool
-	on         bool
-	hitDataCap bool
-	isPro      bool
-	statusMx   sync.RWMutex
-	status     *systray.MenuItem
-	toggle     *systray.MenuItem
-	show       *systray.MenuItem
-	upgrade    *systray.MenuItem
-	quit       *systray.MenuItem
+	enable  bool
+	st      app.Status
+	stMx    sync.RWMutex
+	status  *systray.MenuItem
+	toggle  *systray.MenuItem
+	show    *systray.MenuItem
+	upgrade *systray.MenuItem
+	quit    *systray.MenuItem
 }
 
 var (
@@ -54,6 +51,7 @@ func configureSystemTray(a *app.App) error {
 	if !menu.enable {
 		return nil
 	}
+
 	var err error
 	iconConnected, err = icons.Asset("connected_16.ico")
 	if err != nil {
@@ -67,41 +65,32 @@ func configureSystemTray(a *app.App) error {
 	if err != nil {
 		return fmt.Errorf("Unable to load issue icon for system tray: %v", err)
 	}
+
 	systray.SetTooltip("Lantern")
 	menu.status = systray.AddMenuItem("", "")
 	menu.status.Disable()
-	menu.on = a.IsOn()
 	menu.toggle = systray.AddMenuItem("", "")
 	menu.show = systray.AddMenuItem(i18n.T("TRAY_SHOW_LANTERN"), i18n.T("TRAY_SHOW_LANTERN"))
 	menu.upgrade = systray.AddMenuItem(i18n.T("TRAY_UPGRADE_TO_PRO"), i18n.T("TRAY_UPGRADE_TO_PRO"))
 	systray.AddSeparator()
 	menu.quit = systray.AddMenuItem(i18n.T("TRAY_QUIT"), i18n.T("TRAY_QUIT"))
-	app.AddDataCapListener(func() {
-		menu.statusMx.Lock()
-		menu.hitDataCap = true
-		menu.statusMx.Unlock()
-		updateStatus()
-	})
-	a.AddConnectedStatusListener(func(connected bool) {
-		menu.statusMx.Lock()
-		menu.on = connected
-		menu.statusMx.Unlock()
-		updateStatus()
-	})
-	pro.OnProStatusChange(func(isPro bool) {
-		menu.statusMx.Lock()
-		menu.isPro = isPro
-		menu.statusMx.Unlock()
-		updateStatus()
-	})
-	updateStatus()
+	go func() {
+		for status := range a.StatusUpdates() {
+			menu.stMx.Lock()
+			menu.st = status
+			menu.stMx.Unlock()
+			log.Debugf("Got status: %v", status)
+			statusUpdated()
+		}
+	}()
+
 	go func() {
 		for {
 			select {
 			case <-menu.toggle.ClickedCh:
-				menu.statusMx.Lock()
-				on := menu.on
-				menu.statusMx.Unlock()
+				menu.stMx.Lock()
+				on := menu.st.On
+				menu.stMx.Unlock()
 				if on {
 					a.TurnOff()
 				} else {
@@ -130,37 +119,39 @@ func refreshSystray(language string) {
 	}
 	menu.show.SetTitle(i18n.T("TRAY_SHOW_LANTERN"))
 	menu.show.SetTooltip(i18n.T("SHOW"))
-	updateStatus()
+	statusUpdated()
 }
 
-func updateStatus() {
-	menu.statusMx.RLock()
-	on := menu.on
-	hitDataCap := menu.hitDataCap
-	isPro := menu.isPro
-	menu.statusMx.RUnlock()
+func statusUpdated() {
+	menu.stMx.RLock()
+	st := menu.st
+	menu.stMx.RUnlock()
 
 	var status string
-	if hitDataCap && !isPro {
+	switch st.String() {
+	case app.STATUS_CONNECTING:
 		status = i18n.T("TRAY_STATUS", i18n.T("TRAY_STATUS_BANDWIDTH_LIMITED"))
-		systray.SetIcon(iconIssue)
-	} else if on {
+		systray.SetIcon(iconDisconnected)
+	case app.STATUS_CONNECTED:
 		status = i18n.T("TRAY_STATUS", i18n.T("TRAY_STATUS_CONNECTED"))
 		systray.SetIcon(iconConnected)
-	} else {
+	case app.STATUS_DISCONNECTED:
 		status = i18n.T("TRAY_STATUS", i18n.T("TRAY_STATUS_DISCONNECTED"))
 		systray.SetIcon(iconDisconnected)
+	case app.STATUS_THROTTLED:
+		status = i18n.T("TRAY_STATUS", i18n.T("TRAY_STATUS_BANDWIDTH_LIMITED"))
+		systray.SetIcon(iconIssue)
 	}
 	menu.status.SetTitle(status)
 	menu.status.SetTooltip(status)
 
-	if isPro {
+	if st.IsPro {
 		menu.upgrade.Hide()
 	} else {
 		menu.upgrade.Show()
 	}
 
-	if on {
+	if st.On {
 		menu.toggle.SetTitle(i18n.T("TRAY_TURN_OFF"))
 		menu.toggle.SetTooltip(i18n.T("TRAY_TURN_OFF"))
 	} else {
