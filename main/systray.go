@@ -71,8 +71,9 @@ func configureSystemTray(a *app.App) error {
 	menu.status = systray.AddMenuItem("", "")
 	menu.status.Disable()
 	menu.toggle = systray.AddMenuItem("", "")
-	menu.show = systray.AddMenuItem(i18n.T("TRAY_SHOW_LANTERN"), i18n.T("TRAY_SHOW_LANTERN"))
+	systray.AddSeparator()
 	menu.upgrade = systray.AddMenuItem(i18n.T("TRAY_UPGRADE_TO_PRO"), i18n.T("TRAY_UPGRADE_TO_PRO"))
+	menu.show = systray.AddMenuItem(i18n.T("TRAY_SHOW_LANTERN"), i18n.T("TRAY_SHOW_LANTERN"))
 	systray.AddSeparator()
 	menu.quit = systray.AddMenuItem(i18n.T("TRAY_QUIT"), i18n.T("TRAY_QUIT"))
 	go func() {
