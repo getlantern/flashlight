@@ -362,19 +362,7 @@ func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, error) {
 	b.mu.RUnlock()
 
 	if !trustedOnly {
-		hasSucceedingDialer := false
-		for _, dialer := range dialers {
-			if dialer.Succeeding() {
-				hasSucceedingDialer = true
-				break
-			}
-		}
-		select {
-		case b.hasSucceedingDialer <- hasSucceedingDialer:
-			// okay
-		default:
-			// channel full
-		}
+		b.lookForSucceedingDialer(dialers)
 	}
 
 	if dialers.Len() == 0 {
@@ -432,7 +420,24 @@ func (b *Balancer) sortDialers() {
 	b.trusted = trusted
 	b.mu.Unlock()
 
+	b.lookForSucceedingDialer(dialers)
 	b.printStats(dialers)
+}
+
+func (b *Balancer) lookForSucceedingDialer(dialers []Dialer) {
+	hasSucceedingDialer := false
+	for _, dialer := range dialers {
+		if dialer.Succeeding() {
+			hasSucceedingDialer = true
+			break
+		}
+	}
+	select {
+	case b.hasSucceedingDialer <- hasSucceedingDialer:
+		// okay
+	default:
+		// channel full
+	}
 }
 
 type SortedDialers []Dialer
