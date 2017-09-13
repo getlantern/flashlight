@@ -351,12 +351,16 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 }
 
 func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Context, network, addr string) (net.Conn, error) {
+	shortcutDialer := func(ctx context.Context, network, addr string, ip net.IP) (net.Conn, error) {
+		log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
+		op.Set("shortcut_direct", true)
+		op.Set("shortcut_direct_ip", ip)
+		return netx.DialContext(ctx, "tcp", addr)
+	}
+
 	directDialer := func(ctx context.Context, network, addr string) (net.Conn, error) {
 		if allow, ip := client.allowShortcut(addr); allow {
-			log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
-			op.Set("shortcut_direct", true)
-			op.Set("shortcut_direct_ip", ip)
-			return netx.DialContext(ctx, "tcp", addr)
+			return shortcutDialer(ctx, network, addr, ip)
 		}
 		dl, ok := ctx.Deadline()
 		if !ok {
@@ -416,7 +420,17 @@ func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Con
 		dialer = detour.Dialer(directDialer, proxiedDialer)
 	} else {
 		op.Set("detour", false)
-		dialer = proxiedDialer
+		dialer = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			var conn net.Conn
+			var err error
+			if allow, ip := client.allowShortcut(addr); allow {
+				conn, err = shortcutDialer(ctx, network, addr, ip)
+				if err == nil {
+					return conn, err
+				}
+			}
+			return proxiedDialer(ctx, network, addr)
+		}
 	}
 	return dialer
 }
