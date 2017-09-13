@@ -83,8 +83,6 @@ func (s Status) String() string {
 		return STATUS_DISCONNECTED
 	} else if !s.HasSucceedingProxy {
 		return STATUS_CONNECTING
-	} else if s.HitDataCap && !s.IsPro {
-		return STATUS_THROTTLED
 	}
 	return STATUS_CONNECTED
 }

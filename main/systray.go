@@ -27,9 +27,7 @@ var menu struct {
 }
 
 var (
-	iconConnected    []byte
-	iconDisconnected []byte
-	iconIssue        []byte
+	iconsByName = make(map[string][]byte)
 )
 
 func runOnSystrayReady(a *app.App, f func()) {
@@ -61,18 +59,12 @@ func configureSystemTray(a *app.App) error {
 		iconTemplate = "%s_32.ico"
 	}
 
-	var err error
-	iconConnected, err = icons.Asset(fmt.Sprintf(iconTemplate, "connected"))
-	if err != nil {
-		return fmt.Errorf("Unable to load connected icon for system tray: %v", err)
-	}
-	iconDisconnected, err = icons.Asset(fmt.Sprintf(iconTemplate, "disconnected"))
-	if err != nil {
-		return fmt.Errorf("Unable to load disconnected icon for system tray: %v", err)
-	}
-	iconIssue, err = icons.Asset(fmt.Sprintf(iconTemplate, "issue"))
-	if err != nil {
-		return fmt.Errorf("Unable to load issue icon for system tray: %v", err)
+	for _, name := range []string{"connected", "connectedalert", "disconnected", "disconnectedalert"} {
+		icon, err := icons.Asset(fmt.Sprintf(iconTemplate, name))
+		if err != nil {
+			return fmt.Errorf("Unable to load %v icon for system tray: %v", name, err)
+		}
+		iconsByName[name] = icon
 	}
 
 	systray.SetTooltip("Lantern")
@@ -135,17 +127,18 @@ func statusUpdated() {
 	st := menu.st
 	menu.stMx.RUnlock()
 
-	switch st.String() {
-	case app.STATUS_CONNECTING:
-		systray.SetIcon(iconDisconnected)
-	case app.STATUS_CONNECTED:
-		systray.SetIcon(iconConnected)
-	case app.STATUS_DISCONNECTED:
-		systray.SetIcon(iconDisconnected)
-	case app.STATUS_THROTTLED:
-		systray.SetIcon(iconIssue)
+	iconName := "connected"
+	statusKey := st.String()
+	if !st.On || !st.HasSucceedingProxy {
+		iconName = "disconnected"
 	}
-	status := i18n.T("TRAY_STATUS", i18n.T("status."+st.String()))
+	if st.HitDataCap && !st.IsPro {
+		iconName += "alert"
+		statusKey = "throttled"
+	}
+
+	systray.SetIcon(iconsByName[iconName])
+	status := i18n.T("TRAY_STATUS", i18n.T("status."+statusKey))
 	menu.status.SetTitle(status)
 	menu.status.SetTooltip(status)
 
