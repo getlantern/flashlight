@@ -79,7 +79,6 @@ func configureSystemTray(a *app.App) error {
 			menu.stMx.Lock()
 			menu.st = status
 			menu.stMx.Unlock()
-			log.Debugf("Got status: %v", status)
 			statusUpdated()
 		}
 	}()
