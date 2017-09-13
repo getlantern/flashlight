@@ -22,7 +22,7 @@ var userData = userMap{
 	onProStatus: make([]func(isPro bool), 0),
 }
 
-// OnProStatusChange allows registaring an event handler to learn when the
+// OnProStatusChange allows registering an event handler to learn when the
 // user's pro status has changed.
 func OnProStatusChange(cb func(isPro bool)) {
 	userData.Lock()
