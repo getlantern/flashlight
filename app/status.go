@@ -29,8 +29,9 @@ func (app *App) StatusUpdates() <-chan Status {
 
 type status struct {
 	Status
+	prior   Status
 	updates chan Status
-	mx      sync.RWMutex
+	mx      sync.Mutex
 }
 
 func newStatus() *status {
@@ -61,16 +62,20 @@ func newStatus() *status {
 }
 
 func (s *status) dispatch() {
-	s.mx.RLock()
+	s.mx.Lock()
 	st := s.Status
-	s.mx.RUnlock()
-	select {
-	case s.updates <- st:
-		// okay
-	default:
-		// channel full
+	changed := st != s.prior
+	s.prior = st
+	s.mx.Unlock()
+	if changed {
+		select {
+		case s.updates <- st:
+			// okay
+		default:
+			// channel full
+		}
+		settings.setString(SNStatus, st.String())
 	}
-	settings.setString(SNStatus, st.String())
 }
 
 func (s Status) String() string {

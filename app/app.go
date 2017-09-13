@@ -298,15 +298,16 @@ func (app *App) IsOn() bool {
 	return atomic.LoadInt64(&app.on) == 1
 }
 
-// TurnOff turns off the app
-func (app *App) TurnOff() {
-	settings.setBool(SNOn, false)
+// TurnOn turns on the app
+func (app *App) TurnOn() {
+	ops.Begin("connect").End()
+	settings.setBool(SNOn, true)
 }
 
-// TurnOn turns on the app
 // TurnOff turns off the app
-func (app *App) TurnOn() {
-	settings.setBool(SNOn, true)
+func (app *App) TurnOff() {
+	ops.Begin("disconnect").End()
+	settings.setBool(SNOn, false)
 }
 
 // GetSetting gets the in memory setting with the name specified by attr

@@ -146,6 +146,14 @@ func TestProxying(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	testRequest(t, httpAddr, httpsAddr)
 
+	// Turn Lantern off and try again
+	a.TurnOff()
+	testRequest(t, httpAddr, httpsAddr)
+
+	// Turn Lantern on and try again
+	a.TurnOn()
+	testRequest(t, httpAddr, httpsAddr)
+
 	log.Fatal("test fatal error")
 	a.Exit(nil)
 
