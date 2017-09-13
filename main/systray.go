@@ -4,6 +4,7 @@ package main
 
 import (
 	"fmt"
+	"runtime"
 	"sync"
 
 	"github.com/getlantern/i18n"
@@ -55,16 +56,21 @@ func configureSystemTray(a *app.App) error {
 		return nil
 	}
 
+	iconTemplate := "%s_16.ico"
+	if runtime.GOOS == "darwin" {
+		iconTemplate = "%s_32.ico"
+	}
+
 	var err error
-	iconConnected, err = icons.Asset("connected_16.ico")
+	iconConnected, err = icons.Asset(fmt.Sprintf(iconTemplate, "connected"))
 	if err != nil {
 		return fmt.Errorf("Unable to load connected icon for system tray: %v", err)
 	}
-	iconDisconnected, err = icons.Asset("disconnected_16.ico")
+	iconDisconnected, err = icons.Asset(fmt.Sprintf(iconTemplate, "disconnected"))
 	if err != nil {
 		return fmt.Errorf("Unable to load disconnected icon for system tray: %v", err)
 	}
-	iconIssue, err = icons.Asset("issue_16.ico")
+	iconIssue, err = icons.Asset(fmt.Sprintf(iconTemplate, "issue"))
 	if err != nil {
 		return fmt.Errorf("Unable to load issue icon for system tray: %v", err)
 	}
