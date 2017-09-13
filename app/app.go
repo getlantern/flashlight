@@ -7,10 +7,10 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"sync"
 	"sync/atomic"
 	"time"
 
+	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
@@ -28,6 +28,10 @@ import (
 	"github.com/getlantern/flashlight/proxiedsites"
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
+)
+
+const (
+	longDuration = 100 * 365 * 24 * time.Hour
 )
 
 var (
@@ -49,11 +53,11 @@ type App struct {
 	on           int64
 	ShowUI       bool
 	Flags        map[string]interface{}
-	exitCh       chan error
+	exited       eventual.Value
 	statsTracker *statsTracker
 	status       *status
 
-	exitOnce        sync.Once
+	hasExited       int64
 	chExitFuncs     chan func()
 	chLastExitFuncs chan func()
 }
@@ -63,7 +67,7 @@ func (app *App) Init() {
 	golog.OnFatal(app.exitOnFatal)
 	app.Flags["staging"] = common.Staging
 	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
-	app.exitCh = make(chan error, 1)
+	app.exited = eventual.NewValue()
 	// use buffered channel to avoid blocking the caller of 'AddExitFunc'
 	// the number 100 is arbitrary
 	app.chExitFuncs = make(chan func(), 100)
@@ -131,7 +135,9 @@ func (app *App) Run() {
 			app.onConfigUpdate,
 			settings,
 			app.statsTracker,
-			app.Exit,
+			func(err error) {
+				app.Exit(err)
+			},
 			settings.GetDeviceID(),
 			app.IsPro,
 			settings.GetLanguage,
@@ -427,11 +433,14 @@ func (app *App) AddExitFuncToEnd(exitFunc func()) {
 }
 
 // Exit tells the application to exit, optionally supplying an error that caused
-// the exit.
-func (app *App) Exit(err error) {
-	app.exitOnce.Do(func() {
+// the exit. Returns true if the app is actually exiting, false if exit has
+// already been requested.
+func (app *App) Exit(err error) bool {
+	if atomic.CompareAndSwapInt64(&app.hasExited, 0, 1) {
 		app.doExit(err)
-	})
+		return true
+	}
+	return false
 }
 
 func (app *App) doExit(err error) {
@@ -441,7 +450,7 @@ func (app *App) doExit(err error) {
 		log.Error("Exiting app")
 	}
 	defer func() {
-		app.exitCh <- err
+		app.exited.Set(err)
 		log.Debug("Finished exiting app")
 	}()
 
@@ -483,7 +492,11 @@ func (app *App) collectLastExitFuncs() []func() {
 
 // WaitForExit waits for a request to exit the application.
 func (app *App) WaitForExit() error {
-	return <-app.exitCh
+	err, _ := app.exited.Get(longDuration)
+	if err == nil {
+		return nil
+	}
+	return err.(error)
 }
 
 // Indicates whether or not the app is pro

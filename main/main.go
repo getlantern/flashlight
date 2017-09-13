@@ -187,6 +187,5 @@ func handleSignals(a *app.App) {
 		s := <-c
 		log.Debugf("Got signal \"%s\", exiting...", s)
 		a.Exit(nil)
-		os.Exit(0)
 	}()
 }
