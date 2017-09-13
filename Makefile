@@ -4,7 +4,7 @@ GLIDE_BIN    ?= $(shell which glide)
 SHELL := /bin/bash
 SOURCES := $(shell find . -name '*[^_test].go')
 
-.PHONY: lantern
+.PHONY: lantern update-icons
 
 BUILD_RACE := '-race'
 
@@ -63,6 +63,10 @@ require-glide:
 	@if [ "$(GLIDE_BIN)" = "" ]; then \
 		echo 'Missing "glide" command. See https://github.com/Masterminds/glide' && exit 1; \
 	fi
+
+update-icons:
+	@(which go-bindata >/dev/null) || (echo 'Missing command "go-bindata". See https://github.com/jteeuwen/go-bindata.' && exit 1) && \
+	go-bindata -nomemcopy -nocompress -pkg icons -o icons/icons.go -prefix icons -ignore icons.go icons
 
 # novendor removes the vendor folder to allow building with whatever is on your
 # GOPATH

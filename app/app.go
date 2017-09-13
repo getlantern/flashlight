@@ -238,7 +238,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			log.Errorf("Unable to serve stats to UI: %v", err)
 		}
 
-		setupUserSignal()
+		setupUserSignal(app.TurnOn, app.TurnOff)
 
 		err = serveBandwidth()
 		if err != nil {
@@ -292,6 +292,23 @@ func (app *App) TurnOff() {
 // TurnOff turns off the app
 func (app *App) TurnOn() {
 	settings.setBool(SNOn, true)
+}
+
+// AddConnectedStatusListener adds a listener for connected status updates.
+func (app *App) AddConnectedStatusListener(l func(connected bool)) {
+	settings.OnChange(SNOn, func(on interface{}) {
+		l(on.(bool))
+	})
+	l(atomic.LoadInt64(&app.on) == 1)
+}
+
+// OnDisconnected reigsters a listener for when we're disconnected
+func (app *App) OnDisconnected(l func()) {
+	settings.OnChange(SNOn, func(on interface{}) {
+		if !on.(bool) {
+			l()
+		}
+	})
 }
 
 // GetSetting gets the in memory setting with the name specified by attr

@@ -29,8 +29,9 @@ var menu struct {
 }
 
 var (
-	onIcon  []byte
-	offIcon []byte
+	iconConnected    []byte
+	iconDisconnected []byte
+	iconIssue        []byte
 )
 
 func runOnSystrayReady(a *app.App, f func()) {
@@ -54,13 +55,17 @@ func configureSystemTray(a *app.App) error {
 		return nil
 	}
 	var err error
-	onIcon, err = icons.Asset("icons/16on.ico")
+	iconConnected, err = icons.Asset("connected_16.ico")
 	if err != nil {
-		return fmt.Errorf("Unable to load on icon for system tray: %v", err)
+		return fmt.Errorf("Unable to load connected icon for system tray: %v", err)
 	}
-	offIcon, err = icons.Asset("icons/16off.ico")
+	iconDisconnected, err = icons.Asset("disconnected_16.ico")
 	if err != nil {
-		return fmt.Errorf("Unable to load off icon for system tray: %v", err)
+		return fmt.Errorf("Unable to load disconnected icon for system tray: %v", err)
+	}
+	iconIssue, err = icons.Asset("issue_16.ico")
+	if err != nil {
+		return fmt.Errorf("Unable to load issue icon for system tray: %v", err)
 	}
 	systray.SetTooltip("Lantern")
 	menu.status = systray.AddMenuItem("", "")
@@ -77,6 +82,12 @@ func configureSystemTray(a *app.App) error {
 		menu.statusMx.Unlock()
 		updateStatus()
 	})
+	a.AddConnectedStatusListener(func(connected bool) {
+		menu.statusMx.Lock()
+		menu.on = connected
+		menu.statusMx.Unlock()
+		updateStatus()
+	})
 	pro.OnProStatusChange(func(isPro bool) {
 		menu.statusMx.Lock()
 		menu.isPro = isPro
@@ -89,15 +100,13 @@ func configureSystemTray(a *app.App) error {
 			select {
 			case <-menu.toggle.ClickedCh:
 				menu.statusMx.Lock()
-				menu.on = !menu.on
 				on := menu.on
 				menu.statusMx.Unlock()
 				if on {
-					a.TurnOn()
-				} else {
 					a.TurnOff()
+				} else {
+					a.TurnOn()
 				}
-				updateStatus()
 			case <-menu.show.ClickedCh:
 				ui.ShowRoot("show-lantern", "tray")
 			case <-menu.upgrade.ClickedCh:
@@ -134,10 +143,13 @@ func updateStatus() {
 	var status string
 	if hitDataCap && !isPro {
 		status = i18n.T("TRAY_STATUS", i18n.T("TRAY_STATUS_BANDWIDTH_LIMITED"))
+		systray.SetIcon(iconIssue)
 	} else if on {
 		status = i18n.T("TRAY_STATUS", i18n.T("TRAY_STATUS_CONNECTED"))
+		systray.SetIcon(iconConnected)
 	} else {
 		status = i18n.T("TRAY_STATUS", i18n.T("TRAY_STATUS_DISCONNECTED"))
+		systray.SetIcon(iconDisconnected)
 	}
 	menu.status.SetTitle(status)
 	menu.status.SetTooltip(status)
@@ -149,11 +161,9 @@ func updateStatus() {
 	}
 
 	if on {
-		systray.SetIcon(onIcon)
 		menu.toggle.SetTitle(i18n.T("TRAY_TURN_OFF"))
 		menu.toggle.SetTooltip(i18n.T("TRAY_TURN_OFF"))
 	} else {
-		systray.SetIcon(offIcon)
 		menu.toggle.SetTitle(i18n.T("TRAY_TURN_ON"))
 		menu.toggle.SetTooltip(i18n.T("TRAY_TURN_ON"))
 	}
