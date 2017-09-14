@@ -135,7 +135,9 @@ func statusUpdated() {
 	}
 	if st.HitDataCap && !st.IsPro {
 		iconName += "alert"
-		statusKey = "throttled"
+		if st.On {
+			statusKey = "throttled"
+		}
 	}
 
 	systray.SetIcon(iconsByName[iconName])

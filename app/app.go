@@ -151,11 +151,10 @@ func (app *App) Run() {
 				return ui.AddToken("/") + "#/plans"
 			},
 			func(hasSucceedingProxy bool) {
-				app.status.mx.Lock()
-				app.status.HasSucceedingProxy = hasSucceedingProxy
-				app.status.mx.Unlock()
-				log.Debugf("Has succeeding proxy: %v", hasSucceedingProxy)
-				app.status.dispatch()
+				app.status.update(func(s Status) Status {
+					s.HasSucceedingProxy = hasSucceedingProxy
+					return s
+				})
 			})
 		if err != nil {
 			app.Exit(err)

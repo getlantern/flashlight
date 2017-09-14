@@ -29,7 +29,7 @@ func (app *App) StatusUpdates() <-chan Status {
 
 type status struct {
 	Status
-	prior   Status
+	changes chan Status
 	updates chan Status
 	mx      sync.Mutex
 }
@@ -39,42 +39,58 @@ func newStatus() *status {
 		Status: Status{
 			On: true,
 		},
-		updates: make(chan Status, 1000)}
+		changes: make(chan Status, 1000),
+		updates: make(chan Status, 1000),
+	}
+
 	pro.OnProStatusChange(func(isPro bool) {
-		s.mx.Lock()
-		s.IsPro = isPro
-		s.mx.Unlock()
-		s.dispatch()
+		s.update(func(s Status) Status {
+			s.IsPro = isPro
+			return s
+		})
 	})
 	settings.OnChange(SNOn, func(on interface{}) {
-		s.mx.Lock()
-		s.On = on.(bool)
-		s.mx.Unlock()
-		s.dispatch()
+		s.update(func(s Status) Status {
+			s.On = on.(bool)
+			return s
+		})
 	})
 	addDataCapListener(func(hitDataCap bool) {
-		s.mx.Lock()
-		s.HitDataCap = hitDataCap
-		s.mx.Unlock()
-		s.dispatch()
+		s.update(func(s Status) Status {
+			s.HitDataCap = hitDataCap
+			return s
+		})
 	})
+
+	go s.dispatchChanges()
 	return s
 }
 
-func (s *status) dispatch() {
+func (s *status) update(change func(Status) Status) {
 	s.mx.Lock()
-	st := s.Status
-	changed := st != s.prior
-	s.prior = st
+	s.Status = change(s.Status)
+	select {
+	case s.changes <- s.Status:
+		// okay
+	default:
+		// channel full
+	}
 	s.mx.Unlock()
-	if changed {
-		select {
-		case s.updates <- st:
-			// okay
-		default:
-			// channel full
+}
+
+func (s *status) dispatchChanges() {
+	var prior Status
+	for st := range s.changes {
+		if st != prior {
+			prior = st
+			select {
+			case s.updates <- st:
+				// okay
+			default:
+				// channel full
+			}
+			settings.setString(SNStatus, st.String())
 		}
-		settings.setString(SNStatus, st.String())
 	}
 }
 
