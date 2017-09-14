@@ -82,10 +82,10 @@ func (s *status) dispatchChanges() {
 	var prior Status
 	for st := range s.changes {
 		if st != prior {
-			prior = st
 			select {
 			case s.updates <- st:
 				// okay
+				prior = st
 			default:
 				// channel full
 			}
