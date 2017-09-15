@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/getlantern/eventual"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/pro/client"
 	"github.com/getlantern/golog"
 )
@@ -57,8 +58,8 @@ func (m *userMap) wait(userID int64) *client.User {
 
 // IsProUser indicates whether or not the user is pro, calling the Pro API if
 // necessary to determine the status.
-func IsProUser(userID int64, proToken string, deviceID string) (isPro bool, statusKnown bool) {
-	user, err := GetUserData(userID, proToken, deviceID)
+func IsProUser() (isPro bool, statusKnown bool) {
+	user, err := GetUserData(authConfig)
 	if err != nil {
 		return false, false
 	}
@@ -67,8 +68,8 @@ func IsProUser(userID int64, proToken string, deviceID string) (isPro bool, stat
 
 // IsProUserFast indicates whether or not the user is pro and whether or not the
 // user's status is know, never calling the Pro API to determine the status.
-func IsProUserFast(userID int64) (isPro bool, statusKnown bool) {
-	user, found := GetUserDataFast(userID)
+func IsProUserFast() (isPro bool, statusKnown bool) {
+	user, found := GetUserDataFast(authConfig.GetUserID())
 	if !found {
 		return false, false
 	}
@@ -114,13 +115,17 @@ func newUserWithClient(deviceID string, hc *http.Client) (*client.User, error) {
 
 //GetUserData retrieves local cache first. If the data for the userID is not
 //there, fetches from Pro API, and updates local cache.
-func GetUserData(userID int64, proToken string, deviceID string) (*client.User, error) {
-	return getUserDataWithClient(userID, proToken, deviceID, httpClient)
+func GetUserData(ac common.AuthConfig) (*client.User, error) {
+	return getUserDataWithClient(ac, httpClient)
 }
 
 //getUserDataWithClient retrieves local cache first. If the data for the userID is not
 //there, fetches from Pro API, and updates local cache.
-func getUserDataWithClient(userID int64, proToken string, deviceID string, hc *http.Client) (*client.User, error) {
+func getUserDataWithClient(ac common.AuthConfig, hc *http.Client) (*client.User, error) {
+	deviceID := ac.GetDeviceID()
+	userID := ac.GetUserID()
+	proToken := ac.GetToken()
+
 	user, found := GetUserDataFast(userID)
 	if found {
 		return user, nil

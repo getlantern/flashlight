@@ -24,6 +24,7 @@ import (
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/notifier"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/flashlight/proxiedsites"
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
@@ -60,6 +61,7 @@ func (app *App) Init() {
 	golog.OnFatal(app.exitOnFatal)
 	app.Flags["staging"] = common.Staging
 	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
+	pro.Init(settings)
 	app.exitCh = make(chan error, 1)
 	// use buffered channel to avoid blocking the caller of 'AddExitFunc'
 	// the number 100 is arbitrary

@@ -19,20 +19,22 @@ func TestUsers(t *testing.T) {
 	assert.NotNil(t, u, "Should have gotten a user")
 	t.Logf("user: %+v", u)
 
-	u, err = getUserDataWithClient(u.ID, u.Token, deviceID, nil)
+	auth := u.Auth
+	auth.DeviceID = deviceID
+	u, err = getUserDataWithClient(auth, nil)
 	assert.NoError(t, err, "Unexpected error")
 	assert.NotNil(t, u, "Should have gotten a user")
 
 	delete(userData.data, u.ID)
 
-	u, err = getUserDataWithClient(u.ID, u.Token, deviceID, nil)
+	u, err = getUserDataWithClient(auth, nil)
 	assert.NoError(t, err, "Unexpected error")
 	assert.NotNil(t, u, "Should have gotten a user")
 
-	pro, _ := IsProUser(u.ID, u.Token, deviceID)
+	authConfig = auth
+	pro, _ := IsProUser()
 	assert.False(t, pro)
-
-	pro, _ = IsProUserFast(u.ID)
+	pro, _ = IsProUserFast()
 	assert.False(t, pro)
 
 	user := userData.wait(u.ID)
