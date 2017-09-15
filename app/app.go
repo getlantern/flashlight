@@ -61,7 +61,6 @@ func (app *App) Init() {
 	golog.OnFatal(app.exitOnFatal)
 	app.Flags["staging"] = common.Staging
 	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
-	pro.Init(settings)
 	app.exitCh = make(chan error, 1)
 	// use buffered channel to avoid blocking the caller of 'AddExitFunc'
 	// the number 100 is arbitrary
@@ -224,6 +223,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		if err != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		}
+		ui.Handle("/pro/", pro.APIHandler(settings))
 		ui.Handle("/data", ws.StartUIChannel())
 
 		if e := settings.StartService(); e != nil {
