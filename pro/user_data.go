@@ -58,8 +58,8 @@ func (m *userMap) wait(userID int64) *client.User {
 
 // IsProUser indicates whether or not the user is pro, calling the Pro API if
 // necessary to determine the status.
-func IsProUser() (isPro bool, statusKnown bool) {
-	user, err := GetUserData(authConfig)
+func IsProUser(ac common.AuthConfig) (isPro bool, statusKnown bool) {
+	user, err := GetUserData(ac)
 	if err != nil {
 		return false, false
 	}
@@ -68,8 +68,8 @@ func IsProUser() (isPro bool, statusKnown bool) {
 
 // IsProUserFast indicates whether or not the user is pro and whether or not the
 // user's status is know, never calling the Pro API to determine the status.
-func IsProUserFast() (isPro bool, statusKnown bool) {
-	user, found := GetUserDataFast(authConfig.GetUserID())
+func IsProUserFast(ac common.AuthConfig) (isPro bool, statusKnown bool) {
+	user, found := GetUserDataFast(ac.GetUserID())
 	if !found {
 		return false, false
 	}

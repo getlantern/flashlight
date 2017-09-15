@@ -17,7 +17,7 @@ func isProUser() (isPro bool, ok bool) {
 	if err != nil {
 		return false, false
 	}
-	return pro.IsProUser()
+	return pro.IsProUser(settings)
 }
 
 // isProUserFast checks a cached value for the pro status and doesn't wait for
@@ -25,7 +25,7 @@ func isProUser() (isPro bool, ok bool) {
 // user when starts up. The pro proxy also updates user data implicitly for
 // '/userData' calls initiated from desktop UI.
 func isProUserFast() (isPro bool, statusKnown bool) {
-	return pro.IsProUserFast()
+	return pro.IsProUserFast(settings)
 }
 
 // servePro fetches user data or creates new user, and serves user data to all
