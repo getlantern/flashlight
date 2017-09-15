@@ -9,9 +9,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/getlantern/flashlight/pro/client"
 )
 
 func TestProxy(t *testing.T) {
+	Init(&client.Auth{})
 	m := &mockRoundTripper{msg: "GOOD"}
 	httpClient = &http.Client{Transport: m}
 	l, err := net.Listen("tcp", "localhost:0")

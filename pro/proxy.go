@@ -98,6 +98,18 @@ func APIHandler() http.Handler {
 				common.ProTokenHeader,
 				common.UserIdHeader,
 			}, ", "))
+			// Add auth headers only if not present, to avoid race conditions
+			// when creating new user or switching user, i.e., linking device
+			// to a new account.
+			if r.Header.Get(common.DeviceIdHeader) == "" {
+				r.Header.Set(common.DeviceIdHeader, authConfig.GetDeviceID())
+			}
+			if r.Header.Get(common.UserIdHeader) == "" {
+				r.Header.Set(common.UserIdHeader, strconv.FormatInt(authConfig.GetUserID(), 10))
+			}
+			if r.Header.Get(common.ProTokenHeader) == "" {
+				r.Header.Set(common.ProTokenHeader, authConfig.GetToken())
+			}
 		},
 	}
 }
