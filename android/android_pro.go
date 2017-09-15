@@ -4,14 +4,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/pro"
 	client "github.com/getlantern/flashlight/pro/client"
 	"github.com/stripe/stripe-go"
 )
 
 type Session interface {
-	config.UserConfig
+	common.AuthConfig
 	SetCountry(string)
 	UpdateStats(string, string, string, int, int)
 	SetStaging(bool)

@@ -38,6 +38,7 @@ func isProUserFast() (isPro bool, statusKnown bool) {
 // created, as it's fundamental for the UI to work.
 func servePro() error {
 	logger := golog.LoggerFor("flashlight.app.pro")
+	// pro.SetDeviceID(settings.GetDeviceID())
 	go func() {
 		userID := settings.GetUserID()
 		for {

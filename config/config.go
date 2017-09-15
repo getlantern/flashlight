@@ -13,6 +13,7 @@ import (
 	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/client"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
 )
@@ -29,7 +30,7 @@ type Config interface {
 
 	// Poll polls for new configs from a remote server and saves them to disk for
 	// future runs.
-	poll(UserConfig, chan interface{}, *chainedFrontedURLs, time.Duration)
+	poll(common.AuthConfig, chan interface{}, *chainedFrontedURLs, time.Duration)
 }
 
 type config struct {
@@ -64,9 +65,9 @@ type options struct {
 	// urls are the chaines and fronted URLs to use for fetching this config.
 	urls *chainedFrontedURLs
 
-	// userConfig contains data for communicating the user details to upstream
+	// authConfig contains data for communicating the user details to upstream
 	// servers in HTTP headers, such as the pro token.
-	userConfig UserConfig
+	authConfig common.AuthConfig
 
 	// marshaler marshals application specific config to bytes, defaults to
 	// yaml.Marshal
@@ -131,7 +132,7 @@ func pipeConfig(opts *options) {
 	// Now continually poll for new configs and pipe them back to the dispatch
 	// function.
 	if !opts.sticky {
-		go conf.poll(opts.userConfig, configChan, opts.urls, opts.sleep)
+		go conf.poll(opts.authConfig, configChan, opts.urls, opts.sleep)
 	} else {
 		log.Debugf("Using sticky config")
 	}
@@ -206,7 +207,7 @@ func (conf *config) embedded(data []byte, fileName string) (interface{}, error) 
 	return conf.unmarshaler(bytes)
 }
 
-func (conf *config) poll(uc UserConfig,
+func (conf *config) poll(uc common.AuthConfig,
 	configChan chan interface{}, urls *chainedFrontedURLs, sleep time.Duration) {
 	fetcher := newFetcher(uc, proxied.ParallelPreferChained(), urls)
 
