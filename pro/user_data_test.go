@@ -31,10 +31,9 @@ func TestUsers(t *testing.T) {
 	assert.NoError(t, err, "Unexpected error")
 	assert.NotNil(t, u, "Should have gotten a user")
 
-	authConfig = auth
-	pro, _ := IsProUser()
+	pro, _ := IsProUser(auth)
 	assert.False(t, pro)
-	pro, _ = IsProUserFast()
+	pro, _ = IsProUserFast(auth)
 	assert.False(t, pro)
 
 	user := userData.wait(u.ID)
