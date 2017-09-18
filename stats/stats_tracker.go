@@ -73,7 +73,7 @@ type tracker struct {
 // NewTracker creates a new Tracker
 func NewTracker() Tracker {
 	return &tracker{
-		dispatcher: event.NewDispatcher(false, 1000),
+		dispatcher: event.NewDispatcher(true, 1000),
 	}
 }
 

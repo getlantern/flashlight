@@ -48,8 +48,8 @@ func init() {
 
 // App is the core of the Lantern desktop application, in the form of a library.
 type App struct {
-	on        int64
-	hasExited int64
+	disconnected int64
+	hasExited    int64
 
 	ShowUI       bool
 	Flags        map[string]interface{}
@@ -77,16 +77,15 @@ func (app *App) Init() {
 	settings.OnChange(SNDisconnected, func(disconnected interface{}) {
 		isDisconnected := disconnected.(bool)
 		if isDisconnected {
-			atomic.StoreInt64(&app.on, 0)
+			atomic.StoreInt64(&app.disconnected, 1)
 		} else {
-			atomic.StoreInt64(&app.on, 1)
+			atomic.StoreInt64(&app.disconnected, 0)
 		}
 		app.statsTracker.SetDisconnected(isDisconnected)
 	})
 	addDataCapListener(func(hitDataCap bool) {
 		app.statsTracker.SetHitDataCap(hitDataCap)
 	})
-	atomic.StoreInt64(&app.on, 1)
 }
 
 // LogPanicAndExit logs a panic and then exits the application. This function
@@ -136,7 +135,7 @@ func (app *App) Run() {
 			listenAddr,
 			socksAddr,
 			app.Flags["configdir"].(string),
-			app.IsOn,
+			app.IsDisconnected,
 			func() bool { return !settings.GetProxyAll() }, // use shortcut
 			func() bool { return !settings.GetProxyAll() }, // use detour
 			func() bool { return false },                   // on desktop, we do not allow private hosts
@@ -298,9 +297,9 @@ func localHTTPToken(set *Settings) string {
 	return tok
 }
 
-// IsOn indicates whether or not the app is on
-func (app *App) IsOn() bool {
-	return atomic.LoadInt64(&app.on) == 1
+// IsDisconnected indicates if the app is in disconnected mode
+func (app *App) IsDisconnected() bool {
+	return atomic.LoadInt64(&app.disconnected) == 1
 }
 
 // Connect turns on proxying

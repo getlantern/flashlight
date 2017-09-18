@@ -16,6 +16,8 @@ import (
 	"github.com/getlantern/detour"
 	"github.com/getlantern/mockconn"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/getlantern/flashlight/stats"
 )
 
 const (
@@ -25,9 +27,15 @@ const (
 
 type mockStatsTracker struct{}
 
+func (m mockStatsTracker) Latest() stats.Stats                                      { return stats.Stats{} }
+func (m mockStatsTracker) AddListener(func(newStats stats.Stats)) (close func())    { return nil }
 func (m mockStatsTracker) SetActiveProxyLocation(city, country, countryCode string) {}
 func (m mockStatsTracker) IncHTTPSUpgrades()                                        {}
 func (m mockStatsTracker) IncAdsBlocked()                                           {}
+func (m mockStatsTracker) SetDisconnected(val bool)                                 {}
+func (m mockStatsTracker) SetHasSucceedingProxy(val bool)                           {}
+func (m mockStatsTracker) SetHitDataCap(val bool)                                   {}
+func (m mockStatsTracker) SetIsPro(val bool)                                        {}
 
 func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {
 	client.bal.Reset(&testDialer{
@@ -38,7 +46,7 @@ func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, 
 
 func newClient() *Client {
 	client, _ := NewClient(
-		func() bool { return true },
+		func() bool { return false },
 		func(addr string) (bool, net.IP) { return false, nil },
 		func() bool { return true },
 		func() string { return "proToken" },

@@ -46,7 +46,7 @@ var (
 func Run(httpProxyAddr string,
 	socksProxyAddr string,
 	configDir string,
-	on func() bool,
+	disconnected func() bool,
 	useShortcut func() bool,
 	useDetour func() bool,
 	allowPrivateHosts func() bool,
@@ -69,7 +69,7 @@ func Run(httpProxyAddr string,
 	op := fops.Begin("client_started")
 
 	cl, err := client.NewClient(
-		on,
+		disconnected,
 		func(addr string) (bool, net.IP) {
 			if useShortcut() {
 				return shortcut.Allow(addr)

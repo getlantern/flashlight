@@ -89,7 +89,7 @@ type Client struct {
 
 	l net.Listener
 
-	on             func() bool
+	disconnected   func() bool
 	allowShortcut  func(addr string) (bool, net.IP)
 	useDetour      func() bool
 	proTokenGetter func() string
@@ -110,7 +110,7 @@ type Client struct {
 // SOCKS proxies. It take a function for determing whether or not to proxy
 // all traffic, and another function to get Lantern Pro token when required.
 func NewClient(
-	on func() bool,
+	disconnected func() bool,
 	allowShortcut func(addr string) (bool, net.IP),
 	useDetour func() bool,
 	proTokenGetter func() string,
@@ -126,7 +126,7 @@ func NewClient(
 	}
 	client := &Client{
 		bal:               balancer.New(),
-		on:                on,
+		disconnected:      disconnected,
 		allowShortcut:     allowShortcut,
 		useDetour:         useDetour,
 		proTokenGetter:    proTokenGetter,
@@ -427,7 +427,7 @@ func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Con
 }
 
 func (client *Client) shouldSendToProxy(addr string, port int) error {
-	if !client.on() {
+	if client.disconnected() {
 		return errLanternOff
 	}
 	err := client.isPortProxyable(port)
