@@ -111,7 +111,7 @@ func TestPollProxies(t *testing.T) {
 	os.Rename(fi.Name(), tempName)
 
 	urls := proxiesURLs
-	go cfg.poll(&userConfig{}, proxyChan, urls, 1*time.Hour)
+	go cfg.poll(&authConfig{}, proxyChan, urls, 1*time.Hour)
 	proxies := (<-proxyChan).(map[string]*chained.ChainedServerInfo)
 
 	assert.True(t, len(proxies) > 0)
@@ -156,7 +156,7 @@ func TestPollGlobal(t *testing.T) {
 	tempName := fi.Name() + ".stored"
 	os.Rename(fi.Name(), tempName)
 
-	go cfg.poll(&userConfig{}, configChan, globalURLs, 1*time.Hour)
+	go cfg.poll(&authConfig{}, configChan, globalURLs, 1*time.Hour)
 
 	var fetched *Global
 	select {

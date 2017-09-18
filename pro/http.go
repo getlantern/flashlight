@@ -26,5 +26,9 @@ func getHTTPClient(getRt, otherRt http.RoundTripper) *http.Client {
 			}
 			return otherRt.RoundTrip(req)
 		}),
+		// Not follow redirects
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
 	}
 }
