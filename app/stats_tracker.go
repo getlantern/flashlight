@@ -38,6 +38,8 @@ func (s *statsTracker) StartService() (err error) {
 }
 
 func (s *statsTracker) StopService() {
+	log.Debug("Stopping service")
 	ws.Unregister("stats")
 	s.close()
+	log.Debug("Finished stopping service")
 }

@@ -74,12 +74,7 @@ func (s *Service) writeMsg(msg interface{}, out chan<- []byte) {
 		return
 	}
 	log.Tracef("Sending message to clients: %v", string(b))
-	select {
-	case out <- b:
-	default:
-		log.Errorf("Failed to send message %v to clients", msg)
-	}
-
+	out <- b
 }
 
 // Register registers a WebSocket based service with an optional helloFn to
@@ -96,8 +91,8 @@ func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFn
 
 	s := &Service{
 		Type:     t,
-		in:       make(chan interface{}, 100),
-		out:      make(chan interface{}, 100),
+		in:       make(chan interface{}, 1000),
+		out:      make(chan interface{}, 1000),
 		stopCh:   make(chan bool, 1), // buffered to avoid blocking `Unregister()`
 		helloFn:  helloFn,
 		newMsgFn: newMsgFn,
