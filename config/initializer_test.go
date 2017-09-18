@@ -27,7 +27,7 @@ func TestInit(t *testing.T) {
 		assert.True(t, len(global.Client.MasqueradeSets) > 1)
 		configChan <- true
 	}
-	Init(".", flags, &userConfig{}, proxiesDispatch, globalDispatch)
+	Init(".", flags, &authConfig{}, proxiesDispatch, globalDispatch)
 
 	count := 0
 	for i := 0; i < 2; i++ {

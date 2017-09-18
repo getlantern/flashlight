@@ -9,8 +9,6 @@ import (
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/tarfs"
-
-	"github.com/getlantern/flashlight/pro"
 )
 
 var (
@@ -47,7 +45,6 @@ func attachHandlers(s *server) {
 		resp.WriteHeader(http.StatusOK)
 	}
 	s.Handle("/startup", http.HandlerFunc(startupHandler))
-	s.Handle("/pro/", pro.APIHandler())
 	unpackUI()
 	s.Handle("/", http.FileServer(fs))
 

@@ -8,6 +8,7 @@ import (
 	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config/generated"
 )
 
@@ -52,7 +53,7 @@ var (
 // Init initializes the config setup for both fetching per-user proxies as well
 // as the global config.
 func Init(configDir string, flags map[string]interface{},
-	userConfig UserConfig, proxiesDispatch func(interface{}),
+	authConfig common.AuthConfig, proxiesDispatch func(interface{}),
 	globalDispatch func(interface{})) {
 	staging := isStaging(flags)
 	// These are the options for fetching the per-user proxy config.
@@ -61,7 +62,7 @@ func Init(configDir string, flags map[string]interface{},
 		obfuscate:  obfuscate(flags),
 		name:       "proxies.yaml",
 		urls:       checkOverrides(flags, getProxyURLs(staging), "proxies.yaml.gz"),
-		userConfig: userConfig,
+		authConfig: authConfig,
 		unmarshaler: func(bytes []byte) (interface{}, error) {
 			servers := make(map[string]*chained.ChainedServerInfo)
 			if err := yaml.Unmarshal(bytes, servers); err != nil {
@@ -86,7 +87,7 @@ func Init(configDir string, flags map[string]interface{},
 		obfuscate:  obfuscate(flags),
 		name:       "global.yaml",
 		urls:       checkOverrides(flags, getGlobalURLs(staging), "global.yaml.gz"),
-		userConfig: userConfig,
+		authConfig: authConfig,
 		unmarshaler: func(bytes []byte) (interface{}, error) {
 			gl := newGlobal()
 			gl.applyFlags(flags)
