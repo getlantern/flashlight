@@ -135,10 +135,10 @@ func (app *App) Run() {
 			listenAddr,
 			socksAddr,
 			app.Flags["configdir"].(string),
-			app.IsDisconnected,
-			func() bool { return !settings.GetProxyAll() }, // use shortcut
-			func() bool { return !settings.GetProxyAll() }, // use detour
-			func() bool { return false },                   // on desktop, we do not allow private hosts
+			func() bool { return atomic.LoadInt64(&app.disconnected) == 1 }, // check whether we're disconnected
+			func() bool { return !settings.GetProxyAll() },                  // use shortcut
+			func() bool { return !settings.GetProxyAll() },                  // use detour
+			func() bool { return false },                                    // on desktop, we do not allow private hosts
 			settings.IsAutoReport,
 			app.Flags,
 			app.beforeStart(listenAddr),
@@ -295,11 +295,6 @@ func localHTTPToken(set *Settings) string {
 		return t
 	}
 	return tok
-}
-
-// IsDisconnected indicates if the app is in disconnected mode
-func (app *App) IsDisconnected() bool {
-	return atomic.LoadInt64(&app.disconnected) == 1
 }
 
 // Connect turns on proxying
