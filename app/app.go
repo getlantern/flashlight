@@ -48,8 +48,7 @@ func init() {
 
 // App is the core of the Lantern desktop application, in the form of a library.
 type App struct {
-	disconnected int64
-	hasExited    int64
+	hasExited int64
 
 	ShowUI       bool
 	Flags        map[string]interface{}
@@ -76,11 +75,6 @@ func (app *App) Init() {
 	})
 	settings.OnChange(SNDisconnected, func(disconnected interface{}) {
 		isDisconnected := disconnected.(bool)
-		if isDisconnected {
-			atomic.StoreInt64(&app.disconnected, 1)
-		} else {
-			atomic.StoreInt64(&app.disconnected, 0)
-		}
 		app.statsTracker.SetDisconnected(isDisconnected)
 	})
 	addDataCapListener(func(hitDataCap bool) {
@@ -135,10 +129,10 @@ func (app *App) Run() {
 			listenAddr,
 			socksAddr,
 			app.Flags["configdir"].(string),
-			func() bool { return atomic.LoadInt64(&app.disconnected) == 1 }, // check whether we're disconnected
-			func() bool { return !settings.GetProxyAll() },                  // use shortcut
-			func() bool { return !settings.GetProxyAll() },                  // use detour
-			func() bool { return false },                                    // on desktop, we do not allow private hosts
+			func() bool { return settings.getBool(SNDisconnected) }, // check whether we're disconnected
+			func() bool { return !settings.GetProxyAll() },          // use shortcut
+			func() bool { return !settings.GetProxyAll() },          // use detour
+			func() bool { return false },                            // on desktop, we do not allow private hosts
 			settings.IsAutoReport,
 			app.Flags,
 			app.beforeStart(listenAddr),
