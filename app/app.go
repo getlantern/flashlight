@@ -32,10 +32,6 @@ import (
 	"github.com/getlantern/flashlight/ws"
 )
 
-const (
-	longDuration = 100 * 365 * 24 * time.Hour
-)
-
 var (
 	log      = golog.LoggerFor("flashlight.app")
 	settings *Settings
@@ -83,7 +79,7 @@ func (app *App) Init() {
 		if isDisconnected {
 			atomic.StoreInt64(&app.on, 0)
 		} else {
-			atomic.StoreInt64(&app.on, 0)
+			atomic.StoreInt64(&app.on, 1)
 		}
 		app.statsTracker.SetDisconnected(isDisconnected)
 	})
@@ -499,7 +495,7 @@ func (app *App) collectLastExitFuncs() []func() {
 
 // WaitForExit waits for a request to exit the application.
 func (app *App) WaitForExit() error {
-	err, _ := app.exited.Get(longDuration)
+	err, _ := app.exited.Get(-1)
 	if err == nil {
 		return nil
 	}

@@ -28,10 +28,8 @@ func (s *statsTracker) StartService() (err error) {
 		s.AddListener(func(newStats stats.Stats) {
 			select {
 			case s.service.Out <- newStats:
-				log.Debug("Sent new stats to UI")
 				// ok
 			default:
-				log.Debug("Did not send new stats to UI")
 				// don't block if no-one is listening
 			}
 		})
