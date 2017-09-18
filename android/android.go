@@ -182,7 +182,7 @@ func run(configDir, locale string,
 		session,
 		NewStatsTracker(session),
 		func(err error) {}, // onError
-		session.DeviceId(),
+		session.GetDeviceID(),
 		session.IsProUser,
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
