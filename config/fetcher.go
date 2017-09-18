@@ -24,21 +24,15 @@ type Fetcher interface {
 // fetcher periodically fetches the latest cloud configuration.
 type fetcher struct {
 	lastCloudConfigETag map[string]string
-	user                UserConfig
+	user                common.AuthConfig
 	rt                  http.RoundTripper
 	chainedURL          string
 	frontedURL          string
 }
 
-// UserConfig retrieves any custom user info for fetching the config.
-type UserConfig interface {
-	GetUserID() int64
-	GetToken() string
-}
-
 // newFetcher creates a new configuration fetcher with the specified
 // interface for obtaining the user ID and token if those are populated.
-func newFetcher(conf UserConfig, rt http.RoundTripper,
+func newFetcher(conf common.AuthConfig, rt http.RoundTripper,
 	urls *chainedFrontedURLs) Fetcher {
 	log.Debugf("Will poll for config at %v (%v)", urls.chained, urls.fronted)
 

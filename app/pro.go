@@ -13,11 +13,11 @@ import (
 // because the user can become Pro or free at any time. It waits until
 // the user ID becomes non-zero.
 func isProUser() (isPro bool, ok bool) {
-	uid, err := settings.GetInt64Eventually(SNUserID)
+	_, err := settings.GetInt64Eventually(SNUserID)
 	if err != nil {
 		return false, false
 	}
-	return pro.IsProUser(uid, settings.GetToken(), settings.GetDeviceID())
+	return pro.IsProUser(settings)
 }
 
 // isProUserFast checks a cached value for the pro status and doesn't wait for
@@ -25,11 +25,7 @@ func isProUser() (isPro bool, ok bool) {
 // user when starts up. The pro proxy also updates user data implicitly for
 // '/userData' calls initiated from desktop UI.
 func isProUserFast() (isPro bool, statusKnown bool) {
-	userID := settings.GetUserID()
-	if userID == 0 {
-		return false, false
-	}
-	return pro.IsProUserFast(userID)
+	return pro.IsProUserFast(settings)
 }
 
 // servePro fetches user data or creates new user, and serves user data to all
@@ -38,6 +34,7 @@ func isProUserFast() (isPro bool, statusKnown bool) {
 // created, as it's fundamental for the UI to work.
 func servePro() error {
 	logger := golog.LoggerFor("flashlight.app.pro")
+	// pro.SetDeviceID(settings.GetDeviceID())
 	go func() {
 		userID := settings.GetUserID()
 		for {
@@ -51,7 +48,7 @@ func servePro() error {
 					return
 				}
 			} else {
-				_, err := pro.GetUserData(userID, settings.GetToken(), settings.GetDeviceID())
+				_, err := pro.GetUserData(settings)
 				if err != nil {
 					logger.Errorf("Could not get user data for %v: %v", userID, err)
 				} else {
