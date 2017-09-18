@@ -13,14 +13,14 @@ type UserSignal struct {
 
 var userSignal UserSignal
 
-func setupUserSignal(turnOn func(), turnOff func()) {
+func setupUserSignal(connect func(), disconnect func()) {
 	userSignal.once.Do(func() {
 		err := userSignal.start()
 		if err != nil {
 			log.Errorf("Unable to register signal service: %q", err)
 			return
 		}
-		go userSignal.read(turnOn, turnOff)
+		go userSignal.read(connect, disconnect)
 	})
 }
 
@@ -34,21 +34,16 @@ func (s *UserSignal) start() error {
 	return err
 }
 
-func (s *UserSignal) read(turnOn func(), turnOff func()) {
+func (s *UserSignal) read(connect func(), disconnect func()) {
 	for message := range s.service.In {
 		log.Debugf("Read userSignal %v", message)
 		switch message {
 		case "disconnect":
-			sysproxyOff()
+			disconnect()
 		case "connect":
-			sysproxyOn()
-		case "turnOn":
-			turnOn()
-		case "turnOff":
-			turnOff()
+			connect()
 		default:
 			continue
 		}
-		s.service.Out <- message
 	}
 }

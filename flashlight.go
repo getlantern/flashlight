@@ -56,13 +56,12 @@ func Run(httpProxyAddr string,
 	afterStart func(),
 	onConfigUpdate func(cfg *config.Global),
 	userConfig config.UserConfig,
-	statsTracker stats.StatsTracker,
+	statsTracker stats.Tracker,
 	onError func(err error),
 	deviceID string,
 	isPro func() bool,
 	lang func() string,
-	adSwapTargetURL func() string,
-	onHasSucceedingProxy func(hasSucceding bool)) error {
+	adSwapTargetURL func() string) error {
 
 	elapsed := mtime.Stopwatch()
 	displayVersion()
@@ -89,10 +88,10 @@ func Run(httpProxyAddr string,
 		op.End()
 	}
 
-	if onHasSucceedingProxy != nil {
+	if statsTracker != nil {
 		go func() {
 			for hasSucceeding := range cl.HasSucceedingProxy() {
-				onHasSucceedingProxy(hasSucceeding)
+				statsTracker.SetHasSucceedingProxy(hasSucceeding)
 			}
 		}()
 	}

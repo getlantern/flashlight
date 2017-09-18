@@ -89,6 +89,8 @@ imports:
   version: d906ee7c3465210c328abbe6ea0f855db9db679c
 - name: github.com/getlantern/errors
   version: 99fa440517e8f3d1e4cd8d6dbed6b41f4c1ed3d6
+- name: github.com/getlantern/event
+  version: 5a5f09172f38b01fe9d92c91928bc36a8a4972aa
 - name: github.com/getlantern/eventual
   version: 8a3a062ff1605f65e4d710e016c39bb69e91b6f8
 - name: github.com/getlantern/fdcount

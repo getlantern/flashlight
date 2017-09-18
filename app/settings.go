@@ -27,11 +27,11 @@ import (
 type SettingName string
 
 const (
-	SNAutoReport  SettingName = "autoReport"
-	SNAutoLaunch  SettingName = "autoLaunch"
-	SNProxyAll    SettingName = "proxyAll"
-	SNSystemProxy SettingName = "systemProxy"
-	SNOn          SettingName = "on"
+	SNAutoReport   SettingName = "autoReport"
+	SNAutoLaunch   SettingName = "autoLaunch"
+	SNProxyAll     SettingName = "proxyAll"
+	SNSystemProxy  SettingName = "systemProxy"
+	SNDisconnected SettingName = "disconnected"
 
 	SNLanguage       SettingName = "language"
 	SNLocalHTTPToken SettingName = "localHTTPToken"
@@ -50,8 +50,6 @@ const (
 	SNBuildDate    SettingName = "buildDate"
 	SNRevisionDate SettingName = "revisionDate"
 	SNPACURL       SettingName = "pacURL"
-
-	SNStatus SettingName = "status"
 )
 
 type settingType byte
@@ -68,11 +66,11 @@ var settingMeta = map[SettingName]struct {
 	persist   bool
 	omitempty bool
 }{
-	SNAutoReport:  {stBool, true, false},
-	SNAutoLaunch:  {stBool, true, false},
-	SNProxyAll:    {stBool, true, false},
-	SNSystemProxy: {stBool, true, false},
-	SNOn:          {stBool, false, false},
+	SNAutoReport:   {stBool, true, false},
+	SNAutoLaunch:   {stBool, true, false},
+	SNProxyAll:     {stBool, true, false},
+	SNSystemProxy:  {stBool, true, false},
+	SNDisconnected: {stBool, false, false},
 
 	SNLanguage:       {stString, true, true},
 	SNLocalHTTPToken: {stString, true, true},
@@ -91,8 +89,6 @@ var settingMeta = map[SettingName]struct {
 	SNBuildDate:    {stString, false, false},
 	SNRevisionDate: {stString, false, false},
 	SNPACURL:       {stString, true, true},
-
-	SNStatus: {stString, false, false},
 }
 
 var (
@@ -175,7 +171,7 @@ func newSettings(filePath string) *Settings {
 			SNAutoLaunch:     true,
 			SNProxyAll:       false,
 			SNSystemProxy:    true,
-			SNOn:             true,
+			SNDisconnected:   false,
 			SNLanguage:       "",
 			SNLocalHTTPToken: "",
 			SNUserToken:      "",

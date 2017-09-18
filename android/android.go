@@ -187,7 +187,6 @@ func run(configDir, locale string,
 		session.IsProUser,
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
-		func(hasSucceeding bool) {}, // only used for desktop
 	)
 }
 

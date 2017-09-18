@@ -25,7 +25,9 @@ import (
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/notifier"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/flashlight/proxiedsites"
+	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
 )
@@ -57,7 +59,6 @@ type App struct {
 	Flags        map[string]interface{}
 	exited       eventual.Value
 	statsTracker *statsTracker
-	status       *status
 
 	chExitFuncs     chan func()
 	chLastExitFuncs chan func()
@@ -74,7 +75,21 @@ func (app *App) Init() {
 	app.chExitFuncs = make(chan func(), 100)
 	app.chLastExitFuncs = make(chan func(), 100)
 	app.statsTracker = NewStatsTracker()
-	app.status = newStatus()
+	pro.OnProStatusChange(func(isPro bool) {
+		app.statsTracker.SetIsPro(isPro)
+	})
+	settings.OnChange(SNDisconnected, func(disconnected interface{}) {
+		isDisconnected := disconnected.(bool)
+		if isDisconnected {
+			atomic.StoreInt64(&app.on, 0)
+		} else {
+			atomic.StoreInt64(&app.on, 0)
+		}
+		app.statsTracker.SetDisconnected(isDisconnected)
+	})
+	addDataCapListener(func(hitDataCap bool) {
+		app.statsTracker.SetHitDataCap(hitDataCap)
+	})
 	atomic.StoreInt64(&app.on, 1)
 }
 
@@ -149,12 +164,6 @@ func (app *App) Run() {
 					return ""
 				}
 				return ui.AddToken("/") + "#/plans"
-			},
-			func(hasSucceedingProxy bool) {
-				app.status.update(func(s Status) Status {
-					s.HasSucceedingProxy = hasSucceedingProxy
-					return s
-				})
 			})
 		if err != nil {
 			app.Exit(err)
@@ -253,7 +262,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			log.Errorf("Unable to serve stats to UI: %v", err)
 		}
 
-		setupUserSignal(app.TurnOn, app.TurnOff)
+		setupUserSignal(app.Connect, app.Disconnect)
 
 		err = serveBandwidth()
 		if err != nil {
@@ -298,16 +307,16 @@ func (app *App) IsOn() bool {
 	return atomic.LoadInt64(&app.on) == 1
 }
 
-// TurnOn turns on the app
-func (app *App) TurnOn() {
+// Connect turns on proxying
+func (app *App) Connect() {
 	ops.Begin("connect").End()
-	settings.setBool(SNOn, true)
+	settings.setBool(SNDisconnected, false)
 }
 
-// TurnOff turns off the app
-func (app *App) TurnOff() {
+// Disconnect turns off proxying
+func (app *App) Disconnect() {
 	ops.Begin("disconnect").End()
-	settings.setBool(SNOn, false)
+	settings.setBool(SNDisconnected, true)
 }
 
 // GetSetting gets the in memory setting with the name specified by attr
@@ -335,18 +344,15 @@ func (app *App) OnSettingChange(attr SettingName, cb func(interface{})) {
 	settings.OnChange(attr, cb)
 }
 
+// OnStatsChange adds a listener for Stats changes.
+func (app *App) OnStatsChange(fn func(stats.Stats)) {
+	app.statsTracker.AddListener(fn)
+}
+
 func (app *App) afterStart() {
 	if settings.GetSystemProxy() {
 		sysproxyOn()
 	}
-
-	app.OnSettingChange(SNOn, func(val interface{}) {
-		on := int64(0)
-		if val.(bool) {
-			on = 1
-		}
-		atomic.StoreInt64(&app.on, on)
-	})
 
 	app.OnSettingChange(SNSystemProxy, func(val interface{}) {
 		enable := val.(bool)

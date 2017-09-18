@@ -19,6 +19,7 @@ import:
 - package: github.com/getlantern/edgedetect
 - package: github.com/getlantern/ema
 - package: github.com/getlantern/errors
+- package: github.com/getlantern/event
 - package: github.com/getlantern/eventual
 - package: github.com/getlantern/filepersist
 - package: github.com/getlantern/fronted

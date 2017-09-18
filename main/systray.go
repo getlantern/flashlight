@@ -12,12 +12,13 @@ import (
 
 	"github.com/getlantern/flashlight/app"
 	"github.com/getlantern/flashlight/icons"
+	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ui"
 )
 
 var menu struct {
 	enable  bool
-	st      app.Status
+	st      stats.Stats
 	stMx    sync.RWMutex
 	status  *systray.MenuItem
 	toggle  *systray.MenuItem
@@ -76,26 +77,24 @@ func configureSystemTray(a *app.App) error {
 	menu.show = systray.AddMenuItem(i18n.T("TRAY_SHOW_LANTERN"), i18n.T("TRAY_SHOW_LANTERN"))
 	systray.AddSeparator()
 	menu.quit = systray.AddMenuItem(i18n.T("TRAY_QUIT"), i18n.T("TRAY_QUIT"))
-	go func() {
-		for status := range a.StatusUpdates() {
-			menu.stMx.Lock()
-			menu.st = status
-			menu.stMx.Unlock()
-			statusUpdated()
-		}
-	}()
+	a.OnStatsChange(func(newStats stats.Stats) {
+		menu.stMx.Lock()
+		menu.st = newStats
+		menu.stMx.Unlock()
+		statsUpdated()
+	})
 
 	go func() {
 		for {
 			select {
 			case <-menu.toggle.ClickedCh:
 				menu.stMx.Lock()
-				on := menu.st.On
+				disconnected := menu.st.Disconnected
 				menu.stMx.Unlock()
-				if on {
-					a.TurnOff()
+				if disconnected {
+					a.Connect()
 				} else {
-					a.TurnOn()
+					a.Disconnect()
 				}
 			case <-menu.show.ClickedCh:
 				ui.ShowRoot("show-lantern", "tray")
@@ -120,22 +119,22 @@ func refreshSystray(language string) {
 	}
 	menu.show.SetTitle(i18n.T("TRAY_SHOW_LANTERN"))
 	menu.show.SetTooltip(i18n.T("SHOW"))
-	statusUpdated()
+	statsUpdated()
 }
 
-func statusUpdated() {
+func statsUpdated() {
 	menu.stMx.RLock()
 	st := menu.st
 	menu.stMx.RUnlock()
 
 	iconName := "connected"
-	statusKey := st.String()
-	if !st.On || !st.HasSucceedingProxy {
+	statusKey := st.Status
+	if st.Disconnected || !st.HasSucceedingProxy {
 		iconName = "disconnected"
 	}
 	if st.HitDataCap && !st.IsPro {
 		iconName += "alert"
-		if st.On {
+		if !st.Disconnected {
 			statusKey = "throttled"
 		}
 	}
@@ -151,11 +150,11 @@ func statusUpdated() {
 		menu.upgrade.Show()
 	}
 
-	if st.On {
-		menu.toggle.SetTitle(i18n.T("TRAY_TURN_OFF"))
-		menu.toggle.SetTooltip(i18n.T("TRAY_TURN_OFF"))
+	if st.Disconnected {
+		menu.toggle.SetTitle(i18n.T("TRAY_CONNECT"))
+		menu.toggle.SetTooltip(i18n.T("TRAY_CONNECT"))
 	} else {
-		menu.toggle.SetTitle(i18n.T("TRAY_TURN_ON"))
-		menu.toggle.SetTooltip(i18n.T("TRAY_TURN_ON"))
+		menu.toggle.SetTitle(i18n.T("TRAY_DISCONNECT"))
+		menu.toggle.SetTooltip(i18n.T("TRAY_DISCONNECT"))
 	}
 }

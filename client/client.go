@@ -98,7 +98,7 @@ type Client struct {
 	rewriteToHTTPS httpseverywhere.Rewrite
 	rewriteLRU     *lru.Cache
 
-	statsTracker stats.StatsTracker
+	statsTracker stats.Tracker
 
 	iptool            iptool.Tool
 	allowPrivateHosts func() bool
@@ -114,7 +114,7 @@ func NewClient(
 	allowShortcut func(addr string) (bool, net.IP),
 	useDetour func() bool,
 	proTokenGetter func() string,
-	statsTracker stats.StatsTracker,
+	statsTracker stats.Tracker,
 	allowPrivateHosts func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
