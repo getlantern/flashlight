@@ -155,6 +155,7 @@ func TestProxying(t *testing.T) {
 	testRequest(t, httpAddr, httpsAddr)
 
 	log.Fatal("test fatal error")
+	log.Debug("Exiting")
 	a.Exit(nil)
 
 	select {
