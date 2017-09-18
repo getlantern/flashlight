@@ -235,8 +235,6 @@ func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {
 				s.setStringArray(name, v)
 			}
 		}
-
-		out <- s.uiMap()
 	}
 }
 
