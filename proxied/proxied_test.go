@@ -160,13 +160,13 @@ func TestSwitchingToChained(t *testing.T) {
 
 	chained.setStatusCode(200)
 	req.Header.Set("Lantern-Fronted-URL", "http://fronted")
-	cf.getFetcher().(*dualFetcher).do(req, &delayedRT{chained, 1 * time.Second}, fronted)
+	cf.getFetcher().(*dualFetcher).do(req, &delayedRT{chained, 100 * time.Millisecond}, fronted)
 	time.Sleep(100 * time.Millisecond)
 	_, valid = cf.getFetcher().(*dualFetcher)
 	assert.True(t, valid, "should not switch to chained fetcher if it's significantly slower")
 
 	req.Header.Set("Lantern-Fronted-URL", "http://fronted")
-	cf.getFetcher().(*dualFetcher).do(req, chained, fronted)
+	cf.getFetcher().(*dualFetcher).do(req, chained, &delayedRT{fronted, 100 * time.Millisecond})
 	time.Sleep(100 * time.Millisecond)
 	_, valid = cf.getFetcher().(*chainedFetcher)
 	assert.True(t, valid, "should switch to chained fetcher")
