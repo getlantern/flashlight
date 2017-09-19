@@ -203,10 +203,6 @@ func (s *Settings) StartService() error {
 	return nil
 }
 
-func (s *Settings) StopService() {
-	ws.Unregister("settings")
-}
-
 func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {
 	s.log.Debugf("Start reading settings messages!!")
 	for message := range in {

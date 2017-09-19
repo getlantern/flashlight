@@ -8,7 +8,6 @@ import (
 type statsTracker struct {
 	stats.Tracker
 	service *ws.Service
-	close   func()
 }
 
 func NewStatsTracker() *statsTracker {
@@ -35,11 +34,4 @@ func (s *statsTracker) StartService() (err error) {
 		})
 	}
 	return
-}
-
-func (s *statsTracker) StopService() {
-	log.Debug("Stopping service")
-	ws.Unregister("stats")
-	s.close()
-	log.Debug("Finished stopping service")
 }
