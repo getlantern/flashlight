@@ -18,7 +18,6 @@ type Session interface {
 	ShowSurvey(string)
 	ProxyAll() bool
 	BandwidthUpdate(int, int)
-	DeviceId() string
 	AccountId() string
 	AddDevice(string, string)
 	AddPlan(string, string, string, bool, int, int)
@@ -66,7 +65,7 @@ func newRequest(session Session) *proRequest {
 		client: client.NewClient(pro.GetHTTPClient()),
 		user: client.User{
 			Auth: client.Auth{
-				DeviceID: session.DeviceId(),
+				DeviceID: session.GetDeviceID(),
 				ID:       session.GetUserID(),
 				Token:    session.GetToken(),
 			},
@@ -234,7 +233,7 @@ func userData(req *proRequest) (*client.Response, error) {
 
 	deviceLinked := true
 	deviceName := req.session.DeviceName()
-	deviceId := req.session.DeviceId()
+	deviceId := req.session.GetDeviceID()
 
 	isActive := res.User.UserStatus == "active"
 	expired := res.User.UserStatus == "expired"
