@@ -88,14 +88,6 @@ func Run(httpProxyAddr string,
 		op.End()
 	}
 
-	if statsTracker != nil {
-		go func() {
-			for hasSucceeding := range cl.HasSucceedingProxy() {
-				statsTracker.SetHasSucceedingProxy(hasSucceeding)
-			}
-		}()
-	}
-
 	proxied.SetProxyAddr(cl.Addr)
 
 	proxiesDispatch := func(conf interface{}) {

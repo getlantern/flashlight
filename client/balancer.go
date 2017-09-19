@@ -7,13 +7,6 @@ import (
 	"github.com/getlantern/flashlight/chained"
 )
 
-// HasSucceedingProxy returns a channel on which one can receive updates for the
-// connected status of the balancer (i.e. does it have at least one succeeding)
-// dialer.
-func (client *Client) HasSucceedingProxy() <-chan bool {
-	return client.bal.HasSucceedingDialer
-}
-
 // initBalancer takes hosts from cfg.ChainedServers and it uses them to create a
 // balancer.
 func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo, deviceID string) error {
@@ -43,6 +36,12 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 
 	chained.TrackStatsFor(dialers)
 	client.bal.Reset(dialers...)
+
+	go func() {
+		for hasSucceeding := range client.bal.HasSucceedingDialer {
+			client.statsTracker.SetHasSucceedingProxy(hasSucceeding)
+		}
+	}()
 
 	return nil
 }
