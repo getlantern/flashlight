@@ -21,9 +21,18 @@ var (
 	oneEighty = &sync.Once{}
 	oneFull   = &sync.Once{}
 	ns        = notifyStatus{}
+
+	dataCapListeners   = make([]func(hitDataCap bool), 0)
+	dataCapListenersMx sync.RWMutex
 )
 
 type notifyStatus struct {
+}
+
+func addDataCapListener(l func(hitDataCap bool)) {
+	dataCapListenersMx.Lock()
+	dataCapListeners = append(dataCapListeners, l)
+	dataCapListenersMx.Unlock()
 }
 
 func serveBandwidth() error {
@@ -40,7 +49,14 @@ func serveBandwidth() error {
 		for quota := range bandwidth.Updates {
 			log.Debugf("Sending update...")
 			bservice.Out <- quota
-			if ns.isFull(quota) {
+			isFull := ns.isFull(quota)
+			dataCapListenersMx.RLock()
+			listeners := dataCapListeners
+			dataCapListenersMx.RUnlock()
+			for _, l := range listeners {
+				l(isFull)
+			}
+			if isFull {
 				oneFull.Do(func() {
 					go ns.notifyCapHit()
 				})

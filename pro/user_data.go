@@ -14,10 +14,22 @@ var logger = golog.LoggerFor("flashlight.app.pro")
 
 type userMap struct {
 	sync.RWMutex
-	data map[int64]eventual.Value
+	data        map[int64]eventual.Value
+	onProStatus []func(isPro bool)
 }
 
-var userData = userMap{data: make(map[int64]eventual.Value)}
+var userData = userMap{
+	data:        make(map[int64]eventual.Value),
+	onProStatus: make([]func(isPro bool), 0),
+}
+
+// OnProStatusChange allows registering an event handler to learn when the
+// user's pro status has changed.
+func OnProStatusChange(cb func(isPro bool)) {
+	userData.Lock()
+	userData.onProStatus = append(userData.onProStatus, cb)
+	userData.Unlock()
+}
 
 func (m *userMap) save(userID int64, u *client.User) {
 	m.Lock()
@@ -27,7 +39,12 @@ func (m *userMap) save(userID int64, u *client.User) {
 	}
 	v.Set(u)
 	m.data[userID] = v
+	onProStatus := m.onProStatus
 	m.Unlock()
+	isPro := isActive(u.UserStatus)
+	for _, cb := range onProStatus {
+		cb(isPro)
+	}
 }
 
 func (m *userMap) get(userID int64) (*client.User, bool) {

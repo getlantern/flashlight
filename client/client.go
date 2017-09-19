@@ -69,6 +69,8 @@ var (
 
 	// See http://stackoverflow.com/questions/106179/regular-expression-to-match-dns-hostname-or-ip-address
 	validHostnameRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
+
+	errLanternOff = fmt.Errorf("Lantern is off")
 )
 
 // Client is an HTTP proxy that accepts connections from local programs and
@@ -87,6 +89,7 @@ type Client struct {
 
 	l net.Listener
 
+	disconnected   func() bool
 	allowShortcut  func(addr string) (bool, net.IP)
 	useDetour      func() bool
 	proTokenGetter func() string
@@ -95,7 +98,7 @@ type Client struct {
 	rewriteToHTTPS httpseverywhere.Rewrite
 	rewriteLRU     *lru.Cache
 
-	statsTracker stats.StatsTracker
+	statsTracker stats.Tracker
 
 	iptool            iptool.Tool
 	allowPrivateHosts func() bool
@@ -107,10 +110,11 @@ type Client struct {
 // SOCKS proxies. It take a function for determing whether or not to proxy
 // all traffic, and another function to get Lantern Pro token when required.
 func NewClient(
+	disconnected func() bool,
 	allowShortcut func(addr string) (bool, net.IP),
 	useDetour func() bool,
 	proTokenGetter func() string,
-	statsTracker stats.StatsTracker,
+	statsTracker stats.Tracker,
 	allowPrivateHosts func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
@@ -122,6 +126,7 @@ func NewClient(
 	}
 	client := &Client{
 		bal:               balancer.New(),
+		disconnected:      disconnected,
 		allowShortcut:     allowShortcut,
 		useDetour:         useDetour,
 		proTokenGetter:    proTokenGetter,
@@ -436,6 +441,9 @@ func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Con
 }
 
 func (client *Client) shouldSendToProxy(addr string, port int) error {
+	if client.disconnected() {
+		return errLanternOff
+	}
 	err := client.isPortProxyable(port)
 	if err == nil {
 		err = client.isAddressProxyable(addr)

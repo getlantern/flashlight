@@ -37,5 +37,11 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 	chained.TrackStatsFor(dialers)
 	client.bal.Reset(dialers...)
 
+	go func() {
+		for hasSucceeding := range client.bal.HasSucceedingDialer {
+			client.statsTracker.SetHasSucceedingProxy(hasSucceeding)
+		}
+	}()
+
 	return nil
 }

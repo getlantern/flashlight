@@ -94,7 +94,7 @@ func (c *clientChannels) ServeHTTP(resp http.ResponseWriter, req *http.Request) 
 		id:  c.nextId,
 		c:   c,
 		ws:  ws,
-		out: make(chan []byte, 100),
+		out: make(chan []byte, 1000),
 	}
 	c.conns[conn.id] = conn
 	c.muConns.Unlock()

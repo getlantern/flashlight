@@ -41,7 +41,7 @@ func attachHandlers(s *server) {
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
 	startupHandler := func(resp http.ResponseWriter, req *http.Request) {
-		s.show("existing", "lantern")
+		s.showRoot("existing", "lantern")
 		resp.WriteHeader(http.StatusOK)
 	}
 	s.Handle("/startup", http.HandlerFunc(startupHandler))
@@ -85,13 +85,18 @@ func GetUIAddr() string {
 	return serve.getUIAddr()
 }
 
+// ShowRoot is like Show using the default (root) URL for the UI.
+func ShowRoot(campaign, medium string) {
+	serve.showRoot(campaign, medium)
+}
+
 // Show opens the UI in a browser. Note we know the UI server is
 // *listening* at this point as long as Start is correctly called prior
 // to this method. It may not be reading yet, but since we're the only
 // ones reading from those incoming sockets the fact that reading starts
-// asynchronously is not a problem.
-func Show(campaign, medium string) {
-	serve.show(campaign, medium)
+// asynchronously is not a problem. destURL indicates which URL to open.
+func Show(destURL, campaign, medium string) {
+	serve.show(destURL, campaign, medium)
 }
 
 // AddToken adds the UI domain and custom request token to the specified

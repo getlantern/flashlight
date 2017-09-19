@@ -39,13 +39,14 @@ var (
 	// FullyReportedOps are ops which are reported at 100% to borda, irrespective
 	// of the borda sample percentage. This should all be low-volume operations,
 	// otherwise we will utilize too much bandwidth on the client.
-	FullyReportedOps = []string{"client_started", "client_stopped", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "sysproxy_off_force", "sysproxy_clear", "report_issue", "proxy_rank"}
+	FullyReportedOps = []string{"client_started", "client_stopped", "connect", "disconnect", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "sysproxy_off_force", "sysproxy_clear", "report_issue", "proxy_rank"}
 )
 
 // Run runs a client proxy. It blocks as long as the proxy is running.
 func Run(httpProxyAddr string,
 	socksProxyAddr string,
 	configDir string,
+	disconnected func() bool,
 	useShortcut func() bool,
 	useDetour func() bool,
 	allowPrivateHosts func() bool,
@@ -55,7 +56,7 @@ func Run(httpProxyAddr string,
 	afterStart func(),
 	onConfigUpdate func(cfg *config.Global),
 	userConfig common.AuthConfig,
-	statsTracker stats.StatsTracker,
+	statsTracker stats.Tracker,
 	onError func(err error),
 	deviceID string,
 	isPro func() bool,
@@ -68,6 +69,7 @@ func Run(httpProxyAddr string,
 	op := fops.Begin("client_started")
 
 	cl, err := client.NewClient(
+		disconnected,
 		func(addr string) (bool, net.IP) {
 			if useShortcut() {
 				return shortcut.Allow(addr)
@@ -85,6 +87,7 @@ func Run(httpProxyAddr string,
 		op.FailIf(fatalErr)
 		op.End()
 	}
+
 	proxied.SetProxyAddr(cl.Addr)
 
 	proxiesDispatch := func(conf interface{}) {

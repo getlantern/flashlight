@@ -11,11 +11,12 @@ type statsTracker struct {
 
 func NewStatsTracker(session Session) *statsTracker {
 	s := &statsTracker{
+		Tracker: stats.NewTracker(),
 		session: session,
 	}
-	s.Broadcast = func(st stats.Stats) {
+	s.Tracker.AddListener(func(st stats.Stats) {
 		s.session.UpdateStats(st.City, st.Country,
 			st.CountryCode, st.HTTPSUpgrades, st.AdsBlocked)
-	}
+	})
 	return s
 }

@@ -89,6 +89,8 @@ imports:
   version: d906ee7c3465210c328abbe6ea0f855db9db679c
 - name: github.com/getlantern/errors
   version: 99fa440517e8f3d1e4cd8d6dbed6b41f4c1ed3d6
+- name: github.com/getlantern/event
+  version: f16a5563f52e98643050fed10e7f279437a195ee
 - name: github.com/getlantern/eventual
   version: 8a3a062ff1605f65e4d710e016c39bb69e91b6f8
 - name: github.com/getlantern/fdcount
@@ -159,7 +161,7 @@ imports:
 - name: github.com/getlantern/httpseverywhere
   version: dbb3401e2cd058a29e4d8d045ba6f69e5b905df7
 - name: github.com/getlantern/i18n
-  version: 931e337788965f3dfafa20fa793242c2cacd5b09
+  version: 62fda4bd4d89f9a5ec61584f764896e48fe346c7
 - name: github.com/getlantern/idletiming
   version: 7a71d2e71cf253f64b9610ce7aa9ddfc58aa9b2a
 - name: github.com/getlantern/iptool
@@ -220,7 +222,7 @@ imports:
 - name: github.com/getlantern/sysproxy
   version: 35386ddd7c5ba67608969c38ea0b0d25150bce7d
 - name: github.com/getlantern/systray
-  version: 66e6fad5eea92d7adda31abfae7a5a52070dfae5
+  version: fc8e01480deb4dc92e7f13151536a9678520ff42
 - name: github.com/getlantern/tarfs
   version: d77b63c04dbe74646c5f8f46c5c1e5523ef22415
 - name: github.com/getlantern/tlsdefaults

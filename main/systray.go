@@ -4,20 +4,32 @@ package main
 
 import (
 	"fmt"
+	"runtime"
+	"sync"
 
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/systray"
 
 	"github.com/getlantern/flashlight/app"
 	"github.com/getlantern/flashlight/icons"
+	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ui"
 )
 
 var menu struct {
-	enable bool
-	show   *systray.MenuItem
-	quit   *systray.MenuItem
+	enable  bool
+	st      stats.Stats
+	stMx    sync.RWMutex
+	status  *systray.MenuItem
+	toggle  *systray.MenuItem
+	show    *systray.MenuItem
+	upgrade *systray.MenuItem
+	quit    *systray.MenuItem
 }
+
+var (
+	iconsByName = make(map[string][]byte)
+)
 
 func runOnSystrayReady(a *app.App, f func()) {
 	// Typically, systray.Quit will actually be what causes the app to exit, but
@@ -28,10 +40,11 @@ func runOnSystrayReady(a *app.App, f func()) {
 	})
 
 	systray.Run(f, func() {
-		a.Exit(nil)
-		err := a.WaitForExit()
-		if err != nil {
-			log.Errorf("Error exiting app: %v", err)
+		if a.Exit(nil) {
+			err := a.WaitForExit()
+			if err != nil {
+				log.Errorf("Error exiting app: %v", err)
+			}
 		}
 	})
 }
@@ -41,22 +54,54 @@ func configureSystemTray(a *app.App) error {
 	if !menu.enable {
 		return nil
 	}
-	icon, err := icons.Asset("icons/16on.ico")
-	if err != nil {
-		return fmt.Errorf("Unable to load icon for system tray: %v", err)
+
+	iconTemplate := "%s_16.ico"
+	if runtime.GOOS == "darwin" {
+		iconTemplate = "%s_32.ico"
 	}
-	systray.SetIcon(icon)
+
+	for _, name := range []string{"connected", "connectedalert", "disconnected", "disconnectedalert"} {
+		icon, err := icons.Asset(fmt.Sprintf(iconTemplate, name))
+		if err != nil {
+			return fmt.Errorf("Unable to load %v icon for system tray: %v", name, err)
+		}
+		iconsByName[name] = icon
+	}
+
 	systray.SetTooltip("Lantern")
-	menu.show = systray.AddMenuItem(i18n.T("TRAY_SHOW_LANTERN"), i18n.T("SHOW"))
-	menu.quit = systray.AddMenuItem(i18n.T("TRAY_QUIT"), i18n.T("QUIT"))
+	menu.status = systray.AddMenuItem("", "")
+	menu.status.Disable()
+	menu.toggle = systray.AddMenuItem("", "")
+	systray.AddSeparator()
+	menu.upgrade = systray.AddMenuItem(i18n.T("TRAY_UPGRADE_TO_PRO"), i18n.T("TRAY_UPGRADE_TO_PRO"))
+	menu.show = systray.AddMenuItem(i18n.T("TRAY_SHOW_LANTERN"), i18n.T("TRAY_SHOW_LANTERN"))
+	systray.AddSeparator()
+	menu.quit = systray.AddMenuItem(i18n.T("TRAY_QUIT"), i18n.T("TRAY_QUIT"))
+	a.OnStatsChange(func(newStats stats.Stats) {
+		menu.stMx.Lock()
+		menu.st = newStats
+		menu.stMx.Unlock()
+		statsUpdated()
+	})
+
 	go func() {
 		for {
 			select {
+			case <-menu.toggle.ClickedCh:
+				menu.stMx.Lock()
+				disconnected := menu.st.Disconnected
+				menu.stMx.Unlock()
+				if disconnected {
+					a.Connect()
+				} else {
+					a.Disconnect()
+				}
 			case <-menu.show.ClickedCh:
-				ui.Show("show-lantern", "tray")
+				ui.ShowRoot("show-lantern", "tray")
+			case <-menu.upgrade.ClickedCh:
+				ui.Show(ui.AddToken("/")+"#/plans", "proupgrade", "tray")
 			case <-menu.quit.ClickedCh:
 				systray.Quit()
-				return
 			}
 		}
 	}()
@@ -74,6 +119,42 @@ func refreshSystray(language string) {
 	}
 	menu.show.SetTitle(i18n.T("TRAY_SHOW_LANTERN"))
 	menu.show.SetTooltip(i18n.T("SHOW"))
-	menu.quit.SetTitle(i18n.T("TRAY_QUIT"))
-	menu.quit.SetTooltip(i18n.T("QUIT"))
+	statsUpdated()
+}
+
+func statsUpdated() {
+	menu.stMx.RLock()
+	st := menu.st
+	menu.stMx.RUnlock()
+
+	iconName := "connected"
+	statusKey := st.Status
+	if st.Disconnected || !st.HasSucceedingProxy {
+		iconName = "disconnected"
+	}
+	if st.HitDataCap && !st.IsPro {
+		iconName += "alert"
+		if !st.Disconnected {
+			statusKey = "throttled"
+		}
+	}
+
+	systray.SetIcon(iconsByName[iconName])
+	status := i18n.T("TRAY_STATUS", i18n.T("status."+statusKey))
+	menu.status.SetTitle(status)
+	menu.status.SetTooltip(status)
+
+	if st.IsPro {
+		menu.upgrade.Hide()
+	} else {
+		menu.upgrade.Show()
+	}
+
+	if st.Disconnected {
+		menu.toggle.SetTitle(i18n.T("TRAY_CONNECT"))
+		menu.toggle.SetTooltip(i18n.T("TRAY_CONNECT"))
+	} else {
+		menu.toggle.SetTitle(i18n.T("TRAY_DISCONNECT"))
+		menu.toggle.SetTooltip(i18n.T("TRAY_DISCONNECT"))
+	}
 }

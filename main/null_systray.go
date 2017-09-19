@@ -2,10 +2,19 @@
 
 package main
 
-import "github.com/getlantern/flashlight/app"
+import (
+	"os"
+
+	"github.com/getlantern/flashlight/app"
+)
 
 func runOnSystrayReady(a *app.App, f func()) {
 	f()
+	err := a.WaitForExit()
+	if err != nil {
+		log.Error(err)
+	}
+	os.Exit(0)
 }
 
 func quitSystray() {

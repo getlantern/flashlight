@@ -7,9 +7,10 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"sync"
+	"sync/atomic"
 	"time"
 
+	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
@@ -26,6 +27,7 @@ import (
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/flashlight/proxiedsites"
+	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
 )
@@ -46,12 +48,13 @@ func init() {
 
 // App is the core of the Lantern desktop application, in the form of a library.
 type App struct {
+	hasExited int64
+
 	ShowUI       bool
 	Flags        map[string]interface{}
-	exitCh       chan error
+	exited       eventual.Value
 	statsTracker *statsTracker
 
-	exitOnce        sync.Once
 	chExitFuncs     chan func()
 	chLastExitFuncs chan func()
 }
@@ -61,12 +64,22 @@ func (app *App) Init() {
 	golog.OnFatal(app.exitOnFatal)
 	app.Flags["staging"] = common.Staging
 	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
-	app.exitCh = make(chan error, 1)
+	app.exited = eventual.NewValue()
 	// use buffered channel to avoid blocking the caller of 'AddExitFunc'
 	// the number 100 is arbitrary
 	app.chExitFuncs = make(chan func(), 100)
 	app.chLastExitFuncs = make(chan func(), 100)
 	app.statsTracker = NewStatsTracker()
+	pro.OnProStatusChange(func(isPro bool) {
+		app.statsTracker.SetIsPro(isPro)
+	})
+	settings.OnChange(SNDisconnected, func(disconnected interface{}) {
+		isDisconnected := disconnected.(bool)
+		app.statsTracker.SetDisconnected(isDisconnected)
+	})
+	addDataCapListener(func(hitDataCap bool) {
+		app.statsTracker.SetHitDataCap(hitDataCap)
+	})
 }
 
 // LogPanicAndExit logs a panic and then exits the application. This function
@@ -116,9 +129,10 @@ func (app *App) Run() {
 			listenAddr,
 			socksAddr,
 			app.Flags["configdir"].(string),
-			func() bool { return !settings.GetProxyAll() }, // use shortcut
-			func() bool { return !settings.GetProxyAll() }, // use detour
-			func() bool { return false },                   // on desktop, we do not allow private hosts
+			func() bool { return settings.getBool(SNDisconnected) }, // check whether we're disconnected
+			func() bool { return !settings.GetProxyAll() },          // use shortcut
+			func() bool { return !settings.GetProxyAll() },          // use detour
+			func() bool { return false },                            // on desktop, we do not allow private hosts
 			settings.IsAutoReport,
 			app.Flags,
 			app.beforeStart(listenAddr),
@@ -126,12 +140,11 @@ func (app *App) Run() {
 			app.onConfigUpdate,
 			settings,
 			app.statsTracker,
-			app.Exit,
-			settings.GetDeviceID(),
-			func() bool {
-				isPro, _ := isProUserFast()
-				return isPro
+			func(err error) {
+				app.Exit(err)
 			},
+			settings.GetDeviceID(),
+			app.IsPro,
 			settings.GetLanguage,
 			func() string {
 				isPro, statusKnown := isProUserFast()
@@ -239,7 +252,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			log.Errorf("Unable to serve stats to UI: %v", err)
 		}
 
-		setupUserSignal()
+		setupUserSignal(app.Connect, app.Disconnect)
 
 		err = serveBandwidth()
 		if err != nil {
@@ -279,6 +292,18 @@ func localHTTPToken(set *Settings) string {
 	return tok
 }
 
+// Connect turns on proxying
+func (app *App) Connect() {
+	ops.Begin("connect").End()
+	settings.setBool(SNDisconnected, false)
+}
+
+// Disconnect turns off proxying
+func (app *App) Disconnect() {
+	ops.Begin("disconnect").End()
+	settings.setBool(SNDisconnected, true)
+}
+
 // GetSetting gets the in memory setting with the name specified by attr
 func (app *App) GetSetting(name SettingName) interface{} {
 	if val, ok := settingMeta[name]; ok {
@@ -304,10 +329,16 @@ func (app *App) OnSettingChange(attr SettingName, cb func(interface{})) {
 	settings.OnChange(attr, cb)
 }
 
+// OnStatsChange adds a listener for Stats changes.
+func (app *App) OnStatsChange(fn func(stats.Stats)) {
+	app.statsTracker.AddListener(fn)
+}
+
 func (app *App) afterStart() {
 	if settings.GetSystemProxy() {
 		sysproxyOn()
 	}
+
 	app.OnSettingChange(SNSystemProxy, func(val interface{}) {
 		enable := val.(bool)
 		if enable {
@@ -329,7 +360,7 @@ func (app *App) afterStart() {
 		// URL and the proxy server are all up and running to avoid
 		// race conditions where we change the proxy setup while the
 		// UI server and proxy server are still coming up.
-		ui.Show("startup", "lantern")
+		ui.ShowRoot("startup", "lantern")
 	} else {
 		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
 	}
@@ -394,11 +425,14 @@ func (app *App) AddExitFuncToEnd(exitFunc func()) {
 }
 
 // Exit tells the application to exit, optionally supplying an error that caused
-// the exit.
-func (app *App) Exit(err error) {
-	app.exitOnce.Do(func() {
+// the exit. Returns true if the app is actually exiting, false if exit has
+// already been requested.
+func (app *App) Exit(err error) bool {
+	if atomic.CompareAndSwapInt64(&app.hasExited, 0, 1) {
 		app.doExit(err)
-	})
+		return true
+	}
+	return false
 }
 
 func (app *App) doExit(err error) {
@@ -408,7 +442,7 @@ func (app *App) doExit(err error) {
 		log.Error("Exiting app")
 	}
 	defer func() {
-		app.exitCh <- err
+		app.exited.Set(err)
 		log.Debug("Finished exiting app")
 	}()
 
@@ -450,7 +484,17 @@ func (app *App) collectLastExitFuncs() []func() {
 
 // WaitForExit waits for a request to exit the application.
 func (app *App) WaitForExit() error {
-	return <-app.exitCh
+	err, _ := app.exited.Get(-1)
+	if err == nil {
+		return nil
+	}
+	return err.(error)
+}
+
+// Indicates whether or not the app is pro
+func (app *App) IsPro() bool {
+	isPro, _ := isProUserFast()
+	return isPro
 }
 
 func recordStopped() {
