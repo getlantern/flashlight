@@ -14,6 +14,7 @@ import:
 - package: github.com/getlantern/borda
   subpackages:
   - client
+- package: github.com/getlantern/dnsgrab
 - package: github.com/getlantern/detour
 - package: github.com/getlantern/easylist
 - package: github.com/getlantern/edgedetect

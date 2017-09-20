@@ -104,6 +104,8 @@ type Client struct {
 	allowPrivateHosts func() bool
 	lang              func() string
 	adSwapTargetURL   func() string
+
+	reverseDNS func(addr string) string
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -118,6 +120,7 @@ func NewClient(
 	allowPrivateHosts func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
+	reverseDNS func(addr string) string,
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
 	rewriteLRU, err := lru.New(100)
@@ -136,6 +139,7 @@ func NewClient(
 		allowPrivateHosts: allowPrivateHosts,
 		lang:              lang,
 		adSwapTargetURL:   adSwapTargetURL,
+		reverseDNS:        reverseDNS,
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -291,6 +295,8 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 			op := ops.Begin("proxied_dialer")
 			op.Set("local_proxy_type", "socks5")
 			defer op.End()
+			// Reverse DNS host (does nothing on desktop)
+			addr = client.reverseDNS(addr)
 			return client.doDial(op, ctx, true, addr)
 		},
 	}

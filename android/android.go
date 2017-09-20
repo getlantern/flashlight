@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/autoupdate"
 	"github.com/getlantern/bandwidth"
+	"github.com/getlantern/dnsgrab"
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
@@ -159,6 +161,12 @@ func run(configDir, locale string,
 
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
+	grabber, err := dnsgrab.Listen(":8153", "8.8.8.8")
+	if err != nil {
+		log.Errorf("Unable to start dnsgrab: %v", err)
+		return
+	}
+
 	flashlight.Run("127.0.0.1:0", // listen for HTTP on random address
 		"127.0.0.1:0",                // listen for SOCKS on random address
 		configDir,                    // place to store lantern configuration
@@ -187,6 +195,24 @@ func run(configDir, locale string,
 		session.IsProUser,
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
+		func(addr string) string {
+			host, port, splitErr := net.SplitHostPort(addr)
+			if splitErr != nil {
+				host = addr
+			}
+			ip := net.ParseIP(host)
+			if ip == nil {
+				return host
+			}
+			updatedHost := grabber.ReverseLookup(ip)
+			if updatedHost == "" {
+				return addr
+			}
+			if splitErr != nil {
+				return updatedHost
+			}
+			return fmt.Sprintf("%vs:%v", updatedHost, port)
+		},
 	)
 }
 

@@ -75,6 +75,8 @@ imports:
   version: 624d99b1798d7c5375ea1d3ca4c5b04d58f7c775
 - name: github.com/getlantern/deepcopy
   version: 7f45deb8130a0acc553242eb0e009e3f6f3d9ce3
+- name: github.com/getlantern/dnsgrab
+  version: 629173d928f2b769f3490461c6dd454bbc0ba92f
 - name: github.com/getlantern/detour
   version: 867414515e484eb6a21730cf3abc02a108ed4ed9
 - name: github.com/getlantern/easylist
