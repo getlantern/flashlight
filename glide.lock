@@ -75,8 +75,10 @@ imports:
   version: 624d99b1798d7c5375ea1d3ca4c5b04d58f7c775
 - name: github.com/getlantern/deepcopy
   version: 7f45deb8130a0acc553242eb0e009e3f6f3d9ce3
+- name: github.com/getlantern/dns
+  version: 630ccc2c3041d6f4362479526ed229d222f21274
 - name: github.com/getlantern/dnsgrab
-  version: 629173d928f2b769f3490461c6dd454bbc0ba92f
+  version: 1cb644835589782e9468a9f2af3c84dfed231ea4
 - name: github.com/getlantern/detour
   version: 867414515e484eb6a21730cf3abc02a108ed4ed9
 - name: github.com/getlantern/easylist
@@ -318,8 +320,6 @@ imports:
   version: f3a7b8ffff474320c4f5cc564c9abb2c52ded8bc
 - name: github.com/mailgun/ttlmap
   version: c1c17f74874f2a5ea48bfb06b5459d4ef2689749
-- name: github.com/miekg/dns
-  version: e4205768578dc90c2669e75a2f8a8bf77e3083a4
 - name: github.com/mitchellh/panicwrap
   version: fce601fe55579125e1b3cb0b992287e7290f7b83
 - name: github.com/mxk/go-flowrate
