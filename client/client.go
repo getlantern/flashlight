@@ -291,13 +291,16 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 	socksAddr.Set(listenAddr)
 
 	conf := &socks5.Config{
-		Dial: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			op := ops.Begin("proxied_dialer")
-			op.Set("local_proxy_type", "socks5")
+		HandleConnect: func(ctx context.Context, conn net.Conn, req *socks5.Request, replySuccess func(boundAddr net.Addr) error, replyError func(err error) error) error {
+			op := ops.Begin("proxy")
 			defer op.End()
-			// Reverse DNS host (does nothing on desktop)
-			addr = client.reverseDNS(addr)
-			return client.doDial(op, ctx, true, addr)
+			ctx = context.WithValue(ctx, ctxKeyOp, op)
+			addr := client.reverseDNS(fmt.Sprintf("%v:%v", req.DestAddr.IP, req.DestAddr.Port))
+			errOnReply := replySuccess(nil)
+			if errOnReply != nil {
+				return op.FailIf(log.Errorf("Unable to reply success to SOCKS5 client: %v", errOnReply))
+			}
+			return op.FailIf(client.proxy.Connect(ctx, req.BufConn, conn, addr))
 		},
 	}
 	server, err := socks5.New(conf)

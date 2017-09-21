@@ -15,6 +15,7 @@ import:
   subpackages:
   - client
 - package: github.com/getlantern/dns
+- package: github.com/getlantern/dnsgrab
 - package: github.com/getlantern/detour
 - package: github.com/getlantern/easylist
 - package: github.com/getlantern/edgedetect
