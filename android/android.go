@@ -166,6 +166,12 @@ func run(configDir, locale string,
 		log.Errorf("Unable to start dnsgrab: %v", err)
 		return
 	}
+	go func() {
+		serveErr := grabber.Serve()
+		if serveErr != nil {
+			log.Errorf("Error serving dns: %v", serveErr)
+		}
+	}()
 
 	flashlight.Run("127.0.0.1:0", // listen for HTTP on random address
 		"127.0.0.1:0",                // listen for SOCKS on random address
@@ -211,7 +217,7 @@ func run(configDir, locale string,
 			if splitErr != nil {
 				return updatedHost
 			}
-			return fmt.Sprintf("%vs:%v", updatedHost, port)
+			return fmt.Sprintf("%v:%v", updatedHost, port)
 		},
 	)
 }

@@ -77,8 +77,10 @@ imports:
   version: 7f45deb8130a0acc553242eb0e009e3f6f3d9ce3
 - name: github.com/getlantern/dns
   version: 630ccc2c3041d6f4362479526ed229d222f21274
+- name: github.com/miekg/dns
+  version: e4205768578dc90c2669e75a2f8a8bf77e3083a4
 - name: github.com/getlantern/dnsgrab
-  version: 1cb644835589782e9468a9f2af3c84dfed231ea4
+  version: 86375d9ee14296e22e9fcf9c5febe4f2c9dc7483
 - name: github.com/getlantern/detour
   version: 867414515e484eb6a21730cf3abc02a108ed4ed9
 - name: github.com/getlantern/easylist
