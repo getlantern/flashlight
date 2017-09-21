@@ -68,15 +68,15 @@ func configureSystemTray(a *app.App) error {
 		iconsByName[name] = icon
 	}
 
-	systray.SetTooltip("Lantern")
 	menu.status = systray.AddMenuItem("", "")
 	menu.status.Disable()
 	menu.toggle = systray.AddMenuItem("", "")
 	systray.AddSeparator()
-	menu.upgrade = systray.AddMenuItem(i18n.T("TRAY_UPGRADE_TO_PRO"), i18n.T("TRAY_UPGRADE_TO_PRO"))
-	menu.show = systray.AddMenuItem(i18n.T("TRAY_SHOW_LANTERN"), i18n.T("TRAY_SHOW_LANTERN"))
+	menu.upgrade = systray.AddMenuItem("", "")
+	menu.show = systray.AddMenuItem("", "")
 	systray.AddSeparator()
-	menu.quit = systray.AddMenuItem(i18n.T("TRAY_QUIT"), i18n.T("TRAY_QUIT"))
+	menu.quit = systray.AddMenuItem("", "")
+	refreshMenuItems()
 	a.OnStatsChange(func(newStats stats.Stats) {
 		menu.stMx.Lock()
 		menu.st = newStats
@@ -117,9 +117,15 @@ func refreshSystray(language string) {
 		log.Errorf("i18n.SetLocale(%s) failed: %q", language, err)
 		return
 	}
-	menu.show.SetTitle(i18n.T("TRAY_SHOW_LANTERN"))
-	menu.show.SetTooltip(i18n.T("SHOW"))
+	refreshMenuItems()
 	statsUpdated()
+}
+
+func refreshMenuItems() {
+	systray.SetTooltip(i18n.T("TRAY_LANTERN"))
+	menu.upgrade.SetTitle(i18n.T("TRAY_UPGRADE_TO_PRO"))
+	menu.show.SetTitle(i18n.T("TRAY_SHOW_LANTERN"))
+	menu.quit.SetTitle(i18n.T("TRAY_QUIT"))
 }
 
 func statsUpdated() {
@@ -142,7 +148,6 @@ func statsUpdated() {
 	systray.SetIcon(iconsByName[iconName])
 	status := i18n.T("TRAY_STATUS", i18n.T("status."+statusKey))
 	menu.status.SetTitle(status)
-	menu.status.SetTooltip(status)
 
 	if st.IsPro {
 		menu.upgrade.Hide()
@@ -152,9 +157,7 @@ func statsUpdated() {
 
 	if st.Disconnected {
 		menu.toggle.SetTitle(i18n.T("TRAY_CONNECT"))
-		menu.toggle.SetTooltip(i18n.T("TRAY_CONNECT"))
 	} else {
 		menu.toggle.SetTitle(i18n.T("TRAY_DISCONNECT"))
-		menu.toggle.SetTooltip(i18n.T("TRAY_DISCONNECT"))
 	}
 }
