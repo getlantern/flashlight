@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -150,12 +149,12 @@ func NewClient(
 		OnError:      errorResponse,
 		Dial:         client.dial,
 	})
-	// TODO: turn it to a config option
-	if runtime.GOOS == "android" {
-		client.easylist = allowAllEasyList{}
-	} else {
-		client.initEasyList()
-	}
+	// TODO: allow this only for non playstore downloads
+	// if runtime.GOOS == "android" {
+	// 	client.easylist = allowAllEasyList{}
+	// } else {
+	client.initEasyList()
+	// }
 	client.reportProxyLocationLoop()
 	client.iptool, err = iptool.New()
 	if err != nil {

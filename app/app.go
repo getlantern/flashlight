@@ -153,7 +153,9 @@ func (app *App) Run() {
 					return ""
 				}
 				return ui.AddToken("/") + "#/plans"
-			})
+			},
+			func(addr string) string { return addr }, // no dnsgrab reverse lookups on desktop
+		)
 		if err != nil {
 			app.Exit(err)
 			return

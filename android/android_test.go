@@ -1,6 +1,7 @@
 package android
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -67,17 +68,34 @@ func TestProxying(t *testing.T) {
 func testProxiedRequest(proxyAddr string, socks bool) error {
 	var req *http.Request
 
+	host := "www.google.com"
+	if socks {
+		resolver := &net.Resolver{
+			PreferGo: true,
+			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+				// use dnsgrabber to resolve
+				return net.DialTimeout("udp", "127.0.0.1:8153", 2*time.Second)
+			},
+		}
+		resolved, err := resolver.LookupHost(context.Background(), host)
+		log.Debugf("resolved: %v: %v", resolved, err)
+		if len(resolved) > 0 {
+			host = resolved[0]
+		}
+	}
+	hostWithPort := fmt.Sprintf("%v:80", host)
+
 	req = &http.Request{
 		Method: "GET",
 		URL: &url.URL{
 			Scheme: "http",
-			Host:   "www.google.com",
+			Host:   host,
 			Path:   "http://www.google.com/humans.txt",
 		},
 		ProtoMajor: 1,
 		ProtoMinor: 1,
 		Header: http.Header{
-			"Host": {"www.google.com:80"},
+			"Host": {hostWithPort},
 		},
 	}
 
