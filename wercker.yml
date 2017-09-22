@@ -26,7 +26,7 @@ build:
       fingerprint: D7:9F:07:61:10:B3:92:93:E3:49:AC:89:84:5B:03:80:C1:9E:2F:8B
       type: rsa
     - script:
-      name: force git paths
+      name: authenticate git
       code: git config --global url."https://71cee071ea22b7ffb10f68fa330d1130133bbfbd:x-oauth-basic@github.com/".insteadOf "https://github.com/"
     - script:
       name: get glide
