@@ -20,13 +20,6 @@ build:
     - add-ssh-key:
       keyname: flashlight_key
       host: github.com
-    # For https://github.com/wercker/step-add-to-known_hosts/issues/13
-    - add-to-known_hosts@2.0.1:
-      hostname: github.com
-      fingerprint: 16:27:ac:a5:76:28:2d:36:63:1b:56:4d:eb:df:a6:48
-    - script:
-      name: force git paths
-      code: git config --global url."git@github.com:".insteadOf "https://github.com/"
     - script:
       name: get glide
       code: |
