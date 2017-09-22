@@ -24,9 +24,7 @@ build:
     - add-to-known_hosts@2.0.1:
       hostname: github.com
       fingerprint: D7:9F:07:61:10:B3:92:93:E3:49:AC:89:84:5B:03:80:C1:9E:2F:8B
-    - script:
-      name: force git paths
-      code: git config --global url."git@github.com:".insteadOf "https://github.com/"
+      type: rsa
     - script:
       name: get glide
       code: |
