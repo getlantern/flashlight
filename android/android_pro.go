@@ -17,7 +17,7 @@ type Session interface {
 	SetStaging(bool)
 	ShowSurvey(string)
 	ProxyAll() bool
-	BandwidthUpdate(int, int)
+	BandwidthUpdate(int, int, int)
 	AccountId() string
 	AddDevice(string, string)
 	AddPlan(string, string, string, bool, int, int)
