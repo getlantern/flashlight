@@ -238,7 +238,7 @@ imports:
 - name: github.com/getlantern/tlsdialer
   version: b4d0a731957c4658f2e281e1ae8653781719a55b
 - name: github.com/getlantern/urlcache
-  version: cf9a7866aa8239f7cc71a098bed5e3bc08fbd5bb
+  version: 9ed937e3b27e842a7789e43058021a2526e0f870
 - name: github.com/getlantern/uuid
   version: 1318e7614b82cd38041b0b0bd3692d71f3901fb8
 - name: github.com/getlantern/vtime
