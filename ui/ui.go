@@ -8,6 +8,7 @@ import (
 
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/proxy/filters"
 	"github.com/getlantern/tarfs"
 
 	"github.com/getlantern/flashlight/pro"
@@ -102,4 +103,14 @@ func Show(campaign, medium string) {
 // avoid web sites detecting Lantern.
 func AddToken(in string) string {
 	return serve.addToken(in)
+}
+
+// ServeFromLocalUI serves the request using the local UI server. It relays
+// the request like this because the local UI server uses the Go http package
+// for things like websockets whereas the standard Lantern proxy does not.
+// Relaying locally gives us the best of both worlds.
+func ServeFromLocalUI(ctx filters.Context, req *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
+	log.Debugf("Serving local UI for %v on %v", req.URL, req.Host)
+	req.Host = serve.listenAddr
+	return next(ctx, req)
 }

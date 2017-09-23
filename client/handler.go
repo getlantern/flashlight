@@ -53,7 +53,7 @@ func (client *Client) handle(conn net.Conn) error {
 	return err
 }
 
-func (client *Client) filter(ctx filters.Context, req *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
+func (client *Client) Filter(ctx filters.Context, req *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
 	// Add the scheme back for CONNECT requests. It is cleared
 	// intentionally by the standard library, see
 	// https://golang.org/src/net/http/request.go#L938. The easylist
@@ -81,10 +81,6 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 		// CONNECT requests are often used for HTTPS requests.
 		log.Tracef("Intercepting CONNECT %s", req.URL)
 	} else {
-		if req.URL.Host == "search.lantern.io" {
-			log.Debug("Found search.lantern.io")
-			return client.serveFromLocalUI(ctx, req, op)
-		}
 		log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
 		if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
 			// Don't redirect CORS requests as it means the HTML pages that
@@ -108,21 +104,6 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 	}
 
 	return next(ctx, req)
-}
-
-func (client *Client) serveFromLocalUI(ctx filters.Context, req *http.Request, op *ops.Op) (*http.Response, filters.Context, error) {
-	log.Debugf("Serving local UI for %v on %v", req.URL, req.Host)
-
-	rt := http.NewFileTransport(fs)
-	resp, err := rt.RoundTrip(req)
-	if err != nil {
-		resp = &http.Response{
-			StatusCode: http.StatusNotFound,
-			Close:      true,
-		}
-		return filters.ShortCircuit(ctx, req, resp)
-	}
-	return filters.ShortCircuit(ctx, req, resp)
 }
 
 func unpackUI() (*tarfs.FileSystem, error) {

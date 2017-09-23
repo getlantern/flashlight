@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"net/http"
 	"path/filepath"
 	"runtime"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/ops"
 	"github.com/getlantern/osversion"
+	"github.com/getlantern/proxy/filters"
 
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
@@ -59,7 +61,8 @@ func Run(httpProxyAddr string,
 	onError func(err error),
 	deviceID string,
 	lang func() string,
-	adSwapTargetURL func() string) error {
+	adSwapTargetURL func() string,
+	filterFunc func(ctx filters.Context, req *http.Request, next filters.Next) (*http.Response, filters.Context, error)) error {
 
 	elapsed := mtime.Stopwatch()
 	displayVersion()
@@ -78,7 +81,9 @@ func Run(httpProxyAddr string,
 		statsTracker,
 		allowPrivateHosts,
 		lang,
-		adSwapTargetURL)
+		adSwapTargetURL,
+		filterFunc,
+	)
 	if err != nil {
 		fatalErr := fmt.Errorf("Unable to initialize client: %v", err)
 		op.FailIf(fatalErr)

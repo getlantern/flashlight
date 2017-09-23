@@ -27,6 +27,7 @@ type server struct {
 	listener       net.Listener
 	mux            *http.ServeMux
 	onceOpenExtURL sync.Once
+	proxy          *httputil.ReverseProxy
 }
 
 // newServer creates a new UI server.
