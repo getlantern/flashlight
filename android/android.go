@@ -30,6 +30,10 @@ import (
 	"github.com/getlantern/protected"
 )
 
+const (
+	maxDNSGrabCache = 2500
+)
+
 var (
 	log = golog.LoggerFor("lantern")
 
@@ -161,7 +165,7 @@ func run(configDir, locale string,
 
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
-	grabber, err := dnsgrab.Listen(":8153", "8.8.8.8")
+	grabber, err := dnsgrab.Listen(maxDNSGrabCache, ":8153", "8.8.8.8")
 	if err != nil {
 		log.Errorf("Unable to start dnsgrab: %v", err)
 		return

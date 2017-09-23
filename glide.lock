@@ -80,7 +80,7 @@ imports:
 - name: github.com/miekg/dns
   version: e4205768578dc90c2669e75a2f8a8bf77e3083a4
 - name: github.com/getlantern/dnsgrab
-  version: e335607682c74609845f98c59d3470ac08e6a950
+  version: 852340bb9b6163352f76584935c16c0d85b3d5cf
 - name: github.com/getlantern/detour
   version: 867414515e484eb6a21730cf3abc02a108ed4ed9
 - name: github.com/getlantern/easylist
