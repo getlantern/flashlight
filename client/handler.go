@@ -53,7 +53,12 @@ func (client *Client) handle(conn net.Conn) error {
 	return err
 }
 
-func (client *Client) Filter(ctx filters.Context, req *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
+func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
+	req, err := client.requestFilter(r)
+	if err != nil {
+		req = r
+	}
+	log.Debugf("Original scheme:  %v", req.URL.Scheme)
 	// Add the scheme back for CONNECT requests. It is cleared
 	// intentionally by the standard library, see
 	// https://golang.org/src/net/http/request.go#L938. The easylist

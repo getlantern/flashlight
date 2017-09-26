@@ -14,7 +14,6 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/profiling"
-	"github.com/getlantern/proxy/filters"
 
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/autoupdate"
@@ -112,14 +111,13 @@ func (app *App) Run() {
 			socksAddr = defaultSOCKSProxyAddress
 		}
 
-		uiInterceptor := func(ctx filters.Context, req *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
-			if req.Host == "search.lantern.io" {
-				log.Debug("Found search.lantern.io")
-				return ui.ServeFromLocalUI(ctx, req, next)
+		uiFilter := func(req *http.Request) (*http.Request, error) {
+			if req.URL.Host == "search.lantern.io" || req.Host == "search.lantern.io" {
+				log.Debugf("Found search.lantern.io in %+v", req)
+				return ui.ServeFromLocalUI(req)
 			}
-			return client.Filter(ctx, req, next)
+			return req, nil
 		}
-		uiFilter := filters.FilterFunc(uiInterceptor)
 
 		err := flashlight.Run(
 			listenAddr,
@@ -146,7 +144,7 @@ func (app *App) Run() {
 				}
 				return ui.AddToken("/") + "#/plans"
 			},
-			filters.FilterFunc(uiInterceptor),
+			uiFilter,
 		)
 		if err != nil {
 			app.Exit(err)

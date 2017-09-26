@@ -20,7 +20,6 @@ import (
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/ops"
 	"github.com/getlantern/osversion"
-	"github.com/getlantern/proxy/filters"
 
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
@@ -62,7 +61,7 @@ func Run(httpProxyAddr string,
 	deviceID string,
 	lang func() string,
 	adSwapTargetURL func() string,
-	filterFunc func(ctx filters.Context, req *http.Request, next filters.Next) (*http.Response, filters.Context, error)) error {
+	requestFilter func(*http.Request) (*http.Request, error)) error {
 
 	elapsed := mtime.Stopwatch()
 	displayVersion()
@@ -82,7 +81,7 @@ func Run(httpProxyAddr string,
 		allowPrivateHosts,
 		lang,
 		adSwapTargetURL,
-		filterFunc,
+		requestFilter,
 	)
 	if err != nil {
 		fatalErr := fmt.Errorf("Unable to initialize client: %v", err)

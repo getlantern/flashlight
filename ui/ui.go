@@ -8,7 +8,6 @@ import (
 
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/proxy/filters"
 	"github.com/getlantern/tarfs"
 
 	"github.com/getlantern/flashlight/pro"
@@ -109,8 +108,9 @@ func AddToken(in string) string {
 // the request like this because the local UI server uses the Go http package
 // for things like websockets whereas the standard Lantern proxy does not.
 // Relaying locally gives us the best of both worlds.
-func ServeFromLocalUI(ctx filters.Context, req *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
+func ServeFromLocalUI(req *http.Request) (*http.Request, error) {
 	log.Debugf("Serving local UI for %v on %v", req.URL, req.Host)
 	req.Host = serve.listenAddr
-	return next(ctx, req)
+	serve.setRequestToken(req)
+	return req, nil
 }

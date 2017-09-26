@@ -101,7 +101,7 @@ type Client struct {
 	allowPrivateHosts func() bool
 	lang              func() string
 	adSwapTargetURL   func() string
-	filterFunc        func(ctx filters.Context, req *http.Request, next filters.Next) (*http.Response, filters.Context, error)
+	requestFilter     func(*http.Request) (*http.Request, error)
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -115,7 +115,7 @@ func NewClient(
 	allowPrivateHosts func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
-	filterFunc func(ctx filters.Context, req *http.Request, next filters.Next) (*http.Response, filters.Context, error),
+	requestFilter func(*http.Request) (*http.Request, error),
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
 	rewriteLRU, err := lru.New(100)
@@ -133,7 +133,7 @@ func NewClient(
 		allowPrivateHosts: allowPrivateHosts,
 		lang:              lang,
 		adSwapTargetURL:   adSwapTargetURL,
-		filterFunc:        filterFunc,
+		requestFilter:     requestFilter,
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -141,7 +141,7 @@ func NewClient(
 	client.proxy = proxy.New(&proxy.Opts{
 		IdleTimeout:  keepAliveIdleTimeout,
 		BufferSource: buffers.Pool,
-		Filter:       filters.FilterFunc(filterFunc), //client.filter),
+		Filter:       filters.FilterFunc(client.filter),
 		OnError:      errorResponse,
 		Dial:         client.dial,
 	})

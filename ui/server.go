@@ -175,6 +175,13 @@ func (s *server) addToken(in string) string {
 	return util.SetURLParam("http://"+path.Join(s.accessAddr, in), "token", s.localHTTPToken)
 }
 
+func (s *server) setRequestToken(req *http.Request) {
+	u := req.URL
+	q := u.Query()
+	q.Set("token", s.localHTTPToken)
+	u.RawQuery = q.Encode()
+}
+
 func (s *server) checkOrigin(h http.Handler) http.Handler {
 	check := func(w http.ResponseWriter, r *http.Request) {
 		var clientURL string
