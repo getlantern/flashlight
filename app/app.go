@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -112,7 +113,7 @@ func (app *App) Run() {
 		}
 
 		uiFilter := func(req *http.Request) (*http.Request, error) {
-			if req.URL.Host == "search.lantern.io" || req.Host == "search.lantern.io" {
+			if strings.HasPrefix(req.URL.Host, "search.lantern.io") || strings.HasPrefix(req.Host, "search.lantern.io") {
 				log.Debugf("Found search.lantern.io in %+v", req)
 				return ui.ServeFromLocalUI(req)
 			}

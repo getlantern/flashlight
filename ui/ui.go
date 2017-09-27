@@ -110,7 +110,13 @@ func AddToken(in string) string {
 // Relaying locally gives us the best of both worlds.
 func ServeFromLocalUI(req *http.Request) (*http.Request, error) {
 	log.Debugf("Serving local UI for %v on %v", req.URL, req.Host)
-	req.Host = serve.listenAddr
-	serve.setRequestToken(req)
+	if req.Method == http.MethodConnect {
+		req.URL.Host = serve.listenAddr
+		req.Host = serve.listenAddr
+		// TODO: What to do about the request token here?
+	} else {
+		req.Host = serve.listenAddr
+		serve.setRequestToken(req)
+	}
 	return req, nil
 }

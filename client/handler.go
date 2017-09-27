@@ -54,6 +54,10 @@ func (client *Client) handle(conn net.Conn) error {
 }
 
 func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
+	if r.Method == http.MethodConnect && strings.Contains(r.URL.Host, "search.lantern.io") {
+		log.Debugf("FOUND FOR CONNECT -- IN HANDLER -- search.lantern.io: %+v", r)
+	}
+
 	req, err := client.requestFilter(r)
 	if err != nil {
 		req = r
