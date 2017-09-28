@@ -139,7 +139,7 @@ func (s *server) show(campaign, medium string) {
 // ones reading from those incoming sockets the fact that reading starts
 // asynchronously is not a problem.
 func (s *server) doShow(campaign, medium string, open func(string, time.Duration)) {
-	tempURL := fmt.Sprintf("http://%s/", s.accessAddr)
+	tempURL := fmt.Sprintf("http://search.lantern.io?token=%s", s.localHTTPToken)
 	campaignURL, err := analytics.AddCampaign(tempURL, campaign, "", medium)
 	var uiURL string
 	if err != nil {
