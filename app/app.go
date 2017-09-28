@@ -233,7 +233,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		if err != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		}
-		ui.Handle("/data", ws.StartUIChannel())
+		ui.Handle("data", ws.StartUIChannel())
 
 		if e := settings.StartService(); e != nil {
 			app.Exit(fmt.Errorf("Unable to register settings service: %q", e))

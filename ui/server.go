@@ -5,7 +5,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
-	"net/url"
 	"path"
 	"strconv"
 	"strings"
@@ -21,9 +20,10 @@ type server struct {
 	// The address to listen on, in ":port" form if listen on all interfaces.
 	listenAddr string
 	// The address client should access. Available only if the server is started.
-	accessAddr     string
-	externalURL    string
-	localHTTPToken string
+	accessAddr  string
+	externalURL string
+	//localHTTPToken string
+	requestPath    string
 	listener       net.Listener
 	mux            *http.ServeMux
 	onceOpenExtURL sync.Once
@@ -36,9 +36,9 @@ type server struct {
 // doesn't bring the token in query parameters nor have the same origin.
 func newServer(extURL, localHTTPToken string) *server {
 	return &server{
-		externalURL:    overrideManotoURL(extURL),
-		localHTTPToken: localHTTPToken,
-		mux:            http.NewServeMux(),
+		externalURL: overrideManotoURL(extURL),
+		requestPath: "/" + localHTTPToken + "/",
+		mux:         http.NewServeMux(),
 	}
 }
 
@@ -139,7 +139,8 @@ func (s *server) show(campaign, medium string) {
 // ones reading from those incoming sockets the fact that reading starts
 // asynchronously is not a problem.
 func (s *server) doShow(campaign, medium string, open func(string, time.Duration)) {
-	tempURL := fmt.Sprintf("http://search.lantern.io?token=%s", s.localHTTPToken)
+	tempURL := "http://search.lantern.io" + s.requestPath
+	log.Debugf("Temp URL %v", tempURL)
 	campaignURL, err := analytics.AddCampaign(tempURL, campaign, "", medium)
 	var uiURL string
 	if err != nil {
@@ -172,70 +173,27 @@ func (s *server) stop() error {
 // request path. Without that token, the backend will reject the request to
 // avoid web sites detecting Lantern.
 func (s *server) addToken(in string) string {
-	return util.SetURLParam("http://"+path.Join(s.accessAddr, in), "token", s.localHTTPToken)
+	return util.SetURLParam("http://"+path.Join(s.accessAddr, in), "token", s.requestPath)
 }
 
+/*
 func (s *server) setRequestToken(req *http.Request) {
 	u := req.URL
 	q := u.Query()
 	q.Set("token", s.localHTTPToken)
 	u.RawQuery = q.Encode()
 }
+*/
 
 func (s *server) checkOrigin(h http.Handler) http.Handler {
 	check := func(w http.ResponseWriter, r *http.Request) {
-		var clientURL string
-
-		referer := r.Header.Get("Referer")
-		if referer != "" {
-			clientURL = referer
+		log.Debugf("request path: %v", r.URL.Path)
+		if !strings.HasPrefix(r.URL.Path, s.requestPath) {
+			msg := fmt.Sprintf("Access was denied because the request path was wrong. Expected\n'%v'\nnot:\n%v", r.URL.Path, s.requestPath)
+			s.forbidden(msg, w, r)
+		} else {
+			h.ServeHTTP(w, r)
 		}
-
-		origin := r.Header.Get("Origin")
-		if origin != "" {
-			clientURL = origin
-		}
-
-		token := r.URL.Query().Get("token")
-		tokenMatch := token == s.localHTTPToken
-
-		if clientURL == "" {
-			switch {
-			case r.URL.Path == "/":
-				// we don't bother with additional checks for root URL
-				h.ServeHTTP(w, r)
-				return
-			case tokenMatch:
-				h.ServeHTTP(w, r)
-				return
-			case token != "":
-				msg := fmt.Sprintf("Token '%v' did not match the expected '%v...'", token, s.localHTTPToken)
-				s.forbidden(msg, w, r)
-				return
-			default:
-				msg := fmt.Sprintf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
-				s.forbidden(msg, w, r)
-				return
-			}
-		}
-
-		if strictOriginCheck && !tokenMatch {
-			originURL, err := url.Parse(clientURL)
-			if err != nil {
-				log.Errorf("Could not parse client URL %v", clientURL)
-				return
-			}
-			originHost := originURL.Host
-			// when Lantern is listening on all interfaces, e.g., allow remote
-			// connections, listenAddr is in ":port" form. Using HasSuffix
-			if !strings.HasSuffix(originHost, s.listenAddr) {
-				msg := fmt.Sprintf("Origin was '%v' but expecting: '%v'", originHost, s.listenAddr)
-				s.forbidden(msg, w, r)
-				return
-			}
-		}
-
-		h.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(check)
 }

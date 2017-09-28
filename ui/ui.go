@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"mime"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/getlantern/eventual"
@@ -46,15 +47,32 @@ func attachHandlers(s *server) {
 		s.show("existing", "lantern")
 		resp.WriteHeader(http.StatusOK)
 	}
+
 	s.Handle("/startup", http.HandlerFunc(startupHandler))
 	s.Handle("/pro/", pro.APIHandler())
 	unpackUI()
-	s.Handle("/", http.FileServer(fs))
+	s.Handle(s.requestPath, strippingHandler(http.FileServer(fs)))
 
 }
 
+func strippingHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Debugf("Serving request: %v", r)
+
+		req := stripPath(r, serve.requestPath)
+
+		log.Debugf("Stripped request: %v", req)
+		h.ServeHTTP(w, req)
+	})
+}
+
+func stripPath(req *http.Request, path string) *http.Request {
+	req.URL.Path = strings.Replace(req.URL.Path, path, "/", -1)
+	return req
+}
+
 func Handle(pattern string, handler http.Handler) {
-	serve.Handle(pattern, handler)
+	serve.Handle(serve.requestPath+pattern, strippingHandler(handler))
 }
 
 // Stop stops the UI listener and all services. To facilitate test.
@@ -116,7 +134,7 @@ func ServeFromLocalUI(req *http.Request) (*http.Request, error) {
 		// TODO: What to do about the request token here?
 	} else {
 		req.Host = serve.listenAddr
-		serve.setRequestToken(req)
+		//serve.setRequestToken(req)
 	}
 	return req, nil
 }
