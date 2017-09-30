@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"bytes"
 	"fmt"
 	"mime"
 	"net/http"
@@ -82,13 +83,22 @@ func Stop() {
 
 func unpackUI() {
 	var err error
-	fs, err = tarfs.New(Resources, "")
+	fs, err = tarfs.NewWithListener(Resources, "", fixPath)
 	if err != nil {
 		// Panicking here because this shouldn't happen at runtime unless the
 		// resources were incorrectly embedded.
 		panic(fmt.Errorf("Unable to open tarfs filesystem: %v", err))
 	}
 	translations.Set(fs.SubDir("locale"))
+}
+
+func fixPath(name string, file []byte) []byte {
+	if strings.HasSuffix(name, ".css") {
+		img := bytes.Replace(file, []byte("/img/"), []byte(serve.requestPath+"img/"), -1)
+		return bytes.Replace(img, []byte("/font/"), []byte(serve.requestPath+"font/"), -1)
+
+	}
+	return file
 }
 
 // Translations returns the translations for a given locale file.
