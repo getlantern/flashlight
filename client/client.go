@@ -119,7 +119,7 @@ func NewClient(
 	allowPrivateHosts func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
-	isPlayVersion func() bool,
+	adBlockingAllowed func() bool,
 	reverseDNS func(addr string) string,
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
@@ -150,10 +150,10 @@ func NewClient(
 		OnError:      errorResponse,
 		Dial:         client.dial,
 	})
-	if isPlayVersion() {
-		client.easylist = allowAllEasyList{}
-	} else {
+	if adBlockingAllowed() {
 		client.initEasyList()
+	} else {
+		client.easylist = allowAllEasyList{}
 	}
 	client.reportProxyLocationLoop()
 	client.iptool, err = iptool.New()
