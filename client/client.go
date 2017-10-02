@@ -119,7 +119,7 @@ func NewClient(
 	allowPrivateHosts func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
-	playStoreInstall func() bool,
+	isPlayVersion func() bool,
 	reverseDNS func(addr string) string,
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
@@ -150,7 +150,7 @@ func NewClient(
 		OnError:      errorResponse,
 		Dial:         client.dial,
 	})
-	if playStoreInstall() {
+	if isPlayVersion() {
 		client.easylist = allowAllEasyList{}
 	} else {
 		client.initEasyList()
