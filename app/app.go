@@ -154,7 +154,7 @@ func (app *App) Run() {
 				}
 				return ui.AddToken("/") + "#/plans"
 			},
-			func() bool { return false },             // check if app installed by play store doesn't apply to desktop
+			func() bool { return true },              // always allow ad blocking on desktop
 			func(addr string) string { return addr }, // no dnsgrab reverse lookups on desktop
 		)
 		if err != nil {
