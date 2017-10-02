@@ -34,6 +34,7 @@ type Session interface {
 	SetPaymentProvider(string)
 	StripeToken() string
 	StripeApiKey() string
+	IsPlayVersion() bool
 	Email() string
 	SetToken(string)
 	SetUserId(int64)

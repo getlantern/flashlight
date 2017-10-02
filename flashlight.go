@@ -62,6 +62,7 @@ func Run(httpProxyAddr string,
 	isPro func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
+	installedPlayStore func() bool,
 	reverseDNS func(host string) string) error {
 
 	elapsed := mtime.Stopwatch()
@@ -83,6 +84,7 @@ func Run(httpProxyAddr string,
 		allowPrivateHosts,
 		lang,
 		adSwapTargetURL,
+		installedPlayStore,
 		reverseDNS,
 	)
 	if err != nil {
