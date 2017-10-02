@@ -25,22 +25,22 @@ type testSession struct {
 	Session
 }
 
-func (c testSession) AfterStart()              {}
-func (c testSession) BandwidthUpdate(int, int) {}
-func (c testSession) ConfigUpdate(bool)        {}
-func (c testSession) ShowSurvey(survey string) {}
-func (c testSession) GetUserID() int64         { return 0 }
-func (c testSession) GetToken() string         { return "" }
-func (c testSession) SetStaging(bool)          {}
-func (c testSession) SetCountry(string)        {}
-func (c testSession) ProxyAll() bool           { return true }
-func (c testSession) GetDeviceID() string      { return "123456789" }
-func (c testSession) AccountId() string        { return "1234" }
-func (c testSession) Locale() string           { return "en-US" }
-func (c testSession) SetUserId(int64)          {}
-func (c testSession) SetToken(string)          {}
-func (c testSession) SetCode(string)           {}
-func (c testSession) IsProUser() bool          { return true }
+func (c testSession) AfterStart()                   {}
+func (c testSession) BandwidthUpdate(int, int, int) {}
+func (c testSession) ConfigUpdate(bool)             {}
+func (c testSession) ShowSurvey(survey string)      {}
+func (c testSession) GetUserID() int64              { return 0 }
+func (c testSession) GetToken() string              { return "" }
+func (c testSession) SetStaging(bool)               {}
+func (c testSession) SetCountry(string)             {}
+func (c testSession) ProxyAll() bool                { return true }
+func (c testSession) GetDeviceID() string           { return "123456789" }
+func (c testSession) AccountId() string             { return "1234" }
+func (c testSession) Locale() string                { return "en-US" }
+func (c testSession) SetUserId(int64)               {}
+func (c testSession) SetToken(string)               {}
+func (c testSession) SetCode(string)                {}
+func (c testSession) IsProUser() bool               { return true }
 
 func (c testSession) UpdateStats(string, string, string, int, int) {}
 
