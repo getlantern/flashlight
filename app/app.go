@@ -54,6 +54,7 @@ type App struct {
 	exitOnce        sync.Once
 	chExitFuncs     chan func()
 	chLastExitFuncs chan func()
+	localHTTPToken  string
 }
 
 // Init initializes the App's state
@@ -67,6 +68,7 @@ func (app *App) Init() {
 	app.chExitFuncs = make(chan func(), 100)
 	app.chLastExitFuncs = make(chan func(), 100)
 	app.statsTracker = NewStatsTracker()
+	app.localHTTPToken = localHTTPToken(settings)
 }
 
 // LogPanicAndExit logs a panic and then exits the application. This function
@@ -115,7 +117,11 @@ func (app *App) Run() {
 		uiFilter := func(req *http.Request) (*http.Request, error) {
 			if strings.HasPrefix(req.URL.Host, "search.lantern.io") || strings.HasPrefix(req.Host, "search.lantern.io") {
 				log.Debugf("Found search.lantern.io in %+v", req)
-				return ui.ServeFromLocalUI(req)
+				if strings.Contains(req.URL.Path, app.localHTTPToken) {
+					return ui.ServeFromLocalUI(req)
+				} else {
+					log.Debugf("Did not find token in URL: %v", req.URL)
+				}
 			}
 			return req, nil
 		}
@@ -229,7 +235,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 		log.Debugf("Starting client UI at %v", uiaddr)
 		// ui will handle empty uiaddr correctly
-		err = ui.Start(uiaddr, startupURL, localHTTPToken(settings))
+		err = ui.Start(uiaddr, startupURL, app.localHTTPToken)
 		if err != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		}

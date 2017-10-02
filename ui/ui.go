@@ -96,7 +96,6 @@ func fixPath(name string, file []byte) []byte {
 	if strings.HasSuffix(name, ".css") {
 		img := bytes.Replace(file, []byte("/img/"), []byte(serve.requestPath+"img/"), -1)
 		return bytes.Replace(img, []byte("/font/"), []byte(serve.requestPath+"font/"), -1)
-
 	}
 	return file
 }
@@ -144,7 +143,6 @@ func ServeFromLocalUI(req *http.Request) (*http.Request, error) {
 		// TODO: What to do about the request token here?
 	} else {
 		req.Host = serve.listenAddr
-		//serve.setRequestToken(req)
 	}
 	return req, nil
 }

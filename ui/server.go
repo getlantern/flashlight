@@ -176,18 +176,8 @@ func (s *server) addToken(in string) string {
 	return util.SetURLParam("http://"+path.Join(s.accessAddr, in), "token", s.requestPath)
 }
 
-/*
-func (s *server) setRequestToken(req *http.Request) {
-	u := req.URL
-	q := u.Query()
-	q.Set("token", s.localHTTPToken)
-	u.RawQuery = q.Encode()
-}
-*/
-
 func (s *server) checkOrigin(h http.Handler) http.Handler {
 	check := func(w http.ResponseWriter, r *http.Request) {
-		log.Debugf("request path: %v", r.URL.Path)
 		if !strings.HasPrefix(r.URL.Path, s.requestPath) {
 			msg := fmt.Sprintf("Access was denied because the request path was wrong. Expected\n'%v'\nnot:\n%v", r.URL.Path, s.requestPath)
 			s.forbidden(msg, w, r)
