@@ -116,12 +116,12 @@ func (app *App) Run() {
 
 		uiFilter := func(req *http.Request) (*http.Request, error) {
 			if strings.HasPrefix(req.URL.Host, "search.lantern.io") || strings.HasPrefix(req.Host, "search.lantern.io") {
-				log.Debugf("Found search.lantern.io in %+v", req)
-				if strings.Contains(req.URL.Path, app.localHTTPToken) {
+				// Connect requests cannot contain path information, so rely on
+				// lower-level token handling.
+				if req.Method == http.MethodConnect || strings.Contains(req.URL.Path, app.localHTTPToken) {
 					return ui.ServeFromLocalUI(req)
-				} else {
-					log.Debugf("Did not find token in URL: %v", req.URL)
 				}
+				log.Errorf("Did not find token in URL: %v", req.URL)
 			}
 			return req, nil
 		}
