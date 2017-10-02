@@ -205,7 +205,7 @@ func run(configDir, locale string,
 		session.IsProUser,
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
-		session.IsPlayVersion,
+		session.AdBlockingAllowed,
 		func(addr string) string {
 			host, port, splitErr := net.SplitHostPort(addr)
 			if splitErr != nil {
