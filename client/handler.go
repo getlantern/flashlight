@@ -41,7 +41,6 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 	if err != nil {
 		req = r
 	}
-	log.Debugf("Original scheme:  %v", req.URL.Scheme)
 	// Add the scheme back for CONNECT requests. It is cleared
 	// intentionally by the standard library, see
 	// https://golang.org/src/net/http/request.go#L938. The easylist
