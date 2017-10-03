@@ -3,18 +3,15 @@ package client
 import (
 	"context"
 	"fmt"
-	"mime"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
-	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/proxy/filters"
-	"github.com/getlantern/tarfs"
 )
 
 type contextKey string
@@ -26,18 +23,6 @@ const (
 var adSwapJavaScriptInjections = map[string]string{
 	"http://www.googletagservices.com/tag/js/gpt.js": "https://ads.getlantern.org/v1/js/www.googletagservices.com/tag/js/gpt.js",
 	"http://cpro.baidustatic.com/cpro/ui/c.js":       "https://ads.getlantern.org/v1/js/cpro.baidustatic.com/cpro/ui/c.js",
-}
-
-var (
-	fs           *tarfs.FileSystem
-	translations = eventual.NewValue()
-)
-
-func init() {
-	// http.FileServer relies on OS to guess mime type, which can be wrong.
-	// Override system default for current process.
-	_ = mime.AddExtensionType(".css", "text/css")
-	_ = mime.AddExtensionType(".js", "application/javascript")
 }
 
 func (client *Client) handle(conn net.Conn) error {
