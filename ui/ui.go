@@ -90,10 +90,6 @@ func fixPath(name string, file []byte) []byte {
 		cur := bytes.Replace(file, []byte("/img/"), []byte(serve.requestPath+"/img/"), -1)
 		return bytes.Replace(cur, []byte("/font/"), []byte(serve.requestPath+"/font/"), -1)
 	}
-	if strings.HasSuffix(name, ".html") {
-		// This is just the favicon as of this writing.
-		return bytes.Replace(file, []byte("href=\"/img/"), []byte("href=\""+serve.requestPath+"/img/"), -1)
-	}
 	return file
 }
 
