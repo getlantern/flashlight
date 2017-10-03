@@ -185,6 +185,8 @@ func run(configDir, locale string,
 		session.DeviceId(),
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
+		// Request filter for HTTP proxy. Currently only used on desktop.
+		func(r *http.Request) (*http.Request, error) { return r, nil },
 	)
 }
 
