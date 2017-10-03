@@ -19,14 +19,12 @@ type server struct {
 	// The address to listen on, in ":port" form if listen on all interfaces.
 	listenAddr string
 	// The address client should access. Available only if the server is started.
-	accessAddr  string
-	externalURL string
-	//localHTTPToken string
+	accessAddr     string
+	externalURL    string
 	requestPath    string
 	listener       net.Listener
 	mux            *http.ServeMux
 	onceOpenExtURL sync.Once
-	proxy          *httputil.ReverseProxy
 
 	// The domain to serve the UI on - can be anything really.
 	uiDomain string
