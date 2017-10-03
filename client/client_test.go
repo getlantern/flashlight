@@ -45,6 +45,7 @@ func newClient() *Client {
 		func() bool { return true },
 		func() string { return testLang },
 		func() string { return testAdSwapTargetURL },
+		func(r *http.Request) (*http.Request, error) { return r, nil },
 	)
 	return client
 }
