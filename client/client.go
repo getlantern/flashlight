@@ -119,6 +119,7 @@ func NewClient(
 	allowPrivateHosts func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
+	adBlockingAllowed func() bool,
 	reverseDNS func(addr string) string,
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
@@ -149,12 +150,11 @@ func NewClient(
 		OnError:      errorResponse,
 		Dial:         client.dial,
 	})
-	// TODO: allow this only for non playstore downloads
-	// if runtime.GOOS == "android" {
-	// 	client.easylist = allowAllEasyList{}
-	// } else {
-	client.initEasyList()
-	// }
+	if adBlockingAllowed() {
+		client.initEasyList()
+	} else {
+		client.easylist = allowAllEasyList{}
+	}
 	client.reportProxyLocationLoop()
 	client.iptool, err = iptool.New()
 	if err != nil {
