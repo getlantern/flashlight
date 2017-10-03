@@ -52,24 +52,17 @@ func attachHandlers(s *server) {
 	s.Handle("/startup", http.HandlerFunc(startupHandler))
 	s.Handle("/pro/", pro.APIHandler())
 	unpackUI()
-	s.Handle(s.requestPath, strippingHandler(http.FileServer(fs)))
+	s.Handle(s.requestPath+"/", strippingHandler(http.FileServer(fs)))
 
 }
 
+// strippingHandler removes the secure request path from the URL so that the
+// static file server can properly serve it (it's effectively a virtual path).
 func strippingHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Debugf("Serving request: %v", r)
-
-		req := stripPath(r, serve.requestPath)
-
-		log.Debugf("Stripped request: %v", req)
-		h.ServeHTTP(w, req)
+		r.URL.Path = strings.Replace(r.URL.Path, serve.requestPath, "", -1)
+		h.ServeHTTP(w, r)
 	})
-}
-
-func stripPath(req *http.Request, path string) *http.Request {
-	req.URL.Path = strings.Replace(req.URL.Path, path, "/", -1)
-	return req
 }
 
 func Handle(pattern string, handler http.Handler) {
@@ -97,12 +90,12 @@ func unpackUI() {
 // just reject.
 func fixPath(name string, file []byte) []byte {
 	if strings.HasSuffix(name, ".css") {
-		cur := bytes.Replace(file, []byte("/img/"), []byte(serve.requestPath+"img/"), -1)
-		return bytes.Replace(cur, []byte("/font/"), []byte(serve.requestPath+"font/"), -1)
+		cur := bytes.Replace(file, []byte("/img/"), []byte(serve.requestPath+"/img/"), -1)
+		return bytes.Replace(cur, []byte("/font/"), []byte(serve.requestPath+"/font/"), -1)
 	}
 	if strings.HasSuffix(name, ".html") {
 		// This is just the favicon as of this writing.
-		return bytes.Replace(file, []byte("href=\"/img/"), []byte("href=\""+serve.requestPath+"img/"), -1)
+		return bytes.Replace(file, []byte("href=\"/img/"), []byte("href=\""+serve.requestPath+"/img/"), -1)
 	}
 	return file
 }
@@ -142,14 +135,12 @@ func AddToken(in string) string {
 // the request like this because the local UI server uses the Go http package
 // for things like websockets whereas the standard Lantern proxy does not.
 // Relaying locally gives us the best of both worlds.
-func ServeFromLocalUI(req *http.Request) (*http.Request, error) {
-	log.Debugf("Serving local UI for %v on %v", req.URL, req.Host)
+func ServeFromLocalUI(req *http.Request) *http.Request {
 	if req.Method == http.MethodConnect {
 		req.URL.Host = serve.listenAddr
-		req.Host = serve.listenAddr
-		// TODO: What to do about the request token here?
-	} else {
-		req.Host = serve.listenAddr
 	}
-	return req, nil
+	// It's not clear why CONNECT requests also need the host header set here,
+	// but it doesn't work without it.
+	req.Host = serve.listenAddr
+	return req
 }

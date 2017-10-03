@@ -117,7 +117,7 @@ func (app *App) Run() {
 
 		uiFilter := func(req *http.Request) (*http.Request, error) {
 			if strings.HasPrefix(req.URL.Host, app.uiDomain) || strings.HasPrefix(req.Host, app.uiDomain) {
-				return ui.ServeFromLocalUI(req)
+				return ui.ServeFromLocalUI(req), nil
 			}
 			return req, nil
 		}
@@ -235,7 +235,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		if err != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		}
-		ui.Handle("data", ws.StartUIChannel())
+		ui.Handle("/data", ws.StartUIChannel())
 
 		if e := settings.StartService(); e != nil {
 			app.Exit(fmt.Errorf("Unable to register settings service: %q", e))

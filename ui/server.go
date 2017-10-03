@@ -39,7 +39,7 @@ type server struct {
 func newServer(extURL, localHTTPToken, uiDomain string) *server {
 	return &server{
 		externalURL: overrideManotoURL(extURL),
-		requestPath: "/" + localHTTPToken + "/",
+		requestPath: "/" + localHTTPToken,
 		mux:         http.NewServeMux(),
 		uiDomain:    uiDomain,
 	}
@@ -142,8 +142,7 @@ func (s *server) show(campaign, medium string) {
 // ones reading from those incoming sockets the fact that reading starts
 // asynchronously is not a problem.
 func (s *server) doShow(campaign, medium string, open func(string, time.Duration)) {
-	tempURL := "http://" + s.uiDomain + s.requestPath
-	log.Debugf("Temp URL %v", tempURL)
+	tempURL := "http://" + s.uiDomain + s.requestPath + "/"
 	campaignURL, err := analytics.AddCampaign(tempURL, campaign, "", medium)
 	var uiURL string
 	if err != nil {
@@ -176,7 +175,7 @@ func (s *server) stop() error {
 // request path. Without that token, the backend will reject the request to
 // avoid web sites detecting Lantern.
 func (s *server) addToken(path string) string {
-	return "http://" + s.accessAddr + s.requestPath + path //, in), "token", s.requestPath)
+	return "http://" + s.accessAddr + s.requestPath + path
 }
 
 func (s *server) checkRequestPath(h http.Handler) http.Handler {
