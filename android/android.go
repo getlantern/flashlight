@@ -160,8 +160,9 @@ func run(configDir, locale string,
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
 	flashlight.Run("127.0.0.1:0", // listen for HTTP on random address
-		"127.0.0.1:0", // listen for SOCKS on random address
-		configDir,     // place to store lantern configuration
+		"127.0.0.1:0",                // listen for SOCKS on random address
+		configDir,                    // place to store lantern configuration
+		func() bool { return false }, // always connected
 		// TODO: allow configuring whether or not to enable shortcut depends on
 		// proxyAll option (just like we already have in desktop)
 		func() bool { return !session.ProxyAll() }, // use shortcut
@@ -182,7 +183,8 @@ func run(configDir, locale string,
 		session,
 		NewStatsTracker(session),
 		func(err error) {}, // onError
-		session.DeviceId(),
+		session.GetDeviceID(),
+		session.IsProUser,
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
 		// Request filter for HTTP proxy. Currently only used on desktop.
@@ -198,16 +200,16 @@ func bandwidthUpdates(session Session) {
 	}()
 }
 
-func getBandwidth(quota *bandwidth.Quota) (int, int) {
+func getBandwidth(quota *bandwidth.Quota) (int, int, int) {
 	remaining := 0
 	percent := 100
 	if quota == nil {
-		return 0, 0
+		return 0, 0, 0
 	}
 
 	allowed := quota.MiBAllowed
 	if allowed < 0 || allowed > 50000000 {
-		return 0, 0
+		return 0, 0, 0
 	}
 
 	if quota.MiBUsed >= quota.MiBAllowed {
@@ -217,13 +219,13 @@ func getBandwidth(quota *bandwidth.Quota) (int, int) {
 		percent = int(100 * (float64(quota.MiBUsed) / float64(quota.MiBAllowed)))
 		remaining = int(quota.MiBAllowed - quota.MiBUsed)
 	}
-	return percent, remaining
+	return percent, remaining, int(quota.MiBAllowed)
 }
 
 func setBandwidth(session Session) {
-	percent, remaining := getBandwidth(bandwidth.GetQuota())
+	percent, remaining, allowed := getBandwidth(bandwidth.GetQuota())
 	if percent != 0 && remaining != 0 {
-		session.BandwidthUpdate(percent, remaining)
+		session.BandwidthUpdate(percent, remaining, allowed)
 	}
 }
 

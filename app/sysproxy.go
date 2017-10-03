@@ -23,7 +23,7 @@ var (
 func setUpSysproxyTool() error {
 	var iconFile string
 	if runtime.GOOS == "darwin" {
-		icon, err := icons.Asset("icons/32on.ico")
+		icon, err := icons.Asset("connected_32.ico")
 		if err != nil {
 			return fmt.Errorf("Unable to load escalation prompt icon: %v", err)
 		}
@@ -69,32 +69,49 @@ func sysproxyOff() {
 	off := _sysproxyOff
 	_sysproxyOff = nil
 	sysproxyOffMx.Unlock()
-	if off == nil {
-		log.Debug("Lantern wasn't set as system proxy, not turning off")
+
+	if off != nil {
+		doSysproxyOff(off)
+	}
+
+	op := ops.Begin("sysproxy_off_force")
+	defer op.End()
+	log.Debug("Force clearing system proxy directly, just in case")
+	addr, found := getProxyAddr()
+	if !found {
+		op.FailIf(log.Error("Unable to find proxy address, can't force clear system proxy"))
 		return
 	}
-	log.Debug("Unsetting lantern as system proxy")
+	doSysproxyClear(op, addr)
+}
+
+func doSysproxyOff(off func() error) {
 	op := ops.Begin("sysproxy_off")
 	defer op.End()
+	log.Debug("Unsetting lantern as system proxy using off function")
 	err := off()
 	if err != nil {
-		op.FailIf(log.Errorf("Unable to unset lantern as system proxy: %v", err))
-	} else {
-		log.Debug("Unset lantern as system proxy")
+		op.FailIf(log.Errorf("Unable to unset lantern as system proxy using off function: %v", err))
+		return
 	}
+	log.Debug("Unset lantern as system proxy using off function")
 }
 
 // clearSysproxyFor is like sysproxyOffFor, but records its activity under the
 // sysproxy_clear op instead of the sysproxy_off op.
 func clearSysproxyFor(addr string) {
 	op := ops.Begin("sysproxy_clear")
-	defer op.End()
-	log.Debugf("Unsetting lantern as system proxy at: %v", addr)
+	doSysproxyClear(op, addr)
+	op.End()
+}
+
+func doSysproxyClear(op *ops.Op, addr string) {
+	log.Debugf("Clearing lantern as system proxy at: %v", addr)
 	err := sysproxy.Off(addr)
 	if err != nil {
-		op.FailIf(log.Errorf("Unable to unset lantern as system proxy: %v", err))
+		op.FailIf(log.Errorf("Unable to clear lantern as system proxy: %v", err))
 	} else {
-		log.Debug("Unset lantern as system proxy")
+		log.Debug("Cleared lantern as system proxy")
 	}
 }
 

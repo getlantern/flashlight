@@ -9,9 +9,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/getlantern/flashlight/pro/client"
 )
 
 func TestProxy(t *testing.T) {
+	ac := &client.Auth{}
 	m := &mockRoundTripper{msg: "GOOD"}
 	httpClient = &http.Client{Transport: m}
 	l, err := net.Listen("tcp", "localhost:0")
@@ -22,7 +25,7 @@ func TestProxy(t *testing.T) {
 	addr := l.Addr()
 	url := fmt.Sprintf("http://%s/pro/abc", addr)
 	t.Logf("Test server listening at %s", url)
-	go http.Serve(l, APIHandler())
+	go http.Serve(l, APIHandler(ac))
 
 	req, err := http.NewRequest("OPTIONS", url, nil)
 	if !assert.NoError(t, err) {

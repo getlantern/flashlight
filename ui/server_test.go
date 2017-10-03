@@ -20,13 +20,13 @@ func TestDoShow(t *testing.T) {
 	s := newServer("", "test-http-token", "client.lantern.io")
 
 	assert.Equal(t, "", urlToShow)
-	s.doShow("campaign", "medium", show)
+	s.doShow(s.rootURL(), "campaign", "medium", show)
 
 	assert.NotEqual(t, "", urlToShow)
 
 	s.externalURL = "test"
 
-	s.doShow("campaign", "medium", show)
+	s.doShow(s.rootURL(), "campaign", "medium", show)
 
 	assert.Equal(t, "test", urlToShow)
 }

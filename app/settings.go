@@ -27,10 +27,11 @@ import (
 type SettingName string
 
 const (
-	SNAutoReport  SettingName = "autoReport"
-	SNAutoLaunch  SettingName = "autoLaunch"
-	SNProxyAll    SettingName = "proxyAll"
-	SNSystemProxy SettingName = "systemProxy"
+	SNAutoReport   SettingName = "autoReport"
+	SNAutoLaunch   SettingName = "autoLaunch"
+	SNProxyAll     SettingName = "proxyAll"
+	SNSystemProxy  SettingName = "systemProxy"
+	SNDisconnected SettingName = "disconnected"
 
 	SNLanguage       SettingName = "language"
 	SNLocalHTTPToken SettingName = "localHTTPToken"
@@ -65,10 +66,11 @@ var settingMeta = map[SettingName]struct {
 	persist   bool
 	omitempty bool
 }{
-	SNAutoReport:  {stBool, true, false},
-	SNAutoLaunch:  {stBool, true, false},
-	SNProxyAll:    {stBool, true, false},
-	SNSystemProxy: {stBool, true, false},
+	SNAutoReport:   {stBool, true, false},
+	SNAutoLaunch:   {stBool, true, false},
+	SNProxyAll:     {stBool, true, false},
+	SNSystemProxy:  {stBool, true, false},
+	SNDisconnected: {stBool, false, false},
 
 	SNLanguage:       {stString, true, true},
 	SNLocalHTTPToken: {stString, true, true},
@@ -97,6 +99,7 @@ var (
 type Settings struct {
 	muNotifiers     sync.RWMutex
 	changeNotifiers map[SettingName][]func(interface{})
+	wsOut           chan<- interface{}
 
 	m map[SettingName]interface{}
 	sync.RWMutex
@@ -168,6 +171,7 @@ func newSettings(filePath string) *Settings {
 			SNAutoLaunch:     true,
 			SNProxyAll:       false,
 			SNSystemProxy:    true,
+			SNDisconnected:   false,
 			SNLanguage:       "",
 			SNLocalHTTPToken: "",
 			SNUserToken:      "",
@@ -192,12 +196,11 @@ func (s *Settings) StartService() error {
 	if err != nil {
 		return err
 	}
+	s.muNotifiers.Lock()
+	s.wsOut = service.Out
+	s.muNotifiers.Unlock()
 	go s.read(service.In, service.Out)
 	return nil
-}
-
-func (s *Settings) StopService() {
-	ws.Unregister("settings")
 }
 
 func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {
@@ -581,8 +584,13 @@ func (s *Settings) OnChange(attr SettingName, cb func(interface{})) {
 func (s *Settings) onChange(attr SettingName, value interface{}) {
 	s.muNotifiers.RLock()
 	notifiers := s.changeNotifiers[attr]
+	wsOut := s.wsOut
 	s.muNotifiers.RUnlock()
 	for _, fn := range notifiers {
 		fn(value)
+	}
+	if wsOut != nil {
+		// notify UI of changed settings
+		wsOut <- s.uiMap()
 	}
 }

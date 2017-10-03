@@ -21,6 +21,12 @@ can just use `make`.
 
 You can also just build using the usual `go install` etc.
 
+### Updating Icons
+
+The icons used for the system tray are stored in `icons_src`. To apply changes
+to the icons, make your updates in the `icons_src` folder and then run
+`make update-icons`.
+
 ### Forcing Ad Swapping
 
 By default, only a small percentage of web ads are swapped and only if the user

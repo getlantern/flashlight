@@ -80,7 +80,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 
 // APIHandler returns an HTTP handler that specifically looks for and properly
 // handles pro server requests.
-func APIHandler() http.Handler {
+func APIHandler(ac common.AuthConfig) http.Handler {
 	log.Debugf("Returning pro API handler hitting host: %v", common.ProAPIHost)
 	return &httputil.ReverseProxy{
 		Transport: &proxyTransport{},
@@ -98,6 +98,18 @@ func APIHandler() http.Handler {
 				common.ProTokenHeader,
 				common.UserIdHeader,
 			}, ", "))
+			// Add auth headers only if not present, to avoid race conditions
+			// when creating new user or switching user, i.e., linking device
+			// to a new account.
+			if r.Header.Get(common.DeviceIdHeader) == "" {
+				r.Header.Set(common.DeviceIdHeader, ac.GetDeviceID())
+			}
+			if r.Header.Get(common.UserIdHeader) == "" {
+				r.Header.Set(common.UserIdHeader, strconv.FormatInt(ac.GetUserID(), 10))
+			}
+			if r.Header.Get(common.ProTokenHeader) == "" {
+				r.Header.Set(common.ProTokenHeader, ac.GetToken())
+			}
 		},
 	}
 }

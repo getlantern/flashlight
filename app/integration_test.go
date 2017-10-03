@@ -146,14 +146,23 @@ func TestProxying(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	testRequest(t, httpAddr, httpsAddr)
 
+	// Disconnected Lantern and try again
+	a.Disconnect()
+	testRequest(t, httpAddr, httpsAddr)
+
+	// Connect Lantern and try again
+	a.Connect()
+	testRequest(t, httpAddr, httpsAddr)
+
 	log.Fatal("test fatal error")
+	log.Debug("Exiting")
 	a.Exit(nil)
 
 	select {
 	case <-onGeo:
 		opsMx.RLock()
 		for _, op := range flashlight.FullyReportedOps {
-			if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_clear" {
+			if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" {
 				// ignore these, as we don't do them during the integration test
 				continue
 			}

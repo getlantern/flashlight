@@ -4,21 +4,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/pro"
 	client "github.com/getlantern/flashlight/pro/client"
 	"github.com/stripe/stripe-go"
 )
 
 type Session interface {
-	config.UserConfig
+	common.AuthConfig
 	SetCountry(string)
 	UpdateStats(string, string, string, int, int)
 	SetStaging(bool)
 	ShowSurvey(string)
 	ProxyAll() bool
-	BandwidthUpdate(int, int)
-	DeviceId() string
+	BandwidthUpdate(int, int, int)
 	AccountId() string
 	AddDevice(string, string)
 	AddPlan(string, string, string, bool, int, int)
@@ -46,6 +45,7 @@ type Session interface {
 	Currency() string
 	DeviceOS() string
 	SetStripePubKey(string)
+	IsProUser() bool
 }
 
 const (
@@ -65,7 +65,7 @@ func newRequest(session Session) *proRequest {
 		client: client.NewClient(pro.GetHTTPClient()),
 		user: client.User{
 			Auth: client.Auth{
-				DeviceID: session.DeviceId(),
+				DeviceID: session.GetDeviceID(),
 				ID:       session.GetUserID(),
 				Token:    session.GetToken(),
 			},
@@ -233,7 +233,7 @@ func userData(req *proRequest) (*client.Response, error) {
 
 	deviceLinked := true
 	deviceName := req.session.DeviceName()
-	deviceId := req.session.DeviceId()
+	deviceId := req.session.GetDeviceID()
 
 	isActive := res.User.UserStatus == "active"
 	expired := res.User.UserStatus == "expired"

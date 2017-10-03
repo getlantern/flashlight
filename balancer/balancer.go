@@ -108,16 +108,21 @@ type Balancer struct {
 	onActiveDialer                  chan Dialer
 	priorTopDialer                  Dialer
 	bandwidthKnownForPriorTopDialer bool
+	hasSucceedingDialer             chan bool
+	HasSucceedingDialer             <-chan bool
 }
 
 // New creates a new Balancer using the supplied Dialers.
 func New(dialers ...Dialer) *Balancer {
 	// a small alpha to gradually adjust timeout based on performance of all
 	// dialers
+	hasSucceedingDialer := make(chan bool, 1000)
 	b := &Balancer{
-		nextTimeout:    ema.NewDuration(initialTimeout, 0.2),
-		closeCh:        make(chan bool),
-		onActiveDialer: make(chan Dialer, 1),
+		nextTimeout:         ema.NewDuration(initialTimeout, 0.2),
+		closeCh:             make(chan bool),
+		onActiveDialer:      make(chan Dialer, 1),
+		hasSucceedingDialer: hasSucceedingDialer,
+		HasSucceedingDialer: hasSucceedingDialer,
 	}
 
 	b.Reset(dialers...)
@@ -355,6 +360,11 @@ func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, error) {
 		dialers = b.trusted
 	}
 	b.mu.RUnlock()
+
+	if !trustedOnly {
+		b.lookForSucceedingDialer(dialers)
+	}
+
 	if dialers.Len() == 0 {
 		if trustedOnly {
 			return nil, fmt.Errorf("No trusted dialers")
@@ -410,7 +420,24 @@ func (b *Balancer) sortDialers() {
 	b.trusted = trusted
 	b.mu.Unlock()
 
+	b.lookForSucceedingDialer(dialers)
 	b.printStats(dialers)
+}
+
+func (b *Balancer) lookForSucceedingDialer(dialers []Dialer) {
+	hasSucceedingDialer := false
+	for _, dialer := range dialers {
+		if dialer.Succeeding() {
+			hasSucceedingDialer = true
+			break
+		}
+	}
+	select {
+	case b.hasSucceedingDialer <- hasSucceedingDialer:
+		// okay
+	default:
+		// channel full
+	}
 }
 
 type SortedDialers []Dialer

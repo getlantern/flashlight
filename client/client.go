@@ -69,6 +69,8 @@ var (
 
 	// See http://stackoverflow.com/questions/106179/regular-expression-to-match-dns-hostname-or-ip-address
 	validHostnameRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
+
+	errLanternOff = fmt.Errorf("Lantern is off")
 )
 
 // Client is an HTTP proxy that accepts connections from local programs and
@@ -87,6 +89,7 @@ type Client struct {
 
 	l net.Listener
 
+	disconnected   func() bool
 	allowShortcut  func(addr string) (bool, net.IP)
 	useDetour      func() bool
 	proTokenGetter func() string
@@ -95,7 +98,7 @@ type Client struct {
 	rewriteToHTTPS httpseverywhere.Rewrite
 	rewriteLRU     *lru.Cache
 
-	statsTracker stats.StatsTracker
+	statsTracker stats.Tracker
 
 	iptool            iptool.Tool
 	allowPrivateHosts func() bool
@@ -108,10 +111,11 @@ type Client struct {
 // SOCKS proxies. It take a function for determing whether or not to proxy
 // all traffic, and another function to get Lantern Pro token when required.
 func NewClient(
+	disconnected func() bool,
 	allowShortcut func(addr string) (bool, net.IP),
 	useDetour func() bool,
 	proTokenGetter func() string,
-	statsTracker stats.StatsTracker,
+	statsTracker stats.Tracker,
 	allowPrivateHosts func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
@@ -124,6 +128,7 @@ func NewClient(
 	}
 	client := &Client{
 		bal:               balancer.New(),
+		disconnected:      disconnected,
 		allowShortcut:     allowShortcut,
 		useDetour:         useDetour,
 		proTokenGetter:    proTokenGetter,
@@ -355,12 +360,16 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 }
 
 func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Context, network, addr string) (net.Conn, error) {
+	shortcutDialer := func(ctx context.Context, network, addr string, ip net.IP) (net.Conn, error) {
+		log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
+		op.Set("shortcut_direct", true)
+		op.Set("shortcut_direct_ip", ip)
+		return netx.DialContext(ctx, "tcp", addr)
+	}
+
 	directDialer := func(ctx context.Context, network, addr string) (net.Conn, error) {
 		if allow, ip := client.allowShortcut(addr); allow {
-			log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
-			op.Set("shortcut_direct", true)
-			op.Set("shortcut_direct_ip", ip)
-			return netx.DialContext(ctx, "tcp", addr)
+			return shortcutDialer(ctx, network, addr, ip)
 		}
 		dl, ok := ctx.Deadline()
 		if !ok {
@@ -420,12 +429,25 @@ func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Con
 		dialer = detour.Dialer(directDialer, proxiedDialer)
 	} else {
 		op.Set("detour", false)
-		dialer = proxiedDialer
+		dialer = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			var conn net.Conn
+			var err error
+			if allow, ip := client.allowShortcut(addr); allow {
+				conn, err = shortcutDialer(ctx, network, addr, ip)
+				if err == nil {
+					return conn, err
+				}
+			}
+			return proxiedDialer(ctx, network, addr)
+		}
 	}
 	return dialer
 }
 
 func (client *Client) shouldSendToProxy(addr string, port int) error {
+	if client.disconnected() {
+		return errLanternOff
+	}
 	err := client.isPortProxyable(port)
 	if err == nil {
 		err = client.isAddressProxyable(addr)

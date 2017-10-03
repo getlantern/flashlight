@@ -11,16 +11,9 @@ type statsTracker struct {
 }
 
 func NewStatsTracker() *statsTracker {
-	s := &statsTracker{}
-	s.Broadcast = func(st stats.Stats) {
-		select {
-		case s.service.Out <- st:
-			// ok
-		default:
-			// don't block if no-one is listening
-		}
+	return &statsTracker{
+		Tracker: stats.NewTracker(),
 	}
-	return s
 }
 
 func (s *statsTracker) StartService() (err error) {
@@ -30,9 +23,15 @@ func (s *statsTracker) StartService() (err error) {
 	}
 
 	s.service, err = ws.Register("stats", helloFn)
+	if err == nil {
+		s.AddListener(func(newStats stats.Stats) {
+			select {
+			case s.service.Out <- newStats:
+				// ok
+			default:
+				// don't block if no-one is listening
+			}
+		})
+	}
 	return
-}
-
-func (s *statsTracker) StopService() {
-	ws.Unregister("stats")
 }

@@ -14,12 +14,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/getlantern/golog"
+	"github.com/getlantern/i18n"
+
 	"github.com/getlantern/flashlight/app"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ui"
-	"github.com/getlantern/golog"
-	"github.com/getlantern/i18n"
+
 	"github.com/mitchellh/panicwrap"
 )
 
@@ -185,6 +187,5 @@ func handleSignals(a *app.App) {
 		s := <-c
 		log.Debugf("Got signal \"%s\", exiting...", s)
 		a.Exit(nil)
-		os.Exit(0)
 	}()
 }
