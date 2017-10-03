@@ -32,8 +32,8 @@ func init() {
 }
 
 // Start starts serving the UI.
-func Start(requestedAddr, extURL, localHTTPTok string) error {
-	serve = newServer(extURL, localHTTPTok)
+func Start(requestedAddr, extURL, localHTTPTok, uiDomain string) error {
+	serve = newServer(extURL, localHTTPTok, uiDomain)
 	attachHandlers(serve)
 	if err := serve.start(requestedAddr); err != nil {
 		return err
@@ -92,10 +92,17 @@ func unpackUI() {
 	translations.Set(fs.SubDir("locale"))
 }
 
+// fixPath changes the path in certain files that use hard coded absolute paths
+// to include the secure random path instead of the naked root path the UI will
+// just reject.
 func fixPath(name string, file []byte) []byte {
 	if strings.HasSuffix(name, ".css") {
-		img := bytes.Replace(file, []byte("/img/"), []byte(serve.requestPath+"img/"), -1)
-		return bytes.Replace(img, []byte("/font/"), []byte(serve.requestPath+"font/"), -1)
+		cur := bytes.Replace(file, []byte("/img/"), []byte(serve.requestPath+"img/"), -1)
+		return bytes.Replace(cur, []byte("/font/"), []byte(serve.requestPath+"font/"), -1)
+	}
+	if strings.HasSuffix(name, ".html") {
+		// This is just the favicon as of this writing.
+		return bytes.Replace(file, []byte("href=\"/img/"), []byte("href=\""+serve.requestPath+"img/"), -1)
 	}
 	return file
 }

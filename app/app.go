@@ -54,6 +54,7 @@ type App struct {
 	exitOnce        sync.Once
 	chExitFuncs     chan func()
 	chLastExitFuncs chan func()
+	uiDomain        string
 }
 
 // Init initializes the App's state
@@ -67,6 +68,8 @@ func (app *App) Init() {
 	app.chExitFuncs = make(chan func(), 100)
 	app.chLastExitFuncs = make(chan func(), 100)
 	app.statsTracker = NewStatsTracker()
+
+	app.uiDomain = app.Flags["ui-domain"].(string)
 }
 
 // LogPanicAndExit logs a panic and then exits the application. This function
@@ -113,7 +116,7 @@ func (app *App) Run() {
 		}
 
 		uiFilter := func(req *http.Request) (*http.Request, error) {
-			if strings.HasPrefix(req.URL.Host, "search.lantern.io") || strings.HasPrefix(req.Host, "search.lantern.io") {
+			if strings.HasPrefix(req.URL.Host, app.uiDomain) || strings.HasPrefix(req.Host, app.uiDomain) {
 				return ui.ServeFromLocalUI(req)
 			}
 			return req, nil
@@ -228,7 +231,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 		log.Debugf("Starting client UI at %v", uiaddr)
 		// ui will handle empty uiaddr correctly
-		err = ui.Start(uiaddr, startupURL, localHTTPToken(settings))
+		err = ui.Start(uiaddr, startupURL, localHTTPToken(settings), app.uiDomain)
 		if err != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		}

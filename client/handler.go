@@ -13,7 +13,6 @@ import (
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/proxy/filters"
 	"github.com/getlantern/tarfs"
 )
@@ -39,7 +38,6 @@ func init() {
 	// Override system default for current process.
 	_ = mime.AddExtensionType(".css", "text/css")
 	_ = mime.AddExtensionType(".js", "application/javascript")
-	unpackUI()
 }
 
 func (client *Client) handle(conn net.Conn) error {
@@ -54,10 +52,6 @@ func (client *Client) handle(conn net.Conn) error {
 }
 
 func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
-	if r.Method == http.MethodConnect && strings.Contains(r.URL.Host, "search.lantern.io") {
-		log.Debugf("FOUND FOR CONNECT -- IN HANDLER -- search.lantern.io: %+v", r)
-	}
-
 	req, err := client.requestFilter(r)
 	if err != nil {
 		req = r
@@ -113,18 +107,6 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 	}
 
 	return next(ctx, req)
-}
-
-func unpackUI() (*tarfs.FileSystem, error) {
-	var err error
-	fs, err = tarfs.New(ui.Resources, "")
-	if err != nil {
-		// Panicking here because this shouldn't happen at runtime unless the
-		// resources were incorrectly embedded.
-		panic(fmt.Errorf("Unable to open tarfs filesystem: %v", err))
-	}
-	translations.Set(fs.SubDir("locale"))
-	return fs, err
 }
 
 func (client *Client) easyblock(ctx filters.Context, req *http.Request) (*http.Response, filters.Context, error) {

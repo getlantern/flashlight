@@ -5,7 +5,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
-	"path"
 	"strconv"
 	"strings"
 	"sync"
@@ -28,17 +27,21 @@ type server struct {
 	mux            *http.ServeMux
 	onceOpenExtURL sync.Once
 	proxy          *httputil.ReverseProxy
+
+	// The domain to serve the UI on - can be anything really.
+	uiDomain string
 }
 
 // newServer creates a new UI server.
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func newServer(extURL, localHTTPToken string) *server {
+func newServer(extURL, localHTTPToken, uiDomain string) *server {
 	return &server{
 		externalURL: overrideManotoURL(extURL),
 		requestPath: "/" + localHTTPToken + "/",
 		mux:         http.NewServeMux(),
+		uiDomain:    uiDomain,
 	}
 }
 
@@ -54,7 +57,7 @@ func overrideManotoURL(u string) string {
 func (s *server) Handle(pattern string, handler http.Handler) {
 	log.Debugf("Adding handler for %v", pattern)
 	s.mux.Handle(pattern,
-		s.checkOrigin(util.NoCacheHandler(handler)))
+		s.checkRequestPath(util.NoCacheHandler(handler)))
 }
 
 // starts server listen at addr in host:port format, or arbitrary local port if
@@ -139,7 +142,7 @@ func (s *server) show(campaign, medium string) {
 // ones reading from those incoming sockets the fact that reading starts
 // asynchronously is not a problem.
 func (s *server) doShow(campaign, medium string, open func(string, time.Duration)) {
-	tempURL := "http://search.lantern.io" + s.requestPath
+	tempURL := "http://" + s.uiDomain + s.requestPath
 	log.Debugf("Temp URL %v", tempURL)
 	campaignURL, err := analytics.AddCampaign(tempURL, campaign, "", medium)
 	var uiURL string
@@ -172,11 +175,11 @@ func (s *server) stop() error {
 // addToken adds the UI domain and custom request token to the specified
 // request path. Without that token, the backend will reject the request to
 // avoid web sites detecting Lantern.
-func (s *server) addToken(in string) string {
-	return util.SetURLParam("http://"+path.Join(s.accessAddr, in), "token", s.requestPath)
+func (s *server) addToken(path string) string {
+	return "http://" + s.accessAddr + s.requestPath + path //, in), "token", s.requestPath)
 }
 
-func (s *server) checkOrigin(h http.Handler) http.Handler {
+func (s *server) checkRequestPath(h http.Handler) http.Handler {
 	check := func(w http.ResponseWriter, r *http.Request) {
 		if !strings.HasPrefix(r.URL.Path, s.requestPath) {
 			msg := fmt.Sprintf("Access was denied because the request path was wrong. Expected\n'%v'\nnot:\n%v", r.URL.Path, s.requestPath)
