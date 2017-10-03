@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	maxDNSGrabCache = 2500
+	maxDNSGrabCache = 10000
 )
 
 var (
