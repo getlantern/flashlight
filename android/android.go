@@ -213,10 +213,12 @@ func run(configDir, locale string,
 			}
 			ip := net.ParseIP(host)
 			if ip == nil {
+				log.Debugf("Unable to parse IP %v, passing through address as is", host)
 				return host
 			}
 			updatedHost := grabber.ReverseLookup(ip)
 			if updatedHost == "" {
+				log.Debugf("Unable to reverse lookup %v, passing through (this shouldn't happen much)", ip)
 				return addr
 			}
 			if splitErr != nil {
