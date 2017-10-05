@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -25,20 +26,23 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
+	"github.com/getlantern/overture/core"
 	"github.com/getlantern/protected"
+)
+
+const (
+	defaultLocale   = `en-US`
+	overtureConfig  = "config.json"
+	surveyURL       = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
+	updateServerURL = "https://update.getlantern.org"
 )
 
 var (
 	log = golog.LoggerFor("lantern")
 
-	updateServerURL = "https://update.getlantern.org"
-	defaultLocale   = `en-US`
-
 	surveyHTTPClient = &http.Client{
 		Transport: proxied.ChainedThenFrontedWith("d38rvu630khj2q.cloudfront.net", ""),
 	}
-
-	surveyURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
 
 	startOnce sync.Once
 )
@@ -119,6 +123,8 @@ func Start(configDir string, locale string,
 		return nil, err
 	}
 	log.Debugf("Starting socks proxy at %s", socksAddr)
+
+	go core.InitServer(filepath.Join(configDir, overtureConfig), socksAddr.(string))
 
 	return &StartResult{addr.(string), socksAddr.(string)}, nil
 }

@@ -105,6 +105,8 @@ imports:
   version: d15e28ab7389ed5d644ccb891d9d54154e43cd27
 - name: github.com/getlantern/go-socks5
   version: 84bc9224d653efa66ce1f5f01097b9d38fcc3f34
+- name: github.com/getlantern/overture
+  version: 9d974224c37b84662e795c175ed5346f08d5275b
 - name: github.com/getlantern/go-update
   version: d7c3f1ac97f868e6936ebd946df87f9826e57355
   subpackages:
