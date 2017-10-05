@@ -10,6 +10,13 @@ import (
 	"github.com/stripe/stripe-go"
 )
 
+type Settings interface {
+	StickyConfig() bool
+	EnableAdBlocking() bool
+	DefaultDnsServer() string
+	TimeoutMillis() int
+}
+
 type Session interface {
 	common.AuthConfig
 	SetCountry(string)
@@ -34,7 +41,7 @@ type Session interface {
 	SetPaymentProvider(string)
 	StripeToken() string
 	StripeApiKey() string
-	AdBlockingAllowed() bool
+	IsPlayVersion() bool
 	Email() string
 	SetToken(string)
 	SetUserId(int64)

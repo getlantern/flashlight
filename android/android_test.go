@@ -25,6 +25,15 @@ type testSession struct {
 	Session
 }
 
+type testSettings struct {
+	Settings
+}
+
+func (c testSettings) StickyConfig() bool       { return false }
+func (c testSettings) EnableAdBlocking() bool   { return false }
+func (c testSettings) DefaultDnsServer() string { return "8.8.8.8" }
+func (c testSettings) TimeoutMillis() int       { return 5000 }
+
 func (c testSession) AfterStart()                   {}
 func (c testSession) BandwidthUpdate(int, int, int) {}
 func (c testSession) ConfigUpdate(bool)             {}
@@ -50,9 +59,9 @@ func TestProxying(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "testconfig")
 	if assert.NoError(t, err, "Unable to create temp configDir") {
 		defer os.RemoveAll(tmpDir)
-		result, err := Start(tmpDir, "en_US", false, 5000, testSession{})
+		result, err := Start(tmpDir, "en_US", testSettings{}, testSession{})
 		if assert.NoError(t, err, "Should have been able to start lantern") {
-			newResult, err := Start("testapp", "en_US", false, 5000, testSession{})
+			newResult, err := Start("testapp", "en_US", testSettings{}, testSession{})
 			if assert.NoError(t, err, "Should have been able to start lantern twice") {
 				if assert.Equal(t, result.HTTPAddr, newResult.HTTPAddr, "2nd start should have resulted in the same address") {
 					err := testProxiedRequest(result.HTTPAddr, false)

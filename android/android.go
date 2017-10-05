@@ -105,20 +105,19 @@ type Updater autoupdate.Updater
 // initial activity may be slow, so clients with low read timeouts may
 // time out.
 func Start(configDir string, locale string,
-	stickyConfig bool,
-	timeoutMillis int, session Session) (*StartResult, error) {
+	settings Settings, session Session) (*StartResult, error) {
 
 	startOnce.Do(func() {
-		go run(configDir, locale, stickyConfig, session)
+		go run(configDir, locale, settings, session)
 	})
 
 	elapsed := mtime.Stopwatch()
-	addr, ok := client.Addr(time.Duration(timeoutMillis) * time.Millisecond)
+	addr, ok := client.Addr(time.Duration(settings.TimeoutMillis()) * time.Millisecond)
 	if !ok {
 		return nil, fmt.Errorf("HTTP Proxy didn't start within given timeout")
 	}
 
-	socksAddr, ok := client.Socks5Addr((time.Duration(timeoutMillis) * time.Millisecond) - elapsed())
+	socksAddr, ok := client.Socks5Addr((time.Duration(settings.TimeoutMillis()) * time.Millisecond) - elapsed())
 	if !ok {
 		err := fmt.Errorf("SOCKS5 Proxy didn't start within given timeout")
 		log.Error(err.Error())
@@ -135,13 +134,13 @@ func AddLoggingMetadata(key, value string) {
 }
 
 func run(configDir, locale string,
-	stickyConfig bool, session Session) {
+	settings Settings, session Session) {
 
 	appdir.SetHomeDir(configDir)
 	session.SetStaging(common.Staging)
 
 	log.Debugf("Starting lantern: configDir %s locale %s sticky config %t",
-		configDir, locale, stickyConfig)
+		configDir, locale, settings.StickyConfig())
 
 	flags := map[string]interface{}{
 		"borda-report-interval":    5 * time.Minute,
@@ -156,7 +155,7 @@ func run(configDir, locale string,
 		return
 	}
 
-	if stickyConfig {
+	if settings.StickyConfig() {
 		flags["stickyconfig"] = true
 		flags["readableconfig"] = true
 	}
@@ -165,7 +164,8 @@ func run(configDir, locale string,
 
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
-	grabber, err := dnsgrab.Listen(maxDNSGrabCache, ":8153", "8.8.8.8")
+	grabber, err := dnsgrab.Listen(maxDNSGrabCache, ":8153",
+		settings.DefaultDnsServer())
 	if err != nil {
 		log.Errorf("Unable to start dnsgrab: %v", err)
 		return
@@ -205,7 +205,7 @@ func run(configDir, locale string,
 		session.IsProUser,
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
-		session.AdBlockingAllowed,
+		func() bool { return settings.EnableAdBlocking() && !session.IsPlayVersion() },
 		func(addr string) string {
 			host, port, splitErr := net.SplitHostPort(addr)
 			if splitErr != nil {
