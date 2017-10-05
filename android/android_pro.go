@@ -10,6 +10,13 @@ import (
 	"github.com/stripe/stripe-go"
 )
 
+type Config interface {
+	StickyConfig() bool
+	EnableAdBlocking() bool
+	DefaultDnsServer() string
+	TimeoutMillis() int
+}
+
 type Session interface {
 	common.AuthConfig
 	SetCountry(string)
