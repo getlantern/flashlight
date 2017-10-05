@@ -196,7 +196,10 @@ type frontedRT struct{}
 // `dualFetcher.RoundTrip` when fronted is not yet available, especially when
 // the application is starting up
 func (f frontedRT) RoundTrip(req *http.Request) (*http.Response, error) {
-	rt := fronted.NewDirect(5 * time.Minute)
+	rt, ok := fronted.NewDirect(5 * time.Minute)
+	if !ok {
+		return nil, errors.New("Unable to obtain direct fronter")
+	}
 	changeUserAgent(req)
 	return rt.RoundTrip(req)
 }
