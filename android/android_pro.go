@@ -41,7 +41,7 @@ type Session interface {
 	SetPaymentProvider(string)
 	StripeToken() string
 	StripeApiKey() string
-	AdBlockingAllowed() bool
+	IsPlayVersion() bool
 	Email() string
 	SetToken(string)
 	SetUserId(int64)
