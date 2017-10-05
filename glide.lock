@@ -224,7 +224,7 @@ imports:
 - name: github.com/getlantern/systray
   version: fc8e01480deb4dc92e7f13151536a9678520ff42
 - name: github.com/getlantern/tarfs
-  version: d77b63c04dbe74646c5f8f46c5c1e5523ef22415
+  version: 4987a6195239168b073bbe5878cf2b95b522934c
 - name: github.com/getlantern/tlsdefaults
   version: 55d0dd468a195a4c8cb99ee0c1a2878cb7e72155
 - name: github.com/getlantern/tlsdialer

@@ -73,7 +73,7 @@ func Stop() {
 
 func unpackUI() {
 	var err error
-	fs, err = tarfs.NewWithListener(Resources, "", fixPath)
+	fs, err = tarfs.NewWithFilter(Resources, "", fixPath)
 	if err != nil {
 		// Panicking here because this shouldn't happen at runtime unless the
 		// resources were incorrectly embedded.
@@ -85,12 +85,12 @@ func unpackUI() {
 // fixPath changes the path in certain files that use hard coded absolute paths
 // to include the secure random path instead of the naked root path the UI will
 // just reject.
-func fixPath(name string, file []byte) []byte {
+func fixPath(name string, file []byte) (string, []byte) {
 	if strings.HasSuffix(name, ".css") {
 		cur := bytes.Replace(file, []byte("/img/"), []byte(serve.requestPath+"/img/"), -1)
-		return bytes.Replace(cur, []byte("/font/"), []byte(serve.requestPath+"/font/"), -1)
+		return name, bytes.Replace(cur, []byte("/font/"), []byte(serve.requestPath+"/font/"), -1)
 	}
-	return file
+	return name, file
 }
 
 // Translations returns the translations for a given locale file.
