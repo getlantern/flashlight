@@ -10,7 +10,7 @@ import (
 	"github.com/stripe/stripe-go"
 )
 
-type Config interface {
+type Settings interface {
 	StickyConfig() bool
 	EnableAdBlocking() bool
 	DefaultDnsServer() string
