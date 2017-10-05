@@ -75,6 +75,12 @@ imports:
   version: 624d99b1798d7c5375ea1d3ca4c5b04d58f7c775
 - name: github.com/getlantern/deepcopy
   version: 7f45deb8130a0acc553242eb0e009e3f6f3d9ce3
+- name: github.com/getlantern/dns
+  version: 630ccc2c3041d6f4362479526ed229d222f21274
+- name: github.com/miekg/dns
+  version: e4205768578dc90c2669e75a2f8a8bf77e3083a4
+- name: github.com/getlantern/dnsgrab
+  version: 852340bb9b6163352f76584935c16c0d85b3d5cf
 - name: github.com/getlantern/detour
   version: 867414515e484eb6a21730cf3abc02a108ed4ed9
 - name: github.com/getlantern/easylist
@@ -104,7 +110,7 @@ imports:
 - name: github.com/getlantern/go-loggly
   version: d15e28ab7389ed5d644ccb891d9d54154e43cd27
 - name: github.com/getlantern/go-socks5
-  version: 84bc9224d653efa66ce1f5f01097b9d38fcc3f34
+  version: 3483cc4815b796020cd9e50b504d4f16b04544e5
 - name: github.com/getlantern/go-update
   version: d7c3f1ac97f868e6936ebd946df87f9826e57355
   subpackages:
@@ -127,14 +133,14 @@ imports:
 - name: github.com/getlantern/hidden
   version: d52a649ab33af200943bb599898dbdcfdbc94cb7
 - name: github.com/getlantern/http-proxy
-  version: 3570353323a529cf7b1b84e34f0366932c29ca3d
+  version: dda25cd8a6e70ae8986dd97a848fe667e71fa7af
   subpackages:
   - buffers
   - listeners
   - proxyfilters
   - server
 - name: github.com/getlantern/http-proxy-lantern
-  version: f89cac5cc983ff3392c64c28dbd59e1fd87a3bbf
+  version: 2bbb8ccb7606e6e1978df3279351f8fa9aaf2912
   subpackages:
   - analytics
   - bbr
@@ -201,8 +207,10 @@ imports:
   version: 4afd1fdc46cb36bf428ed91707db063de87ecff5
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
+- name: github.com/getlantern/preconn
+  version: 9d78068db81b714e7612e5d43030ee2e1ce6c49a
 - name: github.com/getlantern/proxy
-  version: aba782fdd7da54524df2bd6ea8976af871f3d257
+  version: 2bd1c807398244942a7c4d890b1bbcffd826c2f3
   subpackages:
   - filters
 - name: github.com/getlantern/proxybench
@@ -230,7 +238,7 @@ imports:
 - name: github.com/getlantern/tlsdialer
   version: b4d0a731957c4658f2e281e1ae8653781719a55b
 - name: github.com/getlantern/urlcache
-  version: cf9a7866aa8239f7cc71a098bed5e3bc08fbd5bb
+  version: 9ed937e3b27e842a7789e43058021a2526e0f870
 - name: github.com/getlantern/uuid
   version: 1318e7614b82cd38041b0b0bd3692d71f3901fb8
 - name: github.com/getlantern/vtime
@@ -316,8 +324,6 @@ imports:
   version: f3a7b8ffff474320c4f5cc564c9abb2c52ded8bc
 - name: github.com/mailgun/ttlmap
   version: c1c17f74874f2a5ea48bfb06b5459d4ef2689749
-- name: github.com/miekg/dns
-  version: e4205768578dc90c2669e75a2f8a8bf77e3083a4
 - name: github.com/mitchellh/panicwrap
   version: fce601fe55579125e1b3cb0b992287e7290f7b83
 - name: github.com/mxk/go-flowrate

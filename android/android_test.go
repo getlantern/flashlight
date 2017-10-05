@@ -1,6 +1,7 @@
 package android
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -24,6 +25,15 @@ type testSession struct {
 	Session
 }
 
+type testSettings struct {
+	Settings
+}
+
+func (c testSettings) StickyConfig() bool       { return false }
+func (c testSettings) EnableAdBlocking() bool   { return false }
+func (c testSettings) DefaultDnsServer() string { return "8.8.8.8" }
+func (c testSettings) TimeoutMillis() int       { return 5000 }
+
 func (c testSession) AfterStart()                   {}
 func (c testSession) BandwidthUpdate(int, int, int) {}
 func (c testSession) ConfigUpdate(bool)             {}
@@ -40,6 +50,7 @@ func (c testSession) SetUserId(int64)               {}
 func (c testSession) SetToken(string)               {}
 func (c testSession) SetCode(string)                {}
 func (c testSession) IsProUser() bool               { return true }
+func (c testSession) AdBlockingAllowed() bool       { return false }
 
 func (c testSession) UpdateStats(string, string, string, int, int) {}
 
@@ -48,9 +59,9 @@ func TestProxying(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "testconfig")
 	if assert.NoError(t, err, "Unable to create temp configDir") {
 		defer os.RemoveAll(tmpDir)
-		result, err := Start(tmpDir, "en_US", false, 5000, testSession{})
+		result, err := Start(tmpDir, "en_US", testSettings{}, testSession{})
 		if assert.NoError(t, err, "Should have been able to start lantern") {
-			newResult, err := Start("testapp", "en_US", false, 5000, testSession{})
+			newResult, err := Start("testapp", "en_US", testSettings{}, testSession{})
 			if assert.NoError(t, err, "Should have been able to start lantern twice") {
 				if assert.Equal(t, result.HTTPAddr, newResult.HTTPAddr, "2nd start should have resulted in the same address") {
 					err := testProxiedRequest(result.HTTPAddr, false)
@@ -67,17 +78,34 @@ func TestProxying(t *testing.T) {
 func testProxiedRequest(proxyAddr string, socks bool) error {
 	var req *http.Request
 
+	host := "www.google.com"
+	if socks {
+		resolver := &net.Resolver{
+			PreferGo: true,
+			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+				// use dnsgrabber to resolve
+				return net.DialTimeout("udp", "127.0.0.1:8153", 2*time.Second)
+			},
+		}
+		resolved, err := resolver.LookupHost(context.Background(), host)
+		log.Debugf("resolved: %v: %v", resolved, err)
+		if len(resolved) > 0 {
+			host = resolved[0]
+		}
+	}
+	hostWithPort := fmt.Sprintf("%v:80", host)
+
 	req = &http.Request{
 		Method: "GET",
 		URL: &url.URL{
 			Scheme: "http",
-			Host:   "www.google.com",
+			Host:   host,
 			Path:   "http://www.google.com/humans.txt",
 		},
 		ProtoMajor: 1,
 		ProtoMinor: 1,
 		Header: http.Header{
-			"Host": {"www.google.com:80"},
+			"Host": {hostWithPort},
 		},
 	}
 

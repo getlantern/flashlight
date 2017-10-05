@@ -54,6 +54,8 @@ func newClient() *Client {
 		func() bool { return true },
 		func() string { return testLang },
 		func() string { return testAdSwapTargetURL },
+		func() bool { return true },
+		func(host string) string { return host },
 	)
 	return client
 }

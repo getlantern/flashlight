@@ -61,7 +61,9 @@ func Run(httpProxyAddr string,
 	deviceID string,
 	isPro func() bool,
 	lang func() string,
-	adSwapTargetURL func() string) error {
+	adSwapTargetURL func() string,
+	adBlockingAllowed func() bool,
+	reverseDNS func(host string) string) error {
 
 	elapsed := mtime.Stopwatch()
 	displayVersion()
@@ -81,7 +83,10 @@ func Run(httpProxyAddr string,
 		statsTracker,
 		allowPrivateHosts,
 		lang,
-		adSwapTargetURL)
+		adSwapTargetURL,
+		adBlockingAllowed,
+		reverseDNS,
+	)
 	if err != nil {
 		fatalErr := fmt.Errorf("Unable to initialize client: %v", err)
 		op.FailIf(fatalErr)

@@ -57,7 +57,7 @@ linux: $(SOURCES)
 
 # vendor installs vendored dependencies using Glide
 vendor: require-glide
-	@$(GLIDE_BIN) install
+	@$(GLIDE_BIN) --debug install
 
 require-glide:
 	@if [ "$(GLIDE_BIN)" = "" ]; then \

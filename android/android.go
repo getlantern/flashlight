@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/autoupdate"
 	"github.com/getlantern/bandwidth"
+	"github.com/getlantern/dnsgrab"
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
@@ -26,6 +28,10 @@ import (
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/protected"
+)
+
+const (
+	maxDNSGrabCache = 10000
 )
 
 var (
@@ -99,20 +105,19 @@ type Updater autoupdate.Updater
 // initial activity may be slow, so clients with low read timeouts may
 // time out.
 func Start(configDir string, locale string,
-	stickyConfig bool,
-	timeoutMillis int, session Session) (*StartResult, error) {
+	settings Settings, session Session) (*StartResult, error) {
 
 	startOnce.Do(func() {
-		go run(configDir, locale, stickyConfig, session)
+		go run(configDir, locale, settings, session)
 	})
 
 	elapsed := mtime.Stopwatch()
-	addr, ok := client.Addr(time.Duration(timeoutMillis) * time.Millisecond)
+	addr, ok := client.Addr(time.Duration(settings.TimeoutMillis()) * time.Millisecond)
 	if !ok {
 		return nil, fmt.Errorf("HTTP Proxy didn't start within given timeout")
 	}
 
-	socksAddr, ok := client.Socks5Addr((time.Duration(timeoutMillis) * time.Millisecond) - elapsed())
+	socksAddr, ok := client.Socks5Addr((time.Duration(settings.TimeoutMillis()) * time.Millisecond) - elapsed())
 	if !ok {
 		err := fmt.Errorf("SOCKS5 Proxy didn't start within given timeout")
 		log.Error(err.Error())
@@ -129,13 +134,13 @@ func AddLoggingMetadata(key, value string) {
 }
 
 func run(configDir, locale string,
-	stickyConfig bool, session Session) {
+	settings Settings, session Session) {
 
 	appdir.SetHomeDir(configDir)
 	session.SetStaging(common.Staging)
 
 	log.Debugf("Starting lantern: configDir %s locale %s sticky config %t",
-		configDir, locale, stickyConfig)
+		configDir, locale, settings.StickyConfig())
 
 	flags := map[string]interface{}{
 		"borda-report-interval":    5 * time.Minute,
@@ -150,7 +155,7 @@ func run(configDir, locale string,
 		return
 	}
 
-	if stickyConfig {
+	if settings.StickyConfig() {
 		flags["stickyconfig"] = true
 		flags["readableconfig"] = true
 	}
@@ -158,6 +163,19 @@ func run(configDir, locale string,
 	logging.EnableFileLogging(configDir)
 
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
+
+	grabber, err := dnsgrab.Listen(maxDNSGrabCache, ":8153",
+		settings.DefaultDnsServer())
+	if err != nil {
+		log.Errorf("Unable to start dnsgrab: %v", err)
+		return
+	}
+	go func() {
+		serveErr := grabber.Serve()
+		if serveErr != nil {
+			log.Errorf("Error serving dns: %v", serveErr)
+		}
+	}()
 
 	flashlight.Run("127.0.0.1:0", // listen for HTTP on random address
 		"127.0.0.1:0",                // listen for SOCKS on random address
@@ -187,6 +205,27 @@ func run(configDir, locale string,
 		session.IsProUser,
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
+		func() bool { return settings.EnableAdBlocking() && !session.IsPlayVersion() },
+		func(addr string) string {
+			host, port, splitErr := net.SplitHostPort(addr)
+			if splitErr != nil {
+				host = addr
+			}
+			ip := net.ParseIP(host)
+			if ip == nil {
+				log.Debugf("Unable to parse IP %v, passing through address as is", host)
+				return host
+			}
+			updatedHost := grabber.ReverseLookup(ip)
+			if updatedHost == "" {
+				log.Debugf("Unable to reverse lookup %v, passing through (this shouldn't happen much)", ip)
+				return addr
+			}
+			if splitErr != nil {
+				return updatedHost
+			}
+			return fmt.Sprintf("%v:%v", updatedHost, port)
+		},
 	)
 }
 

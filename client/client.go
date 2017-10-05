@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -104,6 +103,8 @@ type Client struct {
 	allowPrivateHosts func() bool
 	lang              func() string
 	adSwapTargetURL   func() string
+
+	reverseDNS func(addr string) string
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -118,6 +119,8 @@ func NewClient(
 	allowPrivateHosts func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
+	adBlockingAllowed func() bool,
+	reverseDNS func(addr string) string,
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
 	rewriteLRU, err := lru.New(100)
@@ -136,6 +139,7 @@ func NewClient(
 		allowPrivateHosts: allowPrivateHosts,
 		lang:              lang,
 		adSwapTargetURL:   adSwapTargetURL,
+		reverseDNS:        reverseDNS,
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -146,11 +150,10 @@ func NewClient(
 		OnError:      errorResponse,
 		Dial:         client.dial,
 	})
-	// TODO: turn it to a config option
-	if runtime.GOOS == "android" {
-		client.easylist = allowAllEasyList{}
-	} else {
+	if adBlockingAllowed() {
 		client.initEasyList()
+	} else {
+		client.easylist = allowAllEasyList{}
 	}
 	client.reportProxyLocationLoop()
 	client.iptool, err = iptool.New()
@@ -287,11 +290,16 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 	socksAddr.Set(listenAddr)
 
 	conf := &socks5.Config{
-		Dial: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			op := ops.Begin("proxied_dialer")
-			op.Set("local_proxy_type", "socks5")
+		HandleConnect: func(ctx context.Context, conn net.Conn, req *socks5.Request, replySuccess func(boundAddr net.Addr) error, replyError func(err error) error) error {
+			op := ops.Begin("proxy")
 			defer op.End()
-			return client.doDial(op, ctx, true, addr)
+			ctx = context.WithValue(ctx, ctxKeyOp, op)
+			addr := client.reverseDNS(fmt.Sprintf("%v:%v", req.DestAddr.IP, req.DestAddr.Port))
+			errOnReply := replySuccess(nil)
+			if errOnReply != nil {
+				return op.FailIf(log.Errorf("Unable to reply success to SOCKS5 client: %v", errOnReply))
+			}
+			return op.FailIf(client.proxy.Connect(ctx, req.BufConn, conn, addr))
 		},
 	}
 	server, err := socks5.New(conf)
