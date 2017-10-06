@@ -78,6 +78,7 @@ func (m *userMap) wait(userID int64) *client.User {
 func IsProUser(ac common.AuthConfig) (isPro bool, statusKnown bool) {
 	user, err := GetUserData(ac)
 	if err != nil {
+		log.Debugf("Got error fetching pro user: %v", err)
 		return false, false
 	}
 	return isActive(user.UserStatus), true
