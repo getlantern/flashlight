@@ -127,10 +127,11 @@ func (s *notifyStatus) notifyFreeUser(title, msg, campaign string) {
 	}
 
 	logo := ui.AddToken("/img/lantern_logo.png")
+	click := ui.AddToken("/") + "#/plans"
 	note := &notify.Notification{
 		Title:    title,
 		Message:  msg,
-		ClickURL: "http://" + ui.GetUIAddr() + "#/plans",
+		ClickURL: click,
 		IconURL:  logo,
 	}
 	_ = notifier.ShowNotification(note, campaign)

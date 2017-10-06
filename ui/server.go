@@ -181,7 +181,7 @@ func (s *server) stop() error {
 // request path. Without that token, the backend will reject the request to
 // avoid web sites detecting Lantern.
 func (s *server) addToken(path string) string {
-	return "http://" + s.accessAddr + s.requestPath + path
+	return "http://" + s.uiDomain + s.requestPath + path
 }
 
 func (s *server) checkRequestPath(h http.Handler) http.Handler {
