@@ -28,7 +28,7 @@ var adSwapJavaScriptInjections = map[string]string{
 func (client *Client) handle(conn net.Conn) error {
 	op := ops.Begin("proxy")
 	ctx := context.WithValue(context.Background(), ctxKeyOp, op)
-	err := client.proxy.Handle(ctx, conn)
+	err := client.proxy.Handle(ctx, conn, conn)
 	if err != nil {
 		log.Error(op.FailIf(err))
 	}

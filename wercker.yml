@@ -3,7 +3,7 @@
 # If you want Google's container you would reference google/golang
 # Read more about containers on our dev center
 # http://devcenter.wercker.com/docs/containers/index.html
-box: golang:1.8.3
+box: golang:1.9
 # This is the build pipeline. Pipelines are the core of wercker
 # Read more about pipelines on our dev center
 # http://devcenter.wercker.com/docs/pipelines/index.html
@@ -23,16 +23,17 @@ build:
     # For https://github.com/wercker/step-add-to-known_hosts/issues/13
     - add-to-known_hosts@2.0.1:
       hostname: github.com
-      fingerprint: 16:27:ac:a5:76:28:2d:36:63:1b:56:4d:eb:df:a6:48
+      fingerprint: D7:9F:07:61:10:B3:92:93:E3:49:AC:89:84:5B:03:80:C1:9E:2F:8B
+      type: rsa
     - script:
-      name: force git paths
-      code: git config --global url."git@github.com:".insteadOf "https://github.com/"
+      name: authenticate git
+      code: git config --global url."https://71cee071ea22b7ffb10f68fa330d1130133bbfbd:x-oauth-basic@github.com/".insteadOf "https://github.com/"
     - script:
       name: get glide
       code: |
         # Note the standard glide install of piping through sh isn't supported for the test os, arch.
         cd /tmp
-        curl -L https://github.com/Masterminds/glide/releases/download/v0.12.1/glide-v0.12.1-linux-amd64.tar.gz -o glide.tar.gz
+        curl -L https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-amd64.tar.gz -o glide.tar.gz
         tar -xf glide.tar.gz
         sudo mv linux-amd64/glide /usr/local/bin/
     - install-packages:

@@ -63,8 +63,9 @@ func Run(httpProxyAddr string,
 	isPro func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
+	adBlockingAllowed func() bool,
+	reverseDNS func(host string) string,
 	requestFilter func(*http.Request) (*http.Request, error)) error {
-
 	elapsed := mtime.Stopwatch()
 	displayVersion()
 	initContext(deviceID, common.Version, common.RevisionDate, isPro)
@@ -84,6 +85,8 @@ func Run(httpProxyAddr string,
 		allowPrivateHosts,
 		lang,
 		adSwapTargetURL,
+		adBlockingAllowed,
+		reverseDNS,
 		requestFilter,
 	)
 	if err != nil {
