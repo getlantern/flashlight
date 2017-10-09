@@ -134,7 +134,7 @@ func AddToken(in string) string {
 // for things like websockets whereas the standard Lantern proxy does not.
 // Relaying locally gives us the best of both worlds.
 func ServeFromLocalUI(req *http.Request) *http.Request {
-	if req.Method == http.MethodConnect {
+	if req.Method == http.MethodConnect && req.URL != nil {
 		req.URL.Host = serve.listenAddr
 	}
 	// It's not clear why CONNECT requests also need the host header set here,
