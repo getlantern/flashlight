@@ -3,10 +3,53 @@ package ui
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestStart(t *testing.T) {
+	err := Start("127.0.0.1:0", "", "abcde", "ui.lantern.io", func() bool { return true })
+	assert.NoError(t, err)
+
+	uiAddr := GetUIAddr()
+	assert.NotEqual(t, "", uiAddr)
+
+	tok := AddToken("/abc")
+	assert.NotEqual(t, "", tok)
+	assert.True(t, strings.HasSuffix(tok, "/abc"))
+}
+
+func TestServeFromLocalUI(t *testing.T) {
+	serve = newServer("", "abcde", "ui.lantern.io", func() bool { return true })
+	serve.start("127.0.0.1:0")
+	req := &http.Request{
+		URL: &url.URL{Host: "test.io"},
+	}
+
+	assert.Equal(t, "", req.Host)
+
+	r := ServeFromLocalUI(req)
+
+	assert.Equal(t, serve.listenAddr, r.Host)
+	assert.Equal(t, "test.io", r.URL.Host)
+
+	req.Method = http.MethodConnect
+
+	r = ServeFromLocalUI(req)
+
+	assert.Equal(t, serve.listenAddr, r.URL.Host)
+}
+
+func TestTranslations(t *testing.T) {
+	serve = newServer("", "abcde", "ui.lantern.io", func() bool { return true })
+	unpackUI()
+	dat, err := Translations("en-US.json")
+	assert.NoError(t, err, "Could not fetch locale")
+	assert.NotNil(t, dat)
+}
 
 func TestAddrCandidates(t *testing.T) {
 	endpoint := "127.0.0.1:1892"
