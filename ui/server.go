@@ -5,8 +5,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
-	"net/url"
-	"path"
 	"strconv"
 	"strings"
 	"sync"
@@ -23,21 +21,25 @@ type server struct {
 	// The address client should access. Available only if the server is started.
 	accessAddr     string
 	externalURL    string
-	localHTTPToken string
+	requestPath    string
 	listener       net.Listener
 	mux            *http.ServeMux
 	onceOpenExtURL sync.Once
+
+	// The domain to serve the UI on - can be anything really.
+	uiDomain string
 }
 
 // newServer creates a new UI server.
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func newServer(extURL, localHTTPToken string) *server {
+func newServer(extURL, localHTTPToken, uiDomain string) *server {
 	return &server{
-		externalURL:    overrideManotoURL(extURL),
-		localHTTPToken: localHTTPToken,
-		mux:            http.NewServeMux(),
+		externalURL: overrideManotoURL(extURL),
+		requestPath: "/" + localHTTPToken,
+		mux:         http.NewServeMux(),
+		uiDomain:    uiDomain,
 	}
 }
 
@@ -53,7 +55,7 @@ func overrideManotoURL(u string) string {
 func (s *server) Handle(pattern string, handler http.Handler) {
 	log.Debugf("Adding handler for %v", pattern)
 	s.mux.Handle(pattern,
-		s.checkOrigin(util.NoCacheHandler(handler)))
+		s.checkRequestPath(util.NoCacheHandler(handler)))
 }
 
 // starts server listen at addr in host:port format, or arbitrary local port if
@@ -168,7 +170,7 @@ func (s *server) getUIAddr() string {
 }
 
 func (s *server) rootURL() string {
-	return fmt.Sprintf("http://%s/", s.accessAddr)
+	return "http://" + s.uiDomain + s.requestPath + "/"
 }
 
 func (s *server) stop() error {
@@ -178,64 +180,18 @@ func (s *server) stop() error {
 // addToken adds the UI domain and custom request token to the specified
 // request path. Without that token, the backend will reject the request to
 // avoid web sites detecting Lantern.
-func (s *server) addToken(in string) string {
-	return util.SetURLParam("http://"+path.Join(s.accessAddr, in), "token", s.localHTTPToken)
+func (s *server) addToken(path string) string {
+	return "http://" + s.uiDomain + s.requestPath + path
 }
 
-func (s *server) checkOrigin(h http.Handler) http.Handler {
+func (s *server) checkRequestPath(h http.Handler) http.Handler {
 	check := func(w http.ResponseWriter, r *http.Request) {
-		var clientURL string
-
-		referer := r.Header.Get("Referer")
-		if referer != "" {
-			clientURL = referer
+		if !strings.HasPrefix(r.URL.Path, s.requestPath) {
+			msg := fmt.Sprintf("Access was denied because the request path was wrong. Expected\n'%v'\nnot:\n%v", r.URL.Path, s.requestPath)
+			s.forbidden(msg, w, r)
+		} else {
+			h.ServeHTTP(w, r)
 		}
-
-		origin := r.Header.Get("Origin")
-		if origin != "" {
-			clientURL = origin
-		}
-
-		token := r.URL.Query().Get("token")
-		tokenMatch := token == s.localHTTPToken
-
-		if clientURL == "" {
-			switch {
-			case r.URL.Path == "/":
-				// we don't bother with additional checks for root URL
-				h.ServeHTTP(w, r)
-				return
-			case tokenMatch:
-				h.ServeHTTP(w, r)
-				return
-			case token != "":
-				msg := fmt.Sprintf("Token '%v' did not match the expected '%v...'", token, s.localHTTPToken)
-				s.forbidden(msg, w, r)
-				return
-			default:
-				msg := fmt.Sprintf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
-				s.forbidden(msg, w, r)
-				return
-			}
-		}
-
-		if strictOriginCheck && !tokenMatch {
-			originURL, err := url.Parse(clientURL)
-			if err != nil {
-				log.Errorf("Could not parse client URL %v", clientURL)
-				return
-			}
-			originHost := originURL.Host
-			// when Lantern is listening on all interfaces, e.g., allow remote
-			// connections, listenAddr is in ":port" form. Using HasSuffix
-			if !strings.HasSuffix(originHost, s.listenAddr) {
-				msg := fmt.Sprintf("Origin was '%v' but expecting: '%v'", originHost, s.listenAddr)
-				s.forbidden(msg, w, r)
-				return
-			}
-		}
-
-		h.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(check)
 }

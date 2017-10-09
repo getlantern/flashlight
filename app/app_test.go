@@ -18,7 +18,7 @@ func TestLocalHTTPToken(t *testing.T) {
 
 	defer os.Remove(tmpfile.Name()) // clean up
 
-	ui.Start(":", "", "")
+	ui.Start(":", "", "", "")
 	defer ui.Stop()
 	set := loadSettingsFrom("1", "1/1/1", "1/1/1", tmpfile.Name())
 

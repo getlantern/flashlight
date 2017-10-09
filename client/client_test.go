@@ -56,6 +56,7 @@ func newClient() *Client {
 		func() string { return testAdSwapTargetURL },
 		func() bool { return true },
 		func(host string) string { return host },
+		func(r *http.Request) (*http.Request, error) { return r, nil },
 	)
 	return client
 }

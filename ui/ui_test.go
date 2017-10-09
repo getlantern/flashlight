@@ -25,7 +25,8 @@ func getTestHandler() http.Handler {
 }
 
 func getTestServer(token string) *server {
-	s := newServer("", token)
+	s := newServer("", token, "client.lantern.io")
+	serve = s
 	attachHandlers(s)
 	s.start("localhost:")
 	return s
@@ -33,7 +34,7 @@ func getTestServer(token string) *server {
 
 func TestNoCache(t *testing.T) {
 	var rw httptest.ResponseRecorder
-	req, _ := http.NewRequest("GET", "/", nil)
+	req, _ := http.NewRequest("GET", "/some-token/", nil)
 	getTestHandler().ServeHTTP(&rw, req)
 	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
 }

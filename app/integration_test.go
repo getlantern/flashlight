@@ -417,6 +417,7 @@ func startApp(t *testing.T, configAddr string) (*App, error) {
 		"uiaddr":                  "127.0.0.1:16823",
 		"borda-report-interval":   5 * time.Minute,
 		"borda-sample-percentage": 0.0, // this is 0 to disable random sampling, allowing us to test fully reported ops
+		"ui-domain":               "ui.lantern.io",
 	}
 
 	a := &App{

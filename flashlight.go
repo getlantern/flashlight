@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"net/http"
 	"path/filepath"
 	"runtime"
 	"time"
@@ -63,8 +64,8 @@ func Run(httpProxyAddr string,
 	lang func() string,
 	adSwapTargetURL func() string,
 	adBlockingAllowed func() bool,
-	reverseDNS func(host string) string) error {
-
+	reverseDNS func(host string) string,
+	requestFilter func(*http.Request) (*http.Request, error)) error {
 	elapsed := mtime.Stopwatch()
 	displayVersion()
 	initContext(deviceID, common.Version, common.RevisionDate, isPro)
@@ -86,6 +87,7 @@ func Run(httpProxyAddr string,
 		adSwapTargetURL,
 		adBlockingAllowed,
 		reverseDNS,
+		requestFilter,
 	)
 	if err != nil {
 		fatalErr := fmt.Errorf("Unable to initialize client: %v", err)

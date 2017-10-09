@@ -1,9 +1,11 @@
 package ui
 
 import (
+	"bytes"
 	"fmt"
 	"mime"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/getlantern/eventual"
@@ -28,8 +30,8 @@ func init() {
 }
 
 // Start starts serving the UI.
-func Start(requestedAddr, extURL, localHTTPTok string) error {
-	serve = newServer(extURL, localHTTPTok)
+func Start(requestedAddr, extURL, localHTTPTok, uiDomain string) error {
+	serve = newServer(extURL, localHTTPTok, uiDomain)
 	attachHandlers(serve)
 	if err := serve.start(requestedAddr); err != nil {
 		return err
@@ -44,14 +46,24 @@ func attachHandlers(s *server) {
 		s.showRoot("existing", "lantern")
 		resp.WriteHeader(http.StatusOK)
 	}
+
 	s.Handle("/startup", http.HandlerFunc(startupHandler))
 	unpackUI()
-	s.Handle("/", http.FileServer(fs))
+	s.Handle(s.requestPath+"/", strippingHandler(http.FileServer(fs)))
 
 }
 
+// strippingHandler removes the secure request path from the URL so that the
+// static file server can properly serve it (it's effectively a virtual path).
+func strippingHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.URL.Path = strings.Replace(r.URL.Path, serve.requestPath, "", -1)
+		h.ServeHTTP(w, r)
+	})
+}
+
 func Handle(pattern string, handler http.Handler) {
-	serve.Handle(pattern, handler)
+	serve.Handle(serve.requestPath+pattern, strippingHandler(handler))
 }
 
 // Stop stops the UI listener and all services. To facilitate test.
@@ -61,13 +73,24 @@ func Stop() {
 
 func unpackUI() {
 	var err error
-	fs, err = tarfs.New(Resources, "")
+	fs, err = tarfs.NewWithFilter(Resources, "", fixPath)
 	if err != nil {
 		// Panicking here because this shouldn't happen at runtime unless the
 		// resources were incorrectly embedded.
 		panic(fmt.Errorf("Unable to open tarfs filesystem: %v", err))
 	}
 	translations.Set(fs.SubDir("locale"))
+}
+
+// fixPath changes the path in certain files that use hard coded absolute paths
+// to include the secure random path instead of the naked root path the UI will
+// just reject.
+func fixPath(name string, file []byte) (string, []byte) {
+	if strings.HasSuffix(name, ".css") {
+		cur := bytes.Replace(file, []byte("/img/"), []byte(serve.requestPath+"/img/"), -1)
+		return name, bytes.Replace(cur, []byte("/font/"), []byte(serve.requestPath+"/font/"), -1)
+	}
+	return name, file
 }
 
 // Translations returns the translations for a given locale file.
@@ -104,4 +127,18 @@ func Show(destURL, campaign, medium string) {
 // avoid web sites detecting Lantern.
 func AddToken(in string) string {
 	return serve.addToken(in)
+}
+
+// ServeFromLocalUI serves the request using the local UI server. It relays
+// the request like this because the local UI server uses the Go http package
+// for things like websockets whereas the standard Lantern proxy does not.
+// Relaying locally gives us the best of both worlds.
+func ServeFromLocalUI(req *http.Request) *http.Request {
+	if req.Method == http.MethodConnect && req.URL != nil {
+		req.URL.Host = serve.listenAddr
+	}
+	// It's not clear why CONNECT requests also need the host header set here,
+	// but it doesn't work without it.
+	req.Host = serve.listenAddr
+	return req
 }

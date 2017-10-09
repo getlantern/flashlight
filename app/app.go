@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -57,6 +58,7 @@ type App struct {
 
 	chExitFuncs     chan func()
 	chLastExitFuncs chan func()
+	uiDomain        string
 }
 
 // Init initializes the App's state
@@ -80,6 +82,7 @@ func (app *App) Init() {
 	addDataCapListener(func(hitDataCap bool) {
 		app.statsTracker.SetHitDataCap(hitDataCap)
 	})
+	app.uiDomain = app.Flags["ui-domain"].(string)
 }
 
 // LogPanicAndExit logs a panic and then exits the application. This function
@@ -125,6 +128,13 @@ func (app *App) Run() {
 			socksAddr = defaultSOCKSProxyAddress
 		}
 
+		uiFilter := func(req *http.Request) (*http.Request, error) {
+			if req.URL != nil && strings.HasPrefix(req.URL.Host, app.uiDomain) || strings.HasPrefix(req.Host, app.uiDomain) {
+				return ui.ServeFromLocalUI(req), nil
+			}
+			return req, nil
+		}
+
 		err := flashlight.Run(
 			listenAddr,
 			socksAddr,
@@ -156,6 +166,7 @@ func (app *App) Run() {
 			},
 			func() bool { return true },              // always allow ad blocking on desktop
 			func(addr string) string { return addr }, // no dnsgrab reverse lookups on desktop
+			uiFilter,
 		)
 		if err != nil {
 			app.Exit(err)
@@ -239,7 +250,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 		log.Debugf("Starting client UI at %v", uiaddr)
 		// ui will handle empty uiaddr correctly
-		err = ui.Start(uiaddr, startupURL, localHTTPToken(settings))
+		err = ui.Start(uiaddr, startupURL, localHTTPToken(settings), app.uiDomain)
 		if err != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		}

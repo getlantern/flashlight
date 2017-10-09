@@ -105,6 +105,7 @@ type Client struct {
 	adSwapTargetURL   func() string
 
 	reverseDNS func(addr string) string
+	requestFilter     func(*http.Request) (*http.Request, error)
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -121,6 +122,7 @@ func NewClient(
 	adSwapTargetURL func() string,
 	adBlockingAllowed func() bool,
 	reverseDNS func(addr string) string,
+	requestFilter func(*http.Request) (*http.Request, error),
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
 	rewriteLRU, err := lru.New(100)
@@ -140,9 +142,11 @@ func NewClient(
 		lang:              lang,
 		adSwapTargetURL:   adSwapTargetURL,
 		reverseDNS:        reverseDNS,
+		requestFilter:     requestFilter,
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
+
 	client.proxy = proxy.New(&proxy.Opts{
 		IdleTimeout:  keepAliveIdleTimeout,
 		BufferSource: buffers.Pool,
