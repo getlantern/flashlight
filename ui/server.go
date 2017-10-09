@@ -116,11 +116,6 @@ serve:
 	}
 }
 
-// showRoot is like show using the root (/) URL of the UI.
-func (s *server) showRoot(campaign, medium string) {
-	s.show(s.rootURL(), campaign, medium)
-}
-
 // show opens the UI in a browser. Note we know the UI server is
 // *listening* at this point as long as Start is correctly called prior
 // to this method. It may not be reading yet, but since we're the only
@@ -170,7 +165,7 @@ func (s *server) getUIAddr() string {
 }
 
 func (s *server) rootURL() string {
-	return "http://" + s.uiDomain + s.requestPath + "/"
+	return s.addToken("/")
 }
 
 func (s *server) stop() error {
