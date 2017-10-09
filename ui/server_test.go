@@ -17,7 +17,7 @@ func TestDoShow(t *testing.T) {
 		urlToShow = u
 	}
 
-	s := newServer("", "test-http-token", "client.lantern.io")
+	s := newServer("", "test-http-token", "client.lantern.io", func() bool { return true })
 
 	assert.Equal(t, "", urlToShow)
 	s.doShow(s.rootURL(), "campaign", "medium", show)
@@ -33,7 +33,7 @@ func TestDoShow(t *testing.T) {
 
 func TestStartServer(t *testing.T) {
 	startServer := func(addr string) *server {
-		s := newServer("", "local-http-token", "client.lantern.io")
+		s := newServer("", "local-http-token", "client.lantern.io", func() bool { return true })
 		assert.NoError(t, s.start(addr), "should start server")
 		return s
 	}
@@ -92,7 +92,7 @@ func TestStartServer(t *testing.T) {
 }
 
 func TestCheckOrigin(t *testing.T) {
-	s := newServer("", "token", "client.lantern.io")
+	s := newServer("", "token", "client.lantern.io", func() bool { return true })
 	s.start("localhost:9898")
 	doTestCheckRequestPath(t, s, map[string]bool{
 		"localhost:9898": false,

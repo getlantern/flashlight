@@ -25,7 +25,7 @@ func getTestHandler() http.Handler {
 }
 
 func getTestServer(token string) *server {
-	s := newServer("", token, "client.lantern.io")
+	s := newServer("", token, "client.lantern.io", func() bool { return true })
 	serve = s
 	attachHandlers(s)
 	s.start("localhost:")

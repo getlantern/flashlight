@@ -30,8 +30,9 @@ func init() {
 }
 
 // Start starts serving the UI.
-func Start(requestedAddr, extURL, localHTTPTok, uiDomain string) error {
-	serve = newServer(extURL, localHTTPTok, uiDomain)
+func Start(requestedAddr, extURL, localHTTPTok, uiDomain string,
+	manageSystemProxy func() bool) error {
+	serve = newServer(extURL, localHTTPTok, uiDomain, manageSystemProxy)
 	attachHandlers(serve)
 	if err := serve.start(requestedAddr); err != nil {
 		return err

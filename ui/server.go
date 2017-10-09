@@ -27,19 +27,21 @@ type server struct {
 	onceOpenExtURL sync.Once
 
 	// The domain to serve the UI on - can be anything really.
-	uiDomain string
+	uiDomain          string
+	manageSystemProxy func() bool
 }
 
 // newServer creates a new UI server.
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func newServer(extURL, localHTTPToken, uiDomain string) *server {
+func newServer(extURL, localHTTPToken, uiDomain string, manageSystemProxy func() bool) *server {
 	return &server{
-		externalURL: overrideManotoURL(extURL),
-		requestPath: "/" + localHTTPToken,
-		mux:         http.NewServeMux(),
-		uiDomain:    uiDomain,
+		externalURL:       overrideManotoURL(extURL),
+		requestPath:       "/" + localHTTPToken,
+		mux:               http.NewServeMux(),
+		uiDomain:          uiDomain,
+		manageSystemProxy: manageSystemProxy,
 	}
 }
 
@@ -176,7 +178,14 @@ func (s *server) stop() error {
 // request path. Without that token, the backend will reject the request to
 // avoid web sites detecting Lantern.
 func (s *server) addToken(path string) string {
-	return "http://" + s.uiDomain + s.requestPath + path
+	return "http://" + s.activeDomain() + s.requestPath + path
+}
+
+func (s *server) activeDomain() string {
+	if s.manageSystemProxy() {
+		return s.uiDomain
+	}
+	return s.accessAddr
 }
 
 func (s *server) checkRequestPath(h http.Handler) http.Handler {
