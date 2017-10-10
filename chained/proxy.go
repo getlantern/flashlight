@@ -180,6 +180,10 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 	}
+	rsaPublicKey, ok := cert.X509().PublicKey.(*rsa.PublicKey)
+	if !ok {
+		return nil, errors.New("Public key is not an RSA public key!")
+	}
 	cipherCode := lampshade.Cipher(s.ptSettingInt(fmt.Sprintf("cipher_%v", runtime.GOARCH)))
 	if cipherCode == 0 {
 		if runtime.GOARCH == "amd64" {
@@ -211,7 +215,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 		PingInterval:      pingInterval,
 		Pool:              buffers.Pool,
 		Cipher:            cipherCode,
-		ServerPublicKey:   cert.X509().PublicKey.(*rsa.PublicKey),
+		ServerPublicKey:   rsaPublicKey,
 	})
 	dial := func(p *proxy) (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "lampshade", "tcp").
