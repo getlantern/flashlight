@@ -21,12 +21,15 @@ import (
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/util"
 	"github.com/getlantern/idletiming"
+	"github.com/getlantern/kcptun/client/lib"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/lampshade"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/tlsdialer"
+	"github.com/mitchellh/mapstructure"
 )
 
 const (
@@ -65,6 +68,8 @@ func CreateDialer(name string, s *ChainedServerInfo, deviceID string, proToken f
 		return newOBFS4Proxy(name, s, deviceID, proToken)
 	case "lampshade":
 		return newLampshadeProxy(name, s, deviceID, proToken)
+	case "kcp":
+		return newKCPProxy(name, s, deviceID, proToken)
 	default:
 		return nil, errors.New("Unknown transport").With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
 	}
@@ -85,7 +90,7 @@ func forceProxy(s *ChainedServerInfo) {
 }
 
 func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) *proxy {
-	return newProxy(name, "http", "tcp", s, deviceID, proToken, false, func(p *proxy) (net.Conn, error) {
+	return newProxy(name, "http", "tcp", s.Addr, s, deviceID, proToken, false, func(p *proxy) (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(p.addr, p.protocol, p.network)
 		defer op.End()
 		elapsed := mtime.Stopwatch()
@@ -102,7 +107,7 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 	}
 	x509cert := cert.X509()
 	sessionCache := tls.NewLRUClientSessionCache(1000)
-	return newProxy(name, "https", "tcp", s, deviceID, proToken, s.Trusted, func(p *proxy) (net.Conn, error) {
+	return newProxy(name, "https", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(p *proxy) (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(p.addr, p.protocol, p.network)
 		defer op.End()
 
@@ -140,6 +145,29 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 	}), nil
 }
 
+func newKCPProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
+	var conf lib.Config
+	err := mapstructure.Decode(s.PluggableTransportSettings, &conf)
+	if err != nil {
+		log.Errorf("Could not decode pluggable transport settings?")
+		return nil, err
+	}
+	go func() {
+		lib.Run(&conf, "4.1.4")
+	}()
+
+	util.WaitForServer(conf.LocalAddr)
+	return newProxy(name, "kcp", "udp", conf.LocalAddr, s, deviceID, proToken, s.Trusted, func(p *proxy) (net.Conn, error) {
+		op := ops.Begin("dial_to_chained").ChainedProxy(p.Addr(), p.Protocol(), p.Network())
+		defer op.End()
+		elapsed := mtime.Stopwatch()
+		// The proxy it wrapped already has timeout applied.
+		conn, err := p.tcpDial(op)(chainedDialTimeout)
+		p.dialTime(op, elapsed, err)
+		return conn, op.FailIf(err)
+	}), nil
+}
+
 func newOBFS4Proxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
 	if s.Cert == "" {
 		return nil, fmt.Errorf("No Cert configured for obfs4 server, can't connect")
@@ -159,7 +187,7 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 		return nil, log.Errorf("Unable to parse client args: %v", err)
 	}
 
-	return newProxy(name, "obfs4", "tcp", s, deviceID, proToken, s.Trusted, func(p *proxy) (net.Conn, error) {
+	return newProxy(name, "obfs4", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(p *proxy) (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(p.Addr(), p.Protocol(), p.Network())
 		defer op.End()
 		elapsed := mtime.Stopwatch()
@@ -242,7 +270,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 		return overheadWrapper(true)(conn, op.FailIf(err))
 	}
 
-	p := newProxy(name, "lampshade", "tcp", s, deviceID, proToken, s.Trusted, dial)
+	p := newProxy(name, "lampshade", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, dial)
 
 	if pingInterval > 0 {
 		go func() {
@@ -285,12 +313,12 @@ type proxy struct {
 	mx                sync.Mutex
 }
 
-func newProxy(name, protocol, network string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(*proxy) (net.Conn, error)) *proxy {
+func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(*proxy) (net.Conn, error)) *proxy {
 	p := &proxy{
 		name:             name,
 		protocol:         protocol,
 		network:          network,
-		addr:             s.Addr,
+		addr:             addr,
 		authToken:        s.AuthToken,
 		deviceID:         deviceID,
 		proToken:         proToken,
