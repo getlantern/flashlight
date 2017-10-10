@@ -18,7 +18,7 @@ var (
 )
 
 func NewDialer(dialServer func(p *proxy) (net.Conn, error)) func(network, addr string) (net.Conn, error) {
-	return newProxy("test", "proto", "netw", &ChainedServerInfo{
+	return newProxy("test", "proto", "netw", "addr:567", &ChainedServerInfo{
 		Addr:      "addr:567",
 		AuthToken: "token",
 	}, "device", func() string {
@@ -99,7 +99,7 @@ func TestBadMethodToServer(t *testing.T) {
 }
 
 func TestBadAddressToServer(t *testing.T) {
-	p := newProxy("test", "proto", "netw", &ChainedServerInfo{
+	p := newProxy("test", "proto", "netw", "addr:567", &ChainedServerInfo{
 		Addr:      "addr:567",
 		AuthToken: "token",
 	}, "device", func() string {
