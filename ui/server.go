@@ -27,19 +27,21 @@ type server struct {
 	onceOpenExtURL sync.Once
 
 	// The domain to serve the UI on - can be anything really.
-	uiDomain string
+	uiDomain    string
+	useUIDomain func() bool
 }
 
 // newServer creates a new UI server.
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func newServer(extURL, localHTTPToken, uiDomain string) *server {
+func newServer(extURL, localHTTPToken, uiDomain string, useUIDomain func() bool) *server {
 	return &server{
 		externalURL: overrideManotoURL(extURL),
 		requestPath: "/" + localHTTPToken,
 		mux:         http.NewServeMux(),
 		uiDomain:    uiDomain,
+		useUIDomain: useUIDomain,
 	}
 }
 
@@ -116,11 +118,6 @@ serve:
 	}
 }
 
-// showRoot is like show using the root (/) URL of the UI.
-func (s *server) showRoot(campaign, medium string) {
-	s.show(s.rootURL(), campaign, medium)
-}
-
 // show opens the UI in a browser. Note we know the UI server is
 // *listening* at this point as long as Start is correctly called prior
 // to this method. It may not be reading yet, but since we're the only
@@ -170,7 +167,7 @@ func (s *server) getUIAddr() string {
 }
 
 func (s *server) rootURL() string {
-	return "http://" + s.uiDomain + s.requestPath + "/"
+	return s.addToken("/")
 }
 
 func (s *server) stop() error {
@@ -181,13 +178,20 @@ func (s *server) stop() error {
 // request path. Without that token, the backend will reject the request to
 // avoid web sites detecting Lantern.
 func (s *server) addToken(path string) string {
-	return "http://" + s.uiDomain + s.requestPath + path
+	return "http://" + s.activeDomain() + s.requestPath + path
+}
+
+func (s *server) activeDomain() string {
+	if s.useUIDomain() {
+		return s.uiDomain
+	}
+	return s.accessAddr
 }
 
 func (s *server) checkRequestPath(h http.Handler) http.Handler {
 	check := func(w http.ResponseWriter, r *http.Request) {
 		if !strings.HasPrefix(r.URL.Path, s.requestPath) {
-			msg := fmt.Sprintf("Access was denied because the request path was wrong. Expected\n'%v'\nnot:\n%v", r.URL.Path, s.requestPath)
+			msg := fmt.Sprintf("Access was denied because the request path was wrong. Expected\n'%v'\nnot:\n%v", s.requestPath, r.URL.Path)
 			s.forbidden(msg, w, r)
 		} else {
 			h.ServeHTTP(w, r)

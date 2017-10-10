@@ -30,8 +30,9 @@ func init() {
 }
 
 // Start starts serving the UI.
-func Start(requestedAddr, extURL, localHTTPTok, uiDomain string) error {
-	serve = newServer(extURL, localHTTPTok, uiDomain)
+func Start(requestedAddr, extURL, localHTTPTok, uiDomain string,
+	useUIDomain func() bool) error {
+	serve = newServer(extURL, localHTTPTok, uiDomain, useUIDomain)
 	attachHandlers(serve)
 	if err := serve.start(requestedAddr); err != nil {
 		return err
@@ -43,7 +44,7 @@ func attachHandlers(s *server) {
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
 	startupHandler := func(resp http.ResponseWriter, req *http.Request) {
-		s.showRoot("existing", "lantern")
+		ShowRoot("existing", "lantern")
 		resp.WriteHeader(http.StatusOK)
 	}
 
@@ -110,7 +111,7 @@ func GetUIAddr() string {
 
 // ShowRoot is like Show using the default (root) URL for the UI.
 func ShowRoot(campaign, medium string) {
-	serve.showRoot(campaign, medium)
+	Show(serve.rootURL(), campaign, medium)
 }
 
 // Show opens the UI in a browser. Note we know the UI server is
