@@ -27,21 +27,21 @@ type server struct {
 	onceOpenExtURL sync.Once
 
 	// The domain to serve the UI on - can be anything really.
-	uiDomain          string
-	manageSystemProxy func() bool
+	uiDomain    string
+	useUIDomain func() bool
 }
 
 // newServer creates a new UI server.
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func newServer(extURL, localHTTPToken, uiDomain string, manageSystemProxy func() bool) *server {
+func newServer(extURL, localHTTPToken, uiDomain string, useUIDomain func() bool) *server {
 	return &server{
-		externalURL:       overrideManotoURL(extURL),
-		requestPath:       "/" + localHTTPToken,
-		mux:               http.NewServeMux(),
-		uiDomain:          uiDomain,
-		manageSystemProxy: manageSystemProxy,
+		externalURL: overrideManotoURL(extURL),
+		requestPath: "/" + localHTTPToken,
+		mux:         http.NewServeMux(),
+		uiDomain:    uiDomain,
+		useUIDomain: useUIDomain,
 	}
 }
 
@@ -182,7 +182,7 @@ func (s *server) addToken(path string) string {
 }
 
 func (s *server) activeDomain() string {
-	if s.manageSystemProxy() {
+	if s.useUIDomain() {
 		return s.uiDomain
 	}
 	return s.accessAddr
@@ -191,7 +191,7 @@ func (s *server) activeDomain() string {
 func (s *server) checkRequestPath(h http.Handler) http.Handler {
 	check := func(w http.ResponseWriter, r *http.Request) {
 		if !strings.HasPrefix(r.URL.Path, s.requestPath) {
-			msg := fmt.Sprintf("Access was denied because the request path was wrong. Expected\n'%v'\nnot:\n%v", r.URL.Path, s.requestPath)
+			msg := fmt.Sprintf("Access was denied because the request path was wrong. Expected\n'%v'\nnot:\n%v", s.requestPath, r.URL.Path)
 			s.forbidden(msg, w, r)
 		} else {
 			h.ServeHTTP(w, r)
