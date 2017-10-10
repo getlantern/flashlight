@@ -1,5 +1,5 @@
 hash: a171da343573e908c16eee881d24f4c7cc8886e5509e5cefc2615303d3b27caa
-updated: 2017-09-18T21:50:05.657911605-07:00
+updated: 2017-10-10T16:02:32.920561643-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a3ad5df6c9e7dc8117f55958b4ce99bf1e0fe291
@@ -168,6 +168,10 @@ imports:
   version: 8723ea29ea42bdb85682c242b8e803aa6f05c9db
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
+- name: github.com/getlantern/kcptun
+  version: a9ecd8ab0f22bac2f7b055ab46c65eae0706a248
+  subpackages:
+  - client/lib
 - name: github.com/getlantern/keyman
   version: 92cbbdcae453b5e6cff5fed4d51c0780111b0715
   subpackages:
@@ -274,10 +278,7 @@ imports:
   version: ae59567b9aab61b50b2590679a62c3c044030b61
   subpackages:
   - proto
-  - ptypes
   - ptypes/any
-  - ptypes/duration
-  - ptypes/timestamp
 - name: github.com/golang/snappy
   version: 553a641470496b2327abcac10b36396bd98e45c9
 - name: github.com/gorilla/context
@@ -318,6 +319,8 @@ imports:
   version: c1c17f74874f2a5ea48bfb06b5459d4ef2689749
 - name: github.com/miekg/dns
   version: e4205768578dc90c2669e75a2f8a8bf77e3083a4
+- name: github.com/mitchellh/mapstructure
+  version: d0303fe809921458f417bcf828397a65db30a7e4
 - name: github.com/mitchellh/panicwrap
   version: fce601fe55579125e1b3cb0b992287e7290f7b83
 - name: github.com/mxk/go-flowrate
@@ -373,6 +376,12 @@ imports:
   - form
   - orderitem
   - token
+- name: github.com/templexxx/cpufeat
+  version: 3794dfbfb04749f896b521032f69383f24c3687e
+- name: github.com/templexxx/reedsolomon
+  version: 7092926d7d05c415fabb892b1464a03f8228ab80
+- name: github.com/templexxx/xor
+  version: 0af8e873c554da75f37f2049cdffda804533d44c
 - name: github.com/ua-parser/uap-go
   version: e0b1fe757c944e839263af90b3c74b76d816558e
   subpackages:
@@ -390,27 +399,36 @@ imports:
   subpackages:
   - trie/yfast
 - name: github.com/xtaci/kcp-go
-  version: 44c3d76a6b5cc9e3687f829078a52f372928e776
+  version: f042b40cd3be3eaa802add29ca56a092c70edf07
+- name: github.com/xtaci/smux
+  version: ebec7ef2574b42a7088cd7751176483e0a27d458
 - name: github.com/xwb1989/sqlparser
   version: a9cdf22bd561e715bba34ee228cb1c06bfa2719c
   subpackages:
+  - dependency/bson
   - dependency/bytes2
   - dependency/hack
-  - dependency/querypb
   - dependency/sqltypes
 - name: github.com/Yawning/chacha20
   version: e3b1f968fc6397b51d963fee8ec8711a47bc0ce8
 - name: golang.org/x/crypto
   version: 7d9177d70076375b9a59c8fde23d52d9c4a7ecd5
   subpackages:
+  - blowfish
+  - cast5
   - chacha20poly1305
   - chacha20poly1305/internal/chacha20
   - curve25519
   - hkdf
   - nacl/secretbox
+  - pbkdf2
   - poly1305
+  - salsa20
   - salsa20/salsa
   - ssh/terminal
+  - tea
+  - twofish
+  - xtea
 - name: golang.org/x/net
   version: 8351a756f30f1297fe94bbf4b767ec589c6ea6d0
   repo: https://github.com/golang/net
