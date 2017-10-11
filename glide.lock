@@ -134,7 +134,7 @@ imports:
   - proxyfilters
   - server
 - name: github.com/getlantern/http-proxy-lantern
-  version: 25765c944f04a71c1484957aaec1402d394c2853
+  version: ca8570e2fc23deda85115b9b801568f2988d2a43
   subpackages:
   - analytics
   - bbr
