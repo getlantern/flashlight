@@ -157,6 +157,7 @@ func newKCPProxy(name string, s *ChainedServerInfo, deviceID string, proToken fu
 	}()
 
 	util.WaitForServer(conf.LocalAddr)
+	log.Debugf("kcp lib at %v is up", conf.LocalAddr)
 	return newProxy(name, "kcp", "udp", conf.LocalAddr, s, deviceID, proToken, s.Trusted, func(p *proxy) (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(p.Addr(), p.Protocol(), p.Network())
 		defer op.End()

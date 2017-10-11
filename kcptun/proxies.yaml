@@ -16,7 +16,8 @@ kcp:
     sndwnd: 128
     mtu: 1350
     scavengettl: 600
-    crypt: "none"
+    crypt: "aes-128"
+    key: "thisisreallyakey"
     sockbuf: 4194304
     snmpperiod: 60
   addr: 127.0.0.1:8777
