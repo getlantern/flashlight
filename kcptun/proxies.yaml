@@ -3,7 +3,6 @@ fp-sbtk1a-20171007-010-kcp:
   authtoken: WZPakrXQO1czszu2c5Ih5Nt1gN6u81bvHR71pKU7R0zx9C0uaVz18gjPJ5iLKTw2
   kcpsettings:
     iat-mode: 0
-    localaddr: 127.0.0.1:8777
     remoteaddr: 47.74.17.196:7123
     mode: fast2
     conn: 1

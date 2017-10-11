@@ -17,11 +17,11 @@ import (
 
 	"github.com/getlantern/ema"
 	"github.com/getlantern/errors"
+	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/flashlight/util"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/kcptun/client/lib"
 	"github.com/getlantern/keyman"
@@ -328,24 +328,44 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 	if err != nil {
 		return log.Errorf("Could not decode kcp transport settings?: %v", err)
 	}
+	conf.LocalAddr = "127.0.0.1:0"
+
+	startResult := eventual.NewValue()
 	go func() {
-		lib.Run(&conf, "4.1.4")
+		err := lib.Run(&conf, "embedded", func(addr net.Addr) {
+			startResult.Set(addr.String())
+		})
+		if err != nil {
+			log.Errorf("Error running kcp client: %v", err)
+			startResult.Set(err)
+		}
 	}()
 
-	util.WaitForServer(conf.LocalAddr)
-	log.Debugf("kcp lib at %v is up", conf.LocalAddr)
-	// Right now, we don't have a good way estimating performance of KCP-based
-	// proxies, so we just mark them as "preferred" to force them to get used by
-	// default.
-	p.preferred = true
-	p.addr = conf.LocalAddr
-	p.protocol = p.protocol + "-kcp"
-	if conf.Key != "" && conf.Crypt == "salsa20" || conf.Crypt == "aes128" {
-		// We're using kcp's built-in encryption, so we can consider the dialer
-		// trusted
-		p.trusted = true
+	startTimeout := 5 * time.Second
+	result, ok := startResult.Get(startTimeout)
+	if !ok {
+		return log.Errorf("kcp client failed to start in %v", startTimeout)
 	}
-	return nil
+	switch t := result.(type) {
+	case string:
+		log.Debugf("kcp client running at %v", t)
+		// Right now, we don't have a good way estimating performance of KCP-based
+		// proxies, so we just mark them as "preferred" to force them to get used by
+		// default.
+		p.preferred = true
+		p.addr = t
+		p.protocol = p.protocol + "-kcp"
+		if conf.Key != "" && conf.Crypt != "none" || conf.Crypt != "xor" {
+			// We're using kcp's built-in encryption, so we can consider the dialer
+			// trusted
+			p.trusted = true
+		}
+		return nil
+	case error:
+		return t
+	default:
+		return log.Errorf("Unkown start result type: %v", t)
+	}
 }
 
 func (p *proxy) Protocol() string {
