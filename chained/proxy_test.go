@@ -17,7 +17,7 @@ func TestTrusted(t *testing.T) {
 
 	si := &ChainedServerInfo{Addr: "1.1.1.1", AuthToken: "abcd", Cert: obfs4Cert,
 		PluggableTransport: "obfs4",
-		PluggableTransportSettings: map[string]string{
+		PluggableTransportSettings: map[string]interface{}{
 			"iat-mode": "0",
 		},
 	}

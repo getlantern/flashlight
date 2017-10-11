@@ -180,7 +180,7 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 
 	ptArgs := &pt.Args{}
 	ptArgs.Add("cert", s.Cert)
-	ptArgs.Add("iat-mode", s.PluggableTransportSettings["iat-mode"])
+	ptArgs.Add("iat-mode", s.ptSettingString("iat-mode"))
 
 	args, err := cf.ParseArgs(ptArgs)
 	if err != nil {
@@ -225,12 +225,12 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 	windowSize := s.ptSettingInt("windowsize")
 	maxPadding := s.ptSettingInt("maxpadding")
 	maxStreamsPerConn := uint16(s.ptSettingInt("streams"))
-	idleInterval, parseErr := time.ParseDuration(s.ptSetting("idleinterval"))
+	idleInterval, parseErr := time.ParseDuration(s.ptSettingString("idleinterval"))
 	if parseErr != nil || idleInterval < 0 {
 		idleInterval = IdleTimeout * 2
 		log.Debugf("Defaulted lampshade idleinterval to %v", idleInterval)
 	}
-	pingInterval, parseErr := time.ParseDuration(s.ptSetting("pinginterval"))
+	pingInterval, parseErr := time.ParseDuration(s.ptSettingString("pinginterval"))
 	if parseErr != nil || pingInterval < 0 {
 		pingInterval = 15 * time.Second
 		log.Debugf("Defaulted lampshade pinginterval to %v", pingInterval)
