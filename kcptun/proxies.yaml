@@ -1,0 +1,22 @@
+kcp:
+  pluggabletransport: kcp
+  authtoken: WZPakrXQO1czszu2c5Ih5Nt1gN6u81bvHR71pKU7R0zx9C0uaVz18gjPJ5iLKTw2
+  cert: t2tH1kovX2ZhwLMoDzqRGQ68Tch/V6rt2vBv52sJT1F8VRHGj+tWN1IANTDZQW0jadi9cA
+  pluggabletransportsettings:
+    iat-mode: 0
+    localaddr: 127.0.0.1:8777
+    remoteaddr: 47.74.17.196:7123
+    mode: fast2
+    conn: 1
+    keepalive: 10
+    interval: 50
+    parityshard: 3
+    datashard: 10
+    rcvwnd: 512
+    sndwnd: 128
+    mtu: 1350
+    scavengettl: 600
+    crypt: "none"
+    sockbuf: 4194304
+    snmpperiod: 60
+  addr: 127.0.0.1:8777
