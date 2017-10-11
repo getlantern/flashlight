@@ -355,7 +355,7 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 		p.preferred = true
 		p.addr = t
 		p.protocol = p.protocol + "-kcp"
-		if conf.Key != "" && conf.Crypt != "none" || conf.Crypt != "xor" {
+		if conf.Key != "" && conf.Crypt != "none" && conf.Crypt != "xor" {
 			// We're using kcp's built-in encryption, so we can consider the dialer
 			// trusted
 			p.trusted = true
