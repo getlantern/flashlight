@@ -58,7 +58,7 @@ func CreateDialer(name string, s *ChainedServerInfo, deviceID string, proToken f
 		var err error
 		if s.Cert == "" {
 			log.Errorf("No Cert configured for %s, will dial with plain tcp", s.Addr)
-			p = newHTTPProxy(name, s, deviceID, proToken)
+			p, err = newHTTPProxy(name, s, deviceID, proToken)
 		} else {
 			log.Tracef("Cert configured for  %s, will dial with tls", s.Addr)
 			p, err = newHTTPSProxy(name, s, deviceID, proToken)
@@ -68,10 +68,8 @@ func CreateDialer(name string, s *ChainedServerInfo, deviceID string, proToken f
 		return newOBFS4Proxy(name, s, deviceID, proToken)
 	case "lampshade":
 		return newLampshadeProxy(name, s, deviceID, proToken)
-	case "kcp":
-		return newKCPProxy(name, s, deviceID, proToken)
 	default:
-		return nil, errors.New("Unknown transport").With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
+		return nil, errors.New("Unknown transport: %v", s.PluggableTransport).With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
 	}
 }
 
@@ -89,7 +87,7 @@ func forceProxy(s *ChainedServerInfo) {
 	s.PluggableTransport = ""
 }
 
-func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) *proxy {
+func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
 	return newProxy(name, "http", "tcp", s.Addr, s, deviceID, proToken, false, func(p *proxy) (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(p.addr, p.protocol, p.network)
 		defer op.End()
@@ -142,31 +140,7 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 				received, expected))
 		}
 		return overheadWrapper(true)(conn, op.FailIf(err))
-	}), nil
-}
-
-func newKCPProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
-	var conf lib.Config
-	err := mapstructure.Decode(s.PluggableTransportSettings, &conf)
-	if err != nil {
-		log.Errorf("Could not decode pluggable transport settings?")
-		return nil, err
-	}
-	go func() {
-		lib.Run(&conf, "4.1.4")
-	}()
-
-	util.WaitForServer(conf.LocalAddr)
-	log.Debugf("kcp lib at %v is up", conf.LocalAddr)
-	return newProxy(name, "kcp", "udp", conf.LocalAddr, s, deviceID, proToken, s.Trusted, func(p *proxy) (net.Conn, error) {
-		op := ops.Begin("dial_to_chained").ChainedProxy(p.Addr(), p.Protocol(), p.Network())
-		defer op.End()
-		elapsed := mtime.Stopwatch()
-		// The proxy it wrapped already has timeout applied.
-		conn, err := p.tcpDial(op)(chainedDialTimeout)
-		p.dialTime(op, elapsed, err)
-		return conn, op.FailIf(err)
-	}), nil
+	})
 }
 
 func newOBFS4Proxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
@@ -181,7 +155,7 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 
 	ptArgs := &pt.Args{}
 	ptArgs.Add("cert", s.Cert)
-	ptArgs.Add("iat-mode", s.ptSettingString("iat-mode"))
+	ptArgs.Add("iat-mode", s.ptSetting("iat-mode"))
 
 	args, err := cf.ParseArgs(ptArgs)
 	if err != nil {
@@ -201,7 +175,7 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 		conn, err := cf.Dial("tcp", p.addr, dialFn, args)
 		p.dialTime(op, elapsed, err)
 		return overheadWrapper(true)(conn, op.FailIf(err))
-	}), nil
+	})
 }
 
 func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
@@ -226,12 +200,12 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 	windowSize := s.ptSettingInt("windowsize")
 	maxPadding := s.ptSettingInt("maxpadding")
 	maxStreamsPerConn := uint16(s.ptSettingInt("streams"))
-	idleInterval, parseErr := time.ParseDuration(s.ptSettingString("idleinterval"))
+	idleInterval, parseErr := time.ParseDuration(s.ptSetting("idleinterval"))
 	if parseErr != nil || idleInterval < 0 {
 		idleInterval = IdleTimeout * 2
 		log.Debugf("Defaulted lampshade idleinterval to %v", idleInterval)
 	}
-	pingInterval, parseErr := time.ParseDuration(s.ptSettingString("pinginterval"))
+	pingInterval, parseErr := time.ParseDuration(s.ptSetting("pinginterval"))
 	if parseErr != nil || pingInterval < 0 {
 		pingInterval = 15 * time.Second
 		log.Debugf("Defaulted lampshade pinginterval to %v", pingInterval)
@@ -271,7 +245,10 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 		return overheadWrapper(true)(conn, op.FailIf(err))
 	}
 
-	p := newProxy(name, "lampshade", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, dial)
+	p, err := newProxy(name, "lampshade", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, dial)
+	if err != nil {
+		return nil, err
+	}
 
 	if pingInterval > 0 {
 		go func() {
@@ -305,6 +282,7 @@ type proxy struct {
 	deviceID          string
 	proToken          func() string
 	trusted           bool
+	preferred         bool
 	dialServer        func(*proxy) (net.Conn, error)
 	emaDialTime       *ema.EMA
 	emaLatency        *ema.EMA
@@ -314,7 +292,7 @@ type proxy struct {
 	mx                sync.Mutex
 }
 
-func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(*proxy) (net.Conn, error)) *proxy {
+func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(*proxy) (net.Conn, error)) (*proxy, error) {
 	p := &proxy{
 		name:             name,
 		protocol:         protocol,
@@ -332,8 +310,42 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		closeCh:          make(chan bool, 1),
 		consecSuccesses:  1, // be optimistic
 	}
+
+	if s.KCPSettings != nil && len(s.KCPSettings) > 0 {
+		err := enableKCP(p, s)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	go p.runConnectivityChecks()
-	return p
+	return p, nil
+}
+
+func enableKCP(p *proxy, s *ChainedServerInfo) error {
+	var conf lib.Config
+	err := mapstructure.Decode(s.KCPSettings, &conf)
+	if err != nil {
+		return log.Errorf("Could not decode kcp transport settings?: %v", err)
+	}
+	go func() {
+		lib.Run(&conf, "4.1.4")
+	}()
+
+	util.WaitForServer(conf.LocalAddr)
+	log.Debugf("kcp lib at %v is up", conf.LocalAddr)
+	// Right now, we don't have a good way estimating performance of KCP-based
+	// proxies, so we just mark them as "preferred" to force them to get used by
+	// default.
+	p.preferred = true
+	p.addr = conf.LocalAddr
+	p.protocol = p.protocol + "-kcp"
+	if conf.Key != "" && conf.Crypt == "salsa20" || conf.Crypt == "aes128" {
+		// We're using kcp's built-in encryption, so we can consider the dialer
+		// trusted
+		p.trusted = true
+	}
+	return nil
 }
 
 func (p *proxy) Protocol() string {
@@ -389,6 +401,11 @@ func (p *proxy) EMADialTime() time.Duration {
 }
 
 func (p *proxy) EstLatency() time.Duration {
+	if p.preferred {
+		// For preferred proxies, return a really low value to make sure they get
+		// prioritized.
+		return 1 * time.Millisecond
+	}
 	return p.emaLatency.GetDuration()
 }
 
@@ -407,6 +424,11 @@ func (p *proxy) EstLatency() time.Duration {
 // 3. If a client includes HTTP header "X-BBR: clear", we clear stored estimate
 //    data for the client's IP.
 func (p *proxy) EstBandwidth() float64 {
+	if p.preferred {
+		// For preferred proxies, return a really high value to make sure they get
+		// prioritized.
+		return 1000000
+	}
 	return float64(atomic.LoadInt64(&p.abe)) / 1000
 }
 

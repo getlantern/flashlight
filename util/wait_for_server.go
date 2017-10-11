@@ -13,9 +13,9 @@ var wlog = golog.LoggerFor("flashlight.util")
 //local, address.
 func WaitForServer(addr string) {
 	for {
-		wlog.Debugf("About to dial %v", addr)
 		conn, err := net.DialTimeout("tcp", addr, 4*time.Second)
 		if err != nil {
+			wlog.Debugf("Nothing listening at %v", addr)
 			time.Sleep(200 * time.Millisecond)
 			continue
 		}
