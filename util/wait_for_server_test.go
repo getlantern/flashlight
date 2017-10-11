@@ -2,6 +2,7 @@ package util
 
 import (
 	"net"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -13,10 +14,12 @@ func TestWaitForServer(t *testing.T) {
 	cv := eventual.NewValue()
 	go WaitForServer("127.0.0.1:8087")
 
-	var ret interface{}
-	var valid bool
+	var ret atomic.Value
+	var valid atomic.Value
 	go func() {
-		ret, valid = cv.Get(10 * time.Second)
+		ret1, valid1 := cv.Get(10 * time.Second)
+		ret.Store(ret1)
+		valid.Store(valid1)
 	}()
 
 	time.Sleep(2 * time.Second)
@@ -32,6 +35,6 @@ func TestWaitForServer(t *testing.T) {
 	}()
 
 	time.Sleep(2 * time.Second)
-	assert.True(t, valid)
-	assert.NotNil(t, ret)
+	assert.True(t, valid.Load().(bool))
+	assert.NotNil(t, ret.Load())
 }
