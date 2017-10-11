@@ -37,27 +37,17 @@ type ChainedServerInfo struct {
 	PluggableTransport string
 
 	// PluggableTransportSettings: Settings for pluggable transport
-	PluggableTransportSettings map[string]interface{}
+	PluggableTransportSettings map[string]string
+
+	// KCPSettings: If specified, traffic will be tunneled over KCP
+	KCPSettings map[string]interface{}
 }
 
-func (s *ChainedServerInfo) ptSetting(name string) interface{} {
+func (s *ChainedServerInfo) ptSetting(name string) string {
 	if s.PluggableTransportSettings == nil {
 		return ""
 	}
 	return s.PluggableTransportSettings[name]
-}
-
-func (s *ChainedServerInfo) ptSettingString(name string) string {
-	_val := s.ptSetting(name)
-	if _val == "" {
-		return ""
-	}
-
-	f, ok := _val.(string)
-	if ok {
-		return f
-	}
-	return ""
 }
 
 func (s *ChainedServerInfo) ptSettingInt(name string) int {
@@ -65,24 +55,12 @@ func (s *ChainedServerInfo) ptSettingInt(name string) int {
 	if _val == "" {
 		return 0
 	}
-
-	f, ok := _val.(int)
-	if ok {
-		return f
+	val, err := strconv.Atoi(_val)
+	if err != nil {
+		log.Errorf("Setting %v: %v is not an int", name, _val)
+		return 0
 	}
-
-	// For backwards compatibility make sure we still support conversion from
-	// strings to ints
-	str, oks := _val.(string)
-	if oks {
-		val, err := strconv.Atoi(str)
-		if err != nil {
-			log.Errorf("Setting %v: %v is not an int", name, _val)
-			return 0
-		}
-		return val
-	}
-	return 0
+	return val
 }
 
 func (s *ChainedServerInfo) ptSettingBool(name string) bool {
@@ -90,22 +68,10 @@ func (s *ChainedServerInfo) ptSettingBool(name string) bool {
 	if _val == "" {
 		return false
 	}
-
-	f, ok := _val.(bool)
-	if ok {
-		return f
+	val, err := strconv.ParseBool(_val)
+	if err != nil {
+		log.Errorf("Setting %v: %v is not a boolean", name, _val)
+		return false
 	}
-
-	// For backwards compatibility make sure we still support conversion from
-	// strings to bools
-	str, oks := _val.(string)
-	if oks {
-		val, err := strconv.ParseBool(str)
-		if err != nil {
-			log.Errorf("Setting %v: %v is not a bool", name, _val)
-			return false
-		}
-		return val
-	}
-	return false
+	return val
 }

@@ -3,6 +3,7 @@ package app
 import (
 	"compress/gzip"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -146,6 +147,11 @@ func TestProxying(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	testRequest(t, httpAddr, httpsAddr)
 
+	// Switch to kcp, wait for a new config and test request again
+	protocol.Store("kcp")
+	time.Sleep(2 * time.Second)
+	testRequest(t, httpAddr, httpsAddr)
+
 	// Disconnected Lantern and try again
 	a.Disconnect()
 	testRequest(t, httpAddr, httpsAddr)
@@ -200,7 +206,18 @@ func serveContent(resp http.ResponseWriter, req *http.Request) {
 }
 
 func startProxyServer(t *testing.T) error {
-	s := &proxy.Proxy{
+	kcpConfFile, err := ioutil.TempFile("", "")
+	if err != nil {
+		return err
+	}
+
+	err = json.NewEncoder(kcpConfFile).Encode(kcpConf)
+	kcpConfFile.Close()
+	if err != nil {
+		return err
+	}
+
+	s1 := &proxy.Proxy{
 		TestingLocal:  true,
 		Addr:          ProxyServerAddr,
 		Obfs4Addr:     OBFS4ServerAddr,
@@ -213,9 +230,22 @@ func startProxyServer(t *testing.T) error {
 		HTTPS:         true,
 	}
 
-	go s.ListenAndServe()
+	// kcp server
+	s2 := &proxy.Proxy{
+		TestingLocal: true,
+		Addr:         "127.0.0.1:0",
+		KCPConf:      kcpConfFile.Name(),
+		Token:        Token,
+		KeyFile:      KeyFile,
+		CertFile:     CertFile,
+		IdleTimeout:  30 * time.Second,
+		HTTPS:        false,
+	}
 
-	err := waitforserver.WaitForServer("tcp", ProxyServerAddr, 10*time.Second)
+	go s1.ListenAndServe()
+	go s2.ListenAndServe()
+
+	err = waitforserver.WaitForServer("tcp", ProxyServerAddr, 10*time.Second)
 	if err != nil {
 		return err
 	}
@@ -259,13 +289,7 @@ func serveConfig(t *testing.T) func(http.ResponseWriter, *http.Request) {
 
 func writeGlobalConfig(t *testing.T, resp http.ResponseWriter, req *http.Request) {
 	log.Debug("Writing global config")
-	proto := protocol.Load().(string)
 	version := "1"
-	if proto == "obfs4" {
-		version = "2"
-	} else if proto == "lampshade" {
-		version = "3"
-	}
 
 	if req.Header.Get(IfNoneMatch) == version {
 		resp.WriteHeader(http.StatusNotModified)
@@ -295,6 +319,8 @@ func writeProxyConfig(t *testing.T, resp http.ResponseWriter, req *http.Request)
 		version = "2"
 	} else if proto == "lampshade" {
 		version = "3"
+	} else if proto == "kcp" {
+		version = "4"
 	}
 
 	if req.Header.Get(IfNoneMatch) == version {
@@ -371,6 +397,10 @@ func buildProxies(proto string) ([]byte, error) {
 			srv.PluggableTransport = "lampshade"
 		} else {
 			srv.Addr = ProxyServerAddr
+		}
+
+		if proto == "kcp" {
+			srv.KCPSettings = kcpConf
 		}
 	}
 	out, err := yaml.Marshal(cfg)
@@ -461,4 +491,22 @@ func doRequest(t *testing.T, client *http.Client, url string) {
 			}
 		}
 	}
+}
+
+var kcpConf = map[string]interface{}{
+	"scavengettl": 600,
+	"datashard":   10,
+	"interval":    50,
+	"mtu":         1350,
+	"sockbuf":     4194304,
+	"parityshard": 3,
+	"sndwnd":      128,
+	"mode":        "fast2",
+	"crypt":       "salsa20",
+	"key":         "thisisreallyakey",
+	"snmpperiod":  60,
+	"rcvwnd":      512,
+	"conn":        1,
+	"keepalive":   10,
+	"listen":      "127.0.0.1:8975",
 }

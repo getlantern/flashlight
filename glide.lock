@@ -134,7 +134,7 @@ imports:
   - proxyfilters
   - server
 - name: github.com/getlantern/http-proxy-lantern
-  version: 0c0042ac369a9431669749bd19e51dda44da8d4d
+  version: ca8570e2fc23deda85115b9b801568f2988d2a43
   subpackages:
   - analytics
   - bbr
@@ -169,7 +169,7 @@ imports:
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
 - name: github.com/getlantern/kcptun
-  version: a9ecd8ab0f22bac2f7b055ab46c65eae0706a248
+  version: f8fd1940bcc36ef5e33799d9e8947e7864474c76
   subpackages:
   - client/lib
 - name: github.com/getlantern/keyman
