@@ -33,6 +33,7 @@ func init() {
 func Start(requestedAddr, extURL, localHTTPTok, uiDomain string,
 	useUIDomain func() bool) error {
 	serve = newServer(extURL, localHTTPTok, uiDomain, useUIDomain)
+	unpackUI()
 	attachHandlers(serve)
 	if err := serve.start(requestedAddr); err != nil {
 		return err
@@ -49,7 +50,6 @@ func attachHandlers(s *server) {
 	}
 
 	s.Handle("/startup", http.HandlerFunc(startupHandler))
-	unpackUI()
 	s.Handle(s.requestPath+"/", strippingHandler(http.FileServer(fs)))
 }
 
@@ -73,7 +73,7 @@ func Stop() {
 
 func unpackUI() {
 	var err error
-	fs, err = tarfs.New(Resources, "")
+	fs, err = tarfs.NewWithFilter(Resources, "", fixPath)
 	if err != nil {
 		// Panicking here because this shouldn't happen at runtime unless the
 		// resources were incorrectly embedded.
@@ -87,8 +87,9 @@ func unpackUI() {
 // just reject.
 func fixPath(name string, file []byte) (string, []byte) {
 	if strings.HasSuffix(name, ".css") {
-		cur := bytes.Replace(file, []byte("/img/"), []byte(serve.requestPath+"/img/"), 1)
-		return name, bytes.Replace(cur, []byte("/font/"), []byte(serve.requestPath+"/font/"), 1)
+		log.Debugf("Replacing %v using path %v", name, serve.requestPath)
+		cur := bytes.Replace(file, []byte("/img/"), []byte(serve.requestPath+"/img/"), -1)
+		return name, bytes.Replace(cur, []byte("/font/"), []byte(serve.requestPath+"/font/"), -1)
 	}
 	return name, file
 }
