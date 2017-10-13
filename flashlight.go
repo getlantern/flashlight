@@ -71,6 +71,8 @@ func Run(httpProxyAddr string,
 	initContext(deviceID, common.Version, common.RevisionDate, isPro)
 	op := fops.Begin("client_started")
 
+	go udpEcho()
+
 	cl, err := client.NewClient(
 		disconnected,
 		func(addr string) (bool, net.IP) {
@@ -233,5 +235,35 @@ func initContext(deviceID string, version string, revisionDate string, isPro fun
 
 	if osStr, err := osversion.GetHumanReadable(); err == nil {
 		ops.SetGlobal("os_version", osStr)
+	}
+}
+
+func udpEcho() {
+	log.Debug("Dialing echo server")
+
+	conn, err := net.Dial("udp", "67.205.172.79:1235")
+	if err != nil {
+		log.Errorf("Unable to dial echo server: %v", err)
+		return
+	}
+
+	go func() {
+		b := make([]byte, 1)
+		for {
+			n, err := conn.Read(b)
+			if err != nil {
+				log.Errorf("Unable to read from echo server: %v", err)
+				return
+			}
+			log.Debugf("Got echo response: %v", string(b[:n]))
+		}
+	}()
+
+	log.Debug("Sending to echo server")
+	i := 0
+	for {
+		conn.Write([]byte(fmt.Sprint(i)))
+		i++
+		time.Sleep(1 * time.Second)
 	}
 }
