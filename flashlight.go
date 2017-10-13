@@ -248,7 +248,7 @@ func udpEcho() {
 	}
 
 	go func() {
-		b := make([]byte, 1)
+		b := make([]byte, 100)
 		for {
 			n, err := conn.Read(b)
 			if err != nil {
@@ -259,9 +259,9 @@ func udpEcho() {
 		}
 	}()
 
-	log.Debug("Sending to echo server")
 	i := 0
 	for {
+		log.Debugf("Sending echo: %d", i)
 		conn.Write([]byte(fmt.Sprint(i)))
 		i++
 		time.Sleep(1 * time.Second)
