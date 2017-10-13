@@ -19,7 +19,7 @@ func TestStart(t *testing.T) {
 
 	tok := AddToken("/abc")
 	assert.NotEqual(t, "", tok)
-	assert.True(t, strings.HasSuffix(tok, "/abc"))
+	assert.True(t, strings.HasSuffix(tok, "abc?token=abcde"), "Suffix not found in "+tok)
 }
 
 func TestServeFromLocalUI(t *testing.T) {
@@ -77,7 +77,7 @@ func getTestServer(token string) *server {
 
 func TestNoCache(t *testing.T) {
 	var rw httptest.ResponseRecorder
-	req, _ := http.NewRequest("GET", "/some-token/", nil)
+	req, _ := http.NewRequest("GET", "/paht?token=some-token", nil)
 	getTestHandler().ServeHTTP(&rw, req)
 	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
 }

@@ -33,7 +33,7 @@ func TestDoShow(t *testing.T) {
 
 func TestStartServer(t *testing.T) {
 	startServer := func(addr string) *server {
-		s := newServer("", "local-http-token", "client.lantern.io", func() bool { return true })
+		s := newServer("", "test-http-token", "client.lantern.io", func() bool { return true })
 		assert.NoError(t, s.start(addr), "should start server")
 		return s
 	}
@@ -94,8 +94,8 @@ func TestStartServer(t *testing.T) {
 func TestCheckOrigin(t *testing.T) {
 	s := newServer("", "token", "client.lantern.io", func() bool { return true })
 	s.start("localhost:9898")
-	doTestCheckRequestPath(t, s, map[string]bool{
-		"localhost:9898": false,
+	doTestCheckOrigin(t, s, map[string]bool{
+		"localhost:9898": true,
 		"localhost:1243": false,
 		"127.0.0.1:9898": false,
 		"anyhost:9898":   false,
@@ -103,8 +103,8 @@ func TestCheckOrigin(t *testing.T) {
 	s.stop()
 
 	s.start("127.0.0.1:9897")
-	doTestCheckRequestPath(t, s, map[string]bool{
-		"127.0.0.1:9897": false,
+	doTestCheckOrigin(t, s, map[string]bool{
+		"127.0.0.1:9897": true,
 		"localhost:9897": false,
 		"127.0.0.1:1243": false,
 		"anyhost:9897":   false,
@@ -112,22 +112,22 @@ func TestCheckOrigin(t *testing.T) {
 	s.stop()
 }
 
-func doTestCheckRequestPath(t *testing.T, s *server, testOrigins map[string]bool) {
+func doTestCheckOrigin(t *testing.T, s *server, testOrigins map[string]bool) {
 	var hit bool
 	var basic http.HandlerFunc = func(http.ResponseWriter, *http.Request) {
 		hit = true
 	}
-	h := s.checkRequestPath(basic)
+	h := s.checkOrigin(basic)
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, req)
-	assert.False(t, hit, "naked path should not pass")
+	assert.True(t, hit, "get / should always pass the check")
 
 	hit = false
 	req, _ = http.NewRequest("GET", "/abc", nil)
 	h.ServeHTTP(w, req)
-	assert.False(t, hit, "request without proper path should fail the check")
+	assert.False(t, hit, "request without token should fail the check")
 
 	hit = false
 	url := util.SetURLParam("http://"+path.Join(s.accessAddr, "/abc"), "token", "wrong-token")
@@ -135,7 +135,7 @@ func doTestCheckRequestPath(t *testing.T, s *server, testOrigins map[string]bool
 	h.ServeHTTP(w, req)
 	assert.False(t, hit, "request with incorrect token should fail the check")
 
-	url = s.addToken("abc")
+	url = s.addToken("/abc")
 	req, _ = http.NewRequest("GET", url, nil)
 	h.ServeHTTP(w, req)
 	assert.True(t, hit, "request with correct token should pass the check")
@@ -144,7 +144,7 @@ func doTestCheckRequestPath(t *testing.T, s *server, testOrigins map[string]bool
 	req, _ = http.NewRequest("GET", "/abc", nil)
 	req.Header.Set("Origin", "http://"+s.listenAddr+"/")
 	h.ServeHTTP(w, req)
-	assert.False(t, hit, "request with the same origin should not pass the check")
+	assert.True(t, hit, "request with the same origin should pass the check")
 
 	for origin, allow := range testOrigins {
 		hit = false
