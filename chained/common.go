@@ -6,8 +6,9 @@
 package chained
 
 import (
-	"github.com/getlantern/golog"
 	"strconv"
+
+	"github.com/getlantern/golog"
 )
 
 var (
@@ -37,6 +38,9 @@ type ChainedServerInfo struct {
 
 	// PluggableTransportSettings: Settings for pluggable transport
 	PluggableTransportSettings map[string]string
+
+	// KCPSettings: If specified, traffic will be tunneled over KCP
+	KCPSettings map[string]interface{}
 }
 
 func (s *ChainedServerInfo) ptSetting(name string) string {

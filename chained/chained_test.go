@@ -17,28 +17,38 @@ var (
 	pong = []byte("pong")
 )
 
-func NewDialer(dialServer func(p *proxy) (net.Conn, error)) func(network, addr string) (net.Conn, error) {
-	return newProxy("test", "proto", "netw", &ChainedServerInfo{
+func NewDialer(dialServer func(p *proxy) (net.Conn, error)) (func(network, addr string) (net.Conn, error), error) {
+	p, err := newProxy("test", "proto", "netw", "addr:567", &ChainedServerInfo{
 		Addr:      "addr:567",
 		AuthToken: "token",
 	}, "device", func() string {
 		return "protoken"
-	}, true, dialServer).Dial
+	}, true, dialServer)
+	if err != nil {
+		return nil, err
+	}
+	return p.Dial, nil
 }
 
 func TestBadDialServer(t *testing.T) {
-	dialer := NewDialer(func(p *proxy) (net.Conn, error) {
+	dialer, err := NewDialer(func(p *proxy) (net.Conn, error) {
 		return nil, fmt.Errorf("I refuse to dial")
 	})
-	_, err := dialer("tcp", "www.google.com")
+	if !assert.NoError(t, err) {
+		return
+	}
+	_, err = dialer("tcp", "www.google.com")
 	assert.Error(t, err, "Dialing with a bad DialServer function should have failed")
 }
 
 func TestBadProtocol(t *testing.T) {
-	dialer := NewDialer(func(p *proxy) (net.Conn, error) {
+	dialer, err := NewDialer(func(p *proxy) (net.Conn, error) {
 		return net.Dial("tcp", "www.google.com")
 	})
-	_, err := dialer("udp", "www.google.com")
+	if !assert.NoError(t, err) {
+		return
+	}
+	_, err = dialer("udp", "www.google.com")
 	assert.Error(t, err, "Dialing with a non-tcp protocol should have failed")
 }
 
@@ -57,9 +67,12 @@ func TestBadServer(t *testing.T) {
 		}
 	}()
 
-	dialer := NewDialer(func(p *proxy) (net.Conn, error) {
+	dialer, err := NewDialer(func(p *proxy) (net.Conn, error) {
 		return net.Dial("tcp", l.Addr().String())
 	})
+	if !assert.NoError(t, err) {
+		return
+	}
 	_, err = dialer("connect", "www.google.com")
 	log.Debugf("Error: %v", err)
 	assert.Error(t, err, "Dialing a server that disconnects too soon should have failed")
@@ -82,9 +95,12 @@ func TestBadConnectStatus(t *testing.T) {
 		}
 	}()
 
-	dialer := NewDialer(func(p *proxy) (net.Conn, error) {
+	dialer, err := NewDialer(func(p *proxy) (net.Conn, error) {
 		return net.DialTimeout("tcp", l.Addr().String(), 2*time.Second)
 	})
+	if !assert.NoError(t, err) {
+		return
+	}
 	_, err = dialer("connect", "www.google.com")
 	assert.Error(t, err, "Dialing a server that sends a non-successful HTTP status to our CONNECT request should have failed")
 }
@@ -99,7 +115,7 @@ func TestBadMethodToServer(t *testing.T) {
 }
 
 func TestBadAddressToServer(t *testing.T) {
-	p := newProxy("test", "proto", "netw", &ChainedServerInfo{
+	p, err := newProxy("test", "proto", "netw", "addr:567", &ChainedServerInfo{
 		Addr:      "addr:567",
 		AuthToken: "token",
 	}, "device", func() string {
@@ -107,6 +123,9 @@ func TestBadAddressToServer(t *testing.T) {
 	}, true, func(p *proxy) (net.Conn, error) {
 		return nil, nil
 	})
+	if !assert.NoError(t, err) {
+		return
+	}
 	l := startServer(t)
 	req, err := p.buildCONNECTRequest("somebadaddressasdfdasfds.asdfasdf.dfads:532400")
 	if err != nil {
@@ -129,12 +148,15 @@ func TestBadAddressToServer(t *testing.T) {
 func TestSuccess(t *testing.T) {
 	l := startServer(t)
 
-	dialer := NewDialer(func(p *proxy) (net.Conn, error) {
+	dialer, err := NewDialer(func(p *proxy) (net.Conn, error) {
 		log.Debugf("Dialing with timeout to: %v", l.Addr())
 		conn, err := net.DialTimeout(l.Addr().Network(), l.Addr().String(), 2*time.Second)
 		log.Debugf("Got conn %v and err %v", conn, err)
 		return conn, err
 	})
+	if !assert.NoError(t, err) {
+		return
+	}
 
 	log.Debugf("TESTING SUCCESS")
 	test(t, dialer)
