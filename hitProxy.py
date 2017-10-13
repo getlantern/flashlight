@@ -34,9 +34,10 @@ for i, server in enumerate(loaded):
 tmpdir = tempfile.mkdtemp()
 p = os.path.join(tmpdir, "proxies.yaml")
 f = open(p, "w")
-f.write(yaml.safe_dump(servers, encoding='utf-8', allow_unicode=True, default_flow_style=False))
+cfg = yaml.safe_dump(servers, encoding='utf-8', allow_unicode=True, default_flow_style=False)
+f.write(cfg)
 f.close()
-
+print cfg
 
 path = ""
 if os.path.isfile("./lantern"):
