@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -128,6 +129,9 @@ func (app *App) Run() {
 		}
 
 		uiFilter := func(req *http.Request) (*http.Request, error) {
+			if req.URL != nil && strings.HasPrefix(req.URL.Host, app.uiDomain) || strings.HasPrefix(req.Host, app.uiDomain) {
+				return ui.ServeFromLocalUI(req), nil
+			}
 			return req, nil
 		}
 

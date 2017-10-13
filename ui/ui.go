@@ -1,9 +1,11 @@
 package ui
 
 import (
+	"bytes"
 	"fmt"
 	"mime"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/getlantern/eventual"
@@ -48,11 +50,20 @@ func attachHandlers(s *server) {
 
 	s.Handle("/startup", http.HandlerFunc(startupHandler))
 	unpackUI()
-	s.Handle("/", http.FileServer(fs))
+	s.Handle(s.requestPath+"/", strippingHandler(http.FileServer(fs)))
+}
+
+// strippingHandler removes the secure request path from the URL so that the
+// static file server can properly serve it (it's effectively a virtual path).
+func strippingHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.URL.Path = strings.Replace(r.URL.Path, serve.requestPath, "", -1)
+		h.ServeHTTP(w, r)
+	})
 }
 
 func Handle(pattern string, handler http.Handler) {
-	serve.Handle(pattern, handler)
+	serve.Handle(serve.requestPath+pattern, strippingHandler(handler))
 }
 
 // Stop stops the UI listener and all services. To facilitate test.
@@ -69,6 +80,17 @@ func unpackUI() {
 		panic(fmt.Errorf("Unable to open tarfs filesystem: %v", err))
 	}
 	translations.Set(fs.SubDir("locale"))
+}
+
+// fixPath changes the path in certain files that use hard coded absolute paths
+// to include the secure random path instead of the naked root path the UI will
+// just reject.
+func fixPath(name string, file []byte) (string, []byte) {
+	if strings.HasSuffix(name, ".css") {
+		cur := bytes.Replace(file, []byte("/img/"), []byte(serve.requestPath+"/img/"), 1)
+		return name, bytes.Replace(cur, []byte("/font/"), []byte(serve.requestPath+"/font/"), 1)
+	}
+	return name, file
 }
 
 // Translations returns the translations for a given locale file.
