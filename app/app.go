@@ -250,12 +250,11 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 		log.Debugf("Starting client UI at %v", uiaddr)
 		// ui will handle empty uiaddr correctly
-		err = ui.Start(uiaddr, startupURL, localHTTPToken(settings), app.uiDomain,
+		if e := ui.Start(uiaddr, startupURL, localHTTPToken(settings), app.uiDomain,
 			settings.GetSystemProxy,
 			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
 			&ui.PathHandler{Pattern: "/data", Handler: ws.StartUIChannel()},
-		)
-		if err != nil {
+		); e != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		}
 
