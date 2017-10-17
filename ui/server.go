@@ -191,7 +191,8 @@ func (s *server) activeDomain() string {
 func (s *server) checkRequestPath(h http.Handler) http.Handler {
 	check := func(w http.ResponseWriter, r *http.Request) {
 		if !strings.HasPrefix(r.URL.Path, s.requestPath) {
-			msg := fmt.Sprintf("Access was denied because the request path was wrong. Expected\n'%v'\nnot:\n%v", s.requestPath, r.URL.Path)
+			msg := fmt.Sprintf("Access denied because the request path was wrong. Expected\n'%v'\nnot:\n%v",
+				s.requestPath, r.URL.Path)
 			s.forbidden(msg, w, r)
 		} else {
 			h.ServeHTTP(w, r)

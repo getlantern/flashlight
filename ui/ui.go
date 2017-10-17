@@ -45,16 +45,17 @@ func attachHandlers(s *server) {
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
 	startupHandler := func(resp http.ResponseWriter, req *http.Request) {
+		log.Debugf("Got startup call!!")
 		ShowRoot("existing", "lantern")
 		resp.WriteHeader(http.StatusOK)
 	}
 
-	s.Handle("/startup", http.HandlerFunc(startupHandler))
-	s.Handle(s.requestPath+"/", strippingHandler(http.FileServer(fs)))
+	Handle("/startup", http.HandlerFunc(startupHandler))
+	Handle("/", http.FileServer(fs))
 }
 
 // strippingHandler removes the secure request path from the URL so that the
-// static file server can properly serve it (it's effectively a virtual path).
+// static file server can properly serve it.
 func strippingHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.URL.Path = strings.Replace(r.URL.Path, serve.requestPath, "", -1)

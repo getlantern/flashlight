@@ -403,14 +403,13 @@ func (app *App) onConfigUpdate(cfg *config.Global) {
 // showExistingUi triggers an existing Lantern running on the same system to
 // open a browser to the Lantern start page.
 func (app *App) showExistingUI(addr string) error {
-	url := "http://" + addr + "/startup"
+	url := "http://" + addr + "/" + localHTTPToken(settings) + "/startup"
 	log.Debugf("Hitting local URL: %v", url)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Debugf("Could not build request: %s", err)
 		return err
 	}
-	req.Header.Set("Origin", url)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
