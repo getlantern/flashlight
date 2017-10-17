@@ -29,12 +29,22 @@ func init() {
 	_ = mime.AddExtensionType(".js", "application/javascript")
 }
 
+//PathHandler contains a request path pattern and an HTTP handler for that
+//pattern.
+type PathHandler struct {
+	Pattern string
+	Handler http.Handler
+}
+
 // Start starts serving the UI.
 func Start(requestedAddr, extURL, localHTTPTok, uiDomain string,
-	useUIDomain func() bool) error {
+	useUIDomain func() bool, handlers ...*PathHandler) error {
 	serve = newServer(extURL, localHTTPTok, uiDomain, useUIDomain)
 	unpackUI()
 	attachHandlers(serve)
+	for _, h := range handlers {
+		Handle(h.Pattern, h.Handler)
+	}
 	if err := serve.start(requestedAddr); err != nil {
 		return err
 	}
