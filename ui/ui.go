@@ -55,7 +55,6 @@ func attachHandlers(s *server) {
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
 	startupHandler := func(resp http.ResponseWriter, req *http.Request) {
-		log.Debugf("Got startup call!!")
 		ShowRoot("existing", "lantern")
 		resp.WriteHeader(http.StatusOK)
 	}
