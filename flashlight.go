@@ -21,6 +21,7 @@ import (
 	"github.com/getlantern/ops"
 	"github.com/getlantern/osversion"
 
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
@@ -60,6 +61,7 @@ func Run(httpProxyAddr string,
 	statsTracker stats.Tracker,
 	onError func(err error),
 	deviceID string,
+	dialersUpdate func(dialers []balancer.Dialer),
 	isPro func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
@@ -100,7 +102,10 @@ func Run(httpProxyAddr string,
 	proxiesDispatch := func(conf interface{}) {
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
-		cl.Configure(proxyMap, deviceID)
+		dialers, err := cl.Configure(proxyMap, deviceID)
+		if err == nil {
+			dialersUpdate(dialers)
+		}
 	}
 	globalDispatch := func(conf interface{}) {
 		// Don't love the straight cast here, but we're also the ones defining
