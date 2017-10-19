@@ -49,6 +49,12 @@ type Dialer interface {
 	// Addr returns the address for this Dialer
 	Addr() string
 
+	// KCPEnabled indicates whether or not this is a KCP-based dialer
+	KCPEnabled() bool
+
+	// Enables KCP for the given dialer
+	EnableKCP() error
+
 	// Trusted indicates whether or not this dialer is trusted
 	Trusted() bool
 
