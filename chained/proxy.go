@@ -284,8 +284,10 @@ type proxy struct {
 	trusted           bool
 	preferred         bool
 	dialServer        func(*proxy) (net.Conn, error)
+	chainedServerInfo *ChainedServerInfo
 	emaDialTime       *ema.EMA
 	emaLatency        *ema.EMA
+	kcpEnabled        bool
 	mostRecentABETime time.Time
 	forceRecheckCh    chan bool
 	closeCh           chan bool
@@ -294,36 +296,36 @@ type proxy struct {
 
 func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(*proxy) (net.Conn, error)) (*proxy, error) {
 	p := &proxy{
-		name:             name,
-		protocol:         protocol,
-		network:          network,
-		addr:             addr,
-		authToken:        s.AuthToken,
-		deviceID:         deviceID,
-		proToken:         proToken,
-		trusted:          trusted,
-		dialServer:       dialServer,
-		emaDialTime:      ema.NewDuration(0, 0.8),
-		emaLatency:       ema.NewDuration(0, 0.8),
-		bbrResetRequired: 1, // reset on every start
-		forceRecheckCh:   make(chan bool, 1),
-		closeCh:          make(chan bool, 1),
-		consecSuccesses:  1, // be optimistic
+		name:              name,
+		protocol:          protocol,
+		network:           network,
+		addr:              addr,
+		authToken:         s.AuthToken,
+		deviceID:          deviceID,
+		proToken:          proToken,
+		trusted:           trusted,
+		dialServer:        dialServer,
+		chainedServerInfo: s,
+		emaDialTime:       ema.NewDuration(0, 0.8),
+		emaLatency:        ema.NewDuration(0, 0.8),
+		bbrResetRequired:  1, // reset on every start
+		forceRecheckCh:    make(chan bool, 1),
+		closeCh:           make(chan bool, 1),
+		consecSuccesses:   1, // be optimistic
 	}
 
 	if s.KCPSettings != nil && len(s.KCPSettings) > 0 {
-		err := enableKCP(p, s)
-		if err != nil {
-			return nil, err
-		}
+		p.kcpEnabled = true
+		p.EnableKCP()
 	}
 
 	go p.runConnectivityChecks()
 	return p, nil
 }
 
-func enableKCP(p *proxy, s *ChainedServerInfo) error {
+func (p *proxy) EnableKCP() error {
 	var conf lib.Config
+	s := p.chainedServerInfo
 	err := mapstructure.Decode(s.KCPSettings, &conf)
 	if err != nil {
 		return log.Errorf("Could not decode kcp transport settings?: %v", err)
@@ -331,6 +333,7 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 	conf.LocalAddr = "127.0.0.1:0"
 
 	startResult := eventual.NewValue()
+
 	go func() {
 		err := lib.Run(&conf, "embedded", func(addr net.Addr) {
 			startResult.Set(addr.String())
@@ -366,6 +369,10 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 	default:
 		return log.Errorf("Unkown start result type: %v", t)
 	}
+}
+
+func (p *proxy) KCPEnabled() bool {
+	return p.kcpEnabled
 }
 
 func (p *proxy) Protocol() string {
