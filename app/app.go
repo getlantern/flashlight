@@ -295,18 +295,6 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 	}
 }
 
-// localHTTPToken fetches the local HTTP token from disk if it's there, and
-// otherwise creates a new one and stores it.
-func localHTTPToken(set *Settings) string {
-	tok := set.GetLocalHTTPToken()
-	if tok == "" {
-		t := ui.LocalHTTPToken()
-		set.SetLocalHTTPToken(t)
-		return t
-	}
-	return tok
-}
-
 // Connect turns on proxying
 func (app *App) Connect() {
 	ops.Begin("connect").End()

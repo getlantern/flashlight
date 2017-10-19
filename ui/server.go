@@ -36,9 +36,13 @@ type server struct {
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
 func newServer(extURL, localHTTPToken, uiDomain string, useUIDomain func() bool) *server {
+	requestPath := ""
+	if localHTTPToken != "" {
+		requestPath = "/" + localHTTPToken
+	}
 	return &server{
 		externalURL: overrideManotoURL(extURL),
-		requestPath: "/" + localHTTPToken,
+		requestPath: requestPath,
 		mux:         http.NewServeMux(),
 		uiDomain:    uiDomain,
 		useUIDomain: useUIDomain,
