@@ -20,7 +20,6 @@ import (
 	"github.com/getlantern/flashlight/app"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/logging"
-	"github.com/getlantern/flashlight/ui"
 
 	"github.com/mitchellh/panicwrap"
 )
@@ -117,8 +116,7 @@ func runApp(a *app.App) {
 	})
 	if a.ShowUI {
 		go func() {
-			lang := a.GetSetting(app.SNLanguage).(string)
-			i18nInit(lang)
+			i18nInit(a)
 			if err := configureSystemTray(a); err != nil {
 				return
 			}
@@ -131,9 +129,10 @@ func runApp(a *app.App) {
 	a.Run()
 }
 
-func i18nInit(locale string) {
+func i18nInit(a *app.App) {
+	locale := a.GetLanguage()
 	i18n.SetMessagesFunc(func(filename string) ([]byte, error) {
-		return ui.Translations(filename)
+		return a.GetTranslations(filename)
 	})
 	if err := i18n.SetLocale(locale); err != nil {
 		log.Debugf("i18n.SetLocale(%s) failed, fallback to OS default: %q", locale, err)

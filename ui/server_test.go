@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path"
+	"strings"
 	"testing"
 	"time"
 
@@ -32,7 +33,7 @@ func TestDoShow(t *testing.T) {
 }
 
 func TestStartServer(t *testing.T) {
-	startServer := func(addr string) *server {
+	startServer := func(addr string) *Server {
 		s := newServer("", "test-http-token", "client.lantern.io", func() bool { return true })
 		assert.NoError(t, s.start(addr), "should start server")
 		return s
@@ -40,31 +41,31 @@ func TestStartServer(t *testing.T) {
 	s := startServer("")
 	// make sure the port is non-zero, same below
 	assert.Regexp(t, "localhost:\\d{2,}$", s.listenAddr)
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr())
+	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr())
 	s.stop()
 	s = startServer(":")
 	assert.Regexp(t, ":\\d{2,}$", s.listenAddr)
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr())
+	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr())
 	s.stop()
 	s = startServer(":0")
 	assert.Regexp(t, ":\\d{2,}$", s.listenAddr)
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr())
+	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr())
 	s.stop()
 	s = startServer("localhost:0")
 	assert.Regexp(t, "localhost:\\d{2,}$", s.listenAddr)
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr())
+	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr())
 	s.stop()
 	s = startServer("localhost:9898")
 	assert.Equal(t, "localhost:9898", s.listenAddr)
-	assert.Equal(t, "localhost:9898", s.getUIAddr())
+	assert.Equal(t, "localhost:9898", s.GetUIAddr())
 	s.stop()
 	s = startServer("127.0.0.1:9897")
 	assert.Equal(t, "127.0.0.1:9897", s.listenAddr)
-	assert.Equal(t, "127.0.0.1:9897", s.getUIAddr())
+	assert.Equal(t, "127.0.0.1:9897", s.GetUIAddr())
 	s.stop()
 	s = startServer("127.0.0.1:0")
 	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.listenAddr)
-	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.getUIAddr())
+	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.GetUIAddr())
 	s.stop()
 
 	// Simulate the case when unable to listen on saved uiaddr.
@@ -73,7 +74,7 @@ func TestStartServer(t *testing.T) {
 		"should not listen on invalid host")
 	assert.Regexp(t, "localhost:\\d{2,}$", s.listenAddr,
 		"passing invalid port should fallback to default addresses")
-	assert.Regexp(t, "localhost:\\d{2,}$", s.getUIAddr(),
+	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr(),
 		"passing invalid port should fallback to default addresses")
 	s.stop()
 
@@ -86,7 +87,7 @@ func TestStartServer(t *testing.T) {
 		"should not listen on invalid host")
 	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.listenAddr,
 		"passing invalid port should fallback to default addresses")
-	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.getUIAddr(),
+	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.GetUIAddr(),
 		"passing invalid port should fallback to default addresses")
 	s.stop()
 }
@@ -104,15 +105,17 @@ func TestCheckOrigin(t *testing.T) {
 
 	s.start("127.0.0.1:9897")
 	doTestCheckRequestPath(t, s, map[string]bool{
-		"127.0.0.1:9897": false,
-		"localhost:9897": false,
-		"127.0.0.1:1243": false,
-		"anyhost:9897":   false,
+		"127.0.0.1:9897":              false,
+		"localhost:9897":              false,
+		"127.0.0.1:1243":              false,
+		"anyhost:9897":                false,
+		"localhost:9898/token":        true,
+		"127.0.0.1:9898/testesttoken": true,
 	})
 	s.stop()
 }
 
-func doTestCheckRequestPath(t *testing.T, s *server, testOrigins map[string]bool) {
+func doTestCheckRequestPath(t *testing.T, s *Server, testOrigins map[string]bool) {
 	var hit bool
 	var basic http.HandlerFunc = func(http.ResponseWriter, *http.Request) {
 		hit = true
@@ -135,7 +138,7 @@ func doTestCheckRequestPath(t *testing.T, s *server, testOrigins map[string]bool
 	h.ServeHTTP(w, req)
 	assert.False(t, hit, "request with incorrect token should fail the check")
 
-	url = s.addToken("abc")
+	url = s.AddToken("abc")
 	req, _ = http.NewRequest("GET", url, nil)
 	h.ServeHTTP(w, req)
 	assert.True(t, hit, "request with correct token should pass the check")
@@ -149,7 +152,7 @@ func doTestCheckRequestPath(t *testing.T, s *server, testOrigins map[string]bool
 	for origin, allow := range testOrigins {
 		hit = false
 		req, _ = http.NewRequest("GET", "/abc", nil)
-		req.Header.Set("Origin", "http://"+origin+"/")
+		req.Header.Set("Referer", "http://"+origin+"/")
 		h.ServeHTTP(w, req)
 		if allow {
 			assert.True(t, hit, "origin "+origin+" should pass the check")
@@ -157,4 +160,110 @@ func doTestCheckRequestPath(t *testing.T, s *server, testOrigins map[string]bool
 			assert.False(t, hit, "origin "+origin+" should not pass the check")
 		}
 	}
+}
+
+func TestStart(t *testing.T) {
+	serve, err := StartServer("127.0.0.1:0", "", "abcde", "ui.lantern.io", func() bool { return true },
+		&PathHandler{Pattern: "/testing", Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+			resp.WriteHeader(http.StatusOK)
+		})})
+	assert.NoError(t, err)
+
+	uiAddr := serve.GetUIAddr()
+	assert.NotEqual(t, "", uiAddr)
+
+	tok := serve.AddToken("/abc")
+	assert.NotEqual(t, "", tok)
+	assert.True(t, strings.HasSuffix(tok, "/abc"), "Suffix not found in "+tok)
+}
+
+func TestTranslations(t *testing.T) {
+	serve := newServer("", "abcde", "ui.lantern.io", func() bool { return true })
+	serve.unpackUI()
+	dat, err := Translations("en-US.json")
+	assert.NoError(t, err, "Could not fetch locale")
+	assert.NotNil(t, dat)
+}
+
+func TestAddrCandidates(t *testing.T) {
+	endpoint := "127.0.0.1:1892"
+	candidates := addrCandidates("http://" + endpoint)
+	assert.Equal(t, append([]string{endpoint}, defaultUIAddresses...), candidates)
+
+	candidates = addrCandidates(endpoint)
+	assert.Equal(t, append([]string{endpoint}, defaultUIAddresses...), candidates)
+
+	candidates = addrCandidates("")
+	assert.Equal(t, defaultUIAddresses, candidates)
+}
+
+func getTestHandler() http.Handler {
+	return getTestServer("some-token").mux
+}
+
+func getTestServer(token string) *Server {
+	s := newServer("", token, "client.lantern.io", func() bool { return true })
+	s.start("localhost:")
+	return s
+}
+
+func TestNoCache(t *testing.T) {
+	var rw httptest.ResponseRecorder
+	req, _ := http.NewRequest("GET", "/some-token/", nil)
+	getTestHandler().ServeHTTP(&rw, req)
+	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
+}
+
+func TestProAPI(t *testing.T) {
+	var rw httptest.ResponseRecorder
+	req, _ := http.NewRequest("GET", "/pro/user-data", nil)
+	req.Header.Set("Origin", "http://example.com")
+	getTestHandler().ServeHTTP(&rw, req)
+	assert.Equal(t, "", rw.HeaderMap.Get("Cache-Control"), "The cache middleware should not be executed.")
+}
+
+func TestKnownResource(t *testing.T) {
+	var rw httptest.ResponseRecorder
+	req, _ := http.NewRequest("GET", "/js/bundle.js", nil)
+	req.Header.Set("Origin", "http://example.com")
+	getTestHandler().ServeHTTP(&rw, req)
+	assert.Equal(t, "", rw.HeaderMap.Get("Cache-Control"), "The cache middleware should not be executed.")
+}
+
+func TestKnownResourceWithNoOrigin(t *testing.T) {
+	var rw httptest.ResponseRecorder
+	req, _ := http.NewRequest("GET", "/js/bundle.js", nil)
+	getTestHandler().ServeHTTP(&rw, req)
+	assert.Equal(t, "", rw.HeaderMap.Get("Cache-Control"), "Expecting no reply")
+}
+
+func TestProxyPACWithNoToken(t *testing.T) {
+	var rw httptest.ResponseRecorder
+	req, _ := http.NewRequest("GET", "/proxy_on.pac", nil)
+	getTestHandler().ServeHTTP(&rw, req)
+	assert.Equal(t, "", rw.HeaderMap.Get("Cache-Control"), "Expecting no reply")
+}
+
+func TestKnownResourceWithNoOriginButWithToken(t *testing.T) {
+	var rw httptest.ResponseRecorder
+	s := getTestServer("token")
+	req, _ := http.NewRequest("GET", s.AddToken("/js/bundle.js"), nil)
+	s.mux.ServeHTTP(&rw, req)
+	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
+}
+
+func TestLanternLogoWithToken(t *testing.T) {
+	var rw httptest.ResponseRecorder
+	s := getTestServer("token")
+	req, _ := http.NewRequest("GET", s.AddToken("/img/lantern_logo.png?foo=1"), nil)
+	s.mux.ServeHTTP(&rw, req)
+	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
+}
+
+func TestLanternPACURL(t *testing.T) {
+	var rw httptest.ResponseRecorder
+	s := getTestServer("token")
+	req, _ := http.NewRequest("GET", s.AddToken("/proxy_on.pac"), nil)
+	s.mux.ServeHTTP(&rw, req)
+	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
 }

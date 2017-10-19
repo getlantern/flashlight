@@ -2,12 +2,46 @@ package app
 
 import (
 	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
 	"testing"
 
-	"github.com/getlantern/flashlight/ui"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestUIFilter(t *testing.T) {
+	a := &App{
+		Flags: make(map[string]interface{}),
+	}
+	a.Init()
+
+	uiFilter := a.uiFilter()
+
+	r := &http.Request{
+		Host: "test",
+	}
+
+	_, err := uiFilter(r)
+	assert.NoError(t, err)
+
+	uiFilter = a.uiFilterWithAddr(func() string {
+		return ""
+	})
+	rr, err := uiFilter(r)
+
+	assert.NoError(t, err)
+	assert.Equal(t, rr.Host, "")
+
+	r.Method = http.MethodConnect
+	r.URL, err = url.Parse("http://testtestest")
+	assert.NoError(t, err)
+	rr, err = uiFilter(r)
+
+	assert.NoError(t, err)
+	assert.Equal(t, rr.Host, "")
+	assert.Equal(t, rr.URL.Host, "")
+}
 
 func TestLocalHTTPToken(t *testing.T) {
 	// Avoid polluting real settings.
@@ -18,8 +52,7 @@ func TestLocalHTTPToken(t *testing.T) {
 
 	defer os.Remove(tmpfile.Name()) // clean up
 
-	ui.Start(":", "", "", "", func() bool { return true })
-	defer ui.Stop()
+	//ui.Start(":", "", "", "", func() bool { return true })
 	set := loadSettingsFrom("1", "1/1/1", "1/1/1", tmpfile.Name())
 
 	// Just make sure we correctly set the token.

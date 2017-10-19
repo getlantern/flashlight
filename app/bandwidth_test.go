@@ -8,7 +8,7 @@ import (
 )
 
 func TestPercents(t *testing.T) {
-	ns = notifyStatus{}
+	ns := notifyStatus{}
 
 	quota := &bandwidth.Quota{
 		MiBAllowed: 1000,

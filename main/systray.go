@@ -13,7 +13,6 @@ import (
 	"github.com/getlantern/flashlight/app"
 	"github.com/getlantern/flashlight/icons"
 	"github.com/getlantern/flashlight/stats"
-	"github.com/getlantern/flashlight/ui"
 )
 
 var menu struct {
@@ -97,9 +96,9 @@ func configureSystemTray(a *app.App) error {
 					a.Disconnect()
 				}
 			case <-menu.show.ClickedCh:
-				ui.ShowRoot("show-lantern", "tray")
+				a.OnTrayShow()
 			case <-menu.upgrade.ClickedCh:
-				ui.Show(ui.AddToken("/")+"#/plans", "proupgrade", "tray")
+				a.OnTrayUpgrade()
 			case <-menu.quit.ClickedCh:
 				systray.Quit()
 			}

@@ -59,6 +59,7 @@ type App struct {
 	chExitFuncs     chan func()
 	chLastExitFuncs chan func()
 	uiDomain        string
+	uiServer        *ui.Server
 }
 
 // Init initializes the App's state
@@ -82,7 +83,14 @@ func (app *App) Init() {
 	addDataCapListener(func(hitDataCap bool) {
 		app.statsTracker.SetHitDataCap(hitDataCap)
 	})
-	app.uiDomain = app.Flags["ui-domain"].(string)
+
+	// The ui domain might not be there for tests, for example.
+	domain, ok := app.Flags["ui-domain"]
+	if ok {
+		app.uiDomain = domain.(string)
+	} else {
+		log.Error("No ui domain?")
+	}
 }
 
 // LogPanicAndExit logs a panic and then exits the application. This function
@@ -128,13 +136,6 @@ func (app *App) Run() {
 			socksAddr = defaultSOCKSProxyAddress
 		}
 
-		uiFilter := func(req *http.Request) (*http.Request, error) {
-			if req.URL != nil && strings.HasPrefix(req.URL.Host, app.uiDomain) || strings.HasPrefix(req.Host, app.uiDomain) {
-				return ui.ServeFromLocalUI(req), nil
-			}
-			return req, nil
-		}
-
 		err := flashlight.Run(
 			listenAddr,
 			socksAddr,
@@ -162,11 +163,15 @@ func (app *App) Run() {
 					// pro user (or status unknown), don't ad swap
 					return ""
 				}
-				return ui.AddToken("/") + "#/plans"
+				if app.uiServer != nil {
+					return app.PlansURL()
+				}
+				// This should never happen...
+				return "https://www.getlantern.org"
 			},
 			func() bool { return true },              // always allow ad blocking on desktop
 			func(addr string) string { return addr }, // no dnsgrab reverse lookups on desktop
-			uiFilter,
+			app.uiFilter(),
 		)
 		if err != nil {
 			app.Exit(err)
@@ -249,19 +254,20 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		}
 
 		log.Debugf("Starting client UI at %v", uiaddr)
+
 		// ui will handle empty uiaddr correctly
-		if e := ui.Start(uiaddr, startupURL, localHTTPToken(settings), app.uiDomain,
+		if app.uiServer, err = ui.StartServer(uiaddr, startupURL, localHTTPToken(settings), app.uiDomain,
 			settings.GetSystemProxy,
 			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
 			&ui.PathHandler{Pattern: "/data", Handler: ws.StartUIChannel()},
-		); e != nil {
+		); err != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		}
 
 		if e := settings.StartService(); e != nil {
 			app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
 		}
-		settings.SetUIAddr(ui.GetUIAddr())
+		settings.SetUIAddr(app.uiServer.GetUIAddr())
 
 		if err = app.statsTracker.StartService(); err != nil {
 			log.Errorf("Unable to serve stats to UI: %v", err)
@@ -269,7 +275,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 		setupUserSignal(app.Connect, app.Disconnect)
 
-		err = serveBandwidth()
+		err = serveBandwidth(app)
 		if err != nil {
 			log.Errorf("Unable to serve bandwidth to UI: %v", err)
 		}
@@ -288,7 +294,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			app.AddExitFunc(stopAnalytics)
 		}
 
-		app.AddExitFunc(LoconfScanner(4*time.Hour, isProUser))
+		app.AddExitFunc(LoconfScanner(4*time.Hour, isProUser, app.AddToken))
 		app.AddExitFunc(notifier.NotificationsLoop())
 
 		return true
@@ -307,23 +313,9 @@ func (app *App) Disconnect() {
 	settings.setBool(SNDisconnected, true)
 }
 
-// GetSetting gets the in memory setting with the name specified by attr
-func (app *App) GetSetting(name SettingName) interface{} {
-	if val, ok := settingMeta[name]; ok {
-		switch val.sType {
-		case stBool:
-			return settings.getBool(name)
-		case stNumber:
-			return settings.getInt64(name)
-		case stString:
-			return settings.getString(name)
-		}
-	} else {
-		log.Errorf("Looking for non-existent setting? %v", name)
-	}
-
-	// should never reach here.
-	return nil
+// GetLanguage returns the user language
+func (app *App) GetLanguage() string {
+	return settings.GetLanguage()
 }
 
 // OnSettingChange sets a callback cb to get called when attr is changed from UI.
@@ -363,7 +355,7 @@ func (app *App) afterStart() {
 		// URL and the proxy server are all up and running to avoid
 		// race conditions where we change the proxy setup while the
 		// UI server and proxy server are still coming up.
-		ui.ShowRoot("startup", "lantern")
+		app.uiServer.ShowRoot("startup", "lantern")
 	} else {
 		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
 	}
@@ -493,7 +485,7 @@ func (app *App) WaitForExit() error {
 	return err.(error)
 }
 
-// Indicates whether or not the app is pro
+// IsPro indicates whether or not the app is pro
 func (app *App) IsPro() bool {
 	isPro, _ := isProUserFast()
 	return isPro
@@ -503,4 +495,60 @@ func recordStopped() {
 	ops.Begin("client_stopped").
 		SetMetricSum("uptime", time.Now().Sub(startTime).Seconds()).
 		End()
+}
+
+// OnTrayShow indicates the user has selected to show lantern from the tray.
+func (app *App) OnTrayShow() {
+	app.uiServer.ShowRoot("show-lantern", "tray")
+}
+
+// OnTrayUpgrade indicates the user has selected to upgrade lantern from the tray.
+func (app *App) OnTrayUpgrade() {
+	app.uiServer.Show(app.PlansURL(), "proupgrade", "tray")
+}
+
+// PlansURL returns the URL for accessing the checkout/plans page directly.
+func (app *App) PlansURL() string {
+	return app.uiServer.AddToken("/") + "#/plans"
+}
+
+// AddToken adds our secure token to a given request path.
+func (app *App) AddToken(path string) string {
+	return app.uiServer.AddToken(path)
+}
+
+// GetTranslations adds our secure token to a given request path.
+func (app *App) GetTranslations(filename string) ([]byte, error) {
+	return ui.Translations(filename)
+}
+
+// uiFilter serves requests over a configured domain from the local UI server.
+// This allows Lantern to run over a more standard domain, which makes it more
+// standard and compatible with things like A/B testing software.
+func (app *App) uiFilter() func(req *http.Request) (*http.Request, error) {
+	return app.uiFilterWithAddr(func() string {
+		if app.uiServer == nil {
+			return ""
+		}
+		return app.uiServer.GetListenAddr()
+	})
+}
+
+// uiFilterWithAddr serves requests over a configured domain from the local UI server.
+// This allows Lantern to run over a more standard domain, which makes it more
+// standard and compatible with things like A/B testing software.
+// This version makes testinga  bit easier.
+func (app *App) uiFilterWithAddr(listenAddr func() string) func(req *http.Request) (*http.Request, error) {
+	return func(req *http.Request) (*http.Request, error) {
+		if req.URL != nil && strings.HasPrefix(req.URL.Host, app.uiDomain) || strings.HasPrefix(req.Host, app.uiDomain) {
+			if req.Method == http.MethodConnect && req.URL != nil {
+				req.URL.Host = listenAddr()
+			}
+			// It's not clear why CONNECT requests also need the host header set here,
+			// but it doesn't work without it.
+			req.Host = listenAddr()
+			return req, nil
+		}
+		return req, nil
+	}
 }

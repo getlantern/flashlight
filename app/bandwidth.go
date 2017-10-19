@@ -6,11 +6,11 @@ import (
 	"sync"
 
 	"github.com/getlantern/bandwidth"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/notifier"
 
 	"github.com/getlantern/flashlight/notifier"
-	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
 )
 
@@ -20,13 +20,14 @@ var (
 	oneFifty  = &sync.Once{}
 	oneEighty = &sync.Once{}
 	oneFull   = &sync.Once{}
-	ns        = notifyStatus{}
 
 	dataCapListeners   = make([]func(hitDataCap bool), 0)
 	dataCapListenersMx sync.RWMutex
+	logger             = golog.LoggerFor("flashlight.app.bandwidth")
 )
 
 type notifyStatus struct {
+	app *App
 }
 
 func addDataCapListener(l func(hitDataCap bool)) {
@@ -35,19 +36,20 @@ func addDataCapListener(l func(hitDataCap bool)) {
 	dataCapListenersMx.Unlock()
 }
 
-func serveBandwidth() error {
+func serveBandwidth(app *App) error {
 	helloFn := func(write func(interface{})) {
-		log.Debugf("Sending current bandwidth quota to new client")
+		logger.Debugf("Sending current bandwidth quota to new client")
 		write(bandwidth.GetQuota())
 	}
 	bservice, err := ws.Register("bandwidth", helloFn)
 	if err != nil {
-		log.Errorf("Error registering with UI? %v", err)
+		logger.Errorf("Error registering with UI? %v", err)
 		return err
 	}
+	ns := notifyStatus{app: app}
 	go func() {
 		for quota := range bandwidth.Updates {
-			log.Debugf("Sending update...")
+			logger.Debugf("Sending update...")
 			bservice.Out <- quota
 			isFull := ns.isFull(quota)
 			dataCapListenersMx.RLock()
@@ -119,15 +121,15 @@ func (s *notifyStatus) notifyCapHit() {
 
 func (s *notifyStatus) notifyFreeUser(title, msg, campaign string) {
 	if isPro, ok := isProUser(); !ok {
-		log.Debugf("user status is unknown, skip showing notification")
+		logger.Debugf("user status is unknown, skip showing notification")
 		return
 	} else if isPro {
-		log.Debugf("Not showing desktop notification for pro user")
+		logger.Debugf("Not showing desktop notification for pro user")
 		return
 	}
 
-	logo := ui.AddToken("/img/lantern_logo.png")
-	click := ui.AddToken("/") + "#/plans"
+	logo := s.app.AddToken("/img/lantern_logo.png")
+	click := s.app.PlansURL()
 	note := &notify.Notification{
 		Title:    title,
 		Message:  msg,
