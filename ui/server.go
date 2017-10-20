@@ -120,7 +120,11 @@ func (s *Server) handle(pattern string, handler http.Handler) {
 	// When the token is included in the request path, we need to strip it in
 	// order to serve the UI correctly (i.e. the static UI tarfs FileSystem knows
 	// nothing about the request path).
-	s.mux.Handle(s.requestPath+pattern, util.NoCacheHandler(s.strippingHandler(handler)))
+	if s.requestPath != "" {
+		// If the request path is empty this will panic on adding the same pattern
+		// twice.
+		s.mux.Handle(s.requestPath+pattern, util.NoCacheHandler(s.strippingHandler(handler)))
+	}
 
 	// In the naked request cast, we need to verify the token is there in the
 	// referer header.
