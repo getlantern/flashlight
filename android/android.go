@@ -71,8 +71,8 @@ func ProtectConnections(protector SocketProtector, dnsServer string) {
 	for _, dialer := range dialers {
 		if dialer.KCPEnabled() {
 			log.Debugf("Enabling KCP for dialer: %s", dialer.Label())
-			// only now enableKCP
-			dialer.EnableKCP()
+			// refresh KCP connections
+			dialer.RefreshKCP()
 		}
 	}
 }
