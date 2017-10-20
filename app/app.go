@@ -58,7 +58,6 @@ type App struct {
 
 	chExitFuncs     chan func()
 	chLastExitFuncs chan func()
-	uiDomain        string
 	uiServer        *ui.Server
 }
 
@@ -84,13 +83,6 @@ func (app *App) Init() {
 		app.statsTracker.SetHitDataCap(hitDataCap)
 	})
 
-	// The ui domain might not be there for tests, for example.
-	domain, ok := app.Flags["ui-domain"]
-	if ok {
-		app.uiDomain = domain.(string)
-	} else {
-		log.Error("No ui domain?")
-	}
 }
 
 // LogPanicAndExit logs a panic and then exits the application. This function
@@ -135,6 +127,7 @@ func (app *App) Run() {
 		if socksAddr == "" {
 			socksAddr = defaultSOCKSProxyAddress
 		}
+		uiDomain := app.Flags["ui-domain"].(string)
 
 		err := flashlight.Run(
 			listenAddr,
@@ -171,7 +164,7 @@ func (app *App) Run() {
 			},
 			func() bool { return true },              // always allow ad blocking on desktop
 			func(addr string) string { return addr }, // no dnsgrab reverse lookups on desktop
-			app.uiFilter(),
+			app.uiFilter(uiDomain),
 		)
 		if err != nil {
 			app.Exit(err)
@@ -253,10 +246,14 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			}
 		}
 
+		uiDomain := app.Flags["ui-domain"].(string)
 		log.Debugf("Starting client UI at %v", uiaddr)
 
 		// ui will handle empty uiaddr correctly
-		if app.uiServer, err = ui.StartServer(uiaddr, startupURL, localHTTPToken(settings), app.uiDomain,
+		if app.uiServer, err = ui.StartServer(uiaddr,
+			startupURL,
+			localHTTPToken(settings),
+			uiDomain,
 			settings.GetSystemProxy,
 			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
 			&ui.PathHandler{Pattern: "/data", Handler: ws.StartUIChannel()},
@@ -525,8 +522,8 @@ func (app *App) GetTranslations(filename string) ([]byte, error) {
 // uiFilter serves requests over a configured domain from the local UI server.
 // This allows Lantern to run over a more standard domain, which makes it more
 // standard and compatible with things like A/B testing software.
-func (app *App) uiFilter() func(req *http.Request) (*http.Request, error) {
-	return app.uiFilterWithAddr(func() string {
+func (app *App) uiFilter(uiDomain string) func(req *http.Request) (*http.Request, error) {
+	return uiFilterWithAddr(uiDomain, func() string {
 		if app.uiServer == nil {
 			return ""
 		}
@@ -538,9 +535,9 @@ func (app *App) uiFilter() func(req *http.Request) (*http.Request, error) {
 // This allows Lantern to run over a more standard domain, which makes it more
 // standard and compatible with things like A/B testing software.
 // This version makes testinga  bit easier.
-func (app *App) uiFilterWithAddr(listenAddr func() string) func(req *http.Request) (*http.Request, error) {
+func uiFilterWithAddr(uiDomain string, listenAddr func() string) func(req *http.Request) (*http.Request, error) {
 	return func(req *http.Request) (*http.Request, error) {
-		if req.URL != nil && strings.HasPrefix(req.URL.Host, app.uiDomain) || strings.HasPrefix(req.Host, app.uiDomain) {
+		if req.URL != nil && strings.HasPrefix(req.URL.Host, uiDomain) || strings.HasPrefix(req.Host, uiDomain) {
 			if req.Method == http.MethodConnect && req.URL != nil {
 				req.URL.Host = listenAddr()
 			}
