@@ -140,7 +140,7 @@ imports:
   - proxyfilters
   - server
 - name: github.com/getlantern/http-proxy-lantern
-  version: b91dfe8bfaadb33a78fc63d9e6a9f81731f77fe5
+  version: f288486d56229b89b575bc8e343ea190702e663f
   subpackages:
   - analytics
   - bbr
@@ -176,7 +176,7 @@ imports:
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
 - name: github.com/getlantern/kcpwrapper
-  version: eb317d8dfc25df0ae4a4b0842c6786de92b602c8
+  version: 0f5146a4c333d5ded957c12256da68427b0bd3bc
 - name: github.com/getlantern/keyman
   version: 9d65bff0c88a85449195d54c38322e254b2ac34b
   subpackages:
@@ -585,4 +585,4 @@ testImports:
   subpackages:
   - assert
 - name: github.com/getlantern/cmux
-  version: 22fea4595032f8255f2112c461d40789b370b22a
+  version: 4070e9b512ea619f0bf87c81fdae16589a4ee8ba
