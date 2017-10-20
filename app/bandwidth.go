@@ -27,7 +27,8 @@ var (
 )
 
 type notifyStatus struct {
-	app *App
+	iconURL  func() string
+	clickURL func() string
 }
 
 func addDataCapListener(l func(hitDataCap bool)) {
@@ -36,7 +37,7 @@ func addDataCapListener(l func(hitDataCap bool)) {
 	dataCapListenersMx.Unlock()
 }
 
-func serveBandwidth(app *App) error {
+func serveBandwidth(iconURL func() string, clickURL func() string) error {
 	helloFn := func(write func(interface{})) {
 		logger.Debugf("Sending current bandwidth quota to new client")
 		write(bandwidth.GetQuota())
@@ -46,7 +47,7 @@ func serveBandwidth(app *App) error {
 		logger.Errorf("Error registering with UI? %v", err)
 		return err
 	}
-	ns := notifyStatus{app: app}
+	ns := notifyStatus{iconURL, clickURL}
 	go func() {
 		for quota := range bandwidth.Updates {
 			logger.Debugf("Sending update...")
@@ -128,13 +129,11 @@ func (s *notifyStatus) notifyFreeUser(title, msg, campaign string) {
 		return
 	}
 
-	logo := s.app.AddToken("/img/lantern_logo.png")
-	click := s.app.PlansURL()
 	note := &notify.Notification{
 		Title:    title,
 		Message:  msg,
-		ClickURL: click,
-		IconURL:  logo,
+		ClickURL: s.clickURL(),
+		IconURL:  s.iconURL(),
 	}
 	_ = notifier.ShowNotification(note, campaign)
 }

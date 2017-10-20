@@ -272,7 +272,9 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 		setupUserSignal(app.Connect, app.Disconnect)
 
-		err = serveBandwidth(app)
+		err = serveBandwidth(func() string {
+			return app.AddToken("/img/lantern_logo.png")
+		}, app.PlansURL)
 		if err != nil {
 			log.Errorf("Unable to serve bandwidth to UI: %v", err)
 		}
@@ -291,7 +293,9 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			app.AddExitFunc(stopAnalytics)
 		}
 
-		app.AddExitFunc(LoconfScanner(4*time.Hour, isProUser, app.AddToken))
+		app.AddExitFunc(LoconfScanner(4*time.Hour, isProUser, func() string {
+			return app.AddToken("/img/lantern_logo.png")
+		}))
 		app.AddExitFunc(notifier.NotificationsLoop())
 
 		return true
