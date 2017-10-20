@@ -117,9 +117,12 @@ func (s *Server) attachHandlers() {
 // request path, Lantern looks for the token in the Referer HTTP header and
 // reject the request if it's not present.
 func (s *Server) handle(pattern string, handler http.Handler) {
-	base := s.checkRequestPath(util.NoCacheHandler(handler))
+	base := util.NoCacheHandler(handler)
 	s.mux.Handle(s.requestPath+pattern, base)
-	s.mux.Handle(pattern, base)
+	// don't add the same pattern twice, or the mux will panic
+	if s.requestPath != "" {
+		s.mux.Handle(pattern, s.checkRequestPath(base))
+	}
 }
 
 // strippingHandler removes the secure request path from the URL so that the
@@ -293,12 +296,12 @@ func (s *Server) rejectRequest(r *http.Request) bool {
 	return false
 }
 
-// notFound returns a 403 forbidden response to the client while also dumping
+// notFound returns a 404 Not Found response to the client while also dumping
 // headers and logs for debugging.
 func (s *Server) notFound(msg string, w http.ResponseWriter, r *http.Request) {
 	log.Error(msg)
 	s.dumpRequestHeaders(r)
-	// Return forbidden but do not reveal any details in the body.
+	// Return 404 but do not reveal any details in the body.
 	http.Error(w, "", http.StatusNotFound)
 }
 
