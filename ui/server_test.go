@@ -95,32 +95,38 @@ func TestStartServer(t *testing.T) {
 func TestCheckOrigin(t *testing.T) {
 	s := newServer("", "token", "client.lantern.io", func() bool { return true })
 	s.start("localhost:9898")
-	doTestCheckRequestPath(t, s, map[string]bool{
-		"localhost:9898": false,
-		"localhost:1243": false,
-		"127.0.0.1:9898": false,
-		"anyhost:9898":   false,
+	doTestCheckRequestToken(t, s, map[*http.Request]bool{
+		newRequest("http://localhost:9898"): false,
+		newRequest("http://localhost:1243"): false,
+		newRequest("http://127.0.0.1:9898"): false,
+		newRequest("http://anyhost:9898"):   false,
 	})
 	s.stop()
 
 	s.start("127.0.0.1:9897")
-	doTestCheckRequestPath(t, s, map[string]bool{
-		"127.0.0.1:9897":              false,
-		"localhost:9897":              false,
-		"127.0.0.1:1243":              false,
-		"anyhost:9897":                false,
-		"localhost:9898/token":        true,
-		"127.0.0.1:9898/testesttoken": true,
+	doTestCheckRequestToken(t, s, map[*http.Request]bool{
+		newRequest("http://127.0.0.1:9897"):              false,
+		newRequest("http://localhost:9897"):              false,
+		newRequest("http://127.0.0.1:1243"):              false,
+		newRequest("http://anyhost:9897"):                false,
+		newRequest("http://localhost:9898/token"):        true,
+		newRequest("http://127.0.0.1:9898/testesttoken"): true,
 	})
 	s.stop()
 }
 
-func doTestCheckRequestPath(t *testing.T, s *Server, testOrigins map[string]bool) {
+func newRequest(url string) *http.Request {
+	r, _ := http.NewRequest("GET", url, nil)
+	r.Header.Set("referer", url)
+	return r
+}
+
+func doTestCheckRequestToken(t *testing.T, s *Server, testOrigins map[*http.Request]bool) {
 	var hit bool
 	var basic http.HandlerFunc = func(http.ResponseWriter, *http.Request) {
 		hit = true
 	}
-	h := s.checkRequestPath(basic)
+	h := s.checkRequestForToken(basic)
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
@@ -140,24 +146,22 @@ func doTestCheckRequestPath(t *testing.T, s *Server, testOrigins map[string]bool
 
 	url = s.AddToken("abc")
 	req, _ = http.NewRequest("GET", url, nil)
+	req.Header.Set("referer", url)
 	h.ServeHTTP(w, req)
 	assert.True(t, hit, "request with correct token should pass the check")
 
 	hit = false
 	req, _ = http.NewRequest("GET", "/abc", nil)
-	req.Header.Set("Origin", "http://"+s.listenAddr+"/")
 	h.ServeHTTP(w, req)
 	assert.False(t, hit, "request with the same origin should not pass the check")
 
-	for origin, allow := range testOrigins {
+	for req, allow := range testOrigins {
 		hit = false
-		req, _ = http.NewRequest("GET", "/abc", nil)
-		req.Header.Set("Referer", "http://"+origin+"/")
 		h.ServeHTTP(w, req)
 		if allow {
-			assert.True(t, hit, "origin "+origin+" should pass the check")
+			assert.True(t, hit, "origin "+req.URL.String()+" should pass the check")
 		} else {
-			assert.False(t, hit, "origin "+origin+" should not pass the check")
+			assert.False(t, hit, "origin "+req.URL.String()+" should not pass the check")
 		}
 	}
 }
