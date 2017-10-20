@@ -83,14 +83,7 @@ func (app *App) Init() {
 	addDataCapListener(func(hitDataCap bool) {
 		app.statsTracker.SetHitDataCap(hitDataCap)
 	})
-
-	// The ui domain might not be there for tests, for example.
-	domain, ok := app.Flags["ui-domain"]
-	if ok {
-		app.uiDomain = domain.(string)
-	} else {
-		log.Error("No ui domain?")
-	}
+	app.uiDomain = app.Flags["ui-domain"].(string)
 }
 
 // LogPanicAndExit logs a panic and then exits the application. This function
@@ -163,11 +156,8 @@ func (app *App) Run() {
 					// pro user (or status unknown), don't ad swap
 					return ""
 				}
-				if app.uiServer != nil {
-					return app.PlansURL()
-				}
-				// This should never happen...
-				return "https://www.getlantern.org"
+				return app.PlansURL()
+
 			},
 			func() bool { return true },              // always allow ad blocking on desktop
 			func(addr string) string { return addr }, // no dnsgrab reverse lookups on desktop
@@ -545,7 +535,8 @@ func (app *App) uiFilter() func(req *http.Request) (*http.Request, error) {
 // This version makes testinga  bit easier.
 func (app *App) uiFilterWithAddr(listenAddr func() string) func(req *http.Request) (*http.Request, error) {
 	return func(req *http.Request) (*http.Request, error) {
-		if req.URL != nil && strings.HasPrefix(req.URL.Host, app.uiDomain) || strings.HasPrefix(req.Host, app.uiDomain) {
+		if req.URL != nil && strings.HasPrefix(req.URL.Host, app.uiDomain) ||
+			strings.HasPrefix(req.Host, app.uiDomain) {
 			if req.Method == http.MethodConnect && req.URL != nil {
 				req.URL.Host = listenAddr()
 			}

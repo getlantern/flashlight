@@ -14,12 +14,15 @@ func TestUIFilter(t *testing.T) {
 	a := &App{
 		Flags: make(map[string]interface{}),
 	}
+	a.Flags["ui-domain"] = "test.lantern.io"
 	a.Init()
 
 	uiFilter := a.uiFilter()
 
+	u, _ := url.Parse("http://test.lantern.io")
 	r := &http.Request{
 		Host: "test",
+		URL:  u,
 	}
 
 	_, err := uiFilter(r)
@@ -31,16 +34,14 @@ func TestUIFilter(t *testing.T) {
 	rr, err := uiFilter(r)
 
 	assert.NoError(t, err)
-	assert.Equal(t, rr.Host, "")
+	assert.Equal(t, "", rr.Host)
 
 	r.Method = http.MethodConnect
-	r.URL, err = url.Parse("http://testtestest")
-	assert.NoError(t, err)
 	rr, err = uiFilter(r)
 
 	assert.NoError(t, err)
-	assert.Equal(t, rr.Host, "")
-	assert.Equal(t, rr.URL.Host, "")
+	assert.Equal(t, "", rr.Host)
+	assert.Equal(t, "", rr.URL.Host)
 }
 
 func TestLocalHTTPToken(t *testing.T) {
