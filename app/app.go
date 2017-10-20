@@ -497,6 +497,11 @@ func recordStopped() {
 		End()
 }
 
+// ShouldShowUI determines if we should show the UI or not.
+func (app *App) ShouldShowUI() bool {
+	return app.ShowUI
+}
+
 // OnTrayShow indicates the user has selected to show lantern from the tray.
 func (app *App) OnTrayShow() {
 	app.uiServer.ShowRoot("show-lantern", "tray")

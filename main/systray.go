@@ -10,7 +10,6 @@ import (
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/systray"
 
-	"github.com/getlantern/flashlight/app"
 	"github.com/getlantern/flashlight/icons"
 	"github.com/getlantern/flashlight/stats"
 )
@@ -30,7 +29,19 @@ var (
 	iconsByName = make(map[string][]byte)
 )
 
-func runOnSystrayReady(a *app.App, f func()) {
+type systrayCallback interface {
+	WaitForExit() error
+	AddExitFuncToEnd(func())
+	Exit(error) bool
+	ShouldShowUI() bool
+	OnTrayShow()
+	OnTrayUpgrade()
+	Connect()
+	Disconnect()
+	OnStatsChange(func(stats.Stats))
+}
+
+func runOnSystrayReady(a systrayCallback, f func()) {
 	// Typically, systray.Quit will actually be what causes the app to exit, but
 	// in the case of an uncaught Fatal error, the app will exit before the
 	// systray and we need it to call systray.Quit().
@@ -48,8 +59,8 @@ func runOnSystrayReady(a *app.App, f func()) {
 	})
 }
 
-func configureSystemTray(a *app.App) error {
-	menu.enable = a.ShowUI
+func configureSystemTray(a systrayCallback) error {
+	menu.enable = a.ShouldShowUI()
 	if !menu.enable {
 		return nil
 	}
