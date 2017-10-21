@@ -289,6 +289,7 @@ type proxy struct {
 	emaLatency        *ema.EMA
 	kcpEnabled        bool
 	mostRecentABETime time.Time
+	refreshKCP        chan bool
 	forceRecheckCh    chan bool
 	closeCh           chan bool
 	mx                sync.Mutex
@@ -309,6 +310,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		emaDialTime:       ema.NewDuration(0, 0.8),
 		emaLatency:        ema.NewDuration(0, 0.8),
 		bbrResetRequired:  1, // reset on every start
+		refreshKCP:        make(chan bool),
 		forceRecheckCh:    make(chan bool, 1),
 		closeCh:           make(chan bool, 1),
 		consecSuccesses:   1, // be optimistic
@@ -316,14 +318,20 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 
 	if s.KCPSettings != nil && len(s.KCPSettings) > 0 {
 		p.kcpEnabled = true
-		p.EnableKCP()
+		p.enableKCP()
 	}
 
 	go p.runConnectivityChecks()
 	return p, nil
 }
 
-func (p *proxy) EnableKCP() error {
+func (p *proxy) RefreshKCP() {
+	go func() {
+		p.refreshKCP <- true
+	}()
+}
+
+func (p *proxy) enableKCP() error {
 	var conf lib.Config
 	s := p.chainedServerInfo
 	err := mapstructure.Decode(s.KCPSettings, &conf)
@@ -334,15 +342,17 @@ func (p *proxy) EnableKCP() error {
 
 	startResult := eventual.NewValue()
 
-	go func() {
+	startKCP := func() {
 		err := lib.Run(&conf, "embedded", func(addr net.Addr) {
 			startResult.Set(addr.String())
-		})
+		}, p.refreshKCP)
 		if err != nil {
 			log.Errorf("Error running kcp client: %v", err)
 			startResult.Set(err)
 		}
-	}()
+	}
+
+	go startKCP()
 
 	startTimeout := 5 * time.Second
 	result, ok := startResult.Get(startTimeout)

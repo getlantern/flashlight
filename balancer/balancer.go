@@ -52,8 +52,8 @@ type Dialer interface {
 	// KCPEnabled indicates whether or not this is a KCP-based dialer
 	KCPEnabled() bool
 
-	// Enables KCP for the given dialer
-	EnableKCP() error
+	// Refreshes connection to KCP for the given dialer
+	RefreshKCP()
 
 	// Trusted indicates whether or not this dialer is trusted
 	Trusted() bool

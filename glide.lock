@@ -175,7 +175,7 @@ imports:
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
 - name: github.com/getlantern/kcptun
-  version: d7a2c9b827c0fc99f66a1db3b6edbe2417c8cc00
+  version: 65e0b11d6e0cf90073f57ddf8c8063fa0476d266
   subpackages:
   - client/lib
 - name: github.com/getlantern/keyman
