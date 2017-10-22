@@ -267,7 +267,6 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 type proxy struct {
 	// Store int64's up front to ensure alignment of 64 bit words
 	// See https://golang.org/pkg/sync/atomic/#pkg-note-BUG
-	dialCore          func(timeout time.Duration) (net.Conn, time.Duration, error)
 	attempts          int64
 	successes         int64
 	consecSuccesses   int64
@@ -288,6 +287,7 @@ type proxy struct {
 	emaDialTime       *ema.EMA
 	emaLatency        *ema.EMA
 	mostRecentABETime time.Time
+	dialCore          func(timeout time.Duration) (net.Conn, time.Duration, error)
 	forceRecheckCh    chan bool
 	closeCh           chan bool
 	mx                sync.Mutex
