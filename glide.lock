@@ -192,7 +192,7 @@ imports:
 - name: github.com/getlantern/mtime
   version: ba114e4a82b0d453c15c505073a5896453b5cbd2
 - name: github.com/getlantern/netx
-  version: 2458933739588e3dd74e2c5a6eaa3b0b6391df4c
+  version: cfe4e522eb0e9efe82fa79f65e473bc618cbffb5
 - name: github.com/getlantern/notifier
   version: 9d71672e9d5d137e06fffc4ac957565cd90a628f
   subpackages:
@@ -417,7 +417,7 @@ imports:
   subpackages:
   - trie/yfast
 - name: github.com/getlantern/kcp-go
-  version: 3cada0c8d5cbe809e8b24d65680f6e85bdfde618
+  version: f441645bc28f10d351130f217e759bb5540d24f6
 - name: github.com/xtaci/smux
   version: ebec7ef2574b42a7088cd7751176483e0a27d458
 - name: github.com/xwb1989/sqlparser

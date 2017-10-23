@@ -330,8 +330,11 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 	}
 
 	if s.KCPSettings != nil && len(s.KCPSettings) > 0 {
+		err := enableKCP(p, s)
+		if err != nil {
+			return nil, err
+		}
 		p.kcpEnabled = true
-		p.enableKCP()
 	}
 
 	go p.runConnectivityChecks()
