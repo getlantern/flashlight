@@ -65,6 +65,7 @@ type SocketProtector interface {
 func ProtectConnections(protector SocketProtector, dnsServer string) {
 	p := protected.New(protector.ProtectConn, dnsServer)
 	netx.OverrideDial(p.DialContext)
+	netx.OverrideResolve(p.Resolve)
 }
 
 // RemoveOverrides removes the protected tlsdialer overrides
@@ -164,7 +165,8 @@ func run(configDir, locale string,
 
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
-	grabber, err := dnsgrab.Listen(maxDNSGrabCache, ":8153",
+	grabber, err := dnsgrab.Listen(maxDNSGrabCache,
+		settings.DnsGrabServer(),
 		settings.DefaultDnsServer())
 	if err != nil {
 		log.Errorf("Unable to start dnsgrab: %v", err)
