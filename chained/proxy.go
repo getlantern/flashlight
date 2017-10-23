@@ -284,10 +284,8 @@ type proxy struct {
 	trusted           bool
 	preferred         bool
 	dialServer        func(*proxy) (net.Conn, error)
-	chainedServerInfo *ChainedServerInfo
 	emaDialTime       *ema.EMA
 	emaLatency        *ema.EMA
-	kcpEnabled        bool
 	mostRecentABETime time.Time
 	refreshKCP        chan bool
 	dialCore          func(timeout time.Duration) (net.Conn, time.Duration, error)
@@ -298,23 +296,21 @@ type proxy struct {
 
 func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(*proxy) (net.Conn, error)) (*proxy, error) {
 	p := &proxy{
-		name:              name,
-		protocol:          protocol,
-		network:           network,
-		addr:              addr,
-		authToken:         s.AuthToken,
-		deviceID:          deviceID,
-		proToken:          proToken,
-		trusted:           trusted,
-		dialServer:        dialServer,
-		chainedServerInfo: s,
-		emaDialTime:       ema.NewDuration(0, 0.8),
-		emaLatency:        ema.NewDuration(0, 0.8),
-		bbrResetRequired:  1, // reset on every start
-		refreshKCP:        make(chan bool),
-		forceRecheckCh:    make(chan bool, 1),
-		closeCh:           make(chan bool, 1),
-		consecSuccesses:   1, // be optimistic
+		name:             name,
+		protocol:         protocol,
+		network:          network,
+		addr:             addr,
+		authToken:        s.AuthToken,
+		deviceID:         deviceID,
+		proToken:         proToken,
+		trusted:          trusted,
+		dialServer:       dialServer,
+		emaDialTime:      ema.NewDuration(0, 0.8),
+		emaLatency:       ema.NewDuration(0, 0.8),
+		bbrResetRequired: 1, // reset on every start
+		forceRecheckCh:   make(chan bool, 1),
+		closeCh:          make(chan bool, 1),
+		consecSuccesses:  1, // be optimistic
 	}
 
 	p.dialCore = func(timeout time.Duration) (net.Conn, time.Duration, error) {
@@ -334,17 +330,10 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		if err != nil {
 			return nil, err
 		}
-		p.kcpEnabled = true
 	}
 
 	go p.runConnectivityChecks()
 	return p, nil
-}
-
-func (p *proxy) RefreshKCP() {
-	go func() {
-		p.refreshKCP <- true
-	}()
 }
 
 func enableKCP(p *proxy, s *ChainedServerInfo) error {
@@ -369,10 +358,6 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 	}
 
 	return nil
-}
-
-func (p *proxy) KCPEnabled() bool {
-	return p.kcpEnabled
 }
 
 func (p *proxy) Protocol() string {

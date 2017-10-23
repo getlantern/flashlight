@@ -9,14 +9,11 @@ import (
 
 // initBalancer takes hosts from cfg.ChainedServers and it uses them to create a
 // balancer.
-func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo,
-	deviceID string) ([]balancer.Dialer, error) {
+func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo, deviceID string) error {
 	dialers := []balancer.Dialer{}
 	var err error
 	if len(proxies) == 0 {
-		err = errors.New("No chained servers configured, not initializing balancer")
-		log.Error(err)
-		return dialers, err
+		return fmt.Errorf("No chained servers configured, not initializing balancer")
 	}
 
 	// Add chained (CONNECT proxy) servers.
@@ -45,5 +42,5 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 		}
 	}()
 
-	return dialers, nil
+	return nil
 }

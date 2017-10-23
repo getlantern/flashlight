@@ -321,12 +321,12 @@ func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo, d
 	var dialers []balancer.Dialer
 	var err error
 	log.Debug("Configure() called")
-	dialers, err = client.initBalancer(proxies, deviceID)
+	err = client.initBalancer(proxies, deviceID)
 	if err != nil {
 		log.Error(err)
-		return dialers, err
+		return err
 	}
-	return dialers, nil
+	return nil
 }
 
 // Stop is called when the client is no longer needed. It closes the
