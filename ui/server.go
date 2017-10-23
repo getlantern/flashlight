@@ -297,7 +297,7 @@ func (s *Server) checkRequestForToken(h http.Handler) http.Handler {
 func (s *Server) notFound(msg string, w http.ResponseWriter, r *http.Request) {
 	log.Error(msg)
 	s.dumpRequestHeaders(r)
-	// Return forbidden but do not reveal any details in the body.
+	// Return 404 but do not reveal any details in the body.
 	http.Error(w, "", http.StatusNotFound)
 }
 

@@ -27,11 +27,11 @@ import (
 // show the announcement or not).
 //
 // Returns a function to stop the loop.
-func LoconfScanner(interval time.Duration, proChecker func() (bool, bool), addToken func(string) string) (stop func()) {
+func LoconfScanner(interval time.Duration, proChecker func() (bool, bool), iconURL func() string) (stop func()) {
 	loc := &loconfer{
-		log:      golog.LoggerFor("loconfer"),
-		r:        rand.New(rand.NewSource(time.Now().UnixNano())),
-		addToken: addToken,
+		log:     golog.LoggerFor("loconfer"),
+		r:       rand.New(rand.NewSource(time.Now().UnixNano())),
+		iconURL: iconURL,
 	}
 	return loc.scan(interval, proChecker, loc.onLoconf)
 }
@@ -80,9 +80,9 @@ func in(s string, coll []string) bool {
 }
 
 type loconfer struct {
-	log      golog.Logger
-	r        *rand.Rand
-	addToken func(string) string
+	log     golog.Logger
+	r       *rand.Rand
+	iconURL func() string
 }
 
 func (loc *loconfer) onLoconf(lc *loconf.LoConf, isPro bool) {
@@ -151,12 +151,11 @@ func (loc *loconfer) makeAnnouncements(lc *loconf.LoConf, isPro bool) {
 }
 
 func (loc *loconfer) showAnnouncement(a *loconf.Announcement) bool {
-	logo := loc.addToken("/img/lantern_logo.png")
 	note := &notify.Notification{
 		Title:    a.Title,
 		Message:  a.Message,
 		ClickURL: a.URL,
-		IconURL:  logo,
+		IconURL:  loc.iconURL(),
 	}
 	return notifier.ShowNotification(note, "global-announcement")
 }

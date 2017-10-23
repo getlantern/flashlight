@@ -12,12 +12,14 @@ import (
 
 func TestUIFilter(t *testing.T) {
 	a := &App{
-		Flags: make(map[string]interface{}),
+		Flags: map[string]interface{}{
+			"ui-domain": "",
+		},
 	}
 	a.Flags["ui-domain"] = "test.lantern.io"
 	a.Init()
 
-	uiFilter := a.uiFilter()
+	uiFilter := a.uiFilter("")
 
 	u, _ := url.Parse("http://test.lantern.io")
 	r := &http.Request{
@@ -28,7 +30,7 @@ func TestUIFilter(t *testing.T) {
 	_, err := uiFilter(r)
 	assert.NoError(t, err)
 
-	uiFilter = a.uiFilterWithAddr(func() string {
+	uiFilter = uiFilterWithAddr("", func() string {
 		return ""
 	})
 	rr, err := uiFilter(r)
