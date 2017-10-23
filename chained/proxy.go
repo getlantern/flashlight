@@ -287,7 +287,6 @@ type proxy struct {
 	emaDialTime       *ema.EMA
 	emaLatency        *ema.EMA
 	mostRecentABETime time.Time
-	refreshKCP        chan bool
 	dialCore          func(timeout time.Duration) (net.Conn, time.Duration, error)
 	forceRecheckCh    chan bool
 	closeCh           chan bool
