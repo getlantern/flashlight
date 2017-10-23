@@ -82,7 +82,6 @@ func (app *App) Init() {
 	addDataCapListener(func(hitDataCap bool) {
 		app.statsTracker.SetHitDataCap(hitDataCap)
 	})
-	app.uiDomain = app.Flags["ui-domain"].(string)
 }
 
 // LogPanicAndExit logs a panic and then exits the application. This function
@@ -127,7 +126,6 @@ func (app *App) Run() {
 		if socksAddr == "" {
 			socksAddr = defaultSOCKSProxyAddress
 		}
-		uiDomain := app.Flags["ui-domain"].(string)
 
 		err := flashlight.Run(
 			listenAddr,
@@ -161,7 +159,7 @@ func (app *App) Run() {
 			},
 			func() bool { return true },              // always allow ad blocking on desktop
 			func(addr string) string { return addr }, // no dnsgrab reverse lookups on desktop
-			app.uiFilter(uiDomain),
+			app.uiFilter(app.Flags["ui-domain"].(string)),
 		)
 		if err != nil {
 			app.Exit(err)
@@ -243,14 +241,13 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			}
 		}
 
-		uiDomain := app.Flags["ui-domain"].(string)
 		log.Debugf("Starting client UI at %v", uiaddr)
 
 		// ui will handle empty uiaddr correctly
 		if app.uiServer, err = ui.StartServer(uiaddr,
 			startupURL,
 			localHTTPToken(settings),
-			uiDomain,
+			app.Flags["ui-domain"].(string),
 			settings.GetSystemProxy,
 			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
 			&ui.PathHandler{Pattern: "/data", Handler: ws.StartUIChannel()},
@@ -543,8 +540,8 @@ func (app *App) uiFilter(uiDomain string) func(req *http.Request) (*http.Request
 // This version makes testinga  bit easier.
 func uiFilterWithAddr(uiDomain string, listenAddr func() string) func(req *http.Request) (*http.Request, error) {
 	return func(req *http.Request) (*http.Request, error) {
-		if req.URL != nil && strings.HasPrefix(req.URL.Host, app.uiDomain) ||
-			strings.HasPrefix(req.Host, app.uiDomain) {
+		if req.URL != nil && strings.HasPrefix(req.URL.Host, uiDomain) ||
+			strings.HasPrefix(req.Host, uiDomain) {
 			if req.Method == http.MethodConnect && req.URL != nil {
 				req.URL.Host = listenAddr()
 			}
