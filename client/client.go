@@ -104,8 +104,8 @@ type Client struct {
 	lang              func() string
 	adSwapTargetURL   func() string
 
-	reverseDNS    func(addr string) string
-	requestFilter func(*http.Request) (*http.Request, error)
+	reverseDNS func(addr string) string
+	requestFilter     func(*http.Request) (*http.Request, error)
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -317,16 +317,12 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 
 // Configure updates the client's configuration. Configure can be called
 // before or after ListenAndServe, and can be called multiple times.
-func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo, deviceID string) ([]balancer.Dialer, error) {
-	var dialers []balancer.Dialer
-	var err error
+func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo, deviceID string) {
 	log.Debug("Configure() called")
-	err = client.initBalancer(proxies, deviceID)
+	err := client.initBalancer(proxies, deviceID)
 	if err != nil {
 		log.Error(err)
-		return err
 	}
-	return nil
 }
 
 // Stop is called when the client is no longer needed. It closes the
