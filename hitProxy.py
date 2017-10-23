@@ -7,12 +7,20 @@ import yaml
 import tempfile
 import subprocess
 import os.path
+from misc_util import ipre
+import redis_util as ru
+
+r = ru.redis_shell
 
 if len(sys.argv) != 2:
     print "Usage: %s <ip>" % sys.argv[0]
     sys.exit(1)
 
 ip = sys.argv[1]
+
+# Allow caller to also input server names
+if not ipre.match(ip):
+    ip = r.hget('server->srvip', ip)
 
 try:
     subprocess.check_call(["scp", "lantern@" + ip + ":access_data.json", "."])

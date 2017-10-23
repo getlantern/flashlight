@@ -140,7 +140,7 @@ imports:
   - proxyfilters
   - server
 - name: github.com/getlantern/http-proxy-lantern
-  version: ca8570e2fc23deda85115b9b801568f2988d2a43
+  version: f288486d56229b89b575bc8e343ea190702e663f
   subpackages:
   - analytics
   - bbr
@@ -152,6 +152,7 @@ imports:
   - diffserv
   - geo
   - googlefilter
+  - kcplistener
   - lampshade
   - listeners
   - mimic
@@ -174,16 +175,14 @@ imports:
   version: 8723ea29ea42bdb85682c242b8e803aa6f05c9db
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
-- name: github.com/getlantern/kcptun
-  version: 65e0b11d6e0cf90073f57ddf8c8063fa0476d266
-  subpackages:
-  - client/lib
+- name: github.com/getlantern/kcpwrapper
+  version: 7ee19898fc30c0b106bc55fb103cb73d14daab07
 - name: github.com/getlantern/keyman
   version: 9d65bff0c88a85449195d54c38322e254b2ac34b
   subpackages:
   - certimporter
 - name: github.com/getlantern/lampshade
-  version: c7d71c3e99a56e2a883c8cb7d67df2bffab833a5
+  version: 7c03c31cd4edfc0e521b14986d96f4ac30c15ddc
 - name: github.com/getlantern/launcher
   version: bc9fc3b11894e839c3fcb049f12e8974d7e48497
 - name: github.com/getlantern/measured
@@ -431,7 +430,7 @@ imports:
 - name: github.com/Yawning/chacha20
   version: e3b1f968fc6397b51d963fee8ec8711a47bc0ce8
 - name: golang.org/x/crypto
-  version: 9419663f5a44be8b34ca85f08abc5fe1be11f8a3
+  version: 541b9d50ad47e36efd8fb423e938e59ff1691f68
   subpackages:
   - blowfish
   - cast5
@@ -585,3 +584,5 @@ testImports:
   version: 890a5c3458b43e6104ff5da8dfa139d013d77544
   subpackages:
   - assert
+- name: github.com/getlantern/cmux
+  version: 4070e9b512ea619f0bf87c81fdae16589a4ee8ba

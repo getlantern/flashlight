@@ -76,6 +76,7 @@ import:
 - package: github.com/getlantern/checkfallbacks
 - package: github.com/getlantern/connpool
 - package: github.com/getlantern/deepcopy
+- package: github.com/getlantern/kcpwrapper
 - package: github.com/getlantern/pathreflect
 - package: github.com/getlantern/measured
 - package: github.com/getlantern/tlsdefaults
