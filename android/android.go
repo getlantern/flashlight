@@ -41,7 +41,7 @@ var (
 	updateServerURL = "https://update.getlantern.org"
 	defaultLocale   = `en-US`
 
-	cl atomic.Value
+	cl *atomic.Value
 
 	surveyHTTPClient = &http.Client{
 		Transport: proxied.ChainedThenFrontedWith("d38rvu630khj2q.cloudfront.net", ""),
@@ -72,7 +72,7 @@ func ProtectConnections(protector SocketProtector, dnsServer string) {
 	c := cl.Load().(*client.Client)
 	if c != nil && c.GetBalancer() != nil {
 		log.Debugf("Forcing balancer redial")
-		c.GetBalancer().ForceRedial()
+		cl.GetBalancer().ForceRedial()
 	}
 }
 
@@ -187,7 +187,7 @@ func run(configDir, locale string,
 		}
 	}()
 
-	c, err := flashlight.Run("127.0.0.1:0", // listen for HTTP on random address
+	flashlight.Run("127.0.0.1:0", // listen for HTTP on random address
 		"127.0.0.1:0",                // listen for SOCKS on random address
 		configDir,                    // place to store lantern configuration
 		func() bool { return false }, // always connected
@@ -203,7 +203,8 @@ func run(configDir, locale string,
 		func() bool {
 			return true
 		}, // beforeStart()
-		func() {
+		func(c *client.Client) {
+			cl.Store(c)
 			afterStart(session)
 		}, // afterStart()
 		func(cfg *config.Global) {
@@ -236,17 +237,9 @@ func run(configDir, locale string,
 			}
 			return fmt.Sprintf("%v:%v", updatedHost, port)
 		},
-		func(redial bool) {
-
-		},
 		// Request filter for HTTP proxy. Currently only used on desktop.
 		func(r *http.Request) (*http.Request, error) { return r, nil },
 	)
-	if err != nil {
-		log.Error(err)
-	} else {
-		cl.Store(c)
-	}
 }
 
 func bandwidthUpdates(session Session) {

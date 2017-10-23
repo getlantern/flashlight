@@ -54,7 +54,7 @@ func Run(httpProxyAddr string,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
 	beforeStart func() bool,
-	afterStart func(),
+	afterStart func(cl *client.Client),
 	onConfigUpdate func(cfg *config.Global),
 	userConfig common.AuthConfig,
 	statsTracker stats.Tracker,
@@ -65,7 +65,6 @@ func Run(httpProxyAddr string,
 	adSwapTargetURL func() string,
 	adBlockingAllowed func() bool,
 	reverseDNS func(host string) string,
-	forceRedial func(redial bool),
 	requestFilter func(*http.Request) (*http.Request, error)) (*client.Client, error) {
 	elapsed := mtime.Stopwatch()
 	displayVersion()
@@ -144,7 +143,7 @@ func Run(httpProxyAddr string,
 				}
 				op.End()
 			})
-			afterStart()
+			afterStart(cl)
 		})
 		if err != nil {
 			log.Errorf("Error running client proxy: %v", err)
