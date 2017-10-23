@@ -18,7 +18,6 @@ import (
 	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/dnsgrab"
 	"github.com/getlantern/flashlight"
-	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
@@ -40,7 +39,6 @@ var (
 
 	updateServerURL = "https://update.getlantern.org"
 	defaultLocale   = `en-US`
-	dialers         = []balancer.Dialer{}
 
 	surveyHTTPClient = &http.Client{
 		Transport: proxied.ChainedThenFrontedWith("d38rvu630khj2q.cloudfront.net", ""),
@@ -68,13 +66,6 @@ func ProtectConnections(protector SocketProtector, dnsServer string) {
 	p := protected.New(protector.ProtectConn, dnsServer)
 	netx.OverrideDial(p.DialContext)
 	netx.OverrideResolve(p.Resolve)
-	for _, dialer := range dialers {
-		if dialer.KCPEnabled() {
-			log.Debugf("Enabling KCP for dialer: %s", dialer.Label())
-			// refresh KCP connections
-			dialer.RefreshKCP()
-		}
-	}
 }
 
 // RemoveOverrides removes the protected tlsdialer overrides
@@ -213,15 +204,6 @@ func run(configDir, locale string,
 		NewStatsTracker(session),
 		func(err error) {}, // onError
 		session.GetDeviceID(),
-		func(ds []balancer.Dialer) {
-			if len(ds) == 0 {
-				log.Error("No new dialers")
-				return
-			}
-			log.Debugf("Adding %d new dialers", len(dialers))
-			dialers = make([]balancer.Dialer, len(ds))
-			copy(dialers, ds)
-		},
 		session.IsProUser,
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
