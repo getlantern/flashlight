@@ -21,7 +21,7 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 	// Add chained (CONNECT proxy) servers.
 	log.Debugf("Adding %d chained servers", len(proxies))
 	for name, s := range proxies {
-		if s.PluggableTransport == "obfs4-tcp" {
+		if s.PluggableTransport == "obfs4-tcp" || true {
 			log.Debugf("Ignoring obfs4-tcp server: %v", name)
 			// Ignore obfs4-tcp as these are already included as plain obfs4
 			continue
