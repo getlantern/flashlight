@@ -65,7 +65,8 @@ func Run(httpProxyAddr string,
 	adSwapTargetURL func() string,
 	adBlockingAllowed func() bool,
 	reverseDNS func(host string) string,
-	requestFilter func(*http.Request) (*http.Request, error)) error {
+	forceRedial func(redial bool),
+	requestFilter func(*http.Request) (*http.Request, error)) (*client.Client, error) {
 	elapsed := mtime.Stopwatch()
 	displayVersion()
 	initContext(deviceID, common.Version, common.RevisionDate, isPro)
@@ -151,7 +152,7 @@ func Run(httpProxyAddr string,
 		}
 	}
 
-	return nil
+	return cl, nil
 }
 
 func applyClientConfig(client *client.Client, cfg *config.Global, deviceID string, autoReport func() bool) {

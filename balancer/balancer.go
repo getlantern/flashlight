@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/ema"
@@ -73,6 +74,10 @@ type Dialer interface {
 
 	// ConsecSuccesses returns the number of consecutive dial successes
 	ConsecSuccesses() int64
+
+	KCPEnabled() bool
+
+	ForceRedial() *atomic.Value
 
 	// Failures returns the total number of dial failures
 	Failures() int64
@@ -145,6 +150,16 @@ func (b *Balancer) Reset(dialers ...Dialer) {
 	for _, dl := range oldDialers {
 		dl.Stop()
 	}
+}
+
+func (b *Balancer) ForceRedial() {
+	b.mu.Lock()
+	for _, dl := range b.dialers {
+		if dl.KCPEnabled() {
+			dl.ForceRedial().Store(true)
+		}
+	}
+	b.mu.Unlock()
 }
 
 // Dial dials (network, addr) using one of the currently active configured

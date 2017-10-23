@@ -104,8 +104,8 @@ type Client struct {
 	lang              func() string
 	adSwapTargetURL   func() string
 
-	reverseDNS func(addr string) string
-	requestFilter     func(*http.Request) (*http.Request, error)
+	reverseDNS    func(addr string) string
+	requestFilter func(*http.Request) (*http.Request, error)
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -171,6 +171,10 @@ type allowAllEasyList struct{}
 
 func (l allowAllEasyList) Allow(*http.Request) bool {
 	return true
+}
+
+func (client *Client) GetBalancer() *balancer.Balancer {
+	return client.bal
 }
 
 func (client *Client) initEasyList() {
