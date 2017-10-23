@@ -504,7 +504,6 @@ func (p *proxy) tcpDial(op *ops.Op) func(timeout time.Duration) (net.Conn, error
 			op.Set("est_mbps", estBandwidth)
 		}
 		conn, delta, err := p.dialCore(timeout)
-		log.Debugf("Got conn: %v", conn)
 		op.TCPDialTime(delta, err)
 		return overheadWrapper(false)(conn, err)
 	}
