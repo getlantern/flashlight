@@ -108,21 +108,27 @@ func (s *Server) attachHandlers() {
 		resp.WriteHeader(http.StatusOK)
 	}
 
-	s.handle("/startup", s.strippingHandler(http.HandlerFunc(startupHandler)))
-	s.handle("/", s.strippingHandler(http.FileServer(fs)))
+	s.handle("/startup", http.HandlerFunc(startupHandler))
+	s.handle("/", http.FileServer(fs))
 }
 
 // handle directls the underlying server to handle the given pattern at both
 // the secure token path and the raw request path. In the case of the raw
 // request path, Lantern looks for the token in the Referer HTTP header and
-// reject the request if it's not present.
+// rejects the request if it's not present.
 func (s *Server) handle(pattern string, handler http.Handler) {
-	base := util.NoCacheHandler(handler)
-	s.mux.Handle(s.requestPath+pattern, base)
-	// don't add the same pattern twice, or the mux will panic
+	// When the token is included in the request path, we need to strip it in
+	// order to serve the UI correctly (i.e. the static UI tarfs FileSystem knows
+	// nothing about the request path).
 	if s.requestPath != "" {
-		s.mux.Handle(pattern, s.checkRequestPath(base))
+		// If the request path is empty this will panic on adding the same pattern
+		// twice.
+		s.mux.Handle(s.requestPath+pattern, util.NoCacheHandler(s.strippingHandler(handler)))
 	}
+
+	// In the naked request cast, we need to verify the token is there in the
+	// referer header.
+	s.mux.Handle(pattern, s.checkRequestForToken(util.NoCacheHandler(handler)))
 }
 
 // strippingHandler removes the secure request path from the URL so that the
@@ -273,11 +279,11 @@ func (s *Server) activeDomain() string {
 	return s.accessAddr
 }
 
-func (s *Server) checkRequestPath(h http.Handler) http.Handler {
+func (s *Server) checkRequestForToken(h http.Handler) http.Handler {
 	check := func(w http.ResponseWriter, r *http.Request) {
-		if s.rejectRequest(r) {
-			msg := fmt.Sprintf("Access denied because the request path was wrong. Expected\n'%v'\nnot:\n%v",
-				s.requestPath, r.URL.Path)
+		referer := r.Header.Get("referer")
+		if !strings.Contains(referer, s.localHTTPToken) {
+			msg := fmt.Sprintf("No token in referer. %v", referer)
 			s.notFound(msg, w, r)
 		} else {
 			h.ServeHTTP(w, r)
@@ -286,17 +292,7 @@ func (s *Server) checkRequestPath(h http.Handler) http.Handler {
 	return http.HandlerFunc(check)
 }
 
-func (s *Server) rejectRequest(r *http.Request) bool {
-	if !strings.HasPrefix(r.URL.Path, s.requestPath) {
-		referer := r.Header.Get("referer")
-		if !strings.Contains(referer, s.localHTTPToken) {
-			return true
-		}
-	}
-	return false
-}
-
-// notFound returns a 404 Not Found response to the client while also dumping
+// notFound returns a 403 forbidden response to the client while also dumping
 // headers and logs for debugging.
 func (s *Server) notFound(msg string, w http.ResponseWriter, r *http.Request) {
 	log.Error(msg)

@@ -82,7 +82,7 @@ func (app *App) Init() {
 	addDataCapListener(func(hitDataCap bool) {
 		app.statsTracker.SetHitDataCap(hitDataCap)
 	})
-
+	app.uiDomain = app.Flags["ui-domain"].(string)
 }
 
 // LogPanicAndExit logs a panic and then exits the application. This function
@@ -156,11 +156,8 @@ func (app *App) Run() {
 					// pro user (or status unknown), don't ad swap
 					return ""
 				}
-				if app.uiServer != nil {
-					return app.PlansURL()
-				}
-				// This should never happen...
-				return "https://www.getlantern.org"
+				return app.PlansURL()
+
 			},
 			func() bool { return true },              // always allow ad blocking on desktop
 			func(addr string) string { return addr }, // no dnsgrab reverse lookups on desktop
@@ -498,6 +495,11 @@ func recordStopped() {
 		End()
 }
 
+// ShouldShowUI determines if we should show the UI or not.
+func (app *App) ShouldShowUI() bool {
+	return app.ShowUI
+}
+
 // OnTrayShow indicates the user has selected to show lantern from the tray.
 func (app *App) OnTrayShow() {
 	app.uiServer.ShowRoot("show-lantern", "tray")
@@ -541,7 +543,8 @@ func (app *App) uiFilter(uiDomain string) func(req *http.Request) (*http.Request
 // This version makes testinga  bit easier.
 func uiFilterWithAddr(uiDomain string, listenAddr func() string) func(req *http.Request) (*http.Request, error) {
 	return func(req *http.Request) (*http.Request, error) {
-		if req.URL != nil && strings.HasPrefix(req.URL.Host, uiDomain) || strings.HasPrefix(req.Host, uiDomain) {
+		if req.URL != nil && strings.HasPrefix(req.URL.Host, app.uiDomain) ||
+			strings.HasPrefix(req.Host, app.uiDomain) {
 			if req.Method == http.MethodConnect && req.URL != nil {
 				req.URL.Host = listenAddr()
 			}
