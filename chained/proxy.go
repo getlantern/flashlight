@@ -1,7 +1,6 @@
 package chained
 
 import (
-	"context"
 	"crypto/rsa"
 	"crypto/tls"
 	"fmt"
@@ -117,6 +116,7 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 				ClientSessionCache: sessionCache,
 				InsecureSkipVerify: true,
 			})
+		log.Debugf("Just set up tlsdialer to connect to %v", p.addr)
 		p.dialTime(op, elapsed, err)
 		if err != nil {
 			return nil, op.FailIf(err)
@@ -287,11 +287,10 @@ type proxy struct {
 	dialServer        func(*proxy) (net.Conn, error)
 	emaDialTime       *ema.EMA
 	emaLatency        *ema.EMA
-	kcpConfig         *KCPConfig
 	mostRecentABETime time.Time
 	dialCore          func(timeout time.Duration) (net.Conn, time.Duration, error)
+	kcpConfig         *KCPConfig
 	kcpEnabled        bool
-	forceRedial       atomic.Value
 	forceRecheckCh    chan bool
 	closeCh           chan bool
 	mx                sync.Mutex
@@ -316,7 +315,6 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		closeCh:           make(chan bool, 1),
 		consecSuccesses:   1, // be optimistic
 	}
-	p.forceRedial.Store(false)
 
 	p.dialCore = func(timeout time.Duration) (net.Conn, time.Duration, error) {
 		elapsed := mtime.Stopwatch()
@@ -342,6 +340,19 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 	return p, nil
 }
 
+func (p *proxy) dialKCP(timeout time.Duration) (net.Conn, time.Duration, error) {
+	elapsed := mtime.Stopwatch()
+	conn, err := netx.DialTimeout("tcp", p.addr, timeout)
+	delta := elapsed()
+	if err == nil {
+		p.mx.Lock()
+		p.emaLatency.UpdateDuration(delta)
+		p.mx.Unlock()
+	}
+	return conn, delta, err
+
+}
+
 func (p *proxy) enableKCP() error {
 	var cfg KCPConfig
 	err := mapstructure.Decode(p.chainedServerInfo.KCPSettings, &cfg)
@@ -352,23 +363,7 @@ func (p *proxy) enableKCP() error {
 	// Fix address (comes across as kcp-placeholder)
 	p.addr = cfg.RemoteAddr
 	p.kcpConfig = &cfg
-	return p.updateKCPDialer()
-}
-
-func (p *proxy) updateKCPDialer() error {
-	if p.kcpConfig == nil {
-		return errors.New("No KCP config associated with dialer")
-	}
-	dialKCP := kcpwrapper.Dialer(&p.kcpConfig.DialerConfig)
-	p.dialCore = func(timeout time.Duration) (net.Conn, time.Duration, error) {
-		elapsed := mtime.Stopwatch()
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
-		defer cancel()
-		log.Debug("Dialing KCP")
-		conn, err := dialKCP(ctx, "udp", p.addr)
-		log.Debugf("Dialed KCP: %v : %v", conn, err)
-		return conn, elapsed(), err
-	}
+	p.dialCore = p.dialKCP
 	return nil
 }
 
@@ -516,17 +511,14 @@ func (p *proxy) tcpDial(op *ops.Op) func(timeout time.Duration) (net.Conn, error
 		if estBandwidth > 0 {
 			op.Set("est_mbps", estBandwidth)
 		}
-		var err error
-		forceRedial := p.forceRedial.Load().(bool)
-		if forceRedial {
-			err = p.updateKCPDialer()
-			p.forceRedial.Store(false)
-			if err != nil {
-				log.Errorf("Could not update KCP dialer: %v", err)
-				return nil, err
-			}
+		elapsed := mtime.Stopwatch()
+		conn, err := netx.DialTimeout("tcp", p.addr, timeout)
+		delta := elapsed()
+		if err == nil {
+			p.mx.Lock()
+			p.emaLatency.UpdateDuration(delta)
+			p.mx.Unlock()
 		}
-		conn, delta, err := p.dialCore(timeout)
 		log.Debugf("Got conn: %v", conn)
 		op.TCPDialTime(delta, err)
 		return overheadWrapper(false)(conn, err)

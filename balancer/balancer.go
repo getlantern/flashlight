@@ -9,7 +9,6 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/ema"
@@ -77,8 +76,6 @@ type Dialer interface {
 
 	KCPEnabled() bool
 
-	ForceRedial() *atomic.Value
-
 	// Failures returns the total number of dial failures
 	Failures() int64
 
@@ -113,6 +110,7 @@ type Balancer struct {
 	onActiveDialer                  chan Dialer
 	priorTopDialer                  Dialer
 	bandwidthKnownForPriorTopDialer bool
+	forceRedial                     bool
 	hasSucceedingDialer             chan bool
 	HasSucceedingDialer             <-chan bool
 }
@@ -152,14 +150,17 @@ func (b *Balancer) Reset(dialers ...Dialer) {
 	}
 }
 
-func (b *Balancer) ForceRedial() {
+func (b *Balancer) SetForceRedial(redial bool) {
 	b.mu.Lock()
-	for _, dl := range b.dialers {
-		if dl.KCPEnabled() {
-			dl.ForceRedial().Store(true)
-		}
-	}
+	b.forceRedial = redial
 	b.mu.Unlock()
+}
+
+func (b *Balancer) ForceRedial() bool {
+	b.mu.Lock()
+	forceRedial := b.forceRedial
+	b.mu.Unlock()
+	return forceRedial
 }
 
 // Dial dials (network, addr) using one of the currently active configured

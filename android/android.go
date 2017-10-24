@@ -11,7 +11,6 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/appdir"
@@ -38,10 +37,9 @@ const (
 var (
 	log = golog.LoggerFor("lantern")
 
-	updateServerURL = "https://update.getlantern.org"
-	defaultLocale   = `en-US`
-
-	cl *atomic.Value
+	updateServerURL  = "https://update.getlantern.org"
+	defaultLocale    = `en-US`
+	defaultDnsServer = "8.8.8.8:53"
 
 	surveyHTTPClient = &http.Client{
 		Transport: proxied.ChainedThenFrontedWith("d38rvu630khj2q.cloudfront.net", ""),
@@ -66,14 +64,18 @@ type SocketProtector interface {
 // The DNS server is used to resolve host only when dialing a protected connection
 // from within Lantern client.
 func ProtectConnections(protector SocketProtector, dnsServer string) {
-	p := protected.New(protector.ProtectConn, dnsServer)
+	p := protected.New(protector.ProtectConn, defaultDnsServer)
 	netx.OverrideDial(p.DialContext)
+	netx.OverrideDialUDP(p.DialUDP)
 	netx.OverrideResolve(p.Resolve)
-	c := cl.Load().(*client.Client)
+	netx.OverrideResolveUDP(p.ResolveUDP)
+	/*cl.Lock()
+	c := cl.c
+	cl.Unlock()
 	if c != nil && c.GetBalancer() != nil {
 		log.Debugf("Forcing balancer redial")
-		cl.GetBalancer().ForceRedial()
-	}
+		//c.GetBalancer().ForceRedial()
+	}*/
 }
 
 // RemoveOverrides removes the protected tlsdialer overrides
@@ -204,7 +206,9 @@ func run(configDir, locale string,
 			return true
 		}, // beforeStart()
 		func(c *client.Client) {
-			cl.Store(c)
+			/*cl.Lock()
+			cl.c = c
+			cl.Unlock()*/
 			afterStart(session)
 		}, // afterStart()
 		func(cfg *config.Global) {
