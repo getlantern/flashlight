@@ -1,5 +1,5 @@
 hash: c41a3297dbf12a6024489881323e642168418956258cab16915348729094a097
-updated: 2017-10-24T13:16:39.623035051-07:00
+updated: 2017-10-24T13:53:50.606903188-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a3ad5df6c9e7dc8117f55958b4ce99bf1e0fe291
@@ -193,7 +193,7 @@ imports:
 - name: github.com/getlantern/mtime
   version: ba114e4a82b0d453c15c505073a5896453b5cbd2
 - name: github.com/getlantern/netx
-  version: 6d46b78cd8a6e922684014f43edccbd5836a4da3
+  version: c704f69db48c8406d722f6e9ea9b0ad266975fe6
 - name: github.com/getlantern/notifier
   version: 9d71672e9d5d137e06fffc4ac957565cd90a628f
   subpackages:
@@ -291,10 +291,7 @@ imports:
   version: 1643683e1b54a9e88ad26d98f81400c8c9d9f4f9
   subpackages:
   - proto
-  - ptypes
   - ptypes/any
-  - ptypes/duration
-  - ptypes/timestamp
 - name: github.com/golang/snappy
   version: 553a641470496b2327abcac10b36396bd98e45c9
 - name: github.com/gorilla/context
