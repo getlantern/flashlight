@@ -352,6 +352,11 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 
 	// Fix address (comes across as kcp-placeholder)
 	p.addr = cfg.RemoteAddr
+	// Right now, we don't have a good way estimating performance of KCP-based
+	// proxies, so we just mark them as "preferred" to force them to get used by
+	// default.
+	p.preferred = true
+
 	p.dialKCP = kcpwrapper.Dialer(&cfg.DialerConfig)
 
 	p.dialCore = func(timeout time.Duration) (net.Conn, time.Duration, error) {
@@ -521,7 +526,6 @@ func (p *proxy) tcpDial(op *ops.Op) func(timeout time.Duration) (net.Conn, error
 			op.Set("est_mbps", estBandwidth)
 		}
 		conn, delta, err := p.dialCore(timeout)
-		log.Debugf("Got conn: %v", conn)
 		op.TCPDialTime(delta, err)
 		return overheadWrapper(false)(conn, err)
 	}
