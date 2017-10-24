@@ -83,6 +83,9 @@ type Dialer interface {
 	// Succeeding indicates whether or not this dialer is currently good to use
 	Succeeding() bool
 
+	// Forces the dialer to reconnect to its proxy server
+	ForceRedial()
+
 	// CheckConnectivity checks connectivity to proxy and updates latency and
 	// attempts, successes and failures accordingly. It returns true if the check
 	// was successful. It should use a timeout internally to avoid blocking
@@ -144,6 +147,17 @@ func (b *Balancer) Reset(dialers ...Dialer) {
 
 	for _, dl := range oldDialers {
 		dl.Stop()
+	}
+}
+
+// ForceRedial forces dialers with long-running connections to reconnect
+func (b *Balancer) ForceRedial() {
+	log.Debugf("Received request to force redial")
+	b.mu.Lock()
+	dialers := b.dialers
+	b.mu.Unlock()
+	for _, dl := range dialers {
+		dl.ForceRedial()
 	}
 }
 

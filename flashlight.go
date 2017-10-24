@@ -54,7 +54,7 @@ func Run(httpProxyAddr string,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
 	beforeStart func() bool,
-	afterStart func(),
+	afterStart func(cl *client.Client),
 	onConfigUpdate func(cfg *config.Global),
 	userConfig common.AuthConfig,
 	statsTracker stats.Tracker,
@@ -143,7 +143,7 @@ func Run(httpProxyAddr string,
 				}
 				op.End()
 			})
-			afterStart()
+			afterStart(cl)
 		})
 		if err != nil {
 			log.Errorf("Error running client proxy: %v", err)

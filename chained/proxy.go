@@ -30,6 +30,7 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/tlsdialer"
 	"github.com/mitchellh/mapstructure"
+	"github.com/tevino/abool"
 )
 
 const (
@@ -286,6 +287,8 @@ type proxy struct {
 	dialServer        func(*proxy) (net.Conn, error)
 	emaDialTime       *ema.EMA
 	emaLatency        *ema.EMA
+	kcpConfig         *KCPConfig
+	forceRedial       *abool.AtomicBool
 	mostRecentABETime time.Time
 	dialCore          func(timeout time.Duration) (net.Conn, time.Duration, error)
 	forceRecheckCh    chan bool
@@ -308,6 +311,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		emaLatency:       ema.NewDuration(0, 0.8),
 		bbrResetRequired: 1, // reset on every start
 		forceRecheckCh:   make(chan bool, 1),
+		forceRedial:      abool.New(),
 		closeCh:          make(chan bool, 1),
 		consecSuccesses:  1, // be optimistic
 	}
@@ -341,6 +345,7 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 	if err != nil {
 		return log.Errorf("Could not decode kcp transport settings?: %v", err)
 	}
+	p.kcpConfig = &cfg
 
 	// Fix address (comes across as kcp-placeholder)
 	p.addr = cfg.RemoteAddr
@@ -350,17 +355,31 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 	p.preferred = true
 
 	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig)
+	var dialKCPMutex sync.Mutex
+
 	p.dialCore = func(timeout time.Duration) (net.Conn, time.Duration, error) {
 		elapsed := mtime.Stopwatch()
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
-		log.Debug("Dialing KCP")
-		conn, err := dialKCP(ctx, "tcp", p.addr)
-		log.Debugf("Dialed KCP: %v : %v", conn, err)
+
+		dialKCPMutex.Lock()
+		if p.forceRedial.IsSet() {
+			log.Debug("Connection state changed, re-connecting to server first")
+			dialKCP = kcpwrapper.Dialer(&p.kcpConfig.DialerConfig)
+			p.forceRedial.UnSet()
+		}
+		doDialKCP := dialKCP
+		dialKCPMutex.Unlock()
+
+		conn, err := doDialKCP(ctx, "tcp", p.addr)
 		return conn, elapsed(), err
 	}
 
 	return nil
+}
+
+func (p *proxy) ForceRedial() {
+	p.forceRedial.Set()
 }
 
 func (p *proxy) Protocol() string {

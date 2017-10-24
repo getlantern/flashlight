@@ -7,6 +7,7 @@ import:
 - package: github.com/davecgh/go-spew
   subpackages:
   - spew
+- package: github.com/tevino/abool
 - package: github.com/getlantern/appdir
 - package: github.com/getlantern/autoupdate
 - package: github.com/getlantern/balancer
@@ -91,7 +92,7 @@ import:
   subpackages:
   - flowrate
 - package: github.com/rcrowley/go-metrics
-- package: github.com/xtaci/kcp-go
+- package: github.com/getlantern/kcp-go
 - package: github.com/klauspost/crc32
 - package: github.com/klauspost/reedsolomon
 - package: github.com/pkg/errors

@@ -47,6 +47,9 @@ var (
 	surveyURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
 
 	startOnce sync.Once
+
+	cl   *client.Client
+	clMu sync.Mutex
 )
 
 // SocketProtector is an interface for classes that can protect Android sockets,
@@ -65,6 +68,14 @@ type SocketProtector interface {
 func ProtectConnections(protector SocketProtector, dnsServer string) {
 	p := protected.New(protector.ProtectConn, dnsServer)
 	netx.OverrideDial(p.DialContext)
+	netx.OverrideDialUDP(p.DialUDP)
+	netx.OverrideResolve(p.Resolve)
+	netx.OverrideResolveUDP(p.ResolveUDP)
+	clMu.Lock()
+	defer clMu.Unlock()
+	if cl != nil && cl.GetBalancer() != nil {
+		cl.GetBalancer().ForceRedial()
+	}
 }
 
 // RemoveOverrides removes the protected tlsdialer overrides
@@ -164,7 +175,8 @@ func run(configDir, locale string,
 
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
-	grabber, err := dnsgrab.Listen(maxDNSGrabCache, ":8153",
+	grabber, err := dnsgrab.Listen(maxDNSGrabCache,
+		settings.DnsGrabServer(),
 		settings.DefaultDnsServer())
 	if err != nil {
 		log.Errorf("Unable to start dnsgrab: %v", err)
@@ -193,9 +205,12 @@ func run(configDir, locale string,
 		func() bool {
 			return true
 		}, // beforeStart()
-		func() {
+		func(c *client.Client) {
+			clMu.Lock()
+			cl = c
+			clMu.Unlock()
 			afterStart(session)
-		}, // afterStart()
+		},
 		func(cfg *config.Global) {
 		}, // onConfigUpdate
 		session,
