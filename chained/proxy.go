@@ -1,6 +1,7 @@
 package chained
 
 import (
+	"context"
 	"crypto/rsa"
 	"crypto/tls"
 	"fmt"
@@ -116,7 +117,6 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 				ClientSessionCache: sessionCache,
 				InsecureSkipVerify: true,
 			})
-		log.Debugf("Just set up tlsdialer to connect to %v", p.addr)
 		p.dialTime(op, elapsed, err)
 		if err != nil {
 			return nil, op.FailIf(err)
@@ -283,14 +283,11 @@ type proxy struct {
 	proToken          func() string
 	trusted           bool
 	preferred         bool
-	chainedServerInfo *ChainedServerInfo
 	dialServer        func(*proxy) (net.Conn, error)
 	emaDialTime       *ema.EMA
 	emaLatency        *ema.EMA
 	mostRecentABETime time.Time
 	dialCore          func(timeout time.Duration) (net.Conn, time.Duration, error)
-	kcpConfig         *KCPConfig
-	kcpEnabled        bool
 	forceRecheckCh    chan bool
 	closeCh           chan bool
 	mx                sync.Mutex
@@ -298,22 +295,21 @@ type proxy struct {
 
 func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(*proxy) (net.Conn, error)) (*proxy, error) {
 	p := &proxy{
-		name:              name,
-		protocol:          protocol,
-		network:           network,
-		addr:              addr,
-		authToken:         s.AuthToken,
-		deviceID:          deviceID,
-		proToken:          proToken,
-		trusted:           trusted,
-		chainedServerInfo: s,
-		dialServer:        dialServer,
-		emaDialTime:       ema.NewDuration(0, 0.8),
-		emaLatency:        ema.NewDuration(0, 0.8),
-		bbrResetRequired:  1, // reset on every start
-		forceRecheckCh:    make(chan bool, 1),
-		closeCh:           make(chan bool, 1),
-		consecSuccesses:   1, // be optimistic
+		name:             name,
+		protocol:         protocol,
+		network:          network,
+		addr:             addr,
+		authToken:        s.AuthToken,
+		deviceID:         deviceID,
+		proToken:         proToken,
+		trusted:          trusted,
+		dialServer:       dialServer,
+		emaDialTime:      ema.NewDuration(0, 0.8),
+		emaLatency:       ema.NewDuration(0, 0.8),
+		bbrResetRequired: 1, // reset on every start
+		forceRecheckCh:   make(chan bool, 1),
+		closeCh:          make(chan bool, 1),
+		consecSuccesses:  1, // be optimistic
 	}
 
 	p.dialCore = func(timeout time.Duration) (net.Conn, time.Duration, error) {
@@ -329,41 +325,37 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 	}
 
 	if s.KCPSettings != nil && len(s.KCPSettings) > 0 {
-		err := p.enableKCP()
+		err := enableKCP(p, s)
 		if err != nil {
 			return nil, err
 		}
-		p.kcpEnabled = true
 	}
 
 	go p.runConnectivityChecks()
 	return p, nil
 }
 
-func (p *proxy) dialKCP(timeout time.Duration) (net.Conn, time.Duration, error) {
-	elapsed := mtime.Stopwatch()
-	conn, err := netx.DialTimeout("tcp", p.addr, timeout)
-	delta := elapsed()
-	if err == nil {
-		p.mx.Lock()
-		p.emaLatency.UpdateDuration(delta)
-		p.mx.Unlock()
-	}
-	return conn, delta, err
-
-}
-
-func (p *proxy) enableKCP() error {
+func enableKCP(p *proxy, s *ChainedServerInfo) error {
 	var cfg KCPConfig
-	err := mapstructure.Decode(p.chainedServerInfo.KCPSettings, &cfg)
+	err := mapstructure.Decode(s.KCPSettings, &cfg)
 	if err != nil {
 		return log.Errorf("Could not decode kcp transport settings?: %v", err)
 	}
 
 	// Fix address (comes across as kcp-placeholder)
 	p.addr = cfg.RemoteAddr
-	p.kcpConfig = &cfg
-	p.dialCore = p.dialKCP
+
+	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig)
+	p.dialCore = func(timeout time.Duration) (net.Conn, time.Duration, error) {
+		elapsed := mtime.Stopwatch()
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		log.Debug("Dialing KCP")
+		conn, err := dialKCP(ctx, "tcp", p.addr)
+		log.Debugf("Dialed KCP: %v : %v", conn, err)
+		return conn, elapsed(), err
+	}
+
 	return nil
 }
 
@@ -511,14 +503,7 @@ func (p *proxy) tcpDial(op *ops.Op) func(timeout time.Duration) (net.Conn, error
 		if estBandwidth > 0 {
 			op.Set("est_mbps", estBandwidth)
 		}
-		elapsed := mtime.Stopwatch()
-		conn, err := netx.DialTimeout("tcp", p.addr, timeout)
-		delta := elapsed()
-		if err == nil {
-			p.mx.Lock()
-			p.emaLatency.UpdateDuration(delta)
-			p.mx.Unlock()
-		}
+		conn, delta, err := p.dialCore(timeout)
 		log.Debugf("Got conn: %v", conn)
 		op.TCPDialTime(delta, err)
 		return overheadWrapper(false)(conn, err)
