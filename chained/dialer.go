@@ -82,7 +82,7 @@ func (p *proxy) CheckConnectivity() bool {
 	} else if timeout > maxCheckTimeout {
 		timeout = maxCheckTimeout
 	}
-	_, _, err := p.dialTCP(timeout)
+	_, _, err := p.dialCore(timeout)
 	if err == nil {
 		p.markSuccess()
 		return true

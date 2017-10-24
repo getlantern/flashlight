@@ -22,6 +22,7 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 	log.Debugf("Adding %d chained servers", len(proxies))
 	for name, s := range proxies {
 		if s.PluggableTransport == "obfs4-tcp" {
+			log.Debugf("Ignoring obfs4-tcp server: %v", name)
 			// Ignore obfs4-tcp as these are already included as plain obfs4
 			continue
 		}
@@ -30,7 +31,7 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 			log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)
 			continue
 		}
-		log.Debugf("Adding chained server: %v", s.Addr)
+		log.Debugf("Adding chained server: %v %v", name, dialer)
 		dialers = append(dialers, dialer)
 	}
 

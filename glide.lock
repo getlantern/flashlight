@@ -25,6 +25,8 @@ imports:
   version: fea55316ec360aac14580a95260a0a0553ce69ef
   subpackages:
   - monotime
+- name: github.com/tevino/abool
+  version: 9b9efcf221b50905aab9bbabd3daed56dc10f339
 - name: github.com/armon/go-radix
   version: 1fca145dffbcaa8fe914309b1ec0cfc67500fe61
 - name: github.com/blang/semver
@@ -110,7 +112,7 @@ imports:
 - name: github.com/getlantern/go-loggly
   version: d15e28ab7389ed5d644ccb891d9d54154e43cd27
 - name: github.com/getlantern/go-socks5
-  version: 5add0d960b64f018ad097e5e5a8eb24b3b4b4bc0
+  version: cf262779429bcbf224aa50fbdfcf8723389577e0
 - name: github.com/getlantern/go-update
   version: d7c3f1ac97f868e6936ebd946df87f9826e57355
   subpackages:
@@ -140,7 +142,7 @@ imports:
   - proxyfilters
   - server
 - name: github.com/getlantern/http-proxy-lantern
-  version: ca8570e2fc23deda85115b9b801568f2988d2a43
+  version: f288486d56229b89b575bc8e343ea190702e663f
   subpackages:
   - analytics
   - bbr
@@ -152,6 +154,7 @@ imports:
   - diffserv
   - geo
   - googlefilter
+  - kcplistener
   - lampshade
   - listeners
   - mimic
@@ -174,10 +177,8 @@ imports:
   version: 8723ea29ea42bdb85682c242b8e803aa6f05c9db
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
-- name: github.com/getlantern/kcptun
-  version: f8fd1940bcc36ef5e33799d9e8947e7864474c76
-  subpackages:
-  - client/lib
+- name: github.com/getlantern/kcpwrapper
+  version: 7ee19898fc30c0b106bc55fb103cb73d14daab07
 - name: github.com/getlantern/keyman
   version: 9d65bff0c88a85449195d54c38322e254b2ac34b
   subpackages:
@@ -193,7 +194,7 @@ imports:
 - name: github.com/getlantern/mtime
   version: ba114e4a82b0d453c15c505073a5896453b5cbd2
 - name: github.com/getlantern/netx
-  version: c704f69db48c8406d722f6e9ea9b0ad266975fe6
+  version: faed545c7622920556c402bd8488563c75808b7f
 - name: github.com/getlantern/notifier
   version: 9d71672e9d5d137e06fffc4ac957565cd90a628f
   subpackages:
@@ -210,7 +211,7 @@ imports:
 - name: github.com/getlantern/profiling
   version: 2a15afbadcff99bac017e17af273b31d4510ddb8
 - name: github.com/getlantern/protected
-  version: 4afd1fdc46cb36bf428ed91707db063de87ecff5
+  version: bfda71abe693114852ff8f2f62347dbce45818d8
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/preconn
@@ -417,8 +418,8 @@ imports:
   version: e740680cc77dafd9615b25918b39f4a0ef5ab955
   subpackages:
   - trie/yfast
-- name: github.com/xtaci/kcp-go
-  version: f042b40cd3be3eaa802add29ca56a092c70edf07
+- name: github.com/getlantern/kcp-go
+  version: 4d5ae726b8740577e9267a0800078be9d80dc527
 - name: github.com/xtaci/smux
   version: ebec7ef2574b42a7088cd7751176483e0a27d458
 - name: github.com/xwb1989/sqlparser
@@ -431,7 +432,7 @@ imports:
 - name: github.com/Yawning/chacha20
   version: e3b1f968fc6397b51d963fee8ec8711a47bc0ce8
 - name: golang.org/x/crypto
-  version: 9419663f5a44be8b34ca85f08abc5fe1be11f8a3
+  version: 541b9d50ad47e36efd8fb423e938e59ff1691f68
   subpackages:
   - blowfish
   - cast5
@@ -585,3 +586,5 @@ testImports:
   version: 890a5c3458b43e6104ff5da8dfa139d013d77544
   subpackages:
   - assert
+- name: github.com/getlantern/cmux
+  version: 4070e9b512ea619f0bf87c81fdae16589a4ee8ba

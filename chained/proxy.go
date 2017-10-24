@@ -1,6 +1,7 @@
 package chained
 
 import (
+	"context"
 	"crypto/rsa"
 	"crypto/tls"
 	"fmt"
@@ -17,19 +18,19 @@ import (
 
 	"github.com/getlantern/ema"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
-	"github.com/getlantern/kcptun/client/lib"
+	"github.com/getlantern/kcpwrapper"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/lampshade"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/tlsdialer"
 	"github.com/mitchellh/mapstructure"
+	"github.com/tevino/abool"
 )
 
 const (
@@ -286,7 +287,10 @@ type proxy struct {
 	dialServer        func(*proxy) (net.Conn, error)
 	emaDialTime       *ema.EMA
 	emaLatency        *ema.EMA
+	kcpConfig         *KCPConfig
+	forceRedial       *abool.AtomicBool
 	mostRecentABETime time.Time
+	dialCore          func(timeout time.Duration) (net.Conn, time.Duration, error)
 	forceRecheckCh    chan bool
 	closeCh           chan bool
 	mx                sync.Mutex
@@ -307,8 +311,21 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		emaLatency:       ema.NewDuration(0, 0.8),
 		bbrResetRequired: 1, // reset on every start
 		forceRecheckCh:   make(chan bool, 1),
+		forceRedial:      abool.New(),
 		closeCh:          make(chan bool, 1),
 		consecSuccesses:  1, // be optimistic
+	}
+
+	p.dialCore = func(timeout time.Duration) (net.Conn, time.Duration, error) {
+		elapsed := mtime.Stopwatch()
+		conn, err := netx.DialTimeout("tcp", p.addr, timeout)
+		delta := elapsed()
+		if err == nil {
+			p.mx.Lock()
+			p.emaLatency.UpdateDuration(delta)
+			p.mx.Unlock()
+		}
+		return conn, delta, err
 	}
 
 	if s.KCPSettings != nil && len(s.KCPSettings) > 0 {
@@ -323,49 +340,46 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 }
 
 func enableKCP(p *proxy, s *ChainedServerInfo) error {
-	var conf lib.Config
-	err := mapstructure.Decode(s.KCPSettings, &conf)
+	var cfg KCPConfig
+	err := mapstructure.Decode(s.KCPSettings, &cfg)
 	if err != nil {
 		return log.Errorf("Could not decode kcp transport settings?: %v", err)
 	}
-	conf.LocalAddr = "127.0.0.1:0"
+	p.kcpConfig = &cfg
 
-	startResult := eventual.NewValue()
-	go func() {
-		err := lib.Run(&conf, "embedded", func(addr net.Addr) {
-			startResult.Set(addr.String())
-		})
-		if err != nil {
-			log.Errorf("Error running kcp client: %v", err)
-			startResult.Set(err)
-		}
-	}()
+	// Fix address (comes across as kcp-placeholder)
+	p.addr = cfg.RemoteAddr
+	// Right now, we don't have a good way estimating performance of KCP-based
+	// proxies, so we just mark them as "preferred" to force them to get used by
+	// default.
+	p.preferred = true
 
-	startTimeout := 5 * time.Second
-	result, ok := startResult.Get(startTimeout)
-	if !ok {
-		return log.Errorf("kcp client failed to start in %v", startTimeout)
-	}
-	switch t := result.(type) {
-	case string:
-		log.Debugf("kcp client running at %v", t)
-		// Right now, we don't have a good way estimating performance of KCP-based
-		// proxies, so we just mark them as "preferred" to force them to get used by
-		// default.
-		p.preferred = true
-		p.addr = t
-		p.protocol = p.protocol + "-kcp"
-		if conf.Key != "" && conf.Crypt != "none" && conf.Crypt != "xor" {
-			// We're using kcp's built-in encryption, so we can consider the dialer
-			// trusted
-			p.trusted = true
+	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig)
+	var dialKCPMutex sync.Mutex
+
+	p.dialCore = func(timeout time.Duration) (net.Conn, time.Duration, error) {
+		elapsed := mtime.Stopwatch()
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		dialKCPMutex.Lock()
+		if p.forceRedial.IsSet() {
+			log.Debug("Connection state changed, re-connecting to server first")
+			dialKCP = kcpwrapper.Dialer(&p.kcpConfig.DialerConfig)
+			p.forceRedial.UnSet()
 		}
-		return nil
-	case error:
-		return t
-	default:
-		return log.Errorf("Unkown start result type: %v", t)
+		doDialKCP := dialKCP
+		dialKCPMutex.Unlock()
+
+		conn, err := doDialKCP(ctx, "tcp", p.addr)
+		return conn, elapsed(), err
 	}
+
+	return nil
+}
+
+func (p *proxy) ForceRedial() {
+	p.forceRedial.Set()
 }
 
 func (p *proxy) Protocol() string {
@@ -512,20 +526,15 @@ func (p *proxy) tcpDial(op *ops.Op) func(timeout time.Duration) (net.Conn, error
 		if estBandwidth > 0 {
 			op.Set("est_mbps", estBandwidth)
 		}
-		conn, delta, err := p.dialTCP(timeout)
+		conn, delta, err := p.dialCore(timeout)
 		op.TCPDialTime(delta, err)
 		return overheadWrapper(false)(conn, err)
 	}
 }
 
-func (p *proxy) dialTCP(timeout time.Duration) (net.Conn, time.Duration, error) {
-	elapsed := mtime.Stopwatch()
-	conn, err := netx.DialTimeout("tcp", p.addr, timeout)
-	delta := elapsed()
-	if err == nil {
-		p.mx.Lock()
-		p.emaLatency.UpdateDuration(delta)
-		p.mx.Unlock()
-	}
-	return conn, delta, err
+// KCPConfig adapts kcpwrapper.DialerConfig to the currently deployed
+// configurations in order to provide backward-compatibility.
+type KCPConfig struct {
+	kcpwrapper.DialerConfig `mapstructure:",squash"`
+	RemoteAddr              string `json:"remoteaddr"`
 }
