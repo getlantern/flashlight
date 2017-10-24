@@ -193,7 +193,7 @@ imports:
 - name: github.com/getlantern/mtime
   version: ba114e4a82b0d453c15c505073a5896453b5cbd2
 - name: github.com/getlantern/netx
-  version: c704f69db48c8406d722f6e9ea9b0ad266975fe6
+  version: 6d46b78cd8a6e922684014f43edccbd5836a4da3
 - name: github.com/getlantern/notifier
   version: 9d71672e9d5d137e06fffc4ac957565cd90a628f
   subpackages:
