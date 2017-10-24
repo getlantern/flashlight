@@ -71,10 +71,14 @@ type Dialer interface {
 	// Successes returns the total number of dial successes
 	Successes() int64
 
+	// Whether or not KCP has been enabled on the given dialer
+	KCPEnabled() bool
+
+	// Forces the dialer to reconnect to its proxy server
+	ForceRedial()
+
 	// ConsecSuccesses returns the number of consecutive dial successes
 	ConsecSuccesses() int64
-
-	KCPEnabled() bool
 
 	// Failures returns the total number of dial failures
 	Failures() int64
@@ -110,7 +114,6 @@ type Balancer struct {
 	onActiveDialer                  chan Dialer
 	priorTopDialer                  Dialer
 	bandwidthKnownForPriorTopDialer bool
-	forceRedial                     bool
 	hasSucceedingDialer             chan bool
 	HasSucceedingDialer             <-chan bool
 }
@@ -150,17 +153,17 @@ func (b *Balancer) Reset(dialers ...Dialer) {
 	}
 }
 
-func (b *Balancer) SetForceRedial(redial bool) {
+func (b *Balancer) ForceRedial() {
+	log.Debugf("Received request to force redial")
 	b.mu.Lock()
-	b.forceRedial = redial
+	dialers := b.dialers
 	b.mu.Unlock()
-}
-
-func (b *Balancer) ForceRedial() bool {
-	b.mu.Lock()
-	forceRedial := b.forceRedial
-	b.mu.Unlock()
-	return forceRedial
+	for _, dl := range dialers {
+		if dl.KCPEnabled() {
+			log.Debugf("Forcing dialer %s to reconnect", dl)
+			dl.ForceRedial()
+		}
+	}
 }
 
 // Dial dials (network, addr) using one of the currently active configured

@@ -30,6 +30,7 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/tlsdialer"
 	"github.com/mitchellh/mapstructure"
+	"github.com/tevino/abool"
 )
 
 const (
@@ -286,6 +287,10 @@ type proxy struct {
 	dialServer        func(*proxy) (net.Conn, error)
 	emaDialTime       *ema.EMA
 	emaLatency        *ema.EMA
+	kcpEnabled        bool
+	kcpConfig         *KCPConfig
+	dialKCP           func(ctx context.Context, network, addr string) (net.Conn, error)
+	forceRedial       *abool.AtomicBool
 	mostRecentABETime time.Time
 	dialCore          func(timeout time.Duration) (net.Conn, time.Duration, error)
 	forceRecheckCh    chan bool
@@ -308,6 +313,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		emaLatency:       ema.NewDuration(0, 0.8),
 		bbrResetRequired: 1, // reset on every start
 		forceRecheckCh:   make(chan bool, 1),
+		forceRedial:      abool.New(),
 		closeCh:          make(chan bool, 1),
 		consecSuccesses:  1, // be optimistic
 	}
@@ -329,6 +335,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		if err != nil {
 			return nil, err
 		}
+		p.kcpEnabled = true
 	}
 
 	go p.runConnectivityChecks()
@@ -341,22 +348,32 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 	if err != nil {
 		return log.Errorf("Could not decode kcp transport settings?: %v", err)
 	}
+	p.kcpConfig = &cfg
 
 	// Fix address (comes across as kcp-placeholder)
 	p.addr = cfg.RemoteAddr
+	p.dialKCP = kcpwrapper.Dialer(&cfg.DialerConfig)
 
-	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig)
 	p.dialCore = func(timeout time.Duration) (net.Conn, time.Duration, error) {
 		elapsed := mtime.Stopwatch()
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 		log.Debug("Dialing KCP")
-		conn, err := dialKCP(ctx, "tcp", p.addr)
+		if p.forceRedial.IsSet() {
+			log.Debug("Connection state changed, re-connecting to server first")
+			p.dialKCP = kcpwrapper.Dialer(&p.kcpConfig.DialerConfig)
+			p.forceRedial.UnSet()
+		}
+		conn, err := p.dialKCP(ctx, "tcp", p.addr)
 		log.Debugf("Dialed KCP: %v : %v", conn, err)
 		return conn, elapsed(), err
 	}
 
 	return nil
+}
+
+func (p *proxy) ForceRedial() {
+	p.forceRedial.Set()
 }
 
 func (p *proxy) Protocol() string {

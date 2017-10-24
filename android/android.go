@@ -48,6 +48,9 @@ var (
 	surveyURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
 
 	startOnce sync.Once
+
+	cl   *client.Client
+	clMu sync.Mutex
 )
 
 // SocketProtector is an interface for classes that can protect Android sockets,
@@ -67,15 +70,13 @@ func ProtectConnections(protector SocketProtector, dnsServer string) {
 	p := protected.New(protector.ProtectConn, defaultDnsServer)
 	netx.OverrideDial(p.DialContext)
 	netx.OverrideDialUDP(p.DialUDP)
-	netx.OverrideResolve(p.Resolve)
-	netx.OverrideResolveUDP(p.ResolveUDP)
-	/*cl.Lock()
-	c := cl.c
-	cl.Unlock()
-	if c != nil && c.GetBalancer() != nil {
-		log.Debugf("Forcing balancer redial")
-		//c.GetBalancer().ForceRedial()
-	}*/
+	//netx.OverrideResolve(p.Resolve)
+	//netx.OverrideResolveUDP(p.ResolveUDP)
+	clMu.Lock()
+	if cl != nil && cl.GetBalancer() != nil {
+		cl.GetBalancer().ForceRedial()
+	}
+	clMu.Unlock()
 }
 
 // RemoveOverrides removes the protected tlsdialer overrides
@@ -206,11 +207,11 @@ func run(configDir, locale string,
 			return true
 		}, // beforeStart()
 		func(c *client.Client) {
-			/*cl.Lock()
-			cl.c = c
-			cl.Unlock()*/
+			clMu.Lock()
+			cl = c
+			clMu.Unlock()
 			afterStart(session)
-		}, // afterStart()
+		},
 		func(cfg *config.Global) {
 		}, // onConfigUpdate
 		session,
