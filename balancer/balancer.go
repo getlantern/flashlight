@@ -71,9 +71,6 @@ type Dialer interface {
 	// Successes returns the total number of dial successes
 	Successes() int64
 
-	// Forces the dialer to reconnect to its proxy server
-	ForceRedial()
-
 	// ConsecSuccesses returns the number of consecutive dial successes
 	ConsecSuccesses() int64
 
@@ -85,6 +82,9 @@ type Dialer interface {
 
 	// Succeeding indicates whether or not this dialer is currently good to use
 	Succeeding() bool
+
+	// Forces the dialer to reconnect to its proxy server
+	ForceRedial()
 
 	// CheckConnectivity checks connectivity to proxy and updates latency and
 	// attempts, successes and failures accordingly. It returns true if the check

@@ -99,6 +99,9 @@ func (d *testDialer) Succeeding() bool {
 	return !d.failing
 }
 
+func (d *testDialer) ForceRedial() {
+}
+
 func (d *testDialer) CheckConnectivity() bool {
 	d.recalcLatency()
 	d.connectivityChecks++
