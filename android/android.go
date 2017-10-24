@@ -69,7 +69,7 @@ func ProtectConnections(protector SocketProtector, dnsServer string) {
 	p := protected.New(protector.ProtectConn, dnsServer)
 	netx.OverrideDial(p.DialContext)
 	netx.OverrideDialUDP(p.DialUDP)
-	netx.OverrideResolve(p.Resolve)
+	netx.OverrideResolve(p.ResolveTCP)
 	netx.OverrideResolveUDP(p.ResolveUDP)
 	clMu.Lock()
 	defer clMu.Unlock()
