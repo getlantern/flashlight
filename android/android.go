@@ -70,13 +70,13 @@ func ProtectConnections(protector SocketProtector, dnsServer string) {
 	p := protected.New(protector.ProtectConn, defaultDnsServer)
 	netx.OverrideDial(p.DialContext)
 	netx.OverrideDialUDP(p.DialUDP)
-	//netx.OverrideResolve(p.Resolve)
-	//netx.OverrideResolveUDP(p.ResolveUDP)
+	netx.OverrideResolve(p.Resolve)
+	netx.OverrideResolveUDP(p.ResolveUDP)
 	clMu.Lock()
+	defer clMu.Unlock()
 	if cl != nil && cl.GetBalancer() != nil {
 		cl.GetBalancer().ForceRedial()
 	}
-	clMu.Unlock()
 }
 
 // RemoveOverrides removes the protected tlsdialer overrides
