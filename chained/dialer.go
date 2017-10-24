@@ -110,10 +110,6 @@ func (p *proxy) Successes() int64 {
 	return atomic.LoadInt64(&p.successes)
 }
 
-func (p *proxy) KCPEnabled() bool {
-	return p.kcpEnabled
-}
-
 func (p *proxy) ConsecSuccesses() int64 {
 	return atomic.LoadInt64(&p.consecSuccesses)
 }

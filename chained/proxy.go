@@ -287,9 +287,7 @@ type proxy struct {
 	dialServer        func(*proxy) (net.Conn, error)
 	emaDialTime       *ema.EMA
 	emaLatency        *ema.EMA
-	kcpEnabled        bool
 	kcpConfig         *KCPConfig
-	dialKCP           func(ctx context.Context, network, addr string) (net.Conn, error)
 	forceRedial       *abool.AtomicBool
 	mostRecentABETime time.Time
 	dialCore          func(timeout time.Duration) (net.Conn, time.Duration, error)
@@ -335,7 +333,6 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		if err != nil {
 			return nil, err
 		}
-		p.kcpEnabled = true
 	}
 
 	go p.runConnectivityChecks()
@@ -357,20 +354,24 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 	// default.
 	p.preferred = true
 
-	p.dialKCP = kcpwrapper.Dialer(&cfg.DialerConfig)
+	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig)
+	var dialKCPMutex sync.Mutex
 
 	p.dialCore = func(timeout time.Duration) (net.Conn, time.Duration, error) {
 		elapsed := mtime.Stopwatch()
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
-		log.Debug("Dialing KCP")
+
+		dialKCPMutex.Lock()
 		if p.forceRedial.IsSet() {
 			log.Debug("Connection state changed, re-connecting to server first")
-			p.dialKCP = kcpwrapper.Dialer(&p.kcpConfig.DialerConfig)
+			dialKCP = kcpwrapper.Dialer(&p.kcpConfig.DialerConfig)
 			p.forceRedial.UnSet()
 		}
-		conn, err := p.dialKCP(ctx, "tcp", p.addr)
-		log.Debugf("Dialed KCP: %v : %v", conn, err)
+		doDialKCP := dialKCP
+		dialKCPMutex.Unlock()
+
+		conn, err := doDialKCP(ctx, "tcp", p.addr)
 		return conn, elapsed(), err
 	}
 

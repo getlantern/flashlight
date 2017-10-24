@@ -71,9 +71,6 @@ type Dialer interface {
 	// Successes returns the total number of dial successes
 	Successes() int64
 
-	// Whether or not KCP has been enabled on the given dialer
-	KCPEnabled() bool
-
 	// Forces the dialer to reconnect to its proxy server
 	ForceRedial()
 
@@ -153,16 +150,14 @@ func (b *Balancer) Reset(dialers ...Dialer) {
 	}
 }
 
+// ForceRedial forces dialers with long-running connections to reconnect
 func (b *Balancer) ForceRedial() {
 	log.Debugf("Received request to force redial")
 	b.mu.Lock()
 	dialers := b.dialers
 	b.mu.Unlock()
 	for _, dl := range dialers {
-		if dl.KCPEnabled() {
-			log.Debugf("Forcing dialer %s to reconnect", dl)
-			dl.ForceRedial()
-		}
+		dl.ForceRedial()
 	}
 }
 
