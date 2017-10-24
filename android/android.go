@@ -37,9 +37,8 @@ const (
 var (
 	log = golog.LoggerFor("lantern")
 
-	updateServerURL  = "https://update.getlantern.org"
-	defaultLocale    = `en-US`
-	defaultDnsServer = "8.8.8.8:53"
+	updateServerURL = "https://update.getlantern.org"
+	defaultLocale   = `en-US`
 
 	surveyHTTPClient = &http.Client{
 		Transport: proxied.ChainedThenFrontedWith("d38rvu630khj2q.cloudfront.net", ""),
@@ -67,7 +66,7 @@ type SocketProtector interface {
 // The DNS server is used to resolve host only when dialing a protected connection
 // from within Lantern client.
 func ProtectConnections(protector SocketProtector, dnsServer string) {
-	p := protected.New(protector.ProtectConn, defaultDnsServer)
+	p := protected.New(protector.ProtectConn, dnsServer)
 	netx.OverrideDial(p.DialContext)
 	netx.OverrideDialUDP(p.DialUDP)
 	netx.OverrideResolve(p.Resolve)
