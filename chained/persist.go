@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -46,8 +45,7 @@ func TrackStatsFor(dialers []balancer.Dialer) {
 }
 
 func probeIfRequired(dialers []balancer.Dialer) {
-	sorted := balancer.SortedDialers(dialers)
-	sort.Sort(sorted)
+	sorted := balancer.SortDialers(dialers)
 	latencyOfTopProxy := sorted[0].EstLatency()
 	for i, dialer := range sorted {
 		// probe is automatically required for relatively new dialers

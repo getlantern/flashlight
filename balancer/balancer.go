@@ -105,8 +105,8 @@ type Balancer struct {
 	lastDialTime                    int64 // not used anymore, but makes sure we're aligned on 64bit boundary
 	nextTimeout                     *ema.EMA
 	mu                              sync.RWMutex
-	dialers                         SortedDialers
-	trusted                         SortedDialers
+	dialers                         sortedDialers
+	trusted                         sortedDialers
 	closeCh                         chan bool
 	onActiveDialer                  chan Dialer
 	priorTopDialer                  Dialer
@@ -136,7 +136,7 @@ func New(dialers ...Dialer) *Balancer {
 // Reset closes existing dialers and replaces them with new ones.
 func (b *Balancer) Reset(dialers ...Dialer) {
 	log.Debugf("Resetting with %d dialers", len(dialers))
-	dls := make(SortedDialers, len(dialers))
+	dls := make(sortedDialers, len(dialers))
 	copy(dls, dialers)
 
 	b.mu.Lock()
@@ -313,7 +313,7 @@ func (b *Balancer) evalDialers() {
 	b.bandwidthKnownForPriorTopDialer = bandwidthKnownForNewTopDialer
 }
 
-func checkConnectivityForAll(dialers SortedDialers) {
+func checkConnectivityForAll(dialers sortedDialers) {
 	var wg sync.WaitGroup
 	wg.Add(len(dialers))
 	for _, _d := range dialers {
@@ -345,7 +345,7 @@ func (b *Balancer) Close() {
 	}
 }
 
-func (b *Balancer) printStats(dialers SortedDialers) {
+func (b *Balancer) printStats(dialers sortedDialers) {
 	log.Debug("-------------------------- Dialer Stats -----------------------")
 	rank := float64(1)
 	for _, d := range dialers {
@@ -409,11 +409,11 @@ func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, error) {
 	return dialers, nil
 }
 
-func (b *Balancer) copyOfDialers() SortedDialers {
+func (b *Balancer) copyOfDialers() sortedDialers {
 	b.mu.RLock()
 	_dialers := b.dialers
 	b.mu.RUnlock()
-	dialers := make(SortedDialers, len(_dialers))
+	dialers := make(sortedDialers, len(_dialers))
 	copy(dialers, _dialers)
 	return dialers
 }
@@ -422,7 +422,7 @@ func (b *Balancer) sortDialers() {
 	dialers := b.copyOfDialers()
 	sort.Sort(dialers)
 
-	trusted := make(SortedDialers, 0, len(dialers))
+	trusted := make(sortedDialers, 0, len(dialers))
 	for _, d := range dialers {
 		if d.Trusted() {
 			trusted = append(trusted, d)
@@ -454,15 +454,21 @@ func (b *Balancer) lookForSucceedingDialer(dialers []Dialer) {
 	}
 }
 
-type SortedDialers []Dialer
+func SortDialers(dialers []Dialer) []Dialer {
+	sorted := sortedDialers(dialers)
+	sort.Sort(sorted)
+	return sorted
+}
 
-func (d SortedDialers) Len() int { return len(d) }
+type sortedDialers []Dialer
 
-func (d SortedDialers) Swap(i, j int) {
+func (d sortedDialers) Len() int { return len(d) }
+
+func (d sortedDialers) Swap(i, j int) {
 	d[i], d[j] = d[j], d[i]
 }
 
-func (d SortedDialers) Less(i, j int) bool {
+func (d sortedDialers) Less(i, j int) bool {
 	a, b := d[i], d[j]
 
 	// Prefer the succeeding proxy

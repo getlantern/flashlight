@@ -113,7 +113,7 @@ func TestTrusted(t *testing.T) {
 }
 
 func TestSorting(t *testing.T) {
-	dialers := SortedDialers{
+	dialers := sortedDialers{
 		// Unknown bandwidth comes first
 		&testDialer{
 			name:      "1",
