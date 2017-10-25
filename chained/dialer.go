@@ -215,11 +215,7 @@ func (p *proxy) onRequest(req *http.Request) {
 		req.Header.Set(common.ProTokenHeader, token)
 	}
 	// Request BBR metrics
-	bbrOption := "y"
-	if p.shouldResetBBR() {
-		bbrOption = "clear"
-	}
-	req.Header.Set("X-BBR", bbrOption)
+	req.Header.Set("X-BBR", "y")
 }
 
 func (p *proxy) onFinish(op *ops.Op) {

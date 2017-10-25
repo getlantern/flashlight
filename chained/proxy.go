@@ -274,7 +274,6 @@ type proxy struct {
 	failures          int64
 	consecFailures    int64
 	abe               int64 // Mbps scaled by 1000
-	bbrResetRequired  int64
 	name              string
 	protocol          string
 	network           string
@@ -298,22 +297,21 @@ type proxy struct {
 
 func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(*proxy) (net.Conn, error)) (*proxy, error) {
 	p := &proxy{
-		name:             name,
-		protocol:         protocol,
-		network:          network,
-		addr:             addr,
-		authToken:        s.AuthToken,
-		deviceID:         deviceID,
-		proToken:         proToken,
-		trusted:          trusted,
-		dialServer:       dialServer,
-		emaDialTime:      ema.NewDuration(0, 0.8),
-		emaLatency:       ema.NewDuration(0, 0.8),
-		bbrResetRequired: 1, // reset on every start
-		forceRecheckCh:   make(chan bool, 1),
-		forceRedial:      abool.New(),
-		closeCh:          make(chan bool, 1),
-		consecSuccesses:  1, // be optimistic
+		name:            name,
+		protocol:        protocol,
+		network:         network,
+		addr:            addr,
+		authToken:       s.AuthToken,
+		deviceID:        deviceID,
+		proToken:        proToken,
+		trusted:         trusted,
+		dialServer:      dialServer,
+		emaDialTime:     ema.NewDuration(0, 0.8),
+		emaLatency:      ema.NewDuration(0, 0.8),
+		forceRecheckCh:  make(chan bool, 1),
+		forceRedial:     abool.New(),
+		closeCh:         make(chan bool, 1),
+		consecSuccesses: 1, // be optimistic
 	}
 
 	p.dialCore = func(timeout time.Duration) (net.Conn, time.Duration, error) {
@@ -502,10 +500,6 @@ func (p *proxy) collectBBRInfo(reqTime time.Time, resp *http.Response) {
 			p.mx.Unlock()
 		}
 	}
-}
-
-func (p *proxy) shouldResetBBR() bool {
-	return atomic.CompareAndSwapInt64(&p.bbrResetRequired, 1, 0)
 }
 
 func (p *proxy) forceRecheck() {
