@@ -175,7 +175,7 @@ imports:
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
 - name: github.com/getlantern/kcp-go
-  version: aab6d6d0d9dc69efaf707bbf711475f66befeda4
+  version: 4d5ae726b8740577e9267a0800078be9d80dc527
 - name: github.com/getlantern/kcpwrapper
   version: fce6a30ae8fc58a72d18c0f8a1006bfd11516828
 - name: github.com/getlantern/keyman
