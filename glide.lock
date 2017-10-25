@@ -82,7 +82,7 @@ imports:
 - name: github.com/getlantern/dns
   version: 630ccc2c3041d6f4362479526ed229d222f21274
 - name: github.com/getlantern/dnsgrab
-  version: fe4d4d7da968697312dd60e8700ab75157766c8d
+  version: 227f729dcb41c2838b53575a48208d0b552ab6e8
 - name: github.com/getlantern/easylist
   version: 1635650b3ed817f2bcc82cf42433eb309673fe53
 - name: github.com/getlantern/edgedetect
