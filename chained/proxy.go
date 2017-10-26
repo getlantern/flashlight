@@ -451,6 +451,13 @@ func (p *proxy) DialServer() (net.Conn, error) {
 
 func (p *proxy) dialTime(op *ops.Op, elapsed func() time.Duration, err error) {
 	delta := elapsed()
+	if delta < 10*time.Millisecond {
+		// Some transports (lampshade / KCP) returns immediately when dialing ,
+		// unless it's necessary to create a new underlie connection. Ignore
+		// apparently small deltas to get an actual dial time.
+		return
+	}
+	log.Debugf("Update %s with dial time %v", p.Label(), delta)
 	op.DialTime(delta, err)
 	if err == nil {
 		p.emaDialTime.UpdateDuration(delta)
@@ -458,7 +465,7 @@ func (p *proxy) dialTime(op *ops.Op, elapsed func() time.Duration, err error) {
 }
 
 func (p *proxy) EMADialTime() time.Duration {
-	return p.emaLatency.GetDuration()
+	return p.emaDialTime.GetDuration()
 }
 
 func (p *proxy) EstLatency() time.Duration {
