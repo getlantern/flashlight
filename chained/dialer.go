@@ -123,7 +123,10 @@ func (p *proxy) ConsecFailures() int64 {
 }
 
 func (p *proxy) Succeeding() bool {
-	return p.ConsecSuccesses()-p.ConsecFailures() > 0
+	// To avoid turbulence when network glitches, treat proxies with a small
+	// amount failures as succeeding.
+	return p.ConsecSuccesses()-p.ConsecFailures() > -5 &&
+		p.consecRWSuccesses.Get() > -5
 }
 
 // Dial is a net.Dial-compatible function.

@@ -265,6 +265,34 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 	return p, nil
 }
 
+// consecCounter is a counter that can extend on both directions. Its default
+// value is zero. Inc() sets it to -1 or adds it by 1; Dec() sets it to -1 or
+// minus it by 1. When called concurrently, it may have an incorrect absolute
+// value, but always have the correct sign.
+type consecCounter struct {
+	v int64
+}
+
+func (c *consecCounter) Inc() {
+	if v := atomic.LoadInt64(&c.v); v <= 0 {
+		atomic.StoreInt64(&c.v, 1)
+	} else {
+		atomic.StoreInt64(&c.v, v+1)
+	}
+}
+
+func (c *consecCounter) Dec() {
+	if v := atomic.LoadInt64(&c.v); v >= 0 {
+		atomic.StoreInt64(&c.v, -1)
+	} else {
+		atomic.StoreInt64(&c.v, v-1)
+	}
+}
+
+func (c *consecCounter) Get() int64 {
+	return atomic.LoadInt64(&c.v)
+}
+
 type proxy struct {
 	// Store int64's up front to ensure alignment of 64 bit words
 	// See https://golang.org/pkg/sync/atomic/#pkg-note-BUG
@@ -273,6 +301,7 @@ type proxy struct {
 	consecSuccesses   int64
 	failures          int64
 	consecFailures    int64
+	consecRWSuccesses consecCounter
 	abe               int64 // Mbps scaled by 1000
 	name              string
 	protocol          string

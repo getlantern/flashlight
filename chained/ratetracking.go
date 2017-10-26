@@ -21,6 +21,11 @@ func (p *proxy) withRateTracking(wrapped net.Conn, origin string) net.Conn {
 	return measured.Wrap(wrapped, rateInterval, func(conn measured.Conn) {
 		stats := conn.Stats()
 		rwError := conn.FirstError()
+		if rwError == nil {
+			p.consecRWSuccesses.Inc()
+		} else {
+			p.consecRWSuccesses.Dec()
+		}
 		// record simple traffic without origin
 		op := ops.Begin("traffic")
 		op.SetMetric("client_bytes_sent", borda.Sum(stats.SentTotal)).
