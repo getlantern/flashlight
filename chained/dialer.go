@@ -16,6 +16,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
+	"github.com/getlantern/mtime"
 )
 
 const (
@@ -76,13 +77,9 @@ func (p *proxy) runConnectivityChecks() {
 }
 
 func (p *proxy) CheckConnectivity() bool {
-	timeout := p.emaLatency.GetDuration() * 2
-	if timeout < minCheckTimeout {
-		timeout = minCheckTimeout
-	} else if timeout > maxCheckTimeout {
-		timeout = maxCheckTimeout
-	}
-	_, _, err := p.dialCore(timeout)
+	elapsed := mtime.Stopwatch()
+	_, err := p.DialServer()
+	log.Debugf("Checking %v took %v, err: %v", p.Label(), elapsed(), err)
 	if err == nil {
 		p.markSuccess()
 		return true
