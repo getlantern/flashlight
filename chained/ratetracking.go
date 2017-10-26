@@ -17,17 +17,16 @@ const (
 
 var totalReceived = uint64(0)
 
-func withRateTracking(wrapped net.Conn, origin string, onFinish func(op *ops.Op)) net.Conn {
+func (p *proxy) withRateTracking(wrapped net.Conn, origin string) net.Conn {
 	return measured.Wrap(wrapped, rateInterval, func(conn measured.Conn) {
 		stats := conn.Stats()
+		rwError := conn.FirstError()
 		// record simple traffic without origin
 		op := ops.Begin("traffic")
 		op.SetMetric("client_bytes_sent", borda.Sum(stats.SentTotal)).
 			SetMetric("client_bytes_recv", borda.Sum(stats.RecvTotal))
-		op.FailIf(conn.FirstError())
-		if onFinish != nil {
-			onFinish(op)
-		}
+		op.FailIf(rwError)
+		p.onFinish(op)
 		op.End()
 
 		// record xfer data with origin
@@ -40,11 +39,9 @@ func withRateTracking(wrapped net.Conn, origin string, onFinish func(op *ops.Op)
 			SetMetric("client_bps_recv_min", borda.Min(stats.RecvMin)).
 			SetMetric("client_bps_recv_max", borda.Max(stats.RecvMax)).
 			SetMetric("client_bps_recv_avg", borda.WeightedAvg(stats.RecvAvg, float64(stats.RecvTotal)))
-		op.FailIf(conn.FirstError())
+		op.FailIf(rwError)
+		p.onFinish(op)
 
-		if onFinish != nil {
-			onFinish(op)
-		}
 		// The below is a little verbose, but it allows us to see the transfer rates
 		// right within a user's logs, which is useful when someone submits their logs
 		// together with a complaint of Lantern being slow.

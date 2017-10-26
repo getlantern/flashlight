@@ -204,7 +204,7 @@ func (p *proxy) dialInternal(network, addr string) (net.Conn, error) {
 		conn.Close()
 		return nil, err
 	}
-	return withRateTracking(conn, addr, p.onFinish), nil
+	return p.withRateTracking(conn, addr), nil
 }
 
 func (p *proxy) onRequest(req *http.Request) {

@@ -1,13 +1,15 @@
 package chained
 
 import (
+	"net"
+	"sync"
+	"testing"
+	"time"
+
 	borda "github.com/getlantern/borda/client"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/mockconn"
 	"github.com/stretchr/testify/assert"
-	"sync"
-	"testing"
-	"time"
 )
 
 func TestRateTracking(t *testing.T) {
@@ -17,7 +19,8 @@ func TestRateTracking(t *testing.T) {
 	ops.RegisterReporter(func(failure error, ctx map[string]interface{}) {
 		log.Debugf("Reporting: %v", ctx)
 		mx.Lock()
-		if ctx["client_bytes_sent"].(borda.Val).Get() == 8.0 {
+		val, ok := ctx["client_bytes_sent"].(borda.Val)
+		if ok && val.Get() == 8.0 {
 			finalErr = failure
 			finalCtx = ctx
 		}
@@ -25,11 +28,19 @@ func TestRateTracking(t *testing.T) {
 	})
 
 	sd := mockconn.SucceedingDialer([]byte("1234567890"))
-	wrapped, err := sd.Dial("", "")
+	p, err := newProxy("test", "proto", "netw", "addr:567", &ChainedServerInfo{
+		Addr:      "addr:567",
+		AuthToken: "token",
+	}, "device", func() string {
+		return "protoken"
+	}, true, func(p *proxy) (net.Conn, error) {
+		return sd.Dial("", "")
+	})
+
+	conn, err := p.Dial("tcp", "origin:443")
 	if !assert.NoError(t, err) {
 		return
 	}
-	conn := withRateTracking(wrapped, "origin:443", nil)
 	n, err := conn.Write([]byte("12345678"))
 	if !assert.NoError(t, err) {
 		return
