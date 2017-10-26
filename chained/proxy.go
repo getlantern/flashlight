@@ -239,9 +239,6 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 			}
 			return conn, err
 		})
-		// note - because lampshade is multiplexed, this dial time will often be
-		// lower than other protocols since there's often nothing to be done for
-		// opening up a new multiplexed connection.
 		p.dialTime(op, elapsed, err)
 		return overheadWrapper(true)(conn, op.FailIf(err))
 	}
@@ -447,18 +444,20 @@ func (p *proxy) DialServer() (net.Conn, error) {
 func (p *proxy) dialTime(op *ops.Op, elapsed func() time.Duration, err error) {
 	delta := elapsed()
 	if delta < 10*time.Millisecond {
-		// Some transports (lampshade / KCP) returns immediately when dialing ,
+		// Some transports (lampshade / KCP) returns immediately when dialing,
 		// unless it's necessary to create a new underlie connection. Ignore
-		// apparently small deltas to get an actual dial time.
+		// apparently small delta values to get more useful latency.
 		return
 	}
 	op.DialTime(delta, err)
 	if err == nil {
 		p.emaLatency.UpdateDuration(delta)
-		log.Debugf("Update %s with dial time %v, result: %v", p.Label(), delta, p.emaLatency.GetDuration())
 	}
 }
 
+// EstLatency implements the method from the balancer.Dialer interface. The
+// value is updated from the time to dial the proxy, or the utility of the
+// pluggable transport, e.g., lampshade can measure the RTT of ping packets.
 func (p *proxy) EstLatency() time.Duration {
 	return p.emaLatency.GetDuration()
 }
