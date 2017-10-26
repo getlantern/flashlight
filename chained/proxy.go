@@ -94,7 +94,7 @@ func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken f
 		defer op.End()
 		elapsed := mtime.Stopwatch()
 		conn, err := p.tcpDial(op)(chainedDialTimeout)
-		p.dialTime(op, elapsed, err)
+		op.DialTime(elapsed(), err)
 		return conn, op.FailIf(err)
 	})
 }
@@ -118,7 +118,7 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 				ClientSessionCache: sessionCache,
 				InsecureSkipVerify: true,
 			})
-		p.dialTime(op, elapsed, err)
+		op.DialTime(elapsed(), err)
 		if err != nil {
 			return nil, op.FailIf(err)
 		}
@@ -174,7 +174,7 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 		}
 		// The proxy it wrapped already has timeout applied.
 		conn, err := cf.Dial("tcp", p.addr, dialFn, args)
-		p.dialTime(op, elapsed, err)
+		op.DialTime(elapsed(), err)
 		return overheadWrapper(true)(conn, op.FailIf(err))
 	})
 }
@@ -239,7 +239,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 			}
 			return conn, err
 		})
-		p.dialTime(op, elapsed, err)
+		op.DialTime(elapsed(), err)
 		return overheadWrapper(true)(conn, op.FailIf(err))
 	}
 
@@ -344,6 +344,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		elapsed := mtime.Stopwatch()
 		conn, err := netx.DialTimeout("tcp", p.addr, timeout)
 		delta := elapsed()
+		p.updateLatency(delta, err)
 		return conn, delta, err
 	}
 
@@ -391,7 +392,9 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 		dialKCPMutex.Unlock()
 
 		conn, err := doDialKCP(ctx, "tcp", p.addr)
-		return conn, elapsed(), err
+		delta := elapsed()
+		p.updateLatency(delta, err)
+		return conn, delta, err
 	}
 
 	return nil
@@ -441,17 +444,13 @@ func (p *proxy) DialServer() (net.Conn, error) {
 	return p.dialServer(p)
 }
 
-func (p *proxy) dialTime(op *ops.Op, elapsed func() time.Duration, err error) {
-	delta := elapsed()
-	if delta < 10*time.Millisecond {
+func (p *proxy) updateLatency(latency time.Duration, err error) {
+	if err == nil && latency < 10*time.Millisecond {
 		// Some transports (lampshade / KCP) returns immediately when dialing,
 		// unless it's necessary to create a new underlie connection. Ignore
 		// apparently small delta values to get more useful latency.
 		return
-	}
-	op.DialTime(delta, err)
-	if err == nil {
-		p.emaLatency.UpdateDuration(delta)
+		p.emaLatency.UpdateDuration(latency)
 	}
 }
 
