@@ -256,8 +256,10 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 			for {
 				time.Sleep(pingInterval * 2)
 				ttfa := dialer.EMARTT()
-				p.emaLatency.SetDuration(ttfa)
-				log.Debugf("%v EMA RTT: %v", p.Label(), ttfa)
+				if ttfa > 0 {
+					p.emaLatency.SetDuration(ttfa)
+					log.Debugf("%v EMA RTT: %v", p.Label(), ttfa)
+				}
 			}
 		}()
 	}
@@ -313,7 +315,6 @@ type proxy struct {
 	trusted           bool
 	preferred         bool
 	dialServer        func(*proxy) (net.Conn, error)
-	emaDialTime       *ema.EMA
 	emaLatency        *ema.EMA
 	kcpConfig         *KCPConfig
 	forceRedial       *abool.AtomicBool
@@ -335,7 +336,6 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		proToken:        proToken,
 		trusted:         trusted,
 		dialServer:      dialServer,
-		emaDialTime:     ema.NewDuration(0, 0.8),
 		emaLatency:      ema.NewDuration(0, 0.8),
 		forceRecheckCh:  make(chan bool, 1),
 		forceRedial:     abool.New(),
@@ -347,11 +347,6 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		elapsed := mtime.Stopwatch()
 		conn, err := netx.DialTimeout("tcp", p.addr, timeout)
 		delta := elapsed()
-		if err == nil {
-			p.mx.Lock()
-			p.emaLatency.UpdateDuration(delta)
-			p.mx.Unlock()
-		}
 		return conn, delta, err
 	}
 
@@ -457,23 +452,14 @@ func (p *proxy) dialTime(op *ops.Op, elapsed func() time.Duration, err error) {
 		// apparently small deltas to get an actual dial time.
 		return
 	}
-	log.Debugf("Update %s with dial time %v", p.Label(), delta)
 	op.DialTime(delta, err)
 	if err == nil {
-		p.emaDialTime.UpdateDuration(delta)
+		p.emaLatency.UpdateDuration(delta)
+		log.Debugf("Update %s with dial time %v, result: %v", p.Label(), delta, p.emaLatency.GetDuration())
 	}
-}
-
-func (p *proxy) EMADialTime() time.Duration {
-	return p.emaDialTime.GetDuration()
 }
 
 func (p *proxy) EstLatency() time.Duration {
-	if p.preferred {
-		// For preferred proxies, return a really low value to make sure they get
-		// prioritized.
-		return 1 * time.Millisecond
-	}
 	return p.emaLatency.GetDuration()
 }
 

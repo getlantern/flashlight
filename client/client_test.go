@@ -269,10 +269,6 @@ func (d *testDialer) Dial(network, addr string) (net.Conn, error) {
 	return conn, err
 }
 
-func (d *testDialer) EMADialTime() time.Duration {
-	return 0
-}
-
 func (d *testDialer) EstLatency() time.Duration {
 	return d.latency
 }

@@ -55,10 +55,6 @@ type Dialer interface {
 	// Dial with this dialer
 	Dial(network, addr string) (net.Conn, error)
 
-	// EMADialTime is the exponential moving average app protocol dial time (e.g.
-	// https or obfs4) for successful dials.
-	EMADialTime() time.Duration
-
 	// EstLatency provides a latency estimate
 	EstLatency() time.Duration
 
@@ -351,7 +347,7 @@ func (b *Balancer) printStats(dialers sortedDialers) {
 	for _, d := range dialers {
 		estLatency := d.EstLatency().Seconds()
 		estBandwidth := d.EstBandwidth()
-		log.Debugf("%s  S: %4d / %4d (%d)\tF: %4d / %4d (%d)\tL: %5.0fms\tBW: %3.2fMbps\tDT: %5.0fms", d.JustifiedLabel(), d.Successes(), d.Attempts(), d.ConsecSuccesses(), d.Failures(), d.Attempts(), d.ConsecFailures(), estLatency*1000, estBandwidth, d.EMADialTime().Seconds()*1000)
+		log.Debugf("%s  S: %4d / %4d (%d)\tF: %4d / %4d (%d)\tL: %5.0fms\tBW: %3.2fMbps\t", d.JustifiedLabel(), d.Successes(), d.Attempts(), d.ConsecSuccesses(), d.Failures(), d.Attempts(), d.ConsecFailures(), estLatency*1000, estBandwidth)
 		host, _, _ := net.SplitHostPort(d.Addr())
 		// Report stats to borda
 		op := ops.Begin("proxy_rank").
