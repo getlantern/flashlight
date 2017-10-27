@@ -13,31 +13,23 @@ import redis_util as ru
 r = ru.redis_shell
 
 if len(sys.argv) != 2:
-    print "Usage: %s <ip>" % sys.argv[0]
+    print "Usage: %s <name or ip>" % sys.argv[0]
     sys.exit(1)
 
-ip = sys.argv[1]
+name_or_ip = sys.argv[1]
+if ipre.match(name_or_ip):
+    name = r.hget('srvip->server', name_or_ip)
+else:
+    name = name_or_ip
 
-# Allow caller to also input server names
-if not ipre.match(ip):
-    ip = r.hget('server->srvip', ip)
+cfgs = yaml.load(r.hget('server->config', name))
 
-try:
-    subprocess.check_call(["scp", "lantern@" + ip + ":access_data.json", "."])
-except subprocess.CalledProcessError:
-    print "Error copying access data from "+ip
-    sys.exit(1)
-except OSError:
-    print "Error running scp"
-    sys.exit(1)
-
-loaded = json.loads(open("access_data.json").read())
+print repr(cfgs)
 
 servers = {}
-
-for i, server in enumerate(loaded):
-    server["trusted"] = True
-    servers["server-"+str(i)] = server
+for i, cfg in enumerate(cfgs.values()):
+    cfg['trusted'] = True
+    servers['server-%s' % i] = cfg
 
 tmpdir = tempfile.mkdtemp()
 p = os.path.join(tmpdir, "proxies.yaml")
