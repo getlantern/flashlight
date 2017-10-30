@@ -265,7 +265,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 }
 
 // consecCounter is a counter that can extend on both directions. Its default
-// value is zero. Inc() sets it to -1 or adds it by 1; Dec() sets it to -1 or
+// value is zero. Inc() sets it to 1 or adds it by 1; Dec() sets it to -1 or
 // minus it by 1. When called concurrently, it may have an incorrect absolute
 // value, but always have the correct sign.
 type consecCounter struct {
