@@ -103,7 +103,7 @@ func TestServeHTTPTimeout(t *testing.T) {
 		return
 	}
 	assert.Contains(t, string(body), "<title>Lantern: Error Accessing Page</title>", "should respond with error page")
-	assert.Contains(t, string(body), "context deadline exceeded", "should be with context error")
+	assert.Contains(t, string(body), "Still unable to dial", "should be dial error")
 }
 
 func TestIsAddressProxyable(t *testing.T) {
@@ -253,17 +253,27 @@ func (d *testDialer) Trusted() bool {
 	return !d.untrusted
 }
 
-func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
-	return d.Dial(network, addr)
+func (d *testDialer) Dial(network, addr string) (net.Conn, error) {
+	return d.DialContext(context.Background(), network, addr)
 }
 
-func (d *testDialer) Dial(network, addr string) (net.Conn, error) {
+func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
 	var conn net.Conn
 	var err error
 	if !d.Succeeding() {
 		err = fmt.Errorf("Failing intentionally")
 	} else if network != "" {
-		conn, err = d.dial(network, addr)
+		chDone := make(chan bool)
+		go func() {
+			conn, err = d.dial(network, addr)
+			chDone <- true
+		}()
+		select {
+		case <-chDone:
+			return conn, err
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
 	}
 	atomic.AddInt64(&d.attempts, 1)
 	if err == nil {

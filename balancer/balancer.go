@@ -217,7 +217,7 @@ func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.C
 		}
 		return conn, nil
 	}
-	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", network, addr, i)
+	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", network, addr, i+1)
 }
 
 // OnActiveDialer returns the channel of the last dialer the balancer was using.
