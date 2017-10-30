@@ -192,8 +192,10 @@ func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, err
 	return conn, nil
 }
 
-func (p *proxy) dialInternal(ctx context.Context, network, addr string) (conn net.Conn, err error) {
+func (p *proxy) dialInternal(ctx context.Context, network, addr string) (net.Conn, error) {
 	chDone := make(chan bool)
+	var conn net.Conn
+	var err error
 	go func() {
 		defer func() { chDone <- true }()
 		conn, err = p.DialServer()
@@ -225,6 +227,7 @@ func (p *proxy) dialInternal(ctx context.Context, network, addr string) (conn ne
 		go func() {
 			<-chDone
 			if err == nil {
+				log.Debugf("Connection to %s established too late, closing", addr)
 				conn.Close()
 			}
 		}()

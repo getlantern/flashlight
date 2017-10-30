@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/getlantern/ema"
-	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog"
 )
@@ -22,8 +21,10 @@ const (
 	dialAttempts         = 3
 	connectivityRechecks = 3
 
-	// reasonable but slightly larger than the timeout of all dialers
-	initialTimeout = 1 * time.Minute
+	// max timeout to dial a proxy, so the balancer can have a chance to dial
+	// next proxy. It is slightly larger than the timeout to actually dial any
+	// proxy (10s), but smaller than the requestTimeout (20s).
+	maxDialTimeout = 11 * time.Second
 
 	evalDialersInterval = 10 * time.Second
 )
@@ -102,7 +103,8 @@ type Dialer interface {
 
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
-	lastDialTime                    int64 // not used anymore, but makes sure we're aligned on 64bit boundary
+	// not used anymore, but makes sure we're aligned on 64bit boundary
+	lastDialTime                    int64
 	nextTimeout                     *ema.EMA
 	mu                              sync.RWMutex
 	dialers                         sortedDialers
@@ -121,7 +123,7 @@ func New(dialers ...Dialer) *Balancer {
 	// dialers
 	hasSucceedingDialer := make(chan bool, 1000)
 	b := &Balancer{
-		nextTimeout:         ema.NewDuration(initialTimeout, 0.2),
+		nextTimeout:         ema.NewDuration(maxDialTimeout, 0.2),
 		closeCh:             make(chan bool),
 		onActiveDialer:      make(chan Dialer, 1),
 		hasSucceedingDialer: hasSucceedingDialer,
@@ -197,26 +199,25 @@ func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.C
 	if attempts > len(dialers) {
 		attempts = len(dialers)
 	}
-	for i := 0; i < attempts; i++ {
+	i := 0
+	for ; i < attempts; i++ {
 		d := dialers[i]
-		log.Tracef("Dialing %s://%s with %s", network, addr, d.Label())
-
-		conn, err := b.dialWithTimeout(d, ctx, network, addr)
+		conn, err := b.dialWithTimeout(i, d, ctx, network, addr)
 		if err != nil {
 			log.Errorf("Unable to dial via %v to %s://%s: %v on pass %v...continuing",
 				d.Label(), network, addr, err, i)
+			if ctx.Err() != nil {
+				break
+			}
 			continue
 		}
-		// Please leave this at Debug level, as it helps us understand performance
-		// issues caused by a poor proxy being selected.
-		log.Debugf("Successfully dialed via %v to %v://%v on pass %v", d.Label(), network, addr, i)
 		select {
 		case b.onActiveDialer <- d:
 		default:
 		}
 		return conn, nil
 	}
-	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", network, addr, dialAttempts)
+	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", network, addr, i)
 }
 
 // OnActiveDialer returns the channel of the last dialer the balancer was using.
@@ -225,45 +226,23 @@ func (b *Balancer) OnActiveDialer() <-chan Dialer {
 	return b.onActiveDialer
 }
 
-func (b *Balancer) dialWithTimeout(d Dialer, ctx context.Context, network, addr string) (net.Conn, error) {
-	limit := b.nextTimeout.GetDuration()
-	timer := time.NewTimer(limit)
-	var conn net.Conn
-	var err error
-	// to synchronize access of conn and err between outer and inner goroutine
-	chDone := make(chan bool)
-	t := time.Now()
-	ops.Go(func() {
-		conn, err = d.DialContext(ctx, network, addr)
-		if err == nil {
-			newTimeout := b.nextTimeout.UpdateDuration(3 * time.Since(t))
-			log.Tracef("Updated nextTimeout to %v", newTimeout)
-		}
-		chDone <- true
-	})
-	for {
-		select {
-		case _ = <-timer.C:
-			// give current dialer a chance to return/fail and other dialers to
-			// take part in.
-			if d.ConsecSuccesses() > 0 {
-				log.Debugf("Reset balancer dial timeout because dialer %s suddenly slows down", d.Label())
-				b.nextTimeout.SetDuration(initialTimeout)
-				timer.Reset(initialTimeout)
-				continue
-			}
-			// clean up
-			ops.Go(func() {
-				_ = <-chDone
-				if conn != nil {
-					_ = conn.Close()
-				}
-			})
-			return nil, errors.New("timeout").With("limit", limit)
-		case _ = <-chDone:
-			return conn, err
-		}
+func (b *Balancer) dialWithTimeout(pass int, d Dialer, ctx context.Context, network, addr string) (net.Conn, error) {
+	log.Tracef("Dialing %s://%s with %s on pass %v", network, addr, d.Label(), pass)
+	newCTX, cancel := context.WithTimeout(ctx, b.nextTimeout.GetDuration())
+	defer cancel()
+	start := time.Now()
+	conn, err := d.DialContext(newCTX, network, addr)
+	if err == nil {
+		// Please leave this at Debug level, as it helps us understand
+		// performance issues caused by a poor proxy being selected.
+		log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", d.Label(), network, addr, pass, time.Since(start))
+		newTimeout := b.nextTimeout.UpdateDuration(3 * time.Since(start))
+		log.Tracef("Updated nextTimeout to %v", newTimeout)
+	} else if ctx.Err() != nil {
+		log.Debugf("Reset balancer dial timeout to %v because dialer %s suddenly times out", maxDialTimeout, d.Label())
+		b.nextTimeout.SetDuration(maxDialTimeout)
 	}
+	return conn, err
 }
 
 func (b *Balancer) run() {
