@@ -3,6 +3,7 @@ package client
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -250,6 +251,10 @@ func (d *testDialer) Addr() string {
 
 func (d *testDialer) Trusted() bool {
 	return !d.untrusted
+}
+
+func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	return d.Dial(network, addr)
 }
 
 func (d *testDialer) Dial(network, addr string) (net.Conn, error) {

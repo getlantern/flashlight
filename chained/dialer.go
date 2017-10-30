@@ -194,7 +194,7 @@ func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, err
 
 func (p *proxy) dialInternal(ctx context.Context, network, addr string) (conn net.Conn, err error) {
 	chDone := make(chan bool)
-	ops.Go(func() {
+	go func() {
 		defer func() { chDone <- true }()
 		conn, err = p.DialServer()
 		if err != nil {
@@ -214,21 +214,20 @@ func (p *proxy) dialInternal(ctx context.Context, network, addr string) (conn ne
 		}
 		if err != nil {
 			conn.Close()
-			conn = nil
 			return
 		}
 		conn, err = p.withRateTracking(conn, addr), nil
-	})
+	}()
 	select {
 	case <-chDone:
 		return conn, err
 	case <-ctx.Done():
-		ops.Go(func() {
+		go func() {
 			<-chDone
-			if conn != nil {
+			if err == nil {
 				conn.Close()
 			}
-		})
+		}()
 		return nil, ctx.Err()
 	}
 }
