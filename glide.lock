@@ -1,5 +1,5 @@
 hash: c41a3297dbf12a6024489881323e642168418956258cab16915348729094a097
-updated: 2017-10-24T13:53:50.606903188-07:00
+updated: 2017-10-26T14:55:19.89574-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a3ad5df6c9e7dc8117f55958b4ce99bf1e0fe291
@@ -36,7 +36,7 @@ imports:
 - name: github.com/codahale/hdrhistogram
   version: 3a0bb77429bd3a61596f5e8a3172445844342120
 - name: github.com/davecgh/go-spew
-  version: ecdeabc65495df2dec95d7c4a4c3e021903035e5
+  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
   subpackages:
   - spew
 - name: github.com/dchest/siphash
@@ -56,7 +56,7 @@ imports:
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda
-  version: ecfdb08805a36e956b869497c0d54a6a8918076f
+  version: 84de698fcc198edb239863a021f5772d3a5d00bb
   subpackages:
   - client
 - name: github.com/getlantern/buuid
@@ -66,7 +66,7 @@ imports:
 - name: github.com/getlantern/byteexec
   version: 4cfb26ec74f460fda433dc06fddfbad7ddee3072
 - name: github.com/getlantern/bytemap
-  version: 807aefefeb0978ae9572ddfe7ec99b68f3da03e2
+  version: ae8427dbf355130b32e5261c108917a630f7c36c
 - name: github.com/getlantern/checkfallbacks
   version: 516c0a6997fda7de4e63c771ba6c7c67b1ace811
 - name: github.com/getlantern/cmux
@@ -117,7 +117,7 @@ imports:
   - check
   - download
 - name: github.com/getlantern/goexpr
-  version: 51b3f384ecc855786e02d1ee391ca1c4aceba52e
+  version: 14f9f25038c8aeacad7093dc892c47b514a4ddc9
   subpackages:
   - geo
   - isp
@@ -140,7 +140,7 @@ imports:
   - proxyfilters
   - server
 - name: github.com/getlantern/http-proxy-lantern
-  version: 4de7d46e93448246d4f0fa5d9cfd25b82fe7395b
+  version: eb85aec6dab40e7140d4718f9ac27a39962bda8c
   subpackages:
   - analytics
   - bbr
@@ -190,6 +190,10 @@ imports:
   version: 0582bf799783fba9a890459155817f1cbcf00f17
 - name: github.com/getlantern/mockconn
   version: 422a5afd4432dd82b1389333d5352da003d898a6
+- name: github.com/getlantern/msgpack
+  version: 922e6dcf94043edab4e690df4aa2016117f92fb7
+  subpackages:
+  - codes
 - name: github.com/getlantern/mtime
   version: ba114e4a82b0d453c15c505073a5896453b5cbd2
 - name: github.com/getlantern/netx
@@ -267,7 +271,7 @@ imports:
 - name: github.com/getlantern/yaml
   version: 97d86b60f57eeca9d70c02763ed2565bafc17585
 - name: github.com/getlantern/zenodb
-  version: d428da4ddd0ef13ccc74cfe852d3bca883366e14
+  version: 705c495333ae5d36c94da243836d4b5833c6630b
   subpackages:
   - bytetree
   - common
@@ -291,7 +295,10 @@ imports:
   version: 1643683e1b54a9e88ad26d98f81400c8c9d9f4f9
   subpackages:
   - proto
+  - ptypes
   - ptypes/any
+  - ptypes/duration
+  - ptypes/timestamp
 - name: github.com/golang/snappy
   version: 553a641470496b2327abcac10b36396bd98e45c9
 - name: github.com/gorilla/context
@@ -386,7 +393,7 @@ imports:
   subpackages:
   - uaparser
 - name: github.com/stripe/stripe-go
-  version: db83a9430ef56f9a8851291adf4d131a72c65d5a
+  version: 3cb5b5a4024ec6ee09f563687c434dd85ee89b63
   subpackages:
   - form
   - orderitem
@@ -416,7 +423,7 @@ imports:
 - name: github.com/vulcand/predicate
   version: 939c094524d124c55fa8afe0e077701db4a865e2
 - name: github.com/Workiva/go-datastructures
-  version: e740680cc77dafd9615b25918b39f4a0ef5ab955
+  version: e47d01bc9eaf75e75e0f250e221dcb7533c7a1b8
   subpackages:
   - trie/yfast
 - name: github.com/xtaci/smux
@@ -468,7 +475,7 @@ imports:
   - google
   - jwt
 - name: golang.org/x/sys
-  version: a1a1f1746d156bbc9954f29134b20ed4ce2752f1
+  version: 3e3646d2c706c21b222a5dbcaa6db12b3e0cc765
   repo: https://github.com/golang/sys
   vcs: git
   subpackages:
@@ -500,17 +507,23 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: 3c33c26290b747350f8650c7d38bcc51b42dc785
+  version: 0d399e6307b06024368bb2624572e1271c6eda3d
   subpackages:
+  - balancer
+  - balancer/roundrobin
   - codes
+  - connectivity
   - credentials
-  - grpclb/grpc_lb_v1
+  - grpclb/grpc_lb_v1/messages
   - grpclog
   - internal
   - keepalive
   - metadata
   - naming
   - peer
+  - resolver
+  - resolver/dns
+  - resolver/passthrough
   - stats
   - status
   - tap
@@ -527,10 +540,6 @@ imports:
   - internal/hashtag
   - internal/pool
   - internal/proto
-- name: gopkg.in/vmihailenco/msgpack.v2
-  version: f4f8982de4ef0de18be76456617cc3f5d8d8141e
-  subpackages:
-  - codes
 - name: gopkg.in/yaml.v2
   version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
 testImports:
@@ -538,10 +547,6 @@ testImports:
   version: 9a5594c63329cf77582eccae41a8a75240a078fe
 - name: github.com/getlantern/httptest
   version: 4b40f4c7e590b2afa94729ca7f738e0b14b13749
-- name: github.com/getlantern/kcptun
-  version: f8fd1940bcc36ef5e33799d9e8947e7864474c76
-  subpackages:
-  - server/lib
 - name: github.com/getlantern/tcpinfo
   version: c475b171ec955019a7906187bf6f4011d7d791fe
 - name: github.com/getlantern/tlsredis
@@ -586,5 +591,3 @@ testImports:
   version: 2aa2c176b9dab406a6970f6a55f513e8a8c8b18f
   subpackages:
   - assert
-- name: github.com/xtaci/kcp-go
-  version: 21da33a6696d67c1bffb3c954366499d613097a6
