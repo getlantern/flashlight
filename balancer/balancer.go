@@ -12,7 +12,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/ema"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog"
 )
@@ -105,7 +104,6 @@ type Dialer interface {
 type Balancer struct {
 	// not used anymore, but makes sure we're aligned on 64bit boundary
 	lastDialTime                    int64
-	nextTimeout                     *ema.EMA
 	mu                              sync.RWMutex
 	dialers                         sortedDialers
 	trusted                         sortedDialers
@@ -123,7 +121,6 @@ func New(dialers ...Dialer) *Balancer {
 	// dialers
 	hasSucceedingDialer := make(chan bool, 1000)
 	b := &Balancer{
-		nextTimeout:         ema.NewDuration(maxDialTimeout, 0.2),
 		closeCh:             make(chan bool),
 		onActiveDialer:      make(chan Dialer, 1),
 		hasSucceedingDialer: hasSucceedingDialer,
@@ -228,7 +225,8 @@ func (b *Balancer) OnActiveDialer() <-chan Dialer {
 
 func (b *Balancer) dialWithTimeout(pass int, d Dialer, ctx context.Context, network, addr string) (net.Conn, error) {
 	log.Tracef("Dialing %s://%s with %s on pass %v", network, addr, d.Label(), pass)
-	newCTX, cancel := context.WithTimeout(ctx, b.nextTimeout.GetDuration())
+	// caps the context deadline to maxDialTimeout
+	newCTX, cancel := context.WithTimeout(ctx, maxDialTimeout)
 	defer cancel()
 	start := time.Now()
 	conn, err := d.DialContext(newCTX, network, addr)
@@ -236,11 +234,6 @@ func (b *Balancer) dialWithTimeout(pass int, d Dialer, ctx context.Context, netw
 		// Please leave this at Debug level, as it helps us understand
 		// performance issues caused by a poor proxy being selected.
 		log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", d.Label(), network, addr, pass, time.Since(start))
-		newTimeout := b.nextTimeout.UpdateDuration(3 * time.Since(start))
-		log.Tracef("Updated nextTimeout to %v", newTimeout)
-	} else if ctx.Err() != nil {
-		log.Debugf("Reset balancer dial timeout to %v because dialer %s suddenly times out", maxDialTimeout, d.Label())
-		b.nextTimeout.SetDuration(maxDialTimeout)
 	}
 	return conn, err
 }
