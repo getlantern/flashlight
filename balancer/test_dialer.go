@@ -1,6 +1,7 @@
 package balancer
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"sync/atomic"
@@ -47,12 +48,19 @@ func (d *testDialer) Trusted() bool {
 }
 
 func (d *testDialer) Dial(network, addr string) (net.Conn, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
+	defer cancel()
+	return d.DialContext(ctx, network, addr)
+}
+
+func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
 	var conn net.Conn
 	var err error
 	if !d.Succeeding() {
 		err = fmt.Errorf("Failing intentionally")
 	} else if network != "" {
-		conn, err = net.DialTimeout(network, addr, 250*time.Millisecond)
+		var d net.Dialer
+		conn, err = d.DialContext(ctx, network, addr)
 	}
 	atomic.AddInt64(&d.attempts, 1)
 	if err == nil {

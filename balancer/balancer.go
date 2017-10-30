@@ -3,6 +3,7 @@
 package balancer
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"net"
@@ -54,6 +55,9 @@ type Dialer interface {
 
 	// Dial with this dialer
 	Dial(network, addr string) (net.Conn, error)
+
+	// Dial with this dialer using the provided context
+	DialContext(ctx context.Context, network, addr string) (net.Conn, error)
 
 	// EstLatency provides a latency estimate
 	EstLatency() time.Duration
@@ -171,6 +175,11 @@ func (b *Balancer) ForceRedial() {
 // either manages to connect, or runs out of dialers in which case it returns an
 // error.
 func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
+	return b.DialContext(context.Background(), network, addr)
+}
+
+// DialContext is same as Dial but uses the provided context.
+func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
 	trustedOnly := false
 	_, port, _ := net.SplitHostPort(addr)
 	// We try to identify HTTP traffic (as opposed to HTTPS) by port and only
@@ -192,9 +201,10 @@ func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 		d := dialers[i]
 		log.Tracef("Dialing %s://%s with %s", network, addr, d.Label())
 
-		conn, err := b.dialWithTimeout(d, network, addr)
+		conn, err := b.dialWithTimeout(d, ctx, network, addr)
 		if err != nil {
-			log.Error(errors.New("Unable to dial via %v to %s://%s: %v on pass %v...continuing", d.Label(), network, addr, err, i))
+			log.Errorf("Unable to dial via %v to %s://%s: %v on pass %v...continuing",
+				d.Label(), network, addr, err, i)
 			continue
 		}
 		// Please leave this at Debug level, as it helps us understand performance
@@ -215,7 +225,7 @@ func (b *Balancer) OnActiveDialer() <-chan Dialer {
 	return b.onActiveDialer
 }
 
-func (b *Balancer) dialWithTimeout(d Dialer, network, addr string) (net.Conn, error) {
+func (b *Balancer) dialWithTimeout(d Dialer, ctx context.Context, network, addr string) (net.Conn, error) {
 	limit := b.nextTimeout.GetDuration()
 	timer := time.NewTimer(limit)
 	var conn net.Conn
@@ -224,7 +234,7 @@ func (b *Balancer) dialWithTimeout(d Dialer, network, addr string) (net.Conn, er
 	chDone := make(chan bool)
 	t := time.Now()
 	ops.Go(func() {
-		conn, err = d.Dial(network, addr)
+		conn, err = d.DialContext(ctx, network, addr)
 		if err == nil {
 			newTimeout := b.nextTimeout.UpdateDuration(3 * time.Since(t))
 			log.Tracef("Updated nextTimeout to %v", newTimeout)

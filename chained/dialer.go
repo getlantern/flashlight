@@ -2,6 +2,7 @@ package chained
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -130,7 +131,12 @@ func (p *proxy) Succeeding() bool {
 
 // Dial is a net.Dial-compatible function.
 func (p *proxy) Dial(network, addr string) (net.Conn, error) {
-	conn, err := p.doDial(network, addr)
+	return p.DialContext(context.Background(), network, addr)
+}
+
+// DialContext dials using provided context
+func (p *proxy) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	conn, err := p.doDial(ctx, network, addr)
 	if err != nil {
 		if err != errUpstream {
 			p.markFailure()
@@ -168,14 +174,14 @@ func (p *proxy) doMarkFailure() int64 {
 	return newCF
 }
 
-func (p *proxy) doDial(network, addr string) (net.Conn, error) {
+func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, error) {
 	var conn net.Conn
 	var err error
 
 	op := ops.Begin("dial_for_balancer").ProxyType(ops.ProxyChained).ProxyAddr(p.addr)
 	defer op.End()
 
-	conn, err = p.dialInternal(network, addr)
+	conn, err = p.dialInternal(ctx, network, addr)
 
 	if err != nil {
 		return nil, op.FailIf(err)
@@ -186,27 +192,45 @@ func (p *proxy) doDial(network, addr string) (net.Conn, error) {
 	return conn, nil
 }
 
-func (p *proxy) dialInternal(network, addr string) (net.Conn, error) {
-	conn, err := p.DialServer()
-	if err != nil {
-		return nil, errors.New("Unable to dial server %v: %s", p.Label(), err)
+func (p *proxy) dialInternal(ctx context.Context, network, addr string) (conn net.Conn, err error) {
+	chDone := make(chan bool)
+	ops.Go(func() {
+		defer func() { chDone <- true }()
+		conn, err = p.DialServer()
+		if err != nil {
+			conn, err = nil, errors.New("Unable to dial server %v: %s", p.Label(), err)
+			return
+		}
+		// Look for our special hacked "connect" transport used to signal
+		// that we should send a CONNECT request and tunnel all traffic through
+		// that.
+		switch network {
+		case "connect":
+			log.Tracef("Sending CONNECT request")
+			err = p.sendCONNECT(addr, conn)
+		case "persistent":
+			log.Tracef("Sending GET request to establish persistent HTTP connection")
+			err = p.initPersistentConnection(addr, conn)
+		}
+		if err != nil {
+			conn.Close()
+			conn = nil
+			return
+		}
+		conn, err = p.withRateTracking(conn, addr), nil
+	})
+	select {
+	case <-chDone:
+		return conn, err
+	case <-ctx.Done():
+		ops.Go(func() {
+			<-chDone
+			if conn != nil {
+				conn.Close()
+			}
+		})
+		return nil, ctx.Err()
 	}
-	// Look for our special hacked "connect" transport used to signal
-	// that we should send a CONNECT request and tunnel all traffic through
-	// that.
-	switch network {
-	case "connect":
-		log.Tracef("Sending CONNECT request")
-		err = p.sendCONNECT(addr, conn)
-	case "persistent":
-		log.Tracef("Sending GET request to establish persistent HTTP connection")
-		err = p.initPersistentConnection(addr, conn)
-	}
-	if err != nil {
-		conn.Close()
-		return nil, err
-	}
-	return p.withRateTracking(conn, addr), nil
 }
 
 func (p *proxy) onRequest(req *http.Request) {
