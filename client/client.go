@@ -22,11 +22,13 @@ import (
 	"github.com/getlantern/easylist"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
+	"github.com/getlantern/fronted"
 	"github.com/getlantern/go-socks5"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
 	"github.com/getlantern/httpseverywhere"
 	"github.com/getlantern/iptool"
+	"github.com/getlantern/mitm"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 	"github.com/getlantern/proxy/filters"
@@ -84,7 +86,8 @@ type Client struct {
 	// Balanced CONNECT dialers.
 	bal *balancer.Balancer
 
-	proxy proxy.Proxy
+	proxy        proxy.Proxy
+	frontedProxy atomic.Value
 
 	l net.Listener
 
@@ -129,6 +132,7 @@ func NewClient(
 	if err != nil {
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
+
 	client := &Client{
 		bal:               balancer.New(),
 		disconnected:      disconnected,
@@ -147,13 +151,38 @@ func NewClient(
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
 
-	client.proxy = proxy.New(&proxy.Opts{
+	var mitmErr error
+	client.proxy, mitmErr = proxy.New(&proxy.Opts{
 		IdleTimeout:  keepAliveIdleTimeout,
 		BufferSource: buffers.Pool,
 		Filter:       filters.FilterFunc(client.filter),
 		OnError:      errorResponse,
 		Dial:         client.dial,
+		MITMOpts: &mitm.Opts{
+			PKFile:       filepath.Join(appdir.General("Lantern"), "mitmkey.pem"),
+			CertFile:     filepath.Join(appdir.General("Lantern"), "mitmcert.pem"),
+			Organization: "Lantern",
+			CommonName:   "lantern",
+			InstallCert:  true,
+		},
 	})
+	if mitmErr != nil {
+		log.Error(mitmErr)
+	}
+
+	go func() {
+		// We do this in a goroutine because at this point, fronted.Configure hasn't
+		// been called yet so we don't want to block on waiting for fronted.
+		log.Debug("Getting fronting proxy")
+		frontedProxy, ok := fronted.NewProxyingAt("d100fjyl3713ch.cloudfront.net", 5*time.Minute)
+		if !ok {
+			log.Error("Unable to get fronted proxy")
+		} else {
+			log.Debug("Using fronting proxy")
+			client.frontedProxy.Store(frontedProxy)
+		}
+	}()
+
 	if adBlockingAllowed() {
 		client.initEasyList()
 	} else {
