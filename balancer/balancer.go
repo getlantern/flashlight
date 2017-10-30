@@ -21,9 +21,9 @@ const (
 	dialAttempts         = 3
 	connectivityRechecks = 3
 
-	// max timeout to dial a proxy, so the balancer can have a chance to dial
-	// next proxy. It is slightly larger than the timeout to actually dial any
-	// proxy (10s), but smaller than the requestTimeout (20s).
+	// The max timeout to dial a proxy, so the balancer has the chance to dial
+	// next one. It is slightly larger than the timeout to actually dial any
+	// proxy (10s), but smaller than the timeout to handle user request (20s).
 	maxDialTimeout = 11 * time.Second
 
 	evalDialersInterval = 10 * time.Second
