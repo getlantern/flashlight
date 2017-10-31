@@ -49,6 +49,10 @@ type clientChannels struct {
 // messages for this UIChannel. The given onConnect function is called anytime
 // that the UI connects.
 func newClients(onConnect ConnectFunc) *clientChannels {
+	if onConnect == nil {
+		onConnect = func(chan<- []byte) {}
+	}
+
 	in := make(chan []byte, 100)
 	out := make(chan []byte)
 	c := &clientChannels{
@@ -91,17 +95,16 @@ func (c *clientChannels) ServeHTTP(resp http.ResponseWriter, req *http.Request) 
 	c.muConns.Lock()
 	c.nextId++
 	conn := &wsconn{
-		id:  c.nextId,
-		c:   c,
-		ws:  ws,
-		out: make(chan []byte, 1000),
+		id:         c.nextId,
+		c:          c,
+		ws:         ws,
+		connectOut: make(chan []byte, 1000),
+		out:        make(chan []byte, 1000),
 	}
 	c.conns[conn.id] = conn
 	c.muConns.Unlock()
 
-	if c.onConnect != nil {
-		c.onConnect(conn.out)
-	}
+	c.onConnect(conn.connectOut)
 	go conn.write()
 
 	log.Tracef("About to read from websocket connection")
@@ -166,17 +169,13 @@ func (c *clientChannels) doRemoveConn(conn *wsconn) {
 	delete(c.conns, conn.id)
 }
 
-func (c *clientChannels) Close() {
-	log.Debugf("Closing channel")
-	close(c.out)
-}
-
 // wsconn ties a websocket.Conn to a clientChannels
 type wsconn struct {
-	id  int
-	c   *clientChannels
-	ws  *websocket.Conn
-	out chan []byte
+	id         int
+	c          *clientChannels
+	ws         *websocket.Conn
+	connectOut chan []byte
+	out        chan []byte
 }
 
 func (c *wsconn) read() {
@@ -195,12 +194,29 @@ func (c *wsconn) read() {
 }
 
 func (c *wsconn) write() {
-	for msg := range c.out {
-		err := c.ws.WriteMessage(websocket.TextMessage, msg)
-		if err != nil {
-			log.Debugf("Error writing to WebSocket, closing: %v", err)
-			c.c.connsToRemove <- c
-			return
+	for {
+		select {
+		case msg := <-c.connectOut:
+			if !c.doWrite(msg) {
+				return
+			}
+		case msg, ok := <-c.out:
+			if !ok {
+				return
+			}
+			if !c.doWrite(msg) {
+				return
+			}
 		}
 	}
+}
+
+func (c *wsconn) doWrite(msg []byte) bool {
+	err := c.ws.WriteMessage(websocket.TextMessage, msg)
+	if err != nil {
+		log.Debugf("Error writing to WebSocket, closing: %v", err)
+		c.c.connsToRemove <- c
+		return false
+	}
+	return true
 }
