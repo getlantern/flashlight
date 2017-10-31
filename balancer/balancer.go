@@ -3,6 +3,7 @@
 package balancer
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"net"
@@ -11,8 +12,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/ema"
-	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog"
 )
@@ -21,8 +20,10 @@ const (
 	dialAttempts         = 3
 	connectivityRechecks = 3
 
-	// reasonable but slightly larger than the timeout of all dialers
-	initialTimeout = 1 * time.Minute
+	// The max timeout to dial a proxy, so the balancer has the chance to dial
+	// next one. It is slightly larger than the timeout to actually dial any
+	// proxy (10s), but smaller than the timeout to handle user request (20s).
+	maxDialTimeout = 11 * time.Second
 
 	evalDialersInterval = 10 * time.Second
 )
@@ -55,9 +56,8 @@ type Dialer interface {
 	// Dial with this dialer
 	Dial(network, addr string) (net.Conn, error)
 
-	// EMADialTime is the exponential moving average app protocol dial time (e.g.
-	// https or obfs4) for successful dials.
-	EMADialTime() time.Duration
+	// Dial with this dialer using the provided context
+	DialContext(ctx context.Context, network, addr string) (net.Conn, error)
 
 	// EstLatency provides a latency estimate
 	EstLatency() time.Duration
@@ -102,11 +102,9 @@ type Dialer interface {
 
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
-	lastDialTime                    int64 // not used anymore, but makes sure we're aligned on 64bit boundary
-	nextTimeout                     *ema.EMA
 	mu                              sync.RWMutex
-	dialers                         SortedDialers
-	trusted                         SortedDialers
+	dialers                         sortedDialers
+	trusted                         sortedDialers
 	closeCh                         chan bool
 	onActiveDialer                  chan Dialer
 	priorTopDialer                  Dialer
@@ -121,7 +119,6 @@ func New(dialers ...Dialer) *Balancer {
 	// dialers
 	hasSucceedingDialer := make(chan bool, 1000)
 	b := &Balancer{
-		nextTimeout:         ema.NewDuration(initialTimeout, 0.2),
 		closeCh:             make(chan bool),
 		onActiveDialer:      make(chan Dialer, 1),
 		hasSucceedingDialer: hasSucceedingDialer,
@@ -136,7 +133,7 @@ func New(dialers ...Dialer) *Balancer {
 // Reset closes existing dialers and replaces them with new ones.
 func (b *Balancer) Reset(dialers ...Dialer) {
 	log.Debugf("Resetting with %d dialers", len(dialers))
-	dls := make(SortedDialers, len(dialers))
+	dls := make(sortedDialers, len(dialers))
 	copy(dls, dialers)
 
 	b.mu.Lock()
@@ -175,6 +172,11 @@ func (b *Balancer) ForceRedial() {
 // either manages to connect, or runs out of dialers in which case it returns an
 // error.
 func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
+	return b.DialContext(context.Background(), network, addr)
+}
+
+// DialContext is same as Dial but uses the provided context.
+func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
 	trustedOnly := false
 	_, port, _ := net.SplitHostPort(addr)
 	// We try to identify HTTP traffic (as opposed to HTTPS) by port and only
@@ -192,25 +194,25 @@ func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 	if attempts > len(dialers) {
 		attempts = len(dialers)
 	}
-	for i := 0; i < attempts; i++ {
+	i := 0
+	for ; i < attempts; i++ {
 		d := dialers[i]
-		log.Tracef("Dialing %s://%s with %s", network, addr, d.Label())
-
-		conn, err := b.dialWithTimeout(d, network, addr)
+		conn, err := b.dialWithTimeout(i, d, ctx, network, addr)
 		if err != nil {
-			log.Error(errors.New("Unable to dial via %v to %s://%s: %v on pass %v...continuing", d.Label(), network, addr, err, i))
+			log.Errorf("Unable to dial via %v to %s://%s: %v on pass %v...continuing",
+				d.Label(), network, addr, err, i)
+			if ctx.Err() != nil {
+				break
+			}
 			continue
 		}
-		// Please leave this at Debug level, as it helps us understand performance
-		// issues caused by a poor proxy being selected.
-		log.Debugf("Successfully dialed via %v to %v://%v on pass %v", d.Label(), network, addr, i)
 		select {
 		case b.onActiveDialer <- d:
 		default:
 		}
 		return conn, nil
 	}
-	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", network, addr, dialAttempts)
+	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", network, addr, i+1)
 }
 
 // OnActiveDialer returns the channel of the last dialer the balancer was using.
@@ -219,45 +221,19 @@ func (b *Balancer) OnActiveDialer() <-chan Dialer {
 	return b.onActiveDialer
 }
 
-func (b *Balancer) dialWithTimeout(d Dialer, network, addr string) (net.Conn, error) {
-	limit := b.nextTimeout.GetDuration()
-	timer := time.NewTimer(limit)
-	var conn net.Conn
-	var err error
-	// to synchronize access of conn and err between outer and inner goroutine
-	chDone := make(chan bool)
-	t := time.Now()
-	ops.Go(func() {
-		conn, err = d.Dial(network, addr)
-		if err == nil {
-			newTimeout := b.nextTimeout.UpdateDuration(3 * time.Since(t))
-			log.Tracef("Updated nextTimeout to %v", newTimeout)
-		}
-		chDone <- true
-	})
-	for {
-		select {
-		case _ = <-timer.C:
-			// give current dialer a chance to return/fail and other dialers to
-			// take part in.
-			if d.ConsecSuccesses() > 0 {
-				log.Debugf("Reset balancer dial timeout because dialer %s suddenly slows down", d.Label())
-				b.nextTimeout.SetDuration(initialTimeout)
-				timer.Reset(initialTimeout)
-				continue
-			}
-			// clean up
-			ops.Go(func() {
-				_ = <-chDone
-				if conn != nil {
-					_ = conn.Close()
-				}
-			})
-			return nil, errors.New("timeout").With("limit", limit)
-		case _ = <-chDone:
-			return conn, err
-		}
+func (b *Balancer) dialWithTimeout(pass int, d Dialer, ctx context.Context, network, addr string) (net.Conn, error) {
+	log.Tracef("Dialing %s://%s with %s on pass %v", network, addr, d.Label(), pass)
+	// caps the context deadline to maxDialTimeout
+	newCTX, cancel := context.WithTimeout(ctx, maxDialTimeout)
+	defer cancel()
+	start := time.Now()
+	conn, err := d.DialContext(newCTX, network, addr)
+	if err == nil {
+		// Please leave this at Debug level, as it helps us understand
+		// performance issues caused by a poor proxy being selected.
+		log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", d.Label(), network, addr, pass, time.Since(start))
 	}
+	return conn, err
 }
 
 func (b *Balancer) run() {
@@ -313,7 +289,7 @@ func (b *Balancer) evalDialers() {
 	b.bandwidthKnownForPriorTopDialer = bandwidthKnownForNewTopDialer
 }
 
-func checkConnectivityForAll(dialers SortedDialers) {
+func checkConnectivityForAll(dialers sortedDialers) {
 	var wg sync.WaitGroup
 	wg.Add(len(dialers))
 	for _, _d := range dialers {
@@ -345,13 +321,13 @@ func (b *Balancer) Close() {
 	}
 }
 
-func (b *Balancer) printStats(dialers SortedDialers) {
+func (b *Balancer) printStats(dialers sortedDialers) {
 	log.Debug("-------------------------- Dialer Stats -----------------------")
 	rank := float64(1)
 	for _, d := range dialers {
 		estLatency := d.EstLatency().Seconds()
 		estBandwidth := d.EstBandwidth()
-		log.Debugf("%s  S: %4d / %4d (%d)\tF: %4d / %4d (%d)\tL: %5.0fms\tBW: %3.2fMbps\tDT: %5.0fms", d.JustifiedLabel(), d.Successes(), d.Attempts(), d.ConsecSuccesses(), d.Failures(), d.Attempts(), d.ConsecFailures(), estLatency*1000, estBandwidth, d.EMADialTime().Seconds()*1000)
+		log.Debugf("%s  S: %4d / %4d (%d)\tF: %4d / %4d (%d)\tL: %5.0fms\tBW: %3.2fMbps\t", d.JustifiedLabel(), d.Successes(), d.Attempts(), d.ConsecSuccesses(), d.Failures(), d.Attempts(), d.ConsecFailures(), estLatency*1000, estBandwidth)
 		host, _, _ := net.SplitHostPort(d.Addr())
 		// Report stats to borda
 		op := ops.Begin("proxy_rank").
@@ -409,11 +385,11 @@ func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, error) {
 	return dialers, nil
 }
 
-func (b *Balancer) copyOfDialers() SortedDialers {
+func (b *Balancer) copyOfDialers() sortedDialers {
 	b.mu.RLock()
 	_dialers := b.dialers
 	b.mu.RUnlock()
-	dialers := make(SortedDialers, len(_dialers))
+	dialers := make(sortedDialers, len(_dialers))
 	copy(dialers, _dialers)
 	return dialers
 }
@@ -422,7 +398,7 @@ func (b *Balancer) sortDialers() {
 	dialers := b.copyOfDialers()
 	sort.Sort(dialers)
 
-	trusted := make(SortedDialers, 0, len(dialers))
+	trusted := make(sortedDialers, 0, len(dialers))
 	for _, d := range dialers {
 		if d.Trusted() {
 			trusted = append(trusted, d)
@@ -454,15 +430,21 @@ func (b *Balancer) lookForSucceedingDialer(dialers []Dialer) {
 	}
 }
 
-type SortedDialers []Dialer
+func SortDialers(dialers []Dialer) []Dialer {
+	sorted := sortedDialers(dialers)
+	sort.Sort(sorted)
+	return sorted
+}
 
-func (d SortedDialers) Len() int { return len(d) }
+type sortedDialers []Dialer
 
-func (d SortedDialers) Swap(i, j int) {
+func (d sortedDialers) Len() int { return len(d) }
+
+func (d sortedDialers) Swap(i, j int) {
 	d[i], d[j] = d[j], d[i]
 }
 
-func (d SortedDialers) Less(i, j int) bool {
+func (d sortedDialers) Less(i, j int) bool {
 	a, b := d[i], d[j]
 
 	// Prefer the succeeding proxy

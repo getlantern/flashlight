@@ -94,7 +94,7 @@ func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken f
 		defer op.End()
 		elapsed := mtime.Stopwatch()
 		conn, err := p.tcpDial(op)(chainedDialTimeout)
-		p.dialTime(op, elapsed, err)
+		op.DialTime(elapsed(), err)
 		return conn, op.FailIf(err)
 	})
 }
@@ -118,7 +118,7 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 				ClientSessionCache: sessionCache,
 				InsecureSkipVerify: true,
 			})
-		p.dialTime(op, elapsed, err)
+		op.DialTime(elapsed(), err)
 		if err != nil {
 			return nil, op.FailIf(err)
 		}
@@ -174,7 +174,7 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 		}
 		// The proxy it wrapped already has timeout applied.
 		conn, err := cf.Dial("tcp", p.addr, dialFn, args)
-		p.dialTime(op, elapsed, err)
+		op.DialTime(elapsed(), err)
 		return overheadWrapper(true)(conn, op.FailIf(err))
 	})
 }
@@ -239,10 +239,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 			}
 			return conn, err
 		})
-		// note - because lampshade is multiplexed, this dial time will often be
-		// lower than other protocols since there's often nothing to be done for
-		// opening up a new multiplexed connection.
-		p.dialTime(op, elapsed, err)
+		op.DialTime(elapsed(), err)
 		return overheadWrapper(true)(conn, op.FailIf(err))
 	}
 
@@ -256,13 +253,43 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 			for {
 				time.Sleep(pingInterval * 2)
 				ttfa := dialer.EMARTT()
-				p.emaLatency.SetDuration(ttfa)
-				log.Debugf("%v EMA RTT: %v", p.Label(), ttfa)
+				if ttfa > 0 {
+					p.emaLatency.SetDuration(ttfa)
+					log.Debugf("%v EMA RTT: %v", p.Label(), ttfa)
+				}
 			}
 		}()
 	}
 
 	return p, nil
+}
+
+// consecCounter is a counter that can extend on both directions. Its default
+// value is zero. Inc() sets it to 1 or adds it by 1; Dec() sets it to -1 or
+// minus it by 1. When called concurrently, it may have an incorrect absolute
+// value, but always have the correct sign.
+type consecCounter struct {
+	v int64
+}
+
+func (c *consecCounter) Inc() {
+	if v := atomic.LoadInt64(&c.v); v <= 0 {
+		atomic.StoreInt64(&c.v, 1)
+	} else {
+		atomic.StoreInt64(&c.v, v+1)
+	}
+}
+
+func (c *consecCounter) Dec() {
+	if v := atomic.LoadInt64(&c.v); v >= 0 {
+		atomic.StoreInt64(&c.v, -1)
+	} else {
+		atomic.StoreInt64(&c.v, v-1)
+	}
+}
+
+func (c *consecCounter) Get() int64 {
+	return atomic.LoadInt64(&c.v)
 }
 
 type proxy struct {
@@ -273,8 +300,8 @@ type proxy struct {
 	consecSuccesses   int64
 	failures          int64
 	consecFailures    int64
+	consecRWSuccesses consecCounter
 	abe               int64 // Mbps scaled by 1000
-	bbrResetRequired  int64
 	name              string
 	protocol          string
 	network           string
@@ -285,7 +312,6 @@ type proxy struct {
 	trusted           bool
 	preferred         bool
 	dialServer        func(*proxy) (net.Conn, error)
-	emaDialTime       *ema.EMA
 	emaLatency        *ema.EMA
 	kcpConfig         *KCPConfig
 	forceRedial       *abool.AtomicBool
@@ -298,33 +324,27 @@ type proxy struct {
 
 func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(*proxy) (net.Conn, error)) (*proxy, error) {
 	p := &proxy{
-		name:             name,
-		protocol:         protocol,
-		network:          network,
-		addr:             addr,
-		authToken:        s.AuthToken,
-		deviceID:         deviceID,
-		proToken:         proToken,
-		trusted:          trusted,
-		dialServer:       dialServer,
-		emaDialTime:      ema.NewDuration(0, 0.8),
-		emaLatency:       ema.NewDuration(0, 0.8),
-		bbrResetRequired: 1, // reset on every start
-		forceRecheckCh:   make(chan bool, 1),
-		forceRedial:      abool.New(),
-		closeCh:          make(chan bool, 1),
-		consecSuccesses:  1, // be optimistic
+		name:            name,
+		protocol:        protocol,
+		network:         network,
+		addr:            addr,
+		authToken:       s.AuthToken,
+		deviceID:        deviceID,
+		proToken:        proToken,
+		trusted:         trusted,
+		dialServer:      dialServer,
+		emaLatency:      ema.NewDuration(0, 0.8),
+		forceRecheckCh:  make(chan bool, 1),
+		forceRedial:     abool.New(),
+		closeCh:         make(chan bool, 1),
+		consecSuccesses: 1, // be optimistic
 	}
 
 	p.dialCore = func(timeout time.Duration) (net.Conn, time.Duration, error) {
 		elapsed := mtime.Stopwatch()
 		conn, err := netx.DialTimeout("tcp", p.addr, timeout)
 		delta := elapsed()
-		if err == nil {
-			p.mx.Lock()
-			p.emaLatency.UpdateDuration(delta)
-			p.mx.Unlock()
-		}
+		p.updateLatency(delta, err)
 		return conn, delta, err
 	}
 
@@ -372,7 +392,9 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 		dialKCPMutex.Unlock()
 
 		conn, err := doDialKCP(ctx, "tcp", p.addr)
-		return conn, elapsed(), err
+		delta := elapsed()
+		p.updateLatency(delta, err)
+		return conn, delta, err
 	}
 
 	return nil
@@ -422,24 +444,19 @@ func (p *proxy) DialServer() (net.Conn, error) {
 	return p.dialServer(p)
 }
 
-func (p *proxy) dialTime(op *ops.Op, elapsed func() time.Duration, err error) {
-	delta := elapsed()
-	op.DialTime(delta, err)
-	if err == nil {
-		p.emaDialTime.UpdateDuration(delta)
+func (p *proxy) updateLatency(latency time.Duration, err error) {
+	// Some transports (lampshade / KCP) returns immediately when dialing,
+	// unless it's necessary to create a new underlie connection. Ignore
+	// apparently small delta values to get more useful latency.
+	if err == nil && latency > 10*time.Millisecond {
+		p.emaLatency.UpdateDuration(latency)
 	}
 }
 
-func (p *proxy) EMADialTime() time.Duration {
-	return p.emaLatency.GetDuration()
-}
-
+// EstLatency implements the method from the balancer.Dialer interface. The
+// value is updated from the time to dial the proxy, or the utility of the
+// pluggable transport, e.g., lampshade can measure the RTT of ping packets.
 func (p *proxy) EstLatency() time.Duration {
-	if p.preferred {
-		// For preferred proxies, return a really low value to make sure they get
-		// prioritized.
-		return 1 * time.Millisecond
-	}
 	return p.emaLatency.GetDuration()
 }
 
@@ -502,10 +519,6 @@ func (p *proxy) collectBBRInfo(reqTime time.Time, resp *http.Response) {
 			p.mx.Unlock()
 		}
 	}
-}
-
-func (p *proxy) shouldResetBBR() bool {
-	return atomic.CompareAndSwapInt64(&p.bbrResetRequired, 1, 0)
 }
 
 func (p *proxy) forceRecheck() {
