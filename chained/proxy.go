@@ -448,7 +448,7 @@ func (p *proxy) updateLatency(latency time.Duration, err error) {
 	// Some transports (lampshade / KCP) returns immediately when dialing,
 	// unless it's necessary to create a new underlie connection. Ignore
 	// apparently small delta values to get more useful latency.
-	if err == nil && latency < 10*time.Millisecond {
+	if err == nil && latency > 10*time.Millisecond {
 		p.emaLatency.UpdateDuration(latency)
 	}
 }
