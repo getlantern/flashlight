@@ -193,32 +193,12 @@ func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, err
 }
 
 func (p *proxy) dialInternal(ctx context.Context, network, addr string) (net.Conn, error) {
-	chDone := make(chan bool)
 	var conn net.Conn
 	var err error
+	chDone := make(chan bool)
 	go func() {
-		defer func() { chDone <- true }()
-		conn, err = p.DialServer()
-		if err != nil {
-			conn, err = nil, errors.New("Unable to dial server %v: %s", p.Label(), err)
-			return
-		}
-		// Look for our special hacked "connect" transport used to signal
-		// that we should send a CONNECT request and tunnel all traffic through
-		// that.
-		switch network {
-		case "connect":
-			log.Tracef("Sending CONNECT request")
-			err = p.sendCONNECT(addr, conn)
-		case "persistent":
-			log.Tracef("Sending GET request to establish persistent HTTP connection")
-			err = p.initPersistentConnection(addr, conn)
-		}
-		if err != nil {
-			conn.Close()
-			return
-		}
-		conn, err = p.withRateTracking(conn, addr), nil
+		conn, err = p.doDialInternal(network, addr)
+		chDone <- true
 	}()
 	select {
 	case <-chDone:
@@ -233,6 +213,29 @@ func (p *proxy) dialInternal(ctx context.Context, network, addr string) (net.Con
 		}()
 		return nil, ctx.Err()
 	}
+}
+
+func (p *proxy) doDialInternal(network, addr string) (net.Conn, error) {
+	conn, err := p.DialServer()
+	if err != nil {
+		return nil, errors.New("Unable to dial server %v: %s", p.Label(), err)
+	}
+	// Look for our special hacked "connect" transport used to signal
+	// that we should send a CONNECT request and tunnel all traffic through
+	// that.
+	switch network {
+	case "connect":
+		log.Tracef("Sending CONNECT request")
+		err = p.sendCONNECT(addr, conn)
+	case "persistent":
+		log.Tracef("Sending GET request to establish persistent HTTP connection")
+		err = p.initPersistentConnection(addr, conn)
+	}
+	if err != nil {
+		conn.Close()
+		return nil, err
+	}
+	return p.withRateTracking(conn, addr), nil
 }
 
 func (p *proxy) onRequest(req *http.Request) {
