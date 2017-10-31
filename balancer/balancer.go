@@ -102,8 +102,6 @@ type Dialer interface {
 
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
-	// not used anymore, but makes sure we're aligned on 64bit boundary
-	lastDialTime                    int64
 	mu                              sync.RWMutex
 	dialers                         sortedDialers
 	trusted                         sortedDialers
