@@ -2,6 +2,7 @@ package chained
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -16,6 +17,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
+	"github.com/getlantern/mtime"
 )
 
 const (
@@ -76,13 +78,9 @@ func (p *proxy) runConnectivityChecks() {
 }
 
 func (p *proxy) CheckConnectivity() bool {
-	timeout := p.emaLatency.GetDuration() * 2
-	if timeout < minCheckTimeout {
-		timeout = minCheckTimeout
-	} else if timeout > maxCheckTimeout {
-		timeout = maxCheckTimeout
-	}
-	_, _, err := p.dialCore(timeout)
+	elapsed := mtime.Stopwatch()
+	_, err := p.DialServer()
+	log.Debugf("Checking %v took %v, err: %v", p.Label(), elapsed(), err)
 	if err == nil {
 		p.markSuccess()
 		return true
@@ -123,12 +121,22 @@ func (p *proxy) ConsecFailures() int64 {
 }
 
 func (p *proxy) Succeeding() bool {
-	return p.ConsecSuccesses()-p.ConsecFailures() > 0
+	// To avoid turbulence when network glitches, treat proxies with a small
+	// amount failures as succeeding.
+	// TODO: OTOH, when the proxy just recovered from failing, should wait for
+	// a few successes to consider it as succeeding.
+	return p.ConsecSuccesses()-p.ConsecFailures() > -5 &&
+		p.consecRWSuccesses.Get() > -5
 }
 
 // Dial is a net.Dial-compatible function.
 func (p *proxy) Dial(network, addr string) (net.Conn, error) {
-	conn, err := p.doDial(network, addr)
+	return p.DialContext(context.Background(), network, addr)
+}
+
+// DialContext dials using provided context
+func (p *proxy) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	conn, err := p.doDial(ctx, network, addr)
 	if err != nil {
 		if err != errUpstream {
 			p.markFailure()
@@ -166,14 +174,14 @@ func (p *proxy) doMarkFailure() int64 {
 	return newCF
 }
 
-func (p *proxy) doDial(network, addr string) (net.Conn, error) {
+func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, error) {
 	var conn net.Conn
 	var err error
 
 	op := ops.Begin("dial_for_balancer").ProxyType(ops.ProxyChained).ProxyAddr(p.addr)
 	defer op.End()
 
-	conn, err = p.dialInternal(network, addr)
+	conn, err = p.dialInternal(ctx, network, addr)
 
 	if err != nil {
 		return nil, op.FailIf(err)
@@ -184,7 +192,30 @@ func (p *proxy) doDial(network, addr string) (net.Conn, error) {
 	return conn, nil
 }
 
-func (p *proxy) dialInternal(network, addr string) (net.Conn, error) {
+func (p *proxy) dialInternal(ctx context.Context, network, addr string) (net.Conn, error) {
+	var conn net.Conn
+	var err error
+	chDone := make(chan bool)
+	go func() {
+		conn, err = p.doDialInternal(network, addr)
+		chDone <- true
+	}()
+	select {
+	case <-chDone:
+		return conn, err
+	case <-ctx.Done():
+		go func() {
+			<-chDone
+			if err == nil {
+				log.Debugf("Connection to %s established too late, closing", addr)
+				conn.Close()
+			}
+		}()
+		return nil, ctx.Err()
+	}
+}
+
+func (p *proxy) doDialInternal(network, addr string) (net.Conn, error) {
 	conn, err := p.DialServer()
 	if err != nil {
 		return nil, errors.New("Unable to dial server %v: %s", p.Label(), err)
@@ -204,7 +235,7 @@ func (p *proxy) dialInternal(network, addr string) (net.Conn, error) {
 		conn.Close()
 		return nil, err
 	}
-	return withRateTracking(conn, addr, p.onFinish), nil
+	return p.withRateTracking(conn, addr), nil
 }
 
 func (p *proxy) onRequest(req *http.Request) {
@@ -215,11 +246,7 @@ func (p *proxy) onRequest(req *http.Request) {
 		req.Header.Set(common.ProTokenHeader, token)
 	}
 	// Request BBR metrics
-	bbrOption := "y"
-	if p.shouldResetBBR() {
-		bbrOption = "clear"
-	}
-	req.Header.Set("X-BBR", bbrOption)
+	req.Header.Set("X-BBR", "y")
 }
 
 func (p *proxy) onFinish(op *ops.Op) {
