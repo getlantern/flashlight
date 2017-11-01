@@ -104,7 +104,7 @@ imports:
 - name: github.com/getlantern/filepersist
   version: c5f0cd24e7991579ba6f5f1bd20a1ad2c9f06cd4
 - name: github.com/getlantern/fronted
-  version: de41e09f67ef1b109874a384b38b8e01d0aedd88
+  version: 10607f1901e4ae9ad320035db4a41dd2fbee083f
 - name: github.com/getlantern/geolookup
   version: 823d7ff3e6eb74dd6aae38a4b52207b19abfbf66
 - name: github.com/getlantern/go-loggly
@@ -218,11 +218,11 @@ imports:
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxy
-  version: 10a545352267660d3e060e63226132a3d004e461
+  version: 7ac775cc1f5371cbf5fda6c9c987e7d49d1d4ba6
   subpackages:
   - filters
 - name: github.com/getlantern/mitm
-  version: 7b1d7e42f10fb46d61b072b5aecdcd00d3729832
+  version: 76ff3d6239e2ccf4d7a3e517dc0368c95bc2a618
 - name: github.com/getlantern/proxybench
   version: 17bb0a4ec068dec779b85b87e06b01607a8ce8bd
 - name: github.com/getlantern/redis

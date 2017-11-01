@@ -220,16 +220,18 @@ func (p *proxy) doDialInternal(network, addr string) (net.Conn, error) {
 	if err != nil {
 		return nil, errors.New("Unable to dial server %v: %s", p.Label(), err)
 	}
-	// Look for our special hacked "connect" transport used to signal
-	// that we should send a CONNECT request and tunnel all traffic through
-	// that.
-	switch network {
-	case "connect":
-		log.Tracef("Sending CONNECT request")
-		err = p.sendCONNECT(addr, conn)
-	case "persistent":
-		log.Tracef("Sending GET request to establish persistent HTTP connection")
-		err = p.initPersistentConnection(addr, conn)
+	if !p.suppressCONNECT {
+		// Look for our special hacked "connect" transport used to signal
+		// that we should send a CONNECT request and tunnel all traffic through
+		// that.
+		switch network {
+		case "connect":
+			log.Tracef("Sending CONNECT request")
+			err = p.sendCONNECT(addr, conn)
+		case "persistent":
+			log.Tracef("Sending GET request to establish persistent HTTP connection")
+			err = p.initPersistentConnection(addr, conn)
+		}
 	}
 	if err != nil {
 		conn.Close()

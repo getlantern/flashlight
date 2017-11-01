@@ -45,7 +45,7 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 	// intentionally by the standard library, see
 	// https://golang.org/src/net/http/request.go#L938. The easylist
 	// package and httputil.DumpRequest require the scheme to be present.
-	if req.URL.Scheme == "" {
+	if req.Method == http.MethodConnect {
 		req.URL.Scheme = "http"
 	}
 	req.URL.Host = req.Host
@@ -90,26 +90,6 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
 		// consumed and removed by http-proxy-lantern/versioncheck
 		req.Header.Set(common.VersionHeader, common.Version)
-	}
-
-	frontedProxy := client.frontedProxy.Load()
-	if frontedProxy != nil && req.Method == http.MethodGet && false {
-		log.Debugf("Fronted URL.Host: %v   Host: %v", req.URL.Host, req.Host)
-		// Recover original host for MITM'ed requests
-		hostAndPort := req.Host
-		host, _, _ := net.SplitHostPort(hostAndPort)
-		ip := net.ParseIP(host)
-		if ip == nil || !client.iptool.IsPrivate(&net.IPAddr{IP: ip}) {
-			log.Debugf("Domain fronting %v", r)
-			req.URL.Host = hostAndPort
-			req.RequestURI = ""
-			if req.URL.Scheme == "" {
-				// Scheme was cleared for CONNECT request, add it back in
-				req.URL.Scheme = "https"
-			}
-			resp, err := frontedProxy.(http.RoundTripper).RoundTrip(r)
-			return resp, ctx, err
-		}
 	}
 
 	return next(ctx, req)

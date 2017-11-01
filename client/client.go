@@ -22,7 +22,6 @@ import (
 	"github.com/getlantern/easylist"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/fronted"
 	"github.com/getlantern/go-socks5"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
@@ -86,8 +85,7 @@ type Client struct {
 	// Balanced CONNECT dialers.
 	bal *balancer.Balancer
 
-	proxy        proxy.Proxy
-	frontedProxy atomic.Value
+	proxy proxy.Proxy
 
 	l net.Listener
 
@@ -169,19 +167,6 @@ func NewClient(
 	if mitmErr != nil {
 		log.Error(mitmErr)
 	}
-
-	go func() {
-		// We do this in a goroutine because at this point, fronted.Configure hasn't
-		// been called yet so we don't want to block on waiting for fronted.
-		log.Debug("Getting fronting proxy")
-		frontedProxy, ok := fronted.NewProxyingAt("d100fjyl3713ch.cloudfront.net", 5*time.Minute)
-		if !ok {
-			log.Error("Unable to get fronted proxy")
-		} else {
-			log.Debug("Using fronting proxy")
-			client.frontedProxy.Store(frontedProxy)
-		}
-	}()
 
 	if adBlockingAllowed() {
 		client.initEasyList()

@@ -22,6 +22,7 @@ import (
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/fronted"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/kcpwrapper"
 	"github.com/getlantern/keyman"
@@ -69,6 +70,8 @@ func CreateDialer(name string, s *ChainedServerInfo, deviceID string, proToken f
 		return newOBFS4Proxy(name, s, deviceID, proToken)
 	case "lampshade":
 		return newLampshadeProxy(name, s, deviceID, proToken)
+	case "fronted":
+		return newFrontedProxy(name, s, deviceID, proToken)
 	default:
 		return nil, errors.New("Unknown transport: %v", s.PluggableTransport).With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
 	}
@@ -264,6 +267,22 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 	return p, nil
 }
 
+func newFrontedProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
+	p, err := newProxy(name, "fronted", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(p *proxy) (net.Conn, error) {
+		op := ops.Begin("dial_to_chained").ChainedProxy(p.Addr(), p.Protocol(), p.Network())
+		defer op.End()
+		elapsed := mtime.Stopwatch()
+		conn, err := fronted.DialTimeout(s.Addr, chainedDialTimeout)
+		op.DialTime(elapsed(), err)
+		return overheadWrapper(true)(conn, op.FailIf(err))
+	})
+	if err != nil {
+		return nil, err
+	}
+	p.suppressCONNECT = true
+	return p, nil
+}
+
 // consecCounter is a counter that can extend on both directions. Its default
 // value is zero. Inc() sets it to 1 or adds it by 1; Dec() sets it to -1 or
 // minus it by 1. When called concurrently, it may have an incorrect absolute
@@ -317,6 +336,7 @@ type proxy struct {
 	forceRedial       *abool.AtomicBool
 	mostRecentABETime time.Time
 	dialCore          func(timeout time.Duration) (net.Conn, time.Duration, error)
+	suppressCONNECT   bool
 	forceRecheckCh    chan bool
 	closeCh           chan bool
 	mx                sync.Mutex
