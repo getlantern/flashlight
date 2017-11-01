@@ -272,7 +272,9 @@ func newFrontedProxy(name string, s *ChainedServerInfo, deviceID string, proToke
 		op := ops.Begin("dial_to_chained").ChainedProxy(p.Addr(), p.Protocol(), p.Network())
 		defer op.End()
 		elapsed := mtime.Stopwatch()
-		conn, err := fronted.DialTimeout(s.Addr, chainedDialTimeout)
+		conn, err := fronted.DialTimeout(s.Addr, chainedDialTimeout, func(req *http.Request) {
+			req.Header.Add(common.TokenHeader, p.authToken)
+		})
 		op.DialTime(elapsed(), err)
 		return overheadWrapper(true)(conn, op.FailIf(err))
 	})
