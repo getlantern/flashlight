@@ -35,7 +35,7 @@ type Message struct {
 	// The email address to which the message is sent
 	To string
 	// An optional email address to carbon copy
-	CC string `json:"omitempty"`
+	CC string `json:"cc,omitempty"`
 	// Email subject
 	Subject string
 	// Any global vars defined in the template
