@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"runtime"
 	"strconv"
 	"sync"
@@ -282,6 +283,12 @@ func newFrontedProxy(name string, s *ChainedServerInfo, deviceID string, proToke
 		return nil, err
 	}
 	p.suppressCONNECT = true
+	p.bias = -1000000 // make fronted the least-likely to be used
+	forceFronted, _ := strconv.ParseBool(os.Getenv("FORCE_FRONTED"))
+	if forceFronted {
+		log.Debug("Forcing use of fronted proxies")
+		p.bias = p.bias * -1
+	}
 	return p, nil
 }
 
@@ -331,7 +338,7 @@ type proxy struct {
 	deviceID          string
 	proToken          func() string
 	trusted           bool
-	preferred         bool
+	bias              float64
 	dialServer        func(*proxy) (net.Conn, error)
 	emaLatency        *ema.EMA
 	kcpConfig         *KCPConfig
@@ -392,9 +399,8 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 	// Fix address (comes across as kcp-placeholder)
 	p.addr = cfg.RemoteAddr
 	// Right now, we don't have a good way estimating performance of KCP-based
-	// proxies, so we just mark them as "preferred" to force them to get used by
-	// default.
-	p.preferred = true
+	// proxies, so we just bias them.
+	p.bias = 100000
 
 	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig)
 	var dialKCPMutex sync.Mutex
@@ -447,7 +453,7 @@ func (p *proxy) Label() string {
 }
 
 func (p *proxy) JustifiedLabel() string {
-	label := fmt.Sprintf("%-38v at %21v", p.name, p.addr)
+	label := fmt.Sprintf("%-50v at %21v", p.name, p.addr)
 	if p.trusted {
 		label = label + trustedSuffix
 	}
@@ -479,6 +485,9 @@ func (p *proxy) updateLatency(latency time.Duration, err error) {
 // value is updated from the time to dial the proxy, or the utility of the
 // pluggable transport, e.g., lampshade can measure the RTT of ping packets.
 func (p *proxy) EstLatency() time.Duration {
+	if p.bias != 0 {
+		return 1 * time.Millisecond
+	}
 	return p.emaLatency.GetDuration()
 }
 
@@ -497,10 +506,8 @@ func (p *proxy) EstLatency() time.Duration {
 // 3. If a client includes HTTP header "X-BBR: clear", we clear stored estimate
 //    data for the client's IP.
 func (p *proxy) EstBandwidth() float64 {
-	if p.preferred {
-		// For preferred proxies, return a really high value to make sure they get
-		// prioritized.
-		return 1000000
+	if p.bias != 0 {
+		return p.bias
 	}
 	return float64(atomic.LoadInt64(&p.abe)) / 1000
 }

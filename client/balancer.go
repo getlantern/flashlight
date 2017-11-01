@@ -16,22 +16,22 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 
 	log.Debugf("Adding %d chained servers", len(proxies))
 	dialers := make([]balancer.Dialer, 0, len(proxies))
-	if false {
-		for name, s := range proxies {
-			if s.PluggableTransport == "obfs4-tcp" {
-				log.Debugf("Ignoring obfs4-tcp server: %v", name)
-				// Ignore obfs4-tcp as these are already included as plain obfs4
-				continue
-			}
-			dialer, err := ChainedDialer(name, s, deviceID, client.proTokenGetter)
-			if err != nil {
-				log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)
-				continue
-			}
-			log.Debugf("Adding chained server: %v %v", name, dialer)
-			dialers = append(dialers, dialer)
+	for name, s := range proxies {
+		if s.PluggableTransport == "obfs4-tcp" {
+			log.Debugf("Ignoring obfs4-tcp server: %v", name)
+			// Ignore obfs4-tcp as these are already included as plain obfs4
+			continue
 		}
+		dialer, err := ChainedDialer(name, s, deviceID, client.proTokenGetter)
+		if err != nil {
+			log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)
+			continue
+		}
+		log.Debugf("Adding chained server: %v %v", name, dialer)
+		dialers = append(dialers, dialer)
 	}
+
+	// Adding fronted (temporary, should actually come from config)
 	dialer, err := ChainedDialer("fronted-test", &chained.ChainedServerInfo{
 		Addr:               "d100fjyl3713ch.cloudfront.net",
 		AuthToken:          "pj6mWPafKzP26KZvUf7FIs24eB2ubjUKFvXktodqgUzZULhGeRUT0mwhyHb9jY2b",
