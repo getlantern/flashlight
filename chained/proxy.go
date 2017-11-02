@@ -283,11 +283,10 @@ func newFrontedProxy(name string, s *ChainedServerInfo, deviceID string, proToke
 		return nil, err
 	}
 	p.suppressCONNECT = true
-	p.bias = -1000000 // make fronted the least-likely to be used
 	forceFronted, _ := strconv.ParseBool(os.Getenv("FORCE_FRONTED"))
 	if forceFronted {
 		log.Debug("Forcing use of fronted proxies")
-		p.bias = p.bias * -1
+		p.bias = 999999
 	}
 	return p, nil
 }
@@ -361,6 +360,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		deviceID:        deviceID,
 		proToken:        proToken,
 		trusted:         trusted,
+		bias:            s.Bias,
 		dialServer:      dialServer,
 		emaLatency:      ema.NewDuration(0, 0.8),
 		forceRecheckCh:  make(chan bool, 1),
@@ -398,9 +398,6 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 
 	// Fix address (comes across as kcp-placeholder)
 	p.addr = cfg.RemoteAddr
-	// Right now, we don't have a good way estimating performance of KCP-based
-	// proxies, so we just bias them.
-	p.bias = 100000
 
 	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig)
 	var dialKCPMutex sync.Mutex

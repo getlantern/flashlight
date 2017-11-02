@@ -33,6 +33,13 @@ type ChainedServerInfo struct {
 	// Trusted: Determines if a host can be trusted with plain HTTP traffic.
 	Trusted bool
 
+	// Bias sets an optional bias factor for this proxy. Proxies with a positive
+	// bias will always be preferred over normal proxies (0 bias) as long as
+	// they're not failing, and within biased proxies, those with a higher bias
+	// will be preferred. Proxies with a negative bias will always be rejected vs
+	// normal proxies unless all normal proxies are failing.
+	Bias float64
+
 	// PluggableTransport: If specified, a pluggable transport will be used
 	PluggableTransport string
 
