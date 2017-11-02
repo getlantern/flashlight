@@ -31,7 +31,7 @@ type Session interface {
 	AddPlan(string, string, string, bool, int, int)
 	Locale() string
 	Code() string
-	GetCountry() string
+	GetCountryCode() string
 	VerifyCode() string
 	DeviceCode() string
 	DeviceName() string
@@ -305,7 +305,7 @@ func pwSignature(req *proRequest) (*client.Response, error) {
 func userPaymentGateway(req *proRequest) (*client.Response, error) {
 	provider, err := req.client.UserPaymentGateway(req.user,
 		req.session.AppVersion(),
-		req.session.GetCountry(),
+		req.session.GetCountryCode(),
 		req.session.DeviceOS())
 	if err != nil {
 		log.Errorf("Error trying to determine payment provider: %v", err)
