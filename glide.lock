@@ -1,5 +1,5 @@
-hash: c41a3297dbf12a6024489881323e642168418956258cab16915348729094a097
-updated: 2017-10-26T14:55:19.89574-05:00
+hash: b923f1a97d9124f6d6e948454917e87cb97cee2e6eb83c46cbdc1f0349965b47
+updated: 2017-11-02T11:05:27.51439904-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a3ad5df6c9e7dc8117f55958b4ce99bf1e0fe291
@@ -107,6 +107,10 @@ imports:
   version: 9d5b06012d673b61ed6f2e606e2eba59da3f99da
 - name: github.com/getlantern/geolookup
   version: 823d7ff3e6eb74dd6aae38a4b52207b19abfbf66
+- name: github.com/getlantern/go-cache
+  version: 88b53914f4672fafe9069972c1867222ef02eea1
+  subpackages:
+  - cache
 - name: github.com/getlantern/go-loggly
   version: d15e28ab7389ed5d644ccb891d9d54154e43cd27
 - name: github.com/getlantern/go-socks5
@@ -188,6 +192,8 @@ imports:
   version: bc9fc3b11894e839c3fcb049f12e8974d7e48497
 - name: github.com/getlantern/measured
   version: 0582bf799783fba9a890459155817f1cbcf00f17
+- name: github.com/getlantern/mitm
+  version: 76ff3d6239e2ccf4d7a3e517dc0368c95bc2a618
 - name: github.com/getlantern/mockconn
   version: 422a5afd4432dd82b1389333d5352da003d898a6
 - name: github.com/getlantern/msgpack
@@ -221,10 +227,10 @@ imports:
   version: 7ac775cc1f5371cbf5fda6c9c987e7d49d1d4ba6
   subpackages:
   - filters
-- name: github.com/getlantern/mitm
-  version: 76ff3d6239e2ccf4d7a3e517dc0368c95bc2a618
 - name: github.com/getlantern/proxybench
   version: 17bb0a4ec068dec779b85b87e06b01607a8ce8bd
+- name: github.com/getlantern/reconn
+  version: 7053d017511c663a3fc3b3a367b57689b1b2fd9f
 - name: github.com/getlantern/redis
   version: 5e698a687bd9581c17d3b06be34aa5afdec98640
 - name: github.com/getlantern/rot13
