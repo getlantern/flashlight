@@ -412,8 +412,8 @@ func (c *Client) PWSignature(user User, email, currency, deviceName, planId stri
 func (c *Client) UserPaymentGateway(user User,
 	appVersion, country, deviceOS string) (provider string, err error) {
 	var res Response
-	log.Debugf("Sending user params: %s %s %s",
-		appVersion, country, deviceOS)
+	log.Debugf(`Sending /user-payment-gateway request:
+		appVersion: %s country: %s deviceOS: %s`, appVersion, country, deviceOS)
 	payload, err := c.get(`/user-payment-gateway`, user.headers(), url.Values{
 		"appVersion": {appVersion},
 		"country":    {country},
