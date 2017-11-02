@@ -30,10 +30,14 @@ var (
 type Message struct {
 	// The mandrill template slug
 	Template string
+	// The email address of the sender
+	From string
 	// The email address to which the message is sent
 	To string
 	// An optional email address to carbon copy
-	CC string `json:"omitempty"`
+	CC string `json:"cc,omitempty"`
+	// Email subject
+	Subject string
 	// Any global vars defined in the template
 	Vars map[string]interface{}
 	// Serialized settings data
@@ -80,7 +84,9 @@ func Send(msg *Message) error {
 func sendTemplate(msg *Message) error {
 	client := mandrill.ClientWithKey(MandrillAPIKey)
 	mmsg := &mandrill.Message{
-		To: []*mandrill.To{&mandrill.To{Email: msg.To}},
+		FromEmail: msg.From,
+		To:        []*mandrill.To{&mandrill.To{Email: msg.To}},
+		Subject:   msg.Subject,
 	}
 	if msg.CC != "" {
 		mmsg.To = append(mmsg.To, &mandrill.To{Email: msg.CC, Type: "cc"})
