@@ -147,13 +147,16 @@ func NewClient(
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
 
-	client.proxy = proxy.New(&proxy.Opts{
+	client.proxy, err = proxy.New(&proxy.Opts{
 		IdleTimeout:  keepAliveIdleTimeout,
 		BufferSource: buffers.Pool,
 		Filter:       filters.FilterFunc(client.filter),
 		OnError:      errorResponse,
 		Dial:         client.dial,
 	})
+	if err != nil {
+		return nil, errors.New("Unable to create new proxy: %v", err)
+	}
 	if adBlockingAllowed() {
 		client.initEasyList()
 	} else {
