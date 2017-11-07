@@ -17,6 +17,7 @@ import (
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
 
 	"github.com/getlantern/ema"
+	"github.com/getlantern/enhttp"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
@@ -89,7 +90,7 @@ func forceProxy(s *ChainedServerInfo) {
 }
 
 func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
-	return newProxy(name, "http", "tcp", s.Addr, s, deviceID, proToken, false, func(p *proxy) (net.Conn, error) {
+	return newProxy(name, "http", "tcp", s.Addr, s, deviceID, proToken, s.ENHTTPAddr != "", func(p *proxy) (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(p.addr, p.protocol, p.network)
 		defer op.End()
 		elapsed := mtime.Stopwatch()
@@ -352,6 +353,16 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		err := enableKCP(p, s)
 		if err != nil {
 			return nil, err
+		}
+	}
+
+	if s.ENHTTPAddr != "" {
+		dial := enhttp.NewDialer(&http.Client{}, fmt.Sprintf("http://%v", s.ENHTTPAddr))
+		p.dialCore = func(timeout time.Duration) (net.Conn, time.Duration, error) {
+			log.Debug("Dialing with enhttp")
+			conn, err := dial("tcp", p.addr)
+			log.Debugf("ENHTTP result: %v", err)
+			return conn, 0, err
 		}
 	}
 

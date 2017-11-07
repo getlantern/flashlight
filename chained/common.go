@@ -41,6 +41,8 @@ type ChainedServerInfo struct {
 
 	// KCPSettings: If specified, traffic will be tunneled over KCP
 	KCPSettings map[string]interface{}
+
+	ENHTTPAddr string
 }
 
 func (s *ChainedServerInfo) ptSetting(name string) string {
