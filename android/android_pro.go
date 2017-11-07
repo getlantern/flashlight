@@ -14,7 +14,6 @@ type Settings interface {
 	StickyConfig() bool
 	EnableAdBlocking() bool
 	DefaultDnsServer() string
-	DnsGrabServer() string
 	TimeoutMillis() int
 }
 

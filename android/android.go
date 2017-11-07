@@ -176,7 +176,7 @@ func run(configDir, locale string,
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
 	grabber, err := dnsgrab.Listen(maxDNSGrabCache,
-		settings.DnsGrabServer(),
+		":8153",
 		settings.DefaultDnsServer())
 	if err != nil {
 		log.Errorf("Unable to start dnsgrab: %v", err)
