@@ -17,13 +17,10 @@ import (
 )
 
 const (
-	dialAttempts         = 3
 	connectivityRechecks = 3
 
-	// The max timeout to dial a proxy, so the balancer has the chance to dial
-	// next one. It is slightly larger than the timeout to actually dial any
-	// proxy (10s), but smaller than the timeout to handle user request (20s).
-	maxDialTimeout = 11 * time.Second
+	preconnectedDialTimeout = 1 * time.Second  // timeout for dialing with preconnected dialers, low because these should be fast
+	overallDialTimeout      = 30 * time.Second // timeout for attempting to dial out with some dialer
 
 	evalDialersInterval = 10 * time.Second
 )
@@ -33,6 +30,15 @@ var (
 
 	recheckInterval = 2 * time.Second
 )
+
+// PreconnectedDialer is a pre-established connection to a Proxy which we can
+// use to dial out to an origin
+type PreconnectedDialer interface {
+	Dialer
+
+	// DialContext dials out to the given origin
+	DialContext(ctx context.Context, network, addr string) (net.Conn, error)
+}
 
 // Dialer provides the ability to dial a proxy and obtain information needed to
 // effectively load balance between dialers.
@@ -53,11 +59,9 @@ type Dialer interface {
 	// Trusted indicates whether or not this dialer is trusted
 	Trusted() bool
 
-	// Dial with this dialer
-	Dial(network, addr string) (net.Conn, error)
-
-	// Dial with this dialer using the provided context
-	DialContext(ctx context.Context, network, addr string) (net.Conn, error)
+	// Preconnected() returns a channel from which we can obtain
+	// PreconnectedDialers.
+	Preconnected() <-chan PreconnectedDialer
 
 	// EstLatency provides a latency estimate
 	EstLatency() time.Duration
@@ -168,9 +172,10 @@ func (b *Balancer) ForceRedial() {
 //
 // Only Trusted Dialers are used to dial HTTP hosts.
 //
-// If a Dialer fails to connect, Dial will keep trying at most 3 times until it
-// either manages to connect, or runs out of dialers in which case it returns an
-// error.
+// Dial looks through the preconnected dialers based on the above ordering and
+// dial with the first available. If none are available, it keeps cycling
+// through the list in priority order until it finds one. It will keep trying
+// for up to 30 seconds, at which point it gives up.
 func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 	return b.DialContext(context.Background(), network, addr)
 }
@@ -190,29 +195,46 @@ func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.C
 		return nil, pickErr
 	}
 
-	attempts := dialAttempts
-	if attempts > len(dialers) {
-		attempts = len(dialers)
+	preconnectedDialers := make([]<-chan PreconnectedDialer, 0, len(dialers))
+	for _, dialer := range dialers {
+		preconnectedDialers = append(preconnectedDialers, dialer.Preconnected())
 	}
-	i := 0
-	for ; i < attempts; i++ {
-		d := dialers[i]
-		conn, err := b.dialWithTimeout(i, d, ctx, network, addr)
-		if err != nil {
-			log.Errorf("Unable to dial via %v to %s://%s: %v on pass %v...continuing",
-				d.Label(), network, addr, err, i)
-			if ctx.Err() != nil {
-				break
+
+	var conn net.Conn
+	var err error
+	start := time.Now()
+	attempts := 0
+dialLoop:
+	for {
+		if time.Now().Sub(start) > overallDialTimeout {
+			break dialLoop
+		}
+
+	preconnectedLoop:
+		for _, pcds := range preconnectedDialers {
+			select {
+			case d := <-pcds:
+				// got a preconnected dialer
+				attempts++
+				conn, err = b.dialWithTimeout(attempts, d, ctx, network, addr)
+				if err != nil {
+					log.Errorf("Unable to dial via %v to %s://%s: %v on pass %v...continuing",
+						d.Label(), network, addr, err, attempts)
+					continue preconnectedLoop
+				}
+				select {
+				case b.onActiveDialer <- d:
+				default:
+				}
+				return conn, nil
+			default:
+				log.Debug("Keep looking")
 			}
-			continue
 		}
-		select {
-		case b.onActiveDialer <- d:
-		default:
-		}
-		return conn, nil
+		// no preconnected dialers were available, sleep a little and try again
+		time.Sleep(250 * time.Millisecond)
 	}
-	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", network, addr, i+1)
+	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", network, addr, attempts)
 }
 
 // OnActiveDialer returns the channel of the last dialer the balancer was using.
@@ -221,10 +243,10 @@ func (b *Balancer) OnActiveDialer() <-chan Dialer {
 	return b.onActiveDialer
 }
 
-func (b *Balancer) dialWithTimeout(pass int, d Dialer, ctx context.Context, network, addr string) (net.Conn, error) {
-	log.Tracef("Dialing %s://%s with %s on pass %v", network, addr, d.Label(), pass)
+func (b *Balancer) dialWithTimeout(pass int, d PreconnectedDialer, ctx context.Context, network, addr string) (net.Conn, error) {
+	log.Debugf("Dialing %s://%s with %s on pass %v", network, addr, d.Label(), pass)
 	// caps the context deadline to maxDialTimeout
-	newCTX, cancel := context.WithTimeout(ctx, maxDialTimeout)
+	newCTX, cancel := context.WithTimeout(ctx, preconnectedDialTimeout)
 	defer cancel()
 	start := time.Now()
 	conn, err := d.DialContext(newCTX, network, addr)

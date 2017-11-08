@@ -14,6 +14,7 @@ import (
 
 	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
@@ -26,6 +27,11 @@ const (
 	minCheckTimeout  = 1 * time.Second
 	maxCheckTimeout  = 10 * time.Second
 )
+
+type preconnectedDialer struct {
+	*proxy
+	conn net.Conn
+}
 
 var (
 	// Close connections idle for a period to avoid dangling connections. 45
@@ -129,20 +135,35 @@ func (p *proxy) Succeeding() bool {
 		p.consecRWSuccesses.Get() > -5
 }
 
-// Dial is a net.Dial-compatible function.
-func (p *proxy) Dial(network, addr string) (net.Conn, error) {
-	return p.DialContext(context.Background(), network, addr)
+func (p *proxy) preconnect() {
+	// TODO: make filling of this more adaptive (maybe)
+	// TODO: right now, servers are going to time out these connections after 70
+	// seconds, need to figure out way to keep them fresh ...
+	for {
+		conn, err := p.DialServer()
+		if err != nil {
+			log.Errorf("Unable to dial server %v: %s", p.Label(), err)
+			// TODO: exponential backoff?
+			time.Sleep(250 * time.Millisecond)
+			continue
+		}
+		p.preconnected <- &preconnectedDialer{p, conn}
+	}
+}
+
+func (p *proxy) Preconnected() <-chan balancer.PreconnectedDialer {
+	return p.preconnected
 }
 
 // DialContext dials using provided context
-func (p *proxy) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
-	conn, err := p.doDial(ctx, network, addr)
+func (pd *preconnectedDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	conn, err := pd.doDial(ctx, network, addr)
 	if err != nil {
 		if err != errUpstream {
-			p.markFailure()
+			pd.markFailure()
 		}
 	} else {
-		p.markSuccess()
+		pd.markSuccess()
 	}
 	return conn, err
 }
@@ -174,14 +195,14 @@ func (p *proxy) doMarkFailure() int64 {
 	return newCF
 }
 
-func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, error) {
+func (pd *preconnectedDialer) doDial(ctx context.Context, network, addr string) (net.Conn, error) {
 	var conn net.Conn
 	var err error
 
-	op := ops.Begin("dial_for_balancer").ProxyType(ops.ProxyChained).ProxyAddr(p.addr)
+	op := ops.Begin("dial_for_balancer").ProxyType(ops.ProxyChained).ProxyAddr(pd.addr)
 	defer op.End()
 
-	conn, err = p.dialInternal(ctx, network, addr)
+	conn, err = pd.dialInternal(ctx, network, addr)
 
 	if err != nil {
 		return nil, op.FailIf(err)
@@ -192,12 +213,12 @@ func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, err
 	return conn, nil
 }
 
-func (p *proxy) dialInternal(ctx context.Context, network, addr string) (net.Conn, error) {
+func (pd *preconnectedDialer) dialInternal(ctx context.Context, network, addr string) (net.Conn, error) {
 	var conn net.Conn
 	var err error
 	chDone := make(chan bool)
 	go func() {
-		conn, err = p.doDialInternal(network, addr)
+		conn, err = pd.doDialInternal(network, addr)
 		chDone <- true
 	}()
 	select {
@@ -215,27 +236,24 @@ func (p *proxy) dialInternal(ctx context.Context, network, addr string) (net.Con
 	}
 }
 
-func (p *proxy) doDialInternal(network, addr string) (net.Conn, error) {
-	conn, err := p.DialServer()
-	if err != nil {
-		return nil, errors.New("Unable to dial server %v: %s", p.Label(), err)
-	}
+func (pd *preconnectedDialer) doDialInternal(network, addr string) (net.Conn, error) {
+	var err error
 	// Look for our special hacked "connect" transport used to signal
 	// that we should send a CONNECT request and tunnel all traffic through
 	// that.
 	switch network {
 	case "connect":
 		log.Tracef("Sending CONNECT request")
-		err = p.sendCONNECT(addr, conn)
+		err = pd.sendCONNECT(addr, pd.conn)
 	case "persistent":
 		log.Tracef("Sending GET request to establish persistent HTTP connection")
-		err = p.initPersistentConnection(addr, conn)
+		err = pd.initPersistentConnection(addr, pd.conn)
 	}
 	if err != nil {
-		conn.Close()
+		pd.conn.Close()
 		return nil, err
 	}
-	return p.withRateTracking(conn, addr), nil
+	return pd.withRateTracking(pd.conn, addr), nil
 }
 
 func (p *proxy) onRequest(req *http.Request) {

@@ -1,9 +1,11 @@
 package chained
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -41,7 +43,14 @@ func (p *proxy) httpPing(kb int, resetBBR bool) error {
 	log.Debugf("Sending HTTP Ping to %v", p.Label())
 	rt := &http.Transport{
 		DisableKeepAlives: true,
-		Dial:              p.Dial,
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			conn, err := p.DialServer()
+			if err != nil {
+				return nil, err
+			}
+			pd := &preconnectedDialer{p, conn}
+			return pd.DialContext(ctx, network, addr)
+		},
 	}
 
 	req, err := http.NewRequest("GET", "http://ping-chained-server", nil)

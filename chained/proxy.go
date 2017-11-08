@@ -38,7 +38,7 @@ const (
 )
 
 var (
-	chainedDialTimeout          = 10 * time.Second
+	chainedDialTimeout          = 30 * time.Second
 	theForceAddr, theForceToken string
 )
 
@@ -317,6 +317,7 @@ type proxy struct {
 	forceRedial       *abool.AtomicBool
 	mostRecentABETime time.Time
 	dialCore          func(timeout time.Duration) (net.Conn, time.Duration, error)
+	preconnected      chan balancer.PreconnectedDialer
 	forceRecheckCh    chan bool
 	closeCh           chan bool
 	mx                sync.Mutex
@@ -336,6 +337,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		emaLatency:      ema.NewDuration(0, 0.8),
 		forceRecheckCh:  make(chan bool, 1),
 		forceRedial:     abool.New(),
+		preconnected:    make(chan balancer.PreconnectedDialer, 20),
 		closeCh:         make(chan bool, 1),
 		consecSuccesses: 1, // be optimistic
 	}
@@ -356,6 +358,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 	}
 
 	go p.runConnectivityChecks()
+	go p.preconnect()
 	return p, nil
 }
 

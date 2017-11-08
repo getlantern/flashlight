@@ -23,7 +23,18 @@ type testDialer struct {
 	successes          int64
 	failures           int64
 	stopped            bool
+	preconnected       chan PreconnectedDialer
 	connectivityChecks int
+}
+
+func start(d *testDialer) *testDialer {
+	d.preconnected = make(chan PreconnectedDialer)
+	go func() {
+		for {
+			d.preconnected <- d
+		}
+	}()
+	return d
 }
 
 // Name returns the name for this Dialer
@@ -47,10 +58,8 @@ func (d *testDialer) Trusted() bool {
 	return !d.untrusted
 }
 
-func (d *testDialer) Dial(network, addr string) (net.Conn, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
-	defer cancel()
-	return d.DialContext(ctx, network, addr)
+func (d *testDialer) Preconnected() <-chan PreconnectedDialer {
+	return d.preconnected
 }
 
 func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {

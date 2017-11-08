@@ -33,11 +33,11 @@ func TestSingleDialer(t *testing.T) {
 	addr, l := echoServer()
 	defer func() { _ = l.Close() }()
 
-	dialer := &testDialer{
+	dialer := start(&testDialer{
 		name:      "dialer1",
 		latency:   50 * time.Millisecond,
 		bandwidth: 10000,
-	}
+	})
 	// Test successful single dialer
 	b := New(dialer)
 	conn, err := b.Dial("tcp", addr)
@@ -65,18 +65,18 @@ func TestRetryOnBadDialer(t *testing.T) {
 	addr, l := echoServer()
 	defer func() { _ = l.Close() }()
 
-	dialer1 := &testDialer{
+	dialer1 := start(&testDialer{
 		name:      "dialer1",
 		latency:   50 * time.Millisecond,
 		bandwidth: 10000,
 		failing:   true,
-	}
-	dialer2 := &testDialer{
+	})
+	dialer2 := start(&testDialer{
 		name:      "dialer1",
 		latency:   50 * time.Millisecond,
 		bandwidth: 10000,
 		failing:   true,
-	}
+	})
 
 	b := New(dialer1)
 	_, err := b.Dial("tcp", addr)
@@ -91,9 +91,9 @@ func TestRetryOnBadDialer(t *testing.T) {
 }
 
 func TestTrusted(t *testing.T) {
-	dialer := &testDialer{
+	dialer := start(&testDialer{
 		untrusted: true,
-	}
+	})
 
 	_, err := New(dialer).Dial("", "does-not-exist.com:80")
 	assert.Error(t, err, "Dialing with no trusted dialers should have failed")
@@ -115,50 +115,50 @@ func TestTrusted(t *testing.T) {
 func TestSorting(t *testing.T) {
 	dialers := sortedDialers{
 		// Unknown bandwidth comes first
-		&testDialer{
+		start(&testDialer{
 			name:      "1",
 			bandwidth: 0,
-		},
+		}),
 		// Within unknown bandwidth, sort by name
-		&testDialer{
+		start(&testDialer{
 			name:      "2",
 			bandwidth: 0,
-		},
+		}),
 		// Order known dialers by bandwidth / latency
-		&testDialer{
+		start(&testDialer{
 			name:      "3",
 			bandwidth: 1000,
 			latency:   1 * time.Millisecond,
-		},
-		&testDialer{
+		}),
+		start(&testDialer{
 			name:      "4",
 			bandwidth: 10000,
 			latency:   15 * time.Millisecond,
-		},
+		}),
 		// Same ordering as above applies to failing proxies, which all come after
 		// succeeding ones
-		&testDialer{
+		start(&testDialer{
 			name:      "5",
 			bandwidth: 0,
 			failing:   true,
-		},
-		&testDialer{
+		}),
+		start(&testDialer{
 			name:      "6",
 			bandwidth: 0,
 			failing:   true,
-		},
-		&testDialer{
+		}),
+		start(&testDialer{
 			name:      "7",
 			bandwidth: 1000,
 			latency:   1 * time.Millisecond,
 			failing:   true,
-		},
-		&testDialer{
+		}),
+		start(&testDialer{
 			name:      "8",
 			bandwidth: 10000,
 			latency:   15 * time.Millisecond,
 			failing:   true,
-		},
+		}),
 	}
 
 	// Shuffle and sort multiple times to make sure that comparisons work in both
