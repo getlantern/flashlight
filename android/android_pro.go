@@ -31,6 +31,7 @@ type Session interface {
 	Locale() string
 	Code() string
 	GetCountryCode() string
+	GetDNSServer() string
 	VerifyCode() string
 	DeviceCode() string
 	DeviceName() string

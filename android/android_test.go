@@ -32,7 +32,6 @@ type testSettings struct {
 func (c testSettings) StickyConfig() bool       { return false }
 func (c testSettings) EnableAdBlocking() bool   { return false }
 func (c testSettings) DefaultDnsServer() string { return "8.8.8.8" }
-func (c testSettings) DnsGrabServer() string    { return "" }
 func (c testSettings) TimeoutMillis() int       { return 5000 }
 
 func (c testSession) AfterStart()                   {}

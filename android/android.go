@@ -177,7 +177,7 @@ func run(configDir, locale string,
 
 	grabber, err := dnsgrab.Listen(maxDNSGrabCache,
 		":8153",
-		settings.DefaultDnsServer())
+		session.GetDNSServer())
 	if err != nil {
 		log.Errorf("Unable to start dnsgrab: %v", err)
 		return
