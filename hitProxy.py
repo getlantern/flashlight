@@ -45,4 +45,4 @@ if os.path.isfile("./lantern"):
 else:
     path = "/Applications/Lantern.app/Contents/MacOS/lantern"
 
-subprocess.call([path, "-stickyconfig", "-readableconfig", "-configdir="+tmpdir])
+subprocess.call([path, "-headless", "-stickyconfig", "-readableconfig", "-configdir="+tmpdir])
