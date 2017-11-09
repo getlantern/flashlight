@@ -40,6 +40,7 @@ func (c testSession) ConfigUpdate(bool)             {}
 func (c testSession) ShowSurvey(survey string)      {}
 func (c testSession) GetUserID() int64              { return 0 }
 func (c testSession) GetToken() string              { return "" }
+func (c testSession) GetDNSServer() string          { return "8.8.8.8" }
 func (c testSession) SetStaging(bool)               {}
 func (c testSession) SetCountry(string)             {}
 func (c testSession) ProxyAll() bool                { return true }
