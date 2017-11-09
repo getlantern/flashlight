@@ -89,9 +89,14 @@ func testProxiedRequest(proxyAddr string, socks bool) error {
 			},
 		}
 		resolved, err := resolver.LookupHost(context.Background(), host)
-		log.Debugf("resolved: %v: %v", resolved, err)
-		if len(resolved) > 0 {
-			host = resolved[0]
+		log.Debugf("resolved %v to %v: %v", host, resolved, err)
+		for _, addr := range resolved {
+			ip := net.ParseIP(addr).To4()
+			if ip != nil {
+				log.Debugf("Using resolved IPv4 address: %v", addr)
+				host = addr
+				break
+			}
 		}
 	}
 	hostWithPort := fmt.Sprintf("%v:80", host)
