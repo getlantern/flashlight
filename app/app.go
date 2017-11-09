@@ -526,7 +526,7 @@ func (app *App) GetTranslations(filename string) ([]byte, error) {
 
 // uiFilter serves requests over a configured domain from the local UI server.
 // This allows Lantern to run over a more standard domain, which makes it more
-// standard and compatible with things like A/B testing software.
+// compatible with things like A/B testing software.
 func (app *App) uiFilter(uiDomain string) func(req *http.Request) (*http.Request, error) {
 	return uiFilterWithAddr(uiDomain, func() string {
 		if app.uiServer == nil {
@@ -538,8 +538,11 @@ func (app *App) uiFilter(uiDomain string) func(req *http.Request) (*http.Request
 
 // uiFilterWithAddr serves requests over a configured domain from the local UI server.
 // This allows Lantern to run over a more standard domain, which makes it more
-// standard and compatible with things like A/B testing software.
-// This version makes testinga  bit easier.
+// compatible with things like A/B testing software.
+//
+// This version makes testinga bit easier.
+//
+// Note that for CONNECT requests we unfortunately cannot simply check for the token here.
 func uiFilterWithAddr(uiDomain string, listenAddr func() string) func(req *http.Request) (*http.Request, error) {
 	return func(req *http.Request) (*http.Request, error) {
 		if req.URL != nil && strings.HasPrefix(req.URL.Host, uiDomain) ||
