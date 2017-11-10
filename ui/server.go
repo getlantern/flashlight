@@ -128,7 +128,7 @@ func (s *Server) handle(pattern string, handler http.Handler) {
 
 	// In the naked request cast, we need to verify the token is there in the
 	// referer header.
-	s.mux.Handle(pattern, s.checkRequestForToken(util.NoCacheHandler(handler)))
+	s.mux.Handle(pattern, checkRequestForToken(util.NoCacheHandler(handler), s.localHTTPToken))
 }
 
 // strippingHandler removes the secure request path from the URL so that the
@@ -279,29 +279,48 @@ func (s *Server) activeDomain() string {
 	return s.accessAddr
 }
 
-func (s *Server) checkRequestForToken(h http.Handler) http.Handler {
+func checkRequestForToken(h http.Handler, tok string) http.Handler {
 	check := func(w http.ResponseWriter, r *http.Request) {
-		referer := r.Header.Get("referer")
-		if !strings.Contains(referer, s.localHTTPToken) {
-			msg := fmt.Sprintf("No token in referer. %v", referer)
-			s.notFound(msg, w, r)
-		} else {
+		if HasToken(r, tok) {
 			h.ServeHTTP(w, r)
+		} else {
+			msg := fmt.Sprintf("No token found in. %v", r)
+			closeConn(msg, w, r)
 		}
 	}
 	return http.HandlerFunc(check)
 }
 
-// notFound returns a 403 forbidden response to the client while also dumping
-// headers and logs for debugging.
-func (s *Server) notFound(msg string, w http.ResponseWriter, r *http.Request) {
-	log.Error(msg)
-	s.dumpRequestHeaders(r)
-	// Return 404 but do not reveal any details in the body.
-	http.Error(w, "", http.StatusNotFound)
+// HasToken checks for our secure token in the HTTP request.
+func HasToken(r *http.Request, tok string) bool {
+	if strings.Contains(r.URL.Path, tok) {
+		return true
+	}
+	referer := r.Header.Get("referer")
+	if strings.Contains(referer, tok) {
+		return true
+	} else {
+		return false
+	}
 }
 
-func (s *Server) dumpRequestHeaders(r *http.Request) {
+// closeConn closes the client connection without sending a response.
+func closeConn(msg string, w http.ResponseWriter, r *http.Request) {
+	hj, ok := w.(http.Hijacker)
+	if !ok {
+		log.Error("Response doesn't allow hijacking!")
+		return
+	}
+	connIn, _, err := hj.Hijack()
+	if err != nil {
+		log.Errorf("Unable to hijack connection: %s", err)
+		return
+	}
+	dumpRequestHeaders(r)
+	connIn.Close()
+}
+
+func dumpRequestHeaders(r *http.Request) {
 	dump, err := httputil.DumpRequest(r, false)
 	if err == nil {
 		log.Debugf("Request:\n%s", string(dump))

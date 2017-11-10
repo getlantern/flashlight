@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"strings"
 	"sync/atomic"
 	"time"
 
@@ -248,9 +247,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			startupURL,
 			localHTTPToken(settings),
 			app.Flags["ui-domain"].(string),
-			func() bool {
-				return false
-			},
+			settings.GetSystemProxy,
 			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
 			&ui.PathHandler{Pattern: "/data", Handler: ws.StartUIChannel()},
 		); err != nil {
@@ -545,8 +542,21 @@ func (app *App) uiFilter(uiDomain string) func(req *http.Request) (*http.Request
 // Note that for CONNECT requests we unfortunately cannot simply check for the token here.
 func uiFilterWithAddr(uiDomain string, listenAddr func() string) func(req *http.Request) (*http.Request, error) {
 	return func(req *http.Request) (*http.Request, error) {
-		if req.URL != nil && strings.HasPrefix(req.URL.Host, uiDomain) ||
-			strings.HasPrefix(req.Host, uiDomain) {
+		// We also check for the port being appended because some requests will append the port.
+		withPort := uiDomain + ":80"
+		if req.URL != nil && (req.URL.Host == uiDomain ||
+			req.Host == uiDomain || req.URL.Host == withPort || req.Host == withPort) {
+
+			// Check for the token if the request is not a CONNECT request. CONNECT requests will only
+			// contain the secure token in their underlying HTTP requests, which we cannot check here
+			// without subsequently reading the request itself. The UI server does this token check on
+			// those requests (particularly websocket requests). Known methods for web sites attempting
+			// to detect Lantern cannot trigger that check with CONNECT requests, however. See the
+			// broader discussion of this vulnerability at
+			// https://www.nccgroup.trust/us/our-research/lantern/
+			if req.Method != http.MethodConnect && !ui.HasToken(req, localHTTPToken(settings)) {
+				return req, nil
+			}
 			if req.Method == http.MethodConnect && req.URL != nil {
 				req.URL.Host = listenAddr()
 			}

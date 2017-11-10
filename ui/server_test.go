@@ -126,7 +126,7 @@ func doTestCheckRequestToken(t *testing.T, s *Server, testOrigins map[*http.Requ
 	var basic http.HandlerFunc = func(http.ResponseWriter, *http.Request) {
 		hit = true
 	}
-	h := s.checkRequestForToken(basic)
+	h := checkRequestForToken(basic, s.localHTTPToken)
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
