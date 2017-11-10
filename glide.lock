@@ -214,7 +214,7 @@ imports:
 - name: github.com/getlantern/profiling
   version: 2a15afbadcff99bac017e17af273b31d4510ddb8
 - name: github.com/getlantern/protected
-  version: b450fab723a78582c0771bc5f4a60d427e7d0ecb
+  version: 6ce6c3d5506061d24e72d03f1bfa00a2b80cd588
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxy
