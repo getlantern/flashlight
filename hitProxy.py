@@ -2,7 +2,6 @@
 
 import os
 import sys
-import json
 import yaml
 import tempfile
 import subprocess
@@ -45,4 +44,4 @@ if os.path.isfile("./lantern"):
 else:
     path = "/Applications/Lantern.app/Contents/MacOS/lantern"
 
-subprocess.call([path, "-headless", "-stickyconfig", "-readableconfig", "-configdir="+tmpdir])
+subprocess.call([path, "-headless", "-pprofaddr=:4000", "-stickyconfig", "-readableconfig", "-configdir="+tmpdir])
