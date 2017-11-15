@@ -44,11 +44,11 @@ func (p *proxy) httpPing(kb int, resetBBR bool) error {
 	rt := &http.Transport{
 		DisableKeepAlives: true,
 		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			conn, err := p.DialServer()
+			conn, err := p.doDialServer(ctx, p)
 			if err != nil {
 				return nil, err
 			}
-			pd := &preconnectedDialer{p, conn}
+			pd := p.newPreconnected(conn)
 			return pd.DialContext(ctx, network, addr)
 		},
 	}

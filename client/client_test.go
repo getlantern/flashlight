@@ -18,6 +18,7 @@ import (
 	"github.com/getlantern/mockconn"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/stats"
 )
 
@@ -39,10 +40,10 @@ func (m mockStatsTracker) SetHitDataCap(val bool)                               
 func (m mockStatsTracker) SetIsPro(val bool)                                        {}
 
 func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {
-	client.bal.Reset(&testDialer{
+	client.bal.Reset(start(&testDialer{
 		name: "test-dialer",
 		dial: dialer,
-	})
+	}))
 }
 
 func newClient() *Client {
@@ -220,16 +221,27 @@ func TestDialShortcut(t *testing.T) {
 }
 
 type testDialer struct {
-	name      string
-	latency   time.Duration
-	dial      func(network, addr string) (net.Conn, error)
-	bandwidth float64
-	untrusted bool
-	failing   bool
-	attempts  int64
-	successes int64
-	failures  int64
-	stopped   bool
+	name         string
+	latency      time.Duration
+	dial         func(network, addr string) (net.Conn, error)
+	bandwidth    float64
+	untrusted    bool
+	failing      bool
+	attempts     int64
+	successes    int64
+	failures     int64
+	stopped      bool
+	preconnected chan balancer.PreconnectedDialer
+}
+
+func start(d *testDialer) *testDialer {
+	d.preconnected = make(chan balancer.PreconnectedDialer)
+	go func() {
+		for {
+			d.preconnected <- d
+		}
+	}()
+	return d
 }
 
 // Name returns the name for this Dialer
@@ -251,6 +263,14 @@ func (d *testDialer) Addr() string {
 
 func (d *testDialer) Trusted() bool {
 	return !d.untrusted
+}
+
+func (d *testDialer) Preconnected() <-chan balancer.PreconnectedDialer {
+	return d.preconnected
+}
+
+func (d *testDialer) ExpiresAt() time.Time {
+	return time.Now().Add(365 * 24 * time.Hour)
 }
 
 func (d *testDialer) Dial(network, addr string) (net.Conn, error) {

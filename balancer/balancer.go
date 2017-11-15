@@ -19,9 +19,6 @@ import (
 const (
 	connectivityRechecks = 3
 
-	preconnectedDialTimeout = 1 * time.Second  // timeout for dialing with preconnected dialers, low because these should be fast
-	overallDialTimeout      = 30 * time.Second // timeout for attempting to dial out with some dialer
-
 	evalDialersInterval = 10 * time.Second
 )
 
@@ -38,6 +35,9 @@ type PreconnectedDialer interface {
 
 	// DialContext dials out to the given origin
 	DialContext(ctx context.Context, network, addr string) (net.Conn, error)
+
+	// ExpiresAt indicates when this preconnected dialer is no longer usable
+	ExpiresAt() time.Time
 }
 
 // Dialer provides the ability to dial a proxy and obtain information needed to
@@ -107,6 +107,8 @@ type Dialer interface {
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
 	mu                              sync.RWMutex
+	preconnectedDialTimeout         time.Duration
+	overallDialTimeout              time.Duration
 	dialers                         sortedDialers
 	trusted                         sortedDialers
 	closeCh                         chan bool
@@ -118,15 +120,17 @@ type Balancer struct {
 }
 
 // New creates a new Balancer using the supplied Dialers.
-func New(dialers ...Dialer) *Balancer {
+func New(preconnectedDialTimeout, overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
 	// a small alpha to gradually adjust timeout based on performance of all
 	// dialers
 	hasSucceedingDialer := make(chan bool, 1000)
 	b := &Balancer{
-		closeCh:             make(chan bool),
-		onActiveDialer:      make(chan Dialer, 1),
-		hasSucceedingDialer: hasSucceedingDialer,
-		HasSucceedingDialer: hasSucceedingDialer,
+		preconnectedDialTimeout: preconnectedDialTimeout,
+		overallDialTimeout:      overallDialTimeout,
+		closeCh:                 make(chan bool),
+		onActiveDialer:          make(chan Dialer, 1),
+		hasSucceedingDialer:     hasSucceedingDialer,
+		HasSucceedingDialer:     hasSucceedingDialer,
 	}
 
 	b.Reset(dialers...)
@@ -206,7 +210,7 @@ func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.C
 	attempts := 0
 dialLoop:
 	for {
-		if time.Now().Sub(start) > overallDialTimeout {
+		if time.Now().Sub(start) > b.overallDialTimeout {
 			break dialLoop
 		}
 
@@ -215,6 +219,10 @@ dialLoop:
 			select {
 			case d := <-pcds:
 				// got a preconnected dialer
+				if d.ExpiresAt().Before(time.Now()) {
+					// expired dialer, discard and try again
+					continue preconnectedLoop
+				}
 				attempts++
 				conn, err = b.dialWithTimeout(attempts, d, ctx, network, addr)
 				if err != nil {
@@ -228,7 +236,7 @@ dialLoop:
 				}
 				return conn, nil
 			default:
-				log.Debug("Keep looking")
+				// keep looking
 			}
 		}
 		// no preconnected dialers were available, sleep a little and try again
@@ -246,7 +254,7 @@ func (b *Balancer) OnActiveDialer() <-chan Dialer {
 func (b *Balancer) dialWithTimeout(pass int, d PreconnectedDialer, ctx context.Context, network, addr string) (net.Conn, error) {
 	log.Debugf("Dialing %s://%s with %s on pass %v", network, addr, d.Label(), pass)
 	// caps the context deadline to maxDialTimeout
-	newCTX, cancel := context.WithTimeout(ctx, preconnectedDialTimeout)
+	newCTX, cancel := context.WithTimeout(ctx, b.preconnectedDialTimeout)
 	defer cancel()
 	start := time.Now()
 	conn, err := d.DialContext(newCTX, network, addr)

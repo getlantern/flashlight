@@ -30,7 +30,8 @@ const (
 
 type preconnectedDialer struct {
 	*proxy
-	conn net.Conn
+	conn      net.Conn
+	expiresAt time.Time
 }
 
 var (
@@ -85,7 +86,7 @@ func (p *proxy) runConnectivityChecks() {
 
 func (p *proxy) CheckConnectivity() bool {
 	elapsed := mtime.Stopwatch()
-	_, err := p.DialServer()
+	_, err := p.dialServer()
 	log.Debugf("Checking %v took %v, err: %v", p.Label(), elapsed(), err)
 	if err == nil {
 		p.markSuccess()
@@ -140,14 +141,22 @@ func (p *proxy) preconnect() {
 	// TODO: right now, servers are going to time out these connections after 70
 	// seconds, need to figure out way to keep them fresh ...
 	for {
-		conn, err := p.DialServer()
+		conn, err := p.dialServer()
 		if err != nil {
 			log.Errorf("Unable to dial server %v: %s", p.Label(), err)
 			// TODO: exponential backoff?
 			time.Sleep(250 * time.Millisecond)
 			continue
 		}
-		p.preconnected <- &preconnectedDialer{p, conn}
+		p.preconnected <- p.newPreconnected(conn)
+	}
+}
+
+func (p *proxy) newPreconnected(conn net.Conn) balancer.PreconnectedDialer {
+	return &preconnectedDialer{
+		proxy:     p,
+		conn:      conn,
+		expiresAt: time.Now().Add(IdleTimeout / 2),
 	}
 }
 
@@ -166,6 +175,20 @@ func (pd *preconnectedDialer) DialContext(ctx context.Context, network, addr str
 		pd.markSuccess()
 	}
 	return conn, err
+}
+
+func (p *proxy) dial(network, addr string) (net.Conn, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), chainedDialTimeout)
+	defer cancel()
+	conn, err := p.doDialServer(ctx, p)
+	if err != nil {
+		return nil, err
+	}
+	return p.newPreconnected(conn).DialContext(ctx, network, addr)
+}
+
+func (pd *preconnectedDialer) ExpiresAt() time.Time {
+	return pd.expiresAt
 }
 
 func (p *proxy) markSuccess() {

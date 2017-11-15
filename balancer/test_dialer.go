@@ -62,6 +62,10 @@ func (d *testDialer) Preconnected() <-chan PreconnectedDialer {
 	return d.preconnected
 }
 
+func (d *testDialer) ExpiresAt() time.Time {
+	return time.Now().Add(365 * 24 * time.Hour)
+}
+
 func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
 	var conn net.Conn
 	var err error

@@ -1,6 +1,7 @@
 package chained
 
 import (
+	"context"
 	"net"
 	"sync"
 	"testing"
@@ -33,11 +34,11 @@ func TestRateTracking(t *testing.T) {
 		AuthToken: "token",
 	}, "device", func() string {
 		return "protoken"
-	}, true, func(p *proxy) (net.Conn, error) {
+	}, true, func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return sd.Dial("", "")
 	})
 
-	conn, err := p.Dial("tcp", "origin:443")
+	conn, err := p.dial("tcp", "origin:443")
 	if !assert.NoError(t, err) {
 		return
 	}
