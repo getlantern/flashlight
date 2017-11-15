@@ -97,7 +97,7 @@ func randomize(d time.Duration) time.Duration {
 
 func (p *proxy) Stop() {
 	log.Tracef("Stopping dialer %s", p.Label())
-	p.closeCh <- true
+	close(p.closeCh)
 }
 
 func (p *proxy) Attempts() int64 {
@@ -193,25 +193,36 @@ func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, err
 }
 
 func (p *proxy) dialInternal(ctx context.Context, network, addr string) (net.Conn, error) {
-	var conn net.Conn
-	var err error
-	chDone := make(chan bool)
-	go func() {
-		conn, err = p.doDialInternal(network, addr)
-		chDone <- true
-	}()
+	req := dialRequest{network, addr, make(chan dialResult)}
 	select {
-	case <-chDone:
-		return conn, err
-	case <-ctx.Done():
-		go func() {
-			<-chDone
-			if err == nil {
-				log.Debugf("Connection to %s established too late, closing", addr)
-				conn.Close()
+	case p.dialRequestCh <- req:
+		select {
+		case res := <-req.ch:
+			return res.conn, res.err
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
+	default:
+		return nil, errors.New("dropping excessive dial attempts")
+	}
+}
+
+func (p *proxy) dialWorker() {
+	for {
+		select {
+		case <-p.closeCh:
+			return
+		case req := <-p.dialRequestCh:
+			conn, err := p.doDialInternal(req.network, req.addr)
+			select {
+			case req.ch <- dialResult{conn, err}:
+			default:
+				if err == nil {
+					log.Debugf("Connection to %s established too late, closing", req.addr)
+					conn.Close()
+				}
 			}
-		}()
-		return nil, ctx.Err()
+		}
 	}
 }
 

@@ -34,7 +34,9 @@ import (
 )
 
 const (
-	trustedSuffix = " (t)"
+	trustedSuffix         = " (t)"
+	dialWorkersPerProxy   = 30
+	dialQueueSizePerProxy = 100
 )
 
 var (
@@ -292,6 +294,17 @@ func (c *consecCounter) Get() int64 {
 	return atomic.LoadInt64(&c.v)
 }
 
+type dialRequest struct {
+	network string
+	addr    string
+	ch      chan dialResult
+}
+
+type dialResult struct {
+	conn net.Conn
+	err  error
+}
+
 type proxy struct {
 	// Store int64's up front to ensure alignment of 64 bit words
 	// See https://golang.org/pkg/sync/atomic/#pkg-note-BUG
@@ -317,6 +330,7 @@ type proxy struct {
 	forceRedial       *abool.AtomicBool
 	mostRecentABETime time.Time
 	dialCore          func(timeout time.Duration) (net.Conn, time.Duration, error)
+	dialRequestCh     chan dialRequest
 	forceRecheckCh    chan bool
 	closeCh           chan bool
 	mx                sync.Mutex
@@ -334,6 +348,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		trusted:         trusted,
 		dialServer:      dialServer,
 		emaLatency:      ema.NewDuration(0, 0.8),
+		dialRequestCh:   make(chan dialRequest, dialQueueSizePerProxy),
 		forceRecheckCh:  make(chan bool, 1),
 		forceRedial:     abool.New(),
 		closeCh:         make(chan bool, 1),
@@ -356,6 +371,9 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 	}
 
 	go p.runConnectivityChecks()
+	for i := 0; i < dialWorkersPerProxy; i++ {
+		go p.dialWorker()
+	}
 	return p, nil
 }
 
