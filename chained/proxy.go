@@ -495,7 +495,7 @@ func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64,
 	atomic.StoreInt64(&p.consecFailures, consecFailures)
 	p.emaLatency.SetDuration(emaLatency)
 	p.mostRecentABETime = mostRecentABETime
-	p.abe = abe
+	atomic.StoreInt64(&p.abe, abe)
 	p.mx.Unlock()
 }
 
