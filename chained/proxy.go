@@ -295,6 +295,7 @@ func (c *consecCounter) Get() int64 {
 }
 
 type dialRequest struct {
+	ctx     context.Context
 	network string
 	addr    string
 	ch      chan dialResult

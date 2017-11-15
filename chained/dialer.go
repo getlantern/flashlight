@@ -193,7 +193,7 @@ func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, err
 }
 
 func (p *proxy) dialInternal(ctx context.Context, network, addr string) (net.Conn, error) {
-	req := dialRequest{network, addr, make(chan dialResult)}
+	req := dialRequest{ctx, network, addr, make(chan dialResult)}
 	select {
 	case p.dialRequestCh <- req:
 		select {
@@ -213,6 +213,15 @@ func (p *proxy) dialWorker() {
 		case <-p.closeCh:
 			return
 		case req := <-p.dialRequestCh:
+			select {
+			// If the proxy keeps timing out, requests may piles up in the
+			// channel. The context may already be cancelled when a worker is
+			// available to pick the request. Skipping such requests to handle
+			// new requests ASAP and avoid wasting resources.
+			case <-req.ctx.Done():
+				continue
+			default:
+			}
 			conn, err := p.doDialInternal(req.network, req.addr)
 			select {
 			case req.ch <- dialResult{conn, err}:
