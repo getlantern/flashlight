@@ -156,7 +156,7 @@ func (p *proxy) newPreconnected(conn net.Conn) balancer.PreconnectedDialer {
 	return &preconnectedDialer{
 		proxy:     p,
 		conn:      conn,
-		expiresAt: time.Now().Add(IdleTimeout / 2),
+		expiresAt: time.Now().Add(IdleTimeout / 2), // set the preconnected dialer to expire before we hit the idle timeout
 	}
 }
 
