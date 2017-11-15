@@ -29,9 +29,7 @@ func TrackStatsFor(dialers []balancer.Dialer) {
 	// Load existing stats
 	applyExistingStats(dialers)
 
-	if len(dialers) > 1 {
-		probeIfRequired(dialers)
-	}
+	go probePeriodically(dialers)
 
 	for _, d := range dialers {
 		statsTrackingDialers[d.Addr()] = d
@@ -44,23 +42,13 @@ func TrackStatsFor(dialers []balancer.Dialer) {
 	})
 }
 
-func probeIfRequired(dialers []balancer.Dialer) {
+func probePeriodically(dialers []balancer.Dialer) {
 	sorted := balancer.SortDialers(dialers)
-	latencyOfTopProxy := sorted[0].EstLatency()
-	for i, dialer := range sorted {
-		// probe is automatically required for relatively new dialers
-		probeRequired := dialer.Attempts() < 20
-		if probeRequired {
-			log.Debugf("%v is relatively new, will probe", dialer.Label())
-		} else if i > 0 && dialer.Successes() > 0 && dialer.EstLatency() < latencyOfTopProxy {
-			// dialers whose latency is lower than the top proxy get checked on
-			// startup as well
-			log.Debugf("%v is lower latency than %v, will probe", dialer.Label(), sorted[0].Label())
-			probeRequired = true
-		}
-		if probeRequired {
+	for {
+		for _, dialer := range sorted {
 			go dialer.ProbePerformance()
 		}
+		time.Sleep(15 * time.Minute)
 	}
 }
 

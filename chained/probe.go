@@ -8,8 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/withtimeout"
+
+	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/ops"
 )
 
 var (
@@ -38,10 +40,24 @@ func (p *proxy) httpPing(kb int, resetBBR bool) error {
 	httpPingMx.Lock()
 	defer httpPingMx.Unlock()
 
+	op := ops.Begin("probe").ChainedProxy(p.Addr(), p.Protocol(), p.Network())
+	defer op.End()
+
+	start := time.Now()
+	err := op.FailIf(p.doHttpPing(kb, resetBBR))
+	delta := time.Now().Sub(start)
+	op.SetMetricAvg("probe_rtt", delta.Seconds())
+	log.Debugf("Probe took %v, success?: %v", delta, err == nil)
+
+	return err
+}
+
+func (p *proxy) doHttpPing(kb int, resetBBR bool) error {
 	log.Debugf("Sending HTTP Ping to %v", p.Label())
 	rt := &http.Transport{
 		DisableKeepAlives: true,
 		Dial:              p.Dial,
+		ResponseHeaderTimeout: 20 * time.Second,
 	}
 
 	req, err := http.NewRequest("GET", "http://ping-chained-server", nil)

@@ -97,6 +97,8 @@ func TestProxying(t *testing.T) {
 		case "catchall_fatal":
 			assert.Equal(t, "test fatal error", dimensions["error"])
 			assert.Equal(t, "test fatal error", dimensions["error_text"])
+		case "probe":
+			assert.True(t, getVal("probe_rtt") > 0)
 		}
 	}
 	config.ProxyConfigPollInterval = 100 * time.Millisecond
