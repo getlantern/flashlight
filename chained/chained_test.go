@@ -236,3 +236,13 @@ func test(t *testing.T, dialer func(network, addr string) (net.Conn, error)) {
 	}
 	assert.Equal(t, pong, b, "Didn't receive correct pong message")
 }
+
+func (p *proxy) dial(network, addr string) (net.Conn, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), chainedDialTimeout)
+	defer cancel()
+	conn, err := p.doDialServer(ctx, p)
+	if err != nil {
+		return nil, err
+	}
+	return p.newPreconnected(conn).DialContext(ctx, network, addr)
+}
