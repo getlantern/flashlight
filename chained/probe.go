@@ -18,8 +18,23 @@ var (
 	httpPingMx sync.Mutex
 )
 
-func (p *proxy) ProbePerformance() {
-	log.Debugf("Actively probing performance for %v", p.Label())
+func (p *proxy) Probe(forPerformance bool) {
+	forPerformanceString := ""
+	if forPerformance {
+		forPerformanceString = " for performance"
+	}
+	log.Debugf("Actively probing %v%v", p.Label(), forPerformanceString)
+
+	if !forPerformance {
+		// not probing for performance, just do a small ping
+		err := p.httpPing(1, false)
+		if err != nil {
+			log.Errorf("Error probing %v: %v", p.Label(), err)
+		}
+		return
+	}
+
+	// probing for performance, do several increasingly large pings
 	for i := 0; i < 5; i++ {
 		// we vary the size of the ping request to help the BBR curve-fitting
 		// logic on the server.
@@ -27,7 +42,7 @@ func (p *proxy) ProbePerformance() {
 		// Reset BBR stats to have an up-to-date estimation after the probe
 		err := p.httpPing(kb, i == 0)
 		if err != nil {
-			log.Errorf("Error probing %v: %v", p.Label(), err)
+			log.Errorf("Error probing %v for performance: %v", p.Label(), err)
 			return
 		}
 		// Sleep just a little to allow interleaving of pings for different proxies
@@ -46,8 +61,9 @@ func (p *proxy) httpPing(kb int, resetBBR bool) error {
 	start := time.Now()
 	err := op.FailIf(p.doHttpPing(kb, resetBBR))
 	delta := time.Now().Sub(start)
-	op.SetMetricAvg("probe_rtt", float64(delta/time.Millisecond))
-	log.Debugf("Probe took %v, success?: %v", delta, err == nil)
+	op.Set("success", err == nil)
+	op.SetMetricAvg("probe_rtt", float64(delta)/float64(time.Millisecond))
+	log.Debugf("Probe took %v", delta)
 
 	return err
 }

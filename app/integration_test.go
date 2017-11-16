@@ -168,9 +168,10 @@ func TestProxying(t *testing.T) {
 
 	select {
 	case <-onGeo:
+		time.Sleep(30 * time.Second)
 		opsMx.RLock()
 		for _, op := range flashlight.FullyReportedOps {
-			if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" {
+			if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" || op == "probe" {
 				// ignore these, as we don't do them during the integration test
 				continue
 			}
