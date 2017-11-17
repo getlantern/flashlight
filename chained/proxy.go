@@ -36,7 +36,8 @@ import (
 const (
 	trustedSuffix = " (t)"
 
-	maxPreconnects = 20
+	initialPreconnects = 20
+	maxPreconnects     = 100
 )
 
 var (

@@ -59,7 +59,8 @@ type Dialer interface {
 	// Trusted indicates whether or not this dialer is trusted
 	Trusted() bool
 
-	// Preconnect tells the dialer to go ahead and preconnect 1 connection.
+	// Preconnect tells the dialer to go ahead and preconnect 1 connection (in
+	// the background)
 	Preconnect()
 
 	// Preconnected() returns a channel from which we can obtain

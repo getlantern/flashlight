@@ -137,8 +137,8 @@ func (p *proxy) Succeeding() bool {
 }
 
 func (p *proxy) processPreconnects() {
-	// Eagerly preconnect
-	for i := 0; i < maxPreconnects; i++ {
+	// Eagerly preconnect a few
+	for i := 0; i < initialPreconnects; i++ {
 		p.Preconnect()
 	}
 
@@ -184,7 +184,9 @@ func (pd *preconnectedDialer) DialContext(ctx context.Context, network, addr str
 		}
 	} else {
 		pd.markSuccess()
-		pd.Preconnect() // keeps preconnected queue full
+		// Preconnect a couple of times to keep preconnected queue full
+		pd.Preconnect()
+		pd.Preconnect()
 	}
 	return conn, err
 }
