@@ -24,8 +24,6 @@ import (
 const (
 	minCheckInterval = 10 * time.Second
 	maxCheckInterval = 15 * time.Minute
-	minCheckTimeout  = 1 * time.Second
-	maxCheckTimeout  = 10 * time.Second
 )
 
 type preconnectedDialer struct {
@@ -35,7 +33,7 @@ type preconnectedDialer struct {
 }
 
 var (
-	// Close connections idle for a period to avoid dangling connections. 45
+	// IdleTimeout closes connections idle for a period to avoid dangling connections. 45
 	// seconds is long enough to avoid interrupt normal connections but shorter
 	// than the idle timeout on the server to avoid running into closed connection
 	// problems. 45 seconds is also longer than the MaxIdleTime on our
