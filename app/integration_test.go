@@ -97,6 +97,8 @@ func TestProxying(t *testing.T) {
 		case "catchall_fatal":
 			assert.Equal(t, "test fatal error", dimensions["error"])
 			assert.Equal(t, "test fatal error", dimensions["error_text"])
+		case "probe":
+			assert.True(t, getVal("probe_rtt") > 0)
 		}
 	}
 	config.ProxyConfigPollInterval = 100 * time.Millisecond
@@ -168,7 +170,7 @@ func TestProxying(t *testing.T) {
 	case <-onGeo:
 		opsMx.RLock()
 		for _, op := range flashlight.FullyReportedOps {
-			if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" {
+			if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" || op == "probe" {
 				// ignore these, as we don't do them during the integration test
 				continue
 			}

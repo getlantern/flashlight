@@ -323,7 +323,7 @@ func (d *testDialer) CheckConnectivity() bool {
 	return true
 }
 
-func (d *testDialer) ProbePerformance() {
+func (d *testDialer) Probe(forPerformance bool) {
 }
 
 func (d *testDialer) Stop() {
