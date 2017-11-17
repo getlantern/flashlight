@@ -214,42 +214,49 @@ func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.C
 	var err error
 	start := time.Now()
 	attempts := 0
-dialLoop:
+
+dialLoop: // keep trying everything until we run out of time
 	for {
 		if time.Now().Sub(start) > b.overallDialTimeout {
 			break dialLoop
 		}
 
-	preconnectedLoop:
+		// try all different proxies in order of preference
 		for i, pds := range preconnectedDialers {
-			select {
-			case pd := <-pds:
-				// got a preconnected dialer
-				if pd.ExpiresAt().Before(time.Now()) {
-					// expired dialer, discard and try again
-					continue preconnectedLoop
-				}
-				attempts++
-				conn, err = b.dialWithTimeout(attempts, pd, ctx, network, addr)
-				if err != nil {
-					log.Errorf("Unable to dial via %v to %s://%s: %v on pass %v...continuing",
-						pd.Label(), network, addr, err, attempts)
-					continue preconnectedLoop
-				}
-				// Dial succeeded, preconnect a couple of times to keep preconnected
-				// queue full
-				pd.Preconnect()
-				pd.Preconnect()
+
+		proxyLoop: // try available dialers from this proxy
+			for {
 				select {
-				case b.onActiveDialer <- pd:
+				case pd := <-pds:
+					// got a preconnected dialer
+					if pd.ExpiresAt().Before(time.Now()) {
+						// expired dialer, discard and try next from same proxy
+						continue proxyLoop
+					}
+					attempts++
+					conn, err = b.dialWithTimeout(attempts, pd, ctx, network, addr)
+					if err != nil {
+						log.Errorf("Unable to dial via %v to %s://%s: %v on pass %v...continuing",
+							pd.Label(), network, addr, err, attempts)
+						break proxyLoop
+					}
+					// Dial succeeded, preconnect a couple of times to keep preconnected
+					// queue full
+					pd.Preconnect()
+					pd.Preconnect()
+					select {
+					case b.onActiveDialer <- pd:
+					default:
+					}
+					return conn, nil
 				default:
+					// no preconnected dialer, tell dialer to preconnect and keep looking
+					dialers[i].Preconnect()
+					break proxyLoop
 				}
-				return conn, nil
-			default:
-				// no preconnected dialer, tell dialer to preconnect and keep looking
-				dialers[i].Preconnect()
 			}
 		}
+
 		// no good preconnected dialers were available, sleep a little and try again
 		time.Sleep(250 * time.Millisecond)
 	}
