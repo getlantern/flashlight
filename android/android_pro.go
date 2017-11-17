@@ -14,7 +14,6 @@ type Settings interface {
 	StickyConfig() bool
 	EnableAdBlocking() bool
 	DefaultDnsServer() string
-	DnsGrabServer() string
 	TimeoutMillis() int
 }
 
@@ -32,6 +31,7 @@ type Session interface {
 	Locale() string
 	Code() string
 	GetCountryCode() string
+	GetDNSServer() string
 	VerifyCode() string
 	DeviceCode() string
 	DeviceName() string

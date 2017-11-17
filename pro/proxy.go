@@ -110,6 +110,8 @@ func APIHandler(ac common.AuthConfig) http.Handler {
 			if r.Header.Get(common.ProTokenHeader) == "" {
 				r.Header.Set(common.ProTokenHeader, ac.GetToken())
 			}
+			// Add Lantern Version header always
+			r.Header.Set(common.VersionHeader, common.Version)
 		},
 	}
 }
