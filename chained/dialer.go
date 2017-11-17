@@ -136,15 +136,17 @@ func (p *proxy) Succeeding() bool {
 		p.consecRWSuccesses.Get() > -5
 }
 
-func (p *proxy) preconnect() {
-	// TODO: make filling of this more adaptive (maybe)
-	// TODO: right now, servers are going to time out these connections after 70
-	// seconds, need to figure out way to keep them fresh ...
-	for {
+func (p *proxy) processPreconnects() {
+	// Eagerly preconnect
+	for i := 0; i < maxPreconnects; i++ {
+		p.Preconnect()
+	}
+
+	// As long as we've got requests to preconnect, preconnect
+	for range p.preconnects {
 		conn, err := p.dialServer()
 		if err != nil {
 			log.Errorf("Unable to dial server %v: %s", p.Label(), err)
-			// TODO: exponential backoff?
 			time.Sleep(250 * time.Millisecond)
 			continue
 		}
@@ -157,6 +159,15 @@ func (p *proxy) newPreconnected(conn net.Conn) balancer.PreconnectedDialer {
 		proxy:     p,
 		conn:      conn,
 		expiresAt: time.Now().Add(IdleTimeout / 2), // set the preconnected dialer to expire before we hit the idle timeout
+	}
+}
+
+func (p *proxy) Preconnect() {
+	select {
+	case p.preconnects <- nil:
+		// okay
+	default:
+		// maxPreconnects already requested, ignore
 	}
 }
 
@@ -173,6 +184,7 @@ func (pd *preconnectedDialer) DialContext(ctx context.Context, network, addr str
 		}
 	} else {
 		pd.markSuccess()
+		pd.Preconnect() // keeps preconnected queue full
 	}
 	return conn, err
 }

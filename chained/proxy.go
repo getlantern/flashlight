@@ -35,6 +35,8 @@ import (
 
 const (
 	trustedSuffix = " (t)"
+
+	maxPreconnects = 20
 )
 
 var (
@@ -317,6 +319,7 @@ type proxy struct {
 	forceRedial       *abool.AtomicBool
 	mostRecentABETime time.Time
 	dialCore          func(ctx context.Context) (net.Conn, time.Duration, error)
+	preconnects       chan interface{}
 	preconnected      chan balancer.PreconnectedDialer
 	forceRecheckCh    chan bool
 	closeCh           chan bool
@@ -337,7 +340,8 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		emaLatency:      ema.NewDuration(0, 0.8),
 		forceRecheckCh:  make(chan bool, 1),
 		forceRedial:     abool.New(),
-		preconnected:    make(chan balancer.PreconnectedDialer, 20),
+		preconnects:     make(chan interface{}, maxPreconnects),
+		preconnected:    make(chan balancer.PreconnectedDialer, maxPreconnects),
 		closeCh:         make(chan bool, 1),
 		consecSuccesses: 1, // be optimistic
 	}
@@ -358,7 +362,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 	}
 
 	go p.runConnectivityChecks()
-	go p.preconnect()
+	go p.processPreconnects()
 	return p, nil
 }
 

@@ -265,6 +265,9 @@ func (d *testDialer) Trusted() bool {
 	return !d.untrusted
 }
 
+func (d *testDialer) Preconnect() {
+}
+
 func (d *testDialer) Preconnected() <-chan balancer.PreconnectedDialer {
 	return d.preconnected
 }

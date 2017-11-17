@@ -59,6 +59,9 @@ type Dialer interface {
 	// Trusted indicates whether or not this dialer is trusted
 	Trusted() bool
 
+	// Preconnect tells the dialer to go ahead and preconnect 1 connection.
+	Preconnect()
+
 	// Preconnected() returns a channel from which we can obtain
 	// PreconnectedDialers.
 	Preconnected() <-chan PreconnectedDialer
@@ -215,7 +218,7 @@ dialLoop:
 		}
 
 	preconnectedLoop:
-		for _, pcds := range preconnectedDialers {
+		for i, pcds := range preconnectedDialers {
 			select {
 			case d := <-pcds:
 				// got a preconnected dialer
@@ -236,10 +239,11 @@ dialLoop:
 				}
 				return conn, nil
 			default:
-				// keep looking
+				// no preconnected dialer, tell dialer to preconnect and keep looking
+				dialers[i].Preconnect()
 			}
 		}
-		// no preconnected dialers were available, sleep a little and try again
+		// no good preconnected dialers were available, sleep a little and try again
 		time.Sleep(250 * time.Millisecond)
 	}
 	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", network, addr, attempts)
