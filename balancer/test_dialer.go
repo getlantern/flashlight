@@ -140,7 +140,7 @@ func (d *testDialer) connectivityChecksSinceLast() int {
 	return result
 }
 
-func (d *testDialer) ProbePerformance() {
+func (d *testDialer) Probe(forPerformance bool) {
 }
 
 func (d *testDialer) Stop() {

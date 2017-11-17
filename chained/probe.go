@@ -10,16 +10,33 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/withtimeout"
+
+	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/ops"
 )
 
 var (
 	httpPingMx sync.Mutex
 )
 
-func (p *proxy) ProbePerformance() {
-	log.Debugf("Actively probing performance for %v", p.Label())
+func (p *proxy) Probe(forPerformance bool) {
+	forPerformanceString := ""
+	if forPerformance {
+		forPerformanceString = " for performance"
+	}
+	log.Debugf("Actively probing %v%v", p.Label(), forPerformanceString)
+
+	if !forPerformance {
+		// not probing for performance, just do a small ping
+		err := p.httpPing(1, false)
+		if err != nil {
+			log.Errorf("Error probing %v: %v", p.Label(), err)
+		}
+		return
+	}
+
+	// probing for performance, do several increasingly large pings
 	for i := 0; i < 5; i++ {
 		// we vary the size of the ping request to help the BBR curve-fitting
 		// logic on the server.
@@ -27,7 +44,7 @@ func (p *proxy) ProbePerformance() {
 		// Reset BBR stats to have an up-to-date estimation after the probe
 		err := p.httpPing(kb, i == 0)
 		if err != nil {
-			log.Errorf("Error probing %v: %v", p.Label(), err)
+			log.Errorf("Error probing %v for performance: %v", p.Label(), err)
 			return
 		}
 		// Sleep just a little to allow interleaving of pings for different proxies
@@ -40,6 +57,20 @@ func (p *proxy) httpPing(kb int, resetBBR bool) error {
 	httpPingMx.Lock()
 	defer httpPingMx.Unlock()
 
+	op := ops.Begin("probe").ChainedProxy(p.Addr(), p.Protocol(), p.Network())
+	defer op.End()
+
+	start := time.Now()
+	err := op.FailIf(p.doHttpPing(kb, resetBBR))
+	delta := time.Now().Sub(start)
+	op.Set("success", err == nil)
+	op.SetMetricAvg("probe_rtt", float64(delta)/float64(time.Millisecond))
+	log.Debugf("Probe took %v", delta)
+
+	return err
+}
+
+func (p *proxy) doHttpPing(kb int, resetBBR bool) error {
 	log.Debugf("Sending HTTP Ping to %v", p.Label())
 	rt := &http.Transport{
 		DisableKeepAlives: true,
@@ -51,6 +82,7 @@ func (p *proxy) httpPing(kb int, resetBBR bool) error {
 			pd := p.newPreconnected(conn)
 			return pd.DialContext(ctx, network, addr)
 		},
+		ResponseHeaderTimeout: 20 * time.Second,
 	}
 
 	req, err := http.NewRequest("GET", "http://ping-chained-server", nil)

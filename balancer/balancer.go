@@ -100,9 +100,11 @@ type Dialer interface {
 	// indefinitely.
 	CheckConnectivity() bool
 
-	// ProbePerformance forces the dialer to actively probe to try to better
-	// understand its performance.
-	ProbePerformance()
+	// Probe performs active probing of the proxy to better understand
+	// connectivity and performance. If forPerformance is true, the dialer will
+	// probe more and with bigger data in order for bandwidth estimation to
+	// collect enough data to make a decent estimate.
+	Probe(forPerformance bool)
 
 	// Stop stops background processing for this Dialer.
 	Stop()

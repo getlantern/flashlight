@@ -102,7 +102,10 @@ func randomize(d time.Duration) time.Duration {
 
 func (p *proxy) Stop() {
 	log.Tracef("Stopping dialer %s", p.Label())
-	p.closeCh <- true
+	// don't bother waiting for proxy to stop
+	go func() {
+		p.closeCh <- true
+	}()
 }
 
 func (p *proxy) Attempts() int64 {
