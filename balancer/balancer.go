@@ -221,23 +221,27 @@ dialLoop:
 		}
 
 	preconnectedLoop:
-		for i, pcds := range preconnectedDialers {
+		for i, pds := range preconnectedDialers {
 			select {
-			case d := <-pcds:
+			case pd := <-pds:
 				// got a preconnected dialer
-				if d.ExpiresAt().Before(time.Now()) {
+				if pd.ExpiresAt().Before(time.Now()) {
 					// expired dialer, discard and try again
 					continue preconnectedLoop
 				}
 				attempts++
-				conn, err = b.dialWithTimeout(attempts, d, ctx, network, addr)
+				conn, err = b.dialWithTimeout(attempts, pd, ctx, network, addr)
 				if err != nil {
 					log.Errorf("Unable to dial via %v to %s://%s: %v on pass %v...continuing",
-						d.Label(), network, addr, err, attempts)
+						pd.Label(), network, addr, err, attempts)
 					continue preconnectedLoop
 				}
+				// Dial succeeded, preconnect a couple of times to keep preconnected
+				// queue full
+				pd.Preconnect()
+				pd.Preconnect()
 				select {
-				case b.onActiveDialer <- d:
+				case b.onActiveDialer <- pd:
 				default:
 				}
 				return conn, nil
@@ -258,17 +262,17 @@ func (b *Balancer) OnActiveDialer() <-chan Dialer {
 	return b.onActiveDialer
 }
 
-func (b *Balancer) dialWithTimeout(pass int, d PreconnectedDialer, ctx context.Context, network, addr string) (net.Conn, error) {
-	log.Debugf("Dialing %s://%s with %s on pass %v", network, addr, d.Label(), pass)
+func (b *Balancer) dialWithTimeout(pass int, pd PreconnectedDialer, ctx context.Context, network, addr string) (net.Conn, error) {
+	log.Debugf("Dialing %s://%s with %s on pass %v", network, addr, pd.Label(), pass)
 	// caps the context deadline to maxDialTimeout
 	newCTX, cancel := context.WithTimeout(ctx, b.preconnectedDialTimeout)
 	defer cancel()
 	start := time.Now()
-	conn, err := d.DialContext(newCTX, network, addr)
+	conn, err := pd.DialContext(newCTX, network, addr)
 	if err == nil {
 		// Please leave this at Debug level, as it helps us understand
 		// performance issues caused by a poor proxy being selected.
-		log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", d.Label(), network, addr, pass, time.Since(start))
+		log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", pd.Label(), network, addr, pass, time.Since(start))
 	}
 	return conn, err
 }

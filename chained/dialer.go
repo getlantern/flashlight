@@ -185,9 +185,6 @@ func (pd *preconnectedDialer) DialContext(ctx context.Context, network, addr str
 		}
 	} else {
 		pd.markSuccess()
-		// Preconnect a couple of times to keep preconnected queue full
-		pd.Preconnect()
-		pd.Preconnect()
 	}
 	return conn, err
 }
