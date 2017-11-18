@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/flashlight/ops"
@@ -110,6 +111,12 @@ type Dialer interface {
 	Stop()
 }
 
+type dialStats struct {
+	success int64
+	failure int64
+	expired int64
+}
+
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
 	mu                              sync.RWMutex
@@ -117,6 +124,7 @@ type Balancer struct {
 	overallDialTimeout              time.Duration
 	dialers                         sortedDialers
 	trusted                         sortedDialers
+	sessionStats                    map[string]*dialStats
 	closeCh                         chan bool
 	onActiveDialer                  chan Dialer
 	priorTopDialer                  Dialer
@@ -150,9 +158,15 @@ func (b *Balancer) Reset(dialers ...Dialer) {
 	dls := make(sortedDialers, len(dialers))
 	copy(dls, dialers)
 
+	sessionStats := make(map[string]*dialStats, len(dls))
+	for _, d := range dls {
+		sessionStats[d.Label()] = &dialStats{}
+	}
+
 	b.mu.Lock()
 	oldDialers := b.dialers
 	b.dialers = dls
+	b.sessionStats = sessionStats
 	b.mu.Unlock()
 	b.sortDialers()
 
@@ -200,7 +214,7 @@ func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.C
 		trustedOnly = true
 	}
 
-	dialers, pickErr := b.pickDialers(trustedOnly)
+	dialers, sessionStats, pickErr := b.pickDialers(trustedOnly)
 	if pickErr != nil {
 		return nil, pickErr
 	}
@@ -231,6 +245,7 @@ dialLoop: // keep trying everything until we run out of time
 					// got a preconnected dialer
 					if pd.ExpiresAt().Before(time.Now()) {
 						// expired dialer, discard and try next from same proxy
+						atomic.AddInt64(&sessionStats[pd.Label()].expired, 1)
 						continue proxyLoop
 					}
 					attempts++
@@ -238,10 +253,12 @@ dialLoop: // keep trying everything until we run out of time
 					if err != nil {
 						log.Errorf("Unable to dial via %v to %s://%s: %v on pass %v...continuing",
 							pd.Label(), network, addr, err, attempts)
+						atomic.AddInt64(&sessionStats[pd.Label()].failure, 1)
 						break proxyLoop
 					}
-					// Dial succeeded, preconnect a couple of times to keep preconnected
-					// queue full
+					// Dial succeeded
+					atomic.AddInt64(&sessionStats[pd.Label()].success, 1)
+					// Preconnect a couple of times to keep preconnected queue full
 					pd.Preconnect()
 					pd.Preconnect()
 					select {
@@ -369,13 +386,21 @@ func (b *Balancer) Close() {
 	}
 }
 
-func (b *Balancer) printStats(dialers sortedDialers) {
+func (b *Balancer) printStats(dialers sortedDialers, sessionStats map[string]*dialStats) {
 	log.Debug("-------------------------- Dialer Stats -----------------------")
 	rank := float64(1)
 	for _, d := range dialers {
 		estLatency := d.EstLatency().Seconds()
 		estBandwidth := d.EstBandwidth()
-		log.Debugf("%s  S: %4d / %4d (%d)\tF: %4d / %4d (%d)\tL: %5.0fms\tBW: %3.2fMbps\t", d.JustifiedLabel(), d.Successes(), d.Attempts(), d.ConsecSuccesses(), d.Failures(), d.Attempts(), d.ConsecFailures(), estLatency*1000, estBandwidth)
+		ds := sessionStats[d.Label()]
+		sessionAttempts := ds.success + ds.failure + ds.expired
+		log.Debugf("%s  A: %4d (%5d)\tS: %4d (%5d)\tCS: (%4d)\tF: %4d (%5d)\tCF: %4d\tEXP: %4d\tL: %5.0fms\tBW: %10.2fMbps\t",
+			d.JustifiedLabel(),
+			sessionAttempts, d.Attempts(),
+			ds.success, d.Successes(), d.ConsecSuccesses(),
+			ds.failure, d.Failures(), d.ConsecFailures(),
+			ds.expired,
+			estLatency*1000, estBandwidth)
 		host, _, _ := net.SplitHostPort(d.Addr())
 		// Report stats to borda
 		op := ops.Begin("proxy_rank").
@@ -391,12 +416,13 @@ func (b *Balancer) printStats(dialers sortedDialers) {
 	log.Debug("------------------------ End Dialer Stats ---------------------")
 }
 
-func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, error) {
+func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, map[string]*dialStats, error) {
 	b.mu.RLock()
 	dialers := b.dialers
 	if trustedOnly {
 		dialers = b.trusted
 	}
+	sessionStats := b.sessionStats
 	b.mu.RUnlock()
 
 	if !trustedOnly {
@@ -405,9 +431,9 @@ func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, error) {
 
 	if dialers.Len() == 0 {
 		if trustedOnly {
-			return nil, fmt.Errorf("No trusted dialers")
+			return nil, nil, fmt.Errorf("No trusted dialers")
 		}
-		return nil, fmt.Errorf("No dialers")
+		return nil, nil, fmt.Errorf("No dialers")
 	}
 
 	topDialer := dialers[0]
@@ -426,11 +452,11 @@ func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, error) {
 					randomized = append(randomized, other)
 				}
 			}
-			return randomized, nil
+			return randomized, sessionStats, nil
 		}
 	}
 
-	return dialers, nil
+	return dialers, sessionStats, nil
 }
 
 func (b *Balancer) copyOfDialers() sortedDialers {
@@ -456,10 +482,11 @@ func (b *Balancer) sortDialers() {
 	b.mu.Lock()
 	b.dialers = dialers
 	b.trusted = trusted
+	sessionStats := b.sessionStats
 	b.mu.Unlock()
 
 	b.lookForSucceedingDialer(dialers)
-	b.printStats(dialers)
+	b.printStats(dialers, sessionStats)
 }
 
 func (b *Balancer) lookForSucceedingDialer(dialers []Dialer) {
