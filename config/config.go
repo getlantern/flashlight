@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"time"
 
 	"github.com/getlantern/rot13"
@@ -103,9 +104,16 @@ func pipeConfig(opts *options) {
 	configChan := make(chan interface{})
 
 	go func() {
+		var lastCfg interface{}
 		for {
 			cfg := <-configChan
-			opts.dispatch(cfg)
+			if reflect.DeepEqual(lastCfg, cfg) {
+				log.Debug("Config unchanged, ignoring")
+			} else {
+				log.Debug("Dispatching updated config")
+				opts.dispatch(cfg)
+				lastCfg = cfg
+			}
 		}
 	}()
 	configPath, err := client.InConfigDir(opts.saveDir, opts.name)
