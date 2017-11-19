@@ -36,8 +36,8 @@ import (
 const (
 	trustedSuffix = " (t)"
 
-	initialPreconnects = 20
-	maxPreconnects     = 100
+	defaultInitPreconnect = 20
+	defaultMaxPreconnect  = 100
 )
 
 var (
@@ -328,6 +328,15 @@ type proxy struct {
 }
 
 func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(context.Context, *proxy) (net.Conn, error)) (*proxy, error) {
+	initPreconnect := s.InitPreconnect
+	if initPreconnect <= 0 {
+		initPreconnect = defaultInitPreconnect
+	}
+	maxPreconnect := s.MaxPreconnect
+	if maxPreconnect <= 0 {
+		maxPreconnect = defaultMaxPreconnect
+	}
+
 	p := &proxy{
 		name:            name,
 		protocol:        protocol,
@@ -341,8 +350,8 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		emaLatency:      ema.NewDuration(0, 0.8),
 		forceRecheckCh:  make(chan bool, 1),
 		forceRedial:     abool.New(),
-		preconnects:     make(chan interface{}, maxPreconnects),
-		preconnected:    make(chan balancer.PreconnectedDialer, maxPreconnects),
+		preconnects:     make(chan interface{}, maxPreconnect),
+		preconnected:    make(chan balancer.PreconnectedDialer, maxPreconnect),
 		closeCh:         make(chan bool, 1),
 		consecSuccesses: 1, // be optimistic
 	}
@@ -363,7 +372,8 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 	}
 
 	go p.runConnectivityChecks()
-	go p.processPreconnects()
+	log.Debugf("%v preconnects, init: %d   max: %d", p.Label(), initPreconnect, maxPreconnect)
+	go p.processPreconnects(initPreconnect)
 	return p, nil
 }
 

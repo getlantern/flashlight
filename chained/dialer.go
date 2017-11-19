@@ -137,9 +137,9 @@ func (p *proxy) Succeeding() bool {
 		p.consecRWSuccesses.Get() > -5
 }
 
-func (p *proxy) processPreconnects() {
+func (p *proxy) processPreconnects(initPreconnect int) {
 	// Eagerly preconnect a few
-	for i := 0; i < initialPreconnects; i++ {
+	for i := 0; i < initPreconnect; i++ {
 		p.Preconnect()
 	}
 
