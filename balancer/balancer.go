@@ -260,14 +260,14 @@ dialLoop: // keep trying everything until we run out of time
 					atomic.AddInt64(&sessionStats[pd.Label()].success, 1)
 					// Preconnect a couple of times to keep preconnected queue full
 					pd.Preconnect()
-					pd.Preconnect()
 					select {
 					case b.onActiveDialer <- pd:
 					default:
 					}
 					return conn, nil
 				default:
-					// no preconnected dialer, tell dialer to preconnect and keep looking
+					// no preconnected dialer, tell dialer to preconnect so we'll
+					// hopefully get something on the next pass, and keep looking
 					dialers[i].Preconnect()
 					break proxyLoop
 				}
