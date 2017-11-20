@@ -388,11 +388,7 @@ func (b *Balancer) Close() {
 	}
 }
 
-func (b *Balancer) printStats(dialers sortedDialers, sessionStats map[string]*dialStats) {
-	b.mu.RLock()
-	lastReset := b.lastReset
-	b.mu.RUnlock()
-
+func (b *Balancer) printStats(dialers sortedDialers, sessionStats map[string]*dialStats, lastReset time.Time) {
 	log.Debugf("----------- Dialer Stats (%v) -----------", time.Now().Sub(lastReset))
 	rank := float64(1)
 	for _, d := range dialers {
@@ -489,10 +485,11 @@ func (b *Balancer) sortDialers() {
 	b.dialers = dialers
 	b.trusted = trusted
 	sessionStats := b.sessionStats
+	lastReset := b.lastReset
 	b.mu.Unlock()
 
 	b.lookForSucceedingDialer(dialers)
-	b.printStats(dialers, sessionStats)
+	b.printStats(dialers, sessionStats, lastReset)
 }
 
 func (b *Balancer) lookForSucceedingDialer(dialers []Dialer) {
