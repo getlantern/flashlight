@@ -27,6 +27,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
+	"github.com/getlantern/flashlight/goroutines"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/stats"
 
@@ -66,6 +67,10 @@ func Run(httpProxyAddr string,
 	adBlockingAllowed func() bool,
 	reverseDNS func(host string) string,
 	requestFilter func(*http.Request) (*http.Request, error)) error {
+
+	// check # of goroutines every minute, print the top 5 stacks with most
+	// goroutines if the # exceeds 2000 and is increasing.
+	goroutines.Run(time.Minute, 2000, 5)
 	elapsed := mtime.Stopwatch()
 	displayVersion()
 	initContext(deviceID, common.Version, common.RevisionDate, isPro)
