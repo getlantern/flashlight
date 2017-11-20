@@ -125,6 +125,7 @@ type Balancer struct {
 	dialers                         sortedDialers
 	trusted                         sortedDialers
 	sessionStats                    map[string]*dialStats
+	lastReset                       time.Time
 	closeCh                         chan bool
 	onActiveDialer                  chan Dialer
 	priorTopDialer                  Dialer
@@ -167,6 +168,7 @@ func (b *Balancer) Reset(dialers ...Dialer) {
 	oldDialers := b.dialers
 	b.dialers = dls
 	b.sessionStats = sessionStats
+	b.lastReset = time.Now()
 	b.mu.Unlock()
 	b.sortDialers()
 
@@ -387,7 +389,11 @@ func (b *Balancer) Close() {
 }
 
 func (b *Balancer) printStats(dialers sortedDialers, sessionStats map[string]*dialStats) {
-	log.Debug("-------------------------- Dialer Stats -----------------------")
+	b.mu.RLock()
+	lastReset := b.lastReset
+	b.mu.RUnlock()
+
+	log.Debugf("----------- Dialer Stats (%v) -----------", time.Now().Sub(lastReset))
 	rank := float64(1)
 	for _, d := range dialers {
 		estLatency := d.EstLatency().Seconds()
@@ -413,7 +419,7 @@ func (b *Balancer) printStats(dialers sortedDialers, sessionStats map[string]*di
 		op.End()
 		rank++
 	}
-	log.Debug("------------------------ End Dialer Stats ---------------------")
+	log.Debug("----------- End Dialer Stats -----------")
 }
 
 func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, map[string]*dialStats, error) {
