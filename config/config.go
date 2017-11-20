@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/getlantern/rot13"
 	"github.com/getlantern/tarfs"
 	"github.com/getlantern/yaml"
@@ -107,10 +108,14 @@ func pipeConfig(opts *options) {
 		var lastCfg interface{}
 		for {
 			cfg := <-configChan
-			if reflect.DeepEqual(lastCfg, cfg) {
+			a := yamlRoundTrip(lastCfg)
+			b := yamlRoundTrip(cfg)
+			if reflect.DeepEqual(a, b) {
 				log.Debug("Config unchanged, ignoring")
 			} else {
 				log.Debug("Dispatching updated config")
+				log.Debugf("Old: %v", spew.Sdump(a))
+				log.Debugf("New: %v", spew.Sdump(b))
 				opts.dispatch(cfg)
 				lastCfg = cfg
 			}
@@ -144,6 +149,30 @@ func pipeConfig(opts *options) {
 	} else {
 		log.Debugf("Using sticky config")
 	}
+}
+
+func yamlRoundTrip(o interface{}) interface{} {
+	if o == nil {
+		return nil
+	}
+	var or interface{}
+	t := reflect.TypeOf(o)
+	if t.Kind() == reflect.Ptr {
+		or = reflect.New(t.Elem()).Interface()
+	} else {
+		or = reflect.New(t).Interface()
+	}
+	b, err := yaml.Marshal(or)
+	if err != nil {
+		log.Errorf("Unable to yaml round trip (marshal): %v %v", o, err)
+		return o
+	}
+	err = yaml.Unmarshal(b, or)
+	if err != nil {
+		log.Errorf("Unable to yaml round trip (unmarshal): %v %v", o, err)
+		return o
+	}
+	return or
 }
 
 // newConfig create a new ProxyConfig instance that saves and looks for
