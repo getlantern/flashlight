@@ -15,11 +15,12 @@ import (
 
 var log = golog.LoggerFor("goroutines")
 
-func Run(interval time.Duration, limit int, topN int) (stop func()) {
-	tk := time.NewTicker(interval)
+func Monitor(interval time.Duration, limit int, topN int) (stop func()) {
 	chStop := make(chan struct{})
 	go func() {
 		var lastN int
+		tk := time.NewTicker(interval)
+		defer tk.Stop()
 		for {
 			select {
 			case <-tk.C:
@@ -59,5 +60,5 @@ func printProfile(topN int) {
 		}
 		lines = append(lines, line)
 	}
-	log.Debugf("%s", strings.Join(lines, "\n"))
+	log.Debug(strings.Join(lines, "\n"))
 }

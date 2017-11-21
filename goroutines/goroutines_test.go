@@ -6,9 +6,9 @@ import (
 	"time"
 )
 
-func TestRun(t *testing.T) {
+func TestMonitor(t *testing.T) {
 	// Not a real test, just shows what the output looks like.
-	stop := Run(30*time.Millisecond, 5, 2)
+	stop := Monitor(30*time.Millisecond, 5, 2)
 	defer stop()
 	time.Sleep(100 * time.Millisecond)
 	var wg sync.WaitGroup
