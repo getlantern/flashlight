@@ -9,7 +9,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/getlantern/rot13"
 	"github.com/getlantern/tarfs"
 	"github.com/getlantern/yaml"
@@ -114,8 +113,6 @@ func pipeConfig(opts *options) {
 				log.Debug("Config unchanged, ignoring")
 			} else {
 				log.Debug("Dispatching updated config")
-				log.Debugf("Old: %v", spew.Sdump(a))
-				log.Debugf("New: %v", spew.Sdump(b))
 				opts.dispatch(cfg)
 				lastCfg = cfg
 			}
