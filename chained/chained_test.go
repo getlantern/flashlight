@@ -244,5 +244,6 @@ func (p *proxy) dial(network, addr string) (net.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	return p.newPreconnected(conn).DialContext(ctx, network, addr)
+	pc, _, err := p.newPreconnected(conn).DialContext(ctx, network, addr)
+	return pc, err
 }

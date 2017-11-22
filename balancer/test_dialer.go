@@ -69,7 +69,7 @@ func (d *testDialer) ExpiresAt() time.Time {
 	return time.Now().Add(365 * 24 * time.Hour)
 }
 
-func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, bool, error) {
 	var conn net.Conn
 	var err error
 	if !d.Succeeding() {
@@ -84,7 +84,7 @@ func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net
 	} else {
 		atomic.AddInt64(&d.failures, 1)
 	}
-	return conn, err
+	return conn, true, err
 }
 
 func (d *testDialer) EstLatency() time.Duration {

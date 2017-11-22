@@ -34,8 +34,10 @@ var (
 type PreconnectedDialer interface {
 	Dialer
 
-	// DialContext dials out to the given origin
-	DialContext(ctx context.Context, network, addr string) (net.Conn, error)
+	// DialContext dials out to the given origin. recoverable indicates whether
+	// it's possible to recover from this error by dialing again (either on the
+	// same or a different dialer).
+	DialContext(ctx context.Context, network, addr string) (conn net.Conn, recoverable bool, err error)
 
 	// ExpiresAt indicates when this preconnected dialer is no longer usable
 	ExpiresAt() time.Time
@@ -251,10 +253,18 @@ dialLoop: // keep trying everything until we run out of time
 						continue proxyLoop
 					}
 					attempts++
-					conn, err = b.dialWithTimeout(attempts, pd, ctx, network, addr)
+					recoverable := false
+					conn, recoverable, err = b.dialWithTimeout(attempts, pd, ctx, network, addr)
 					if err != nil {
-						log.Errorf("Unable to dial via %v to %s://%s: %v on pass %v...continuing",
-							pd.Label(), network, addr, err, attempts)
+						recoverableString := "...aborting"
+						if recoverable {
+							recoverableString = "...continuing"
+						}
+						log.Errorf("Unable to dial via %v to %s://%s: %v on pass %v%v",
+							pd.Label(), network, addr, err, attempts, recoverableString)
+						if !recoverable {
+							break dialLoop
+						}
 						atomic.AddInt64(&sessionStats[pd.Label()].failure, 1)
 						break proxyLoop
 					}
@@ -288,19 +298,19 @@ func (b *Balancer) OnActiveDialer() <-chan Dialer {
 	return b.onActiveDialer
 }
 
-func (b *Balancer) dialWithTimeout(pass int, pd PreconnectedDialer, ctx context.Context, network, addr string) (net.Conn, error) {
+func (b *Balancer) dialWithTimeout(pass int, pd PreconnectedDialer, ctx context.Context, network, addr string) (net.Conn, bool, error) {
 	log.Debugf("Dialing %s://%s with %s on pass %v", network, addr, pd.Label(), pass)
 	// caps the context deadline to maxDialTimeout
 	newCTX, cancel := context.WithTimeout(ctx, b.preconnectedDialTimeout)
 	defer cancel()
 	start := time.Now()
-	conn, err := pd.DialContext(newCTX, network, addr)
+	conn, recoverable, err := pd.DialContext(newCTX, network, addr)
 	if err == nil {
 		// Please leave this at Debug level, as it helps us understand
 		// performance issues caused by a poor proxy being selected.
 		log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", pd.Label(), network, addr, pass, time.Since(start))
 	}
-	return conn, err
+	return conn, recoverable, err
 }
 
 func (b *Balancer) run() {

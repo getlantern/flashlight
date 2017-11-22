@@ -177,16 +177,18 @@ func (p *proxy) Preconnected() <-chan balancer.PreconnectedDialer {
 }
 
 // DialContext dials using provided context
-func (pd *preconnectedDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+func (pd *preconnectedDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, bool, error) {
+	recoverable := false
 	conn, err := pd.doDial(ctx, network, addr)
 	if err != nil {
 		if err != errUpstream {
 			pd.markFailure()
+			recoverable = true
 		}
 	} else {
 		pd.markSuccess()
 	}
-	return conn, err
+	return conn, recoverable, err
 }
 
 func (pd *preconnectedDialer) ExpiresAt() time.Time {

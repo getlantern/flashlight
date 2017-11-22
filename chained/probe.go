@@ -80,7 +80,8 @@ func (p *proxy) doHttpPing(kb int, resetBBR bool) error {
 				return nil, err
 			}
 			pd := p.newPreconnected(conn)
-			return pd.DialContext(ctx, network, addr)
+			pc, _, err := pd.DialContext(ctx, network, addr)
+			return pc, err
 		},
 		ResponseHeaderTimeout: 20 * time.Second,
 	}
