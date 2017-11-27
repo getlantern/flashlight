@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"runtime"
 	"strconv"
 	"sync"
@@ -22,6 +23,7 @@ import (
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/fronted"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/kcpwrapper"
 	"github.com/getlantern/keyman"
@@ -69,6 +71,8 @@ func CreateDialer(name string, s *ChainedServerInfo, deviceID string, proToken f
 		return newOBFS4Proxy(name, s, deviceID, proToken)
 	case "lampshade":
 		return newLampshadeProxy(name, s, deviceID, proToken)
+	case "fronted":
+		return newFrontedProxy(name, s, deviceID, proToken)
 	default:
 		return nil, errors.New("Unknown transport: %v", s.PluggableTransport).With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
 	}
@@ -264,6 +268,29 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 	return p, nil
 }
 
+func newFrontedProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
+	p, err := newProxy(name, "fronted", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(p *proxy) (net.Conn, error) {
+		op := ops.Begin("dial_to_chained").ChainedProxy(p.Addr(), p.Protocol(), p.Network())
+		defer op.End()
+		elapsed := mtime.Stopwatch()
+		conn, err := fronted.DialTimeout(s.Addr, chainedDialTimeout, func(req *http.Request) {
+			req.Header.Add(common.TokenHeader, p.authToken)
+		})
+		op.DialTime(elapsed(), err)
+		return overheadWrapper(true)(conn, op.FailIf(err))
+	})
+	if err != nil {
+		return nil, err
+	}
+	p.suppressCONNECT = true
+	forceFronted, _ := strconv.ParseBool(os.Getenv("FORCE_FRONTED"))
+	if forceFronted {
+		log.Debug("Forcing use of fronted proxies")
+		p.bias = 999999
+	}
+	return p, nil
+}
+
 // consecCounter is a counter that can extend on both directions. Its default
 // value is zero. Inc() sets it to 1 or adds it by 1; Dec() sets it to -1 or
 // minus it by 1. When called concurrently, it may have an incorrect absolute
@@ -310,13 +337,14 @@ type proxy struct {
 	deviceID          string
 	proToken          func() string
 	trusted           bool
-	preferred         bool
+	bias              float64
 	dialServer        func(*proxy) (net.Conn, error)
 	emaLatency        *ema.EMA
 	kcpConfig         *KCPConfig
 	forceRedial       *abool.AtomicBool
 	mostRecentABETime time.Time
 	dialCore          func(timeout time.Duration) (net.Conn, time.Duration, error)
+	suppressCONNECT   bool
 	forceRecheckCh    chan bool
 	closeCh           chan bool
 	mx                sync.Mutex
@@ -332,6 +360,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		deviceID:        deviceID,
 		proToken:        proToken,
 		trusted:         trusted,
+		bias:            s.Bias,
 		dialServer:      dialServer,
 		emaLatency:      ema.NewDuration(0, 0.8),
 		forceRecheckCh:  make(chan bool, 1),
@@ -369,10 +398,6 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 
 	// Fix address (comes across as kcp-placeholder)
 	p.addr = cfg.RemoteAddr
-	// Right now, we don't have a good way estimating performance of KCP-based
-	// proxies, so we just mark them as "preferred" to force them to get used by
-	// default.
-	p.preferred = true
 
 	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig)
 	var dialKCPMutex sync.Mutex
@@ -425,7 +450,7 @@ func (p *proxy) Label() string {
 }
 
 func (p *proxy) JustifiedLabel() string {
-	label := fmt.Sprintf("%-38v at %21v", p.name, p.addr)
+	label := fmt.Sprintf("%-50v at %21v", p.name, p.addr)
 	if p.trusted {
 		label = label + trustedSuffix
 	}
@@ -457,6 +482,9 @@ func (p *proxy) updateLatency(latency time.Duration, err error) {
 // value is updated from the time to dial the proxy, or the utility of the
 // pluggable transport, e.g., lampshade can measure the RTT of ping packets.
 func (p *proxy) EstLatency() time.Duration {
+	if p.bias != 0 {
+		return 1 * time.Millisecond
+	}
 	return p.emaLatency.GetDuration()
 }
 
@@ -475,10 +503,8 @@ func (p *proxy) EstLatency() time.Duration {
 // 3. If a client includes HTTP header "X-BBR: clear", we clear stored estimate
 //    data for the client's IP.
 func (p *proxy) EstBandwidth() float64 {
-	if p.preferred {
-		// For preferred proxies, return a really high value to make sure they get
-		// prioritized.
-		return 1000000
+	if p.bias != 0 {
+		return p.bias
 	}
 	return float64(atomic.LoadInt64(&p.abe)) / 1000
 }

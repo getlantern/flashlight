@@ -45,7 +45,9 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 	// intentionally by the standard library, see
 	// https://golang.org/src/net/http/request.go#L938. The easylist
 	// package and httputil.DumpRequest require the scheme to be present.
-	req.URL.Scheme = "http"
+	if req.Method == http.MethodConnect {
+		req.URL.Scheme = "http"
+	}
 	req.URL.Host = req.Host
 
 	op := ctx.Value(ctxKeyOp).(*ops.Op)

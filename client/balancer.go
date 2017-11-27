@@ -31,6 +31,20 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 		dialers = append(dialers, dialer)
 	}
 
+	// Adding fronted (temporary, should actually come from config)
+	dialer, err := ChainedDialer("fronted-test", &chained.ChainedServerInfo{
+		Addr:               "d100fjyl3713ch.cloudfront.net",
+		AuthToken:          "pj6mWPafKzP26KZvUf7FIs24eB2ubjUKFvXktodqgUzZULhGeRUT0mwhyHb9jY2b",
+		Trusted:            true,
+		Bias:               -10000,
+		PluggableTransport: "fronted",
+	}, deviceID, client.proTokenGetter)
+	if err != nil {
+		log.Error(err)
+	} else {
+		dialers = append(dialers, dialer)
+	}
+
 	chained.TrackStatsFor(dialers)
 	client.bal.Reset(dialers...)
 
