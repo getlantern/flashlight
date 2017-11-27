@@ -466,18 +466,6 @@ func (c *Client) Purchase(user User, deviceName, pubKey string, purchase Purchas
 	return
 }
 
-// TokenReset Request a token change. This will generate a new one and send it
-// to the requesting device.
-func (c *Client) TokenReset(user User) (res *Response, err error) {
-	var payload []byte
-	payload, err = c.post(`/token-reset`, user.headers(), nil)
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(payload, &res)
-	return
-}
-
 // ChargeByID Request payment details by id.
 func (c *Client) ChargeByID(user User, chargeID string) (res *Response, err error) {
 	var payload []byte

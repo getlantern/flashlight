@@ -27,6 +27,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
+	"github.com/getlantern/flashlight/goroutines"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/stats"
 
@@ -40,7 +41,7 @@ var (
 	// FullyReportedOps are ops which are reported at 100% to borda, irrespective
 	// of the borda sample percentage. This should all be low-volume operations,
 	// otherwise we will utilize too much bandwidth on the client.
-	FullyReportedOps = []string{"client_started", "client_stopped", "connect", "disconnect", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "sysproxy_off_force", "sysproxy_clear", "report_issue", "proxy_rank"}
+	FullyReportedOps = []string{"client_started", "client_stopped", "connect", "disconnect", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "sysproxy_off_force", "sysproxy_clear", "report_issue", "proxy_rank", "probe"}
 )
 
 // Run runs a client proxy. It blocks as long as the proxy is running.
@@ -66,6 +67,11 @@ func Run(httpProxyAddr string,
 	adBlockingAllowed func() bool,
 	reverseDNS func(host string) string,
 	requestFilter func(*http.Request) (*http.Request, error)) error {
+
+	// check # of goroutines every minute, print the top 5 stacks with most
+	// goroutines if the # exceeds 2000 and is increasing.
+	stopMonitor := goroutines.Monitor(time.Minute, 2000, 5)
+	defer stopMonitor()
 	elapsed := mtime.Stopwatch()
 	displayVersion()
 	initContext(deviceID, common.Version, common.RevisionDate, isPro)
