@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"runtime"
+	"runtime/pprof"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -374,7 +376,13 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 	// default.
 	p.preferred = true
 
-	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig)
+	addIdleTiming := func(conn net.Conn) net.Conn {
+		log.Debug("Wrapping KCP with idletiming")
+		return idletiming.Conn(conn, IdleTimeout*2, func() {
+			log.Debug("KCP connection idled")
+		})
+	}
+	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig, addIdleTiming)
 	var dialKCPMutex sync.Mutex
 
 	p.dialCore = func(timeout time.Duration) (net.Conn, time.Duration, error) {
@@ -385,7 +393,7 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 		dialKCPMutex.Lock()
 		if p.forceRedial.IsSet() {
 			log.Debug("Connection state changed, re-connecting to server first")
-			dialKCP = kcpwrapper.Dialer(&p.kcpConfig.DialerConfig)
+			dialKCP = kcpwrapper.Dialer(&p.kcpConfig.DialerConfig, addIdleTiming)
 			p.forceRedial.UnSet()
 		}
 		doDialKCP := dialKCP
@@ -396,6 +404,14 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 		p.updateLatency(delta, err)
 		return conn, delta, err
 	}
+
+	go func() {
+		runtime.SetBlockProfileRate(int(time.Second.Nanoseconds()))
+		for {
+			time.Sleep(5 * time.Second)
+			pprof.Lookup("block").WriteTo(os.Stdout, 1)
+		}
+	}()
 
 	return nil
 }
