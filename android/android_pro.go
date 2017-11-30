@@ -333,6 +333,11 @@ func ProRequest(command string, session Session) bool {
 
 	log.Debugf("Received a %s pro request", command)
 
+	if command != "newuser" && session.GetUserID() == 0 {
+		log.Debugf("No user ID: not making %s request", command)
+		return false
+	}
+
 	commands := map[string]proFunc{
 		"emailexists":          emailExists,
 		"newuser":              newUser,
