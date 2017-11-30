@@ -88,7 +88,7 @@ func TestProxying(t *testing.T) {
 		case "client_stopped":
 			uptime := getVal("uptime")
 			assert.True(t, uptime > 0)
-			assert.True(t, uptime < 30)
+			assert.True(t, uptime < 5000)
 		case "traffic":
 			sent := getVal("client_bytes_sent")
 			recv := getVal("client_bytes_recv")
