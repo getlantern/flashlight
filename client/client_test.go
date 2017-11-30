@@ -277,10 +277,11 @@ func (d *testDialer) ExpiresAt() time.Time {
 }
 
 func (d *testDialer) Dial(network, addr string) (net.Conn, error) {
-	return d.DialContext(context.Background(), network, addr)
+	conn, _, err := d.DialContext(context.Background(), network, addr)
+	return conn, err
 }
 
-func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, bool, error) {
 	var conn net.Conn
 	var err error
 	if !d.Succeeding() {
@@ -293,9 +294,9 @@ func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net
 		}()
 		select {
 		case <-chDone:
-			return conn, err
+			return conn, true, err
 		case <-ctx.Done():
-			return nil, ctx.Err()
+			return nil, false, ctx.Err()
 		}
 	}
 	atomic.AddInt64(&d.attempts, 1)
@@ -304,7 +305,7 @@ func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net
 	} else {
 		atomic.AddInt64(&d.failures, 1)
 	}
-	return conn, err
+	return conn, true, err
 }
 
 func (d *testDialer) EstLatency() time.Duration {
