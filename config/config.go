@@ -159,7 +159,7 @@ func yamlRoundTrip(o interface{}) interface{} {
 	} else {
 		or = reflect.New(t).Interface()
 	}
-	b, err := yaml.Marshal(or)
+	b, err := yaml.Marshal(o)
 	if err != nil {
 		log.Errorf("Unable to yaml round trip (marshal): %v %v", o, err)
 		return o
