@@ -7,9 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"runtime"
-	"runtime/pprof"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -420,14 +418,6 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 		p.updateLatency(delta, err)
 		return conn, delta, err
 	}
-
-	go func() {
-		runtime.SetBlockProfileRate(int(time.Second.Nanoseconds()))
-		for {
-			time.Sleep(5 * time.Second)
-			pprof.Lookup("block").WriteTo(os.Stdout, 1)
-		}
-	}()
 
 	return nil
 }
