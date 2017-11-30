@@ -78,6 +78,11 @@ var (
 			"Japan",
 			"JP",
 		},
+		"sbtk9a": &location{
+			"Tokyo",
+			"Japan",
+			"JP",
+		},
 		"sbhk1b": &location{
 			"Hong Kong",
 			"China",
