@@ -66,16 +66,15 @@ func TestGoodSlowDialer(t *testing.T) {
 	defer func() { _ = l.Close() }()
 
 	dialer1 := start(&testDialer{
-		name:      "dialer1",
-		latency:   50 * time.Millisecond,
-		bandwidth: 10000,
-		failing:   true,
+		name:              "dialer1",
+		latency:           50 * time.Millisecond,
+		bandwidth:         10000,
+		remainingFailures: 1000,
 	})
 	dialer2 := start(&testDialer{
 		name:      "dialer1",
 		latency:   500 * time.Millisecond,
 		bandwidth: 10000,
-		failing:   false,
 	})
 
 	b := newBalancer(dialer1)
@@ -125,18 +124,19 @@ func TestOneFailingUpstream(t *testing.T) {
 		failingUpstream: true,
 	})
 	dialer2 := start(&testDialer{
-		name:            "dialer2",
-		latency:         500 * time.Millisecond,
-		bandwidth:       10000,
-		failingUpstream: false,
+		name:              "dialer2",
+		latency:           500 * time.Millisecond,
+		bandwidth:         10000,
+		remainingFailures: 1,
 	})
 
 	b := newBalancer(dialer1, dialer2)
 	_, err := b.Dial("tcp", addr)
 	assert.NoError(t, err, "Dialing with one good dialer should succeed")
 	assert.EqualValues(t, 1, dialer1.Failures(), "When a dialer succeeds, dialer that failed upstream should be marked as failed")
+	assert.EqualValues(t, 1, dialer2.Failures(), "Dialer that failed on first dial should be marked as failed")
 	assert.EqualValues(t, 1, dialer1.Attempts(), "Dialer failing upstream should have had only 1 attempt")
-	assert.EqualValues(t, 0, dialer2.Failures(), "Succeeding dialer should not be marked as failed")
+	assert.EqualValues(t, 2, dialer2.Attempts(), "Dialer that failed on first dial should have had 2 attempts")
 }
 
 func TestTrusted(t *testing.T) {
@@ -187,26 +187,26 @@ func TestSorting(t *testing.T) {
 		// Same ordering as above applies to failing proxies, which all come after
 		// succeeding ones
 		start(&testDialer{
-			name:      "5",
-			bandwidth: 0,
-			failing:   true,
+			name:              "5",
+			bandwidth:         0,
+			remainingFailures: 1000,
 		}),
 		start(&testDialer{
-			name:      "6",
-			bandwidth: 0,
-			failing:   true,
+			name:              "6",
+			bandwidth:         0,
+			remainingFailures: 1000,
 		}),
 		start(&testDialer{
-			name:      "7",
-			bandwidth: 1000,
-			latency:   1 * time.Millisecond,
-			failing:   true,
+			name:              "7",
+			bandwidth:         1000,
+			latency:           1 * time.Millisecond,
+			remainingFailures: 1000,
 		}),
 		start(&testDialer{
-			name:      "8",
-			bandwidth: 10000,
-			latency:   15 * time.Millisecond,
-			failing:   true,
+			name:              "8",
+			bandwidth:         10000,
+			latency:           15 * time.Millisecond,
+			remainingFailures: 1000,
 		}),
 	}
 
