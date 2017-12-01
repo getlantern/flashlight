@@ -300,6 +300,7 @@ dialLoop: // keep trying everything until we run out of time
 					// connectivity issues that prevent them from resolving or connecting
 					// to the origin, but other dialers don't suffer from the same issues.
 					for _, d := range unrecoverableDialers {
+						atomic.AddInt64(&sessionStats[d.Label()].failure, 1)
 						d.MarkFailure()
 					}
 
