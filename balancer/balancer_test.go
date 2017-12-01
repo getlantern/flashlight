@@ -99,7 +99,7 @@ func TestAllFailingUpstream(t *testing.T) {
 		failingUpstream: true,
 	})
 	dialer2 := start(&testDialer{
-		name:            "dialer1",
+		name:            "dialer2",
 		latency:         500 * time.Millisecond,
 		bandwidth:       10000,
 		failingUpstream: true,
@@ -110,6 +110,8 @@ func TestAllFailingUpstream(t *testing.T) {
 	assert.Error(t, err, "Dialing all bad dialers should fail")
 	assert.EqualValues(t, 0, dialer1.Failures(), "When all dialers fail upstream, don't record a failure")
 	assert.EqualValues(t, 0, dialer2.Failures(), "When all dialers fail upstream, don't record a failure")
+	assert.EqualValues(t, 1, dialer1.Attempts(), "All dialers should have had 1 attempt")
+	assert.EqualValues(t, 1, dialer2.Attempts(), "All dialers should have had 1 attempt")
 }
 
 func TestOneFailingUpstream(t *testing.T) {
@@ -123,7 +125,7 @@ func TestOneFailingUpstream(t *testing.T) {
 		failingUpstream: true,
 	})
 	dialer2 := start(&testDialer{
-		name:            "dialer1",
+		name:            "dialer2",
 		latency:         500 * time.Millisecond,
 		bandwidth:       10000,
 		failingUpstream: false,
@@ -133,6 +135,7 @@ func TestOneFailingUpstream(t *testing.T) {
 	_, err := b.Dial("tcp", addr)
 	assert.NoError(t, err, "Dialing with one good dialer should succeed")
 	assert.EqualValues(t, 1, dialer1.Failures(), "When a dialer succeeds, dialer that failed upstream should be marked as failed")
+	assert.EqualValues(t, 1, dialer1.Attempts(), "Dialer failing upstream should have had only 1 attempt")
 	assert.EqualValues(t, 0, dialer2.Failures(), "Succeeding dialer should not be marked as failed")
 }
 
