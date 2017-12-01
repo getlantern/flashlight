@@ -247,10 +247,11 @@ dialLoop: // keep trying everything until we run out of time
 			break dialLoop
 		}
 
-		// try all different proxies in order of preference
+	proxiesLoop: // try all different proxies in order of preference
 		for i, pds := range preconnectedDialers {
 			if unrecoverableDialers[i] != nil {
 				// this dialer is not recoverable, don't bother trying again
+				continue proxiesLoop
 			}
 
 		proxyLoop: // try available dialers from this proxy
