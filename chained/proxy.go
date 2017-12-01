@@ -392,7 +392,13 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 	// default.
 	p.preferred = true
 
-	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig)
+	addIdleTiming := func(conn net.Conn) net.Conn {
+		log.Debug("Wrapping KCP with idletiming")
+		return idletiming.Conn(conn, IdleTimeout*2, func() {
+			log.Debug("KCP connection idled")
+		})
+	}
+	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig, addIdleTiming)
 	var dialKCPMutex sync.Mutex
 
 	p.dialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
@@ -401,7 +407,7 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 		dialKCPMutex.Lock()
 		if p.forceRedial.IsSet() {
 			log.Debug("Connection state changed, re-connecting to server first")
-			dialKCP = kcpwrapper.Dialer(&p.kcpConfig.DialerConfig)
+			dialKCP = kcpwrapper.Dialer(&p.kcpConfig.DialerConfig, addIdleTiming)
 			p.forceRedial.UnSet()
 		}
 		doDialKCP := dialKCP
