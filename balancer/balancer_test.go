@@ -88,6 +88,54 @@ func TestGoodSlowDialer(t *testing.T) {
 	}
 }
 
+func TestAllFailingUpstream(t *testing.T) {
+	addr, l := echoServer()
+	defer func() { _ = l.Close() }()
+
+	dialer1 := start(&testDialer{
+		name:            "dialer1",
+		latency:         50 * time.Millisecond,
+		bandwidth:       10000,
+		failingUpstream: true,
+	})
+	dialer2 := start(&testDialer{
+		name:            "dialer1",
+		latency:         500 * time.Millisecond,
+		bandwidth:       10000,
+		failingUpstream: true,
+	})
+
+	b := newBalancer(dialer1, dialer2)
+	_, err := b.Dial("tcp", addr)
+	assert.Error(t, err, "Dialing all bad dialers should fail")
+	assert.EqualValues(t, 0, dialer1.Failures(), "When all dialers fail upstream, don't record a failure")
+	assert.EqualValues(t, 0, dialer2.Failures(), "When all dialers fail upstream, don't record a failure")
+}
+
+func TestOneFailingUpstream(t *testing.T) {
+	addr, l := echoServer()
+	defer func() { _ = l.Close() }()
+
+	dialer1 := start(&testDialer{
+		name:            "dialer1",
+		latency:         50 * time.Millisecond,
+		bandwidth:       10000,
+		failingUpstream: true,
+	})
+	dialer2 := start(&testDialer{
+		name:            "dialer1",
+		latency:         500 * time.Millisecond,
+		bandwidth:       10000,
+		failingUpstream: false,
+	})
+
+	b := newBalancer(dialer1, dialer2)
+	_, err := b.Dial("tcp", addr)
+	assert.NoError(t, err, "Dialing with one good dialer should succeed")
+	assert.EqualValues(t, 1, dialer1.Failures(), "When a dialer succeeds, dialer that failed upstream should be marked as failed")
+	assert.EqualValues(t, 0, dialer2.Failures(), "Succeeding dialer should not be marked as failed")
+}
+
 func TestTrusted(t *testing.T) {
 	dialer := start(&testDialer{
 		untrusted: true,

@@ -308,6 +308,10 @@ func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net
 	return conn, true, err
 }
 
+func (d *testDialer) MarkFailure() {
+	atomic.AddInt64(&d.failures, 1)
+}
+
 func (d *testDialer) EstLatency() time.Duration {
 	return d.latency
 }

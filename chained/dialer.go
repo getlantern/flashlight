@@ -90,7 +90,7 @@ func (p *proxy) CheckConnectivity() bool {
 		p.markSuccess()
 		return true
 	}
-	p.markFailure()
+	p.MarkFailure()
 	return false
 	// We intentionally don't close the connection and instead let the
 	// server's idle timeout handle it to make this less fingerprintable.
@@ -182,7 +182,7 @@ func (pd *preconnectedDialer) DialContext(ctx context.Context, network, addr str
 	conn, err := pd.doDial(ctx, network, addr)
 	if err != nil {
 		if err != errUpstream {
-			pd.markFailure()
+			pd.MarkFailure()
 			recoverable = true
 		}
 	} else {
@@ -206,7 +206,7 @@ func (p *proxy) markSuccess() {
 	}
 }
 
-func (p *proxy) markFailure() {
+func (p *proxy) MarkFailure() {
 	if p.doMarkFailure() == 1 {
 		// On new failure, force recheck
 		p.forceRecheck()

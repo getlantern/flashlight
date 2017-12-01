@@ -70,6 +70,9 @@ type Dialer interface {
 	// PreconnectedDialers.
 	Preconnected() <-chan PreconnectedDialer
 
+	// MarkFailure marks a dial failure on this dialer.
+	MarkFailure()
+
 	// EstLatency provides a latency estimate
 	EstLatency() time.Duration
 
@@ -210,6 +213,11 @@ func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 
 // DialContext is same as Dial but uses the provided context.
 func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	op := ops.Begin("balancer_dial")
+	defer op.End()
+
+	start := time.Now()
+
 	trustedOnly := false
 	_, port, _ := net.SplitHostPort(addr)
 	// We try to identify HTTP traffic (as opposed to HTTPS) by port and only
@@ -228,9 +236,9 @@ func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.C
 		preconnectedDialers = append(preconnectedDialers, dialer.Preconnected())
 	}
 
+	unrecoverableDialers := make(map[int]Dialer, len(preconnectedDialers))
 	var conn net.Conn
 	var err error
-	start := time.Now()
 	attempts := 0
 
 dialLoop: // keep trying everything until we run out of time
@@ -241,6 +249,9 @@ dialLoop: // keep trying everything until we run out of time
 
 		// try all different proxies in order of preference
 		for i, pds := range preconnectedDialers {
+			if unrecoverableDialers[i] != nil {
+				// this dialer is not recoverable, don't bother trying again
+			}
 
 		proxyLoop: // try available dialers from this proxy
 			for {
@@ -262,12 +273,18 @@ dialLoop: // keep trying everything until we run out of time
 						}
 						log.Errorf("Unable to dial via %v to %s://%s: %v on pass %v%v",
 							pd.Label(), network, addr, err, attempts, recoverableString)
-						if !recoverable {
-							break dialLoop
+						if recoverable {
+							atomic.AddInt64(&sessionStats[pd.Label()].failure, 1)
+						} else {
+							unrecoverableDialers[i] = pd
+							if len(unrecoverableDialers) == len(preconnectedDialers) {
+								// no more recoverable dialers, break
+								break dialLoop
+							}
 						}
-						atomic.AddInt64(&sessionStats[pd.Label()].failure, 1)
 						break proxyLoop
 					}
+
 					// Dial succeeded
 					atomic.AddInt64(&sessionStats[pd.Label()].success, 1)
 					// Preconnect a couple of times to keep preconnected queue full
@@ -276,6 +293,17 @@ dialLoop: // keep trying everything until we run out of time
 					case b.onActiveDialer <- pd:
 					default:
 					}
+
+					// Mark dialers with upstream errors with failure, since we found a
+					// dialer that doesn't suffer from an upstream error. An example of
+					// when this might happen is if some dialers have upstream network
+					// connectivity issues that prevent them from resolving or connecting
+					// to the origin, but other dialers don't suffer from the same issues.
+					for _, d := range unrecoverableDialers {
+						d.MarkFailure()
+					}
+
+					op.BalancerDialTime(time.Now().Sub(start), nil)
 					return conn, nil
 				default:
 					// no preconnected dialer, tell dialer to preconnect so we'll
@@ -289,7 +317,10 @@ dialLoop: // keep trying everything until we run out of time
 		// no good preconnected dialers were available, sleep a little and try again
 		time.Sleep(250 * time.Millisecond)
 	}
-	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", network, addr, attempts)
+
+	err = fmt.Errorf("Still unable to dial %s://%s after %d attempts", network, addr, attempts)
+	op.BalancerDialTime(time.Now().Sub(start), err)
+	return nil, op.FailIf(err)
 }
 
 // OnActiveDialer returns the channel of the last dialer the balancer was using.

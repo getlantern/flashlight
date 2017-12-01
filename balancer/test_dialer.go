@@ -19,6 +19,7 @@ type testDialer struct {
 	bandwidth          float64
 	untrusted          bool
 	failing            bool
+	failingUpstream    bool
 	attempts           int64
 	successes          int64
 	failures           int64
@@ -72,7 +73,9 @@ func (d *testDialer) ExpiresAt() time.Time {
 func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, bool, error) {
 	var conn net.Conn
 	var err error
-	if !d.Succeeding() {
+	if d.failingUpstream {
+		err = fmt.Errorf("Failing upstream")
+	} else if d.failing {
 		err = fmt.Errorf("Failing intentionally")
 	} else if network != "" {
 		var d net.Dialer
@@ -81,10 +84,14 @@ func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net
 	atomic.AddInt64(&d.attempts, 1)
 	if err == nil {
 		atomic.AddInt64(&d.successes, 1)
-	} else {
+	} else if !d.failingUpstream {
 		atomic.AddInt64(&d.failures, 1)
 	}
-	return conn, true, err
+	return conn, !d.failingUpstream, err
+}
+
+func (d *testDialer) MarkFailure() {
+	atomic.AddInt64(&d.failures, 1)
 }
 
 func (d *testDialer) EstLatency() time.Duration {
