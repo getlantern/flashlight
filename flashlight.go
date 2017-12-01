@@ -103,6 +103,7 @@ func Run(httpProxyAddr string,
 
 	proxied.SetProxyAddr(cl.Addr)
 
+	onBordaConfigured := make(chan bool, 1)
 	proxiesDispatch := func(conf interface{}) {
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
@@ -113,7 +114,7 @@ func Run(httpProxyAddr string,
 		// the type in the factory method above.
 		cfg := conf.(*config.Global)
 		log.Debugf("Applying global config")
-		applyClientConfig(cl, cfg, deviceID, autoReport)
+		applyClientConfig(cl, cfg, deviceID, autoReport, onBordaConfigured)
 		onConfigUpdate(cfg)
 	}
 	config.Init(configDir, flagsAsMap, userConfig, proxiesDispatch, globalDispatch)
@@ -137,18 +138,29 @@ func Run(httpProxyAddr string,
 		err := cl.ListenAndServeHTTP(httpProxyAddr, func() {
 			log.Debug("Started client HTTP proxy")
 			op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
+
+			// wait for borda to be configured before proceeding
+			select {
+			case <-onBordaConfigured:
+				// okay, now we're ready
+			case <-time.After(5 * time.Second):
+				// borda didn't get configured quickly, proceed anyway
+				// anyway
+			}
+
 			ops.Go(func() {
 				// wait for geo info before reporting so that we know the client ip and
 				// country
 				select {
 				case <-onGeo:
-					// okay, we've got geolocation info
+					// good to go
 				case <-time.After(5 * time.Minute):
 					// failed to get geolocation info within 5 minutes, just record end of
 					// startup anyway
 				}
 				op.End()
 			})
+
 			afterStart(cl)
 		})
 		if err != nil {
@@ -160,7 +172,7 @@ func Run(httpProxyAddr string,
 	return nil
 }
 
-func applyClientConfig(client *client.Client, cfg *config.Global, deviceID string, autoReport func() bool) {
+func applyClientConfig(client *client.Client, cfg *config.Global, deviceID string, autoReport func() bool, onBordaConfigured chan bool) {
 	certs, err := getTrustedCACerts(cfg)
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
@@ -195,6 +207,12 @@ func applyClientConfig(client *client.Client, cfg *config.Global, deviceID strin
 		}
 	}
 	borda.Configure(cfg.BordaReportInterval, enableBorda)
+	select {
+	case onBordaConfigured <- true:
+		// okay
+	default:
+		// ignore
+	}
 }
 
 func getTrustedCACerts(cfg *config.Global) (pool *x509.CertPool, err error) {

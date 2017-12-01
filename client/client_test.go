@@ -18,6 +18,7 @@ import (
 	"github.com/getlantern/mockconn"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/stats"
 )
 
@@ -39,10 +40,10 @@ func (m mockStatsTracker) SetHitDataCap(val bool)                               
 func (m mockStatsTracker) SetIsPro(val bool)                                        {}
 
 func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {
-	client.bal.Reset(&testDialer{
+	client.bal.Reset(start(&testDialer{
 		name: "test-dialer",
 		dial: dialer,
-	})
+	}))
 }
 
 func newClient() *Client {
@@ -220,16 +221,27 @@ func TestDialShortcut(t *testing.T) {
 }
 
 type testDialer struct {
-	name      string
-	latency   time.Duration
-	dial      func(network, addr string) (net.Conn, error)
-	bandwidth float64
-	untrusted bool
-	failing   bool
-	attempts  int64
-	successes int64
-	failures  int64
-	stopped   bool
+	name         string
+	latency      time.Duration
+	dial         func(network, addr string) (net.Conn, error)
+	bandwidth    float64
+	untrusted    bool
+	failing      bool
+	attempts     int64
+	successes    int64
+	failures     int64
+	stopped      bool
+	preconnected chan balancer.PreconnectedDialer
+}
+
+func start(d *testDialer) *testDialer {
+	d.preconnected = make(chan balancer.PreconnectedDialer)
+	go func() {
+		for {
+			d.preconnected <- d
+		}
+	}()
+	return d
 }
 
 // Name returns the name for this Dialer
@@ -253,11 +265,23 @@ func (d *testDialer) Trusted() bool {
 	return !d.untrusted
 }
 
-func (d *testDialer) Dial(network, addr string) (net.Conn, error) {
-	return d.DialContext(context.Background(), network, addr)
+func (d *testDialer) Preconnect() {
 }
 
-func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+func (d *testDialer) Preconnected() <-chan balancer.PreconnectedDialer {
+	return d.preconnected
+}
+
+func (d *testDialer) ExpiresAt() time.Time {
+	return time.Now().Add(365 * 24 * time.Hour)
+}
+
+func (d *testDialer) Dial(network, addr string) (net.Conn, error) {
+	conn, _, err := d.DialContext(context.Background(), network, addr)
+	return conn, err
+}
+
+func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, bool, error) {
 	var conn net.Conn
 	var err error
 	if !d.Succeeding() {
@@ -270,9 +294,9 @@ func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net
 		}()
 		select {
 		case <-chDone:
-			return conn, err
+			return conn, true, err
 		case <-ctx.Done():
-			return nil, ctx.Err()
+			return nil, false, ctx.Err()
 		}
 	}
 	atomic.AddInt64(&d.attempts, 1)
@@ -281,7 +305,7 @@ func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net
 	} else {
 		atomic.AddInt64(&d.failures, 1)
 	}
-	return conn, err
+	return conn, true, err
 }
 
 func (d *testDialer) EstLatency() time.Duration {

@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/flashlight/ops"
@@ -17,13 +18,7 @@ import (
 )
 
 const (
-	dialAttempts         = 3
 	connectivityRechecks = 3
-
-	// The max timeout to dial a proxy, so the balancer has the chance to dial
-	// next one. It is slightly larger than the timeout to actually dial any
-	// proxy (10s), but smaller than the timeout to handle user request (20s).
-	maxDialTimeout = 11 * time.Second
 
 	evalDialersInterval = 10 * time.Second
 )
@@ -33,6 +28,20 @@ var (
 
 	recheckInterval = 2 * time.Second
 )
+
+// PreconnectedDialer is a pre-established connection to a Proxy which we can
+// use to dial out to an origin
+type PreconnectedDialer interface {
+	Dialer
+
+	// DialContext dials out to the given origin. recoverable indicates whether
+	// it's possible to recover from this error by dialing again (either on the
+	// same or a different dialer).
+	DialContext(ctx context.Context, network, addr string) (conn net.Conn, recoverable bool, err error)
+
+	// ExpiresAt indicates when this preconnected dialer is no longer usable
+	ExpiresAt() time.Time
+}
 
 // Dialer provides the ability to dial a proxy and obtain information needed to
 // effectively load balance between dialers.
@@ -53,11 +62,13 @@ type Dialer interface {
 	// Trusted indicates whether or not this dialer is trusted
 	Trusted() bool
 
-	// Dial with this dialer
-	Dial(network, addr string) (net.Conn, error)
+	// Preconnect tells the dialer to go ahead and preconnect 1 connection (in
+	// the background)
+	Preconnect()
 
-	// Dial with this dialer using the provided context
-	DialContext(ctx context.Context, network, addr string) (net.Conn, error)
+	// Preconnected() returns a channel from which we can obtain
+	// PreconnectedDialers.
+	Preconnected() <-chan PreconnectedDialer
 
 	// EstLatency provides a latency estimate
 	EstLatency() time.Duration
@@ -102,11 +113,21 @@ type Dialer interface {
 	Stop()
 }
 
+type dialStats struct {
+	success int64
+	failure int64
+	expired int64
+}
+
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
 	mu                              sync.RWMutex
+	preconnectedDialTimeout         time.Duration
+	overallDialTimeout              time.Duration
 	dialers                         sortedDialers
 	trusted                         sortedDialers
+	sessionStats                    map[string]*dialStats
+	lastReset                       time.Time
 	closeCh                         chan bool
 	onActiveDialer                  chan Dialer
 	priorTopDialer                  Dialer
@@ -116,15 +137,17 @@ type Balancer struct {
 }
 
 // New creates a new Balancer using the supplied Dialers.
-func New(dialers ...Dialer) *Balancer {
+func New(preconnectedDialTimeout, overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
 	// a small alpha to gradually adjust timeout based on performance of all
 	// dialers
 	hasSucceedingDialer := make(chan bool, 1000)
 	b := &Balancer{
-		closeCh:             make(chan bool),
-		onActiveDialer:      make(chan Dialer, 1),
-		hasSucceedingDialer: hasSucceedingDialer,
-		HasSucceedingDialer: hasSucceedingDialer,
+		preconnectedDialTimeout: preconnectedDialTimeout,
+		overallDialTimeout:      overallDialTimeout,
+		closeCh:                 make(chan bool),
+		onActiveDialer:          make(chan Dialer, 1),
+		hasSucceedingDialer:     hasSucceedingDialer,
+		HasSucceedingDialer:     hasSucceedingDialer,
 	}
 
 	b.Reset(dialers...)
@@ -138,9 +161,16 @@ func (b *Balancer) Reset(dialers ...Dialer) {
 	dls := make(sortedDialers, len(dialers))
 	copy(dls, dialers)
 
+	sessionStats := make(map[string]*dialStats, len(dls))
+	for _, d := range dls {
+		sessionStats[d.Label()] = &dialStats{}
+	}
+
 	b.mu.Lock()
 	oldDialers := b.dialers
 	b.dialers = dls
+	b.sessionStats = sessionStats
+	b.lastReset = time.Now()
 	b.mu.Unlock()
 	b.sortDialers()
 
@@ -170,9 +200,10 @@ func (b *Balancer) ForceRedial() {
 //
 // Only Trusted Dialers are used to dial HTTP hosts.
 //
-// If a Dialer fails to connect, Dial will keep trying at most 3 times until it
-// either manages to connect, or runs out of dialers in which case it returns an
-// error.
+// Dial looks through the preconnected dialers based on the above ordering and
+// dial with the first available. If none are available, it keeps cycling
+// through the list in priority order until it finds one. It will keep trying
+// for up to 30 seconds, at which point it gives up.
 func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 	return b.DialContext(context.Background(), network, addr)
 }
@@ -187,34 +218,78 @@ func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.C
 		trustedOnly = true
 	}
 
-	dialers, pickErr := b.pickDialers(trustedOnly)
+	dialers, sessionStats, pickErr := b.pickDialers(trustedOnly)
 	if pickErr != nil {
 		return nil, pickErr
 	}
 
-	attempts := dialAttempts
-	if attempts > len(dialers) {
-		attempts = len(dialers)
+	preconnectedDialers := make([]<-chan PreconnectedDialer, 0, len(dialers))
+	for _, dialer := range dialers {
+		preconnectedDialers = append(preconnectedDialers, dialer.Preconnected())
 	}
-	i := 0
-	for ; i < attempts; i++ {
-		d := dialers[i]
-		conn, err := b.dialWithTimeout(i, d, ctx, network, addr)
-		if err != nil {
-			log.Errorf("Unable to dial via %v to %s://%s: %v on pass %v...continuing",
-				d.Label(), network, addr, err, i)
-			if ctx.Err() != nil {
-				break
+
+	var conn net.Conn
+	var err error
+	start := time.Now()
+	attempts := 0
+
+dialLoop: // keep trying everything until we run out of time
+	for {
+		if time.Now().Sub(start) > b.overallDialTimeout {
+			break dialLoop
+		}
+
+		// try all different proxies in order of preference
+		for i, pds := range preconnectedDialers {
+
+		proxyLoop: // try available dialers from this proxy
+			for {
+				select {
+				case pd := <-pds:
+					// got a preconnected dialer
+					if pd.ExpiresAt().Before(time.Now()) {
+						// expired dialer, discard and try next from same proxy
+						atomic.AddInt64(&sessionStats[pd.Label()].expired, 1)
+						continue proxyLoop
+					}
+					attempts++
+					recoverable := false
+					conn, recoverable, err = b.dialWithTimeout(attempts, pd, ctx, network, addr)
+					if err != nil {
+						recoverableString := "...aborting"
+						if recoverable {
+							recoverableString = "...continuing"
+						}
+						log.Errorf("Unable to dial via %v to %s://%s: %v on pass %v%v",
+							pd.Label(), network, addr, err, attempts, recoverableString)
+						if !recoverable {
+							break dialLoop
+						}
+						atomic.AddInt64(&sessionStats[pd.Label()].failure, 1)
+						break proxyLoop
+					}
+					// Dial succeeded
+					atomic.AddInt64(&sessionStats[pd.Label()].success, 1)
+					// Preconnect a couple of times to keep preconnected queue full
+					pd.Preconnect()
+					select {
+					case b.onActiveDialer <- pd:
+					default:
+					}
+					return conn, nil
+				default:
+					// no preconnected dialer, tell dialer to preconnect so we'll
+					// hopefully get something on the next pass, and keep looking
+					dialers[i].Preconnect()
+					break proxyLoop
+				}
 			}
-			continue
 		}
-		select {
-		case b.onActiveDialer <- d:
-		default:
-		}
-		return conn, nil
+
+		// no good preconnected dialers were available, sleep a little and try again
+		time.Sleep(250 * time.Millisecond)
 	}
-	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", network, addr, i+1)
+	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", network, addr, attempts)
 }
 
 // OnActiveDialer returns the channel of the last dialer the balancer was using.
@@ -223,19 +298,19 @@ func (b *Balancer) OnActiveDialer() <-chan Dialer {
 	return b.onActiveDialer
 }
 
-func (b *Balancer) dialWithTimeout(pass int, d Dialer, ctx context.Context, network, addr string) (net.Conn, error) {
-	log.Tracef("Dialing %s://%s with %s on pass %v", network, addr, d.Label(), pass)
+func (b *Balancer) dialWithTimeout(pass int, pd PreconnectedDialer, ctx context.Context, network, addr string) (net.Conn, bool, error) {
+	log.Debugf("Dialing %s://%s with %s on pass %v", network, addr, pd.Label(), pass)
 	// caps the context deadline to maxDialTimeout
-	newCTX, cancel := context.WithTimeout(ctx, maxDialTimeout)
+	newCTX, cancel := context.WithTimeout(ctx, b.preconnectedDialTimeout)
 	defer cancel()
 	start := time.Now()
-	conn, err := d.DialContext(newCTX, network, addr)
+	conn, recoverable, err := pd.DialContext(newCTX, network, addr)
 	if err == nil {
 		// Please leave this at Debug level, as it helps us understand
 		// performance issues caused by a poor proxy being selected.
-		log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", d.Label(), network, addr, pass, time.Since(start))
+		log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", pd.Label(), network, addr, pass, time.Since(start))
 	}
-	return conn, err
+	return conn, recoverable, err
 }
 
 func (b *Balancer) run() {
@@ -323,13 +398,21 @@ func (b *Balancer) Close() {
 	}
 }
 
-func (b *Balancer) printStats(dialers sortedDialers) {
-	log.Debug("-------------------------- Dialer Stats -----------------------")
+func (b *Balancer) printStats(dialers sortedDialers, sessionStats map[string]*dialStats, lastReset time.Time) {
+	log.Debugf("----------- Dialer Stats (%v) -----------", time.Now().Sub(lastReset))
 	rank := float64(1)
 	for _, d := range dialers {
 		estLatency := d.EstLatency().Seconds()
 		estBandwidth := d.EstBandwidth()
-		log.Debugf("%s  S: %4d / %4d (%d)\tF: %4d / %4d (%d)\tL: %5.0fms\tBW: %3.2fMbps\t", d.JustifiedLabel(), d.Successes(), d.Attempts(), d.ConsecSuccesses(), d.Failures(), d.Attempts(), d.ConsecFailures(), estLatency*1000, estBandwidth)
+		ds := sessionStats[d.Label()]
+		sessionAttempts := atomic.LoadInt64(&ds.success) + atomic.LoadInt64(&ds.failure) + atomic.LoadInt64(&ds.expired)
+		log.Debugf("%s  A: %4d (%5d)\tS: %4d (%5d)\tCS: (%4d)\tF: %4d (%5d)\tCF: %4d\tEXP: %4d\tL: %5.0fms\tBW: %10.2fMbps\t",
+			d.JustifiedLabel(),
+			sessionAttempts, d.Attempts(),
+			atomic.LoadInt64(&ds.success), d.Successes(), d.ConsecSuccesses(),
+			atomic.LoadInt64(&ds.failure), d.Failures(), d.ConsecFailures(),
+			atomic.LoadInt64(&ds.expired),
+			estLatency*1000, estBandwidth)
 		host, _, _ := net.SplitHostPort(d.Addr())
 		// Report stats to borda
 		op := ops.Begin("proxy_rank").
@@ -342,15 +425,16 @@ func (b *Balancer) printStats(dialers sortedDialers) {
 		op.End()
 		rank++
 	}
-	log.Debug("------------------------ End Dialer Stats ---------------------")
+	log.Debug("----------- End Dialer Stats -----------")
 }
 
-func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, error) {
+func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, map[string]*dialStats, error) {
 	b.mu.RLock()
 	dialers := b.dialers
 	if trustedOnly {
 		dialers = b.trusted
 	}
+	sessionStats := b.sessionStats
 	b.mu.RUnlock()
 
 	if !trustedOnly {
@@ -359,9 +443,9 @@ func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, error) {
 
 	if dialers.Len() == 0 {
 		if trustedOnly {
-			return nil, fmt.Errorf("No trusted dialers")
+			return nil, nil, fmt.Errorf("No trusted dialers")
 		}
-		return nil, fmt.Errorf("No dialers")
+		return nil, nil, fmt.Errorf("No dialers")
 	}
 
 	topDialer := dialers[0]
@@ -380,11 +464,11 @@ func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, error) {
 					randomized = append(randomized, other)
 				}
 			}
-			return randomized, nil
+			return randomized, sessionStats, nil
 		}
 	}
 
-	return dialers, nil
+	return dialers, sessionStats, nil
 }
 
 func (b *Balancer) copyOfDialers() sortedDialers {
@@ -410,10 +494,12 @@ func (b *Balancer) sortDialers() {
 	b.mu.Lock()
 	b.dialers = dialers
 	b.trusted = trusted
+	sessionStats := b.sessionStats
+	lastReset := b.lastReset
 	b.mu.Unlock()
 
 	b.lookForSucceedingDialer(dialers)
-	b.printStats(dialers)
+	b.printStats(dialers, sessionStats, lastReset)
 }
 
 func (b *Balancer) lookForSucceedingDialer(dialers []Dialer) {
