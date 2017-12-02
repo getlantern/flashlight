@@ -279,11 +279,6 @@ func (b *Balancer) newBalancedDial(ctx context.Context, network string, addr str
 
 func (bd *balancedDial) dial() (conn net.Conn, err error) {
 	for {
-		if time.Now().Sub(bd.start) > bd.overallDialTimeout {
-			// reached overall timeout, stop
-			break
-		}
-
 		pc := bd.nextPreconnected()
 		if pc == nil {
 			// no more proxy connections available, stop
@@ -291,7 +286,7 @@ func (bd *balancedDial) dial() (conn net.Conn, err error) {
 		}
 
 		bd.attempts++
-		recoverable := false
+		var recoverable bool
 		conn, recoverable, err = bd.dialWithTimeout(pc)
 		if err != nil {
 			recoverableString := "...aborting"
@@ -320,6 +315,11 @@ func (bd *balancedDial) dial() (conn net.Conn, err error) {
 
 func (bd *balancedDial) nextPreconnected() ProxyConnection {
 	for {
+		if time.Now().Sub(bd.start) > bd.overallDialTimeout {
+			// reached overall timeout, stop
+			return nil
+		}
+
 		pcs := bd.preconnected[bd.idx]
 		select {
 		case pc := <-pcs:
