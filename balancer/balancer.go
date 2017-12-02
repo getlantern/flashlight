@@ -34,10 +34,9 @@ var (
 type ProxyConnection interface {
 	Dialer
 
-	// DialContext dials out to the given origin. recoverable indicates whether
-	// it's possible to recover from this error by dialing again (either on the
-	// same or a different dialer).
-	DialContext(ctx context.Context, network, addr string) (conn net.Conn, recoverable bool, err error)
+	// DialContext dials out to the given origin. failedUpstream indicates whether
+	// this was an upstream error (as opposed to errors connecting to the proxy).
+	DialContext(ctx context.Context, network, addr string) (conn net.Conn, failedUpstream bool, err error)
 
 	// ExpiresAt indicates when this proxy connection is no longer usable
 	ExpiresAt() time.Time
@@ -233,16 +232,16 @@ func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.C
 // balancedDial encapsulates a single dial using the available Dialers
 type balancedDial struct {
 	*Balancer
-	ctx           context.Context
-	network       string
-	addr          string
-	start         time.Time
-	sessionStats  map[string]*dialStats
-	dialers       []Dialer
-	preconnected  []<-chan ProxyConnection
-	unrecoverable map[int]Dialer
-	attempts      int
-	idx           int
+	ctx            context.Context
+	network        string
+	addr           string
+	start          time.Time
+	sessionStats   map[string]*dialStats
+	dialers        []Dialer
+	preconnected   []<-chan ProxyConnection
+	failedUpstream map[int]Dialer
+	attempts       int
+	idx            int
 }
 
 func (b *Balancer) newBalancedDial(ctx context.Context, network string, addr string, start time.Time) (*balancedDial, error) {
@@ -264,18 +263,16 @@ func (b *Balancer) newBalancedDial(ctx context.Context, network string, addr str
 		preconnected = append(preconnected, dialer.Preconnected())
 	}
 
-	unrecoverable := make(map[int]Dialer, len(preconnected))
-
 	return &balancedDial{
-		Balancer:      b,
-		ctx:           ctx,
-		network:       network,
-		addr:          addr,
-		start:         start,
-		sessionStats:  sessionStats,
-		dialers:       dialers,
-		preconnected:  preconnected,
-		unrecoverable: unrecoverable,
+		Balancer:       b,
+		ctx:            ctx,
+		network:        network,
+		addr:           addr,
+		start:          start,
+		sessionStats:   sessionStats,
+		dialers:        dialers,
+		preconnected:   preconnected,
+		failedUpstream: make(map[int]Dialer, len(preconnected)),
 	}, nil
 }
 
@@ -287,15 +284,15 @@ func (bd *balancedDial) dial() (conn net.Conn, err error) {
 			break
 		}
 
-		var recoverable bool
-		conn, recoverable, err = bd.dialWithTimeout(pc)
+		var failedUpstream bool
+		conn, failedUpstream, err = bd.dialWithTimeout(pc)
 
 		if err == nil {
 			bd.onSuccess(pc)
 			return conn, nil
 		}
 
-		bd.onFailure(pc, recoverable, err)
+		bd.onFailure(pc, failedUpstream, err)
 		bd.attempts++
 		if !bd.advanceToNextDialer() {
 			break
@@ -334,11 +331,11 @@ func (bd *balancedDial) nextPreconnected() ProxyConnection {
 }
 
 // advanceToNextDialer advances this balancedDial to the next dialer, cycling
-// back to the beginning if necessary. If no recoverable dialers are left, this
+// back to the beginning if necessary. If all dialers have failed upstream, this
 // method returns false.
 func (bd *balancedDial) advanceToNextDialer() bool {
-	if len(bd.unrecoverable) == len(bd.preconnected) {
-		// no more recoverable dialers
+	if len(bd.failedUpstream) == len(bd.preconnected) {
+		// all dialers failed upstream, give up
 		return false
 	}
 
@@ -348,8 +345,8 @@ func (bd *balancedDial) advanceToNextDialer() bool {
 			bd.idx = 0
 			time.Sleep(250 * time.Millisecond)
 		}
-		if bd.unrecoverable[bd.idx] != nil {
-			// this dialer is not recoverable, don't use it
+		if bd.failedUpstream[bd.idx] != nil {
+			// this dialer failed upstream, don't bother trying again
 			continue
 		}
 		return true
@@ -371,23 +368,23 @@ func (bd *balancedDial) onSuccess(pc ProxyConnection) {
 	// when this might happen is if some dialers have upstream network
 	// connectivity issues that prevent them from resolving or connecting
 	// to the origin, but other dialers don't suffer from the same issues.
-	for _, d := range bd.unrecoverable {
+	for _, d := range bd.failedUpstream {
 		atomic.AddInt64(&bd.sessionStats[d.Label()].failure, 1)
 		d.MarkFailure()
 	}
 }
 
-func (bd *balancedDial) onFailure(pc ProxyConnection, recoverable bool, err error) {
-	recoverableString := "...aborting"
-	if recoverable {
-		recoverableString = "...continuing"
+func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err error) {
+	continueString := "...continuing"
+	if failedUpstream {
+		continueString = "...aborting"
 	}
 	log.Errorf("Unable to dial via %v to %s://%s: %v on pass %v%v",
-		pc.Label(), bd.network, bd.addr, err, bd.attempts, recoverableString)
-	if recoverable {
-		atomic.AddInt64(&bd.sessionStats[pc.Label()].failure, 1)
+		pc.Label(), bd.network, bd.addr, err, bd.attempts, continueString)
+	if failedUpstream {
+		bd.failedUpstream[bd.idx] = pc
 	} else {
-		bd.unrecoverable[bd.idx] = pc
+		atomic.AddInt64(&bd.sessionStats[pc.Label()].failure, 1)
 	}
 }
 
@@ -397,13 +394,13 @@ func (bd *balancedDial) dialWithTimeout(pc ProxyConnection) (net.Conn, bool, err
 	newCTX, cancel := context.WithTimeout(bd.ctx, bd.preconnectedDialTimeout)
 	defer cancel()
 	start := time.Now()
-	conn, recoverable, err := pc.DialContext(newCTX, bd.network, bd.addr)
+	conn, failedUpstream, err := pc.DialContext(newCTX, bd.network, bd.addr)
 	if err == nil {
 		// Please leave this at Debug level, as it helps us understand
 		// performance issues caused by a poor proxy being selected.
 		log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", pc.Label(), bd.network, bd.addr, bd.attempts, time.Since(start))
 	}
-	return conn, recoverable, err
+	return conn, failedUpstream, err
 }
 
 // OnActiveDialer returns the channel of the last dialer the balancer was using.

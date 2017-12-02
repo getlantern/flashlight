@@ -178,17 +178,18 @@ func (p *proxy) Preconnected() <-chan balancer.ProxyConnection {
 
 // DialContext dials using provided context
 func (pc *proxyConnection) DialContext(ctx context.Context, network, addr string) (net.Conn, bool, error) {
-	recoverable := false
+	upstream := false
 	conn, err := pc.doDial(ctx, network, addr)
 	if err != nil {
-		if err != errUpstream {
+		if err == errUpstream {
+			upstream = true
+		} else {
 			pc.MarkFailure()
-			recoverable = true
 		}
 	} else {
 		pc.markSuccess()
 	}
-	return conn, recoverable, err
+	return conn, upstream, err
 }
 
 func (pc *proxyConnection) ExpiresAt() time.Time {

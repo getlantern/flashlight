@@ -305,7 +305,7 @@ func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net
 	} else {
 		atomic.AddInt64(&d.failures, 1)
 	}
-	return conn, true, err
+	return conn, false, err
 }
 
 func (d *testDialer) MarkFailure() {

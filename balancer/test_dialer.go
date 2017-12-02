@@ -90,7 +90,7 @@ func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net
 	} else if !d.failingUpstream {
 		atomic.AddInt64(&d.failures, 1)
 	}
-	return conn, !d.failingUpstream, err
+	return conn, d.failingUpstream, err
 }
 
 func (d *testDialer) MarkFailure() {
