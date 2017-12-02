@@ -288,20 +288,11 @@ func (bd *balancedDial) dial() (conn net.Conn, err error) {
 		bd.attempts++
 		var recoverable bool
 		conn, recoverable, err = bd.dialWithTimeout(pc)
+
 		if err != nil {
-			recoverableString := "...aborting"
-			if recoverable {
-				recoverableString = "...continuing"
-			}
-			log.Errorf("Unable to dial via %v to %s://%s: %v on pass %v%v",
-				pc.Label(), bd.network, bd.addr, err, bd.attempts, recoverableString)
-			if recoverable {
-				atomic.AddInt64(&bd.sessionStats[pc.Label()].failure, 1)
-			} else {
-				bd.unrecoverable[bd.idx] = pc
-				if !bd.advance() {
-					break
-				}
+			bd.onFailure(pc, recoverable, err)
+			if !bd.advance() {
+				break
 			}
 			continue
 		}
@@ -378,6 +369,20 @@ func (bd *balancedDial) onSuccess(pc ProxyConnection) {
 	for _, d := range bd.unrecoverable {
 		atomic.AddInt64(&bd.sessionStats[d.Label()].failure, 1)
 		d.MarkFailure()
+	}
+}
+
+func (bd *balancedDial) onFailure(pc ProxyConnection, recoverable bool, err error) {
+	recoverableString := "...aborting"
+	if recoverable {
+		recoverableString = "...continuing"
+	}
+	log.Errorf("Unable to dial via %v to %s://%s: %v on pass %v%v",
+		pc.Label(), bd.network, bd.addr, err, bd.attempts, recoverableString)
+	if recoverable {
+		atomic.AddInt64(&bd.sessionStats[pc.Label()].failure, 1)
+	} else {
+		bd.unrecoverable[bd.idx] = pc
 	}
 }
 
