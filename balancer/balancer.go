@@ -229,6 +229,7 @@ func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.C
 	return conn, err
 }
 
+// balancedDial encapsulates a single dial using the available Dialers
 type balancedDial struct {
 	*Balancer
 	ctx           context.Context
@@ -291,7 +292,7 @@ func (bd *balancedDial) dial() (conn net.Conn, err error) {
 
 		if err != nil {
 			bd.onFailure(pc, recoverable, err)
-			if !bd.advance() {
+			if !bd.advanceToNextDialer() {
 				break
 			}
 			continue
@@ -316,27 +317,31 @@ func (bd *balancedDial) nextPreconnected() ProxyConnection {
 		case pc := <-pcs:
 			// got a proxy connection
 			if pc.ExpiresAt().Before(time.Now()) {
-				// expired dialer, discard and try next from same proxy
+				// expired proxy connection, discard and try next from same proxy
 				atomic.AddInt64(&bd.sessionStats[pc.Label()].expired, 1)
 				continue
 			}
 			return pc
 		default:
 			// no proxy connections, tell dialer to preconnect so we'll
-			// hopefully get something on the next pass, and keep looking
+			// hopefully get something on the next pass, and advance to next dialer
 			bd.dialers[bd.idx].Preconnect()
-			if !bd.advance() {
+			if !bd.advanceToNextDialer() {
 				return nil
 			}
 		}
 	}
 }
 
-func (bd *balancedDial) advance() bool {
+// advanceToNextDialer advances this balancedDial to the next dialer, cycling
+// back to the beginning if necessary. If no recoverable dialers are left, this
+// method returns false.
+func (bd *balancedDial) advanceToNextDialer() bool {
 	if len(bd.unrecoverable) == len(bd.preconnected) {
 		// no more recoverable dialers
 		return false
 	}
+
 	for {
 		bd.idx++
 		if bd.idx >= len(bd.preconnected) {
