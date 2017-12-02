@@ -24,12 +24,12 @@ type testDialer struct {
 	successes          int64
 	failures           int64
 	stopped            bool
-	preconnected       chan PreconnectedDialer
+	preconnected       chan ProxyConnection
 	connectivityChecks int
 }
 
 func start(d *testDialer) *testDialer {
-	d.preconnected = make(chan PreconnectedDialer)
+	d.preconnected = make(chan ProxyConnection)
 	go func() {
 		for {
 			d.preconnected <- d
@@ -62,7 +62,7 @@ func (d *testDialer) Trusted() bool {
 func (d *testDialer) Preconnect() {
 }
 
-func (d *testDialer) Preconnected() <-chan PreconnectedDialer {
+func (d *testDialer) Preconnected() <-chan ProxyConnection {
 	return d.preconnected
 }
 
