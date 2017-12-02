@@ -287,7 +287,6 @@ func (bd *balancedDial) dial() (conn net.Conn, err error) {
 			break
 		}
 
-		bd.attempts++
 		var recoverable bool
 		conn, recoverable, err = bd.dialWithTimeout(pc)
 
@@ -297,6 +296,7 @@ func (bd *balancedDial) dial() (conn net.Conn, err error) {
 		}
 
 		bd.onFailure(pc, recoverable, err)
+		bd.attempts++
 		if !bd.advanceToNextDialer() {
 			break
 		}
