@@ -225,8 +225,9 @@ func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.C
 	if err != nil {
 		return nil, op.FailIf(log.Error(err))
 	}
+
 	op.BalancerDialTime(time.Now().Sub(start), nil)
-	return conn, err
+	return conn, nil
 }
 
 // balancedDial encapsulates a single dial using the available Dialers
@@ -290,16 +291,15 @@ func (bd *balancedDial) dial() (conn net.Conn, err error) {
 		var recoverable bool
 		conn, recoverable, err = bd.dialWithTimeout(pc)
 
-		if err != nil {
-			bd.onFailure(pc, recoverable, err)
-			if !bd.advanceToNextDialer() {
-				break
-			}
-			continue
+		if err == nil {
+			bd.onSuccess(pc)
+			return conn, nil
 		}
 
-		bd.onSuccess(pc)
-		return conn, nil
+		bd.onFailure(pc, recoverable, err)
+		if !bd.advanceToNextDialer() {
+			break
+		}
 	}
 
 	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", bd.network, bd.addr, bd.attempts)
