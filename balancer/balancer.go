@@ -391,12 +391,6 @@ func (bd *balancedDial) onFailure(pc ProxyConnection, recoverable bool, err erro
 	}
 }
 
-// OnActiveDialer returns the channel of the last dialer the balancer was using.
-// Can be called only once.
-func (b *Balancer) OnActiveDialer() <-chan Dialer {
-	return b.onActiveDialer
-}
-
 func (bd *balancedDial) dialWithTimeout(pc ProxyConnection) (net.Conn, bool, error) {
 	log.Debugf("Dialing %s://%s with %s on pass %v", bd.network, bd.addr, pc.Label(), bd.attempts)
 	// caps the context deadline to maxDialTimeout
@@ -410,6 +404,12 @@ func (bd *balancedDial) dialWithTimeout(pc ProxyConnection) (net.Conn, bool, err
 		log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", pc.Label(), bd.network, bd.addr, bd.attempts, time.Since(start))
 	}
 	return conn, recoverable, err
+}
+
+// OnActiveDialer returns the channel of the last dialer the balancer was using.
+// Can be called only once.
+func (b *Balancer) OnActiveDialer() <-chan Dialer {
+	return b.onActiveDialer
 }
 
 func (b *Balancer) run() {
