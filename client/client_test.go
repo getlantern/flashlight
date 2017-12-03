@@ -231,11 +231,11 @@ type testDialer struct {
 	successes    int64
 	failures     int64
 	stopped      bool
-	preconnected chan balancer.PreconnectedDialer
+	preconnected chan balancer.ProxyConnection
 }
 
 func start(d *testDialer) *testDialer {
-	d.preconnected = make(chan balancer.PreconnectedDialer)
+	d.preconnected = make(chan balancer.ProxyConnection)
 	go func() {
 		for {
 			d.preconnected <- d
@@ -268,7 +268,7 @@ func (d *testDialer) Trusted() bool {
 func (d *testDialer) Preconnect() {
 }
 
-func (d *testDialer) Preconnected() <-chan balancer.PreconnectedDialer {
+func (d *testDialer) Preconnected() <-chan balancer.ProxyConnection {
 	return d.preconnected
 }
 
@@ -305,7 +305,11 @@ func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net
 	} else {
 		atomic.AddInt64(&d.failures, 1)
 	}
-	return conn, true, err
+	return conn, false, err
+}
+
+func (d *testDialer) MarkFailure() {
+	atomic.AddInt64(&d.failures, 1)
 }
 
 func (d *testDialer) EstLatency() time.Duration {

@@ -321,7 +321,7 @@ type proxy struct {
 	mostRecentABETime time.Time
 	dialCore          func(ctx context.Context) (net.Conn, time.Duration, error)
 	preconnects       chan interface{}
-	preconnected      chan balancer.PreconnectedDialer
+	preconnected      chan balancer.ProxyConnection
 	forceRecheckCh    chan bool
 	closeCh           chan bool
 	mx                sync.Mutex
@@ -351,7 +351,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		forceRecheckCh:  make(chan bool, 1),
 		forceRedial:     abool.New(),
 		preconnects:     make(chan interface{}, maxPreconnect),
-		preconnected:    make(chan balancer.PreconnectedDialer, maxPreconnect),
+		preconnected:    make(chan balancer.ProxyConnection, maxPreconnect),
 		closeCh:         make(chan bool, 1),
 		consecSuccesses: 1, // be optimistic
 	}
