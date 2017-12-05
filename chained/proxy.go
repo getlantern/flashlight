@@ -603,7 +603,6 @@ func reportProxyDial(delta time.Duration, err error) {
 		innerOp := ops.Begin("proxy_dial")
 		innerOp.DialTime(delta, err)
 		innerOp.FailIf(err)
-		log.Debug("Reporting proxy dial")
 		innerOp.End()
 	}
 }
