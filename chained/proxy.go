@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -555,20 +556,26 @@ func (p *proxy) forceRecheck() {
 }
 
 func (p *proxy) dialCore(ctx context.Context) (net.Conn, error) {
-	op := ops.Begin("core_dial")
-	defer op.End()
-
-	estLatency, estBandwidth := p.EstLatency(), p.EstBandwidth()
-	if estLatency > 0 {
-		op.Set("est_rtt", estLatency.Seconds()/1000)
-	}
-	if estBandwidth > 0 {
-		op.Set("est_mbps", estBandwidth)
-	}
-
 	conn, delta, err := p.doDialCore(ctx)
-	op.CoreDialTime(delta, err)
-	op.FailIf(err)
+	success := err == nil
+	potentialBlocking := false
+	if err != nil {
+		errText := err.Error()
+		potentialBlocking = !strings.Contains(errText, "network is down") && !strings.Contains(errText, "unreachable")
+	}
+	if success || potentialBlocking {
+		op := ops.Begin("core_dial").Set("potential_blocking", true)
+		estLatency, estBandwidth := p.EstLatency(), p.EstBandwidth()
+		if estLatency > 0 {
+			op.Set("est_rtt", estLatency.Seconds()/1000)
+		}
+		if estBandwidth > 0 {
+			op.Set("est_mbps", estBandwidth)
+		}
+		op.CoreDialTime(delta, err)
+		op.FailIf(err)
+		op.End()
+	}
 	return overheadWrapper(false)(conn, err)
 }
 
