@@ -245,8 +245,6 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		if app.uiServer, err = ui.StartServer(uiaddr,
 			startupURL,
 			localHTTPToken(settings),
-			app.Flags["ui-domain"].(string),
-			func() bool { return false },
 			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
 			&ui.PathHandler{Pattern: "/data", Handler: ws.StartUIChannel()},
 		); err != nil {

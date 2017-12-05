@@ -52,9 +52,6 @@ type Server struct {
 	mux            *http.ServeMux
 	onceOpenExtURL sync.Once
 
-	// The domain to serve the UI on - can be anything really.
-	uiDomain     string
-	useUIDomain  func() bool
 	translations eventual.Value
 }
 
@@ -62,9 +59,9 @@ type Server struct {
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func StartServer(requestedAddr, extURL, localHTTPToken, uiDomain string, useUIDomain func() bool,
+func StartServer(requestedAddr, extURL, localHTTPToken string,
 	handlers ...*PathHandler) (*Server, error) {
-	server := newServer(extURL, localHTTPToken, uiDomain, useUIDomain)
+	server := newServer(extURL, localHTTPToken)
 
 	for _, h := range handlers {
 		server.handle(h.Pattern, h.Handler)
@@ -80,7 +77,7 @@ func StartServer(requestedAddr, extURL, localHTTPToken, uiDomain string, useUIDo
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func newServer(extURL, localHTTPToken, uiDomain string, useUIDomain func() bool) *Server {
+func newServer(extURL, localHTTPToken string) *Server {
 	requestPath := ""
 	if localHTTPToken != "" {
 		requestPath = "/" + localHTTPToken
@@ -89,8 +86,6 @@ func newServer(extURL, localHTTPToken, uiDomain string, useUIDomain func() bool)
 		externalURL:    overrideManotoURL(extURL),
 		requestPath:    requestPath,
 		mux:            http.NewServeMux(),
-		uiDomain:       uiDomain,
-		useUIDomain:    useUIDomain,
 		localHTTPToken: localHTTPToken,
 		translations:   eventual.NewValue(),
 	}
@@ -273,9 +268,6 @@ func (s *Server) AddToken(path string) string {
 }
 
 func (s *Server) activeDomain() string {
-	if s.useUIDomain() {
-		return s.uiDomain
-	}
 	return s.accessAddr
 }
 
