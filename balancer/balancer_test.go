@@ -24,7 +24,7 @@ func init() {
 func TestNoDialers(t *testing.T) {
 	addr, l := echoServer()
 	defer func() { _ = l.Close() }()
-	b := New()
+	b := newBalancer()
 	_, err := b.Dial("tcp", addr)
 	assert.Error(t, err, "Dialing with no dialers should have failed")
 }
@@ -33,13 +33,13 @@ func TestSingleDialer(t *testing.T) {
 	addr, l := echoServer()
 	defer func() { _ = l.Close() }()
 
-	dialer := &testDialer{
+	dialer := start(&testDialer{
 		name:      "dialer1",
 		latency:   50 * time.Millisecond,
 		bandwidth: 10000,
-	}
+	})
 	// Test successful single dialer
-	b := New(dialer)
+	b := newBalancer(dialer)
 	conn, err := b.Dial("tcp", addr)
 	if assert.NoError(t, err, "Dialing should have succeeded") {
 		doTestConn(t, conn)
@@ -61,53 +61,102 @@ func TestSingleDialer(t *testing.T) {
 	}
 }
 
-func TestRetryOnBadDialer(t *testing.T) {
+func TestGoodSlowDialer(t *testing.T) {
 	addr, l := echoServer()
 	defer func() { _ = l.Close() }()
 
-	dialer1 := &testDialer{
+	dialer1 := start(&testDialer{
+		name:              "dialer1",
+		latency:           50 * time.Millisecond,
+		bandwidth:         10000,
+		remainingFailures: 1000,
+	})
+	dialer2 := start(&testDialer{
 		name:      "dialer1",
-		latency:   50 * time.Millisecond,
+		latency:   500 * time.Millisecond,
 		bandwidth: 10000,
-		failing:   true,
-	}
-	dialer2 := &testDialer{
-		name:      "dialer1",
-		latency:   50 * time.Millisecond,
-		bandwidth: 10000,
-		failing:   true,
-	}
+	})
 
-	b := New(dialer1)
+	b := newBalancer(dialer1)
 	_, err := b.Dial("tcp", addr)
-	if assert.Error(t, err, "Dialing bad dialer should fail") {
-		assert.EqualValues(t, 1, dialer1.Attempts(), "should try same dialer only once")
-	}
+	assert.Error(t, err, "Dialing bad dialer should fail")
 	b.Reset(dialer1, dialer2)
 	_, err = b.Dial("tcp", addr)
-	if assert.Error(t, err, "Dialing bad dialer should fail") {
-		assert.EqualValues(t, 3, dialer1.Attempts()+dialer2.Attempts(), "should try both dialers again")
+	if assert.NoError(t, err, "Dialing with one good dialer should succeed") {
+		assert.True(t, dialer1.Attempts() > 0, "should have tried fast dialer first")
 	}
 }
 
-func TestTrusted(t *testing.T) {
-	dialer := &testDialer{
-		untrusted: true,
-	}
+func TestAllFailingUpstream(t *testing.T) {
+	addr, l := echoServer()
+	defer func() { _ = l.Close() }()
 
-	_, err := New(dialer).Dial("", "does-not-exist.com:80")
+	dialer1 := start(&testDialer{
+		name:            "dialer1",
+		latency:         50 * time.Millisecond,
+		bandwidth:       10000,
+		failingUpstream: true,
+	})
+	dialer2 := start(&testDialer{
+		name:            "dialer2",
+		latency:         500 * time.Millisecond,
+		bandwidth:       10000,
+		failingUpstream: true,
+	})
+
+	b := newBalancer(dialer1, dialer2)
+	_, err := b.Dial("tcp", addr)
+	assert.Error(t, err, "Dialing all bad dialers should fail")
+	assert.EqualValues(t, 0, dialer1.Failures(), "When all dialers fail upstream, don't record a failure")
+	assert.EqualValues(t, 0, dialer2.Failures(), "When all dialers fail upstream, don't record a failure")
+	assert.EqualValues(t, 1, dialer1.Attempts(), "All dialers should have had 1 attempt")
+	assert.EqualValues(t, 1, dialer2.Attempts(), "All dialers should have had 1 attempt")
+}
+
+func TestOneFailingUpstream(t *testing.T) {
+	addr, l := echoServer()
+	defer func() { _ = l.Close() }()
+
+	dialer1 := start(&testDialer{
+		name:            "dialer1",
+		latency:         50 * time.Millisecond,
+		bandwidth:       10000,
+		failingUpstream: true,
+	})
+	dialer2 := start(&testDialer{
+		name:              "dialer2",
+		latency:           500 * time.Millisecond,
+		bandwidth:         10000,
+		remainingFailures: 1,
+	})
+
+	b := newBalancer(dialer1, dialer2)
+	_, err := b.Dial("tcp", addr)
+	assert.NoError(t, err, "Dialing with one good dialer should succeed")
+	assert.EqualValues(t, 1, dialer1.Failures(), "When a dialer succeeds, dialer that failed upstream should be marked as failed")
+	assert.EqualValues(t, 1, dialer2.Failures(), "Dialer that failed on first dial should be marked as failed")
+	assert.EqualValues(t, 1, dialer1.Attempts(), "Dialer failing upstream should have had only 1 attempt")
+	assert.EqualValues(t, 2, dialer2.Attempts(), "Dialer that failed on first dial should have had 2 attempts")
+}
+
+func TestTrusted(t *testing.T) {
+	dialer := start(&testDialer{
+		untrusted: true,
+	})
+
+	_, err := newBalancer(dialer).Dial("", "does-not-exist.com:80")
 	assert.Error(t, err, "Dialing with no trusted dialers should have failed")
 	assert.EqualValues(t, 0, dialer.Attempts(), "should not dial untrusted dialer")
 
-	_, err = New(dialer).Dial("", "does-not-exist.com:8080")
+	_, err = newBalancer(dialer).Dial("", "does-not-exist.com:8080")
 	assert.Error(t, err, "Dialing with no trusted dialers should have failed")
 	assert.EqualValues(t, 0, dialer.Attempts(), "should not dial untrusted dialer")
 
 	dialer.untrusted = false
-	_, err = New(dialer).Dial("", "does-not-exist.com:80")
+	_, err = newBalancer(dialer).Dial("", "does-not-exist.com:80")
 	assert.NoError(t, err, "Dialing with trusted dialer should have succeeded")
 	assert.EqualValues(t, 1, dialer.Attempts(), "should dial trusted dialer")
-	_, err = New(dialer).Dial("", "does-not-exist.com:8080")
+	_, err = newBalancer(dialer).Dial("", "does-not-exist.com:8080")
 	assert.NoError(t, err, "Dialing with trusted dialer should have succeeded")
 	assert.EqualValues(t, 2, dialer.Attempts(), "should dial trusted dialer")
 }
@@ -115,50 +164,50 @@ func TestTrusted(t *testing.T) {
 func TestSorting(t *testing.T) {
 	dialers := sortedDialers{
 		// Unknown bandwidth comes first
-		&testDialer{
+		start(&testDialer{
 			name:      "1",
 			bandwidth: 0,
-		},
+		}),
 		// Within unknown bandwidth, sort by name
-		&testDialer{
+		start(&testDialer{
 			name:      "2",
 			bandwidth: 0,
-		},
+		}),
 		// Order known dialers by bandwidth / latency
-		&testDialer{
+		start(&testDialer{
 			name:      "3",
 			bandwidth: 1000,
 			latency:   1 * time.Millisecond,
-		},
-		&testDialer{
+		}),
+		start(&testDialer{
 			name:      "4",
 			bandwidth: 10000,
 			latency:   15 * time.Millisecond,
-		},
+		}),
 		// Same ordering as above applies to failing proxies, which all come after
 		// succeeding ones
-		&testDialer{
-			name:      "5",
-			bandwidth: 0,
-			failing:   true,
-		},
-		&testDialer{
-			name:      "6",
-			bandwidth: 0,
-			failing:   true,
-		},
-		&testDialer{
-			name:      "7",
-			bandwidth: 1000,
-			latency:   1 * time.Millisecond,
-			failing:   true,
-		},
-		&testDialer{
-			name:      "8",
-			bandwidth: 10000,
-			latency:   15 * time.Millisecond,
-			failing:   true,
-		},
+		start(&testDialer{
+			name:              "5",
+			bandwidth:         0,
+			remainingFailures: 1000,
+		}),
+		start(&testDialer{
+			name:              "6",
+			bandwidth:         0,
+			remainingFailures: 1000,
+		}),
+		start(&testDialer{
+			name:              "7",
+			bandwidth:         1000,
+			latency:           1 * time.Millisecond,
+			remainingFailures: 1000,
+		}),
+		start(&testDialer{
+			name:              "8",
+			bandwidth:         10000,
+			latency:           15 * time.Millisecond,
+			remainingFailures: 1000,
+		}),
 	}
 
 	// Shuffle and sort multiple times to make sure that comparisons work in both
@@ -209,4 +258,8 @@ func doTestConn(t *testing.T, conn net.Conn) {
 	wg.Wait()
 	err := conn.Close()
 	assert.NoError(t, err, "Should close conn")
+}
+
+func newBalancer(dialers ...Dialer) *Balancer {
+	return New(250*time.Millisecond, 1*time.Second, dialers...)
 }

@@ -18,12 +18,24 @@ type testDialer struct {
 	latency            time.Duration
 	bandwidth          float64
 	untrusted          bool
-	failing            bool
+	remainingFailures  int
+	failingUpstream    bool
 	attempts           int64
 	successes          int64
 	failures           int64
 	stopped            bool
+	preconnected       chan ProxyConnection
 	connectivityChecks int
+}
+
+func start(d *testDialer) *testDialer {
+	d.preconnected = make(chan ProxyConnection)
+	go func() {
+		for {
+			d.preconnected <- d
+		}
+	}()
+	return d
 }
 
 // Name returns the name for this Dialer
@@ -47,17 +59,27 @@ func (d *testDialer) Trusted() bool {
 	return !d.untrusted
 }
 
-func (d *testDialer) Dial(network, addr string) (net.Conn, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
-	defer cancel()
-	return d.DialContext(ctx, network, addr)
+func (d *testDialer) Preconnect() {
 }
 
-func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+func (d *testDialer) Preconnected() <-chan ProxyConnection {
+	return d.preconnected
+}
+
+func (d *testDialer) ExpiresAt() time.Time {
+	return time.Now().Add(365 * 24 * time.Hour)
+}
+
+func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, bool, error) {
 	var conn net.Conn
 	var err error
 	if !d.Succeeding() {
 		err = fmt.Errorf("Failing intentionally")
+		d.remainingFailures -= 1
+	} else if d.failingUpstream {
+		err = fmt.Errorf("Failing upstream")
+	} else if !d.Succeeding() {
+
 	} else if network != "" {
 		var d net.Dialer
 		conn, err = d.DialContext(ctx, network, addr)
@@ -65,10 +87,14 @@ func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net
 	atomic.AddInt64(&d.attempts, 1)
 	if err == nil {
 		atomic.AddInt64(&d.successes, 1)
-	} else {
+	} else if !d.failingUpstream {
 		atomic.AddInt64(&d.failures, 1)
 	}
-	return conn, err
+	return conn, d.failingUpstream, err
+}
+
+func (d *testDialer) MarkFailure() {
+	atomic.AddInt64(&d.failures, 1)
 }
 
 func (d *testDialer) EstLatency() time.Duration {
@@ -100,7 +126,7 @@ func (d *testDialer) ConsecFailures() int64 {
 }
 
 func (d *testDialer) Succeeding() bool {
-	return !d.failing
+	return d.remainingFailures == 0
 }
 
 func (d *testDialer) ForceRedial() {
@@ -124,7 +150,7 @@ func (d *testDialer) connectivityChecksSinceLast() int {
 	return result
 }
 
-func (d *testDialer) ProbePerformance() {
+func (d *testDialer) Probe(forPerformance bool) {
 }
 
 func (d *testDialer) Stop() {

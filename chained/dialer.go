@@ -14,6 +14,7 @@ import (
 
 	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
@@ -23,12 +24,16 @@ import (
 const (
 	minCheckInterval = 10 * time.Second
 	maxCheckInterval = 15 * time.Minute
-	minCheckTimeout  = 1 * time.Second
-	maxCheckTimeout  = 10 * time.Second
 )
 
+type proxyConnection struct {
+	*proxy
+	conn      net.Conn
+	expiresAt time.Time
+}
+
 var (
-	// Close connections idle for a period to avoid dangling connections. 45
+	// IdleTimeout closes connections idle for a period to avoid dangling connections. 45
 	// seconds is long enough to avoid interrupt normal connections but shorter
 	// than the idle timeout on the server to avoid running into closed connection
 	// problems. 45 seconds is also longer than the MaxIdleTime on our
@@ -79,13 +84,13 @@ func (p *proxy) runConnectivityChecks() {
 
 func (p *proxy) CheckConnectivity() bool {
 	elapsed := mtime.Stopwatch()
-	_, err := p.DialServer()
+	_, err := p.dialServer()
 	log.Debugf("Checking %v took %v, err: %v", p.Label(), elapsed(), err)
 	if err == nil {
 		p.markSuccess()
 		return true
 	}
-	p.markFailure()
+	p.MarkFailure()
 	return false
 	// We intentionally don't close the connection and instead let the
 	// server's idle timeout handle it to make this less fingerprintable.
@@ -97,7 +102,10 @@ func randomize(d time.Duration) time.Duration {
 
 func (p *proxy) Stop() {
 	log.Tracef("Stopping dialer %s", p.Label())
-	p.closeCh <- true
+	// don't bother waiting for proxy to stop
+	go func() {
+		p.closeCh <- true
+	}()
 }
 
 func (p *proxy) Attempts() int64 {
@@ -129,22 +137,63 @@ func (p *proxy) Succeeding() bool {
 		p.consecRWSuccesses.Get() > -5
 }
 
-// Dial is a net.Dial-compatible function.
-func (p *proxy) Dial(network, addr string) (net.Conn, error) {
-	return p.DialContext(context.Background(), network, addr)
+func (p *proxy) processPreconnects(initPreconnect int) {
+	// Eagerly preconnect a few
+	for i := 0; i < initPreconnect; i++ {
+		p.Preconnect()
+	}
+
+	// As long as we've got requests to preconnect, preconnect
+	for range p.preconnects {
+		conn, err := p.dialServer()
+		if err != nil {
+			log.Errorf("Unable to dial server %v: %s", p.Label(), err)
+			time.Sleep(250 * time.Millisecond)
+			continue
+		}
+		p.preconnected <- p.newPreconnected(conn)
+	}
+}
+
+func (p *proxy) newPreconnected(conn net.Conn) balancer.ProxyConnection {
+	return &proxyConnection{
+		proxy:     p,
+		conn:      conn,
+		expiresAt: time.Now().Add(IdleTimeout / 2), // set the preconnected dialer to expire before we hit the idle timeout
+	}
+}
+
+func (p *proxy) Preconnect() {
+	select {
+	case p.preconnects <- nil:
+		// okay
+	default:
+		// maxPreconnects already requested, ignore
+	}
+}
+
+func (p *proxy) Preconnected() <-chan balancer.ProxyConnection {
+	return p.preconnected
 }
 
 // DialContext dials using provided context
-func (p *proxy) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
-	conn, err := p.doDial(ctx, network, addr)
+func (pc *proxyConnection) DialContext(ctx context.Context, network, addr string) (net.Conn, bool, error) {
+	upstream := false
+	conn, err := pc.doDial(ctx, network, addr)
 	if err != nil {
-		if err != errUpstream {
-			p.markFailure()
+		if err == errUpstream {
+			upstream = true
+		} else {
+			pc.MarkFailure()
 		}
 	} else {
-		p.markSuccess()
+		pc.markSuccess()
 	}
-	return conn, err
+	return conn, upstream, err
+}
+
+func (pc *proxyConnection) ExpiresAt() time.Time {
+	return pc.expiresAt
 }
 
 func (p *proxy) markSuccess() {
@@ -158,7 +207,7 @@ func (p *proxy) markSuccess() {
 	}
 }
 
-func (p *proxy) markFailure() {
+func (p *proxy) MarkFailure() {
 	if p.doMarkFailure() == 1 {
 		// On new failure, force recheck
 		p.forceRecheck()
@@ -174,14 +223,14 @@ func (p *proxy) doMarkFailure() int64 {
 	return newCF
 }
 
-func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, error) {
+func (pc *proxyConnection) doDial(ctx context.Context, network, addr string) (net.Conn, error) {
 	var conn net.Conn
 	var err error
 
-	op := ops.Begin("dial_for_balancer").ProxyType(ops.ProxyChained).ProxyAddr(p.addr)
+	op := ops.Begin("dial_for_balancer").ProxyType(ops.ProxyChained).ProxyAddr(pc.addr)
 	defer op.End()
 
-	conn, err = p.dialInternal(ctx, network, addr)
+	conn, err = pc.dialInternal(ctx, network, addr)
 
 	if err != nil {
 		return nil, op.FailIf(err)
@@ -192,12 +241,12 @@ func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, err
 	return conn, nil
 }
 
-func (p *proxy) dialInternal(ctx context.Context, network, addr string) (net.Conn, error) {
+func (pc *proxyConnection) dialInternal(ctx context.Context, network, addr string) (net.Conn, error) {
 	var conn net.Conn
 	var err error
 	chDone := make(chan bool)
 	go func() {
-		conn, err = p.doDialInternal(network, addr)
+		conn, err = pc.doDialInternal(network, addr)
 		chDone <- true
 	}()
 	select {
@@ -215,27 +264,24 @@ func (p *proxy) dialInternal(ctx context.Context, network, addr string) (net.Con
 	}
 }
 
-func (p *proxy) doDialInternal(network, addr string) (net.Conn, error) {
-	conn, err := p.DialServer()
-	if err != nil {
-		return nil, errors.New("Unable to dial server %v: %s", p.Label(), err)
-	}
+func (pc *proxyConnection) doDialInternal(network, addr string) (net.Conn, error) {
+	var err error
 	// Look for our special hacked "connect" transport used to signal
 	// that we should send a CONNECT request and tunnel all traffic through
 	// that.
 	switch network {
 	case "connect":
 		log.Tracef("Sending CONNECT request")
-		err = p.sendCONNECT(addr, conn)
+		err = pc.sendCONNECT(addr, pc.conn)
 	case "persistent":
 		log.Tracef("Sending GET request to establish persistent HTTP connection")
-		err = p.initPersistentConnection(addr, conn)
+		err = pc.initPersistentConnection(addr, pc.conn)
 	}
 	if err != nil {
-		conn.Close()
+		pc.conn.Close()
 		return nil, err
 	}
-	return p.withRateTracking(conn, addr), nil
+	return pc.withRateTracking(pc.conn, addr), nil
 }
 
 func (p *proxy) onRequest(req *http.Request) {

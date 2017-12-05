@@ -14,7 +14,6 @@ type Settings interface {
 	StickyConfig() bool
 	EnableAdBlocking() bool
 	DefaultDnsServer() string
-	DnsGrabServer() string
 	TimeoutMillis() int
 }
 
@@ -32,6 +31,7 @@ type Session interface {
 	Locale() string
 	Code() string
 	GetCountryCode() string
+	GetDNSServer() string
 	VerifyCode() string
 	DeviceCode() string
 	DeviceName() string
@@ -332,6 +332,11 @@ func ProRequest(command string, session Session) bool {
 	req := newRequest(session)
 
 	log.Debugf("Received a %s pro request", command)
+
+	if command != "newuser" && session.GetUserID() == 0 {
+		log.Debugf("No user ID: not making %s request", command)
+		return false
+	}
 
 	commands := map[string]proFunc{
 		"emailexists":          emailExists,

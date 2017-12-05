@@ -150,20 +150,6 @@ func TestUserADataAfterPurchase(t *testing.T) {
 	//assert.True(t, res.User.Subscription != "")
 }
 
-func TestUserATokenReset(t *testing.T) {
-	res, err := tc.TokenReset(userA)
-	assert.NoError(t, err)
-	assert.Equal(t, "ok", res.Status)
-	assert.True(t, res.User.Token != "")
-	userA.Token = res.User.Token
-}
-
-func TestUserADataAfterTokenReset(t *testing.T) {
-	res, err := tc.UserData(userA)
-	assert.NoError(t, err)
-	assert.Equal(t, "ok", res.Status)
-}
-
 func TestCreateUserB(t *testing.T) {
 	userB = generateUser()
 

@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"time"
 
 	"github.com/getlantern/rot13"
@@ -103,9 +104,18 @@ func pipeConfig(opts *options) {
 	configChan := make(chan interface{})
 
 	go func() {
+		var lastCfg interface{}
 		for {
 			cfg := <-configChan
-			opts.dispatch(cfg)
+			a := yamlRoundTrip(lastCfg)
+			b := yamlRoundTrip(cfg)
+			if reflect.DeepEqual(a, b) {
+				log.Debug("Config unchanged, ignoring")
+			} else {
+				log.Debug("Dispatching updated config")
+				opts.dispatch(cfg)
+				lastCfg = cfg
+			}
 		}
 	}()
 	configPath, err := client.InConfigDir(opts.saveDir, opts.name)
@@ -136,6 +146,30 @@ func pipeConfig(opts *options) {
 	} else {
 		log.Debugf("Using sticky config")
 	}
+}
+
+func yamlRoundTrip(o interface{}) interface{} {
+	if o == nil {
+		return nil
+	}
+	var or interface{}
+	t := reflect.TypeOf(o)
+	if t.Kind() == reflect.Ptr {
+		or = reflect.New(t.Elem()).Interface()
+	} else {
+		or = reflect.New(t).Interface()
+	}
+	b, err := yaml.Marshal(o)
+	if err != nil {
+		log.Errorf("Unable to yaml round trip (marshal): %v %v", o, err)
+		return o
+	}
+	err = yaml.Unmarshal(b, or)
+	if err != nil {
+		log.Errorf("Unable to yaml round trip (unmarshal): %v %v", o, err)
+		return o
+	}
+	return or
 }
 
 // newConfig create a new ProxyConfig instance that saves and looks for

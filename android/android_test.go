@@ -32,7 +32,6 @@ type testSettings struct {
 func (c testSettings) StickyConfig() bool       { return false }
 func (c testSettings) EnableAdBlocking() bool   { return false }
 func (c testSettings) DefaultDnsServer() string { return "8.8.8.8" }
-func (c testSettings) DnsGrabServer() string    { return "" }
 func (c testSettings) TimeoutMillis() int       { return 5000 }
 
 func (c testSession) AfterStart()                   {}
@@ -41,6 +40,7 @@ func (c testSession) ConfigUpdate(bool)             {}
 func (c testSession) ShowSurvey(survey string)      {}
 func (c testSession) GetUserID() int64              { return 0 }
 func (c testSession) GetToken() string              { return "" }
+func (c testSession) GetDNSServer() string          { return "8.8.8.8" }
 func (c testSession) SetStaging(bool)               {}
 func (c testSession) SetCountry(string)             {}
 func (c testSession) ProxyAll() bool                { return true }
@@ -89,9 +89,14 @@ func testProxiedRequest(proxyAddr string, socks bool) error {
 			},
 		}
 		resolved, err := resolver.LookupHost(context.Background(), host)
-		log.Debugf("resolved: %v: %v", resolved, err)
-		if len(resolved) > 0 {
-			host = resolved[0]
+		log.Debugf("resolved %v to %v: %v", host, resolved, err)
+		for _, addr := range resolved {
+			ip := net.ParseIP(addr).To4()
+			if ip != nil {
+				log.Debugf("Using resolved IPv4 address: %v", addr)
+				host = addr
+				break
+			}
 		}
 	}
 	hostWithPort := fmt.Sprintf("%v:80", host)
