@@ -96,7 +96,7 @@ func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken f
 		op := ops.Begin("dial_to_chained").ChainedProxy(p.addr, p.protocol, p.network)
 		defer op.End()
 		elapsed := mtime.Stopwatch()
-		conn, err := p.tcpDial(op)(ctx)
+		conn, err := p.dialCore(ctx)
 		op.DialTime(elapsed(), err)
 		return conn, op.FailIf(err)
 	})
@@ -115,7 +115,7 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 
 		elapsed := mtime.Stopwatch()
 		conn, err := tlsdialer.DialTimeout(func(network, addr string, timeout time.Duration) (net.Conn, error) {
-			return p.tcpDial(op)(ctx)
+			return p.dialCore(ctx)
 		}, timeoutFor(ctx),
 			"tcp", p.addr, false, &tls.Config{
 				ClientSessionCache: sessionCache,
@@ -173,7 +173,7 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 		dialFn := func(network, address string) (net.Conn, error) {
 			// We know for sure the network and address are the same as what
 			// the inner DailServer uses.
-			return p.tcpDial(op)(ctx)
+			return p.dialCore(ctx)
 		}
 		// The proxy it wrapped already has timeout applied.
 		conn, err := cf.Dial("tcp", p.addr, dialFn, args)
@@ -234,7 +234,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 
 		elapsed := mtime.Stopwatch()
 		conn, err := dialer.Dial(func() (net.Conn, error) {
-			conn, err := p.tcpDial(op)(ctx)
+			conn, err := p.dialCore(ctx)
 			if err == nil && idleInterval > 0 {
 				conn = idletiming.Conn(conn, idleInterval, func() {
 					log.Debug("lampshade TCP connection idled")
@@ -319,7 +319,7 @@ type proxy struct {
 	kcpConfig         *KCPConfig
 	forceRedial       *abool.AtomicBool
 	mostRecentABETime time.Time
-	dialCore          func(ctx context.Context) (net.Conn, time.Duration, error)
+	doDialCore        func(ctx context.Context) (net.Conn, time.Duration, error)
 	preconnects       chan interface{}
 	preconnected      chan balancer.ProxyConnection
 	forceRecheckCh    chan bool
@@ -356,7 +356,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		consecSuccesses: 1, // be optimistic
 	}
 
-	p.dialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
+	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
 		elapsed := mtime.Stopwatch()
 		conn, err := netx.DialTimeout("tcp", p.addr, timeoutFor(ctx))
 		delta := elapsed()
@@ -401,7 +401,7 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig, addIdleTiming)
 	var dialKCPMutex sync.Mutex
 
-	p.dialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
+	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
 		elapsed := mtime.Stopwatch()
 
 		dialKCPMutex.Lock()
@@ -554,19 +554,22 @@ func (p *proxy) forceRecheck() {
 	}
 }
 
-func (p *proxy) tcpDial(op *ops.Op) func(ctx context.Context) (net.Conn, error) {
-	return func(ctx context.Context) (net.Conn, error) {
-		estLatency, estBandwidth := p.EstLatency(), p.EstBandwidth()
-		if estLatency > 0 {
-			op.Set("est_rtt", estLatency.Seconds()/1000)
-		}
-		if estBandwidth > 0 {
-			op.Set("est_mbps", estBandwidth)
-		}
-		conn, delta, err := p.dialCore(ctx)
-		op.TCPDialTime(delta, err)
-		return overheadWrapper(false)(conn, err)
+func (p *proxy) dialCore(ctx context.Context) (net.Conn, error) {
+	op := ops.Begin("core_dial")
+	defer op.End()
+
+	estLatency, estBandwidth := p.EstLatency(), p.EstBandwidth()
+	if estLatency > 0 {
+		op.Set("est_rtt", estLatency.Seconds()/1000)
 	}
+	if estBandwidth > 0 {
+		op.Set("est_mbps", estBandwidth)
+	}
+
+	conn, delta, err := p.doDialCore(ctx)
+	op.CoreDialTime(delta, err)
+	op.FailIf(err)
+	return overheadWrapper(false)(conn, err)
 }
 
 // KCPConfig adapts kcpwrapper.DialerConfig to the currently deployed

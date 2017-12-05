@@ -185,23 +185,30 @@ func (op *Op) Origin(origin string, defaultPort string) *Op {
 }
 
 // DialTime records a dial time relative to a given start time (in milliseconds)
-// and records whether or not the dial succeeded (based on err being nil).
+// if and only if there is no error.
 func (op *Op) DialTime(elapsed time.Duration, err error) *Op {
-	return op.SetMetric("dial_time", borda.Avg(float64(elapsed.Nanoseconds())/1000000)).Set("dial_succeeded", err == nil)
+	if err != nil {
+		return op
+	}
+	return op.SetMetric("dial_time", borda.Avg(float64(elapsed.Nanoseconds())/1000000))
 }
 
-// DialTime records a balancer dial time relative to a given start time (in
-// milliseconds) and records whether or not the dial succeeded (based on err
-// being nil).
+// BalancerDialTime records a balancer dial time relative to a given start time (in
+// milliseconds) if and only if there is no error.
 func (op *Op) BalancerDialTime(elapsed time.Duration, err error) *Op {
-	return op.SetMetric("balancer_dial_time", borda.Avg(float64(elapsed.Nanoseconds())/1000000)).Set("balancer_dial_succeeded", err == nil)
+	if err != nil {
+		return op
+	}
+	return op.SetMetric("balancer_dial_time", borda.Avg(float64(elapsed.Nanoseconds())/1000000))
 }
 
-// TCPDialTime records a dial time relative to a given start time (in
-// milliseconds) and records whether or not the dial succeeded (based on err
-// being nil).
-func (op *Op) TCPDialTime(elapsed time.Duration, err error) {
-	op.SetMetric("tcp_dial_time", borda.Avg(float64(elapsed.Nanoseconds())/1000000)).Set("tcp_dial_succeeded", err == nil)
+// CoreDialTime records a core dial time relative to a given start time (in
+// milliseconds) if and only if there is no error.
+func (op *Op) CoreDialTime(elapsed time.Duration, err error) *Op {
+	if err != nil {
+		return op
+	}
+	return op.SetMetric("core_dial_time", borda.Avg(float64(elapsed.Nanoseconds())/1000000))
 }
 
 // SetMetric sets a named metric. Metrics will be reported as borda values
