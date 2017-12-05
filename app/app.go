@@ -158,7 +158,7 @@ func (app *App) Run() {
 			},
 			func() bool { return true },              // always allow ad blocking on desktop
 			func(addr string) string { return addr }, // no dnsgrab reverse lookups on desktop
-			app.uiFilter(app.Flags["ui-domain"].(string)),
+			app.noUIFilter(),
 		)
 		if err != nil {
 			app.Exit(err)
@@ -519,6 +519,13 @@ func (app *App) AddToken(path string) string {
 // GetTranslations adds our secure token to a given request path.
 func (app *App) GetTranslations(filename string) ([]byte, error) {
 	return ui.Translations(filename)
+}
+
+// noUIFilter does not filter any requests for UI serving.
+func (app *App) noUIFilter() func(req *http.Request) (*http.Request, error) {
+	return func(req *http.Request) (*http.Request, error) {
+		return req, nil
+	}
 }
 
 // uiFilter serves requests over a configured domain from the local UI server.
