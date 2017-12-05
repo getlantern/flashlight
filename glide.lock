@@ -1,5 +1,5 @@
 hash: c41a3297dbf12a6024489881323e642168418956258cab16915348729094a097
-updated: 2017-11-29T16:50:50.518092-06:00
+updated: 2017-12-05T07:58:36.300008-08:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a3ad5df6c9e7dc8117f55958b4ce99bf1e0fe291
@@ -68,7 +68,7 @@ imports:
 - name: github.com/getlantern/bytemap
   version: ae8427dbf355130b32e5261c108917a630f7c36c
 - name: github.com/getlantern/checkfallbacks
-  version: f505f10690af992a3060b462e9b3825044126332
+  version: b31a166934913dfbd6e8ec878dc912c89ac32af5
 - name: github.com/getlantern/cmux
   version: ee58cae565e4f208c7eb59cb2e70acf2230a1d12
 - name: github.com/getlantern/connpool
@@ -94,7 +94,7 @@ imports:
 - name: github.com/getlantern/ema
   version: d906ee7c3465210c328abbe6ea0f855db9db679c
 - name: github.com/getlantern/errors
-  version: 99fa440517e8f3d1e4cd8d6dbed6b41f4c1ed3d6
+  version: e9c0296368b736086adb20832549567064224854
 - name: github.com/getlantern/event
   version: f16a5563f52e98643050fed10e7f279437a195ee
 - name: github.com/getlantern/eventual
@@ -304,11 +304,11 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
-  version: 65ec7248c53f499f6b480655e019e0b9d7a6ce11
+  version: 7904d2e42e7ebbdb4a6eb3e57eb201b11df25c57
 - name: github.com/gorilla/securecookie
   version: e59506cc896acb7f7bf732d4fdf5e25f7ccd8983
 - name: github.com/gorilla/websocket
-  version: 2b5852213197a760e72744fcce7ee529cbf97c78
+  version: b89020ee79b89a7f932c5617d218fc06db382f53
 - name: github.com/hashicorp/golang-lru
   version: 0a025b7e63adc15a622f29b0b2c4c3848243bbf6
   subpackages:
@@ -338,9 +338,7 @@ imports:
 - name: github.com/mailgun/ttlmap
   version: c1c17f74874f2a5ea48bfb06b5459d4ef2689749
 - name: github.com/miekg/dns
-  version: 6da3249dfb57fbaa16efafcd8744cee8809d80cd
-  subpackages:
-  - internal/socket
+  version: 325e98bb8641b89fa2b1542149b09ec670953ac4
 - name: github.com/mitchellh/mapstructure
   version: 06020f85339e21b2478f756a78e295255ffa4d6a
 - name: github.com/mitchellh/panicwrap
@@ -350,7 +348,7 @@ imports:
   subpackages:
   - flowrate
 - name: github.com/openconfig/reference
-  version: afb738f18f7459ea3dc99fb267ee479724007746
+  version: 01d756d1d7dcb43706e76df359300a033e8a2721
   subpackages:
   - rpc/gnmi
   - rpc/openconfig
@@ -411,7 +409,7 @@ imports:
   subpackages:
   - sm4
 - name: github.com/ua-parser/uap-go
-  version: 64b1ab213fd92f19f9e8ce5c3d9a70000f5adad0
+  version: 85b696657ca4434c8d27d3d0f5c446a5b1c8374a
   subpackages:
   - uaparser
 - name: github.com/vharitonsky/iniflags
@@ -423,7 +421,7 @@ imports:
 - name: github.com/vulcand/predicate
   version: 939c094524d124c55fa8afe0e077701db4a865e2
 - name: github.com/Workiva/go-datastructures
-  version: af7475fb23e7561c87e7c1d17c12f46d732379bb
+  version: 9937fb49a4885795838b31eef9cc237820f0dcff
   subpackages:
   - trie/yfast
 - name: github.com/xtaci/smux
@@ -468,6 +466,7 @@ imports:
   - internal/socket
   - internal/timeseries
   - ipv4
+  - ipv6
   - lex/httplex
   - proxy
   - trace
@@ -477,14 +476,14 @@ imports:
   - google
   - jwt
 - name: golang.org/x/sys
-  version: 316e9227019baa6ea3f76ea21538bab101fd1182
+  version: 8b4580aae2a0dd0c231a45d3ccb8434ff533b840
   repo: https://github.com/golang/sys
   vcs: git
   subpackages:
   - unix
   - windows
 - name: golang.org/x/text
-  version: 572a2b141f625f4360cf42a41a43622067e0510b
+  version: 57961680700a5336d15015c8c50686ca5ba362a4
   subpackages:
   - encoding
   - encoding/charmap
@@ -509,7 +508,7 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: a62701e4aa1d276bec70311251d62a478404d63f
+  version: be077907e29fdb945d351e4284eb5361e7f8924e
   subpackages:
   - balancer
   - balancer/roundrobin
