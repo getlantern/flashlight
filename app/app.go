@@ -247,7 +247,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			startupURL,
 			localHTTPToken(settings),
 			app.Flags["ui-domain"].(string),
-			settings.GetSystemProxy,
+			func() bool { return false },
 			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
 			&ui.PathHandler{Pattern: "/data", Handler: ws.StartUIChannel()},
 		); err != nil {
