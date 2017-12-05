@@ -41,7 +41,7 @@ const (
 )
 
 var (
-	chainedDialTimeout          = 30 * time.Second
+	chainedDialTimeout          = 1 * time.Minute
 	theForceAddr, theForceToken string
 )
 
