@@ -1,6 +1,7 @@
 package chained
 
 import (
+	"context"
 	"crypto/rsa"
 	"crypto/tls"
 	"fmt"
@@ -17,27 +18,30 @@ import (
 
 	"github.com/getlantern/ema"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
-	"github.com/getlantern/kcptun/client/lib"
+	"github.com/getlantern/kcpwrapper"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/lampshade"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/tlsdialer"
 	"github.com/mitchellh/mapstructure"
+	"github.com/tevino/abool"
 )
 
 const (
 	trustedSuffix = " (t)"
+
+	defaultInitPreconnect = 20
+	defaultMaxPreconnect  = 100
 )
 
 var (
-	chainedDialTimeout          = 10 * time.Second
+	chainedDialTimeout          = 1 * time.Minute
 	theForceAddr, theForceToken string
 )
 
@@ -88,12 +92,12 @@ func forceProxy(s *ChainedServerInfo) {
 }
 
 func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
-	return newProxy(name, "http", "tcp", s.Addr, s, deviceID, proToken, false, func(p *proxy) (net.Conn, error) {
+	return newProxy(name, "http", "tcp", s.Addr, s, deviceID, proToken, false, func(ctx context.Context, p *proxy) (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(p.addr, p.protocol, p.network)
 		defer op.End()
 		elapsed := mtime.Stopwatch()
-		conn, err := p.tcpDial(op)(chainedDialTimeout)
-		p.dialTime(op, elapsed, err)
+		conn, err := p.tcpDial(op)(ctx)
+		op.DialTime(elapsed(), err)
 		return conn, op.FailIf(err)
 	})
 }
@@ -105,19 +109,19 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 	}
 	x509cert := cert.X509()
 	sessionCache := tls.NewLRUClientSessionCache(1000)
-	return newProxy(name, "https", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(p *proxy) (net.Conn, error) {
+	return newProxy(name, "https", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(ctx context.Context, p *proxy) (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(p.addr, p.protocol, p.network)
 		defer op.End()
 
 		elapsed := mtime.Stopwatch()
 		conn, err := tlsdialer.DialTimeout(func(network, addr string, timeout time.Duration) (net.Conn, error) {
-			return p.tcpDial(op)(timeout)
-		}, chainedDialTimeout,
+			return p.tcpDial(op)(ctx)
+		}, timeoutFor(ctx),
 			"tcp", p.addr, false, &tls.Config{
 				ClientSessionCache: sessionCache,
 				InsecureSkipVerify: true,
 			})
-		p.dialTime(op, elapsed, err)
+		op.DialTime(elapsed(), err)
 		if err != nil {
 			return nil, op.FailIf(err)
 		}
@@ -162,18 +166,18 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 		return nil, log.Errorf("Unable to parse client args: %v", err)
 	}
 
-	return newProxy(name, "obfs4", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(p *proxy) (net.Conn, error) {
+	return newProxy(name, "obfs4", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(ctx context.Context, p *proxy) (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(p.Addr(), p.Protocol(), p.Network())
 		defer op.End()
 		elapsed := mtime.Stopwatch()
 		dialFn := func(network, address string) (net.Conn, error) {
 			// We know for sure the network and address are the same as what
 			// the inner DailServer uses.
-			return p.tcpDial(op)(chainedDialTimeout)
+			return p.tcpDial(op)(ctx)
 		}
 		// The proxy it wrapped already has timeout applied.
 		conn, err := cf.Dial("tcp", p.addr, dialFn, args)
-		p.dialTime(op, elapsed, err)
+		op.DialTime(elapsed(), err)
 		return overheadWrapper(true)(conn, op.FailIf(err))
 	})
 }
@@ -220,7 +224,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 		Cipher:            cipherCode,
 		ServerPublicKey:   rsaPublicKey,
 	})
-	dial := func(p *proxy) (net.Conn, error) {
+	dial := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "lampshade", "tcp").
 			Set("ls_win", windowSize).
 			Set("ls_pad", maxPadding).
@@ -230,7 +234,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 
 		elapsed := mtime.Stopwatch()
 		conn, err := dialer.Dial(func() (net.Conn, error) {
-			conn, err := p.tcpDial(op)(chainedDialTimeout)
+			conn, err := p.tcpDial(op)(ctx)
 			if err == nil && idleInterval > 0 {
 				conn = idletiming.Conn(conn, idleInterval, func() {
 					log.Debug("lampshade TCP connection idled")
@@ -238,10 +242,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 			}
 			return conn, err
 		})
-		// note - because lampshade is multiplexed, this dial time will often be
-		// lower than other protocols since there's often nothing to be done for
-		// opening up a new multiplexed connection.
-		p.dialTime(op, elapsed, err)
+		op.DialTime(elapsed(), err)
 		return overheadWrapper(true)(conn, op.FailIf(err))
 	}
 
@@ -255,13 +256,43 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 			for {
 				time.Sleep(pingInterval * 2)
 				ttfa := dialer.EMARTT()
-				p.emaLatency.SetDuration(ttfa)
-				log.Debugf("%v EMA RTT: %v", p.Label(), ttfa)
+				if ttfa > 0 {
+					p.emaLatency.SetDuration(ttfa)
+					log.Debugf("%v EMA RTT: %v", p.Label(), ttfa)
+				}
 			}
 		}()
 	}
 
 	return p, nil
+}
+
+// consecCounter is a counter that can extend on both directions. Its default
+// value is zero. Inc() sets it to 1 or adds it by 1; Dec() sets it to -1 or
+// minus it by 1. When called concurrently, it may have an incorrect absolute
+// value, but always have the correct sign.
+type consecCounter struct {
+	v int64
+}
+
+func (c *consecCounter) Inc() {
+	if v := atomic.LoadInt64(&c.v); v <= 0 {
+		atomic.StoreInt64(&c.v, 1)
+	} else {
+		atomic.StoreInt64(&c.v, v+1)
+	}
+}
+
+func (c *consecCounter) Dec() {
+	if v := atomic.LoadInt64(&c.v); v >= 0 {
+		atomic.StoreInt64(&c.v, -1)
+	} else {
+		atomic.StoreInt64(&c.v, v-1)
+	}
+}
+
+func (c *consecCounter) Get() int64 {
+	return atomic.LoadInt64(&c.v)
 }
 
 type proxy struct {
@@ -272,8 +303,8 @@ type proxy struct {
 	consecSuccesses   int64
 	failures          int64
 	consecFailures    int64
+	consecRWSuccesses consecCounter
 	abe               int64 // Mbps scaled by 1000
-	bbrResetRequired  int64
 	name              string
 	protocol          string
 	network           string
@@ -283,32 +314,54 @@ type proxy struct {
 	proToken          func() string
 	trusted           bool
 	preferred         bool
-	dialServer        func(*proxy) (net.Conn, error)
-	emaDialTime       *ema.EMA
+	doDialServer      func(context.Context, *proxy) (net.Conn, error)
 	emaLatency        *ema.EMA
+	kcpConfig         *KCPConfig
+	forceRedial       *abool.AtomicBool
 	mostRecentABETime time.Time
+	dialCore          func(ctx context.Context) (net.Conn, time.Duration, error)
+	preconnects       chan interface{}
+	preconnected      chan balancer.ProxyConnection
 	forceRecheckCh    chan bool
 	closeCh           chan bool
 	mx                sync.Mutex
 }
 
-func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(*proxy) (net.Conn, error)) (*proxy, error) {
+func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(context.Context, *proxy) (net.Conn, error)) (*proxy, error) {
+	initPreconnect := s.InitPreconnect
+	if initPreconnect <= 0 {
+		initPreconnect = defaultInitPreconnect
+	}
+	maxPreconnect := s.MaxPreconnect
+	if maxPreconnect <= 0 {
+		maxPreconnect = defaultMaxPreconnect
+	}
+
 	p := &proxy{
-		name:             name,
-		protocol:         protocol,
-		network:          network,
-		addr:             addr,
-		authToken:        s.AuthToken,
-		deviceID:         deviceID,
-		proToken:         proToken,
-		trusted:          trusted,
-		dialServer:       dialServer,
-		emaDialTime:      ema.NewDuration(0, 0.8),
-		emaLatency:       ema.NewDuration(0, 0.8),
-		bbrResetRequired: 1, // reset on every start
-		forceRecheckCh:   make(chan bool, 1),
-		closeCh:          make(chan bool, 1),
-		consecSuccesses:  1, // be optimistic
+		name:            name,
+		protocol:        protocol,
+		network:         network,
+		addr:            addr,
+		authToken:       s.AuthToken,
+		deviceID:        deviceID,
+		proToken:        proToken,
+		trusted:         trusted,
+		doDialServer:    dialServer,
+		emaLatency:      ema.NewDuration(0, 0.8),
+		forceRecheckCh:  make(chan bool, 1),
+		forceRedial:     abool.New(),
+		preconnects:     make(chan interface{}, maxPreconnect),
+		preconnected:    make(chan balancer.ProxyConnection, maxPreconnect),
+		closeCh:         make(chan bool, 1),
+		consecSuccesses: 1, // be optimistic
+	}
+
+	p.dialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
+		elapsed := mtime.Stopwatch()
+		conn, err := netx.DialTimeout("tcp", p.addr, timeoutFor(ctx))
+		delta := elapsed()
+		p.updateLatency(delta, err)
+		return conn, delta, err
 	}
 
 	if s.KCPSettings != nil && len(s.KCPSettings) > 0 {
@@ -319,53 +372,58 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 	}
 
 	go p.runConnectivityChecks()
+	log.Debugf("%v preconnects, init: %d   max: %d", p.Label(), initPreconnect, maxPreconnect)
+	go p.processPreconnects(initPreconnect)
 	return p, nil
 }
 
 func enableKCP(p *proxy, s *ChainedServerInfo) error {
-	var conf lib.Config
-	err := mapstructure.Decode(s.KCPSettings, &conf)
+	var cfg KCPConfig
+	err := mapstructure.Decode(s.KCPSettings, &cfg)
 	if err != nil {
 		return log.Errorf("Could not decode kcp transport settings?: %v", err)
 	}
-	conf.LocalAddr = "127.0.0.1:0"
+	p.kcpConfig = &cfg
 
-	startResult := eventual.NewValue()
-	go func() {
-		err := lib.Run(&conf, "embedded", func(addr net.Addr) {
-			startResult.Set(addr.String())
+	// Fix address (comes across as kcp-placeholder)
+	p.addr = cfg.RemoteAddr
+	// Right now, we don't have a good way estimating performance of KCP-based
+	// proxies, so we just mark them as "preferred" to force them to get used by
+	// default.
+	p.preferred = true
+
+	addIdleTiming := func(conn net.Conn) net.Conn {
+		log.Debug("Wrapping KCP with idletiming")
+		return idletiming.Conn(conn, IdleTimeout*2, func() {
+			log.Debug("KCP connection idled")
 		})
-		if err != nil {
-			log.Errorf("Error running kcp client: %v", err)
-			startResult.Set(err)
-		}
-	}()
+	}
+	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig, addIdleTiming)
+	var dialKCPMutex sync.Mutex
 
-	startTimeout := 5 * time.Second
-	result, ok := startResult.Get(startTimeout)
-	if !ok {
-		return log.Errorf("kcp client failed to start in %v", startTimeout)
-	}
-	switch t := result.(type) {
-	case string:
-		log.Debugf("kcp client running at %v", t)
-		// Right now, we don't have a good way estimating performance of KCP-based
-		// proxies, so we just mark them as "preferred" to force them to get used by
-		// default.
-		p.preferred = true
-		p.addr = t
-		p.protocol = p.protocol + "-kcp"
-		if conf.Key != "" && conf.Crypt != "none" && conf.Crypt != "xor" {
-			// We're using kcp's built-in encryption, so we can consider the dialer
-			// trusted
-			p.trusted = true
+	p.dialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
+		elapsed := mtime.Stopwatch()
+
+		dialKCPMutex.Lock()
+		if p.forceRedial.IsSet() {
+			log.Debug("Connection state changed, re-connecting to server first")
+			dialKCP = kcpwrapper.Dialer(&p.kcpConfig.DialerConfig, addIdleTiming)
+			p.forceRedial.UnSet()
 		}
-		return nil
-	case error:
-		return t
-	default:
-		return log.Errorf("Unkown start result type: %v", t)
+		doDialKCP := dialKCP
+		dialKCPMutex.Unlock()
+
+		conn, err := doDialKCP(ctx, "tcp", p.addr)
+		delta := elapsed()
+		p.updateLatency(delta, err)
+		return conn, delta, err
 	}
+
+	return nil
+}
+
+func (p *proxy) ForceRedial() {
+	p.forceRedial.Set()
 }
 
 func (p *proxy) Protocol() string {
@@ -404,28 +462,25 @@ func (p *proxy) AdaptRequest(req *http.Request) {
 	req.Header.Add(common.TokenHeader, p.authToken)
 }
 
-func (p *proxy) DialServer() (net.Conn, error) {
-	return p.dialServer(p)
+func (p *proxy) dialServer() (net.Conn, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), chainedDialTimeout)
+	defer cancel()
+	return p.doDialServer(ctx, p)
 }
 
-func (p *proxy) dialTime(op *ops.Op, elapsed func() time.Duration, err error) {
-	delta := elapsed()
-	op.DialTime(delta, err)
-	if err == nil {
-		p.emaDialTime.UpdateDuration(delta)
+func (p *proxy) updateLatency(latency time.Duration, err error) {
+	// Some transports (lampshade / KCP) returns immediately when dialing,
+	// unless it's necessary to create a new underlie connection. Ignore
+	// apparently small delta values to get more useful latency.
+	if err == nil && latency > 10*time.Millisecond {
+		p.emaLatency.UpdateDuration(latency)
 	}
 }
 
-func (p *proxy) EMADialTime() time.Duration {
-	return p.emaLatency.GetDuration()
-}
-
+// EstLatency implements the method from the balancer.Dialer interface. The
+// value is updated from the time to dial the proxy, or the utility of the
+// pluggable transport, e.g., lampshade can measure the RTT of ping packets.
 func (p *proxy) EstLatency() time.Duration {
-	if p.preferred {
-		// For preferred proxies, return a really low value to make sure they get
-		// prioritized.
-		return 1 * time.Millisecond
-	}
 	return p.emaLatency.GetDuration()
 }
 
@@ -461,7 +516,7 @@ func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64,
 	atomic.StoreInt64(&p.consecFailures, consecFailures)
 	p.emaLatency.SetDuration(emaLatency)
 	p.mostRecentABETime = mostRecentABETime
-	p.abe = abe
+	atomic.StoreInt64(&p.abe, abe)
 	p.mx.Unlock()
 }
 
@@ -490,10 +545,6 @@ func (p *proxy) collectBBRInfo(reqTime time.Time, resp *http.Response) {
 	}
 }
 
-func (p *proxy) shouldResetBBR() bool {
-	return atomic.CompareAndSwapInt64(&p.bbrResetRequired, 1, 0)
-}
-
 func (p *proxy) forceRecheck() {
 	select {
 	case p.forceRecheckCh <- true:
@@ -503,8 +554,8 @@ func (p *proxy) forceRecheck() {
 	}
 }
 
-func (p *proxy) tcpDial(op *ops.Op) func(timeout time.Duration) (net.Conn, error) {
-	return func(timeout time.Duration) (net.Conn, error) {
+func (p *proxy) tcpDial(op *ops.Op) func(ctx context.Context) (net.Conn, error) {
+	return func(ctx context.Context) (net.Conn, error) {
 		estLatency, estBandwidth := p.EstLatency(), p.EstBandwidth()
 		if estLatency > 0 {
 			op.Set("est_rtt", estLatency.Seconds()/1000)
@@ -512,20 +563,23 @@ func (p *proxy) tcpDial(op *ops.Op) func(timeout time.Duration) (net.Conn, error
 		if estBandwidth > 0 {
 			op.Set("est_mbps", estBandwidth)
 		}
-		conn, delta, err := p.dialTCP(timeout)
+		conn, delta, err := p.dialCore(ctx)
 		op.TCPDialTime(delta, err)
 		return overheadWrapper(false)(conn, err)
 	}
 }
 
-func (p *proxy) dialTCP(timeout time.Duration) (net.Conn, time.Duration, error) {
-	elapsed := mtime.Stopwatch()
-	conn, err := netx.DialTimeout("tcp", p.addr, timeout)
-	delta := elapsed()
-	if err == nil {
-		p.mx.Lock()
-		p.emaLatency.UpdateDuration(delta)
-		p.mx.Unlock()
+// KCPConfig adapts kcpwrapper.DialerConfig to the currently deployed
+// configurations in order to provide backward-compatibility.
+type KCPConfig struct {
+	kcpwrapper.DialerConfig `mapstructure:",squash"`
+	RemoteAddr              string `json:"remoteaddr"`
+}
+
+func timeoutFor(ctx context.Context) time.Duration {
+	deadline, ok := ctx.Deadline()
+	if ok {
+		return deadline.Sub(time.Now())
 	}
-	return conn, delta, err
+	return chainedDialTimeout
 }

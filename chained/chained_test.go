@@ -2,6 +2,7 @@ package chained
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"net"
@@ -17,7 +18,7 @@ var (
 	pong = []byte("pong")
 )
 
-func NewDialer(dialServer func(p *proxy) (net.Conn, error)) (func(network, addr string) (net.Conn, error), error) {
+func NewDialer(dialServer func(ctx context.Context, p *proxy) (net.Conn, error)) (func(network, addr string) (net.Conn, error), error) {
 	p, err := newProxy("test", "proto", "netw", "addr:567", &ChainedServerInfo{
 		Addr:      "addr:567",
 		AuthToken: "token",
@@ -27,11 +28,11 @@ func NewDialer(dialServer func(p *proxy) (net.Conn, error)) (func(network, addr 
 	if err != nil {
 		return nil, err
 	}
-	return p.Dial, nil
+	return p.dial, nil
 }
 
 func TestBadDialServer(t *testing.T) {
-	dialer, err := NewDialer(func(p *proxy) (net.Conn, error) {
+	dialer, err := NewDialer(func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return nil, fmt.Errorf("I refuse to dial")
 	})
 	if !assert.NoError(t, err) {
@@ -42,7 +43,7 @@ func TestBadDialServer(t *testing.T) {
 }
 
 func TestBadProtocol(t *testing.T) {
-	dialer, err := NewDialer(func(p *proxy) (net.Conn, error) {
+	dialer, err := NewDialer(func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return net.Dial("tcp", "www.google.com")
 	})
 	if !assert.NoError(t, err) {
@@ -67,7 +68,7 @@ func TestBadServer(t *testing.T) {
 		}
 	}()
 
-	dialer, err := NewDialer(func(p *proxy) (net.Conn, error) {
+	dialer, err := NewDialer(func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return net.Dial("tcp", l.Addr().String())
 	})
 	if !assert.NoError(t, err) {
@@ -95,7 +96,7 @@ func TestBadConnectStatus(t *testing.T) {
 		}
 	}()
 
-	dialer, err := NewDialer(func(p *proxy) (net.Conn, error) {
+	dialer, err := NewDialer(func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return net.DialTimeout("tcp", l.Addr().String(), 2*time.Second)
 	})
 	if !assert.NoError(t, err) {
@@ -120,7 +121,7 @@ func TestBadAddressToServer(t *testing.T) {
 		AuthToken: "token",
 	}, "device", func() string {
 		return "protoken"
-	}, true, func(p *proxy) (net.Conn, error) {
+	}, true, func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return nil, nil
 	})
 	if !assert.NoError(t, err) {
@@ -148,7 +149,7 @@ func TestBadAddressToServer(t *testing.T) {
 func TestSuccess(t *testing.T) {
 	l := startServer(t)
 
-	dialer, err := NewDialer(func(p *proxy) (net.Conn, error) {
+	dialer, err := NewDialer(func(ctx context.Context, p *proxy) (net.Conn, error) {
 		log.Debugf("Dialing with timeout to: %v", l.Addr())
 		conn, err := net.DialTimeout(l.Addr().Network(), l.Addr().String(), 2*time.Second)
 		log.Debugf("Got conn %v and err %v", conn, err)
@@ -234,4 +235,15 @@ func test(t *testing.T, dialer func(network, addr string) (net.Conn, error)) {
 		t.Fatalf("Unable to read from server: %s", err)
 	}
 	assert.Equal(t, pong, b, "Didn't receive correct pong message")
+}
+
+func (p *proxy) dial(network, addr string) (net.Conn, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), chainedDialTimeout)
+	defer cancel()
+	conn, err := p.doDialServer(ctx, p)
+	if err != nil {
+		return nil, err
+	}
+	pc, _, err := p.newPreconnected(conn).DialContext(ctx, network, addr)
+	return pc, err
 }

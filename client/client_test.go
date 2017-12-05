@@ -3,6 +3,7 @@ package client
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -17,6 +18,7 @@ import (
 	"github.com/getlantern/mockconn"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/stats"
 )
 
@@ -38,10 +40,10 @@ func (m mockStatsTracker) SetHitDataCap(val bool)                               
 func (m mockStatsTracker) SetIsPro(val bool)                                        {}
 
 func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {
-	client.bal.Reset(&testDialer{
+	client.bal.Reset(start(&testDialer{
 		name: "test-dialer",
 		dial: dialer,
-	})
+	}))
 }
 
 func newClient() *Client {
@@ -102,7 +104,7 @@ func TestServeHTTPTimeout(t *testing.T) {
 		return
 	}
 	assert.Contains(t, string(body), "<title>Lantern: Error Accessing Page</title>", "should respond with error page")
-	assert.Contains(t, string(body), "context deadline exceeded", "should be with context error")
+	assert.Contains(t, string(body), "Still unable to dial", "should be dial error")
 }
 
 func TestIsAddressProxyable(t *testing.T) {
@@ -219,16 +221,27 @@ func TestDialShortcut(t *testing.T) {
 }
 
 type testDialer struct {
-	name      string
-	latency   time.Duration
-	dial      func(network, addr string) (net.Conn, error)
-	bandwidth float64
-	untrusted bool
-	failing   bool
-	attempts  int64
-	successes int64
-	failures  int64
-	stopped   bool
+	name         string
+	latency      time.Duration
+	dial         func(network, addr string) (net.Conn, error)
+	bandwidth    float64
+	untrusted    bool
+	failing      bool
+	attempts     int64
+	successes    int64
+	failures     int64
+	stopped      bool
+	preconnected chan balancer.ProxyConnection
+}
+
+func start(d *testDialer) *testDialer {
+	d.preconnected = make(chan balancer.ProxyConnection)
+	go func() {
+		for {
+			d.preconnected <- d
+		}
+	}()
+	return d
 }
 
 // Name returns the name for this Dialer
@@ -252,13 +265,39 @@ func (d *testDialer) Trusted() bool {
 	return !d.untrusted
 }
 
+func (d *testDialer) Preconnect() {
+}
+
+func (d *testDialer) Preconnected() <-chan balancer.ProxyConnection {
+	return d.preconnected
+}
+
+func (d *testDialer) ExpiresAt() time.Time {
+	return time.Now().Add(365 * 24 * time.Hour)
+}
+
 func (d *testDialer) Dial(network, addr string) (net.Conn, error) {
+	conn, _, err := d.DialContext(context.Background(), network, addr)
+	return conn, err
+}
+
+func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, bool, error) {
 	var conn net.Conn
 	var err error
 	if !d.Succeeding() {
 		err = fmt.Errorf("Failing intentionally")
 	} else if network != "" {
-		conn, err = d.dial(network, addr)
+		chDone := make(chan bool)
+		go func() {
+			conn, err = d.dial(network, addr)
+			chDone <- true
+		}()
+		select {
+		case <-chDone:
+			return conn, true, err
+		case <-ctx.Done():
+			return nil, false, ctx.Err()
+		}
 	}
 	atomic.AddInt64(&d.attempts, 1)
 	if err == nil {
@@ -266,11 +305,11 @@ func (d *testDialer) Dial(network, addr string) (net.Conn, error) {
 	} else {
 		atomic.AddInt64(&d.failures, 1)
 	}
-	return conn, err
+	return conn, false, err
 }
 
-func (d *testDialer) EMADialTime() time.Duration {
-	return 0
+func (d *testDialer) MarkFailure() {
+	atomic.AddInt64(&d.failures, 1)
 }
 
 func (d *testDialer) EstLatency() time.Duration {
@@ -305,11 +344,14 @@ func (d *testDialer) Succeeding() bool {
 	return !d.failing
 }
 
+func (d *testDialer) ForceRedial() {
+}
+
 func (d *testDialer) CheckConnectivity() bool {
 	return true
 }
 
-func (d *testDialer) ProbePerformance() {
+func (d *testDialer) Probe(forPerformance bool) {
 }
 
 func (d *testDialer) Stop() {

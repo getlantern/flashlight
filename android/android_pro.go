@@ -30,6 +30,8 @@ type Session interface {
 	AddPlan(string, string, string, bool, int, int)
 	Locale() string
 	Code() string
+	GetCountryCode() string
+	GetDNSServer() string
 	VerifyCode() string
 	DeviceCode() string
 	DeviceName() string
@@ -41,6 +43,7 @@ type Session interface {
 	SetPaymentProvider(string)
 	StripeToken() string
 	StripeApiKey() string
+	AppVersion() string
 	IsPlayVersion() bool
 	Email() string
 	SetToken(string)
@@ -300,7 +303,10 @@ func pwSignature(req *proRequest) (*client.Response, error) {
 }
 
 func userPaymentGateway(req *proRequest) (*client.Response, error) {
-	provider, err := req.client.UserPaymentGateway(req.user, req.session.DeviceOS())
+	provider, err := req.client.UserPaymentGateway(req.user,
+		req.session.AppVersion(),
+		req.session.GetCountryCode(),
+		req.session.DeviceOS())
 	if err != nil {
 		log.Errorf("Error trying to determine payment provider: %v", err)
 		return nil, err
@@ -326,6 +332,11 @@ func ProRequest(command string, session Session) bool {
 	req := newRequest(session)
 
 	log.Debugf("Received a %s pro request", command)
+
+	if command != "newuser" && session.GetUserID() == 0 {
+		log.Debugf("No user ID: not making %s request", command)
+		return false
+	}
 
 	commands := map[string]proFunc{
 		"emailexists":          emailExists,

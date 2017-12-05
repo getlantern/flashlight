@@ -27,6 +27,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
+	"github.com/getlantern/flashlight/goroutines"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/stats"
 
@@ -40,7 +41,7 @@ var (
 	// FullyReportedOps are ops which are reported at 100% to borda, irrespective
 	// of the borda sample percentage. This should all be low-volume operations,
 	// otherwise we will utilize too much bandwidth on the client.
-	FullyReportedOps = []string{"client_started", "client_stopped", "connect", "disconnect", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "sysproxy_off_force", "sysproxy_clear", "report_issue", "proxy_rank"}
+	FullyReportedOps = []string{"client_started", "client_stopped", "connect", "disconnect", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "sysproxy_off_force", "sysproxy_clear", "report_issue", "proxy_rank", "probe"}
 )
 
 // Run runs a client proxy. It blocks as long as the proxy is running.
@@ -54,7 +55,7 @@ func Run(httpProxyAddr string,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
 	beforeStart func() bool,
-	afterStart func(),
+	afterStart func(cl *client.Client),
 	onConfigUpdate func(cfg *config.Global),
 	userConfig common.AuthConfig,
 	statsTracker stats.Tracker,
@@ -66,6 +67,11 @@ func Run(httpProxyAddr string,
 	adBlockingAllowed func() bool,
 	reverseDNS func(host string) string,
 	requestFilter func(*http.Request) (*http.Request, error)) error {
+
+	// check # of goroutines every minute, print the top 5 stacks with most
+	// goroutines if the # exceeds 2000 and is increasing.
+	stopMonitor := goroutines.Monitor(time.Minute, 2000, 5)
+	defer stopMonitor()
 	elapsed := mtime.Stopwatch()
 	displayVersion()
 	initContext(deviceID, common.Version, common.RevisionDate, isPro)
@@ -97,6 +103,7 @@ func Run(httpProxyAddr string,
 
 	proxied.SetProxyAddr(cl.Addr)
 
+	onBordaConfigured := make(chan bool, 1)
 	proxiesDispatch := func(conf interface{}) {
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
@@ -107,7 +114,7 @@ func Run(httpProxyAddr string,
 		// the type in the factory method above.
 		cfg := conf.(*config.Global)
 		log.Debugf("Applying global config")
-		applyClientConfig(cl, cfg, deviceID, autoReport)
+		applyClientConfig(cl, cfg, deviceID, autoReport, onBordaConfigured)
 		onConfigUpdate(cfg)
 	}
 	config.Init(configDir, flagsAsMap, userConfig, proxiesDispatch, globalDispatch)
@@ -131,19 +138,30 @@ func Run(httpProxyAddr string,
 		err := cl.ListenAndServeHTTP(httpProxyAddr, func() {
 			log.Debug("Started client HTTP proxy")
 			op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
+
+			// wait for borda to be configured before proceeding
+			select {
+			case <-onBordaConfigured:
+				// okay, now we're ready
+			case <-time.After(5 * time.Second):
+				// borda didn't get configured quickly, proceed anyway
+				// anyway
+			}
+
 			ops.Go(func() {
 				// wait for geo info before reporting so that we know the client ip and
 				// country
 				select {
 				case <-onGeo:
-					// okay, we've got geolocation info
+					// good to go
 				case <-time.After(5 * time.Minute):
 					// failed to get geolocation info within 5 minutes, just record end of
 					// startup anyway
 				}
 				op.End()
 			})
-			afterStart()
+
+			afterStart(cl)
 		})
 		if err != nil {
 			log.Errorf("Error running client proxy: %v", err)
@@ -154,7 +172,7 @@ func Run(httpProxyAddr string,
 	return nil
 }
 
-func applyClientConfig(client *client.Client, cfg *config.Global, deviceID string, autoReport func() bool) {
+func applyClientConfig(client *client.Client, cfg *config.Global, deviceID string, autoReport func() bool, onBordaConfigured chan bool) {
 	certs, err := getTrustedCACerts(cfg)
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
@@ -189,6 +207,12 @@ func applyClientConfig(client *client.Client, cfg *config.Global, deviceID strin
 		}
 	}
 	borda.Configure(cfg.BordaReportInterval, enableBorda)
+	select {
+	case onBordaConfigured <- true:
+		// okay
+	default:
+		// ignore
+	}
 }
 
 func getTrustedCACerts(cfg *config.Global) (pool *x509.CertPool, err error) {

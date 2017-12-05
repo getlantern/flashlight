@@ -409,10 +409,15 @@ func (c *Client) PWSignature(user User, email, currency, deviceName, planId stri
 	return sig, nil
 }
 
-func (c *Client) UserPaymentGateway(user User, deviceOS string) (provider string, err error) {
+func (c *Client) UserPaymentGateway(user User,
+	appVersion, country, deviceOS string) (provider string, err error) {
 	var res Response
+	log.Debugf(`Sending /user-payment-gateway request:
+		appVersion: %s country: %s deviceOS: %s`, appVersion, country, deviceOS)
 	payload, err := c.get(`/user-payment-gateway`, user.headers(), url.Values{
-		"deviceOS": {deviceOS},
+		"appVersion": {appVersion},
+		"country":    {country},
+		"deviceOS":   {deviceOS},
 	})
 	if err != nil {
 		return "", err
@@ -454,18 +459,6 @@ func (c *Client) Purchase(user User, deviceName, pubKey string, purchase Purchas
 			"deviceName":      {deviceName},
 		},
 	)
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(payload, &res)
-	return
-}
-
-// TokenReset Request a token change. This will generate a new one and send it
-// to the requesting device.
-func (c *Client) TokenReset(user User) (res *Response, err error) {
-	var payload []byte
-	payload, err = c.post(`/token-reset`, user.headers(), nil)
 	if err != nil {
 		return nil, err
 	}

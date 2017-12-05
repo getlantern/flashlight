@@ -323,7 +323,7 @@ func (app *App) OnStatsChange(fn func(stats.Stats)) {
 	app.statsTracker.AddListener(fn)
 }
 
-func (app *App) afterStart() {
+func (app *App) afterStart(cl *client.Client) {
 	if settings.GetSystemProxy() {
 		sysproxyOn()
 	}

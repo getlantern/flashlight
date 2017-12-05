@@ -39,6 +39,11 @@ import (
 	"github.com/getlantern/flashlight/status"
 )
 
+const (
+	preconnectedDialTimeout = 5 * time.Second  // timeout for dialing with preconnected dialers, low because these should be fast
+	overallDialTimeout      = 30 * time.Second // timeout for attempting to dial out with some dialer
+)
+
 var (
 	log = golog.LoggerFor("flashlight.client")
 
@@ -104,8 +109,8 @@ type Client struct {
 	lang              func() string
 	adSwapTargetURL   func() string
 
-	reverseDNS func(addr string) string
-	requestFilter     func(*http.Request) (*http.Request, error)
+	reverseDNS    func(addr string) string
+	requestFilter func(*http.Request) (*http.Request, error)
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -130,7 +135,7 @@ func NewClient(
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
 	client := &Client{
-		bal:               balancer.New(),
+		bal:               balancer.New(preconnectedDialTimeout, overallDialTimeout),
 		disconnected:      disconnected,
 		allowShortcut:     allowShortcut,
 		useDetour:         useDetour,
@@ -171,6 +176,10 @@ type allowAllEasyList struct{}
 
 func (l allowAllEasyList) Allow(*http.Request) bool {
 	return true
+}
+
+func (client *Client) GetBalancer() *balancer.Balancer {
+	return client.bal
 }
 
 func (client *Client) initEasyList() {
@@ -404,31 +413,12 @@ func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Con
 			// case.
 			proto = "connect"
 		}
-		// TODO: pass context down to all layers.
-		chDone := make(chan bool)
-		var conn net.Conn
-		var err error
-		go func() {
-			start := time.Now()
-			conn, err = client.bal.Dial(proto, addr)
-			if log.IsTraceEnabled() {
-				log.Tracef("Dialing proxy takes %v for %s", time.Since(start), addr)
-			}
-			chDone <- true
-		}()
-		select {
-		case <-chDone:
-			return conn, err
-		case <-ctx.Done():
-			go func() {
-				<-chDone
-				if conn != nil {
-					log.Debugf("Connection to %s established too late, closing", addr)
-					conn.Close()
-				}
-			}()
-			return nil, ctx.Err()
+		start := time.Now()
+		conn, err := client.bal.DialContext(ctx, proto, addr)
+		if log.IsTraceEnabled() {
+			log.Tracef("Dialing proxy takes %v for %s", time.Since(start), addr)
 		}
+		return conn, err
 	}
 
 	var dialer func(ctx context.Context, network, addr string) (net.Conn, error)

@@ -1,5 +1,5 @@
-hash: a171da343573e908c16eee881d24f4c7cc8886e5509e5cefc2615303d3b27caa
-updated: 2017-10-10T16:14:06.602025773-07:00
+hash: c41a3297dbf12a6024489881323e642168418956258cab16915348729094a097
+updated: 2017-11-29T16:50:50.518092-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a3ad5df6c9e7dc8117f55958b4ce99bf1e0fe291
@@ -22,7 +22,7 @@ imports:
 - name: github.com/aristanetworks/glog
   version: b0d951ca530387842f35331df6fd8d9b501d5f90
 - name: github.com/aristanetworks/goarista
-  version: fea55316ec360aac14580a95260a0a0553ce69ef
+  version: 54fadd0c513d502544edf098480238dc9da50f9e
   subpackages:
   - monotime
 - name: github.com/armon/go-radix
@@ -30,9 +30,9 @@ imports:
 - name: github.com/blang/semver
   version: 2ee87856327ba09384cabd113bc6b5d174e9ec0f
 - name: github.com/chzyer/readline
-  version: 6a4bc7b4feaeff8feb63f87d5fb2cf3e3610a559
+  version: a4d5111b617813c5d09df1ba6d76394ed71b1644
 - name: github.com/cloudfoundry/gosigar
-  version: 14c0a766933d517675369dae6f551f5c1a10f0d8
+  version: dcb1afc219e4c99f21c37fb1ec22ed9ffe443317
 - name: github.com/codahale/hdrhistogram
   version: 3a0bb77429bd3a61596f5e8a3172445844342120
 - name: github.com/davecgh/go-spew
@@ -42,9 +42,9 @@ imports:
 - name: github.com/dchest/siphash
   version: 4ebf1de738443ea7f45f02dc394c4df1942a126d
 - name: github.com/dustin/go-humanize
-  version: 79e699ccd02f240a1f1fbbdcee7e64c1c12e41aa
+  version: bb3d318650d48840a39aa21a027c6630e198e626
 - name: github.com/elazarl/goproxy
-  version: aacba83f36a55ac31cbb71c06547a328c0cd1604
+  version: a96fa3a318260eab29abaf32f7128c9eb07fb073
 - name: github.com/fatih/set
   version: 27c40922c40b43fe04554d8223a402af3ea333f3
 - name: github.com/getlantern/appdir
@@ -56,7 +56,7 @@ imports:
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda
-  version: d41cb3687c2f2a192ea12e349ca87c4f6559fa37
+  version: 84de698fcc198edb239863a021f5772d3a5d00bb
   subpackages:
   - client
 - name: github.com/getlantern/buuid
@@ -66,23 +66,23 @@ imports:
 - name: github.com/getlantern/byteexec
   version: 4cfb26ec74f460fda433dc06fddfbad7ddee3072
 - name: github.com/getlantern/bytemap
-  version: 807aefefeb0978ae9572ddfe7ec99b68f3da03e2
+  version: ae8427dbf355130b32e5261c108917a630f7c36c
 - name: github.com/getlantern/checkfallbacks
-  version: 3385ad6fdaa9d883c34cc5ee31eeae098ea61e6d
+  version: f505f10690af992a3060b462e9b3825044126332
+- name: github.com/getlantern/cmux
+  version: ee58cae565e4f208c7eb59cb2e70acf2230a1d12
 - name: github.com/getlantern/connpool
   version: d04ff90bba7bdee0d9627a687b79fb0cb407d001
 - name: github.com/getlantern/context
   version: 624d99b1798d7c5375ea1d3ca4c5b04d58f7c775
 - name: github.com/getlantern/deepcopy
   version: 7f45deb8130a0acc553242eb0e009e3f6f3d9ce3
-- name: github.com/getlantern/dns
-  version: 630ccc2c3041d6f4362479526ed229d222f21274
-- name: github.com/miekg/dns
-  version: e4205768578dc90c2669e75a2f8a8bf77e3083a4
-- name: github.com/getlantern/dnsgrab
-  version: 852340bb9b6163352f76584935c16c0d85b3d5cf
 - name: github.com/getlantern/detour
   version: 40ce261d3ba85a967570daa390627e5d0529baa0
+- name: github.com/getlantern/dns
+  version: 630ccc2c3041d6f4362479526ed229d222f21274
+- name: github.com/getlantern/dnsgrab
+  version: 227f729dcb41c2838b53575a48208d0b552ab6e8
 - name: github.com/getlantern/easylist
   version: 1635650b3ed817f2bcc82cf42433eb309673fe53
 - name: github.com/getlantern/edgedetect
@@ -110,14 +110,14 @@ imports:
 - name: github.com/getlantern/go-loggly
   version: d15e28ab7389ed5d644ccb891d9d54154e43cd27
 - name: github.com/getlantern/go-socks5
-  version: 5add0d960b64f018ad097e5e5a8eb24b3b4b4bc0
+  version: 79d4dd3e2db581c4f31d170662ea44c454109a9c
 - name: github.com/getlantern/go-update
   version: d7c3f1ac97f868e6936ebd946df87f9826e57355
   subpackages:
   - check
   - download
 - name: github.com/getlantern/goexpr
-  version: fe2ff14f1ca2649a1c4e250aacc4a055d84be508
+  version: 14f9f25038c8aeacad7093dc892c47b514a4ddc9
   subpackages:
   - geo
   - isp
@@ -133,14 +133,14 @@ imports:
 - name: github.com/getlantern/hidden
   version: d52a649ab33af200943bb599898dbdcfdbc94cb7
 - name: github.com/getlantern/http-proxy
-  version: c70d87222c28e17a679b94c1ec885fbf174f53df
+  version: fb73ef725169f7e09266dfdd24c438413a39e128
   subpackages:
   - buffers
   - listeners
   - proxyfilters
   - server
 - name: github.com/getlantern/http-proxy-lantern
-  version: ca8570e2fc23deda85115b9b801568f2988d2a43
+  version: d12a8e845064075252c83b2b011a65037d823a29
   subpackages:
   - analytics
   - bbr
@@ -174,26 +174,30 @@ imports:
   version: 8723ea29ea42bdb85682c242b8e803aa6f05c9db
 - name: github.com/getlantern/jibber_jabber
   version: 7346f98d2644252b9fc10b89af1f1858b2dc29b9
-- name: github.com/getlantern/kcptun
-  version: f8fd1940bcc36ef5e33799d9e8947e7864474c76
-  subpackages:
-  - client/lib
+- name: github.com/getlantern/kcp-go
+  version: 19559e0e938cb2af45ae30765c109f821da19b33
+- name: github.com/getlantern/kcpwrapper
+  version: a35c895f6de73d94ca04369ac0c311cb8a97c0f2
 - name: github.com/getlantern/keyman
   version: 9d65bff0c88a85449195d54c38322e254b2ac34b
   subpackages:
   - certimporter
 - name: github.com/getlantern/lampshade
-  version: c7d71c3e99a56e2a883c8cb7d67df2bffab833a5
+  version: b10a301ad56e92a66ef15f22c7ba921e6b84a884
 - name: github.com/getlantern/launcher
   version: bc9fc3b11894e839c3fcb049f12e8974d7e48497
 - name: github.com/getlantern/measured
   version: 0582bf799783fba9a890459155817f1cbcf00f17
 - name: github.com/getlantern/mockconn
   version: 422a5afd4432dd82b1389333d5352da003d898a6
+- name: github.com/getlantern/msgpack
+  version: 922e6dcf94043edab4e690df4aa2016117f92fb7
+  subpackages:
+  - codes
 - name: github.com/getlantern/mtime
   version: ba114e4a82b0d453c15c505073a5896453b5cbd2
 - name: github.com/getlantern/netx
-  version: c704f69db48c8406d722f6e9ea9b0ad266975fe6
+  version: 06a8a15aede91b4274bb0272108e16a4eabeca19
 - name: github.com/getlantern/notifier
   version: 9d71672e9d5d137e06fffc4ac957565cd90a628f
   subpackages:
@@ -210,17 +214,15 @@ imports:
 - name: github.com/getlantern/profiling
   version: 2a15afbadcff99bac017e17af273b31d4510ddb8
 - name: github.com/getlantern/protected
-  version: 4afd1fdc46cb36bf428ed91707db063de87ecff5
+  version: b0900930f8068ec3c024d6d022c16d75ddd8a163
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
-- name: github.com/getlantern/preconn
-  version: 9d78068db81b714e7612e5d43030ee2e1ce6c49a
 - name: github.com/getlantern/proxy
-  version: ade3643df05b710488f85647459c5ce895c70214
+  version: 48c563c5d3a12636447a169b786638874ced97a3
   subpackages:
   - filters
 - name: github.com/getlantern/proxybench
-  version: 3a2f5573ad58c1690d23a67db1059dfd2c11ef10
+  version: 17bb0a4ec068dec779b85b87e06b01607a8ce8bd
 - name: github.com/getlantern/redis
   version: 5e698a687bd9581c17d3b06be34aa5afdec98640
 - name: github.com/getlantern/rot13
@@ -230,11 +232,16 @@ imports:
 - name: github.com/getlantern/shortcut
   version: 08ded803cb4dbc6f4149ab0091847248f8976f57
 - name: github.com/getlantern/sqlparser
-  version: 57225f75cf94afde1b3a886b6376c7e5f0aef240
+  version: a879d8035f3cd754fdda965da8305bb9d04ec439
+  subpackages:
+  - dependency/bson
+  - dependency/bytes2
+  - dependency/hack
+  - dependency/sqltypes
 - name: github.com/getlantern/stack
   version: 02f928aad224fbccd50d66edd776fc9d1e9f2f2b
 - name: github.com/getlantern/sysproxy
-  version: 2494eaf8b5437eba8778c45862e7d1ab84e9c2fc
+  version: eb982eb140351544ca13cc91b6a992370320baa0
 - name: github.com/getlantern/systray
   version: fc8e01480deb4dc92e7f13151536a9678520ff42
 - name: github.com/getlantern/tarfs
@@ -242,7 +249,7 @@ imports:
 - name: github.com/getlantern/tlsdefaults
   version: cf35cfd0b1b460b031536c9846ffcd5f7811dddb
 - name: github.com/getlantern/tlsdialer
-  version: b4d0a731957c4658f2e281e1ae8653781719a55b
+  version: 275d735df0fe7c62ef2020c26212a2edd84d46e7
 - name: github.com/getlantern/urlcache
   version: d5aa446253570bfba3e15186c05464b9646d92af
 - name: github.com/getlantern/uuid
@@ -264,7 +271,7 @@ imports:
 - name: github.com/getlantern/yaml
   version: 97d86b60f57eeca9d70c02763ed2565bafc17585
 - name: github.com/getlantern/zenodb
-  version: 0947e81d5d5dcf171c76987d56eb18a9cf835932
+  version: 705c495333ae5d36c94da243836d4b5833c6630b
   subpackages:
   - bytetree
   - common
@@ -277,15 +284,15 @@ imports:
 - name: github.com/golang/glog
   version: 23def4e6c14b4da8ac2ed8007337bc5eb5007998
 - name: github.com/golang/groupcache
-  version: b710c8433bd175204919eb38776e944233235d03
+  version: 84a468cf14b4376def5d68c722b139b881c450a4
   subpackages:
   - lru
 - name: github.com/golang/mock
-  version: 6e20fef50e74e443696bc32b693cf286b612d45b
+  version: 747e9e6390e12b0d987c261bdc89a51e76b9f5fc
   subpackages:
   - gomock
 - name: github.com/golang/protobuf
-  version: 130e6b02ab059e7b717a096f397c5b60111cae74
+  version: 1e59b77b52bf8e4b449a57e6f79f21226d571845
   subpackages:
   - proto
   - ptypes
@@ -297,11 +304,11 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
-  version: 9bd9ff2d1d2a0660d35050674f2c3112547997af
+  version: 65ec7248c53f499f6b480655e019e0b9d7a6ce11
 - name: github.com/gorilla/securecookie
   version: e59506cc896acb7f7bf732d4fdf5e25f7ccd8983
 - name: github.com/gorilla/websocket
-  version: f918560c4c3d6a271185320bb1d4a1e40f77297f
+  version: 2b5852213197a760e72744fcce7ee529cbf97c78
 - name: github.com/hashicorp/golang-lru
   version: 0a025b7e63adc15a622f29b0b2c4c3848243bbf6
   subpackages:
@@ -313,17 +320,17 @@ imports:
 - name: github.com/keighl/mandrill
   version: 5d7133fb578a9504f8ab549737c993422f65a000
 - name: github.com/klauspost/cpuid
-  version: ae7887de9fa5d2db4eaa8174a7eff2c1ac00f2da
+  version: eae9b3e628d72774e13bdf024e78c0802f85a5b9
 - name: github.com/klauspost/crc32
   version: bab58d77464aa9cf4e84200c3276da0831fe0c03
 - name: github.com/klauspost/reedsolomon
-  version: 6bb6130ff6a76a904c1841707d65603aec9cc288
+  version: e52c150f961e65ab9538bf1276b33bf469f919d8
 - name: github.com/kr/binarydist
   version: 3035450ff8b987ec4373f65c40767f096b35f2d2
 - name: github.com/mailgun/multibuf
   version: 565402cd71fbd9c12aa7e295324ea357e970a61e
 - name: github.com/mailgun/oxy
-  version: d11463e5dffa3f8ae94ae9005b10fc37fbb4d301
+  version: 5dfac9992dbefb4a2fc6ca201bbcb791bf32654c
   subpackages:
   - forward
 - name: github.com/mailgun/timetools
@@ -331,11 +338,11 @@ imports:
 - name: github.com/mailgun/ttlmap
   version: c1c17f74874f2a5ea48bfb06b5459d4ef2689749
 - name: github.com/miekg/dns
-  version: 946bd9fbed05568b0f3cd188353d8aa28f38b688
+  version: 6da3249dfb57fbaa16efafcd8744cee8809d80cd
   subpackages:
   - internal/socket
 - name: github.com/mitchellh/mapstructure
-  version: d0303fe809921458f417bcf828397a65db30a7e4
+  version: 06020f85339e21b2478f756a78e295255ffa4d6a
 - name: github.com/mitchellh/panicwrap
   version: fce601fe55579125e1b3cb0b992287e7290f7b83
 - name: github.com/mxk/go-flowrate
@@ -356,13 +363,13 @@ imports:
 - name: github.com/oxtoacart/emsort
   version: e467347e335434365584bc76ce22b8d23190da6e
 - name: github.com/pkg/errors
-  version: 2b3a18b5f0fb6b4f9190549597d3f962c02bc5eb
+  version: f15c970de5b76fac0b59abb32d62c17cc7bed265
 - name: github.com/pmezard/adblock
-  version: 29c53dd9e3bcee4e9162f84047266994562d06a0
+  version: edfb97ad89cd57ae8675175539a55aceaf2a05d3
   subpackages:
   - adblock
 - name: github.com/rcrowley/go-metrics
-  version: 1f30fe9094a513ce4c700b9a54458bbb0c96996c
+  version: e181e095bae94582363434144c61a9653aff6e50
 - name: github.com/retailnext/hllpp
   version: 6e8b6d394466a6f3719bcd7f14988bbfb02ff087
 - name: github.com/rickar/props
@@ -386,7 +393,7 @@ imports:
   subpackages:
   - uaparser
 - name: github.com/stripe/stripe-go
-  version: ec955e8b6e08a1268fe3fb63946cb37058e26d67
+  version: a705fb222df92bba0cbc4c190bcbebf7dfe0b0cc
   subpackages:
   - form
   - orderitem
@@ -397,8 +404,10 @@ imports:
   version: 7092926d7d05c415fabb892b1464a03f8228ab80
 - name: github.com/templexxx/xor
   version: 0af8e873c554da75f37f2049cdffda804533d44c
+- name: github.com/tevino/abool
+  version: 9b9efcf221b50905aab9bbabd3daed56dc10f339
 - name: github.com/tjfoc/gmsm
-  version: b74f37ac3d66001c1ae9fff11d8b55a2e196b7e7
+  version: 98aa888b79d8de04afe0fccf45ed10594efc858b
   subpackages:
   - sm4
 - name: github.com/ua-parser/uap-go
@@ -408,36 +417,33 @@ imports:
 - name: github.com/vharitonsky/iniflags
   version: e586d5c5197c636313580bf6eb2f54522bd65147
 - name: github.com/vulcand/oxy
-  version: d11463e5dffa3f8ae94ae9005b10fc37fbb4d301
+  version: 5dfac9992dbefb4a2fc6ca201bbcb791bf32654c
   subpackages:
   - utils
 - name: github.com/vulcand/predicate
   version: 939c094524d124c55fa8afe0e077701db4a865e2
 - name: github.com/Workiva/go-datastructures
-  version: e740680cc77dafd9615b25918b39f4a0ef5ab955
+  version: af7475fb23e7561c87e7c1d17c12f46d732379bb
   subpackages:
   - trie/yfast
-- name: github.com/xtaci/kcp-go
-  version: f042b40cd3be3eaa802add29ca56a092c70edf07
 - name: github.com/xtaci/smux
   version: ebec7ef2574b42a7088cd7751176483e0a27d458
 - name: github.com/xwb1989/sqlparser
-  version: a9cdf22bd561e715bba34ee228cb1c06bfa2719c
+  version: da747e0c62c4e145ebd7484cf69f92c0dd192305
   subpackages:
-  - dependency/bson
-  - dependency/bytes2
   - dependency/hack
-  - dependency/sqltypes
 - name: github.com/Yawning/chacha20
   version: e3b1f968fc6397b51d963fee8ec8711a47bc0ce8
 - name: golang.org/x/crypto
-  version: 9419663f5a44be8b34ca85f08abc5fe1be11f8a3
+  version: 94eea52f7b742c7cbe0b03b22f0c4c8631ece122
   subpackages:
   - blowfish
   - cast5
   - chacha20poly1305
   - chacha20poly1305/internal/chacha20
   - curve25519
+  - ed25519
+  - ed25519/internal/edwards25519
   - hkdf
   - nacl/secretbox
   - pbkdf2
@@ -449,7 +455,7 @@ imports:
   - twofish
   - xtea
 - name: golang.org/x/net
-  version: a04bdaca5b32abe1c069418fb7088ae607de5bd0
+  version: a8b9294777976932365dabb6640cf1468d95c70f
   repo: https://github.com/golang/net
   vcs: git
   subpackages:
@@ -466,19 +472,19 @@ imports:
   - proxy
   - trace
 - name: golang.org/x/oauth2
-  version: bb50c06baba3d0c76f9d125c0719093e315b5b44
+  version: f95fa95eaa936d9d87489b15d1d18b97c1ba9c28
   subpackages:
   - google
   - jwt
 - name: golang.org/x/sys
-  version: ebfc5b4631820b793c9010c87fd8fef0f39eb082
+  version: 316e9227019baa6ea3f76ea21538bab101fd1182
   repo: https://github.com/golang/sys
   vcs: git
   subpackages:
   - unix
   - windows
 - name: golang.org/x/text
-  version: 825fc78a2fd6fa0a5447e300189e3219e05e1f25
+  version: 572a2b141f625f4360cf42a41a43622067e0510b
   subpackages:
   - encoding
   - encoding/charmap
@@ -488,7 +494,7 @@ imports:
   - unicode/bidi
   - unicode/norm
 - name: google.golang.org/appengine
-  version: 07f075729064fd38e1360517947f0f6e03500651
+  version: 9d8544a6b2c7df9cff240fcf92d7b2f59bc13416
   subpackages:
   - datastore
   - internal
@@ -499,21 +505,29 @@ imports:
   - internal/modules
   - internal/remote_api
 - name: google.golang.org/genproto
-  version: f676e0f3ac6395ff1a529ae59a6670878a8371a6
+  version: 7f0da29060c682909f650ad8ed4e515bd74fa12a
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: 3c33c26290b747350f8650c7d38bcc51b42dc785
+  version: a62701e4aa1d276bec70311251d62a478404d63f
   subpackages:
+  - balancer
+  - balancer/roundrobin
   - codes
+  - connectivity
   - credentials
-  - grpclb/grpc_lb_v1
+  - encoding
+  - grpclb/grpc_lb_v1/messages
   - grpclog
   - internal
   - keepalive
   - metadata
   - naming
   - peer
+  - resolver
+  - resolver/dns
+  - resolver/manual
+  - resolver/passthrough
   - stats
   - status
   - tap
@@ -530,12 +544,8 @@ imports:
   - internal/hashtag
   - internal/pool
   - internal/proto
-- name: gopkg.in/vmihailenco/msgpack.v2
-  version: f4f8982de4ef0de18be76456617cc3f5d8d8141e
-  subpackages:
-  - codes
 - name: gopkg.in/yaml.v2
-  version: eb3733d160e74a9c7e442f435eb3bea458e1d19f
+  version: 287cf08546ab5e7e37d55a84f7ed3fd1db036de5
 testImports:
 - name: github.com/getlantern/bbrconn
   version: 9a5594c63329cf77582eccae41a8a75240a078fe
@@ -570,18 +580,18 @@ testImports:
 - name: github.com/gonum/stat
   version: 40602ac931a7ab7f72cb1eff5ce1753a2d28d345
 - name: github.com/mikioh/tcp
-  version: f1d847c4c06bbfeabd47636817e2c8095f1340db
+  version: 904f276fef1dc41b94a7bd9c85384bee9b993db8
 - name: github.com/mikioh/tcpopt
-  version: 032b8eaf3844912fda93bef6ae3c6a27aacc160a
+  version: 55475675a638cfb3b97c617bb65d91834a663d7f
 - name: github.com/pborman/uuid
-  version: e790cca94e6cc75c7064b1332e63811d4aae1a53
+  version: e533369306653d193b93dae055f6083cbf8ba54f
 - name: github.com/pmezard/go-difflib
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
   - difflib
 - name: github.com/sirupsen/logrus
-  version: 89742aefa4b206dcf400792f3bd35b542998eb3b
+  version: 95cd2b9c79aa5e72ab0bc69b7ccc2be15bf850f6
 - name: github.com/stretchr/testify
-  version: 890a5c3458b43e6104ff5da8dfa139d013d77544
+  version: 2aa2c176b9dab406a6970f6a55f513e8a8c8b18f
   subpackages:
   - assert

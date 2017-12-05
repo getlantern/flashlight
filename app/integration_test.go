@@ -88,7 +88,7 @@ func TestProxying(t *testing.T) {
 		case "client_stopped":
 			uptime := getVal("uptime")
 			assert.True(t, uptime > 0)
-			assert.True(t, uptime < 30)
+			assert.True(t, uptime < 5000)
 		case "traffic":
 			sent := getVal("client_bytes_sent")
 			recv := getVal("client_bytes_recv")
@@ -97,6 +97,8 @@ func TestProxying(t *testing.T) {
 		case "catchall_fatal":
 			assert.Equal(t, "test fatal error", dimensions["error"])
 			assert.Equal(t, "test fatal error", dimensions["error_text"])
+		case "probe":
+			assert.True(t, getVal("probe_rtt") > 0)
 		}
 	}
 	config.ProxyConfigPollInterval = 100 * time.Millisecond
@@ -168,7 +170,7 @@ func TestProxying(t *testing.T) {
 	case <-onGeo:
 		opsMx.RLock()
 		for _, op := range flashlight.FullyReportedOps {
-			if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" {
+			if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" || op == "probe" {
 				// ignore these, as we don't do them during the integration test
 				continue
 			}
