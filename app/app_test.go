@@ -2,49 +2,11 @@ package app
 
 import (
 	"io/ioutil"
-	"net/http"
-	"net/url"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
-
-func TestUIFilter(t *testing.T) {
-	a := &App{
-		Flags: map[string]interface{}{
-			"ui-domain": "",
-		},
-	}
-	a.Flags["ui-domain"] = "test.lantern.io"
-	a.Init()
-
-	uiFilter := a.uiFilter("")
-
-	u, _ := url.Parse("http://test.lantern.io")
-	r := &http.Request{
-		Host: "test",
-		URL:  u,
-	}
-
-	_, err := uiFilter(r)
-	assert.NoError(t, err)
-
-	uiFilter = uiFilterWithAddr("", func() string {
-		return ""
-	})
-	rr, err := uiFilter(r)
-
-	assert.NoError(t, err)
-	assert.Equal(t, "", rr.Host)
-
-	r.Method = http.MethodConnect
-	rr, err = uiFilter(r)
-
-	assert.NoError(t, err)
-	assert.Equal(t, "", rr.Host)
-	assert.Equal(t, "", rr.URL.Host)
-}
 
 func TestLocalHTTPToken(t *testing.T) {
 	// Avoid polluting real settings.

@@ -241,8 +241,6 @@ func run(configDir, locale string,
 			}
 			return fmt.Sprintf("%v:%v", updatedHost, port)
 		},
-		// Request filter for HTTP proxy. Currently only used on desktop.
-		func(r *http.Request) (*http.Request, error) { return r, nil },
 	)
 }
 

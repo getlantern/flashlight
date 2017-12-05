@@ -158,7 +158,6 @@ func (app *App) Run() {
 			},
 			func() bool { return true },              // always allow ad blocking on desktop
 			func(addr string) string { return addr }, // no dnsgrab reverse lookups on desktop
-			app.noUIFilter(),
 		)
 		if err != nil {
 			app.Exit(err)
@@ -519,59 +518,4 @@ func (app *App) AddToken(path string) string {
 // GetTranslations adds our secure token to a given request path.
 func (app *App) GetTranslations(filename string) ([]byte, error) {
 	return ui.Translations(filename)
-}
-
-// noUIFilter does not filter any requests for UI serving.
-func (app *App) noUIFilter() func(req *http.Request) (*http.Request, error) {
-	return func(req *http.Request) (*http.Request, error) {
-		return req, nil
-	}
-}
-
-// uiFilter serves requests over a configured domain from the local UI server.
-// This allows Lantern to run over a more standard domain, which makes it more
-// compatible with things like A/B testing software.
-func (app *App) uiFilter(uiDomain string) func(req *http.Request) (*http.Request, error) {
-	return uiFilterWithAddr(uiDomain, func() string {
-		if app.uiServer == nil {
-			return ""
-		}
-		return app.uiServer.GetListenAddr()
-	})
-}
-
-// uiFilterWithAddr serves requests over a configured domain from the local UI server.
-// This allows Lantern to run over a more standard domain, which makes it more
-// compatible with things like A/B testing software.
-//
-// This version makes testinga bit easier.
-//
-// Note that for CONNECT requests we unfortunately cannot simply check for the token here.
-func uiFilterWithAddr(uiDomain string, listenAddr func() string) func(req *http.Request) (*http.Request, error) {
-	return func(req *http.Request) (*http.Request, error) {
-		// We also check for the port being appended because some requests will append the port.
-		withPort := uiDomain + ":80"
-		if req.URL != nil && (req.URL.Host == uiDomain ||
-			req.Host == uiDomain || req.URL.Host == withPort || req.Host == withPort) {
-
-			// Check for the token if the request is not a CONNECT request. CONNECT requests will only
-			// contain the secure token in their underlying HTTP requests, which we cannot check here
-			// without subsequently reading the request itself. The UI server does this token check on
-			// those requests (particularly websocket requests). Known methods for web sites attempting
-			// to detect Lantern cannot trigger that check with CONNECT requests, however. See the
-			// broader discussion of this vulnerability at
-			// https://www.nccgroup.trust/us/our-research/lantern/
-			if req.Method != http.MethodConnect && !ui.HasToken(req, localHTTPToken(settings)) {
-				return req, nil
-			}
-			if req.Method == http.MethodConnect && req.URL != nil {
-				req.URL.Host = listenAddr()
-			}
-			// It's not clear why CONNECT requests also need the host header set here,
-			// but it doesn't work without it.
-			req.Host = listenAddr()
-			return req, nil
-		}
-		return req, nil
-	}
 }
