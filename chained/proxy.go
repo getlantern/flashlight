@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -93,12 +94,9 @@ func forceProxy(s *ChainedServerInfo) {
 
 func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
 	return newProxy(name, "http", "tcp", s.Addr, s, deviceID, proToken, false, func(ctx context.Context, p *proxy) (net.Conn, error) {
-		op := ops.Begin("dial_to_chained").ChainedProxy(p.addr, p.protocol, p.network)
-		defer op.End()
-		elapsed := mtime.Stopwatch()
-		conn, err := p.tcpDial(op)(ctx)
-		op.DialTime(elapsed(), err)
-		return conn, op.FailIf(err)
+		return reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
+			return p.dialCore(op)(ctx)
+		})
 	})
 }
 
@@ -110,40 +108,37 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 	x509cert := cert.X509()
 	sessionCache := tls.NewLRUClientSessionCache(1000)
 	return newProxy(name, "https", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(ctx context.Context, p *proxy) (net.Conn, error) {
-		op := ops.Begin("dial_to_chained").ChainedProxy(p.addr, p.protocol, p.network)
-		defer op.End()
-
-		elapsed := mtime.Stopwatch()
-		conn, err := tlsdialer.DialTimeout(func(network, addr string, timeout time.Duration) (net.Conn, error) {
-			return p.tcpDial(op)(ctx)
-		}, timeoutFor(ctx),
-			"tcp", p.addr, false, &tls.Config{
-				ClientSessionCache: sessionCache,
-				InsecureSkipVerify: true,
-			})
-		op.DialTime(elapsed(), err)
-		if err != nil {
-			return nil, op.FailIf(err)
-		}
-		if !conn.ConnectionState().PeerCertificates[0].Equal(x509cert) {
-			if closeErr := conn.Close(); closeErr != nil {
-				log.Debugf("Error closing chained server connection: %s", closeErr)
+		return reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
+			conn, err := tlsdialer.DialTimeout(func(network, addr string, timeout time.Duration) (net.Conn, error) {
+				return p.dialCore(op)(ctx)
+			}, timeoutFor(ctx),
+				"tcp", p.addr, false, &tls.Config{
+					ClientSessionCache: sessionCache,
+					InsecureSkipVerify: true,
+				})
+			if err != nil {
+				return conn, err
 			}
-			var received interface{}
-			var expected interface{}
-			_received, certErr := keyman.LoadCertificateFromX509(conn.ConnectionState().PeerCertificates[0])
-			if certErr != nil {
-				log.Errorf("Unable to parse received certificate: %v", certErr)
-				received = conn.ConnectionState().PeerCertificates[0]
-				expected = x509cert
-			} else {
-				received = string(_received.PEMEncoded())
-				expected = string(cert.PEMEncoded())
+			if !conn.ConnectionState().PeerCertificates[0].Equal(x509cert) {
+				if closeErr := conn.Close(); closeErr != nil {
+					log.Debugf("Error closing chained server connection: %s", closeErr)
+				}
+				var received interface{}
+				var expected interface{}
+				_received, certErr := keyman.LoadCertificateFromX509(conn.ConnectionState().PeerCertificates[0])
+				if certErr != nil {
+					log.Errorf("Unable to parse received certificate: %v", certErr)
+					received = conn.ConnectionState().PeerCertificates[0]
+					expected = x509cert
+				} else {
+					received = string(_received.PEMEncoded())
+					expected = string(cert.PEMEncoded())
+				}
+				return nil, op.FailIf(log.Errorf("Server's certificate didn't match expected! Server had\n%v\nbut expected:\n%v",
+					received, expected))
 			}
-			return nil, op.FailIf(log.Errorf("Server's certificate didn't match expected! Server had\n%v\nbut expected:\n%v",
-				received, expected))
-		}
-		return overheadWrapper(true)(conn, op.FailIf(err))
+			return overheadWrapper(true)(conn, op.FailIf(err))
+		})
 	})
 }
 
@@ -167,18 +162,16 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 	}
 
 	return newProxy(name, "obfs4", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(ctx context.Context, p *proxy) (net.Conn, error) {
-		op := ops.Begin("dial_to_chained").ChainedProxy(p.Addr(), p.Protocol(), p.Network())
-		defer op.End()
-		elapsed := mtime.Stopwatch()
-		dialFn := func(network, address string) (net.Conn, error) {
-			// We know for sure the network and address are the same as what
-			// the inner DailServer uses.
-			return p.tcpDial(op)(ctx)
-		}
-		// The proxy it wrapped already has timeout applied.
-		conn, err := cf.Dial("tcp", p.addr, dialFn, args)
-		op.DialTime(elapsed(), err)
-		return overheadWrapper(true)(conn, op.FailIf(err))
+		return reportedDial(p.Addr(), p.Protocol(), p.Network(), func(op *ops.Op) (net.Conn, error) {
+			dialFn := func(network, address string) (net.Conn, error) {
+				// We know for sure the network and address are the same as what
+				// the inner DailServer uses.
+				return p.dialCore(op)(ctx)
+			}
+
+			// The proxy it wrapped already has timeout applied.
+			return overheadWrapper(true)(cf.Dial("tcp", p.addr, dialFn, args))
+		})
 	})
 }
 
@@ -225,25 +218,22 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 		ServerPublicKey:   rsaPublicKey,
 	})
 	dial := func(ctx context.Context, p *proxy) (net.Conn, error) {
-		op := ops.Begin("dial_to_chained").ChainedProxy(s.Addr, "lampshade", "tcp").
-			Set("ls_win", windowSize).
-			Set("ls_pad", maxPadding).
-			Set("ls_streams", int(maxStreamsPerConn)).
-			Set("ls_cipher", cipherCode.String())
-		defer op.End()
-
-		elapsed := mtime.Stopwatch()
-		conn, err := dialer.Dial(func() (net.Conn, error) {
-			conn, err := p.tcpDial(op)(ctx)
-			if err == nil && idleInterval > 0 {
-				conn = idletiming.Conn(conn, idleInterval, func() {
-					log.Debug("lampshade TCP connection idled")
-				})
-			}
-			return conn, err
+		return reportedDial(s.Addr, "lampshade", "tcp", func(op *ops.Op) (net.Conn, error) {
+			op.Set("ls_win", windowSize).
+				Set("ls_pad", maxPadding).
+				Set("ls_streams", int(maxStreamsPerConn)).
+				Set("ls_cipher", cipherCode.String())
+			conn, err := dialer.Dial(func() (net.Conn, error) {
+				conn, err := p.dialCore(op)(ctx)
+				if err == nil && idleInterval > 0 {
+					conn = idletiming.Conn(conn, idleInterval, func() {
+						log.Debug("lampshade TCP connection idled")
+					})
+				}
+				return conn, err
+			})
+			return overheadWrapper(true)(conn, err)
 		})
-		op.DialTime(elapsed(), err)
-		return overheadWrapper(true)(conn, op.FailIf(err))
 	}
 
 	p, err := newProxy(name, "lampshade", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, dial)
@@ -319,7 +309,7 @@ type proxy struct {
 	kcpConfig         *KCPConfig
 	forceRedial       *abool.AtomicBool
 	mostRecentABETime time.Time
-	dialCore          func(ctx context.Context) (net.Conn, time.Duration, error)
+	doDialCore        func(ctx context.Context) (net.Conn, time.Duration, error)
 	preconnects       chan interface{}
 	preconnected      chan balancer.ProxyConnection
 	forceRecheckCh    chan bool
@@ -356,7 +346,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		consecSuccesses: 1, // be optimistic
 	}
 
-	p.dialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
+	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
 		elapsed := mtime.Stopwatch()
 		conn, err := netx.DialTimeout("tcp", p.addr, timeoutFor(ctx))
 		delta := elapsed()
@@ -401,7 +391,7 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig, addIdleTiming)
 	var dialKCPMutex sync.Mutex
 
-	p.dialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
+	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
 		elapsed := mtime.Stopwatch()
 
 		dialKCPMutex.Lock()
@@ -554,7 +544,7 @@ func (p *proxy) forceRecheck() {
 	}
 }
 
-func (p *proxy) tcpDial(op *ops.Op) func(ctx context.Context) (net.Conn, error) {
+func (p *proxy) dialCore(op *ops.Op) func(ctx context.Context) (net.Conn, error) {
 	return func(ctx context.Context) (net.Conn, error) {
 		estLatency, estBandwidth := p.EstLatency(), p.EstBandwidth()
 		if estLatency > 0 {
@@ -563,8 +553,8 @@ func (p *proxy) tcpDial(op *ops.Op) func(ctx context.Context) (net.Conn, error) 
 		if estBandwidth > 0 {
 			op.Set("est_mbps", estBandwidth)
 		}
-		conn, delta, err := p.dialCore(ctx)
-		op.TCPDialTime(delta, err)
+		conn, delta, err := p.doDialCore(ctx)
+		op.CoreDialTime(delta, err)
 		return overheadWrapper(false)(conn, err)
 	}
 }
@@ -582,4 +572,37 @@ func timeoutFor(ctx context.Context) time.Duration {
 		return deadline.Sub(time.Now())
 	}
 	return chainedDialTimeout
+}
+
+func reportedDial(addr, protocol, network string, dial func(op *ops.Op) (net.Conn, error)) (net.Conn, error) {
+	op := ops.Begin("dial_to_chained").ChainedProxy(addr, protocol, network)
+	defer op.End()
+
+	elapsed := mtime.Stopwatch()
+	conn, err := dial(op)
+	delta := elapsed()
+	op.DialTime(delta, err)
+	reportProxyDial(delta, err)
+
+	return conn, op.FailIf(err)
+}
+
+// reportProxyDial reports a "proxy_dial" op if and only if the dial was
+// successful or failed in a way that might indicate blocking.
+func reportProxyDial(delta time.Duration, err error) {
+	success := err == nil
+	potentialBlocking := false
+	if err != nil {
+		errText := err.Error()
+		potentialBlocking =
+			!strings.Contains(errText, "network is down") &&
+				!strings.Contains(errText, "unreachable") &&
+				!strings.Contains(errText, "Bad status code on CONNECT response")
+	}
+	if success || potentialBlocking {
+		innerOp := ops.Begin("proxy_dial")
+		innerOp.DialTime(delta, err)
+		innerOp.FailIf(err)
+		innerOp.End()
+	}
 }

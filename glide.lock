@@ -1,5 +1,5 @@
 hash: c41a3297dbf12a6024489881323e642168418956258cab16915348729094a097
-updated: 2017-12-05T07:58:36.300008-08:00
+updated: 2017-12-05T10:19:41.981222-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a3ad5df6c9e7dc8117f55958b4ce99bf1e0fe291
@@ -56,7 +56,7 @@ imports:
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda
-  version: 84de698fcc198edb239863a021f5772d3a5d00bb
+  version: d75a6c2dca1dbaa85ee332bae0c7c991f55dda6a
   subpackages:
   - client
 - name: github.com/getlantern/buuid
