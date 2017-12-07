@@ -32,8 +32,8 @@ var (
 	translations = eventual.NewValue()
 )
 
-//PathHandler contains a request path pattern and an HTTP handler for that
-//pattern.
+// PathHandler contains a request path pattern and an HTTP handler for that
+// pattern.
 type PathHandler struct {
 	Pattern string
 	Handler http.Handler
@@ -73,10 +73,6 @@ func StartServer(requestedAddr, extURL, localHTTPToken string,
 	return server, nil
 }
 
-// StartServer creates and starts a new UI server.
-// extURL: when supplied, open the URL in addition to the UI address.
-// localHTTPToken: if set, close client connection directly if the request
-// doesn't bring the token in query parameters nor have the same origin.
 func newServer(extURL, localHTTPToken string) *Server {
 	requestPath := ""
 	if localHTTPToken != "" {
@@ -107,7 +103,7 @@ func (s *Server) attachHandlers() {
 	s.handle("/", http.FileServer(fs))
 }
 
-// handle directls the underlying server to handle the given pattern at both
+// handle directs the underlying server to handle the given pattern at both
 // the secure token path and the raw request path. In the case of the raw
 // request path, Lantern looks for the token in the Referer HTTP header and
 // rejects the request if it's not present.
@@ -291,9 +287,8 @@ func HasToken(r *http.Request, tok string) bool {
 	referer := r.Header.Get("referer")
 	if strings.Contains(referer, tok) {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
 // closeConn closes the client connection without sending a response.
