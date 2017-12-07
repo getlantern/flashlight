@@ -29,7 +29,7 @@ var (
 	iconsByName = make(map[string][]byte)
 )
 
-type systrayCallback interface {
+type systrayCallbacks interface {
 	WaitForExit() error
 	AddExitFuncToEnd(func())
 	Exit(error) bool
@@ -41,7 +41,7 @@ type systrayCallback interface {
 	OnStatsChange(func(stats.Stats))
 }
 
-func runOnSystrayReady(a systrayCallback, f func()) {
+func runOnSystrayReady(a systrayCallbacks, f func()) {
 	// Typically, systray.Quit will actually be what causes the app to exit, but
 	// in the case of an uncaught Fatal error, the app will exit before the
 	// systray and we need it to call systray.Quit().
@@ -59,7 +59,7 @@ func runOnSystrayReady(a systrayCallback, f func()) {
 	})
 }
 
-func configureSystemTray(a systrayCallback) error {
+func configureSystemTray(a systrayCallbacks) error {
 	menu.enable = a.ShouldShowUI()
 	if !menu.enable {
 		return nil
