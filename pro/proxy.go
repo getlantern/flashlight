@@ -40,19 +40,15 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	} else {
 		// Workaround for https://github.com/getlantern/pro-server/issues/192
 		req.Header.Del("Origin")
-		if log.IsTraceEnabled() {
-			b, _ := httputil.DumpRequestOut(req, true)
-			log.Trace(string(b))
-		}
+		b, _ := httputil.DumpRequestOut(req, true)
+		log.Debug(string(b))
 		resp, err = GetHTTPClient().Do(req)
 		if err != nil {
 			log.Errorf("Could not issue HTTP request? %v", err)
 			return
 		}
-		if log.IsTraceEnabled() {
-			b, _ := httputil.DumpResponse(resp, false)
-			log.Trace(string(b))
-		}
+		b, _ = httputil.DumpResponse(resp, false)
+		log.Debug(string(b))
 	}
 	resp.Header.Set("Access-Control-Allow-Origin", origin)
 	if req.URL.Path != "/user-data" || resp.StatusCode != http.StatusOK {
@@ -82,9 +78,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 		return
 	}
 	log.Debugf("Updating user data implicitly for user %v", userID)
-	if log.IsTraceEnabled() {
-		log.Tracef("%v", user)
-	}
+	log.Debugf("%v", user)
 	setUserData(userID, &user)
 	return
 }
