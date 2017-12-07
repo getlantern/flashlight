@@ -22,6 +22,7 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/datacap"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/notifier"
 	"github.com/getlantern/flashlight/ops"
@@ -78,7 +79,7 @@ func (app *App) Init() {
 		isDisconnected := disconnected.(bool)
 		app.statsTracker.SetDisconnected(isDisconnected)
 	})
-	addDataCapListener(func(hitDataCap bool) {
+	datacap.AddDataCapListener(func(hitDataCap bool) {
 		app.statsTracker.SetHitDataCap(hitDataCap)
 	})
 }
@@ -262,9 +263,9 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 		setupUserSignal(app.Connect, app.Disconnect)
 
-		err = serveBandwidth(func() string {
+		err = datacap.ServeDataCap(func() string {
 			return app.AddToken("/img/lantern_logo.png")
-		}, app.PlansURL)
+		}, app.PlansURL, isProUser)
 		if err != nil {
 			log.Errorf("Unable to serve bandwidth to UI: %v", err)
 		}
