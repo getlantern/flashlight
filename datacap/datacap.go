@@ -23,7 +23,7 @@ var (
 
 	dataCapListeners   = make([]func(hitDataCap bool), 0)
 	dataCapListenersMx sync.RWMutex
-	log                = golog.LoggerFor("flashlight.app.bandwidth")
+	log                = golog.LoggerFor("flashlight.datacap")
 )
 
 type dataCap struct {
