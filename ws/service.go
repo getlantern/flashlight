@@ -144,6 +144,7 @@ func Unregister(t string) {
 // StartUIChannel establishes a channel to the UI for sending and receiving
 // updates
 func StartUIChannel() http.Handler {
+	go clients.writeAll()
 	go readLoop(clients.In)
 
 	log.Debugf("Accepting WebSocket connections")
