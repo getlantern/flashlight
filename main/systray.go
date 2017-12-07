@@ -10,10 +10,8 @@ import (
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/systray"
 
-	"github.com/getlantern/flashlight/app"
 	"github.com/getlantern/flashlight/icons"
 	"github.com/getlantern/flashlight/stats"
-	"github.com/getlantern/flashlight/ui"
 )
 
 var menu struct {
@@ -31,7 +29,19 @@ var (
 	iconsByName = make(map[string][]byte)
 )
 
-func runOnSystrayReady(a *app.App, f func()) {
+type systrayCallbacks interface {
+	WaitForExit() error
+	AddExitFuncToEnd(func())
+	Exit(error) bool
+	ShouldShowUI() bool
+	OnTrayShow()
+	OnTrayUpgrade()
+	Connect()
+	Disconnect()
+	OnStatsChange(func(stats.Stats))
+}
+
+func runOnSystrayReady(a systrayCallbacks, f func()) {
 	// Typically, systray.Quit will actually be what causes the app to exit, but
 	// in the case of an uncaught Fatal error, the app will exit before the
 	// systray and we need it to call systray.Quit().
@@ -49,8 +59,8 @@ func runOnSystrayReady(a *app.App, f func()) {
 	})
 }
 
-func configureSystemTray(a *app.App) error {
-	menu.enable = a.ShowUI
+func configureSystemTray(a systrayCallbacks) error {
+	menu.enable = a.ShouldShowUI()
 	if !menu.enable {
 		return nil
 	}
@@ -97,9 +107,9 @@ func configureSystemTray(a *app.App) error {
 					a.Disconnect()
 				}
 			case <-menu.show.ClickedCh:
-				ui.ShowRoot("show-lantern", "tray")
+				a.OnTrayShow()
 			case <-menu.upgrade.ClickedCh:
-				ui.Show(ui.AddToken("/")+"#/plans", "proupgrade", "tray")
+				a.OnTrayUpgrade()
 			case <-menu.quit.ClickedCh:
 				systray.Quit()
 			}

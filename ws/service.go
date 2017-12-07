@@ -35,9 +35,23 @@ type Service struct {
 }
 
 var (
-	clients    *clientChannels
 	muServices sync.RWMutex
 	services   = make(map[string]*Service)
+
+	clients = newClients(func(out chan<- []byte) {
+		// This method is the callback that gets called whenever there's a new
+		// incoming websocket connection.
+		muServices.RLock()
+		defer muServices.RUnlock()
+		for _, s := range services {
+			// Just queue the hello message for the given service for writing
+			// on the new incoming websocket.
+			// We put each call on a separate go routine to avoid any single hello
+			// function from blocking the others, which could result in the UI
+			// hanging.
+			go s.writeHelloMsg(out)
+		}
+	})
 )
 
 func (s *Service) writeAll() {
@@ -130,21 +144,6 @@ func Unregister(t string) {
 // StartUIChannel establishes a channel to the UI for sending and receiving
 // updates
 func StartUIChannel() http.Handler {
-	clients = newClients(func(out chan<- []byte) {
-		// This method is the callback that gets called whenever there's a new
-		// incoming websocket connection.
-		muServices.RLock()
-		defer muServices.RUnlock()
-		for _, s := range services {
-			// Just queue the hello message for the given service for writing
-			// on the new incoming websocket.
-			// We put each call on a separate go routine to avoid any single hello
-			// function from blocking the others, which could result in the UI
-			// hanging.
-			go s.writeHelloMsg(out)
-		}
-	})
-
 	go readLoop(clients.In)
 
 	log.Debugf("Accepting WebSocket connections")

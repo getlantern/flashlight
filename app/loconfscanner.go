@@ -14,7 +14,6 @@ import (
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/loconf"
 	"github.com/getlantern/flashlight/notifier"
-	"github.com/getlantern/flashlight/ui"
 )
 
 // LoconfScanner starts a goroutine to periodically check for new loconf files.
@@ -28,10 +27,11 @@ import (
 // show the announcement or not).
 //
 // Returns a function to stop the loop.
-func LoconfScanner(interval time.Duration, proChecker func() (bool, bool)) (stop func()) {
+func LoconfScanner(interval time.Duration, proChecker func() (bool, bool), iconURL func() string) (stop func()) {
 	loc := &loconfer{
-		log: golog.LoggerFor("loconfer"),
-		r:   rand.New(rand.NewSource(time.Now().UnixNano())),
+		log:     golog.LoggerFor("loconfer"),
+		r:       rand.New(rand.NewSource(time.Now().UnixNano())),
+		iconURL: iconURL,
 	}
 	return loc.scan(interval, proChecker, loc.onLoconf)
 }
@@ -80,8 +80,9 @@ func in(s string, coll []string) bool {
 }
 
 type loconfer struct {
-	log golog.Logger
-	r   *rand.Rand
+	log     golog.Logger
+	r       *rand.Rand
+	iconURL func() string
 }
 
 func (loc *loconfer) onLoconf(lc *loconf.LoConf, isPro bool) {
@@ -150,12 +151,11 @@ func (loc *loconfer) makeAnnouncements(lc *loconf.LoConf, isPro bool) {
 }
 
 func (loc *loconfer) showAnnouncement(a *loconf.Announcement) bool {
-	logo := ui.AddToken("/img/lantern_logo.png")
 	note := &notify.Notification{
 		Title:    a.Title,
 		Message:  a.Message,
 		ClickURL: a.URL,
-		IconURL:  logo,
+		IconURL:  loc.iconURL(),
 	}
 	return notifier.ShowNotification(note, "global-announcement")
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
-	"net/http"
 	"path/filepath"
 	"runtime"
 	"time"
@@ -68,8 +67,7 @@ func Run(httpProxyAddr string,
 	lang func() string,
 	adSwapTargetURL func() string,
 	adBlockingAllowed func() bool,
-	reverseDNS func(host string) string,
-	requestFilter func(*http.Request) (*http.Request, error)) error {
+	reverseDNS func(host string) string) error {
 
 	// check # of goroutines every minute, print the top 5 stacks with most
 	// goroutines if the # exceeds 2000 and is increasing.
@@ -96,7 +94,6 @@ func Run(httpProxyAddr string,
 		adSwapTargetURL,
 		adBlockingAllowed,
 		reverseDNS,
-		requestFilter,
 	)
 	if err != nil {
 		fatalErr := fmt.Errorf("Unable to initialize client: %v", err)
