@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
@@ -27,6 +28,7 @@ import (
 	"github.com/getlantern/tlsdialer"
 	"github.com/getlantern/yaml"
 
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
 )
@@ -439,17 +441,9 @@ func buildModel(cas map[string]*castat, masquerades []*masquerade, useFallbacks 
 				log.Debugf("Skipping fallback %v because of error building dialer: %v", f.Addr, err)
 				continue
 			}
-			conn, err := dialer.Dial("tcp", "http://www.google.com")
-			if err != nil {
-				log.Debugf("Skipping fallback %v because dialing Google failed: %v", f.Addr, err)
-				continue
+			if fallbackOK(f, dialer) {
+				fbs = append(fbs, fb)
 			}
-			if err := conn.Close(); err != nil {
-				log.Debugf("Error closing connection: %v", err)
-			}
-
-			// Use this fallback
-			fbs = append(fbs, fb)
 		}
 	}
 	return map[string]interface{}{
@@ -459,6 +453,27 @@ func buildModel(cas map[string]*castat, masquerades []*masquerade, useFallbacks 
 		"fallbacks":    fbs,
 		"showAds":      showAds,
 		"ftVersion":    ftVersion,
+	}
+}
+
+func fallbackOK(f *chained.ChainedServerInfo, dialer balancer.Dialer) bool {
+	timeout := 30 * time.Second
+	deadline := time.Now().Add(timeout)
+	select {
+	case pd := <-dialer.Preconnected():
+		ctx, cancel := context.WithDeadline(context.Background(), deadline)
+		defer cancel()
+		conn, _, err := pd.DialContext(ctx, "tcp", "http://www.google.com")
+		if err != nil {
+			log.Debugf("Skipping fallback %v because dialing Google failed: %v", f.Addr, err)
+			return false
+		}
+		if err := conn.Close(); err != nil {
+			log.Debugf("Error closing connection: %v", err)
+		}
+		return true
+	case <-time.After(timeout):
+		return false
 	}
 }
 
