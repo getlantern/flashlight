@@ -221,6 +221,8 @@ imports:
   version: ae779d55f96c2944cd5352b40abc42c5d0266a74
   subpackages:
   - filters
+- name: github.com/getlantern/mitm
+  version: 76ff3d6239e2ccf4d7a3e517dc0368c95bc2a618
 - name: github.com/getlantern/proxybench
   version: 17bb0a4ec068dec779b85b87e06b01607a8ce8bd
 - name: github.com/getlantern/redis
