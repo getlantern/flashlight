@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/getlantern/golog"
 )
@@ -23,7 +24,20 @@ func ServeVideo(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 	pr, pw := io.Pipe()
-	go io.Copy(pw, file)
+	go func() {
+		b := make([]byte, 65536)
+		for {
+			n, err := file.Read(b)
+			if n > 0 {
+				pw.Write(b[:n])
+			}
+			if err != nil {
+				return
+			}
+			// simulate laggy connection
+			time.Sleep(1 * time.Second)
+		}
+	}()
 	resp.WriteHeader(http.StatusOK)
 	io.Copy(resp, pr)
 }
