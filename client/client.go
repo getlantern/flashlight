@@ -27,6 +27,7 @@ import (
 	"github.com/getlantern/hidden"
 	"github.com/getlantern/httpseverywhere"
 	"github.com/getlantern/iptool"
+	"github.com/getlantern/mitm"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 	"github.com/getlantern/proxy/filters"
@@ -149,13 +150,24 @@ func NewClient(
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
 
-	client.proxy = proxy.New(&proxy.Opts{
+	var mitmErr error
+	client.proxy, mitmErr = proxy.New(&proxy.Opts{
 		IdleTimeout:  keepAliveIdleTimeout,
 		BufferSource: buffers.Pool,
 		Filter:       filters.FilterFunc(client.filter),
 		OnError:      errorResponse,
 		Dial:         client.dial,
+		MITMOpts: &mitm.Opts{
+			PKFile:       filepath.Join(appdir.General("Lantern"), "mitmkey.pem"),
+			CertFile:     filepath.Join(appdir.General("Lantern"), "mitmcert.pem"),
+			Organization: "Lantern",
+			CommonName:   "lantern",
+			InstallCert:  true,
+		},
 	})
+	if mitmErr != nil {
+		log.Errorf("Unable to initialize MITM: %v", mitmErr)
+	}
 	if adBlockingAllowed() {
 		client.initEasyList()
 	} else {

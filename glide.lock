@@ -218,7 +218,7 @@ imports:
 - name: github.com/getlantern/proxiedsites
   version: 996122c1374578a85a536445d7d7ae88d3ee5a35
 - name: github.com/getlantern/proxy
-  version: 48c563c5d3a12636447a169b786638874ced97a3
+  version: ae779d55f96c2944cd5352b40abc42c5d0266a74
   subpackages:
   - filters
 - name: github.com/getlantern/proxybench
