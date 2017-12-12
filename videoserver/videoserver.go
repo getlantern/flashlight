@@ -1,11 +1,12 @@
 package videoserver
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"os"
-	"time"
+	"os/exec"
+	"path"
+	"strings"
 
 	"github.com/getlantern/golog"
 )
@@ -15,29 +16,16 @@ var (
 )
 
 func ServeVideo(resp http.ResponseWriter, req *http.Request) {
-	video := fmt.Sprintf("videos/%v", req.URL.Query().Get("v"))
-	log.Debugf("Serving video: %v", video)
-	file, err := os.Open(video)
-	if err != nil {
-		log.Errorf("Unable to open video %v: %v", video, err)
-		resp.WriteHeader(http.StatusNotFound)
-		return
-	}
-	pr, pw := io.Pipe()
-	go func() {
-		b := make([]byte, 65536)
-		for {
-			n, err := file.Read(b)
-			if n > 0 {
-				pw.Write(b[:n])
-			}
-			if err != nil {
-				return
-			}
-			// simulate laggy connection
-			time.Sleep(1 * time.Second)
-		}
-	}()
+	videoHash := strings.Split(path.Base(req.URL.Query().Get("v")), ".")[0]
+	log.Debugf("Serving video: %v", videoHash)
+	cmd := exec.Command("ipfs", "cat", videoHash)
+	data, _ := cmd.StdoutPipe()
+	stdErr, _ := cmd.StderrPipe()
+	go io.Copy(os.Stderr, stdErr)
 	resp.WriteHeader(http.StatusOK)
-	io.Copy(resp, pr)
+	go io.Copy(resp, data)
+	err := cmd.Run()
+	if err != nil {
+		log.Errorf("Error reading %v from ipfs: %v", videoHash, err)
+	}
 }
