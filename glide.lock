@@ -596,3 +596,9 @@ testImports:
   version: 2aa2c176b9dab406a6970f6a55f513e8a8c8b18f
   subpackages:
   - assert
+- name: github.com/getlantern/go-cache
+  version: 88b53914f4672fafe9069972c1867222ef02eea1
+  subpackages:
+  - cache
+- name: github.com/getlantern/reconn
+  version: 7053d017511c663a3fc3b3a367b57689b1b2fd9f
