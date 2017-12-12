@@ -46,7 +46,11 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 
 	op := ctx.Value(ctxKeyOp).(*ops.Op)
 	if req.Host == "www.youtube.com" && req.URL.Path == "/watch" {
-		log.Debugf("Requested YouTube Video: %v", req.URL.Query().Get("v"))
+		videoID := req.URL.Query().Get("v")
+		watchOp := ops.Begin("watch_video")
+		watchOp.Set("video_service", "youtube")
+		watchOp.Set("video_id", videoID)
+		watchOp.End()
 	}
 
 	adSwapURL := client.adSwapURL(req)
