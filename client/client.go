@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -150,6 +151,16 @@ func NewClient(
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
 
+	var mitmOpts *mitm.Opts
+	if runtime.GOOS != "android" {
+		mitmOpts = &mitm.Opts{
+			PKFile:       filepath.Join(appdir.General("Lantern"), "mitmkey.pem"),
+			CertFile:     filepath.Join(appdir.General("Lantern"), "mitmcert.pem"),
+			Organization: "Lantern",
+			InstallCert:  true,
+			Domains:      []string{"www.youtube.com"},
+		}
+	}
 	var mitmErr error
 	client.proxy, mitmErr = proxy.New(&proxy.Opts{
 		IdleTimeout:  keepAliveIdleTimeout,
@@ -157,13 +168,7 @@ func NewClient(
 		Filter:       filters.FilterFunc(client.filter),
 		OnError:      errorResponse,
 		Dial:         client.dial,
-		MITMOpts: &mitm.Opts{
-			PKFile:       filepath.Join(appdir.General("Lantern"), "mitmkey.pem"),
-			CertFile:     filepath.Join(appdir.General("Lantern"), "mitmcert.pem"),
-			Organization: "Lantern",
-			CommonName:   "lantern",
-			InstallCert:  true,
-		},
+		MITMOpts:     mitmOpts,
 	})
 	if mitmErr != nil {
 		log.Errorf("Unable to initialize MITM: %v", mitmErr)

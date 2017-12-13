@@ -50,6 +50,7 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 		watchOp := ops.Begin("watch_video")
 		watchOp.Set("video_service", "youtube")
 		watchOp.Set("video_id", videoID)
+		log.Debug("Requested YouTube Video")
 		watchOp.End()
 	}
 
