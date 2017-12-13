@@ -88,7 +88,7 @@ imports:
 - name: github.com/getlantern/edgedetect
   version: f58e865f680868c70f5d114b620b682a39fdaff7
 - name: github.com/getlantern/elevate
-  version: a1e4813b4e263a37d95b569a21cf5a2943acfd26
+  version: f8b1ca464b2193d7ccddfd90a68b7ad2be576917
   subpackages:
   - bin
 - name: github.com/getlantern/ema
@@ -179,7 +179,7 @@ imports:
 - name: github.com/getlantern/kcpwrapper
   version: a35c895f6de73d94ca04369ac0c311cb8a97c0f2
 - name: github.com/getlantern/keyman
-  version: 9d65bff0c88a85449195d54c38322e254b2ac34b
+  version: 6777876f564163a0f298a665676084c855b6dc4e
   subpackages:
   - certimporter
 - name: github.com/getlantern/lampshade
@@ -222,7 +222,7 @@ imports:
   subpackages:
   - filters
 - name: github.com/getlantern/mitm
-  version: 76ff3d6239e2ccf4d7a3e517dc0368c95bc2a618
+  version: 03dcc17acd85e9abdf55336cc9ca01bbae41aad3
 - name: github.com/getlantern/proxybench
   version: 17bb0a4ec068dec779b85b87e06b01607a8ce8bd
 - name: github.com/getlantern/redis
