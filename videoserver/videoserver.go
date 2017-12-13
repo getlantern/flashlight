@@ -45,6 +45,18 @@ func FetchLoop() func() {
 }
 
 func ServeVideo(resp http.ResponseWriter, req *http.Request) {
+	origin := req.Header.Get("Origin")
+	resp.Header().Set("Access-Control-Allow-Origin", origin)
+	if req.Method == "OPTIONS" {
+		resp.Header().Set("Connection", "keep-alive")
+		resp.Header().Set("Access-Control-Allow-Origin", origin)
+		resp.Header().Set("Access-Control-Allow-Methods", "GET")
+		resp.Header().Set("Access-Control-Allow-Headers", req.Header.Get("Access-Control-Request-Headers"))
+		resp.Header().Set("Via", "Lantern Client")
+		resp.Write([]byte("preflight complete"))
+		return
+	}
+
 	if req.URL.RawQuery == "" {
 		serveList(resp, req)
 		return
