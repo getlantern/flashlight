@@ -15,6 +15,7 @@ import (
 const (
 	loConfURL        = "https://raw.githubusercontent.com/getlantern/loconf/master/desktop-ui.json"
 	stagingLoConfURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui-staging.json"
+	popVideosURL     = "https://s3.amazonaws.com/lantern/videos.json"
 )
 
 var (
@@ -68,6 +69,16 @@ type Announcement struct {
 // Get gets announcement via the HTTP client, based on the locale and staging flags.
 func Get(hc *http.Client, isStaging bool) (*LoConf, error) {
 	return get(hc, isStaging, loConfURL, stagingLoConfURL)
+}
+
+// GetPopVideos gets a json of pop videos via the HTTP client. The content is
+// opaque to flashlight.
+func GetPopVideos(hc *http.Client) ([]byte, error) {
+	b, efetch := fetch(hc, bustCache(popVideosURL))
+	if efetch != nil {
+		return nil, errors.Wrap(efetch)
+	}
+	return b, nil
 }
 
 // get gets announcement via the HTTP client, based on the locale and staging flags.
