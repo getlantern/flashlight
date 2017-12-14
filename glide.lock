@@ -179,7 +179,7 @@ imports:
 - name: github.com/getlantern/kcpwrapper
   version: a35c895f6de73d94ca04369ac0c311cb8a97c0f2
 - name: github.com/getlantern/keyman
-  version: 6777876f564163a0f298a665676084c855b6dc4e
+  version: a351523c1c9189303e58c1afe136c700e7900ddd
   subpackages:
   - certimporter
 - name: github.com/getlantern/lampshade
