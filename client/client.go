@@ -158,7 +158,25 @@ func NewClient(
 			CertFile:     filepath.Join(appdir.General("Lantern"), "mitmcert.pem"),
 			Organization: "Lantern",
 			InstallCert:  true,
-			Domains:      []string{"www.youtube.com"},
+			Domains: []string{
+				"*.youtube.com",
+				"*.youtube.com.hk",
+				"*.youtube.hk",
+				"*.youtube.co.jp",
+				"*.youtube.jp",
+				"*.youtube.nl",
+				"*.doubleclick.net",
+				"www.google.com",
+				"www.google.com.hk",
+				"www.google.co.jp",
+				"www.google.nl",
+				"adservice.google.com",
+				"adservice.google.com.hk",
+				"adservice.google.co.jp",
+				"adservice.google.nl",
+				"*.googlesyndication.com",
+				"*.googletagservices.com",
+			},
 		}
 	}
 	var mitmErr error
