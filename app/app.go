@@ -289,8 +289,12 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			return app.AddToken("/img/lantern_logo.png")
 		}))
 		app.AddExitFunc(notifier.NotificationsLoop())
-		app.AddExitFunc(videoserver.FetchLoop())
-
+		stop, err := videoserver.FetchLoop()
+		if err != nil {
+			log.Error(err)
+		} else {
+			app.AddExitFunc(stop)
+		}
 		return true
 	}
 }

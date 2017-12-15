@@ -6,12 +6,15 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/getlantern/appdir"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/golog"
 
+	"github.com/getlantern/flashlight/ipfs"
 	"github.com/getlantern/flashlight/loconf"
 )
 
@@ -20,10 +23,18 @@ var (
 	videoList = eventual.NewValue()
 )
 
-func FetchLoop() func() {
+func FetchLoop() (func(), error) {
+	repoDir := filepath.Join(appdir.General("Lantern"), "ipfs-repo")
+	node, err := ipfs.Start(repoDir, "")
+	if err != nil {
+		return func() {}, err
+	}
 	tk := time.NewTicker(1 * time.Hour)
 	ch := make(chan bool)
-	stop := func() { ch <- true }
+	stop := func() {
+		node.Stop()
+		ch <- true
+	}
 	go func() {
 		for {
 			b, err := loconf.GetPopVideos(http.DefaultClient)
@@ -41,7 +52,7 @@ func FetchLoop() func() {
 			}
 		}
 	}()
-	return stop
+	return stop, nil
 }
 
 func ServeVideo(resp http.ResponseWriter, req *http.Request) {

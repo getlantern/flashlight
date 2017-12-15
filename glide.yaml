@@ -170,6 +170,8 @@ import:
   - gomock
 - package: github.com/golang/glog
 - package: github.com/getlantern/httpseverywhere
+- package: github.com/getlantern/go-ipfs
+- package: github.com/ipfs/go-ipld-format
 testImport:
 - package: github.com/sirupsen/logrus
 - package: github.com/stretchr/testify
