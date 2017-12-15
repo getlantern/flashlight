@@ -172,6 +172,7 @@ import:
 - package: github.com/getlantern/httpseverywhere
 - package: github.com/getlantern/go-ipfs
 - package: github.com/ipfs/go-ipld-format
+- package: github.com/getlantern/ipfswrapper
 testImport:
 - package: github.com/sirupsen/logrus
 - package: github.com/stretchr/testify

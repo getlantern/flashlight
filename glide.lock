@@ -1,5 +1,5 @@
-hash: 5e7086760d6ab3e03b3693d6cf9dccca0c6630d79a7b6dbe75dda95d062e9677
-updated: 2017-12-14T15:54:51.701506009-08:00
+hash: d0c18ab3f0ff6d26226a51471dd065bc94ecb0de17b777b2da6a4516268794b3
+updated: 2017-12-14T17:00:43.203178471-08:00
 imports:
 - name: bazil.org/fuse
   version: e4fcc9a2c7567d1c42861deebeb483315d222262
@@ -158,6 +158,7 @@ imports:
   - Godeps/_workspace/src/github.com/briantigerchow/pubsub
   - Godeps/_workspace/src/github.com/mitchellh/go-homedir
   - Godeps/_workspace/src/github.com/whyrusleeping/chunker
+  - assets
   - blocks/blockstore
   - blockservice
   - core
@@ -278,6 +279,8 @@ imports:
   version: 293a8dd143490b99a1fb1ae28cf1d421f10f296f
 - name: github.com/getlantern/idletiming
   version: 7a71d2e71cf253f64b9610ce7aa9ddfc58aa9b2a
+- name: github.com/getlantern/ipfswrapper
+  version: 0ec2dda6ddb6a89297f04374044ed2e7a586ef48
 - name: github.com/getlantern/iptool
   version: 8723ea29ea42bdb85682c242b8e803aa6f05c9db
 - name: github.com/getlantern/jibber_jabber
@@ -447,6 +450,8 @@ imports:
   - ssdp
 - name: github.com/inconshreveable/go-vhost
   version: 06d84117953b22058c096b49a429ebd4f3d3d97b
+- name: github.com/ipfs/dir-index-html
+  version: 76b6774a477fe6263d445972fe176f3f3b4ea176
 - name: github.com/ipfs/go-block-format
   version: 39aeea2706d2bfa571be9d4fea26741213bc02c7
 - name: github.com/ipfs/go-cid

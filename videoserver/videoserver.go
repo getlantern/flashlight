@@ -11,20 +11,20 @@ import (
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/ipfswrapper"
 
-	"github.com/getlantern/flashlight/ipfs"
 	"github.com/getlantern/flashlight/loconf"
 )
 
 var (
 	log       = golog.LoggerFor("flashlight.videoserver")
 	videoList = eventual.NewValue()
-	ipfsNode  *ipfs.IpfsNode
+	ipfsNode  *ipfswrapper.Node
 )
 
 func FetchLoop() (func(), error) {
 	repoDir := filepath.Join(appdir.General("Lantern"), "ipfs-repo")
-	node, err := ipfs.Start(repoDir, "")
+	node, err := ipfswrapper.Start(repoDir, "")
 	if err != nil {
 		return func() {}, err
 	}
