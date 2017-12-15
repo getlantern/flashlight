@@ -21,7 +21,7 @@ const (
 )
 
 var adSwapJavaScriptInjections = map[string]string{
-	"http://www.googletagservices.com/tag/js/gpt.js": "https://ads.getlantern.org/v1/js/www.googletagservices.com/tag/js/gpt.js",
+	"http://www.googletagservices.com/tag/js/gpt.js": "http://127.0.0.1:8080/v1/js/www.googletagservices.com/tag/js/gpt.js",
 	"http://cpro.baidustatic.com/cpro/ui/c.js":       "https://ads.getlantern.org/v1/js/cpro.baidustatic.com/cpro/ui/c.js",
 }
 
@@ -36,7 +36,19 @@ func (client *Client) handle(conn net.Conn) error {
 	return err
 }
 
-func (client *Client) filter(ctx filters.Context, req *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
+func normalizeExoAd(req *http.Request) (*http.Request, bool) {
+	if strings.Contains(req.Host, "exdynsrv.com") {
+		qvals := req.URL.Query()
+		qvals.Set("p", "https://www.getlantern.org/")
+		req.URL.RawQuery = qvals.Encode()
+		return req, true
+	}
+	return req, false
+}
+
+func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
+	req, ad := normalizeExoAd(r)
+
 	// Add the scheme back for CONNECT requests. It is cleared
 	// intentionally by the standard library, see
 	// https://golang.org/src/net/http/request.go#L938. The easylist
@@ -55,7 +67,7 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 	}
 
 	adSwapURL := client.adSwapURL(req)
-	if adSwapURL == "" && !client.easylist.Allow(req) {
+	if !ad && adSwapURL == "" && !client.easylist.Allow(req) {
 		// Don't record this as proxying
 		op.Cancel()
 		return client.easyblock(ctx, req)
@@ -63,7 +75,7 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 
 	op.UserAgent(req.Header.Get("User-Agent")).OriginFromRequest(req)
 
-	if adSwapURL != "" {
+	if !ad && adSwapURL != "" {
 		return client.redirectAdSwap(ctx, req, adSwapURL, op)
 	}
 
