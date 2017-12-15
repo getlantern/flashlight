@@ -21,7 +21,7 @@ const (
 )
 
 var adSwapJavaScriptInjections = map[string]string{
-	"http://www.googletagservices.com/tag/js/gpt.js": "http://127.0.0.1:8080/v1/js/www.googletagservices.com/tag/js/gpt.js",
+	"http://www.googletagservices.com/tag/js/gpt.js": "https://ads.getlantern.org/v1/js/www.googletagservices.com/tag/js/gpt.js",
 	"http://cpro.baidustatic.com/cpro/ui/c.js":       "https://ads.getlantern.org/v1/js/cpro.baidustatic.com/cpro/ui/c.js",
 }
 
