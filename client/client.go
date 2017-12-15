@@ -166,6 +166,7 @@ func NewClient(
 				"*.youtube.jp",
 				"*.youtube.nl",
 				"*.doubleclick.net",
+				"*.g.doubleclick.net",
 				"www.google.com",
 				"www.google.com.hk",
 				"www.google.co.jp",
