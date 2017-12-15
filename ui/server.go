@@ -14,7 +14,7 @@ import (
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/util"
-	"github.com/getlantern/flashlight/videoserver"
+	// "github.com/getlantern/flashlight/videoserver"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/tarfs"
 	"github.com/skratchdot/open-golang/open"
@@ -101,7 +101,7 @@ func (s *Server) attachHandlers() {
 	}
 
 	s.handle("/startup", http.HandlerFunc(startupHandler))
-	s.handle("/videos", http.HandlerFunc(videoserver.ServeVideo))
+	// s.handle("/videos", http.HandlerFunc(videoserver.ServeVideo))
 	s.handle("/", http.FileServer(fs))
 }
 

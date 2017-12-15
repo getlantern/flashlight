@@ -30,7 +30,7 @@ import (
 	"github.com/getlantern/flashlight/proxiedsites"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ui"
-	"github.com/getlantern/flashlight/videoserver"
+	// "github.com/getlantern/flashlight/videoserver"
 	"github.com/getlantern/flashlight/ws"
 )
 
@@ -289,12 +289,12 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			return app.AddToken("/img/lantern_logo.png")
 		}))
 		app.AddExitFunc(notifier.NotificationsLoop())
-		stop, err := videoserver.FetchLoop()
-		if err != nil {
-			log.Error(err)
-		} else {
-			app.AddExitFunc(stop)
-		}
+		// stop, err := videoserver.FetchLoop()
+		// if err != nil {
+		// 	log.Error(err)
+		// } else {
+		// 	app.AddExitFunc(stop)
+		// }
 		return true
 	}
 }

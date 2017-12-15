@@ -187,6 +187,14 @@ func NewClient(
 		OnError:      errorResponse,
 		Dial:         client.dial,
 		MITMOpts:     mitmOpts,
+		ShouldMITM: func(req *http.Request, upstreamAddr string) bool {
+			userAgent := req.Header.Get("User-Agent")
+			// Only MITM certain browsers
+			// See http://useragentstring.com/pages/useragentstring.php
+			return strings.Contains(userAgent, "Chrome/") || // Chrome
+				strings.Contains(userAgent, "MSIE") || strings.Contains(userAgent, "Trident") || // Internet Explorer
+				strings.Contains(userAgent, "Edge") // Microsoft Edge
+		},
 	})
 	if mitmErr != nil {
 		log.Errorf("Unable to initialize MITM: %v", mitmErr)
