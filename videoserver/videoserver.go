@@ -3,8 +3,6 @@ package videoserver
 import (
 	"io"
 	"net/http"
-	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
@@ -21,6 +19,7 @@ import (
 var (
 	log       = golog.LoggerFor("flashlight.videoserver")
 	videoList = eventual.NewValue()
+	ipfsNode  *ipfs.IpfsNode
 )
 
 func FetchLoop() (func(), error) {
@@ -29,10 +28,11 @@ func FetchLoop() (func(), error) {
 	if err != nil {
 		return func() {}, err
 	}
+	ipfsNode = node
 	tk := time.NewTicker(1 * time.Hour)
 	ch := make(chan bool)
 	stop := func() {
-		node.Stop()
+		ipfsNode.Stop()
 		ch <- true
 	}
 	go func() {
@@ -68,21 +68,20 @@ func ServeVideo(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if req.URL.RawQuery == "" {
+	videoHash := strings.Split(path.Base(req.URL.Query().Get("v")), ".")[0]
+	if videoHash == "" {
 		serveList(resp, req)
 		return
 	}
-	videoHash := strings.Split(path.Base(req.URL.Query().Get("v")), ".")[0]
+
 	log.Debugf("Serving video: %v", videoHash)
-	cmd := exec.Command("ipfs", "cat", videoHash)
-	data, _ := cmd.StdoutPipe()
-	stdErr, _ := cmd.StderrPipe()
-	go io.Copy(os.Stderr, stdErr)
-	resp.WriteHeader(http.StatusOK)
-	go io.Copy(resp, data)
-	err := cmd.Run()
+	reader, err := ipfsNode.GetFile("/ipfs/" + videoHash)
 	if err != nil {
 		log.Errorf("Error reading %v from ipfs: %v", videoHash, err)
+		resp.WriteHeader(http.StatusInternalServerError)
+	} else {
+		resp.WriteHeader(http.StatusOK)
+		go io.Copy(resp, reader)
 	}
 }
 

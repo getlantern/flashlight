@@ -15,7 +15,11 @@ import (
 	node "github.com/ipfs/go-ipld-format"
 	crypto "github.com/libp2p/go-libp2p-crypto"
 	peer "github.com/libp2p/go-libp2p-peer"
+
+	"github.com/getlantern/golog"
 )
+
+var log = golog.LoggerFor("flashlight.ipfs")
 
 type IpfsNode struct {
 	node   *core.IpfsNode
@@ -30,6 +34,13 @@ type IpnsEntry struct {
 }
 
 func Start(repoDir string, pkfile string) (*IpfsNode, error) {
+	if !fsrepo.IsInitialized(repoDir) {
+		log.Debugf("Creating IPFS repo at %v", repoDir)
+		if err := Init(repoDir); err != nil {
+			return nil, err
+		}
+	}
+
 	r, err := fsrepo.Open(repoDir)
 	if err != nil {
 		return nil, err
@@ -74,14 +85,17 @@ func (node *IpfsNode) AddFile(fileName string, name string) (path string, dNode 
 	return coreunix.AddWrapped(node.node, file, name)
 }
 
-func (node *IpfsNode) Get(pt string) (string, error) {
+func (node *IpfsNode) GetFile(pt string) (io.Reader, error) {
 	p := path.Path(pt)
 	dn, err := core.Resolve(node.ctx, node.node.Namesys, node.node.Resolver, p)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
+	return uio.NewDagReader(node.ctx, dn, node.node.DAG)
+}
 
-	reader, err := uio.NewDagReader(node.ctx, dn, node.node.DAG)
+func (node *IpfsNode) Get(pt string) (string, error) {
+	reader, err := node.GetFile(pt)
 	if err != nil {
 		return "", err
 	}
