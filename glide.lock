@@ -129,7 +129,7 @@ imports:
 - name: github.com/getlantern/edgedetect
   version: f58e865f680868c70f5d114b620b682a39fdaff7
 - name: github.com/getlantern/elevate
-  version: f8b1ca464b2193d7ccddfd90a68b7ad2be576917
+  version: 17962ac260bea7f687dda17741a8bcf1aa578033
   subpackages:
   - bin
 - name: github.com/getlantern/ema
