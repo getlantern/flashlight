@@ -280,7 +280,7 @@ imports:
 - name: github.com/getlantern/idletiming
   version: 7a71d2e71cf253f64b9610ce7aa9ddfc58aa9b2a
 - name: github.com/getlantern/ipfswrapper
-  version: 0ec2dda6ddb6a89297f04374044ed2e7a586ef48
+  version: fd9f42a69b608306cba118e658fa0e0b87d0db4a
 - name: github.com/getlantern/iptool
   version: 8723ea29ea42bdb85682c242b8e803aa6f05c9db
 - name: github.com/getlantern/jibber_jabber

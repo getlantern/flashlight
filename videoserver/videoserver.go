@@ -80,8 +80,13 @@ func ServeVideo(resp http.ResponseWriter, req *http.Request) {
 		log.Errorf("Error reading %v from ipfs: %v", videoHash, err)
 		resp.WriteHeader(http.StatusInternalServerError)
 	} else {
-		resp.WriteHeader(http.StatusOK)
-		go io.Copy(resp, reader)
+		n, err := io.Copy(resp, reader)
+		if err != nil {
+			log.Errorf("Error reading %v from ipfs: %v", videoHash, err)
+			resp.WriteHeader(http.StatusInternalServerError)
+		} else {
+			log.Debugf("Served %d bytes for video %v", n, videoHash)
+		}
 	}
 }
 

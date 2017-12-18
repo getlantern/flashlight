@@ -15,7 +15,7 @@ import (
 const (
 	loConfURL        = "https://raw.githubusercontent.com/getlantern/loconf/master/desktop-ui.json"
 	stagingLoConfURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui-staging.json"
-	popVideosURL     = "https://s3.amazonaws.com/lantern/videos.json"
+	popVideosURL     = "https://s3.amazonaws.com/lantern/videos2.json"
 )
 
 var (
