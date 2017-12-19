@@ -177,6 +177,9 @@ func NewClient(
 				"adservice.google.nl",
 				"*.googlesyndication.com",
 				"*.googletagservices.com",
+				"www.baidu.com",
+				"www.baidu.cn",
+				"cpro.baidustatic.com",
 			},
 		}
 	}
