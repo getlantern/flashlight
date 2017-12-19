@@ -37,7 +37,11 @@ func (client *Client) handle(conn net.Conn) error {
 }
 
 func normalizeExoAd(req *http.Request) (*http.Request, bool) {
-	if strings.Contains(req.Host, "exdynsrv.com") {
+	host, _, err := net.SplitHostPort(req.Host)
+	if err != nil {
+		host = req.Host
+	}
+	if strings.HasSuffix(host, ".exdynsrv.com") {
 		qvals := req.URL.Query()
 		qvals.Set("p", "https://www.getlantern.org/")
 		req.URL.RawQuery = qvals.Encode()

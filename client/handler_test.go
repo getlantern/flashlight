@@ -12,22 +12,24 @@ import (
 )
 
 func TestNormalizeExoAd(t *testing.T) {
-	req, _ := http.NewRequest("GET", "http://syndication.exdynsrv.com", nil)
+	doTestNormalizeExoAd(t, "syndication.exdynsrv.com")
+	doTestNormalizeExoAd(t, "syndication.exdynsrv.com:80")
+	doTestNormalizeExoAd(t, "syndication.exdynsrv.com:443")
+
+	req, _ := http.NewRequest("GET", "http://exdynsrv.com.friendlygfw.cn", nil)
+	_, ad := normalizeExoAd(req)
+	assert.False(t, ad)
+}
+
+func doTestNormalizeExoAd(t *testing.T, host string) {
+	req, _ := http.NewRequest("GET", "http://"+host, nil)
 	qvals := req.URL.Query()
 	qvals.Set("p", "https://www.somethingelse.com")
 	req.URL.RawQuery = qvals.Encode()
 
 	req2, ad := normalizeExoAd(req)
-
 	assert.True(t, ad)
-
 	assert.Equal(t, "https://www.getlantern.org/", req2.URL.Query().Get("p"))
-
-	req, _ = http.NewRequest("GET", "http://blah.com", nil)
-
-	_, ad = normalizeExoAd(req)
-
-	assert.False(t, ad)
 }
 
 func TestRewriteHTTPSSuccess(t *testing.T) {
