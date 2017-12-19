@@ -47,7 +47,7 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 	op := ctx.Value(ctxKeyOp).(*ops.Op)
 
 	adSwapURL := client.adSwapURL(req)
-	if adSwapURL == "" && !client.easylist.Allow(req) {
+	if adSwapURL == "" && !strings.Contains(req.URL.Host, ".exdynsrv.com") && !client.easylist.Allow(req) {
 		// Don't record this as proxying
 		op.Cancel()
 		return client.easyblock(ctx, req)
