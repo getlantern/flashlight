@@ -5,10 +5,12 @@ import (
 	"time"
 
 	"github.com/getlantern/bandwidth"
+	"github.com/getlantern/flashlight/ws"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestServeCap(t *testing.T) {
+	ws.StartUIChannel()
 	err := ServeDataCap(func() string {
 		return ""
 	}, func() string {
