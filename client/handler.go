@@ -36,7 +36,22 @@ func (client *Client) handle(conn net.Conn) error {
 	return err
 }
 
+func normalizeExoAd(req *http.Request) (*http.Request, bool) {
+	host, _, err := net.SplitHostPort(req.Host)
+	if err != nil {
+		host = req.Host
+	}
+	if strings.HasSuffix(host, ".exdynsrv.com") {
+		qvals := req.URL.Query()
+		qvals.Set("p", "https://www.getlantern.org/")
+		req.URL.RawQuery = qvals.Encode()
+		return req, true
+	}
+	return req, false
+}
+
 func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
+	req, ad := normalizeExoAd(r)
 	req, err := client.requestFilter(r)
 	if err != nil {
 		req = r
@@ -51,7 +66,7 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 	op := ctx.Value(ctxKeyOp).(*ops.Op)
 
 	adSwapURL := client.adSwapURL(req)
-	if adSwapURL == "" && !client.easylist.Allow(req) {
+	if !ad && adSwapURL == "" && !client.easylist.Allow(req) {
 		// Don't record this as proxying
 		op.Cancel()
 		return client.easyblock(ctx, req)
@@ -59,7 +74,7 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 
 	op.UserAgent(req.Header.Get("User-Agent")).OriginFromRequest(req)
 
-	if adSwapURL != "" {
+	if !ad && adSwapURL != "" {
 		return client.redirectAdSwap(ctx, req, adSwapURL, op)
 	}
 
