@@ -1,14 +1,11 @@
 package videoserver
 
 import (
-	"fmt"
-	"io"
 	"net/http"
 	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 
@@ -82,65 +79,16 @@ func ServeVideo(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var offset, end int
-	partialContent := false
-	if v := req.Header.Get("Range"); v != "" {
-		r := rangeRegexp.FindStringSubmatch(v)
-		if len(r) != 3 {
-			resp.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		var econv error
-		offset, econv = strconv.Atoi(r[1])
-		end, _ = strconv.Atoi(r[2])
-		if econv != nil || offset < 0 || (end > 0 && end <= offset) {
-			resp.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		partialContent = true
-	}
-
 	dag, err := ipfsNode.Get(videoHash)
 	if err != nil {
-		log.Errorf("Error reading %v from ipfs: %v", videoHash, err)
+		log.Errorf("Error reading %s from ipfs: %v", videoHash, err)
 		resp.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	defer dag.Close()
-	var reader io.Reader = dag
-	resp.Header().Set("Accept-Ranges", "bytes")
-	if partialContent {
-		if uint64(end) >= dag.Size() {
-			resp.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		_, eseek := dag.Seek(int64(offset), io.SeekStart)
-		if eseek != nil {
-			log.Error(eseek)
-			resp.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		if end == 0 {
-			end = offset + 1048576 - 1
-		}
-		if uint64(end) >= dag.Size() {
-			end = int(dag.Size() - 1)
-		}
-		crange := fmt.Sprintf("bytes %d-%d/%d", offset, end, dag.Size())
-		resp.Header().Set("Content-Range", crange)
-		length := end - offset + 1
-		resp.Header().Set("Content-Length", strconv.Itoa(length))
-		reader = io.LimitReader(dag, int64(length))
-		resp.WriteHeader(http.StatusPartialContent)
-	}
-	n, ecopy := io.Copy(resp, reader)
-	if ecopy != nil {
-		log.Errorf("Error reading %v from ipfs: %v", videoHash, ecopy)
-		// at this point it can do nothing but silently return
-	} else {
-		log.Debugf("Served %d bytes (%d-%d/%d) for video %v",
-			n, offset, end, dag.Size(), videoHash)
-	}
+	log.Debugf("Serving video %s, total size: %d bytes", videoHash, dag.Size())
+	// TODO: use real file type and modify time
+	http.ServeContent(resp, req, videoHash+".mp4", time.Time{}, dag)
 }
 
 func serveList(resp http.ResponseWriter, req *http.Request) {
