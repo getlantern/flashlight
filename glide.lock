@@ -153,7 +153,7 @@ imports:
   subpackages:
   - cache
 - name: github.com/getlantern/go-ipfs
-  version: 0e107108325f2ceb7681b34f8be7a52038217ea8
+  version: c62515d82a9e9fd05ae22f68f06adae1175cb104
   subpackages:
   - Godeps/_workspace/src/github.com/briantigerchow/pubsub
   - Godeps/_workspace/src/github.com/mitchellh/go-homedir
