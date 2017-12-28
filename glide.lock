@@ -50,7 +50,7 @@ imports:
 - name: github.com/getlantern/appdir
   version: 659a155d06e8f3dd8b9f79d6147445897499b56b
 - name: github.com/getlantern/autoupdate
-  version: 5139f95ec3dd12536fd29939ba07ba6805f63d8f
+  version: 5a7623e46c13dee13e267bce28b284b761dc8045
 - name: github.com/getlantern/balancer
   version: 70e3aff550185f805d2f40933c2bc8c29aefa28d
 - name: github.com/getlantern/bandwidth
