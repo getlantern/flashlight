@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/keighl/mandrill"
@@ -24,7 +25,22 @@ var (
 
 	// Only allowed to call /send_template
 	MandrillAPIKey = "fmYlUdjEpGGonI4NDx9xeA"
+
+	defaultRecipient string
+	mu               sync.RWMutex
 )
+
+func SetDefaultRecipient(address string) {
+	mu.Lock()
+	defer mu.Unlock()
+	defaultRecipient = address
+}
+
+func getDefaultRecipient() string {
+	mu.RLock()
+	defer mu.RUnlock()
+	return defaultRecipient
+}
 
 // Message is a templatized email message
 type Message struct {
@@ -83,9 +99,16 @@ func Send(msg *Message) error {
 
 func sendTemplate(msg *Message) error {
 	client := mandrill.ClientWithKey(MandrillAPIKey)
+	recipient := msg.To
+	if recipient == "" {
+		recipient = getDefaultRecipient()
+	}
+	if recipient == "" {
+		return errors.New("no recipient")
+	}
 	mmsg := &mandrill.Message{
 		FromEmail: msg.From,
-		To:        []*mandrill.To{&mandrill.To{Email: msg.To}},
+		To:        []*mandrill.To{&mandrill.To{Email: recipient}},
 		Subject:   msg.Subject,
 	}
 	if msg.CC != "" {
