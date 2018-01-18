@@ -21,6 +21,7 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxied"
@@ -212,6 +213,7 @@ func run(configDir, locale string,
 			afterStart(session)
 		},
 		func(cfg *config.Global) {
+			email.SetDefaultRecipient(cfg.ReportIssueEmail)
 		}, // onConfigUpdate
 		session,
 		NewStatsTracker(session),

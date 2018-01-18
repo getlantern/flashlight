@@ -23,6 +23,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/datacap"
+	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/notifier"
 	"github.com/getlantern/flashlight/ops"
@@ -370,6 +371,7 @@ func (app *App) afterStart(cl *client.Client) {
 func (app *App) onConfigUpdate(cfg *config.Global) {
 	proxiedsites.Configure(cfg.ProxiedSites)
 	autoupdate.Configure(cfg.UpdateServerURL, cfg.AutoUpdateCA)
+	email.SetDefaultRecipient(cfg.ReportIssueEmail)
 }
 
 // showExistingUi triggers an existing Lantern running on the same system to
