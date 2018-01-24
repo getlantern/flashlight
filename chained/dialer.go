@@ -247,19 +247,19 @@ func (pc *proxyConnection) dialInternal(ctx context.Context, network, addr strin
 	chDone := make(chan bool)
 	go func() {
 		conn, err = pc.doDialInternal(network, addr)
-		chDone <- true
+		select {
+		case chDone <- true:
+		default:
+			if err == nil {
+				log.Debugf("Connection to %s established too late, closing", addr)
+				conn.Close()
+			}
+		}
 	}()
 	select {
 	case <-chDone:
 		return conn, err
 	case <-ctx.Done():
-		go func() {
-			<-chDone
-			if err == nil {
-				log.Debugf("Connection to %s established too late, closing", addr)
-				conn.Close()
-			}
-		}()
 		return nil, ctx.Err()
 	}
 }
