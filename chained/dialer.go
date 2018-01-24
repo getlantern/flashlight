@@ -244,6 +244,11 @@ func (pc *proxyConnection) doDial(ctx context.Context, network, addr string) (ne
 func (pc *proxyConnection) dialInternal(ctx context.Context, network, addr string) (net.Conn, error) {
 	var conn net.Conn
 	var err error
+	if deadline, set := ctx.Deadline(); set {
+		pc.conn.SetDeadline(deadline)
+	} else {
+		pc.conn.SetDeadline(time.Time{})
+	}
 	chDone := make(chan bool)
 	go func() {
 		conn, err = pc.doDialInternal(network, addr)
