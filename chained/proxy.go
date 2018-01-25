@@ -20,10 +20,12 @@ import (
 	"github.com/getlantern/ema"
 	"github.com/getlantern/enhttp"
 	"github.com/getlantern/errors"
+	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/fronted"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/kcpwrapper"
 	"github.com/getlantern/keyman"
@@ -363,8 +365,19 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 	}
 
 	if s.ENHTTPAddr != "" {
-		dial := enhttp.NewDialer(&http.Client{}, fmt.Sprintf("http://%v", s.ENHTTPAddr))
-		p.dialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
+		tr := &frontedTransport{rt: eventual.NewValue()}
+		go func() {
+			rt, ok := fronted.NewDirect(5 * time.Minute)
+			if !ok {
+				log.Errorf("Unable to initialize domain-fronting for enhttp")
+				return
+			}
+			tr.rt.Set(rt)
+		}()
+		dial := enhttp.NewDialer(&http.Client{
+			Transport: tr,
+		}, fmt.Sprintf("https://%v", s.ENHTTPAddr))
+		p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
 			log.Debug("Dialing with enhttp")
 			conn, err := dial("tcp", p.addr)
 			log.Debugf("ENHTTP result: %v", err)

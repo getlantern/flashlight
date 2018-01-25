@@ -34,10 +34,10 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 	}
 
 	dialer, err := ChainedDialer("enhttp-test", &chained.ChainedServerInfo{
-		Addr:       "67.205.172.79:80",
+		Addr:       "df.lantern.io:80",
 		AuthToken:  "pj6mWPafKzP26KZvUf7FIs24eB2ubjUKFvXktodqgUzZULhGeRUT0mwhyHb9jY2b",
 		Trusted:    true,
-		ENHTTPAddr: "67.205.172.79:8080",
+		ENHTTPAddr: "d100fjyl3713ch.cloudfront.net",
 	}, deviceID, client.proTokenGetter)
 	if err != nil {
 		log.Error(err)
