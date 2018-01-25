@@ -101,6 +101,11 @@ type StartResult struct {
 	SOCKS5Addr string
 }
 
+type AdSettings interface {
+	ShowAds() bool
+	TargettedApps(string) string
+}
+
 type Updater autoupdate.Updater
 
 // Start starts a HTTP and SOCKS proxies at random addresses. It blocks up till
@@ -213,6 +218,7 @@ func run(configDir, locale string,
 			afterStart(session)
 		},
 		func(cfg *config.Global) {
+			session.UpdateAdSettings(cfg)
 			email.SetDefaultRecipient(cfg.ReportIssueEmail)
 		}, // onConfigUpdate
 		session,

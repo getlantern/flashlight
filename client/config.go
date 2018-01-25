@@ -6,8 +6,6 @@ import (
 
 // ClientConfig captures configuration information for a Client
 type ClientConfig struct {
-	ShowAds bool // whether or not to show ads for a given client
-
 	DumpHeaders    bool // whether or not to dump headers of requests and responses
 	MasqueradeSets map[string][]*fronted.Masquerade
 }
