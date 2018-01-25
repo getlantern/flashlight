@@ -94,20 +94,10 @@ func forceProxy(s *ChainedServerInfo) {
 }
 
 func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
-<<<<<<< HEAD
 	return newProxy(name, "http", "tcp", s.Addr, s, deviceID, proToken, s.ENHTTPAddr != "", func(ctx context.Context, p *proxy) (net.Conn, error) {
-		op := ops.Begin("dial_to_chained").ChainedProxy(p.addr, p.protocol, p.network)
-		defer op.End()
-		elapsed := mtime.Stopwatch()
-		conn, err := p.tcpDial(op)(ctx)
-		op.DialTime(elapsed(), err)
-		return conn, op.FailIf(err)
-=======
-	return newProxy(name, "http", "tcp", s.Addr, s, deviceID, proToken, false, func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
 			return p.dialCore(op)(ctx)
 		})
->>>>>>> devel
 	})
 }
 
