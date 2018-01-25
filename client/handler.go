@@ -36,11 +36,23 @@ func (client *Client) handle(conn net.Conn) error {
 	return err
 }
 
-func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
-	req, err := client.requestFilter(r)
+func normalizeExoAd(req *http.Request) (*http.Request, bool) {
+	host, _, err := net.SplitHostPort(req.Host)
 	if err != nil {
-		req = r
+		host = req.Host
 	}
+	if strings.HasSuffix(host, ".exdynsrv.com") {
+		qvals := req.URL.Query()
+		qvals.Set("p", "https://www.getlantern.org/")
+		req.URL.RawQuery = qvals.Encode()
+		return req, true
+	}
+	return req, false
+}
+
+func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
+	req, ad := normalizeExoAd(r)
+
 	// Add the scheme back for CONNECT requests. It is cleared
 	// intentionally by the standard library, see
 	// https://golang.org/src/net/http/request.go#L938. The easylist
@@ -51,7 +63,7 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 	op := ctx.Value(ctxKeyOp).(*ops.Op)
 
 	adSwapURL := client.adSwapURL(req)
-	if adSwapURL == "" && !client.easylist.Allow(req) {
+	if !ad && adSwapURL == "" && !client.easylist.Allow(req) {
 		// Don't record this as proxying
 		op.Cancel()
 		return client.easyblock(ctx, req)
@@ -59,7 +71,7 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 
 	op.UserAgent(req.Header.Get("User-Agent")).OriginFromRequest(req)
 
-	if adSwapURL != "" {
+	if !ad && adSwapURL != "" {
 		return client.redirectAdSwap(ctx, req, adSwapURL, op)
 	}
 

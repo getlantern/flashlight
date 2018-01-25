@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
-	"net/http"
 	"path/filepath"
 	"runtime"
 	"time"
@@ -41,7 +40,10 @@ var (
 	// FullyReportedOps are ops which are reported at 100% to borda, irrespective
 	// of the borda sample percentage. This should all be low-volume operations,
 	// otherwise we will utilize too much bandwidth on the client.
-	FullyReportedOps = []string{"client_started", "client_stopped", "connect", "disconnect", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "sysproxy_off_force", "sysproxy_clear", "report_issue", "proxy_rank", "probe"}
+	FullyReportedOps = []string{"client_started", "client_stopped", "connect", "disconnect", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "sysproxy_off_force", "sysproxy_clear", "report_issue", "proxy_rank", "probe", "balancer_dial", "proxy_dial"}
+
+	// Lightweight Ops are ops for which we record less than the full set of dimensions (e.g. omit error)
+	LightweightOps = []string{"balancer_dial", "proxy_dial"}
 )
 
 // Run runs a client proxy. It blocks as long as the proxy is running.
@@ -65,8 +67,7 @@ func Run(httpProxyAddr string,
 	lang func() string,
 	adSwapTargetURL func() string,
 	adBlockingAllowed func() bool,
-	reverseDNS func(host string) string,
-	requestFilter func(*http.Request) (*http.Request, error)) error {
+	reverseDNS func(host string) string) error {
 
 	// check # of goroutines every minute, print the top 5 stacks with most
 	// goroutines if the # exceeds 2000 and is increasing.
@@ -93,7 +94,6 @@ func Run(httpProxyAddr string,
 		adSwapTargetURL,
 		adBlockingAllowed,
 		reverseDNS,
-		requestFilter,
 	)
 	if err != nil {
 		fatalErr := fmt.Errorf("Unable to initialize client: %v", err)
@@ -195,6 +195,14 @@ func applyClientConfig(client *client.Client, cfg *config.Global, deviceID strin
 		op := ctx["op"]
 		switch t := op.(type) {
 		case string:
+			for _, lightweightOp := range LightweightOps {
+				if t == lightweightOp {
+					log.Tracef("Removing error and error_text for op %v", lightweightOp)
+					delete(ctx, "error")
+					delete(ctx, "error_text")
+				}
+			}
+
 			for _, fullyReportedOp := range FullyReportedOps {
 				if t == fullyReportedOp {
 					log.Tracef("Including fully reported op %v in borda sample", fullyReportedOp)

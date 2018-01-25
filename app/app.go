@@ -22,6 +22,8 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/datacap"
+	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/notifier"
 	"github.com/getlantern/flashlight/ops"
@@ -57,7 +59,7 @@ type App struct {
 
 	chExitFuncs     chan func()
 	chLastExitFuncs chan func()
-	uiDomain        string
+	uiServer        *ui.Server
 }
 
 // Init initializes the App's state
@@ -78,10 +80,9 @@ func (app *App) Init() {
 		isDisconnected := disconnected.(bool)
 		app.statsTracker.SetDisconnected(isDisconnected)
 	})
-	addDataCapListener(func(hitDataCap bool) {
+	datacap.AddDataCapListener(func(hitDataCap bool) {
 		app.statsTracker.SetHitDataCap(hitDataCap)
 	})
-	app.uiDomain = app.Flags["ui-domain"].(string)
 }
 
 // LogPanicAndExit logs a panic and then exits the application. This function
@@ -127,10 +128,6 @@ func (app *App) Run() {
 			socksAddr = defaultSOCKSProxyAddress
 		}
 
-		uiFilter := func(req *http.Request) (*http.Request, error) {
-			return req, nil
-		}
-
 		err := flashlight.Run(
 			listenAddr,
 			socksAddr,
@@ -158,11 +155,11 @@ func (app *App) Run() {
 					// pro user (or status unknown), don't ad swap
 					return ""
 				}
-				return ui.AddToken("/") + "#/plans"
+				return app.PlansURL()
+
 			},
 			func() bool { return true },              // always allow ad blocking on desktop
 			func(addr string) string { return addr }, // no dnsgrab reverse lookups on desktop
-			uiFilter,
 		)
 		if err != nil {
 			app.Exit(err)
@@ -245,19 +242,21 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		}
 
 		log.Debugf("Starting client UI at %v", uiaddr)
+
 		// ui will handle empty uiaddr correctly
-		err = ui.Start(uiaddr, startupURL, localHTTPToken(settings), app.uiDomain,
-			settings.GetSystemProxy)
-		if err != nil {
+		if app.uiServer, err = ui.StartServer(uiaddr,
+			startupURL,
+			localHTTPToken(settings),
+			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
+			&ui.PathHandler{Pattern: "/data", Handler: ws.StartUIChannel()},
+		); err != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		}
-		ui.Handle("/pro/", pro.APIHandler(settings))
-		ui.Handle("/data", ws.StartUIChannel())
 
 		if e := settings.StartService(); e != nil {
 			app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
 		}
-		settings.SetUIAddr(ui.GetUIAddr())
+		settings.SetUIAddr(app.uiServer.GetUIAddr())
 
 		if err = app.statsTracker.StartService(); err != nil {
 			log.Errorf("Unable to serve stats to UI: %v", err)
@@ -265,7 +264,9 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 		setupUserSignal(app.Connect, app.Disconnect)
 
-		err = serveBandwidth()
+		err = datacap.ServeDataCap(func() string {
+			return app.AddToken("/img/lantern_logo.png")
+		}, app.PlansURL, isProUser)
 		if err != nil {
 			log.Errorf("Unable to serve bandwidth to UI: %v", err)
 		}
@@ -284,23 +285,13 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			app.AddExitFunc(stopAnalytics)
 		}
 
-		app.AddExitFunc(LoconfScanner(4*time.Hour, isProUser))
+		app.AddExitFunc(LoconfScanner(4*time.Hour, isProUser, func() string {
+			return app.AddToken("/img/lantern_logo.png")
+		}))
 		app.AddExitFunc(notifier.NotificationsLoop())
 
 		return true
 	}
-}
-
-// localHTTPToken fetches the local HTTP token from disk if it's there, and
-// otherwise creates a new one and stores it.
-func localHTTPToken(set *Settings) string {
-	tok := set.GetLocalHTTPToken()
-	if tok == "" {
-		t := ui.LocalHTTPToken()
-		set.SetLocalHTTPToken(t)
-		return t
-	}
-	return tok
 }
 
 // Connect turns on proxying
@@ -315,23 +306,9 @@ func (app *App) Disconnect() {
 	settings.setBool(SNDisconnected, true)
 }
 
-// GetSetting gets the in memory setting with the name specified by attr
-func (app *App) GetSetting(name SettingName) interface{} {
-	if val, ok := settingMeta[name]; ok {
-		switch val.sType {
-		case stBool:
-			return settings.getBool(name)
-		case stNumber:
-			return settings.getInt64(name)
-		case stString:
-			return settings.getString(name)
-		}
-	} else {
-		log.Errorf("Looking for non-existent setting? %v", name)
-	}
-
-	// should never reach here.
-	return nil
+// GetLanguage returns the user language
+func (app *App) GetLanguage() string {
+	return settings.GetLanguage()
 }
 
 // OnSettingChange sets a callback cb to get called when attr is changed from UI.
@@ -371,7 +348,7 @@ func (app *App) afterStart(cl *client.Client) {
 		// URL and the proxy server are all up and running to avoid
 		// race conditions where we change the proxy setup while the
 		// UI server and proxy server are still coming up.
-		ui.ShowRoot("startup", "lantern")
+		app.uiServer.ShowRoot("startup", "lantern")
 	} else {
 		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
 	}
@@ -394,19 +371,19 @@ func (app *App) afterStart(cl *client.Client) {
 func (app *App) onConfigUpdate(cfg *config.Global) {
 	proxiedsites.Configure(cfg.ProxiedSites)
 	autoupdate.Configure(cfg.UpdateServerURL, cfg.AutoUpdateCA)
+	email.SetDefaultRecipient(cfg.ReportIssueEmail)
 }
 
 // showExistingUi triggers an existing Lantern running on the same system to
 // open a browser to the Lantern start page.
 func (app *App) showExistingUI(addr string) error {
-	url := "http://" + addr + "/startup"
+	url := "http://" + addr + "/" + localHTTPToken(settings) + "/startup"
 	log.Debugf("Hitting local URL: %v", url)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		log.Debugf("Could not build request: %s", err)
 		return err
 	}
-	req.Header.Set("Origin", url)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -502,7 +479,7 @@ func (app *App) WaitForExit() error {
 	return err.(error)
 }
 
-// Indicates whether or not the app is pro
+// IsPro indicates whether or not the app is pro
 func (app *App) IsPro() bool {
 	isPro, _ := isProUserFast()
 	return isPro
@@ -512,4 +489,34 @@ func recordStopped() {
 	ops.Begin("client_stopped").
 		SetMetricSum("uptime", time.Now().Sub(startTime).Seconds()).
 		End()
+}
+
+// ShouldShowUI determines if we should show the UI or not.
+func (app *App) ShouldShowUI() bool {
+	return app.ShowUI
+}
+
+// OnTrayShow indicates the user has selected to show lantern from the tray.
+func (app *App) OnTrayShow() {
+	app.uiServer.ShowRoot("show-lantern", "tray")
+}
+
+// OnTrayUpgrade indicates the user has selected to upgrade lantern from the tray.
+func (app *App) OnTrayUpgrade() {
+	app.uiServer.Show(app.PlansURL(), "proupgrade", "tray")
+}
+
+// PlansURL returns the URL for accessing the checkout/plans page directly.
+func (app *App) PlansURL() string {
+	return app.uiServer.AddToken("/") + "#/plans"
+}
+
+// AddToken adds our secure token to a given request path.
+func (app *App) AddToken(path string) string {
+	return app.uiServer.AddToken(path)
+}
+
+// GetTranslations adds our secure token to a given request path.
+func (app *App) GetTranslations(filename string) ([]byte, error) {
+	return ui.Translations(filename)
 }

@@ -66,7 +66,6 @@ func newClients(onConnect ConnectFunc) *clientChannels {
 		onConnect:     onConnect,
 	}
 
-	go c.writeAll()
 	return c
 }
 

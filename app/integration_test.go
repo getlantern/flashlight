@@ -512,4 +512,5 @@ var kcpConf = map[string]interface{}{
 	"conn":        1,
 	"keepalive":   10,
 	"listen":      "127.0.0.1:8975",
+	"remoteaddr":  "127.0.0.1:8975",
 }

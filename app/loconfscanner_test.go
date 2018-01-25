@@ -39,11 +39,11 @@ func TestParsing(t *testing.T) {
 	logger := golog.LoggerFor("loconfloop-test")
 	stop := LoconfScanner(4*time.Hour, func() (bool, bool) {
 		return true, false
-	})
+	}, func() string { return "" })
 	stop()
 	stop = LoconfScanner(4*time.Hour, func() (bool, bool) {
 		return true, true
-	})
+	}, func() string { return "" })
 	logger.Debug("Stopping")
 	stop()
 

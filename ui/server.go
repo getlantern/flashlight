@@ -2,69 +2,139 @@ package ui
 
 import (
 	"fmt"
+	"mime"
 	"net"
 	"net/http"
 	"net/http/httputil"
-	"net/url"
-	"path"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/util"
+	"github.com/getlantern/golog"
+	"github.com/getlantern/tarfs"
 	"github.com/skratchdot/open-golang/open"
 )
 
-type server struct {
+func init() {
+	// http.FileServer relies on OS to guess mime type, which can be wrong.
+	// Override system default for current process.
+	_ = mime.AddExtensionType(".css", "text/css")
+	_ = mime.AddExtensionType(".js", "application/javascript")
+}
+
+var (
+	log          = golog.LoggerFor("flashlight.ui")
+	fs           *tarfs.FileSystem
+	translations = eventual.NewValue()
+)
+
+// PathHandler contains a request path pattern and an HTTP handler for that
+// pattern.
+type PathHandler struct {
+	Pattern string
+	Handler http.Handler
+}
+
+// Server serves the local UI.
+type Server struct {
 	// The address to listen on, in ":port" form if listen on all interfaces.
 	listenAddr string
 	// The address client should access. Available only if the server is started.
 	accessAddr     string
 	externalURL    string
+	requestPath    string
 	localHTTPToken string
 	listener       net.Listener
 	mux            *http.ServeMux
 	onceOpenExtURL sync.Once
 
-	// The domain to serve the UI on - can be anything really.
-	uiDomain    string
-	useUIDomain func() bool
+	translations eventual.Value
 }
 
-// newServer creates a new UI server.
+// StartServer creates and starts a new UI server.
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func newServer(extURL, localHTTPToken, uiDomain string, useUIDomain func() bool) *server {
-	return &server{
+func StartServer(requestedAddr, extURL, localHTTPToken string,
+	handlers ...*PathHandler) (*Server, error) {
+	server := newServer(extURL, localHTTPToken)
+
+	for _, h := range handlers {
+		server.handle(h.Pattern, h.Handler)
+	}
+
+	if err := server.start(requestedAddr); err != nil {
+		return nil, err
+	}
+	return server, nil
+}
+
+func newServer(extURL, localHTTPToken string) *Server {
+	requestPath := ""
+	if localHTTPToken != "" {
+		requestPath = "/" + localHTTPToken
+	}
+	server := &Server{
 		externalURL:    overrideManotoURL(extURL),
-		localHTTPToken: localHTTPToken,
+		requestPath:    requestPath,
 		mux:            http.NewServeMux(),
-		uiDomain:       uiDomain,
-		useUIDomain:    useUIDomain,
+		localHTTPToken: localHTTPToken,
+		translations:   eventual.NewValue(),
 	}
+	server.unpackUI()
+
+	server.attachHandlers()
+	return server
 }
 
-func overrideManotoURL(u string) string {
-	if strings.HasPrefix(u, "https://www.manoto1.com/") || strings.HasPrefix(u, "https://www.facebook.com/manototv") {
-		// Here we make sure to override any old manoto URLs with the latest.
-		return "https://www.manototv.com/iran?utm_campaign=manotolantern"
+func (s *Server) attachHandlers() {
+	// This allows a second Lantern running on the system to trigger the existing
+	// Lantern to show the UI, or at least try to
+	startupHandler := func(resp http.ResponseWriter, req *http.Request) {
+		s.ShowRoot("existing", "lantern")
+		resp.WriteHeader(http.StatusOK)
 	}
-	return u
+
+	s.handle("/startup", http.HandlerFunc(startupHandler))
+	s.handle("/", http.FileServer(fs))
 }
 
-// Handle let the Server to handle the pattern using handler.
-func (s *server) Handle(pattern string, handler http.Handler) {
-	log.Debugf("Adding handler for %v", pattern)
-	s.mux.Handle(pattern,
-		s.checkOrigin(util.NoCacheHandler(handler)))
+// handle directs the underlying server to handle the given pattern at both
+// the secure token path and the raw request path. In the case of the raw
+// request path, Lantern looks for the token in the Referer HTTP header and
+// rejects the request if it's not present.
+func (s *Server) handle(pattern string, handler http.Handler) {
+	// When the token is included in the request path, we need to strip it in
+	// order to serve the UI correctly (i.e. the static UI tarfs FileSystem knows
+	// nothing about the request path).
+	if s.requestPath != "" {
+		// If the request path is empty this will panic on adding the same pattern
+		// twice.
+		s.mux.Handle(s.requestPath+pattern, util.NoCacheHandler(s.strippingHandler(handler)))
+	}
+
+	// In the naked request cast, we need to verify the token is there in the
+	// referer header.
+	s.mux.Handle(pattern, checkRequestForToken(util.NoCacheHandler(handler), s.localHTTPToken))
+}
+
+// strippingHandler removes the secure request path from the URL so that the
+// static file server can properly serve it.
+func (s *Server) strippingHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Debugf("Stripping path from %v", r.URL.Path)
+		r.URL.Path = strings.Replace(r.URL.Path, s.requestPath, "", -1)
+		h.ServeHTTP(w, r)
+	})
 }
 
 // starts server listen at addr in host:port format, or arbitrary local port if
 // addr is empty.
-func (s *server) start(requestedAddr string) error {
+func (s *Server) start(requestedAddr string) error {
 	var listenErr error
 	for _, addr := range addrCandidates(requestedAddr) {
 		log.Debugf("Lantern UI server start listening at %v", addr)
@@ -120,12 +190,17 @@ serve:
 	}
 }
 
-// show opens the UI in a browser. Note we know the UI server is
+// ShowRoot shows the UI at the root level (default).
+func (s *Server) ShowRoot(campaign, medium string) {
+	s.Show(s.rootURL(), campaign, medium)
+}
+
+// Show opens the UI in a browser. Note we know the UI server is
 // *listening* at this point as long as Start is correctly called prior
 // to this method. It may not be reading yet, but since we're the only
 // ones reading from those incoming sockets the fact that reading starts
 // asynchronously is not a problem. destURL indicates which URL to open.
-func (s *server) show(destURL, campaign, medium string) {
+func (s *Server) Show(destURL, campaign, medium string) {
 	open := func(u string, t time.Duration) {
 		go func() {
 			time.Sleep(t)
@@ -143,7 +218,7 @@ func (s *server) show(destURL, campaign, medium string) {
 // to this method. It may not be reading yet, but since we're the only
 // ones reading from those incoming sockets the fact that reading starts
 // asynchronously is not a problem.
-func (s *server) doShow(destURL, campaign, medium string, open func(string, time.Duration)) {
+func (s *Server) doShow(destURL, campaign, medium string, open func(string, time.Duration)) {
 	campaignURL, err := analytics.AddCampaign(destURL, campaign, "", medium)
 	var uiURL string
 	if err != nil {
@@ -163,94 +238,76 @@ func (s *server) doShow(destURL, campaign, medium string, open func(string, time
 	}
 }
 
-// getUIAddr returns the current UI address.
-func (s *server) getUIAddr() string {
+// GetUIAddr returns the current UI address.
+func (s *Server) GetUIAddr() string {
 	return s.accessAddr
 }
 
-func (s *server) rootURL() string {
-	return s.addToken("/")
+// GetListenAddr returns the address the UI server is listening at.
+func (s *Server) GetListenAddr() string {
+	return s.listenAddr
 }
 
-func (s *server) stop() error {
+func (s *Server) rootURL() string {
+	return s.AddToken("/")
+}
+
+func (s *Server) stop() error {
 	return s.listener.Close()
 }
 
-// addToken adds the UI domain and custom request token to the specified
+// AddToken adds the UI domain and custom request token to the specified
 // request path. Without that token, the backend will reject the request to
 // avoid web sites detecting Lantern.
-func (s *server) addToken(in string) string {
-	return util.SetURLParam("http://"+path.Join(s.accessAddr, in), "token", s.localHTTPToken)
+func (s *Server) AddToken(path string) string {
+	return "http://" + s.activeDomain() + s.requestPath + path
 }
 
-func (s *server) checkOrigin(h http.Handler) http.Handler {
+func (s *Server) activeDomain() string {
+	return s.accessAddr
+}
+
+func checkRequestForToken(h http.Handler, tok string) http.Handler {
 	check := func(w http.ResponseWriter, r *http.Request) {
-		var clientURL string
-
-		referer := r.Header.Get("Referer")
-		if referer != "" {
-			clientURL = referer
+		if HasToken(r, tok) {
+			h.ServeHTTP(w, r)
+		} else {
+			msg := fmt.Sprintf("No token found in. %v", r)
+			closeConn(msg, w, r)
 		}
-
-		origin := r.Header.Get("Origin")
-		if origin != "" {
-			clientURL = origin
-		}
-
-		token := r.URL.Query().Get("token")
-		tokenMatch := token == s.localHTTPToken
-
-		if clientURL == "" {
-			switch {
-			case r.URL.Path == "/":
-				// we don't bother with additional checks for root URL
-				h.ServeHTTP(w, r)
-				return
-			case tokenMatch:
-				h.ServeHTTP(w, r)
-				return
-			case token != "":
-				msg := fmt.Sprintf("Token '%v' did not match the expected '%v...'", token, s.localHTTPToken)
-				s.forbidden(msg, w, r)
-				return
-			default:
-				msg := fmt.Sprintf("Access to %v was denied because no valid Origin or Referer headers were provided.", r.URL)
-				s.forbidden(msg, w, r)
-				return
-			}
-		}
-
-		if strictOriginCheck && !tokenMatch {
-			originURL, err := url.Parse(clientURL)
-			if err != nil {
-				log.Errorf("Could not parse client URL %v", clientURL)
-				return
-			}
-			originHost := originURL.Host
-			// when Lantern is listening on all interfaces, e.g., allow remote
-			// connections, listenAddr is in ":port" form. Using HasSuffix
-			if !strings.HasSuffix(originHost, s.listenAddr) {
-				msg := fmt.Sprintf("Origin was '%v' but expecting: '%v'", originHost, s.listenAddr)
-				s.forbidden(msg, w, r)
-				return
-			}
-		}
-
-		h.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(check)
 }
 
-// forbidden returns a 403 forbidden response to the client while also dumping
-// headers and logs for debugging.
-func (s *server) forbidden(msg string, w http.ResponseWriter, r *http.Request) {
-	log.Error(msg)
-	s.dumpRequestHeaders(r)
-	// Return forbidden but do not reveal any details in the body.
-	http.Error(w, "", http.StatusForbidden)
+// HasToken checks for our secure token in the HTTP request.
+func HasToken(r *http.Request, tok string) bool {
+	if strings.Contains(r.URL.Path, tok) {
+		return true
+	}
+	referer := r.Header.Get("referer")
+	if strings.Contains(referer, tok) {
+		return true
+	}
+	return false
 }
 
-func (s *server) dumpRequestHeaders(r *http.Request) {
+// closeConn closes the client connection without sending a response.
+func closeConn(msg string, w http.ResponseWriter, r *http.Request) {
+	hj, ok := w.(http.Hijacker)
+	if !ok {
+		log.Error("Response doesn't allow hijacking!")
+		return
+	}
+	connIn, _, err := hj.Hijack()
+	if err != nil {
+		log.Errorf("Unable to hijack connection: %s", err)
+		return
+	}
+	dumpRequestHeaders(r)
+	connIn.Close()
+}
+
+func dumpRequestHeaders(r *http.Request) {
 	dump, err := httputil.DumpRequest(r, false)
 	if err == nil {
 		log.Debugf("Request:\n%s", string(dump))
@@ -267,4 +324,33 @@ func addrCandidates(requested string) []string {
 		return append([]string{requested}, defaultUIAddresses...)
 	}
 	return defaultUIAddresses
+}
+
+func overrideManotoURL(u string) string {
+	if strings.HasPrefix(u, "https://www.manoto1.com/") || strings.HasPrefix(u, "https://www.facebook.com/manototv") {
+		// Here we make sure to override any old manoto URLs with the latest.
+		return "https://www.manototv.com/iran?utm_campaign=manotolantern"
+	}
+	return u
+}
+
+func (s *Server) unpackUI() {
+	var err error
+	fs, err = tarfs.New(Resources, "")
+	if err != nil {
+		// Panicking here because this shouldn't happen at runtime unless the
+		// resources were incorrectly embedded.
+		panic(fmt.Errorf("Unable to open tarfs filesystem: %v", err))
+	}
+	translations.Set(fs.SubDir("locale"))
+}
+
+// Translations returns the translations for a given locale file.
+func Translations(filename string) ([]byte, error) {
+	log.Tracef("Accessing translations %v", filename)
+	tr, ok := translations.Get(30 * time.Second)
+	if !ok || tr == nil {
+		return nil, fmt.Errorf("Could not get traslation for file name: %v", filename)
+	}
+	return tr.(*tarfs.FileSystem).Get(filename)
 }
