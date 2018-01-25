@@ -23,6 +23,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/datacap"
+	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/notifier"
 	"github.com/getlantern/flashlight/ops"
@@ -372,6 +373,7 @@ func (app *App) onConfigUpdate(cfg *config.Global) {
 	autoupdate.Configure(cfg.UpdateServerURL, cfg.AutoUpdateCA, func() string {
 		return app.AddToken("/img/lantern_logo.png")
 	})
+	email.SetDefaultRecipient(cfg.ReportIssueEmail)
 }
 
 // showExistingUi triggers an existing Lantern running on the same system to

@@ -56,7 +56,7 @@ imports:
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda
-  version: ceb28d7a89f397b5952b8cb67efe952ce9a7ae25
+  version: 03848add4b027c1691e59ac0e63497d001513556
   subpackages:
   - client
 - name: github.com/getlantern/buuid

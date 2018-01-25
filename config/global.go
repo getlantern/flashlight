@@ -21,6 +21,7 @@ type Global struct {
 	UpdateServerURL       string
 	BordaReportInterval   time.Duration
 	BordaSamplePercentage float64
+	ReportIssueEmail      string
 	Client                *client.ClientConfig
 
 	// ProxiedSites are domains that get routed through Lantern rather than accessed directly.
