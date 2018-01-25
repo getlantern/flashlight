@@ -102,6 +102,10 @@ type StartResult struct {
 }
 
 type AdSettings interface {
+	AppId() string
+	AdUnitId() string
+	VideoAdunitId() string
+	InterstitialAdId() string
 	ShowAds() bool
 	TargettedApps(string) string
 }

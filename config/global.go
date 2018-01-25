@@ -22,36 +22,16 @@ type Global struct {
 	BordaReportInterval   time.Duration
 	BordaSamplePercentage float64
 	ReportIssueEmail      string
-	AdSettings            *AdSettings
 	Client                *client.ClientConfig
+
+	// AdSettings are the settings to use for showing ads to mobile clients
+	AdSettings            *AdSettings
 
 	// ProxiedSites are domains that get routed through Lantern rather than accessed directly.
 	ProxiedSites *proxiedsites.Config
 
 	// TrustedCAs are trusted CAs for domain fronting domains only.
 	TrustedCAs []*fronted.CA
-}
-
-// AdOptions are settings to use when showing ads to Android clients
-type AdSettings struct {
-	ShowAds bool
-	TargettedApps map[string]string
-}
-
-// showAds is a global indicator to show ads to clients at all
-func (cfg *Global) ShowAds() bool {
-	if cfg.AdSettings != nil {
-		return cfg.AdSettings.ShowAds
-	}
-	return false
-}
-
-// targettedApps returns the apps to show splash screen ads for
-func (cfg *Global) TargettedApps(region string) string {
-	if cfg.AdSettings != nil {
-		return cfg.AdSettings.TargettedApps[region]
-	}
-	return ""
 }
 
 // newGlobal creates a new global config with otherwise nil values set.
