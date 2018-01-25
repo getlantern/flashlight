@@ -22,7 +22,7 @@ type Global struct {
 	BordaReportInterval   time.Duration
 	BordaSamplePercentage float64
 	ReportIssueEmail      string
-	AdSettings            AdSettings
+	AdSettings            *AdSettings
 	Client                *client.ClientConfig
 
 	// ProxiedSites are domains that get routed through Lantern rather than accessed directly.
@@ -40,12 +40,18 @@ type AdSettings struct {
 
 // showAds is a global indicator to show ads to clients at all
 func (cfg *Global) ShowAds() bool {
-	return cfg.AdSettings.ShowAds
+	if cfg.AdSettings != nil {
+		return cfg.AdSettings.ShowAds
+	}
+	return false
 }
 
 // targettedApps returns the apps to show splash screen ads for
 func (cfg *Global) TargettedApps(region string) string {
-	return cfg.AdSettings.TargettedApps[region]
+	if cfg.AdSettings != nil {
+		return cfg.AdSettings.TargettedApps[region]
+	}
+	return ""
 }
 
 // newGlobal creates a new global config with otherwise nil values set.
