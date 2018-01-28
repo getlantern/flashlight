@@ -25,7 +25,7 @@ type Global struct {
 	Client                *client.ClientConfig
 
 	// AdSettings are the settings to use for showing ads to mobile clients
-	AdSettings            *AdSettings
+	AdSettings *AdSettings
 
 	// ProxiedSites are domains that get routed through Lantern rather than accessed directly.
 	ProxiedSites *proxiedsites.Config

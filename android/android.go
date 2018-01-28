@@ -110,7 +110,7 @@ type AdSettings interface {
 	Percentage() float64
 	Provider() string
 	NativeAdId() string
-	TargettedApps(string) string
+	TargetedApps(string) string
 }
 
 type Updater autoupdate.Updater
@@ -225,7 +225,9 @@ func run(configDir, locale string,
 			afterStart(session)
 		},
 		func(cfg *config.Global) {
-			session.UpdateAdSettings(cfg)
+			if cfg.AdSettings != nil {
+				session.UpdateAdSettings(cfg)
+			}
 			email.SetDefaultRecipient(cfg.ReportIssueEmail)
 		}, // onConfigUpdate
 		session,

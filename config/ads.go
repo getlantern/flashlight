@@ -6,25 +6,25 @@ import (
 
 // AdOptions are settings to use when showing ads to Android clients
 type AdSettings struct {
-	ShowAds bool
-	Percentage float64
-	Provider string
-	TargettedApps map[string]string
-	Admob *Admob
-	InMobi *InMobi
+	ShowAds      bool
+	Percentage   float64
+	Provider     string
+	TargetedApps map[string]string
+	Admob        *Admob
+	InMobi       *InMobi
 }
 
 type Admob struct {
-	AppId string
-	AdunitId string
+	AppId            string
+	AdunitId         string
 	InterstitialAdId string
-	VideoAdunitId string
+	VideoAdunitId    string
 }
 
 type InMobi struct {
-	AppId string
+	AppId            string
 	InterstitialAdId string
-	NativeAdId string
+	NativeAdId       string
 }
 
 // showAds is a global indicator to show ads to clients at all
@@ -50,9 +50,9 @@ func (cfg *Global) Percentage() float64 {
 }
 
 // targettedApps returns the apps to show splash screen ads for
-func (cfg *Global) TargettedApps(region string) string {
+func (cfg *Global) TargetedApps(region string) string {
 	if cfg.AdSettings != nil {
-		return cfg.AdSettings.TargettedApps[region]
+		return cfg.AdSettings.TargetedApps[region]
 	}
 	return ""
 }
@@ -73,7 +73,7 @@ func (cfg *Global) AdunitId() string {
 }
 
 func (cfg *Global) InterstitialAdId() string {
-	if cfg.AdSettings == nil  {
+	if cfg.AdSettings == nil {
 		return ""
 	}
 	if strings.EqualFold(cfg.AdSettings.Provider, "inmobi") {
