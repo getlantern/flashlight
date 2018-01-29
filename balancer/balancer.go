@@ -292,7 +292,6 @@ func (bd *balancedDial) dial() (conn net.Conn, err error) {
 			return conn, nil
 		}
 
-		log.Debugf("Error: %v", err)
 		bd.onFailure(pc, failedUpstream, err)
 		bd.attempts++
 		if !bd.advanceToNextDialer() {
