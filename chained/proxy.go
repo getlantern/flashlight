@@ -96,11 +96,15 @@ func forceProxy(s *ChainedServerInfo) {
 }
 
 func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
-	return newProxy(name, "http", "tcp", s.Addr, s, deviceID, proToken, s.ENHTTPAddr != "", func(ctx context.Context, p *proxy) (net.Conn, error) {
+	proxy, err := newProxy(name, "http", "tcp", s.Addr, s, deviceID, proToken, s.ENHTTPURL != "", func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
 			return p.dialCore(op)(ctx)
 		})
 	})
+	if proxy != nil && s.ENHTTPURL != "" {
+		proxy.lastResort = true
+	}
+	return proxy, err
 }
 
 func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
@@ -307,6 +311,7 @@ type proxy struct {
 	proToken          func() string
 	trusted           bool
 	preferred         bool
+	lastResort        bool
 	doDialServer      func(context.Context, *proxy) (net.Conn, error)
 	emaLatency        *ema.EMA
 	kcpConfig         *KCPConfig
@@ -364,7 +369,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		}
 	}
 
-	if s.ENHTTPAddr != "" {
+	if s.ENHTTPURL != "" {
 		tr := &frontedTransport{rt: eventual.NewValue()}
 		go func() {
 			rt, ok := fronted.NewDirect(5 * time.Minute)
@@ -376,11 +381,9 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		}()
 		dial := enhttp.NewDialer(&http.Client{
 			Transport: tr,
-		}, fmt.Sprintf("https://%v", s.ENHTTPAddr))
+		}, s.ENHTTPURL)
 		p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
-			log.Debug("Dialing with enhttp")
 			conn, err := dial("tcp", p.addr)
-			log.Debugf("ENHTTP result: %v", err)
 			return conn, 0, err
 		}
 	}
@@ -495,6 +498,11 @@ func (p *proxy) updateLatency(latency time.Duration, err error) {
 // value is updated from the time to dial the proxy, or the utility of the
 // pluggable transport, e.g., lampshade can measure the RTT of ping packets.
 func (p *proxy) EstLatency() time.Duration {
+	if p.lastResort {
+		// For last-resort proxies, return a really  high value to make sure they
+		// get deprioritized.
+		return 1000 * time.Second
+	}
 	return p.emaLatency.GetDuration()
 }
 
@@ -517,6 +525,11 @@ func (p *proxy) EstBandwidth() float64 {
 		// For preferred proxies, return a really high value to make sure they get
 		// prioritized.
 		return 1000000
+	}
+	if p.lastResort {
+		// For last-resort proxies, return a really  low value to make sure they get
+		// deprioritized.
+		return 1
 	}
 	return float64(atomic.LoadInt64(&p.abe)) / 1000
 }

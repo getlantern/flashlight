@@ -1,5 +1,5 @@
 hash: e98e01159403666c8fa91dd9b76c23bcbc15e36193c7c0eb84e6d7c5e0677b59
-updated: 2018-01-25T14:20:45.538526-06:00
+updated: 2018-01-26T14:01:38.698118-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a3ad5df6c9e7dc8117f55958b4ce99bf1e0fe291
@@ -94,7 +94,7 @@ imports:
 - name: github.com/getlantern/ema
   version: d906ee7c3465210c328abbe6ea0f855db9db679c
 - name: github.com/getlantern/enhttp
-  version: 6e3689ed175652b0591e17cc68f6782c95a29335
+  version: d18e33ba3a88d96f2b4087be312a67f14dfaebd2
 - name: github.com/getlantern/errors
   version: e9c0296368b736086adb20832549567064224854
 - name: github.com/getlantern/event
@@ -294,7 +294,7 @@ imports:
   subpackages:
   - gomock
 - name: github.com/golang/protobuf
-  version: c65a0412e71e8b9b3bfd22925720d23c0f054237
+  version: 925541529c1fa6821df4e44ce2723319eb2be768
   subpackages:
   - proto
   - ptypes
@@ -369,7 +369,7 @@ imports:
   subpackages:
   - adblock
 - name: github.com/rcrowley/go-metrics
-  version: e181e095bae94582363434144c61a9653aff6e50
+  version: 8732c616f52954686704c8645fe1a9d59e9df7c1
 - name: github.com/retailnext/hllpp
   version: 6e8b6d394466a6f3719bcd7f14988bbfb02ff087
 - name: github.com/rickar/props
@@ -435,7 +435,7 @@ imports:
 - name: github.com/Yawning/chacha20
   version: e3b1f968fc6397b51d963fee8ec8711a47bc0ce8
 - name: golang.org/x/crypto
-  version: 3d37316aaa6bd9929127ac9a527abf408178ea7b
+  version: 0efb9460aaf800c6376acf625be2853bceac2e06
   subpackages:
   - blowfish
   - cast5
@@ -473,12 +473,12 @@ imports:
   - proxy
   - trace
 - name: golang.org/x/oauth2
-  version: b28fcf2b08a19742b43084fb40ab78ac6c3d8067
+  version: a032972e28060ca4f5644acffae3dfc268cc09db
   subpackages:
   - google
   - jwt
 - name: golang.org/x/sys
-  version: 03467258950d845cd1877eab69461b98e8c09219
+  version: ff2a66f350cefa5c93a634eadb5d25bb60c85a9c
   repo: https://github.com/golang/sys
   vcs: git
   subpackages:
@@ -510,7 +510,7 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: 5769e0273602e7240317df8a169e311904e19519
+  version: 0bd008f5fadb62d228f12b18d016709e8139a7af
   subpackages:
   - balancer
   - balancer/base

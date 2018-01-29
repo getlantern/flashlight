@@ -48,7 +48,9 @@ type ChainedServerInfo struct {
 	// KCPSettings: If specified, traffic will be tunneled over KCP
 	KCPSettings map[string]interface{}
 
-	ENHTTPAddr string
+	// The URL at which to access a domain-fronting server farm using the enhttp
+	// protocol.
+	ENHTTPURL string
 }
 
 func (s *ChainedServerInfo) ptSetting(name string) string {
