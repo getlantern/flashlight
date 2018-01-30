@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/getlantern/golog"
@@ -46,22 +47,76 @@ var (
 		fronted: "http://d33pfmbpauhmvd.cloudfront.net/proxies.yaml.gz",
 	}
 
-	// ProxyConfigPollInterval determines how frequently to fetch proxies.yaml
-	ProxyConfigPollInterval = 1 * time.Minute
+	// DefaultProxyConfigPollInterval determines how frequently to fetch proxies.yaml
+	DefaultProxyConfigPollInterval = 1 * time.Minute
+
+	// DefaultGlobalConfigPollInterval determines how frequently to fetch global.yaml
+	DefaultGlobalConfigPollInterval = 24 * time.Hour
 )
 
-// Init initializes the config setup for both fetching per-user proxies as well
-// as the global config.
+// Init determines the URLs at which to fetch proxy and global config and
+// passes those to InitWithURLs, which initializes the config setup for both
+// fetching per-user proxies as well as the global config.
 func Init(configDir string, flags map[string]interface{},
 	authConfig common.AuthConfig, proxiesDispatch func(interface{}),
-	globalDispatch func(interface{})) {
+	origGlobalDispatch func(interface{}), useDualFetcher bool) {
 	staging := isStaging(flags)
+	proxyConfigURLs := checkOverrides(flags, getProxyURLs(staging), "proxies.yaml.gz")
+	globalConfigURLs := checkOverrides(flags, getGlobalURLs(staging), "global.yaml.gz")
+
+	InitWithURLs(configDir, flags, authConfig, proxiesDispatch,
+		origGlobalDispatch, proxyConfigURLs, globalConfigURLs, useDualFetcher)
+}
+
+// InitWithURLs initializes the config setup for both fetching per-user proxies
+// as well as the global config given a set of URLs for fetching proxy and
+// global config
+func InitWithURLs(configDir string, flags map[string]interface{},
+	authConfig common.AuthConfig, origProxiesDispatch func(interface{}),
+	origGlobalDispatch func(interface{}), proxyURLs *chainedFrontedURLs,
+	globalURLs *chainedFrontedURLs, useDualFetcher bool) {
+	var mx sync.RWMutex
+	globalConfigPollInterval := DefaultGlobalConfigPollInterval
+	proxyConfigPollInterval := DefaultProxyConfigPollInterval
+
+	globalDispatchCh := make(chan interface{})
+	proxiesDispatchCh := make(chan interface{})
+	go func() {
+		for cfg := range globalDispatchCh {
+			origGlobalDispatch(cfg)
+		}
+	}()
+	go func() {
+		for cfg := range proxiesDispatchCh {
+			origProxiesDispatch(cfg)
+		}
+	}()
+
+	globalDispatch := func(cfg interface{}) {
+		globalConfig, ok := cfg.(*Global)
+		if ok {
+			mx.Lock()
+			if globalConfig.GlobalConfigPollInterval > 0 {
+				globalConfigPollInterval = globalConfig.GlobalConfigPollInterval
+			}
+			if globalConfig.ProxyConfigPollInterval > 0 {
+				proxyConfigPollInterval = globalConfig.ProxyConfigPollInterval
+			}
+			mx.Unlock()
+		}
+		globalDispatchCh <- cfg
+	}
+
+	proxiesDispatch := func(cfg interface{}) {
+		proxiesDispatchCh <- cfg
+	}
+
 	// These are the options for fetching the per-user proxy config.
 	proxyOptions := &options{
 		saveDir:    configDir,
 		obfuscate:  obfuscate(flags),
 		name:       "proxies.yaml",
-		urls:       checkOverrides(flags, getProxyURLs(staging), "proxies.yaml.gz"),
+		urls:       proxyURLs,
 		authConfig: authConfig,
 		unmarshaler: func(bytes []byte) (interface{}, error) {
 			servers := make(map[string]*chained.ChainedServerInfo)
@@ -75,8 +130,13 @@ func Init(configDir string, flags map[string]interface{},
 		},
 		dispatch:     proxiesDispatch,
 		embeddedData: generated.EmbeddedProxies,
-		sleep:        ProxyConfigPollInterval,
-		sticky:       isSticky(flags),
+		sleep: func() time.Duration {
+			mx.RLock()
+			defer mx.RUnlock()
+			return proxyConfigPollInterval
+		},
+		sticky:         isSticky(flags),
+		useDualFetcher: useDualFetcher,
 	}
 
 	pipeConfig(proxyOptions)
@@ -86,7 +146,7 @@ func Init(configDir string, flags map[string]interface{},
 		saveDir:    configDir,
 		obfuscate:  obfuscate(flags),
 		name:       "global.yaml",
-		urls:       checkOverrides(flags, getGlobalURLs(staging), "global.yaml.gz"),
+		urls:       globalURLs,
 		authConfig: authConfig,
 		unmarshaler: func(bytes []byte) (interface{}, error) {
 			gl := newGlobal()
@@ -101,8 +161,13 @@ func Init(configDir string, flags map[string]interface{},
 		},
 		dispatch:     globalDispatch,
 		embeddedData: generated.GlobalConfig,
-		sleep:        24 * time.Hour,
-		sticky:       false,
+		sleep: func() time.Duration {
+			mx.RLock()
+			defer mx.RUnlock()
+			return globalConfigPollInterval
+		},
+		sticky:         false,
+		useDualFetcher: useDualFetcher,
 	}
 
 	pipeConfig(globalOptions)

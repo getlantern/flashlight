@@ -101,7 +101,7 @@ func TestProxying(t *testing.T) {
 			assert.True(t, getVal("probe_rtt") > 0)
 		}
 	}
-	config.ProxyConfigPollInterval = 100 * time.Millisecond
+	config.DefaultProxyConfigPollInterval = 100 * time.Millisecond
 
 	// Web server serves known content for testing
 	httpAddr, httpsAddr, err := startWebServer(t)

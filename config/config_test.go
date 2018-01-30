@@ -3,7 +3,11 @@ package config
 import (
 	"errors"
 	"io/ioutil"
+	"net"
+	"net/http"
 	"os"
+	"strconv"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -14,6 +18,7 @@ import (
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config/generated"
+	"github.com/getlantern/flashlight/proxied"
 )
 
 // TestInvalidFile test an empty or malformed config file
@@ -111,7 +116,11 @@ func TestPollProxies(t *testing.T) {
 	os.Rename(fi.Name(), tempName)
 
 	urls := proxiesURLs
-	go cfg.poll(&authConfig{}, proxyChan, urls, 1*time.Hour)
+	fetcher := newFetcher(&authConfig{}, proxied.ParallelPreferChained(), urls)
+	dispatch := func(cfg interface{}) {
+		proxyChan <- cfg
+	}
+	go cfg.poll(dispatch, fetcher, func() time.Duration { return 1 * time.Hour })
 	proxies := (<-proxyChan).(map[string]*chained.ChainedServerInfo)
 
 	assert.True(t, len(proxies) > 0)
@@ -147,8 +156,15 @@ func TestPollGlobal(t *testing.T) {
 	cfg := newConfig(file, &options{
 		unmarshaler: globalUnmarshaler,
 	})
-
-	fi, err := os.Stat(file)
+	var fi os.FileInfo
+	var err error
+	for i := 1; i <= 400; i++ {
+		fi, err = os.Stat(file)
+		if err == nil {
+			break
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
 	if !assert.Nil(t, err) {
 		return
 	}
@@ -156,7 +172,34 @@ func TestPollGlobal(t *testing.T) {
 	tempName := fi.Name() + ".stored"
 	os.Rename(fi.Name(), tempName)
 
-	go cfg.poll(&authConfig{}, configChan, globalURLs, 1*time.Hour)
+	l, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Fatalf("Unable to listen: %s", err)
+	}
+
+	hs := &http.Server{
+		Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+			http.ServeFile(resp, req, "./fetched-global.yaml.gz")
+		}),
+	}
+	go func() {
+		if err = hs.Serve(l); err != nil {
+			t.Fatalf("Unable to serve: %v", err)
+		}
+	}()
+
+	port := l.Addr().(*net.TCPAddr).Port
+	url := "http://localhost:" + strconv.Itoa(port)
+	globalConfigURLs := &chainedFrontedURLs{
+		chained: url,
+		fronted: url,
+	}
+
+	fetcher := newFetcher(&authConfig{}, &http.Transport{}, globalConfigURLs)
+	dispatch := func(cfg interface{}) {
+		configChan <- cfg
+	}
+	go cfg.poll(dispatch, fetcher, func() time.Duration { return 1 * time.Hour })
 
 	var fetched *Global
 	select {
@@ -184,6 +227,67 @@ func TestPollGlobal(t *testing.T) {
 		assert.NotNil(t, fi)
 		assert.True(t, fi.ModTime().After(mtime), "Incorrect modification times")
 	}
+
+	// Just restore the original file.
+	os.Rename(tempName, file)
+}
+
+func TestPollIntervals(t *testing.T) {
+	fronted.ConfigureForTest(t)
+	file := "./fetched-global.yaml"
+	cfg := newConfig(file, &options{
+		unmarshaler: globalUnmarshaler,
+	})
+	var fi os.FileInfo
+	var err error
+	for i := 1; i <= 400; i++ {
+		fi, err = os.Stat(file)
+		if err == nil {
+			break
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
+	if !assert.Nil(t, err) {
+		return
+	}
+	tempName := fi.Name() + ".stored"
+	os.Rename(fi.Name(), tempName)
+
+	l, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Fatalf("Unable to listen: %s", err)
+	}
+
+	var reqCount uint64
+	hs := &http.Server{
+		Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+			atomic.AddUint64(&reqCount, 1)
+			http.ServeFile(resp, req, "./fetched-global.yaml.gz")
+		}),
+	}
+	go func() {
+		if err = hs.Serve(l); err != nil {
+			t.Fatalf("Unable to serve: %v", err)
+		}
+	}()
+
+	port := l.Addr().(*net.TCPAddr).Port
+	url := "http://localhost:" + strconv.Itoa(port)
+	configURLs := &chainedFrontedURLs{
+		chained: url,
+		fronted: url,
+	}
+	pollInterval := 500 * time.Millisecond
+	waitTime := pollInterval*2 + (200 * time.Millisecond)
+
+	fetcher := newFetcher(&authConfig{}, &http.Transport{}, configURLs)
+	dispatch := func(cfg interface{}) {}
+	go cfg.poll(dispatch, fetcher, func() time.Duration { return pollInterval })
+
+	time.Sleep(waitTime)
+
+	finalReqCount := atomic.LoadUint64(&reqCount)
+	assert.Equal(t, 3, int(finalReqCount), "should have fetched config every %v", pollInterval)
 
 	// Just restore the original file.
 	os.Rename(tempName, file)

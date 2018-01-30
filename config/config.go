@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"reflect"
 	"time"
@@ -31,7 +32,7 @@ type Config interface {
 
 	// Poll polls for new configs from a remote server and saves them to disk for
 	// future runs.
-	poll(common.AuthConfig, chan interface{}, *chainedFrontedURLs, time.Duration)
+	poll(func(interface{}), Fetcher, func() time.Duration)
 }
 
 type config struct {
@@ -84,11 +85,15 @@ type options struct {
 	embeddedData []byte
 
 	// sleep the time to sleep between config fetches.
-	sleep time.Duration
+	sleep func() time.Duration
 
 	// sticky specifies whether or not to only use the local config and not
 	// update it with remote data.
 	sticky bool
+
+	// useDualFetcher specifies whether to fetch configs from fronted and chained
+	// URLs.
+	useDualFetcher bool
 }
 
 // pipeConfig creates a new config pipeline for reading a specified type of
@@ -100,24 +105,19 @@ type options struct {
 // 3. Configs fetched remotely, and those will be piped back over and over
 //   again as the remote configs change (but only if they change).
 func pipeConfig(opts *options) {
-
-	configChan := make(chan interface{})
-
-	go func() {
-		var lastCfg interface{}
-		for {
-			cfg := <-configChan
-			a := yamlRoundTrip(lastCfg)
-			b := yamlRoundTrip(cfg)
-			if reflect.DeepEqual(a, b) {
-				log.Debug("Config unchanged, ignoring")
-			} else {
-				log.Debug("Dispatching updated config")
-				opts.dispatch(cfg)
-				lastCfg = cfg
-			}
+	var lastCfg interface{}
+	dispatch := func(cfg interface{}) {
+		a := lastCfg
+		b := yamlRoundTrip(cfg)
+		if reflect.DeepEqual(a, b) {
+			log.Debug("Config unchanged, ignoring")
+		} else {
+			log.Debug("Dispatching updated config")
+			opts.dispatch(cfg)
+			lastCfg = yamlRoundTrip(cfg)
 		}
-	}()
+	}
+
 	configPath, err := client.InConfigDir(opts.saveDir, opts.name)
 	if err != nil {
 		log.Errorf("Could not get config path? %v", err)
@@ -132,17 +132,22 @@ func pipeConfig(opts *options) {
 			log.Errorf("Could not load embedded config %v", errr)
 		} else {
 			log.Debugf("Sending embedded config for %v", opts.name)
-			configChan <- embedded
+			dispatch(embedded)
 		}
 	} else {
 		log.Debugf("Sending saved config for %v", opts.name)
-		configChan <- saved
+		dispatch(saved)
 	}
 
 	// Now continually poll for new configs and pipe them back to the dispatch
 	// function.
 	if !opts.sticky {
-		go conf.poll(opts.authConfig, configChan, opts.urls, opts.sleep)
+		rt := proxied.ParallelPreferChained()
+		if !opts.useDualFetcher {
+			rt = &http.Transport{}
+		}
+		fetcher := newFetcher(opts.authConfig, rt, opts.urls)
+		go conf.poll(dispatch, fetcher, opts.sleep)
 	} else {
 		log.Debugf("Using sticky config")
 	}
@@ -241,10 +246,7 @@ func (conf *config) embedded(data []byte, fileName string) (interface{}, error) 
 	return conf.unmarshaler(bytes)
 }
 
-func (conf *config) poll(uc common.AuthConfig,
-	configChan chan interface{}, urls *chainedFrontedURLs, sleep time.Duration) {
-	fetcher := newFetcher(uc, proxied.ParallelPreferChained(), urls)
-
+func (conf *config) poll(dispatch func(interface{}), fetcher Fetcher, sleep func() time.Duration) {
 	for {
 		if bytes, err := fetcher.fetch(); err != nil {
 			log.Errorf("Error fetching config: %v", err)
@@ -260,9 +262,9 @@ func (conf *config) poll(uc common.AuthConfig,
 			// we did these on go routines, for example.
 			conf.saveChan <- cfg
 			log.Debugf("Sent to save chan")
-			configChan <- cfg
+			dispatch(cfg)
 		}
-		time.Sleep(sleep)
+		time.Sleep(sleep())
 	}
 }
 
