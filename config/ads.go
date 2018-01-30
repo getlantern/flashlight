@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-// AdOptions are settings to use when showing ads to Android clients
+// AdSettings are settings to use when showing ads to Android clients
 type AdSettings struct {
 	ShowAds      bool
 	Percentage   float64

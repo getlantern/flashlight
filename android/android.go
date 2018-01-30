@@ -225,9 +225,7 @@ func run(configDir, locale string,
 			afterStart(session)
 		},
 		func(cfg *config.Global) {
-			if cfg.AdSettings != nil {
-				session.UpdateAdSettings(cfg)
-			}
+			session.UpdateAdSettings(cfg)
 			email.SetDefaultRecipient(cfg.ReportIssueEmail)
 		}, // onConfigUpdate
 		session,
