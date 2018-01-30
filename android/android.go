@@ -101,16 +101,18 @@ type StartResult struct {
 	SOCKS5Addr string
 }
 
+// AdSettings is an interface for retrieving mobile ad settings from the
+// global config
 type AdSettings interface {
 	AppId() string
 	AdunitId() string
 	VideoAdunitId() string
 	InterstitialAdId() string
-	ShowAds() bool
-	Percentage() float64
-	Provider() string
+	Enabled() bool
+	GetPercentage() float64
+	GetProvider() string
 	NativeAdId() string
-	TargetedApps(string) string
+	GetTargetedApps(string) string
 }
 
 type Updater autoupdate.Updater
@@ -225,7 +227,7 @@ func run(configDir, locale string,
 			afterStart(session)
 		},
 		func(cfg *config.Global) {
-			session.UpdateAdSettings(cfg)
+			session.UpdateAdSettings(cfg.AdSettings)
 			email.SetDefaultRecipient(cfg.ReportIssueEmail)
 		}, // onConfigUpdate
 		session,

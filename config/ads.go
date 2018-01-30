@@ -28,71 +28,71 @@ type InMobi struct {
 }
 
 // showAds is a global indicator to show ads to clients at all
-func (cfg *Global) ShowAds() bool {
-	if cfg.AdSettings != nil {
-		return cfg.AdSettings.ShowAds
+func (settings *AdSettings) Enabled() bool {
+	if settings != nil {
+		return settings.ShowAds
 	}
 	return false
 }
 
-func (cfg *Global) Provider() string {
-	if cfg.AdSettings != nil {
-		return cfg.AdSettings.Provider
+func (settings *AdSettings) GetProvider() string {
+	if settings != nil {
+		return settings.Provider
 	}
 	return ""
 }
 
-func (cfg *Global) Percentage() float64 {
-	if cfg.AdSettings != nil {
-		return cfg.AdSettings.Percentage
+func (settings *AdSettings) GetPercentage() float64 {
+	if settings != nil {
+		return settings.Percentage
 	}
 	return 0
 }
 
 // targettedApps returns the apps to show splash screen ads for
-func (cfg *Global) TargetedApps(region string) string {
-	if cfg.AdSettings != nil {
-		return cfg.AdSettings.TargetedApps[region]
+func (settings *AdSettings) GetTargetedApps(region string) string {
+	if settings != nil {
+		return settings.TargetedApps[region]
 	}
 	return ""
 }
 
-func (cfg *Global) AppId() string {
-	if cfg.AdSettings != nil && cfg.AdSettings.Admob != nil {
-		log.Debugf("Admob id is %s", cfg.AdSettings.Admob.AppId)
-		return cfg.AdSettings.Admob.AppId
+func (settings *AdSettings) AppId() string {
+	if settings != nil && settings.Admob != nil {
+		log.Debugf("Admob id is %s", settings.Admob.AppId)
+		return settings.Admob.AppId
 	}
 	return ""
 }
 
-func (cfg *Global) AdunitId() string {
-	if cfg.AdSettings != nil && cfg.AdSettings.Admob != nil {
-		return cfg.AdSettings.Admob.AdunitId
+func (settings *AdSettings) AdunitId() string {
+	if settings != nil && settings.Admob != nil {
+		return settings.Admob.AdunitId
 	}
 	return ""
 }
 
-func (cfg *Global) InterstitialAdId() string {
-	if cfg.AdSettings == nil {
+func (settings *AdSettings) InterstitialAdId() string {
+	if settings == nil {
 		return ""
 	}
-	if strings.EqualFold(cfg.AdSettings.Provider, "inmobi") {
-		return cfg.AdSettings.InMobi.InterstitialAdId
+	if strings.EqualFold(settings.Provider, "inmobi") {
+		return settings.InMobi.InterstitialAdId
 	} else {
-		return cfg.AdSettings.Admob.InterstitialAdId
+		return settings.Admob.InterstitialAdId
 	}
 }
 
-func (cfg *Global) NativeAdId() string {
-	if cfg.AdSettings != nil && cfg.AdSettings.InMobi != nil {
-		return cfg.AdSettings.InMobi.NativeAdId
+func (settings *AdSettings) NativeAdId() string {
+	if settings != nil && settings.InMobi != nil {
+		return settings.InMobi.NativeAdId
 	}
 	return ""
 }
 
-func (cfg *Global) VideoAdunitId() string {
-	if cfg.AdSettings != nil && cfg.AdSettings.Admob != nil {
-		return cfg.AdSettings.Admob.VideoAdunitId
+func (settings *AdSettings) VideoAdunitId() string {
+	if settings != nil && settings.Admob != nil {
+		return settings.Admob.VideoAdunitId
 	}
 	return ""
 }
