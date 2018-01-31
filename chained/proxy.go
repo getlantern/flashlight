@@ -499,7 +499,7 @@ func (p *proxy) updateLatency(latency time.Duration, err error) {
 // pluggable transport, e.g., lampshade can measure the RTT of ping packets.
 func (p *proxy) EstLatency() time.Duration {
 	if p.lastResort {
-		// For last-resort proxies, return a really  high value to make sure they
+		// For last-resort proxies, return a really high value to make sure they
 		// get deprioritized.
 		return 1000 * time.Second
 	}
@@ -527,9 +527,9 @@ func (p *proxy) EstBandwidth() float64 {
 		return 1000000
 	}
 	if p.lastResort {
-		// For last-resort proxies, return a really  low value to make sure they get
+		// For last-resort proxies, return a really low value to make sure they get
 		// deprioritized.
-		return 1
+		return 0.00001
 	}
 	return float64(atomic.LoadInt64(&p.abe)) / 1000
 }
