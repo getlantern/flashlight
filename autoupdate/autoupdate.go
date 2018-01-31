@@ -62,24 +62,24 @@ func enableAutoupdate() {
 
 func watchForUpdate() {
 	log.Debugf("Software version: %s", Version)
-	var sleepTime time.Duration
 	for {
 		newVersion, err := autoupdate.ApplyNext(&autoupdate.Config{
 			CurrentVersion: Version,
+			CheckInterval:  4 * time.Hour,
 			URL:            getUpdateURL(),
 			PublicKey:      PublicKey,
 			HTTPClient:     httpClient.Load().(*http.Client),
 		})
-
 		if err == nil {
 			notifyUser(newVersion)
-			sleepTime = 24 * time.Hour
-			log.Debugf("Got update for version %s, wait %v for next check", newVersion, sleepTime)
+			log.Debugf("Got update for version %s", newVersion)
 		} else {
-			sleepTime = time.Minute
-			log.Debugf("Error getting update, retry in %v: %v", sleepTime, err)
+			// unrecoverable error which tends to happen again
+			log.Error(err)
 		}
-		time.Sleep(sleepTime)
+		// At this point we either updated the binary or failed to recover from a
+		// update error, let's wait a bit longer before looking for another update.
+		time.Sleep(24 * time.Hour)
 	}
 }
 
