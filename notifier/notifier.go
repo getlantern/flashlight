@@ -72,7 +72,9 @@ func loopFor(delay time.Duration) (stop func()) {
 			case n := <-ch:
 				n.note.Sender = "com.getlantern.lantern"
 				n.note.AutoDismissAfter = notificationTimeout
-				n.note.ClickLabel = i18n.T("BACKEND_CLICK_LABEL")
+				if n.note.ClickLabel == "" {
+					n.note.ClickLabel = i18n.T("BACKEND_CLICK_LABEL_OPEN")
+				}
 				if err := notifier.Notify(n.note); err != nil {
 					log.Errorf("Could not notify? %v", err)
 					n.chResult <- false
