@@ -243,12 +243,13 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 		log.Debugf("Starting client UI at %v", uiaddr)
 
+		wsChannel := ws.NewUIChannel()
 		// ui will handle empty uiaddr correctly
 		if app.uiServer, err = ui.StartServer(uiaddr,
 			startupURL,
 			localHTTPToken(settings),
 			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
-			&ui.PathHandler{Pattern: "/data", Handler: ws.StartUIChannel()},
+			&ui.PathHandler{Pattern: "/data", Handler: wsChannel.Start()},
 		); err != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		}
@@ -271,7 +272,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			log.Errorf("Unable to serve bandwidth to UI: %v", err)
 		}
 
-		err = serveEmailProxy()
+		err = serveEmailProxy(wsChannel)
 		if err != nil {
 			log.Errorf("Unable to serve mandrill to UI: %v", err)
 		}
