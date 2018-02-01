@@ -96,15 +96,11 @@ func forceProxy(s *ChainedServerInfo) {
 }
 
 func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
-	proxy, err := newProxy(name, "http", "tcp", s.Addr, s, deviceID, proToken, s.ENHTTPURL != "", func(ctx context.Context, p *proxy) (net.Conn, error) {
+	return newProxy(name, "http", "tcp", s.Addr, s, deviceID, proToken, s.ENHTTPURL != "", func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
 			return p.dialCore(op)(ctx)
 		})
 	})
-	if proxy != nil && s.ENHTTPURL != "" {
-		proxy.lastResort = true
-	}
-	return proxy, err
 }
 
 func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
@@ -344,6 +340,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		deviceID:        deviceID,
 		proToken:        proToken,
 		trusted:         trusted,
+		lastResort:      s.ENHTTPURL != "",
 		doDialServer:    dialServer,
 		emaLatency:      ema.NewDuration(0, 0.8),
 		forceRecheckCh:  make(chan bool, 1),
