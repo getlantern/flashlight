@@ -55,6 +55,8 @@ func (c testSession) AdBlockingAllowed() bool       { return false }
 
 func (c testSession) UpdateStats(string, string, string, int, int) {}
 
+func (c testSession) UpdateAdSettings(AdSettings) {}
+
 func TestProxying(t *testing.T) {
 
 	tmpDir, err := ioutil.TempDir("", "testconfig")

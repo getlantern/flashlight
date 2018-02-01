@@ -20,6 +20,7 @@ type Settings interface {
 type Session interface {
 	common.AuthConfig
 	SetCountry(string)
+	UpdateAdSettings(AdSettings)
 	UpdateStats(string, string, string, int, int)
 	SetStaging(bool)
 	ShowSurvey(string)

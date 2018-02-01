@@ -370,7 +370,9 @@ func (app *App) afterStart(cl *client.Client) {
 
 func (app *App) onConfigUpdate(cfg *config.Global) {
 	proxiedsites.Configure(cfg.ProxiedSites)
-	autoupdate.Configure(cfg.UpdateServerURL, cfg.AutoUpdateCA)
+	autoupdate.Configure(cfg.UpdateServerURL, cfg.AutoUpdateCA, func() string {
+		return app.AddToken("/img/lantern_logo.png")
+	})
 	email.SetDefaultRecipient(cfg.ReportIssueEmail)
 }
 
