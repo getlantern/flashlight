@@ -15,13 +15,14 @@ import (
 )
 
 func TestEmailProxy(t *testing.T) {
-	s := httptest.NewServer(ws.StartUIChannel())
+	channel := ws.NewUIChannel()
+	s := httptest.NewServer(channel.Start())
 	defer s.Close()
 	// avoid panicking when attaching settings to the email.
 	settings = loadSettings("version", "revisionDate", "buildDate")
 	err := serveEmailProxy()
 	assert.NoError(t, err, "should start service")
-	defer ws.Unregister("email-proxy")
+	defer channel.Unregister("email-proxy")
 	wsURL := strings.Replace(s.URL, "http://", "ws://", -1)
 	conn, _, err := websocket.DefaultDialer.Dial(wsURL, http.Header{})
 	if !assert.NoError(t, err, "should connect to Websocket") {

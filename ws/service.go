@@ -8,20 +8,9 @@ import (
 	"sync"
 )
 
-// envelopeType is the type of the message envelope.
-type envelopeType struct {
-	Type string `json:"type,inline"`
-}
-
-// envelope is a struct that wraps messages and associates them with a type.
-type envelope struct {
-	envelopeType
-	Message interface{} `json:"message"`
-}
-
-type helloFnType func(func(interface{}))
-
-type newMsgFnType func() interface{}
+var (
+	defaultUIChannel *UIChannel = NewUIChannel()
+)
 
 type Service struct {
 	Type     string
@@ -32,27 +21,8 @@ type Service struct {
 	stopCh   chan bool
 	helloFn  helloFnType
 	newMsgFn newMsgFnType
+	clients  *clientChannels
 }
-
-var (
-	muServices sync.RWMutex
-	services   = make(map[string]*Service)
-
-	clients = newClients(func(out chan<- []byte) {
-		// This method is the callback that gets called whenever there's a new
-		// incoming websocket connection.
-		muServices.RLock()
-		defer muServices.RUnlock()
-		for _, s := range services {
-			// Just queue the hello message for the given service for writing
-			// on the new incoming websocket.
-			// We put each call on a separate go routine to avoid any single hello
-			// function from blocking the others, which could result in the UI
-			// hanging.
-			go s.writeHelloMsg(out)
-		}
-	})
-)
 
 func (s *Service) writeAll() {
 	// Watch for new messages and send them to the combined output.
@@ -62,7 +32,7 @@ func (s *Service) writeAll() {
 			log.Trace("Received message on stop channel")
 			return
 		case msg := <-s.out:
-			s.writeMsg(msg, clients.Out)
+			s.writeMsg(msg, s.clients.Out)
 		}
 	}
 }
@@ -94,13 +64,64 @@ func (s *Service) writeMsg(msg interface{}, out chan<- []byte) {
 // Register registers a WebSocket based service with an optional helloFn to
 // send initial message to connected clients.
 func Register(t string, helloFn helloFnType) (*Service, error) {
-	return RegisterWithMsgInitializer(t, helloFn, nil)
+	return defaultUIChannel.Register(t, helloFn)
 }
 
 // RegisterWithMsgInitializer is similar to Register, but with an additional
 // newMsgFn to initialize the message type to-be received from WebSocket
 // client, instead of letting JSON unmarshaler to guess the type.
 func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFnType) (*Service, error) {
+	return defaultUIChannel.RegisterWithMsgInitializer(t, helloFn, newMsgFn)
+}
+
+func Unregister(t string) {
+	defaultUIChannel.Unregister(t)
+}
+
+// StartUIChannel establishes a channel to the UI for sending and receiving
+// updates
+func StartUIChannel() http.Handler {
+	return defaultUIChannel.Start()
+}
+
+type UIChannel struct {
+	clients    *clientChannels
+	muServices sync.RWMutex
+	services   map[string]*Service
+}
+
+func NewUIChannel() *UIChannel {
+	c := &UIChannel{services: make(map[string]*Service)}
+	c.clients = newClients(func(out chan<- []byte) {
+		// This method is the callback that gets called whenever there's a new
+		// incoming websocket connection.
+		c.muServices.RLock()
+		defer c.muServices.RUnlock()
+		for _, s := range c.services {
+			// Just queue the hello message for the given service for writing
+			// on the new incoming websocket.
+			// We put each call on a separate go routine to avoid any single hello
+			// function from blocking the others, which could result in the UI
+			// hanging.
+			go s.writeHelloMsg(out)
+		}
+	})
+	return c
+}
+
+func (c *UIChannel) Start() http.Handler {
+	go c.clients.writeAll()
+	go c.readLoop()
+
+	log.Debugf("Accepting WebSocket connections")
+	return c.clients
+}
+
+func (c *UIChannel) Register(t string, helloFn helloFnType) (*Service, error) {
+	return c.RegisterWithMsgInitializer(t, helloFn, nil)
+}
+
+func (c *UIChannel) RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFnType) (*Service, error) {
 	log.Tracef("Registering UI service %s", t)
 
 	s := &Service{
@@ -110,49 +131,40 @@ func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFn
 		stopCh:   make(chan bool, 1), // buffered to avoid blocking `Unregister()`
 		helloFn:  helloFn,
 		newMsgFn: newMsgFn,
+		clients:  c.clients,
 	}
 	s.In, s.Out = s.in, s.out
-	s.writeHelloMsg(clients.Out)
+	s.writeHelloMsg(c.clients.Out)
 
-	muServices.Lock()
-	defer muServices.Unlock()
+	c.muServices.Lock()
+	defer c.muServices.Unlock()
 
-	if services[t] != nil {
+	if c.services[t] != nil {
 		// Using panic because this would be a developer error rather that
 		// something that could happen naturally.
 		panic("Service was already registered.")
 	}
 
 	// Adding new service to service map.
-	services[t] = s
+	c.services[t] = s
 
 	log.Tracef("Registered UI service %s", t)
 	go s.writeAll()
 	return s, nil
 }
 
-func Unregister(t string) {
+func (c *UIChannel) Unregister(t string) {
 	log.Tracef("Unregistering service: %v", t)
-	muServices.Lock()
-	defer muServices.Unlock()
-	if services[t] != nil {
-		services[t].stopCh <- true
-		delete(services, t)
+	c.muServices.Lock()
+	defer c.muServices.Unlock()
+	if c.services[t] != nil {
+		c.services[t].stopCh <- true
+		delete(c.services, t)
 	}
 }
 
-// StartUIChannel establishes a channel to the UI for sending and receiving
-// updates
-func StartUIChannel() http.Handler {
-	go clients.writeAll()
-	go readLoop(clients.In)
-
-	log.Debugf("Accepting WebSocket connections")
-	return clients
-}
-
-func readLoop(in <-chan []byte) {
-	for b := range in {
+func (c *UIChannel) readLoop() {
+	for b := range c.clients.in {
 		// Determining message type.
 		var envType envelopeType
 		err := json.Unmarshal(b, &envType)
@@ -163,9 +175,9 @@ func readLoop(in <-chan []byte) {
 		}
 
 		// Delegating response to the service that registered with the given type.
-		muServices.RLock()
-		service := services[envType.Type]
-		muServices.RUnlock()
+		c.muServices.RLock()
+		service := c.services[envType.Type]
+		c.muServices.RUnlock()
 		if service == nil {
 			log.Errorf("Message type %v belongs to an unknown service.", envType.Type)
 			continue
@@ -187,6 +199,21 @@ func readLoop(in <-chan []byte) {
 		service.in <- env.Message
 	}
 }
+
+// envelopeType is the type of the message envelope.
+type envelopeType struct {
+	Type string `json:"type,inline"`
+}
+
+// envelope is a struct that wraps messages and associates them with a type.
+type envelope struct {
+	envelopeType
+	Message interface{} `json:"message"`
+}
+
+type helloFnType func(func(interface{}))
+
+type newMsgFnType func() interface{}
 
 func newEnvelope(t string, msg interface{}) ([]byte, error) {
 	b, err := json.Marshal(&envelope{
