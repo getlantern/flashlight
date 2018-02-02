@@ -105,6 +105,11 @@ type options struct {
 // 3. Configs fetched remotely, and those will be piped back over and over
 //   again as the remote configs change (but only if they change).
 func pipeConfig(opts *options) {
+	// lastCfg is accessed by both the current goroutine when dispatching
+	// saved or embedded configs, and in a separate goroutine for polling
+	// for remote configs.  There should never be mutual access by these
+	// goroutines, however, since the polling routine is started after the prior
+	// calls to dispatch return.
 	var lastCfg interface{}
 	dispatch := func(cfg interface{}) {
 		a := lastCfg
