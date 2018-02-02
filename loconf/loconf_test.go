@@ -12,23 +12,21 @@ import (
 
 func TestRoundTrip(t *testing.T) {
 	lc, err := Get(http.DefaultClient, false)
-	assert.NoError(t, err)
-	assert.True(t, len(lc.Surveys) > 0)
+	_ = assert.NoError(t, err) && assert.True(t, len(lc.Surveys) > 0)
 
 	lc, err = Get(http.DefaultClient, true)
-	assert.Nil(t, err)
-	assert.True(t, len(lc.Surveys) > 0)
+	_ = assert.NoError(t, err) && assert.True(t, len(lc.Surveys) > 0)
 
 	lc, err = get(http.DefaultClient, false, "badurl", "badurl")
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 
 	lc, err = get(http.DefaultClient, true, "badurl", "badurl")
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 
 	lc, err = get(http.DefaultClient, false,
 		"https://raw.githubusercontent.com/getlantern/loconf/master/DOESNOTEXIST.json",
 		"https://raw.githubusercontent.com/getlantern/loconf/master/DOESNOTEXIST.json")
-	assert.NotNil(t, err)
+	assert.Error(t, err)
 }
 
 func TestParsing(t *testing.T) {
@@ -37,9 +35,7 @@ func TestParsing(t *testing.T) {
 
 	lc, err := parse(buf)
 
-	assert.Nil(t, err)
-	//log.Debugf("Got loconf: %+v", lc)
-	assert.NotNil(t, lc)
+	_ = assert.NoError(t, err) && assert.NotNil(t, lc)
 
 	us := lc.GetUninstallSurvey("zh-CN", "US", false)
 
@@ -82,8 +78,7 @@ func testUninstallSurvey(t *testing.T, suffix string, getUninstallSurvey func(lc
   `
 	buf = strings.Replace(buf, "uninstall-survey", "uninstall-survey-"+suffix, 1)
 	lc, err := parse([]byte(buf))
-	assert.Nil(t, err)
-	assert.NotNil(t, lc)
+	_ = assert.NoError(t, err) && assert.NotNil(t, lc)
 
 	sur := getUninstallSurvey(lc, "en-US", "US")
 
@@ -102,8 +97,7 @@ func testUninstallSurvey(t *testing.T, suffix string, getUninstallSurvey func(lc
   `
 	buf = strings.Replace(buf, "uninstall-survey", "uninstall-survey-"+suffix, 1)
 	lc, err = parse([]byte(buf))
-	assert.Nil(t, err)
-	assert.NotNil(t, lc)
+	_ = assert.NoError(t, err) && assert.NotNil(t, lc)
 
 	sur = getUninstallSurvey(lc, "en-US", "US")
 
@@ -122,8 +116,7 @@ func testUninstallSurvey(t *testing.T, suffix string, getUninstallSurvey func(lc
   `
 	buf = strings.Replace(buf, "uninstall-survey", "uninstall-survey-"+suffix, 1)
 	lc, err = parse([]byte(buf))
-	assert.NotNil(t, lc)
-	assert.Nil(t, err)
+	_ = assert.NotNil(t, lc) && assert.NoError(t, err)
 
 	sur = getUninstallSurvey(lc, "en-US", "US")
 
@@ -143,8 +136,7 @@ func testUninstallSurvey(t *testing.T, suffix string, getUninstallSurvey func(lc
   `
 	buf = strings.Replace(buf, "uninstall-survey", "uninstall-survey-"+suffix, 1)
 	lc, err = parse([]byte(buf))
-	assert.NotNil(t, lc)
-	assert.Nil(t, err)
+	_ = assert.NotNil(t, lc) && assert.NoError(t, err)
 
 	sur = getUninstallSurvey(lc, "en-US", "US")
 
@@ -167,14 +159,11 @@ func TestSurvey(t *testing.T) {
   }
   `
 	lc, err := parse([]byte(buf))
-	assert.Nil(t, err)
-	assert.NotNil(t, lc)
+	_ = assert.NoError(t, err) && assert.NotNil(t, lc)
 
 	sur := lc.GetSurvey("en-US", "US")
 
-	assert.NotNil(t, sur)
-
-	assert.Equal(t, "Click Here", sur.Button)
+	_ = assert.NotNil(t, sur) && assert.Equal(t, "Click Here", sur.Button)
 
 	sur = lc.GetSurvey("nothereatall", "notthere")
 
@@ -193,8 +182,7 @@ func TestSurvey(t *testing.T) {
   }
   `
 	lc, err = parse([]byte(buf))
-	assert.NotNil(t, lc)
-	assert.Nil(t, err)
+	_ = assert.NotNil(t, lc) && assert.NoError(t, err)
 
 	sur = lc.GetSurvey("en-US", "US")
 
@@ -214,7 +202,7 @@ func TestAnnouncements(t *testing.T) {
          "campaign": "20160801-new-feature",
          "pro": true,
          "free": true,
-         "expiry": "2018-02-02T15:00:00+07:00",
+         "expiry": "2099-02-02T15:00:00+07:00",
          "title": "Try out the new feature",
          "message": "Believe or not, you'll definitely love it!",
          "url": ""
@@ -222,21 +210,17 @@ func TestAnnouncements(t *testing.T) {
     }
   }`
 	lc, err := parse([]byte(buf))
+	_ = assert.NoError(t, err) && assert.NotNil(t, lc)
 
-	assert.Nil(t, err)
-	assert.NotNil(t, lc)
-
+	log.Debug("Start")
 	ann, err := lc.GetAnnouncement("en-US", true)
+	log.Debug("End")
 
-	assert.Nil(t, err)
-	if assert.NotNil(t, ann) {
-		assert.Equal(t, "Try out the new feature", ann.Title)
-	}
+	_ = assert.NoError(t, err) && assert.NotNil(t, ann) && assert.Equal(t, "Try out the new feature", ann.Title)
 
 	// Test that checking for an invalid locale still returns the default.
 	ann, err = lc.GetAnnouncement("FAKE-LOCALE", true)
-	assert.Nil(t, err)
-	assert.NotNil(t, ann)
+	_ = assert.NoError(t, err) && assert.NotNil(t, ann)
 
 	// Now test missing default.
 	buf = `
@@ -247,7 +231,7 @@ func TestAnnouncements(t *testing.T) {
          "campaign": "20160801-new-feature",
          "pro": true,
          "free": true,
-         "expiry": "2018-02-02T15:00:00+07:00",
+         "expiry": "2099-02-02T15:00:00+07:00",
          "title": "Try out the new feature",
          "message": "Believe or not, you'll definitely love it!",
          "url": ""
@@ -256,14 +240,11 @@ func TestAnnouncements(t *testing.T) {
   }`
 	lc, err = parse([]byte(buf))
 
-	assert.Nil(t, err)
-	//log.Debugf("Got loconf: %+v", lc)
-	assert.NotNil(t, lc)
+	_ = assert.NoError(t, err) && assert.NotNil(t, lc)
 
 	// Test that checking for an invalid locale no longer returns the default.
 	ann, err = lc.GetAnnouncement("FAKE-LOCALE", true)
-	assert.NotNil(t, err)
-	assert.Nil(t, ann)
+	_ = assert.Error(t, err) && assert.Nil(t, ann)
 
 	// Now test no default.
 	buf = `
@@ -277,14 +258,11 @@ func TestAnnouncements(t *testing.T) {
   }`
 	lc, err = parse([]byte(buf))
 
-	assert.Nil(t, err)
-	//log.Debugf("Got loconf: %+v", lc)
-	assert.NotNil(t, lc)
+	_ = assert.NoError(t, err) && assert.NotNil(t, lc)
 
 	// Test that checking for an invalid locale no longer returns the default.
 	ann, err = lc.GetAnnouncement("FAKE-LOCALE", true)
-	assert.NotNil(t, err)
-	assert.Nil(t, ann)
+	_ = assert.Error(t, err) && assert.Nil(t, ann)
 }
 
 func TestAnnouncementsExpiry(t *testing.T) {
@@ -305,14 +283,12 @@ func TestAnnouncementsExpiry(t *testing.T) {
   }`
 	lc, err := parse([]byte(buf))
 
-	assert.Nil(t, err)
-	assert.NotNil(t, lc)
+	_ = assert.NoError(t, err) && assert.NotNil(t, lc)
 
 	// Announcement should be expired!
 	ann, err := lc.GetAnnouncement("en-US", true)
 
-	assert.NotNil(t, err)
-	assert.Nil(t, ann)
+	_ = assert.Error(t, err) && assert.Nil(t, ann)
 
 	// Now test a bogus expiry time.
 
@@ -333,12 +309,10 @@ func TestAnnouncementsExpiry(t *testing.T) {
   }`
 	lc, err = parse([]byte(buf))
 
-	assert.Nil(t, err)
-	assert.NotNil(t, lc)
+	_ = assert.NoError(t, err) && assert.NotNil(t, lc)
 
 	// Should not have been able to parse expiry
 	ann, err = lc.GetAnnouncement("en-US", true)
 
-	assert.NotNil(t, err)
-	assert.Nil(t, ann)
+	_ = assert.Error(t, err) && assert.Nil(t, ann)
 }
