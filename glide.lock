@@ -1,5 +1,5 @@
 hash: e98e01159403666c8fa91dd9b76c23bcbc15e36193c7c0eb84e6d7c5e0677b59
-updated: 2018-02-02T05:05:06.840363-06:00
+updated: 2018-02-02T09:54:24.554479-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a3ad5df6c9e7dc8117f55958b4ce99bf1e0fe291
@@ -139,7 +139,7 @@ imports:
 - name: github.com/getlantern/hidden
   version: d52a649ab33af200943bb599898dbdcfdbc94cb7
 - name: github.com/getlantern/http-proxy
-  version: 9f5d04da4a4c2c36070a01cfe4988ce834a431a1
+  version: bf1eb8b9e947dba5167d74bb9270ecaed940725b
   subpackages:
   - buffers
   - listeners
@@ -486,7 +486,7 @@ imports:
   - google
   - jwt
 - name: golang.org/x/sys
-  version: 8f27ce8a604014414f8dfffc25cbcde83a3f2216
+  version: 37707fdb30a5b38865cfb95e5aab41707daec7fd
   repo: https://github.com/golang/sys
   vcs: git
   subpackages:
