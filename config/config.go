@@ -31,7 +31,7 @@ type Config interface {
 
 	// Poll polls for new configs from a remote server and saves them to disk for
 	// future runs.
-	poll(func(interface{}), Fetcher, func() time.Duration)
+	poll(dispatch func(interface{}), fetcher Fetcher, sleep func() time.Duration)
 }
 
 type config struct {
