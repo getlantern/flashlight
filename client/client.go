@@ -149,7 +149,7 @@ func NewClient(
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
 
-	client.proxy = proxy.New(&proxy.Opts{
+	client.proxy, _ = proxy.New(&proxy.Opts{
 		IdleTimeout:  keepAliveIdleTimeout,
 		BufferSource: buffers.Pool,
 		Filter:       filters.FilterFunc(client.filter),
