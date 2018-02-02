@@ -229,9 +229,9 @@ func TestAnnouncements(t *testing.T) {
 	ann, err := lc.GetAnnouncement("en-US", true)
 
 	assert.Nil(t, err)
-	assert.NotNil(t, ann)
-
-	assert.Equal(t, "Try out the new feature", ann.Title)
+	if assert.NotNil(t, ann) {
+		assert.Equal(t, "Try out the new feature", ann.Title)
+	}
 
 	// Test that checking for an invalid locale still returns the default.
 	ann, err = lc.GetAnnouncement("FAKE-LOCALE", true)
