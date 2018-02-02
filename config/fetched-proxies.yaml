@@ -4,5 +4,9 @@ fallback-104.236.192.114:
     CERTIFICATE-----\n"
   authtoken: OlTIG6BtHaSDC2Iu2FmM7Xv3SYoP1HjjqpRXFGU7Q7719uRwJpQfTKPBfbN020SZ
   trusted: true
+  initpreconnect: 0
+  maxpreconnect: 0
   pluggabletransport: ""
   pluggabletransportsettings: {}
+  kcpsettings: {}
+  enhttpurl: ""
