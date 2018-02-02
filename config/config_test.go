@@ -18,7 +18,6 @@ import (
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config/generated"
-	"github.com/getlantern/flashlight/proxied"
 )
 
 // TestInvalidFile test an empty or malformed config file
@@ -106,8 +105,15 @@ func TestPollProxies(t *testing.T) {
 	cfg := newConfig(file, &options{
 		unmarshaler: proxiesUnmarshaler,
 	})
-
-	fi, err := os.Stat(file)
+	var fi os.FileInfo
+	var err error
+	for i := 1; i <= 400; i++ {
+		fi, err = os.Stat(file)
+		if err == nil {
+			break
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
 	if !assert.Nil(t, err) {
 		return
 	}
@@ -115,8 +121,8 @@ func TestPollProxies(t *testing.T) {
 	tempName := fi.Name() + ".stored"
 	os.Rename(fi.Name(), tempName)
 
-	urls := proxiesURLs
-	fetcher := newFetcher(&authConfig{}, proxied.ParallelPreferChained(), urls)
+	proxyConfigURLs := startConfigServer(t, fi.Name())
+	fetcher := newFetcher(&authConfig{}, &http.Transport{}, proxyConfigURLs)
 	dispatch := func(cfg interface{}) {
 		proxyChan <- cfg
 	}
@@ -172,29 +178,7 @@ func TestPollGlobal(t *testing.T) {
 	tempName := fi.Name() + ".stored"
 	os.Rename(fi.Name(), tempName)
 
-	l, err := net.Listen("tcp", "localhost:0")
-	if err != nil {
-		t.Fatalf("Unable to listen: %s", err)
-	}
-
-	hs := &http.Server{
-		Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
-			http.ServeFile(resp, req, "./fetched-global.yaml.gz")
-		}),
-	}
-	go func() {
-		if err = hs.Serve(l); err != nil {
-			t.Fatalf("Unable to serve: %v", err)
-		}
-	}()
-
-	port := l.Addr().(*net.TCPAddr).Port
-	url := "http://localhost:" + strconv.Itoa(port)
-	globalConfigURLs := &chainedFrontedURLs{
-		chained: url,
-		fronted: url,
-	}
-
+	globalConfigURLs := startConfigServer(t, fi.Name())
 	fetcher := newFetcher(&authConfig{}, &http.Transport{}, globalConfigURLs)
 	dispatch := func(cfg interface{}) {
 		configChan <- cfg
@@ -303,4 +287,30 @@ func proxiesUnmarshaler(b []byte) (interface{}, error) {
 	servers := make(map[string]*chained.ChainedServerInfo)
 	err := yaml.Unmarshal(b, servers)
 	return servers, err
+}
+
+func startConfigServer(t *testing.T, configFilename string) (urls *chainedFrontedURLs) {
+	l, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Fatalf("Unable to listen: %s", err)
+	}
+
+	gzippedName := configFilename + ".gz"
+	hs := &http.Server{
+		Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+			http.ServeFile(resp, req, gzippedName)
+		}),
+	}
+	go func() {
+		if err = hs.Serve(l); err != nil {
+			t.Fatalf("Unable to serve: %v", err)
+		}
+	}()
+
+	port := l.Addr().(*net.TCPAddr).Port
+	url := "http://localhost:" + strconv.Itoa(port)
+	return &chainedFrontedURLs{
+		chained: url,
+		fronted: url,
+	}
 }
