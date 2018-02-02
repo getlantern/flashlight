@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"net/http"
 	"sync"
 	"time"
 
@@ -59,13 +60,13 @@ var (
 // fetching per-user proxies as well as the global config.
 func Init(configDir string, flags map[string]interface{},
 	authConfig common.AuthConfig, proxiesDispatch func(interface{}),
-	origGlobalDispatch func(interface{}), useDualFetcher bool) {
+	origGlobalDispatch func(interface{}), rt http.RoundTripper) {
 	staging := isStaging(flags)
 	proxyConfigURLs := checkOverrides(flags, getProxyURLs(staging), "proxies.yaml.gz")
 	globalConfigURLs := checkOverrides(flags, getGlobalURLs(staging), "global.yaml.gz")
 
 	InitWithURLs(configDir, flags, authConfig, proxiesDispatch,
-		origGlobalDispatch, proxyConfigURLs, globalConfigURLs, useDualFetcher)
+		origGlobalDispatch, proxyConfigURLs, globalConfigURLs, rt)
 }
 
 // InitWithURLs initializes the config setup for both fetching per-user proxies
@@ -74,7 +75,7 @@ func Init(configDir string, flags map[string]interface{},
 func InitWithURLs(configDir string, flags map[string]interface{},
 	authConfig common.AuthConfig, origProxiesDispatch func(interface{}),
 	origGlobalDispatch func(interface{}), proxyURLs *chainedFrontedURLs,
-	globalURLs *chainedFrontedURLs, useDualFetcher bool) {
+	globalURLs *chainedFrontedURLs, rt http.RoundTripper) {
 	var mx sync.RWMutex
 	globalConfigPollInterval := DefaultGlobalConfigPollInterval
 	proxyConfigPollInterval := DefaultProxyConfigPollInterval
@@ -135,8 +136,8 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 			defer mx.RUnlock()
 			return proxyConfigPollInterval
 		},
-		sticky:         isSticky(flags),
-		useDualFetcher: useDualFetcher,
+		sticky: isSticky(flags),
+		rt:     rt,
 	}
 
 	pipeConfig(proxyOptions)
@@ -166,8 +167,8 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 			defer mx.RUnlock()
 			return globalConfigPollInterval
 		},
-		sticky:         false,
-		useDualFetcher: useDualFetcher,
+		sticky: false,
+		rt:     rt,
 	}
 
 	pipeConfig(globalOptions)

@@ -17,7 +17,6 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/flashlight/proxied"
 )
 
 // Config is an interface for getting proxy data saved locally, embedded
@@ -91,9 +90,10 @@ type options struct {
 	// update it with remote data.
 	sticky bool
 
-	// useDualFetcher specifies whether to fetch configs from fronted and chained
-	// URLs.
-	useDualFetcher bool
+	// rt provides the RoundTripper the fetcher should use, which allows us to
+	// dictate whether the fetcher will use dual fetching (from fronted and
+	// chained URLs) or not.
+	rt http.RoundTripper
 }
 
 // pipeConfig creates a new config pipeline for reading a specified type of
@@ -147,11 +147,7 @@ func pipeConfig(opts *options) {
 	// Now continually poll for new configs and pipe them back to the dispatch
 	// function.
 	if !opts.sticky {
-		rt := proxied.ParallelPreferChained()
-		if !opts.useDualFetcher {
-			rt = &http.Transport{}
-		}
-		fetcher := newFetcher(opts.authConfig, rt, opts.urls)
+		fetcher := newFetcher(opts.authConfig, opts.rt, opts.urls)
 		go conf.poll(dispatch, fetcher, opts.sleep)
 	} else {
 		log.Debugf("Using sticky config")

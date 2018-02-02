@@ -31,7 +31,7 @@ func TestInit(t *testing.T) {
 		assert.True(t, len(global.Client.MasqueradeSets) > 1)
 		configChan <- true
 	}
-	Init(".", flags, &authConfig{}, proxiesDispatch, globalDispatch, false)
+	Init(".", flags, &authConfig{}, proxiesDispatch, globalDispatch, &http.Transport{})
 
 	count := 0
 	for i := 0; i < 2; i++ {
@@ -115,9 +115,8 @@ func TestInitWithURLs(t *testing.T) {
 	// embedded ones, and remote ones.
 	proxiesDispatch := func(cfg interface{}) {}
 	globalDispatch := func(cfg interface{}) {}
-	useDualFetcher := false
 	InitWithURLs(".", flags, &authConfig{}, proxiesDispatch, globalDispatch,
-		proxyConfigURLs, globalConfigURLs, useDualFetcher)
+		proxyConfigURLs, globalConfigURLs, &http.Transport{})
 
 	// sleep some amount
 	globalPollInterval := 3 * time.Second

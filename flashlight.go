@@ -117,7 +117,8 @@ func Run(httpProxyAddr string,
 		applyClientConfig(cl, cfg, deviceID, autoReport, onBordaConfigured)
 		onConfigUpdate(cfg)
 	}
-	config.Init(configDir, flagsAsMap, userConfig, proxiesDispatch, globalDispatch, true)
+	rt := proxied.ParallelPreferChained()
+	config.Init(configDir, flagsAsMap, userConfig, proxiesDispatch, globalDispatch, rt)
 
 	if beforeStart() {
 		log.Debug("Preparing to start client proxy")
