@@ -76,7 +76,7 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 	}
 
 	isConnect := req.Method == http.MethodConnect
-	if isConnect {
+	if isConnect || ctx.IsMITMing() {
 		// CONNECT requests are often used for HTTPS requests.
 		log.Tracef("Intercepting CONNECT %s", req.URL)
 	} else {
