@@ -51,7 +51,7 @@ func normalizeExoAd(req *http.Request) (*http.Request, bool) {
 }
 
 func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
-	req, ad := normalizeExoAd(r)
+	req, exoclick := normalizeExoAd(r)
 
 	// Add the scheme back for CONNECT requests. It is cleared
 	// intentionally by the standard library, see
@@ -63,7 +63,7 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 	op := ctx.Value(ctxKeyOp).(*ops.Op)
 
 	adSwapURL := client.adSwapURL(req)
-	if !ad && adSwapURL == "" && !strings.Contains(req.URL.Host, ".exdynsrv.com") && !client.easylist.Allow(req) {
+	if !exoclick && adSwapURL == "" && !client.easylist.Allow(req) {
 		// Don't record this as proxying
 		op.Cancel()
 		return client.easyblock(ctx, req)
@@ -71,7 +71,7 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 
 	op.UserAgent(req.Header.Get("User-Agent")).OriginFromRequest(req)
 
-	if !ad && adSwapURL != "" {
+	if !exoclick && adSwapURL != "" {
 		return client.redirectAdSwap(ctx, req, adSwapURL, op)
 	}
 
