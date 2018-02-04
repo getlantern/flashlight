@@ -115,8 +115,8 @@ func runApp(a *app.App) {
 		}
 	})
 	if a.ShowUI {
+		i18nInit(a)
 		go func() {
-			i18nInit(a)
 			if err := configureSystemTray(a); err != nil {
 				return
 			}
@@ -130,10 +130,10 @@ func runApp(a *app.App) {
 }
 
 func i18nInit(a *app.App) {
-	locale := a.GetLanguage()
 	i18n.SetMessagesFunc(func(filename string) ([]byte, error) {
 		return a.GetTranslations(filename)
 	})
+	locale := a.GetLanguage()
 	if err := i18n.SetLocale(locale); err != nil {
 		log.Debugf("i18n.SetLocale(%s) failed, fallback to OS default: %q", locale, err)
 		if err := i18n.UseOSLocale(); err != nil {
