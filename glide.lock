@@ -1,5 +1,5 @@
 hash: e98e01159403666c8fa91dd9b76c23bcbc15e36193c7c0eb84e6d7c5e0677b59
-updated: 2018-02-04T13:50:17.679866-06:00
+updated: 2018-02-05T07:57:31.80242-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a3ad5df6c9e7dc8117f55958b4ce99bf1e0fe291
@@ -195,7 +195,7 @@ imports:
 - name: github.com/getlantern/measured
   version: 0582bf799783fba9a890459155817f1cbcf00f17
 - name: github.com/getlantern/mitm
-  version: 649cb6af518378c21f38dc1c83d5af4be7b695dd
+  version: 1813064993f2eea4a2118f225030759f046d31fa
 - name: github.com/getlantern/mockconn
   version: 422a5afd4432dd82b1389333d5352da003d898a6
 - name: github.com/getlantern/msgpack
