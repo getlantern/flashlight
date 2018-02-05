@@ -19,8 +19,9 @@ type locationData struct {
 
 func TestStartServer(t *testing.T) {
 
+	channel := NewUIChannel()
 	mux := http.NewServeMux()
-	mux.Handle("/data", StartUIChannel())
+	mux.Handle("/data", channel.Handler())
 
 	server := &http.Server{
 		Handler:  mux,
@@ -38,7 +39,8 @@ func TestStartServer(t *testing.T) {
 			Code: "US",
 		})
 	}
-	service, _ := Register("hello", helloFn)
+	service, _ := channel.Register("hello", helloFn)
+	defer channel.Unregister("hello")
 
 	u := url.URL{Scheme: "ws", Host: "127.0.0.1:" + strconv.Itoa(port), Path: "/data"}
 	log.Debugf("connecting to %s", u.String())
@@ -71,7 +73,6 @@ func TestStartServer(t *testing.T) {
 
 	received := <-service.in
 	log.Debugf("recv: %s", received)
-	Unregister("hello")
 	close(service.in)
 	close(service.out)
 }
