@@ -113,6 +113,7 @@ type AdSettings interface {
 	GetProvider() string
 	NativeAdId() string
 	GetTargetedApps(string) string
+	GetShowAdsAfterDays() int
 }
 
 type Updater autoupdate.Updater
