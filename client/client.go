@@ -155,11 +155,13 @@ func NewClient(
 	var mitmOpts *mitm.Opts
 	if runtime.GOOS != "android" {
 		mitmOpts = &mitm.Opts{
-			PKFile:        filepath.Join(appdir.General("Lantern"), "mitmkey.pem"),
-			CertFile:      filepath.Join(appdir.General("Lantern"), "mitmcert.pem"),
-			Organization:  "Lantern",
-			InstallCert:   true,
-			InstallPrompt: i18n.T("BACKEND_MITM_INSTALL_CERT"),
+			PKFile:             filepath.Join(appdir.General("Lantern"), "mitmkey.pem"),
+			CertFile:           filepath.Join(appdir.General("Lantern"), "mitmcert.pem"),
+			Organization:       "Lantern",
+			InstallCert:        true,
+			InstallPrompt:      i18n.T("BACKEND_MITM_INSTALL_CERT"),
+			WindowsPromptTitle: i18n.T("BACKEND_MITM_INSTALL_CERT"),
+			WindowsPromptBody:  i18n.T("BACKEND_MITM_INSTALL_CERT_WINDOWS_BODY", "certimporter.exe"),
 			Domains: []string{
 				"*.doubleclick.net",
 				"*.g.doubleclick.net",

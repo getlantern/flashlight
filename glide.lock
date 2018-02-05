@@ -1,5 +1,5 @@
 hash: e98e01159403666c8fa91dd9b76c23bcbc15e36193c7c0eb84e6d7c5e0677b59
-updated: 2018-02-05T07:57:31.80242-06:00
+updated: 2018-02-05T15:58:11.846122-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a3ad5df6c9e7dc8117f55958b4ce99bf1e0fe291
@@ -22,7 +22,7 @@ imports:
 - name: github.com/aristanetworks/glog
   version: b0d951ca530387842f35331df6fd8d9b501d5f90
 - name: github.com/aristanetworks/goarista
-  version: 715120d92d2c52780078ee6da2318c2c37d77dc7
+  version: 7c4fd920f333e180b16c33ef1209e3fe62b4f62b
   subpackages:
   - monotime
 - name: github.com/armon/go-radix
@@ -185,7 +185,7 @@ imports:
 - name: github.com/getlantern/kcpwrapper
   version: a35c895f6de73d94ca04369ac0c311cb8a97c0f2
 - name: github.com/getlantern/keyman
-  version: 9d65bff0c88a85449195d54c38322e254b2ac34b
+  version: ec05d2e2bbe5fa36f17ed8dab2269fcfa44367fe
   subpackages:
   - certimporter
 - name: github.com/getlantern/lampshade
@@ -195,7 +195,7 @@ imports:
 - name: github.com/getlantern/measured
   version: 0582bf799783fba9a890459155817f1cbcf00f17
 - name: github.com/getlantern/mitm
-  version: 1813064993f2eea4a2118f225030759f046d31fa
+  version: 4ce456bae6504e6a1dc8c835cd849cba166eb3d8
 - name: github.com/getlantern/mockconn
   version: 422a5afd4432dd82b1389333d5352da003d898a6
 - name: github.com/getlantern/msgpack
@@ -518,7 +518,7 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: 424e3e9894f9206fca433fb4ba66f639be56e325
+  version: d09ec435457694f2e314397fe5bc18a1d959f303
   subpackages:
   - balancer
   - balancer/base
