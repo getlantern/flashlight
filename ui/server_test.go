@@ -182,8 +182,6 @@ func TestStart(t *testing.T) {
 }
 
 func TestTranslations(t *testing.T) {
-	serve := newServer("", "abcde")
-	serve.unpackUI()
 	dat, err := Translations("en-US.json")
 	assert.NoError(t, err, "Could not fetch locale")
 	assert.NotNil(t, dat)
