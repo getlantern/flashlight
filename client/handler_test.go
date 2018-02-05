@@ -89,17 +89,21 @@ func TestRewriteHTTPSRedirectLoop(t *testing.T) {
 	assert.Equal(t, http.StatusMovedPermanently, resp.StatusCode, "should rewrite to HTTPS some time later")
 }
 
-func TestEasylist(t *testing.T) {
+func TestAdBlockingFree(t *testing.T) {
 	client := newClient()
 	req, _ := http.NewRequest("GET", "http://cdn.adblade.com", nil)
 	resp, err := roundTrip(client, req)
-	if !assert.NoError(t, err) {
-		return
-	}
-	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+	_ = assert.NoError(t, err) && assert.Equal(t, http.StatusForbidden, resp.StatusCode)
 }
 
-func TestAdSwap(t *testing.T) {
+func TestAdBlockingPro(t *testing.T) {
+	client := newClientWithAdSwapping("")
+	req, _ := http.NewRequest("GET", "https://www.googletagservices.com/tag/js/gpt.js", nil)
+	resp, err := roundTrip(client, req)
+	_ = assert.NoError(t, err) && assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+}
+
+func TestAdSwapFree(t *testing.T) {
 	client := newClient()
 	for orig, updated := range adSwapJavaScriptInjections {
 		req, _ := http.NewRequest("GET", orig, nil)
