@@ -16,13 +16,13 @@ func NewStatsTracker() *statsTracker {
 	}
 }
 
-func (s *statsTracker) StartService() (err error) {
+func (s *statsTracker) StartService(channel *ws.UIChannel) (err error) {
 	helloFn := func(write func(interface{})) {
 		log.Debugf("Sending Lantern stats to new client")
 		write(s.Latest())
 	}
 
-	s.service, err = ws.Register("stats", helloFn)
+	s.service, err = channel.Register("stats", helloFn)
 	if err == nil {
 		s.AddListener(func(newStats stats.Stats) {
 			select {

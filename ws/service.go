@@ -8,10 +8,6 @@ import (
 	"sync"
 )
 
-var (
-	defaultUIChannel *UIChannel = NewUIChannel()
-)
-
 type Service struct {
 	Type     string
 	In       <-chan interface{}
@@ -61,29 +57,6 @@ func (s *Service) writeMsg(msg interface{}, out chan<- []byte) {
 	out <- b
 }
 
-// Register registers a WebSocket based service with an optional helloFn to
-// send initial message to connected clients.
-func Register(t string, helloFn helloFnType) (*Service, error) {
-	return defaultUIChannel.Register(t, helloFn)
-}
-
-// RegisterWithMsgInitializer is similar to Register, but with an additional
-// newMsgFn to initialize the message type to-be received from WebSocket
-// client, instead of letting JSON unmarshaler to guess the type.
-func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFnType) (*Service, error) {
-	return defaultUIChannel.RegisterWithMsgInitializer(t, helloFn, newMsgFn)
-}
-
-func Unregister(t string) {
-	defaultUIChannel.Unregister(t)
-}
-
-// StartUIChannel establishes a channel to the UI for sending and receiving
-// updates
-func StartUIChannel() http.Handler {
-	return defaultUIChannel.Start()
-}
-
 type UIChannel struct {
 	clients    *clientChannels
 	muServices sync.RWMutex
@@ -106,21 +79,26 @@ func NewUIChannel() *UIChannel {
 			go s.writeHelloMsg(out)
 		}
 	})
-	return c
-}
-
-func (c *UIChannel) Start() http.Handler {
 	go c.clients.writeAll()
 	go c.readLoop()
 
 	log.Debugf("Accepting WebSocket connections")
+	return c
+}
+
+func (c *UIChannel) Handler() http.Handler {
 	return c.clients
 }
 
+// Register registers a WebSocket based service with an optional helloFn to
+// send initial message to connected clients.
 func (c *UIChannel) Register(t string, helloFn helloFnType) (*Service, error) {
 	return c.RegisterWithMsgInitializer(t, helloFn, nil)
 }
 
+// RegisterWithMsgInitializer is similar to Register, but with an additional
+// newMsgFn to initialize the message type to-be received from WebSocket
+// client, instead of letting JSON unmarshaler to guess the type.
 func (c *UIChannel) RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFnType) (*Service, error) {
 	log.Tracef("Registering UI service %s", t)
 

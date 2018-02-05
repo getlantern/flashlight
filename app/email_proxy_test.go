@@ -15,7 +15,7 @@ import (
 
 func TestEmailProxy(t *testing.T) {
 	channel := ws.NewUIChannel()
-	s := httptest.NewServer(channel.Start())
+	s := httptest.NewServer(channel.Handler())
 	defer s.Close()
 	// avoid panicking when attaching settings to the email.
 	settings = loadSettings("version", "revisionDate", "buildDate")
