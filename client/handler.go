@@ -77,7 +77,10 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 
 	isConnect := req.Method == http.MethodConnect
 	if isConnect || ctx.IsMITMing() {
-		// CONNECT requests are often used for HTTPS requests.
+		// CONNECT requests are often used for HTTPS requests. If we're MITMing the
+		// connection, we've stripped the CONNECT and actually performed the MITM
+		// at this point, so we have to check for that and skip redirecting to
+		// HTTPS in that case.
 		log.Tracef("Intercepting CONNECT %s", req.URL)
 	} else {
 		log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
