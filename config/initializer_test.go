@@ -1,8 +1,10 @@
 package config
 
 import (
+	"io"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"sync/atomic"
 	"testing"
@@ -48,6 +50,24 @@ func TestInit(t *testing.T) {
 // TestInitWithURLs tests that proxy and global configs are fetched at the
 // correct polling intervals.
 func TestInitWithURLs(t *testing.T) {
+	// ensure a `global.yaml` exists in order to avoid fetching embedded config
+	from, err := os.Open("./embedded-global.yaml")
+	if err != nil {
+		t.Fatalf("Unable to open file ./embedded-global.yaml: %s", err)
+	}
+	defer from.Close()
+
+	to, err := os.OpenFile("./global.yaml", os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		t.Fatalf("Unable to open file global.yaml: %s", err)
+	}
+	defer to.Close()
+
+	_, err = io.Copy(to, from)
+  if err != nil {
+		t.Fatalf("Unable to copy file: %s", err)
+  }
+
 	// set up 2 servers:
 	// 1. one that serves up the global config and
 	// 2. one that serves up the proxy config
