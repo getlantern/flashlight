@@ -64,9 +64,9 @@ func TestInitWithURLs(t *testing.T) {
 	defer to.Close()
 
 	_, err = io.Copy(to, from)
-  if err != nil {
+	if err != nil {
 		t.Fatalf("Unable to copy file: %s", err)
-  }
+	}
 
 	// set up 2 servers:
 	// 1. one that serves up the global config and
