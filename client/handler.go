@@ -51,7 +51,7 @@ func normalizeExoAd(req *http.Request) (*http.Request, bool) {
 }
 
 func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
-	req, ad := normalizeExoAd(r)
+	req, exoclick := normalizeExoAd(r)
 
 	// Add the scheme back for CONNECT requests. It is cleared
 	// intentionally by the standard library, see
@@ -63,7 +63,7 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 	op := ctx.Value(ctxKeyOp).(*ops.Op)
 
 	adSwapURL := client.adSwapURL(req)
-	if !ad && adSwapURL == "" && !client.easylist.Allow(req) {
+	if !exoclick && adSwapURL == "" && !client.easylist.Allow(req) {
 		// Don't record this as proxying
 		op.Cancel()
 		return client.easyblock(ctx, req)
@@ -71,13 +71,16 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 
 	op.UserAgent(req.Header.Get("User-Agent")).OriginFromRequest(req)
 
-	if !ad && adSwapURL != "" {
+	if !exoclick && adSwapURL != "" {
 		return client.redirectAdSwap(ctx, req, adSwapURL, op)
 	}
 
 	isConnect := req.Method == http.MethodConnect
-	if isConnect {
-		// CONNECT requests are often used for HTTPS requests.
+	if isConnect || ctx.IsMITMing() {
+		// CONNECT requests are often used for HTTPS requests. If we're MITMing the
+		// connection, we've stripped the CONNECT and actually performed the MITM
+		// at this point, so we have to check for that and skip redirecting to
+		// HTTPS in that case.
 		log.Tracef("Intercepting CONNECT %s", req.URL)
 	} else {
 		log.Tracef("Checking for HTTP redirect for %v", req.URL.String())

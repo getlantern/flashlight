@@ -24,6 +24,8 @@ func init() {
 	// Override system default for current process.
 	_ = mime.AddExtensionType(".css", "text/css")
 	_ = mime.AddExtensionType(".js", "application/javascript")
+
+	unpackUI()
 }
 
 var (
@@ -85,7 +87,6 @@ func newServer(extURL, localHTTPToken string) *Server {
 		localHTTPToken: localHTTPToken,
 		translations:   eventual.NewValue(),
 	}
-	server.unpackUI()
 
 	server.attachHandlers()
 	return server
@@ -334,7 +335,7 @@ func overrideManotoURL(u string) string {
 	return u
 }
 
-func (s *Server) unpackUI() {
+func unpackUI() {
 	var err error
 	fs, err = tarfs.New(Resources, "")
 	if err != nil {

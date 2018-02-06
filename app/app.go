@@ -60,6 +60,7 @@ type App struct {
 	chExitFuncs     chan func()
 	chLastExitFuncs chan func()
 	uiServer        *ui.Server
+	ws              ws.UIChannel
 }
 
 // Init initializes the App's state
@@ -83,6 +84,7 @@ func (app *App) Init() {
 	datacap.AddDataCapListener(func(hitDataCap bool) {
 		app.statsTracker.SetHitDataCap(hitDataCap)
 	})
+	app.ws = ws.NewUIChannel()
 }
 
 // LogPanicAndExit logs a panic and then exits the application. This function
@@ -248,36 +250,35 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			startupURL,
 			localHTTPToken(settings),
 			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
-			&ui.PathHandler{Pattern: "/data", Handler: ws.StartUIChannel()},
+			&ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
 		); err != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		}
 
-		if e := settings.StartService(); e != nil {
+		if e := settings.StartService(app.ws); e != nil {
 			app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
 		}
 		settings.SetUIAddr(app.uiServer.GetUIAddr())
 
-		if err = app.statsTracker.StartService(); err != nil {
+		if err = app.statsTracker.StartService(app.ws); err != nil {
 			log.Errorf("Unable to serve stats to UI: %v", err)
 		}
 
-		setupUserSignal(app.Connect, app.Disconnect)
+		setupUserSignal(app.ws, app.Connect, app.Disconnect)
 
-		err = datacap.ServeDataCap(func() string {
+		err = datacap.ServeDataCap(app.ws, func() string {
 			return app.AddToken("/img/lantern_logo.png")
 		}, app.PlansURL, isProUser)
 		if err != nil {
 			log.Errorf("Unable to serve bandwidth to UI: %v", err)
 		}
-
-		err = serveEmailProxy()
+		err = serveEmailProxy(app.ws)
 		if err != nil {
 			log.Errorf("Unable to serve mandrill to UI: %v", err)
 		}
 
 		// Don't block on fetching the location for the UI.
-		go serveLocation()
+		go serveLocation(app.ws)
 
 		// Only run analytics once on startup.
 		if settings.IsAutoReport() {
@@ -362,7 +363,7 @@ func (app *App) afterStart(cl *client.Client) {
 	} else {
 		log.Errorf("Couldn't retrieve SOCKS proxy addr in time")
 	}
-	err := servePro()
+	err := servePro(app.ws)
 	if err != nil {
 		log.Errorf("Unable to serve pro data to UI: %v", err)
 	}

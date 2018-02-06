@@ -11,14 +11,14 @@ type locationData struct {
 	Code string `json:"code"`
 }
 
-func serveLocation() {
+func serveLocation(channel ws.UIChannel) {
 	helloFn := func(write func(interface{})) {
 		write(locationData{
 			Code: geolookup.GetCountry(time.Second * 30),
 		})
 	}
 
-	_, err := ws.Register("location", helloFn)
+	_, err := channel.Register("location", helloFn)
 	if err != nil {
 		log.Errorf("Error registering with UI? %v", err)
 	}

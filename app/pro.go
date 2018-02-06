@@ -32,7 +32,7 @@ func isProUserFast() (isPro bool, statusKnown bool) {
 // connected WebSocket clients via the "pro" channel.
 // It loops forever in 10 seconds interval until the user is fetched or
 // created, as it's fundamental for the UI to work.
-func servePro() error {
+func servePro(channel ws.UIChannel) error {
 	logger := golog.LoggerFor("flashlight.app.pro")
 	// pro.SetDeviceID(settings.GetDeviceID())
 	go func() {
@@ -65,6 +65,6 @@ func servePro() error {
 			write(user)
 		}()
 	}
-	_, err := ws.Register("pro", helloFn)
+	_, err := channel.Register("pro", helloFn)
 	return err
 }

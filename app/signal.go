@@ -13,9 +13,9 @@ type UserSignal struct {
 
 var userSignal UserSignal
 
-func setupUserSignal(connect func(), disconnect func()) {
+func setupUserSignal(channel ws.UIChannel, connect func(), disconnect func()) {
 	userSignal.once.Do(func() {
-		err := userSignal.start()
+		err := userSignal.start(channel)
 		if err != nil {
 			log.Errorf("Unable to register signal service: %q", err)
 			return
@@ -25,12 +25,12 @@ func setupUserSignal(connect func(), disconnect func()) {
 }
 
 // start the settings service that synchronizes Lantern's configuration with every UI client
-func (s *UserSignal) start() error {
+func (s *UserSignal) start(channel ws.UIChannel) error {
 	var err error
 	helloFn := func(write func(interface{})) {
 		write("connected")
 	}
-	s.service, err = ws.Register("signal", helloFn)
+	s.service, err = channel.Register("signal", helloFn)
 	return err
 }
 

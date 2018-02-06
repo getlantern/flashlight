@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -26,7 +27,9 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
 	"github.com/getlantern/httpseverywhere"
+	"github.com/getlantern/i18n"
 	"github.com/getlantern/iptool"
+	"github.com/getlantern/mitm"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 	"github.com/getlantern/proxy/filters"
@@ -149,13 +152,46 @@ func NewClient(
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
 
-	client.proxy, _ = proxy.New(&proxy.Opts{
+	var mitmOpts *mitm.Opts
+	if runtime.GOOS != "android" {
+		mitmOpts = &mitm.Opts{
+			PKFile:        filepath.Join(appdir.General("Lantern"), "mitmkey.pem"),
+			CertFile:      filepath.Join(appdir.General("Lantern"), "mitmcert.pem"),
+			Organization:  "Lantern",
+			InstallCert:   true,
+			InstallPrompt: i18n.T("BACKEND_MITM_INSTALL_CERT"),
+			Domains: []string{
+				"*.doubleclick.net",
+				"*.g.doubleclick.net",
+				"adservice.google.com",
+				"adservice.google.com.hk",
+				"adservice.google.co.jp",
+				"adservice.google.nl",
+				"*.googlesyndication.com",
+				"*.googletagservices.com",
+			},
+		}
+	}
+	var mitmErr error
+	client.proxy, mitmErr = proxy.New(&proxy.Opts{
 		IdleTimeout:  keepAliveIdleTimeout,
 		BufferSource: buffers.Pool,
 		Filter:       filters.FilterFunc(client.filter),
 		OnError:      errorResponse,
 		Dial:         client.dial,
+		MITMOpts:     mitmOpts,
+		ShouldMITM: func(req *http.Request, upstreamAddr string) bool {
+			userAgent := req.Header.Get("User-Agent")
+			// Only MITM certain browsers
+			// See http://useragentstring.com/pages/useragentstring.php
+			return strings.Contains(userAgent, "Chrome/") || // Chrome
+				strings.Contains(userAgent, "MSIE") || strings.Contains(userAgent, "Trident") || // Internet Explorer
+				strings.Contains(userAgent, "Edge") // Microsoft Edge
+		},
 	})
+	if mitmErr != nil {
+		log.Errorf("Unable to initialize MITM: %v", mitmErr)
+	}
 	if adBlockingAllowed() {
 		client.initEasyList()
 	} else {
