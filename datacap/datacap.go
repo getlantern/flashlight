@@ -33,12 +33,12 @@ type dataCap struct {
 }
 
 // ServeDataCap starts serving data cap data to the frontend.
-func ServeDataCap(iconURL func() string, clickURL func() string, isPro func() (bool, bool)) error {
+func ServeDataCap(channel ws.UIChannel, iconURL func() string, clickURL func() string, isPro func() (bool, bool)) error {
 	helloFn := func(write func(interface{})) {
 		log.Debugf("Sending current bandwidth quota to new client")
 		write(bandwidth.GetQuota())
 	}
-	bservice, err := ws.Register("bandwidth", helloFn)
+	bservice, err := channel.Register("bandwidth", helloFn)
 	if err != nil {
 		log.Errorf("Error registering with UI? %v", err)
 		return err
