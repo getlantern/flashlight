@@ -8,9 +8,37 @@ import (
 	"sync"
 )
 
+type helloFnType func(func(interface{}))
+
+type newMsgFnType func() interface{}
+
+// UIChannel is a WebSocket server which can be attached to an HTTP server.
+// Services can be registered with specific types so once the WebSocket
+// clients are connected, they can exchange any JSON messages with the services.
+type UIChannel interface {
+	// Handler exposes the UIChannel as an http.Handler
+	Handler() http.Handler
+	// Register registers a service with an optional helloFn to send initial
+	// message to connected clients.
+	Register(t string, helloFn helloFnType) (*Service, error)
+	// RegisterWithMsgInitializer is similar to Register, but with an additional
+	// newMsgFn to initialize the message data type to-be received from WebSocket
+	// client, instead of letting JSON unmarshaler to guess the data type.
+	RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFnType) (*Service, error)
+	// Unregister stops the UIChannel from processing messages with the specific type.
+	Unregister(t string)
+}
+
+// Service encapsulates a way to exchange JSON messages with a specific type
+// with WebSocket clients. The messages are in the form of
+// `{"type": <Type>, "message": <actual message>}`.
 type Service struct {
-	Type     string
-	In       <-chan interface{}
+	// Type must be unique in an UIChannel
+	Type string
+	// In is the channel to receive messages with the specific type from the
+	// clients.
+	In <-chan interface{}
+	// Out is the channel to send messages to the clients.
 	Out      chan<- interface{}
 	in       chan interface{}
 	out      chan interface{}
@@ -57,14 +85,8 @@ func (s *Service) writeMsg(msg interface{}, out chan<- []byte) {
 	out <- b
 }
 
-type UIChannel struct {
-	clients    *clientChannels
-	muServices sync.RWMutex
-	services   map[string]*Service
-}
-
-func NewUIChannel() *UIChannel {
-	c := &UIChannel{services: make(map[string]*Service)}
+func NewUIChannel() UIChannel {
+	c := &uiChannel{services: make(map[string]*Service)}
 	c.clients = newClients(func(out chan<- []byte) {
 		// This method is the callback that gets called whenever there's a new
 		// incoming websocket connection.
@@ -86,20 +108,21 @@ func NewUIChannel() *UIChannel {
 	return c
 }
 
-func (c *UIChannel) Handler() http.Handler {
+type uiChannel struct {
+	clients    *clientChannels
+	muServices sync.RWMutex
+	services   map[string]*Service
+}
+
+func (c *uiChannel) Handler() http.Handler {
 	return c.clients
 }
 
-// Register registers a WebSocket based service with an optional helloFn to
-// send initial message to connected clients.
-func (c *UIChannel) Register(t string, helloFn helloFnType) (*Service, error) {
+func (c *uiChannel) Register(t string, helloFn helloFnType) (*Service, error) {
 	return c.RegisterWithMsgInitializer(t, helloFn, nil)
 }
 
-// RegisterWithMsgInitializer is similar to Register, but with an additional
-// newMsgFn to initialize the message type to-be received from WebSocket
-// client, instead of letting JSON unmarshaler to guess the type.
-func (c *UIChannel) RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFnType) (*Service, error) {
+func (c *uiChannel) RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFnType) (*Service, error) {
 	log.Tracef("Registering UI service %s", t)
 
 	s := &Service{
@@ -131,7 +154,7 @@ func (c *UIChannel) RegisterWithMsgInitializer(t string, helloFn helloFnType, ne
 	return s, nil
 }
 
-func (c *UIChannel) Unregister(t string) {
+func (c *uiChannel) Unregister(t string) {
 	log.Tracef("Unregistering service: %v", t)
 	c.muServices.Lock()
 	defer c.muServices.Unlock()
@@ -141,7 +164,7 @@ func (c *UIChannel) Unregister(t string) {
 	}
 }
 
-func (c *UIChannel) readLoop() {
+func (c *uiChannel) readLoop() {
 	for b := range c.clients.in {
 		// Determining message type.
 		var envType envelopeType
@@ -188,10 +211,6 @@ type envelope struct {
 	envelopeType
 	Message interface{} `json:"message"`
 }
-
-type helloFnType func(func(interface{}))
-
-type newMsgFnType func() interface{}
 
 func newEnvelope(t string, msg interface{}) ([]byte, error) {
 	b, err := json.Marshal(&envelope{

@@ -20,7 +20,7 @@ type mandrillMessage struct {
 // It intentionally uses direct connection to the 3rd party service, to serve
 // as an out-of-band channel when Lantern doesn't work well, say, when user
 // wants to report an issue.
-func serveEmailProxy(uiChannel *ws.UIChannel) error {
+func serveEmailProxy(uiChannel ws.UIChannel) error {
 	service, err := uiChannel.RegisterWithMsgInitializer("email-proxy", nil,
 		func() interface{} { return &mandrillMessage{} })
 	if err != nil {

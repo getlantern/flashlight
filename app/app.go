@@ -60,7 +60,7 @@ type App struct {
 	chExitFuncs     chan func()
 	chLastExitFuncs chan func()
 	uiServer        *ui.Server
-	ws              *ws.UIChannel
+	ws              ws.UIChannel
 }
 
 // Init initializes the App's state

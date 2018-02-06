@@ -11,7 +11,7 @@ type locationData struct {
 	Code string `json:"code"`
 }
 
-func serveLocation(channel *ws.UIChannel) {
+func serveLocation(channel ws.UIChannel) {
 	helloFn := func(write func(interface{})) {
 		write(locationData{
 			Code: geolookup.GetCountry(time.Second * 30),

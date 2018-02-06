@@ -13,7 +13,7 @@ type UserSignal struct {
 
 var userSignal UserSignal
 
-func setupUserSignal(channel *ws.UIChannel, connect func(), disconnect func()) {
+func setupUserSignal(channel ws.UIChannel, connect func(), disconnect func()) {
 	userSignal.once.Do(func() {
 		err := userSignal.start(channel)
 		if err != nil {
@@ -25,7 +25,7 @@ func setupUserSignal(channel *ws.UIChannel, connect func(), disconnect func()) {
 }
 
 // start the settings service that synchronizes Lantern's configuration with every UI client
-func (s *UserSignal) start(channel *ws.UIChannel) error {
+func (s *UserSignal) start(channel ws.UIChannel) error {
 	var err error
 	helloFn := func(write func(interface{})) {
 		write("connected")
