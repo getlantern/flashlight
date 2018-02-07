@@ -68,6 +68,12 @@ func TestInitWithURLs(t *testing.T) {
 		t.Fatalf("Unable to copy file: %s", err)
 	}
 
+	// create gzipped proxy and global config files to serve
+	gzippedGlobalConfigFilename := "fetched-global.yaml.gz"
+	gzippedProxyConfigFilename := "fetched-proxies.yaml.gz"
+	createGzippedFile(t, "fetched-global.yaml", gzippedGlobalConfigFilename)
+	createGzippedFile(t, "fetched-proxies.yaml", gzippedProxyConfigFilename)
+
 	// set up 2 servers:
 	// 1. one that serves up the global config and
 	// 2. one that serves up the proxy config
@@ -88,7 +94,7 @@ func TestInitWithURLs(t *testing.T) {
 	globalHs := &http.Server{
 		Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 			atomic.AddUint64(&globalReqCount, 1)
-			http.ServeFile(resp, req, "./fetched-global.yaml.gz")
+			http.ServeFile(resp, req, gzippedGlobalConfigFilename)
 		}),
 	}
 	go func() {
@@ -102,7 +108,7 @@ func TestInitWithURLs(t *testing.T) {
 	proxyHs := &http.Server{
 		Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 			atomic.AddUint64(&proxyReqCount, 1)
-			http.ServeFile(resp, req, "./fetched-proxies.yaml.gz")
+			http.ServeFile(resp, req, gzippedProxyConfigFilename)
 		}),
 	}
 	go func() {

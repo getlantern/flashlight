@@ -102,6 +102,7 @@ func TestPollProxies(t *testing.T) {
 	fronted.ConfigureForTest(t)
 	proxyChan := make(chan interface{})
 	file := "./fetched-proxies.yaml"
+	gzippedFile := "fetched-proxies.yaml.gz"
 	cfg := newConfig(file, &options{
 		unmarshaler: proxiesUnmarshaler,
 	})
@@ -117,13 +118,16 @@ func TestPollProxies(t *testing.T) {
 	if !assert.Nil(t, err) {
 		return
 	}
+
+	createGzippedFile(t, file, gzippedFile)
+
 	mtime := fi.ModTime()
 	oldName := fi.Name()
 	tempName := oldName + ".stored"
 	renameFile(t, oldName, tempName)
 	defer renameFile(t, tempName, oldName)
 
-	proxyConfigURLs := startConfigServer(t, fi.Name())
+	proxyConfigURLs := startConfigServer(t, gzippedFile)
 	fetcher := newFetcher(&authConfig{}, &http.Transport{}, proxyConfigURLs)
 	dispatch := func(cfg interface{}) {
 		proxyChan <- cfg
@@ -158,6 +162,7 @@ func TestPollGlobal(t *testing.T) {
 	fronted.ConfigureForTest(t)
 	configChan := make(chan interface{})
 	file := "./fetched-global.yaml"
+	gzippedFile := "fetched-global.yaml.gz"
 	cfg := newConfig(file, &options{
 		unmarshaler: globalUnmarshaler,
 	})
@@ -173,13 +178,16 @@ func TestPollGlobal(t *testing.T) {
 	if !assert.Nil(t, err) {
 		return
 	}
+
+	createGzippedFile(t, file, gzippedFile)
+
 	mtime := fi.ModTime()
 	oldName := fi.Name()
 	tempName := oldName + ".stored"
 	renameFile(t, oldName, tempName)
 	defer renameFile(t, tempName, oldName)
 
-	globalConfigURLs := startConfigServer(t, fi.Name())
+	globalConfigURLs := startConfigServer(t, gzippedFile)
 	fetcher := newFetcher(&authConfig{}, &http.Transport{}, globalConfigURLs)
 	dispatch := func(cfg interface{}) {
 		configChan <- cfg
@@ -217,6 +225,7 @@ func TestPollGlobal(t *testing.T) {
 func TestPollIntervals(t *testing.T) {
 	fronted.ConfigureForTest(t)
 	file := "./fetched-global.yaml"
+	gzippedFile := "fetched-global.yaml.gz"
 	cfg := newConfig(file, &options{
 		unmarshaler: globalUnmarshaler,
 	})
@@ -232,6 +241,9 @@ func TestPollIntervals(t *testing.T) {
 	if !assert.Nil(t, err) {
 		return
 	}
+
+	createGzippedFile(t, file, gzippedFile)
+
 	oldName := fi.Name()
 	tempName := oldName + ".stored"
 	renameFile(t, oldName, tempName)
@@ -246,7 +258,7 @@ func TestPollIntervals(t *testing.T) {
 	hs := &http.Server{
 		Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 			atomic.AddUint64(&reqCount, 1)
-			http.ServeFile(resp, req, "./fetched-global.yaml.gz")
+			http.ServeFile(resp, req, gzippedFile)
 		}),
 	}
 	go func() {
@@ -292,10 +304,9 @@ func startConfigServer(t *testing.T, configFilename string) (urls *chainedFronte
 		t.Fatalf("Unable to listen: %s", err)
 	}
 
-	gzippedName := configFilename + ".gz"
 	hs := &http.Server{
 		Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
-			http.ServeFile(resp, req, gzippedName)
+			http.ServeFile(resp, req, configFilename)
 		}),
 	}
 	go func() {
