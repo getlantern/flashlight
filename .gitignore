@@ -19,6 +19,8 @@ global.yaml
 .glide
 config/fetched-proxies.yaml.stored
 config/fetched-global.yaml.stored
+config/global.yaml
+config/proxies.yaml
 config/generated/masquerades.go
 profile.cov
 profile_tmp.cov
