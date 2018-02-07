@@ -68,7 +68,7 @@ func TestObfuscated(t *testing.T) {
 
 // TestSaved tests reading stored proxies from disk
 func TestSaved(t *testing.T) {
-	cfg := newConfig("./test-proxies.yaml", &options{
+	cfg := newConfig("./fetched-proxies.yaml", &options{
 		unmarshaler: proxiesUnmarshaler,
 	})
 
@@ -76,9 +76,9 @@ func TestSaved(t *testing.T) {
 	assert.Nil(t, err)
 
 	proxies := pr.(map[string]*chained.ChainedServerInfo)
-	chained := proxies["fallback-1.1.1.1"]
+	chained := proxies["fallback-104.236.192.114"]
 	assert.True(t, chained != nil)
-	assert.Equal(t, "1.1.1.1:443", chained.Addr)
+	assert.Equal(t, "104.236.192.114:443", chained.Addr)
 }
 
 // TestEmbedded tests reading stored proxies from disk
