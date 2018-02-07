@@ -244,12 +244,9 @@ func (pc *proxyConnection) doDial(ctx context.Context, network, addr string) (ne
 func (pc *proxyConnection) dialInternal(ctx context.Context, network, addr string) (net.Conn, error) {
 	var conn net.Conn
 	var err error
-	if deadline, set := ctx.Deadline(); set {
-		pc.conn.SetDeadline(deadline)
-	}
 	chDone := make(chan bool)
 	go func() {
-		conn, err = pc.doDialInternal(network, addr)
+		conn, err = pc.doDialInternal(ctx, network, addr)
 		select {
 		case chDone <- true:
 		default:
@@ -267,7 +264,10 @@ func (pc *proxyConnection) dialInternal(ctx context.Context, network, addr strin
 	}
 }
 
-func (pc *proxyConnection) doDialInternal(network, addr string) (net.Conn, error) {
+func (pc *proxyConnection) doDialInternal(ctx context.Context, network, addr string) (net.Conn, error) {
+	if deadline, set := ctx.Deadline(); set {
+		pc.conn.SetDeadline(deadline)
+	}
 	var err error
 	// Look for our special hacked "connect" transport used to signal
 	// that we should send a CONNECT request and tunnel all traffic through
@@ -284,6 +284,8 @@ func (pc *proxyConnection) doDialInternal(network, addr string) (net.Conn, error
 		pc.conn.Close()
 		return nil, err
 	}
+	// Unset the deadline to avoid affecting later read/write on the connection.
+	pc.conn.SetDeadline(time.Time{})
 	return pc.withRateTracking(pc.conn, addr), nil
 }
 
