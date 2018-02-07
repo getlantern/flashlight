@@ -1,5 +1,5 @@
 hash: e98e01159403666c8fa91dd9b76c23bcbc15e36193c7c0eb84e6d7c5e0677b59
-updated: 2018-02-05T15:58:11.846122-06:00
+updated: 2018-02-07T11:52:30.621218-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a3ad5df6c9e7dc8117f55958b4ce99bf1e0fe291
@@ -22,7 +22,7 @@ imports:
 - name: github.com/aristanetworks/glog
   version: b0d951ca530387842f35331df6fd8d9b501d5f90
 - name: github.com/aristanetworks/goarista
-  version: 7c4fd920f333e180b16c33ef1209e3fe62b4f62b
+  version: d6227875a4d124594c68a50e0f98385da89ef8b2
   subpackages:
   - monotime
 - name: github.com/armon/go-radix
@@ -88,7 +88,7 @@ imports:
 - name: github.com/getlantern/edgedetect
   version: f58e865f680868c70f5d114b620b682a39fdaff7
 - name: github.com/getlantern/elevate
-  version: 17962ac260bea7f687dda17741a8bcf1aa578033
+  version: c2e2e4901072d1f7e9f525426735acfab5fd9cdd
   subpackages:
   - bin
 - name: github.com/getlantern/ema
@@ -185,7 +185,7 @@ imports:
 - name: github.com/getlantern/kcpwrapper
   version: a35c895f6de73d94ca04369ac0c311cb8a97c0f2
 - name: github.com/getlantern/keyman
-  version: ec05d2e2bbe5fa36f17ed8dab2269fcfa44367fe
+  version: f55e7280e93a8802a175e9c4beccad873f3fdf43
   subpackages:
   - certimporter
 - name: github.com/getlantern/lampshade
@@ -443,7 +443,7 @@ imports:
 - name: github.com/Yawning/chacha20
   version: e3b1f968fc6397b51d963fee8ec8711a47bc0ce8
 - name: golang.org/x/crypto
-  version: 1875d0a70c90e57f11972aefd42276df65e895b9
+  version: d9133f5469342136e669e85192a26056b587f503
   subpackages:
   - blowfish
   - cast5
@@ -514,11 +514,11 @@ imports:
   - internal/modules
   - internal/remote_api
 - name: google.golang.org/genproto
-  version: 4eb30f4778eed4c258ba66527a0d4f9ec8a36c45
+  version: 2b5a72b8730b0b16380010cfe5286c42108d88e7
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: d09ec435457694f2e314397fe5bc18a1d959f303
+  version: 7646b5360d049a7ca31e9133315db43456f39e2e
   subpackages:
   - balancer
   - balancer/base
@@ -600,8 +600,8 @@ testImports:
   subpackages:
   - difflib
 - name: github.com/sirupsen/logrus
-  version: 768a92a02685ee7535069fc1581341b41bab9b72
+  version: dcf2d47dfb9dfc8f2727c7096e358cadac7d1423
 - name: github.com/stretchr/testify
-  version: a726187e3128d0a0ec37f73ca7c4d3e508e6c2e5
+  version: be8372ae8ec5c6daaed3cc28ebf73c54b737c240
   subpackages:
   - assert
