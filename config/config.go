@@ -119,7 +119,7 @@ func pipeConfig(opts *options) {
 		} else {
 			log.Debug("Dispatching updated config")
 			opts.dispatch(cfg)
-			lastCfg = yamlRoundTrip(cfg)
+			lastCfg = b
 		}
 	}
 
