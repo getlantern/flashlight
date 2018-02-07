@@ -8,51 +8,45 @@ import (
 	"sync"
 )
 
-// envelopeType is the type of the message envelope.
-type envelopeType struct {
-	Type string `json:"type,inline"`
-}
-
-// envelope is a struct that wraps messages and associates them with a type.
-type envelope struct {
-	envelopeType
-	Message interface{} `json:"message"`
-}
-
 type helloFnType func(func(interface{}))
 
 type newMsgFnType func() interface{}
 
+// UIChannel is a WebSocket server which can be attached to an HTTP server.
+// Services can be registered with specific types so once the WebSocket
+// clients are connected, they can exchange any JSON messages with the services.
+type UIChannel interface {
+	// Handler exposes the UIChannel as an http.Handler
+	Handler() http.Handler
+	// Register registers a service with an optional helloFn to send initial
+	// message to connected clients.
+	Register(t string, helloFn helloFnType) (*Service, error)
+	// RegisterWithMsgInitializer is similar to Register, but with an additional
+	// newMsgFn to initialize the message data type to-be received from WebSocket
+	// client, instead of letting JSON unmarshaler to guess the data type.
+	RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFnType) (*Service, error)
+	// Unregister stops the UIChannel from processing messages with the specific type.
+	Unregister(t string)
+}
+
+// Service encapsulates a way to exchange JSON messages with a specific type
+// with WebSocket clients. The messages are in the form of
+// `{"type": <Type>, "message": <actual message>}`.
 type Service struct {
-	Type     string
-	In       <-chan interface{}
+	// Type must be unique in an UIChannel
+	Type string
+	// In is the channel to receive messages with the specific type from the
+	// clients.
+	In <-chan interface{}
+	// Out is the channel to send messages to the clients.
 	Out      chan<- interface{}
 	in       chan interface{}
 	out      chan interface{}
 	stopCh   chan bool
 	helloFn  helloFnType
 	newMsgFn newMsgFnType
+	clients  *clientChannels
 }
-
-var (
-	muServices sync.RWMutex
-	services   = make(map[string]*Service)
-
-	clients = newClients(func(out chan<- []byte) {
-		// This method is the callback that gets called whenever there's a new
-		// incoming websocket connection.
-		muServices.RLock()
-		defer muServices.RUnlock()
-		for _, s := range services {
-			// Just queue the hello message for the given service for writing
-			// on the new incoming websocket.
-			// We put each call on a separate go routine to avoid any single hello
-			// function from blocking the others, which could result in the UI
-			// hanging.
-			go s.writeHelloMsg(out)
-		}
-	})
-)
 
 func (s *Service) writeAll() {
 	// Watch for new messages and send them to the combined output.
@@ -62,7 +56,7 @@ func (s *Service) writeAll() {
 			log.Trace("Received message on stop channel")
 			return
 		case msg := <-s.out:
-			s.writeMsg(msg, clients.Out)
+			s.writeMsg(msg, s.clients.Out)
 		}
 	}
 }
@@ -91,16 +85,44 @@ func (s *Service) writeMsg(msg interface{}, out chan<- []byte) {
 	out <- b
 }
 
-// Register registers a WebSocket based service with an optional helloFn to
-// send initial message to connected clients.
-func Register(t string, helloFn helloFnType) (*Service, error) {
-	return RegisterWithMsgInitializer(t, helloFn, nil)
+func NewUIChannel() UIChannel {
+	c := &uiChannel{services: make(map[string]*Service)}
+	c.clients = newClients(func(out chan<- []byte) {
+		// This method is the callback that gets called whenever there's a new
+		// incoming websocket connection.
+		c.muServices.RLock()
+		defer c.muServices.RUnlock()
+		for _, s := range c.services {
+			// Just queue the hello message for the given service for writing
+			// on the new incoming websocket.
+			// We put each call on a separate go routine to avoid any single hello
+			// function from blocking the others, which could result in the UI
+			// hanging.
+			go s.writeHelloMsg(out)
+		}
+	})
+	go c.clients.writeAll()
+	go c.readLoop()
+
+	log.Debugf("Accepting WebSocket connections")
+	return c
 }
 
-// RegisterWithMsgInitializer is similar to Register, but with an additional
-// newMsgFn to initialize the message type to-be received from WebSocket
-// client, instead of letting JSON unmarshaler to guess the type.
-func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFnType) (*Service, error) {
+type uiChannel struct {
+	clients    *clientChannels
+	muServices sync.RWMutex
+	services   map[string]*Service
+}
+
+func (c *uiChannel) Handler() http.Handler {
+	return c.clients
+}
+
+func (c *uiChannel) Register(t string, helloFn helloFnType) (*Service, error) {
+	return c.RegisterWithMsgInitializer(t, helloFn, nil)
+}
+
+func (c *uiChannel) RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFnType) (*Service, error) {
 	log.Tracef("Registering UI service %s", t)
 
 	s := &Service{
@@ -110,49 +132,40 @@ func RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFn
 		stopCh:   make(chan bool, 1), // buffered to avoid blocking `Unregister()`
 		helloFn:  helloFn,
 		newMsgFn: newMsgFn,
+		clients:  c.clients,
 	}
 	s.In, s.Out = s.in, s.out
-	s.writeHelloMsg(clients.Out)
+	s.writeHelloMsg(c.clients.Out)
 
-	muServices.Lock()
-	defer muServices.Unlock()
+	c.muServices.Lock()
+	defer c.muServices.Unlock()
 
-	if services[t] != nil {
+	if c.services[t] != nil {
 		// Using panic because this would be a developer error rather that
 		// something that could happen naturally.
 		panic("Service was already registered.")
 	}
 
 	// Adding new service to service map.
-	services[t] = s
+	c.services[t] = s
 
 	log.Tracef("Registered UI service %s", t)
 	go s.writeAll()
 	return s, nil
 }
 
-func Unregister(t string) {
+func (c *uiChannel) Unregister(t string) {
 	log.Tracef("Unregistering service: %v", t)
-	muServices.Lock()
-	defer muServices.Unlock()
-	if services[t] != nil {
-		services[t].stopCh <- true
-		delete(services, t)
+	c.muServices.Lock()
+	defer c.muServices.Unlock()
+	if c.services[t] != nil {
+		c.services[t].stopCh <- true
+		delete(c.services, t)
 	}
 }
 
-// StartUIChannel establishes a channel to the UI for sending and receiving
-// updates
-func StartUIChannel() http.Handler {
-	go clients.writeAll()
-	go readLoop(clients.In)
-
-	log.Debugf("Accepting WebSocket connections")
-	return clients
-}
-
-func readLoop(in <-chan []byte) {
-	for b := range in {
+func (c *uiChannel) readLoop() {
+	for b := range c.clients.in {
 		// Determining message type.
 		var envType envelopeType
 		err := json.Unmarshal(b, &envType)
@@ -163,9 +176,9 @@ func readLoop(in <-chan []byte) {
 		}
 
 		// Delegating response to the service that registered with the given type.
-		muServices.RLock()
-		service := services[envType.Type]
-		muServices.RUnlock()
+		c.muServices.RLock()
+		service := c.services[envType.Type]
+		c.muServices.RUnlock()
 		if service == nil {
 			log.Errorf("Message type %v belongs to an unknown service.", envType.Type)
 			continue
@@ -186,6 +199,17 @@ func readLoop(in <-chan []byte) {
 		// Pass this message and continue reading another one.
 		service.in <- env.Message
 	}
+}
+
+// envelopeType is the type of the message envelope.
+type envelopeType struct {
+	Type string `json:"type,inline"`
+}
+
+// envelope is a struct that wraps messages and associates them with a type.
+type envelope struct {
+	envelopeType
+	Message interface{} `json:"message"`
 }
 
 func newEnvelope(t string, msg interface{}) ([]byte, error) {

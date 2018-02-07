@@ -1,7 +1,6 @@
 package app
 
 import (
-	"bytes"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -15,13 +14,14 @@ import (
 )
 
 func TestEmailProxy(t *testing.T) {
-	s := httptest.NewServer(ws.StartUIChannel())
+	channel := ws.NewUIChannel()
+	s := httptest.NewServer(channel.Handler())
 	defer s.Close()
 	// avoid panicking when attaching settings to the email.
 	settings = loadSettings("version", "revisionDate", "buildDate")
-	err := serveEmailProxy()
+	err := serveEmailProxy(channel)
 	assert.NoError(t, err, "should start service")
-	defer ws.Unregister("email-proxy")
+	defer channel.Unregister("email-proxy")
 	wsURL := strings.Replace(s.URL, "http://", "ws://", -1)
 	conn, _, err := websocket.DefaultDialer.Dial(wsURL, http.Header{})
 	if !assert.NoError(t, err, "should connect to Websocket") {
@@ -32,29 +32,16 @@ func TestEmailProxy(t *testing.T) {
 	email.MandrillAPIKey = "SANDBOX_SUCCESS"
 	err = sendTemplateVia(conn)
 	assert.NoError(t, err, "should write to ws")
-	// When running with integration test, there're some other WebSocket
-	// messages sent to client. Filter mandrill specific message to verify. If
-	// there's no such message, the test hangs as an indication. Same below.
-	for {
-		_, p, err := conn.ReadMessage()
-		assert.NoError(t, err, "should read from ws")
-		if bytes.Contains(p, []byte("email-proxy")) {
-			assert.Equal(t, `{"type":"email-proxy","message":"success"}`, string(p))
-			break
-		}
-	}
+	_, p, err := conn.ReadMessage()
+	assert.NoError(t, err, "should read from ws")
+	assert.Equal(t, `{"type":"email-proxy","message":"success"}`, string(p))
 
 	email.MandrillAPIKey = "SANDBOX_ERROR"
 	err = sendTemplateVia(conn)
 	assert.NoError(t, err, "should write to ws")
-	for {
-		_, p, err := conn.ReadMessage()
-		assert.NoError(t, err, "should read from ws")
-		if bytes.Contains(p, []byte("email-proxy")) {
-			assert.Equal(t, `{"type":"email-proxy","message":"SANDBOX_ERROR"}`, string(p))
-			break
-		}
-	}
+	_, p, err = conn.ReadMessage()
+	assert.NoError(t, err, "should read from ws")
+	assert.Equal(t, `{"type":"email-proxy","message":"SANDBOX_ERROR"}`, string(p))
 }
 
 func sendTemplateVia(conn *websocket.Conn) error {
