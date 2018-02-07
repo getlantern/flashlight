@@ -6,13 +6,14 @@ import (
 
 // AdSettings are settings to use when showing ads to Android clients
 type AdSettings struct {
-	ShowAds          bool
-	ShowAdsAfterDays int
-	Percentage       float64
-	Provider         string
-	TargetedApps     map[string]string
-	Admob            *Admob
-	InMobi           *InMobi
+	ShowAds        bool
+	MinDaysShowAds int `yaml:"mindaysshowads,omitempty"`
+	MaxDaysShowAds int `yaml:"maxdaysshowads,omitempty"`
+	Percentage     float64
+	Provider       string
+	TargetedApps   map[string]string
+	Admob          *Admob
+	InMobi         *InMobi
 }
 
 type Admob struct {
@@ -36,9 +37,16 @@ func (settings *AdSettings) Enabled() bool {
 	return false
 }
 
-func (settings *AdSettings) GetShowAdsAfterDays() int {
+func (settings *AdSettings) GetMinDaysShowAds() int {
 	if settings != nil {
-		return settings.ShowAdsAfterDays
+		return settings.MinDaysShowAds
+	}
+	return 0
+}
+
+func (settings *AdSettings) GetMaxDaysShowAds() int {
+	if settings != nil {
+		return settings.MaxDaysShowAds
 	}
 	return 0
 }
