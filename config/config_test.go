@@ -52,7 +52,9 @@ func TestInvalidFile(t *testing.T) {
 
 // TestObfuscated tests reading obfuscated global config from disk
 func TestObfuscated(t *testing.T) {
-	config := newConfig("./obfuscated-global.yaml", &options{
+	writeObfuscatedConfig(t, "fetched-global.yaml", "global.yaml")
+
+	config := newConfig("global.yaml", &options{
 		obfuscate:   true,
 		unmarshaler: globalUnmarshaler,
 	})

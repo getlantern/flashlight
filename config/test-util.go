@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/getlantern/rot13"
 )
 
 func createGzippedFile(t *testing.T, filename string, gzippedFilename string) {
@@ -26,5 +28,35 @@ func createGzippedFile(t *testing.T, filename string, gzippedFilename string) {
 	err = w.Close()
 	if err != nil {
 		t.Fatalf("Could not close %v: %v", gzippedFilename, err)
+	}
+}
+
+func writeObfuscatedConfig(t *testing.T, filename string, obfuscatedFilename string) {
+	log.Debugf("Writing obfuscated config from %v to %v", filename, obfuscatedFilename)
+
+	// open and read yaml file
+	yamlFile, err := os.Open(filename)
+	if err != nil {
+		t.Fatalf("Failed to open %v: %v", filename, err)
+	}
+	defer yamlFile.Close()
+
+	bytes, err := ioutil.ReadAll(yamlFile)
+	if err != nil {
+		t.Fatalf("Failed to read %v: %v", filename, err)
+	}
+
+	// create new obfuscated file
+	outfile, err := os.OpenFile(obfuscatedFilename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	if err != nil {
+		t.Fatalf("Unable to open file %v for writing: %v", obfuscatedFilename, err)
+	}
+	defer outfile.Close()
+
+	// write ROT13-encoded config to obfuscated file
+	out := rot13.NewWriter(outfile)
+	_, err = out.Write(bytes)
+	if err != nil {
+		t.Fatalf("Unable to write yaml to file %v: %v", obfuscatedFilename, err)
 	}
 }
