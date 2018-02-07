@@ -1,5 +1,5 @@
 hash: e98e01159403666c8fa91dd9b76c23bcbc15e36193c7c0eb84e6d7c5e0677b59
-updated: 2018-02-07T07:37:23.722536-06:00
+updated: 2018-02-07T11:52:30.621218-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a3ad5df6c9e7dc8117f55958b4ce99bf1e0fe291
@@ -185,7 +185,7 @@ imports:
 - name: github.com/getlantern/kcpwrapper
   version: a35c895f6de73d94ca04369ac0c311cb8a97c0f2
 - name: github.com/getlantern/keyman
-  version: 12392c672357e18c9ca8b68a4446febe3a4c1afc
+  version: f55e7280e93a8802a175e9c4beccad873f3fdf43
   subpackages:
   - certimporter
 - name: github.com/getlantern/lampshade
