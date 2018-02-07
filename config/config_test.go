@@ -118,8 +118,10 @@ func TestPollProxies(t *testing.T) {
 		return
 	}
 	mtime := fi.ModTime()
-	tempName := fi.Name() + ".stored"
-	os.Rename(fi.Name(), tempName)
+	oldName := fi.Name()
+	tempName := oldName + ".stored"
+	renameFile(t, oldName, tempName)
+	defer renameFile(t, tempName, oldName)
 
 	proxyConfigURLs := startConfigServer(t, fi.Name())
 	fetcher := newFetcher(&authConfig{}, &http.Transport{}, proxyConfigURLs)
@@ -150,9 +152,6 @@ func TestPollProxies(t *testing.T) {
 	assert.Nil(t, err, "Got error: %v", err)
 
 	assert.True(t, fi.ModTime().After(mtime))
-
-	// Just restore the original file.
-	os.Rename(tempName, fi.Name())
 }
 
 func TestPollGlobal(t *testing.T) {
@@ -175,8 +174,10 @@ func TestPollGlobal(t *testing.T) {
 		return
 	}
 	mtime := fi.ModTime()
-	tempName := fi.Name() + ".stored"
-	os.Rename(fi.Name(), tempName)
+	oldName := fi.Name()
+	tempName := oldName + ".stored"
+	renameFile(t, oldName, tempName)
+	defer renameFile(t, tempName, oldName)
 
 	globalConfigURLs := startConfigServer(t, fi.Name())
 	fetcher := newFetcher(&authConfig{}, &http.Transport{}, globalConfigURLs)
@@ -211,9 +212,6 @@ func TestPollGlobal(t *testing.T) {
 		assert.NotNil(t, fi)
 		assert.True(t, fi.ModTime().After(mtime), "Incorrect modification times")
 	}
-
-	// Just restore the original file.
-	os.Rename(tempName, file)
 }
 
 func TestPollIntervals(t *testing.T) {
@@ -234,8 +232,10 @@ func TestPollIntervals(t *testing.T) {
 	if !assert.Nil(t, err) {
 		return
 	}
-	tempName := fi.Name() + ".stored"
-	os.Rename(fi.Name(), tempName)
+	oldName := fi.Name()
+	tempName := oldName + ".stored"
+	renameFile(t, oldName, tempName)
+	defer renameFile(t, tempName, oldName)
 
 	l, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
@@ -272,9 +272,6 @@ func TestPollIntervals(t *testing.T) {
 
 	finalReqCount := atomic.LoadUint64(&reqCount)
 	assert.Equal(t, 3, int(finalReqCount), "should have fetched config every %v", pollInterval)
-
-	// Just restore the original file.
-	os.Rename(tempName, file)
 }
 
 func globalUnmarshaler(b []byte) (interface{}, error) {
@@ -312,5 +309,12 @@ func startConfigServer(t *testing.T, configFilename string) (urls *chainedFronte
 	return &chainedFrontedURLs{
 		chained: url,
 		fronted: url,
+	}
+}
+
+func renameFile(t *testing.T, oldpath string, newpath string) {
+	err := os.Rename(oldpath, newpath)
+	if err != nil {
+		t.Fatalf("Unable to rename file: %s", err)
 	}
 }
