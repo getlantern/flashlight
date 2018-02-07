@@ -36,7 +36,7 @@ type Global struct {
 	// GlobalConfigPollInterval sets interval at which to poll for global config
 	GlobalConfigPollInterval time.Duration
 
-	// ProxyConfigPollInterval
+	// ProxyConfigPollInterval sets interval at which to poll for proxy config
 	ProxyConfigPollInterval time.Duration
 }
 
