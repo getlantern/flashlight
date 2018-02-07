@@ -28,3 +28,5 @@ proxiedsites:
 trustedcas: {{range .cas}}
 - commonname: "{{.CommonName}}"
   cert: "{{.Cert}}"{{end}}
+globalconfigpollinterval: 24h
+proxyconfigpollinterval: 1m
