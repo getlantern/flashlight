@@ -105,6 +105,11 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 			}
 			mx.Unlock()
 		}
+		// Rather than call `origGlobalDispatch` here, we are calling it in a
+		// separate goroutine (initiated above) that listens for messages on
+		// `globalDispatchCh`. This (a) avoids blocking Lantern startup when
+		// applying new configuration and (b) allows us to serialize application of
+		// config changes.
 		globalDispatchCh <- cfg
 	}
 
