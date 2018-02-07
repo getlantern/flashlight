@@ -246,25 +246,28 @@ func (pc *proxyConnection) dialInternal(ctx context.Context, network, addr strin
 	var err error
 	chDone := make(chan bool)
 	go func() {
-		conn, err = pc.doDialInternal(network, addr)
-		chDone <- true
+		conn, err = pc.doDialInternal(ctx, network, addr)
+		select {
+		case chDone <- true:
+		default:
+			if err == nil {
+				log.Debugf("Connection to %s established too late, closing", addr)
+				conn.Close()
+			}
+		}
 	}()
 	select {
 	case <-chDone:
 		return conn, err
 	case <-ctx.Done():
-		go func() {
-			<-chDone
-			if err == nil {
-				log.Debugf("Connection to %s established too late, closing", addr)
-				conn.Close()
-			}
-		}()
 		return nil, ctx.Err()
 	}
 }
 
-func (pc *proxyConnection) doDialInternal(network, addr string) (net.Conn, error) {
+func (pc *proxyConnection) doDialInternal(ctx context.Context, network, addr string) (net.Conn, error) {
+	if deadline, set := ctx.Deadline(); set {
+		pc.conn.SetDeadline(deadline)
+	}
 	var err error
 	// Look for our special hacked "connect" transport used to signal
 	// that we should send a CONNECT request and tunnel all traffic through
@@ -281,6 +284,8 @@ func (pc *proxyConnection) doDialInternal(network, addr string) (net.Conn, error
 		pc.conn.Close()
 		return nil, err
 	}
+	// Unset the deadline to avoid affecting later read/write on the connection.
+	pc.conn.SetDeadline(time.Time{})
 	return pc.withRateTracking(pc.conn, addr), nil
 }
 
