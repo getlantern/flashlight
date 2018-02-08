@@ -14,6 +14,8 @@ import (
 
 // TestInit tests initializing configs.
 func TestInit(t *testing.T) {
+	defer deleteGlobalConfig()
+
 	flags := make(map[string]interface{})
 	flags["staging"] = true
 

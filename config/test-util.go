@@ -60,3 +60,13 @@ func writeObfuscatedConfig(t *testing.T, filename string, obfuscatedFilename str
 		t.Fatalf("Unable to write yaml to file %v: %v", obfuscatedFilename, err)
 	}
 }
+
+// Certain tests fetch global config from a remote server and store it at
+// `global.yaml`.  Other tests rely on `global.yaml` matching the
+// `fetched-global.yaml` fixture.  For tests that fetch config remotely, we must
+// delete the config file once the test has completed to avoid causing other
+// these other tests to fail in the event that the remote config differs from
+// the fixture.
+func deleteGlobalConfig() {
+	os.Remove("global.yaml")
+}
