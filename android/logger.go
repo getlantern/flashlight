@@ -7,11 +7,3 @@ func Debug(tag, msg string) {
 func Error(tag, msg string) {
 	log.Errorf("%s: %s", tag, msg)
 }
-
-func Warn(tag, msg string) {
-	log.Debugf("%s: %s", tag, msg)
-}
-
-func Info(tag, msg string) {
-	log.Debugf("%s: %s", tag, msg)
-}
