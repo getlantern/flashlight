@@ -109,17 +109,12 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 	}
 	x509cert := cert.X509()
-	sessionCache := tls.NewLRUClientSessionCache(1000)
 	return newProxy(name, "https", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
 			conn, err := tlsdialer.DialTimeout(func(network, addr string, timeout time.Duration) (net.Conn, error) {
 				return p.dialCore(op)(ctx)
 			}, timeoutFor(ctx),
-				"tcp", p.addr, false, &tls.Config{
-					ClientSessionCache: sessionCache,
-					InsecureSkipVerify: true,
-					CipherSuites:       determineOrderedCipherSuites(s),
-				})
+				"tcp", p.addr, false, tlsConfigForProxy(s))
 			if err != nil {
 				return conn, err
 			}
@@ -642,21 +637,35 @@ func reportProxyDial(delta time.Duration, err error) {
 	}
 }
 
-// determineOrderedCipherSuites returns the ordered list of cipher suites to be
-// used for TLS handshakes, depending on (a) whether the platform is desktop or
-// mobile, and (b) whether the proxy config specifies a particular cipher suite
-// order.  If not, it relies on defaults.
-func determineOrderedCipherSuites(s *ChainedServerInfo) []uint16 {
+func tlsConfigForProxy(s *ChainedServerInfo) *tls.Config {
+	sessionCache := tls.NewLRUClientSessionCache(1000)
+	cipherSuites := orderedCipherSuitesFromConfig(s)
+
+	var tlsConfig *tls.Config
+	if cipherSuites != nil {
+		tlsConfig = &tls.Config{
+			ClientSessionCache: sessionCache,
+			InsecureSkipVerify: true,
+			CipherSuites:       cipherSuites,
+		}
+	} else {
+		tlsConfig = &tls.Config{
+			ClientSessionCache: sessionCache,
+			InsecureSkipVerify: true,
+		}
+	}
+
+	return tlsConfig
+}
+
+func orderedCipherSuitesFromConfig(s *ChainedServerInfo) []uint16 {
 	var ciphers []uint16
 
-	if runtime.GOOS == "android" && s.mobileOrderedCipherSuites() != nil {
+	onMobile := runtime.GOOS == "android"
+	if onMobile && s.mobileOrderedCipherSuites() != nil {
 		ciphers = s.mobileOrderedCipherSuites()
-	} else if runtime.GOOS == "android" {
-		ciphers = defaultMobileOrderedCipherSuites
-	} else if s.desktopOrderedCipherSuites() != nil {
+	} else if !onMobile && s.desktopOrderedCipherSuites() != nil {
 		ciphers = s.desktopOrderedCipherSuites()
-	} else {
-		ciphers = defaultDesktopOrderedCipherSuites
 	}
 
 	return ciphers
