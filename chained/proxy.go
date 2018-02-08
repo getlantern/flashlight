@@ -47,44 +47,6 @@ const (
 var (
 	chainedDialTimeout          = 1 * time.Minute
 	theForceAddr, theForceToken string
-
-	desktopOrderedCipherSuites = []uint16{
-		tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-		tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-		tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-		tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-		tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
-		tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
-		tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
-		tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
-		tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-		tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
-		tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
-		tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
-		tls.TLS_RSA_WITH_AES_128_CBC_SHA,
-		tls.TLS_RSA_WITH_AES_256_CBC_SHA,
-		tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
-		tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
-	}
-
-	mobileOrderedCipherSuites = []uint16{
-		tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
-		tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
-		tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-		tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-		tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-		tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-		tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
-		tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
-		tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-		tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
-		tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
-		tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
-		tls.TLS_RSA_WITH_AES_128_CBC_SHA,
-		tls.TLS_RSA_WITH_AES_256_CBC_SHA,
-		tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
-		tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
-	}
 )
 
 // CreateDialer creates a Proxy (balancer.Dialer) with supplied server info.
@@ -107,13 +69,7 @@ func CreateDialer(name string, s *ChainedServerInfo, deviceID string, proToken f
 			p, err = newHTTPProxy(name, s, deviceID, proToken)
 		} else {
 			log.Tracef("Cert configured for  %s, will dial with tls", s.Addr)
-			// on desktop, specify order of cipher suites to match golang TLS library;
-			// on mobile, prioritize CHACHA20 given performance implications
-			cipherSuites := desktopOrderedCipherSuites
-			if runtime.GOOS == "android" {
-				cipherSuites = mobileOrderedCipherSuites
-			}
-			p, err = newHTTPSProxy(name, s, deviceID, proToken, cipherSuites)
+			p, err = newHTTPSProxy(name, s, deviceID, proToken)
 		}
 		return p, err
 	case "obfs4":
@@ -147,7 +103,7 @@ func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken f
 	})
 }
 
-func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string, orderedCipherSuites []uint16) (*proxy, error) {
+func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
@@ -162,7 +118,7 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 				"tcp", p.addr, false, &tls.Config{
 					ClientSessionCache: sessionCache,
 					InsecureSkipVerify: true,
-					CipherSuites:       orderedCipherSuites,
+					CipherSuites:       determineOrderedCipherSuites(s),
 				})
 			if err != nil {
 				return conn, err
@@ -684,4 +640,24 @@ func reportProxyDial(delta time.Duration, err error) {
 		innerOp.FailIf(err)
 		innerOp.End()
 	}
+}
+
+// determineOrderedCipherSuites returns the ordered list of cipher suites to be
+// used for TLS handshakes, depending on (a) whether the platform is desktop or
+// mobile, and (b) whether the proxy config specifies a particular cipher suite
+// order.  If not, it relies on defaults.
+func determineOrderedCipherSuites(s *ChainedServerInfo) []uint16 {
+	var ciphers []uint16
+
+	if runtime.GOOS == "android" && s.mobileOrderedCipherSuites() != nil {
+		ciphers = s.mobileOrderedCipherSuites()
+	} else if runtime.GOOS == "android" {
+		ciphers = defaultMobileOrderedCipherSuites
+	} else if s.desktopOrderedCipherSuites() != nil {
+		ciphers = s.desktopOrderedCipherSuites()
+	} else {
+		ciphers = defaultDesktopOrderedCipherSuites
+	}
+
+	return ciphers
 }
