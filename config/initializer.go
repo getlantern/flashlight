@@ -2,7 +2,6 @@ package config
 
 import (
 	"errors"
-	"runtime"
 	"time"
 
 	"github.com/getlantern/golog"
@@ -27,13 +26,6 @@ var (
 	globalStagingURLs = &chainedFrontedURLs{
 		chained: "https://globalconfig.flashlightproxy.com/global.yaml.gz",
 		fronted: "https://d24ykmup0867cj.cloudfront.net/global.yaml.gz",
-	}
-
-	// globalAndroidStagingURLs are the chained and fronted URLs for fetching the global
-	// config in a staging environment for Android
-	globalAndroidStagingURLs = &chainedFrontedURLs{
-		chained: "https://s3.amazonaws.com/lantern-android/global.yaml.gz",
-		fronted: "https://s3.amazonaws.com/lantern-android/global.yaml.gz",
 	}
 
 	// The following are over HTTP because proxies do not forward X-Forwarded-For
@@ -168,9 +160,6 @@ func getProxyURLs(staging bool) *chainedFrontedURLs {
 func getGlobalURLs(staging bool) *chainedFrontedURLs {
 	if staging {
 		log.Debug("Configuring for staging")
-		if runtime.GOOS == "android" {
-			return globalAndroidStagingURLs
-		}
 		return globalStagingURLs
 	}
 	log.Debugf("Not configuring for staging.")
