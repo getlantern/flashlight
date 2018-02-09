@@ -642,11 +642,24 @@ func tlsConfigForProxy(s *ChainedServerInfo) *tls.Config {
 	cipherSuites := orderedCipherSuitesFromConfig(s)
 
 	var tlsConfig *tls.Config
-	if cipherSuites != nil {
+	if cipherSuites != nil && s.ServerNameIndicator != "" {
 		tlsConfig = &tls.Config{
 			ClientSessionCache: sessionCache,
 			InsecureSkipVerify: true,
 			CipherSuites:       cipherSuites,
+			ServerName:         s.ServerNameIndicator,
+		}
+	} else if cipherSuites != nil {
+		tlsConfig = &tls.Config{
+			ClientSessionCache: sessionCache,
+			InsecureSkipVerify: true,
+			CipherSuites:       cipherSuites,
+		}
+	} else if s.ServerNameIndicator != "" {
+		tlsConfig = &tls.Config{
+			ClientSessionCache: sessionCache,
+			InsecureSkipVerify: true,
+			ServerName:         s.ServerNameIndicator,
 		}
 	} else {
 		tlsConfig = &tls.Config{

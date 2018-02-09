@@ -81,6 +81,11 @@ type ChainedServerInfo struct {
 	// ordering for desktop because performance of AES ciphers is more of a
 	// concern on mobile.
 	MobileOrderedCipherSuiteNames []string
+
+	// ServerNameIndicator:  Specifies the hostname that should be sent by the
+	// client as the Server Name Indication header in a TLS request.  If not
+	// provided, the client should not send an SNI header.
+	ServerNameIndicator string
 }
 
 func (s *ChainedServerInfo) ptSetting(name string) string {
