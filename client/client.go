@@ -236,11 +236,10 @@ func (client *Client) initEasyList(adBlockingAllowed func() bool) {
 	client.easylist = easylist.ListFunc(func(req *http.Request) bool {
 		adSwappingEnabled := client.adSwapTargetURL() != ""
 		if adSwappingEnabled {
-			// Use only laternList in order to avoid blocking ad resources for
-			// swapped ads
-			return lanternList.Allow(req)
+			// Always allow to avoid interfering with ad swapping
+			return true
 		}
-		// Ad swapping disabled, use laternList and easylistList for maximum
+		// Use lanternList and easylistList for maximum
 		// coverage
 		return lanternList.Allow(req) && easylistList.Allow(req)
 	})
