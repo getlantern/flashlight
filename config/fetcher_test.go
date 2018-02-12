@@ -25,6 +25,8 @@ func (uc *authConfig) GetUserID() int64 {
 
 // TestFetcher actually fetches a config file over the network.
 func TestFetcher(t *testing.T) {
+	defer deleteGlobalConfig()
+
 	// This will actually fetch the cloud config over the network.
 	rt := &http.Transport{}
 	configFetcher := newFetcher(&authConfig{}, rt, globalURLs)
