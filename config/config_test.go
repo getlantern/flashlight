@@ -3,7 +3,11 @@ package config
 import (
 	"errors"
 	"io/ioutil"
+	"net"
+	"net/http"
 	"os"
+	"strconv"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -48,7 +52,9 @@ func TestInvalidFile(t *testing.T) {
 
 // TestObfuscated tests reading obfuscated global config from disk
 func TestObfuscated(t *testing.T) {
-	config := newConfig("./obfuscated-global.yaml", &options{
+	writeObfuscatedConfig(t, "fetched-global.yaml", "global.yaml")
+
+	config := newConfig("global.yaml", &options{
 		obfuscate:   true,
 		unmarshaler: globalUnmarshaler,
 	})
@@ -64,7 +70,7 @@ func TestObfuscated(t *testing.T) {
 
 // TestSaved tests reading stored proxies from disk
 func TestSaved(t *testing.T) {
-	cfg := newConfig("./test-proxies.yaml", &options{
+	cfg := newConfig("./fetched-proxies.yaml", &options{
 		unmarshaler: proxiesUnmarshaler,
 	})
 
@@ -72,9 +78,9 @@ func TestSaved(t *testing.T) {
 	assert.Nil(t, err)
 
 	proxies := pr.(map[string]*chained.ChainedServerInfo)
-	chained := proxies["fallback-1.1.1.1"]
+	chained := proxies["fallback-104.236.192.114"]
 	assert.True(t, chained != nil)
-	assert.Equal(t, "1.1.1.1:443", chained.Addr)
+	assert.Equal(t, "104.236.192.114:443", chained.Addr)
 }
 
 // TestEmbedded tests reading stored proxies from disk
@@ -98,20 +104,37 @@ func TestPollProxies(t *testing.T) {
 	fronted.ConfigureForTest(t)
 	proxyChan := make(chan interface{})
 	file := "./fetched-proxies.yaml"
+	gzippedFile := "fetched-proxies.yaml.gz"
 	cfg := newConfig(file, &options{
 		unmarshaler: proxiesUnmarshaler,
 	})
-
-	fi, err := os.Stat(file)
+	var fi os.FileInfo
+	var err error
+	for i := 1; i <= 400; i++ {
+		fi, err = os.Stat(file)
+		if err == nil {
+			break
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
 	if !assert.Nil(t, err) {
 		return
 	}
-	mtime := fi.ModTime()
-	tempName := fi.Name() + ".stored"
-	os.Rename(fi.Name(), tempName)
 
-	urls := proxiesURLs
-	go cfg.poll(&authConfig{}, proxyChan, urls, 1*time.Hour)
+	createGzippedFile(t, file, gzippedFile)
+
+	mtime := fi.ModTime()
+	oldName := fi.Name()
+	tempName := oldName + ".stored"
+	renameFile(t, oldName, tempName)
+	defer renameFile(t, tempName, oldName)
+
+	proxyConfigURLs := startConfigServer(t, gzippedFile)
+	fetcher := newFetcher(&authConfig{}, &http.Transport{}, proxyConfigURLs)
+	dispatch := func(cfg interface{}) {
+		proxyChan <- cfg
+	}
+	go cfg.poll(dispatch, fetcher, func() time.Duration { return 1 * time.Hour })
 	proxies := (<-proxyChan).(map[string]*chained.ChainedServerInfo)
 
 	assert.True(t, len(proxies) > 0)
@@ -135,28 +158,43 @@ func TestPollProxies(t *testing.T) {
 	assert.Nil(t, err, "Got error: %v", err)
 
 	assert.True(t, fi.ModTime().After(mtime))
-
-	// Just restore the original file.
-	os.Rename(tempName, fi.Name())
 }
 
 func TestPollGlobal(t *testing.T) {
 	fronted.ConfigureForTest(t)
 	configChan := make(chan interface{})
 	file := "./fetched-global.yaml"
+	gzippedFile := "fetched-global.yaml.gz"
 	cfg := newConfig(file, &options{
 		unmarshaler: globalUnmarshaler,
 	})
-
-	fi, err := os.Stat(file)
+	var fi os.FileInfo
+	var err error
+	for i := 1; i <= 400; i++ {
+		fi, err = os.Stat(file)
+		if err == nil {
+			break
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
 	if !assert.Nil(t, err) {
 		return
 	}
-	mtime := fi.ModTime()
-	tempName := fi.Name() + ".stored"
-	os.Rename(fi.Name(), tempName)
 
-	go cfg.poll(&authConfig{}, configChan, globalURLs, 1*time.Hour)
+	createGzippedFile(t, file, gzippedFile)
+
+	mtime := fi.ModTime()
+	oldName := fi.Name()
+	tempName := oldName + ".stored"
+	renameFile(t, oldName, tempName)
+	defer renameFile(t, tempName, oldName)
+
+	globalConfigURLs := startConfigServer(t, gzippedFile)
+	fetcher := newFetcher(&authConfig{}, &http.Transport{}, globalConfigURLs)
+	dispatch := func(cfg interface{}) {
+		configChan <- cfg
+	}
+	go cfg.poll(dispatch, fetcher, func() time.Duration { return 1 * time.Hour })
 
 	var fetched *Global
 	select {
@@ -184,9 +222,70 @@ func TestPollGlobal(t *testing.T) {
 		assert.NotNil(t, fi)
 		assert.True(t, fi.ModTime().After(mtime), "Incorrect modification times")
 	}
+}
 
-	// Just restore the original file.
-	os.Rename(tempName, file)
+func TestPollIntervals(t *testing.T) {
+	fronted.ConfigureForTest(t)
+	file := "./fetched-global.yaml"
+	gzippedFile := "fetched-global.yaml.gz"
+	cfg := newConfig(file, &options{
+		unmarshaler: globalUnmarshaler,
+	})
+	var fi os.FileInfo
+	var err error
+	for i := 1; i <= 400; i++ {
+		fi, err = os.Stat(file)
+		if err == nil {
+			break
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
+	if !assert.Nil(t, err) {
+		return
+	}
+
+	createGzippedFile(t, file, gzippedFile)
+
+	oldName := fi.Name()
+	tempName := oldName + ".stored"
+	renameFile(t, oldName, tempName)
+	defer renameFile(t, tempName, oldName)
+
+	l, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Fatalf("Unable to listen: %s", err)
+	}
+
+	var reqCount uint64
+	hs := &http.Server{
+		Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+			atomic.AddUint64(&reqCount, 1)
+			http.ServeFile(resp, req, gzippedFile)
+		}),
+	}
+	go func() {
+		if err = hs.Serve(l); err != nil {
+			t.Fatalf("Unable to serve: %v", err)
+		}
+	}()
+
+	port := l.Addr().(*net.TCPAddr).Port
+	url := "http://localhost:" + strconv.Itoa(port)
+	configURLs := &chainedFrontedURLs{
+		chained: url,
+		fronted: url,
+	}
+	pollInterval := 500 * time.Millisecond
+	waitTime := pollInterval*2 + (200 * time.Millisecond)
+
+	fetcher := newFetcher(&authConfig{}, &http.Transport{}, configURLs)
+	dispatch := func(cfg interface{}) {}
+	go cfg.poll(dispatch, fetcher, func() time.Duration { return pollInterval })
+
+	time.Sleep(waitTime)
+
+	finalReqCount := atomic.LoadUint64(&reqCount)
+	assert.Equal(t, 3, int(finalReqCount), "should have fetched config every %v", pollInterval)
 }
 
 func globalUnmarshaler(b []byte) (interface{}, error) {
@@ -199,4 +298,36 @@ func proxiesUnmarshaler(b []byte) (interface{}, error) {
 	servers := make(map[string]*chained.ChainedServerInfo)
 	err := yaml.Unmarshal(b, servers)
 	return servers, err
+}
+
+func startConfigServer(t *testing.T, configFilename string) (urls *chainedFrontedURLs) {
+	l, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Fatalf("Unable to listen: %s", err)
+	}
+
+	hs := &http.Server{
+		Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+			http.ServeFile(resp, req, configFilename)
+		}),
+	}
+	go func() {
+		if err = hs.Serve(l); err != nil {
+			t.Fatalf("Unable to serve: %v", err)
+		}
+	}()
+
+	port := l.Addr().(*net.TCPAddr).Port
+	url := "http://localhost:" + strconv.Itoa(port)
+	return &chainedFrontedURLs{
+		chained: url,
+		fronted: url,
+	}
+}
+
+func renameFile(t *testing.T, oldpath string, newpath string) {
+	err := os.Rename(oldpath, newpath)
+	if err != nil {
+		t.Fatalf("Unable to rename file: %s", err)
+	}
 }
