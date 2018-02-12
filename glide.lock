@@ -1,5 +1,5 @@
 hash: e98e01159403666c8fa91dd9b76c23bcbc15e36193c7c0eb84e6d7c5e0677b59
-updated: 2018-02-07T11:52:30.621218-06:00
+updated: 2018-02-12T07:31:59.599235-06:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a3ad5df6c9e7dc8117f55958b4ce99bf1e0fe291
@@ -22,7 +22,7 @@ imports:
 - name: github.com/aristanetworks/glog
   version: b0d951ca530387842f35331df6fd8d9b501d5f90
 - name: github.com/aristanetworks/goarista
-  version: d6227875a4d124594c68a50e0f98385da89ef8b2
+  version: 76d15ea364f9cab3eaa9935ff6893d49c3691c23
   subpackages:
   - monotime
 - name: github.com/armon/go-radix
@@ -84,7 +84,7 @@ imports:
 - name: github.com/getlantern/dnsgrab
   version: 227f729dcb41c2838b53575a48208d0b552ab6e8
 - name: github.com/getlantern/easylist
-  version: 1635650b3ed817f2bcc82cf42433eb309673fe53
+  version: db67cdb31fb5d1d07e3e4bddd509bb4ae20617b6
 - name: github.com/getlantern/edgedetect
   version: f58e865f680868c70f5d114b620b682a39fdaff7
 - name: github.com/getlantern/elevate
@@ -261,7 +261,7 @@ imports:
 - name: github.com/getlantern/tlsdialer
   version: 275d735df0fe7c62ef2020c26212a2edd84d46e7
 - name: github.com/getlantern/urlcache
-  version: d5aa446253570bfba3e15186c05464b9646d92af
+  version: e4f8e1d47eedf2b6d351340656459f5947e11d27
 - name: github.com/getlantern/uuid
   version: 1318e7614b82cd38041b0b0bd3692d71f3901fb8
 - name: github.com/getlantern/vtime
@@ -298,7 +298,7 @@ imports:
   subpackages:
   - lru
 - name: github.com/golang/mock
-  version: b3e60bcdc577185fce3cf625fc96b62857ce5574
+  version: 58cd061d09382b6011f84c1291ebe50ef2e25bab
   subpackages:
   - gomock
 - name: github.com/golang/protobuf
@@ -340,7 +340,7 @@ imports:
 - name: github.com/mailgun/multibuf
   version: 565402cd71fbd9c12aa7e295324ea357e970a61e
 - name: github.com/mailgun/oxy
-  version: 092a2d70bb8859a9def2b1bb9a61cdc193ee55cc
+  version: d9d81e96d257207bb071c96cd9c1cea8cbcb57a7
   subpackages:
   - forward
 - name: github.com/mailgun/timetools
@@ -401,7 +401,7 @@ imports:
   subpackages:
   - uaparser
 - name: github.com/stripe/stripe-go
-  version: 4ecf59a9187da2d9051b4169b500169cb000f289
+  version: c7c700f9a469299d3577b57bb9a970d005cfee6c
   subpackages:
   - form
   - orderitem
@@ -425,7 +425,7 @@ imports:
 - name: github.com/vharitonsky/iniflags
   version: e2b4a6da96d46d6660e977fe22eda5ea0f2b35d2
 - name: github.com/vulcand/oxy
-  version: 092a2d70bb8859a9def2b1bb9a61cdc193ee55cc
+  version: d9d81e96d257207bb071c96cd9c1cea8cbcb57a7
   subpackages:
   - utils
 - name: github.com/vulcand/predicate
@@ -443,7 +443,7 @@ imports:
 - name: github.com/Yawning/chacha20
   version: e3b1f968fc6397b51d963fee8ec8711a47bc0ce8
 - name: golang.org/x/crypto
-  version: d9133f5469342136e669e85192a26056b587f503
+  version: 9de5f2eaf759b4c4550b3db39fed2e9e5f86f45c
   subpackages:
   - blowfish
   - cast5
@@ -463,7 +463,7 @@ imports:
   - twofish
   - xtea
 - name: golang.org/x/net
-  version: 2fb46b16b8dda405028c50f7c7f0f9dd1fa6bfb1
+  version: f5dfe339be1d06f81b22525fe34671ee7d2c8904
   repo: https://github.com/golang/net
   vcs: git
   subpackages:
@@ -481,7 +481,7 @@ imports:
   - proxy
   - trace
 - name: golang.org/x/oauth2
-  version: a032972e28060ca4f5644acffae3dfc268cc09db
+  version: 543e37812f10c46c622c9575afd7ad22f22a12ba
   subpackages:
   - google
   - jwt
@@ -493,7 +493,7 @@ imports:
   - unix
   - windows
 - name: golang.org/x/text
-  version: e19ae1496984b1c655b8044a65c0300a3c878dd3
+  version: 4e4a3210bb54bb31f6ab2cdca2edcc0b50c420c1
   subpackages:
   - encoding
   - encoding/charmap
@@ -518,7 +518,7 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: 7646b5360d049a7ca31e9133315db43456f39e2e
+  version: d50734d1d6ca477a72646f3022216ec39639f4cd
   subpackages:
   - balancer
   - balancer/base
@@ -590,9 +590,9 @@ testImports:
 - name: github.com/gonum/stat
   version: ec9c8a1062f4be6c6ad671f0f5dba12d4a76826d
 - name: github.com/mikioh/tcp
-  version: 47f8f0a99cba808822a9a4b7eb339ddb40cbbc9d
+  version: 3bd3001131da0045ef55a30a207c6a3f0c29f277
 - name: github.com/mikioh/tcpopt
-  version: 55475675a638cfb3b97c617bb65d91834a663d7f
+  version: 18f4a8218095cbd44df0d49c3dd91e7f2a3b12e0
 - name: github.com/pborman/uuid
   version: c65b2f87fee37d1c7854c9164a450713c28d50cd
 - name: github.com/pmezard/go-difflib
@@ -600,7 +600,7 @@ testImports:
   subpackages:
   - difflib
 - name: github.com/sirupsen/logrus
-  version: dcf2d47dfb9dfc8f2727c7096e358cadac7d1423
+  version: 9f91ab2ef97544cdca176a1fb9165f2cf6fd709b
 - name: github.com/stretchr/testify
   version: be8372ae8ec5c6daaed3cc28ebf73c54b737c240
   subpackages:

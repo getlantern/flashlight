@@ -47,6 +47,10 @@ func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, 
 }
 
 func newClient() *Client {
+	return newClientWithLangAndAdSwapTargetURL(testLang, testAdSwapTargetURL)
+}
+
+func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *Client {
 	client, _ := NewClient(
 		func() bool { return false },
 		func(addr string) (bool, net.IP) { return false, nil },
@@ -54,8 +58,8 @@ func newClient() *Client {
 		func() string { return "proToken" },
 		mockStatsTracker{},
 		func() bool { return true },
-		func() string { return testLang },
-		func() string { return testAdSwapTargetURL },
+		func() string { return lang },
+		func() string { return adSwapTargetURL },
 		func() bool { return true },
 		func(host string) string { return host },
 	)
