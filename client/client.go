@@ -221,13 +221,13 @@ func (client *Client) initEasyList(adBlockingAllowed func() bool) {
 	}
 
 	log.Debug("Initializing easylist")
-	lanternList, err := easyListFor("lanternlist.txt", "https://github.com/getlantern/easylist/raw/master/lanternlist.txt")
+	lanternList, err := easyListFor("lanternlist.txt.gz", "https://raw.githubusercontent.com/getlantern/easylist/master/lanternlist.txt.gz")
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	easylistList, err := easyListFor("easylist.txt", easylist.DefaultURL)
+	easylistList, err := easyListFor("easylist.txt.gz", easylist.DefaultURL)
 	if err != nil {
 		log.Error(err)
 		return
@@ -252,7 +252,7 @@ func easyListFor(cacheFile string, url string) (easylist.List, error) {
 	if err != nil {
 		return nil, errors.New("Unable to get easylist config path: %v", err)
 	}
-	list, err := easylist.OpenWithURL(path, url, 1*time.Hour)
+	list, err := easylist.OpenWithURL(path, url, true, 1*time.Hour)
 	if err != nil {
 		return nil, errors.New("Unable to open easylist: %v", err)
 	}
