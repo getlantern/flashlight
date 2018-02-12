@@ -93,9 +93,8 @@ func TestAdBlockingFree(t *testing.T) {
 	client := newClient()
 	// Give us a chance to fetch the latest easylist and lanternlist
 	time.Sleep(5 * time.Second)
-	assertAllow(t, client, "http://googleads.g.doubleclick.net", false)
-	assertAllow(t, client, "http://www.googleadservices.com", false)
-	assertAllow(t, client, "http://cdn.adblade.com", true)
+	// On free, nothing should be blocked
+	assertAllow(t, client, "https://cdn.adblade.com", true)
 }
 
 func TestAdBlockingPro(t *testing.T) {
