@@ -31,7 +31,7 @@ var (
 
 type systrayCallbacks interface {
 	WaitForExit() error
-	AddExitFuncToEnd(func())
+	AddExitFuncToEnd(string, func())
 	Exit(error) bool
 	ShouldShowUI() bool
 	OnTrayShow()
@@ -45,7 +45,7 @@ func runOnSystrayReady(a systrayCallbacks, f func()) {
 	// Typically, systray.Quit will actually be what causes the app to exit, but
 	// in the case of an uncaught Fatal error, the app will exit before the
 	// systray and we need it to call systray.Quit().
-	a.AddExitFuncToEnd(func() {
+	a.AddExitFuncToEnd("quitting systray", func() {
 		systray.Quit()
 	})
 
