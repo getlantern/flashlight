@@ -171,6 +171,13 @@ func NewClient(
 				"adservice.google.nl",
 				"*.googlesyndication.com",
 				"*.googletagservices.com",
+				"googleadservices.com",
+				"*.youtube.com",
+				"*.youtube.com.hk",
+				"*.youtube.hk",
+				"*.youtube.co.jp",
+				"*.youtube.jp",
+				"*.youtube.nl",
 			},
 		}
 	}
