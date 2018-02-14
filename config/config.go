@@ -31,7 +31,7 @@ type Config interface {
 
 	// Poll polls for new configs from a remote server and saves them to disk for
 	// future runs.
-	poll(dispatch func(interface{}), fetcher Fetcher, sleep func() time.Duration)
+	poll(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, sleep func() time.Duration)
 }
 
 type config struct {
@@ -104,7 +104,11 @@ type options struct {
 // 2. Configs embedded in the binary according to the specified name, if any.
 // 3. Configs fetched remotely, and those will be piped back over and over
 //   again as the remote configs change (but only if they change).
-func pipeConfig(opts *options) {
+//
+// pipeConfig returns a function that can be used to stop polling
+func pipeConfig(opts *options) (stop func()) {
+	stopCh := make(chan bool)
+
 	// lastCfg is accessed by both the current goroutine when dispatching
 	// saved or embedded configs, and in a separate goroutine for polling
 	// for remote configs.  There should never be mutual access by these
@@ -148,9 +152,13 @@ func pipeConfig(opts *options) {
 	// function.
 	if !opts.sticky {
 		fetcher := newFetcher(opts.authConfig, opts.rt, opts.urls)
-		go conf.poll(dispatch, fetcher, opts.sleep)
+		go conf.poll(stopCh, dispatch, fetcher, opts.sleep)
 	} else {
 		log.Debugf("Using sticky config")
+	}
+
+	return func() {
+		close(stopCh)
 	}
 }
 
@@ -247,7 +255,7 @@ func (conf *config) embedded(data []byte, fileName string) (interface{}, error) 
 	return conf.unmarshaler(bytes)
 }
 
-func (conf *config) poll(dispatch func(interface{}), fetcher Fetcher, sleep func() time.Duration) {
+func (conf *config) poll(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, sleep func() time.Duration) {
 	for {
 		if bytes, err := fetcher.fetch(); err != nil {
 			log.Errorf("Error fetching config: %v", err)
@@ -265,7 +273,13 @@ func (conf *config) poll(dispatch func(interface{}), fetcher Fetcher, sleep func
 			log.Debugf("Sent to save chan")
 			dispatch(cfg)
 		}
-		time.Sleep(sleep())
+		select {
+		case <-stopCh:
+			log.Debug("Stopping polling")
+			return
+		case <-time.After(sleep()):
+			continue
+		}
 	}
 }
 

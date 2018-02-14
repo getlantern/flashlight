@@ -57,25 +57,27 @@ var (
 
 // Init determines the URLs at which to fetch proxy and global config and
 // passes those to InitWithURLs, which initializes the config setup for both
-// fetching per-user proxies as well as the global config.
+// fetching per-user proxies as well as the global config. It returns a function
+// that can be used to stop the reading of configs.
 func Init(configDir string, flags map[string]interface{},
 	authConfig common.AuthConfig, proxiesDispatch func(interface{}),
-	origGlobalDispatch func(interface{}), rt http.RoundTripper) {
+	origGlobalDispatch func(interface{}), rt http.RoundTripper) (stop func()) {
 	staging := isStaging(flags)
 	proxyConfigURLs := checkOverrides(flags, getProxyURLs(staging), "proxies.yaml.gz")
 	globalConfigURLs := checkOverrides(flags, getGlobalURLs(staging), "global.yaml.gz")
 
-	InitWithURLs(configDir, flags, authConfig, proxiesDispatch,
+	return InitWithURLs(configDir, flags, authConfig, proxiesDispatch,
 		origGlobalDispatch, proxyConfigURLs, globalConfigURLs, rt)
 }
 
 // InitWithURLs initializes the config setup for both fetching per-user proxies
 // as well as the global config given a set of URLs for fetching proxy and
-// global config
+// global config. It returns a function that can be used to stop the reading of
+// configs.
 func InitWithURLs(configDir string, flags map[string]interface{},
 	authConfig common.AuthConfig, origProxiesDispatch func(interface{}),
 	origGlobalDispatch func(interface{}), proxyURLs *chainedFrontedURLs,
-	globalURLs *chainedFrontedURLs, rt http.RoundTripper) {
+	globalURLs *chainedFrontedURLs, rt http.RoundTripper) (stop func()) {
 	var mx sync.RWMutex
 	globalConfigPollInterval := DefaultGlobalConfigPollInterval
 	proxyConfigPollInterval := DefaultProxyConfigPollInterval
@@ -145,7 +147,7 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 		rt:     rt,
 	}
 
-	pipeConfig(proxyOptions)
+	stopProxies := pipeConfig(proxyOptions)
 
 	// These are the options for fetching the global config.
 	globalOptions := &options{
@@ -176,7 +178,13 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 		rt:     rt,
 	}
 
-	pipeConfig(globalOptions)
+	stopGlobal := pipeConfig(globalOptions)
+
+	return func() {
+		log.Debug("*************** Stopping Config")
+		stopProxies()
+		stopGlobal()
+	}
 }
 
 func obfuscate(flags map[string]interface{}) bool {

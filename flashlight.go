@@ -118,7 +118,8 @@ func Run(httpProxyAddr string,
 		onConfigUpdate(cfg)
 	}
 	rt := proxied.ParallelPreferChained()
-	config.Init(configDir, flagsAsMap, userConfig, proxiesDispatch, globalDispatch, rt)
+	stopConfig := config.Init(configDir, flagsAsMap, userConfig, proxiesDispatch, globalDispatch, rt)
+	defer stopConfig()
 
 	if beforeStart() {
 		log.Debug("Preparing to start client proxy")
