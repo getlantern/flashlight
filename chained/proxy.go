@@ -96,11 +96,32 @@ func forceProxy(s *ChainedServerInfo) {
 }
 
 func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
-	return newProxy(name, "http", "tcp", s.Addr, s, deviceID, proToken, s.ENHTTPURL != "", func(ctx context.Context, p *proxy) (net.Conn, error) {
-		return reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
-			return p.dialCore(op)(ctx)
-		})
-	})
+	var dialServer func(ctx context.Context, p *proxy) (serverConn, error)
+	if s.ENHTTPURL != "" {
+		tr := &frontedTransport{rt: eventual.NewValue()}
+		go func() {
+			rt, ok := fronted.NewDirect(5 * time.Minute)
+			if !ok {
+				log.Errorf("Unable to initialize domain-fronting for enhttp")
+				return
+			}
+			tr.rt.Set(rt)
+		}()
+		dial := enhttp.NewDialer(&http.Client{
+			Transport: tr,
+		}, s.ENHTTPURL)
+		dialServer = func(ctx context.Context, p *proxy) (serverConn, error) {
+			return &enhttpServerConn{dial}, nil
+		}
+	} else {
+		dialServer = func(ctx context.Context, p *proxy) (serverConn, error) {
+			return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
+				return p.dialCore(op)(ctx)
+			})
+		}
+	}
+
+	return newProxy(name, "http", "tcp", s.Addr, s, deviceID, proToken, s.ENHTTPURL != "", dialServer)
 }
 
 func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
@@ -110,8 +131,8 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 	}
 	x509cert := cert.X509()
 	sessionCache := tls.NewLRUClientSessionCache(1000)
-	return newProxy(name, "https", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(ctx context.Context, p *proxy) (net.Conn, error) {
-		return reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
+	return newProxy(name, "https", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(ctx context.Context, p *proxy) (serverConn, error) {
+		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
 			conn, err := tlsdialer.DialTimeout(func(network, addr string, timeout time.Duration) (net.Conn, error) {
 				return p.dialCore(op)(ctx)
 			}, timeoutFor(ctx),
@@ -164,8 +185,8 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 		return nil, log.Errorf("Unable to parse client args: %v", err)
 	}
 
-	return newProxy(name, "obfs4", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(ctx context.Context, p *proxy) (net.Conn, error) {
-		return reportedDial(p.Addr(), p.Protocol(), p.Network(), func(op *ops.Op) (net.Conn, error) {
+	return newProxy(name, "obfs4", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(ctx context.Context, p *proxy) (serverConn, error) {
+		return p.reportedDial(p.Addr(), p.Protocol(), p.Network(), func(op *ops.Op) (net.Conn, error) {
 			dialFn := func(network, address string) (net.Conn, error) {
 				// We know for sure the network and address are the same as what
 				// the inner DailServer uses.
@@ -220,8 +241,8 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 		Cipher:            cipherCode,
 		ServerPublicKey:   rsaPublicKey,
 	})
-	dial := func(ctx context.Context, p *proxy) (net.Conn, error) {
-		return reportedDial(s.Addr, "lampshade", "tcp", func(op *ops.Op) (net.Conn, error) {
+	dial := func(ctx context.Context, p *proxy) (serverConn, error) {
+		return p.reportedDial(s.Addr, "lampshade", "tcp", func(op *ops.Op) (net.Conn, error) {
 			op.Set("ls_win", windowSize).
 				Set("ls_pad", maxPadding).
 				Set("ls_streams", int(maxStreamsPerConn)).
@@ -308,7 +329,7 @@ type proxy struct {
 	trusted           bool
 	preferred         bool
 	lastResort        bool
-	doDialServer      func(context.Context, *proxy) (net.Conn, error)
+	doDialServer      func(context.Context, *proxy) (serverConn, error)
 	emaLatency        *ema.EMA
 	kcpConfig         *KCPConfig
 	forceRedial       *abool.AtomicBool
@@ -321,7 +342,7 @@ type proxy struct {
 	mx                sync.Mutex
 }
 
-func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(context.Context, *proxy) (net.Conn, error)) (*proxy, error) {
+func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(context.Context, *proxy) (serverConn, error)) (*proxy, error) {
 	initPreconnect := s.InitPreconnect
 	if initPreconnect <= 0 {
 		initPreconnect = defaultInitPreconnect
@@ -363,25 +384,6 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		err := enableKCP(p, s)
 		if err != nil {
 			return nil, err
-		}
-	}
-
-	if s.ENHTTPURL != "" {
-		tr := &frontedTransport{rt: eventual.NewValue()}
-		go func() {
-			rt, ok := fronted.NewDirect(5 * time.Minute)
-			if !ok {
-				log.Errorf("Unable to initialize domain-fronting for enhttp")
-				return
-			}
-			tr.rt.Set(rt)
-		}()
-		dial := enhttp.NewDialer(&http.Client{
-			Transport: tr,
-		}, s.ENHTTPURL)
-		p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
-			conn, err := dial("tcp", p.addr)
-			return conn, 0, err
 		}
 	}
 
@@ -476,7 +478,7 @@ func (p *proxy) AdaptRequest(req *http.Request) {
 	req.Header.Add(common.TokenHeader, p.authToken)
 }
 
-func (p *proxy) dialServer() (net.Conn, error) {
+func (p *proxy) dialServer() (serverConn, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), chainedDialTimeout)
 	defer cancel()
 	return p.doDialServer(ctx, p)
@@ -608,7 +610,7 @@ func timeoutFor(ctx context.Context) time.Duration {
 	return chainedDialTimeout
 }
 
-func reportedDial(addr, protocol, network string, dial func(op *ops.Op) (net.Conn, error)) (net.Conn, error) {
+func (p *proxy) reportedDial(addr, protocol, network string, dial func(op *ops.Op) (net.Conn, error)) (serverConn, error) {
 	op := ops.Begin("dial_to_chained").ChainedProxy(addr, protocol, network)
 	defer op.End()
 
@@ -618,7 +620,7 @@ func reportedDial(addr, protocol, network string, dial func(op *ops.Op) (net.Con
 	op.DialTime(delta, err)
 	reportProxyDial(delta, err)
 
-	return conn, op.FailIf(err)
+	return p.serverConn(conn, op.FailIf(err))
 }
 
 // reportProxyDial reports a "proxy_dial" op if and only if the dial was

@@ -28,7 +28,7 @@ const (
 
 type proxyConnection struct {
 	*proxy
-	conn      net.Conn
+	conn      serverConn
 	expiresAt time.Time
 }
 
@@ -155,7 +155,7 @@ func (p *proxy) processPreconnects(initPreconnect int) {
 	}
 }
 
-func (p *proxy) newPreconnected(conn net.Conn) balancer.ProxyConnection {
+func (p *proxy) newPreconnected(conn serverConn) balancer.ProxyConnection {
 	return &proxyConnection{
 		proxy:     p,
 		conn:      conn,
@@ -246,7 +246,7 @@ func (pc *proxyConnection) dialInternal(ctx context.Context, network, addr strin
 	var err error
 	chDone := make(chan bool)
 	go func() {
-		conn, err = pc.doDialInternal(ctx, network, addr)
+		conn, err = pc.conn.dialOrigin(ctx, network, addr)
 		select {
 		case chDone <- true:
 		default:
@@ -258,15 +258,15 @@ func (pc *proxyConnection) dialInternal(ctx context.Context, network, addr strin
 	}()
 	select {
 	case <-chDone:
-		return conn, err
+		return pc.withRateTracking(conn, addr), err
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	}
 }
 
-func (pc *proxyConnection) doDialInternal(ctx context.Context, network, addr string) (net.Conn, error) {
+func (conn defaultServerConn) dialOrigin(ctx context.Context, network, addr string) (net.Conn, error) {
 	if deadline, set := ctx.Deadline(); set {
-		pc.conn.SetDeadline(deadline)
+		conn.SetDeadline(deadline)
 	}
 	var err error
 	// Look for our special hacked "connect" transport used to signal
@@ -275,18 +275,18 @@ func (pc *proxyConnection) doDialInternal(ctx context.Context, network, addr str
 	switch network {
 	case "connect":
 		log.Tracef("Sending CONNECT request")
-		err = pc.sendCONNECT(addr, pc.conn)
+		err = conn.p.sendCONNECT(addr, conn)
 	case "persistent":
 		log.Tracef("Sending GET request to establish persistent HTTP connection")
-		err = pc.initPersistentConnection(addr, pc.conn)
+		err = conn.p.initPersistentConnection(addr, conn)
 	}
 	if err != nil {
-		pc.conn.Close()
+		conn.Close()
 		return nil, err
 	}
 	// Unset the deadline to avoid affecting later read/write on the connection.
-	pc.conn.SetDeadline(time.Time{})
-	return pc.withRateTracking(pc.conn, addr), nil
+	conn.SetDeadline(time.Time{})
+	return conn, nil
 }
 
 func (p *proxy) onRequest(req *http.Request) {
@@ -371,5 +371,35 @@ func (p *proxy) initPersistentConnection(addr string, conn net.Conn) error {
 		return fmt.Errorf("Unable to write initial request: %v", writeErr)
 	}
 
+	return nil
+}
+
+type serverConn interface {
+	dialOrigin(ctx context.Context, network, addr string) (net.Conn, error)
+
+	Close() error
+}
+
+type defaultServerConn struct {
+	net.Conn
+	p *proxy
+}
+
+func (p *proxy) serverConn(conn net.Conn, err error) (serverConn, error) {
+	if err != nil {
+		return nil, err
+	}
+	return &defaultServerConn{conn, p}, err
+}
+
+type enhttpServerConn struct {
+	dial func(string, string) (net.Conn, error)
+}
+
+func (conn *enhttpServerConn) dialOrigin(ctx context.Context, network, addr string) (net.Conn, error) {
+	return conn.dial(network, addr)
+}
+
+func (conn *enhttpServerConn) Close() error {
 	return nil
 }
