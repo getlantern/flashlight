@@ -265,6 +265,9 @@ func (pc *proxyConnection) dialInternal(ctx context.Context, network, addr strin
 	}
 }
 
+// dialOrigin implements the method from serverConn. With standard proxies, this
+// involves sending either a CONNECT request or a GET request to initiate a
+// persistent connection to the upstream proxy.
 func (conn defaultServerConn) dialOrigin(ctx context.Context, network, addr string) (net.Conn, error) {
 	if deadline, set := ctx.Deadline(); set {
 		conn.SetDeadline(deadline)
@@ -375,12 +378,17 @@ func (p *proxy) initPersistentConnection(addr string, conn net.Conn) error {
 	return nil
 }
 
+// serverConn represents a connection to a proxy server.
 type serverConn interface {
+	// dialOrigin dials out to the given origin address using the connected server
 	dialOrigin(ctx context.Context, network, addr string) (net.Conn, error)
 
+	// Close closes the connection to the proxy server
 	Close() error
 }
 
+// defaultServerConn is the standard implementation of serverConn to typical
+// lantern proxies.
 type defaultServerConn struct {
 	net.Conn
 	p *proxy
@@ -393,6 +401,10 @@ func (p *proxy) serverConn(conn net.Conn, err error) (serverConn, error) {
 	return &defaultServerConn{conn, p}, err
 }
 
+// enhttpServerConn represents a serverConn to domain-fronted servers. Unlike a
+// defaultServerConn, an enhttpServerConn doesn't actually have a real TCP/UDP
+// connection, since it operates by making multiple HTTP requests via a CDN like
+// CloudFront.
 type enhttpServerConn struct {
 	dial func(string, string) (net.Conn, error)
 }
