@@ -259,7 +259,7 @@ func (pc *proxyConnection) dialInternal(ctx context.Context, network, addr strin
 	}()
 	select {
 	case <-chDone:
-		return conn, err
+		return pc.withRateTracking(conn, addr), err
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	}
@@ -287,7 +287,7 @@ func (conn defaultServerConn) dialOrigin(ctx context.Context, network, addr stri
 	}
 	// Unset the deadline to avoid affecting later read/write on the connection.
 	conn.SetDeadline(time.Time{})
-	return conn.p.withRateTracking(conn, addr), nil
+	return conn, nil
 }
 
 func (p *proxy) onRequest(req *http.Request) {
@@ -398,7 +398,13 @@ type enhttpServerConn struct {
 }
 
 func (conn *enhttpServerConn) dialOrigin(ctx context.Context, network, addr string) (net.Conn, error) {
-	return conn.dial(network, addr)
+	dfConn, err := conn.dial(network, addr)
+	if err != nil {
+		dfConn = idletiming.Conn(dfConn, IdleTimeout, func() {
+			log.Debug("enhttp connection idled")
+		})
+	}
+	return dfConn, err
 }
 
 func (conn *enhttpServerConn) Close() error {
