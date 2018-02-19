@@ -6,6 +6,7 @@ import (
 
 // AdSettings are settings to use when showing ads to Android clients
 type AdSettings struct {
+	Whitelist      bool
 	ShowAds        bool
 	MinDaysShowAds int `yaml:"mindaysshowads,omitempty"`
 	MaxDaysShowAds int `yaml:"maxdaysshowads,omitempty"`
@@ -33,6 +34,13 @@ type InMobi struct {
 func (settings *AdSettings) Enabled() bool {
 	if settings != nil {
 		return settings.ShowAds
+	}
+	return false
+}
+
+func (settings *AdSettings) UseWhitelist() bool {
+	if settings != nil {
+		return settings.Whitelist
 	}
 	return false
 }

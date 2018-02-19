@@ -115,6 +115,7 @@ type AdSettings interface {
 	GetTargetedApps(string) string
 	GetMinDaysShowAds() int
 	GetMaxDaysShowAds() int
+	UseWhitelist() bool
 }
 
 type Updater autoupdate.Updater
