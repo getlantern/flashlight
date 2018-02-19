@@ -411,7 +411,7 @@ type enhttpServerConn struct {
 
 func (conn *enhttpServerConn) dialOrigin(ctx context.Context, network, addr string) (net.Conn, error) {
 	dfConn, err := conn.dial(network, addr)
-	if err != nil {
+	if err == nil {
 		dfConn = idletiming.Conn(dfConn, IdleTimeout, func() {
 			log.Debug("enhttp connection idled")
 		})
