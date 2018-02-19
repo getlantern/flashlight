@@ -6,13 +6,12 @@ import (
 
 // AdSettings are settings to use when showing ads to Android clients
 type AdSettings struct {
-	Whitelist      bool
+	Whitelist      *map[string]bool
 	ShowAds        bool
 	MinDaysShowAds int `yaml:"mindaysshowads,omitempty"`
 	MaxDaysShowAds int `yaml:"maxdaysshowads,omitempty"`
 	Percentage     float64
 	Provider       string
-	TargetedApps   map[string]string
 	Admob          *Admob
 	InMobi         *InMobi
 }
@@ -39,10 +38,17 @@ func (settings *AdSettings) Enabled() bool {
 }
 
 func (settings *AdSettings) UseWhitelist() bool {
-	if settings != nil {
-		return settings.Whitelist
+	return settings != nil && settings.Whitelist != nil
+}
+
+// check whether we should an ad for the given app
+func (settings *AdSettings) IsWhitelisted(app string) bool {
+	if settings == nil || settings.Whitelist == nil {
+		return false
 	}
-	return false
+	m := *settings.Whitelist
+	_, exists := m[app]
+	return exists
 }
 
 func (settings *AdSettings) GetMinDaysShowAds() int {
@@ -71,14 +77,6 @@ func (settings *AdSettings) GetPercentage() float64 {
 		return settings.Percentage
 	}
 	return 0
-}
-
-// targettedApps returns the apps to show splash screen ads for
-func (settings *AdSettings) GetTargetedApps(region string) string {
-	if settings != nil {
-		return settings.TargetedApps[region]
-	}
-	return ""
 }
 
 func (settings *AdSettings) AppId() string {
