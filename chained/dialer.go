@@ -129,6 +129,7 @@ func (p *proxy) ConsecFailures() int64 {
 }
 
 func (p *proxy) Succeeding() bool {
+	log.Debugf("%d / %d : %d", p.ConsecSuccesses(), p.ConsecFailures(), p.consecRWSuccesses.Get())
 	// To avoid turbulence when network glitches, treat proxies with a small
 	// amount failures as succeeding.
 	// TODO: OTOH, when the proxy just recovered from failing, should wait for
@@ -258,7 +259,7 @@ func (pc *proxyConnection) dialInternal(ctx context.Context, network, addr strin
 	}()
 	select {
 	case <-chDone:
-		return pc.withRateTracking(conn, addr), err
+		return conn, err
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	}
@@ -286,7 +287,7 @@ func (conn defaultServerConn) dialOrigin(ctx context.Context, network, addr stri
 	}
 	// Unset the deadline to avoid affecting later read/write on the connection.
 	conn.SetDeadline(time.Time{})
-	return conn, nil
+	return conn.p.withRateTracking(conn, addr), nil
 }
 
 func (p *proxy) onRequest(req *http.Request) {

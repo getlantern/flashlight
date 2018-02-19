@@ -193,7 +193,7 @@ imports:
 - name: github.com/getlantern/launcher
   version: bc9fc3b11894e839c3fcb049f12e8974d7e48497
 - name: github.com/getlantern/measured
-  version: 0582bf799783fba9a890459155817f1cbcf00f17
+  version: a8c193f55e47ad3abe8793d4d1526366d6efa599
 - name: github.com/getlantern/mitm
   version: 4ce456bae6504e6a1dc8c835cd849cba166eb3d8
 - name: github.com/getlantern/mockconn
