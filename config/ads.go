@@ -41,7 +41,7 @@ func (settings *AdSettings) UseWhitelist() bool {
 	return settings != nil && settings.Whitelist != nil
 }
 
-// check whether we should an ad for the given app
+// check whether we should show an ad for the given app
 func (settings *AdSettings) IsWhitelisted(app string) bool {
 	if settings == nil || settings.Whitelist == nil {
 		return false
