@@ -34,7 +34,7 @@ func TestRateTracking(t *testing.T) {
 	}, "device", func() string {
 		return "protoken"
 	}, true, func(ctx context.Context, p *proxy) (serverConn, error) {
-		return p.serverConn(sd.Dial("", ""))
+		return p.defaultServerConn(sd.Dial("", ""))
 	})
 
 	conn, err := p.dial("tcp", "origin:443")

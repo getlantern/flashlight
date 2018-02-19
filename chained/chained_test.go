@@ -26,7 +26,7 @@ func NewDialer(dialServer func(ctx context.Context, p *proxy) (net.Conn, error))
 		return "protoken"
 	}, true, func(ctx context.Context, p *proxy) (serverConn, error) {
 		conn, err := dialServer(ctx, p)
-		return p.serverConn(conn, err)
+		return p.defaultServerConn(conn, err)
 	})
 	if err != nil {
 		return nil, err

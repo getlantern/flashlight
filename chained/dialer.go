@@ -394,7 +394,7 @@ type defaultServerConn struct {
 	p *proxy
 }
 
-func (p *proxy) serverConn(conn net.Conn, err error) (serverConn, error) {
+func (p *proxy) defaultServerConn(conn net.Conn, err error) (serverConn, error) {
 	if err != nil {
 		return nil, err
 	}

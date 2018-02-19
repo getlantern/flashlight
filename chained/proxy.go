@@ -620,7 +620,7 @@ func (p *proxy) reportedDial(addr, protocol, network string, dial func(op *ops.O
 	op.DialTime(delta, err)
 	reportProxyDial(delta, err)
 
-	return p.serverConn(conn, op.FailIf(err))
+	return p.defaultServerConn(conn, op.FailIf(err))
 }
 
 // reportProxyDial reports a "proxy_dial" op if and only if the dial was
