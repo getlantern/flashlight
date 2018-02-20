@@ -57,9 +57,6 @@ func CreateDialer(name string, s *ChainedServerInfo, deviceID string, proToken f
 	if s.Addr == "" {
 		return nil, errors.New("Empty addr")
 	}
-	if s.AuthToken == "" {
-		return nil, errors.New("No auth token").With("addr", s.Addr)
-	}
 	switch s.PluggableTransport {
 	case "":
 		var p *proxy
