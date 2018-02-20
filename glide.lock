@@ -1,5 +1,5 @@
 hash: e98e01159403666c8fa91dd9b76c23bcbc15e36193c7c0eb84e6d7c5e0677b59
-updated: 2018-02-18T07:06:16.9200577-06:00
+updated: 2018-02-20T09:05:55.650549-08:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: a3ad5df6c9e7dc8117f55958b4ce99bf1e0fe291
@@ -94,7 +94,7 @@ imports:
 - name: github.com/getlantern/ema
   version: d906ee7c3465210c328abbe6ea0f855db9db679c
 - name: github.com/getlantern/enhttp
-  version: 0cc7e942acd4c49aac195c21b2d0dda81c746263
+  version: fe127e522a8ab219aa256f9ff8f899c3e6cbbe0b
 - name: github.com/getlantern/errors
   version: e9c0296368b736086adb20832549567064224854
 - name: github.com/getlantern/event
@@ -106,7 +106,7 @@ imports:
 - name: github.com/getlantern/filepersist
   version: c5f0cd24e7991579ba6f5f1bd20a1ad2c9f06cd4
 - name: github.com/getlantern/fronted
-  version: 5d44643874001777b974d21401e850d37a8e2bd6
+  version: 9953232410f106d73468642f058bbfa59e48bab0
 - name: github.com/getlantern/geolookup
   version: 823d7ff3e6eb74dd6aae38a4b52207b19abfbf66
 - name: github.com/getlantern/go-cache
@@ -318,7 +318,7 @@ imports:
 - name: github.com/gorilla/securecookie
   version: e59506cc896acb7f7bf732d4fdf5e25f7ccd8983
 - name: github.com/gorilla/websocket
-  version: 4ac909741dfa57448bfadfdbca0cf7eeaa68f0e2
+  version: f37d1588608ec036fa9b0b7b8afbde47dc06aea9
 - name: github.com/hashicorp/golang-lru
   version: 0fb14efe8c47ae851c0034ed7a448854d3d34cf3
   subpackages:
@@ -363,7 +363,7 @@ imports:
   - rpc/gnmi
   - rpc/openconfig
 - name: github.com/oschwald/geoip2-golang
-  version: 5b1dc16861f81d05d9836bb21c2d0d65282fc0b8
+  version: b1581f42de7092eb285fa413a1310f90c4f328fb
 - name: github.com/oschwald/maxminddb-golang
   version: 6cf014f8bd8998776f35873ec662ba83c5c1cae7
 - name: github.com/oxtoacart/bpool
@@ -443,7 +443,7 @@ imports:
 - name: github.com/Yawning/chacha20
   version: e3b1f968fc6397b51d963fee8ec8711a47bc0ce8
 - name: golang.org/x/crypto
-  version: 650f4a345ab4e5b245a3034b110ebc7299e68186
+  version: 432090b8f568c018896cd8a0fb0345872bbac6ce
   subpackages:
   - blowfish
   - cast5
@@ -463,7 +463,7 @@ imports:
   - twofish
   - xtea
 - name: golang.org/x/net
-  version: 136a25c244d3019482a795d728110278d6ba09a4
+  version: cbe0f9307d0156177f9dd5dc85da1a31abc5f2fb
   repo: https://github.com/golang/net
   vcs: git
   subpackages:
