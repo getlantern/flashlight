@@ -39,6 +39,13 @@ type ChainedServerInfo struct {
 	// MaxPreconnect: the maximum number of preconnections to keep
 	MaxPreconnect int
 
+	// Bias indicates a relative biasing factor for proxy selection purposes.
+	// Proxies are bias 0 by default, meaning that they're prioritized by the
+	// usual bandwidth and latency metrics. Proxies with a higher bias are
+	// preferred over proxies with a lower bias irrespective of their measured
+	// performance.
+	Bias int
+
 	// PluggableTransport: If specified, a pluggable transport will be used
 	PluggableTransport string
 
