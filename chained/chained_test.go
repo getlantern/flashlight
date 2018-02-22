@@ -24,7 +24,10 @@ func NewDialer(dialServer func(ctx context.Context, p *proxy) (net.Conn, error))
 		AuthToken: "token",
 	}, "device", func() string {
 		return "protoken"
-	}, true, dialServer)
+	}, true, func(ctx context.Context, p *proxy) (serverConn, error) {
+		conn, err := dialServer(ctx, p)
+		return p.defaultServerConn(conn, err)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +124,7 @@ func TestBadAddressToServer(t *testing.T) {
 		AuthToken: "token",
 	}, "device", func() string {
 		return "protoken"
-	}, true, func(ctx context.Context, p *proxy) (net.Conn, error) {
+	}, true, func(ctx context.Context, p *proxy) (serverConn, error) {
 		return nil, nil
 	})
 	if !assert.NoError(t, err) {

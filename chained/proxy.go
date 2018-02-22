@@ -57,9 +57,6 @@ func CreateDialer(name string, s *ChainedServerInfo, deviceID string, proToken f
 	if s.Addr == "" {
 		return nil, errors.New("Empty addr")
 	}
-	if s.AuthToken == "" {
-		return nil, errors.New("No auth token").With("addr", s.Addr)
-	}
 	switch s.PluggableTransport {
 	case "":
 		var p *proxy
@@ -96,11 +93,32 @@ func forceProxy(s *ChainedServerInfo) {
 }
 
 func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
-	return newProxy(name, "http", "tcp", s.Addr, s, deviceID, proToken, s.ENHTTPURL != "", func(ctx context.Context, p *proxy) (net.Conn, error) {
-		return reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
-			return p.dialCore(op)(ctx)
-		})
-	})
+	var dialServer func(ctx context.Context, p *proxy) (serverConn, error)
+	if s.ENHTTPURL != "" {
+		tr := &frontedTransport{rt: eventual.NewValue()}
+		go func() {
+			rt, ok := fronted.NewDirect(5 * time.Minute)
+			if !ok {
+				log.Errorf("Unable to initialize domain-fronting for enhttp")
+				return
+			}
+			tr.rt.Set(rt)
+		}()
+		dial := enhttp.NewDialer(&http.Client{
+			Transport: tr,
+		}, s.ENHTTPURL)
+		dialServer = func(ctx context.Context, p *proxy) (serverConn, error) {
+			return &enhttpServerConn{dial}, nil
+		}
+	} else {
+		dialServer = func(ctx context.Context, p *proxy) (serverConn, error) {
+			return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
+				return p.dialCore(op)(ctx)
+			})
+		}
+	}
+
+	return newProxy(name, "http", "tcp", s.Addr, s, deviceID, proToken, s.ENHTTPURL != "", dialServer)
 }
 
 func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
@@ -110,8 +128,8 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 	}
 	x509cert := cert.X509()
 	sessionCache := tls.NewLRUClientSessionCache(1000)
-	return newProxy(name, "https", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(ctx context.Context, p *proxy) (net.Conn, error) {
-		return reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
+	return newProxy(name, "https", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(ctx context.Context, p *proxy) (serverConn, error) {
+		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
 			conn, err := tlsdialer.DialTimeout(func(network, addr string, timeout time.Duration) (net.Conn, error) {
 				return p.dialCore(op)(ctx)
 			}, timeoutFor(ctx),
@@ -164,8 +182,8 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 		return nil, log.Errorf("Unable to parse client args: %v", err)
 	}
 
-	return newProxy(name, "obfs4", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(ctx context.Context, p *proxy) (net.Conn, error) {
-		return reportedDial(p.Addr(), p.Protocol(), p.Network(), func(op *ops.Op) (net.Conn, error) {
+	return newProxy(name, "obfs4", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(ctx context.Context, p *proxy) (serverConn, error) {
+		return p.reportedDial(p.Addr(), p.Protocol(), p.Network(), func(op *ops.Op) (net.Conn, error) {
 			dialFn := func(network, address string) (net.Conn, error) {
 				// We know for sure the network and address are the same as what
 				// the inner DailServer uses.
@@ -220,8 +238,8 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 		Cipher:            cipherCode,
 		ServerPublicKey:   rsaPublicKey,
 	})
-	dial := func(ctx context.Context, p *proxy) (net.Conn, error) {
-		return reportedDial(s.Addr, "lampshade", "tcp", func(op *ops.Op) (net.Conn, error) {
+	dial := func(ctx context.Context, p *proxy) (serverConn, error) {
+		return p.reportedDial(s.Addr, "lampshade", "tcp", func(op *ops.Op) (net.Conn, error) {
 			op.Set("ls_win", windowSize).
 				Set("ls_pad", maxPadding).
 				Set("ls_streams", int(maxStreamsPerConn)).
@@ -306,9 +324,8 @@ type proxy struct {
 	deviceID          string
 	proToken          func() string
 	trusted           bool
-	preferred         bool
-	lastResort        bool
-	doDialServer      func(context.Context, *proxy) (net.Conn, error)
+	bias              int
+	doDialServer      func(context.Context, *proxy) (serverConn, error)
 	emaLatency        *ema.EMA
 	kcpConfig         *KCPConfig
 	forceRedial       *abool.AtomicBool
@@ -321,7 +338,7 @@ type proxy struct {
 	mx                sync.Mutex
 }
 
-func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(context.Context, *proxy) (net.Conn, error)) (*proxy, error) {
+func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(context.Context, *proxy) (serverConn, error)) (*proxy, error) {
 	initPreconnect := s.InitPreconnect
 	if initPreconnect <= 0 {
 		initPreconnect = defaultInitPreconnect
@@ -340,7 +357,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		deviceID:        deviceID,
 		proToken:        proToken,
 		trusted:         trusted,
-		lastResort:      s.ENHTTPURL != "",
+		bias:            s.Bias,
 		doDialServer:    dialServer,
 		emaLatency:      ema.NewDuration(0, 0.8),
 		forceRecheckCh:  make(chan bool, 1),
@@ -349,6 +366,12 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		preconnected:    make(chan balancer.ProxyConnection, maxPreconnect),
 		closeCh:         make(chan bool, 1),
 		consecSuccesses: 1, // be optimistic
+	}
+
+	if s.Bias == 0 && s.ENHTTPURL != "" {
+		// By default, do not prefer ENHTTP proxies. Use a very low bias as domain-
+		// fronting is our very-last resort.
+		p.bias = -10
 	}
 
 	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
@@ -363,25 +386,6 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		err := enableKCP(p, s)
 		if err != nil {
 			return nil, err
-		}
-	}
-
-	if s.ENHTTPURL != "" {
-		tr := &frontedTransport{rt: eventual.NewValue()}
-		go func() {
-			rt, ok := fronted.NewDirect(5 * time.Minute)
-			if !ok {
-				log.Errorf("Unable to initialize domain-fronting for enhttp")
-				return
-			}
-			tr.rt.Set(rt)
-		}()
-		dial := enhttp.NewDialer(&http.Client{
-			Transport: tr,
-		}, s.ENHTTPURL)
-		p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
-			conn, err := dial("tcp", p.addr)
-			return conn, 0, err
 		}
 	}
 
@@ -401,10 +405,12 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 
 	// Fix address (comes across as kcp-placeholder)
 	p.addr = cfg.RemoteAddr
-	// Right now, we don't have a good way estimating performance of KCP-based
-	// proxies, so we just mark them as "preferred" to force them to get used by
-	// default.
-	p.preferred = true
+	// KCP consumes a lot of bandwidth, so we want to bias against using it unless
+	// everything else is blocked. However, we prefer it to domain-fronting. We
+	// only default the bias if none was configured.
+	if p.bias == 0 {
+		p.bias = -1
+	}
 
 	addIdleTiming := func(conn net.Conn) net.Conn {
 		log.Debug("Wrapping KCP with idletiming")
@@ -476,7 +482,7 @@ func (p *proxy) AdaptRequest(req *http.Request) {
 	req.Header.Add(common.TokenHeader, p.authToken)
 }
 
-func (p *proxy) dialServer() (net.Conn, error) {
+func (p *proxy) dialServer() (serverConn, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), chainedDialTimeout)
 	defer cancel()
 	return p.doDialServer(ctx, p)
@@ -495,10 +501,9 @@ func (p *proxy) updateLatency(latency time.Duration, err error) {
 // value is updated from the time to dial the proxy, or the utility of the
 // pluggable transport, e.g., lampshade can measure the RTT of ping packets.
 func (p *proxy) EstLatency() time.Duration {
-	if p.lastResort {
-		// For last-resort proxies, return a really high value to make sure they
-		// get deprioritized.
-		return 1000 * time.Second
+	if p.bias != 0 {
+		// For biased proxies, return an extreme latency in proportion to the bias
+		return time.Duration(p.bias) * -100 * time.Second
 	}
 	return p.emaLatency.GetDuration()
 }
@@ -518,15 +523,9 @@ func (p *proxy) EstLatency() time.Duration {
 // 3. If a client includes HTTP header "X-BBR: clear", we clear stored estimate
 //    data for the client's IP.
 func (p *proxy) EstBandwidth() float64 {
-	if p.preferred {
-		// For preferred proxies, return a really high value to make sure they get
-		// prioritized.
-		return 1000000
-	}
-	if p.lastResort {
-		// For last-resort proxies, return a really low value to make sure they get
-		// deprioritized.
-		return 0.00001
+	if p.bias != 0 {
+		// For biased proxies, return an extreme bandwidth in proportion to the bias
+		return float64(p.bias) * 1000
 	}
 	return float64(atomic.LoadInt64(&p.abe)) / 1000
 }
@@ -608,7 +607,7 @@ func timeoutFor(ctx context.Context) time.Duration {
 	return chainedDialTimeout
 }
 
-func reportedDial(addr, protocol, network string, dial func(op *ops.Op) (net.Conn, error)) (net.Conn, error) {
+func (p *proxy) reportedDial(addr, protocol, network string, dial func(op *ops.Op) (net.Conn, error)) (serverConn, error) {
 	op := ops.Begin("dial_to_chained").ChainedProxy(addr, protocol, network)
 	defer op.End()
 
@@ -618,7 +617,7 @@ func reportedDial(addr, protocol, network string, dial func(op *ops.Op) (net.Con
 	op.DialTime(delta, err)
 	reportProxyDial(delta, err)
 
-	return conn, op.FailIf(err)
+	return p.defaultServerConn(conn, op.FailIf(err))
 }
 
 // reportProxyDial reports a "proxy_dial" op if and only if the dial was

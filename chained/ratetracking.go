@@ -18,6 +18,10 @@ const (
 var totalReceived = uint64(0)
 
 func (p *proxy) withRateTracking(wrapped net.Conn, origin string) net.Conn {
+	if wrapped == nil {
+		return nil
+	}
+
 	return measured.Wrap(wrapped, rateInterval, func(conn measured.Conn) {
 		stats := conn.Stats()
 		rwError := conn.FirstError()
