@@ -324,8 +324,7 @@ type proxy struct {
 	deviceID          string
 	proToken          func() string
 	trusted           bool
-	preferred         bool
-	lastResort        bool
+	bias              int
 	doDialServer      func(context.Context, *proxy) (serverConn, error)
 	emaLatency        *ema.EMA
 	kcpConfig         *KCPConfig
@@ -358,7 +357,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		deviceID:        deviceID,
 		proToken:        proToken,
 		trusted:         trusted,
-		lastResort:      s.ENHTTPURL != "",
+		bias:            s.Bias,
 		doDialServer:    dialServer,
 		emaLatency:      ema.NewDuration(0, 0.8),
 		forceRecheckCh:  make(chan bool, 1),
@@ -367,6 +366,12 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		preconnected:    make(chan balancer.ProxyConnection, maxPreconnect),
 		closeCh:         make(chan bool, 1),
 		consecSuccesses: 1, // be optimistic
+	}
+
+	if s.Bias == 0 && s.ENHTTPURL != "" {
+		// By default, do not prefer ENHTTP proxies. Use a very low bias as domain-
+		// fronting is our very-last resort.
+		p.bias = -10
 	}
 
 	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
@@ -400,10 +405,12 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 
 	// Fix address (comes across as kcp-placeholder)
 	p.addr = cfg.RemoteAddr
-	// Right now, we don't have a good way estimating performance of KCP-based
-	// proxies, so we just mark them as "preferred" to force them to get used by
-	// default.
-	p.preferred = true
+	// KCP consumes a lot of bandwidth, so we want to bias against using it unless
+	// everything else is blocked. However, we prefer it to domain-fronting. We
+	// only default the bias if none was configured.
+	if p.bias == 0 {
+		p.bias = -1
+	}
 
 	addIdleTiming := func(conn net.Conn) net.Conn {
 		log.Debug("Wrapping KCP with idletiming")
@@ -494,10 +501,9 @@ func (p *proxy) updateLatency(latency time.Duration, err error) {
 // value is updated from the time to dial the proxy, or the utility of the
 // pluggable transport, e.g., lampshade can measure the RTT of ping packets.
 func (p *proxy) EstLatency() time.Duration {
-	if p.lastResort {
-		// For last-resort proxies, return a really high value to make sure they
-		// get deprioritized.
-		return 1000 * time.Second
+	if p.bias != 0 {
+		// For biased proxies, return an extreme latency in proportion to the bias
+		return time.Duration(p.bias) * -100 * time.Second
 	}
 	return p.emaLatency.GetDuration()
 }
@@ -517,15 +523,9 @@ func (p *proxy) EstLatency() time.Duration {
 // 3. If a client includes HTTP header "X-BBR: clear", we clear stored estimate
 //    data for the client's IP.
 func (p *proxy) EstBandwidth() float64 {
-	if p.preferred {
-		// For preferred proxies, return a really high value to make sure they get
-		// prioritized.
-		return 1000000
-	}
-	if p.lastResort {
-		// For last-resort proxies, return a really low value to make sure they get
-		// deprioritized.
-		return 0.00001
+	if p.bias != 0 {
+		// For biased proxies, return an extreme bandwidth in proportion to the bias
+		return float64(p.bias) * 1000
 	}
 	return float64(atomic.LoadInt64(&p.abe)) / 1000
 }
