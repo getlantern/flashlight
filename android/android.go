@@ -112,9 +112,10 @@ type AdSettings interface {
 	GetPercentage() float64
 	GetProvider() string
 	NativeAdId() string
-	GetTargetedApps(string) string
 	GetMinDaysShowAds() int
 	GetMaxDaysShowAds() int
+	IsWhitelisted(string) bool
+	UseWhitelist() bool
 }
 
 type Updater autoupdate.Updater
