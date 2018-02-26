@@ -114,6 +114,7 @@ type AdSettings interface {
 	NativeAdId() string
 	GetMinDaysShowAds() int
 	GetMaxDaysShowAds() int
+	IsRegionEnabled(string) bool
 	IsWhitelisted(string) bool
 	UseWhitelist() bool
 }

@@ -6,6 +6,7 @@ import (
 
 // AdSettings are settings to use when showing ads to Android clients
 type AdSettings struct {
+	RegionsEnabled *map[string]bool
 	Whitelist      *map[string]bool
 	ShowAds        bool
 	MinDaysShowAds int `yaml:"mindaysshowads,omitempty"`
@@ -39,6 +40,16 @@ func (settings *AdSettings) Enabled() bool {
 
 func (settings *AdSettings) UseWhitelist() bool {
 	return settings != nil && settings.Whitelist != nil
+}
+
+func (settings *AdSettings) IsRegionEnabled(region string) bool {
+	if settings == nil || settings.RegionsEnabled == nil {
+		return false
+	}
+	log.Debugf("Checking if ads are enabled for region: %v", region)
+	m := *settings.RegionsEnabled
+	_, exists := m[region]
+	return exists
 }
 
 // check whether we should show an ad for the given app
