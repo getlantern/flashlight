@@ -638,48 +638,25 @@ func reportProxyDial(delta time.Duration, err error) {
 }
 
 func tlsConfigForProxy(s *ChainedServerInfo) *tls.Config {
-	sessionCache := tls.NewLRUClientSessionCache(1000)
+	var sessionCache tls.ClientSessionCache
+	if s.TLSClientSessionCacheSize == 0 {
+		sessionCache = tls.NewLRUClientSessionCache(1000)
+	} else if s.TLSClientSessionCacheSize > 0 {
+		sessionCache = tls.NewLRUClientSessionCache(s.TLSClientSessionCacheSize)
+	}
 	cipherSuites := orderedCipherSuitesFromConfig(s)
 
-	var tlsConfig *tls.Config
-	if cipherSuites != nil && s.ServerNameIndicator != "" {
-		tlsConfig = &tls.Config{
-			ClientSessionCache: sessionCache,
-			InsecureSkipVerify: true,
-			CipherSuites:       cipherSuites,
-			ServerName:         s.ServerNameIndicator,
-		}
-	} else if cipherSuites != nil {
-		tlsConfig = &tls.Config{
-			ClientSessionCache: sessionCache,
-			InsecureSkipVerify: true,
-			CipherSuites:       cipherSuites,
-		}
-	} else if s.ServerNameIndicator != "" {
-		tlsConfig = &tls.Config{
-			ClientSessionCache: sessionCache,
-			InsecureSkipVerify: true,
-			ServerName:         s.ServerNameIndicator,
-		}
-	} else {
-		tlsConfig = &tls.Config{
-			ClientSessionCache: sessionCache,
-			InsecureSkipVerify: true,
-		}
+	return &tls.Config{
+		ClientSessionCache: sessionCache,
+		CipherSuites:       cipherSuites,
+		ServerName:         s.TLSServerNameIndicator,
+		InsecureSkipVerify: true,
 	}
-
-	return tlsConfig
 }
 
 func orderedCipherSuitesFromConfig(s *ChainedServerInfo) []uint16 {
-	var ciphers []uint16
-
-	onMobile := runtime.GOOS == "android"
-	if onMobile && s.mobileOrderedCipherSuites() != nil {
-		ciphers = s.mobileOrderedCipherSuites()
-	} else if !onMobile && s.desktopOrderedCipherSuites() != nil {
-		ciphers = s.desktopOrderedCipherSuites()
+	if runtime.GOOS == "android" {
+		return s.mobileOrderedCipherSuites()
 	}
-
-	return ciphers
+	return s.desktopOrderedCipherSuites()
 }

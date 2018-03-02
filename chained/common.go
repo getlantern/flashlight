@@ -6,7 +6,8 @@
 package chained
 
 import (
-	"crypto/tls"
+	"go/importer"
+	"go/types"
 	"strconv"
 
 	"github.com/getlantern/golog"
@@ -14,25 +15,6 @@ import (
 
 var (
 	log = golog.LoggerFor("chained")
-
-	cipherLookup = map[string]uint16{
-		"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256":   tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-		"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384":   tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-		"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256": tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-		"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384": tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-		"TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305":    tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
-		"TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305":  tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
-		"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA":      tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
-		"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA":    tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
-		"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA":      tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-		"TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA":    tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
-		"TLS_RSA_WITH_AES_128_GCM_SHA256":         tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
-		"TLS_RSA_WITH_AES_256_GCM_SHA384":         tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
-		"TLS_RSA_WITH_AES_128_CBC_SHA":            tls.TLS_RSA_WITH_AES_128_CBC_SHA,
-		"TLS_RSA_WITH_AES_256_CBC_SHA":            tls.TLS_RSA_WITH_AES_256_CBC_SHA,
-		"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA":     tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
-		"TLS_RSA_WITH_3DES_EDE_CBC_SHA":           tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
-	}
 )
 
 // ChainedServerInfo contains all the data for connecting to a given chained
@@ -72,20 +54,24 @@ type ChainedServerInfo struct {
 	// protocol.
 	ENHTTPURL string
 
-	// DesktopOrderedCipherSuiteNames: The ordered list of cipher suites to use
+	// TLSDesktopOrderedCipherSuiteNames: The ordered list of cipher suites to use
 	// for desktop clients using TLS represented as strings.
-	DesktopOrderedCipherSuiteNames []string
+	TLSDesktopOrderedCipherSuiteNames []string
 
-	// OrderedMobileCipherSuiteNames: The ordered list of cipher suites to use for
-	// mobile clients using TLS represented as strings. This may differ from the
-	// ordering for desktop because performance of AES ciphers is more of a
+	// TLSMobileOrderedCipherSuiteNames: The ordered list of cipher suites to use
+	// for mobile clients using TLS represented as strings. This may differ from
+	// the ordering for desktop because performance of AES ciphers is more of a
 	// concern on mobile.
-	MobileOrderedCipherSuiteNames []string
+	TLSMobileOrderedCipherSuiteNames []string
 
-	// ServerNameIndicator:  Specifies the hostname that should be sent by the
+	// TLSServerNameIndicator: Specifies the hostname that should be sent by the
 	// client as the Server Name Indication header in a TLS request.  If not
 	// provided, the client should not send an SNI header.
-	ServerNameIndicator string
+	TLSServerNameIndicator string
+
+	// TLSClientSessionCacheSize: the size of client session cache to use. Set to
+	// 0 to use default size, set to < 0 to disable.
+	TLSClientSessionCacheSize int
 }
 
 func (s *ChainedServerInfo) ptSetting(name string) string {
@@ -122,18 +108,39 @@ func (s *ChainedServerInfo) ptSettingBool(name string) bool {
 }
 
 func (s *ChainedServerInfo) desktopOrderedCipherSuites() []uint16 {
-	return ciphersFromNames(s.DesktopOrderedCipherSuiteNames)
+	return ciphersFromNames(s.TLSDesktopOrderedCipherSuiteNames)
 }
 
 func (s *ChainedServerInfo) mobileOrderedCipherSuites() []uint16 {
-	return ciphersFromNames(s.MobileOrderedCipherSuiteNames)
+	return ciphersFromNames(s.TLSMobileOrderedCipherSuiteNames)
 }
 
 func ciphersFromNames(cipherNames []string) []uint16 {
-	var ciphers []uint16
+	ciphers := make([]uint16, 0, len(cipherNames))
 
+	pkg, err := importer.Default().Import("crypto/tls")
+	if err != nil {
+		log.Errorf("Unable to load crypto/tls package to look up ciphers: %v", err)
+		return ciphers
+	}
+
+	scope := pkg.Scope()
 	for _, name := range cipherNames {
-		ciphers = append(ciphers, cipherLookup[name])
+		obj := scope.Lookup("TLS_" + name)
+		switch t := obj.(type) {
+		case *types.Const:
+			if t.Exported() && t.Type().String() == "uint16" {
+				_val, parseErr := strconv.ParseUint(t.Val().ExactString(), 10, 16)
+				if parseErr != nil {
+					log.Errorf("Unable to parse cipher suite value for TLS_%v", name, parseErr)
+					continue
+				}
+				val := uint16(_val)
+				ciphers = append(ciphers, val)
+			}
+		default:
+			log.Errorf("Unable to find cipher suite TLS_%v", name)
+		}
 	}
 
 	return ciphers
