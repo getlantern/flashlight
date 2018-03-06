@@ -38,6 +38,7 @@ v6.facebook.com
 connect.facebook.net
 # Facebook uses this heavily.
 akamaihd.net
+firebaseio.com
 flickr.com
 friendfeed.com
 freedomhouse.org
