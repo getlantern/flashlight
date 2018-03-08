@@ -163,9 +163,11 @@ func (cf *chainedAndFronted) RoundTrip(req *http.Request) (*http.Response, error
 	if err != nil {
 		log.Error(err)
 		// If there's an error, switch back to using the dual fetcher.
+		log.Debug("Switching back to dual fetcher because of error on chained request")
 		cf.setFetcher(newDualFetcher(cf))
 	} else if !success(resp) {
 		log.Error(resp.Status)
+		log.Debug("Switching back to dual fetcher because of unexpected response status on chained request")
 		cf.setFetcher(newDualFetcher(cf))
 	}
 	return resp, err
