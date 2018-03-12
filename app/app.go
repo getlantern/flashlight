@@ -103,7 +103,7 @@ func (app *App) exitOnFatal(err error) {
 // Run starts the app. It will block until the app exits.
 func (app *App) Run() {
 	golog.OnFatal(app.exitOnFatal)
-	app.AddExitFunc(recordStopped)
+	app.AddExitFunc("record app stopped", recordStopped)
 
 	// Run below in separate goroutine as config.Init() can potentially block when Lantern runs
 	// for the first time. User can still quit Lantern through systray menu when it happens.
@@ -183,7 +183,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		if cpuProf != "" || memProf != "" {
 			log.Debugf("Start profiling with cpu file %s and mem file %s", cpuProf, memProf)
 			finishProfiling := profiling.Start(cpuProf, memProf)
-			app.AddExitFunc(finishProfiling)
+			app.AddExitFunc("finish profiling", finishProfiling)
 		}
 
 		if err := setUpSysproxyTool(); err != nil {
@@ -283,13 +283,13 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		// Only run analytics once on startup.
 		if settings.IsAutoReport() {
 			stopAnalytics := analytics.Start(settings.GetDeviceID(), common.Version)
-			app.AddExitFunc(stopAnalytics)
+			app.AddExitFunc("stopping analytics", stopAnalytics)
 		}
 
-		app.AddExitFunc(LoconfScanner(4*time.Hour, isProUser, func() string {
+		app.AddExitFunc("stopping loconf scanner", LoconfScanner(4*time.Hour, isProUser, func() string {
 			return app.AddToken("/img/lantern_logo.png")
 		}))
-		app.AddExitFunc(notifier.NotificationsLoop())
+		app.AddExitFunc("stopping notifier", notifier.NotificationsLoop())
 
 		return true
 	}
@@ -342,8 +342,8 @@ func (app *App) afterStart(cl *client.Client) {
 		go launcher.CreateLaunchFile(enable)
 	})
 
-	app.AddExitFunc(sysproxyOff)
-	app.AddExitFunc(borda.Flush)
+	app.AddExitFunc("turning off system proxy", sysproxyOff)
+	app.AddExitFunc("flushing to borda", borda.Flush)
 	if app.ShowUI && !app.Flags["startup"].(bool) {
 		// Launch a browser window with Lantern but only after the pac
 		// URL and the proxy server are all up and running to avoid
@@ -405,14 +405,20 @@ func (app *App) showExistingUI(addr string) error {
 }
 
 // AddExitFunc adds a function to be called before the application exits.
-func (app *App) AddExitFunc(exitFunc func()) {
-	app.chExitFuncs <- exitFunc
+func (app *App) AddExitFunc(label string, exitFunc func()) {
+	app.chExitFuncs <- func() {
+		log.Debugf("Processing exit function: %v", label)
+		exitFunc()
+	}
 }
 
 // AddExitFuncToEnd adds a function to be called before the application exits
 // but after exit functions added with AddExitFunc.
-func (app *App) AddExitFuncToEnd(exitFunc func()) {
-	app.chLastExitFuncs <- exitFunc
+func (app *App) AddExitFuncToEnd(label string, exitFunc func()) {
+	app.chLastExitFuncs <- func() {
+		log.Debugf("Processing exit function at end: %v", label)
+		exitFunc()
+	}
 }
 
 // Exit tells the application to exit, optionally supplying an error that caused
@@ -437,8 +443,10 @@ func (app *App) doExit(err error) {
 		log.Debug("Finished exiting app")
 	}()
 
+	log.Debug("Running exit functions")
 	app.runExitFuncs()
 	app.runLastExitFuncs()
+	log.Debug("Finished running exit functions")
 }
 
 func (app *App) runExitFuncs() {

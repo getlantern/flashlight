@@ -89,14 +89,35 @@ func TestRewriteHTTPSRedirectLoop(t *testing.T) {
 	assert.Equal(t, http.StatusMovedPermanently, resp.StatusCode, "should rewrite to HTTPS some time later")
 }
 
-func TestEasylist(t *testing.T) {
+func TestAdBlockingFree(t *testing.T) {
 	client := newClient()
-	req, _ := http.NewRequest("GET", "http://cdn.adblade.com", nil)
+	// Give us a chance to fetch the latest easylist and lanternlist
+	time.Sleep(5 * time.Second)
+	// On free, nothing should be blocked
+	assertAllow(t, client, "https://cdn.adblade.com", true)
+}
+
+func TestAdBlockingPro(t *testing.T) {
+	client := newClientWithLangAndAdSwapTargetURL("en_US", "")
+	// Give us a chance to fetch the latest easylist and lanternlist
+	time.Sleep(5 * time.Second)
+	assertAllow(t, client, "http://googleads.g.doubleclick.net", false)
+	assertAllow(t, client, "http://www.googleadservices.com", false)
+	assertAllow(t, client, "http://cdn.adblade.com", false)
+}
+
+func assertAllow(t *testing.T, client *Client, url string, allow bool) {
+	req, _ := http.NewRequest("GET", url, nil)
 	resp, err := roundTrip(client, req)
 	if !assert.NoError(t, err) {
 		return
 	}
-	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+	expectedStatus := http.StatusFound
+	if !allow {
+		expectedStatus = http.StatusForbidden
+	}
+	assert.Equal(t, expectedStatus, resp.StatusCode)
 }
 
 func TestAdSwap(t *testing.T) {

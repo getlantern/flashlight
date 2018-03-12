@@ -32,6 +32,12 @@ type Global struct {
 
 	// TrustedCAs are trusted CAs for domain fronting domains only.
 	TrustedCAs []*fronted.CA
+
+	// GlobalConfigPollInterval sets interval at which to poll for global config
+	GlobalConfigPollInterval time.Duration
+
+	// ProxyConfigPollInterval sets interval at which to poll for proxy config
+	ProxyConfigPollInterval time.Duration
 }
 
 // newGlobal creates a new global config with otherwise nil values set.

@@ -6,12 +6,15 @@ import (
 
 // AdSettings are settings to use when showing ads to Android clients
 type AdSettings struct {
-	ShowAds      bool
-	Percentage   float64
-	Provider     string
-	TargetedApps map[string]string
-	Admob        *Admob
-	InMobi       *InMobi
+	RegionsEnabled *map[string]bool
+	Whitelist      *map[string]bool
+	ShowAds        bool
+	MinDaysShowAds int `yaml:"mindaysshowads,omitempty"`
+	MaxDaysShowAds int `yaml:"maxdaysshowads,omitempty"`
+	Percentage     float64
+	Provider       string
+	Admob          *Admob
+	InMobi         *InMobi
 }
 
 type Admob struct {
@@ -35,6 +38,44 @@ func (settings *AdSettings) Enabled() bool {
 	return false
 }
 
+func (settings *AdSettings) UseWhitelist() bool {
+	return settings != nil && settings.Whitelist != nil
+}
+
+func (settings *AdSettings) IsRegionEnabled(region string) bool {
+	if settings == nil || settings.RegionsEnabled == nil {
+		return false
+	}
+	log.Debugf("Checking if ads are enabled for region: %v", region)
+	m := *settings.RegionsEnabled
+	_, exists := m[region]
+	return exists
+}
+
+// check whether we should show an ad for the given app
+func (settings *AdSettings) IsWhitelisted(app string) bool {
+	if settings == nil || settings.Whitelist == nil {
+		return false
+	}
+	m := *settings.Whitelist
+	_, exists := m[app]
+	return exists
+}
+
+func (settings *AdSettings) GetMinDaysShowAds() int {
+	if settings != nil {
+		return settings.MinDaysShowAds
+	}
+	return 0
+}
+
+func (settings *AdSettings) GetMaxDaysShowAds() int {
+	if settings != nil {
+		return settings.MaxDaysShowAds
+	}
+	return 0
+}
+
 func (settings *AdSettings) GetProvider() string {
 	if settings != nil {
 		return settings.Provider
@@ -47,14 +88,6 @@ func (settings *AdSettings) GetPercentage() float64 {
 		return settings.Percentage
 	}
 	return 0
-}
-
-// targettedApps returns the apps to show splash screen ads for
-func (settings *AdSettings) GetTargetedApps(region string) string {
-	if settings != nil {
-		return settings.TargetedApps[region]
-	}
-	return ""
 }
 
 func (settings *AdSettings) AppId() string {

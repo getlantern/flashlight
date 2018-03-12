@@ -28,7 +28,7 @@ const (
 
 type proxyConnection struct {
 	*proxy
-	conn      net.Conn
+	conn      serverConn
 	expiresAt time.Time
 }
 
@@ -129,6 +129,7 @@ func (p *proxy) ConsecFailures() int64 {
 }
 
 func (p *proxy) Succeeding() bool {
+	log.Debugf("%d / %d : %d", p.ConsecSuccesses(), p.ConsecFailures(), p.consecRWSuccesses.Get())
 	// To avoid turbulence when network glitches, treat proxies with a small
 	// amount failures as succeeding.
 	// TODO: OTOH, when the proxy just recovered from failing, should wait for
@@ -155,7 +156,7 @@ func (p *proxy) processPreconnects(initPreconnect int) {
 	}
 }
 
-func (p *proxy) newPreconnected(conn net.Conn) balancer.ProxyConnection {
+func (p *proxy) newPreconnected(conn serverConn) balancer.ProxyConnection {
 	return &proxyConnection{
 		proxy:     p,
 		conn:      conn,
@@ -246,25 +247,31 @@ func (pc *proxyConnection) dialInternal(ctx context.Context, network, addr strin
 	var err error
 	chDone := make(chan bool)
 	go func() {
-		conn, err = pc.doDialInternal(network, addr)
-		chDone <- true
-	}()
-	select {
-	case <-chDone:
-		return conn, err
-	case <-ctx.Done():
-		go func() {
-			<-chDone
+		conn, err = pc.conn.dialOrigin(ctx, network, addr)
+		select {
+		case chDone <- true:
+		default:
 			if err == nil {
 				log.Debugf("Connection to %s established too late, closing", addr)
 				conn.Close()
 			}
-		}()
+		}
+	}()
+	select {
+	case <-chDone:
+		return pc.withRateTracking(conn, addr), err
+	case <-ctx.Done():
 		return nil, ctx.Err()
 	}
 }
 
-func (pc *proxyConnection) doDialInternal(network, addr string) (net.Conn, error) {
+// dialOrigin implements the method from serverConn. With standard proxies, this
+// involves sending either a CONNECT request or a GET request to initiate a
+// persistent connection to the upstream proxy.
+func (conn defaultServerConn) dialOrigin(ctx context.Context, network, addr string) (net.Conn, error) {
+	if deadline, set := ctx.Deadline(); set {
+		conn.SetDeadline(deadline)
+	}
 	var err error
 	// Look for our special hacked "connect" transport used to signal
 	// that we should send a CONNECT request and tunnel all traffic through
@@ -272,16 +279,18 @@ func (pc *proxyConnection) doDialInternal(network, addr string) (net.Conn, error
 	switch network {
 	case "connect":
 		log.Tracef("Sending CONNECT request")
-		err = pc.sendCONNECT(addr, pc.conn)
+		err = conn.p.sendCONNECT(addr, conn)
 	case "persistent":
 		log.Tracef("Sending GET request to establish persistent HTTP connection")
-		err = pc.initPersistentConnection(addr, pc.conn)
+		err = conn.p.initPersistentConnection(addr, conn)
 	}
 	if err != nil {
-		pc.conn.Close()
+		conn.Close()
 		return nil, err
 	}
-	return pc.withRateTracking(pc.conn, addr), nil
+	// Unset the deadline to avoid affecting later read/write on the connection.
+	conn.SetDeadline(time.Time{})
+	return conn, nil
 }
 
 func (p *proxy) onRequest(req *http.Request) {
@@ -366,5 +375,50 @@ func (p *proxy) initPersistentConnection(addr string, conn net.Conn) error {
 		return fmt.Errorf("Unable to write initial request: %v", writeErr)
 	}
 
+	return nil
+}
+
+// serverConn represents a connection to a proxy server.
+type serverConn interface {
+	// dialOrigin dials out to the given origin address using the connected server
+	dialOrigin(ctx context.Context, network, addr string) (net.Conn, error)
+
+	// Close closes the connection to the proxy server
+	Close() error
+}
+
+// defaultServerConn is the standard implementation of serverConn to typical
+// lantern proxies.
+type defaultServerConn struct {
+	net.Conn
+	p *proxy
+}
+
+func (p *proxy) defaultServerConn(conn net.Conn, err error) (serverConn, error) {
+	if err != nil {
+		return nil, err
+	}
+	return &defaultServerConn{conn, p}, err
+}
+
+// enhttpServerConn represents a serverConn to domain-fronted servers. Unlike a
+// defaultServerConn, an enhttpServerConn doesn't actually have a real TCP/UDP
+// connection, since it operates by making multiple HTTP requests via a CDN like
+// CloudFront.
+type enhttpServerConn struct {
+	dial func(string, string) (net.Conn, error)
+}
+
+func (conn *enhttpServerConn) dialOrigin(ctx context.Context, network, addr string) (net.Conn, error) {
+	dfConn, err := conn.dial(network, addr)
+	if err == nil {
+		dfConn = idletiming.Conn(dfConn, IdleTimeout, func() {
+			log.Debug("enhttp connection idled")
+		})
+	}
+	return dfConn, err
+}
+
+func (conn *enhttpServerConn) Close() error {
 	return nil
 }

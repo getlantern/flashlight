@@ -171,6 +171,13 @@ func NewClient(
 				"adservice.google.nl",
 				"*.googlesyndication.com",
 				"*.googletagservices.com",
+				"googleadservices.com",
+				"*.youtube.com",
+				"*.youtube.com.hk",
+				"*.youtube.hk",
+				"*.youtube.co.jp",
+				"*.youtube.jp",
+				"*.youtube.nl",
 			},
 		}
 	}
@@ -194,11 +201,7 @@ func NewClient(
 	if mitmErr != nil {
 		log.Errorf("Unable to initialize MITM: %v", mitmErr)
 	}
-	if adBlockingAllowed() {
-		client.initEasyList()
-	} else {
-		client.easylist = allowAllEasyList{}
-	}
+	client.initEasyList(adBlockingAllowed)
 	client.reportProxyLocationLoop()
 	client.iptool, err = iptool.New()
 	if err != nil {
@@ -207,36 +210,60 @@ func NewClient(
 	return client, nil
 }
 
-type allowAllEasyList struct{}
-
-func (l allowAllEasyList) Allow(*http.Request) bool {
-	return true
-}
-
 func (client *Client) GetBalancer() *balancer.Balancer {
 	return client.bal
 }
 
-func (client *Client) initEasyList() {
+func (client *Client) initEasyList(adBlockingAllowed func() bool) {
 	defer func() {
 		if client.easylist == nil {
 			log.Debugf("Not using easylist")
-			client.easylist = allowAllEasyList{}
+			client.easylist = easylist.AndList{}
 		}
 	}()
+
+	if !adBlockingAllowed() {
+		log.Debug("Ad blocking not allowed, not initializing easylist")
+		return
+	}
+
 	log.Debug("Initializing easylist")
-	path, err := InConfigDir("", "easylist.txt")
+	lanternList, err := easyListFor("lanternlist.txt.gz", "https://raw.githubusercontent.com/getlantern/easylist/master/lanternlist.txt.gz")
 	if err != nil {
-		log.Errorf("Unable to get config path: %v", err)
+		log.Error(err)
 		return
 	}
-	list, err := easylist.Open(path, 1*time.Hour)
+
+	easylistList, err := easyListFor("easylist.txt.gz", easylist.DefaultURL)
 	if err != nil {
-		log.Errorf("Unable to open easylist: %v", err)
+		log.Error(err)
 		return
 	}
-	client.easylist = list
+
+	combined := easylist.AndList{lanternList, easylistList}
+
+	client.easylist = easylist.ListFunc(func(req *http.Request) bool {
+		adSwappingEnabled := client.adSwapTargetURL() != ""
+		if adSwappingEnabled {
+			// Always allow to avoid interfering with ad swapping
+			return true
+		}
+		// Use combined for maximum coverage
+		return combined.Allow(req)
+	})
 	log.Debug("Initialized easylist")
+}
+
+func easyListFor(cacheFile string, url string) (easylist.List, error) {
+	path, err := InConfigDir("", cacheFile)
+	if err != nil {
+		return nil, errors.New("Unable to get easylist config path: %v", err)
+	}
+	list, err := easylist.OpenWithURL(path, url, true, 1*time.Hour)
+	if err != nil {
+		return nil, errors.New("Unable to open easylist: %v", err)
+	}
+	return list, nil
 }
 
 func (client *Client) reportProxyLocationLoop() {

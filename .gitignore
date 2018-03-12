@@ -17,8 +17,12 @@ lantern_darwin_amd64
 proxies.yaml
 global.yaml
 .glide
-config/fetched-proxies.yaml.stored
+config/fetched-global.yaml.gz
 config/fetched-global.yaml.stored
+config/fetched-proxies.yaml.gz
+config/fetched-proxies.yaml.stored
+config/global.yaml
+config/proxies.yaml
 config/generated/masquerades.go
 profile.cov
 profile_tmp.cov
