@@ -149,6 +149,7 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 
 	stopProxies := pipeConfig(proxyOptions)
 
+	log.Debug(string(generated.GlobalConfig))
 	// These are the options for fetching the global config.
 	globalOptions := &options{
 		saveDir:    configDir,
