@@ -30,7 +30,7 @@ git submodule update  || die "Could not update submodules?"
 ./fetchcfg.py etc >> proxies.yaml || die "Could not fetch proxy in etc region?"
 cd -
 
-go install github.com/getlantern/tarfs/tarfs || die "Could not install tarfs"
+go get github.com/getlantern/tarfs/tarfs || die "Could not install tarfs"
 
 mkdir proxies-yaml-temp || die "Could not make proxies temp dir"
 cp $etc/proxies.yaml proxies-yaml-temp || die "Could not copy proxies.yaml"
