@@ -5,12 +5,15 @@ function die() {
   exit 1
 }
 
-curl https://globalconfig.flashlightproxy.com/global.yaml.gz | gunzip > yaml-temp
-go get github.com/getlantern/tarfs/tarfs || die "Could not install tarfs"
+curl https://globalconfig.flashlightproxy.com/global.yaml.gz | gunzip >> yaml-temp
 
-tarfs -pkg generated -var GlobalConfig yaml-temp > ../config/generated/embeddedGlobal.go
+echo 'package generated' > ../config/generated/embeddedGlobal.go && \
+echo '' >> ../config/generated/embeddedGlobal.go && \
+echo 'var GlobalConfig = []byte(`' >> ../config/generated/embeddedGlobal.go && \
+cat yaml-temp >> ../config/generated/embeddedGlobal.go && \
+echo '`)' >> ../config/generated/embeddedGlobal.go || die "Unable to generate embeddedGlobal.go"
 
-rm -rf yaml-temp
+rm yaml-temp
 
 git add ../config/generated/embeddedGlobal.go || die "Could not add resources?"
 
