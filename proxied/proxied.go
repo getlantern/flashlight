@@ -133,11 +133,15 @@ func dual(parallel bool, frontedURL, rootCA string) RoundTripper {
 		rootCA:            rootCA,
 		masqueradeTimeout: 5 * time.Minute,
 	}
-	cf.setFetcher(newDualFetcher(cf, cf.masqueradeTimeout))
+	cf.setFetcher(newDualFetcher(cf))
 	return cf
 }
 
-func newDualFetcher(cf *chainedAndFronted, masqueradeTimeout time.Duration) http.RoundTripper {
+func newDualFetcher(cf *chainedAndFronted) http.RoundTripper {
+	return newDualFetcherWithTimeout(cf, cf.getMasqueradeTimeout())
+}
+
+func newDualFetcherWithTimeout(cf *chainedAndFronted, masqueradeTimeout time.Duration) http.RoundTripper {
 	return &dualFetcher{cf: cf, rootCA: cf.rootCA, masqueradeTimeout: masqueradeTimeout}
 }
 
@@ -176,11 +180,11 @@ func (cf *chainedAndFronted) RoundTrip(req *http.Request) (*http.Response, error
 		log.Error(err)
 		// If there's an error, switch back to using the dual fetcher.
 		log.Debug("Switching back to dual fetcher because of error on chained request")
-		cf.setFetcher(newDualFetcher(cf, cf.getMasqueradeTimeout()))
+		cf.setFetcher(newDualFetcher(cf))
 	} else if !success(resp) {
 		log.Error(resp.Status)
 		log.Debug("Switching back to dual fetcher because of unexpected response status on chained request")
-		cf.setFetcher(newDualFetcher(cf, cf.getMasqueradeTimeout()))
+		cf.setFetcher(newDualFetcher(cf))
 	}
 	return resp, err
 }
@@ -190,7 +194,7 @@ func (cf *chainedAndFronted) SetMasqueradeTimeout(masqueradeTimeout time.Duratio
 	cf.masqueradeTimeout = masqueradeTimeout
 	_, isDual := cf._fetcher.(*dualFetcher)
 	if isDual {
-		cf._fetcher = newDualFetcher(cf, masqueradeTimeout)
+		cf._fetcher = newDualFetcherWithTimeout(cf, masqueradeTimeout)
 	}
 	cf.mu.Unlock()
 }
