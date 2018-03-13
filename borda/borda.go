@@ -127,7 +127,6 @@ func createBordaClient(reportInterval time.Duration) *borda.Client {
 				proxied.PrepareForFronting(req, frontedURL.String())
 				return rt.RoundTrip(req)
 			}),
-			Timeout: time.Second * 10,
 		},
 		BeforeSubmit: BeforeSubmit,
 	})
