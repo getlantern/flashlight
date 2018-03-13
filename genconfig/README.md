@@ -3,7 +3,7 @@
 If you want to update the global proxied sites list, first edit the global file at
 https://github.com/getlantern/lantern_aws/blob/master/salt/update_masquerades/original.txt
 
-As of this writing that gets pulled from [every hour on the hour as of this writing](https://github.com/getlantern/lantern_aws/blob/master/salt/update_masquerades/init.sls#L48) into global.yaml, so you'll want to make sure it's actually updated before pulling it into the client. You can check that with:
+As of this writing that gets pulled from [every hour on the hour](https://github.com/getlantern/lantern_aws/blob/master/salt/update_masquerades/init.sls#L48) into global.yaml, so you'll want to make sure it's actually updated before pulling it into the client. You can check that with:
 
 `curl --head https://globalconfig.flashlightproxy.com/global.yaml.gz`
 
