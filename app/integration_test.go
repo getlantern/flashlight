@@ -162,6 +162,9 @@ func TestProxying(t *testing.T) {
 	a.Connect()
 	testRequest(t, httpAddr, httpsAddr)
 
+	// Sleep a while to let balancer re-display stats (and trigger proxy_rank op)
+	time.Sleep(15 * time.Second)
+
 	log.Fatal("test fatal error")
 	log.Debug("Exiting")
 	a.Exit(nil)
