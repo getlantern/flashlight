@@ -150,5 +150,9 @@ func ciphersFromNames(cipherNames []string) []uint16 {
 		}
 	}
 
+	if len(ciphers) == 0 {
+		// Set ciphers to nil so that tls.Config uses default ciphers
+		ciphers = nil
+	}
 	return ciphers
 }

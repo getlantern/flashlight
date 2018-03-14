@@ -29,7 +29,7 @@ type testSettings struct {
 	Settings
 }
 
-func (c testSettings) StickyConfig() bool       { return true }
+func (c testSettings) StickyConfig() bool       { return false }
 func (c testSettings) EnableAdBlocking() bool   { return false }
 func (c testSettings) DefaultDnsServer() string { return "8.8.8.8" }
 func (c testSettings) TimeoutMillis() int       { return 5000 }
