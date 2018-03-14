@@ -82,7 +82,7 @@ func TestChainedAndFrontedHeaders(t *testing.T) {
 	req.Header.Set("X-Lantern-If-None-Match", etag)
 	req.Body = ioutil.NopCloser(bytes.NewBufferString("Hello"))
 
-	df := &dualFetcher{&chainedAndFronted{parallel: true}, ""}
+	df := &dualFetcher{&chainedAndFronted{parallel: true}, "", 5 * time.Minute}
 	crt := &mockChainedRT{req: eventual.NewValue(), sc: 503}
 	frt := &mockFrontedRT{req: eventual.NewValue()}
 	df.do(req, crt, frt)
@@ -172,7 +172,7 @@ func TestSwitchingToChained(t *testing.T) {
 	assert.True(t, valid, "should switch to chained fetcher")
 }
 
-func doTestChainedAndFronted(t *testing.T, build func() http.RoundTripper) {
+func doTestChainedAndFronted(t *testing.T, build func() RoundTripper) {
 	fwd, _ := forward.New()
 
 	sleep := 0 * time.Second

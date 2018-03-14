@@ -100,7 +100,7 @@ func TestEmbedded(t *testing.T) {
 			unmarshaler: proxiesUnmarshaler,
 		})
 
-		pr, err := cfg.embedded(generated.EmbeddedProxies, "proxies.yaml")
+		pr, err := cfg.embedded(generated.EmbeddedProxies)
 		assert.Nil(t, err)
 
 		proxies := pr.(map[string]*chained.ChainedServerInfo)

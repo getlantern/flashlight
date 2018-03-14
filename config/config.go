@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/getlantern/rot13"
-	"github.com/getlantern/tarfs"
 	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/client"
@@ -27,7 +26,7 @@ type Config interface {
 	saved() (interface{}, error)
 
 	// Embedded retrieves a yaml config embedded in the binary.
-	embedded([]byte, string) (interface{}, error)
+	embedded([]byte) (interface{}, error)
 
 	// Poll polls for new configs from a remote server and saves them to disk for
 	// future runs.
@@ -137,7 +136,7 @@ func pipeConfig(opts *options) (stop func()) {
 
 	if saved, proxyErr := conf.saved(); proxyErr != nil {
 		log.Debugf("Could not load stored config %v", proxyErr)
-		if embedded, errr := conf.embedded(opts.embeddedData, opts.name); errr != nil {
+		if embedded, errr := conf.embedded(opts.embeddedData); errr != nil {
 			log.Errorf("Could not load embedded config %v", errr)
 		} else {
 			log.Debugf("Sending embedded config for %v", opts.name)
@@ -236,23 +235,8 @@ func (conf *config) saved() (interface{}, error) {
 	return conf.unmarshaler(bytes)
 }
 
-func (conf *config) embedded(data []byte, fileName string) (interface{}, error) {
-	fs, err := tarfs.New(data, "")
-	if err != nil {
-		log.Errorf("Could not read resources? %v", err)
-		return nil, err
-	}
-
-	// Get the yaml file from either the local file system or from an
-	// embedded resource, but ignore local file system files if they're
-	// empty.
-	bytes, err := fs.GetIgnoreLocalEmpty(fileName)
-	if err != nil {
-		log.Errorf("Could not read embedded proxies %v", err)
-		return nil, err
-	}
-
-	return conf.unmarshaler(bytes)
+func (conf *config) embedded(data []byte) (interface{}, error) {
+	return conf.unmarshaler(data)
 }
 
 func (conf *config) poll(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, sleep func() time.Duration) {

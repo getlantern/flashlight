@@ -80,19 +80,29 @@ func getProxyAddr() (string, bool) {
 	return addr.(string), true
 }
 
+// RoundTripper implements http.RoundTripper and allows configuration of the
+// masquerade timeout.
+type RoundTripper interface {
+	http.RoundTripper
+
+	// SetMasqueradeTimeout specifies how long we're willing to wait for a valid
+	// fronting masquerade before failing.
+	SetMasqueradeTimeout(time.Duration)
+}
+
 // ParallelPreferChained creates a new http.RoundTripper that attempts to send
 // requests through both chained and direct fronted routes in parallel. Once a
 // chained request succeeds, subsequent requests will only go through Chained
 // servers unless and until a request fails, in which case we'll start trying
 // fronted requests again.
-func ParallelPreferChained() http.RoundTripper {
+func ParallelPreferChained() RoundTripper {
 	return dual(true, "", "")
 }
 
 // ChainedThenFronted creates a new http.RoundTripper that attempts to send
 // requests first through a chained server and then falls back to using a
 // direct fronted server if the chained route didn't work.
-func ChainedThenFronted() http.RoundTripper {
+func ChainedThenFronted() RoundTripper {
 	return dual(false, "", "")
 }
 
@@ -102,7 +112,7 @@ func ChainedThenFronted() http.RoundTripper {
 // Chained servers unless and until a request fails, in which case we'll start
 // trying fronted requests again. This version specified the fronted URL
 // directly.
-func ParallelPreferChainedWith(frontedURL string, rootCA string) http.RoundTripper {
+func ParallelPreferChainedWith(frontedURL string, rootCA string) RoundTripper {
 	return dual(true, frontedURL, rootCA)
 }
 
@@ -110,34 +120,40 @@ func ParallelPreferChainedWith(frontedURL string, rootCA string) http.RoundTripp
 // requests first through a chained server and then falls back to using a
 // direct fronted server if the chained route didn't work.
 // This version specified the fronted URL directly.
-func ChainedThenFrontedWith(frontedURL, rootCA string) http.RoundTripper {
+func ChainedThenFrontedWith(frontedURL, rootCA string) RoundTripper {
 	return dual(false, frontedURL, rootCA)
 }
 
 // dual creates a new http.RoundTripper that attempts to send
 // requests to both chained and fronted servers either in parallel or not.
-func dual(parallel bool, frontedURL, rootCA string) http.RoundTripper {
+func dual(parallel bool, frontedURL, rootCA string) RoundTripper {
 	cf := &chainedAndFronted{
-		parallel:       parallel,
-		frontedURLHost: frontedURL,
-		rootCA:         rootCA,
+		parallel:          parallel,
+		frontedURLHost:    frontedURL,
+		rootCA:            rootCA,
+		masqueradeTimeout: 5 * time.Minute,
 	}
 	cf.setFetcher(newDualFetcher(cf))
 	return cf
 }
 
 func newDualFetcher(cf *chainedAndFronted) http.RoundTripper {
-	return &dualFetcher{cf: cf, rootCA: cf.rootCA}
+	return newDualFetcherWithTimeout(cf, cf.getMasqueradeTimeout())
+}
+
+func newDualFetcherWithTimeout(cf *chainedAndFronted, masqueradeTimeout time.Duration) http.RoundTripper {
+	return &dualFetcher{cf: cf, rootCA: cf.rootCA, masqueradeTimeout: masqueradeTimeout}
 }
 
 // chainedAndFronted fetches HTTP data in parallel using both chained and fronted
 // servers.
 type chainedAndFronted struct {
-	parallel       bool
-	frontedURLHost string
-	_fetcher       http.RoundTripper
-	mu             sync.RWMutex
-	rootCA         string
+	parallel          bool
+	frontedURLHost    string
+	_fetcher          http.RoundTripper
+	mu                sync.RWMutex
+	rootCA            string
+	masqueradeTimeout time.Duration
 }
 
 func (cf *chainedAndFronted) getFetcher() http.RoundTripper {
@@ -173,6 +189,22 @@ func (cf *chainedAndFronted) RoundTrip(req *http.Request) (*http.Response, error
 	return resp, err
 }
 
+func (cf *chainedAndFronted) SetMasqueradeTimeout(masqueradeTimeout time.Duration) {
+	cf.mu.Lock()
+	cf.masqueradeTimeout = masqueradeTimeout
+	_, isDual := cf._fetcher.(*dualFetcher)
+	if isDual {
+		cf._fetcher = newDualFetcherWithTimeout(cf, masqueradeTimeout)
+	}
+	cf.mu.Unlock()
+}
+
+func (cf *chainedAndFronted) getMasqueradeTimeout() time.Duration {
+	cf.mu.RLock()
+	defer cf.mu.RUnlock()
+	return cf.masqueradeTimeout
+}
+
 type chainedFetcher struct {
 	rootCA string
 }
@@ -188,17 +220,20 @@ func (cf *chainedFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 type dualFetcher struct {
-	cf     *chainedAndFronted
-	rootCA string
+	cf                *chainedAndFronted
+	rootCA            string
+	masqueradeTimeout time.Duration
 }
 
-type frontedRT struct{}
+type frontedRT struct {
+	masqueradeTimeout time.Duration
+}
 
 // Use a wrapper for fronted.NewDirect to avoid blocking
 // `dualFetcher.RoundTrip` when fronted is not yet available, especially when
 // the application is starting up
 func (f frontedRT) RoundTrip(req *http.Request) (*http.Response, error) {
-	rt, ok := fronted.NewDirect(5 * time.Minute)
+	rt, ok := fronted.NewDirect(f.masqueradeTimeout)
 	if !ok {
 		return nil, errors.New("Unable to obtain direct fronter")
 	}
@@ -218,7 +253,7 @@ func (df *dualFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, errors.Wrap(err).Op("DFCreateChainedClient")
 	}
-	return df.do(req, directRT, frontedRT{})
+	return df.do(req, directRT, frontedRT{masqueradeTimeout: df.masqueradeTimeout})
 }
 
 // do will attempt to execute the specified HTTP request using both

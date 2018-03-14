@@ -116,6 +116,7 @@ func startBordaAndProxyBench(reportInterval time.Duration, enabled func(ctx map[
 
 func createBordaClient(reportInterval time.Duration) *borda.Client {
 	rt := proxied.ChainedThenFronted()
+	rt.SetMasqueradeTimeout(30 * time.Second)
 	return borda.NewClient(&borda.Options{
 		BatchInterval: reportInterval,
 		HTTPClient: &http.Client{
