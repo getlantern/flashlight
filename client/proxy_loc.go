@@ -88,6 +88,16 @@ var (
 			"China",
 			"HK",
 		},
+		"cdsgz1": &location{
+			"Hong Kong",
+			"China",
+			"HK",
+		},
+		"enhttp": &location{
+			"New York",
+			"United States",
+			"US",
+		},
 	}
 )
 
