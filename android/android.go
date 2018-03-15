@@ -302,36 +302,9 @@ func setBandwidth(session Session) {
 	}
 }
 
-func initSession(session Session) {
-	if session.GetUserID() == 0 {
-		// create new user first if we have no valid user id
-		_, err := newUser(newRequest(session))
-		if err != nil {
-			log.Errorf("Could not create new pro user")
-			return
-		}
-	}
-
-	log.Debugf("New Lantern session with user id %d", session.GetUserID())
-
-	setBandwidth(session)
-	setSurvey(session)
-
-	req := newRequest(session)
-
-	for _, proFn := range []proFunc{plans, userData} {
-		_, err := proFn(req)
-		if err != nil {
-			log.Errorf("Error making pro request: %v", err)
-		}
-	}
-}
-
 func afterStart(session Session) {
 
 	bandwidthUpdates(session)
-
-	go initSession(session)
 
 	go func() {
 		if <-geolookup.OnRefresh() {

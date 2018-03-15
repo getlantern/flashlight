@@ -28,7 +28,6 @@ type Session interface {
 	BandwidthUpdate(int, int, int)
 	AccountId() string
 	AddDevice(string, string)
-	AddPlan(string, string, string, bool, int, int)
 	Locale() string
 	Code() string
 	GetCountryCode() string
@@ -37,7 +36,6 @@ type Session interface {
 	DeviceCode() string
 	DeviceName() string
 	Referral() string
-	Plan() string
 	Provider() string
 	ResellerCode() string
 	SetSignature(string)
@@ -112,8 +110,8 @@ func purchase(req *proRequest) (*client.Response, error) {
 		Provider:       req.session.Provider(),
 		ResellerCode:   req.session.ResellerCode(),
 		Email:          req.session.Email(),
-		Plan:           req.session.Plan(),
-		Currency:       strings.ToLower(req.session.Currency()),
+		//Plan:           req.session.Plan(),
+		Currency: strings.ToLower(req.session.Currency()),
 	}
 	pubKey := req.session.StripeApiKey()
 	deviceName := req.session.DeviceName()
@@ -201,29 +199,6 @@ func cancel(req *proRequest) (*client.Response, error) {
 	return req.client.CancelSubscription(req.user)
 }
 
-func plans(req *proRequest) (*client.Response, error) {
-	res, err := req.client.Plans(req.user)
-	if err != nil || len(res.Plans) == 0 {
-		return res, err
-	}
-	req.session.SetStripePubKey(res.PubKey)
-	for _, plan := range res.Plans {
-		var currency string
-		var price int
-		for currency, price = range plan.Price {
-			break
-		}
-		if currency != "" {
-			log.Debugf("Calling add plan with %s currency %s desc: %s best value %t price %d",
-				plan.Id, currency, plan.Description, plan.BestValue, price)
-			req.session.AddPlan(plan.Id, plan.Description,
-				currency, plan.BestValue, plan.Duration.Years, price)
-		}
-	}
-
-	return res, err
-}
-
 // Used to confirm an email isn't already associated with a Pro
 // account
 func emailExists(req *proRequest) (*client.Response, error) {
@@ -293,7 +268,7 @@ func pwSignature(req *proRequest) (*client.Response, error) {
 		req.session.Email(),
 		strings.ToLower(req.session.Currency()),
 		req.session.DeviceName(),
-		req.session.Plan())
+		"")
 
 	if err != nil {
 		log.Errorf("Error trying to generate pw signature: %v", err)
@@ -345,7 +320,6 @@ func ProRequest(command string, session Session) bool {
 		"payment-signature":    pwSignature,
 		"user-payment-gateway": userPaymentGateway,
 		"purchase":             purchase,
-		"plans":                plans,
 		"signin":               signin,
 		"linkrequest":          linkRequest,
 		"redeemcode":           redeemCode,
