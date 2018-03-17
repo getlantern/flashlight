@@ -80,8 +80,6 @@ type Session interface {
 	SetDeviceCode(string, int64)
 	UserData(bool, bool, int64, int64, int64, string, string)
 	SetCode(string)
-	SetError(string, string)
-	SetErrorId(string, string)
 	Currency() string
 	DeviceOS() string
 	SetStripePubKey(string)
