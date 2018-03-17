@@ -250,3 +250,10 @@ func (p *proxy) dial(network, addr string) (net.Conn, error) {
 	pc, _, err := p.newPreconnected(conn).DialContext(ctx, network, addr)
 	return pc, err
 }
+
+func TestCiphersFromNames(t *testing.T) {
+	assert.Nil(t, ciphersFromNames(nil))
+	assert.Nil(t, ciphersFromNames([]string{}))
+	assert.Nil(t, ciphersFromNames([]string{"UNKNOWN"}))
+	assert.EqualValues(t, []uint16{0x0035, 0x003c}, ciphersFromNames([]string{"TLS_RSA_WITH_AES_256_CBC_SHA", "UNKNOWN", "TLS_RSA_WITH_AES_128_CBC_SHA256"}))
+}
