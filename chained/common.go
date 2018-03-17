@@ -127,8 +127,8 @@ func ciphersFromNames(cipherNames []string) []uint16 {
 
 	pkg, err := importer.Default().Import("crypto/tls")
 	if err != nil {
-		log.Errorf("Unable to load crypto/tls package to look up ciphers: %v", err)
-		return ciphers
+		log.Tracef("Unable to load crypto/tls package to look up ciphers: %v", err)
+		return nil
 	}
 
 	scope := pkg.Scope()
