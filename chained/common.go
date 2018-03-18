@@ -6,6 +6,8 @@
 package chained
 
 import (
+	"go/importer"
+	"go/types"
 	"strconv"
 
 	"github.com/getlantern/golog"
@@ -58,6 +60,25 @@ type ChainedServerInfo struct {
 	// The URL at which to access a domain-fronting server farm using the enhttp
 	// protocol.
 	ENHTTPURL string
+
+	// TLSDesktopOrderedCipherSuiteNames: The ordered list of cipher suites to use
+	// for desktop clients using TLS represented as strings.
+	TLSDesktopOrderedCipherSuiteNames []string
+
+	// TLSMobileOrderedCipherSuiteNames: The ordered list of cipher suites to use
+	// for mobile clients using TLS represented as strings. This may differ from
+	// the ordering for desktop because performance of AES ciphers is more of a
+	// concern on mobile.
+	TLSMobileOrderedCipherSuiteNames []string
+
+	// TLSServerNameIndicator: Specifies the hostname that should be sent by the
+	// client as the Server Name Indication header in a TLS request.  If not
+	// provided, the client should not send an SNI header.
+	TLSServerNameIndicator string
+
+	// TLSClientSessionCacheSize: the size of client session cache to use. Set to
+	// 0 to use default size, set to < 0 to disable.
+	TLSClientSessionCacheSize int
 }
 
 func (s *ChainedServerInfo) ptSetting(name string) string {
@@ -91,4 +112,47 @@ func (s *ChainedServerInfo) ptSettingBool(name string) bool {
 		return false
 	}
 	return val
+}
+
+func (s *ChainedServerInfo) desktopOrderedCipherSuites() []uint16 {
+	return ciphersFromNames(s.TLSDesktopOrderedCipherSuiteNames)
+}
+
+func (s *ChainedServerInfo) mobileOrderedCipherSuites() []uint16 {
+	return ciphersFromNames(s.TLSMobileOrderedCipherSuiteNames)
+}
+
+func ciphersFromNames(cipherNames []string) []uint16 {
+	ciphers := make([]uint16, 0, len(cipherNames))
+
+	pkg, err := importer.Default().Import("crypto/tls")
+	if err != nil {
+		log.Errorf("Unable to load crypto/tls package to look up ciphers: %v", err)
+		return ciphers
+	}
+
+	scope := pkg.Scope()
+	for _, name := range cipherNames {
+		obj := scope.Lookup("TLS_" + name)
+		switch t := obj.(type) {
+		case *types.Const:
+			if t.Exported() && t.Type().String() == "uint16" {
+				_val, parseErr := strconv.ParseUint(t.Val().ExactString(), 10, 16)
+				if parseErr != nil {
+					log.Errorf("Unable to parse cipher suite value for TLS_%v", name, parseErr)
+					continue
+				}
+				val := uint16(_val)
+				ciphers = append(ciphers, val)
+			}
+		default:
+			log.Errorf("Unable to find cipher suite TLS_%v", name)
+		}
+	}
+
+	if len(ciphers) == 0 {
+		// Set ciphers to nil so that tls.Config uses default ciphers
+		ciphers = nil
+	}
+	return ciphers
 }

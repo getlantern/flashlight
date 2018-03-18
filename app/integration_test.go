@@ -168,15 +168,30 @@ func TestProxying(t *testing.T) {
 
 	select {
 	case <-onGeo:
-		opsMx.RLock()
-		for _, op := range flashlight.FullyReportedOps {
-			if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" || op == "probe" {
-				// ignore these, as we don't do them during the integration test
-				continue
+		// Look for reported ops several times over a 15 second period to give
+		// system time to report everything
+		var missingOps []string
+		for i := 0; i < 15; i++ {
+			missingOps := make([]string, 0)
+			opsMx.RLock()
+			for _, op := range flashlight.FullyReportedOps {
+				if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" || op == "probe" {
+					// ignore these, as we don't do them during the integration test
+					continue
+				}
+				if !reportedOps[op] {
+					missingOps = append(missingOps, op)
+				}
 			}
-			assert.True(t, reportedOps[op], "Op %v wasn't reported", op)
+			opsMx.RUnlock()
+			if len(missingOps) == 0 {
+				break
+			}
+			time.Sleep(1 * time.Second)
 		}
-		opsMx.RUnlock()
+		for _, op := range missingOps {
+			assert.Fail(t, "Op %v wasn't reported", op)
+		}
 	case <-time.After(1 * time.Minute):
 		assert.Fail(t, "Geolookup never succeeded")
 	}

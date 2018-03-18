@@ -5,29 +5,15 @@ function die() {
   exit 1
 }
 
+curl https://globalconfig.flashlightproxy.com/global.yaml.gz | gunzip >> yaml-temp
 
-go run genconfig.go \
-   -numworkers=100 \
-   -blacklist="blacklist.txt" \
-   -masquerades="masquerades.txt" \
-   -masquerades-out="../config/generated/masquerades.go" \
-   -min-masquerades=1000 \
-   -max-masquerades=1000 \
-   -proxiedsites="proxiedsites" \
-   -proxiedsites-out="../config/generated/proxiedsites.go" \
-   -fallbacks="fallbacks.yaml" \
-   -fallbacks-out= "../config/generated/fallbacks.go" \
-   \
-    || die "Could not generate config?"
+echo 'package generated' > ../config/generated/embeddedGlobal.go && \
+echo '' >> ../config/generated/embeddedGlobal.go && \
+echo 'var GlobalConfig = []byte(`' >> ../config/generated/embeddedGlobal.go && \
+cat yaml-temp >> ../config/generated/embeddedGlobal.go && \
+echo '`)' >> ../config/generated/embeddedGlobal.go || die "Unable to generate embeddedGlobal.go"
 
-mkdir yaml-temp || die "Could not make directory"
-mv lantern.yaml global.yaml
-cp global.yaml yaml-temp || die "Could not copy yaml"
-go install github.com/getlantern/tarfs/tarfs || die "Could not install tarfs"
-
-tarfs -pkg generated -var GlobalConfig yaml-temp > ../config/generated/embeddedGlobal.go
-
-rm -rf yaml-temp
+rm yaml-temp
 
 git add ../config/generated/embeddedGlobal.go || die "Could not add resources?"
 

@@ -30,14 +30,12 @@ git submodule update  || die "Could not update submodules?"
 ./fetchcfg.py etc >> proxies.yaml || die "Could not fetch proxy in etc region?"
 cd -
 
-go install github.com/getlantern/tarfs/tarfs || die "Could not install tarfs"
+echo 'package generated' > ../config/generated/embeddedProxies.go && \
+echo '' >> ../config/generated/embeddedProxies.go && \
+echo 'var EmbeddedProxies = []byte(`' >> ../config/generated/embeddedProxies.go && \
+cat $etc/proxies.yaml >> ../config/generated/embeddedProxies.go && \
+echo '`)' >> ../config/generated/embeddedProxies.go || die "Unable to generate embeddedProxies.go"
 
-mkdir proxies-yaml-temp || die "Could not make proxies temp dir"
-cp $etc/proxies.yaml proxies-yaml-temp || die "Could not copy proxies.yaml"
-
-tarfs -pkg generated -var EmbeddedProxies proxies-yaml-temp > ../config/generated/embeddedProxies.go
 git add ../config/generated/embeddedProxies.go || die "Could not add proxies?"
-
-rm -rf proxies-yaml-temp
 
 echo "Finished generating proxies and added ../config/generated/embeddedProxies.go. Please simply commit that file after confirming the process seemed to have correctly generatated everything -- check lantern.yaml in particular, but no need to check that in"

@@ -127,16 +127,13 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 	}
 	x509cert := cert.X509()
-	sessionCache := tls.NewLRUClientSessionCache(1000)
+
 	return newProxy(name, "https", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(ctx context.Context, p *proxy) (serverConn, error) {
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
 			conn, err := tlsdialer.DialTimeout(func(network, addr string, timeout time.Duration) (net.Conn, error) {
 				return p.dialCore(op)(ctx)
 			}, timeoutFor(ctx),
-				"tcp", p.addr, false, &tls.Config{
-					ClientSessionCache: sessionCache,
-					InsecureSkipVerify: true,
-				})
+				"tcp", p.addr, false, tlsConfigForProxy(s))
 			if err != nil {
 				return conn, err
 			}
@@ -638,4 +635,28 @@ func reportProxyDial(delta time.Duration, err error) {
 		innerOp.FailIf(err)
 		innerOp.End()
 	}
+}
+
+func tlsConfigForProxy(s *ChainedServerInfo) *tls.Config {
+	var sessionCache tls.ClientSessionCache
+	if s.TLSClientSessionCacheSize == 0 {
+		sessionCache = tls.NewLRUClientSessionCache(1000)
+	} else if s.TLSClientSessionCacheSize > 0 {
+		sessionCache = tls.NewLRUClientSessionCache(s.TLSClientSessionCacheSize)
+	}
+	cipherSuites := orderedCipherSuitesFromConfig(s)
+
+	return &tls.Config{
+		ClientSessionCache: sessionCache,
+		CipherSuites:       cipherSuites,
+		ServerName:         s.TLSServerNameIndicator,
+		InsecureSkipVerify: true,
+	}
+}
+
+func orderedCipherSuitesFromConfig(s *ChainedServerInfo) []uint16 {
+	if runtime.GOOS == "android" {
+		return s.mobileOrderedCipherSuites()
+	}
+	return s.desktopOrderedCipherSuites()
 }
