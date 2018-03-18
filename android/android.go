@@ -45,6 +45,8 @@ type Settings interface {
 	StickyConfig() bool
 	EnableAdBlocking() bool
 	DefaultDnsServer() string
+	GetHttpProxyHost() string
+	GetHttpProxyPort() int
 	TimeoutMillis() int
 }
 
@@ -241,7 +243,11 @@ func run(configDir, locale string,
 		}
 	}()
 
-	flashlight.Run("127.0.0.1:0", // listen for HTTP on random address
+	httpProxyAddr := fmt.Sprintf("%s:%d",
+		settings.GetHttpProxyHost(),
+		settings.GetHttpProxyPort())
+
+	flashlight.Run(httpProxyAddr, // listen for HTTP on provided address
 		"127.0.0.1:0",                // listen for SOCKS on random address
 		configDir,                    // place to store lantern configuration
 		func() bool { return false }, // always connected
