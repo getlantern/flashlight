@@ -6,8 +6,7 @@
 package chained
 
 import (
-	"go/importer"
-	"go/types"
+	"crypto/tls"
 	"strconv"
 
 	"github.com/getlantern/golog"
@@ -123,36 +122,41 @@ func (s *ChainedServerInfo) mobileOrderedCipherSuites() []uint16 {
 }
 
 func ciphersFromNames(cipherNames []string) []uint16 {
-	ciphers := make([]uint16, 0, len(cipherNames))
+	var ciphers []uint16
 
-	pkg, err := importer.Default().Import("crypto/tls")
-	if err != nil {
-		log.Errorf("Unable to load crypto/tls package to look up ciphers: %v", err)
-		return ciphers
-	}
-
-	scope := pkg.Scope()
-	for _, name := range cipherNames {
-		obj := scope.Lookup("TLS_" + name)
-		switch t := obj.(type) {
-		case *types.Const:
-			if t.Exported() && t.Type().String() == "uint16" {
-				_val, parseErr := strconv.ParseUint(t.Val().ExactString(), 10, 16)
-				if parseErr != nil {
-					log.Errorf("Unable to parse cipher suite value for TLS_%v", name, parseErr)
-					continue
-				}
-				val := uint16(_val)
-				ciphers = append(ciphers, val)
-			}
-		default:
-			log.Errorf("Unable to find cipher suite TLS_%v", name)
+	for _, cipherName := range cipherNames {
+		cipher, found := availableTLSCiphers[cipherName]
+		if !found {
+			log.Errorf("Unknown cipher: %v", cipherName)
+			continue
 		}
+		ciphers = append(ciphers, cipher)
 	}
 
-	if len(ciphers) == 0 {
-		// Set ciphers to nil so that tls.Config uses default ciphers
-		ciphers = nil
-	}
 	return ciphers
+}
+
+var availableTLSCiphers = map[string]uint16{
+	"TLS_RSA_WITH_RC4_128_SHA":                tls.TLS_RSA_WITH_RC4_128_SHA,
+	"TLS_RSA_WITH_3DES_EDE_CBC_SHA":           tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+	"TLS_RSA_WITH_AES_128_CBC_SHA":            tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+	"TLS_RSA_WITH_AES_256_CBC_SHA":            tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+	"TLS_RSA_WITH_AES_128_CBC_SHA256":         tls.TLS_RSA_WITH_AES_128_CBC_SHA256,
+	"TLS_RSA_WITH_AES_128_GCM_SHA256":         tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
+	"TLS_RSA_WITH_AES_256_GCM_SHA384":         tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+	"TLS_ECDHE_ECDSA_WITH_RC4_128_SHA":        tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
+	"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA":    tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+	"TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA":    tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+	"TLS_ECDHE_RSA_WITH_RC4_128_SHA":          tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+	"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA":     tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+	"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA":      tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+	"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA":      tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+	"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256": tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+	"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256":   tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+	"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256":   tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+	"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256": tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+	"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384":   tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+	"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384": tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+	"TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305":    tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+	"TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305":  tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
 }
