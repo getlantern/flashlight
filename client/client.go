@@ -67,6 +67,12 @@ var (
 		19305, 19306, 19307, 19308, 19309,
 	}
 
+	// Requests to these domains require proxies for security purposes and to
+	// ensure that config-server requests in particular always go through a proxy
+	// so that it can add the necessary authentication token and other headers.
+	// Direct connections to these domains are not allowed.
+	domainsRequiringProxy = []string{"getiantem.org", "lantern.io", "getlantern.org"}
+
 	// Set a hard limit when processing proxy requests. Should be short enough to
 	// avoid applications bypassing Lantern.
 	// Chrome has a 30s timeout before marking proxy as bad.
@@ -447,8 +453,12 @@ func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Con
 	}
 
 	directDialer := func(ctx context.Context, network, addr string) (net.Conn, error) {
-		if allow, ip := client.allowShortcut(addr); allow {
-			return shortcutDialer(ctx, network, addr, ip)
+		if requiresProxy(addr) {
+			log.Debugf("Address %v requires a proxy, not using shortcut", addr)
+		} else {
+			if allow, ip := client.allowShortcut(addr); allow {
+				return shortcutDialer(ctx, network, addr, ip)
+			}
 		}
 		dl, ok := ctx.Deadline()
 		if !ok {
@@ -505,6 +515,11 @@ func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Con
 }
 
 func (client *Client) shouldSendToProxy(addr string, port int) error {
+	if requiresProxy(addr) {
+		log.Debugf("Address %v requires a proxy", addr)
+		return nil
+	}
+
 	if client.disconnected() {
 		return errLanternOff
 	}
@@ -554,6 +569,30 @@ func (client *Client) isAddressProxyable(addr string) error {
 		return fmt.Errorf("IP %v is private", host)
 	}
 	return nil
+}
+
+func requiresProxy(addr string) bool {
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		host = addr
+	}
+	host = strings.TrimSpace(host)
+	parts := strings.Split(host, ".")
+
+domainsLoop:
+	for _, domain := range domainsRequiringProxy {
+		domainParts := strings.Split(domain, ".")
+		if len(parts) >= len(domainParts) {
+			for i := 1; i <= len(domainParts); i++ {
+				if !strings.EqualFold(domainParts[len(domainParts)-i], parts[len(parts)-i]) {
+					continue domainsLoop
+				}
+			}
+			return true
+		}
+	}
+
+	return false
 }
 
 func (client *Client) portForAddress(addr string) (int, error) {
