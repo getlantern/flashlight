@@ -58,33 +58,17 @@ type Session interface {
 	SetStaging(bool)
 	ProxyAll() bool
 	BandwidthUpdate(int, int, int)
-	AccountId() string
-	AddDevice(string, string)
 	Locale() string
 	Code() string
 	GetCountryCode() string
 	GetDNSServer() string
-	VerifyCode() string
-	DeviceCode() string
-	DeviceName() string
-	Referral() string
 	Provider() string
-	ResellerCode() string
-	SetSignature(string)
-	SetPaymentProvider(string)
-	StripeToken() string
-	StripeApiKey() string
 	AppVersion() string
 	IsPlayVersion() bool
 	Email() string
-	SetToken(string)
-	SetUserId(int64)
-	SetDeviceCode(string, int64)
-	UserData(bool, bool, int64, int64, int64, string, string)
 	SetCode(string)
 	Currency() string
 	DeviceOS() string
-	SetStripePubKey(string)
 	IsProUser() bool
 }
 
