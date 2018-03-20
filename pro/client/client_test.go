@@ -92,15 +92,6 @@ func TestUserAData(t *testing.T) {
 	assert.Equal(t, "ok", res.Status)
 }
 
-func TestUserADataAfterPurchase(t *testing.T) {
-	res, err := tc.UserData(userA)
-	assert.NoError(t, err)
-	assert.Equal(t, "ok", res.Status)
-	assert.True(t, res.User.Expiration != 0) // we already made a purchase, so we expect this to be not empty.
-	//assert.True(t, res.User.Email != "")
-	//assert.True(t, res.User.Subscription != "")
-}
-
 func TestCreateUserB(t *testing.T) {
 	userB = generateUser()
 
