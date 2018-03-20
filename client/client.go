@@ -445,35 +445,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 }
 
 func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Context, network, addr string) (net.Conn, error) {
-	shortcutDialer := func(ctx context.Context, network, addr string, ip net.IP) (net.Conn, error) {
-		log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
-		op.Set("shortcut_direct", true)
-		op.Set("shortcut_direct_ip", ip)
-		return netx.DialContext(ctx, "tcp", addr)
-	}
-
-	directDialer := func(ctx context.Context, network, addr string) (net.Conn, error) {
-		if requiresProxy(addr) {
-			log.Debugf("Address %v requires a proxy, not using shortcut", addr)
-		} else {
-			if allow, ip := client.allowShortcut(addr); allow {
-				return shortcutDialer(ctx, network, addr, ip)
-			}
-		}
-		dl, ok := ctx.Deadline()
-		if !ok {
-			return nil, errors.New("context has no deadline")
-		}
-		// It's roughly requestTimeout (20s) / 5 = 4s to leave enough time
-		// to try detour. Not hardcode to 4s to avoid break test code which may
-		// have a shorter requestTimeout.
-		timeout := dl.Sub(time.Now()) / 5
-		newCTX, cancel := context.WithTimeout(ctx, timeout)
-		defer cancel()
-		return netx.DialContext(newCTX, "tcp", addr)
-	}
-
-	proxiedDialer := func(ctx context.Context, network, addr string) (net.Conn, error) {
+	dialProxied := func(ctx context.Context, network, addr string) (net.Conn, error) {
 		proto := "persistent"
 		if isCONNECT {
 			// UGLY HACK ALERT! In this case, we know we need to send a CONNECT request
@@ -493,22 +465,57 @@ func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Con
 		return conn, err
 	}
 
+	dialDirectForShortcut := func(ctx context.Context, network, addr string, ip net.IP) (net.Conn, error) {
+		if requiresProxy(addr) {
+			log.Debugf("Address %v requires a proxy, use it instead of shortcutting", addr)
+			return dialProxied(ctx, network, addr)
+		}
+
+		log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
+		op.Set("shortcut_direct", true)
+		op.Set("shortcut_direct_ip", ip)
+		return netx.DialContext(ctx, "tcp", addr)
+	}
+
+	dialDirectForDetour := func(ctx context.Context, network, addr string) (net.Conn, error) {
+		if allow, ip := client.allowShortcut(addr); allow {
+			return dialDirectForShortcut(ctx, network, addr, ip)
+		}
+
+		if requiresProxy(addr) {
+			log.Debugf("Address %v requires a proxy, use it instead of detour direct", addr)
+			return dialProxied(ctx, network, addr)
+		}
+
+		dl, ok := ctx.Deadline()
+		if !ok {
+			return nil, errors.New("context has no deadline")
+		}
+		// It's roughly requestTimeout (20s) / 5 = 4s to leave enough time
+		// to try detour. Not hardcode to 4s to avoid break test code which may
+		// have a shorter requestTimeout.
+		timeout := dl.Sub(time.Now()) / 5
+		newCTX, cancel := context.WithTimeout(ctx, timeout)
+		defer cancel()
+		return netx.DialContext(newCTX, "tcp", addr)
+	}
+
 	var dialer func(ctx context.Context, network, addr string) (net.Conn, error)
 	if client.useDetour() {
 		op.Set("detour", true)
-		dialer = detour.Dialer(directDialer, proxiedDialer)
+		dialer = detour.Dialer(dialDirectForDetour, dialProxied)
 	} else {
 		op.Set("detour", false)
 		dialer = func(ctx context.Context, network, addr string) (net.Conn, error) {
 			var conn net.Conn
 			var err error
 			if allow, ip := client.allowShortcut(addr); allow {
-				conn, err = shortcutDialer(ctx, network, addr, ip)
+				conn, err = dialDirectForShortcut(ctx, network, addr, ip)
 				if err == nil {
 					return conn, err
 				}
 			}
-			return proxiedDialer(ctx, network, addr)
+			return dialProxied(ctx, network, addr)
 		}
 	}
 	return dialer
