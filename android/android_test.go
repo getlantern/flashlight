@@ -33,6 +33,8 @@ func (c testSettings) StickyConfig() bool       { return false }
 func (c testSettings) EnableAdBlocking() bool   { return false }
 func (c testSettings) DefaultDnsServer() string { return "8.8.8.8" }
 func (c testSettings) TimeoutMillis() int       { return 5000 }
+func (c testSettings) GetHttpProxyHost() string { return "127.0.0.1" }
+func (c testSettings) GetHttpProxyPort() int    { return 49128 }
 
 func (c testSession) AfterStart()                   {}
 func (c testSession) BandwidthUpdate(int, int, int) {}
