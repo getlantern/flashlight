@@ -14,8 +14,8 @@ var (
 
 	Staging = false
 
-	ProAPIHost    = "api.getiantem.org"
-	ProAPIDDFHost = "d2n32kma9hyo9f.cloudfront.net"
+	ProAPIHost = "lantern-pro-server-fwp.herokuapp.com"
+	ProAPIDDFHost = "lantern-pro-server-fwp.herokuapp.com"
 
 	log = golog.LoggerFor("flashlight.common")
 
