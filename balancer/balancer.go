@@ -123,6 +123,7 @@ type dialStats struct {
 
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
+	beam_seq                        uint64
 	mu                              sync.RWMutex
 	preconnectedDialTimeout         time.Duration
 	overallDialTimeout              time.Duration
@@ -212,7 +213,7 @@ func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 
 // DialContext is same as Dial but uses the provided context.
 func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
-	op := ops.Begin("balancer_dial")
+	op := ops.Begin("balancer_dial").Set("beam", atomic.AddUint64(&b.beam_seq, 1))
 	defer op.End()
 
 	start := time.Now()
@@ -278,6 +279,11 @@ func (b *Balancer) newBalancedDial(ctx context.Context, network string, addr str
 
 func (bd *balancedDial) dial() (conn net.Conn, err error) {
 	for {
+		deadline, hasDeadline := bd.ctx.Deadline()
+		if hasDeadline && deadline.Before(time.Now()) {
+			log.Debugf("Balancer dial exceeded existing deadline of %v", deadline)
+		}
+
 		pc := bd.nextPreconnected()
 		if pc == nil {
 			// no more proxy connections available, stop
@@ -389,10 +395,13 @@ func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err e
 }
 
 func (bd *balancedDial) dialWithTimeout(pc ProxyConnection) (net.Conn, bool, error) {
-	log.Debugf("Dialing %s://%s with %s on pass %v", bd.network, bd.addr, pc.Label(), bd.attempts)
-	// caps the context deadline to maxDialTimeout
-	newCTX, cancel := context.WithTimeout(bd.ctx, bd.preconnectedDialTimeout)
+	// Increase dial timeout by 50% of original dial timeout with each successive dial
+	timeout := time.Duration(float64(bd.preconnectedDialTimeout) * (1 + 0.5*float64(bd.attempts)))
+	newCTX, cancel := context.WithTimeout(bd.ctx, timeout)
 	defer cancel()
+
+	deadline, _ := newCTX.Deadline()
+	log.Debugf("Dialing %s://%s with %s on pass %v with timeout %v and deadline %v", bd.network, bd.addr, pc.Label(), bd.attempts, timeout, deadline)
 	start := time.Now()
 	conn, failedUpstream, err := pc.DialContext(newCTX, bd.network, bd.addr)
 	if err == nil {
