@@ -44,7 +44,7 @@ import (
 
 const (
 	// timeout for dialing with preconnected dialers, low because these should be fast
-	preconnectedDialTimeout = 5 * time.Second
+	preconnectedDialTimeout = 2 * time.Second
 )
 
 var (

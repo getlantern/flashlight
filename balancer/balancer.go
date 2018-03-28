@@ -395,8 +395,9 @@ func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err e
 }
 
 func (bd *balancedDial) dialWithTimeout(pc ProxyConnection) (net.Conn, bool, error) {
-	// Increase dial timeout by 50% of original dial timeout with each successive dial
-	timeout := time.Duration(float64(bd.preconnectedDialTimeout) * (1 + 0.5*float64(bd.attempts)))
+	// Double dial timeout with each successive dial to in case network conditions
+	// and/or available proxies are just really bad.
+	timeout := time.Duration(1+bd.attempts) * bd.preconnectedDialTimeout
 	newCTX, cancel := context.WithTimeout(bd.ctx, timeout)
 	defer cancel()
 
