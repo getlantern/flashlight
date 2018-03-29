@@ -282,6 +282,7 @@ func (bd *balancedDial) dial() (conn net.Conn, err error) {
 		deadline, hasDeadline := bd.ctx.Deadline()
 		if hasDeadline && deadline.Before(time.Now()) {
 			log.Debugf("Balancer dial exceeded existing deadline of %v", deadline)
+			break
 		}
 
 		pc := bd.nextPreconnected()
@@ -395,16 +396,23 @@ func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err e
 }
 
 func (bd *balancedDial) dialWithTimeout(pc ProxyConnection) (net.Conn, bool, error) {
-	// Double dial timeout with each successive dial to in case network conditions
-	// and/or available proxies are just really bad.
-	timeout := time.Duration(1+bd.attempts) * bd.preconnectedDialTimeout
-	newCTX, cancel := context.WithTimeout(bd.ctx, timeout)
-	defer cancel()
+	dialCtx := bd.ctx
 
-	deadline, _ := newCTX.Deadline()
-	log.Debugf("Dialing %s://%s with %s on pass %v with timeout %v and deadline %v", bd.network, bd.addr, pc.Label(), bd.attempts, timeout, deadline)
+	if len(bd.dialers) > 1 {
+		// If more than 1 dialer is present, set a timeout on the dial so that we
+		// have the opportunity to fail over from a slow proxy to a faster one.
+		// Increase dial timeout with each successive dial in case network
+		// conditions and/or available proxies are just really bad.
+		timeout := time.Duration(1+bd.attempts) * bd.preconnectedDialTimeout
+		var cancel context.CancelFunc
+		dialCtx, cancel = context.WithTimeout(bd.ctx, timeout)
+		defer cancel()
+	}
+
+	deadline, _ := dialCtx.Deadline()
+	log.Debugf("Dialing %s://%s with %s on pass %v with deadline %v", bd.network, bd.addr, pc.Label(), bd.attempts, deadline)
 	start := time.Now()
-	conn, failedUpstream, err := pc.DialContext(newCTX, bd.network, bd.addr)
+	conn, failedUpstream, err := pc.DialContext(dialCtx, bd.network, bd.addr)
 	if err == nil {
 		// Please leave this at Debug level, as it helps us understand
 		// performance issues caused by a poor proxy being selected.
