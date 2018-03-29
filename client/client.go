@@ -42,11 +42,6 @@ import (
 	"github.com/getlantern/flashlight/status"
 )
 
-const (
-	// timeout for dialing with preconnected dialers, low because these should be fast
-	preconnectedDialTimeout = 2 * time.Second
-)
-
 var (
 	log = golog.LoggerFor("flashlight.client")
 
@@ -144,7 +139,7 @@ func NewClient(
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
 	client := &Client{
-		bal:               balancer.New(preconnectedDialTimeout, time.Duration(requestTimeout)),
+		bal:               balancer.New(time.Duration(requestTimeout)),
 		disconnected:      disconnected,
 		allowShortcut:     allowShortcut,
 		useDetour:         useDetour,
