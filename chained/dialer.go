@@ -232,7 +232,6 @@ func (pc *proxyConnection) doDial(ctx context.Context, network, addr string) (ne
 	defer op.End()
 
 	conn, err = pc.dialInternal(ctx, network, addr)
-
 	if err != nil {
 		return nil, op.FailIf(err)
 	}

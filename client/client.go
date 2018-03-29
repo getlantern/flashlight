@@ -42,11 +42,6 @@ import (
 	"github.com/getlantern/flashlight/status"
 )
 
-const (
-	preconnectedDialTimeout = 5 * time.Second  // timeout for dialing with preconnected dialers, low because these should be fast
-	overallDialTimeout      = 30 * time.Second // timeout for attempting to dial out with some dialer
-)
-
 var (
 	log = golog.LoggerFor("flashlight.client")
 
@@ -76,7 +71,9 @@ var (
 	// Set a hard limit when processing proxy requests. Should be short enough to
 	// avoid applications bypassing Lantern.
 	// Chrome has a 30s timeout before marking proxy as bad.
+	// Also used as the overall dial timeout for the balancer.
 	requestTimeout = int64(20 * time.Second)
+
 	// interval before rewriting the same URL to HTTPS, to avoid redirect loop.
 	httpsRewriteInterval = 10 * time.Second
 
@@ -142,7 +139,7 @@ func NewClient(
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
 	client := &Client{
-		bal:               balancer.New(preconnectedDialTimeout, overallDialTimeout),
+		bal:               balancer.New(time.Duration(requestTimeout)),
 		disconnected:      disconnected,
 		allowShortcut:     allowShortcut,
 		useDetour:         useDetour,
