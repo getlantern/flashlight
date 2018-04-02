@@ -60,7 +60,7 @@ func TestProxying(t *testing.T) {
 	onGeo := geolookup.OnRefresh()
 
 	var opsMx sync.RWMutex
-	reportedOps := make(map[string]bool)
+	reportedOps := make(map[string]int)
 	borda.BeforeSubmit = func(name string, key string, ts time.Time, values map[string]bclient.Val, dimensions map[string]interface{}) {
 		_op, found := dimensions["op"]
 		if !found {
@@ -77,7 +77,7 @@ func TestProxying(t *testing.T) {
 		}
 
 		opsMx.Lock()
-		reportedOps[op] = true
+		reportedOps[op] = reportedOps[op] + 1
 		opsMx.Unlock()
 
 		switch op {
@@ -171,6 +171,7 @@ func TestProxying(t *testing.T) {
 		// Look for reported ops several times over a 15 second period to give
 		// system time to report everything
 		var missingOps []string
+		var overreportedOps []string
 		for i := 0; i < 15; i++ {
 			missingOps := make([]string, 0)
 			opsMx.RLock()
@@ -179,8 +180,12 @@ func TestProxying(t *testing.T) {
 					// ignore these, as we don't do them during the integration test
 					continue
 				}
-				if !reportedOps[op] {
+				if reportedOps[op] == 0 {
 					missingOps = append(missingOps, op)
+				} else if op == "balancer_dial" || op == "proxy_dial" {
+					if reportedOps[op] > 2 {
+						overreportedOps = append(overreportedOps, op)
+					}
 				}
 			}
 			opsMx.RUnlock()
@@ -190,7 +195,10 @@ func TestProxying(t *testing.T) {
 			time.Sleep(1 * time.Second)
 		}
 		for _, op := range missingOps {
-			assert.Fail(t, "Op %v wasn't reported", op)
+			assert.Fail(t, "Op wasn't reported", op)
+		}
+		for _, op := range overreportedOps {
+			assert.Fail(t, "Op was reported too much", "%v reported %d times", op, reportedOps[op])
 		}
 	case <-time.After(1 * time.Minute):
 		assert.Fail(t, "Geolookup never succeeded")
