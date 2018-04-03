@@ -1,6 +1,6 @@
 // +build !disableresourcerandomization
 
-package app
+package desktop
 
 import (
 	"crypto/rand"
