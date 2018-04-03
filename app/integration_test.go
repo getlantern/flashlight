@@ -189,9 +189,13 @@ func TestProxying(t *testing.T) {
 				}
 				if reportedOps[op] == 0 {
 					missingOps = append(missingOps, op)
-				} else if op == "balancer_dial" || op == "proxy_dial" {
-					if reportedOps[op] > 2 {
-						overreportedOps = append(overreportedOps, op)
+				} else {
+					for _, lightweight_op := range flashlight.LightweightOps {
+						if op == lightweight_op {
+							if reportedOps[op] > 2 {
+								overreportedOps = append(overreportedOps, op)
+							}
+						}
 					}
 				}
 			}
@@ -202,10 +206,10 @@ func TestProxying(t *testing.T) {
 			time.Sleep(1 * time.Second)
 		}
 		for _, op := range missingOps {
-			assert.Fail(t, "Op wasn't reported", op)
+			assert.Fail(t, "Fully reported op wasn't reported", op)
 		}
 		for _, op := range overreportedOps {
-			assert.Fail(t, "Op was reported too much", "%v reported %d times", op, reportedOps[op])
+			assert.Fail(t, "Lightweight op was reported too much", "%v reported %d times", op, reportedOps[op])
 		}
 	case <-time.After(1 * time.Minute):
 		assert.Fail(t, "Geolookup never succeeded")
