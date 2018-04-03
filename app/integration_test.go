@@ -61,7 +61,14 @@ func TestProxying(t *testing.T) {
 
 	var opsMx sync.RWMutex
 	reportedOps := make(map[string]int)
-	borda.BeforeSubmit = func(name string, key string, ts time.Time, values map[string]bclient.Val, dimensions map[string]interface{}) {
+	borda.BeforeSubmit = func(name string, ts time.Time, values map[string]bclient.Val, dimensionsJSON []byte) {
+		dimensions := make(map[string]interface{})
+		err := json.Unmarshal(dimensionsJSON, dimensions)
+		if err != nil {
+			log.Errorf("Unable to unmarshal dimensions: %v", err)
+			return
+		}
+
 		_op, found := dimensions["op"]
 		if !found {
 			return
