@@ -389,3 +389,13 @@ type response struct {
 func (r *response) nested() (*http.Response, error) {
 	return http.ReadResponse(r.br, r.req)
 }
+
+func TestRequiresProxy(t *testing.T) {
+	assert.True(t, requiresProxy("getiantem.org"))
+	assert.True(t, requiresProxy("config.getiantem.org"))
+	assert.True(t, requiresProxy("borda.lantern.io:80"))
+	assert.True(t, requiresProxy("www.getlantern.org:443"))
+	assert.False(t, requiresProxy(""))
+	assert.False(t, requiresProxy("org"))
+	assert.False(t, requiresProxy("127.0.0.1"))
+}

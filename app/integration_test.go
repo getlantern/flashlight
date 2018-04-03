@@ -473,7 +473,10 @@ func startApp(t *testing.T, configAddr string) (*App, error) {
 	}
 	a.Init()
 	// Set a non-zero User ID to make prochecker happy
-	settings.SetUserID(1)
+	id := settings.GetUserID()
+	if id == 0 {
+		settings.SetUserID(1)
+	}
 
 	go func() {
 		a.Run()

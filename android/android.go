@@ -2,14 +2,9 @@
 package android
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"math/rand"
 	"net"
-	"net/http"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
@@ -24,7 +19,6 @@ import (
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
-	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
@@ -41,17 +35,42 @@ var (
 	updateServerURL = "https://update.getlantern.org"
 	defaultLocale   = `en-US`
 
-	surveyHTTPClient = &http.Client{
-		Transport: proxied.ChainedThenFrontedWith("d38rvu630khj2q.cloudfront.net", ""),
-	}
-
-	surveyURL = "https://raw.githubusercontent.com/getlantern/loconf/master/ui.json"
-
 	startOnce sync.Once
 
 	cl   *client.Client
 	clMu sync.Mutex
 )
+
+type Settings interface {
+	StickyConfig() bool
+	EnableAdBlocking() bool
+	DefaultDnsServer() string
+	GetHttpProxyHost() string
+	GetHttpProxyPort() int
+	TimeoutMillis() int
+}
+
+type Session interface {
+	common.AuthConfig
+	SetCountry(string)
+	UpdateAdSettings(AdSettings)
+	UpdateStats(string, string, string, int, int)
+	SetStaging(bool)
+	ProxyAll() bool
+	BandwidthUpdate(int, int, int)
+	Locale() string
+	Code() string
+	GetCountryCode() string
+	GetDNSServer() string
+	Provider() string
+	AppVersion() string
+	IsPlayVersion() bool
+	Email() string
+	SetCode(string)
+	Currency() string
+	DeviceOS() string
+	IsProUser() bool
+}
 
 // SocketProtector is an interface for classes that can protect Android sockets,
 // meaning those sockets will not be passed through the VPN.
@@ -215,7 +234,11 @@ func run(configDir, locale string,
 		}
 	}()
 
-	flashlight.Run("127.0.0.1:0", // listen for HTTP on random address
+	httpProxyAddr := fmt.Sprintf("%s:%d",
+		settings.GetHttpProxyHost(),
+		settings.GetHttpProxyPort())
+
+	flashlight.Run(httpProxyAddr, // listen for HTTP on provided address
 		"127.0.0.1:0",                // listen for SOCKS on random address
 		configDir,                    // place to store lantern configuration
 		func() bool { return false }, // always connected
@@ -309,36 +332,9 @@ func setBandwidth(session Session) {
 	}
 }
 
-func initSession(session Session) {
-	if session.GetUserID() == 0 {
-		// create new user first if we have no valid user id
-		_, err := newUser(newRequest(session))
-		if err != nil {
-			log.Errorf("Could not create new pro user")
-			return
-		}
-	}
-
-	log.Debugf("New Lantern session with user id %d", session.GetUserID())
-
-	setBandwidth(session)
-	setSurvey(session)
-
-	req := newRequest(session)
-
-	for _, proFn := range []proFunc{plans, userData} {
-		_, err := proFn(req)
-		if err != nil {
-			log.Errorf("Error making pro request: %v", err)
-		}
-	}
-}
-
 func afterStart(session Session) {
 
 	bandwidthUpdates(session)
-
-	go initSession(session)
 
 	go func() {
 		if <-geolookup.OnRefresh() {
@@ -352,90 +348,6 @@ func afterStart(session Session) {
 // handleError logs the given error message
 func handleError(err error) {
 	log.Error(err)
-}
-
-func extractUrl(surveys map[string]*json.RawMessage, locale string) (string, error) {
-
-	var survey SurveyInfo
-	var err error
-	if val, ok := surveys[locale]; ok {
-		err = json.Unmarshal(*val, &survey)
-		if err != nil {
-			handleError(fmt.Errorf("Error parsing survey: %v", err))
-			return "", err
-		}
-		if !survey.Enabled {
-			log.Debugf("Survey %s is disabled for locale: %s", survey.Url, locale)
-			return "", nil
-		}
-
-		if rand.Float64() >= survey.Probability {
-			log.Debugf("Not electing to show survey based on probability field")
-			return "", nil
-		}
-
-		log.Debugf("Found a survey for locale %s: %s", locale, survey.Url)
-		return survey.Url, nil
-	} else if locale != defaultLocale {
-		log.Debugf("No survey found for %s ; Using default locale: %s", locale, defaultLocale)
-		return extractUrl(surveys, defaultLocale)
-	}
-	return "", nil
-}
-
-func setSurvey(session Session) {
-	url, err := surveyRequest(session.Locale())
-	if err == nil && url != "" {
-		log.Debugf("Setting survey url to %s", url)
-		session.ShowSurvey(url)
-	}
-}
-
-func surveyRequest(locale string) (string, error) {
-	var err error
-	var req *http.Request
-	var res *http.Response
-
-	var surveyResp map[string]*json.RawMessage
-
-	if req, err = http.NewRequest("GET", surveyURL, nil); err != nil {
-		handleError(fmt.Errorf("Error fetching survey: %v", err))
-		return "", err
-	}
-
-	if res, err = surveyHTTPClient.Do(req); err != nil {
-		handleError(fmt.Errorf("Error fetching feed: %v", err))
-		return "", err
-	}
-
-	defer res.Body.Close()
-
-	contents, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		handleError(fmt.Errorf("Error reading survey: %v", err))
-		return "", err
-	}
-
-	log.Debugf("Survey response: %s", string(contents))
-
-	err = json.Unmarshal(contents, &surveyResp)
-	if err != nil {
-		handleError(fmt.Errorf("Error parsing survey: %v", err))
-		return "", err
-	}
-
-	if surveyResp["survey"] != nil {
-		var surveys map[string]*json.RawMessage
-		err = json.Unmarshal(*surveyResp["survey"], &surveys)
-		if err != nil {
-			handleError(fmt.Errorf("Error parsing survey: %v", err))
-			return "", err
-		}
-		locale = strings.Replace(locale, "_", "-", -1)
-		return extractUrl(surveys, locale)
-	}
-	log.Errorf("Error parsing survey response: missing from map")
-	return "", nil
 }
 
 // CheckForUpdates checks to see if a new version of Lantern is available
