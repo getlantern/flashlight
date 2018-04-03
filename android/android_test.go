@@ -32,7 +32,7 @@ type testSettings struct {
 func (c testSettings) StickyConfig() bool       { return false }
 func (c testSettings) EnableAdBlocking() bool   { return false }
 func (c testSettings) DefaultDnsServer() string { return "8.8.8.8" }
-func (c testSettings) TimeoutMillis() int       { return 5000 }
+func (c testSettings) TimeoutMillis() int       { return 15000 }
 func (c testSettings) GetHttpProxyHost() string { return "127.0.0.1" }
 func (c testSettings) GetHttpProxyPort() int    { return 49128 }
 
@@ -117,6 +117,7 @@ func testProxiedRequest(proxyAddr string, socks bool) error {
 		Header: http.Header{
 			"Host": {hostWithPort},
 		},
+		Close: true,
 	}
 
 	transport := &http.Transport{}
