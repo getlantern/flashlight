@@ -182,9 +182,9 @@ func AddLoggingMetadata(key, value string) {
 	//logging.SetExtraLogglyInfo(key, value)
 }
 
-// Exit is used to immediately stop Lantern
-// it's called when the service Lantern is running in receives a signal to
-// stop (such as when a user turns on another VPN)
+// Exit is used to immediately stop Lantern; it's called when the
+// the service Lantern is running in receives a signal to
+// stop (such as when a user s on another VPN)
 func Exit() {
 	os.Exit(0)
 }
