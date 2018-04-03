@@ -60,8 +60,15 @@ func TestProxying(t *testing.T) {
 	onGeo := geolookup.OnRefresh()
 
 	var opsMx sync.RWMutex
-	reportedOps := make(map[string]bool)
-	borda.BeforeSubmit = func(name string, key string, ts time.Time, values map[string]bclient.Val, dimensions map[string]interface{}) {
+	reportedOps := make(map[string]int)
+	borda.BeforeSubmit = func(name string, ts time.Time, values map[string]bclient.Val, dimensionsJSON []byte) {
+		dimensions := make(map[string]interface{})
+		err := json.Unmarshal(dimensionsJSON, &dimensions)
+		if err != nil {
+			log.Errorf("Unable to unmarshal dimensions: %v", err)
+			return
+		}
+
 		_op, found := dimensions["op"]
 		if !found {
 			return
@@ -77,7 +84,7 @@ func TestProxying(t *testing.T) {
 		}
 
 		opsMx.Lock()
-		reportedOps[op] = true
+		reportedOps[op] = reportedOps[op] + 1
 		opsMx.Unlock()
 
 		switch op {
@@ -171,16 +178,25 @@ func TestProxying(t *testing.T) {
 		// Look for reported ops several times over a 15 second period to give
 		// system time to report everything
 		var missingOps []string
+		var overreportedOps []string
 		for i := 0; i < 15; i++ {
-			missingOps := make([]string, 0)
+			missingOps = make([]string, 0)
 			opsMx.RLock()
 			for _, op := range flashlight.FullyReportedOps {
-				if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" || op == "probe" {
-					// ignore these, as we don't do them during the integration test
+				if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" || op == "probe" || op == "proxy_rank" {
+					// ignore these, as we don't do them (reliably) during the integration test
 					continue
 				}
-				if !reportedOps[op] {
+				if reportedOps[op] == 0 {
 					missingOps = append(missingOps, op)
+				} else {
+					for _, lightweightOp := range flashlight.LightweightOps {
+						if op == lightweightOp {
+							if reportedOps[op] > 6 {
+								overreportedOps = append(overreportedOps, op)
+							}
+						}
+					}
 				}
 			}
 			opsMx.RUnlock()
@@ -190,7 +206,10 @@ func TestProxying(t *testing.T) {
 			time.Sleep(1 * time.Second)
 		}
 		for _, op := range missingOps {
-			assert.Fail(t, "Op %v wasn't reported", op)
+			assert.Fail(t, "Fully reported op wasn't reported", op)
+		}
+		for _, op := range overreportedOps {
+			assert.Fail(t, "Lightweight op was reported too much", "%v reported %d times", op, reportedOps[op])
 		}
 	case <-time.After(1 * time.Minute):
 		assert.Fail(t, "Geolookup never succeeded")
