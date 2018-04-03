@@ -120,11 +120,8 @@ func testProxiedRequest(proxyAddr string, socks bool) error {
 		}
 		transport.Dial = socksDialer.Dial
 	} else {
-		// Set up HTTP proxy
-		transport.Dial = func(n, a string) (net.Conn, error) {
-			//return net.Dial("tcp", "127.0.0.1:9898")
-			return net.Dial("tcp", proxyAddr)
-		}
+		proxyURL, _ := url.Parse("http://" + proxyAddr)
+		transport.Proxy = http.ProxyURL(proxyURL)
 	}
 
 	client := &http.Client{
