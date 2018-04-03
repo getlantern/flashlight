@@ -81,8 +81,6 @@ func TestProxying(t *testing.T) {
 }
 
 func testProxiedRequest(proxyAddr string, socks bool) error {
-	var req *http.Request
-
 	host := "www.google.com"
 	if socks {
 		resolver := &net.Resolver{
@@ -105,20 +103,8 @@ func testProxiedRequest(proxyAddr string, socks bool) error {
 	}
 	hostWithPort := fmt.Sprintf("%v:80", host)
 
-	req = &http.Request{
-		Method: "GET",
-		URL: &url.URL{
-			Scheme: "http",
-			Host:   host,
-			Path:   "http://www.google.com/humans.txt",
-		},
-		ProtoMajor: 1,
-		ProtoMinor: 1,
-		Header: http.Header{
-			"Host": {hostWithPort},
-		},
-		Close: true,
-	}
+	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%v/humans.txt", host), nil)
+	req.Header.Set("Host", hostWithPort)
 
 	transport := &http.Transport{}
 	if socks {
