@@ -206,6 +206,7 @@ func applyClientConfig(client *client.Client, cfg *config.Global, deviceID strin
 					delete(ctx, "origin")
 					delete(ctx, "origin_host")
 					delete(ctx, "origin_port")
+					delete(ctx, "root_op")
 				}
 			}
 

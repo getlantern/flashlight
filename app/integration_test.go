@@ -63,7 +63,7 @@ func TestProxying(t *testing.T) {
 	reportedOps := make(map[string]int)
 	borda.BeforeSubmit = func(name string, ts time.Time, values map[string]bclient.Val, dimensionsJSON []byte) {
 		dimensions := make(map[string]interface{})
-		err := json.Unmarshal(dimensionsJSON, dimensions)
+		err := json.Unmarshal(dimensionsJSON, &dimensions)
 		if err != nil {
 			log.Errorf("Unable to unmarshal dimensions: %v", err)
 			return
@@ -180,19 +180,19 @@ func TestProxying(t *testing.T) {
 		var missingOps []string
 		var overreportedOps []string
 		for i := 0; i < 15; i++ {
-			missingOps := make([]string, 0)
+			missingOps = make([]string, 0)
 			opsMx.RLock()
 			for _, op := range flashlight.FullyReportedOps {
-				if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" || op == "probe" {
-					// ignore these, as we don't do them during the integration test
+				if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" || op == "probe" || op == "proxy_rank" {
+					// ignore these, as we don't do them (reliably) during the integration test
 					continue
 				}
 				if reportedOps[op] == 0 {
 					missingOps = append(missingOps, op)
 				} else {
-					for _, lightweight_op := range flashlight.LightweightOps {
-						if op == lightweight_op {
-							if reportedOps[op] > 2 {
+					for _, lightweightOp := range flashlight.LightweightOps {
+						if op == lightweightOp {
+							if reportedOps[op] > 6 {
 								overreportedOps = append(overreportedOps, op)
 							}
 						}
