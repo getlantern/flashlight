@@ -1,5 +1,5 @@
 hash: e98e01159403666c8fa91dd9b76c23bcbc15e36193c7c0eb84e6d7c5e0677b59
-updated: 2018-03-30T10:55:47.634953-07:00
+updated: 2018-04-03T08:54:57.6924369-05:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 7d56ec4f381e8b1aedfda360594e35a5731b5337
@@ -56,7 +56,7 @@ imports:
 - name: github.com/getlantern/bandwidth
   version: 96de96fff16cf1aa844edc1b4a72c906add83180
 - name: github.com/getlantern/borda
-  version: 2a4da320611aaace4c9f7cab9f7d7c6fd0f16eae
+  version: 4d925212258106a9fbd7debb8019b95362be6eb6
   subpackages:
   - client
 - name: github.com/getlantern/buuid
@@ -189,7 +189,7 @@ imports:
   subpackages:
   - certimporter
 - name: github.com/getlantern/lampshade
-  version: b10a301ad56e92a66ef15f22c7ba921e6b84a884
+  version: f99876b04e42faf6ced1321b9218e7402f861efc
 - name: github.com/getlantern/launcher
   version: bc9fc3b11894e839c3fcb049f12e8974d7e48497
 - name: github.com/getlantern/measured
@@ -230,7 +230,7 @@ imports:
   subpackages:
   - filters
 - name: github.com/getlantern/proxybench
-  version: 7c85f851f4f2568db23310b712daa1492da26efd
+  version: 45e025c73a2f34ff0faa98e71e9a998ab4898f72
 - name: github.com/getlantern/reconn
   version: 7053d017511c663a3fc3b3a367b57689b1b2fd9f
 - name: github.com/getlantern/redis
@@ -348,7 +348,7 @@ imports:
 - name: github.com/mailgun/ttlmap
   version: c1c17f74874f2a5ea48bfb06b5459d4ef2689749
 - name: github.com/miekg/dns
-  version: d174bbf0a57b4ab555db36b0e55f692d5e8dfca8
+  version: 83c435cc65d2862736428b9b4d07d0ab10ad3e4d
 - name: github.com/mitchellh/go-homedir
   version: b8bc1bf767474819792c23f32d8286a45736f1c6
 - name: github.com/mitchellh/mapstructure
@@ -403,7 +403,7 @@ imports:
   subpackages:
   - uaparser
 - name: github.com/stripe/stripe-go
-  version: 59e79a3707f0162a94137c13de3a036eb80cfb8f
+  version: 8d1bea01f1b5e5ffa7cfdc4859b1082013565f08
 - name: github.com/templexxx/cpufeat
   version: 3794dfbfb04749f896b521032f69383f24c3687e
 - name: github.com/templexxx/reedsolomon
@@ -441,7 +441,7 @@ imports:
 - name: github.com/Yawning/chacha20
   version: e3b1f968fc6397b51d963fee8ec8711a47bc0ce8
 - name: golang.org/x/crypto
-  version: 88942b9c40a4c9d203b82b3731787b672d6e809b
+  version: 12892e8c234f4fe6f6803f052061de9057903bb2
   subpackages:
   - blowfish
   - cast5
@@ -461,7 +461,7 @@ imports:
   - twofish
   - xtea
 - name: golang.org/x/net
-  version: 6078986fec03a1dcc236c34816c71b0e05018fda
+  version: b68f30494add4df6bd8ef5e82803f308e7f7c59c
   repo: https://github.com/golang/net
   vcs: git
   subpackages:
@@ -479,7 +479,7 @@ imports:
   - proxy
   - trace
 - name: golang.org/x/oauth2
-  version: fdc9e635145ae97e6c2cb777c48305600cf515cb
+  version: 921ae394b9430ed4fb549668d7b087601bd60a81
   subpackages:
   - google
   - jwt
@@ -516,7 +516,7 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: 1a70180f35f423e98c3f91cffdba0322f460cb36
+  version: 2eae9d0c740461cb0098df2005e77bf25c48817b
   subpackages:
   - balancer
   - balancer/base

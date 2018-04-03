@@ -578,10 +578,10 @@ func (p *proxy) dialCore(op *ops.Op) func(ctx context.Context) (net.Conn, error)
 	return func(ctx context.Context) (net.Conn, error) {
 		estLatency, estBandwidth := p.EstLatency(), p.EstBandwidth()
 		if estLatency > 0 {
-			op.Set("est_rtt", estLatency.Seconds()/1000)
+			op.SetMetricAvg("est_rtt", estLatency.Seconds()/1000)
 		}
 		if estBandwidth > 0 {
-			op.Set("est_mbps", estBandwidth)
+			op.SetMetricAvg("est_mbps", estBandwidth)
 		}
 		conn, delta, err := p.doDialCore(ctx)
 		op.CoreDialTime(delta, err)

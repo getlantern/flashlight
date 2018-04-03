@@ -199,9 +199,14 @@ func applyClientConfig(client *client.Client, cfg *config.Global, deviceID strin
 		case string:
 			for _, lightweightOp := range LightweightOps {
 				if t == lightweightOp {
-					log.Tracef("Removing error and error_text for op %v", lightweightOp)
+					log.Tracef("Removing high dimensional data for lightweight op %v", lightweightOp)
 					delete(ctx, "error")
 					delete(ctx, "error_text")
+					delete(ctx, "beam")
+					delete(ctx, "origin")
+					delete(ctx, "origin_host")
+					delete(ctx, "origin_port")
+					delete(ctx, "root_op")
 				}
 			}
 
