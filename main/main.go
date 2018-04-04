@@ -17,8 +17,8 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 
-	"github.com/getlantern/flashlight/app"
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/desktop"
 	"github.com/getlantern/flashlight/logging"
 
 	"github.com/mitchellh/panicwrap"
@@ -37,7 +37,7 @@ func main() {
 	debug.SetTraceback("all")
 	parseFlags()
 
-	a := &app.App{
+	a := &desktop.App{
 		ShowUI: !*headless,
 		Flags:  flagsAsMap(),
 	}
@@ -106,7 +106,7 @@ func main() {
 	}
 }
 
-func runApp(a *app.App) {
+func runApp(a *desktop.App) {
 	// Schedule cleanup actions
 	handleSignals(a)
 	a.AddExitFuncToEnd("stopping logging", func() {
@@ -120,7 +120,7 @@ func runApp(a *app.App) {
 			if err := configureSystemTray(a); err != nil {
 				return
 			}
-			a.OnSettingChange(app.SNLanguage, func(lang interface{}) {
+			a.OnSettingChange(desktop.SNLanguage, func(lang interface{}) {
 				refreshSystray(lang.(string))
 			})
 		}()
@@ -129,7 +129,7 @@ func runApp(a *app.App) {
 	a.Run()
 }
 
-func i18nInit(a *app.App) {
+func i18nInit(a *desktop.App) {
 	i18n.SetMessagesFunc(func(filename string) ([]byte, error) {
 		return a.GetTranslations(filename)
 	})
@@ -159,7 +159,7 @@ func parseFlags() {
 }
 
 // Handle system signals in panicwrap wrapper process for clean exit
-func handleWrapperSignals(a *app.App) chan os.Signal {
+func handleWrapperSignals(a *desktop.App) chan os.Signal {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c,
 		syscall.SIGHUP,
@@ -175,7 +175,7 @@ func handleWrapperSignals(a *app.App) chan os.Signal {
 }
 
 // Handle system signals for clean exit
-func handleSignals(a *app.App) {
+func handleSignals(a *desktop.App) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c,
 		syscall.SIGHUP,

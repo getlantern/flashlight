@@ -1,4 +1,4 @@
-package app
+package desktop
 
 import (
 	"io/ioutil"
