@@ -19,6 +19,7 @@ import (
 
 	bclient "github.com/getlantern/borda/client"
 	"github.com/getlantern/http-proxy-lantern"
+	"github.com/getlantern/ops"
 	"github.com/getlantern/tlsdefaults"
 	"github.com/getlantern/waitforserver"
 	"github.com/getlantern/yaml"
@@ -168,6 +169,9 @@ func TestProxying(t *testing.T) {
 	// Connect Lantern and try again
 	a.Connect()
 	testRequest(t, httpAddr, httpsAddr)
+
+	// Do a fake proxybench op to make sure it gets reported
+	ops.Begin("proxybench").Set("success", false).End()
 
 	log.Fatal("test fatal error")
 	log.Debug("Exiting")

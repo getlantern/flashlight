@@ -230,7 +230,7 @@ imports:
   subpackages:
   - filters
 - name: github.com/getlantern/proxybench
-  version: 45e025c73a2f34ff0faa98e71e9a998ab4898f72
+  version: d07720551a2bd7c2c20377d4678a3c92b7bbbb71
 - name: github.com/getlantern/reconn
   version: 7053d017511c663a3fc3b3a367b57689b1b2fd9f
 - name: github.com/getlantern/redis
