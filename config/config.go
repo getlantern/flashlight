@@ -65,9 +65,9 @@ type options struct {
 	// urls are the chaines and fronted URLs to use for fetching this config.
 	urls *chainedFrontedURLs
 
-	// authConfig contains data for communicating the user details to upstream
-	// servers in HTTP headers, such as the pro token.
-	authConfig common.AuthConfig
+	// userConfig contains data for communicating the user details to upstream
+	// servers in HTTP headers, such as the pro token and other options.
+	userConfig common.UserConfig
 
 	// marshaler marshals application specific config to bytes, defaults to
 	// yaml.Marshal
@@ -150,7 +150,7 @@ func pipeConfig(opts *options) (stop func()) {
 	// Now continually poll for new configs and pipe them back to the dispatch
 	// function.
 	if !opts.sticky {
-		fetcher := newFetcher(opts.authConfig, opts.rt, opts.urls)
+		fetcher := newFetcher(opts.userConfig, opts.rt, opts.urls)
 		go conf.poll(stopCh, dispatch, fetcher, opts.sleep)
 	} else {
 		log.Debugf("Using sticky config")

@@ -59,6 +59,8 @@ func (c testSession) UpdateStats(string, string, string, int, int) {}
 
 func (c testSession) UpdateAdSettings(AdSettings) {}
 
+func (c testSession) SerializedInternalHeaders() string { return "" }
+
 func TestProxying(t *testing.T) {
 
 	tmpDir, err := ioutil.TempDir("", "testconfig")

@@ -6,3 +6,9 @@ type AuthConfig interface {
 	GetUserID() int64
 	GetToken() string
 }
+
+// UserConfig retrieves auth and other metadata passed to internal services.
+type UserConfig interface {
+	AuthConfig
+	GetInternalHeaders() map[string]string
+}

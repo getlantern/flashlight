@@ -13,8 +13,14 @@ import (
 	"github.com/getlantern/flashlight/pro/client"
 )
 
+type userConfig struct {
+	client.Auth
+}
+
+func (uc *userConfig) GetInternalHeaders() map[string]string { return nil }
+
 func TestProxy(t *testing.T) {
-	ac := &client.Auth{}
+	uc := &userConfig{}
 	m := &mockRoundTripper{msg: "GOOD"}
 	httpClient = &http.Client{Transport: m}
 	l, err := net.Listen("tcp", "localhost:0")
@@ -25,7 +31,7 @@ func TestProxy(t *testing.T) {
 	addr := l.Addr()
 	url := fmt.Sprintf("http://%s/pro/abc", addr)
 	t.Logf("Test server listening at %s", url)
-	go http.Serve(l, APIHandler(ac))
+	go http.Serve(l, APIHandler(uc))
 
 	req, err := http.NewRequest("OPTIONS", url, nil)
 	if !assert.NoError(t, err) {

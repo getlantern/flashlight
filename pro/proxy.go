@@ -80,7 +80,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 
 // APIHandler returns an HTTP handler that specifically looks for and properly
 // handles pro server requests.
-func APIHandler(ac common.AuthConfig) http.Handler {
+func APIHandler(uc common.UserConfig) http.Handler {
 	log.Debugf("Returning pro API handler hitting host: %v", common.ProAPIHost)
 	return &httputil.ReverseProxy{
 		Transport: &proxyTransport{},
@@ -98,17 +98,26 @@ func APIHandler(ac common.AuthConfig) http.Handler {
 				common.ProTokenHeader,
 				common.UserIdHeader,
 			}, ", "))
+
+			// Internal configuration headers particular to this user (non-auth)
+			for k, v := range uc.GetInternalHeaders() {
+				if v != "" {
+					r.Header.Set(k, v)
+					log.Debugf("Set internal header %s = %q on pro request", k, v)
+				}
+			}
+
 			// Add auth headers only if not present, to avoid race conditions
 			// when creating new user or switching user, i.e., linking device
 			// to a new account.
 			if r.Header.Get(common.DeviceIdHeader) == "" {
-				r.Header.Set(common.DeviceIdHeader, ac.GetDeviceID())
+				r.Header.Set(common.DeviceIdHeader, uc.GetDeviceID())
 			}
 			if r.Header.Get(common.UserIdHeader) == "" {
-				r.Header.Set(common.UserIdHeader, strconv.FormatInt(ac.GetUserID(), 10))
+				r.Header.Set(common.UserIdHeader, strconv.FormatInt(uc.GetUserID(), 10))
 			}
 			if r.Header.Get(common.ProTokenHeader) == "" {
-				r.Header.Set(common.ProTokenHeader, ac.GetToken())
+				r.Header.Set(common.ProTokenHeader, uc.GetToken())
 			}
 			// Add Lantern Version header always
 			r.Header.Set(common.VersionHeader, common.Version)
