@@ -1,5 +1,5 @@
 hash: e98e01159403666c8fa91dd9b76c23bcbc15e36193c7c0eb84e6d7c5e0677b59
-updated: 2018-04-03T08:54:57.6924369-05:00
+updated: 2018-04-06T15:31:06.760703529-07:00
 imports:
 - name: git.torproject.org/pluggable-transports/goptlib.git
   version: 7d56ec4f381e8b1aedfda360594e35a5731b5337
@@ -22,7 +22,7 @@ imports:
 - name: github.com/aristanetworks/glog
   version: 05ca9a5db52e53bdbfb3a0cc9c214cf01c7413ee
 - name: github.com/aristanetworks/goarista
-  version: 9cf7f6b188ea30684caffe3d18e03e61d7193e25
+  version: bfd6294e8be0d922f04fadaa00b252228d30e3fd
   subpackages:
   - monotime
 - name: github.com/armon/go-radix
@@ -32,7 +32,7 @@ imports:
 - name: github.com/chzyer/readline
   version: f6d7a1f6fbf35bbf9beb80dc63c56a29dcfb759f
 - name: github.com/cloudfoundry/gosigar
-  version: dcb1afc219e4c99f21c37fb1ec22ed9ffe443317
+  version: 1375283248c3c5fa82163113c0ef15e79390f644
 - name: github.com/codahale/hdrhistogram
   version: 3a0bb77429bd3a61596f5e8a3172445844342120
 - name: github.com/davecgh/go-spew
@@ -146,7 +146,7 @@ imports:
   - proxyfilters
   - server
 - name: github.com/getlantern/http-proxy-lantern
-  version: d214ee2b508d496d7a24e175835424ca437c9445
+  version: ec887559a97a2c212c55dc64047f5b60f1fa0786
   subpackages:
   - analytics
   - bbr
@@ -298,7 +298,7 @@ imports:
   subpackages:
   - lru
 - name: github.com/golang/mock
-  version: 58cd061d09382b6011f84c1291ebe50ef2e25bab
+  version: 8b2eeeb0ca5f56c78bec5efde9c4a21d9201126c
   subpackages:
   - gomock
 - name: github.com/golang/protobuf
@@ -314,7 +314,7 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
-  version: 4dbd923b0c9e99ff63ad54b0e9705ff92d3cdb06
+  version: 94231ffd98496cbcb1c15b7bf2a9edfd5f852cd4
 - name: github.com/gorilla/securecookie
   version: e59506cc896acb7f7bf732d4fdf5e25f7ccd8983
 - name: github.com/gorilla/websocket
@@ -330,7 +330,7 @@ imports:
 - name: github.com/keighl/mandrill
   version: 5d7133fb578a9504f8ab549737c993422f65a000
 - name: github.com/klauspost/cpuid
-  version: 30e450625213468c7ec31fec6102dab6504adcc9
+  version: e7e905edc00ea8827e58662220139109efea09db
 - name: github.com/klauspost/crc32
   version: bab58d77464aa9cf4e84200c3276da0831fe0c03
 - name: github.com/klauspost/reedsolomon
@@ -348,7 +348,7 @@ imports:
 - name: github.com/mailgun/ttlmap
   version: c1c17f74874f2a5ea48bfb06b5459d4ef2689749
 - name: github.com/miekg/dns
-  version: 83c435cc65d2862736428b9b4d07d0ab10ad3e4d
+  version: 01d59357d468872339068bcd5d55a00e2463051f
 - name: github.com/mitchellh/go-homedir
   version: b8bc1bf767474819792c23f32d8286a45736f1c6
 - name: github.com/mitchellh/mapstructure
@@ -379,7 +379,7 @@ imports:
   subpackages:
   - adblock
 - name: github.com/rcrowley/go-metrics
-  version: 8732c616f52954686704c8645fe1a9d59e9df7c1
+  version: f1af7f7bf233c0e7ebb76d72d789af1e6957d826
 - name: github.com/retailnext/hllpp
   version: 101a6d2f8b52abfc409ac188958e7e7be0116331
 - name: github.com/rickar/props
@@ -403,7 +403,7 @@ imports:
   subpackages:
   - uaparser
 - name: github.com/stripe/stripe-go
-  version: 8d1bea01f1b5e5ffa7cfdc4859b1082013565f08
+  version: 4a0e51dbbf5646ef8ae2c88ae749dfc4dbf55e91
 - name: github.com/templexxx/cpufeat
   version: 3794dfbfb04749f896b521032f69383f24c3687e
 - name: github.com/templexxx/reedsolomon
@@ -413,7 +413,7 @@ imports:
 - name: github.com/tevino/abool
   version: 9b9efcf221b50905aab9bbabd3daed56dc10f339
 - name: github.com/tjfoc/gmsm
-  version: 98aa888b79d8de04afe0fccf45ed10594efc858b
+  version: 0effa9db1ba81e1a21d70ab611ee2bab9424531a
   subpackages:
   - sm4
 - name: github.com/ua-parser/uap-go
@@ -441,7 +441,7 @@ imports:
 - name: github.com/Yawning/chacha20
   version: e3b1f968fc6397b51d963fee8ec8711a47bc0ce8
 - name: golang.org/x/crypto
-  version: 12892e8c234f4fe6f6803f052061de9057903bb2
+  version: b2aa35443fbc700ab74c586ae79b81c171851023
   subpackages:
   - blowfish
   - cast5
@@ -461,7 +461,7 @@ imports:
   - twofish
   - xtea
 - name: golang.org/x/net
-  version: b68f30494add4df6bd8ef5e82803f308e7f7c59c
+  version: 61147c48b25b599e5b561d2e9c4f3e1ef489ca41
   repo: https://github.com/golang/net
   vcs: git
   subpackages:
@@ -472,6 +472,7 @@ imports:
   - idna
   - internal/iana
   - internal/socket
+  - internal/socks
   - internal/timeseries
   - ipv4
   - ipv6
@@ -484,14 +485,14 @@ imports:
   - google
   - jwt
 - name: golang.org/x/sys
-  version: 378d26f46672a356c46195c28f61bdb4c0a781dd
+  version: 3b87a42e500a6dc65dae1a55d0b641295971163e
   repo: https://github.com/golang/sys
   vcs: git
   subpackages:
   - unix
   - windows
 - name: golang.org/x/text
-  version: ece95c760240037f89ebcbdd7155ac8cb52e38fa
+  version: 2cb43934f0eece38629746959acc633cba083fe4
   subpackages:
   - encoding
   - encoding/charmap
@@ -501,7 +502,7 @@ imports:
   - unicode/bidi
   - unicode/norm
 - name: google.golang.org/appengine
-  version: ad39d7fab7c60b2493fdc318c3d2cdb2128f92a4
+  version: 0a24098c0ec68416ec050f567f75df563d6b231e
   subpackages:
   - datastore
   - internal
@@ -512,11 +513,11 @@ imports:
   - internal/modules
   - internal/remote_api
 - name: google.golang.org/genproto
-  version: ab0870e398d5dd054b868c0db1481ab029b9a9f2
+  version: aae13d27a44d62f039eeeb93e74e893886673932
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: 2eae9d0c740461cb0098df2005e77bf25c48817b
+  version: 30fb59a4304034ce78ff68e21bd25776b1d79488
   subpackages:
   - balancer
   - balancer/base
