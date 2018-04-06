@@ -5,10 +5,10 @@ package main
 import (
 	"os"
 
-	"github.com/getlantern/flashlight/app"
+	"github.com/getlantern/flashlight/desktop"
 )
 
-func runOnSystrayReady(a *app.App, f func()) {
+func runOnSystrayReady(a *desktop.App, f func()) {
 	f()
 	err := a.WaitForExit()
 	if err != nil {
@@ -20,7 +20,7 @@ func runOnSystrayReady(a *app.App, f func()) {
 func quitSystray() {
 }
 
-func configureSystemTray(a *app.App) error {
+func configureSystemTray(a *desktop.App) error {
 	return nil
 }
 

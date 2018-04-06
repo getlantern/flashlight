@@ -1,4 +1,4 @@
-package app
+package desktop
 
 import (
 	"github.com/getlantern/flashlight/stats"

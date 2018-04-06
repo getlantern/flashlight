@@ -32,7 +32,9 @@ type testSettings struct {
 func (c testSettings) StickyConfig() bool       { return false }
 func (c testSettings) EnableAdBlocking() bool   { return false }
 func (c testSettings) DefaultDnsServer() string { return "8.8.8.8" }
-func (c testSettings) TimeoutMillis() int       { return 5000 }
+func (c testSettings) TimeoutMillis() int       { return 15000 }
+func (c testSettings) GetHttpProxyHost() string { return "127.0.0.1" }
+func (c testSettings) GetHttpProxyPort() int    { return 49128 }
 
 func (c testSession) AfterStart()                   {}
 func (c testSession) BandwidthUpdate(int, int, int) {}
@@ -79,8 +81,6 @@ func TestProxying(t *testing.T) {
 }
 
 func testProxiedRequest(proxyAddr string, socks bool) error {
-	var req *http.Request
-
 	host := "www.google.com"
 	if socks {
 		resolver := &net.Resolver{
@@ -103,19 +103,8 @@ func testProxiedRequest(proxyAddr string, socks bool) error {
 	}
 	hostWithPort := fmt.Sprintf("%v:80", host)
 
-	req = &http.Request{
-		Method: "GET",
-		URL: &url.URL{
-			Scheme: "http",
-			Host:   host,
-			Path:   "http://www.google.com/humans.txt",
-		},
-		ProtoMajor: 1,
-		ProtoMinor: 1,
-		Header: http.Header{
-			"Host": {hostWithPort},
-		},
-	}
+	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%v/humans.txt", host), nil)
+	req.Header.Set("Host", hostWithPort)
 
 	transport := &http.Transport{}
 	if socks {
@@ -131,11 +120,8 @@ func testProxiedRequest(proxyAddr string, socks bool) error {
 		}
 		transport.Dial = socksDialer.Dial
 	} else {
-		// Set up HTTP proxy
-		transport.Dial = func(n, a string) (net.Conn, error) {
-			//return net.Dial("tcp", "127.0.0.1:9898")
-			return net.Dial("tcp", proxyAddr)
-		}
+		proxyURL, _ := url.Parse("http://" + proxyAddr)
+		transport.Proxy = http.ProxyURL(proxyURL)
 	}
 
 	client := &http.Client{

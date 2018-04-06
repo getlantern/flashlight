@@ -1,5 +1,5 @@
 // Package app implements the desktop application functionality of flashlight
-package app
+package desktop
 
 import (
 	"fmt"

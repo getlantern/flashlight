@@ -19,7 +19,7 @@ var (
 
 	// BeforeSubmit is an optional callback to capture when borda batches are
 	// submitted. It's mostly useful for unit testing.
-	BeforeSubmit func(name string, key string, ts time.Time, values map[string]borda.Val, dimensions map[string]interface{})
+	BeforeSubmit func(name string, ts time.Time, values map[string]borda.Val, dimensionsJSON []byte)
 
 	bordaClient *borda.Client
 
