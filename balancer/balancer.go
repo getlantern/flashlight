@@ -487,8 +487,9 @@ func (b *Balancer) printStats(dialers sortedDialers, sessionStats map[string]*di
 		estBandwidth := d.EstBandwidth()
 		ds := sessionStats[d.Label()]
 		sessionAttempts := atomic.LoadInt64(&ds.success) + atomic.LoadInt64(&ds.failure) + atomic.LoadInt64(&ds.expired)
-		log.Debugf("%s  A: %5d (%6d)\tS: %5d (%6d)\tCS: (%5d)\tF: %5d (%6d)\tCF: %5d\tEXP: %5d\tL: %5.0fms\tBW: %10.2fMbps\t",
+		log.Debugf("%s  P:%2d  A: %5d(%6d)  S: %5d(%6d)  CS: %5d  F: %5d(%6d)  CF: %5d  EXP: %5d  L: %5.0fms  B: %10.2fMbps",
 			d.JustifiedLabel(),
+			len(d.Preconnected()),
 			sessionAttempts, d.Attempts(),
 			atomic.LoadInt64(&ds.success), d.Successes(), d.ConsecSuccesses(),
 			atomic.LoadInt64(&ds.failure), d.Failures(), d.ConsecFailures(),
