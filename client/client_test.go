@@ -268,6 +268,14 @@ func (d *testDialer) Trusted() bool {
 	return !d.untrusted
 }
 
+func (d *testDialer) NumPreconnecting() int {
+	return 0
+}
+
+func (d *testDialer) NumPreconnected() int {
+	return 0
+}
+
 func (d *testDialer) Preconnect() {
 }
 
