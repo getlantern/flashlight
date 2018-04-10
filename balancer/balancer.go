@@ -237,7 +237,6 @@ type balancedDial struct {
 	dialers        []Dialer
 	preconnected   []<-chan ProxyConnection
 	failedUpstream map[int]Dialer
-	attempts       int
 	idx            int
 }
 
@@ -273,6 +272,7 @@ func (b *Balancer) newBalancedDial(network string, addr string) (*balancedDial, 
 
 func (bd *balancedDial) dial(ctx context.Context) (conn net.Conn, err error) {
 	newCTX, _ := context.WithTimeout(ctx, bd.Balancer.overallDialTimeout)
+	attempts := 0
 	for {
 		pc := bd.nextPreconnected(newCTX)
 		if pc == nil {
@@ -281,13 +281,13 @@ func (bd *balancedDial) dial(ctx context.Context) (conn net.Conn, err error) {
 		}
 
 		deadline, _ := newCTX.Deadline()
-		log.Debugf("Dialing %s://%s with %s on pass %v with deadline %v", bd.network, bd.addr, pc.Label(), bd.attempts, deadline)
+		log.Debugf("Dialing %s://%s with %s on pass %v with deadline %v", bd.network, bd.addr, pc.Label(), attempts, deadline)
 		start := time.Now()
 		conn, failedUpstream, err := pc.DialContext(ctx, bd.network, bd.addr)
 		if err == nil {
 			// Please leave this at Debug level, as it helps us understand
 			// performance issues caused by a poor proxy being selected.
-			log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", pc.Label(), bd.network, bd.addr, bd.attempts, time.Since(start))
+			log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", pc.Label(), bd.network, bd.addr, attempts, time.Since(start))
 		}
 
 		if err == nil {
@@ -295,14 +295,14 @@ func (bd *balancedDial) dial(ctx context.Context) (conn net.Conn, err error) {
 			return conn, nil
 		}
 
-		bd.onFailure(pc, failedUpstream, err)
-		bd.attempts++
+		bd.onFailure(pc, failedUpstream, err, attempts)
+		attempts++
 		if !bd.advanceToNextDialer() {
 			break
 		}
 	}
 
-	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", bd.network, bd.addr, bd.attempts)
+	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", bd.network, bd.addr, attempts)
 }
 
 func (bd *balancedDial) nextPreconnected(ctx context.Context) ProxyConnection {
@@ -377,13 +377,13 @@ func (bd *balancedDial) onSuccess(pc ProxyConnection) {
 	}
 }
 
-func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err error) {
+func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err error, attempts int) {
 	continueString := "...continuing"
 	if failedUpstream {
 		continueString = "...aborting"
 	}
 	log.Errorf("Unable to dial via %v to %s://%s: %v on pass %v%v",
-		pc.Label(), bd.network, bd.addr, err, bd.attempts, continueString)
+		pc.Label(), bd.network, bd.addr, err, attempts, continueString)
 	if failedUpstream {
 		bd.failedUpstream[bd.idx] = pc
 	} else {
