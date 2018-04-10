@@ -280,8 +280,15 @@ func (bd *balancedDial) dial(ctx context.Context) (conn net.Conn, err error) {
 			break
 		}
 
-		var failedUpstream bool
-		conn, failedUpstream, err = bd.dialWithTimeout(newCTX, pc)
+		deadline, _ := newCTX.Deadline()
+		log.Debugf("Dialing %s://%s with %s on pass %v with deadline %v", bd.network, bd.addr, pc.Label(), bd.attempts, deadline)
+		start := time.Now()
+		conn, failedUpstream, err := pc.DialContext(ctx, bd.network, bd.addr)
+		if err == nil {
+			// Please leave this at Debug level, as it helps us understand
+			// performance issues caused by a poor proxy being selected.
+			log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", pc.Label(), bd.network, bd.addr, bd.attempts, time.Since(start))
+		}
 
 		if err == nil {
 			bd.onSuccess(pc)
@@ -382,19 +389,6 @@ func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err e
 	} else {
 		atomic.AddInt64(&bd.sessionStats[pc.Label()].failure, 1)
 	}
-}
-
-func (bd *balancedDial) dialWithTimeout(ctx context.Context, pc ProxyConnection) (net.Conn, bool, error) {
-	deadline, _ := ctx.Deadline()
-	log.Debugf("Dialing %s://%s with %s on pass %v with deadline %v", bd.network, bd.addr, pc.Label(), bd.attempts, deadline)
-	start := time.Now()
-	conn, failedUpstream, err := pc.DialContext(ctx, bd.network, bd.addr)
-	if err == nil {
-		// Please leave this at Debug level, as it helps us understand
-		// performance issues caused by a poor proxy being selected.
-		log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", pc.Label(), bd.network, bd.addr, bd.attempts, time.Since(start))
-	}
-	return conn, failedUpstream, err
 }
 
 // OnActiveDialer returns the channel of the last dialer the balancer was using.
