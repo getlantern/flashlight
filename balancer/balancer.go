@@ -65,6 +65,9 @@ type Dialer interface {
 	// the background)
 	Preconnect()
 
+	// NumPreconnecting returns the number of pending preconnecting requests.
+	NumPreconnecting() int
+
 	// Preconnected() returns a channel from which we can obtain
 	// ProxyConnections.
 	Preconnected() <-chan ProxyConnection
@@ -312,12 +315,16 @@ func (bd *balancedDial) nextPreconnected(ctx context.Context) ProxyConnection {
 		pcs := bd.preconnected[bd.idx]
 		select {
 		case pc := <-pcs:
-			// got a proxy connection
 			if pc.ExpiresAt().Before(time.Now()) {
-				// expired proxy connection, discard and try next from same proxy
+				// Expired proxy connection, discard and try next from same
+				// proxy. It also means no recent activity via the dialer, so
+				// no need to preconnect actively. The dialer may still
+				// preconnect to keep minimum available connections.
 				atomic.AddInt64(&bd.sessionStats[pc.Label()].expired, 1)
 				continue
 			}
+			// Back pressure to preconnect more
+			bd.dialers[bd.idx].Preconnect()
 			return pc
 		default:
 			// no proxy connections, tell dialer to preconnect so we'll
@@ -355,9 +362,6 @@ func (bd *balancedDial) advanceToNextDialer() bool {
 
 func (bd *balancedDial) onSuccess(pc ProxyConnection) {
 	atomic.AddInt64(&bd.sessionStats[pc.Label()].success, 1)
-
-	// Preconnect a couple of times to keep preconnected queue full
-	pc.Preconnect()
 	select {
 	case bd.onActiveDialer <- pc:
 	default:
@@ -487,9 +491,10 @@ func (b *Balancer) printStats(dialers sortedDialers, sessionStats map[string]*di
 		estBandwidth := d.EstBandwidth()
 		ds := sessionStats[d.Label()]
 		sessionAttempts := atomic.LoadInt64(&ds.success) + atomic.LoadInt64(&ds.failure) + atomic.LoadInt64(&ds.expired)
-		log.Debugf("%s  P:%2d  A: %5d(%6d)  S: %5d(%6d)  CS: %5d  F: %5d(%6d)  CF: %5d  EXP: %5d  L: %5.0fms  B: %10.2fMbps",
+		log.Debugf("%s  P:%2d  R:%2d  A: %5d(%6d)  S: %5d(%6d)  CS: %5d  F: %5d(%6d)  CF: %5d  EXP: %5d  L: %5.0fms  B: %10.2fMbps",
 			d.JustifiedLabel(),
 			len(d.Preconnected()),
+			d.NumPreconnecting(),
 			sessionAttempts, d.Attempts(),
 			atomic.LoadInt64(&ds.success), d.Successes(), d.ConsecSuccesses(),
 			atomic.LoadInt64(&ds.failure), d.Failures(), d.ConsecFailures(),

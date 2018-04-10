@@ -39,6 +39,8 @@ var (
 	// problems. 45 seconds is also longer than the MaxIdleTime on our
 	// http.Transport, so it doesn't interfere with that.
 	IdleTimeout = 45 * time.Second
+	// set the preconnected dialer to expire before we hit the idle timeout
+	expireTimeout = IdleTimeout - 1*time.Second
 
 	// errUpstream is an error that indicates there was a problem upstream of a
 	// proxy. Such errors are not counted as failures but do allow failover to
@@ -138,21 +140,22 @@ func (p *proxy) Succeeding() bool {
 		p.consecRWSuccesses.Get() > -5
 }
 
-func (p *proxy) processPreconnects(initPreconnect int) {
-	// Eagerly preconnect a few
-	for i := 0; i < initPreconnect; i++ {
-		p.Preconnect()
-	}
-
+func (p *proxy) processPreconnects(minPreconnect int) {
+	// Stir it up
+	p.Preconnect()
 	// As long as we've got requests to preconnect, preconnect
 	for range p.preconnects {
 		conn, err := p.dialServer()
 		if err != nil {
 			log.Errorf("Unable to dial server %v: %s", p.Label(), err)
 			time.Sleep(250 * time.Millisecond)
-			continue
+		} else {
+			p.preconnected <- p.newPreconnected(conn)
 		}
-		p.preconnected <- p.newPreconnected(conn)
+		// Try best to keep a minimum number of connections ready
+		for len(p.preconnects)+len(p.preconnected) < minPreconnect {
+			p.Preconnect()
+		}
 	}
 }
 
@@ -160,7 +163,7 @@ func (p *proxy) newPreconnected(conn serverConn) balancer.ProxyConnection {
 	return &proxyConnection{
 		proxy:     p,
 		conn:      conn,
-		expiresAt: time.Now().Add(IdleTimeout / 2), // set the preconnected dialer to expire before we hit the idle timeout
+		expiresAt: time.Now().Add(expireTimeout),
 	}
 }
 
@@ -171,6 +174,10 @@ func (p *proxy) Preconnect() {
 	default:
 		// maxPreconnects already requested, ignore
 	}
+}
+
+func (p *proxy) NumPreconnecting() int {
+	return len(p.preconnects)
 }
 
 func (p *proxy) Preconnected() <-chan balancer.ProxyConnection {
