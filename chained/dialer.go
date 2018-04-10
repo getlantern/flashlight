@@ -104,10 +104,9 @@ func randomize(d time.Duration) time.Duration {
 
 func (p *proxy) Stop() {
 	log.Tracef("Stopping dialer %s", p.Label())
-	// don't bother waiting for proxy to stop
-	go func() {
-		p.closeCh <- true
-	}()
+	p.closeOnce.Do(func() {
+		close(p.closeCh)
+	})
 }
 
 func (p *proxy) Attempts() int64 {
@@ -141,20 +140,33 @@ func (p *proxy) Succeeding() bool {
 }
 
 func (p *proxy) processPreconnects(minPreconnect int) {
+	// Queue the connections in two phases so there's a chance to check queue
+	// length whenever the preconnected queue is consumed.
+	go func() {
+		for c := range p.preconnectedPool {
+			p.preconnected <- c
+			// Try best to keep a minimum number of connections ready
+			for p.NumPreconnecting()+p.NumPreconnected() < minPreconnect {
+				p.Preconnect()
+			}
+		}
+	}()
 	// Stir it up
 	p.Preconnect()
 	// As long as we've got requests to preconnect, preconnect
-	for range p.preconnects {
-		conn, err := p.dialServer()
-		if err != nil {
-			log.Errorf("Unable to dial server %v: %s", p.Label(), err)
-			time.Sleep(250 * time.Millisecond)
-		} else {
-			p.preconnected <- p.newPreconnected(conn)
-		}
-		// Try best to keep a minimum number of connections ready
-		for len(p.preconnects)+len(p.preconnected) < minPreconnect {
-			p.Preconnect()
+	for {
+		select {
+		case <-p.closeCh:
+			close(p.preconnectedPool)
+			return
+		case <-p.preconnects:
+			conn, err := p.dialServer()
+			if err != nil {
+				log.Errorf("Unable to dial server %v: %s", p.Label(), err)
+				time.Sleep(250 * time.Millisecond)
+			} else {
+				p.preconnectedPool <- p.newPreconnected(conn)
+			}
 		}
 	}
 }
@@ -178,6 +190,10 @@ func (p *proxy) Preconnect() {
 
 func (p *proxy) NumPreconnecting() int {
 	return len(p.preconnects)
+}
+
+func (p *proxy) NumPreconnected() int {
+	return len(p.preconnected) + len(p.preconnectedPool)
 }
 
 func (p *proxy) Preconnected() <-chan balancer.ProxyConnection {

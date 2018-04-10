@@ -65,8 +65,11 @@ type Dialer interface {
 	// the background)
 	Preconnect()
 
-	// NumPreconnecting returns the number of pending preconnecting requests.
+	// NumPreconnecting returns the number of pending preconnect requests.
 	NumPreconnecting() int
+
+	// NumPreconnected returns the number of preconnected connections.
+	NumPreconnected() int
 
 	// Preconnected() returns a channel from which we can obtain
 	// ProxyConnections.
@@ -493,7 +496,7 @@ func (b *Balancer) printStats(dialers sortedDialers, sessionStats map[string]*di
 		sessionAttempts := atomic.LoadInt64(&ds.success) + atomic.LoadInt64(&ds.failure) + atomic.LoadInt64(&ds.expired)
 		log.Debugf("%s  P:%2d  R:%2d  A: %5d(%6d)  S: %5d(%6d)  CS: %5d  F: %5d(%6d)  CF: %5d  EXP: %5d  L: %5.0fms  B: %10.2fMbps",
 			d.JustifiedLabel(),
-			len(d.Preconnected()),
+			d.NumPreconnected(),
 			d.NumPreconnecting(),
 			sessionAttempts, d.Attempts(),
 			atomic.LoadInt64(&ds.success), d.Successes(), d.ConsecSuccesses(),
