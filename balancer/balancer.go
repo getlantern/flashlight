@@ -219,7 +219,7 @@ func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.C
 	if err != nil {
 		return nil, op.FailIf(log.Error(err))
 	}
-	conn, err := bd.dial(ctx)
+	conn, err := bd.dial(ctx, start)
 	if err != nil {
 		return nil, op.FailIf(log.Error(err))
 	}
@@ -270,7 +270,7 @@ func (b *Balancer) newBalancedDial(network string, addr string) (*balancedDial, 
 	}, nil
 }
 
-func (bd *balancedDial) dial(ctx context.Context) (conn net.Conn, err error) {
+func (bd *balancedDial) dial(ctx context.Context, start time.Time) (conn net.Conn, err error) {
 	newCTX, _ := context.WithTimeout(ctx, bd.Balancer.overallDialTimeout)
 	attempts := 0
 	for {
@@ -282,15 +282,11 @@ func (bd *balancedDial) dial(ctx context.Context) (conn net.Conn, err error) {
 
 		deadline, _ := newCTX.Deadline()
 		log.Debugf("Dialing %s://%s with %s on pass %v with deadline %v", bd.network, bd.addr, pc.Label(), attempts, deadline)
-		start := time.Now()
 		conn, failedUpstream, err := pc.DialContext(ctx, bd.network, bd.addr)
 		if err == nil {
 			// Please leave this at Debug level, as it helps us understand
 			// performance issues caused by a poor proxy being selected.
 			log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", pc.Label(), bd.network, bd.addr, attempts, time.Since(start))
-		}
-
-		if err == nil {
 			bd.onSuccess(pc)
 			return conn, nil
 		}
