@@ -166,6 +166,39 @@ func TestSuccess(t *testing.T) {
 	test(t, dialer)
 }
 
+func TestPreconnect(t *testing.T) {
+	l := startServer(t)
+	p, err := newProxy("test", "proto", "netw", "addr:567", &ChainedServerInfo{
+		Addr:      "addr:567",
+		AuthToken: "token",
+	}, "device", func() string {
+		return "protoken"
+	}, true, func(ctx context.Context, p *proxy) (serverConn, error) {
+		conn, err := net.DialTimeout(l.Addr().Network(), l.Addr().String(), 2*time.Second)
+		return p.defaultServerConn(conn, err)
+	})
+	assert.NoError(t, err)
+	time.Sleep(100 * time.Millisecond)
+	assert.Equal(t, defaultInitPreconnect, p.NumPreconnected()+p.NumPreconnecting(), "should preconnect on start")
+	<-p.Preconnected()
+	<-p.Preconnected()
+	time.Sleep(100 * time.Millisecond)
+	assert.Equal(t, defaultInitPreconnect, p.NumPreconnected()+p.NumPreconnecting(), "should preconnect to keep minimum connections available")
+	p.Preconnect()
+	time.Sleep(100 * time.Millisecond)
+	assert.Equal(t, defaultInitPreconnect+1, p.NumPreconnected()+p.NumPreconnecting(), "should preconnect when reqeusted")
+out:
+	for {
+		select {
+		case <-p.Preconnected():
+		default:
+			break out
+		}
+	}
+	time.Sleep(100 * time.Millisecond)
+	assert.Equal(t, defaultInitPreconnect, p.NumPreconnected()+p.NumPreconnecting(), "should refill asap")
+}
+
 func startServer(t *testing.T) net.Listener {
 	l, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
