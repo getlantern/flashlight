@@ -277,7 +277,8 @@ func (b *Balancer) newBalancedDial(network string, addr string) (*balancedDial, 
 }
 
 func (bd *balancedDial) dial(ctx context.Context, start time.Time) (conn net.Conn, err error) {
-	newCTX, _ := context.WithTimeout(ctx, bd.Balancer.overallDialTimeout)
+	newCTX, cancel := context.WithTimeout(ctx, bd.Balancer.overallDialTimeout)
+	defer cancel()
 	attempts := 0
 	failedUpstream := false
 	for {
