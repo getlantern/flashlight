@@ -316,6 +316,7 @@ func (bd *balancedDial) nextPreconnected(ctx context.Context) ProxyConnection {
 		default:
 		}
 		pcs := bd.preconnected[bd.idx]
+		curDialer := bd.dialers[bd.idx]
 		select {
 		case pc := <-pcs:
 			if pc.ExpiresAt().Before(time.Now()) {
@@ -327,12 +328,12 @@ func (bd *balancedDial) nextPreconnected(ctx context.Context) ProxyConnection {
 				continue
 			}
 			// Back pressure to preconnect more
-			bd.dialers[bd.idx].Preconnect()
+			curDialer.Preconnect()
 			return pc
 		default:
 			// no proxy connections, tell dialer to preconnect so we'll
 			// hopefully get something on the next pass, and advance to next dialer
-			bd.dialers[bd.idx].Preconnect()
+			curDialer.Preconnect()
 			if !bd.advanceToNextDialer() {
 				return nil
 			}
