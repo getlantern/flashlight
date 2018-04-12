@@ -18,7 +18,7 @@ func TestEmailProxy(t *testing.T) {
 	s := httptest.NewServer(channel.Handler())
 	defer s.Close()
 	// avoid panicking when attaching settings to the email.
-	settings = loadSettings("version", "revisionDate", "buildDate")
+	settings = loadSettings("version", "revisionDate", "buildDate", false)
 	err := serveEmailProxy(channel)
 	assert.NoError(t, err, "should start service")
 	defer channel.Unregister("email-proxy")

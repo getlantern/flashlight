@@ -67,7 +67,7 @@ type App struct {
 func (app *App) Init() {
 	golog.OnFatal(app.exitOnFatal)
 	app.Flags["staging"] = common.Staging
-	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
+	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate, common.Staging)
 	app.exited = eventual.NewValue()
 	// use buffered channel to avoid blocking the caller of 'AddExitFunc'
 	// the number 100 is arbitrary
@@ -91,7 +91,7 @@ func (app *App) Init() {
 // is only used in the panicwrap parent process.
 func (app *App) LogPanicAndExit(msg interface{}) {
 	// Reload settings to make sure we have an up-to-date addr
-	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate)
+	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate, common.Staging)
 	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
 }
 
