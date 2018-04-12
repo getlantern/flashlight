@@ -62,6 +62,14 @@ func (d *testDialer) Trusted() bool {
 func (d *testDialer) Preconnect() {
 }
 
+func (d *testDialer) NumPreconnecting() int {
+	return 0
+}
+
+func (d *testDialer) NumPreconnected() int {
+	return 1
+}
+
 func (d *testDialer) Preconnected() <-chan ProxyConnection {
 	return d.preconnected
 }

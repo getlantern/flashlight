@@ -330,8 +330,10 @@ type proxy struct {
 	doDialCore        func(ctx context.Context) (net.Conn, time.Duration, error)
 	preconnects       chan interface{}
 	preconnected      chan balancer.ProxyConnection
+	preconnectedPool  chan balancer.ProxyConnection
 	forceRecheckCh    chan bool
 	closeCh           chan bool
+	closeOnce         sync.Once
 	mx                sync.Mutex
 }
 
@@ -346,23 +348,24 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 	}
 
 	p := &proxy{
-		name:            name,
-		protocol:        protocol,
-		network:         network,
-		addr:            addr,
-		authToken:       s.AuthToken,
-		deviceID:        deviceID,
-		proToken:        proToken,
-		trusted:         trusted,
-		bias:            s.Bias,
-		doDialServer:    dialServer,
-		emaLatency:      ema.NewDuration(0, 0.8),
-		forceRecheckCh:  make(chan bool, 1),
-		forceRedial:     abool.New(),
-		preconnects:     make(chan interface{}, maxPreconnect),
-		preconnected:    make(chan balancer.ProxyConnection, maxPreconnect),
-		closeCh:         make(chan bool, 1),
-		consecSuccesses: 1, // be optimistic
+		name:             name,
+		protocol:         protocol,
+		network:          network,
+		addr:             addr,
+		authToken:        s.AuthToken,
+		deviceID:         deviceID,
+		proToken:         proToken,
+		trusted:          trusted,
+		bias:             s.Bias,
+		doDialServer:     dialServer,
+		emaLatency:       ema.NewDuration(0, 0.8),
+		forceRecheckCh:   make(chan bool, 1),
+		forceRedial:      abool.New(),
+		preconnects:      make(chan interface{}, maxPreconnect),
+		preconnected:     make(chan balancer.ProxyConnection, initPreconnect),
+		preconnectedPool: make(chan balancer.ProxyConnection, maxPreconnect-initPreconnect),
+		closeCh:          make(chan bool, 1),
+		consecSuccesses:  1, // be optimistic
 	}
 
 	if s.Bias == 0 && s.ENHTTPURL != "" {
