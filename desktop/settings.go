@@ -92,7 +92,8 @@ var settingMeta = map[SettingName]struct {
 }
 
 var (
-	defaultPath = filepath.Join(appdir.General("Lantern"), "settings.yaml")
+	defaultPath        = filepath.Join(appdir.General("Lantern"), "settings.yaml")
+	defaultPathStaging = filepath.Join(appdir.General("Lantern"), "settings-staging.yaml")
 )
 
 // Settings is a struct of all settings unique to this particular Lantern instance.
@@ -108,8 +109,12 @@ type Settings struct {
 	log golog.Logger
 }
 
-func loadSettings(version, revisionDate, buildDate string) *Settings {
-	return loadSettingsFrom(version, revisionDate, buildDate, defaultPath)
+func loadSettings(version, revisionDate, buildDate string, isStaging bool) *Settings {
+	path := defaultPath
+	if isStaging {
+		path = defaultPathStaging
+	}
+	return loadSettingsFrom(version, revisionDate, buildDate, path)
 }
 
 // loadSettings loads the initial settings at startup, either from disk or using defaults.
