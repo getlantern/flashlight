@@ -458,7 +458,7 @@ func (s *Settings) GetUserID() int64 {
 // GetInternalHeaders returns extra headers sent with requests to internal services
 func (s *Settings) GetInternalHeaders() map[string]string {
 	// stubbed
-	return nil
+	return make(map[string]string)
 }
 
 // GetSystemProxy returns whether or not to set system proxy when lantern starts

@@ -86,16 +86,17 @@ func (uc *userConfig) GetDeviceID() string { return uc.session.GetDeviceID() }
 func (uc *userConfig) GetUserID() int64    { return uc.session.GetUserID() }
 func (uc *userConfig) GetToken() string    { return uc.session.GetToken() }
 func (uc *userConfig) GetInternalHeaders() map[string]string {
+	h := make(map[string]string)
+
 	var f interface{}
 	if err := json.Unmarshal([]byte(uc.session.SerializedInternalHeaders()), &f); err != nil {
-		return nil
+		return h
 	}
 	m, ok := f.(map[string]interface{})
 	if !ok {
-		return nil
+		return h
 	}
 
-	h := make(map[string]string)
 	for k, v := range m {
 		vv, ok := v.(string)
 		if ok {
