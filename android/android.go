@@ -163,12 +163,12 @@ func Start(configDir string, locale string,
 	elapsed := mtime.Stopwatch()
 	addr, ok := client.Addr(time.Duration(settings.TimeoutMillis()) * time.Millisecond)
 	if !ok {
-		return nil, fmt.Errorf("HTTP Proxy didn't start within given timeout")
+		return nil, fmt.Errorf("HTTP Proxy didn't start within %vms timeout", settings.TimeoutMillis())
 	}
 
 	socksAddr, ok := client.Socks5Addr((time.Duration(settings.TimeoutMillis()) * time.Millisecond) - elapsed())
 	if !ok {
-		err := fmt.Errorf("SOCKS5 Proxy didn't start within given timeout")
+		err := fmt.Errorf("SOCKS5 Proxy didn't start within %vms timeout", settings.TimeoutMillis())
 		log.Error(err.Error())
 		return nil, err
 	}
