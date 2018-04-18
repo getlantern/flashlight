@@ -9,8 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/idletiming"
 	"github.com/getlantern/proxy/filters"
 )
 
@@ -28,6 +30,10 @@ var adSwapJavaScriptInjections = map[string]string{
 func (client *Client) handle(conn net.Conn) error {
 	op := ops.Begin("proxy")
 	ctx := context.WithValue(context.Background(), ctxKeyOp, op)
+	// Set user agent connection to idle a little before the upstream connection
+	// so that we don't read data from the client after the upstream connection
+	// has already timed out.
+	conn = idletiming.Conn(conn, chained.IdleTimeout-1*time.Second, nil)
 	err := client.proxy.Handle(ctx, conn, conn)
 	if err != nil {
 		log.Error(op.FailIf(err))
