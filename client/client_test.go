@@ -19,6 +19,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/flashlight/balancer"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/stats"
 )
 
@@ -39,6 +40,10 @@ func (m mockStatsTracker) SetHasSucceedingProxy(val bool)                       
 func (m mockStatsTracker) SetHitDataCap(val bool)                                   {}
 func (m mockStatsTracker) SetIsPro(val bool)                                        {}
 
+func newTestUserConfig() *common.UserConfigData {
+	return common.NewUserConfigData("device", 1234, "protoken", nil)
+}
+
 func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {
 	client.bal.Reset(start(&testDialer{
 		name: "test-dialer",
@@ -55,7 +60,7 @@ func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *C
 		func() bool { return false },
 		func(addr string) (bool, net.IP) { return false, nil },
 		func() bool { return true },
-		func() string { return "proToken" },
+		newTestUserConfig(),
 		mockStatsTracker{},
 		func() bool { return true },
 		func() string { return lang },

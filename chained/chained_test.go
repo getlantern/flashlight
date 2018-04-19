@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/getlantern/flashlight/common"
 )
 
 var (
@@ -18,31 +20,8 @@ var (
 	pong = []byte("pong")
 )
 
-type testUserConfig struct {
-	DeviceID string
-	UserID   int64
-	Token    string
-	Headers  map[string]string
-}
-
-func (uc *testUserConfig) GetDeviceID() string { return uc.DeviceID }
-func (uc *testUserConfig) GetUserID() int64    { return uc.UserID }
-func (uc *testUserConfig) GetToken() string    { return uc.Token }
-func (uc *testUserConfig) GetInternalHeaders() map[string]string {
-	h := make(map[string]string)
-	for k, v := range uc.Headers {
-		h[k] = v
-	}
-	return h
-}
-
-func newTestUserConfig() *testUserConfig {
-	return &testUserConfig{
-		"device",
-		1234,
-		"protoken",
-		make(map[string]string),
-	}
+func newTestUserConfig() *common.UserConfigData {
+	return common.NewUserConfigData("device", 1234, "protoken", nil)
 }
 
 func NewDialer(dialServer func(ctx context.Context, p *proxy) (net.Conn, error)) (func(network, addr string) (net.Conn, error), error) {
