@@ -99,28 +99,10 @@ func APIHandler(uc common.UserConfig) http.Handler {
 				common.UserIdHeader,
 			}, ", "))
 
-			// Internal configuration headers particular to this user (non-auth)
-			for k, v := range uc.GetInternalHeaders() {
-				if v != "" {
-					r.Header.Set(k, v)
-					log.Debugf("Set internal header %s = %q on pro request", k, v)
-				}
-			}
-
 			// Add auth headers only if not present, to avoid race conditions
 			// when creating new user or switching user, i.e., linking device
-			// to a new account.
-			if r.Header.Get(common.DeviceIdHeader) == "" {
-				r.Header.Set(common.DeviceIdHeader, uc.GetDeviceID())
-			}
-			if r.Header.Get(common.UserIdHeader) == "" {
-				r.Header.Set(common.UserIdHeader, strconv.FormatInt(uc.GetUserID(), 10))
-			}
-			if r.Header.Get(common.ProTokenHeader) == "" {
-				r.Header.Set(common.ProTokenHeader, uc.GetToken())
-			}
-			// Add Lantern Version header always
-			r.Header.Set(common.VersionHeader, common.Version)
+			// to a new account. (ovewriteAuth=false)
+			common.AddCommonHeadersWithOptions(uc, r, false, true)
 		},
 	}
 }

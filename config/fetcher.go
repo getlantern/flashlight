@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strconv"
 
 	"github.com/getlantern/detour"
 
@@ -78,23 +77,7 @@ func (cf *fetcher) doFetch(op *ops.Op) ([]byte, error) {
 	// Set the fronted URL to lookup the config in parallel using chained and domain fronted servers.
 	proxied.PrepareForFronting(req, cf.frontedURL)
 
-	// Internal configuration headers particular to this user (non-auth)
-	for k, v := range cf.user.GetInternalHeaders() {
-		if v != "" {
-			req.Header.Set(k, v)
-			log.Debugf("Set internal header %s = %q on config request", k, v)
-		}
-	}
-
-	id := cf.user.GetUserID()
-	if id != 0 {
-		strID := strconv.FormatInt(id, 10)
-		req.Header.Set(common.UserIdHeader, strID)
-	}
-	tok := cf.user.GetToken()
-	if tok != "" {
-		req.Header.Set(common.ProTokenHeader, tok)
-	}
+	common.AddCommonHeaders(cf.user, req)
 
 	// make sure to close the connection after reading the Body
 	// this prevents the occasional EOFs errors we're seeing with

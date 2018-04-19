@@ -31,9 +31,7 @@ func TestRateTracking(t *testing.T) {
 	p, err := newProxy("test", "proto", "netw", "addr:567", &ChainedServerInfo{
 		Addr:      "addr:567",
 		AuthToken: "token",
-	}, "device", func() string {
-		return "protoken"
-	}, true, func(ctx context.Context, p *proxy) (serverConn, error) {
+	}, newTestUserConfig(), true, func(ctx context.Context, p *proxy) (serverConn, error) {
 		return p.defaultServerConn(sd.Dial("", ""))
 	})
 

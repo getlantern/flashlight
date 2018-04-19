@@ -37,6 +37,7 @@ import (
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/status"
@@ -99,10 +100,10 @@ type Client struct {
 
 	l net.Listener
 
-	disconnected   func() bool
-	allowShortcut  func(addr string) (bool, net.IP)
-	useDetour      func() bool
-	proTokenGetter func() string
+	disconnected  func() bool
+	allowShortcut func(addr string) (bool, net.IP)
+	useDetour     func() bool
+	user          common.UserConfig
 
 	easylist       easylist.List
 	rewriteToHTTPS httpseverywhere.Rewrite
@@ -125,7 +126,7 @@ func NewClient(
 	disconnected func() bool,
 	allowShortcut func(addr string) (bool, net.IP),
 	useDetour func() bool,
-	proTokenGetter func() string,
+	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
 	allowPrivateHosts func() bool,
 	lang func() string,
@@ -143,7 +144,7 @@ func NewClient(
 		disconnected:      disconnected,
 		allowShortcut:     allowShortcut,
 		useDetour:         useDetour,
-		proTokenGetter:    proTokenGetter,
+		user:              userConfig,
 		rewriteToHTTPS:    httpseverywhere.Default(),
 		rewriteLRU:        rewriteLRU,
 		statsTracker:      statsTracker,
@@ -391,9 +392,9 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 
 // Configure updates the client's configuration. Configure can be called
 // before or after ListenAndServe, and can be called multiple times.
-func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo, deviceID string) {
+func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo) {
 	log.Debug("Configure() called")
-	err := client.initBalancer(proxies, deviceID)
+	err := client.initBalancer(proxies)
 	if err != nil {
 		log.Error(err)
 	}

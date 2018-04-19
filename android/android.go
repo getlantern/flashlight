@@ -305,7 +305,6 @@ func run(configDir, locale string,
 		newUserConfig(session),
 		NewStatsTracker(session),
 		func(err error) {}, // onError
-		session.GetDeviceID(),
 		session.IsProUser,
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
