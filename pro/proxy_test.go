@@ -10,17 +10,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/getlantern/flashlight/pro/client"
+	"github.com/getlantern/flashlight/common"
 )
 
-type userConfig struct {
-	client.Auth
-}
-
-func (uc *userConfig) GetInternalHeaders() map[string]string { return nil }
-
 func TestProxy(t *testing.T) {
-	uc := &userConfig{}
+	uc := common.NewUserConfigData("device", 0, "token", nil)
 	m := &mockRoundTripper{msg: "GOOD"}
 	httpClient = &http.Client{Transport: m}
 	l, err := net.Listen("tcp", "localhost:0")

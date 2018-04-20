@@ -30,7 +30,7 @@ func TestInit(t *testing.T) {
 		assert.True(t, len(global.Client.MasqueradeSets) > 1)
 		configChan <- true
 	}
-	stop := Init(".", flags, &userConfig{}, proxiesDispatch, globalDispatch, &http.Transport{})
+	stop := Init(".", flags, newTestUserConfig(), proxiesDispatch, globalDispatch, &http.Transport{})
 	defer stop()
 
 	count := 0
@@ -77,7 +77,7 @@ func TestInitWithURLs(t *testing.T) {
 		// embedded ones, and remote ones.
 		proxiesDispatch := func(cfg interface{}) {}
 		globalDispatch := func(cfg interface{}) {}
-		stop := InitWithURLs(inTempDir("."), flags, &userConfig{}, proxiesDispatch, globalDispatch,
+		stop := InitWithURLs(inTempDir("."), flags, newTestUserConfig(), proxiesDispatch, globalDispatch,
 			proxyConfigURLs, globalConfigURLs, &http.Transport{})
 		defer stop()
 

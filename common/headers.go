@@ -31,7 +31,9 @@ func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth
 	}
 
 	if overwriteAuth || req.Header.Get(DeviceIdHeader) == "" {
-		req.Header.Set(DeviceIdHeader, uc.GetDeviceID())
+		if deviceID := uc.GetDeviceID(); deviceID != "" {
+			req.Header.Set(DeviceIdHeader, deviceID)
+		}
 	}
 	if overwriteAuth || req.Header.Get(ProTokenHeader) == "" {
 		if token := uc.GetToken(); token != "" {
@@ -39,7 +41,9 @@ func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth
 		}
 	}
 	if overwriteAuth || req.Header.Get(UserIdHeader) == "" {
-		req.Header.Set(UserIdHeader, strconv.FormatInt(uc.GetUserID(), 10))
+		if userID := uc.GetUserID(); userID != 0 {
+			req.Header.Set(UserIdHeader, strconv.FormatInt(userID, 10))
+		}
 	}
 
 	// unconditionally overwritten

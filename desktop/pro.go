@@ -39,7 +39,7 @@ func servePro(channel ws.UIChannel) error {
 		userID := settings.GetUserID()
 		for {
 			if userID == 0 {
-				user, err := pro.NewUser(settings.GetDeviceID())
+				user, err := pro.NewUser(settings)
 				if err != nil {
 					logger.Errorf("Could not create new Pro user: %v", err)
 				} else {
