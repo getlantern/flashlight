@@ -290,7 +290,7 @@ func (bd *balancedDial) dial(ctx context.Context, start time.Time) (conn net.Con
 
 		deadline, _ := newCTX.Deadline()
 		log.Debugf("Dialing %s://%s with %s on pass %v with deadline %v", bd.network, bd.addr, pc.Label(), attempts, deadline)
-		conn, failedUpstream, err = pc.DialContext(ctx, bd.network, bd.addr)
+		conn, failedUpstream, err = pc.DialContext(newCTX, bd.network, bd.addr)
 		if err == nil {
 			// Please leave this at Debug level, as it helps us understand
 			// performance issues caused by a poor proxy being selected.
@@ -310,6 +310,7 @@ func (bd *balancedDial) dial(ctx context.Context, start time.Time) (conn net.Con
 }
 
 func (bd *balancedDial) nextPreconnected(ctx context.Context) ProxyConnection {
+	n := 0
 	for {
 		select {
 		case <-ctx.Done():
@@ -332,6 +333,13 @@ func (bd *balancedDial) nextPreconnected(ctx context.Context) ProxyConnection {
 			curDialer.Preconnect()
 			return pc
 		default:
+			n++
+			// wrapped around the whole list but still no dialer has proxy
+			// connections, give up so the application can give feedback to the
+			// user, instead of endlessly waiting.
+			if n > len(bd.dialers) {
+				return nil
+			}
 			// no proxy connections, tell dialer to preconnect so we'll
 			// hopefully get something on the next pass, and advance to next dialer
 			curDialer.Preconnect()
