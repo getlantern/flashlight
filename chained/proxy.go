@@ -235,23 +235,25 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 		Cipher:            cipherCode,
 		ServerPublicKey:   rsaPublicKey,
 	})
-	dial := func(ctx context.Context, p *proxy) (serverConn, error) {
-		return p.reportedDial(s.Addr, "lampshade", "tcp", func(op *ops.Op) (net.Conn, error) {
-			op.Set("ls_win", windowSize).
-				Set("ls_pad", maxPadding).
-				Set("ls_streams", int(maxStreamsPerConn)).
-				Set("ls_cipher", cipherCode.String())
-			conn, err := dialer.Dial(func() (net.Conn, error) {
-				conn, err := p.dialCore(op)(ctx)
-				if err == nil && idleInterval > 0 {
-					conn = idletiming.Conn(conn, idleInterval, func() {
-						log.Debug("lampshade TCP connection idled")
-					})
-				}
-				return conn, err
+	dial := func(unusedCtx context.Context, p *proxy) (serverConn, error) {
+		return lazyServerConn(func(ctx context.Context) (serverConn, error) {
+			return p.reportedDial(s.Addr, "lampshade", "tcp", func(op *ops.Op) (net.Conn, error) {
+				op.Set("ls_win", windowSize).
+					Set("ls_pad", maxPadding).
+					Set("ls_streams", int(maxStreamsPerConn)).
+					Set("ls_cipher", cipherCode.String())
+				conn, err := dialer.Dial(func() (net.Conn, error) {
+					conn, err := p.dialCore(op)(ctx)
+					if err == nil && idleInterval > 0 {
+						conn = idletiming.Conn(conn, idleInterval, func() {
+							log.Debug("lampshade TCP connection idled")
+						})
+					}
+					return conn, err
+				})
+				return overheadWrapper(true)(conn, err)
 			})
-			return overheadWrapper(true)(conn, err)
-		})
+		}), nil
 	}
 
 	p, err := newProxy(name, "lampshade", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, dial)
