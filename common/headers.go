@@ -20,13 +20,17 @@ const (
 	PingHeader                          = "X-Lantern-Ping"
 )
 
-func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth bool, includeInternal bool) {
+// AddCommonHeadersWithOptions sets standard http headers on a request bound
+// for an internal service, representing auth and other configuration
+// metadata.  The caller may specify overwriteAuth=false to prevent overwriting
+// any of the common 'auth' headers (DeviceIdHeader, ProTokenHeader, UserIdHeader)
+// that are already present in the given request.
+func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth bool) {
 
-	if includeInternal {
-		for k, v := range uc.GetInternalHeaders() {
-			if v != "" {
-				req.Header.Set(k, v)
-			}
+	req.Header.Set(VersionHeader, Version)
+	for k, v := range uc.GetInternalHeaders() {
+		if v != "" {
+			req.Header.Set(k, v)
 		}
 	}
 
@@ -45,11 +49,11 @@ func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth
 			req.Header.Set(UserIdHeader, strconv.FormatInt(userID, 10))
 		}
 	}
-
-	// unconditionally overwritten
-	req.Header.Set(VersionHeader, Version)
 }
 
+// AddCommonHeaders sets standard http headers on a request
+// bound for an internal service, representing auth and other
+// configuration metadata.
 func AddCommonHeaders(uc UserConfig, req *http.Request) {
-	AddCommonHeadersWithOptions(uc, req, true, true)
+	AddCommonHeadersWithOptions(uc, req, true)
 }

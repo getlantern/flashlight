@@ -23,6 +23,7 @@ type testProtector struct{}
 
 type testSession struct {
 	Session
+	serializedInternalHeaders string
 }
 
 type testSettings struct {
@@ -59,7 +60,9 @@ func (c testSession) UpdateStats(string, string, string, int, int) {}
 
 func (c testSession) UpdateAdSettings(AdSettings) {}
 
-func (c testSession) SerializedInternalHeaders() string { return "" }
+func (c testSession) SerializedInternalHeaders() string {
+	return c.serializedInternalHeaders
+}
 
 func TestProxying(t *testing.T) {
 
@@ -149,4 +152,41 @@ func testProxiedRequest(proxyAddr string, socks bool) error {
 	}
 
 	return nil
+}
+
+func TestInternalHeaders(t *testing.T) {
+	var tests = []struct {
+		input    string
+		expected map[string]string
+	}{
+		// Legit
+		{
+			"{\"X-Lantern-Foo-Bar\": \"foobar\", \"X-Lantern-Baz\": \"quux\"}",
+			map[string]string{"X-Lantern-Foo-Bar": "foobar", "X-Lantern-Baz": "quux"},
+		},
+		// Ignored
+		{
+			"",
+			map[string]string{},
+		},
+		{
+			"jf91283r7f0--",
+			map[string]string{},
+		},
+		{
+			"[\"X-Lantern-Foo-Bar\", \"foobar\"]",
+			map[string]string{},
+		},
+		// Partially ignored
+		{
+			"{\"X-Lantern-Foo-Bar\": {\"foobar\": \"baz\"}, \"X-Lantern-Baz\": \"quux\"}",
+			map[string]string{"X-Lantern-Baz": "quux"},
+		},
+	}
+
+	for _, test := range tests {
+		s := userConfig{testSession{serializedInternalHeaders: test.input}}
+		got := s.GetInternalHeaders()
+		assert.Equal(t, test.expected, got, "Headers did not decode as expected")
+	}
 }

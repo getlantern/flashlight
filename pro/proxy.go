@@ -102,7 +102,7 @@ func APIHandler(uc common.UserConfig) http.Handler {
 			// Add auth headers only if not present, to avoid race conditions
 			// when creating new user or switching user, i.e., linking device
 			// to a new account. (ovewriteAuth=false)
-			common.AddCommonHeadersWithOptions(uc, r, false, true)
+			common.AddCommonHeadersWithOptions(uc, r, false)
 		},
 	}
 }

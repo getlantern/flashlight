@@ -2,6 +2,7 @@
 
 package common
 
+// an implementation of common.UserConfig
 type UserConfigData struct {
 	DeviceID string
 	UserID   int64
@@ -22,6 +23,7 @@ func (uc *UserConfigData) GetInternalHeaders() map[string]string {
 
 var _ UserConfig = (*UserConfigData)(nil)
 
+// Constucts a new UserConfigData (common.UserConfig) with the given options.
 func NewUserConfigData(deviceID string, userID int64, token string, headers map[string]string) *UserConfigData {
 	uc := &UserConfigData{
 		DeviceID: deviceID,
