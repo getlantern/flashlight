@@ -9,7 +9,7 @@ import (
 
 // initBalancer takes hosts from cfg.ChainedServers and it uses them to create a
 // balancer.
-func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo, deviceID string) error {
+func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo) error {
 	if len(proxies) == 0 {
 		return fmt.Errorf("No chained servers configured, not initializing balancer")
 	}
@@ -22,7 +22,7 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 			// Ignore obfs4-tcp as these are already included as plain obfs4
 			continue
 		}
-		dialer, err := ChainedDialer(name, s, deviceID, client.proTokenGetter)
+		dialer, err := ChainedDialer(name, s, client.user)
 		if err != nil {
 			log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)
 			continue

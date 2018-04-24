@@ -60,13 +60,13 @@ var (
 // fetching per-user proxies as well as the global config. It returns a function
 // that can be used to stop the reading of configs.
 func Init(configDir string, flags map[string]interface{},
-	authConfig common.AuthConfig, proxiesDispatch func(interface{}),
+	userConfig common.UserConfig, proxiesDispatch func(interface{}),
 	origGlobalDispatch func(interface{}), rt http.RoundTripper) (stop func()) {
 	staging := isStaging(flags)
 	proxyConfigURLs := checkOverrides(flags, getProxyURLs(staging), "proxies.yaml.gz")
 	globalConfigURLs := checkOverrides(flags, getGlobalURLs(staging), "global.yaml.gz")
 
-	return InitWithURLs(configDir, flags, authConfig, proxiesDispatch,
+	return InitWithURLs(configDir, flags, userConfig, proxiesDispatch,
 		origGlobalDispatch, proxyConfigURLs, globalConfigURLs, rt)
 }
 
@@ -75,7 +75,7 @@ func Init(configDir string, flags map[string]interface{},
 // global config. It returns a function that can be used to stop the reading of
 // configs.
 func InitWithURLs(configDir string, flags map[string]interface{},
-	authConfig common.AuthConfig, origProxiesDispatch func(interface{}),
+	userConfig common.UserConfig, origProxiesDispatch func(interface{}),
 	origGlobalDispatch func(interface{}), proxyURLs *chainedFrontedURLs,
 	globalURLs *chainedFrontedURLs, rt http.RoundTripper) (stop func()) {
 	var mx sync.RWMutex
@@ -125,7 +125,7 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 		obfuscate:  obfuscate(flags),
 		name:       "proxies.yaml",
 		urls:       proxyURLs,
-		authConfig: authConfig,
+		userConfig: userConfig,
 		unmarshaler: func(bytes []byte) (interface{}, error) {
 			servers := make(map[string]*chained.ChainedServerInfo)
 			if err := yaml.Unmarshal(bytes, servers); err != nil {
@@ -155,7 +155,7 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 		obfuscate:  obfuscate(flags),
 		name:       "global.yaml",
 		urls:       globalURLs,
-		authConfig: authConfig,
+		userConfig: userConfig,
 		unmarshaler: func(bytes []byte) (interface{}, error) {
 			gl := newGlobal()
 			gl.applyFlags(flags)

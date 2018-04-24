@@ -13,27 +13,26 @@ func TestUsers(t *testing.T) {
 	common.ForceStaging()
 
 	deviceID := "77777777"
-	u, err := newUserWithClient(deviceID, nil)
+	u, err := newUserWithClient(common.NewUserConfigData(deviceID, 0, "", nil), nil)
 
 	assert.NoError(t, err, "Unexpected error")
 	assert.NotNil(t, u, "Should have gotten a user")
 	t.Logf("user: %+v", u)
 
-	auth := u.Auth
-	auth.DeviceID = deviceID
-	u, err = getUserDataWithClient(auth, nil)
+	uc := common.NewUserConfigData(deviceID, u.Auth.ID, u.Auth.Token, nil)
+	u, err = getUserDataWithClient(uc, nil)
 	assert.NoError(t, err, "Unexpected error")
 	assert.NotNil(t, u, "Should have gotten a user")
 
 	delete(userData.data, u.ID)
 
-	u, err = getUserDataWithClient(auth, nil)
+	u, err = getUserDataWithClient(uc, nil)
 	assert.NoError(t, err, "Unexpected error")
 	assert.NotNil(t, u, "Should have gotten a user")
 
-	pro, _ := IsProUser(auth)
+	pro, _ := IsProUser(uc)
 	assert.False(t, pro)
-	pro, _ = IsProUserFast(auth)
+	pro, _ = IsProUserFast(uc)
 	assert.False(t, pro)
 
 	user := userData.wait(u.ID)

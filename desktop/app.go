@@ -148,7 +148,6 @@ func (app *App) Run() {
 			func(err error) {
 				app.Exit(err)
 			},
-			settings.GetDeviceID(),
 			app.IsPro,
 			settings.GetLanguage,
 			func() string {

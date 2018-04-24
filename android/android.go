@@ -2,6 +2,7 @@
 package android
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -70,6 +71,43 @@ type Session interface {
 	Currency() string
 	DeviceOS() string
 	IsProUser() bool
+
+	// workaround for lack of any sequence types in gomobile bind... ;_;
+	// used to implement GetInternalHeaders() map[string]string
+	// Should return a JSON encoded map[string]string {"key":"val","key2":"val", ...}
+	SerializedInternalHeaders() string
+}
+
+type userConfig struct {
+	session Session
+}
+
+func (uc *userConfig) GetDeviceID() string { return uc.session.GetDeviceID() }
+func (uc *userConfig) GetUserID() int64    { return uc.session.GetUserID() }
+func (uc *userConfig) GetToken() string    { return uc.session.GetToken() }
+func (uc *userConfig) GetInternalHeaders() map[string]string {
+	h := make(map[string]string)
+
+	var f interface{}
+	if err := json.Unmarshal([]byte(uc.session.SerializedInternalHeaders()), &f); err != nil {
+		return h
+	}
+	m, ok := f.(map[string]interface{})
+	if !ok {
+		return h
+	}
+
+	for k, v := range m {
+		vv, ok := v.(string)
+		if ok {
+			h[k] = vv
+		}
+	}
+	return h
+}
+
+func newUserConfig(session Session) *userConfig {
+	return &userConfig{session: session}
 }
 
 // SocketProtector is an interface for classes that can protect Android sockets,
@@ -264,10 +302,9 @@ func run(configDir, locale string,
 			session.UpdateAdSettings(cfg.AdSettings)
 			email.SetDefaultRecipient(cfg.ReportIssueEmail)
 		}, // onConfigUpdate
-		session,
+		newUserConfig(session),
 		NewStatsTracker(session),
 		func(err error) {}, // onError
-		session.GetDeviceID(),
 		session.IsProUser,
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop

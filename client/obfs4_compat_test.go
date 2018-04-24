@@ -21,6 +21,6 @@ func buildDialer() error {
 			"iat-mode": "0",
 		},
 	}
-	_, err := ChainedDialer("test", s, "deviceid", func() string { return "protoken" })
+	_, err := ChainedDialer("test", s, newTestUserConfig())
 	return err
 }

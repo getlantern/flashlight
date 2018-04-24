@@ -3,10 +3,11 @@ package client
 import (
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/common"
 )
 
 // ChainedDialer creates a *balancer.Dialer backed by a chained server.
-func ChainedDialer(name string, si *chained.ChainedServerInfo, deviceID string, proTokenGetter func() string) (balancer.Dialer, error) {
+func ChainedDialer(name string, si *chained.ChainedServerInfo, uc common.UserConfig) (balancer.Dialer, error) {
 	// Copy server info to allow modifying
 	sic := &chained.ChainedServerInfo{}
 	*sic = *si
@@ -16,5 +17,5 @@ func ChainedDialer(name string, si *chained.ChainedServerInfo, deviceID string, 
 		sic.PluggableTransport = "obfs4"
 	}
 
-	return chained.CreateDialer(name, sic, deviceID, proTokenGetter)
+	return chained.CreateDialer(name, sic, uc)
 }

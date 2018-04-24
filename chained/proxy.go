@@ -50,7 +50,7 @@ var (
 )
 
 // CreateDialer creates a Proxy (balancer.Dialer) with supplied server info.
-func CreateDialer(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (balancer.Dialer, error) {
+func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (balancer.Dialer, error) {
 	if theForceAddr != "" && theForceToken != "" {
 		forceProxy(s)
 	}
@@ -63,16 +63,16 @@ func CreateDialer(name string, s *ChainedServerInfo, deviceID string, proToken f
 		var err error
 		if s.Cert == "" {
 			log.Errorf("No Cert configured for %s, will dial with plain tcp", s.Addr)
-			p, err = newHTTPProxy(name, s, deviceID, proToken)
+			p, err = newHTTPProxy(name, s, uc)
 		} else {
 			log.Tracef("Cert configured for  %s, will dial with tls", s.Addr)
-			p, err = newHTTPSProxy(name, s, deviceID, proToken)
+			p, err = newHTTPSProxy(name, s, uc)
 		}
 		return p, err
 	case "obfs4":
-		return newOBFS4Proxy(name, s, deviceID, proToken)
+		return newOBFS4Proxy(name, s, uc)
 	case "lampshade":
-		return newLampshadeProxy(name, s, deviceID, proToken)
+		return newLampshadeProxy(name, s, uc)
 	default:
 		return nil, errors.New("Unknown transport: %v", s.PluggableTransport).With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
 	}
@@ -92,7 +92,7 @@ func forceProxy(s *ChainedServerInfo) {
 	s.PluggableTransport = ""
 }
 
-func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
+func newHTTPProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 	var dialServer func(ctx context.Context, p *proxy) (serverConn, error)
 	if s.ENHTTPURL != "" {
 		tr := &frontedTransport{rt: eventual.NewValue()}
@@ -118,17 +118,17 @@ func newHTTPProxy(name string, s *ChainedServerInfo, deviceID string, proToken f
 		}
 	}
 
-	return newProxy(name, "http", "tcp", s.Addr, s, deviceID, proToken, s.ENHTTPURL != "", dialServer)
+	return newProxy(name, "http", "tcp", s.Addr, s, uc, s.ENHTTPURL != "", dialServer)
 }
 
-func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
+func newHTTPSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 	}
 	x509cert := cert.X509()
 
-	return newProxy(name, "https", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(ctx context.Context, p *proxy) (serverConn, error) {
+	return newProxy(name, "https", "tcp", s.Addr, s, uc, s.Trusted, func(ctx context.Context, p *proxy) (serverConn, error) {
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
 			conn, err := tlsdialer.DialTimeout(func(network, addr string, timeout time.Duration) (net.Conn, error) {
 				return p.dialCore(op)(ctx)
@@ -160,7 +160,7 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 	})
 }
 
-func newOBFS4Proxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
+func newOBFS4Proxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 	if s.Cert == "" {
 		return nil, fmt.Errorf("No Cert configured for obfs4 server, can't connect")
 	}
@@ -179,7 +179,7 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 		return nil, log.Errorf("Unable to parse client args: %v", err)
 	}
 
-	return newProxy(name, "obfs4", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, func(ctx context.Context, p *proxy) (serverConn, error) {
+	return newProxy(name, "obfs4", "tcp", s.Addr, s, uc, s.Trusted, func(ctx context.Context, p *proxy) (serverConn, error) {
 		return p.reportedDial(p.Addr(), p.Protocol(), p.Network(), func(op *ops.Op) (net.Conn, error) {
 			dialFn := func(network, address string) (net.Conn, error) {
 				// We know for sure the network and address are the same as what
@@ -193,7 +193,7 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, deviceID string, proToken 
 	})
 }
 
-func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proToken func() string) (*proxy, error) {
+func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
@@ -254,7 +254,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, deviceID string, proTo
 		})
 	}
 
-	p, err := newProxy(name, "lampshade", "tcp", s.Addr, s, deviceID, proToken, s.Trusted, dial)
+	p, err := newProxy(name, "lampshade", "tcp", s.Addr, s, uc, s.Trusted, dial)
 	if err != nil {
 		return nil, err
 	}
@@ -318,8 +318,7 @@ type proxy struct {
 	network           string
 	addr              string
 	authToken         string
-	deviceID          string
-	proToken          func() string
+	user              common.UserConfig
 	trusted           bool
 	bias              int
 	doDialServer      func(context.Context, *proxy) (serverConn, error)
@@ -337,7 +336,7 @@ type proxy struct {
 	mx                sync.Mutex
 }
 
-func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, deviceID string, proToken func() string, trusted bool, dialServer func(context.Context, *proxy) (serverConn, error)) (*proxy, error) {
+func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc common.UserConfig, trusted bool, dialServer func(context.Context, *proxy) (serverConn, error)) (*proxy, error) {
 	initPreconnect := s.InitPreconnect
 	if initPreconnect <= 0 {
 		initPreconnect = defaultInitPreconnect
@@ -353,8 +352,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, device
 		network:          network,
 		addr:             addr,
 		authToken:        s.AuthToken,
-		deviceID:         deviceID,
-		proToken:         proToken,
+		user:             uc,
 		trusted:          trusted,
 		bias:             s.Bias,
 		doDialServer:     dialServer,

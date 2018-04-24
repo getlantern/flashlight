@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strconv"
 
 	"github.com/getlantern/detour"
 
@@ -24,7 +23,7 @@ type Fetcher interface {
 // fetcher periodically fetches the latest cloud configuration.
 type fetcher struct {
 	lastCloudConfigETag map[string]string
-	user                common.AuthConfig
+	user                common.UserConfig
 	rt                  http.RoundTripper
 	chainedURL          string
 	frontedURL          string
@@ -32,7 +31,7 @@ type fetcher struct {
 
 // newFetcher creates a new configuration fetcher with the specified
 // interface for obtaining the user ID and token if those are populated.
-func newFetcher(conf common.AuthConfig, rt http.RoundTripper,
+func newFetcher(conf common.UserConfig, rt http.RoundTripper,
 	urls *chainedFrontedURLs) Fetcher {
 	log.Debugf("Will poll for config at %v (%v)", urls.chained, urls.fronted)
 
@@ -78,15 +77,7 @@ func (cf *fetcher) doFetch(op *ops.Op) ([]byte, error) {
 	// Set the fronted URL to lookup the config in parallel using chained and domain fronted servers.
 	proxied.PrepareForFronting(req, cf.frontedURL)
 
-	id := cf.user.GetUserID()
-	if id != 0 {
-		strID := strconv.FormatInt(id, 10)
-		req.Header.Set(common.UserIdHeader, strID)
-	}
-	tok := cf.user.GetToken()
-	if tok != "" {
-		req.Header.Set(common.ProTokenHeader, tok)
-	}
+	common.AddCommonHeaders(cf.user, req)
 
 	// make sure to close the connection after reading the Body
 	// this prevents the occasional EOFs errors we're seeing with

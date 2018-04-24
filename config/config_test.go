@@ -141,7 +141,7 @@ func TestPollProxies(t *testing.T) {
 		os.Remove(file)
 
 		proxyConfigURLs, _ := startConfigServer(t, proxyConfig)
-		fetcher := newFetcher(&authConfig{}, &http.Transport{}, proxyConfigURLs)
+		fetcher := newFetcher(newTestUserConfig(), &http.Transport{}, proxyConfigURLs)
 		dispatch := func(cfg interface{}) {
 			proxyChan <- cfg
 		}
@@ -201,7 +201,7 @@ func TestPollGlobal(t *testing.T) {
 		os.Remove(file)
 
 		globalConfigURLs, _ := startConfigServer(t, globalConfig)
-		fetcher := newFetcher(&authConfig{}, &http.Transport{}, globalConfigURLs)
+		fetcher := newFetcher(newTestUserConfig(), &http.Transport{}, globalConfigURLs)
 		dispatch := func(cfg interface{}) {
 			configChan <- cfg
 		}
@@ -265,7 +265,7 @@ func TestPollIntervals(t *testing.T) {
 		pollInterval := 500 * time.Millisecond
 		waitTime := pollInterval*2 + (200 * time.Millisecond)
 
-		fetcher := newFetcher(&authConfig{}, &http.Transport{}, configURLs)
+		fetcher := newFetcher(newTestUserConfig(), &http.Transport{}, configURLs)
 		dispatch := func(cfg interface{}) {}
 		go cfg.poll(nil, dispatch, fetcher, func() time.Duration { return pollInterval })
 

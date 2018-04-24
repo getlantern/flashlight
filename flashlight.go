@@ -59,10 +59,9 @@ func Run(httpProxyAddr string,
 	beforeStart func() bool,
 	afterStart func(cl *client.Client),
 	onConfigUpdate func(cfg *config.Global),
-	userConfig common.AuthConfig,
+	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
 	onError func(err error),
-	deviceID string,
 	isPro func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
@@ -75,7 +74,7 @@ func Run(httpProxyAddr string,
 	defer stopMonitor()
 	elapsed := mtime.Stopwatch()
 	displayVersion()
-	initContext(deviceID, common.Version, common.RevisionDate, isPro)
+	initContext(userConfig.GetDeviceID(), common.Version, common.RevisionDate, isPro)
 	op := fops.Begin("client_started")
 
 	cl, err := client.NewClient(
@@ -87,7 +86,7 @@ func Run(httpProxyAddr string,
 			return false, nil
 		},
 		useDetour,
-		userConfig.GetToken,
+		userConfig,
 		statsTracker,
 		allowPrivateHosts,
 		lang,
@@ -107,14 +106,14 @@ func Run(httpProxyAddr string,
 	proxiesDispatch := func(conf interface{}) {
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
-		cl.Configure(proxyMap, deviceID)
+		cl.Configure(proxyMap)
 	}
 	globalDispatch := func(conf interface{}) {
 		// Don't love the straight cast here, but we're also the ones defining
 		// the type in the factory method above.
 		cfg := conf.(*config.Global)
 		log.Debugf("Applying global config")
-		applyClientConfig(cl, cfg, deviceID, autoReport, onBordaConfigured)
+		applyClientConfig(cl, cfg, autoReport, onBordaConfigured)
 		onConfigUpdate(cfg)
 	}
 	rt := proxied.ParallelPreferChained()
@@ -174,7 +173,7 @@ func Run(httpProxyAddr string,
 	return nil
 }
 
-func applyClientConfig(client *client.Client, cfg *config.Global, deviceID string, autoReport func() bool, onBordaConfigured chan bool) {
+func applyClientConfig(client *client.Client, cfg *config.Global, autoReport func() bool, onBordaConfigured chan bool) {
 	certs, err := getTrustedCACerts(cfg)
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)

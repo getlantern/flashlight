@@ -317,11 +317,7 @@ func (conn defaultServerConn) dialOrigin(ctx context.Context, network, addr stri
 
 func (p *proxy) onRequest(req *http.Request) {
 	p.AdaptRequest(req)
-	req.Header.Set(common.DeviceIdHeader, p.deviceID)
-	req.Header.Set(common.VersionHeader, common.Version)
-	if token := p.proToken(); token != "" {
-		req.Header.Set(common.ProTokenHeader, token)
-	}
+	common.AddCommonHeaders(p.user, req)
 	// Request BBR metrics
 	req.Header.Set("X-BBR", "y")
 }
