@@ -29,13 +29,9 @@ build:
       name: authenticate git
       code: git config --global url."https://71cee071ea22b7ffb10f68fa330d1130133bbfbd:x-oauth-basic@github.com/".insteadOf "https://github.com/"
     - script:
-      name: get glide
+      name: install dep 
       code: |
-        # Note the standard glide install of piping through sh isn't supported for the test os, arch.
-        cd /tmp
-        curl -L https://github.com/Masterminds/glide/releases/download/v0.12.3/glide-v0.12.3-linux-amd64.tar.gz -o glide.tar.gz
-        tar -xf glide.tar.gz
-        sudo mv linux-amd64/glide /usr/local/bin/
+	curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
     - install-packages:
       packages: lsof # required by fdcount
     - script:
