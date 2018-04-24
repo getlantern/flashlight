@@ -180,7 +180,7 @@ func (lc *LoConf) getUninstallSurvey(surveys map[string]*UninstallSurvey, locale
 // or returns an error if no announcement is availabe.
 func (lc *LoConf) GetAnnouncement(locale string, isPro bool) (*Announcement, error) {
 	if len(lc.Announcements) == 0 {
-		return nil, errors.New("no announcement section")
+		return nil, ErrNoAvailable
 	}
 	section, exist := lc.Announcements[strings.ToLower(locale)]
 	if !exist {
