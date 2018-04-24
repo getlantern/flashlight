@@ -400,9 +400,6 @@ func (p *proxy) initPersistentConnection(addr string, conn net.Conn) error {
 type serverConn interface {
 	// dialOrigin dials out to the given origin address using the connected server
 	dialOrigin(ctx context.Context, network, addr string) (net.Conn, error)
-
-	// Close closes the connection to the proxy server
-	Close() error
 }
 
 // defaultServerConn is the standard implementation of serverConn to typical
@@ -417,6 +414,21 @@ func (p *proxy) defaultServerConn(conn net.Conn, err error) (serverConn, error) 
 		return nil, err
 	}
 	return &defaultServerConn{conn, p}, err
+}
+
+// lazyServerConn is a serverConn that defers opening a connection until
+// dialOrigin is called. This is useful for multiplexed protocols like
+// lampshade where there's no cost to creating new connections and it's safer to
+// do so as late as possible in case the underlying TCP connection has been
+// closed since the serverConn was eagerly established.
+type lazyServerConn func(ctx context.Context) (serverConn, error)
+
+func (lsc lazyServerConn) dialOrigin(ctx context.Context, network, addr string) (net.Conn, error) {
+	conn, err := lsc(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return conn.dialOrigin(ctx, network, addr)
 }
 
 // enhttpServerConn represents a serverConn to domain-fronted servers. Unlike a
@@ -435,8 +447,4 @@ func (conn *enhttpServerConn) dialOrigin(ctx context.Context, network, addr stri
 		})
 	}
 	return dfConn, err
-}
-
-func (conn *enhttpServerConn) Close() error {
-	return nil
 }

@@ -6,6 +6,7 @@ import yaml
 import tempfile
 import subprocess
 import os.path
+import platform
 from misc_util import ipre
 import redis_util as ru
 
@@ -66,10 +67,24 @@ f.write(cfg)
 f.close()
 print cfg
 
+on_windows = len([item for item in platform.uname() if "Microsoft" in item]) > 0
 path = ""
-if os.path.isfile("./lantern"):
+configdir = tmpdir
+if on_windows:
+    path = "./lantern.exe"
+    # Make sure we compiled in console-mode as Gui mode won't take our command-line flags
+    subprocess.call('file lantern.exe | grep console', shell=True)
+    # Get Windows path for tempdir
+    configdir = subprocess.check_output('wslpath -w `readlink --canonicalize %s`' % tmpdir, shell=True).strip()
+elif os.path.isfile("./lantern"):
     path = "./lantern"
 else:
     path = "/Applications/Lantern.app/Contents/MacOS/lantern"
 
-subprocess.call([path, "-headless", "-pprofaddr=:4000", "-stickyconfig", "-readableconfig", "-configdir="+tmpdir])
+args = [path, "-pprofaddr=:4000", "-stickyconfig", "-readableconfig", "-configdir="+configdir]
+if not on_windows:
+    # On windows, show Gui so that we can exit cleanly through menu (Ctrl+c
+    # doesn't work)
+    args.append("-headless")
+
+subprocess.call(args)
