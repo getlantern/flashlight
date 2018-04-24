@@ -1,5 +1,5 @@
 DISABLE_PORT_RANDOMIZATION ?=
-GLIDE_BIN    ?= $(shell which glide)
+DEP_BIN    ?= $(shell which dep)
 
 SHELL := /bin/bash
 SOURCES := $(shell find . -name '*[^_test].go')
@@ -37,7 +37,7 @@ define build-tags
 	EXTRA_LDFLAGS=$$(echo $$EXTRA_LDFLAGS | xargs) && echo "Extra ldflags: $$EXTRA_LDFLAGS"
 endef
 
-.PHONY: require-glide vendor novendor
+.PHONY: require-dep vendor novendor
 
 lantern: $(SOURCES)
 	@$(call build-tags) && \
@@ -56,12 +56,12 @@ linux: $(SOURCES)
 	HEADLESS=true GOOS=linux GOARCH=amd64 go build -o lantern-linux -tags="$$BUILD_TAGS headless" -ldflags="$$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
 
 # vendor installs vendored dependencies using Glide
-vendor: require-glide
-	@$(GLIDE_BIN) --debug install
+vendor: require-dep
+	@$(DEP_BIN) -v ensure
 
-require-glide:
-	@if [ "$(GLIDE_BIN)" = "" ]; then \
-		echo 'Missing "glide" command. See https://github.com/Masterminds/glide' && exit 1; \
+require-dep:
+	@if [ "$(DEP_BIN)" = "" ]; then \
+		echo 'Missing "dep" command. See https://github.com/golang/dep' && exit 1; \
 	fi
 
 update-icons:
@@ -84,7 +84,7 @@ test-and-cover: $(SOURCES)
 	done
 
 test: $(SOURCES)
-	@TP=$$(glide novendor -x) && \
+	@TP=$$(go list ./... | grep -v /vendor/) && \
 	go test -race -v -tags="headless" $$TP || exit 1; \
 
 clean:
