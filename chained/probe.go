@@ -57,7 +57,7 @@ func (p *proxy) httpPing(kb int, resetBBR bool) error {
 	httpPingMx.Lock()
 	defer httpPingMx.Unlock()
 
-	op := ops.Begin("probe").ChainedProxy(p.Addr(), p.Protocol(), p.Network())
+	op := ops.Begin("probe").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network())
 	defer op.End()
 
 	start := time.Now()

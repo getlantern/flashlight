@@ -327,7 +327,7 @@ func (p *proxy) onRequest(req *http.Request) {
 }
 
 func (p *proxy) onFinish(op *ops.Op) {
-	op.ChainedProxy(p.addr, p.protocol, p.network)
+	op.ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network())
 }
 
 func (p *proxy) sendCONNECT(addr string, conn net.Conn) error {
