@@ -16,7 +16,6 @@ lantern_darwin_amd64
 *.exe
 proxies.yaml
 global.yaml
-.glide
 config/fetched-global.yaml.gz
 config/fetched-global.yaml.stored
 config/fetched-proxies.yaml.gz

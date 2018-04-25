@@ -2,17 +2,6 @@
 
 
 [[projects]]
-  name = "cloud.google.com/go"
-  packages = [
-    "compute/metadata",
-    "internal/version",
-    "monitoring/apiv3",
-    "trace/apiv2"
-  ]
-  revision = "29f476ffa9c4cd4fd14336b6043090ac1ad76733"
-  version = "v0.21.0"
-
-[[projects]]
   branch = "master"
   name = "git.torproject.org/pluggable-transports/goptlib.git"
   packages = ["."]
@@ -466,13 +455,13 @@
   revision = "996122c1374578a85a536445d7d7ae88d3ee5a35"
 
 [[projects]]
-  branch = "tracing"
+  branch = "master"
   name = "github.com/getlantern/proxy"
   packages = [
     ".",
     "filters"
   ]
-  revision = "79549931a933ba8498c3748a4ed3c2721efac471"
+  revision = "afe965b8c237b91043ad31beac695e3224c8c34e"
 
 [[projects]]
   name = "github.com/getlantern/proxybench"
@@ -636,13 +625,10 @@
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
-    "protoc-gen-go/descriptor",
     "ptypes",
     "ptypes/any",
     "ptypes/duration",
-    "ptypes/empty",
-    "ptypes/timestamp",
-    "ptypes/wrappers"
+    "ptypes/timestamp"
   ]
   revision = "e09c5db296004fbe3f74490e84dcd62c3c5ddb1b"
 
@@ -702,12 +688,6 @@
   name = "github.com/gonum/stat"
   packages = ["."]
   revision = "ec9c8a1062f4be6c6ad671f0f5dba12d4a76826d"
-
-[[projects]]
-  name = "github.com/googleapis/gax-go"
-  packages = ["."]
-  revision = "317e0006254c44a0ac427cc52a0e083ff0b9622f"
-  version = "v2.0.0"
 
 [[projects]]
   name = "github.com/gorilla/websocket"
@@ -896,27 +876,6 @@
   revision = "da747e0c62c4e145ebd7484cf69f92c0dd192305"
 
 [[projects]]
-  name = "go.opencensus.io"
-  packages = [
-    "exporter/stackdriver",
-    "exporter/stackdriver/propagation",
-    "internal",
-    "internal/tagencoding",
-    "plugin/ocgrpc",
-    "plugin/ochttp",
-    "plugin/ochttp/propagation/b3",
-    "stats",
-    "stats/internal",
-    "stats/view",
-    "tag",
-    "trace",
-    "trace/internal",
-    "trace/propagation"
-  ]
-  revision = "0095aec66ae14801c6711210f6f0716411cefdd3"
-  version = "v0.8.0"
-
-[[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = [
@@ -945,7 +904,6 @@
   packages = [
     "bpf",
     "context",
-    "context/ctxhttp",
     "http2",
     "http2/hpack",
     "idna",
@@ -961,23 +919,6 @@
   ]
   revision = "61147c48b25b599e5b561d2e9c4f3e1ef489ca41"
   source = "https://github.com/golang/net"
-
-[[projects]]
-  name = "golang.org/x/oauth2"
-  packages = [
-    ".",
-    "google",
-    "internal",
-    "jws",
-    "jwt"
-  ]
-  revision = "921ae394b9430ed4fb549668d7b087601bd60a81"
-
-[[projects]]
-  branch = "master"
-  name = "golang.org/x/sync"
-  packages = ["semaphore"]
-  revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
 
 [[projects]]
   name = "golang.org/x/sys"
@@ -1011,21 +952,6 @@
 
 [[projects]]
   branch = "master"
-  name = "google.golang.org/api"
-  packages = [
-    "googleapi/transport",
-    "internal",
-    "iterator",
-    "option",
-    "support/bundler",
-    "transport",
-    "transport/grpc",
-    "transport/http"
-  ]
-  revision = "8b8c1d4168b3aa7d5fbdb9eb159a1a7ac0cc146d"
-
-[[projects]]
-  branch = "master"
   name = "google.golang.org/appengine"
   packages = [
     ".",
@@ -1036,27 +962,13 @@
     "internal/datastore",
     "internal/log",
     "internal/modules",
-    "internal/remote_api",
-    "internal/socket",
-    "internal/urlfetch",
-    "socket",
-    "urlfetch"
+    "internal/remote_api"
   ]
   revision = "0a24098c0ec68416ec050f567f75df563d6b231e"
 
 [[projects]]
   name = "google.golang.org/genproto"
-  packages = [
-    "googleapis/api/annotations",
-    "googleapis/api/distribution",
-    "googleapis/api/label",
-    "googleapis/api/metric",
-    "googleapis/api/monitoredres",
-    "googleapis/devtools/cloudtrace/v2",
-    "googleapis/monitoring/v3",
-    "googleapis/rpc/status",
-    "protobuf/field_mask"
-  ]
+  packages = ["googleapis/rpc/status"]
   revision = "aae13d27a44d62f039eeeb93e74e893886673932"
 
 [[projects]]
@@ -1069,7 +981,6 @@
     "codes",
     "connectivity",
     "credentials",
-    "credentials/oauth",
     "encoding",
     "encoding/proto",
     "grpclb/grpc_lb_v1/messages",
@@ -1105,6 +1016,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a6ab08afb5e81859ce8f38953ada310835f3fb0e2c2907dff39a3197cf1ec973"
+  inputs-digest = "bbdbcfe3c0929d8df5005f874b95f8de173925107740c01f602c1c50bc5b0d4a"
   solver-name = "gps-cdcl"
   solver-version = 1

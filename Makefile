@@ -55,7 +55,7 @@ linux: $(SOURCES)
 	@$(call build-tags) && \
 	HEADLESS=true GOOS=linux GOARCH=amd64 go build -o lantern-linux -tags="$$BUILD_TAGS headless" -ldflags="$$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
 
-# vendor installs vendored dependencies using Glide
+# vendor installs vendored dependencies using Dep
 vendor: require-dep
 	@$(DEP_BIN) ensure
 
@@ -75,7 +75,7 @@ novendor:
 
 test-and-cover: $(SOURCES)
 	@echo "mode: count" > profile.cov && \
-	TP=$$(find . -name "*_test.go" -printf '%h\n' | grep  -v vendor | grep -v glide | sort -u) && \
+	TP=$$(find . -name "*_test.go" -printf '%h\n' | grep  -v vendor | sort -u) && \
 	CP=$$(echo $$TP | tr ' ', ',') && \
 	set -x && \
 	for pkg in $$TP; do \
