@@ -30,7 +30,7 @@ build:
       code: git config --global url."https://71cee071ea22b7ffb10f68fa330d1130133bbfbd:x-oauth-basic@github.com/".insteadOf "https://github.com/"
     - script:
       name: install dep
-      code: |
+      code: |-
         curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
     - install-packages:
       packages: lsof # required by fdcount
