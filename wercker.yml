@@ -47,9 +47,6 @@ build:
       name: adjust race detector
       code: export GORACE=history_size=7
     - script:
-      name: update glide dependencies to latest
-      code: glide up
-    - script:
       name: test-and-cover
       code: make test-and-cover
     - tcnksm/goveralls:
