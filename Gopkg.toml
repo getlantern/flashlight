@@ -274,10 +274,6 @@
   name = "github.com/tevino/abool"
 
 [[constraint]]
-  name = "go.opencensus.io"
-  version = "0.8.0"
-
-[[constraint]]
   name = "golang.org/x/net"
   source = "https://github.com/golang/net"
 
