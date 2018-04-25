@@ -33,3 +33,13 @@ By default, only a small percentage of web ads are swapped and only if the user
 is free (not pro), making it difficult to test ad swapping. However, you can
 force 100% of eligible ads to be swapped even when pro by setting the
 environment variable `FORCEADS=true`.
+
+### Running CI Locally
+
+You can run CI locally with the following:
+
+```
+brew tap wercker/wercker
+brew install wercker-cli
+wercker build
+```
