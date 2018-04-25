@@ -310,7 +310,6 @@ func (bd *balancedDial) dial(ctx context.Context, start time.Time) (conn net.Con
 }
 
 func (bd *balancedDial) nextPreconnected(ctx context.Context) ProxyConnection {
-	n := 0
 	for {
 		select {
 		case <-ctx.Done():
@@ -333,13 +332,6 @@ func (bd *balancedDial) nextPreconnected(ctx context.Context) ProxyConnection {
 			curDialer.Preconnect()
 			return pc
 		default:
-			n++
-			// wrapped around the whole list but still no dialer has proxy
-			// connections, give up so the application can give feedback to the
-			// user, instead of endlessly waiting.
-			if n > len(bd.dialers) {
-				return nil
-			}
 			// no proxy connections, tell dialer to preconnect so we'll
 			// hopefully get something on the next pass, and advance to next dialer
 			curDialer.Preconnect()
