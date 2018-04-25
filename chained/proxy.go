@@ -387,6 +387,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		if err != nil {
 			return nil, err
 		}
+		p.protocol = "kcp"
 	}
 
 	go p.runConnectivityChecks()
@@ -608,7 +609,7 @@ func timeoutFor(ctx context.Context) time.Duration {
 }
 
 func (p *proxy) reportedDial(addr, protocol, network string, dial func(op *ops.Op) (net.Conn, error)) (serverConn, error) {
-	op := ops.Begin("dial_to_chained").ChainedProxy(addr, protocol, network)
+	op := ops.Begin("dial_to_chained").ChainedProxy(p.Name(), addr, protocol, network)
 	defer op.End()
 
 	elapsed := mtime.Stopwatch()

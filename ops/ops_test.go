@@ -2,10 +2,12 @@ package ops
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/getlantern/ops"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRequest(t *testing.T) {
@@ -39,4 +41,25 @@ func TestRequest(t *testing.T) {
 			assert.Equal(t, port, ctx["origin_port"])
 		}
 	}
+}
+
+func TestProxyName(t *testing.T) {
+	runTest := func(expectMatch bool, name string, expectedName, expectedDatacenter string) {
+		op := Begin("testop").ProxyName(name)
+		ctx := ops.AsMap(op, false)
+		op.End()
+		if !expectMatch {
+			assert.Empty(t, ctx["proxy_name"])
+			assert.Empty(t, ctx["dc"])
+		} else {
+			assert.Equal(t, expectedName, ctx["proxy_name"])
+			assert.Equal(t, expectedDatacenter, ctx["dc"])
+		}
+	}
+
+	runTest(true, "fp-https-donyc3-20180101-006-kcp", "fp-https-donyc3-20180101-006", "donyc3")
+	runTest(true, "fp-donyc3-20180101-006-kcp", "fp-donyc3-20180101-006", "donyc3")
+	runTest(true, "fp-donyc3-20180101-006", "fp-donyc3-20180101-006", "donyc3")
+	runTest(false, "fp-14325-adsfds-006", "", "")
+	runTest(false, "cloudcompile", "", "")
 }

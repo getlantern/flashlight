@@ -5,6 +5,7 @@ package ops
 import (
 	"net"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -22,6 +23,10 @@ const (
 	ProxyChained ProxyType = "chained"
 	// ProxyFronted means access through domain fronting
 	ProxyFronted ProxyType = "fronted"
+)
+
+var (
+	proxyNameRegex = regexp.MustCompile(`(fp-([a-z]+-)?([a-z0-9]+)-[0-9]{8}-[0-9]+)(-.+)?`)
 )
 
 // Op decorates an ops.Op with convenience methods.
@@ -129,8 +134,9 @@ func (op *Op) HTTPStatusCode(code int) *Op {
 }
 
 // ChainedProxy attaches chained proxy information to the Context
-func (op *Op) ChainedProxy(addr string, protocol string, network string) *Op {
+func (op *Op) ChainedProxy(name string, addr string, protocol string, network string) *Op {
 	return op.ProxyType(ProxyChained).
+		ProxyName(name).
 		ProxyAddr(addr).
 		ProxyProtocol(protocol).
 		ProxyNetwork(network)
@@ -139,6 +145,18 @@ func (op *Op) ChainedProxy(addr string, protocol string, network string) *Op {
 // ProxyType attaches proxy type to the Context
 func (op *Op) ProxyType(v ProxyType) *Op {
 	return op.Set("proxy_type", v)
+}
+
+// ProxyName attaches the name of the proxy and the inferred datacenter to the
+// Context
+func (op *Op) ProxyName(name string) *Op {
+	match := proxyNameRegex.FindStringSubmatch(name)
+	// Only set proxy name if it follows our naming convention
+	if len(match) == 5 {
+		op.Set("proxy_name", match[1])
+		op.Set("dc", match[3])
+	}
+	return op
 }
 
 // ProxyAddr attaches proxy server address to the Context

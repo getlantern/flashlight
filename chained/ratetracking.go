@@ -31,7 +31,7 @@ func (p *proxy) withRateTracking(wrapped net.Conn, origin string) net.Conn {
 			p.consecRWSuccesses.Dec()
 		}
 		// record simple traffic without origin
-		op := ops.Begin("traffic")
+		op := ops.Begin("traffic").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network())
 		op.SetMetric("client_bytes_sent", borda.Sum(stats.SentTotal)).
 			SetMetric("client_bytes_recv", borda.Sum(stats.RecvTotal))
 		op.FailIf(rwError)
