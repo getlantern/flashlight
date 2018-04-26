@@ -20,11 +20,7 @@ var (
 	httpPingMx sync.Mutex
 )
 
-func (p *proxy) Probe(forPerformance bool) {
-	p.probe(forPerformance)
-}
-
-func (p *proxy) probe(forPerformance bool) bool {
+func (p *proxy) Probe(forPerformance bool) bool {
 	forPerformanceString := ""
 	if forPerformance {
 		forPerformanceString = " for performance"
@@ -36,8 +32,10 @@ func (p *proxy) probe(forPerformance bool) bool {
 		err := p.httpPing(1, false)
 		if err != nil {
 			log.Errorf("Error probing %v: %v", p.Label(), err)
+			p.MarkFailure()
 			return false
 		}
+		p.markSuccess()
 		return true
 	}
 

@@ -18,7 +18,6 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
-	"github.com/getlantern/mtime"
 )
 
 const (
@@ -62,7 +61,7 @@ func (p *proxy) runConnectivityChecks() {
 			select {
 			case <-timer.C:
 				log.Debugf("Checking %v", p.Label())
-				if p.CheckConnectivity() {
+				if p.Probe(false) {
 					// On success, don't bother rechecking anytime soon
 					checkInterval = maxCheckInterval
 				} else {
@@ -82,18 +81,6 @@ func (p *proxy) runConnectivityChecks() {
 			}
 		}
 	})
-}
-
-func (p *proxy) CheckConnectivity() bool {
-	elapsed := mtime.Stopwatch()
-	result := p.probe(false)
-	log.Debugf("Checking %v took %v, succeed?: %v", p.Label(), elapsed(), result)
-	if result {
-		p.markSuccess()
-		return true
-	}
-	p.MarkFailure()
-	return false
 }
 
 func randomize(d time.Duration) time.Duration {
