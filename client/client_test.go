@@ -367,7 +367,8 @@ func (d *testDialer) CheckConnectivity() bool {
 	return true
 }
 
-func (d *testDialer) Probe(forPerformance bool) {
+func (d *testDialer) Probe(forPerformance bool) bool {
+	return true
 }
 
 func (d *testDialer) Stop() {
