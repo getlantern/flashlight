@@ -494,7 +494,6 @@ func (b *Balancer) periodicallyPrintStats() {
 	for {
 		select {
 		case <-ticker.C:
-			time.Sleep(evalDialersInterval)
 			b.mu.Lock()
 			dialers := b.dialers
 			sessionStats := b.sessionStats
