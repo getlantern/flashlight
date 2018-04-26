@@ -21,6 +21,10 @@ var (
 )
 
 func (p *proxy) Probe(forPerformance bool) {
+	p.probe(forPerformance)
+}
+
+func (p *proxy) probe(forPerformance bool) bool {
 	forPerformanceString := ""
 	if forPerformance {
 		forPerformanceString = " for performance"
@@ -32,8 +36,9 @@ func (p *proxy) Probe(forPerformance bool) {
 		err := p.httpPing(1, false)
 		if err != nil {
 			log.Errorf("Error probing %v: %v", p.Label(), err)
+			return false
 		}
-		return
+		return true
 	}
 
 	// probing for performance, do several increasingly large pings
@@ -45,11 +50,12 @@ func (p *proxy) Probe(forPerformance bool) {
 		err := p.httpPing(kb, i == 0)
 		if err != nil {
 			log.Errorf("Error probing %v for performance: %v", p.Label(), err)
-			return
+			return false
 		}
 		// Sleep just a little to allow interleaving of pings for different proxies
 		time.Sleep(randomize(50 * time.Millisecond))
 	}
+	return true
 }
 
 func (p *proxy) httpPing(kb int, resetBBR bool) error {

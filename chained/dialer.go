@@ -86,16 +86,14 @@ func (p *proxy) runConnectivityChecks() {
 
 func (p *proxy) CheckConnectivity() bool {
 	elapsed := mtime.Stopwatch()
-	_, err := p.dialServer()
-	log.Debugf("Checking %v took %v, err: %v", p.Label(), elapsed(), err)
-	if err == nil {
+	result := p.probe(false)
+	log.Debugf("Checking %v took %v, succeed?: %v", p.Label(), elapsed(), result)
+	if result {
 		p.markSuccess()
 		return true
 	}
 	p.MarkFailure()
 	return false
-	// We intentionally don't close the connection and instead let the
-	// server's idle timeout handle it to make this less fingerprintable.
 }
 
 func randomize(d time.Duration) time.Duration {
