@@ -14,6 +14,7 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/mtime"
 )
 
 var (
@@ -27,16 +28,30 @@ func (p *proxy) Probe(forPerformance bool) bool {
 	}
 	log.Debugf("Actively probing %v%v", p.Label(), forPerformanceString)
 
+	elapsed := mtime.Stopwatch()
+	logResult := func(succeeded bool) bool {
+		forPerformanceString := ""
+		if forPerformance {
+			forPerformanceString = " for performance"
+		}
+		successString := "failed"
+		if succeeded {
+			successString = "succeeded"
+		}
+		log.Debugf("Actively probing %v%v took %v and %v", p.Label(), forPerformanceString, elapsed(), successString)
+		return succeeded
+	}
+
 	if !forPerformance {
 		// not probing for performance, just do a small ping
 		err := p.httpPing(1, false)
 		if err != nil {
 			log.Errorf("Error probing %v: %v", p.Label(), err)
 			p.MarkFailure()
-			return false
+			return logResult(false)
 		}
 		p.markSuccess()
-		return true
+		return logResult(true)
 	}
 
 	// probing for performance, do several increasingly large pings
@@ -48,12 +63,12 @@ func (p *proxy) Probe(forPerformance bool) bool {
 		err := p.httpPing(kb, i == 0)
 		if err != nil {
 			log.Errorf("Error probing %v for performance: %v", p.Label(), err)
-			return false
+			return logResult(false)
 		}
 		// Sleep just a little to allow interleaving of pings for different proxies
 		time.Sleep(randomize(50 * time.Millisecond))
 	}
-	return true
+	return logResult(true)
 }
 
 func (p *proxy) httpPing(kb int, resetBBR bool) error {
