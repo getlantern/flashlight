@@ -425,8 +425,6 @@ func (b *Balancer) run() {
 			for _, d := range oldDialers {
 				d.Stop()
 			}
-			// Make sure everything is actually cleaned up before the caller continues.
-			b.closeCh <- true
 			return
 		}
 	}
