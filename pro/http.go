@@ -2,6 +2,7 @@ package pro
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/proxied"
@@ -20,6 +21,7 @@ func GetHTTPClient() *http.Client {
 
 func getHTTPClient(getRt, otherRt http.RoundTripper) *http.Client {
 	return &http.Client{
+		Timeout: time.Second * 30,
 		Transport: proxied.AsRoundTripper(func(req *http.Request) (*http.Response, error) {
 			if req.Method == "GET" || req.Method == "HEAD" {
 				return getRt.RoundTrip(req)
