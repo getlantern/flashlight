@@ -18,7 +18,6 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
-	"github.com/getlantern/mtime"
 )
 
 const (
@@ -85,9 +84,14 @@ func (p *proxy) runConnectivityChecks() {
 }
 
 func (p *proxy) CheckConnectivity() bool {
-	elapsed := mtime.Stopwatch()
-	_, err := p.dialServer()
-	log.Debugf("Checking %v took %v, err: %v", p.Label(), elapsed(), err)
+	ctx, cancel := context.WithTimeout(context.Background(), chainedDialTimeout)
+	defer cancel()
+	// We use doDialCore which ensures that an actual TCP connection is opened
+	// rather than just dialing with a multiplexed protocol.
+	// TODO: this doesn't help for KCP where doDialCore is still using a
+	// multiplexed connection.
+	_, elapsed, err := p.doDialCore(ctx)
+	log.Debugf("Checking %v took %v, err: %v", p.Label(), elapsed, err)
 	if err == nil {
 		p.markSuccess()
 		return true
