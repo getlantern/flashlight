@@ -23,7 +23,7 @@ type testDialer struct {
 	attempts           int64
 	successes          int64
 	failures           int64
-	stopped            bool
+	stopped            int32
 	preconnected       chan ProxyConnection
 	connectivityChecks int
 }
@@ -162,5 +162,5 @@ func (d *testDialer) Probe(forPerformance bool) {
 }
 
 func (d *testDialer) Stop() {
-	d.stopped = true
+	atomic.StoreInt32(&d.stopped, 1)
 }

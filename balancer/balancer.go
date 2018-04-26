@@ -136,7 +136,8 @@ type Balancer struct {
 	trusted                         sortedDialers
 	sessionStats                    map[string]*dialStats
 	lastReset                       time.Time
-	closeCh                         chan bool
+	closeOnce                       sync.Once
+	closeCh                         chan interface{}
 	onActiveDialer                  chan Dialer
 	priorTopDialer                  Dialer
 	bandwidthKnownForPriorTopDialer bool
@@ -151,7 +152,7 @@ func New(overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
 	hasSucceedingDialer := make(chan bool, 1000)
 	b := &Balancer{
 		overallDialTimeout:  overallDialTimeout,
-		closeCh:             make(chan bool),
+		closeCh:             make(chan interface{}),
 		onActiveDialer:      make(chan Dialer, 1),
 		hasSucceedingDialer: hasSucceedingDialer,
 		HasSucceedingDialer: hasSucceedingDialer,
@@ -159,6 +160,7 @@ func New(overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
 
 	b.Reset(dialers...)
 	ops.Go(b.run)
+	ops.Go(b.periodicallyPrintStats)
 	return b
 }
 
@@ -173,17 +175,20 @@ func (b *Balancer) Reset(dialers ...Dialer) {
 		sessionStats[d.Label()] = &dialStats{}
 	}
 
+	lastReset := time.Now()
 	b.mu.Lock()
 	oldDialers := b.dialers
 	b.dialers = dls
 	b.sessionStats = sessionStats
-	b.lastReset = time.Now()
+	b.lastReset = lastReset
 	b.mu.Unlock()
 	b.sortDialers()
 
 	for _, dl := range oldDialers {
 		dl.Stop()
 	}
+
+	b.printStats(dialers, sessionStats, lastReset)
 }
 
 // ForceRedial forces dialers with long-running connections to reconnect
@@ -420,8 +425,6 @@ func (b *Balancer) run() {
 			for _, d := range oldDialers {
 				d.Stop()
 			}
-			// Make sure everything is actually cleaned up before the caller continues.
-			b.closeCh <- true
 			return
 		}
 	}
@@ -479,12 +482,28 @@ func checkConnectivityFor(d Dialer) {
 // Close closes this Balancer, stopping all background processing. You must call
 // Close to avoid leaking goroutines.
 func (b *Balancer) Close() {
-	select {
-	case b.closeCh <- true:
-		// Submitted close request
-		<-b.closeCh
-	default:
-		// already closing
+	b.closeOnce.Do(func() {
+		close(b.closeCh)
+	})
+}
+
+func (b *Balancer) periodicallyPrintStats() {
+	ticker := time.NewTicker(evalDialersInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			b.mu.Lock()
+			dialers := b.dialers
+			sessionStats := b.sessionStats
+			lastReset := b.lastReset
+			b.mu.Unlock()
+			b.printStats(dialers, sessionStats, lastReset)
+
+		case <-b.closeCh:
+			return
+		}
 	}
 }
 
@@ -586,12 +605,9 @@ func (b *Balancer) sortDialers() {
 	b.mu.Lock()
 	b.dialers = dialers
 	b.trusted = trusted
-	sessionStats := b.sessionStats
-	lastReset := b.lastReset
 	b.mu.Unlock()
 
 	b.lookForSucceedingDialer(dialers)
-	b.printStats(dialers, sessionStats, lastReset)
 }
 
 func (b *Balancer) lookForSucceedingDialer(dialers []Dialer) {

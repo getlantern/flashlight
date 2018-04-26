@@ -93,7 +93,7 @@ func forceProxy(s *ChainedServerInfo) {
 }
 
 func newHTTPProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
-	var dialServer func(ctx context.Context, p *proxy) (serverConn, error)
+	var doDialServer func(ctx context.Context, p *proxy) (serverConn, error)
 	if s.ENHTTPURL != "" {
 		tr := &frontedTransport{rt: eventual.NewValue()}
 		go func() {
@@ -107,18 +107,18 @@ func newHTTPProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pro
 		dial := enhttp.NewDialer(&http.Client{
 			Transport: tr,
 		}, s.ENHTTPURL)
-		dialServer = func(ctx context.Context, p *proxy) (serverConn, error) {
+		doDialServer = func(ctx context.Context, p *proxy) (serverConn, error) {
 			return &enhttpServerConn{dial}, nil
 		}
 	} else {
-		dialServer = func(ctx context.Context, p *proxy) (serverConn, error) {
+		doDialServer = func(ctx context.Context, p *proxy) (serverConn, error) {
 			return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
 				return p.dialCore(op)(ctx)
 			})
 		}
 	}
 
-	return newProxy(name, "http", "tcp", s.Addr, s, uc, s.ENHTTPURL != "", dialServer)
+	return newProxy(name, "http", "tcp", s.Addr, s, uc, s.ENHTTPURL != "", doDialServer)
 }
 
 func newHTTPSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {

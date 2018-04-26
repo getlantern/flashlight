@@ -7,6 +7,7 @@ import (
 	"net"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -54,7 +55,7 @@ func TestSingleDialer(t *testing.T) {
 	// Test close balancer
 	b.Close()
 	time.Sleep(250 * time.Millisecond)
-	assert.True(t, dialer.stopped)
+	assert.EqualValues(t, 1, atomic.LoadInt32(&dialer.stopped))
 	_, err = b.Dial("tcp", addr)
 	if assert.Error(t, err, "Dialing on closed balancer should fail") {
 		assert.Contains(t, "No dialers", err.Error(), "Error should have mentioned that there were no dialers")
