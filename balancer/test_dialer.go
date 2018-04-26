@@ -140,12 +140,6 @@ func (d *testDialer) Succeeding() bool {
 func (d *testDialer) ForceRedial() {
 }
 
-func (d *testDialer) CheckConnectivity() bool {
-	d.recalcLatency()
-	d.connectivityChecks++
-	return true
-}
-
 func (d *testDialer) recalcLatency() {
 	if d.baseLatency != 0 {
 		d.latency = d.baseLatency * latencyMultiplier
@@ -158,7 +152,10 @@ func (d *testDialer) connectivityChecksSinceLast() int {
 	return result
 }
 
-func (d *testDialer) Probe(forPerformance bool) {
+func (d *testDialer) Probe(forPerformance bool) bool {
+	d.recalcLatency()
+	d.connectivityChecks++
+	return true
 }
 
 func (d *testDialer) Stop() {

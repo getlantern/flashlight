@@ -105,17 +105,12 @@ type Dialer interface {
 	// Forces the dialer to reconnect to its proxy server
 	ForceRedial()
 
-	// CheckConnectivity checks connectivity to proxy and updates latency and
-	// attempts, successes and failures accordingly. It returns true if the check
-	// was successful. It should use a timeout internally to avoid blocking
-	// indefinitely.
-	CheckConnectivity() bool
-
 	// Probe performs active probing of the proxy to better understand
 	// connectivity and performance. If forPerformance is true, the dialer will
 	// probe more and with bigger data in order for bandwidth estimation to
-	// collect enough data to make a decent estimate.
-	Probe(forPerformance bool)
+	// collect enough data to make a decent estimate. Probe returns true if it was
+	// successfully able to communicate with the Proxy.
+	Probe(forPerformance bool) bool
 
 	// Stop stops background processing for this Dialer.
 	Stop()
@@ -474,7 +469,7 @@ func checkConnectivityForAll(dialers sortedDialers) {
 
 func checkConnectivityFor(d Dialer) {
 	for i := 0; i < connectivityRechecks; i++ {
-		d.CheckConnectivity()
+		d.Probe(false)
 		time.Sleep(randomize(recheckInterval))
 	}
 }
