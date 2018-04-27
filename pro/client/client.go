@@ -19,7 +19,7 @@ var (
 	log = golog.LoggerFor("pro-server-client")
 
 	defaultTimeout = time.Second * 30
-	maxRetries     = 12
+	maxRetries     = 4
 	retryBaseTime  = time.Millisecond * 100
 )
 
@@ -34,7 +34,7 @@ type Client struct {
 	locale     string
 }
 
-func (c *Client) do(req *http.Request) ([]byte, error) {
+func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
 	var buf []byte
 	if req.Body != nil {
 		var err error
@@ -43,7 +43,7 @@ func (c *Client) do(req *http.Request) ([]byte, error) {
 			return nil, err
 		}
 	}
-	req.Header.Set("User-Agent", "Lantern-"+common.Version)
+	common.AddCommonHeaders(user, req)
 
 	for i := 0; i < maxRetries; i++ {
 		client := c.httpClient
@@ -98,10 +98,10 @@ func (c *Client) UserCreate(user common.UserConfig) (res *Response, err error) {
 	if err != nil {
 		return nil, err
 	}
-	common.AddCommonHeaders(user, req)
+
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	payload, err := c.do(req)
+	payload, err := c.do(user, req)
 	if err != nil {
 		return nil, err
 	}
@@ -130,13 +130,12 @@ func (c *Client) UserData(user common.UserConfig) (res *Response, err error) {
 		return nil, err
 	}
 
-	common.AddCommonHeaders(user, req)
 	req.URL.RawQuery = url.Values{
 		"timeout": {"10"},
 		"locale":  {c.locale},
 	}.Encode()
 
-	payload, err := c.do(req)
+	payload, err := c.do(user, req)
 	if err != nil {
 		return nil, err
 	}
