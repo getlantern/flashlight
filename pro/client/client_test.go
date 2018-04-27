@@ -1,7 +1,6 @@
 package client
 
 import (
-	"os"
 	"testing"
 
 	"github.com/pborman/uuid"
@@ -25,18 +24,8 @@ var (
 
 var tc *Client
 
-const (
-	testAPIPrefix = "https://lantern-pro-server-staging.herokuapp.com"
-)
-
 func init() {
-	// Setting to defaults.
-	endpointPrefix = testAPIPrefix
-
-	// Overwritten by env?
-	if envAPIPrefix := os.Getenv("API_PREFIX"); envAPIPrefix != "" {
-		endpointPrefix = envAPIPrefix
-	}
+	common.ForceStaging()
 }
 
 func TestCreateClient(t *testing.T) {

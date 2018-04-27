@@ -21,7 +21,6 @@ var (
 	defaultTimeout = time.Second * 30
 	maxRetries     = 12
 	retryBaseTime  = time.Millisecond * 100
-	endpointPrefix = "https://" + common.ProAPIHost
 )
 
 const defaultLocale = "en_US"
@@ -44,7 +43,7 @@ func (c *Client) do(req *http.Request) ([]byte, error) {
 			return nil, err
 		}
 	}
-	req.Header.Set("User-Agent", "Lantern-Android-"+common.Version)
+	req.Header.Set("User-Agent", "Lantern-"+common.Version)
 
 	for i := 0; i < maxRetries; i++ {
 		client := c.httpClient
@@ -95,7 +94,7 @@ func NewClient(httpClient *http.Client) *Client {
 // UserCreate creates an user without asking for any payment.
 func (c *Client) UserCreate(user common.UserConfig) (res *Response, err error) {
 	body := strings.NewReader(url.Values{"locale": {c.locale}}.Encode())
-	req, err := http.NewRequest("POST", endpointPrefix+"/user-create", body)
+	req, err := http.NewRequest("POST", "https://"+common.ProAPIHost+"/user-create", body)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +125,7 @@ func (c *Client) UserStatus(user common.UserConfig) (*Response, error) {
 // UserData Returns all user data, including payments, referrals and all
 // available fields.
 func (c *Client) UserData(user common.UserConfig) (res *Response, err error) {
-	req, err := http.NewRequest("GET", endpointPrefix+"/user-data", nil)
+	req, err := http.NewRequest("GET", "https://"+common.ProAPIHost+"/user-data", nil)
 	if err != nil {
 		return nil, err
 	}
