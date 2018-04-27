@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
@@ -53,24 +54,39 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	// Try to update user data implicitly
 	_userID := req.Header.Get("X-Lantern-User-Id")
 	if _userID == "" {
+		log.Error("Request has an empty user ID")
 		return
 	}
 	userID, parseErr := strconv.ParseInt(_userID, 10, 64)
 	if parseErr != nil {
+		log.Errorf("User ID %s is invalid", _userID)
 		return
 	}
-	gzbody, readErr := ioutil.ReadAll(resp.Body)
+	body, readErr := ioutil.ReadAll(resp.Body)
 	if readErr != nil {
+		log.Errorf("Error read response body: %v", readErr)
 		return
 	}
-	resp.Body = ioutil.NopCloser(bytes.NewReader(gzbody))
-	gzr, readErr := gzip.NewReader(bytes.NewReader(gzbody))
-	if readErr != nil {
+	resp.Body = ioutil.NopCloser(bytes.NewReader(body))
+	encoding := resp.Header.Get("Content-Encoding")
+	var br io.Reader = bytes.NewReader(body)
+	switch encoding {
+	case "gzip":
+		gzr, readErr := gzip.NewReader(bytes.NewReader(body))
+		if readErr != nil {
+			log.Errorf("Unable to decode gzipped data: %v", readErr)
+			return
+		}
+		br = gzr
+	case "":
+	default:
+		log.Errorf("Unsupported response encoding %s", encoding)
 		return
 	}
 	user := client.User{}
-	readErr = json.NewDecoder(gzr).Decode(&user)
+	readErr = json.NewDecoder(br).Decode(&user)
 	if readErr != nil {
+		log.Errorf("Error decode JSON: %v", readErr)
 		return
 	}
 	log.Debugf("Updating user data implicitly for user %v", userID)

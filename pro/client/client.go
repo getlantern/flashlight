@@ -19,9 +19,8 @@ var (
 	log = golog.LoggerFor("pro-server-client")
 
 	defaultTimeout = time.Second * 30
-	maxRetries     = 12
+	maxRetries     = 4
 	retryBaseTime  = time.Millisecond * 100
-	endpointPrefix = "https://" + common.ProAPIHost
 )
 
 const defaultLocale = "en_US"
@@ -35,7 +34,7 @@ type Client struct {
 	locale     string
 }
 
-func (c *Client) do(req *http.Request) ([]byte, error) {
+func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
 	var buf []byte
 	if req.Body != nil {
 		var err error
@@ -44,7 +43,7 @@ func (c *Client) do(req *http.Request) ([]byte, error) {
 			return nil, err
 		}
 	}
-	req.Header.Set("User-Agent", "Lantern-Android-"+common.Version)
+	common.AddCommonHeaders(user, req)
 
 	for i := 0; i < maxRetries; i++ {
 		client := c.httpClient
@@ -95,14 +94,14 @@ func NewClient(httpClient *http.Client) *Client {
 // UserCreate creates an user without asking for any payment.
 func (c *Client) UserCreate(user common.UserConfig) (res *Response, err error) {
 	body := strings.NewReader(url.Values{"locale": {c.locale}}.Encode())
-	req, err := http.NewRequest("POST", endpointPrefix+"/user-create", body)
+	req, err := http.NewRequest("POST", "https://"+common.ProAPIHost+"/user-create", body)
 	if err != nil {
 		return nil, err
 	}
-	common.AddCommonHeaders(user, req)
+
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	payload, err := c.do(req)
+	payload, err := c.do(user, req)
 	if err != nil {
 		return nil, err
 	}
@@ -126,18 +125,17 @@ func (c *Client) UserStatus(user common.UserConfig) (*Response, error) {
 // UserData Returns all user data, including payments, referrals and all
 // available fields.
 func (c *Client) UserData(user common.UserConfig) (res *Response, err error) {
-	req, err := http.NewRequest("GET", endpointPrefix+"/user-data", nil)
+	req, err := http.NewRequest("GET", "https://"+common.ProAPIHost+"/user-data", nil)
 	if err != nil {
 		return nil, err
 	}
 
-	common.AddCommonHeaders(user, req)
 	req.URL.RawQuery = url.Values{
 		"timeout": {"10"},
 		"locale":  {c.locale},
 	}.Encode()
 
-	payload, err := c.do(req)
+	payload, err := c.do(user, req)
 	if err != nil {
 		return nil, err
 	}
