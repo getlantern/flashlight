@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	statsTrackingDialers = make(map[string]balancer.Dialer)
+	statsTrackingDialers []balancer.Dialer
 
 	statsMx sync.Mutex
 
@@ -33,8 +33,9 @@ func TrackStatsFor(dialers []balancer.Dialer) {
 		probeIfRequired(dialers)
 	}
 
+	statsTrackingDialers = make([]balancer.Dialer, 0, len(dialers))
 	for _, d := range dialers {
-		statsTrackingDialers[d.Addr()] = d
+		statsTrackingDialers = append(statsTrackingDialers, d)
 	}
 
 	statsMx.Unlock()
@@ -179,8 +180,8 @@ func persistStats() {
 		for _, d := range statsTrackingDialers {
 			dialers = append(dialers, d)
 		}
-		doPersistStats(dialers)
 		statsMx.Unlock()
+		doPersistStats(dialers)
 	}
 }
 
