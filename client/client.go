@@ -325,15 +325,15 @@ func (client *Client) Socks5Addr(timeout time.Duration) (interface{}, bool) {
 // Sometimes on Windows, http.Server may fail to accept new connections after
 // running for a random period. This method will try serve again.
 func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn func()) error {
-	log.Debug("About to listen")
-	if requestedAddr == "" {
-		requestedAddr = "127.0.0.1:0"
-	}
-
 	var err error
 	var l net.Listener
+	log.Debugf("About to listen at '%s'", requestedAddr)
 	if l, err = net.Listen("tcp", requestedAddr); err != nil {
-		return fmt.Errorf("Unable to listen: %q", err)
+		requestedAddr = "127.0.0.1:0"
+		log.Debugf("About to listen at '%s'", requestedAddr)
+		if l, err = net.Listen("tcp", requestedAddr); err != nil {
+			return fmt.Errorf("Unable to listen: %q", err)
+		}
 	}
 
 	client.l = l
