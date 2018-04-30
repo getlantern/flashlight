@@ -83,6 +83,7 @@ func (p *proxy) httpPing(kb int, resetBBR bool) error {
 	err := op.FailIf(p.doHttpPing(kb, resetBBR))
 	delta := time.Now().Sub(start)
 	op.Set("success", err == nil)
+	op.Set("probe_kb", kb)
 	op.SetMetricAvg("probe_rtt", float64(delta)/float64(time.Millisecond))
 	log.Debugf("Probe took %v", delta)
 
