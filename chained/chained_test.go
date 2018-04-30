@@ -127,7 +127,7 @@ func TestBadAddressToServer(t *testing.T) {
 		Addr:      "addr:567",
 		AuthToken: "token",
 	}, newTestUserConfig(), true, func(ctx context.Context, p *proxy) (serverConn, error) {
-		return nil, nil
+		return nil, fmt.Errorf("fail intentionally")
 	})
 	if !assert.NoError(t, err) {
 		return
