@@ -329,6 +329,7 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 	var l net.Listener
 	log.Debugf("About to listen at '%s'", requestedAddr)
 	if l, err = net.Listen("tcp", requestedAddr); err != nil {
+		log.Debugf("Error listening at '%s', fallback to default: %v", requestedAddr, err)
 		requestedAddr = "127.0.0.1:0"
 		log.Debugf("About to listen at '%s'", requestedAddr)
 		if l, err = net.Listen("tcp", requestedAddr); err != nil {
