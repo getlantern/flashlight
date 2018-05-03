@@ -450,8 +450,19 @@ func (b *Balancer) evalDialers() {
 
 	// Now that we have updated metrics, sort dialers for real
 	b.sortDialers()
+	newTopDialer = dialers[0]
+	topDialerChanged := b.priorTopDialer != nil && newTopDialer != b.priorTopDialer
 	b.priorTopDialer = newTopDialer
 	b.bandwidthKnownForPriorTopDialer = bandwidthKnownForNewTopDialer
+	op := ops.Begin("proxy_selection_stability")
+	if topDialerChanged {
+		op.SetMetricSum("top_dialer_changed", 1)
+		log.Debug("Top dialer changed")
+	} else {
+		op.SetMetricSum("top_dialer_unchanged", 1)
+		log.Debug("Top dialer unchanged")
+	}
+	op.End()
 }
 
 func checkConnectivityForAll(dialers sortedDialers) {
