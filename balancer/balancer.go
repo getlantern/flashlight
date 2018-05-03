@@ -545,6 +545,7 @@ func (b *Balancer) printStats(dialers sortedDialers, sessionStats map[string]*di
 		host, _, _ := net.SplitHostPort(d.Addr())
 		// Report stats to borda
 		op := ops.Begin("proxy_rank").
+			ProxyName(d.Name()).
 			Set("proxy_host", host).
 			SetMetricAvg("rank", rank).
 			SetMetricAvg("est_rtt", estLatency)
