@@ -79,8 +79,13 @@ func (p *proxy) httpPing(kb int, resetBBR bool) error {
 	op := ops.Begin("probe").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network())
 	defer op.End()
 
+	// Also include a probe_details op that's sampled but includes details like
+	// the actual error.
+	detailOp := ops.Begin("probe_details")
+	defer detailOp.End()
+
 	start := time.Now()
-	err := op.FailIf(p.doHttpPing(kb, resetBBR))
+	err := detailOp.FailIf(p.doHttpPing(kb, resetBBR))
 	delta := time.Now().Sub(start)
 	op.Set("success", err == nil)
 	op.Set("probe_kb", kb)
