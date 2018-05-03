@@ -43,3 +43,8 @@ brew tap wercker/wercker
 brew install wercker-cli
 wercker build
 ```
+
+### Throttling Proxies
+On OS X, you can use the [throttle](throttle) script to throttle individual
+proxies by IP, for example `throttle 1 104.131.91.213 1Mbit/s 0.05` throttles the
+proxy `104.131.91.213` to 1Mbit/s with a 5% packet loss rate.

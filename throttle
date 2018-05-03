@@ -1,0 +1,60 @@
+#! /usr/bin/env sh
+
+# Usage
+#
+# To throttle an IP:
+#       throttle <pipenumber>  <ip>            <bandwidth>  <packet loss rate>
+# e.g.  throttle 2             128.199.40.235  2Kbit/s      .8
+#
+# You can throttle multiple IPs by specifying different pipenumbers.
+#
+# To show status: throttle status
+#
+# To turn off: throttle off
+
+tfile=~/.throttle
+
+status() {
+  sudo pfctl -sa  2>&1 | grep "dummynet" | grep "from"
+  sudo dnctl show | grep queues | grep -v "999"
+}
+
+off() {
+  sudo pfctl -f /etc/pf.conf 2>/dev/null
+  sudo pfctl -d 2>&1 | grep -v ALTQ
+  sudo dnctl -q flush
+  rm $tfile
+}
+
+case $1 in
+  off)
+    off
+    ;;
+  status)
+    status
+    ;;
+  *)
+    number=$1
+    ip=$2
+
+    speed=$3
+    if [ -z "$speed" ]; then
+      speed="2Mbit/s"
+    fi
+
+    plr=$4
+    if [ -z "$plr" ]; then
+      plr="0.16"
+    fi
+
+    sudo sysctl -w net.inet.ip.forwarding=1
+    sudo pfctl -e 2>&1 | grep -v ALTQ
+    sudo dnctl pipe "${number}1" config bw $speed plr $plr
+    sudo dnctl pipe "${number}2" config bw $speed plr $plr
+
+    echo "dummynet out inet from any to $ip pipe ${number}1" >> $tfile
+    echo "dummynet in inet from $ip to any pipe ${number}2" >> $tfile
+    sudo pfctl -f ~/.throttle
+    status
+    ;;
+esac
