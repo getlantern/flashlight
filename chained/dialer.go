@@ -236,7 +236,7 @@ func (pc *proxyConnection) doDial(ctx context.Context, network, addr string) (ne
 	var conn net.Conn
 	var err error
 
-	op := ops.Begin("dial_for_balancer").ProxyType(ops.ProxyChained).ProxyAddr(pc.addr)
+	op := ops.Begin("dial_for_balancer").ChainedProxy(pc.Name(), pc.Addr(), pc.Protocol(), pc.Network())
 	defer op.End()
 
 	conn, err = pc.dialInternal(ctx, network, addr)
