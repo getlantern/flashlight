@@ -453,23 +453,25 @@ func (b *Balancer) evalDialers() {
 	newTopDialer = dialers[0]
 	bandwidthKnownForNewTopDialer = newTopDialer.EstBandwidth() > 0
 	topDialerChanged := b.priorTopDialer != nil && newTopDialer != b.priorTopDialer
-	op := ops.Begin("proxy_selection_stability")
-	if b.priorTopDialer == nil {
-		op.SetMetricSum("top_dialer_initialized", 1)
-		log.Debug("Top dialer initialized")
-	} else if topDialerChanged {
-		op.SetMetricSum("top_dialer_changed", 1)
-		reason := "performance"
-		if !b.priorTopDialer.Succeeding() {
-			reason = "failing"
+	if len(dialers) > 1 {
+		op := ops.Begin("proxy_selection_stability")
+		if b.priorTopDialer == nil {
+			op.SetMetricSum("top_dialer_initialized", 1)
+			log.Debug("Top dialer initialized")
+		} else if topDialerChanged {
+			op.SetMetricSum("top_dialer_changed", 1)
+			reason := "performance"
+			if !b.priorTopDialer.Succeeding() {
+				reason = "failing"
+			}
+			op.Set("reason", reason)
+			log.Debug("Top dialer changed")
+		} else {
+			op.SetMetricSum("top_dialer_unchanged", 1)
+			log.Debug("Top dialer unchanged")
 		}
-		op.Set("reason", reason)
-		log.Debug("Top dialer changed")
-	} else {
-		op.SetMetricSum("top_dialer_unchanged", 1)
-		log.Debug("Top dialer unchanged")
+		op.End()
 	}
-	op.End()
 
 	b.priorTopDialer = newTopDialer
 	b.bandwidthKnownForPriorTopDialer = bandwidthKnownForNewTopDialer
