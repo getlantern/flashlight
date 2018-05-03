@@ -115,7 +115,6 @@ func (p *proxy) ConsecFailures() int64 {
 }
 
 func (p *proxy) Succeeding() bool {
-	log.Debugf("%d / %d : %d", p.ConsecSuccesses(), p.ConsecFailures(), p.consecRWSuccesses.Get())
 	// To avoid turbulence when network glitches, treat proxies with a small
 	// amount failures as succeeding.
 	// TODO: OTOH, when the proxy just recovered from failing, should wait for
