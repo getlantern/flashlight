@@ -75,7 +75,7 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 	op := ctx.Value(ctxKeyOp).(*ops.Op)
 
 	if isAndroid() && req.URL != nil && strings.HasPrefix(req.URL.Path, "/pro/") {
-		return client.handleProRequest(ctx, req, op)
+		return client.interceptProRequest(ctx, req, op)
 	}
 
 	adSwapURL := client.adSwapURL(req)
@@ -124,7 +124,9 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 	return next(ctx, req)
 }
 
-func (client *Client) handleProRequest(ctx filters.Context, r *http.Request, op *ops.Op) (*http.Response, filters.Context, error) {
+// interceptProRequest specifically looks for and properly handles pro server
+// requests (similar to desktop's APIHandler)
+func (client *Client) interceptProRequest(ctx filters.Context, r *http.Request, op *ops.Op) (*http.Response, filters.Context, error) {
 	log.Debugf("Intercepting request to pro server: %v", r.URL.Path)
 	r.URL.Path = r.URL.Path[4:]
 	r.URL.Scheme = "https"
@@ -140,6 +142,7 @@ func (client *Client) handleProRequest(ctx filters.Context, r *http.Request, op 
 	r.Header.Del("Origin")
 	resp, err := pro.GetHTTPClient().Do(r)
 	if err != nil {
+		log.Error(err)
 		resp = &http.Response{
 			StatusCode: http.StatusForbidden,
 			Close:      true,
