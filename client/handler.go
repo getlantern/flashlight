@@ -70,7 +70,8 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 
 	op := ctx.Value(ctxKeyOp).(*ops.Op)
 
-	if runtime.GOOS == "android" && req.URL != nil && strings.HasPrefix(req.URL.Path, "/pro/") {
+	if runtime.GOOS == "android" && req.URL != nil && req.URL.Host == "localhost" &&
+		strings.HasPrefix(req.URL.Path, "/pro/") {
 		return client.interceptProRequest(ctx, req, op)
 	}
 
