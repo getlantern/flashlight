@@ -139,7 +139,7 @@ func (client *Client) interceptProRequest(ctx filters.Context, r *http.Request, 
 	r.Header.Del("Origin")
 	resp, err := pro.GetHTTPClient().Do(r)
 	if err != nil {
-		log.Error(err)
+		log.Errorf("Error intercepting request to pro server: %v", err)
 		resp = &http.Response{
 			StatusCode: http.StatusForbidden,
 			Close:      true,
