@@ -58,10 +58,6 @@ func normalizeExoAd(req *http.Request) (*http.Request, bool) {
 	return req, false
 }
 
-func isAndroid() bool {
-	return runtime.GOOS == "android"
-}
-
 func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
 	req, exoclick := normalizeExoAd(r)
 
@@ -74,7 +70,7 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 
 	op := ctx.Value(ctxKeyOp).(*ops.Op)
 
-	if isAndroid() && req.URL != nil && strings.HasPrefix(req.URL.Path, "/pro/") {
+	if runtime.GOOS == "android" && req.URL != nil && strings.HasPrefix(req.URL.Path, "/pro/") {
 		return client.interceptProRequest(ctx, req, op)
 	}
 
