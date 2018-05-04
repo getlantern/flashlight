@@ -187,7 +187,7 @@ func TestProxying(t *testing.T) {
 			missingOps = make([]string, 0)
 			opsMx.RLock()
 			for _, op := range flashlight.FullyReportedOps {
-				if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" || op == "probe" || op == "proxy_rank" {
+				if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" || op == "probe" || op == "proxy_rank" || op == "proxy_selection_stability" {
 					// ignore these, as we don't do them (reliably) during the integration test
 					continue
 				}

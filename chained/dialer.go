@@ -115,7 +115,6 @@ func (p *proxy) ConsecFailures() int64 {
 }
 
 func (p *proxy) Succeeding() bool {
-	log.Debugf("%d / %d : %d", p.ConsecSuccesses(), p.ConsecFailures(), p.consecRWSuccesses.Get())
 	// To avoid turbulence when network glitches, treat proxies with a small
 	// amount failures as succeeding.
 	// TODO: OTOH, when the proxy just recovered from failing, should wait for
@@ -236,7 +235,7 @@ func (pc *proxyConnection) doDial(ctx context.Context, network, addr string) (ne
 	var conn net.Conn
 	var err error
 
-	op := ops.Begin("dial_for_balancer").ProxyType(ops.ProxyChained).ProxyAddr(pc.addr)
+	op := ops.Begin("dial_for_balancer").ChainedProxy(pc.Name(), pc.Addr(), pc.Protocol(), pc.Network())
 	defer op.End()
 
 	conn, err = pc.dialInternal(ctx, network, addr)
