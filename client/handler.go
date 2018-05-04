@@ -6,12 +6,14 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"runtime"
 	"strings"
 	"time"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/proxy/filters"
 )
@@ -56,6 +58,10 @@ func normalizeExoAd(req *http.Request) (*http.Request, bool) {
 	return req, false
 }
 
+func isAndroid() bool {
+	return runtime.GOOS == "android"
+}
+
 func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
 	req, exoclick := normalizeExoAd(r)
 
@@ -67,6 +73,10 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 	req.URL.Host = req.Host
 
 	op := ctx.Value(ctxKeyOp).(*ops.Op)
+
+	if isAndroid() && req.URL != nil && strings.HasPrefix(req.URL.Path, "/pro/") {
+		return client.handleProRequest(ctx, req, op)
+	}
 
 	adSwapURL := client.adSwapURL(req)
 	if !exoclick && adSwapURL == "" && !client.easylist.Allow(req) {
@@ -112,6 +122,30 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 	}
 
 	return next(ctx, req)
+}
+
+func (client *Client) handleProRequest(ctx filters.Context, r *http.Request, op *ops.Op) (*http.Response, filters.Context, error) {
+	log.Debugf("Intercepting request to pro server: %v", r.URL.Path)
+	r.URL.Path = r.URL.Path[4:]
+	r.URL.Scheme = "https"
+	r.URL.Host = common.ProAPIHost
+	r.Host = r.URL.Host
+	r.RequestURI = "" // http: Request.RequestURI can't be set in client requests.
+	r.Header.Set("Access-Control-Allow-Headers", strings.Join([]string{
+		common.DeviceIdHeader,
+		common.ProTokenHeader,
+		common.UserIdHeader,
+	}, ", "))
+	common.AddCommonHeadersWithOptions(client.user, r, false)
+	r.Header.Del("Origin")
+	resp, err := pro.GetHTTPClient().Do(r)
+	if err != nil {
+		resp = &http.Response{
+			StatusCode: http.StatusForbidden,
+			Close:      true,
+		}
+	}
+	return filters.ShortCircuit(ctx, r, resp)
 }
 
 func (client *Client) easyblock(ctx filters.Context, req *http.Request) (*http.Response, filters.Context, error) {
