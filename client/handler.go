@@ -126,16 +126,7 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 func (client *Client) interceptProRequest(ctx filters.Context, r *http.Request, op *ops.Op) (*http.Response, filters.Context, error) {
 	log.Debugf("Intercepting request to pro server: %v", r.URL.Path)
 	r.URL.Path = r.URL.Path[4:]
-	r.URL.Scheme = "https"
-	r.URL.Host = common.ProAPIHost
-	r.Host = r.URL.Host
-	r.RequestURI = "" // http: Request.RequestURI can't be set in client requests.
-	r.Header.Set("Access-Control-Allow-Headers", strings.Join([]string{
-		common.DeviceIdHeader,
-		common.ProTokenHeader,
-		common.UserIdHeader,
-	}, ", "))
-	common.AddCommonHeadersWithOptions(client.user, r, false)
+	pro.PrepareProRequest(r, client.user)
 	r.Header.Del("Origin")
 	resp, err := pro.GetHTTPClient().Do(r)
 	if err != nil {
