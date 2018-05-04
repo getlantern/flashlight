@@ -141,7 +141,7 @@ func (client *Client) interceptProRequest(ctx filters.Context, r *http.Request, 
 	if err != nil {
 		log.Errorf("Error intercepting request to pro server: %v", err)
 		resp = &http.Response{
-			StatusCode: http.StatusForbidden,
+			StatusCode: http.StatusInternalServerError,
 			Close:      true,
 		}
 	}
