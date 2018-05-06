@@ -6,12 +6,14 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"runtime"
 	"strings"
 	"time"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/proxy/filters"
 )
@@ -68,6 +70,11 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 
 	op := ctx.Value(ctxKeyOp).(*ops.Op)
 
+	if runtime.GOOS == "android" && req.URL != nil && req.URL.Host == "localhost" &&
+		strings.HasPrefix(req.URL.Path, "/pro/") {
+		return client.interceptProRequest(ctx, req, op)
+	}
+
 	adSwapURL := client.adSwapURL(req)
 	if !exoclick && adSwapURL == "" && !client.easylist.Allow(req) {
 		// Don't record this as proxying
@@ -112,6 +119,24 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 	}
 
 	return next(ctx, req)
+}
+
+// interceptProRequest specifically looks for and properly handles pro server
+// requests (similar to desktop's APIHandler)
+func (client *Client) interceptProRequest(ctx filters.Context, r *http.Request, op *ops.Op) (*http.Response, filters.Context, error) {
+	log.Debugf("Intercepting request to pro server: %v", r.URL.Path)
+	r.URL.Path = r.URL.Path[4:]
+	pro.PrepareProRequest(r, client.user)
+	r.Header.Del("Origin")
+	resp, err := pro.GetHTTPClient().Do(r)
+	if err != nil {
+		log.Errorf("Error intercepting request to pro server: %v", err)
+		resp = &http.Response{
+			StatusCode: http.StatusInternalServerError,
+			Close:      true,
+		}
+	}
+	return filters.ShortCircuit(ctx, r, resp)
 }
 
 func (client *Client) easyblock(ctx filters.Context, req *http.Request) (*http.Response, filters.Context, error) {

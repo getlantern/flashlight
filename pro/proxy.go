@@ -94,6 +94,23 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	return
 }
 
+func PrepareProRequest(r *http.Request, uc common.UserConfig) {
+	r.URL.Scheme = "https"
+	r.URL.Host = common.ProAPIHost
+	r.Host = r.URL.Host
+	r.RequestURI = "" // http: Request.RequestURI can't be set in client requests.
+	r.Header.Set("Access-Control-Allow-Headers", strings.Join([]string{
+		common.DeviceIdHeader,
+		common.ProTokenHeader,
+		common.UserIdHeader,
+	}, ", "))
+
+	// Add auth headers only if not present, to avoid race conditions
+	// when creating new user or switching user, i.e., linking device
+	// to a new account. (ovewriteAuth=false)
+	common.AddCommonHeadersWithOptions(uc, r, false)
+}
+
 // APIHandler returns an HTTP handler that specifically looks for and properly
 // handles pro server requests.
 func APIHandler(uc common.UserConfig) http.Handler {
@@ -105,20 +122,7 @@ func APIHandler(uc common.UserConfig) http.Handler {
 			if strings.HasPrefix(r.URL.Path, "/pro/") {
 				r.URL.Path = r.URL.Path[4:]
 			}
-			r.URL.Scheme = "https"
-			r.URL.Host = common.ProAPIHost
-			r.Host = r.URL.Host
-			r.RequestURI = "" // http: Request.RequestURI can't be set in client requests.
-			r.Header.Set("Access-Control-Allow-Headers", strings.Join([]string{
-				common.DeviceIdHeader,
-				common.ProTokenHeader,
-				common.UserIdHeader,
-			}, ", "))
-
-			// Add auth headers only if not present, to avoid race conditions
-			// when creating new user or switching user, i.e., linking device
-			// to a new account. (ovewriteAuth=false)
-			common.AddCommonHeadersWithOptions(uc, r, false)
+			PrepareProRequest(r, uc)
 		},
 	}
 }
