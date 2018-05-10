@@ -26,7 +26,7 @@ const (
 )
 
 var (
-	proxyNameRegex = regexp.MustCompile(`(fp-([a-z]+-)?([a-z0-9]+)-[0-9]{8}-[0-9]+)(-.+)?`)
+	proxyNameRegex = regexp.MustCompile(`(fp-([a-z0-9]+-)?([a-z0-9]+)-[0-9]{8}-[0-9]+)(-.+)?`)
 )
 
 // Op decorates an ops.Op with convenience methods.
