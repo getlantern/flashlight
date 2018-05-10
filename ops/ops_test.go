@@ -60,6 +60,7 @@ func TestProxyName(t *testing.T) {
 	runTest(true, "fp-https-donyc3-20180101-006-kcp", "fp-https-donyc3-20180101-006", "donyc3")
 	runTest(true, "fp-donyc3-20180101-006-kcp", "fp-donyc3-20180101-006", "donyc3")
 	runTest(true, "fp-donyc3-20180101-006", "fp-donyc3-20180101-006", "donyc3")
+	runTest(true, "fp-obfs4-donyc3-20160715-005", "fp-obfs4-donyc3-20160715-005", "donyc3")
 	runTest(false, "fp-14325-adsfds-006", "", "")
 	runTest(false, "cloudcompile", "", "")
 }
