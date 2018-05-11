@@ -25,7 +25,7 @@ git submodule update  || die "Could not update submodules?"
 ./fetchcfg.py ir >> proxies.yaml || die "Could not fetch proxy in etc region?"
 ./fetchcfg.py ir >> proxies.yaml || die "Could not fetch proxy in etc region?"
 ./fetchcfg.py ir >> proxies.yaml || die "Could not fetch proxy in etc region?"
-./fetchcfg.py sea > proxies.yaml || die "Could not fetch proxy in sea region?"
+./fetchcfg.py sea >> proxies.yaml || die "Could not fetch proxy in sea region?"
 ./fetchcfg.py sea >> proxies.yaml || die "Could not fetch proxy in sea region?"
 ./fetchcfg.py sea >> proxies.yaml || die "Could not fetch proxy in sea region?"
 cd -
