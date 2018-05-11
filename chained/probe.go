@@ -85,8 +85,10 @@ func (p *proxy) httpPing(kb int, resetBBR bool) error {
 	defer detailOp.End()
 
 	start := time.Now()
-	err := detailOp.FailIf(p.doHttpPing(kb, resetBBR))
+	err := p.doHttpPing(kb, resetBBR)
 	delta := time.Now().Sub(start)
+	detailOp.FailIf(err)
+	op.FailIf(err)
 	op.Set("success", err == nil)
 	op.Set("probe_kb", kb)
 	op.SetMetricAvg("probe_rtt", float64(delta)/float64(time.Millisecond))
