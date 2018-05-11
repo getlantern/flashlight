@@ -17,4 +17,4 @@ rm yaml-temp
 
 git add ../config/generated/embeddedGlobal.go || die "Could not add resources?"
 
-echo "Finished generating resources and added ../config/generated/global.go. Please simply commit that file after confirming the process seemed to have correctly generatated everything -- check lantern.yaml in particular, but no need to check that in"
+echo "Finished generating resources and added ../config/generated/embeddedGlobal.go. Please simply commit that file after manually viewing it to make sure it looks sane"
