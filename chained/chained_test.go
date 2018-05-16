@@ -175,28 +175,42 @@ func TestPreconnect(t *testing.T) {
 		AuthToken: "token",
 	}, newTestUserConfig(), true, func(ctx context.Context, p *proxy) (serverConn, error) {
 		conn, err := net.DialTimeout(l.Addr().Network(), l.Addr().String(), 2*time.Second)
+		// sleep long enough that test would fail if we're not dialing in parallel
+		time.Sleep(50 * time.Millisecond)
 		return p.defaultServerConn(conn, err)
 	})
 	assert.NoError(t, err)
 	time.Sleep(100 * time.Millisecond)
 	assert.Equal(t, defaultInitPreconnect, p.NumPreconnected()+p.NumPreconnecting(), "should preconnect on start")
-	<-p.Preconnected()
-	<-p.Preconnected()
+	p.Preconnected()
+	p.Preconnected()
 	time.Sleep(100 * time.Millisecond)
-	assert.Equal(t, defaultInitPreconnect, p.NumPreconnected()+p.NumPreconnecting(), "should preconnect to keep minimum connections available")
+	assert.Equal(t, defaultInitPreconnect, p.NumPreconnected()+p.NumPreconnecting(), "should preconnect to replace used connections")
 	p.Preconnect()
 	time.Sleep(100 * time.Millisecond)
-	assert.Equal(t, defaultInitPreconnect+1, p.NumPreconnected()+p.NumPreconnecting(), "should preconnect when reqeusted")
+	assert.Equal(t, defaultInitPreconnect+1, p.NumPreconnected()+p.NumPreconnecting(), "should preconnect when requested")
+
 out:
 	for {
-		select {
-		case <-p.Preconnected():
-		default:
+		pc := p.Preconnected()
+		if pc == nil {
 			break out
 		}
 	}
 	time.Sleep(100 * time.Millisecond)
-	assert.Equal(t, defaultInitPreconnect, p.NumPreconnected()+p.NumPreconnecting(), "should refill asap")
+	assert.Equal(t, defaultInitPreconnect+2, p.NumPreconnected()+p.NumPreconnecting(), "should refill asap")
+
+	now := time.Now()
+	// Expire all proxy connections, drain them and make sure we go down to 0
+	for i := 0; i <= p.NumPreconnected()+p.NumPreconnecting(); i++ {
+		pc := <-p.preconnected
+		pc.expiresAt = now
+		p.preconnected <- pc
+	}
+
+	p.Preconnected()
+	time.Sleep(100 * time.Millisecond)
+	assert.Equal(t, 1, p.NumPreconnected()+p.NumPreconnecting(), "expired connections should cause queue to get drained")
 }
 
 func startServer(t *testing.T) net.Listener {

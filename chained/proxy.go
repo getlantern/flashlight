@@ -330,8 +330,7 @@ type proxy struct {
 	mostRecentABETime time.Time
 	doDialCore        func(ctx context.Context) (net.Conn, time.Duration, error)
 	preconnects       chan interface{}
-	preconnected      chan balancer.ProxyConnection
-	preconnectedPool  chan balancer.ProxyConnection
+	preconnected      chan *proxyConnection
 	forceRecheckCh    chan bool
 	closeCh           chan bool
 	closeOnce         sync.Once
@@ -349,23 +348,22 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 	}
 
 	p := &proxy{
-		name:             name,
-		protocol:         protocol,
-		network:          network,
-		addr:             addr,
-		authToken:        s.AuthToken,
-		user:             uc,
-		trusted:          trusted,
-		bias:             s.Bias,
-		doDialServer:     dialServer,
-		emaLatency:       ema.NewDuration(0, 0.8),
-		forceRecheckCh:   make(chan bool, 1),
-		forceRedial:      abool.New(),
-		preconnects:      make(chan interface{}, maxPreconnect),
-		preconnected:     make(chan balancer.ProxyConnection, initPreconnect),
-		preconnectedPool: make(chan balancer.ProxyConnection, maxPreconnect-initPreconnect),
-		closeCh:          make(chan bool, 1),
-		consecSuccesses:  1, // be optimistic
+		name:            name,
+		protocol:        protocol,
+		network:         network,
+		addr:            addr,
+		authToken:       s.AuthToken,
+		user:            uc,
+		trusted:         trusted,
+		bias:            s.Bias,
+		doDialServer:    dialServer,
+		emaLatency:      ema.NewDuration(0, 0.8),
+		forceRecheckCh:  make(chan bool, 1),
+		forceRedial:     abool.New(),
+		preconnects:     make(chan interface{}, maxPreconnect),
+		preconnected:    make(chan *proxyConnection, maxPreconnect),
+		closeCh:         make(chan bool, 1),
+		consecSuccesses: 1, // be optimistic
 	}
 
 	if s.Bias == 0 && s.ENHTTPURL != "" {
@@ -392,7 +390,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 
 	go p.runConnectivityChecks()
 	log.Debugf("%v preconnects, init: %d   max: %d", p.Label(), initPreconnect, maxPreconnect)
-	go p.processPreconnects(initPreconnect)
+	p.processPreconnects(initPreconnect)
 	return p, nil
 }
 

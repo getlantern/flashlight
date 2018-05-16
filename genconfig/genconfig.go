@@ -459,8 +459,14 @@ func buildModel(cas map[string]*castat, masquerades []*masquerade, useFallbacks 
 func fallbackOK(f *chained.ChainedServerInfo, dialer balancer.Dialer) bool {
 	timeout := 30 * time.Second
 	deadline := time.Now().Add(timeout)
-	select {
-	case pd := <-dialer.Preconnected():
+	for {
+		if time.Now().After(deadline) {
+			return false
+		}
+		pd := dialer.Preconnected()
+		if pd == nil {
+			time.Sleep(250 * time.Millisecond)
+		}
 		ctx, cancel := context.WithDeadline(context.Background(), deadline)
 		defer cancel()
 		conn, _, err := pd.DialContext(ctx, "tcp", "http://www.google.com")
@@ -472,8 +478,6 @@ func fallbackOK(f *chained.ChainedServerInfo, dialer balancer.Dialer) bool {
 			log.Debugf("Error closing connection: %v", err)
 		}
 		return true
-	case <-time.After(timeout):
-		return false
 	}
 }
 
