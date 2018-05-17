@@ -157,7 +157,8 @@ func NewClient(
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
 
 	var mitmOpts *mitm.Opts
-	if runtime.GOOS != "android" {
+	// Totally disabling MITM for now
+	if runtime.GOOS != "android" && false {
 		mitmOpts = &mitm.Opts{
 			PKFile:             filepath.Join(appdir.General("Lantern"), "mitmkey.pem"),
 			CertFile:           filepath.Join(appdir.General("Lantern"), "mitmcert.pem"),
