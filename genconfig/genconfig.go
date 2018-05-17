@@ -466,6 +466,7 @@ func fallbackOK(f *chained.ChainedServerInfo, dialer balancer.Dialer) bool {
 		pd := dialer.Preconnected()
 		if pd == nil {
 			time.Sleep(250 * time.Millisecond)
+			continue
 		}
 		ctx, cancel := context.WithDeadline(context.Background(), deadline)
 		defer cancel()
