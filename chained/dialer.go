@@ -189,6 +189,7 @@ func (p *proxy) Preconnected() balancer.ProxyConnection {
 			// found a preconnected conn
 			if pc.expiresAt.Before(time.Now()) {
 				// discard expired connection
+				pc.conn.Close()
 				continue
 			}
 			return pc
@@ -395,6 +396,8 @@ func (p *proxy) initPersistentConnection(addr string, conn net.Conn) error {
 type serverConn interface {
 	// dialOrigin dials out to the given origin address using the connected server
 	dialOrigin(ctx context.Context, network, addr string) (net.Conn, error)
+
+	Close() error
 }
 
 // defaultServerConn is the standard implementation of serverConn to typical
@@ -426,6 +429,10 @@ func (lsc lazyServerConn) dialOrigin(ctx context.Context, network, addr string) 
 	return conn.dialOrigin(ctx, network, addr)
 }
 
+func (lsc lazyServerConn) Close() error {
+	return nil
+}
+
 // enhttpServerConn represents a serverConn to domain-fronted servers. Unlike a
 // defaultServerConn, an enhttpServerConn doesn't actually have a real TCP/UDP
 // connection, since it operates by making multiple HTTP requests via a CDN like
@@ -442,4 +449,8 @@ func (conn *enhttpServerConn) dialOrigin(ctx context.Context, network, addr stri
 		})
 	}
 	return dfConn, err
+}
+
+func (conn *enhttpServerConn) Close() error {
+	return nil
 }
