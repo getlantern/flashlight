@@ -229,26 +229,19 @@ func TestDialShortcut(t *testing.T) {
 }
 
 type testDialer struct {
-	name         string
-	latency      time.Duration
-	dial         func(network, addr string) (net.Conn, error)
-	bandwidth    float64
-	untrusted    bool
-	failing      bool
-	attempts     int64
-	successes    int64
-	failures     int64
-	stopped      bool
-	preconnected chan balancer.ProxyConnection
+	name      string
+	latency   time.Duration
+	dial      func(network, addr string) (net.Conn, error)
+	bandwidth float64
+	untrusted bool
+	failing   bool
+	attempts  int64
+	successes int64
+	failures  int64
+	stopped   bool
 }
 
 func start(d *testDialer) *testDialer {
-	d.preconnected = make(chan balancer.ProxyConnection)
-	go func() {
-		for {
-			d.preconnected <- d
-		}
-	}()
 	return d
 }
 
@@ -284,12 +277,8 @@ func (d *testDialer) NumPreconnected() int {
 func (d *testDialer) Preconnect() {
 }
 
-func (d *testDialer) Preconnected() <-chan balancer.ProxyConnection {
-	return d.preconnected
-}
-
-func (d *testDialer) ExpiresAt() time.Time {
-	return time.Now().Add(365 * 24 * time.Hour)
+func (d *testDialer) Preconnected() balancer.ProxyConnection {
+	return d
 }
 
 func (d *testDialer) Dial(network, addr string) (net.Conn, error) {

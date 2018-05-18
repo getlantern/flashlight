@@ -123,25 +123,23 @@ func (p *proxy) Succeeding() bool {
 		p.consecRWSuccesses.Get() > -5
 }
 
-func (p *proxy) processPreconnects(minPreconnect int) {
-	// Queue the connections in two phases so there's a chance to check queue
-	// length whenever the preconnected queue is consumed.
-	go func() {
-		for c := range p.preconnectedPool {
-			p.preconnected <- c
-			// Try best to keep a minimum number of connections ready
-			for p.NumPreconnecting()+p.NumPreconnected() < minPreconnect {
-				p.Preconnect()
-			}
-		}
-	}()
-	// Stir it up
-	p.Preconnect()
+func (p *proxy) processPreconnects(initPreconnect int) {
+	// Fill pool to initial size
+	for i := 0; i < initPreconnect; i++ {
+		p.Preconnect()
+	}
+	// Preconnect in parallel
+	maxPreconnects := cap(p.preconnects)
+	for i := 0; i < maxPreconnects; i++ {
+		go p.doPreconnect()
+	}
+}
+
+func (p *proxy) doPreconnect() {
 	// As long as we've got requests to preconnect, preconnect
 	for {
 		select {
 		case <-p.closeCh:
-			close(p.preconnectedPool)
 			return
 		case <-p.preconnects:
 			conn, err := p.dialServer()
@@ -149,13 +147,13 @@ func (p *proxy) processPreconnects(minPreconnect int) {
 				log.Errorf("Unable to dial server %v: %s", p.Label(), err)
 				time.Sleep(250 * time.Millisecond)
 			} else {
-				p.preconnectedPool <- p.newPreconnected(conn)
+				p.preconnected <- p.newPreconnected(conn)
 			}
 		}
 	}
 }
 
-func (p *proxy) newPreconnected(conn serverConn) balancer.ProxyConnection {
+func (p *proxy) newPreconnected(conn serverConn) *proxyConnection {
 	return &proxyConnection{
 		proxy:     p,
 		conn:      conn,
@@ -177,11 +175,29 @@ func (p *proxy) NumPreconnecting() int {
 }
 
 func (p *proxy) NumPreconnected() int {
-	return len(p.preconnected) + len(p.preconnectedPool)
+	return len(p.preconnected)
 }
 
-func (p *proxy) Preconnected() <-chan balancer.ProxyConnection {
-	return p.preconnected
+func (p *proxy) Preconnected() balancer.ProxyConnection {
+	// always preconnect to replace the returned connection, or request a new
+	// connection in case we didn't have any.
+	defer p.Preconnect()
+
+	for {
+		select {
+		case pc := <-p.preconnected:
+			// found a preconnected conn
+			if pc.expiresAt.Before(time.Now()) {
+				// discard expired connection
+				pc.conn.Close()
+				continue
+			}
+			return pc
+		default:
+			// none immediately available and return nil
+			return nil
+		}
+	}
 }
 
 // DialContext dials using provided context
@@ -198,10 +214,6 @@ func (pc *proxyConnection) DialContext(ctx context.Context, network, addr string
 		pc.markSuccess()
 	}
 	return conn, upstream, err
-}
-
-func (pc *proxyConnection) ExpiresAt() time.Time {
-	return pc.expiresAt
 }
 
 func (p *proxy) markSuccess() {
@@ -384,6 +396,8 @@ func (p *proxy) initPersistentConnection(addr string, conn net.Conn) error {
 type serverConn interface {
 	// dialOrigin dials out to the given origin address using the connected server
 	dialOrigin(ctx context.Context, network, addr string) (net.Conn, error)
+
+	Close() error
 }
 
 // defaultServerConn is the standard implementation of serverConn to typical
@@ -415,6 +429,10 @@ func (lsc lazyServerConn) dialOrigin(ctx context.Context, network, addr string) 
 	return conn.dialOrigin(ctx, network, addr)
 }
 
+func (lsc lazyServerConn) Close() error {
+	return nil
+}
+
 // enhttpServerConn represents a serverConn to domain-fronted servers. Unlike a
 // defaultServerConn, an enhttpServerConn doesn't actually have a real TCP/UDP
 // connection, since it operates by making multiple HTTP requests via a CDN like
@@ -431,4 +449,8 @@ func (conn *enhttpServerConn) dialOrigin(ctx context.Context, network, addr stri
 		})
 	}
 	return dfConn, err
+}
+
+func (conn *enhttpServerConn) Close() error {
+	return nil
 }

@@ -37,9 +37,6 @@ type ProxyConnection interface {
 	// DialContext dials out to the given origin. failedUpstream indicates whether
 	// this was an upstream error (as opposed to errors connecting to the proxy).
 	DialContext(ctx context.Context, network, addr string) (conn net.Conn, failedUpstream bool, err error)
-
-	// ExpiresAt indicates when this proxy connection is no longer usable
-	ExpiresAt() time.Time
 }
 
 // Dialer provides the ability to dial a proxy and obtain information needed to
@@ -71,9 +68,9 @@ type Dialer interface {
 	// NumPreconnected returns the number of preconnected connections.
 	NumPreconnected() int
 
-	// Preconnected() returns a channel from which we can obtain
-	// ProxyConnections.
-	Preconnected() <-chan ProxyConnection
+	// Preconnected() returns a preconnected ProxyConnection or nil if none is
+	// immediately available.
+	Preconnected() ProxyConnection
 
 	// MarkFailure marks a dial failure on this dialer.
 	MarkFailure()
@@ -119,7 +116,6 @@ type Dialer interface {
 type dialStats struct {
 	success int64
 	failure int64
-	expired int64
 }
 
 // Balancer balances connections among multiple Dialers.
@@ -241,7 +237,6 @@ type balancedDial struct {
 	addr           string
 	sessionStats   map[string]*dialStats
 	dialers        []Dialer
-	preconnected   []<-chan ProxyConnection
 	failedUpstream map[int]Dialer
 	idx            int
 }
@@ -260,19 +255,13 @@ func (b *Balancer) newBalancedDial(network string, addr string) (*balancedDial, 
 		return nil, pickErr
 	}
 
-	preconnected := make([]<-chan ProxyConnection, 0, len(dialers))
-	for _, dialer := range dialers {
-		preconnected = append(preconnected, dialer.Preconnected())
-	}
-
 	return &balancedDial{
 		Balancer:       b,
 		network:        network,
 		addr:           addr,
 		sessionStats:   sessionStats,
 		dialers:        dialers,
-		preconnected:   preconnected,
-		failedUpstream: make(map[int]Dialer, len(preconnected)),
+		failedUpstream: make(map[int]Dialer, len(dialers)),
 	}, nil
 }
 
@@ -316,28 +305,16 @@ func (bd *balancedDial) nextPreconnected(ctx context.Context) ProxyConnection {
 			return nil
 		default:
 		}
-		pcs := bd.preconnected[bd.idx]
 		curDialer := bd.dialers[bd.idx]
-		select {
-		case pc := <-pcs:
-			if pc.ExpiresAt().Before(time.Now()) {
-				// Expired proxy connection, discard and try next from same
-				// proxy. It also means no recent activity via the dialer, so
-				// no need to preconnect actively. The dialer may still
-				// preconnect to keep minimum available connections.
-				atomic.AddInt64(&bd.sessionStats[pc.Label()].expired, 1)
-				continue
-			}
-			// Back pressure to preconnect more
+		pc := curDialer.Preconnected()
+		if pc != nil {
+			// Aggressively preconnect to build up queue
 			curDialer.Preconnect()
 			return pc
-		default:
-			// no proxy connections, tell dialer to preconnect so we'll
-			// hopefully get something on the next pass, and advance to next dialer
-			curDialer.Preconnect()
-			if !bd.advanceToNextDialer() {
-				return nil
-			}
+		}
+		// no proxy connections, advance to next dialer
+		if !bd.advanceToNextDialer() {
+			return nil
 		}
 	}
 }
@@ -346,14 +323,14 @@ func (bd *balancedDial) nextPreconnected(ctx context.Context) ProxyConnection {
 // back to the beginning if necessary. If all dialers have failed upstream, this
 // method returns false.
 func (bd *balancedDial) advanceToNextDialer() bool {
-	if len(bd.failedUpstream) == len(bd.preconnected) {
+	if len(bd.failedUpstream) == len(bd.dialers) {
 		// all dialers failed upstream, give up
 		return false
 	}
 
 	for {
 		bd.idx++
-		if bd.idx >= len(bd.preconnected) {
+		if bd.idx >= len(bd.dialers) {
 			bd.idx = 0
 			time.Sleep(250 * time.Millisecond)
 		}
@@ -532,15 +509,14 @@ func (b *Balancer) printStats(dialers sortedDialers, sessionStats map[string]*di
 		estLatency := d.EstLatency().Seconds()
 		estBandwidth := d.EstBandwidth()
 		ds := sessionStats[d.Label()]
-		sessionAttempts := atomic.LoadInt64(&ds.success) + atomic.LoadInt64(&ds.failure) + atomic.LoadInt64(&ds.expired)
-		log.Debugf("%s  P:%2d  R:%2d  A: %5d(%6d)  S: %5d(%6d)  CS: %5d  F: %5d(%6d)  CF: %5d  EXP: %5d  L: %5.0fms  B: %10.2fMbps",
+		sessionAttempts := atomic.LoadInt64(&ds.success) + atomic.LoadInt64(&ds.failure)
+		log.Debugf("%s  P:%2d  R:%2d  A: %5d(%6d)  S: %5d(%6d)  CS: %5d  F: %5d(%6d)  CF: %5d  L: %5.0fms  B: %10.2fMbps",
 			d.JustifiedLabel(),
 			d.NumPreconnected(),
 			d.NumPreconnecting(),
 			sessionAttempts, d.Attempts(),
 			atomic.LoadInt64(&ds.success), d.Successes(), d.ConsecSuccesses(),
 			atomic.LoadInt64(&ds.failure), d.Failures(), d.ConsecFailures(),
-			atomic.LoadInt64(&ds.expired),
 			estLatency*1000, estBandwidth)
 		host, _, _ := net.SplitHostPort(d.Addr())
 		// Report stats to borda

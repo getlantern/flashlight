@@ -24,17 +24,10 @@ type testDialer struct {
 	successes          int64
 	failures           int64
 	stopped            int32
-	preconnected       chan ProxyConnection
 	connectivityChecks int
 }
 
 func start(d *testDialer) *testDialer {
-	d.preconnected = make(chan ProxyConnection)
-	go func() {
-		for {
-			d.preconnected <- d
-		}
-	}()
 	return d
 }
 
@@ -70,12 +63,8 @@ func (d *testDialer) NumPreconnected() int {
 	return 1
 }
 
-func (d *testDialer) Preconnected() <-chan ProxyConnection {
-	return d.preconnected
-}
-
-func (d *testDialer) ExpiresAt() time.Time {
-	return time.Now().Add(365 * 24 * time.Hour)
+func (d *testDialer) Preconnected() ProxyConnection {
+	return d
 }
 
 func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, bool, error) {
