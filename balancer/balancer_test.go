@@ -73,7 +73,7 @@ func TestGoodSlowDialer(t *testing.T) {
 		remainingFailures: 1000,
 	})
 	dialer2 := start(&testDialer{
-		name:      "dialer1",
+		name:      "dialer2",
 		latency:   500 * time.Millisecond,
 		bandwidth: 10000,
 	})
