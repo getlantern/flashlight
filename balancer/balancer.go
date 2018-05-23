@@ -479,7 +479,11 @@ func (b *Balancer) recheckConnectivity() {
 			}
 			wg.Wait()
 			sortedDialers := b.evalDialers(false)
-			log.Debugf("Finished checking connectivity for all dialers, resulting in top dialer: %v", sortedDialers[0].Name())
+			if len(sortedDialers) == 0 {
+				log.Debug("Finished checking connectivity for all dialers, but no dialers are left!")
+			} else {
+				log.Debugf("Finished checking connectivity for all dialers, resulting in top dialer: %v", sortedDialers[0].Name())
+			}
 		}
 	}
 }
