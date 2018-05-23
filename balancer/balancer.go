@@ -410,13 +410,7 @@ func (b *Balancer) evalDialers(checkAllowed bool) []Dialer {
 	b.evalMx.Lock()
 	defer b.evalMx.Unlock()
 
-	dialers := b.copyOfDialers()
-	if len(dialers) == 0 {
-		return dialers
-	}
-
-	// First do a tentative sort
-	sort.Sort(dialers)
+	dialers := b.sortDialers()
 	newTopDialer := dialers[0]
 	bandwidthKnownForNewTopDialer := newTopDialer.EstBandwidth() > 0
 
@@ -430,13 +424,9 @@ func (b *Balancer) evalDialers(checkAllowed bool) []Dialer {
 		b.checkConnectivityForAll(dialers)
 	}
 
-	// Now that we have updated metrics, sort dialers for real
-	sortedDialers := b.sortDialers()
-	newTopDialer = sortedDialers[0]
-	bandwidthKnownForNewTopDialer = newTopDialer.EstBandwidth() > 0
-	topDialerChanged := b.priorTopDialer != nil && newTopDialer != b.priorTopDialer
 	if len(dialers) > 1 {
 		op := ops.Begin("proxy_selection_stability")
+		topDialerChanged := b.priorTopDialer != nil && newTopDialer != b.priorTopDialer
 		if b.priorTopDialer == nil {
 			op.SetMetricSum("top_dialer_initialized", 1)
 			log.Debug("Top dialer initialized")
@@ -458,7 +448,7 @@ func (b *Balancer) evalDialers(checkAllowed bool) []Dialer {
 	b.priorTopDialer = newTopDialer
 	b.bandwidthKnownForPriorTopDialer = bandwidthKnownForNewTopDialer
 
-	return sortedDialers
+	return dialers
 }
 
 func (b *Balancer) checkConnectivityForAll(dialers sortedDialers) {
