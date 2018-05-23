@@ -122,11 +122,13 @@ type dialStats struct {
 type Balancer struct {
 	beam_seq                        uint64
 	mu                              sync.RWMutex
+	evalMx                          sync.Mutex
 	overallDialTimeout              time.Duration
 	dialers                         sortedDialers
 	trusted                         sortedDialers
 	sessionStats                    map[string]*dialStats
 	lastReset                       time.Time
+	recheckConnectivityCh           chan []Dialer
 	closeOnce                       sync.Once
 	closeCh                         chan interface{}
 	onActiveDialer                  chan Dialer
@@ -142,16 +144,18 @@ func New(overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
 	// dialers
 	hasSucceedingDialer := make(chan bool, 1000)
 	b := &Balancer{
-		overallDialTimeout:  overallDialTimeout,
-		closeCh:             make(chan interface{}),
-		onActiveDialer:      make(chan Dialer, 1),
-		hasSucceedingDialer: hasSucceedingDialer,
-		HasSucceedingDialer: hasSucceedingDialer,
+		overallDialTimeout:    overallDialTimeout,
+		recheckConnectivityCh: make(chan []Dialer),
+		closeCh:               make(chan interface{}),
+		onActiveDialer:        make(chan Dialer, 1),
+		hasSucceedingDialer:   hasSucceedingDialer,
+		HasSucceedingDialer:   hasSucceedingDialer,
 	}
 
 	b.Reset(dialers...)
 	ops.Go(b.run)
 	ops.Go(b.periodicallyPrintStats)
+	ops.Go(b.recheckConnectivity)
 	return b
 }
 
@@ -387,7 +391,7 @@ func (b *Balancer) run() {
 	for {
 		select {
 		case <-ticker.C:
-			b.evalDialers()
+			b.evalDialers(true)
 
 		case <-b.closeCh:
 			b.mu.Lock()
@@ -402,69 +406,88 @@ func (b *Balancer) run() {
 	}
 }
 
-func (b *Balancer) evalDialers() {
-	dialers := b.copyOfDialers()
-	if len(dialers) == 0 {
-		return
-	}
+func (b *Balancer) evalDialers(checkAllowed bool) []Dialer {
+	b.evalMx.Lock()
+	defer b.evalMx.Unlock()
 
-	// First do a tentative sort
-	sort.Sort(dialers)
+	dialers := b.sortDialers()
+	if len(dialers) < 2 {
+		// nothing to do
+		return dialers
+	}
 	newTopDialer := dialers[0]
 	bandwidthKnownForNewTopDialer := newTopDialer.EstBandwidth() > 0
 
 	// If we've had a change at the top of the order, let's recheck latencies to
 	// see if it's just due to general network conditions degrading.
-	checkNeeded := b.bandwidthKnownForPriorTopDialer &&
+	checkNeeded := checkAllowed && b.bandwidthKnownForPriorTopDialer &&
 		bandwidthKnownForNewTopDialer &&
 		newTopDialer != b.priorTopDialer
 	if checkNeeded {
 		log.Debugf("Top dialer changed from %v to %v, checking connectivity for all dialers to get updated latencies", b.priorTopDialer.Name(), newTopDialer.Name())
-		checkConnectivityForAll(dialers)
-		sort.Sort(dialers)
-		log.Debugf("Finished checking connectivity for all dialers, resulting in top dialer: %v", dialers[0].Name())
+		b.checkConnectivityForAll(dialers)
 	}
 
-	// Now that we have updated metrics, sort dialers for real
-	b.sortDialers()
-	newTopDialer = dialers[0]
-	bandwidthKnownForNewTopDialer = newTopDialer.EstBandwidth() > 0
+	op := ops.Begin("proxy_selection_stability")
 	topDialerChanged := b.priorTopDialer != nil && newTopDialer != b.priorTopDialer
-	if len(dialers) > 1 {
-		op := ops.Begin("proxy_selection_stability")
-		if b.priorTopDialer == nil {
-			op.SetMetricSum("top_dialer_initialized", 1)
-			log.Debug("Top dialer initialized")
-		} else if topDialerChanged {
-			op.SetMetricSum("top_dialer_changed", 1)
-			reason := "performance"
-			if !b.priorTopDialer.Succeeding() {
-				reason = "failing"
-			}
-			op.Set("reason", reason)
-			log.Debug("Top dialer changed")
-		} else {
-			op.SetMetricSum("top_dialer_unchanged", 1)
-			log.Debug("Top dialer unchanged")
+	if b.priorTopDialer == nil {
+		op.SetMetricSum("top_dialer_initialized", 1)
+		log.Debug("Top dialer initialized")
+	} else if topDialerChanged {
+		op.SetMetricSum("top_dialer_changed", 1)
+		reason := "performance"
+		if !b.priorTopDialer.Succeeding() {
+			reason = "failing"
 		}
-		op.End()
+		op.Set("reason", reason)
+		log.Debug("Top dialer changed")
+	} else {
+		op.SetMetricSum("top_dialer_unchanged", 1)
+		log.Debug("Top dialer unchanged")
 	}
+	op.End()
 
 	b.priorTopDialer = newTopDialer
 	b.bandwidthKnownForPriorTopDialer = bandwidthKnownForNewTopDialer
+
+	return dialers
 }
 
-func checkConnectivityForAll(dialers sortedDialers) {
-	var wg sync.WaitGroup
-	wg.Add(len(dialers))
-	for _, _d := range dialers {
-		d := _d
-		ops.Go(func() {
-			checkConnectivityFor(d)
-			wg.Done()
-		})
+func (b *Balancer) checkConnectivityForAll(dialers sortedDialers) {
+	select {
+	case b.recheckConnectivityCh <- dialers:
+		// okay
+	default:
+		log.Debug("Already rechecking connectivity for all dialers, ignoring duplicate request for checks")
 	}
-	wg.Wait()
+}
+
+func (b *Balancer) recheckConnectivity() {
+	for {
+		select {
+		case <-b.closeCh:
+			// closed
+			return
+		case dialers := <-b.recheckConnectivityCh:
+			log.Debugf("Rechecking connectivity for %d dialers", len(dialers))
+			var wg sync.WaitGroup
+			wg.Add(len(dialers))
+			for _, _d := range dialers {
+				d := _d
+				ops.Go(func() {
+					checkConnectivityFor(d)
+					wg.Done()
+				})
+			}
+			wg.Wait()
+			sortedDialers := b.evalDialers(false)
+			if len(sortedDialers) == 0 {
+				log.Debug("Finished checking connectivity for all dialers, but no dialers are left!")
+			} else {
+				log.Debugf("Finished checking connectivity for all dialers, resulting in top dialer: %v", sortedDialers[0].Name())
+			}
+		}
+	}
 }
 
 func checkConnectivityFor(d Dialer) {
@@ -586,7 +609,7 @@ func (b *Balancer) copyOfDialers() sortedDialers {
 	return dialers
 }
 
-func (b *Balancer) sortDialers() {
+func (b *Balancer) sortDialers() []Dialer {
 	dialers := b.copyOfDialers()
 	sort.Sort(dialers)
 
@@ -603,6 +626,7 @@ func (b *Balancer) sortDialers() {
 	b.mu.Unlock()
 
 	b.lookForSucceedingDialer(dialers)
+	return dialers
 }
 
 func (b *Balancer) lookForSucceedingDialer(dialers []Dialer) {
