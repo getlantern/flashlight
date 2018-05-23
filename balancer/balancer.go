@@ -411,6 +411,10 @@ func (b *Balancer) evalDialers(checkAllowed bool) []Dialer {
 	defer b.evalMx.Unlock()
 
 	dialers := b.sortDialers()
+	if len(dialers) < 2 {
+		// nothing to do
+		return dialers
+	}
 	newTopDialer := dialers[0]
 	bandwidthKnownForNewTopDialer := newTopDialer.EstBandwidth() > 0
 
@@ -424,26 +428,24 @@ func (b *Balancer) evalDialers(checkAllowed bool) []Dialer {
 		b.checkConnectivityForAll(dialers)
 	}
 
-	if len(dialers) > 1 {
-		op := ops.Begin("proxy_selection_stability")
-		topDialerChanged := b.priorTopDialer != nil && newTopDialer != b.priorTopDialer
-		if b.priorTopDialer == nil {
-			op.SetMetricSum("top_dialer_initialized", 1)
-			log.Debug("Top dialer initialized")
-		} else if topDialerChanged {
-			op.SetMetricSum("top_dialer_changed", 1)
-			reason := "performance"
-			if !b.priorTopDialer.Succeeding() {
-				reason = "failing"
-			}
-			op.Set("reason", reason)
-			log.Debug("Top dialer changed")
-		} else {
-			op.SetMetricSum("top_dialer_unchanged", 1)
-			log.Debug("Top dialer unchanged")
+	op := ops.Begin("proxy_selection_stability")
+	topDialerChanged := b.priorTopDialer != nil && newTopDialer != b.priorTopDialer
+	if b.priorTopDialer == nil {
+		op.SetMetricSum("top_dialer_initialized", 1)
+		log.Debug("Top dialer initialized")
+	} else if topDialerChanged {
+		op.SetMetricSum("top_dialer_changed", 1)
+		reason := "performance"
+		if !b.priorTopDialer.Succeeding() {
+			reason = "failing"
 		}
-		op.End()
+		op.Set("reason", reason)
+		log.Debug("Top dialer changed")
+	} else {
+		op.SetMetricSum("top_dialer_unchanged", 1)
+		log.Debug("Top dialer unchanged")
 	}
+	op.End()
 
 	b.priorTopDialer = newTopDialer
 	b.bandwidthKnownForPriorTopDialer = bandwidthKnownForNewTopDialer
