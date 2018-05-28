@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -59,6 +60,12 @@ func normalizeExoAd(req *http.Request) (*http.Request, bool) {
 }
 
 func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
+	if client.isHTTPProxyPort(r) {
+		log.Debugf("Reject proxy request to myself: %s", r.Host)
+		// Not reveal any error text to the application.
+		return filters.Fail(ctx, r, http.StatusBadRequest, errors.New(""))
+	}
+
 	req, exoclick := normalizeExoAd(r)
 
 	// Add the scheme back for CONNECT requests. It is cleared
@@ -119,6 +126,26 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 	}
 
 	return next(ctx, req)
+}
+
+func (client *Client) isHTTPProxyPort(r *http.Request) bool {
+	host, port, err := net.SplitHostPort(r.Host)
+	if err != nil {
+		return false
+	}
+	if port != client.httpProxyPort {
+		return false
+	}
+	addrs, elookup := net.LookupHost(host)
+	if elookup != nil {
+		return false
+	}
+	for _, addr := range addrs {
+		if addr == client.httpProxyIP {
+			return true
+		}
+	}
+	return false
 }
 
 // interceptProRequest specifically looks for and properly handles pro server
