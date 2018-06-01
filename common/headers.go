@@ -35,13 +35,7 @@ func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth
 		}
 	}
 
-	var platform string
-	if runtime.GOOS == "android" {
-		platform = "android"
-	} else {
-		platform = "desktop"
-	}
-	req.Header.Set(PlatformHeader, platform)
+	req.Header.Set(PlatformHeader, runtime.GOOS)
 
 	if overwriteAuth || req.Header.Get(DeviceIdHeader) == "" {
 		if deviceID := uc.GetDeviceID(); deviceID != "" {
