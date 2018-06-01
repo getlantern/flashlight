@@ -2,6 +2,7 @@ package common
 
 import (
 	"net/http"
+	"runtime"
 	"strconv"
 )
 
@@ -18,6 +19,7 @@ const (
 	EtagHeader                          = "X-Lantern-Etag"
 	IfNoneMatchHeader                   = "X-Lantern-If-None-Match"
 	PingHeader                          = "X-Lantern-Ping"
+	PlatformHeader                      = "X-Lantern-Platform"
 )
 
 // AddCommonHeadersWithOptions sets standard http headers on a request bound
@@ -26,13 +28,14 @@ const (
 // any of the common 'auth' headers (DeviceIdHeader, ProTokenHeader, UserIdHeader)
 // that are already present in the given request.
 func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth bool) {
-
 	req.Header.Set(VersionHeader, Version)
 	for k, v := range uc.GetInternalHeaders() {
 		if v != "" {
 			req.Header.Set(k, v)
 		}
 	}
+
+	req.Header.Set(PlatformHeader, runtime.GOOS)
 
 	if overwriteAuth || req.Header.Get(DeviceIdHeader) == "" {
 		if deviceID := uc.GetDeviceID(); deviceID != "" {
