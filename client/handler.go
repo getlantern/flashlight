@@ -131,7 +131,16 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 func (client *Client) isHTTPProxyPort(r *http.Request) bool {
 	host, port, err := net.SplitHostPort(r.Host)
 	if err != nil {
-		return false
+		// In case if it listens on standard ports, though highly unlikely.
+		host = r.Host
+		switch r.URL.Scheme {
+		case "http", "ws":
+			port = "80"
+		case "https", "wss":
+			port = "443"
+		default:
+			return false
+		}
 	}
 	if port != client.httpProxyPort {
 		return false

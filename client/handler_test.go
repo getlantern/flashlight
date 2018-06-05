@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"testing"
@@ -132,4 +133,30 @@ func TestAdSwap(t *testing.T) {
 		expectedLocation := fmt.Sprintf("%v?lang=%v&url=%v", updated, url.QueryEscape(testLang), url.QueryEscape(testAdSwapTargetURL))
 		assert.Equal(t, expectedLocation, resp.Header.Get("Location"))
 	}
+}
+func TestRejectHTTPProxyPort(t *testing.T) {
+	client := newClient()
+	client.httpProxyIP, client.httpProxyPort, _ = net.SplitHostPort("127.0.0.1:4321")
+	req, _ := http.NewRequest("GET", "http://127.0.0.1:4321", nil)
+	assert.True(t, client.isHTTPProxyPort(req))
+	req, _ = http.NewRequest("GET", "http://localhost:4321", nil)
+	assert.True(t, client.isHTTPProxyPort(req))
+
+	client.httpProxyIP, client.httpProxyPort, _ = net.SplitHostPort("[::]:4321")
+	req, _ = http.NewRequest("GET", "http://[::]:4321", nil)
+	assert.True(t, client.isHTTPProxyPort(req))
+	req, _ = http.NewRequest("GET", "http://localhost:4321", nil)
+	assert.True(t, client.isHTTPProxyPort(req))
+
+	client.httpProxyIP, client.httpProxyPort, _ = net.SplitHostPort("127.0.0.1:80")
+	req, _ = http.NewRequest("GET", "http://localhost", nil)
+	assert.True(t, client.isHTTPProxyPort(req))
+	req, _ = http.NewRequest("GET", "ws://localhost", nil)
+	assert.True(t, client.isHTTPProxyPort(req))
+
+	client.httpProxyIP, client.httpProxyPort, _ = net.SplitHostPort("127.0.0.1:443")
+	req, _ = http.NewRequest("GET", "https://localhost", nil)
+	assert.True(t, client.isHTTPProxyPort(req))
+	req, _ = http.NewRequest("GET", "wss://localhost", nil)
+	assert.True(t, client.isHTTPProxyPort(req))
 }
