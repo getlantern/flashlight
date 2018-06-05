@@ -33,7 +33,7 @@ const (
 	SNSystemProxy  SettingName = "systemProxy"
 	SNDisconnected SettingName = "disconnected"
 
-	SNLanguage       SettingName = "userSetLanguage"
+	SNLanguage       SettingName = "lang"
 	SNLocalHTTPToken SettingName = "localHTTPToken"
 
 	SNDeviceID          SettingName = "deviceID"
