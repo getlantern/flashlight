@@ -92,7 +92,7 @@ func TestRead(t *testing.T) {
 		"systemProxy": false,
 		"deviceID": "8208fja09493",
 		"userID": 890238588,
-		"language": "en-US",
+		"lang": "en-US",
 		"takenSurveys": ["foo", "bar"],
 		"localHTTPToken": "0jafdjlka",
 		"uiAddr": "127.0.0.1:1234"
@@ -224,7 +224,7 @@ func TestOnChange(t *testing.T) {
 	go func() {
 		set.read(in, out)
 	}()
-	in <- map[string]interface{}{"language": "en"}
+	in <- map[string]interface{}{"lang": "en"}
 	_ = <-out
 	assert.Equal(t, "en", c1, "should call OnChange callback")
 	assert.Equal(t, "en", c2, "should call all OnChange callbacks")
