@@ -142,12 +142,6 @@ func TestRejectHTTPProxyPort(t *testing.T) {
 	req, _ = http.NewRequest("GET", "http://localhost:4321", nil)
 	assert.True(t, client.isHTTPProxyPort(req))
 
-	client.httpProxyIP, client.httpProxyPort, _ = net.SplitHostPort("[::]:4321")
-	req, _ = http.NewRequest("GET", "http://[::]:4321", nil)
-	assert.True(t, client.isHTTPProxyPort(req))
-	req, _ = http.NewRequest("GET", "http://localhost:4321", nil)
-	assert.True(t, client.isHTTPProxyPort(req))
-
 	client.httpProxyIP, client.httpProxyPort, _ = net.SplitHostPort("127.0.0.1:80")
 	req, _ = http.NewRequest("GET", "http://localhost", nil)
 	assert.True(t, client.isHTTPProxyPort(req))
