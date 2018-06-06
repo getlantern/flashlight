@@ -1,6 +1,6 @@
 autoLaunch: true
 autoReport: true
-language: en
+lang: en
 localHTTPToken: ""
 pacURL: ""
 proxyAll: false
