@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
 	"sync/atomic"
 	"testing"
@@ -226,6 +227,42 @@ func TestDialShortcut(t *testing.T) {
 		return
 	}
 	assert.Equal(t, 404, nestedResp.StatusCode, "should dial proxy if the site is whitelisted")
+}
+
+func TestAccessingProxyPort(t *testing.T) {
+	mockResponse := []byte("HTTP/1.1 404 Not Found\r\n\r\n")
+	client := newClient()
+	resetBalancer(client, mockconn.SucceedingDialer(mockResponse).Dial)
+
+	go func() {
+		client.ListenAndServeHTTP("localhost:", func() {
+		})
+	}()
+	listenAddr, valid := addr.Get(-1)
+	assert.True(t, valid, "should set addr")
+	proxyURL := "http://" + listenAddr.(string)
+	tr := http.Transport{
+		Proxy: func(*http.Request) (*url.URL, error) {
+			return url.Parse(proxyURL)
+		},
+	}
+
+	req, _ := http.NewRequest("GET", proxyURL, nil)
+	resp, err := tr.RoundTrip(req)
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	assert.Equal(t, "0", resp.Header.Get("Content-Length"))
+
+	_, port, _ := net.SplitHostPort(listenAddr.(string))
+	req, _ = http.NewRequest("GET", "http://localhost:"+port, nil)
+	resp, err = tr.RoundTrip(req)
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	assert.Equal(t, "0", resp.Header.Get("Content-Length"))
 }
 
 type testDialer struct {

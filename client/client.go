@@ -117,6 +117,9 @@ type Client struct {
 	adSwapTargetURL   func() string
 
 	reverseDNS func(addr string) string
+
+	httpProxyIP   string
+	httpProxyPort string
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -341,6 +344,7 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 	client.l = l
 	listenAddr := l.Addr().String()
 	addr.Set(listenAddr)
+	client.httpProxyIP, client.httpProxyPort, _ = net.SplitHostPort(listenAddr)
 	onListeningFn()
 
 	log.Debugf("About to start HTTP client proxy at %v", listenAddr)
