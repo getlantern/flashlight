@@ -82,9 +82,4 @@ else:
     path = "/Applications/Lantern.app/Contents/MacOS/lantern"
 
 args = [path, "-pprofaddr=:4000", "-stickyconfig", "-readableconfig", "-configdir="+configdir]
-if not on_windows:
-    # On windows, show Gui so that we can exit cleanly through menu (Ctrl+c
-    # doesn't work)
-    args.append("-headless")
-
 subprocess.call(args)
