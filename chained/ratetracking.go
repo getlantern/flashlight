@@ -54,8 +54,9 @@ func (p *proxy) withRateTracking(wrapped net.Conn, origin string) net.Conn {
 		// The below is a little verbose, but it allows us to see the transfer rates
 		// right within a user's logs, which is useful when someone submits their logs
 		// together with a complaint of Lantern being slow.
-		log.Debug("Finished xfer")
+		log.Debugf("Finished xfer, received %v, total received %v",
+			humanize.Bytes(uint64(stats.RecvTotal)),
+			humanize.Bytes(atomic.AddUint64(&totalReceived, uint64(stats.RecvTotal))))
 		op.End()
-		log.Debugf("Total Received: %v", humanize.Bytes(atomic.AddUint64(&totalReceived, uint64(stats.RecvTotal))))
 	})
 }
