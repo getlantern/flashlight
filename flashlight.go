@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/bandwidth"
 	fops "github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/fronted"
@@ -267,6 +268,13 @@ func initContext(deviceID string, version string, revisionDate string, isPro fun
 	})
 	ops.SetGlobalDynamic("is_pro", func() interface{} {
 		return isPro()
+	})
+	ops.SetGlobalDynamic("is_data_capped", func() interface{} {
+		if isPro() {
+			return false
+		}
+		quota := bandwidth.GetQuota()
+		return quota != nil && quota.MiBUsed >= quota.MiBAllowed
 	})
 
 	if osStr, err := osversion.GetHumanReadable(); err == nil {
