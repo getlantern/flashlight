@@ -12,6 +12,7 @@ import (
 
 	"github.com/getlantern/withtimeout"
 
+	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/mtime"
@@ -127,13 +128,13 @@ func (p *proxy) doHttpPing(kb int, resetBBR bool) error {
 		reqTime := time.Now()
 		resp, rtErr := rt.RoundTrip(req)
 		if rtErr != nil {
-			return false, fmt.Errorf("Error testing dialer %s: %s", p.Addr(), rtErr)
+			return false, errors.New("Error testing dialer %s: %s", p.Addr(), rtErr)
 		}
 		if resp.Body != nil {
 			// Read the body to include this in our timing.
 			defer resp.Body.Close()
 			if _, copyErr := io.Copy(ioutil.Discard, resp.Body); copyErr != nil {
-				return false, fmt.Errorf("Unable to read response body: %v", copyErr)
+				return false, errors.New("Unable to read response body: %v", copyErr)
 			}
 		}
 		log.Tracef("PING through chained server at %s, status code %d", p.Addr(), resp.StatusCode)
