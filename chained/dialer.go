@@ -264,6 +264,7 @@ func (pc *proxyConnection) dialInternal(ctx context.Context, network, addr strin
 	var conn net.Conn
 	var err error
 	chDone := make(chan bool)
+	start := time.Now()
 	go func() {
 		conn, err = pc.conn.dialOrigin(ctx, network, addr)
 		select {
@@ -279,7 +280,7 @@ func (pc *proxyConnection) dialInternal(ctx context.Context, network, addr strin
 	case <-chDone:
 		return pc.withRateTracking(conn, addr), err
 	case <-ctx.Done():
-		return nil, ctx.Err()
+		return nil, errors.New("fail to dial origin after %+v", time.Since(start))
 	}
 }
 
