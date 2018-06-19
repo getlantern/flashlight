@@ -8,6 +8,7 @@
   revision = "7d56ec4f381e8b1aedfda360594e35a5731b5337"
 
 [[projects]]
+  branch = "master"
   name = "git.torproject.org/pluggable-transports/obfs4.git"
   packages = [
     "common/csrand",
@@ -19,7 +20,7 @@
     "transports/obfs4",
     "transports/obfs4/framing"
   ]
-  revision = "af4824cb0b2c36a0eba4bc1590eb0737302e992e"
+  revision = "89c21805c212bcc2f5a0c4ffdadf424cbff1c7c9"
 
 [[projects]]
   branch = "master"
@@ -55,6 +56,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/codahale/hdrhistogram"
+  packages = ["."]
+  revision = "3a0bb77429bd3a61596f5e8a3172445844342120"
+
+[[projects]]
+  branch = "master"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
@@ -66,9 +73,10 @@
   version = "v1.1.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/dustin/go-humanize"
   packages = ["."]
-  revision = "bb3d318650d48840a39aa21a027c6630e198e626"
+  revision = "02af3965c54e8cacf948b97fef38925c4120652c"
 
 [[projects]]
   branch = "v0.1.1"
@@ -101,9 +109,10 @@
   revision = "9a5594c63329cf77582eccae41a8a75240a078fe"
 
 [[projects]]
+  branch = "master"
   name = "github.com/getlantern/borda"
   packages = ["client"]
-  revision = "4d925212258106a9fbd7debb8019b95362be6eb6"
+  revision = "65cc1df08e271c261303eb3b6b434543d2eac089"
 
 [[projects]]
   branch = "master"
@@ -112,9 +121,10 @@
   revision = "4cfb26ec74f460fda433dc06fddfbad7ddee3072"
 
 [[projects]]
+  branch = "master"
   name = "github.com/getlantern/bytemap"
   packages = ["."]
-  revision = "ae8427dbf355130b32e5261c108917a630f7c36c"
+  revision = "c7bf952233bcc421fcbd185f601e117d45df89c7"
 
 [[projects]]
   branch = "master"
@@ -168,9 +178,10 @@
   revision = "d906ee7c3465210c328abbe6ea0f855db9db679c"
 
 [[projects]]
+  branch = "master"
   name = "github.com/getlantern/enhttp"
   packages = ["."]
-  revision = "a0fc6a99dbea1d3c2784fd569351514201209267"
+  revision = "06cfcf06160d10ec1cc9d1b92452dd4d17cb684a"
 
 [[projects]]
   branch = "master"
@@ -304,7 +315,7 @@
     "usage",
     "versioncheck"
   ]
-  revision = "ec887559a97a2c212c55dc64047f5b60f1fa0786"
+  revision = "0411577746850e128be75a4a4753862794d80313"
 
 [[projects]]
   branch = "master"
@@ -322,7 +333,7 @@
   branch = "master"
   name = "github.com/getlantern/idletiming"
   packages = ["."]
-  revision = "7a71d2e71cf253f64b9610ce7aa9ddfc58aa9b2a"
+  revision = "b57e3cdec825ee34a0ed309f2b013df19ab39de2"
 
 [[projects]]
   branch = "master"
@@ -373,7 +384,7 @@
   branch = "master"
   name = "github.com/getlantern/measured"
   packages = ["."]
-  revision = "0582bf799783fba9a890459155817f1cbcf00f17"
+  revision = "58aa379db63a19b9f8e9d3e940676619082bdd0a"
 
 [[projects]]
   branch = "master"
@@ -596,12 +607,13 @@
   revision = "511f017cd91361be75ad73fee96e466a5d790312"
 
 [[projects]]
+  branch = "master"
   name = "github.com/getlantern/yaml"
   packages = ["."]
-  revision = "97d86b60f57eeca9d70c02763ed2565bafc17585"
-  version = "v1"
+  revision = "79303eb9c0d903b1a2e6b6ef82b5f8d22792dba9"
 
 [[projects]]
+  branch = "master"
   name = "github.com/getlantern/zenodb"
   packages = [
     "bytetree",
@@ -613,7 +625,7 @@
     "rpc",
     "sql"
   ]
-  revision = "149af1c4059e3d7322eaa517949d83e7a780190a"
+  revision = "44cc8585533a2bb441dc5862ffae6ccb9f25f487"
 
 [[projects]]
   branch = "master"
@@ -705,16 +717,22 @@
   revision = "0fb14efe8c47ae851c0034ed7a448854d3d34cf3"
 
 [[projects]]
+  name = "github.com/juju/ratelimit"
+  packages = ["."]
+  revision = "59fac5042749a5afb9af70e813da1dd5474f0167"
+  version = "1.0.1"
+
+[[projects]]
   branch = "master"
   name = "github.com/kardianos/osext"
   packages = ["."]
   revision = "ae77be60afb1dcacde03767a8c37337fad28ac14"
 
 [[projects]]
+  branch = "master"
   name = "github.com/keighl/mandrill"
   packages = ["."]
-  revision = "5d7133fb578a9504f8ab549737c993422f65a000"
-  version = "1.1.0"
+  revision = "1775dd4b3b4121aa2731132552ebcff17253d103"
 
 [[projects]]
   branch = "master"
@@ -762,12 +780,6 @@
   name = "github.com/mitchellh/panicwrap"
   packages = ["."]
   revision = "fce601fe55579125e1b3cb0b992287e7290f7b83"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/mxk/go-flowrate"
-  packages = ["flowrate"]
-  revision = "cca7078d478f8520f85629ad7c68962d31ed7682"
 
 [[projects]]
   name = "github.com/oschwald/geoip2-golang"
@@ -901,10 +913,12 @@
   revision = "2b6c08872f4b66da917bb4ce98df4f0307330f78"
 
 [[projects]]
+  branch = "master"
   name = "golang.org/x/net"
   packages = [
     "bpf",
     "context",
+    "http/httpguts",
     "http2",
     "http2/hpack",
     "idna",
@@ -914,12 +928,10 @@
     "internal/timeseries",
     "ipv4",
     "ipv6",
-    "lex/httplex",
     "proxy",
     "trace"
   ]
-  revision = "61147c48b25b599e5b561d2e9c4f3e1ef489ca41"
-  source = "https://github.com/golang/net"
+  revision = "db08ff08e8622530d9ed3a0e8ac279f6d4c02196"
 
 [[projects]]
   name = "golang.org/x/sys"
@@ -1017,6 +1029,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "bbdbcfe3c0929d8df5005f874b95f8de173925107740c01f602c1c50bc5b0d4a"
+  inputs-digest = "2595b819dfc14f4f6df3c4746a4232c50713ca252e6150f6dc465433495d26c7"
   solver-name = "gps-cdcl"
   solver-version = 1

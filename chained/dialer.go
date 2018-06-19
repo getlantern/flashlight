@@ -250,7 +250,7 @@ func (pc *proxyConnection) doDial(ctx context.Context, network, addr string) (ne
 	op := ops.Begin("dial_for_balancer").ChainedProxy(pc.Name(), pc.Addr(), pc.Protocol(), pc.Network())
 	defer op.End()
 
-	conn, err = pc.dialInternal(ctx, network, addr)
+	conn, err = pc.dialInternal(op, ctx, network, addr)
 	if err != nil {
 		return nil, op.FailIf(err)
 	}
@@ -260,12 +260,15 @@ func (pc *proxyConnection) doDial(ctx context.Context, network, addr string) (ne
 	return conn, nil
 }
 
-func (pc *proxyConnection) dialInternal(ctx context.Context, network, addr string) (net.Conn, error) {
+func (pc *proxyConnection) dialInternal(op *ops.Op, ctx context.Context, network, addr string) (net.Conn, error) {
 	var conn net.Conn
 	var err error
 	chDone := make(chan bool)
 	go func() {
 		conn, err = pc.conn.dialOrigin(ctx, network, addr)
+		if err != nil {
+			op.Set("idled", idletiming.IsIdled(conn))
+		}
 		select {
 		case chDone <- true:
 		default:
@@ -354,7 +357,7 @@ func (p *proxy) buildCONNECTRequest(addr string) (*http.Request, error) {
 func (p *proxy) checkCONNECTResponse(r *bufio.Reader, req *http.Request, reqTime time.Time) error {
 	resp, err := http.ReadResponse(r, req)
 	if err != nil {
-		return fmt.Errorf("Error reading CONNECT response: %s", err)
+		return errors.New("Error reading CONNECT response: %s", err)
 	}
 	if !sameStatusCodeClass(http.StatusOK, resp.StatusCode) {
 		var body []byte
