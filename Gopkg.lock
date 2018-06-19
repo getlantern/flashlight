@@ -106,7 +106,7 @@
   branch = "master"
   name = "github.com/getlantern/bbrconn"
   packages = ["."]
-  revision = "9a5594c63329cf77582eccae41a8a75240a078fe"
+  revision = "86cf8c16f3d092de7a0c72c6eae830ccb2a2147b"
 
 [[projects]]
   branch = "master"
@@ -542,12 +542,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/getlantern/tcpinfo"
-  packages = ["."]
-  revision = "c475b171ec955019a7906187bf6f4011d7d791fe"
-
-[[projects]]
-  branch = "master"
   name = "github.com/getlantern/tlsdefaults"
   packages = ["."]
   revision = "cf35cfd0b1b460b031536c9846ffcd5f7811dddb"
@@ -756,6 +750,12 @@
   name = "github.com/mikioh/tcp"
   packages = ["."]
   revision = "a2964c74d73b11ff68e6c9bfabb496cfe29a9a60"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/mikioh/tcpinfo"
+  packages = ["."]
+  revision = "fd8b9a80d71e11a9ffcf963e3548d336c8b39e1d"
 
 [[projects]]
   branch = "master"
