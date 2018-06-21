@@ -67,7 +67,6 @@ func TestBalancerSimulation(t *testing.T) {
 	latencyMultiplier = 1
 	a.recalcLatency()
 	assertDialerOrder("sort order should remain the same even after dramatically decreased latency across the board", t, bal, a, b, c)
-	log.Debug("adfdsaf")
 	bal.evalDialers()
 	assertDialerOrder("sort order should remain the same even after generally decreased latencies", t, bal, a, b, c)
 	assertChecksSinceLast(t, bal, 0)
