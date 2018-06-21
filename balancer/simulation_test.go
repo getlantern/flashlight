@@ -41,25 +41,25 @@ func TestBalancerSimulation(t *testing.T) {
 	defer bal.Close()
 	assertDialerOrder("dialers with unknown bandwidth should sort by name", t, bal, a, b, c)
 
-	bal.evalDialers(true)
+	bal.evalDialers()
 	// make bandwidth known for one dialer
 	a.bandwidth = 20000
 	assertDialerOrder("sort order should remain unchanged before calling eval", t, bal, a, b, c)
-	bal.evalDialers(true)
+	bal.evalDialers()
 	assertDialerOrder("dialers with unknown bandwidth should sort before those with known bandwidth", t, bal, b, c, a)
 	assertChecksSinceLast(t, bal, 0)
 
 	// fill out bandwidth for all dialers
 	b.bandwidth = 5000
 	c.bandwidth = 1250
-	bal.evalDialers(true)
+	bal.evalDialers()
 	assertDialerOrder("dialers should sort by combination of bandwidth and latency", t, bal, a, b, c)
 
 	// dramatically increase latency across the board
 	latencyMultiplier = 10
 	a.recalcLatency()
 	assertDialerOrder("sort order should remain the same even after dramatically increased latency across the board", t, bal, a, b, c)
-	bal.evalDialers(true)
+	bal.evalDialers()
 	assertDialerOrder("sort order should remain the same even after generally increased latencies", t, bal, a, b, c)
 	assertChecksSinceLast(t, bal, connectivityRechecks)
 
@@ -68,21 +68,21 @@ func TestBalancerSimulation(t *testing.T) {
 	a.recalcLatency()
 	assertDialerOrder("sort order should remain the same even after dramatically decreased latency across the board", t, bal, a, b, c)
 	log.Debug("adfdsaf")
-	bal.evalDialers(true)
+	bal.evalDialers()
 	assertDialerOrder("sort order should remain the same even after generally decreased latencies", t, bal, a, b, c)
 	assertChecksSinceLast(t, bal, 0)
 
 	// dramatically increase latency for top dialer
 	a.baseLatency *= 100
 	a.recalcLatency()
-	bal.evalDialers(true)
+	bal.evalDialers()
 	assertDialerOrder("top dialer should have changed after latency jump", t, bal, b, c, a)
 	assertChecksSinceLast(t, bal, connectivityRechecks)
 
 	// recover latency for top dialer
 	a.baseLatency /= 100
 	a.recalcLatency()
-	bal.evalDialers(true)
+	bal.evalDialers()
 	assertDialerOrder("top dialer should have changed after latency decrease", t, bal, a, b, c)
 	assertChecksSinceLast(t, bal, connectivityRechecks)
 }

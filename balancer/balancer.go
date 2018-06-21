@@ -364,6 +364,7 @@ func (bd *balancedDial) onSuccess(pc ProxyConnection, oldLatency time.Duration, 
 		d.MarkFailure()
 	}
 
+	// Reevaluate all dialers if the top dialer performance dramatically changed
 	if attempts == 0 {
 		switch {
 		case pc.EstLatency() > oldLatency*3:
@@ -373,7 +374,7 @@ func (bd *balancedDial) onSuccess(pc ProxyConnection, oldLatency time.Duration, 
 		default:
 			return
 		}
-		ops.Go(func() { bd.evalDialers(true) })
+		ops.Go(bd.evalDialers)
 	}
 }
 
@@ -397,7 +398,7 @@ func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err e
 	}
 	if attempts == 0 && !pc.Succeeding() {
 		log.Debugf("Dialer %s is failing, re-evaluate all dialers", pc.Label())
-		ops.Go(func() { bd.evalDialers(true) })
+		ops.Go(bd.evalDialers)
 	}
 }
 
@@ -407,11 +408,11 @@ func (b *Balancer) OnActiveDialer() <-chan Dialer {
 	return b.onActiveDialer
 }
 
-func (b *Balancer) evalDialers(checkAllowed bool) []Dialer {
+func (b *Balancer) evalDialers() {
 	dialers := b.sortDialers()
 	if len(dialers) < 2 {
 		// nothing to do
-		return dialers
+		return
 	}
 	newTopDialer := dialers[0]
 	bandwidthKnownForNewTopDialer := newTopDialer.EstBandwidth() > 0
@@ -419,9 +420,8 @@ func (b *Balancer) evalDialers(checkAllowed bool) []Dialer {
 	// If we've had a change at the top of the order, let's recheck latencies to
 	// see if it's just due to general network conditions degrading.
 	b.evalMx.Lock()
-	checkNeeded := checkAllowed && b.bandwidthKnownForPriorTopDialer &&
-		bandwidthKnownForNewTopDialer &&
-		newTopDialer != b.priorTopDialer
+	checkNeeded := b.bandwidthKnownForPriorTopDialer &&
+		bandwidthKnownForNewTopDialer && newTopDialer != b.priorTopDialer
 	b.evalMx.Unlock()
 
 	if checkNeeded {
@@ -430,7 +430,7 @@ func (b *Balancer) evalDialers(checkAllowed bool) []Dialer {
 		dialers = b.sortDialers()
 		if len(dialers) < 2 {
 			// nothing to do
-			return dialers
+			return
 		}
 		newTopDialer = dialers[0]
 		bandwidthKnownForNewTopDialer = newTopDialer.EstBandwidth() > 0
@@ -467,8 +467,6 @@ func (b *Balancer) evalDialers(checkAllowed bool) []Dialer {
 	b.priorTopDialer = newTopDialer
 	log.Debugf("setting top dialer to %v", b.priorTopDialer.Label())
 	b.bandwidthKnownForPriorTopDialer = bandwidthKnownForNewTopDialer
-
-	return dialers
 }
 
 func (b *Balancer) checkConnectivityForAll(dialers []Dialer) {
