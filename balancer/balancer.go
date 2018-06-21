@@ -369,8 +369,14 @@ func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err e
 	if failedUpstream {
 		continueString = "...aborting"
 	}
-	log.Errorf("Unable to dial via %v to %s://%s: %v on pass %v%v",
-		pc.Label(), bd.network, bd.addr, err, attempts, continueString)
+	msg := "%v dialing via %v to %s://%s: %v on pass %v%v"
+	if failedUpstream {
+		log.Debugf(msg,
+			"Upstream error", pc.Label(), bd.network, bd.addr, err, attempts, continueString)
+	} else {
+		log.Errorf(msg,
+			"Unexpected error", pc.Label(), bd.network, bd.addr, err, attempts, continueString)
+	}
 	if failedUpstream {
 		bd.failedUpstream[bd.idx] = pc
 	} else {
