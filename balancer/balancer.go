@@ -602,9 +602,7 @@ func (b *Balancer) copyOfDialers() sortedDialers {
 }
 
 func (b *Balancer) sortDialers() []Dialer {
-	dialers := b.copyOfDialers()
-	sort.Sort(dialers)
-
+	dialers := SortDialers(b.copyOfDialers())
 	trusted := make(sortedDialers, 0, len(dialers))
 	for _, d := range dialers {
 		if d.Trusted() {
