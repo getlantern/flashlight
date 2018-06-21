@@ -38,7 +38,7 @@ func TestBalancerSimulation(t *testing.T) {
 		recheckConnectivityCh: make(chan []Dialer),
 		closeCh:               make(chan interface{}),
 	}
-	bal.Reset(a, b, c)
+	bal.Reset([]Dialer{a, b, c})
 	go bal.recheckConnectivity()
 	defer bal.Close()
 	assertDialerOrder("dialers with unknown bandwidth should sort by name", t, bal, a, b, c)

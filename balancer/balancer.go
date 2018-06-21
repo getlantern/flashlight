@@ -156,14 +156,14 @@ func New(overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
 		HasSucceedingDialer:   hasSucceedingDialer,
 	}
 
-	b.Reset(dialers...)
+	b.Reset(dialers)
 	ops.Go(b.periodicallyPrintStats)
 	ops.Go(b.recheckConnectivity)
 	return b
 }
 
 // Reset closes existing dialers and replaces them with new ones.
-func (b *Balancer) Reset(dialers ...Dialer) {
+func (b *Balancer) Reset(dialers []Dialer) {
 	log.Debugf("Resetting with %d dialers", len(dialers))
 	dls := make(sortedDialers, len(dialers))
 	copy(dls, dialers)
@@ -463,7 +463,10 @@ func (b *Balancer) recheckConnectivity() {
 			for _, _d := range dialers {
 				d := _d
 				ops.Go(func() {
-					checkConnectivityFor(d)
+					for i := 0; i < connectivityRechecks; i++ {
+						d.Probe(false)
+						time.Sleep(randomize(recheckInterval))
+					}
 					wg.Done()
 				})
 			}
@@ -478,17 +481,11 @@ func (b *Balancer) recheckConnectivity() {
 	}
 }
 
-func checkConnectivityFor(d Dialer) {
-	for i := 0; i < connectivityRechecks; i++ {
-		d.Probe(false)
-		time.Sleep(randomize(recheckInterval))
-	}
-}
-
 // Close closes this Balancer, stopping all background processing. You must call
 // Close to avoid leaking goroutines.
 func (b *Balancer) Close() {
 	b.closeOnce.Do(func() {
+		b.Reset([]Dialer{})
 		close(b.closeCh)
 		b.mu.Lock()
 		oldDialers := b.dialers

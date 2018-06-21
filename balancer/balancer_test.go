@@ -81,7 +81,7 @@ func TestGoodSlowDialer(t *testing.T) {
 	b := newBalancer(dialer1)
 	_, err := b.Dial("tcp", addr)
 	assert.Error(t, err, "Dialing bad dialer should fail")
-	b.Reset(dialer1, dialer2)
+	b.Reset([]Dialer{dialer1, dialer2})
 	_, err = b.Dial("tcp", addr)
 	if assert.NoError(t, err, "Dialing with one good dialer should succeed") {
 		assert.True(t, dialer1.Attempts() > 0, "should have tried fast dialer first")

@@ -48,10 +48,10 @@ func newTestUserConfig() *common.UserConfigData {
 }
 
 func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {
-	client.bal.Reset(start(&testDialer{
+	client.bal.Reset([]balancer.Dialer{&testDialer{
 		name: "test-dialer",
 		dial: dialer,
-	}))
+	}})
 }
 
 func newClient() *Client {
@@ -273,10 +273,6 @@ type testDialer struct {
 	successes int64
 	failures  int64
 	stopped   bool
-}
-
-func start(d *testDialer) *testDialer {
-	return d
 }
 
 // Name returns the name for this Dialer
