@@ -23,6 +23,9 @@ import (
 const (
 	minCheckInterval = 10 * time.Second
 	maxCheckInterval = 15 * time.Minute
+
+	connect    = "connect"
+	persistent = "persistent"
 )
 
 type proxyConnection struct {
@@ -210,7 +213,7 @@ func (pc *proxyConnection) DialContext(ctx context.Context, network, addr string
 		} else {
 			pc.MarkFailure()
 		}
-	} else if network == "connect" {
+	} else if network == connect {
 		// only mark success if we did a CONNECT request because that involves a
 		// full round-trip to/from the proxy
 		pc.markSuccess()
@@ -249,7 +252,7 @@ func (pc *proxyConnection) doDial(ctx context.Context, network, addr string) (ne
 	var conn net.Conn
 	var err error
 
-	op := ops.Begin("dial_for_balancer").ChainedProxy(pc.Name(), pc.Addr(), pc.Protocol(), pc.Network())
+	op := ops.Begin("dial_for_balancer").ChainedProxy(pc.Name(), pc.Addr(), pc.Protocol(), pc.Network()).Set("dial_type", network)
 	defer op.End()
 
 	conn, err = pc.dialInternal(ctx, network, addr)
@@ -298,10 +301,10 @@ func (conn defaultServerConn) dialOrigin(ctx context.Context, network, addr stri
 	// that we should send a CONNECT request and tunnel all traffic through
 	// that.
 	switch network {
-	case "connect":
+	case connect:
 		log.Tracef("Sending CONNECT request")
 		err = conn.p.sendCONNECT(addr, conn)
-	case "persistent":
+	case persistent:
 		log.Tracef("Sending GET request to establish persistent HTTP connection")
 		err = conn.p.initPersistentConnection(addr, conn)
 	}
