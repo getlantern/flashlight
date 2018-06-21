@@ -157,7 +157,6 @@ func New(overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
 	}
 
 	b.Reset(dialers...)
-	ops.Go(b.run)
 	ops.Go(b.periodicallyPrintStats)
 	ops.Go(b.recheckConnectivity)
 	return b
@@ -234,7 +233,7 @@ func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.C
 		return nil, op.FailIf(log.Error(err))
 	}
 
-	op.BalancerDialTime(time.Now().Sub(start), nil)
+	op.BalancerDialTime(time.Since(start), nil)
 	return conn, nil
 }
 
@@ -394,28 +393,6 @@ func (b *Balancer) OnActiveDialer() <-chan Dialer {
 	return b.onActiveDialer
 }
 
-func (b *Balancer) run() {
-	ticker := time.NewTicker(evalDialersInterval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			b.evalDialers(true)
-
-		case <-b.closeCh:
-			b.mu.Lock()
-			oldDialers := b.dialers
-			b.dialers = nil
-			b.mu.Unlock()
-			for _, d := range oldDialers {
-				d.Stop()
-			}
-			return
-		}
-	}
-}
-
 func (b *Balancer) evalDialers(checkAllowed bool) []Dialer {
 	b.evalMx.Lock()
 	defer b.evalMx.Unlock()
@@ -513,6 +490,13 @@ func checkConnectivityFor(d Dialer) {
 func (b *Balancer) Close() {
 	b.closeOnce.Do(func() {
 		close(b.closeCh)
+		b.mu.Lock()
+		oldDialers := b.dialers
+		b.dialers = nil
+		b.mu.Unlock()
+		for _, d := range oldDialers {
+			d.Stop()
+		}
 	})
 }
 
@@ -537,7 +521,7 @@ func (b *Balancer) periodicallyPrintStats() {
 }
 
 func (b *Balancer) printStats(dialers sortedDialers, sessionStats map[string]*dialStats, lastReset time.Time) {
-	log.Debugf("----------- Dialer Stats (%v) -----------", time.Now().Sub(lastReset))
+	log.Debugf("----------- Dialer Stats (%v) -----------", time.Since(lastReset))
 	rank := float64(1)
 	for _, d := range dialers {
 		estLatency := d.EstLatency().Seconds()
