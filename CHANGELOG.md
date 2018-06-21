@@ -3,10 +3,6 @@
 ## [4.7.6](https://github.com/getlantern/flashlight/tree/4.7.6) (2018-06-21)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.5...4.7.6)
 
-**Closed issues:**
-
-- Piled up goroutines in lampshade sendLoop [\#375](https://github.com/getlantern/flashlight/issues/375)
-
 **Merged pull requests:**
 
 - Only mark a connection successful if we got a successful HTTPS CONNEC… [\#468](https://github.com/getlantern/flashlight/pull/468) ([oxtoacart](https://github.com/oxtoacart))
@@ -17,10 +13,6 @@
 ## [4.7.5](https://github.com/getlantern/flashlight/tree/4.7.5) (2018-06-11)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.4...4.7.5)
 
-**Closed issues:**
-
-- Port Chrome Extension to browser 360 [\#309](https://github.com/getlantern/flashlight/issues/309)
-
 **Merged pull requests:**
 
 - latest fronted [\#463](https://github.com/getlantern/flashlight/pull/463) ([myleshorton](https://github.com/myleshorton))
@@ -28,10 +20,6 @@
 
 ## [4.7.4](https://github.com/getlantern/flashlight/tree/4.7.4) (2018-06-06)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.3...4.7.4)
-
-**Closed issues:**
-
-- use different YAML file names for staging build [\#176](https://github.com/getlantern/flashlight/issues/176)
 
 **Merged pull requests:**
 
