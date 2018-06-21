@@ -210,7 +210,9 @@ func (pc *proxyConnection) DialContext(ctx context.Context, network, addr string
 		} else {
 			pc.MarkFailure()
 		}
-	} else {
+	} else if network == "connect" {
+		// only mark success if we did a CONNECT request because that involves a
+		// full round-trip to/from the proxy
 		pc.markSuccess()
 	}
 	return conn, upstream, err
