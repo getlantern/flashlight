@@ -41,7 +41,6 @@ func TrackStatsFor(dialers []balancer.Dialer) {
 	statsMx.Unlock()
 
 	persistOnce.Do(func() {
-		go probePeriodically()
 		go persistStats()
 	})
 }
@@ -63,24 +62,6 @@ func probeIfRequired(dialers []balancer.Dialer) {
 		if probeRequired {
 			go dialer.Probe(true)
 		}
-	}
-}
-
-func probePeriodically() {
-	for {
-		statsMx.Lock()
-		dialers := make([]balancer.Dialer, 0, len(statsTrackingDialers))
-		for _, d := range statsTrackingDialers {
-			dialers = append(dialers, d)
-		}
-		statsMx.Unlock()
-
-		log.Debugf("Dialers to probe: %d", len(dialers))
-		for _, dialer := range dialers {
-			go dialer.Probe(false)
-		}
-
-		time.Sleep(randomize(30 * time.Minute))
 	}
 }
 
