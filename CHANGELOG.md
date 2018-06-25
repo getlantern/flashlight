@@ -1,5 +1,13 @@
 # Change Log
 
+## [Unreleased](https://github.com/getlantern/flashlight/tree/HEAD)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.6...HEAD)
+
+**Merged pull requests:**
+
+- Tracking idled dimension when CONNECT fails [\#466](https://github.com/getlantern/flashlight/pull/466) ([oxtoacart](https://github.com/oxtoacart))
+
 ## [4.7.6](https://github.com/getlantern/flashlight/tree/4.7.6) (2018-06-21)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.5...4.7.6)
 
@@ -64,42 +72,52 @@
 - Allowing numbers in optional protocol part of proxy name regex [\#449](https://github.com/getlantern/flashlight/pull/449) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [4.6.14](https://github.com/getlantern/flashlight/tree/4.6.14) (2018-05-06)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.14)
-
-**Closed issues:**
-
-- timeout is not enforced when checking CONNECT response [\#341](https://github.com/getlantern/flashlight/issues/341)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.14)
 
 **Merged pull requests:**
 
 - \[mobile\] Intercept requests to pro server and handle with special http.Client [\#448](https://github.com/getlantern/flashlight/pull/448) ([atavism](https://github.com/atavism))
 - Include a little more info with dial\_for\_balancer op [\#447](https://github.com/getlantern/flashlight/pull/447) ([oxtoacart](https://github.com/oxtoacart))
 
-## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.11)
-
 ## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.12)
+
+## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.11)
 
 ## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.2.0...4.6.13)
-
-**Closed issues:**
-
-- Data race in ws package [\#382](https://github.com/getlantern/flashlight/issues/382)
-- panic: send on closed channel in lampshade code [\#363](https://github.com/getlantern/flashlight/issues/363)
-- Sometimes dialer stats don't show up [\#344](https://github.com/getlantern/flashlight/issues/344)
-- Checking proxy's ConsecSuccesses causes an invalid memory address or nil pointer dereference [\#333](https://github.com/getlantern/flashlight/issues/333)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.13)
 
 **Merged pull requests:**
 
 - updated config [\#445](https://github.com/getlantern/flashlight/pull/445) ([myleshorton](https://github.com/myleshorton))
-- adyen iran pro UI tweaks [\#444](https://github.com/getlantern/flashlight/pull/444) ([myleshorton](https://github.com/myleshorton))
-- Record size of probe so we can filter on it [\#443](https://github.com/getlantern/flashlight/pull/443) ([oxtoacart](https://github.com/oxtoacart))
 - fallback to 127.0.0.1:0 when error listening on proxy address [\#442](https://github.com/getlantern/flashlight/pull/442) ([joesis](https://github.com/joesis))
 - reset stats tracking dialers every time [\#441](https://github.com/getlantern/flashlight/pull/441) ([joesis](https://github.com/joesis))
+
+## [4.6.10](https://github.com/getlantern/flashlight/tree/4.6.10) (2018-04-30)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.9...4.6.10)
+
+**Merged pull requests:**
+
+- adyen iran pro UI tweaks [\#444](https://github.com/getlantern/flashlight/pull/444) ([myleshorton](https://github.com/myleshorton))
+- Record size of probe so we can filter on it [\#443](https://github.com/getlantern/flashlight/pull/443) ([oxtoacart](https://github.com/oxtoacart))
 - unzip response body only if gzip header is present [\#440](https://github.com/getlantern/flashlight/pull/440) ([joesis](https://github.com/joesis))
+
+## [4.6.9](https://github.com/getlantern/flashlight/tree/4.6.9) (2018-04-26)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.7...4.6.9)
+
+**Merged pull requests:**
+
 - use http-ping to check for connectivity [\#438](https://github.com/getlantern/flashlight/pull/438) ([joesis](https://github.com/joesis))
+
+## [4.6.7](https://github.com/getlantern/flashlight/tree/4.6.7) (2018-04-26)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.8...4.6.7)
+
+## [4.6.8](https://github.com/getlantern/flashlight/tree/4.6.8) (2018-04-26)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.6...4.6.8)
+
+**Merged pull requests:**
+
 - Make sure dialer stats print periodically [\#436](https://github.com/getlantern/flashlight/pull/436) ([oxtoacart](https://github.com/oxtoacart))
 - Adding wercker details [\#435](https://github.com/getlantern/flashlight/pull/435) ([myleshorton](https://github.com/myleshorton))
 - no opencensus [\#434](https://github.com/getlantern/flashlight/pull/434) ([myleshorton](https://github.com/myleshorton))
@@ -108,11 +126,38 @@
 - move from glide to dep [\#431](https://github.com/getlantern/flashlight/pull/431) ([myleshorton](https://github.com/myleshorton))
 - removing error level log when no announcement section is in loconf [\#430](https://github.com/getlantern/flashlight/pull/430) ([myleshorton](https://github.com/myleshorton))
 - Defer dialing of virtual lampshade connections until needed by balancer [\#429](https://github.com/getlantern/flashlight/pull/429) ([oxtoacart](https://github.com/oxtoacart))
+- accept arbitrary headers to pass to pro/config servers [\#423](https://github.com/getlantern/flashlight/pull/423) ([forkner](https://github.com/forkner))
+
+## [4.6.6](https://github.com/getlantern/flashlight/tree/4.6.6) (2018-04-23)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.4...4.6.6)
+
+## [4.6.4](https://github.com/getlantern/flashlight/tree/4.6.4) (2018-04-20)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.4)
+
+**Merged pull requests:**
+
 - Two fixes [\#428](https://github.com/getlantern/flashlight/pull/428) ([joesis](https://github.com/joesis))
+
+## [4.6.3](https://github.com/getlantern/flashlight/tree/4.6.3) (2018-04-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.3)
+
+## [4.6.1](https://github.com/getlantern/flashlight/tree/4.6.1) (2018-04-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.1)
+
+## [4.6.2](https://github.com/getlantern/flashlight/tree/4.6.2) (2018-04-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.2)
+
+**Merged pull requests:**
+
 - Idletiming user agent connections [\#426](https://github.com/getlantern/flashlight/pull/426) ([oxtoacart](https://github.com/oxtoacart))
+
+## [4.6.0](https://github.com/getlantern/flashlight/tree/4.6.0) (2018-04-16)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.2.0...4.6.0)
+
+**Merged pull requests:**
+
 - logging improvement [\#425](https://github.com/getlantern/flashlight/pull/425) ([myleshorton](https://github.com/myleshorton))
 - use different settings.yaml in staging mode [\#424](https://github.com/getlantern/flashlight/pull/424) ([joesis](https://github.com/joesis))
-- accept arbitrary headers to pass to pro/config servers [\#423](https://github.com/getlantern/flashlight/pull/423) ([forkner](https://github.com/forkner))
 - More stable dialer selection [\#422](https://github.com/getlantern/flashlight/pull/422) ([joesis](https://github.com/joesis))
 - updated UI [\#421](https://github.com/getlantern/flashlight/pull/421) ([myleshorton](https://github.com/myleshorton))
 - updating deps [\#420](https://github.com/getlantern/flashlight/pull/420) ([myleshorton](https://github.com/myleshorton))
@@ -235,16 +280,6 @@
 ## [4.0.1](https://github.com/getlantern/flashlight/tree/4.0.1) (2017-09-06)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/3.7.6...4.0.1)
 
-**Fixed bugs:**
-
-- ws package panics: close of closed channel [\#273](https://github.com/getlantern/flashlight/issues/273)
-
-**Closed issues:**
-
-- fronted package blocks even after network recovered [\#285](https://github.com/getlantern/flashlight/issues/285)
-- More robust way to clear proxy setting when Windows shuts down [\#258](https://github.com/getlantern/flashlight/issues/258)
-- Pick up random port again when fail to listen [\#149](https://github.com/getlantern/flashlight/issues/149)
-
 **Merged pull requests:**
 
 - check LRU for recent https rewritten URL [\#299](https://github.com/getlantern/flashlight/pull/299) ([joesis](https://github.com/joesis))
@@ -265,13 +300,6 @@
 
 ## [3.7.6](https://github.com/getlantern/flashlight/tree/3.7.6) (2017-07-31)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/3.5.12...3.7.6)
-
-**Closed issues:**
-
-- `android\_test.go` failing [\#265](https://github.com/getlantern/flashlight/issues/265)
-- Error persist proxystats.csv on Android [\#204](https://github.com/getlantern/flashlight/issues/204)
-- Always serve CSS file with correct "Content-Type" header [\#196](https://github.com/getlantern/flashlight/issues/196)
-- Data race [\#123](https://github.com/getlantern/flashlight/issues/123)
 
 **Merged pull requests:**
 
@@ -393,22 +421,6 @@
 ## [3.5.12](https://github.com/getlantern/flashlight/tree/3.5.12) (2017-01-02)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/0.0.3...3.5.12)
 
-**Fixed bugs:**
-
-- An empty uiAddr entry causes Lantern panic [\#79](https://github.com/getlantern/flashlight/issues/79)
-
-**Closed issues:**
-
-- 3.5.5 can take \> 10s to start up [\#129](https://github.com/getlantern/flashlight/issues/129)
-- Data race when applying fetched config [\#125](https://github.com/getlantern/flashlight/issues/125)
-- Obfs4 allocates too much memory [\#94](https://github.com/getlantern/flashlight/issues/94)
-- showExistingUI hit incorrect address [\#78](https://github.com/getlantern/flashlight/issues/78)
-- -clear-proxy-settings option no longer works [\#77](https://github.com/getlantern/flashlight/issues/77)
-- Dump every request/response to pro-server [\#58](https://github.com/getlantern/flashlight/issues/58)
-- HTTPS Sites don't work in Firefox [\#8](https://github.com/getlantern/flashlight/issues/8)
-- Certain resources fail to load because of certificate errors [\#6](https://github.com/getlantern/flashlight/issues/6)
-- Look into adding idle timeout to client and server proxies [\#5](https://github.com/getlantern/flashlight/issues/5)
-
 **Merged pull requests:**
 
 - Suggested changes to https://github.com/getlantern/flashlight/pull/143 [\#145](https://github.com/getlantern/flashlight/pull/145) ([joesis](https://github.com/joesis))
@@ -489,18 +501,18 @@
 - Refactored to use nattywad that uses topics support in waddell [\#48](https://github.com/getlantern/flashlight/pull/48) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [v1.5.12](https://github.com/getlantern/flashlight/tree/v1.5.12) (2014-11-19)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta2...v1.5.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta1...v1.5.12)
 
 **Merged pull requests:**
 
 - getlantern/lantern\#1981 gzipping cloud.yaml [\#47](https://github.com/getlantern/flashlight/pull/47) ([oxtoacart](https://github.com/oxtoacart))
 - Pull changes for getlantern/lantern\#1946 into natty branch [\#46](https://github.com/getlantern/flashlight/pull/46) ([oxtoacart](https://github.com/oxtoacart))
 
-## [natty-beta2](https://github.com/getlantern/flashlight/tree/natty-beta2) (2014-11-10)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta1...natty-beta2)
-
 ## [natty-beta1](https://github.com/getlantern/flashlight/tree/natty-beta1) (2014-11-10)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/natty...natty-beta1)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta2...natty-beta1)
+
+## [natty-beta2](https://github.com/getlantern/flashlight/tree/natty-beta2) (2014-11-10)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/natty...natty-beta2)
 
 ## [natty](https://github.com/getlantern/flashlight/tree/natty) (2014-11-10)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/v1.6.0...natty)
@@ -575,15 +587,6 @@
 - Stats [\#13](https://github.com/getlantern/flashlight/pull/13) ([myleshorton](https://github.com/myleshorton))
 
 ## [0.0.1](https://github.com/getlantern/flashlight/tree/0.0.1) (2014-07-29)
-**Closed issues:**
-
-- In Chrome, URL results in a download when it should show a page [\#9](https://github.com/getlantern/flashlight/issues/9)
-- Seeing Washington Post Favicon for HomeDepot website?! [\#7](https://github.com/getlantern/flashlight/issues/7)
-- Occasional content-length mismatch when running through CloudFlare [\#4](https://github.com/getlantern/flashlight/issues/4)
-- Redirect loop on www.nytimes.com [\#3](https://github.com/getlantern/flashlight/issues/3)
-- CloudFlare sites are inaccessible while host-spoofing through CloudFlare [\#2](https://github.com/getlantern/flashlight/issues/2)
-- Some GitHub features are broken when running through CloudFlare [\#1](https://github.com/getlantern/flashlight/issues/1)
-
 **Merged pull requests:**
 
 - Added fastly support to flashlight [\#12](https://github.com/getlantern/flashlight/pull/12) ([oxtoacart](https://github.com/oxtoacart))
