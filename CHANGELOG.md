@@ -72,21 +72,21 @@
 - Allowing numbers in optional protocol part of proxy name regex [\#449](https://github.com/getlantern/flashlight/pull/449) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [4.6.14](https://github.com/getlantern/flashlight/tree/4.6.14) (2018-05-06)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.14)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.14)
 
 **Merged pull requests:**
 
 - \[mobile\] Intercept requests to pro server and handle with special http.Client [\#448](https://github.com/getlantern/flashlight/pull/448) ([atavism](https://github.com/atavism))
 - Include a little more info with dial\_for\_balancer op [\#447](https://github.com/getlantern/flashlight/pull/447) ([oxtoacart](https://github.com/oxtoacart))
 
+## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.13)
+
 ## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.12)
 
 ## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.11)
-
-## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.13)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.11)
 
 **Merged pull requests:**
 
@@ -152,7 +152,7 @@
 - Idletiming user agent connections [\#426](https://github.com/getlantern/flashlight/pull/426) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [4.6.0](https://github.com/getlantern/flashlight/tree/4.6.0) (2018-04-16)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.2.0...4.6.0)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.5.9...4.6.0)
 
 **Merged pull requests:**
 
@@ -163,7 +163,19 @@
 - updating deps [\#420](https://github.com/getlantern/flashlight/pull/420) ([myleshorton](https://github.com/myleshorton))
 - Release 4.5.7 branch [\#419](https://github.com/getlantern/flashlight/pull/419) ([myleshorton](https://github.com/myleshorton))
 - updated UI with fixes for device linking [\#418](https://github.com/getlantern/flashlight/pull/418) ([myleshorton](https://github.com/myleshorton))
+
+## [4.5.9](https://github.com/getlantern/flashlight/tree/4.5.9) (2018-04-05)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.5.8...4.5.9)
+
+**Merged pull requests:**
+
 - Made proxybench a fully reported op [\#417](https://github.com/getlantern/flashlight/pull/417) ([oxtoacart](https://github.com/oxtoacart))
+
+## [4.5.8](https://github.com/getlantern/flashlight/tree/4.5.8) (2018-04-04)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.5.7...4.5.8)
+
+**Merged pull requests:**
+
 - Add Exit method [\#416](https://github.com/getlantern/flashlight/pull/416) ([atavism](https://github.com/atavism))
 - renamed package [\#415](https://github.com/getlantern/flashlight/pull/415) ([myleshorton](https://github.com/myleshorton))
 - Updated dependencies [\#414](https://github.com/getlantern/flashlight/pull/414) ([oxtoacart](https://github.com/oxtoacart))
@@ -173,30 +185,72 @@
 - Forcing traffic for internal domains over proxies, closes getlantern/… [\#410](https://github.com/getlantern/flashlight/pull/410) ([oxtoacart](https://github.com/oxtoacart))
 - \#1523 bugfix: Don't overwrite userID in test [\#409](https://github.com/getlantern/flashlight/pull/409) ([hchood](https://github.com/hchood))
 - \[mobile\] Remove pro client [\#408](https://github.com/getlantern/flashlight/pull/408) ([atavism](https://github.com/atavism))
+
+## [4.5.7](https://github.com/getlantern/flashlight/tree/4.5.7) (2018-03-17)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.5.5...4.5.7)
+
+**Merged pull requests:**
+
 - Hardcoding available TLS ciphers instead of using Go importer [\#407](https://github.com/getlantern/flashlight/pull/407) ([oxtoacart](https://github.com/oxtoacart))
+
+## [4.5.5](https://github.com/getlantern/flashlight/tree/4.5.5) (2018-03-15)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.5.4...4.5.5)
+
+**Merged pull requests:**
+
 - Pulling embedded global.yaml from cloud [\#406](https://github.com/getlantern/flashlight/pull/406) ([oxtoacart](https://github.com/oxtoacart))
 - Shorter masquerade timeout for Borda [\#405](https://github.com/getlantern/flashlight/pull/405) ([oxtoacart](https://github.com/oxtoacart))
 - Suggested code review updates [\#403](https://github.com/getlantern/flashlight/pull/403) ([oxtoacart](https://github.com/oxtoacart))
-- Add option to only show ads for certain regions [\#402](https://github.com/getlantern/flashlight/pull/402) ([atavism](https://github.com/atavism))
-- More generic proxy biasing mechanism, with KCP deprioritized by default [\#401](https://github.com/getlantern/flashlight/pull/401) ([oxtoacart](https://github.com/oxtoacart))
-- \[mobile\] Add whitelist to ad settings [\#400](https://github.com/getlantern/flashlight/pull/400) ([atavism](https://github.com/atavism))
-- Domain-fronting bypasses CONNECT processing [\#399](https://github.com/getlantern/flashlight/pull/399) ([oxtoacart](https://github.com/oxtoacart))
 - Attempt at blocking preroll ads [\#398](https://github.com/getlantern/flashlight/pull/398) ([oxtoacart](https://github.com/oxtoacart))
+- Issue \#1489: Make our TLS fingerprint more like Golang TLS [\#393](https://github.com/getlantern/flashlight/pull/393) ([hchood](https://github.com/hchood))
+
+## [4.5.4](https://github.com/getlantern/flashlight/tree/4.5.4) (2018-02-26)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.5.3...4.5.4)
+
+**Merged pull requests:**
+
+- Add option to only show ads for certain regions [\#402](https://github.com/getlantern/flashlight/pull/402) ([atavism](https://github.com/atavism))
+- \[mobile\] Add whitelist to ad settings [\#400](https://github.com/getlantern/flashlight/pull/400) ([atavism](https://github.com/atavism))
+
+## [4.5.3](https://github.com/getlantern/flashlight/tree/4.5.3) (2018-02-22)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.5.2...4.5.3)
+
+**Merged pull requests:**
+
+- More generic proxy biasing mechanism, with KCP deprioritized by default [\#401](https://github.com/getlantern/flashlight/pull/401) ([oxtoacart](https://github.com/oxtoacart))
+- Domain-fronting bypasses CONNECT processing [\#399](https://github.com/getlantern/flashlight/pull/399) ([oxtoacart](https://github.com/oxtoacart))
+
+## [4.5.2](https://github.com/getlantern/flashlight/tree/4.5.2) (2018-02-16)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.5.1...4.5.2)
+
+**Merged pull requests:**
+
 - Reading config test templates from memory and storing configs in temp… [\#397](https://github.com/getlantern/flashlight/pull/397) ([oxtoacart](https://github.com/oxtoacart))
+- Add interval for showing ads to fresh installs [\#394](https://github.com/getlantern/flashlight/pull/394) ([atavism](https://github.com/atavism))
+
+## [4.5.1](https://github.com/getlantern/flashlight/tree/4.5.1) (2018-02-13)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.5.0...4.5.1)
+
+**Merged pull requests:**
+
 - Don't ad block if ad swapping is enabled [\#396](https://github.com/getlantern/flashlight/pull/396) ([oxtoacart](https://github.com/oxtoacart))
 - Added custom lantern easylist, using only that for free [\#395](https://github.com/getlantern/flashlight/pull/395) ([oxtoacart](https://github.com/oxtoacart))
-- Add interval for showing ads to fresh installs [\#394](https://github.com/getlantern/flashlight/pull/394) ([atavism](https://github.com/atavism))
-- Issue \#1489: Make our TLS fingerprint more like Golang TLS [\#393](https://github.com/getlantern/flashlight/pull/393) ([hchood](https://github.com/hchood))
 - Updated to latest MITM library to fix getlantern/lantern-internal\#1499 [\#391](https://github.com/getlantern/flashlight/pull/391) ([oxtoacart](https://github.com/oxtoacart))
 - Support for localizing MITM certificate installation, for getlantern/… [\#390](https://github.com/getlantern/flashlight/pull/390) ([oxtoacart](https://github.com/oxtoacart))
 - exoclick cleanup [\#389](https://github.com/getlantern/flashlight/pull/389) ([myleshorton](https://github.com/myleshorton))
 - Not applying HTTPSEverywhere to MITM'ed requests [\#388](https://github.com/getlantern/flashlight/pull/388) ([oxtoacart](https://github.com/oxtoacart))
-- Fixed loconf test [\#387](https://github.com/getlantern/flashlight/pull/387) ([oxtoacart](https://github.com/oxtoacart))
-- MITM'ing for better ad swapping coverage [\#386](https://github.com/getlantern/flashlight/pull/386) ([oxtoacart](https://github.com/oxtoacart))
 - Issue \#1455: Adhere to config setting for config server retries [\#385](https://github.com/getlantern/flashlight/pull/385) ([hchood](https://github.com/hchood))
 - avoid ws package data race in tests [\#384](https://github.com/getlantern/flashlight/pull/384) ([joesis](https://github.com/joesis))
-- Add ad settings to client config [\#383](https://github.com/getlantern/flashlight/pull/383) ([atavism](https://github.com/atavism))
 - set deadline for CONNECT phase [\#381](https://github.com/getlantern/flashlight/pull/381) ([joesis](https://github.com/joesis))
+
+## [4.5.0](https://github.com/getlantern/flashlight/tree/4.5.0) (2018-02-03)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.2.0...4.5.0)
+
+**Merged pull requests:**
+
+- Fixed loconf test [\#387](https://github.com/getlantern/flashlight/pull/387) ([oxtoacart](https://github.com/oxtoacart))
+- MITM'ing for better ad swapping coverage [\#386](https://github.com/getlantern/flashlight/pull/386) ([oxtoacart](https://github.com/oxtoacart))
+- Add ad settings to client config [\#383](https://github.com/getlantern/flashlight/pull/383) ([atavism](https://github.com/atavism))
 - Updated to latest borda library that submits to borda.lantern.io \(Clo… [\#380](https://github.com/getlantern/flashlight/pull/380) ([oxtoacart](https://github.com/oxtoacart))
 - set default recipient from global config [\#379](https://github.com/getlantern/flashlight/pull/379) ([joesis](https://github.com/joesis))
 - show desktop notification once got updated version [\#378](https://github.com/getlantern/flashlight/pull/378) ([joesis](https://github.com/joesis))
@@ -501,18 +555,18 @@
 - Refactored to use nattywad that uses topics support in waddell [\#48](https://github.com/getlantern/flashlight/pull/48) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [v1.5.12](https://github.com/getlantern/flashlight/tree/v1.5.12) (2014-11-19)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta1...v1.5.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta2...v1.5.12)
 
 **Merged pull requests:**
 
 - getlantern/lantern\#1981 gzipping cloud.yaml [\#47](https://github.com/getlantern/flashlight/pull/47) ([oxtoacart](https://github.com/oxtoacart))
 - Pull changes for getlantern/lantern\#1946 into natty branch [\#46](https://github.com/getlantern/flashlight/pull/46) ([oxtoacart](https://github.com/oxtoacart))
 
-## [natty-beta1](https://github.com/getlantern/flashlight/tree/natty-beta1) (2014-11-10)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta2...natty-beta1)
-
 ## [natty-beta2](https://github.com/getlantern/flashlight/tree/natty-beta2) (2014-11-10)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/natty...natty-beta2)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta1...natty-beta2)
+
+## [natty-beta1](https://github.com/getlantern/flashlight/tree/natty-beta1) (2014-11-10)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/natty...natty-beta1)
 
 ## [natty](https://github.com/getlantern/flashlight/tree/natty) (2014-11-10)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/v1.6.0...natty)
