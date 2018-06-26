@@ -58,9 +58,8 @@ type App struct {
 	exited       eventual.Value
 	statsTracker *statsTracker
 
-	muExitFuncs   sync.RWMutex
-	exitFuncs     []func()
-	lastExitFuncs []func()
+	muExitFuncs sync.RWMutex
+	exitFuncs   []func()
 
 	uiServer *ui.Server
 	ws       ws.UIChannel
@@ -413,18 +412,6 @@ func (app *App) AddExitFunc(label string, exitFunc func()) {
 	app.muExitFuncs.Unlock()
 }
 
-// AddExitFuncToEnd adds a function to be called before the application exits
-// but after exit functions added with AddExitFunc.
-func (app *App) AddExitFuncToEnd(label string, exitFunc func()) {
-	app.muExitFuncs.Lock()
-	app.lastExitFuncs = append(app.lastExitFuncs, func() {
-		log.Debugf("Processing exit function at end: %v", label)
-		exitFunc()
-		log.Debugf("Done processing exit function at end: %v", label)
-	})
-	app.muExitFuncs.Unlock()
-}
-
 // Exit tells the application to exit, optionally supplying an error that caused
 // the exit. Returns true if the app is actually exiting, false if exit has
 // already been requested.
@@ -447,11 +434,9 @@ func (app *App) doExit(err error) {
 		log.Debugf("Finished exiting app %d(%d)", os.Getpid(), os.Getppid())
 	}()
 
-	log.Debug("Running exit functions")
 	ch := make(chan struct{})
 	go func() {
 		app.runExitFuncs()
-		app.runLastExitFuncs()
 		close(ch)
 	}()
 	t := time.NewTimer(10 * time.Second)
@@ -461,12 +446,16 @@ func (app *App) doExit(err error) {
 	case <-t.C:
 		log.Debug("Timeout running exit functions, quit anyway")
 	}
+	if err := logging.Close(); err != nil {
+		log.Errorf("Error closing log: %v", err)
+	}
 }
 
 func (app *App) runExitFuncs() {
 	var wg sync.WaitGroup
 	// call plain exit funcs in parallel
 	app.muExitFuncs.RLock()
+	log.Debugf("Running %d exit functions", len(app.exitFuncs))
 	wg.Add(len(app.exitFuncs))
 	for _, f := range app.exitFuncs {
 		go func(f func()) {
@@ -476,20 +465,6 @@ func (app *App) runExitFuncs() {
 	}
 	app.muExitFuncs.RUnlock()
 	wg.Wait()
-}
-
-func (app *App) runLastExitFuncs() {
-	// call last exit funcs in reverse order
-	app.muExitFuncs.RLock()
-	reversed := make([]func(), len(app.lastExitFuncs))
-	lastIndex := len(app.lastExitFuncs) - 1
-	for i, f := range app.lastExitFuncs {
-		reversed[lastIndex-i] = f
-	}
-	app.muExitFuncs.RUnlock()
-	for _, f := range reversed {
-		f()
-	}
 }
 
 // WaitForExit waits for a request to exit the application.
