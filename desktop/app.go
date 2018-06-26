@@ -464,12 +464,18 @@ func (app *App) doExit(err error) {
 }
 
 func (app *App) runExitFuncs() {
+	var wg sync.WaitGroup
 	// call plain exit funcs in parallel
 	app.muExitFuncs.RLock()
+	wg.Add(len(app.exitFuncs))
 	for _, f := range app.exitFuncs {
-		go f()
+		go func(f func()) {
+			f()
+			wg.Done()
+		}(f)
 	}
 	app.muExitFuncs.RUnlock()
+	wg.Wait()
 }
 
 func (app *App) runLastExitFuncs() {
