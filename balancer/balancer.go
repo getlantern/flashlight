@@ -52,6 +52,10 @@ type Dialer interface {
 	// -line display.
 	JustifiedLabel() string
 
+	// Protocol returns a string representation of the protocol used by this
+	// Dialer.
+	Protocol() string
+
 	// Addr returns the address for this Dialer
 	Addr() string
 
@@ -177,7 +181,7 @@ func (b *Balancer) Reset(dialers ...Dialer) {
 	b.sessionStats = sessionStats
 	b.lastReset = lastReset
 	b.mu.Unlock()
-	b.sortDialers()
+	recordTopDialer(b.sortDialers())
 
 	for _, dl := range oldDialers {
 		dl.Stop()
@@ -447,6 +451,7 @@ func (b *Balancer) evalDialers(checkAllowed bool) []Dialer {
 		}
 		op.Set("reason", reason)
 		log.Debug("Top dialer changed")
+		recordTopDialer(dialers)
 	} else {
 		op.SetMetricSum("top_dialer_unchanged", 1)
 		log.Debug("Top dialer unchanged")
@@ -649,6 +654,25 @@ func (b *Balancer) lookForSucceedingDialer(dialers []Dialer) {
 	default:
 		// channel full
 	}
+}
+
+func recordTopDialer(sortedDialers []Dialer) {
+	if len(sortedDialers) == 0 {
+		ops.SetGlobal("top_proxy_name", nil)
+		ops.SetGlobal("top_dc", nil)
+		ops.SetGlobal("top_proxy_protocol", nil)
+		return
+	}
+
+	dialer := sortedDialers[0]
+	name, dc := ops.ProxyNameAndDC(dialer.Name())
+	if name != "" {
+		ops.SetGlobal("top_proxy_name", name)
+	}
+	if dc != "" {
+		ops.SetGlobal("top_dc", dc)
+	}
+	ops.SetGlobal("top_proxy_protocol", dialer.Protocol())
 }
 
 func SortDialers(dialers []Dialer) []Dialer {

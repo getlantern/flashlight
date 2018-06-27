@@ -44,6 +44,10 @@ func (d *testDialer) JustifiedLabel() string {
 	return d.name
 }
 
+func (d *testDialer) Protocol() string {
+	return "https"
+}
+
 func (d *testDialer) Addr() string {
 	return ""
 }

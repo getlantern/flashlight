@@ -150,13 +150,24 @@ func (op *Op) ProxyType(v ProxyType) *Op {
 // ProxyName attaches the name of the proxy and the inferred datacenter to the
 // Context
 func (op *Op) ProxyName(name string) *Op {
-	match := proxyNameRegex.FindStringSubmatch(name)
-	// Only set proxy name if it follows our naming convention
-	if len(match) == 5 {
-		op.Set("proxy_name", match[1])
-		op.Set("dc", match[3])
+	proxyName, dc := ProxyNameAndDC(name)
+	if proxyName != "" {
+		op.Set("proxy_name", proxyName)
+	}
+	if dc != "" {
+		op.Set("dc", dc)
 	}
 	return op
+}
+
+// ProxyNameAndDC extracts the canonical proxy name and datacenter from a given
+// full proxy name.
+func ProxyNameAndDC(name string) (string, string) {
+	match := proxyNameRegex.FindStringSubmatch(name)
+	if len(match) == 5 {
+		return match[1], match[3]
+	}
+	return "", ""
 }
 
 // ProxyAddr attaches proxy server address to the Context
