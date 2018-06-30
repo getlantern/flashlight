@@ -91,10 +91,10 @@
   revision = "7c0f9d241ea78ff68bf3aecfe2ea2009ff8500cf"
 
 [[projects]]
-  branch = "master"
+  branch = "issue_1891"
   name = "github.com/getlantern/autoupdate"
   packages = ["."]
-  revision = "33eb946ea4bcf107a87810143357facc64decf18"
+  revision = "d6f6b3de25887229fe6da04b7b5d386f911ce5f7"
 
 [[projects]]
   branch = "master"
@@ -208,16 +208,16 @@
   revision = "c5f0cd24e7991579ba6f5f1bd20a1ad2c9f06cd4"
 
 [[projects]]
-  branch = "master"
+  branch = "issue_1891"
   name = "github.com/getlantern/fronted"
   packages = ["."]
-  revision = "2083bbd8118e357d44354a22dc202a8c70e1560b"
+  revision = "92180d7bb2b7debdfa93e5efcacfe7d993b534f4"
 
 [[projects]]
-  branch = "master"
+  branch = "issue_1891"
   name = "github.com/getlantern/geolookup"
   packages = ["."]
-  revision = "823d7ff3e6eb74dd6aae38a4b52207b19abfbf66"
+  revision = "8b7142a493e09ed96897f8333feadfe125a07195"
 
 [[projects]]
   branch = "master"
@@ -288,7 +288,7 @@
   revision = "8f8c6ce1e943b07d9216279588118f428537e6f9"
 
 [[projects]]
-  branch = "master"
+  branch = "issue_1891"
   name = "github.com/getlantern/http-proxy-lantern"
   packages = [
     ".",
@@ -315,7 +315,7 @@
     "usage",
     "versioncheck"
   ]
-  revision = "0411577746850e128be75a4a4753862794d80313"
+  revision = "a0e1946577b61fb810fd0df71dd57a38bcd27007"
 
 [[projects]]
   branch = "master"
@@ -1029,6 +1029,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2595b819dfc14f4f6df3c4746a4232c50713ca252e6150f6dc465433495d26c7"
+  inputs-digest = "7b26e9eb8cc5e9f4f9d8bddf03cda6af9e5663faf0ac6d3d93d690e9ae070738"
   solver-name = "gps-cdcl"
   solver-version = 1

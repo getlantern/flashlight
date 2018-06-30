@@ -35,24 +35,20 @@ func TestStagingSetup(t *testing.T) {
 	rt := &http.Transport{}
 
 	var fetch *fetcher
-	fetch = newFetcher(newTestUserConfig(), rt, proxiesURLs).(*fetcher)
+	fetch = newFetcher(newTestUserConfig(), rt, proxiesURL).(*fetcher)
 
-	assert.Equal(t, "http://config.getiantem.org/proxies.yaml.gz", fetch.chainedURL)
-	assert.Equal(t, "http://d2wi0vwulmtn99.cloudfront.net/proxies.yaml.gz", fetch.frontedURL)
+	assert.Equal(t, "http://config.getiantem.org/proxies.yaml.gz", fetch.originURL)
 
-	urls := proxiesURLs
+	url := proxiesURL
 
 	// Blank flags should mean we use the default
 	flags["cloudconfig"] = ""
-	flags["frontedconfig"] = ""
-	fetch = newFetcher(newTestUserConfig(), rt, urls).(*fetcher)
+	fetch = newFetcher(newTestUserConfig(), rt, url).(*fetcher)
 
-	assert.Equal(t, "http://config.getiantem.org/proxies.yaml.gz", fetch.chainedURL)
-	assert.Equal(t, "http://d2wi0vwulmtn99.cloudfront.net/proxies.yaml.gz", fetch.frontedURL)
+	assert.Equal(t, "http://config.getiantem.org/proxies.yaml.gz", fetch.originURL)
 
-	stagingURLs := proxiesStagingURLs
+	stagingURL := proxiesStagingURL
 	flags["staging"] = true
-	fetch = newFetcher(newTestUserConfig(), rt, stagingURLs).(*fetcher)
-	assert.Equal(t, "http://config-staging.getiantem.org/proxies.yaml.gz", fetch.chainedURL)
-	assert.Equal(t, "http://d33pfmbpauhmvd.cloudfront.net/proxies.yaml.gz", fetch.frontedURL)
+	fetch = newFetcher(newTestUserConfig(), rt, stagingURL).(*fetcher)
+	assert.Equal(t, "http://config-staging.getiantem.org/proxies.yaml.gz", fetch.originURL)
 }
