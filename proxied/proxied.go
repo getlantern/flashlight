@@ -31,8 +31,7 @@ import (
 )
 
 const (
-	forceDF           = "FORCE_DOMAINFRONT"
-	lanternFrontedURL = "Lantern-Fronted-URL"
+	forceDF = "FORCE_DOMAINFRONT"
 )
 
 var (
@@ -96,41 +95,37 @@ type RoundTripper interface {
 // servers unless and until a request fails, in which case we'll start trying
 // fronted requests again.
 func ParallelPreferChained() RoundTripper {
-	return dual(true, "", "")
+	return dual(true, "")
 }
 
 // ChainedThenFronted creates a new http.RoundTripper that attempts to send
 // requests first through a chained server and then falls back to using a
 // direct fronted server if the chained route didn't work.
 func ChainedThenFronted() RoundTripper {
-	return dual(false, "", "")
+	return dual(false, "")
 }
 
 // ParallelPreferChainedWith creates a new http.RoundTripper that attempts to
 // send requests through both chained and direct fronted routes in parallel.
 // Once a chained request succeeds, subsequent requests will only go through
 // Chained servers unless and until a request fails, in which case we'll start
-// trying fronted requests again. This version specified the fronted URL
-// directly.
-func ParallelPreferChainedWith(frontedURL string, rootCA string) RoundTripper {
-	return dual(true, frontedURL, rootCA)
+// trying fronted requests again.
+func ParallelPreferChainedWith(rootCA string) RoundTripper {
+	return dual(true, rootCA)
 }
 
 // ChainedThenFrontedWith creates a new http.RoundTripper that attempts to send
 // requests first through a chained server and then falls back to using a
 // direct fronted server if the chained route didn't work.
-// This version specified the fronted URL directly.
-func ChainedThenFrontedWith(frontedURL, rootCA string) RoundTripper {
-	return dual(false, frontedURL, rootCA)
+func ChainedThenFrontedWith(rootCA string) RoundTripper {
+	return dual(false, rootCA)
 }
 
 // dual creates a new http.RoundTripper that attempts to send
 // requests to both chained and fronted servers either in parallel or not.
-func dual(parallel bool, frontedURL, rootCA string) RoundTripper {
+func dual(parallel bool, rootCA string) RoundTripper {
 	cf := &chainedAndFronted{
 		parallel:          parallel,
-		frontedURLHost:    frontedURL,
-		rootCA:            rootCA,
 		masqueradeTimeout: 5 * time.Minute,
 	}
 	cf.setFetcher(newDualFetcher(cf))
@@ -149,7 +144,6 @@ func newDualFetcherWithTimeout(cf *chainedAndFronted, masqueradeTimeout time.Dur
 // servers.
 type chainedAndFronted struct {
 	parallel          bool
-	frontedURLHost    string
 	_fetcher          http.RoundTripper
 	mu                sync.RWMutex
 	rootCA            string
@@ -243,8 +237,7 @@ func (f frontedRT) RoundTrip(req *http.Request) (*http.Response, error) {
 
 // RoundTrip will attempt to execute the specified HTTP request using both
 // chained and fronted servers, simply returning the first response to
-// arrive. Callers MUST use the Lantern-Fronted-URL HTTP header to
-// specify the fronted URL to use.
+// arrive.
 func (df *dualFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
 	if df.cf.parallel && !isIdempotentMethod(req) {
 		return nil, errors.New("Use ParallelPreferChained for non-idempotent method")
@@ -257,8 +250,7 @@ func (df *dualFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 // do will attempt to execute the specified HTTP request using both
-// chained and fronted servers. Callers MUST use the Lantern-Fronted-URL HTTP
-// header to specify the fronted URL to use.
+// chained and fronted servers.
 func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT http.RoundTripper) (*http.Response, error) {
 	log.Debugf("Using dual fronter")
 	op := ops.Begin("dualfetcher").Request(req)
@@ -304,8 +296,6 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 		}
 	}
 
-	// cloneRequestForFronted modifies the req to remove Lantern-Fronted-URL
-	// header. We need to call it before make any requests.
 	frontedReq, err := df.cf.cloneRequestForFronted(req)
 	if err != nil {
 		// Fail immediately as it's a program error.
@@ -393,24 +383,7 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 }
 
 func (cf *chainedAndFronted) cloneRequestForFronted(req *http.Request) (*http.Request, error) {
-	var frontedURL string
-	if cf.frontedURLHost != "" {
-		// Just swap the host while keeping the rest of the URL the same.
-		urlCopy := *req.URL
-		urlCopy.Host = cf.frontedURLHost
-		frontedURL = urlCopy.String()
-	} else {
-		frontedURL = req.Header.Get(lanternFrontedURL)
-		if frontedURL == "" {
-			return nil, errors.New("Callers MUST specify the fronted URL in the Lantern-Fronted-URL header")
-		}
-		req.Header.Del(lanternFrontedURL)
-	}
-	return cloneRequestForFronted(req, frontedURL)
-}
-
-func cloneRequestForFronted(req *http.Request, frontedURL string) (*http.Request, error) {
-	frontedReq, err := http.NewRequest(req.Method, frontedURL, nil)
+	frontedReq, err := http.NewRequest(req.Method, req.URL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -552,12 +525,6 @@ func chained(rootCA string, persistent bool) (http.RoundTripper, error) {
 		op.Response(resp)
 		return resp, errors.Wrap(err)
 	}), nil
-}
-
-// PrepareForFronting prepares the given request to be used with domain-
-// fronting.
-func PrepareForFronting(req *http.Request, frontedURL string) {
-	req.Header.Set(lanternFrontedURL, frontedURL)
 }
 
 // AsRoundTripper turns the given function into an http.RoundTripper.

@@ -40,12 +40,6 @@ type config struct {
 	unmarshaler func([]byte) (interface{}, error)
 }
 
-// chainedFrontedURLs contains a chained and a fronted URL for fetching a config.
-type chainedFrontedURLs struct {
-	chained string
-	fronted string
-}
-
 // options specifies the options to use for piping config data back to the
 // dispatch processor function.
 type options struct {
@@ -62,8 +56,8 @@ type options struct {
 	// configuration by convention).
 	name string
 
-	// urls are the chaines and fronted URLs to use for fetching this config.
-	urls *chainedFrontedURLs
+	// URL to use for fetching this config.
+	originURL string
 
 	// userConfig contains data for communicating the user details to upstream
 	// servers in HTTP headers, such as the pro token and other options.
@@ -150,7 +144,7 @@ func pipeConfig(opts *options) (stop func()) {
 	// Now continually poll for new configs and pipe them back to the dispatch
 	// function.
 	if !opts.sticky {
-		fetcher := newFetcher(opts.userConfig, opts.rt, opts.urls)
+		fetcher := newFetcher(opts.userConfig, opts.rt, opts.originURL)
 		go conf.poll(stopCh, dispatch, fetcher, opts.sleep)
 	} else {
 		log.Debugf("Using sticky config")

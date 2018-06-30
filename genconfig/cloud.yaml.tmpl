@@ -14,11 +14,20 @@ client:
       weight: 1000000
       qos: 10
       trusted: true{{end}}
+  fronted:
+    providers: {{range $pid, $p := .providers}}
+      {{$pid}}:
+        hostaliases: {{range $k, $v := $p.HostAliases}}
+          {{$k}}: {{$v}}{{end}}
+        testurl: {{$p.TestURL}}
+        masquerades: {{if eq $pid "cloudfront"}}&cfmasq{{end}}{{range $p.Masquerades}}
+        - domain: {{.Domain}}
+          ipaddress: {{.IpAddress}}{{end}}{{else}}{}{{end}}
   masqueradesets:
     cloudflare: []
-    cloudfront: {{range .masquerades}}
+    {{if .providers.cloudfront}}cloudfront: *cfmasq{{else}}cloudfront: {{range .cloudfrontMasquerades}}
     - domain: {{.Domain}}
-      ipaddress: {{.IpAddress}}{{end}}
+      ipaddress: {{.IpAddress}}{{else}}[]{{end}}{{end}}
 proxiedsites:
   delta:
     additions: []

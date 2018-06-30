@@ -65,9 +65,22 @@ func (cfg *Global) applyFlags(flags map[string]interface{}) {
 		}
 	}
 }
+
+// applyDefaults creates any default values that cannot be zero-value initialized
+func (cfg *Global) ApplyDefaults() {
+	cfg.Client.ApplyDefaults()
+}
+
 func (cfg *Global) validate() error {
-	if len(cfg.Client.MasqueradeSets) == 0 {
-		return errors.New("No masquerades")
+	if len(cfg.Client.Fronted.Providers) == 0 {
+		return errors.New("No fronted providers.")
+	}
+	masqsz := 0
+	for _, p := range cfg.Client.Fronted.Providers {
+		masqsz += len(p.Masquerades)
+	}
+	if masqsz == 0 {
+		return errors.New("No masquerades.")
 	}
 	if len(cfg.TrustedCAs) == 0 {
 		return errors.New("No trusted CAs")

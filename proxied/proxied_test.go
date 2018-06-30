@@ -69,12 +69,10 @@ func (rt *delayedRT) RoundTrip(req *http.Request) (*http.Response, error) {
 // copied to the fronted request from the original chained request.
 func TestChainedAndFrontedHeaders(t *testing.T) {
 	directURL := "http://direct"
-	frontedURL := "http://fronted"
 	req, err := http.NewRequest("GET", directURL, nil)
 	if !assert.NoError(t, err) {
 		return
 	}
-	req.Header.Set("Lantern-Fronted-URL", frontedURL)
 	req.Header.Set("Accept", "application/x-gzip")
 	// Prevents intermediate nodes (domain-fronters) from caching the content
 	req.Header.Set("Cache-Control", "no-cache")
@@ -89,7 +87,7 @@ func TestChainedAndFrontedHeaders(t *testing.T) {
 	t.Log("Checking chained roundtripper")
 	checkRequest(t, crt.req, etag, directURL)
 	t.Log("Checking fronted roundtripper")
-	checkRequest(t, frt.req, etag, frontedURL)
+	checkRequest(t, frt.req, etag, directURL)
 }
 
 func checkRequest(t *testing.T, v eventual.Value, etag string, url string) {
@@ -134,23 +132,10 @@ func TestChainedThenFronted(t *testing.T) {
 	doTestChainedAndFronted(t, ChainedThenFronted)
 }
 
-func TestInvalidRequest(t *testing.T) {
-	chained := &mockChainedRT{req: eventual.NewValue(), sc: 503}
-	fronted := &mockFrontedRT{req: eventual.NewValue()}
-	req, _ := http.NewRequest("GET", "http://chained", nil)
-	// intentionally omit Lantern-Fronted-URL
-
-	cf := ParallelPreferChained().(*chainedAndFronted)
-	_, err := cf.getFetcher().(*dualFetcher).do(req, chained, fronted)
-	assert.Error(t, err, "should fail instead of crash")
-	t.Log(err)
-}
-
 func TestSwitchingToChained(t *testing.T) {
 	chained := &mockChainedRT{req: eventual.NewValue(), sc: 503}
 	fronted := &mockFrontedRT{req: eventual.NewValue()}
 	req, _ := http.NewRequest("GET", "http://chained", nil)
-	req.Header.Set("Lantern-Fronted-URL", "http://fronted")
 
 	cf := ParallelPreferChained().(*chainedAndFronted)
 	cf.getFetcher().(*dualFetcher).do(req, chained, fronted)
@@ -159,13 +144,11 @@ func TestSwitchingToChained(t *testing.T) {
 	assert.True(t, valid, "should not switch fetcher if chained failed")
 
 	chained.setStatusCode(200)
-	req.Header.Set("Lantern-Fronted-URL", "http://fronted")
 	cf.getFetcher().(*dualFetcher).do(req, &delayedRT{chained, 100 * time.Millisecond}, fronted)
 	time.Sleep(100 * time.Millisecond)
 	_, valid = cf.getFetcher().(*dualFetcher)
 	assert.True(t, valid, "should not switch to chained fetcher if it's significantly slower")
 
-	req.Header.Set("Lantern-Fronted-URL", "http://fronted")
 	cf.getFetcher().(*dualFetcher).do(req, chained, &delayedRT{fronted, 100 * time.Millisecond})
 	time.Sleep(100 * time.Millisecond)
 	_, valid = cf.getFetcher().(*chainedFetcher)
@@ -197,10 +180,8 @@ func doTestChainedAndFronted(t *testing.T, build func() RoundTripper) {
 	SetProxyAddr(eventual.DefaultGetter(l.Addr().String()))
 
 	fronted.ConfigureForTest(t)
-
 	geo := "http://d3u5fqukq7qrhd.cloudfront.net/lookup/198.199.72.101"
 	req, err := http.NewRequest("GET", geo, nil)
-	req.Header.Set("Lantern-Fronted-URL", geo)
 
 	assert.NoError(t, err)
 
@@ -213,12 +194,16 @@ func doTestChainedAndFronted(t *testing.T, build func() RoundTripper) {
 	assert.True(t, strings.Contains(string(body), "United States"), "Unexpected response ")
 	_ = resp.Body.Close()
 
-	// Now test with a bad cloudfront url that won't resolve and make sure even the
-	// delayed req server still gives us the result
 	sleep = 2 * time.Second
-	bad := "http://48290.cloudfront.net/lookup/198.199.72.101"
+
+	// Now test with a bad cloudfront url configured that won't
+	// resolve and make sure even the delayed req server still gives us the result
+	goodhost := "d3u5fqukq7qrhd.cloudfront.net"
+	badhost := "48290.cloudfront.net"
+	fronted.ConfigureHostAlaisesForTest(t, map[string]string{goodhost: badhost})
+
 	req, err = http.NewRequest("GET", geo, nil)
-	req.Header.Set("Lantern-Fronted-URL", bad)
+
 	assert.NoError(t, err)
 	cf = build()
 	resp, err = cf.RoundTrip(req)
@@ -232,9 +217,10 @@ func doTestChainedAndFronted(t *testing.T, build func() RoundTripper) {
 	// Now give the bad url to the req server and make sure we still get the corret
 	// result from the fronted server.
 	//log.Debugf("Running test with bad URL in the req server")
-	bad = "http://48290.cloudfront.net/lookup/198.199.72.101"
+	bad := "http://48290.cloudfront.net/lookup/198.199.72.101"
 	req, err = http.NewRequest("GET", bad, nil)
-	req.Header.Set("Lantern-Fronted-URL", geo)
+	fronted.ConfigureHostAlaisesForTest(t, map[string]string{badhost: goodhost})
+
 	assert.NoError(t, err)
 	cf = build()
 	resp, err = cf.RoundTrip(req)
@@ -266,10 +252,6 @@ func TestCloneRequestForFronted(t *testing.T) {
 	}
 
 	r, err := cf.cloneRequestForFronted(req)
-	assert.Error(t, err, "an request without fronted URL should fail")
-
-	req.Header.Add("Lantern-Fronted-URL", "http://fronted.tldr/path2")
-	r, err = cf.cloneRequestForFronted(req)
 	assert.Nil(t, err)
 
 	dump, er := httputil.DumpRequestOut(req, true)
@@ -285,8 +267,8 @@ func TestCloneRequestForFronted(t *testing.T) {
 	assert.Equal(t, "test1", param1)
 	assert.Equal(t, "test2", param2)
 
-	assert.Equal(t, "fronted.tldr", r.URL.Host)
-	assert.Equal(t, "/path2", r.URL.Path)
+	assert.Equal(t, "chained.com", r.URL.Host)
+	assert.Equal(t, "/path1", r.URL.Path)
 	assert.Equal(t, req.ContentLength, r.ContentLength)
 	b, _ := ioutil.ReadAll(r.Body)
 	assert.Equal(t, "abc", string(b), "should have body")
