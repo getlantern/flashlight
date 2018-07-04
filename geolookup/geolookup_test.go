@@ -8,7 +8,9 @@ import (
 )
 
 func TestFronted(t *testing.T) {
-	fronted.ConfigureForTest(t)
+	fronted.ConfigureHostAlaisesForTest(t, map[string]string{
+		"geo.getiantem.org": "d3u5fqukq7qrhd.cloudfront.net",
+	})
 	ch := OnRefresh()
 	Refresh()
 	country := GetCountry(15 * time.Second)

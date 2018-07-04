@@ -106,21 +106,12 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 
 	// These are the options for fetching the per-user proxy config.
 	proxyOptions := &options{
-		saveDir:    configDir,
-		obfuscate:  obfuscate(flags),
-		name:       "proxies.yaml",
-		originURL:  proxyURL,
-		userConfig: userConfig,
-		unmarshaler: func(bytes []byte) (interface{}, error) {
-			servers := make(map[string]*chained.ChainedServerInfo)
-			if err := yaml.Unmarshal(bytes, servers); err != nil {
-				return nil, err
-			}
-			if len(servers) == 0 {
-				return nil, errors.New("No chained server")
-			}
-			return servers, nil
-		},
+		saveDir:      configDir,
+		obfuscate:    obfuscate(flags),
+		name:         "proxies.yaml",
+		originURL:    proxyURL,
+		userConfig:   userConfig,
+		unmarshaler:  newProxiesUnmarshaler(),
 		dispatch:     proxiesDispatch,
 		embeddedData: generated.EmbeddedProxies,
 		sleep: func() time.Duration {
@@ -136,23 +127,12 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 
 	// These are the options for fetching the global config.
 	globalOptions := &options{
-		saveDir:    configDir,
-		obfuscate:  obfuscate(flags),
-		name:       "global.yaml",
-		originURL:  globalURL,
-		userConfig: userConfig,
-		unmarshaler: func(bytes []byte) (interface{}, error) {
-			gl := newGlobal()
-			gl.applyFlags(flags)
-			if err := yaml.Unmarshal(bytes, gl); err != nil {
-				return nil, err
-			}
-			gl.ApplyDefaults()
-			if err := gl.validate(); err != nil {
-				return nil, err
-			}
-			return gl, nil
-		},
+		saveDir:      configDir,
+		obfuscate:    obfuscate(flags),
+		name:         "global.yaml",
+		originURL:    globalURL,
+		userConfig:   userConfig,
+		unmarshaler:  newGlobalUnmarshaler(flags),
 		dispatch:     globalDispatch,
 		embeddedData: generated.GlobalConfig,
 		sleep: func() time.Duration {
@@ -170,6 +150,34 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 		log.Debug("*************** Stopping Config")
 		stopProxies()
 		stopGlobal()
+	}
+}
+
+func newGlobalUnmarshaler(flags map[string]interface{}) func(bytes []byte) (interface{}, error) {
+	return func(bytes []byte) (interface{}, error) {
+		gl := newGlobal()
+		gl.applyFlags(flags)
+		if err := yaml.Unmarshal(bytes, gl); err != nil {
+			return nil, err
+		}
+		gl.ApplyDefaults()
+		if err := gl.validate(); err != nil {
+			return nil, err
+		}
+		return gl, nil
+	}
+}
+
+func newProxiesUnmarshaler() func(bytes []byte) (interface{}, error) {
+	return func(bytes []byte) (interface{}, error) {
+		servers := make(map[string]*chained.ChainedServerInfo)
+		if err := yaml.Unmarshal(bytes, servers); err != nil {
+			return nil, err
+		}
+		if len(servers) == 0 {
+			return nil, errors.New("No chained server")
+		}
+		return servers, nil
 	}
 }
 

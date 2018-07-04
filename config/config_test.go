@@ -10,7 +10,6 @@ import (
 
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/flashlight/chained"
@@ -56,7 +55,7 @@ func TestObfuscated(t *testing.T) {
 
 		config := newConfig(file, &options{
 			obfuscate:   true,
-			unmarshaler: globalUnmarshaler,
+			unmarshaler: newGlobalUnmarshaler(nil),
 		})
 
 		conf, err := config.saved()
@@ -78,7 +77,7 @@ func TestSaved(t *testing.T) {
 
 		cfg := newConfig(file, &options{
 			obfuscate:   true,
-			unmarshaler: proxiesUnmarshaler,
+			unmarshaler: newProxiesUnmarshaler(),
 		})
 
 		pr, err := cfg.saved()
@@ -97,7 +96,7 @@ func TestEmbedded(t *testing.T) {
 		file := inTempDir("proxies.yaml")
 
 		cfg := newConfig(file, &options{
-			unmarshaler: proxiesUnmarshaler,
+			unmarshaler: newProxiesUnmarshaler(),
 		})
 
 		pr, err := cfg.embedded(generated.EmbeddedProxies)
@@ -122,7 +121,7 @@ func TestPollProxies(t *testing.T) {
 
 		proxyChan := make(chan interface{})
 		cfg := newConfig(file, &options{
-			unmarshaler: proxiesUnmarshaler,
+			unmarshaler: newProxiesUnmarshaler(),
 		})
 		var fi os.FileInfo
 		var err error
@@ -182,7 +181,7 @@ func TestPollGlobal(t *testing.T) {
 
 		configChan := make(chan interface{})
 		cfg := newConfig(file, &options{
-			unmarshaler: globalUnmarshaler,
+			unmarshaler: newGlobalUnmarshaler(nil),
 		})
 		var fi os.FileInfo
 		var err error
@@ -245,7 +244,7 @@ func TestPollIntervals(t *testing.T) {
 		writeObfuscatedConfig(t, globalConfig, file)
 
 		cfg := newConfig(file, &options{
-			unmarshaler: globalUnmarshaler,
+			unmarshaler: newGlobalUnmarshaler(nil),
 		})
 		var err error
 		for i := 1; i <= 400; i++ {
@@ -267,22 +266,12 @@ func TestPollIntervals(t *testing.T) {
 
 		fetcher := newFetcher(newTestUserConfig(), &http.Transport{}, configURLs)
 		dispatch := func(cfg interface{}) {}
-		go cfg.poll(nil, dispatch, fetcher, func() time.Duration { return pollInterval })
 
+		stopChan := make(chan bool)
+		go cfg.poll(stopChan, dispatch, fetcher, func() time.Duration { return pollInterval })
 		time.Sleep(waitTime)
+		close(stopChan)
 
 		assert.Equal(t, 3, int(reqCount()), "should have fetched config every %v", pollInterval)
 	})
-}
-
-func globalUnmarshaler(b []byte) (interface{}, error) {
-	gl := &Global{}
-	err := yaml.Unmarshal(b, gl)
-	return gl, err
-}
-
-func proxiesUnmarshaler(b []byte) (interface{}, error) {
-	servers := make(map[string]*chained.ChainedServerInfo)
-	err := yaml.Unmarshal(b, servers)
-	return servers, err
 }

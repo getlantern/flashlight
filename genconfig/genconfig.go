@@ -78,19 +78,9 @@ func init() {
 	flag.Var(&enabledProviders, "enable-provider", "Enable fronting provider")
 
 	providers = make(map[string]*provider)
-	providers["cloudfront"] = newProvider(
-		"https://d157vud77ygy87.cloudfront.net/ping",
-		map[string]string{
-			"api.getiantem.org":                "d2n32kma9hyo9f.cloudfront.net",
-			"api-staging.getiantem.org":        "d16igwq64x5e11.cloudfront.net",
-			"borda.lantern.io":                 "d157vud77ygy87.cloudfront.net",
-			"config.getiantem.org":             "d2wi0vwulmtn99.cloudfront.net",
-			"config-staging.getiantem.org":     "d33pfmbpauhmvd.cloudfront.net",
-			"geo.getiantem.org":                "d3u5fqukq7qrhd.cloudfront.net",
-			"globalconfig.flashlightproxy.com": "d24ykmup0867cj.cloudfront.net",
-			"update.getlantern.org":            "d2yl1zps97e5mx.cloudfront.net",
-			"github.com":                       "d2yl1zps97e5mx.cloudfront.net",
-		})
+	providers[client.CloudfrontProviderID] = newProvider(
+		client.CloudfrontTestURL,
+		client.GetCloudfrontHostAliases())
 	providers["akamai"] = newProvider(
 		"https://rxurtgyb9ax8bs0l.getiantem.org/ping",
 		map[string]string{
