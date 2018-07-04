@@ -94,7 +94,7 @@
   branch = "issue_1891"
   name = "github.com/getlantern/autoupdate"
   packages = ["."]
-  revision = "d6f6b3de25887229fe6da04b7b5d386f911ce5f7"
+  revision = "f1ccd922e9b357bbdbac65b7b2e1cd53bda0f45d"
 
 [[projects]]
   branch = "master"
@@ -211,13 +211,13 @@
   branch = "issue_1891"
   name = "github.com/getlantern/fronted"
   packages = ["."]
-  revision = "92180d7bb2b7debdfa93e5efcacfe7d993b534f4"
+  revision = "7ae1a03fc6eacbf406f93b77d88adf7bf76e9597"
 
 [[projects]]
   branch = "issue_1891"
   name = "github.com/getlantern/geolookup"
   packages = ["."]
-  revision = "8b7142a493e09ed96897f8333feadfe125a07195"
+  revision = "009cfe13a7b13f4a50265f2a0e3a05d7cd7412b6"
 
 [[projects]]
   branch = "master"
