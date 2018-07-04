@@ -19,7 +19,7 @@ func TestFetcher(t *testing.T) {
 
 	// This will actually fetch the cloud config over the network.
 	rt := &http.Transport{}
-	configFetcher := newFetcher(newTestUserConfig(), rt, globalURLs)
+	configFetcher := newFetcher(newTestUserConfig(), rt, globalURL)
 
 	bytes, err := configFetcher.fetch()
 	assert.Nil(t, err)

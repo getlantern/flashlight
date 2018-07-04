@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"sync"
 	"time"
@@ -36,7 +37,7 @@ var (
 
 	// XXX mobile does not respect the autoupdate global config
 	updateClient = &http.Client{Transport: proxied.ChainedThenFrontedWith("")}
-	updateCfg    = autoupdate.Config{
+	updateCfg    = &autoupdate.Config{
 		CurrentVersion: common.CompileTimePackageVersion,
 		URL:            "https://update.getlantern.org/update",
 		HTTPClient:     updateClient,

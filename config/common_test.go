@@ -24,7 +24,6 @@ func withTempDir(t *testing.T, fn func(inTempDir func(file string) string)) {
 	tmpDir, err := ioutil.TempDir("", "test")
 	abortOnError(t, err)
 	defer os.RemoveAll(tmpDir)
-
 	fn(func(file string) string {
 		return filepath.Join(tmpDir, file)
 	})
@@ -49,7 +48,7 @@ func writeObfuscatedConfig(t *testing.T, config interface{}, obfuscatedFilename 
 	abortOnError(t, err)
 }
 
-func startConfigServer(t *testing.T, config interface{}) (urls *chainedFrontedURLs, reqCount func() int64) {
+func startConfigServer(t *testing.T, config interface{}) (u string, reqCount func() int64) {
 	l, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		t.Fatalf("Unable to listen: %s", err)
@@ -73,12 +72,9 @@ func startConfigServer(t *testing.T, config interface{}) (urls *chainedFrontedUR
 
 	port := l.Addr().(*net.TCPAddr).Port
 	url := "http://localhost:" + strconv.Itoa(port)
-	return &chainedFrontedURLs{
-			chained: url,
-			fronted: url,
-		}, func() int64 {
-			return atomic.LoadInt64(&requests)
-		}
+	return url, func() int64 {
+		return atomic.LoadInt64(&requests)
+	}
 }
 
 func newGlobalConfig(t *testing.T) *Global {
