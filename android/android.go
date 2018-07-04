@@ -20,6 +20,7 @@ import (
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
+	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
@@ -33,8 +34,16 @@ const (
 var (
 	log = golog.LoggerFor("lantern")
 
-	updateServerURL = "https://update.getlantern.org"
-	defaultLocale   = `en-US`
+	// XXX mobile does not respect the autoupdate global config
+	updateClient = &http.Client{Transport: proxied.ChainedThenFrontedWith("")}
+	updateCfg    = autoupdate.Config{
+		CurrentVersion: common.CompileTimePackageVersion,
+		URL:            "https://update.getlantern.org/update",
+		HTTPClient:     updateClient,
+		PublicKey:      []byte(autoupdate.PackagePublicKey),
+	}
+
+	defaultLocale = `en-US`
 
 	startOnce sync.Once
 
@@ -389,12 +398,11 @@ func handleError(err error) {
 
 // CheckForUpdates checks to see if a new version of Lantern is available
 func CheckForUpdates() (string, error) {
-	return autoupdate.CheckMobileUpdate(updateServerURL,
-		common.CompileTimePackageVersion)
+	return autoupdate.CheckMobileUpdate(updateCfg)
 }
 
 // DownloadUpdate downloads the latest APK from the given url to the apkPath
 // file destination.
 func DownloadUpdate(url, apkPath string, updater Updater) {
-	autoupdate.UpdateMobile(url, apkPath, updater)
+	autoupdate.UpdateMobile(url, apkPath, updater, updateClient)
 }

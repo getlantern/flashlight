@@ -91,6 +91,7 @@ func init() {
 			"geo.getiantem.org":                "d3u5fqukq7qrhd.cloudfront.net",
 			"globalconfig.flashlightproxy.com": "d24ykmup0867cj.cloudfront.net",
 			"update.getlantern.org":            "d2yl1zps97e5mx.cloudfront.net",
+			"github.com":                       "d2yl1zps97e5mx.cloudfront.net",
 		})
 	providers["akamai"] = newProvider(
 		"https://rxurtgyb9ax8bs0l.getiantem.org/ping",
@@ -103,6 +104,7 @@ func init() {
 			"geo.getiantem.org":                "ompbv7fxj9ate7qn.getiantem.org",
 			"globalconfig.flashlightproxy.com": "oxrovkdbmw04byt2.getiantem.org",
 			"update.getlantern.org":            "r1ktidq1ohjht2qr.getiantem.org",
+			"github.com":                       "2mbjmpzpb7dkwm6d.getiantem.org",
 		})
 }
 
