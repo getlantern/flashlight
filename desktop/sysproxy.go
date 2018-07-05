@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/getlantern/errors"
 	"github.com/getlantern/filepersist"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/ops"
@@ -44,24 +45,27 @@ func setUpSysproxyTool() error {
 	return nil
 }
 
-func sysproxyOn() {
+func sysproxyOn() (err error) {
 	op := ops.Begin("sysproxy_on")
 	defer op.End()
 	addr, found := getProxyAddr()
 	if !found {
-		op.FailIf(log.Errorf("Unable to set lantern as system proxy, no proxy address available"))
+		err = errors.New("Unable to set lantern as system proxy, no proxy address available")
+		op.FailIf(log.Error(err))
 		return
 	}
 	log.Debugf("Setting lantern as system proxy at: %v", addr)
-	off, err := sysproxy.On(addr)
-	if err != nil {
-		op.FailIf(log.Errorf("Unable to set lantern as system proxy: %v", err))
+	off, e := sysproxy.On(addr)
+	if e != nil {
+		err = errors.New("Unable to set lantern as system proxy: %v", e)
+		op.FailIf(log.Error(err))
 		return
 	}
 	sysproxyOffMx.Lock()
 	_sysproxyOff = off
 	sysproxyOffMx.Unlock()
 	log.Debug("Finished setting lantern as system proxy")
+	return
 }
 
 func sysproxyOff() {

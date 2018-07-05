@@ -1,9 +1,12 @@
 package stats
 
 import (
+	"reflect"
 	"sync"
+	"time"
 
 	"github.com/getlantern/event"
+	"github.com/getlantern/golog"
 )
 
 const (
@@ -12,6 +15,35 @@ const (
 	STATUS_DISCONNECTED = "disconnected"
 	STATUS_THROTTLED    = "throttled"
 )
+
+type AlertType string
+
+const (
+	FAIL_TO_SET_SYSTEM_PROXY AlertType = "fail_to_set_system_proxy"
+	FAIL_TO_OPEN_BROWSER     AlertType = "fail_to_open_browser"
+	// TODO: code to trigger this alert
+	NO_INTERNET_CONNECTION AlertType = "no_internet_connection"
+)
+
+var (
+	log = golog.LoggerFor("flashlight.stats")
+)
+
+type Alert struct {
+	AlertType AlertType `json:"alertType"`
+	Details   string    `json:"alertDetails"`
+	HelpURL   string    `json:"helpURL"`
+}
+
+func (e Alert) Alert() string {
+	return string(e.AlertType)
+}
+
+var helpURLs = map[AlertType]string{
+	FAIL_TO_SET_SYSTEM_PROXY: "https://github.com/getlantern/lantern/wiki/Troubleshooting:-Failed-to-set-Lantern-as-system-proxy",
+	FAIL_TO_OPEN_BROWSER:     "https://github.com/getlantern/lantern/wiki/Troubleshooting:-Failed-to-open-browser-window-to-show-the-Lantern-user-interface",
+	NO_INTERNET_CONNECTION:   "",
+}
 
 // Tracker is a common interface to receive user perceptible Lantern stats
 type Tracker interface {
@@ -46,20 +78,29 @@ type Tracker interface {
 
 	// SetIsPro indicates that we're pro
 	SetIsPro(val bool)
+
+	// SetAlert indicates that some alert needs user attention. If transient is
+	// true, the alert will be cleared automatically 10 seconds later.
+	SetAlert(alertType AlertType, details string, transient bool)
+
+	// ClearAlert clears the alert state if the current alert has the specific
+	// type.
+	ClearAlert(alertType AlertType)
 }
 
 // Stats are stats and status of the current Lantern
 type Stats struct {
-	City               string `json:"city"`
-	Country            string `json:"country"`
-	CountryCode        string `json:"countryCode"`
-	HTTPSUpgrades      int    `json:"httpsUpgrades"`
-	AdsBlocked         int    `json:"adsBlocked"`
-	Disconnected       bool   `json:"disconnected"`
-	HasSucceedingProxy bool   `json:"hasSucceedingProxy"`
-	HitDataCap         bool   `json:"hitDataCap"`
-	IsPro              bool   `json:"isPro"`
-	Status             string `json:"status"`
+	City               string  `json:"city"`
+	Country            string  `json:"country"`
+	CountryCode        string  `json:"countryCode"`
+	HTTPSUpgrades      int     `json:"httpsUpgrades"`
+	AdsBlocked         int     `json:"adsBlocked"`
+	Disconnected       bool    `json:"disconnected"`
+	HasSucceedingProxy bool    `json:"hasSucceedingProxy"`
+	HitDataCap         bool    `json:"hitDataCap"`
+	IsPro              bool    `json:"isPro"`
+	Status             string  `json:"status"`
+	Alerts             []Alert `json:"alerts"`
 }
 
 // tracker is an implementation of Tracker which broadcasts changes as they
@@ -139,10 +180,40 @@ func (t *tracker) SetIsPro(val bool) {
 	})
 }
 
+func (t *tracker) SetAlert(alertType AlertType, details string, transient bool) {
+	t.update(func(stats Stats) Stats {
+		log.Debugf("Setting alert %s", alertType)
+		e := Alert{alertType, details, helpURLs[alertType]}
+		stats.Alerts = append(stats.Alerts, e)
+		if transient {
+			go func() {
+				time.Sleep(10 * time.Second)
+				t.ClearAlert(alertType)
+			}()
+		}
+		return stats
+	})
+}
+
+func (t *tracker) ClearAlert(alertType AlertType) {
+	t.update(func(stats Stats) Stats {
+		alerts := stats.Alerts[:0]
+		for _, a := range stats.Alerts {
+			if a.AlertType == alertType {
+				log.Debugf("Clearing alert %s", alertType)
+			} else {
+				alerts = append(alerts, a)
+			}
+		}
+		stats.Alerts = alerts
+		return stats
+	})
+}
+
 func (t *tracker) update(update func(stats Stats) Stats) {
 	t.mx.Lock()
 	stats := update(t.stats)
-	if stats != t.stats {
+	if !reflect.DeepEqual(stats, t.stats) {
 		if stats.Disconnected {
 			stats.Status = STATUS_DISCONNECTED
 		} else if !stats.HasSucceedingProxy {
@@ -151,6 +222,9 @@ func (t *tracker) update(update func(stats Stats) Stats) {
 			stats.Status = STATUS_CONNECTED
 		}
 		t.stats = stats
+		// copy the slice to avoid data race between updating and consuming alerts
+		t.stats.Alerts = make([]Alert, len(stats.Alerts))
+		copy(t.stats.Alerts, stats.Alerts)
 		t.dispatcher.Dispatch(stats)
 	}
 	t.mx.Unlock()
