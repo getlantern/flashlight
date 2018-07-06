@@ -19,7 +19,6 @@ import (
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/desktop"
-	"github.com/getlantern/flashlight/logging"
 
 	"github.com/mitchellh/panicwrap"
 )
@@ -109,11 +108,6 @@ func main() {
 func runApp(a *desktop.App) {
 	// Schedule cleanup actions
 	handleSignals(a)
-	a.AddExitFuncToEnd("stopping logging", func() {
-		if err := logging.Close(); err != nil {
-			log.Errorf("Error closing log: %v", err)
-		}
-	})
 	if a.ShowUI {
 		i18nInit(a)
 		go func() {

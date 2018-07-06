@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -57,10 +58,11 @@ type App struct {
 	exited       eventual.Value
 	statsTracker *statsTracker
 
-	chExitFuncs     chan func()
-	chLastExitFuncs chan func()
-	uiServer        *ui.Server
-	ws              ws.UIChannel
+	muExitFuncs sync.RWMutex
+	exitFuncs   []func()
+
+	uiServer *ui.Server
+	ws       ws.UIChannel
 }
 
 // Init initializes the App's state
@@ -69,10 +71,6 @@ func (app *App) Init() {
 	app.Flags["staging"] = common.Staging
 	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate, common.Staging)
 	app.exited = eventual.NewValue()
-	// use buffered channel to avoid blocking the caller of 'AddExitFunc'
-	// the number 100 is arbitrary
-	app.chExitFuncs = make(chan func(), 100)
-	app.chLastExitFuncs = make(chan func(), 100)
 	app.statsTracker = NewStatsTracker()
 	pro.OnProStatusChange(func(isPro bool) {
 		app.statsTracker.SetIsPro(isPro)
@@ -405,19 +403,13 @@ func (app *App) showExistingUI(addr string) error {
 
 // AddExitFunc adds a function to be called before the application exits.
 func (app *App) AddExitFunc(label string, exitFunc func()) {
-	app.chExitFuncs <- func() {
+	app.muExitFuncs.Lock()
+	app.exitFuncs = append(app.exitFuncs, func() {
 		log.Debugf("Processing exit function: %v", label)
 		exitFunc()
-	}
-}
-
-// AddExitFuncToEnd adds a function to be called before the application exits
-// but after exit functions added with AddExitFunc.
-func (app *App) AddExitFuncToEnd(label string, exitFunc func()) {
-	app.chLastExitFuncs <- func() {
-		log.Debugf("Processing exit function at end: %v", label)
-		exitFunc()
-	}
+		log.Debugf("Done processing exit function: %v", label)
+	})
+	app.muExitFuncs.Unlock()
 }
 
 // Exit tells the application to exit, optionally supplying an error that caused
@@ -433,51 +425,46 @@ func (app *App) Exit(err error) bool {
 
 func (app *App) doExit(err error) {
 	if err != nil {
-		log.Errorf("Exiting app because of %v", err)
+		log.Errorf("Exiting app %d(%d) because of %v", os.Getpid(), os.Getppid(), err)
 	} else {
-		log.Error("Exiting app")
+		log.Debugf("Exiting app %d(%d)", os.Getpid(), os.Getppid())
 	}
 	defer func() {
 		app.exited.Set(err)
-		log.Debug("Finished exiting app")
+		log.Debugf("Finished exiting app %d(%d)", os.Getpid(), os.Getppid())
 	}()
 
-	log.Debug("Running exit functions")
-	app.runExitFuncs()
-	app.runLastExitFuncs()
-	log.Debug("Finished running exit functions")
+	ch := make(chan struct{})
+	go func() {
+		app.runExitFuncs()
+		close(ch)
+	}()
+	t := time.NewTimer(10 * time.Second)
+	select {
+	case <-ch:
+		log.Debug("Finished running exit functions")
+	case <-t.C:
+		log.Debug("Timeout running exit functions, quit anyway")
+	}
+	if err := logging.Close(); err != nil {
+		log.Errorf("Error closing log: %v", err)
+	}
 }
 
 func (app *App) runExitFuncs() {
-	// call plain exit funcs in order
-	for {
-		select {
-		case f := <-app.chExitFuncs:
+	var wg sync.WaitGroup
+	// call plain exit funcs in parallel
+	app.muExitFuncs.RLock()
+	log.Debugf("Running %d exit functions", len(app.exitFuncs))
+	wg.Add(len(app.exitFuncs))
+	for _, f := range app.exitFuncs {
+		go func(f func()) {
 			f()
-		default:
-			return
-		}
+			wg.Done()
+		}(f)
 	}
-}
-
-func (app *App) runLastExitFuncs() {
-	// call last exit funcs in reverse order
-	lastExitFuncs := app.collectLastExitFuncs()
-	for i := len(lastExitFuncs) - 1; i >= 0; i-- {
-		lastExitFuncs[i]()
-	}
-}
-
-func (app *App) collectLastExitFuncs() []func() {
-	lastExitFuncs := make([]func(), 0)
-	for {
-		select {
-		case f := <-app.chLastExitFuncs:
-			lastExitFuncs = append(lastExitFuncs, f)
-		default:
-			return lastExitFuncs
-		}
-	}
+	app.muExitFuncs.RUnlock()
+	wg.Wait()
 }
 
 // WaitForExit waits for a request to exit the application.
