@@ -427,7 +427,7 @@ func (app *App) doExit(err error) {
 	if err != nil {
 		log.Errorf("Exiting app %d(%d) because of %v", os.Getpid(), os.Getppid(), err)
 	} else {
-		log.Errorf("Exiting app %d(%d)", os.Getpid(), os.Getppid())
+		log.Debugf("Exiting app %d(%d)", os.Getpid(), os.Getppid())
 	}
 	defer func() {
 		app.exited.Set(err)
