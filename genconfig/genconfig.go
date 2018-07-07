@@ -82,7 +82,9 @@ func init() {
 	providers = make(map[string]*provider)
 	providers[client.CloudfrontProviderID] = newProvider(
 		client.CloudfrontTestURL,
-		client.GetCloudfrontHostAliases())
+		client.CloudfrontHostAliases(),
+		&client.ValidatorConfig{RejectStatus: client.CloudfrontBadStatus()},
+	)
 	providers["akamai"] = newProvider(
 		"https://rxurtgyb9ax8bs0l.getiantem.org/ping",
 		map[string]string{
@@ -95,7 +97,9 @@ func init() {
 			"globalconfig.flashlightproxy.com": "oxrovkdbmw04byt2.getiantem.org",
 			"update.getlantern.org":            "r1ktidq1ohjht2qr.getiantem.org",
 			"github.com":                       "2mbjmpzpb7dkwm6d.getiantem.org",
-		})
+		},
+		&client.ValidatorConfig{RejectStatus: []int{403}},
+	)
 }
 
 type filter map[string]bool
@@ -117,14 +121,16 @@ type provider struct {
 	HostAliases map[string]string
 	TestURL     string
 	Masquerades []*masquerade
+	Validator   *client.ValidatorConfig
 	Enabled     bool
 }
 
-func newProvider(testURL string, hosts map[string]string) *provider {
+func newProvider(testURL string, hosts map[string]string, validator *client.ValidatorConfig) *provider {
 	return &provider{
 		HostAliases: hosts,
 		TestURL:     testURL,
 		Masquerades: make([]*masquerade, 0),
+		Validator:   validator,
 	}
 }
 

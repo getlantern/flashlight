@@ -1,6 +1,8 @@
 package client
 
 import (
+	"errors"
+
 	"github.com/getlantern/fronted"
 )
 
@@ -14,6 +16,7 @@ const (
 )
 
 var (
+	cloudfrontBadStatus   = []int{403}
 	cloudfrontHostAliases = map[string]string{
 		"api.getiantem.org":                "d2n32kma9hyo9f.cloudfront.net",
 		"api-staging.getiantem.org":        "d16igwq64x5e11.cloudfront.net",
@@ -41,12 +44,39 @@ type ClientConfig struct {
 }
 
 type FrontedConfig struct {
-	Providers map[string]*fronted.Provider
+	Providers map[string]*ProviderConfig
+}
+
+type ProviderConfig struct {
+	HostAliases map[string]string
+	TestURL     string
+	Masquerades []*fronted.Masquerade
+	Validator   *ValidatorConfig
+}
+
+func (p *ProviderConfig) GetResponseValidator(providerID string) fronted.ResponseValidator {
+	// hard-coded custom validators can be determined here if needed...
+
+	if p.Validator == nil {
+		return nil
+	}
+
+	if len(p.Validator.RejectStatus) > 0 {
+		return fronted.NewStatusCodeValidator(p.Validator.RejectStatus)
+	}
+	// ...
+
+	// unknown or empty
+	return nil
+}
+
+type ValidatorConfig struct {
+	RejectStatus []int
 }
 
 func newFrontedConfig() *FrontedConfig {
 	return &FrontedConfig{
-		Providers: make(map[string]*fronted.Provider),
+		Providers: make(map[string]*ProviderConfig),
 	}
 }
 
@@ -58,37 +88,69 @@ func NewConfig() *ClientConfig {
 	}
 }
 
-// applyDefaults creates any default values that cannot be zero-value initialized
-func (c *ClientConfig) ApplyDefaults() {
-	c.checkNoFrontedConfig()
-}
+// Builds a list of fronted.Providers to use based on the configuration
+func (c *ClientConfig) FrontedProviders() map[string]*fronted.Provider {
 
-// If an old configuration is loaded which does not specify
-// any fronted provider details (only masqeradesets), add a
-// provider with the old hardcoded details (cloudfront) and
-// the list of masquerades given in masqueradesets.
-//
-// Note: if any other provider is specified or a cloudfront
-// configuration is present, this provider will not be added.
-// It is assumed in that case if cloudfront is enabled, it will
-// be explicitly listed.
-func (c *ClientConfig) checkNoFrontedConfig() {
-	// yaml can nil out these fields in some cases
-	if c.Fronted == nil {
-		c.Fronted = newFrontedConfig()
-	} else if c.Fronted.Providers == nil {
-		c.Fronted.Providers = make(map[string]*fronted.Provider)
-	}
-	if len(c.Fronted.Providers) == 0 {
+	providers := make(map[string]*fronted.Provider)
+
+	// If an old configuration is loaded which does not specify
+	// any fronted provider details (only masqeradesets)
+	// materialize a provider with the old hardcoded cloudfront details
+	// using the list of masquerades given in masqueradesets.
+	//
+	// Note: if any other provider is specified or a cloudfront
+	// configuration is present, this provider will not be added.
+	// It is assumed in that case if cloudfront is enabled, it will
+	// be explicitly listed.
+	if c.Fronted == nil || len(c.Fronted.Providers) == 0 {
 		pid := CloudfrontProviderID
-		c.Fronted.Providers[pid] = fronted.NewProvider(cloudfrontHostAliases, CloudfrontTestURL, c.MasqueradeSets[pid])
+		providers[pid] = fronted.NewProvider(
+			cloudfrontHostAliases,
+			CloudfrontTestURL,
+			c.MasqueradeSets[pid],
+			fronted.NewStatusCodeValidator(cloudfrontBadStatus),
+		)
 		log.Debugf("Added default provider details for '%s'", pid)
 	} else {
-		log.Debugf("Using configured providers.")
+		for pid, p := range c.Fronted.Providers {
+			providers[pid] = fronted.NewProvider(
+				p.HostAliases,
+				p.TestURL,
+				p.Masquerades,
+				p.GetResponseValidator(pid),
+			)
+		}
 	}
+
+	return providers
 }
 
-func GetCloudfrontHostAliases() map[string]string {
+func (c *ClientConfig) Validate() error {
+	sz := 0
+	if c.Fronted == nil || len(c.Fronted.Providers) == 0 {
+		for _, m := range c.MasqueradeSets {
+			sz += len(m)
+		}
+	} else {
+		for _, p := range c.Fronted.Providers {
+			sz += len(p.Masquerades)
+		}
+	}
+
+	if sz == 0 {
+		return errors.New("No masquerades.")
+	}
+
+	return nil
+}
+
+func CloudfrontBadStatus() []int {
+	b := make([]int, len(cloudfrontBadStatus))
+	copy(b, cloudfrontBadStatus)
+	return b
+}
+
+func CloudfrontHostAliases() map[string]string {
 	a := make(map[string]string)
 	for k, v := range cloudfrontHostAliases {
 		a[k] = v
