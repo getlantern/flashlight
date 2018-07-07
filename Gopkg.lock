@@ -211,7 +211,7 @@
   branch = "issue_1891"
   name = "github.com/getlantern/fronted"
   packages = ["."]
-  revision = "7ae1a03fc6eacbf406f93b77d88adf7bf76e9597"
+  revision = "98dcf2ab9975646fbc77e3873fb752a8cfa7e459"
 
 [[projects]]
   branch = "issue_1891"

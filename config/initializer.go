@@ -160,7 +160,6 @@ func newGlobalUnmarshaler(flags map[string]interface{}) func(bytes []byte) (inte
 		if err := yaml.Unmarshal(bytes, gl); err != nil {
 			return nil, err
 		}
-		gl.ApplyDefaults()
 		if err := gl.validate(); err != nil {
 			return nil, err
 		}

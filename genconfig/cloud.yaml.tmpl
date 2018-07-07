@@ -19,7 +19,9 @@ client:
       {{$pid}}:
         hostaliases: {{range $k, $v := $p.HostAliases}}
           {{$k}}: {{$v}}{{end}}
-        testurl: {{$p.TestURL}}
+        testurl: {{$p.TestURL}}{{if $p.Validator}}
+        validator:{{if $p.Validator.RejectStatus}}
+          rejectstatus: [{{range $i, $e := $p.Validator.RejectStatus}}{{if $i}}, {{end}}{{$e}}{{end}}]{{end}}{{end}}
         masquerades: {{if eq $pid "cloudfront"}}&cfmasq{{end}}{{range $p.Masquerades}}
         - domain: {{.Domain}}
           ipaddress: {{.IpAddress}}{{end}}{{else}}{}{{end}}
