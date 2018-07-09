@@ -140,7 +140,7 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 			defer mx.RUnlock()
 			return globalConfigPollInterval
 		},
-		sticky: false,
+		sticky: isSticky(flags),
 		rt:     rt,
 	}
 
