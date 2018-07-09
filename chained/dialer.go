@@ -21,8 +21,9 @@ import (
 )
 
 const (
-	minCheckInterval = 10 * time.Second
-	maxCheckInterval = 15 * time.Minute
+	minCheckInterval      = 10 * time.Second
+	maxCheckInterval      = 15 * time.Minute
+	dialCoreCheckInterval = 30 * time.Second
 
 	connect    = "connect"
 	persistent = "persistent"
@@ -50,11 +51,11 @@ var (
 	errUpstream = errors.New("Upstream error")
 )
 
+// Periodically check our connectivity.
+// With a 15 minute period, Lantern running 8 hours a day for 30 days and 148
+// bytes for a TCP connection setup and teardown, this check will consume
+// approximately 138 KB per month per proxy.
 func (p *proxy) runConnectivityChecks() {
-	// Periodically check our connectivity.
-	// With a 15 minute period, Lantern running 8 hours a day for 30 days and 148
-	// bytes for a TCP connection setup and teardown, this check will consume
-	// approximately 138 KB per month per proxy.
 	checkInterval := minCheckInterval
 	timer := time.NewTimer(checkInterval)
 
@@ -77,6 +78,30 @@ func (p *proxy) runConnectivityChecks() {
 			case <-p.forceRecheckCh:
 				log.Debugf("Forcing recheck for %v", p.Label())
 				checkInterval = minCheckInterval
+			case <-p.closeCh:
+				log.Tracef("Dialer %v stopped", p.Label())
+				timer.Stop()
+				return
+			}
+		}
+	})
+}
+
+// Periodically call doDialCore to make sure we're recording updated latencies.
+func (p *proxy) checkCoreDials() {
+	timer := time.NewTimer(0)
+
+	ops.Go(func() {
+		for {
+			timer.Reset(randomize(dialCoreCheckInterval))
+			select {
+			case <-timer.C:
+				ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(dialCoreCheckInterval/2))
+				conn, _, err := p.doDialCore(ctx)
+				if err == nil {
+					conn.Close()
+				}
+				cancel()
 			case <-p.closeCh:
 				log.Tracef("Dialer %v stopped", p.Label())
 				timer.Stop()

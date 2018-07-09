@@ -376,7 +376,11 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		elapsed := mtime.Stopwatch()
 		conn, err := netx.DialTimeout("tcp", p.addr, timeoutFor(ctx))
 		delta := elapsed()
-		p.updateLatency(delta, err)
+		if err == nil {
+			// only include latency if dial succeeded
+			p.updateLatency(delta, err)
+		}
+		log.Tracef("Core dial time to %v was %v", p.Name(), delta)
 		return conn, delta, err
 	}
 
@@ -388,7 +392,8 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		p.protocol = "kcp"
 	}
 
-	go p.runConnectivityChecks()
+	p.runConnectivityChecks()
+	p.checkCoreDials()
 	log.Debugf("%v preconnects, init: %d   max: %d", p.Label(), initPreconnect, maxPreconnect)
 	p.processPreconnects(initPreconnect)
 	return p, nil
