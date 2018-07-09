@@ -175,11 +175,16 @@ func main() {
 	cas, masqs := coalesceMasquerades()
 	vetAndAssignMasquerades(cas, masqs)
 
-	model := buildModel("cloud.yaml", cas, false)
+	model, err := buildModel("cloud.yaml", cas, false)
+	if err != nil {
+		log.Fatalf("Invalid configuration: %s", err)
+	}
 	generateTemplate(model, yamlTmpl, "cloud.yaml")
-	model = buildModel("lantern.yaml", cas, true)
+	model, err = buildModel("lantern.yaml", cas, true)
+	if err != nil {
+		log.Fatalf("Invalid configuration: %s", err)
+	}
 	generateTemplate(model, yamlTmpl, "lantern.yaml")
-	var err error
 	if *masqueradesOutFile != "" {
 		masqueradesTmpl := loadTemplate("masquerades.go.tmpl")
 		generateTemplate(model, masqueradesTmpl, *masqueradesOutFile)
@@ -514,7 +519,7 @@ func doVetMasquerades(certPool *x509.CertPool, inCh chan *masquerade, outCh chan
 	wg.Done()
 }
 
-func buildModel(configName string, cas map[string]*castat, useFallbacks bool) map[string]interface{} {
+func buildModel(configName string, cas map[string]*castat, useFallbacks bool) (map[string]interface{}, error) {
 	casList := make([]*castat, 0, len(cas))
 	for _, ca := range cas {
 		casList = append(casList, ca)
@@ -523,7 +528,7 @@ func buildModel(configName string, cas map[string]*castat, useFallbacks bool) ma
 
 	cfMasquerades := providers[defaultProviderID].Masquerades
 	if len(cfMasquerades) == 0 {
-		log.Debugf("WARNING!!! %s: configuration contains no cloudfront masquerades for older clients.", configName)
+		return nil, fmt.Errorf("%s: configuration contains no cloudfront masquerades for older clients.", configName)
 	}
 
 	aliased := make(map[string]bool)
@@ -535,7 +540,7 @@ func buildModel(configName string, cas map[string]*castat, useFallbacks bool) ma
 				sort.Sort(ByDomain(v.Masquerades))
 				enabledProviders[k] = v
 			} else {
-				log.Debugf("WARNING!!! %s: disabling provider %s with no vetted masquerades", configName, k)
+				return nil, fmt.Errorf("%s: enabled provider %s had no vetted masquerades", configName, k)
 			}
 		}
 		for a, _ := range v.HostAliases {
@@ -547,7 +552,7 @@ func buildModel(configName string, cas map[string]*castat, useFallbacks bool) ma
 		for a, _ := range aliased {
 			_, ok := p.HostAliases[a]
 			if !ok {
-				log.Debugf("WARNING!!! %s: configured provider %s does not have an alias for origin %s", configName, pid, a)
+				return nil, fmt.Errorf("%s: configured provider %s does not have an alias for origin %s", configName, pid, a)
 			}
 		}
 	}
@@ -588,7 +593,7 @@ func buildModel(configName string, cas map[string]*castat, useFallbacks bool) ma
 		"fallbacks":             fbs,
 		"showAds":               showAds,
 		"ftVersion":             ftVersion,
-	}
+	}, nil
 }
 
 func fallbackOK(f *chained.ChainedServerInfo, dialer balancer.Dialer) bool {
