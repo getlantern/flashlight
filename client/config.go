@@ -12,7 +12,8 @@ const (
 	// any masquerade that does not have a provider is assigned this provider
 	// eg if encountered in a cache file etc.
 	CloudfrontProviderID = "cloudfront"
-	CloudfrontTestURL    = "http://d157vud77ygy87.cloudfront.net/ping"
+	// this url is used to 'vet' cloudfront masquerades
+	CloudfrontTestURL = "http://d157vud77ygy87.cloudfront.net/ping"
 )
 
 var (
@@ -43,10 +44,12 @@ type ClientConfig struct {
 	MasqueradeSets map[string][]*fronted.Masquerade
 }
 
+// Configuration structure for direct domain fronting
 type FrontedConfig struct {
 	Providers map[string]*ProviderConfig
 }
 
+// Configuration structure for a parciular fronting provider (cloudfront, akamai, etc)
 type ProviderConfig struct {
 	HostAliases map[string]string
 	TestURL     string
@@ -54,6 +57,8 @@ type ProviderConfig struct {
 	Validator   *ValidatorConfig
 }
 
+// returns a fronted.ResponseValidator specified by the
+// provider config or nil if none was specified
 func (p *ProviderConfig) GetResponseValidator(providerID string) fronted.ResponseValidator {
 	// hard-coded custom validators can be determined here if needed...
 
@@ -70,6 +75,7 @@ func (p *ProviderConfig) GetResponseValidator(providerID string) fronted.Respons
 	return nil
 }
 
+// Configuration struture that specifies a fronted.ResponseValidator
 type ValidatorConfig struct {
 	RejectStatus []int
 }
@@ -125,6 +131,7 @@ func (c *ClientConfig) FrontedProviders() map[string]*fronted.Provider {
 	return providers
 }
 
+// Check that this ClientConfig is valid
 func (c *ClientConfig) Validate() error {
 	sz := 0
 	if c.Fronted == nil || len(c.Fronted.Providers) == 0 {
@@ -144,12 +151,16 @@ func (c *ClientConfig) Validate() error {
 	return nil
 }
 
+// Returns list of http status codes considered to indicate that
+// domain fronting failed.
 func CloudfrontBadStatus() []int {
 	b := make([]int, len(cloudfrontBadStatus))
 	copy(b, cloudfrontBadStatus)
 	return b
 }
 
+// Returns list of host aliases for the default cloudfront
+// provider.
 func CloudfrontHostAliases() map[string]string {
 	a := make(map[string]string)
 	for k, v := range cloudfrontHostAliases {
