@@ -100,6 +100,21 @@ func init() {
 		},
 		&client.ValidatorConfig{RejectStatus: []int{403}},
 	)
+	providers["edgecast"] = newProvider(
+		"https://7pjuyyk4gsffpvf9.getiantem.org/ping",
+		map[string]string{
+			"api.getiantem.org":                "fb6fy4cx9vjljuat.getiantem.org",
+			"api-staging.getiantem.org":        "a1l3kh9gpetejfyl.getiantem.org",
+			"borda.lantern.io":                 "7pjuyyk4gsffpvf9.getiantem.org",
+			"config.getiantem.org":             "fb6fy4cx9vjljuat.getiantem.org",
+			"config-staging.getiantem.org":     "a1l3kh9gpetejfyl.getiantem.org",
+			"geo.getiantem.org":                "4nyaxxbvf9cthxb7.getiantem.org",
+			"globalconfig.flashlightproxy.com": "4x13jsbjbhgtktew.getiantem.org",
+			"update.getlantern.org":            "p6zj7yrrc8vnindu.getiantem.org",
+			"github.com":                       "gvvex1er7qmuarl1.getiantem.org",
+		},
+		&client.ValidatorConfig{RejectStatus: []int{403}},
+	)
 }
 
 type filter map[string]bool
