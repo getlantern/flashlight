@@ -92,6 +92,7 @@ func (p *proxy) checkCoreDials() {
 	timer := time.NewTimer(0)
 
 	ops.Go(func() {
+		log.Debugf("Will probe core dials to %v", p.Label())
 		for {
 			timer.Reset(randomize(dialCoreCheckInterval))
 			select {
