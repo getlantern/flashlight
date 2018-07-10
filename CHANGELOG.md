@@ -1,5 +1,12 @@
 # Change Log
 
+## [4.7.8](https://github.com/getlantern/flashlight/tree/4.7.8) (2018-07-10)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.7...4.7.8)
+
+**Merged pull requests:**
+
+- set a hard limit when running exit funcs [\#469](https://github.com/getlantern/flashlight/pull/469) ([joesis](https://github.com/joesis))
+
 ## [4.7.7](https://github.com/getlantern/flashlight/tree/4.7.7) (2018-07-05)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.6...4.7.7)
 
@@ -133,20 +140,20 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.4...4.6.6)
 
 ## [4.6.4](https://github.com/getlantern/flashlight/tree/4.6.4) (2018-04-20)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.4)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.4)
 
 **Merged pull requests:**
 
 - Two fixes [\#428](https://github.com/getlantern/flashlight/pull/428) ([joesis](https://github.com/joesis))
 
-## [4.6.1](https://github.com/getlantern/flashlight/tree/4.6.1) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.1)
-
 ## [4.6.2](https://github.com/getlantern/flashlight/tree/4.6.2) (2018-04-18)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.2)
 
 ## [4.6.3](https://github.com/getlantern/flashlight/tree/4.6.3) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.3)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.3)
+
+## [4.6.1](https://github.com/getlantern/flashlight/tree/4.6.1) (2018-04-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.1)
 
 **Merged pull requests:**
 
