@@ -286,7 +286,9 @@ func run(configDir, locale string,
 		func() bool { return false },               // not use detour
 		// TODO: allow configuring whether or not to enable reporting (just like we
 		// already have in desktop)
-		func() bool { return true }, // on Android, we allow private hosts
+		func() bool { return session.ProxyAll() },
+		// on Android, we allow private hosts
+		// if proxy all is enabled
 		func() bool { return true }, // auto report
 		flags,
 		func() bool {
