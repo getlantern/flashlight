@@ -51,42 +51,6 @@ var (
 	errUpstream = errors.New("Upstream error")
 )
 
-// Periodically check our connectivity.
-// With a 15 minute period, Lantern running 8 hours a day for 30 days and 148
-// bytes for a TCP connection setup and teardown, this check will consume
-// approximately 138 KB per month per proxy.
-func (p *proxy) runConnectivityChecks() {
-	checkInterval := minCheckInterval
-	timer := time.NewTimer(checkInterval)
-
-	ops.Go(func() {
-		for {
-			timer.Reset(randomize(checkInterval))
-			select {
-			case <-timer.C:
-				log.Debugf("Checking %v", p.Label())
-				if p.Probe(false) {
-					// On success, don't bother rechecking anytime soon
-					checkInterval = maxCheckInterval
-				} else {
-					// Exponentially back off while we're still failing
-					checkInterval *= 2
-					if checkInterval > maxCheckInterval {
-						checkInterval = maxCheckInterval
-					}
-				}
-			case <-p.forceRecheckCh:
-				log.Debugf("Forcing recheck for %v", p.Label())
-				checkInterval = minCheckInterval
-			case <-p.closeCh:
-				log.Tracef("Dialer %v stopped", p.Label())
-				timer.Stop()
-				return
-			}
-		}
-	})
-}
-
 // Periodically call doDialCore to make sure we're recording updated latencies.
 func (p *proxy) checkCoreDials() {
 	timer := time.NewTimer(0)
@@ -259,13 +223,6 @@ func (p *proxy) markSuccess() {
 }
 
 func (p *proxy) MarkFailure() {
-	if p.doMarkFailure() == 1 {
-		// On new failure, force recheck
-		p.forceRecheck()
-	}
-}
-
-func (p *proxy) doMarkFailure() int64 {
 	atomic.AddInt64(&p.attempts, 1)
 	atomic.AddInt64(&p.failures, 1)
 	atomic.StoreInt64(&p.consecSuccesses, 0)

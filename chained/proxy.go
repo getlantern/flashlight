@@ -338,7 +338,6 @@ type proxy struct {
 	doDialCore        func(ctx context.Context) (net.Conn, time.Duration, error)
 	preconnects       chan interface{}
 	preconnected      chan *proxyConnection
-	forceRecheckCh    chan bool
 	closeCh           chan bool
 	closeOnce         sync.Once
 	mx                sync.Mutex
@@ -365,7 +364,6 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		bias:            s.Bias,
 		doDialServer:    dialServer,
 		emaLatency:      ema.NewDuration(0, 0.8),
-		forceRecheckCh:  make(chan bool, 1),
 		forceRedial:     abool.New(),
 		preconnects:     make(chan interface{}, maxPreconnect),
 		preconnected:    make(chan *proxyConnection, maxPreconnect),
@@ -396,7 +394,6 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		p.protocol = "kcp"
 	}
 
-	p.runConnectivityChecks()
 	if probeCoreDials {
 		p.checkCoreDials()
 	}
@@ -575,15 +572,6 @@ func (p *proxy) collectBBRInfo(reqTime time.Time, resp *http.Response) {
 			}
 			p.mx.Unlock()
 		}
-	}
-}
-
-func (p *proxy) forceRecheck() {
-	select {
-	case p.forceRecheckCh <- true:
-		// requested
-	default:
-		// recheck already requested, ignore
 	}
 }
 
