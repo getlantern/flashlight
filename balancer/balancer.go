@@ -436,12 +436,19 @@ func (b *Balancer) evalDialers() {
 	}
 	newTopDialer := dialers[0]
 	log.Debugf("Finished checking connectivity for all dialers, resulting in top dialer: %v", dialers[0].Name())
+
 	op := ops.Begin("proxy_selection_stability")
-	topDialerChanged := b.priorTopDialer != nil && newTopDialer != b.priorTopDialer
+	defer op.End()
+	if newTopDialer == b.priorTopDialer {
+		op.SetMetricSum("top_dialer_unchanged", 1)
+		log.Debug("Top dialer unchanged")
+		return
+	}
+
 	if b.priorTopDialer == nil {
 		op.SetMetricSum("top_dialer_initialized", 1)
 		log.Debug("Top dialer initialized")
-	} else if topDialerChanged {
+	} else {
 		op.SetMetricSum("top_dialer_changed", 1)
 		reason := "performance"
 		if !b.priorTopDialer.Succeeding() {
@@ -450,12 +457,7 @@ func (b *Balancer) evalDialers() {
 		op.Set("reason", reason)
 		log.Debug("Top dialer changed")
 		recordTopDialer(dialers)
-	} else {
-		op.SetMetricSum("top_dialer_unchanged", 1)
-		log.Debug("Top dialer unchanged")
 	}
-	op.End()
-
 	b.priorTopDialer = newTopDialer
 	log.Debugf("setting top dialer to %v", b.priorTopDialer.Label())
 }
