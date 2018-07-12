@@ -124,21 +124,20 @@ type dialStats struct {
 
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
-	beam_seq                        uint64
-	mu                              sync.RWMutex
-	evalMx                          sync.Mutex
-	overallDialTimeout              time.Duration
-	dialers                         sortedDialers
-	trusted                         sortedDialers
-	sessionStats                    map[string]*dialStats
-	lastReset                       time.Time
-	closeOnce                       sync.Once
-	closeCh                         chan struct{}
-	onActiveDialer                  chan Dialer
-	priorTopDialer                  Dialer
-	bandwidthKnownForPriorTopDialer bool
-	hasSucceedingDialer             chan bool
-	HasSucceedingDialer             <-chan bool
+	beam_seq            uint64
+	mu                  sync.RWMutex
+	overallDialTimeout  time.Duration
+	dialers             sortedDialers
+	trusted             sortedDialers
+	sessionStats        map[string]*dialStats
+	lastReset           time.Time
+	closeOnce           sync.Once
+	closeCh             chan struct{}
+	chEvalDialers       chan struct{}
+	onActiveDialer      chan Dialer
+	priorTopDialer      Dialer
+	hasSucceedingDialer chan bool
+	HasSucceedingDialer <-chan bool
 }
 
 // New creates a new Balancer using the supplied Dialers.
@@ -149,6 +148,7 @@ func New(overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
 	b := &Balancer{
 		overallDialTimeout:  overallDialTimeout,
 		closeCh:             make(chan struct{}),
+		chEvalDialers:       make(chan struct{}, 1),
 		onActiveDialer:      make(chan Dialer, 1),
 		hasSucceedingDialer: hasSucceedingDialer,
 		HasSucceedingDialer: hasSucceedingDialer,
@@ -156,6 +156,7 @@ func New(overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
 
 	b.Reset(dialers)
 	ops.Go(b.periodicallyPrintStats)
+	ops.Go(b.evalLoop)
 	return b
 }
 
@@ -289,7 +290,12 @@ func (bd *balancedDial) dial(ctx context.Context, start time.Time) (conn net.Con
 			// Please leave this at Debug level, as it helps us understand
 			// performance issues caused by a poor proxy being selected.
 			log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", pc.Label(), bd.network, bd.addr, attempts, time.Since(start))
-			bd.onSuccess(pc, oldLatency, oldBW, attempts)
+			bd.onSuccess(pc)
+			// Reevaluate all dialers if the top dialer performance dramatically changed
+			if attempts == 0 {
+				bd.reEvalIfRequired(pc, oldLatency, oldBW)
+			}
+
 			return conn, nil
 		}
 
@@ -347,7 +353,7 @@ func (bd *balancedDial) advanceToNextDialer() bool {
 	}
 }
 
-func (bd *balancedDial) onSuccess(pc ProxyConnection, oldLatency time.Duration, oldBW float64, attempts int) {
+func (bd *balancedDial) onSuccess(pc ProxyConnection) {
 	atomic.AddInt64(&bd.sessionStats[pc.Label()].success, 1)
 	select {
 	case bd.onActiveDialer <- pc:
@@ -364,17 +370,25 @@ func (bd *balancedDial) onSuccess(pc ProxyConnection, oldLatency time.Duration, 
 		d.MarkFailure()
 	}
 
-	// Reevaluate all dialers if the top dialer performance dramatically changed
-	if attempts == 0 {
-		switch {
-		case pc.EstLatency() > oldLatency*3:
-			log.Debugf("Dialer %s latency increased from %v to %v, re-evaluate all dialers", pc.Label(), oldLatency, pc.EstLatency())
-		case pc.EstBandwidth()*10 < oldBW:
-			log.Debugf("Dialer %s bandwidth decreased from %v to %v, re-evaluate all dialers", pc.Label(), oldBW, pc.EstBandwidth())
-		default:
-			return
-		}
-		ops.Go(bd.evalDialers)
+}
+
+func (bd *balancedDial) reEvalIfRequired(pc ProxyConnection, oldLatency time.Duration, oldBW float64) {
+	switch {
+	case pc.EstLatency() > oldLatency*3:
+		log.Debugf("Dialer %s latency increased from %v to %v, re-evaluate all dialers", pc.Label(), oldLatency, pc.EstLatency())
+	case pc.EstBandwidth()*10 < oldBW:
+		log.Debugf("Dialer %s bandwidth decreased from %v to %v, re-evaluate all dialers", pc.Label(), oldBW, pc.EstBandwidth())
+	default:
+		return
+	}
+	bd.requestForEval()
+}
+
+func (bd *balancedDial) requestForEval() {
+	select {
+	case bd.Balancer.chEvalDialers <- struct{}{}:
+	default:
+		log.Debug("Evaluating dialers in progress, skipping")
 	}
 }
 
@@ -398,7 +412,7 @@ func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err e
 	}
 	if attempts == 0 && !pc.Succeeding() {
 		log.Debugf("Dialer %s is failing, re-evaluate all dialers", pc.Label())
-		ops.Go(bd.evalDialers)
+		bd.requestForEval()
 	}
 }
 
@@ -409,41 +423,19 @@ func (b *Balancer) OnActiveDialer() <-chan Dialer {
 }
 
 func (b *Balancer) evalDialers() {
-	dialers := b.sortDialers()
+	dialers := b.copyOfDialers()
+	if len(dialers) < 2 {
+		// nothing to do
+		return
+	}
+	b.checkConnectivityForAll(dialers)
+	dialers = b.sortDialers()
 	if len(dialers) < 2 {
 		// nothing to do
 		return
 	}
 	newTopDialer := dialers[0]
-	bandwidthKnownForNewTopDialer := newTopDialer.EstBandwidth() > 0
-
-	// If we've had a change at the top of the order, let's recheck latencies to
-	// see if it's just due to general network conditions degrading.
-	b.evalMx.Lock()
-	checkNeeded := b.bandwidthKnownForPriorTopDialer &&
-		bandwidthKnownForNewTopDialer && newTopDialer != b.priorTopDialer
-	b.evalMx.Unlock()
-
-	if checkNeeded {
-		log.Debugf("Top dialer changed from %v to %v, checking connectivity for all dialers to get updated latencies", b.priorTopDialer.Name(), newTopDialer.Name())
-		b.checkConnectivityForAll(dialers)
-		dialers = b.sortDialers()
-		if len(dialers) < 2 {
-			// nothing to do
-			return
-		}
-		newTopDialer = dialers[0]
-		bandwidthKnownForNewTopDialer = newTopDialer.EstBandwidth() > 0
-		if len(dialers) == 0 {
-			log.Debug("Finished checking connectivity for all dialers, but no dialers are left!")
-		} else {
-			log.Debugf("Finished checking connectivity for all dialers, resulting in top dialer: %v", dialers[0].Name())
-		}
-	}
-
-	b.evalMx.Lock()
-	defer b.evalMx.Unlock()
-
+	log.Debugf("Finished checking connectivity for all dialers, resulting in top dialer: %v", dialers[0].Name())
 	op := ops.Begin("proxy_selection_stability")
 	topDialerChanged := b.priorTopDialer != nil && newTopDialer != b.priorTopDialer
 	if b.priorTopDialer == nil {
@@ -466,7 +458,6 @@ func (b *Balancer) evalDialers() {
 
 	b.priorTopDialer = newTopDialer
 	log.Debugf("setting top dialer to %v", b.priorTopDialer.Label())
-	b.bandwidthKnownForPriorTopDialer = bandwidthKnownForNewTopDialer
 }
 
 func (b *Balancer) checkConnectivityForAll(dialers []Dialer) {
@@ -493,6 +484,32 @@ func (b *Balancer) Close() {
 		b.Reset([]Dialer{})
 		close(b.closeCh)
 	})
+}
+
+// evalLoop keeps running until the balancer is closed. It checks a channel
+// every second to see if there are requests to evalulate all dialers, runs it,
+// then wait for one minute (randomized) to recheck the channel.
+func (b *Balancer) evalLoop() {
+	nextEvalTimer := time.NewTimer(0)
+	chDone := make(chan struct{})
+	for {
+		select {
+		case <-nextEvalTimer.C:
+			select {
+			case <-b.chEvalDialers:
+				ops.Go(func() {
+					b.evalDialers()
+					chDone <- struct{}{}
+				})
+			default:
+				nextEvalTimer.Reset(time.Second)
+			}
+		case <-chDone:
+			nextEvalTimer.Reset(randomize(time.Minute))
+		case <-b.closeCh:
+			return
+		}
+	}
 }
 
 func (b *Balancer) periodicallyPrintStats() {
@@ -683,14 +700,14 @@ func (d sortedDialers) Less(i, j int) bool {
 		return rand.Float64() < 0.5
 	}
 
-	// while proxy's bandwidth is unknown, it should get traffic so that we can
-	// ascertain the bandwidth
+	// should avoid sending traffic to proxy if bandwidth is unknown. The
+	// dialer will take care of probling for bandwidth when starts up.
 	eba, ebb := a.EstBandwidth(), b.EstBandwidth()
 	ebaKnown, ebbKnown := eba != 0, ebb != 0
-	if !ebaKnown && ebbKnown {
+	if ebaKnown && !ebbKnown {
 		return true
 	}
-	if ebaKnown && !ebbKnown {
+	if !ebaKnown && ebbKnown {
 		return false
 	}
 	if !ebaKnown && !ebbKnown {
