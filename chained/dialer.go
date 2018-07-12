@@ -228,7 +228,7 @@ func (p *proxy) MarkFailure() {
 	atomic.StoreInt64(&p.consecSuccesses, 0)
 	newCF := atomic.AddInt64(&p.consecFailures, 1)
 	log.Tracef("Dialer %s consecutive failures: %d -> %d", p.Label(), newCF-1, newCF)
-	return newCF
+	return
 }
 
 func (pc *proxyConnection) doDial(ctx context.Context, network, addr string) (net.Conn, error) {
