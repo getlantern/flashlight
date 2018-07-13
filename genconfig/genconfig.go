@@ -102,8 +102,8 @@ func init() {
 	providers["edgecast"] = newProvider(
 		"https://7pjuyyk4gsffpvf9.getiantem.org/ping",
 		map[string]string{
-			"api.getiantem.org":                "fb6fy4cx9vjljuat.getiantem.org",
-			"api-staging.getiantem.org":        "a1l3kh9gpetejfyl.getiantem.org",
+			"api.getiantem.org":                "5olzme25tldgulwp.getiantem.org",
+			"api-staging.getiantem.org":        "v0klxlag1s1wvfcv.getiantem.org",
 			"borda.lantern.io":                 "7pjuyyk4gsffpvf9.getiantem.org",
 			"config.getiantem.org":             "fb6fy4cx9vjljuat.getiantem.org",
 			"config-staging.getiantem.org":     "a1l3kh9gpetejfyl.getiantem.org",
