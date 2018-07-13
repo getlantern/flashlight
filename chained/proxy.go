@@ -3,7 +3,6 @@ package chained
 import (
 	"context"
 	"crypto/rsa"
-	"crypto/tls"
 	"fmt"
 	"net"
 	"net/http"
@@ -34,6 +33,7 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/tlsdialer"
 	"github.com/mitchellh/mapstructure"
+	"github.com/refraction-networking/utls"
 	"github.com/tevino/abool"
 )
 
@@ -130,10 +130,17 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pr
 
 	return newProxy(name, "https", "tcp", s.Addr, s, uc, s.Trusted, false, func(ctx context.Context, p *proxy) (serverConn, error) {
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
-			conn, err := tlsdialer.DialTimeout(func(network, addr string, timeout time.Duration) (net.Conn, error) {
-				return p.dialCore(op)(ctx)
-			}, timeoutFor(ctx),
-				"tcp", p.addr, false, tlsConfigForProxy(s))
+			tlsConfig, clientHelloID := tlsConfigForProxy(s)
+			td := &tlsdialer.Dialer{
+				DoDial: func(network, addr string, timeout time.Duration) (net.Conn, error) {
+					return p.dialCore(op)(ctx)
+				},
+				Timeout:        timeoutFor(ctx),
+				SendServerName: tlsConfig.ServerName != "",
+				Config:         tlsConfig,
+				ClientHelloID:  clientHelloID,
+			}
+			conn, err := td.Dial("tcp", p.addr)
 			if err != nil {
 				return conn, err
 			}
@@ -643,7 +650,7 @@ func reportProxyDial(delta time.Duration, err error) {
 	}
 }
 
-func tlsConfigForProxy(s *ChainedServerInfo) *tls.Config {
+func tlsConfigForProxy(s *ChainedServerInfo) (*tls.Config, tls.ClientHelloID) {
 	var sessionCache tls.ClientSessionCache
 	if s.TLSClientSessionCacheSize == 0 {
 		sessionCache = tls.NewLRUClientSessionCache(1000)
@@ -657,7 +664,7 @@ func tlsConfigForProxy(s *ChainedServerInfo) *tls.Config {
 		CipherSuites:       cipherSuites,
 		ServerName:         s.TLSServerNameIndicator,
 		InsecureSkipVerify: true,
-	}
+	}, s.clientHelloID()
 }
 
 func orderedCipherSuitesFromConfig(s *ChainedServerInfo) []uint16 {
