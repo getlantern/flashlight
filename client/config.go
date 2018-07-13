@@ -28,6 +28,7 @@ var (
 		"globalconfig.flashlightproxy.com": "d24ykmup0867cj.cloudfront.net",
 		"update.getlantern.org":            "d2yl1zps97e5mx.cloudfront.net",
 		"github.com":                       "d2yl1zps97e5mx.cloudfront.net",
+		"github-production-release-asset-2e65be.s3.amazonaws.com": "d37kom4pw4aa7b.cloudfront.net",
 	}
 )
 
