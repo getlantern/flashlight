@@ -97,6 +97,7 @@ func init() {
 			"globalconfig.flashlightproxy.com": "oxrovkdbmw04byt2.getiantem.org",
 			"update.getlantern.org":            "r1ktidq1ohjht2qr.getiantem.org",
 			"github.com":                       "2mbjmpzpb7dkwm6d.getiantem.org",
+			"github-production-release-asset-2e65be.s3.amazonaws.com": "0l6xjiqoogflgfu1.getiantem.org",
 		},
 		&client.ValidatorConfig{RejectStatus: []int{403}},
 	)
@@ -109,9 +110,10 @@ func init() {
 			"config.getiantem.org":             "fb6fy4cx9vjljuat.getiantem.org",
 			"config-staging.getiantem.org":     "a1l3kh9gpetejfyl.getiantem.org",
 			"geo.getiantem.org":                "4nyaxxbvf9cthxb7.getiantem.org",
-			"globalconfig.flashlightproxy.com": "4x13jsbjbhgtktew.getiantem.org",
+			"globalconfig.flashlightproxy.com": "pf7clvtvwomg38we.getiantem.org",
 			"update.getlantern.org":            "p6zj7yrrc8vnindu.getiantem.org",
-			"github.com":                       "gvvex1er7qmuarl1.getiantem.org",
+			"github.com":                       "knqob1zvc3dgq7hk.getiantem.org",
+			"github-production-release-asset-2e65be.s3.amazonaws.com": "2bcmg4nsmtzxzoo8.getiantem.org",
 		},
 		&client.ValidatorConfig{RejectStatus: []int{403}},
 	)
