@@ -45,13 +45,12 @@ func (p *proxy) Probe(forPerformance bool) bool {
 
 	if !forPerformance {
 		// not probing for performance, just do a small ping
-		rtt, err := p.httpPing(1, false)
+		err := p.httpPing(1, false)
 		if err != nil {
 			log.Errorf("Error probing %v: %v", p.Label(), err)
 			p.MarkFailure()
 			return logResult(false)
 		}
-		p.emaLatency.UpdateDuration(rtt)
 		p.markSuccess()
 		return logResult(true)
 	}
@@ -62,7 +61,7 @@ func (p *proxy) Probe(forPerformance bool) bool {
 		// logic on the server.
 		kb := 50 + i*25
 		// Reset BBR stats to have an up-to-date estimation after the probe
-		_, err := p.httpPing(kb, i == 0)
+		err := p.httpPing(kb, i == 0)
 		if err != nil {
 			log.Errorf("Error probing %v for performance: %v", p.Label(), err)
 			return logResult(false)
@@ -73,7 +72,7 @@ func (p *proxy) Probe(forPerformance bool) bool {
 	return logResult(true)
 }
 
-func (p *proxy) httpPing(kb int, resetBBR bool) (rtt time.Duration, err error) {
+func (p *proxy) httpPing(kb int, resetBBR bool) error {
 	// Only check one proxy at time to give ourselves the full available pipe
 	httpPingMx.Lock()
 	defer httpPingMx.Unlock()
@@ -87,7 +86,7 @@ func (p *proxy) httpPing(kb int, resetBBR bool) (rtt time.Duration, err error) {
 	defer detailOp.End()
 
 	start := time.Now()
-	rtt, err = p.doHttpPing(kb, resetBBR)
+	err := p.doHttpPing(kb, resetBBR)
 	delta := time.Since(start)
 	detailOp.FailIf(err)
 	op.FailIf(err)
@@ -95,14 +94,14 @@ func (p *proxy) httpPing(kb int, resetBBR bool) (rtt time.Duration, err error) {
 	op.Set("probe_kb", kb)
 	op.SetMetricAvg("probe_rtt", float64(delta)/float64(time.Millisecond))
 	log.Debugf("Probe %s with %vkb took %v", p.Name(), kb, delta)
-	return
+	return err
 }
 
-func (p *proxy) doHttpPing(kb int, resetBBR bool) (rtt time.Duration, err error) {
+func (p *proxy) doHttpPing(kb int, resetBBR bool) error {
 	log.Debugf("Sending HTTP Ping to %v", p.Label())
 	req, e := http.NewRequest("GET", "http://ping-chained-server", nil)
 	if e != nil {
-		return 0, fmt.Errorf("Could not create HTTP request: %v", e)
+		return fmt.Errorf("Could not create HTTP request: %v", e)
 	}
 	req.Header.Set(common.PingHeader, fmt.Sprint(kb))
 	p.onRequest(req)
@@ -110,7 +109,7 @@ func (p *proxy) doHttpPing(kb int, resetBBR bool) (rtt time.Duration, err error)
 		req.Header.Set("X-BBR", "clear")
 	}
 
-	_, _, err = withtimeout.Do(30*time.Second, func() (interface{}, error) {
+	_, _, err := withtimeout.Do(30*time.Second, func() (interface{}, error) {
 		var dialEnd time.Time
 		rt := &http.Transport{
 			DisableKeepAlives: true,
@@ -140,7 +139,7 @@ func (p *proxy) doHttpPing(kb int, resetBBR bool) (rtt time.Duration, err error)
 		if rtErr != nil {
 			return false, errors.New("Error testing dialer %s: %s", p.Addr(), rtErr)
 		}
-		rtt = time.Since(dialEnd)
+		p.emaRTT.UpdateDuration(time.Since(dialEnd))
 		if resp.Body != nil {
 			// Read the body to include this in our timing.
 			defer resp.Body.Close()
@@ -156,5 +155,5 @@ func (p *proxy) doHttpPing(kb int, resetBBR bool) (rtt time.Duration, err error)
 		return success, nil
 	})
 
-	return
+	return err
 }

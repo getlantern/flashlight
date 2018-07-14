@@ -9,13 +9,13 @@ import (
 )
 
 var (
-	latencyMultiplier = time.Duration(1)
+	rttMultiplier = time.Duration(1)
 )
 
 type testDialer struct {
 	name               string
-	baseLatency        time.Duration
-	latency            time.Duration
+	baseRTT            time.Duration
+	rtt                time.Duration
 	bandwidth          float64
 	untrusted          bool
 	remainingFailures  int
@@ -98,8 +98,8 @@ func (d *testDialer) MarkFailure() {
 	atomic.AddInt64(&d.failures, 1)
 }
 
-func (d *testDialer) EstLatency() time.Duration {
-	return d.latency
+func (d *testDialer) EstRTT() time.Duration {
+	return d.rtt
 }
 
 func (d *testDialer) EstBandwidth() float64 {
@@ -133,9 +133,9 @@ func (d *testDialer) Succeeding() bool {
 func (d *testDialer) ForceRedial() {
 }
 
-func (d *testDialer) recalcLatency() {
-	if d.baseLatency != 0 {
-		d.latency = d.baseLatency * latencyMultiplier
+func (d *testDialer) recalcRTT() {
+	if d.baseRTT != 0 {
+		d.rtt = d.baseRTT * rttMultiplier
 	}
 }
 
@@ -146,7 +146,7 @@ func (d *testDialer) connectivityChecksSinceLast() int {
 }
 
 func (d *testDialer) Probe(forPerformance bool) bool {
-	d.recalcLatency()
+	d.recalcRTT()
 	d.connectivityChecks++
 	return true
 }

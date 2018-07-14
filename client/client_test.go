@@ -264,7 +264,7 @@ func TestAccessingProxyPort(t *testing.T) {
 
 type testDialer struct {
 	name      string
-	latency   time.Duration
+	rtt       time.Duration
 	dial      func(network, addr string) (net.Conn, error)
 	bandwidth float64
 	untrusted bool
@@ -351,8 +351,8 @@ func (d *testDialer) MarkFailure() {
 	atomic.AddInt64(&d.failures, 1)
 }
 
-func (d *testDialer) EstLatency() time.Duration {
-	return d.latency
+func (d *testDialer) EstRTT() time.Duration {
+	return d.rtt
 }
 
 func (d *testDialer) EstBandwidth() float64 {

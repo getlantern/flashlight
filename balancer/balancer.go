@@ -79,8 +79,8 @@ type Dialer interface {
 	// MarkFailure marks a dial failure on this dialer.
 	MarkFailure()
 
-	// EstLatency provides a latency estimate
-	EstLatency() time.Duration
+	// EstRTT provides a round trip delay time estimate
+	EstRTT() time.Duration
 
 	// EstBandwidth provides the estimated bandwidth in Mbps
 	EstBandwidth() float64
@@ -204,7 +204,7 @@ func (b *Balancer) ForceRedial() {
 // - succeeding dialers are preferred to failing
 // - dialers whose bandwidth is unknown are preferred to those whose bandwidth
 //   is known (in order to collect data)
-// - faster dialers (based on bandwidth / latency) are preferred to slower ones
+// - faster dialers (based on bandwidth / RTT) are preferred to slower ones
 //
 // Only Trusted Dialers are used to dial HTTP hosts.
 //
@@ -284,7 +284,7 @@ func (bd *balancedDial) dial(ctx context.Context, start time.Time) (conn net.Con
 
 		deadline, _ := newCTX.Deadline()
 		log.Debugf("Dialing %s://%s with %s on pass %v with timeout %v", bd.network, bd.addr, pc.Label(), attempts, deadline.Sub(time.Now()))
-		oldLatency, oldBW := pc.EstLatency(), pc.EstBandwidth()
+		oldRTT, oldBW := pc.EstRTT(), pc.EstBandwidth()
 		conn, failedUpstream, err = pc.DialContext(newCTX, bd.network, bd.addr)
 		if err == nil {
 			// Please leave this at Debug level, as it helps us understand
@@ -293,7 +293,7 @@ func (bd *balancedDial) dial(ctx context.Context, start time.Time) (conn net.Con
 			bd.onSuccess(pc)
 			// Reevaluate all dialers if the top dialer performance dramatically changed
 			if attempts == 0 {
-				bd.reEvalIfRequired(pc, oldLatency, oldBW)
+				bd.reEvalIfRequired(pc, oldRTT, oldBW)
 			}
 
 			return conn, nil
@@ -372,10 +372,10 @@ func (bd *balancedDial) onSuccess(pc ProxyConnection) {
 
 }
 
-func (bd *balancedDial) reEvalIfRequired(pc ProxyConnection, oldLatency time.Duration, oldBW float64) {
+func (bd *balancedDial) reEvalIfRequired(pc ProxyConnection, oldRTT time.Duration, oldBW float64) {
 	switch {
-	case pc.EstLatency() > oldLatency*3:
-		log.Debugf("Dialer %s latency increased from %v to %v, re-evaluate all dialers", pc.Label(), oldLatency, pc.EstLatency())
+	case pc.EstRTT() > oldRTT*3:
+		log.Debugf("Dialer %s RTT increased from %v to %v, re-evaluate all dialers", pc.Label(), oldRTT, pc.EstRTT())
 	case pc.EstBandwidth()*10 < oldBW:
 		log.Debugf("Dialer %s bandwidth decreased from %v to %v, re-evaluate all dialers", pc.Label(), oldBW, pc.EstBandwidth())
 	default:
@@ -538,7 +538,7 @@ func (b *Balancer) printStats(dialers sortedDialers, sessionStats map[string]*di
 	log.Debugf("----------- Dialer Stats (%v) -----------", time.Since(lastReset))
 	rank := float64(1)
 	for _, d := range dialers {
-		estLatency := d.EstLatency().Seconds()
+		estRTT := d.EstRTT().Seconds()
 		estBandwidth := d.EstBandwidth()
 		ds := sessionStats[d.Label()]
 		sessionAttempts := atomic.LoadInt64(&ds.success) + atomic.LoadInt64(&ds.failure)
@@ -549,14 +549,14 @@ func (b *Balancer) printStats(dialers sortedDialers, sessionStats map[string]*di
 			sessionAttempts, d.Attempts(),
 			atomic.LoadInt64(&ds.success), d.Successes(), d.ConsecSuccesses(),
 			atomic.LoadInt64(&ds.failure), d.Failures(), d.ConsecFailures(),
-			estLatency*1000, estBandwidth)
+			estRTT*1000, estBandwidth)
 		host, _, _ := net.SplitHostPort(d.Addr())
 		// Report stats to borda
 		op := ops.Begin("proxy_rank").
 			ProxyName(d.Name()).
 			Set("proxy_host", host).
 			SetMetricAvg("rank", rank).
-			SetMetricAvg("est_rtt", estLatency)
+			SetMetricAvg("est_rtt", estRTT)
 		if estBandwidth > 0 {
 			op.SetMetricAvg("est_mbps", estBandwidth)
 		}
@@ -589,12 +589,12 @@ func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, map[string]*dialStat
 	topDialer := dialers[0]
 	for i := 1; i < len(dialers); i++ {
 		dialer := dialers[i]
-		if dialer.Succeeding() && dialer.EstLatency().Seconds()/topDialer.EstLatency().Seconds() < 0.75 && rand.Float64() < 0.05 {
-			// We generally assume that dialers with lower latency could be faster
+		if dialer.Succeeding() && dialer.EstRTT().Seconds()/topDialer.EstRTT().Seconds() < 0.75 && rand.Float64() < 0.05 {
+			// We generally assume that dialers with lower rtt could be faster
 			// overall, so send a little traffic to them to find out if that's true.
 			// Amongst other things, this allows the fastest dialer to eventually
 			// recover after a temporary hiccup.
-			log.Debugf("Dialer %v has a dramatically lower latency than top dialer %v, randomly moving it to the top of the line", dialer.Name(), topDialer.Name())
+			log.Debugf("Dialer %v has a dramatically lower rtt than top dialer %v, randomly moving it to the top of the line", dialer.Name(), topDialer.Name())
 			randomized := make([]Dialer, 0, len(dialers))
 			randomized = append(randomized, dialer)
 			for j, other := range dialers {
@@ -718,8 +718,8 @@ func (d sortedDialers) Less(i, j int) bool {
 		return strings.Compare(a.Label(), b.Label()) < 0
 	}
 
-	// divide bandwidth by latency to determine how to sort
-	ela, elb := a.EstLatency().Seconds(), b.EstLatency().Seconds()
+	// divide bandwidth by rtt to determine how to sort
+	ela, elb := a.EstRTT().Seconds(), b.EstRTT().Seconds()
 	return float64(eba)/ela > float64(ebb)/elb
 }
 

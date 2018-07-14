@@ -370,7 +370,7 @@ func (p *proxy) checkCONNECTResponse(r *bufio.Reader, req *http.Request, reqTime
 			// dialupstream is the only metric for now, but more may be added later.
 			for _, metric := range header.Metrics {
 				if metric.Name == gp.MetricDialUpstream {
-					p.emaLatency.UpdateDuration(rtt - metric.Duration)
+					p.emaRTT.UpdateDuration(rtt - metric.Duration)
 				}
 			}
 		}

@@ -313,7 +313,7 @@ type proxy struct {
 	trusted           bool
 	bias              int
 	doDialServer      func(context.Context, *proxy) (serverConn, error)
-	emaLatency        *ema.EMA
+	emaRTT            *ema.EMA
 	kcpConfig         *KCPConfig
 	forceRedial       *abool.AtomicBool
 	mostRecentABETime time.Time
@@ -345,7 +345,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		trusted:         trusted,
 		bias:            s.Bias,
 		doDialServer:    dialServer,
-		emaLatency:      ema.NewDuration(0, 0.8),
+		emaRTT:          ema.NewDuration(0, 0.8),
 		forceRedial:     abool.New(),
 		preconnects:     make(chan interface{}, maxPreconnect),
 		preconnected:    make(chan *proxyConnection, maxPreconnect),
@@ -472,15 +472,15 @@ func (p *proxy) dialServer() (serverConn, error) {
 	return p.doDialServer(ctx, p)
 }
 
-// EstLatency implements the method from the balancer.Dialer interface. The
+// EstRTT implements the method from the balancer.Dialer interface. The
 // value is updated from the round trip time of CONNECT request (minus the time
 // to dial origin) or the HTTP ping.
-func (p *proxy) EstLatency() time.Duration {
+func (p *proxy) EstRTT() time.Duration {
 	if p.bias != 0 {
-		// For biased proxies, return an extreme latency in proportion to the bias
+		// For biased proxies, return an extreme RTT in proportion to the bias
 		return time.Duration(p.bias) * -100 * time.Second
 	}
-	return p.emaLatency.GetDuration()
+	return p.emaRTT.GetDuration()
 }
 
 // EstBandwidth implements the method from the balancer.Dialer interface.
@@ -505,14 +505,14 @@ func (p *proxy) EstBandwidth() float64 {
 	return float64(atomic.LoadInt64(&p.abe)) / 1000
 }
 
-func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64, failures int64, consecFailures int64, emaLatency time.Duration, mostRecentABETime time.Time, abe int64) {
+func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64, failures int64, consecFailures int64, emaRTT time.Duration, mostRecentABETime time.Time, abe int64) {
 	p.mx.Lock()
 	atomic.StoreInt64(&p.attempts, attempts)
 	atomic.StoreInt64(&p.successes, successes)
 	atomic.StoreInt64(&p.consecSuccesses, consecSuccesses)
 	atomic.StoreInt64(&p.failures, failures)
 	atomic.StoreInt64(&p.consecFailures, consecFailures)
-	p.emaLatency.SetDuration(emaLatency)
+	p.emaRTT.SetDuration(emaRTT)
 	p.mostRecentABETime = mostRecentABETime
 	atomic.StoreInt64(&p.abe, abe)
 	p.mx.Unlock()
@@ -545,9 +545,9 @@ func (p *proxy) collectBBRInfo(reqTime time.Time, resp *http.Response) {
 
 func (p *proxy) dialCore(op *ops.Op) func(ctx context.Context) (net.Conn, error) {
 	return func(ctx context.Context) (net.Conn, error) {
-		estLatency, estBandwidth := p.EstLatency(), p.EstBandwidth()
-		if estLatency > 0 {
-			op.SetMetricAvg("est_rtt", estLatency.Seconds()/1000)
+		estRTT, estBandwidth := p.EstRTT(), p.EstBandwidth()
+		if estRTT > 0 {
+			op.SetMetricAvg("est_rtt", estRTT.Seconds()/1000)
 		}
 		if estBandwidth > 0 {
 			op.SetMetricAvg("est_mbps", estBandwidth)

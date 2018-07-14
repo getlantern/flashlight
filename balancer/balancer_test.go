@@ -36,7 +36,7 @@ func TestSingleDialer(t *testing.T) {
 
 	dialer := start(&testDialer{
 		name:      "dialer1",
-		latency:   50 * time.Millisecond,
+		rtt:       50 * time.Millisecond,
 		bandwidth: 10000,
 	})
 	// Test successful single dialer
@@ -68,13 +68,13 @@ func TestGoodSlowDialer(t *testing.T) {
 
 	dialer1 := start(&testDialer{
 		name:              "dialer1",
-		latency:           50 * time.Millisecond,
+		rtt:               50 * time.Millisecond,
 		bandwidth:         10000,
 		remainingFailures: 1000,
 	})
 	dialer2 := start(&testDialer{
 		name:      "dialer2",
-		latency:   500 * time.Millisecond,
+		rtt:       500 * time.Millisecond,
 		bandwidth: 10000,
 	})
 
@@ -94,13 +94,13 @@ func TestAllFailingUpstream(t *testing.T) {
 
 	dialer1 := start(&testDialer{
 		name:            "dialer1",
-		latency:         50 * time.Millisecond,
+		rtt:             50 * time.Millisecond,
 		bandwidth:       10000,
 		failingUpstream: true,
 	})
 	dialer2 := start(&testDialer{
 		name:            "dialer2",
-		latency:         500 * time.Millisecond,
+		rtt:             500 * time.Millisecond,
 		bandwidth:       10000,
 		failingUpstream: true,
 	})
@@ -120,13 +120,13 @@ func TestOneFailingUpstream(t *testing.T) {
 
 	dialer1 := start(&testDialer{
 		name:            "dialer1",
-		latency:         50 * time.Millisecond,
+		rtt:             50 * time.Millisecond,
 		bandwidth:       10000,
 		failingUpstream: true,
 	})
 	dialer2 := start(&testDialer{
 		name:              "dialer2",
-		latency:           500 * time.Millisecond,
+		rtt:               500 * time.Millisecond,
 		bandwidth:         10000,
 		remainingFailures: 1,
 	})
@@ -174,16 +174,16 @@ func TestSorting(t *testing.T) {
 			name:      "2",
 			bandwidth: 0,
 		}),
-		// Order known dialers by bandwidth / latency
+		// Order known dialers by bandwidth / RTT
 		start(&testDialer{
 			name:      "3",
 			bandwidth: 1000,
-			latency:   1 * time.Millisecond,
+			rtt:       1 * time.Millisecond,
 		}),
 		start(&testDialer{
 			name:      "4",
 			bandwidth: 10000,
-			latency:   15 * time.Millisecond,
+			rtt:       15 * time.Millisecond,
 		}),
 		// Same ordering as above applies to failing proxies, which all come after
 		// succeeding ones
@@ -200,13 +200,13 @@ func TestSorting(t *testing.T) {
 		start(&testDialer{
 			name:              "7",
 			bandwidth:         1000,
-			latency:           1 * time.Millisecond,
+			rtt:               1 * time.Millisecond,
 			remainingFailures: 1000,
 		}),
 		start(&testDialer{
 			name:              "8",
 			bandwidth:         10000,
-			latency:           15 * time.Millisecond,
+			rtt:               15 * time.Millisecond,
 			remainingFailures: 1000,
 		}),
 	}
