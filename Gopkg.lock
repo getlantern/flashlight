@@ -85,6 +85,12 @@
   version = "v0.2.1"
 
 [[projects]]
+  name = "github.com/felixge/httpsnoop"
+  packages = ["."]
+  revision = "eadd4fad6aac69ae62379194fe0219f3dbc80fd3"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/getlantern/appdir"
   packages = ["."]
@@ -285,7 +291,7 @@
     "proxyfilters",
     "server"
   ]
-  revision = "8f8c6ce1e943b07d9216279588118f428537e6f9"
+  revision = "fa6e2187eafd7424f7decf5a265b04ea26390dfe"
 
 [[projects]]
   branch = "master"
@@ -472,7 +478,7 @@
     ".",
     "filters"
   ]
-  revision = "afe965b8c237b91043ad31beac695e3224c8c34e"
+  revision = "e822de39af648c8ee96450786897a50e455baa05"
 
 [[projects]]
   branch = "master"
@@ -623,6 +629,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/golang/gddo"
+  packages = ["httputil/header"]
+  revision = "daffe1f90ec57f8ed69464f9094753fc6452e983"
+
+[[projects]]
+  branch = "master"
   name = "github.com/golang/groupcache"
   packages = ["lru"]
   revision = "66deaeb636dff1ac7d938ce666d090556056a4b0"
@@ -768,6 +780,12 @@
   name = "github.com/mitchellh/go-homedir"
   packages = ["."]
   revision = "b8bc1bf767474819792c23f32d8286a45736f1c6"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/mitchellh/go-server-timing"
+  packages = ["."]
+  revision = "d145200e1f903b0ea9e6fd99eea2fb9621e0feaa"
 
 [[projects]]
   branch = "master"
@@ -1038,6 +1056,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "bedb7a14cc3a77722cb02e7912f31c9678baedb2cc5709b532aad3ab460f4d7b"
+  inputs-digest = "67595d4e7d5f3df3c5016c5c43c55f98c27dcdab86c417af347425f7d3604856"
   solver-name = "gps-cdcl"
   solver-version = 1

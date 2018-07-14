@@ -12,12 +12,15 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/mitchellh/go-server-timing"
+
 	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
+	gp "github.com/getlantern/proxy"
 )
 
 const (
@@ -357,6 +360,22 @@ func (p *proxy) checkCONNECTResponse(r *bufio.Reader, req *http.Request, reqTime
 		log.Errorf("Bad status code on CONNECT response %d: %v", resp.StatusCode, string(body))
 		return errUpstream
 	}
+	rtt := time.Since(reqTime)
+	timing := resp.Header.Get(servertiming.HeaderKey)
+	if timing != "" {
+		header, err := servertiming.ParseHeader(timing)
+		if err != nil {
+			log.Errorf("Fail to parse Server-Timing header in CONNECT response: %v", err)
+		} else {
+			// dialupstream is the only metric for now, but more may be added later.
+			for _, metric := range header.Metrics {
+				if metric.Name == gp.MetricDialUpstream {
+					p.emaLatency.UpdateDuration(rtt - metric.Duration)
+				}
+			}
+		}
+	}
+
 	p.collectBBRInfo(reqTime, resp)
 	bandwidth.Track(resp)
 	return nil

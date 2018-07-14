@@ -118,7 +118,7 @@ func newHTTPProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pro
 		}
 	}
 
-	return newProxy(name, "http", "tcp", s.Addr, s, uc, s.ENHTTPURL != "", false, doDialServer)
+	return newProxy(name, "http", "tcp", s.Addr, s, uc, s.ENHTTPURL != "", doDialServer)
 }
 
 func newHTTPSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
@@ -128,7 +128,7 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pr
 	}
 	x509cert := cert.X509()
 
-	return newProxy(name, "https", "tcp", s.Addr, s, uc, s.Trusted, false, func(ctx context.Context, p *proxy) (serverConn, error) {
+	return newProxy(name, "https", "tcp", s.Addr, s, uc, s.Trusted, func(ctx context.Context, p *proxy) (serverConn, error) {
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
 			tlsConfig, clientHelloID := tlsConfigForProxy(s)
 			td := &tlsdialer.Dialer{
@@ -186,7 +186,7 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pr
 		return nil, log.Errorf("Unable to parse client args: %v", err)
 	}
 
-	return newProxy(name, "obfs4", "tcp", s.Addr, s, uc, s.Trusted, false, func(ctx context.Context, p *proxy) (serverConn, error) {
+	return newProxy(name, "obfs4", "tcp", s.Addr, s, uc, s.Trusted, func(ctx context.Context, p *proxy) (serverConn, error) {
 		return p.reportedDial(p.Addr(), p.Protocol(), p.Network(), func(op *ops.Op) (net.Conn, error) {
 			dialFn := func(network, address string) (net.Conn, error) {
 				// We know for sure the network and address are the same as what
@@ -263,25 +263,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 		}), nil
 	}
 
-	p, err := newProxy(name, "lampshade", "tcp", s.Addr, s, uc, s.Trusted, true, dial)
-	if err != nil {
-		return nil, err
-	}
-
-	if pingInterval > 0 {
-		go func() {
-			for {
-				time.Sleep(pingInterval * 2)
-				ttfa := dialer.EMARTT()
-				if ttfa > 0 {
-					p.emaLatency.SetDuration(ttfa)
-					log.Debugf("%v EMA RTT: %v", p.Label(), ttfa)
-				}
-			}
-		}()
-	}
-
-	return p, nil
+	return newProxy(name, "lampshade", "tcp", s.Addr, s, uc, s.Trusted, dial)
 }
 
 // consecCounter is a counter that can extend on both directions. Its default
@@ -343,7 +325,7 @@ type proxy struct {
 	mx                sync.Mutex
 }
 
-func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc common.UserConfig, trusted bool, probeCoreDials bool, dialServer func(context.Context, *proxy) (serverConn, error)) (*proxy, error) {
+func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc common.UserConfig, trusted bool, dialServer func(context.Context, *proxy) (serverConn, error)) (*proxy, error) {
 	initPreconnect := s.InitPreconnect
 	if initPreconnect <= 0 {
 		initPreconnect = defaultInitPreconnect
@@ -381,7 +363,6 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		elapsed := mtime.Stopwatch()
 		conn, err := netx.DialTimeout("tcp", p.addr, timeoutFor(ctx))
 		delta := elapsed()
-		p.updateLatency(delta, err)
 		log.Tracef("Core dial time to %v was %v", p.Name(), delta)
 		return conn, delta, err
 	}
@@ -394,9 +375,6 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		p.protocol = "kcp"
 	}
 
-	if probeCoreDials {
-		p.checkCoreDials()
-	}
 	log.Debugf("%v preconnects, init: %d   max: %d", p.Label(), initPreconnect, maxPreconnect)
 	p.processPreconnects(initPreconnect)
 	return p, nil
@@ -442,7 +420,6 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 
 		conn, err := doDialKCP(ctx, "tcp", p.addr)
 		delta := elapsed()
-		p.updateLatency(delta, err)
 		return conn, delta, err
 	}
 
@@ -495,18 +472,9 @@ func (p *proxy) dialServer() (serverConn, error) {
 	return p.doDialServer(ctx, p)
 }
 
-func (p *proxy) updateLatency(latency time.Duration, err error) {
-	// Some transports (lampshade / KCP) return immediately when dialing,
-	// unless it's necessary to create a new underlie connection. Ignore
-	// apparently small delta values to get more useful latency.
-	if err == nil && latency > 10*time.Millisecond {
-		p.emaLatency.UpdateDuration(latency)
-	}
-}
-
 // EstLatency implements the method from the balancer.Dialer interface. The
-// value is updated from the time to dial the proxy, or the utility of the
-// pluggable transport, e.g., lampshade can measure the RTT of ping packets.
+// value is updated from the round trip time of CONNECT request (minus the time
+// to dial origin) or the HTTP ping.
 func (p *proxy) EstLatency() time.Duration {
 	if p.bias != 0 {
 		// For biased proxies, return an extreme latency in proportion to the bias
