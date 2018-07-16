@@ -167,7 +167,7 @@ func New(overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
 
 	b.Reset(dialers)
 	ops.Go(b.periodicallyPrintStats)
-	ops.Go(b.evalLoop)
+	ops.Go(b.evalDialersLoop)
 	return b
 }
 
@@ -285,7 +285,6 @@ func (bd *balancedDial) dial(ctx context.Context, start time.Time) (conn net.Con
 	newCTX, cancel := context.WithTimeout(ctx, bd.Balancer.overallDialTimeout)
 	defer cancel()
 	attempts := 0
-	failedUpstream := false
 	for {
 		pc := bd.nextPreconnected(newCTX)
 		if pc == nil {
@@ -293,24 +292,10 @@ func (bd *balancedDial) dial(ctx context.Context, start time.Time) (conn net.Con
 			break
 		}
 
-		deadline, _ := newCTX.Deadline()
-		log.Debugf("Dialing %s://%s with %s on pass %v with timeout %v", bd.network, bd.addr, pc.Label(), attempts, deadline.Sub(time.Now()))
-		oldRTT, oldBW := pc.EstRTT(), pc.EstBandwidth()
-		conn, failedUpstream, err = pc.DialContext(newCTX, bd.network, bd.addr)
-		if err == nil {
-			// Please leave this at Debug level, as it helps us understand
-			// performance issues caused by a poor proxy being selected.
-			log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", pc.Label(), bd.network, bd.addr, attempts, time.Since(start))
-			bd.onSuccess(pc)
-			// Reevaluate all dialers if the top dialer performance dramatically changed
-			if attempts == 0 {
-				bd.reEvalIfRequired(pc, oldRTT, oldBW)
-			}
-
+		conn := bd.dialWithPC(newCTX, pc, start, attempts)
+		if conn != nil {
 			return conn, nil
 		}
-
-		bd.onFailure(pc, failedUpstream, err, attempts)
 		attempts++
 		if !bd.advanceToNextDialer() {
 			break
@@ -364,6 +349,34 @@ func (bd *balancedDial) advanceToNextDialer() bool {
 	}
 }
 
+func (bd *balancedDial) dialWithPC(ctx context.Context, pc ProxyConnection, start time.Time, attempts int) net.Conn {
+	deadline, _ := ctx.Deadline()
+	log.Debugf("Dialing %s://%s with %s on pass %v with timeout %v", bd.network, bd.addr, pc.Label(), attempts, deadline.Sub(time.Now()))
+	oldRTT, oldBW := pc.EstRTT(), pc.EstBandwidth()
+	conn, failedUpstream, err := pc.DialContext(ctx, bd.network, bd.addr)
+	if err != nil {
+		bd.onFailure(pc, failedUpstream, err, attempts)
+		return nil
+	}
+	// Please leave this at Debug level, as it helps us understand
+	// performance issues caused by a poor proxy being selected.
+	log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", pc.Label(), bd.network, bd.addr, attempts, time.Since(start))
+	bd.onSuccess(pc)
+	// Reevaluate all dialers if the top dialer performance dramatically changed
+	if attempts == 0 {
+		switch {
+		case pc.EstRTT() > oldRTT*3:
+			log.Debugf("Dialer %s RTT increased from %v to %v, re-evaluate all dialers", pc.Label(), oldRTT, pc.EstRTT())
+			bd.requestEvalDialers()
+		case pc.EstBandwidth()*10 < oldBW:
+			log.Debugf("Dialer %s bandwidth decreased from %v to %v, re-evaluate all dialers", pc.Label(), oldBW, pc.EstBandwidth())
+			bd.requestEvalDialers()
+		default:
+		}
+	}
+	return conn
+}
+
 func (bd *balancedDial) onSuccess(pc ProxyConnection) {
 	atomic.AddInt64(&bd.sessionStats[pc.Label()].success, 1)
 	select {
@@ -381,26 +394,6 @@ func (bd *balancedDial) onSuccess(pc ProxyConnection) {
 		d.MarkFailure()
 	}
 
-}
-
-func (bd *balancedDial) reEvalIfRequired(pc ProxyConnection, oldRTT time.Duration, oldBW float64) {
-	switch {
-	case pc.EstRTT() > oldRTT*3:
-		log.Debugf("Dialer %s RTT increased from %v to %v, re-evaluate all dialers", pc.Label(), oldRTT, pc.EstRTT())
-	case pc.EstBandwidth()*10 < oldBW:
-		log.Debugf("Dialer %s bandwidth decreased from %v to %v, re-evaluate all dialers", pc.Label(), oldBW, pc.EstBandwidth())
-	default:
-		return
-	}
-	bd.requestForEval()
-}
-
-func (bd *balancedDial) requestForEval() {
-	select {
-	case bd.Balancer.chEvalDialers <- struct{}{}:
-	default:
-		log.Debug("Evaluating dialers in progress, skipping")
-	}
 }
 
 func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err error, attempts int) {
@@ -423,7 +416,15 @@ func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err e
 	}
 	if attempts == 0 && !pc.Succeeding() {
 		log.Debugf("Dialer %s is failing, re-evaluate all dialers", pc.Label())
-		bd.requestForEval()
+		bd.requestEvalDialers()
+	}
+}
+
+func (bd *balancedDial) requestEvalDialers() {
+	select {
+	case bd.Balancer.chEvalDialers <- struct{}{}:
+	default:
+		log.Debug("Evaluating dialers in progress, skipping")
 	}
 }
 
@@ -499,10 +500,10 @@ func (b *Balancer) Close() {
 	})
 }
 
-// evalLoop keeps running until the balancer is closed. It checks a channel
-// every second to see if there are requests to evalulate all dialers, runs it,
-// then wait for one minute (randomized) to recheck the channel.
-func (b *Balancer) evalLoop() {
+// evalDialersLoop keeps running until the balancer is closed. It checks a
+// channel every second to see if there are requests to evalulate all dialers,
+// runs it, then wait for one minute (randomized) to recheck the channel.
+func (b *Balancer) evalDialersLoop() {
 	nextEvalTimer := time.NewTimer(0)
 	chDone := make(chan struct{})
 	for {
@@ -717,7 +718,7 @@ func (d sortedDialers) Less(i, j int) bool {
 	}
 
 	// should avoid sending traffic to proxy if bandwidth is unknown. The
-	// dialer will take care of probling for bandwidth when starts up.
+	// dialer will take care of probeing for bandwidth when starts up.
 	eba, ebb := a.EstBandwidth(), b.EstBandwidth()
 	ebaKnown, ebbKnown := eba != 0, ebb != 0
 	if ebaKnown && !ebbKnown {
