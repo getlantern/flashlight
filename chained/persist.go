@@ -26,9 +26,7 @@ var (
 func TrackStatsFor(dialers []balancer.Dialer) {
 	statsMx.Lock()
 
-	// Load existing stats
 	applyExistingStats(dialers)
-
 	if len(dialers) > 1 {
 		probeIfRequired(dialers)
 	}

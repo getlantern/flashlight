@@ -457,6 +457,8 @@ func (b *Balancer) evalDialers() {
 		return
 	}
 
+	// Print stats immediately when dialer initialized / changed so we have an
+	// idea what caused the change.
 	b.printStats()
 	if b.priorTopDialer == nil {
 		op.SetMetricSum("top_dialer_initialized", 1)
@@ -699,6 +701,10 @@ func (d sortedDialers) Swap(i, j int) {
 	d[i], d[j] = d[j], d[i]
 }
 
+// This is how the dialers are re-ordered. It's based on the assumption that
+// the succeeding status and RTT are up-to-date when sorting (but sensitive to
+// packet loss on the wire), while the less-updated estimated bandwidth can be
+// a hint when RTT is somewhat comparable.
 func (d sortedDialers) Less(i, j int) bool {
 	a, b := d[i], d[j]
 
@@ -716,9 +722,9 @@ func (d sortedDialers) Less(i, j int) bool {
 		return rand.Float64() < 0.5
 	}
 
-	// should avoid sending traffic to proxy if bandwidth is unknown. The
-	// dialer will take care of probeing for bandwidth when starts up.
 	eba, ebb := a.EstBandwidth(), b.EstBandwidth()
+	// should avoid sending traffic to proxy if bandwidth is unknown. The
+	// dialer will take care of probing for bandwidth when starts up.
 	ebaKnown, ebbKnown := eba != 0, ebb != 0
 	if ebaKnown && !ebbKnown {
 		return true
@@ -726,14 +732,23 @@ func (d sortedDialers) Less(i, j int) bool {
 	if !ebaKnown && ebbKnown {
 		return false
 	}
+
+	ela, elb := a.EstRTT().Seconds(), b.EstRTT().Seconds()
+	// when RTT differs significantly, choose the one with smaller RTT.
+	if ela*3 < elb {
+		return true
+	}
+	if elb*3 < ela {
+		return false
+	}
+
+	// bandwidth is known for neither proxy and RTT is comparable, sort by
+	// label to keep sending traffic to same proxy until we know bandwidth.
 	if !ebaKnown && !ebbKnown {
-		// bandwidth is known for neither proxy, sort by label to keep sending
-		// traffic to same proxy until we know bandwidth.
 		return strings.Compare(a.Label(), b.Label()) < 0
 	}
 
 	// divide bandwidth by rtt to determine how to sort
-	ela, elb := a.EstRTT().Seconds(), b.EstRTT().Seconds()
 	return float64(eba)/ela > float64(ebb)/elb
 }
 

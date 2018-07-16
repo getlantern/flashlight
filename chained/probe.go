@@ -63,7 +63,8 @@ func (p *proxy) Probe(forPerformance bool) bool {
 		// we vary the size of the ping request to help the BBR curve-fitting
 		// logic on the server.
 		kb = 50 + i*25
-		// Reset BBR stats to have an up-to-date estimation after the probe
+		// Ask the proxy to reset BBR stats to have an up-to-date estimation
+		// after the probe.
 		err := p.httpPing(kb, i == 0)
 		if err != nil {
 			log.Errorf("Error probing %v for performance: %v", p.Label(), err)
