@@ -40,8 +40,6 @@ func (m mockStatsTracker) SetDisconnected(val bool)                             
 func (m mockStatsTracker) SetHasSucceedingProxy(val bool)                           {}
 func (m mockStatsTracker) SetHitDataCap(val bool)                                   {}
 func (m mockStatsTracker) SetIsPro(val bool)                                        {}
-func (m mockStatsTracker) SetAlert(stats.AlertType, string, bool)                   {}
-func (m mockStatsTracker) ClearAlert(stats.AlertType)                               {}
 
 func newTestUserConfig() *common.UserConfigData {
 	return common.NewUserConfigData("device", 1234, "protoken", nil)
