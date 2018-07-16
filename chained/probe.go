@@ -58,10 +58,11 @@ func (p *proxy) Probe(forPerformance bool) bool {
 	}
 
 	// probing for performance, do several increasingly large pings
+	var kb int
 	for i := 0; i < 5; i++ {
 		// we vary the size of the ping request to help the BBR curve-fitting
 		// logic on the server.
-		kb := 50 + i*25
+		kb = 50 + i*25
 		// Reset BBR stats to have an up-to-date estimation after the probe
 		err := p.httpPing(kb, i == 0)
 		if err != nil {

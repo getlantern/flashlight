@@ -195,7 +195,7 @@ func (b *Balancer) Reset(dialers []Dialer) {
 		dl.Stop()
 	}
 
-	b.printStats(dialers, sessionStats, lastReset)
+	b.printStats()
 }
 
 // ForceRedial forces dialers with long-running connections to reconnect
@@ -457,6 +457,7 @@ func (b *Balancer) evalDialers() {
 		return
 	}
 
+	b.printStats()
 	if b.priorTopDialer == nil {
 		op.SetMetricSum("top_dialer_initialized", 1)
 		log.Debug("Top dialer initialized")
@@ -529,24 +530,22 @@ func (b *Balancer) evalDialersLoop() {
 func (b *Balancer) periodicallyPrintStats() {
 	ticker := time.NewTicker(printStatsInterval)
 	defer ticker.Stop()
-
 	for {
 		select {
 		case <-ticker.C:
-			b.mu.Lock()
-			dialers := b.dialers
-			sessionStats := b.sessionStats
-			lastReset := b.lastReset
-			b.mu.Unlock()
-			b.printStats(dialers, sessionStats, lastReset)
-
+			b.printStats()
 		case <-b.closeCh:
 			return
 		}
 	}
 }
 
-func (b *Balancer) printStats(dialers sortedDialers, sessionStats map[string]*dialStats, lastReset time.Time) {
+func (b *Balancer) printStats() {
+	b.mu.Lock()
+	dialers := b.dialers
+	sessionStats := b.sessionStats
+	lastReset := b.lastReset
+	b.mu.Unlock()
 	log.Debugf("----------- Dialer Stats (%v) -----------", time.Since(lastReset))
 	rank := float64(1)
 	for _, d := range dialers {
