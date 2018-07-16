@@ -112,6 +112,9 @@ type Dialer interface {
 	// collect enough data to make a decent estimate. Probe returns true if it was
 	// successfully able to communicate with the Proxy.
 	Probe(forPerformance bool) bool
+	// ProbeStats returns probe related stats for the dialer which can be used
+	// to estimate the overhead of active probling.
+	ProbeStats() (successes int64, successKBs int64, failures int64, failedKBs int64)
 
 	// Stop stops background processing for this Dialer.
 	Stop()
@@ -542,14 +545,16 @@ func (b *Balancer) printStats(dialers sortedDialers, sessionStats map[string]*di
 		estBandwidth := d.EstBandwidth()
 		ds := sessionStats[d.Label()]
 		sessionAttempts := atomic.LoadInt64(&ds.success) + atomic.LoadInt64(&ds.failure)
-		log.Debugf("%s  P:%2d  R:%2d  A: %5d(%6d)  S: %5d(%6d)  CS: %5d  F: %5d(%6d)  CF: %5d  L: %5.0fms  B: %10.2fMbps",
+		probeSuccesses, probeSuccessKBs, probeFailures, probeFailedKBs := d.ProbeStats()
+		log.Debugf("%s  P:%2d  R:%2d  A: %5d(%6d)  S: %5d(%6d)  CS: %5d  F: %5d(%6d)  CF: %5d  L: %5.0fms  B: %10.2fMbps P: %3d(%3dkb)/%3d(%3dkb)",
 			d.JustifiedLabel(),
 			d.NumPreconnected(),
 			d.NumPreconnecting(),
 			sessionAttempts, d.Attempts(),
 			atomic.LoadInt64(&ds.success), d.Successes(), d.ConsecSuccesses(),
 			atomic.LoadInt64(&ds.failure), d.Failures(), d.ConsecFailures(),
-			estRTT*1000, estBandwidth)
+			estRTT*1000, estBandwidth,
+			probeSuccesses, probeSuccessKBs, probeFailures, probeFailedKBs)
 		host, _, _ := net.SplitHostPort(d.Addr())
 		// Report stats to borda
 		op := ops.Begin("proxy_rank").

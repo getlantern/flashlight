@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/withtimeout"
@@ -22,6 +23,11 @@ var (
 	httpPingMx sync.Mutex
 )
 
+func (p *proxy) ProbeStats() (successes int64, successKBs int64, failures int64, failedKBs int64) {
+	return atomic.LoadInt64(&p.probeSuccesses), atomic.LoadInt64(&p.probeSuccessKBs),
+		atomic.LoadInt64(&p.probeFailures), atomic.LoadInt64(&p.probeFailedKBs)
+}
+
 func (p *proxy) Probe(forPerformance bool) bool {
 	forPerformanceString := ""
 	if forPerformance {
@@ -31,10 +37,6 @@ func (p *proxy) Probe(forPerformance bool) bool {
 
 	elapsed := mtime.Stopwatch()
 	logResult := func(succeeded bool) bool {
-		forPerformanceString := ""
-		if forPerformance {
-			forPerformanceString = " for performance"
-		}
 		successString := "failed"
 		if succeeded {
 			successString = "succeeded"
@@ -88,6 +90,13 @@ func (p *proxy) httpPing(kb int, resetBBR bool) error {
 	start := time.Now()
 	err := p.doHttpPing(kb, resetBBR)
 	delta := time.Since(start)
+	if err != nil {
+		atomic.AddInt64(&p.probeFailures, 1)
+		atomic.AddInt64(&p.probeFailedKBs, int64(kb))
+	} else {
+		atomic.AddInt64(&p.probeSuccesses, 1)
+		atomic.AddInt64(&p.probeSuccessKBs, int64(kb))
+	}
 	detailOp.FailIf(err)
 	op.FailIf(err)
 	op.Set("success", err == nil)
@@ -98,7 +107,6 @@ func (p *proxy) httpPing(kb int, resetBBR bool) error {
 }
 
 func (p *proxy) doHttpPing(kb int, resetBBR bool) error {
-	log.Debugf("Sending HTTP Ping to %v", p.Label())
 	req, e := http.NewRequest("GET", "http://ping-chained-server", nil)
 	if e != nil {
 		return fmt.Errorf("Could not create HTTP request: %v", e)

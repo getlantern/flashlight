@@ -151,6 +151,10 @@ func (d *testDialer) Probe(forPerformance bool) bool {
 	return true
 }
 
+func (d *testDialer) ProbeStats() (successes int64, successKBs int64, failures int64, failedKBs int64) {
+	return 0, 0, 0, 0
+}
+
 func (d *testDialer) Stop() {
 	atomic.StoreInt32(&d.stopped, 1)
 }
