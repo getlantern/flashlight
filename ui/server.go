@@ -11,16 +11,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/skratchdot/open-golang/open"
-
-	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
+	"github.com/getlantern/flashlight/analytics"
+	"github.com/getlantern/flashlight/util"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/tarfs"
-
-	"github.com/getlantern/flashlight/analytics"
-	"github.com/getlantern/flashlight/stats"
-	"github.com/getlantern/flashlight/util"
+	"github.com/skratchdot/open-golang/open"
 )
 
 func init() {
@@ -100,7 +96,7 @@ func (s *Server) attachHandlers() {
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
 	startupHandler := func(resp http.ResponseWriter, req *http.Request) {
-		s.ShowRoot("existing", "lantern", nil)
+		s.ShowRoot("existing", "lantern")
 		resp.WriteHeader(http.StatusOK)
 	}
 
@@ -196,8 +192,8 @@ serve:
 }
 
 // ShowRoot shows the UI at the root level (default).
-func (s *Server) ShowRoot(campaign, medium string, st stats.Tracker) {
-	s.Show(s.rootURL(), campaign, medium, st)
+func (s *Server) ShowRoot(campaign, medium string) {
+	s.Show(s.rootURL(), campaign, medium)
 }
 
 // Show opens the UI in a browser. Note we know the UI server is
@@ -205,20 +201,13 @@ func (s *Server) ShowRoot(campaign, medium string, st stats.Tracker) {
 // to this method. It may not be reading yet, but since we're the only
 // ones reading from those incoming sockets the fact that reading starts
 // asynchronously is not a problem. destURL indicates which URL to open.
-// When fails to open the browser, it sends a transient alert to the stats
-// tracker passed in.
-func (s *Server) Show(destURL, campaign, medium string, st stats.Tracker) {
+func (s *Server) Show(destURL, campaign, medium string) {
 	open := func(u string, t time.Duration) {
 		go func() {
 			time.Sleep(t)
 			err := open.Run(u)
 			if err != nil {
-				e := errors.New("Error opening external page to `%v`: %v",
-					s.externalURL, err)
-				log.Error(e)
-				if st != nil {
-					st.SetAlert(stats.FAIL_TO_OPEN_BROWSER, e.Error(), true)
-				}
+				log.Errorf("Error opening external page to `%v`: %v", s.externalURL, err)
 			}
 		}()
 	}
