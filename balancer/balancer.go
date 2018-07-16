@@ -13,6 +13,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	humanize "github.com/dustin/go-humanize"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog"
 )
@@ -114,7 +115,14 @@ type Dialer interface {
 	Probe(forPerformance bool) bool
 	// ProbeStats returns probe related stats for the dialer which can be used
 	// to estimate the overhead of active probling.
-	ProbeStats() (successes int64, successKBs int64, failures int64, failedKBs int64)
+	ProbeStats() (successes uint64, successKBs uint64, failures uint64, failedKBs uint64)
+
+	// DataSent returns total bytes of application data sent to connections
+	// created via this dialer.
+	DataSent() uint64
+	// DataRecv returns total bytes of application data received from
+	// connections created via this dialer.
+	DataRecv() uint64
 
 	// Stop stops background processing for this Dialer.
 	Stop()
@@ -546,7 +554,7 @@ func (b *Balancer) printStats(dialers sortedDialers, sessionStats map[string]*di
 		ds := sessionStats[d.Label()]
 		sessionAttempts := atomic.LoadInt64(&ds.success) + atomic.LoadInt64(&ds.failure)
 		probeSuccesses, probeSuccessKBs, probeFailures, probeFailedKBs := d.ProbeStats()
-		log.Debugf("%s  P:%2d  R:%2d  A: %5d(%6d)  S: %5d(%6d)  CS: %5d  F: %5d(%6d)  CF: %5d  L: %5.0fms  B: %10.2fMbps P: %3d(%3dkb)/%3d(%3dkb)",
+		log.Debugf("%s  P:%3d  R:%3d  A: %4d(%5d)  S: %4d(%5d)  CS: %4d  F: %4d(%5d)  CF: %4d  L: %4.0fms  B: %8.2fMbps  T: %8s/%8s  P: %3d(%3dkb)/%3d(%3dkb)",
 			d.JustifiedLabel(),
 			d.NumPreconnected(),
 			d.NumPreconnecting(),
@@ -554,6 +562,7 @@ func (b *Balancer) printStats(dialers sortedDialers, sessionStats map[string]*di
 			atomic.LoadInt64(&ds.success), d.Successes(), d.ConsecSuccesses(),
 			atomic.LoadInt64(&ds.failure), d.Failures(), d.ConsecFailures(),
 			estRTT*1000, estBandwidth,
+			humanize.Bytes(d.DataSent()), humanize.Bytes(d.DataRecv()),
 			probeSuccesses, probeSuccessKBs, probeFailures, probeFailedKBs)
 		host, _, _ := net.SplitHostPort(d.Addr())
 		// Report stats to borda

@@ -23,9 +23,9 @@ var (
 	httpPingMx sync.Mutex
 )
 
-func (p *proxy) ProbeStats() (successes int64, successKBs int64, failures int64, failedKBs int64) {
-	return atomic.LoadInt64(&p.probeSuccesses), atomic.LoadInt64(&p.probeSuccessKBs),
-		atomic.LoadInt64(&p.probeFailures), atomic.LoadInt64(&p.probeFailedKBs)
+func (p *proxy) ProbeStats() (successes uint64, successKBs uint64, failures uint64, failedKBs uint64) {
+	return atomic.LoadUint64(&p.probeSuccesses), atomic.LoadUint64(&p.probeSuccessKBs),
+		atomic.LoadUint64(&p.probeFailures), atomic.LoadUint64(&p.probeFailedKBs)
 }
 
 func (p *proxy) Probe(forPerformance bool) bool {
@@ -91,11 +91,11 @@ func (p *proxy) httpPing(kb int, resetBBR bool) error {
 	err := p.doHttpPing(kb, resetBBR)
 	delta := time.Since(start)
 	if err != nil {
-		atomic.AddInt64(&p.probeFailures, 1)
-		atomic.AddInt64(&p.probeFailedKBs, int64(kb))
+		atomic.AddUint64(&p.probeFailures, 1)
+		atomic.AddUint64(&p.probeFailedKBs, uint64(kb))
 	} else {
-		atomic.AddInt64(&p.probeSuccesses, 1)
-		atomic.AddInt64(&p.probeSuccessKBs, int64(kb))
+		atomic.AddUint64(&p.probeSuccesses, 1)
+		atomic.AddUint64(&p.probeSuccessKBs, uint64(kb))
 	}
 	detailOp.FailIf(err)
 	op.FailIf(err)

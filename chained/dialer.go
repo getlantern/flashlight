@@ -119,6 +119,14 @@ func (p *proxy) Succeeding() bool {
 		p.consecRWSuccesses.Get() > -5
 }
 
+func (p *proxy) DataSent() uint64 {
+	return atomic.LoadUint64(&p.dataSent)
+}
+
+func (p *proxy) DataRecv() uint64 {
+	return atomic.LoadUint64(&p.dataRecv)
+}
+
 func (p *proxy) processPreconnects(initPreconnect int) {
 	// Fill pool to initial size
 	for i := 0; i < initPreconnect; i++ {

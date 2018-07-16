@@ -145,13 +145,21 @@ func (d *testDialer) connectivityChecksSinceLast() int {
 	return result
 }
 
+func (d *testDialer) DataSent() uint64 {
+	return 0
+}
+
+func (d *testDialer) DataRecv() uint64 {
+	return 0
+}
+
 func (d *testDialer) Probe(forPerformance bool) bool {
 	d.recalcRTT()
 	d.connectivityChecks++
 	return true
 }
 
-func (d *testDialer) ProbeStats() (successes int64, successKBs int64, failures int64, failedKBs int64) {
+func (d *testDialer) ProbeStats() (successes uint64, successKBs uint64, failures uint64, failedKBs uint64) {
 	return 0, 0, 0, 0
 }
 

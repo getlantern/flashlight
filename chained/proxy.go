@@ -303,10 +303,12 @@ type proxy struct {
 	failures          int64
 	consecFailures    int64
 	abe               int64 // Mbps scaled by 1000
-	probeSuccesses    int64
-	probeSuccessKBs   int64
-	probeFailures     int64
-	probeFailedKBs    int64
+	probeSuccesses    uint64
+	probeSuccessKBs   uint64
+	probeFailures     uint64
+	probeFailedKBs    uint64
+	dataSent          uint64
+	dataRecv          uint64
 	consecRWSuccesses consecCounter
 	name              string
 	protocol          string
