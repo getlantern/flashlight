@@ -36,12 +36,12 @@ func (p *proxy) Probe(forPerformance bool) bool {
 	log.Debugf("Actively probing %v%v", p.Label(), forPerformanceString)
 
 	elapsed := mtime.Stopwatch()
-	logResult := func(succeeded bool) bool {
+	logResult := func(succeeded bool, kb int) bool {
 		successString := "failed"
 		if succeeded {
 			successString = "succeeded"
 		}
-		log.Debugf("Actively probing %v%v took %v and %v", p.Label(), forPerformanceString, elapsed(), successString)
+		log.Debugf("Actively probing %v with %dkb took %v and %v", p.Label(), kb, elapsed(), successString)
 		return succeeded
 	}
 
@@ -51,10 +51,10 @@ func (p *proxy) Probe(forPerformance bool) bool {
 		if err != nil {
 			log.Errorf("Error probing %v: %v", p.Label(), err)
 			p.MarkFailure()
-			return logResult(false)
+			return logResult(false, 1)
 		}
 		p.markSuccess()
-		return logResult(true)
+		return logResult(true, 1)
 	}
 
 	// probing for performance, do several increasingly large pings
@@ -66,12 +66,12 @@ func (p *proxy) Probe(forPerformance bool) bool {
 		err := p.httpPing(kb, i == 0)
 		if err != nil {
 			log.Errorf("Error probing %v for performance: %v", p.Label(), err)
-			return logResult(false)
+			return logResult(false, kb)
 		}
 		// Sleep just a little to allow interleaving of pings for different proxies
 		time.Sleep(randomize(50 * time.Millisecond))
 	}
-	return logResult(true)
+	return logResult(true, kb)
 }
 
 func (p *proxy) httpPing(kb int, resetBBR bool) error {
@@ -102,7 +102,6 @@ func (p *proxy) httpPing(kb int, resetBBR bool) error {
 	op.Set("success", err == nil)
 	op.Set("probe_kb", kb)
 	op.SetMetricAvg("probe_rtt", float64(delta)/float64(time.Millisecond))
-	log.Debugf("Probe %s with %vkb took %v", p.Name(), kb, delta)
 	return err
 }
 
