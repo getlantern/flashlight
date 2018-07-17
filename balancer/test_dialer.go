@@ -102,6 +102,10 @@ func (d *testDialer) EstRTT() time.Duration {
 	return d.rtt
 }
 
+func (d *testDialer) EstSuccessRate() float64 {
+	return 1.0
+}
+
 func (d *testDialer) EstBandwidth() float64 {
 	return d.bandwidth
 }

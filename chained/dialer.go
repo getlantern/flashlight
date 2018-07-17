@@ -223,6 +223,7 @@ func (pc *proxyConnection) DialContext(ctx context.Context, network, addr string
 }
 
 func (p *proxy) markSuccess() {
+	p.emaSuccessRate.Update(1)
 	atomic.AddInt64(&p.attempts, 1)
 	atomic.AddInt64(&p.successes, 1)
 	newCS := atomic.AddInt64(&p.consecSuccesses, 1)
@@ -234,6 +235,7 @@ func (p *proxy) markSuccess() {
 }
 
 func (p *proxy) MarkFailure() {
+	p.emaSuccessRate.Update(0)
 	atomic.AddInt64(&p.attempts, 1)
 	atomic.AddInt64(&p.failures, 1)
 	atomic.StoreInt64(&p.consecSuccesses, 0)
@@ -378,7 +380,7 @@ func (p *proxy) checkCONNECTResponse(r *bufio.Reader, req *http.Request, reqTime
 			// dialupstream is the only metric for now, but more may be added later.
 			for _, metric := range header.Metrics {
 				if metric.Name == gp.MetricDialUpstream {
-					p.emaRTT.UpdateDuration(rtt - metric.Duration)
+					p.updateEstRTT(rtt - metric.Duration)
 				}
 			}
 		}

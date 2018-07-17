@@ -42,6 +42,12 @@ const (
 
 	defaultInitPreconnect = 20
 	defaultMaxPreconnect  = 100
+
+	// Below values are based on suggestions in rfc6298
+	rttAlpha         = 0.125
+	rttVarianceAlpha = 0.25
+	rttVarianceK     = 4.0
+	SuccessRateAlpha = 0.9
 )
 
 var (
@@ -320,6 +326,8 @@ type proxy struct {
 	bias              int
 	doDialServer      func(context.Context, *proxy) (serverConn, error)
 	emaRTT            *ema.EMA
+	emaRTTVAR         *ema.EMA
+	emaSuccessRate    *ema.EMA
 	kcpConfig         *KCPConfig
 	forceRedial       *abool.AtomicBool
 	mostRecentABETime time.Time
@@ -351,7 +359,9 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		trusted:         trusted,
 		bias:            s.Bias,
 		doDialServer:    dialServer,
-		emaRTT:          ema.NewDuration(0, 0.8),
+		emaRTT:          ema.NewDuration(0, rttAlpha),
+		emaRTTVAR:       ema.NewDuration(0, rttVarianceAlpha),
+		emaSuccessRate:  ema.NewDuration(0, SuccessRateAlpha),
 		forceRedial:     abool.New(),
 		preconnects:     make(chan interface{}, maxPreconnect),
 		preconnected:    make(chan *proxyConnection, maxPreconnect),
@@ -486,7 +496,18 @@ func (p *proxy) EstRTT() time.Duration {
 		// For biased proxies, return an extreme RTT in proportion to the bias
 		return time.Duration(p.bias) * -100 * time.Second
 	}
-	return p.emaRTT.GetDuration()
+	// Take variance into account, see rfc6298
+	return time.Duration(p.emaRTT.Get() + rttVarianceK*p.emaRTTVAR.Get())
+}
+
+// calc both RTT and its variance per rfc6298
+func (p *proxy) updateEstRTT(rtt time.Duration) {
+	deviant := rtt - p.emaRTT.GetDuration()
+	if deviant < 0 {
+		deviant = -deviant
+	}
+	p.emaRTTVAR.UpdateDuration(deviant)
+	p.emaRTT.UpdateDuration(rtt)
 }
 
 // EstBandwidth implements the method from the balancer.Dialer interface.
@@ -509,6 +530,10 @@ func (p *proxy) EstBandwidth() float64 {
 		return float64(p.bias) * 1000
 	}
 	return float64(atomic.LoadInt64(&p.abe)) / 1000
+}
+
+func (p *proxy) EstSuccessRate() float64 {
+	return p.emaSuccessRate.Get()
 }
 
 func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64, failures int64, consecFailures int64, emaRTT time.Duration, mostRecentABETime time.Time, abe int64) {

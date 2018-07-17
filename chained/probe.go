@@ -156,7 +156,9 @@ func (p *proxy) doHttpPing(kb int, resetBBR bool) error {
 		if rtErr != nil {
 			return false, errors.New("Error testing dialer %s: %s", p.Addr(), rtErr)
 		}
-		p.emaRTT.UpdateDuration(time.Since(dialEnd))
+		// Note that it is updated before reading the body in hope to measure
+		// more accurate RTT on the wire.
+		p.updateEstRTT(time.Since(dialEnd))
 		if resp.Body != nil {
 			// Read the body to include this in our timing.
 			defer resp.Body.Close()

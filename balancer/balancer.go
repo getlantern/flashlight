@@ -80,11 +80,15 @@ type Dialer interface {
 	// MarkFailure marks a dial failure on this dialer.
 	MarkFailure()
 
-	// EstRTT provides a round trip delay time estimate
+	// EstRTT provides a round trip delay time estimate, based on the same way
+	// RTT is estimated in TCP (https://tools.ietf.org/html/rfc6298)
 	EstRTT() time.Duration
 
 	// EstBandwidth provides the estimated bandwidth in Mbps
 	EstBandwidth() float64
+
+	// EstSuccessRate returns the estimated success rate dialing this dialer.
+	EstSuccessRate() float64
 
 	// Attempts returns the total number of dial attempts
 	Attempts() int64
@@ -556,13 +560,14 @@ func (b *Balancer) printStats() {
 		ds := sessionStats[d.Label()]
 		sessionAttempts := atomic.LoadInt64(&ds.success) + atomic.LoadInt64(&ds.failure)
 		probeSuccesses, probeSuccessKBs, probeFailures, probeFailedKBs := d.ProbeStats()
-		log.Debugf("%s  P:%3d  R:%3d  A: %4d(%5d)  S: %4d(%5d)  CS: %4d  F: %4d(%5d)  CF: %4d  L: %4.0fms  B: %8.2fMbps  T: %8s/%8s  P: %3d(%3dkb)/%3d(%3dkb)",
+		log.Debugf("%s  P:%3d  R:%3d  A: %4d(%5d)  S: %4d(%5d)  CS: %4d  F: %4d(%5d)  CF: %4d  R: %4.1f  L: %4.0fms  B: %8.2fMbps  T: %8s/%8s  P: %3d(%3dkb)/%3d(%3dkb)",
 			d.JustifiedLabel(),
 			d.NumPreconnected(),
 			d.NumPreconnecting(),
 			sessionAttempts, d.Attempts(),
 			atomic.LoadInt64(&ds.success), d.Successes(), d.ConsecSuccesses(),
 			atomic.LoadInt64(&ds.failure), d.Failures(), d.ConsecFailures(),
+			d.EstSuccessRate(),
 			estRTT*1000, estBandwidth,
 			humanize.Bytes(d.DataSent()), humanize.Bytes(d.DataRecv()),
 			probeSuccesses, probeSuccessKBs, probeFailures, probeFailedKBs)
