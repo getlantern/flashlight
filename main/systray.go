@@ -151,6 +151,10 @@ func statsUpdated() {
 		if !st.Disconnected {
 			statusKey = "throttled"
 		}
+	} else if len(st.Alerts) > 0 {
+		iconName += "alert"
+		// Show the first one as status if there are multiple alerts
+		statusKey = st.Alerts[0].Alert()
 	}
 
 	systray.SetIcon(iconsByName[iconName])
