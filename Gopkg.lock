@@ -91,10 +91,10 @@
   revision = "7c0f9d241ea78ff68bf3aecfe2ea2009ff8500cf"
 
 [[projects]]
-  branch = "issue_1891"
+  branch = "master"
   name = "github.com/getlantern/autoupdate"
   packages = ["."]
-  revision = "f1ccd922e9b357bbdbac65b7b2e1cd53bda0f45d"
+  revision = "a22eab7ded9998c511f4bd680776af3362a2fe60"
 
 [[projects]]
   branch = "master"
@@ -208,16 +208,16 @@
   revision = "c5f0cd24e7991579ba6f5f1bd20a1ad2c9f06cd4"
 
 [[projects]]
-  branch = "issue_1891"
+  branch = "master"
   name = "github.com/getlantern/fronted"
   packages = ["."]
-  revision = "98dcf2ab9975646fbc77e3873fb752a8cfa7e459"
+  revision = "1e44de6afa620f8cd4355e1806d3a763e77ed994"
 
 [[projects]]
-  branch = "issue_1891"
+  branch = "master"
   name = "github.com/getlantern/geolookup"
   packages = ["."]
-  revision = "009cfe13a7b13f4a50265f2a0e3a05d7cd7412b6"
+  revision = "68d621f75f46e08045dbd0dc9b06af0f5c265c7b"
 
 [[projects]]
   branch = "master"
@@ -288,7 +288,7 @@
   revision = "8f8c6ce1e943b07d9216279588118f428537e6f9"
 
 [[projects]]
-  branch = "issue_1891"
+  branch = "master"
   name = "github.com/getlantern/http-proxy-lantern"
   packages = [
     ".",
@@ -315,7 +315,7 @@
     "usage",
     "versioncheck"
   ]
-  revision = "a0e1946577b61fb810fd0df71dd57a38bcd27007"
+  revision = "8fefc5afc1b26d0a53f730e7ddf5d2226109df42"
 
 [[projects]]
   branch = "master"
@@ -550,7 +550,7 @@
   branch = "master"
   name = "github.com/getlantern/tlsdialer"
   packages = ["."]
-  revision = "275d735df0fe7c62ef2020c26212a2edd84d46e7"
+  revision = "bae89e3a58a7d46e8b6ef7ddf40163e0a1fd9a7a"
 
 [[projects]]
   branch = "master"
@@ -824,6 +824,15 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/refraction-networking/utls"
+  packages = [
+    ".",
+    "cpu"
+  ]
+  revision = "e0edd7863bd2c52945332a16219a8673d93884fb"
+
+[[projects]]
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
@@ -1029,6 +1038,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7b26e9eb8cc5e9f4f9d8bddf03cda6af9e5663faf0ac6d3d93d690e9ae070738"
+  inputs-digest = "2595b819dfc14f4f6df3c4746a4232c50713ca252e6150f6dc465433495d26c7"
   solver-name = "gps-cdcl"
   solver-version = 1
