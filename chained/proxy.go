@@ -43,11 +43,12 @@ const (
 	defaultInitPreconnect = 20
 	defaultMaxPreconnect  = 100
 
-	// Below values are based on suggestions in rfc6298
+	// Below two values are based on suggestions in rfc6298
 	rttAlpha         = 0.125
 	rttVarianceAlpha = 0.25
-	rttVarianceK     = 4.0
-	SuccessRateAlpha = 0.9
+
+	rttVarianceK     = 2   // Estimated RTT = mean RTT + 2 * variance
+	SuccessRateAlpha = 0.7 // See example_ema_success_rate_test.go
 )
 
 var (
@@ -361,7 +362,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		doDialServer:    dialServer,
 		emaRTT:          ema.NewDuration(0, rttAlpha),
 		emaRTTVAR:       ema.NewDuration(0, rttVarianceAlpha),
-		emaSuccessRate:  ema.NewDuration(0, SuccessRateAlpha),
+		emaSuccessRate:  ema.New(0, SuccessRateAlpha),
 		forceRedial:     abool.New(),
 		preconnects:     make(chan interface{}, maxPreconnect),
 		preconnected:    make(chan *proxyConnection, maxPreconnect),
@@ -490,7 +491,9 @@ func (p *proxy) dialServer() (serverConn, error) {
 
 // EstRTT implements the method from the balancer.Dialer interface. The
 // value is updated from the round trip time of CONNECT request (minus the time
-// to dial origin) or the HTTP ping.
+// to dial origin) or the HTTP ping. RTT variance is also taken into account,
+// so the value is higher if the proxy has a larger variance over time, even if
+// the measured RTT are the same.
 func (p *proxy) EstRTT() time.Duration {
 	if p.bias != 0 {
 		// For biased proxies, return an extreme RTT in proportion to the bias
@@ -500,7 +503,7 @@ func (p *proxy) EstRTT() time.Duration {
 	return time.Duration(p.emaRTT.Get() + rttVarianceK*p.emaRTTVAR.Get())
 }
 
-// calc both RTT and its variance per rfc6298
+// update both RTT and its variance per rfc6298
 func (p *proxy) updateEstRTT(rtt time.Duration) {
 	deviant := rtt - p.emaRTT.GetDuration()
 	if deviant < 0 {

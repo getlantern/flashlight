@@ -560,7 +560,7 @@ func (b *Balancer) printStats() {
 		ds := sessionStats[d.Label()]
 		sessionAttempts := atomic.LoadInt64(&ds.success) + atomic.LoadInt64(&ds.failure)
 		probeSuccesses, probeSuccessKBs, probeFailures, probeFailedKBs := d.ProbeStats()
-		log.Debugf("%s  P:%3d  R:%3d  A: %4d(%5d)  S: %4d(%5d)  CS: %4d  F: %4d(%5d)  CF: %4d  R: %4.1f  L: %4.0fms  B: %8.2fMbps  T: %8s/%8s  P: %3d(%3dkb)/%3d(%3dkb)",
+		log.Debugf("%s  P:%3d  R:%3d  A: %4d(%5d)  S: %4d(%5d)  CS: %3d  F: %4d(%5d)  CF: %3d  R: %4.3f  L: %4.0fms  B: %6.2fMbps  T: %7s/%7s  P: %3d(%3dkb)/%3d(%3dkb)",
 			d.JustifiedLabel(),
 			d.NumPreconnected(),
 			d.NumPreconnecting(),
@@ -713,16 +713,15 @@ func (d sortedDialers) Swap(i, j int) {
 func (d sortedDialers) Less(i, j int) bool {
 	a, b := d[i], d[j]
 
-	// Prefer the succeeding proxy
-	aSucceeding, bSucceeding := a.Succeeding(), b.Succeeding()
-	if aSucceeding && !bSucceeding {
+	// Prefer the proxy with higher success rate
+	rateA, rateB := a.EstSuccessRate(), b.EstSuccessRate()
+	if rateA-rateB > 0.1 {
 		return true
-	}
-	if !aSucceeding && bSucceeding {
+	} else if rateA-rateB < -0.1 {
 		return false
 	}
-	if !aSucceeding && !bSucceeding {
-		// If both are failing, sort randomly so that we have the best chance of
+	if rateA < 0.1 && rateB < 0.1 {
+		// If both have very low success rate, sort randomly so that we have the best chance of
 		// finding a dialer that works.
 		return rand.Float64() < 0.5
 	}
