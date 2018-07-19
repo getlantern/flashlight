@@ -111,12 +111,8 @@ func (p *proxy) ConsecFailures() int64 {
 }
 
 func (p *proxy) Succeeding() bool {
-	// To avoid turbulence when network glitches, treat proxies with a small
-	// amount failures as succeeding.
-	// TODO: OTOH, when the proxy just recovered from failing, should wait for
-	// a few successes to consider it as succeeding.
-	return p.ConsecSuccesses()-p.ConsecFailures() > -5 &&
-		p.consecRWSuccesses.Get() > -5
+	return p.ConsecSuccesses()-p.ConsecFailures() > 0 &&
+		p.consecRWSuccesses.Get() > 0
 }
 
 func (p *proxy) DataSent() uint64 {

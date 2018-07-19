@@ -370,11 +370,13 @@ func (bd *balancedDial) dialWithPC(ctx context.Context, pc ProxyConnection, star
 	if attempts == 0 {
 		switch {
 		case pc.EstRTT() > oldRTT*5:
-			log.Debugf("Dialer %s RTT increased from %v to %v, re-evaluating all dialers", pc.Label(), oldRTT, pc.EstRTT())
-			bd.requestEvalDialers()
+			reason := fmt.Sprintf("Dialer %s RTT increased from %v to %v",
+				pc.Label(), oldRTT, pc.EstRTT())
+			bd.requestEvalDialers(reason)
 		case pc.EstBandwidth()*5 < oldBW:
-			log.Debugf("Dialer %s bandwidth decreased from %v to %v, re-evaluating all dialers", pc.Label(), oldBW, pc.EstBandwidth())
-			bd.requestEvalDialers()
+			reason := fmt.Sprintf("Dialer %s bandwidth decreased from %v to %v",
+				pc.Label(), oldBW, pc.EstBandwidth())
+			bd.requestEvalDialers(reason)
 		default:
 		}
 	}
@@ -419,16 +421,15 @@ func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err e
 		atomic.AddInt64(&bd.sessionStats[pc.Label()].failure, 1)
 	}
 	if attempts == 0 && !pc.Succeeding() {
-		log.Debugf("Dialer %s is failing, re-evaluating all dialers", pc.Label())
-		bd.requestEvalDialers()
+		bd.requestEvalDialers(fmt.Sprintf("Dialer %s is failing", pc.Label()))
 	}
 }
 
-func (bd *balancedDial) requestEvalDialers() {
+func (bd *balancedDial) requestEvalDialers(reason string) {
 	select {
 	case bd.Balancer.chEvalDialers <- struct{}{}:
+		log.Debug(reason + ", re-evaluating all dialers")
 	default:
-		log.Debug("Dialers re-evaluating in progress, skipping")
 	}
 }
 
@@ -509,7 +510,7 @@ func (b *Balancer) Close() {
 
 // evalDialersLoop keeps running until the balancer is closed. It checks a
 // channel every second to see if there are requests to evalulate all dialers,
-// runs it, then wait for 5 minutes (randomized) to recheck the channel.
+// runs it, then wait for one minute (randomized) to recheck the channel.
 func (b *Balancer) evalDialersLoop() {
 	nextEvalTimer := time.NewTimer(0)
 	chDone := make(chan struct{})
@@ -606,27 +607,6 @@ func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, map[string]*dialStat
 		}
 		return nil, nil, fmt.Errorf("No dialers")
 	}
-
-	topDialer := dialers[0]
-	for i := 1; i < len(dialers); i++ {
-		dialer := dialers[i]
-		if dialer.Succeeding() && dialer.EstRTT().Seconds()/topDialer.EstRTT().Seconds() < 0.75 && rand.Float64() < 0.05 {
-			// We generally assume that dialers with lower rtt could be faster
-			// overall, so send a little traffic to them to find out if that's true.
-			// Amongst other things, this allows the fastest dialer to eventually
-			// recover after a temporary hiccup.
-			log.Debugf("Dialer %v has a dramatically lower rtt than top dialer %v, randomly moving it to the top of the line", dialer.Name(), topDialer.Name())
-			randomized := make([]Dialer, 0, len(dialers))
-			randomized = append(randomized, dialer)
-			for j, other := range dialers {
-				if j != i {
-					randomized = append(randomized, other)
-				}
-			}
-			return randomized, sessionStats, nil
-		}
-	}
-
 	return dialers, sessionStats, nil
 }
 
