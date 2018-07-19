@@ -1,5 +1,13 @@
 # Change Log
 
+## [4.7.9](https://github.com/getlantern/flashlight/tree/4.7.9) (2018-07-11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.8...4.7.9)
+
+**Merged pull requests:**
+
+- proxy private hosts only if proxyall is true [\#475](https://github.com/getlantern/flashlight/pull/475) ([joesis](https://github.com/joesis))
+- Added periodic calls to doDialCore to get updated latencies for lamps… [\#474](https://github.com/getlantern/flashlight/pull/474) ([oxtoacart](https://github.com/oxtoacart))
+
 ## [4.7.8](https://github.com/getlantern/flashlight/tree/4.7.8) (2018-07-10)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.7...4.7.8)
 
@@ -80,18 +88,18 @@
 - Allowing numbers in optional protocol part of proxy name regex [\#449](https://github.com/getlantern/flashlight/pull/449) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [4.6.14](https://github.com/getlantern/flashlight/tree/4.6.14) (2018-05-06)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.14)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.14)
 
 **Merged pull requests:**
 
 - \[mobile\] Intercept requests to pro server and handle with special http.Client [\#448](https://github.com/getlantern/flashlight/pull/448) ([atavism](https://github.com/atavism))
 - Include a little more info with dial\_for\_balancer op [\#447](https://github.com/getlantern/flashlight/pull/447) ([oxtoacart](https://github.com/oxtoacart))
 
-## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.12)
-
 ## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.11)
+
+## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.12)
 
 ## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.13)
@@ -140,20 +148,20 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.4...4.6.6)
 
 ## [4.6.4](https://github.com/getlantern/flashlight/tree/4.6.4) (2018-04-20)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.4)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.4)
 
 **Merged pull requests:**
 
 - Two fixes [\#428](https://github.com/getlantern/flashlight/pull/428) ([joesis](https://github.com/joesis))
 
-## [4.6.2](https://github.com/getlantern/flashlight/tree/4.6.2) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.2)
-
 ## [4.6.3](https://github.com/getlantern/flashlight/tree/4.6.3) (2018-04-18)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.3)
 
 ## [4.6.1](https://github.com/getlantern/flashlight/tree/4.6.1) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.1)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.1)
+
+## [4.6.2](https://github.com/getlantern/flashlight/tree/4.6.2) (2018-04-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.2)
 
 **Merged pull requests:**
 

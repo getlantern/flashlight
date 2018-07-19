@@ -14,7 +14,9 @@ import (
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/i18n"
 	"github.com/getlantern/launcher"
+	"github.com/getlantern/notifier"
 	"github.com/getlantern/profiling"
 
 	"github.com/getlantern/flashlight/analytics"
@@ -287,7 +289,17 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			return app.AddToken("/img/lantern_logo.png")
 		}))
 		app.AddExitFunc("stopping notifier", notifier.NotificationsLoop())
-
+		app.OnStatsChange(func(newStats stats.Stats) {
+			for _, alert := range newStats.Alerts {
+				note := &notify.Notification{
+					Title:      i18n.T("BACKEND_ALERT_TITLE"),
+					Message:    i18n.T("status." + alert.Alert()),
+					ClickLabel: i18n.T("BACKEND_CLICK_LABEL_HELP"),
+					ClickURL:   alert.HelpURL,
+				}
+				_ = notifier.ShowNotification(note, "alert-prompt")
+			}
+		})
 		return true
 	}
 }
@@ -320,15 +332,22 @@ func (app *App) OnStatsChange(fn func(stats.Stats)) {
 	app.statsTracker.AddListener(fn)
 }
 
+func (app *App) sysproxyOn() {
+	if err := sysproxyOn(); err != nil {
+		app.statsTracker.SetAlert(
+			stats.FAIL_TO_SET_SYSTEM_PROXY, err.Error(), false)
+	}
+}
+
 func (app *App) afterStart(cl *client.Client) {
 	if settings.GetSystemProxy() {
-		sysproxyOn()
+		app.sysproxyOn()
 	}
 
 	app.OnSettingChange(SNSystemProxy, func(val interface{}) {
 		enable := val.(bool)
 		if enable {
-			sysproxyOn()
+			app.sysproxyOn()
 		} else {
 			sysproxyOff()
 		}
@@ -346,7 +365,7 @@ func (app *App) afterStart(cl *client.Client) {
 		// URL and the proxy server are all up and running to avoid
 		// race conditions where we change the proxy setup while the
 		// UI server and proxy server are still coming up.
-		app.uiServer.ShowRoot("startup", "lantern")
+		app.uiServer.ShowRoot("startup", "lantern", app.statsTracker)
 	} else {
 		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
 	}
@@ -495,12 +514,12 @@ func (app *App) ShouldShowUI() bool {
 
 // OnTrayShow indicates the user has selected to show lantern from the tray.
 func (app *App) OnTrayShow() {
-	app.uiServer.ShowRoot("show-lantern", "tray")
+	app.uiServer.ShowRoot("show-lantern", "tray", app.statsTracker)
 }
 
 // OnTrayUpgrade indicates the user has selected to upgrade lantern from the tray.
 func (app *App) OnTrayUpgrade() {
-	app.uiServer.Show(app.PlansURL(), "proupgrade", "tray")
+	app.uiServer.Show(app.PlansURL(), "proupgrade", "tray", app.statsTracker)
 }
 
 // PlansURL returns the URL for accessing the checkout/plans page directly.
