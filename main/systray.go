@@ -31,7 +31,7 @@ var (
 
 type systrayCallbacks interface {
 	WaitForExit() error
-	AddExitFuncToEnd(string, func())
+	AddExitFunc(string, func())
 	Exit(error) bool
 	ShouldShowUI() bool
 	OnTrayShow()
@@ -45,9 +45,7 @@ func runOnSystrayReady(a systrayCallbacks, f func()) {
 	// Typically, systray.Quit will actually be what causes the app to exit, but
 	// in the case of an uncaught Fatal error, the app will exit before the
 	// systray and we need it to call systray.Quit().
-	a.AddExitFuncToEnd("quitting systray", func() {
-		systray.Quit()
-	})
+	a.AddExitFunc("quitting systray", systray.Quit)
 
 	systray.Run(f, func() {
 		if a.Exit(nil) {
@@ -153,6 +151,10 @@ func statsUpdated() {
 		if !st.Disconnected {
 			statusKey = "throttled"
 		}
+	} else if len(st.Alerts) > 0 {
+		iconName += "alert"
+		// Show the first one as status if there are multiple alerts
+		statusKey = st.Alerts[0].Alert()
 	}
 
 	systray.SetIcon(iconsByName[iconName])

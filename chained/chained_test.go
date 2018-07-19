@@ -28,7 +28,7 @@ func NewDialer(dialServer func(ctx context.Context, p *proxy) (net.Conn, error))
 	p, err := newProxy("test", "proto", "netw", "addr:567", &ChainedServerInfo{
 		Addr:      "addr:567",
 		AuthToken: "token",
-	}, newTestUserConfig(), true, func(ctx context.Context, p *proxy) (serverConn, error) {
+	}, newTestUserConfig(), true, false, func(ctx context.Context, p *proxy) (serverConn, error) {
 		conn, err := dialServer(ctx, p)
 		return p.defaultServerConn(conn, err)
 	})
@@ -126,7 +126,7 @@ func TestBadAddressToServer(t *testing.T) {
 	p, err := newProxy("test", "proto", "netw", "addr:567", &ChainedServerInfo{
 		Addr:      "addr:567",
 		AuthToken: "token",
-	}, newTestUserConfig(), true, func(ctx context.Context, p *proxy) (serverConn, error) {
+	}, newTestUserConfig(), true, false, func(ctx context.Context, p *proxy) (serverConn, error) {
 		return nil, fmt.Errorf("fail intentionally")
 	})
 	if !assert.NoError(t, err) {
@@ -173,7 +173,7 @@ func TestPreconnect(t *testing.T) {
 	p, err := newProxy("test", "proto", "netw", "addr:567", &ChainedServerInfo{
 		Addr:      "addr:567",
 		AuthToken: "token",
-	}, newTestUserConfig(), true, func(ctx context.Context, p *proxy) (serverConn, error) {
+	}, newTestUserConfig(), true, false, func(ctx context.Context, p *proxy) (serverConn, error) {
 		conn, err := net.DialTimeout(l.Addr().Network(), l.Addr().String(), 2*time.Second)
 		// sleep long enough that test would fail if we're not dialing in parallel
 		time.Sleep(50 * time.Millisecond)

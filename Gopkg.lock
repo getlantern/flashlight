@@ -333,7 +333,7 @@
   branch = "master"
   name = "github.com/getlantern/idletiming"
   packages = ["."]
-  revision = "b57e3cdec825ee34a0ed309f2b013df19ab39de2"
+  revision = "1ee14e2c3fde60192f6d6a1d5748ffafe487bb75"
 
 [[projects]]
   branch = "master"

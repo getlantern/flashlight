@@ -41,15 +41,14 @@ const (
 )
 
 var (
-	help                = flag.Bool("help", false, "Get usage help")
-	masqueradesOutFile  = flag.String("masquerades-out", "", "Path, if any, to write the go-formatted masquerades configuration.")
-	minMasquerades      = flag.Int("min-masquerades", 1000, "Require that the resulting config contain at least this many masquerades per provider")
-	maxMasquerades      = flag.Int("max-masquerades", 1000, "Limit the number of masquerades to include in config per provider")
-	blacklistFile       = flag.String("blacklist", "", "Path to file containing list of blacklisted domains, which will be excluded from the configuration even if present in the masquerades file (e.g. blacklist.txt)")
-	proxiedSitesDir     = flag.String("proxiedsites", "proxiedsites", "Path to directory containing proxied site lists, which will be combined and proxied by Lantern")
-	proxiedSitesOutFile = flag.String("proxiedsites-out", "", "Path, if any, to write the go-formatted proxied sites configuration.")
-	minFreq             = flag.Float64("minfreq", 3.0, "Minimum frequency (percentage) for including CA cert in list of trusted certs, defaults to 3.0%")
-	numberOfWorkers     = flag.Int("numworkers", 50, "Number of worker threads")
+	help               = flag.Bool("help", false, "Get usage help")
+	masqueradesOutFile = flag.String("masquerades-out", "", "Path, if any, to write the go-formatted masquerades configuration.")
+	minMasquerades     = flag.Int("min-masquerades", 1000, "Require that the resulting config contain at least this many masquerades per provider")
+	maxMasquerades     = flag.Int("max-masquerades", 1000, "Limit the number of masquerades to include in config per provider")
+	blacklistFile      = flag.String("blacklist", "", "Path to file containing list of blacklisted domains, which will be excluded from the configuration even if present in the masquerades file (e.g. blacklist.txt)")
+	proxiedSitesDir    = flag.String("proxiedsites", "proxiedsites", "Path to directory containing proxied site lists, which will be combined and proxied by Lantern")
+	minFreq            = flag.Float64("minfreq", 3.0, "Minimum frequency (percentage) for including CA cert in list of trusted certs, defaults to 3.0%")
+	numberOfWorkers    = flag.Int("numworkers", 50, "Number of worker threads")
 
 	fallbacksFile    = flag.String("fallbacks", "fallbacks.yaml", "File containing yaml dict of fallback information")
 	fallbacksOutFile = flag.String("fallbacks-out", "", "Path, if any, to write the go-formatted fallback configuration.")
@@ -210,14 +209,6 @@ func main() {
 		_, err = run("gofmt", "-w", *masqueradesOutFile)
 		if err != nil {
 			log.Fatalf("Unable to format %s: %s", *masqueradesOutFile, err)
-		}
-	}
-	if *proxiedSitesOutFile != "" {
-		proxiedSitesTmpl := loadTemplate("proxiedsites.go.tmpl")
-		generateTemplate(model, proxiedSitesTmpl, *proxiedSitesOutFile)
-		_, err = run("gofmt", "-w", *proxiedSitesOutFile)
-		if err != nil {
-			log.Fatalf("Unable to format %s: %s", *proxiedSitesOutFile, err)
 		}
 	}
 	if *fallbacksOutFile != "" {

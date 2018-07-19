@@ -287,16 +287,14 @@ func run(configDir, locale string,
 		settings.GetHttpProxyPort())
 
 	flashlight.Run(httpProxyAddr, // listen for HTTP on provided address
-		"127.0.0.1:0",                // listen for SOCKS on random address
-		configDir,                    // place to store lantern configuration
-		func() bool { return false }, // always connected
-		// TODO: allow configuring whether or not to enable shortcut depends on
-		// proxyAll option (just like we already have in desktop)
+		"127.0.0.1:0",                              // listen for SOCKS on random address
+		configDir,                                  // place to store lantern configuration
+		func() bool { return false },               // always connected
 		func() bool { return !session.ProxyAll() }, // use shortcut
 		func() bool { return false },               // not use detour
+		func() bool { return session.ProxyAll() },  // allow proxying private hosts if proxy all
 		// TODO: allow configuring whether or not to enable reporting (just like we
 		// already have in desktop)
-		func() bool { return true }, // on Android, we allow private hosts
 		func() bool { return true }, // auto report
 		flags,
 		func() bool {
