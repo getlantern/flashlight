@@ -44,10 +44,10 @@ const (
 	defaultMaxPreconnect  = 100
 
 	// Below two values are based on suggestions in rfc6298
-	rttAlpha         = 0.125
-	rttVarianceAlpha = 0.25
+	rttAlpha    = 0.125
+	rttDevAlpha = 0.25
 
-	rttVarianceK     = 2   // Estimated RTT = mean RTT + 2 * variance
+	rttDevK          = 2   // Estimated RTT = mean RTT + 2 * deviation
 	SuccessRateAlpha = 0.7 // See example_ema_success_rate_test.go
 )
 
@@ -327,7 +327,7 @@ type proxy struct {
 	bias              int
 	doDialServer      func(context.Context, *proxy) (serverConn, error)
 	emaRTT            *ema.EMA
-	emaRTTVAR         *ema.EMA
+	emaRTTDev         *ema.EMA
 	emaSuccessRate    *ema.EMA
 	kcpConfig         *KCPConfig
 	forceRedial       *abool.AtomicBool
@@ -361,7 +361,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		bias:            s.Bias,
 		doDialServer:    dialServer,
 		emaRTT:          ema.NewDuration(0, rttAlpha),
-		emaRTTVAR:       ema.NewDuration(0, rttVarianceAlpha),
+		emaRTTDev:       ema.NewDuration(0, rttDevAlpha),
 		emaSuccessRate:  ema.New(0, SuccessRateAlpha),
 		forceRedial:     abool.New(),
 		preconnects:     make(chan interface{}, maxPreconnect),
@@ -491,26 +491,26 @@ func (p *proxy) dialServer() (serverConn, error) {
 
 // EstRTT implements the method from the balancer.Dialer interface. The
 // value is updated from the round trip time of CONNECT request (minus the time
-// to dial origin) or the HTTP ping. RTT variance is also taken into account,
-// so the value is higher if the proxy has a larger variance over time, even if
+// to dial origin) or the HTTP ping. RTT deviation is also taken into account,
+// so the value is higher if the proxy has a larger deviation over time, even if
 // the measured RTT are the same.
 func (p *proxy) EstRTT() time.Duration {
 	if p.bias != 0 {
 		// For biased proxies, return an extreme RTT in proportion to the bias
 		return time.Duration(p.bias) * -100 * time.Second
 	}
-	// Take variance into account, see rfc6298
-	return time.Duration(p.emaRTT.Get() + rttVarianceK*p.emaRTTVAR.Get())
+	// Take deviation into account, see rfc6298
+	return time.Duration(p.emaRTT.Get() + rttDevK*p.emaRTTDev.Get())
 }
 
-// update both RTT and its variance per rfc6298
+// update both RTT and its deviation per rfc6298
 func (p *proxy) updateEstRTT(rtt time.Duration) {
-	deviant := rtt - p.emaRTT.GetDuration()
-	if deviant < 0 {
-		deviant = -deviant
+	deviation := rtt - p.emaRTT.GetDuration()
+	if deviation < 0 {
+		deviation = -deviation
 	}
-	p.emaRTTVAR.UpdateDuration(deviant)
 	p.emaRTT.UpdateDuration(rtt)
+	p.emaRTTDev.UpdateDuration(deviation)
 }
 
 // EstBandwidth implements the method from the balancer.Dialer interface.
