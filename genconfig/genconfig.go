@@ -49,6 +49,8 @@ var (
 	proxiedSitesDir    = flag.String("proxiedsites", "proxiedsites", "Path to directory containing proxied site lists, which will be combined and proxied by Lantern")
 	minFreq            = flag.Float64("minfreq", 3.0, "Minimum frequency (percentage) for including CA cert in list of trusted certs, defaults to 3.0%")
 	numberOfWorkers    = flag.Int("numworkers", 50, "Number of worker threads")
+	fallbacksFile      = flag.String("fallbacks", "fallbacks.yaml", "File containing yaml dict of fallback information")
+	fallbacksOutFile   = flag.String("fallbacks-out", "", "Path, if any, to write the go-formatted fallback configuration.")
 
 	fallbacksFile    = flag.String("fallbacks", "fallbacks.yaml", "File containing yaml dict of fallback information")
 	fallbacksOutFile = flag.String("fallbacks-out", "", "Path, if any, to write the go-formatted fallback configuration.")
@@ -85,6 +87,7 @@ func init() {
 		&client.ValidatorConfig{RejectStatus: client.CloudfrontBadStatus()},
 	)
 	providers["akamai"] = newProvider(
+<<<<<<< HEAD
 		"https://rxurtgyb9ax8bs0l.getiantem.org/ping",
 		map[string]string{
 			"api.getiantem.org":                "jq4smqywq0qt7jlr.getiantem.org",
@@ -97,10 +100,25 @@ func init() {
 			"update.getlantern.org":            "r1ktidq1ohjht2qr.getiantem.org",
 			"github.com":                       "2mbjmpzpb7dkwm6d.getiantem.org",
 			"github-production-release-asset-2e65be.s3.amazonaws.com": "0l6xjiqoogflgfu1.getiantem.org",
+=======
+		"https://borda.akamai.getiantem.org/ping",
+		map[string]string{
+			"api.getiantem.org":                "api.akamai.getiantem.org",
+			"api-staging.getiantem.org":        "api-staging.akamai.getiantem.org",
+			"borda.lantern.io":                 "borda.akamai.getiantem.org",
+			"config.getiantem.org":             "config.akamai.getiantem.org",
+			"config-staging.getiantem.org":     "config-staging.akamai.getiantem.org",
+			"geo.getiantem.org":                "geo.akamai.getiantem.org",
+			"globalconfig.flashlightproxy.com": "globalconfig.akamai.getiantem.org",
+			"update.getlantern.org":            "update.akamai.getiantem.org",
+			"github.com":                       "github.akamai.getiantem.org",
+			"github-production-release-asset-2e65be.s3.amazonaws.com": "github-release-asset.akamai.getiantem.org",
+>>>>>>> 85cdd3108f1d5f731b466a98fe30b2bf85d937c2
 		},
 		&client.ValidatorConfig{RejectStatus: []int{403}},
 	)
 	providers["edgecast"] = newProvider(
+<<<<<<< HEAD
 		"https://7pjuyyk4gsffpvf9.getiantem.org/ping",
 		map[string]string{
 			"api.getiantem.org":                "fb6fy4cx9vjljuat.getiantem.org",
@@ -113,6 +131,20 @@ func init() {
 			"update.getlantern.org":            "p6zj7yrrc8vnindu.getiantem.org",
 			"github.com":                       "knqob1zvc3dgq7hk.getiantem.org",
 			"github-production-release-asset-2e65be.s3.amazonaws.com": "2bcmg4nsmtzxzoo8.getiantem.org",
+=======
+		"https://borda.edgecast.getiantem.org/ping",
+		map[string]string{
+			"api.getiantem.org":                "api.edgecast.getiantem.org",
+			"api-staging.getiantem.org":        "api-staging.edgecast.getiantem.org",
+			"borda.lantern.io":                 "borda.edgecast.getiantem.org",
+			"config.getiantem.org":             "config.edgecast.getiantem.org",
+			"config-staging.getiantem.org":     "config-staging.edgecast.getiantem.org",
+			"geo.getiantem.org":                "geo.edgecast.getiantem.org",
+			"globalconfig.flashlightproxy.com": "globalconfig.edgecast.getiantem.org",
+			"update.getlantern.org":            "update.edgecast.getiantem.org",
+			"github.com":                       "github.edgecast.getiantem.org",
+			"github-production-release-asset-2e65be.s3.amazonaws.com": "github-release-asset.edgecast.getiantem.org",
+>>>>>>> 85cdd3108f1d5f731b466a98fe30b2bf85d937c2
 		},
 		&client.ValidatorConfig{RejectStatus: []int{403}},
 	)
