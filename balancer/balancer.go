@@ -399,7 +399,6 @@ func (bd *balancedDial) onSuccess(pc ProxyConnection) {
 		atomic.AddInt64(&bd.sessionStats[d.Label()].failure, 1)
 		d.MarkFailure()
 	}
-
 }
 
 func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err error, attempts int) {
@@ -420,8 +419,10 @@ func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err e
 	} else {
 		atomic.AddInt64(&bd.sessionStats[pc.Label()].failure, 1)
 	}
-	if attempts == 0 && !pc.Succeeding() {
-		bd.requestEvalDialers(fmt.Sprintf("Dialer %s is failing", pc.Label()))
+	if attempts == 0 && pc.ConsecFailures() > 3 {
+		// when top dialer fails, re-evaluate dialers immediately without
+		// checking connectivity for faster convergence.
+		bd.evalDialers(false)
 	}
 }
 
@@ -439,21 +440,21 @@ func (b *Balancer) OnActiveDialer() <-chan Dialer {
 	return b.onActiveDialer
 }
 
-func (b *Balancer) evalDialers() {
+func (b *Balancer) evalDialers(checkConnectivity bool) {
 	dialers := b.copyOfDialers()
 	if len(dialers) < 2 {
 		// nothing to do
 		return
 	}
-	b.checkConnectivityForAll(dialers)
+	if checkConnectivity {
+		b.checkConnectivityForAll(dialers)
+	}
 	dialers = b.sortDialers()
 	if len(dialers) < 2 {
 		// nothing to do
 		return
 	}
 	newTopDialer := dialers[0]
-	log.Debugf("Finished checking connectivity for all dialers, resulting in top dialer: %v", dialers[0].Name())
-
 	op := ops.Begin("proxy_selection_stability")
 	defer op.End()
 	if newTopDialer == b.priorTopDialer {
@@ -467,7 +468,7 @@ func (b *Balancer) evalDialers() {
 	b.printStats()
 	if b.priorTopDialer == nil {
 		op.SetMetricSum("top_dialer_initialized", 1)
-		log.Debug("Top dialer initialized")
+		log.Debugf("Top dialer initialized to %v", newTopDialer.Label())
 	} else {
 		op.SetMetricSum("top_dialer_changed", 1)
 		reason := "performance"
@@ -475,11 +476,10 @@ func (b *Balancer) evalDialers() {
 			reason = "failing"
 		}
 		op.Set("reason", reason)
-		log.Debug("Top dialer changed")
+		log.Debugf("Top dialer changed from %v to %v", b.priorTopDialer.Label(), newTopDialer.Label())
 		recordTopDialer(dialers)
 	}
 	b.priorTopDialer = newTopDialer
-	log.Debugf("setting top dialer to %v", b.priorTopDialer.Label())
 }
 
 func (b *Balancer) checkConnectivityForAll(dialers []Dialer) {
@@ -520,7 +520,7 @@ func (b *Balancer) evalDialersLoop() {
 			select {
 			case <-b.chEvalDialers:
 				ops.Go(func() {
-					b.evalDialers()
+					b.evalDialers(true)
 					chDone <- struct{}{}
 				})
 			default:
