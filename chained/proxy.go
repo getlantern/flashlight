@@ -362,7 +362,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		doDialServer:    dialServer,
 		emaRTT:          ema.NewDuration(0, rttAlpha),
 		emaRTTDev:       ema.NewDuration(0, rttDevAlpha),
-		emaSuccessRate:  ema.New(0, SuccessRateAlpha),
+		emaSuccessRate:  ema.New(1, SuccessRateAlpha), // Consider a proxy success when initializing
 		forceRedial:     abool.New(),
 		preconnects:     make(chan interface{}, maxPreconnect),
 		preconnected:    make(chan *proxyConnection, maxPreconnect),
