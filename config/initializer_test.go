@@ -64,10 +64,10 @@ func TestInitWithURLs(t *testing.T) {
 		// each should track the number of requests made to it
 
 		// set up servers to serve global config and count number of requests
-		globalConfigURLs, globalReqCount := startConfigServer(t, globalConfig)
+		globalConfigURL, globalReqCount := startConfigServer(t, globalConfig)
 
 		// set up servers to serve global config and count number of requests
-		proxyConfigURLs, proxyReqCount := startConfigServer(t, proxiesConfig)
+		proxyConfigURL, proxyReqCount := startConfigServer(t, proxiesConfig)
 
 		// set up and call InitWithURLs
 		flags := make(map[string]interface{})
@@ -78,7 +78,7 @@ func TestInitWithURLs(t *testing.T) {
 		proxiesDispatch := func(cfg interface{}) {}
 		globalDispatch := func(cfg interface{}) {}
 		stop := InitWithURLs(inTempDir("."), flags, newTestUserConfig(), proxiesDispatch, globalDispatch,
-			proxyConfigURLs, globalConfigURLs, &http.Transport{})
+			proxyConfigURL, globalConfigURL, &http.Transport{})
 		defer stop()
 
 		// sleep some amount
@@ -106,25 +106,14 @@ func TestStaging(t *testing.T) {
 
 // TestOverrides tests url override flags
 func TestOverrides(t *testing.T) {
-	urls := &chainedFrontedURLs{
-		chained: "chained",
-		fronted: "fronted",
-	}
+	url := "host"
 	flags := make(map[string]interface{})
-	checkOverrides(flags, urls, "name")
+	out := checkOverrides(flags, url, "name")
 
-	assert.Equal(t, "chained", urls.chained)
-	assert.Equal(t, "fronted", urls.fronted)
+	assert.Equal(t, "host", out)
 
 	flags["cloudconfig"] = "test"
-	checkOverrides(flags, urls, "name")
+	out = checkOverrides(flags, url, "name")
 
-	assert.Equal(t, "test/name", urls.chained)
-	assert.Equal(t, "fronted", urls.fronted)
-
-	flags["frontedconfig"] = "test"
-	checkOverrides(flags, urls, "name")
-
-	assert.Equal(t, "test/name", urls.chained)
-	assert.Equal(t, "test/name", urls.fronted)
+	assert.Equal(t, "test/name", out)
 }

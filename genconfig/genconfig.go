@@ -36,23 +36,25 @@ import (
 )
 
 const (
-	ftVersionFile   = `https://raw.githubusercontent.com/firetweet/downloads/master/version.txt`
-	defaultDeviceID = "555"
+	ftVersionFile     = `https://raw.githubusercontent.com/firetweet/downloads/master/version.txt`
+	defaultDeviceID   = "555"
+	defaultProviderID = "cloudfront"
 )
 
 var (
 	help               = flag.Bool("help", false, "Get usage help")
-	masqueradesInFile  = flag.String("masquerades", "", "Path to file containing list of pasquerades to use, with one space-separated 'ip domain' pair per line (e.g. masquerades.txt)")
 	masqueradesOutFile = flag.String("masquerades-out", "", "Path, if any, to write the go-formatted masquerades configuration.")
-	minMasquerades     = flag.Int("min-masquerades", 1000, "Require that the resulting config contain at least this many masquerades")
-	maxMasquerades     = flag.Int("max-masquerades", 1000, "Limit the number of masquerades to include in config")
+	minMasquerades     = flag.Int("min-masquerades", 1000, "Require that the resulting config contain at least this many masquerades per provider")
+	maxMasquerades     = flag.Int("max-masquerades", 1000, "Limit the number of masquerades to include in config per provider")
 	blacklistFile      = flag.String("blacklist", "", "Path to file containing list of blacklisted domains, which will be excluded from the configuration even if present in the masquerades file (e.g. blacklist.txt)")
 	proxiedSitesDir    = flag.String("proxiedsites", "proxiedsites", "Path to directory containing proxied site lists, which will be combined and proxied by Lantern")
 	minFreq            = flag.Float64("minfreq", 3.0, "Minimum frequency (percentage) for including CA cert in list of trusted certs, defaults to 3.0%")
 	numberOfWorkers    = flag.Int("numworkers", 50, "Number of worker threads")
+	fallbacksFile      = flag.String("fallbacks", "fallbacks.yaml", "File containing yaml dict of fallback information")
+	fallbacksOutFile   = flag.String("fallbacks-out", "", "Path, if any, to write the go-formatted fallback configuration.")
 
-	fallbacksFile    = flag.String("fallbacks", "fallbacks.yaml", "File containing yaml dict of fallback information")
-	fallbacksOutFile = flag.String("fallbacks-out", "", "Path, if any, to write the go-formatted fallback configuration.")
+	enabledProviders   stringsFlag // --enable-provider in init()
+	masqueradesInFiles stringsFlag // --masquerades in init()
 )
 
 var (
@@ -69,20 +71,94 @@ var (
 	inputCh       = make(chan string)
 	masqueradesCh = make(chan *masquerade)
 	wg            sync.WaitGroup
+	providers     map[string]*provider // supported fronting providers
 )
+
+func init() {
+	flag.Var(&masqueradesInFiles, "masquerades", "Path to file containing list of masquerades to use, with one space-separated 'ip domain provider' set per line (e.g. masquerades.txt)")
+	flag.Var(&enabledProviders, "enable-provider", "Enable fronting provider")
+
+	providers = make(map[string]*provider)
+	providers[client.CloudfrontProviderID] = newProvider(
+		client.CloudfrontTestURL,
+		client.CloudfrontHostAliases(),
+		&client.ValidatorConfig{RejectStatus: client.CloudfrontBadStatus()},
+	)
+	providers["akamai"] = newProvider(
+		"https://borda.akamai.getiantem.org/ping",
+		map[string]string{
+			"api.getiantem.org":                "api.akamai.getiantem.org",
+			"api-staging.getiantem.org":        "api-staging.akamai.getiantem.org",
+			"borda.lantern.io":                 "borda.akamai.getiantem.org",
+			"config.getiantem.org":             "config.akamai.getiantem.org",
+			"config-staging.getiantem.org":     "config-staging.akamai.getiantem.org",
+			"geo.getiantem.org":                "geo.akamai.getiantem.org",
+			"globalconfig.flashlightproxy.com": "globalconfig.akamai.getiantem.org",
+			"update.getlantern.org":            "update.akamai.getiantem.org",
+			"github.com":                       "github.akamai.getiantem.org",
+			"github-production-release-asset-2e65be.s3.amazonaws.com": "github-release-asset.akamai.getiantem.org",
+		},
+		&client.ValidatorConfig{RejectStatus: []int{403}},
+	)
+	providers["edgecast"] = newProvider(
+		"https://borda.edgecast.getiantem.org/ping",
+		map[string]string{
+			"api.getiantem.org":                "api.edgecast.getiantem.org",
+			"api-staging.getiantem.org":        "api-staging.edgecast.getiantem.org",
+			"borda.lantern.io":                 "borda.edgecast.getiantem.org",
+			"config.getiantem.org":             "config.edgecast.getiantem.org",
+			"config-staging.getiantem.org":     "config-staging.edgecast.getiantem.org",
+			"geo.getiantem.org":                "geo.edgecast.getiantem.org",
+			"globalconfig.flashlightproxy.com": "globalconfig.edgecast.getiantem.org",
+			"update.getlantern.org":            "update.edgecast.getiantem.org",
+			"github.com":                       "github.edgecast.getiantem.org",
+			"github-production-release-asset-2e65be.s3.amazonaws.com": "github-release-asset.edgecast.getiantem.org",
+		},
+		&client.ValidatorConfig{RejectStatus: []int{403}},
+	)
+}
 
 type filter map[string]bool
 
 type masquerade struct {
-	Domain    string
-	IpAddress string
-	RootCA    *castat
+	Domain     string
+	IpAddress  string
+	ProviderID string
+	RootCA     *castat
 }
 
 type castat struct {
 	CommonName string
 	Cert       string
 	freq       float64
+}
+
+type provider struct {
+	HostAliases map[string]string
+	TestURL     string
+	Masquerades []*masquerade
+	Validator   *client.ValidatorConfig
+	Enabled     bool
+}
+
+func newProvider(testURL string, hosts map[string]string, validator *client.ValidatorConfig) *provider {
+	return &provider{
+		HostAliases: hosts,
+		TestURL:     testURL,
+		Masquerades: make([]*masquerade, 0),
+		Validator:   validator,
+	}
+}
+
+type stringsFlag []string
+
+func (ss *stringsFlag) String() string {
+	return strings.Join(*ss, ",")
+}
+
+func (ss *stringsFlag) Set(value string) error {
+	*ss = append(*ss, value)
+	return nil
 }
 
 func main() {
@@ -97,6 +173,14 @@ func main() {
 	log.Debugf("Using all %d cores on machine", numcores)
 	runtime.GOMAXPROCS(numcores)
 
+	for _, pid := range enabledProviders {
+		p, ok := providers[pid]
+		if !ok {
+			log.Fatalf("Invalid/Unknown fronting provider: %s", pid)
+		}
+		p.Enabled = true
+	}
+
 	loadMasquerades()
 	loadProxiedSitesList()
 	loadBlacklist()
@@ -107,12 +191,18 @@ func main() {
 
 	go feedMasquerades()
 	cas, masqs := coalesceMasquerades()
-	masqs = vetMasquerades(cas, masqs)
-	model := buildModel(cas, masqs, false)
+	vetAndAssignMasquerades(cas, masqs)
+
+	model, err := buildModel("cloud.yaml", cas, false)
+	if err != nil {
+		log.Fatalf("Invalid configuration: %s", err)
+	}
 	generateTemplate(model, yamlTmpl, "cloud.yaml")
-	model = buildModel(cas, masqs, true)
+	model, err = buildModel("lantern.yaml", cas, true)
+	if err != nil {
+		log.Fatalf("Invalid configuration: %s", err)
+	}
 	generateTemplate(model, yamlTmpl, "lantern.yaml")
-	var err error
 	if *masqueradesOutFile != "" {
 		masqueradesTmpl := loadTemplate("masquerades.go.tmpl")
 		generateTemplate(model, masqueradesTmpl, *masqueradesOutFile)
@@ -132,16 +222,18 @@ func main() {
 }
 
 func loadMasquerades() {
-	if *masqueradesInFile == "" {
+	if len(masqueradesInFiles) == 0 {
 		log.Error("Please specify a masquerades file")
 		flag.Usage()
 		os.Exit(2)
 	}
-	bytes, err := ioutil.ReadFile(*masqueradesInFile)
-	if err != nil {
-		log.Fatalf("Unable to read masquerades file at %s: %s", *masqueradesInFile, err)
+	for _, filename := range masqueradesInFiles {
+		bytes, err := ioutil.ReadFile(filename)
+		if err != nil {
+			log.Fatalf("Unable to read masquerades file at %s: %s", filename, err)
+		}
+		masquerades = append(masquerades, strings.Split(string(bytes), "\n")...)
 	}
-	masquerades = strings.Split(string(bytes), "\n")
 }
 
 // Scans the proxied site directory and stores the sites in the files found
@@ -264,10 +356,26 @@ func grabCerts() {
 
 	for masq := range inputCh {
 		parts := strings.Split(masq, " ")
-		if len(parts) != 2 {
+		var providerID string
+		if len(parts) == 2 {
+			providerID = defaultProviderID
+		} else if len(parts) == 3 {
+			providerID = parts[2]
+		} else {
 			log.Error("Bad line! '" + masq + "'")
 			continue
 		}
+
+		provider, ok := providers[providerID]
+		if !ok {
+			log.Debugf("Skipping masquerade for unknown provider %s", providerID)
+			continue
+		}
+		// default provider is always vetted even if not enabled for legacy client config
+		if providerID != defaultProviderID && !provider.Enabled {
+			log.Debugf("Skipping masquerade for disabled provider %s", providerID)
+		}
+
 		ip := parts[0]
 		domain := parts[1]
 		_, blacklisted := blacklist[domain]
@@ -298,9 +406,10 @@ func grabCerts() {
 
 		log.Debugf("Successfully grabbed certs for: %v", domain)
 		masqueradesCh <- &masquerade{
-			Domain:    domain,
-			IpAddress: ip,
-			RootCA:    ca,
+			Domain:     domain,
+			IpAddress:  ip,
+			ProviderID: providerID,
+			RootCA:     ca,
 		}
 	}
 }
@@ -342,6 +451,28 @@ func coalesceMasquerades() (map[string]*castat, []*masquerade) {
 	return trustedCAs, trustedMasquerades
 }
 
+func vetAndAssignMasquerades(cas map[string]*castat, masquerades []*masquerade) {
+	byProvider := make(map[string][]*masquerade, 0)
+	for _, m := range masquerades {
+		byProvider[m.ProviderID] = append(byProvider[m.ProviderID], m)
+	}
+	for pid, candidates := range byProvider {
+		provider, ok := providers[pid]
+		if !ok {
+			log.Debugf("Not vetting masquerades for unknown provider %s", pid)
+			continue
+		}
+		if !provider.Enabled {
+			log.Debugf("Not vetting masquerades for disabled provider %s", pid)
+		}
+		vetted := vetMasquerades(cas, candidates)
+		if len(vetted) < *minMasquerades {
+			log.Fatalf("%s: %d masquerades was fewer than minimum of %d", pid, len(vetted), *minMasquerades)
+		}
+		provider.Masquerades = vetted
+	}
+}
+
 func vetMasquerades(cas map[string]*castat, masquerades []*masquerade) []*masquerade {
 	certPool := x509.NewCertPool()
 	for _, ca := range cas {
@@ -378,10 +509,6 @@ func vetMasquerades(cas map[string]*castat, masquerades []*masquerade) []*masque
 			break
 		}
 	}
-
-	if len(result) < *minMasquerades {
-		log.Fatalf("%d masquerades was fewer than minimum of %d", len(result), *minMasquerades)
-	}
 	return result
 }
 
@@ -392,7 +519,14 @@ func doVetMasquerades(certPool *x509.CertPool, inCh chan *masquerade, outCh chan
 			Domain:    _m.Domain,
 			IpAddress: _m.IpAddress,
 		}
-		if fronted.Vet(m, certPool) {
+
+		provider, ok := providers[_m.ProviderID]
+		if !ok {
+			log.Debugf("%v (%v) failed to vet: unknown provider %v", m.Domain, m.IpAddress, _m.ProviderID)
+			continue
+		}
+
+		if fronted.Vet(m, certPool, provider.TestURL) {
 			log.Debugf("Successfully vetted %v (%v)", m.Domain, m.IpAddress)
 			outCh <- _m
 		} else {
@@ -403,13 +537,44 @@ func doVetMasquerades(certPool *x509.CertPool, inCh chan *masquerade, outCh chan
 	wg.Done()
 }
 
-func buildModel(cas map[string]*castat, masquerades []*masquerade, useFallbacks bool) map[string]interface{} {
+func buildModel(configName string, cas map[string]*castat, useFallbacks bool) (map[string]interface{}, error) {
 	casList := make([]*castat, 0, len(cas))
 	for _, ca := range cas {
 		casList = append(casList, ca)
 	}
 	sort.Sort(ByFreq(casList))
-	sort.Sort(ByDomain(masquerades))
+
+	cfMasquerades := providers[defaultProviderID].Masquerades
+	if len(cfMasquerades) == 0 {
+		return nil, fmt.Errorf("%s: configuration contains no cloudfront masquerades for older clients.", configName)
+	}
+
+	aliased := make(map[string]bool)
+
+	enabledProviders := make(map[string]*provider)
+	for k, v := range providers {
+		if v.Enabled {
+			if len(v.Masquerades) > 0 {
+				sort.Sort(ByDomain(v.Masquerades))
+				enabledProviders[k] = v
+			} else {
+				return nil, fmt.Errorf("%s: enabled provider %s had no vetted masquerades", configName, k)
+			}
+		}
+		for a, _ := range v.HostAliases {
+			aliased[a] = true
+		}
+	}
+
+	for pid, p := range enabledProviders {
+		for a, _ := range aliased {
+			_, ok := p.HostAliases[a]
+			if !ok {
+				return nil, fmt.Errorf("%s: configured provider %s does not have an alias for origin %s", configName, pid, a)
+			}
+		}
+	}
+
 	ps := make([]string, 0, len(proxiedSites))
 	for site, _ := range proxiedSites {
 		ps = append(ps, site)
@@ -439,13 +604,14 @@ func buildModel(cas map[string]*castat, masquerades []*masquerade, useFallbacks 
 		}
 	}
 	return map[string]interface{}{
-		"cas":          casList,
-		"masquerades":  masquerades,
-		"proxiedsites": ps,
-		"fallbacks":    fbs,
-		"showAds":      showAds,
-		"ftVersion":    ftVersion,
-	}
+		"cas": casList,
+		"cloudfrontMasquerades": cfMasquerades,
+		"providers":             enabledProviders,
+		"proxiedsites":          ps,
+		"fallbacks":             fbs,
+		"showAds":               showAds,
+		"ftVersion":             ftVersion,
+	}, nil
 }
 
 func fallbackOK(f *chained.ChainedServerInfo, dialer balancer.Dialer) bool {

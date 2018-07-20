@@ -3,13 +3,12 @@ package pro
 import (
 	"net/http"
 
-	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/proxied"
 )
 
 var (
-	httpClient = getHTTPClient(proxied.ParallelPreferChainedWith(common.ProAPIDDFHost, ""),
-		proxied.ChainedThenFrontedWith(common.ProAPIDDFHost, ""))
+	httpClient = getHTTPClient(proxied.ParallelPreferChainedWith(""),
+		proxied.ChainedThenFrontedWith(""))
 )
 
 // GetHTTPClient creates a new http.Client that uses domain fronting and direct

@@ -34,7 +34,7 @@ func Configure(updateURL, updateCA string, iconURL func() string) {
 	fnIconURL = iconURL
 	httpClient.Store(
 		&http.Client{
-			Transport: proxied.ChainedThenFrontedWith("d2yl1zps97e5mx.cloudfront.net", updateCA),
+			Transport: proxied.ChainedThenFrontedWith(updateCA),
 		})
 	enableAutoupdate()
 }

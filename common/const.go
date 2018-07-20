@@ -14,8 +14,7 @@ var (
 
 	Staging = false
 
-	ProAPIHost    = "api.getiantem.org"
-	ProAPIDDFHost = "d2n32kma9hyo9f.cloudfront.net"
+	ProAPIHost = "api.getiantem.org"
 
 	log = golog.LoggerFor("flashlight.common")
 
@@ -42,7 +41,6 @@ func initInternal() {
 	}
 	if Staging {
 		ProAPIHost = "api-staging.getiantem.org"
-		ProAPIDDFHost = "d16igwq64x5e11.cloudfront.net"
 	}
 	forceAds, _ = strconv.ParseBool(os.Getenv("FORCEADS"))
 }

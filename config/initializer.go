@@ -17,36 +17,21 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.config")
 
-	// globalURLs are the chained and fronted URLs for fetching the global config.
-	globalURLs = &chainedFrontedURLs{
-		chained: "https://globalconfig.flashlightproxy.com/global.yaml.gz",
-		fronted: "https://d24ykmup0867cj.cloudfront.net/global.yaml.gz",
-	}
+	// URL for fetching the global config.
+	globalURL = "https://globalconfig.flashlightproxy.com/global.yaml.gz"
 
-	// globalStagingURLs are the chained and fronted URLs for fetching the global
-	// config in a staging environment.
-	globalStagingURLs = &chainedFrontedURLs{
-		chained: "https://globalconfig.flashlightproxy.com/global.yaml.gz",
-		fronted: "https://d24ykmup0867cj.cloudfront.net/global.yaml.gz",
-	}
+	// URL for fetching the global config in a staging environment.
+	globalStagingURL = "https://globalconfig.flashlightproxy.com/global.yaml.gz"
 
 	// The following are over HTTP because proxies do not forward X-Forwarded-For
 	// with HTTPS and because we only support falling back to direct domain
 	// fronting through the local proxy for HTTP.
 
-	// proxiesURLs are the chained and fronted URLs for fetching the per user
-	// proxy config.
-	proxiesURLs = &chainedFrontedURLs{
-		chained: "http://config.getiantem.org/proxies.yaml.gz",
-		fronted: "http://d2wi0vwulmtn99.cloudfront.net/proxies.yaml.gz",
-	}
+	// URL for fetching the per user proxy config.
+	proxiesURL = "http://config.getiantem.org/proxies.yaml.gz"
 
-	// proxiesStagingURLs are the chained and fronted URLs for fetching the per user
-	// proxy config in a staging environment.
-	proxiesStagingURLs = &chainedFrontedURLs{
-		chained: "http://config-staging.getiantem.org/proxies.yaml.gz",
-		fronted: "http://d33pfmbpauhmvd.cloudfront.net/proxies.yaml.gz",
-	}
+	// URLs for fetching the per user proxy config in a staging environment.
+	proxiesStagingURL = "http://config-staging.getiantem.org/proxies.yaml.gz"
 
 	// DefaultProxyConfigPollInterval determines how frequently to fetch proxies.yaml
 	DefaultProxyConfigPollInterval = 1 * time.Minute
@@ -63,11 +48,11 @@ func Init(configDir string, flags map[string]interface{},
 	userConfig common.UserConfig, proxiesDispatch func(interface{}),
 	origGlobalDispatch func(interface{}), rt http.RoundTripper) (stop func()) {
 	staging := isStaging(flags)
-	proxyConfigURLs := checkOverrides(flags, getProxyURLs(staging), "proxies.yaml.gz")
-	globalConfigURLs := checkOverrides(flags, getGlobalURLs(staging), "global.yaml.gz")
+	proxyConfigURL := checkOverrides(flags, getProxyURL(staging), "proxies.yaml.gz")
+	globalConfigURL := checkOverrides(flags, getGlobalURL(staging), "global.yaml.gz")
 
 	return InitWithURLs(configDir, flags, userConfig, proxiesDispatch,
-		origGlobalDispatch, proxyConfigURLs, globalConfigURLs, rt)
+		origGlobalDispatch, proxyConfigURL, globalConfigURL, rt)
 }
 
 // InitWithURLs initializes the config setup for both fetching per-user proxies
@@ -76,8 +61,8 @@ func Init(configDir string, flags map[string]interface{},
 // configs.
 func InitWithURLs(configDir string, flags map[string]interface{},
 	userConfig common.UserConfig, origProxiesDispatch func(interface{}),
-	origGlobalDispatch func(interface{}), proxyURLs *chainedFrontedURLs,
-	globalURLs *chainedFrontedURLs, rt http.RoundTripper) (stop func()) {
+	origGlobalDispatch func(interface{}), proxyURL string,
+	globalURL string, rt http.RoundTripper) (stop func()) {
 	var mx sync.RWMutex
 	globalConfigPollInterval := DefaultGlobalConfigPollInterval
 	proxyConfigPollInterval := DefaultProxyConfigPollInterval
@@ -121,21 +106,12 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 
 	// These are the options for fetching the per-user proxy config.
 	proxyOptions := &options{
-		saveDir:    configDir,
-		obfuscate:  obfuscate(flags),
-		name:       "proxies.yaml",
-		urls:       proxyURLs,
-		userConfig: userConfig,
-		unmarshaler: func(bytes []byte) (interface{}, error) {
-			servers := make(map[string]*chained.ChainedServerInfo)
-			if err := yaml.Unmarshal(bytes, servers); err != nil {
-				return nil, err
-			}
-			if len(servers) == 0 {
-				return nil, errors.New("No chained server")
-			}
-			return servers, nil
-		},
+		saveDir:      configDir,
+		obfuscate:    obfuscate(flags),
+		name:         "proxies.yaml",
+		originURL:    proxyURL,
+		userConfig:   userConfig,
+		unmarshaler:  newProxiesUnmarshaler(),
 		dispatch:     proxiesDispatch,
 		embeddedData: generated.EmbeddedProxies,
 		sleep: func() time.Duration {
@@ -151,22 +127,12 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 
 	// These are the options for fetching the global config.
 	globalOptions := &options{
-		saveDir:    configDir,
-		obfuscate:  obfuscate(flags),
-		name:       "global.yaml",
-		urls:       globalURLs,
-		userConfig: userConfig,
-		unmarshaler: func(bytes []byte) (interface{}, error) {
-			gl := newGlobal()
-			gl.applyFlags(flags)
-			if err := yaml.Unmarshal(bytes, gl); err != nil {
-				return nil, err
-			}
-			if err := gl.validate(); err != nil {
-				return nil, err
-			}
-			return gl, nil
-		},
+		saveDir:      configDir,
+		obfuscate:    obfuscate(flags),
+		name:         "global.yaml",
+		originURL:    globalURL,
+		userConfig:   userConfig,
+		unmarshaler:  newGlobalUnmarshaler(flags),
 		dispatch:     globalDispatch,
 		embeddedData: generated.GlobalConfig,
 		sleep: func() time.Duration {
@@ -174,7 +140,7 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 			defer mx.RUnlock()
 			return globalConfigPollInterval
 		},
-		sticky: false,
+		sticky: isSticky(flags),
 		rt:     rt,
 	}
 
@@ -184,6 +150,33 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 		log.Debug("*************** Stopping Config")
 		stopProxies()
 		stopGlobal()
+	}
+}
+
+func newGlobalUnmarshaler(flags map[string]interface{}) func(bytes []byte) (interface{}, error) {
+	return func(bytes []byte) (interface{}, error) {
+		gl := newGlobal()
+		gl.applyFlags(flags)
+		if err := yaml.Unmarshal(bytes, gl); err != nil {
+			return nil, err
+		}
+		if err := gl.validate(); err != nil {
+			return nil, err
+		}
+		return gl, nil
+	}
+}
+
+func newProxiesUnmarshaler() func(bytes []byte) (interface{}, error) {
+	return func(bytes []byte) (interface{}, error) {
+		servers := make(map[string]*chained.ChainedServerInfo)
+		if err := yaml.Unmarshal(bytes, servers); err != nil {
+			return nil, err
+		}
+		if len(servers) == 0 {
+			return nil, errors.New("No chained server")
+		}
+		return servers, nil
 	}
 }
 
@@ -207,40 +200,34 @@ func checkBool(flags map[string]interface{}, key string) bool {
 }
 
 func checkOverrides(flags map[string]interface{},
-	urls *chainedFrontedURLs, name string) *chainedFrontedURLs {
+	url string, name string) string {
 	if s, ok := flags["cloudconfig"].(string); ok {
 		if len(s) > 0 {
-			log.Debugf("Overridding chained URL from the command line '%v'", s)
-			urls.chained = s + "/" + name
+			log.Debugf("Overridding config URL from the command line '%v'", s)
+			return s + "/" + name
 		}
 	}
-	if s, ok := flags["frontedconfig"].(string); ok {
-		if len(s) > 0 {
-			log.Debugf("Overridding fronted URL from the command line '%v'", s)
-			urls.fronted = s + "/" + name
-		}
-	}
-	return urls
+	return url
 }
 
-// getProxyURLs returns the proxy URLs to use depending on whether or not
+// getProxyURL returns the proxy URL to use depending on whether or not
 // we're in staging.
-func getProxyURLs(staging bool) *chainedFrontedURLs {
+func getProxyURL(staging bool) string {
 	if staging {
 		log.Debug("Configuring for staging")
-		return proxiesStagingURLs
+		return proxiesStagingURL
 	}
 	log.Debugf("Not configuring for staging.")
-	return proxiesURLs
+	return proxiesURL
 }
 
-// getGlobalURLs returns the global URLs to use depending on whether or not
+// getGlobalURL returns the global URL to use depending on whether or not
 // we're in staging.
-func getGlobalURLs(staging bool) *chainedFrontedURLs {
+func getGlobalURL(staging bool) string {
 	if staging {
 		log.Debug("Configuring for staging")
-		return globalStagingURLs
+		return globalStagingURL
 	}
 	log.Debugf("Not configuring for staging.")
-	return globalURLs
+	return globalURL
 }

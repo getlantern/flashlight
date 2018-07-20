@@ -121,11 +121,8 @@ func createBordaClient(reportInterval time.Duration) *borda.Client {
 		BatchInterval: reportInterval,
 		HTTPClient: &http.Client{
 			Transport: proxied.AsRoundTripper(func(req *http.Request) (*http.Response, error) {
-				frontedURL := *req.URL
-				frontedURL.Host = "d157vud77ygy87.cloudfront.net"
 				op := ops.Begin("report_to_borda").Request(req)
 				defer op.End()
-				proxied.PrepareForFronting(req, frontedURL.String())
 				return rt.RoundTrip(req)
 			}),
 		},

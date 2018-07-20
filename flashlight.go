@@ -174,12 +174,14 @@ func Run(httpProxyAddr string,
 	return nil
 }
 
-func applyClientConfig(client *client.Client, cfg *config.Global, autoReport func() bool, onBordaConfigured chan bool) {
+func applyClientConfig(c *client.Client, cfg *config.Global, autoReport func() bool, onBordaConfigured chan bool) {
 	certs, err := getTrustedCACerts(cfg)
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
-	} else if cfg.Client != nil {
-		fronted.Configure(certs, cfg.Client.MasqueradeSets, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
+	} else if cfg.Client != nil && cfg.Client.Fronted != nil {
+		fronted.Configure(certs, cfg.Client.FrontedProviders(), client.CloudfrontProviderID, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
+	} else {
+		log.Errorf("Unable to configured fronted (no config)")
 	}
 
 	enableBorda := func(ctx map[string]interface{}) bool {

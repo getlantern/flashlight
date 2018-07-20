@@ -12,7 +12,6 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/flashlight/proxied"
 )
 
 // Fetcher is an interface for fetching config updates.
@@ -25,18 +24,16 @@ type fetcher struct {
 	lastCloudConfigETag map[string]string
 	user                common.UserConfig
 	rt                  http.RoundTripper
-	chainedURL          string
-	frontedURL          string
+	originURL           string
 }
 
 // newFetcher creates a new configuration fetcher with the specified
 // interface for obtaining the user ID and token if those are populated.
-func newFetcher(conf common.UserConfig, rt http.RoundTripper,
-	urls *chainedFrontedURLs) Fetcher {
-	log.Debugf("Will poll for config at %v (%v)", urls.chained, urls.fronted)
+func newFetcher(conf common.UserConfig, rt http.RoundTripper, originURL string) Fetcher {
+	log.Debugf("Will poll for config at %v", originURL)
 
 	// Force detour to whitelist chained domain
-	u, err := url.Parse(urls.chained)
+	u, err := url.Parse(originURL)
 	if err != nil {
 		log.Fatalf("Unable to parse chained cloud config URL: %v", err)
 	}
@@ -46,8 +43,7 @@ func newFetcher(conf common.UserConfig, rt http.RoundTripper,
 		lastCloudConfigETag: map[string]string{},
 		user:                conf,
 		rt:                  rt,
-		chainedURL:          urls.chained,
-		frontedURL:          urls.fronted,
+		originURL:           originURL,
 	}
 }
 
@@ -59,9 +55,9 @@ func (cf *fetcher) fetch() ([]byte, error) {
 }
 
 func (cf *fetcher) doFetch(op *ops.Op) ([]byte, error) {
-	log.Debugf("Fetching cloud config from %v (%v)", cf.chainedURL, cf.frontedURL)
+	log.Debugf("Fetching cloud config from %v", cf.originURL)
 
-	url := cf.chainedURL
+	url := cf.originURL
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to construct request for cloud config at %s: %s", url, err)
@@ -74,9 +70,6 @@ func (cf *fetcher) doFetch(op *ops.Op) ([]byte, error) {
 	req.Header.Set("Accept", "application/x-gzip")
 	// Prevents intermediate nodes (domain-fronters) from caching the content
 	req.Header.Set("Cache-Control", "no-cache")
-	// Set the fronted URL to lookup the config in parallel using chained and domain fronted servers.
-	proxied.PrepareForFronting(req, cf.frontedURL)
-
 	common.AddCommonHeaders(cf.user, req)
 
 	// make sure to close the connection after reading the Body
@@ -92,7 +85,7 @@ func (cf *fetcher) doFetch(op *ops.Op) ([]byte, error) {
 	if dumperr != nil {
 		log.Errorf("Could not dump response: %v", dumperr)
 	} else {
-		log.Debugf("Response headers from %v (%v):\n%v", cf.chainedURL, cf.frontedURL, string(dump))
+		log.Debugf("Response headers from %v:\n%v", cf.originURL, string(dump))
 	}
 	defer func() {
 		if closeerr := resp.Body.Close(); closeerr != nil {

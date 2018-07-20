@@ -65,9 +65,11 @@ func (cfg *Global) applyFlags(flags map[string]interface{}) {
 		}
 	}
 }
+
 func (cfg *Global) validate() error {
-	if len(cfg.Client.MasqueradeSets) == 0 {
-		return errors.New("No masquerades")
+	err := cfg.Client.Validate()
+	if err != nil {
+		return err
 	}
 	if len(cfg.TrustedCAs) == 0 {
 		return errors.New("No trusted CAs")
