@@ -88,20 +88,6 @@ func init() {
 		&client.ValidatorConfig{RejectStatus: client.CloudfrontBadStatus()},
 	)
 	providers["akamai"] = newProvider(
-<<<<<<< HEAD
-		"https://rxurtgyb9ax8bs0l.getiantem.org/ping",
-		map[string]string{
-			"api.getiantem.org":                "jq4smqywq0qt7jlr.getiantem.org",
-			"api-staging.getiantem.org":        "x8nokhfc5iusdx2k.getiantem.org",
-			"borda.lantern.io":                 "rxurtgyb9ax8bs0l.getiantem.org",
-			"config.getiantem.org":             "jiabhau96ubbe6kg.getiantem.org",
-			"config-staging.getiantem.org":     "xjjz70xhqeo3nrbe.getiantem.org",
-			"geo.getiantem.org":                "ompbv7fxj9ate7qn.getiantem.org",
-			"globalconfig.flashlightproxy.com": "oxrovkdbmw04byt2.getiantem.org",
-			"update.getlantern.org":            "r1ktidq1ohjht2qr.getiantem.org",
-			"github.com":                       "2mbjmpzpb7dkwm6d.getiantem.org",
-			"github-production-release-asset-2e65be.s3.amazonaws.com": "0l6xjiqoogflgfu1.getiantem.org",
-=======
 		"https://borda.akamai.getiantem.org/ping",
 		map[string]string{
 			"api.getiantem.org":                "api.akamai.getiantem.org",
@@ -114,7 +100,6 @@ func init() {
 			"update.getlantern.org":            "update.akamai.getiantem.org",
 			"github.com":                       "github.akamai.getiantem.org",
 			"github-production-release-asset-2e65be.s3.amazonaws.com": "github-release-asset.akamai.getiantem.org",
->>>>>>> 85cdd3108f1d5f731b466a98fe30b2bf85d937c2
 		},
 		&client.ValidatorConfig{RejectStatus: []int{403}},
 	)
