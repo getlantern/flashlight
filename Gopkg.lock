@@ -211,7 +211,7 @@
   branch = "master"
   name = "github.com/getlantern/fronted"
   packages = ["."]
-  revision = "2083bbd8118e357d44354a22dc202a8c70e1560b"
+  revision = "e159e2689b887e9d1954719248bfbe2c9b766661"
 
 [[projects]]
   branch = "master"
@@ -550,7 +550,7 @@
   branch = "master"
   name = "github.com/getlantern/tlsdialer"
   packages = ["."]
-  revision = "275d735df0fe7c62ef2020c26212a2edd84d46e7"
+  revision = "bae89e3a58a7d46e8b6ef7ddf40163e0a1fd9a7a"
 
 [[projects]]
   branch = "master"
@@ -824,6 +824,15 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/refraction-networking/utls"
+  packages = [
+    ".",
+    "cpu"
+  ]
+  revision = "e0edd7863bd2c52945332a16219a8673d93884fb"
+
+[[projects]]
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
@@ -1029,6 +1038,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2595b819dfc14f4f6df3c4746a4232c50713ca252e6150f6dc465433495d26c7"
+  inputs-digest = "bedb7a14cc3a77722cb02e7912f31c9678baedb2cc5709b532aad3ab460f4d7b"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -6,10 +6,10 @@
 package chained
 
 import (
-	"crypto/tls"
 	"strconv"
 
 	"github.com/getlantern/golog"
+	"github.com/refraction-networking/utls"
 )
 
 var (
@@ -78,6 +78,9 @@ type ChainedServerInfo struct {
 	// TLSClientSessionCacheSize: the size of client session cache to use. Set to
 	// 0 to use default size, set to < 0 to disable.
 	TLSClientSessionCacheSize int
+
+	// TLSClientHelloID specifies with uTLS client hello to use.
+	TLSClientHelloID string
 }
 
 func (s *ChainedServerInfo) ptSetting(name string) string {
@@ -136,6 +139,14 @@ func ciphersFromNames(cipherNames []string) []uint16 {
 	return ciphers
 }
 
+func (s *ChainedServerInfo) clientHelloID() tls.ClientHelloID {
+	chid := availableClientHelloIDs[s.TLSClientHelloID]
+	if chid.Browser == "" {
+		chid = tls.HelloGolang
+	}
+	return chid
+}
+
 var availableTLSCiphers = map[string]uint16{
 	"TLS_RSA_WITH_RC4_128_SHA":                tls.TLS_RSA_WITH_RC4_128_SHA,
 	"TLS_RSA_WITH_3DES_EDE_CBC_SHA":           tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
@@ -159,4 +170,17 @@ var availableTLSCiphers = map[string]uint16{
 	"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384": tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
 	"TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305":    tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
 	"TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305":  tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+}
+
+var availableClientHelloIDs = map[string]tls.ClientHelloID{
+	"HelloGolang":           tls.HelloGolang,
+	"HelloRandomized":       tls.HelloRandomized,
+	"HelloRandomizedALPN":   tls.HelloRandomizedALPN,
+	"HelloRandomizedNoALPN": tls.HelloRandomizedNoALPN,
+	"HelloFirefox_Auto":     tls.HelloFirefox_Auto,
+	"HelloFirefox_55":       tls.HelloFirefox_55,
+	"HelloFirefox_56":       tls.HelloFirefox_56,
+	"HelloChrome_Auto":      tls.HelloChrome_Auto,
+	"HelloChrome_58":        tls.HelloChrome_58,
+	"HelloChrome_62":        tls.HelloChrome_62,
 }
