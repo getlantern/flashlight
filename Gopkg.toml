@@ -38,7 +38,7 @@
   name = "github.com/getlantern/appdir"
 
 [[constraint]]
-  branch = "issue_1891"
+  branch = "master"
   name = "github.com/getlantern/autoupdate"
 
 [[constraint]]
@@ -78,11 +78,11 @@
   name = "github.com/getlantern/filepersist"
 
 [[constraint]]
-  branch = "issue_1891"
+  branch = "master"
   name = "github.com/getlantern/fronted"
 
 [[constraint]]
-  branch = "issue_1891"
+  branch = "master"
   name = "github.com/getlantern/geolookup"
 
 [[constraint]]
@@ -98,7 +98,7 @@
   name = "github.com/getlantern/hidden"
 
 [[constraint]]
-  branch = "issue_1891"
+  branch = "master"
   name = "github.com/getlantern/http-proxy-lantern"
 
 [[constraint]]

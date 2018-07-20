@@ -53,9 +53,6 @@ var (
 	fallbacksFile      = flag.String("fallbacks", "fallbacks.yaml", "File containing yaml dict of fallback information")
 	fallbacksOutFile   = flag.String("fallbacks-out", "", "Path, if any, to write the go-formatted fallback configuration.")
 
-	fallbacksFile    = flag.String("fallbacks", "fallbacks.yaml", "File containing yaml dict of fallback information")
-	fallbacksOutFile = flag.String("fallbacks-out", "", "Path, if any, to write the go-formatted fallback configuration.")
-
 	enabledProviders   stringsFlag // --enable-provider in init()
 	masqueradesInFiles stringsFlag // --masquerades in init()
 )
@@ -104,20 +101,6 @@ func init() {
 		&client.ValidatorConfig{RejectStatus: []int{403}},
 	)
 	providers["edgecast"] = newProvider(
-<<<<<<< HEAD
-		"https://7pjuyyk4gsffpvf9.getiantem.org/ping",
-		map[string]string{
-			"api.getiantem.org":                "fb6fy4cx9vjljuat.getiantem.org",
-			"api-staging.getiantem.org":        "a1l3kh9gpetejfyl.getiantem.org",
-			"borda.lantern.io":                 "7pjuyyk4gsffpvf9.getiantem.org",
-			"config.getiantem.org":             "fb6fy4cx9vjljuat.getiantem.org",
-			"config-staging.getiantem.org":     "a1l3kh9gpetejfyl.getiantem.org",
-			"geo.getiantem.org":                "4nyaxxbvf9cthxb7.getiantem.org",
-			"globalconfig.flashlightproxy.com": "pf7clvtvwomg38we.getiantem.org",
-			"update.getlantern.org":            "p6zj7yrrc8vnindu.getiantem.org",
-			"github.com":                       "knqob1zvc3dgq7hk.getiantem.org",
-			"github-production-release-asset-2e65be.s3.amazonaws.com": "2bcmg4nsmtzxzoo8.getiantem.org",
-=======
 		"https://borda.edgecast.getiantem.org/ping",
 		map[string]string{
 			"api.getiantem.org":                "api.edgecast.getiantem.org",
@@ -130,7 +113,6 @@ func init() {
 			"update.getlantern.org":            "update.edgecast.getiantem.org",
 			"github.com":                       "github.edgecast.getiantem.org",
 			"github-production-release-asset-2e65be.s3.amazonaws.com": "github-release-asset.edgecast.getiantem.org",
->>>>>>> 85cdd3108f1d5f731b466a98fe30b2bf85d937c2
 		},
 		&client.ValidatorConfig{RejectStatus: []int{403}},
 	)
