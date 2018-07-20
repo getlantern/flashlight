@@ -15,6 +15,7 @@ import (
 
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
+	"github.com/refraction-networking/utls"
 
 	"github.com/getlantern/ema"
 	"github.com/getlantern/enhttp"
