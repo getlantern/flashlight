@@ -292,7 +292,7 @@ func run(configDir, locale string,
 		func() bool { return false },               // always connected
 		func() bool { return !session.ProxyAll() }, // use shortcut
 		func() bool { return false },               // not use detour
-		func() bool { return session.ProxyAll() },  // allow proxying private hosts if proxy all
+		func() bool { return false },               // do not proxy private hosts on Android
 		// TODO: allow configuring whether or not to enable reporting (just like we
 		// already have in desktop)
 		func() bool { return true }, // auto report
