@@ -1,11 +1,15 @@
 package balancer
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net"
+	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/getlantern/mockconn"
 )
 
 var (
@@ -18,17 +22,14 @@ type testDialer struct {
 	rtt                time.Duration
 	bandwidth          float64
 	untrusted          bool
-	remainingFailures  int
 	failingUpstream    bool
+	successRate        float64
 	attempts           int64
 	successes          int64
 	failures           int64
 	stopped            int32
 	connectivityChecks int
-}
-
-func start(d *testDialer) *testDialer {
-	return d
+	remainingFailures  int
 }
 
 // Name returns the name for this Dialer
@@ -74,16 +75,19 @@ func (d *testDialer) Preconnected() ProxyConnection {
 func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, bool, error) {
 	var conn net.Conn
 	var err error
-	if !d.Succeeding() {
+	if d.remainingFailures > 0 {
 		err = fmt.Errorf("Failing intentionally")
-		d.remainingFailures -= 1
+		d.remainingFailures--
+	} else if !d.Succeeding() {
+		err = fmt.Errorf("Not succeeding")
 	} else if d.failingUpstream {
 		err = fmt.Errorf("Failing upstream")
-	} else if !d.Succeeding() {
-
 	} else if network != "" {
 		var d net.Dialer
 		conn, err = d.DialContext(ctx, network, addr)
+	} else {
+		var buf bytes.Buffer
+		conn = mockconn.New(&buf, strings.NewReader(""))
 	}
 	atomic.AddInt64(&d.attempts, 1)
 	if err == nil {
@@ -103,7 +107,7 @@ func (d *testDialer) EstRTT() time.Duration {
 }
 
 func (d *testDialer) EstSuccessRate() float64 {
-	return 1.0
+	return d.successRate
 }
 
 func (d *testDialer) EstBandwidth() float64 {
@@ -131,7 +135,7 @@ func (d *testDialer) ConsecFailures() int64 {
 }
 
 func (d *testDialer) Succeeding() bool {
-	return d.remainingFailures == 0
+	return d.EstSuccessRate() > 0.9
 }
 
 func (d *testDialer) ForceRedial() {

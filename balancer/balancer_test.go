@@ -34,11 +34,12 @@ func TestSingleDialer(t *testing.T) {
 	addr, l := echoServer()
 	defer func() { _ = l.Close() }()
 
-	dialer := start(&testDialer{
-		name:      "dialer1",
-		rtt:       50 * time.Millisecond,
-		bandwidth: 10000,
-	})
+	dialer := &testDialer{
+		name:        "dialer1",
+		rtt:         50 * time.Millisecond,
+		bandwidth:   10000,
+		successRate: 1,
+	}
 	// Test successful single dialer
 	b := newBalancer(dialer)
 	conn, err := b.Dial("tcp", addr)
@@ -66,17 +67,17 @@ func TestGoodSlowDialer(t *testing.T) {
 	addr, l := echoServer()
 	defer func() { _ = l.Close() }()
 
-	dialer1 := start(&testDialer{
-		name:              "dialer1",
-		rtt:               50 * time.Millisecond,
-		bandwidth:         10000,
-		remainingFailures: 1000,
-	})
-	dialer2 := start(&testDialer{
-		name:      "dialer2",
-		rtt:       500 * time.Millisecond,
+	dialer1 := &testDialer{
+		name:      "dialer1",
+		rtt:       50 * time.Millisecond,
 		bandwidth: 10000,
-	})
+	}
+	dialer2 := &testDialer{
+		name:        "dialer2",
+		rtt:         500 * time.Millisecond,
+		bandwidth:   10000,
+		successRate: 1,
+	}
 
 	b := newBalancer(dialer1)
 	_, err := b.Dial("tcp", addr)
@@ -92,18 +93,20 @@ func TestAllFailingUpstream(t *testing.T) {
 	addr, l := echoServer()
 	defer func() { _ = l.Close() }()
 
-	dialer1 := start(&testDialer{
+	dialer1 := &testDialer{
 		name:            "dialer1",
 		rtt:             50 * time.Millisecond,
 		bandwidth:       10000,
 		failingUpstream: true,
-	})
-	dialer2 := start(&testDialer{
+		successRate:     1,
+	}
+	dialer2 := &testDialer{
 		name:            "dialer2",
 		rtt:             500 * time.Millisecond,
 		bandwidth:       10000,
 		failingUpstream: true,
-	})
+		successRate:     1,
+	}
 
 	b := newBalancer(dialer1, dialer2)
 	_, err := b.Dial("tcp", addr)
@@ -118,18 +121,20 @@ func TestOneFailingUpstream(t *testing.T) {
 	addr, l := echoServer()
 	defer func() { _ = l.Close() }()
 
-	dialer1 := start(&testDialer{
+	dialer1 := &testDialer{
 		name:            "dialer1",
 		rtt:             50 * time.Millisecond,
 		bandwidth:       10000,
 		failingUpstream: true,
-	})
-	dialer2 := start(&testDialer{
+		successRate:     1,
+	}
+	dialer2 := &testDialer{
 		name:              "dialer2",
 		rtt:               500 * time.Millisecond,
 		bandwidth:         10000,
+		successRate:       1,
 		remainingFailures: 1,
-	})
+	}
 
 	b := newBalancer(dialer1, dialer2)
 	_, err := b.Dial("tcp", addr)
@@ -141,9 +146,10 @@ func TestOneFailingUpstream(t *testing.T) {
 }
 
 func TestTrusted(t *testing.T) {
-	dialer := start(&testDialer{
-		untrusted: true,
-	})
+	dialer := &testDialer{
+		untrusted:   true,
+		successRate: 1,
+	}
 
 	_, err := newBalancer(dialer).Dial("", "does-not-exist.com:80")
 	assert.Error(t, err, "Dialing with no trusted dialers should have failed")
@@ -164,63 +170,60 @@ func TestTrusted(t *testing.T) {
 
 func TestSorting(t *testing.T) {
 	dialers := sortedDialers{
-		// Unknown bandwidth comes first
-		start(&testDialer{
-			name:      "1",
-			bandwidth: 0,
-		}),
-		// Within unknown bandwidth, sort by name
-		start(&testDialer{
-			name:      "2",
-			bandwidth: 0,
-		}),
 		// Order known dialers by bandwidth / RTT
-		start(&testDialer{
-			name:      "3",
-			bandwidth: 1000,
-			rtt:       1 * time.Millisecond,
-		}),
-		start(&testDialer{
-			name:      "4",
-			bandwidth: 10000,
-			rtt:       15 * time.Millisecond,
-		}),
+		&testDialer{
+			name:        "1",
+			bandwidth:   1000,
+			rtt:         1 * time.Millisecond,
+			successRate: 1,
+		},
+		&testDialer{
+			name:        "2",
+			bandwidth:   10000,
+			rtt:         15 * time.Millisecond,
+			successRate: 1,
+		},
+		// Unknown bandwidth should be avoided
+		&testDialer{
+			name:        "3",
+			bandwidth:   0,
+			successRate: 1,
+		},
+		// Within unknown bandwidth, sort by name
+		&testDialer{
+			name:        "4",
+			bandwidth:   0,
+			successRate: 1,
+		},
 		// Same ordering as above applies to failing proxies, which all come after
 		// succeeding ones
-		start(&testDialer{
-			name:              "5",
-			bandwidth:         0,
-			remainingFailures: 1000,
-		}),
-		start(&testDialer{
-			name:              "6",
-			bandwidth:         0,
-			remainingFailures: 1000,
-		}),
-		start(&testDialer{
-			name:              "7",
-			bandwidth:         1000,
-			rtt:               1 * time.Millisecond,
-			remainingFailures: 1000,
-		}),
-		start(&testDialer{
-			name:              "8",
-			bandwidth:         10000,
-			rtt:               15 * time.Millisecond,
-			remainingFailures: 1000,
-		}),
+		&testDialer{
+			name:      "5",
+			bandwidth: 1000,
+			rtt:       1 * time.Millisecond,
+		},
+		&testDialer{
+			name:      "6",
+			bandwidth: 10000,
+			rtt:       15 * time.Millisecond,
+		},
+		&testDialer{
+			name:      "7",
+			bandwidth: 0,
+		},
+		&testDialer{
+			name:      "8",
+			bandwidth: 0,
+		},
 	}
 
 	// Shuffle and sort multiple times to make sure that comparisons work in both
 	// directions
 	failingSortedRandomlyAtLeastOnce := false
 	for i := 0; i < 500; i++ {
-		// shuffle
-		for i := range dialers {
-			j := rand.Intn(i + 1)
+		rand.Shuffle(len(dialers), func(i, j int) {
 			dialers[i], dialers[j] = dialers[j], dialers[i]
-		}
-
+		})
 		sort.Sort(dialers)
 		var order []string
 		for _, d := range dialers {

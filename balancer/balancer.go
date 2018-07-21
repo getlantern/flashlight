@@ -418,11 +418,11 @@ func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err e
 		bd.failedUpstream[bd.idx] = pc
 	} else {
 		atomic.AddInt64(&bd.sessionStats[pc.Label()].failure, 1)
-	}
-	if attempts == 0 && pc.ConsecFailures() > 3 {
-		// when top dialer fails, re-evaluate dialers immediately without
-		// checking connectivity for faster convergence.
-		bd.evalDialers(false)
+		if attempts == 0 {
+			// Whenever top dialer fails, re-evaluate dialers immediately without
+			// checking connectivity for faster convergence.
+			bd.evalDialers(false)
+		}
 	}
 }
 
@@ -697,7 +697,7 @@ func (d sortedDialers) Less(i, j int) bool {
 	rateA, rateB := a.EstSuccessRate(), b.EstSuccessRate()
 	if rateA-rateB > 0.1 {
 		return true
-	} else if rateA-rateB < -0.1 {
+	} else if rateB-rateA > 0.1 {
 		return false
 	}
 	if rateA < 0.1 && rateB < 0.1 {
