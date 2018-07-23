@@ -80,8 +80,8 @@ type Dialer interface {
 	// MarkFailure marks a dial failure on this dialer.
 	MarkFailure()
 
-	// EstRTT provides a round trip delay time estimate, based on the same way
-	// RTT is estimated in TCP (https://tools.ietf.org/html/rfc6298)
+	// EstRTT provides a round trip delay time estimate, similar to how RTT is
+	// estimated in TCP (https://tools.ietf.org/html/rfc6298)
 	EstRTT() time.Duration
 
 	// EstBandwidth provides the estimated bandwidth in Mbps
@@ -146,9 +146,9 @@ type Balancer struct {
 	trusted             sortedDialers
 	sessionStats        map[string]*dialStats
 	lastReset           time.Time
+	chEvalDialers       chan struct{}
 	closeOnce           sync.Once
 	closeCh             chan struct{}
-	chEvalDialers       chan struct{}
 	onActiveDialer      chan Dialer
 	priorTopDialer      Dialer
 	hasSucceedingDialer chan bool
@@ -435,6 +435,33 @@ func (b *Balancer) OnActiveDialer() <-chan Dialer {
 	return b.onActiveDialer
 }
 
+// evalDialersLoop keeps running until the balancer is closed. It checks a
+// channel every second to see if there are requests to evalulate all dialers,
+// runs it, then wait for one minute (randomized) to recheck the channel.
+func (b *Balancer) evalDialersLoop() {
+	nextEvalTimer := time.NewTimer(0)
+	defer nextEvalTimer.Stop()
+	chDone := make(chan struct{})
+	for {
+		select {
+		case <-nextEvalTimer.C:
+			select {
+			case <-b.chEvalDialers:
+				ops.Go(func() {
+					b.evalDialers(true)
+					chDone <- struct{}{}
+				})
+			default:
+				nextEvalTimer.Reset(time.Second)
+			}
+		case <-chDone:
+			nextEvalTimer.Reset(randomize(time.Minute))
+		case <-b.closeCh:
+			return
+		}
+	}
+}
+
 func (b *Balancer) evalDialers(checkConnectivity bool) {
 	dialers := b.copyOfDialers()
 	if len(dialers) < 2 {
@@ -494,15 +521,6 @@ func (b *Balancer) checkConnectivityForAll(dialers []Dialer) {
 	wg.Wait()
 }
 
-// Close closes this Balancer, stopping all background processing. You must call
-// Close to avoid leaking goroutines.
-func (b *Balancer) Close() {
-	b.closeOnce.Do(func() {
-		b.Reset([]Dialer{})
-		close(b.closeCh)
-	})
-}
-
 func (b *Balancer) requestEvalDialers(reason string) {
 	select {
 	case b.chEvalDialers <- struct{}{}:
@@ -511,30 +529,13 @@ func (b *Balancer) requestEvalDialers(reason string) {
 	}
 }
 
-// evalDialersLoop keeps running until the balancer is closed. It checks a
-// channel every second to see if there are requests to evalulate all dialers,
-// runs it, then wait for one minute (randomized) to recheck the channel.
-func (b *Balancer) evalDialersLoop() {
-	nextEvalTimer := time.NewTimer(0)
-	chDone := make(chan struct{})
-	for {
-		select {
-		case <-nextEvalTimer.C:
-			select {
-			case <-b.chEvalDialers:
-				ops.Go(func() {
-					b.evalDialers(true)
-					chDone <- struct{}{}
-				})
-			default:
-				nextEvalTimer.Reset(time.Second)
-			}
-		case <-chDone:
-			nextEvalTimer.Reset(randomize(time.Minute))
-		case <-b.closeCh:
-			return
-		}
-	}
+// Close closes this Balancer, stopping all background processing. You must call
+// Close to avoid leaking goroutines.
+func (b *Balancer) Close() {
+	b.closeOnce.Do(func() {
+		b.Reset([]Dialer{})
+		close(b.closeCh)
+	})
 }
 
 func (b *Balancer) periodicallyPrintStats() {
