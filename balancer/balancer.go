@@ -169,9 +169,11 @@ func New(overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
 		HasSucceedingDialer: hasSucceedingDialer,
 	}
 
-	b.Reset(dialers)
 	ops.Go(b.periodicallyPrintStats)
 	ops.Go(b.evalDialersLoop)
+	if len(dialers) > 0 {
+		b.Reset(dialers)
+	}
 	return b
 }
 
@@ -200,6 +202,7 @@ func (b *Balancer) Reset(dialers []Dialer) {
 	}
 
 	b.printStats()
+	b.requestEvalDialers("Resetting balancer")
 }
 
 // ForceRedial forces dialers with long-running connections to reconnect
@@ -426,14 +429,6 @@ func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err e
 	}
 }
 
-func (bd *balancedDial) requestEvalDialers(reason string) {
-	select {
-	case bd.Balancer.chEvalDialers <- struct{}{}:
-		log.Debug(reason + ", re-evaluating all dialers")
-	default:
-	}
-}
-
 // OnActiveDialer returns the channel of the last dialer the balancer was using.
 // Can be called only once.
 func (b *Balancer) OnActiveDialer() <-chan Dialer {
@@ -506,6 +501,14 @@ func (b *Balancer) Close() {
 		b.Reset([]Dialer{})
 		close(b.closeCh)
 	})
+}
+
+func (b *Balancer) requestEvalDialers(reason string) {
+	select {
+	case b.chEvalDialers <- struct{}{}:
+		log.Debug(reason + ", re-evaluating all dialers")
+	default:
+	}
 }
 
 // evalDialersLoop keeps running until the balancer is closed. It checks a
