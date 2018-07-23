@@ -64,6 +64,7 @@ func Run(httpProxyAddr string,
 	statsTracker stats.Tracker,
 	onError func(err error),
 	isPro func() bool,
+	userID func() int64,
 	lang func() string,
 	adSwapTargetURL func() string,
 	adBlockingAllowed func() bool,
@@ -75,7 +76,7 @@ func Run(httpProxyAddr string,
 	defer stopMonitor()
 	elapsed := mtime.Stopwatch()
 	displayVersion()
-	initContext(userConfig.GetDeviceID(), common.Version, common.RevisionDate, isPro)
+	initContext(userConfig.GetDeviceID(), common.Version, common.RevisionDate, isPro, userID)
 	op := fops.Begin("client_started")
 
 	cl, err := client.NewClient(
@@ -248,7 +249,7 @@ func displayVersion() {
 	log.Debugf("---- flashlight version: %s, release: %s, build revision date: %s ----", common.Version, common.PackageVersion, common.RevisionDate)
 }
 
-func initContext(deviceID string, version string, revisionDate string, isPro func() bool) {
+func initContext(deviceID string, version string, revisionDate string, isPro func() bool, userID func() int64) {
 	// Using "application" allows us to distinguish between errors from the
 	// lantern client vs other sources like the http-proxy, etop.
 	ops.SetGlobal("app", "lantern-client")
@@ -270,6 +271,9 @@ func initContext(deviceID string, version string, revisionDate string, isPro fun
 	})
 	ops.SetGlobalDynamic("is_pro", func() interface{} {
 		return isPro()
+	})
+	ops.SetGlobalDynamic("user_id", func() interface{} {
+		return userID()
 	})
 	ops.SetGlobalDynamic("is_data_capped", func() interface{} {
 		if isPro() {
