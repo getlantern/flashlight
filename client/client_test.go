@@ -359,6 +359,14 @@ func (d *testDialer) EstBandwidth() float64 {
 	return d.bandwidth
 }
 
+func (d *testDialer) EstSuccessRate() float64 {
+	return 0
+}
+
+func (d *testDialer) ProbeStats() (successes uint64, successKBs uint64, failures uint64, failedKBs uint64) {
+	return 0, 0, 0, 0
+}
+
 func (d *testDialer) Attempts() int64 {
 	return atomic.LoadInt64(&d.attempts)
 }
@@ -381,6 +389,14 @@ func (d *testDialer) ConsecFailures() int64 {
 
 func (d *testDialer) Succeeding() bool {
 	return !d.failing
+}
+
+func (d *testDialer) DataRecv() uint64 {
+	return 0
+}
+
+func (d *testDialer) DataSent() uint64 {
+	return 0
 }
 
 func (d *testDialer) ForceRedial() {
