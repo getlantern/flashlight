@@ -314,6 +314,7 @@ func run(configDir, locale string,
 		NewStatsTracker(session),
 		func(err error) {}, // onError
 		session.IsProUser,
+		session.GetUserID,
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
 		func() bool { return settings.EnableAdBlocking() && !session.IsPlayVersion() },

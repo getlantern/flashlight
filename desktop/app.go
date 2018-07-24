@@ -149,6 +149,7 @@ func (app *App) Run() {
 				app.Exit(err)
 			},
 			app.IsPro,
+			settings.GetUserID,
 			settings.GetLanguage,
 			func() string {
 				isPro, statusKnown := isProUserFast()
@@ -157,7 +158,6 @@ func (app *App) Run() {
 					return ""
 				}
 				return app.PlansURL()
-
 			},
 			func() bool { return true },              // always allow ad blocking on desktop
 			func(addr string) string { return addr }, // no dnsgrab reverse lookups on desktop
