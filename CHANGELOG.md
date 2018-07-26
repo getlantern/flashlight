@@ -1,5 +1,20 @@
 # Change Log
 
+## [4.7.10](https://github.com/getlantern/flashlight/tree/4.7.10) (2018-07-26)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.9...4.7.10)
+
+**Merged pull requests:**
+
+- Adds GA ecommerce fix, upgrade button fix, tests, error notifications [\#483](https://github.com/getlantern/flashlight/pull/483) ([myleshorton](https://github.com/myleshorton))
+- Reporting userid to borda [\#482](https://github.com/getlantern/flashlight/pull/482) ([oxtoacart](https://github.com/oxtoacart))
+- Disable proxying private hosts on Android [\#481](https://github.com/getlantern/flashlight/pull/481) ([atavism](https://github.com/atavism))
+- Using uTLS to allow TLS client hello parotting [\#480](https://github.com/getlantern/flashlight/pull/480) ([oxtoacart](https://github.com/oxtoacart))
+- Re-submit \#473 with latest UI [\#478](https://github.com/getlantern/flashlight/pull/478) ([joesis](https://github.com/joesis))
+- Revert "show critical alerts on systray and as system notification" [\#477](https://github.com/getlantern/flashlight/pull/477) ([hchood](https://github.com/hchood))
+- Removed unused generated proxiedsites.go file [\#476](https://github.com/getlantern/flashlight/pull/476) ([myleshorton](https://github.com/myleshorton))
+- show critical alerts on systray and as system notification [\#473](https://github.com/getlantern/flashlight/pull/473) ([joesis](https://github.com/joesis))
+- Enable possible alternate fronting providers by configuration [\#471](https://github.com/getlantern/flashlight/pull/471) ([forkner](https://github.com/forkner))
+
 ## [4.7.9](https://github.com/getlantern/flashlight/tree/4.7.9) (2018-07-11)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.8...4.7.9)
 
@@ -120,17 +135,17 @@
 - unzip response body only if gzip header is present [\#440](https://github.com/getlantern/flashlight/pull/440) ([joesis](https://github.com/joesis))
 
 ## [4.6.9](https://github.com/getlantern/flashlight/tree/4.6.9) (2018-04-26)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.8...4.6.9)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.7...4.6.9)
 
 **Merged pull requests:**
 
 - use http-ping to check for connectivity [\#438](https://github.com/getlantern/flashlight/pull/438) ([joesis](https://github.com/joesis))
 
-## [4.6.8](https://github.com/getlantern/flashlight/tree/4.6.8) (2018-04-26)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.7...4.6.8)
-
 ## [4.6.7](https://github.com/getlantern/flashlight/tree/4.6.7) (2018-04-26)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.6...4.6.7)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.8...4.6.7)
+
+## [4.6.8](https://github.com/getlantern/flashlight/tree/4.6.8) (2018-04-26)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.6...4.6.8)
 
 **Merged pull requests:**
 
@@ -148,20 +163,20 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.4...4.6.6)
 
 ## [4.6.4](https://github.com/getlantern/flashlight/tree/4.6.4) (2018-04-20)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.4)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.4)
 
 **Merged pull requests:**
 
 - Two fixes [\#428](https://github.com/getlantern/flashlight/pull/428) ([joesis](https://github.com/joesis))
 
-## [4.6.3](https://github.com/getlantern/flashlight/tree/4.6.3) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.3)
-
 ## [4.6.1](https://github.com/getlantern/flashlight/tree/4.6.1) (2018-04-18)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.1)
 
 ## [4.6.2](https://github.com/getlantern/flashlight/tree/4.6.2) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.2)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.2)
+
+## [4.6.3](https://github.com/getlantern/flashlight/tree/4.6.3) (2018-04-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.3)
 
 **Merged pull requests:**
 
