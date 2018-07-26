@@ -145,8 +145,13 @@ func (p *proxy) doPreconnect() {
 			conn, err := p.dialServer()
 			if err != nil {
 				log.Errorf("Unable to dial server %v: %s", p.Label(), err)
+				p.MarkFailure()
 				time.Sleep(250 * time.Millisecond)
 			} else {
+				// Failing to preconnect does indicate a failing proxy, but
+				// considering multiplexed transports, successful preconnects
+				// don't necessarily mean the proxy is good. Don't mark
+				// success here.
 				p.preconnected <- p.newPreconnected(conn)
 			}
 		}
