@@ -203,6 +203,20 @@ func (b *Balancer) Reset(dialers []Dialer) {
 
 	b.printStats()
 	b.requestEvalDialers("Resetting balancer")
+	// TODO: remove or optimize the periodical probing
+	ops.Go(func() {
+		tk := time.NewTicker(10 * time.Minute)
+		for {
+			select {
+			case <-tk.C:
+				log.Debugf("Start periodical check")
+				b.checkConnectivityForAll(b.copyOfDialers())
+				log.Debugf("End periodical check")
+			case <-b.closeCh:
+				return
+			}
+		}
+	})
 }
 
 // ForceRedial forces dialers with long-running connections to reconnect
