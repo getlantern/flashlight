@@ -85,7 +85,7 @@ func init() {
 		&client.ValidatorConfig{RejectStatus: client.CloudfrontBadStatus()},
 	)
 	providers["akamai"] = newProvider(
-		"https://borda.akamai.getiantem.org/ping",
+		"https://fronted-ping.akamai.getiantem.org/ping",
 		map[string]string{
 			"api.getiantem.org":                "api.akamai.getiantem.org",
 			"api-staging.getiantem.org":        "api-staging.akamai.getiantem.org",
@@ -101,7 +101,7 @@ func init() {
 		&client.ValidatorConfig{RejectStatus: []int{403}},
 	)
 	providers["edgecast"] = newProvider(
-		"https://borda.edgecast.getiantem.org/ping",
+		"https://fronted-ping.edgecast.getiantem.org/ping",
 		map[string]string{
 			"api.getiantem.org":                "api.edgecast.getiantem.org",
 			"api-staging.getiantem.org":        "api-staging.edgecast.getiantem.org",
