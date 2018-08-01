@@ -27,7 +27,7 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 			log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)
 			continue
 		}
-		log.Debugf("Adding chained server: %v %v", name, dialer)
+		log.Debugf("Adding chained server: %v", dialer.JustifiedLabel())
 		dialers = append(dialers, dialer)
 	}
 
