@@ -13,7 +13,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"sync/atomic"
 	"time"
 
 	lru "github.com/hashicorp/golang-lru"
@@ -73,7 +72,7 @@ var (
 	// avoid applications bypassing Lantern.
 	// Chrome has a 30s timeout before marking proxy as bad.
 	// Also used as the overall dial timeout for the balancer.
-	requestTimeout = int64(20 * time.Second)
+	requestTimeout = 20 * time.Second
 
 	// interval before rewriting the same URL to HTTPS, to avoid redirect loop.
 	httpsRewriteInterval = 10 * time.Second
@@ -87,11 +86,8 @@ var (
 // Client is an HTTP proxy that accepts connections from local programs and
 // proxies these via remote flashlight servers.
 type Client struct {
-	// readTimeout: (optional) timeout for read ops
-	readTimeout time.Duration
-
-	// writeTimeout: (optional) timeout for write ops
-	writeTimeout time.Duration
+	// requestTimeout: (optional) timeout to process the request from application
+	requestTimeout time.Duration
 
 	// Balanced CONNECT dialers.
 	bal *balancer.Balancer
@@ -143,6 +139,7 @@ func NewClient(
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
 	client := &Client{
+		requestTimeout:    requestTimeout,
 		bal:               balancer.New(time.Duration(requestTimeout)),
 		disconnected:      disconnected,
 		allowShortcut:     allowShortcut,
@@ -431,7 +428,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		return nil, err
 	}
 
-	newCTX, cancel := context.WithTimeout(ctx, getRequestTimeout())
+	newCTX, cancel := context.WithTimeout(ctx, client.requestTimeout)
 	defer cancel()
 	op.Origin(addr, "")
 
@@ -674,8 +671,4 @@ func errorResponse(ctx filters.Context, req *http.Request, read bool, err error)
 		Body:       ioutil.NopCloser(bytes.NewBuffer(htmlerr)),
 		StatusCode: http.StatusServiceUnavailable,
 	}
-}
-
-func getRequestTimeout() time.Duration {
-	return time.Duration(atomic.LoadInt64(&requestTimeout))
 }
