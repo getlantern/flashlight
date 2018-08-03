@@ -90,15 +90,10 @@ func TestServeHTTPOk(t *testing.T) {
 }
 
 func TestServeHTTPTimeout(t *testing.T) {
-	originalRequestTimeout := getRequestTimeout()
-	atomic.StoreInt64(&requestTimeout, int64(50*time.Millisecond))
-	defer func() {
-		atomic.StoreInt64(&requestTimeout, int64(originalRequestTimeout))
-	}()
-
 	client := newClient()
+	client.requestTimeout = 50 * time.Millisecond
 	resetBalancer(client, func(network, addr string) (net.Conn, error) {
-		<-time.After(getRequestTimeout() * 2)
+		<-time.After(client.requestTimeout * 2)
 		return mockconn.SucceedingDialer(nil).Dial(network, addr)
 	})
 
