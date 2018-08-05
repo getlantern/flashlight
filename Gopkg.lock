@@ -463,7 +463,7 @@
   branch = "master"
   name = "github.com/getlantern/proxiedsites"
   packages = ["."]
-  revision = "996122c1374578a85a536445d7d7ae88d3ee5a35"
+  revision = "5362487dd72c45097a5b8ddac9283fa61014ef88"
 
 [[projects]]
   branch = "master"
