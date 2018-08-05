@@ -12,7 +12,6 @@ import (
 	"runtime/debug"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
@@ -75,9 +74,7 @@ func main() {
 		go func() {
 			log.Debugf("Starting pprof page at http://%s/debug/pprof", *pprofAddr)
 			srv := &http.Server{
-				Addr:         *pprofAddr,
-				ReadTimeout:  20 * time.Second,
-				WriteTimeout: 30 * time.Second,
+				Addr: *pprofAddr,
 			}
 			if err := srv.ListenAndServe(); err != nil {
 				log.Error(err)
