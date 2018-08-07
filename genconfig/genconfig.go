@@ -116,6 +116,22 @@ func init() {
 		},
 		&client.ValidatorConfig{RejectStatus: []int{403}},
 	)
+	providers["limelight"] = newProvider(
+		"https://fronted-ping.limelight.getiantem.org/ping",
+		map[string]string{
+			"api.getiantem.org":                "api.limelight.getiantem.org",
+			"api-staging.getiantem.org":        "api-staging.limelight.getiantem.org",
+			"borda.lantern.io":                 "borda.limelight.getiantem.org",
+			"config.getiantem.org":             "config.limelight.getiantem.org",
+			"config-staging.getiantem.org":     "config-staging.limelight.getiantem.org",
+			"geo.getiantem.org":                "geo.limelight.getiantem.org",
+			"globalconfig.flashlightproxy.com": "globalconfig.limelight.getiantem.org",
+			"update.getlantern.org":            "update.limelight.getiantem.org",
+			"github.com":                       "github.limelight.getiantem.org",
+			"github-production-release-asset-2e65be.s3.amazonaws.com": "github-release-asset.limelight.getiantem.org",
+		},
+		&client.ValidatorConfig{RejectStatus: []int{403}},
+	)
 }
 
 type filter map[string]bool
