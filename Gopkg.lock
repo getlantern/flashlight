@@ -79,10 +79,10 @@
   revision = "02af3965c54e8cacf948b97fef38925c4120652c"
 
 [[projects]]
-  branch = "v0.1.1"
   name = "github.com/fatih/set"
   packages = ["."]
-  revision = "168a5d71ba0669ae06888225478d73a113f1687e"
+  revision = "2c768e3c5489976167bfc42b5c7c92ca783f4389"
+  version = "v0.2.1"
 
 [[projects]]
   branch = "master"
