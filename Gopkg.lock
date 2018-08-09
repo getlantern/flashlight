@@ -44,6 +44,17 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:e05c7b72aeba7570b1d2f9c6dc9f0373d224b16b70fa886c504de867bffe1c2e"
+  name = "github.com/aead/chacha20"
+  packages = [
+    ".",
+    "chacha",
+  ]
+  pruneopts = "UT"
+  revision = "8b13a72661dae6e9e5dea04f344f0dc95ea29547"
+
+[[projects]]
+  branch = "master"
   digest = "1:5699a1540433914320cef63d1afc814e0632c8e7ec5954c37b0fc07a614bf149"
   name = "github.com/agl/ed25519"
   packages = [
@@ -70,11 +81,30 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:1f96c755246f1b688f1b2f0d2ba6cff5a94ceb35a7c5d06f7489e5e348ce356d"
+  name = "github.com/bifurcation/mint"
+  packages = [
+    ".",
+    "syntax",
+  ]
+  pruneopts = "UT"
+  revision = "93c51c6ce11597a26e246fc33a301d62d3439cd2"
+
+[[projects]]
+  branch = "master"
   digest = "1:758f6c0b49bdec3cead1398e0aa71197429bc5c614363c1703a8a3374176e3f5"
   name = "github.com/blang/semver"
   packages = ["."]
   pruneopts = "UT"
   revision = "c5e971dbed7850a93c23aa6ff69db5771d8e23b3"
+
+[[projects]]
+  digest = "1:f438d91be142877c3ad83157992c91de787ddfbddcc2a7da1ef6ef61606cadc4"
+  name = "github.com/cheekybits/genny"
+  packages = ["generic"]
+  pruneopts = "UT"
+  revision = "d2cf3cdd35ce0d789056c4bc02a4d6349c947caf"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
@@ -652,6 +682,33 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:2307bd62adaa4e7e68ad432b3fb5f458546f32506fefe619bd467183a1c6da8a"
+  name = "github.com/getlantern/quic-go"
+  packages = [
+    ".",
+    "internal/ackhandler",
+    "internal/congestion",
+    "internal/crypto",
+    "internal/flowcontrol",
+    "internal/handshake",
+    "internal/protocol",
+    "internal/utils",
+    "internal/wire",
+    "qerr",
+  ]
+  pruneopts = "UT"
+  revision = "ff3dd4ac7113ca9ffde47484ad431440c2cb939d"
+
+[[projects]]
+  branch = "master"
+  digest = "1:259ff2e7638cfec25f6f03f703115fca959d6d9eb4cfd233bc261bbcf67b6abb"
+  name = "github.com/getlantern/quicwrapper"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "3c9b1064abd19556879b6376a41f634b97d34c59"
+
+[[projects]]
+  branch = "master"
   digest = "1:fe83a44c95f15ae21643250231ac9a2bb163a0ce92708f8d0cb8b9b7e54012fe"
   name = "github.com/getlantern/reconn"
   packages = ["."]
@@ -996,6 +1053,22 @@
   revision = "3035450ff8b987ec4373f65c40767f096b35f2d2"
 
 [[projects]]
+  branch = "master"
+  digest = "1:6fe6fc7707d8c37fb305362a324462d898bc1c01eaa2bfe15383ec21f6540c71"
+  name = "github.com/lucas-clemente/aes12"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "cd47fb39b79f867c6e4e5cd39cf7abd799f71670"
+
+[[projects]]
+  branch = "master"
+  digest = "1:08b3484b0665f09be0f1f699a38e877708453795df07a3d6e4cd41fa7a2cabf0"
+  name = "github.com/lucas-clemente/quic-go-certificates"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d2f86524cced5186554df90d92529757d22c1cb6"
+
+[[projects]]
   digest = "1:edc06cd757463855201296ea10ef945e63485c8fa2a0418061cfcbb831f6e220"
   name = "github.com/mailgun/oxy"
   packages = ["forward"]
@@ -1293,14 +1366,24 @@
   revision = "db08ff08e8622530d9ed3a0e8ac279f6d4c02196"
 
 [[projects]]
-  digest = "1:4eb196f937ca6319f4095e0373b346aeeb4e3377e0200e7bb51daac0b5ec964c"
+  branch = "master"
+  digest = "1:e0140c0c868c6e0f01c0380865194592c011fe521d6e12d78bfd33e756fe018a"
+  name = "golang.org/x/sync"
+  packages = ["semaphore"]
+  pruneopts = "UT"
+  revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
+
+[[projects]]
+  branch = "master"
+  digest = "1:d2b400b70ce4782420c9509c939dcad15b7e0e63684640c3272657f019ca6b9e"
   name = "golang.org/x/sys"
   packages = [
+    "cpu",
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "3b87a42e500a6dc65dae1a55d0b641295971163e"
+  revision = "d47a0f3392421c5624713c9a19fe781f651f8a50"
 
 [[projects]]
   digest = "1:631ef6715072ab603861df0d7cf0313f85d8b5491c93f8ad0e6f7cbc55d19482"
@@ -1449,6 +1532,7 @@
     "github.com/getlantern/proxy",
     "github.com/getlantern/proxy/filters",
     "github.com/getlantern/proxybench",
+    "github.com/getlantern/quicwrapper",
     "github.com/getlantern/rot13",
     "github.com/getlantern/rotator",
     "github.com/getlantern/shortcut",
