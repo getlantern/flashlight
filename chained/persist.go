@@ -26,9 +26,7 @@ var (
 func TrackStatsFor(dialers []balancer.Dialer) {
 	statsMx.Lock()
 
-	// Load existing stats
 	applyExistingStats(dialers)
-
 	if len(dialers) > 1 {
 		probeIfRequired(dialers)
 	}
@@ -41,46 +39,26 @@ func TrackStatsFor(dialers []balancer.Dialer) {
 	statsMx.Unlock()
 
 	persistOnce.Do(func() {
-		go probePeriodically()
 		go persistStats()
 	})
 }
 
 func probeIfRequired(dialers []balancer.Dialer) {
 	sorted := balancer.SortDialers(dialers)
-	latencyOfTopProxy := sorted[0].EstLatency()
+	rttOfTopProxy := sorted[0].EstRTT()
 	for i, dialer := range sorted {
 		// probe is automatically required for relatively new dialers
 		probeRequired := dialer.Attempts() < 20
 		if probeRequired {
 			log.Debugf("%v is relatively new, will probe for performance", dialer.Label())
-		} else if i > 0 && dialer.Successes() > 0 && dialer.EstLatency() < latencyOfTopProxy {
-			// dialers whose latency is lower than the top proxy get checked on
-			// startup as well
-			log.Debugf("%v is lower latency than %v, will probe for performance", dialer.Label(), sorted[0].Label())
+		} else if i > 0 && dialer.Successes() > 0 && dialer.EstRTT() < rttOfTopProxy {
+			// dialers whose RTT is lower than the top proxy get checked on startup as well
+			log.Debugf("%v is lower RTT than %v, will probe for performance", dialer.Label(), sorted[0].Label())
 			probeRequired = true
 		}
 		if probeRequired {
 			go dialer.Probe(true)
 		}
-	}
-}
-
-func probePeriodically() {
-	for {
-		statsMx.Lock()
-		dialers := make([]balancer.Dialer, 0, len(statsTrackingDialers))
-		for _, d := range statsTrackingDialers {
-			dialers = append(dialers, d)
-		}
-		statsMx.Unlock()
-
-		log.Debugf("Dialers to probe: %d", len(dialers))
-		for _, dialer := range dialers {
-			go dialer.Probe(false)
-		}
-
-		time.Sleep(randomize(30 * time.Minute))
 	}
 }
 
@@ -155,7 +133,7 @@ func updateStats(p *proxy, row []string) error {
 	if err != nil {
 		return err
 	}
-	emaLatency, err := time.ParseDuration(row[7])
+	emaRTT, err := time.ParseDuration(row[7])
 	if err != nil {
 		return err
 	}
@@ -168,7 +146,7 @@ func updateStats(p *proxy, row []string) error {
 		return err
 	}
 
-	p.setStats(attempts, successes, consecSuccesses, failures, consecFailures, emaLatency, mostRecentABETime, abe)
+	p.setStats(attempts, successes, consecSuccesses, failures, consecFailures, emaRTT, mostRecentABETime, abe)
 	return nil
 }
 
@@ -196,11 +174,11 @@ func doPersistStats(dialers []balancer.Dialer) {
 	defer out.Close()
 
 	csvOut := csv.NewWriter(out)
-	csvOut.Write([]string{"addr", "label", "attempts", "successes", "consec successes", "failures", "consec failures", "est latency", "most recent bandwidth estimate", "est bandwidth"})
+	csvOut.Write([]string{"addr", "label", "attempts", "successes", "consec successes", "failures", "consec failures", "est rtt", "most recent bandwidth estimate", "est bandwidth"})
 	for _, d := range dialers {
 		p := d.(*proxy)
 		p.mx.Lock()
-		err = csvOut.Write([]string{d.Addr(), d.Label(), fmt.Sprint(d.Attempts()), fmt.Sprint(d.Successes()), fmt.Sprint(d.ConsecSuccesses()), fmt.Sprint(d.Failures()), fmt.Sprint(d.ConsecFailures()), p.emaLatency.GetDuration().String(), p.mostRecentABETime.Format(time.RFC3339Nano), fmt.Sprint(p.abe)})
+		err = csvOut.Write([]string{d.Addr(), d.Label(), fmt.Sprint(d.Attempts()), fmt.Sprint(d.Successes()), fmt.Sprint(d.ConsecSuccesses()), fmt.Sprint(d.Failures()), fmt.Sprint(d.ConsecFailures()), p.emaRTT.GetDuration().String(), p.mostRecentABETime.Format(time.RFC3339Nano), fmt.Sprint(p.abe)})
 		p.mx.Unlock()
 		if err != nil {
 			log.Errorf("Error writing to proxystats.csv: %v", err)

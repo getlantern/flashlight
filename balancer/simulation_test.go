@@ -16,80 +16,74 @@ func TestBalancerSimulation(t *testing.T) {
 
 	a := &testDialer{
 		name:        "a",
-		baseLatency: 4 * time.Second,
-		latency:     4 * time.Second,
+		baseRTT:     4 * time.Second,
+		rtt:         4 * time.Second,
 		bandwidth:   0,
+		successRate: 1,
 	}
 	b := &testDialer{
 		name:        "b",
-		baseLatency: 2 * time.Second,
-		latency:     2 * time.Second,
+		baseRTT:     2 * time.Second,
+		rtt:         2 * time.Second,
 		bandwidth:   0,
+		successRate: 1,
 	}
 	c := &testDialer{
 		name:        "c",
-		baseLatency: 1 * time.Second,
-		latency:     1 * time.Second,
+		baseRTT:     1 * time.Second,
+		rtt:         1 * time.Second,
 		bandwidth:   0,
+		successRate: 1,
 	}
 
 	// initialize Balancer
 	bal := &Balancer{
-		recheckConnectivityCh: make(chan []Dialer),
-		closeCh:               make(chan interface{}),
+		closeCh: make(chan struct{}),
 	}
-	bal.Reset(a, b, c)
-	go bal.recheckConnectivity()
+	bal.Reset([]Dialer{a, b, c})
 	defer bal.Close()
 	assertDialerOrder("dialers with unknown bandwidth should sort by name", t, bal, a, b, c)
 
-	evalDialers := func() {
-		bal.evalDialers(true)
-		time.Sleep(250 * time.Millisecond)
-	}
-
+	bal.evalDialers(false)
 	// make bandwidth known for one dialer
-	a.bandwidth = 20000
+	c.bandwidth = 20000
 	assertDialerOrder("sort order should remain unchanged before calling eval", t, bal, a, b, c)
-	evalDialers()
-	assertDialerOrder("dialers with unknown bandwidth should sort before those with known bandwidth", t, bal, b, c, a)
+	bal.evalDialers(false)
+	assertDialerOrder("dialers with known bandwidth should sort before those with unknown bandwidth", t, bal, c, a, b)
 	assertChecksSinceLast(t, bal, 0)
 
 	// fill out bandwidth for all dialers
 	b.bandwidth = 5000
-	c.bandwidth = 1250
-	evalDialers()
-	assertDialerOrder("dialers should sort by combination of bandwidth and latency", t, bal, a, b, c)
+	a.bandwidth = 1250
+	bal.evalDialers(false)
+	assertDialerOrder("dialers should sort by combination of bandwidth and RTT if RTT is comparable", t, bal, c, b, a)
 
-	// dramatically increase latency across the board
-	latencyMultiplier = 10
-	a.recalcLatency()
-	assertDialerOrder("sort order should remain the same even after dramatically increased latency across the board", t, bal, a, b, c)
-	evalDialers()
-	assertDialerOrder("sort order should remain the same even after generally increased latencies", t, bal, a, b, c)
-	assertChecksSinceLast(t, bal, connectivityRechecks)
+	// dramatically increase RTT across the board
+	rttMultiplier = 10
+	a.recalcRTT()
+	assertDialerOrder("sort order should remain the same even after dramatically increased RTT across the board", t, bal, c, b, a)
+	bal.evalDialers(false)
+	assertDialerOrder("sort order should remain the same even after generally increased latencies", t, bal, c, b, a)
 
-	// dramatically drop latency across the board
-	latencyMultiplier = 1
-	a.recalcLatency()
-	assertDialerOrder("sort order should remain the same even after dramatically decreased latency across the board", t, bal, a, b, c)
-	evalDialers()
-	assertDialerOrder("sort order should remain the same even after generally decreased latencies", t, bal, a, b, c)
+	// dramatically drop RTT across the board
+	rttMultiplier = 1
+	a.recalcRTT()
+	assertDialerOrder("sort order should remain the same even after dramatically decreased RTT across the board", t, bal, c, b, a)
+	bal.evalDialers(false)
+	assertDialerOrder("sort order should remain the same even after generally decreased latencies", t, bal, c, b, a)
 	assertChecksSinceLast(t, bal, 0)
 
-	// dramatically increase latency for top dialer
-	a.baseLatency *= 100
-	a.recalcLatency()
-	evalDialers()
-	assertDialerOrder("top dialer should have changed after latency jump", t, bal, b, c, a)
-	assertChecksSinceLast(t, bal, connectivityRechecks)
+	// dramatically increase RTT for top dialer
+	c.baseRTT *= 100
+	c.recalcRTT()
+	bal.evalDialers(false)
+	assertDialerOrder("top dialer should have changed after RTT jump", t, bal, b, a, c)
 
-	// recover latency for top dialer
-	a.baseLatency /= 100
-	a.recalcLatency()
-	evalDialers()
-	assertDialerOrder("top dialer should have changed after latency decrease", t, bal, a, b, c)
-	assertChecksSinceLast(t, bal, connectivityRechecks)
+	// recover RTT for top dialer
+	a.baseRTT /= 100
+	a.recalcRTT()
+	bal.evalDialers(false)
+	assertDialerOrder("top dialer should have changed after RTT decrease", t, bal, a, b, c)
 }
 
 func assertDialerOrder(scenario string, t *testing.T, bal *Balancer, expectedDialers ...Dialer) {

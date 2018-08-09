@@ -50,6 +50,8 @@ func (p *proxy) withRateTracking(wrapped net.Conn, origin string) net.Conn {
 			SetMetric("client_bps_recv_avg", borda.WeightedAvg(stats.RecvAvg, float64(stats.RecvTotal)))
 		op.FailIf(rwError)
 		p.onFinish(op)
+		atomic.AddUint64(&p.dataSent, uint64(stats.SentTotal))
+		atomic.AddUint64(&p.dataRecv, uint64(stats.RecvTotal))
 
 		// The below is a little verbose, but it allows us to see the transfer rates
 		// right within a user's logs, which is useful when someone submits their logs

@@ -1,34 +1,35 @@
 package balancer
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net"
+	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/getlantern/mockconn"
 )
 
 var (
-	latencyMultiplier = time.Duration(1)
+	rttMultiplier = time.Duration(1)
 )
 
 type testDialer struct {
 	name               string
-	baseLatency        time.Duration
-	latency            time.Duration
+	baseRTT            time.Duration
+	rtt                time.Duration
 	bandwidth          float64
 	untrusted          bool
-	remainingFailures  int
 	failingUpstream    bool
+	successRate        float64
 	attempts           int64
 	successes          int64
 	failures           int64
 	stopped            int32
 	connectivityChecks int
-}
-
-func start(d *testDialer) *testDialer {
-	return d
+	remainingFailures  int
 }
 
 // Name returns the name for this Dialer
@@ -74,16 +75,19 @@ func (d *testDialer) Preconnected() ProxyConnection {
 func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, bool, error) {
 	var conn net.Conn
 	var err error
-	if !d.Succeeding() {
+	if d.remainingFailures > 0 {
 		err = fmt.Errorf("Failing intentionally")
-		d.remainingFailures -= 1
+		d.remainingFailures--
+	} else if !d.Succeeding() {
+		err = fmt.Errorf("Not succeeding")
 	} else if d.failingUpstream {
 		err = fmt.Errorf("Failing upstream")
-	} else if !d.Succeeding() {
-
 	} else if network != "" {
 		var d net.Dialer
 		conn, err = d.DialContext(ctx, network, addr)
+	} else {
+		var buf bytes.Buffer
+		conn = mockconn.New(&buf, strings.NewReader(""))
 	}
 	atomic.AddInt64(&d.attempts, 1)
 	if err == nil {
@@ -98,8 +102,12 @@ func (d *testDialer) MarkFailure() {
 	atomic.AddInt64(&d.failures, 1)
 }
 
-func (d *testDialer) EstLatency() time.Duration {
-	return d.latency
+func (d *testDialer) EstRTT() time.Duration {
+	return d.rtt
+}
+
+func (d *testDialer) EstSuccessRate() float64 {
+	return d.successRate
 }
 
 func (d *testDialer) EstBandwidth() float64 {
@@ -127,15 +135,15 @@ func (d *testDialer) ConsecFailures() int64 {
 }
 
 func (d *testDialer) Succeeding() bool {
-	return d.remainingFailures == 0
+	return d.EstSuccessRate() > 0.9
 }
 
 func (d *testDialer) ForceRedial() {
 }
 
-func (d *testDialer) recalcLatency() {
-	if d.baseLatency != 0 {
-		d.latency = d.baseLatency * latencyMultiplier
+func (d *testDialer) recalcRTT() {
+	if d.baseRTT != 0 {
+		d.rtt = d.baseRTT * rttMultiplier
 	}
 }
 
@@ -145,10 +153,22 @@ func (d *testDialer) connectivityChecksSinceLast() int {
 	return result
 }
 
+func (d *testDialer) DataSent() uint64 {
+	return 0
+}
+
+func (d *testDialer) DataRecv() uint64 {
+	return 0
+}
+
 func (d *testDialer) Probe(forPerformance bool) bool {
-	d.recalcLatency()
+	d.recalcRTT()
 	d.connectivityChecks++
 	return true
+}
+
+func (d *testDialer) ProbeStats() (successes uint64, successKBs uint64, failures uint64, failedKBs uint64) {
+	return 0, 0, 0, 0
 }
 
 func (d *testDialer) Stop() {

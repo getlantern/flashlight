@@ -42,7 +42,7 @@ type ChainedServerInfo struct {
 
 	// Bias indicates a relative biasing factor for proxy selection purposes.
 	// Proxies are bias 0 by default, meaning that they're prioritized by the
-	// usual bandwidth and latency metrics. Proxies with a higher bias are
+	// usual bandwidth and RTT metrics. Proxies with a higher bias are
 	// preferred over proxies with a lower bias irrespective of their measured
 	// performance.
 	Bias int

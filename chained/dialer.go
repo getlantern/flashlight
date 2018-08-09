@@ -12,12 +12,15 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/mitchellh/go-server-timing"
+
 	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
+	gp "github.com/getlantern/proxy"
 )
 
 const (
@@ -50,42 +53,6 @@ var (
 	// other proxies.
 	errUpstream = errors.New("Upstream error")
 )
-
-// Periodically check our connectivity.
-// With a 15 minute period, Lantern running 8 hours a day for 30 days and 148
-// bytes for a TCP connection setup and teardown, this check will consume
-// approximately 138 KB per month per proxy.
-func (p *proxy) runConnectivityChecks() {
-	checkInterval := minCheckInterval
-	timer := time.NewTimer(checkInterval)
-
-	ops.Go(func() {
-		for {
-			timer.Reset(randomize(checkInterval))
-			select {
-			case <-timer.C:
-				log.Debugf("Checking %v", p.Label())
-				if p.Probe(false) {
-					// On success, don't bother rechecking anytime soon
-					checkInterval = maxCheckInterval
-				} else {
-					// Exponentially back off while we're still failing
-					checkInterval *= 2
-					if checkInterval > maxCheckInterval {
-						checkInterval = maxCheckInterval
-					}
-				}
-			case <-p.forceRecheckCh:
-				log.Debugf("Forcing recheck for %v", p.Label())
-				checkInterval = minCheckInterval
-			case <-p.closeCh:
-				log.Tracef("Dialer %v stopped", p.Label())
-				timer.Stop()
-				return
-			}
-		}
-	})
-}
 
 // Periodically call doDialCore to make sure we're recording updated latencies.
 func (p *proxy) checkCoreDials() {
@@ -144,12 +111,16 @@ func (p *proxy) ConsecFailures() int64 {
 }
 
 func (p *proxy) Succeeding() bool {
-	// To avoid turbulence when network glitches, treat proxies with a small
-	// amount failures as succeeding.
-	// TODO: OTOH, when the proxy just recovered from failing, should wait for
-	// a few successes to consider it as succeeding.
-	return p.ConsecSuccesses()-p.ConsecFailures() > -5 &&
-		p.consecRWSuccesses.Get() > -5
+	return p.ConsecSuccesses()-p.ConsecFailures() > 0 &&
+		p.consecRWSuccesses.Get() > 0
+}
+
+func (p *proxy) DataSent() uint64 {
+	return atomic.LoadUint64(&p.dataSent)
+}
+
+func (p *proxy) DataRecv() uint64 {
+	return atomic.LoadUint64(&p.dataRecv)
 }
 
 func (p *proxy) processPreconnects(initPreconnect int) {
@@ -174,8 +145,13 @@ func (p *proxy) doPreconnect() {
 			conn, err := p.dialServer()
 			if err != nil {
 				log.Errorf("Unable to dial server %v: %s", p.Label(), err)
+				p.MarkFailure()
 				time.Sleep(250 * time.Millisecond)
 			} else {
+				// Failing to preconnect does indicate a failing proxy, but
+				// considering multiplexed transports, successful preconnects
+				// don't necessarily mean the proxy is good. Don't mark
+				// success here.
 				p.preconnected <- p.newPreconnected(conn)
 			}
 		}
@@ -248,6 +224,7 @@ func (pc *proxyConnection) DialContext(ctx context.Context, network, addr string
 }
 
 func (p *proxy) markSuccess() {
+	p.emaSuccessRate.Update(1)
 	atomic.AddInt64(&p.attempts, 1)
 	atomic.AddInt64(&p.successes, 1)
 	newCS := atomic.AddInt64(&p.consecSuccesses, 1)
@@ -259,19 +236,13 @@ func (p *proxy) markSuccess() {
 }
 
 func (p *proxy) MarkFailure() {
-	if p.doMarkFailure() == 1 {
-		// On new failure, force recheck
-		p.forceRecheck()
-	}
-}
-
-func (p *proxy) doMarkFailure() int64 {
+	p.emaSuccessRate.Update(0)
 	atomic.AddInt64(&p.attempts, 1)
 	atomic.AddInt64(&p.failures, 1)
 	atomic.StoreInt64(&p.consecSuccesses, 0)
 	newCF := atomic.AddInt64(&p.consecFailures, 1)
 	log.Tracef("Dialer %s consecutive failures: %d -> %d", p.Label(), newCF-1, newCF)
-	return newCF
+	return
 }
 
 func (pc *proxyConnection) doDial(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -400,6 +371,22 @@ func (p *proxy) checkCONNECTResponse(r *bufio.Reader, req *http.Request, reqTime
 		log.Errorf("Bad status code on CONNECT response %d: %v", resp.StatusCode, string(body))
 		return errUpstream
 	}
+	rtt := time.Since(reqTime)
+	timing := resp.Header.Get(servertiming.HeaderKey)
+	if timing != "" {
+		header, err := servertiming.ParseHeader(timing)
+		if err != nil {
+			log.Errorf("Fail to parse Server-Timing header in CONNECT response: %v", err)
+		} else {
+			// dialupstream is the only metric for now, but more may be added later.
+			for _, metric := range header.Metrics {
+				if metric.Name == gp.MetricDialUpstream {
+					p.updateEstRTT(rtt - metric.Duration)
+				}
+			}
+		}
+	}
+
 	p.collectBBRInfo(reqTime, resp)
 	bandwidth.Track(resp)
 	return nil

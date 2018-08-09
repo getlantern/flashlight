@@ -48,10 +48,10 @@ func newTestUserConfig() *common.UserConfigData {
 }
 
 func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {
-	client.bal.Reset(start(&testDialer{
+	client.bal.Reset([]balancer.Dialer{&testDialer{
 		name: "test-dialer",
 		dial: dialer,
-	}))
+	}})
 }
 
 func newClient() *Client {
@@ -264,7 +264,7 @@ func TestAccessingProxyPort(t *testing.T) {
 
 type testDialer struct {
 	name      string
-	latency   time.Duration
+	rtt       time.Duration
 	dial      func(network, addr string) (net.Conn, error)
 	bandwidth float64
 	untrusted bool
@@ -273,10 +273,6 @@ type testDialer struct {
 	successes int64
 	failures  int64
 	stopped   bool
-}
-
-func start(d *testDialer) *testDialer {
-	return d
 }
 
 // Name returns the name for this Dialer
@@ -355,12 +351,20 @@ func (d *testDialer) MarkFailure() {
 	atomic.AddInt64(&d.failures, 1)
 }
 
-func (d *testDialer) EstLatency() time.Duration {
-	return d.latency
+func (d *testDialer) EstRTT() time.Duration {
+	return d.rtt
 }
 
 func (d *testDialer) EstBandwidth() float64 {
 	return d.bandwidth
+}
+
+func (d *testDialer) EstSuccessRate() float64 {
+	return 0
+}
+
+func (d *testDialer) ProbeStats() (successes uint64, successKBs uint64, failures uint64, failedKBs uint64) {
+	return 0, 0, 0, 0
 }
 
 func (d *testDialer) Attempts() int64 {
@@ -385,6 +389,14 @@ func (d *testDialer) ConsecFailures() int64 {
 
 func (d *testDialer) Succeeding() bool {
 	return !d.failing
+}
+
+func (d *testDialer) DataRecv() uint64 {
+	return 0
+}
+
+func (d *testDialer) DataSent() uint64 {
+	return 0
 }
 
 func (d *testDialer) ForceRedial() {
