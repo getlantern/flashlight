@@ -489,18 +489,13 @@ func (b *Balancer) evalDialers() {
 	b.mu.RLock()
 	priorTopDialer := b.priorTopDialer
 	b.mu.RUnlock()
-	if newTopDialer == priorTopDialer {
-		op.SetMetricSum("top_dialer_unchanged", 1)
-		log.Debug("Top dialer unchanged")
-		return
-	}
-
-	// Print stats immediately when dialer initialized / changed so we have an
-	// idea what caused the change.
-	b.printStats()
 	if priorTopDialer == nil {
 		op.SetMetricSum("top_dialer_initialized", 1)
 		log.Debugf("Top dialer initialized to %v", newTopDialer.Label())
+	} else if newTopDialer.Name() == priorTopDialer.Name() {
+		op.SetMetricSum("top_dialer_unchanged", 1)
+		log.Debug("Top dialer unchanged")
+		return
 	} else {
 		op.SetMetricSum("top_dialer_changed", 1)
 		reason := "performance"
@@ -514,6 +509,10 @@ func (b *Balancer) evalDialers() {
 	b.mu.Lock()
 	b.priorTopDialer = newTopDialer
 	b.mu.Unlock()
+
+	// Print stats immediately after dialer initialized / changed so we have an
+	// idea what caused it.
+	b.printStats()
 }
 
 func (b *Balancer) checkConnectivityForAll() {
