@@ -1,3 +1,7 @@
+// package shortcut loads country specific shortcut subnet list from resources
+// so the caller can check if an IP should be dialed directly or not.  If
+// there's no list for the country, a default list which includes private IP
+// ranges are used.
 package shortcut
 
 import (
