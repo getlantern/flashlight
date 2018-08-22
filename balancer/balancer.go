@@ -210,7 +210,7 @@ func (b *Balancer) Reset(dialers []Dialer) {
 			select {
 			case <-tk.C:
 				log.Debugf("Start periodical check")
-				b.checkConnectivityForAll(b.copyOfDialers())
+				b.checkConnectivityForAll()
 				log.Debugf("End periodical check")
 			case <-b.closeCh:
 				return
@@ -438,7 +438,7 @@ func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err e
 		if attempts == 0 {
 			// Whenever top dialer fails, re-evaluate dialers immediately without
 			// checking connectivity for faster convergence.
-			bd.evalDialers(false)
+			bd.evalDialers()
 		}
 	}
 }
@@ -462,7 +462,8 @@ func (b *Balancer) evalDialersLoop() {
 			select {
 			case <-b.chEvalDialers:
 				ops.Go(func() {
-					b.evalDialers(true)
+					b.checkConnectivityForAll()
+					b.evalDialers()
 					chDone <- struct{}{}
 				})
 			default:
@@ -476,16 +477,8 @@ func (b *Balancer) evalDialersLoop() {
 	}
 }
 
-func (b *Balancer) evalDialers(checkConnectivity bool) {
-	dialers := b.copyOfDialers()
-	if len(dialers) < 2 {
-		// nothing to do
-		return
-	}
-	if checkConnectivity {
-		b.checkConnectivityForAll(dialers)
-	}
-	dialers = b.sortDialers()
+func (b *Balancer) evalDialers() {
+	dialers := b.sortDialers()
 	if len(dialers) < 2 {
 		// nothing to do
 		return
@@ -493,32 +486,41 @@ func (b *Balancer) evalDialers(checkConnectivity bool) {
 	newTopDialer := dialers[0]
 	op := ops.Begin("proxy_selection_stability")
 	defer op.End()
-	if newTopDialer == b.priorTopDialer {
+	b.mu.RLock()
+	priorTopDialer := b.priorTopDialer
+	b.mu.RUnlock()
+	if priorTopDialer == nil {
+		op.SetMetricSum("top_dialer_initialized", 1)
+		log.Debugf("Top dialer initialized to %v", newTopDialer.Label())
+	} else if newTopDialer.Name() == priorTopDialer.Name() {
 		op.SetMetricSum("top_dialer_unchanged", 1)
 		log.Debug("Top dialer unchanged")
 		return
-	}
-
-	// Print stats immediately when dialer initialized / changed so we have an
-	// idea what caused the change.
-	b.printStats()
-	if b.priorTopDialer == nil {
-		op.SetMetricSum("top_dialer_initialized", 1)
-		log.Debugf("Top dialer initialized to %v", newTopDialer.Label())
 	} else {
 		op.SetMetricSum("top_dialer_changed", 1)
 		reason := "performance"
-		if !b.priorTopDialer.Succeeding() {
+		if !priorTopDialer.Succeeding() {
 			reason = "failing"
 		}
 		op.Set("reason", reason)
-		log.Debugf("Top dialer changed from %v to %v", b.priorTopDialer.Label(), newTopDialer.Label())
+		log.Debugf("Top dialer changed from %v to %v", priorTopDialer.Label(), newTopDialer.Label())
 		recordTopDialer(dialers)
 	}
+	b.mu.Lock()
 	b.priorTopDialer = newTopDialer
+	b.mu.Unlock()
+
+	// Print stats immediately after dialer initialized / changed so we have an
+	// idea what caused it.
+	b.printStats()
 }
 
-func (b *Balancer) checkConnectivityForAll(dialers []Dialer) {
+func (b *Balancer) checkConnectivityForAll() {
+	dialers := b.copyOfDialers()
+	if len(dialers) < 2 {
+		// nothing to do
+		return
+	}
 	log.Debugf("Rechecking connectivity for %d dialers", len(dialers))
 	var wg sync.WaitGroup
 	wg.Add(len(dialers))
