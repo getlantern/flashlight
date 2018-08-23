@@ -447,6 +447,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 
 func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Context, network, addr string) (net.Conn, error) {
 	dialProxied := func(ctx context.Context, network, addr string) (net.Conn, error) {
+		op.Set("remotely_proxied", true)
 		proto := "persistent"
 		if isCONNECT {
 			// UGLY HACK ALERT! In this case, we know we need to send a CONNECT request
