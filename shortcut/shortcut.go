@@ -1,3 +1,7 @@
+// package shortcut loads country specific shortcut subnet list from resources
+// so the caller can check if an IP should be dialed directly or not.  If
+// there's no list for the country, a default list which includes private IP
+// ranges are used.
 package shortcut
 
 import (
@@ -35,17 +39,21 @@ func (s *nullShortcut) Allow(string) (bool, net.IP) {
 
 func configure(country string) {
 	country = strings.ToLower(country)
-	v4, v4err := Asset("resources/" + country + "_ipv4.txt")
-	v6, v6err := Asset("resources/" + country + "_ipv6.txt")
-	if v4err != nil || v6err != nil {
-		log.Debugf("no shortcut list for country %s", country)
-		return
+	var _sc shortcut.Shortcut
+	for {
+		v4, v4err := Asset("resources/" + country + "_ipv4.txt")
+		v6, v6err := Asset("resources/" + country + "_ipv6.txt")
+		if v4err == nil && v6err == nil {
+			_sc = shortcut.NewFromReader(
+				bytes.NewReader(v4),
+				bytes.NewReader(v6),
+			)
+			break
+		}
+		log.Debugf("no shortcut list for country %s, fallback to default", country)
+		country = "default"
 	}
 
-	_sc := shortcut.NewFromReader(
-		bytes.NewReader(v4),
-		bytes.NewReader(v6),
-	)
 	mu.Lock()
 	sc = _sc
 	mu.Unlock()

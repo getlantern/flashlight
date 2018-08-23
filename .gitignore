@@ -25,7 +25,7 @@ config/proxies.yaml
 config/generated/masquerades.go
 profile.cov
 profile_tmp.cov
-shortcut/resources/*
+shortcut/resources/cn*
 lantern-linux
 lantern-windows.exe
 lantern.zip
