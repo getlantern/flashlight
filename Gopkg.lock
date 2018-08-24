@@ -538,7 +538,7 @@
   branch = "master"
   name = "github.com/getlantern/systray"
   packages = ["."]
-  revision = "9ddd647aedba71f782bef029a90964301de03480"
+  revision = "3fd1443dac5c8297999189fe28d5836b2b075b66"
 
 [[projects]]
   branch = "master"
