@@ -23,6 +23,16 @@ var (
 			"India",
 			"IN",
 		},
+		"dofra1": &location{
+			"Frankfurt",
+			"Germany",
+			"DE",
+		},
+		"dolon1": &location{
+			"London",
+			"United Kingdom",
+			"GB",
+		},
 		"dosgp1": &location{
 			"Singapore",
 			"Singapore",
@@ -48,6 +58,11 @@ var (
 			"Japan",
 			"JP",
 		},
+		"litok2": &location{
+			"Tokyo",
+			"Japan",
+			"JP",
+		},
 		"xfkrkt": &location{
 			"Seoul",
 			"Korea",
@@ -57,6 +72,21 @@ var (
 			"Changhua",
 			"Taiwan",
 			"TW",
+		},
+		"vllhr1": &location{
+			"London",
+			"United Kingdom",
+			"GB",
+		},
+		"vllos1": &location{
+			"Los Angeles",
+			"United States",
+			"US",
+		},
+		"vlsgp1": &location{
+			"Singapore",
+			"Singapore",
+			"SG",
 		},
 		"vltok1": &location{
 			"Tokyo",
