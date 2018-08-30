@@ -193,7 +193,7 @@
   branch = "master"
   name = "github.com/getlantern/errors"
   packages = ["."]
-  revision = "e9c0296368b736086adb20832549567064224854"
+  revision = "e24b7f4ff7c70be59bbefca6b7695d68cda8b399"
 
 [[projects]]
   branch = "master"
@@ -524,12 +524,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/getlantern/stack"
-  packages = ["."]
-  revision = "02f928aad224fbccd50d66edd776fc9d1e9f2f2b"
-
-[[projects]]
-  branch = "master"
   name = "github.com/getlantern/sysproxy"
   packages = ["."]
   revision = "eb982eb140351544ca13cc91b6a992370320baa0"
@@ -626,6 +620,12 @@
     "sql"
   ]
   revision = "44cc8585533a2bb441dc5862ffae6ccb9f25f487"
+
+[[projects]]
+  name = "github.com/go-stack/stack"
+  packages = ["."]
+  revision = "2fee6af1a9795aafbe0253a0cfbdf668e1fb8a9a"
+  version = "v1.8.0"
 
 [[projects]]
   branch = "master"
