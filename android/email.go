@@ -7,9 +7,10 @@ import (
 // EmailMessage exposes the type email.Message as part of this package.
 type EmailMessage email.Message
 
-// EmailResponse is used to report any errors sending an email
-type EmailResponse interface {
-	ShowError(string)
+// EmailResponseHandler is used to return a response to the client in the
+// event there's an error sending an email
+type EmailResponseHandler interface {
+	OnError(string)
 }
 
 // PutInt sets an integer variable
@@ -30,10 +31,10 @@ func (msg *EmailMessage) putVar(key string, val interface{}) {
 }
 
 // Send sends this EmailMessage using the email package.
-func (msg *EmailMessage) Send(response EmailResponse) {
+func (msg *EmailMessage) Send(handler EmailResponseHandler) {
 	emsg := email.Message(*msg)
 	err := email.Send(&emsg)
 	if err != nil {
-		response.ShowError(err.Error())
+		handler.OnError(err.Error())
 	}
 }
