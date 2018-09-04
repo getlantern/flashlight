@@ -103,7 +103,6 @@ func (app *App) exitOnFatal(err error) {
 // Run starts the app. It will block until the app exits.
 func (app *App) Run() {
 	golog.OnFatal(app.exitOnFatal)
-	app.AddExitFunc("record app stopped", recordStopped)
 
 	// Run below in separate goroutine as config.Init() can potentially block when Lantern runs
 	// for the first time. User can still quit Lantern through systray menu when it happens.
@@ -448,6 +447,8 @@ func (app *App) doExit(err error) {
 	} else {
 		log.Debugf("Exiting app %d(%d)", os.Getpid(), os.Getppid())
 	}
+	// call it before flushing borda (one of the exit funcs)
+	recordStopped()
 	defer func() {
 		app.exited.Set(err)
 		log.Debugf("Finished exiting app %d(%d)", os.Getpid(), os.Getppid())
