@@ -238,6 +238,10 @@ func loadMasquerades() {
 
 // Scans the proxied site directory and stores the sites in the files found
 func loadProxiedSites(path string, info os.FileInfo, err error) error {
+	if err != nil {
+		log.Fatalf("Error accessing path %q: %v\n", path, err)
+		return err
+	}
 	if info.IsDir() {
 		// skip root directory
 		return nil
