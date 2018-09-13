@@ -3,6 +3,7 @@ DEP_BIN    ?= $(shell which dep)
 
 SHELL := /bin/bash
 SOURCES := $(shell find . -name '*[^_test].go')
+BINARY_NAME := lantern
 
 .PHONY: lantern update-icons
 
@@ -15,6 +16,7 @@ ifeq ($(OS),Windows_NT)
 endif
 
 define build-tags
+	BINARY_NAME="$(BINARY_NAME)" && \
 	BUILD_TAGS="$(BUILD_TAGS)" && \
 	EXTRA_LDFLAGS="" && \
 	if [[ ! -z "$$VERSION" ]]; then \
@@ -23,12 +25,14 @@ define build-tags
 		echo "** VERSION was not set, using default version. This is OK while in development."; \
 	fi && \
 	if [[ ! -z "$$HEADLESS" ]]; then \
+		BINARY_NAME="$$BINARY_NAME-headless"; \
 		BUILD_TAGS="$$BUILD_TAGS headless"; \
 	fi && \
 	if [[ ! -z "$$DISABLE_PORT_RANDOMIZATION" ]]; then \
 		BUILD_TAGS="$$BUILD_TAGS disableresourcerandomization"; \
 	fi && \
 	if [[ ! -z "$$STAGING" ]]; then \
+		BINARY_NAME="$$BINARY_NAME-staging"; \
 		BUILD_TAGS="$$BUILD_TAGS staging"; \
 		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/common.StagingMode=$$STAGING"; \
 		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/lantern.StagingMode=$$STAGING"; \
@@ -41,19 +45,19 @@ endef
 
 lantern: $(SOURCES)
 	@$(call build-tags) && \
-	CGO_ENABLED=1 go build $(BUILD_RACE) -o lantern -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s" github.com/getlantern/flashlight/main;
+	CGO_ENABLED=1 go build $(BUILD_RACE) -o $$BINARY_NAME -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s" github.com/getlantern/flashlight/main;
 
 windowscli: $(SOURCES)
 	@$(call build-tags) && \
-	GOOS=windows GOARCH=386 CGO_ENABLED=1 go build -o lantern.exe -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
+	GOOS=windows GOARCH=386 CGO_ENABLED=1 go build -o $$BINARY_NAME.exe -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
 
 windowsgui: $(SOURCES)
 	@$(call build-tags) && \
-	GOOS=windows GOARCH=386 CGO_ENABLED=1 go build -a -o lantern.exe -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS -H=windowsgui" github.com/getlantern/flashlight/main;
+	GOOS=windows GOARCH=386 CGO_ENABLED=1 go build -a -o $$BINARY_NAME.exe -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS -H=windowsgui" github.com/getlantern/flashlight/main;
 
 linux: $(SOURCES)
 	@$(call build-tags) && \
-	HEADLESS=true GOOS=linux GOARCH=amd64 go build -o lantern-linux -tags="$$BUILD_TAGS headless" -ldflags="$$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
+	HEADLESS=true GOOS=linux GOARCH=amd64 go build -o $$BINARY_NAME-linux -tags="$$BUILD_TAGS headless" -ldflags="$$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
 
 # vendor installs vendored dependencies using Dep
 vendor: require-dep
