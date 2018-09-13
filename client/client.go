@@ -58,8 +58,8 @@ var (
 		5228, 5229,
 		// udpgw
 		7300,
-		// Google Hangouts TCP Ports (see https://support.google.com/a/answer/1279090?hl=en)
-		19305, 19306, 19307, 19308, 19309,
+		// Google Hangouts/Meet TCP Ports (see https://support.google.com/a/answer/7582935#ports)
+		19302, 19303, 19304, 19305, 19306, 19307, 19308, 19309,
 	}
 
 	// Requests to these domains require proxies for security purposes and to
