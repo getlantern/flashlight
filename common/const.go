@@ -16,8 +16,6 @@ var (
 
 	ProAPIHost = "api.getiantem.org"
 
-	
-
 	forceAds bool
 )
 

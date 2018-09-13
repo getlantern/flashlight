@@ -27,6 +27,8 @@ var (
 	BuildDate string // The actual date and time the binary was built.
 )
 
+const devel = "development"
+
 func bestPackageVersion() string {
 	if CompileTimePackageVersion != "" {
 		return CompileTimePackageVersion
@@ -42,10 +44,15 @@ func init() {
 	}
 
 	if Version == "" {
-		Version = "development"
+		Version = devel
 	}
 
 	if RevisionDate == "" {
 		RevisionDate = "now"
 	}
+}
+
+// InDevel returns whether or not we're currently running in development.
+func InDevel() bool {
+	return Version == devel
 }

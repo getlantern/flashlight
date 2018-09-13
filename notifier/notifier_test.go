@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/getlantern/notifier"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,7 +29,6 @@ func TestNotify(t *testing.T) {
 }
 
 func TestNormalizeClickURL(t *testing.T) {
-	log := golog.LoggerFor("flashlight.notifier-test")
 	note := &notify.Notification{
 		Title:    "test",
 		Message:  "test",

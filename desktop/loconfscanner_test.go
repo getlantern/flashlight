@@ -8,8 +8,9 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/loconf"
-	"github.com/getlantern/golog"
 	"github.com/stretchr/testify/assert"
+
+	logger "github.com/sirupsen/logrus"
 )
 
 func TestWriteURL(t *testing.T) {
@@ -18,7 +19,6 @@ func TestWriteURL(t *testing.T) {
 	}
 	testURL := "https://testtesttest"
 	us := &loconf.UninstallSurvey{
-		//log: golog.LoggerFor("loconfer"),
 		URL:         testURL,
 		Probability: 1.0,
 		Enabled:     true,
@@ -35,7 +35,6 @@ func TestWriteURL(t *testing.T) {
 }
 
 func TestParsing(t *testing.T) {
-	logger := golog.LoggerFor("loconfloop-test")
 	stop := LoconfScanner(4*time.Hour, func() (bool, bool) {
 		return true, false
 	}, func() string { return "" })

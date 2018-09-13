@@ -13,7 +13,6 @@ import (
 
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight"
-	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/notifier"
@@ -69,7 +68,15 @@ type App struct {
 
 // Init initializes the App's state
 func (app *App) Init() {
-	golog.OnFatal(app.exitOnFatal)
+	if common.InDevel() {
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: true})
+	} else {
+		// The TextFormatter is default, you don't actually have to do this.
+		log.SetFormatter(&log.TextFormatter{FullTimestamp: true})
+	}
+	log.RegisterExitHandler(func() {
+		app.exitOnFatal(nil)
+	})
 	app.Flags["staging"] = common.Staging
 	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate, common.Staging)
 	app.exited = eventual.NewValue()
@@ -102,8 +109,6 @@ func (app *App) exitOnFatal(err error) {
 
 // Run starts the app. It will block until the app exits.
 func (app *App) Run() {
-	golog.OnFatal(app.exitOnFatal)
-
 	// Run below in separate goroutine as config.Init() can potentially block when Lantern runs
 	// for the first time. User can still quit Lantern through systray menu when it happens.
 	go func() {
