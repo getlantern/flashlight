@@ -191,6 +191,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/getlantern/enproxy"
+  packages = ["."]
+  revision = "002212d417a4577159baab012807a35b2c096984"
+
+[[projects]]
+  branch = "master"
   name = "github.com/getlantern/errors"
   packages = ["."]
   revision = "e24b7f4ff7c70be59bbefca6b7695d68cda8b399"
@@ -484,7 +490,7 @@
   branch = "master"
   name = "github.com/getlantern/proxybench"
   packages = ["."]
-  revision = "18dd26b439d63143a518b0dc58f1c907e98e2079"
+  revision = "151919a064d2b2e227dd785d05a8c0af3032ef72"
 
 [[projects]]
   branch = "master"
