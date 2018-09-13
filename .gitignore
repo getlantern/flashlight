@@ -12,6 +12,8 @@ genconfig/genconfig
 genconfig/cloud.yaml
 vendor
 lantern
+lantern-headless*
+lantern-staging*
 lantern_darwin_amd64
 *.exe
 proxies.yaml
@@ -27,7 +29,6 @@ profile.cov
 profile_tmp.cov
 shortcut/resources/cn*
 lantern-linux
-lantern-windows.exe
 lantern.zip
 .DS_store
 access_data.json
