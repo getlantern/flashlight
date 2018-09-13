@@ -1,5 +1,33 @@
 # Change Log
 
+## [Unreleased](https://github.com/getlantern/flashlight/tree/HEAD)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.1...HEAD)
+
+**Merged pull requests:**
+
+- append headless and staging suffix to the binary name [\#502](https://github.com/getlantern/flashlight/pull/502) ([joesis](https://github.com/joesis))
+
+## [4.8.1](https://github.com/getlantern/flashlight/tree/4.8.1) (2018-09-13)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.0...4.8.1)
+
+**Merged pull requests:**
+
+- Desktop UI update no IP check for yinbi ad [\#505](https://github.com/getlantern/flashlight/pull/505) ([myleshorton](https://github.com/myleshorton))
+- Updated to latest proxybench with support for enproxy [\#504](https://github.com/getlantern/flashlight/pull/504) ([oxtoacart](https://github.com/oxtoacart))
+- add error check [\#501](https://github.com/getlantern/flashlight/pull/501) ([myleshorton](https://github.com/myleshorton))
+- Updated to latest fronted [\#500](https://github.com/getlantern/flashlight/pull/500) ([oxtoacart](https://github.com/oxtoacart))
+- Present error to client if sending an email fails [\#499](https://github.com/getlantern/flashlight/pull/499) ([atavism](https://github.com/atavism))
+- use akamai dsa hosts rather than ion [\#498](https://github.com/getlantern/flashlight/pull/498) ([forkner](https://github.com/forkner))
+- Add missing data centers to `dcLocs` [\#497](https://github.com/getlantern/flashlight/pull/497) ([hchood](https://github.com/hchood))
+- Updated to latest errors package using upstream go-stack [\#496](https://github.com/getlantern/flashlight/pull/496) ([oxtoacart](https://github.com/oxtoacart))
+- record stopped before flushing borda [\#495](https://github.com/getlantern/flashlight/pull/495) ([joesis](https://github.com/joesis))
+- Record when the proxy op is actually using a remote proxy [\#494](https://github.com/getlantern/flashlight/pull/494) ([oxtoacart](https://github.com/oxtoacart))
+- Updated to systray that doesn't use dll [\#493](https://github.com/getlantern/flashlight/pull/493) ([oxtoacart](https://github.com/oxtoacart))
+- dial private IPs via shortcut [\#492](https://github.com/getlantern/flashlight/pull/492) ([joesis](https://github.com/joesis))
+- Two fixes for PR \#479 [\#491](https://github.com/getlantern/flashlight/pull/491) ([joesis](https://github.com/joesis))
+- replace borda with an explicit service for fronted vetting [\#484](https://github.com/getlantern/flashlight/pull/484) ([forkner](https://github.com/forkner))
+
 ## [4.8.0](https://github.com/getlantern/flashlight/tree/4.8.0) (2018-08-09)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.13...4.8.0)
 
@@ -130,21 +158,21 @@
 - Allowing numbers in optional protocol part of proxy name regex [\#449](https://github.com/getlantern/flashlight/pull/449) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [4.6.14](https://github.com/getlantern/flashlight/tree/4.6.14) (2018-05-06)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.14)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.14)
 
 **Merged pull requests:**
 
 - \[mobile\] Intercept requests to pro server and handle with special http.Client [\#448](https://github.com/getlantern/flashlight/pull/448) ([atavism](https://github.com/atavism))
 - Include a little more info with dial\_for\_balancer op [\#447](https://github.com/getlantern/flashlight/pull/447) ([oxtoacart](https://github.com/oxtoacart))
 
-## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.13)
-
 ## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.12)
 
 ## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.11)
+
+## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.13)
 
 **Merged pull requests:**
 
