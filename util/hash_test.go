@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func TestGetFileHash(t *testing.T) {
@@ -16,6 +18,6 @@ func TestGetFileHash(t *testing.T) {
 	log.Debugf("Got hash! %v", hash)
 
 	// Update this with shasum -a 256 hash.go
-	assert.Equal(t, "699b8a31a9c8c0b26ce1b4cbe79af1de97de9ef83b9ab717241ed53fb5d86df2", hash,
+	assert.Equal(t, "a7db9a14837bdb7192b24940b8ef3bc4a127cf002248bacdf9e7165ecd41d04e", hash,
 		"hashes not equal! has hashes.go changed?")
 }

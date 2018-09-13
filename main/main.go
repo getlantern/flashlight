@@ -13,17 +13,13 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/desktop"
 
 	"github.com/mitchellh/panicwrap"
-)
-
-var (
-	log = golog.LoggerFor("flashlight")
 )
 
 func main() {

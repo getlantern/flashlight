@@ -16,7 +16,7 @@ import (
 	"github.com/getlantern/flashlight/util"
 	"github.com/kardianos/osext"
 
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -27,7 +27,7 @@ const (
 )
 
 var (
-	log = golog.LoggerFor("flashlight.analytics")
+	
 
 	maxWaitForIP = math.MaxInt32 * time.Second
 

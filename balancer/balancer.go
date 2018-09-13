@@ -15,7 +15,7 @@ import (
 
 	humanize "github.com/dustin/go-humanize"
 	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -25,8 +25,6 @@ const (
 )
 
 var (
-	log = golog.LoggerFor("balancer")
-
 	recheckInterval = 2 * time.Second
 )
 
@@ -256,11 +254,11 @@ func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.C
 	start := time.Now()
 	bd, err := b.newBalancedDial(network, addr)
 	if err != nil {
-		return nil, op.FailIf(log.Error(err))
+		return nil, op.FailIf(err)
 	}
 	conn, err := bd.dial(ctx, start)
 	if err != nil {
-		return nil, op.FailIf(log.Error(err))
+		return nil, op.FailIf(err)
 	}
 
 	op.BalancerDialTime(time.Since(start), nil)

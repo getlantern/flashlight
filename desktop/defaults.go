@@ -5,6 +5,8 @@ package desktop
 import (
 	"crypto/rand"
 	"encoding/hex"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (

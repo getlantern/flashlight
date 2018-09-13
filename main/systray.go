@@ -12,6 +12,8 @@ import (
 
 	"github.com/getlantern/flashlight/icons"
 	"github.com/getlantern/flashlight/stats"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var menu struct {

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,7 +30,6 @@ func TestRoundTrip(t *testing.T) {
 }
 
 func TestParsing(t *testing.T) {
-	log := golog.LoggerFor("loconf-test")
 	buf, _ := ioutil.ReadFile("test/desktop-ui.json")
 
 	lc, err := parse(buf)

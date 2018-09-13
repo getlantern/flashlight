@@ -5,6 +5,8 @@ import (
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // initBalancer takes hosts from cfg.ChainedServers and it uses them to create a

@@ -18,6 +18,7 @@ import (
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/notifier"
 	"github.com/getlantern/profiling"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/autoupdate"
@@ -38,7 +39,6 @@ import (
 )
 
 var (
-	log      = golog.LoggerFor("flashlight.app")
 	settings *Settings
 
 	startTime = time.Now()

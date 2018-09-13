@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/getlantern/golog"
 	"github.com/getlantern/notifier"
 
 	"github.com/getlantern/flashlight/client"
@@ -14,6 +13,8 @@ import (
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/loconf"
 	"github.com/getlantern/flashlight/notifier"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // LoconfScanner starts a goroutine to periodically check for new loconf files.
@@ -29,7 +30,6 @@ import (
 // Returns a function to stop the loop.
 func LoconfScanner(interval time.Duration, proChecker func() (bool, bool), iconURL func() string) (stop func()) {
 	loc := &loconfer{
-		log:     golog.LoggerFor("loconfer"),
 		r:       rand.New(rand.NewSource(time.Now().UnixNano())),
 		iconURL: iconURL,
 	}
@@ -43,12 +43,12 @@ func (loc *loconfer) scan(interval time.Duration, proChecker func() (bool, bool)
 	checker := func() {
 		lc, err := loconf.Get(http.DefaultClient, isStaging)
 		if err != nil {
-			loc.log.Error(err)
+			log.Error(err)
 			return
 		}
 		isPro, ok := proChecker()
 		if !ok {
-			loc.log.Debugf("Skip checking announcement as user status is unknown")
+			log.Debugf("Skip checking announcement as user status is unknown")
 			return
 		}
 		onLoconf(lc, isPro)
@@ -80,7 +80,6 @@ func in(s string, coll []string) bool {
 }
 
 type loconfer struct {
-	log     golog.Logger
 	r       *rand.Rand
 	iconURL func() string
 }
@@ -93,13 +92,13 @@ func (loc *loconfer) onLoconf(lc *loconf.LoConf, isPro bool) {
 func (loc *loconfer) setUninstallURL(lc *loconf.LoConf, isPro bool) {
 	path, err := client.InConfigDir("", "uninstall_url.txt")
 	if err != nil {
-		loc.log.Errorf("Could not get config path? %v", err)
+		log.Errorf("Could not get config path? %v", err)
 		return
 	}
 
 	survey := lc.GetUninstallSurvey(settings.GetLanguage(), geolookup.GetCountry(time.Second*30), isPro)
 	if survey == nil {
-		loc.log.Debugf("No available uninstall survey")
+		log.Debugf("No available uninstall survey")
 		return
 	}
 	loc.writeURL(path, survey, isPro)
@@ -109,22 +108,22 @@ func (loc *loconfer) writeURL(path string, survey *loconf.UninstallSurvey, isPro
 	var url string
 	if survey.Enabled {
 		if survey.Probability > loc.r.Float64() {
-			loc.log.Debugf("Enabling survey at URL %v", survey.URL)
+			log.Debugf("Enabling survey at URL %v", survey.URL)
 			url = survey.URL
 		} else {
-			loc.log.Debugf("Turning survey off probabalistically")
+			log.Debugf("Turning survey off probabalistically")
 		}
 	}
 	outfile, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
-		loc.log.Errorf("Unable to open file %v for writing: %v", path, err)
+		log.Errorf("Unable to open file %v for writing: %v", path, err)
 		return
 	}
 	defer outfile.Close()
 
 	_, err = outfile.Write([]byte(url))
 	if err != nil {
-		loc.log.Errorf("Unable to write url to file %v: %v", path, err)
+		log.Errorf("Unable to write url to file %v: %v", path, err)
 	}
 }
 
@@ -133,15 +132,15 @@ func (loc *loconfer) makeAnnouncements(lc *loconf.LoConf, isPro bool) {
 	current, err := lc.GetAnnouncement(lang, isPro)
 	if err != nil {
 		if err == loconf.ErrNoAvailable {
-			loc.log.Debugf("No available announcement")
+			log.Debugf("No available announcement")
 		} else {
-			loc.log.Error(err)
+			log.Error(err)
 		}
 		return
 	}
 	past := settings.getStringArray(SNPastAnnouncements)
 	if in(current.Campaign, past) {
-		loc.log.Debugf("Skip announcement %s", current.Campaign)
+		log.Debugf("Skip announcement %s", current.Campaign)
 		return
 	}
 	if loc.showAnnouncement(current) {

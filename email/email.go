@@ -13,7 +13,7 @@ import (
 	"github.com/keighl/mandrill"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ops"
@@ -21,7 +21,6 @@ import (
 )
 
 var (
-	log = golog.LoggerFor("flashlight.email")
 
 	// Only allowed to call /send_template
 	MandrillAPIKey = "fmYlUdjEpGGonI4NDx9xeA"
@@ -92,7 +91,7 @@ func Send(msg *Message) error {
 	defer op.End()
 	err := sendTemplate(msg)
 	if err != nil {
-		return log.Error(op.FailIf(err))
+		return op.FailIf(err)
 	}
 	return nil
 }

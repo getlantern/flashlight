@@ -14,8 +14,7 @@ import (
 
 func TestWriteURL(t *testing.T) {
 	loc := &loconfer{
-		log: golog.LoggerFor("loconfer"),
-		r:   rand.New(rand.NewSource(time.Now().UnixNano())),
+		r: rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 	testURL := "https://testtesttest"
 	us := &loconf.UninstallSurvey{
@@ -47,9 +46,7 @@ func TestParsing(t *testing.T) {
 	logger.Debug("Stopping")
 	stop()
 
-	loc := &loconfer{
-		log: golog.LoggerFor("loconfer"),
-	}
+	loc := &loconfer{}
 
 	loc.scan(4*time.Hour, func() (bool, bool) {
 		return true, true

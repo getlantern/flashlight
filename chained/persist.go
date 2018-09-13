@@ -11,6 +11,8 @@ import (
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/flashlight/balancer"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var (

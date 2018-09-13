@@ -9,6 +9,8 @@ import (
 	borda "github.com/getlantern/borda/client"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/measured"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (

@@ -15,10 +15,10 @@ import (
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/uuid"
 	"github.com/getlantern/yaml"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/getlantern/flashlight/ws"
 )
@@ -105,8 +105,6 @@ type Settings struct {
 	m map[SettingName]interface{}
 	sync.RWMutex
 	filePath string
-
-	log golog.Logger
 }
 
 func loadSettings(version, revisionDate, buildDate string, isStaging bool) *Settings {
@@ -127,12 +125,12 @@ func loadSettingsFrom(version, revisionDate, buildDate, path string) *Settings {
 
 	// Use settings from disk if they're available.
 	if bytes, err := ioutil.ReadFile(path); err != nil {
-		sett.log.Debugf("Could not read file %v", err)
+		log.Debugf("Could not read file %v", err)
 	} else if err := yaml.Unmarshal(bytes, set); err != nil {
-		sett.log.Errorf("Could not load yaml %v", err)
+		log.Errorf("Could not load yaml %v", err)
 		// Just keep going with the original settings not from disk.
 	} else {
-		sett.log.Debugf("Loaded settings from %v", path)
+		log.Debugf("Loaded settings from %v", path)
 	}
 	// old lantern persist settings with all lower case, convert them to camel cased.
 	toCamelCase(set)
@@ -185,7 +183,6 @@ func newSettings(filePath string) *Settings {
 		},
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
-		log:             golog.LoggerFor("app.settings"),
 	}
 }
 
@@ -193,7 +190,7 @@ func newSettings(filePath string) *Settings {
 // every UI client
 func (s *Settings) StartService(channel ws.UIChannel) error {
 	helloFn := func(write func(interface{})) {
-		s.log.Debugf("Sending Lantern settings to new client")
+		log.Debugf("Sending Lantern settings to new client")
 		write(s.uiMap())
 	}
 
@@ -209,9 +206,9 @@ func (s *Settings) StartService(channel ws.UIChannel) error {
 }
 
 func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {
-	s.log.Debugf("Start reading settings messages!!")
+	log.Debugf("Start reading settings messages!!")
 	for message := range in {
-		s.log.Debugf("Read settings message %v", message)
+		log.Debugf("Read settings message %v", message)
 
 		data, ok := (message).(map[string]interface{})
 		if !ok {
@@ -222,7 +219,7 @@ func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {
 			name := SettingName(k)
 			t, exists := settingMeta[name]
 			if !exists {
-				s.log.Errorf("Unknown settings name %s", k)
+				log.Errorf("Unknown settings name %s", k)
 				continue
 			}
 			switch t.sType {
@@ -244,7 +241,7 @@ func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {
 func (s *Settings) setBool(name SettingName, v interface{}) {
 	b, ok := v.(bool)
 	if !ok {
-		s.log.Errorf("Could not convert %s(%v) to bool", name, v)
+		log.Errorf("Could not convert %s(%v) to bool", name, v)
 		return
 	}
 	s.setVal(name, b)
@@ -253,12 +250,12 @@ func (s *Settings) setBool(name SettingName, v interface{}) {
 func (s *Settings) setNum(name SettingName, v interface{}) {
 	number, ok := v.(json.Number)
 	if !ok {
-		s.log.Errorf("Could not convert %v of type %v", name, reflect.TypeOf(v))
+		log.Errorf("Could not convert %v of type %v", name, reflect.TypeOf(v))
 		return
 	}
 	bigint, err := number.Int64()
 	if err != nil {
-		s.log.Errorf("Could not get int64 value for %v with error %v", name, err)
+		log.Errorf("Could not get int64 value for %v with error %v", name, err)
 		return
 	}
 	s.setVal(name, bigint)
@@ -269,7 +266,7 @@ func (s *Settings) setStringArray(name SettingName, v interface{}) {
 	if !ok {
 		ss, ok := v.([]interface{})
 		if !ok {
-			s.log.Errorf("Could not convert %s(%v) to array", name, v)
+			log.Errorf("Could not convert %s(%v) to array", name, v)
 			return
 		}
 		for i := range ss {
@@ -282,7 +279,7 @@ func (s *Settings) setStringArray(name SettingName, v interface{}) {
 func (s *Settings) setString(name SettingName, v interface{}) {
 	str, ok := v.(string)
 	if !ok {
-		s.log.Errorf("Could not convert %s(%v) to string", name, v)
+		log.Errorf("Could not convert %s(%v) to string", name, v)
 		return
 	}
 	s.setVal(name, str)
@@ -290,13 +287,13 @@ func (s *Settings) setString(name SettingName, v interface{}) {
 
 // save saves settings to disk.
 func (s *Settings) save() {
-	log.Trace("Saving settings")
+	log.Debug("Saving settings")
 	if f, err := os.Create(s.filePath); err != nil {
-		s.log.Errorf("Could not open settings file for writing: %v", err)
+		log.Errorf("Could not open settings file for writing: %v", err)
 	} else if _, err := s.writeTo(f); err != nil {
-		s.log.Errorf("Could not save settings file: %v", err)
+		log.Errorf("Could not save settings file: %v", err)
 	} else {
-		log.Tracef("Saved settings to %s", s.filePath)
+		log.Debugf("Saved settings to %s", s.filePath)
 	}
 }
 
@@ -522,18 +519,18 @@ func (s *Settings) getInt64(name SettingName) int64 {
 }
 
 func (s *Settings) getVal(name SettingName) (interface{}, error) {
-	log.Tracef("Getting value for %v", name)
+	log.Debugf("Getting value for %v", name)
 	s.RLock()
 	defer s.RUnlock()
 	if val, ok := s.m[name]; ok {
 		return val, nil
 	}
-	s.log.Errorf("Could not get value for %s", name)
+	log.Errorf("Could not get value for %s", name)
 	return nil, fmt.Errorf("No value for %v", name)
 }
 
 func (s *Settings) setVal(name SettingName, val interface{}) {
-	s.log.Debugf("Setting %v to %v in %v", name, val, s.m)
+	log.Debugf("Setting %v to %v in %v", name, val, s.m)
 	s.Lock()
 	s.m[name] = val
 	// Need to unlock here because s.save() will lock again.

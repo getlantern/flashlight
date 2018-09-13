@@ -23,7 +23,7 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 	"github.com/getlantern/keyman"
 
 	"github.com/getlantern/flashlight/common"
@@ -35,7 +35,7 @@ const (
 )
 
 var (
-	log = golog.LoggerFor("flashlight.proxied")
+	
 
 	proxyAddrMutex sync.RWMutex
 	proxyAddr      = eventual.DefaultUnsetGetter()

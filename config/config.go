@@ -16,6 +16,7 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	log "github.com/sirupsen/logrus"
 )
 
 // Config is an interface for getting proxy data saved locally, embedded
@@ -125,7 +126,7 @@ func pipeConfig(opts *options) (stop func()) {
 		log.Errorf("Could not get config path? %v", err)
 	}
 
-	log.Tracef("Obfuscating %v", opts.obfuscate)
+	log.Debugf("Obfuscating %v", opts.obfuscate)
 	conf := newConfig(configPath, opts)
 
 	if saved, proxyErr := conf.saved(); proxyErr != nil {

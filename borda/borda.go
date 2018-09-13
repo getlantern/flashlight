@@ -9,13 +9,13 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/proxybench"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
 )
 
 var (
-	log = golog.LoggerFor("flashlight.borda")
 
 	// BeforeSubmit is an optional callback to capture when borda batches are
 	// submitted. It's mostly useful for unit testing.
@@ -46,6 +46,22 @@ func Flush() {
 		log.Debugf("Flushing pending borda submissions")
 		bordaClient.Flush()
 	}
+}
+
+type logrusHook struct {
+	levels []log.Level
+}
+
+func (h *logrusHook) Levels() []log.Level {
+	return h.levels
+}
+
+func (h *logrusHook) Fire(entry *log.Entry) error {
+	return nil
+}
+
+func NewLogrusHook() log.Hook {
+	return &logrusHook{levels: []log.Level{log.WarnLevel, log.ErrorLevel, log.FatalLevel, log.PanicLevel}}
 }
 
 func startBordaAndProxyBench(reportInterval time.Duration, enabled func(ctx map[string]interface{}) bool) {
@@ -85,6 +101,7 @@ func startBordaAndProxyBench(reportInterval time.Duration, enabled func(ctx map[
 	}
 
 	ops.RegisterReporter(reporter)
+
 	golog.RegisterReporter(func(err error, linePrefix string, severity golog.Severity, ctx map[string]interface{}) {
 		// This code catches all logged errors that didn't happen inside an op
 		if ctx["op"] == nil {

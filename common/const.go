@@ -4,7 +4,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -16,7 +16,7 @@ var (
 
 	ProAPIHost = "api.getiantem.org"
 
-	log = golog.LoggerFor("flashlight.common")
+	
 
 	forceAds bool
 )

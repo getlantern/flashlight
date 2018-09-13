@@ -4,6 +4,8 @@ import (
 	"io"
 	"net"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type EchoConn struct{ b []byte }

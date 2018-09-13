@@ -4,6 +4,8 @@ import (
 	"errors"
 
 	"github.com/getlantern/fronted"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (

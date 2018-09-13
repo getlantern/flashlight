@@ -3,6 +3,8 @@ package desktop
 import (
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ws"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type statsTracker struct {

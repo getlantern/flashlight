@@ -16,7 +16,9 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/rotator"
 	"github.com/getlantern/wfilter"
+	log "github.com/sirupsen/logrus"
 
+	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/util"
 )
 
@@ -25,7 +27,6 @@ const (
 )
 
 var (
-	log          = golog.LoggerFor("flashlight.logging")
 	processStart = time.Now()
 
 	logFile *rotator.SizeRotator
@@ -44,6 +45,8 @@ func init() {
 }
 
 func EnableFileLogging(logdir string) {
+
+	log.AddHook(borda.NewLogrusHook())
 	if logdir == "" {
 		logdir = appdir.Logs("Lantern")
 	}

@@ -10,10 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 )
-
-var log = golog.LoggerFor("goroutines")
 
 func Monitor(interval time.Duration, limit int, topN int) (stop func()) {
 	chStop := make(chan struct{})

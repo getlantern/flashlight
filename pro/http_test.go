@@ -5,12 +5,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestClient(t *testing.T) {
-	log := golog.LoggerFor("pro-http-test")
 	url := "https://api.getiantem.org/plans"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

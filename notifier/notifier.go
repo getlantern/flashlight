@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/analytics"
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/notifier"
 )
@@ -19,7 +19,7 @@ type notifierRequest struct {
 }
 
 var (
-	log = golog.LoggerFor("flashlight.notifier")
+	
 	ch  = make(chan notifierRequest)
 )
 

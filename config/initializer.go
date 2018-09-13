@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/golog"
 	"github.com/getlantern/yaml"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
@@ -15,8 +15,6 @@ import (
 )
 
 var (
-	log = golog.LoggerFor("flashlight.config")
-
 	// URL for fetching the global config.
 	globalURL = "https://globalconfig.flashlightproxy.com/global.yaml.gz"
 

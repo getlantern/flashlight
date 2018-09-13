@@ -2,6 +2,8 @@ package config
 
 import (
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // AdSettings are settings to use when showing ads to Android clients

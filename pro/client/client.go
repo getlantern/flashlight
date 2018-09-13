@@ -12,11 +12,11 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
-	log = golog.LoggerFor("pro-server-client")
+	
 
 	defaultTimeout = time.Second * 30
 	maxRetries     = 4

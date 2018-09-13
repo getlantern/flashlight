@@ -10,6 +10,8 @@ import (
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/mockconn"
 	"github.com/stretchr/testify/assert"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func TestRateTracking(t *testing.T) {

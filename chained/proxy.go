@@ -35,6 +35,8 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/refraction-networking/utls"
 	"github.com/tevino/abool"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -72,7 +74,7 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 			log.Errorf("No Cert configured for %s, will dial with plain tcp", s.Addr)
 			p, err = newHTTPProxy(name, s, uc)
 		} else {
-			log.Tracef("Cert configured for  %s, will dial with tls", s.Addr)
+			log.Debugf("Cert configured for  %s, will dial with tls", s.Addr)
 			p, err = newHTTPSProxy(name, s, uc)
 		}
 		return p, err
@@ -131,7 +133,9 @@ func newHTTPProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pro
 func newHTTPSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
-		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
+		certErr := errors.Wrap(err).With("addr", s.Addr)
+		log.Error(certErr)
+		return nil, certErr
 	}
 	x509cert := cert.X509()
 
@@ -166,8 +170,10 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pr
 					received = string(_received.PEMEncoded())
 					expected = string(cert.PEMEncoded())
 				}
-				return nil, op.FailIf(log.Errorf("Server's certificate didn't match expected! Server had\n%v\nbut expected:\n%v",
-					received, expected))
+				certMatchErr := errors.New("Server's certificate didn't match expected! Server had\n%v\nbut expected:\n%v",
+					received, expected)
+				log.Errorf("cert error %v", certMatchErr)
+				return nil, op.FailIf(certMatchErr)
 			}
 			return overheadWrapper(true)(conn, op.FailIf(err))
 		})
@@ -181,7 +187,9 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pr
 
 	cf, err := (&obfs4.Transport{}).ClientFactory("")
 	if err != nil {
-		return nil, log.Errorf("Unable to create obfs4 client factory: %v", err)
+		obfs4Err := errors.New("Unable to create obfs4 client factory: %v", err)
+		log.Errorf("obfs4 err %v", obfs4Err)
+		return nil, obfs4Err
 	}
 
 	ptArgs := &pt.Args{}
@@ -190,7 +198,9 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pr
 
 	args, err := cf.ParseArgs(ptArgs)
 	if err != nil {
-		return nil, log.Errorf("Unable to parse client args: %v", err)
+		ptErr := errors.New("Unable to parse client args: %v", err)
+		log.Errorf("pt error: %v", ptErr)
+		return nil, ptErr
 	}
 
 	return newProxy(name, "obfs4", "tcp", s.Addr, s, uc, s.Trusted, func(ctx context.Context, p *proxy) (serverConn, error) {
@@ -210,7 +220,9 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pr
 func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
-		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
+		certErr := errors.Wrap(err).With("addr", s.Addr)
+		log.Errorf("cert error %v", certErr)
+		return nil, certErr
 	}
 	rsaPublicKey, ok := cert.X509().PublicKey.(*rsa.PublicKey)
 	if !ok {
@@ -380,7 +392,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		elapsed := mtime.Stopwatch()
 		conn, err := netx.DialTimeout("tcp", p.addr, timeoutFor(ctx))
 		delta := elapsed()
-		log.Tracef("Core dial time to %v was %v", p.Name(), delta)
+		log.Debugf("Core dial time to %v was %v", p.Name(), delta)
 		return conn, delta, err
 	}
 
@@ -401,7 +413,9 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 	var cfg KCPConfig
 	err := mapstructure.Decode(s.KCPSettings, &cfg)
 	if err != nil {
-		return log.Errorf("Could not decode kcp transport settings?: %v", err)
+		kcpErr := errors.New("Could not decode kcp transport settings?: %v", err)
+		log.Errorf("kcp error: %v", kcpErr)
+		return kcpErr
 	}
 	p.kcpConfig = &cfg
 

@@ -7,10 +7,8 @@ import (
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/pro/client"
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 )
-
-var logger = golog.LoggerFor("flashlight.app.pro")
 
 type userMap struct {
 	sync.RWMutex
@@ -119,7 +117,7 @@ func NewUser(uc common.UserConfig) (*client.User, error) {
 // using the specified http client.
 func newUserWithClient(uc common.UserConfig, hc *http.Client) (*client.User, error) {
 	deviceID := uc.GetDeviceID()
-	logger.Debugf("Creating new user with device ID '%v'", deviceID)
+	log.Debugf("Creating new user with device ID '%v'", deviceID)
 
 	// use deviceID, ignore userID, token
 	user := common.NewUserConfigData(deviceID, 0, "", uc.GetInternalHeaders())
@@ -146,18 +144,18 @@ func getUserDataWithClient(uc common.UserConfig, hc *http.Client) (*client.User,
 	if found {
 		return user, nil
 	}
-	logger.Debugf("Fetching user status with device ID '%v', user ID '%v' and proToken %v", uc.GetDeviceID(), userID, uc.GetToken())
+	log.Debugf("Fetching user status with device ID '%v', user ID '%v' and proToken %v", uc.GetDeviceID(), userID, uc.GetToken())
 
 	resp, err := client.NewClient(hc).UserStatus(uc)
 	if err != nil {
 		return nil, err
 	}
 	setUserData(userID, &resp.User)
-	logger.Debugf("User %d is '%v'", userID, resp.User.UserStatus)
+	log.Debugf("User %d is '%v'", userID, resp.User.UserStatus)
 	return &resp.User, nil
 }
 
 func setUserData(userID int64, user *client.User) {
-	logger.Debugf("Storing user data for user %v", userID)
+	log.Debugf("Storing user data for user %v", userID)
 	userData.save(userID, user)
 }

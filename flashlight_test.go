@@ -14,6 +14,8 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/uuid"
 	"github.com/stretchr/testify/assert"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (

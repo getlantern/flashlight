@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 

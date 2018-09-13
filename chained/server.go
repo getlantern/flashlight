@@ -6,6 +6,8 @@ import (
 	"net"
 	"net/http"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Server provides the upstream side of a chained proxy setup. It can be run as

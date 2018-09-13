@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/getlantern/fronted"
-	"github.com/getlantern/golog"
+	logger "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/flashlight/chained"
@@ -18,8 +18,6 @@ import (
 
 // TestInvalidFile test an empty or malformed config file
 func TestInvalidFile(t *testing.T) {
-	logger := golog.LoggerFor("config-test")
-
 	tmpfile, err := ioutil.TempFile("", "invalid-test-file")
 	if err != nil {
 		logger.Fatal(err)

@@ -11,6 +11,8 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type locationData struct {
@@ -24,8 +26,7 @@ func TestStartServer(t *testing.T) {
 	mux.Handle("/data", channel.Handler())
 
 	server := &http.Server{
-		Handler:  mux,
-		ErrorLog: log.AsStdLogger(),
+		Handler: mux,
 	}
 
 	l, _ := net.Listen("tcp", "127.0.0.1:0")
@@ -55,7 +56,7 @@ func TestStartServer(t *testing.T) {
 	defer close(done)
 	_, message, err := c.ReadMessage()
 	if err != nil {
-		log.Debugf("read:", err)
+		log.Debugf("read: %v", err)
 		return
 	}
 	log.Debugf("recv: %s", message)

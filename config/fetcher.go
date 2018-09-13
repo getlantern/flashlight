@@ -12,6 +12,7 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	log "github.com/sirupsen/logrus"
 )
 
 // Fetcher is an interface for fetching config updates.

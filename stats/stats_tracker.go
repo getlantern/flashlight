@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/getlantern/event"
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -26,7 +26,7 @@ const (
 )
 
 var (
-	log = golog.LoggerFor("flashlight.stats")
+	
 )
 
 type Alert struct {

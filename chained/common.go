@@ -8,12 +8,12 @@ package chained
 import (
 	"strconv"
 
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 	"github.com/refraction-networking/utls"
 )
 
 var (
-	log = golog.LoggerFor("chained")
+	
 )
 
 // ChainedServerInfo contains all the data for connecting to a given chained

@@ -13,6 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/flashlight/common"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var (

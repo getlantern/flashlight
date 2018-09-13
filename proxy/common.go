@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
-	log = golog.LoggerFor("flashlight.proxy")
+	
 )
 
 // ProxyConfig encapsulates common proxy configuration

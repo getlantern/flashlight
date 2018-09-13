@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/getlantern/fronted"
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/tlsdialer"
 	"github.com/getlantern/yaml"
@@ -58,7 +58,7 @@ var (
 )
 
 var (
-	log = golog.LoggerFor("genconfig")
+	
 
 	masquerades []string
 

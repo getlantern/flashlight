@@ -22,6 +22,8 @@ import (
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/stats"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (

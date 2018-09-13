@@ -10,14 +10,14 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 	"github.com/getlantern/shortcut"
 
 	"github.com/getlantern/flashlight/geolookup"
 )
 
 var (
-	log = golog.LoggerFor("flashlight.shortcut")
+	
 
 	sc shortcut.Shortcut = &nullShortcut{}
 	mu sync.RWMutex

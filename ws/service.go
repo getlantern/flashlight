@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type helloFnType func(func(interface{}))
@@ -53,7 +55,7 @@ func (s *Service) writeAll() {
 	for {
 		select {
 		case <-s.stopCh:
-			log.Trace("Received message on stop channel")
+			log.Debug("Received message on stop channel")
 			return
 		case msg := <-s.out:
 			s.writeMsg(msg, s.clients.Out)
@@ -75,13 +77,13 @@ func (s *Service) writeHelloMsg(out chan<- []byte) {
 // could fan out to all connected clients or could write to a single client,
 // for example.
 func (s *Service) writeMsg(msg interface{}, out chan<- []byte) {
-	log.Tracef("Creating new envelope for %v", s.Type)
+	log.Debugf("Creating new envelope for %v", s.Type)
 	b, err := newEnvelope(s.Type, msg)
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	log.Tracef("Sending message to clients: %v", string(b))
+	log.Debugf("Sending message to clients: %v", string(b))
 	out <- b
 }
 
@@ -123,7 +125,7 @@ func (c *uiChannel) Register(t string, helloFn helloFnType) (*Service, error) {
 }
 
 func (c *uiChannel) RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFnType) (*Service, error) {
-	log.Tracef("Registering UI service %s", t)
+	log.Debugf("Registering UI service %s", t)
 
 	s := &Service{
 		Type:     t,
@@ -149,13 +151,13 @@ func (c *uiChannel) RegisterWithMsgInitializer(t string, helloFn helloFnType, ne
 	// Adding new service to service map.
 	c.services[t] = s
 
-	log.Tracef("Registered UI service %s", t)
+	log.Debugf("Registered UI service %s", t)
 	go s.writeAll()
 	return s, nil
 }
 
 func (c *uiChannel) Unregister(t string) {
-	log.Tracef("Unregistering service: %v", t)
+	log.Debugf("Unregistering service: %v", t)
 	c.muServices.Lock()
 	defer c.muServices.Unlock()
 	if c.services[t] != nil {
@@ -195,7 +197,7 @@ func (c *uiChannel) readLoop() {
 			log.Errorf("Unable to unmarshal message of type %v: %v", envType.Type, err)
 			continue
 		}
-		log.Tracef("Forwarding message: %v", env)
+		log.Debugf("Forwarding message: %v", env)
 		// Pass this message and continue reading another one.
 		service.in <- env.Message
 	}

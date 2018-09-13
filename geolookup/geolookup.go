@@ -7,14 +7,14 @@ import (
 
 	"github.com/getlantern/eventual"
 	geo "github.com/getlantern/geolookup"
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
 )
 
 var (
-	log = golog.LoggerFor("flashlight.geolookup")
+	
 
 	refreshRequest = make(chan interface{}, 1)
 	currentGeoInfo = eventual.NewValue()

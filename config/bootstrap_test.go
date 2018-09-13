@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/getlantern/yaml"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 

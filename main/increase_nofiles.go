@@ -4,6 +4,8 @@ package main
 
 import (
 	"syscall"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (

@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/getlantern/golog"
 	"github.com/gorilla/websocket"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -15,7 +15,6 @@ const (
 )
 
 var (
-	log      = golog.LoggerFor("flashlight.ws")
 	upgrader = &websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: MaxMessageSize,
@@ -106,7 +105,7 @@ func (c *clientChannels) ServeHTTP(resp http.ResponseWriter, req *http.Request) 
 	c.onConnect(conn.connectOut)
 	go conn.write()
 
-	log.Tracef("About to read from websocket connection")
+	log.Debugf("About to read from websocket connection")
 	conn.read()
 }
 
@@ -180,14 +179,14 @@ type wsconn struct {
 func (c *wsconn) read() {
 	for {
 		_, b, err := c.ws.ReadMessage()
-		log.Tracef("Read message: %q", b)
+		log.Debugf("Read message: %q", b)
 		if err != nil {
 			if err != io.EOF {
 				log.Debugf("Error reading from UI: %v", err)
 			}
 			return
 		}
-		log.Tracef("Sending to channel...")
+		log.Debugf("Sending to channel...")
 		c.c.in <- b
 	}
 }

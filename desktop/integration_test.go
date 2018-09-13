@@ -31,6 +31,8 @@ import (
 	"github.com/getlantern/flashlight/geolookup"
 
 	"github.com/stretchr/testify/assert"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (

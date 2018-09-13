@@ -14,6 +14,8 @@ import (
 	"github.com/getlantern/sysproxy"
 
 	"github.com/getlantern/flashlight/icons"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -51,14 +53,16 @@ func sysproxyOn() (err error) {
 	addr, found := getProxyAddr()
 	if !found {
 		err = errors.New("Unable to set lantern as system proxy, no proxy address available")
-		op.FailIf(log.Error(err))
+		log.Error(err)
+		op.FailIf(err)
 		return
 	}
 	log.Debugf("Setting lantern as system proxy at: %v", addr)
 	off, e := sysproxy.On(addr)
 	if e != nil {
 		err = errors.New("Unable to set lantern as system proxy: %v", e)
-		op.FailIf(log.Error(err))
+		log.Error(err)
+		op.FailIf(err)
 		return
 	}
 	sysproxyOffMx.Lock()
@@ -83,7 +87,9 @@ func sysproxyOff() {
 	log.Debug("Force clearing system proxy directly, just in case")
 	addr, found := getProxyAddr()
 	if !found {
-		op.FailIf(log.Error("Unable to find proxy address, can't force clear system proxy"))
+		foundErr := errors.New("Unable to find proxy address, can't force clear system proxy")
+		log.Error(foundErr)
+		op.FailIf(foundErr)
 		return
 	}
 	doSysproxyClear(op, addr)
@@ -95,7 +101,9 @@ func doSysproxyOff(off func() error) {
 	log.Debug("Unsetting lantern as system proxy using off function")
 	err := off()
 	if err != nil {
-		op.FailIf(log.Errorf("Unable to unset lantern as system proxy using off function: %v", err))
+		unsetErr := errors.New("Unable to unset lantern as system proxy using off function: %v", err)
+		log.Error(unsetErr)
+		op.FailIf(unsetErr)
 		return
 	}
 	log.Debug("Unset lantern as system proxy using off function")
@@ -113,7 +121,9 @@ func doSysproxyClear(op *ops.Op, addr string) {
 	log.Debugf("Clearing lantern as system proxy at: %v", addr)
 	err := sysproxy.Off(addr)
 	if err != nil {
-		op.FailIf(log.Errorf("Unable to clear lantern as system proxy: %v", err))
+		offErr := errors.New("Unable to clear lantern as system proxy: %v", err)
+		log.Error(offErr)
+		op.FailIf(offErr)
 	} else {
 		log.Debug("Cleared lantern as system proxy")
 	}

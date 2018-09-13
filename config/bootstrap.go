@@ -10,6 +10,7 @@ import (
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/yaml"
+	log "github.com/sirupsen/logrus"
 )
 
 var (

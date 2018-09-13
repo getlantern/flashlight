@@ -4,6 +4,8 @@ import (
 	"sync"
 
 	"github.com/getlantern/flashlight/ws"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type UserSignal struct {

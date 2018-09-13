@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var (

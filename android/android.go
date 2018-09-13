@@ -22,7 +22,7 @@ import (
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxied"
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/protected"
@@ -33,7 +33,7 @@ const (
 )
 
 var (
-	log = golog.LoggerFor("lantern")
+	
 
 	// XXX mobile does not respect the autoupdate global config
 	updateClient = &http.Client{Transport: proxied.ChainedThenFrontedWith("")}

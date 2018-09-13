@@ -3,6 +3,8 @@ package util
 import (
 	"net/http"
 	"net/http/httputil"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func DumpRequest(req *http.Request) {

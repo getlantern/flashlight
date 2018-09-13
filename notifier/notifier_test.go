@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/golog"
+	log "github.com/sirupsen/logrus"
 	"github.com/getlantern/notifier"
 	"github.com/stretchr/testify/assert"
 )

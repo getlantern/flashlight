@@ -23,7 +23,6 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/go-socks5"
-	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
 	"github.com/getlantern/httpseverywhere"
 	"github.com/getlantern/i18n"
@@ -32,6 +31,7 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 	"github.com/getlantern/proxy/filters"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
@@ -43,8 +43,6 @@ import (
 )
 
 var (
-	log = golog.LoggerFor("flashlight.client")
-
 	addr                = eventual.NewValue()
 	socksAddr           = eventual.NewValue()
 	proxiedCONNECTPorts = []int{
@@ -379,7 +377,8 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 			addr := client.reverseDNS(fmt.Sprintf("%v:%v", req.DestAddr.IP, req.DestAddr.Port))
 			errOnReply := replySuccess(nil)
 			if errOnReply != nil {
-				return op.FailIf(log.Errorf("Unable to reply success to SOCKS5 client: %v", errOnReply))
+				socksErr := errors.New("Unable to reply success to SOCKS5 client: %v", errOnReply)
+				return op.FailIf(socksErr)
 			}
 			return op.FailIf(client.proxy.Connect(ctx, req.BufConn, conn, addr))
 		},
@@ -461,9 +460,7 @@ func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Con
 		}
 		start := time.Now()
 		conn, err := client.bal.DialContext(ctx, proto, addr)
-		if log.IsTraceEnabled() {
-			log.Tracef("Dialing proxy takes %v for %s", time.Since(start), addr)
-		}
+		log.Debugf("Dialing proxy takes %v for %s", time.Since(start), addr)
 		return conn, err
 	}
 

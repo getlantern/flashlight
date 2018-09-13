@@ -15,6 +15,7 @@ import (
 	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/chained"
+	log "github.com/sirupsen/logrus"
 )
 
 // withTempDir creates a temporary directory, executes the given function and

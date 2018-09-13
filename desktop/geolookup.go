@@ -5,6 +5,8 @@ import (
 
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/ws"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type locationData struct {

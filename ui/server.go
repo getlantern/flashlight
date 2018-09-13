@@ -15,8 +15,8 @@ import (
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/golog"
 	"github.com/getlantern/tarfs"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/stats"
@@ -33,7 +33,6 @@ func init() {
 }
 
 var (
-	log          = golog.LoggerFor("flashlight.ui")
 	fs           *tarfs.FileSystem
 	translations = eventual.NewValue()
 )
@@ -174,8 +173,7 @@ serve:
 	s.accessAddr = net.JoinHostPort(host, strconv.Itoa(actualPort))
 
 	server := &http.Server{
-		Handler:  s.mux,
-		ErrorLog: log.AsStdLogger(),
+		Handler: s.mux,
 	}
 	ch := make(chan error, 1)
 	go func() {
@@ -359,7 +357,7 @@ func unpackUI() {
 
 // Translations returns the translations for a given locale file.
 func Translations(filename string) ([]byte, error) {
-	log.Tracef("Accessing translations %v", filename)
+	log.Debugf("Accessing translations %v", filename)
 	tr, ok := translations.Get(30 * time.Second)
 	if !ok || tr == nil {
 		return nil, fmt.Errorf("Could not get traslation for file name: %v", filename)
