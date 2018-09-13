@@ -519,7 +519,6 @@ func (s *Settings) getInt64(name SettingName) int64 {
 }
 
 func (s *Settings) getVal(name SettingName) (interface{}, error) {
-	log.Debugf("Getting value for %v", name)
 	s.RLock()
 	defer s.RUnlock()
 	if val, ok := s.m[name]; ok {
@@ -530,7 +529,6 @@ func (s *Settings) getVal(name SettingName) (interface{}, error) {
 }
 
 func (s *Settings) setVal(name SettingName, val interface{}) {
-	log.Debugf("Setting %v to %v in %v", name, val, s.m)
 	s.Lock()
 	s.m[name] = val
 	// Need to unlock here because s.save() will lock again.
