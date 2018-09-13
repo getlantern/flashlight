@@ -101,9 +101,9 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 		// connection, we've stripped the CONNECT and actually performed the MITM
 		// at this point, so we have to check for that and skip redirecting to
 		// HTTPS in that case.
-		log.Tracef("Intercepting CONNECT %s", req.URL)
+		log.Debugf("Intercepting CONNECT %s", req.URL)
 	} else {
-		log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
+		log.Debugf("Checking for HTTP redirect for %v", req.URL.String())
 		if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
 			// Don't redirect CORS requests as it means the HTML pages that
 			// initiate the requests were not HTTPS redirected. Redirecting
@@ -120,7 +120,7 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 
 		}
 		// Direct proxying can only be used for plain HTTP connections.
-		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
+		log.Debugf("Intercepting HTTP request %s %v", req.Method, req.URL)
 		// consumed and removed by http-proxy-lantern/versioncheck
 		req.Header.Set(common.VersionHeader, common.Version)
 	}

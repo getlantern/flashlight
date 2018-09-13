@@ -16,6 +16,7 @@ import (
 	"time"
 
 	lru "github.com/hashicorp/golang-lru"
+	"go.uber.org/zap"
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/detour"
@@ -23,7 +24,6 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/go-socks5"
-	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
 	"github.com/getlantern/httpseverywhere"
 	"github.com/getlantern/i18n"
@@ -43,7 +43,7 @@ import (
 )
 
 var (
-	log = golog.LoggerFor("flashlight.client")
+	log = zap.NewExample().Sugar()
 
 	addr                = eventual.NewValue()
 	socksAddr           = eventual.NewValue()
@@ -379,7 +379,8 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 			addr := client.reverseDNS(fmt.Sprintf("%v:%v", req.DestAddr.IP, req.DestAddr.Port))
 			errOnReply := replySuccess(nil)
 			if errOnReply != nil {
-				return op.FailIf(log.Errorf("Unable to reply success to SOCKS5 client: %v", errOnReply))
+				log.Errorf("Unable to reply success to SOCKS5 client: %v", errOnReply)
+				return op.FailIf(errOnReply)
 			}
 			return op.FailIf(client.proxy.Connect(ctx, req.BufConn, conn, addr))
 		},
@@ -461,9 +462,7 @@ func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Con
 		}
 		start := time.Now()
 		conn, err := client.bal.DialContext(ctx, proto, addr)
-		if log.IsTraceEnabled() {
-			log.Tracef("Dialing proxy takes %v for %s", time.Since(start), addr)
-		}
+		log.Debugf("Dialing proxy took %v for %s", time.Since(start), addr)
 		return conn, err
 	}
 

@@ -6,11 +6,11 @@ import (
 	"io"
 	"os"
 
-	"github.com/getlantern/golog"
+	"go.uber.org/zap"
 )
 
 var (
-	log = golog.LoggerFor("flashlight.util")
+	log = zap.NewExample().Sugar()
 )
 
 // GetFileHash returns the hex encoding of the sha-256 hash of the

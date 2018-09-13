@@ -8,16 +8,16 @@ import (
 	"time"
 
 	"github.com/getlantern/autoupdate"
-	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/notifier"
+	"go.uber.org/zap"
 
 	"github.com/getlantern/flashlight/notifier"
 	"github.com/getlantern/flashlight/proxied"
 )
 
 var (
-	log             = golog.LoggerFor("flashlight.autoupdate")
+	log             = zap.NewExample().Sugar()
 	updateServerURL = "https://update.getlantern.org"
 	PublicKey       = []byte(autoupdate.PackagePublicKey)
 	Version         string

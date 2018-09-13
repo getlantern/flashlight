@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/keighl/mandrill"
+	"go.uber.org/zap"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/golog"
 
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ops"
@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	log = golog.LoggerFor("flashlight.email")
+	log = zap.NewExample().Sugar()
 
 	// Only allowed to call /send_template
 	MandrillAPIKey = "fmYlUdjEpGGonI4NDx9xeA"
@@ -92,7 +92,9 @@ func Send(msg *Message) error {
 	defer op.End()
 	err := sendTemplate(msg)
 	if err != nil {
-		return log.Error(op.FailIf(err))
+		fail := op.FailIf(err)
+		log.Error(fail)
+		return fail
 	}
 	return nil
 }

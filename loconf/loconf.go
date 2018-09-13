@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/golog"
+	"go.uber.org/zap"
 )
 
 const (
@@ -22,7 +22,7 @@ var (
 	// current user.
 	ErrNoAvailable error = errors.New("no announcement available")
 
-	log = golog.LoggerFor("loconf")
+	log = zap.NewExample().Sugar()
 )
 
 // LoConf is a struct representing the locale-based configuration file data.
@@ -31,7 +31,7 @@ type LoConf struct {
 	Announcements        map[string]json.RawMessage  `json:"announcement,omitempty"`
 	UninstallSurveysPro  map[string]*UninstallSurvey `json:"uninstall-survey-pro,omitempty"`
 	UninstallSurveysFree map[string]*UninstallSurvey `json:"uninstall-survey-free,omitempty"`
-	log                  golog.Logger
+	log                  *zap.SugaredLogger
 }
 
 // BaseSurvey contains the core elements of any survey type.
@@ -113,7 +113,7 @@ func fetch(hc *http.Client, u string) (b []byte, err error) {
 }
 
 func parse(buf []byte) (*LoConf, error) {
-	obj := LoConf{log: golog.LoggerFor("flashlight.loconf")}
+	obj := LoConf{log: zap.NewExample().Sugar()}
 	if ejson := json.Unmarshal(buf, &obj); ejson != nil {
 		log.Errorf("Could not parse JSON %v", ejson)
 		return nil, errors.New("error parsing loconf section: %v", ejson)

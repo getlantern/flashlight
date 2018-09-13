@@ -4,7 +4,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/getlantern/golog"
+	"go.uber.org/zap"
 )
 
 var (
@@ -16,7 +16,7 @@ var (
 
 	ProAPIHost = "api.getiantem.org"
 
-	log = golog.LoggerFor("flashlight.common")
+	log = zap.NewExample().Sugar()
 
 	forceAds bool
 )

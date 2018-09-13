@@ -15,8 +15,7 @@ import (
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/util"
 	"github.com/kardianos/osext"
-
-	"github.com/getlantern/golog"
+	"go.uber.org/zap"
 )
 
 const (
@@ -27,7 +26,7 @@ const (
 )
 
 var (
-	log = golog.LoggerFor("flashlight.analytics")
+	log = zap.NewExample().Sugar()
 
 	maxWaitForIP = math.MaxInt32 * time.Second
 

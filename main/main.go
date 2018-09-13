@@ -13,8 +13,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
+	"go.uber.org/zap"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/desktop"
@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	log = golog.LoggerFor("flashlight")
+	log = zap.NewExample().Sugar()
 )
 
 func main() {

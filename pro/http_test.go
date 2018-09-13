@@ -10,7 +10,7 @@ import (
 )
 
 func TestClient(t *testing.T) {
-	log := golog.LoggerFor("pro-http-test")
+	log := zap.NewExample().Sugar()
 	url := "https://api.getiantem.org/plans"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

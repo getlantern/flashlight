@@ -4,12 +4,12 @@ import (
 	"sync"
 
 	"github.com/getlantern/detour"
-	"github.com/getlantern/golog"
 	"github.com/getlantern/proxiedsites"
+	"go.uber.org/zap"
 )
 
 var (
-	log = golog.LoggerFor("flashlight.proxiedsites")
+	log = zap.NewExample().Sugar()
 
 	PACURL     string
 	startMutex sync.Mutex

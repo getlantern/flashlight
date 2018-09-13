@@ -8,12 +8,12 @@ package chained
 import (
 	"strconv"
 
-	"github.com/getlantern/golog"
 	"github.com/refraction-networking/utls"
+	"go.uber.org/zap"
 )
 
 var (
-	log = golog.LoggerFor("chained")
+	log = zap.NewExample().Sugar()
 )
 
 // ChainedServerInfo contains all the data for connecting to a given chained

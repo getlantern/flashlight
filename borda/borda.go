@@ -8,14 +8,16 @@ import (
 	borda "github.com/getlantern/borda/client"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
+
 	"github.com/getlantern/proxybench"
+	"go.uber.org/zap"
 
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
 )
 
 var (
-	log = golog.LoggerFor("flashlight.borda")
+	log = zap.NewExample().Sugar()
 
 	// BeforeSubmit is an optional callback to capture when borda batches are
 	// submitted. It's mostly useful for unit testing.

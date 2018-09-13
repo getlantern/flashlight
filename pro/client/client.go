@@ -12,11 +12,11 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/golog"
+	"go.uber.org/zap"
 )
 
 var (
-	log = golog.LoggerFor("pro-server-client")
+	log = zap.NewExample().Sugar()
 
 	defaultTimeout = time.Second * 30
 	maxRetries     = 4

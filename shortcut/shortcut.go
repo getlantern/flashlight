@@ -10,14 +10,14 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/getlantern/golog"
 	"github.com/getlantern/shortcut"
+	"go.uber.org/zap"
 
 	"github.com/getlantern/flashlight/geolookup"
 )
 
 var (
-	log = golog.LoggerFor("flashlight.shortcut")
+	log = zap.NewExample().Sugar()
 
 	sc shortcut.Shortcut = &nullShortcut{}
 	mu sync.RWMutex

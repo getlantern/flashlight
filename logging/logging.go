@@ -16,6 +16,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/rotator"
 	"github.com/getlantern/wfilter"
+	"go.uber.org/zap"
 
 	"github.com/getlantern/flashlight/util"
 )
@@ -25,7 +26,7 @@ const (
 )
 
 var (
-	log          = golog.LoggerFor("flashlight.logging")
+	log          = zap.NewExample().Sugar()
 	processStart = time.Now()
 
 	logFile *rotator.SizeRotator

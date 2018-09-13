@@ -7,10 +7,10 @@ import (
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/pro/client"
-	"github.com/getlantern/golog"
+	"go.uber.org/zap"
 )
 
-var logger = golog.LoggerFor("flashlight.app.pro")
+var logger = zap.NewExample().Sugar()
 
 type userMap struct {
 	sync.RWMutex

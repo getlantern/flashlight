@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/getlantern/event"
-	"github.com/getlantern/golog"
+	"go.uber.org/zap"
 )
 
 const (
@@ -26,7 +26,7 @@ const (
 )
 
 var (
-	log = golog.LoggerFor("flashlight.stats")
+	log = zap.NewExample().Sugar()
 )
 
 type Alert struct {

@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/getlantern/golog"
+	"go.uber.org/zap"
 )
 
 var (
-	log = golog.LoggerFor("flashlight.proxy")
+	log = zap.NewExample().Sugar()
 )
 
 // ProxyConfig encapsulates common proxy configuration

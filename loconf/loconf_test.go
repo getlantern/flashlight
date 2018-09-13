@@ -6,9 +6,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/getlantern/golog"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
+
+var logger = zap.NewExample().Sugar()
 
 func TestRoundTrip(t *testing.T) {
 	lc, err := Get(http.DefaultClient, false)
@@ -30,7 +32,6 @@ func TestRoundTrip(t *testing.T) {
 }
 
 func TestParsing(t *testing.T) {
-	log := golog.LoggerFor("loconf-test")
 	buf, _ := ioutil.ReadFile("test/desktop-ui.json")
 
 	lc, err := parse(buf)
@@ -41,7 +42,7 @@ func TestParsing(t *testing.T) {
 
 	assert.NotNil(t, us)
 
-	log.Debugf("Got uninstall survey: %+v", us)
+	logger.Debugf("Got uninstall survey: %+v", us)
 
 	us = lc.GetUninstallSurvey("nothereatall", "notthere", false)
 
@@ -51,7 +52,7 @@ func TestParsing(t *testing.T) {
 
 	assert.NotNil(t, us)
 
-	log.Debugf("Got uninstall survey: %+v", us)
+	logger.Debugf("Got uninstall survey: %+v", us)
 }
 
 func TestUninstallSurvey(t *testing.T) {
@@ -212,9 +213,9 @@ func TestAnnouncements(t *testing.T) {
 	lc, err := parse([]byte(buf))
 	_ = assert.NoError(t, err) && assert.NotNil(t, lc)
 
-	log.Debug("Start")
+	logger.Debug("Start")
 	ann, err := lc.GetAnnouncement("en-US", true)
-	log.Debug("End")
+	logger.Debug("End")
 
 	_ = assert.NoError(t, err) && assert.NotNil(t, ann) && assert.Equal(t, "Try out the new feature", ann.Title)
 

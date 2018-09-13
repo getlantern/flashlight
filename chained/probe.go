@@ -168,7 +168,7 @@ func (p *proxy) doHttpPing(kb int, resetBBR bool) error {
 				return false, errors.New("Unable to read response body: %v", copyErr)
 			}
 		}
-		log.Tracef("PING through chained server at %s, status code %d", p.Addr(), resp.StatusCode)
+		log.Debugf("PING through chained server at %s, status code %d", p.Addr(), resp.StatusCode)
 		success := resp.StatusCode >= 200 && resp.StatusCode <= 299
 		if success {
 			p.collectBBRInfo(reqTime, resp)

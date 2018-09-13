@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/getlantern/golog"
 	"github.com/getlantern/notifier"
+	"go.uber.org/zap"
 
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
@@ -29,7 +29,7 @@ import (
 // Returns a function to stop the loop.
 func LoconfScanner(interval time.Duration, proChecker func() (bool, bool), iconURL func() string) (stop func()) {
 	loc := &loconfer{
-		log:     golog.LoggerFor("loconfer"),
+		log:     zap.NewExample().Sugar(),
 		r:       rand.New(rand.NewSource(time.Now().UnixNano())),
 		iconURL: iconURL,
 	}
@@ -80,7 +80,7 @@ func in(s string, coll []string) bool {
 }
 
 type loconfer struct {
-	log     golog.Logger
+	log     *zap.SugaredLogger
 	r       *rand.Rand
 	iconURL func() string
 }

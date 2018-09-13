@@ -22,10 +22,10 @@ import (
 	"time"
 
 	"github.com/getlantern/fronted"
-	"github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/tlsdialer"
 	"github.com/getlantern/yaml"
+	"go.uber.org/zap"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
@@ -58,7 +58,7 @@ var (
 )
 
 var (
-	log = golog.LoggerFor("genconfig")
+	log = zap.NewExample().Sugar()
 
 	masquerades []string
 
@@ -384,10 +384,10 @@ func grabCerts() {
 		domain := parts[1]
 		_, blacklisted := blacklist[domain]
 		if blacklisted {
-			log.Tracef("Domain %s is blacklisted, skipping", domain)
+			log.Debugf("Domain %s is blacklisted, skipping", domain)
 			continue
 		}
-		log.Tracef("Grabbing certs for IP %s, domain %s", ip, domain)
+		log.Debugf("Grabbing certs for IP %s, domain %s", ip, domain)
 		cwt, err := tlsdialer.DialForTimings(net.DialTimeout, 10*time.Second, "tcp", ip+":443", false, &tls.Config{ServerName: domain})
 		if err != nil {
 			log.Errorf("Unable to dial IP %s, domain %s: %s", ip, domain, err)

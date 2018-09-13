@@ -18,6 +18,7 @@ import (
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/notifier"
 	"github.com/getlantern/profiling"
+	"go.uber.org/zap"
 
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/autoupdate"
@@ -38,7 +39,7 @@ import (
 )
 
 var (
-	log      = golog.LoggerFor("flashlight.app")
+	log      = zap.NewExample().Sugar()
 	settings *Settings
 
 	startTime = time.Now()

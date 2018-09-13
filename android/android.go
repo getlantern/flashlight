@@ -22,10 +22,10 @@ import (
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxied"
-	"github.com/getlantern/golog"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/protected"
+	"go.uber.org/zap"
 )
 
 const (
@@ -33,7 +33,7 @@ const (
 )
 
 var (
-	log = golog.LoggerFor("lantern")
+	log = zap.NewExample().Sugar()
 
 	// XXX mobile does not respect the autoupdate global config
 	updateClient = &http.Client{Transport: proxied.ChainedThenFrontedWith("")}

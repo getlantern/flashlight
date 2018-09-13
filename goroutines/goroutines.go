@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/getlantern/golog"
+	"go.uber.org/zap"
 )
 
-var log = golog.LoggerFor("goroutines")
+var log = zap.NewExample().Sugar()
 
 func Monitor(interval time.Duration, limit int, topN int) (stop func()) {
 	chStop := make(chan struct{})

@@ -6,9 +6,9 @@ import (
 	"sync"
 
 	"github.com/getlantern/bandwidth"
-	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/notifier"
+	"go.uber.org/zap"
 
 	"github.com/getlantern/flashlight/notifier"
 	"github.com/getlantern/flashlight/ws"
@@ -23,7 +23,7 @@ var (
 
 	dataCapListeners   = make([]func(hitDataCap bool), 0)
 	dataCapListenersMx sync.RWMutex
-	log                = golog.LoggerFor("flashlight.datacap")
+	log                = zap.NewExample().Sugar()
 )
 
 type dataCap struct {

@@ -14,12 +14,12 @@ import (
 	fops "github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/fronted"
-	"github.com/getlantern/golog"
 	"github.com/getlantern/jibber_jabber"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/ops"
 	"github.com/getlantern/osversion"
+	"go.uber.org/zap"
 
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
@@ -36,14 +36,14 @@ import (
 )
 
 var (
-	log = golog.LoggerFor("flashlight")
+	log = zap.NewExample().Sugar()
 
 	// FullyReportedOps are ops which are reported at 100% to borda, irrespective
 	// of the borda sample percentage. This should all be low-volume operations,
 	// otherwise we will utilize too much bandwidth on the client.
 	FullyReportedOps = []string{"proxybench", "client_started", "client_stopped", "connect", "disconnect", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "sysproxy_off_force", "sysproxy_clear", "report_issue", "proxy_rank", "proxy_selection_stability", "probe", "balancer_dial", "proxy_dial"}
 
-	// Lightweight Ops are ops for which we record less than the full set of dimensions (e.g. omit error)
+	// LightweightOps are ops for which we record less than the full set of dimensions (e.g. omit error)
 	LightweightOps = []string{"balancer_dial", "proxy_dial"}
 )
 
@@ -202,7 +202,7 @@ func applyClientConfig(c *client.Client, cfg *config.Global, autoReport func() b
 		case string:
 			for _, lightweightOp := range LightweightOps {
 				if t == lightweightOp {
-					log.Tracef("Removing high dimensional data for lightweight op %v", lightweightOp)
+					log.Debugf("Removing high dimensional data for lightweight op %v", lightweightOp)
 					delete(ctx, "error")
 					delete(ctx, "error_text")
 					delete(ctx, "beam")
@@ -215,7 +215,7 @@ func applyClientConfig(c *client.Client, cfg *config.Global, autoReport func() b
 
 			for _, fullyReportedOp := range FullyReportedOps {
 				if t == fullyReportedOp {
-					log.Tracef("Including fully reported op %v in borda sample", fullyReportedOp)
+					log.Debugf("Including fully reported op %v in borda sample", fullyReportedOp)
 					return true
 				}
 			}

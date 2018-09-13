@@ -125,7 +125,7 @@ func pipeConfig(opts *options) (stop func()) {
 		log.Errorf("Could not get config path? %v", err)
 	}
 
-	log.Tracef("Obfuscating %v", opts.obfuscate)
+	log.Debugf("Obfuscating %v", opts.obfuscate)
 	conf := newConfig(configPath, opts)
 
 	if saved, proxyErr := conf.saved(); proxyErr != nil {

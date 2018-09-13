@@ -12,6 +12,7 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/sysproxy"
+	"github.com/prometheus/common/log"
 
 	"github.com/getlantern/flashlight/icons"
 )
@@ -51,7 +52,7 @@ func sysproxyOn() (err error) {
 	addr, found := getProxyAddr()
 	if !found {
 		err = errors.New("Unable to set lantern as system proxy, no proxy address available")
-		op.FailIf(log.Error(err))
+		op.FailIf(err)
 		return
 	}
 	log.Debugf("Setting lantern as system proxy at: %v", addr)

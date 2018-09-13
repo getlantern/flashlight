@@ -15,10 +15,10 @@ import (
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/uuid"
 	"github.com/getlantern/yaml"
+	"go.uber.org/zap"
 
 	"github.com/getlantern/flashlight/ws"
 )
@@ -106,7 +106,7 @@ type Settings struct {
 	sync.RWMutex
 	filePath string
 
-	log golog.Logger
+	log *zap.SugaredLogger
 }
 
 func loadSettings(version, revisionDate, buildDate string, isStaging bool) *Settings {
@@ -185,7 +185,7 @@ func newSettings(filePath string) *Settings {
 		},
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
-		log:             golog.LoggerFor("app.settings"),
+		log:             zap.NewExample().Sugar(),
 	}
 }
 
@@ -290,13 +290,13 @@ func (s *Settings) setString(name SettingName, v interface{}) {
 
 // save saves settings to disk.
 func (s *Settings) save() {
-	log.Trace("Saving settings")
+	s.log.Debug("Saving settings")
 	if f, err := os.Create(s.filePath); err != nil {
 		s.log.Errorf("Could not open settings file for writing: %v", err)
 	} else if _, err := s.writeTo(f); err != nil {
 		s.log.Errorf("Could not save settings file: %v", err)
 	} else {
-		log.Tracef("Saved settings to %s", s.filePath)
+		log.Debugf("Saved settings to %s", s.filePath)
 	}
 }
 
@@ -522,7 +522,7 @@ func (s *Settings) getInt64(name SettingName) int64 {
 }
 
 func (s *Settings) getVal(name SettingName) (interface{}, error) {
-	log.Tracef("Getting value for %v", name)
+	log.Debugf("Getting value for %v", name)
 	s.RLock()
 	defer s.RUnlock()
 	if val, ok := s.m[name]; ok {

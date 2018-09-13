@@ -4,9 +4,9 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/analytics"
-	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/notifier"
+	"go.uber.org/zap"
 )
 
 const (
@@ -19,7 +19,7 @@ type notifierRequest struct {
 }
 
 var (
-	log = golog.LoggerFor("flashlight.notifier")
+	log = zap.NewExample().Sugar()
 	ch  = make(chan notifierRequest)
 )
 

@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/golog"
 	"github.com/getlantern/notifier"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
 func TestNotify(t *testing.T) {
@@ -29,7 +29,7 @@ func TestNotify(t *testing.T) {
 }
 
 func TestNormalizeClickURL(t *testing.T) {
-	log := golog.LoggerFor("flashlight.notifier-test")
+	log := zap.NewExample().Sugar()
 	note := &notify.Notification{
 		Title:    "test",
 		Message:  "test",

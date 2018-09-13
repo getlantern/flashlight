@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/golog"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
 type errorTripper struct {
@@ -66,7 +66,7 @@ func TestAddCampaign(t *testing.T) {
 }
 
 func TestAnalytics(t *testing.T) {
-	logger := golog.LoggerFor("flashlight.analytics_test")
+	logger := zap.NewExample().Sugar()
 
 	params := eventual.NewValue()
 	stop := start("1", "2.2.0", func(time.Duration) string {

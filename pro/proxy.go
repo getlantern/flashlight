@@ -13,11 +13,11 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/pro/client"
-	"github.com/getlantern/golog"
+	"go.uber.org/zap"
 )
 
 var (
-	log = golog.LoggerFor("flashlight.pro")
+	log = zap.NewExample().Sugar()
 )
 
 type proxyTransport struct {
