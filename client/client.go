@@ -280,16 +280,21 @@ func (client *Client) reportProxyLocationLoop() {
 			if proxy.Name() == activeProxy {
 				continue
 			}
-			activeProxy = proxy.Name()
-			loc := proxyLoc(activeProxy)
-			if loc == nil {
-				log.Debugf("Couldn't find location for %s", activeProxy)
-				continue
+			countryCode, country, city := proxy.Location()
+			// proxies launched before June 2018 don't have location info in
+			// the config, fallback to hardcoded data.
+			if countryCode == "" {
+				activeProxy = proxy.Name()
+				countryCode, country, city = proxyLoc(activeProxy)
+				if countryCode == "" {
+					log.Debugf("Couldn't find location for %s", activeProxy)
+					countryCode, country, city = "N/A", "N/A", "N/A"
+				}
 			}
 			client.statsTracker.SetActiveProxyLocation(
-				loc.city,
-				loc.country,
-				loc.countryCode,
+				city,
+				country,
+				countryCode,
 			)
 		}
 	}()

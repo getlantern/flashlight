@@ -131,11 +131,11 @@ var (
 	}
 )
 
-func proxyLoc(name string) *location {
+func proxyLoc(name string) (string, string, string) {
 	for k, v := range dcLocs {
 		if strings.Contains(name, k) {
-			return v
+			return v.countryCode, v.country, v.city
 		}
 	}
-	return nil
+	return "", "", ""
 }

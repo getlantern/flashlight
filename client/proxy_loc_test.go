@@ -14,10 +14,10 @@ func TestProxyLoc(t *testing.T) {
 		"fp-obfs4-donyc3-20161214-001":        "New York",
 		"fp-obfs4-donyc3staging-20161214-001": "New York",
 	}
-	for proxy, city := range valid_proxies {
-		loc := proxyLoc(proxy)
-		if assert.NotNil(t, loc) {
-			assert.Equal(t, loc.city, city)
+	for proxy, c := range valid_proxies {
+		code, _, city := proxyLoc(proxy)
+		if assert.NotEmpty(t, code) {
+			assert.Equal(t, city, c)
 		}
 	}
 
@@ -25,6 +25,9 @@ func TestProxyLoc(t *testing.T) {
 		"fp-anhklb-20161214-001",
 	}
 	for _, proxy := range invalid_proxies {
-		assert.Nil(t, proxyLoc(proxy))
+		code, country, city := proxyLoc(proxy)
+		assert.Empty(t, code)
+		assert.Empty(t, country)
+		assert.Empty(t, city)
 	}
 }

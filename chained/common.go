@@ -16,6 +16,15 @@ var (
 	log = golog.LoggerFor("chained")
 )
 
+// ServerLocation represents the location info embeded in proxy config.
+type ServerLocation struct {
+	City        string
+	Country     string
+	CountryCode string
+	Latitude    float32
+	Longitude   float32
+}
+
 // ChainedServerInfo contains all the data for connecting to a given chained
 // server.
 type ChainedServerInfo struct {
@@ -81,6 +90,9 @@ type ChainedServerInfo struct {
 
 	// TLSClientHelloID specifies with uTLS client hello to use.
 	TLSClientHelloID string
+
+	// Location: the location where the server resides.
+	Location ServerLocation
 }
 
 func (s *ChainedServerInfo) ptSetting(name string) string {

@@ -53,6 +53,10 @@ type Dialer interface {
 	// -line display.
 	JustifiedLabel() string
 
+	// Location returns the country code, country name and city name of the
+	// dialer, in this order.
+	Location() (string, string, string)
+
 	// Protocol returns a string representation of the protocol used by this
 	// Dialer.
 	Protocol() string
