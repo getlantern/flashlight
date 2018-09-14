@@ -280,16 +280,11 @@ func (client *Client) reportProxyLocationLoop() {
 			if proxy.Name() == activeProxy {
 				continue
 			}
-			activeProxy = proxy.Name()
-			loc := proxyLoc(activeProxy)
-			if loc == nil {
-				log.Debugf("Couldn't find location for %s", activeProxy)
-				continue
-			}
+			countryCode, country, city := proxyLoc(proxy)
 			client.statsTracker.SetActiveProxyLocation(
-				loc.city,
-				loc.country,
-				loc.countryCode,
+				city,
+				country,
+				countryCode,
 			)
 		}
 	}()

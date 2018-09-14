@@ -322,6 +322,7 @@ type proxy struct {
 	network           string
 	addr              string
 	authToken         string
+	location          ServerLocation
 	user              common.UserConfig
 	trusted           bool
 	bias              int
@@ -355,6 +356,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		protocol:        protocol,
 		network:         network,
 		addr:            addr,
+		location:        s.Location,
 		authToken:       s.AuthToken,
 		user:            uc,
 		trusted:         trusted,
@@ -473,6 +475,10 @@ func (p *proxy) JustifiedLabel() string {
 		label = label + trustedSuffix
 	}
 	return label
+}
+
+func (p *proxy) Location() (string, string, string) {
+	return p.location.CountryCode, p.location.Country, p.location.City
 }
 
 func (p *proxy) Trusted() bool {

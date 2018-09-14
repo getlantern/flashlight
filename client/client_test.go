@@ -288,6 +288,10 @@ func (d *testDialer) JustifiedLabel() string {
 	return d.name
 }
 
+func (d *testDialer) Location() (string, string, string) {
+	return "", "", ""
+}
+
 func (d *testDialer) Protocol() string {
 	return "https"
 }

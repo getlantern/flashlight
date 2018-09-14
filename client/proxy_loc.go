@@ -2,6 +2,8 @@ package client
 
 import (
 	"strings"
+
+	"github.com/getlantern/flashlight/balancer"
 )
 
 type location struct {
@@ -131,11 +133,19 @@ var (
 	}
 )
 
-func proxyLoc(name string) *location {
+func proxyLoc(proxy balancer.Dialer) (countryCode string, country string, city string) {
+	countryCode, country, city = proxy.Location()
+	if countryCode != "" {
+		return
+	}
+	// proxies launched before June 2018 don't have location info in
+	// the config, fallback to hardcoded data.
+	name := proxy.Name()
 	for k, v := range dcLocs {
 		if strings.Contains(name, k) {
-			return v
+			return v.countryCode, v.country, v.city
 		}
 	}
-	return nil
+	log.Debugf("Couldn't find location for %s", name)
+	return "N/A", "N/A", "N/A"
 }
