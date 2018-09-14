@@ -74,7 +74,7 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 			log.Errorf("No Cert configured for %s, will dial with plain tcp", s.Addr)
 			p, err = newHTTPProxy(name, s, uc)
 		} else {
-			log.Infof("Cert configured for  %s, will dial with tls", s.Addr)
+			log.Debugf("Cert configured for  %s, will dial with tls", s.Addr)
 			p, err = newHTTPSProxy(name, s, uc)
 		}
 		return p, err
@@ -392,7 +392,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		elapsed := mtime.Stopwatch()
 		conn, err := netx.DialTimeout("tcp", p.addr, timeoutFor(ctx))
 		delta := elapsed()
-		log.Infof("Core dial time to %v was %v", p.Name(), delta)
+		log.Debugf("Core dial time to %v was %v", p.Name(), delta)
 		return conn, delta, err
 	}
 

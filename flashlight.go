@@ -201,7 +201,7 @@ func applyClientConfig(c *client.Client, cfg *config.Global, autoReport func() b
 		case string:
 			for _, lightweightOp := range LightweightOps {
 				if t == lightweightOp {
-					log.Infof("Removing high dimensional data for lightweight op %v", lightweightOp)
+					log.Debugf("Removing high dimensional data for lightweight op %v", lightweightOp)
 					delete(ctx, "error")
 					delete(ctx, "error_text")
 					delete(ctx, "beam")
@@ -214,7 +214,7 @@ func applyClientConfig(c *client.Client, cfg *config.Global, autoReport func() b
 
 			for _, fullyReportedOp := range FullyReportedOps {
 				if t == fullyReportedOp {
-					log.Infof("Including fully reported op %v in borda sample", fullyReportedOp)
+					log.Debugf("Including fully reported op %v in borda sample", fullyReportedOp)
 					return true
 				}
 			}

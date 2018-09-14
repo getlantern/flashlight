@@ -229,7 +229,7 @@ func (p *proxy) markSuccess() {
 	atomic.AddInt64(&p.attempts, 1)
 	atomic.AddInt64(&p.successes, 1)
 	newCS := atomic.AddInt64(&p.consecSuccesses, 1)
-	log.Infof("Dialer %s consecutive successes: %d -> %d", p.Label(), newCS-1, newCS)
+	log.Debugf("Dialer %s consecutive successes: %d -> %d", p.Label(), newCS-1, newCS)
 	// only when state is changing
 	if newCS <= 2 {
 		atomic.StoreInt64(&p.consecFailures, 0)
@@ -242,7 +242,7 @@ func (p *proxy) MarkFailure() {
 	atomic.AddInt64(&p.failures, 1)
 	atomic.StoreInt64(&p.consecSuccesses, 0)
 	newCF := atomic.AddInt64(&p.consecFailures, 1)
-	log.Infof("Dialer %s consecutive failures: %d -> %d", p.Label(), newCF-1, newCF)
+	log.Debugf("Dialer %s consecutive failures: %d -> %d", p.Label(), newCF-1, newCF)
 	return
 }
 
@@ -303,10 +303,10 @@ func (conn defaultServerConn) dialOrigin(ctx context.Context, network, addr stri
 	// that.
 	switch network {
 	case connect:
-		log.Infof("Sending CONNECT request")
+		log.Debugf("Sending CONNECT request")
 		err = conn.p.sendCONNECT(addr, conn)
 	case persistent:
-		log.Infof("Sending GET request to establish persistent HTTP connection")
+		log.Debugf("Sending GET request to establish persistent HTTP connection")
 		err = conn.p.initPersistentConnection(addr, conn)
 	}
 	if err != nil {

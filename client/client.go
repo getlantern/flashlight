@@ -460,7 +460,7 @@ func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Con
 		}
 		start := time.Now()
 		conn, err := client.bal.DialContext(ctx, proto, addr)
-		log.Infof("Dialing proxy takes %v for %s", time.Since(start), addr)
+		log.Debugf("Dialing proxy takes %v for %s", time.Since(start), addr)
 		return conn, err
 	}
 
