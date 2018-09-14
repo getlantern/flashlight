@@ -63,7 +63,7 @@ func normalizeExoAd(req *http.Request) (*http.Request, bool) {
 
 func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
 	if client.isHTTPProxyPort(r) {
-		log.Debugf("Reject proxy request to myself: %s", r.Host)
+		log.Infof("Reject proxy request to myself: %s", r.Host)
 		// Not reveal any error text to the application.
 		return filters.Fail(ctx, r, http.StatusBadRequest, errors.New(""))
 	}
@@ -103,9 +103,9 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 		// connection, we've stripped the CONNECT and actually performed the MITM
 		// at this point, so we have to check for that and skip redirecting to
 		// HTTPS in that case.
-		log.Debugf("Intercepting CONNECT %s", req.URL)
+		log.Infof("Intercepting CONNECT %s", req.URL)
 	} else {
-		log.Debugf("Checking for HTTP redirect for %v", req.URL.String())
+		log.Infof("Checking for HTTP redirect for %v", req.URL.String())
 		if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
 			// Don't redirect CORS requests as it means the HTML pages that
 			// initiate the requests were not HTTPS redirected. Redirecting
@@ -113,7 +113,7 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 			if origin := req.Header.Get("Origin"); origin == "" {
 				// Not rewrite recently rewritten URL to avoid redirect loop.
 				if t, ok := client.rewriteLRU.Get(httpsURL); ok && time.Since(t.(time.Time)) < httpsRewriteInterval {
-					log.Debugf("Not httpseverywhere redirecting to %v to avoid redirect loop", httpsURL)
+					log.Infof("Not httpseverywhere redirecting to %v to avoid redirect loop", httpsURL)
 				} else {
 					client.rewriteLRU.Add(httpsURL, time.Now())
 					return client.redirectHTTPS(ctx, req, httpsURL, op)
@@ -122,7 +122,7 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 
 		}
 		// Direct proxying can only be used for plain HTTP connections.
-		log.Debugf("Intercepting HTTP request %s %v", req.Method, req.URL)
+		log.Infof("Intercepting HTTP request %s %v", req.Method, req.URL)
 		// consumed and removed by http-proxy-lantern/versioncheck
 		req.Header.Set(common.VersionHeader, common.Version)
 	}
@@ -162,7 +162,7 @@ func (client *Client) isHTTPProxyPort(r *http.Request) bool {
 // interceptProRequest specifically looks for and properly handles pro server
 // requests (similar to desktop's APIHandler)
 func (client *Client) interceptProRequest(ctx filters.Context, r *http.Request, op *ops.Op) (*http.Response, filters.Context, error) {
-	log.Debugf("Intercepting request to pro server: %v", r.URL.Path)
+	log.Infof("Intercepting request to pro server: %v", r.URL.Path)
 	r.URL.Path = r.URL.Path[4:]
 	pro.PrepareProRequest(r, client.user)
 	r.Header.Del("Origin")
@@ -178,7 +178,7 @@ func (client *Client) interceptProRequest(ctx filters.Context, r *http.Request, 
 }
 
 func (client *Client) easyblock(ctx filters.Context, req *http.Request) (*http.Response, filters.Context, error) {
-	log.Debugf("Blocking %v on %v", req.URL, req.Host)
+	log.Infof("Blocking %v on %v", req.URL, req.Host)
 	client.statsTracker.IncAdsBlocked()
 	resp := &http.Response{
 		StatusCode: http.StatusForbidden,
@@ -188,7 +188,7 @@ func (client *Client) easyblock(ctx filters.Context, req *http.Request) (*http.R
 }
 
 func (client *Client) redirectHTTPS(ctx filters.Context, req *http.Request, httpsURL string, op *ops.Op) (*http.Response, filters.Context, error) {
-	log.Debugf("httpseverywhere redirecting to %v", httpsURL)
+	log.Infof("httpseverywhere redirecting to %v", httpsURL)
 	op.Set("forcedhttps", true)
 	client.statsTracker.IncHTTPSUpgrades()
 	// Tell the browser to only cache the redirect for a day. The browser
@@ -216,7 +216,7 @@ func (client *Client) adSwapURL(req *http.Request) string {
 		return ""
 	}
 	lang := client.lang()
-	log.Debugf("Swapping javascript for %v to %v", urlString, jsURL)
+	log.Infof("Swapping javascript for %v to %v", urlString, jsURL)
 	extra := ""
 	if common.ForceAds() {
 		extra = "&force=true"

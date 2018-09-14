@@ -500,12 +500,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/getlantern/rotator"
-  packages = ["."]
-  revision = "013d4f8e36a2f6369b2435d89866056b5b74c69e"
-
-[[projects]]
-  branch = "master"
   name = "github.com/getlantern/shortcut"
   packages = ["."]
   revision = "08ded803cb4dbc6f4149ab0091847248f8976f57"
@@ -581,12 +575,6 @@
   name = "github.com/getlantern/wal"
   packages = ["."]
   revision = "028a06aadcb93566469b90c0765fd2c1354718cc"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/getlantern/wfilter"
-  packages = ["."]
-  revision = "69cc8585ee9c5b4e0b55110ea2c219921f954ba3"
 
 [[projects]]
   branch = "master"
@@ -1056,6 +1044,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "67595d4e7d5f3df3c5016c5c43c55f98c27dcdab86c417af347425f7d3604856"
+  inputs-digest = "694f5e04a8bb3af016a881534b7fed8b4ca9d6aa4d955a979916227c061ea8e6"
   solver-name = "gps-cdcl"
   solver-version = 1

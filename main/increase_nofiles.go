@@ -24,7 +24,7 @@ func init() {
 		return
 	}
 	if rLimit.Cur > DesiredNoFilesLimit {
-		log.Debugf("Current nofiles soft limit of %d is enough", rLimit.Cur)
+		log.Infof("Current nofiles soft limit of %d is enough", rLimit.Cur)
 		return
 	}
 	rLimit.Cur = DesiredNoFilesLimit
@@ -32,5 +32,5 @@ func init() {
 	if err != nil {
 		log.Errorf("Unable to increase nofiles limit: %v", err)
 	}
-	log.Debugf("Changed nofiles soft limit to %d", rLimit.Cur)
+	log.Infof("Changed nofiles soft limit to %d", rLimit.Cur)
 }

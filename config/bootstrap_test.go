@@ -23,9 +23,9 @@ func TestBootstrapSettings(t *testing.T) {
 	assert.True(t, err == nil, "Should not be an error")
 	file.Close()
 
-	log.Debugf("File at: %v", file.Name())
+	log.Infof("File at: %v", file.Name())
 	settings := BootstrapSettings{StartupUrl: "test"}
-	log.Debugf("Settings: %v", settings)
+	log.Infof("Settings: %v", settings)
 
 	data, er := yaml.Marshal(&settings)
 	assert.True(t, er == nil, "Should not be an error")
@@ -49,7 +49,7 @@ func TestBootstrapSettings(t *testing.T) {
 	}
 	assert.True(t, err == nil, "Should not be an error")
 
-	log.Debugf("Running in %v", dir)
+	log.Infof("Running in %v", dir)
 	if runtime.GOOS == "darwin" {
 		assert.Equal(t, dir+"/"+name, path, "Unexpected settings dir")
 	} else if runtime.GOOS == "linux" {

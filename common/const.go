@@ -31,7 +31,7 @@ func ForceStaging() {
 
 func initInternal() {
 	var err error
-	log.Debugf("****************************** stagingMode: %v", StagingMode)
+	log.Infof("****************************** stagingMode: %v", StagingMode)
 	Staging, err = strconv.ParseBool(StagingMode)
 	if err != nil {
 		log.Errorf("Error parsing boolean flag: %v", err)

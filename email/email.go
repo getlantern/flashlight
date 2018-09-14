@@ -84,7 +84,7 @@ func Send(msg *Message) error {
 				Set("issue_note", msg.Vars["report"]).
 				Set("email", msg.Vars["emailaddress"])
 		}
-		log.Debug("Reporting issue")
+		log.Info("Reporting issue")
 	} else {
 		op = ops.Begin("send_email").Set("template", msg.Template)
 	}

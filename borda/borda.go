@@ -31,19 +31,19 @@ var (
 // time before it reports to borda, however.
 func Configure(reportInterval time.Duration, enabled func(ctx map[string]interface{}) bool) {
 	if reportInterval > 0 {
-		log.Debug("Enabling borda")
+		log.Info("Enabling borda")
 		once.Do(func() {
 			startBordaAndProxyBench(reportInterval, enabled)
 		})
 	} else {
-		log.Debug("Borda not enabled")
+		log.Info("Borda not enabled")
 	}
 }
 
 // Flush flushes any pending submission
 func Flush() {
 	if bordaClient != nil {
-		log.Debugf("Flushing pending borda submissions")
+		log.Infof("Flushing pending borda submissions")
 		bordaClient.Flush()
 	}
 }

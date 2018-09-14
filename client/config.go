@@ -119,7 +119,7 @@ func (c *ClientConfig) FrontedProviders() map[string]*fronted.Provider {
 			c.MasqueradeSets[pid],
 			fronted.NewStatusCodeValidator(cloudfrontBadStatus),
 		)
-		log.Debugf("Added default provider details for '%s'", pid)
+		log.Infof("Added default provider details for '%s'", pid)
 	} else {
 		for pid, p := range c.Fronted.Providers {
 			providers[pid] = fronted.NewProvider(

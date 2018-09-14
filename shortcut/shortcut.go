@@ -50,14 +50,14 @@ func configure(country string) {
 			)
 			break
 		}
-		log.Debugf("no shortcut list for country %s, fallback to default", country)
+		log.Infof("no shortcut list for country %s, fallback to default", country)
 		country = "default"
 	}
 
 	mu.Lock()
 	sc = _sc
 	mu.Unlock()
-	log.Debugf("loaded shortcut list for country %s", country)
+	log.Infof("loaded shortcut list for country %s", country)
 }
 
 func Allow(addr string) (bool, net.IP) {

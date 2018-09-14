@@ -74,7 +74,7 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 			log.Errorf("No Cert configured for %s, will dial with plain tcp", s.Addr)
 			p, err = newHTTPProxy(name, s, uc)
 		} else {
-			log.Debugf("Cert configured for  %s, will dial with tls", s.Addr)
+			log.Infof("Cert configured for  %s, will dial with tls", s.Addr)
 			p, err = newHTTPSProxy(name, s, uc)
 		}
 		return p, err
@@ -90,7 +90,7 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 // ForceProxy forces everything through the HTTP proxy at forceAddr using
 // forceToken.
 func ForceProxy(forceAddr string, forceToken string) {
-	log.Debugf("Forcing proxying through proxy at %v using token %v", forceAddr, forceToken)
+	log.Infof("Forcing proxying through proxy at %v using token %v", forceAddr, forceToken)
 	theForceAddr, theForceToken = forceAddr, forceToken
 }
 
@@ -157,7 +157,7 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pr
 			}
 			if !conn.ConnectionState().PeerCertificates[0].Equal(x509cert) {
 				if closeErr := conn.Close(); closeErr != nil {
-					log.Debugf("Error closing chained server connection: %s", closeErr)
+					log.Infof("Error closing chained server connection: %s", closeErr)
 				}
 				var received interface{}
 				var expected interface{}
@@ -244,12 +244,12 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 	idleInterval, parseErr := time.ParseDuration(s.ptSetting("idleinterval"))
 	if parseErr != nil || idleInterval < 0 {
 		idleInterval = IdleTimeout * 2
-		log.Debugf("Defaulted lampshade idleinterval to %v", idleInterval)
+		log.Infof("Defaulted lampshade idleinterval to %v", idleInterval)
 	}
 	pingInterval, parseErr := time.ParseDuration(s.ptSetting("pinginterval"))
 	if parseErr != nil || pingInterval < 0 {
 		pingInterval = 15 * time.Second
-		log.Debugf("Defaulted lampshade pinginterval to %v", pingInterval)
+		log.Infof("Defaulted lampshade pinginterval to %v", pingInterval)
 	}
 	dialer := lampshade.NewDialer(&lampshade.DialerOpts{
 		WindowSize:        windowSize,
@@ -272,7 +272,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 					conn, err := p.dialCore(op)(ctx)
 					if err == nil && idleInterval > 0 {
 						conn = idletiming.Conn(conn, idleInterval, func() {
-							log.Debug("lampshade TCP connection idled")
+							log.Info("lampshade TCP connection idled")
 						})
 					}
 					return conn, err
@@ -392,7 +392,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		elapsed := mtime.Stopwatch()
 		conn, err := netx.DialTimeout("tcp", p.addr, timeoutFor(ctx))
 		delta := elapsed()
-		log.Debugf("Core dial time to %v was %v", p.Name(), delta)
+		log.Infof("Core dial time to %v was %v", p.Name(), delta)
 		return conn, delta, err
 	}
 
@@ -404,7 +404,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		p.protocol = "kcp"
 	}
 
-	log.Debugf("%v preconnects, init: %d   max: %d", p.Label(), initPreconnect, maxPreconnect)
+	log.Infof("%v preconnects, init: %d   max: %d", p.Label(), initPreconnect, maxPreconnect)
 	p.processPreconnects(initPreconnect)
 	return p, nil
 }
@@ -429,9 +429,9 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 	}
 
 	addIdleTiming := func(conn net.Conn) net.Conn {
-		log.Debug("Wrapping KCP with idletiming")
+		log.Info("Wrapping KCP with idletiming")
 		return idletiming.Conn(conn, IdleTimeout*2, func() {
-			log.Debug("KCP connection idled")
+			log.Info("KCP connection idled")
 		})
 	}
 	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig, addIdleTiming)
@@ -442,7 +442,7 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 
 		dialKCPMutex.Lock()
 		if p.forceRedial.IsSet() {
-			log.Debug("Connection state changed, re-connecting to server first")
+			log.Info("Connection state changed, re-connecting to server first")
 			dialKCP = kcpwrapper.Dialer(&p.kcpConfig.DialerConfig, addIdleTiming)
 			p.forceRedial.UnSet()
 		}
@@ -576,7 +576,7 @@ func (p *proxy) collectBBRInfo(reqTime time.Time, resp *http.Response) {
 			// value.
 			p.mx.Lock()
 			if reqTime.After(p.mostRecentABETime) {
-				log.Debugf("%v: X-BBR-ABE: %.2f Mbps", p.Label(), abe)
+				log.Infof("%v: X-BBR-ABE: %.2f Mbps", p.Label(), abe)
 				intABE := int64(abe * 1000)
 				if intABE > 0 {
 					// We check for a positive ABE here because in some scenarios (like

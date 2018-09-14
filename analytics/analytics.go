@@ -50,14 +50,14 @@ func start(deviceID, version string, ipFunc func(time.Duration) string,
 			log.Errorf("No IP found within %v", maxWaitForIP)
 		}
 		addr.Store(ip)
-		log.Debugf("Starting analytics session with ip %v", ip)
+		log.Infof("Starting analytics session with ip %v", ip)
 		startSession(ip, version, deviceID, transport)
 	}()
 
 	stop := func() {
 		if addr.Load() != nil {
 			ip := addr.Load().(string)
-			log.Debugf("Ending analytics session with ip %v", ip)
+			log.Infof("Ending analytics session with ip %v", ip)
 			endSession(ip, version, deviceID, transport)
 		}
 	}
@@ -108,7 +108,7 @@ func getExecutableHash() string {
 		return "android"
 	}
 	if lanternPath, err := osext.Executable(); err != nil {
-		log.Debugf("Could not get path to executable %v", err)
+		log.Infof("Could not get path to executable %v", err)
 		return err.Error()
 	} else {
 		if b, er := util.GetFileHash(lanternPath); er != nil {
@@ -152,9 +152,9 @@ func doTrackSession(args string, rt http.RoundTripper) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(args)))
 
 	if req, er := httputil.DumpRequestOut(r, true); er != nil {
-		log.Debugf("Could not dump request: %v", er)
+		log.Infof("Could not dump request: %v", er)
 	} else {
-		log.Debugf("Full analytics request: %v", string(req))
+		log.Infof("Full analytics request: %v", string(req))
 	}
 
 	resp, err := rt.RoundTrip(r)
@@ -162,9 +162,9 @@ func doTrackSession(args string, rt http.RoundTripper) {
 		log.Errorf("Could not send HTTP request to GA: %s", err)
 		return
 	}
-	log.Debugf("Successfully sent request to GA: %s", resp.Status)
+	log.Infof("Successfully sent request to GA: %s", resp.Status)
 	if err := resp.Body.Close(); err != nil {
-		log.Debugf("Unable to close response body: %v", err)
+		log.Infof("Unable to close response body: %v", err)
 	}
 }
 

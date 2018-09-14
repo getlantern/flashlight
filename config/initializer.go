@@ -145,7 +145,7 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 	stopGlobal := pipeConfig(globalOptions)
 
 	return func() {
-		log.Debug("*************** Stopping Config")
+		log.Info("*************** Stopping Config")
 		stopProxies()
 		stopGlobal()
 	}
@@ -201,7 +201,7 @@ func checkOverrides(flags map[string]interface{},
 	url string, name string) string {
 	if s, ok := flags["cloudconfig"].(string); ok {
 		if len(s) > 0 {
-			log.Debugf("Overridding config URL from the command line '%v'", s)
+			log.Infof("Overridding config URL from the command line '%v'", s)
 			return s + "/" + name
 		}
 	}
@@ -212,10 +212,10 @@ func checkOverrides(flags map[string]interface{},
 // we're in staging.
 func getProxyURL(staging bool) string {
 	if staging {
-		log.Debug("Configuring for staging")
+		log.Info("Configuring for staging")
 		return proxiesStagingURL
 	}
-	log.Debugf("Not configuring for staging.")
+	log.Infof("Not configuring for staging.")
 	return proxiesURL
 }
 
@@ -223,9 +223,9 @@ func getProxyURL(staging bool) string {
 // we're in staging.
 func getGlobalURL(staging bool) string {
 	if staging {
-		log.Debug("Configuring for staging")
+		log.Info("Configuring for staging")
 		return globalStagingURL
 	}
-	log.Debugf("Not configuring for staging.")
+	log.Infof("Not configuring for staging.")
 	return globalURL
 }

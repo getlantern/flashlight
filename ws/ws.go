@@ -69,7 +69,7 @@ func newClients(onConnect ConnectFunc) *clientChannels {
 }
 
 func (c *clientChannels) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	log.Debugf("Got connection to the UI channel")
+	log.Infof("Got connection to the UI channel")
 	var err error
 
 	if req.Method != "GET" {
@@ -83,10 +83,10 @@ func (c *clientChannels) ServeHTTP(resp http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	log.Debugf("Upgraded to websocket")
+	log.Infof("Upgraded to websocket")
 	defer func() {
 		if err := ws.Close(); err != nil {
-			log.Debugf("Error closing WebSockets connection: %s", err)
+			log.Infof("Error closing WebSockets connection: %s", err)
 		}
 	}()
 
@@ -105,13 +105,13 @@ func (c *clientChannels) ServeHTTP(resp http.ResponseWriter, req *http.Request) 
 	c.onConnect(conn.connectOut)
 	go conn.write()
 
-	log.Debugf("About to read from websocket connection")
+	log.Infof("About to read from websocket connection")
 	conn.read()
 }
 
 func (c *clientChannels) writeAll() {
 	defer func() {
-		log.Debugf("Closing all websockets")
+		log.Infof("Closing all websockets")
 		c.muConns.Lock()
 		for _, conn := range c.conns {
 			c.doRemoveConn(conn)
@@ -134,7 +134,7 @@ func (c *clientChannels) writeAll() {
 				}
 			}
 		case conn := <-c.connsToRemove:
-			log.Debugf("Removing single conn")
+			log.Infof("Removing single conn")
 			c.lockedRemoveConn(conn)
 		}
 	}
@@ -161,7 +161,7 @@ func (c *clientChannels) lockedRemoveConn(conn *wsconn) {
 
 func (c *clientChannels) doRemoveConn(conn *wsconn) {
 	if err := conn.ws.Close(); err != nil {
-		log.Debugf("Error closing WebSockets connection: %v", err)
+		log.Infof("Error closing WebSockets connection: %v", err)
 	}
 	close(conn.out)
 	delete(c.conns, conn.id)
@@ -179,14 +179,14 @@ type wsconn struct {
 func (c *wsconn) read() {
 	for {
 		_, b, err := c.ws.ReadMessage()
-		log.Debugf("Read message: %q", b)
+		log.Infof("Read message: %q", b)
 		if err != nil {
 			if err != io.EOF {
-				log.Debugf("Error reading from UI: %v", err)
+				log.Infof("Error reading from UI: %v", err)
 			}
 			return
 		}
-		log.Debugf("Sending to channel...")
+		log.Infof("Sending to channel...")
 		c.c.in <- b
 	}
 }
@@ -212,7 +212,7 @@ func (c *wsconn) write() {
 func (c *wsconn) doWrite(msg []byte) bool {
 	err := c.ws.WriteMessage(websocket.TextMessage, msg)
 	if err != nil {
-		log.Debugf("Error writing to WebSocket, closing: %v", err)
+		log.Infof("Error writing to WebSocket, closing: %v", err)
 		c.c.connsToRemove <- c
 		return false
 	}

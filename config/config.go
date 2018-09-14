@@ -113,9 +113,9 @@ func pipeConfig(opts *options) (stop func()) {
 		a := lastCfg
 		b := yamlRoundTrip(cfg)
 		if reflect.DeepEqual(a, b) {
-			log.Debug("Config unchanged, ignoring")
+			log.Info("Config unchanged, ignoring")
 		} else {
-			log.Debug("Dispatching updated config")
+			log.Info("Dispatching updated config")
 			opts.dispatch(cfg)
 			lastCfg = b
 		}
@@ -126,19 +126,19 @@ func pipeConfig(opts *options) (stop func()) {
 		log.Errorf("Could not get config path? %v", err)
 	}
 
-	log.Debugf("Obfuscating %v", opts.obfuscate)
+	log.Infof("Obfuscating %v", opts.obfuscate)
 	conf := newConfig(configPath, opts)
 
 	if saved, proxyErr := conf.saved(); proxyErr != nil {
-		log.Debugf("Could not load stored config %v", proxyErr)
+		log.Infof("Could not load stored config %v", proxyErr)
 		if embedded, errr := conf.embedded(opts.embeddedData); errr != nil {
 			log.Errorf("Could not load embedded config %v", errr)
 		} else {
-			log.Debugf("Sending embedded config for %v", opts.name)
+			log.Infof("Sending embedded config for %v", opts.name)
 			dispatch(embedded)
 		}
 	} else {
-		log.Debugf("Sending saved config for %v", opts.name)
+		log.Infof("Sending saved config for %v", opts.name)
 		dispatch(saved)
 	}
 
@@ -148,7 +148,7 @@ func pipeConfig(opts *options) (stop func()) {
 		fetcher := newFetcher(opts.userConfig, opts.rt, opts.originURL)
 		go conf.poll(stopCh, dispatch, fetcher, opts.sleep)
 	} else {
-		log.Debugf("Using sticky config")
+		log.Infof("Using sticky config")
 	}
 
 	return func() {
@@ -226,7 +226,7 @@ func (conf *config) saved() (interface{}, error) {
 		return nil, fmt.Errorf("Config exists but is empty at %v", conf.filePath)
 	}
 
-	log.Debugf("Returning saved config at %v", conf.filePath)
+	log.Infof("Returning saved config at %v", conf.filePath)
 	return conf.unmarshaler(bytes)
 }
 
@@ -240,21 +240,21 @@ func (conf *config) poll(stopCh chan bool, dispatch func(interface{}), fetcher F
 			log.Errorf("Error fetching config: %v", err)
 		} else if bytes == nil {
 			// This is what fetcher returns for not-modified.
-			log.Debug("Ignoring not modified response")
+			log.Info("Ignoring not modified response")
 		} else if cfg, err := conf.unmarshaler(bytes); err != nil {
 			log.Errorf("Error fetching config: %v", err)
 		} else {
-			log.Debugf("Fetched config! %v", cfg)
+			log.Infof("Fetched config! %v", cfg)
 
 			// Push these to channels to avoid race conditions that might occur if
 			// we did these on go routines, for example.
 			conf.saveChan <- cfg
-			log.Debugf("Sent to save chan")
+			log.Infof("Sent to save chan")
 			dispatch(cfg)
 		}
 		select {
 		case <-stopCh:
-			log.Debug("Stopping polling")
+			log.Info("Stopping polling")
 			return
 		case <-time.After(sleep()):
 			continue
@@ -297,6 +297,6 @@ func (conf *config) doSaveOne(in interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Unable to write yaml to file %v: %v", conf.filePath, err)
 	}
-	log.Debugf("Wrote file at %v", conf.filePath)
+	log.Infof("Wrote file at %v", conf.filePath)
 	return nil
 }

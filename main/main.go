@@ -3,7 +3,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -18,8 +17,6 @@ import (
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/desktop"
-
-	"github.com/mitchellh/panicwrap"
 )
 
 func main() {
@@ -36,30 +33,7 @@ func main() {
 		Flags:  flagsAsMap(),
 	}
 	a.Init()
-	wrapperC := handleWrapperSignals(a)
-
-	// environmental variables, etc.) and monitoring the stderr of the program.
-	exitStatus, err := panicwrap.BasicWrap(
-		func(output string) {
-			a.LogPanicAndExit(output)
-		})
-	if err != nil {
-		// Something went wrong setting up the panic wrapper. This won't be
-		// captured by panicwrap
-		// At this point, continue execution without panicwrap support. There
-		// are known cases where panicwrap will fail to fork, such as Windows
-		// GUI app
-		log.Errorf("Error setting up panic wrapper: %v", err)
-	} else {
-		// If exitStatus >= 0, then we're the parent process.
-		if exitStatus >= 0 {
-			os.Exit(exitStatus)
-		}
-	}
-
-	// We're in the child (wrapped) process
-	// Stop wrapper signal handling
-	signal.Stop(wrapperC)
+	handleSignals(a)
 
 	if *help {
 		flag.Usage()
@@ -68,7 +42,7 @@ func main() {
 
 	if *pprofAddr != "" {
 		go func() {
-			log.Debugf("Starting pprof page at http://%s/debug/pprof", *pprofAddr)
+			log.Infof("Starting pprof page at http://%s/debug/pprof", *pprofAddr)
 			srv := &http.Server{
 				Addr: *pprofAddr,
 			}
@@ -87,20 +61,18 @@ func main() {
 			runApp(a)
 		})
 	} else {
-		log.Debug("Running headless")
+		log.Info("Running headless")
 		runApp(a)
 		err := a.WaitForExit()
 		if err != nil {
 			log.Error(err)
 		}
-		log.Debug("Lantern stopped")
+		log.Info("Lantern stopped")
 		os.Exit(0)
 	}
 }
 
 func runApp(a *desktop.App) {
-	// Schedule cleanup actions
-	handleSignals(a)
 	if a.ShowUI {
 		i18nInit(a)
 		go func() {
@@ -122,9 +94,9 @@ func i18nInit(a *desktop.App) {
 	})
 	locale := a.GetLanguage()
 	if err := i18n.SetLocale(locale); err != nil {
-		log.Debugf("i18n.SetLocale(%s) failed, fallback to OS default: %q", locale, err)
+		log.Infof("i18n.SetLocale(%s) failed, fallback to OS default: %q", locale, err)
 		if err := i18n.UseOSLocale(); err != nil {
-			log.Debugf("i18n.UseOSLocale: %q", err)
+			log.Infof("i18n.UseOSLocale: %q", err)
 		}
 	}
 }
@@ -137,28 +109,12 @@ func parseFlags() {
 	// pass an extra flag like -psn_0_1122578.  flag.Parse() fails if it sees
 	// any flags that haven't been declared, so we remove the extra flag.
 	if len(os.Args) == 2 && strings.HasPrefix(os.Args[1], "-psn") {
-		log.Debugf("Ignoring extra flag %v", os.Args[1])
+		log.Infof("Ignoring extra flag %v", os.Args[1])
 		args = []string{}
 	}
 	// Note - we can ignore the returned error because CommandLine.Parse() will
 	// exit if it fails.
 	_ = flag.CommandLine.Parse(args)
-}
-
-// Handle system signals in panicwrap wrapper process for clean exit
-func handleWrapperSignals(a *desktop.App) chan os.Signal {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c,
-		syscall.SIGHUP,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGQUIT,
-		syscall.SIGPIPE) // it's okay to trap SIGPIPE in the wrapper but not in the main process because we can get it from failed network connections
-	go func() {
-		s := <-c
-		a.LogPanicAndExit(fmt.Sprintf("Panicwrapper received signal %v", s))
-	}()
-	return c
 }
 
 // Handle system signals for clean exit
@@ -171,7 +127,7 @@ func handleSignals(a *desktop.App) {
 		syscall.SIGQUIT)
 	go func() {
 		s := <-c
-		log.Debugf("Got signal \"%s\", exiting...", s)
+		log.Infof("Got signal \"%s\", exiting...", s)
 		a.Exit(nil)
 	}()
 }

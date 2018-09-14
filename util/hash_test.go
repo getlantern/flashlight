@@ -14,8 +14,8 @@ func TestGetFileHash(t *testing.T) {
 	path := wd + "/hash.go"
 
 	hash, _ := GetFileHash(path)
-	//log.Debugf("Got hash! %x", hash)
-	log.Debugf("Got hash! %v", hash)
+	//log.Infof("Got hash! %x", hash)
+	log.Infof("Got hash! %v", hash)
 
 	// Update this with shasum -a 256 hash.go
 	assert.Equal(t, "a7db9a14837bdb7192b24940b8ef3bc4a127cf002248bacdf9e7165ecd41d04e", hash,

@@ -38,7 +38,7 @@ func (s *UserSignal) start(channel ws.UIChannel) error {
 
 func (s *UserSignal) read(connect func(), disconnect func()) {
 	for message := range s.service.In {
-		log.Debugf("Read userSignal %v", message)
+		log.Infof("Read userSignal %v", message)
 		switch message {
 		case "disconnect":
 			disconnect()

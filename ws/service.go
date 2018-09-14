@@ -55,7 +55,7 @@ func (s *Service) writeAll() {
 	for {
 		select {
 		case <-s.stopCh:
-			log.Debug("Received message on stop channel")
+			log.Info("Received message on stop channel")
 			return
 		case msg := <-s.out:
 			s.writeMsg(msg, s.clients.Out)
@@ -77,13 +77,13 @@ func (s *Service) writeHelloMsg(out chan<- []byte) {
 // could fan out to all connected clients or could write to a single client,
 // for example.
 func (s *Service) writeMsg(msg interface{}, out chan<- []byte) {
-	log.Debugf("Creating new envelope for %v", s.Type)
+	log.Infof("Creating new envelope for %v", s.Type)
 	b, err := newEnvelope(s.Type, msg)
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	log.Debugf("Sending message to clients: %v", string(b))
+	log.Infof("Sending message to clients: %v", string(b))
 	out <- b
 }
 
@@ -106,7 +106,7 @@ func NewUIChannel() UIChannel {
 	go c.clients.writeAll()
 	go c.readLoop()
 
-	log.Debugf("Accepting WebSocket connections")
+	log.Infof("Accepting WebSocket connections")
 	return c
 }
 
@@ -125,7 +125,7 @@ func (c *uiChannel) Register(t string, helloFn helloFnType) (*Service, error) {
 }
 
 func (c *uiChannel) RegisterWithMsgInitializer(t string, helloFn helloFnType, newMsgFn newMsgFnType) (*Service, error) {
-	log.Debugf("Registering UI service %s", t)
+	log.Infof("Registering UI service %s", t)
 
 	s := &Service{
 		Type:     t,
@@ -151,13 +151,13 @@ func (c *uiChannel) RegisterWithMsgInitializer(t string, helloFn helloFnType, ne
 	// Adding new service to service map.
 	c.services[t] = s
 
-	log.Debugf("Registered UI service %s", t)
+	log.Infof("Registered UI service %s", t)
 	go s.writeAll()
 	return s, nil
 }
 
 func (c *uiChannel) Unregister(t string) {
-	log.Debugf("Unregistering service: %v", t)
+	log.Infof("Unregistering service: %v", t)
 	c.muServices.Lock()
 	defer c.muServices.Unlock()
 	if c.services[t] != nil {
@@ -197,7 +197,7 @@ func (c *uiChannel) readLoop() {
 			log.Errorf("Unable to unmarshal message of type %v: %v", envType.Type, err)
 			continue
 		}
-		log.Debugf("Forwarding message: %v", env)
+		log.Infof("Forwarding message: %v", env)
 		// Pass this message and continue reading another one.
 		service.in <- env.Message
 	}

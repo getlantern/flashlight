@@ -60,7 +60,7 @@ func (p *proxy) checkCoreDials() {
 	timer := time.NewTimer(0)
 
 	ops.Go(func() {
-		log.Debugf("Will probe core dials to %v", p.Label())
+		log.Infof("Will probe core dials to %v", p.Label())
 		for {
 			timer.Reset(randomize(dialCoreCheckInterval))
 			select {
@@ -72,7 +72,7 @@ func (p *proxy) checkCoreDials() {
 				}
 				cancel()
 			case <-p.closeCh:
-				log.Debugf("Dialer %v stopped", p.Label())
+				log.Infof("Dialer %v stopped", p.Label())
 				timer.Stop()
 				return
 			}
@@ -85,7 +85,7 @@ func randomize(d time.Duration) time.Duration {
 }
 
 func (p *proxy) Stop() {
-	log.Debugf("Stopping dialer %s", p.Label())
+	log.Infof("Stopping dialer %s", p.Label())
 	p.closeOnce.Do(func() {
 		close(p.closeCh)
 	})
@@ -229,7 +229,7 @@ func (p *proxy) markSuccess() {
 	atomic.AddInt64(&p.attempts, 1)
 	atomic.AddInt64(&p.successes, 1)
 	newCS := atomic.AddInt64(&p.consecSuccesses, 1)
-	log.Debugf("Dialer %s consecutive successes: %d -> %d", p.Label(), newCS-1, newCS)
+	log.Infof("Dialer %s consecutive successes: %d -> %d", p.Label(), newCS-1, newCS)
 	// only when state is changing
 	if newCS <= 2 {
 		atomic.StoreInt64(&p.consecFailures, 0)
@@ -242,7 +242,7 @@ func (p *proxy) MarkFailure() {
 	atomic.AddInt64(&p.failures, 1)
 	atomic.StoreInt64(&p.consecSuccesses, 0)
 	newCF := atomic.AddInt64(&p.consecFailures, 1)
-	log.Debugf("Dialer %s consecutive failures: %d -> %d", p.Label(), newCF-1, newCF)
+	log.Infof("Dialer %s consecutive failures: %d -> %d", p.Label(), newCF-1, newCF)
 	return
 }
 
@@ -258,7 +258,7 @@ func (pc *proxyConnection) doDial(ctx context.Context, network, addr string) (ne
 		return nil, op.FailIf(err)
 	}
 	conn = idletiming.Conn(conn, IdleTimeout, func() {
-		log.Debugf("Proxy connection to %s via %s idle for %v, closed", addr, conn.RemoteAddr(), IdleTimeout)
+		log.Infof("Proxy connection to %s via %s idle for %v, closed", addr, conn.RemoteAddr(), IdleTimeout)
 	})
 	return conn, nil
 }
@@ -277,7 +277,7 @@ func (pc *proxyConnection) dialInternal(op *ops.Op, ctx context.Context, network
 		case chDone <- true:
 		default:
 			if err == nil {
-				log.Debugf("Connection to %s established too late, closing", addr)
+				log.Infof("Connection to %s established too late, closing", addr)
 				conn.Close()
 			}
 		}
@@ -303,10 +303,10 @@ func (conn defaultServerConn) dialOrigin(ctx context.Context, network, addr stri
 	// that.
 	switch network {
 	case connect:
-		log.Debugf("Sending CONNECT request")
+		log.Infof("Sending CONNECT request")
 		err = conn.p.sendCONNECT(addr, conn)
 	case persistent:
-		log.Debugf("Sending GET request to establish persistent HTTP connection")
+		log.Infof("Sending GET request to establish persistent HTTP connection")
 		err = conn.p.initPersistentConnection(addr, conn)
 	}
 	if err != nil {
@@ -468,7 +468,7 @@ func (conn *enhttpServerConn) dialOrigin(ctx context.Context, network, addr stri
 	dfConn, err := conn.dial(network, addr)
 	if err == nil {
 		dfConn = idletiming.Conn(dfConn, IdleTimeout, func() {
-			log.Debug("enhttp connection idled")
+			log.Info("enhttp connection idled")
 		})
 	}
 	return dfConn, err

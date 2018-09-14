@@ -12,7 +12,7 @@ import (
 // GetFileHash returns the hex encoding of the sha-256 hash of the
 // file at the specified path.
 func GetFileHash(path string) (string, error) {
-	log.Debugf("Hashing file at path %v", path)
+	log.Infof("Hashing file at path %v", path)
 	if f, err := os.Open(path); err != nil {
 		log.Errorf("Could not open file at %v, %v", path, err)
 		return "", err

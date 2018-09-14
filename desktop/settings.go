@@ -117,7 +117,7 @@ func loadSettings(version, revisionDate, buildDate string, isStaging bool) *Sett
 
 // loadSettings loads the initial settings at startup, either from disk or using defaults.
 func loadSettingsFrom(version, revisionDate, buildDate, path string) *Settings {
-	log.Debug("Loading settings")
+	log.Info("Loading settings")
 	// Create default settings that may or may not be overridden from an existing file
 	// on disk.
 	sett := newSettings(path)
@@ -125,12 +125,12 @@ func loadSettingsFrom(version, revisionDate, buildDate, path string) *Settings {
 
 	// Use settings from disk if they're available.
 	if bytes, err := ioutil.ReadFile(path); err != nil {
-		log.Debugf("Could not read file %v", err)
+		log.Infof("Could not read file %v", err)
 	} else if err := yaml.Unmarshal(bytes, set); err != nil {
 		log.Errorf("Could not load yaml %v", err)
 		// Just keep going with the original settings not from disk.
 	} else {
-		log.Debugf("Loaded settings from %v", path)
+		log.Infof("Loaded settings from %v", path)
 	}
 	// old lantern persist settings with all lower case, convert them to camel cased.
 	toCamelCase(set)
@@ -190,7 +190,7 @@ func newSettings(filePath string) *Settings {
 // every UI client
 func (s *Settings) StartService(channel ws.UIChannel) error {
 	helloFn := func(write func(interface{})) {
-		log.Debugf("Sending Lantern settings to new client")
+		log.Infof("Sending Lantern settings to new client")
 		write(s.uiMap())
 	}
 
@@ -206,9 +206,9 @@ func (s *Settings) StartService(channel ws.UIChannel) error {
 }
 
 func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {
-	log.Debugf("Start reading settings messages!!")
+	log.Infof("Start reading settings messages!!")
 	for message := range in {
-		log.Debugf("Read settings message %v", message)
+		log.Infof("Read settings message %v", message)
 
 		data, ok := (message).(map[string]interface{})
 		if !ok {
@@ -287,13 +287,13 @@ func (s *Settings) setString(name SettingName, v interface{}) {
 
 // save saves settings to disk.
 func (s *Settings) save() {
-	log.Debug("Saving settings")
+	log.Info("Saving settings")
 	if f, err := os.Create(s.filePath); err != nil {
 		log.Errorf("Could not open settings file for writing: %v", err)
 	} else if _, err := s.writeTo(f); err != nil {
 		log.Errorf("Could not save settings file: %v", err)
 	} else {
-		log.Debugf("Saved settings to %s", s.filePath)
+		log.Infof("Saved settings to %s", s.filePath)
 	}
 }
 

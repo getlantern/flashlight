@@ -31,7 +31,7 @@ type fetcher struct {
 // newFetcher creates a new configuration fetcher with the specified
 // interface for obtaining the user ID and token if those are populated.
 func newFetcher(conf common.UserConfig, rt http.RoundTripper, originURL string) Fetcher {
-	log.Debugf("Will poll for config at %v", originURL)
+	log.Infof("Will poll for config at %v", originURL)
 
 	// Force detour to whitelist chained domain
 	u, err := url.Parse(originURL)
@@ -56,7 +56,7 @@ func (cf *fetcher) fetch() ([]byte, error) {
 }
 
 func (cf *fetcher) doFetch(op *ops.Op) ([]byte, error) {
-	log.Debugf("Fetching cloud config from %v", cf.originURL)
+	log.Infof("Fetching cloud config from %v", cf.originURL)
 
 	url := cf.originURL
 	req, err := http.NewRequest("GET", url, nil)
@@ -86,7 +86,7 @@ func (cf *fetcher) doFetch(op *ops.Op) ([]byte, error) {
 	if dumperr != nil {
 		log.Errorf("Could not dump response: %v", dumperr)
 	} else {
-		log.Debugf("Response headers from %v:\n%v", cf.originURL, string(dump))
+		log.Infof("Response headers from %v:\n%v", cf.originURL, string(dump))
 	}
 	defer func() {
 		if closeerr := resp.Body.Close(); closeerr != nil {
@@ -96,7 +96,7 @@ func (cf *fetcher) doFetch(op *ops.Op) ([]byte, error) {
 
 	if resp.StatusCode == 304 {
 		op.Set("config_changed", false)
-		log.Debug("Config unchanged in cloud")
+		log.Info("Config unchanged in cloud")
 		return nil, nil
 	} else if resp.StatusCode != 200 {
 		op.HTTPStatusCode(resp.StatusCode)
@@ -119,6 +119,6 @@ func (cf *fetcher) doFetch(op *ops.Op) ([]byte, error) {
 		}
 	}()
 
-	log.Debugf("Fetched cloud config")
+	log.Infof("Fetched cloud config")
 	return ioutil.ReadAll(gzReader)
 }

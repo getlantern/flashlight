@@ -19,7 +19,7 @@ func TestRateTracking(t *testing.T) {
 	var finalErr error
 	var finalCtx map[string]interface{}
 	ops.RegisterReporter(func(failure error, ctx map[string]interface{}) {
-		log.Debugf("Reporting: %v", ctx)
+		log.Infof("Reporting: %v", ctx)
 		mx.Lock()
 		val, ok := ctx["client_bytes_sent"].(borda.Val)
 		if ok && val.Get() == 8.0 {

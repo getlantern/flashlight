@@ -84,7 +84,7 @@ func TestBadServer(t *testing.T) {
 		return
 	}
 	_, err = dialer("connect", "www.google.com")
-	log.Debugf("Error: %v", err)
+	log.Infof("Error: %v", err)
 	assert.Error(t, err, "Dialing a server that disconnects too soon should have failed")
 }
 
@@ -157,16 +157,16 @@ func TestSuccess(t *testing.T) {
 	l := startServer(t)
 
 	dialer, err := NewDialer(func(ctx context.Context, p *proxy) (net.Conn, error) {
-		log.Debugf("Dialing with timeout to: %v", l.Addr())
+		log.Infof("Dialing with timeout to: %v", l.Addr())
 		conn, err := net.DialTimeout(l.Addr().Network(), l.Addr().String(), 2*time.Second)
-		log.Debugf("Got conn %v and err %v", conn, err)
+		log.Infof("Got conn %v and err %v", conn, err)
 		return conn, err
 	})
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	log.Debugf("TESTING SUCCESS")
+	log.Infof("TESTING SUCCESS")
 	test(t, dialer)
 }
 

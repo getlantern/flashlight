@@ -31,5 +31,5 @@ const (
 
 // DumpHeaders logs the given headers (request or response).
 func DumpHeaders(category string, headers *http.Header) {
-	log.Debugf("%s Headers\n%s\n%s\n%s\n\n", category, HR, spew.Sdump(headers), HR)
+	log.Infof("%s Headers\n%s\n%s\n%s\n\n", category, HR, spew.Sdump(headers), HR)
 }

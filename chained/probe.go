@@ -35,7 +35,7 @@ func (p *proxy) Probe(forPerformance bool) bool {
 	if forPerformance {
 		forPerformanceString = " for performance"
 	}
-	log.Debugf("Actively probing %v%v", p.Label(), forPerformanceString)
+	log.Infof("Actively probing %v%v", p.Label(), forPerformanceString)
 
 	elapsed := mtime.Stopwatch()
 	logResult := func(succeeded bool, kb int) bool {
@@ -43,7 +43,7 @@ func (p *proxy) Probe(forPerformance bool) bool {
 		if succeeded {
 			successString = "succeeded"
 		}
-		log.Debugf("Actively probing %v with %dkb took %v and %v", p.Label(), kb, elapsed(), successString)
+		log.Infof("Actively probing %v with %dkb took %v and %v", p.Label(), kb, elapsed(), successString)
 		return succeeded
 	}
 
@@ -170,7 +170,7 @@ func (p *proxy) doHttpPing(kb int, resetBBR bool) error {
 				return false, errors.New("Unable to read response body: %v", copyErr)
 			}
 		}
-		log.Debugf("PING through chained server at %s, status code %d", p.Addr(), resp.StatusCode)
+		log.Infof("PING through chained server at %s, status code %d", p.Addr(), resp.StatusCode)
 		success := resp.StatusCode >= 200 && resp.StatusCode <= 299
 		if success {
 			p.collectBBRInfo(reqTime, resp)

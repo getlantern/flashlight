@@ -57,9 +57,9 @@ func GetCountry(timeout time.Duration) string {
 func Refresh() {
 	select {
 	case refreshRequest <- true:
-		log.Debug("Requested refresh")
+		log.Info("Requested refresh")
 	default:
-		log.Debug("Refresh already in progress")
+		log.Info("Refresh already in progress")
 	}
 }
 
@@ -81,7 +81,7 @@ func run() {
 	for _ = range refreshRequest {
 		gi := lookup()
 		if gi.ip == GetIP(0) {
-			log.Debug("public IP doesn't change, not update")
+			log.Info("public IP doesn't change, not update")
 			continue
 		}
 		currentGeoInfo.Set(gi)
@@ -103,12 +103,12 @@ func lookup() *geoInfo {
 	for {
 		gi, err := doLookup()
 		if err != nil {
-			log.Debugf("Unable to get current location: %s", err)
+			log.Infof("Unable to get current location: %s", err)
 			wait := time.Duration(math.Pow(2, float64(consecutiveFailures))*float64(retryWaitMillis)) * time.Millisecond
 			if wait > maxRetryWait {
 				wait = maxRetryWait
 			}
-			log.Debugf("Waiting %v before retrying", wait)
+			log.Infof("Waiting %v before retrying", wait)
 			time.Sleep(wait)
 			consecutiveFailures++
 		} else {

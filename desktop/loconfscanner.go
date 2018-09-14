@@ -48,7 +48,7 @@ func (loc *loconfer) scan(interval time.Duration, proChecker func() (bool, bool)
 		}
 		isPro, ok := proChecker()
 		if !ok {
-			log.Debugf("Skip checking announcement as user status is unknown")
+			log.Infof("Skip checking announcement as user status is unknown")
 			return
 		}
 		onLoconf(lc, isPro)
@@ -98,7 +98,7 @@ func (loc *loconfer) setUninstallURL(lc *loconf.LoConf, isPro bool) {
 
 	survey := lc.GetUninstallSurvey(settings.GetLanguage(), geolookup.GetCountry(time.Second*30), isPro)
 	if survey == nil {
-		log.Debugf("No available uninstall survey")
+		log.Infof("No available uninstall survey")
 		return
 	}
 	loc.writeURL(path, survey, isPro)
@@ -108,10 +108,10 @@ func (loc *loconfer) writeURL(path string, survey *loconf.UninstallSurvey, isPro
 	var url string
 	if survey.Enabled {
 		if survey.Probability > loc.r.Float64() {
-			log.Debugf("Enabling survey at URL %v", survey.URL)
+			log.Infof("Enabling survey at URL %v", survey.URL)
 			url = survey.URL
 		} else {
-			log.Debugf("Turning survey off probabalistically")
+			log.Infof("Turning survey off probabalistically")
 		}
 	}
 	outfile, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
@@ -132,7 +132,7 @@ func (loc *loconfer) makeAnnouncements(lc *loconf.LoConf, isPro bool) {
 	current, err := lc.GetAnnouncement(lang, isPro)
 	if err != nil {
 		if err == loconf.ErrNoAvailable {
-			log.Debugf("No available announcement")
+			log.Infof("No available announcement")
 		} else {
 			log.Error(err)
 		}
@@ -140,7 +140,7 @@ func (loc *loconfer) makeAnnouncements(lc *loconf.LoConf, isPro bool) {
 	}
 	past := settings.getStringArray(SNPastAnnouncements)
 	if in(current.Campaign, past) {
-		log.Debugf("Skip announcement %s", current.Campaign)
+		log.Infof("Skip announcement %s", current.Campaign)
 		return
 	}
 	if loc.showAnnouncement(current) {

@@ -76,7 +76,7 @@ func (m *userMap) wait(userID int64) *client.User {
 func IsProUser(uc common.UserConfig) (isPro bool, statusKnown bool) {
 	user, err := GetUserData(uc)
 	if err != nil {
-		log.Debugf("Got error fetching pro user: %v", err)
+		log.Infof("Got error fetching pro user: %v", err)
 		return false, false
 	}
 	return isActive(user.UserStatus), true
@@ -117,7 +117,7 @@ func NewUser(uc common.UserConfig) (*client.User, error) {
 // using the specified http client.
 func newUserWithClient(uc common.UserConfig, hc *http.Client) (*client.User, error) {
 	deviceID := uc.GetDeviceID()
-	log.Debugf("Creating new user with device ID '%v'", deviceID)
+	log.Infof("Creating new user with device ID '%v'", deviceID)
 
 	// use deviceID, ignore userID, token
 	user := common.NewUserConfigData(deviceID, 0, "", uc.GetInternalHeaders())
@@ -126,7 +126,7 @@ func newUserWithClient(uc common.UserConfig, hc *http.Client) (*client.User, err
 		return nil, err
 	}
 	setUserData(resp.User.Auth.ID, &resp.User)
-	log.Debugf("created user %+v", resp.User)
+	log.Infof("created user %+v", resp.User)
 	return &resp.User, nil
 }
 
@@ -144,18 +144,18 @@ func getUserDataWithClient(uc common.UserConfig, hc *http.Client) (*client.User,
 	if found {
 		return user, nil
 	}
-	log.Debugf("Fetching user status with device ID '%v', user ID '%v' and proToken %v", uc.GetDeviceID(), userID, uc.GetToken())
+	log.Infof("Fetching user status with device ID '%v', user ID '%v' and proToken %v", uc.GetDeviceID(), userID, uc.GetToken())
 
 	resp, err := client.NewClient(hc).UserStatus(uc)
 	if err != nil {
 		return nil, err
 	}
 	setUserData(userID, &resp.User)
-	log.Debugf("User %d is '%v'", userID, resp.User.UserStatus)
+	log.Infof("User %d is '%v'", userID, resp.User.UserStatus)
 	return &resp.User, nil
 }
 
 func setUserData(userID int64, user *client.User) {
-	log.Debugf("Storing user data for user %v", userID)
+	log.Infof("Storing user data for user %v", userID)
 	userData.save(userID, user)
 }

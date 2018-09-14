@@ -182,7 +182,7 @@ func (t *tracker) SetIsPro(val bool) {
 
 func (t *tracker) SetAlert(alertType AlertType, details string, transient bool) {
 	t.update(func(stats Stats) Stats {
-		log.Debugf("Setting alert %s", alertType)
+		log.Infof("Setting alert %s", alertType)
 		e := Alert{alertType, details, helpURLs[alertType]}
 		stats.Alerts = append(stats.Alerts, e)
 		if transient {
@@ -200,7 +200,7 @@ func (t *tracker) ClearAlert(alertType AlertType) {
 		alerts := stats.Alerts[:0]
 		for _, a := range stats.Alerts {
 			if a.AlertType == alertType {
-				log.Debugf("Clearing alert %s", alertType)
+				log.Infof("Clearing alert %s", alertType)
 			} else {
 				alerts = append(alerts, a)
 			}

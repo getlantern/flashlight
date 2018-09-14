@@ -25,7 +25,7 @@ func TestClient(t *testing.T) {
 	if !assert.NoError(t, e) {
 		return
 	}
-	log.Debugf("Got responsde code: %v", res.StatusCode)
+	log.Infof("Got responsde code: %v", res.StatusCode)
 	assert.NotNil(t, res.Body, "nil plans response body?")
 
 	body, bodyErr := ioutil.ReadAll(res.Body)
