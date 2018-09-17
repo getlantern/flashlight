@@ -22,12 +22,12 @@ cd $etc
 git checkout master || die "Could not checkout master?"
 git pull || die "Could not pull latest code?"
 git submodule update  || die "Could not update submodules?"
-./fetchcfg.py ir >> proxies.yaml || die "Could not fetch proxy in etc region?"
-./fetchcfg.py ir >> proxies.yaml || die "Could not fetch proxy in etc region?"
-./fetchcfg.py ir >> proxies.yaml || die "Could not fetch proxy in etc region?"
-./fetchcfg.py sea >> proxies.yaml || die "Could not fetch proxy in sea region?"
-./fetchcfg.py sea >> proxies.yaml || die "Could not fetch proxy in sea region?"
-./fetchcfg.py sea >> proxies.yaml || die "Could not fetch proxy in sea region?"
+./fetch_bakedin_config.py ir >> proxies.yaml || die "Could not fetch proxy in etc region?"
+./fetch_bakedin_config.py ir >> proxies.yaml || die "Could not fetch proxy in etc region?"
+./fetch_bakedin_config.py ir >> proxies.yaml || die "Could not fetch proxy in etc region?"
+./fetch_bakedin_config.py sea >> proxies.yaml || die "Could not fetch proxy in sea region?"
+./fetch_bakedin_config.py sea >> proxies.yaml || die "Could not fetch proxy in sea region?"
+./fetch_bakedin_config.py sea >> proxies.yaml || die "Could not fetch proxy in sea region?"
 cd -
 
 echo 'package generated' > ../config/generated/embeddedProxies.go && \
