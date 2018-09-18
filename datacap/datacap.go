@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/getlantern/bandwidth"
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/notifier"
 
@@ -23,7 +23,7 @@ var (
 
 	dataCapListeners   = make([]func(hitDataCap bool), 0)
 	dataCapListenersMx sync.RWMutex
-	log                = golog.LoggerFor("flashlight.datacap")
+	log                = zaplog.LoggerFor("flashlight.datacap")
 )
 
 type dataCap struct {
@@ -35,7 +35,7 @@ type dataCap struct {
 // ServeDataCap starts serving data cap data to the frontend.
 func ServeDataCap(channel ws.UIChannel, iconURL func() string, clickURL func() string, isPro func() (bool, bool)) error {
 	helloFn := func(write func(interface{})) {
-		log.Debugf("Sending current bandwidth quota to new client")
+		log.Infof("Sending current bandwidth quota to new client")
 		write(bandwidth.GetQuota())
 	}
 	bservice, err := channel.Register("bandwidth", helloFn)
@@ -53,7 +53,7 @@ func ServeDataCap(channel ws.UIChannel, iconURL func() string, clickURL func() s
 }
 
 func (dc *dataCap) processQuota(out chan<- interface{}, quota *bandwidth.Quota) {
-	log.Debugf("Sending update...")
+	log.Infof("Sending update...")
 	out <- quota
 	isFull := dc.isFull(quota)
 	dataCapListenersMx.RLock()
@@ -127,10 +127,10 @@ func (dc *dataCap) notifyCapHit() {
 
 func (dc *dataCap) notifyFreeUser(title, msg, campaign string) {
 	if isPro, ok := dc.isPro(); !ok {
-		log.Debugf("user status is unknown, skip showing notification")
+		log.Infof("user status is unknown, skip showing notification")
 		return
 	} else if isPro {
-		log.Debugf("Not showing desktop notification for pro user")
+		log.Infof("Not showing desktop notification for pro user")
 		return
 	}
 

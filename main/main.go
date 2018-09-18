@@ -13,7 +13,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 	"github.com/getlantern/i18n"
 
 	"github.com/getlantern/flashlight/chained"
@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	log = golog.LoggerFor("flashlight")
+	log = zaplog.LoggerFor("flashlight")
 )
 
 func main() {
@@ -72,7 +72,7 @@ func main() {
 
 	if *pprofAddr != "" {
 		go func() {
-			log.Debugf("Starting pprof page at http://%s/debug/pprof", *pprofAddr)
+			log.Infof("Starting pprof page at http://%s/debug/pprof", *pprofAddr)
 			srv := &http.Server{
 				Addr: *pprofAddr,
 			}
@@ -91,13 +91,13 @@ func main() {
 			runApp(a)
 		})
 	} else {
-		log.Debug("Running headless")
+		log.Info("Running headless")
 		runApp(a)
 		err := a.WaitForExit()
 		if err != nil {
 			log.Error(err)
 		}
-		log.Debug("Lantern stopped")
+		log.Info("Lantern stopped")
 		os.Exit(0)
 	}
 }
@@ -126,9 +126,9 @@ func i18nInit(a *desktop.App) {
 	})
 	locale := a.GetLanguage()
 	if err := i18n.SetLocale(locale); err != nil {
-		log.Debugf("i18n.SetLocale(%s) failed, fallback to OS default: %q", locale, err)
+		log.Infof("i18n.SetLocale(%s) failed, fallback to OS default: %q", locale, err)
 		if err := i18n.UseOSLocale(); err != nil {
-			log.Debugf("i18n.UseOSLocale: %q", err)
+			log.Infof("i18n.UseOSLocale: %q", err)
 		}
 	}
 }
@@ -141,7 +141,7 @@ func parseFlags() {
 	// pass an extra flag like -psn_0_1122578.  flag.Parse() fails if it sees
 	// any flags that haven't been declared, so we remove the extra flag.
 	if len(os.Args) == 2 && strings.HasPrefix(os.Args[1], "-psn") {
-		log.Debugf("Ignoring extra flag %v", os.Args[1])
+		log.Infof("Ignoring extra flag %v", os.Args[1])
 		args = []string{}
 	}
 	// Note - we can ignore the returned error because CommandLine.Parse() will
@@ -175,7 +175,7 @@ func handleSignals(a *desktop.App) {
 		syscall.SIGQUIT)
 	go func() {
 		s := <-c
-		log.Debugf("Got signal \"%s\", exiting...", s)
+		log.Infof("Got signal \"%s\", exiting...", s)
 		a.Exit(nil)
 	}()
 }

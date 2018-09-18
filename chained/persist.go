@@ -50,10 +50,10 @@ func probeIfRequired(dialers []balancer.Dialer) {
 		// probe is automatically required for relatively new dialers
 		probeRequired := dialer.Attempts() < 20
 		if probeRequired {
-			log.Debugf("%v is relatively new, will probe for performance", dialer.Label())
+			log.Infof("%v is relatively new, will probe for performance", dialer.Label())
 		} else if i > 0 && dialer.Successes() > 0 && dialer.EstRTT() < rttOfTopProxy {
 			// dialers whose RTT is lower than the top proxy get checked on startup as well
-			log.Debugf("%v is lower RTT than %v, will probe for performance", dialer.Label(), sorted[0].Label())
+			log.Infof("%v is lower RTT than %v, will probe for performance", dialer.Label(), sorted[0].Label())
 			probeRequired = true
 		}
 		if probeRequired {
@@ -98,7 +98,7 @@ func applyExistingStats(dialers []balancer.Dialer) {
 				successful = false
 				break
 			}
-			log.Debugf("Loaded stats for %v", row[1])
+			log.Infof("Loaded stats for %v", row[1])
 		}
 	}
 
@@ -198,7 +198,7 @@ func doPersistStats(dialers []balancer.Dialer) {
 		log.Errorf("Unable to move temporary proxystats.csv to final location: %v", err)
 	}
 
-	log.Debugf("Saved proxy stats to %v", statsFile)
+	log.Infof("Saved proxy stats to %v", statsFile)
 }
 
 func statsFilePath() string {

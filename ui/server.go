@@ -12,11 +12,12 @@ import (
 	"time"
 
 	"github.com/skratchdot/open-golang/open"
+	"go.uber.org/zap"
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/golog"
 	"github.com/getlantern/tarfs"
+	"github.com/getlantern/zaplog"
 
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/stats"
@@ -33,7 +34,7 @@ func init() {
 }
 
 var (
-	log          = golog.LoggerFor("flashlight.ui")
+	log          = zaplog.LoggerFor("flashlight.ui")
 	fs           *tarfs.FileSystem
 	translations = eventual.NewValue()
 )
@@ -131,7 +132,7 @@ func (s *Server) handle(pattern string, handler http.Handler) {
 // static file server can properly serve it.
 func (s *Server) strippingHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Debugf("Stripping path from %v", r.URL.Path)
+		log.Infof("Stripping path from %v", r.URL.Path)
 		r.URL.Path = strings.Replace(r.URL.Path, s.requestPath, "", -1)
 		h.ServeHTTP(w, r)
 	})
@@ -142,11 +143,11 @@ func (s *Server) strippingHandler(h http.Handler) http.Handler {
 func (s *Server) start(requestedAddr string) error {
 	var listenErr error
 	for _, addr := range addrCandidates(requestedAddr) {
-		log.Debugf("Lantern UI server start listening at %v", addr)
+		log.Infof("Lantern UI server start listening at %v", addr)
 		l, err := net.Listen("tcp", addr)
 		if err != nil {
 			listenErr = fmt.Errorf("unable to listen at %v: %v", addr, err)
-			log.Debug(listenErr)
+			log.Info(listenErr)
 			continue
 		}
 		s.listenAddr = addr
@@ -166,7 +167,7 @@ serve:
 		// On first run, we pick an arbitrary port, update our listenAddr to
 		// reflect the assigned port
 		s.listenAddr = fmt.Sprintf("%v:%v", host, actualPort)
-		log.Debugf("rewrote listen address to %v", s.listenAddr)
+		log.Infof("rewrote listen address to %v", s.listenAddr)
 	}
 	if host == "" {
 		host = "localhost"
@@ -175,11 +176,11 @@ serve:
 
 	server := &http.Server{
 		Handler:  s.mux,
-		ErrorLog: log.AsStdLogger(),
+		ErrorLog: zap.NewStdLog(log.Desugar()),
 	}
 	ch := make(chan error, 1)
 	go func() {
-		log.Debugf("UI serving at %v", s.listener.Addr())
+		log.Infof("UI serving at %v", s.listener.Addr())
 		err := server.Serve(s.listener)
 		ch <- err
 	}()
@@ -190,7 +191,7 @@ serve:
 		log.Errorf("Error serving: %v", err)
 		return err
 	case <-time.After(100 * time.Millisecond):
-		log.Debugf("UI available at http://%v", s.accessAddr)
+		log.Infof("UI available at http://%v", s.accessAddr)
 		return nil
 	}
 }
@@ -238,7 +239,7 @@ func (s *Server) doShow(destURL, campaign, medium string, open func(string, time
 	} else {
 		uiURL = campaignURL
 	}
-	log.Debugf("Opening browser at %v", uiURL)
+	log.Infof("Opening browser at %v", uiURL)
 	open(uiURL, 0*time.Second)
 
 	// This is for opening exernal URLs in a new browser window for
@@ -322,7 +323,7 @@ func closeConn(msg string, w http.ResponseWriter, r *http.Request) {
 func dumpRequestHeaders(r *http.Request) {
 	dump, err := httputil.DumpRequest(r, false)
 	if err == nil {
-		log.Debugf("Request:\n%s", string(dump))
+		log.Infof("Request:\n%s", string(dump))
 	}
 }
 
@@ -359,7 +360,7 @@ func unpackUI() {
 
 // Translations returns the translations for a given locale file.
 func Translations(filename string) ([]byte, error) {
-	log.Tracef("Accessing translations %v", filename)
+	log.Debugf("Accessing translations %v", filename)
 	tr, ok := translations.Get(30 * time.Second)
 	if !ok || tr == nil {
 		return nil, fmt.Errorf("Could not get traslation for file name: %v", filename)

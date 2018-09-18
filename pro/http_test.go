@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestClient(t *testing.T) {
-	log := golog.LoggerFor("pro-http-test")
+	log := zaplog.LoggerFor("pro-http-test")
 	url := "https://api.getiantem.org/plans"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -26,7 +26,7 @@ func TestClient(t *testing.T) {
 	if !assert.NoError(t, e) {
 		return
 	}
-	log.Debugf("Got responsde code: %v", res.StatusCode)
+	log.Infof("Got responsde code: %v", res.StatusCode)
 	assert.NotNil(t, res.Body, "nil plans response body?")
 
 	body, bodyErr := ioutil.ReadAll(res.Body)

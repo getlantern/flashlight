@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/getlantern/autoupdate"
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/notifier"
 
@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	log             = golog.LoggerFor("flashlight.autoupdate")
+	log             = zaplog.LoggerFor("flashlight.autoupdate")
 	updateServerURL = "https://update.getlantern.org"
 	PublicKey       = []byte(autoupdate.PackagePublicKey)
 	Version         string
@@ -61,7 +61,7 @@ func enableAutoupdate() {
 }
 
 func watchForUpdate() {
-	log.Debugf("Software version: %s", Version)
+	log.Infof("Software version: %s", Version)
 	for {
 		newVersion, err := autoupdate.ApplyNext(&autoupdate.Config{
 			CurrentVersion: Version,
@@ -72,7 +72,7 @@ func watchForUpdate() {
 		})
 		if err == nil {
 			notifyUser(newVersion)
-			log.Debugf("Got update for version %s", newVersion)
+			log.Infof("Got update for version %s", newVersion)
 		} else {
 			// unrecoverable error which tends to happen again
 			log.Error(err)
@@ -91,6 +91,6 @@ func notifyUser(newVersion string) {
 		ClickLabel: i18n.T("BACKEND_CLICK_LABEL_GOT_IT"),
 	}
 	if !notifier.ShowNotification(note, "autoupdate-notification") {
-		log.Debug("Unable to show autoupdate notification")
+		log.Info("Unable to show autoupdate notification")
 	}
 }

@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/getlantern/fronted"
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/tlsdialer"
 	"github.com/getlantern/yaml"
@@ -58,7 +58,7 @@ var (
 )
 
 var (
-	log = golog.LoggerFor("genconfig")
+	log = zaplog.LoggerFor("genconfig")
 
 	masquerades []string
 
@@ -170,7 +170,7 @@ func main() {
 	}
 
 	numcores := runtime.NumCPU()
-	log.Debugf("Using all %d cores on machine", numcores)
+	log.Infof("Using all %d cores on machine", numcores)
 	runtime.GOMAXPROCS(numcores)
 
 	for _, pid := range enabledProviders {
@@ -285,7 +285,7 @@ func loadFtVersion() {
 
 	defer func() {
 		if err := res.Body.Close(); err != nil {
-			log.Debugf("Error closing response body: %v", err)
+			log.Infof("Error closing response body: %v", err)
 		}
 	}()
 	body, err := ioutil.ReadAll(res.Body)
@@ -372,29 +372,29 @@ func grabCerts() {
 
 		provider, ok := providers[providerID]
 		if !ok {
-			log.Debugf("Skipping masquerade for unknown provider %s", providerID)
+			log.Infof("Skipping masquerade for unknown provider %s", providerID)
 			continue
 		}
 		// default provider is always vetted even if not enabled for legacy client config
 		if providerID != defaultProviderID && !provider.Enabled {
-			log.Debugf("Skipping masquerade for disabled provider %s", providerID)
+			log.Infof("Skipping masquerade for disabled provider %s", providerID)
 		}
 
 		ip := parts[0]
 		domain := parts[1]
 		_, blacklisted := blacklist[domain]
 		if blacklisted {
-			log.Tracef("Domain %s is blacklisted, skipping", domain)
+			log.Debugf("Domain %s is blacklisted, skipping", domain)
 			continue
 		}
-		log.Tracef("Grabbing certs for IP %s, domain %s", ip, domain)
+		log.Debugf("Grabbing certs for IP %s, domain %s", ip, domain)
 		cwt, err := tlsdialer.DialForTimings(net.DialTimeout, 10*time.Second, "tcp", ip+":443", false, &tls.Config{ServerName: domain})
 		if err != nil {
 			log.Errorf("Unable to dial IP %s, domain %s: %s", ip, domain, err)
 			continue
 		}
 		if err := cwt.Conn.Close(); err != nil {
-			log.Debugf("Error closing connection: %v", err)
+			log.Infof("Error closing connection: %v", err)
 		}
 		chain := cwt.VerifiedChains[0]
 		rootCA := chain[len(chain)-1]
@@ -408,7 +408,7 @@ func grabCerts() {
 			Cert:       strings.Replace(string(rootCert.PEMEncoded()), "\n", "\\n", -1),
 		}
 
-		log.Debugf("Successfully grabbed certs for: %v", domain)
+		log.Infof("Successfully grabbed certs for: %v", domain)
 		masqueradesCh <- &masquerade{
 			Domain:     domain,
 			IpAddress:  ip,
@@ -463,11 +463,11 @@ func vetAndAssignMasquerades(cas map[string]*castat, masquerades []*masquerade) 
 	for pid, candidates := range byProvider {
 		provider, ok := providers[pid]
 		if !ok {
-			log.Debugf("Not vetting masquerades for unknown provider %s", pid)
+			log.Infof("Not vetting masquerades for unknown provider %s", pid)
 			continue
 		}
 		if !provider.Enabled {
-			log.Debugf("Not vetting masquerades for disabled provider %s", pid)
+			log.Infof("Not vetting masquerades for disabled provider %s", pid)
 		}
 		vetted := vetMasquerades(cas, candidates)
 		if len(vetted) < *minMasquerades {
@@ -486,7 +486,7 @@ func vetMasquerades(cas map[string]*castat, masquerades []*masquerade) []*masque
 			continue
 		}
 		certPool.AddCert(cert.X509())
-		log.Debug("Added cert to pool")
+		log.Info("Added cert to pool")
 	}
 
 	wg.Add(*numberOfWorkers)
@@ -517,7 +517,7 @@ func vetMasquerades(cas map[string]*castat, masquerades []*masquerade) []*masque
 }
 
 func doVetMasquerades(certPool *x509.CertPool, inCh chan *masquerade, outCh chan *masquerade) {
-	log.Debug("Starting to vet masquerades")
+	log.Info("Starting to vet masquerades")
 	for _m := range inCh {
 		m := &fronted.Masquerade{
 			Domain:    _m.Domain,
@@ -526,18 +526,18 @@ func doVetMasquerades(certPool *x509.CertPool, inCh chan *masquerade, outCh chan
 
 		provider, ok := providers[_m.ProviderID]
 		if !ok {
-			log.Debugf("%v (%v) failed to vet: unknown provider %v", m.Domain, m.IpAddress, _m.ProviderID)
+			log.Infof("%v (%v) failed to vet: unknown provider %v", m.Domain, m.IpAddress, _m.ProviderID)
 			continue
 		}
 
 		if fronted.Vet(m, certPool, provider.TestURL) {
-			log.Debugf("Successfully vetted %v (%v)", m.Domain, m.IpAddress)
+			log.Infof("Successfully vetted %v (%v)", m.Domain, m.IpAddress)
 			outCh <- _m
 		} else {
-			log.Debugf("%v (%v) failed to vet", m.Domain, m.IpAddress)
+			log.Infof("%v (%v) failed to vet", m.Domain, m.IpAddress)
 		}
 	}
-	log.Debug("Done vetting masquerades")
+	log.Info("Done vetting masquerades")
 	wg.Done()
 }
 
@@ -599,7 +599,7 @@ func buildModel(configName string, cas map[string]*castat, useFallbacks bool) (m
 			userConfig := common.NewUserConfigData(defaultDeviceID, 0, "", nil)
 			dialer, err := client.ChainedDialer(name, info, userConfig)
 			if err != nil {
-				log.Debugf("Skipping fallback %v because of error building dialer: %v", f.Addr, err)
+				log.Infof("Skipping fallback %v because of error building dialer: %v", f.Addr, err)
 				continue
 			}
 			if fallbackOK(f, dialer) {
@@ -634,11 +634,11 @@ func fallbackOK(f *chained.ChainedServerInfo, dialer balancer.Dialer) bool {
 		defer cancel()
 		conn, _, err := pd.DialContext(ctx, "tcp", "http://www.google.com")
 		if err != nil {
-			log.Debugf("Skipping fallback %v because dialing Google failed: %v", f.Addr, err)
+			log.Infof("Skipping fallback %v because dialing Google failed: %v", f.Addr, err)
 			return false
 		}
 		if err := conn.Close(); err != nil {
-			log.Debugf("Error closing connection: %v", err)
+			log.Infof("Error closing connection: %v", err)
 		}
 		return true
 	}
@@ -657,7 +657,7 @@ func generateTemplate(model map[string]interface{}, tmplString string, filename 
 	}
 	defer func() {
 		if err := out.Close(); err != nil {
-			log.Debugf("Error closing file: %v", err)
+			log.Infof("Error closing file: %v", err)
 		}
 	}()
 	err = tmpl.Execute(out, model)
@@ -668,7 +668,7 @@ func generateTemplate(model map[string]interface{}, tmplString string, filename 
 
 func run(prg string, args ...string) (string, error) {
 	cmd := exec.Command(prg, args...)
-	log.Debugf("Running %s %s", prg, strings.Join(args, " "))
+	log.Infof("Running %s %s", prg, strings.Join(args, " "))
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("%s says %s", prg, string(out))

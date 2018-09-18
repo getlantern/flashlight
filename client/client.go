@@ -23,7 +23,6 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/go-socks5"
-	"github.com/getlantern/golog"
 	"github.com/getlantern/hidden"
 	"github.com/getlantern/httpseverywhere"
 	"github.com/getlantern/i18n"
@@ -32,6 +31,7 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 	"github.com/getlantern/proxy/filters"
+	"github.com/getlantern/zaplog"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
@@ -43,7 +43,7 @@ import (
 )
 
 var (
-	log = golog.LoggerFor("flashlight.client")
+	log = zaplog.LoggerFor("flashlight.client")
 
 	addr                = eventual.NewValue()
 	socksAddr           = eventual.NewValue()
@@ -222,17 +222,17 @@ func (client *Client) GetBalancer() *balancer.Balancer {
 func (client *Client) initEasyList(adBlockingAllowed func() bool) {
 	defer func() {
 		if client.easylist == nil {
-			log.Debugf("Not using easylist")
+			log.Infof("Not using easylist")
 			client.easylist = easylist.AndList{}
 		}
 	}()
 
 	if !adBlockingAllowed() {
-		log.Debug("Ad blocking not allowed, not initializing easylist")
+		log.Info("Ad blocking not allowed, not initializing easylist")
 		return
 	}
 
-	log.Debug("Initializing easylist")
+	log.Info("Initializing easylist")
 	lanternList, err := easyListFor("lanternlist.txt.gz", "https://raw.githubusercontent.com/getlantern/easylist/master/lanternlist.txt.gz")
 	if err != nil {
 		log.Error(err)
@@ -256,7 +256,7 @@ func (client *Client) initEasyList(adBlockingAllowed func() bool) {
 		// Use combined for maximum coverage
 		return combined.Allow(req)
 	})
-	log.Debug("Initialized easylist")
+	log.Info("Initialized easylist")
 }
 
 func easyListFor(cacheFile string, url string) (easylist.List, error) {
@@ -323,11 +323,11 @@ func (client *Client) Socks5Addr(timeout time.Duration) (interface{}, bool) {
 func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn func()) error {
 	var err error
 	var l net.Listener
-	log.Debugf("About to listen at '%s'", requestedAddr)
+	log.Infof("About to listen at '%s'", requestedAddr)
 	if l, err = net.Listen("tcp", requestedAddr); err != nil {
-		log.Debugf("Error listening at '%s', fallback to default: %v", requestedAddr, err)
+		log.Infof("Error listening at '%s', fallback to default: %v", requestedAddr, err)
 		requestedAddr = "127.0.0.1:0"
-		log.Debugf("About to listen at '%s'", requestedAddr)
+		log.Infof("About to listen at '%s'", requestedAddr)
 		if l, err = net.Listen("tcp", requestedAddr); err != nil {
 			return fmt.Errorf("Unable to listen: %q", err)
 		}
@@ -339,13 +339,13 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 	client.httpProxyIP, client.httpProxyPort, _ = net.SplitHostPort(listenAddr)
 	onListeningFn()
 
-	log.Debugf("About to start HTTP client proxy at %v", listenAddr)
+	log.Infof("About to start HTTP client proxy at %v", listenAddr)
 	for {
 		start := time.Now()
 		conn, err := l.Accept()
 		if err != nil {
 			if time.Since(start) >= 10*time.Second {
-				log.Debugf("Error serving HTTP client proxy at %v, restarting: %v", listenAddr, err)
+				log.Infof("Error serving HTTP client proxy at %v, restarting: %v", listenAddr, err)
 				time.Sleep(100 * time.Millisecond)
 				continue
 			}
@@ -374,7 +374,8 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 			addr := client.reverseDNS(fmt.Sprintf("%v:%v", req.DestAddr.IP, req.DestAddr.Port))
 			errOnReply := replySuccess(nil)
 			if errOnReply != nil {
-				return op.FailIf(log.Errorf("Unable to reply success to SOCKS5 client: %v", errOnReply))
+				log.Errorf("Unable to reply success to SOCKS5 client: %v", errOnReply)
+				return op.FailIf(errOnReply)
 			}
 			return op.FailIf(client.proxy.Connect(ctx, req.BufConn, conn, addr))
 		},
@@ -384,14 +385,14 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 		return fmt.Errorf("Unable to create SOCKS5 server: %v", err)
 	}
 
-	log.Debugf("About to start SOCKS5 client proxy at %v", listenAddr)
+	log.Infof("About to start SOCKS5 client proxy at %v", listenAddr)
 	return server.Serve(l)
 }
 
 // Configure updates the client's configuration. Configure can be called
 // before or after ListenAndServe, and can be called multiple times.
 func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo) {
-	log.Debug("Configure() called")
+	log.Info("Configure() called")
 	err := client.initBalancer(proxies)
 	if err != nil {
 		log.Error(err)
@@ -428,7 +429,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 	op.Origin(addr, "")
 
 	if err := client.shouldSendToProxy(addr, port); err != nil {
-		log.Debugf("%v, sending directly to %v", err, addr)
+		log.Infof("%v, sending directly to %v", err, addr)
 		op.Set("force_direct", true)
 		op.Set("force_direct_reason", err.Error())
 		// Use netx because on Android, we need a special protected dialer, same below
@@ -456,19 +457,17 @@ func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Con
 		}
 		start := time.Now()
 		conn, err := client.bal.DialContext(ctx, proto, addr)
-		if log.IsTraceEnabled() {
-			log.Tracef("Dialing proxy takes %v for %s", time.Since(start), addr)
-		}
+		log.Debugf("Dialing proxy takes %v for %s", time.Since(start), addr)
 		return conn, err
 	}
 
 	dialDirectForShortcut := func(ctx context.Context, network, addr string, ip net.IP) (net.Conn, error) {
 		if requiresProxy(addr) {
-			log.Debugf("Address %v requires a proxy, use it instead of shortcutting", addr)
+			log.Infof("Address %v requires a proxy, use it instead of shortcutting", addr)
 			return dialProxied(ctx, network, addr)
 		}
 
-		log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
+		log.Infof("Use shortcut (dial directly) for %v(%v)", addr, ip)
 		op.Set("shortcut_direct", true)
 		op.Set("shortcut_direct_ip", ip)
 		return netx.DialContext(ctx, "tcp", addr)
@@ -480,7 +479,7 @@ func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Con
 		}
 
 		if requiresProxy(addr) {
-			log.Debugf("Address %v requires a proxy, use it instead of detour direct", addr)
+			log.Infof("Address %v requires a proxy, use it instead of detour direct", addr)
 			return dialProxied(ctx, network, addr)
 		}
 
@@ -520,7 +519,7 @@ func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Con
 
 func (client *Client) shouldSendToProxy(addr string, port int) error {
 	if requiresProxy(addr) {
-		log.Debugf("Address %v requires a proxy", addr)
+		log.Infof("Address %v requires a proxy", addr)
 		return nil
 	}
 
@@ -621,7 +620,7 @@ func InConfigDir(configDir string, filename string) (string, error) {
 		cdir = appdir.General("Lantern")
 	}
 
-	log.Debugf("Using config dir %v", cdir)
+	log.Infof("Using config dir %v", cdir)
 	if _, err := os.Stat(cdir); err != nil {
 		if os.IsNotExist(err) {
 			// Create config dir
@@ -654,7 +653,7 @@ func errorResponse(ctx filters.Context, req *http.Request, read bool, err error)
 		// from getting just a blank screen.
 		htmlerr, err = status.ErrorAccessingPage(req.Host, err)
 		if err != nil {
-			log.Debugf("Got error while generating status page: %q", err)
+			log.Infof("Got error while generating status page: %q", err)
 		}
 	}
 

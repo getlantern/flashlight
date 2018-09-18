@@ -13,11 +13,11 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/pro/client"
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 )
 
 var (
-	log = golog.LoggerFor("flashlight.pro")
+	log = zaplog.LoggerFor("flashlight.pro")
 )
 
 type proxyTransport struct {
@@ -89,7 +89,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 		log.Errorf("Error decode JSON: %v", readErr)
 		return
 	}
-	log.Debugf("Updating user data implicitly for user %v", userID)
+	log.Infof("Updating user data implicitly for user %v", userID)
 	setUserData(userID, &user)
 	return
 }
@@ -114,7 +114,7 @@ func PrepareProRequest(r *http.Request, uc common.UserConfig) {
 // APIHandler returns an HTTP handler that specifically looks for and properly
 // handles pro server requests.
 func APIHandler(uc common.UserConfig) http.Handler {
-	log.Debugf("Returning pro API handler hitting host: %v", common.ProAPIHost)
+	log.Infof("Returning pro API handler hitting host: %v", common.ProAPIHost)
 	return &httputil.ReverseProxy{
 		Transport: &proxyTransport{},
 		Director: func(r *http.Request) {

@@ -72,7 +72,7 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 			log.Errorf("No Cert configured for %s, will dial with plain tcp", s.Addr)
 			p, err = newHTTPProxy(name, s, uc)
 		} else {
-			log.Tracef("Cert configured for  %s, will dial with tls", s.Addr)
+			log.Debugf("Cert configured for  %s, will dial with tls", s.Addr)
 			p, err = newHTTPSProxy(name, s, uc)
 		}
 		return p, err
@@ -88,7 +88,7 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 // ForceProxy forces everything through the HTTP proxy at forceAddr using
 // forceToken.
 func ForceProxy(forceAddr string, forceToken string) {
-	log.Debugf("Forcing proxying through proxy at %v using token %v", forceAddr, forceToken)
+	log.Infof("Forcing proxying through proxy at %v using token %v", forceAddr, forceToken)
 	theForceAddr, theForceToken = forceAddr, forceToken
 }
 
@@ -131,7 +131,9 @@ func newHTTPProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pro
 func newHTTPSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
-		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
+		keyErr := errors.Wrap(err).With("addr", s.Addr)
+		log.Error(keyErr)
+		return nil, keyErr
 	}
 	x509cert := cert.X509()
 
@@ -153,7 +155,7 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pr
 			}
 			if !conn.ConnectionState().PeerCertificates[0].Equal(x509cert) {
 				if closeErr := conn.Close(); closeErr != nil {
-					log.Debugf("Error closing chained server connection: %s", closeErr)
+					log.Infof("Error closing chained server connection: %s", closeErr)
 				}
 				var received interface{}
 				var expected interface{}
@@ -166,8 +168,9 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pr
 					received = string(_received.PEMEncoded())
 					expected = string(cert.PEMEncoded())
 				}
-				return nil, op.FailIf(log.Errorf("Server's certificate didn't match expected! Server had\n%v\nbut expected:\n%v",
-					received, expected))
+				certError := fmt.Errorf("Server's certificate didn't match expected! Server had\n%v\nbut expected:\n%v",
+					received, expected)
+				return nil, op.FailIf(certError)
 			}
 			return overheadWrapper(true)(conn, op.FailIf(err))
 		})
@@ -181,7 +184,9 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pr
 
 	cf, err := (&obfs4.Transport{}).ClientFactory("")
 	if err != nil {
-		return nil, log.Errorf("Unable to create obfs4 client factory: %v", err)
+		obfs4Err := fmt.Errorf("Unable to create obfs4 client factory: %v", err)
+		log.Error(obfs4Err)
+		return nil, obfs4Err
 	}
 
 	ptArgs := &pt.Args{}
@@ -190,7 +195,9 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pr
 
 	args, err := cf.ParseArgs(ptArgs)
 	if err != nil {
-		return nil, log.Errorf("Unable to parse client args: %v", err)
+		ptErr := fmt.Errorf("Unable to parse client args: %v", err)
+		log.Error(ptErr)
+		return nil, ptErr
 	}
 
 	return newProxy(name, "obfs4", "tcp", s.Addr, s, uc, s.Trusted, func(ctx context.Context, p *proxy) (serverConn, error) {
@@ -210,7 +217,9 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pr
 func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
-		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
+		keyErr := errors.Wrap(err).With("addr", s.Addr)
+		log.Error(keyErr)
+		return nil, keyErr
 	}
 	rsaPublicKey, ok := cert.X509().PublicKey.(*rsa.PublicKey)
 	if !ok {
@@ -232,12 +241,12 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 	idleInterval, parseErr := time.ParseDuration(s.ptSetting("idleinterval"))
 	if parseErr != nil || idleInterval < 0 {
 		idleInterval = IdleTimeout * 2
-		log.Debugf("Defaulted lampshade idleinterval to %v", idleInterval)
+		log.Infof("Defaulted lampshade idleinterval to %v", idleInterval)
 	}
 	pingInterval, parseErr := time.ParseDuration(s.ptSetting("pinginterval"))
 	if parseErr != nil || pingInterval < 0 {
 		pingInterval = 15 * time.Second
-		log.Debugf("Defaulted lampshade pinginterval to %v", pingInterval)
+		log.Infof("Defaulted lampshade pinginterval to %v", pingInterval)
 	}
 	dialer := lampshade.NewDialer(&lampshade.DialerOpts{
 		WindowSize:        windowSize,
@@ -260,7 +269,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 					conn, err := p.dialCore(op)(ctx)
 					if err == nil && idleInterval > 0 {
 						conn = idletiming.Conn(conn, idleInterval, func() {
-							log.Debug("lampshade TCP connection idled")
+							log.Info("lampshade TCP connection idled")
 						})
 					}
 					return conn, err
@@ -382,7 +391,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		elapsed := mtime.Stopwatch()
 		conn, err := netx.DialTimeout("tcp", p.addr, timeoutFor(ctx))
 		delta := elapsed()
-		log.Tracef("Core dial time to %v was %v", p.Name(), delta)
+		log.Debugf("Core dial time to %v was %v", p.Name(), delta)
 		return conn, delta, err
 	}
 
@@ -394,7 +403,7 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		p.protocol = "kcp"
 	}
 
-	log.Debugf("%v preconnects, init: %d   max: %d", p.Label(), initPreconnect, maxPreconnect)
+	log.Infof("%v preconnects, init: %d   max: %d", p.Label(), initPreconnect, maxPreconnect)
 	p.processPreconnects(initPreconnect)
 	return p, nil
 }
@@ -403,7 +412,9 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 	var cfg KCPConfig
 	err := mapstructure.Decode(s.KCPSettings, &cfg)
 	if err != nil {
-		return log.Errorf("Could not decode kcp transport settings?: %v", err)
+		kcpErr := fmt.Errorf("Could not decode kcp transport settings?: %v", err)
+		log.Error(kcpErr)
+		return kcpErr
 	}
 	p.kcpConfig = &cfg
 
@@ -417,9 +428,9 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 	}
 
 	addIdleTiming := func(conn net.Conn) net.Conn {
-		log.Debug("Wrapping KCP with idletiming")
+		log.Info("Wrapping KCP with idletiming")
 		return idletiming.Conn(conn, IdleTimeout*2, func() {
-			log.Debug("KCP connection idled")
+			log.Info("KCP connection idled")
 		})
 	}
 	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig, addIdleTiming)
@@ -430,7 +441,7 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 
 		dialKCPMutex.Lock()
 		if p.forceRedial.IsSet() {
-			log.Debug("Connection state changed, re-connecting to server first")
+			log.Info("Connection state changed, re-connecting to server first")
 			dialKCP = kcpwrapper.Dialer(&p.kcpConfig.DialerConfig, addIdleTiming)
 			p.forceRedial.UnSet()
 		}
@@ -568,7 +579,7 @@ func (p *proxy) collectBBRInfo(reqTime time.Time, resp *http.Response) {
 			// value.
 			p.mx.Lock()
 			if reqTime.After(p.mostRecentABETime) {
-				log.Debugf("%v: X-BBR-ABE: %.2f Mbps", p.Label(), abe)
+				log.Infof("%v: X-BBR-ABE: %.2f Mbps", p.Label(), abe)
 				intABE := int64(abe * 1000)
 				if intABE > 0 {
 					// We check for a positive ABE here because in some scenarios (like

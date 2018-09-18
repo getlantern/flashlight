@@ -8,12 +8,12 @@ package chained
 import (
 	"strconv"
 
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 	"github.com/refraction-networking/utls"
 )
 
 var (
-	log = golog.LoggerFor("chained")
+	log = zaplog.LoggerFor("chained")
 )
 
 // ServerLocation represents the location info embeded in proxy config.

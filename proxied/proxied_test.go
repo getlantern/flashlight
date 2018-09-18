@@ -190,7 +190,7 @@ func doTestChainedAndFronted(t *testing.T, build func() RoundTripper) {
 	assert.NoError(t, err)
 	body, err := ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
-	//log.Debugf("Got body: %v", string(body))
+	//log.Infof("Got body: %v", string(body))
 	assert.True(t, strings.Contains(string(body), "United States"), "Unexpected response ")
 	_ = resp.Body.Close()
 
@@ -208,7 +208,7 @@ func doTestChainedAndFronted(t *testing.T, build func() RoundTripper) {
 	cf = build()
 	resp, err = cf.RoundTrip(req)
 	assert.NoError(t, err)
-	//log.Debugf("Got response in test")
+	//log.Infof("Got response in test")
 	body, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)
 	assert.True(t, strings.Contains(string(body), "United States"), "Unexpected response ")
@@ -216,7 +216,7 @@ func doTestChainedAndFronted(t *testing.T, build func() RoundTripper) {
 
 	// Now give the bad url to the req server and make sure we still get the corret
 	// result from the fronted server.
-	//log.Debugf("Running test with bad URL in the req server")
+	//log.Infof("Running test with bad URL in the req server")
 	bad := "http://48290.cloudfront.net/lookup/198.199.72.101"
 	req, err = http.NewRequest("GET", bad, nil)
 	fronted.ConfigureHostAlaisesForTest(t, map[string]string{badhost: goodhost})

@@ -96,11 +96,11 @@ func testProxiedRequest(proxyAddr string, socks bool) error {
 			},
 		}
 		resolved, err := resolver.LookupHost(context.Background(), host)
-		log.Debugf("resolved %v to %v: %v", host, resolved, err)
+		log.Infof("resolved %v to %v: %v", host, resolved, err)
 		for _, addr := range resolved {
 			ip := net.ParseIP(addr).To4()
 			if ip != nil {
-				log.Debugf("Using resolved IPv4 address: %v", addr)
+				log.Infof("Using resolved IPv4 address: %v", addr)
 				host = addr
 				break
 			}

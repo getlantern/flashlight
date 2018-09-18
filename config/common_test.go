@@ -32,7 +32,7 @@ func withTempDir(t *testing.T, fn func(inTempDir func(file string) string)) {
 // writeObfuscatedConfig serializes the given config onto disk as YAML with
 // ROT13 encoding.
 func writeObfuscatedConfig(t *testing.T, config interface{}, obfuscatedFilename string) {
-	log.Debugf("Writing obfuscated config to %v", obfuscatedFilename)
+	log.Infof("Writing obfuscated config to %v", obfuscatedFilename)
 
 	bytes, err := yaml.Marshal(config)
 	abortOnError(t, err)

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 	"github.com/getlantern/notifier"
 	"github.com/stretchr/testify/assert"
 )
@@ -29,7 +29,7 @@ func TestNotify(t *testing.T) {
 }
 
 func TestNormalizeClickURL(t *testing.T) {
-	log := golog.LoggerFor("flashlight.notifier-test")
+	log := zaplog.LoggerFor("flashlight.notifier-test")
 	note := &notify.Notification{
 		Title:    "test",
 		Message:  "test",
@@ -39,11 +39,11 @@ func TestNormalizeClickURL(t *testing.T) {
 
 	err := normalizeClickURL(note, "test-campaign")
 	assert.NoError(t, err, "unexpected error")
-	log.Debugf("url: %v", note.ClickURL)
+	log.Infof("url: %v", note.ClickURL)
 	assert.Equal(t, "https://test.com?utm_campaign=test-campaign&utm_content=test-test&utm_medium=notification&utm_source="+runtime.GOOS, note.ClickURL)
 
 	note.ClickURL = ":"
-	log.Debugf("url: %v", note.ClickURL)
+	log.Infof("url: %v", note.ClickURL)
 	err = normalizeClickURL(note, "test-campaign")
 	assert.Error(t, err, "expected an error")
 

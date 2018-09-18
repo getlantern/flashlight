@@ -8,18 +8,18 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/loconf"
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWriteURL(t *testing.T) {
 	loc := &loconfer{
-		log: golog.LoggerFor("loconfer"),
+		log: zaplog.LoggerFor("loconfer"),
 		r:   rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 	testURL := "https://testtesttest"
 	us := &loconf.UninstallSurvey{
-		//log: golog.LoggerFor("loconfer"),
+		//log: zaplog.LoggerFor("loconfer"),
 		URL:         testURL,
 		Probability: 1.0,
 		Enabled:     true,
@@ -36,7 +36,7 @@ func TestWriteURL(t *testing.T) {
 }
 
 func TestParsing(t *testing.T) {
-	logger := golog.LoggerFor("loconfloop-test")
+	logger := zaplog.LoggerFor("loconfloop-test")
 	stop := LoconfScanner(4*time.Hour, func() (bool, bool) {
 		return true, false
 	}, func() string { return "" })
@@ -48,7 +48,7 @@ func TestParsing(t *testing.T) {
 	stop()
 
 	loc := &loconfer{
-		log: golog.LoggerFor("loconfer"),
+		log: zaplog.LoggerFor("loconfer"),
 	}
 
 	loc.scan(4*time.Hour, func() (bool, bool) {

@@ -12,11 +12,11 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 )
 
 var (
-	log = golog.LoggerFor("pro-server-client")
+	log = zaplog.LoggerFor("pro-server-client")
 
 	defaultTimeout = time.Second * 30
 	maxRetries     = 4
@@ -47,7 +47,7 @@ func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
 
 	for i := 0; i < maxRetries; i++ {
 		client := c.httpClient
-		log.Debugf("%s %s", req.Method, req.URL)
+		log.Infof("%s %s", req.Method, req.URL)
 		if len(buf) > 0 {
 			req.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
 		}
@@ -61,22 +61,22 @@ func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
 				return body, err
 			case 202:
 				// Accepted: Immediately retry idempotent operation
-				log.Debugf("Received 202, retrying idempotent operation immediately.")
+				log.Infof("Received 202, retrying idempotent operation immediately.")
 				continue
 			default:
 				body, err := ioutil.ReadAll(res.Body)
 				if err == nil {
-					log.Debugf("Expecting 200, got: %d, body: %v", res.StatusCode, string(body))
+					log.Infof("Expecting 200, got: %d, body: %v", res.StatusCode, string(body))
 				} else {
-					log.Debugf("Expecting 200, got: %d, could not get body: %v", res.StatusCode, err)
+					log.Infof("Expecting 200, got: %d, could not get body: %v", res.StatusCode, err)
 				}
 			}
 		} else {
-			log.Debugf("Do: %v, res: %v", err, res)
+			log.Infof("Do: %v, res: %v", err, res)
 		}
 
 		retryTime := time.Duration(math.Pow(2, float64(i))) * retryBaseTime
-		log.Debugf("timed out, waiting %v to retry.", retryTime)
+		log.Infof("timed out, waiting %v to retry.", retryTime)
 		time.Sleep(retryTime)
 	}
 	return nil, ErrAPIUnavailable

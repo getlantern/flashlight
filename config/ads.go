@@ -46,7 +46,7 @@ func (settings *AdSettings) IsRegionEnabled(region string) bool {
 	if settings == nil || settings.RegionsEnabled == nil {
 		return false
 	}
-	log.Debugf("Checking if ads are enabled for region: %v", region)
+	log.Infof("Checking if ads are enabled for region: %v", region)
 	m := *settings.RegionsEnabled
 	_, exists := m[region]
 	return exists
@@ -92,7 +92,7 @@ func (settings *AdSettings) GetPercentage() float64 {
 
 func (settings *AdSettings) AppId() string {
 	if settings != nil && settings.Admob != nil {
-		log.Debugf("Admob id is %s", settings.Admob.AppId)
+		log.Infof("Admob id is %s", settings.Admob.AppId)
 		return settings.Admob.AppId
 	}
 	return ""

@@ -43,7 +43,7 @@ func testRequest(testCase string, t *testing.T, requests chan *http.Request, htt
 	defer os.RemoveAll(dir)
 	fronted.ConfigureForTest(t)
 
-	log.Debug("Making request")
+	log.Info("Making request")
 	httpClient := &http.Client{Transport: &http.Transport{
 		Proxy: func(req *http.Request) (*url.URL, error) {
 			return url.Parse("http://" + clientAddr)

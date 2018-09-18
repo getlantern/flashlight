@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/getlantern/fronted"
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/flashlight/chained"
@@ -18,7 +18,7 @@ import (
 
 // TestInvalidFile test an empty or malformed config file
 func TestInvalidFile(t *testing.T) {
-	logger := golog.LoggerFor("config-test")
+	logger := zaplog.LoggerFor("config-test")
 
 	tmpfile, err := ioutil.TempFile("", "invalid-test-file")
 	if err != nil {
@@ -156,7 +156,7 @@ func TestPollProxies(t *testing.T) {
 		for i := 1; i <= 400; i++ {
 			fi, err = os.Stat(file)
 			if err == nil && fi != nil && fi.ModTime().After(mtime) {
-				//log.Debugf("Got newer mod time?")
+				//log.Infof("Got newer mod time?")
 				break
 			}
 			time.Sleep(50 * time.Millisecond)

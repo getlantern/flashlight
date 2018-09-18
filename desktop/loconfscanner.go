@@ -6,8 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/getlantern/golog"
 	"github.com/getlantern/notifier"
+	"github.com/getlantern/zaplog"
+	"go.uber.org/zap"
 
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
@@ -29,7 +30,7 @@ import (
 // Returns a function to stop the loop.
 func LoconfScanner(interval time.Duration, proChecker func() (bool, bool), iconURL func() string) (stop func()) {
 	loc := &loconfer{
-		log:     golog.LoggerFor("loconfer"),
+		log:     zaplog.LoggerFor("loconfer"),
 		r:       rand.New(rand.NewSource(time.Now().UnixNano())),
 		iconURL: iconURL,
 	}
@@ -48,7 +49,7 @@ func (loc *loconfer) scan(interval time.Duration, proChecker func() (bool, bool)
 		}
 		isPro, ok := proChecker()
 		if !ok {
-			loc.log.Debugf("Skip checking announcement as user status is unknown")
+			loc.log.Infof("Skip checking announcement as user status is unknown")
 			return
 		}
 		onLoconf(lc, isPro)
@@ -80,7 +81,7 @@ func in(s string, coll []string) bool {
 }
 
 type loconfer struct {
-	log     golog.Logger
+	log     *zap.SugaredLogger
 	r       *rand.Rand
 	iconURL func() string
 }
@@ -99,7 +100,7 @@ func (loc *loconfer) setUninstallURL(lc *loconf.LoConf, isPro bool) {
 
 	survey := lc.GetUninstallSurvey(settings.GetLanguage(), geolookup.GetCountry(time.Second*30), isPro)
 	if survey == nil {
-		loc.log.Debugf("No available uninstall survey")
+		loc.log.Infof("No available uninstall survey")
 		return
 	}
 	loc.writeURL(path, survey, isPro)
@@ -109,10 +110,10 @@ func (loc *loconfer) writeURL(path string, survey *loconf.UninstallSurvey, isPro
 	var url string
 	if survey.Enabled {
 		if survey.Probability > loc.r.Float64() {
-			loc.log.Debugf("Enabling survey at URL %v", survey.URL)
+			loc.log.Infof("Enabling survey at URL %v", survey.URL)
 			url = survey.URL
 		} else {
-			loc.log.Debugf("Turning survey off probabalistically")
+			loc.log.Infof("Turning survey off probabalistically")
 		}
 	}
 	outfile, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
@@ -133,7 +134,7 @@ func (loc *loconfer) makeAnnouncements(lc *loconf.LoConf, isPro bool) {
 	current, err := lc.GetAnnouncement(lang, isPro)
 	if err != nil {
 		if err == loconf.ErrNoAvailable {
-			loc.log.Debugf("No available announcement")
+			loc.log.Infof("No available announcement")
 		} else {
 			loc.log.Error(err)
 		}
@@ -141,7 +142,7 @@ func (loc *loconfer) makeAnnouncements(lc *loconf.LoConf, isPro bool) {
 	}
 	past := settings.getStringArray(SNPastAnnouncements)
 	if in(current.Campaign, past) {
-		loc.log.Debugf("Skip announcement %s", current.Campaign)
+		loc.log.Infof("Skip announcement %s", current.Campaign)
 		return
 	}
 	if loc.showAnnouncement(current) {
