@@ -52,20 +52,20 @@ func ReadBootstrapSettings() (*BootstrapSettings, error) {
 // ReadSettingsFromFile reads BootstrapSettings from the yaml file at the specified
 // path.
 func readSettingsFromFile(yamlPath string) (*BootstrapSettings, error) {
-	log.Debugf("Opening file at: %v", yamlPath)
+	log.Infof("Opening file at: %v", yamlPath)
 	data, err := ioutil.ReadFile(yamlPath)
 	if err != nil {
 		// This will happen whenever there's no packaged settings, which is often
-		log.Debugf("Error reading file %v", err)
+		log.Infof("Error reading file %v", err)
 		return &BootstrapSettings{}, err
 	}
 
 	trimmed := strings.TrimSpace(string(data))
 
-	log.Debugf("Read bytes: %v", trimmed)
+	log.Infof("Read bytes: %v", trimmed)
 
 	if trimmed == "" {
-		log.Debugf("Ignoring empty string")
+		log.Infof("Ignoring empty string")
 		return &BootstrapSettings{}, errors.New("Empty string")
 	}
 	var s BootstrapSettings
@@ -102,6 +102,6 @@ func bootstrapPath(fileName string) (string, string, error) {
 		yamldir = dir + "/../"
 	}
 	fullPath := filepath.Join(yamldir, fileName)
-	log.Debugf("Opening bootstrap file from: %v", fullPath)
+	log.Infof("Opening bootstrap file from: %v", fullPath)
 	return yamldir, fullPath, nil
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/notifier"
 	"github.com/getlantern/profiling"
+	"github.com/getlantern/zaplog"
 
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/autoupdate"
@@ -38,7 +39,7 @@ import (
 )
 
 var (
-	log      = golog.LoggerFor("flashlight.app")
+	log      = zaplog.LoggerFor("flashlight.app")
 	settings *Settings
 
 	startTime = time.Now()
@@ -107,7 +108,7 @@ func (app *App) Run() {
 	// Run below in separate goroutine as config.Init() can potentially block when Lantern runs
 	// for the first time. User can still quit Lantern through systray menu when it happens.
 	go func() {
-		log.Debug(app.Flags)
+		log.Info(app.Flags)
 		if app.Flags["proxyall"].(bool) {
 			// If proxyall flag was supplied, force proxying of all
 			settings.SetProxyAll(true)
@@ -170,7 +171,7 @@ func (app *App) Run() {
 
 func (app *App) beforeStart(listenAddr string) func() bool {
 	return func() bool {
-		log.Debug("Got first config")
+		log.Info("Got first config")
 		var cpuProf, memProf string
 		if cpu, cok := app.Flags["cpuprofile"]; cok {
 			cpuProf = cpu.(string)
@@ -179,7 +180,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			memProf = mem.(string)
 		}
 		if cpuProf != "" || memProf != "" {
-			log.Debugf("Start profiling with cpu file %s and mem file %s", cpuProf, memProf)
+			log.Infof("Start profiling with cpu file %s and mem file %s", cpuProf, memProf)
 			finishProfiling := profiling.Start(cpuProf, memProf)
 			app.AddExitFunc("finish profiling", finishProfiling)
 		}
@@ -191,7 +192,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		var startupURL string
 		bootstrap, err := config.ReadBootstrapSettings()
 		if err != nil {
-			log.Debugf("Could not read bootstrap settings: %v", err)
+			log.Infof("Could not read bootstrap settings: %v", err)
 		} else {
 			startupURL = bootstrap.StartupUrl
 		}
@@ -221,13 +222,13 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			// off.
 			//
 			// See: https://github.com/getlantern/lantern/issues/2776
-			log.Debug("Requested clearing of proxy settings")
+			log.Info("Requested clearing of proxy settings")
 			_, port, splitErr := net.SplitHostPort(listenAddr)
 			if splitErr == nil && port != "0" {
-				log.Debugf("Clearing system proxy settings for: %v", listenAddr)
+				log.Infof("Clearing system proxy settings for: %v", listenAddr)
 				clearSysproxyFor(listenAddr)
 			} else {
-				log.Debugf("Can't clear proxy settings for: %v", listenAddr)
+				log.Infof("Can't clear proxy settings for: %v", listenAddr)
 			}
 			app.Exit(nil)
 			os.Exit(0)
@@ -236,12 +237,12 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		if uiaddr != "" {
 			// Is something listening on that port?
 			if showErr := app.showExistingUI(uiaddr); showErr == nil {
-				log.Debug("Lantern already running, showing existing UI")
+				log.Info("Lantern already running, showing existing UI")
 				app.Exit(nil)
 			}
 		}
 
-		log.Debugf("Starting client UI at %v", uiaddr)
+		log.Infof("Starting client UI at %v", uiaddr)
 
 		// ui will handle empty uiaddr correctly
 		if app.uiServer, err = ui.StartServer(uiaddr,
@@ -366,7 +367,7 @@ func (app *App) afterStart(cl *client.Client) {
 		// UI server and proxy server are still coming up.
 		app.uiServer.ShowRoot("startup", "lantern", app.statsTracker)
 	} else {
-		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
+		log.Infof("Not opening browser. Startup is: %v", app.Flags["startup"])
 	}
 	if addr, ok := client.Addr(6 * time.Second); ok {
 		settings.setString(SNAddr, addr)
@@ -396,21 +397,21 @@ func (app *App) onConfigUpdate(cfg *config.Global) {
 // open a browser to the Lantern start page.
 func (app *App) showExistingUI(addr string) error {
 	url := "http://" + addr + "/" + localHTTPToken(settings) + "/startup"
-	log.Debugf("Hitting local URL: %v", url)
+	log.Infof("Hitting local URL: %v", url)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Debugf("Could not build request: %s", err)
+		log.Infof("Could not build request: %s", err)
 		return err
 	}
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Debugf("Could not hit local lantern: %s", err)
+		log.Infof("Could not hit local lantern: %s", err)
 		return err
 	}
 	if resp.Body != nil {
 		if err = resp.Body.Close(); err != nil {
-			log.Debugf("Error closing body! %s", err)
+			log.Infof("Error closing body! %s", err)
 		}
 	}
 	if resp.StatusCode != http.StatusOK {
@@ -423,9 +424,9 @@ func (app *App) showExistingUI(addr string) error {
 func (app *App) AddExitFunc(label string, exitFunc func()) {
 	app.muExitFuncs.Lock()
 	app.exitFuncs = append(app.exitFuncs, func() {
-		log.Debugf("Processing exit function: %v", label)
+		log.Infof("Processing exit function: %v", label)
 		exitFunc()
-		log.Debugf("Done processing exit function: %v", label)
+		log.Infof("Done processing exit function: %v", label)
 	})
 	app.muExitFuncs.Unlock()
 }
@@ -445,13 +446,13 @@ func (app *App) doExit(err error) {
 	if err != nil {
 		log.Errorf("Exiting app %d(%d) because of %v", os.Getpid(), os.Getppid(), err)
 	} else {
-		log.Debugf("Exiting app %d(%d)", os.Getpid(), os.Getppid())
+		log.Infof("Exiting app %d(%d)", os.Getpid(), os.Getppid())
 	}
 	// call it before flushing borda (one of the exit funcs)
 	recordStopped()
 	defer func() {
 		app.exited.Set(err)
-		log.Debugf("Finished exiting app %d(%d)", os.Getpid(), os.Getppid())
+		log.Infof("Finished exiting app %d(%d)", os.Getpid(), os.Getppid())
 	}()
 
 	ch := make(chan struct{})
@@ -462,9 +463,9 @@ func (app *App) doExit(err error) {
 	t := time.NewTimer(10 * time.Second)
 	select {
 	case <-ch:
-		log.Debug("Finished running exit functions")
+		log.Info("Finished running exit functions")
 	case <-t.C:
-		log.Debug("Timeout running exit functions, quit anyway")
+		log.Info("Timeout running exit functions, quit anyway")
 	}
 	if err := logging.Close(); err != nil {
 		log.Errorf("Error closing log: %v", err)
@@ -475,7 +476,7 @@ func (app *App) runExitFuncs() {
 	var wg sync.WaitGroup
 	// call plain exit funcs in parallel
 	app.muExitFuncs.RLock()
-	log.Debugf("Running %d exit functions", len(app.exitFuncs))
+	log.Infof("Running %d exit functions", len(app.exitFuncs))
 	wg.Add(len(app.exitFuncs))
 	for _, f := range app.exitFuncs {
 		go func(f func()) {

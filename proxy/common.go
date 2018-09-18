@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 )
 
 var (
-	log = golog.LoggerFor("flashlight.proxy")
+	log = zaplog.LoggerFor("flashlight.proxy")
 )
 
 // ProxyConfig encapsulates common proxy configuration
@@ -31,5 +31,5 @@ const (
 
 // DumpHeaders logs the given headers (request or response).
 func DumpHeaders(category string, headers *http.Header) {
-	log.Debugf("%s Headers\n%s\n%s\n%s\n\n", category, HR, spew.Sdump(headers), HR)
+	log.Infof("%s Headers\n%s\n%s\n%s\n\n", category, HR, spew.Sdump(headers), HR)
 }

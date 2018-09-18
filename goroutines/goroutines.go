@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 )
 
-var log = golog.LoggerFor("goroutines")
+var log = zaplog.LoggerFor("goroutines")
 
 func Monitor(interval time.Duration, limit int, topN int) (stop func()) {
 	chStop := make(chan struct{})
@@ -29,7 +29,7 @@ func Monitor(interval time.Duration, limit int, topN int) (stop func()) {
 					printProfile(topN)
 					lastN = num
 				} else {
-					log.Debugf("goroutine profile: total %v", num)
+					log.Infof("goroutine profile: total %v", num)
 				}
 			case <-chStop:
 				return
@@ -60,5 +60,5 @@ func printProfile(topN int) {
 		}
 		lines = append(lines, line)
 	}
-	log.Debug(strings.Join(lines, "\n"))
+	log.Info(strings.Join(lines, "\n"))
 }

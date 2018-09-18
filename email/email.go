@@ -13,7 +13,7 @@ import (
 	"github.com/keighl/mandrill"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ops"
@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	log = golog.LoggerFor("flashlight.email")
+	log = zaplog.LoggerFor("flashlight.email")
 
 	// Only allowed to call /send_template
 	MandrillAPIKey = "fmYlUdjEpGGonI4NDx9xeA"
@@ -85,14 +85,15 @@ func Send(msg *Message) error {
 				Set("issue_note", msg.Vars["report"]).
 				Set("email", msg.Vars["emailaddress"])
 		}
-		log.Debug("Reporting issue")
+		log.Info("Reporting issue")
 	} else {
 		op = ops.Begin("send_email").Set("template", msg.Template)
 	}
 	defer op.End()
 	err := sendTemplate(msg)
 	if err != nil {
-		return log.Error(op.FailIf(err))
+		log.Error(err)
+		return op.FailIf(err)
 	}
 	return nil
 }

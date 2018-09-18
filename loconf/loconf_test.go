@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,7 +30,7 @@ func TestRoundTrip(t *testing.T) {
 }
 
 func TestParsing(t *testing.T) {
-	log := golog.LoggerFor("loconf-test")
+	log := zaplog.LoggerFor("loconf-test")
 	buf, _ := ioutil.ReadFile("test/desktop-ui.json")
 
 	lc, err := parse(buf)
@@ -41,7 +41,7 @@ func TestParsing(t *testing.T) {
 
 	assert.NotNil(t, us)
 
-	log.Debugf("Got uninstall survey: %+v", us)
+	log.Infof("Got uninstall survey: %+v", us)
 
 	us = lc.GetUninstallSurvey("nothereatall", "notthere", false)
 
@@ -51,7 +51,7 @@ func TestParsing(t *testing.T) {
 
 	assert.NotNil(t, us)
 
-	log.Debugf("Got uninstall survey: %+v", us)
+	log.Infof("Got uninstall survey: %+v", us)
 }
 
 func TestUninstallSurvey(t *testing.T) {
@@ -212,9 +212,9 @@ func TestAnnouncements(t *testing.T) {
 	lc, err := parse([]byte(buf))
 	_ = assert.NoError(t, err) && assert.NotNil(t, lc)
 
-	log.Debug("Start")
+	log.Info("Start")
 	ann, err := lc.GetAnnouncement("en-US", true)
-	log.Debug("End")
+	log.Info("End")
 
 	_ = assert.NoError(t, err) && assert.NotNil(t, ann) && assert.Equal(t, "Try out the new feature", ann.Title)
 

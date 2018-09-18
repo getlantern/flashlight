@@ -5,7 +5,7 @@ import (
 
 	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/flashlight/ws"
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 )
 
 // isProUser blocks itself to check if current user is Pro, or !ok if error
@@ -33,7 +33,7 @@ func isProUserFast() (isPro bool, statusKnown bool) {
 // It loops forever in 10 seconds interval until the user is fetched or
 // created, as it's fundamental for the UI to work.
 func servePro(channel ws.UIChannel) error {
-	logger := golog.LoggerFor("flashlight.app.pro")
+	logger := zaplog.LoggerFor("flashlight.app.pro")
 	// pro.SetDeviceID(settings.GetDeviceID())
 	go func() {
 		userID := settings.GetUserID()

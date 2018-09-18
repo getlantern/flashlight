@@ -47,7 +47,7 @@ func TestCreateUserA(t *testing.T) {
 	userA.UserID = res.User.ID
 	userA.Token = res.User.Token
 
-	log.Debug(userA)
+	log.Info(userA)
 }
 
 func TestUserAData(t *testing.T) {
@@ -70,5 +70,5 @@ func TestCreateUserB(t *testing.T) {
 	userB.UserID = res.User.ID
 	userB.Token = res.User.Token
 
-	log.Debug(userB)
+	log.Info(userB)
 }

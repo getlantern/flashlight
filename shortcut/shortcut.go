@@ -10,14 +10,14 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 	"github.com/getlantern/shortcut"
 
 	"github.com/getlantern/flashlight/geolookup"
 )
 
 var (
-	log = golog.LoggerFor("flashlight.shortcut")
+	log = zaplog.LoggerFor("flashlight.shortcut")
 
 	sc shortcut.Shortcut = &nullShortcut{}
 	mu sync.RWMutex
@@ -50,14 +50,14 @@ func configure(country string) {
 			)
 			break
 		}
-		log.Debugf("no shortcut list for country %s, fallback to default", country)
+		log.Infof("no shortcut list for country %s, fallback to default", country)
 		country = "default"
 	}
 
 	mu.Lock()
 	sc = _sc
 	mu.Unlock()
-	log.Debugf("loaded shortcut list for country %s", country)
+	log.Infof("loaded shortcut list for country %s", country)
 }
 
 func Allow(addr string) (bool, net.IP) {

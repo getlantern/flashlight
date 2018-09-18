@@ -174,7 +174,7 @@ func TestProxying(t *testing.T) {
 	ops.Begin("proxybench").Set("success", false).End()
 
 	log.Fatal("test fatal error")
-	log.Debug("Exiting")
+	log.Info("Exiting")
 	a.Exit(nil)
 
 	select {
@@ -315,7 +315,7 @@ func startConfigServer(t *testing.T) (string, error) {
 
 func serveConfig(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(resp http.ResponseWriter, req *http.Request) {
-		log.Debugf("Reading request path: %v", req.URL.String())
+		log.Infof("Reading request path: %v", req.URL.String())
 		if strings.Contains(req.URL.String(), "global") {
 			writeGlobalConfig(t, resp, req)
 		} else if strings.Contains(req.URL.String(), "prox") {
@@ -328,7 +328,7 @@ func serveConfig(t *testing.T) func(http.ResponseWriter, *http.Request) {
 }
 
 func writeGlobalConfig(t *testing.T, resp http.ResponseWriter, req *http.Request) {
-	log.Debug("Writing global config")
+	log.Info("Writing global config")
 	version := "1"
 
 	if req.Header.Get(IfNoneMatch) == version {
@@ -352,7 +352,7 @@ func writeGlobalConfig(t *testing.T, resp http.ResponseWriter, req *http.Request
 }
 
 func writeProxyConfig(t *testing.T, resp http.ResponseWriter, req *http.Request) {
-	log.Debug("Writing proxy config")
+	log.Info("Writing proxy config")
 	proto := protocol.Load().(string)
 	version := "1"
 	if proto == "obfs4" {

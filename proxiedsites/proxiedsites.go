@@ -4,19 +4,19 @@ import (
 	"sync"
 
 	"github.com/getlantern/detour"
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 	"github.com/getlantern/proxiedsites"
 )
 
 var (
-	log = golog.LoggerFor("flashlight.proxiedsites")
+	log = zaplog.LoggerFor("flashlight.proxiedsites")
 
 	PACURL     string
 	startMutex sync.Mutex
 )
 
 func Configure(cfg *proxiedsites.Config) {
-	log.Debug("Configuring")
+	log.Info("Configuring")
 
 	delta := proxiedsites.Configure(cfg)
 	startMutex.Lock()
@@ -28,7 +28,7 @@ func Configure(cfg *proxiedsites.Config) {
 }
 
 func updateDetour(delta *proxiedsites.Delta) {
-	log.Debugf("Updating detour with %d additions and %d deletions", len(delta.Additions), len(delta.Deletions))
+	log.Infof("Updating detour with %d additions and %d deletions", len(delta.Additions), len(delta.Deletions))
 
 	// TODO: subscribe changes of geolookup and set country accordingly
 	// safe to hardcode here as IR has all detection rules

@@ -23,7 +23,7 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 	"github.com/getlantern/keyman"
 
 	"github.com/getlantern/flashlight/common"
@@ -35,7 +35,7 @@ const (
 )
 
 var (
-	log = golog.LoggerFor("flashlight.proxied")
+	log = zaplog.LoggerFor("flashlight.proxied")
 
 	proxyAddrMutex sync.RWMutex
 	proxyAddr      = eventual.DefaultUnsetGetter()
@@ -173,11 +173,11 @@ func (cf *chainedAndFronted) RoundTrip(req *http.Request) (*http.Response, error
 	if err != nil {
 		log.Error(err)
 		// If there's an error, switch back to using the dual fetcher.
-		log.Debug("Switching back to dual fetcher because of error on chained request")
+		log.Info("Switching back to dual fetcher because of error on chained request")
 		cf.setFetcher(newDualFetcher(cf))
 	} else if !success(resp) {
 		log.Error(resp.Status)
-		log.Debug("Switching back to dual fetcher because of unexpected response status on chained request")
+		log.Info("Switching back to dual fetcher because of unexpected response status on chained request")
 		cf.setFetcher(newDualFetcher(cf))
 	}
 	return resp, err
@@ -205,7 +205,7 @@ type chainedFetcher struct {
 
 // RoundTrip will attempt to execute the specified HTTP request using only a chained fetcher
 func (cf *chainedFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
-	log.Debugf("Using chained fetcher")
+	log.Infof("Using chained fetcher")
 	rt, err := ChainedNonPersistent(cf.rootCA)
 	if err != nil {
 		return nil, err
@@ -252,7 +252,7 @@ func (df *dualFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
 // do will attempt to execute the specified HTTP request using both
 // chained and fronted servers.
 func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT http.RoundTripper) (*http.Response, error) {
-	log.Debugf("Using dual fronter")
+	log.Infof("Using dual fronter")
 	op := ops.Begin("dualfetcher").Request(req)
 	defer op.End()
 
@@ -267,11 +267,11 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 		}
 		op.Response(resp)
 		if asIs {
-			log.Debug("Passing response as is")
+			log.Info("Passing response as is")
 			responses <- resp
 			return resp, nil
 		} else if success(resp) {
-			log.Debugf("Got successful HTTP call!")
+			log.Infof("Got successful HTTP call!")
 			responses <- resp
 			return resp, nil
 		}
@@ -291,7 +291,7 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 		// 3 is arbitraily chosen to check if chained speed is reasonable
 		// comparing to fronted
 		if atomic.LoadInt64(&chainedRTT) <= 3*atomic.LoadInt64(&frontedRTT) {
-			log.Debug("Switching to chained fetcher for future requests since it is within 3 times of fronted response time")
+			log.Info("Switching to chained fetcher for future requests since it is within 3 times of fronted response time")
 			df.cf.setFetcher(&chainedFetcher{rootCA: df.rootCA})
 		}
 	}
@@ -303,11 +303,11 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 	}
 	doFronted := func() {
 		op.ProxyType(ops.ProxyFronted)
-		log.Debugf("Sending DDF request. With body? %v", frontedReq.Body != nil)
+		log.Infof("Sending DDF request. With body? %v", frontedReq.Body != nil)
 		start := time.Now()
 		if resp, err := request(!df.cf.parallel, ddfRT, frontedReq); err == nil {
 			elapsed := time.Since(start)
-			log.Debugf("Fronted request succeeded (%s) in %v",
+			log.Infof("Fronted request succeeded (%s) in %v",
 				resp.Status, elapsed)
 			// util.DumpResponse(resp) can be called here to examine the response
 			atomic.StoreInt64(&frontedRTT, int64(elapsed))
@@ -317,11 +317,11 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 
 	doChained := func() {
 		op.ProxyType(ops.ProxyChained)
-		log.Debugf("Sending chained request. With body? %v", req.Body != nil)
+		log.Infof("Sending chained request. With body? %v", req.Body != nil)
 		start := time.Now()
 		if _, err := request(false, chainedRT, req); err == nil {
 			elapsed := time.Since(start)
-			log.Debugf("Chained request succeeded in %v", elapsed)
+			log.Infof("Chained request succeeded in %v", elapsed)
 			atomic.StoreInt64(&chainedRTT, int64(elapsed))
 			switchToChainedIfRequired()
 		}
@@ -358,7 +358,7 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 
 	frontOnly, _ := strconv.ParseBool(os.Getenv(forceDF))
 	if frontOnly {
-		log.Debug("Forcing domain-fronting")
+		log.Info("Forcing domain-fronting")
 		doFronted()
 		resp, err := getResponse()
 		return resp, op.FailIf(err)
@@ -377,7 +377,7 @@ func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT 
 		log.Errorf("Chained failed, trying fronted: %v", err)
 		doFronted()
 		resp, err = getResponse()
-		log.Debugf("Result of fronting: %v", err)
+		log.Infof("Result of fronting: %v", err)
 	}
 	return resp, op.FailIf(err)
 }
@@ -431,26 +431,26 @@ func readResponses(finalResponse chan *http.Response, responses chan *http.Respo
 	select {
 	case resp := <-responses:
 		if success(resp) {
-			log.Debug("Got good first response")
+			log.Info("Got good first response")
 			finalResponse <- resp
 
 			// Just ignore the second response, but still process it.
 			select {
 			case response := <-responses:
-				log.Debug("Closing second response body")
+				log.Info("Closing second response body")
 				_ = response.Body.Close()
 				return
 			case <-errs:
-				log.Debug("Ignoring error on second response")
+				log.Info("Ignoring error on second response")
 				return
 			}
 		} else {
-			log.Debugf("Got bad first response -- wait for second")
+			log.Infof("Got bad first response -- wait for second")
 			_ = resp.Body.Close()
 			waitForSecond()
 		}
 	case err := <-errs:
-		log.Debugf("Got an error in first response: %v", err)
+		log.Infof("Got an error in first response: %v", err)
 		waitForSecond()
 	}
 }

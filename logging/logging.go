@@ -3,20 +3,18 @@
 package logging
 
 import (
-	"fmt"
 	"io"
-	"math"
-	"os"
 	"path/filepath"
 	"runtime"
 	"sync"
 	"time"
 
 	"github.com/getlantern/appdir"
-	"github.com/getlantern/golog"
 	"github.com/getlantern/rotator"
-	"github.com/getlantern/wfilter"
+	"github.com/getlantern/zaplog"
+	"go.uber.org/zap"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/util"
 )
 
@@ -25,7 +23,7 @@ const (
 )
 
 var (
-	log          = golog.LoggerFor("flashlight.logging")
+	log          = zaplog.LoggerFor("flashlight.logging")
 	processStart = time.Now()
 
 	logFile *rotator.SizeRotator
@@ -43,6 +41,8 @@ func init() {
 	}
 }
 
+// EnableFileLogging enables logging at the specified path. Uses the default
+// OS-sepcific path is logdir is empty.
 func EnableFileLogging(logdir string) {
 	if logdir == "" {
 		logdir = appdir.Logs("Lantern")
@@ -51,25 +51,26 @@ func EnableFileLogging(logdir string) {
 	actualLogDir = logdir
 	actualLogDirMx.Unlock()
 
-	log.Debugf("Placing logs in %v", logdir)
-	if _, err := os.Stat(logdir); err != nil {
-		if os.IsNotExist(err) {
-			// Create log dir
-			if err := os.MkdirAll(logdir, 0755); err != nil {
-				log.Errorf("Unable to create logdir at %s: %s", logdir, err)
-				return
-			}
-		}
-	}
-	logFile = rotator.NewSizeRotator(filepath.Join(logdir, "lantern.log"))
+	logPath := filepath.Join(logdir, "lantern.log")
+	logFile = rotator.NewSizeRotator(logPath)
 	// Set log files to 4 MB
 	logFile.RotationSize = 4 * 1024 * 1024
 	// Keep up to 5 log files
 	logFile.MaxRotation = 5
 
-	errorOut = timestamped(NonStopWriter(os.Stderr, logFile))
-	debugOut = timestamped(NonStopWriter(os.Stdout, logFile))
-	golog.SetOutputs(errorOut, debugOut)
+	var config zap.Config
+	var zapOutPaths []string
+	if common.IsDevel() {
+		config = zap.NewDevelopmentConfig()
+		zapOutPaths = []string{"stderr", "lantern.log"}
+	} else {
+		config = zap.NewProductionConfig()
+		zapOutPaths = []string{logPath}
+	}
+	config.OutputPaths = zapOutPaths
+	zaplog.SetZapConfig(config)
+
+	log.Infof("Placing logs in %v", logdir)
 }
 
 // ZipLogFiles zip the Lantern log files to the writer. All files will be
@@ -90,48 +91,9 @@ func ZipLogFiles(w io.Writer, underFolder string, maxBytes int64) error {
 
 // Close stops logging.
 func Close() error {
-	initLogging()
 	if logFile != nil {
 		return logFile.Close()
 	}
+	zaplog.Close()
 	return nil
-}
-
-func initLogging() {
-	errorOut = timestamped(os.Stderr)
-	debugOut = timestamped(os.Stdout)
-	golog.SetOutputs(errorOut, debugOut)
-}
-
-// timestamped adds a timestamp to the beginning of log lines
-func timestamped(orig io.Writer) io.Writer {
-	return wfilter.SimplePrepender(orig, func(w io.Writer) (int, error) {
-		ts := time.Now()
-		runningSecs := ts.Sub(processStart).Seconds()
-		secs := int(math.Mod(runningSecs, 60))
-		mins := int(runningSecs / 60)
-		return fmt.Fprintf(w, "%s - %dm%ds ", ts.In(time.UTC).Format(logTimestampFormat), mins, secs)
-	})
-}
-
-type nonStopWriter struct {
-	writers []io.Writer
-}
-
-// NonStopWriter creates a writer that duplicates its writes to all the
-// provided writers, even if errors encountered while writting.
-func NonStopWriter(writers ...io.Writer) io.Writer {
-	w := make([]io.Writer, len(writers))
-	copy(w, writers)
-	return &nonStopWriter{w}
-}
-
-// Write implements the method from io.Writer.
-// It never fails and always return the length of bytes passed in
-func (t *nonStopWriter) Write(p []byte) (int, error) {
-	for _, w := range t.writers {
-		// intentionally not checking for errors
-		_, _ = w.Write(p)
-	}
-	return len(p), nil
 }

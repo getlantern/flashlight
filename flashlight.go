@@ -14,7 +14,7 @@ import (
 	fops "github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/fronted"
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 	"github.com/getlantern/jibber_jabber"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/mtime"
@@ -36,7 +36,7 @@ import (
 )
 
 var (
-	log = golog.LoggerFor("flashlight")
+	log = zaplog.LoggerFor("flashlight")
 
 	// FullyReportedOps are ops which are reported at 100% to borda, irrespective
 	// of the borda sample percentage. This should all be low-volume operations,
@@ -107,14 +107,14 @@ func Run(httpProxyAddr string,
 	onBordaConfigured := make(chan bool, 1)
 	proxiesDispatch := func(conf interface{}) {
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
-		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
+		log.Infof("Applying proxy config with proxies: %v", proxyMap)
 		cl.Configure(proxyMap)
 	}
 	globalDispatch := func(conf interface{}) {
 		// Don't love the straight cast here, but we're also the ones defining
 		// the type in the factory method above.
 		cfg := conf.(*config.Global)
-		log.Debugf("Applying global config")
+		log.Infof("Applying global config")
 		applyClientConfig(cl, cfg, autoReport, onBordaConfigured)
 		onConfigUpdate(cfg)
 	}
@@ -123,13 +123,13 @@ func Run(httpProxyAddr string,
 	defer stopConfig()
 
 	if beforeStart() {
-		log.Debug("Preparing to start client proxy")
+		log.Info("Preparing to start client proxy")
 		onGeo := geolookup.OnRefresh()
 		geolookup.Refresh()
 
 		if socksProxyAddr != "" {
 			go func() {
-				log.Debug("Starting client SOCKS5 proxy")
+				log.Info("Starting client SOCKS5 proxy")
 				err := cl.ListenAndServeSOCKS5(socksProxyAddr)
 				if err != nil {
 					log.Errorf("Unable to start SOCKS5 proxy: %v", err)
@@ -137,9 +137,9 @@ func Run(httpProxyAddr string,
 			}()
 		}
 
-		log.Debug("Starting client HTTP proxy")
+		log.Info("Starting client HTTP proxy")
 		err := cl.ListenAndServeHTTP(httpProxyAddr, func() {
-			log.Debug("Started client HTTP proxy")
+			log.Info("Started client HTTP proxy")
 			op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
 
 			// wait for borda to be configured before proceeding
@@ -202,7 +202,7 @@ func applyClientConfig(c *client.Client, cfg *config.Global, autoReport func() b
 		case string:
 			for _, lightweightOp := range LightweightOps {
 				if t == lightweightOp {
-					log.Tracef("Removing high dimensional data for lightweight op %v", lightweightOp)
+					log.Debugf("Removing high dimensional data for lightweight op %v", lightweightOp)
 					delete(ctx, "error")
 					delete(ctx, "error_text")
 					delete(ctx, "beam")
@@ -215,7 +215,7 @@ func applyClientConfig(c *client.Client, cfg *config.Global, autoReport func() b
 
 			for _, fullyReportedOp := range FullyReportedOps {
 				if t == fullyReportedOp {
-					log.Tracef("Including fully reported op %v in borda sample", fullyReportedOp)
+					log.Debugf("Including fully reported op %v in borda sample", fullyReportedOp)
 					return true
 				}
 			}
@@ -246,7 +246,7 @@ func getTrustedCACerts(cfg *config.Global) (pool *x509.CertPool, err error) {
 }
 
 func displayVersion() {
-	log.Debugf("---- flashlight version: %s, release: %s, build revision date: %s ----", common.Version, common.PackageVersion, common.RevisionDate)
+	log.Infof("---- flashlight version: %s, release: %s, build revision date: %s ----", common.Version, common.PackageVersion, common.RevisionDate)
 }
 
 func initContext(deviceID string, version string, revisionDate string, isPro func() bool, userID func() int64) {

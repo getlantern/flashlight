@@ -15,7 +15,7 @@ import (
 
 	humanize "github.com/dustin/go-humanize"
 	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 )
 
 const (
@@ -25,7 +25,7 @@ const (
 )
 
 var (
-	log = golog.LoggerFor("balancer")
+	log = zaplog.LoggerFor("balancer")
 
 	recheckInterval = 2 * time.Second
 )
@@ -183,7 +183,7 @@ func New(overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
 
 // Reset closes existing dialers and replaces them with new ones.
 func (b *Balancer) Reset(dialers []Dialer) {
-	log.Debugf("Resetting with %d dialers", len(dialers))
+	log.Infof("Resetting with %d dialers", len(dialers))
 	dls := make(sortedDialers, len(dialers))
 	copy(dls, dialers)
 
@@ -213,9 +213,9 @@ func (b *Balancer) Reset(dialers []Dialer) {
 		for {
 			select {
 			case <-tk.C:
-				log.Debugf("Start periodical check")
+				log.Infof("Start periodical check")
 				b.checkConnectivityForAll()
-				log.Debugf("End periodical check")
+				log.Infof("End periodical check")
 			case <-b.closeCh:
 				return
 			}
@@ -225,7 +225,7 @@ func (b *Balancer) Reset(dialers []Dialer) {
 
 // ForceRedial forces dialers with long-running connections to reconnect
 func (b *Balancer) ForceRedial() {
-	log.Debugf("Received request to force redial")
+	log.Infof("Received request to force redial")
 	b.mu.Lock()
 	dialers := b.dialers
 	b.mu.Unlock()
@@ -260,11 +260,13 @@ func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.C
 	start := time.Now()
 	bd, err := b.newBalancedDial(network, addr)
 	if err != nil {
-		return nil, op.FailIf(log.Error(err))
+		log.Error(err)
+		return nil, op.FailIf(err)
 	}
 	conn, err := bd.dial(ctx, start)
 	if err != nil {
-		return nil, op.FailIf(log.Error(err))
+		log.Error(err)
+		return nil, op.FailIf(err)
 	}
 
 	op.BalancerDialTime(time.Since(start), nil)
@@ -376,7 +378,7 @@ func (bd *balancedDial) advanceToNextDialer() bool {
 
 func (bd *balancedDial) dialWithPC(ctx context.Context, pc ProxyConnection, start time.Time, attempts int) net.Conn {
 	deadline, _ := ctx.Deadline()
-	log.Debugf("Dialing %s://%s with %s on pass %v with timeout %v", bd.network, bd.addr, pc.Label(), attempts, deadline.Sub(time.Now()))
+	log.Infof("Dialing %s://%s with %s on pass %v with timeout %v", bd.network, bd.addr, pc.Label(), attempts, deadline.Sub(time.Now()))
 	oldRTT, oldBW := pc.EstRTT(), pc.EstBandwidth()
 	conn, failedUpstream, err := pc.DialContext(ctx, bd.network, bd.addr)
 	if err != nil {
@@ -385,7 +387,7 @@ func (bd *balancedDial) dialWithPC(ctx context.Context, pc ProxyConnection, star
 	}
 	// Please leave this at Debug level, as it helps us understand
 	// performance issues caused by a poor proxy being selected.
-	log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", pc.Label(), bd.network, bd.addr, attempts, time.Since(start))
+	log.Infof("Successfully dialed via %v to %v://%v on pass %v (%v)", pc.Label(), bd.network, bd.addr, attempts, time.Since(start))
 	bd.onSuccess(pc)
 	// Reevaluate all dialers if the top dialer performance dramatically changed
 	if attempts == 0 {
@@ -429,7 +431,7 @@ func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err e
 	}
 	msg := "%v dialing via %v to %s://%s: %v on pass %v%v"
 	if failedUpstream {
-		log.Debugf(msg,
+		log.Infof(msg,
 			"Upstream error", pc.Label(), bd.network, bd.addr, err, attempts, continueString)
 	} else {
 		log.Errorf(msg,
@@ -495,10 +497,10 @@ func (b *Balancer) evalDialers() {
 	b.mu.RUnlock()
 	if priorTopDialer == nil {
 		op.SetMetricSum("top_dialer_initialized", 1)
-		log.Debugf("Top dialer initialized to %v", newTopDialer.Label())
+		log.Infof("Top dialer initialized to %v", newTopDialer.Label())
 	} else if newTopDialer.Name() == priorTopDialer.Name() {
 		op.SetMetricSum("top_dialer_unchanged", 1)
-		log.Debug("Top dialer unchanged")
+		log.Info("Top dialer unchanged")
 		return
 	} else {
 		op.SetMetricSum("top_dialer_changed", 1)
@@ -507,7 +509,7 @@ func (b *Balancer) evalDialers() {
 			reason = "failing"
 		}
 		op.Set("reason", reason)
-		log.Debugf("Top dialer changed from %v to %v", priorTopDialer.Label(), newTopDialer.Label())
+		log.Infof("Top dialer changed from %v to %v", priorTopDialer.Label(), newTopDialer.Label())
 		recordTopDialer(dialers)
 	}
 	b.mu.Lock()
@@ -525,7 +527,7 @@ func (b *Balancer) checkConnectivityForAll() {
 		// nothing to do
 		return
 	}
-	log.Debugf("Rechecking connectivity for %d dialers", len(dialers))
+	log.Infof("Rechecking connectivity for %d dialers", len(dialers))
 	var wg sync.WaitGroup
 	wg.Add(len(dialers))
 	for _, _d := range dialers {
@@ -544,7 +546,7 @@ func (b *Balancer) checkConnectivityForAll() {
 func (b *Balancer) requestEvalDialers(reason string) {
 	select {
 	case b.chEvalDialers <- struct{}{}:
-		log.Debug(reason + ", re-evaluating all dialers")
+		log.Info(reason + ", re-evaluating all dialers")
 	default:
 	}
 }
@@ -577,7 +579,7 @@ func (b *Balancer) printStats() {
 	sessionStats := b.sessionStats
 	lastReset := b.lastReset
 	b.mu.Unlock()
-	log.Debugf("----------- Dialer Stats (%v) -----------", time.Since(lastReset))
+	log.Infof("----------- Dialer Stats (%v) -----------", time.Since(lastReset))
 	rank := float64(1)
 	for _, d := range dialers {
 		estRTT := d.EstRTT().Seconds()
@@ -585,7 +587,7 @@ func (b *Balancer) printStats() {
 		ds := sessionStats[d.Label()]
 		sessionAttempts := atomic.LoadInt64(&ds.success) + atomic.LoadInt64(&ds.failure)
 		probeSuccesses, probeSuccessKBs, probeFailures, probeFailedKBs := d.ProbeStats()
-		log.Debugf("%s  P:%3d  R:%3d  A: %4d(%5d)  S: %4d(%5d)  CS: %3d  F: %4d(%5d)  CF: %3d  R: %4.3f  L: %4.0fms  B: %6.2fMbps  T: %7s/%7s  P: %3d(%3dkb)/%3d(%3dkb)",
+		log.Infof("%s  P:%3d  R:%3d  A: %4d(%5d)  S: %4d(%5d)  CS: %3d  F: %4d(%5d)  CF: %3d  R: %4.3f  L: %4.0fms  B: %6.2fMbps  T: %7s/%7s  P: %3d(%3dkb)/%3d(%3dkb)",
 			d.JustifiedLabel(),
 			d.NumPreconnected(),
 			d.NumPreconnecting(),
@@ -609,7 +611,7 @@ func (b *Balancer) printStats() {
 		op.End()
 		rank++
 	}
-	log.Debug("----------- End Dialer Stats -----------")
+	log.Info("----------- End Dialer Stats -----------")
 }
 
 func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, map[string]*dialStats, error) {

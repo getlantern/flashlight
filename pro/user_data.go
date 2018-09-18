@@ -7,10 +7,10 @@ import (
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/pro/client"
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 )
 
-var logger = golog.LoggerFor("flashlight.app.pro")
+var logger = zaplog.LoggerFor("flashlight.app.pro")
 
 type userMap struct {
 	sync.RWMutex
@@ -78,7 +78,7 @@ func (m *userMap) wait(userID int64) *client.User {
 func IsProUser(uc common.UserConfig) (isPro bool, statusKnown bool) {
 	user, err := GetUserData(uc)
 	if err != nil {
-		log.Debugf("Got error fetching pro user: %v", err)
+		log.Infof("Got error fetching pro user: %v", err)
 		return false, false
 	}
 	return isActive(user.UserStatus), true
@@ -128,7 +128,7 @@ func newUserWithClient(uc common.UserConfig, hc *http.Client) (*client.User, err
 		return nil, err
 	}
 	setUserData(resp.User.Auth.ID, &resp.User)
-	log.Debugf("created user %+v", resp.User)
+	log.Infof("created user %+v", resp.User)
 	return &resp.User, nil
 }
 

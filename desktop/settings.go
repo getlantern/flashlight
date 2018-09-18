@@ -15,10 +15,11 @@ import (
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/uuid"
 	"github.com/getlantern/yaml"
+	"github.com/getlantern/zaplog"
+	"go.uber.org/zap"
 
 	"github.com/getlantern/flashlight/ws"
 )
@@ -106,7 +107,7 @@ type Settings struct {
 	sync.RWMutex
 	filePath string
 
-	log golog.Logger
+	log *zap.SugaredLogger
 }
 
 func loadSettings(version, revisionDate, buildDate string, isStaging bool) *Settings {
@@ -119,20 +120,20 @@ func loadSettings(version, revisionDate, buildDate string, isStaging bool) *Sett
 
 // loadSettings loads the initial settings at startup, either from disk or using defaults.
 func loadSettingsFrom(version, revisionDate, buildDate, path string) *Settings {
-	log.Debug("Loading settings")
 	// Create default settings that may or may not be overridden from an existing file
 	// on disk.
 	sett := newSettings(path)
 	set := sett.m
+	sett.log.Info("Loading settings")
 
 	// Use settings from disk if they're available.
 	if bytes, err := ioutil.ReadFile(path); err != nil {
-		sett.log.Debugf("Could not read file %v", err)
+		sett.log.Infof("Could not read file %v", err)
 	} else if err := yaml.Unmarshal(bytes, set); err != nil {
 		sett.log.Errorf("Could not load yaml %v", err)
 		// Just keep going with the original settings not from disk.
 	} else {
-		sett.log.Debugf("Loaded settings from %v", path)
+		sett.log.Infof("Loaded settings from %v", path)
 	}
 	// old lantern persist settings with all lower case, convert them to camel cased.
 	toCamelCase(set)
@@ -185,7 +186,7 @@ func newSettings(filePath string) *Settings {
 		},
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
-		log:             golog.LoggerFor("app.settings"),
+		log:             zaplog.LoggerFor("app.settings"),
 	}
 }
 
@@ -193,7 +194,7 @@ func newSettings(filePath string) *Settings {
 // every UI client
 func (s *Settings) StartService(channel ws.UIChannel) error {
 	helloFn := func(write func(interface{})) {
-		s.log.Debugf("Sending Lantern settings to new client")
+		s.log.Infof("Sending Lantern settings to new client")
 		write(s.uiMap())
 	}
 
@@ -209,9 +210,9 @@ func (s *Settings) StartService(channel ws.UIChannel) error {
 }
 
 func (s *Settings) read(in <-chan interface{}, out chan<- interface{}) {
-	s.log.Debugf("Start reading settings messages!!")
+	s.log.Infof("Start reading settings messages!!")
 	for message := range in {
-		s.log.Debugf("Read settings message %v", message)
+		s.log.Infof("Read settings message %v", message)
 
 		data, ok := (message).(map[string]interface{})
 		if !ok {
@@ -290,13 +291,13 @@ func (s *Settings) setString(name SettingName, v interface{}) {
 
 // save saves settings to disk.
 func (s *Settings) save() {
-	log.Trace("Saving settings")
+	s.log.Debug("Saving settings")
 	if f, err := os.Create(s.filePath); err != nil {
 		s.log.Errorf("Could not open settings file for writing: %v", err)
 	} else if _, err := s.writeTo(f); err != nil {
 		s.log.Errorf("Could not save settings file: %v", err)
 	} else {
-		log.Tracef("Saved settings to %s", s.filePath)
+		s.log.Debugf("Saved settings to %s", s.filePath)
 	}
 }
 
@@ -522,7 +523,7 @@ func (s *Settings) getInt64(name SettingName) int64 {
 }
 
 func (s *Settings) getVal(name SettingName) (interface{}, error) {
-	log.Tracef("Getting value for %v", name)
+	s.log.Debugf("Getting value for %v", name)
 	s.RLock()
 	defer s.RUnlock()
 	if val, ok := s.m[name]; ok {
@@ -533,7 +534,7 @@ func (s *Settings) getVal(name SettingName) (interface{}, error) {
 }
 
 func (s *Settings) setVal(name SettingName, val interface{}) {
-	s.log.Debugf("Setting %v to %v in %v", name, val, s.m)
+	s.log.Infof("Setting %v to %v in %v", name, val, s.m)
 	s.Lock()
 	s.m[name] = val
 	// Need to unlock here because s.save() will lock again.

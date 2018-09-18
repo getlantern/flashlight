@@ -22,7 +22,7 @@ import (
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxied"
-	"github.com/getlantern/golog"
+	"github.com/getlantern/zaplog"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/protected"
@@ -33,7 +33,7 @@ const (
 )
 
 var (
-	log = golog.LoggerFor("lantern")
+	log = zaplog.LoggerFor("lantern")
 
 	// XXX mobile does not respect the autoupdate global config
 	updateClient = &http.Client{Transport: proxied.ChainedThenFrontedWith("")}
@@ -220,7 +220,7 @@ func Start(configDir string, locale string,
 		log.Error(err.Error())
 		return nil, err
 	}
-	log.Debugf("Starting socks proxy at %s", socksAddr)
+	log.Infof("Starting socks proxy at %s", socksAddr)
 
 	return &StartResult{addr.(string), socksAddr.(string)}, nil
 }
@@ -243,7 +243,7 @@ func run(configDir, locale string,
 	appdir.SetHomeDir(configDir)
 	session.SetStaging(common.Staging)
 
-	log.Debugf("Starting lantern: configDir %s locale %s sticky config %t",
+	log.Infof("Starting lantern: configDir %s locale %s sticky config %t",
 		configDir, locale, settings.StickyConfig())
 
 	flags := map[string]interface{}{
@@ -266,7 +266,7 @@ func run(configDir, locale string,
 
 	logging.EnableFileLogging(configDir)
 
-	log.Debugf("Writing log messages to %s/lantern.log", configDir)
+	log.Infof("Writing log messages to %s/lantern.log", configDir)
 
 	grabber, err := dnsgrab.Listen(maxDNSGrabCache,
 		":8153",
@@ -325,12 +325,12 @@ func run(configDir, locale string,
 			}
 			ip := net.ParseIP(host)
 			if ip == nil {
-				log.Debugf("Unable to parse IP %v, passing through address as is", host)
+				log.Infof("Unable to parse IP %v, passing through address as is", host)
 				return host
 			}
 			updatedHost := grabber.ReverseLookup(ip)
 			if updatedHost == "" {
-				log.Debugf("Unable to reverse lookup %v, passing through (this shouldn't happen much)", ip)
+				log.Infof("Unable to reverse lookup %v, passing through (this shouldn't happen much)", ip)
 				return addr
 			}
 			if splitErr != nil {
@@ -385,7 +385,7 @@ func afterStart(session Session) {
 	go func() {
 		if <-geolookup.OnRefresh() {
 			country := geolookup.GetCountry(0)
-			log.Debugf("Successful geolookup: country %s", country)
+			log.Infof("Successful geolookup: country %s", country)
 			session.SetCountry(country)
 		}
 	}()

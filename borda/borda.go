@@ -7,15 +7,17 @@ import (
 
 	borda "github.com/getlantern/borda/client"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/golog"
 	"github.com/getlantern/proxybench"
+	"github.com/getlantern/zaplog"
 
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
+
+	"go.uber.org/zap/zapcore"
 )
 
 var (
-	log = golog.LoggerFor("flashlight.borda")
+	log = zaplog.LoggerFor("flashlight.borda")
 
 	// BeforeSubmit is an optional callback to capture when borda batches are
 	// submitted. It's mostly useful for unit testing.
@@ -31,19 +33,19 @@ var (
 // time before it reports to borda, however.
 func Configure(reportInterval time.Duration, enabled func(ctx map[string]interface{}) bool) {
 	if reportInterval > 0 {
-		log.Debug("Enabling borda")
+		log.Info("Enabling borda")
 		once.Do(func() {
 			startBordaAndProxyBench(reportInterval, enabled)
 		})
 	} else {
-		log.Debug("Borda not enabled")
+		log.Info("Borda not enabled")
 	}
 }
 
 // Flush flushes any pending submission
 func Flush() {
 	if bordaClient != nil {
-		log.Debugf("Flushing pending borda submissions")
+		log.Infof("Flushing pending borda submissions")
 		bordaClient.Flush()
 	}
 }
@@ -85,32 +87,23 @@ func startBordaAndProxyBench(reportInterval time.Duration, enabled func(ctx map[
 	}
 
 	ops.RegisterReporter(reporter)
-	golog.RegisterReporter(func(err error, linePrefix string, severity golog.Severity, ctx map[string]interface{}) {
-		// This code catches all logged errors that didn't happen inside an op
-		if ctx["op"] == nil {
-			var ctxErr errors.Error
-			switch e := err.(type) {
-			case errors.Error:
-				ctxErr = e
-			case error:
-				ctxErr = errors.Wrap(e)
-			default:
-				ctxErr = errors.New(e.Error())
-			}
 
-			ctxErr.Fill(ctx)
-			flushImmediately := false
-			op := "catchall"
-			if severity == golog.FATAL {
-				op = op + "_fatal"
-				flushImmediately = true
-			}
-			ctx["op"] = op
-			reporter(err, ctx)
-			if flushImmediately {
-				Flush()
-			}
+	zaplog.AddWarnHook(func(entry zapcore.Entry) error {
+		ctx := make(map[string]interface{})
+		ctxErr := errors.New(entry.Message)
+		ctxErr.Fill(ctx)
+		flushImmediately := false
+		op := "catchall"
+		if entry.Level == zapcore.FatalLevel {
+			op = op + "_fatal"
+			flushImmediately = true
 		}
+		ctx["op"] = op
+		reporter(ctxErr, ctx)
+		if flushImmediately {
+			Flush()
+		}
+		return nil
 	})
 }
 

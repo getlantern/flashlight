@@ -12,7 +12,7 @@ func DumpRequest(req *http.Request) {
 		return
 	}
 
-	log.Debugf("%q", dump)
+	log.Infof("%q", dump)
 }
 
 func DumpResponse(resp *http.Response) {
@@ -22,5 +22,5 @@ func DumpResponse(resp *http.Response) {
 		return
 	}
 
-	log.Debugf("%q", dump)
+	log.Infof("%q", dump)
 }

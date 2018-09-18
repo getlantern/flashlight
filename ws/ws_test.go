@@ -34,7 +34,7 @@ func TestStartServer(t *testing.T) {
 	go server.Serve(l)
 
 	helloFn := func(write func(interface{})) {
-		log.Debugf("Sending message to new client")
+		log.Infof("Sending message to new client")
 		write(locationData{
 			Code: "US",
 		})
@@ -43,7 +43,7 @@ func TestStartServer(t *testing.T) {
 	defer channel.Unregister("hello")
 
 	u := url.URL{Scheme: "ws", Host: "127.0.0.1:" + strconv.Itoa(port), Path: "/data"}
-	log.Debugf("connecting to %s", u.String())
+	log.Infof("connecting to %s", u.String())
 
 	time.Sleep(100 * time.Millisecond)
 	c, _, _ := websocket.DefaultDialer.Dial(u.String(), nil)
@@ -55,10 +55,10 @@ func TestStartServer(t *testing.T) {
 	defer close(done)
 	_, message, err := c.ReadMessage()
 	if err != nil {
-		log.Debugf("read:", err)
+		log.Infof("read:", err)
 		return
 	}
-	log.Debugf("recv: %s", message)
+	log.Infof("recv: %s", message)
 
 	// Just make sure we get the expected message back in response to the
 	// connection.
@@ -72,7 +72,7 @@ func TestStartServer(t *testing.T) {
 	assert.Nil(t, err)
 
 	received := <-service.in
-	log.Debugf("recv: %s", received)
+	log.Infof("recv: %s", received)
 	close(service.in)
 	close(service.out)
 }
