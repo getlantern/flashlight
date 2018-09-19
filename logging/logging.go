@@ -1,5 +1,5 @@
-// package logging configures the golog subsystem for use with Lantern
-// Import this to make sure golog is initialized before you log.
+// Package logging configures the logging subsystem for use with Lantern
+// Import this to make sure logging is initialized before you log.
 package logging
 
 import (
@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"sync"
-	"time"
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/rotator"
@@ -18,18 +17,10 @@ import (
 	"github.com/getlantern/flashlight/util"
 )
 
-const (
-	logTimestampFormat = "Jan 02 15:04:05.000"
-)
-
 var (
-	log          = zaplog.LoggerFor("flashlight.logging")
-	processStart = time.Now()
+	log = zaplog.LoggerFor("flashlight.logging")
 
 	logFile *rotator.SizeRotator
-
-	errorOut io.Writer
-	debugOut io.Writer
 
 	actualLogDir   string
 	actualLogDirMx sync.RWMutex

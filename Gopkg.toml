@@ -91,7 +91,7 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/getlantern/golog"
+  name = "github.com/getlantern/zaplog"
 
 [[constraint]]
   branch = "master"
@@ -224,10 +224,6 @@
 [[constraint]]
   branch = "master"
   name = "github.com/getlantern/waitforserver"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/getlantern/wfilter"
 
 [[constraint]]
   branch = "master"

@@ -590,12 +590,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/getlantern/wfilter"
-  packages = ["."]
-  revision = "69cc8585ee9c5b4e0b55110ea2c219921f954ba3"
-
-[[projects]]
-  branch = "master"
   name = "github.com/getlantern/winsvc"
   packages = ["winapi"]
   revision = "8bb3a5dbcc1dd85fbb701d3dc316bf5cc3d02689"
@@ -611,6 +605,12 @@
   name = "github.com/getlantern/yaml"
   packages = ["."]
   revision = "79303eb9c0d903b1a2e6b6ef82b5f8d22792dba9"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/getlantern/zaplog"
+  packages = ["."]
+  revision = "c7ba852846a46db299725b7a91f6647cb4056f8c"
 
 [[projects]]
   branch = "master"
@@ -922,6 +922,31 @@
   revision = "da747e0c62c4e145ebd7484cf69f92c0dd192305"
 
 [[projects]]
+  name = "go.uber.org/atomic"
+  packages = ["."]
+  revision = "1ea20fb1cbb1cc08cbd0d913a96dead89aa18289"
+  version = "v1.3.2"
+
+[[projects]]
+  name = "go.uber.org/multierr"
+  packages = ["."]
+  revision = "3c4937480c32f4c13a875a1829af76c98ca3d40a"
+  version = "v1.1.0"
+
+[[projects]]
+  name = "go.uber.org/zap"
+  packages = [
+    ".",
+    "buffer",
+    "internal/bufferpool",
+    "internal/color",
+    "internal/exit",
+    "zapcore"
+  ]
+  revision = "ff33455a0e382e8a81d14dd7c922020b6b5e7982"
+  version = "v1.9.1"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = [
@@ -1062,6 +1087,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "67595d4e7d5f3df3c5016c5c43c55f98c27dcdab86c417af347425f7d3604856"
+  inputs-digest = "024267dca2f8350e040b92d83e42aff30ea3a087bc5d88384314c39ec66996a0"
   solver-name = "gps-cdcl"
   solver-version = 1

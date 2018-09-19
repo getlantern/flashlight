@@ -13,7 +13,6 @@ import (
 
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight"
-	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/notifier"
@@ -70,7 +69,7 @@ type App struct {
 
 // Init initializes the App's state
 func (app *App) Init() {
-	golog.OnFatal(app.exitOnFatal)
+	zaplog.OnFatal(app.exitOnFatal)
 	app.Flags["staging"] = common.Staging
 	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate, common.Staging)
 	app.exited = eventual.NewValue()
@@ -96,14 +95,13 @@ func (app *App) LogPanicAndExit(msg interface{}) {
 	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
 }
 
-func (app *App) exitOnFatal(err error) {
+func (app *App) exitOnFatal() {
 	_ = logging.Close()
-	app.Exit(err)
+	app.Exit(nil)
 }
 
 // Run starts the app. It will block until the app exits.
 func (app *App) Run() {
-	golog.OnFatal(app.exitOnFatal)
 
 	// Run below in separate goroutine as config.Init() can potentially block when Lantern runs
 	// for the first time. User can still quit Lantern through systray menu when it happens.
