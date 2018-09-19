@@ -4,6 +4,7 @@ package logging
 
 import (
 	"io"
+	"os"
 	"path/filepath"
 	"runtime"
 	"sync"
@@ -18,12 +19,12 @@ import (
 )
 
 var (
-	log = zaplog.LoggerFor("flashlight.logging")
-
 	logFile *rotator.SizeRotator
 
 	actualLogDir   string
 	actualLogDirMx sync.RWMutex
+
+	once sync.Once
 )
 
 func init() {
@@ -32,9 +33,21 @@ func init() {
 	}
 }
 
+// LoggerFor wraps zaplog.LoggerFor for cases where we need to make sure the logging package loads
+// first.
+func LoggerFor(name string) *zap.SugaredLogger {
+	return zaplog.LoggerFor(name)
+}
+
 // EnableFileLogging enables logging at the specified path. Uses the default
 // OS-sepcific path is logdir is empty.
 func EnableFileLogging(logdir string) {
+	once.Do(func() {
+		enableLogging(logdir)
+	})
+}
+
+func enableLogging(logdir string) {
 	if logdir == "" {
 		logdir = appdir.Logs("Lantern")
 	}
@@ -53,15 +66,20 @@ func EnableFileLogging(logdir string) {
 	var zapOutPaths []string
 	if common.IsDevel() {
 		config = zap.NewDevelopmentConfig()
-		zapOutPaths = []string{"stderr", "lantern.log"}
+
+		zapOutPaths = []string{"stderr"}
+		dir, err := os.Getwd()
+		if err == nil {
+			localLog := filepath.Join(dir, "lantern.log")
+			zapOutPaths = append(zapOutPaths, localLog)
+		}
 	} else {
 		config = zap.NewProductionConfig()
 		zapOutPaths = []string{logPath}
 	}
 	config.OutputPaths = zapOutPaths
+	config.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
 	zaplog.SetZapConfig(config)
-
-	log.Infof("Placing logs in %v", logdir)
 }
 
 // ZipLogFiles zip the Lantern log files to the writer. All files will be

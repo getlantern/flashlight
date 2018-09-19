@@ -5,6 +5,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	_ "github.com/getlantern/flashlight/logging"
+	"github.com/getlantern/zaplog"
+
 	"github.com/dustin/go-humanize"
 )
 
@@ -19,7 +22,8 @@ func init() {
 			time.Sleep(30 * time.Second)
 			wire := atomic.LoadUint64(&wireTraffic)
 			app := atomic.LoadUint64(&appTraffic)
-			log.Infof("App Traffic: %v  Wire Traffic: %v  Overhead: %3.2f%%", humanize.Bytes(app), humanize.Bytes(wire), float64(wire-app)*100/float64(app))
+			logger := zaplog.LoggerFor("chained.overhead")
+			logger.Infof("App Traffic: %v  Wire Traffic: %v  Overhead: %3.2f%%", humanize.Bytes(app), humanize.Bytes(wire), float64(wire-app)*100/float64(app))
 		}
 	}()
 }

@@ -800,12 +800,6 @@
   revision = "00c29f56e2386353d58c599509e8dc3801b0d716"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/mitchellh/panicwrap"
-  packages = ["."]
-  revision = "fce601fe55579125e1b3cb0b992287e7290f7b83"
-
-[[projects]]
   name = "github.com/oschwald/geoip2-golang"
   packages = ["."]
   revision = "7118115686e16b77967cdbf55d1b944fe14ad312"
@@ -1087,6 +1081,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "024267dca2f8350e040b92d83e42aff30ea3a087bc5d88384314c39ec66996a0"
+  inputs-digest = "e1b3bb75768e4be94a8ed813c1473eff7da1f8a9920471f9561e0a044207ac0e"
   solver-name = "gps-cdcl"
   solver-version = 1

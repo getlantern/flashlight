@@ -9,13 +9,10 @@ import (
 	"github.com/getlantern/zaplog"
 )
 
-var (
-	log = zaplog.LoggerFor("flashlight.util")
-)
-
 // GetFileHash returns the hex encoding of the sha-256 hash of the
 // file at the specified path.
 func GetFileHash(path string) (string, error) {
+	log := zaplog.LoggerFor("flashlight.util")
 	log.Infof("Hashing file at path %v", path)
 	if f, err := os.Open(path); err != nil {
 		log.Errorf("Could not open file at %v, %v", path, err)

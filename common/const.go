@@ -3,8 +3,6 @@ package common
 import (
 	"os"
 	"strconv"
-
-	"github.com/getlantern/zaplog"
 )
 
 var (
@@ -15,8 +13,6 @@ var (
 	Staging = false
 
 	ProAPIHost = "api.getiantem.org"
-
-	log = zaplog.LoggerFor("flashlight.common")
 
 	forceAds bool
 )
@@ -33,10 +29,8 @@ func ForceStaging() {
 
 func initInternal() {
 	var err error
-	log.Infof("****************************** stagingMode: %v", StagingMode)
 	Staging, err = strconv.ParseBool(StagingMode)
 	if err != nil {
-		log.Errorf("Error parsing boolean flag: %v", err)
 		return
 	}
 	if Staging {

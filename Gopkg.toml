@@ -91,10 +91,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/getlantern/zaplog"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/getlantern/hidden"
 
 [[constraint]]
@@ -248,10 +244,6 @@
 [[constraint]]
   branch = "master"
   name = "github.com/mitchellh/mapstructure"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/mitchellh/panicwrap"
 
 [[constraint]]
   branch = "master"

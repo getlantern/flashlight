@@ -8,12 +8,12 @@ package chained
 import (
 	"strconv"
 
-	"github.com/getlantern/zaplog"
+	"github.com/getlantern/flashlight/logging"
 	"github.com/refraction-networking/utls"
 )
 
 var (
-	log = zaplog.LoggerFor("chained")
+	log = logging.LoggerFor("chained")
 )
 
 // ServerLocation represents the location info embeded in proxy config.

@@ -38,7 +38,7 @@ import (
 )
 
 var (
-	log      = zaplog.LoggerFor("flashlight.app")
+	log      = logging.LoggerFor("flashlight.app")
 	settings *Settings
 
 	startTime = time.Now()
