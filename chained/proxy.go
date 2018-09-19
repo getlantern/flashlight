@@ -3,7 +3,7 @@ package chained
 import (
 	"context"
 	"crypto/rsa"
-	stdtls "crypto/tls"
+	gtls "crypto/tls"
 	"fmt"
 	"net"
 	"net/http"
@@ -445,6 +445,7 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 		if err != nil {
 			return nil, err
 		}
+		p.protocol = "quic"
 	} else if allowPreconnecting && s.MaxPreconnect > 0 {
 		log.Debugf("Enabling preconnecting for %v", p.Label())
 		// give ourselves a large margin for making sure we're not using idled preconnected connections
@@ -506,7 +507,7 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 
 func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 	addr := s.Addr
-	tlsConf := &stdtls.Config{InsecureSkipVerify: true}
+	tlsConf := &gtls.Config{InsecureSkipVerify: true}
 
 	maxStreamsPerConn := s.ptSettingInt("streams")
 
