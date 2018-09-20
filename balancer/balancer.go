@@ -173,6 +173,8 @@ func New(overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
 		HasSucceedingDialer: hasSucceedingDialer,
 	}
 
+	// TODO: remove or optimize the periodical probing
+	ops.Go(b.periodicallyProbeDialers)
 	ops.Go(b.periodicallyPrintStats)
 	ops.Go(b.evalDialersLoop)
 	if len(dialers) > 0 {
@@ -207,20 +209,6 @@ func (b *Balancer) Reset(dialers []Dialer) {
 
 	b.printStats()
 	b.requestEvalDialers("Resetting balancer")
-	// TODO: remove or optimize the periodical probing
-	ops.Go(func() {
-		tk := time.NewTicker(10 * time.Minute)
-		for {
-			select {
-			case <-tk.C:
-				log.Debugf("Start periodical check")
-				b.checkConnectivityForAll()
-				log.Debugf("End periodical check")
-			case <-b.closeCh:
-				return
-			}
-		}
-	})
 }
 
 // ForceRedial forces dialers with long-running connections to reconnect
@@ -556,6 +544,20 @@ func (b *Balancer) Close() {
 		b.Reset([]Dialer{})
 		close(b.closeCh)
 	})
+}
+
+func (b *Balancer) periodicallyProbeDialers() {
+	tk := time.NewTicker(10 * time.Minute)
+	for {
+		select {
+		case <-tk.C:
+			log.Debugf("Start periodical probing")
+			b.checkConnectivityForAll()
+			log.Debugf("End periodical probing")
+		case <-b.closeCh:
+			return
+		}
+	}
 }
 
 func (b *Balancer) periodicallyPrintStats() {
