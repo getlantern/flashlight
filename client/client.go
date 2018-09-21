@@ -43,7 +43,7 @@ import (
 )
 
 var (
-	log = zaplog.LoggerFor("flashlight.client")
+	log = logging.LoggerFor("flashlight.client")
 
 	addr                = eventual.NewValue()
 	socksAddr           = eventual.NewValue()

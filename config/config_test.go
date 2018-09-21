@@ -18,7 +18,7 @@ import (
 
 // TestInvalidFile test an empty or malformed config file
 func TestInvalidFile(t *testing.T) {
-	logger := zaplog.LoggerFor("config-test")
+	logger := logging.LoggerFor("config-test")
 
 	tmpfile, err := ioutil.TempFile("", "invalid-test-file")
 	if err != nil {

@@ -19,7 +19,7 @@ import (
 	"github.com/getlantern/flashlight/desktop"
 )
 
-var log = zaplog.LoggerFor("flashlight")
+var log = logging.LoggerFor("flashlight")
 
 func main() {
 	// systray requires the goroutine locked with main thread, or the whole

@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	log = zaplog.LoggerFor("flashlight.email")
+	log = logging.LoggerFor("flashlight.email")
 
 	// Only allowed to call /send_template
 	MandrillAPIKey = "fmYlUdjEpGGonI4NDx9xeA"

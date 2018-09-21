@@ -36,7 +36,7 @@ import (
 )
 
 var (
-	log = zaplog.LoggerFor("flashlight")
+	log = logging.LoggerFor("flashlight")
 
 	// FullyReportedOps are ops which are reported at 100% to borda, irrespective
 	// of the borda sample percentage. This should all be low-volume operations,

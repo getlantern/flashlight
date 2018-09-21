@@ -33,10 +33,10 @@ func init() {
 	}
 }
 
-// LoggerFor wraps zaplog.LoggerFor for cases where we need to make sure the logging package loads
+// LoggerFor wraps logging.LoggerFor for cases where we need to make sure the logging package loads
 // first.
 func LoggerFor(name string) *zap.SugaredLogger {
-	return zaplog.LoggerFor(name)
+	return logging.LoggerFor(name)
 }
 
 // EnableFileLogging enables logging at the specified path. Uses the default

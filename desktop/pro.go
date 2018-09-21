@@ -33,7 +33,7 @@ func isProUserFast() (isPro bool, statusKnown bool) {
 // It loops forever in 10 seconds interval until the user is fetched or
 // created, as it's fundamental for the UI to work.
 func servePro(channel ws.UIChannel) error {
-	logger := zaplog.LoggerFor("flashlight.app.pro")
+	logger := logging.LoggerFor("flashlight.app.pro")
 	// pro.SetDeviceID(settings.GetDeviceID())
 	go func() {
 		userID := settings.GetUserID()

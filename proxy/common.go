@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	log = zaplog.LoggerFor("flashlight.proxy")
+	log = logging.LoggerFor("flashlight.proxy")
 )
 
 // ProxyConfig encapsulates common proxy configuration

@@ -58,7 +58,7 @@ var (
 )
 
 var (
-	log = zaplog.LoggerFor("genconfig")
+	log = logging.LoggerFor("genconfig")
 
 	masquerades []string
 

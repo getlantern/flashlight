@@ -23,7 +23,7 @@ var (
 
 	dataCapListeners   = make([]func(hitDataCap bool), 0)
 	dataCapListenersMx sync.RWMutex
-	log                = zaplog.LoggerFor("flashlight.datacap")
+	log                = logging.LoggerFor("flashlight.datacap")
 )
 
 type dataCap struct {

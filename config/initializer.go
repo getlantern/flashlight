@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	log = zaplog.LoggerFor("flashlight.config")
+	log = logging.LoggerFor("flashlight.config")
 
 	// URL for fetching the global config.
 	globalURL = "https://globalconfig.flashlightproxy.com/global.yaml.gz"

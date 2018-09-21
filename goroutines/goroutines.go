@@ -13,7 +13,7 @@ import (
 	"github.com/getlantern/zaplog"
 )
 
-var log = zaplog.LoggerFor("goroutines")
+var log = logging.LoggerFor("goroutines")
 
 func Monitor(interval time.Duration, limit int, topN int) (stop func()) {
 	chStop := make(chan struct{})

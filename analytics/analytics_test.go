@@ -66,7 +66,7 @@ func TestAddCampaign(t *testing.T) {
 }
 
 func TestAnalytics(t *testing.T) {
-	logger := zaplog.LoggerFor("flashlight.analytics_test")
+	logger := logging.LoggerFor("flashlight.analytics_test")
 
 	params := eventual.NewValue()
 	stop := start("1", "2.2.0", func(time.Duration) string {

@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	log             = zaplog.LoggerFor("flashlight.autoupdate")
+	log             = logging.LoggerFor("flashlight.autoupdate")
 	updateServerURL = "https://update.getlantern.org"
 	PublicKey       = []byte(autoupdate.PackagePublicKey)
 	Version         string

@@ -10,7 +10,7 @@ import (
 	"github.com/getlantern/zaplog"
 )
 
-var logger = zaplog.LoggerFor("flashlight.app.pro")
+var logger = logging.LoggerFor("flashlight.app.pro")
 
 type userMap struct {
 	sync.RWMutex

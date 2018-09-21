@@ -15,7 +15,7 @@ const (
 )
 
 var (
-	log      = zaplog.LoggerFor("flashlight.ws")
+	log      = logging.LoggerFor("flashlight.ws")
 	upgrader = &websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: MaxMessageSize,

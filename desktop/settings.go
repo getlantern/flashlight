@@ -186,7 +186,7 @@ func newSettings(filePath string) *Settings {
 		},
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
-		log:             zaplog.LoggerFor("app.settings"),
+		log:             logging.LoggerFor("app.settings"),
 	}
 }
 

@@ -19,7 +19,7 @@ type notifierRequest struct {
 }
 
 var (
-	log = zaplog.LoggerFor("flashlight.notifier")
+	log = logging.LoggerFor("flashlight.notifier")
 	ch  = make(chan notifierRequest)
 )
 

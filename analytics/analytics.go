@@ -27,7 +27,7 @@ const (
 )
 
 var (
-	log = zaplog.LoggerFor("flashlight.analytics")
+	log = logging.LoggerFor("flashlight.analytics")
 
 	maxWaitForIP = math.MaxInt32 * time.Second
 

@@ -25,7 +25,7 @@ const (
 )
 
 var (
-	log = zaplog.LoggerFor("balancer")
+	log = logging.LoggerFor("balancer")
 
 	recheckInterval = 2 * time.Second
 )

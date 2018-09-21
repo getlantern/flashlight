@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	log = zaplog.LoggerFor("flashlight.borda")
+	log = logging.LoggerFor("flashlight.borda")
 
 	// BeforeSubmit is an optional callback to capture when borda batches are
 	// submitted. It's mostly useful for unit testing.

@@ -33,7 +33,7 @@ const (
 )
 
 var (
-	log = zaplog.LoggerFor("lantern")
+	log = logging.LoggerFor("lantern")
 
 	// XXX mobile does not respect the autoupdate global config
 	updateClient = &http.Client{Transport: proxied.ChainedThenFrontedWith("")}

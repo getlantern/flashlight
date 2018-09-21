@@ -34,7 +34,7 @@ func init() {
 }
 
 var (
-	log          = zaplog.LoggerFor("flashlight.ui")
+	log          = logging.LoggerFor("flashlight.ui")
 	fs           *tarfs.FileSystem
 	translations = eventual.NewValue()
 )

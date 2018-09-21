@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	log = zaplog.LoggerFor("flashlight.proxiedsites")
+	log = logging.LoggerFor("flashlight.proxiedsites")
 
 	PACURL     string
 	startMutex sync.Mutex

@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	log = zaplog.LoggerFor("flashlight.pro")
+	log = logging.LoggerFor("flashlight.pro")
 )
 
 type proxyTransport struct {

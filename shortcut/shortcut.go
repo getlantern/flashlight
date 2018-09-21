@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	log = zaplog.LoggerFor("flashlight.shortcut")
+	log = logging.LoggerFor("flashlight.shortcut")
 
 	sc shortcut.Shortcut = &nullShortcut{}
 	mu sync.RWMutex

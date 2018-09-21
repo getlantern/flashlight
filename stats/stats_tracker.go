@@ -26,7 +26,7 @@ const (
 )
 
 var (
-	log = zaplog.LoggerFor("flashlight.stats")
+	log = logging.LoggerFor("flashlight.stats")
 )
 
 type Alert struct {

@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	log = zaplog.LoggerFor("flashlight.geolookup")
+	log = logging.LoggerFor("flashlight.geolookup")
 
 	refreshRequest = make(chan interface{}, 1)
 	currentGeoInfo = eventual.NewValue()

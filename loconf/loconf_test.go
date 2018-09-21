@@ -30,7 +30,7 @@ func TestRoundTrip(t *testing.T) {
 }
 
 func TestParsing(t *testing.T) {
-	log := zaplog.LoggerFor("loconf-test")
+	log := logging.LoggerFor("loconf-test")
 	buf, _ := ioutil.ReadFile("test/desktop-ui.json")
 
 	lc, err := parse(buf)

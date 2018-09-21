@@ -35,7 +35,7 @@ const (
 )
 
 var (
-	log = zaplog.LoggerFor("flashlight.proxied")
+	log = logging.LoggerFor("flashlight.proxied")
 
 	proxyAddrMutex sync.RWMutex
 	proxyAddr      = eventual.DefaultUnsetGetter()

@@ -14,12 +14,12 @@ import (
 
 func TestWriteURL(t *testing.T) {
 	loc := &loconfer{
-		log: zaplog.LoggerFor("loconfer"),
+		log: logging.LoggerFor("loconfer"),
 		r:   rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 	testURL := "https://testtesttest"
 	us := &loconf.UninstallSurvey{
-		//log: zaplog.LoggerFor("loconfer"),
+		//log: logging.LoggerFor("loconfer"),
 		URL:         testURL,
 		Probability: 1.0,
 		Enabled:     true,
@@ -36,7 +36,7 @@ func TestWriteURL(t *testing.T) {
 }
 
 func TestParsing(t *testing.T) {
-	logger := zaplog.LoggerFor("loconfloop-test")
+	logger := logging.LoggerFor("loconfloop-test")
 	stop := LoconfScanner(4*time.Hour, func() (bool, bool) {
 		return true, false
 	}, func() string { return "" })
@@ -48,7 +48,7 @@ func TestParsing(t *testing.T) {
 	stop()
 
 	loc := &loconfer{
-		log: zaplog.LoggerFor("loconfer"),
+		log: logging.LoggerFor("loconfer"),
 	}
 
 	loc.scan(4*time.Hour, func() (bool, bool) {

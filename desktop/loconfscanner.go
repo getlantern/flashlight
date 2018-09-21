@@ -30,7 +30,7 @@ import (
 // Returns a function to stop the loop.
 func LoconfScanner(interval time.Duration, proChecker func() (bool, bool), iconURL func() string) (stop func()) {
 	loc := &loconfer{
-		log:     zaplog.LoggerFor("loconfer"),
+		log:     logging.LoggerFor("loconfer"),
 		r:       rand.New(rand.NewSource(time.Now().UnixNano())),
 		iconURL: iconURL,
 	}

@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	log = zaplog.LoggerFor("pro-server-client")
+	log = logging.LoggerFor("pro-server-client")
 
 	defaultTimeout = time.Second * 30
 	maxRetries     = 4

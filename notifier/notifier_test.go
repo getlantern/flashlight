@@ -29,7 +29,7 @@ func TestNotify(t *testing.T) {
 }
 
 func TestNormalizeClickURL(t *testing.T) {
-	log := zaplog.LoggerFor("flashlight.notifier-test")
+	log := logging.LoggerFor("flashlight.notifier-test")
 	note := &notify.Notification{
 		Title:    "test",
 		Message:  "test",
