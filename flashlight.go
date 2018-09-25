@@ -14,7 +14,6 @@ import (
 	fops "github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/fronted"
-	"github.com/getlantern/zaplog"
 	"github.com/getlantern/jibber_jabber"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/mtime"
@@ -31,8 +30,7 @@ import (
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/stats"
 
-	// Make sure logging is initialized
-	_ "github.com/getlantern/flashlight/logging"
+	"github.com/getlantern/flashlight/logging"
 )
 
 var (

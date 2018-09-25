@@ -3,9 +3,9 @@ package desktop
 import (
 	"time"
 
+	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/flashlight/ws"
-	"github.com/getlantern/zaplog"
 )
 
 // isProUser blocks itself to check if current user is Pro, or !ok if error

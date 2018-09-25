@@ -7,8 +7,8 @@ import (
 
 	"github.com/getlantern/eventual"
 	geo "github.com/getlantern/geolookup"
-	"github.com/getlantern/zaplog"
 
+	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
 )

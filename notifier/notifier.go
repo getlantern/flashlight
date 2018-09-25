@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/analytics"
-	"github.com/getlantern/zaplog"
+	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/notifier"
 )

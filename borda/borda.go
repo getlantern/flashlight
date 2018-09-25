@@ -10,6 +10,7 @@ import (
 	"github.com/getlantern/proxybench"
 	"github.com/getlantern/zaplog"
 
+	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
 

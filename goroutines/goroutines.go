@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/getlantern/zaplog"
+	"github.com/getlantern/flashlight/logging"
 )
 
 var log = logging.LoggerFor("goroutines")

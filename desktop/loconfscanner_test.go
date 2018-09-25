@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/loconf"
-	"github.com/getlantern/zaplog"
+	"github.com/getlantern/flashlight/logging"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/getlantern/autoupdate"
-	"github.com/getlantern/zaplog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/notifier"
 
+	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/notifier"
 	"github.com/getlantern/flashlight/proxied"
 )

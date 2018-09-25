@@ -6,12 +6,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/zaplog"
 	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config/generated"
+	"github.com/getlantern/flashlight/logging"
 )
 
 var (

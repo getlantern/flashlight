@@ -17,9 +17,9 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/tarfs"
-	"github.com/getlantern/zaplog"
 
 	"github.com/getlantern/flashlight/analytics"
+	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/util"
 )

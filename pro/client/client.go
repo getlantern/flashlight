@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/zaplog"
+	"github.com/getlantern/flashlight/logging"
 )
 
 var (

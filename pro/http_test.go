@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/getlantern/zaplog"
+	"github.com/getlantern/flashlight/logging"
 	"github.com/stretchr/testify/assert"
 )
 

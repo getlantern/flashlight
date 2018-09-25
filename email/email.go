@@ -13,7 +13,6 @@ import (
 	"github.com/keighl/mandrill"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/zaplog"
 
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ops"

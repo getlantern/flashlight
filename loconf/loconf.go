@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/zaplog"
+	"github.com/getlantern/flashlight/logging"
 	"go.uber.org/zap"
 )
 

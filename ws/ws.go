@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/getlantern/zaplog"
+	"github.com/getlantern/flashlight/logging"
 	"github.com/gorilla/websocket"
 )
 

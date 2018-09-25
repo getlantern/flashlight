@@ -6,8 +6,8 @@ import (
 
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/pro/client"
-	"github.com/getlantern/zaplog"
 )
 
 var logger = logging.LoggerFor("flashlight.app.pro")
@@ -78,7 +78,7 @@ func (m *userMap) wait(userID int64) *client.User {
 func IsProUser(uc common.UserConfig) (isPro bool, statusKnown bool) {
 	user, err := GetUserData(uc)
 	if err != nil {
-		log.Infof("Got error fetching pro user: %v", err)
+		logger.Infof("Got error fetching pro user: %v", err)
 		return false, false
 	}
 	return isActive(user.UserStatus), true
@@ -128,7 +128,7 @@ func newUserWithClient(uc common.UserConfig, hc *http.Client) (*client.User, err
 		return nil, err
 	}
 	setUserData(resp.User.Auth.ID, &resp.User)
-	log.Infof("created user %+v", resp.User)
+	logger.Infof("created user %+v", resp.User)
 	return &resp.User, nil
 }
 

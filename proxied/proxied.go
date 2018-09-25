@@ -23,10 +23,10 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
-	"github.com/getlantern/zaplog"
 	"github.com/getlantern/keyman"
 
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ops"
 )
 

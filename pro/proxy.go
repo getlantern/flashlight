@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/pro/client"
-	"github.com/getlantern/zaplog"
 )
 
 var (

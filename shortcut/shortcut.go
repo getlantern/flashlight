@@ -10,10 +10,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/getlantern/zaplog"
 	"github.com/getlantern/shortcut"
 
 	"github.com/getlantern/flashlight/geolookup"
+	"github.com/getlantern/flashlight/logging"
 )
 
 var (

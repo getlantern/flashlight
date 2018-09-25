@@ -31,12 +31,12 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/proxy"
 	"github.com/getlantern/proxy/filters"
-	"github.com/getlantern/zaplog"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/status"

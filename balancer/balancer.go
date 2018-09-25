@@ -14,8 +14,8 @@ import (
 	"time"
 
 	humanize "github.com/dustin/go-humanize"
+	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/zaplog"
 )
 
 const (

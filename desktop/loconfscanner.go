@@ -7,13 +7,13 @@ import (
 	"time"
 
 	"github.com/getlantern/notifier"
-	"github.com/getlantern/zaplog"
 	"go.uber.org/zap"
 
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/loconf"
+	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/notifier"
 )
 

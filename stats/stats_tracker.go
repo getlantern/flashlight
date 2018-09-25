@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/getlantern/event"
-	"github.com/getlantern/zaplog"
+	"github.com/getlantern/flashlight/logging"
 )
 
 const (

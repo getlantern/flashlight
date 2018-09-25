@@ -11,6 +11,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
 type locationData struct {
@@ -25,7 +26,7 @@ func TestStartServer(t *testing.T) {
 
 	server := &http.Server{
 		Handler:  mux,
-		ErrorLog: log.AsStdLogger(),
+		ErrorLog: zap.NewStdLog(log.Desugar()),
 	}
 
 	l, _ := net.Listen("tcp", "127.0.0.1:0")

@@ -13,10 +13,10 @@ import (
 	"syscall"
 
 	"github.com/getlantern/i18n"
-	"github.com/getlantern/zaplog"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/desktop"
+	"github.com/getlantern/flashlight/logging"
 )
 
 var log = logging.LoggerFor("flashlight")

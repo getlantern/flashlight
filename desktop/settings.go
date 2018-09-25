@@ -18,9 +18,9 @@ import (
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/uuid"
 	"github.com/getlantern/yaml"
-	"github.com/getlantern/zaplog"
 	"go.uber.org/zap"
 
+	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ws"
 )
 

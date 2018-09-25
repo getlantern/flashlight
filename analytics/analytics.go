@@ -12,11 +12,10 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/geolookup"
+	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/util"
 	"github.com/kardianos/osext"
-
-	"github.com/getlantern/zaplog"
 )
 
 const (

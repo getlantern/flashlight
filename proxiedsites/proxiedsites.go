@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"github.com/getlantern/detour"
-	"github.com/getlantern/zaplog"
+	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/proxiedsites"
 )
 
