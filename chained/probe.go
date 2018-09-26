@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -17,10 +16,6 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/mtime"
-)
-
-var (
-	httpPingMx sync.RWMutex
 )
 
 func (p *proxy) ProbeStats() (successes uint64, successKBs uint64, failures uint64, failedKBs uint64) {
@@ -49,7 +44,7 @@ func (p *proxy) Probe(forPerformance bool) bool {
 		// not probing for performance, just do a small ping
 		err := p.httpPing(1, false)
 		if err != nil {
-			log.Errorf("Error probing %v: %v", p.Label(), err)
+			log.Errorf("Error probing %v after %v: %v", p.Label(), elapsed(), err)
 			p.MarkFailure()
 			return logResult(false, 1)
 		}
@@ -67,7 +62,7 @@ func (p *proxy) Probe(forPerformance bool) bool {
 		// after the probe.
 		err := p.httpPing(kb, i == 0)
 		if err != nil {
-			log.Errorf("Error probing %v for performance: %v", p.Label(), err)
+			log.Errorf("Error probing %v for performance after %v: %v", p.Label(), elapsed(), err)
 			return logResult(false, kb)
 		}
 		// Sleep just a little to allow interleaving of pings for different proxies
@@ -77,18 +72,6 @@ func (p *proxy) Probe(forPerformance bool) bool {
 }
 
 func (p *proxy) httpPing(kb int, resetBBR bool) error {
-	if kb == 1 {
-		// When checking connectivity, run in parallel to reduce variables when
-		// comparing proxies.
-		httpPingMx.RLock()
-		defer httpPingMx.RUnlock()
-	} else {
-		// When probing for performance, only check one proxy at time to give
-		// ourselves the full available pipe.
-		httpPingMx.Lock()
-		defer httpPingMx.Unlock()
-	}
-
 	op := ops.Begin("probe").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network())
 	defer op.End()
 
@@ -160,7 +143,9 @@ func (p *proxy) doHttpPing(kb int, resetBBR bool) error {
 		}
 		// Note that it is updated before reading the body in hope to measure
 		// more accurate RTT on the wire.
-		p.updateEstRTT(time.Since(dialEnd))
+		rtt := time.Since(dialEnd)
+		p.updateEstRTT(rtt)
+		log.Debugf("%v RTT from Probe: %v", p.Label(), rtt)
 		if resp.Body != nil {
 			// Read the body to include this in our timing.
 			defer resp.Body.Close()

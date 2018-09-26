@@ -382,6 +382,7 @@ func (p *proxy) checkCONNECTResponse(r *bufio.Reader, req *http.Request, reqTime
 			for _, metric := range header.Metrics {
 				if metric.Name == gp.MetricDialUpstream {
 					p.updateEstRTT(rtt - metric.Duration)
+					log.Debugf("%v RTT from CONNECT timing: %v - %v = %v", p.Label(), rtt, metric.Duration, rtt-metric.Duration)
 				}
 			}
 		}
