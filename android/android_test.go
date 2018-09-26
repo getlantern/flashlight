@@ -2,6 +2,7 @@ package android
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -108,10 +109,14 @@ func testProxiedRequest(proxyAddr string, socks bool) error {
 	}
 	hostWithPort := fmt.Sprintf("%v:80", host)
 
-	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%v/humans.txt", host), nil)
+	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("https://%v/humans.txt", host), nil)
 	req.Header.Set("Host", hostWithPort)
 
-	transport := &http.Transport{}
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}
 	if socks {
 		// Set up SOCKS proxy
 		proxyURL, err := url.Parse("socks5://" + proxyAddr)
