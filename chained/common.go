@@ -43,12 +43,6 @@ type ChainedServerInfo struct {
 	// Trusted: Determines if a host can be trusted with plain HTTP traffic.
 	Trusted bool
 
-	// InitPreconnect: how much to preconnect on startup
-	InitPreconnect int
-
-	// MaxPreconnect: the maximum number of preconnections to keep
-	MaxPreconnect int
-
 	// Bias indicates a relative biasing factor for proxy selection purposes.
 	// Proxies are bias 0 by default, meaning that they're prioritized by the
 	// usual bandwidth and RTT metrics. Proxies with a higher bias are

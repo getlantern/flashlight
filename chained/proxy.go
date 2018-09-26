@@ -40,9 +40,6 @@ import (
 const (
 	trustedSuffix = " (t)"
 
-	defaultInitPreconnect = 20
-	defaultMaxPreconnect  = 100
-
 	// Below two values are based on suggestions in rfc6298
 	rttAlpha    = 0.125
 	rttDevAlpha = 0.25
@@ -100,7 +97,13 @@ func forceProxy(s *ChainedServerInfo) {
 }
 
 func newHTTPProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
-	var doDialServer func(ctx context.Context, p *proxy) (serverConn, error)
+	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
+		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
+			return p.dialCore(op)(ctx)
+		})
+	}
+
+	dialOrigin := defaultDialOrigin
 	if s.ENHTTPURL != "" {
 		tr := &frontedTransport{rt: eventual.NewValue()}
 		go func() {
@@ -114,18 +117,17 @@ func newHTTPProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pro
 		dial := enhttp.NewDialer(&http.Client{
 			Transport: tr,
 		}, s.ENHTTPURL)
-		doDialServer = func(ctx context.Context, p *proxy) (serverConn, error) {
-			return &enhttpServerConn{dial}, nil
-		}
-	} else {
-		doDialServer = func(ctx context.Context, p *proxy) (serverConn, error) {
-			return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
-				return p.dialCore(op)(ctx)
-			})
+		dialOrigin = func(ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
+			dfConn, err := dial(network, addr)
+			if err == nil {
+				dfConn = idletiming.Conn(dfConn, IdleTimeout, func() {
+					log.Debug("enhttp connection idled")
+				})
+			}
+			return dfConn, err
 		}
 	}
-
-	return newProxy(name, "http", "tcp", s.Addr, s, uc, s.ENHTTPURL != "", doDialServer)
+	return newProxy(name, "http", "tcp", s.Addr, s, uc, s.ENHTTPURL != "", doDialServer, dialOrigin)
 }
 
 func newHTTPSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
@@ -135,7 +137,7 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pr
 	}
 	x509cert := cert.X509()
 
-	return newProxy(name, "https", "tcp", s.Addr, s, uc, s.Trusted, func(ctx context.Context, p *proxy) (serverConn, error) {
+	return newProxy(name, "https", "tcp", s.Addr, s, uc, s.Trusted, func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
 			tlsConfig, clientHelloID := tlsConfigForProxy(s)
 			td := &tlsdialer.Dialer{
@@ -171,7 +173,7 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pr
 			}
 			return overheadWrapper(true)(conn, op.FailIf(err))
 		})
-	})
+	}, defaultDialOrigin)
 }
 
 func newOBFS4Proxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
@@ -193,7 +195,7 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pr
 		return nil, log.Errorf("Unable to parse client args: %v", err)
 	}
 
-	return newProxy(name, "obfs4", "tcp", s.Addr, s, uc, s.Trusted, func(ctx context.Context, p *proxy) (serverConn, error) {
+	return newProxy(name, "obfs4", "tcp", s.Addr, s, uc, s.Trusted, func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(p.Addr(), p.Protocol(), p.Network(), func(op *ops.Op) (net.Conn, error) {
 			dialFn := func(network, address string) (net.Conn, error) {
 				// We know for sure the network and address are the same as what
@@ -204,7 +206,7 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pr
 			// The proxy it wrapped already has timeout applied.
 			return overheadWrapper(true)(cf.Dial("tcp", p.addr, dialFn, args))
 		})
-	})
+	}, defaultDialOrigin)
 }
 
 func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
@@ -249,28 +251,26 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 		Cipher:            cipherCode,
 		ServerPublicKey:   rsaPublicKey,
 	})
-	dial := func(unusedCtx context.Context, p *proxy) (serverConn, error) {
-		return lazyServerConn(func(ctx context.Context) (serverConn, error) {
-			return p.reportedDial(s.Addr, "lampshade", "tcp", func(op *ops.Op) (net.Conn, error) {
-				op.Set("ls_win", windowSize).
-					Set("ls_pad", maxPadding).
-					Set("ls_streams", int(maxStreamsPerConn)).
-					Set("ls_cipher", cipherCode.String())
-				conn, err := dialer.Dial(func() (net.Conn, error) {
-					conn, err := p.dialCore(op)(ctx)
-					if err == nil && idleInterval > 0 {
-						conn = idletiming.Conn(conn, idleInterval, func() {
-							log.Debug("lampshade TCP connection idled")
-						})
-					}
-					return conn, err
-				})
-				return overheadWrapper(true)(conn, err)
+	dial := func(ctx context.Context, p *proxy) (net.Conn, error) {
+		return p.reportedDial(s.Addr, "lampshade", "tcp", func(op *ops.Op) (net.Conn, error) {
+			op.Set("ls_win", windowSize).
+				Set("ls_pad", maxPadding).
+				Set("ls_streams", int(maxStreamsPerConn)).
+				Set("ls_cipher", cipherCode.String())
+			conn, err := dialer.Dial(func() (net.Conn, error) {
+				conn, err := p.dialCore(op)(ctx)
+				if err == nil && idleInterval > 0 {
+					conn = idletiming.Conn(conn, idleInterval, func() {
+						log.Debug("lampshade TCP connection idled")
+					})
+				}
+				return conn, err
 			})
-		}), nil
+			return overheadWrapper(true)(conn, err)
+		})
 	}
 
-	return newProxy(name, "lampshade", "tcp", s.Addr, s, uc, s.Trusted, dial)
+	return newProxy(name, "lampshade", "tcp", s.Addr, s, uc, s.Trusted, dial, defaultDialOrigin)
 }
 
 // consecCounter is a counter that can extend on both directions. Its default
@@ -301,6 +301,8 @@ func (c *consecCounter) Get() int64 {
 	return atomic.LoadInt64(&c.v)
 }
 
+type dialOriginFn func(ctx context.Context, p *proxy, network, addr string) (net.Conn, error)
+
 type proxy struct {
 	// Store int64's up front to ensure alignment of 64 bit words
 	// See https://golang.org/pkg/sync/atomic/#pkg-note-BUG
@@ -326,7 +328,8 @@ type proxy struct {
 	user              common.UserConfig
 	trusted           bool
 	bias              int
-	doDialServer      func(context.Context, *proxy) (serverConn, error)
+	doDialServer      func(context.Context, *proxy) (net.Conn, error)
+	dialOrigin        dialOriginFn
 	emaRTT            *ema.EMA
 	emaRTTDev         *ema.EMA
 	emaSuccessRate    *ema.EMA
@@ -334,23 +337,12 @@ type proxy struct {
 	forceRedial       *abool.AtomicBool
 	mostRecentABETime time.Time
 	doDialCore        func(ctx context.Context) (net.Conn, time.Duration, error)
-	preconnects       chan interface{}
-	preconnected      chan *proxyConnection
 	closeCh           chan bool
 	closeOnce         sync.Once
 	mx                sync.Mutex
 }
 
-func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc common.UserConfig, trusted bool, dialServer func(context.Context, *proxy) (serverConn, error)) (*proxy, error) {
-	initPreconnect := s.InitPreconnect
-	if initPreconnect <= 0 {
-		initPreconnect = defaultInitPreconnect
-	}
-	maxPreconnect := s.MaxPreconnect
-	if maxPreconnect <= 0 {
-		maxPreconnect = defaultMaxPreconnect
-	}
-
+func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc common.UserConfig, trusted bool, dialServer func(context.Context, *proxy) (net.Conn, error), dialOrigin dialOriginFn) (*proxy, error) {
 	p := &proxy{
 		name:            name,
 		protocol:        protocol,
@@ -362,12 +354,11 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		trusted:         trusted,
 		bias:            s.Bias,
 		doDialServer:    dialServer,
+		dialOrigin:      dialOrigin,
 		emaRTT:          ema.NewDuration(0, rttAlpha),
 		emaRTTDev:       ema.NewDuration(0, rttDevAlpha),
 		emaSuccessRate:  ema.New(1, successRateAlpha), // Consider a proxy success when initializing
 		forceRedial:     abool.New(),
-		preconnects:     make(chan interface{}, maxPreconnect),
-		preconnected:    make(chan *proxyConnection, maxPreconnect),
 		closeCh:         make(chan bool, 1),
 		consecSuccesses: 1, // be optimistic
 	}
@@ -394,8 +385,6 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 		p.protocol = "kcp"
 	}
 
-	log.Debugf("%v preconnects, init: %d   max: %d", p.Label(), initPreconnect, maxPreconnect)
-	p.processPreconnects(initPreconnect)
 	return p, nil
 }
 
@@ -489,10 +478,13 @@ func (p *proxy) AdaptRequest(req *http.Request) {
 	req.Header.Add(common.TokenHeader, p.authToken)
 }
 
-func (p *proxy) dialServer() (serverConn, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), chainedDialTimeout)
-	defer cancel()
-	return p.doDialServer(ctx, p)
+func (p *proxy) dialServer(ctx context.Context) (net.Conn, error) {
+	conn, err := p.doDialServer(ctx, p)
+	if err != nil {
+		log.Errorf("Unable to dial server %v: %s", p.Label(), err)
+		p.MarkFailure()
+	}
+	return conn, err
 }
 
 // update both RTT and its deviation per rfc6298
@@ -613,7 +605,7 @@ func timeoutFor(ctx context.Context) time.Duration {
 	return chainedDialTimeout
 }
 
-func (p *proxy) reportedDial(addr, protocol, network string, dial func(op *ops.Op) (net.Conn, error)) (serverConn, error) {
+func (p *proxy) reportedDial(addr, protocol, network string, dial func(op *ops.Op) (net.Conn, error)) (net.Conn, error) {
 	op := ops.Begin("dial_to_chained").ChainedProxy(p.Name(), addr, protocol, network)
 	defer op.End()
 
@@ -623,7 +615,7 @@ func (p *proxy) reportedDial(addr, protocol, network string, dial func(op *ops.O
 	op.DialTime(delta, err)
 	reportProxyDial(delta, err)
 
-	return p.defaultServerConn(conn, op.FailIf(err))
+	return conn, op.FailIf(err)
 }
 
 // reportProxyDial reports a "proxy_dial" op if and only if the dial was

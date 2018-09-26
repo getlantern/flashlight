@@ -112,22 +112,10 @@ func (p *proxy) doHttpPing(kb int, resetBBR bool) error {
 	_, _, err := withtimeout.Do(30*time.Second, func() (interface{}, error) {
 		var dialEnd time.Time
 		dial := func(ctx context.Context, network, addr string) (net.Conn, error) {
-			tk := time.NewTicker(time.Second)
 			for {
-				pd := p.Preconnected()
-				if pd != nil {
-					tk.Stop()
-					pc, _, err := pd.DialContext(ctx, network, addr)
-					dialEnd = time.Now()
-					return pc, err
-				}
-				select {
-				case <-ctx.Done():
-					tk.Stop()
-					return nil, ctx.Err()
-				case <-tk.C:
-					continue
-				}
+				pc, _, err := p.DialContext(ctx, network, addr)
+				dialEnd = time.Now()
+				return pc, err
 			}
 		}
 

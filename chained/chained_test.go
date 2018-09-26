@@ -28,10 +28,7 @@ func NewDialer(dialServer func(ctx context.Context, p *proxy) (net.Conn, error))
 	p, err := newProxy("test", "proto", "netw", "addr:567", &ChainedServerInfo{
 		Addr:      "addr:567",
 		AuthToken: "token",
-	}, newTestUserConfig(), true, func(ctx context.Context, p *proxy) (serverConn, error) {
-		conn, err := dialServer(ctx, p)
-		return p.defaultServerConn(conn, err)
-	})
+	}, newTestUserConfig(), true, dialServer, defaultDialOrigin)
 	if err != nil {
 		return nil, err
 	}
@@ -126,9 +123,9 @@ func TestBadAddressToServer(t *testing.T) {
 	p, err := newProxy("test", "proto", "netw", "addr:567", &ChainedServerInfo{
 		Addr:      "addr:567",
 		AuthToken: "token",
-	}, newTestUserConfig(), true, func(ctx context.Context, p *proxy) (serverConn, error) {
+	}, newTestUserConfig(), true, func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return nil, fmt.Errorf("fail intentionally")
-	})
+	}, defaultDialOrigin)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -166,51 +163,6 @@ func TestSuccess(t *testing.T) {
 
 	log.Debugf("TESTING SUCCESS")
 	test(t, dialer)
-}
-
-func TestPreconnect(t *testing.T) {
-	l := startServer(t)
-	p, err := newProxy("test", "proto", "netw", "addr:567", &ChainedServerInfo{
-		Addr:      "addr:567",
-		AuthToken: "token",
-	}, newTestUserConfig(), true, func(ctx context.Context, p *proxy) (serverConn, error) {
-		conn, err := net.DialTimeout(l.Addr().Network(), l.Addr().String(), 2*time.Second)
-		// sleep long enough that test would fail if we're not dialing in parallel
-		time.Sleep(50 * time.Millisecond)
-		return p.defaultServerConn(conn, err)
-	})
-	assert.NoError(t, err)
-	time.Sleep(100 * time.Millisecond)
-	assert.Equal(t, defaultInitPreconnect, p.NumPreconnected()+p.NumPreconnecting(), "should preconnect on start")
-	p.Preconnected()
-	p.Preconnected()
-	time.Sleep(100 * time.Millisecond)
-	assert.Equal(t, defaultInitPreconnect, p.NumPreconnected()+p.NumPreconnecting(), "should preconnect to replace used connections")
-	p.Preconnect()
-	time.Sleep(100 * time.Millisecond)
-	assert.Equal(t, defaultInitPreconnect+1, p.NumPreconnected()+p.NumPreconnecting(), "should preconnect when requested")
-
-out:
-	for {
-		pc := p.Preconnected()
-		if pc == nil {
-			break out
-		}
-	}
-	time.Sleep(100 * time.Millisecond)
-	assert.Equal(t, defaultInitPreconnect+2, p.NumPreconnected()+p.NumPreconnecting(), "should refill asap")
-
-	now := time.Now()
-	// Expire all proxy connections, drain them and make sure we go down to 0
-	for i := 0; i <= p.NumPreconnected()+p.NumPreconnecting(); i++ {
-		pc := <-p.preconnected
-		pc.expiresAt = now
-		p.preconnected <- pc
-	}
-
-	p.Preconnected()
-	time.Sleep(100 * time.Millisecond)
-	assert.Equal(t, 1, p.NumPreconnected()+p.NumPreconnecting(), "expired connections should cause queue to get drained")
 }
 
 func startServer(t *testing.T) net.Listener {
@@ -288,14 +240,10 @@ func test(t *testing.T, dialer func(network, addr string) (net.Conn, error)) {
 }
 
 func (p *proxy) dial(network, addr string) (net.Conn, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), chainedDialTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 	defer cancel()
-	conn, err := p.doDialServer(ctx, p)
-	if err != nil {
-		return nil, err
-	}
-	pc, _, err := p.newPreconnected(conn).DialContext(ctx, network, addr)
-	return pc, err
+	conn, _, err := p.DialContext(ctx, network, addr)
+	return conn, err
 }
 
 func TestCiphersFromNames(t *testing.T) {

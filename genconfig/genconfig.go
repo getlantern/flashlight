@@ -608,7 +608,7 @@ func buildModel(configName string, cas map[string]*castat, useFallbacks bool) (m
 		}
 	}
 	return map[string]interface{}{
-		"cas": casList,
+		"cas":                   casList,
 		"cloudfrontMasquerades": cfMasquerades,
 		"providers":             enabledProviders,
 		"proxiedsites":          ps,
@@ -625,14 +625,9 @@ func fallbackOK(f *chained.ChainedServerInfo, dialer balancer.Dialer) bool {
 		if time.Now().After(deadline) {
 			return false
 		}
-		pd := dialer.Preconnected()
-		if pd == nil {
-			time.Sleep(250 * time.Millisecond)
-			continue
-		}
 		ctx, cancel := context.WithDeadline(context.Background(), deadline)
 		defer cancel()
-		conn, _, err := pd.DialContext(ctx, "tcp", "http://www.google.com")
+		conn, _, err := dialer.DialContext(ctx, "tcp", "http://www.google.com")
 		if err != nil {
 			log.Debugf("Skipping fallback %v because dialing Google failed: %v", f.Addr, err)
 			return false

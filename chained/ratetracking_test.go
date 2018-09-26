@@ -2,6 +2,7 @@ package chained
 
 import (
 	"context"
+	"net"
 	"sync"
 	"testing"
 	"time"
@@ -31,9 +32,9 @@ func TestRateTracking(t *testing.T) {
 	p, err := newProxy("test", "proto", "netw", "addr:567", &ChainedServerInfo{
 		Addr:      "addr:567",
 		AuthToken: "token",
-	}, newTestUserConfig(), true, func(ctx context.Context, p *proxy) (serverConn, error) {
-		return p.defaultServerConn(sd.Dial("", ""))
-	})
+	}, newTestUserConfig(), true, func(ctx context.Context, p *proxy) (net.Conn, error) {
+		return sd.Dial("", "")
+	}, defaultDialOrigin)
 
 	conn, err := p.dial("tcp", "origin:443")
 	if !assert.NoError(t, err) {
