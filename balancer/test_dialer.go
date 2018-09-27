@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -21,8 +22,9 @@ type testDialer struct {
 	baseRTT            time.Duration
 	rtt                time.Duration
 	bandwidth          float64
-	untrusted          bool
+	untrusted          int32
 	failingUpstream    bool
+	muSuccessRate      sync.RWMutex
 	successRate        float64
 	attempts           int64
 	successes          int64
@@ -58,7 +60,7 @@ func (d *testDialer) Addr() string {
 }
 
 func (d *testDialer) Trusted() bool {
-	return !d.untrusted
+	return atomic.LoadInt32(&d.untrusted) == 0
 }
 
 func (d *testDialer) Preconnect() {
@@ -110,7 +112,15 @@ func (d *testDialer) EstRTT() time.Duration {
 	return d.rtt
 }
 
+func (d *testDialer) setSuccessRate(rate float64) {
+	d.muSuccessRate.Lock()
+	defer d.muSuccessRate.Unlock()
+	d.successRate = rate
+}
+
 func (d *testDialer) EstSuccessRate() float64 {
+	d.muSuccessRate.RLock()
+	defer d.muSuccessRate.RUnlock()
 	return d.successRate
 }
 

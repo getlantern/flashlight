@@ -28,6 +28,7 @@ var (
 	log = golog.LoggerFor("balancer")
 
 	recheckInterval = 2 * time.Second
+	evalInterval    = time.Minute
 )
 
 // ProxyConnection is a pre-established connection to a Proxy which we can
@@ -428,9 +429,14 @@ func (bd *balancedDial) onFailure(pc ProxyConnection, failedUpstream bool, err e
 	} else {
 		atomic.AddInt64(&bd.sessionStats[pc.Label()].failure, 1)
 		if attempts == 0 {
-			// Whenever top dialer fails, re-evaluate dialers immediately without
-			// checking connectivity for faster convergence.
-			bd.evalDialers()
+			// Whenever top dialer fails, re-evaluate dialers immediately
+			// without checking connectivity for faster convergence. A full
+			// check and re-evaluating should follow up if the dialer changes,
+			// to avoid permanently switching to a slow dialer due to outdated
+			// measurements.
+			if bd.evalDialers() {
+				bd.requestEvalDialers("Top dialer changed because of failing")
+			}
 		}
 	}
 }
@@ -455,21 +461,23 @@ func (b *Balancer) evalDialersLoop() {
 			case <-b.chEvalDialers:
 				ops.Go(func() {
 					b.checkConnectivityForAll()
-					b.evalDialers()
+					_ = b.evalDialers()
 					chDone <- struct{}{}
 				})
 			default:
-				nextEvalTimer.Reset(time.Second)
+				nextEvalTimer.Reset(evalInterval / 60)
 			}
 		case <-chDone:
-			nextEvalTimer.Reset(randomize(time.Minute))
+			nextEvalTimer.Reset(randomize(evalInterval))
 		case <-b.closeCh:
 			return
 		}
 	}
 }
 
-func (b *Balancer) evalDialers() {
+// evalDialers re-orders dailers and reports/logs the result. It returns true
+// if the top dialer changed.
+func (b *Balancer) evalDialers() (changed bool) {
 	dialers := b.sortDialers()
 	if len(dialers) < 2 {
 		// nothing to do
@@ -489,6 +497,7 @@ func (b *Balancer) evalDialers() {
 		log.Debug("Top dialer unchanged")
 		return
 	} else {
+		changed = true
 		op.SetMetricSum("top_dialer_changed", 1)
 		reason := "performance"
 		if !priorTopDialer.Succeeding() {
@@ -505,6 +514,7 @@ func (b *Balancer) evalDialers() {
 	// Print stats immediately after dialer initialized / changed so we have an
 	// idea what caused it.
 	b.printStats()
+	return
 }
 
 func (b *Balancer) checkConnectivityForAll() {
