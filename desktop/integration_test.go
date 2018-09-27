@@ -1,61 +1,32 @@
 package desktop
 
 import (
-	"compress/gzip"
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"net/url"
-	"os"
-	"regexp"
-	"strings"
 	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
 
 	bclient "github.com/getlantern/borda/client"
-	"github.com/getlantern/http-proxy-lantern"
 	"github.com/getlantern/ops"
-	"github.com/getlantern/tlsdefaults"
 	"github.com/getlantern/waitforserver"
-	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/flashlight/borda"
-	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
+	"github.com/getlantern/flashlight/integrationtest"
 
 	"github.com/stretchr/testify/assert"
 )
 
 const (
-	LocalProxyAddr      = "localhost:18345"
-	SocksProxyAddr      = "localhost:18346"
-	ProxyServerAddr     = "localhost:18347"
-	OBFS4ServerAddr     = "localhost:18348"
-	LampshadeServerAddr = "localhost:18349"
-
-	Content  = "THIS IS SOME STATIC CONTENT FROM THE WEB SERVER"
-	Token    = "AF325DF3432FDS"
-	KeyFile  = "./proxykey.pem"
-	CertFile = "./proxycert.pem"
-
-	Etag        = "X-Lantern-Etag"
-	IfNoneMatch = "X-Lantern-If-None-Match"
+	LocalProxyAddr = "localhost:18345"
+	SocksProxyAddr = "localhost:18346"
 )
-
-var (
-	protocol atomic.Value
-)
-
-func init() {
-	protocol.Store("https")
-}
 
 func TestProxying(t *testing.T) {
 	onGeo := geolookup.OnRefresh()
@@ -111,64 +82,43 @@ func TestProxying(t *testing.T) {
 	}
 	config.DefaultProxyConfigPollInterval = 100 * time.Millisecond
 
-	// Web server serves known content for testing
-	httpAddr, httpsAddr, err := startWebServer(t)
+	helper, err := integrationtest.NewHelper(t, "localhost:18347", "localhost:18348", "localhost:18349")
 	if !assert.NoError(t, err) {
 		return
 	}
-
-	// This is the remote proxy server
-	err = startProxyServer(t)
-	if !assert.NoError(t, err) {
-		return
-	}
-
-	// This is a fake config server that serves up a config that points at our
-	// testing proxy server.
-	configAddr, err := startConfigServer(t)
-	if !assert.NoError(t, err) {
-		return
-	}
-
-	// We have to write out a config file so that Lantern doesn't try to use the
-	// default config, which would go to some remote proxies that can't talk to
-	// our fake config server.
-	err = writeConfig()
-	if !assert.NoError(t, err) {
-		return
-	}
+	defer helper.Close()
 
 	// Starts the Lantern App
-	a, err := startApp(t, configAddr)
+	a, err := startApp(t, helper)
 	if !assert.NoError(t, err) {
 		return
 	}
 
 	// Makes a test request
-	testRequest(t, httpAddr, httpsAddr)
+	testRequest(t, helper)
 
 	// Switch to obfs4, wait for a new config and test request again
-	protocol.Store("obfs4")
+	helper.SetProtocol("obfs4")
 	time.Sleep(2 * time.Second)
-	testRequest(t, httpAddr, httpsAddr)
+	testRequest(t, helper)
 
 	// Switch to lampshade, wait for a new config and test request again
-	protocol.Store("lampshade")
+	helper.SetProtocol("lampshade")
 	time.Sleep(2 * time.Second)
-	testRequest(t, httpAddr, httpsAddr)
+	testRequest(t, helper)
 
 	// Switch to kcp, wait for a new config and test request again
-	protocol.Store("kcp")
+	helper.SetProtocol("kcp")
 	time.Sleep(2 * time.Second)
-	testRequest(t, httpAddr, httpsAddr)
+	testRequest(t, helper)
 
 	// Disconnected Lantern and try again
 	a.Disconnect()
-	testRequest(t, httpAddr, httpsAddr)
+	testRequest(t, helper)
 
 	// Connect Lantern and try again
 	a.Connect()
-	testRequest(t, httpAddr, httpsAddr)
+	testRequest(t, helper)
 
 	// Do a fake proxybench op to make sure it gets reported
 	ops.Begin("proxybench").Set("success", false).End()
@@ -220,259 +170,8 @@ func TestProxying(t *testing.T) {
 	}
 }
 
-func startWebServer(t *testing.T) (string, string, error) {
-	lh, err := net.Listen("tcp", "localhost:0")
-	if err != nil {
-		return "", "", fmt.Errorf("Unable to listen for HTTP connections: %v", err)
-	}
-	ls, err := tlsdefaults.Listen("localhost:0", "webkey.pem", "webcert.pem")
-	if err != nil {
-		return "", "", fmt.Errorf("Unable to listen for HTTPS connections: %v", err)
-	}
-	go func() {
-		err := http.Serve(lh, http.HandlerFunc(serveContent))
-		assert.NoError(t, err, "Unable to serve HTTP")
-	}()
-	go func() {
-		err := http.Serve(ls, http.HandlerFunc(serveContent))
-		assert.NoError(t, err, "Unable to serve HTTPS")
-	}()
-	return lh.Addr().String(), ls.Addr().String(), nil
-}
-
-func serveContent(resp http.ResponseWriter, req *http.Request) {
-	resp.WriteHeader(http.StatusOK)
-	resp.Write([]byte(Content))
-}
-
-func startProxyServer(t *testing.T) error {
-	kcpConfFile, err := ioutil.TempFile("", "")
-	if err != nil {
-		return err
-	}
-
-	err = json.NewEncoder(kcpConfFile).Encode(kcpConf)
-	kcpConfFile.Close()
-	if err != nil {
-		return err
-	}
-
-	s1 := &proxy.Proxy{
-		TestingLocal:  true,
-		Addr:          ProxyServerAddr,
-		Obfs4Addr:     OBFS4ServerAddr,
-		Obfs4Dir:      ".",
-		LampshadeAddr: LampshadeServerAddr,
-		Token:         Token,
-		KeyFile:       KeyFile,
-		CertFile:      CertFile,
-		IdleTimeout:   30 * time.Second,
-		HTTPS:         true,
-	}
-
-	// kcp server
-	s2 := &proxy.Proxy{
-		TestingLocal: true,
-		Addr:         "127.0.0.1:0",
-		KCPConf:      kcpConfFile.Name(),
-		Token:        Token,
-		KeyFile:      KeyFile,
-		CertFile:     CertFile,
-		IdleTimeout:  30 * time.Second,
-		HTTPS:        false,
-	}
-
-	go s1.ListenAndServe()
-	go s2.ListenAndServe()
-
-	err = waitforserver.WaitForServer("tcp", ProxyServerAddr, 10*time.Second)
-	if err != nil {
-		return err
-	}
-
-	// Wait for cert file to show up
-	var statErr error
-	for i := 0; i < 400; i++ {
-		_, statErr = os.Stat(CertFile)
-		if statErr != nil {
-			time.Sleep(25 * time.Millisecond)
-		}
-	}
-	return statErr
-}
-
-func startConfigServer(t *testing.T) (string, error) {
-	l, err := net.Listen("tcp", "localhost:0")
-	if err != nil {
-		return "", fmt.Errorf("Unable to listen for config server connection: %v", err)
-	}
-	go func() {
-		err := http.Serve(l, http.HandlerFunc(serveConfig(t)))
-		assert.NoError(t, err, "Unable to serve config")
-	}()
-	return l.Addr().String(), nil
-}
-
-func serveConfig(t *testing.T) func(http.ResponseWriter, *http.Request) {
-	return func(resp http.ResponseWriter, req *http.Request) {
-		log.Debugf("Reading request path: %v", req.URL.String())
-		if strings.Contains(req.URL.String(), "global") {
-			writeGlobalConfig(t, resp, req)
-		} else if strings.Contains(req.URL.String(), "prox") {
-			writeProxyConfig(t, resp, req)
-		} else {
-			log.Errorf("Not requesting global or proxies in %v", req.URL.String())
-			resp.WriteHeader(http.StatusBadRequest)
-		}
-	}
-}
-
-func writeGlobalConfig(t *testing.T, resp http.ResponseWriter, req *http.Request) {
-	log.Debug("Writing global config")
-	version := "1"
-
-	if req.Header.Get(IfNoneMatch) == version {
-		resp.WriteHeader(http.StatusNotModified)
-		return
-	}
-
-	cfg, err := buildGlobal()
-	if err != nil {
-		t.Error(err)
-		resp.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	resp.Header().Set(Etag, version)
-	resp.WriteHeader(http.StatusOK)
-
-	w := gzip.NewWriter(resp)
-	w.Write(cfg)
-	w.Close()
-}
-
-func writeProxyConfig(t *testing.T, resp http.ResponseWriter, req *http.Request) {
-	log.Debug("Writing proxy config")
-	proto := protocol.Load().(string)
-	version := "1"
-	if proto == "obfs4" {
-		version = "2"
-	} else if proto == "lampshade" {
-		version = "3"
-	} else if proto == "kcp" {
-		version = "4"
-	}
-
-	if req.Header.Get(IfNoneMatch) == version {
-		resp.WriteHeader(http.StatusNotModified)
-		return
-	}
-
-	cfg, err := buildProxies(proto)
-	if err != nil {
-		t.Error(err)
-		resp.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	resp.Header().Set(Etag, version)
-	resp.WriteHeader(http.StatusOK)
-
-	w := gzip.NewWriter(resp)
-	w.Write(cfg)
-	w.Close()
-}
-
-func writeConfig() error {
-	filename := "proxies.yaml"
-	err := os.Remove(filename)
-	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("Unable to delete existing yaml config: %v", err)
-	}
-
-	proto := protocol.Load().(string)
-	cfg, err := buildProxies(proto)
-	if err != nil {
-		return err
-	}
-
-	return ioutil.WriteFile(filename, cfg, 0644)
-}
-
-func buildProxies(proto string) ([]byte, error) {
-	bytes, err := ioutil.ReadFile("./proxies-template.yaml")
-	if err != nil {
-		return nil, fmt.Errorf("Could not read config %v", err)
-	}
-
-	cfg := make(map[string]*chained.ChainedServerInfo)
-	err = yaml.Unmarshal(bytes, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("Could not unmarshal config %v", err)
-	}
-
-	srv := cfg["fallback-template"]
-	srv.AuthToken = Token
-	if proto == "obfs4" {
-		srv.Addr = OBFS4ServerAddr
-		srv.PluggableTransport = "obfs4"
-		srv.PluggableTransportSettings = map[string]string{
-			"iat-mode": "0",
-		}
-
-		bridgelineFile, err2 := ioutil.ReadFile("obfs4_bridgeline.txt")
-		if err2 != nil {
-			return nil, fmt.Errorf("Could not read obfs4_bridgeline.txt: %v", err2)
-		}
-		obfs4extract := regexp.MustCompile(".+cert=([^\\s]+).+")
-		srv.Cert = string(obfs4extract.FindSubmatch(bridgelineFile)[1])
-	} else {
-		cert, err2 := ioutil.ReadFile(CertFile)
-		if err2 != nil {
-			return nil, fmt.Errorf("Could not read cert %v", err2)
-		}
-		srv.Cert = string(cert)
-		if proto == "lampshade" {
-			srv.Addr = LampshadeServerAddr
-			srv.PluggableTransport = "lampshade"
-		} else {
-			srv.Addr = ProxyServerAddr
-		}
-
-		if proto == "kcp" {
-			srv.KCPSettings = kcpConf
-		}
-	}
-	out, err := yaml.Marshal(cfg)
-	if err != nil {
-		return nil, fmt.Errorf("Could not marshal config %v", err)
-	}
-
-	return out, nil
-}
-
-func buildGlobal() ([]byte, error) {
-	bytes, err := ioutil.ReadFile("./global-template.yaml")
-	if err != nil {
-		return nil, fmt.Errorf("Could not read config %v", err)
-	}
-
-	cfg := &config.Global{}
-	err = yaml.Unmarshal(bytes, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("Could not unmarshal config %v", err)
-	}
-
-	out, err := yaml.Marshal(cfg)
-	if err != nil {
-		return nil, fmt.Errorf("Could not marshal config %v", err)
-	}
-
-	return out, nil
-}
-
-func startApp(t *testing.T, configAddr string) (*App, error) {
-	configURL := "http://" + configAddr
+func startApp(t *testing.T, helper *integrationtest.Helper) (*App, error) {
+	configURL := "http://" + helper.ConfigServerAddr
 	flags := map[string]interface{}{
 		"cloudconfig":             configURL,
 		"frontedconfig":           configURL,
@@ -480,7 +179,7 @@ func startApp(t *testing.T, configAddr string) (*App, error) {
 		"socksaddr":               SocksProxyAddr,
 		"headless":                true,
 		"proxyall":                true,
-		"configdir":               ".",
+		"configdir":               helper.ConfigDir,
 		"stickyconfig":            false,
 		"clear-proxy-settings":    false,
 		"readableconfig":          true,
@@ -509,7 +208,7 @@ func startApp(t *testing.T, configAddr string) (*App, error) {
 	return a, waitforserver.WaitForServer("tcp", LocalProxyAddr, 10*time.Second)
 }
 
-func testRequest(t *testing.T, httpAddr string, httpsAddr string) {
+func testRequest(t *testing.T, helper *integrationtest.Helper) {
 	proxyURL, _ := url.Parse("http://" + LocalProxyAddr)
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -520,8 +219,8 @@ func testRequest(t *testing.T, httpAddr string, httpsAddr string) {
 		},
 	}
 
-	doRequest(t, client, "http://"+httpAddr)
-	doRequest(t, client, "https://"+httpsAddr)
+	doRequest(t, client, "http://"+helper.HTTPServerAddr)
+	doRequest(t, client, "https://"+helper.HTTPSServerAddr)
 }
 
 func doRequest(t *testing.T, client *http.Client, url string) {
@@ -531,27 +230,8 @@ func doRequest(t *testing.T, client *http.Client, url string) {
 		b, err := ioutil.ReadAll(resp.Body)
 		if assert.NoError(t, err, "Unable to read response for "+url) {
 			if assert.Equal(t, http.StatusOK, resp.StatusCode, "Bad response status for "+url+": "+string(b)) {
-				assert.Equal(t, Content, string(b))
+				assert.Equal(t, integrationtest.Content, string(b))
 			}
 		}
 	}
-}
-
-var kcpConf = map[string]interface{}{
-	"scavengettl": 600,
-	"datashard":   10,
-	"interval":    50,
-	"mtu":         1350,
-	"sockbuf":     4194304,
-	"parityshard": 3,
-	"sndwnd":      128,
-	"mode":        "fast2",
-	"crypt":       "salsa20",
-	"key":         "thisisreallyakey",
-	"snmpperiod":  60,
-	"rcvwnd":      512,
-	"conn":        1,
-	"keepalive":   10,
-	"listen":      "127.0.0.1:8975",
-	"remoteaddr":  "127.0.0.1:8975",
 }
