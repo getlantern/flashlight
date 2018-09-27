@@ -304,10 +304,6 @@ func (d *testDialer) Trusted() bool {
 	return !d.untrusted
 }
 
-func (d *testDialer) NumPreconnecting() int {
-	return 0
-}
-
 func (d *testDialer) Dial(network, addr string) (net.Conn, error) {
 	conn, _, err := d.DialContext(context.Background(), network, addr)
 	return conn, err

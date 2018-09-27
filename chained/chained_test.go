@@ -240,7 +240,7 @@ func test(t *testing.T, dialer func(network, addr string) (net.Conn, error)) {
 }
 
 func (p *proxy) dial(network, addr string) (net.Conn, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), chainedDialTimeout)
 	defer cancel()
 	conn, _, err := p.DialContext(ctx, network, addr)
 	return conn, err
