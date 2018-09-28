@@ -557,7 +557,7 @@ func (b *Balancer) Close() {
 }
 
 func (b *Balancer) periodicallyProbeDialers() {
-	tk := time.NewTicker(10 * time.Minute)
+	tk := time.NewTicker(randomize(10 * time.Minute))
 	for {
 		select {
 		case <-tk.C:
