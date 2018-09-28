@@ -30,7 +30,7 @@ type testDialer struct {
 	successes          int64
 	failures           int64
 	stopped            int32
-	connectivityChecks int
+	connectivityChecks int32
 	remainingFailures  int
 }
 
@@ -162,9 +162,7 @@ func (d *testDialer) recalcRTT() {
 }
 
 func (d *testDialer) connectivityChecksSinceLast() int {
-	result := d.connectivityChecks
-	d.connectivityChecks = 0
-	return result
+	return int(atomic.SwapInt32(&d.connectivityChecks, 0))
 }
 
 func (d *testDialer) DataSent() uint64 {
@@ -177,7 +175,7 @@ func (d *testDialer) DataRecv() uint64 {
 
 func (d *testDialer) Probe(forPerformance bool) bool {
 	d.recalcRTT()
-	d.connectivityChecks++
+	atomic.AddInt32(&d.connectivityChecks, 1)
 	return true
 }
 
