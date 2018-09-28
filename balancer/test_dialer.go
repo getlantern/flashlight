@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -21,14 +22,15 @@ type testDialer struct {
 	baseRTT            time.Duration
 	rtt                time.Duration
 	bandwidth          float64
-	untrusted          bool
+	untrusted          int32
 	failingUpstream    bool
+	muSuccessRate      sync.RWMutex
 	successRate        float64
 	attempts           int64
 	successes          int64
 	failures           int64
 	stopped            int32
-	connectivityChecks int
+	connectivityChecks int32
 	remainingFailures  int
 }
 
@@ -58,7 +60,7 @@ func (d *testDialer) Addr() string {
 }
 
 func (d *testDialer) Trusted() bool {
-	return !d.untrusted
+	return atomic.LoadInt32(&d.untrusted) == 0
 }
 
 func (d *testDialer) Preconnect() {
@@ -110,7 +112,15 @@ func (d *testDialer) EstRTT() time.Duration {
 	return d.rtt
 }
 
+func (d *testDialer) setSuccessRate(rate float64) {
+	d.muSuccessRate.Lock()
+	defer d.muSuccessRate.Unlock()
+	d.successRate = rate
+}
+
 func (d *testDialer) EstSuccessRate() float64 {
+	d.muSuccessRate.RLock()
+	defer d.muSuccessRate.RUnlock()
 	return d.successRate
 }
 
@@ -152,9 +162,7 @@ func (d *testDialer) recalcRTT() {
 }
 
 func (d *testDialer) connectivityChecksSinceLast() int {
-	result := d.connectivityChecks
-	d.connectivityChecks = 0
-	return result
+	return int(atomic.SwapInt32(&d.connectivityChecks, 0))
 }
 
 func (d *testDialer) DataSent() uint64 {
@@ -167,7 +175,7 @@ func (d *testDialer) DataRecv() uint64 {
 
 func (d *testDialer) Probe(forPerformance bool) bool {
 	d.recalcRTT()
-	d.connectivityChecks++
+	atomic.AddInt32(&d.connectivityChecks, 1)
 	return true
 }
 
