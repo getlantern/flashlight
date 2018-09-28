@@ -138,8 +138,24 @@ type Dialer interface {
 }
 
 type dialStats struct {
-	success int64
-	failure int64
+	success               int64
+	connectSuccess        int64
+	persistentSuccess     int64
+	failure               int64
+	attempts              int64
+	startTime             time.Time
+	connectConnectTime    int64
+	persistentConnectTime int64
+}
+
+func (ds *dialStats) addConnectConnectTime(t time.Duration) {
+	atomic.AddInt64(&ds.connectConnectTime, int64(t))
+	atomic.AddInt64(&ds.connectSuccess, 1)
+}
+
+func (ds *dialStats) addPersistentConnectTime(t time.Duration) {
+	atomic.AddInt64(&ds.persistentConnectTime, int64(t))
+	atomic.AddInt64(&ds.persistentSuccess, 1)
 }
 
 // Balancer balances connections among multiple Dialers.
@@ -192,7 +208,7 @@ func (b *Balancer) Reset(dialers []Dialer) {
 
 	sessionStats := make(map[string]*dialStats, len(dls))
 	for _, d := range dls {
-		sessionStats[d.Label()] = &dialStats{}
+		sessionStats[d.Label()] = &dialStats{startTime: time.Now()}
 	}
 
 	lastReset := time.Now()
@@ -367,15 +383,31 @@ func (bd *balancedDial) dialWithPC(ctx context.Context, pc ProxyConnection, star
 	deadline, _ := ctx.Deadline()
 	log.Debugf("Dialing %s://%s with %s on pass %v with timeout %v", bd.network, bd.addr, pc.Label(), attempts, deadline.Sub(time.Now()))
 	oldRTT, oldBW := pc.EstRTT(), pc.EstBandwidth()
+	stats := bd.sessionStats[pc.Label()]
+	atomic.AddInt64(&stats.attempts, 1)
 	conn, failedUpstream, err := pc.DialContext(ctx, bd.network, bd.addr)
 	if err != nil {
 		bd.onFailure(pc, failedUpstream, err, attempts)
 		return nil
 	}
+
+	if strings.HasPrefix(bd.network, "connect") {
+		stats.addConnectConnectTime(time.Since(start) / 1000 / 1000)
+	} else {
+		stats.addPersistentConnectTime(time.Since(start) / 1000 / 1000)
+	}
+
 	// Please leave this at Debug level, as it helps us understand
 	// performance issues caused by a poor proxy being selected.
 	log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", pc.Label(), bd.network, bd.addr, attempts, time.Since(start))
 	bd.onSuccess(pc)
+	if stats.connectSuccess > 0 {
+		log.Debugf("Average connect time CONNECT: %vms", stats.connectConnectTime/stats.connectSuccess)
+	}
+	if stats.persistentSuccess > 0 {
+		log.Debugf("Average connect time PERSISTENT: %vms", stats.persistentConnectTime/stats.persistentSuccess)
+	}
+
 	// Reevaluate all dialers if the top dialer performance dramatically changed
 	if attempts == 0 {
 		switch {
