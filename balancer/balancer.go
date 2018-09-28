@@ -557,10 +557,12 @@ func (b *Balancer) Close() {
 }
 
 func (b *Balancer) periodicallyProbeDialers() {
-	tk := time.NewTicker(randomize(10 * time.Minute))
+	t := time.NewTimer(0)
+	defer t.Stop()
 	for {
+		t.Reset(randomize(10 * time.Minute))
 		select {
-		case <-tk.C:
+		case <-t.C:
 			log.Debugf("Start periodical probing")
 			b.checkConnectivityForAll()
 			log.Debugf("End periodical probing")
