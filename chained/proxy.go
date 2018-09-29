@@ -16,6 +16,7 @@ import (
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
 
+	"github.com/getlantern/cmux"
 	"github.com/getlantern/ema"
 	"github.com/getlantern/enhttp"
 	"github.com/getlantern/errors"
@@ -63,18 +64,13 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 	}
 	switch s.PluggableTransport {
 	case "":
-		var p *proxy
-		var err error
-		if s.Cert == "" {
-			log.Errorf("No Cert configured for %s, will dial with plain tcp", s.Addr)
-			p, err = newHTTPProxy(name, s, uc)
-		} else {
-			log.Tracef("Cert configured for  %s, will dial with tls", s.Addr)
-			p, err = newHTTPSProxy(name, s, uc)
-		}
-		return p, err
+		return newHTTPOrHTTPSProxy(name, s, uc)
+	case "mhttp":
+		return multiplex(newHTTPOrHTTPSProxy(name, s, uc))
 	case "obfs4":
 		return newOBFS4Proxy(name, s, uc)
+	case "mobfs4":
+		return multiplex(newOBFS4Proxy(name, s, uc))
 	case "lampshade":
 		return newLampshadeProxy(name, s, uc)
 	default:
@@ -94,6 +90,19 @@ func forceProxy(s *ChainedServerInfo) {
 	s.AuthToken = theForceToken
 	s.Cert = ""
 	s.PluggableTransport = ""
+}
+
+func newHTTPOrHTTPSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+	var p *proxy
+	var err error
+	if s.Cert == "" {
+		log.Errorf("No Cert configured for %s, will dial with plain tcp", s.Addr)
+		p, err = newHTTPProxy(name, s, uc)
+	} else {
+		log.Tracef("Cert configured for  %s, will dial with tls", s.Addr)
+		p, err = newHTTPSProxy(name, s, uc)
+	}
+	return p, err
 }
 
 func newHTTPProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
@@ -383,6 +392,27 @@ func newProxy(name, protocol, network, addr string, s *ChainedServerInfo, uc com
 			return nil, err
 		}
 		p.protocol = "kcp"
+	}
+
+	return p, nil
+}
+
+func multiplex(p *proxy, err error) (*proxy, error) {
+	if err != nil {
+		return p, err
+	}
+
+	log.Debugf("Multiplexing connections to %v", p.Label())
+
+	originalDoDialServer := p.doDialServer
+
+	cmuxDialer := cmux.Dialer(&cmux.DialerOpts{
+		Dial: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return originalDoDialServer(ctx, p)
+		},
+	})
+	p.doDialServer = func(ctx context.Context, p *proxy) (net.Conn, error) {
+		return cmuxDialer(ctx, "", "")
 	}
 
 	return p, nil

@@ -87,6 +87,9 @@ type ChainedServerInfo struct {
 
 	// Location: the location where the server resides.
 	Location ServerLocation
+
+	// Multiplexed indicates whether to use cmux multiplexing
+	Multiplexed bool
 }
 
 func (s *ChainedServerInfo) ptSetting(name string) string {
