@@ -76,7 +76,7 @@ func EnableFileLogging(logdir string) {
 type pipedWriteCloser struct {
 	w        io.WriteCloser
 	ch       chan []byte
-	chClosed chan bool
+	chClosed chan struct{}
 	bufPool  sync.Pool // to reduce allocation as much as possible
 }
 
@@ -94,9 +94,16 @@ func (w *pipedWriteCloser) Write(b []byte) (int, error) {
 }
 
 func (w *pipedWriteCloser) Close() error {
-	close(w.ch)
-	<-w.chClosed
-	return w.w.Close()
+	// it's not sufficient to detect concurrent Close() calls, but looks ok in
+	// our application.
+	select {
+	case <-w.chClosed:
+		return nil
+	default:
+		close(w.ch)
+		<-w.chClosed
+		return w.w.Close()
+	}
 }
 
 // newPipedWriteCloser wraps a WriteCloser to sequentialize writes from
@@ -106,7 +113,7 @@ func (w *pipedWriteCloser) Close() error {
 func newPipedWriteCloser(w io.WriteCloser, nPending int) io.WriteCloser {
 	pwc := &pipedWriteCloser{w,
 		make(chan []byte, nPending),
-		make(chan bool),
+		make(chan struct{}),
 		sync.Pool{
 			New: func() interface{} { return make([]byte, 0, 256) },
 		},
@@ -116,7 +123,7 @@ func newPipedWriteCloser(w io.WriteCloser, nPending int) io.WriteCloser {
 			pwc.w.Write(b)
 			pwc.bufPool.Put(b)
 		}
-		pwc.chClosed <- true
+		close(pwc.chClosed)
 	}()
 	return pwc
 }
