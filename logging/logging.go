@@ -77,11 +77,17 @@ type pipedWriteCloser struct {
 	w        io.WriteCloser
 	ch       chan []byte
 	chClosed chan bool
+	bufPool  sync.Pool // to reduce allocation as much as possible
 }
 
 func (w *pipedWriteCloser) Write(b []byte) (int, error) {
+	buf := w.bufPool.Get().([]byte)
+	// Have to copy the slice as the caller may reuse it before it's consumed
+	// by the write goroutine. Using append is a trick to grow the slice
+	// automatically.
+	buf = append(buf[:0], b...)
 	select {
-	case w.ch <- b:
+	case w.ch <- buf:
 	default:
 	}
 	return len(b), nil
@@ -98,15 +104,21 @@ func (w *pipedWriteCloser) Close() error {
 // propagated back to the caller goroutine and pending writes more than
 // nPending will be dropped silently.
 func newPipedWriteCloser(w io.WriteCloser, nPending int) io.WriteCloser {
-	ch := make(chan []byte, nPending)
-	chClosed := make(chan bool)
+	pwc := &pipedWriteCloser{w,
+		make(chan []byte, nPending),
+		make(chan bool),
+		sync.Pool{
+			New: func() interface{} { return make([]byte, 0, 256) },
+		},
+	}
 	go func() {
-		for b := range ch {
-			w.Write(b)
+		for b := range pwc.ch {
+			pwc.w.Write(b)
+			pwc.bufPool.Put(b)
 		}
-		chClosed <- true
+		pwc.chClosed <- true
 	}()
-	return &pipedWriteCloser{w, ch, chClosed}
+	return pwc
 }
 
 // ZipLogFiles zip the Lantern log files to the writer. All files will be
