@@ -1,7 +1,9 @@
 package logging
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"strings"
 	"testing"
 	"time"
@@ -27,21 +29,38 @@ func TestUserAgent(t *testing.T) {
 	assert.True(t, strings.Contains(agents, "AppleWebKit"), "Expected agent not in "+agents)
 }
 
-type BadWriter struct{}
-type GoodWriter struct{ counter int }
+type badWriter struct{}
+type goodWriter struct{ counter int }
 
-func (w *BadWriter) Write(p []byte) (int, error) {
+func (w *badWriter) Write(p []byte) (int, error) {
 	return 0, fmt.Errorf("Fail intentionally")
 }
 
-func (w *GoodWriter) Write(p []byte) (int, error) {
+func (w *goodWriter) Write(p []byte) (int, error) {
 	w.counter = len(p)
 	return w.counter, nil
 }
 
 func TestNonStopWriter(t *testing.T) {
-	b, g := BadWriter{}, GoodWriter{}
-	ns := NonStopWriter(&b, &g)
+	b, g := badWriter{}, goodWriter{}
+	ns := newNonStopWriter(&b, &g)
 	ns.Write([]byte("1234"))
 	assert.Equal(t, 4, g.counter, "Should write to all writers even when error encountered")
+}
+
+type nopCloser struct {
+	io.Writer
+}
+
+func (nopCloser) Close() error { return nil }
+
+func TestPipedWriteCloserWriteProperly(t *testing.T) {
+	entry := []byte("abcd")
+	var b bytes.Buffer
+	w := newPipedWriteCloser(nopCloser{&b}, 100)
+	for i := 0; i < 100; i++ {
+		w.Write(entry)
+	}
+	w.Close()
+	assert.Equal(t, b.Bytes(), bytes.Repeat(entry, 100))
 }

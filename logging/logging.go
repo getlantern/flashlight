@@ -28,7 +28,7 @@ var (
 	log          = golog.LoggerFor("flashlight.logging")
 	processStart = time.Now()
 
-	logFile *rotator.SizeRotator
+	logFile io.WriteCloser
 
 	errorOut io.Writer
 	debugOut io.Writer
@@ -61,15 +61,52 @@ func EnableFileLogging(logdir string) {
 			}
 		}
 	}
-	logFile = rotator.NewSizeRotator(filepath.Join(logdir, "lantern.log"))
+	rotator := rotator.NewSizeRotator(filepath.Join(logdir, "lantern.log"))
 	// Set log files to 4 MB
-	logFile.RotationSize = 4 * 1024 * 1024
+	rotator.RotationSize = 4 * 1024 * 1024
 	// Keep up to 5 log files
-	logFile.MaxRotation = 5
+	rotator.MaxRotation = 5
 
-	errorOut = timestamped(NonStopWriter(os.Stderr, logFile))
-	debugOut = timestamped(NonStopWriter(os.Stdout, logFile))
+	logFile = newPipedWriteCloser(rotator, 10000)
+	errorOut = timestamped(newNonStopWriter(os.Stderr, logFile))
+	debugOut = timestamped(newNonStopWriter(os.Stdout, logFile))
 	golog.SetOutputs(errorOut, debugOut)
+}
+
+type pipedWriteCloser struct {
+	w        io.WriteCloser
+	ch       chan []byte
+	chClosed chan bool
+}
+
+func (w *pipedWriteCloser) Write(b []byte) (int, error) {
+	select {
+	case w.ch <- b:
+	default:
+	}
+	return len(b), nil
+}
+
+func (w *pipedWriteCloser) Close() error {
+	close(w.ch)
+	<-w.chClosed
+	return w.w.Close()
+}
+
+// newPipedWriteCloser wraps a WriteCloser to sequentialize writes from
+// different goroutines into a single goroutine. Write errors won't be
+// propagated back to the caller goroutine and pending writes more than
+// nPending will be dropped silently.
+func newPipedWriteCloser(w io.WriteCloser, nPending int) io.WriteCloser {
+	ch := make(chan []byte, nPending)
+	chClosed := make(chan bool)
+	go func() {
+		for b := range ch {
+			w.Write(b)
+		}
+		chClosed <- true
+	}()
+	return &pipedWriteCloser{w, ch, chClosed}
 }
 
 // ZipLogFiles zip the Lantern log files to the writer. All files will be
@@ -118,9 +155,9 @@ type nonStopWriter struct {
 	writers []io.Writer
 }
 
-// NonStopWriter creates a writer that duplicates its writes to all the
+// newNonStopWriter creates a writer that duplicates its writes to all the
 // provided writers, even if errors encountered while writting.
-func NonStopWriter(writers ...io.Writer) io.Writer {
+func newNonStopWriter(writers ...io.Writer) io.Writer {
 	w := make([]io.Writer, len(writers))
 	copy(w, writers)
 	return &nonStopWriter{w}
