@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/ops"
 )
 
 var (
@@ -147,7 +148,9 @@ func TestBadAddressToServer(t *testing.T) {
 	}
 
 	r := bufio.NewReader(conn)
-	err = p.checkCONNECTResponse(r, req, time.Now())
+	op := ops.Begin("test_op")
+	defer op.End()
+	err = p.checkCONNECTResponse(op, r, req, time.Now())
 	assert.Error(t, err, "Connect response should be bad")
 }
 
