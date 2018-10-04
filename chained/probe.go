@@ -125,8 +125,12 @@ func (p *proxy) doHttpPing(kb int, resetBBR bool) error {
 	if resetBBR {
 		req.Header.Set("X-BBR", "clear")
 	}
+	opTimeout := 30 * time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), opTimeout)
+	req.WithContext(ctx)
+	defer cancel()
 
-	_, _, err := withtimeout.Do(30*time.Second, func() (interface{}, error) {
+	_, _, err := withtimeout.Do(opTimeout, func() (interface{}, error) {
 		var dialEnd time.Time
 		dial := func(ctx context.Context, network, addr string) (net.Conn, error) {
 			tk := time.NewTicker(time.Second)
