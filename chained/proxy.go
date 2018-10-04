@@ -22,6 +22,7 @@ import (
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
+	"github.com/getlantern/flashlight/chained/config"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/fronted"
@@ -322,7 +323,7 @@ type proxy struct {
 	network           string
 	addr              string
 	authToken         string
-	location          ServerLocation
+	location          config.ServerLocation
 	user              common.UserConfig
 	trusted           bool
 	bias              int
