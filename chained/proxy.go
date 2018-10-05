@@ -22,6 +22,7 @@ import (
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
+	"github.com/getlantern/flashlight/chained/config"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/fronted"
@@ -117,7 +118,7 @@ func newHTTPProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pro
 		dial := enhttp.NewDialer(&http.Client{
 			Transport: tr,
 		}, s.ENHTTPURL)
-		dialOrigin = func(ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
+		dialOrigin = func(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
 			dfConn, err := dial(network, addr)
 			if err == nil {
 				dfConn = idletiming.Conn(dfConn, IdleTimeout, func() {
@@ -301,7 +302,7 @@ func (c *consecCounter) Get() int64 {
 	return atomic.LoadInt64(&c.v)
 }
 
-type dialOriginFn func(ctx context.Context, p *proxy, network, addr string) (net.Conn, error)
+type dialOriginFn func(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error)
 
 type proxy struct {
 	// Store int64's up front to ensure alignment of 64 bit words
@@ -324,7 +325,7 @@ type proxy struct {
 	network           string
 	addr              string
 	authToken         string
-	location          ServerLocation
+	location          config.ServerLocation
 	user              common.UserConfig
 	trusted           bool
 	bias              int

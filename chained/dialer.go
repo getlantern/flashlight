@@ -176,8 +176,8 @@ func (p *proxy) dialInternal(op *ops.Op, ctx context.Context, network, addr stri
 	var err error
 	chDone := make(chan bool)
 	start := time.Now()
-	go func() {
-		conn, err = p.dialOrigin(ctx, p, network, addr)
+	ops.Go(func() {
+		conn, err = p.dialOrigin(op, ctx, p, network, addr)
 		if err != nil {
 			op.Set("idled", idletiming.IsIdled(conn))
 		}
@@ -189,9 +189,12 @@ func (p *proxy) dialInternal(op *ops.Op, ctx context.Context, network, addr stri
 				conn.Close()
 			}
 		}
-	}()
+	})
 	select {
 	case <-chDone:
+		if network == connect {
+			log.Debug("CONNECT succeeded")
+		}
 		return p.withRateTracking(conn, addr), err
 	case <-ctx.Done():
 		return nil, errors.New("fail to dial origin after %+v", time.Since(start))
@@ -201,7 +204,7 @@ func (p *proxy) dialInternal(op *ops.Op, ctx context.Context, network, addr stri
 // dialOrigin implements the method from serverConn. With standard proxies, this
 // involves sending either a CONNECT request or a GET request to initiate a
 // persistent connection to the upstream proxy.
-func defaultDialOrigin(ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
+func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
 	conn, err := p.dialServer(ctx)
 	if err != nil {
 		return nil, err
@@ -215,7 +218,7 @@ func defaultDialOrigin(ctx context.Context, p *proxy, network, addr string) (net
 	switch network {
 	case connect:
 		log.Tracef("Sending CONNECT request")
-		err = p.sendCONNECT(addr, conn)
+		err = p.sendCONNECT(op, addr, conn)
 	case persistent:
 		log.Tracef("Sending GET request to establish persistent HTTP connection")
 		err = p.initPersistentConnection(addr, conn)
@@ -240,7 +243,7 @@ func (p *proxy) onFinish(op *ops.Op) {
 	op.ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network())
 }
 
-func (p *proxy) sendCONNECT(addr string, conn net.Conn) error {
+func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn net.Conn) error {
 	reqTime := time.Now()
 	req, err := p.buildCONNECTRequest(addr)
 	if err != nil {
@@ -252,7 +255,7 @@ func (p *proxy) sendCONNECT(addr string, conn net.Conn) error {
 	}
 
 	r := bufio.NewReader(conn)
-	err = p.checkCONNECTResponse(r, req, reqTime)
+	err = p.checkCONNECTResponse(op, r, req, reqTime)
 	return err
 }
 
@@ -269,7 +272,7 @@ func (p *proxy) buildCONNECTRequest(addr string) (*http.Request, error) {
 	return req, nil
 }
 
-func (p *proxy) checkCONNECTResponse(r *bufio.Reader, req *http.Request, reqTime time.Time) error {
+func (p *proxy) checkCONNECTResponse(op *ops.Op, r *bufio.Reader, req *http.Request, reqTime time.Time) error {
 	resp, err := http.ReadResponse(r, req)
 	if err != nil {
 		return errors.New("Error reading CONNECT response: %s", err)
@@ -293,8 +296,11 @@ func (p *proxy) checkCONNECTResponse(r *bufio.Reader, req *http.Request, reqTime
 			// dialupstream is the only metric for now, but more may be added later.
 			for _, metric := range header.Metrics {
 				if metric.Name == gp.MetricDialUpstream {
-					p.updateEstRTT(rtt - metric.Duration)
-					log.Debugf("%v RTT from CONNECT timing: %v - %v = %v", p.Label(), rtt, metric.Duration, rtt-metric.Duration)
+					adjustedRTT := rtt - metric.Duration
+					op.Set("connect_time_total", rtt)
+					op.Set("connect_time_server", metric.Duration)
+					op.Set("connect_time_rtt", adjustedRTT)
+					p.updateEstRTT(adjustedRTT)
 				}
 			}
 		}
