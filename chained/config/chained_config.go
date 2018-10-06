@@ -77,4 +77,12 @@ type ChainedServerInfo struct {
 
 	// Location: the location where the server resides.
 	Location ServerLocation
+
+	// MultiplexedAddr: a host:port at which this server is reachable using cmux-
+	// based multiplexing.
+	MultiplexedAddr string
+
+	// MultiplexedPhysicalConns controls how many physical connections to use
+	// under the multiplexing. This defaults to 1.
+	MultiplexedPhysicalConns int
 }

@@ -26,7 +26,7 @@ func newTestUserConfig() *common.UserConfigData {
 }
 
 func NewDialer(dialServer func(ctx context.Context, p *proxy) (net.Conn, error)) (func(network, addr string) (net.Conn, error), error) {
-	p, err := newProxy("test", "proto", "netw", "addr:567", &ChainedServerInfo{
+	p, err := newProxy("test", "proto", "netw", &ChainedServerInfo{
 		Addr:      "addr:567",
 		AuthToken: "token",
 	}, newTestUserConfig(), true, dialServer, defaultDialOrigin)
@@ -121,7 +121,7 @@ func TestBadMethodToServer(t *testing.T) {
 }
 
 func TestBadAddressToServer(t *testing.T) {
-	p, err := newProxy("test", "proto", "netw", "addr:567", &ChainedServerInfo{
+	p, err := newProxy("test", "proto", "netw", &ChainedServerInfo{
 		Addr:      "addr:567",
 		AuthToken: "token",
 	}, newTestUserConfig(), true, func(ctx context.Context, p *proxy) (net.Conn, error) {
