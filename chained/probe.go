@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -17,10 +16,6 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/mtime"
-)
-
-var (
-	httpPingMx sync.RWMutex
 )
 
 func (p *proxy) ProbeStats() (successes uint64, successKBs uint64, failures uint64, failedKBs uint64) {
@@ -77,18 +72,6 @@ func (p *proxy) Probe(forPerformance bool) bool {
 }
 
 func (p *proxy) httpPing(kb int, resetBBR bool) error {
-	if kb == 1 {
-		// When checking connectivity, run in parallel to reduce variables when
-		// comparing proxies.
-		httpPingMx.RLock()
-		defer httpPingMx.RUnlock()
-	} else {
-		// When probing for performance, only check one proxy at time to give
-		// ourselves the full available pipe.
-		httpPingMx.Lock()
-		defer httpPingMx.Unlock()
-	}
-
 	op := ops.Begin("probe").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network())
 	defer op.End()
 
