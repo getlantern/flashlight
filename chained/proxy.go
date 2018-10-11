@@ -41,8 +41,8 @@ import (
 const (
 	trustedSuffix = " (t)"
 
-	defaultInitPreconnect = 20
-	defaultMaxPreconnect  = 100
+	defaultInitPreconnect = 1
+	defaultMaxPreconnect  = 4
 
 	// Below two values are based on suggestions in rfc6298
 	rttAlpha    = 0.125
