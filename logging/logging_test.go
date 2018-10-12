@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -55,7 +57,7 @@ type nopCloser struct {
 func (nopCloser) Close() error { return nil }
 
 func TestPipedWriteCloserWriteProperly(t *testing.T) {
-	entry := []byte("abcd")
+	entry := []byte("abcd\n")
 	var b bytes.Buffer
 	w := newPipedWriteCloser(nopCloser{&b}, 100)
 	for i := 0; i < 100; i++ {
@@ -63,4 +65,35 @@ func TestPipedWriteCloserWriteProperly(t *testing.T) {
 	}
 	w.Close()
 	assert.Equal(t, b.Bytes(), bytes.Repeat(entry, 100))
+}
+
+func TestPipedWriteCloserSkipMessages(t *testing.T) {
+	entry := []byte("abcd\n")
+	var b bytes.Buffer
+	w := newPipedWriteCloser(nopCloser{&b}, 10)
+	for i := 0; i < 1000; i++ {
+		w.Write(entry)
+	}
+	w.Close()
+	time.Sleep(time.Second)
+	assert.Contains(t, string(b.Bytes()), "message(s) skipped...")
+	assert.Equal(t, 1000, countMessages(b.Bytes()))
+}
+
+func countMessages(b []byte) int {
+	lines := bytes.Split(b, []byte("\n"))
+	var n int
+	re := regexp.MustCompile("\\d+")
+	for _, l := range lines {
+		found := re.Find(l)
+		if found == nil {
+			if len(l) > 0 { // exclude the latest '\n'
+				n++
+			}
+		} else {
+			i, _ := strconv.Atoi(string(found))
+			n += i
+		}
+	}
+	return n
 }

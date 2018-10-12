@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/appdir"
@@ -74,6 +75,7 @@ func EnableFileLogging(logdir string) {
 }
 
 type pipedWriteCloser struct {
+	nSkipped uint64
 	w        io.WriteCloser
 	ch       chan []byte
 	chClosed chan struct{}
@@ -88,7 +90,20 @@ func (w *pipedWriteCloser) Write(b []byte) (int, error) {
 	buf = append(buf[:0], b...)
 	select {
 	case w.ch <- buf:
+		skipped := atomic.LoadUint64(&w.nSkipped)
+		if skipped > 0 {
+			select {
+			case w.ch <- []byte(fmt.Sprintf("...%d message(s) skipped...\n", skipped)):
+				// Note: Race condition could cause the message being printed
+				// several times, but that's acceptable.
+				atomic.StoreUint64(&w.nSkipped, 0)
+			default:
+			}
+		}
 	default:
+		// Intentionally not returning the buffer to pool, to prevent the pool
+		// from expanding indefinitely.
+		atomic.AddUint64(&w.nSkipped, 1)
 	}
 	return len(b), nil
 }
@@ -111,7 +126,7 @@ func (w *pipedWriteCloser) Close() error {
 // propagated back to the caller goroutine and pending writes more than
 // nPending will be dropped silently.
 func newPipedWriteCloser(w io.WriteCloser, nPending int) io.WriteCloser {
-	pwc := &pipedWriteCloser{w,
+	pwc := &pipedWriteCloser{0, w,
 		make(chan []byte, nPending),
 		make(chan struct{}),
 		sync.Pool{
