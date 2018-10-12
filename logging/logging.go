@@ -68,7 +68,7 @@ func EnableFileLogging(logdir string) {
 	// Keep up to 5 log files
 	rotator.MaxRotation = 5
 
-	logFile = newPipedWriteCloser(rotator, 10000)
+	logFile = newPipedWriteCloser(rotator, 100)
 	errorOut = timestamped(newNonStopWriter(os.Stderr, logFile))
 	debugOut = timestamped(newNonStopWriter(os.Stdout, logFile))
 	golog.SetOutputs(errorOut, debugOut)
