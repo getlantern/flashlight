@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/appdir"
@@ -28,7 +29,7 @@ var (
 	log          = golog.LoggerFor("flashlight.logging")
 	processStart = time.Now()
 
-	logFile *rotator.SizeRotator
+	logFile io.WriteCloser
 
 	errorOut io.Writer
 	debugOut io.Writer
@@ -61,15 +62,85 @@ func EnableFileLogging(logdir string) {
 			}
 		}
 	}
-	logFile = rotator.NewSizeRotator(filepath.Join(logdir, "lantern.log"))
+	rotator := rotator.NewSizeRotator(filepath.Join(logdir, "lantern.log"))
 	// Set log files to 4 MB
-	logFile.RotationSize = 4 * 1024 * 1024
+	rotator.RotationSize = 4 * 1024 * 1024
 	// Keep up to 5 log files
-	logFile.MaxRotation = 5
+	rotator.MaxRotation = 5
 
-	errorOut = timestamped(NonStopWriter(os.Stderr, logFile))
-	debugOut = timestamped(NonStopWriter(os.Stdout, logFile))
+	logFile = newPipedWriteCloser(rotator, 100)
+	errorOut = timestamped(newNonStopWriter(os.Stderr, logFile))
+	debugOut = timestamped(newNonStopWriter(os.Stdout, logFile))
 	golog.SetOutputs(errorOut, debugOut)
+}
+
+type pipedWriteCloser struct {
+	nSkipped uint64
+	w        io.WriteCloser
+	ch       chan []byte
+	chClosed chan struct{}
+	bufPool  sync.Pool // to reduce allocation as much as possible
+}
+
+func (w *pipedWriteCloser) Write(b []byte) (int, error) {
+	buf := w.bufPool.Get().([]byte)
+	// Have to copy the slice as the caller may reuse it before it's consumed
+	// by the write goroutine. Using append is a trick to grow the slice
+	// automatically.
+	buf = append(buf[:0], b...)
+	select {
+	case w.ch <- buf:
+		skipped := atomic.LoadUint64(&w.nSkipped)
+		if skipped > 0 {
+			select {
+			case w.ch <- []byte(fmt.Sprintf("...%d message(s) skipped...\n", skipped)):
+				// Note: Race condition could cause the message being printed
+				// several times, but that's acceptable.
+				atomic.StoreUint64(&w.nSkipped, 0)
+			default:
+			}
+		}
+	default:
+		// Intentionally not returning the buffer to pool, to prevent the pool
+		// from expanding indefinitely.
+		atomic.AddUint64(&w.nSkipped, 1)
+	}
+	return len(b), nil
+}
+
+func (w *pipedWriteCloser) Close() error {
+	// it's not sufficient to detect concurrent Close() calls, but looks ok in
+	// our application.
+	select {
+	case <-w.chClosed:
+		return nil
+	default:
+		close(w.ch)
+		<-w.chClosed
+		return w.w.Close()
+	}
+}
+
+// newPipedWriteCloser wraps a WriteCloser to sequentialize writes from
+// different goroutines into a single goroutine. Write errors won't be
+// propagated back to the caller goroutine and pending writes more than
+// nPending will be dropped silently.
+func newPipedWriteCloser(w io.WriteCloser, nPending int) io.WriteCloser {
+	pwc := &pipedWriteCloser{0, w,
+		make(chan []byte, nPending),
+		make(chan struct{}),
+		sync.Pool{
+			New: func() interface{} { return make([]byte, 0, 256) },
+		},
+	}
+	go func() {
+		for b := range pwc.ch {
+			pwc.w.Write(b)
+			pwc.bufPool.Put(b)
+		}
+		close(pwc.chClosed)
+	}()
+	return pwc
 }
 
 // ZipLogFiles zip the Lantern log files to the writer. All files will be
@@ -118,9 +189,9 @@ type nonStopWriter struct {
 	writers []io.Writer
 }
 
-// NonStopWriter creates a writer that duplicates its writes to all the
+// newNonStopWriter creates a writer that duplicates its writes to all the
 // provided writers, even if errors encountered while writting.
-func NonStopWriter(writers ...io.Writer) io.Writer {
+func newNonStopWriter(writers ...io.Writer) io.Writer {
 	w := make([]io.Writer, len(writers))
 	copy(w, writers)
 	return &nonStopWriter{w}
