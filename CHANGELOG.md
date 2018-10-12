@@ -1,5 +1,18 @@
 # Change Log
 
+## [4.8.3](https://github.com/getlantern/flashlight/tree/4.8.3) (2018-10-12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.2...4.8.3)
+
+**Merged pull requests:**
+
+- Updated desktop UI with Yinbi ad updates [\#522](https://github.com/getlantern/flashlight/pull/522) ([myleshorton](https://github.com/myleshorton))
+- Removed lock on probing proxies [\#520](https://github.com/getlantern/flashlight/pull/520) ([oxtoacart](https://github.com/oxtoacart))
+- Moved ChainedServerInfo into its own package for easier reuse in conf… [\#518](https://github.com/getlantern/flashlight/pull/518) ([lanternwercker](https://github.com/lanternwercker))
+- Record more detailed timing for CONNECT requests [\#516](https://github.com/getlantern/flashlight/pull/516) ([oxtoacart](https://github.com/oxtoacart))
+- Record timing for CONNECT requests [\#515](https://github.com/getlantern/flashlight/pull/515) ([oxtoacart](https://github.com/oxtoacart))
+- Write log file in a single goroutine [\#514](https://github.com/getlantern/flashlight/pull/514) ([joesis](https://github.com/joesis))
+- fetchcfg.py in lantern\_aws was renamed to fetch\_bakedin\_config.py [\#507](https://github.com/getlantern/flashlight/pull/507) ([joesis](https://github.com/joesis))
+
 ## [4.8.2](https://github.com/getlantern/flashlight/tree/4.8.2) (2018-09-28)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.1...4.8.2)
 
@@ -170,13 +183,13 @@
 - Include a little more info with dial\_for\_balancer op [\#447](https://github.com/getlantern/flashlight/pull/447) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.11)
-
-## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.11)
 
 ## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.13)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.13)
+
+## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.12)
 
 **Merged pull requests:**
 
@@ -222,20 +235,20 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.4...4.6.6)
 
 ## [4.6.4](https://github.com/getlantern/flashlight/tree/4.6.4) (2018-04-20)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.4)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.4)
 
 **Merged pull requests:**
 
 - Two fixes [\#428](https://github.com/getlantern/flashlight/pull/428) ([joesis](https://github.com/joesis))
 
-## [4.6.1](https://github.com/getlantern/flashlight/tree/4.6.1) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.1)
-
 ## [4.6.2](https://github.com/getlantern/flashlight/tree/4.6.2) (2018-04-18)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.2)
 
 ## [4.6.3](https://github.com/getlantern/flashlight/tree/4.6.3) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.3)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.3)
+
+## [4.6.1](https://github.com/getlantern/flashlight/tree/4.6.1) (2018-04-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.1)
 
 **Merged pull requests:**
 
