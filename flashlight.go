@@ -246,7 +246,8 @@ func getTrustedCACerts(cfg *config.Global) (pool *x509.CertPool, err error) {
 }
 
 func displayVersion() {
-	log.Debugf("---- flashlight version: %s, release: %s, build revision date: %s ----", common.Version, common.PackageVersion, common.RevisionDate)
+	log.Debugf("---- flashlight version: %s, release: %s, build revision date: %s, build date: %s ----",
+		common.Version, common.PackageVersion, common.RevisionDate, common.BuildDate)
 }
 
 func initContext(deviceID string, version string, revisionDate string, isPro func() bool, userID func() int64) {
