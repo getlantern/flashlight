@@ -71,11 +71,14 @@ func TestPipedWriteCloserSkipMessages(t *testing.T) {
 	entry := []byte("abcd\n")
 	var b bytes.Buffer
 	w := newPipedWriteCloser(nopCloser{&b}, 10)
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 999; i++ {
 		w.Write(entry)
 	}
+	time.Sleep(time.Millisecond)
+	// Write one last entry to trigger the printing of the skipped message
+	// count, if any
+	w.Write(entry)
 	w.Close()
-	time.Sleep(time.Second)
 	assert.Contains(t, string(b.Bytes()), "message(s) skipped...")
 	assert.Equal(t, 1000, countMessages(b.Bytes()))
 }
