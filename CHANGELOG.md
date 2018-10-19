@@ -1,5 +1,13 @@
 # Change Log
 
+## [4.8.4](https://github.com/getlantern/flashlight/tree/4.8.4) (2018-10-19)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.3...4.8.4)
+
+**Merged pull requests:**
+
+- adjust ca selection to tally by provider [\#525](https://github.com/getlantern/flashlight/pull/525) ([forkner](https://github.com/forkner))
+- Updated to latest proxybench [\#524](https://github.com/getlantern/flashlight/pull/524) ([oxtoacart](https://github.com/oxtoacart))
+
 ## [4.8.3](https://github.com/getlantern/flashlight/tree/4.8.3) (2018-10-12)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.2...4.8.3)
 
@@ -53,7 +61,7 @@
 - Lots of changes to balancer and chained package [\#479](https://github.com/getlantern/flashlight/pull/479) ([joesis](https://github.com/joesis))
 
 ## [4.7.13](https://github.com/getlantern/flashlight/tree/4.7.13) (2018-08-09)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.13)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.13)
 
 **Merged pull requests:**
 
@@ -62,11 +70,11 @@
 - Updated desktop ui with device name fix [\#487](https://github.com/getlantern/flashlight/pull/487) ([myleshorton](https://github.com/myleshorton))
 - set client request timeout as a struct member [\#486](https://github.com/getlantern/flashlight/pull/486) ([joesis](https://github.com/joesis))
 
-## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.12)
-
 ## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.11)
+
+## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.12)
 
 **Merged pull requests:**
 
@@ -175,18 +183,18 @@
 - Allowing numbers in optional protocol part of proxy name regex [\#449](https://github.com/getlantern/flashlight/pull/449) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [4.6.14](https://github.com/getlantern/flashlight/tree/4.6.14) (2018-05-06)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.14)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.14)
 
 **Merged pull requests:**
 
 - \[mobile\] Intercept requests to pro server and handle with special http.Client [\#448](https://github.com/getlantern/flashlight/pull/448) ([atavism](https://github.com/atavism))
 - Include a little more info with dial\_for\_balancer op [\#447](https://github.com/getlantern/flashlight/pull/447) ([oxtoacart](https://github.com/oxtoacart))
 
-## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.11)
-
 ## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.13)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.13)
+
+## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.11)
 
 ## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.12)
@@ -235,20 +243,20 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.4...4.6.6)
 
 ## [4.6.4](https://github.com/getlantern/flashlight/tree/4.6.4) (2018-04-20)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.4)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.4)
 
 **Merged pull requests:**
 
 - Two fixes [\#428](https://github.com/getlantern/flashlight/pull/428) ([joesis](https://github.com/joesis))
 
-## [4.6.2](https://github.com/getlantern/flashlight/tree/4.6.2) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.2)
-
 ## [4.6.3](https://github.com/getlantern/flashlight/tree/4.6.3) (2018-04-18)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.3)
 
 ## [4.6.1](https://github.com/getlantern/flashlight/tree/4.6.1) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.1)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.1)
+
+## [4.6.2](https://github.com/getlantern/flashlight/tree/4.6.2) (2018-04-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.2)
 
 **Merged pull requests:**
 
@@ -658,18 +666,18 @@
 - Refactored to use nattywad that uses topics support in waddell [\#48](https://github.com/getlantern/flashlight/pull/48) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [v1.5.12](https://github.com/getlantern/flashlight/tree/v1.5.12) (2014-11-19)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta2...v1.5.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta1...v1.5.12)
 
 **Merged pull requests:**
 
 - getlantern/lantern\#1981 gzipping cloud.yaml [\#47](https://github.com/getlantern/flashlight/pull/47) ([oxtoacart](https://github.com/oxtoacart))
 - Pull changes for getlantern/lantern\#1946 into natty branch [\#46](https://github.com/getlantern/flashlight/pull/46) ([oxtoacart](https://github.com/oxtoacart))
 
-## [natty-beta2](https://github.com/getlantern/flashlight/tree/natty-beta2) (2014-11-10)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta1...natty-beta2)
-
 ## [natty-beta1](https://github.com/getlantern/flashlight/tree/natty-beta1) (2014-11-10)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/natty...natty-beta1)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta2...natty-beta1)
+
+## [natty-beta2](https://github.com/getlantern/flashlight/tree/natty-beta2) (2014-11-10)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/natty...natty-beta2)
 
 ## [natty](https://github.com/getlantern/flashlight/tree/natty) (2014-11-10)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/v1.6.0...natty)
