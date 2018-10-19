@@ -130,7 +130,8 @@ type masquerade struct {
 type castat struct {
 	CommonName string
 	Cert       string
-	freq       float64
+	total      int64
+	byProvider map[string]int64
 }
 
 type provider struct {
@@ -406,6 +407,7 @@ func grabCerts() {
 		ca := &castat{
 			CommonName: rootCA.Subject.CommonName,
 			Cert:       strings.Replace(string(rootCert.PEMEncoded()), "\n", "\\n", -1),
+			byProvider: make(map[string]int64),
 		}
 
 		log.Debugf("Successfully grabbed certs for: %v", domain)
@@ -419,36 +421,42 @@ func grabCerts() {
 }
 
 func coalesceMasquerades() (map[string]*castat, []*masquerade) {
-	count := 0
+	count := make(map[string]int) // by provider
 	allCAs := make(map[string]*castat)
 	allMasquerades := make([]*masquerade, 0)
-	for masquerade := range masqueradesCh {
-		count = count + 1
-		ca := allCAs[masquerade.RootCA.Cert]
+	for m := range masqueradesCh {
+		ca := allCAs[m.RootCA.Cert]
 		if ca == nil {
-			ca = masquerade.RootCA
+			ca = m.RootCA
 		}
-		ca.freq = ca.freq + 1
+		count[m.ProviderID] += 1
+		ca.byProvider[m.ProviderID] += 1
+		ca.total += 1
 		allCAs[ca.Cert] = ca
-		allMasquerades = append(allMasquerades, masquerade)
+		allMasquerades = append(allMasquerades, m)
 	}
 
 	// Trust only those cas whose relative frequency exceeds *minFreq
+	// for some provider.
 	trustedCAs := make(map[string]*castat)
 	for _, ca := range allCAs {
-		// Make frequency relative
-		ca.freq = float64(ca.freq*100) / float64(count)
-		if ca.freq > *minFreq {
-			trustedCAs[ca.Cert] = ca
+		for pid, cc := range ca.byProvider {
+			freq := float64(cc*100) / float64(count[pid])
+			log.Debugf("CA %s has freq %f for provider %s", ca.CommonName, freq, pid)
+			if freq > *minFreq {
+				trustedCAs[ca.Cert] = ca
+				log.Debugf("Trusting CA %s", ca.CommonName)
+				break
+			}
 		}
 	}
 
 	// Pick only the masquerades associated with the trusted certs
 	trustedMasquerades := make([]*masquerade, 0)
-	for _, masquerade := range allMasquerades {
-		_, caFound := trustedCAs[masquerade.RootCA.Cert]
+	for _, m := range allMasquerades {
+		_, caFound := trustedCAs[m.RootCA.Cert]
 		if caFound {
-			trustedMasquerades = append(trustedMasquerades, masquerade)
+			trustedMasquerades = append(trustedMasquerades, m)
 		}
 	}
 
@@ -546,7 +554,7 @@ func buildModel(configName string, cas map[string]*castat, useFallbacks bool) (m
 	for _, ca := range cas {
 		casList = append(casList, ca)
 	}
-	sort.Sort(ByFreq(casList))
+	sort.Sort(ByTotal(casList))
 
 	cfMasquerades := providers[defaultProviderID].Masquerades
 	if len(cfMasquerades) == 0 {
@@ -696,8 +704,8 @@ func (a ByDomain) Len() int           { return len(a) }
 func (a ByDomain) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByDomain) Less(i, j int) bool { return a[i].Domain < a[j].Domain }
 
-type ByFreq []*castat
+type ByTotal []*castat
 
-func (a ByFreq) Len() int           { return len(a) }
-func (a ByFreq) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByFreq) Less(i, j int) bool { return a[i].freq > a[j].freq }
+func (a ByTotal) Len() int           { return len(a) }
+func (a ByTotal) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByTotal) Less(i, j int) bool { return a[i].total > a[j].total }
