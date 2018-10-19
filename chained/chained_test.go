@@ -29,7 +29,7 @@ func NewDialer(dialServer func(ctx context.Context, p *proxy) (net.Conn, error))
 	p, err := newProxy("test", "proto", "netw", &ChainedServerInfo{
 		Addr:      "addr:567",
 		AuthToken: "token",
-	}, newTestUserConfig(), true, dialServer, defaultDialOrigin)
+	}, newTestUserConfig(), true, false, dialServer, defaultDialOrigin)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func TestBadAddressToServer(t *testing.T) {
 	p, err := newProxy("test", "proto", "netw", &ChainedServerInfo{
 		Addr:      "addr:567",
 		AuthToken: "token",
-	}, newTestUserConfig(), true, func(ctx context.Context, p *proxy) (net.Conn, error) {
+	}, newTestUserConfig(), true, false, func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return nil, fmt.Errorf("fail intentionally")
 	}, defaultDialOrigin)
 	if !assert.NoError(t, err) {

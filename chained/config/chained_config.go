@@ -27,9 +27,6 @@ type ChainedServerInfo struct {
 	// Trusted: Determines if a host can be trusted with plain HTTP traffic.
 	Trusted bool
 
-	// InitPreconnect: how much to preconnect on startup
-	InitPreconnect int
-
 	// MaxPreconnect: the maximum number of preconnections to keep
 	MaxPreconnect int
 
