@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/getlantern/golog"
@@ -19,12 +20,14 @@ func (pc *preconnectedConn) expired() bool {
 }
 
 type preconnectingDialer struct {
-	log           golog.Logger
-	maxPreconnect int
-	expiration    time.Duration
-	origDial      dialServerFn
-	pool          chan *preconnectedConn
-	closeCh       chan bool
+	log               golog.Logger
+	maxPreconnect     int
+	expiration        time.Duration
+	origDial          dialServerFn
+	pool              chan *preconnectedConn
+	preconnected      int
+	preconnectedMutex sync.Mutex
+	closeCh           chan bool
 }
 
 func newPreconnectingDialer(name string, maxPreconnect int, expiration time.Duration, closeCh chan bool, origDial dialServerFn) *preconnectingDialer {
@@ -33,10 +36,10 @@ func newPreconnectingDialer(name string, maxPreconnect int, expiration time.Dura
 		origDial:      origDial,
 		maxPreconnect: maxPreconnect,
 		expiration:    expiration,
-		pool:          make(chan *preconnectedConn, maxPreconnect*2),
+		pool:          make(chan *preconnectedConn, maxPreconnect),
 		closeCh:       closeCh,
 	}
-	pd.log.Debugf("will preconnect up to %d times", maxPreconnect*2)
+	pd.log.Debugf("will preconnect up to %d times", maxPreconnect)
 	go pd.closeWhenNecessary()
 	return pd
 }
@@ -53,6 +56,7 @@ func (pd *preconnectingDialer) dial(ctx context.Context, p *proxy) (conn net.Con
 	for {
 		select {
 		case pconn := <-pd.pool:
+			pd.decrementPreconnected()
 			if !pconn.expired() {
 				pd.log.Tracef("using preconnection")
 				conn = pconn.Conn
@@ -68,16 +72,20 @@ func (pd *preconnectingDialer) dial(ctx context.Context, p *proxy) (conn net.Con
 }
 
 func (pd *preconnectingDialer) preconnectIfNecessary(p *proxy) {
-	if len(pd.pool) >= pd.maxPreconnect {
-		// pool already full, don't bother
-		// note - this check does not precisely bound the pool, but it's okay if we go a little over
+	pd.preconnectedMutex.Lock()
+	defer pd.preconnectedMutex.Unlock()
+	if pd.preconnected >= pd.maxPreconnect {
+		// pool already full, don't bother preconnecting
 		return
 	}
+	// Eagerly record preconnection to avoid going overboard
+	pd.preconnected++
 
 	go func() {
 		select {
 		case <-pd.closeCh:
 			pd.log.Trace("already closed, refusing to preconnect")
+			pd.decrementPreconnected()
 			return
 		default:
 			pd.preconnect(p)
@@ -93,16 +101,17 @@ func (pd *preconnectingDialer) preconnect(p *proxy) {
 	conn, err := pd.origDial(ctx, p)
 	if err != nil {
 		pd.log.Errorf("error preconnecting: %v", err)
+		pd.decrementPreconnected()
 		return
 	}
-	select {
-	case pd.pool <- &preconnectedConn{conn, expiration}:
-		pd.log.Trace("preconnected")
-	default:
-		// pool filled while we were dialing, just close conn and discard
-		pd.log.Trace("discarding preconnection")
-		conn.Close()
-	}
+	pd.pool <- &preconnectedConn{conn, expiration}
+	pd.log.Trace("preconnected")
+}
+
+func (pd *preconnectingDialer) decrementPreconnected() {
+	pd.preconnectedMutex.Lock()
+	pd.preconnected--
+	pd.preconnectedMutex.Unlock()
 }
 
 func (pd *preconnectingDialer) closeWhenNecessary() {
