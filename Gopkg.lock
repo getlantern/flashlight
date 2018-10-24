@@ -628,11 +628,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:bc99722a97f9706403d25fb024eadc9e20900601c956819380aae42712d17705"
+  digest = "1:b16c53abe18b43736d912a289d53598dce9318ee74c6c0e6ae43bbd9fba99640"
   name = "github.com/getlantern/proxybench"
   packages = ["."]
   pruneopts = "UT"
-  revision = "151919a064d2b2e227dd785d05a8c0af3032ef72"
+  revision = "2acfa62efd1269ecb4b075f096e7956bfec53023"
 
 [[projects]]
   branch = "master"

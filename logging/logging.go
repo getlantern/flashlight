@@ -76,6 +76,7 @@ func EnableFileLogging(logdir string) {
 
 type pipedWriteCloser struct {
 	nSkipped uint64
+	closing  uint32 // 1 means true
 	w        io.WriteCloser
 	ch       chan []byte
 	chClosed chan struct{}
@@ -83,6 +84,9 @@ type pipedWriteCloser struct {
 }
 
 func (w *pipedWriteCloser) Write(b []byte) (int, error) {
+	if atomic.LoadUint32(&w.closing) > 0 {
+		return len(b), nil
+	}
 	buf := w.bufPool.Get().([]byte)
 	// Have to copy the slice as the caller may reuse it before it's consumed
 	// by the write goroutine. Using append is a trick to grow the slice
@@ -109,16 +113,13 @@ func (w *pipedWriteCloser) Write(b []byte) (int, error) {
 }
 
 func (w *pipedWriteCloser) Close() error {
-	// it's not sufficient to detect concurrent Close() calls, but looks ok in
-	// our application.
-	select {
-	case <-w.chClosed:
+	if !atomic.CompareAndSwapUint32(&w.closing, 0, 1) {
+		// Closing in progress or done
 		return nil
-	default:
-		close(w.ch)
-		<-w.chClosed
-		return w.w.Close()
 	}
+	close(w.ch)
+	<-w.chClosed
+	return w.w.Close()
 }
 
 // newPipedWriteCloser wraps a WriteCloser to sequentialize writes from
@@ -126,7 +127,7 @@ func (w *pipedWriteCloser) Close() error {
 // propagated back to the caller goroutine and pending writes more than
 // nPending will be dropped silently.
 func newPipedWriteCloser(w io.WriteCloser, nPending int) io.WriteCloser {
-	pwc := &pipedWriteCloser{0, w,
+	pwc := &pipedWriteCloser{0, 0, w,
 		make(chan []byte, nPending),
 		make(chan struct{}),
 		sync.Pool{
