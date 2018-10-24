@@ -13,6 +13,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	lru "github.com/hashicorp/golang-lru"
@@ -81,7 +82,23 @@ var (
 	validHostnameRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
 	errLanternOff = fmt.Errorf("Lantern is off")
+
+	forceProxying int64
 )
+
+// ForceProxying forces everything to get proxied (useful for testing)
+func ForceProxying() {
+	atomic.StoreInt64(&forceProxying, 1)
+}
+
+// StopForcingProxying disables forced proxying (useful for testing)
+func StopForcingProxying() {
+	atomic.StoreInt64(&forceProxying, 0)
+}
+
+func shouldForceProxying() bool {
+	return atomic.LoadInt64(&forceProxying) == 1
+}
 
 // Client is an HTTP proxy that accepts connections from local programs and
 // proxies these via remote flashlight servers.
@@ -519,6 +536,10 @@ func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Con
 }
 
 func (client *Client) shouldSendToProxy(addr string, port int) error {
+	if shouldForceProxying() {
+		return nil
+	}
+
 	if requiresProxy(addr) {
 		log.Debugf("Address %v requires a proxy", addr)
 		return nil

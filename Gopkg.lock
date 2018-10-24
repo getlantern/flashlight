@@ -1359,6 +1359,7 @@
     "github.com/getlantern/autoupdate",
     "github.com/getlantern/bandwidth",
     "github.com/getlantern/borda/client",
+    "github.com/getlantern/cmux",
     "github.com/getlantern/detour",
     "github.com/getlantern/dnsgrab",
     "github.com/getlantern/easylist",
