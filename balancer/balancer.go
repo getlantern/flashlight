@@ -62,6 +62,12 @@ type Dialer interface {
 	// Trusted indicates whether or not this dialer is trusted
 	Trusted() bool
 
+	// NumPreconnecting returns the number of pending preconnect requests.
+	NumPreconnecting() int
+
+	// NumPreconnected returns the number of preconnected connections.
+	NumPreconnected() int
+
 	// MarkFailure marks a dial failure on this dialer.
 	MarkFailure()
 
@@ -556,8 +562,10 @@ func (b *Balancer) printStats() {
 		ds := sessionStats[d.Label()]
 		sessionAttempts := atomic.LoadInt64(&ds.success) + atomic.LoadInt64(&ds.failure)
 		probeSuccesses, probeSuccessKBs, probeFailures, probeFailedKBs := d.ProbeStats()
-		log.Debugf("%s  A: %4d(%5d)  S: %4d(%5d)  CS: %3d  F: %4d(%5d)  CF: %3d  R: %4.3f  L: %4.0fms  B: %6.2fMbps  T: %7s/%7s  P: %3d(%3dkb)/%3d(%3dkb)",
+		log.Debugf("%s  P:%3d  R:%3d  A: %4d(%5d)  S: %4d(%5d)  CS: %3d  F: %4d(%5d)  CF: %3d  R: %4.3f  L: %4.0fms  B: %6.2fMbps  T: %7s/%7s  P: %3d(%3dkb)/%3d(%3dkb)",
 			d.JustifiedLabel(),
+			d.NumPreconnected(),
+			d.NumPreconnecting(),
 			sessionAttempts, d.Attempts(),
 			atomic.LoadInt64(&ds.success), d.Successes(), d.ConsecSuccesses(),
 			atomic.LoadInt64(&ds.failure), d.Failures(), d.ConsecFailures(),

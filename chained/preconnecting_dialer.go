@@ -20,14 +20,15 @@ func (pc *preconnectedConn) expired() bool {
 }
 
 type preconnectingDialer struct {
-	log               golog.Logger
-	maxPreconnect     int
-	expiration        time.Duration
-	origDial          dialServerFn
-	pool              chan *preconnectedConn
-	preconnected      int
-	preconnectedMutex sync.Mutex
-	closeCh           chan bool
+	log           golog.Logger
+	maxPreconnect int
+	expiration    time.Duration
+	origDial      dialServerFn
+	pool          chan *preconnectedConn
+	preconnected  int
+	preconnecting int
+	statsMutex    sync.RWMutex
+	closeCh       chan bool
 }
 
 func newPreconnectingDialer(name string, maxPreconnect int, expiration time.Duration, closeCh chan bool, origDial dialServerFn) *preconnectingDialer {
@@ -72,20 +73,19 @@ func (pd *preconnectingDialer) dial(ctx context.Context, p *proxy) (conn net.Con
 }
 
 func (pd *preconnectingDialer) preconnectIfNecessary(p *proxy) {
-	pd.preconnectedMutex.Lock()
-	defer pd.preconnectedMutex.Unlock()
-	if pd.preconnected >= pd.maxPreconnect {
-		// pool already full, don't bother preconnecting
+	pd.statsMutex.Lock()
+	defer pd.statsMutex.Unlock()
+	if pd.preconnected+pd.preconnecting >= pd.maxPreconnect {
+		// pool potentially full once in-flight preconnectings succeed, don't bother preconnecting
 		return
 	}
-	// Eagerly record preconnection to avoid going overboard
-	pd.preconnected++
+	pd.preconnecting++
 
 	go func() {
 		select {
 		case <-pd.closeCh:
 			pd.log.Trace("already closed, refusing to preconnect")
-			pd.decrementPreconnected()
+			pd.decrementPreconnecting()
 			return
 		default:
 			pd.preconnect(p)
@@ -101,17 +101,43 @@ func (pd *preconnectingDialer) preconnect(p *proxy) {
 	conn, err := pd.origDial(ctx, p)
 	if err != nil {
 		pd.log.Errorf("error preconnecting: %v", err)
-		pd.decrementPreconnected()
+		pd.decrementPreconnecting()
 		return
 	}
+	pd.preconnectingSucceeded()
 	pd.pool <- &preconnectedConn{conn, expiration}
 	pd.log.Trace("preconnected")
 }
 
+func (pd *preconnectingDialer) numPreconnecting() int {
+	pd.statsMutex.RLock()
+	defer pd.statsMutex.RUnlock()
+	return pd.preconnecting
+}
+
+func (pd *preconnectingDialer) numPreconnected() int {
+	pd.statsMutex.RLock()
+	defer pd.statsMutex.RUnlock()
+	return pd.preconnected
+}
+
+func (pd *preconnectingDialer) decrementPreconnecting() {
+	pd.statsMutex.Lock()
+	pd.preconnecting--
+	pd.statsMutex.Unlock()
+}
+
+func (pd *preconnectingDialer) preconnectingSucceeded() {
+	pd.statsMutex.Lock()
+	pd.preconnecting--
+	pd.preconnected++
+	pd.statsMutex.Unlock()
+}
+
 func (pd *preconnectingDialer) decrementPreconnected() {
-	pd.preconnectedMutex.Lock()
+	pd.statsMutex.Lock()
 	pd.preconnected--
-	pd.preconnectedMutex.Unlock()
+	pd.statsMutex.Unlock()
 }
 
 func (pd *preconnectingDialer) closeWhenNecessary() {

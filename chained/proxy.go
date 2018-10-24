@@ -345,6 +345,8 @@ type proxy struct {
 	forceRedial       *abool.AtomicBool
 	mostRecentABETime time.Time
 	doDialCore        func(ctx context.Context) (net.Conn, time.Duration, error)
+	numPreconnecting  func() int
+	numPreconnected   func() int
 	closeCh           chan bool
 	closeOnce         sync.Once
 	mx                sync.Mutex
@@ -357,23 +359,25 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 	}
 
 	p := &proxy{
-		name:            name,
-		protocol:        protocol,
-		network:         network,
-		addr:            addr,
-		location:        s.Location,
-		authToken:       s.AuthToken,
-		user:            uc,
-		trusted:         trusted,
-		bias:            s.Bias,
-		doDialServer:    dialServer,
-		dialOrigin:      dialOrigin,
-		emaRTT:          ema.NewDuration(0, rttAlpha),
-		emaRTTDev:       ema.NewDuration(0, rttDevAlpha),
-		emaSuccessRate:  ema.New(1, successRateAlpha), // Consider a proxy success when initializing
-		forceRedial:     abool.New(),
-		closeCh:         make(chan bool, 1),
-		consecSuccesses: 1, // be optimistic
+		name:             name,
+		protocol:         protocol,
+		network:          network,
+		addr:             addr,
+		location:         s.Location,
+		authToken:        s.AuthToken,
+		user:             uc,
+		trusted:          trusted,
+		bias:             s.Bias,
+		doDialServer:     dialServer,
+		dialOrigin:       dialOrigin,
+		emaRTT:           ema.NewDuration(0, rttAlpha),
+		emaRTTDev:        ema.NewDuration(0, rttDevAlpha),
+		emaSuccessRate:   ema.New(1, successRateAlpha), // Consider a proxy success when initializing
+		forceRedial:      abool.New(),
+		numPreconnecting: func() int { return 0 },
+		numPreconnected:  func() int { return 0 },
+		closeCh:          make(chan bool, 1),
+		consecSuccesses:  1, // be optimistic
 	}
 
 	if s.Bias == 0 && s.ENHTTPURL != "" {
@@ -419,6 +423,8 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 		expiration := IdleTimeout / 2
 		pd := newPreconnectingDialer(name, s.MaxPreconnect, expiration, p.closeCh, p.doDialServer)
 		p.doDialServer = pd.dial
+		p.numPreconnecting = pd.numPreconnecting
+		p.numPreconnected = pd.numPreconnected
 	}
 
 	return p, nil

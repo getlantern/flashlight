@@ -63,6 +63,14 @@ func (d *testDialer) Trusted() bool {
 	return atomic.LoadInt32(&d.untrusted) == 0
 }
 
+func (d *testDialer) NumPreconnecting() int {
+	return 0
+}
+
+func (d *testDialer) NumPreconnected() int {
+	return 0
+}
+
 func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, bool, error) {
 	var conn net.Conn
 	var err error

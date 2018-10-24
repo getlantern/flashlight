@@ -114,6 +114,14 @@ func (p *proxy) DataRecv() uint64 {
 	return atomic.LoadUint64(&p.dataRecv)
 }
 
+func (p *proxy) NumPreconnecting() int {
+	return p.numPreconnecting()
+}
+
+func (p *proxy) NumPreconnected() int {
+	return p.numPreconnected()
+}
+
 // DialContext dials using provided context
 func (p *proxy) DialContext(ctx context.Context, network, addr string) (net.Conn, bool, error) {
 	upstream := false

@@ -63,6 +63,7 @@ func TestPreconnecting(t *testing.T) {
 
 	for i := 1; i <= maxSuccessfulPreconnects; i++ {
 		time.Sleep(25 * time.Millisecond)
+		assert.Equal(t, 1, pd.numPreconnected())
 		conn, err = pd.dial(nil, nil)
 		if !assert.NoError(t, err) {
 			return
