@@ -1,5 +1,13 @@
 # Change Log
 
+## [4.9.0](https://github.com/getlantern/flashlight/tree/4.9.0) (2018-10-24)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.4...4.9.0)
+
+**Merged pull requests:**
+
+- prevent writing after newPipedWriteCloser is closed [\#526](https://github.com/getlantern/flashlight/pull/526) ([joesis](https://github.com/joesis))
+- Remove preconnecting, add multiplexing [\#519](https://github.com/getlantern/flashlight/pull/519) ([oxtoacart](https://github.com/oxtoacart))
+
 ## [4.8.4](https://github.com/getlantern/flashlight/tree/4.8.4) (2018-10-19)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.3...4.8.4)
 
@@ -61,7 +69,7 @@
 - Lots of changes to balancer and chained package [\#479](https://github.com/getlantern/flashlight/pull/479) ([joesis](https://github.com/joesis))
 
 ## [4.7.13](https://github.com/getlantern/flashlight/tree/4.7.13) (2018-08-09)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.13)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.13)
 
 **Merged pull requests:**
 
@@ -70,11 +78,11 @@
 - Updated desktop ui with device name fix [\#487](https://github.com/getlantern/flashlight/pull/487) ([myleshorton](https://github.com/myleshorton))
 - set client request timeout as a struct member [\#486](https://github.com/getlantern/flashlight/pull/486) ([joesis](https://github.com/joesis))
 
-## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.11)
-
 ## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.12)
+
+## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.11)
 
 **Merged pull requests:**
 
@@ -183,21 +191,21 @@
 - Allowing numbers in optional protocol part of proxy name regex [\#449](https://github.com/getlantern/flashlight/pull/449) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [4.6.14](https://github.com/getlantern/flashlight/tree/4.6.14) (2018-05-06)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.14)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.14)
 
 **Merged pull requests:**
 
 - \[mobile\] Intercept requests to pro server and handle with special http.Client [\#448](https://github.com/getlantern/flashlight/pull/448) ([atavism](https://github.com/atavism))
 - Include a little more info with dial\_for\_balancer op [\#447](https://github.com/getlantern/flashlight/pull/447) ([oxtoacart](https://github.com/oxtoacart))
 
-## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.13)
-
 ## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.11)
 
 ## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.12)
+
+## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.13)
 
 **Merged pull requests:**
 
