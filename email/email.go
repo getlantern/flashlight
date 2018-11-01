@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -27,9 +28,11 @@ var (
 	MandrillAPIKey = "fmYlUdjEpGGonI4NDx9xeA"
 
 	defaultRecipient string
+	httpClient       = &http.Client{}
 	mu               sync.RWMutex
 )
 
+// SetDefaultRecipient configures the email address that will receive emails
 func SetDefaultRecipient(address string) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -40,6 +43,19 @@ func getDefaultRecipient() string {
 	mu.RLock()
 	defer mu.RUnlock()
 	return defaultRecipient
+}
+
+// SetHTTPClient configures an alternate http.Client to use when sending emails
+func SetHTTPClient(client *http.Client) {
+	mu.Lock()
+	defer mu.Unlock()
+	httpClient = client
+}
+
+func getHTTPClient() *http.Client {
+	mu.RLock()
+	defer mu.RUnlock()
+	return httpClient
 }
 
 // Message is a templatized email message
@@ -99,6 +115,7 @@ func Send(msg *Message) error {
 
 func sendTemplate(msg *Message) error {
 	client := mandrill.ClientWithKey(MandrillAPIKey)
+	client.HTTPClient = getHTTPClient()
 	recipient := msg.To
 	if recipient == "" {
 		recipient = getDefaultRecipient()

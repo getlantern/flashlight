@@ -11,6 +11,7 @@ import (
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/bandwidth"
+	"github.com/getlantern/flashlight/email"
 	fops "github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/fronted"
@@ -77,6 +78,7 @@ func Run(httpProxyAddr string,
 	elapsed := mtime.Stopwatch()
 	displayVersion()
 	initContext(userConfig.GetDeviceID(), common.Version, common.RevisionDate, isPro, userID)
+	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 	op := fops.Begin("client_started")
 
 	cl, err := client.NewClient(
