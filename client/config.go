@@ -29,6 +29,7 @@ var (
 		"update.getlantern.org":            "d2yl1zps97e5mx.cloudfront.net",
 		"github.com":                       "d2yl1zps97e5mx.cloudfront.net",
 		"github-production-release-asset-2e65be.s3.amazonaws.com": "d37kom4pw4aa7b.cloudfront.net",
+		"mandrillapp.com":                                         "d2rh3u0miqci5a.cloudfront.net",
 	}
 )
 

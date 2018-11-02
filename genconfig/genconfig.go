@@ -97,6 +97,7 @@ func init() {
 			"update.getlantern.org":            "update.dsa.akamai.getiantem.org",
 			"github.com":                       "github.dsa.akamai.getiantem.org",
 			"github-production-release-asset-2e65be.s3.amazonaws.com": "github-release-asset.dsa.akamai.getiantem.org",
+			"mandrillapp.com":                                         "mandrillapp.dsa.akamai.getiantem.org",
 		},
 		&client.ValidatorConfig{RejectStatus: []int{403}},
 	)
@@ -113,6 +114,7 @@ func init() {
 			"update.getlantern.org":            "update.edgecast.getiantem.org",
 			"github.com":                       "github.edgecast.getiantem.org",
 			"github-production-release-asset-2e65be.s3.amazonaws.com": "github-release-asset.edgecast.getiantem.org",
+			"mandrillapp.com":                                         "mandrillapp.edgecast.getiantem.org",
 		},
 		&client.ValidatorConfig{RejectStatus: []int{403}},
 	)
@@ -616,7 +618,7 @@ func buildModel(configName string, cas map[string]*castat, useFallbacks bool) (m
 		}
 	}
 	return map[string]interface{}{
-		"cas":                   casList,
+		"cas": casList,
 		"cloudfrontMasquerades": cfMasquerades,
 		"providers":             enabledProviders,
 		"proxiedsites":          ps,

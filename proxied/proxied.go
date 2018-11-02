@@ -553,3 +553,34 @@ func isIdempotentMethod(req *http.Request) bool {
 	}
 	return false
 }
+
+// DirectThenFrontedClient returns an http.Client that first attempts to connect
+// directly to the origin and then falls back to using domain fronting.
+// WARNING - if using this for non-idempotent requests like POST, you may see
+// duplicate POSTS if the direct submission succeeds but fails to return a
+// response by the timeout!
+func DirectThenFrontedClient(timeout time.Duration) *http.Client {
+	drt := &http.Transport{
+		TLSHandshakeTimeout:   timeout,
+		ResponseHeaderTimeout: timeout,
+	}
+	frt := &frontedRT{masqueradeTimeout: timeout}
+	return &http.Client{
+		Timeout:   timeout * 2,
+		Transport: serialTransport{drt, frt},
+	}
+}
+
+type serialTransport []http.RoundTripper
+
+func (tr serialTransport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	for _, rt := range tr {
+		resp, err = rt.RoundTrip(req)
+		if err == nil {
+			return
+		}
+		log.Debugf("Error roundtripping request to %v, continuing to next transport", req.URL)
+	}
+	log.Errorf("Unable to roundtrip request to %v, out of transports", req.URL)
+	return
+}
