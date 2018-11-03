@@ -17,8 +17,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/getlantern/golog"
 	"github.com/getlantern/http-proxy-lantern"
 	"github.com/getlantern/tlsdefaults"
@@ -26,6 +24,7 @@ import (
 	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config"
 )
 
@@ -55,10 +54,14 @@ type Helper struct {
 	HTTPServerAddr           string
 	HTTPSServerAddr          string
 	ConfigServerAddr         string
+	listeners                []net.Listener
 }
 
 // NewHelper prepares a new integration test helper including a web server for
-// content, a proxy server and a config server that ties it all together.
+// content, a proxy server and a config server that ties it all together. It
+// also enables ForceProxying on the client package to make sure even localhost
+// origins are served through the proxy. Make sure to close the Helper with
+// Close() when finished with the test.
 func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string) (*Helper, error) {
 	ConfigDir, err := ioutil.TempDir("", "integrationtest_helper")
 	if err != nil {
@@ -73,16 +76,19 @@ func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr s
 		LampshadeProxyServerAddr: lampshadeAddr,
 	}
 	helper.SetProtocol("https")
+	client.ForceProxying()
 
 	// Web server serves known content for testing
 	err = helper.startWebServer()
 	if err != nil {
+		helper.Close()
 		return nil, err
 	}
 
 	// This is the remote proxy server
 	err = helper.startProxyServer()
 	if err != nil {
+		helper.Close()
 		return nil, err
 	}
 
@@ -90,6 +96,7 @@ func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr s
 	// testing proxy server.
 	err = helper.startConfigServer()
 	if err != nil {
+		helper.Close()
 		return nil, err
 	}
 
@@ -98,6 +105,7 @@ func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr s
 	// our fake config server.
 	err = helper.writeConfig()
 	if err != nil {
+		helper.Close()
 		return nil, err
 	}
 
@@ -105,9 +113,13 @@ func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr s
 }
 
 // Close closes the integration test helper and cleans up.
-// TODO: actually close the listeners
+// TODO: actually stop the proxy (not currently supported by API)
 func (helper *Helper) Close() {
+	client.StopForcingProxying()
 	os.RemoveAll(helper.ConfigDir)
+	for _, l := range helper.listeners {
+		l.Close()
+	}
 }
 
 // SetProtocol sets the protocol to use when connecting to the test proxy
@@ -121,17 +133,17 @@ func (helper *Helper) startWebServer() error {
 	if err != nil {
 		return fmt.Errorf("Unable to listen for HTTP connections: %v", err)
 	}
+	helper.listeners = append(helper.listeners, lh)
 	ls, err := tlsdefaults.Listen("localhost:0", "webkey.pem", "webcert.pem")
 	if err != nil {
 		return fmt.Errorf("Unable to listen for HTTPS connections: %v", err)
 	}
+	helper.listeners = append(helper.listeners, ls)
 	go func() {
-		err := http.Serve(lh, http.HandlerFunc(serveContent))
-		assert.NoError(helper.t, err, "Unable to serve HTTP")
+		http.Serve(lh, http.HandlerFunc(serveContent))
 	}()
 	go func() {
-		err := http.Serve(ls, http.HandlerFunc(serveContent))
-		assert.NoError(helper.t, err, "Unable to serve HTTPS")
+		http.Serve(ls, http.HandlerFunc(serveContent))
 	}()
 	helper.HTTPServerAddr, helper.HTTPSServerAddr = lh.Addr().String(), ls.Addr().String()
 	return nil
@@ -203,9 +215,9 @@ func (helper *Helper) startConfigServer() error {
 	if err != nil {
 		return fmt.Errorf("Unable to listen for config server connection: %v", err)
 	}
+	helper.listeners = append(helper.listeners, l)
 	go func() {
-		err := http.Serve(l, http.HandlerFunc(helper.serveConfig()))
-		assert.NoError(helper.t, err, "Unable to serve config")
+		http.Serve(l, http.HandlerFunc(helper.serveConfig()))
 	}()
 	helper.ConfigServerAddr = l.Addr().String()
 	return nil

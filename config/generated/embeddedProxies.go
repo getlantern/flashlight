@@ -2,271 +2,427 @@ package generated
 
 var EmbeddedProxies = []byte(`
 
-    fp-dofra1-20180511-043: {addr: '46.101.105.101:15480', authtoken: fD7rJmCekX44V9euASSoGmHjml86ti6PtSqBpFr1slvmQu7AdagTKa7BKRrusAyO,
+    fp-doams3-20181011-004-lampshade:
+      addr: 188.166.85.34:443
+      authtoken: IrBQI3NgU0WEGzYV1eIt9exmEn6yolkfPZ0eP8AqJHSGTeFnmUOMvBrZdPRAjgO6
       cert: '-----BEGIN CERTIFICATE-----
     
-        MIIDhTCCAm2gAwIBAgIJAODSuAtR9jbeMA0GCSqGSIb3DQEBCwUAMGgxHTAbBgNV
+        MIIDgzCCAmugAwIBAgIJAPZyEMRkZWozMA0GCSqGSIb3DQEBCwUAMGcxGTAXBgNV
     
-        BAMTFEhlYXZlIE1vb25zaG90IFBpa2VkMRkwFwYDVQQKExBSZXB0aWxlIENydWNp
+        BAMTEElucXVpc2l0aW9ucyBKYWIxEzARBgNVBAoTCkRlbW9ncmFwaHkxDzANBgNV
     
-        YmxlMQ8wDQYDVQQHEwZFZmZpZ3kxDjAMBgNVBAgTBVRleGFzMQswCQYDVQQGEwJV
+        BAcTBlJ1c3RsZTEXMBUGA1UECBMOTm9ydGggQ2Fyb2xpbmExCzAJBgNVBAYTAlVT
     
-        UzAeFw0xODA1MTEwNjU0MDdaFw0xOTA1MTEwNjU0MDdaMGgxHTAbBgNVBAMTFEhl
+        MB4XDTE4MTAxMTAwNDEwOFoXDTE5MTAxMTAwNDEwOFowZzEZMBcGA1UEAxMQSW5x
     
-        YXZlIE1vb25zaG90IFBpa2VkMRkwFwYDVQQKExBSZXB0aWxlIENydWNpYmxlMQ8w
+        dWlzaXRpb25zIEphYjETMBEGA1UEChMKRGVtb2dyYXBoeTEPMA0GA1UEBxMGUnVz
     
-        DQYDVQQHEwZFZmZpZ3kxDjAMBgNVBAgTBVRleGFzMQswCQYDVQQGEwJVUzCCASIw
+        dGxlMRcwFQYDVQQIEw5Ob3J0aCBDYXJvbGluYTELMAkGA1UEBhMCVVMwggEiMA0G
     
-        DQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAO6hB75e5v06ERxMcl6+8RxqfOLx
+        CSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQClzywEgIY+JR891x3kU8Abq6de+ZnI
     
-        fbGlg+/HFeZKfTs8Efw0AB5jiAAwoCk/lByOIG2Civ24fb9Fj96OD+Ow1iy3txsl
+        MtyN3iq9HfjuB4RT9RQJa+O5+XdwdPXLwxN8Y4oavfJVumN6e32qff1xCS8fNcA7
     
-        Ra0/GZhIChuCr/8f5OClaC9Ab5QuvHnyyESX99uj0groUf2ytW3C+7tp4PTE4i53
+        T4b0txiexWeUraLIbqKFjhV2oPnk1/tGD2O+XG/c0Srk7+oo/gsR+yZZlFQPl5pp
     
-        9oO7wOxgQqfcEVh6gsuZjfO/vDsP3sIkewHjh8irQKDtS/t/98HiWl8TYdpth0Ig
+        gcEAFYkFCucGd4SCvxzRJTt+0b3OmiN/o00+QEF67TD3PKjvbU01lez2QEXHSQ1F
     
-        Kkmej4VPuyORTTzzbgXx+PrinR6TU9X+sc89Li2kf5updYqQUyNixMvvq8n/xotG
+        u2cgsydXiUuq1oRUQ463fd9Nan/Zx0Hpj+5Kw1swhLs3bhB/Mh+c6TiN4upGPv2D
     
-        DVHteGCRzyA0sN48x4B1eUQSRnpNnlEkHLoa+EzueMjdL16CS5mbWBC1jb8CAwEA
+        +4W51biPvPRQU+sTc21MRAMpt1HBr8h2VaM3rhDVToM5QtYf2WhkkmIRAgMBAAGj
     
-        AaMyMDAwHQYDVR0OBBYEFOGZYFWnkr8Z7c+SFMnQwzuP4erSMA8GA1UdEQQIMAaH
+        MjAwMB0GA1UdDgQWBBTbXMnR4jPoOQJShQaNiAAvn2gRnjAPBgNVHREECDAGhwS8
     
-        BC5laWUwDQYJKoZIhvcNAQELBQADggEBAJXwHF7CHQwxrSUuxG0LqR2CaNn/R6m2
+        plUiMA0GCSqGSIb3DQEBCwUAA4IBAQB2DHMDLDYrG5edCv19jj0wbgSUKlQJp5si
     
-        hpuL1eu9y4tAxhp1cNcbfywa7BtwCGatDWPScPIx8PIHg0bA1PZh57ojwkbMLG2G
+        lHbuMBrRZAKPoyQENO6pCqC1nyr7SqMvFB5Mj7liQvjSGifzvxFEMU1HuhqZwuFT
     
-        Vw443nvt7cF3R8nEgePWBP8xdylgpXkaZIi08mjKUXjFgafJ6mXVHbX4++HWLCL4
+        Yj6TpvvXssYx2eseHuodZmw+ZIsLRKHEMCRZMz3DZ7Qw+J8n1DfuR62PjBrIB38B
     
-        by7KdzLmE2h923PgsmRbJpJNzaBtQA00Ilx/7Dy7eNd8UrMpep8XL6Q8ImEJMbah
+        2kaxSd96W/dbEuVgQ/tAm/h2/U/gb7iLgLx/i0HRTASRIszw505UgMkLJKBbILft
     
-        gtKtZzF6boLhyPti5rjfkCPqmnTY3hvQ8wiF+4qprYmFOpFXjtGXW2r2MI8cQuJe
+        ipbPPvDovZAHxzZ4WUbJgho5ZhwaIaFpJqQ+fsAOr3JVnbzkZt7tHytL6qJgEFKh
     
-        NmPXq5Fnz/wCv5LUh5Yv1NMpRadneJ/BK/XWgoRwL846YvJEqER7s3g=
+        edlJ/jaRKLZLlHHl1iLWCUeGZ0yUG9teFSSBv5kct1pfJxbHfpb0
     
         -----END CERTIFICATE-----
     
-        ', pipeline: true, pluggabletransport: '', qos: 10, trusted: true, weight: 1000000}
+        '
+      location: {city: Amsterdam, country: Netherlands, countryCode: NL, latitude: 52.35,
+        longitude: 4.94}
+      pipeline: true
+      pluggabletransport: lampshade
+      qos: 10
+      trusted: true
+      weight: 1000000
     
 
-    fp-dofra1-20180511-049: {addr: '159.65.120.205:443', authtoken: ddBkw1VOn7aOXnHNPse8jmPdA0Cxkm5E95yZfWJI2LEvJTVN0RR1ZFqZPiCgwwWF,
+    fp-doblr1-20181010-001:
+      addr: 142.93.214.120:443
+      authtoken: 2PIOFlcQAK6kNGhJfLQxTULc4HMnfTz9OzviqobbxXSjP6KhhL7n2BnsbLCzYWNG
       cert: '-----BEGIN CERTIFICATE-----
     
-        MIIDfTCCAmWgAwIBAgIJAMDAmXZJiJvjMA0GCSqGSIb3DQEBCwUAMGQxFTATBgNV
+        MIIDbzCCAlegAwIBAgIJAMFmskmkmWF9MA0GCSqGSIb3DQEBCwUAMF0xDzANBgNV
     
-        BAMTDFN0ZWFrIFBpbGF0ZTEWMBQGA1UEChMNQmxpbnR6ZSBCcnVzaDERMA8GA1UE
+        BAMTBkJ5cGFzdDEYMBYGA1UEChMPSG9yc2VyYWRpc2ggUmVkMQ4wDAYDVQQHEwVN
     
-        BxMITWlzc291cmkxEzARBgNVBAgTCkNhbGlmb3JuaWExCzAJBgNVBAYTAlVTMB4X
+        aXNzeTETMBEGA1UECBMKQ2FsaWZvcm5pYTELMAkGA1UEBhMCVVMwHhcNMTgxMDEw
     
-        DTE4MDUxMTA3MTcxOFoXDTE5MDUxMTA3MTcxOFowZDEVMBMGA1UEAxMMU3RlYWsg
+        MjMyNDI2WhcNMTkxMDEwMjMyNDI2WjBdMQ8wDQYDVQQDEwZCeXBhc3QxGDAWBgNV
     
-        UGlsYXRlMRYwFAYDVQQKEw1CbGludHplIEJydXNoMREwDwYDVQQHEwhNaXNzb3Vy
+        BAoTD0hvcnNlcmFkaXNoIFJlZDEOMAwGA1UEBxMFTWlzc3kxEzARBgNVBAgTCkNh
     
-        aTETMBEGA1UECBMKQ2FsaWZvcm5pYTELMAkGA1UEBhMCVVMwggEiMA0GCSqGSIb3
+        bGlmb3JuaWExCzAJBgNVBAYTAlVTMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB
     
-        DQEBAQUAA4IBDwAwggEKAoIBAQDlAEkqFjQgGPFbHmflxZIhk8HAxdyVpcMwy2xo
+        CgKCAQEAxKzCpXhxIu3M79EGdcrDlv2S3aNFxqgcmnXc4hQ5c6s5erw2HAmvav14
     
-        z2T85C6JyPY2qu5ZwZ3yq03WoJFwOCS0WhvGCxd7F2HmPoZBsGMCXOncIGAHfVX2
+        OhQ1dzL3tWWxJSJaH3GAwzDChZyldKklOAULYSFgc/+rDcVOtQevl2SyMf2qTUVg
     
-        9pXeWINxNfmQrGjbhHZMXJ2GC5uUFNGUWy6/BJBtDg/5uOwRlllY1wKPxEOCXEJ3
+        MDjLesGv5eWdrSNwniaBU8tXD9Q5NrpZiwBQ0GUfzu+ViO9BcDMjIYXuhnJ2lcwu
     
-        Umbdmzn1a2CfIIncM/dcF5s5Cv5YlllZHCHJuP+84o2zXOh8916TagT7J3M+HFZx
+        HlBL5XXxNJh05ld21JoQKBEVXycgdyFU6ElTzJZJi1kcCd4xn99cx+TfL0zkTIyX
     
-        yN/91PcTofl1ZzGY0Gt2QcqVlgHoY+2sUUN+9TNjExmqhZzRGTA7MMOMMFTHjlm2
+        mZlRcNFJo59QJzHSebikA3HIBUsxIR9wbE1bcQUhmB86lV5hXwfBGRyt1ZPzGmDb
     
-        ytZ9H7md7k/WWHgOh7xdiu/wfJ1AS1JbzzEm0rynWIZoUzVHAgMBAAGjMjAwMB0G
+        qQgRNbSNPLC3y0u2QWSz/ugO3ueJNwIDAQABozIwMDAdBgNVHQ4EFgQU5uUn2yZ9
     
-        A1UdDgQWBBSR0N1hiiVBTIDQi2DrjOTclX8/RjAPBgNVHREECDAGhwSfQXjNMA0G
+        8EzlZ1njIO4aD6/8uEkwDwYDVR0RBAgwBocEjl3WeDANBgkqhkiG9w0BAQsFAAOC
     
-        CSqGSIb3DQEBCwUAA4IBAQCGNwMb8CdBJPL0LNoZ1ZxvDgYB79oJA8IroJWETRUM
+        AQEAG89chYN7kegGwfPWtexiJ+tKPP+egffqij+4Kra/MeZx0Yy/pivxhlLUL7eD
     
-        eKl0rWtZ3q6Yc0cU7Hzblkl6qkabuAgH/slF3UCgrUK+m+oGrODw1++EC38DN1iu
+        rYu0c9ovcbmmVGMIYsKSHPvbzGryoek3m7QLU9MdDSbCUDGAFNWW1RBoArAjVUI4
     
-        oMAJSXwBTmGH1hwyZHHpF/ZH6/IVKKRFmuplR3tlWu43c5OVGsydBJPRs2mS8APU
+        r/wD0ybYUwV5MiLsURrZ/lNjQ/xac5udQKpz4M+XEt3eH+rhntsLSmMbYKXW2h6n
     
-        yFhet4FUMtNT61i62i2TIebKe6MB0rKDd/guirHXSKsK4dsPoTBu6I8ayXUCM9ny
+        +umoU1XPxQZx4OawU4/vQONWBvjenrpKpbMUSX0xD/spAGmxeuDyCcgu6ztpudiK
     
-        MateWAtXiGfrKgbIbJnxDnvRnTBPQWgM3qd+kcFJuyybhUt1//CBI55wCbWTv/R2
+        f2zPR0kXert7f7b7Zew3fHk7hy1vPp5bxwjAxzIO2ROaclj6LnSM6Y6QoRC8b/Qx
     
-        FzCABzk77WkmZwEupaV8d8a9nn2gWoepiOvY4x+8AmAt
+        Zs6fe+p6VMDLsTwayWAoHG+6pQ==
     
         -----END CERTIFICATE-----
     
-        ', pipeline: true, pluggabletransport: '', qos: 10, trusted: true, weight: 1000000}
+        '
+      location: {city: Bangalore, country: India, countryCode: IN, latitude: 12.98, longitude: 77.58}
+      pipeline: true
+      pluggabletransport: ''
+      qos: 10
+      trusted: true
+      weight: 1000000
     
 
-    fp-dofra1-20180511-048: {addr: '159.89.20.160:7415', authtoken: zmGA3Xy3LVBXGzXfjkdwBvt69qRschoEkcb7TVJHzC7i65Hi3iqLOstbOksuHlIO,
+    fp-dofra1-20181010-087-lampshade:
+      addr: 188.166.162.21:443
+      authtoken: bsF0Av4y2XYgAHDEHxhDKmZAI7Tq3Pa2xC0v75b5pXlnl4Y9ujlQ94zX9gdikqH8
       cert: '-----BEGIN CERTIFICATE-----
     
-        MIIDZTCCAk2gAwIBAgIJAI4OlbBnKvoUMA0GCSqGSIb3DQEBCwUAMFgxIjAgBgNV
+        MIIDfzCCAmegAwIBAgIJAOLfxoFAKSsWMA0GCSqGSIb3DQEBCwUAMGUxGzAZBgNV
     
-        BAMTGUZhdCBTcHJpZyBXYWxsYWJpZXMgU3Rhc2gxEDAOBgNVBAcTB0NvbW1lbnQx
+        BAMTEkZsdWVuY3kgTWFnbml0dWRlczETMBEGA1UEChMKUm91bmRhYm91dDEPMA0G
     
-        EzARBgNVBAgTCk5ldyBKZXJzZXkxCzAJBgNVBAYTAlVTMB4XDTE4MDUxMTA3MDY0
+        A1UEBxMGU2FiaW5hMRMwEQYDVQQIEwpDYWxpZm9ybmlhMQswCQYDVQQGEwJVUzAe
     
-        OVoXDTIxMDUxMDA3MDY0OVowWDEiMCAGA1UEAxMZRmF0IFNwcmlnIFdhbGxhYmll
+        Fw0xODEwMTAyMzI0MjJaFw0xOTEwMTAyMzI0MjJaMGUxGzAZBgNVBAMTEkZsdWVu
     
-        cyBTdGFzaDEQMA4GA1UEBxMHQ29tbWVudDETMBEGA1UECBMKTmV3IEplcnNleTEL
+        Y3kgTWFnbml0dWRlczETMBEGA1UEChMKUm91bmRhYm91dDEPMA0GA1UEBxMGU2Fi
     
-        MAkGA1UEBhMCVVMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDNQhAO
+        aW5hMRMwEQYDVQQIEwpDYWxpZm9ybmlhMQswCQYDVQQGEwJVUzCCASIwDQYJKoZI
     
-        BmtNOIs3dG9k408J0N83sBnvyK5skgb9eO6cB3axhyxYbuY+JJvah3bImrOzUkoq
+        hvcNAQEBBQADggEPADCCAQoCggEBALA6ATENLrTmcjsevYvV/nwBEFhKX0BgvdNs
     
-        UacH+Eo4kbMVo8ZAiv1o+ppF0u1q0S2iROkylYh/6vA5uprDy3uqinGvJhNe30XY
+        6T/pRQYLuRrQRkbNgMmhO6CSadjAdz+8nOM7MXa6dPDs7mTh8W7I3QDdCkoNZYC+
     
-        8fGbIhl+xaHDqFvHexiMgcr9GbyDw7NZQri8Ijh/2mehfI13KBEhUpSIg3779DOx
+        IFnX5yIQ+xXS/koGvM4LpWSpY93iWi2zKWTOwUKmw9WJCrdb27UYskGSRjnek74i
     
-        BzWX59Zgi3BjzOYMZyLyF/B9OvMGd1kzFqo/DPultte+IP2XFEo5B0rkOUs36wgf
+        5dwB+ZosG0aJMKGhiJ1gK4c8om4Bqr2skHBp2RJdP4yldZPFmJJS9dciEmR5BdZX
     
-        SYIwnMhTbR6cgQ8mP8VZr88QQ9vOsRuz32kk7gFPk9Cx1g78b9ONhmoxMhN4EnQi
+        aIFptv4/TWH8rELGFZAHnUxM9I7e0OXG0BJHp0Ak/gwE8irt28jKecFLbhpYv+AX
     
-        uVKxB9p3KKh6B0VjAgMBAAGjMjAwMB0GA1UdDgQWBBSoMttZNHCULlxJjXvvlgDJ
+        tU5xFnq5YpEUip/amAvZ4tod702CuZVcQeQgWf7NE2qdEVps7SMCAwEAAaMyMDAw
     
-        g1HDIzAPBgNVHREECDAGhwSfWRSgMA0GCSqGSIb3DQEBCwUAA4IBAQBswqdNNycN
+        HQYDVR0OBBYEFHupbONQGuUa51CWIpYKu6ez9etaMA8GA1UdEQQIMAaHBLymohUw
     
-        UTvTCyCwps6hojP5oHQjH39hY1WYEh6hmA/O97a0dgu4xjx7+kK6DH8BqcNNlUiK
+        DQYJKoZIhvcNAQELBQADggEBABTe1RfApYD+3n1EgK6LLvPW1Mrs0Z55VIKPhkZE
     
-        CHbuUXIzcCG2ELGEotcSt43n94BeaS5dxNrBHGD/fB9CJ9Ng+lgVp2DelPQa/YWe
+        dhejXNunczfnvI1bpsrYSewDYH52CjDKPZK+qI+KAcPlwQbAxoHjAjyTnP7hNtyQ
     
-        GbHr0UEC8m+X/SX6B5sc8zkBGiPPu+qoV8xj4euFl1797Umjc2BH7if3F/gO8f4h
+        EVIKCIml4G4VXF9RXVhxahxanIZ+NmV7kbFrac0MKmWyBf3mPg91MZJfCIjhWBjZ
     
-        TaAqC3AWRj5DlDy3qkhXJYNdFDtPUFpHsVMjN08OGx58nrW14SurbmzsQvzlZIPy
+        QBn6WvaBee0kSJ0eLeRk+P/AgPPRNdzand/9kq5HkCQIdHPwIZJvLBeBMbo3zcd4
     
-        krSIRJ9C0QEN0jAjnBdEFourl5aafT5Y+3D87pXK6UZlUKuHPC1LJaS29fvqWj2l
+        WP9uLrRptSgJmkE2DYEWMOH40gbCN8vrZVgaqYKc/Yqh9tnJjdhM3CfRDdCiQssr
     
-        baL1WITsiogh
+        TKlZ0GeOvjljjj2jkz0/DGXGL8NIGloxl9V1vr8vSJGhGEs=
     
         -----END CERTIFICATE-----
     
-        ', pipeline: true, pluggabletransport: '', qos: 10, trusted: true, weight: 1000000}
+        '
+      location: {city: Frankfurt, country: Germany, countryCode: DE, latitude: 50.12,
+        longitude: 8.68}
+      pipeline: true
+      pluggabletransport: lampshade
+      qos: 10
+      trusted: true
+      weight: 1000000
     
 
-    fp-vltok1-20180509-042-lampshade: {addr: '149.28.26.82:443', authtoken: gqXP6nRsfiRj7hkUyZwx7t3PBVfOQNFiC0yKNXnimJmmIWtE5S6cT9haMGYy5kmx,
+    fp-dolon1-20181010-074-lampshade:
+      addr: 206.189.27.199:443
+      authtoken: IT1zt3WHAVW75mVRZbKXTNJKfkgX7eRVBkPcORx9kydMtHLBp6stPbMWLgHFit3x
       cert: '-----BEGIN CERTIFICATE-----
     
-        MIIDPTCCAiWgAwIBAgIJAJLu2JrpzbbXMA0GCSqGSIb3DQEBCwUAMEQxEDAOBgNV
+        MIIDKzCCAhOgAwIBAgIJAKVTC7weT6UdMA0GCSqGSIb3DQEBCwUAMDsxJjAkBgNV
     
-        BAMTB0hlcm9pc20xDjAMBgNVBAcTBU5vZGVzMRMwEQYDVQQIEwpXYXNoaW5ndG9u
+        BAMTHU1ldGFtb3JwaGlzbSBSb3V0aW5pemUgUGFkZGxlMREwDwYDVQQKEwhXeWNs
     
-        MQswCQYDVQQGEwJVUzAeFw0xODA1MDkxNTAwNDdaFw0yMTA1MDgxNTAwNDdaMEQx
+        aWZmZTAeFw0xODEwMTAyMzI1NTBaFw0yMDEwMDkyMzI1NTBaMDsxJjAkBgNVBAMT
     
-        EDAOBgNVBAMTB0hlcm9pc20xDjAMBgNVBAcTBU5vZGVzMRMwEQYDVQQIEwpXYXNo
+        HU1ldGFtb3JwaGlzbSBSb3V0aW5pemUgUGFkZGxlMREwDwYDVQQKEwhXeWNsaWZm
     
-        aW5ndG9uMQswCQYDVQQGEwJVUzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+        ZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMdWAPxj875GYFKVEtwX
     
-        ggEBAJfF6uvjRiAYKbM0i8NlpaJ/siUCEzXfLlXAKncI1PnWID2/T+kq6UlGevvU
+        wkvwsxi4Jn78e0yDeQP0fTYwNlivKI9wUyLEnizPBL0K9iNCtLjhhQ/yIdKJ1S5k
     
-        vGDA7rhkV5cx9ajRFiEO0rCCopBWk1AKYJiYD7eLTfhRHogv4Bja0bgwGGUHWoaS
+        Sz+D1BeHY5vfu5ae0cE5ptwz/+XWaPDoWv1CyYkiUw7O6YN2z7ooAxZTU7u6b/GQ
     
-        b3OEcEK1r4L1glam2RTK6sYjTrp8f8m178UiHDUNq9LVTvSreA+fg3zaTYHXhlRG
+        QcBnwq0HlVr25YjwISf0tT2GoIYgPA+qDy/AvwdfQczlXlpkBZ2bbglRKYZi9dTv
     
-        l6GiqZMHGQMS6ywBJG7AowP0D5c9FTfAKOYzivbiKILMI/YY7JkB3GPf1x1t1MU2
+        O3eX/MpV+2E3f+bA0+j0tVgEnNQsnCKC3Sltm/edSZYt3YaImgbtvDzFwW6ibiXA
     
-        R8sPWpcmSniBPsHYZcD07Wfq1BrCxQkart9Wn0KxmfqqQh1gNEoiTF8FAk/SM1Cz
+        6k/LPwMqeLfvXa+aK+q0LALNZ6QJOPZi6OfCofJKX4G7J63b2MbtaVnGbqJ8+G3c
     
-        qVE092q5UkICJCxma6GmgreyYoUCAwEAAaMyMDAwHQYDVR0OBBYEFCiTVQFb4tKy
+        XqsCAwEAAaMyMDAwHQYDVR0OBBYEFAQXRCOzd49y4c56/Ic/LW1uD1AwMA8GA1Ud
     
-        6jsJ9ZrN9uFlv1FEMA8GA1UdEQQIMAaHBJUcGlIwDQYJKoZIhvcNAQELBQADggEB
+        EQQIMAaHBM69G8cwDQYJKoZIhvcNAQELBQADggEBALcHiFt119mxragduAKz4tgr
     
-        AGOArmbb26GaJB6huboZ2e8ChwrXGEeazSLcg12fpiZe1jSFcKTg6Zaz0ngSnBDn
+        YtfPK2Ys4lyTPLZSrxwvYims00iyfx5WHnF1kPu7wWUKbuRO3lioW8bXwnehHK2M
     
-        PhDMk7Zh+RDvcawEy7QOhnucKE1Eh3BOQ4ll5e5UKtuJiz543/RC/0USoT8wHsfA
+        ZD0WVJfoqTSg97yhcsCfEEs/AqDnUBE/wjYs9iil1MkZY2SlOPymm9gHpBmZCAQ7
     
-        2BB1AtyzC8uXDfHYEznzMAgwV5spU84b3M9iW55FYE4RBh7uSE/UMruASri41m55
+        WhL2hAfB50bMnSMlXtbQDolNsvs6yJX4+cctNhMisxHHvhdNTCjt0g/8jlwszn2l
     
-        ycQfGTDG5ZEao2ViNe/3u71c3i5TaZhj/JwZdpAmBJfkQOMF73F67TQwZHZYMH7b
+        Dom/7LRQJ3Uvw8qMPpFbEpzutmuN2e5h16BdVJyKQF5UhoW+406lIl9kft4eroDb
     
-        I3St3oB5X08ijoAfRW7fdnrQkSkvnfbiVbnG89sTU6q9zgpglyOUKA3aaE4uWnAT
-    
-        T40/ciLAkZ+HihRNn5sFD28=
+        QB+JA6iENmXy8+Pa7DHUFjTKijv3IDYxoadw/6l183NjNFSdd3QICXc6w3eZQlw=
     
         -----END CERTIFICATE-----
     
-        ', pipeline: true, pluggabletransport: lampshade, qos: 10, trusted: true, weight: 1000000}
+        '
+      location: {city: London, country: England, countryCode: GB, latitude: 51.5142, longitude: -0.0931}
+      pipeline: true
+      pluggabletransport: lampshade
+      qos: 10
+      trusted: true
+      weight: 1000000
     
 
-    fp-dosgp1-20180509-024: {addr: '128.199.193.220:443', authtoken: q0eewraQBOu8nVtojY76QtFwFvN981mjRoiuo50H6Wnj86y6t95hQNu0BDzADHqg,
+    fp-donyc3-20181010-010:
+      addr: 159.203.109.157:443
+      authtoken: HytheaS6tdMPYaO5UoGA9THo5obTq7m38ImGs9qIuxlDHO5zKDhCB7tY58MS7FZf
       cert: '-----BEGIN CERTIFICATE-----
     
-        MIIDezCCAmOgAwIBAgIJAO6nT9pnEqPOMA0GCSqGSIb3DQEBCwUAMGMxGTAXBgNV
+        MIIC9zCCAd+gAwIBAgIJANJiztXQlCYeMA0GCSqGSIb3DQEBCwUAMCExHzAdBgNV
     
-        BAMTEEdpZ3MgQWZmaWxpYXRpbmcxFjAUBgNVBAoTDU1pc2p1ZGdlbWVudHMxDzAN
+        BAMTFlN0b3J5Ym9va3MgQ29uY29taXRhbnQwHhcNMTgxMDEwMjMyNTQ5WhcNMTkx
     
-        BgNVBAcTBlNjb3VyczEQMA4GA1UECBMHRmxvcmlkYTELMAkGA1UEBhMCVVMwHhcN
+        MDEwMjMyNTQ5WjAhMR8wHQYDVQQDExZTdG9yeWJvb2tzIENvbmNvbWl0YW50MIIB
     
-        MTgwNTA5MTU1MDA4WhcNMjAwNTA4MTU1MDA4WjBjMRkwFwYDVQQDExBHaWdzIEFm
+        IjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvG512j7akAfKFvr30od3yTlt
     
-        ZmlsaWF0aW5nMRYwFAYDVQQKEw1NaXNqdWRnZW1lbnRzMQ8wDQYDVQQHEwZTY291
+        ejVsCOrX/PAdEk2WKU5nRxDTFpVK8YHC5M8+x+R8sY69IvxPscRGlISuZgbgVSAl
     
-        cnMxEDAOBgNVBAgTB0Zsb3JpZGExCzAJBgNVBAYTAlVTMIIBIjANBgkqhkiG9w0B
+        MMUiwlDpFMCFKada7kwLCc1Nj90sVB3N7ix8a0kKUd/c2RiDWroVsvwvc3/TnkDZ
     
-        AQEFAAOCAQ8AMIIBCgKCAQEA7hq7w81fOsTeMw2funhi1KlvDxjgxHfaFgFnQGNl
+        NE0C5aEBqc198Gx/biIhOAvbqAgv3dM9VIwFyziiQQ18GWqRpaizOFUvKrqFc2HA
     
-        c6Nf5PxabvrhzBAbIGam9ItbHDrbJjTolBWgXIghLElBoGx6epaGQp4dKbjqtKfH
+        NVk6Q5ELOc3ZaK2OT5a6obZUCSkfl6rkRpCQO3dtkn5C41bt8gjjppsX5chx7AO6
     
-        8qr+SZMESk9RGL5v8mlaWizdNzJj+iNGpoi70WDIALIxUJN3RAw5ojyzbxSPTIbX
+        tn0L7nA93xdx9W3E/Y6TmZ0ii4+bLChZwi+AvtyW1s8DX4qYCC4UzcL+HtWV1wID
     
-        LyNSRlu3DxnyofVT5y1MLGI77T/syhe5NGDggSTV1vfsxvdd2PJ6m0MSlztfCfSJ
+        AQABozIwMDAdBgNVHQ4EFgQUuvbmzCKb7fscR4wFwWZ1T2G0q5MwDwYDVR0RBAgw
     
-        rN54olwRmVPEuTm+6Q1bnTpbIhESVsEZxGYSsctFXnbeqMMgHcG3Xh3AjMqcTn04
+        BocEn8ttnTANBgkqhkiG9w0BAQsFAAOCAQEArHj59OuiXD18WVGLu+vu/qQUVkVs
     
-        192mMRiXEwEloM4Z4NDzS0tzGvAPLsze+vybRvEQ8WUk9QIDAQABozIwMDAdBgNV
+        tZwwoNWTIcLPfcwNCNjeW95oEE8FqWEImcPty/eCnFbXYYSrchm0xzcrNzG2TzGg
     
-        HQ4EFgQUqSZQBVIsXtV0S9z0G5MxKjoGAI8wDwYDVR0RBAgwBocEgMfB3DANBgkq
+        163aYFbN+f+OdyDOmt2H5ExmdKjTnf5hzqL9LgHuQWeYD/ZnA7XMlW7re/RndXfw
     
-        hkiG9w0BAQsFAAOCAQEARgMVJrP5+0BpsmjlexTohWtMmTByadOOR+CpYx+Mq+C2
+        qPHtlKf35nrZ8aoxbMa/51zyPfvZynlV3xvmoCYDKYT56TOLil6d4g7BVvBxRiap
     
-        PeCZ+/GFUnw4gK/qpNKiEuQt43bcGnp3J3OBq6WOnUrBFyPjzfbtg9ql4j3cZRDN
+        vXNOFsaL0BsxbaLw+8TuckMmDtISd2QR6IS3Y+BdQucVaaBjJaA+ealopZKCq7+j
     
-        2iMebwiOrpIdUjPP+4FO5glQ5lSJj7sxSNv0KeTbhnKRPpJLEPykKuLnoLfCcIPE
-    
-        r1VQkV8deEm/GzYOrvJWr+y+fUfloCq7YcC9nxxaKis1S7Yeb/snHQ97uXOGn4rz
-    
-        r2QmU0+Blr8ccXXpkT1OsAlZ03cQskJkbum7nfGRWsAck9HKkSNWeMscbvNEsBZf
-    
-        moYbcT6w6CaRLbaTIJ6A+ySjEcZFWVVroCoMZgG5hg==
+        KshPEEuM5kOKlBGdH1oAwFJGexD3DaV6PugrWqXLGgKKw518vWu9t4exkg==
     
         -----END CERTIFICATE-----
     
-        ', pipeline: true, pluggabletransport: '', qos: 10, trusted: true, weight: 1000000}
+        '
+      location: {city: New York, country: United States, countryCode: US, latitude: 40.83,
+        longitude: -74.13}
+      pipeline: true
+      pluggabletransport: ''
+      qos: 10
+      trusted: true
+      weight: 1000000
     
 
-    fp-sbtk1a-20180509-040-lampshade: {addr: '47.74.37.187:443', authtoken: g8A8rUNxcAORXUUg1jJaKhPXbYJ7Qp8XKVCruSksBiEUHtHDDxks8UL1ZvOUftg4,
+    fp-dosgp1-20181010-126:
+      addr: 128.199.185.96:443
+      authtoken: 9i5WG6CJurKPlhabsj3RSDGPcB5DuTZKZPKtfJQs5CYxNjK5ZKXcy4TKFvYHz6Pg
       cert: '-----BEGIN CERTIFICATE-----
     
-        MIIC6TCCAdGgAwIBAgIJAPS1SaGe+aWJMA0GCSqGSIb3DQEBCwUAMBoxGDAWBgNV
+        MIIDiTCCAnGgAwIBAgIJAN/ew9X/cgLkMA0GCSqGSIb3DQEBCwUAMGoxFDASBgNV
     
-        BAMTD0RvcmVlbiBDdXJseWN1ZTAeFw0xODA1MDkxNTUyMjBaFw0xOTA1MDkxNTUy
+        BAMTC0Rpc2NsYWltaW5nMR0wGwYDVQQKExRQaG90b2dyYXBoaWMgTm9kZGluZzEU
     
-        MjBaMBoxGDAWBgNVBAMTD0RvcmVlbiBDdXJseWN1ZTCCASIwDQYJKoZIhvcNAQEB
+        MBIGA1UEBxMLUGVyb3JhdGlvbnMxEDAOBgNVBAgTB0Zsb3JpZGExCzAJBgNVBAYT
     
-        BQADggEPADCCAQoCggEBAM56KxOY/h4u4bi2tmo1WWeaWUiHaKRqAsfNzhEJXB9H
+        AlVTMB4XDTE4MTAxMDIzMjQzMFoXDTE5MTAxMDIzMjQzMFowajEUMBIGA1UEAxML
     
-        8YrZJHzfxIUo/anJDWdNVDj2negDkDVaOTAESJYorO8ALGPJlmrOF0auyPQapykM
+        RGlzY2xhaW1pbmcxHTAbBgNVBAoTFFBob3RvZ3JhcGhpYyBOb2RkaW5nMRQwEgYD
     
-        x1ERLfyB1Sl9VQLbnUFzTVUVHrPyat7fBnXZ/HZ0oXRstuhzjqAu6HC8bwNmNRN+
+        VQQHEwtQZXJvcmF0aW9uczEQMA4GA1UECBMHRmxvcmlkYTELMAkGA1UEBhMCVVMw
     
-        /JerU0iUYMxsuTi8MhPA4hRyXupwPaQuSvDZG895OMfZuQgIczn/lTFtNId4ZuOR
+        ggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDkiISln56eVsVuni6gFwQs
     
-        CKXljZWEZ+pzEp4uuk556Ly3eyo2rXRQOQdjt0q6hscgtqsv2vSPRFTmHMWJuF13
+        ZEWd/TLC3i5waX554XzQGZ39H/lVlmuWfcBGOd0j/o6st1rmE7On5rrFazZV11G7
     
-        03wrVMDy9WThVMpnvK2dKcO3RX76Ea9/CZd2lYX42ysCAwEAAaMyMDAwHQYDVR0O
+        q559QitNXhSRyKVPGm8xQHSCVIKXgT6OD8I2CrQ4Rtx6gkhLA8z93QstAMNTxUMQ
     
-        BBYEFLBlZv6KgaetvlMepSoe3ryZ77cpMA8GA1UdEQQIMAaHBC9KJbswDQYJKoZI
+        NVkZ0o4SreurVUKCVtqRBbrSeCjAv24PVWIi6t78amL5ClGOtV4y+e59cpGjlreQ
     
-        hvcNAQELBQADggEBABxJNrLbgwhGk5KP4aI8KIdYS3LhSo+G1wXb4rlOJ6sQr9sv
+        silOnLLpdFRW7VJ17If/vY7Ecu2283DvDZCXp8gLQIrhSwt8r5hx1nz8XbcBTwrv
     
-        PrVVH58u4tGW9/S9GpF2NvS5RReg4lJxaF3RRxmmaKOrgVamYhKB67zBjfTCEb1X
+        xLzQB5tKcUhfeJyOkM+GLCm2aWzbgUD41plT3UbwparNGUYgfno5T7q69gsJ6nHP
     
-        OBuPOJyrxAyj5jka86xzb/MOLyYlkY6jgV05u+FqHQhKnbcohgVw9PDzhbTXa3w6
+        AgMBAAGjMjAwMB0GA1UdDgQWBBT3qiDvpAnIum4r9y9Pf9CRpXpJojAPBgNVHREE
     
-        SOeEPjlxzEa3GEXsQoo/AYGoyHc0FNTA48TdMnADJBXo6W3dpQf9JSg4zReyPwyt
+        CDAGhwSAx7lgMA0GCSqGSIb3DQEBCwUAA4IBAQAWpKknHET73dJRlJ8uKTGd1qzv
     
-        UTYFLoSTKHgKHsk5HfYIVwPtrE34WsklMkYpHLiMuob+oWOyfv5VIqJVcD7eb6Ys
+        3tR0kW41CjNiitg8UAnB2y8/89rySH6/sVhnkGQgm3+BTdrkds1FVNZeL34YSLu4
     
-        JaxeZyzKTI8HIuulSm2ifaVdBmuH3rWv4QAuqrg=
+        DNZpSJRXHEqTiVG7jC3NUbQs1aSHDsNKgxBOWX68SclQD6j/7rmfJXIxbzqxFcXq
+    
+        ev3CFq6KS/fonnWaz7h9f/kRQd7QxoOJDKu3o/zfdCQ1sgV0W4wFLZTRspbYuWAw
+    
+        4UEq71+DmOOWyyUQXacZQXmC51z1OyJAOS08uj9uG/wd/PZsTveYQx7iMPUVUTPw
+    
+        lDCzbRMKhkDpTNgM9t/fwSkNpsTEqb3DW4UvZBpTEwN733jpe8Pf3/cYKJmJ
     
         -----END CERTIFICATE-----
     
-        ', pipeline: true, pluggabletransport: lampshade, qos: 10, trusted: true, weight: 1000000}
+        '
+      location: {city: Singapore, country: Singapore, countryCode: SG, latitude: 1.29,
+        longitude: 103.86}
+      pipeline: true
+      pluggabletransport: ''
+      qos: 10
+      trusted: true
+      weight: 1000000
+    
+
+    fp-vllos1-20181010-125-lampshade:
+      addr: 149.28.77.28:443
+      authtoken: lfxXempiqCwIhgX9Ijr5Q87FNQsh273Ru9Ev4drlIHHjFlmHuq99CPb2L79Gudry
+      cert: '-----BEGIN CERTIFICATE-----
+    
+        MIIDZTCCAk2gAwIBAgIJAN0CGlCD4tg0MA0GCSqGSIb3DQEBCwUAMFgxEzARBgNV
+    
+        BAMTClNoaXBwZXIgTG4xEjAQBgNVBAoTCVBhdGFnb25pYTENMAsGA1UEBxMES2Vu
+    
+        dDERMA8GA1UECBMITmV3IFlvcmsxCzAJBgNVBAYTAlVTMB4XDTE4MTAxMDIzMjMy
+    
+        NloXDTE5MTAxMDIzMjMyNlowWDETMBEGA1UEAxMKU2hpcHBlciBMbjESMBAGA1UE
+    
+        ChMJUGF0YWdvbmlhMQ0wCwYDVQQHEwRLZW50MREwDwYDVQQIEwhOZXcgWW9yazEL
+    
+        MAkGA1UEBhMCVVMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDKna+1
+    
+        cJRrue9ZTTkajYjDkydYGc6LvvGysWV0EobJe/K5ZNjzqW/j9vPvmIZybPhrZuSV
+    
+        n9api9EtqNbaiE2ldNqAakrSHU+nIhvZnvMq7llwgdPaWUAkxLy7SLu1cPSUaMzU
+    
+        6y1npb6+A3H1TFCIE8weyCUXBW3WctCNzjvZUZLjFaKcUzUqIUEiYR6Z6MyIZwdA
+    
+        lj9poOJSBt0zGQsXJYp5r3/DFxIfrybDj1E4/s+g1ePx5NZIoqx7jrLvVprEA1cr
+    
+        2K82H4k5yI8ghjY20BU6VAayZ1tOYPhACLD2fXcgvPokYBTiR9twTer+M1/OB7di
+    
+        DJz+D6czm49kW2/RAgMBAAGjMjAwMB0GA1UdDgQWBBSkWwTaFkRAMZWA1Jl8rfAA
+    
+        aymYaDAPBgNVHREECDAGhwSVHE0cMA0GCSqGSIb3DQEBCwUAA4IBAQA8fYoL10+N
+    
+        R6CVWJZjlauWmG/d1OUFYvHL0LEqDNa6C8wMHGG1h9GzVqfLGptUvqfYlWinHrMo
+    
+        5xzh9E/D2Rpo52vFg01xEgnPCrZMl8Q4t+ZKCN4shcvfLrp5c8lZov1W4rrF2jQm
+    
+        KziNDpO3uAi9ZJxFqg0+73VUjk2cKDF/RGqBnZx9csqdKUlg9qcjcS4gPzxu//gW
+    
+        IthDEAXLRImR1KeqLUiA2xMLWtN8BjPTO5Zv2W7jm6hTMARSqSJEltJzzE/wrD8+
+    
+        seC26/PfH63rxTOYgHdPX3Y0yXJnG0YYefN+QKFypmlDfPtL+u8KLMFNuiUeF9Zf
+    
+        nhURjtWkgAq5
+    
+        -----END CERTIFICATE-----
+    
+        '
+      location: {city: Los Angeles, country: United States, countryCode: US, latitude: 34.0729,
+        longitude: -118.2606}
+      pipeline: true
+      pluggabletransport: lampshade
+      qos: 10
+      trusted: true
+      weight: 1000000
+    
+
+    fp-vlsgp1-20181011-003:
+      addr: 66.42.59.154:443
+      authtoken: 2Eb6ErAGmQXH3tvmfVAnfxzMUQgT3sPX9tIq5iEXjv5KaWYCWExFSF30H006p3Z8
+      cert: '-----BEGIN CERTIFICATE-----
+    
+        MIIDCzCCAfOgAwIBAgIJAPzfg+VznVvoMA0GCSqGSIb3DQEBCwUAMCsxGDAWBgNV
+    
+        BAMTD0hvdXNlYm9hdCBTY2FyZjEPMA0GA1UEChMGRGVzaXJlMB4XDTE4MTAxMTAw
+    
+        NDEwNloXDTE5MTAxMTAwNDEwNlowKzEYMBYGA1UEAxMPSG91c2Vib2F0IFNjYXJm
+    
+        MQ8wDQYDVQQKEwZEZXNpcmUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
+    
+        AQC9kQ0fCMMOjFVKui06wTu/jcPSjApuqW9wnxOFlPRLlOGpTzo/v5VPzJe95Pjt
+    
+        r0zYT7txBkhYECp2IxYraivJF9zMGV7WbAmg+vYutKb8zQ8EXuYujvE5zT7FfhNs
+    
+        3IXZInsnKwehFFbuqQPQdU6+i6v02gsMmi5eCV5Hnue6MR/WakKwMZilng5U82Hg
+    
+        xRWDszkyTBJGzxQobOAi/mDS7DKRlYbSzP7ZtB9ejE0LKko9oo8CNXz6/YdmRRLb
+    
+        uMeKdIxBU+C5qmnB+8Qyv9RPUhEWGsE+CB84AN01IhIMdnHcgfgGWDphdD+/qvJ6
+    
+        oLiiJLARdc0++g4u2TIU+qzNAgMBAAGjMjAwMB0GA1UdDgQWBBQ0sxyU+NtmJW5N
+    
+        RfqREdiuUQZjgzAPBgNVHREECDAGhwRCKjuaMA0GCSqGSIb3DQEBCwUAA4IBAQAW
+    
+        240/lZtEt9jSqXkDL3r0ImqKaO2wMjaBQwOU21NnN3EeV0CiOCt5mya4XMeqDgBt
+    
+        5pYgljae9DJiA9tngRXn/ezhxj5P4KZqQDtJ75drEeU22UeeBvIJdLiAXVvbDvc8
+    
+        ZEH2KxoouPe5P7VSwrUFtAugbkltAbmAbv/2xUu3H0lsEQXTcLERw0hBLmM/J3z0
+    
+        OsjxXuJG8vCQIHhNCqM662RVcKO3VOBBzYoWywKDW6ONGZt492HM8ERIeIFKN+TF
+    
+        M0ZjaCzAxnDh2BSEZFxJ5fmtYPh2RZY0Tu7PD4kfN69KiMuK4iktS1L5M3s4ZOHs
+    
+        H8k86BCKJje7vR/CFLig
+    
+        -----END CERTIFICATE-----
+    
+        '
+      location: {city: Singapore, country: Singapore, countryCode: SG, latitude: 1.29,
+        longitude: 103.86}
+      pipeline: true
+      pluggabletransport: ''
+      qos: 10
+      trusted: true
+      weight: 1000000
     
 `)

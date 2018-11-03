@@ -312,13 +312,6 @@ func (d *testDialer) NumPreconnected() int {
 	return 0
 }
 
-func (d *testDialer) Preconnect() {
-}
-
-func (d *testDialer) Preconnected() balancer.ProxyConnection {
-	return d
-}
-
 func (d *testDialer) Dial(network, addr string) (net.Conn, error) {
 	conn, _, err := d.DialContext(context.Background(), network, addr)
 	return conn, err
