@@ -50,6 +50,8 @@ const (
 	SNBuildDate    SettingName = "buildDate"
 	SNRevisionDate SettingName = "revisionDate"
 	SNPACURL       SettingName = "pacURL"
+
+	SNYinbiEnabled SettingName = "yinbiEnabled"
 )
 
 type settingType byte
@@ -89,6 +91,8 @@ var settingMeta = map[SettingName]struct {
 	SNBuildDate:    {stString, false, false},
 	SNRevisionDate: {stString, false, false},
 	SNPACURL:       {stString, true, true},
+
+	SNYinbiEnabled: {stBool, false, false},
 }
 
 var (
@@ -182,6 +186,7 @@ func newSettings(filePath string) *Settings {
 			SNUserToken:      "",
 			SNUIAddr:         "",
 			SNPACURL:         "",
+			SNYinbiEnabled:   true,
 		},
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
@@ -464,6 +469,12 @@ func (s *Settings) GetInternalHeaders() map[string]string {
 // GetSystemProxy returns whether or not to set system proxy when lantern starts
 func (s *Settings) GetSystemProxy() bool {
 	return s.getBool(SNSystemProxy)
+}
+
+// GetYinbiEnabled returns whether or not the user should participate in the
+// Yinbi giveaway
+func (s *Settings) GetYinbiEnabled() bool {
+	return s.getBool(SNYinbiEnabled)
 }
 
 // SetPACURL sets the last used PAC URL. Note this is used particularl on
