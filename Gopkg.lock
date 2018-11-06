@@ -181,12 +181,12 @@
   revision = "ee58cae565e4f208c7eb59cb2e70acf2230a1d12"
 
 [[projects]]
-  branch = "ox/issue2416"
+  branch = "master"
   digest = "1:c3c09c0f941175181747b2d6948fd1add3ba82e66215aae78ec9b44d97d8ed40"
   name = "github.com/getlantern/context"
   packages = ["."]
   pruneopts = "UT"
-  revision = "6e2b659f486117c7501579ee3c620367ca620ffc"
+  revision = "539649cc311886ee3604204cfab46f72b5f40950"
 
 [[projects]]
   branch = "master"
