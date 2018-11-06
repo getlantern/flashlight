@@ -160,6 +160,8 @@ func New(overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
 		HasSucceedingDialer: hasSucceedingDialer,
 	}
 
+	b.initOpsContext()
+
 	// TODO: remove or optimize the periodical probing
 	ops.Go(b.periodicallyProbeDialers)
 	ops.Go(b.periodicallyPrintStats)
@@ -739,4 +741,52 @@ func (d sortedDialers) Less(i, j int) bool {
 
 func randomize(d time.Duration) time.Duration {
 	return d/2 + time.Duration(rand.Int63n(int64(d)))
+}
+
+func (b *Balancer) initOpsContext() {
+	ops.SetGlobalDynamic("balancer_metrics", func() interface{} {
+		metrics := make(map[string]interface{}, 9)
+		setProxy := func(prefix string, dialer Dialer) {
+			name, dc := ops.ProxyNameAndDC(dialer.Name())
+			metrics[prefix+"_proxy"] = name
+			metrics[prefix+"_dc"] = dc
+			metrics[prefix+"_protocol"] = dialer.Protocol()
+		}
+
+		b.mu.RLock()
+		dialers := b.dialers
+		sessionStats := b.sessionStats
+		b.mu.RUnlock()
+
+		if len(dialers) == 0 {
+			// no dialers yet, ignore
+			return metrics
+		}
+
+		var topSession Dialer
+		topSessionAttempts := int64(-1)
+		var topAllTime Dialer
+		topAllTimeAttempts := int64(-1)
+		for _, dialer := range dialers {
+			ds := sessionStats[dialer.Label()]
+			sessionSuccesses := atomic.LoadInt64(&ds.success)
+			sessionFailures := atomic.LoadInt64(&ds.failure)
+			sessionAttempts := sessionSuccesses + sessionFailures
+			if sessionAttempts > topSessionAttempts {
+				topSession = dialer
+				topSessionAttempts = sessionAttempts
+			}
+			allTimeAttempts := dialer.Attempts()
+			if allTimeAttempts > topAllTimeAttempts {
+				topAllTime = dialer
+				topAllTimeAttempts = allTimeAttempts
+			}
+		}
+
+		setProxy("top_current", dialers[0])
+		setProxy("top_session", topSession)
+		setProxy("top_all_time", topAllTime)
+
+		return metrics
+	})
 }
