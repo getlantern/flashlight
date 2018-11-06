@@ -1,12 +1,22 @@
 # Change Log
 
+## [4.9.1-yinbi](https://github.com/getlantern/flashlight/tree/4.9.1-yinbi) (2018-11-06)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.9.0...4.9.1-yinbi)
+
+**Merged pull requests:**
+
+- \[WIP\] Enable Yinbi on the desktop frontend [\#530](https://github.com/getlantern/flashlight/pull/530) ([hchood](https://github.com/hchood))
+- Updated embedded global.yaml [\#529](https://github.com/getlantern/flashlight/pull/529) ([oxtoacart](https://github.com/oxtoacart))
+- Using domain-fronting if submitting email directly to Mandrill fails [\#528](https://github.com/getlantern/flashlight/pull/528) ([oxtoacart](https://github.com/oxtoacart))
+- Updated to latest lampshade [\#527](https://github.com/getlantern/flashlight/pull/527) ([oxtoacart](https://github.com/oxtoacart))
+
 ## [4.9.0](https://github.com/getlantern/flashlight/tree/4.9.0) (2018-10-24)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.4...4.9.0)
 
 **Merged pull requests:**
 
 - prevent writing after newPipedWriteCloser is closed [\#526](https://github.com/getlantern/flashlight/pull/526) ([joesis](https://github.com/joesis))
-- Remove preconnecting, add multiplexing [\#519](https://github.com/getlantern/flashlight/pull/519) ([oxtoacart](https://github.com/oxtoacart))
+- Rewrite preconnecting, add multiplexing [\#519](https://github.com/getlantern/flashlight/pull/519) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [4.8.4](https://github.com/getlantern/flashlight/tree/4.8.4) (2018-10-19)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.3...4.8.4)
@@ -191,21 +201,21 @@
 - Allowing numbers in optional protocol part of proxy name regex [\#449](https://github.com/getlantern/flashlight/pull/449) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [4.6.14](https://github.com/getlantern/flashlight/tree/4.6.14) (2018-05-06)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.14)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.14)
 
 **Merged pull requests:**
 
 - \[mobile\] Intercept requests to pro server and handle with special http.Client [\#448](https://github.com/getlantern/flashlight/pull/448) ([atavism](https://github.com/atavism))
 - Include a little more info with dial\_for\_balancer op [\#447](https://github.com/getlantern/flashlight/pull/447) ([oxtoacart](https://github.com/oxtoacart))
 
-## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.11)
+## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.13)
 
 ## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.12)
 
-## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.13)
+## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.11)
 
 **Merged pull requests:**
 
