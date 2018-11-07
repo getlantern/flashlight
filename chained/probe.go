@@ -72,7 +72,7 @@ func (p *proxy) Probe(forPerformance bool) bool {
 }
 
 func (p *proxy) httpPing(kb int, resetBBR bool) error {
-	op := ops.Begin("probe").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network())
+	op := ops.Begin("probe").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed)
 	defer op.End()
 
 	// Also include a probe_details op that's sampled but includes details like
