@@ -330,6 +330,7 @@ type proxy struct {
 	name              string
 	protocol          string
 	network           string
+	multiplexed       bool
 	addr              string
 	authToken         string
 	location          config.ServerLocation
@@ -354,14 +355,17 @@ type proxy struct {
 
 func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.UserConfig, trusted bool, allowPreconnecting bool, dialServer dialServerFn, dialOrigin dialOriginFn) (*proxy, error) {
 	addr := s.Addr
+	multiplexed := false
 	if s.MultiplexedAddr != "" {
 		addr = s.MultiplexedAddr
+		multiplexed = true
 	}
 
 	p := &proxy{
 		name:             name,
 		protocol:         protocol,
 		network:          network,
+		multiplexed:      multiplexed,
 		addr:             addr,
 		location:         s.Location,
 		authToken:        s.AuthToken,
@@ -648,7 +652,7 @@ func timeoutFor(ctx context.Context) time.Duration {
 }
 
 func (p *proxy) reportedDial(addr, protocol, network string, dial func(op *ops.Op) (net.Conn, error)) (net.Conn, error) {
-	op := ops.Begin("dial_to_chained").ChainedProxy(p.Name(), addr, protocol, network)
+	op := ops.Begin("dial_to_chained").ChainedProxy(p.Name(), addr, protocol, network, p.multiplexed)
 	defer op.End()
 
 	elapsed := mtime.Stopwatch()
