@@ -15,17 +15,17 @@ var logger = golog.LoggerFor("flashlight.app.pro")
 type userMap struct {
 	sync.RWMutex
 	data        map[int64]eventual.Value
-	onProStatus []func(isPro bool)
+	onProStatus []func(isPro bool, yinbiEnabled bool)
 }
 
 var userData = userMap{
 	data:        make(map[int64]eventual.Value),
-	onProStatus: make([]func(isPro bool), 0),
+	onProStatus: make([]func(isPro bool, yinbiEnabled bool), 0),
 }
 
 // OnProStatusChange allows registering an event handler to learn when the
-// user's pro status has changed.
-func OnProStatusChange(cb func(isPro bool)) {
+// user's pro status or "yinbi enabled" status has changed.
+func OnProStatusChange(cb func(isPro bool, yinbiEnabled bool)) {
 	userData.Lock()
 	userData.onProStatus = append(userData.onProStatus, cb)
 	userData.Unlock()
@@ -42,8 +42,9 @@ func (m *userMap) save(userID int64, u *client.User) {
 	onProStatus := m.onProStatus
 	m.Unlock()
 	isPro := isActive(u.UserStatus)
+	yinbiEnabled := u.YinbiEnabled
 	for _, cb := range onProStatus {
-		cb(isPro)
+		cb(isPro, yinbiEnabled)
 	}
 }
 
