@@ -74,8 +74,9 @@ func (app *App) Init() {
 	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate, common.Staging)
 	app.exited = eventual.NewValue()
 	app.statsTracker = NewStatsTracker()
-	pro.OnProStatusChange(func(isPro bool) {
+	pro.OnProStatusChange(func(isPro bool, yinbiEnabled bool) {
 		app.statsTracker.SetIsPro(isPro)
+		app.statsTracker.SetYinbiEnabled(yinbiEnabled)
 	})
 	settings.OnChange(SNDisconnected, func(disconnected interface{}) {
 		isDisconnected := disconnected.(bool)

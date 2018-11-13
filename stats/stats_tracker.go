@@ -79,6 +79,10 @@ type Tracker interface {
 	// SetIsPro indicates that we're pro
 	SetIsPro(val bool)
 
+	// SetYinbiEnabled indicates that the user is eligible to participate in the
+	// Yinbi giveaway
+	SetYinbiEnabled(val bool)
+
 	// SetAlert indicates that some alert needs user attention. If transient is
 	// true, the alert will be cleared automatically 10 seconds later.
 	SetAlert(alertType AlertType, details string, transient bool)
@@ -99,6 +103,7 @@ type Stats struct {
 	HasSucceedingProxy bool    `json:"hasSucceedingProxy"`
 	HitDataCap         bool    `json:"hitDataCap"`
 	IsPro              bool    `json:"isPro"`
+	YinbiEnabled       bool    `json:"yinbiEnabled"`
 	Status             string  `json:"status"`
 	Alerts             []Alert `json:"alerts"`
 }
@@ -176,6 +181,13 @@ func (t *tracker) SetHitDataCap(val bool) {
 func (t *tracker) SetIsPro(val bool) {
 	t.update(func(stats Stats) Stats {
 		stats.IsPro = val
+		return stats
+	})
+}
+
+func (t *tracker) SetYinbiEnabled(val bool) {
+	t.update(func(stats Stats) Stats {
+		stats.YinbiEnabled = val
 		return stats
 	})
 }

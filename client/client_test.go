@@ -40,6 +40,7 @@ func (m mockStatsTracker) SetDisconnected(val bool)                             
 func (m mockStatsTracker) SetHasSucceedingProxy(val bool)                           {}
 func (m mockStatsTracker) SetHitDataCap(val bool)                                   {}
 func (m mockStatsTracker) SetIsPro(val bool)                                        {}
+func (m mockStatsTracker) SetYinbiEnabled(val bool)                                 {}
 func (m mockStatsTracker) SetAlert(stats.AlertType, string, bool)                   {}
 func (m mockStatsTracker) ClearAlert(stats.AlertType)                               {}
 
