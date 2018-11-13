@@ -27,6 +27,14 @@
   revision = "89c21805c212bcc2f5a0c4ffdadf424cbff1c7c9"
 
 [[projects]]
+  digest = "1:e92f5581902c345eb4ceffdcd4a854fb8f73cf436d47d837d1ec98ef1fe0a214"
+  name = "github.com/StackExchange/wmi"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "5d049714c4a64225c3c79a7cf7d02f7fb5b96338"
+  version = "1.0.0"
+
+[[projects]]
   branch = "master"
   digest = "1:8fa55a6e302771a90a86ceae1ca3c0df4ef15d21092198e8313f61dde9eea963"
   name = "github.com/Yawning/chacha20"
@@ -51,14 +59,6 @@
   packages = ["monotime"]
   pruneopts = "UT"
   revision = "bfd6294e8be0d922f04fadaa00b252228d30e3fd"
-
-[[projects]]
-  branch = "master"
-  digest = "1:9fd3a6ab34bb103ba228eefd044d3f9aa476237ea95a46d12e8cccd3abf3fea2"
-  name = "github.com/armon/go-radix"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "1fca145dffbcaa8fe914309b1ec0cfc67500fe61"
 
 [[projects]]
   branch = "master"
@@ -211,14 +211,6 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "227f729dcb41c2838b53575a48208d0b552ab6e8"
-
-[[projects]]
-  branch = "master"
-  digest = "1:e96cea92d51116be86b83994067f6c51f079135a1283fd47b9ba4d20eacd01e6"
-  name = "github.com/getlantern/easylist"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "42a110754e2c8027797aca3783609d846a8c1b56"
 
 [[projects]]
   branch = "master"
@@ -423,14 +415,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:378316be3e44cb23cfc63a3e1f135652fea19841f2e10209505d3fda70ba0a02"
-  name = "github.com/getlantern/httpseverywhere"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "9bdb93e40695deb035a35f1ef7f2dfd8de7df2df"
-
-[[projects]]
-  branch = "master"
   digest = "1:3717defed6fd92ea69a81f7cc2665fef431bc1db7fc319ee28e90d4faf1f932f"
   name = "github.com/getlantern/i18n"
   packages = ["."]
@@ -511,6 +495,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "c70b16bb4198911c3c876b79f057df09619b2c6b"
+
+[[projects]]
+  branch = "master"
+  digest = "1:024816cb85e8a561527e724976181db4a28dd95bace8b042400e0bf8002dfef1"
+  name = "github.com/getlantern/memhelper"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "777ea7552231e36d5faac8dcb950a0527809b164"
 
 [[projects]]
   branch = "master"
@@ -730,14 +722,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:02df7b0ecddcbe1b2a6dc81954d10b5a5e6e55f2a5158b3460085b12db8b6785"
-  name = "github.com/getlantern/urlcache"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "82187dd97f50f0ae304317ef18f36d67f81f5a83"
-
-[[projects]]
-  branch = "master"
   digest = "1:9072181164e616e422cbfbe48ca9ac249a4d76301ca0876c9f56b937cf214a2f"
   name = "github.com/getlantern/uuid"
   packages = ["."]
@@ -808,6 +792,17 @@
   ]
   pruneopts = "UT"
   revision = "44cc8585533a2bb441dc5862ffae6ccb9f25f487"
+
+[[projects]]
+  digest = "1:64a5a67c69b70c2420e607a8545d674a23778ed9c3e80607bfd17b77c6c87f6a"
+  name = "github.com/go-ole/go-ole"
+  packages = [
+    ".",
+    "oleutil",
+  ]
+  pruneopts = "UT"
+  revision = "a41e3c4b706f6ae8dfbff342b06e40fa4d2d0506"
+  version = "v1.2.1"
 
 [[projects]]
   digest = "1:586ea76dbd0374d6fb649a91d70d652b7fe0ccffb8910a77468e7702e7901f3d"
@@ -1080,14 +1075,6 @@
   revision = "816c9085562cd7ee03e7f8188a1cfd942858cded"
 
 [[projects]]
-  branch = "master"
-  digest = "1:0c8c777abf111a0cc92174ad2a259f3adc904997acbaf7f0eb13286eb539fdfd"
-  name = "github.com/pmezard/adblock"
-  packages = ["adblock"]
-  pruneopts = "UT"
-  revision = "edfb97ad89cd57ae8675175539a55aceaf2a05d3"
-
-[[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
@@ -1105,6 +1092,29 @@
   ]
   pruneopts = "UT"
   revision = "e0edd7863bd2c52945332a16219a8673d93884fb"
+
+[[projects]]
+  digest = "1:946db283b5540b64c60e7517b5afa54dc148b4672d69b38423a1c8d7fe24f3d1"
+  name = "github.com/shirou/gopsutil"
+  packages = [
+    "cpu",
+    "host",
+    "internal/common",
+    "mem",
+    "net",
+    "process",
+  ]
+  pruneopts = "UT"
+  revision = "3ec50d2876a36047b2ca39f955ba88fb7a455e92"
+  version = "v2.18.10"
+
+[[projects]]
+  branch = "master"
+  digest = "1:99c6a6dab47067c9b898e8c8b13d130c6ab4ffbcc4b7cc6236c2cd0b1e344f5b"
+  name = "github.com/shirou/w32"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "bb4de0191aa41b5507caa14b0650cdbddcd9280b"
 
 [[projects]]
   digest = "1:9e9193aa51197513b3abcb108970d831fbcf40ef96aa845c4f03276e1fa316d2"
@@ -1243,14 +1253,15 @@
   revision = "db08ff08e8622530d9ed3a0e8ac279f6d4c02196"
 
 [[projects]]
-  digest = "1:4eb196f937ca6319f4095e0373b346aeeb4e3377e0200e7bb51daac0b5ec964c"
+  branch = "master"
+  digest = "1:6a875550c3b582f6c2d7e2ce44aba792511f00016d7c46b0a4fb26f730ef3058"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "3b87a42e500a6dc65dae1a55d0b641295971163e"
+  revision = "66b7b1311ac80bbafcd2daeef9a5e6e2cd1e2399"
 
 [[projects]]
   digest = "1:631ef6715072ab603861df0d7cf0313f85d8b5491c93f8ad0e6f7cbc55d19482"
@@ -1362,7 +1373,6 @@
     "github.com/getlantern/cmux",
     "github.com/getlantern/detour",
     "github.com/getlantern/dnsgrab",
-    "github.com/getlantern/easylist",
     "github.com/getlantern/ema",
     "github.com/getlantern/enhttp",
     "github.com/getlantern/errors",
@@ -1375,7 +1385,6 @@
     "github.com/getlantern/golog",
     "github.com/getlantern/hidden",
     "github.com/getlantern/http-proxy-lantern",
-    "github.com/getlantern/httpseverywhere",
     "github.com/getlantern/i18n",
     "github.com/getlantern/idletiming",
     "github.com/getlantern/iptool",
@@ -1385,6 +1394,7 @@
     "github.com/getlantern/lampshade",
     "github.com/getlantern/launcher",
     "github.com/getlantern/measured",
+    "github.com/getlantern/memhelper",
     "github.com/getlantern/mitm",
     "github.com/getlantern/mockconn",
     "github.com/getlantern/mtime",
