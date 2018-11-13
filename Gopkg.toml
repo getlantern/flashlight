@@ -51,10 +51,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/getlantern/dnsgrab"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/getlantern/ema"
 
 [[constraint]]

@@ -4,7 +4,6 @@ package android
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"sync"
@@ -13,7 +12,6 @@ import (
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/autoupdate"
 	"github.com/getlantern/bandwidth"
-	"github.com/getlantern/dnsgrab"
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
@@ -27,10 +25,6 @@ import (
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/protected"
-)
-
-const (
-	maxDNSGrabCache = 10000
 )
 
 var (
@@ -270,20 +264,6 @@ func run(configDir, locale string,
 
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
-	grabber, err := dnsgrab.Listen(maxDNSGrabCache,
-		":8153",
-		session.GetDNSServer())
-	if err != nil {
-		log.Errorf("Unable to start dnsgrab: %v", err)
-		return
-	}
-	go func() {
-		serveErr := grabber.Serve()
-		if serveErr != nil {
-			log.Errorf("Error serving dns: %v", serveErr)
-		}
-	}()
-
 	httpProxyAddr := fmt.Sprintf("%s:%d",
 		settings.GetHttpProxyHost(),
 		settings.GetHttpProxyPort())
@@ -320,26 +300,7 @@ func run(configDir, locale string,
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
 		func() bool { return settings.EnableAdBlocking() && !session.IsPlayVersion() },
-		func(addr string) string {
-			host, port, splitErr := net.SplitHostPort(addr)
-			if splitErr != nil {
-				host = addr
-			}
-			ip := net.ParseIP(host)
-			if ip == nil {
-				log.Debugf("Unable to parse IP %v, passing through address as is", host)
-				return host
-			}
-			updatedHost := grabber.ReverseLookup(ip)
-			if updatedHost == "" {
-				log.Debugf("Unable to reverse lookup %v, passing through (this shouldn't happen much)", ip)
-				return addr
-			}
-			if splitErr != nil {
-				return updatedHost
-			}
-			return fmt.Sprintf("%v:%v", updatedHost, port)
-		},
+		func(addr string) string { return addr }, // no dnsgrab reverse lookups on mobile at the moment either
 	)
 }
 

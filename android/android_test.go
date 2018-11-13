@@ -1,11 +1,9 @@
 package android
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"net/url"
 	"testing"
@@ -86,25 +84,6 @@ func TestProxying(t *testing.T) {
 
 func testProxiedRequest(helper *integrationtest.Helper, proxyAddr string, socks bool) error {
 	host := helper.HTTPServerAddr
-	if socks {
-		resolver := &net.Resolver{
-			PreferGo: true,
-			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
-				// use dnsgrabber to resolve
-				return net.DialTimeout("udp", "127.0.0.1:8153", 2*time.Second)
-			},
-		}
-		resolved, err := resolver.LookupHost(context.Background(), host)
-		log.Debugf("resolved %v to %v: %v", host, resolved, err)
-		for _, addr := range resolved {
-			ip := net.ParseIP(addr).To4()
-			if ip != nil {
-				log.Debugf("Using resolved IPv4 address: %v", addr)
-				host = addr
-				break
-			}
-		}
-	}
 	hostWithPort := fmt.Sprintf("%v:80", host)
 
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%v/humans.txt", host), nil)
