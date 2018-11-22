@@ -122,7 +122,11 @@ func runApp(a *desktop.App) {
 
 func i18nInit(a *desktop.App) {
 	i18n.SetMessagesFunc(func(filename string) ([]byte, error) {
-		return a.GetTranslations(filename)
+		b, err := a.GetTranslations(filename)
+		if err != nil {
+			log.Debugf("Error getting %s: %v", filename, err)
+		}
+		return b, err
 	})
 	locale := a.GetLanguage()
 	if err := i18n.SetLocale(locale); err != nil {
