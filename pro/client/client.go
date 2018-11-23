@@ -29,6 +29,13 @@ var (
 	ErrAPIUnavailable = errors.New("API unavailable.")
 )
 
+type Response struct {
+	Status  string `json:"status"`
+	Error   string `json:"error"`
+	ErrorId string `json:"errorId"`
+	User    `json:",inline"`
+}
+
 type Client struct {
 	httpClient *http.Client
 	locale     string
