@@ -47,8 +47,7 @@ func servePro(channel ws.UIChannel) error {
 				logger.Errorf("Could not create new Pro user: %v", err)
 				retry.Reset(retryInterval)
 			} else {
-				settings.SetUserID(user.Auth.ID)
-				settings.SetToken(user.Auth.Token)
+				settings.SetUserIDAndToken(user.Auth.ID, user.Auth.Token)
 			}
 		} else {
 			_, err := pro.FetchUserData(settings)

@@ -27,7 +27,7 @@ func TestGetInt64Eventually(t *testing.T) {
 		}
 	}()
 
-	s.SetUserID(77)
+	s.SetUserIDAndToken(77, "token")
 	time.Sleep(100 * time.Millisecond)
 
 	assert.Equal(t, int64(77), aid.Load().(int64))
@@ -35,29 +35,6 @@ func TestGetInt64Eventually(t *testing.T) {
 	uid, err := s.GetInt64Eventually(SNUserID)
 	assert.NoError(t, err)
 	assert.Equal(t, int64(77), uid)
-}
-
-func TestGetStringEventually(t *testing.T) {
-	s := loadTemp()
-	id := s.GetToken()
-	assert.Equal(t, "", id)
-
-	var aid atomic.Value
-	go func() {
-		uid, err := s.GetStringEventually(SNUserToken)
-		if err == nil {
-			aid.Store(uid)
-		}
-	}()
-
-	s.SetToken("77")
-	time.Sleep(100 * time.Millisecond)
-
-	assert.Equal(t, "77", aid.Load().(string))
-
-	uid, err := s.GetStringEventually(SNUserToken)
-	assert.NoError(t, err)
-	assert.Equal(t, "77", uid)
 }
 
 func loadTemp() *Settings {
@@ -196,12 +173,12 @@ func TestPersistAndLoad(t *testing.T) {
 	assert.Equal(t, int64(1), set.GetUserID(), "Should load user id from file")
 
 	set.SetLanguage("leet")
-	set.SetUserID(1234)
+	set.SetUserIDAndToken(1234, "token")
 	set2 := loadSettingsFrom(version, revisionDate, buildDate, yamlFile)
 	assert.Equal(t, "leet", set2.GetLanguage(), "Should save language to file and reload")
 	assert.Equal(t, int64(1234), set2.GetUserID(), "Should save user id to file and reload")
 	set2.SetLanguage("en")
-	set2.SetUserID(1)
+	set2.SetUserIDAndToken(1, "token")
 }
 
 func TestLoadLowerCased(t *testing.T) {
