@@ -5,8 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/flashlight/common"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/pro/client"
 )
 
 func TestUsers(t *testing.T) {
@@ -44,9 +46,24 @@ func TestUsers(t *testing.T) {
 		user8 := userData.wait(waitUser)
 		userRef.Store(user8)
 	}()
+	var changed int
+	var userDataSaved int
+	OnUserData(func(*client.User, *client.User) {
+		userDataSaved += 1
+	})
+
+	OnProStatusChange(func(bool, bool) {
+		changed += 1
+	})
 
 	userData.save(waitUser, u)
+	assert.Equal(t, 1, userDataSaved, "OnUserData should be called")
+	assert.Equal(t, 1, changed, "OnProStatusChange should be called")
 	time.Sleep(100 * time.Millisecond)
+	assert.NotNil(t, userRef.Load(), "wait should have succeeded")
 
-	assert.NotNil(t, userRef.Load())
+	userData.save(waitUser, u)
+	assert.Equal(t, 2, userDataSaved, "OnUserData should be called after each saving")
+	assert.Equal(t, 1, changed, "OnProStatusChange should not be called again if nothing changes")
+
 }

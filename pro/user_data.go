@@ -14,37 +14,51 @@ var logger = golog.LoggerFor("flashlight.app.pro")
 
 type userMap struct {
 	sync.RWMutex
-	data        map[int64]eventual.Value
-	onProStatus []func(isPro bool, yinbiEnabled bool)
+	data       map[int64]eventual.Value
+	onUserData []func(current *client.User, new *client.User)
 }
 
 var userData = userMap{
-	data:        make(map[int64]eventual.Value),
-	onProStatus: make([]func(isPro bool, yinbiEnabled bool), 0),
+	data:       make(map[int64]eventual.Value),
+	onUserData: make([]func(current *client.User, new *client.User), 0),
+}
+
+// OnUserData allows registering an event handler to learn when the
+// user data has been fetched.
+func OnUserData(cb func(current *client.User, new *client.User)) {
+	userData.Lock()
+	userData.onUserData = append(userData.onUserData, cb)
+	userData.Unlock()
 }
 
 // OnProStatusChange allows registering an event handler to learn when the
 // user's pro status or "yinbi enabled" status has changed.
 func OnProStatusChange(cb func(isPro bool, yinbiEnabled bool)) {
-	userData.Lock()
-	userData.onProStatus = append(userData.onProStatus, cb)
-	userData.Unlock()
+	OnUserData(func(current *client.User, new *client.User) {
+		if current == nil ||
+			isActive(current.UserStatus) != isActive(new.UserStatus) ||
+			current.YinbiEnabled != new.YinbiEnabled {
+			cb(isActive(new.UserStatus), new.YinbiEnabled)
+		}
+	})
 }
 
 func (m *userMap) save(userID int64, u *client.User) {
 	m.Lock()
 	v := m.data[userID]
+	var current *client.User
 	if v == nil {
 		v = eventual.NewValue()
+	} else {
+		cur, _ := v.Get(0)
+		current, _ = cur.(*client.User)
 	}
 	v.Set(u)
 	m.data[userID] = v
-	onProStatus := m.onProStatus
+	onUserData := m.onUserData
 	m.Unlock()
-	isPro := isActive(u.UserStatus)
-	yinbiEnabled := u.YinbiEnabled
-	for _, cb := range onProStatus {
-		cb(isPro, yinbiEnabled)
+	for _, cb := range onUserData {
+		cb(current, u)
 	}
 }
 
