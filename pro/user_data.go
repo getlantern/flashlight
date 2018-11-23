@@ -149,7 +149,7 @@ func getUserDataWithClient(uc common.UserConfig, hc *http.Client) (*client.User,
 	}
 	logger.Debugf("Fetching user status with device ID '%v', user ID '%v' and proToken %v", uc.GetDeviceID(), userID, uc.GetToken())
 
-	resp, err := client.NewClient(hc).UserStatus(uc)
+	resp, err := client.NewClient(hc).UserData(uc)
 	if err != nil {
 		return nil, err
 	}
