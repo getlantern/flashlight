@@ -76,25 +76,17 @@ func (m *userMap) get(userID int64) (*client.User, bool) {
 	return u.(*client.User), true
 }
 
-func (m *userMap) wait(userID int64) *client.User {
-	m.Lock()
-	v := m.data[userID]
-	if v == nil {
-		v = eventual.NewValue()
-		m.data[userID] = v
-	}
-	m.Unlock()
-	u, _ := v.Get(-1)
-	return u.(*client.User)
-}
-
 // IsProUser indicates whether or not the user is pro, calling the Pro API if
 // necessary to determine the status.
 func IsProUser(uc common.UserConfig) (isPro bool, statusKnown bool) {
-	user, err := GetUserData(uc)
-	if err != nil {
-		log.Debugf("Got error fetching pro user: %v", err)
-		return false, false
+	user, found := GetUserDataFast(uc.GetUserID())
+	if !found {
+		var err error
+		user, err = fetchUserDataWithClient(uc, httpClient)
+		if err != nil {
+			log.Debugf("Got error fetching pro user: %v", err)
+			return false, false
+		}
 	}
 	return isActive(user.UserStatus), true
 }
@@ -119,13 +111,7 @@ func GetUserDataFast(userID int64) (*client.User, bool) {
 	return userData.get(userID)
 }
 
-// WaitForUserData blocks itself to get the user data for the given userID
-// until it's available.
-func WaitForUserData(userID int64) *client.User {
-	return userData.wait(userID)
-}
-
-//NewUser creates a new user via Pro API, and updates local cache.
+// NewUser creates a new user via Pro API, and updates local cache.
 func NewUser(uc common.UserConfig) (*client.User, error) {
 	return newUserWithClient(uc, httpClient)
 }
@@ -147,20 +133,13 @@ func newUserWithClient(uc common.UserConfig, hc *http.Client) (*client.User, err
 	return &resp.User, nil
 }
 
-//GetUserData retrieves local cache first. If the data for the userID is not
-//there, fetches from Pro API, and updates local cache.
-func GetUserData(uc common.UserConfig) (*client.User, error) {
-	return getUserDataWithClient(uc, httpClient)
+// FetchUserData fetches user data from Pro API, and updates local cache.
+func FetchUserData(uc common.UserConfig) (*client.User, error) {
+	return fetchUserDataWithClient(uc, httpClient)
 }
 
-//getUserDataWithClient retrieves local cache first. If the data for the userID is not
-//there, fetches from Pro API, and updates local cache.
-func getUserDataWithClient(uc common.UserConfig, hc *http.Client) (*client.User, error) {
+func fetchUserDataWithClient(uc common.UserConfig, hc *http.Client) (*client.User, error) {
 	userID := uc.GetUserID()
-	user, found := GetUserDataFast(userID)
-	if found {
-		return user, nil
-	}
 	logger.Debugf("Fetching user status with device ID '%v', user ID '%v' and proToken %v", uc.GetDeviceID(), userID, uc.GetToken())
 
 	resp, err := client.NewClient(hc).UserData(uc)
