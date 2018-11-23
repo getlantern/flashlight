@@ -29,7 +29,8 @@ func isProUserFast() (isPro bool, statusKnown bool) {
 	return pro.IsProUserFast(settings)
 }
 
-// servePro fetches user data or creates new user, and serves user data to all
+// servePro fetches user data or creates new user when the application starts
+// up or a new WebSocket client is connected, and serves user data to all
 // connected WebSocket clients via the "pro" channel.
 // It loops forever in 10 seconds interval until the user is fetched or
 // created, as it's fundamental for the UI to work.
