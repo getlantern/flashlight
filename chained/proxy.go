@@ -286,16 +286,14 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 
 func newQUICProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 
-	dial := func(unusedCtx context.Context, p *proxy) (serverConn, error) {
-		return lazyServerConn(func(ctx context.Context) (serverConn, error) {
-			return p.reportedDial(s.Addr, "quic", "udp", func(op *ops.Op) (net.Conn, error) {
-				conn, err := p.dialCore(op)(ctx)
-				return overheadWrapper(true)(conn, err)
-			})
-		}), nil
+	dialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
+		return p.reportedDial(s.Addr, "quic", "udp", func(op *ops.Op) (net.Conn, error) {
+			conn, err := p.dialCore(op)(ctx)
+			return overheadWrapper(true)(conn, err)
+		})
 	}
 
-	return newProxy(name, "quic", "udp", s.Addr, s, uc, s.Trusted, dial)
+	return newProxy(name, "quic", "udp", s, uc, s.Trusted, false, dialServer, defaultDialOrigin)
 }
 
 // consecCounter is a counter that can extend on both directions. Its default
@@ -512,10 +510,9 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 	maxStreamsPerConn := s.ptSettingInt("streams")
 
 	quicConf := &quicwrapper.Config{
-		RequestConnectionIDOmission: true,
-		IdleTimeout:                 IdleTimeout,
-		MaxIncomingStreams:          maxStreamsPerConn,
-		KeepAlive:                   true,
+		IdleTimeout:        IdleTimeout,
+		MaxIncomingStreams: maxStreamsPerConn,
+		KeepAlive:          true,
 	}
 
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
@@ -566,15 +563,12 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 		dialerLock.Unlock()
 
 		var conn net.Conn
-		qconn, err := dialer.DialContext(ctx)
-		if err == nil {
-			log.Debug("Wrapping QUIC connection with idletiming")
-			conn = idletiming.Conn(qconn, IdleTimeout*2, func() {
-				log.Debug("QUIC connection idled")
-			})
-		} else {
+		conn, err := dialer.DialContext(ctx)
+		if err != nil {
 			log.Debugf("Failed to establish multiplexed connection: %s", err)
 			p.ForceRedial()
+		} else {
+			log.Debug("established new multiplexed quic connection.")
 		}
 
 		delta := elapsed()

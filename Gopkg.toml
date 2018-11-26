@@ -187,10 +187,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/getlantern/quicwrapper"
- 
-[[constraint]]
-  branch = "master"
   name = "github.com/getlantern/rot13"
 
 [[constraint]]
@@ -282,8 +278,17 @@
   branch = "master"
 
 [[override]]
-  name = "github.com/getlantern/quic-go"
-  branch = "master"
+  name = "github.com/getlantern/quicwrapper"
+  branch = "adjust_errors"
+
+[[override]]
+  name = "github.com/lucas-clemente/quic-go"
+  branch = "logging_hacks"
+  source = "https://github.com/getlantern/quic-go"
+
+[[override]]
+  name = "github.com/marten-seemann/qtls"
+  branch = "qtls"
 
 [prune]
   go-tests = true

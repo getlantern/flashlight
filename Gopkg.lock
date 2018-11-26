@@ -44,17 +44,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e05c7b72aeba7570b1d2f9c6dc9f0373d224b16b70fa886c504de867bffe1c2e"
-  name = "github.com/aead/chacha20"
-  packages = [
-    ".",
-    "chacha",
-  ]
-  pruneopts = "UT"
-  revision = "8b13a72661dae6e9e5dea04f344f0dc95ea29547"
-
-[[projects]]
-  branch = "master"
   digest = "1:5699a1540433914320cef63d1afc814e0632c8e7ec5954c37b0fc07a614bf149"
   name = "github.com/agl/ed25519"
   packages = [
@@ -78,17 +67,6 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "1fca145dffbcaa8fe914309b1ec0cfc67500fe61"
-
-[[projects]]
-  branch = "master"
-  digest = "1:1f96c755246f1b688f1b2f0d2ba6cff5a94ceb35a7c5d06f7489e5e348ce356d"
-  name = "github.com/bifurcation/mint"
-  packages = [
-    ".",
-    "syntax",
-  ]
-  pruneopts = "UT"
-  revision = "93c51c6ce11597a26e246fc33a301d62d3439cd2"
 
 [[projects]]
   branch = "master"
@@ -681,31 +659,12 @@
   revision = "2acfa62efd1269ecb4b075f096e7956bfec53023"
 
 [[projects]]
-  branch = "master"
-  digest = "1:2307bd62adaa4e7e68ad432b3fb5f458546f32506fefe619bd467183a1c6da8a"
-  name = "github.com/getlantern/quic-go"
-  packages = [
-    ".",
-    "internal/ackhandler",
-    "internal/congestion",
-    "internal/crypto",
-    "internal/flowcontrol",
-    "internal/handshake",
-    "internal/protocol",
-    "internal/utils",
-    "internal/wire",
-    "qerr",
-  ]
-  pruneopts = "UT"
-  revision = "ff3dd4ac7113ca9ffde47484ad431440c2cb939d"
-
-[[projects]]
-  branch = "master"
-  digest = "1:259ff2e7638cfec25f6f03f703115fca959d6d9eb4cfd233bc261bbcf67b6abb"
+  branch = "adjust_errors"
+  digest = "1:f74bfbcb23dacebc2ae7466f44c9302f1612bdac796eee56ed848345791a9ab2"
   name = "github.com/getlantern/quicwrapper"
   packages = ["."]
   pruneopts = "UT"
-  revision = "3c9b1064abd19556879b6376a41f634b97d34c59"
+  revision = "73720ee417aed9b08aad756b9e88dd5ac337f641"
 
 [[projects]]
   branch = "master"
@@ -1053,20 +1012,24 @@
   revision = "3035450ff8b987ec4373f65c40767f096b35f2d2"
 
 [[projects]]
-  branch = "master"
-  digest = "1:6fe6fc7707d8c37fb305362a324462d898bc1c01eaa2bfe15383ec21f6540c71"
-  name = "github.com/lucas-clemente/aes12"
-  packages = ["."]
+  branch = "logging_hacks"
+  digest = "1:cf0672800344eda8ecba017b7249ddf415e76d156ed4bca7daa8d331b5d040e2"
+  name = "github.com/lucas-clemente/quic-go"
+  packages = [
+    ".",
+    "internal/ackhandler",
+    "internal/congestion",
+    "internal/crypto",
+    "internal/flowcontrol",
+    "internal/handshake",
+    "internal/protocol",
+    "internal/qerr",
+    "internal/utils",
+    "internal/wire",
+  ]
   pruneopts = "UT"
-  revision = "cd47fb39b79f867c6e4e5cd39cf7abd799f71670"
-
-[[projects]]
-  branch = "master"
-  digest = "1:08b3484b0665f09be0f1f699a38e877708453795df07a3d6e4cd41fa7a2cabf0"
-  name = "github.com/lucas-clemente/quic-go-certificates"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "d2f86524cced5186554df90d92529757d22c1cb6"
+  revision = "74078857dd65b1b6bb843a01c86b5eee0e6df5c7"
+  source = "https://github.com/getlantern/quic-go"
 
 [[projects]]
   digest = "1:edc06cd757463855201296ea10ef945e63485c8fa2a0418061cfcbb831f6e220"
@@ -1074,6 +1037,14 @@
   packages = ["forward"]
   pruneopts = "UT"
   revision = "3a0f6c4b456b7376a5b148e69e97f93f6366b613"
+
+[[projects]]
+  branch = "qtls"
+  digest = "1:d9fa8e4b5feb3ef4198bf0d1047cddea06c69937e0b4e9e50ee7b2545c58a517"
+  name = "github.com/marten-seemann/qtls"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "c50a91d48284ab31c39389e64f7c57e475bb0633"
 
 [[projects]]
   branch = "master"
@@ -1375,10 +1346,9 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d2b400b70ce4782420c9509c939dcad15b7e0e63684640c3272657f019ca6b9e"
+  digest = "1:4d2869b8df54b3a687c426758d0891720e8bedfa6ff5d472671ce1d31d29bdfb"
   name = "golang.org/x/sys"
   packages = [
-    "cpu",
     "unix",
     "windows",
   ]
