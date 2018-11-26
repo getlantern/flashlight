@@ -44,7 +44,7 @@ func (p *proxy) Probe(forPerformance bool) bool {
 		// not probing for performance, just do a small ping
 		err := p.httpPing(1, false)
 		if err != nil {
-			log.Errorf("Error probing %v: %v", p.Label(), err)
+			log.Errorf("Error probing %v after %v: %v", p.Label(), elapsed(), err)
 			p.MarkFailure()
 			return logResult(false, 1)
 		}
@@ -62,7 +62,7 @@ func (p *proxy) Probe(forPerformance bool) bool {
 		// after the probe.
 		err := p.httpPing(kb, i == 0)
 		if err != nil {
-			log.Errorf("Error probing %v for performance: %v", p.Label(), err)
+			log.Errorf("Error probing %v for performance after %v: %v", p.Label(), elapsed(), err)
 			return logResult(false, kb)
 		}
 		// Sleep just a little to allow interleaving of pings for different proxies
@@ -72,7 +72,7 @@ func (p *proxy) Probe(forPerformance bool) bool {
 }
 
 func (p *proxy) httpPing(kb int, resetBBR bool) error {
-	op := ops.Begin("probe").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network())
+	op := ops.Begin("probe").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed)
 	defer op.End()
 
 	// Also include a probe_details op that's sampled but includes details like
@@ -112,23 +112,9 @@ func (p *proxy) doHttpPing(kb int, resetBBR bool) error {
 	_, _, err := withtimeout.Do(30*time.Second, func() (interface{}, error) {
 		var dialEnd time.Time
 		dial := func(ctx context.Context, network, addr string) (net.Conn, error) {
-			tk := time.NewTicker(time.Second)
-			for {
-				pd := p.Preconnected()
-				if pd != nil {
-					tk.Stop()
-					pc, _, err := pd.DialContext(ctx, network, addr)
-					dialEnd = time.Now()
-					return pc, err
-				}
-				select {
-				case <-ctx.Done():
-					tk.Stop()
-					return nil, ctx.Err()
-				case <-tk.C:
-					continue
-				}
-			}
+			pc, _, err := p.DialContext(ctx, network, addr)
+			dialEnd = time.Now()
+			return pc, err
 		}
 
 		rt := &http.Transport{
@@ -143,7 +129,9 @@ func (p *proxy) doHttpPing(kb int, resetBBR bool) error {
 		}
 		// Note that it is updated before reading the body in hope to measure
 		// more accurate RTT on the wire.
-		p.updateEstRTT(time.Since(dialEnd))
+		rtt := time.Since(dialEnd)
+		p.updateEstRTT(rtt)
+		log.Debugf("%v RTT from Probe: %v", p.Label(), rtt)
 		if resp.Body != nil {
 			// Read the body to include this in our timing.
 			defer resp.Body.Close()

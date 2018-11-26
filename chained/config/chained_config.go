@@ -27,9 +27,6 @@ type ChainedServerInfo struct {
 	// Trusted: Determines if a host can be trusted with plain HTTP traffic.
 	Trusted bool
 
-	// InitPreconnect: how much to preconnect on startup
-	InitPreconnect int
-
 	// MaxPreconnect: the maximum number of preconnections to keep
 	MaxPreconnect int
 
@@ -77,4 +74,12 @@ type ChainedServerInfo struct {
 
 	// Location: the location where the server resides.
 	Location ServerLocation
+
+	// MultiplexedAddr: a host:port at which this server is reachable using cmux-
+	// based multiplexing.
+	MultiplexedAddr string
+
+	// MultiplexedPhysicalConns controls how many physical connections to use
+	// under the multiplexing. This defaults to 1.
+	MultiplexedPhysicalConns int
 }

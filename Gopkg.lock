@@ -182,11 +182,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:54d414482fb70eaccdd6e6fca023986b16ab3004e5b499b6bc3667d89574fc07"
+  digest = "1:c3c09c0f941175181747b2d6948fd1add3ba82e66215aae78ec9b44d97d8ed40"
   name = "github.com/getlantern/context"
   packages = ["."]
   pruneopts = "UT"
-  revision = "624d99b1798d7c5375ea1d3ca4c5b04d58f7c775"
+  revision = "539649cc311886ee3604204cfab46f72b5f40950"
 
 [[projects]]
   branch = "master"
@@ -490,11 +490,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:0a264481214c4e7e292520d28bb482f4fadd72ce7aeae52e6a57d8b6793a9898"
+  digest = "1:7b753a58505179be72fe557381d83a17719487952ee2a6306c2cc78f81fc363d"
   name = "github.com/getlantern/lampshade"
   packages = ["."]
   pruneopts = "UT"
-  revision = "3477e2207d12602f0714ff5da89876374b09ebff"
+  revision = "44db2076fd5bf00175d91088b7679a4a310b9bfa"
 
 [[projects]]
   branch = "master"
@@ -628,11 +628,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:bc99722a97f9706403d25fb024eadc9e20900601c956819380aae42712d17705"
+  digest = "1:b16c53abe18b43736d912a289d53598dce9318ee74c6c0e6ae43bbd9fba99640"
   name = "github.com/getlantern/proxybench"
   packages = ["."]
   pruneopts = "UT"
-  revision = "151919a064d2b2e227dd785d05a8c0af3032ef72"
+  revision = "2acfa62efd1269ecb4b075f096e7956bfec53023"
 
 [[projects]]
   branch = "master"
@@ -1359,6 +1359,7 @@
     "github.com/getlantern/autoupdate",
     "github.com/getlantern/bandwidth",
     "github.com/getlantern/borda/client",
+    "github.com/getlantern/cmux",
     "github.com/getlantern/detour",
     "github.com/getlantern/dnsgrab",
     "github.com/getlantern/easylist",

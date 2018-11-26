@@ -18,6 +18,7 @@ type User struct {
 	Code          string   `json:"code"`
 	ExpireAt      int64    `json:"expireAt"`
 	Referral      string   `json:"referral"`
+	YinbiEnabled  bool     `json:"yinbiEnabled"`
 	Auth          `json:",inline"`
 }
 

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -14,6 +15,8 @@ import (
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
+	pops "github.com/getlantern/ops"
+	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ops"
@@ -27,9 +30,11 @@ var (
 	MandrillAPIKey = "fmYlUdjEpGGonI4NDx9xeA"
 
 	defaultRecipient string
+	httpClient       = &http.Client{}
 	mu               sync.RWMutex
 )
 
+// SetDefaultRecipient configures the email address that will receive emails
 func SetDefaultRecipient(address string) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -40,6 +45,19 @@ func getDefaultRecipient() string {
 	mu.RLock()
 	defer mu.RUnlock()
 	return defaultRecipient
+}
+
+// SetHTTPClient configures an alternate http.Client to use when sending emails
+func SetHTTPClient(client *http.Client) {
+	mu.Lock()
+	defer mu.Unlock()
+	httpClient = client
+}
+
+func getHTTPClient() *http.Client {
+	mu.RLock()
+	defer mu.RUnlock()
+	return httpClient
 }
 
 // Message is a templatized email message
@@ -99,6 +117,7 @@ func Send(msg *Message) error {
 
 func sendTemplate(msg *Message) error {
 	client := mandrill.ClientWithKey(MandrillAPIKey)
+	client.HTTPClient = getHTTPClient()
 	recipient := msg.To
 	if recipient == "" {
 		recipient = getDefaultRecipient()
@@ -121,6 +140,7 @@ func sendTemplate(msg *Message) error {
 			Name:    prefix(msg) + "_settings.yaml",
 			Content: base64.StdEncoding.EncodeToString(msg.SettingsData),
 		})
+		attachOpsCtx(msg, mmsg)
 	}
 	if msg.MaxLogSize != "" {
 		if size, err := util.ParseFileSize(msg.MaxLogSize); err != nil {
@@ -173,4 +193,25 @@ func prefix(msg *Message) string {
 	s = prepend(msg.Vars["os"], s)
 	s = prepend(msg.Vars["version"], s)
 	return s
+}
+
+func attachOpsCtx(msg *Message, mmsg *mandrill.Message) {
+	defer func() {
+		p := recover()
+		if p != nil {
+			log.Errorf("Panicked while trying to attach ops context to mandrill message, continuing with submission: %v", p)
+		}
+	}()
+
+	opsCtx := pops.AsMap(nil, true)
+	opsCtxYAML, err := yaml.Marshal(opsCtx)
+	if err != nil {
+		log.Errorf("Unable to marshal global ops context to JSON: %v", err)
+	} else {
+		mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
+			Type:    "application/x-yaml",
+			Name:    prefix(msg) + "_context.yaml",
+			Content: base64.StdEncoding.EncodeToString(opsCtxYAML),
+		})
+	}
 }

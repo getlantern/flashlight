@@ -40,6 +40,7 @@ func (m mockStatsTracker) SetDisconnected(val bool)                             
 func (m mockStatsTracker) SetHasSucceedingProxy(val bool)                           {}
 func (m mockStatsTracker) SetHitDataCap(val bool)                                   {}
 func (m mockStatsTracker) SetIsPro(val bool)                                        {}
+func (m mockStatsTracker) SetYinbiEnabled(val bool)                                 {}
 func (m mockStatsTracker) SetAlert(stats.AlertType, string, bool)                   {}
 func (m mockStatsTracker) ClearAlert(stats.AlertType)                               {}
 
@@ -310,13 +311,6 @@ func (d *testDialer) NumPreconnecting() int {
 
 func (d *testDialer) NumPreconnected() int {
 	return 0
-}
-
-func (d *testDialer) Preconnect() {
-}
-
-func (d *testDialer) Preconnected() balancer.ProxyConnection {
-	return d
 }
 
 func (d *testDialer) Dial(network, addr string) (net.Conn, error) {

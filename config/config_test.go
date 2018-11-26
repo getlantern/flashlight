@@ -103,7 +103,7 @@ func TestEmbedded(t *testing.T) {
 		assert.Nil(t, err)
 
 		proxies := pr.(map[string]*chained.ChainedServerInfo)
-		assert.Equal(t, 6, len(proxies))
+		assert.Equal(t, 8, len(proxies))
 		for _, val := range proxies {
 			assert.True(t, val != nil)
 			assert.True(t, len(val.Addr) > 6)
