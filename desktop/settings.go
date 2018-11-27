@@ -437,7 +437,7 @@ func (s *Settings) GetDeviceID() string {
 
 // SetUserIDAndToken sets the user ID and token atomically
 func (s *Settings) SetUserIDAndToken(id int64, token string) {
-	s.setVals([]SettingName{SNUserID, SNUserToken}, []interface{}{id, token})
+	s.setVals(map[SettingName]interface{}{SNUserID: id, SNUserToken: token})
 }
 
 // GetUserID returns the user ID
@@ -528,20 +528,20 @@ func (s *Settings) getVal(name SettingName) (interface{}, error) {
 }
 
 func (s *Settings) setVal(name SettingName, val interface{}) {
-	s.setVals([]SettingName{name}, []interface{}{val})
+	s.setVals(map[SettingName]interface{}{name: val})
 }
 
-func (s *Settings) setVals(names []SettingName, vals []interface{}) {
-	s.log.Debugf("Setting %v to %v in %v", names, vals, s.m)
+func (s *Settings) setVals(vals map[SettingName]interface{}) {
+	s.log.Debugf("Setting %v in %v", vals, s.m)
 	s.Lock()
-	for i := 0; i < len(names) && i < len(vals); i++ {
-		s.m[names[i]] = vals[i]
+	for name, val := range vals {
+		s.m[name] = val
 	}
 	// Need to unlock here because s.save() will lock again.
 	s.Unlock()
 	s.save()
-	for i := 0; i < len(names) && i < len(vals); i++ {
-		s.onChange(names[i], vals[i])
+	for name, val := range vals {
+		s.onChange(name, val)
 	}
 }
 
