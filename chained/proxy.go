@@ -264,13 +264,10 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 				Set("ls_streams", int(maxStreamsPerConn)).
 				Set("ls_cipher", cipherCode.String())
 			conn, err := dialer.Dial(func() (net.Conn, error) {
-				conn, err := p.dialCore(op)(ctx)
-				if err == nil && idleInterval > 0 {
-					conn = idletiming.Conn(conn, idleInterval, func() {
-						log.Debug("lampshade TCP connection idled")
-					})
-				}
-				return conn, err
+				// note - we do not wrap the TCP connection with IdleTiming because
+				// lampshade cleans up after itself and won't leave excess unused
+				// connections hanging around.
+				return p.dialCore(op)(ctx)
 			})
 			return overheadWrapper(true)(conn, err)
 		})

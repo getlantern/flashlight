@@ -439,11 +439,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a94a9658bf10d3e53b805b0f6ba40d65da3c2625975731646771e1623848c68e"
+  digest = "1:349cd7781b821a13bf9a005fa2f5b6c78c4248e477bc3b869e01bb601c1e6cdd"
   name = "github.com/getlantern/idletiming"
   packages = ["."]
   pruneopts = "UT"
-  revision = "1ee14e2c3fde60192f6d6a1d5748ffafe487bb75"
+  revision = "d6af7c708ed589011044d1ca79945bbbaa42056e"
 
 [[projects]]
   branch = "master"
@@ -490,11 +490,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7b753a58505179be72fe557381d83a17719487952ee2a6306c2cc78f81fc363d"
+  digest = "1:1e260c564c8d608f74841d250d5065f3ad59adc927c2471b067b95529a5e695f"
   name = "github.com/getlantern/lampshade"
   packages = ["."]
   pruneopts = "UT"
-  revision = "44db2076fd5bf00175d91088b7679a4a310b9bfa"
+  revision = "00e09a522d61d090a915959ad678c6a63388c62f"
 
 [[projects]]
   branch = "master"
