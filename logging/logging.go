@@ -39,7 +39,7 @@ var (
 )
 
 func init() {
-	if runtime.GOOS != "android" {
+	if runtime.GOOS != "android" && (runtime.GOOS == "darwin" && runtime.GOARCH[:3] == "arm") {
 		EnableFileLogging("")
 	}
 }
