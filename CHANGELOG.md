@@ -1,5 +1,30 @@
 # Change Log
 
+## [Unreleased](https://github.com/getlantern/flashlight/tree/HEAD)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.0.0...HEAD)
+
+**Merged pull requests:**
+
+- Added mechanism for running memory limited Lantern with Docker [\#545](https://github.com/getlantern/flashlight/pull/545) ([oxtoacart](https://github.com/oxtoacart))
+
+## [5.0.0](https://github.com/getlantern/flashlight/tree/5.0.0) (2018-11-30)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.9.1-yinbi...5.0.0)
+
+**Merged pull requests:**
+
+- Updated yinbi UI [\#544](https://github.com/getlantern/flashlight/pull/544) ([myleshorton](https://github.com/myleshorton))
+- Smaller IdleInterval for lampshade [\#543](https://github.com/getlantern/flashlight/pull/543) ([oxtoacart](https://github.com/oxtoacart))
+- Don't add wrap lampshade TCP connections with IdleTiming [\#542](https://github.com/getlantern/flashlight/pull/542) ([oxtoacart](https://github.com/oxtoacart))
+- updated ui [\#541](https://github.com/getlantern/flashlight/pull/541) ([myleshorton](https://github.com/myleshorton))
+- Fix for system tray issue [\#540](https://github.com/getlantern/flashlight/pull/540) ([myleshorton](https://github.com/myleshorton))
+- Lantern Desktop to fetch user data more often [\#539](https://github.com/getlantern/flashlight/pull/539) ([joesis](https://github.com/joesis))
+- Update pro client test [\#538](https://github.com/getlantern/flashlight/pull/538) ([joesis](https://github.com/joesis))
+- \[RFR\] Yinbi-154: Set `yinbiEnabled` based on `pro-server` call [\#533](https://github.com/getlantern/flashlight/pull/533) ([hchood](https://github.com/hchood))
+- Reporting proxy\_multiplexed dimension to borda [\#532](https://github.com/getlantern/flashlight/pull/532) ([oxtoacart](https://github.com/oxtoacart))
+- Added info about top proxies global borda context [\#531](https://github.com/getlantern/flashlight/pull/531) ([oxtoacart](https://github.com/oxtoacart))
+- Prevent Flashlight dev from hitting the outdated page [\#523](https://github.com/getlantern/flashlight/pull/523) ([joesis](https://github.com/joesis))
+
 ## [4.9.1-yinbi](https://github.com/getlantern/flashlight/tree/4.9.1-yinbi) (2018-11-06)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.9.0...4.9.1-yinbi)
 
@@ -79,7 +104,7 @@
 - Lots of changes to balancer and chained package [\#479](https://github.com/getlantern/flashlight/pull/479) ([joesis](https://github.com/joesis))
 
 ## [4.7.13](https://github.com/getlantern/flashlight/tree/4.7.13) (2018-08-09)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.13)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.13)
 
 **Merged pull requests:**
 
@@ -88,11 +113,11 @@
 - Updated desktop ui with device name fix [\#487](https://github.com/getlantern/flashlight/pull/487) ([myleshorton](https://github.com/myleshorton))
 - set client request timeout as a struct member [\#486](https://github.com/getlantern/flashlight/pull/486) ([joesis](https://github.com/joesis))
 
-## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.12)
-
 ## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.11)
+
+## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.12)
 
 **Merged pull requests:**
 
