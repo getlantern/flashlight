@@ -1,8 +1,7 @@
 # Change Log
 
-## [Unreleased](https://github.com/getlantern/flashlight/tree/HEAD)
-
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.0.0...HEAD)
+## [5.0.1](https://github.com/getlantern/flashlight/tree/5.0.1) (2018-12-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.0.0...5.0.1)
 
 **Merged pull requests:**
 
@@ -104,7 +103,7 @@
 - Lots of changes to balancer and chained package [\#479](https://github.com/getlantern/flashlight/pull/479) ([joesis](https://github.com/joesis))
 
 ## [4.7.13](https://github.com/getlantern/flashlight/tree/4.7.13) (2018-08-09)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.13)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.13)
 
 **Merged pull requests:**
 
@@ -113,11 +112,11 @@
 - Updated desktop ui with device name fix [\#487](https://github.com/getlantern/flashlight/pull/487) ([myleshorton](https://github.com/myleshorton))
 - set client request timeout as a struct member [\#486](https://github.com/getlantern/flashlight/pull/486) ([joesis](https://github.com/joesis))
 
-## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.11)
-
 ## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.12)
+
+## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.11)
 
 **Merged pull requests:**
 
@@ -258,17 +257,17 @@
 - unzip response body only if gzip header is present [\#440](https://github.com/getlantern/flashlight/pull/440) ([joesis](https://github.com/joesis))
 
 ## [4.6.9](https://github.com/getlantern/flashlight/tree/4.6.9) (2018-04-26)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.7...4.6.9)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.8...4.6.9)
 
 **Merged pull requests:**
 
 - use http-ping to check for connectivity [\#438](https://github.com/getlantern/flashlight/pull/438) ([joesis](https://github.com/joesis))
 
-## [4.6.7](https://github.com/getlantern/flashlight/tree/4.6.7) (2018-04-26)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.8...4.6.7)
-
 ## [4.6.8](https://github.com/getlantern/flashlight/tree/4.6.8) (2018-04-26)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.6...4.6.8)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.7...4.6.8)
+
+## [4.6.7](https://github.com/getlantern/flashlight/tree/4.6.7) (2018-04-26)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.6...4.6.7)
 
 **Merged pull requests:**
 
