@@ -1,5 +1,8 @@
 # Change Log
 
+## [5.0.3](https://github.com/getlantern/flashlight/tree/5.0.3) (2018-12-03)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.0.2...5.0.3)
+
 ## [5.0.2](https://github.com/getlantern/flashlight/tree/5.0.2) (2018-12-03)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.0.1...5.0.2)
 
