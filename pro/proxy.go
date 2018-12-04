@@ -95,7 +95,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 }
 
 func PrepareProRequest(r *http.Request, uc common.UserConfig) {
-	r.URL.Scheme = "https"
+	r.URL.Scheme = "http"
 	r.URL.Host = common.ProAPIHost
 	r.Host = r.URL.Host
 	r.RequestURI = "" // http: Request.RequestURI can't be set in client requests.
