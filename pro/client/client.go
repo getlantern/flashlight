@@ -39,6 +39,7 @@ type Response struct {
 type Client struct {
 	httpClient *http.Client
 	locale     string
+	preparePro func(*http.Request, common.UserConfig)
 }
 
 func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
@@ -50,7 +51,8 @@ func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
 			return nil, err
 		}
 	}
-	common.AddCommonHeaders(user, req)
+
+	c.preparePro(req, user)
 
 	for i := 0; i < maxRetries; i++ {
 		client := c.httpClient
@@ -88,13 +90,13 @@ func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
 	return nil, ErrAPIUnavailable
 }
 
-func NewClient(httpClient *http.Client) *Client {
+func NewClient(httpClient *http.Client, preparePro func(r *http.Request, uc common.UserConfig)) *Client {
 	if httpClient == nil {
 		httpClient = &http.Client{
 			Timeout: defaultTimeout,
 		}
 	}
-	return &Client{locale: defaultLocale, httpClient: httpClient}
+	return &Client{locale: defaultLocale, httpClient: httpClient, preparePro: preparePro}
 }
 
 // UserCreate creates an user without asking for any payment.
