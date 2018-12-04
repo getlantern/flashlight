@@ -1,5 +1,8 @@
 # Change Log
 
+## [5.1.0](https://github.com/getlantern/flashlight/tree/5.1.0) (2018-12-04)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.0.4...5.1.0)
+
 ## [5.0.4](https://github.com/getlantern/flashlight/tree/5.0.4) (2018-12-04)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.0.3...5.0.4)
 
@@ -302,20 +305,20 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.4...4.6.6)
 
 ## [4.6.4](https://github.com/getlantern/flashlight/tree/4.6.4) (2018-04-20)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.4)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.4)
 
 **Merged pull requests:**
 
 - Two fixes [\#428](https://github.com/getlantern/flashlight/pull/428) ([joesis](https://github.com/joesis))
 
-## [4.6.1](https://github.com/getlantern/flashlight/tree/4.6.1) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.1)
+## [4.6.2](https://github.com/getlantern/flashlight/tree/4.6.2) (2018-04-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.2)
 
 ## [4.6.3](https://github.com/getlantern/flashlight/tree/4.6.3) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.3)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.3)
 
-## [4.6.2](https://github.com/getlantern/flashlight/tree/4.6.2) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.2)
+## [4.6.1](https://github.com/getlantern/flashlight/tree/4.6.1) (2018-04-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.1)
 
 **Merged pull requests:**
 
