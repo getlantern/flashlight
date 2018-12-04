@@ -354,7 +354,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:eab4885f85debda23d701ec749a72790f5e7dc4902d0af80f4e7d5b25b79ee2d"
+  digest = "1:bdc25272d063d67bbb74590055a865cef2c5c68b3bdfdf65389b8b533a9d7d56"
+  name = "github.com/getlantern/gosocks"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e93c9263972849c7068f8cdeb3dccfa72fba9395"
+
+[[projects]]
+  branch = "master"
+  digest = "1:754d843a213d4f3f26dcc5b4d523340ad367632de26bac903b183d16ec224ce3"
   name = "github.com/getlantern/gotun2socks"
   packages = [
     ".",
@@ -362,7 +370,7 @@
     "tun",
   ]
   pruneopts = "UT"
-  revision = "cc6b8d42e63993b531be0754453ca9dd3764006d"
+  revision = "04b90f75b25032f0e7a632bb0412cc46f3ba7bf5"
 
 [[projects]]
   branch = "master"
@@ -1204,14 +1212,6 @@
   packages = ["dependency/hack"]
   pruneopts = "UT"
   revision = "da747e0c62c4e145ebd7484cf69f92c0dd192305"
-
-[[projects]]
-  branch = "master"
-  digest = "1:cb26a4a09edd61df35ed736b3e7314fffb829eb949a91d83ae4b2c0f936089f5"
-  name = "github.com/yinghuocho/gosocks"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "fe2a2c4caed2b0a4d5e1ede2527d0dc583ce2ba2"
 
 [[projects]]
   branch = "master"

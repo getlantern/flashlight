@@ -385,6 +385,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 
 	conf := &socks5.Config{
 		HandleConnect: func(ctx context.Context, conn net.Conn, req *socks5.Request, replySuccess func(boundAddr net.Addr) error, replyError func(err error) error) error {
+			log.Debugf("Got SOCKS command %v from %v to %v", req.Command, req.RemoteAddr, req.DestAddr)
 			op := ops.Begin("proxy")
 			defer op.End()
 			ctx = context.WithValue(ctx, ctxKeyOp, op)
