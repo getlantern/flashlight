@@ -354,6 +354,18 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:cfa5ce244777fdf42d66eb8c85882cbae80fbabd816304a548d84f155915cbee"
+  name = "github.com/getlantern/gotun2socks"
+  packages = [
+    ".",
+    "internal/packet",
+    "tun",
+  ]
+  pruneopts = "UT"
+  revision = "8bd55c01cf3e86139ae7db74222efa2d021c668e"
+
+[[projects]]
+  branch = "master"
   digest = "1:ba3141b74b24b8727d197c5b8cc2c6a598bab0ea848b96f115fd27ea82ea83a6"
   name = "github.com/getlantern/gowin"
   packages = ["."]
@@ -1195,6 +1207,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:cb26a4a09edd61df35ed736b3e7314fffb829eb949a91d83ae4b2c0f936089f5"
+  name = "github.com/yinghuocho/gosocks"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "fe2a2c4caed2b0a4d5e1ede2527d0dc583ce2ba2"
+
+[[projects]]
+  branch = "master"
   digest = "1:ceaeda007e14ea4d082c7a6c1326bf23e55a46f937a4e3a52fd3594a4373d3a7"
   name = "golang.org/x/crypto"
   packages = [
@@ -1243,11 +1263,12 @@
   revision = "db08ff08e8622530d9ed3a0e8ac279f6d4c02196"
 
 [[projects]]
-  digest = "1:4eb196f937ca6319f4095e0373b346aeeb4e3377e0200e7bb51daac0b5ec964c"
+  digest = "1:ad59dc26d52bcd389ebcd96d8dad41da4ca13ab7286469142b263d16bdf35ce0"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
+    "windows/registry",
   ]
   pruneopts = "UT"
   revision = "3b87a42e500a6dc65dae1a55d0b641295971163e"
@@ -1373,6 +1394,8 @@
     "github.com/getlantern/geolookup",
     "github.com/getlantern/go-socks5",
     "github.com/getlantern/golog",
+    "github.com/getlantern/gotun2socks",
+    "github.com/getlantern/gotun2socks/tun",
     "github.com/getlantern/hidden",
     "github.com/getlantern/http-proxy-lantern",
     "github.com/getlantern/httpseverywhere",

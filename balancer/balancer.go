@@ -732,7 +732,7 @@ func (d sortedDialers) Less(i, j int) bool {
 	// bandwidth is known for neither proxy and RTT is comparable, sort by
 	// label to keep sending traffic to same proxy until we know bandwidth.
 	if !ebaKnown && !ebbKnown {
-		return strings.Compare(a.Label(), b.Label()) < 0
+		return strings.Compare(a.Label(), b.Label()) > 0
 	}
 
 	// divide bandwidth by rtt to determine how to sort

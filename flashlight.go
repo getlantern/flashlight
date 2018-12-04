@@ -51,6 +51,8 @@ var (
 // Run runs a client proxy. It blocks as long as the proxy is running.
 func Run(httpProxyAddr string,
 	socksProxyAddr string,
+	tunDevice int,
+	dnsServersForTUN []string,
 	configDir string,
 	disconnected func() bool,
 	useShortcut func() bool,
@@ -135,6 +137,14 @@ func Run(httpProxyAddr string,
 				err := cl.ListenAndServeSOCKS5(socksProxyAddr)
 				if err != nil {
 					log.Errorf("Unable to start SOCKS5 proxy: %v", err)
+				}
+
+				if tunDevice > 0 {
+					log.Debug("Starting TUN")
+					err := cl.ListenAndServeTUN(tunDevice, dnsServersForTUN)
+					if err != nil {
+						log.Errorf("Unable to start TUN: %v", err)
+					}
 				}
 			}()
 		}

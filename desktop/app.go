@@ -133,6 +133,8 @@ func (app *App) Run() {
 		err := flashlight.Run(
 			listenAddr,
 			socksAddr,
+			0,   // don't use TUN
+			nil, // no TUN DNS servers
 			app.Flags["configdir"].(string),
 			func() bool { return settings.getBool(SNDisconnected) }, // check whether we're disconnected
 			func() bool { return !settings.GetProxyAll() },          // use shortcut

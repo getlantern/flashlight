@@ -68,9 +68,9 @@ func TestProxying(t *testing.T) {
 	helper, err := integrationtest.NewHelper(t, "localhost:19347", "localhost:19348", "localhost:19349")
 	if assert.NoError(t, err, "Unable to create temp configDir") {
 		defer helper.Close()
-		result, err := Start(helper.ConfigDir, "en_US", testSettings{}, testSession{})
+		result, err := Start(helper.ConfigDir, "en_US", testSettings{}, testSession{}, 0)
 		if assert.NoError(t, err, "Should have been able to start lantern") {
-			newResult, err := Start("testapp", "en_US", testSettings{}, testSession{})
+			newResult, err := Start("testapp", "en_US", testSettings{}, testSession{}, 0)
 			if assert.NoError(t, err, "Should have been able to start lantern twice") {
 				if assert.Equal(t, result.HTTPAddr, newResult.HTTPAddr, "2nd start should have resulted in the same address") {
 					err := testProxiedRequest(helper, result.HTTPAddr, false)

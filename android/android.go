@@ -202,10 +202,10 @@ type Updater autoupdate.Updater
 // initial activity may be slow, so clients with low read timeouts may
 // time out.
 func Start(configDir string, locale string,
-	settings Settings, session Session) (*StartResult, error) {
+	settings Settings, session Session, tunDevice int) (*StartResult, error) {
 
 	startOnce.Do(func() {
-		go run(configDir, locale, settings, session)
+		go run(configDir, locale, settings, session, tunDevice)
 	})
 
 	elapsed := mtime.Stopwatch()
@@ -238,7 +238,8 @@ func Exit() {
 }
 
 func run(configDir, locale string,
-	settings Settings, session Session) {
+	settings Settings, session Session,
+	tunDevice int) {
 
 	appdir.SetHomeDir(configDir)
 	session.SetStaging(common.Staging)
@@ -287,7 +288,9 @@ func run(configDir, locale string,
 		settings.GetHttpProxyPort())
 
 	flashlight.Run(httpProxyAddr, // listen for HTTP on provided address
-		"127.0.0.1:0",                              // listen for SOCKS on random address
+		"127.0.0.1:0", // listen for SOCKS on random address
+		tunDevice,
+		[]string{grabber.LocalAddr().String()},
 		configDir,                                  // place to store lantern configuration
 		func() bool { return false },               // always connected
 		func() bool { return !session.ProxyAll() }, // use shortcut

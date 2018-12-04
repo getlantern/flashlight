@@ -25,6 +25,8 @@ import (
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/go-socks5"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/gotun2socks"
+	"github.com/getlantern/gotun2socks/tun"
 	"github.com/getlantern/hidden"
 	"github.com/getlantern/httpseverywhere"
 	"github.com/getlantern/i18n"
@@ -403,6 +405,31 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 
 	log.Debugf("About to start SOCKS5 client proxy at %v", listenAddr)
 	return server.Serve(l)
+}
+
+// ListenAndServeTUN serves traffic from a TUN device (doesn't currently handle
+// UDP correctly)
+func (client *Client) ListenAndServeTUN(tunDeviceFD int, dnsServers []string) error {
+	localSocksAddr, ok := socksAddr.Get(30 * time.Second)
+	if !ok {
+		return errors.New("Unable to get SOCKS address in time, can't do TUN")
+	}
+
+	dev, err := tun.WrapTunDevice(tunDeviceFD)
+	if err != nil {
+		return errors.New("Unable to wrap TUN device: %v", err)
+	}
+
+	tun := gotun2socks.New(dev,
+		localSocksAddr.(string),
+		dnsServers,
+		true,  // public traffic only
+		false, // don't cache DNS
+	)
+	go tun.Run()
+
+	log.Debug("Listening for TUN traffic")
+	return nil
 }
 
 // Configure updates the client's configuration. Configure can be called
