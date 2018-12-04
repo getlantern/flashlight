@@ -1,6 +1,7 @@
 package client
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/pborman/uuid"
@@ -29,7 +30,9 @@ func init() {
 }
 
 func TestCreateClient(t *testing.T) {
-	tc = NewClient(nil)
+	tc = NewClient(nil, func(req *http.Request, uc common.UserConfig) {
+		common.AddCommonHeaders(uc, req)
+	})
 }
 
 func TestCreateUserA(t *testing.T) {
@@ -46,8 +49,6 @@ func TestCreateUserA(t *testing.T) {
 
 	userA.UserID = res.User.ID
 	userA.Token = res.User.Token
-
-	log.Debug(userA)
 }
 
 func TestUserAData(t *testing.T) {
@@ -69,6 +70,4 @@ func TestCreateUserB(t *testing.T) {
 
 	userB.UserID = res.User.ID
 	userB.Token = res.User.Token
-
-	log.Debug(userB)
 }
