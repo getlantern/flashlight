@@ -239,7 +239,10 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 	maxStreamsPerConn := uint16(s.ptSettingInt("streams"))
 	idleInterval, parseErr := time.ParseDuration(s.ptSetting("idleinterval"))
 	if parseErr != nil || idleInterval < 0 {
-		idleInterval = IdleTimeout * 2
+		// This should be less than the server's IdleTimeout to avoid trying to use
+		// a connection that was just idled. The client's IdleTimeout is already set
+		// appropriately for this purpose, so use that.
+		idleInterval = IdleTimeout
 		log.Debugf("Defaulted lampshade idleinterval to %v", idleInterval)
 	}
 	pingInterval, parseErr := time.ParseDuration(s.ptSetting("pinginterval"))
@@ -264,13 +267,11 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 				Set("ls_streams", int(maxStreamsPerConn)).
 				Set("ls_cipher", cipherCode.String())
 			conn, err := dialer.Dial(func() (net.Conn, error) {
-				conn, err := p.dialCore(op)(ctx)
-				if err == nil && idleInterval > 0 {
-					conn = idletiming.Conn(conn, idleInterval, func() {
-						log.Debug("lampshade TCP connection idled")
-					})
-				}
-				return conn, err
+				// note - we do not wrap the TCP connection with IdleTiming because
+				// lampshade cleans up after itself and won't leave excess unused
+				// connections hanging around.
+				log.Debugf("Dialing lampshade TCP connection to %v", p.Label())
+				return p.dialCore(op)(ctx)
 			})
 			return overheadWrapper(true)(conn, err)
 		})

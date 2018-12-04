@@ -1,5 +1,39 @@
 # Change Log
 
+## [5.0.3](https://github.com/getlantern/flashlight/tree/5.0.3) (2018-12-03)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.0.2...5.0.3)
+
+## [5.0.2](https://github.com/getlantern/flashlight/tree/5.0.2) (2018-12-03)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.0.1...5.0.2)
+
+**Merged pull requests:**
+
+- latest yinbi translations [\#547](https://github.com/getlantern/flashlight/pull/547) ([myleshorton](https://github.com/myleshorton))
+
+## [5.0.1](https://github.com/getlantern/flashlight/tree/5.0.1) (2018-12-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.0.0...5.0.1)
+
+**Merged pull requests:**
+
+- Added mechanism for running memory limited Lantern with Docker [\#545](https://github.com/getlantern/flashlight/pull/545) ([oxtoacart](https://github.com/oxtoacart))
+
+## [5.0.0](https://github.com/getlantern/flashlight/tree/5.0.0) (2018-11-30)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.9.1-yinbi...5.0.0)
+
+**Merged pull requests:**
+
+- Updated yinbi UI [\#544](https://github.com/getlantern/flashlight/pull/544) ([myleshorton](https://github.com/myleshorton))
+- Smaller IdleInterval for lampshade [\#543](https://github.com/getlantern/flashlight/pull/543) ([oxtoacart](https://github.com/oxtoacart))
+- Don't add wrap lampshade TCP connections with IdleTiming [\#542](https://github.com/getlantern/flashlight/pull/542) ([oxtoacart](https://github.com/oxtoacart))
+- updated ui [\#541](https://github.com/getlantern/flashlight/pull/541) ([myleshorton](https://github.com/myleshorton))
+- Fix for system tray issue [\#540](https://github.com/getlantern/flashlight/pull/540) ([myleshorton](https://github.com/myleshorton))
+- Lantern Desktop to fetch user data more often [\#539](https://github.com/getlantern/flashlight/pull/539) ([joesis](https://github.com/joesis))
+- Update pro client test [\#538](https://github.com/getlantern/flashlight/pull/538) ([joesis](https://github.com/joesis))
+- \[RFR\] Yinbi-154: Set `yinbiEnabled` based on `pro-server` call [\#533](https://github.com/getlantern/flashlight/pull/533) ([hchood](https://github.com/hchood))
+- Reporting proxy\_multiplexed dimension to borda [\#532](https://github.com/getlantern/flashlight/pull/532) ([oxtoacart](https://github.com/oxtoacart))
+- Added info about top proxies global borda context [\#531](https://github.com/getlantern/flashlight/pull/531) ([oxtoacart](https://github.com/oxtoacart))
+- Prevent Flashlight dev from hitting the outdated page [\#523](https://github.com/getlantern/flashlight/pull/523) ([joesis](https://github.com/joesis))
+
 ## [4.9.1-yinbi](https://github.com/getlantern/flashlight/tree/4.9.1-yinbi) (2018-11-06)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.9.0...4.9.1-yinbi)
 
@@ -201,18 +235,18 @@
 - Allowing numbers in optional protocol part of proxy name regex [\#449](https://github.com/getlantern/flashlight/pull/449) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [4.6.14](https://github.com/getlantern/flashlight/tree/4.6.14) (2018-05-06)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.14)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.14)
 
 **Merged pull requests:**
 
 - \[mobile\] Intercept requests to pro server and handle with special http.Client [\#448](https://github.com/getlantern/flashlight/pull/448) ([atavism](https://github.com/atavism))
 - Include a little more info with dial\_for\_balancer op [\#447](https://github.com/getlantern/flashlight/pull/447) ([oxtoacart](https://github.com/oxtoacart))
 
-## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.13)
-
 ## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.12)
+
+## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.13)
 
 ## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.11)
@@ -233,17 +267,17 @@
 - unzip response body only if gzip header is present [\#440](https://github.com/getlantern/flashlight/pull/440) ([joesis](https://github.com/joesis))
 
 ## [4.6.9](https://github.com/getlantern/flashlight/tree/4.6.9) (2018-04-26)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.7...4.6.9)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.8...4.6.9)
 
 **Merged pull requests:**
 
 - use http-ping to check for connectivity [\#438](https://github.com/getlantern/flashlight/pull/438) ([joesis](https://github.com/joesis))
 
-## [4.6.7](https://github.com/getlantern/flashlight/tree/4.6.7) (2018-04-26)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.8...4.6.7)
-
 ## [4.6.8](https://github.com/getlantern/flashlight/tree/4.6.8) (2018-04-26)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.6...4.6.8)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.7...4.6.8)
+
+## [4.6.7](https://github.com/getlantern/flashlight/tree/4.6.7) (2018-04-26)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.6...4.6.7)
 
 **Merged pull requests:**
 
@@ -261,17 +295,17 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.4...4.6.6)
 
 ## [4.6.4](https://github.com/getlantern/flashlight/tree/4.6.4) (2018-04-20)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.4)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.4)
 
 **Merged pull requests:**
 
 - Two fixes [\#428](https://github.com/getlantern/flashlight/pull/428) ([joesis](https://github.com/joesis))
 
-## [4.6.3](https://github.com/getlantern/flashlight/tree/4.6.3) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.3)
-
 ## [4.6.1](https://github.com/getlantern/flashlight/tree/4.6.1) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.1)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.1)
+
+## [4.6.3](https://github.com/getlantern/flashlight/tree/4.6.3) (2018-04-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.3)
 
 ## [4.6.2](https://github.com/getlantern/flashlight/tree/4.6.2) (2018-04-18)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.2)

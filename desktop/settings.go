@@ -50,8 +50,6 @@ const (
 	SNBuildDate    SettingName = "buildDate"
 	SNRevisionDate SettingName = "revisionDate"
 	SNPACURL       SettingName = "pacURL"
-
-	SNYinbiEnabled SettingName = "yinbiEnabled"
 )
 
 type settingType byte
@@ -91,8 +89,6 @@ var settingMeta = map[SettingName]struct {
 	SNBuildDate:    {stString, false, false},
 	SNRevisionDate: {stString, false, false},
 	SNPACURL:       {stString, true, true},
-
-	SNYinbiEnabled: {stBool, false, false},
 }
 
 var (
@@ -186,7 +182,6 @@ func newSettings(filePath string) *Settings {
 			SNUserToken:      "",
 			SNUIAddr:         "",
 			SNPACURL:         "",
-			SNYinbiEnabled:   true,
 		},
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
@@ -440,24 +435,19 @@ func (s *Settings) GetDeviceID() string {
 	return s.getString(SNDeviceID)
 }
 
-// SetToken sets the user token
-func (s *Settings) SetToken(token string) {
-	s.setString(SNUserToken, token)
-}
-
-// GetToken returns the user token
-func (s *Settings) GetToken() string {
-	return s.getString(SNUserToken)
-}
-
-// SetUserID sets the user ID
-func (s *Settings) SetUserID(id int64) {
-	s.setVal(SNUserID, id)
+// SetUserIDAndToken sets the user ID and token atomically
+func (s *Settings) SetUserIDAndToken(id int64, token string) {
+	s.setVals(map[SettingName]interface{}{SNUserID: id, SNUserToken: token})
 }
 
 // GetUserID returns the user ID
 func (s *Settings) GetUserID() int64 {
 	return s.getInt64(SNUserID)
+}
+
+// GetToken returns the user token
+func (s *Settings) GetToken() string {
+	return s.getString(SNUserToken)
 }
 
 // GetInternalHeaders returns extra headers sent with requests to internal services
@@ -469,12 +459,6 @@ func (s *Settings) GetInternalHeaders() map[string]string {
 // GetSystemProxy returns whether or not to set system proxy when lantern starts
 func (s *Settings) GetSystemProxy() bool {
 	return s.getBool(SNSystemProxy)
-}
-
-// GetYinbiEnabled returns whether or not the user should participate in the
-// Yinbi giveaway
-func (s *Settings) GetYinbiEnabled() bool {
-	return s.getBool(SNYinbiEnabled)
 }
 
 // SetPACURL sets the last used PAC URL. Note this is used particularl on
@@ -544,13 +528,21 @@ func (s *Settings) getVal(name SettingName) (interface{}, error) {
 }
 
 func (s *Settings) setVal(name SettingName, val interface{}) {
-	s.log.Debugf("Setting %v to %v in %v", name, val, s.m)
+	s.setVals(map[SettingName]interface{}{name: val})
+}
+
+func (s *Settings) setVals(vals map[SettingName]interface{}) {
+	s.log.Debugf("Setting %v in %v", vals, s.m)
 	s.Lock()
-	s.m[name] = val
+	for name, val := range vals {
+		s.m[name] = val
+	}
 	// Need to unlock here because s.save() will lock again.
 	s.Unlock()
 	s.save()
-	s.onChange(name, val)
+	for name, val := range vals {
+		s.onChange(name, val)
+	}
 }
 
 // GetInt64Eventually blocks returning an int64 until the int has a value
@@ -572,27 +564,6 @@ func (s *Settings) GetInt64Eventually(name SettingName) (int64, error) {
 		return int64(0), errors.New("Could not cast to int64?")
 	}
 	return intVal, nil
-}
-
-// GetStringEventually blocks returning a string until the string has a value
-// other than the defualt.
-func (s *Settings) GetStringEventually(name SettingName) (string, error) {
-	nval := eventual.NewValue()
-	s.OnChange(name, func(val interface{}) {
-		nval.Set(val)
-	})
-
-	val := s.getString(name)
-	if val != "" {
-		return val, nil
-	}
-
-	eid, _ := nval.Get(-1)
-	castedVal, ok := eid.(string)
-	if !ok {
-		return "", errors.New("Could not cast to int64?")
-	}
-	return castedVal, nil
 }
 
 // OnChange sets a callback cb to get called when attr is changed from UI.

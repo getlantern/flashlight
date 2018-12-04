@@ -40,9 +40,9 @@ func TestCreateUserA(t *testing.T) {
 
 	assert.True(t, res.User.ID != 0)
 	assert.True(t, res.User.Expiration == 0)
-	assert.True(t, res.User.Code == "")
 	assert.True(t, res.User.Token != "")
-	assert.True(t, res.User.Referral != "")
+	assert.True(t, res.User.Code != "")
+	assert.True(t, res.User.Referral == res.User.Code)
 
 	userA.UserID = res.User.ID
 	userA.Token = res.User.Token
@@ -63,9 +63,9 @@ func TestCreateUserB(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.True(t, res.User.ID != 0)
-	assert.True(t, res.User.Code == "")
 	assert.True(t, res.User.Token != "")
-	assert.True(t, res.User.Referral != "")
+	assert.True(t, res.User.Code != "")
+	assert.True(t, res.User.Referral == res.User.Code)
 
 	userB.UserID = res.User.ID
 	userB.Token = res.User.Token

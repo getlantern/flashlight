@@ -42,7 +42,7 @@ func init() {
 	}
 
 	if Version == "" {
-		Version = "development"
+		Version = DefaultPackageVersion + "-dev"
 	}
 
 	if RevisionDate == "" {

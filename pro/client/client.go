@@ -29,6 +29,13 @@ var (
 	ErrAPIUnavailable = errors.New("API unavailable.")
 )
 
+type Response struct {
+	Status  string `json:"status"`
+	Error   string `json:"error"`
+	ErrorId string `json:"errorId"`
+	User    `json:",inline"`
+}
+
 type Client struct {
 	httpClient *http.Client
 	locale     string
@@ -60,7 +67,6 @@ func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
 				body, err := ioutil.ReadAll(res.Body)
 				return body, err
 			case 202:
-				// Accepted: Immediately retry idempotent operation
 				log.Debugf("Received 202, retrying idempotent operation immediately.")
 				continue
 			default:
@@ -109,19 +115,6 @@ func (c *Client) UserCreate(user common.UserConfig) (res *Response, err error) {
 	return
 }
 
-func (c *Client) UserStatus(user common.UserConfig) (*Response, error) {
-	res, err := c.UserData(user)
-	if err != nil {
-		log.Errorf("Failed to get user data: %v", err)
-		return nil, err
-	}
-
-	if res.Status == "error" {
-		return nil, errors.New(res.Error)
-	}
-	return res, nil
-}
-
 // UserData Returns all user data, including payments, referrals and all
 // available fields.
 func (c *Client) UserData(user common.UserConfig) (res *Response, err error) {
@@ -140,5 +133,13 @@ func (c *Client) UserData(user common.UserConfig) (res *Response, err error) {
 		return nil, err
 	}
 	err = json.Unmarshal(payload, &res)
-	return
+	if err != nil {
+		log.Errorf("Failed to get user data: %v", err)
+		return nil, err
+	}
+
+	if res.Status == "error" {
+		return nil, errors.New(res.Error)
+	}
+	return res, nil
 }

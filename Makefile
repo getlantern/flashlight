@@ -8,6 +8,8 @@ BINARY_NAME := lantern
 .PHONY: lantern update-icons
 
 BUILD_RACE := '-race'
+REVISION_DATE := $(shell git log -1 --pretty=format:%ad --date=format:%Y%m%d.%H%M%S)
+BUILD_DATE := $(shell date -u +%Y%m%d.%H%M%S)
 
 ifeq ($(OS),Windows_NT)
 	  # Race detection is not supported by Go Windows 386, so disable it. The -x
@@ -18,7 +20,7 @@ endif
 define build-tags
 	BINARY_NAME="$(BINARY_NAME)" && \
 	BUILD_TAGS="$(BUILD_TAGS)" && \
-	EXTRA_LDFLAGS="" && \
+	EXTRA_LDFLAGS="-X github.com/getlantern/flashlight/common.RevisionDate=$(REVISION_DATE) -X github.com/getlantern/flashlight/common.BuildDate=$(BUILD_DATE) " && \
 	if [[ ! -z "$$VERSION" ]]; then \
 		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/common.CompileTimePackageVersion=$$VERSION"; \
 	else \
