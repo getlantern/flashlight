@@ -354,6 +354,26 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:bdc25272d063d67bbb74590055a865cef2c5c68b3bdfdf65389b8b533a9d7d56"
+  name = "github.com/getlantern/gosocks"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e93c9263972849c7068f8cdeb3dccfa72fba9395"
+
+[[projects]]
+  branch = "master"
+  digest = "1:754d843a213d4f3f26dcc5b4d523340ad367632de26bac903b183d16ec224ce3"
+  name = "github.com/getlantern/gotun2socks"
+  packages = [
+    ".",
+    "internal/packet",
+    "tun",
+  ]
+  pruneopts = "UT"
+  revision = "04b90f75b25032f0e7a632bb0412cc46f3ba7bf5"
+
+[[projects]]
+  branch = "master"
   digest = "1:ba3141b74b24b8727d197c5b8cc2c6a598bab0ea848b96f115fd27ea82ea83a6"
   name = "github.com/getlantern/gowin"
   packages = ["."]
@@ -598,14 +618,6 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "2a15afbadcff99bac017e17af273b31d4510ddb8"
-
-[[projects]]
-  branch = "master"
-  digest = "1:18a0cec8ed1628574a021aa6e0fb8bc5481df904069b2ae0ecd6d7a9fd8ea020"
-  name = "github.com/getlantern/protected"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "b0900930f8068ec3c024d6d022c16d75ddd8a163"
 
 [[projects]]
   branch = "master"
@@ -1243,11 +1255,12 @@
   revision = "db08ff08e8622530d9ed3a0e8ac279f6d4c02196"
 
 [[projects]]
-  digest = "1:4eb196f937ca6319f4095e0373b346aeeb4e3377e0200e7bb51daac0b5ec964c"
+  digest = "1:ad59dc26d52bcd389ebcd96d8dad41da4ca13ab7286469142b263d16bdf35ce0"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
+    "windows/registry",
   ]
   pruneopts = "UT"
   revision = "3b87a42e500a6dc65dae1a55d0b641295971163e"
@@ -1373,6 +1386,8 @@
     "github.com/getlantern/geolookup",
     "github.com/getlantern/go-socks5",
     "github.com/getlantern/golog",
+    "github.com/getlantern/gotun2socks",
+    "github.com/getlantern/gotun2socks/tun",
     "github.com/getlantern/hidden",
     "github.com/getlantern/http-proxy-lantern",
     "github.com/getlantern/httpseverywhere",
@@ -1393,7 +1408,6 @@
     "github.com/getlantern/ops",
     "github.com/getlantern/osversion",
     "github.com/getlantern/profiling",
-    "github.com/getlantern/protected",
     "github.com/getlantern/proxiedsites",
     "github.com/getlantern/proxy",
     "github.com/getlantern/proxy/filters",

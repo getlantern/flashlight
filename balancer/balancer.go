@@ -330,7 +330,7 @@ func (bd *balancedDial) advanceToNextDialer() bool {
 
 func (bd *balancedDial) dialWithDialer(ctx context.Context, dialer Dialer, start time.Time, attempts int) net.Conn {
 	deadline, _ := ctx.Deadline()
-	log.Debugf("Dialing %s://%s with %s on pass %v with timeout %v", bd.network, bd.addr, dialer.Label(), attempts, deadline.Sub(time.Now()))
+	log.Errorf("Dialing %s://%s with %s on pass %v with timeout %v", bd.network, bd.addr, dialer.Label(), attempts, deadline.Sub(time.Now()))
 	oldRTT, oldBW := dialer.EstRTT(), dialer.EstBandwidth()
 	conn, failedUpstream, err := dialer.DialContext(ctx, bd.network, bd.addr)
 	if err != nil {
