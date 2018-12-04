@@ -1,5 +1,12 @@
 # Change Log
 
+## [5.2.0](https://github.com/getlantern/flashlight/tree/5.2.0) (2018-12-04)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.1.0...5.2.0)
+
+**Merged pull requests:**
+
+- Use PrepareProRequest for all pro requests [\#551](https://github.com/getlantern/flashlight/pull/551) ([myleshorton](https://github.com/myleshorton))
+
 ## [5.1.0](https://github.com/getlantern/flashlight/tree/5.1.0) (2018-12-04)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.0.4...5.1.0)
 
