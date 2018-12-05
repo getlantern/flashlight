@@ -6,7 +6,6 @@ import (
 
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/fronted"
-	"github.com/getlantern/proxiedsites"
 )
 
 // Global contains general configuration for Lantern either set globally via
@@ -28,7 +27,7 @@ type Global struct {
 	AdSettings *AdSettings
 
 	// ProxiedSites are domains that get routed through Lantern rather than accessed directly.
-	ProxiedSites *proxiedsites.Config
+	ProxiedSites *proxiedSitesConfig
 
 	// TrustedCAs are trusted CAs for domain fronting domains only.
 	TrustedCAs []*fronted.CA
@@ -40,13 +39,15 @@ type Global struct {
 	ProxyConfigPollInterval time.Duration
 }
 
+type proxiedSitesConfig struct {
+	Cloud []string
+}
+
 // newGlobal creates a new global config with otherwise nil values set.
 func newGlobal() *Global {
 	return &Global{
-		Client: client.NewConfig(),
-		ProxiedSites: &proxiedsites.Config{
-			Delta: &proxiedsites.Delta{},
-		},
+		Client:       client.NewConfig(),
+		ProxiedSites: &proxiedSitesConfig{},
 	}
 }
 

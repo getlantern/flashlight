@@ -61,6 +61,14 @@
   revision = "bfd6294e8be0d922f04fadaa00b252228d30e3fd"
 
 [[projects]]
+  digest = "1:c47f4964978e211c6e566596ec6246c329912ea92e9bb99c00798bb4564c5b09"
+  name = "github.com/armon/go-radix"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "1a2de0c21c94309923825da3df33a4381872c795"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   digest = "1:758f6c0b49bdec3cead1398e0aa71197429bc5c614363c1703a8a3374176e3f5"
   name = "github.com/blang/semver"
@@ -99,14 +107,6 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "02af3965c54e8cacf948b97fef38925c4120652c"
-
-[[projects]]
-  digest = "1:5f1d44e13c151d777a80b0d8ca850347530773e73ccce5995a520cdc6947c205"
-  name = "github.com/fatih/set"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "2c768e3c5489976167bfc42b5c7c92ca783f4389"
-  version = "v0.2.1"
 
 [[projects]]
   digest = "1:296cda2c4a6a7a54964d7b3b0815e2aed215da75217b72033060ffb1c4e4b6ae"
@@ -189,12 +189,12 @@
   revision = "539649cc311886ee3604204cfab46f72b5f40950"
 
 [[projects]]
-  branch = "master"
-  digest = "1:7f812a62c522ca270f3b017ca39f161a03f914eafa05129b156aff83d823dede"
+  branch = "ox/lowermem"
+  digest = "1:344d9b10198701d1625c9244ca3fbfcd280605a9425e6b53fbd3b0f3dbfc022b"
   name = "github.com/getlantern/detour"
   packages = ["."]
   pruneopts = "UT"
-  revision = "40ce261d3ba85a967570daa390627e5d0529baa0"
+  revision = "6904356c01278925d06324ffdc8667c992273152"
 
 [[projects]]
   branch = "master"
@@ -598,14 +598,6 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "b0900930f8068ec3c024d6d022c16d75ddd8a163"
-
-[[projects]]
-  branch = "master"
-  digest = "1:d5d91b9d9addc54449c823afb6e5b8046f94e8feb124060fd26108e5f660ac48"
-  name = "github.com/getlantern/proxiedsites"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "5362487dd72c45097a5b8ddac9283fa61014ef88"
 
 [[projects]]
   branch = "master"
@@ -1404,7 +1396,6 @@
     "github.com/getlantern/osversion",
     "github.com/getlantern/profiling",
     "github.com/getlantern/protected",
-    "github.com/getlantern/proxiedsites",
     "github.com/getlantern/proxy",
     "github.com/getlantern/proxy/filters",
     "github.com/getlantern/proxybench",

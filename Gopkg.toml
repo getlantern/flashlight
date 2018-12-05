@@ -46,7 +46,7 @@
   name = "github.com/getlantern/bandwidth"
 
 [[constraint]]
-  branch = "master"
+  branch = "ox/lowermem"
   name = "github.com/getlantern/detour"
 
 [[constraint]]
@@ -168,10 +168,6 @@
 [[constraint]]
   branch = "master"
   name = "github.com/getlantern/protected"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/getlantern/proxiedsites"
 
 [[constraint]]
   branch = "master"

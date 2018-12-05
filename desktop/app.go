@@ -11,6 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/getlantern/detour"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/golog"
@@ -32,7 +33,6 @@ import (
 	"github.com/getlantern/flashlight/notifier"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/pro"
-	"github.com/getlantern/flashlight/proxiedsites"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
@@ -388,7 +388,7 @@ func (app *App) afterStart(cl *client.Client) {
 }
 
 func (app *App) onConfigUpdate(cfg *config.Global) {
-	proxiedsites.Configure(cfg.ProxiedSites)
+	detour.UpdatePermanentWhitelist(cfg.ProxiedSites.Cloud)
 	autoupdate.Configure(cfg.UpdateServerURL, cfg.AutoUpdateCA, func() string {
 		return app.AddToken("/img/lantern_logo.png")
 	})
