@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/pro"
+	"github.com/getlantern/flashlight/pro/client"
 	"github.com/getlantern/flashlight/ws"
 	"github.com/getlantern/golog"
 )
@@ -28,43 +29,62 @@ func isProUserFast() (isPro bool, statusKnown bool) {
 	return pro.IsProUserFast(settings)
 }
 
-// servePro fetches user data or creates new user, and serves user data to all
+// servePro fetches user data or creates new user when the application starts
+// up or a new WebSocket client is connected, and serves user data to all
 // connected WebSocket clients via the "pro" channel.
 // It loops forever in 10 seconds interval until the user is fetched or
 // created, as it's fundamental for the UI to work.
 func servePro(channel ws.UIChannel) error {
 	logger := golog.LoggerFor("flashlight.app.pro")
-	// pro.SetDeviceID(settings.GetDeviceID())
-	go func() {
+	chFetch := make(chan bool)
+	retryInterval := 10 * time.Second
+	retry := time.NewTimer(retryInterval)
+
+	fetchOrCreate := func() {
 		userID := settings.GetUserID()
-		for {
-			if userID == 0 {
-				user, err := pro.NewUser(settings)
-				if err != nil {
-					logger.Errorf("Could not create new Pro user: %v", err)
-				} else {
-					settings.SetUserID(user.Auth.ID)
-					settings.SetToken(user.Auth.Token)
-					return
-				}
+		if userID == 0 {
+			user, err := pro.NewUser(settings)
+			if err != nil {
+				logger.Errorf("Could not create new Pro user: %v", err)
+				retry.Reset(retryInterval)
 			} else {
-				_, err := pro.GetUserData(settings)
-				if err != nil {
-					logger.Errorf("Could not get user data for %v: %v", userID, err)
-				} else {
-					return
-				}
+				settings.SetUserIDAndToken(user.Auth.ID, user.Auth.Token)
 			}
-			time.Sleep(10 * time.Second)
+		} else {
+			_, err := pro.FetchUserData(settings)
+			if err != nil {
+				logger.Errorf("Could not get user data for %v: %v", userID, err)
+				retry.Reset(retryInterval)
+			}
+		}
+	}
+	go func() {
+		fetchOrCreate()
+		for {
+			select {
+			case <-chFetch:
+				fetchOrCreate()
+			case <-retry.C:
+				fetchOrCreate()
+			}
 		}
 	}()
 	helloFn := func(write func(interface{})) {
-		go func() {
-			user := pro.WaitForUserData(settings.GetUserID())
+		if user, known := pro.GetUserDataFast(settings.GetUserID()); known {
 			logger.Debugf("Sending current user data to new client: %v", user)
 			write(user)
-		}()
+		}
+		logger.Debugf("Fetching user data again to see if any changes")
+		select {
+		case chFetch <- true:
+		default: // fetching in progress, skipping
+		}
 	}
-	_, err := channel.Register("pro", helloFn)
+	service, err := channel.Register("pro", helloFn)
+	pro.OnUserData(func(current *client.User, new *client.User) {
+		logger.Debugf("Sending updated user data to all clients: %v", new)
+		service.Out <- new
+	})
+
 	return err
 }
