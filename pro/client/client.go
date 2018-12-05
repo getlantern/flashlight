@@ -23,8 +23,6 @@ var (
 	retryBaseTime  = time.Millisecond * 100
 )
 
-const defaultLocale = "en_US"
-
 var (
 	ErrAPIUnavailable = errors.New("API unavailable.")
 )
@@ -90,13 +88,14 @@ func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
 	return nil, ErrAPIUnavailable
 }
 
-func NewClient(httpClient *http.Client, preparePro func(r *http.Request, uc common.UserConfig)) *Client {
+func NewClient(httpClient *http.Client, preparePro func(r *http.Request, uc common.UserConfig),
+	uc common.UserConfig) *Client {
 	if httpClient == nil {
 		httpClient = &http.Client{
 			Timeout: defaultTimeout,
 		}
 	}
-	return &Client{locale: defaultLocale, httpClient: httpClient, preparePro: preparePro}
+	return &Client{locale: uc.GetLanguage(), httpClient: httpClient, preparePro: preparePro}
 }
 
 // UserCreate creates an user without asking for any payment.

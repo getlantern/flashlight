@@ -10,5 +10,6 @@ type AuthConfig interface {
 // UserConfig retrieves auth and other metadata passed to internal services.
 type UserConfig interface {
 	AuthConfig
+	GetLanguage() string
 	GetInternalHeaders() map[string]string
 }
