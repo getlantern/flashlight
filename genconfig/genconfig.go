@@ -606,7 +606,7 @@ func buildModel(configName string, cas map[string]*castat, useFallbacks bool) (m
 			fb["cert"] = strings.Replace(cert, "\n", "\\n", -1)
 
 			info := f
-			userConfig := common.NewUserConfigData(defaultDeviceID, 0, "", nil)
+			userConfig := common.NewUserConfigData(defaultDeviceID, 0, "", nil, "en-US")
 			dialer, err := client.ChainedDialer(name, info, userConfig)
 			if err != nil {
 				log.Debugf("Skipping fallback %v because of error building dialer: %v", f.Addr, err)
