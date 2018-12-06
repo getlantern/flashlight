@@ -88,8 +88,7 @@ func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
 }
 
 // NewClient creates a new pro client.
-func NewClient(httpClient *http.Client, preparePro func(r *http.Request, uc common.UserConfig),
-	uc common.UserConfig) *Client {
+func NewClient(httpClient *http.Client, preparePro func(r *http.Request, uc common.UserConfig)) *Client {
 	if httpClient == nil {
 		httpClient = &http.Client{
 			Timeout: defaultTimeout,
