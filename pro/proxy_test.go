@@ -19,7 +19,7 @@ import (
 )
 
 func TestProxy(t *testing.T) {
-	uc := common.NewUserConfigData("device", 0, "token", nil)
+	uc := common.NewUserConfigData("device", 0, "token", nil, "en-US")
 	m := &mockRoundTripper{header: http.Header{}, body: strings.NewReader("GOOD")}
 	httpClient = &http.Client{Transport: m}
 	l, err := net.Listen("tcp", "localhost:0")

@@ -13,13 +13,13 @@ func TestUsers(t *testing.T) {
 	common.ForceStaging()
 
 	deviceID := "77777777"
-	u, err := newUserWithClient(common.NewUserConfigData(deviceID, 0, "", nil), nil)
+	u, err := newUserWithClient(common.NewUserConfigData(deviceID, 0, "", nil, "en-US"), nil)
 
 	assert.NoError(t, err, "Unexpected error")
 	assert.NotNil(t, u, "Should have gotten a user")
 	t.Logf("user: %+v", u)
 
-	uc := common.NewUserConfigData(deviceID, u.Auth.ID, u.Auth.Token, nil)
+	uc := common.NewUserConfigData(deviceID, u.Auth.ID, u.Auth.Token, nil, "en-US")
 	u, err = fetchUserDataWithClient(uc, nil)
 	assert.NoError(t, err, "Unexpected error")
 	assert.NotNil(t, u, "Should have gotten a user")

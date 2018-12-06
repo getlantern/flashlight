@@ -15,7 +15,7 @@ func generateDeviceId() string {
 }
 
 func generateUser() *common.UserConfigData {
-	return common.NewUserConfigData(generateDeviceId(), 0, "", nil)
+	return common.NewUserConfigData(generateDeviceId(), 0, "", nil, "en-US")
 }
 
 var (
@@ -32,7 +32,7 @@ func init() {
 func TestCreateClient(t *testing.T) {
 	tc = NewClient(nil, func(req *http.Request, uc common.UserConfig) {
 		common.AddCommonHeaders(uc, req)
-	})
+	}, generateUser())
 }
 
 func TestCreateUserA(t *testing.T) {
