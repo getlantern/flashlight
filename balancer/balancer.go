@@ -657,6 +657,8 @@ func (b *Balancer) lookForSucceedingDialer(dialers []Dialer) {
 }
 
 func recordTopDialer(sortedDialers []Dialer) {
+	ops.SetGlobal("num_proxies", len(sortedDialers))
+
 	if len(sortedDialers) == 0 {
 		ops.SetGlobal("top_proxy_name", nil)
 		ops.SetGlobal("top_dc", nil)
