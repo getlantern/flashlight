@@ -36,7 +36,6 @@ type Response struct {
 
 type Client struct {
 	httpClient *http.Client
-	locale     string
 	preparePro func(*http.Request, common.UserConfig)
 }
 
@@ -88,6 +87,7 @@ func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
 	return nil, ErrAPIUnavailable
 }
 
+// NewClient creates a new pro client.
 func NewClient(httpClient *http.Client, preparePro func(r *http.Request, uc common.UserConfig),
 	uc common.UserConfig) *Client {
 	if httpClient == nil {
@@ -95,12 +95,12 @@ func NewClient(httpClient *http.Client, preparePro func(r *http.Request, uc comm
 			Timeout: defaultTimeout,
 		}
 	}
-	return &Client{locale: uc.GetLanguage(), httpClient: httpClient, preparePro: preparePro}
+	return &Client{httpClient: httpClient, preparePro: preparePro}
 }
 
 // UserCreate creates an user without asking for any payment.
 func (c *Client) UserCreate(user common.UserConfig) (res *Response, err error) {
-	body := strings.NewReader(url.Values{"locale": {c.locale}}.Encode())
+	body := strings.NewReader(url.Values{"locale": {user.GetLanguage()}}.Encode())
 	req, err := http.NewRequest("POST", "https://"+common.ProAPIHost+"/user-create", body)
 	if err != nil {
 		return nil, err
@@ -126,7 +126,7 @@ func (c *Client) UserData(user common.UserConfig) (res *Response, err error) {
 
 	req.URL.RawQuery = url.Values{
 		"timeout": {"10"},
-		"locale":  {c.locale},
+		"locale":  {user.GetLanguage()},
 	}.Encode()
 
 	payload, err := c.do(user, req)
