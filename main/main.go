@@ -125,10 +125,16 @@ func i18nInit(a *desktop.App) {
 		return a.GetTranslations(filename)
 	})
 	locale := a.GetLanguage()
-	if err := i18n.SetLocale(locale); err != nil {
+	log.Debugf("Using locale: %v", locale)
+	if _, err := i18n.SetLocale(locale); err != nil {
 		log.Debugf("i18n.SetLocale(%s) failed, fallback to OS default: %q", locale, err)
-		if err := i18n.UseOSLocale(); err != nil {
+
+		// On startup GetLangauge will return '', as the browser has not set the language yet.
+		// We use the OS locale instead and make sure the language is populated.
+		if locale, err := i18n.UseOSLocale(); err != nil {
 			log.Debugf("i18n.UseOSLocale: %q", err)
+		} else {
+			a.SetLanguage(locale)
 		}
 	}
 }

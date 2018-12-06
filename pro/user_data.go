@@ -84,7 +84,7 @@ func IsProUser(uc common.UserConfig) (isPro bool, statusKnown bool) {
 		var err error
 		user, err = fetchUserDataWithClient(uc, httpClient)
 		if err != nil {
-			log.Debugf("Got error fetching pro user: %v", err)
+			logger.Debugf("Got error fetching pro user: %v", err)
 			return false, false
 		}
 	}
@@ -123,13 +123,13 @@ func newUserWithClient(uc common.UserConfig, hc *http.Client) (*client.User, err
 	logger.Debugf("Creating new user with device ID '%v'", deviceID)
 
 	// use deviceID, ignore userID, token
-	user := common.NewUserConfigData(deviceID, 0, "", uc.GetInternalHeaders())
+	user := common.NewUserConfigData(deviceID, 0, "", uc.GetInternalHeaders(), uc.GetLanguage())
 	resp, err := client.NewClient(hc, PrepareProRequestWithOptions).UserCreate(user)
 	if err != nil {
 		return nil, err
 	}
 	setUserData(resp.User.Auth.ID, &resp.User)
-	log.Debugf("created user %+v", resp.User)
+	logger.Debugf("created user %+v", resp.User)
 	return &resp.User, nil
 }
 

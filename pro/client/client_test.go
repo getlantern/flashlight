@@ -15,7 +15,7 @@ func generateDeviceId() string {
 }
 
 func generateUser() *common.UserConfigData {
-	return common.NewUserConfigData(generateDeviceId(), 0, "", nil)
+	return common.NewUserConfigData(generateDeviceId(), 0, "", nil, "en-US")
 }
 
 var (

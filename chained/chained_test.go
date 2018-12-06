@@ -14,15 +14,17 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/golog"
 )
 
 var (
-	ping = []byte("ping")
-	pong = []byte("pong")
+	logger = golog.LoggerFor("chained-test")
+	ping   = []byte("ping")
+	pong   = []byte("pong")
 )
 
 func newTestUserConfig() *common.UserConfigData {
-	return common.NewUserConfigData("device", 1234, "protoken", nil)
+	return common.NewUserConfigData("device", 1234, "protoken", nil, "en-US")
 }
 
 func NewDialer(dialServer func(ctx context.Context, p *proxy) (net.Conn, error)) (func(network, addr string) (net.Conn, error), error) {
@@ -80,7 +82,7 @@ func TestBadServer(t *testing.T) {
 		return
 	}
 	_, err = dialer("connect", "www.google.com")
-	log.Debugf("Error: %v", err)
+	logger.Debugf("Error: %v", err)
 	assert.Error(t, err, "Dialing a server that disconnects too soon should have failed")
 }
 
@@ -155,16 +157,16 @@ func TestSuccess(t *testing.T) {
 	l := startServer(t)
 
 	dialer, err := NewDialer(func(ctx context.Context, p *proxy) (net.Conn, error) {
-		log.Debugf("Dialing with timeout to: %v", l.Addr())
+		logger.Debugf("Dialing with timeout to: %v", l.Addr())
 		conn, err := net.DialTimeout(l.Addr().Network(), l.Addr().String(), 2*time.Second)
-		log.Debugf("Got conn %v and err %v", conn, err)
+		logger.Debugf("Got conn %v and err %v", conn, err)
 		return conn, err
 	})
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	log.Debugf("TESTING SUCCESS")
+	logger.Debugf("TESTING SUCCESS")
 	test(t, dialer)
 }
 

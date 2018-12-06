@@ -431,11 +431,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:3717defed6fd92ea69a81f7cc2665fef431bc1db7fc319ee28e90d4faf1f932f"
+  digest = "1:c5f44c6a51e02eae7f80cee832dcfda63a5e2e3e83713e62b22a698b667c2b0c"
   name = "github.com/getlantern/i18n"
   packages = ["."]
   pruneopts = "UT"
-  revision = "293a8dd143490b99a1fb1ae28cf1d421f10f296f"
+  revision = "2afc4f49bb1c85ec6753d144a9d6e19693a95c63"
 
 [[projects]]
   branch = "master"

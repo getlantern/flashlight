@@ -321,6 +321,11 @@ func (app *App) GetLanguage() string {
 	return settings.GetLanguage()
 }
 
+// SetLanguage sets the user language
+func (app *App) SetLanguage(lang string) {
+	settings.SetLanguage(lang)
+}
+
 // OnSettingChange sets a callback cb to get called when attr is changed from UI.
 // When calling multiple times for same attr, only the last one takes effect.
 func (app *App) OnSettingChange(attr SettingName, cb func(interface{})) {
