@@ -1,5 +1,14 @@
 # Change Log
 
+## [5.2.1](https://github.com/getlantern/flashlight/tree/5.2.1) (2018-12-07)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.0...5.2.1)
+
+**Merged pull requests:**
+
+- Updated ui [\#555](https://github.com/getlantern/flashlight/pull/555) ([myleshorton](https://github.com/myleshorton))
+- Set the locale correctly in user-data and user-create calls [\#553](https://github.com/getlantern/flashlight/pull/553) ([myleshorton](https://github.com/myleshorton))
+- Recording num\_proxies dimension [\#552](https://github.com/getlantern/flashlight/pull/552) ([oxtoacart](https://github.com/oxtoacart))
+
 ## [5.2.0](https://github.com/getlantern/flashlight/tree/5.2.0) (2018-12-04)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.1.0...5.2.0)
 
@@ -130,7 +139,7 @@
 - Lots of changes to balancer and chained package [\#479](https://github.com/getlantern/flashlight/pull/479) ([joesis](https://github.com/joesis))
 
 ## [4.7.13](https://github.com/getlantern/flashlight/tree/4.7.13) (2018-08-09)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.13)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.13)
 
 **Merged pull requests:**
 
@@ -139,11 +148,11 @@
 - Updated desktop ui with device name fix [\#487](https://github.com/getlantern/flashlight/pull/487) ([myleshorton](https://github.com/myleshorton))
 - set client request timeout as a struct member [\#486](https://github.com/getlantern/flashlight/pull/486) ([joesis](https://github.com/joesis))
 
-## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.12)
-
 ## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.11)
+
+## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.12)
 
 **Merged pull requests:**
 
