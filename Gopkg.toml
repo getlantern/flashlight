@@ -55,10 +55,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/getlantern/easylist"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/getlantern/ema"
 
 [[constraint]]
@@ -100,10 +96,6 @@
 [[constraint]]
   branch = "master"
   name = "github.com/getlantern/http-proxy-lantern"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/getlantern/httpseverywhere"
 
 [[constraint]]
   branch = "master"

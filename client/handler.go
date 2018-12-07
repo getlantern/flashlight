@@ -83,12 +83,6 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 	}
 
 	adSwapURL := client.adSwapURL(req)
-	if !exoclick && adSwapURL == "" && !client.easylist.Allow(req) {
-		// Don't record this as proxying
-		op.Cancel()
-		return client.easyblock(ctx, req)
-	}
-
 	op.UserAgent(req.Header.Get("User-Agent")).OriginFromRequest(req)
 
 	if !exoclick && adSwapURL != "" {
@@ -103,22 +97,6 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 		// HTTPS in that case.
 		log.Tracef("Intercepting CONNECT %s", req.URL)
 	} else {
-		log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
-		if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
-			// Don't redirect CORS requests as it means the HTML pages that
-			// initiate the requests were not HTTPS redirected. Redirecting
-			// them adds few benefits, but may break some sites.
-			if origin := req.Header.Get("Origin"); origin == "" {
-				// Not rewrite recently rewritten URL to avoid redirect loop.
-				if t, ok := client.rewriteLRU.Get(httpsURL); ok && time.Since(t.(time.Time)) < httpsRewriteInterval {
-					log.Debugf("Not httpseverywhere redirecting to %v to avoid redirect loop", httpsURL)
-				} else {
-					client.rewriteLRU.Add(httpsURL, time.Now())
-					return client.redirectHTTPS(ctx, req, httpsURL, op)
-				}
-			}
-
-		}
 		// Direct proxying can only be used for plain HTTP connections.
 		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
 		// consumed and removed by http-proxy-lantern/versioncheck
@@ -173,34 +151,6 @@ func (client *Client) interceptProRequest(ctx filters.Context, r *http.Request, 
 		}
 	}
 	return filters.ShortCircuit(ctx, r, resp)
-}
-
-func (client *Client) easyblock(ctx filters.Context, req *http.Request) (*http.Response, filters.Context, error) {
-	log.Debugf("Blocking %v on %v", req.URL, req.Host)
-	client.statsTracker.IncAdsBlocked()
-	resp := &http.Response{
-		StatusCode: http.StatusForbidden,
-		Close:      true,
-	}
-	return filters.ShortCircuit(ctx, req, resp)
-}
-
-func (client *Client) redirectHTTPS(ctx filters.Context, req *http.Request, httpsURL string, op *ops.Op) (*http.Response, filters.Context, error) {
-	log.Debugf("httpseverywhere redirecting to %v", httpsURL)
-	op.Set("forcedhttps", true)
-	client.statsTracker.IncHTTPSUpgrades()
-	// Tell the browser to only cache the redirect for a day. The browser
-	// generally caches permanent redirects permanently, but it will obey caching
-	// directives if set.
-	resp := &http.Response{
-		StatusCode: http.StatusMovedPermanently,
-		Header:     make(http.Header, 3),
-		Close:      true,
-	}
-	resp.Header.Set("Location", httpsURL)
-	resp.Header.Set("Cache-Control", "max-age:86400")
-	resp.Header.Set("Expires", time.Now().Add(time.Duration(24)*time.Hour).Format(http.TimeFormat))
-	return filters.ShortCircuit(ctx, req, resp)
 }
 
 func (client *Client) adSwapURL(req *http.Request) string {
