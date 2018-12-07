@@ -32,7 +32,6 @@ func Tun2Socks(fd int, socksAddr string, dnsServer string) error {
 	go func() {
 		for {
 			ch <- make([]byte, 81920)
-			time.Sleep(10 * time.Millisecond)
 		}
 	}()
 
