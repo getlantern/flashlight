@@ -690,11 +690,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6a5bead5d6b5b244a7e9120bb08c92c6e9a1b7a631df3663010c674eb96546cd"
+  digest = "1:69145a1b1fb8684017c6e6f84544ac456bd86a32a4e34754644282edec2a31f9"
   name = "github.com/getlantern/systray"
   packages = ["."]
   pruneopts = "UT"
-  revision = "3fd1443dac5c8297999189fe28d5836b2b075b66"
+  revision = "eaad7114094d8a1b1b7188c062fa7f0fe21ac9b0"
 
 [[projects]]
   branch = "master"
