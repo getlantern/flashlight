@@ -71,7 +71,13 @@ require-dep:
 	fi
 
 update-icons:
-	@(which go-bindata >/dev/null) || (echo 'Missing command "go-bindata". See https://github.com/kevinburke/go-bindata.' && exit 1) && \
+#make sure the correct dependency is being used
+	@if ! [ "$(which go-bindata)" ]; then \
+		echo 'Missing command go-bindata. See https://github.com/kevinburke/go-bindata' && exit 1; \
+	fi && \
+	if [ "$(grep jteeuwen `command -v go-bindata >/dev/null`)" ]; then \
+		echo 'Update dependency go-bindata with: go get -u github.com/kevinburke/go-bindata/...' && exit 1; \
+	fi && \
 	go-bindata -nomemcopy -nocompress -pkg icons -o icons/icons.go -prefix icons -ignore icons.go icons
 
 # novendor removes the vendor folder to allow building with whatever is on your
