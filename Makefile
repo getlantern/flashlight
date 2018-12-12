@@ -1,5 +1,6 @@
 DISABLE_PORT_RANDOMIZATION ?=
 DEP_BIN    ?= $(shell which dep)
+GOBINDATA_BIN ?= $(shell which go-bindata)
 
 SHELL := /bin/bash
 SOURCES := $(shell find . -name '*[^_test].go')
@@ -70,9 +71,16 @@ require-dep:
 		echo 'Missing "dep" command. See https://github.com/golang/dep' && exit 1; \
 	fi
 
+# test go-bindata dependency and update icons if up-to-date
 update-icons:
-	@(which go-bindata >/dev/null) || (echo 'Missing command "go-bindata". See https://github.com/kevinburke/go-bindata.' && exit 1) && \
-	go-bindata -nomemcopy -nocompress -pkg icons -o icons/icons.go -prefix icons -ignore icons.go icons
+	@if [[ -z "$(GOBINDATA_BIN)" ]]; then \
+		echo 'Missing dependency go-bindata, get with: go get -u github.com/kevinburke/go-bindata/...' && exit 1; \
+	fi; \
+	GOBINDATA_VERSION=`grep jteeuwen $(GOBINDATA_BIN)`; \
+	if [[ ! -z "$$GOBINDATA_VERSION" ]]; then \
+		echo 'Update dependency go-bindata with: go get -u github.com/kevinburke/go-bindata/...' && exit 1; \
+	fi; \
+	$(GOBINDATA_BIN) -nomemcopy -nocompress -pkg icons -o icons/icons.go -prefix icons -ignore icons.go icons
 
 # novendor removes the vendor folder to allow building with whatever is on your
 # GOPATH
