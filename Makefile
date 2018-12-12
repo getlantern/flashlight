@@ -73,7 +73,7 @@ require-dep:
 
 # test go-bindata dependency and update icons if up-to-date
 update-icons:
-	@if [ "$(GOBINDATA_BIN)" = "" ]; then \
+	@if [[ -z "$(GOBINDATA_BIN)" ]]; then \
 		echo 'Missing dependency go-bindata, get with: go get -u github.com/kevinburke/go-bindata/...' && exit 1; \
 	fi; \
 	GOBINDATA_VERSION=`grep jteeuwen $(GOBINDATA_BIN)`; \
