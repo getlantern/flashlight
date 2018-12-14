@@ -659,12 +659,12 @@
   revision = "2acfa62efd1269ecb4b075f096e7956bfec53023"
 
 [[projects]]
-  branch = "adjust_errors"
-  digest = "1:f74bfbcb23dacebc2ae7466f44c9302f1612bdac796eee56ed848345791a9ab2"
+  branch = "master"
+  digest = "1:fa8d63ae8a4d875c53be3578319bde0a29d49042609ce6387413b422ec797386"
   name = "github.com/getlantern/quicwrapper"
   packages = ["."]
   pruneopts = "UT"
-  revision = "73720ee417aed9b08aad756b9e88dd5ac337f641"
+  revision = "9afd6b9b3c2fc904a1b01e6372e3942249ea0b33"
 
 [[projects]]
   branch = "master"
@@ -1012,8 +1012,8 @@
   revision = "3035450ff8b987ec4373f65c40767f096b35f2d2"
 
 [[projects]]
-  branch = "logging_hacks"
-  digest = "1:cf0672800344eda8ecba017b7249ddf415e76d156ed4bca7daa8d331b5d040e2"
+  branch = "master"
+  digest = "1:cf1b1b7fd1673fe07f900f87d0e9ef327f368d4c4d84a50945f80cc5679b116d"
   name = "github.com/lucas-clemente/quic-go"
   packages = [
     ".",
@@ -1028,7 +1028,7 @@
     "internal/wire",
   ]
   pruneopts = "UT"
-  revision = "74078857dd65b1b6bb843a01c86b5eee0e6df5c7"
+  revision = "1facb9de6ec27e25373be2598c6485290bdcc8da"
   source = "https://github.com/getlantern/quic-go"
 
 [[projects]]

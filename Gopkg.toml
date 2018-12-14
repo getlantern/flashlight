@@ -279,11 +279,11 @@
 
 [[override]]
   name = "github.com/getlantern/quicwrapper"
-  branch = "adjust_errors"
+  branch = "master"
 
 [[override]]
   name = "github.com/lucas-clemente/quic-go"
-  branch = "logging_hacks"
+  branch = "master"
   source = "https://github.com/getlantern/quic-go"
 
 [[override]]
