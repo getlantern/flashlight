@@ -235,6 +235,42 @@ func TestPollGlobal(t *testing.T) {
 	})
 }
 
+// TestProductionGlobal validates certain properties of the live production global config
+func TestProductionGlobal(t *testing.T) {
+
+	testURL := globalURL // this should always point to the live production configuration (not staging etc)
+	f := newFetcher(newTestUserConfig(), &http.Transport{}, testURL)
+
+	cfgBytes, err := f.fetch()
+	if !assert.NoError(t, err, "Error fetching global config from %s", testURL) {
+		return
+	}
+
+	unmarshal := newGlobalUnmarshaler(nil)
+	cfgIf, err := unmarshal(cfgBytes)
+	if !assert.NoError(t, err, "Error unmarshaling global config from %s", testURL) {
+		return
+	}
+
+	cfg, ok := cfgIf.(*Global)
+	if !assert.True(t, ok, "Unexpected configuration type returned from %s", testURL) {
+		return
+	}
+
+	defaultMasq := cfg.Client.MasqueradeSets["cloudfront"]
+	assert.True(t, len(defaultMasq) > 500, "global config %s should have a large number of default masquerade sets for cloudfront (found %d)", testURL, len(defaultMasq))
+
+	if !assert.NotNil(t, cfg.Client.Fronted, "global config %s missing fronted section!", testURL) {
+		return
+	}
+	if assert.True(t, len(cfg.Client.Fronted.Providers) > 0, "global config %s should have fronted providers list", testURL) {
+		for pid, provider := range cfg.Client.Fronted.Providers {
+			assert.True(t, len(provider.Masquerades) > 100, "global config %s provider %s had only %d masquerades!", testURL, pid, len(provider.Masquerades))
+			assert.True(t, len(provider.HostAliases) > 0, "global config %s provider %s has no host aliases?", testURL, pid)
+		}
+	}
+}
+
 func TestPollIntervals(t *testing.T) {
 	withTempDir(t, func(inTempDir func(string) string) {
 		fronted.ConfigureForTest(t)
