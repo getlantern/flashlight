@@ -16,6 +16,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/launcher"
+	"github.com/getlantern/memhelper"
 	"github.com/getlantern/notifier"
 	"github.com/getlantern/profiling"
 
@@ -104,6 +105,8 @@ func (app *App) exitOnFatal(err error) {
 // Run starts the app. It will block until the app exits.
 func (app *App) Run() {
 	golog.OnFatal(app.exitOnFatal)
+
+	memhelper.Track(15*time.Second, 15*time.Second)
 
 	// Run below in separate goroutine as config.Init() can potentially block when Lantern runs
 	// for the first time. User can still quit Lantern through systray menu when it happens.

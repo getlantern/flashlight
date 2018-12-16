@@ -23,6 +23,7 @@ import (
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/memhelper"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/protected"
@@ -241,6 +242,7 @@ func Exit() {
 func run(configDir, locale string,
 	settings Settings, session Session) {
 
+	memhelper.Track(15*time.Second, 15*time.Second)
 	appdir.SetHomeDir(configDir)
 	session.SetStaging(common.Staging)
 

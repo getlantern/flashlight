@@ -27,6 +27,14 @@
   revision = "89c21805c212bcc2f5a0c4ffdadf424cbff1c7c9"
 
 [[projects]]
+  digest = "1:e92f5581902c345eb4ceffdcd4a854fb8f73cf436d47d837d1ec98ef1fe0a214"
+  name = "github.com/StackExchange/wmi"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "5d049714c4a64225c3c79a7cf7d02f7fb5b96338"
+  version = "1.0.0"
+
+[[projects]]
   branch = "master"
   digest = "1:8fa55a6e302771a90a86ceae1ca3c0df4ef15d21092198e8313f61dde9eea963"
   name = "github.com/Yawning/chacha20"
@@ -514,6 +522,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:024816cb85e8a561527e724976181db4a28dd95bace8b042400e0bf8002dfef1"
+  name = "github.com/getlantern/memhelper"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "777ea7552231e36d5faac8dcb950a0527809b164"
+
+[[projects]]
+  branch = "master"
   digest = "1:9fd06ebb3a00d133bc20af34e89e9fb0419fc2447aae435bbfd24b250ef6db4b"
   name = "github.com/getlantern/mitm"
   packages = ["."]
@@ -808,6 +824,17 @@
   ]
   pruneopts = "UT"
   revision = "44cc8585533a2bb441dc5862ffae6ccb9f25f487"
+
+[[projects]]
+  digest = "1:64a5a67c69b70c2420e607a8545d674a23778ed9c3e80607bfd17b77c6c87f6a"
+  name = "github.com/go-ole/go-ole"
+  packages = [
+    ".",
+    "oleutil",
+  ]
+  pruneopts = "UT"
+  revision = "a41e3c4b706f6ae8dfbff342b06e40fa4d2d0506"
+  version = "v1.2.1"
 
 [[projects]]
   digest = "1:586ea76dbd0374d6fb649a91d70d652b7fe0ccffb8910a77468e7702e7901f3d"
@@ -1107,6 +1134,29 @@
   revision = "e0edd7863bd2c52945332a16219a8673d93884fb"
 
 [[projects]]
+  digest = "1:7395b855a6078ad2e6c40311402a057a91125fb9f32cf228e1b32cdc57c33538"
+  name = "github.com/shirou/gopsutil"
+  packages = [
+    "cpu",
+    "host",
+    "internal/common",
+    "mem",
+    "net",
+    "process",
+  ]
+  pruneopts = "UT"
+  revision = "8048a2e9c5773235122027dd585cf821b2af1249"
+  version = "v2.18.07"
+
+[[projects]]
+  branch = "master"
+  digest = "1:99c6a6dab47067c9b898e8c8b13d130c6ab4ffbcc4b7cc6236c2cd0b1e344f5b"
+  name = "github.com/shirou/w32"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "bb4de0191aa41b5507caa14b0650cdbddcd9280b"
+
+[[projects]]
   digest = "1:9e9193aa51197513b3abcb108970d831fbcf40ef96aa845c4f03276e1fa316d2"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
@@ -1385,6 +1435,7 @@
     "github.com/getlantern/lampshade",
     "github.com/getlantern/launcher",
     "github.com/getlantern/measured",
+    "github.com/getlantern/memhelper",
     "github.com/getlantern/mitm",
     "github.com/getlantern/mockconn",
     "github.com/getlantern/mtime",
