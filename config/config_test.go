@@ -239,6 +239,12 @@ func TestPollGlobal(t *testing.T) {
 func TestProductionGlobal(t *testing.T) {
 
 	testURL := globalURL // this should always point to the live production configuration (not staging etc)
+
+	expectedProviders := map[string]bool{
+		"cloudfront": true,
+		"akamai":     true,
+	}
+
 	f := newFetcher(newTestUserConfig(), &http.Transport{}, testURL)
 
 	cfgBytes, err := f.fetch()
@@ -263,11 +269,19 @@ func TestProductionGlobal(t *testing.T) {
 	if !assert.NotNil(t, cfg.Client.Fronted, "global config %s missing fronted section!", testURL) {
 		return
 	}
-	if assert.True(t, len(cfg.Client.Fronted.Providers) > 0, "global config %s should have fronted providers list", testURL) {
-		for pid, provider := range cfg.Client.Fronted.Providers {
-			assert.True(t, len(provider.Masquerades) > 100, "global config %s provider %s had only %d masquerades!", testURL, pid, len(provider.Masquerades))
-			assert.True(t, len(provider.HostAliases) > 0, "global config %s provider %s has no host aliases?", testURL, pid)
+
+	for pid, _ := range expectedProviders {
+		provider := cfg.Client.Fronted.Providers[pid]
+		if !assert.NotNil(t, provider, "global config %s missing expected fronted provider %s", testURL, pid) {
+			continue
 		}
+		assert.True(t, len(provider.Masquerades) > 100, "global config %s provider %s had only %d masquerades!", testURL, pid, len(provider.Masquerades))
+		assert.True(t, len(provider.HostAliases) > 0, "global config %s provider %s has no host aliases?", testURL, pid)
+
+	}
+
+	for pid := range cfg.Client.Fronted.Providers {
+		assert.True(t, expectedProviders[pid], "global config %s had unexpected provider %s (update expected list?)", testURL, pid)
 	}
 }
 
