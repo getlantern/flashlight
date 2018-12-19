@@ -362,14 +362,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1cd28aadc3fe108002a12fd8f091f6b3e0ca141a4ebc1dd9b4b97ed67b2fe9bd"
+  digest = "1:b8304f451abeff7233f9ac56fe25817c530b3520ac52cbd7e649cc4cd59d7b9a"
   name = "github.com/getlantern/gotun"
   packages = [
     ".",
     "packet",
   ]
   pruneopts = "UT"
-  revision = "7ccbf9e7cf94a1e47968f418edf96d3526328768"
+  revision = "2d27a5d8358131a90085dce0db0ca5a0c93aef1d"
 
 [[projects]]
   branch = "master"
@@ -576,11 +576,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:30181df0b6eeb2a6cd136d480b6f688658c7976793fa83e00a731859a680dd05"
+  digest = "1:2f2e79db72ce34715cf5a1c57581a8623a57ad9c2a38699598ef90dc3b9b8c6c"
   name = "github.com/getlantern/netx"
   packages = ["."]
   pruneopts = "UT"
-  revision = "2e444869f9f5c45c651ee847e4a2ea27231ecec9"
+  revision = "e4cf01032170e7c06da6deb1ae53ce8c1e0df0ab"
 
 [[projects]]
   branch = "master"

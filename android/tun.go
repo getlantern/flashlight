@@ -2,13 +2,17 @@ package android
 
 import (
 	"context"
+	"io"
 	"net"
+	"sync/atomic"
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/gotun"
 	"github.com/getlantern/netx"
 	"golang.org/x/net/proxy"
 )
+
+var currentDevice atomic.Value
 
 // Tun2Socks wraps the TUN device identified by fd with a gotun server that does
 // the following:
@@ -26,6 +30,8 @@ func Tun2Socks(fd int, socksAddr, dnsAddr, dnsGrabAddr string, mtu int) error {
 	if err != nil {
 		return errors.New("Unable to get SOCKS5 dialer: %v", err)
 	}
+	currentDevice.Store(dev)
+
 	go func() {
 		err := tun.Serve(dev, &tun.ServerOpts{
 			MTU: mtu,
@@ -48,5 +54,15 @@ func Tun2Socks(fd int, socksAddr, dnsAddr, dnsGrabAddr string, mtu int) error {
 			log.Errorf("Error on serving from TUN device: %v", err)
 		}
 	}()
+
 	return nil
+}
+
+// StopTun2Socks stops the current tun device.
+func StopTun2Socks() {
+	dev := currentDevice.Load()
+	if dev != nil {
+		dev.(io.Closer).Close()
+		currentDevice.Store(nil)
+	}
 }
