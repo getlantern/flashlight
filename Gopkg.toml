@@ -284,3 +284,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/mitchellh/go-server-timing"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/getlantern/gotun"
