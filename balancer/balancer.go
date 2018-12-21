@@ -234,6 +234,9 @@ func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.C
 	op := ops.Begin("balancer_dial").Set("beam", atomic.AddUint64(&b.beam_seq, 1))
 	defer op.End()
 
+	op = ops.Begin("balancer_dial_details")
+	defer op.End()
+
 	start := time.Now()
 	bd, err := b.newBalancedDial(network, addr)
 	if err != nil {
