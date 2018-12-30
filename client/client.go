@@ -51,6 +51,12 @@ var (
 	proxiedCONNECTPorts = []int{
 		// Standard HTTP(S) ports
 		80, 443,
+		// SMTP and encrypted SMTP
+		25, 465,
+		// POP and encrypted POP
+		110, 995,
+		// IMAP and encrypted IMAP
+		143, 993,
 		// Common unprivileged HTTP(S) ports
 		8080, 8443,
 		// XMPP
