@@ -1,5 +1,15 @@
 # Change Log
 
+## [5.2.3](https://github.com/getlantern/flashlight/tree/5.2.3) (2019-01-03)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.2...5.2.3)
+
+**Merged pull requests:**
+
+- updated resources for 5.2.3 [\#566](https://github.com/getlantern/flashlight/pull/566) ([myleshorton](https://github.com/myleshorton))
+- add email related ports [\#565](https://github.com/getlantern/flashlight/pull/565) ([joesis](https://github.com/joesis))
+- Add a test to validate certain basic properties of live global config [\#562](https://github.com/getlantern/flashlight/pull/562) ([forkner](https://github.com/forkner))
+- Added memory usage logging [\#536](https://github.com/getlantern/flashlight/pull/536) ([oxtoacart](https://github.com/oxtoacart))
+
 ## [5.2.2](https://github.com/getlantern/flashlight/tree/5.2.2) (2018-12-13)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.1...5.2.2)
 
