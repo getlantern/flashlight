@@ -35,7 +35,7 @@ func bestPackageVersion() string {
 }
 
 func init() {
-	if PackageVersion != DefaultPackageVersion {
+	if !InDevelopment() {
 		// packageVersion has precedence over GIT revision. This will happen when
 		// packing a version intended for release.
 		Version = PackageVersion
@@ -48,4 +48,9 @@ func init() {
 	if RevisionDate == "" {
 		RevisionDate = "now"
 	}
+}
+
+// InDevelopment indicates whether this built was built in development.
+func InDevelopment() bool {
+	return PackageVersion == DefaultPackageVersion
 }

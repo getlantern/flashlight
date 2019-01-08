@@ -253,6 +253,9 @@ func displayVersion() {
 }
 
 func initContext(deviceID string, version string, revisionDate string, isPro func() bool, userID func() int64) {
+	if common.InDevelopment() {
+		log.Debugf("You can query for this device's activity in borda under device id: %v", deviceID)
+	}
 	// Using "application" allows us to distinguish between errors from the
 	// lantern client vs other sources like the http-proxy, etop.
 	ops.SetGlobal("app", "lantern-client")
