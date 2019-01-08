@@ -10,6 +10,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/proxybench"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
 )
@@ -30,6 +31,14 @@ var (
 // service never stops once enabled. The service will check enabled each
 // time before it reports to borda, however.
 func Configure(reportInterval time.Duration, enabled func(ctx map[string]interface{}) bool) {
+	if common.InDevelopment() {
+		log.Debug("In development, will report everything to borda every 1 minutes")
+		reportInterval = 1 * time.Minute
+		enabled = func(ctx map[string]interface{}) bool {
+			return true
+		}
+	}
+
 	if reportInterval > 0 {
 		log.Debug("Enabling borda")
 		once.Do(func() {
