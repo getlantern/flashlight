@@ -573,11 +573,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:30181df0b6eeb2a6cd136d480b6f688658c7976793fa83e00a731859a680dd05"
+  digest = "1:50425f63a4348b642f1ce2a343b86077e62f98153d1bf00d9bc3387524e71872"
   name = "github.com/getlantern/netx"
   packages = ["."]
   pruneopts = "UT"
-  revision = "2e444869f9f5c45c651ee847e4a2ea27231ecec9"
+  revision = "9912de6f94fd1dd35a2f3af9a9ce5650d1a10b7a"
 
 [[projects]]
   branch = "master"
@@ -625,11 +625,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:18a0cec8ed1628574a021aa6e0fb8bc5481df904069b2ae0ecd6d7a9fd8ea020"
+  digest = "1:ad9c217189ec55389d111a3a2bb76f8ec6f37cee6ba63b4815fe300e494b1119"
   name = "github.com/getlantern/protected"
   packages = ["."]
   pruneopts = "UT"
-  revision = "b0900930f8068ec3c024d6d022c16d75ddd8a163"
+  revision = "cc3b5f4a0fb853b4aa6d7994707fa916ed963b00"
 
 [[projects]]
   branch = "master"
@@ -660,11 +660,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:fa8d63ae8a4d875c53be3578319bde0a29d49042609ce6387413b422ec797386"
+  digest = "1:e5baaf124b9b31538eadaf72bce33b3fa54c8ffad2bd42a2e8eea46354a341a7"
   name = "github.com/getlantern/quicwrapper"
   packages = ["."]
   pruneopts = "UT"
-  revision = "9afd6b9b3c2fc904a1b01e6372e3942249ea0b33"
+  revision = "f6dd70305d8ec1ce65c767ebc4d7ef6e3ee36499"
 
 [[projects]]
   branch = "master"

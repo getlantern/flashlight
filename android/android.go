@@ -141,6 +141,7 @@ func ProtectConnections(protector SocketProtector, dnsServer string) {
 	netx.OverrideDialUDP(p.DialUDP)
 	netx.OverrideResolve(p.ResolveTCP)
 	netx.OverrideResolveUDP(p.ResolveUDP)
+	netx.OverrideListenUDP(p.ListenUDP)
 	clMu.Lock()
 	defer clMu.Unlock()
 	if cl != nil && cl.GetBalancer() != nil {
