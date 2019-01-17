@@ -1397,14 +1397,6 @@
   revision = "a16aeec10ff407b1e7be6dd35797ccf5426ef0f0"
   version = "v5.2.9"
 
-[[projects]]
-  branch = "v1"
-  digest = "1:4384086c0f7f9e662c2ae8e900af35dc75ff262205b362597bb65af2fd8a21c9"
-  name = "gopkg.in/yaml.v1"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "9f9df34309c04878acc86042b16630b0f696e1de"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -1484,7 +1476,6 @@
     "github.com/stretchr/testify/assert",
     "github.com/tevino/abool",
     "golang.org/x/net/proxy",
-    "gopkg.in/yaml.v1",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
