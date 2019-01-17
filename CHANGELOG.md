@@ -1,5 +1,14 @@
 # Change Log
 
+## [5.2.5](https://github.com/getlantern/flashlight/tree/5.2.5) (2019-01-17)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.4...5.2.5)
+
+**Merged pull requests:**
+
+- dep ensure consistently strips this [\#571](https://github.com/getlantern/flashlight/pull/571) ([myleshorton](https://github.com/myleshorton))
+- updated UI for 5.2.5 [\#570](https://github.com/getlantern/flashlight/pull/570) ([myleshorton](https://github.com/myleshorton))
+- update to latest context package [\#569](https://github.com/getlantern/flashlight/pull/569) ([joesis](https://github.com/joesis))
+
 ## [5.2.4](https://github.com/getlantern/flashlight/tree/5.2.4) (2019-01-08)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.3...5.2.4)
 
