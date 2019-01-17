@@ -277,6 +277,19 @@
   name = "golang.org/x/net"
   branch = "master"
 
+[[override]]
+  name = "github.com/getlantern/quicwrapper"
+  branch = "master"
+
+[[override]]
+  name = "github.com/lucas-clemente/quic-go"
+  branch = "master"
+  source = "https://github.com/getlantern/quic-go"
+
+[[override]]
+  name = "github.com/marten-seemann/qtls"
+  branch = "qtls"
+
 [prune]
   go-tests = true
   unused-packages = true
