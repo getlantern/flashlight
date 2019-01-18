@@ -29,10 +29,9 @@ var (
 	log          = golog.LoggerFor("flashlight.logging")
 	processStart = time.Now()
 
-	logFile io.WriteCloser
-
-	errorOut io.Writer
-	debugOut io.Writer
+	logFile  io.WriteCloser
+	errorPWC io.WriteCloser
+	debugPWC io.WriteCloser
 
 	actualLogDir   string
 	actualLogDirMx sync.RWMutex
@@ -68,10 +67,10 @@ func EnableFileLogging(logdir string) {
 	// Keep up to 5 log files
 	rotator.MaxRotation = 5
 
-	logFile = newPipedWriteCloser(rotator, 100)
-	errorOut = timestamped(newNonStopWriter(os.Stderr, logFile))
-	debugOut = timestamped(newNonStopWriter(os.Stdout, logFile))
-	golog.SetOutputs(errorOut, debugOut)
+	logFile = rotator
+	errorPWC = newPipedWriteCloser(newNonStopWriteCloser(os.Stderr, logFile), 1000)
+	debugPWC = newPipedWriteCloser(newNonStopWriteCloser(os.Stdout, logFile), 100)
+	golog.SetOutputs(timestamped(errorPWC), timestamped(debugPWC))
 }
 
 type pipedWriteCloser struct {
@@ -162,17 +161,21 @@ func ZipLogFiles(w io.Writer, underFolder string, maxBytes int64) error {
 
 // Close stops logging.
 func Close() error {
-	initLogging()
-	if logFile != nil {
-		return logFile.Close()
+	if errorPWC != nil {
+		errorPWC.Close()
 	}
+	if debugPWC != nil {
+		debugPWC.Close()
+	}
+	if logFile != nil {
+		logFile.Close()
+	}
+	initLogging()
 	return nil
 }
 
 func initLogging() {
-	errorOut = timestamped(os.Stderr)
-	debugOut = timestamped(os.Stdout)
-	golog.SetOutputs(errorOut, debugOut)
+	golog.SetOutputs(timestamped(os.Stderr), timestamped(os.Stdout))
 }
 
 // timestamped adds a timestamp to the beginning of log lines
@@ -186,24 +189,29 @@ func timestamped(orig io.Writer) io.Writer {
 	})
 }
 
-type nonStopWriter struct {
-	writers []io.Writer
+type nonStopWriteCloser struct {
+	writers []io.WriteCloser
 }
 
-// newNonStopWriter creates a writer that duplicates its writes to all the
-// provided writers, even if errors encountered while writting.
-func newNonStopWriter(writers ...io.Writer) io.Writer {
-	w := make([]io.Writer, len(writers))
+// newNonStopWriteCloser creates a WriteCloser that duplicates its writes to all the
+// provided WriteClosers, even if errors encountered while writing. It doesn't
+// close the provided WriteClosers.
+func newNonStopWriteCloser(writers ...io.WriteCloser) io.WriteCloser {
+	w := make([]io.WriteCloser, len(writers))
 	copy(w, writers)
-	return &nonStopWriter{w}
+	return &nonStopWriteCloser{w}
 }
 
 // Write implements the method from io.Writer.
 // It never fails and always return the length of bytes passed in
-func (t *nonStopWriter) Write(p []byte) (int, error) {
+func (t *nonStopWriteCloser) Write(p []byte) (int, error) {
 	for _, w := range t.writers {
 		// intentionally not checking for errors
 		_, _ = w.Write(p)
 	}
 	return len(p), nil
+}
+
+func (t *nonStopWriteCloser) Close() error {
+	return nil
 }

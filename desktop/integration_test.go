@@ -146,7 +146,7 @@ func TestProxying(t *testing.T) {
 				} else {
 					for _, lightweightOp := range flashlight.LightweightOps {
 						if op == lightweightOp {
-							if reportedOps[op] > 20 {
+							if reportedOps[op] > 40 {
 								overreportedOps = append(overreportedOps, op)
 							}
 						}

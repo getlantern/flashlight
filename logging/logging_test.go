@@ -43,23 +43,28 @@ func (w *goodWriter) Write(p []byte) (int, error) {
 	return w.counter, nil
 }
 
-func TestNonStopWriter(t *testing.T) {
-	b, g := badWriter{}, goodWriter{}
-	ns := newNonStopWriter(&b, &g)
-	ns.Write([]byte("1234"))
-	assert.Equal(t, 4, g.counter, "Should write to all writers even when error encountered")
-}
-
 type nopCloser struct {
 	io.Writer
+	closeCalled bool
 }
 
-func (nopCloser) Close() error { return nil }
+func (c *nopCloser) Close() error { c.closeCalled = true; return nil }
+
+func TestNonStopWriter(t *testing.T) {
+	b, g := &badWriter{}, &goodWriter{}
+	ncb, ncg := &nopCloser{Writer: b}, &nopCloser{Writer: g}
+	ns := newNonStopWriteCloser(ncb, ncg)
+	ns.Write([]byte("1234"))
+	assert.Equal(t, 4, g.counter, "Should write to all writers even when error encountered")
+	ns.Close()
+	assert.False(t, ncb.closeCalled)
+	assert.False(t, ncg.closeCalled)
+}
 
 func TestPipedWriteCloserWriteProperly(t *testing.T) {
 	entry := []byte("abcd\n")
 	var b bytes.Buffer
-	w := newPipedWriteCloser(nopCloser{&b}, 100)
+	w := newPipedWriteCloser(&nopCloser{Writer: &b}, 100)
 	for i := 0; i < 100; i++ {
 		w.Write(entry)
 	}
@@ -70,7 +75,7 @@ func TestPipedWriteCloserWriteProperly(t *testing.T) {
 func TestPipedWriteCloserSkipMessages(t *testing.T) {
 	entry := []byte("abcd\n")
 	var b bytes.Buffer
-	w := newPipedWriteCloser(nopCloser{&b}, 10)
+	w := newPipedWriteCloser(&nopCloser{Writer: &b}, 10)
 	for i := 0; i < 999; i++ {
 		w.Write(entry)
 	}
@@ -99,4 +104,11 @@ func countMessages(b []byte) int {
 		}
 	}
 	return n
+}
+
+func TestCloseAndInit(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		EnableFileLogging("")
+		Close()
+	}
 }
