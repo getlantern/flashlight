@@ -362,14 +362,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b8304f451abeff7233f9ac56fe25817c530b3520ac52cbd7e649cc4cd59d7b9a"
+  digest = "1:82239ac7177fb0b9ca584769d6c25471a9ddb3e01f7b2a9fa4b666792a157c39"
   name = "github.com/getlantern/gotun"
   packages = [
     ".",
     "packet",
   ]
   pruneopts = "UT"
-  revision = "2d27a5d8358131a90085dce0db0ca5a0c93aef1d"
+  revision = "e1af62175687557f830bb9945edda5a60c00b907"
 
 [[projects]]
   branch = "master"
@@ -1409,14 +1409,6 @@
   revision = "a16aeec10ff407b1e7be6dd35797ccf5426ef0f0"
   version = "v5.2.9"
 
-[[projects]]
-  branch = "v1"
-  digest = "1:4384086c0f7f9e662c2ae8e900af35dc75ff262205b362597bb65af2fd8a21c9"
-  name = "gopkg.in/yaml.v1"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "9f9df34309c04878acc86042b16630b0f696e1de"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -1497,7 +1489,6 @@
     "github.com/stretchr/testify/assert",
     "github.com/tevino/abool",
     "golang.org/x/net/proxy",
-    "gopkg.in/yaml.v1",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -33,7 +33,7 @@ func Tun2Socks(fd int, socksAddr, dnsAddr, dnsGrabAddr string, mtu int) error {
 	currentDevice.Store(dev)
 
 	go func() {
-		err := tun.Serve(dev, &tun.ServerOpts{
+		err := tun.NewBridge(dev, &tun.ServerOpts{
 			MTU: mtu,
 			DialTCP: func(ctx context.Context, network, addr string) (net.Conn, error) {
 				return socksDialer.Dial(network, addr)
@@ -49,7 +49,7 @@ func Tun2Socks(fd int, socksAddr, dnsAddr, dnsGrabAddr string, mtu int) error {
 				}
 				return netx.DialUDP(network, nil, raddr)
 			},
-		})
+		}).Serve()
 		if err != nil {
 			log.Errorf("Error on serving from TUN device: %v", err)
 		}
