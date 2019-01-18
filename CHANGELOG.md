@@ -1,5 +1,13 @@
 # Change Log
 
+## [5.2.6](https://github.com/getlantern/flashlight/tree/5.2.6) (2019-01-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.5...5.2.6)
+
+**Merged pull requests:**
+
+- fixes for yinbi mouseover and translation [\#573](https://github.com/getlantern/flashlight/pull/573) ([myleshorton](https://github.com/myleshorton))
+- quic support [\#490](https://github.com/getlantern/flashlight/pull/490) ([forkner](https://github.com/forkner))
+
 ## [5.2.5](https://github.com/getlantern/flashlight/tree/5.2.5) (2019-01-17)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.4...5.2.5)
 
