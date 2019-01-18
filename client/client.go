@@ -120,7 +120,7 @@ type Client struct {
 	l net.Listener
 
 	disconnected  func() bool
-	allowShortcut func(addr string) (bool, net.IP)
+	allowShortcut func(ctx context.Context, addr string) (bool, net.IP)
 	useDetour     func() bool
 	user          common.UserConfig
 
@@ -146,7 +146,7 @@ type Client struct {
 // all traffic, and another function to get Lantern Pro token when required.
 func NewClient(
 	disconnected func() bool,
-	allowShortcut func(addr string) (bool, net.IP),
+	allowShortcut func(ctx context.Context, addr string) (bool, net.IP),
 	useDetour func() bool,
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
@@ -498,7 +498,7 @@ func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Con
 	}
 
 	dialDirectForDetour := func(ctx context.Context, network, addr string) (net.Conn, error) {
-		if allow, ip := client.allowShortcut(addr); allow {
+		if allow, ip := client.allowShortcut(ctx, addr); allow {
 			return dialDirectForShortcut(ctx, network, addr, ip)
 		}
 
@@ -512,10 +512,9 @@ func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Con
 			return nil, errors.New("context has no deadline")
 		}
 		// It's roughly requestTimeout (20s) / 5 = 4s to leave enough time
-		// to try detour. Not hardcode to 4s to avoid break test code which may
-		// have a shorter requestTimeout.
-		timeout := dl.Sub(time.Now()) / 5
-		newCTX, cancel := context.WithTimeout(ctx, timeout)
+		// to try dialing via proxies. Not hardcode to 4s to avoid break test
+		// code which may have a shorter requestTimeout.
+		newCTX, cancel := context.WithTimeout(ctx, dl.Sub(time.Now())/5)
 		defer cancel()
 		return netx.DialContext(newCTX, "tcp", addr)
 	}
@@ -529,7 +528,7 @@ func (client *Client) getDialer(op *ops.Op, isCONNECT bool) func(ctx context.Con
 		dialer = func(ctx context.Context, network, addr string) (net.Conn, error) {
 			var conn net.Conn
 			var err error
-			if allow, ip := client.allowShortcut(addr); allow {
+			if allow, ip := client.allowShortcut(ctx, addr); allow {
 				conn, err = dialDirectForShortcut(ctx, network, addr, ip)
 				if err == nil {
 					return conn, err

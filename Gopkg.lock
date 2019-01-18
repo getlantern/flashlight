@@ -676,11 +676,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:bb791df8894bb9e7f1c904b8f60fd9f3eab83b7004782df03b0b2bdc7cd12bd2"
+  digest = "1:4f86058053105c14f09c41df3dbcf7c49f890dfdb5170eb6faa202981363719c"
   name = "github.com/getlantern/shortcut"
   packages = ["."]
   pruneopts = "UT"
-  revision = "08ded803cb4dbc6f4149ab0091847248f8976f57"
+  revision = "bb4d4203cc254f5838b1e53fd189f6f34ae2af42"
 
 [[projects]]
   branch = "master"

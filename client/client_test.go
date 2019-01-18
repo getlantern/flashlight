@@ -65,7 +65,7 @@ func newClient() *Client {
 func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *Client {
 	client, _ := NewClient(
 		func() bool { return false },
-		func(addr string) (bool, net.IP) { return false, nil },
+		func(context.Context, string) (bool, net.IP) { return false, nil },
 		func() bool { return true },
 		newTestUserConfig(),
 		mockStatsTracker{},
@@ -159,7 +159,7 @@ func TestDialShortcut(t *testing.T) {
 
 	client := newClient()
 	shortcutVisited := false
-	client.allowShortcut = func(addr string) (bool, net.IP) {
+	client.allowShortcut = func(ctx context.Context, addr string) (bool, net.IP) {
 		shortcutVisited = true
 		return true, net.ParseIP(addr)
 	}
@@ -192,7 +192,7 @@ func TestDialShortcut(t *testing.T) {
 	}
 	assert.Equal(t, 404, nestedResp.StatusCode, "should dial proxy if the shortcutted site is unreachable")
 
-	client.allowShortcut = func(addr string) (bool, net.IP) {
+	client.allowShortcut = func(context.Context, string) (bool, net.IP) {
 		shortcutVisited = true
 		return false, nil
 	}
