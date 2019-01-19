@@ -198,7 +198,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c3c09c0f941175181747b2d6948fd1add3ba82e66215aae78ec9b44d97d8ed40"
+  digest = "1:e189a74ad21c3d1e10630172d9468f3f641414725a50326045ca360d71e753a6"
   name = "github.com/getlantern/context"
   packages = ["."]
   pruneopts = "UT"
