@@ -247,22 +247,34 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 		// a connection that was just idled. The client's IdleTimeout is already set
 		// appropriately for this purpose, so use that.
 		idleInterval = IdleTimeout
-		log.Debugf("Defaulted lampshade idleinterval to %v", idleInterval)
+		log.Debugf("%s: defaulted idleinterval to %v", name, idleInterval)
 	}
 	pingInterval, parseErr := time.ParseDuration(s.ptSetting("pinginterval"))
 	if parseErr != nil || pingInterval < 0 {
 		pingInterval = 15 * time.Second
-		log.Debugf("Defaulted lampshade pinginterval to %v", pingInterval)
+		log.Debugf("%s: defaulted pinginterval to %v", name, pingInterval)
+	}
+	maxLiveConns := s.ptSettingInt("maxliveconns")
+	if maxLiveConns <= 0 {
+		maxLiveConns = 5
+		log.Debugf("%s: defaulted maxliveconns to %v", name, maxLiveConns)
+	}
+	redialSessionInterval, parseErr := time.ParseDuration(s.ptSetting("redialsessioninterval"))
+	if parseErr != nil || redialSessionInterval < 0 {
+		redialSessionInterval = 5 * time.Second
+		log.Debugf("%s: defaulted redialsessioninterval to %v", name, redialSessionInterval)
 	}
 	dialer := lampshade.NewDialer(&lampshade.DialerOpts{
-		WindowSize:        windowSize,
-		MaxPadding:        maxPadding,
-		MaxStreamsPerConn: maxStreamsPerConn,
-		IdleInterval:      idleInterval,
-		PingInterval:      pingInterval,
-		Pool:              buffers.Pool,
-		Cipher:            cipherCode,
-		ServerPublicKey:   rsaPublicKey,
+		WindowSize:            windowSize,
+		MaxPadding:            maxPadding,
+		MaxLiveConns:          maxLiveConns,
+		MaxStreamsPerConn:     maxStreamsPerConn,
+		IdleInterval:          idleInterval,
+		PingInterval:          pingInterval,
+		RedialSessionInterval: redialSessionInterval,
+		Pool:                  buffers.Pool,
+		Cipher:                cipherCode,
+		ServerPublicKey:       rsaPublicKey,
 	})
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(s.Addr, "lampshade", "tcp", func(op *ops.Op) (net.Conn, error) {
@@ -270,7 +282,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 				Set("ls_pad", maxPadding).
 				Set("ls_streams", int(maxStreamsPerConn)).
 				Set("ls_cipher", cipherCode.String())
-			conn, err := dialer.Dial(func() (net.Conn, error) {
+			conn, err := dialer.DialContext(ctx, func() (net.Conn, error) {
 				// note - we do not wrap the TCP connection with IdleTiming because
 				// lampshade cleans up after itself and won't leave excess unused
 				// connections hanging around.
