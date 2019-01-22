@@ -21,8 +21,8 @@ var currentDevice atomic.Value
 // 2. All other udp packets are routed directly to their destination
 // 3. All TCP traffic is routed through the Lantern proxy at the given socksAddr.
 //
-func Tun2Socks(fd int, socksAddr, dnsAddr, dnsGrabAddr string, mtu int) error {
-	dev, err := tun.WrapTunDevice(fd)
+func Tun2Socks(fd int, tunAddr, gwAddr, socksAddr, dnsAddr, dnsGrabAddr string, mtu int) error {
+	dev, err := tun.WrapTunDevice(fd, tunAddr, gwAddr)
 	if err != nil {
 		return errors.New("Unable to wrap tun device: %v", err)
 	}
@@ -33,7 +33,7 @@ func Tun2Socks(fd int, socksAddr, dnsAddr, dnsGrabAddr string, mtu int) error {
 	currentDevice.Store(dev)
 
 	go func() {
-		err := tun.NewBridge(dev, &tun.ServerOpts{
+		err := tun.NewBridge(dev, &tun.BridgeOpts{
 			MTU: mtu,
 			DialTCP: func(ctx context.Context, network, addr string) (net.Conn, error) {
 				return socksDialer.Dial(network, addr)
