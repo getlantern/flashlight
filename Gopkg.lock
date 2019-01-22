@@ -370,14 +370,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b0c614f470a7e22eed0668dfbf0207a0abef4d3fec445c2bb6bbf77aa20d4862"
+  digest = "1:c8f7b9abe43024f46df6700739e463f2fc56fe9c92b7bb6dbc975f4c2898f5a6"
   name = "github.com/getlantern/gotun"
   packages = [
     ".",
     "packet",
   ]
   pruneopts = "UT"
-  revision = "ee7fe44cc26aa4226eca56b6a157ea19affc676c"
+  revision = "4ea3ed9fc4513dcc6c844ce63db6367e184e93ce"
 
 [[projects]]
   branch = "master"
