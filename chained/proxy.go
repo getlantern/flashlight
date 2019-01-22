@@ -3,6 +3,7 @@ package chained
 import (
 	"context"
 	"crypto/rsa"
+	gtls "crypto/tls"
 	"fmt"
 	"net"
 	"net/http"
@@ -33,6 +34,7 @@ import (
 	"github.com/getlantern/lampshade"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
+	"github.com/getlantern/quicwrapper"
 	"github.com/getlantern/tlsdialer"
 	"github.com/mitchellh/mapstructure"
 	"github.com/refraction-networking/utls"
@@ -81,6 +83,8 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		return newOBFS4Proxy(name, s, uc)
 	case "lampshade":
 		return newLampshadeProxy(name, s, uc)
+	case "quic":
+		return newQUICProxy(name, s, uc)
 	default:
 		return nil, errors.New("Unknown transport: %v", s.PluggableTransport).With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
 	}
@@ -280,6 +284,18 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 	return newProxy(name, "lampshade", "tcp", s, uc, s.Trusted, false, doDialServer, defaultDialOrigin)
 }
 
+func newQUICProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+
+	dialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
+		return p.reportedDial(s.Addr, "quic", "udp", func(op *ops.Op) (net.Conn, error) {
+			conn, err := p.dialCore(op)(ctx)
+			return overheadWrapper(true)(conn, err)
+		})
+	}
+
+	return newProxy(name, "quic", "udp", s, uc, s.Trusted, false, dialServer, defaultDialOrigin)
+}
+
 // consecCounter is a counter that can extend on both directions. Its default
 // value is zero. Inc() sets it to 1 or adds it by 1; Dec() sets it to -1 or
 // minus it by 1. When called concurrently, it may have an incorrect absolute
@@ -422,6 +438,12 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 			return nil, err
 		}
 		p.protocol = "kcp"
+	} else if s.PluggableTransport == "quic" {
+		err := enableQUIC(p, s)
+		if err != nil {
+			return nil, err
+		}
+		p.protocol = "quic"
 	} else if allowPreconnecting && s.MaxPreconnect > 0 {
 		log.Debugf("Enabling preconnecting for %v", p.Label())
 		// give ourselves a large margin for making sure we're not using idled preconnected connections
@@ -474,6 +496,81 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 		dialKCPMutex.Unlock()
 
 		conn, err := doDialKCP(ctx, "tcp", p.addr)
+		delta := elapsed()
+		return conn, delta, err
+	}
+
+	return nil
+}
+
+func enableQUIC(p *proxy, s *ChainedServerInfo) error {
+	addr := s.Addr
+	tlsConf := &gtls.Config{InsecureSkipVerify: true}
+
+	maxStreamsPerConn := s.ptSettingInt("streams")
+
+	quicConf := &quicwrapper.Config{
+		IdleTimeout:        IdleTimeout,
+		MaxIncomingStreams: maxStreamsPerConn,
+		KeepAlive:          true,
+	}
+
+	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
+	if err != nil {
+		return log.Error(errors.Wrap(err).With("addr", s.Addr))
+	}
+	pinnedCert := cert.X509()
+
+	newQUICDialer := func() *quicwrapper.Client {
+		d := quicwrapper.NewClientWithPinnedCert(
+			addr,
+			tlsConf,
+			quicConf,
+			quicwrapper.DialWithNetx,
+			pinnedCert,
+		)
+		return d
+	}
+
+	dialer := newQUICDialer()
+	var dialerLock sync.Mutex
+
+	// when the proxy closes, close the dialer
+	// and nil it out.
+	go func() {
+		<-p.closeCh
+		log.Debug("Closing quic session: Proxy closed.")
+		dialerLock.Lock()
+		dialer.Close()
+		dialer = nil
+		dialerLock.Unlock()
+	}()
+
+	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
+		elapsed := mtime.Stopwatch()
+
+		dialerLock.Lock()
+		if p.forceRedial.IsSet() {
+			if dialer != nil {
+				log.Debug("Connection state changed, re-connecting to server first")
+				dialer.Close()
+				dialer = newQUICDialer()
+			} else {
+				log.Debug("not re-connecting after closed.")
+			}
+			p.forceRedial.UnSet()
+		}
+		dialerLock.Unlock()
+
+		var conn net.Conn
+		conn, err := dialer.DialContext(ctx)
+		if err != nil {
+			log.Debugf("Failed to establish multiplexed connection: %s", err)
+			p.ForceRedial()
+		} else {
+			log.Debug("established new multiplexed quic connection.")
+		}
+
 		delta := elapsed()
 		return conn, delta, err
 	}

@@ -1,5 +1,29 @@
 # Change Log
 
+## [5.2.7](https://github.com/getlantern/flashlight/tree/5.2.7) (2019-01-19)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.6...5.2.7)
+
+**Merged pull requests:**
+
+- Fix digest for context [\#574](https://github.com/getlantern/flashlight/pull/574) ([myleshorton](https://github.com/myleshorton))
+
+## [5.2.6](https://github.com/getlantern/flashlight/tree/5.2.6) (2019-01-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.5...5.2.6)
+
+**Merged pull requests:**
+
+- fixes for yinbi mouseover and translation [\#573](https://github.com/getlantern/flashlight/pull/573) ([myleshorton](https://github.com/myleshorton))
+- quic support [\#490](https://github.com/getlantern/flashlight/pull/490) ([forkner](https://github.com/forkner))
+
+## [5.2.5](https://github.com/getlantern/flashlight/tree/5.2.5) (2019-01-17)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.4...5.2.5)
+
+**Merged pull requests:**
+
+- dep ensure consistently strips this [\#571](https://github.com/getlantern/flashlight/pull/571) ([myleshorton](https://github.com/myleshorton))
+- updated UI for 5.2.5 [\#570](https://github.com/getlantern/flashlight/pull/570) ([myleshorton](https://github.com/myleshorton))
+- update to latest context package [\#569](https://github.com/getlantern/flashlight/pull/569) ([joesis](https://github.com/joesis))
+
 ## [5.2.4](https://github.com/getlantern/flashlight/tree/5.2.4) (2019-01-08)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.3...5.2.4)
 
@@ -169,7 +193,7 @@
 - Lots of changes to balancer and chained package [\#479](https://github.com/getlantern/flashlight/pull/479) ([joesis](https://github.com/joesis))
 
 ## [4.7.13](https://github.com/getlantern/flashlight/tree/4.7.13) (2018-08-09)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.13)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.13)
 
 **Merged pull requests:**
 
@@ -178,11 +202,11 @@
 - Updated desktop ui with device name fix [\#487](https://github.com/getlantern/flashlight/pull/487) ([myleshorton](https://github.com/myleshorton))
 - set client request timeout as a struct member [\#486](https://github.com/getlantern/flashlight/pull/486) ([joesis](https://github.com/joesis))
 
-## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.12)
-
 ## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.11)
+
+## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.12)
 
 **Merged pull requests:**
 
@@ -774,18 +798,18 @@
 - Refactored to use nattywad that uses topics support in waddell [\#48](https://github.com/getlantern/flashlight/pull/48) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [v1.5.12](https://github.com/getlantern/flashlight/tree/v1.5.12) (2014-11-19)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta1...v1.5.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta2...v1.5.12)
 
 **Merged pull requests:**
 
 - getlantern/lantern\#1981 gzipping cloud.yaml [\#47](https://github.com/getlantern/flashlight/pull/47) ([oxtoacart](https://github.com/oxtoacart))
 - Pull changes for getlantern/lantern\#1946 into natty branch [\#46](https://github.com/getlantern/flashlight/pull/46) ([oxtoacart](https://github.com/oxtoacart))
 
-## [natty-beta1](https://github.com/getlantern/flashlight/tree/natty-beta1) (2014-11-10)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta2...natty-beta1)
-
 ## [natty-beta2](https://github.com/getlantern/flashlight/tree/natty-beta2) (2014-11-10)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/natty...natty-beta2)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta1...natty-beta2)
+
+## [natty-beta1](https://github.com/getlantern/flashlight/tree/natty-beta1) (2014-11-10)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/natty...natty-beta1)
 
 ## [natty](https://github.com/getlantern/flashlight/tree/natty) (2014-11-10)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/v1.6.0...natty)

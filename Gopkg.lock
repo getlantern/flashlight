@@ -77,6 +77,14 @@
   revision = "c5e971dbed7850a93c23aa6ff69db5771d8e23b3"
 
 [[projects]]
+  digest = "1:f438d91be142877c3ad83157992c91de787ddfbddcc2a7da1ef6ef61606cadc4"
+  name = "github.com/cheekybits/genny"
+  packages = ["generic"]
+  pruneopts = "UT"
+  revision = "d2cf3cdd35ce0d789056c4bc02a4d6349c947caf"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   digest = "1:4c4c33075b704791d6a7f09dfb55c66769e8a1dc6adf87026292d274fe8ad113"
   name = "github.com/codahale/hdrhistogram"
@@ -190,7 +198,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c3c09c0f941175181747b2d6948fd1add3ba82e66215aae78ec9b44d97d8ed40"
+  digest = "1:e189a74ad21c3d1e10630172d9468f3f641414725a50326045ca360d71e753a6"
   name = "github.com/getlantern/context"
   packages = ["."]
   pruneopts = "UT"
@@ -362,14 +370,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:82239ac7177fb0b9ca584769d6c25471a9ddb3e01f7b2a9fa4b666792a157c39"
+  digest = "1:b0c614f470a7e22eed0668dfbf0207a0abef4d3fec445c2bb6bbf77aa20d4862"
   name = "github.com/getlantern/gotun"
   packages = [
     ".",
     "packet",
   ]
   pruneopts = "UT"
-  revision = "e1af62175687557f830bb9945edda5a60c00b907"
+  revision = "ee7fe44cc26aa4226eca56b6a157ea19affc676c"
 
 [[projects]]
   branch = "master"
@@ -576,11 +584,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2f2e79db72ce34715cf5a1c57581a8623a57ad9c2a38699598ef90dc3b9b8c6c"
+  digest = "1:50425f63a4348b642f1ce2a343b86077e62f98153d1bf00d9bc3387524e71872"
   name = "github.com/getlantern/netx"
   packages = ["."]
   pruneopts = "UT"
-  revision = "e4cf01032170e7c06da6deb1ae53ce8c1e0df0ab"
+  revision = "9912de6f94fd1dd35a2f3af9a9ce5650d1a10b7a"
 
 [[projects]]
   branch = "master"
@@ -628,11 +636,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:18a0cec8ed1628574a021aa6e0fb8bc5481df904069b2ae0ecd6d7a9fd8ea020"
+  digest = "1:ad9c217189ec55389d111a3a2bb76f8ec6f37cee6ba63b4815fe300e494b1119"
   name = "github.com/getlantern/protected"
   packages = ["."]
   pruneopts = "UT"
-  revision = "b0900930f8068ec3c024d6d022c16d75ddd8a163"
+  revision = "cc3b5f4a0fb853b4aa6d7994707fa916ed963b00"
 
 [[projects]]
   branch = "master"
@@ -663,6 +671,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:e5baaf124b9b31538eadaf72bce33b3fa54c8ffad2bd42a2e8eea46354a341a7"
+  name = "github.com/getlantern/quicwrapper"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f6dd70305d8ec1ce65c767ebc4d7ef6e3ee36499"
+
+[[projects]]
+  branch = "master"
   digest = "1:fe83a44c95f15ae21643250231ac9a2bb163a0ce92708f8d0cb8b9b7e54012fe"
   name = "github.com/getlantern/reconn"
   packages = ["."]
@@ -687,11 +703,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:bb791df8894bb9e7f1c904b8f60fd9f3eab83b7004782df03b0b2bdc7cd12bd2"
+  digest = "1:4f86058053105c14f09c41df3dbcf7c49f890dfdb5170eb6faa202981363719c"
   name = "github.com/getlantern/shortcut"
   packages = ["."]
   pruneopts = "UT"
-  revision = "08ded803cb4dbc6f4149ab0091847248f8976f57"
+  revision = "bb4d4203cc254f5838b1e53fd189f6f34ae2af42"
 
 [[projects]]
   branch = "master"
@@ -1007,11 +1023,39 @@
   revision = "3035450ff8b987ec4373f65c40767f096b35f2d2"
 
 [[projects]]
+  branch = "master"
+  digest = "1:cf1b1b7fd1673fe07f900f87d0e9ef327f368d4c4d84a50945f80cc5679b116d"
+  name = "github.com/lucas-clemente/quic-go"
+  packages = [
+    ".",
+    "internal/ackhandler",
+    "internal/congestion",
+    "internal/crypto",
+    "internal/flowcontrol",
+    "internal/handshake",
+    "internal/protocol",
+    "internal/qerr",
+    "internal/utils",
+    "internal/wire",
+  ]
+  pruneopts = "UT"
+  revision = "1facb9de6ec27e25373be2598c6485290bdcc8da"
+  source = "https://github.com/getlantern/quic-go"
+
+[[projects]]
   digest = "1:edc06cd757463855201296ea10ef945e63485c8fa2a0418061cfcbb831f6e220"
   name = "github.com/mailgun/oxy"
   packages = ["forward"]
   pruneopts = "UT"
   revision = "3a0f6c4b456b7376a5b148e69e97f93f6366b613"
+
+[[projects]]
+  branch = "qtls"
+  digest = "1:d9fa8e4b5feb3ef4198bf0d1047cddea06c69937e0b4e9e50ee7b2545c58a517"
+  name = "github.com/marten-seemann/qtls"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "c50a91d48284ab31c39389e64f7c57e475bb0633"
 
 [[projects]]
   branch = "master"
@@ -1304,7 +1348,16 @@
   revision = "db08ff08e8622530d9ed3a0e8ac279f6d4c02196"
 
 [[projects]]
-  digest = "1:ad59dc26d52bcd389ebcd96d8dad41da4ca13ab7286469142b263d16bdf35ce0"
+  branch = "master"
+  digest = "1:e0140c0c868c6e0f01c0380865194592c011fe521d6e12d78bfd33e756fe018a"
+  name = "golang.org/x/sync"
+  packages = ["semaphore"]
+  pruneopts = "UT"
+  revision = "1d60e4601c6fd243af51cc01ddf169918a5407ca"
+
+[[projects]]
+  branch = "master"
+  digest = "1:41c13cada29d953aedd6e98918f11d662e8a84af9a4374df5f2cc9dbb4731664"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -1312,7 +1365,7 @@
     "windows/registry",
   ]
   pruneopts = "UT"
-  revision = "3b87a42e500a6dc65dae1a55d0b641295971163e"
+  revision = "d47a0f3392421c5624713c9a19fe781f651f8a50"
 
 [[projects]]
   digest = "1:631ef6715072ab603861df0d7cf0313f85d8b5491c93f8ad0e6f7cbc55d19482"
@@ -1462,6 +1515,7 @@
     "github.com/getlantern/proxy",
     "github.com/getlantern/proxy/filters",
     "github.com/getlantern/proxybench",
+    "github.com/getlantern/quicwrapper",
     "github.com/getlantern/rot13",
     "github.com/getlantern/rotator",
     "github.com/getlantern/shortcut",
