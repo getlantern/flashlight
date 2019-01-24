@@ -24,6 +24,7 @@ var (
 // 3. All TCP traffic is routed through the Lantern proxy at the given socksAddr.
 //
 func Tun2Socks(fd int, tunAddr, gwAddr, socksAddr, dnsAddr, dnsGrabAddr string, mtu int) error {
+	log.Debugf("Starting tun2socks at %v gw %v connection to socks at %v with dns %v", tunAddr, gwAddr, socksAddr, dnsAddr)
 	dev, err := tun.WrapTunDevice(fd, tunAddr, gwAddr)
 	if err != nil {
 		return errors.New("Unable to wrap tun device: %v", err)
