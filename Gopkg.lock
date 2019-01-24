@@ -206,11 +206,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7f812a62c522ca270f3b017ca39f161a03f914eafa05129b156aff83d823dede"
+  digest = "1:7138fb0e9c6cb68acebb6cba7adbd7d15114fecc6bafa7f449e4ea26192d96aa"
   name = "github.com/getlantern/detour"
   packages = ["."]
   pruneopts = "UT"
-  revision = "40ce261d3ba85a967570daa390627e5d0529baa0"
+  revision = "7107a599a1704521f97f40d0086b7e20c3cd1fa6"
 
 [[projects]]
   branch = "master"
