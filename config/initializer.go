@@ -36,6 +36,9 @@ var (
 	// DefaultProxyConfigPollInterval determines how frequently to fetch proxies.yaml
 	DefaultProxyConfigPollInterval = 1 * time.Minute
 
+	// Overrides how frequently to fetch proxies.yaml if set (does not honor values from global.yaml)
+	ForceProxyConfigPollInterval = 0 * time.Second
+
 	// DefaultGlobalConfigPollInterval determines how frequently to fetch global.yaml
 	DefaultGlobalConfigPollInterval = 24 * time.Hour
 )
@@ -66,6 +69,9 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 	var mx sync.RWMutex
 	globalConfigPollInterval := DefaultGlobalConfigPollInterval
 	proxyConfigPollInterval := DefaultProxyConfigPollInterval
+	if ForceProxyConfigPollInterval > 0 {
+		proxyConfigPollInterval = ForceProxyConfigPollInterval
+	}
 
 	globalDispatchCh := make(chan interface{})
 	proxiesDispatchCh := make(chan interface{})
@@ -87,7 +93,7 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 			if globalConfig.GlobalConfigPollInterval > 0 {
 				globalConfigPollInterval = globalConfig.GlobalConfigPollInterval
 			}
-			if globalConfig.ProxyConfigPollInterval > 0 {
+			if ForceProxyConfigPollInterval == 0 && globalConfig.ProxyConfigPollInterval > 0 {
 				proxyConfigPollInterval = globalConfig.ProxyConfigPollInterval
 			}
 			mx.Unlock()

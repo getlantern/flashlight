@@ -80,9 +80,8 @@ func TestProxying(t *testing.T) {
 			assert.True(t, getVal("probe_rtt") > 0)
 		}
 	}
-	config.DefaultProxyConfigPollInterval = 100 * time.Millisecond
-
-	helper, err := integrationtest.NewHelper(t, "localhost:18347", "localhost:18348", "localhost:18349")
+	config.ForceProxyConfigPollInterval = 1 * time.Second
+	helper, err := integrationtest.NewHelper(t, "localhost:18347", "localhost:18348", "localhost:18349", "localhost:18350")
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -98,9 +97,9 @@ func TestProxying(t *testing.T) {
 	testRequest(t, helper)
 
 	// Switch to obfs4, wait for a new config and test request again
-	helper.SetProtocol("obfs4")
-	time.Sleep(2 * time.Second)
-	testRequest(t, helper)
+	// helper.SetProtocol("obfs4")
+	// time.Sleep(2 * time.Second)
+	// testRequest(t, helper)
 
 	// Switch to lampshade, wait for a new config and test request again
 	helper.SetProtocol("lampshade")
@@ -108,7 +107,12 @@ func TestProxying(t *testing.T) {
 	testRequest(t, helper)
 
 	// Switch to kcp, wait for a new config and test request again
-	helper.SetProtocol("kcp")
+	// helper.SetProtocol("kcp")
+	// time.Sleep(2 * time.Second)
+	// testRequest(t, helper)
+
+	// Switch to quic, wait for a new config and test request again
+	helper.SetProtocol("quic")
 	time.Sleep(2 * time.Second)
 	testRequest(t, helper)
 

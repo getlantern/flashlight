@@ -51,6 +51,7 @@ type Helper struct {
 	HTTPSProxyServerAddr     string
 	OBFS4ProxyServerAddr     string
 	LampshadeProxyServerAddr string
+	QUICProxyServerAddr      string
 	HTTPServerAddr           string
 	HTTPSServerAddr          string
 	ConfigServerAddr         string
@@ -62,7 +63,7 @@ type Helper struct {
 // also enables ForceProxying on the client package to make sure even localhost
 // origins are served through the proxy. Make sure to close the Helper with
 // Close() when finished with the test.
-func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string) (*Helper, error) {
+func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string) (*Helper, error) {
 	ConfigDir, err := ioutil.TempDir("", "integrationtest_helper")
 	if err != nil {
 		return nil, err
@@ -74,6 +75,7 @@ func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr s
 		HTTPSProxyServerAddr:     httpsAddr,
 		OBFS4ProxyServerAddr:     obfs4Addr,
 		LampshadeProxyServerAddr: lampshadeAddr,
+		QUICProxyServerAddr:      quicAddr,
 	}
 	helper.SetProtocol("https")
 	client.ForceProxying()
@@ -168,10 +170,11 @@ func (helper *Helper) startProxyServer() error {
 
 	s1 := &proxy.Proxy{
 		TestingLocal:  true,
-		Addr:          helper.HTTPSProxyServerAddr,
+		HTTPAddr:      helper.HTTPSProxyServerAddr,
 		Obfs4Addr:     helper.OBFS4ProxyServerAddr,
 		Obfs4Dir:      filepath.Join(helper.ConfigDir, ".server"),
 		LampshadeAddr: helper.LampshadeProxyServerAddr,
+		QUICAddr:      helper.QUICProxyServerAddr,
 		Token:         Token,
 		KeyFile:       KeyFile,
 		CertFile:      CertFile,
@@ -182,7 +185,7 @@ func (helper *Helper) startProxyServer() error {
 	// kcp server
 	s2 := &proxy.Proxy{
 		TestingLocal: true,
-		Addr:         "127.0.0.1:0",
+		HTTPAddr:     "127.0.0.1:0",
 		KCPConf:      kcpConfFile.Name(),
 		Token:        Token,
 		KeyFile:      KeyFile,
@@ -271,6 +274,8 @@ func (helper *Helper) writeProxyConfig(resp http.ResponseWriter, req *http.Reque
 		version = "3"
 	} else if proto == "kcp" {
 		version = "4"
+	} else if proto == "quic" {
+		version = "5"
 	}
 
 	if req.Header.Get(IfNoneMatch) == version {
@@ -340,6 +345,9 @@ func (helper *Helper) buildProxies(proto string) ([]byte, error) {
 		if proto == "lampshade" {
 			srv.Addr = helper.LampshadeProxyServerAddr
 			srv.PluggableTransport = "lampshade"
+		} else if proto == "quic" {
+			srv.Addr = helper.QUICProxyServerAddr
+			srv.PluggableTransport = "quic"
 		} else {
 			srv.Addr = helper.HTTPSProxyServerAddr
 		}
