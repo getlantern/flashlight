@@ -422,7 +422,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c01caf9470a08ddf436cbd62dc6bfc3e636f7fc65691215ad94b7d8df8c9b1fd"
+  digest = "1:241c04c1ed9b7d308dbd6b43498b9af228b4aff7d6e4c0be2ae0add89df2752e"
   name = "github.com/getlantern/http-proxy-lantern"
   packages = [
     ".",
@@ -430,9 +430,11 @@
     "bbr",
     "blacklist",
     "borda",
+    "cleanheadersfilter",
     "common",
     "devicefilter",
     "diffserv",
+    "domains",
     "geo",
     "googlefilter",
     "httpsrewriter",
@@ -451,7 +453,7 @@
     "versioncheck",
   ]
   pruneopts = "UT"
-  revision = "f8ac40bd2ea1622669960c391d11a5fb83dd9228"
+  revision = "8929c971a5e416120d6a7ec8fd61a6cd50af2873"
 
 [[projects]]
   branch = "master"
