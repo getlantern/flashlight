@@ -36,6 +36,8 @@ const (
 
 	Etag        = "X-Lantern-Etag"
 	IfNoneMatch = "X-Lantern-If-None-Match"
+
+	obfs4SubDir = ".obfs4"
 )
 
 var (
@@ -65,6 +67,7 @@ type Helper struct {
 // Close() when finished with the test.
 func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string) (*Helper, error) {
 	ConfigDir, err := ioutil.TempDir("", "integrationtest_helper")
+	log.Debugf("ConfigDir is %v", ConfigDir)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +175,7 @@ func (helper *Helper) startProxyServer() error {
 		TestingLocal:  true,
 		HTTPAddr:      helper.HTTPSProxyServerAddr,
 		Obfs4Addr:     helper.OBFS4ProxyServerAddr,
-		Obfs4Dir:      filepath.Join(helper.ConfigDir, ".server"),
+		Obfs4Dir:      filepath.Join(helper.ConfigDir, obfs4SubDir),
 		LampshadeAddr: helper.LampshadeProxyServerAddr,
 		QUICAddr:      helper.QUICProxyServerAddr,
 		Token:         Token,
@@ -330,7 +333,7 @@ func (helper *Helper) buildProxies(proto string) ([]byte, error) {
 			"iat-mode": "0",
 		}
 
-		bridgelineFile, err2 := ioutil.ReadFile("obfs4_bridgeline.txt")
+		bridgelineFile, err2 := ioutil.ReadFile(filepath.Join(filepath.Join(helper.ConfigDir, obfs4SubDir), "obfs4_bridgeline.txt"))
 		if err2 != nil {
 			return nil, fmt.Errorf("Could not read obfs4_bridgeline.txt: %v", err2)
 		}
