@@ -1058,7 +1058,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5aebe1b0003ac7874ef27a50bb1d94c5e8f090a0459393711b2fc926d60e41e9"
+  digest = "1:fc0099fa5cb6720480fcaf50d642b4c262dbed4bb800ba0476cd0d81bdebe0ba"
   name = "github.com/lucas-clemente/quic-go"
   packages = [
     ".",
@@ -1072,7 +1072,7 @@
     "internal/wire",
   ]
   pruneopts = "UT"
-  revision = "ca35f392a8ec033ad8bdbbc45cca49b7e0e3adaa"
+  revision = "9ba817d6fed5e950b5ba955a8642e0712a938f6a"
   source = "https://github.com/getlantern/quic-go"
 
 [[projects]]
