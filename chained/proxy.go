@@ -74,6 +74,9 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		if s.Cert == "" {
 			log.Errorf("No Cert configured for %s, will dial with plain tcp", s.Addr)
 			p, err = newHTTPProxy(name, s, uc)
+		} else if len(s.KCPSettings) > 0 {
+			log.Errorf("KCP configured for %s, not using tls", s.Addr)
+			p, err = newHTTPProxy(name, s, uc)
 		} else {
 			log.Tracef("Cert configured for  %s, will dial with tls", s.Addr)
 			p, err = newHTTPSProxy(name, s, uc)
@@ -272,9 +275,9 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 		IdleInterval:          idleInterval,
 		PingInterval:          pingInterval,
 		RedialSessionInterval: redialSessionInterval,
-		Pool:                  buffers.Pool,
-		Cipher:                cipherCode,
-		ServerPublicKey:       rsaPublicKey,
+		Pool:            buffers.Pool,
+		Cipher:          cipherCode,
+		ServerPublicKey: rsaPublicKey,
 	})
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(s.Addr, "lampshade", "tcp", func(op *ops.Op) (net.Conn, error) {
@@ -444,13 +447,15 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 		p.doDialServer = func(ctx context.Context, p *proxy) (net.Conn, error) {
 			return multiplexedDial(ctx, "", "")
 		}
-	} else if s.KCPSettings != nil && len(s.KCPSettings) > 0 {
+	} else if len(s.KCPSettings) > 0 {
+		log.Debugf("Enabling KCP for %v (%v)", p.Label(), p.protocol)
 		err := enableKCP(p, s)
 		if err != nil {
 			return nil, err
 		}
 		p.protocol = "kcp"
 	} else if s.PluggableTransport == "quic" {
+		log.Debugf("Enabling QUIC for %v (%v)", p.Label(), p.protocol)
 		err := enableQUIC(p, s)
 		if err != nil {
 			return nil, err

@@ -409,7 +409,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:77d3154124ca77419c0b07006fbfdcacacf48847508950d59e49bee64f5ac062"
+  digest = "1:b4d2c9777f3dd6ed41e5cb7e6e41641dc4f2355442c3279873c4bd96575cc1a3"
   name = "github.com/getlantern/http-proxy"
   packages = [
     "buffers",
@@ -418,11 +418,11 @@
     "server",
   ]
   pruneopts = "UT"
-  revision = "fa6e2187eafd7424f7decf5a265b04ea26390dfe"
+  revision = "5b96142859a8e8122b4c04651c67cf4c0010006e"
 
 [[projects]]
   branch = "master"
-  digest = "1:a3b01f85fb3921d361a8ea4c58e278640e321e4942d2ece5d7cde624cccdb912"
+  digest = "1:241c04c1ed9b7d308dbd6b43498b9af228b4aff7d6e4c0be2ae0add89df2752e"
   name = "github.com/getlantern/http-proxy-lantern"
   packages = [
     ".",
@@ -430,18 +430,21 @@
     "bbr",
     "blacklist",
     "borda",
+    "cleanheadersfilter",
     "common",
-    "configserverfilter",
     "devicefilter",
     "diffserv",
+    "domains",
     "geo",
     "googlefilter",
+    "httpsrewriter",
     "lampshade",
     "listeners",
     "mimic",
     "obfs4listener",
     "opsfilter",
     "ping",
+    "quic",
     "redis",
     "throttle",
     "tlslistener",
@@ -450,7 +453,7 @@
     "versioncheck",
   ]
   pruneopts = "UT"
-  revision = "8fefc5afc1b26d0a53f730e7ddf5d2226109df42"
+  revision = "8929c971a5e416120d6a7ec8fd61a6cd50af2873"
 
 [[projects]]
   branch = "master"
@@ -624,6 +627,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:c1303f30b9287d29b73f076d4b7aa6fe4bd0cfbc4c69d52da42451c897ff1a1f"
+  name = "github.com/getlantern/pcapper"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "a8b1a3ff0cdec641ec5577fa0e09cc44cd82c6ea"
+
+[[projects]]
+  branch = "master"
   digest = "1:029a4d043394ab5e6465949a2b467bfc1f4930506b73ae7cbffb20b3377408df"
   name = "github.com/getlantern/preconn"
   packages = ["."]
@@ -656,14 +667,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6498038c3d87b08ecc4709973b8889c896d7be147edb9a25f4b4e0c326420622"
+  digest = "1:13077a6da704790a363c2b897455b782aebb10bdeea574975d65092defd40056"
   name = "github.com/getlantern/proxy"
   packages = [
     ".",
     "filters",
   ]
   pruneopts = "UT"
-  revision = "e822de39af648c8ee96450786897a50e455baa05"
+  revision = "3f472f8f4fe8a92c88c7309300729dbb16dad174"
 
 [[projects]]
   branch = "master"
@@ -688,6 +699,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "7053d017511c663a3fc3b3a367b57689b1b2fd9f"
+
+[[projects]]
+  branch = "master"
+  digest = "1:571da384cb220f5e8e6dde4cad924646c7e1a0723014b41af28e440cc6660e7e"
+  name = "github.com/getlantern/ring"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "dd46ce8faa010713858a89ca2915583ca744ad2e"
 
 [[projects]]
   branch = "master"
@@ -977,6 +996,19 @@
   revision = "ec9c8a1062f4be6c6ad671f0f5dba12d4a76826d"
 
 [[projects]]
+  branch = "master"
+  digest = "1:2d510cf5486a6ab90196bd3cc07bf124e180bf978dc03ffe6b58af21e5607d7b"
+  name = "github.com/google/gopacket"
+  packages = [
+    ".",
+    "layers",
+    "pcap",
+    "pcapgo",
+  ]
+  pruneopts = "UT"
+  revision = "3c037fb4650eaecb208dfa07c0bf4c7e3bb3b7be"
+
+[[projects]]
   digest = "1:643aa38de6b18d12f719a24faef105fb6a1725435627f05c41b46d3ca2aa0be5"
   name = "github.com/gorilla/websocket"
   packages = ["."]
@@ -1028,7 +1060,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5aebe1b0003ac7874ef27a50bb1d94c5e8f090a0459393711b2fc926d60e41e9"
+  digest = "1:fc0099fa5cb6720480fcaf50d642b4c262dbed4bb800ba0476cd0d81bdebe0ba"
   name = "github.com/lucas-clemente/quic-go"
   packages = [
     ".",
@@ -1042,7 +1074,7 @@
     "internal/wire",
   ]
   pruneopts = "UT"
-  revision = "ca35f392a8ec033ad8bdbbc45cca49b7e0e3adaa"
+  revision = "9ba817d6fed5e950b5ba955a8642e0712a938f6a"
   source = "https://github.com/getlantern/quic-go"
 
 [[projects]]
@@ -1059,6 +1091,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "646330209b76bfdcdc054a863468f473e9d0a7af"
+
+[[projects]]
+  branch = "master"
+  digest = "1:450f3a64f7a76d3f229ff33a30f0a889629dde46b0f82ece7c53404528316665"
+  name = "github.com/mdlayher/raw"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "fa5ef3332ca961deab5782da07b1616fea8a9dd8"
 
 [[projects]]
   branch = "master"

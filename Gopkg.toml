@@ -297,3 +297,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/mitchellh/go-server-timing"
+
+[[override]]
+  branch = "master"
+  name = "github.com/google/gopacket"
