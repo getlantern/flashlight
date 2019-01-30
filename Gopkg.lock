@@ -86,6 +86,21 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:c61f241352b7fba13cd70aeb1311a5519305897d91df5fdccd39ae6099be84a0"
+  name = "github.com/cloudflare/sidh"
+  packages = [
+    "internal/arith",
+    "internal/isogeny",
+    "internal/utils",
+    "p503",
+    "p751",
+    "sidh",
+  ]
+  pruneopts = "UT"
+  revision = "fc8e6378752b38efe6d5814630911b5fc654c223"
+
+[[projects]]
+  branch = "master"
   digest = "1:4c4c33075b704791d6a7f09dfb55c66769e8a1dc6adf87026292d274fe8ad113"
   name = "github.com/codahale/hdrhistogram"
   packages = ["."]
@@ -1013,13 +1028,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:cf1b1b7fd1673fe07f900f87d0e9ef327f368d4c4d84a50945f80cc5679b116d"
+  digest = "1:5aebe1b0003ac7874ef27a50bb1d94c5e8f090a0459393711b2fc926d60e41e9"
   name = "github.com/lucas-clemente/quic-go"
   packages = [
     ".",
     "internal/ackhandler",
     "internal/congestion",
-    "internal/crypto",
     "internal/flowcontrol",
     "internal/handshake",
     "internal/protocol",
@@ -1028,7 +1042,7 @@
     "internal/wire",
   ]
   pruneopts = "UT"
-  revision = "1facb9de6ec27e25373be2598c6485290bdcc8da"
+  revision = "ca35f392a8ec033ad8bdbbc45cca49b7e0e3adaa"
   source = "https://github.com/getlantern/quic-go"
 
 [[projects]]
@@ -1040,11 +1054,11 @@
 
 [[projects]]
   branch = "qtls"
-  digest = "1:d9fa8e4b5feb3ef4198bf0d1047cddea06c69937e0b4e9e50ee7b2545c58a517"
+  digest = "1:6eb76d7a2daca2297f53d2ef02fdeaef9bfbac0e75ffb77a72131f1708db4f31"
   name = "github.com/marten-seemann/qtls"
   packages = ["."]
   pruneopts = "UT"
-  revision = "c50a91d48284ab31c39389e64f7c57e475bb0633"
+  revision = "646330209b76bfdcdc054a863468f473e9d0a7af"
 
 [[projects]]
   branch = "master"
