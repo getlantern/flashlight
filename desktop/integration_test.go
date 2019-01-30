@@ -97,9 +97,9 @@ func TestProxying(t *testing.T) {
 	testRequest(t, helper)
 
 	// Switch to obfs4, wait for a new config and test request again
-	// helper.SetProtocol("obfs4")
-	// time.Sleep(2 * time.Second)
-	// testRequest(t, helper)
+	helper.SetProtocol("obfs4")
+	time.Sleep(2 * time.Second)
+	testRequest(t, helper)
 
 	// Switch to lampshade, wait for a new config and test request again
 	helper.SetProtocol("lampshade")
@@ -107,9 +107,9 @@ func TestProxying(t *testing.T) {
 	testRequest(t, helper)
 
 	// Switch to kcp, wait for a new config and test request again
-	// helper.SetProtocol("kcp")
-	// time.Sleep(2 * time.Second)
-	// testRequest(t, helper)
+	helper.SetProtocol("kcp")
+	time.Sleep(2 * time.Second)
+	testRequest(t, helper)
 
 	// Switch to quic, wait for a new config and test request again
 	helper.SetProtocol("quic")
