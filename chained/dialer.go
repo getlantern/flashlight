@@ -200,9 +200,6 @@ func (p *proxy) dialInternal(op *ops.Op, ctx context.Context, network, addr stri
 	})
 	select {
 	case <-chDone:
-		if network == connect {
-			log.Debug("CONNECT succeeded")
-		}
 		return p.withRateTracking(conn, addr), err
 	case <-ctx.Done():
 		return nil, errors.New("fail to dial origin after %+v", time.Since(start))
