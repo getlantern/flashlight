@@ -83,13 +83,14 @@ func (p *proxy) httpPing(forPerformance bool) error {
 		ResponseHeaderTimeout: 20 * time.Second,
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
 	probes := Probes
 	if forPerformance {
 		probes = PerformanceProbes
 	}
+	ctx, cancel := context.WithTimeout(context.Background(),
+		time.Duration(probes)*30*time.Second)
+	defer cancel()
+
 	var err error
 	var totalKB, i int
 	var sumOfRTT int64
