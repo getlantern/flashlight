@@ -524,11 +524,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e40802768fe627c8d764d92c99eee93ca8d68a69e797677770bda9e6f250a959"
+  digest = "1:17a85f517326a745446724f41e0fb26fce71e46f125bb0e1e7f2c4534b73bd89"
   name = "github.com/getlantern/lampshade"
   packages = ["."]
   pruneopts = "UT"
-  revision = "6c4b0038448a4771ff1e7105d438543b4139b1c5"
+  revision = "3b917459b74979f4d588016f58276ca2cb9906ec"
 
 [[projects]]
   branch = "master"
@@ -1569,7 +1569,6 @@
     "github.com/getlantern/uuid",
     "github.com/getlantern/waitforserver",
     "github.com/getlantern/wfilter",
-    "github.com/getlantern/withtimeout",
     "github.com/getlantern/yaml",
     "github.com/gorilla/websocket",
     "github.com/hashicorp/golang-lru",
