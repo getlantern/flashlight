@@ -231,10 +231,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/getlantern/withtimeout"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/getlantern/yaml"
 
 [[constraint]]
