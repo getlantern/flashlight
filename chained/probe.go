@@ -53,7 +53,7 @@ func (p *proxy) Probe(forPerformance bool) bool {
 		return err == nil
 	}
 
-	err := p.httpPing(forPerformance)
+	err := p.doProbe(forPerformance)
 	if err != nil {
 		p.MarkFailure()
 	} else {
@@ -62,7 +62,7 @@ func (p *proxy) Probe(forPerformance bool) bool {
 	return logResult(err)
 }
 
-func (p *proxy) httpPing(forPerformance bool) error {
+func (p *proxy) doProbe(forPerformance bool) error {
 	var dialEnd time.Time
 	dial := func(ctx context.Context, network, addr string) (net.Conn, error) {
 		pc, _, err := p.DialContext(ctx, network, addr)
@@ -80,14 +80,6 @@ func (p *proxy) httpPing(forPerformance bool) error {
 		probes = PerformanceProbes
 	}
 	for i := 0; i < probes; i++ {
-		op := ops.Begin("probe").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed)
-		defer op.End()
-
-		// Also include a probe_details op that's sampled but includes details like
-		// the actual error.
-		detailOp := ops.Begin("probe_details")
-		defer detailOp.End()
-
 		kb := 1
 		resetBBR := false
 		if forPerformance {
@@ -99,32 +91,44 @@ func (p *proxy) httpPing(forPerformance bool) error {
 			// after the probe.
 			resetBBR = i == 0
 		}
-
-		start := time.Now()
-		tofb, err := p.doHttpPing(rt, kb, resetBBR)
-		rtt := time.Since(start).Nanoseconds()
-
-		if err != nil {
-			atomic.AddUint64(&p.probeFailures, 1)
-			atomic.AddUint64(&p.probeFailedKBs, uint64(kb))
-		} else {
-			atomic.AddUint64(&p.probeSuccesses, 1)
-			atomic.AddUint64(&p.probeSuccessKBs, uint64(kb))
-			if i == 0 {
-				p.updateEstRTT(tofb.Sub(dialEnd))
-			}
-		}
-
-		detailOp.FailIf(err)
-		op.FailIf(err)
-		op.Set("success", err == nil)
-		op.Set("probe_kb", kb)
-		op.SetMetricAvg("probe_rtt", float64(rtt)/float64(time.Millisecond))
+		tofb, err := p.httpPing(rt, kb, resetBBR)
 		if err != nil {
 			return err
 		}
+		if i == 0 {
+			p.updateEstRTT(tofb.Sub(dialEnd))
+		}
 	}
 	return nil
+}
+
+func (p *proxy) httpPing(rt http.RoundTripper, kb int, resetBBR bool) (time.Time, error) {
+	op := ops.Begin("probe").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed)
+	defer op.End()
+
+	// Also include a probe_details op that's sampled but includes details like
+	// the actual error.
+	detailOp := ops.Begin("probe_details")
+	defer detailOp.End()
+
+	start := time.Now()
+	tofb, err := p.doHttpPing(rt, kb, resetBBR)
+	rtt := time.Since(start).Nanoseconds()
+
+	if err != nil {
+		atomic.AddUint64(&p.probeFailures, 1)
+		atomic.AddUint64(&p.probeFailedKBs, uint64(kb))
+	} else {
+		atomic.AddUint64(&p.probeSuccesses, 1)
+		atomic.AddUint64(&p.probeSuccessKBs, uint64(kb))
+	}
+
+	detailOp.FailIf(err)
+	op.FailIf(err)
+	op.Set("success", err == nil)
+	op.Set("probe_kb", kb)
+	op.SetMetricAvg("probe_rtt", float64(rtt)/float64(time.Millisecond))
+	return tofb, err
 }
 
 func (p *proxy) doHttpPing(rt http.RoundTripper, kb int, resetBBR bool) (tofb time.Time, err error) {
