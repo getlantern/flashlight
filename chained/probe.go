@@ -63,14 +63,6 @@ func (p *proxy) Probe(forPerformance bool) bool {
 }
 
 func (p *proxy) httpPing(forPerformance bool) error {
-	op := ops.Begin("probe").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed)
-	defer op.End()
-
-	// Also include a probe_details op that's sampled but includes details like
-	// the actual error.
-	detailOp := ops.Begin("probe_details")
-	defer detailOp.End()
-
 	var dialEnd time.Time
 	dial := func(ctx context.Context, network, addr string) (net.Conn, error) {
 		pc, _, err := p.DialContext(ctx, network, addr)
@@ -87,14 +79,15 @@ func (p *proxy) httpPing(forPerformance bool) error {
 	if forPerformance {
 		probes = PerformanceProbes
 	}
-	ctx, cancel := context.WithTimeout(context.Background(),
-		time.Duration(probes)*30*time.Second)
-	defer cancel()
+	for i := 0; i < probes; i++ {
+		op := ops.Begin("probe").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed)
+		defer op.End()
 
-	var err error
-	var totalKB, i int
-	var sumOfRTT int64
-	for ; i < probes; i++ {
+		// Also include a probe_details op that's sampled but includes details like
+		// the actual error.
+		detailOp := ops.Begin("probe_details")
+		defer detailOp.End()
+
 		kb := 1
 		resetBBR := false
 		if forPerformance {
@@ -106,15 +99,10 @@ func (p *proxy) httpPing(forPerformance bool) error {
 			// after the probe.
 			resetBBR = i == 0
 		}
-		totalKB += kb
 
 		start := time.Now()
-		tofb, err := p.doHttpPing(ctx, rt, kb, resetBBR)
-		// exclude the time to dial proxy to have more accurate RTT
-		if start.Before(dialEnd) {
-			start = dialEnd
-		}
-		sumOfRTT += time.Since(start).Nanoseconds()
+		tofb, err := p.doHttpPing(rt, kb, resetBBR)
+		rtt := time.Since(start).Nanoseconds()
 
 		if err != nil {
 			atomic.AddUint64(&p.probeFailures, 1)
@@ -126,21 +114,24 @@ func (p *proxy) httpPing(forPerformance bool) error {
 				p.updateEstRTT(tofb.Sub(dialEnd))
 			}
 		}
+
+		detailOp.FailIf(err)
+		op.FailIf(err)
+		op.Set("success", err == nil)
+		op.Set("probe_kb", kb)
+		op.SetMetricAvg("probe_rtt", float64(rtt)/float64(time.Millisecond))
 		if err != nil {
-			break
+			return err
 		}
 	}
-	detailOp.FailIf(err)
-	op.FailIf(err)
-	op.Set("success", err == nil)
-	op.Set("probe_kb", totalKB)
-	avgRTT := sumOfRTT / int64(i+1)
-	op.SetMetricAvg("probe_rtt", float64(avgRTT)/float64(time.Millisecond))
-	return err
+	return nil
 }
 
-func (p *proxy) doHttpPing(ctx context.Context, rt http.RoundTripper, kb int, resetBBR bool) (tofb time.Time, err error) {
+func (p *proxy) doHttpPing(rt http.RoundTripper, kb int, resetBBR bool) (tofb time.Time, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 	deadline, _ := ctx.Deadline()
+
 	req, e := http.NewRequest("GET", "http://ping-chained-server", nil)
 	if e != nil {
 		return deadline, fmt.Errorf("Could not create HTTP request: %v", e)
