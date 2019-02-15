@@ -164,6 +164,7 @@ func (p *proxy) doHttpPing(rt http.RoundTripper, kb int, resetBBR bool) (tofb ti
 	log.Tracef("PING through chained server at %s, status code %d", p.Addr(), resp.StatusCode)
 	if sameStatusCodeClass(http.StatusOK, resp.StatusCode) {
 		p.collectBBRInfo(reqTime, resp)
+		return tofb, nil
 	}
-	return tofb, nil
+	return deadline, errors.New("Unexpected HTTP status %v", resp.StatusCode)
 }
