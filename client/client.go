@@ -447,7 +447,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 
 	dialProxied := func(ctx context.Context, _unused, addr string) (net.Conn, error) {
 		op.Set("remotely_proxied", true)
-		proto := "persistent"
+		proto := balancer.NetworkPersistent
 		if isCONNECT {
 			// UGLY HACK ALERT! In this case, we know we need to send a CONNECT request
 			// to the chained server. We need to send that request from chained/dialer.go
@@ -456,7 +456,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 			// that is effectively always "tcp" in the end, but we look for this
 			// special "transport" in the dialer and send a CONNECT request in that
 			// case.
-			proto = "connect"
+			proto = balancer.NetworkConnect
 		}
 		start := time.Now()
 		conn, err := client.bal.DialContext(ctx, proto, addr)
