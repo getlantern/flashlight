@@ -524,11 +524,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:17a85f517326a745446724f41e0fb26fce71e46f125bb0e1e7f2c4534b73bd89"
+  digest = "1:9a89fb6b97d5fdb02fcb3d0b6a23ea9b921aaa02ecba1a9abf7b09acc7d86086"
   name = "github.com/getlantern/lampshade"
   packages = ["."]
   pruneopts = "UT"
-  revision = "3b917459b74979f4d588016f58276ca2cb9906ec"
+  revision = "bca9c93b5723449e98c5077b75fc8b31387339c6"
 
 [[projects]]
   branch = "master"
