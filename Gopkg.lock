@@ -422,7 +422,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:241c04c1ed9b7d308dbd6b43498b9af228b4aff7d6e4c0be2ae0add89df2752e"
+  digest = "1:87f12219310990424516334193b5fb0d909c815a5ab1053f97cd0170e5f44b5e"
   name = "github.com/getlantern/http-proxy-lantern"
   packages = [
     ".",
@@ -453,7 +453,7 @@
     "versioncheck",
   ]
   pruneopts = "UT"
-  revision = "8929c971a5e416120d6a7ec8fd61a6cd50af2873"
+  revision = "7eadd7153ff951fe64216276a3fa33f3bc72862c"
 
 [[projects]]
   branch = "master"
