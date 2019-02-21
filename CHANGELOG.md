@@ -1,5 +1,16 @@
 # Change Log
 
+## [5.3.0](https://github.com/getlantern/flashlight/tree/5.3.0) (2019-02-20)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.8...5.3.0)
+
+**Merged pull requests:**
+
+- Update lampshade to the latest [\#587](https://github.com/getlantern/flashlight/pull/587) ([joesis](https://github.com/joesis))
+- add test to cover active probing [\#585](https://github.com/getlantern/flashlight/pull/585) ([joesis](https://github.com/joesis))
+- ping 3 times when probing a proxy for connectivity [\#584](https://github.com/getlantern/flashlight/pull/584) ([joesis](https://github.com/joesis))
+- remove the misleading 'CONNECT succeeded' log [\#583](https://github.com/getlantern/flashlight/pull/583) ([joesis](https://github.com/joesis))
+- update packages to avoid missing commit in qtls dep [\#582](https://github.com/getlantern/flashlight/pull/582) ([forkner](https://github.com/forkner))
+
 ## [5.2.8](https://github.com/getlantern/flashlight/tree/5.2.8) (2019-02-01)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.7...5.2.8)
 
