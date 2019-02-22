@@ -16,8 +16,8 @@ import (
 )
 
 // SetLogger configures the logger to use
-func SetLogger(loggerFunc uintptr) {
-	lfn := unsafe.Pointer(loggerFunc)
+func SetLogger(loggerFunc uint64) {
+	lfn := unsafe.Pointer(uintptr(loggerFunc))
 	golog.SetOutputs(&clogger{lfn, 1}, &clogger{lfn, 0})
 }
 

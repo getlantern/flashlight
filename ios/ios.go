@@ -10,7 +10,6 @@ import (
 	"runtime"
 	"runtime/debug"
 	"time"
-	"unsafe"
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/go-socks5"
@@ -38,8 +37,6 @@ const (
 
 var (
 	log = golog.LoggerFor("ios")
-
-	loggerFunc unsafe.Pointer
 )
 
 type client struct {
