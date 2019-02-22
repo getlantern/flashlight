@@ -15,6 +15,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/gotun"
 	"github.com/getlantern/hidden"
+	"github.com/getlantern/memhelper"
 	"github.com/getlantern/packetforward"
 	"github.com/getlantern/proxy"
 	"github.com/getlantern/proxy/filters"
@@ -25,6 +26,11 @@ import (
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/status"
+)
+
+const (
+	memLimitInMiB   = 12
+	memLimitInBytes = memLimitInMiB * 1024 * 1024
 )
 
 var (
@@ -47,6 +53,7 @@ func Start(fd int, addr string, gw string) error {
 }
 
 func StartWithDevice(dev tun.TUNDevice) error {
+	memhelper.TrackAndLimit(5*time.Second, 5*time.Second, 5*time.Second, memLimitInBytes)
 	dialers, err := loadDialers()
 	if err != nil {
 		return err

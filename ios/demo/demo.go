@@ -23,6 +23,8 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"syscall"
@@ -44,6 +46,7 @@ var (
 	tunMask   = flag.String("tun-mask", "255.255.255.0", "tun device netmask")
 	tunGW     = flag.String("tun-gw", "10.0.0.1", "tun device gateway")
 	ifOut     = flag.String("ifout", "en0", "name of interface to use for outbound connections")
+	pprofAddr = flag.String("pprofaddr", "", "pprof address to listen on, not activate pprof if empty")
 )
 
 type fivetuple struct {
@@ -57,6 +60,20 @@ func (ft fivetuple) String() string {
 }
 
 func main() {
+	flag.Parse()
+
+	if *pprofAddr != "" {
+		go func() {
+			log.Debugf("Starting pprof page at http://%s/debug/pprof", *pprofAddr)
+			srv := &http.Server{
+				Addr: *pprofAddr,
+			}
+			if err := srv.ListenAndServe(); err != nil {
+				log.Error(err)
+			}
+		}()
+	}
+
 	dev, err := tun.OpenTunDevice(*tunDevice, *tunAddr, *tunGW, *tunMask)
 	if err != nil {
 		log.Fatal(err)
