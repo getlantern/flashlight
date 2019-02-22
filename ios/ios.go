@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"runtime"
+	"runtime/debug"
 	"time"
 	"unsafe"
 
@@ -15,7 +17,6 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/gotun"
 	"github.com/getlantern/hidden"
-	"github.com/getlantern/memhelper"
 	"github.com/getlantern/packetforward"
 	"github.com/getlantern/proxy"
 	"github.com/getlantern/proxy/filters"
@@ -26,6 +27,8 @@ import (
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/status"
+
+	"github.com/dustin/go-humanize"
 )
 
 const (
@@ -53,7 +56,8 @@ func Start(fd int, addr string, gw string) error {
 }
 
 func StartWithDevice(dev tun.TUNDevice) error {
-	memhelper.TrackAndLimit(5*time.Second, 5*time.Second, 5*time.Second, memLimitInBytes)
+	go trackAndLimitMemory()
+
 	dialers, err := loadDialers()
 	if err != nil {
 		return err
@@ -212,6 +216,20 @@ func loadProxies() (map[string]*chained.ChainedServerInfo, error) {
 		return nil, errors.New("Unable to unmarshal proxyConfig: %v", err)
 	}
 	return proxies, nil
+}
+
+func trackAndLimitMemory() {
+	for {
+		time.Sleep(5 * time.Second)
+		memstats := &runtime.MemStats{}
+		runtime.ReadMemStats(memstats)
+		log.Debugf("Memory InUse: %v    Alloc: %v    Sys: %v",
+			humanize.Bytes(memstats.HeapInuse),
+			humanize.Bytes(memstats.Alloc),
+			humanize.Bytes(memstats.Sys))
+		runtime.GC()
+		debug.FreeOSMemory()
+	}
 }
 
 // var proxyConfig = `
