@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"time"
+	"unsafe"
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/go-socks5"
@@ -28,6 +29,8 @@ import (
 
 var (
 	log = golog.LoggerFor("ios")
+
+	loggerFunc unsafe.Pointer
 )
 
 type client struct {
