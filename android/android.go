@@ -23,6 +23,7 @@ import (
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/memhelper"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/protected"
@@ -95,6 +96,7 @@ type userConfig struct {
 func (uc *userConfig) GetDeviceID() string { return uc.session.GetDeviceID() }
 func (uc *userConfig) GetUserID() int64    { return uc.session.GetUserID() }
 func (uc *userConfig) GetToken() string    { return uc.session.GetToken() }
+func (uc *userConfig) GetLanguage() string { return uc.session.Locale() }
 func (uc *userConfig) GetInternalHeaders() map[string]string {
 	h := make(map[string]string)
 
@@ -240,6 +242,7 @@ func Exit() {
 func run(configDir, locale string,
 	settings Settings, session Session) {
 
+	memhelper.Track(15*time.Second, 15*time.Second)
 	appdir.SetHomeDir(configDir)
 	session.SetStaging(common.Staging)
 

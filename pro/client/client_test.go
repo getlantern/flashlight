@@ -1,6 +1,7 @@
 package client
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/pborman/uuid"
@@ -14,7 +15,7 @@ func generateDeviceId() string {
 }
 
 func generateUser() *common.UserConfigData {
-	return common.NewUserConfigData(generateDeviceId(), 0, "", nil)
+	return common.NewUserConfigData(generateDeviceId(), 0, "", nil, "en-US")
 }
 
 var (
@@ -29,7 +30,9 @@ func init() {
 }
 
 func TestCreateClient(t *testing.T) {
-	tc = NewClient(nil)
+	tc = NewClient(nil, func(req *http.Request, uc common.UserConfig) {
+		common.AddCommonHeaders(uc, req)
+	})
 }
 
 func TestCreateUserA(t *testing.T) {
@@ -40,14 +43,12 @@ func TestCreateUserA(t *testing.T) {
 
 	assert.True(t, res.User.ID != 0)
 	assert.True(t, res.User.Expiration == 0)
-	assert.True(t, res.User.Code == "")
 	assert.True(t, res.User.Token != "")
-	assert.True(t, res.User.Referral != "")
+	assert.True(t, res.User.Code != "")
+	assert.True(t, res.User.Referral == res.User.Code)
 
 	userA.UserID = res.User.ID
 	userA.Token = res.User.Token
-
-	log.Debug(userA)
 }
 
 func TestUserAData(t *testing.T) {
@@ -63,12 +64,10 @@ func TestCreateUserB(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.True(t, res.User.ID != 0)
-	assert.True(t, res.User.Code == "")
 	assert.True(t, res.User.Token != "")
-	assert.True(t, res.User.Referral != "")
+	assert.True(t, res.User.Code != "")
+	assert.True(t, res.User.Referral == res.User.Code)
 
 	userB.UserID = res.User.ID
 	userB.Token = res.User.Token
-
-	log.Debug(userB)
 }

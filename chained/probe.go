@@ -18,6 +18,16 @@ import (
 	"github.com/getlantern/mtime"
 )
 
+var (
+	// PerformanceProbes determines how many times to probe for performance on
+	// each call to Probe()
+	PerformanceProbes = 5
+
+	// BasePerformanceProbeKB is the minimum number of KB to request from ping
+	// endpoint when probing for performance
+	BasePerformanceProbeKB = 50
+)
+
 func (p *proxy) ProbeStats() (successes uint64, successKBs uint64, failures uint64, failedKBs uint64) {
 	return atomic.LoadUint64(&p.probeSuccesses), atomic.LoadUint64(&p.probeSuccessKBs),
 		atomic.LoadUint64(&p.probeFailures), atomic.LoadUint64(&p.probeFailedKBs)
@@ -54,10 +64,10 @@ func (p *proxy) Probe(forPerformance bool) bool {
 
 	// probing for performance, do several increasingly large pings
 	var kb int
-	for i := 0; i < 5; i++ {
+	for i := 0; i < PerformanceProbes; i++ {
 		// we vary the size of the ping request to help the BBR curve-fitting
 		// logic on the server.
-		kb = 50 + i*25
+		kb = BasePerformanceProbeKB + i*25
 		// Ask the proxy to reset BBR stats to have an up-to-date estimation
 		// after the probe.
 		err := p.httpPing(kb, i == 0)
@@ -72,7 +82,7 @@ func (p *proxy) Probe(forPerformance bool) bool {
 }
 
 func (p *proxy) httpPing(kb int, resetBBR bool) error {
-	op := ops.Begin("probe").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network())
+	op := ops.Begin("probe").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed)
 	defer op.End()
 
 	// Also include a probe_details op that's sampled but includes details like

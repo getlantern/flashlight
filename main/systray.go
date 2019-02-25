@@ -121,7 +121,7 @@ func refreshSystray(language string) {
 	if !menu.enable {
 		return
 	}
-	if err := i18n.SetLocale(language); err != nil {
+	if _, err := i18n.SetLocale(language); err != nil {
 		log.Errorf("i18n.SetLocale(%s) failed: %q", language, err)
 		return
 	}

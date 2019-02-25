@@ -354,7 +354,7 @@ func unpackUI() {
 		// resources were incorrectly embedded.
 		panic(fmt.Errorf("Unable to open tarfs filesystem: %v", err))
 	}
-	translations.Set(fs.SubDir("locale"))
+	translations.Set(fs.SubDir("locale/translation"))
 }
 
 // Translations returns the translations for a given locale file.

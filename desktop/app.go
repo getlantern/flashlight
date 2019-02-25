@@ -16,6 +16,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/launcher"
+	"github.com/getlantern/memhelper"
 	"github.com/getlantern/notifier"
 	"github.com/getlantern/profiling"
 
@@ -74,8 +75,9 @@ func (app *App) Init() {
 	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate, common.Staging)
 	app.exited = eventual.NewValue()
 	app.statsTracker = NewStatsTracker()
-	pro.OnProStatusChange(func(isPro bool) {
+	pro.OnProStatusChange(func(isPro bool, yinbiEnabled bool) {
 		app.statsTracker.SetIsPro(isPro)
+		app.statsTracker.SetYinbiEnabled(yinbiEnabled)
 	})
 	settings.OnChange(SNDisconnected, func(disconnected interface{}) {
 		isDisconnected := disconnected.(bool)
@@ -103,6 +105,8 @@ func (app *App) exitOnFatal(err error) {
 // Run starts the app. It will block until the app exits.
 func (app *App) Run() {
 	golog.OnFatal(app.exitOnFatal)
+
+	memhelper.Track(15*time.Second, 15*time.Second)
 
 	// Run below in separate goroutine as config.Init() can potentially block when Lantern runs
 	// for the first time. User can still quit Lantern through systray menu when it happens.
@@ -318,6 +322,11 @@ func (app *App) Disconnect() {
 // GetLanguage returns the user language
 func (app *App) GetLanguage() string {
 	return settings.GetLanguage()
+}
+
+// SetLanguage sets the user language
+func (app *App) SetLanguage(lang string) {
+	settings.SetLanguage(lang)
 }
 
 // OnSettingChange sets a callback cb to get called when attr is changed from UI.

@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/getlantern/detour"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/mockconn"
 	"github.com/stretchr/testify/assert"
 
@@ -23,6 +24,8 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/stats"
 )
+
+var logger = golog.LoggerFor("client-test")
 
 const (
 	testLang            = "en"
@@ -40,11 +43,12 @@ func (m mockStatsTracker) SetDisconnected(val bool)                             
 func (m mockStatsTracker) SetHasSucceedingProxy(val bool)                           {}
 func (m mockStatsTracker) SetHitDataCap(val bool)                                   {}
 func (m mockStatsTracker) SetIsPro(val bool)                                        {}
+func (m mockStatsTracker) SetYinbiEnabled(val bool)                                 {}
 func (m mockStatsTracker) SetAlert(stats.AlertType, string, bool)                   {}
 func (m mockStatsTracker) ClearAlert(stats.AlertType)                               {}
 
 func newTestUserConfig() *common.UserConfigData {
-	return common.NewUserConfigData("device", 1234, "protoken", nil)
+	return common.NewUserConfigData("device", 1234, "protoken", nil, "en-US")
 }
 
 func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {
@@ -420,7 +424,7 @@ func roundTrip(client *Client, req *http.Request) (*response, error) {
 	received := &bytes.Buffer{}
 	err = client.handle(mockconn.New(received, toSend))
 	if err != nil {
-		log.Errorf("Error handling: %v", err)
+		logger.Errorf("Error handling: %v", err)
 	}
 	br := bufio.NewReader(bytes.NewReader(received.Bytes()))
 	resp, err2 := http.ReadResponse(br, req)

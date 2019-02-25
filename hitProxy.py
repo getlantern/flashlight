@@ -59,7 +59,13 @@ for i, cfg in enumerate(cfgs):
     cfg['trusted'] = True
     servers['server-%s' % i] = cfg
 
-tmpdir = tempfile.mkdtemp()
+on_windows = len([item for item in platform.uname() if "Microsoft" in item]) > 0
+
+if on_windows:
+    wintemp = subprocess.check_output('wslpath $(cmd.exe /C "echo %TEMP%")', shell=True).strip()
+    tmpdir = tempfile.mkdtemp(dir=wintemp)
+else: 
+    tmpdir = tempfile.mkdtemp()
 p = os.path.join(tmpdir, "proxies.yaml")
 f = open(p, "w")
 cfg = yaml.safe_dump(servers, encoding='utf-8', allow_unicode=True, default_flow_style=False)
@@ -67,15 +73,14 @@ f.write(cfg)
 f.close()
 print cfg
 
-on_windows = len([item for item in platform.uname() if "Microsoft" in item]) > 0
 path = ""
 configdir = tmpdir
 if on_windows:
-    path = "./lantern.exe"
+    path = "./lantern-cli.exe"
     # Make sure we compiled in console-mode as Gui mode won't take our command-line flags
     subprocess.call('file lantern.exe | grep console', shell=True)
     # Get Windows path for tempdir
-    configdir = subprocess.check_output('wslpath -w `readlink --canonicalize %s`' % tmpdir, shell=True).strip()
+    configdir = subprocess.check_output('wslpath -w {}'.format(tmpdir), shell=True).strip()
 elif os.path.isfile("./lantern"):
     path = "./lantern"
 else:

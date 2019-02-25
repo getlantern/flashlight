@@ -134,12 +134,13 @@ func (op *Op) HTTPStatusCode(code int) *Op {
 }
 
 // ChainedProxy attaches chained proxy information to the Context
-func (op *Op) ChainedProxy(name string, addr string, protocol string, network string) *Op {
+func (op *Op) ChainedProxy(name string, addr string, protocol string, network string, multiplexed bool) *Op {
 	return op.ProxyType(ProxyChained).
 		ProxyName(name).
 		ProxyAddr(addr).
 		ProxyProtocol(protocol).
-		ProxyNetwork(network)
+		ProxyNetwork(network).
+		ProxyMultiplexed(multiplexed)
 }
 
 // ProxyType attaches proxy type to the Context
@@ -187,6 +188,10 @@ func (op *Op) ProxyProtocol(v string) *Op {
 // ProxyNetwork attaches proxy server's network (tcp or kcp) to the Context
 func (op *Op) ProxyNetwork(v string) *Op {
 	return op.Set("proxy_network", v)
+}
+
+func (op *Op) ProxyMultiplexed(v bool) *Op {
+	return op.Set("proxy_multiplexed", v)
 }
 
 // OriginFromRequest attaches the origin to the Context based on the request's

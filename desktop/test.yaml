@@ -8,4 +8,4 @@ systemProxy: true
 takenSurveys: []
 uiAddr: ""
 userID: 1
-userToken: ""
+userToken: token

@@ -167,7 +167,7 @@ func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, err
 	var conn net.Conn
 	var err error
 
-	op := ops.Begin("dial_for_balancer").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network()).Set("dial_type", network)
+	op := ops.Begin("dial_for_balancer").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed).Set("dial_type", network)
 	defer op.End()
 
 	conn, err = p.dialInternal(op, ctx, network, addr)
@@ -258,7 +258,7 @@ func (p *proxy) onRequest(req *http.Request) {
 }
 
 func (p *proxy) onFinish(op *ops.Op) {
-	op.ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network())
+	op.ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed)
 }
 
 func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn net.Conn, timeout time.Duration) error {
