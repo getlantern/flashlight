@@ -20,7 +20,7 @@ const (
 	IfNoneMatchHeader                   = "X-Lantern-If-None-Match"
 	PingHeader                          = "X-Lantern-Ping"
 	PlatformHeader                      = "X-Lantern-Platform"
-	ProxyDialTimeoutHeader              = "X-Proxy-Dial-Timeout"
+	ProxyDialTimeoutHeader              = "X-Lantern-Dial-Timeout"
 )
 
 // AddCommonHeadersWithOptions sets standard http headers on a request bound
