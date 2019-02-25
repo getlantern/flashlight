@@ -16,6 +16,7 @@ import (
 
 	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
@@ -26,9 +27,6 @@ const (
 	minCheckInterval      = 10 * time.Second
 	maxCheckInterval      = 15 * time.Minute
 	dialCoreCheckInterval = 30 * time.Second
-
-	connect    = "connect"
-	persistent = "persistent"
 )
 
 var (
@@ -132,7 +130,7 @@ func (p *proxy) DialContext(ctx context.Context, network, addr string) (net.Conn
 		} else {
 			p.MarkFailure()
 		}
-	} else if network == connect {
+	} else if network == balancer.NetworkConnect {
 		// only mark success if we did a CONNECT request because that involves a
 		// full round-trip to/from the proxy
 		p.markSuccess()
@@ -221,11 +219,11 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 	// that we should send a CONNECT request and tunnel all traffic through
 	// that.
 	switch network {
-	case connect:
-		log.Tracef("Sending CONNECT request")
+	case balancer.NetworkConnect:
+		log.Trace("Sending CONNECT request")
 		err = p.sendCONNECT(op, addr, conn)
-	case persistent:
-		log.Tracef("Sending GET request to establish persistent HTTP connection")
+	case balancer.NetworkPersistent:
+		log.Trace("Sending GET request to establish persistent HTTP connection")
 		err = p.initPersistentConnection(addr, conn)
 	}
 	if err != nil {
