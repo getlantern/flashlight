@@ -3,6 +3,7 @@ package chained
 import (
 	"context"
 	"crypto/rsa"
+	gtls "crypto/tls"
 	"fmt"
 	"net"
 	"net/http"
@@ -33,6 +34,7 @@ import (
 	"github.com/getlantern/lampshade"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
+	"github.com/getlantern/quicwrapper"
 	"github.com/getlantern/tlsdialer"
 	"github.com/mitchellh/mapstructure"
 	"github.com/refraction-networking/utls"
@@ -72,6 +74,9 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		if s.Cert == "" {
 			log.Errorf("No Cert configured for %s, will dial with plain tcp", s.Addr)
 			p, err = newHTTPProxy(name, s, uc)
+		} else if len(s.KCPSettings) > 0 {
+			log.Errorf("KCP configured for %s, not using tls", s.Addr)
+			p, err = newHTTPProxy(name, s, uc)
 		} else {
 			log.Tracef("Cert configured for  %s, will dial with tls", s.Addr)
 			p, err = newHTTPSProxy(name, s, uc)
@@ -81,6 +86,8 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		return newOBFS4Proxy(name, s, uc)
 	case "lampshade":
 		return newLampshadeProxy(name, s, uc)
+	case "quic":
+		return newQUICProxy(name, s, uc)
 	default:
 		return nil, errors.New("Unknown transport: %v", s.PluggableTransport).With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
 	}
@@ -243,22 +250,34 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 		// a connection that was just idled. The client's IdleTimeout is already set
 		// appropriately for this purpose, so use that.
 		idleInterval = IdleTimeout
-		log.Debugf("Defaulted lampshade idleinterval to %v", idleInterval)
+		log.Debugf("%s: defaulted idleinterval to %v", name, idleInterval)
 	}
 	pingInterval, parseErr := time.ParseDuration(s.ptSetting("pinginterval"))
 	if parseErr != nil || pingInterval < 0 {
 		pingInterval = 15 * time.Second
-		log.Debugf("Defaulted lampshade pinginterval to %v", pingInterval)
+		log.Debugf("%s: defaulted pinginterval to %v", name, pingInterval)
+	}
+	maxLiveConns := s.ptSettingInt("maxliveconns")
+	if maxLiveConns <= 0 {
+		maxLiveConns = 5
+		log.Debugf("%s: defaulted maxliveconns to %v", name, maxLiveConns)
+	}
+	redialSessionInterval, parseErr := time.ParseDuration(s.ptSetting("redialsessioninterval"))
+	if parseErr != nil || redialSessionInterval < 0 {
+		redialSessionInterval = 5 * time.Second
+		log.Debugf("%s: defaulted redialsessioninterval to %v", name, redialSessionInterval)
 	}
 	dialer := lampshade.NewDialer(&lampshade.DialerOpts{
-		WindowSize:        windowSize,
-		MaxPadding:        maxPadding,
-		MaxStreamsPerConn: maxStreamsPerConn,
-		IdleInterval:      idleInterval,
-		PingInterval:      pingInterval,
-		Pool:              buffers.Pool,
-		Cipher:            cipherCode,
-		ServerPublicKey:   rsaPublicKey,
+		WindowSize:            windowSize,
+		MaxPadding:            maxPadding,
+		MaxLiveConns:          maxLiveConns,
+		MaxStreamsPerConn:     maxStreamsPerConn,
+		IdleInterval:          idleInterval,
+		PingInterval:          pingInterval,
+		RedialSessionInterval: redialSessionInterval,
+		Pool:            buffers.Pool,
+		Cipher:          cipherCode,
+		ServerPublicKey: rsaPublicKey,
 	})
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(s.Addr, "lampshade", "tcp", func(op *ops.Op) (net.Conn, error) {
@@ -266,7 +285,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 				Set("ls_pad", maxPadding).
 				Set("ls_streams", int(maxStreamsPerConn)).
 				Set("ls_cipher", cipherCode.String())
-			conn, err := dialer.Dial(func() (net.Conn, error) {
+			conn, err := dialer.DialContext(ctx, func() (net.Conn, error) {
 				// note - we do not wrap the TCP connection with IdleTiming because
 				// lampshade cleans up after itself and won't leave excess unused
 				// connections hanging around.
@@ -278,6 +297,18 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 	}
 
 	return newProxy(name, "lampshade", "tcp", s, uc, s.Trusted, false, doDialServer, defaultDialOrigin)
+}
+
+func newQUICProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+
+	dialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
+		return p.reportedDial(s.Addr, "quic", "udp", func(op *ops.Op) (net.Conn, error) {
+			conn, err := p.dialCore(op)(ctx)
+			return overheadWrapper(true)(conn, err)
+		})
+	}
+
+	return newProxy(name, "quic", "udp", s, uc, s.Trusted, false, dialServer, defaultDialOrigin)
 }
 
 // consecCounter is a counter that can extend on both directions. Its default
@@ -416,12 +447,20 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 		p.doDialServer = func(ctx context.Context, p *proxy) (net.Conn, error) {
 			return multiplexedDial(ctx, "", "")
 		}
-	} else if s.KCPSettings != nil && len(s.KCPSettings) > 0 {
+	} else if len(s.KCPSettings) > 0 {
+		log.Debugf("Enabling KCP for %v (%v)", p.Label(), p.protocol)
 		err := enableKCP(p, s)
 		if err != nil {
 			return nil, err
 		}
 		p.protocol = "kcp"
+	} else if s.PluggableTransport == "quic" {
+		log.Debugf("Enabling QUIC for %v (%v)", p.Label(), p.protocol)
+		err := enableQUIC(p, s)
+		if err != nil {
+			return nil, err
+		}
+		p.protocol = "quic"
 	} else if allowPreconnecting && s.MaxPreconnect > 0 {
 		log.Debugf("Enabling preconnecting for %v", p.Label())
 		// give ourselves a large margin for making sure we're not using idled preconnected connections
@@ -474,6 +513,81 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 		dialKCPMutex.Unlock()
 
 		conn, err := doDialKCP(ctx, "tcp", p.addr)
+		delta := elapsed()
+		return conn, delta, err
+	}
+
+	return nil
+}
+
+func enableQUIC(p *proxy, s *ChainedServerInfo) error {
+	addr := s.Addr
+	tlsConf := &gtls.Config{InsecureSkipVerify: true}
+
+	maxStreamsPerConn := s.ptSettingInt("streams")
+
+	quicConf := &quicwrapper.Config{
+		IdleTimeout:        IdleTimeout,
+		MaxIncomingStreams: maxStreamsPerConn,
+		KeepAlive:          true,
+	}
+
+	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
+	if err != nil {
+		return log.Error(errors.Wrap(err).With("addr", s.Addr))
+	}
+	pinnedCert := cert.X509()
+
+	newQUICDialer := func() *quicwrapper.Client {
+		d := quicwrapper.NewClientWithPinnedCert(
+			addr,
+			tlsConf,
+			quicConf,
+			quicwrapper.DialWithNetx,
+			pinnedCert,
+		)
+		return d
+	}
+
+	dialer := newQUICDialer()
+	var dialerLock sync.Mutex
+
+	// when the proxy closes, close the dialer
+	// and nil it out.
+	go func() {
+		<-p.closeCh
+		log.Debug("Closing quic session: Proxy closed.")
+		dialerLock.Lock()
+		dialer.Close()
+		dialer = nil
+		dialerLock.Unlock()
+	}()
+
+	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
+		elapsed := mtime.Stopwatch()
+
+		dialerLock.Lock()
+		if p.forceRedial.IsSet() {
+			if dialer != nil {
+				log.Debug("Connection state changed, re-connecting to server first")
+				dialer.Close()
+				dialer = newQUICDialer()
+			} else {
+				log.Debug("not re-connecting after closed.")
+			}
+			p.forceRedial.UnSet()
+		}
+		dialerLock.Unlock()
+
+		var conn net.Conn
+		conn, err := dialer.DialContext(ctx)
+		if err != nil {
+			log.Debugf("Failed to establish multiplexed connection: %s", err)
+			p.ForceRedial()
+		} else {
+			log.Debug("established new multiplexed quic connection.")
+		}
+
 		delta := elapsed()
 		return conn, delta, err
 	}

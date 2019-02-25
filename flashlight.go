@@ -1,6 +1,7 @@
 package flashlight
 
 import (
+	"context"
 	"crypto/x509"
 	"fmt"
 	"math/rand"
@@ -83,9 +84,9 @@ func Run(httpProxyAddr string,
 
 	cl, err := client.NewClient(
 		disconnected,
-		func(addr string) (bool, net.IP) {
+		func(ctx context.Context, addr string) (bool, net.IP) {
 			if useShortcut() {
-				return shortcut.Allow(addr)
+				return shortcut.Allow(ctx, addr)
 			}
 			return false, nil
 		},

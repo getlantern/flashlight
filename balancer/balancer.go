@@ -19,6 +19,14 @@ import (
 )
 
 const (
+	// NetworkConnect is a pseudo network name to instruct the dialer to establish
+	// a CONNECT tunnel to the proxy.
+	NetworkConnect = "connect"
+	// NetworkPersistent is a pseudo network name to instruct the dialer to
+	// signal the proxy to establish a persistent HTTP connection over which
+	// one or more HTTP requests can be sent directly.
+	NetworkPersistent = "persistent"
+
 	connectivityRechecks = 3
 
 	printStatsInterval = 10 * time.Second
@@ -234,6 +242,9 @@ func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.C
 	op := ops.Begin("balancer_dial").Set("beam", atomic.AddUint64(&b.beam_seq, 1))
 	defer op.End()
 
+	op = ops.Begin("balancer_dial_details")
+	defer op.End()
+
 	start := time.Now()
 	bd, err := b.newBalancedDial(network, addr)
 	if err != nil {
@@ -336,6 +347,12 @@ func (bd *balancedDial) dialWithDialer(ctx context.Context, dialer Dialer, start
 	if err != nil {
 		bd.onFailure(dialer, failedUpstream, err, attempts)
 		return nil
+	}
+	// Multiplexed dialers don't wait for anything from the proxy when dialing
+	// "persistent" connections, so we can't blindly trust such connections as
+	// signals of success dialers.
+	if bd.network == NetworkPersistent {
+		return conn
 	}
 	// Please leave this at Debug level, as it helps us understand
 	// performance issues caused by a poor proxy being selected.

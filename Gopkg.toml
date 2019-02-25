@@ -231,10 +231,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/getlantern/withtimeout"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/getlantern/yaml"
 
 [[constraint]]
@@ -277,6 +273,20 @@
   name = "golang.org/x/net"
   branch = "master"
 
+[[override]]
+  name = "github.com/getlantern/quicwrapper"
+  branch = "master"
+
+[[override]]
+  name = "github.com/lucas-clemente/quic-go"
+  branch = "master"
+  source = "https://github.com/getlantern/quic-go"
+
+[[override]]
+  name = "github.com/marten-seemann/qtls"
+  branch = "qtls"
+  source = "https://github.com/marten-seemann/qtls-deprecated"
+
 [prune]
   go-tests = true
   unused-packages = true
@@ -284,3 +294,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/mitchellh/go-server-timing"
+
+[[override]]
+  branch = "master"
+  name = "github.com/google/gopacket"
