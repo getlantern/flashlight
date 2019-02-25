@@ -319,6 +319,14 @@
   revision = "c5f0cd24e7991579ba6f5f1bd20a1ad2c9f06cd4"
 
 [[projects]]
+  branch = "ox/issue2635"
+  digest = "1:70a1ea4270b3a90c236308628b8922c71040acf976c7e7f321bb964cdcca4a4e"
+  name = "github.com/getlantern/framed"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "a0ee46d06d5840ab5605b4d6465ec1686414700d"
+
+[[projects]]
   branch = "master"
   digest = "1:e9352c28c58ba823fa2d5bba3eb0ed5bdc790130407db86de2c92e60c8636604"
   name = "github.com/getlantern/fronted"
@@ -382,6 +390,17 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "cca714f7feb5df8e455f409b549d384441ac4578"
+
+[[projects]]
+  branch = "master"
+  digest = "1:9264a5303dbdbaf779720c54b27c8990fb98f1a7adfeab332f3e26cb3c878091"
+  name = "github.com/getlantern/gotun"
+  packages = [
+    ".",
+    "packet",
+  ]
+  pruneopts = "UT"
+  revision = "a925033dae035d4f8f85a5bcc67b9bfaaed30268"
 
 [[projects]]
   branch = "master"
@@ -624,6 +643,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "8f3fb296110c7f171058539e477851026fa30ce2"
+
+[[projects]]
+  branch = "ox/issue2635"
+  digest = "1:cfdb1e0cf9877e4da6bcbe577326d3c4f614e381854bdd59b1b0d9209f517a27"
+  name = "github.com/getlantern/packetforward"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "1a7cd29e031ca004ba7c2fccb93247b599aab46e"
 
 [[projects]]
   branch = "master"
@@ -1401,11 +1428,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4d2869b8df54b3a687c426758d0891720e8bedfa6ff5d472671ce1d31d29bdfb"
+  digest = "1:41c13cada29d953aedd6e98918f11d662e8a84af9a4374df5f2cc9dbb4731664"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
+    "windows/registry",
   ]
   pruneopts = "UT"
   revision = "d47a0f3392421c5624713c9a19fe781f651f8a50"
@@ -1531,6 +1559,7 @@
     "github.com/getlantern/geolookup",
     "github.com/getlantern/go-socks5",
     "github.com/getlantern/golog",
+    "github.com/getlantern/gotun",
     "github.com/getlantern/hidden",
     "github.com/getlantern/http-proxy-lantern",
     "github.com/getlantern/httpseverywhere",
@@ -1551,6 +1580,7 @@
     "github.com/getlantern/notifier",
     "github.com/getlantern/ops",
     "github.com/getlantern/osversion",
+    "github.com/getlantern/packetforward",
     "github.com/getlantern/profiling",
     "github.com/getlantern/protected",
     "github.com/getlantern/proxiedsites",
