@@ -668,6 +668,11 @@ func (p *proxy) EstRTT() time.Duration {
 		// For biased proxies, return an extreme RTT in proportion to the bias
 		return time.Duration(p.bias) * -100 * time.Second
 	}
+	return p.realEstRTT()
+}
+
+// realEstRTT() returns the same as EstRTT() but ignores any bias factor.
+func (p *proxy) realEstRTT() time.Duration {
 	// Take deviation into account, see rfc6298
 	return time.Duration(p.emaRTT.Get() + rttDevK*p.emaRTTDev.Get())
 }

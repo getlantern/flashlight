@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"math/rand"
 	"net"
 	"net/http"
@@ -212,8 +213,17 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 	if err != nil {
 		return nil, err
 	}
+
+	var timeout time.Duration
 	if deadline, set := ctx.Deadline(); set {
 		conn.SetDeadline(deadline)
+		// Set timeout based on our given deadline, minus the estimated RTT minus a 1 second fudge factor
+		timeUntilDeadline := deadline.Sub(time.Now())
+		timeout = timeUntilDeadline - p.realEstRTT() - 1*time.Second
+		if timeout < 0 {
+			log.Errorf("Not enough time left for server to dial upstream within %v, return errUpstream immediately", timeUntilDeadline)
+			return nil, errUpstream
+		}
 	}
 	// Look for our special hacked "connect" transport used to signal
 	// that we should send a CONNECT request and tunnel all traffic through
@@ -221,7 +231,7 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 	switch network {
 	case balancer.NetworkConnect:
 		log.Trace("Sending CONNECT request")
-		err = p.sendCONNECT(op, addr, conn)
+		err = p.sendCONNECT(op, addr, conn, timeout)
 	case balancer.NetworkPersistent:
 		log.Trace("Sending GET request to establish persistent HTTP connection")
 		err = p.initPersistentConnection(addr, conn)
@@ -246,9 +256,9 @@ func (p *proxy) onFinish(op *ops.Op) {
 	op.ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed)
 }
 
-func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn net.Conn) error {
+func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn net.Conn, timeout time.Duration) error {
 	reqTime := time.Now()
-	req, err := p.buildCONNECTRequest(addr)
+	req, err := p.buildCONNECTRequest(addr, timeout)
 	if err != nil {
 		return fmt.Errorf("Unable to construct CONNECT request: %s", err)
 	}
@@ -262,7 +272,7 @@ func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn net.Conn) error {
 	return err
 }
 
-func (p *proxy) buildCONNECTRequest(addr string) (*http.Request, error) {
+func (p *proxy) buildCONNECTRequest(addr string, timeout time.Duration) (*http.Request, error) {
 	req, err := http.NewRequest(http.MethodConnect, "/", nil)
 	if err != nil {
 		return nil, err
@@ -271,6 +281,9 @@ func (p *proxy) buildCONNECTRequest(addr string) (*http.Request, error) {
 		Host: addr,
 	}
 	req.Host = addr
+	if timeout != 0 {
+		req.Header.Set(common.ProxyDialTimeoutHeader, fmt.Sprint(int(math.Ceil(timeout.Seconds()*1000))))
+	}
 	p.onRequest(req)
 	return req, nil
 }
