@@ -89,7 +89,7 @@ func TestServeHTTPOk(t *testing.T) {
 		return
 	}
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assert.Equal(t, "timeout=38", resp.Header.Get("Keep-Alive"))
+	assert.Equal(t, "timeout=58", resp.Header.Get("Keep-Alive"))
 	assert.Equal(t, "0", resp.Header.Get("Content-Length"))
 }
 

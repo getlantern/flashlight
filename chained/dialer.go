@@ -31,12 +31,12 @@ const (
 )
 
 var (
-	// IdleTimeout closes connections idle for a period to avoid dangling connections. 45
-	// seconds is long enough to avoid interrupt normal connections but shorter
-	// than the idle timeout on the server to avoid running into closed connection
-	// problems. 45 seconds is also longer than the MaxIdleTime on our
-	// http.Transport, so it doesn't interfere with that.
-	IdleTimeout = 45 * time.Second
+	// IdleTimeout closes connections idle for a period to avoid dangling
+	// connections. Web applications tend to contact servers in 1 minute
+	// interval or below. 65 seconds is long enough to avoid interrupt normal
+	// connections but shorter than the idle timeout on the server to avoid
+	// running into closed connection problems.
+	IdleTimeout = 65 * time.Second
 
 	// errUpstream is an error that indicates there was a problem upstream of a
 	// proxy. Such errors are not counted as failures but do allow failover to
