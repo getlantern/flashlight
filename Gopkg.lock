@@ -497,11 +497,11 @@
 
 [[projects]]
   branch = "ox/init"
-  digest = "1:07237f67bf19e5a71ca22c0db66bc2e30fb7af08e1e24390454febafcfbce4ab"
+  digest = "1:8de179f6a89c8985289579b53db94ad73d70f5ddcc5233b05e264c1cff98631a"
   name = "github.com/getlantern/ipproxy"
   packages = ["."]
   pruneopts = "UT"
-  revision = "5bab94121bbf5845c5bd83a7d9bb72f408cd407c"
+  revision = "e46e0eb097880712dff24a7ae846b2de3652299d"
 
 [[projects]]
   branch = "master"
