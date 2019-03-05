@@ -300,8 +300,16 @@
   name = "github.com/google/gopacket"
 
 [[constraint]]
-  branch = "ox/issue2635"
+  branch = "ox/ipproxy"
   name = "github.com/getlantern/packetforward"
+
+[[override]]
+  branch = "ox/init"
+  name = "github.com/getlantern/ipproxy"
+
+[[override]]
+  branch = "ox/simplify"
+  name = "github.com/getlantern/gotun"
 
 [[override]]
   name = "github.com/getlantern/framed"

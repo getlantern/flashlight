@@ -78,7 +78,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer dev.Stop()
+	defer dev.Close()
 
 	outIF, err := net.InterfaceByName(*ifOut)
 	if err != nil {
@@ -116,7 +116,7 @@ func main() {
 	go func() {
 		<-ch
 		log.Debug("Stopping TUN device")
-		dev.Stop()
+		dev.Close()
 		log.Debug("Stopped TUN device")
 	}()
 
