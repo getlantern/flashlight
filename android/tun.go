@@ -65,14 +65,7 @@ func Tun2Socks(fd int, tunAddr, gwAddr, socksAddr, dnsAddr, dnsGrabAddr string, 
 	currentIPP = ipp
 	currentDeviceMx.Unlock()
 
-	go func() {
-		serveErr := ipp.Serve()
-		if serveErr != nil {
-			log.Errorf("Error on serving from TUN device: %v", serveErr)
-		}
-	}()
-
-	return nil
+	return ipp.Serve()
 }
 
 // StopTun2Socks stops the current tun device.
