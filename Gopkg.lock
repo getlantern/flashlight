@@ -1034,7 +1034,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:77542d3596ff2d8ce2aa25cf062c5b93d927762e7e4dcd982358ecb228d9f811"
+  digest = "1:cdd6bd1f284c12343ec424bd80ce5bed9618b33a78585ddedd87a8648d6b600b"
   name = "github.com/google/netstack"
   packages = [
     "ilist",
@@ -1057,7 +1057,8 @@
     "waiter",
   ]
   pruneopts = "UT"
-  revision = "d650097f29e55fc8253d502f154a98ddd1edf19e"
+  revision = "9d02bdf3ced5b5a2e82f1c66328fdcb0fab73162"
+  source = "https://github.com/getlantern/netstack"
 
 [[projects]]
   digest = "1:643aa38de6b18d12f719a24faef105fb6a1725435627f05c41b46d3ca2aa0be5"
