@@ -80,9 +80,8 @@ func TestProxying(t *testing.T) {
 			assert.True(t, getVal("probe_rtt") > 0)
 		}
 	}
-	config.DefaultProxyConfigPollInterval = 100 * time.Millisecond
-
-	helper, err := integrationtest.NewHelper(t, "localhost:18347", "localhost:18348", "localhost:18349")
+	config.ForceProxyConfigPollInterval = 1 * time.Second
+	helper, err := integrationtest.NewHelper(t, "localhost:18347", "localhost:18348", "localhost:18349", "localhost:18350")
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -109,6 +108,11 @@ func TestProxying(t *testing.T) {
 
 	// Switch to kcp, wait for a new config and test request again
 	helper.SetProtocol("kcp")
+	time.Sleep(2 * time.Second)
+	testRequest(t, helper)
+
+	// Switch to quic, wait for a new config and test request again
+	helper.SetProtocol("quic")
 	time.Sleep(2 * time.Second)
 	testRequest(t, helper)
 
@@ -146,7 +150,7 @@ func TestProxying(t *testing.T) {
 				} else {
 					for _, lightweightOp := range flashlight.LightweightOps {
 						if op == lightweightOp {
-							if reportedOps[op] > 40 {
+							if reportedOps[op] > 100 {
 								overreportedOps = append(overreportedOps, op)
 							}
 						}

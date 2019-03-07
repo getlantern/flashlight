@@ -1,5 +1,40 @@
 # Change Log
 
+## [5.3.1](https://github.com/getlantern/flashlight/tree/5.3.1) (2019-02-26)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.0...5.3.1)
+
+**Merged pull requests:**
+
+- Set a larger IdleTimeout [\#590](https://github.com/getlantern/flashlight/pull/590) ([joesis](https://github.com/joesis))
+- Don't log borda error as error to prevent recursion [\#589](https://github.com/getlantern/flashlight/pull/589) ([joesis](https://github.com/joesis))
+- don't mark persistent connections as successful [\#586](https://github.com/getlantern/flashlight/pull/586) ([joesis](https://github.com/joesis))
+- Added support for DialTimeoutHeader on CONNECT requests [\#517](https://github.com/getlantern/flashlight/pull/517) ([oxtoacart](https://github.com/oxtoacart))
+
+## [5.3.0](https://github.com/getlantern/flashlight/tree/5.3.0) (2019-02-20)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.8...5.3.0)
+
+**Merged pull requests:**
+
+- Update lampshade to the latest [\#587](https://github.com/getlantern/flashlight/pull/587) ([joesis](https://github.com/joesis))
+- add test to cover active probing [\#585](https://github.com/getlantern/flashlight/pull/585) ([joesis](https://github.com/joesis))
+- ping 3 times when probing a proxy for connectivity [\#584](https://github.com/getlantern/flashlight/pull/584) ([joesis](https://github.com/joesis))
+- remove the misleading 'CONNECT succeeded' log [\#583](https://github.com/getlantern/flashlight/pull/583) ([joesis](https://github.com/joesis))
+- update packages to avoid missing commit in qtls dep [\#582](https://github.com/getlantern/flashlight/pull/582) ([forkner](https://github.com/forkner))
+
+## [5.2.8](https://github.com/getlantern/flashlight/tree/5.2.8) (2019-02-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.7...5.2.8)
+
+**Merged pull requests:**
+
+- New UI with react 16 and new material UI and accessibility improvements [\#581](https://github.com/getlantern/flashlight/pull/581) ([myleshorton](https://github.com/myleshorton))
+- Updated to latest quic-go to fix race condition [\#580](https://github.com/getlantern/flashlight/pull/580) ([oxtoacart](https://github.com/oxtoacart))
+- update quic packages to latest [\#579](https://github.com/getlantern/flashlight/pull/579) ([forkner](https://github.com/forkner))
+- Add quic integration test [\#577](https://github.com/getlantern/flashlight/pull/577) ([forkner](https://github.com/forkner))
+- Update to the latest detour package [\#576](https://github.com/getlantern/flashlight/pull/576) ([joesis](https://github.com/joesis))
+- use the latest shortcut package [\#575](https://github.com/getlantern/flashlight/pull/575) ([joesis](https://github.com/joesis))
+- update to latest lampshade w/ session pooling [\#572](https://github.com/getlantern/flashlight/pull/572) ([joesis](https://github.com/joesis))
+- Added balancer\_dial\_details to capture details of balancer dials [\#564](https://github.com/getlantern/flashlight/pull/564) ([oxtoacart](https://github.com/oxtoacart))
+
 ## [5.2.7](https://github.com/getlantern/flashlight/tree/5.2.7) (2019-01-19)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.6...5.2.7)
 
@@ -323,13 +358,13 @@
 - Include a little more info with dial\_for\_balancer op [\#447](https://github.com/getlantern/flashlight/pull/447) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.12)
-
-## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.12)
 
 ## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.13)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.13)
+
+## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.11)
 
 **Merged pull requests:**
 
@@ -375,17 +410,17 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.4...4.6.6)
 
 ## [4.6.4](https://github.com/getlantern/flashlight/tree/4.6.4) (2018-04-20)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.4)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.4)
 
 **Merged pull requests:**
 
 - Two fixes [\#428](https://github.com/getlantern/flashlight/pull/428) ([joesis](https://github.com/joesis))
 
-## [4.6.2](https://github.com/getlantern/flashlight/tree/4.6.2) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.2)
-
 ## [4.6.3](https://github.com/getlantern/flashlight/tree/4.6.3) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.3)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.3)
+
+## [4.6.2](https://github.com/getlantern/flashlight/tree/4.6.2) (2018-04-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.2)
 
 ## [4.6.1](https://github.com/getlantern/flashlight/tree/4.6.1) (2018-04-18)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.1)

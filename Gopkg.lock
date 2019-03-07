@@ -86,6 +86,21 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:c61f241352b7fba13cd70aeb1311a5519305897d91df5fdccd39ae6099be84a0"
+  name = "github.com/cloudflare/sidh"
+  packages = [
+    "internal/arith",
+    "internal/isogeny",
+    "internal/utils",
+    "p503",
+    "p751",
+    "sidh",
+  ]
+  pruneopts = "UT"
+  revision = "fc8e6378752b38efe6d5814630911b5fc654c223"
+
+[[projects]]
+  branch = "master"
   digest = "1:4c4c33075b704791d6a7f09dfb55c66769e8a1dc6adf87026292d274fe8ad113"
   name = "github.com/codahale/hdrhistogram"
   packages = ["."]
@@ -206,11 +221,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7f812a62c522ca270f3b017ca39f161a03f914eafa05129b156aff83d823dede"
+  digest = "1:7138fb0e9c6cb68acebb6cba7adbd7d15114fecc6bafa7f449e4ea26192d96aa"
   name = "github.com/getlantern/detour"
   packages = ["."]
   pruneopts = "UT"
-  revision = "40ce261d3ba85a967570daa390627e5d0529baa0"
+  revision = "7107a599a1704521f97f40d0086b7e20c3cd1fa6"
 
 [[projects]]
   branch = "master"
@@ -405,7 +420,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:77d3154124ca77419c0b07006fbfdcacacf48847508950d59e49bee64f5ac062"
+  digest = "1:b4d2c9777f3dd6ed41e5cb7e6e41641dc4f2355442c3279873c4bd96575cc1a3"
   name = "github.com/getlantern/http-proxy"
   packages = [
     "buffers",
@@ -414,11 +429,11 @@
     "server",
   ]
   pruneopts = "UT"
-  revision = "fa6e2187eafd7424f7decf5a265b04ea26390dfe"
+  revision = "5b96142859a8e8122b4c04651c67cf4c0010006e"
 
 [[projects]]
   branch = "master"
-  digest = "1:a3b01f85fb3921d361a8ea4c58e278640e321e4942d2ece5d7cde624cccdb912"
+  digest = "1:87f12219310990424516334193b5fb0d909c815a5ab1053f97cd0170e5f44b5e"
   name = "github.com/getlantern/http-proxy-lantern"
   packages = [
     ".",
@@ -426,18 +441,21 @@
     "bbr",
     "blacklist",
     "borda",
+    "cleanheadersfilter",
     "common",
-    "configserverfilter",
     "devicefilter",
     "diffserv",
+    "domains",
     "geo",
     "googlefilter",
+    "httpsrewriter",
     "lampshade",
     "listeners",
     "mimic",
     "obfs4listener",
     "opsfilter",
     "ping",
+    "quic",
     "redis",
     "throttle",
     "tlslistener",
@@ -446,7 +464,7 @@
     "versioncheck",
   ]
   pruneopts = "UT"
-  revision = "8fefc5afc1b26d0a53f730e7ddf5d2226109df42"
+  revision = "7eadd7153ff951fe64216276a3fa33f3bc72862c"
 
 [[projects]]
   branch = "master"
@@ -517,11 +535,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e25081b3f7b6437f0cf0e7683f1acf4a43dc608303c5de14c66e4ce53282a163"
+  digest = "1:9a89fb6b97d5fdb02fcb3d0b6a23ea9b921aaa02ecba1a9abf7b09acc7d86086"
   name = "github.com/getlantern/lampshade"
   packages = ["."]
   pruneopts = "UT"
-  revision = "52e49a475948c3e0c3221db7775f1c325210dab0"
+  revision = "bca9c93b5723449e98c5077b75fc8b31387339c6"
 
 [[projects]]
   branch = "master"
@@ -620,6 +638,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:c1303f30b9287d29b73f076d4b7aa6fe4bd0cfbc4c69d52da42451c897ff1a1f"
+  name = "github.com/getlantern/pcapper"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "a8b1a3ff0cdec641ec5577fa0e09cc44cd82c6ea"
+
+[[projects]]
+  branch = "master"
   digest = "1:029a4d043394ab5e6465949a2b467bfc1f4930506b73ae7cbffb20b3377408df"
   name = "github.com/getlantern/preconn"
   packages = ["."]
@@ -652,14 +678,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6498038c3d87b08ecc4709973b8889c896d7be147edb9a25f4b4e0c326420622"
+  digest = "1:dc6205da649637f53c456084d90f8feb3afe76a970661e1313b03e79e4fd635c"
   name = "github.com/getlantern/proxy"
   packages = [
     ".",
     "filters",
   ]
   pruneopts = "UT"
-  revision = "e822de39af648c8ee96450786897a50e455baa05"
+  revision = "31d1cc06ed3ded513b71cc6d023a2d3525d63561"
 
 [[projects]]
   branch = "master"
@@ -684,6 +710,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "7053d017511c663a3fc3b3a367b57689b1b2fd9f"
+
+[[projects]]
+  branch = "master"
+  digest = "1:571da384cb220f5e8e6dde4cad924646c7e1a0723014b41af28e440cc6660e7e"
+  name = "github.com/getlantern/ring"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "dd46ce8faa010713858a89ca2915583ca744ad2e"
 
 [[projects]]
   branch = "master"
@@ -973,6 +1007,19 @@
   revision = "ec9c8a1062f4be6c6ad671f0f5dba12d4a76826d"
 
 [[projects]]
+  digest = "1:b23296076e13a960263285b98907623e5d45f12fc405b14da19c6afa2a113deb"
+  name = "github.com/google/gopacket"
+  packages = [
+    ".",
+    "layers",
+    "pcap",
+    "pcapgo",
+  ]
+  pruneopts = "UT"
+  revision = "7f3fc6cbbb499248dca53da7fe3ed6c25a78d22f"
+  version = "v1.1.16"
+
+[[projects]]
   digest = "1:643aa38de6b18d12f719a24faef105fb6a1725435627f05c41b46d3ca2aa0be5"
   name = "github.com/gorilla/websocket"
   packages = ["."]
@@ -1024,13 +1071,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:cf1b1b7fd1673fe07f900f87d0e9ef327f368d4c4d84a50945f80cc5679b116d"
+  digest = "1:025fb66f977973c52bc653a8f1bb8b2ce13ba3ed1d9ebf736802f2bc41d9e424"
   name = "github.com/lucas-clemente/quic-go"
   packages = [
     ".",
     "internal/ackhandler",
     "internal/congestion",
-    "internal/crypto",
     "internal/flowcontrol",
     "internal/handshake",
     "internal/protocol",
@@ -1039,7 +1085,7 @@
     "internal/wire",
   ]
   pruneopts = "UT"
-  revision = "1facb9de6ec27e25373be2598c6485290bdcc8da"
+  revision = "f9d7a8b53ff5f906746398fcb891200f96f754f0"
   source = "https://github.com/getlantern/quic-go"
 
 [[projects]]
@@ -1051,11 +1097,20 @@
 
 [[projects]]
   branch = "qtls"
-  digest = "1:d9fa8e4b5feb3ef4198bf0d1047cddea06c69937e0b4e9e50ee7b2545c58a517"
+  digest = "1:1d3142fa76462447ac41ff6a71a2796b74494f7002ff6005f095430315d41660"
   name = "github.com/marten-seemann/qtls"
   packages = ["."]
   pruneopts = "UT"
-  revision = "c50a91d48284ab31c39389e64f7c57e475bb0633"
+  revision = "591c71538704125b0b189f4cd3c0e61485dd6ef7"
+  source = "https://github.com/marten-seemann/qtls-deprecated"
+
+[[projects]]
+  branch = "master"
+  digest = "1:450f3a64f7a76d3f229ff33a30f0a889629dde46b0f82ece7c53404528316665"
+  name = "github.com/mdlayher/raw"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "fa5ef3332ca961deab5782da07b1616fea8a9dd8"
 
 [[projects]]
   branch = "master"
@@ -1527,7 +1582,6 @@
     "github.com/getlantern/uuid",
     "github.com/getlantern/waitforserver",
     "github.com/getlantern/wfilter",
-    "github.com/getlantern/withtimeout",
     "github.com/getlantern/yaml",
     "github.com/gorilla/websocket",
     "github.com/hashicorp/golang-lru",

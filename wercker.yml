@@ -33,7 +33,7 @@ build:
       code: |-
         curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
     - install-packages:
-      packages: lsof # required by fdcount
+      packages: lsof libpcap-dev # lsof required by fdcount
     - script:
       name: make-lantern
       code: |

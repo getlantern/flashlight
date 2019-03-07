@@ -231,10 +231,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/getlantern/withtimeout"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/getlantern/yaml"
 
 [[constraint]]
@@ -289,6 +285,7 @@
 [[override]]
   name = "github.com/marten-seemann/qtls"
   branch = "qtls"
+  source = "https://github.com/marten-seemann/qtls-deprecated"
 
 [prune]
   go-tests = true
@@ -301,3 +298,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/getlantern/gotun"
+
+[[override]]
+  name = "github.com/google/gopacket"
+  version = "1.1.16"

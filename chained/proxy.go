@@ -74,6 +74,9 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		if s.Cert == "" {
 			log.Errorf("No Cert configured for %s, will dial with plain tcp", s.Addr)
 			p, err = newHTTPProxy(name, s, uc)
+		} else if len(s.KCPSettings) > 0 {
+			log.Errorf("KCP configured for %s, not using tls", s.Addr)
+			p, err = newHTTPProxy(name, s, uc)
 		} else {
 			log.Tracef("Cert configured for  %s, will dial with tls", s.Addr)
 			p, err = newHTTPSProxy(name, s, uc)
@@ -247,22 +250,34 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 		// a connection that was just idled. The client's IdleTimeout is already set
 		// appropriately for this purpose, so use that.
 		idleInterval = IdleTimeout
-		log.Debugf("Defaulted lampshade idleinterval to %v", idleInterval)
+		log.Debugf("%s: defaulted idleinterval to %v", name, idleInterval)
 	}
 	pingInterval, parseErr := time.ParseDuration(s.ptSetting("pinginterval"))
 	if parseErr != nil || pingInterval < 0 {
 		pingInterval = 15 * time.Second
-		log.Debugf("Defaulted lampshade pinginterval to %v", pingInterval)
+		log.Debugf("%s: defaulted pinginterval to %v", name, pingInterval)
+	}
+	maxLiveConns := s.ptSettingInt("maxliveconns")
+	if maxLiveConns <= 0 {
+		maxLiveConns = 5
+		log.Debugf("%s: defaulted maxliveconns to %v", name, maxLiveConns)
+	}
+	redialSessionInterval, parseErr := time.ParseDuration(s.ptSetting("redialsessioninterval"))
+	if parseErr != nil || redialSessionInterval < 0 {
+		redialSessionInterval = 5 * time.Second
+		log.Debugf("%s: defaulted redialsessioninterval to %v", name, redialSessionInterval)
 	}
 	dialer := lampshade.NewDialer(&lampshade.DialerOpts{
-		WindowSize:        windowSize,
-		MaxPadding:        maxPadding,
-		MaxStreamsPerConn: maxStreamsPerConn,
-		IdleInterval:      idleInterval,
-		PingInterval:      pingInterval,
-		Pool:              buffers.Pool,
-		Cipher:            cipherCode,
-		ServerPublicKey:   rsaPublicKey,
+		WindowSize:            windowSize,
+		MaxPadding:            maxPadding,
+		MaxLiveConns:          maxLiveConns,
+		MaxStreamsPerConn:     maxStreamsPerConn,
+		IdleInterval:          idleInterval,
+		PingInterval:          pingInterval,
+		RedialSessionInterval: redialSessionInterval,
+		Pool:            buffers.Pool,
+		Cipher:          cipherCode,
+		ServerPublicKey: rsaPublicKey,
 	})
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(s.Addr, "lampshade", "tcp", func(op *ops.Op) (net.Conn, error) {
@@ -270,7 +285,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 				Set("ls_pad", maxPadding).
 				Set("ls_streams", int(maxStreamsPerConn)).
 				Set("ls_cipher", cipherCode.String())
-			conn, err := dialer.Dial(func() (net.Conn, error) {
+			conn, err := dialer.DialContext(ctx, func() (net.Conn, error) {
 				// note - we do not wrap the TCP connection with IdleTiming because
 				// lampshade cleans up after itself and won't leave excess unused
 				// connections hanging around.
@@ -432,13 +447,15 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 		p.doDialServer = func(ctx context.Context, p *proxy) (net.Conn, error) {
 			return multiplexedDial(ctx, "", "")
 		}
-	} else if s.KCPSettings != nil && len(s.KCPSettings) > 0 {
+	} else if len(s.KCPSettings) > 0 {
+		log.Debugf("Enabling KCP for %v (%v)", p.Label(), p.protocol)
 		err := enableKCP(p, s)
 		if err != nil {
 			return nil, err
 		}
 		p.protocol = "kcp"
 	} else if s.PluggableTransport == "quic" {
+		log.Debugf("Enabling QUIC for %v (%v)", p.Label(), p.protocol)
 		err := enableQUIC(p, s)
 		if err != nil {
 			return nil, err
@@ -651,6 +668,11 @@ func (p *proxy) EstRTT() time.Duration {
 		// For biased proxies, return an extreme RTT in proportion to the bias
 		return time.Duration(p.bias) * -100 * time.Second
 	}
+	return p.realEstRTT()
+}
+
+// realEstRTT() returns the same as EstRTT() but ignores any bias factor.
+func (p *proxy) realEstRTT() time.Duration {
 	// Take deviation into account, see rfc6298
 	return time.Duration(p.emaRTT.Get() + rttDevK*p.emaRTTDev.Get())
 }
