@@ -384,15 +384,12 @@
   revision = "cca714f7feb5df8e455f409b549d384441ac4578"
 
 [[projects]]
-  branch = "master"
-  digest = "1:9264a5303dbdbaf779720c54b27c8990fb98f1a7adfeab332f3e26cb3c878091"
+  branch = "ox/simplify"
+  digest = "1:24900823be1ccc4edcc9d173c500c23d9191824320f6e872194b8d0cfa988190"
   name = "github.com/getlantern/gotun"
-  packages = [
-    ".",
-    "packet",
-  ]
+  packages = ["."]
   pruneopts = "UT"
-  revision = "a925033dae035d4f8f85a5bcc67b9bfaaed30268"
+  revision = "e1a04d1f42289457d33dda1272159010f3348965"
 
 [[projects]]
   branch = "master"
@@ -489,6 +486,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "d6af7c708ed589011044d1ca79945bbbaa42056e"
+
+[[projects]]
+  branch = "ox/init"
+  digest = "1:c8ce2baac911863ed156bd4d7c72e88d3cc1d009cbd4ba85385bfd1819b68647"
+  name = "github.com/getlantern/ipproxy"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "4341aff6835ffbaaae8d31add6852ce73ddbd4e6"
 
 [[projects]]
   branch = "master"
@@ -1007,6 +1012,14 @@
   revision = "ec9c8a1062f4be6c6ad671f0f5dba12d4a76826d"
 
 [[projects]]
+  branch = "master"
+  digest = "1:0bfbe13936953a98ae3cfe8ed6670d396ad81edf069a806d2f6515d7bb6950df"
+  name = "github.com/google/btree"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "4030bb1f1f0c35b30ca7009e9ebd06849dd45306"
+
+[[projects]]
   digest = "1:b23296076e13a960263285b98907623e5d45f12fc405b14da19c6afa2a113deb"
   name = "github.com/google/gopacket"
   packages = [
@@ -1018,6 +1031,33 @@
   pruneopts = "UT"
   revision = "7f3fc6cbbb499248dca53da7fe3ed6c25a78d22f"
   version = "v1.1.16"
+
+[[projects]]
+  branch = "master"
+  digest = "1:77542d3596ff2d8ce2aa25cf062c5b93d927762e7e4dcd982358ecb228d9f811"
+  name = "github.com/google/netstack"
+  packages = [
+    "ilist",
+    "rand",
+    "sleep",
+    "tcpip",
+    "tcpip/buffer",
+    "tcpip/hash/jenkins",
+    "tcpip/header",
+    "tcpip/link/channel",
+    "tcpip/network/fragmentation",
+    "tcpip/network/hash",
+    "tcpip/network/ipv4",
+    "tcpip/ports",
+    "tcpip/seqnum",
+    "tcpip/stack",
+    "tcpip/transport/tcp",
+    "tcpip/transport/udp",
+    "tmutex",
+    "waiter",
+  ]
+  pruneopts = "UT"
+  revision = "d650097f29e55fc8253d502f154a98ddd1edf19e"
 
 [[projects]]
   digest = "1:643aa38de6b18d12f719a24faef105fb6a1725435627f05c41b46d3ca2aa0be5"
@@ -1207,6 +1247,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "c65b2f87fee37d1c7854c9164a450713c28d50cd"
+
+[[projects]]
+  branch = "master"
+  digest = "1:3bf17a6e6eaa6ad24152148a631d18662f7212e21637c2699bff3369b7f00fa2"
+  name = "github.com/petar/GoLLRB"
+  packages = ["llrb"]
+  pruneopts = "UT"
+  revision = "53be0d36a84c2a886ca057d34b6aa4468df9ccb4"
 
 [[projects]]
   branch = "master"
@@ -1549,6 +1597,7 @@
     "github.com/getlantern/httpseverywhere",
     "github.com/getlantern/i18n",
     "github.com/getlantern/idletiming",
+    "github.com/getlantern/ipproxy",
     "github.com/getlantern/iptool",
     "github.com/getlantern/jibber_jabber",
     "github.com/getlantern/kcpwrapper",

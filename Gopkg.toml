@@ -296,7 +296,11 @@
   name = "github.com/mitchellh/go-server-timing"
 
 [[constraint]]
-  branch = "master"
+  branch = "ox/init"
+  name = "github.com/getlantern/ipproxy"
+
+[[constraint]]
+  branch = "ox/simplify"
   name = "github.com/getlantern/gotun"
 
 [[override]]
