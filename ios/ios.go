@@ -1,11 +1,8 @@
 package ios
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"runtime"
@@ -13,20 +10,16 @@ import (
 	"time"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/go-socks5"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/gotun"
-	"github.com/getlantern/hidden"
 	"github.com/getlantern/packetforward"
 	"github.com/getlantern/proxy"
 	"github.com/getlantern/proxy/filters"
 	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/balancer"
-	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/status"
 
 	"github.com/dustin/go-humanize"
 )
@@ -62,26 +55,11 @@ func StartWithDevice(dev io.ReadWriteCloser) error {
 	}
 	bal := balancer.New(30*time.Second, dialers...)
 
-	pr, _ := proxy.New(&proxy.Opts{
-		IdleTimeout:  chained.IdleTimeout - 5*time.Second,
-		BufferSource: buffers.Pool,
-		Filter:       filters.FilterFunc(filter),
-		OnError:      errorResponse,
-		Dial: func(ctx context.Context, isConnect bool, network, addr string) (conn net.Conn, err error) {
-			return bal.DialContext(ctx, "connect", addr)
-		},
-	})
-
-	cl := &client{pr}
-	socksAddr, err := cl.ListenAndServeSOCKS5()
-	if err != nil {
-		bal.Close()
-		return err
-	}
-
 	go func() {
 		defer bal.Close()
-		err := packetforward.To(socksAddr, "127.0.0.1:3000", dev, 1500)
+		err := packetforward.Client(dev, 1500, func(ctx context.Context) (net.Conn, error) {
+			return bal.DialContext(ctx, "connect", "127.0.0.1:3000")
+		})
 		if err != nil {
 			log.Fatalf("Error forwarding packets: %v", err)
 		}
@@ -101,69 +79,6 @@ func filter(ctx filters.Context, req *http.Request, next filters.Next) (*http.Re
 	req.Header.Set(common.VersionHeader, common.Version)
 
 	return next(ctx, req)
-}
-
-func (client *client) ListenAndServeSOCKS5() (string, error) {
-	var err error
-	var l net.Listener
-	if l, err = net.Listen("tcp", "127.0.0.1:0"); err != nil {
-		return "", errors.New("Unable to listen SOCKS5: %v", err)
-	}
-	listenAddr := l.Addr().String()
-
-	conf := &socks5.Config{
-		HandleConnect: func(ctx context.Context, conn net.Conn, req *socks5.Request, replySuccess func(boundAddr net.Addr) error, replyError func(err error) error) error {
-			addr := fmt.Sprintf("%v:%v", req.DestAddr.IP, req.DestAddr.Port)
-			errOnReply := replySuccess(nil)
-			if errOnReply != nil {
-				return log.Errorf("Unable to reply success to SOCKS5 client: %v", errOnReply)
-			}
-			return client.proxy.Connect(ctx, req.BufConn, conn, addr)
-		},
-	}
-	server, err := socks5.New(conf)
-	if err != nil {
-		return "", errors.New("Unable to create SOCKS5 server: %v", err)
-	}
-
-	log.Debugf("About to start SOCKS5 client proxy at %v", listenAddr)
-	go server.Serve(l)
-	return l.Addr().String(), nil
-}
-
-func errorResponse(ctx filters.Context, req *http.Request, read bool, err error) *http.Response {
-	var htmlerr []byte
-
-	if req == nil {
-		return nil
-	}
-
-	// If the request has an 'Accept' header preferring HTML, or
-	// doesn't have that header at all, render the error page.
-	switch req.Header.Get("Accept") {
-	case "text/html":
-		fallthrough
-	case "application/xhtml+xml":
-		fallthrough
-	case "":
-		// It is likely we will have lots of different errors to handle but for now
-		// we will only return a ErrorAccessingPage error.  This prevents the user
-		// from getting just a blank screen.
-		htmlerr, err = status.ErrorAccessingPage(req.Host, err)
-		if err != nil {
-			log.Debugf("Got error while generating status page: %q", err)
-		}
-	}
-
-	if htmlerr == nil {
-		// Default value for htmlerr
-		htmlerr = []byte(hidden.Clean(err.Error()))
-	}
-
-	return &http.Response{
-		Body:       ioutil.NopCloser(bytes.NewBuffer(htmlerr)),
-		StatusCode: http.StatusServiceUnavailable,
-	}
 }
 
 func loadDialers() ([]balancer.Dialer, error) {

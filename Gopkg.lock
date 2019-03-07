@@ -497,11 +497,11 @@
 
 [[projects]]
   branch = "ox/init"
-  digest = "1:8de179f6a89c8985289579b53db94ad73d70f5ddcc5233b05e264c1cff98631a"
+  digest = "1:26bfd64b0a7ca05edc81551f42167bb8f2be8e473f828cd4823f7d4b4f9dba98"
   name = "github.com/getlantern/ipproxy"
   packages = ["."]
   pruneopts = "UT"
-  revision = "e46e0eb097880712dff24a7ae846b2de3652299d"
+  revision = "074b3eedb084d85d34020090a01c65ea172b80b0"
 
 [[projects]]
   branch = "master"
@@ -651,11 +651,11 @@
 
 [[projects]]
   branch = "ox/ipproxy"
-  digest = "1:1d778f6c789030d3bf497a27bdd2eb03b614df7abedf41ee405c409bc3626c56"
+  digest = "1:2861da7fd5b59077403468d74f54fda7a42ed373f7ffe236332231cb2e891360"
   name = "github.com/getlantern/packetforward"
   packages = ["."]
   pruneopts = "UT"
-  revision = "86e1c6909e87533f3d321b83b2da6892e03a1011"
+  revision = "a4c0f27cfeb12428ec5cc6a2b2add135f505d76f"
 
 [[projects]]
   branch = "master"
@@ -1613,6 +1613,7 @@
     "github.com/getlantern/httpseverywhere",
     "github.com/getlantern/i18n",
     "github.com/getlantern/idletiming",
+    "github.com/getlantern/ipproxy",
     "github.com/getlantern/iptool",
     "github.com/getlantern/jibber_jabber",
     "github.com/getlantern/kcpwrapper",
