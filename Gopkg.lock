@@ -493,7 +493,7 @@
   name = "github.com/getlantern/ipproxy"
   packages = ["."]
   pruneopts = "UT"
-  revision = "4341aff6835ffbaaae8d31add6852ce73ddbd4e6"
+  revision = "a9d838343f99a895aa750ac81a17d8a2178c9a7a"
 
 [[projects]]
   branch = "master"

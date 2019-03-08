@@ -40,7 +40,9 @@ func Tun2Socks(fd int, tunAddr, gwAddr, socksAddr, dnsAddr, dnsGrabAddr string, 
 	}
 
 	ipp, err := ipproxy.New(dev, &ipproxy.Opts{
-		MTU: mtu,
+		MTU:                 mtu,
+		OutboundBufferDepth: 10000,
+		TCPConnectBacklog:   100,
 		DialTCP: func(ctx context.Context, network, addr string) (net.Conn, error) {
 			return socksDialer.Dial(network, addr)
 		},
