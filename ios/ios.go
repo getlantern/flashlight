@@ -57,7 +57,7 @@ func StartWithDevice(dev io.ReadWriteCloser) error {
 
 	go func() {
 		defer bal.Close()
-		err := packetforward.Client(dev, 1500, func(ctx context.Context) (net.Conn, error) {
+		err := packetforward.Client(dev, 1500, 3*time.Second, func(ctx context.Context) (net.Conn, error) {
 			return bal.DialContext(ctx, "connect", "127.0.0.1:3000")
 		})
 		if err != nil {

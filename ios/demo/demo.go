@@ -81,13 +81,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	go packetforward.Serve(l, &ipproxy.Opts{
+	pfs := packetforward.NewServer(&ipproxy.Opts{
 		OutboundBufferDepth: 10000,
 		DialTCP: func(ctx context.Context, network, addr string) (net.Conn, error) {
 			return net.Dial("tcp", "127.0.0.1:8000")
 		},
 		StatsInterval: 1 * time.Second,
 	})
+	go pfs.Serve(l)
 
 	dev, err := tun.OpenTunDevice(*tunDevice, *tunAddr, *tunGW, *tunMask)
 	if err != nil {
