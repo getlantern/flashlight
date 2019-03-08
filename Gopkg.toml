@@ -314,3 +314,8 @@
 [[override]]
   name = "github.com/getlantern/framed"
   branch = "ox/issue2635"
+
+[[override]]
+  name = "github.com/google/netstack"
+  branch = "master"
+  source = "https://github.com/getlantern/netstack"
