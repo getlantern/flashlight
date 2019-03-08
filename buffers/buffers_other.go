@@ -1,5 +1,4 @@
-// +build !darwin
-// +build !arm
+// +build !darwin !arm
 
 package buffers
 
