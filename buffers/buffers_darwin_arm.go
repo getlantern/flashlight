@@ -1,6 +1,3 @@
-// +build !darwin
-// +build !arm
-
 package buffers
 
 const (
