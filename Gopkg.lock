@@ -651,11 +651,11 @@
 
 [[projects]]
   branch = "ox/ipproxy"
-  digest = "1:42aa7319144a87dec4b370327b94f3bc77612d1afdc93a21fc10dfef2319b967"
+  digest = "1:e6b9ce11e26e1fab56c491b557f75ae6b44a538e5313e52a37871d8bcbc39de0"
   name = "github.com/getlantern/packetforward"
   packages = ["."]
   pruneopts = "UT"
-  revision = "38bc397543d5d33dc5b8de251b1b5ff7efc510e7"
+  revision = "b833273e09ffade9eaccaa75b29528427637cac6"
 
 [[projects]]
   branch = "master"
