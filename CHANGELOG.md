@@ -1,5 +1,15 @@
 # Change Log
 
+## [5.3.2](https://github.com/getlantern/flashlight/tree/5.3.2) (2019-03-12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.1...5.3.2)
+
+**Merged pull requests:**
+
+- Don't log individual errors when recording entries to borda [\#595](https://github.com/getlantern/flashlight/pull/595) ([oxtoacart](https://github.com/oxtoacart))
+- prevent a QUIC dialer from being null [\#594](https://github.com/getlantern/flashlight/pull/594) ([joesis](https://github.com/joesis))
+- cap the time to dial shortcut [\#592](https://github.com/getlantern/flashlight/pull/592) ([joesis](https://github.com/joesis))
+- Updated to latest gopacket release for go 1.12 fix [\#591](https://github.com/getlantern/flashlight/pull/591) ([myleshorton](https://github.com/myleshorton))
+
 ## [5.3.1](https://github.com/getlantern/flashlight/tree/5.3.1) (2019-02-26)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.0...5.3.1)
 
