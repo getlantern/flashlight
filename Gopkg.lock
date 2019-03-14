@@ -489,11 +489,11 @@
 
 [[projects]]
   branch = "ox/init"
-  digest = "1:c8ce2baac911863ed156bd4d7c72e88d3cc1d009cbd4ba85385bfd1819b68647"
+  digest = "1:51bd9a3b970d13065f5fdff7b5f1f63af0df316ab77573c0b8f5610d07e768c5"
   name = "github.com/getlantern/ipproxy"
   packages = ["."]
   pruneopts = "UT"
-  revision = "a9d838343f99a895aa750ac81a17d8a2178c9a7a"
+  revision = "eed53dc1e07932dd86942d7218268e190f06fe13"
 
 [[projects]]
   branch = "master"
@@ -1034,7 +1034,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:cdd6bd1f284c12343ec424bd80ce5bed9618b33a78585ddedd87a8648d6b600b"
+  digest = "1:55142a16897f202530e0fefcac6f77aa0788f3dc87a26736b2035fd24850f92f"
   name = "github.com/google/netstack"
   packages = [
     "ilist",
@@ -1057,7 +1057,7 @@
     "waiter",
   ]
   pruneopts = "UT"
-  revision = "9d02bdf3ced5b5a2e82f1c66328fdcb0fab73162"
+  revision = "8999826b821d2ab1516549a8887f6760145e6f04"
   source = "https://github.com/getlantern/netstack"
 
 [[projects]]
