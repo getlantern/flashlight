@@ -217,9 +217,9 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 	var timeout time.Duration
 	if deadline, set := ctx.Deadline(); set {
 		conn.SetDeadline(deadline)
-		// Set timeout based on our given deadline, minus the estimated RTT minus a 1 second fudge factor
+		// Set timeout based on our given deadline, minus a 2 second fudge factor
 		timeUntilDeadline := deadline.Sub(time.Now())
-		timeout = timeUntilDeadline - p.realEstRTT() - 1*time.Second
+		timeout = timeUntilDeadline - 2*time.Second
 		if timeout < 0 {
 			log.Errorf("Not enough time left for server to dial upstream within %v, return errUpstream immediately", timeUntilDeadline)
 			return nil, errUpstream
