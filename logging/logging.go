@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/rotator"
 	"github.com/getlantern/wfilter"
@@ -38,12 +39,19 @@ var (
 )
 
 func init() {
-	if runtime.GOOS != "android" {
+	if runtime.GOARCH != "arm" {
 		EnableFileLogging("")
 	}
 }
 
 func EnableFileLogging(logdir string) {
+	err := EnableFileLoggingWith(os.Stdout, os.Stderr, logdir)
+	if err != nil {
+		log.Error(err)
+	}
+}
+
+func EnableFileLoggingWith(werr io.WriteCloser, wout io.WriteCloser, logdir string) error {
 	if logdir == "" {
 		logdir = appdir.Logs("Lantern")
 	}
@@ -56,8 +64,7 @@ func EnableFileLogging(logdir string) {
 		if os.IsNotExist(err) {
 			// Create log dir
 			if err := os.MkdirAll(logdir, 0755); err != nil {
-				log.Errorf("Unable to create logdir at %s: %s", logdir, err)
-				return
+				return errors.New("Unable to create logdir at %s: %s", logdir, err)
 			}
 		}
 	}
@@ -68,9 +75,10 @@ func EnableFileLogging(logdir string) {
 	rotator.MaxRotation = 5
 
 	logFile = rotator
-	errorPWC = newPipedWriteCloser(newNonStopWriteCloser(os.Stderr, logFile), 1000)
-	debugPWC = newPipedWriteCloser(newNonStopWriteCloser(os.Stdout, logFile), 100)
+	errorPWC = newPipedWriteCloser(newNonStopWriteCloser(werr, logFile), 1000)
+	debugPWC = newPipedWriteCloser(newNonStopWriteCloser(wout, logFile), 100)
 	golog.SetOutputs(timestamped(errorPWC), timestamped(debugPWC))
+	return nil
 }
 
 type pipedWriteCloser struct {
