@@ -137,7 +137,7 @@ func main() {
 		log.Debug("Stopped TUN device")
 	}()
 
-	writer, err := ios.Client(dev, 1500)
+	writer, err := ios.Client(&writerAdapter{dev}, 1500)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -154,4 +154,13 @@ func main() {
 			return
 		}
 	}
+}
+
+type writerAdapter struct {
+	Writer io.Writer
+}
+
+func (wa *writerAdapter) Write(b []byte) bool {
+	_, err := wa.Writer.Write(b)
+	return err == nil
 }
