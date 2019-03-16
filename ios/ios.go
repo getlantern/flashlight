@@ -11,7 +11,6 @@ import (
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/gotun"
 	"github.com/getlantern/packetforward"
 	"github.com/getlantern/proxy"
 	"github.com/getlantern/proxy/filters"
@@ -33,39 +32,60 @@ var (
 	log = golog.LoggerFor("ios")
 )
 
+type Writer interface {
+	Write([]byte) bool
+}
+
+type writerAdapter struct {
+	Writer
+}
+
+func (wa *writerAdapter) Write(b []byte) (int, error) {
+	ok := wa.Writer.Write(b)
+	if !ok {
+		return 0, errors.New("error writing")
+	}
+	return len(b), nil
+}
+
+type WriteCloser interface {
+	Write([]byte) error
+
+	Close() error
+}
+
+type wc struct {
+	io.Writer
+	bal *balancer.Balancer
+}
+
+func (c *wc) Write(b []byte) error {
+	_, err := c.Writer.Write(b)
+	return err
+}
+
+func (c *wc) Close() error {
+	c.bal.Close()
+	return nil
+}
+
 type client struct {
 	proxy proxy.Proxy
 }
 
-func Start(fd int, addr string, gw string) error {
-	dev, err := tun.WrapTunDevice(fd, addr, gw)
-	if err != nil {
-		return log.Errorf("Unable to wrap tun device: %v", err)
-	}
-
-	return StartWithDevice(dev)
-}
-
-func StartWithDevice(dev io.ReadWriteCloser) error {
+func Client(packetsOut Writer, mtu int) (WriteCloser, error) {
 	go trackAndLimitMemory()
 
 	dialers, err := loadDialers()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	bal := balancer.New(30*time.Second, dialers...)
 
-	go func() {
-		defer bal.Close()
-		err := packetforward.Client(dev, 1500, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
-			return bal.DialContext(ctx, "connect", "127.0.0.1:3000")
-		})
-		if err != nil {
-			log.Fatalf("Error forwarding packets: %v", err)
-		}
-	}()
-
-	return nil
+	w := packetforward.Client(&writerAdapter{packetsOut}, mtu, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
+		return bal.DialContext(ctx, "connect", "127.0.0.1:3000")
+	})
+	return &wc{w, bal}, nil
 }
 
 func filter(ctx filters.Context, req *http.Request, next filters.Next) (*http.Response, filters.Context, error) {

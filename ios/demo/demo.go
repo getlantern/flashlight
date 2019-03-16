@@ -23,6 +23,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	_ "net/http/pprof"
@@ -136,9 +137,21 @@ func main() {
 		log.Debug("Stopped TUN device")
 	}()
 
-	err = ios.StartWithDevice(dev)
+	writer, err := ios.Client(dev, 1500)
 	if err != nil {
 		log.Fatal(err)
 	}
-	time.Sleep(1000 * time.Hour)
+	b := make([]byte, 1500)
+	for {
+		n, err := dev.Read(b)
+		if n > 0 {
+			writer.Write(b[:n])
+		}
+		if err != nil {
+			if err != io.EOF {
+				log.Errorf("Unexpected error reading from TUN device: %v", err)
+			}
+			return
+		}
+	}
 }
