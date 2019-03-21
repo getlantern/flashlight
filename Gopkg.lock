@@ -237,11 +237,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:56011a2810e9979d652841eb0f60cb669a3beea2ed9e173eecd9c8b5ee9dca47"
+  digest = "1:e8edb6fd65784c0b418ee5a243e803dbff34078355c08ea71a3d084b5b19df0d"
   name = "github.com/getlantern/dnsgrab"
   packages = ["."]
   pruneopts = "UT"
-  revision = "227f729dcb41c2838b53575a48208d0b552ab6e8"
+  revision = "06d5b79b6d2c7db17c1a6887e97536d54d740a9a"
 
 [[projects]]
   branch = "master"
