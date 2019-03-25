@@ -37,24 +37,9 @@ func TestParseFileSize(t *testing.T) {
 	}
 }
 
-func TestZipFiles(t *testing.T) {
+func TestZipFilesWithoutPath(t *testing.T) {
 	var buf bytes.Buffer
-	err := ZipFiles(&buf, ZipOptions{Glob: "test_zip_src/*.txt*"})
-	if !assert.NoError(t, err) {
-		return
-	}
-	expectedFiles := []string{
-		"test_zip_src/hello.txt",
-		"test_zip_src/hello.txt.1",
-		"test_zip_src/large.txt",
-		"test_zip_src/zzzz.txt.2",
-	}
-	testZipFiles(t, buf.Bytes(), expectedFiles)
-}
-
-func TestZipFilesWithDir(t *testing.T) {
-	var buf bytes.Buffer
-	err := ZipFiles(&buf, ZipOptions{Glob: "*.txt*", Dir: "test_zip_src"})
+	err := ZipFiles(&buf, ZipOptions{Globs: map[string]string{"": "**/*.txt*"}})
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -69,7 +54,7 @@ func TestZipFilesWithDir(t *testing.T) {
 
 func TestZipFilesWithMaxBytes(t *testing.T) {
 	var buf bytes.Buffer
-	err := ZipFiles(&buf, ZipOptions{Glob: "*.txt*", Dir: "test_zip_src", MaxBytes: 1 * kb})
+	err := ZipFiles(&buf, ZipOptions{Globs: map[string]string{"": "test_zip_src/*.txt*"}, MaxBytes: 1 * kb})
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -82,7 +67,7 @@ func TestZipFilesWithMaxBytes(t *testing.T) {
 
 func TestZipFilesWithNewRoot(t *testing.T) {
 	var buf bytes.Buffer
-	err := ZipFiles(&buf, ZipOptions{Glob: "*.txt*", Dir: "test_zip_src", NewRoot: "new_root"})
+	err := ZipFiles(&buf, ZipOptions{Globs: map[string]string{"new_root": "**/*.txt*"}})
 	if !assert.NoError(t, err) {
 		return
 	}

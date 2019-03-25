@@ -59,7 +59,6 @@ func EnableFileLoggingWith(werr io.WriteCloser, wout io.WriteCloser, logdir stri
 	actualLogDir = logdir
 	actualLogDirMx.Unlock()
 
-	log.Debugf("Placing logs in %v", logdir)
 	if _, err := os.Stat(logdir); err != nil {
 		if os.IsNotExist(err) {
 			// Create log dir
@@ -159,10 +158,19 @@ func ZipLogFiles(w io.Writer, underFolder string, maxBytes int64) error {
 	logdir := actualLogDir
 	actualLogDirMx.RUnlock()
 
+	return ZipLogFilesFrom(w, maxBytes, map[string]string{"logs": logdir})
+}
+
+// ZipLogFilesFrom zip the log files from the given dirs to the writer. It will
+// stop and return if the newly added file would make the extracted files exceed
+// maxBytes in total.
+func ZipLogFilesFrom(w io.Writer, maxBytes int64, dirs map[string]string) error {
+	globs := make(map[string]string, len(dirs))
+	for baseDir, dir := range dirs {
+		globs[baseDir] = fmt.Sprintf(filepath.Join(dir, "lantern.log*"))
+	}
 	return util.ZipFiles(w, util.ZipOptions{
-		Glob:     "lantern.log*",
-		Dir:      logdir,
-		NewRoot:  underFolder,
+		Globs:    globs,
 		MaxBytes: maxBytes,
 	})
 }
