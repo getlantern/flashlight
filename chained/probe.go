@@ -37,6 +37,11 @@ func (p *proxy) ProbeStats() (successes uint64, successKBs uint64, failures uint
 }
 
 func (p *proxy) Probe(forPerformance bool) bool {
+	// We don't really need the context or the op here. The only purpose is to
+	// create a new beam and implicitly pass it down to the child op.
+	op, _ := ops.BeginWithNewBeam("probe_root", context.Background())
+	op.Set("for_performance", forPerformance)
+	defer op.End()
 	forPerformanceString := ""
 	if forPerformance {
 		forPerformanceString = " for performance"
@@ -103,6 +108,8 @@ func (p *proxy) doProbe(forPerformance bool) error {
 }
 
 func (p *proxy) httpPing(rt http.RoundTripper, kb int, resetBBR bool) (time.Time, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 	op := ops.Begin("probe").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed)
 	defer op.End()
 
@@ -112,7 +119,7 @@ func (p *proxy) httpPing(rt http.RoundTripper, kb int, resetBBR bool) (time.Time
 	defer detailOp.End()
 
 	start := time.Now()
-	tofb, err := p.doHttpPing(rt, kb, resetBBR)
+	tofb, err := p.doHttpPing(ctx, rt, kb, resetBBR)
 	rtt := time.Since(start).Nanoseconds()
 
 	if err != nil {
@@ -131,9 +138,7 @@ func (p *proxy) httpPing(rt http.RoundTripper, kb int, resetBBR bool) (time.Time
 	return tofb, err
 }
 
-func (p *proxy) doHttpPing(rt http.RoundTripper, kb int, resetBBR bool) (tofb time.Time, err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+func (p *proxy) doHttpPing(ctx context.Context, rt http.RoundTripper, kb int, resetBBR bool) (tofb time.Time, err error) {
 	deadline, _ := ctx.Deadline()
 
 	req, e := http.NewRequest("GET", "http://ping-chained-server", nil)

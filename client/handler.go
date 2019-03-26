@@ -19,20 +19,13 @@ import (
 	"github.com/getlantern/proxy/filters"
 )
 
-type contextKey string
-
-const (
-	ctxKeyOp = contextKey("op")
-)
-
 var adSwapJavaScriptInjections = map[string]string{
 	"http://www.googletagservices.com/tag/js/gpt.js": "https://ads.getlantern.org/v1/js/www.googletagservices.com/tag/js/gpt.js",
 	"http://cpro.baidustatic.com/cpro/ui/c.js":       "https://ads.getlantern.org/v1/js/cpro.baidustatic.com/cpro/ui/c.js",
 }
 
 func (client *Client) handle(conn net.Conn) error {
-	op := ops.Begin("proxy")
-	ctx := context.WithValue(context.Background(), ctxKeyOp, op)
+	op, ctx := ops.BeginWithNewBeam("proxy", context.Background())
 	// Set user agent connection to idle a little before the upstream connection
 	// so that we don't read data from the client after the upstream connection
 	// has already timed out.
@@ -75,7 +68,7 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 	req.URL.Scheme = "http"
 	req.URL.Host = req.Host
 
-	op := ctx.Value(ctxKeyOp).(*ops.Op)
+	op := ops.FromContext(ctx)
 
 	if runtime.GOOS == "android" && req.URL != nil && req.URL.Host == "localhost" &&
 		strings.HasPrefix(req.URL.Path, "/pro/") {

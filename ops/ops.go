@@ -3,10 +3,12 @@
 package ops
 
 import (
+	"context"
 	"net"
 	"net/http"
 	"regexp"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	borda "github.com/getlantern/borda/client"
@@ -15,6 +17,7 @@ import (
 
 // ProxyType is the type of various proxy channel
 type ProxyType string
+type contextKey string
 
 const (
 	// ProxyNone means direct access, not proxying at all
@@ -23,10 +26,15 @@ const (
 	ProxyChained ProxyType = "chained"
 	// ProxyFronted means access through domain fronting
 	ProxyFronted ProxyType = "fronted"
+
+	ctxKeyOp   = contextKey("op")
+	ctxKeyBeam = contextKey("beam")
 )
 
 var (
 	proxyNameRegex = regexp.MustCompile(`(fp-([a-z0-9]+-)?([a-z0-9]+)-[0-9]{8}-[0-9]+)(-.+)?`)
+
+	beam_seq uint64
 )
 
 // Op decorates an ops.Op with convenience methods.
@@ -46,6 +54,37 @@ func (op *Op) Begin(name string) *Op {
 // Begin mimics the similar method from ops
 func Begin(name string) *Op {
 	return &Op{ops.Begin(name)}
+}
+
+// BeginWithBeam begins an Op with the beam extracted from the context, if
+// exists.
+func BeginWithBeam(name string, ctx context.Context) *Op {
+	op := Begin(name)
+	if beam, exist := ctx.Value(ctxKeyBeam).(uint64); exist {
+		op.Set("beam", beam)
+	}
+	return op
+}
+
+// BeginWithNewBeam begins an Op with a new beam and adds it to the context.
+func BeginWithNewBeam(name string, ctx context.Context) (*Op, context.Context) {
+	beam := atomic.AddUint64(&beam_seq, 1)
+	newCtx := context.WithValue(ctx, ctxKeyBeam, beam)
+	op := BeginWithBeam(name, newCtx)
+	return op, WithOp(newCtx, op)
+}
+
+// WithOp adds an Op to the context to be retrieved later via FromContext
+func WithOp(ctx context.Context, op *Op) context.Context {
+	return context.WithValue(ctx, ctxKeyOp, op)
+}
+
+// FromContext extracts an Op from the context, or nil if doesn't exist
+func FromContext(ctx context.Context) *Op {
+	if op, exist := ctx.Value(ctxKeyOp).(*Op); exist {
+		return op
+	}
+	return nil
 }
 
 // RegisterReporter mimics the similar method from ops

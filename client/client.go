@@ -391,9 +391,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 
 	conf := &socks5.Config{
 		HandleConnect: func(ctx context.Context, conn net.Conn, req *socks5.Request, replySuccess func(boundAddr net.Addr) error, replyError func(err error) error) error {
-			op := ops.Begin("proxy")
-			defer op.End()
-			ctx = context.WithValue(ctx, ctxKeyOp, op)
+			op, ctx := ops.BeginWithNewBeam("proxy", ctx)
 			addr := client.reverseDNS(fmt.Sprintf("%v:%v", req.DestAddr.IP, req.DestAddr.Port))
 			errOnReply := replySuccess(nil)
 			if errOnReply != nil {
@@ -428,7 +426,7 @@ func (client *Client) Stop() error {
 }
 
 func (client *Client) dial(ctx context.Context, isConnect bool, network, addr string) (conn net.Conn, err error) {
-	op := ops.Begin("proxied_dialer")
+	op := ops.BeginWithBeam("proxied_dialer", ctx)
 	op.Set("local_proxy_type", "http")
 	op.Origin(addr, "")
 	defer op.End()
