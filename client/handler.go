@@ -68,12 +68,12 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 	req.URL.Scheme = "http"
 	req.URL.Host = req.Host
 
-	op := ops.FromContext(ctx)
-
 	if runtime.GOOS == "android" && req.URL != nil && req.URL.Host == "localhost" &&
 		strings.HasPrefix(req.URL.Path, "/pro/") {
-		return client.interceptProRequest(ctx, req, op)
+		return client.interceptProRequest(ctx, req)
 	}
+
+	op := ops.FromContext(ctx)
 
 	adSwapURL := client.adSwapURL(req)
 	if !exoclick && adSwapURL == "" && !client.easylist.Allow(req) {
@@ -152,12 +152,12 @@ func (client *Client) isHTTPProxyPort(r *http.Request) bool {
 
 // interceptProRequest specifically looks for and properly handles pro server
 // requests (similar to desktop's APIHandler)
-func (client *Client) interceptProRequest(ctx filters.Context, r *http.Request, op *ops.Op) (*http.Response, filters.Context, error) {
+func (client *Client) interceptProRequest(ctx filters.Context, r *http.Request) (*http.Response, filters.Context, error) {
 	log.Debugf("Intercepting request to pro server: %v", r.URL.Path)
 	r.URL.Path = r.URL.Path[4:]
 	pro.PrepareProRequest(r, client.user)
 	r.Header.Del("Origin")
-	resp, err := pro.GetHTTPClient().Do(r)
+	resp, err := pro.GetHTTPClient().Do(r.WithContext(ctx))
 	if err != nil {
 		log.Errorf("Error intercepting request to pro server: %v", err)
 		resp = &http.Response{

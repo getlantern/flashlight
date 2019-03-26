@@ -27,8 +27,8 @@ const (
 	// ProxyFronted means access through domain fronting
 	ProxyFronted ProxyType = "fronted"
 
+	CtxKeyBeam = contextKey("beam")
 	ctxKeyOp   = contextKey("op")
-	ctxKeyBeam = contextKey("beam")
 )
 
 var (
@@ -60,7 +60,7 @@ func Begin(name string) *Op {
 // exists.
 func BeginWithBeam(name string, ctx context.Context) *Op {
 	op := Begin(name)
-	if beam, exist := ctx.Value(ctxKeyBeam).(uint64); exist {
+	if beam, exist := ctx.Value(CtxKeyBeam).(uint64); exist {
 		op.Set("beam", beam)
 	}
 	return op
@@ -69,7 +69,7 @@ func BeginWithBeam(name string, ctx context.Context) *Op {
 // BeginWithNewBeam begins an Op with a new beam and adds it to the context.
 func BeginWithNewBeam(name string, ctx context.Context) (*Op, context.Context) {
 	beam := atomic.AddUint64(&beam_seq, 1)
-	newCtx := context.WithValue(ctx, ctxKeyBeam, beam)
+	newCtx := context.WithValue(ctx, CtxKeyBeam, beam)
 	op := BeginWithBeam(name, newCtx)
 	return op, WithOp(newCtx, op)
 }
