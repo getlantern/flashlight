@@ -1,12 +1,15 @@
 package config
 
 import (
+	"crypto/x509"
 	"errors"
 	"time"
 
-	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/fronted"
+	"github.com/getlantern/keyman"
 	"github.com/getlantern/proxiedsites"
+
+	"github.com/getlantern/flashlight/client"
 )
 
 // Global contains general configuration for Lantern either set globally via
@@ -38,6 +41,20 @@ type Global struct {
 
 	// ProxyConfigPollInterval sets interval at which to poll for proxy config
 	ProxyConfigPollInterval time.Duration
+}
+
+// TrustedCACerts returns a certificate pool containing the TrustedCAs from this
+// config.
+func (cfg *Global) TrustedCACerts() (pool *x509.CertPool, err error) {
+	certs := make([]string, 0, len(cfg.TrustedCAs))
+	for _, ca := range cfg.TrustedCAs {
+		certs = append(certs, ca.Cert)
+	}
+	pool, err = keyman.PoolContainingCerts(certs...)
+	if err != nil {
+		log.Errorf("Could not create pool %v", err)
+	}
+	return
 }
 
 // newGlobal creates a new global config with otherwise nil values set.

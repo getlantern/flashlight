@@ -2,7 +2,6 @@ package flashlight
 
 import (
 	"context"
-	"crypto/x509"
 	"fmt"
 	"math/rand"
 	"net"
@@ -18,7 +17,6 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/jibber_jabber"
-	"github.com/getlantern/keyman"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/ops"
 	"github.com/getlantern/osversion"
@@ -179,7 +177,7 @@ func Run(httpProxyAddr string,
 }
 
 func applyClientConfig(c *client.Client, cfg *config.Global, autoReport func() bool, onBordaConfigured chan bool) {
-	certs, err := getTrustedCACerts(cfg)
+	certs, err := cfg.TrustedCACerts()
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
 	} else if cfg.Client != nil && cfg.Client.Fronted != nil {
@@ -234,18 +232,6 @@ func applyClientConfig(c *client.Client, cfg *config.Global, autoReport func() b
 	default:
 		// ignore
 	}
-}
-
-func getTrustedCACerts(cfg *config.Global) (pool *x509.CertPool, err error) {
-	certs := make([]string, 0, len(cfg.TrustedCAs))
-	for _, ca := range cfg.TrustedCAs {
-		certs = append(certs, ca.Cert)
-	}
-	pool, err = keyman.PoolContainingCerts(certs...)
-	if err != nil {
-		log.Errorf("Could not create pool %v", err)
-	}
-	return
 }
 
 func displayVersion() {
