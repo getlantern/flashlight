@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,7 +30,9 @@ func TestConfigure(t *testing.T) {
 		return
 	}
 	assert.False(t, result2.VPNNeedsReconfiguring)
-	sort.Strings(result1.IPSToExcludeFromVPN)
-	sort.Strings(result2.IPSToExcludeFromVPN)
-	assert.Equal(t, result1.IPSToExcludeFromVPN, result2.IPSToExcludeFromVPN)
+	ips1 := strings.Split(result1.IPSToExcludeFromVPN, ",")
+	ips2 := strings.Split(result2.IPSToExcludeFromVPN, ",")
+	sort.Strings(ips1)
+	sort.Strings(ips2)
+	assert.Equal(t, ips1, ips2)
 }

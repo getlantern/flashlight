@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -35,8 +36,8 @@ type ConfigResult struct {
 	VPNNeedsReconfiguring bool
 
 	// IPSToExcludeFromVPN lists all IPS that should be excluded from the VPNS's
-	// routes
-	IPSToExcludeFromVPN []string
+	// routes in a comma-delimited string
+	IPSToExcludeFromVPN string
 }
 
 // Configure fetches updated configuration from the cloud and stores it in
@@ -82,7 +83,11 @@ func (c *configurer) configure() (*ConfigResult, error) {
 
 	for _, masqueradeSet := range global.Client.MasqueradeSets {
 		for _, masquerade := range masqueradeSet {
-			result.IPSToExcludeFromVPN = append(result.IPSToExcludeFromVPN, masquerade.IpAddress)
+			if len(result.IPSToExcludeFromVPN) == 0 {
+				result.IPSToExcludeFromVPN = masquerade.IpAddress
+			} else {
+				result.IPSToExcludeFromVPN = fmt.Sprintf("%v,%v", result.IPSToExcludeFromVPN, masquerade.IpAddress)
+			}
 		}
 	}
 
