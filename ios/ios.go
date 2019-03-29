@@ -14,7 +14,6 @@ import (
 	"github.com/getlantern/packetforward"
 	"github.com/getlantern/proxy"
 	"github.com/getlantern/proxy/filters"
-	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
@@ -73,16 +72,22 @@ type client struct {
 	proxy proxy.Proxy
 }
 
-func Client(packetsOut Writer, mtu int) (WriteCloser, error) {
+// ClientOpts configures a client
+type ClientOpts struct {
+	ConfigDir string
+	MTU       int
+}
+
+func Client(packetsOut Writer, opts *ClientOpts) (WriteCloser, error) {
 	go trackAndLimitMemory()
 
-	dialers, err := loadDialers()
+	dialers, err := loadDialers(opts.ConfigDir)
 	if err != nil {
 		return nil, err
 	}
 	bal := balancer.New(30*time.Second, dialers...)
 
-	w := packetforward.Client(&writerAdapter{packetsOut}, mtu, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
+	w := packetforward.Client(&writerAdapter{packetsOut}, opts.MTU, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
 		return bal.DialContext(ctx, "connect", "127.0.0.1:3000")
 	})
 	return &wc{w, bal}, nil
@@ -101,8 +106,10 @@ func filter(ctx filters.Context, req *http.Request, next filters.Next) (*http.Re
 	return next(ctx, req)
 }
 
-func loadDialers() ([]balancer.Dialer, error) {
-	proxies, err := loadProxies()
+func loadDialers(configDir string) ([]balancer.Dialer, error) {
+	c := &configurer{configFolderPath: configDir}
+	proxies := make(map[string]*chained.ChainedServerInfo)
+	_, _, err := c.openConfig(proxiesYaml, proxies, []byte{})
 	if err != nil {
 		return nil, err
 	}
@@ -142,14 +149,14 @@ func chainedDialer(name string, si *chained.ChainedServerInfo) (balancer.Dialer,
 	return chained.CreateDialer(name, sic, common.NewUserConfigData("~~~~~~", 0, "", nil, "en_US"))
 }
 
-func loadProxies() (map[string]*chained.ChainedServerInfo, error) {
-	proxies := make(map[string]*chained.ChainedServerInfo, 1)
-	err := yaml.Unmarshal([]byte(proxyConfig), proxies)
-	if err != nil {
-		return nil, errors.New("Unable to unmarshal proxyConfig: %v", err)
-	}
-	return proxies, nil
-}
+// func loadProxies() (map[string]*chained.ChainedServerInfo, error) {
+// 	proxies := make(map[string]*chained.ChainedServerInfo, 1)
+// 	err := yaml.Unmarshal([]byte(proxyConfig), proxies)
+// 	if err != nil {
+// 		return nil, errors.New("Unable to unmarshal proxyConfig: %v", err)
+// 	}
+// 	return proxies, nil
+// }
 
 func trackAndLimitMemory() {
 	for {

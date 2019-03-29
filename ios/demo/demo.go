@@ -24,11 +24,14 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"os/exec"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -45,12 +48,13 @@ var (
 )
 
 var (
-	tunDevice = flag.String("tun-device", "tun0", "tun device name")
-	tunAddr   = flag.String("tun-address", "10.0.0.2", "tun device address")
-	tunMask   = flag.String("tun-mask", "255.255.255.0", "tun device netmask")
-	tunGW     = flag.String("tun-gw", "10.0.0.1", "tun device gateway")
-	ifOut     = flag.String("ifout", "en0", "name of interface to use for outbound connections")
-	pprofAddr = flag.String("pprofaddr", "", "pprof address to listen on, not activate pprof if empty")
+	tunDevice       = flag.String("tun-device", "tun0", "tun device name")
+	tunAddr         = flag.String("tun-address", "10.0.0.2", "tun device address")
+	tunMask         = flag.String("tun-mask", "255.255.255.0", "tun device netmask")
+	tunGW           = flag.String("tun-gw", "10.0.0.1", "tun device gateway")
+	ifOut           = flag.String("ifout", "en0", "name of interface to use for outbound connections")
+	pprofAddr       = flag.String("pprofaddr", "", "pprof address to listen on, not activate pprof if empty")
+	internetGateway = flag.String("gw", "192.168.1.1", "gateway for getting to Internet")
 )
 
 type fivetuple struct {
@@ -76,6 +80,17 @@ func main() {
 				log.Error(err)
 			}
 		}()
+	}
+
+	tmpDir, err := ioutil.TempDir("", "ios_demo")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	cfgResult, err := ios.Configure(tmpDir)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	l, err := net.Listen("tcp", ":3000")
@@ -137,7 +152,27 @@ func main() {
 		log.Debug("Stopped TUN device")
 	}()
 
-	writer, err := ios.Client(&writerAdapter{dev}, 1500)
+	ipsToExclude := strings.Split(cfgResult.IPSToExcludeFromVPN, ",")
+	defer func() {
+		for _, ip := range ipsToExclude {
+			err := exec.Command("sudo", "route", "delete", ip).Run()
+			if err != nil {
+				log.Error(err)
+			}
+		}
+	}()
+
+	for _, ip := range ipsToExclude {
+		err := exec.Command("sudo", "route", "add", ip, *internetGateway).Run()
+		if err != nil {
+			log.Error(err)
+		}
+	}
+
+	writer, err := ios.Client(&writerAdapter{dev}, &ios.ClientOpts{
+		ConfigDir: tmpDir,
+		MTU:       1500,
+	})
 	if err != nil {
 		log.Fatal(err)
 	}

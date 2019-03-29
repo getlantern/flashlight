@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"os"
@@ -88,6 +89,19 @@ func (c *configurer) configure() (*ConfigResult, error) {
 			} else {
 				result.IPSToExcludeFromVPN = fmt.Sprintf("%v,%v", result.IPSToExcludeFromVPN, masquerade.IpAddress)
 			}
+		}
+	}
+
+	for _, proxy := range proxies {
+		if proxy.Addr != "" {
+			host, _, _ := net.SplitHostPort(proxy.Addr)
+			result.IPSToExcludeFromVPN = fmt.Sprintf("%v,%v", result.IPSToExcludeFromVPN, host)
+			log.Debugf("Added %v", host)
+		}
+		if proxy.MultiplexedAddr != "" {
+			host, _, _ := net.SplitHostPort(proxy.MultiplexedAddr)
+			result.IPSToExcludeFromVPN = fmt.Sprintf("%v,%v", result.IPSToExcludeFromVPN, host)
+			log.Debugf("Added %v", host)
 		}
 	}
 
