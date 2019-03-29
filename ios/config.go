@@ -109,10 +109,10 @@ func (c *configurer) openProxies() (map[string]*chained.ChainedServerInfo, strin
 func (c *configurer) openConfig(name string, cfg interface{}, embedded []byte) (string, bool, error) {
 	var initialized bool
 	bytes, err := ioutil.ReadFile(c.fullPathTo(name))
-	if err == nil {
+	if err == nil && len(bytes) > 0 {
 		log.Debugf("Loaded %v from file", name)
 	} else {
-		log.Debugf("Initializing %f from embedded", name)
+		log.Debugf("Initializing %v from embedded", name)
 		bytes = embedded
 		initialized = true
 		if writeErr := ioutil.WriteFile(c.fullPathTo(name), bytes, 0644); writeErr != nil {

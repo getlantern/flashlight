@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -39,7 +40,7 @@ var (
 )
 
 func init() {
-	if runtime.GOARCH != "arm" {
+	if !strings.HasPrefix(runtime.GOARCH, "arm") {
 		EnableFileLogging("")
 	}
 }

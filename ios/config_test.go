@@ -3,6 +3,7 @@ package ios
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -16,6 +17,11 @@ func TestConfigure(t *testing.T) {
 		return
 	}
 	defer os.RemoveAll(tmpDir)
+	ioutil.WriteFile(filepath.Join(tmpDir, "global.yaml"), []byte{}, 0644)
+	ioutil.WriteFile(filepath.Join(tmpDir, "global.yaml.etag"), []byte{}, 0644)
+	ioutil.WriteFile(filepath.Join(tmpDir, "proxies.yaml"), []byte{}, 0644)
+	ioutil.WriteFile(filepath.Join(tmpDir, "proxies.yaml.etag"), []byte{}, 0644)
+	ioutil.WriteFile(filepath.Join(tmpDir, "masquerade_cache"), []byte{}, 0644)
 
 	result1, err := Configure(tmpDir)
 	if !assert.NoError(t, err) {

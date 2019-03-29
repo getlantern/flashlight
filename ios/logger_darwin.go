@@ -23,13 +23,7 @@ import (
 )
 
 func init() {
-	golog.SetOutputs(
-		io.MultiWriter(os.Stderr, loggerWith(func(msg string) {
-			C.log_error(C.CString(msg))
-		})),
-		io.MultiWriter(os.Stdout, loggerWith(func(msg string) {
-			C.log_debug(C.CString(msg))
-		})))
+	golog.SetOutputs(defaultLoggers())
 }
 
 // ConfigureFileLogging configures file logging to use the lantern.log file at
@@ -38,11 +32,38 @@ func init() {
 // side.
 func ConfigureFileLogging(fullLogFilePath string) error {
 	logFileDirectory, _ := filepath.Split(fullLogFilePath)
-	return logging.EnableFileLoggingWith(loggerWith(func(msg string) {
-		C.log_error(C.CString(msg))
-	}), loggerWith(func(msg string) {
-		C.log_debug(C.CString(msg))
-	}), logFileDirectory)
+	werr, wout := defaultLoggers()
+	return logging.EnableFileLoggingWith(werr, wout, logFileDirectory)
+}
+
+func defaultLoggers() (io.WriteCloser, io.WriteCloser) {
+	return &dualWriter{os.Stderr, loggerWith(func(msg string) {
+			C.log_error(C.CString(msg))
+		})},
+		&dualWriter{os.Stdout, loggerWith(func(msg string) {
+			C.log_debug(C.CString(msg))
+		})}
+}
+
+type dualWriter struct {
+	w1 io.Writer
+	w2 io.WriteCloser
+}
+
+func (dw *dualWriter) Write(b []byte) (int, error) {
+	n, err := dw.w1.Write(b)
+	n2, err2 := dw.w2.Write(b)
+	if n2 < n {
+		n = n2
+	}
+	if err == nil {
+		err = err2
+	}
+	return n, err
+}
+
+func (dw *dualWriter) Close() error {
+	return dw.w2.Close()
 }
 
 func loggerWith(fn func(string)) io.WriteCloser {
