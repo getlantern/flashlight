@@ -169,10 +169,7 @@ func main() {
 		}
 	}
 
-	writer, err := ios.Client(&writerAdapter{dev}, &ios.ClientOpts{
-		ConfigDir: tmpDir,
-		MTU:       1500,
-	})
+	writer, err := ios.Client(&writerAdapter{dev}, tmpDir, 1500)
 	if err != nil {
 		log.Fatal(err)
 	}
