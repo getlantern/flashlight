@@ -447,7 +447,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 
 	dialProxied := func(ctx context.Context, _unused, addr string) (net.Conn, error) {
 		op.Set("remotely_proxied", true)
-		proto := "persistent"
+		proto := balancer.NetworkPersistent
 		if isCONNECT {
 			// UGLY HACK ALERT! In this case, we know we need to send a CONNECT request
 			// to the chained server. We need to send that request from chained/dialer.go
@@ -456,7 +456,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 			// that is effectively always "tcp" in the end, but we look for this
 			// special "transport" in the dialer and send a CONNECT request in that
 			// case.
-			proto = "connect"
+			proto = balancer.NetworkConnect
 		}
 		start := time.Now()
 		conn, err := client.bal.DialContext(ctx, proto, addr)
@@ -490,13 +490,16 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 	// It's roughly requestTimeout (20s) / 5 = 4s to leave enough time
 	// to try dialing via proxies. Not hardcode to 4s to avoid break test
 	// code which may have a shorter requestTimeout.
-	cappedCTX, cancel := context.WithTimeout(ctx, dl.Sub(time.Now())/5)
+	directTimeout := dl.Sub(time.Now()) / 5
+	cappedCTX, cancel := context.WithTimeout(ctx, directTimeout)
 	defer cancel()
 
 	dialDirectForDetour := func(ctx context.Context, network, addr string) (net.Conn, error) {
 		if allow, ip := client.allowShortcut(cappedCTX, addr); allow {
-			// Don't cap the context if the address is eligible for shortcut.
-			return dialDirectForShortcut(ctx, network, addr, ip)
+			// Arbitrarily have a larger timeout if the address is eligible for shortcut.
+			shortcutCTX, cancel := context.WithTimeout(ctx, directTimeout*2)
+			defer cancel()
+			return dialDirectForShortcut(shortcutCTX, network, addr, ip)
 		}
 		return netx.DialContext(cappedCTX, network, addr)
 	}

@@ -87,10 +87,7 @@ func startBordaAndProxyBench(reportInterval time.Duration, enabled func(ctx map[
 			}
 		}
 
-		reportErr := reportToBorda(values, ctx)
-		if reportErr != nil {
-			log.Errorf("Error reporting error to borda: %v", reportErr)
-		}
+		reportToBorda(values, ctx)
 	}
 
 	ops.RegisterReporter(reporter)

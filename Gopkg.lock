@@ -272,11 +272,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1fa1d94f7e3078d13b2343681908c58af78b8c402045d6e280a5d8e9629db1d1"
+  digest = "1:e1bd5124f74246a43532df9469dec62e6d7a9e6977188495ca71daf0a4473977"
   name = "github.com/getlantern/enhttp"
   packages = ["."]
   pruneopts = "UT"
-  revision = "06cfcf06160d10ec1cc9d1b92452dd4d17cb684a"
+  revision = "a974fa851e3c18be5d0bb6f06d09656365731832"
 
 [[projects]]
   branch = "master"
@@ -699,14 +699,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:13077a6da704790a363c2b897455b782aebb10bdeea574975d65092defd40056"
+  digest = "1:dc6205da649637f53c456084d90f8feb3afe76a970661e1313b03e79e4fd635c"
   name = "github.com/getlantern/proxy"
   packages = [
     ".",
     "filters",
   ]
   pruneopts = "UT"
-  revision = "3f472f8f4fe8a92c88c7309300729dbb16dad174"
+  revision = "31d1cc06ed3ded513b71cc6d023a2d3525d63561"
 
 [[projects]]
   branch = "master"
@@ -836,11 +836,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9072181164e616e422cbfbe48ca9ac249a4d76301ca0876c9f56b937cf214a2f"
+  digest = "1:c8531772275e4f3ad417d11b6e54f8adec37f5c23e3f53147a3aea0050a8170b"
   name = "github.com/getlantern/uuid"
   packages = ["."]
   pruneopts = "UT"
-  revision = "1318e7614b82cd38041b0b0bd3692d71f3901fb8"
+  revision = "ffb979a5ca6465a5de5112b0d401c52e05e77435"
 
 [[projects]]
   branch = "master"
@@ -1036,8 +1036,7 @@
   revision = "4030bb1f1f0c35b30ca7009e9ebd06849dd45306"
 
 [[projects]]
-  branch = "master"
-  digest = "1:2d510cf5486a6ab90196bd3cc07bf124e180bf978dc03ffe6b58af21e5607d7b"
+  digest = "1:b23296076e13a960263285b98907623e5d45f12fc405b14da19c6afa2a113deb"
   name = "github.com/google/gopacket"
   packages = [
     ".",
@@ -1046,7 +1045,8 @@
     "pcapgo",
   ]
   pruneopts = "UT"
-  revision = "3c037fb4650eaecb208dfa07c0bf4c7e3bb3b7be"
+  revision = "7f3fc6cbbb499248dca53da7fe3ed6c25a78d22f"
+  version = "v1.1.16"
 
 [[projects]]
   branch = "master"

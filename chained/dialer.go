@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"math/rand"
 	"net"
 	"net/http"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
@@ -26,18 +28,15 @@ const (
 	minCheckInterval      = 10 * time.Second
 	maxCheckInterval      = 15 * time.Minute
 	dialCoreCheckInterval = 30 * time.Second
-
-	connect    = "connect"
-	persistent = "persistent"
 )
 
 var (
-	// IdleTimeout closes connections idle for a period to avoid dangling connections. 45
-	// seconds is long enough to avoid interrupt normal connections but shorter
-	// than the idle timeout on the server to avoid running into closed connection
-	// problems. 45 seconds is also longer than the MaxIdleTime on our
-	// http.Transport, so it doesn't interfere with that.
-	IdleTimeout = 45 * time.Second
+	// IdleTimeout closes connections idle for a period to avoid dangling
+	// connections. Web applications tend to contact servers in 1 minute
+	// interval or below. 65 seconds is long enough to avoid interrupt normal
+	// connections but shorter than the idle timeout on the server to avoid
+	// running into closed connection problems.
+	IdleTimeout = 65 * time.Second
 
 	// errUpstream is an error that indicates there was a problem upstream of a
 	// proxy. Such errors are not counted as failures but do allow failover to
@@ -132,7 +131,7 @@ func (p *proxy) DialContext(ctx context.Context, network, addr string) (net.Conn
 		} else {
 			p.MarkFailure()
 		}
-	} else if network == connect {
+	} else if network == balancer.NetworkConnect {
 		// only mark success if we did a CONNECT request because that involves a
 		// full round-trip to/from the proxy
 		p.markSuccess()
@@ -214,18 +213,27 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 	if err != nil {
 		return nil, err
 	}
+
+	var timeout time.Duration
 	if deadline, set := ctx.Deadline(); set {
 		conn.SetDeadline(deadline)
+		// Set timeout based on our given deadline, minus a 2 second fudge factor
+		timeUntilDeadline := deadline.Sub(time.Now())
+		timeout = timeUntilDeadline - 2*time.Second
+		if timeout < 0 {
+			log.Errorf("Not enough time left for server to dial upstream within %v, return errUpstream immediately", timeUntilDeadline)
+			return nil, errUpstream
+		}
 	}
 	// Look for our special hacked "connect" transport used to signal
 	// that we should send a CONNECT request and tunnel all traffic through
 	// that.
 	switch network {
-	case connect:
-		log.Tracef("Sending CONNECT request")
-		err = p.sendCONNECT(op, addr, conn)
-	case persistent:
-		log.Tracef("Sending GET request to establish persistent HTTP connection")
+	case balancer.NetworkConnect:
+		log.Trace("Sending CONNECT request")
+		err = p.sendCONNECT(op, addr, conn, timeout)
+	case balancer.NetworkPersistent:
+		log.Trace("Sending GET request to establish persistent HTTP connection")
 		err = p.initPersistentConnection(addr, conn)
 	}
 	if err != nil {
@@ -248,9 +256,9 @@ func (p *proxy) onFinish(op *ops.Op) {
 	op.ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed)
 }
 
-func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn net.Conn) error {
+func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn net.Conn, timeout time.Duration) error {
 	reqTime := time.Now()
-	req, err := p.buildCONNECTRequest(addr)
+	req, err := p.buildCONNECTRequest(addr, timeout)
 	if err != nil {
 		return fmt.Errorf("Unable to construct CONNECT request: %s", err)
 	}
@@ -264,7 +272,7 @@ func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn net.Conn) error {
 	return err
 }
 
-func (p *proxy) buildCONNECTRequest(addr string) (*http.Request, error) {
+func (p *proxy) buildCONNECTRequest(addr string, timeout time.Duration) (*http.Request, error) {
 	req, err := http.NewRequest(http.MethodConnect, "/", nil)
 	if err != nil {
 		return nil, err
@@ -273,6 +281,9 @@ func (p *proxy) buildCONNECTRequest(addr string) (*http.Request, error) {
 		Host: addr,
 	}
 	req.Host = addr
+	if timeout != 0 {
+		req.Header.Set(common.ProxyDialTimeoutHeader, fmt.Sprint(int(math.Ceil(timeout.Seconds()*1000))))
+	}
 	p.onRequest(req)
 	return req, nil
 }
