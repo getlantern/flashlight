@@ -272,11 +272,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1fa1d94f7e3078d13b2343681908c58af78b8c402045d6e280a5d8e9629db1d1"
+  digest = "1:e1bd5124f74246a43532df9469dec62e6d7a9e6977188495ca71daf0a4473977"
   name = "github.com/getlantern/enhttp"
   packages = ["."]
   pruneopts = "UT"
-  revision = "06cfcf06160d10ec1cc9d1b92452dd4d17cb684a"
+  revision = "a974fa851e3c18be5d0bb6f06d09656365731832"
 
 [[projects]]
   branch = "master"
