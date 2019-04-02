@@ -37,6 +37,8 @@ func flagsAsMap() map[string]interface{} {
 		switch fl := f.Value.(type) {
 		case flag.Getter:
 			flags[f.Name] = fl.Get()
+		default:
+			log.Debugf("Received unexpected flag: %v", f)
 		}
 	})
 	// Some properties should always be included
