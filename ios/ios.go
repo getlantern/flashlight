@@ -4,7 +4,6 @@ import (
 	"context"
 	"io"
 	"net"
-	"net/http"
 	"runtime"
 	"runtime/debug"
 	"time"
@@ -12,8 +11,6 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/packetforward"
-	"github.com/getlantern/proxy"
-	"github.com/getlantern/proxy/filters"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
@@ -69,7 +66,10 @@ func (c *wc) Close() error {
 }
 
 type client struct {
-	proxy proxy.Proxy
+	packetsOut Writer
+	configDir  string
+	mtu        int
+	uc         common.UserConfig
 }
 
 func Client(packetsOut Writer, configDir string, mtu int) (WriteCloser, error) {
@@ -80,35 +80,48 @@ func Client(packetsOut Writer, configDir string, mtu int) (WriteCloser, error) {
 		mtu = 1500
 	}
 
-	dialers, err := loadDialers(configDir)
+	c := &client{
+		packetsOut: packetsOut,
+		configDir:  configDir,
+		mtu:        mtu,
+	}
+
+	return c.start()
+}
+
+func (c *client) start() (WriteCloser, error) {
+	if err := c.loadUserConfig(); err != nil {
+		return nil, err
+	}
+
+	log.Debugf("Running client for device '%v' at config path '%v'", c.uc.GetDeviceID(), c.configDir)
+
+	dialers, err := c.loadDialers()
 	if err != nil {
 		return nil, err
 	}
 	bal := balancer.New(30*time.Second, dialers...)
 
-	w := packetforward.Client(&writerAdapter{packetsOut}, mtu, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
+	w := packetforward.Client(&writerAdapter{c.packetsOut}, c.mtu, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
 		return bal.DialContext(ctx, "connect", "127.0.0.1:3000")
 	})
 	return &wc{w, bal}, nil
 }
 
-func filter(ctx filters.Context, req *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
-	// Add the scheme back for CONNECT requests. It is cleared
-	// intentionally by the standard library, see
-	// https://golang.org/src/net/http/request.go#L938. The easylist
-	// package and httputil.DumpRequest require the scheme to be present.
-	req.URL.Scheme = "http"
-	req.URL.Host = req.Host
-
-	req.Header.Set(common.VersionHeader, common.Version)
-
-	return next(ctx, req)
+func (c *client) loadUserConfig() error {
+	cf := &configurer{configFolderPath: c.configDir}
+	uc, err := cf.readUserConfig()
+	if err != nil {
+		return err
+	}
+	c.uc = uc
+	return nil
 }
 
-func loadDialers(configDir string) ([]balancer.Dialer, error) {
-	c := &configurer{configFolderPath: configDir}
+func (c *client) loadDialers() ([]balancer.Dialer, error) {
+	cf := &configurer{configFolderPath: c.configDir}
 	proxies := make(map[string]*chained.ChainedServerInfo)
-	_, _, err := c.openConfig(proxiesYaml, proxies, []byte{})
+	_, _, err := cf.openConfig(proxiesYaml, proxies, []byte{})
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +133,7 @@ func loadDialers(configDir string) ([]balancer.Dialer, error) {
 			// Ignore obfs4-tcp as these are already included as plain obfs4
 			continue
 		}
-		dialer, err := chainedDialer(name, s)
+		dialer, err := c.chainedDialer(name, s)
 		if err != nil {
 			log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)
 			continue
@@ -135,7 +148,7 @@ func loadDialers(configDir string) ([]balancer.Dialer, error) {
 }
 
 // chainedDialer creates a *balancer.Dialer backed by a chained server.
-func chainedDialer(name string, si *chained.ChainedServerInfo) (balancer.Dialer, error) {
+func (c *client) chainedDialer(name string, si *chained.ChainedServerInfo) (balancer.Dialer, error) {
 	// Copy server info to allow modifying
 	sic := &chained.ChainedServerInfo{}
 	*sic = *si
@@ -145,7 +158,7 @@ func chainedDialer(name string, si *chained.ChainedServerInfo) (balancer.Dialer,
 		sic.PluggableTransport = "obfs4"
 	}
 
-	return chained.CreateDialer(name, sic, common.NewUserConfigData("~~~~~~", 0, "", nil, "en_US"))
+	return chained.CreateDialer(name, sic, c.uc)
 }
 
 func trackAndLimitMemory() {
@@ -160,4 +173,14 @@ func trackAndLimitMemory() {
 		runtime.GC()
 		debug.FreeOSMemory()
 	}
+}
+
+func userConfigFor(deviceID string) *common.UserConfigData {
+	return common.NewUserConfigData(
+		deviceID,
+		0,   // UserID currently unused
+		"",  // Token currently unused
+		nil, // Headers currently unused
+		"",  // Language currently unused
+	)
 }

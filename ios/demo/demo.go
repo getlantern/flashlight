@@ -21,6 +21,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"flag"
 	"fmt"
 	"io"
@@ -32,6 +33,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -39,6 +41,7 @@ import (
 	"github.com/getlantern/gotun"
 	"github.com/getlantern/ipproxy"
 	"github.com/getlantern/packetforward"
+	"github.com/getlantern/uuid"
 
 	"github.com/getlantern/flashlight/ios"
 )
@@ -55,6 +58,8 @@ var (
 	ifOut           = flag.String("ifout", "en0", "name of interface to use for outbound connections")
 	pprofAddr       = flag.String("pprofaddr", "", "pprof address to listen on, not activate pprof if empty")
 	internetGateway = flag.String("gw", "192.168.1.1", "gateway for getting to Internet")
+	deviceID        = flag.String("deviceid", base64.StdEncoding.EncodeToString(uuid.NodeID()), "deviceid to report to server")
+	bypassThreads   = flag.Int("bypassthreads", 100, "number of threads to use for configuring bypass routes")
 )
 
 type fivetuple struct {
@@ -88,7 +93,7 @@ func main() {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cfgResult, err := ios.Configure(tmpDir)
+	cfgResult, err := ios.Configure(tmpDir, *deviceID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -152,27 +157,73 @@ func main() {
 		log.Debug("Stopped TUN device")
 	}()
 
+	doneAddingBypassRoutes := make(chan interface{})
+
 	ipsToExclude := strings.Split(cfgResult.IPSToExcludeFromVPN, ",")
 	defer func() {
-		for _, ip := range ipsToExclude {
-			err := exec.Command("sudo", "route", "delete", ip).Run()
-			if err != nil {
-				log.Error(err)
+		<-doneAddingBypassRoutes
+		log.Debugf("Deleting bypass routes for %d ips", len(ipsToExclude))
+
+		ipsCh := make(chan string)
+		var wg sync.WaitGroup
+		wg.Add(*bypassThreads)
+		for i := 0; i < *bypassThreads; i++ {
+			go func() {
+				for ip := range ipsCh {
+					if deleteErr := exec.Command("sudo", "route", "delete", ip).Run(); deleteErr != nil {
+						log.Error(deleteErr)
+					}
+				}
+				wg.Done()
+			}()
+		}
+		for i, ip := range ipsToExclude {
+			ipsCh <- ip
+			if i > 0 && i%50 == 0 {
+				log.Debugf("Deleting bypass routes ... %d", i)
 			}
 		}
+		close(ipsCh)
+		wg.Wait()
+
+		log.Debugf("Deleted bypass routes for %d ips", len(ipsToExclude))
 	}()
 
-	for _, ip := range ipsToExclude {
-		err := exec.Command("sudo", "route", "add", ip, *internetGateway).Run()
-		if err != nil {
-			log.Error(err)
+	go func() {
+		log.Debugf("Adding bypass routes for %d ips", len(ipsToExclude))
+
+		ipsCh := make(chan string)
+		var wg sync.WaitGroup
+		wg.Add(*bypassThreads)
+		for i := 0; i < *bypassThreads; i++ {
+			go func() {
+				for ip := range ipsCh {
+					if addErr := exec.Command("sudo", "route", "add", ip, *internetGateway).Run(); addErr != nil {
+						log.Error(addErr)
+					}
+				}
+				wg.Done()
+			}()
 		}
-	}
+		for i, ip := range ipsToExclude {
+			ipsCh <- ip
+			if i > 0 && i%50 == 0 {
+				log.Debugf("Adding bypass routes ... %d", i)
+			}
+		}
+		close(ipsCh)
+		wg.Wait()
+
+		log.Debugf("Added bypass routes for %d ips", len(ipsToExclude))
+		close(doneAddingBypassRoutes)
+	}()
 
 	writer, err := ios.Client(&writerAdapter{dev}, tmpDir, 1500)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Debug("Reading from TUN device")
 	b := make([]byte, 1500)
 	for {
 		n, err := dev.Read(b)
