@@ -1,5 +1,12 @@
 # Change Log
 
+## [5.3.4](https://github.com/getlantern/flashlight/tree/5.3.4) (2019-04-02)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.3...5.3.4)
+
+**Merged pull requests:**
+
+- Flags crash [\#602](https://github.com/getlantern/flashlight/pull/602) ([myleshorton](https://github.com/myleshorton))
+
 ## [5.3.3](https://github.com/getlantern/flashlight/tree/5.3.3) (2019-04-01)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.2...5.3.3)
 
