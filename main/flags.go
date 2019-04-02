@@ -34,7 +34,10 @@ var (
 func flagsAsMap() map[string]interface{} {
 	flags := make(map[string]interface{})
 	flag.VisitAll(func(f *flag.Flag) {
-		flags[f.Name] = f.Value.(flag.Getter).Get()
+		switch fl := f.Value.(type) {
+		case flag.Getter:
+			flags[f.Name] = fl.Get()
+		}
 	})
 	// Some properties should always be included
 	flags["cpuprofile"] = *cpuprofile
