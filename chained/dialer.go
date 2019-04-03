@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
-	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
@@ -43,35 +42,6 @@ var (
 	// other proxies.
 	errUpstream = errors.New("Upstream error")
 )
-
-// Periodically call doDialCore to make sure we're recording updated latencies.
-func (p *proxy) checkCoreDials() {
-	timer := time.NewTimer(0)
-
-	ops.Go(func() {
-		log.Debugf("Will probe core dials to %v", p.Label())
-		for {
-			timer.Reset(randomize(dialCoreCheckInterval))
-			select {
-			case <-timer.C:
-				ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(dialCoreCheckInterval/2))
-				conn, _, err := p.doDialCore(ctx)
-				if err == nil {
-					conn.Close()
-				}
-				cancel()
-			case <-p.closeCh:
-				log.Tracef("Dialer %v stopped", p.Label())
-				timer.Stop()
-				return
-			}
-		}
-	})
-}
-
-func randomize(d time.Duration) time.Duration {
-	return d/2 + time.Duration(rand.Int63n(int64(d)))
-}
 
 func (p *proxy) Stop() {
 	log.Tracef("Stopping dialer %s", p.Label())
@@ -217,9 +187,9 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 	var timeout time.Duration
 	if deadline, set := ctx.Deadline(); set {
 		conn.SetDeadline(deadline)
-		// Set timeout based on our given deadline, minus the estimated RTT minus a 1 second fudge factor
+		// Set timeout based on our given deadline, minus a 2 second fudge factor
 		timeUntilDeadline := deadline.Sub(time.Now())
-		timeout = timeUntilDeadline - p.realEstRTT() - 1*time.Second
+		timeout = timeUntilDeadline - 2*time.Second
 		if timeout < 0 {
 			log.Errorf("Not enough time left for server to dial upstream within %v, return errUpstream immediately", timeUntilDeadline)
 			return nil, errUpstream

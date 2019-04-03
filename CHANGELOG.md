@@ -1,5 +1,34 @@
 # Change Log
 
+## [5.3.4](https://github.com/getlantern/flashlight/tree/5.3.4) (2019-04-02)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.3...5.3.4)
+
+**Merged pull requests:**
+
+- Flags crash [\#602](https://github.com/getlantern/flashlight/pull/602) ([myleshorton](https://github.com/myleshorton))
+
+## [5.3.3](https://github.com/getlantern/flashlight/tree/5.3.3) (2019-04-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.2...5.3.3)
+
+**Merged pull requests:**
+
+- fix the call to Timer.Reset [\#601](https://github.com/getlantern/flashlight/pull/601) ([joesis](https://github.com/joesis))
+- Used uuid that ignores touchbar address [\#600](https://github.com/getlantern/flashlight/pull/600) ([myleshorton](https://github.com/myleshorton))
+- Use new domain that does not redirect itself [\#597](https://github.com/getlantern/flashlight/pull/597) ([myleshorton](https://github.com/myleshorton))
+- Ignoring EstRTT in deciding whether we have time to dial proxy [\#596](https://github.com/getlantern/flashlight/pull/596) ([oxtoacart](https://github.com/oxtoacart))
+- more logs to debug datacap [\#593](https://github.com/getlantern/flashlight/pull/593) ([myleshorton](https://github.com/myleshorton))
+- Removed unused cloud.yaml.tmpl and updateyaml.bash [\#521](https://github.com/getlantern/flashlight/pull/521) ([oxtoacart](https://github.com/oxtoacart))
+
+## [5.3.2](https://github.com/getlantern/flashlight/tree/5.3.2) (2019-03-12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.1...5.3.2)
+
+**Merged pull requests:**
+
+- Don't log individual errors when recording entries to borda [\#595](https://github.com/getlantern/flashlight/pull/595) ([oxtoacart](https://github.com/oxtoacart))
+- prevent a QUIC dialer from being null [\#594](https://github.com/getlantern/flashlight/pull/594) ([joesis](https://github.com/joesis))
+- cap the time to dial shortcut [\#592](https://github.com/getlantern/flashlight/pull/592) ([joesis](https://github.com/joesis))
+- Updated to latest gopacket release for go 1.12 fix [\#591](https://github.com/getlantern/flashlight/pull/591) ([myleshorton](https://github.com/myleshorton))
+
 ## [5.3.1](https://github.com/getlantern/flashlight/tree/5.3.1) (2019-02-26)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.0...5.3.1)
 
@@ -228,7 +257,7 @@
 - Lots of changes to balancer and chained package [\#479](https://github.com/getlantern/flashlight/pull/479) ([joesis](https://github.com/joesis))
 
 ## [4.7.13](https://github.com/getlantern/flashlight/tree/4.7.13) (2018-08-09)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.13)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.13)
 
 **Merged pull requests:**
 
@@ -237,11 +266,11 @@
 - Updated desktop ui with device name fix [\#487](https://github.com/getlantern/flashlight/pull/487) ([myleshorton](https://github.com/myleshorton))
 - set client request timeout as a struct member [\#486](https://github.com/getlantern/flashlight/pull/486) ([joesis](https://github.com/joesis))
 
-## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.11)
-
 ## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.12)
+
+## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.11)
 
 **Merged pull requests:**
 
@@ -350,18 +379,18 @@
 - Allowing numbers in optional protocol part of proxy name regex [\#449](https://github.com/getlantern/flashlight/pull/449) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [4.6.14](https://github.com/getlantern/flashlight/tree/4.6.14) (2018-05-06)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.14)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.14)
 
 **Merged pull requests:**
 
 - \[mobile\] Intercept requests to pro server and handle with special http.Client [\#448](https://github.com/getlantern/flashlight/pull/448) ([atavism](https://github.com/atavism))
 - Include a little more info with dial\_for\_balancer op [\#447](https://github.com/getlantern/flashlight/pull/447) ([oxtoacart](https://github.com/oxtoacart))
 
-## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.12)
-
 ## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.13)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.13)
+
+## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.12)
 
 ## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.11)

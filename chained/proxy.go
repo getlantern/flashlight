@@ -275,9 +275,9 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 		IdleInterval:          idleInterval,
 		PingInterval:          pingInterval,
 		RedialSessionInterval: redialSessionInterval,
-		Pool:            buffers.Pool,
-		Cipher:          cipherCode,
-		ServerPublicKey: rsaPublicKey,
+		Pool:                  buffers.Pool,
+		Cipher:                cipherCode,
+		ServerPublicKey:       rsaPublicKey,
 	})
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(s.Addr, "lampshade", "tcp", func(op *ops.Op) (net.Conn, error) {
@@ -553,13 +553,11 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 	var dialerLock sync.Mutex
 
 	// when the proxy closes, close the dialer
-	// and nil it out.
 	go func() {
 		<-p.closeCh
 		log.Debug("Closing quic session: Proxy closed.")
 		dialerLock.Lock()
 		dialer.Close()
-		dialer = nil
 		dialerLock.Unlock()
 	}()
 
@@ -568,19 +566,20 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 
 		dialerLock.Lock()
 		if p.forceRedial.IsSet() {
-			if dialer != nil {
+			select {
+			case <-p.closeCh:
+				log.Debug("not re-connecting after closed.")
+			default:
 				log.Debug("Connection state changed, re-connecting to server first")
 				dialer.Close()
 				dialer = newQUICDialer()
-			} else {
-				log.Debug("not re-connecting after closed.")
 			}
 			p.forceRedial.UnSet()
 		}
+		d := dialer
 		dialerLock.Unlock()
 
-		var conn net.Conn
-		conn, err := dialer.DialContext(ctx)
+		conn, err := d.DialContext(ctx)
 		if err != nil {
 			log.Debugf("Failed to establish multiplexed connection: %s", err)
 			p.ForceRedial()
