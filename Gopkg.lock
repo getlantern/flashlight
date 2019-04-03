@@ -237,11 +237,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e8edb6fd65784c0b418ee5a243e803dbff34078355c08ea71a3d084b5b19df0d"
+  digest = "1:56011a2810e9979d652841eb0f60cb669a3beea2ed9e173eecd9c8b5ee9dca47"
   name = "github.com/getlantern/dnsgrab"
   packages = ["."]
   pruneopts = "UT"
-  revision = "06d5b79b6d2c7db17c1a6887e97536d54d740a9a"
+  revision = "9ebc5560382485f82a38a0f389f1e35801ec1bf2"
 
 [[projects]]
   branch = "master"
@@ -489,11 +489,11 @@
 
 [[projects]]
   branch = "ox/init"
-  digest = "1:51bd9a3b970d13065f5fdff7b5f1f63af0df316ab77573c0b8f5610d07e768c5"
+  digest = "1:74d7e30870d459b3c117367b8282d0b0c68223ed5d497aacd5f5ff1fc17b8f0e"
   name = "github.com/getlantern/ipproxy"
   packages = ["."]
   pruneopts = "UT"
-  revision = "eed53dc1e07932dd86942d7218268e190f06fe13"
+  revision = "8996add3e13c94c1b6c23fce70701351b12dd25b"
 
 [[projects]]
   branch = "master"
