@@ -222,6 +222,27 @@ func TestDialShortcut(t *testing.T) {
 	assert.Equal(t, 404, nestedResp.StatusCode, "should dial proxy if the site is whitelisted")
 }
 
+// See https://github.com/getlantern/lantern-internal/issues/2724
+func TestTimeoutCheckingShortcut(t *testing.T) {
+	requestTimeout := 10 * time.Millisecond
+	client := newClient()
+	client.requestTimeout = requestTimeout
+	client.useDetour = func() bool { return false }
+	client.allowShortcut = func(ctx context.Context, addr string) (bool, net.IP) {
+		// In theory allowShortcut should never exceed the context deadline,
+		// but it could happen in cases like computer resuming from sleeping.
+		time.Sleep(requestTimeout * 2)
+		return false, nil
+	}
+
+	dialer := mockconn.SucceedingDialer([]byte("whatever"))
+	resetBalancer(client, dialer.Dial)
+	req, _ := http.NewRequest("GET", "http://unknown:80", nil)
+	res, _ := roundTrip(client, req)
+	assert.Equal(t, 503, res.StatusCode, "should fail if checking shortcut list times out")
+	assert.True(t, dialer.AllClosed(), "should not dial proxy if checking shourcut list times out")
+}
+
 func TestAccessingProxyPort(t *testing.T) {
 	mockResponse := []byte("HTTP/1.1 404 Not Found\r\n\r\n")
 	client := newClient()
