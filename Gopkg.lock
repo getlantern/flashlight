@@ -564,11 +564,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2d3658ecb4e37ed1ee7cb14ef73b51b90155d2b1f1d581a94c23026c0ba55c60"
+  digest = "1:28f3450b7344a4861d8f21fbedc76f4ea4e53d7762372c5b75c8bb888a7d0ff7"
   name = "github.com/getlantern/mockconn"
   packages = ["."]
   pruneopts = "UT"
-  revision = "422a5afd4432dd82b1389333d5352da003d898a6"
+  revision = "a8ffa60494a6e58e75e9286aca0eba170d5349b6"
 
 [[projects]]
   branch = "master"
