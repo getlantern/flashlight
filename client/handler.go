@@ -82,15 +82,9 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 		return client.interceptProRequest(ctx, req, op)
 	}
 
-	adSwapURL := client.adSwapURL(req)
-	if !exoclick && adSwapURL == "" && !client.easylist.Allow(req) {
-		// Don't record this as proxying
-		op.Cancel()
-		return client.easyblock(ctx, req)
-	}
-
 	op.UserAgent(req.Header.Get("User-Agent")).OriginFromRequest(req)
 
+	adSwapURL := client.adSwapURL(req)
 	if !exoclick && adSwapURL != "" {
 		return client.redirectAdSwap(ctx, req, adSwapURL, op)
 	}
