@@ -67,7 +67,7 @@ func Tun2Socks(fd int, tunAddr, gwAddr, socksAddr, dnsAddr, dnsGrabAddr string, 
 	currentIPP = ipp
 	currentDeviceMx.Unlock()
 
-	err := ipp.Serve()
+	err = ipp.Serve()
 	if err != io.EOF {
 		return err
 	}

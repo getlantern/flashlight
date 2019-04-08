@@ -240,6 +240,11 @@ func Exit() {
 	os.Exit(0)
 }
 
+// EnableLogging enables logging.
+func EnableLogging(configDir string) {
+	logging.EnableFileLogging(configDir)
+}
+
 func run(configDir, locale string,
 	settings Settings, session Session) {
 
@@ -268,8 +273,6 @@ func run(configDir, locale string,
 		flags["readableconfig"] = true
 	}
 
-	logging.EnableFileLogging(configDir)
-
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
 	grabber, err := dnsgrab.Listen(maxDNSGrabCache,
@@ -291,9 +294,9 @@ func run(configDir, locale string,
 		settings.GetHttpProxyPort())
 
 	flashlight.Run(httpProxyAddr, // listen for HTTP on provided address
-		"127.0.0.1:0",                              // listen for SOCKS on random address
-		configDir,                                  // place to store lantern configuration
-		func() bool { return false },               // always connected
+		"127.0.0.1:0",                // listen for SOCKS on random address
+		configDir,                    // place to store lantern configuration
+		func() bool { return false }, // always connected
 		func() bool { return !session.ProxyAll() }, // use shortcut
 		func() bool { return false },               // not use detour
 		func() bool { return false },               // do not proxy private hosts on Android
