@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"net"
+	"runtime"
 	"sync"
 
 	"github.com/getlantern/errors"
@@ -27,6 +28,8 @@ var (
 // 3. All TCP traffic is routed through the Lantern proxy at the given socksAddr.
 //
 func Tun2Socks(fd int, tunAddr, gwAddr, socksAddr, dnsAddr, dnsGrabAddr string, mtu int) error {
+	runtime.LockOSThread()
+
 	log.Debugf("Starting tun2socks at %v gw %v connecting to socks at %v with dns %v", tunAddr, gwAddr, socksAddr, dnsAddr)
 	dev, err := tun.WrapTunDevice(fd, tunAddr, gwAddr)
 	if err != nil {
@@ -80,6 +83,7 @@ func StopTun2Socks() {
 	dev := currentDevice
 	ipp := currentIPP
 	currentDevice = nil
+	currentIPP = nil
 	currentDeviceMx.Unlock()
 	if dev != nil {
 		log.Debug("Closing TUN device")
@@ -89,10 +93,12 @@ func StopTun2Socks() {
 		log.Debug("Closed TUN device")
 	}
 	if ipp != nil {
-		log.Debug("Closing ipproxy")
-		if err := currentIPP.Close(); err != nil {
-			log.Errorf("Error closing ipproxy: %v", err)
-		}
-		log.Debug("Closed ipproxy")
+		go func() {
+			log.Debug("Closing ipproxy")
+			if err := ipp.Close(); err != nil {
+				log.Errorf("Error closing ipproxy: %v", err)
+			}
+			log.Debug("Closed ipproxy")
+		}()
 	}
 }

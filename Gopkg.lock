@@ -320,6 +320,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:70a1ea4270b3a90c236308628b8922c71040acf976c7e7f321bb964cdcca4a4e"
+  name = "github.com/getlantern/framed"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "7f7919c8cf9be21bbe007d778ae641c06d858f79"
+
+[[projects]]
+  branch = "master"
   digest = "1:e9352c28c58ba823fa2d5bba3eb0ed5bdc790130407db86de2c92e60c8636604"
   name = "github.com/getlantern/fronted"
   packages = ["."]
@@ -384,12 +392,15 @@
   revision = "cca714f7feb5df8e455f409b549d384441ac4578"
 
 [[projects]]
-  branch = "ox/simplify"
-  digest = "1:314da1a4b21cb13d4b650c5ada30f77635127a5a4f73231dcddd4b89f9abd0ce"
+  branch = "master"
+  digest = "1:9264a5303dbdbaf779720c54b27c8990fb98f1a7adfeab332f3e26cb3c878091"
   name = "github.com/getlantern/gotun"
-  packages = ["."]
+  packages = [
+    ".",
+    "packet",
+  ]
   pruneopts = "UT"
-  revision = "2fc27b245ae4b8c7436bdd8d2cd9643e973715b1"
+  revision = "a925033dae035d4f8f85a5bcc67b9bfaaed30268"
 
 [[projects]]
   branch = "master"
@@ -488,12 +499,12 @@
   revision = "9540d1aeda2b5d50b52e2294fb5e0f2869fb6be0"
 
 [[projects]]
-  branch = "ox/init"
+  branch = "master"
   digest = "1:74d7e30870d459b3c117367b8282d0b0c68223ed5d497aacd5f5ff1fc17b8f0e"
   name = "github.com/getlantern/ipproxy"
   packages = ["."]
   pruneopts = "UT"
-  revision = "8996add3e13c94c1b6c23fce70701351b12dd25b"
+  revision = "b10dcf96025c24f57ebfcae42eba1ee8f8e15e75"
 
 [[projects]]
   branch = "master"
@@ -640,6 +651,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "8f3fb296110c7f171058539e477851026fa30ce2"
+
+[[projects]]
+  branch = "master"
+  digest = "1:15c2e94766b1e7a9442ca9dc2ab5584096d66a62a803edd9c8f6b182c5b6818f"
+  name = "github.com/getlantern/packetforward"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "1bbf778f49d242f829980c80b9b4f22d8abd1a9b"
 
 [[projects]]
   branch = "master"
@@ -1614,6 +1633,7 @@
     "github.com/getlantern/notifier",
     "github.com/getlantern/ops",
     "github.com/getlantern/osversion",
+    "github.com/getlantern/packetforward",
     "github.com/getlantern/profiling",
     "github.com/getlantern/protected",
     "github.com/getlantern/proxiedsites",
