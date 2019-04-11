@@ -400,9 +400,6 @@ func (d *testDialer) DataSent() uint64 {
 	return 0
 }
 
-func (d *testDialer) ForceRedial() {
-}
-
 func (d *testDialer) CheckConnectivity() bool {
 	return true
 }

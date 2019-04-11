@@ -107,9 +107,6 @@ type Dialer interface {
 	// Succeeding indicates whether or not this dialer is currently good to use
 	Succeeding() bool
 
-	// Forces the dialer to reconnect to its proxy server
-	ForceRedial()
-
 	// Probe performs active probing of the proxy to better understand
 	// connectivity and performance. If forPerformance is true, the dialer will
 	// probe more and with bigger data in order for bandwidth estimation to
@@ -208,15 +205,14 @@ func (b *Balancer) Reset(dialers []Dialer) {
 	b.requestEvalDialers("Resetting balancer")
 }
 
-// ForceRedial forces dialers with long-running connections to reconnect
-func (b *Balancer) ForceRedial() {
+// ResetFromExisting Resets using the existing dialers (useful when you want to
+// force redialing).
+func (b *Balancer) ResetFromExisting() {
 	log.Debugf("Received request to force redial")
 	b.mu.Lock()
 	dialers := b.dialers
 	b.mu.Unlock()
-	for _, dl := range dialers {
-		dl.ForceRedial()
-	}
+	b.Reset(dialers)
 }
 
 // Dial dials (network, addr) using one of the currently active configured
