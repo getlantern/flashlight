@@ -147,7 +147,7 @@ func ProtectConnections(protector SocketProtector, dnsServer string) {
 	bal := GetBalancer(0)
 	if bal != nil {
 		log.Debug("Protected after balancer already created, force redial")
-		bal.ForceRedial()
+		bal.ResetFromExisting()
 	}
 }
 
