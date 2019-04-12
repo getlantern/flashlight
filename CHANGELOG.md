@@ -1,5 +1,13 @@
 # Change Log
 
+## [5.3.5](https://github.com/getlantern/flashlight/tree/5.3.5) (2019-04-12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.4...5.3.5)
+
+**Merged pull requests:**
+
+- new UI for 5.3.5 [\#606](https://github.com/getlantern/flashlight/pull/606) ([myleshorton](https://github.com/myleshorton))
+- Get rid of ad blocking altogether [\#604](https://github.com/getlantern/flashlight/pull/604) ([joesis](https://github.com/joesis))
+
 ## [5.3.4](https://github.com/getlantern/flashlight/tree/5.3.4) (2019-04-02)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.3...5.3.4)
 
@@ -14,7 +22,7 @@
 
 - fix the call to Timer.Reset [\#601](https://github.com/getlantern/flashlight/pull/601) ([joesis](https://github.com/joesis))
 - Used uuid that ignores touchbar address [\#600](https://github.com/getlantern/flashlight/pull/600) ([myleshorton](https://github.com/myleshorton))
-- Use new domain that does not redirect itself [\#597](https://github.com/getlantern/flashlight/pull/597) ([myleshorton](https://github.com/myleshorton))
+- Use new HTTPS Everywhere test domain that does not redirect itself [\#597](https://github.com/getlantern/flashlight/pull/597) ([myleshorton](https://github.com/myleshorton))
 - Ignoring EstRTT in deciding whether we have time to dial proxy [\#596](https://github.com/getlantern/flashlight/pull/596) ([oxtoacart](https://github.com/oxtoacart))
 - more logs to debug datacap [\#593](https://github.com/getlantern/flashlight/pull/593) ([myleshorton](https://github.com/myleshorton))
 - Removed unused cloud.yaml.tmpl and updateyaml.bash [\#521](https://github.com/getlantern/flashlight/pull/521) ([oxtoacart](https://github.com/oxtoacart))
@@ -411,17 +419,17 @@
 - unzip response body only if gzip header is present [\#440](https://github.com/getlantern/flashlight/pull/440) ([joesis](https://github.com/joesis))
 
 ## [4.6.9](https://github.com/getlantern/flashlight/tree/4.6.9) (2018-04-26)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.8...4.6.9)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.7...4.6.9)
 
 **Merged pull requests:**
 
 - use http-ping to check for connectivity [\#438](https://github.com/getlantern/flashlight/pull/438) ([joesis](https://github.com/joesis))
 
-## [4.6.8](https://github.com/getlantern/flashlight/tree/4.6.8) (2018-04-26)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.7...4.6.8)
-
 ## [4.6.7](https://github.com/getlantern/flashlight/tree/4.6.7) (2018-04-26)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.6...4.6.7)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.8...4.6.7)
+
+## [4.6.8](https://github.com/getlantern/flashlight/tree/4.6.8) (2018-04-26)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.6...4.6.8)
 
 **Merged pull requests:**
 
