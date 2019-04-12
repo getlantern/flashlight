@@ -52,14 +52,12 @@ func normalizeExoAd(req *http.Request) (*http.Request, bool) {
 	return req, false
 }
 
-func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
-	if client.isHTTPProxyPort(r) {
-		log.Debugf("Reject proxy request to myself: %s", r.Host)
+func (client *Client) filter(ctx filters.Context, req *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
+	if client.isHTTPProxyPort(req) {
+		log.Debugf("Reject proxy request to myself: %s", req.Host)
 		// Not reveal any error text to the application.
-		return filters.Fail(ctx, r, http.StatusBadRequest, errors.New(""))
+		return filters.Fail(ctx, req, http.StatusBadRequest, errors.New(""))
 	}
-
-	req, exoclick := normalizeExoAd(r)
 
 	// Add the scheme back for CONNECT requests. It is cleared
 	// intentionally by the standard library, see
@@ -74,19 +72,18 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 	}
 
 	op := ops.FromContext(ctx)
-
-	adSwapURL := client.adSwapURL(req)
-	if !exoclick && adSwapURL == "" && !client.easylist.Allow(req) {
-		// Don't record this as proxying
-		op.Cancel()
-		return client.easyblock(ctx, req)
-	}
-
 	op.UserAgent(req.Header.Get("User-Agent")).OriginFromRequest(req)
 
-	if !exoclick && adSwapURL != "" {
-		return client.redirectAdSwap(ctx, req, adSwapURL, op)
-	}
+	// Disable Ad swapping for now given that Ad blocking is completely
+	// removed.  A limited form of Ad blocking should be re-introduced before
+	// enabling it again.
+	//
+	// adSwapURL := client.adSwapURL(req)
+	// if !exoclick && adSwapURL != "" {
+	// // Don't record this as proxying
+	// 	op.Cancel()
+	// 	return client.redirectAdSwap(ctx, req, adSwapURL, op)
+	// }
 
 	isConnect := req.Method == http.MethodConnect
 	if isConnect || ctx.IsMITMing() {

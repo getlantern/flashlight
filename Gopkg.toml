@@ -55,10 +55,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/getlantern/easylist"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/getlantern/ema"
 
 [[constraint]]

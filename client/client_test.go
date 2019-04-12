@@ -72,7 +72,6 @@ func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *C
 		func() bool { return true },
 		func() string { return lang },
 		func() string { return adSwapTargetURL },
-		func() bool { return true },
 		func(host string) string { return host },
 	)
 	return client
