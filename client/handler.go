@@ -84,10 +84,15 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 
 	op.UserAgent(req.Header.Get("User-Agent")).OriginFromRequest(req)
 
-	adSwapURL := client.adSwapURL(req)
-	if !exoclick && adSwapURL != "" {
-		return client.redirectAdSwap(ctx, req, adSwapURL, op)
-	}
+	_ = exoclick
+	// Disable Ad swapping for now given that Ad blocking is completely
+	// removed.  A limited form of Ad blocking should be re-introduced before
+	// enabling it again.
+	//
+	// adSwapURL := client.adSwapURL(req)
+	// if !exoclick && adSwapURL != "" {
+	// 	return client.redirectAdSwap(ctx, req, adSwapURL, op)
+	// }
 
 	isConnect := req.Method == http.MethodConnect
 	if isConnect || ctx.IsMITMing() {

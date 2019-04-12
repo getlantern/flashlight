@@ -1,10 +1,8 @@
 package client
 
 import (
-	"fmt"
 	"net"
 	"net/http"
-	"net/url"
 	"testing"
 	"time"
 
@@ -90,19 +88,20 @@ func TestRewriteHTTPSRedirectLoop(t *testing.T) {
 	assert.Equal(t, http.StatusMovedPermanently, resp.StatusCode, "should rewrite to HTTPS some time later")
 }
 
-func TestAdSwap(t *testing.T) {
-	client := newClient()
-	for orig, updated := range adSwapJavaScriptInjections {
-		req, _ := http.NewRequest("GET", orig, nil)
-		resp, err := roundTrip(client, req)
-		if !assert.NoError(t, err) {
-			return
-		}
-		assert.Equal(t, http.StatusTemporaryRedirect, resp.StatusCode)
-		expectedLocation := fmt.Sprintf("%v?lang=%v&url=%v", updated, url.QueryEscape(testLang), url.QueryEscape(testAdSwapTargetURL))
-		assert.Equal(t, expectedLocation, resp.Header.Get("Location"))
-	}
-}
+// func TestAdSwap(t *testing.T) {
+// 	client := newClient()
+// 	for orig, updated := range adSwapJavaScriptInjections {
+// 		req, _ := http.NewRequest("GET", orig, nil)
+// 		resp, err := roundTrip(client, req)
+// 		if !assert.NoError(t, err) {
+// 			return
+// 		}
+// 		assert.Equal(t, http.StatusTemporaryRedirect, resp.StatusCode)
+// 		expectedLocation := fmt.Sprintf("%v?lang=%v&url=%v", updated, url.QueryEscape(testLang), url.QueryEscape(testAdSwapTargetURL))
+// 		assert.Equal(t, expectedLocation, resp.Header.Get("Location"))
+// 	}
+// }
+
 func TestRejectHTTPProxyPort(t *testing.T) {
 	client := newClient()
 	client.httpProxyIP, client.httpProxyPort, _ = net.SplitHostPort("127.0.0.1:4321")
