@@ -69,7 +69,6 @@ func Run(httpProxyAddr string,
 	userID func() int64,
 	lang func() string,
 	adSwapTargetURL func() string,
-	adBlockingAllowed func() bool,
 	reverseDNS func(host string) string) error {
 
 	// check # of goroutines every minute, print the top 5 stacks with most
@@ -96,7 +95,6 @@ func Run(httpProxyAddr string,
 		allowPrivateHosts,
 		lang,
 		adSwapTargetURL,
-		adBlockingAllowed,
 		reverseDNS,
 	)
 	if err != nil {
