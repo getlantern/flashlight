@@ -245,14 +245,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e96cea92d51116be86b83994067f6c51f079135a1283fd47b9ba4d20eacd01e6"
-  name = "github.com/getlantern/easylist"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "42a110754e2c8027797aca3783609d846a8c1b56"
-
-[[projects]]
-  branch = "master"
   digest = "1:efdd91b82e28f23d8485c9639f1bd47337dd80189d7209ee369876a1f1a18016"
   name = "github.com/getlantern/elevate"
   packages = [
@@ -591,11 +583,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2d3658ecb4e37ed1ee7cb14ef73b51b90155d2b1f1d581a94c23026c0ba55c60"
+  digest = "1:28f3450b7344a4861d8f21fbedc76f4ea4e53d7762372c5b75c8bb888a7d0ff7"
   name = "github.com/getlantern/mockconn"
   packages = ["."]
   pruneopts = "UT"
-  revision = "422a5afd4432dd82b1389333d5352da003d898a6"
+  revision = "a8ffa60494a6e58e75e9286aca0eba170d5349b6"
 
 [[projects]]
   branch = "master"
@@ -828,14 +820,6 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "5d4ed6dd3836cd7e1210a52da62ba4c4a923bfd7"
-
-[[projects]]
-  branch = "master"
-  digest = "1:02df7b0ecddcbe1b2a6dc81954d10b5a5e6e55f2a5158b3460085b12db8b6785"
-  name = "github.com/getlantern/urlcache"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "82187dd97f50f0ae304317ef18f36d67f81f5a83"
 
 [[projects]]
   branch = "master"
@@ -1285,14 +1269,6 @@
   revision = "816c9085562cd7ee03e7f8188a1cfd942858cded"
 
 [[projects]]
-  branch = "master"
-  digest = "1:0c8c777abf111a0cc92174ad2a259f3adc904997acbaf7f0eb13286eb539fdfd"
-  name = "github.com/pmezard/adblock"
-  packages = ["adblock"]
-  pruneopts = "UT"
-  revision = "edfb97ad89cd57ae8675175539a55aceaf2a05d3"
-
-[[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
@@ -1600,7 +1576,6 @@
     "github.com/getlantern/cmux",
     "github.com/getlantern/detour",
     "github.com/getlantern/dnsgrab",
-    "github.com/getlantern/easylist",
     "github.com/getlantern/ema",
     "github.com/getlantern/enhttp",
     "github.com/getlantern/errors",

@@ -56,7 +56,6 @@ var (
 
 type Settings interface {
 	StickyConfig() bool
-	EnableAdBlocking() bool
 	DefaultDnsServer() string
 	GetHttpProxyHost() string
 	GetHttpProxyPort() int
@@ -334,7 +333,6 @@ func run(configDir, locale string,
 		session.GetUserID,
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
-		func() bool { return settings.EnableAdBlocking() && !session.IsPlayVersion() },
 		func(addr string) string {
 			host, port, splitErr := net.SplitHostPort(addr)
 			if splitErr != nil {
