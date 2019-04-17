@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -181,7 +180,7 @@ func NewClient(
 
 	var mitmOpts *mitm.Opts
 	// Totally disabling MITM for now
-	if runtime.GOOS != "android" && false {
+	if common.Platform != "android" && false {
 		mitmOpts = &mitm.Opts{
 			PKFile:             filepath.Join(appdir.General("Lantern"), "mitmkey.pem"),
 			CertFile:           filepath.Join(appdir.General("Lantern"), "mitmcert.pem"),

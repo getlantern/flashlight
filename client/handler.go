@@ -7,16 +7,16 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"runtime"
 	"strings"
 	"time"
+
+	"github.com/getlantern/idletiming"
+	"github.com/getlantern/proxy/filters"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/pro"
-	"github.com/getlantern/idletiming"
-	"github.com/getlantern/proxy/filters"
 )
 
 type contextKey string
@@ -77,7 +77,7 @@ func (client *Client) filter(ctx filters.Context, r *http.Request, next filters.
 
 	op := ctx.Value(ctxKeyOp).(*ops.Op)
 
-	if runtime.GOOS == "android" && req.URL != nil && req.URL.Host == "localhost" &&
+	if common.Platform == "android" && req.URL != nil && req.URL.Host == "localhost" &&
 		strings.HasPrefix(req.URL.Path, "/pro/") {
 		return client.interceptProRequest(ctx, req, op)
 	}
