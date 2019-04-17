@@ -11,9 +11,7 @@ import (
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/bandwidth"
-	"github.com/getlantern/flashlight/email"
 	fops "github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/jibber_jabber"
@@ -26,9 +24,11 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/goroutines"
 	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/stats"
 
 	// Make sure logging is initialized
@@ -248,7 +248,7 @@ func initContext(deviceID string, version string, revisionDate string, isPro fun
 	ops.SetGlobal("app", "lantern-client")
 	ops.SetGlobal("app_version", fmt.Sprintf("%v (%v)", version, revisionDate))
 	ops.SetGlobal("go_version", runtime.Version())
-	ops.SetGlobal("os_name", runtime.GOOS)
+	ops.SetGlobal("os_name", common.Platform)
 	ops.SetGlobal("os_arch", runtime.GOARCH)
 	ops.SetGlobal("device_id", deviceID)
 	ops.SetGlobalDynamic("geo_country", func() interface{} { return geolookup.GetCountry(0) })

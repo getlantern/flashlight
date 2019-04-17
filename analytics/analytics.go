@@ -6,17 +6,18 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"runtime"
 	"strconv"
 	"sync/atomic"
 	"time"
 
-	"github.com/getlantern/flashlight/geolookup"
-	"github.com/getlantern/flashlight/proxied"
-	"github.com/getlantern/flashlight/util"
 	"github.com/kardianos/osext"
 
 	"github.com/getlantern/golog"
+
+	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/geolookup"
+	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/util"
 )
 
 const (
@@ -104,7 +105,7 @@ func getExecutableHash() string {
 	// We don't know how to get a useful hash here for Android but also this
 	// code isn't currently called on Android, so just guard against Something
 	// bad happening here.
-	if runtime.GOOS == "android" {
+	if common.Platform == "android" {
 		return "android"
 	}
 	if lanternPath, err := osext.Executable(); err != nil {
@@ -178,7 +179,7 @@ func AddCampaign(urlStr, campaign, content, medium string) (string, error) {
 	}
 
 	q := u.Query()
-	q.Set("utm_source", runtime.GOOS)
+	q.Set("utm_source", common.Platform)
 	q.Set("utm_medium", medium)
 	q.Set("utm_campaign", campaign)
 	q.Set("utm_content", content)

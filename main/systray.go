@@ -4,12 +4,12 @@ package main
 
 import (
 	"fmt"
-	"runtime"
 	"sync"
 
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/systray"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/icons"
 	"github.com/getlantern/flashlight/stats"
 )
@@ -64,7 +64,7 @@ func configureSystemTray(a systrayCallbacks) error {
 	}
 
 	iconTemplate := "%s_16.ico"
-	if runtime.GOOS == "darwin" {
+	if common.Platform == "darwin" {
 		iconTemplate = "%s_32.ico"
 	}
 

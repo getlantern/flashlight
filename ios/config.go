@@ -169,7 +169,7 @@ func (cf *configurer) openConfig(name string, cfg interface{}, embedded []byte) 
 		}
 	}
 	if parseErr := yaml.Unmarshal(bytes, cfg); parseErr != nil {
-		return "", false, errors.New("Unable to parse %v: %v", parseErr)
+		return "", false, errors.New("Unable to parse %v: %v", name, parseErr)
 	}
 	etagBytes, err := ioutil.ReadFile(cf.fullPathTo(name + ".etag"))
 	if err != nil {
