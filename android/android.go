@@ -144,7 +144,7 @@ func ProtectConnections(protector SocketProtector, dnsServer string) {
 	clMu.Lock()
 	defer clMu.Unlock()
 	if cl != nil && cl.GetBalancer() != nil {
-		cl.GetBalancer().ForceRedial()
+		cl.GetBalancer().ResetFromExisting()
 	}
 }
 

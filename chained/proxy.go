@@ -375,7 +375,6 @@ type proxy struct {
 	emaRTTDev         *ema.EMA
 	emaSuccessRate    *ema.EMA
 	kcpConfig         *KCPConfig
-	forceRedial       *abool.AtomicBool
 	mostRecentABETime time.Time
 	doDialCore        func(ctx context.Context) (net.Conn, time.Duration, error)
 	numPreconnecting  func() int
@@ -409,7 +408,6 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 		emaRTT:           ema.NewDuration(0, rttAlpha),
 		emaRTTDev:        ema.NewDuration(0, rttDevAlpha),
 		emaSuccessRate:   ema.New(1, successRateAlpha), // Consider a proxy success when initializing
-		forceRedial:      abool.New(),
 		numPreconnecting: func() int { return 0 },
 		numPreconnected:  func() int { return 0 },
 		closeCh:          make(chan bool, 1),
@@ -498,21 +496,11 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 		})
 	}
 	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig, addIdleTiming)
-	var dialKCPMutex sync.Mutex
 
 	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
 		elapsed := mtime.Stopwatch()
 
-		dialKCPMutex.Lock()
-		if p.forceRedial.IsSet() {
-			log.Debug("Connection state changed, re-connecting to server first")
-			dialKCP = kcpwrapper.Dialer(&p.kcpConfig.DialerConfig, addIdleTiming)
-			p.forceRedial.UnSet()
-		}
-		doDialKCP := dialKCP
-		dialKCPMutex.Unlock()
-
-		conn, err := doDialKCP(ctx, "tcp", p.addr)
+		conn, err := dialKCP(ctx, "tcp", p.addr)
 		delta := elapsed()
 		return conn, delta, err
 	}
@@ -551,6 +539,7 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 
 	dialer := newQUICDialer()
 	var dialerLock sync.Mutex
+	forceRedial := abool.New()
 
 	// when the proxy closes, close the dialer
 	go func() {
@@ -565,7 +554,7 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 		elapsed := mtime.Stopwatch()
 
 		dialerLock.Lock()
-		if p.forceRedial.IsSet() {
+		if forceRedial.IsSet() {
 			select {
 			case <-p.closeCh:
 				log.Debug("not re-connecting after closed.")
@@ -574,7 +563,7 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 				dialer.Close()
 				dialer = newQUICDialer()
 			}
-			p.forceRedial.UnSet()
+			forceRedial.UnSet()
 		}
 		d := dialer
 		dialerLock.Unlock()
@@ -582,7 +571,7 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 		conn, err := d.DialContext(ctx)
 		if err != nil {
 			log.Debugf("Failed to establish multiplexed connection: %s", err)
-			p.ForceRedial()
+			forceRedial.Set()
 		} else {
 			log.Debug("established new multiplexed quic connection.")
 		}
@@ -592,10 +581,6 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 	}
 
 	return nil
-}
-
-func (p *proxy) ForceRedial() {
-	p.forceRedial.Set()
 }
 
 func (p *proxy) Protocol() string {

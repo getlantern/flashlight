@@ -145,9 +145,6 @@ func (d *testDialer) Succeeding() bool {
 	return d.EstSuccessRate() > 0.9
 }
 
-func (d *testDialer) ForceRedial() {
-}
-
 func (d *testDialer) recalcRTT() {
 	if d.baseRTT != 0 {
 		d.rtt = d.baseRTT * rttMultiplier
