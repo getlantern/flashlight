@@ -143,7 +143,9 @@ func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, err
 		return nil, op.FailIf(err)
 	}
 	conn = idletiming.Conn(conn, IdleTimeout, func() {
+		op := ops.BeginWithBeam("idle_close", ctx)
 		log.Debugf("Proxy connection to %s via %s idle for %v, closed", addr, conn.RemoteAddr(), IdleTimeout)
+		op.End()
 	})
 	return conn, nil
 }
@@ -169,7 +171,7 @@ func (p *proxy) dialInternal(op *ops.Op, ctx context.Context, network, addr stri
 	})
 	select {
 	case <-chDone:
-		return p.withRateTracking(conn, addr), err
+		return p.withRateTracking(conn, addr, ctx), err
 	case <-ctx.Done():
 		return nil, errors.New("fail to dial origin after %+v", time.Since(start))
 	}

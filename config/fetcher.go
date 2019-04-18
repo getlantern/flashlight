@@ -2,6 +2,7 @@ package config
 
 import (
 	"compress/gzip"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -48,13 +49,13 @@ func newFetcher(conf common.UserConfig, rt http.RoundTripper, originURL string) 
 }
 
 func (cf *fetcher) fetch() ([]byte, error) {
-	op := ops.Begin("fetch_config")
+	op, ctx := ops.BeginWithNewBeam("fetch_config", context.Background())
 	defer op.End()
-	result, err := cf.doFetch(op)
+	result, err := cf.doFetch(ctx, op)
 	return result, op.FailIf(err)
 }
 
-func (cf *fetcher) doFetch(op *ops.Op) ([]byte, error) {
+func (cf *fetcher) doFetch(ctx context.Context, op *ops.Op) ([]byte, error) {
 	log.Debugf("Fetching cloud config from %v", cf.originURL)
 
 	url := cf.originURL
@@ -77,7 +78,7 @@ func (cf *fetcher) doFetch(op *ops.Op) ([]byte, error) {
 	// successive requests
 	req.Close = true
 
-	resp, err := cf.rt.RoundTrip(req)
+	resp, err := cf.rt.RoundTrip(req.WithContext(ctx))
 	if err != nil {
 		return nil, fmt.Errorf("Unable to fetch cloud config at %s: %s", url, err)
 	}

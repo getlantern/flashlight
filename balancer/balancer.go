@@ -138,7 +138,6 @@ type dialStats struct {
 
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
-	beam_seq            uint64
 	mu                  sync.RWMutex
 	overallDialTimeout  time.Duration
 	dialers             sortedDialers
@@ -239,7 +238,7 @@ func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 
 // DialContext is same as Dial but uses the provided context.
 func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
-	op := ops.Begin("balancer_dial").Set("beam", atomic.AddUint64(&b.beam_seq, 1))
+	op := ops.BeginWithBeam("balancer_dial", ctx)
 	defer op.End()
 
 	op = ops.Begin("balancer_dial_details")
