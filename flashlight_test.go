@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"testing"
 	"time"
 
@@ -94,7 +95,7 @@ func testRequest(testCase string, t *testing.T, requests chan *http.Request, htt
 // randomTempPath creates a random file path in the temp folder (doesn't create
 // a file)
 func randomTempPath() string {
-	return os.TempDir() + string(os.PathSeparator) + uuid.New()
+	return path.Join(os.TempDir(), uuid.New().String())
 }
 
 // waitForServer waits for a TCP server to start at the given address, waiting

@@ -55,7 +55,6 @@ var (
 
 type Settings interface {
 	StickyConfig() bool
-	EnableAdBlocking() bool
 	DefaultDnsServer() string
 	GetHttpProxyHost() string
 	GetHttpProxyPort() int
@@ -291,9 +290,9 @@ func run(configDir, locale string,
 		settings.GetHttpProxyPort())
 
 	flashlight.Run(httpProxyAddr, // listen for HTTP on provided address
-		"127.0.0.1:0",                              // listen for SOCKS on random address
-		configDir,                                  // place to store lantern configuration
-		func() bool { return false },               // always connected
+		"127.0.0.1:0",                // listen for SOCKS on random address
+		configDir,                    // place to store lantern configuration
+		func() bool { return false }, // always connected
 		func() bool { return !session.ProxyAll() }, // use shortcut
 		func() bool { return false },               // not use detour
 		func() bool { return false },               // do not proxy private hosts on Android
@@ -321,7 +320,6 @@ func run(configDir, locale string,
 		session.GetUserID,
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
-		func() bool { return settings.EnableAdBlocking() && !session.IsPlayVersion() },
 		func(addr string) string {
 			host, port, splitErr := net.SplitHostPort(addr)
 			if splitErr != nil {
