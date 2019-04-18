@@ -466,6 +466,9 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 			}
 			select {
 			case <-ctx.Done():
+				if err == nil {
+					err = ctx.Err()
+				}
 				return nil, err
 			default:
 				return dialProxied(ctx, network, addr)
