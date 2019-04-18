@@ -208,7 +208,7 @@ func (b *Balancer) Reset(dialers []Dialer) {
 // ResetFromExisting Resets using the existing dialers (useful when you want to
 // force redialing).
 func (b *Balancer) ResetFromExisting() {
-	log.Debugf("Received request to force redial")
+	log.Debugf("Resetting from existing dialers")
 	b.mu.Lock()
 	dialers := b.dialers
 	b.mu.Unlock()
