@@ -170,6 +170,7 @@ func New(overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
 	ops.Go(b.periodicallyProbeDialers)
 	ops.Go(b.periodicallyPrintStats)
 	ops.Go(b.evalDialersLoop)
+	ops.Go(b.KeepLookingForSucceedingDialer)
 	if len(dialers) > 0 {
 		b.Reset(dialers)
 	}
@@ -612,10 +613,6 @@ func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, map[string]*dialStat
 	sessionStats := b.sessionStats
 	b.mu.RUnlock()
 
-	if !trustedOnly {
-		b.lookForSucceedingDialer(dialers)
-	}
-
 	if dialers.Len() == 0 {
 		if trustedOnly {
 			return nil, nil, fmt.Errorf("No trusted dialers")
@@ -648,23 +645,34 @@ func (b *Balancer) sortDialers() []Dialer {
 	b.trusted = trusted
 	b.mu.Unlock()
 
-	b.lookForSucceedingDialer(dialers)
 	return dialers
 }
 
-func (b *Balancer) lookForSucceedingDialer(dialers []Dialer) {
-	hasSucceedingDialer := false
-	for _, dialer := range dialers {
-		if dialer.Succeeding() {
-			hasSucceedingDialer = true
-			break
+func (b *Balancer) KeepLookingForSucceedingDialer() {
+	ticker := time.NewTicker(3 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			b.mu.RLock()
+			dialers := b.dialers
+			b.mu.RUnlock()
+			hasSucceedingDialer := false
+			for _, dialer := range dialers {
+				if dialer.Succeeding() {
+					hasSucceedingDialer = true
+					break
+				}
+			}
+			select {
+			case b.hasSucceedingDialer <- hasSucceedingDialer:
+				// okay
+			default:
+				// channel full
+			}
+		case <-b.closeCh:
+			return
 		}
-	}
-	select {
-	case b.hasSucceedingDialer <- hasSucceedingDialer:
-		// okay
-	default:
-		// channel full
 	}
 }
 

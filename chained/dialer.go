@@ -71,8 +71,8 @@ func (p *proxy) ConsecFailures() int64 {
 }
 
 func (p *proxy) Succeeding() bool {
-	return p.ConsecSuccesses()-p.ConsecFailures() > 0 &&
-		p.consecRWSuccesses.Get() > 0
+	return p.EstSuccessRate() > 0.5 &&
+		p.consecReadSuccesses.Get() > 0
 }
 
 func (p *proxy) DataSent() uint64 {

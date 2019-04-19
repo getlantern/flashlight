@@ -109,7 +109,7 @@ func applyExistingStats(dialers []balancer.Dialer) {
 }
 
 func updateStats(p *proxy, row []string) error {
-	if len(row) != 10 {
+	if len(row) < 10 {
 		return fmt.Errorf("Wrong number of fields in row")
 	}
 
@@ -146,7 +146,15 @@ func updateStats(p *proxy, row []string) error {
 		return err
 	}
 
-	p.setStats(attempts, successes, consecSuccesses, failures, consecFailures, emaRTT, mostRecentABETime, abe)
+	var emaSuccessRate float64
+	if len(row) > 10 {
+		emaSuccessRate, err = strconv.ParseFloat(row[10], 64)
+		if err != nil {
+			return err
+		}
+	}
+
+	p.setStats(attempts, successes, consecSuccesses, failures, consecFailures, emaRTT, mostRecentABETime, abe, emaSuccessRate)
 	return nil
 }
 
@@ -174,11 +182,11 @@ func doPersistStats(dialers []balancer.Dialer) {
 	defer out.Close()
 
 	csvOut := csv.NewWriter(out)
-	csvOut.Write([]string{"addr", "label", "attempts", "successes", "consec successes", "failures", "consec failures", "est rtt", "most recent bandwidth estimate", "est bandwidth"})
+	csvOut.Write([]string{"addr", "label", "attempts", "successes", "consec successes", "failures", "consec failures", "est rtt", "most recent bandwidth estimate", "est bandwidth", "est success rate"})
 	for _, d := range dialers {
 		p := d.(*proxy)
 		p.mx.Lock()
-		err = csvOut.Write([]string{d.Addr(), d.Label(), fmt.Sprint(d.Attempts()), fmt.Sprint(d.Successes()), fmt.Sprint(d.ConsecSuccesses()), fmt.Sprint(d.Failures()), fmt.Sprint(d.ConsecFailures()), p.emaRTT.GetDuration().String(), p.mostRecentABETime.Format(time.RFC3339Nano), fmt.Sprint(p.abe)})
+		err = csvOut.Write([]string{d.Addr(), d.Label(), fmt.Sprint(d.Attempts()), fmt.Sprint(d.Successes()), fmt.Sprint(d.ConsecSuccesses()), fmt.Sprint(d.Failures()), fmt.Sprint(d.ConsecFailures()), p.emaRTT.GetDuration().String(), p.mostRecentABETime.Format(time.RFC3339Nano), fmt.Sprint(p.abe), fmt.Sprint(p.emaSuccessRate.Get())})
 		p.mx.Unlock()
 		if err != nil {
 			log.Errorf("Error writing to proxystats.csv: %v", err)

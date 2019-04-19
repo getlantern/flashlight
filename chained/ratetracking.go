@@ -27,9 +27,13 @@ func (p *proxy) withRateTracking(wrapped net.Conn, origin string, ctx context.Co
 		stats := conn.Stats()
 		rwError := conn.FirstError()
 		if rwError == nil {
-			p.consecRWSuccesses.Inc()
+			if stats.RecvTotal > 0 {
+				p.consecReadSuccesses.Inc()
+			}
 		} else {
-			p.consecRWSuccesses.Dec()
+			// Decrease for whatever error as subsequent reads will fail anyway
+			// in this case.
+			p.consecReadSuccesses.Dec()
 		}
 		// record simple traffic without origin
 		op := ops.BeginWithBeam("traffic", ctx).ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed)

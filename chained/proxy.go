@@ -346,42 +346,43 @@ type dialOriginFn func(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 type proxy struct {
 	// Store int64's up front to ensure alignment of 64 bit words
 	// See https://golang.org/pkg/sync/atomic/#pkg-note-BUG
-	attempts          int64
-	successes         int64
-	consecSuccesses   int64
-	failures          int64
-	consecFailures    int64
-	abe               int64 // Mbps scaled by 1000
-	probeSuccesses    uint64
-	probeSuccessKBs   uint64
-	probeFailures     uint64
-	probeFailedKBs    uint64
-	dataSent          uint64
-	dataRecv          uint64
-	consecRWSuccesses consecCounter
-	name              string
-	protocol          string
-	network           string
-	multiplexed       bool
-	addr              string
-	authToken         string
-	location          config.ServerLocation
-	user              common.UserConfig
-	trusted           bool
-	bias              int
-	doDialServer      dialServerFn
-	dialOrigin        dialOriginFn
-	emaRTT            *ema.EMA
-	emaRTTDev         *ema.EMA
-	emaSuccessRate    *ema.EMA
-	kcpConfig         *KCPConfig
-	mostRecentABETime time.Time
-	doDialCore        func(ctx context.Context) (net.Conn, time.Duration, error)
-	numPreconnecting  func() int
-	numPreconnected   func() int
-	closeCh           chan bool
-	closeOnce         sync.Once
-	mx                sync.Mutex
+	attempts            int64
+	successes           int64
+	consecSuccesses     int64
+	failures            int64
+	consecFailures      int64
+	abe                 int64 // Mbps scaled by 1000
+	probeSuccesses      uint64
+	probeSuccessKBs     uint64
+	probeFailures       uint64
+	probeFailedKBs      uint64
+	dataSent            uint64
+	dataRecv            uint64
+	consecReadSuccesses consecCounter
+	name                string
+	protocol            string
+	network             string
+	multiplexed         bool
+	addr                string
+	authToken           string
+	location            config.ServerLocation
+	user                common.UserConfig
+	trusted             bool
+	bias                int
+	doDialServer        dialServerFn
+	dialOrigin          dialOriginFn
+	emaRTT              *ema.EMA
+	emaRTTDev           *ema.EMA
+	emaSuccessRate      *ema.EMA
+	kcpConfig           *KCPConfig
+	forceRedial         *abool.AtomicBool
+	mostRecentABETime   time.Time
+	doDialCore          func(ctx context.Context) (net.Conn, time.Duration, error)
+	numPreconnecting    func() int
+	numPreconnected     func() int
+	closeCh             chan bool
+	closeOnce           sync.Once
+	mx                  sync.Mutex
 }
 
 func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.UserConfig, trusted bool, allowPreconnecting bool, dialServer dialServerFn, dialOrigin dialOriginFn) (*proxy, error) {
@@ -687,7 +688,7 @@ func (p *proxy) EstSuccessRate() float64 {
 	return p.emaSuccessRate.Get()
 }
 
-func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64, failures int64, consecFailures int64, emaRTT time.Duration, mostRecentABETime time.Time, abe int64) {
+func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64, failures int64, consecFailures int64, emaRTT time.Duration, mostRecentABETime time.Time, abe int64, emaSuccessRate float64) {
 	p.mx.Lock()
 	atomic.StoreInt64(&p.attempts, attempts)
 	atomic.StoreInt64(&p.successes, successes)
@@ -697,6 +698,7 @@ func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64,
 	p.emaRTT.SetDuration(emaRTT)
 	p.mostRecentABETime = mostRecentABETime
 	atomic.StoreInt64(&p.abe, abe)
+	p.emaSuccessRate.Set(emaSuccessRate)
 	p.mx.Unlock()
 }
 
