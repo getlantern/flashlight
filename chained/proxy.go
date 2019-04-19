@@ -688,7 +688,7 @@ func (p *proxy) EstSuccessRate() float64 {
 	return p.emaSuccessRate.Get()
 }
 
-func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64, failures int64, consecFailures int64, emaRTT time.Duration, mostRecentABETime time.Time, abe int64) {
+func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64, failures int64, consecFailures int64, emaRTT time.Duration, mostRecentABETime time.Time, abe int64, emaSuccessRate float64) {
 	p.mx.Lock()
 	atomic.StoreInt64(&p.attempts, attempts)
 	atomic.StoreInt64(&p.successes, successes)
@@ -698,6 +698,7 @@ func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64,
 	p.emaRTT.SetDuration(emaRTT)
 	p.mostRecentABETime = mostRecentABETime
 	atomic.StoreInt64(&p.abe, abe)
+	p.emaSuccessRate.Set(emaSuccessRate)
 	p.mx.Unlock()
 }
 
