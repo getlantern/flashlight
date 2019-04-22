@@ -188,7 +188,7 @@ func main() {
 			go func() {
 				for ip := range ipsCh {
 					if deleteErr := exec.Command("sudo", "route", "delete", ip).Run(); deleteErr != nil {
-						log.Error(deleteErr)
+						log.Errorf("Error deleting route fpr %v: %v", ip, deleteErr)
 					}
 				}
 				wg.Done()
