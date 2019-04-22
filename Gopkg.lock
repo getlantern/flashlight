@@ -393,11 +393,11 @@
 
 [[projects]]
   branch = "ox/simplify"
-  digest = "1:24900823be1ccc4edcc9d173c500c23d9191824320f6e872194b8d0cfa988190"
+  digest = "1:314da1a4b21cb13d4b650c5ada30f77635127a5a4f73231dcddd4b89f9abd0ce"
   name = "github.com/getlantern/gotun"
   packages = ["."]
   pruneopts = "UT"
-  revision = "e1a04d1f42289457d33dda1272159010f3348965"
+  revision = "2fc27b245ae4b8c7436bdd8d2cd9643e973715b1"
 
 [[projects]]
   branch = "master"

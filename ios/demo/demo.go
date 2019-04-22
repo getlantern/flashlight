@@ -32,6 +32,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"sync"
 	"syscall"
@@ -60,6 +61,7 @@ var (
 	internetGateway = flag.String("gw", "192.168.1.1", "gateway for getting to Internet")
 	deviceID        = flag.String("deviceid", base64.StdEncoding.EncodeToString(uuid.NodeID()), "deviceid to report to server")
 	bypassThreads   = flag.Int("bypassthreads", 100, "number of threads to use for configuring bypass routes")
+	proxiesYaml     = flag.String("proxiesyaml", "", "if specified, use the proxies.yaml at this location to configure client")
 )
 
 type fivetuple struct {
@@ -98,14 +100,28 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if *proxiesYaml != "" {
+		log.Debugf("Using proxies.yaml at %v", *proxiesYaml)
+		in, readErr := ioutil.ReadFile(*proxiesYaml)
+		if readErr != nil {
+			log.Fatal(readErr)
+		}
+		writeErr := ioutil.WriteFile(filepath.Join(tmpDir, "proxies.yaml"), in, 0644)
+		if writeErr != nil {
+			log.Fatal(writeErr)
+		}
+	}
+
 	l, err := net.Listen("tcp", ":3000")
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Debug("Starting packetforward server")
 	pfs := packetforward.NewServer(&ipproxy.Opts{
 		OutboundBufferDepth: 10000,
 		DialTCP: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			return net.Dial("tcp", "127.0.0.1:8000")
+			return net.Dial("tcp", "127.0.0.1:3000")
 		},
 		StatsInterval: 1 * time.Second,
 	})
@@ -113,17 +129,18 @@ func main() {
 
 	dev, err := tun.OpenTunDevice(*tunDevice, *tunAddr, *tunGW, *tunMask)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error opening TUN device: %v", err)
 	}
 	defer dev.Close()
 
+	log.Debugf("Finding interface %v", *ifOut)
 	outIF, err := net.InterfaceByName(*ifOut)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Unable to find interface %v: %v", *ifOut, err)
 	}
 	outIFAddrs, err := outIF.Addrs()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Unable to get addresses for interface %v: %v", *ifOut, err)
 	}
 	var laddrTCP *net.TCPAddr
 	var laddrUDP *net.UDPAddr
