@@ -2,12 +2,16 @@ package ios
 
 import (
 	"context"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
+	"path/filepath"
 	"runtime"
 	"runtime/debug"
 	"time"
 
+	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/packetforward"
@@ -20,8 +24,9 @@ import (
 )
 
 const (
-	memLimitInMiB   = 12
-	memLimitInBytes = memLimitInMiB * 1024 * 1024
+	memLimitInMiB     = 12
+	memLimitInBytes   = memLimitInMiB * 1024 * 1024
+	quotaSaveInterval = 1 * time.Minute
 )
 
 var (
@@ -45,19 +50,44 @@ func (wa *writerAdapter) Write(b []byte) (int, error) {
 }
 
 type WriteCloser interface {
-	Write([]byte) error
+	// Write writes the given bytes. As a side effect of writing, we periodically
+	// record updated bandwidth quota information in the configured quota.txt file.
+	// If user has exceeded bandwidth allowance, returns a positive integer
+	// representing the bandwidth allowance.
+	Write([]byte) (int, error)
 
 	Close() error
 }
 
 type wc struct {
 	io.Writer
-	bal *balancer.Balancer
+	bal            *balancer.Balancer
+	quotaTextPath  string
+	lastSavedQuota time.Time
 }
 
-func (c *wc) Write(b []byte) error {
+func (c *wc) Write(b []byte) (int, error) {
 	_, err := c.Writer.Write(b)
-	return err
+
+	result := 0
+	if time.Since(c.lastSavedQuota) > quotaSaveInterval {
+		quota := bandwidth.GetQuota()
+		if quota != nil {
+			c.lastSavedQuota = time.Now()
+			go func() {
+				writeErr := ioutil.WriteFile(c.quotaTextPath, []byte(fmt.Sprintf("%d/%d", quota.MiBUsed, quota.MiBAllowed)), 0644)
+				if writeErr != nil {
+					log.Errorf("Unable to write quota text: %v", writeErr)
+				}
+			}()
+
+			if quota.MiBUsed > quota.MiBAllowed {
+				result = int(quota.MiBAllowed)
+			}
+		}
+	}
+
+	return result, err
 }
 
 func (c *wc) Close() error {
@@ -105,7 +135,7 @@ func (c *client) start() (WriteCloser, error) {
 	w := packetforward.Client(&writerAdapter{c.packetsOut}, c.mtu, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
 		return bal.DialContext(ctx, "connect", "127.0.0.1:3000")
 	})
-	return &wc{w, bal}, nil
+	return &wc{Writer: w, bal: bal, quotaTextPath: filepath.Join(c.configDir, "quota.txt")}, nil
 }
 
 func (c *client) loadUserConfig() error {

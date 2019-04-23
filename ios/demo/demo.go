@@ -245,7 +245,10 @@ func main() {
 	for {
 		n, err := dev.Read(b)
 		if n > 0 {
-			writer.Write(b[:n])
+			dataCap, _ := writer.Write(b[:n])
+			if dataCap > 0 {
+				log.Debugf("Data capped at %dMiB", dataCap)
+			}
 		}
 		if err != nil {
 			if err != io.EOF {
