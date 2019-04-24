@@ -1,5 +1,18 @@
 # Change Log
 
+## [Unreleased](https://github.com/getlantern/flashlight/tree/HEAD)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.7...HEAD)
+
+**Merged pull requests:**
+
+- Various changes for more prompt connection status [\#608](https://github.com/getlantern/flashlight/pull/608) ([joesis](https://github.com/joesis))
+- Resetting whole balancer when connections get protected [\#605](https://github.com/getlantern/flashlight/pull/605) ([oxtoacart](https://github.com/oxtoacart))
+- Add beam to track requests end to end [\#598](https://github.com/getlantern/flashlight/pull/598) ([joesis](https://github.com/joesis))
+
+## [5.3.7](https://github.com/getlantern/flashlight/tree/5.3.7) (2019-04-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.6...5.3.7)
+
 ## [5.3.6](https://github.com/getlantern/flashlight/tree/5.3.6) (2019-04-18)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.5...5.3.6)
 
@@ -241,27 +254,21 @@
 - Vetting dialers right after switching proxy because of failing [\#512](https://github.com/getlantern/flashlight/pull/512) ([joesis](https://github.com/joesis))
 - Moved integration test support into a shared package and use it for A… [\#511](https://github.com/getlantern/flashlight/pull/511) ([oxtoacart](https://github.com/oxtoacart))
 - update measured and netx [\#509](https://github.com/getlantern/flashlight/pull/509) ([forkner](https://github.com/forkner))
-- allow a few ports required by Google Hangouts Meet [\#506](https://github.com/getlantern/flashlight/pull/506) ([joesis](https://github.com/joesis))
 
 ## [4.8.1](https://github.com/getlantern/flashlight/tree/4.8.1) (2018-09-13)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.0...4.8.1)
-
-**Merged pull requests:**
-
-- Desktop UI update no IP check for yinbi ad [\#505](https://github.com/getlantern/flashlight/pull/505) ([myleshorton](https://github.com/myleshorton))
-- Updated to latest proxybench with support for enproxy [\#504](https://github.com/getlantern/flashlight/pull/504) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [4.8.0](https://github.com/getlantern/flashlight/tree/4.8.0) (2018-08-09)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.13...4.8.0)
 
 ## [4.7.13](https://github.com/getlantern/flashlight/tree/4.7.13) (2018-08-09)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.13)
-
-## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.13)
 
 ## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.11)
+
+## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.12)
 
 ## [4.7.10](https://github.com/getlantern/flashlight/tree/4.7.10) (2018-07-26)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.9...4.7.10)
