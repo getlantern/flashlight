@@ -1,8 +1,7 @@
 # Change Log
 
-## [Unreleased](https://github.com/getlantern/flashlight/tree/HEAD)
-
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.7...HEAD)
+## [5.3.8](https://github.com/getlantern/flashlight/tree/5.3.8) (2019-04-24)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.7...5.3.8)
 
 **Merged pull requests:**
 
