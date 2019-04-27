@@ -72,6 +72,10 @@ func (c *wc) Write(b []byte) (int, error) {
 	result := 0
 	if time.Since(c.lastSavedQuota) > quotaSaveInterval {
 		quota := bandwidth.GetQuota()
+		quota = &bandwidth.Quota{
+			MiBUsed:    600,
+			MiBAllowed: 500,
+		}
 		if quota != nil {
 			c.lastSavedQuota = time.Now()
 			go func() {
