@@ -4,12 +4,12 @@ package ios
 //
 // void log_debug(const char *msg)
 // {
-//   os_log(OS_LOG_DEFAULT, "%{public}s", msg);
+//   os_log_debug(OS_LOG_DEFAULT, "%{public}s", msg);
 // }
 //
 // void log_error(const char *msg)
 // {
-//   os_log(OS_LOG_DEFAULT, "%{public}s", msg);
+//   os_log_error(OS_LOG_DEFAULT, "%{public}s", msg);
 // }
 import "C"
 

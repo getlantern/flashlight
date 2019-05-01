@@ -107,7 +107,8 @@ type client struct {
 }
 
 func Client(packetsOut Writer, configDir string, mtu int) (WriteCloser, error) {
-	go trackAndLimitMemory()
+	go trackMemory()
+	go limitMemory()
 
 	if mtu <= 0 {
 		log.Debug("Defaulting MTU to 1500")
@@ -195,15 +196,21 @@ func (c *client) chainedDialer(name string, si *chained.ChainedServerInfo) (bala
 	return chained.CreateDialer(name, sic, c.uc)
 }
 
-func trackAndLimitMemory() {
+func trackMemory() {
 	for {
-		time.Sleep(5 * time.Second)
+		time.Sleep(1 * time.Minute)
 		memstats := &runtime.MemStats{}
 		runtime.ReadMemStats(memstats)
 		log.Debugf("Memory InUse: %v    Alloc: %v    Sys: %v",
 			humanize.Bytes(memstats.HeapInuse),
 			humanize.Bytes(memstats.Alloc),
 			humanize.Bytes(memstats.Sys))
+	}
+}
+
+func limitMemory() {
+	for {
+		time.Sleep(5 * time.Second)
 		runtime.GC()
 		debug.FreeOSMemory()
 	}
