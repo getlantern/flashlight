@@ -54,6 +54,46 @@
   revision = "5312a61534124124185d41f09206b9fef1d88403"
 
 [[projects]]
+  digest = "1:9e4640c0d56e648789a443f456a38b6611756fe99878cecde657161990c17407"
+  name = "github.com/anacrolix/go-libutp"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d7dd83bce17eb552d89dc42b7acdb8498e7e70db"
+  version = "v1.0.1"
+
+[[projects]]
+  digest = "1:d260febfa75a48e72ef78b1859635741bad6eb722c5913846f23e7582767055b"
+  name = "github.com/anacrolix/missinggo"
+  packages = [
+    ".",
+    "expect",
+    "inproc",
+    "perf",
+  ]
+  pruneopts = "UT"
+  revision = "1ab2af89c3c32bf788d1d1985c1b601489c7b331"
+  version = "v2.0.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:26f2e8da5e7d4b3ebdebac5da81a1f617960a97efe82139b5f251623024d0895"
+  name = "github.com/anacrolix/mmsg"
+  packages = [
+    ".",
+    "socket",
+  ]
+  pruneopts = "UT"
+  revision = "5adb2c1127c0320bcebc8b13189db19493090cd4"
+
+[[projects]]
+  branch = "master"
+  digest = "1:3adb53977686df2c767d57feaba122fa813df4b7d7a8a79c0bfcb47222e57ffc"
+  name = "github.com/anacrolix/sync"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "44578de4e778a60bb7a9c15ab60b3f0b0311a53a"
+
+[[projects]]
   digest = "1:7d191fd0c54ff370eaf6116a14dafe2a328df487baea280699f597aae858d00d"
   name = "github.com/aristanetworks/goarista"
   packages = ["monotime"]
@@ -1011,6 +1051,14 @@
   revision = "0fb14efe8c47ae851c0034ed7a448854d3d34cf3"
 
 [[projects]]
+  digest = "1:f9a5e090336881be43cfc1cf468330c1bdd60abdc9dd194e0b1ab69f4b94dd7c"
+  name = "github.com/huandu/xstrings"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f02667b379e2fb5916c3cda2cf31e0eb885d79f8"
+  version = "v1.2.0"
+
+[[projects]]
   branch = "master"
   digest = "1:190ff84d9b2ed6589088f178cba8edb4b8ecb334df4572421fb016be1ac20463"
   name = "github.com/juju/ratelimit"
@@ -1487,6 +1535,7 @@
   input-imports = [
     "git.torproject.org/pluggable-transports/goptlib.git",
     "git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4",
+    "github.com/anacrolix/go-libutp",
     "github.com/davecgh/go-spew/spew",
     "github.com/dustin/go-humanize",
     "github.com/getlantern/appdir",
