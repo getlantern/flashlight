@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"github.com/getlantern/appdir"
-	"github.com/getlantern/bandwidth"
-	fops "github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/jibber_jabber"
@@ -19,6 +17,7 @@ import (
 	"github.com/getlantern/ops"
 	"github.com/getlantern/osversion"
 
+	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
@@ -27,6 +26,7 @@ import (
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/goroutines"
+	fops "github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/stats"
@@ -272,7 +272,7 @@ func initContext(deviceID string, version string, revisionDate string, isPro fun
 		if isPro() {
 			return false
 		}
-		quota := bandwidth.GetQuota()
+		quota, _ := bandwidth.GetQuota()
 		return quota != nil && quota.MiBUsed >= quota.MiBAllowed
 	})
 

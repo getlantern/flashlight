@@ -165,14 +165,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a244bc7b14a0c974aa095cddaad2a3672f9f4342f8b0786076bd74b36f2c7c3d"
-  name = "github.com/getlantern/bandwidth"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "96de96fff16cf1aa844edc1b4a72c906add83180"
-
-[[projects]]
-  branch = "master"
   digest = "1:40f3cfba599674ceddeee4c8cfd31666df104330e4bb2cfe1592020c53f5cedf"
   name = "github.com/getlantern/bbrconn"
   packages = ["."]
@@ -1592,7 +1584,6 @@
     "github.com/dustin/go-humanize",
     "github.com/getlantern/appdir",
     "github.com/getlantern/autoupdate",
-    "github.com/getlantern/bandwidth",
     "github.com/getlantern/borda/client",
     "github.com/getlantern/cmux",
     "github.com/getlantern/detour",

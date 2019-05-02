@@ -15,9 +15,9 @@ import (
 
 	"github.com/mitchellh/go-server-timing"
 
-	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/balancer"
+	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"

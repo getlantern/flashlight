@@ -11,12 +11,12 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/packetforward"
 
 	"github.com/getlantern/flashlight/balancer"
+	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 
@@ -71,23 +71,30 @@ func (c *wc) Write(b []byte) (int, error) {
 
 	result := 0
 	if time.Since(c.lastSavedQuota) > quotaSaveInterval {
-		quota := bandwidth.GetQuota()
-		quota = &bandwidth.Quota{
-			MiBUsed:    600,
-			MiBAllowed: 500,
-		}
-		if quota != nil {
-			c.lastSavedQuota = time.Now()
-			go func() {
-				writeErr := ioutil.WriteFile(c.quotaTextPath, []byte(fmt.Sprintf("%d/%d", quota.MiBUsed, quota.MiBAllowed)), 0644)
-				if writeErr != nil {
-					log.Errorf("Unable to write quota text: %v", writeErr)
-				}
-			}()
+		c.lastSavedQuota = time.Now()
 
-			if quota.MiBUsed > quota.MiBAllowed {
+		quota, tracked := bandwidth.GetQuota()
+		// Only save if quota has actually been tracked already
+		if tracked {
+			if quota != nil && quota.MiBUsed > quota.MiBAllowed {
 				result = int(quota.MiBAllowed)
 			}
+
+			go func() {
+				if quota == nil {
+					log.Debug("Clearing bandwidth quota file")
+					writeErr := ioutil.WriteFile(c.quotaTextPath, []byte{}, 0644)
+					if writeErr != nil {
+						log.Errorf("Unable to clear quota file: %v", writeErr)
+					}
+				} else {
+					log.Debugf("Saving bandwidth quota file with %d/%d", quota.MiBUsed, quota.MiBAllowed)
+					writeErr := ioutil.WriteFile(c.quotaTextPath, []byte(fmt.Sprintf("%d/%d", quota.MiBUsed, quota.MiBAllowed)), 0644)
+					if writeErr != nil {
+						log.Errorf("Unable to write quota file: %v", writeErr)
+					}
+				}
+			}()
 		}
 	}
 

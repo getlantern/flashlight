@@ -43,10 +43,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/getlantern/bandwidth"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/getlantern/detour"
 
 [[constraint]]
