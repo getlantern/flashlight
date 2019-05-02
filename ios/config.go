@@ -13,6 +13,7 @@ import (
 	"net/http/httputil"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/errors"
@@ -57,9 +58,10 @@ func Configure(configFolderPath string, deviceID string) (*ConfigResult, error) 
 }
 
 type configurer struct {
-	configFolderPath string
-	uc               common.UserConfig
-	rt               http.RoundTripper
+	configFolderPath  string
+	uc                common.UserConfig
+	rt                http.RoundTripper
+	hasFetchedProxies int64
 }
 
 func (cf *configurer) configure() (*ConfigResult, error) {
@@ -209,14 +211,25 @@ func (cf *configurer) updateGlobal(cfg *config.Global, etag string) (*config.Glo
 
 func (cf *configurer) updateProxies(cfg map[string]*chained.ChainedServerInfo, etag string) (map[string]*chained.ChainedServerInfo, bool) {
 	updated := make(map[string]*chained.ChainedServerInfo)
-	didFetch, err := cf.updateFromWeb(proxiesYaml, etag, updated, "http://config.getiantem.org/proxies.yaml.gz")
+	err := yaml.Unmarshal(hardcodedProxies, updated)
 	if err != nil {
 		log.Error(err)
+		return cfg, false
+	} else {
+		needsSaving := atomic.CompareAndSwapInt64(&cf.hasFetchedProxies, 0, 1)
+		if needsSaving {
+			cf.saveConfig(proxiesYaml, hardcodedProxies)
+		}
+		return updated, needsSaving
 	}
-	if didFetch {
-		cfg = updated
-	}
-	return cfg, didFetch
+	// didFetch, err := cf.updateFromWeb(proxiesYaml, etag, updated, "http://config.getiantem.org/proxies.yaml.gz")
+	// if err != nil {
+	// 	log.Error(err)
+	// }
+	// if didFetch {
+	// 	cfg = updated
+	// }
+	// return cfg, didFetch
 }
 
 // TODO: DRY violation with ../config/fetcher.go
@@ -325,3 +338,64 @@ func (cf *configurer) saveEtag(name string, etag string) {
 func (cf *configurer) fullPathTo(filename string) string {
 	return filepath.Join(cf.configFolderPath, filename)
 }
+
+var hardcodedProxies = []byte(`server-0:
+  addr: 168.63.217.81:443
+  authtoken: gTg60ZF0uDCMB00Z1JWBpt7SP9D6VxcsSbq9tRjI71d6fQUqdgyQg2WNJ3i2BWC5
+  cert: '-----BEGIN CERTIFICATE-----
+
+    MIIDYzCCAkugAwIBAgIJAMvUEkDs2cKSMA0GCSqGSIb3DQEBCwUAMFcxHzAdBgNV
+
+    BAMMFkh1bWJsZXIgUHN5Y2hvYW5hbHlzaXMxEjAQBgNVBAcMCUZpZXJpbmVzczET
+
+    MBEGA1UECAwKQ2FsaWZvcm5pYTELMAkGA1UEBhMCVVMwHhcNMTkwNDAxMDUyMjM0
+
+    WhcNMjAwMzMxMDUyMjM0WjBXMR8wHQYDVQQDDBZIdW1ibGVyIFBzeWNob2FuYWx5
+
+    c2lzMRIwEAYDVQQHDAlGaWVyaW5lc3MxEzARBgNVBAgMCkNhbGlmb3JuaWExCzAJ
+
+    BgNVBAYTAlVTMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArvY/EBsL
+
+    Ve1G0lhUDQH8VVZE++ZmbSWk3bGoXi59i66u9YczZqsN7Up2l+HWU1OfhqAyCK4p
+
+    NGy6fYI92hXXaLCMa0d/H5/rg2mSCInl2IfPEwrdfAqoGQ+Sf7uD1cOi6yUWoTfq
+
+    ZJ4rpcWtcZdoU8q2SSHOpTCYCBwxFFag5wsPrHDSQdoZRHgiFMMtCE4rYTV3Ojfx
+
+    PLpnJLIN0mczfSzC1Q/3E3oWkfF8sk6vgB/sLZY9grsKs4k7RcvBaOh26Clf/bxd
+
+    kqODk6+zhb/WvaDe0SCugG3OT/vAtZnZrBURfkPd2E0WUSNCh6oEKS+vF009pyVs
+
+    B6epcabjPFAopwIDAQABozIwMDAdBgNVHQ4EFgQUlh8xsYK/XZW+joFxFam9Husu
+
+    tawwDwYDVR0RBAgwBocEqD/ZUTANBgkqhkiG9w0BAQsFAAOCAQEAW6R5zuAKrKbt
+
+    9CJQ4xlZUk7scAFcf1jLYoyCt0h4oGNvCwPEyRGysYyt1sYjYdcdtZkGufB6qXQ1
+
+    fC3HJ4tfkMUYYagT4xglxGcjOIUW25gxPyocJf+RJOXgj0gyPJbJohSFD43l0rOg
+
+    bQshFzXOnvOFKG2+qHZCT/niCUZBsgkEFnZftGzZA+TkbpIYth5+rGMFNO2BCd19
+
+    r/M8LIN+YMXSwG6PIhZPvHo8cdOboA2/gqlmLF5YnVn96TPAWGHxe8pkbmiHPhEL
+
+    SFxl8H47L4NK8EjM28fwYm0gNk7ClnevggOg7hJTJqjc22AMQZMLygI+QaXBAAb/
+
+    jQeltkev4A==
+
+    -----END CERTIFICATE-----
+
+    '
+  location:
+    city: Hong Kong
+    country: China
+    countrycode: HK
+    latitude: 22.28
+    longitude: 114.15
+  pipeline: true
+  pluggabletransport: lampshade
+  pluggabletransportsettings:
+    maxpadding: '100'
+  qos: 10
+  trusted: true
+  weight: 1000000
+`)
