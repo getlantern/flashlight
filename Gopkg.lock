@@ -189,6 +189,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:8e02518e7a9d6781802466e602296d19c4d2eca0131a5d50876725b7e85a70d1"
+  name = "github.com/getlantern/bufconn"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "6402607914eb123dd0adc0a4c7845286dc18acef"
+
+[[projects]]
+  branch = "master"
   digest = "1:aba6216005f9d2c7e678b380e12bab326a41af23e76c65680c70c4bdbb59559a"
   name = "github.com/getlantern/byteexec"
   packages = ["."]
@@ -761,6 +769,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "4987a6195239168b073bbe5878cf2b95b522934c"
+
+[[projects]]
+  branch = "master"
+  digest = "1:d73e45b16879bf77e665465acc2389f5451c29803bfe78be334bf9305a0a1760"
+  name = "github.com/getlantern/tinywss"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "72f4ddc309252beeb29b14920390be4a360c998b"
 
 [[projects]]
   branch = "master"
@@ -1539,6 +1555,7 @@
     "github.com/getlantern/sysproxy",
     "github.com/getlantern/systray",
     "github.com/getlantern/tarfs",
+    "github.com/getlantern/tinywss",
     "github.com/getlantern/tlsdefaults",
     "github.com/getlantern/tlsdialer",
     "github.com/getlantern/uuid",
