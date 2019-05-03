@@ -341,64 +341,13 @@ func (cf *configurer) fullPathTo(filename string) string {
 	return filepath.Join(cf.configFolderPath, filename)
 }
 
-var hardcodedProxies = []byte(`server-0:
-  addr: 168.63.217.81:443
-  authtoken: gTg60ZF0uDCMB00Z1JWBpt7SP9D6VxcsSbq9tRjI71d6fQUqdgyQg2WNJ3i2BWC5
-  cert: '-----BEGIN CERTIFICATE-----
-
-    MIIDYzCCAkugAwIBAgIJAMvUEkDs2cKSMA0GCSqGSIb3DQEBCwUAMFcxHzAdBgNV
-
-    BAMMFkh1bWJsZXIgUHN5Y2hvYW5hbHlzaXMxEjAQBgNVBAcMCUZpZXJpbmVzczET
-
-    MBEGA1UECAwKQ2FsaWZvcm5pYTELMAkGA1UEBhMCVVMwHhcNMTkwNDAxMDUyMjM0
-
-    WhcNMjAwMzMxMDUyMjM0WjBXMR8wHQYDVQQDDBZIdW1ibGVyIFBzeWNob2FuYWx5
-
-    c2lzMRIwEAYDVQQHDAlGaWVyaW5lc3MxEzARBgNVBAgMCkNhbGlmb3JuaWExCzAJ
-
-    BgNVBAYTAlVTMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArvY/EBsL
-
-    Ve1G0lhUDQH8VVZE++ZmbSWk3bGoXi59i66u9YczZqsN7Up2l+HWU1OfhqAyCK4p
-
-    NGy6fYI92hXXaLCMa0d/H5/rg2mSCInl2IfPEwrdfAqoGQ+Sf7uD1cOi6yUWoTfq
-
-    ZJ4rpcWtcZdoU8q2SSHOpTCYCBwxFFag5wsPrHDSQdoZRHgiFMMtCE4rYTV3Ojfx
-
-    PLpnJLIN0mczfSzC1Q/3E3oWkfF8sk6vgB/sLZY9grsKs4k7RcvBaOh26Clf/bxd
-
-    kqODk6+zhb/WvaDe0SCugG3OT/vAtZnZrBURfkPd2E0WUSNCh6oEKS+vF009pyVs
-
-    B6epcabjPFAopwIDAQABozIwMDAdBgNVHQ4EFgQUlh8xsYK/XZW+joFxFam9Husu
-
-    tawwDwYDVR0RBAgwBocEqD/ZUTANBgkqhkiG9w0BAQsFAAOCAQEAW6R5zuAKrKbt
-
-    9CJQ4xlZUk7scAFcf1jLYoyCt0h4oGNvCwPEyRGysYyt1sYjYdcdtZkGufB6qXQ1
-
-    fC3HJ4tfkMUYYagT4xglxGcjOIUW25gxPyocJf+RJOXgj0gyPJbJohSFD43l0rOg
-
-    bQshFzXOnvOFKG2+qHZCT/niCUZBsgkEFnZftGzZA+TkbpIYth5+rGMFNO2BCd19
-
-    r/M8LIN+YMXSwG6PIhZPvHo8cdOboA2/gqlmLF5YnVn96TPAWGHxe8pkbmiHPhEL
-
-    SFxl8H47L4NK8EjM28fwYm0gNk7ClnevggOg7hJTJqjc22AMQZMLygI+QaXBAAb/
-
-    jQeltkev4A==
-
-    -----END CERTIFICATE-----
-
-    '
-  location:
-    city: Hong Kong
-    country: China
-    countrycode: HK
-    latitude: 22.28
-    longitude: 114.15
-  pipeline: true
+var hardcodedProxies = []byte(`fp-cloudcompile-lampshade:
+  addr: "67.205.172.79:14443"
+  cert: "-----BEGIN CERTIFICATE-----\nMIIDHzCCAgegAwIBAgIIFPWhFLs4/GMwDQYJKoZIhvcNAQELBQAwHzEQMA4GA1UE\nChMHTGFudGVybjELMAkGA1UEAxMCOjowHhcNMTcxMDEwMDUwNjAwWhcNMjcxMTEw\nMDUwNTU4WjAfMRAwDgYDVQQKEwdMYW50ZXJuMQswCQYDVQQDEwI6OjCCASIwDQYJ\nKoZIhvcNAQEBBQADggEPADCCAQoCggEBAM+1qr0v/5droAUt6P2QRX7C60S4kRdT\nm5M5xPmAMF19bOf+Pk4gKH36/9gzMc3ESTOt5Ij4/3r01vKux7+tMJSLaJtGaB2w\n55NdHOkVyoQf6wnznI6XC+YtE3AN63WzDZnMXw5ADIaRgUPe8qojp5+sWCuXsGvi\nBQZClga/GMmXNLMT4EIjNqC+MfkTttJccRPqahUY1AbUHgUDRy5M0zfIR2XYHmOc\n6mtogbkdalGIKRxzBe/Db1hKgBzojuT+Pxt5L8boWp4MxgGIqBbFxqgvnuVh9Jmj\nlqVUMRqg1pK3MqGHNuAl8Q/e14Y8nmpFjQAFiFnhwtCNP4ZjHaF3oCMCAwEAAaNf\nMF0wDgYDVR0PAQH/BAQDAgKkMB0GA1UdJQQWMBQGCCsGAQUFBwMBBggrBgEFBQcD\nAjAPBgNVHRMBAf8EBTADAQH/MBsGA1UdEQQUMBKHEAAAAAAAAAAAAAAAAAAAAAAw\nDQYJKoZIhvcNAQELBQADggEBAMK5YYj6KiXe/hmC0SF3DdkdW8ZqU8/LlQUuTO6O\nblDqiubvuscz1B2h+TRB5A2ebWukYDoBCurNIbFOmQA1TdBdjF5EvGAVj5QJm3QJ\nrXdWwbVfhdIy8VMrNag1qhqM7XDsLOVA7VKssU78u0nDINun/4cVngbcsqmjjyeM\nYVWgsfwm5mGU01gDYG1Wg7XIb+JNT5ynAv2DnoNCwvLp3UUBJY3sP9r1GD8gem/T\nfyQ8GtB73BYLRSDaocASwVNx/9putdsdkiMx8l4T3z4owqVQ6gGxFUFJRWs0Idww\nsiRLNHqPVZEg32jr++Tm4yBclMNJc62/8FUqAa5G0KtYmjg=\n-----END CERTIFICATE-----"
+  authtoken: "pj6mWPafKzP26KZvUf7FIs24eB2ubjUKFvXktodqgUzZULhGeRUT0mwhyHb9jY2b"
+  trusted: true
   pluggabletransport: lampshade
   pluggabletransportsettings:
     maxpadding: '100'
     windowsize: '250'
-  qos: 10
-  trusted: true
-  weight: 1000000
 `)
