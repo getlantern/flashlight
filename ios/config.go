@@ -213,13 +213,15 @@ func (cf *configurer) updateProxies(cfg map[string]*chained.ChainedServerInfo, e
 	updated := make(map[string]*chained.ChainedServerInfo)
 	err := yaml.Unmarshal(hardcodedProxies, updated)
 	if err != nil {
-		log.Error(err)
+		log.Errorf("Unable to parse hardcoded proxies.yaml, defaulting to existing config: %v", err)
 		return cfg, false
 	} else {
 		needsSaving := atomic.CompareAndSwapInt64(&cf.hasFetchedProxies, 0, 1)
 		if needsSaving {
+			log.Debug("Saving hardcoded proxies.yaml")
 			cf.saveConfig(proxiesYaml, hardcodedProxies)
 		}
+		log.Debug("Returning hardcoded proxies.yaml")
 		return updated, needsSaving
 	}
 	// didFetch, err := cf.updateFromWeb(proxiesYaml, etag, updated, "http://config.getiantem.org/proxies.yaml.gz")
@@ -395,6 +397,7 @@ var hardcodedProxies = []byte(`server-0:
   pluggabletransport: lampshade
   pluggabletransportsettings:
     maxpadding: '100'
+		windowsize: '250'
   qos: 10
   trusted: true
   weight: 1000000
