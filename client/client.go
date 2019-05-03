@@ -53,7 +53,7 @@ var (
 		// SSH is disabled to prevent abuse. Caution should be taken before
 		// enabling it. See
 		// https://github.com/getlantern/lantern-internal/issues/2720
-		// 22
+		// 22,
 		// SMTP and encrypted SMTP
 		25, 465,
 		// POP and encrypted POP
