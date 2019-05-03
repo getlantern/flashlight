@@ -50,10 +50,8 @@ var (
 	proxiedCONNECTPorts = []int{
 		// Standard HTTP(S) ports
 		80, 443,
-		// SSH is disabled to prevent abuse. Caution should be taken before
-		// enabling it. See
-		// https://github.com/getlantern/lantern-internal/issues/2720
-		// 22
+		// SSH is disabled to prevent abuse.
+		// 22,
 		// SMTP and encrypted SMTP
 		25, 465,
 		// POP and encrypted POP
