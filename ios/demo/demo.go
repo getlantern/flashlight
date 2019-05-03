@@ -60,7 +60,7 @@ var (
 	pprofAddr       = flag.String("pprofaddr", "", "pprof address to listen on, not activate pprof if empty")
 	internetGateway = flag.String("gw", "192.168.1.1", "gateway for getting to Internet")
 	deviceID        = flag.String("deviceid", base64.StdEncoding.EncodeToString(uuid.NodeID()), "deviceid to report to server")
-	bypassThreads   = flag.Int("bypassthreads", 100, "number of threads to use for configuring bypass routes")
+	bypassThreads   = flag.Int("bypassthreads", 0, "number of threads to use for configuring bypass routes. If set to 0, we don't bypass.")
 	proxiesYaml     = flag.String("proxiesyaml", "", "if specified, use the proxies.yaml at this location to configure client")
 )
 
@@ -177,63 +177,65 @@ func main() {
 	doneAddingBypassRoutes := make(chan interface{})
 
 	ipsToExclude := strings.Split(cfgResult.IPSToExcludeFromVPN, ",")
-	defer func() {
-		<-doneAddingBypassRoutes
-		log.Debugf("Deleting bypass routes for %d ips", len(ipsToExclude))
+	if *bypassThreads > 0 {
+		defer func() {
+			<-doneAddingBypassRoutes
+			log.Debugf("Deleting bypass routes for %d ips", len(ipsToExclude))
 
-		ipsCh := make(chan string)
-		var wg sync.WaitGroup
-		wg.Add(*bypassThreads)
-		for i := 0; i < *bypassThreads; i++ {
-			go func() {
-				for ip := range ipsCh {
-					if deleteErr := exec.Command("sudo", "route", "delete", ip).Run(); deleteErr != nil {
-						log.Errorf("Error deleting route fpr %v: %v", ip, deleteErr)
+			ipsCh := make(chan string)
+			var wg sync.WaitGroup
+			wg.Add(*bypassThreads)
+			for i := 0; i < *bypassThreads; i++ {
+				go func() {
+					for ip := range ipsCh {
+						if deleteErr := exec.Command("sudo", "route", "delete", ip).Run(); deleteErr != nil {
+							log.Errorf("Error deleting route fpr %v: %v", ip, deleteErr)
+						}
 					}
-				}
-				wg.Done()
-			}()
-		}
-		for i, ip := range ipsToExclude {
-			ipsCh <- ip
-			if i > 0 && i%50 == 0 {
-				log.Debugf("Deleting bypass routes ... %d", i)
+					wg.Done()
+				}()
 			}
-		}
-		close(ipsCh)
-		wg.Wait()
+			for i, ip := range ipsToExclude {
+				ipsCh <- ip
+				if i > 0 && i%50 == 0 {
+					log.Debugf("Deleting bypass routes ... %d", i)
+				}
+			}
+			close(ipsCh)
+			wg.Wait()
 
-		log.Debugf("Deleted bypass routes for %d ips", len(ipsToExclude))
-	}()
+			log.Debugf("Deleted bypass routes for %d ips", len(ipsToExclude))
+		}()
 
-	go func() {
-		log.Debugf("Adding bypass routes for %d ips", len(ipsToExclude))
+		go func() {
+			log.Debugf("Adding bypass routes for %d ips", len(ipsToExclude))
 
-		ipsCh := make(chan string)
-		var wg sync.WaitGroup
-		wg.Add(*bypassThreads)
-		for i := 0; i < *bypassThreads; i++ {
-			go func() {
-				for ip := range ipsCh {
-					if addErr := exec.Command("sudo", "route", "add", ip, *internetGateway).Run(); addErr != nil {
-						log.Error(addErr)
+			ipsCh := make(chan string)
+			var wg sync.WaitGroup
+			wg.Add(*bypassThreads)
+			for i := 0; i < *bypassThreads; i++ {
+				go func() {
+					for ip := range ipsCh {
+						if addErr := exec.Command("sudo", "route", "add", ip, *internetGateway).Run(); addErr != nil {
+							log.Error(addErr)
+						}
 					}
-				}
-				wg.Done()
-			}()
-		}
-		for i, ip := range ipsToExclude {
-			ipsCh <- ip
-			if i > 0 && i%50 == 0 {
-				log.Debugf("Adding bypass routes ... %d", i)
+					wg.Done()
+				}()
 			}
-		}
-		close(ipsCh)
-		wg.Wait()
+			for i, ip := range ipsToExclude {
+				ipsCh <- ip
+				if i > 0 && i%50 == 0 {
+					log.Debugf("Adding bypass routes ... %d", i)
+				}
+			}
+			close(ipsCh)
+			wg.Wait()
 
-		log.Debugf("Added bypass routes for %d ips", len(ipsToExclude))
-		close(doneAddingBypassRoutes)
-	}()
+			log.Debugf("Added bypass routes for %d ips", len(ipsToExclude))
+			close(doneAddingBypassRoutes)
+		}()
+	}
 
 	writer, err := ios.Client(&writerAdapter{dev}, tmpDir, 1500)
 	if err != nil {

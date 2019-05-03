@@ -207,7 +207,7 @@ func (c *client) chainedDialer(name string, si *chained.ChainedServerInfo) (bala
 
 func trackMemory() {
 	for {
-		time.Sleep(1 * time.Minute)
+		time.Sleep(5 * time.Second)
 		memstats := &runtime.MemStats{}
 		runtime.ReadMemStats(memstats)
 		log.Debugf("Memory InUse: %v    Alloc: %v    Sys: %v",
