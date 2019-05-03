@@ -397,7 +397,7 @@ var hardcodedProxies = []byte(`server-0:
   pluggabletransport: lampshade
   pluggabletransportsettings:
     maxpadding: '100'
-		windowsize: '250'
+    windowsize: '250'
   qos: 10
   trusted: true
   weight: 1000000
