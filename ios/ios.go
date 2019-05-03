@@ -17,6 +17,7 @@ import (
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/bandwidth"
+	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 
@@ -137,6 +138,7 @@ func (c *client) start() (WriteCloser, error) {
 	}
 
 	log.Debugf("Running client for device '%v' at config path '%v'", c.uc.GetDeviceID(), c.configDir)
+	log.Debugf("Max buffer bytes: %d", buffers.MaxBufferBytes())
 
 	dialers, err := c.loadDialers()
 	if err != nil {

@@ -1,4 +1,4 @@
-// +build !darwin !arm
+// +build !ios
 
 package buffers
 
