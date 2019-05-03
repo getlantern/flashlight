@@ -50,6 +50,8 @@ var (
 	proxiedCONNECTPorts = []int{
 		// Standard HTTP(S) ports
 		80, 443,
+		// SSH is disabled to prevent abuse.
+		// 22,
 		// SMTP and encrypted SMTP
 		25, 465,
 		// POP and encrypted POP

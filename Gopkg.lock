@@ -189,6 +189,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:8e02518e7a9d6781802466e602296d19c4d2eca0131a5d50876725b7e85a70d1"
+  name = "github.com/getlantern/bufconn"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "6402607914eb123dd0adc0a4c7845286dc18acef"
+
+[[projects]]
+  branch = "master"
   digest = "1:aba6216005f9d2c7e678b380e12bab326a41af23e76c65680c70c4bdbb59559a"
   name = "github.com/getlantern/byteexec"
   packages = ["."]
@@ -1493,6 +1501,7 @@
     "github.com/getlantern/autoupdate",
     "github.com/getlantern/bandwidth",
     "github.com/getlantern/borda/client",
+    "github.com/getlantern/bufconn",
     "github.com/getlantern/cmux",
     "github.com/getlantern/detour",
     "github.com/getlantern/dnsgrab",
