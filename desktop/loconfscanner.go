@@ -9,7 +9,6 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/notifier"
 
-	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/loconf"
@@ -91,7 +90,7 @@ func (loc *loconfer) onLoconf(lc *loconf.LoConf, isPro bool) {
 }
 
 func (loc *loconfer) setUninstallURL(lc *loconf.LoConf, isPro bool) {
-	path, err := client.InConfigDir("", "uninstall_url.txt")
+	path, err := common.InConfigDir("", "uninstall_url.txt")
 	if err != nil {
 		loc.log.Errorf("Could not get config path? %v", err)
 		return

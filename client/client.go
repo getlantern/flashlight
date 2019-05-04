@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -282,7 +281,7 @@ func (client *Client) initEasyList(adBlockingAllowed func() bool) {
 }
 
 func easyListFor(cacheFile string, url string) (easylist.List, error) {
-	path, err := InConfigDir("", cacheFile)
+	path, err := common.InConfigDir("", cacheFile)
 	if err != nil {
 		return nil, errors.New("Unable to get easylist config path: %v", err)
 	}
@@ -632,29 +631,6 @@ func (client *Client) portForAddress(addr string) (int, error) {
 		return 0, fmt.Errorf("Unable to parse port %v for address %v: %v", addr, port, err)
 	}
 	return port, nil
-}
-
-// InConfigDir returns the path of the specified file name in the Lantern
-// configuration directory, using an alternate base configuration directory
-// if necessary for things like testing.
-func InConfigDir(configDir string, filename string) (string, error) {
-	cdir := configDir
-
-	if cdir == "" {
-		cdir = appdir.General("Lantern")
-	}
-
-	log.Debugf("Using config dir %v", cdir)
-	if _, err := os.Stat(cdir); err != nil {
-		if os.IsNotExist(err) {
-			// Create config dir
-			if err := os.MkdirAll(cdir, 0750); err != nil {
-				return "", fmt.Errorf("Unable to create configdir at %s: %s", cdir, err)
-			}
-		}
-	}
-
-	return filepath.Join(cdir, filename), nil
 }
 
 func errorResponse(ctx filters.Context, req *http.Request, read bool, err error) *http.Response {
