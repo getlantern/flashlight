@@ -8,8 +8,6 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/proxiedsites"
-
-	"github.com/getlantern/flashlight/client"
 )
 
 // Global contains general configuration for Lantern either set globally via
@@ -25,7 +23,7 @@ type Global struct {
 	BordaReportInterval   time.Duration
 	BordaSamplePercentage float64
 	ReportIssueEmail      string
-	Client                *client.ClientConfig
+	Client                *ClientConfig
 
 	// AdSettings are the settings to use for showing ads to mobile clients
 	AdSettings *AdSettings
@@ -60,7 +58,7 @@ func (cfg *Global) TrustedCACerts() (pool *x509.CertPool, err error) {
 // newGlobal creates a new global config with otherwise nil values set.
 func newGlobal() *Global {
 	return &Global{
-		Client: client.NewConfig(),
+		Client: NewClientConfig(),
 		ProxiedSites: &proxiedsites.Config{
 			Delta: &proxiedsites.Delta{},
 		},

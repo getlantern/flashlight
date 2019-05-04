@@ -172,12 +172,12 @@
   revision = "86cf8c16f3d092de7a0c72c6eae830ccb2a2147b"
 
 [[projects]]
-  branch = "master"
-  digest = "1:4043dd80697b2a80ec36343621bae7f9e9412e56a7dd4459c9be47ae0858b008"
+  branch = "ox/cleandeps"
+  digest = "1:eadc89c88b0bc2f254d1cc3a33fb822d7bfe4f72e12eac6136cdd43fc500aba9"
   name = "github.com/getlantern/borda"
   packages = ["client"]
   pruneopts = "UT"
-  revision = "65cc1df08e271c261303eb3b6b434543d2eac089"
+  revision = "682b5f61eb60b1e7ba6b5921778ae69aebe483ef"
 
 [[projects]]
   branch = "master"
@@ -642,12 +642,12 @@
   revision = "8f3fb296110c7f171058539e477851026fa30ce2"
 
 [[projects]]
-  branch = "ox/ipproxy"
-  digest = "1:15c2e94766b1e7a9442ca9dc2ab5584096d66a62a803edd9c8f6b182c5b6818f"
+  branch = "master"
+  digest = "1:40e3c992c37d5699b5571904971feabd9635a1a5c64cdb5fbd13ac657ea42a69"
   name = "github.com/getlantern/packetforward"
   packages = ["."]
   pruneopts = "UT"
-  revision = "7d71eb99f499777d35eb4f2031f65f3fc10a77f3"
+  revision = "5be78b74b0087a8aade4404ff973ea5752cdd357"
 
 [[projects]]
   branch = "master"

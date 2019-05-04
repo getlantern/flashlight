@@ -13,7 +13,6 @@ import (
 	"github.com/getlantern/rot13"
 	"github.com/getlantern/yaml"
 
-	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 )
@@ -120,7 +119,7 @@ func pipeConfig(opts *options) (stop func()) {
 		}
 	}
 
-	configPath, err := client.InConfigDir(opts.saveDir, opts.name)
+	configPath, err := common.InConfigDir(opts.saveDir, opts.name)
 	if err != nil {
 		log.Errorf("Could not get config path? %v", err)
 	}
