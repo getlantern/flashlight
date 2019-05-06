@@ -2,14 +2,32 @@ package ios
 
 import (
 	"bytes"
+	"net/http"
+	"time"
 
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/logging"
+	"github.com/getlantern/fronted"
 )
 
 func init() {
 	// TODO: get this from config
 	email.SetDefaultRecipient("report-issue@getlantern.org")
+
+	go func() {
+		log.Debug("Getting fronted transport to use for submitting issues")
+		start := time.Now()
+		tr, ok := fronted.NewDirect(5 * time.Minute)
+		if ok {
+			log.Debugf("Got fronted transport for submitting issues within %v", time.Now().Sub(start))
+		} else {
+			log.Debug("Failed to get fronted transport for submitting issues")
+		}
+		email.SetHTTPClient(&http.Client{
+			Timeout:   20 * time.Second,
+			Transport: tr,
+		})
+	}()
 }
 
 // ReportIssue reports an issue via email.

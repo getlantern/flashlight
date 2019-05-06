@@ -168,7 +168,7 @@ func ZipLogFiles(w io.Writer, underFolder string, maxBytes int64) error {
 func ZipLogFilesFrom(w io.Writer, maxBytes int64, dirs map[string]string) error {
 	globs := make(map[string]string, len(dirs))
 	for baseDir, dir := range dirs {
-		globs[baseDir] = fmt.Sprintf(filepath.Join(dir, "lantern.log*"))
+		globs[baseDir] = fmt.Sprintf(filepath.Join(dir, "*.log*"))
 	}
 	return util.ZipFiles(w, util.ZipOptions{
 		Globs:    globs,
