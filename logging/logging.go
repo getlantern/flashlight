@@ -8,8 +8,6 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"runtime"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -20,6 +18,7 @@ import (
 	"github.com/getlantern/rotator"
 	"github.com/getlantern/wfilter"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/util"
 )
 
@@ -40,7 +39,7 @@ var (
 )
 
 func init() {
-	if !strings.HasPrefix(runtime.GOARCH, "arm") {
+	if common.Platform != "android" && common.Platform != "ios" {
 		EnableFileLogging("")
 	}
 }
