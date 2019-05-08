@@ -67,7 +67,6 @@ func Run(httpProxyAddr string,
 	userID func() int64,
 	lang func() string,
 	adSwapTargetURL func() string,
-	adBlockingAllowed func() bool,
 	reverseDNS func(host string) string) error {
 
 	// check # of goroutines every minute, print the top 5 stacks with most
@@ -94,7 +93,6 @@ func Run(httpProxyAddr string,
 		allowPrivateHosts,
 		lang,
 		adSwapTargetURL,
-		adBlockingAllowed,
 		reverseDNS,
 	)
 	if err != nil {
@@ -197,6 +195,7 @@ func applyClientConfig(c *client.Client, cfg *config.Global, autoReport func() b
 			return true
 		}
 
+		delete(ctx, "beam") // beam is only useful within a single client session.
 		// For some ops, we don't randomly sample, we include all of them
 		op := ctx["op"]
 		switch t := op.(type) {
@@ -206,7 +205,6 @@ func applyClientConfig(c *client.Client, cfg *config.Global, autoReport func() b
 					log.Tracef("Removing high dimensional data for lightweight op %v", lightweightOp)
 					delete(ctx, "error")
 					delete(ctx, "error_text")
-					delete(ctx, "beam")
 					delete(ctx, "origin")
 					delete(ctx, "origin_host")
 					delete(ctx, "origin_port")

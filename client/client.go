@@ -18,7 +18,6 @@ import (
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/detour"
-	"github.com/getlantern/easylist"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/go-socks5"
@@ -49,6 +48,8 @@ var (
 	proxiedCONNECTPorts = []int{
 		// Standard HTTP(S) ports
 		80, 443,
+		// SSH is disabled to prevent abuse.
+		// 22,
 		// SMTP and encrypted SMTP
 		25, 465,
 		// POP and encrypted POP
@@ -122,7 +123,6 @@ type Client struct {
 	useDetour     func() bool
 	user          common.UserConfig
 
-	easylist       easylist.List
 	rewriteToHTTPS httpseverywhere.Rewrite
 	rewriteLRU     *lru.Cache
 
@@ -151,7 +151,6 @@ func NewClient(
 	allowPrivateHosts func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
-	adBlockingAllowed func() bool,
 	reverseDNS func(addr string) string,
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
@@ -227,7 +226,6 @@ func NewClient(
 	if mitmErr != nil {
 		log.Errorf("Unable to initialize MITM: %v", mitmErr)
 	}
-	client.initEasyList(adBlockingAllowed)
 	client.reportProxyLocationLoop()
 	client.iptool, err = iptool.New()
 	if err != nil {
@@ -238,58 +236,6 @@ func NewClient(
 
 func (client *Client) GetBalancer() *balancer.Balancer {
 	return client.bal
-}
-
-func (client *Client) initEasyList(adBlockingAllowed func() bool) {
-	defer func() {
-		if client.easylist == nil {
-			log.Debugf("Not using easylist")
-			client.easylist = easylist.AndList{}
-		}
-	}()
-
-	if !adBlockingAllowed() {
-		log.Debug("Ad blocking not allowed, not initializing easylist")
-		return
-	}
-
-	log.Debug("Initializing easylist")
-	lanternList, err := easyListFor("lanternlist.txt.gz", "https://raw.githubusercontent.com/getlantern/easylist/master/lanternlist.txt.gz")
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
-	easylistList, err := easyListFor("easylist.txt.gz", easylist.DefaultURL)
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
-	combined := easylist.AndList{lanternList, easylistList}
-
-	client.easylist = easylist.ListFunc(func(req *http.Request) bool {
-		adSwappingEnabled := client.adSwapTargetURL() != ""
-		if adSwappingEnabled {
-			// Always allow to avoid interfering with ad swapping
-			return true
-		}
-		// Use combined for maximum coverage
-		return combined.Allow(req)
-	})
-	log.Debug("Initialized easylist")
-}
-
-func easyListFor(cacheFile string, url string) (easylist.List, error) {
-	path, err := common.InConfigDir("", cacheFile)
-	if err != nil {
-		return nil, errors.New("Unable to get easylist config path: %v", err)
-	}
-	list, err := easylist.OpenWithURL(path, url, true, 1*time.Hour)
-	if err != nil {
-		return nil, errors.New("Unable to open easylist: %v", err)
-	}
-	return list, nil
 }
 
 func (client *Client) reportProxyLocationLoop() {
@@ -389,9 +335,8 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 
 	conf := &socks5.Config{
 		HandleConnect: func(ctx context.Context, conn net.Conn, req *socks5.Request, replySuccess func(boundAddr net.Addr) error, replyError func(err error) error) error {
-			op := ops.Begin("proxy")
+			op, ctx := ops.BeginWithNewBeam("proxy", ctx)
 			defer op.End()
-			ctx = context.WithValue(ctx, ctxKeyOp, op)
 			addr := client.reverseDNS(fmt.Sprintf("%v:%v", req.DestAddr.IP, req.DestAddr.Port))
 			errOnReply := replySuccess(nil)
 			if errOnReply != nil {
@@ -426,7 +371,7 @@ func (client *Client) Stop() error {
 }
 
 func (client *Client) dial(ctx context.Context, isConnect bool, network, addr string) (conn net.Conn, err error) {
-	op := ops.Begin("proxied_dialer")
+	op := ops.BeginWithBeam("proxied_dialer", ctx)
 	op.Set("local_proxy_type", "http")
 	op.Origin(addr, "")
 	defer op.End()
@@ -520,6 +465,9 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 			}
 			select {
 			case <-ctx.Done():
+				if err == nil {
+					err = ctx.Err()
+				}
 				return nil, err
 			default:
 				return dialProxied(ctx, network, addr)

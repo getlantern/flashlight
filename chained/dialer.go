@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
-	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/mitchellh/go-server-timing"
 
+	"github.com/getlantern/bufconn"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/bandwidth"
@@ -44,35 +44,6 @@ var (
 	errUpstream = errors.New("Upstream error")
 )
 
-// Periodically call doDialCore to make sure we're recording updated latencies.
-func (p *proxy) checkCoreDials() {
-	timer := time.NewTimer(0)
-
-	ops.Go(func() {
-		log.Debugf("Will probe core dials to %v", p.Label())
-		for {
-			timer.Reset(randomize(dialCoreCheckInterval))
-			select {
-			case <-timer.C:
-				ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(dialCoreCheckInterval/2))
-				conn, _, err := p.doDialCore(ctx)
-				if err == nil {
-					conn.Close()
-				}
-				cancel()
-			case <-p.closeCh:
-				log.Tracef("Dialer %v stopped", p.Label())
-				timer.Stop()
-				return
-			}
-		}
-	})
-}
-
-func randomize(d time.Duration) time.Duration {
-	return d/2 + time.Duration(rand.Int63n(int64(d)))
-}
-
 func (p *proxy) Stop() {
 	log.Tracef("Stopping dialer %s", p.Label())
 	p.closeOnce.Do(func() {
@@ -101,8 +72,8 @@ func (p *proxy) ConsecFailures() int64 {
 }
 
 func (p *proxy) Succeeding() bool {
-	return p.ConsecSuccesses()-p.ConsecFailures() > 0 &&
-		p.consecRWSuccesses.Get() > 0
+	return p.EstSuccessRate() > 0.5 &&
+		p.consecReadSuccesses.Get() > 0
 }
 
 func (p *proxy) DataSent() uint64 {
@@ -173,7 +144,9 @@ func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, err
 		return nil, op.FailIf(err)
 	}
 	conn = idletiming.Conn(conn, IdleTimeout, func() {
+		op := ops.BeginWithBeam("idle_close", ctx)
 		log.Debugf("Proxy connection to %s via %s idle for %v, closed", addr, conn.RemoteAddr(), IdleTimeout)
+		op.End()
 	})
 	return conn, nil
 }
@@ -199,7 +172,7 @@ func (p *proxy) dialInternal(op *ops.Op, ctx context.Context, network, addr stri
 	})
 	select {
 	case <-chDone:
-		return p.withRateTracking(conn, addr), err
+		return p.withRateTracking(conn, addr, ctx), err
 	case <-ctx.Done():
 		return nil, errors.New("fail to dial origin after %+v", time.Since(start))
 	}
@@ -231,7 +204,9 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 	switch network {
 	case balancer.NetworkConnect:
 		log.Trace("Sending CONNECT request")
-		err = p.sendCONNECT(op, addr, conn, timeout)
+		bconn := bufconn.Wrap(conn)
+		conn = bconn
+		err = p.sendCONNECT(op, addr, bconn, timeout)
 	case balancer.NetworkPersistent:
 		log.Trace("Sending GET request to establish persistent HTTP connection")
 		err = p.initPersistentConnection(addr, conn)
@@ -256,7 +231,7 @@ func (p *proxy) onFinish(op *ops.Op) {
 	op.ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed)
 }
 
-func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn net.Conn, timeout time.Duration) error {
+func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn bufconn.Conn, timeout time.Duration) error {
 	reqTime := time.Now()
 	req, err := p.buildCONNECTRequest(addr, timeout)
 	if err != nil {
@@ -267,7 +242,7 @@ func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn net.Conn, timeout time
 		return fmt.Errorf("Unable to write CONNECT request: %s", err)
 	}
 
-	r := bufio.NewReader(conn)
+	r := conn.Head()
 	err = p.checkCONNECTResponse(op, r, req, reqTime)
 	return err
 }

@@ -347,43 +347,43 @@ type dialOriginFn func(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 type proxy struct {
 	// Store int64's up front to ensure alignment of 64 bit words
 	// See https://golang.org/pkg/sync/atomic/#pkg-note-BUG
-	attempts          int64
-	successes         int64
-	consecSuccesses   int64
-	failures          int64
-	consecFailures    int64
-	abe               int64 // Mbps scaled by 1000
-	probeSuccesses    uint64
-	probeSuccessKBs   uint64
-	probeFailures     uint64
-	probeFailedKBs    uint64
-	dataSent          uint64
-	dataRecv          uint64
-	consecRWSuccesses consecCounter
-	name              string
-	protocol          string
-	network           string
-	multiplexed       bool
-	addr              string
-	authToken         string
-	location          config.ServerLocation
-	user              common.UserConfig
-	trusted           bool
-	bias              int
-	doDialServer      dialServerFn
-	dialOrigin        dialOriginFn
-	emaRTT            *ema.EMA
-	emaRTTDev         *ema.EMA
-	emaSuccessRate    *ema.EMA
-	kcpConfig         *KCPConfig
-	forceRedial       *abool.AtomicBool
-	mostRecentABETime time.Time
-	doDialCore        func(ctx context.Context) (net.Conn, time.Duration, error)
-	numPreconnecting  func() int
-	numPreconnected   func() int
-	closeCh           chan bool
-	closeOnce         sync.Once
-	mx                sync.Mutex
+	attempts            int64
+	successes           int64
+	consecSuccesses     int64
+	failures            int64
+	consecFailures      int64
+	abe                 int64 // Mbps scaled by 1000
+	probeSuccesses      uint64
+	probeSuccessKBs     uint64
+	probeFailures       uint64
+	probeFailedKBs      uint64
+	dataSent            uint64
+	dataRecv            uint64
+	consecReadSuccesses consecCounter
+	name                string
+	protocol            string
+	network             string
+	multiplexed         bool
+	addr                string
+	authToken           string
+	location            config.ServerLocation
+	user                common.UserConfig
+	trusted             bool
+	bias                int
+	doDialServer        dialServerFn
+	dialOrigin          dialOriginFn
+	emaRTT              *ema.EMA
+	emaRTTDev           *ema.EMA
+	emaSuccessRate      *ema.EMA
+	kcpConfig           *KCPConfig
+	forceRedial         *abool.AtomicBool
+	mostRecentABETime   time.Time
+	doDialCore          func(ctx context.Context) (net.Conn, time.Duration, error)
+	numPreconnecting    func() int
+	numPreconnected     func() int
+	closeCh             chan bool
+	closeOnce           sync.Once
+	mx                  sync.Mutex
 }
 
 func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.UserConfig, trusted bool, allowPreconnecting bool, dialServer dialServerFn, dialOrigin dialOriginFn) (*proxy, error) {
@@ -410,7 +410,6 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 		emaRTT:           ema.NewDuration(0, rttAlpha),
 		emaRTTDev:        ema.NewDuration(0, rttDevAlpha),
 		emaSuccessRate:   ema.New(1, successRateAlpha), // Consider a proxy success when initializing
-		forceRedial:      abool.New(),
 		numPreconnecting: func() int { return 0 },
 		numPreconnected:  func() int { return 0 },
 		closeCh:          make(chan bool, 1),
@@ -499,21 +498,11 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 		})
 	}
 	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig, addIdleTiming)
-	var dialKCPMutex sync.Mutex
 
 	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
 		elapsed := mtime.Stopwatch()
 
-		dialKCPMutex.Lock()
-		if p.forceRedial.IsSet() {
-			log.Debug("Connection state changed, re-connecting to server first")
-			dialKCP = kcpwrapper.Dialer(&p.kcpConfig.DialerConfig, addIdleTiming)
-			p.forceRedial.UnSet()
-		}
-		doDialKCP := dialKCP
-		dialKCPMutex.Unlock()
-
-		conn, err := doDialKCP(ctx, "tcp", p.addr)
+		conn, err := dialKCP(ctx, "tcp", p.addr)
 		delta := elapsed()
 		return conn, delta, err
 	}
@@ -552,6 +541,7 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 
 	dialer := newQUICDialer()
 	var dialerLock sync.Mutex
+	forceRedial := abool.New()
 
 	// when the proxy closes, close the dialer
 	go func() {
@@ -566,7 +556,7 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 		elapsed := mtime.Stopwatch()
 
 		dialerLock.Lock()
-		if p.forceRedial.IsSet() {
+		if forceRedial.IsSet() {
 			select {
 			case <-p.closeCh:
 				log.Debug("not re-connecting after closed.")
@@ -575,7 +565,7 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 				dialer.Close()
 				dialer = newQUICDialer()
 			}
-			p.forceRedial.UnSet()
+			forceRedial.UnSet()
 		}
 		d := dialer
 		dialerLock.Unlock()
@@ -583,7 +573,7 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 		conn, err := d.DialContext(ctx)
 		if err != nil {
 			log.Debugf("Failed to establish multiplexed connection: %s", err)
-			p.ForceRedial()
+			forceRedial.Set()
 		} else {
 			log.Debug("established new multiplexed quic connection.")
 		}
@@ -593,10 +583,6 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 	}
 
 	return nil
-}
-
-func (p *proxy) ForceRedial() {
-	p.forceRedial.Set()
 }
 
 func (p *proxy) Protocol() string {
@@ -703,7 +689,7 @@ func (p *proxy) EstSuccessRate() float64 {
 	return p.emaSuccessRate.Get()
 }
 
-func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64, failures int64, consecFailures int64, emaRTT time.Duration, mostRecentABETime time.Time, abe int64) {
+func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64, failures int64, consecFailures int64, emaRTT time.Duration, mostRecentABETime time.Time, abe int64, emaSuccessRate float64) {
 	p.mx.Lock()
 	atomic.StoreInt64(&p.attempts, attempts)
 	atomic.StoreInt64(&p.successes, successes)
@@ -713,6 +699,7 @@ func (p *proxy) setStats(attempts int64, successes int64, consecSuccesses int64,
 	p.emaRTT.SetDuration(emaRTT)
 	p.mostRecentABETime = mostRecentABETime
 	atomic.StoreInt64(&p.abe, abe)
+	p.emaSuccessRate.Set(emaSuccessRate)
 	p.mx.Unlock()
 }
 

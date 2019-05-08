@@ -222,2005 +222,2005 @@ client:
           rejectstatus: [403]
         masquerades: 
         - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.113
+          ipaddress: 23.67.250.153
         - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.162
+          ipaddress: 23.62.6.73
         - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.123
+          ipaddress: 23.62.6.48
         - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.193
+          ipaddress: 23.67.250.91
         - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.57
+          ipaddress: 23.67.250.117
         - domain: a248.e.akamai.net
-          ipaddress: 104.100.93.6
+          ipaddress: 65.216.231.80
         - domain: a248.e.akamai.net
-          ipaddress: 184.24.97.181
+          ipaddress: 23.67.250.113
         - domain: a248.e.akamai.net
-          ipaddress: 184.24.97.14
+          ipaddress: 65.216.231.104
         - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.229
+          ipaddress: 65.216.231.65
         - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.21
+          ipaddress: 65.216.231.79
         - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.137
+          ipaddress: 65.216.231.69
         - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.214
+          ipaddress: 23.62.6.85
         - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.234
+          ipaddress: 184.87.194.37
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.95
+          ipaddress: 96.17.68.94
         - domain: a248.e.akamai.net
-          ipaddress: 209.107.207.45
+          ipaddress: 184.51.1.57
         - domain: a248.e.akamai.net
-          ipaddress: 157.131.218.53
+          ipaddress: 184.51.1.26
         - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.171
+          ipaddress: 23.215.100.153
         - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.238
+          ipaddress: 95.101.80.123
         - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.74
+          ipaddress: 5.178.43.28
         - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.123
+          ipaddress: 2.18.215.49
         - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.47
+          ipaddress: 2.17.122.74
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.152
+          ipaddress: 96.17.70.214
         - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.165
+          ipaddress: 95.101.142.24
         - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.32
-        - domain: a248.e.akamai.net
-          ipaddress: 173.223.52.207
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.71
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.197
-        - domain: a248.e.akamai.net
-          ipaddress: 72.247.185.25
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.155
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.81
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.211
-        - domain: a248.e.akamai.net
-          ipaddress: 95.100.39.8
-        - domain: a248.e.akamai.net
-          ipaddress: 2.21.77.165
-        - domain: a248.e.akamai.net
-          ipaddress: 2.21.77.204
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.31
-        - domain: a248.e.akamai.net
-          ipaddress: 23.205.119.28
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.178.5
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.247.27
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.114
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.247.54
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.188.192
-        - domain: a248.e.akamai.net
-          ipaddress: 173.223.52.166
-        - domain: a248.e.akamai.net
-          ipaddress: 23.55.37.136
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.98.220
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.35
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.202
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.112
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.165
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.193
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.97.212
-        - domain: a248.e.akamai.net
-          ipaddress: 92.123.182.77
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.194
-        - domain: a248.e.akamai.net
-          ipaddress: 72.247.185.64
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.71
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.188.134
-        - domain: a248.e.akamai.net
-          ipaddress: 95.100.39.17
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.220
-        - domain: a248.e.akamai.net
-          ipaddress: 157.131.218.52
-        - domain: a248.e.akamai.net
-          ipaddress: 23.205.119.81
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.19
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.156
-        - domain: a248.e.akamai.net
-          ipaddress: 173.223.52.185
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.47
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.221
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.239
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.226
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.81
-        - domain: a248.e.akamai.net
-          ipaddress: 173.223.52.183
-        - domain: a248.e.akamai.net
-          ipaddress: 217.212.252.84
-        - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.108
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.188.253
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.246
-        - domain: a248.e.akamai.net
-          ipaddress: 217.212.252.186
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.191
-        - domain: a248.e.akamai.net
-          ipaddress: 95.101.77.17
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.56
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.97.41
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.121
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.70.125
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.100
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.73
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.57
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.198
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.42
-        - domain: a248.e.akamai.net
-          ipaddress: 184.51.15.80
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.123
-        - domain: a248.e.akamai.net
-          ipaddress: 2.21.77.136
-        - domain: a248.e.akamai.net
-          ipaddress: 92.123.182.15
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.31
-        - domain: a248.e.akamai.net
-          ipaddress: 95.100.252.39
-        - domain: a248.e.akamai.net
-          ipaddress: 209.107.207.106
-        - domain: a248.e.akamai.net
-          ipaddress: 95.100.39.39
-        - domain: a248.e.akamai.net
-          ipaddress: 23.205.119.22
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.169
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.178.47
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.64
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.98.208
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.115
-        - domain: a248.e.akamai.net
-          ipaddress: 210.65.144.160
-        - domain: a248.e.akamai.net
-          ipaddress: 2.16.64.150
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.52
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.247
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.140
-        - domain: a248.e.akamai.net
-          ipaddress: 203.69.141.92
-        - domain: a248.e.akamai.net
-          ipaddress: 23.55.37.123
-        - domain: a248.e.akamai.net
-          ipaddress: 104.116.243.4
-        - domain: a248.e.akamai.net
-          ipaddress: 95.101.77.30
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.178.136
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.188.82
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.241
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.222
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.195
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.226
-        - domain: a248.e.akamai.net
-          ipaddress: 210.65.144.199
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.70.227
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.54
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.194
-        - domain: a248.e.akamai.net
-          ipaddress: 210.61.248.243
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.217.73
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.101
-        - domain: a248.e.akamai.net
-          ipaddress: 184.87.194.9
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.45
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.12
-        - domain: a248.e.akamai.net
-          ipaddress: 23.205.119.68
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.100
-        - domain: a248.e.akamai.net
-          ipaddress: 173.223.52.192
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.223
-        - domain: a248.e.akamai.net
-          ipaddress: 210.65.144.147
-        - domain: a248.e.akamai.net
-          ipaddress: 209.107.207.36
-        - domain: a248.e.akamai.net
-          ipaddress: 95.100.252.42
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.57
-        - domain: a248.e.akamai.net
-          ipaddress: 92.123.182.52
-        - domain: a248.e.akamai.net
-          ipaddress: 95.101.77.34
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.21
-        - domain: a248.e.akamai.net
-          ipaddress: 210.65.144.156
-        - domain: a248.e.akamai.net
-          ipaddress: 210.65.144.135
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.28
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.208
-        - domain: a248.e.akamai.net
-          ipaddress: 184.51.15.97
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.82
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.9
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.254
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.247.36
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.33
-        - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.45
-        - domain: a248.e.akamai.net
-          ipaddress: 23.55.37.203
-        - domain: a248.e.akamai.net
-          ipaddress: 210.65.144.162
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.99
-        - domain: a248.e.akamai.net
-          ipaddress: 217.212.252.67
-        - domain: a248.e.akamai.net
-          ipaddress: 210.61.248.171
-        - domain: a248.e.akamai.net
-          ipaddress: 23.65.182.138
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.57
-        - domain: a248.e.akamai.net
-          ipaddress: 2.16.64.139
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.151
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.138
-        - domain: a248.e.akamai.net
-          ipaddress: 203.69.141.27
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.27
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.106
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.225
-        - domain: a248.e.akamai.net
-          ipaddress: 203.69.138.225
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.204
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.20
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.159
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.15
-        - domain: a248.e.akamai.net
-          ipaddress: 216.156.211.35
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.96
-        - domain: a248.e.akamai.net
-          ipaddress: 23.65.182.189
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.178.21
-        - domain: a248.e.akamai.net
-          ipaddress: 2.21.77.93
-        - domain: a248.e.akamai.net
-          ipaddress: 210.61.248.76
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.101
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.253
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.188.95
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.183
-        - domain: a248.e.akamai.net
-          ipaddress: 2.16.103.93
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.98.190
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.217
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.106
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.52
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.214
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.68.60
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.84
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.70.27
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.219
-        - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.187
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.138
-        - domain: a248.e.akamai.net
-          ipaddress: 95.101.89.82
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.51
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.72.50
+          ipaddress: 23.205.119.38
         - domain: a248.e.akamai.net
           ipaddress: 23.205.119.42
         - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.56
+          ipaddress: 23.15.4.4
         - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.249
+          ipaddress: 96.17.68.55
         - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.110
+          ipaddress: 23.55.37.172
         - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.56
+          ipaddress: 104.80.88.100
         - domain: a248.e.akamai.net
-          ipaddress: 184.87.194.13
+          ipaddress: 23.215.100.5
         - domain: a248.e.akamai.net
-          ipaddress: 203.69.138.9
+          ipaddress: 23.215.100.218
         - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.209
+          ipaddress: 23.205.119.24
         - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.85
+          ipaddress: 23.215.100.99
         - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.71
-        - domain: a248.e.akamai.net
-          ipaddress: 2.16.64.138
-        - domain: a248.e.akamai.net
-          ipaddress: 23.205.119.56
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.151
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.112
-        - domain: a248.e.akamai.net
-          ipaddress: 210.61.248.233
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.218
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.172
-        - domain: a248.e.akamai.net
-          ipaddress: 2.16.103.116
-        - domain: a248.e.akamai.net
-          ipaddress: 2.16.103.202
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.217.6
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.253
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.42
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.227
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.48
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.97.228
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.19
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.127
-        - domain: a248.e.akamai.net
-          ipaddress: 23.15.4.13
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.51
-        - domain: a248.e.akamai.net
-          ipaddress: 210.65.144.178
-        - domain: a248.e.akamai.net
-          ipaddress: 95.100.39.57
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.211
-        - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.110
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.171
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.146
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.70.127
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.92
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.178.50
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.96
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.204
-        - domain: a248.e.akamai.net
-          ipaddress: 203.69.141.94
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.71
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.209
-        - domain: a248.e.akamai.net
-          ipaddress: 95.100.39.59
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.244
-        - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.228
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.64
-        - domain: a248.e.akamai.net
-          ipaddress: 92.123.182.254
-        - domain: a248.e.akamai.net
-          ipaddress: 2.21.77.157
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.115
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.175
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.188.6
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.23
-        - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.171
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.97.206
-        - domain: a248.e.akamai.net
-          ipaddress: 184.51.15.75
-        - domain: a248.e.akamai.net
-          ipaddress: 195.12.233.39
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.175
-        - domain: a248.e.akamai.net
-          ipaddress: 23.55.37.85
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.70.142
-        - domain: a248.e.akamai.net
-          ipaddress: 216.156.211.41
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.178.13
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.244
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.125
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.72
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.130
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.88
-        - domain: a248.e.akamai.net
-          ipaddress: 210.65.144.163
-        - domain: a248.e.akamai.net
-          ipaddress: 173.223.52.9
-        - domain: a248.e.akamai.net
-          ipaddress: 184.51.15.178
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.247.168
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.38
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.63
-        - domain: a248.e.akamai.net
-          ipaddress: 210.65.144.203
-        - domain: a248.e.akamai.net
-          ipaddress: 95.100.39.50
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.9
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.202
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.83
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.126
-        - domain: a248.e.akamai.net
-          ipaddress: 23.55.37.191
-        - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.41
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.175
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.188.152
-        - domain: a248.e.akamai.net
-          ipaddress: 210.61.248.78
-        - domain: a248.e.akamai.net
-          ipaddress: 95.100.39.40
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.248
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.178.61
-        - domain: a248.e.akamai.net
-          ipaddress: 72.247.185.48
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.145
-        - domain: a248.e.akamai.net
-          ipaddress: 92.123.182.37
-        - domain: a248.e.akamai.net
-          ipaddress: 23.205.119.25
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.22
-        - domain: a248.e.akamai.net
-          ipaddress: 95.101.89.238
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.5
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.98.228
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.203
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.92
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.137
-        - domain: a248.e.akamai.net
-          ipaddress: 216.156.211.13
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.25
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.70.10
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.66
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.171
-        - domain: a248.e.akamai.net
-          ipaddress: 195.12.232.217
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.181
-        - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.59
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.69
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.68.14
-        - domain: a248.e.akamai.net
-          ipaddress: 173.223.52.36
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.153
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.115
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.75
-        - domain: a248.e.akamai.net
-          ipaddress: 23.55.37.109
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.35
-        - domain: a248.e.akamai.net
-          ipaddress: 210.65.144.216
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.233
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.36
-        - domain: a248.e.akamai.net
-          ipaddress: 210.61.248.191
-        - domain: a248.e.akamai.net
-          ipaddress: 2.21.77.167
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.226
-        - domain: a248.e.akamai.net
-          ipaddress: 104.116.243.169
-        - domain: a248.e.akamai.net
-          ipaddress: 92.123.182.30
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.27
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.216
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.74
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.202
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.194
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.45
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.184
-        - domain: a248.e.akamai.net
-          ipaddress: 184.51.15.86
-        - domain: a248.e.akamai.net
-          ipaddress: 216.156.211.15
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.133
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.151
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.70
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.31
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.194
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.48
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.234
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.98.157
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.27.21
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.238
-        - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.154
-        - domain: a248.e.akamai.net
-          ipaddress: 72.247.185.73
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.240
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.53
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.97.48
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.229
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.77
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.72.52
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.84
-        - domain: a248.e.akamai.net
-          ipaddress: 2.16.103.6
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.199
-        - domain: a248.e.akamai.net
-          ipaddress: 203.69.138.38
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.47
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.227
-        - domain: a248.e.akamai.net
-          ipaddress: 184.51.15.132
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.107
-        - domain: a248.e.akamai.net
-          ipaddress: 72.247.185.20
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.24
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.127
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.126
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.109
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.12
-        - domain: a248.e.akamai.net
-          ipaddress: 217.212.252.192
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.188
-        - domain: a248.e.akamai.net
-          ipaddress: 210.61.248.225
-        - domain: a248.e.akamai.net
-          ipaddress: 203.69.141.96
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.188
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.89
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.203
-        - domain: a248.e.akamai.net
-          ipaddress: 95.100.39.4
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.72.19
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.209
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.82
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.69
-        - domain: a248.e.akamai.net
-          ipaddress: 23.205.119.77
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.87
-        - domain: a248.e.akamai.net
-          ipaddress: 23.55.37.91
-        - domain: a248.e.akamai.net
-          ipaddress: 203.69.81.43
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.179
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.58
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.136
-        - domain: a248.e.akamai.net
-          ipaddress: 72.247.185.16
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.247.77
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.109
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.112
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.98
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.207
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.169
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.65
-        - domain: a248.e.akamai.net
-          ipaddress: 203.69.138.43
-        - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.65
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.190
-        - domain: a248.e.akamai.net
-          ipaddress: 2.16.103.207
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.173
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.112
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.156
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.56
-        - domain: a248.e.akamai.net
-          ipaddress: 120.29.145.18
-        - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.232
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.247.170
-        - domain: a248.e.akamai.net
-          ipaddress: 210.65.144.154
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.173
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.142
-        - domain: a248.e.akamai.net
-          ipaddress: 210.61.248.227
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.66
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.72.10
-        - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.8
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.93
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.8
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.214
-        - domain: a248.e.akamai.net
-          ipaddress: 2.16.64.164
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.171
-        - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.53
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.153
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.97.186
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.168
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.100
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.192
-        - domain: a248.e.akamai.net
-          ipaddress: 23.55.37.196
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.150
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.92
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.10
-        - domain: a248.e.akamai.net
-          ipaddress: 209.107.207.92
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.24
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.155
-        - domain: a248.e.akamai.net
-          ipaddress: 203.69.141.88
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.131
-        - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.197
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.151
-        - domain: a248.e.akamai.net
-          ipaddress: 2.16.103.200
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.68.80
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.103
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.217.78
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.83
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.47
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.218
-        - domain: a248.e.akamai.net
-          ipaddress: 23.205.119.57
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.66
-        - domain: a248.e.akamai.net
-          ipaddress: 209.107.207.40
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.211
-        - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.99
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.70.226
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.70.221
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.188.42
-        - domain: a248.e.akamai.net
-          ipaddress: 95.100.252.7
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.240
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.98.104
-        - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.11
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.79
-        - domain: a248.e.akamai.net
-          ipaddress: 209.107.207.107
-        - domain: a248.e.akamai.net
-          ipaddress: 120.29.145.8
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.209
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.39
-        - domain: a248.e.akamai.net
-          ipaddress: 203.69.138.45
-        - domain: a248.e.akamai.net
-          ipaddress: 120.29.144.131
-        - domain: a248.e.akamai.net
-          ipaddress: 95.101.89.26
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.38
-        - domain: a248.e.akamai.net
-          ipaddress: 210.65.144.174
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.20
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.247.165
-        - domain: a248.e.akamai.net
-          ipaddress: 92.123.182.50
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.178.6
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.78
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.22
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.11
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.18
-        - domain: a248.e.akamai.net
-          ipaddress: 210.61.248.210
-        - domain: a248.e.akamai.net
-          ipaddress: 95.101.89.13
-        - domain: a248.e.akamai.net
-          ipaddress: 95.100.252.34
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.123
-        - domain: a248.e.akamai.net
-          ipaddress: 2.16.103.16
-        - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.10
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.233
-        - domain: a248.e.akamai.net
-          ipaddress: 23.55.37.209
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.163
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.188.175
-        - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.100
-        - domain: a248.e.akamai.net
-          ipaddress: 184.87.194.41
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.217.39
-        - domain: a248.e.akamai.net
-          ipaddress: 23.55.37.193
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.205
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.13
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.155
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.139
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.70.136
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.68.108
-        - domain: a248.e.akamai.net
-          ipaddress: 210.61.248.26
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.178.82
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.35
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.31
-        - domain: a248.e.akamai.net
-          ipaddress: 217.212.252.93
-        - domain: a248.e.akamai.net
-          ipaddress: 23.205.119.75
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.178.75
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.53
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.74
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.11
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.94
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.173
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.14
-        - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.175
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.89
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.163
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.212
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.217.74
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.68.110
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.98.176
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.114
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.142
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.70
-        - domain: a248.e.akamai.net
-          ipaddress: 217.212.252.97
-        - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.227
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.231
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.98.201
-        - domain: a248.e.akamai.net
-          ipaddress: 23.55.37.179
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.132
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.188.16
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.98
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.188.83
-        - domain: a248.e.akamai.net
-          ipaddress: 23.55.37.118
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.55
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.68.63
-        - domain: a248.e.akamai.net
-          ipaddress: 210.65.144.179
-        - domain: a248.e.akamai.net
-          ipaddress: 23.55.37.138
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.141
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.70.16
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.188.184
-        - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.161
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.72.254
-        - domain: a248.e.akamai.net
-          ipaddress: 173.223.52.8
-        - domain: a248.e.akamai.net
-          ipaddress: 209.107.207.96
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.60
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.39
-        - domain: a248.e.akamai.net
-          ipaddress: 173.223.52.187
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.45
-        - domain: a248.e.akamai.net
-          ipaddress: 23.65.182.217
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.70.137
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.188.37
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.98.172
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.8
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.60
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.20
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.59
-        - domain: a248.e.akamai.net
-          ipaddress: 173.223.52.29
-        - domain: a248.e.akamai.net
-          ipaddress: 184.87.195.13
-        - domain: a248.e.akamai.net
-          ipaddress: 95.101.89.28
-        - domain: a248.e.akamai.net
-          ipaddress: 120.29.144.127
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.68.117
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.149
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.72
-        - domain: a248.e.akamai.net
-          ipaddress: 203.69.138.230
-        - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.38
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.40
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.186
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.105
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.200
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.242
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.192
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.46
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.57
-        - domain: a248.e.akamai.net
-          ipaddress: 203.69.138.41
-        - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.223
-        - domain: a248.e.akamai.net
-          ipaddress: 184.51.15.198
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.163
-        - domain: a248.e.akamai.net
-          ipaddress: 203.69.141.21
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.201
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.172
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.61
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.98.191
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.188.94
-        - domain: a248.e.akamai.net
-          ipaddress: 23.55.37.153
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.70.42
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.217.52
-        - domain: a248.e.akamai.net
-          ipaddress: 203.69.138.209
-        - domain: a248.e.akamai.net
-          ipaddress: 95.101.89.53
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.97.40
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.188.194
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.180
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.27.33
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.97.4
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.54
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.10
-        - domain: a248.e.akamai.net
-          ipaddress: 209.107.207.97
-        - domain: a248.e.akamai.net
-          ipaddress: 184.51.15.64
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.74
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.162
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.13
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.45
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.72.41
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.205
-        - domain: a248.e.akamai.net
-          ipaddress: 95.100.252.40
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.22
-        - domain: a248.e.akamai.net
-          ipaddress: 23.205.119.12
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.221
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.188.215
-        - domain: a248.e.akamai.net
-          ipaddress: 209.107.207.63
-        - domain: a248.e.akamai.net
-          ipaddress: 23.205.119.8
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.84
-        - domain: a248.e.akamai.net
-          ipaddress: 2.21.77.197
-        - domain: a248.e.akamai.net
-          ipaddress: 203.69.141.37
-        - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.96
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.43
-        - domain: a248.e.akamai.net
-          ipaddress: 95.101.77.27
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.38
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.41
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.97.173
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.154
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.70.126
-        - domain: a248.e.akamai.net
-          ipaddress: 92.123.182.7
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.82
-        - domain: a248.e.akamai.net
-          ipaddress: 92.123.182.84
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.201
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.118
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.26
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.173
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.84
-        - domain: a248.e.akamai.net
-          ipaddress: 95.100.252.56
-        - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.198
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.202
-        - domain: a248.e.akamai.net
-          ipaddress: 210.61.248.70
-        - domain: a248.e.akamai.net
-          ipaddress: 95.101.89.27
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.92
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.35
-        - domain: a248.e.akamai.net
-          ipaddress: 210.61.248.180
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.124
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.19
-        - domain: a248.e.akamai.net
-          ipaddress: 157.131.218.48
-        - domain: a248.e.akamai.net
-          ipaddress: 92.123.182.10
-        - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.78
-        - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.93
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.129
-        - domain: a248.e.akamai.net
-          ipaddress: 173.223.52.177
-        - domain: a248.e.akamai.net
-          ipaddress: 184.51.15.157
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.136
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.222
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.217.84
-        - domain: a248.e.akamai.net
-          ipaddress: 184.51.15.179
-        - domain: a248.e.akamai.net
-          ipaddress: 2.21.77.151
-        - domain: a248.e.akamai.net
-          ipaddress: 210.65.144.213
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.240
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.217
-        - domain: a248.e.akamai.net
-          ipaddress: 95.100.252.31
-        - domain: a248.e.akamai.net
-          ipaddress: 95.101.89.100
-        - domain: a248.e.akamai.net
-          ipaddress: 104.116.243.157
-        - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.177
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.83
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.64
-        - domain: a248.e.akamai.net
-          ipaddress: 72.247.185.23
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.190
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.36
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.188.61
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.163
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.178.57
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.159
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.188.155
-        - domain: a248.e.akamai.net
-          ipaddress: 2.16.64.133
-        - domain: a248.e.akamai.net
-          ipaddress: 23.205.119.36
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.51
-        - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.194
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.87
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.171
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.173
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.251
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.34
-        - domain: a248.e.akamai.net
-          ipaddress: 209.107.207.69
-        - domain: a248.e.akamai.net
-          ipaddress: 203.69.138.239
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.68.67
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.193
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.34
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.121
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.91
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.72.40
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.35
-        - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.183
-        - domain: a248.e.akamai.net
-          ipaddress: 2.21.77.201
-        - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.17
-        - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.16
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.22
-        - domain: a248.e.akamai.net
-          ipaddress: 23.205.119.64
-        - domain: a248.e.akamai.net
-          ipaddress: 184.24.97.56
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.102
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.72.24
-        - domain: a248.e.akamai.net
-          ipaddress: 184.87.194.39
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.208
-        - domain: a248.e.akamai.net
-          ipaddress: 23.205.119.18
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.228
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.57
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.150
-        - domain: a248.e.akamai.net
-          ipaddress: 184.51.15.187
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.181
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.16
-        - domain: a248.e.akamai.net
-          ipaddress: 23.55.37.159
-        - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.251
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.130
-        - domain: a248.e.akamai.net
-          ipaddress: 210.61.248.86
-        - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.179
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.72.74
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.37
-        - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.107
-        - domain: a248.e.akamai.net
-          ipaddress: 80.239.217.69
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.163
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.157
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.97
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.200
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.161
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.212
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.77
-        - domain: a248.e.akamai.net
-          ipaddress: 23.205.119.50
-        - domain: a248.e.akamai.net
-          ipaddress: 203.69.141.86
-        - domain: a248.e.akamai.net
-          ipaddress: 2.16.64.154
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.44
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.176
-        - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.190
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.179
-        - domain: a248.e.akamai.net
-          ipaddress: 23.55.37.87
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.238
-        - domain: a248.e.akamai.net
-          ipaddress: 203.69.141.83
-        - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.28
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.39
-        - domain: a248.e.akamai.net
-          ipaddress: 92.123.182.26
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.102
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.174
-        - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.94
-        - domain: a248.e.akamai.net
-          ipaddress: 210.61.248.51
-        - domain: a248.e.akamai.net
-          ipaddress: 184.51.15.82
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.188.28
-        - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.246
-        - domain: a248.e.akamai.net
-          ipaddress: 2.21.77.184
-        - domain: a248.e.akamai.net
-          ipaddress: 173.223.52.186
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.50
-        - domain: a248.e.akamai.net
-          ipaddress: 92.123.182.23
-        - domain: a248.e.akamai.net
-          ipaddress: 184.87.195.7
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.188.40
-        - domain: a248.e.akamai.net
-          ipaddress: 157.131.218.46
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.242
-        - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.131
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.55
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.99
-        - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.6
-        - domain: a248.e.akamai.net
-          ipaddress: 209.107.207.33
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.67
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.248
-        - domain: a248.e.akamai.net
-          ipaddress: 2.21.77.146
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.4
-        - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.149
-        - domain: a248.e.akamai.net
-          ipaddress: 72.247.185.40
-        - domain: a248.e.akamai.net
-          ipaddress: 203.69.138.234
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.178
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.120
-        - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.191
-        - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.92
-        - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.146
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.70.50
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.92
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.74
-        - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.90
-        - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.155
-        - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.160
-        - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.215
-        - domain: a248.e.akamai.net
-          ipaddress: 210.65.144.133
-        - domain: a248.e.akamai.net
-          ipaddress: 2.20.188.116
-        - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.29
-        - domain: a248.e.akamai.net
-          ipaddress: 23.65.182.205
+          ipaddress: 104.80.88.160
         - domain: a248.e.akamai.net
           ipaddress: 184.87.194.25
         - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.22
+          ipaddress: 104.80.88.99
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.90
+          ipaddress: 2.18.212.121
         - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.76
+          ipaddress: 95.101.80.35
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.235
+          ipaddress: 95.101.80.196
         - domain: a248.e.akamai.net
-          ipaddress: 184.24.98.112
+          ipaddress: 2.18.212.130
         - domain: a248.e.akamai.net
-          ipaddress: 203.69.141.11
+          ipaddress: 95.101.80.227
         - domain: a248.e.akamai.net
-          ipaddress: 203.69.138.240
+          ipaddress: 95.101.80.221
         - domain: a248.e.akamai.net
-          ipaddress: 80.239.217.60
+          ipaddress: 23.34.61.5
         - domain: a248.e.akamai.net
-          ipaddress: 184.87.195.11
+          ipaddress: 2.18.212.48
         - domain: a248.e.akamai.net
-          ipaddress: 80.239.247.47
+          ipaddress: 104.84.152.232
         - domain: a248.e.akamai.net
-          ipaddress: 23.15.4.9
+          ipaddress: 92.123.195.116
         - domain: a248.e.akamai.net
-          ipaddress: 203.69.138.218
+          ipaddress: 92.123.195.91
         - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.232
+          ipaddress: 92.123.180.81
         - domain: a248.e.akamai.net
-          ipaddress: 192.204.27.8
+          ipaddress: 5.178.43.32
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.166
+          ipaddress: 2.18.212.143
         - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.110
+          ipaddress: 2.17.122.56
         - domain: a248.e.akamai.net
-          ipaddress: 195.12.233.29
+          ipaddress: 104.80.88.89
         - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.25
+          ipaddress: 23.34.61.177
         - domain: a248.e.akamai.net
-          ipaddress: 80.239.178.152
+          ipaddress: 2.18.215.55
         - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.61
+          ipaddress: 95.101.142.91
         - domain: a248.e.akamai.net
-          ipaddress: 210.61.248.90
+          ipaddress: 23.215.131.205
         - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.91
+          ipaddress: 65.216.231.183
         - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.88
+          ipaddress: 64.86.203.98
         - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.49
+          ipaddress: 65.216.231.147
         - domain: a248.e.akamai.net
-          ipaddress: 80.239.247.31
+          ipaddress: 23.2.16.17
         - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.77
+          ipaddress: 2.16.173.81
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.84
+          ipaddress: 5.178.43.79
         - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.146
+          ipaddress: 23.215.100.36
         - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.200
+          ipaddress: 65.216.231.106
         - domain: a248.e.akamai.net
-          ipaddress: 184.28.188.224
+          ipaddress: 65.216.231.180
         - domain: a248.e.akamai.net
-          ipaddress: 120.29.145.12
+          ipaddress: 23.215.100.136
         - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.104
+          ipaddress: 23.205.119.73
         - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.217
+          ipaddress: 95.101.142.78
         - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.140
+          ipaddress: 88.221.132.38
         - domain: a248.e.akamai.net
-          ipaddress: 173.223.52.171
+          ipaddress: 2.17.122.24
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.53
+          ipaddress: 2.17.122.95
         - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.230
+          ipaddress: 2.18.215.89
         - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.88
+          ipaddress: 104.118.6.110
         - domain: a248.e.akamai.net
-          ipaddress: 203.69.141.64
+          ipaddress: 23.215.100.27
         - domain: a248.e.akamai.net
-          ipaddress: 209.107.207.74
+          ipaddress: 65.216.231.119
         - domain: a248.e.akamai.net
-          ipaddress: 184.28.188.161
+          ipaddress: 23.32.3.35
         - domain: a248.e.akamai.net
-          ipaddress: 104.116.243.172
+          ipaddress: 2.18.212.172
         - domain: a248.e.akamai.net
-          ipaddress: 96.17.72.47
+          ipaddress: 23.34.61.200
         - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.20
+          ipaddress: 92.123.180.161
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.109
+          ipaddress: 92.123.180.198
         - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.184
+          ipaddress: 92.123.180.84
         - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.55
+          ipaddress: 95.101.80.40
         - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.244
+          ipaddress: 104.80.88.17
         - domain: a248.e.akamai.net
-          ipaddress: 184.87.195.15
+          ipaddress: 96.17.109.160
         - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.5
+          ipaddress: 95.101.80.97
         - domain: a248.e.akamai.net
-          ipaddress: 184.28.188.87
+          ipaddress: 2.18.212.24
         - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.154
+          ipaddress: 65.216.231.61
         - domain: a248.e.akamai.net
-          ipaddress: 92.123.182.32
+          ipaddress: 184.51.1.17
         - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.110
+          ipaddress: 23.215.100.48
         - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.31
+          ipaddress: 104.80.88.54
         - domain: a248.e.akamai.net
-          ipaddress: 96.17.70.8
+          ipaddress: 104.116.243.159
         - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.141
+          ipaddress: 23.15.4.32
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.34
+          ipaddress: 92.123.180.158
         - domain: a248.e.akamai.net
-          ipaddress: 173.223.52.184
+          ipaddress: 96.17.72.20
         - domain: a248.e.akamai.net
-          ipaddress: 80.239.178.150
+          ipaddress: 23.32.3.230
         - domain: a248.e.akamai.net
-          ipaddress: 80.239.178.8
+          ipaddress: 104.116.243.178
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.15
+          ipaddress: 95.101.80.232
         - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.18
+          ipaddress: 2.18.215.73
         - domain: a248.e.akamai.net
-          ipaddress: 96.17.72.77
+          ipaddress: 95.100.252.60
         - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.20
+          ipaddress: 23.52.171.79
         - domain: a248.e.akamai.net
-          ipaddress: 95.101.89.244
+          ipaddress: 96.17.68.61
         - domain: a248.e.akamai.net
-          ipaddress: 2.20.188.117
+          ipaddress: 184.28.218.66
         - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.228
+          ipaddress: 217.212.252.202
         - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.97
+          ipaddress: 96.17.70.147
         - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.169
+          ipaddress: 2.20.255.73
         - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.121
+          ipaddress: 23.205.119.31
         - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.215
+          ipaddress: 23.52.171.62
         - domain: a248.e.akamai.net
-          ipaddress: 80.239.247.46
+          ipaddress: 92.123.195.86
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.96
+          ipaddress: 64.86.203.94
         - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.118
+          ipaddress: 104.118.6.203
         - domain: a248.e.akamai.net
-          ipaddress: 80.239.217.67
+          ipaddress: 104.116.243.153
         - domain: a248.e.akamai.net
-          ipaddress: 203.69.138.91
+          ipaddress: 23.215.100.53
         - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.113
+          ipaddress: 92.123.180.111
         - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.90
+          ipaddress: 184.51.15.177
         - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.106
+          ipaddress: 184.28.218.58
         - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.152
+          ipaddress: 65.216.231.58
         - domain: a248.e.akamai.net
-          ipaddress: 203.69.141.67
+          ipaddress: 96.17.109.156
         - domain: a248.e.akamai.net
-          ipaddress: 2.21.77.208
+          ipaddress: 184.51.15.165
         - domain: a248.e.akamai.net
-          ipaddress: 184.51.15.159
+          ipaddress: 23.32.3.22
         - domain: a248.e.akamai.net
-          ipaddress: 2.20.188.14
+          ipaddress: 23.52.171.56
         - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.251
+          ipaddress: 23.52.171.124
         - domain: a248.e.akamai.net
-          ipaddress: 184.28.188.249
+          ipaddress: 23.34.61.213
         - domain: a248.e.akamai.net
-          ipaddress: 184.24.97.200
+          ipaddress: 96.17.70.221
         - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.105
+          ipaddress: 23.59.188.101
         - domain: a248.e.akamai.net
-          ipaddress: 95.101.77.20
+          ipaddress: 2.17.122.140
         - domain: a248.e.akamai.net
-          ipaddress: 23.65.182.180
+          ipaddress: 2.17.122.70
         - domain: a248.e.akamai.net
-          ipaddress: 80.239.178.228
+          ipaddress: 96.17.109.13
         - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.176
+          ipaddress: 2.20.255.135
         - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.150
+          ipaddress: 104.118.6.173
         - domain: a248.e.akamai.net
-          ipaddress: 80.239.247.158
+          ipaddress: 23.62.6.142
         - domain: a248.e.akamai.net
-          ipaddress: 184.24.98.117
+          ipaddress: 2.18.212.188
         - domain: a248.e.akamai.net
-          ipaddress: 2.21.77.211
+          ipaddress: 2.18.212.16
         - domain: a248.e.akamai.net
-          ipaddress: 184.87.194.35
+          ipaddress: 184.28.218.5
         - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.70
+          ipaddress: 23.205.119.6
         - domain: a248.e.akamai.net
-          ipaddress: 210.61.248.11
+          ipaddress: 23.62.6.165
         - domain: a248.e.akamai.net
-          ipaddress: 203.69.138.75
+          ipaddress: 65.216.231.6
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.100.160
+          ipaddress: 77.67.127.34
         - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.211
+          ipaddress: 2.20.255.207
         - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.15
+          ipaddress: 2.18.212.182
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.240
+          ipaddress: 23.34.61.176
         - domain: a248.e.akamai.net
-          ipaddress: 203.69.81.47
+          ipaddress: 2.18.212.86
         - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.93
+          ipaddress: 2.20.255.147
         - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.81
+          ipaddress: 23.62.6.58
         - domain: a248.e.akamai.net
-          ipaddress: 184.28.188.99
+          ipaddress: 92.123.180.45
         - domain: a248.e.akamai.net
-          ipaddress: 217.212.252.70
+          ipaddress: 96.7.54.63
         - domain: a248.e.akamai.net
-          ipaddress: 23.65.182.132
+          ipaddress: 77.67.127.21
         - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.193
+          ipaddress: 23.55.37.142
         - domain: a248.e.akamai.net
-          ipaddress: 184.51.15.145
+          ipaddress: 2.20.255.196
         - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.122
+          ipaddress: 23.2.16.197
         - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.140
+          ipaddress: 96.17.109.159
         - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.92
+          ipaddress: 104.118.6.114
         - domain: a248.e.akamai.net
-          ipaddress: 80.239.178.64
+          ipaddress: 95.101.80.88
         - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.24
+          ipaddress: 64.86.203.21
         - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.131
+          ipaddress: 23.55.37.117
         - domain: a248.e.akamai.net
-          ipaddress: 2.20.188.76
+          ipaddress: 104.80.88.5
         - domain: a248.e.akamai.net
-          ipaddress: 209.107.207.39
+          ipaddress: 23.52.171.122
         - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.153
+          ipaddress: 23.32.3.19
         - domain: a248.e.akamai.net
-          ipaddress: 2.21.77.149
+          ipaddress: 23.52.171.206
         - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.92
+          ipaddress: 23.55.37.111
         - domain: a248.e.akamai.net
-          ipaddress: 95.100.39.54
+          ipaddress: 2.18.212.87
         - domain: a248.e.akamai.net
-          ipaddress: 210.61.248.67
+          ipaddress: 23.52.171.217
         - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.82
+          ipaddress: 184.51.15.202
         - domain: a248.e.akamai.net
-          ipaddress: 2.21.77.172
+          ipaddress: 95.101.142.28
         - domain: a248.e.akamai.net
-          ipaddress: 23.65.182.128
+          ipaddress: 104.84.152.132
         - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.115
+          ipaddress: 104.84.152.99
         - domain: a248.e.akamai.net
-          ipaddress: 184.24.98.218
+          ipaddress: 2.16.173.79
         - domain: a248.e.akamai.net
-          ipaddress: 23.55.37.158
+          ipaddress: 96.17.70.31
         - domain: a248.e.akamai.net
-          ipaddress: 80.239.247.34
+          ipaddress: 104.118.6.120
         - domain: a248.e.akamai.net
-          ipaddress: 203.69.138.247
+          ipaddress: 65.216.231.166
         - domain: a248.e.akamai.net
-          ipaddress: 173.223.52.41
+          ipaddress: 184.28.218.8
         - domain: a248.e.akamai.net
-          ipaddress: 96.17.72.80
+          ipaddress: 184.28.218.75
         - domain: a248.e.akamai.net
-          ipaddress: 96.17.72.68
+          ipaddress: 23.62.6.108
         - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.13
+          ipaddress: 23.34.61.159
         - domain: a248.e.akamai.net
-          ipaddress: 95.100.252.5
+          ipaddress: 77.67.127.66
         - domain: a248.e.akamai.net
-          ipaddress: 95.101.89.75
+          ipaddress: 2.18.212.158
         - domain: a248.e.akamai.net
-          ipaddress: 173.223.52.200
+          ipaddress: 65.216.231.31
         - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.229
+          ipaddress: 96.17.109.50
         - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.115
+          ipaddress: 96.17.72.58
         - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.191
+          ipaddress: 23.215.100.241
         - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.220
+          ipaddress: 2.16.173.102
         - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.49
+          ipaddress: 2.18.215.57
         - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.99
+          ipaddress: 23.32.3.45
         - domain: a248.e.akamai.net
-          ipaddress: 95.100.252.61
+          ipaddress: 104.80.88.103
         - domain: a248.e.akamai.net
-          ipaddress: 95.100.252.26
+          ipaddress: 96.7.54.89
         - domain: a248.e.akamai.net
-          ipaddress: 184.24.97.176
+          ipaddress: 104.118.6.117
         - domain: a248.e.akamai.net
-          ipaddress: 192.204.27.23
+          ipaddress: 23.32.3.97
         - domain: a248.e.akamai.net
-          ipaddress: 203.69.141.26
+          ipaddress: 23.59.188.113
         - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.46
+          ipaddress: 23.2.16.84
         - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.55
+          ipaddress: 96.17.68.124
         - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.224
+          ipaddress: 23.52.171.46
         - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.84
+          ipaddress: 23.62.6.68
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.10
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.163
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.253
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.58
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.130
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.43
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.68
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.23
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.122
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.70.245
+        - domain: a248.e.akamai.net
+          ipaddress: 77.67.127.75
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.1.49
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.131.212
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.74
+        - domain: a248.e.akamai.net
+          ipaddress: 95.100.252.63
+        - domain: a248.e.akamai.net
+          ipaddress: 23.205.119.50
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.84
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.68.88
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.109
+        - domain: a248.e.akamai.net
+          ipaddress: 77.67.127.36
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.184
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.55
+        - domain: a248.e.akamai.net
+          ipaddress: 95.100.252.10
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.90
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.200
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.34
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.70.25
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.33
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.195.89
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.218.67
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.138
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.193
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.198
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.195.104
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.101
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.76
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.163
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.195.4
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.79
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.65
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.164
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.68.114
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.69
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.109.70
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.227
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.70.122
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.97
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.195.43
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.195.30
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.72.54
+        - domain: a248.e.akamai.net
+          ipaddress: 77.67.127.9
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.57
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.145
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.215.67
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.106
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.83
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.161
+        - domain: a248.e.akamai.net
+          ipaddress: 77.67.127.49
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.46
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.90
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.70
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.241
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.111
+        - domain: a248.e.akamai.net
+          ipaddress: 23.34.61.218
+        - domain: a248.e.akamai.net
+          ipaddress: 69.192.3.19
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.175
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.219
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.35
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.118
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.152
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.131.233
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.77
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.126
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.68.106
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.205
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.194
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.210
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.199
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.192
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.40
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.73
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.68.69
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.132.7
+        - domain: a248.e.akamai.net
+          ipaddress: 23.15.4.12
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.78
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.70.222
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.142.10
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.238
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.167
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.72
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.13
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.64
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.222
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.139
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.213
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.107
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.103
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.70.142
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.89
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.68.122
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.132.9
+        - domain: a248.e.akamai.net
+          ipaddress: 2.21.77.210
+        - domain: a248.e.akamai.net
+          ipaddress: 104.116.243.166
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.109
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.149
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.109.90
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.59
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.109.87
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.193
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.81
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.250
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.186
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.102
+        - domain: a248.e.akamai.net
+          ipaddress: 217.212.252.99
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.225
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.77
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.195.60
+        - domain: a248.e.akamai.net
+          ipaddress: 23.15.33.88
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.51
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.68.54
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.215
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.137
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.118
+        - domain: a248.e.akamai.net
+          ipaddress: 23.35.216.152
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.200
+        - domain: a248.e.akamai.net
+          ipaddress: 23.57.74.43
+        - domain: a248.e.akamai.net
+          ipaddress: 2.16.173.103
         - domain: a248.e.akamai.net
           ipaddress: 96.17.72.61
         - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.243
+          ipaddress: 184.87.194.6
         - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.239
+          ipaddress: 96.17.109.24
         - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.217
+          ipaddress: 2.20.255.110
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.113
+          ipaddress: 95.100.252.32
         - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.32
+          ipaddress: 2.20.255.154
         - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.104
+          ipaddress: 23.34.61.40
         - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.50
+          ipaddress: 2.20.255.118
         - domain: a248.e.akamai.net
-          ipaddress: 210.61.248.96
+          ipaddress: 23.52.171.125
         - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.173
+          ipaddress: 65.216.231.162
         - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.254
+          ipaddress: 96.17.109.8
         - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.211
+          ipaddress: 104.118.6.210
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.131.173
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.212
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.57
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.45
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.16
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.141
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.16
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.215
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.107
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.93
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.153
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.15.126
+        - domain: a248.e.akamai.net
+          ipaddress: 184.87.194.23
+        - domain: a248.e.akamai.net
+          ipaddress: 23.15.4.34
+        - domain: a248.e.akamai.net
+          ipaddress: 217.212.252.195
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.218.53
+        - domain: a248.e.akamai.net
+          ipaddress: 5.178.43.45
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.93
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.57
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.131.170
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.218.118
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.96
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.133
+        - domain: a248.e.akamai.net
+          ipaddress: 2.16.173.69
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.56
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.47
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.173
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.1.56
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.93
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.177
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.51
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.24
+        - domain: a248.e.akamai.net
+          ipaddress: 23.205.119.57
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.131.192
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.86
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.86
+        - domain: a248.e.akamai.net
+          ipaddress: 217.212.252.71
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.218.88
+        - domain: a248.e.akamai.net
+          ipaddress: 23.15.4.35
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.180.253
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.142.69
+        - domain: a248.e.akamai.net
+          ipaddress: 2.16.173.112
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.180.94
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.122
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.180.163
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.1.29
+        - domain: a248.e.akamai.net
+          ipaddress: 95.100.252.29
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.144
+        - domain: a248.e.akamai.net
+          ipaddress: 69.192.3.6
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.142.47
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.187
+        - domain: a248.e.akamai.net
+          ipaddress: 23.59.188.114
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.114
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.152
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.166
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.121
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.218.43
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.90
+        - domain: a248.e.akamai.net
+          ipaddress: 95.100.252.74
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.7
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.132.76
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.209
+        - domain: a248.e.akamai.net
+          ipaddress: 23.57.74.51
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.31
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.88
+        - domain: a248.e.akamai.net
+          ipaddress: 95.100.252.6
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.208
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.46
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.218.54
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.47
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.78
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.111
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.57
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.227
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.153
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.104
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.119
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.80
+        - domain: a248.e.akamai.net
+          ipaddress: 2.16.173.70
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.180.53
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.131
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.195.61
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.150
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.163
+        - domain: a248.e.akamai.net
+          ipaddress: 23.59.188.102
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.68.113
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.35
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.185
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.132
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.180.69
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.34
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.252
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.195.81
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.126
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.4
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.215.62
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.215.93
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.122
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.172
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.23
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.18
+        - domain: a248.e.akamai.net
+          ipaddress: 69.192.3.9
+        - domain: a248.e.akamai.net
+          ipaddress: 23.15.33.101
+        - domain: a248.e.akamai.net
+          ipaddress: 5.178.43.16
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.226
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.95
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.144
+        - domain: a248.e.akamai.net
+          ipaddress: 95.100.252.47
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.109.150
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.180.77
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.122
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.115
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.182
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.1.47
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.218.59
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.70.145
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.72
+        - domain: a248.e.akamai.net
+          ipaddress: 77.67.127.48
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.26
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.195.113
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.187
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.137
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.108
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.118
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.1.67
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.79
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.25
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.72.64
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.57
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.150
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.136
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.219
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.131.201
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.68.73
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.43
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.69
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.218
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.1.27
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.108
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.9
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.200
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.35
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.17
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.109.147
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.118
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.254
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.142.12
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.40
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.138
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.70.39
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.180.200
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.142
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.41
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.96
+        - domain: a248.e.akamai.net
+          ipaddress: 5.178.43.31
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.15.139
+        - domain: a248.e.akamai.net
+          ipaddress: 2.16.173.84
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.91
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.98
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.112
+        - domain: a248.e.akamai.net
+          ipaddress: 95.100.252.51
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.176
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.96
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.61
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.211
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.168
+        - domain: a248.e.akamai.net
+          ipaddress: 23.15.4.5
+        - domain: a248.e.akamai.net
+          ipaddress: 23.34.61.210
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.160
+        - domain: a248.e.akamai.net
+          ipaddress: 23.15.4.9
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.68.102
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.68.80
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.249
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.155
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.98
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.50
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.16
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.195.54
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.109.74
+        - domain: a248.e.akamai.net
+          ipaddress: 217.212.252.82
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.83
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.72.34
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.94
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.212
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.72.10
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.220
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.98
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.82
+        - domain: a248.e.akamai.net
+          ipaddress: 217.212.252.83
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.120
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.72.46
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.33
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.104
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.15.149
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.55
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.68.15
+        - domain: a248.e.akamai.net
+          ipaddress: 23.34.61.153
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.94
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.104
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.95
+        - domain: a248.e.akamai.net
+          ipaddress: 95.100.252.4
+        - domain: a248.e.akamai.net
+          ipaddress: 104.116.243.177
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.101
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.215
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.138
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.25
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.102
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.146
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.15.168
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.29
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.169
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.40
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.249
+        - domain: a248.e.akamai.net
+          ipaddress: 23.34.61.140
+        - domain: a248.e.akamai.net
+          ipaddress: 2.16.173.78
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.218.56
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.180.88
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.63
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.72.68
+        - domain: a248.e.akamai.net
+          ipaddress: 23.15.33.108
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.13
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.109.84
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.163
+        - domain: a248.e.akamai.net
+          ipaddress: 77.67.127.77
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.21
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.208
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.15.127
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.225
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.42
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.178
+        - domain: a248.e.akamai.net
+          ipaddress: 217.212.252.203
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.68.82
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.171
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.65
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.110
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.93
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.196
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.96
+        - domain: a248.e.akamai.net
+          ipaddress: 2.16.173.68
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.112
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.207
+        - domain: a248.e.akamai.net
+          ipaddress: 23.34.61.139
+        - domain: a248.e.akamai.net
+          ipaddress: 217.212.252.182
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.70.24
+        - domain: a248.e.akamai.net
+          ipaddress: 69.192.3.19
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.10
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.182
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.243
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.70.220
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.148
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.163
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.79
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.32
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.218.77
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.72.38
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.27
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.42
+        - domain: a248.e.akamai.net
+          ipaddress: 23.15.4.26
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.142.4
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.15
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.1.6
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.87
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.88
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.15.252
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.154
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.99
+        - domain: a248.e.akamai.net
+          ipaddress: 23.15.33.92
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.70.17
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.218.94
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.97
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.111
+        - domain: a248.e.akamai.net
+          ipaddress: 23.15.33.98
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.160
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.218.33
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.103
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.142.62
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.174
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.232
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.39
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.117
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.20
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.131.206
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.195.15
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.121
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.109.141
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.79
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.154
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.179
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.51
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.76
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.226
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.72.76
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.156
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.129
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.248
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.21
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.70.223
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.224
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.181
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.145
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.15.175
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.90
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.185
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.132.36
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.142.37
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.131.215
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.183
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.70.40
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.187
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.91
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.102
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.91
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.1.8
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.17
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.121
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.28
+        - domain: a248.e.akamai.net
+          ipaddress: 23.15.4.27
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.132.21
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.154
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.131.161
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.167
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.225
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.109.43
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.68.60
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.100
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.139
+        - domain: a248.e.akamai.net
+          ipaddress: 77.67.127.71
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.118
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.144
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.180.83
+        - domain: a248.e.akamai.net
+          ipaddress: 173.223.235.16
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.245
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.156
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.109.4
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.201
+        - domain: a248.e.akamai.net
+          ipaddress: 104.116.243.171
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.195.64
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.68
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.11
+        - domain: a248.e.akamai.net
+          ipaddress: 23.15.4.15
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.121
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.230
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.15.122
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.131
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.229
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.41
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.195.96
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.176
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.15.166
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.34
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.50
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.180.162
+        - domain: a248.e.akamai.net
+          ipaddress: 5.178.43.85
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.174
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.187
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.223
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.216
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.211
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.98
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.202
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.100
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.78
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.149
         - domain: a248.e.akamai.net
           ipaddress: 96.17.109.102
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.184
+          ipaddress: 65.216.231.132
         - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.187
+          ipaddress: 184.51.1.14
         - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.193
+          ipaddress: 95.101.80.251
         - domain: a248.e.akamai.net
-          ipaddress: 203.69.138.243
+          ipaddress: 64.86.203.82
         - domain: a248.e.akamai.net
-          ipaddress: 184.28.188.251
+          ipaddress: 65.216.231.27
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.36
+          ipaddress: 23.32.3.114
         - domain: a248.e.akamai.net
-          ipaddress: 80.239.178.189
+          ipaddress: 2.17.122.104
         - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.133
+          ipaddress: 184.87.194.18
         - domain: a248.e.akamai.net
-          ipaddress: 23.206.195.218
+          ipaddress: 77.67.127.32
         - domain: a248.e.akamai.net
-          ipaddress: 2.21.77.87
+          ipaddress: 96.7.54.92
         - domain: a248.e.akamai.net
-          ipaddress: 95.100.252.18
+          ipaddress: 95.101.80.120
         - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.223
+          ipaddress: 65.216.231.108
         - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.11
+          ipaddress: 23.215.100.87
         - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.187
+          ipaddress: 96.17.109.78
         - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.220
+          ipaddress: 95.101.80.159
         - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.56
+          ipaddress: 95.100.252.12
         - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.122
+          ipaddress: 95.101.142.16
         - domain: a248.e.akamai.net
-          ipaddress: 23.65.182.131
+          ipaddress: 2.16.173.101
         - domain: a248.e.akamai.net
-          ipaddress: 2.16.103.113
+          ipaddress: 23.2.16.44
         - domain: a248.e.akamai.net
-          ipaddress: 157.131.218.36
+          ipaddress: 104.80.88.69
         - domain: a248.e.akamai.net
-          ipaddress: 173.205.14.103
+          ipaddress: 2.18.212.28
         - domain: a248.e.akamai.net
-          ipaddress: 192.204.27.30
+          ipaddress: 23.55.37.158
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.128
+          ipaddress: 23.215.100.175
         - domain: a248.e.akamai.net
-          ipaddress: 96.17.109.104
+          ipaddress: 23.62.6.77
         - domain: a248.e.akamai.net
-          ipaddress: 184.24.98.103
+          ipaddress: 104.84.152.120
         - domain: a248.e.akamai.net
-          ipaddress: 2.20.188.7
+          ipaddress: 92.123.195.36
         - domain: a248.e.akamai.net
-          ipaddress: 23.65.182.145
+          ipaddress: 23.59.188.103
         - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.184
+          ipaddress: 2.17.122.157
         - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.118
+          ipaddress: 23.52.171.198
         - domain: a248.e.akamai.net
-          ipaddress: 184.28.188.158
+          ipaddress: 23.34.61.21
         - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.176
+          ipaddress: 2.17.122.91
         - domain: a248.e.akamai.net
-          ipaddress: 184.28.188.242
+          ipaddress: 92.123.180.90
         - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.50
+          ipaddress: 23.55.37.160
         - domain: a248.e.akamai.net
-          ipaddress: 2.20.189.57
+          ipaddress: 92.123.180.182
         - domain: a248.e.akamai.net
-          ipaddress: 23.48.32.90
+          ipaddress: 23.67.250.125
         - domain: a248.e.akamai.net
-          ipaddress: 184.28.218.35
+          ipaddress: 96.17.72.49
         - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.242
+          ipaddress: 23.215.131.231
         - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.50
+          ipaddress: 2.18.212.201
         - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.25
+          ipaddress: 95.101.142.54
         - domain: a248.e.akamai.net
-          ipaddress: 80.239.247.78
+          ipaddress: 92.123.180.202
         - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.211
+          ipaddress: 23.215.100.211
         - domain: a248.e.akamai.net
-          ipaddress: 203.69.81.89
+          ipaddress: 92.123.180.62
         - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.136
+          ipaddress: 96.7.54.128
         - domain: a248.e.akamai.net
-          ipaddress: 104.100.93.10
+          ipaddress: 65.216.231.158
         - domain: a248.e.akamai.net
-          ipaddress: 2.17.120.95
+          ipaddress: 65.216.231.185
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.186
+          ipaddress: 65.216.231.116
         - domain: a248.e.akamai.net
-          ipaddress: 23.62.6.66
+          ipaddress: 104.84.152.128
         - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.207
+          ipaddress: 2.18.212.38
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.97
+          ipaddress: 92.123.180.97
         - domain: a248.e.akamai.net
-          ipaddress: 203.69.141.13
+          ipaddress: 104.116.243.156
         - domain: a248.e.akamai.net
-          ipaddress: 2.20.188.59
+          ipaddress: 23.205.119.25
         - domain: a248.e.akamai.net
-          ipaddress: 80.239.178.44
+          ipaddress: 2.18.212.240
         - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.9
+          ipaddress: 92.123.180.42
         - domain: a248.e.akamai.net
-          ipaddress: 72.247.185.126
+          ipaddress: 173.223.235.119
         - domain: a248.e.akamai.net
-          ipaddress: 210.61.248.77
+          ipaddress: 95.100.252.54
         - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.47
+          ipaddress: 23.62.6.93
         - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.144
+          ipaddress: 77.67.127.68
         - domain: a248.e.akamai.net
-          ipaddress: 184.24.97.217
+          ipaddress: 184.28.218.126
         - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.148
+          ipaddress: 23.215.100.253
         - domain: a248.e.akamai.net
-          ipaddress: 23.215.102.92
+          ipaddress: 2.18.212.209
         - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.23
+          ipaddress: 23.215.131.166
         - domain: a248.e.akamai.net
-          ipaddress: 23.46.210.207
+          ipaddress: 88.221.132.39
         - domain: a248.e.akamai.net
-          ipaddress: 104.86.110.54
+          ipaddress: 2.16.173.108
         - domain: a248.e.akamai.net
-          ipaddress: 157.131.218.56
+          ipaddress: 77.67.127.64
         - domain: a248.e.akamai.net
-          ipaddress: 203.69.141.41
+          ipaddress: 23.55.37.185
         - domain: a248.e.akamai.net
-          ipaddress: 173.223.52.210
+          ipaddress: 23.34.61.162
         - domain: a248.e.akamai.net
-          ipaddress: 184.28.188.80
+          ipaddress: 95.101.80.107
         - domain: a248.e.akamai.net
-          ipaddress: 23.222.28.41
+          ipaddress: 96.17.109.47
         - domain: a248.e.akamai.net
-          ipaddress: 66.110.33.191
+          ipaddress: 2.17.122.45
         - domain: a248.e.akamai.net
-          ipaddress: 184.25.56.145
+          ipaddress: 95.100.252.26
         - domain: a248.e.akamai.net
-          ipaddress: 23.205.119.35
+          ipaddress: 23.15.4.6
         - domain: a248.e.akamai.net
-          ipaddress: 184.84.243.60
+          ipaddress: 65.216.231.171
         - domain: a248.e.akamai.net
-          ipaddress: 104.99.238.173
+          ipaddress: 104.84.152.254
         - domain: a248.e.akamai.net
-          ipaddress: 192.204.26.242
+          ipaddress: 2.16.173.96
         - domain: a248.e.akamai.net
-          ipaddress: 72.247.185.44
+          ipaddress: 96.7.54.87
         - domain: a248.e.akamai.net
-          ipaddress: 88.221.132.104
+          ipaddress: 217.212.252.189
         - domain: a248.e.akamai.net
-          ipaddress: 203.69.138.36
+          ipaddress: 104.84.152.149
         - domain: a248.e.akamai.net
-          ipaddress: 2.22.119.73
+          ipaddress: 23.67.250.38
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.66
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.7
+        - domain: a248.e.akamai.net
+          ipaddress: 23.34.61.193
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.42
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.134
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.179
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.134
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.218.103
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.201
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.9
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.85
+        - domain: a248.e.akamai.net
+          ipaddress: 23.205.119.65
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.30
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.155
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.152
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.58
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.13
+        - domain: a248.e.akamai.net
+          ipaddress: 23.34.61.212
+        - domain: a248.e.akamai.net
+          ipaddress: 95.100.252.24
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.180.194
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.218.44
+        - domain: a248.e.akamai.net
+          ipaddress: 5.178.43.21
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.146
+        - domain: a248.e.akamai.net
+          ipaddress: 23.205.119.52
+        - domain: a248.e.akamai.net
+          ipaddress: 23.48.201.51
+        - domain: a248.e.akamai.net
+          ipaddress: 217.212.252.95
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.198
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.219
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.53
+        - domain: a248.e.akamai.net
+          ipaddress: 104.116.243.148
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.39
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.113
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.209
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.113
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.6
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.65
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.138
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.118
+        - domain: a248.e.akamai.net
+          ipaddress: 23.34.61.6
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.56
+        - domain: a248.e.akamai.net
+          ipaddress: 23.205.119.79
+        - domain: a248.e.akamai.net
+          ipaddress: 23.15.4.23
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.102
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.128
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.45
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.140
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.72.25
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.161
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.72.27
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.68.131
+        - domain: a248.e.akamai.net
+          ipaddress: 202.4.185.143
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.15.140
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.70
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.215.61
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.223
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.95
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.166
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.15.201
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.134
+        - domain: a248.e.akamai.net
+          ipaddress: 184.87.194.34
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.218.97
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.12
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.212
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.45
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.109.54
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.101
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.109.61
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.64
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.92
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.74
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.119
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.80
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.25
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.116
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.5
+        - domain: a248.e.akamai.net
+          ipaddress: 23.34.61.14
+        - domain: a248.e.akamai.net
+          ipaddress: 202.4.185.144
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.54
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.180.106
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.180.5
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.91
+        - domain: a248.e.akamai.net
+          ipaddress: 95.100.252.56
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.227
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.115
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.192
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.25
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.94
+        - domain: a248.e.akamai.net
+          ipaddress: 77.67.127.63
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.218.29
+        - domain: a248.e.akamai.net
+          ipaddress: 77.67.127.27
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.109.142
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.138
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.53
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.23
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.111
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.142.33
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.131.183
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.195.28
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.28
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.70
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.92
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.132.13
+        - domain: a248.e.akamai.net
+          ipaddress: 23.34.61.30
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.139
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.182
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.55
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.142.96
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.119
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.162
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.180.21
+        - domain: a248.e.akamai.net
+          ipaddress: 95.100.252.55
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.203
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.218.57
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.186
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.68.95
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.78
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.140
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.98
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.107
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.135
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.135
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.76
+        - domain: a248.e.akamai.net
+          ipaddress: 184.87.194.42
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.184
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.1.38
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.203
+        - domain: a248.e.akamai.net
+          ipaddress: 23.59.188.98
+        - domain: a248.e.akamai.net
+          ipaddress: 5.178.43.43
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.142.5
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.38
+        - domain: a248.e.akamai.net
+          ipaddress: 95.100.252.43
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.80
+        - domain: a248.e.akamai.net
+          ipaddress: 77.67.127.37
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.73
+        - domain: a248.e.akamai.net
+          ipaddress: 23.205.119.64
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.72.253
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.133
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.195.48
+        - domain: a248.e.akamai.net
+          ipaddress: 95.100.252.125
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.205
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.147
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.130
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.180
+        - domain: a248.e.akamai.net
+          ipaddress: 23.34.61.149
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.65
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.205
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.98
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.100
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.180.186
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.162
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.28
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.187
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.1.71
+        - domain: a248.e.akamai.net
+          ipaddress: 184.87.194.41
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.81
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.197
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.119
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.12
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.47
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.123
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.241
+        - domain: a248.e.akamai.net
+          ipaddress: 217.212.252.78
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.60
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.245
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.180.201
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.44
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.108
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.24
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.102
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.131.203
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.19
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.68.86
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.109.161
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.93
+        - domain: a248.e.akamai.net
+          ipaddress: 23.32.3.27
+        - domain: a248.e.akamai.net
+          ipaddress: 173.223.235.12
+        - domain: a248.e.akamai.net
+          ipaddress: 5.178.43.39
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.99
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.103
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.35
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.68.117
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.176
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.168
+        - domain: a248.e.akamai.net
+          ipaddress: 104.80.88.64
+        - domain: a248.e.akamai.net
+          ipaddress: 92.123.180.99
+        - domain: a248.e.akamai.net
+          ipaddress: 23.34.61.138
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.99
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.120
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.172
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.72.9
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.134
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.152
+        - domain: a248.e.akamai.net
+          ipaddress: 88.221.132.42
+        - domain: a248.e.akamai.net
+          ipaddress: 23.52.171.142
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.215.66
+        - domain: a248.e.akamai.net
+          ipaddress: 77.67.127.17
+        - domain: a248.e.akamai.net
+          ipaddress: 23.205.119.11
+        - domain: a248.e.akamai.net
+          ipaddress: 77.67.127.79
+        - domain: a248.e.akamai.net
+          ipaddress: 69.192.3.27
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.139
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.211
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.1.45
+        - domain: a248.e.akamai.net
+          ipaddress: 23.215.100.166
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.30
+        - domain: a248.e.akamai.net
+          ipaddress: 104.118.6.143
+        - domain: a248.e.akamai.net
+          ipaddress: 23.34.61.195
+        - domain: a248.e.akamai.net
+          ipaddress: 23.67.250.134
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.154
+        - domain: a248.e.akamai.net
+          ipaddress: 23.205.119.48
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.97
+        - domain: a248.e.akamai.net
+          ipaddress: 104.84.152.145
+        - domain: a248.e.akamai.net
+          ipaddress: 184.51.1.18
+        - domain: a248.e.akamai.net
+          ipaddress: 2.20.255.72
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.46
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.6
+        - domain: a248.e.akamai.net
+          ipaddress: 23.62.6.129
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.39
+        - domain: a248.e.akamai.net
+          ipaddress: 184.28.218.89
+        - domain: a248.e.akamai.net
+          ipaddress: 23.55.37.136
+        - domain: a248.e.akamai.net
+          ipaddress: 2.18.212.165
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.36
+        - domain: a248.e.akamai.net
+          ipaddress: 2.17.122.96
+        - domain: a248.e.akamai.net
+          ipaddress: 96.17.70.13
+        - domain: a248.e.akamai.net
+          ipaddress: 64.86.203.88
+        - domain: a248.e.akamai.net
+          ipaddress: 96.7.54.43
+        - domain: a248.e.akamai.net
+          ipaddress: 95.101.80.52
+        - domain: a248.e.akamai.net
+          ipaddress: 65.216.231.52
+        - domain: a248.e.akamai.net
+          ipaddress: 23.2.16.216
       cloudfront:
         hostaliases: 
           api-staging.getiantem.org: d16igwq64x5e11.cloudfront.net
@@ -2238,2006 +2238,2006 @@ client:
         validator:
           rejectstatus: [403]
         masquerades: &cfmasq
+        - domain: 1706bbc01.adambank.com
+          ipaddress: 52.84.0.36
+        - domain: 1706bbc01.coutts.com
+          ipaddress: 99.86.1.176
+        - domain: 1706bbc01.coutts.com
+          ipaddress: 13.35.1.25
+        - domain: 1rx.io
+          ipaddress: 54.239.192.19
+        - domain: 2cimple.com
+          ipaddress: 13.32.0.138
+        - domain: 3day.au.com
+          ipaddress: 54.230.1.65
+        - domain: 3day.au.com
+          ipaddress: 54.230.1.128
+        - domain: 4fdaayvm7rrh2cz8-cdn.telematics-hv.uconnectservice.net
+          ipaddress: 54.192.1.58
         - domain: 4v1game.net
-          ipaddress: 54.239.130.154
-        - domain: accuplacer.org
-          ipaddress: 52.84.2.132
+          ipaddress: 52.84.1.8
+        - domain: abcmouse.com
+          ipaddress: 52.84.1.160
+        - domain: accounts.autodesk.com
+          ipaddress: 205.251.251.58
+        - domain: acerchen.com
+          ipaddress: 54.192.0.115
         - domain: achievers.com
-          ipaddress: 52.84.1.157
+          ipaddress: 54.192.0.61
         - domain: achievers.com
-          ipaddress: 143.204.2.48
+          ipaddress: 52.222.129.30
+        - domain: achievers.com
+          ipaddress: 52.222.128.240
         - domain: actaspire.org
-          ipaddress: 143.204.2.78
+          ipaddress: 99.86.1.80
         - domain: ad-stir.com
-          ipaddress: 52.84.0.178
+          ipaddress: 52.84.0.57
+        - domain: ad-stir.com
+          ipaddress: 52.84.0.196
+        - domain: ad0.awsstatic.com
+          ipaddress: 54.192.0.29
         - domain: ad0.awsstatic.com
           ipaddress: 54.239.192.83
-        - domain: ad0.awsstatic.com
-          ipaddress: 13.32.2.231
-        - domain: adparlor.com
-          ipaddress: 143.204.2.199
-        - domain: adrta.com
-          ipaddress: 52.84.5.41
-        - domain: advisor.sky.com
-          ipaddress: 52.84.4.172
-        - domain: advisor.sky.com
-          ipaddress: 13.35.3.122
-        - domain: akamai.hls.o.brightcove.com
-          ipaddress: 143.204.2.8
+        - domain: ad1.awsstatic.com
+          ipaddress: 99.86.1.95
+        - domain: admin.dev.printconcept.be
+          ipaddress: 52.84.1.64
+        - domain: admin.dev.printconcept.be
+          ipaddress: 54.192.1.76
+        - domain: adn.wyzant.com
+          ipaddress: 99.86.0.33
+        - domain: ads-interfaces.sc-cdn.net
+          ipaddress: 54.192.0.25
+        - domain: ads-interfaces.sc-cdn.net
+          ipaddress: 205.251.253.137
+        - domain: ads-interfaces.sc-cdn.net
+          ipaddress: 99.84.0.166
+        - domain: adventureacademy.com
+          ipaddress: 54.192.1.131
+        - domain: adventureacademy.com
+          ipaddress: 13.35.1.87
+        - domain: aiag.i-memo.jp
+          ipaddress: 205.251.253.143
+        - domain: aircorsica.com
+          ipaddress: 54.182.1.93
+        - domain: aircorsica.com
+          ipaddress: 54.239.192.151
+        - domain: aircorsica.com
+          ipaddress: 204.246.169.14
+        - domain: airtrack.jp
+          ipaddress: 205.251.251.159
         - domain: aldebaran.com
-          ipaddress: 52.84.4.161
+          ipaddress: 205.251.251.39
         - domain: altium.com
-          ipaddress: 52.84.2.33
-        - domain: amazon.co.jp
-          ipaddress: 54.239.132.183
+          ipaddress: 54.182.1.24
+        - domain: altvr.com
+          ipaddress: 205.251.251.89
         - domain: amazon.co.uk
-          ipaddress: 54.230.2.223
-        - domain: amazon.com.au
-          ipaddress: 143.204.5.53
-        - domain: amazonpay.amazon.in
-          ipaddress: 54.239.130.164
+          ipaddress: 99.86.1.130
+        - domain: amazon.com
+          ipaddress: 54.182.1.56
+        - domain: amazonlogistics.eu
+          ipaddress: 52.84.1.4
+        - domain: amazonsmile.com
+          ipaddress: 52.84.0.31
+        - domain: ams.au.com
+          ipaddress: 13.35.0.236
         - domain: angular.mrowl.com
           ipaddress: 54.239.192.219
-        - domain: api.eab.com
-          ipaddress: 54.239.130.35
-        - domain: api.jobrapp.com
-          ipaddress: 13.35.5.88
+        - domain: api-1.platformdxc-d0.com
+          ipaddress: 99.86.0.60
+        - domain: api-1.platformdxc-qa.com
+          ipaddress: 54.239.192.196
+        - domain: api-1.platformdxc-st.com
+          ipaddress: 54.182.1.80
+        - domain: api.creditiq.com
+          ipaddress: 99.84.0.61
+        - domain: api.eu.context.cloud.sap
+          ipaddress: 52.222.129.148
         - domain: api.mercadolibre.com
-          ipaddress: 52.84.3.196
+          ipaddress: 205.251.251.45
+        - domain: api.mercadolibre.com
+          ipaddress: 99.84.0.163
+        - domain: api.mercadolibre.com
+          ipaddress: 205.251.251.166
         - domain: api.msg.ue1.a.app.chime.aws
-          ipaddress: 143.204.2.174
+          ipaddress: 54.182.0.33
         - domain: api.parcelpoint.com.au
-          ipaddress: 52.84.4.67
-        - domain: api.staging.parcelpoint.com.au
-          ipaddress: 52.84.2.39
-        - domain: api.thinkbit-beta.com
-          ipaddress: 52.84.3.122
-        - domain: api.ua.com
-          ipaddress: 13.35.5.133
-        - domain: api.ua.com
-          ipaddress: 143.204.5.132
-        - domain: api1.platformdxc-sb.com
-          ipaddress: 52.84.4.144
-        - domain: apilivingsocial.co.uk
-          ipaddress: 52.84.0.119
-        - domain: aplaceformom.com
-          ipaddress: 13.35.4.186
-        - domain: appscatter.com
-          ipaddress: 13.35.3.189
-        - domain: appstore.good.com
-          ipaddress: 143.204.2.215
-        - domain: aresawesome.com
-          ipaddress: 52.84.3.146
-        - domain: argusmedia.com
-          ipaddress: 143.204.5.105
-        - domain: arkoselabs.com
-          ipaddress: 52.84.4.216
-        - domain: arkoselabs.com
-          ipaddress: 13.35.3.5
-        - domain: arya-enterprise-iad.iad.amazon.com.amazon.com
-          ipaddress: 54.239.130.157
-        - domain: as0.awsstatic.com
-          ipaddress: 143.204.5.23
-        - domain: autodiscover.powercontrol.net
-          ipaddress: 52.84.2.247
-        - domain: autodiscover.tpe101.myinstance.com
-          ipaddress: 143.204.2.104
-        - domain: autodiscover.tpe101.myinstance.com
-          ipaddress: 52.84.3.73
-        - domain: awsapps.com
-          ipaddress: 52.84.5.9
-        - domain: awsapps.com
-          ipaddress: 52.84.2.136
-        - domain: awsapps.com
-          ipaddress: 52.84.4.187
-        - domain: awsapps.com
-          ipaddress: 52.84.5.128
-        - domain: awsapps.com
-          ipaddress: 143.204.2.221
-        - domain: awsapps.com
-          ipaddress: 52.84.0.163
-        - domain: awsapps.com
-          ipaddress: 52.84.2.199
-        - domain: ba0.awsstatic.com
-          ipaddress: 13.35.5.90
-        - domain: battlechampsgame.com
-          ipaddress: 13.35.3.100
-        - domain: behance.net
-          ipaddress: 54.239.192.74
-        - domain: beta.us-west-2.iot.amazonaws.com
-          ipaddress: 143.204.2.220
-        - domain: betterdoctor.com
-          ipaddress: 52.84.3.65
-        - domain: binance.com
-          ipaddress: 52.84.5.131
-        - domain: branch.io
-          ipaddress: 13.35.4.73
-        - domain: bytetrade.io
-          ipaddress: 52.84.4.164
-        - domain: camp-fire.jp
-          ipaddress: 143.204.2.120
-        - domain: cdn.airmap.io
-          ipaddress: 13.35.5.28
-        - domain: cdn.ant8im.com
-          ipaddress: 52.84.4.176
-        - domain: cdn.burlingtonenglish.com
-          ipaddress: 13.35.3.200
-        - domain: cdn.evergage.com
-          ipaddress: 52.84.2.90
-        - domain: cdn.heapanalytics.com
-          ipaddress: 54.239.130.144
-        - domain: cdn.heapanalytics.com
-          ipaddress: 52.84.5.105
-        - domain: cdn.mozilla.net
-          ipaddress: 13.35.3.157
-        - domain: cdn.realtimeprocess.net
-          ipaddress: 52.84.0.83
-        - domain: cdn.sell.yeay.jp
-          ipaddress: 13.35.2.133
-        - domain: cdn.sw.altova.com
-          ipaddress: 13.35.2.114
-        - domain: cdnsta.fca.telematics.net
-          ipaddress: 143.204.2.33
-        - domain: cdnsta.fca.telematics.net
-          ipaddress: 13.35.4.33
-        - domain: cetlog.jp
-          ipaddress: 52.84.3.141
-        - domain: chaturbate.com
-          ipaddress: 13.35.2.82
-        - domain: citrix.com
-          ipaddress: 52.84.0.15
-        - domain: client.wc.ue1.app.chime.aws
-          ipaddress: 52.84.2.110
-        - domain: clients.g.chime.aws
-          ipaddress: 52.84.2.210
-        - domain: cloudbeds.com
-          ipaddress: 13.35.4.117
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.145
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.208
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.66
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.154
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.192
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.198
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.226
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.58
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.206
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.107
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.184
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.88
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.168
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.4
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.62
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.236
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.191
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.51
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.61
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.55
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.252
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.218
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.75
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.189
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.19
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.146
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.106
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.19
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.85
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.233
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.61
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.248
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.8
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.189
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.84
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.30
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.10
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.14
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.49
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.78
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.247
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.253
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.217
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.106
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.168
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.82
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.48
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.81
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.68
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.52
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.182
-        - domain: cloudfront.net
-          ipaddress: 143.204.3.28
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.24
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.79
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.105
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.238
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.195
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.90
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.240
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.244
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.174
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.186
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.251
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.112
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.31
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.209
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.120
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.22
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.246
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.214
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.63
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.143
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.3
-        - domain: cloudfront.net
-          ipaddress: 143.204.3.26
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.50
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.108
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.40
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.77
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.158
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.254
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.111
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.191
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.78
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.121
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.220
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.35
-        - domain: cloudfront.net
-          ipaddress: 143.204.3.2
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.102
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.59
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.198
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.139
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.52
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.248
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.148
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.220
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.74
-        - domain: cloudfront.net
-          ipaddress: 52.84.2.156
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.231
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.215
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.24
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.16
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.46
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.129
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.28
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.105
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.170
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.199
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.81
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.22
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.72
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.119
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.3
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.248
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.126
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.206
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.65
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.100
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.42
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.22
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.20
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.116
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.132
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.23
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.116
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.116
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.91
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.234
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.81
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.102
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.7
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.135
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.161
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.58
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.159
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.32
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.120
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.28
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.230
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.249
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.139
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.219
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.211
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.137
-        - domain: cloudfront.net
-          ipaddress: 143.204.3.7
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.85
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.38
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.52
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.10
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.254
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.95
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.159
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.34
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.77
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.174
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.59
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.93
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.89
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.49
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.173
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.170
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.78
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.168
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.166
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.141
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.35
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.130
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.129
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.214
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.54
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.96
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.58
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.220
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.243
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.200
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.56
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.168
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.80
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.24
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.138
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.78
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.149
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.75
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.56
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.141
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.232
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.178
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.20
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.125
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.85
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.230
-        - domain: cloudfront.net
-          ipaddress: 143.204.3.30
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.176
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.47
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.21
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.212
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.225
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.124
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.251
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.184
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.129
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.69
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.36
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.49
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.135
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.78
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.26
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.46
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.204
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.86
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.64
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.63
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.211
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.45
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.4
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.111
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.237
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.202
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.150
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.244
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.251
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.110
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.207
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.19
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.142
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.161
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.99
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.12
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.108
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.155
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.93
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.172
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.118
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.213
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.127
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.173
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.113
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.46
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.70
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.176
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.33
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.236
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.254
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.94
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.146
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.111
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.231
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.177
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.225
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.162
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.240
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.254
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.29
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.152
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.92
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.161
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.15
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.107
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.81
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.5
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.218
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.193
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.37
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.153
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.253
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.195
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.196
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.139
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.91
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.183
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.145
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.175
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.146
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.68
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.204
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.208
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.6
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.68
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.48
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.88
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.200
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.67
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.115
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.74
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.179
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.202
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.146
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.211
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.202
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.70
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.11
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.205
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.54
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.2
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.8
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.72
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.7
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.83
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.54
-        - domain: cloudfront.net
-          ipaddress: 143.204.3.14
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.217
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.6
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.64
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.119
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.43
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.71
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.84
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.172
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.57
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.60
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.27
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.149
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.20
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.71
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.94
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.189
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.15
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.113
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.180
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.136
-        - domain: cloudfront.net
-          ipaddress: 143.204.3.21
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.38
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.3
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.110
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.241
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.160
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.54
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.120
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.92
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.227
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.185
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.253
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.134
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.111
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.136
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.225
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.68
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.116
-        - domain: cloudfront.net
           ipaddress: 13.32.0.191
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.172
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.145
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.16
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.75
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.180
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.41
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.229
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.66
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.132
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.6
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.83
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.97
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.22
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.210
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.213
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.98
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.94
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.228
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.120
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.18
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.201
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.37
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.203
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.222
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.113
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.220
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.165
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.84
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.212
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.125
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.104
-        - domain: cloudfront.net
-          ipaddress: 143.204.3.29
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.197
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.62
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.93
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.32
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.161
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.75
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.90
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.131
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.150
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.177
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.97
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.12
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.103
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.214
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.39
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.154
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.105
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.144
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.192
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.129
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.102
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.249
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.109
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.44
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.115
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.92
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.163
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.19
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.72
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.48
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.62
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.86
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.20
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.72
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.102
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.220
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.43
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.123
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.10
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.87
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.12
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.41
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.76
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.143
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.153
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.47
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.116
-        - domain: cloudfront.net
-          ipaddress: 13.32.4.73
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.128
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.75
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.122
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.109
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.169
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.130
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.21
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.5
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.166
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.131
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.11
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.55
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.155
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.64
-        - domain: cloudfront.net
-          ipaddress: 54.182.2.47
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.103
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.164
-        - domain: cloudfront.net
-          ipaddress: 13.32.0.247
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.182
-        - domain: cloudfront.net
-          ipaddress: 52.222.132.114
-        - domain: cloudfront.net
-          ipaddress: 54.230.0.53
-        - domain: cloudfront.net
-          ipaddress: 13.35.0.52
-        - domain: cloudfront.net
-          ipaddress: 54.230.5.89
-        - domain: cloudfront.net
-          ipaddress: 54.182.1.146
+        - domain: api.parcelpoint.com.au
+          ipaddress: 99.84.0.152
+        - domain: api.staging.creditiq.com
+          ipaddress: 205.251.251.67
+        - domain: api.ua.com
+          ipaddress: 204.246.169.28
+        - domain: api.us.context.cloud.sap
+          ipaddress: 54.239.192.112
+        - domain: api.us.context.cloud.sap
+          ipaddress: 205.251.251.14
+        - domain: api.web.foodnetwork.com
+          ipaddress: 13.35.1.61
+        - domain: api2.asu-uto-bi-caliper-endpoint-dev.com
+          ipaddress: 13.32.0.181
+        - domain: app.imaginelearning.com
+          ipaddress: 99.86.1.118
+        - domain: appstore.good.com
+          ipaddress: 54.182.1.44
+        - domain: apxlv.com
+          ipaddress: 52.84.1.38
+        - domain: arbitersports.com
+          ipaddress: 54.239.192.110
+        - domain: arbitersports.com
+          ipaddress: 13.35.1.111
+        - domain: arkoselabs.com
+          ipaddress: 54.182.1.132
+        - domain: arkoselabs.com
+          ipaddress: 52.222.129.82
+        - domain: article.auone.jp
+          ipaddress: 54.239.192.233
+        - domain: article.auone.jp
+          ipaddress: 54.192.0.124
+        - domain: arya-enterprise-iad.iad.amazon.com.amazon.com
+          ipaddress: 99.86.1.72
+        - domain: asort.com
+          ipaddress: 54.230.1.68
+        - domain: assets.bwbx.io
+          ipaddress: 52.84.1.77
+        - domain: assets.cameloteurope.com
+          ipaddress: 54.192.0.54
+        - domain: assets.lovlee.de
+          ipaddress: 204.246.169.82
+        - domain: auth.nightowlx.com
+          ipaddress: 54.192.0.12
+        - domain: auth.taskcluster.net
+          ipaddress: 54.192.0.138
+        - domain: autodiscover.tpe101.myinstance.com
+          ipaddress: 52.84.0.201
+        - domain: avatax.avalara.net
+          ipaddress: 54.182.0.88
+        - domain: awsapps.com
+          ipaddress: 13.32.0.141
+        - domain: awsapps.com
+          ipaddress: 99.86.1.112
+        - domain: awsapps.com
+          ipaddress: 13.35.1.31
+        - domain: awsapps.com
+          ipaddress: 99.86.0.134
+        - domain: awsapps.com
+          ipaddress: 99.86.0.82
+        - domain: awsapps.com
+          ipaddress: 52.222.129.179
+        - domain: awsapps.com
+          ipaddress: 54.230.1.63
+        - domain: awsapps.com
+          ipaddress: 54.239.192.100
+        - domain: awsapps.com
+          ipaddress: 99.84.0.213
+        - domain: awsapps.com
+          ipaddress: 204.246.169.128
+        - domain: b-0.hexagon-cdn.com
+          ipaddress: 99.86.1.105
+        - domain: ba0.awsstatic.com
+          ipaddress: 13.32.0.196
+        - domain: behance.net
+          ipaddress: 52.222.129.76
+        - domain: bethsoft.com
+          ipaddress: 13.35.1.6
+        - domain: better.com
+          ipaddress: 54.230.1.159
+        - domain: betterdoctor.com
+          ipaddress: 54.192.1.15
+        - domain: bluecrossmnreport.com
+          ipaddress: 99.84.0.36
+        - domain: boleto.pagseguro.com.br
+          ipaddress: 99.86.0.19
+        - domain: boomkat.com
+          ipaddress: 99.86.0.79
+        - domain: boomkat.com
+          ipaddress: 13.32.0.205
+        - domain: boomkat.com
+          ipaddress: 54.192.1.148
+        - domain: boomkat.com
+          ipaddress: 54.239.192.75
+        - domain: bpsgameserver.com
+          ipaddress: 54.182.0.24
+        - domain: brcdn.com
+          ipaddress: 13.32.0.188
+        - domain: brightcove.com
+          ipaddress: 99.84.0.20
+        - domain: brightcove.com
+          ipaddress: 99.86.1.20
+        - domain: camp-fire.jp
+          ipaddress: 52.222.128.207
+        - domain: camp-fire.jp
+          ipaddress: 54.239.192.127
+        - domain: cannonfodder.xyz
+          ipaddress: 99.86.0.7
+        - domain: careem.com
+          ipaddress: 52.84.0.34
+        - domain: cascade.madmimi.com
+          ipaddress: 99.84.0.210
+        - domain: cctsl.com
+          ipaddress: 13.32.1.122
+        - domain: cdn-legacy.contentful.com
+          ipaddress: 54.192.0.43
+        - domain: cdn.accounts-stg.autodesk.com
+          ipaddress: 13.32.0.33
+        - domain: cdn.accounts-stg.autodesk.com
+          ipaddress: 13.35.1.8
+        - domain: cdn.airmap.io
+          ipaddress: 54.192.0.156
+        - domain: cdn.ant8im.com
+          ipaddress: 205.251.253.182
+        - domain: cdn.apps-content.splunk.com
+          ipaddress: 54.182.0.40
+        - domain: cdn.bswift.com
+          ipaddress: 99.86.0.163
+        - domain: cdn.di-capt.com
+          ipaddress: 99.84.0.181
+        - domain: cdn.di-capt.com
+          ipaddress: 54.230.1.149
+        - domain: cdn.evergage.com
+          ipaddress: 204.246.169.71
+        - domain: cdn.federate.amazon.com
+          ipaddress: 52.84.0.133
+        - domain: cdn.federate.amazon.com
+          ipaddress: 54.192.0.142
+        - domain: cdn.inkfrog.com
+          ipaddress: 204.246.169.135
+        - domain: cdn.klarna.com
+          ipaddress: 204.246.169.151
+        - domain: cdn.klarna.com
+          ipaddress: 13.32.0.198
+        - domain: cdn.realtimeprocess.net
+          ipaddress: 52.84.0.52
+        - domain: cdn.sw.altova.com
+          ipaddress: 54.192.1.159
+        - domain: cdn.sw.altova.com
+          ipaddress: 52.84.1.54
+        - domain: cdnint.fca.telematics.net
+          ipaddress: 13.32.0.108
+        - domain: celtra.com
+          ipaddress: 52.222.129.156
+        - domain: cf.dropboxstatic.com
+          ipaddress: 99.86.0.71
+        - domain: cfcdn.club
+          ipaddress: 99.84.0.26
+        - domain: cfcdn.club
+          ipaddress: 13.35.1.78
+        - domain: cfm.quest.com
+          ipaddress: 204.246.169.13
+        - domain: chemistwarehouse.com.au
+          ipaddress: 99.86.1.147
+        - domain: ciggws.net
+          ipaddress: 54.182.0.150
+        - domain: citrix.com
+          ipaddress: 54.182.1.42
+        - domain: citrix.com
+          ipaddress: 52.84.0.3
+        - domain: clients.a.chime.aws
+          ipaddress: 52.222.129.56
+        - domain: clients.amazonworkspaces.com
+          ipaddress: 54.230.1.72
+        - domain: clientupdates.dropboxstatic.com
+          ipaddress: 54.192.0.233
+        - domain: climate.com
+          ipaddress: 204.246.169.174
+        - domain: cloud.accedo.tv
+          ipaddress: 54.230.1.142
+        - domain: cloud.sailpoint.com
+          ipaddress: 54.230.1.47
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.72
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.74
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.34
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.224
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.33
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.250
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.172
         - domain: cloudfront.net
           ipaddress: 54.230.0.231
         - domain: cloudfront.net
-          ipaddress: 13.32.0.27
+          ipaddress: 54.230.0.84
         - domain: cloudfront.net
-          ipaddress: 13.32.0.9
+          ipaddress: 54.230.0.31
         - domain: cloudfront.net
-          ipaddress: 52.222.132.113
+          ipaddress: 54.230.0.13
         - domain: cloudfront.net
-          ipaddress: 54.182.2.178
+          ipaddress: 13.35.0.45
         - domain: cloudfront.net
-          ipaddress: 54.182.2.115
+          ipaddress: 13.35.0.108
         - domain: cloudfront.net
-          ipaddress: 52.222.132.158
+          ipaddress: 13.35.0.27
         - domain: cloudfront.net
-          ipaddress: 54.182.2.107
+          ipaddress: 13.35.0.197
         - domain: cloudfront.net
-          ipaddress: 54.182.2.35
+          ipaddress: 13.35.0.200
         - domain: cloudfront.net
-          ipaddress: 54.230.5.56
+          ipaddress: 54.230.0.214
         - domain: cloudfront.net
-          ipaddress: 13.35.0.202
+          ipaddress: 54.230.0.235
         - domain: cloudfront.net
-          ipaddress: 54.182.1.203
+          ipaddress: 54.230.0.252
         - domain: cloudfront.net
-          ipaddress: 54.182.1.164
+          ipaddress: 54.230.0.207
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.220
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.159
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.192
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.115
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.52
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.160
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.101
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.48
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.237
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.173
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.193
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.244
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.161
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.198
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.164
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.163
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.105
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.134
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.24
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.230
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.113
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.83
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.181
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.86
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.58
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.180
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.217
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.124
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.219
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.198
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.158
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.152
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.146
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.254
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.28
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.184
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.178
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.204
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.169
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.165
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.20
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.82
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.56
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.215
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.50
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.76
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.10
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.2
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.208
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.136
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.151
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.116
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.7
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.102
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.111
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.168
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.167
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.103
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.130
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.218
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.190
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.98
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.115
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.19
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.196
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.67
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.49
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.239
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.32
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.170
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.26
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.212
+        - domain: cloudfront.net
+          ipaddress: 54.182.1.152
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.201
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.164
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.128
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.47
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.15
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.102
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.232
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.203
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.222
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.121
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.170
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.112
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.92
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.242
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.21
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.4
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.84
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.138
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.21
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.52
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.96
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.110
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.80
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.184
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.145
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.191
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.182
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.193
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.12
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.146
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.162
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.132
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.111
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.97
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.93
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.121
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.215
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.249
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.9
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.150
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.51
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.42
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.62
         - domain: cloudfront.net
           ipaddress: 13.35.0.119
         - domain: cloudfront.net
-          ipaddress: 54.182.1.93
+          ipaddress: 13.35.0.7
         - domain: cloudfront.net
-          ipaddress: 54.182.1.150
+          ipaddress: 54.230.0.104
         - domain: cloudfront.net
-          ipaddress: 54.182.2.165
+          ipaddress: 13.35.0.117
         - domain: cloudfront.net
-          ipaddress: 54.182.1.194
+          ipaddress: 54.230.0.157
         - domain: cloudfront.net
-          ipaddress: 54.182.1.69
+          ipaddress: 54.230.0.253
         - domain: cloudfront.net
-          ipaddress: 13.32.0.165
+          ipaddress: 54.230.0.209
         - domain: cloudfront.net
-          ipaddress: 54.230.0.122
+          ipaddress: 54.230.0.228
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.88
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.208
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.139
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.17
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.69
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.64
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.151
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.3
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.29
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.156
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.122
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.46
+        - domain: cloudfront.net
+          ipaddress: 54.230.0.55
+        - domain: cloudfront.net
+          ipaddress: 13.35.0.70
+        - domain: cloudmetro.com
+          ipaddress: 52.222.129.75
         - domain: cloudreach.com
-          ipaddress: 13.35.5.108
-        - domain: coinrail.co.kr
-          ipaddress: 13.35.5.62
+          ipaddress: 54.230.1.48
+        - domain: club.pokemon.com
+          ipaddress: 99.86.1.116
+        - domain: club.ubisoft.com
+          ipaddress: 54.192.1.170
+        - domain: club.ubisoft.com
+          ipaddress: 54.192.1.63
+        - domain: code.org
+          ipaddress: 99.84.0.227
+        - domain: coefficient.co
+          ipaddress: 205.251.251.171
+        - domain: collage.com
+          ipaddress: 54.192.1.45
+        - domain: collage.com
+          ipaddress: 13.32.0.249
         - domain: collectivehealth.com
-          ipaddress: 54.239.192.66
-        - domain: company-target.com
-          ipaddress: 52.84.3.8
+          ipaddress: 13.32.0.47
+        - domain: connectedfleet.io
+          ipaddress: 54.192.0.80
+        - domain: connectedfleet.io
+          ipaddress: 54.192.0.184
+        - domain: connectedfleet.io
+          ipaddress: 13.35.0.232
         - domain: cont-test.mydaiz.jp
-          ipaddress: 52.84.1.117
-        - domain: contents.truefighting.bnsv.ca
-          ipaddress: 54.239.130.136
-        - domain: core-reverseproxy-stage.adobelogin.com
-          ipaddress: 54.239.192.73
-        - domain: core-reverseproxy-stage.adobelogin.com
-          ipaddress: 52.84.4.230
-        - domain: coreo.io
-          ipaddress: 52.84.2.173
-        - domain: coupang.net
-          ipaddress: 52.84.2.129
-        - domain: coupang.net
-          ipaddress: 13.35.4.222
-        - domain: craftsy.com
-          ipaddress: 52.84.2.240
-        - domain: craftsy.com
-          ipaddress: 13.35.4.232
+          ipaddress: 13.32.0.55
+        - domain: contentqa.blackhawknetwork.com
+          ipaddress: 99.86.0.148
+        - domain: cookie.oup.com
+          ipaddress: 99.84.0.83
+        - domain: cookpad-pop.jp
+          ipaddress: 54.192.0.33
+        - domain: cookpad.com
+          ipaddress: 13.35.1.102
+        - domain: core-bookpass.auone.jp
+          ipaddress: 205.251.251.140
+        - domain: coupang.com
+          ipaddress: 13.32.0.157
+        - domain: coupang.com
+          ipaddress: 54.192.0.68
+        - domain: coupangcdn.com
+          ipaddress: 99.84.0.176
+        - domain: cp-sys-api-cf.bandainamcoid.com
+          ipaddress: 54.192.0.216
+        - domain: crazyegg.com
+          ipaddress: 99.86.0.185
+        - domain: crazyegg.com
+          ipaddress: 54.230.1.86
         - domain: crmia-ron1.umuc.edu
-          ipaddress: 54.239.192.253
-        - domain: crownpeak.net
-          ipaddress: 143.204.5.99
-        - domain: csp.infoblox.com
-          ipaddress: 13.35.5.101
-        - domain: customerfi.com
-          ipaddress: 52.84.4.214
+          ipaddress: 99.84.0.94
+        - domain: crmia-ron1.umuc.edu
+          ipaddress: 52.84.0.235
+        - domain: crs-review-api.crs-prd.aws.oath.cloud
+          ipaddress: 204.246.169.117
+        - domain: crs-review-api.crs-prd.aws.oath.cloud
+          ipaddress: 99.86.0.250
         - domain: customers.biocatch.com
-          ipaddress: 52.84.3.99
-        - domain: da-v-sin.amazon-adsystem.com
-          ipaddress: 13.35.2.182
-        - domain: da-v-sin.amazon-adsystem.com
-          ipaddress: 52.84.5.55
-        - domain: datad0g.com
-          ipaddress: 52.84.1.134
-        - domain: dcpq5rdp8imbn.cloudfront.net
-          ipaddress: 54.239.192.42
-        - domain: dcpq5rdp8imbn.cloudfront.net
-          ipaddress: 52.84.3.213
+          ipaddress: 99.84.0.96
+        - domain: d.connect.ringier.ch
+          ipaddress: 52.222.128.16
+        - domain: d1rucrevwzgc5t.cloudfront.net
+          ipaddress: 52.84.1.21
+        - domain: datadoghq.com
+          ipaddress: 205.251.251.116
+        - domain: datalab.akcelita.info
+          ipaddress: 52.84.1.164
         - domain: deli-fuzoku.jp
-          ipaddress: 54.239.130.215
-        - domain: deploy.itginc.com
-          ipaddress: 54.239.130.137
-        - domain: dev-pre.enjoy.point.auone.jp
-          ipaddress: 52.84.3.192
+          ipaddress: 99.86.0.58
+        - domain: demandbase.com
+          ipaddress: 205.251.253.95
         - domain: dev.ctrf.api.eden.mediba.jp
-          ipaddress: 52.84.4.4
-        - domain: dev.pec.macmillan.education
-          ipaddress: 13.35.3.247
-        - domain: dev.ring.com
-          ipaddress: 52.84.4.125
+          ipaddress: 52.222.129.99
+        - domain: dev.display.ellotte.com
+          ipaddress: 54.182.0.197
+        - domain: dev.public.api.eden.mediba.jp
+          ipaddress: 52.84.0.240
         - domain: dev.twitch.tv
-          ipaddress: 52.84.4.94
+          ipaddress: 99.84.0.177
+        - domain: dev4-www.lifelock.com
+          ipaddress: 52.84.1.3
         - domain: devbuilds.uber.com
-          ipaddress: 52.84.3.18
-        - domain: dfoneople.com
-          ipaddress: 54.239.130.194
+          ipaddress: 204.246.169.102
         - domain: dl3tools.bydeluxe.com
-          ipaddress: 52.84.0.69
-        - domain: dlog.disney.co.jp
-          ipaddress: 52.84.4.29
-        - domain: dm-static.com
-          ipaddress: 13.35.2.56
+          ipaddress: 204.246.169.90
+        - domain: dlgdigitalapi.com
+          ipaddress: 204.246.169.118
         - domain: dm.redlobster.com
           ipaddress: 54.239.192.171
+        - domain: dm.redlobster.com
+          ipaddress: 99.86.0.203
+        - domain: dmp.tconnect.jp
+          ipaddress: 54.192.0.106
+        - domain: docomo-analytics.com
+          ipaddress: 52.84.1.81
+        - domain: docomo-ntsupport.jp
+          ipaddress: 13.32.0.171
         - domain: docs.apteligent.com
-          ipaddress: 143.204.5.96
-        - domain: downloads.adtpulseaws.net
-          ipaddress: 52.84.5.48
+          ipaddress: 54.192.1.6
+        - domain: donateaphoto.com
+          ipaddress: 52.222.128.74
+        - domain: donateaphoto.com
+          ipaddress: 99.86.1.137
+        - domain: download.epicgames.com
+          ipaddress: 13.35.1.37
         - domain: downloads.adtpulseaws.net
           ipaddress: 54.239.192.217
         - domain: downloads.cdn.telerik.com
-          ipaddress: 52.84.4.23
-        - domain: dsl.eu-west-1-gamma.aiv-delivery.net
-          ipaddress: 143.204.2.43
-        - domain: dsl.eu-west-1-gamma.aiv-delivery.net
-          ipaddress: 52.84.5.42
-        - domain: dsl.us-east-1-beta.aiv-delivery.net
-          ipaddress: 13.35.3.245
-        - domain: dsl.us-east-1-gamma.aiv-delivery.net
-          ipaddress: 52.84.4.241
-        - domain: dstupload.com
-          ipaddress: 13.35.2.203
+          ipaddress: 54.192.0.6
+        - domain: driveautohook.com
+          ipaddress: 205.251.253.127
+        - domain: dropboxcaptcha.com
+          ipaddress: 205.251.251.64
+        - domain: dsl.eu-west-1.aiv-delivery.net
+          ipaddress: 204.246.169.74
+        - domain: dsl.us-east-1.aiv-delivery.net
+          ipaddress: 54.192.0.132
         - domain: dwell.com
-          ipaddress: 143.204.5.146
+          ipaddress: 54.192.0.182
         - domain: dwell.com
-          ipaddress: 52.84.1.104
-        - domain: dwell.com
-          ipaddress: 13.35.3.146
-        - domain: edge.dis.commercecloud.salesforce.com
-          ipaddress: 52.84.1.93
-        - domain: enetscores.com
-          ipaddress: 52.84.5.118
+          ipaddress: 99.86.0.117
+        - domain: e2ma.net
+          ipaddress: 52.84.0.13
+        - domain: ebookstore.sony.jp
+          ipaddress: 13.35.1.131
+        - domain: ebookstore.sony.jp
+          ipaddress: 54.192.0.193
+        - domain: echoheaders.amazon.com
+          ipaddress: 99.86.0.84
+        - domain: eco-tag.jp
+          ipaddress: 54.230.1.179
         - domain: enetscores.com
           ipaddress: 54.239.192.147
+        - domain: enetscores.com
+          ipaddress: 54.192.1.147
+        - domain: enetscores.com
+          ipaddress: 99.86.1.84
+        - domain: engineeringstaging.api.fluentretail.com
+          ipaddress: 52.84.1.124
+        - domain: enigmasoftware.com
+          ipaddress: 54.192.1.134
+        - domain: enjoy.point.auone.jp
+          ipaddress: 13.32.0.103
         - domain: envysion.com
-          ipaddress: 52.84.4.109
+          ipaddress: 13.35.1.129
         - domain: epicgames.com
-          ipaddress: 143.204.2.151
-        - domain: epicwar-online.com
-          ipaddress: 52.84.1.129
+          ipaddress: 54.239.192.150
         - domain: esd.sentinelcloud.com
-          ipaddress: 13.35.4.113
-        - domain: esd.sentinelcloud.com
-          ipaddress: 52.84.3.126
-        - domain: esd.sentinelcloud.com
-          ipaddress: 13.35.2.76
+          ipaddress: 205.251.251.130
+        - domain: estimate.parivedasolutions.com
+          ipaddress: 205.251.251.38
+        - domain: eu.ec.api.amazonvideo.com
+          ipaddress: 205.251.253.138
         - domain: eu.ec.api.av-gamma.com
-          ipaddress: 54.239.132.12
-        - domain: eu.ec.api.av-gamma.com
-          ipaddress: 52.84.2.200
+          ipaddress: 54.192.0.239
         - domain: evident.io
-          ipaddress: 52.84.5.149
-        - domain: evident.io
-          ipaddress: 54.239.192.247
+          ipaddress: 204.246.169.8
+        - domain: expo2020dubai.com
+          ipaddress: 99.86.0.243
+        - domain: expo2020dubai.com
+          ipaddress: 205.251.251.40
+        - domain: ext.app-cloud.jp
+          ipaddress: 54.182.0.175
+        - domain: fabric-tokyo.com
+          ipaddress: 205.251.251.120
+        - domain: fandays.jp
+          ipaddress: 204.246.169.66
         - domain: fifaconnect.org
-          ipaddress: 52.84.4.57
+          ipaddress: 54.182.1.141
         - domain: fifaconnect.org
-          ipaddress: 13.35.2.152
+          ipaddress: 54.192.1.16
         - domain: file-video.stg.classi.jp
-          ipaddress: 52.84.1.7
-        - domain: foresee.com
-          ipaddress: 13.35.4.57
+          ipaddress: 52.84.1.60
+        - domain: file-video.stg.classi.jp
+          ipaddress: 54.192.0.217
+        - domain: firefoxusercontent.com
+          ipaddress: 13.32.0.11
+        - domain: fleethealth.io
+          ipaddress: 13.32.0.29
+        - domain: fleethealth.io
+          ipaddress: 99.86.0.55
+        - domain: flickr.com
+          ipaddress: 13.35.1.118
+        - domain: flickr.com
+          ipaddress: 52.84.1.170
+        - domain: flipboard.com
+          ipaddress: 54.182.1.105
+        - domain: foodlogiq.com
+          ipaddress: 54.182.1.117
         - domain: forgecdn.net
-          ipaddress: 13.35.2.13
+          ipaddress: 52.222.129.23
         - domain: forgecdn.net
-          ipaddress: 13.35.2.35
+          ipaddress: 204.246.169.98
         - domain: forgesvc.net
-          ipaddress: 52.84.2.169
+          ipaddress: 99.84.0.66
         - domain: forgesvc.net
-          ipaddress: 52.84.2.73
-        - domain: foxsportsgo.com
-          ipaddress: 54.239.192.128
-        - domain: ftp.mozilla.org
-          ipaddress: 52.84.5.126
-        - domain: fusepartners.com.au
-          ipaddress: 54.239.130.39
-        - domain: fusepartners.com.au
-          ipaddress: 52.84.5.97
-        - domain: fw.hna.lgefota.com
-          ipaddress: 143.204.5.3
-        - domain: g6.hotelkeyapp.com
-          ipaddress: 13.35.5.114
+          ipaddress: 54.192.0.155
+        - domain: forgesvc.net
+          ipaddress: 99.84.0.82
+        - domain: forhims.com
+          ipaddress: 52.84.0.7
+        - domain: gallery.mailchimp.com
+          ipaddress: 99.86.0.77
+        - domain: gallery.mailchimp.com
+          ipaddress: 13.32.0.154
+        - domain: game.auone.jp
+          ipaddress: 52.84.0.232
+        - domain: game.auone.jp
+          ipaddress: 52.84.0.104
+        - domain: game.auone.jp
+          ipaddress: 99.84.0.145
+        - domain: gamecircus.com
+          ipaddress: 52.222.128.200
+        - domain: gameiom.com
+          ipaddress: 54.182.0.145
+        - domain: gameiom.com
+          ipaddress: 99.84.0.120
+        - domain: gamma.us-east-1.iot.amazonaws.com
+          ipaddress: 54.239.192.49
+        - domain: gastecnologia.com.br
+          ipaddress: 204.246.169.26
         - domain: gcsp.jnj.com
-          ipaddress: 52.84.4.145
-        - domain: gehc.psgd.io
-          ipaddress: 52.84.5.83
-        - domain: geo.cld.navitime.jp
-          ipaddress: 54.239.130.47
+          ipaddress: 52.222.129.58
+        - domain: geocomply.com
+          ipaddress: 52.84.1.168
+        - domain: getchute.com
+          ipaddress: 13.32.1.43
         - domain: gfycat.com
-          ipaddress: 52.84.1.250
-        - domain: giv-dev.nmgcloud.io
-          ipaddress: 13.35.3.77
-        - domain: glbl.adlegend.com
-          ipaddress: 52.84.4.148
-        - domain: glbl.adlegend.com
-          ipaddress: 13.35.5.148
+          ipaddress: 54.192.1.182
+        - domain: ghimg.com
+          ipaddress: 52.84.1.31
+        - domain: gimmegimme.it
+          ipaddress: 54.192.0.238
+        - domain: gluon-cv.mxnet.io
+          ipaddress: 13.35.1.114
         - domain: gp-static.com
-          ipaddress: 52.84.5.62
+          ipaddress: 54.192.0.191
         - domain: gp-static.com
-          ipaddress: 54.192.1.123
-        - domain: gp-static.com
-          ipaddress: 13.35.2.23
-        - domain: gr0.awsstatic.com
-          ipaddress: 54.230.3.103
+          ipaddress: 54.182.1.166
         - domain: gr0.awsstatic.com
           ipaddress: 54.239.192.138
-        - domain: grammarly.com
-          ipaddress: 13.35.3.3
-        - domain: harpeligible.com
-          ipaddress: 52.84.3.131
-        - domain: hbonow.com
-          ipaddress: 52.84.2.222
+        - domain: gratefulvideo.jp
+          ipaddress: 54.192.0.36
+        - domain: h48kr-11.gph.gaming.com
+          ipaddress: 52.84.0.215
+        - domain: h48kr.gph.gaming.com
+          ipaddress: 52.84.0.222
+        - domain: hbfiles.com
+          ipaddress: 54.192.0.176
         - domain: heartbeat-stage.v0.maxdome.cloud
-          ipaddress: 52.84.5.70
+          ipaddress: 99.86.0.154
         - domain: heartbeat-test.v0.maxdome.cloud
           ipaddress: 54.239.192.195
+        - domain: heartbeat.v0.maxdome.cloud
+          ipaddress: 99.86.0.74
+        - domain: highspot.com
+          ipaddress: 54.192.0.74
+        - domain: houseofwellness.com.au
+          ipaddress: 99.86.0.205
         - domain: huddle.com
-          ipaddress: 52.84.4.3
-        - domain: huddle.com
-          ipaddress: 143.204.2.228
-        - domain: ia.media-imdb.com
-          ipaddress: 52.84.2.203
-        - domain: imeetbeta.net
-          ipaddress: 143.204.5.40
-        - domain: infodata.bancsabadell.mobi
-          ipaddress: 54.239.132.184
-        - domain: insdrcdn.com
-          ipaddress: 54.239.132.47
-        - domain: int3.machieco.nestle.jp
-          ipaddress: 52.84.1.177
+          ipaddress: 54.239.192.44
+        - domain: icontactimg.com
+          ipaddress: 99.84.0.246
+        - domain: icontactimg.com
+          ipaddress: 54.239.192.111
+        - domain: icontactimg.com
+          ipaddress: 13.32.0.220
+        - domain: identitynow.com
+          ipaddress: 204.246.169.115
+        - domain: image.ellotte.com
+          ipaddress: 54.230.1.121
+        - domain: image.ellotte.com
+          ipaddress: 99.86.0.131
+        - domain: images-cn.ssl-images-amazon.com
+          ipaddress: 99.84.0.218
+        - domain: images.buttonhub.com
+          ipaddress: 13.35.1.97
+        - domain: images.buttonhub.com
+          ipaddress: 54.239.192.96
+        - domain: imdb.com
+          ipaddress: 52.84.0.205
+        - domain: imeet.com
+          ipaddress: 54.182.1.26
+        - domain: img.elo7.com.br
+          ipaddress: 13.32.0.248
+        - domain: img.fujoho.jp
+          ipaddress: 54.239.192.35
+        - domain: inbound.bigpanda.io
+          ipaddress: 52.84.1.91
         - domain: interpolls.com
-          ipaddress: 54.192.0.76
-        - domain: iot.ap-northeast-1.amazonaws.com
-          ipaddress: 52.84.2.189
-        - domain: iot.ap-southeast-2.amazonaws.com
-          ipaddress: 143.204.2.110
-        - domain: iot.eu-west-2.amazonaws.com
-          ipaddress: 52.84.1.111
-        - domain: iot.eu-west-2.amazonaws.com
-          ipaddress: 54.239.132.161
-        - domain: iot.eu-west-2.amazonaws.com
-          ipaddress: 143.204.2.42
-        - domain: iot.us-east-2.amazonaws.com
-          ipaddress: 52.84.4.20
-        - domain: iot.us-west-2.amazonaws.com
-          ipaddress: 143.204.5.90
-        - domain: iot.us-west-2.amazonaws.com
-          ipaddress: 13.35.2.235
-        - domain: ipartsexpert.com
-          ipaddress: 52.84.4.71
-        - domain: ipartsexpert.com
-          ipaddress: 13.35.3.82
-        - domain: itcher.com
-          ipaddress: 52.84.2.249
-        - domain: jemstep.com
-          ipaddress: 54.182.3.27
-        - domain: jillstuart.jp
-          ipaddress: 52.84.3.176
-        - domain: js-assets.aiv-cdn.net
-          ipaddress: 54.239.132.187
-        - domain: jwplayer.com
-          ipaddress: 143.204.2.222
+          ipaddress: 54.192.0.24
+        - domain: isappcloud.com
+          ipaddress: 13.35.1.39
+        - domain: isappcloud.com
+          ipaddress: 52.84.0.207
+        - domain: izettle.com
+          ipaddress: 52.84.1.45
+        - domain: jivox.com
+          ipaddress: 52.84.0.248
+        - domain: job.mynavi.jp
+          ipaddress: 54.230.1.107
+        - domain: joinryde.com
+          ipaddress: 204.246.169.124
+        - domain: joinryde.com
+          ipaddress: 54.230.1.54
+        - domain: joinryde.com
+          ipaddress: 54.230.1.39
+        - domain: kariusdx.com
+          ipaddress: 52.222.129.168
+        - domain: kenshoo-lab.com
+          ipaddress: 54.182.1.51
+        - domain: kinnek.com
+          ipaddress: 54.192.0.41
         - domain: kissmetrics.com
-          ipaddress: 13.35.2.87
+          ipaddress: 54.182.0.76
+        - domain: krxd.net
+          ipaddress: 205.251.253.119
+        - domain: krxd.net
+          ipaddress: 54.192.1.115
+        - domain: ksmobile.net
+          ipaddress: 52.84.1.82
         - domain: kucoin.com
-          ipaddress: 52.84.0.203
-        - domain: leansys.fr
-          ipaddress: 54.239.192.4
+          ipaddress: 52.84.0.4
+        - domain: kuvo.com
+          ipaddress: 204.246.169.170
+        - domain: ladsp.com
+          ipaddress: 204.246.169.122
+        - domain: lagreport.na.leagueoflegends.com
+          ipaddress: 99.86.0.190
+        - domain: lagreport.na.leagueoflegends.com
+          ipaddress: 52.222.128.232
+        - domain: landmark.solutions
+          ipaddress: 99.86.0.142
+        - domain: lanyonevents.com
+          ipaddress: 52.84.0.163
+        - domain: lanyonevents.com
+          ipaddress: 52.222.129.7
+        - domain: lgcpm.com
+          ipaddress: 204.246.169.62
         - domain: listen.audible.com
-          ipaddress: 52.84.4.129
-        - domain: littlstar.com
-          ipaddress: 52.84.4.223
-        - domain: login.schibsted.com
-          ipaddress: 52.84.3.76
-        - domain: lovewall-missdior.dior.com
-          ipaddress: 143.204.5.130
+          ipaddress: 52.222.129.79
+        - domain: livethumb.huluim.com
+          ipaddress: 54.192.1.133
+        - domain: logpostback.com
+          ipaddress: 204.246.169.54
+        - domain: lucidhq.com
+          ipaddress: 99.84.0.52
+        - domain: lucidhq.com
+          ipaddress: 54.192.1.90
         - domain: lyft.com
-          ipaddress: 52.84.4.135
+          ipaddress: 99.84.0.65
+        - domain: m.bookdepository.com
+          ipaddress: 13.32.0.82
+        - domain: machieco.nestle.jp
+          ipaddress: 13.35.1.121
+        - domain: magazineluiza.com.br
+          ipaddress: 52.222.129.138
+        - domain: magazineluiza.com.br
+          ipaddress: 54.192.1.106
         - domain: main.cdn.wish.com
-          ipaddress: 52.84.1.74
+          ipaddress: 99.86.0.16
+        - domain: mapbox.cn
+          ipaddress: 54.230.1.78
+        - domain: maplarge.com
+          ipaddress: 13.32.0.231
+        - domain: matrixbooking.com
+          ipaddress: 54.239.192.211
         - domain: media.amazonwebservices.com
-          ipaddress: 54.239.130.17
-        - domain: media.prod.xhwholesale.xfinityhome.com
-          ipaddress: 52.84.4.65
-        - domain: mercadolibre.com
-          ipaddress: 13.35.2.22
-        - domain: mercadolibre.com.ar
-          ipaddress: 54.239.192.93
-        - domain: mercadolibre.com.ar
-          ipaddress: 54.230.3.246
-        - domain: mercadolibre.com.mx
-          ipaddress: 13.35.4.176
-        - domain: mercadolibre.com.pe
-          ipaddress: 143.204.5.101
-        - domain: mercadolibre.com.py
-          ipaddress: 143.204.5.85
-        - domain: mercadolivre.com
-          ipaddress: 52.84.5.68
-        - domain: mercadopago.cl
-          ipaddress: 13.35.2.52
-        - domain: mercadopago.com
-          ipaddress: 52.84.2.152
-        - domain: mercadopago.com.br
-          ipaddress: 143.204.2.226
+          ipaddress: 54.230.1.183
+        - domain: mediatek.com
+          ipaddress: 52.222.129.145
+        - domain: mediatek.com
+          ipaddress: 204.246.169.55
+        - domain: melaleuca.com
+          ipaddress: 52.84.0.49
         - domain: mercadopago.com.co
-          ipaddress: 143.204.5.52
-        - domain: mercadopago.com.pe
-          ipaddress: 52.84.1.145
-        - domain: mercadopago.com.uy
-          ipaddress: 13.35.3.177
-        - domain: mercadopago.com.ve
-          ipaddress: 13.35.3.153
-        - domain: mfi-device02-s1.fnopf.jp
-          ipaddress: 13.35.4.142
-        - domain: mfi-device02.fnopf.jp
-          ipaddress: 54.239.192.137
-        - domain: mheducation.com
-          ipaddress: 13.35.2.229
-        - domain: mi.lendingclub.com
-          ipaddress: 52.84.5.80
-        - domain: minecraft.net
-          ipaddress: 52.84.2.195
-        - domain: minecraft.net
-          ipaddress: 13.35.5.80
-        - domain: mitene.us
-          ipaddress: 52.84.4.95
-        - domain: mlbstatic.com
-          ipaddress: 143.204.2.253
-        - domain: mlbstatic.com
-          ipaddress: 54.239.132.248
-        - domain: mlbyouthbaseball.com
-          ipaddress: 52.84.2.34
-        - domain: mobileappadmin.gamestop.com
-          ipaddress: 13.35.2.93
-        - domain: mobileposse.com
-          ipaddress: 13.35.2.113
+          ipaddress: 52.222.128.135
+        - domain: mfdhelpsearch.fujixerox.com
+          ipaddress: 54.182.1.46
+        - domain: mfi-device.fnopf.jp
+          ipaddress: 99.86.0.14
+        - domain: minnano-cafe.com
+          ipaddress: 99.86.1.128
+        - domain: mix.tokyo
+          ipaddress: 52.84.0.253
+        - domain: mlb.com
+          ipaddress: 54.182.1.119
+        - domain: mobile.belongprod.com.au
+          ipaddress: 54.192.0.65
         - domain: mojang.com
-          ipaddress: 13.35.3.173
-        - domain: mojang.com
-          ipaddress: 52.222.131.90
-        - domain: mojang.com
-          ipaddress: 52.222.131.163
-        - domain: mojang.com
-          ipaddress: 52.222.131.213
-        - domain: mojang.com
-          ipaddress: 143.204.3.67
-        - domain: mongodb.com
-          ipaddress: 54.239.192.13
-        - domain: mongodb.com
-          ipaddress: 52.84.0.70
-        - domain: mongodb.org
-          ipaddress: 52.84.3.212
+          ipaddress: 54.192.0.157
         - domain: moveableink.hollandandbarrett.com
-          ipaddress: 52.84.2.18
+          ipaddress: 54.182.0.154
+        - domain: moveableink.hollandandbarrett.com
+          ipaddress: 54.192.0.246
+        - domain: movescount.com
+          ipaddress: 52.222.128.224
+        - domain: movescount.com
+          ipaddress: 13.32.1.20
         - domain: mparticle.com
-          ipaddress: 52.84.5.107
+          ipaddress: 204.246.169.169
+        - domain: musixmatch.com
+          ipaddress: 205.251.251.102
+        - domain: musixmatch.com
+          ipaddress: 54.182.1.13
+        - domain: mybeautyspot.com.au
+          ipaddress: 52.84.1.119
+        - domain: myfitnesspal.com
+          ipaddress: 54.230.1.66
+        - domain: myfonts-beta.com
+          ipaddress: 52.84.0.48
+        - domain: myfonts-beta.com
+          ipaddress: 205.251.253.124
         - domain: myfonts.net
-          ipaddress: 143.204.5.51
-        - domain: myportfolio.com
-          ipaddress: 13.35.2.193
-        - domain: mytaxi.com
-          ipaddress: 52.84.1.108
-        - domain: nakamap.com
-          ipaddress: 52.84.2.112
+          ipaddress: 54.192.1.109
+        - domain: mymagazine.smt.docomo.ne.jp
+          ipaddress: 205.251.251.180
+        - domain: mymortgage-app.net
+          ipaddress: 13.35.1.128
+        - domain: n-ship.jp
+          ipaddress: 54.239.192.223
         - domain: neochen.myinstance.com
-          ipaddress: 13.35.3.186
-        - domain: nesngo.nesn.com
-          ipaddress: 143.204.2.119
+          ipaddress: 205.251.251.61
+        - domain: neochen.myinstance.com
+          ipaddress: 13.32.1.42
+        - domain: net.wwe.com
+          ipaddress: 205.251.253.166
+        - domain: net.wwe.com
+          ipaddress: 13.32.0.59
         - domain: netmarble.net
-          ipaddress: 54.239.132.165
-        - domain: netmarble.net
-          ipaddress: 143.204.5.50
+          ipaddress: 13.35.1.92
+        - domain: neustar.biz
+          ipaddress: 52.222.128.129
+        - domain: neustar.biz
+          ipaddress: 54.192.1.91
         - domain: newscred.com
-          ipaddress: 143.204.2.90
-        - domain: newscred.com
-          ipaddress: 13.35.4.88
-        - domain: newscred.com
-          ipaddress: 52.84.0.91
-        - domain: ng.tekken.bnsv.ca
-          ipaddress: 143.204.2.79
-        - domain: ng.tekken.bnsv.ca
-          ipaddress: 52.84.3.2
-        - domain: now.bt.co
-          ipaddress: 52.84.1.125
+          ipaddress: 99.86.1.152
+        - domain: newsletter-images.sndimg.com
+          ipaddress: 54.192.1.96
+        - domain: nosto.com
+          ipaddress: 99.86.0.62
         - domain: nowforce.com
-          ipaddress: 52.84.2.130
+          ipaddress: 99.86.1.178
         - domain: nubium.io
-          ipaddress: 52.84.0.104
+          ipaddress: 13.32.0.102
         - domain: oasgames.com
-          ipaddress: 13.35.3.55
+          ipaddress: 99.86.0.18
         - domain: offerup.com
-          ipaddress: 13.35.3.84
+          ipaddress: 52.222.128.110
         - domain: offerup.com
-          ipaddress: 143.204.2.89
-        - domain: oneblood.org
-          ipaddress: 54.239.192.133
-        - domain: oneblood.org
-          ipaddress: 52.84.2.113
-        - domain: onerecord.com
-          ipaddress: 52.84.4.91
+          ipaddress: 204.246.169.24
+        - domain: oih-fe.aka.amazon.com
+          ipaddress: 99.84.0.185
+        - domain: oih-gamma-cn.aka.amazon.com
+          ipaddress: 13.32.0.178
+        - domain: oih-gamma-eu.aka.amazon.com
+          ipaddress: 54.192.1.160
+        - domain: oih-gamma-fe.aka.amazon.com
+          ipaddress: 13.35.1.173
+        - domain: oih-gamma-na.aka.amazon.com
+          ipaddress: 13.32.0.174
+        - domain: omronconnect.com
+          ipaddress: 54.239.192.54
+        - domain: omsdocs.magento.com
+          ipaddress: 13.32.0.226
         - domain: online2.wavemark.net
-          ipaddress: 52.84.1.163
-        - domain: online2.wavemark.net
-          ipaddress: 54.239.192.68
-        - domain: ooyala.com
-          ipaddress: 52.84.4.165
-        - domain: ooyala.com
-          ipaddress: 52.84.1.131
-        - domain: opsgenie.com
-          ipaddress: 13.35.2.81
-        - domain: order.nestle.jp
-          ipaddress: 13.35.5.14
-        - domain: origin-api.eu.amazonalexa.com
-          ipaddress: 52.84.4.123
-        - domain: origin-api.eu.amazonalexa.com
-          ipaddress: 13.35.2.10
+          ipaddress: 52.84.1.51
+        - domain: openfin.co
+          ipaddress: 99.84.0.108
+        - domain: openfin.co
+          ipaddress: 54.192.0.121
+        - domain: openfin.co
+          ipaddress: 52.222.129.78
+        - domain: origin-api.amazonalexa.com
+          ipaddress: 54.230.1.178
+        - domain: origin-beta.client.legacy-app.games.a2z.com
+          ipaddress: 52.222.129.90
+        - domain: origin-distribution.games.amazon.com
+          ipaddress: 54.192.1.114
+        - domain: origin-gamma.client.legacy-app.games.a2z.com
+          ipaddress: 99.84.0.103
         - domain: origin-www.amazon.com.tr
-          ipaddress: 54.239.192.245
+          ipaddress: 54.230.1.127
         - domain: orthosensor.com
-          ipaddress: 143.204.2.65
+          ipaddress: 99.86.1.65
+        - domain: orthosensor.com
+          ipaddress: 13.32.0.144
+        - domain: orthosensor.com
+          ipaddress: 204.246.169.180
+        - domain: orthosensor.com
+          ipaddress: 54.182.1.84
+        - domain: osusume.auone.jp
+          ipaddress: 54.192.0.107
+        - domain: osusume.auone.jp
+          ipaddress: 54.192.0.11
+        - domain: p.script.5thfinger.com
+          ipaddress: 52.222.128.154
+        - domain: pa.cl-ev1.c-ij.com
+          ipaddress: 54.239.192.208
         - domain: pactsafe.io
-          ipaddress: 52.84.1.231
-        - domain: pactsafe.io
-          ipaddress: 143.204.2.179
-        - domain: pactsafe.io
-          ipaddress: 13.35.3.26
+          ipaddress: 54.239.192.205
+        - domain: patra.store
+          ipaddress: 99.84.0.109
+        - domain: pay.2go.com
+          ipaddress: 13.32.0.164
         - domain: payment.global.rakuten.com
-          ipaddress: 52.84.4.142
+          ipaddress: 54.230.1.162
         - domain: payment.schibsted.no
-          ipaddress: 52.84.3.191
-        - domain: payments.zynga.com
-          ipaddress: 52.84.3.119
-        - domain: pcmax.jp
-          ipaddress: 13.35.3.92
-        - domain: pearsonaccessnext.com
-          ipaddress: 52.84.2.177
+          ipaddress: 13.35.1.85
+        - domain: payment.schibsted.no
+          ipaddress: 99.86.0.89
         - domain: pearsontestcontent.com
-          ipaddress: 52.84.1.112
+          ipaddress: 99.86.1.167
+        - domain: pearsontestcontent.com
+          ipaddress: 13.35.1.161
+        - domain: pepedev.com
+          ipaddress: 54.192.0.164
         - domain: perseus.de
-          ipaddress: 52.84.0.50
-        - domain: pgatourlive.com
-          ipaddress: 52.84.2.2
-        - domain: pgealerts.com
-          ipaddress: 52.84.3.253
+          ipaddress: 13.32.0.232
+        - domain: perseus.de
+          ipaddress: 52.222.128.37
         - domain: pimg.jp
-          ipaddress: 13.35.3.27
-        - domain: pin.guru
-          ipaddress: 52.84.3.177
-        - domain: pin.guru
-          ipaddress: 13.35.5.37
+          ipaddress: 99.86.1.27
         - domain: pinkoi.com
-          ipaddress: 143.204.2.122
-        - domain: playball.org
-          ipaddress: 52.84.5.119
+          ipaddress: 54.192.0.181
         - domain: playfirst.com
-          ipaddress: 52.84.2.9
-        - domain: pod-point.com
-          ipaddress: 54.239.130.220
-        - domain: portalinmobiliario.com
-          ipaddress: 13.35.5.9
-        - domain: preprod.patientslikeme.com
-          ipaddress: 52.84.3.209
-        - domain: previews.envatousercontent.com
-          ipaddress: 52.84.3.133
-        - domain: prod-in.prod-getty.cloud
-          ipaddress: 13.35.2.155
-        - domain: prod-mm.prod-getty.cloud
-          ipaddress: 52.84.4.90
-        - domain: ps.ns-cdn.com
-          ipaddress: 52.84.4.40
-        - domain: pubcerts.licenses.adobe.com
-          ipaddress: 52.84.2.20
+          ipaddress: 13.32.0.242
+        - domain: polaris.lhinside.com
+          ipaddress: 52.84.1.131
+        - domain: polaris.lhinside.com
+          ipaddress: 99.86.0.112
+        - domain: pp.s3.ringcentral.com
+          ipaddress: 54.182.0.214
+        - domain: pre.courrier.jp
+          ipaddress: 52.84.0.158
+        - domain: pro-labs.imdb.com
+          ipaddress: 54.192.1.37
+        - domain: pro.104.com.tw
+          ipaddress: 54.239.192.157
+        - domain: pubcerts-stage.licenses.adobe.com
+          ipaddress: 99.86.0.20
+        - domain: pubcerts-stage.licenses.adobe.com
+          ipaddress: 54.192.0.162
+        - domain: pubcerts-stage.licenses.adobe.com
+          ipaddress: 54.182.1.17
+        - domain: public-rca-cloudstation-eu-west-1.inf.hydra.sophos.com
+          ipaddress: 99.84.0.216
+        - domain: public-rca-cloudstation-us-east-2.prod.hydra.sophos.com
+          ipaddress: 99.84.0.93
+        - domain: purchase.festground.com
+          ipaddress: 13.32.0.140
+        - domain: qa-software.cdn.boomi.com
+          ipaddress: 99.84.0.133
+        - domain: qa.dlgdigitalapi.com
+          ipaddress: 13.32.0.197
+        - domain: qa.edgenuity.com
+          ipaddress: 205.251.251.3
+        - domain: qa.o.brightcove.com
+          ipaddress: 13.32.0.243
         - domain: qa.rubiconproject.com
-          ipaddress: 52.84.0.151
-        - domain: rafflecopter.com
-          ipaddress: 143.204.2.148
-        - domain: rakuten.tv
-          ipaddress: 52.84.3.125
+          ipaddress: 13.35.1.144
+        - domain: qa.rubiconproject.com
+          ipaddress: 52.84.0.155
+        - domain: qa.slack-redir.net
+          ipaddress: 52.222.129.87
+        - domain: qadev.singlewire.com
+          ipaddress: 54.182.0.109
+        - domain: qpyou.cn
+          ipaddress: 52.84.0.247
+        - domain: qpyou.cn
+          ipaddress: 204.246.169.44
+        - domain: rca-upload-cloudstation-eu-west-1.inf.hydra.sophos.com
+          ipaddress: 13.32.0.207
+        - domain: realisticgames.co.uk
+          ipaddress: 54.192.1.71
+        - domain: realisticgames.co.uk
+          ipaddress: 99.84.0.80
         - domain: res.ebdcdn.com
-          ipaddress: 13.35.5.143
-        - domain: resources.amazonwebapps.com
-          ipaddress: 13.35.3.226
-        - domain: riffsy.com
-          ipaddress: 52.84.4.229
+          ipaddress: 54.192.1.150
+        - domain: res.ebdcdn.com
+          ipaddress: 13.32.0.16
+        - domain: resources-stage.licenses.adobe.com
+          ipaddress: 99.86.0.189
+        - domain: ring.com
+          ipaddress: 52.222.128.173
+        - domain: rovio.com
+          ipaddress: 52.84.1.146
+        - domain: rovio.com
+          ipaddress: 54.182.1.115
+        - domain: rr.img.naver.jp
+          ipaddress: 54.230.1.92
+        - domain: rtl.nl
+          ipaddress: 99.86.0.129
         - domain: rubiconproject.com
-          ipaddress: 54.239.192.224
+          ipaddress: 13.32.0.194
         - domain: rview.com
-          ipaddress: 143.204.2.185
+          ipaddress: 13.32.0.34
         - domain: rview.com
-          ipaddress: 13.35.2.54
+          ipaddress: 99.86.0.177
         - domain: rview.com
-          ipaddress: 52.84.0.106
-        - domain: s.connect.ringier.ch
-          ipaddress: 52.84.3.154
+          ipaddress: 52.84.0.100
+        - domain: rview.com
+          ipaddress: 52.84.0.54
+        - domain: s-onetag.com
+          ipaddress: 13.35.1.133
         - domain: s.salecycle.com
-          ipaddress: 52.84.2.226
+          ipaddress: 54.192.1.149
+        - domain: s3-accelerate.amazonaws.com
+          ipaddress: 99.86.0.169
         - domain: samsungacr.com
-          ipaddress: 52.84.3.168
-        - domain: samsungcloudsolution.com
-          ipaddress: 13.35.5.29
-        - domain: samsunghealth.com
-          ipaddress: 52.84.0.228
-        - domain: samsunghealth.com
-          ipaddress: 52.84.3.34
+          ipaddress: 204.246.169.109
+        - domain: samsungknowledge.com
+          ipaddress: 54.239.192.160
         - domain: samsungknox.com
-          ipaddress: 52.84.1.83
-        - domain: samsungvr.com
-          ipaddress: 52.84.1.192
-        - domain: schoox.com
-          ipaddress: 52.84.0.236
+          ipaddress: 99.86.1.136
+        - domain: saucelabs.com
+          ipaddress: 204.246.169.22
+        - domain: screenhero.com
+          ipaddress: 205.251.251.84
+        - domain: seal.beyondsecurity.com
+          ipaddress: 13.32.0.46
+        - domain: seal.beyondsecurity.com
+          ipaddress: 54.239.192.7
+        - domain: secb2b.com
+          ipaddress: 52.222.129.170
         - domain: secondlife-staging.com
-          ipaddress: 52.84.5.51
-        - domain: secondlife.com
-          ipaddress: 52.84.1.23
-        - domain: secure.hotelurbano.com
-          ipaddress: 52.84.4.87
-        - domain: segment.com
-          ipaddress: 52.84.0.20
+          ipaddress: 204.246.169.51
+        - domain: secretsales.com
+          ipaddress: 52.84.0.124
+        - domain: segment.io
+          ipaddress: 205.251.253.106
+        - domain: segment.io
+          ipaddress: 54.192.0.139
+        - domain: segment.io
+          ipaddress: 54.182.1.30
         - domain: sellercentral-europe.amazon.com
-          ipaddress: 52.84.3.238
-        - domain: sellercentral-japan.amazon.com
-          ipaddress: 143.204.5.71
-        - domain: sellercentral.amazon.ae
-          ipaddress: 52.84.5.106
+          ipaddress: 54.182.0.121
+        - domain: sellercentral-europe.amazon.com
+          ipaddress: 99.84.0.85
+        - domain: sellercentral-europe.amazon.com
+          ipaddress: 13.32.0.40
+        - domain: sellercentral-mena.amazon.com
+          ipaddress: 54.192.0.160
         - domain: sellercentral.amazon.co.jp
-          ipaddress: 13.35.4.230
-        - domain: sellercentral.amazon.de
-          ipaddress: 13.35.4.226
-        - domain: sellercentral.amazon.de
-          ipaddress: 52.84.1.151
-        - domain: sellercentral.amazon.fr
-          ipaddress: 143.204.2.46
-        - domain: sellercentral.amazon.it
-          ipaddress: 13.35.5.70
-        - domain: sellercentral.amazon.it
-          ipaddress: 52.84.5.81
-        - domain: sellercentral.amazon.sa
-          ipaddress: 52.84.1.24
-        - domain: sessionm.com
-          ipaddress: 13.35.2.248
-        - domain: shopch.jp
-          ipaddress: 52.84.2.17
-        - domain: sif.platformdxc.com
-          ipaddress: 52.84.5.108
+          ipaddress: 52.84.0.214
+        - domain: sellercentral.amazon.co.jp
+          ipaddress: 204.246.169.16
+        - domain: sellercentral.amazon.es
+          ipaddress: 54.192.1.151
+        - domain: sellercentral.amazon.es
+          ipaddress: 52.222.128.243
+        - domain: seriemundial.com
+          ipaddress: 54.230.1.74
+        - domain: servicepoint.fluentretail.com
+          ipaddress: 52.222.128.175
+        - domain: shoefitr.com
+          ipaddress: 54.182.0.192
+        - domain: shufu-job.jp
+          ipaddress: 52.84.1.58
+        - domain: sif.au00-platformdxc.com
+          ipaddress: 52.222.129.165
+        - domain: sif.au00-platformdxc.com
+          ipaddress: 204.246.169.95
+        - domain: sif.platformdxc-qa.com
+          ipaddress: 13.32.0.252
+        - domain: sif.platformdxc-sb.com
+          ipaddress: 99.86.1.26
+        - domain: sif.platformdxc-st.com
+          ipaddress: 99.86.1.99
+        - domain: sif.platformdxc-t0.com
+          ipaddress: 13.32.0.212
         - domain: siftscience.com
-          ipaddress: 52.84.4.70
-        - domain: signal.is
-          ipaddress: 54.239.192.24
-        - domain: silveregg.net
-          ipaddress: 13.35.5.125
-        - domain: simple-workflow-stage.licenses.adobe.com
-          ipaddress: 52.84.2.221
+          ipaddress: 52.222.128.187
+        - domain: siftscience.com
+          ipaddress: 52.84.1.59
+        - domain: signage.ricoh.com
+          ipaddress: 204.246.169.141
+        - domain: sings-download.twitch.tv
+          ipaddress: 205.251.251.164
+        - domain: sjc.io
+          ipaddress: 99.84.0.203
         - domain: skavaone.com
-          ipaddress: 54.239.130.56
+          ipaddress: 54.182.1.164
+        - domain: slack-edge.com
+          ipaddress: 54.230.1.175
+        - domain: slack-files.com
+          ipaddress: 52.84.0.228
+        - domain: slack-files.com
+          ipaddress: 52.84.0.142
+        - domain: slack-redir.com
+          ipaddress: 54.230.1.123
+        - domain: slack-redir.net
+          ipaddress: 54.230.1.119
         - domain: slack.com
-          ipaddress: 13.35.3.158
+          ipaddress: 205.251.251.111
+        - domain: smartica.jp
+          ipaddress: 13.32.1.10
         - domain: smartrecruiters.com
-          ipaddress: 13.35.2.131
+          ipaddress: 54.230.1.52
+        - domain: smile.amazon.co.uk
+          ipaddress: 99.86.0.241
         - domain: smtown.com
-          ipaddress: 52.84.0.90
-        - domain: smyte.com
-          ipaddress: 13.35.4.143
-        - domain: society6.com
-          ipaddress: 52.84.1.234
-        - domain: sophosupd.net
-          ipaddress: 54.192.3.245
-        - domain: souqcdn.com
-          ipaddress: 52.84.3.189
+          ipaddress: 13.35.0.237
+        - domain: softcoin.com
+          ipaddress: 52.84.1.110
+        - domain: software.cdn.boomi.com
+          ipaddress: 52.84.0.18
+        - domain: software.cdn.boomi.com
+          ipaddress: 99.84.0.164
+        - domain: sotappm.auone.jp
+          ipaddress: 13.35.1.181
+        - domain: sotappm.auone.jp
+          ipaddress: 54.230.1.140
+        - domain: sotappm.auone.jp
+          ipaddress: 205.251.251.170
+        - domain: sothebyshome.biz
+          ipaddress: 205.251.251.175
         - domain: sparxcdn.net
-          ipaddress: 52.84.2.80
-        - domain: stage1-www.lifelock.com
-          ipaddress: 52.84.2.161
-        - domain: stage1-www.lifelock.com
-          ipaddress: 13.35.3.87
-        - domain: stage4-www.lifelock.com
-          ipaddress: 13.35.2.179
-        - domain: stage4-www.lifelock.com
-          ipaddress: 143.204.2.180
-        - domain: staging.aplaceformom.com
-          ipaddress: 52.84.5.65
-        - domain: static.agent-search.rdc-dev.moveaws.com
-          ipaddress: 13.35.3.67
+          ipaddress: 99.84.0.131
+        - domain: spd.samsungdm.com
+          ipaddress: 13.32.0.166
+        - domain: spd.samsungdm.com
+          ipaddress: 99.86.1.81
+        - domain: spothero.com
+          ipaddress: 205.251.251.59
+        - domain: spothero.com
+          ipaddress: 52.222.129.106
+        - domain: ss-api-stg.fujixerox.co.jp
+          ipaddress: 54.192.1.175
+        - domain: ss-api.fujixerox.co.jp
+          ipaddress: 54.230.1.163
+        - domain: stage.cf.md.bbci.co.uk
+          ipaddress: 99.84.0.50
+        - domain: static-ziprealty.com
+          ipaddress: 54.192.1.171
+        - domain: static-ziprealty.com
+          ipaddress: 52.84.0.189
+        - domain: static.agent-search.rdc-qa.moveaws.com
+          ipaddress: 54.182.1.39
+        - domain: static.amundi.com
+          ipaddress: 52.84.1.36
+        - domain: static.amundi.com
+          ipaddress: 99.84.0.222
         - domain: static.ascendco.cloud
-          ipaddress: 52.84.0.47
+          ipaddress: 99.84.0.144
         - domain: static.cld.navitime.jp
-          ipaddress: 52.84.0.181
+          ipaddress: 204.246.169.182
+        - domain: static.datadoghq.com
+          ipaddress: 54.239.192.134
         - domain: static.essaybot.com
-          ipaddress: 52.84.5.5
-        - domain: static.karte.io
-          ipaddress: 52.84.3.236
-        - domain: static.lendingclub.com
-          ipaddress: 52.84.4.89
-        - domain: static.yub-cdn.com
-          ipaddress: 13.35.2.205
-        - domain: statista.com
-          ipaddress: 52.84.2.60
-        - domain: stg-mm.lower-getty.cloud
-          ipaddress: 52.84.2.163
+          ipaddress: 99.86.1.168
+        - domain: static.essaybot.com
+          ipaddress: 13.32.0.169
+        - domain: static.essaybot.com
+          ipaddress: 54.230.1.41
+        - domain: stg-njg-front.job-gear.jp
+          ipaddress: 13.35.1.3
+        - domain: stg.sotappm.auone.jp
+          ipaddress: 52.222.128.96
+        - domain: stg.sotappm.auone.jp
+          ipaddress: 204.246.169.178
+        - domain: stg.sotappm.auone.jp
+          ipaddress: 54.230.1.50
+        - domain: stg.weather-cdn.auone.jp
+          ipaddress: 52.84.1.123
+        - domain: stmath.com
+          ipaddress: 54.182.1.150
+        - domain: storify.com
+          ipaddress: 52.84.1.178
+        - domain: sunsky-online.com
+          ipaddress: 54.239.192.155
+        - domain: sup-gcsp.jnj.com
+          ipaddress: 204.246.169.130
         - domain: supercell.com
-          ipaddress: 13.35.3.221
-        - domain: surveywall-api.survata.com
-          ipaddress: 52.84.2.235
+          ipaddress: 205.251.251.7
+        - domain: supplychainconnect.amazon.com
+          ipaddress: 54.192.0.21
+        - domain: supportal.io
+          ipaddress: 54.182.0.7
         - domain: svc.litv.tv
-          ipaddress: 13.35.2.64
+          ipaddress: 52.222.129.39
+        - domain: svc.litv.tv
+          ipaddress: 99.86.0.64
+        - domain: svc.nhl.com
+          ipaddress: 54.192.0.179
+        - domain: syapp.jp
+          ipaddress: 52.222.129.5
+        - domain: syapp.jp
+          ipaddress: 54.182.0.108
+        - domain: syapp.jp
+          ipaddress: 54.230.1.135
+        - domain: synology.com
+          ipaddress: 54.230.1.28
         - domain: sys-api-cf.bandainamcoid.com
-          ipaddress: 13.35.2.226
-        - domain: sys-api-cf.bandainamcoid.com
-          ipaddress: 52.84.5.125
+          ipaddress: 54.192.0.131
         - domain: tapad.com
           ipaddress: 54.239.192.76
+        - domain: tapad.com
+          ipaddress: 54.192.0.77
+        - domain: targetsandbox.servicepoint.fluentretail.com
+          ipaddress: 54.192.0.17
+        - domain: taskcluster-artifacts.net
+          ipaddress: 204.246.169.35
+        - domain: taskcluster-artifacts.net
+          ipaddress: 13.32.0.45
+        - domain: teamviewer.com
+          ipaddress: 52.222.129.60
+        - domain: telemetry.mozilla.org
+          ipaddress: 99.86.0.234
         - domain: tenki.auone.jp
-          ipaddress: 13.35.3.160
-        - domain: tenor.co
-          ipaddress: 54.239.130.245
+          ipaddress: 204.246.169.110
+        - domain: tentaculos.net
+          ipaddress: 54.182.1.75
+        - domain: test.wpcp.shiseido.co.jp
+          ipaddress: 52.84.1.42
         - domain: testnav.com
-          ipaddress: 13.35.3.180
-        - domain: trexusa.net
-          ipaddress: 52.84.3.128
-        - domain: tsavaari.com
-          ipaddress: 52.84.5.122
-        - domain: tst.campaign.tellotte.com
-          ipaddress: 52.84.3.11
-        - domain: tv-static.net
-          ipaddress: 13.35.4.136
-        - domain: tv-static.net
-          ipaddress: 52.84.1.153
-        - domain: tvc-mall.com
-          ipaddress: 52.84.1.248
-        - domain: twitchcdn-shadow.net
-          ipaddress: 52.84.3.36
-        - domain: twitchsvc.net
-          ipaddress: 52.84.0.217
-        - domain: uat.echelonccl.com
-          ipaddress: 52.84.2.138
+          ipaddress: 54.182.1.61
+        - domain: testnav.com
+          ipaddress: 52.84.0.2
+        - domain: testshop.shopch.jp
+          ipaddress: 204.246.169.114
+        - domain: thescore.com
+          ipaddress: 52.222.129.115
+        - domain: ticketfly.com
+          ipaddress: 52.222.129.9
+        - domain: tickr.com
+          ipaddress: 99.86.0.156
+        - domain: tokuten.auone.jp
+          ipaddress: 99.86.1.163
+        - domain: toysrus.co.jp
+          ipaddress: 52.84.0.203
+        - domain: tplinkra.com
+          ipaddress: 99.86.0.226
+        - domain: traversedlp.com
+          ipaddress: 54.192.0.252
+        - domain: traversedlp.com
+          ipaddress: 204.246.169.89
+        - domain: tresensa.com
+          ipaddress: 99.84.0.43
+        - domain: tripkit-test2.jeppesen.com
+          ipaddress: 13.32.0.7
+        - domain: tripkit-test2.jeppesen.com
+          ipaddress: 99.86.1.75
+        - domain: tripkit-test4.jeppesen.com
+          ipaddress: 99.84.0.240
+        - domain: tripkit.jeppesen.com
+          ipaddress: 99.86.0.248
+        - domain: truecar.com
+          ipaddress: 52.84.0.148
+        - domain: truste.com
+          ipaddress: 54.192.1.108
+        - domain: tvcdn.de
+          ipaddress: 52.84.0.115
+        - domain: tvcdn.de
+          ipaddress: 205.251.251.43
+        - domain: twitchcdn.net
+          ipaddress: 54.230.1.114
+        - domain: twitchsvc-shadow.net
+          ipaddress: 54.230.1.120
+        - domain: twitchsvc-shadow.net
+          ipaddress: 52.84.0.121
+        - domain: ubnt.com
+          ipaddress: 13.32.0.201
+        - domain: ukwip-cf.cms.pearson.com
+          ipaddress: 54.239.192.29
         - domain: uniqodo.com
-          ipaddress: 54.230.2.236
+          ipaddress: 13.32.1.136
+        - domain: unrealengine.com
+          ipaddress: 54.192.0.118
+        - domain: unrealengine.com
+          ipaddress: 54.182.0.62
         - domain: unrulymedia.com
-          ipaddress: 52.84.0.180
-        - domain: us.whispir.com
-          ipaddress: 13.35.2.183
-        - domain: usaa.staging2.newzag.com
-          ipaddress: 52.84.0.176
-        - domain: usanaprjb.com
-          ipaddress: 13.35.5.63
+          ipaddress: 52.84.0.80
+        - domain: update.hicloud.com
+          ipaddress: 204.246.169.113
+        - domain: update.hicloud.com
+          ipaddress: 99.84.0.11
+        - domain: updates.cdc.carbonblack.io
+          ipaddress: 52.84.1.46
+        - domain: uploads.skyhighnetworks.com
+          ipaddress: 54.239.192.202
         - domain: use.edgefonts.net
-          ipaddress: 13.35.4.58
+          ipaddress: 205.251.251.25
+        - domain: use.edgefonts.net
+          ipaddress: 54.182.0.26
+        - domain: use.edgefonts.net
+          ipaddress: 13.35.1.47
+        - domain: user.meetflo.com
+          ipaddress: 13.35.1.179
         - domain: userreport.com
-          ipaddress: 13.35.2.36
-        - domain: userreport.com
-          ipaddress: 52.84.2.6
-        - domain: video.counsyl.com
-          ipaddress: 13.35.3.199
-        - domain: video.counsyl.com
-          ipaddress: 52.84.2.234
+          ipaddress: 54.192.1.34
+        - domain: veeam.com
+          ipaddress: 52.222.128.146
+        - domain: venmosdk.braintreegateway.com
+          ipaddress: 99.84.0.14
+        - domain: venmosdk.braintreegateway.com
+          ipaddress: 54.192.0.49
+        - domain: versal.com
+          ipaddress: 52.222.129.141
         - domain: videocdn.webmeeting.com.br
-          ipaddress: 52.84.4.17
+          ipaddress: 99.86.0.195
+        - domain: videocdn.webmeeting.com.br
+          ipaddress: 52.222.128.159
         - domain: viralstyle.com
-          ipaddress: 52.84.3.84
-        - domain: vivoom.co
-          ipaddress: 13.35.3.23
-        - domain: vivoom.co
-          ipaddress: 13.35.2.189
+          ipaddress: 54.182.0.190
         - domain: viyet.com
-          ipaddress: 54.239.132.11
+          ipaddress: 52.222.129.112
+        - domain: vmweb.net
+          ipaddress: 52.84.0.112
+        - domain: vr.fi
+          ipaddress: 52.222.128.85
+        - domain: vr.fi
+          ipaddress: 13.35.0.247
+        - domain: vyrl.com
+          ipaddress: 54.239.192.106
+        - domain: vyrl.com
+          ipaddress: 13.32.0.139
         - domain: we-stats.com
-          ipaddress: 52.84.3.137
+          ipaddress: 54.192.1.38
+        - domain: we-stats.com
+          ipaddress: 52.222.129.142
+        - domain: we-stats.com
+          ipaddress: 54.192.1.140
         - domain: webview-jp.bh3.com
-          ipaddress: 143.204.2.235
-        - domain: weedmaps.com
-          ipaddress: 13.35.5.33
+          ipaddress: 13.35.1.124
+        - domain: werally.com
+          ipaddress: 205.251.251.63
         - domain: whisbi.com
-          ipaddress: 143.204.2.208
-        - domain: whizz.com
-          ipaddress: 52.84.0.103
+          ipaddress: 52.84.0.113
+        - domain: whisbi.com
+          ipaddress: 52.84.0.239
+        - domain: widencdn.net
+          ipaddress: 52.84.0.87
+        - domain: wms-eu.amazon-adsystem.com
+          ipaddress: 99.84.0.148
+        - domain: wms-eu.amazon-adsystem.com
+          ipaddress: 13.32.1.105
+        - domain: wms-na.amazon-adsystem.com
+          ipaddress: 13.32.0.62
+        - domain: workflow.licenses.adobe.com
+          ipaddress: 52.84.0.212
+        - domain: wuaki.tv
+          ipaddress: 52.84.0.101
+        - domain: www.53.localytics.com
+          ipaddress: 52.84.0.236
         - domain: www.a3cloud.net
-          ipaddress: 52.84.1.238
-        - domain: www.achrafsouk.com
-          ipaddress: 143.204.2.141
+          ipaddress: 52.84.1.32
+        - domain: www.accordiagolf.com
+          ipaddress: 54.192.0.128
+        - domain: www.adenandanais.com
+          ipaddress: 52.222.129.126
         - domain: www.allianz-connect.com
-          ipaddress: 52.84.1.61
-        - domain: www.allianz-connect.com
-          ipaddress: 143.204.5.81
+          ipaddress: 13.32.0.182
+        - domain: www.amazon.ae
+          ipaddress: 54.192.0.226
+        - domain: www.amazon.co.in
+          ipaddress: 54.230.1.38
         - domain: www.amazon.com
-          ipaddress: 13.35.1.230
-        - domain: www.amazon.com
-          ipaddress: 52.84.0.53
+          ipaddress: 99.86.0.67
         - domain: www.amazon.it
-          ipaddress: 13.35.2.230
-        - domain: www.amplify.com
-          ipaddress: 52.84.5.34
-        - domain: www.antonioli.eu
-          ipaddress: 52.84.4.33
-        - domain: www.apimgmt-test.cfadevelop.com
-          ipaddress: 13.35.4.212
-        - domain: www.apimgmt.cfahome.com
-          ipaddress: 52.84.1.235
-        - domain: www.apiodyth.com
-          ipaddress: 52.84.0.154
+          ipaddress: 204.246.169.65
+        - domain: www.amp.com.au
+          ipaddress: 54.192.1.104
+        - domain: www.api.everforth.com
+          ipaddress: 54.182.1.110
+        - domain: www.apimgmt-dev.cfadevelop.com
+          ipaddress: 204.246.169.153
         - domain: www.apkimage.io
-          ipaddress: 52.84.4.30
+          ipaddress: 52.84.0.200
         - domain: www.apkimage.io
-          ipaddress: 13.35.2.7
+          ipaddress: 54.239.192.109
+        - domain: www.apkimage.io
+          ipaddress: 54.192.1.102
+        - domain: www.au.com
+          ipaddress: 54.192.0.34
         - domain: www.auth0.com
-          ipaddress: 52.84.4.44
-        - domain: www.bcovlive.io
-          ipaddress: 52.84.4.35
-        - domain: www.beauty-co.jp
-          ipaddress: 52.84.1.92
-        - domain: www.bettermg.com
-          ipaddress: 52.84.5.76
+          ipaddress: 99.86.0.206
+        - domain: www.awness.com
+          ipaddress: 54.182.1.175
+        - domain: www.awness.com
+          ipaddress: 52.84.1.100
+        - domain: www.back4app.com
+          ipaddress: 13.32.1.30
+        - domain: www.back4app.com
+          ipaddress: 52.222.129.71
+        - domain: www.back4app.io
+          ipaddress: 54.192.1.43
+        - domain: www.bamsec.com
+          ipaddress: 205.251.253.146
+        - domain: www.bamsec.com
+          ipaddress: 54.230.1.176
+        - domain: www.bnet.run
+          ipaddress: 54.192.0.245
+        - domain: www.bookfinder.com
+          ipaddress: 54.192.0.212
+        - domain: www.bookfinder.com
+          ipaddress: 99.86.1.104
         - domain: www.bounceexchange.com
-          ipaddress: 13.35.2.74
-        - domain: www.brickworksoftware.com
-          ipaddress: 52.84.0.71
-        - domain: www.brickworksoftware.com
-          ipaddress: 13.35.3.35
-        - domain: www.brightcloud.com
-          ipaddress: 52.84.2.23
-        - domain: www.c.misumi-ec.com
-          ipaddress: 13.35.4.98
-        - domain: www.cafewell.com
-          ipaddress: 52.84.1.66
-        - domain: www.cariot.jp
-          ipaddress: 52.84.3.225
-        - domain: www.catchplay.com
-          ipaddress: 52.84.3.26
-        - domain: www.challengervault.com
-          ipaddress: 52.84.1.210
+          ipaddress: 54.230.1.37
+        - domain: www.bounceexchange.com
+          ipaddress: 54.230.1.157
+        - domain: www.brinkpos.net
+          ipaddress: 204.246.169.61
+        - domain: www.chartboost.com
+          ipaddress: 52.222.129.162
+        - domain: www.chatbar.me
+          ipaddress: 54.192.0.168
+        - domain: www.chatbar.me
+          ipaddress: 52.222.129.133
+        - domain: www.chatbar.me
+          ipaddress: 54.182.0.2
         - domain: www.classdojo.com
-          ipaddress: 52.84.2.153
+          ipaddress: 52.222.128.180
         - domain: www.clearlinkdata.com
-          ipaddress: 54.239.192.60
+          ipaddress: 54.230.1.116
         - domain: www.clearlinkdata.com
-          ipaddress: 52.84.4.190
-        - domain: www.columnis.com
-          ipaddress: 54.192.1.226
+          ipaddress: 54.230.1.14
+        - domain: www.cloud.tenable.com
+          ipaddress: 205.251.253.151
         - domain: www.comparaonline.com
-          ipaddress: 52.84.0.95
+          ipaddress: 99.86.0.13
+        - domain: www.comparaonline.com
+          ipaddress: 52.84.0.180
+        - domain: www.connectwise.com
+          ipaddress: 205.251.253.161
+        - domain: www.connectwisedev.com
+          ipaddress: 52.222.129.176
         - domain: www.continental-connected-services.com
-          ipaddress: 52.84.1.206
+          ipaddress: 13.32.0.213
         - domain: www.cookpad.com
-          ipaddress: 13.35.4.213
-        - domain: www.coveritlive.com
-          ipaddress: 143.204.5.135
+          ipaddress: 13.32.0.28
         - domain: www.cpcdn.com
-          ipaddress: 52.84.0.221
-        - domain: www.cphostaccess.com
-          ipaddress: 52.84.1.249
+          ipaddress: 54.192.0.174
         - domain: www.d2c.ne.jp
-          ipaddress: 13.35.4.111
-        - domain: www.dcm-icwweb-dev.com
-          ipaddress: 54.239.192.203
-        - domain: www.democrats.org
-          ipaddress: 52.84.3.63
+          ipaddress: 99.86.1.121
+        - domain: www.dailynessu.com
+          ipaddress: 13.32.0.132
+        - domain: www.dailynessu.com
+          ipaddress: 13.35.1.166
+        - domain: www.daptiv.com
+          ipaddress: 99.86.1.120
+        - domain: www.denso-ten.com
+          ipaddress: 13.35.1.108
         - domain: www.desmos.com
-          ipaddress: 143.204.5.136
-        - domain: www.dev.csc.turner.com
-          ipaddress: 13.35.2.170
-        - domain: www.dev.sdvi.csc.turner.com
-          ipaddress: 54.192.1.23
-        - domain: www.dev.sdvi.csc.turner.com
-          ipaddress: 52.84.1.181
-        - domain: www.dxpstatic.com
-          ipaddress: 52.84.3.169
-        - domain: www.earthnetworks.com
-          ipaddress: 13.35.3.188
-        - domain: www.eng.bnet.run
-          ipaddress: 52.84.3.54
-        - domain: www.eu-api.swrve.com
-          ipaddress: 143.204.2.6
-        - domain: www.eu-api.swrve.com
-          ipaddress: 52.84.2.71
-        - domain: www.fabricvideo.tv
-          ipaddress: 52.84.3.118
-        - domain: www.filmstruck.turner.com
-          ipaddress: 52.84.1.252
+          ipaddress: 52.84.1.57
+        - domain: www.desmos.com
+          ipaddress: 54.192.0.60
+        - domain: www.desmos.com
+          ipaddress: 205.251.251.5
+        - domain: www.dev.catchplay.com
+          ipaddress: 99.86.0.193
+        - domain: www.dev.catchplay.com
+          ipaddress: 205.251.251.162
+        - domain: www.dev.cmhconnection.com
+          ipaddress: 54.182.1.29
+        - domain: www.dev.irl.aws.tipico.com
+          ipaddress: 54.230.1.172
+        - domain: www.dev.woodmac.com
+          ipaddress: 54.230.1.112
+        - domain: www.dockerproject.org
+          ipaddress: 13.32.0.190
+        - domain: www.dockerproject.org
+          ipaddress: 99.86.0.111
+        - domain: www.dpl.unicornmedia.com
+          ipaddress: 54.239.192.193
+        - domain: www.dreambox.com
+          ipaddress: 54.192.0.4
+        - domain: www.dst.vpsvc.com
+          ipaddress: 52.84.0.202
+        - domain: www.dta.netflix.com
+          ipaddress: 54.239.192.2
+        - domain: www.e-aidem.com
+          ipaddress: 52.84.1.156
+        - domain: www.e-aidem.com
+          ipaddress: 99.86.1.38
+        - domain: www.enjoy.point.auone.jp
+          ipaddress: 54.230.1.146
+        - domain: www.enjoy.point.auone.jp
+          ipaddress: 205.251.251.60
+        - domain: www.eu.auth0.com
+          ipaddress: 205.251.251.23
+        - domain: www.execute-api.ap-northeast-1.amazonaws.com
+          ipaddress: 52.84.0.217
+        - domain: www.execute-api.us-east-1.amazonaws.com
+          ipaddress: 99.86.0.42
+        - domain: www.execute-api.us-west-2.amazonaws.com
+          ipaddress: 54.239.192.3
+        - domain: www.fabernovel.com
+          ipaddress: 13.32.0.104
+        - domain: www.fastretailing.com
+          ipaddress: 99.86.1.108
+        - domain: www.fdgahl.cn
+          ipaddress: 13.32.0.92
+        - domain: www.feature.lens.dev.woodmac.com
+          ipaddress: 54.230.1.88
+        - domain: www.findawayworld.com
+          ipaddress: 99.86.1.90
         - domain: www.flixwagon.com
-          ipaddress: 13.35.3.224
+          ipaddress: 52.84.0.99
+        - domain: www.flixwagon.com
+          ipaddress: 204.246.169.127
         - domain: www.fmicassets.com
-          ipaddress: 54.239.130.182
-        - domain: www.fonts.freshfruit.nl
-          ipaddress: 13.35.3.115
-        - domain: www.gamepedia.io
-          ipaddress: 52.84.2.238
-        - domain: www.games.dev.starmp.com
-          ipaddress: 52.84.1.228
+          ipaddress: 52.222.129.81
+        - domain: www.game34.klabgames.net
+          ipaddress: 204.246.169.4
         - domain: www.gdl.easebar.com
-          ipaddress: 52.84.2.202
-        - domain: www.gdl.imtxwy.com
-          ipaddress: 52.84.4.146
+          ipaddress: 54.192.1.168
         - domain: www.gdl.netease.com
-          ipaddress: 143.204.2.247
+          ipaddress: 54.230.1.93
         - domain: www.gdl.towanonanoka.com
-          ipaddress: 52.84.0.174
-        - domain: www.global.rakuten.com
-          ipaddress: 13.35.3.223
-        - domain: www.gph.easebar.com
-          ipaddress: 54.239.192.196
+          ipaddress: 54.182.1.160
+        - domain: www.gdl.towanonanoka.com
+          ipaddress: 52.84.0.185
+        - domain: www.globalmeet.com
+          ipaddress: 54.182.0.82
         - domain: www.gph.imtxwy.com
-          ipaddress: 52.84.4.163
+          ipaddress: 99.86.0.199
         - domain: www.gph.netease.com
-          ipaddress: 52.84.1.4
+          ipaddress: 54.230.1.161
+        - domain: www.gr-assets.com
+          ipaddress: 54.239.192.204
+        - domain: www.gr-assets.com
+          ipaddress: 99.86.1.8
+        - domain: www.homepackbuzz.com
+          ipaddress: 13.35.1.44
+        - domain: www.homepackbuzz.com
+          ipaddress: 54.239.192.43
         - domain: www.homepackbuzz.com
           ipaddress: 52.84.1.159
-        - domain: www.hostedpci.com
-          ipaddress: 52.84.2.214
-        - domain: www.hostedpci.com
-          ipaddress: 13.35.4.55
+        - domain: www.homepackbuzz.com
+          ipaddress: 205.251.251.96
+        - domain: www.hungama.com
+          ipaddress: 205.251.251.86
+        - domain: www.idexximagebank.com
+          ipaddress: 52.84.0.153
+        - domain: www.idexximagebank.com
+          ipaddress: 13.32.0.109
+        - domain: www.idm-test.cfadevelop.com
+          ipaddress: 99.86.0.166
         - domain: www.idm.cfahome.com
-          ipaddress: 13.35.3.136
+          ipaddress: 99.86.1.140
         - domain: www.iflix.com
-          ipaddress: 13.35.2.199
-        - domain: www.imrworldwide.com
-          ipaddress: 52.84.4.233
-        - domain: www.inf.messagemedia.com
-          ipaddress: 13.35.4.243
-        - domain: www.jeebley.com
-          ipaddress: 54.239.192.182
-        - domain: www.lab.digitalpublishing.adobe.com
-          ipaddress: 54.239.192.167
-        - domain: www.lifelockunlocked.com
-          ipaddress: 52.84.3.201
-        - domain: www.litv.tv
-          ipaddress: 13.35.5.21
+          ipaddress: 54.192.1.95
+        - domain: www.iflix.com
+          ipaddress: 52.222.128.71
+        - domain: www.iflix.com
+          ipaddress: 99.84.0.208
+        - domain: www.images.dev.aventa.cc
+          ipaddress: 54.230.1.11
+        - domain: www.imapotato.fun
+          ipaddress: 52.222.129.146
+        - domain: www.imtxwy.com
+          ipaddress: 54.230.1.131
+        - domain: www.imtxwy.com
+          ipaddress: 99.84.0.99
+        - domain: www.infomedia.com.au
+          ipaddress: 54.192.0.135
+        - domain: www.int.woodmac.com
+          ipaddress: 54.230.1.152
+        - domain: www.job.mynavi.jp
+          ipaddress: 99.86.0.244
+        - domain: www.life360.com
+          ipaddress: 54.192.0.175
+        - domain: www.life360.com
+          ipaddress: 54.182.1.121
+        - domain: www.lightspeed-demo.com
+          ipaddress: 13.32.0.68
+        - domain: www.lightspeed-demo.com
+          ipaddress: 13.32.0.234
+        - domain: www.lightspeed-demo.com
+          ipaddress: 205.251.251.129
+        - domain: www.line-rc.me
+          ipaddress: 205.251.251.47
         - domain: www.lps.lottedfs.com
-          ipaddress: 52.84.1.31
-        - domain: www.lps.lottedfs.com
-          ipaddress: 54.239.132.204
-        - domain: www.m.kor.lps.lottedfs.com
-          ipaddress: 143.204.2.73
-        - domain: www.me2zengame.com
-          ipaddress: 52.84.3.231
-        - domain: www.me2zengame.com
-          ipaddress: 13.35.3.117
+          ipaddress: 204.246.169.148
+        - domain: www.ltmtn.bnet.run
+          ipaddress: 205.251.253.52
+        - domain: www.ltmtn.bnet.run
+          ipaddress: 52.84.0.69
+        - domain: www.ltmtn.bnet.run
+          ipaddress: 54.182.1.82
+        - domain: www.ltvlg.bnet.run
+          ipaddress: 99.84.0.101
+        - domain: www.ltw.org
+          ipaddress: 52.84.0.10
+        - domain: www.manheim.man-auto1.com
+          ipaddress: 99.86.0.38
+        - domain: www.mapnwea.org
+          ipaddress: 52.222.129.104
+        - domain: www.mercadopago.com.co
+          ipaddress: 54.192.1.101
         - domain: www.metacdn.com
-          ipaddress: 52.84.1.132
-        - domain: www.midasplayer.com
-          ipaddress: 143.204.5.20
-        - domain: www.midasplayer.com
-          ipaddress: 13.35.5.50
-        - domain: www.mindflash.com
-          ipaddress: 52.84.3.47
-        - domain: www.mindflash.com
-          ipaddress: 13.35.4.120
-        - domain: www.mitene.us
-          ipaddress: 52.84.2.171
-        - domain: www.mobilerq.com
-          ipaddress: 54.239.192.148
+          ipaddress: 54.192.1.166
+        - domain: www.milkvr.rocks
+          ipaddress: 52.222.128.168
+        - domain: www.mnlottery.com
+          ipaddress: 52.84.1.117
+        - domain: www.mobile.sega.jp
+          ipaddress: 54.192.1.42
+        - domain: www.moja.africa
+          ipaddress: 52.84.1.66
+        - domain: www.moja.africa
+          ipaddress: 13.32.0.224
+        - domain: www.moja.africa
+          ipaddress: 52.222.129.50
+        - domain: www.money.net
+          ipaddress: 52.84.1.118
         - domain: www.myanimelist.net
-          ipaddress: 52.84.2.46
-        - domain: www.mygowifi.com
-          ipaddress: 52.84.4.110
-        - domain: www.myharmony.com
-          ipaddress: 52.84.2.36
+          ipaddress: 205.251.251.41
+        - domain: www.myconnectwise.net
+          ipaddress: 204.246.169.156
+        - domain: www.mydaiz.jp
+          ipaddress: 52.222.129.96
+        - domain: www.mydaiz.jp
+          ipaddress: 204.246.169.21
         - domain: www.mzbcdn.net
-          ipaddress: 143.204.5.9
-        - domain: www.na.ab.api.amazonvideo.com
-          ipaddress: 52.84.3.221
-        - domain: www.nie.netease.com
-          ipaddress: 13.35.3.30
+          ipaddress: 99.86.0.10
+        - domain: www.nausyme.net
+          ipaddress: 52.84.0.128
+        - domain: www.neuweb.biz
+          ipaddress: 54.182.1.28
         - domain: www.nrd.netflix.com
-          ipaddress: 54.192.1.153
+          ipaddress: 99.86.1.160
+        - domain: www.nrd.netflix.com
+          ipaddress: 52.222.129.11
         - domain: www.nyc837-dev.gin-dev.com
-          ipaddress: 143.204.2.59
-        - domain: www.placelocal.com
-          ipaddress: 13.35.3.253
-        - domain: www.playsino.com
-          ipaddress: 52.84.1.140
+          ipaddress: 52.84.0.225
+        - domain: www.observian.com
+          ipaddress: 99.86.1.129
+        - domain: www.offerup-int.com
+          ipaddress: 54.192.1.135
+        - domain: www.offerup-stg.com
+          ipaddress: 54.230.1.2
+        - domain: www.offerup-stg.com
+          ipaddress: 205.251.251.105
+        - domain: www.ozstage.com
+          ipaddress: 13.35.1.14
+        - domain: www.p7s1.io
+          ipaddress: 99.84.0.70
+        - domain: www.p7s1.io
+          ipaddress: 204.246.169.63
+        - domain: www.pb.com
+          ipaddress: 204.246.169.143
+        - domain: www.pb.com
+          ipaddress: 99.84.0.95
+        - domain: www.pearsonsandcastle.com
+          ipaddress: 54.192.0.18
+        - domain: www.pepeapi.com
+          ipaddress: 52.222.128.6
+        - domain: www.pepeapi.com
+          ipaddress: 13.32.0.43
+        - domain: www.pepeapi.com
+          ipaddress: 99.86.0.230
+        - domain: www.pinsightmedia.com
+          ipaddress: 54.182.1.123
+        - domain: www.pinsightmedia.com
+          ipaddress: 54.182.1.125
+        - domain: www.platform.hicloud.com
+          ipaddress: 52.84.1.56
         - domain: www.playsinocloud.com
-          ipaddress: 143.204.2.145
-        - domain: www.playsinocloud.com
-          ipaddress: 54.239.192.144
-        - domain: www.prod-fca-xevo-market.com
-          ipaddress: 143.204.2.240
+          ipaddress: 13.32.0.77
+        - domain: www.presage.io
+          ipaddress: 99.86.1.91
+        - domain: www.presage.io
+          ipaddress: 54.182.1.147
         - domain: www.project-a.videoprojects.net
-          ipaddress: 52.84.1.162
-        - domain: www.quick-cdn.com
-          ipaddress: 52.84.0.5
-        - domain: www.quipper.com
-          ipaddress: 54.239.130.75
-        - domain: www.schibsted.com
-          ipaddress: 54.239.192.78
-        - domain: www.schibsted.com
-          ipaddress: 52.84.4.194
-        - domain: www.scribblelive.com
-          ipaddress: 52.84.1.72
+          ipaddress: 52.222.129.111
+        - domain: www.project-a.videoprojects.net
+          ipaddress: 52.84.1.41
+        - domain: www.rcstatic.com
+          ipaddress: 54.230.1.126
+        - domain: www.reach150.com
+          ipaddress: 54.182.1.47
+        - domain: www.realizedev-test.com
+          ipaddress: 54.182.0.17
+        - domain: www.ref.csc.turner.com
+          ipaddress: 99.86.1.165
+        - domain: www.scentbird.com
+          ipaddress: 52.84.0.174
+        - domain: www.scruff.com
+          ipaddress: 54.192.0.150
+        - domain: www.scruff.com
+          ipaddress: 54.239.192.206
+        - domain: www.scruff.com
+          ipaddress: 52.222.128.215
         - domain: www.seek.com.au
-          ipaddress: 52.84.4.13
-        - domain: www.shiseido.co.jp
-          ipaddress: 52.84.1.119
+          ipaddress: 204.246.169.97
+        - domain: www.sf-cdn.net
+          ipaddress: 54.182.1.45
+        - domain: www.shopch.jp
+          ipaddress: 52.222.129.31
         - domain: www.siksine.com
           ipaddress: 54.239.192.239
+        - domain: www.singular.net
+          ipaddress: 54.230.1.96
+        - domain: www.smart-works.jp
+          ipaddress: 52.84.1.23
         - domain: www.sodexomyway.com
-          ipaddress: 52.84.0.160
-        - domain: www.sodexomyway.com
-          ipaddress: 13.35.4.49
+          ipaddress: 54.192.1.93
         - domain: www.speedwaymotors.com
-          ipaddress: 52.84.1.135
+          ipaddress: 54.230.1.46
         - domain: www.sprinklr.com
-          ipaddress: 13.35.2.217
+          ipaddress: 99.86.0.168
+        - domain: www.sprinklr.com
+          ipaddress: 52.84.1.108
+        - domain: www.srv.ygles-test.com
+          ipaddress: 99.84.0.249
+        - domain: www.srv.ygles-test.com
+          ipaddress: 205.251.251.18
+        - domain: www.srv.ygles.com
+          ipaddress: 99.86.0.66
+        - domain: www.staging.newzag.com
+          ipaddress: 52.222.129.124
         - domain: www.staging.truecardev.com
-          ipaddress: 13.35.4.10
-        - domain: www.starbuckshopscotch.com
-          ipaddress: 52.84.3.167
+          ipaddress: 54.239.192.139
+        - domain: www.staging.truecardev.com
+          ipaddress: 54.192.0.165
         - domain: www.stg.zype.com
-          ipaddress: 52.84.3.23
+          ipaddress: 99.86.0.191
         - domain: www.stg.zype.com
-          ipaddress: 13.35.4.183
-        - domain: www.svtrd.com
-          ipaddress: 143.204.2.41
-        - domain: www.taggstar.com
-          ipaddress: 52.84.2.170
+          ipaddress: 54.192.0.134
+        - domain: www.stratas.com
+          ipaddress: 99.86.0.196
+        - domain: www.swrve.com
+          ipaddress: 54.182.1.158
         - domain: www.tap.d2c.ne.jp
-          ipaddress: 52.84.2.248
-        - domain: www.test.pb.com
-          ipaddress: 13.35.4.59
+          ipaddress: 54.230.1.22
+        - domain: www.tfly-aws.com
+          ipaddress: 204.246.169.165
+        - domain: www.tfly-aws.com
+          ipaddress: 52.222.129.105
         - domain: www.tflystage.com
-          ipaddress: 13.35.5.49
-        - domain: www.tflystage.com
-          ipaddress: 54.239.132.216
-        - domain: www.thinkbit-beta.com
-          ipaddress: 54.239.192.30
-        - domain: www.tigocloud.net
-          ipaddress: 54.239.132.135
+          ipaddress: 54.192.0.72
         - domain: www.tipico.com
-          ipaddress: 54.239.192.35
-        - domain: www.tmsimg.com
-          ipaddress: 143.204.5.21
-        - domain: www.twitch.tv
-          ipaddress: 13.35.2.71
-        - domain: www.twitch.tv
-          ipaddress: 52.84.3.162
-        - domain: www.vehiclemall.com
-          ipaddress: 54.239.130.6
-        - domain: www.vehiclemall.com
-          ipaddress: 52.84.2.44
+          ipaddress: 54.230.1.105
+        - domain: www.toasttab.com
+          ipaddress: 54.192.1.97
+        - domain: www.tripfactory.com
+          ipaddress: 204.246.169.101
+        - domain: www.tripfactory.com
+          ipaddress: 54.182.0.13
+        - domain: www.uat.truecardev.com
+          ipaddress: 52.84.1.61
+        - domain: www.uat.truecardev.com
+          ipaddress: 205.251.251.147
+        - domain: www.uniqlo.com
+          ipaddress: 54.230.1.42
+        - domain: www.urban-tube.com
+          ipaddress: 99.84.0.224
         - domain: www.videopolis.com
-          ipaddress: 52.84.4.193
-        - domain: www.younow.com
-          ipaddress: 54.239.130.233
-        - domain: www.zoop.ws
-          ipaddress: 52.84.0.214
-        - domain: www.zoop.ws
-          ipaddress: 13.35.2.250
+          ipaddress: 204.246.169.111
+        - domain: www.vistarmedia.com
+          ipaddress: 205.251.251.27
+        - domain: www.xp-assets.aiv-cdn.net
+          ipaddress: 52.84.0.238
+        - domain: www.zag.com
+          ipaddress: 52.222.129.119
+        - domain: www.zenefits.com
+          ipaddress: 54.230.1.8
+        - domain: www.zenefits.com
+          ipaddress: 204.246.169.120
+        - domain: www.zoocdn.com
+          ipaddress: 54.182.1.33
+        - domain: www.zoocdn.com
+          ipaddress: 204.246.169.164
+        - domain: www5.keiyogas.co.jp
+          ipaddress: 13.32.1.135
         - domain: xignite.com
-          ipaddress: 13.35.2.132
-        - domain: yldbt.com
-          ipaddress: 13.35.2.228
-        - domain: z-eu.amazon-adsystem.com
-          ipaddress: 52.84.0.44
-        - domain: zapier.com
-          ipaddress: 54.239.130.79
+          ipaddress: 205.251.251.17
+        - domain: xj-storage.jp
+          ipaddress: 204.246.169.108
+        - domain: youracclaim.com
+          ipaddress: 54.230.1.100
+        - domain: z-fe.amazon-adsystem.com
+          ipaddress: 52.222.129.20
+        - domain: z-na.amazon-adsystem.com
+          ipaddress: 13.35.1.112
+        - domain: zeasn.tv
+          ipaddress: 13.32.1.145
+        - domain: zerostack.com
+          ipaddress: 52.222.128.239
+        - domain: zigbang.com
+          ipaddress: 99.86.1.154
+        - domain: zimbra.com
+          ipaddress: 13.32.1.103
+        - domain: zipmark.com
+          ipaddress: 54.182.1.107
+        - domain: zuora.com
+          ipaddress: 99.84.0.125
+        - domain: zurple.com
+          ipaddress: 52.222.129.54
+        - domain: zype.com
+          ipaddress: 54.192.1.127
+        - domain: zype.com
+          ipaddress: 52.84.0.164
   masqueradesets:
     cloudflare: []
     cloudfront: *cfmasq
@@ -7047,6 +7047,7 @@ proxiedsites:
   - googlepages.com
   - googlesile.com
   - googleusercontent.com
+  - googlevideo.com
   - gooya.com
   - gopetition.com
   - goproxing.com
@@ -9080,6 +9081,7 @@ proxiedsites:
   - porn-xhamster.com
   - porn.com
   - porn2.com
+  - porn8.com
   - porn99.net
   - pornbase.org
   - pornerbros.com
@@ -11375,6 +11377,7 @@ proxiedsites:
   - yikyakapp.com
   - yildiz.edu.tr
   - yimg.com
+  - yin.bi
   - yingchao8.com
   - yinlaohan.us
   - yinrense.com
@@ -11556,12 +11559,16 @@ proxiedsites:
 trustedcas: 
 - commonname: "DigiCert Global Root CA"
   cert: "-----BEGIN CERTIFICATE-----\nMIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh\nMQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3\nd3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBD\nQTAeFw0wNjExMTAwMDAwMDBaFw0zMTExMTAwMDAwMDBaMGExCzAJBgNVBAYTAlVT\nMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j\nb20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IENBMIIBIjANBgkqhkiG\n9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4jvhEXLeqKTTo1eqUKKPC3eQyaKl7hLOllsB\nCSDMAZOnTjC3U/dDxGkAV53ijSLdhwZAAIEJzs4bg7/fzTtxRuLWZscFs3YnFo97\nnh6Vfe63SKMI2tavegw5BmV/Sl0fvBf4q77uKNd0f3p4mVmFaG5cIzJLv07A6Fpt\n43C/dxC//AH2hdmoRBBYMql1GNXRor5H4idq9Joz+EkIYIvUX7Q6hL+hqkpMfT7P\nT19sdl6gSzeRntwi5m3OFBqOasv+zbMUZBfHWymeMr/y7vrTC0LUq7dBMtoM1O/4\ngdW7jVg/tRvoSSiicNoxBN33shbyTApOB6jtSj1etX+jkMOvJwIDAQABo2MwYTAO\nBgNVHQ8BAf8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUA95QNVbR\nTLtm8KPiGxvDl7I90VUwHwYDVR0jBBgwFoAUA95QNVbRTLtm8KPiGxvDl7I90VUw\nDQYJKoZIhvcNAQEFBQADggEBAMucN6pIExIK+t1EnE9SsPTfrgT1eXkIoyQY/Esr\nhMAtudXH/vTBH1jLuG2cenTnmCmrEbXjcKChzUyImZOMkXDiqw8cvpOp/2PV5Adg\n06O/nVsJ8dWO41P0jmP6P6fbtGbfYmbW0W5BjfIttep3Sp+dWOIrWcBAI+0tKIJF\nPnlUkiaY4IBIqDfv8NZ5YBberOgOzW6sRBc4L0na4UU+Krk2U886UAb3LujEV0ls\nYSEY1QSteDwsOoBrp+uvFRTp2InBuThs4pFsiv9kuXclVzDAGySj4dzp30d8tbQk\nCAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=\n-----END CERTIFICATE-----\n"
-- commonname: "DigiCert Global Root G2"
-  cert: "-----BEGIN CERTIFICATE-----\nMIIDjjCCAnagAwIBAgIQAzrx5qcRqaC7KGSxHQn65TANBgkqhkiG9w0BAQsFADBh\nMQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3\nd3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBH\nMjAeFw0xMzA4MDExMjAwMDBaFw0zODAxMTUxMjAwMDBaMGExCzAJBgNVBAYTAlVT\nMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j\nb20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IEcyMIIBIjANBgkqhkiG\n9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuzfNNNx7a8myaJCtSnX/RrohCgiN9RlUyfuI\n2/Ou8jqJkTx65qsGGmvPrC3oXgkkRLpimn7Wo6h+4FR1IAWsULecYxpsMNzaHxmx\n1x7e/dfgy5SDN67sH0NO3Xss0r0upS/kqbitOtSZpLYl6ZtrAGCSYP9PIUkY92eQ\nq2EGnI/yuum06ZIya7XzV+hdG82MHauVBJVJ8zUtluNJbd134/tJS7SsVQepj5Wz\ntCO7TG1F8PapspUwtP1MVYwnSlcUfIKdzXOS0xZKBgyMUNGPHgm+F6HmIcr9g+UQ\nvIOlCsRnKPZzFBQ9RnbDhxSJITRNrw9FDKZJobq7nMWxM4MphQIDAQABo0IwQDAP\nBgNVHRMBAf8EBTADAQH/MA4GA1UdDwEB/wQEAwIBhjAdBgNVHQ4EFgQUTiJUIBiV\n5uNu5g/6+rkS7QYXjzkwDQYJKoZIhvcNAQELBQADggEBAGBnKJRvDkhj6zHd6mcY\n1Yl9PMWLSn/pvtsrF9+wX3N3KjITOYFnQoQj8kVnNeyIv/iPsGEMNKSuIEyExtv4\nNeF22d+mQrvHRAiGfzZ0JFrabA0UWTW98kndth/Jsw1HKj2ZL7tcu7XUIOGZX1NG\nFdtom/DzMNU+MeKNhJ7jitralj41E6Vf8PlwUHBHQRFXGU7Aj64GxJUTFy8bJZ91\n8rGOmaFvE7FBcf6IKshPECBV1/MUReXgRPTqh5Uykw7+U0b6LJ3/iyK5S9kJRaTe\npLiaWN0bfVKfjllDiIGknibVb63dDcY3fe0Dkhvld1927jyNxF1WW6LZZm6zNTfl\nMrY=\n-----END CERTIFICATE-----\n"
 - commonname: "Amazon Root CA 1"
   cert: "-----BEGIN CERTIFICATE-----\nMIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF\nADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6\nb24gUm9vdCBDQSAxMB4XDTE1MDUyNjAwMDAwMFoXDTM4MDExNzAwMDAwMFowOTEL\nMAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJv\nb3QgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJ4gHHKeNXj\nca9HgFB0fW7Y14h29Jlo91ghYPl0hAEvrAIthtOgQ3pOsqTQNroBvo3bSMgHFzZM\n9O6II8c+6zf1tRn4SWiw3te5djgdYZ6k/oI2peVKVuRF4fn9tBb6dNqcmzU5L/qw\nIFAGbHrQgLKm+a/sRxmPUDgH3KKHOVj4utWp+UhnMJbulHheb4mjUcAwhmahRWa6\nVOujw5H5SNz/0egwLX0tdHA114gk957EWW67c4cX8jJGKLhD+rcdqsq08p8kDi1L\n93FcXmn/6pUCyziKrlA4b9v7LWIbxcceVOF34GfID5yHI9Y/QCB/IIDEgEw+OyQm\njgSubJrIqg0CAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC\nAYYwHQYDVR0OBBYEFIQYzIU07LwMlJQuCFmcx7IQTgoIMA0GCSqGSIb3DQEBCwUA\nA4IBAQCY8jdaQZChGsV2USggNiMOruYou6r4lK5IpDB/G/wkjUu0yKGX9rbxenDI\nU5PMCCjjmCXPI6T53iHTfIUJrU6adTrCC2qJeHZERxhlbI1Bjjt/msv0tadQ1wUs\nN+gDS63pYaACbvXy8MWy7Vu33PqUXHeeE6V/Uq2V8viTO96LXFvKWlJbYK8U90vv\no/ufQJVtMVT8QtPHRh8jrdkPSHCa2XV4cdFyQzR1bldZwgJcJmApzyMZFo6IQ6XU\n5MsI+yMRQ+hDKXJioaldXgjUkK642M4UwtBV8ob2xJNDd2ZhwLnoQdeXeGADbkpy\nrqXRfboQnoZsG4q5WTP468SQvvG5\n-----END CERTIFICATE-----\n"
-- commonname: "Go Daddy Root Certificate Authority - G2"
-  cert: "-----BEGIN CERTIFICATE-----\nMIIDxTCCAq2gAwIBAgIBADANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMCVVMx\nEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAYBgNVBAoT\nEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290IENlcnRp\nZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTA5MDkwMTAwMDAwMFoXDTM3MTIzMTIz\nNTk1OVowgYMxCzAJBgNVBAYTAlVTMRAwDgYDVQQIEwdBcml6b25hMRMwEQYDVQQH\nEwpTY290dHNkYWxlMRowGAYDVQQKExFHb0RhZGR5LmNvbSwgSW5jLjExMC8GA1UE\nAxMoR28gRGFkZHkgUm9vdCBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkgLSBHMjCCASIw\nDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAL9xYgjx+lk09xvJGKP3gElY6SKD\nE6bFIEMBO4Tx5oVJnyfq9oQbTqC023CYxzIBsQU+B07u9PpPL1kwIuerGVZr4oAH\n/PMWdYA5UXvl+TW2dE6pjYIT5LY/qQOD+qK+ihVqf94Lw7YZFAXK6sOoBJQ7Rnwy\nDfMAZiLIjWltNowRGLfTshxgtDj6AozO091GB94KPutdfMh8+7ArU6SSYmlRJQVh\nGkSBjCypQ5Yj36w6gZoOKcUcqeldHraenjAKOc7xiID7S13MMuyFYkMlNAJWJwGR\ntDtwKj9useiciAF9n9T521NtYJ2/LOdYq7hfRvzOxBsDPAnrSTFcaUaz4EcCAwEA\nAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAQYwHQYDVR0OBBYE\nFDqahQcQZyi27/a9BUFuIMGU2g/eMA0GCSqGSIb3DQEBCwUAA4IBAQCZ21151fmX\nWWcDYfF+OwYxdS2hII5PZYe096acvNjpL9DbWu7PdIxztDhC2gV7+AJ1uP2lsdeu\n9tfeE8tTEH6KRtGX+rcuKxGrkLAngPnon1rpN5+r5N9ss4UXnT3ZJE95kTXWXwTr\ngIOrmgIttRD02JDHBHNA7XIloKmf7J6raBKZV8aPEjoJpL1E/QYVN8Gb5DKj7Tjo\n2GTzLH4U/ALqn83/B2gX2yKQOC16jdFU8WnjXzPKej17CuPKf1855eJ1usV2GDPO\nLPAvTK33sefOT6jEm0pUBsV/fdUID+Ic/n4XuKxe9tQWskMJDE32p2u0mYRlynqI\n4uJEvlz36hz1\n-----END CERTIFICATE-----\n"
+- commonname: "DigiCert Global Root G2"
+  cert: "-----BEGIN CERTIFICATE-----\nMIIDjjCCAnagAwIBAgIQAzrx5qcRqaC7KGSxHQn65TANBgkqhkiG9w0BAQsFADBh\nMQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3\nd3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBH\nMjAeFw0xMzA4MDExMjAwMDBaFw0zODAxMTUxMjAwMDBaMGExCzAJBgNVBAYTAlVT\nMRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j\nb20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IEcyMIIBIjANBgkqhkiG\n9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuzfNNNx7a8myaJCtSnX/RrohCgiN9RlUyfuI\n2/Ou8jqJkTx65qsGGmvPrC3oXgkkRLpimn7Wo6h+4FR1IAWsULecYxpsMNzaHxmx\n1x7e/dfgy5SDN67sH0NO3Xss0r0upS/kqbitOtSZpLYl6ZtrAGCSYP9PIUkY92eQ\nq2EGnI/yuum06ZIya7XzV+hdG82MHauVBJVJ8zUtluNJbd134/tJS7SsVQepj5Wz\ntCO7TG1F8PapspUwtP1MVYwnSlcUfIKdzXOS0xZKBgyMUNGPHgm+F6HmIcr9g+UQ\nvIOlCsRnKPZzFBQ9RnbDhxSJITRNrw9FDKZJobq7nMWxM4MphQIDAQABo0IwQDAP\nBgNVHRMBAf8EBTADAQH/MA4GA1UdDwEB/wQEAwIBhjAdBgNVHQ4EFgQUTiJUIBiV\n5uNu5g/6+rkS7QYXjzkwDQYJKoZIhvcNAQELBQADggEBAGBnKJRvDkhj6zHd6mcY\n1Yl9PMWLSn/pvtsrF9+wX3N3KjITOYFnQoQj8kVnNeyIv/iPsGEMNKSuIEyExtv4\nNeF22d+mQrvHRAiGfzZ0JFrabA0UWTW98kndth/Jsw1HKj2ZL7tcu7XUIOGZX1NG\nFdtom/DzMNU+MeKNhJ7jitralj41E6Vf8PlwUHBHQRFXGU7Aj64GxJUTFy8bJZ91\n8rGOmaFvE7FBcf6IKshPECBV1/MUReXgRPTqh5Uykw7+U0b6LJ3/iyK5S9kJRaTe\npLiaWN0bfVKfjllDiIGknibVb63dDcY3fe0Dkhvld1927jyNxF1WW6LZZm6zNTfl\nMrY=\n-----END CERTIFICATE-----\n"
 - commonname: "COMODO RSA Certification Authority"
   cert: "-----BEGIN CERTIFICATE-----\nMIIF2DCCA8CgAwIBAgIQTKr5yttjb+Af907YWwOGnTANBgkqhkiG9w0BAQwFADCB\nhTELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4G\nA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExpbWl0ZWQxKzApBgNV\nBAMTIkNPTU9ETyBSU0EgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkwHhcNMTAwMTE5\nMDAwMDAwWhcNMzgwMTE4MjM1OTU5WjCBhTELMAkGA1UEBhMCR0IxGzAZBgNVBAgT\nEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMR\nQ09NT0RPIENBIExpbWl0ZWQxKzApBgNVBAMTIkNPTU9ETyBSU0EgQ2VydGlmaWNh\ndGlvbiBBdXRob3JpdHkwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQCR\n6FSS0gpWsawNJN3Fz0RndJkrN6N9I3AAcbxT38T6KhKPS38QVr2fcHK3YX/JSw8X\npz3jsARh7v8Rl8f0hj4K+j5c+ZPmNHrZFGvnnLOFoIJ6dq9xkNfs/Q36nGz637CC\n9BR++b7Epi9Pf5l/tfxnQ3K9DADWietrLNPtj5gcFKt+5eNu/Nio5JIk2kNrYrhV\n/erBvGy2i/MOjZrkm2xpmfh4SDBF1a3hDTxFYPwyllEnvGfDyi62a+pGx8cgoLEf\nZd5ICLqkTqnyg0Y3hOvozIFIQ2dOciqbXL1MGyiKXCJ7tKuY2e7gUYPDCUZObT6Z\n+pUX2nwzV0E8jVHtC7ZcryxjGt9XyD+86V3Em69FmeKjWiS0uqlWPc9vqv9JWL7w\nqP/0uK3pN/u6uPQLOvnoQ0IeidiEyxPx2bvhiWC4jChWrBQdnArncevPDt09qZah\nSL0896+1DSJMwBGB7FY79tOi4lu3sgQiUpWAk2nojkxl8ZEDLXB0AuqLZxUpaVIC\nu9ffUGpVRr+goyhhf3DQw6KqLCGqR84onAZFdr+CGCe01a60y1Dma/RMhnEw6abf\nFobg2P9A3fvQQoh/ozM6LlweQRGBY84YcWsr7KaKtzFcOmpH4MN5WdYgGq/yapiq\ncrxXStJLnbsQ/LBMQeXtHT1eKJ2czL+zUdqnR+WEUwIDAQABo0IwQDAdBgNVHQ4E\nFgQUu69+Aj36pvE8hI6t7jiY7NkyMtQwDgYDVR0PAQH/BAQDAgEGMA8GA1UdEwEB\n/wQFMAMBAf8wDQYJKoZIhvcNAQEMBQADggIBAArx1UaEt65Ru2yyTUEUAJNMnMvl\nwFTPoCWOAvn9sKIN9SCYPBMtrFaisNZ+EZLpLrqeLppysb0ZRGxhNaKatBYSaVqM\n4dc+pBroLwP0rmEdEBsqpIt6xf4FpuHA1sj+nq6PK7o9mfjYcwlYRm6mnPTXJ9OV\n2jeDchzTc+CiR5kDOF3VSXkAKRzH7JsgHAckaVd4sjn8OoSgtZx8jb8uk2Intzna\nFxiuvTwJaP+EmzzV1gsD41eeFPfR60/IvYcjt7ZJQ3mFXLrrkguhxuhoqEwWsRqZ\nCuhTLJK7oQkYdQxlqHvLI7cawiiFwxv/0Cti76R7CZGYZ4wUAc1oBmpjIXUDgIiK\nboHGhfKppC3n9KUkEEeDys30jXlYsQab5xoq2Z0B15R97QNKyvDb6KkBPvVWmcke\njkk9u+UJueBPSZI9FoJAzMxZxuY67RIuaTxslbH9qh17f4a+Hg4yRvv7E491f0yL\nS0Zj/gA0QHDBw7mh3aZw4gSzQbzpgJHqZJx64SIDqZxubw5lT2yHh17zbqD5daWb\nQOhTsiedSrnAdyGN/4fy3ryM7xfft0kL0fJuMAsaDk527RH89elWsn2/x20Kk4yl\n0MC2Hb46TpSi125sC8KKfPog88Tk5c0NqMuRkrF8hey1FGlmDoLnzc7ILaZRfyHB\nNVOFBkpdn627G190\n-----END CERTIFICATE-----\n"
+- commonname: "Go Daddy Root Certificate Authority - G2"
+  cert: "-----BEGIN CERTIFICATE-----\nMIIDxTCCAq2gAwIBAgIBADANBgkqhkiG9w0BAQsFADCBgzELMAkGA1UEBhMCVVMx\nEDAOBgNVBAgTB0FyaXpvbmExEzARBgNVBAcTClNjb3R0c2RhbGUxGjAYBgNVBAoT\nEUdvRGFkZHkuY29tLCBJbmMuMTEwLwYDVQQDEyhHbyBEYWRkeSBSb290IENlcnRp\nZmljYXRlIEF1dGhvcml0eSAtIEcyMB4XDTA5MDkwMTAwMDAwMFoXDTM3MTIzMTIz\nNTk1OVowgYMxCzAJBgNVBAYTAlVTMRAwDgYDVQQIEwdBcml6b25hMRMwEQYDVQQH\nEwpTY290dHNkYWxlMRowGAYDVQQKExFHb0RhZGR5LmNvbSwgSW5jLjExMC8GA1UE\nAxMoR28gRGFkZHkgUm9vdCBDZXJ0aWZpY2F0ZSBBdXRob3JpdHkgLSBHMjCCASIw\nDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAL9xYgjx+lk09xvJGKP3gElY6SKD\nE6bFIEMBO4Tx5oVJnyfq9oQbTqC023CYxzIBsQU+B07u9PpPL1kwIuerGVZr4oAH\n/PMWdYA5UXvl+TW2dE6pjYIT5LY/qQOD+qK+ihVqf94Lw7YZFAXK6sOoBJQ7Rnwy\nDfMAZiLIjWltNowRGLfTshxgtDj6AozO091GB94KPutdfMh8+7ArU6SSYmlRJQVh\nGkSBjCypQ5Yj36w6gZoOKcUcqeldHraenjAKOc7xiID7S13MMuyFYkMlNAJWJwGR\ntDtwKj9useiciAF9n9T521NtYJ2/LOdYq7hfRvzOxBsDPAnrSTFcaUaz4EcCAwEA\nAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAQYwHQYDVR0OBBYE\nFDqahQcQZyi27/a9BUFuIMGU2g/eMA0GCSqGSIb3DQEBCwUAA4IBAQCZ21151fmX\nWWcDYfF+OwYxdS2hII5PZYe096acvNjpL9DbWu7PdIxztDhC2gV7+AJ1uP2lsdeu\n9tfeE8tTEH6KRtGX+rcuKxGrkLAngPnon1rpN5+r5N9ss4UXnT3ZJE95kTXWXwTr\ngIOrmgIttRD02JDHBHNA7XIloKmf7J6raBKZV8aPEjoJpL1E/QYVN8Gb5DKj7Tjo\n2GTzLH4U/ALqn83/B2gX2yKQOC16jdFU8WnjXzPKej17CuPKf1855eJ1usV2GDPO\nLPAvTK33sefOT6jEm0pUBsV/fdUID+Ic/n4XuKxe9tQWskMJDE32p2u0mYRlynqI\n4uJEvlz36hz1\n-----END CERTIFICATE-----\n"
+- commonname: "DigiCert High Assurance EV Root CA"
+  cert: "-----BEGIN CERTIFICATE-----\nMIIDxTCCAq2gAwIBAgIQAqxcJmoLQJuPC3nyrkYldzANBgkqhkiG9w0BAQUFADBs\nMQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3\nd3cuZGlnaWNlcnQuY29tMSswKQYDVQQDEyJEaWdpQ2VydCBIaWdoIEFzc3VyYW5j\nZSBFViBSb290IENBMB4XDTA2MTExMDAwMDAwMFoXDTMxMTExMDAwMDAwMFowbDEL\nMAkGA1UEBhMCVVMxFTATBgNVBAoTDERpZ2lDZXJ0IEluYzEZMBcGA1UECxMQd3d3\nLmRpZ2ljZXJ0LmNvbTErMCkGA1UEAxMiRGlnaUNlcnQgSGlnaCBBc3N1cmFuY2Ug\nRVYgUm9vdCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMbM5XPm\n+9S75S0tMqbf5YE/yc0lSbZxKsPVlDRnogocsF9ppkCxxLeyj9CYpKlBWTrT3JTW\nPNt0OKRKzE0lgvdKpVMSOO7zSW1xkX5jtqumX8OkhPhPYlG++MXs2ziS4wblCJEM\nxChBVfvLWokVfnHoNb9Ncgk9vjo4UFt3MRuNs8ckRZqnrG0AFFoEt7oT61EKmEFB\nIk5lYYeBQVCmeVyJ3hlKV9Uu5l0cUyx+mM0aBhakaHPQNAQTXKFx01p8VdteZOE3\nhzBWBOURtCmAEvF5OYiiAhF8J2a3iLd48soKqDirCmTCv2ZdlYTBoSUeh10aUAsg\nEsxBu24LUTi4S8sCAwEAAaNjMGEwDgYDVR0PAQH/BAQDAgGGMA8GA1UdEwEB/wQF\nMAMBAf8wHQYDVR0OBBYEFLE+w2kD+L9HAdSYJhoIAu9jZCvDMB8GA1UdIwQYMBaA\nFLE+w2kD+L9HAdSYJhoIAu9jZCvDMA0GCSqGSIb3DQEBBQUAA4IBAQAcGgaX3Nec\nnzyIZgYIVyHbIUf4KmeqvxgydkAQV8GK83rZEWWONfqe/EW1ntlMMUu4kehDLI6z\neM7b41N5cdblIZQB2lWHmiRk9opmzN6cN82oNLFpmyPInngiK3BD41VHMWEZ71jF\nhS9OMPagMRYjyOfiZRYzy78aG6A9+MpeizGLYAiJLQwGXFK3xPkKmNEVX58Svnw2\nYzi9RKR/5CYrCsSXaQ3pjOLAEFe4yHYSkVXySGnYvCoCWw9E1CAx2/S6cCZdkGCe\nvEsXCS+0yx5DaMkHJ8HSXPfqIbloEpw8nL+e/IBcm2PN7EeqJSdnoDfzAIJ9VNep\n+OkuE6N36B9K\n-----END CERTIFICATE-----\n"
+- commonname: "GlobalSign Root CA"
+  cert: "-----BEGIN CERTIFICATE-----\nMIIDdTCCAl2gAwIBAgILBAAAAAABFUtaw5QwDQYJKoZIhvcNAQEFBQAwVzELMAkG\nA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYtc2ExEDAOBgNVBAsTB1Jv\nb3QgQ0ExGzAZBgNVBAMTEkdsb2JhbFNpZ24gUm9vdCBDQTAeFw05ODA5MDExMjAw\nMDBaFw0yODAxMjgxMjAwMDBaMFcxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9i\nYWxTaWduIG52LXNhMRAwDgYDVQQLEwdSb290IENBMRswGQYDVQQDExJHbG9iYWxT\naWduIFJvb3QgQ0EwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDaDuaZ\njc6j40+Kfvvxi4Mla+pIH/EqsLmVEQS98GPR4mdmzxzdzxtIK+6NiY6arymAZavp\nxy0Sy6scTHAHoT0KMM0VjU/43dSMUBUc71DuxC73/OlS8pF94G3VNTCOXkNz8kHp\n1Wrjsok6Vjk4bwY8iGlbKk3Fp1S4bInMm/k8yuX9ifUSPJJ4ltbcdG6TRGHRjcdG\nsnUOhugZitVtbNV4FpWi6cgKOOvyJBNPc1STE4U6G7weNLWLBYy5d4ux2x8gkasJ\nU26Qzns3dLlwR5EiUWMWea6xrkEmCMgZK9FGqkjWZCrXgzT/LCrBbBlDSgeF59N8\n9iFo7+ryUp9/k5DPAgMBAAGjQjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNVHRMBAf8E\nBTADAQH/MB0GA1UdDgQWBBRge2YaRQ2XyolQL30EzTSo//z9SzANBgkqhkiG9w0B\nAQUFAAOCAQEA1nPnfE920I2/7LqivjTFKDK1fPxsnCwrvQmeU79rXqoRSLblCKOz\nyj1hTdNGCbM+w6DjY1Ub8rrvrTnhQ7k4o+YviiY776BQVvnGCv04zcQLcFGUl5gE\n38NflNUVyRRBnMRddWQVDf9VMOyGj/8N7yy5Y0b2qvzfvGn9LhJIZJrglfCm7ymP\nAbEVtQwdpf5pLGkkeB6zpxxxYu7KyJesF12KwvhHhm4qxFYxldBniYUr+WymXUad\nDKqC5JlR3XC321Y9YeRq4VzW9v493kHMB65jUr9TU/Qr6cf9tveCX4XSQRjbgbME\nHMUfpIBvFSDJ3gyICh3WZlXi/EjJKSZp4A==\n-----END CERTIFICATE-----\n"
 `)

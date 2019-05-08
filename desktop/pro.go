@@ -37,8 +37,13 @@ func isProUserFast() (isPro bool, statusKnown bool) {
 func servePro(channel ws.UIChannel) error {
 	logger := golog.LoggerFor("flashlight.app.pro")
 	chFetch := make(chan bool)
-	retryInterval := 10 * time.Second
-	retry := time.NewTimer(retryInterval)
+	retry := time.NewTimer(0)
+	retryLater := func() {
+		if !retry.Stop() {
+			<-retry.C
+		}
+		retry.Reset(10 * time.Second)
+	}
 
 	fetchOrCreate := func() {
 		userID := settings.GetUserID()
@@ -46,7 +51,7 @@ func servePro(channel ws.UIChannel) error {
 			user, err := pro.NewUser(settings)
 			if err != nil {
 				logger.Errorf("Could not create new Pro user: %v", err)
-				retry.Reset(retryInterval)
+				retryLater()
 			} else {
 				settings.SetUserIDAndToken(user.Auth.ID, user.Auth.Token)
 			}
@@ -54,12 +59,11 @@ func servePro(channel ws.UIChannel) error {
 			_, err := pro.FetchUserData(settings)
 			if err != nil {
 				logger.Errorf("Could not get user data for %v: %v", userID, err)
-				retry.Reset(retryInterval)
+				retryLater()
 			}
 		}
 	}
 	go func() {
-		fetchOrCreate()
 		for {
 			select {
 			case <-chFetch:
@@ -69,6 +73,7 @@ func servePro(channel ws.UIChannel) error {
 			}
 		}
 	}()
+
 	helloFn := func(write func(interface{})) {
 		if user, known := pro.GetUserDataFast(settings.GetUserID()); known {
 			logger.Debugf("Sending current user data to new client: %v", user)

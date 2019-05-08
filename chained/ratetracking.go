@@ -1,6 +1,7 @@
 package chained
 
 import (
+	"context"
 	"net"
 	"sync/atomic"
 	"time"
@@ -17,7 +18,7 @@ const (
 
 var totalReceived = uint64(0)
 
-func (p *proxy) withRateTracking(wrapped net.Conn, origin string) net.Conn {
+func (p *proxy) withRateTracking(wrapped net.Conn, origin string, ctx context.Context) net.Conn {
 	if wrapped == nil {
 		return nil
 	}
@@ -26,12 +27,16 @@ func (p *proxy) withRateTracking(wrapped net.Conn, origin string) net.Conn {
 		stats := conn.Stats()
 		rwError := conn.FirstError()
 		if rwError == nil {
-			p.consecRWSuccesses.Inc()
+			if stats.RecvTotal > 0 {
+				p.consecReadSuccesses.Inc()
+			}
 		} else {
-			p.consecRWSuccesses.Dec()
+			// Decrease for whatever error as subsequent reads will fail anyway
+			// in this case.
+			p.consecReadSuccesses.Dec()
 		}
 		// record simple traffic without origin
-		op := ops.Begin("traffic").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed)
+		op := ops.BeginWithBeam("traffic", ctx).ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed)
 		op.SetMetric("client_bytes_sent", borda.Sum(stats.SentTotal)).
 			SetMetric("client_bytes_recv", borda.Sum(stats.RecvTotal))
 		op.FailIf(rwError)
@@ -39,7 +44,7 @@ func (p *proxy) withRateTracking(wrapped net.Conn, origin string) net.Conn {
 		op.End()
 
 		// record xfer data with origin
-		op = ops.Begin("xfer").Origin(origin, "")
+		op = ops.BeginWithBeam("xfer", ctx).Origin(origin, "")
 		op.SetMetric("client_bytes_sent", borda.Sum(stats.SentTotal)).
 			SetMetric("client_bps_sent_min", borda.Min(stats.SentMin)).
 			SetMetric("client_bps_sent_max", borda.Max(stats.SentMax)).

@@ -72,7 +72,6 @@ func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *C
 		func() bool { return true },
 		func() string { return lang },
 		func() string { return adSwapTargetURL },
-		func() bool { return true },
 		func(host string) string { return host },
 	)
 	return client
@@ -156,36 +155,34 @@ func TestDialShortcut(t *testing.T) {
 	_, p, _ := net.SplitHostPort(addr)
 	port, _ := strconv.Atoi(p)
 	proxiedCONNECTPorts = append(proxiedCONNECTPorts, port)
-
 	client := newClient()
-	shortcutVisited := false
+	shortcutVisited := 0
+
 	client.allowShortcut = func(ctx context.Context, addr string) (bool, net.IP) {
-		shortcutVisited = true
+		shortcutVisited++
 		return true, net.ParseIP(addr)
 	}
-	mockResponse := []byte("HTTP/1.1 404 Not Found\r\n\r\n") // used as a sign that the request is sent to proxy
-	resetBalancer(client, mockconn.SucceedingDialer(mockResponse).Dial)
+	// used as a sign that the request is sent to proxy
+	mockResponse := []byte("HTTP/1.1 404 Not Found\r\n\r\n")
+	// add some delay before sending back data, as response before the request
+	// was sent is apparently not expected by http client.
+	resetBalancer(client, mockconn.SlowResponder(mockconn.SucceedingDialer(mockResponse), 10*time.Millisecond).Dial)
 
 	req, _ := http.NewRequest("GET", site.URL, nil)
 	res, _ := roundTrip(client, req)
-	assert.True(t, shortcutVisited)
+	assert.Equal(t, 1, shortcutVisited, "should check shortcut list")
 	assert.Equal(t, 200, res.StatusCode, "should respond with 200 when a shortcutted site is reachable")
 	body, _ := ioutil.ReadAll(res.Body)
 	assert.Equal(t, "abc", string(body), "should respond with correct content")
 
-	// disable the test temporarily. It has weird error "readLoopPeekFailLocked <nil>" when run with `go test -race`
-	// w = newMockWriter()
-	// req, _ = http.NewRequest("GET", "http://unknown:80", nil)
-	// shortcutVisited = false
-	// client.ServeHTTP(w, req)
-	// assert.True(t, shortcutVisited)
-	// res, = w.ReadResponse()
-	// assert.Equal(t, 404, res.StatusCode, "should dial proxy if the shortcutted site is unreachable")
+	req, _ = http.NewRequest("GET", "http://unknown:80", nil)
+	res, _ = roundTrip(client, req)
+	assert.Equal(t, 2, shortcutVisited, "should check shortcut list")
+	assert.Equal(t, 404, res.StatusCode, "should dial proxy if the shortcutted site is unreachable")
 
 	req, _ = http.NewRequest("CONNECT", "http://unknown2:80", nil)
-	shortcutVisited = false
 	res, _ = roundTrip(client, req)
-	assert.True(t, shortcutVisited)
+	assert.Equal(t, 3, shortcutVisited, "should check shortcut list")
 	nestedResp, err := res.nested()
 	if !assert.NoError(t, err) {
 		return
@@ -193,41 +190,56 @@ func TestDialShortcut(t *testing.T) {
 	assert.Equal(t, 404, nestedResp.StatusCode, "should dial proxy if the shortcutted site is unreachable")
 
 	client.allowShortcut = func(context.Context, string) (bool, net.IP) {
-		shortcutVisited = true
+		shortcutVisited++
 		return false, nil
 	}
 	req, _ = http.NewRequest("CONNECT", "http://unknown3:80", nil)
-	shortcutVisited = false
 	res, _ = roundTrip(client, req)
-	assert.True(t, shortcutVisited)
+	assert.Equal(t, 4, shortcutVisited, "should check shortcut list")
 	nestedResp, err = res.nested()
 	if !assert.NoError(t, err) {
 		return
 	}
 	assert.Equal(t, 404, nestedResp.StatusCode, "should dial proxy if the site is not shortcutted")
 
-	// disable the test temporarily. It has weird error "readLoopPeekFailLocked <nil>" when run with `go test -race`
-	// detour.AddToWl("unknown4:80", true)
-	// defer detour.RemoveFromWl("unknown4:80")
-	// w = newMockWriter()
-	// req, _ = http.NewRequest("GET", "http://unknown4:80", nil)
-	// shortcutVisited = false
-	// client.ServeHTTP(w, req)
-	// assert.False(t, shortcutVisited, "should not check shortcut list if the site is whitelisted")
-	// res, = w.ReadResponse()
-	// assert.Equal(t, 404, res.StatusCode, "should dial proxy if the site is whitelisted")
+	detour.AddToWl("unknown4:80", true)
+	defer detour.RemoveFromWl("unknown4:80")
+	req, _ = http.NewRequest("GET", "http://unknown4:80", nil)
+	res, _ = roundTrip(client, req)
+	assert.Equal(t, 4, shortcutVisited, "should not check shortcut list if the site is whitelisted")
+	assert.Equal(t, 404, res.StatusCode, "should dial proxy if the site is whitelisted")
 
 	detour.AddToWl("unknown5:80", true)
 	defer detour.RemoveFromWl("unknown5:80")
 	req, _ = http.NewRequest("CONNECT", "http://unknown5:80", nil)
-	shortcutVisited = false
 	res, _ = roundTrip(client, req)
-	assert.False(t, shortcutVisited, "should not check shortcut list if the site is whitelisted")
+	assert.Equal(t, 4, shortcutVisited, "should not check shortcut list if the site is whitelisted")
 	nestedResp, err = res.nested()
 	if !assert.NoError(t, err) {
 		return
 	}
 	assert.Equal(t, 404, nestedResp.StatusCode, "should dial proxy if the site is whitelisted")
+}
+
+// See https://github.com/getlantern/lantern-internal/issues/2724
+func TestTimeoutCheckingShortcut(t *testing.T) {
+	requestTimeout := 10 * time.Millisecond
+	client := newClient()
+	client.requestTimeout = requestTimeout
+	client.useDetour = func() bool { return false }
+	client.allowShortcut = func(ctx context.Context, addr string) (bool, net.IP) {
+		// In theory allowShortcut should never exceed the context deadline,
+		// but it could happen in cases like computer resuming from sleeping.
+		time.Sleep(requestTimeout * 2)
+		return false, nil
+	}
+
+	dialer := mockconn.SucceedingDialer([]byte("whatever"))
+	resetBalancer(client, dialer.Dial)
+	req, _ := http.NewRequest("GET", "http://unknown:80", nil)
+	res, _ := roundTrip(client, req)
+	assert.Equal(t, 503, res.StatusCode, "should fail if checking shortcut list times out")
+	assert.True(t, dialer.AllClosed(), "should not dial proxy if checking shourcut list times out")
 }
 
 func TestAccessingProxyPort(t *testing.T) {
@@ -398,9 +410,6 @@ func (d *testDialer) DataRecv() uint64 {
 
 func (d *testDialer) DataSent() uint64 {
 	return 0
-}
-
-func (d *testDialer) ForceRedial() {
 }
 
 func (d *testDialer) CheckConnectivity() bool {
