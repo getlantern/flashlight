@@ -351,7 +351,7 @@ func bandwidthUpdates(session Session) {
 	}()
 }
 
-func getBandwidth(quota *bandwidth.Quota, tracked bool) (int, int, int) {
+func getBandwidth(quota *bandwidth.Quota) (int, int, int) {
 	remaining := 0
 	percent := 100
 	if quota == nil {
@@ -374,7 +374,8 @@ func getBandwidth(quota *bandwidth.Quota, tracked bool) (int, int, int) {
 }
 
 func setBandwidth(session Session) {
-	percent, remaining, allowed := getBandwidth(bandwidth.GetQuota())
+	quota, _ := bandwidth.GetQuota()
+	percent, remaining, allowed := getBandwidth(quota)
 	if percent != 0 && remaining != 0 {
 		session.BandwidthUpdate(percent, remaining, allowed)
 	}
