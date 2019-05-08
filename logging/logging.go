@@ -161,7 +161,7 @@ func ZipLogFiles(w io.Writer, underFolder string, maxBytes int64) error {
 	return ZipLogFilesFrom(w, maxBytes, map[string]string{"logs": logdir})
 }
 
-// ZipLogFilesFrom zip the log files from the given dirs to the writer. It will
+// ZipLogFilesFrom zips the log files from the given dirs to the writer. It will
 // stop and return if the newly added file would make the extracted files exceed
 // maxBytes in total.
 func ZipLogFilesFrom(w io.Writer, maxBytes int64, dirs map[string]string) error {

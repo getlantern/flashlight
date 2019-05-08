@@ -90,7 +90,6 @@ func zipFile(w *zip.Writer, baseDir string, source string, limit int64, prevByte
 	}
 
 	walkErr := filepath.Walk(source, func(fpath string, info os.FileInfo, err error) error {
-		log.Debug(source)
 		if err != nil {
 			return fmt.Errorf("walking to %s: %v", fpath, err)
 		}
