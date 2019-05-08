@@ -54,6 +54,46 @@
   revision = "5312a61534124124185d41f09206b9fef1d88403"
 
 [[projects]]
+  digest = "1:9e4640c0d56e648789a443f456a38b6611756fe99878cecde657161990c17407"
+  name = "github.com/anacrolix/go-libutp"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d7dd83bce17eb552d89dc42b7acdb8498e7e70db"
+  version = "v1.0.1"
+
+[[projects]]
+  digest = "1:3447219f77f1eb64700a3834b1ef04d99568a31bb97ab6f44ca3f162f3b54d7e"
+  name = "github.com/anacrolix/missinggo"
+  packages = [
+    ".",
+    "expect",
+    "inproc",
+    "perf",
+  ]
+  pruneopts = "UT"
+  revision = "06ffe87aef2930c1cbf3a82ce897a5068063c854"
+  version = "v2.1.0"
+
+[[projects]]
+  digest = "1:4fddfde9c720c471cbe3461e042123057f17330902a5c0d81357f2504ba3492a"
+  name = "github.com/anacrolix/mmsg"
+  packages = [
+    ".",
+    "socket",
+  ]
+  pruneopts = "UT"
+  revision = "e49ae86000d76e6978b573bfaa4e9296713e2fd4"
+  version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:3adb53977686df2c767d57feaba122fa813df4b7d7a8a79c0bfcb47222e57ffc"
+  name = "github.com/anacrolix/sync"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "44578de4e778a60bb7a9c15ab60b3f0b0311a53a"
+
+[[projects]]
   digest = "1:7d191fd0c54ff370eaf6116a14dafe2a328df487baea280699f597aae858d00d"
   name = "github.com/aristanetworks/goarista"
   packages = ["monotime"]
@@ -67,6 +107,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "1fca145dffbcaa8fe914309b1ec0cfc67500fe61"
+
+[[projects]]
+  digest = "1:d6afaeed1502aa28e80a4ed0981d570ad91b2579193404256ce672ed0a609e0d"
+  name = "github.com/beorn7/perks"
+  packages = ["quantile"]
+  pruneopts = "UT"
+  revision = "4b2b341e8d7715fae06375aa633dbb6e91b3fb46"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
@@ -172,12 +220,15 @@
   revision = "86cf8c16f3d092de7a0c72c6eae830ccb2a2147b"
 
 [[projects]]
-  branch = "ox/cleandeps"
-  digest = "1:eadc89c88b0bc2f254d1cc3a33fb822d7bfe4f72e12eac6136cdd43fc500aba9"
+  branch = "master"
+  digest = "1:b6efc2e5eb4130a3d0bbf81d4e804213729a0f557e62aaf72c64fc4c5befa933"
   name = "github.com/getlantern/borda"
-  packages = ["client"]
+  packages = [
+    "client",
+    "client/rpcclient",
+  ]
   pruneopts = "UT"
-  revision = "682b5f61eb60b1e7ba6b5921778ae69aebe483ef"
+  revision = "9a0c110eea9d1b0856323bb4968004cb58d09867"
 
 [[projects]]
   branch = "master"
@@ -430,7 +481,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:87f12219310990424516334193b5fb0d909c815a5ab1053f97cd0170e5f44b5e"
+  digest = "1:f9fee7d6f65186b6409a710ef217704223eb3312995217bdde230e2cedcaf2f8"
   name = "github.com/getlantern/http-proxy-lantern"
   packages = [
     ".",
@@ -446,6 +497,7 @@
     "geo",
     "googlefilter",
     "httpsrewriter",
+    "instrument",
     "lampshade",
     "listeners",
     "mimic",
@@ -461,7 +513,7 @@
     "versioncheck",
   ]
   pruneopts = "UT"
-  revision = "7eadd7153ff951fe64216276a3fa33f3bc72862c"
+  revision = "6e2a6ecc68fb080c518759560236eee025817beb"
 
 [[projects]]
   branch = "master"
@@ -643,9 +695,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:40e3c992c37d5699b5571904971feabd9635a1a5c64cdb5fbd13ac657ea42a69"
+  digest = "1:39e1cd80f39b371a213c8bb1fb24cb57a25055d09f5a2cd47a7ad971ba981551"
   name = "github.com/getlantern/packetforward"
-  packages = ["."]
+  packages = [
+    ".",
+    "server",
+  ]
   pruneopts = "UT"
   revision = "5be78b74b0087a8aade4404ff973ea5752cdd357"
 
@@ -935,8 +990,7 @@
   revision = "66deaeb636dff1ac7d938ce666d090556056a4b0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:0f56223de1ca49228034f96a18d3659415404c986426290b9761935f02894755"
+  digest = "1:4c0989ca0bcd10799064318923b9bc2db6b4d6338dd75f3f2d86c3511aaaf5cf"
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
@@ -946,7 +1000,8 @@
     "ptypes/timestamp",
   ]
   pruneopts = "UT"
-  revision = "e09c5db296004fbe3f74490e84dcd62c3c5ddb1b"
+  revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
+  version = "v1.2.0"
 
 [[projects]]
   branch = "master"
@@ -1087,6 +1142,14 @@
   revision = "0fb14efe8c47ae851c0034ed7a448854d3d34cf3"
 
 [[projects]]
+  digest = "1:f9a5e090336881be43cfc1cf468330c1bdd60abdc9dd194e0b1ab69f4b94dd7c"
+  name = "github.com/huandu/xstrings"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f02667b379e2fb5916c3cda2cf31e0eb885d79f8"
+  version = "v1.2.0"
+
+[[projects]]
   branch = "master"
   digest = "1:190ff84d9b2ed6589088f178cba8edb4b8ecb334df4572421fb016be1ac20463"
   name = "github.com/juju/ratelimit"
@@ -1152,6 +1215,14 @@
   pruneopts = "UT"
   revision = "591c71538704125b0b189f4cd3c0e61485dd6ef7"
   source = "https://github.com/marten-seemann/qtls-deprecated"
+
+[[projects]]
+  digest = "1:ff5ebae34cfbf047d505ee150de27e60570e8c394b3b8fdbb720ff6ac71985fc"
+  name = "github.com/matttproud/golang_protobuf_extensions"
+  packages = ["pbutil"]
+  pruneopts = "UT"
+  revision = "c12348ce28de40eed0136aa2b644d0ee0650e56c"
+  version = "v1.0.1"
 
 [[projects]]
   branch = "master"
@@ -1288,6 +1359,49 @@
   pruneopts = "UT"
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
   version = "v1.0.0"
+
+[[projects]]
+  digest = "1:93a746f1060a8acbcf69344862b2ceced80f854170e1caae089b2834c5fbf7f4"
+  name = "github.com/prometheus/client_golang"
+  packages = [
+    "prometheus",
+    "prometheus/internal",
+    "prometheus/promhttp",
+  ]
+  pruneopts = "UT"
+  revision = "505eaef017263e299324067d40ca2c48f6a2cf50"
+  version = "v0.9.2"
+
+[[projects]]
+  branch = "master"
+  digest = "1:2d5cd61daa5565187e1d96bae64dbbc6080dacf741448e9629c64fd93203b0d4"
+  name = "github.com/prometheus/client_model"
+  packages = ["go"]
+  pruneopts = "UT"
+  revision = "fd36f4220a901265f90734c3183c5f0c91daa0b8"
+
+[[projects]]
+  digest = "1:35cf6bdf68db765988baa9c4f10cc5d7dda1126a54bd62e252dbcd0b1fc8da90"
+  name = "github.com/prometheus/common"
+  packages = [
+    "expfmt",
+    "internal/bitbucket.org/ww/goautoneg",
+    "model",
+  ]
+  pruneopts = "UT"
+  revision = "1ba88736f028e37bc17328369e94a537ae9e0234"
+  version = "v0.4.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:9d62e12429921bbbdc2d1e3c81c6a2c128cc07046633ff92fb6d17376f74261d"
+  name = "github.com/prometheus/procfs"
+  packages = [
+    ".",
+    "internal/fs",
+  ]
+  pruneopts = "UT"
+  revision = "5867b95ac084bbfee6ea16595c4e05ab009021da"
 
 [[projects]]
   branch = "master"
