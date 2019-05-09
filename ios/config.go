@@ -91,8 +91,8 @@ func (cf *configurer) configure() (*ConfigResult, error) {
 		result.VPNNeedsReconfiguring = result.VPNNeedsReconfiguring || globalUpdated || proxiesUpdated
 	}
 
-	for _, masqueradeSet := range global.Client.MasqueradeSets {
-		for _, masquerade := range masqueradeSet {
+	for _, provider := range global.Client.Fronted.Providers {
+		for _, masquerade := range provider.Masquerades {
 			if len(result.IPSToExcludeFromVPN) == 0 {
 				result.IPSToExcludeFromVPN = masquerade.IpAddress
 			} else {
