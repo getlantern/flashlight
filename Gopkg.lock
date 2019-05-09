@@ -352,7 +352,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6d1863ed6c09e99ce9e84199f635e5b2f5c40ca1d436dc763fe724c00920b081"
+  digest = "1:7cb381ff32eecd5573b7b7aed639dc3dfda72f9d145529e403e443ba55af38ab"
   name = "github.com/getlantern/go-update"
   packages = [
     ".",
@@ -360,7 +360,7 @@
     "download",
   ]
   pruneopts = "UT"
-  revision = "d7c3f1ac97f868e6936ebd946df87f9826e57355"
+  revision = "6e81ea3657e2e3087390ea076f60ea181d24fe7a"
 
 [[projects]]
   branch = "master"
