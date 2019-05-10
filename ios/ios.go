@@ -40,11 +40,9 @@ type Writer interface {
 
 type writerAdapter struct {
 	Writer
-	stats *ipstats
 }
 
 func (wa *writerAdapter) Write(b []byte) (int, error) {
-	wa.stats.incrRecv(b)
 	ok := wa.Writer.Write(b)
 	if !ok {
 		return 0, errors.New("error writing")
@@ -67,11 +65,9 @@ type wc struct {
 	bal            *balancer.Balancer
 	quotaTextPath  string
 	lastSavedQuota time.Time
-	stats          *ipstats
 }
 
 func (c *wc) Write(b []byte) (int, error) {
-	c.stats.incrSent(b)
 	_, err := c.Writer.Write(b)
 
 	result := 0
@@ -144,22 +140,19 @@ func (c *client) start() (WriteCloser, error) {
 	log.Debugf("Running client for device '%v' at config path '%v'", c.uc.GetDeviceID(), c.configDir)
 	log.Debugf("Max buffer bytes: %d", buffers.MaxBufferBytes())
 
-	stats := newIPStats()
-
 	dialers, err := c.loadDialers()
 	if err != nil {
 		return nil, err
 	}
 	bal := balancer.New(30*time.Second, dialers...)
 
-	w := packetforward.Client(&writerAdapter{c.packetsOut, stats}, c.mtu, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
+	w := packetforward.Client(&writerAdapter{c.packetsOut}, c.mtu, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
 		return bal.DialContext(ctx, "connect", "127.0.0.1:3000")
 	})
 	return &wc{
 		Writer:        w,
 		bal:           bal,
 		quotaTextPath: filepath.Join(c.configDir, "quota.txt"),
-		stats:         stats,
 	}, nil
 }
 
