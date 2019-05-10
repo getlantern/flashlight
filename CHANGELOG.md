@@ -1,5 +1,17 @@
 # Change Log
 
+## [5.4.0](https://github.com/getlantern/flashlight/tree/5.4.0) (2019-05-10)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.8...5.4.0)
+
+**Merged pull requests:**
+
+- Relatively minor UI tweaks for desktop [\#615](https://github.com/getlantern/flashlight/pull/615) ([myleshorton](https://github.com/myleshorton))
+- update go-update again [\#614](https://github.com/getlantern/flashlight/pull/614) ([joesis](https://github.com/joesis))
+- Updates go-update to include OS version [\#613](https://github.com/getlantern/flashlight/pull/613) ([myleshorton](https://github.com/myleshorton))
+- Adds support for websocket transport [\#612](https://github.com/getlantern/flashlight/pull/612) ([forkner](https://github.com/forkner))
+- Using bufconn to make sure that we can always safely read from a conn… [\#611](https://github.com/getlantern/flashlight/pull/611) ([oxtoacart](https://github.com/oxtoacart))
+- Avoid potential data loss caused by use of bufio.Reader to read CONNECT response [\#610](https://github.com/getlantern/flashlight/pull/610) ([joesis](https://github.com/joesis))
+
 ## [5.3.8](https://github.com/getlantern/flashlight/tree/5.3.8) (2019-04-24)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.7...5.3.8)
 
@@ -243,16 +255,9 @@
 - Record more detailed timing for CONNECT requests [\#516](https://github.com/getlantern/flashlight/pull/516) ([oxtoacart](https://github.com/oxtoacart))
 - Record timing for CONNECT requests [\#515](https://github.com/getlantern/flashlight/pull/515) ([oxtoacart](https://github.com/oxtoacart))
 - Write log file in a single goroutine [\#514](https://github.com/getlantern/flashlight/pull/514) ([joesis](https://github.com/joesis))
-- fetchcfg.py in lantern\_aws was renamed to fetch\_bakedin\_config.py [\#507](https://github.com/getlantern/flashlight/pull/507) ([joesis](https://github.com/joesis))
 
 ## [4.8.2](https://github.com/getlantern/flashlight/tree/4.8.2) (2018-09-28)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.1...4.8.2)
-
-**Merged pull requests:**
-
-- Vetting dialers right after switching proxy because of failing [\#512](https://github.com/getlantern/flashlight/pull/512) ([joesis](https://github.com/joesis))
-- Moved integration test support into a shared package and use it for A… [\#511](https://github.com/getlantern/flashlight/pull/511) ([oxtoacart](https://github.com/oxtoacart))
-- update measured and netx [\#509](https://github.com/getlantern/flashlight/pull/509) ([forkner](https://github.com/forkner))
 
 ## [4.8.1](https://github.com/getlantern/flashlight/tree/4.8.1) (2018-09-13)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.0...4.8.1)
