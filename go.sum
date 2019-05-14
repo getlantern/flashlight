@@ -169,7 +169,9 @@ github.com/getlantern/proxy v0.0.0-20190225163220-31d1cc06ed3d h1:OEYoa8d4QnXxez
 github.com/getlantern/proxy v0.0.0-20190225163220-31d1cc06ed3d/go.mod h1:z6u2OS1ynUdXIraWO04T1wcHFcGaIHwPed0n0bNilZU=
 github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12 h1:ofbl3nOfcM7CgGyInmuF79injlLFIKsPRFg9bpz17ow=
 github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12/go.mod h1:0q8eYDExExu4OEUGbKFbitxZ3UXbGHzewQ9o/ywIJaE=
+github.com/getlantern/quic-go v0.7.1-0.20190207212844-f9d7a8b53ff5 h1:zX0FwPVxQdUlgoRF1IKjwH0B7x5e9Z1rqjKF/aZMZ9I=
 github.com/getlantern/quic-go v0.7.1-0.20190207212844-f9d7a8b53ff5/go.mod h1:kBFoTCTI+LRtbTg62OUa6VCz70Y//M/GvMYz8shF+wQ=
+github.com/getlantern/quic-go v0.9.0/go.mod h1:kBFoTCTI+LRtbTg62OUa6VCz70Y//M/GvMYz8shF+wQ=
 github.com/getlantern/quicwrapper v0.0.0-20190110220323-f6dd70305d8e h1:DAjXhkqbxRX70qpUCESdePivcjyk9SpUdgufsnWsxMk=
 github.com/getlantern/quicwrapper v0.0.0-20190110220323-f6dd70305d8e/go.mod h1:rs6eBHMycj48pN8Y7EB2hbQ9cBvVEKFxxen4HdKPrc8=
 github.com/getlantern/quicwrapper v0.0.0-20190514220845-9eb6494ed1a8 h1:7Y8oy4CydEdJvrtM4iOc/0QqK2+yve3Kv64IgUN5buk=
@@ -262,6 +264,8 @@ github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxv
 github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9 h1:3Fl5b279zmvAl41sC0IgkbW9oZN1hIppM74ubEqY0w8=
 github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9/go.mod h1:pE49GDVOelLlVz56xncbegMQqkyTO8sM36sT8bt7Z58=
 github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515/go.mod h1:+0opPa2QZZtGFBFZlji/RkVcI2GknAs/DXo4wKdlNEc=
+github.com/lucas-clemente/quic-go v0.11.1 h1:zasajC848Dqq/+WqfqBCkmPw+YHNe1MBts/z7y7nXf4=
+github.com/lucas-clemente/quic-go v0.11.1/go.mod h1:PpMmPfPKO9nKJ/psF49ESTAGQSdfXxlg1otPbEB2nOw=
 github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b/go.mod h1:EIaXW0QIcnewglY4Ge3rpq0YxHMfvBcLl+RkIH1CMfE=
 github.com/marten-seemann/qtls v0.0.0-20190207043627-591c71538704 h1:7Fx1paF8onfPhcIMlwgznBklz62TrCZjOjoBbUod/3Y=
 github.com/marten-seemann/qtls v0.0.0-20190207043627-591c71538704/go.mod h1:DWDPNN1eWKaT5wsnMz2LR336Zh9hlw/YSRXxqEukrT8=

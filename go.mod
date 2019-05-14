@@ -87,7 +87,7 @@ require (
 	github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c
 	github.com/getlantern/proxy v0.0.0-20190225163220-31d1cc06ed3d
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
-	github.com/getlantern/quic-go v0.7.1-0.20190207212844-f9d7a8b53ff5
+	github.com/getlantern/quic-go v0.9.0
 	github.com/getlantern/quicwrapper v0.0.0-20190110220323-f6dd70305d8e
 	github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c
 	github.com/getlantern/ring v0.0.0-20181206150603-dd46ce8faa01
