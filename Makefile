@@ -44,8 +44,6 @@ define build-tags
 	EXTRA_LDFLAGS=$$(echo $$EXTRA_LDFLAGS | xargs) && echo "Extra ldflags: $$EXTRA_LDFLAGS"
 endef
 
-.PHONY: require-dep vendor novendor
-
 lantern: $(SOURCES)
 	@$(call build-tags) && \
 	CGO_ENABLED=1 go build $(BUILD_RACE) -o $$BINARY_NAME -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s" github.com/getlantern/flashlight/main;
@@ -62,10 +60,6 @@ linux: $(SOURCES)
 	@$(call build-tags) && \
 	HEADLESS=true GOOS=linux GOARCH=amd64 go build -o $$BINARY_NAME-linux -tags="$$BUILD_TAGS headless" -ldflags="$$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
 
-# vendor installs vendored dependencies using Dep
-vendor: require-dep
-	@$(DEP_BIN) ensure
-
 require-dep:
 	@if [ "$(DEP_BIN)" = "" ]; then \
 		echo 'Missing "dep" command. See https://github.com/golang/dep' && exit 1; \
@@ -81,11 +75,6 @@ update-icons:
 		echo 'Update dependency go-bindata with: go get -u github.com/kevinburke/go-bindata/...' && exit 1; \
 	fi; \
 	$(GOBINDATA_BIN) -nomemcopy -nocompress -pkg icons -o icons/icons.go -prefix icons -ignore icons.go icons
-
-# novendor removes the vendor folder to allow building with whatever is on your
-# GOPATH
-novendor:
-	@rm -Rf vendor
 
 test-and-cover: $(SOURCES)
 	@echo "mode: count" > profile.cov && \
