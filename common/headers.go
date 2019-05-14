@@ -2,7 +2,6 @@ package common
 
 import (
 	"net/http"
-	"runtime"
 	"strconv"
 )
 
@@ -36,7 +35,7 @@ func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth
 		}
 	}
 
-	req.Header.Set(PlatformHeader, runtime.GOOS)
+	req.Header.Set(PlatformHeader, Platform)
 
 	if overwriteAuth || req.Header.Get(DeviceIdHeader) == "" {
 		if deviceID := uc.GetDeviceID(); deviceID != "" {

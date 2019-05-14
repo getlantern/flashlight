@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	notify "github.com/getlantern/notifier"
 
+	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/notifier"
 	"github.com/getlantern/flashlight/ws"
 )
@@ -35,8 +35,9 @@ type dataCap struct {
 // ServeDataCap starts serving data cap data to the frontend.
 func ServeDataCap(channel ws.UIChannel, iconURL func() string, clickURL func() string, isPro func() (bool, bool)) error {
 	helloFn := func(write func(interface{})) {
-		log.Debugf("Sending current bandwidth quota to new client: %v", bandwidth.GetQuota())
-		write(bandwidth.GetQuota())
+		q, _ := bandwidth.GetQuota()
+		log.Debugf("Sending current bandwidth quota to new client: %v", q)
+		write(q)
 	}
 	bservice, err := channel.Register("bandwidth", helloFn)
 	if err != nil {

@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/getlantern/bandwidth"
+	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/ws"
 )
 

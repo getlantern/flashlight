@@ -16,17 +16,15 @@ import (
 
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
+	"github.com/mitchellh/mapstructure"
+	"github.com/refraction-networking/utls"
+	"github.com/tevino/abool"
 
 	"github.com/getlantern/cmux"
 	"github.com/getlantern/ema"
 	"github.com/getlantern/enhttp"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/flashlight/balancer"
-	"github.com/getlantern/flashlight/buffers"
-	"github.com/getlantern/flashlight/chained/config"
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/kcpwrapper"
@@ -37,9 +35,12 @@ import (
 	"github.com/getlantern/quicwrapper"
 	"github.com/getlantern/tinywss"
 	"github.com/getlantern/tlsdialer"
-	"github.com/mitchellh/mapstructure"
-	"github.com/refraction-networking/utls"
-	"github.com/tevino/abool"
+
+	"github.com/getlantern/flashlight/balancer"
+	"github.com/getlantern/flashlight/buffers"
+	"github.com/getlantern/flashlight/chained/config"
+	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/ops"
 )
 
 const (
@@ -894,7 +895,7 @@ func tlsConfigForProxy(s *ChainedServerInfo) (*tls.Config, tls.ClientHelloID) {
 }
 
 func orderedCipherSuitesFromConfig(s *ChainedServerInfo) []uint16 {
-	if runtime.GOOS == "android" {
+	if common.Platform == "android" {
 		return s.mobileOrderedCipherSuites()
 	}
 	return s.desktopOrderedCipherSuites()

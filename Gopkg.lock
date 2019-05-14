@@ -213,14 +213,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a244bc7b14a0c974aa095cddaad2a3672f9f4342f8b0786076bd74b36f2c7c3d"
-  name = "github.com/getlantern/bandwidth"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "96de96fff16cf1aa844edc1b4a72c906add83180"
-
-[[projects]]
-  branch = "master"
   digest = "1:40f3cfba599674ceddeee4c8cfd31666df104330e4bb2cfe1592020c53f5cedf"
   name = "github.com/getlantern/bbrconn"
   packages = ["."]
@@ -441,6 +433,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "cca714f7feb5df8e455f409b549d384441ac4578"
+
+[[projects]]
+  branch = "ox/simplify"
+  digest = "1:314da1a4b21cb13d4b650c5ada30f77635127a5a4f73231dcddd4b89f9abd0ce"
+  name = "github.com/getlantern/gotun"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "2fc27b245ae4b8c7436bdd8d2cd9643e973715b1"
 
 [[projects]]
   branch = "master"
@@ -695,11 +695,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8a592eecbb5ec743b49f2d0b466d56ff1734930ae1a84c8b2a04d0382e00ece1"
+  digest = "1:39e1cd80f39b371a213c8bb1fb24cb57a25055d09f5a2cd47a7ad971ba981551"
   name = "github.com/getlantern/packetforward"
-  packages = ["server"]
+  packages = [
+    ".",
+    "server",
+  ]
   pruneopts = "UT"
-  revision = "800eb2c186b1fc79432d560bd7e959e2d2807fca"
+  revision = "5be78b74b0087a8aade4404ff973ea5752cdd357"
 
 [[projects]]
   branch = "master"
@@ -1572,11 +1575,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4d2869b8df54b3a687c426758d0891720e8bedfa6ff5d472671ce1d31d29bdfb"
+  digest = "1:41c13cada29d953aedd6e98918f11d662e8a84af9a4374df5f2cc9dbb4731664"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
+    "windows/registry",
   ]
   pruneopts = "UT"
   revision = "d47a0f3392421c5624713c9a19fe781f651f8a50"
@@ -1690,7 +1694,6 @@
     "github.com/dustin/go-humanize",
     "github.com/getlantern/appdir",
     "github.com/getlantern/autoupdate",
-    "github.com/getlantern/bandwidth",
     "github.com/getlantern/borda/client",
     "github.com/getlantern/bufconn",
     "github.com/getlantern/cmux",
@@ -1706,11 +1709,13 @@
     "github.com/getlantern/geolookup",
     "github.com/getlantern/go-socks5",
     "github.com/getlantern/golog",
+    "github.com/getlantern/gotun",
     "github.com/getlantern/hidden",
     "github.com/getlantern/http-proxy-lantern",
     "github.com/getlantern/httpseverywhere",
     "github.com/getlantern/i18n",
     "github.com/getlantern/idletiming",
+    "github.com/getlantern/ipproxy",
     "github.com/getlantern/iptool",
     "github.com/getlantern/jibber_jabber",
     "github.com/getlantern/kcpwrapper",
@@ -1726,6 +1731,7 @@
     "github.com/getlantern/notifier",
     "github.com/getlantern/ops",
     "github.com/getlantern/osversion",
+    "github.com/getlantern/packetforward",
     "github.com/getlantern/profiling",
     "github.com/getlantern/protected",
     "github.com/getlantern/proxiedsites",
