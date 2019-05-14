@@ -11,7 +11,6 @@ import (
 )
 
 func init() {
-	// TODO: get this from config
 	email.SetDefaultRecipient("report-issue@getlantern.org")
 
 	go func() {
@@ -31,7 +30,15 @@ func init() {
 }
 
 // ReportIssue reports an issue via email.
-func ReportIssue(appVersion string, deviceModel string, iosVersion string, emailAddress string, issue string, appLogsDir string, tunnelLogsDir string) error {
+func ReportIssue(appVersion string, deviceModel string, iosVersion string, emailAddress string, issue string, configDir string, appLogsDir string, tunnelLogsDir string) error {
+	cf := &configurer{
+		configFolderPath: configDir,
+	}
+	if globalConfig, _, _, cfgErr := cf.openGlobal(); cfgErr == nil && globalConfig.ReportIssueEmail != "" {
+		cf.configureFronting(global)
+		email.SetDefaultRecipient(globalConfig.ReportIssueEmail)
+	}
+
 	msg := &email.Message{
 		Template: "user-send-logs-ios",
 		From:     emailAddress,
