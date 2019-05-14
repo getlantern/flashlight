@@ -87,7 +87,6 @@ require (
 	github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c
 	github.com/getlantern/proxy v0.0.0-20190225163220-31d1cc06ed3d
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
-	github.com/getlantern/quic-go v0.7.1-0.20190514232624-e5e2953885df
 	github.com/getlantern/quicwrapper v0.0.0-20190110220323-f6dd70305d8e
 	github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c
 	github.com/getlantern/ring v0.0.0-20181206150603-dd46ce8faa01
@@ -133,7 +132,7 @@ require (
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
 	github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9
-	github.com/lucas-clemente/quic-go v0.0.0-00010101000000-000000000000 // indirect
+	github.com/lucas-clemente/quic-go v0.7.1-0.20190207125157-7dc4be2ce994
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
 	github.com/marten-seemann/qtls-deprecated v0.0.0-20190207043627-591c71538704
 	github.com/matttproud/golang_protobuf_extensions v1.0.1
@@ -182,4 +181,4 @@ require (
 	gopkg.in/redis.v5 v5.2.9
 )
 
-replace github.com/lucas-clemente/quic-go => ../quic-go
+replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20190514232624-e5e2953885df
