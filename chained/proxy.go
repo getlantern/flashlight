@@ -33,6 +33,7 @@ import (
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/quicwrapper"
+	"github.com/getlantern/tinywss"
 	"github.com/getlantern/tlsdialer"
 
 	"github.com/getlantern/flashlight/balancer"
@@ -89,6 +90,8 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		return newLampshadeProxy(name, s, uc)
 	case "quic":
 		return newQUICProxy(name, s, uc)
+	case "wss":
+		return newWSSProxy(name, s, uc)
 	default:
 		return nil, errors.New("Unknown transport: %v", s.PluggableTransport).With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
 	}
@@ -312,6 +315,18 @@ func newQUICProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pro
 	return newProxy(name, "quic", "udp", s, uc, s.Trusted, false, dialServer, defaultDialOrigin)
 }
 
+func newWSSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+
+	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
+		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
+			conn, err := p.dialCore(op)(ctx)
+			return overheadWrapper(true)(conn, err)
+		})
+	}
+
+	return newProxy(name, "wss", "tcp", s, uc, s.Trusted, false, doDialServer, defaultDialOrigin)
+}
+
 // consecCounter is a counter that can extend on both directions. Its default
 // value is zero. Inc() sets it to 1 or adds it by 1; Dec() sets it to -1 or
 // minus it by 1. When called concurrently, it may have an incorrect absolute
@@ -461,6 +476,13 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 			return nil, err
 		}
 		p.protocol = "quic"
+	} else if s.PluggableTransport == "wss" {
+		log.Debugf("Enabling WSS for %v (%v)", p.Label(), p.protocol)
+		err := enableWSS(p, s)
+		if err != nil {
+			return nil, err
+		}
+		p.protocol = "wss"
 	} else if allowPreconnecting && s.MaxPreconnect > 0 {
 		log.Debugf("Enabling preconnecting for %v", p.Label())
 		// give ourselves a large margin for making sure we're not using idled preconnected connections
@@ -503,6 +525,70 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 		elapsed := mtime.Stopwatch()
 
 		conn, err := dialKCP(ctx, "tcp", p.addr)
+		delta := elapsed()
+		return conn, delta, err
+	}
+
+	return nil
+}
+
+func enableWSS(p *proxy, s *ChainedServerInfo) error {
+	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
+	if err != nil {
+		return log.Error(errors.Wrap(err).With("addr", s.Addr))
+	}
+	x509cert := cert.X509()
+
+	tlsConf := &tls.Config{
+		CipherSuites:       orderedCipherSuitesFromConfig(s),
+		ServerName:         s.TLSServerNameIndicator,
+		InsecureSkipVerify: true,
+	}
+
+	td := &tlsdialer.Dialer{
+		DoDial:         netx.DialTimeout,
+		SendServerName: s.TLSServerNameIndicator != "",
+		Config:         tlsConf,
+		ClientHelloID:  s.clientHelloID(),
+		Timeout:        chainedDialTimeout,
+	}
+
+	rt := tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
+		log.Debugf("tinywss Roundtripper dial...")
+		conn, err := td.Dial(network, addr)
+		if err != nil {
+			log.Errorf("tlsdialer failed with: %s", err)
+			return nil, err
+		}
+		serverCert := conn.ConnectionState().PeerCertificates[0]
+		if !serverCert.Equal(x509cert) {
+			conn.Close()
+			received, err := keyman.LoadCertificateFromX509(serverCert)
+			if err != nil {
+				return nil, log.Errorf("Unable to parse received certificate: %v (%v)", err, serverCert)
+			}
+			return nil, log.Errorf("Server's certificate didn't match expected! Server had\n%s\nbut expected:\n%s",
+				string(received.PEMEncoded()), string(cert.PEMEncoded()))
+		}
+		log.Debugf("tinywss RoundTripper returning conn (connected)...")
+		return conn, nil
+	})
+
+	opts := &tinywss.ClientOpts{
+		URL:               fmt.Sprintf("wss://%s", p.addr),
+		RoundTrip:         rt,
+		KeepAliveInterval: IdleTimeout / 2,
+		KeepAliveTimeout:  IdleTimeout,
+		Multiplexed:       s.ptSettingBool("multiplexed"),
+		MaxFrameSize:      s.ptSettingInt("max_frame_size"),
+		MaxReceiveBuffer:  s.ptSettingInt("max_receive_buffer"),
+	}
+
+	client := tinywss.NewClient(opts)
+
+	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
+		elapsed := mtime.Stopwatch()
+		conn, err := client.DialContext(ctx)
 		delta := elapsed()
 		return conn, delta, err
 	}

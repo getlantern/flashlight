@@ -81,7 +81,7 @@ func TestProxying(t *testing.T) {
 		}
 	}
 	config.ForceProxyConfigPollInterval = 1 * time.Second
-	helper, err := integrationtest.NewHelper(t, "localhost:18347", "localhost:18348", "localhost:18349", "localhost:18350")
+	helper, err := integrationtest.NewHelper(t, "localhost:18347", "localhost:18348", "localhost:18349", "localhost:18350", "localhost:18351")
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -113,6 +113,11 @@ func TestProxying(t *testing.T) {
 
 	// Switch to quic, wait for a new config and test request again
 	helper.SetProtocol("quic")
+	time.Sleep(2 * time.Second)
+	testRequest(t, helper)
+
+	// Switch to wss, wait for a new config and test request again
+	helper.SetProtocol("wss")
 	time.Sleep(2 * time.Second)
 	testRequest(t, helper)
 

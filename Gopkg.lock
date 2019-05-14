@@ -362,12 +362,12 @@
   revision = "c5f0cd24e7991579ba6f5f1bd20a1ad2c9f06cd4"
 
 [[projects]]
-  branch = "ox/issue2635"
+  branch = "master"
   digest = "1:70a1ea4270b3a90c236308628b8922c71040acf976c7e7f321bb964cdcca4a4e"
   name = "github.com/getlantern/framed"
   packages = ["."]
   pruneopts = "UT"
-  revision = "a0ee46d06d5840ab5605b4d6465ec1686414700d"
+  revision = "7f7919c8cf9be21bbe007d778ae641c06d858f79"
 
 [[projects]]
   branch = "master"
@@ -403,7 +403,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6d1863ed6c09e99ce9e84199f635e5b2f5c40ca1d436dc763fe724c00920b081"
+  digest = "1:297b0dd0f69a8a25a11d32f4c21d972f4cf6946067a8a19fc1c1538237409c6c"
   name = "github.com/getlantern/go-update"
   packages = [
     ".",
@@ -411,7 +411,7 @@
     "download",
   ]
   pruneopts = "UT"
-  revision = "d7c3f1ac97f868e6936ebd946df87f9826e57355"
+  revision = "79c495ab728c00c95dbc028c6f775bbb421fa18e"
 
 [[projects]]
   branch = "master"
@@ -481,7 +481,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f9fee7d6f65186b6409a710ef217704223eb3312995217bdde230e2cedcaf2f8"
+  digest = "1:e74d61fc8fb9d8819c086c9ecc8979e7a0867994833b76189e86ba42c106be05"
   name = "github.com/getlantern/http-proxy-lantern"
   packages = [
     ".",
@@ -513,7 +513,7 @@
     "versioncheck",
   ]
   pruneopts = "UT"
-  revision = "6e2a6ecc68fb080c518759560236eee025817beb"
+  revision = "e005a9cd4425a6bcf12e73d57cfa6ba97c2456c1"
 
 [[projects]]
   branch = "master"
@@ -540,12 +540,12 @@
   revision = "9540d1aeda2b5d50b52e2294fb5e0f2869fb6be0"
 
 [[projects]]
-  branch = "ox/init"
-  digest = "1:74d7e30870d459b3c117367b8282d0b0c68223ed5d497aacd5f5ff1fc17b8f0e"
+  branch = "master"
+  digest = "1:9ab19c222cb2522a9a1e8f8625bfb3eddc2ad9c33e3bd31144c95d12dc5a4ef6"
   name = "github.com/getlantern/ipproxy"
   packages = ["."]
   pruneopts = "UT"
-  revision = "8996add3e13c94c1b6c23fce70701351b12dd25b"
+  revision = "6329c3cbf2fa547ce1a726bdbb07e2d83cdb4643"
 
 [[projects]]
   branch = "master"
@@ -851,6 +851,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:d73e45b16879bf77e665465acc2389f5451c29803bfe78be334bf9305a0a1760"
+  name = "github.com/getlantern/tinywss"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "72f4ddc309252beeb29b14920390be4a360c998b"
+
+[[projects]]
+  branch = "master"
   digest = "1:c1e882a662cef1bad0c2b7a6a881b6573a53a528099831defbce67ac42d33082"
   name = "github.com/getlantern/tlsdefaults"
   packages = ["."]
@@ -1067,12 +1075,12 @@
   revision = "ec9c8a1062f4be6c6ad671f0f5dba12d4a76826d"
 
 [[projects]]
-  branch = "master"
   digest = "1:0bfbe13936953a98ae3cfe8ed6670d396ad81edf069a806d2f6515d7bb6950df"
   name = "github.com/google/btree"
   packages = ["."]
   pruneopts = "UT"
   revision = "4030bb1f1f0c35b30ca7009e9ebd06849dd45306"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:b23296076e13a960263285b98907623e5d45f12fc405b14da19c6afa2a113deb"
@@ -1627,7 +1635,7 @@
   revision = "aae13d27a44d62f039eeeb93e74e893886673932"
 
 [[projects]]
-  digest = "1:f6aece3c36e6dbb051dd14ea984f188c0cd5faf397ef897634c1b47bd9a63916"
+  digest = "1:ab8e92d746fb5c4c18846b0879842ac8e53b3d352449423d0924a11f1020ae1b"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -1639,9 +1647,13 @@
     "credentials",
     "encoding",
     "encoding/proto",
-    "grpclb/grpc_lb_v1/messages",
     "grpclog",
     "internal",
+    "internal/backoff",
+    "internal/channelz",
+    "internal/envconfig",
+    "internal/grpcrand",
+    "internal/transport",
     "keepalive",
     "metadata",
     "naming",
@@ -1652,10 +1664,10 @@
     "stats",
     "status",
     "tap",
-    "transport",
   ]
   pruneopts = "UT"
-  revision = "30fb59a4304034ce78ff68e21bd25776b1d79488"
+  revision = "8dea3dc473e90c8179e519d91302d0597c0ca1d1"
+  version = "v1.15.0"
 
 [[projects]]
   digest = "1:e5a1379b4f0cad2aabd75580598c3b8e19a027e8eed806e7b76b0ec949df4599"
@@ -1733,6 +1745,7 @@
     "github.com/getlantern/sysproxy",
     "github.com/getlantern/systray",
     "github.com/getlantern/tarfs",
+    "github.com/getlantern/tinywss",
     "github.com/getlantern/tlsdefaults",
     "github.com/getlantern/tlsdialer",
     "github.com/getlantern/uuid",
