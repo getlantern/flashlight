@@ -30,14 +30,7 @@ func init() {
 }
 
 // ReportIssue reports an issue via email.
-func ReportIssue(appVersion string, deviceModel string, iosVersion string, emailAddress string, issue string, configDir string, appLogsDir string, tunnelLogsDir string) error {
-	c := &configurer{
-		configFolderPath: configDir,
-	}
-	if globalConfig, _, _, cfgErr := c.openGlobal(); cfgErr == nil && globalConfig.ReportIssueEmail != "" {
-		email.SetDefaultRecipient(globalConfig.ReportIssueEmail)
-	}
-
+func ReportIssue(appVersion string, deviceModel string, iosVersion string, emailAddress string, issue string, appLogsDir string, tunnelLogsDir string) error {
 	msg := &email.Message{
 		Template: "user-send-logs-ios",
 		From:     emailAddress,

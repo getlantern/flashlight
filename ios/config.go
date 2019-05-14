@@ -23,6 +23,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/config/generated"
+	"github.com/getlantern/flashlight/email"
 )
 
 const (
@@ -73,6 +74,8 @@ func (cf *configurer) configure() (*ConfigResult, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	email.SetDefaultRecipient(global.ReportIssueEmail)
 
 	proxies, proxiesEtag, proxiesInitialized, err := cf.openProxies()
 	if err != nil {
