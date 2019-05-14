@@ -33,7 +33,7 @@ build:
     - script:
       name: make-lantern
       code: |
-        HEADLESS=true make lantern
+        HEADLESS=true GO111MODULE=on make lantern
     - script:
       name: get goveralls
       code: |-
