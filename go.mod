@@ -181,5 +181,3 @@ require (
 	google.golang.org/grpc v1.15.0
 	gopkg.in/redis.v5 v5.2.9
 )
-
-replace github.com/lucas-clemente/quic-go => ../quic-go
