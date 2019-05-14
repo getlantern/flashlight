@@ -44,6 +44,6 @@ build:
       code: export GORACE=history_size=7
     - script:
       name: test-and-cover
-      code: make test-and-cover
+      code: GO111MODULE=on make test-and-cover
     - tcnksm/goveralls:
       token: 19Nno28mzRG0nIrWOc92flFUhZF2ty4Rc
