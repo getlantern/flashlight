@@ -171,6 +171,7 @@ github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12 h1:ofbl3nOfc
 github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12/go.mod h1:0q8eYDExExu4OEUGbKFbitxZ3UXbGHzewQ9o/ywIJaE=
 github.com/getlantern/quic-go v0.7.1-0.20190207212844-f9d7a8b53ff5 h1:zX0FwPVxQdUlgoRF1IKjwH0B7x5e9Z1rqjKF/aZMZ9I=
 github.com/getlantern/quic-go v0.7.1-0.20190207212844-f9d7a8b53ff5/go.mod h1:kBFoTCTI+LRtbTg62OUa6VCz70Y//M/GvMYz8shF+wQ=
+github.com/getlantern/quic-go v0.7.1-0.20190514232624-e5e2953885df/go.mod h1:/1Nq+p2X4mN722PHq3YaU2ks+N/djHf6aej/1I3IHsE=
 github.com/getlantern/quic-go v0.9.0/go.mod h1:kBFoTCTI+LRtbTg62OUa6VCz70Y//M/GvMYz8shF+wQ=
 github.com/getlantern/quicwrapper v0.0.0-20190110220323-f6dd70305d8e h1:DAjXhkqbxRX70qpUCESdePivcjyk9SpUdgufsnWsxMk=
 github.com/getlantern/quicwrapper v0.0.0-20190110220323-f6dd70305d8e/go.mod h1:rs6eBHMycj48pN8Y7EB2hbQ9cBvVEKFxxen4HdKPrc8=
