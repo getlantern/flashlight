@@ -1,13 +1,14 @@
 package notifier
 
 import (
-	"runtime"
 	"testing"
 	"time"
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/notifier"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/getlantern/flashlight/common"
 )
 
 func TestNotify(t *testing.T) {
@@ -40,7 +41,7 @@ func TestNormalizeClickURL(t *testing.T) {
 	err := normalizeClickURL(note, "test-campaign")
 	assert.NoError(t, err, "unexpected error")
 	log.Debugf("url: %v", note.ClickURL)
-	assert.Equal(t, "https://test.com?utm_campaign=test-campaign&utm_content=test-test&utm_medium=notification&utm_source="+runtime.GOOS, note.ClickURL)
+	assert.Equal(t, "https://test.com?utm_campaign=test-campaign&utm_content=test-test&utm_medium=notification&utm_source="+common.Platform, note.ClickURL)
 
 	note.ClickURL = ":"
 	log.Debugf("url: %v", note.ClickURL)

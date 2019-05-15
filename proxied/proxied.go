@@ -57,7 +57,7 @@ func success(resp *http.Response) bool {
 func changeUserAgent(req *http.Request) {
 	secondary := req.Header.Get("User-Agent")
 	ua := strings.TrimSpace(fmt.Sprintf("Lantern/%s (%s/%s) %s",
-		common.Version, runtime.GOOS, runtime.GOARCH, secondary))
+		common.Version, common.Platform, runtime.GOARCH, secondary))
 	req.Header.Set("User-Agent", ua)
 }
 
@@ -165,7 +165,17 @@ func (cf *chainedAndFronted) setFetcher(fetcher http.RoundTripper) {
 
 // RoundTrip will attempt to execute the specified HTTP request using only a chained fetcher
 func (cf *chainedAndFronted) RoundTrip(req *http.Request) (*http.Response, error) {
-	op := ops.Begin("chainedandfronted").Request(req)
+	var op *ops.Op
+	ctx := req.Context()
+	if req.Context().Value((ops.CtxKeyBeam)) == nil {
+		// Some callers like the autoupdate package don't have a way to add beam to
+		// the request context. In such cases, generate a new beam.
+		op, ctx = ops.BeginWithNewBeam("chainedandfronted", ctx)
+		req = req.WithContext(ctx)
+	} else {
+		op = ops.BeginWithBeam("chainedandfronted", ctx)
+	}
+	op.Request(req)
 	defer op.End()
 
 	resp, err := cf.getFetcher().RoundTrip(req)
@@ -253,7 +263,7 @@ func (df *dualFetcher) RoundTrip(req *http.Request) (*http.Response, error) {
 // chained and fronted servers.
 func (df *dualFetcher) do(req *http.Request, chainedRT http.RoundTripper, ddfRT http.RoundTripper) (*http.Response, error) {
 	log.Debugf("Using dual fronter")
-	op := ops.Begin("dualfetcher").Request(req)
+	op := ops.BeginWithBeam("dualfetcher", req.Context()).Request(req)
 	defer op.End()
 
 	responses := make(chan *http.Response, 2)
@@ -519,7 +529,7 @@ func chained(rootCA string, persistent bool) (http.RoundTripper, error) {
 
 	return AsRoundTripper(func(req *http.Request) (*http.Response, error) {
 		changeUserAgent(req)
-		op := ops.Begin("chained").ProxyType(ops.ProxyChained).Request(req)
+		op := ops.BeginWithBeam("chained", req.Context()).ProxyType(ops.ProxyChained).Request(req)
 		defer op.End()
 		resp, err := tr.RoundTrip(req)
 		op.Response(resp)

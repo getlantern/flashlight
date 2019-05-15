@@ -135,7 +135,6 @@ type dialStats struct {
 
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
-	beam_seq            uint64
 	mu                  sync.RWMutex
 	overallDialTimeout  time.Duration
 	dialers             sortedDialers
@@ -171,6 +170,7 @@ func New(overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
 	ops.Go(b.periodicallyProbeDialers)
 	ops.Go(b.periodicallyPrintStats)
 	ops.Go(b.evalDialersLoop)
+	ops.Go(b.KeepLookingForSucceedingDialer)
 	if len(dialers) > 0 {
 		b.Reset(dialers)
 	}
@@ -208,7 +208,7 @@ func (b *Balancer) Reset(dialers []Dialer) {
 // ResetFromExisting Resets using the existing dialers (useful when you want to
 // force redialing).
 func (b *Balancer) ResetFromExisting() {
-	log.Debugf("Received request to force redial")
+	log.Debugf("Resetting from existing dialers")
 	b.mu.Lock()
 	dialers := b.dialers
 	b.mu.Unlock()
@@ -235,7 +235,7 @@ func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 
 // DialContext is same as Dial but uses the provided context.
 func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
-	op := ops.Begin("balancer_dial").Set("beam", atomic.AddUint64(&b.beam_seq, 1))
+	op := ops.BeginWithBeam("balancer_dial", ctx)
 	defer op.End()
 
 	op = ops.Begin("balancer_dial_details")
@@ -613,10 +613,6 @@ func (b *Balancer) pickDialers(trustedOnly bool) ([]Dialer, map[string]*dialStat
 	sessionStats := b.sessionStats
 	b.mu.RUnlock()
 
-	if !trustedOnly {
-		b.lookForSucceedingDialer(dialers)
-	}
-
 	if dialers.Len() == 0 {
 		if trustedOnly {
 			return nil, nil, fmt.Errorf("No trusted dialers")
@@ -649,23 +645,34 @@ func (b *Balancer) sortDialers() []Dialer {
 	b.trusted = trusted
 	b.mu.Unlock()
 
-	b.lookForSucceedingDialer(dialers)
 	return dialers
 }
 
-func (b *Balancer) lookForSucceedingDialer(dialers []Dialer) {
-	hasSucceedingDialer := false
-	for _, dialer := range dialers {
-		if dialer.Succeeding() {
-			hasSucceedingDialer = true
-			break
+func (b *Balancer) KeepLookingForSucceedingDialer() {
+	ticker := time.NewTicker(3 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			b.mu.RLock()
+			dialers := b.dialers
+			b.mu.RUnlock()
+			hasSucceedingDialer := false
+			for _, dialer := range dialers {
+				if dialer.Succeeding() {
+					hasSucceedingDialer = true
+					break
+				}
+			}
+			select {
+			case b.hasSucceedingDialer <- hasSucceedingDialer:
+				// okay
+			default:
+				// channel full
+			}
+		case <-b.closeCh:
+			return
 		}
-	}
-	select {
-	case b.hasSucceedingDialer <- hasSucceedingDialer:
-		// okay
-	default:
-		// channel full
 	}
 }
 

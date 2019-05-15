@@ -54,6 +54,7 @@ type Helper struct {
 	OBFS4ProxyServerAddr     string
 	LampshadeProxyServerAddr string
 	QUICProxyServerAddr      string
+	WSSProxyServerAddr       string
 	HTTPServerAddr           string
 	HTTPSServerAddr          string
 	ConfigServerAddr         string
@@ -65,7 +66,7 @@ type Helper struct {
 // also enables ForceProxying on the client package to make sure even localhost
 // origins are served through the proxy. Make sure to close the Helper with
 // Close() when finished with the test.
-func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string) (*Helper, error) {
+func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string, wssAddr string) (*Helper, error) {
 	ConfigDir, err := ioutil.TempDir("", "integrationtest_helper")
 	log.Debugf("ConfigDir is %v", ConfigDir)
 	if err != nil {
@@ -79,6 +80,7 @@ func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr s
 		OBFS4ProxyServerAddr:     obfs4Addr,
 		LampshadeProxyServerAddr: lampshadeAddr,
 		QUICProxyServerAddr:      quicAddr,
+		WSSProxyServerAddr:       wssAddr,
 	}
 	helper.SetProtocol("https")
 	client.ForceProxying()
@@ -178,6 +180,7 @@ func (helper *Helper) startProxyServer() error {
 		Obfs4Dir:      filepath.Join(helper.ConfigDir, obfs4SubDir),
 		LampshadeAddr: helper.LampshadeProxyServerAddr,
 		QUICAddr:      helper.QUICProxyServerAddr,
+		WSSAddr:       helper.WSSProxyServerAddr,
 		Token:         Token,
 		KeyFile:       KeyFile,
 		CertFile:      CertFile,
@@ -279,6 +282,8 @@ func (helper *Helper) writeProxyConfig(resp http.ResponseWriter, req *http.Reque
 		version = "4"
 	} else if proto == "quic" {
 		version = "5"
+	} else if proto == "wss" {
+		version = "6"
 	}
 
 	if req.Header.Get(IfNoneMatch) == version {
@@ -351,6 +356,12 @@ func (helper *Helper) buildProxies(proto string) ([]byte, error) {
 		} else if proto == "quic" {
 			srv.Addr = helper.QUICProxyServerAddr
 			srv.PluggableTransport = "quic"
+		} else if proto == "wss" {
+			srv.Addr = helper.WSSProxyServerAddr
+			srv.PluggableTransport = "wss"
+			srv.PluggableTransportSettings = map[string]string{
+				"multiplexed": "true",
+			}
 		} else {
 			srv.Addr = helper.HTTPSProxyServerAddr
 		}

@@ -1,6 +1,7 @@
 package borda
 
 import (
+	"context"
 	"net/http"
 	"sync"
 	"time"
@@ -127,9 +128,10 @@ func createBordaClient(reportInterval time.Duration) *borda.Client {
 		BatchInterval: reportInterval,
 		HTTPClient: &http.Client{
 			Transport: proxied.AsRoundTripper(func(req *http.Request) (*http.Response, error) {
-				op := ops.Begin("report_to_borda").Request(req)
+				op, ctx := ops.BeginWithNewBeam("report_to_borda", context.Background())
+				op.Request(req)
 				defer op.End()
-				return rt.RoundTrip(req)
+				return rt.RoundTrip(req.WithContext(ctx))
 			}),
 		},
 		BeforeSubmit: BeforeSubmit,

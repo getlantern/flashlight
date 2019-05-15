@@ -2,7 +2,6 @@ package flashlight
 
 import (
 	"context"
-	"crypto/x509"
 	"fmt"
 	"math/rand"
 	"net"
@@ -11,26 +10,25 @@ import (
 	"time"
 
 	"github.com/getlantern/appdir"
-	"github.com/getlantern/bandwidth"
-	"github.com/getlantern/flashlight/email"
-	fops "github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/jibber_jabber"
-	"github.com/getlantern/keyman"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/ops"
 	"github.com/getlantern/osversion"
 
+	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/goroutines"
+	fops "github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/stats"
 
 	// Make sure logging is initialized
@@ -177,11 +175,11 @@ func Run(httpProxyAddr string,
 }
 
 func applyClientConfig(c *client.Client, cfg *config.Global, autoReport func() bool, onBordaConfigured chan bool) {
-	certs, err := getTrustedCACerts(cfg)
+	certs, err := cfg.TrustedCACerts()
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
 	} else if cfg.Client != nil && cfg.Client.Fronted != nil {
-		fronted.Configure(certs, cfg.Client.FrontedProviders(), client.CloudfrontProviderID, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
+		fronted.Configure(certs, cfg.Client.FrontedProviders(), config.CloudfrontProviderID, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
 	} else {
 		log.Errorf("Unable to configured fronted (no config)")
 	}
@@ -197,6 +195,7 @@ func applyClientConfig(c *client.Client, cfg *config.Global, autoReport func() b
 			return true
 		}
 
+		delete(ctx, "beam") // beam is only useful within a single client session.
 		// For some ops, we don't randomly sample, we include all of them
 		op := ctx["op"]
 		switch t := op.(type) {
@@ -206,7 +205,6 @@ func applyClientConfig(c *client.Client, cfg *config.Global, autoReport func() b
 					log.Tracef("Removing high dimensional data for lightweight op %v", lightweightOp)
 					delete(ctx, "error")
 					delete(ctx, "error_text")
-					delete(ctx, "beam")
 					delete(ctx, "origin")
 					delete(ctx, "origin_host")
 					delete(ctx, "origin_port")
@@ -234,18 +232,6 @@ func applyClientConfig(c *client.Client, cfg *config.Global, autoReport func() b
 	}
 }
 
-func getTrustedCACerts(cfg *config.Global) (pool *x509.CertPool, err error) {
-	certs := make([]string, 0, len(cfg.TrustedCAs))
-	for _, ca := range cfg.TrustedCAs {
-		certs = append(certs, ca.Cert)
-	}
-	pool, err = keyman.PoolContainingCerts(certs...)
-	if err != nil {
-		log.Errorf("Could not create pool %v", err)
-	}
-	return
-}
-
 func displayVersion() {
 	log.Debugf("---- flashlight version: %s, release: %s, build revision date: %s, build date: %s ----",
 		common.Version, common.PackageVersion, common.RevisionDate, common.BuildDate)
@@ -260,7 +246,7 @@ func initContext(deviceID string, version string, revisionDate string, isPro fun
 	ops.SetGlobal("app", "lantern-client")
 	ops.SetGlobal("app_version", fmt.Sprintf("%v (%v)", version, revisionDate))
 	ops.SetGlobal("go_version", runtime.Version())
-	ops.SetGlobal("os_name", runtime.GOOS)
+	ops.SetGlobal("os_name", common.Platform)
 	ops.SetGlobal("os_arch", runtime.GOARCH)
 	ops.SetGlobal("device_id", deviceID)
 	ops.SetGlobalDynamic("geo_country", func() interface{} { return geolookup.GetCountry(0) })
@@ -284,7 +270,7 @@ func initContext(deviceID string, version string, revisionDate string, isPro fun
 		if isPro() {
 			return false
 		}
-		quota := bandwidth.GetQuota()
+		quota, _ := bandwidth.GetQuota()
 		return quota != nil && quota.MiBUsed >= quota.MiBAllowed
 	})
 
