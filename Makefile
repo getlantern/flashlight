@@ -46,19 +46,19 @@ endef
 
 lantern: $(SOURCES)
 	@$(call build-tags) && \
-	CGO_ENABLED=1 go build $(BUILD_RACE) -o $$BINARY_NAME -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s" github.com/getlantern/flashlight/main;
+	GO111MODULE=on CGO_ENABLED=1 go build $(BUILD_RACE) -o $$BINARY_NAME -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s" github.com/getlantern/flashlight/main;
 
 windowscli: $(SOURCES)
 	@$(call build-tags) && \
-	GOOS=windows GOARCH=386 CGO_ENABLED=1 go build -o $$BINARY_NAME-cli.exe -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
+	GO111MODULE=on GOOS=windows GOARCH=386 CGO_ENABLED=1 go build -o $$BINARY_NAME-cli.exe -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
 
 windowsgui: $(SOURCES)
 	@$(call build-tags) && \
-	GOOS=windows GOARCH=386 CGO_ENABLED=1 go build -a -o $$BINARY_NAME-gui.exe -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS -H=windowsgui" github.com/getlantern/flashlight/main;
+	GO111MODULE=on GOOS=windows GOARCH=386 CGO_ENABLED=1 go build -a -o $$BINARY_NAME-gui.exe -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS -H=windowsgui" github.com/getlantern/flashlight/main;
 
 linux: $(SOURCES)
 	@$(call build-tags) && \
-	HEADLESS=true GOOS=linux GOARCH=amd64 go build -o $$BINARY_NAME-linux -tags="$$BUILD_TAGS headless" -ldflags="$$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
+	GO111MODULE=on HEADLESS=true GOOS=linux GOARCH=amd64 go build -o $$BINARY_NAME-linux -tags="$$BUILD_TAGS headless" -ldflags="$$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
 
 require-dep:
 	@if [ "$(DEP_BIN)" = "" ]; then \
@@ -82,13 +82,13 @@ test-and-cover: $(SOURCES)
 	CP=$$(echo $$TP | tr ' ', ',') && \
 	set -x && \
 	for pkg in $$TP; do \
-		go test -race -v -tags="headless" -covermode=atomic -coverprofile=profile_tmp.cov -coverpkg "$$CP" $$pkg || exit 1; \
+		GO111MODULE=on go test -race -v -tags="headless" -covermode=atomic -coverprofile=profile_tmp.cov -coverpkg "$$CP" $$pkg || exit 1; \
 		tail -n +2 profile_tmp.cov >> profile.cov; \
 	done
 
 test: $(SOURCES)
 	@TP=$$(go list ./... | grep -v /vendor/) && \
-	go test -race -v -tags="headless" $$TP || exit 1; \
+	GO111MODULE=on go test -race -v -tags="headless" $$TP || exit 1; \
 
 clean:
 	rm -f lantern

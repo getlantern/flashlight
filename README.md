@@ -4,6 +4,8 @@
 
 * [Go 1.11](https://golang.org/dl/) is the minimum supported version of Go
 * [GNU Make](https://www.gnu.org/software/make/) if you want to use the Makefile
+* Dependencies are managed with Go Modules. Use `GO111MODULE=on` in front of `go`
+  command to automatically pick up dependencies.
 * Force git to use ssh instead of https by running
   `git config --global url."git@github.com:".insteadOf "https://github.com/"`
 
