@@ -75,6 +75,7 @@ require (
 	github.com/getlantern/mockconn v0.0.0-20190403061815-a8ffa60494a6
 	github.com/getlantern/msgpack v3.1.4+incompatible
 	github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0
+	github.com/getlantern/netstack v0.0.0-20190313202628-8999826b821d
 	github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd
 	github.com/getlantern/notifier v0.0.0-20190514215959-14a5ab5a47d6
 	github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f
@@ -123,7 +124,6 @@ require (
 	github.com/gonum/stat v0.0.0-20180125090729-ec9c8a1062f4
 	github.com/google/btree v1.0.0
 	github.com/google/gopacket v1.1.16
-	github.com/google/netstack v0.0.0-20190503185223-284c9ce35aac
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v0.0.0-20180306181548-eb925808374e
 	github.com/hashicorp/golang-lru v0.0.0-20180201235237-0fb14efe8c47
