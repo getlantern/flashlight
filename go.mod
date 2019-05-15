@@ -75,7 +75,6 @@ require (
 	github.com/getlantern/mockconn v0.0.0-20190403061815-a8ffa60494a6
 	github.com/getlantern/msgpack v3.1.4+incompatible
 	github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0
-	github.com/getlantern/netstack v0.0.0-20190313202628-8999826b821d
 	github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd
 	github.com/getlantern/notifier v0.0.0-20190514215959-14a5ab5a47d6
 	github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f
@@ -182,3 +181,5 @@ require (
 )
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20190514232624-e5e2953885df
+
+replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20190313202628-8999826b821d
