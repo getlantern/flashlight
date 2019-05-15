@@ -5,11 +5,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/yaml"
+
+	"github.com/getlantern/flashlight/common"
 )
 
 var (
@@ -85,9 +86,9 @@ func bootstrapPath(fileName string) (string, string, error) {
 		return "", "", err
 	}
 	var yamldir string
-	if runtime.GOOS == "windows" {
+	if common.Platform == "windows" {
 		yamldir = dir
-	} else if runtime.GOOS == "darwin" {
+	} else if common.Platform == "darwin" {
 		// Code signing doesn't like this file in the current directory
 		// for whatever reason, so we grab it from the Resources/en.lproj
 		// directory in the app bundle. See:
@@ -98,7 +99,7 @@ func bootstrapPath(fileName string) (string, string, error) {
 			// in the app bundle, so just look in the old location in Resources.
 			yamldir = dir + "/../Resources"
 		}
-	} else if runtime.GOOS == "linux" {
+	} else if common.Platform == "linux" {
 		yamldir = dir + "/../"
 	}
 	fullPath := filepath.Join(yamldir, fileName)

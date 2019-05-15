@@ -7,10 +7,8 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"os"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -50,6 +48,8 @@ var (
 	proxiedCONNECTPorts = []int{
 		// Standard HTTP(S) ports
 		80, 443,
+		// SSH is disabled to prevent abuse.
+		// 22,
 		// SMTP and encrypted SMTP
 		25, 465,
 		// POP and encrypted POP
@@ -178,7 +178,7 @@ func NewClient(
 
 	var mitmOpts *mitm.Opts
 	// Totally disabling MITM for now
-	if runtime.GOOS != "android" && false {
+	if common.Platform != "android" && false {
 		mitmOpts = &mitm.Opts{
 			PKFile:             filepath.Join(appdir.General("Lantern"), "mitmkey.pem"),
 			CertFile:           filepath.Join(appdir.General("Lantern"), "mitmcert.pem"),
@@ -335,9 +335,8 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 
 	conf := &socks5.Config{
 		HandleConnect: func(ctx context.Context, conn net.Conn, req *socks5.Request, replySuccess func(boundAddr net.Addr) error, replyError func(err error) error) error {
-			op := ops.Begin("proxy")
+			op, ctx := ops.BeginWithNewBeam("proxy", ctx)
 			defer op.End()
-			ctx = context.WithValue(ctx, ctxKeyOp, op)
 			addr := client.reverseDNS(fmt.Sprintf("%v:%v", req.DestAddr.IP, req.DestAddr.Port))
 			errOnReply := replySuccess(nil)
 			if errOnReply != nil {
@@ -372,7 +371,7 @@ func (client *Client) Stop() error {
 }
 
 func (client *Client) dial(ctx context.Context, isConnect bool, network, addr string) (conn net.Conn, err error) {
-	op := ops.Begin("proxied_dialer")
+	op := ops.BeginWithBeam("proxied_dialer", ctx)
 	op.Set("local_proxy_type", "http")
 	op.Origin(addr, "")
 	defer op.End()
@@ -580,29 +579,6 @@ func (client *Client) portForAddress(addr string) (int, error) {
 		return 0, fmt.Errorf("Unable to parse port %v for address %v: %v", addr, port, err)
 	}
 	return port, nil
-}
-
-// InConfigDir returns the path of the specified file name in the Lantern
-// configuration directory, using an alternate base configuration directory
-// if necessary for things like testing.
-func InConfigDir(configDir string, filename string) (string, error) {
-	cdir := configDir
-
-	if cdir == "" {
-		cdir = appdir.General("Lantern")
-	}
-
-	log.Debugf("Using config dir %v", cdir)
-	if _, err := os.Stat(cdir); err != nil {
-		if os.IsNotExist(err) {
-			// Create config dir
-			if err := os.MkdirAll(cdir, 0750); err != nil {
-				return "", fmt.Errorf("Unable to create configdir at %s: %s", cdir, err)
-			}
-		}
-	}
-
-	return filepath.Join(cdir, filename), nil
 }
 
 func errorResponse(ctx filters.Context, req *http.Request, read bool, err error) *http.Response {

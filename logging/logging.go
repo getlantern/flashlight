@@ -8,16 +8,17 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/rotator"
 	"github.com/getlantern/wfilter"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/util"
 )
 
@@ -38,12 +39,19 @@ var (
 )
 
 func init() {
-	if runtime.GOOS != "android" {
+	if common.Platform != "android" && common.Platform != "ios" {
 		EnableFileLogging("")
 	}
 }
 
 func EnableFileLogging(logdir string) {
+	err := EnableFileLoggingWith(os.Stdout, os.Stderr, logdir)
+	if err != nil {
+		log.Error(err)
+	}
+}
+
+func EnableFileLoggingWith(werr io.WriteCloser, wout io.WriteCloser, logdir string) error {
 	if logdir == "" {
 		logdir = appdir.Logs("Lantern")
 	}
@@ -51,13 +59,11 @@ func EnableFileLogging(logdir string) {
 	actualLogDir = logdir
 	actualLogDirMx.Unlock()
 
-	log.Debugf("Placing logs in %v", logdir)
 	if _, err := os.Stat(logdir); err != nil {
 		if os.IsNotExist(err) {
 			// Create log dir
 			if err := os.MkdirAll(logdir, 0755); err != nil {
-				log.Errorf("Unable to create logdir at %s: %s", logdir, err)
-				return
+				return errors.New("Unable to create logdir at %s: %s", logdir, err)
 			}
 		}
 	}
@@ -68,9 +74,10 @@ func EnableFileLogging(logdir string) {
 	rotator.MaxRotation = 5
 
 	logFile = rotator
-	errorPWC = newPipedWriteCloser(newNonStopWriteCloser(os.Stderr, logFile), 1000)
-	debugPWC = newPipedWriteCloser(newNonStopWriteCloser(os.Stdout, logFile), 100)
+	errorPWC = newPipedWriteCloser(newNonStopWriteCloser(werr, logFile), 1000)
+	debugPWC = newPipedWriteCloser(newNonStopWriteCloser(wout, logFile), 100)
 	golog.SetOutputs(timestamped(errorPWC), timestamped(debugPWC))
+	return nil
 }
 
 type pipedWriteCloser struct {
@@ -151,10 +158,19 @@ func ZipLogFiles(w io.Writer, underFolder string, maxBytes int64) error {
 	logdir := actualLogDir
 	actualLogDirMx.RUnlock()
 
+	return ZipLogFilesFrom(w, maxBytes, map[string]string{"logs": logdir})
+}
+
+// ZipLogFilesFrom zips the log files from the given dirs to the writer. It will
+// stop and return if the newly added file would make the extracted files exceed
+// maxBytes in total.
+func ZipLogFilesFrom(w io.Writer, maxBytes int64, dirs map[string]string) error {
+	globs := make(map[string]string, len(dirs))
+	for baseDir, dir := range dirs {
+		globs[baseDir] = fmt.Sprintf(filepath.Join(dir, "*.log*"))
+	}
 	return util.ZipFiles(w, util.ZipOptions{
-		Glob:     "lantern.log*",
-		Dir:      logdir,
-		NewRoot:  underFolder,
+		Globs:    globs,
 		MaxBytes: maxBytes,
 	})
 }

@@ -4,11 +4,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/getlantern/flashlight/common"
 )
 
 func TestBootstrapSettings(t *testing.T) {
@@ -41,17 +42,17 @@ func TestBootstrapSettings(t *testing.T) {
 
 	var dir string
 
-	if runtime.GOOS == "darwin" {
+	if common.Platform == "darwin" {
 		dir, err = filepath.Abs(filepath.Dir(os.Args[0]) + "/../Resources")
-	} else if runtime.GOOS == "linux" {
+	} else if common.Platform == "linux" {
 		dir, err = filepath.Abs(filepath.Dir(os.Args[0]) + "/../")
 	}
 	assert.True(t, err == nil, "Should not be an error")
 
 	log.Debugf("Running in %v", dir)
-	if runtime.GOOS == "darwin" {
+	if common.Platform == "darwin" {
 		assert.Equal(t, dir+"/"+name, path, "Unexpected settings dir")
-	} else if runtime.GOOS == "linux" {
+	} else if common.Platform == "linux" {
 		assert.Equal(t, dir+"/"+name, path, "Unexpected settings dir")
 	}
 }

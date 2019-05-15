@@ -7,7 +7,6 @@ import (
 	"io"
 	"math"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -22,16 +21,11 @@ const (
 
 // ZipOptions is a set of options for ZipFiles.
 type ZipOptions struct {
-	// The search pattern of the files / directories to be zipped, traversed
-	// in lexical order.
+	// The search patterns for the files / directories to be zipped, keyed to the
+	// directory prefix used for storing the associated files in the ZIP,
 	// The search pattern is described at the comments of path/filepath.Match.
 	// As a special note, "**/*" doesn't match files not under a subdirectory.
-	Glob string
-	// The directory where the search pattern starts with, if specified. It
-	// also serves as the root directory in zipped archive.
-	Dir string
-	// To replace Dir as the root directory in zipped archive, if specified.
-	NewRoot string
+	Globs map[string]string
 	// The limit of total bytes of all the files in the archive.
 	// All remaining files will be ignored if the limit would be hit.
 	MaxBytes int64
@@ -60,11 +54,6 @@ func ParseFileSize(s string) (int64, error) {
 
 // ZipFiles creates a zip archive per the options and writes to the writer.
 func ZipFiles(writer io.Writer, opts ZipOptions) (err error) {
-	glob := filepath.Join(opts.Dir, opts.Glob)
-	matched, e := filepath.Glob(glob)
-	if e != nil {
-		return e
-	}
 	w := zip.NewWriter(writer)
 	defer func() {
 		if e := w.Close(); e != nil {
@@ -76,18 +65,25 @@ func ZipFiles(writer io.Writer, opts ZipOptions) (err error) {
 	if maxBytes == 0 {
 		maxBytes = math.MaxInt64
 	}
+
 	var totalBytes int64
-	for _, source := range matched {
-		nextTotal, e := zipFile(w, source, opts.Dir, opts.NewRoot, maxBytes, totalBytes)
-		if e != nil || nextTotal > maxBytes {
+	for baseDir, glob := range opts.Globs {
+		matched, e := filepath.Glob(glob)
+		if e != nil {
 			return e
 		}
-		totalBytes = nextTotal
+		for _, source := range matched {
+			nextTotal, e := zipFile(w, baseDir, source, maxBytes, totalBytes)
+			if e != nil || nextTotal > maxBytes {
+				return e
+			}
+			totalBytes = nextTotal
+		}
 	}
 	return
 }
 
-func zipFile(w *zip.Writer, source string, baseDir string, newRoot string, limit int64, prevBytes int64) (newBytes int64, err error) {
+func zipFile(w *zip.Writer, baseDir string, source string, limit int64, prevBytes int64) (newBytes int64, err error) {
 	_, e := os.Stat(source)
 	if e != nil {
 		return prevBytes, fmt.Errorf("%s: stat: %v", source, e)
@@ -107,15 +103,17 @@ func zipFile(w *zip.Writer, source string, baseDir string, newRoot string, limit
 			return fmt.Errorf("%s: getting header: %v", fpath, err)
 		}
 
-		if newRoot == "" {
-			header.Name = fpath
+		dir, filename := filepath.Split(fpath)
+		if baseDir != "" {
+			dir = baseDir
 		} else {
-			header.Name = path.Join(newRoot, strings.TrimPrefix(fpath, baseDir))
+			dir = dir[:len(dir)-1] // strip trailing slash
 		}
 		if info.IsDir() {
-			header.Name += "/"
+			header.Name = fmt.Sprintf("%v/", dir)
 			header.Method = zip.Store
 		} else {
+			header.Name = fmt.Sprintf("%v/%v", dir, filename)
 			header.Method = zip.Deflate
 		}
 
