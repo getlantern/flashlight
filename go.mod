@@ -99,7 +99,7 @@ require (
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
 	github.com/getlantern/tlsdialer v0.0.0-20180712141225-bae89e3a58a7
 	github.com/getlantern/tlsredis v0.0.0-20180308045249-5d4ed6dd3836
-	github.com/getlantern/uuid v1.2.1-0.20190514210554-971888c45667
+	github.com/getlantern/uuid v1.2.1-0.20190515184524-7ab03de9f869
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/wal v0.0.0-20171207173857-028a06aadcb9
 	github.com/getlantern/wfilter v0.0.0-20160829163852-69cc8585ee9c
