@@ -41,7 +41,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/gotun"
 	"github.com/getlantern/ipproxy"
-	"github.com/getlantern/packetforward"
+	packetforward "github.com/getlantern/packetforward/server"
 	"github.com/getlantern/uuid"
 
 	"github.com/getlantern/flashlight/ios"
