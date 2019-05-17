@@ -1,21 +1,40 @@
 // This demo program allows testing the iOS packet forwarding functionality
-// on a desktop machine.
+// on a desktop machine using a TUN device. There are two ways to run it.
 //
-// Run the program, then in a terminal
+// To fetch configuration from the cloud, just like iOS does, run:
+//
+// ./demo -gw 192.168.1.1 -bypassthreads 100
+//
+// Replace 192.168.1.1 with your default gateway (here and below as well).
+//
+// The -bypassthreads flag will enable automatic configuration of the routing
+// table to bypass the demo TUN device for traffic to your proxy as well as
+// domain fronting traffic.
+//
+// Alternately, to point at a specific proxies.yaml, run:
+//
+// ./demo -gw 192.168.1.1 -proxiesyaml ~/proxies.yaml
+//
+// To have the demo program handle all your internet traffic, run:
 //
 // sudo route delete default
 // sudo route add default 10.0.0.2
+//
+// If using a proxies.yaml, you'll also need to manually set up a direct route
+// for proxy traffic via the default gateway, like so:
+//
 // sudo route add 67.205.172.79 192.168.1.1
 //
-// Replace 192.168.1.1 with the IP of your default gateway
-//
-// Now your network traffic will route through here to the proxy at 67.205.172.79.
+// Now your network traffic will route through here to your proxy.
 //
 // When you're finished, you can fix your routing table with:
 //
 // sudo route delete default
-// sudo route delete 67.205.172.79
 // sudo route add default 102.168.1.1
+//
+// If you added a manual route for the proxy, you'll want to remove that too:
+//
+// sudo route delete 67.205.172.79
 //
 package main
 

@@ -1732,6 +1732,7 @@
     "github.com/getlantern/ops",
     "github.com/getlantern/osversion",
     "github.com/getlantern/packetforward",
+    "github.com/getlantern/packetforward/server",
     "github.com/getlantern/profiling",
     "github.com/getlantern/protected",
     "github.com/getlantern/proxiedsites",
