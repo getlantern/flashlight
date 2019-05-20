@@ -221,14 +221,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b6efc2e5eb4130a3d0bbf81d4e804213729a0f557e62aaf72c64fc4c5befa933"
+  digest = "1:5af8404007f076246e50dcf6a725f2d54700cb2640a6d9ba3b43a50235a0a212"
   name = "github.com/getlantern/borda"
   packages = [
     "client",
     "client/rpcclient",
   ]
   pruneopts = "UT"
-  revision = "9a0c110eea9d1b0856323bb4968004cb58d09867"
+  revision = "7bb4022323b13f00da5221cb5f51c572fa3803ab"
 
 [[projects]]
   branch = "master"
