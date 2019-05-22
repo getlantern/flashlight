@@ -126,7 +126,7 @@ func Client(packetsOut Writer, configDir string, mtu int) (WriteCloser, error) {
 	c := &client{
 		packetsOut: packetsOut,
 		configDir:  configDir,
-		mtu:        mtu,
+		mtu:        mtu, // hardcoding this to support large segments
 	}
 
 	return c.start()

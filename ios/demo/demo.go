@@ -39,13 +39,11 @@
 package main
 
 import (
-	"context"
 	"encoding/base64"
 	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -55,12 +53,9 @@ import (
 	"strings"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/gotun"
-	"github.com/getlantern/ipproxy"
-	packetforward "github.com/getlantern/packetforward/server"
 	"github.com/getlantern/uuid"
 
 	"github.com/getlantern/flashlight/ios"
@@ -70,12 +65,15 @@ var (
 	log = golog.LoggerFor("ios-demo")
 )
 
+const (
+	mtu = 65535
+)
+
 var (
 	tunDevice       = flag.String("tun-device", "tun0", "tun device name")
 	tunAddr         = flag.String("tun-address", "10.0.0.2", "tun device address")
 	tunMask         = flag.String("tun-mask", "255.255.255.0", "tun device netmask")
 	tunGW           = flag.String("tun-gw", "10.0.0.1", "tun device gateway")
-	ifOut           = flag.String("ifout", "en0", "name of interface to use for outbound connections")
 	pprofAddr       = flag.String("pprofaddr", "", "pprof address to listen on, not activate pprof if empty")
 	internetGateway = flag.String("gw", "192.168.1.1", "gateway for getting to Internet")
 	deviceID        = flag.String("deviceid", base64.StdEncoding.EncodeToString(uuid.NodeID()), "deviceid to report to server")
@@ -131,54 +129,11 @@ func main() {
 		}
 	}
 
-	l, err := net.Listen("tcp", ":3000")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Debug("Starting packetforward server")
-	pfs := packetforward.NewServer(&ipproxy.Opts{
-		OutboundBufferDepth: 10000,
-		DialTCP: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			return net.Dial("tcp", "127.0.0.1:3000")
-		},
-		StatsInterval: 1 * time.Second,
-	})
-	go pfs.Serve(l)
-
-	dev, err := tun.OpenTunDevice(*tunDevice, *tunAddr, *tunGW, *tunMask)
+	dev, err := tun.OpenTunDevice(*tunDevice, *tunAddr, *tunGW, *tunMask, 1500)
 	if err != nil {
 		log.Fatalf("Error opening TUN device: %v", err)
 	}
 	defer dev.Close()
-
-	log.Debugf("Finding interface %v", *ifOut)
-	outIF, err := net.InterfaceByName(*ifOut)
-	if err != nil {
-		log.Fatalf("Unable to find interface %v: %v", *ifOut, err)
-	}
-	outIFAddrs, err := outIF.Addrs()
-	if err != nil {
-		log.Fatalf("Unable to get addresses for interface %v: %v", *ifOut, err)
-	}
-	var laddrTCP *net.TCPAddr
-	var laddrUDP *net.UDPAddr
-	for _, outIFAddr := range outIFAddrs {
-		switch t := outIFAddr.(type) {
-		case *net.IPNet:
-			ipv4 := t.IP.To4()
-			if ipv4 != nil {
-				laddrTCP = &net.TCPAddr{IP: ipv4, Port: 0}
-				laddrUDP = &net.UDPAddr{IP: ipv4, Port: 0}
-				break
-			}
-		}
-	}
-	if laddrTCP == nil {
-		log.Fatalf("Unable to get IPv4 address for interface %v", *ifOut)
-	}
-	log.Debugf("Outbound TCP will use %v", laddrTCP)
-	log.Debugf("Outbound UDP will use %v", laddrUDP)
 
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch,
@@ -191,6 +146,7 @@ func main() {
 		log.Debug("Stopping TUN device")
 		dev.Close()
 		log.Debug("Stopped TUN device")
+		os.Exit(0)
 	}()
 
 	doneAddingBypassRoutes := make(chan interface{})
@@ -256,13 +212,13 @@ func main() {
 		}()
 	}
 
-	writer, err := ios.Client(&writerAdapter{dev}, tmpDir, 1500)
+	writer, err := ios.Client(&writerAdapter{dev}, tmpDir, mtu)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	log.Debug("Reading from TUN device")
-	b := make([]byte, 1500)
+	b := make([]byte, mtu)
 	for {
 		n, err := dev.Read(b)
 		if n > 0 {

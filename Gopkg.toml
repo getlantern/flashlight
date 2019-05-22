@@ -303,3 +303,11 @@
 [[override]]
   name = "github.com/golang/protobuf"
   version = "=1.2.0"
+
+[[override]]
+  name = "github.com/getlantern/packetforward"
+  branch = "ox/gonat"
+
+[[override]]
+  name = "github.com/getlantern/framed"
+  branch = "ox/large_frames_support"
