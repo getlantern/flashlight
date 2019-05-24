@@ -51,6 +51,7 @@ func TestRewriteHTTPSCORS(t *testing.T) {
 	req, _ := http.NewRequest("GET", "http://www.adaptec.com/", nil)
 	req.Header.Set("Origin", "www.adaptec.com")
 	resp, err := roundTrip(client, req)
+	log.Debug("Finished round trip")
 	if !assert.NoError(t, err) {
 		return
 	}
