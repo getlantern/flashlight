@@ -50,7 +50,9 @@ func TestRewriteHTTPSCORS(t *testing.T) {
 	client.rewriteToHTTPS = httpseverywhere.Eager()
 	req, _ := http.NewRequest("GET", "http://www.adaptec.com/", nil)
 	req.Header.Set("Origin", "www.adaptec.com")
+	log.Debug("Starting CORS roundtrip")
 	resp, err := roundTrip(client, req)
+	log.Debug("Finished CORS round trip")
 	if !assert.NoError(t, err) {
 		return
 	}
