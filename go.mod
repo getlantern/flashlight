@@ -74,7 +74,7 @@ require (
 	github.com/getlantern/msgpack v3.1.4+incompatible
 	github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0
 	github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd
-	github.com/getlantern/notifier v0.0.0-20190514215959-14a5ab5a47d6
+	github.com/getlantern/notifier v0.0.0-20190515193151-bb80473662f5
 	github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f
 	github.com/getlantern/osversion v0.0.0-20180309120706-8f3fb296110c
 	github.com/getlantern/packetforward v0.0.0-20190504050844-5be78b74b008
@@ -170,7 +170,6 @@ require (
 	golang.org/x/crypto v0.0.0-20190228161510-8dd112bcdc25
 	golang.org/x/net v0.0.0-20181201002055-351d144fa1fc
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58
-	golang.org/x/sys v0.0.0-20190502175342-a43fa875dd82
 	golang.org/x/text v0.3.0
 	google.golang.org/appengine v1.1.0
 	google.golang.org/genproto v0.0.0-20180817151627-c66870c02cf8
