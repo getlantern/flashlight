@@ -1,5 +1,7 @@
 module github.com/getlantern/flashlight
 
+go 1.11
+
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v0.0.0-20180321061416-7d56ec4f381e
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
@@ -41,6 +43,7 @@ require (
 	github.com/getlantern/errors v0.0.0-20190325191628-abdb3e3e36f7
 	github.com/getlantern/event v0.0.0-20170919023932-f16a5563f52e
 	github.com/getlantern/eventual v0.0.0-20180125201821-84b02499361b
+	github.com/getlantern/fdcount v0.0.0-20170105153814-6a6cb5839bc5 // indirect
 	github.com/getlantern/filepersist v0.0.0-20160317154340-c5f0cd24e799
 	github.com/getlantern/framed v0.0.0-20190306221922-7f7919c8cf9b
 	github.com/getlantern/fronted v0.0.0-20180905190541-5b4f46cc8f8d
@@ -52,6 +55,7 @@ require (
 	github.com/getlantern/golog v0.0.0-20170508214112-cca714f7feb5
 	github.com/getlantern/gotun v0.0.0-20190422200803-35dee1b197b5
 	github.com/getlantern/gowin v0.0.0-20160824205538-88fa116ddffc
+	github.com/getlantern/grtrack v0.0.0-20160824195228-cbf67d3fa0fd // indirect
 	github.com/getlantern/hex v0.0.0-20190417191902-c6586a6fe0b7
 	github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55
 	github.com/getlantern/http-proxy v0.0.0-20181211022424-5b96142859a8
@@ -59,7 +63,6 @@ require (
 	github.com/getlantern/httpseverywhere v0.0.0-20180326165025-9bdb93e40695
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
 	github.com/getlantern/idletiming v0.0.0-20190331182121-9540d1aeda2b
-	github.com/getlantern/ipproxy v0.0.0-20190508162323-6329c3cbf2fa
 	github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42
 	github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644
 	github.com/getlantern/kcp-go v0.0.0-20171025115649-19559e0e938c
@@ -99,7 +102,7 @@ require (
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
 	github.com/getlantern/tlsdialer v0.0.0-20180712141225-bae89e3a58a7
 	github.com/getlantern/tlsredis v0.0.0-20180308045249-5d4ed6dd3836
-	github.com/getlantern/uuid v1.2.1-0.20190515184524-7ab03de9f869
+	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/wal v0.0.0-20171207173857-028a06aadcb9
 	github.com/getlantern/wfilter v0.0.0-20160829163852-69cc8585ee9c
@@ -121,6 +124,7 @@ require (
 	github.com/gonum/stat v0.0.0-20180125090729-ec9c8a1062f4
 	github.com/google/btree v1.0.0
 	github.com/google/gopacket v1.1.16
+	github.com/google/netstack v0.0.0-20190503185223-284c9ce35aac // indirect
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v0.0.0-20180306181548-eb925808374e
 	github.com/hashicorp/golang-lru v0.0.0-20180201235237-0fb14efe8c47

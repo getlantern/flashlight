@@ -231,6 +231,8 @@ github.com/getlantern/tlsdialer v0.0.0-20180712141225-bae89e3a58a7 h1:C9BC2oU+8k
 github.com/getlantern/tlsdialer v0.0.0-20180712141225-bae89e3a58a7/go.mod h1:O0cCO2crLwc02DtahTowM6jjUCvn6Jr26uDQaGVab4g=
 github.com/getlantern/tlsredis v0.0.0-20180308045249-5d4ed6dd3836 h1:Qx9tRhqZdhF0RBxHe2OVE1OJ30ipOCPfMraDrZED3bc=
 github.com/getlantern/tlsredis v0.0.0-20180308045249-5d4ed6dd3836/go.mod h1:1ZJE0mXEdPyyuF1daUTDBo2nVWB/6nuZy7IcNmRnHrc=
+github.com/getlantern/uuid v1.2.0 h1:pGrGaCV7XEaG6lvjWkwf8Y92BjB/9yFmkKsNFpRQ7rc=
+github.com/getlantern/uuid v1.2.0/go.mod h1:uX10hOzZUUDR+oYNSIks+RcozOEiwTNC/K2rw9SUi1k=
 github.com/getlantern/uuid v1.2.1-0.20190514210554-971888c45667 h1:DaUhPyvQqxNtNo/cEATImJvQPB4YRPDZsTUaChMHZIY=
 github.com/getlantern/uuid v1.2.1-0.20190514210554-971888c45667/go.mod h1:lprYff2ze+I+xD5pZHqWPnLmT+gP57HDsKHVkDAaL1o=
 github.com/getlantern/uuid v1.2.1-0.20190515184524-7ab03de9f869 h1:G+MunQqKHMd82TcfYQXxzeOeoD6aIEa9Wx3iHPMVStc=
@@ -432,6 +434,9 @@ golang.org/x/sys v0.0.0-20180905080454-ebe1bf3edb33/go.mod h1:STP8DvDyc/dI5b8T5h
 golang.org/x/sys v0.0.0-20181011152604-fa43e7bc11ba/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20181116152217-5ac8a444bdc5/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+golang.org/x/sys v0.0.0-20190226215855-775f8194d0f9 h1:N26gncmS+iqc/W/SKhX3ElI5pkt72XYoRLgi5Z70LSc=
+golang.org/x/sys v0.0.0-20190226215855-775f8194d0f9/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+golang.org/x/sys v0.0.0-20190228124157-a34e9553db1e/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20190502175342-a43fa875dd82 h1:vsphBvatvfbhlb4PO1BYSr9dzugGxJ/SQHoNufZJq1w=
 golang.org/x/sys v0.0.0-20190502175342-a43fa875dd82/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
