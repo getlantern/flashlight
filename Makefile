@@ -1,5 +1,4 @@
 DISABLE_PORT_RANDOMIZATION ?=
-DEP_BIN    ?= $(shell which dep)
 GOBINDATA_BIN ?= $(shell which go-bindata)
 
 SHELL := /bin/bash
@@ -44,7 +43,7 @@ define build-tags
 	EXTRA_LDFLAGS=$$(echo $$EXTRA_LDFLAGS | xargs) && echo "Extra ldflags: $$EXTRA_LDFLAGS"
 endef
 
-.PHONY: require-dep vendor novendor
+.PHONY: vendor novendor
 
 lantern: $(SOURCES)
 	@$(call build-tags) && \
@@ -63,13 +62,8 @@ linux: $(SOURCES)
 	HEADLESS=true GOOS=linux GOARCH=amd64 go build -o $$BINARY_NAME-linux -tags="$$BUILD_TAGS headless" -ldflags="$$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
 
 # vendor installs vendored dependencies using Dep
-vendor: require-dep
-	@$(DEP_BIN) ensure
-
-require-dep:
-	@if [ "$(DEP_BIN)" = "" ]; then \
-		echo 'Missing "dep" command. See https://github.com/golang/dep' && exit 1; \
-	fi
+vendor:
+	GO111MODULE=on go mod vendor
 
 # test go-bindata dependency and update icons if up-to-date
 update-icons:

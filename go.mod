@@ -62,7 +62,7 @@ require (
 	github.com/getlantern/mockconn v0.0.0-20190403061815-a8ffa60494a6
 	github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0
 	github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd
-	github.com/getlantern/notifier v0.0.0-20170512210300-9d71672e9d5d // indirect
+	github.com/getlantern/notifier v0.0.0-20190531021800-64e5c4112f43
 	github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f
 	github.com/getlantern/osversion v0.0.0-20180309120706-8f3fb296110c
 	github.com/getlantern/packetforward v0.0.0-20190531004311-d92b6414beca
