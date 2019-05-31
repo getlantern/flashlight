@@ -5,7 +5,6 @@ go 1.12
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v0.0.0-20180321061416-7d56ec4f381e
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
-	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/Yawning/chacha20 v0.0.0-20170904085104-e3b1f968fc63 // indirect
 	github.com/agl/ed25519 v0.0.0-20170116200512-5312a6153412 // indirect
 	github.com/anacrolix/go-libutp v1.0.2 // indirect
@@ -13,24 +12,21 @@ require (
 	github.com/beorn7/perks v1.0.0 // indirect
 	github.com/blang/semver v0.0.0-20180305174007-c5e971dbed78 // indirect
 	github.com/cheekybits/genny v1.0.0 // indirect
-	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dchest/siphash v1.1.0 // indirect
-	github.com/dustin/go-humanize v0.0.0-20180421182945-02af3965c54e
+	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/set v0.2.1 // indirect
 	github.com/felixge/httpsnoop v1.0.0 // indirect
 	github.com/getlantern/appdir v0.0.0-20180320102544-7c0f9d241ea7
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/bbrconn v0.0.0-20180619163322-86cf8c16f3d0 // indirect
-	github.com/getlantern/borda v0.0.0-20190507190350-9a0c110eea9d
+	github.com/getlantern/borda v0.0.0-20190520135432-7bb4022323b1
 	github.com/getlantern/bufconn v0.0.0-20190503112805-6402607914eb
 	github.com/getlantern/byteexec v0.0.0-20170405023437-4cfb26ec74f4 // indirect
-	github.com/getlantern/bytemap v0.0.0-20180417025909-c7bf952233bc // indirect
 	github.com/getlantern/cmux v0.0.0-20171023232237-ee58cae565e4
 	github.com/getlantern/detour v0.0.0-20190122161414-7107a599a170
 	github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041 // indirect
 	github.com/getlantern/dnsgrab v0.0.0-20171025121014-227f729dcb41
-	github.com/getlantern/elevate v0.0.0-20180207094634-c2e2e4901072 // indirect
 	github.com/getlantern/ema v0.0.0-20170330162033-d906ee7c3465
 	github.com/getlantern/enhttp v0.0.0-20190401024120-a974fa851e3c
 	github.com/getlantern/enproxy v0.0.0-20180913191734-002212d417a4 // indirect
@@ -43,7 +39,6 @@ require (
 	github.com/getlantern/go-cache v0.0.0-20141028142048-88b53914f467 // indirect
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
 	github.com/getlantern/go-update v0.0.0-20190510022740-79c495ab728c // indirect
-	github.com/getlantern/goexpr v0.0.0-20171209042432-610eae7c7314 // indirect
 	github.com/getlantern/golog v0.0.0-20170508214112-cca714f7feb5
 	github.com/getlantern/gotun v0.0.0-20190523194503-885514e382d2
 	github.com/getlantern/gowin v0.0.0-20160824205538-88fa116ddffc // indirect
@@ -65,7 +60,6 @@ require (
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
 	github.com/getlantern/mitm v0.0.0-20180205214248-4ce456bae650
 	github.com/getlantern/mockconn v0.0.0-20190403061815-a8ffa60494a6
-	github.com/getlantern/msgpack v3.1.4+incompatible // indirect
 	github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0
 	github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd
 	github.com/getlantern/notifier v0.0.0-20170512210300-9d71672e9d5d // indirect
@@ -85,26 +79,22 @@ require (
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/shortcut v0.0.0-20190117153616-bb4d4203cc25
-	github.com/getlantern/sqlparser v0.0.0-20171012210704-a879d8035f3c // indirect
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
 	github.com/getlantern/systray v0.0.0-20181206010516-eaad7114094d
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
 	github.com/getlantern/tinywss v0.0.0-20190508231233-72f4ddc30925
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
 	github.com/getlantern/tlsdialer v0.0.0-20180712141225-bae89e3a58a7
-	github.com/getlantern/tlsredis v0.0.0-20180308045249-5d4ed6dd3836 // indirect
 	github.com/getlantern/unsafeslice v0.0.0-20190520180502-c8f6b3669ee7 // indirect
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
-	github.com/getlantern/wal v0.0.0-20171207173857-028a06aadcb9 // indirect
 	github.com/getlantern/wfilter v0.0.0-20160829163852-69cc8585ee9c
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
-	github.com/getlantern/withtimeout v0.0.0-20160829163843-511f017cd913 // indirect
 	github.com/getlantern/yaml v0.0.0-20160317154340-79303eb9c0d9
-	github.com/getlantern/zenodb v0.0.0-20180618221016-44cc8585533a // indirect
 	github.com/go-ole/go-ole v1.2.1 // indirect
 	github.com/golang/gddo v0.0.0-20180703174436-daffe1f90ec5 // indirect
 	github.com/golang/groupcache v0.0.0-20180203143532-66deaeb636df // indirect
+	github.com/golang/lint v0.0.0-20180702182130-06c8688daad7 // indirect
 	github.com/gonum/blas v0.0.0-20180125090452-e7c5890b24cf // indirect
 	github.com/gonum/floats v0.0.0-20180125090339-7de1f4ea7ab5 // indirect
 	github.com/gonum/internal v0.0.0-20180125090855-fda53f8d2571 // indirect
@@ -113,11 +103,12 @@ require (
 	github.com/gonum/stat v0.0.0-20180125090729-ec9c8a1062f4 // indirect
 	github.com/google/netstack v0.0.0-20190505230633-4391e4a763ab // indirect
 	github.com/gorilla/websocket v0.0.0-20180306181548-eb925808374e
-	github.com/hashicorp/golang-lru v0.0.0-20180201235237-0fb14efe8c47
+	github.com/hashicorp/golang-lru v0.5.1
 	github.com/huandu/xstrings v1.2.0 // indirect
 	github.com/juju/ratelimit v1.0.1 // indirect
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
+	github.com/kisielk/gotool v1.0.0 // indirect
 	github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9 // indirect
 	github.com/lucas-clemente/quic-go v0.7.1-0.20190207125157-7dc4be2ce994 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
@@ -126,12 +117,9 @@ require (
 	github.com/mikioh/tcp v0.0.0-20180313052821-a2964c74d73b // indirect
 	github.com/mikioh/tcpinfo v0.0.0-20180210234901-fd8b9a80d71e // indirect
 	github.com/mikioh/tcpopt v0.0.0-20180210233710-18f4a8218095 // indirect
-	github.com/mitchellh/go-homedir v0.0.0-20161203194507-b8bc1bf76747 // indirect
 	github.com/mitchellh/go-server-timing v0.0.0-20180226015900-d145200e1f90
 	github.com/mitchellh/mapstructure v0.0.0-20180220230111-00c29f56e238
 	github.com/mitchellh/panicwrap v0.0.0-20170106182340-fce601fe5557
-	github.com/oschwald/geoip2-golang v1.2.1 // indirect
-	github.com/oschwald/maxminddb-golang v1.3.0 // indirect
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
 	github.com/petar/GoLLRB v0.0.0-20130427215148-53be0d36a84c // indirect
 	github.com/prometheus/client_golang v0.9.2 // indirect
@@ -139,8 +127,6 @@ require (
 	github.com/prometheus/common v0.4.0 // indirect
 	github.com/prometheus/procfs v0.0.0-20190507164030-5867b95ac084 // indirect
 	github.com/refraction-networking/utls v0.0.0-20180627181930-e0edd7863bd2
-	github.com/shirou/gopsutil v0.0.0-20180801053943-8048a2e9c577 // indirect
-	github.com/shirou/w32 v0.0.0-20160930032740-bb4de0191aa4 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20160302144031-75fb7ed4208c
 	github.com/stretchr/testify v1.3.0
 	github.com/templexxx/cpufeat v0.0.0-20170927014610-3794dfbfb047 // indirect
@@ -150,10 +136,7 @@ require (
 	github.com/tjfoc/gmsm v0.0.0-20180404022540-0effa9db1ba8 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.0.7 // indirect
-	github.com/xwb1989/sqlparser v0.0.0-20171128062118-da747e0c62c4 // indirect
 	golang.org/x/net v0.0.0-20190509222800-a4d6f7feada5
-	google.golang.org/grpc v1.15.0 // indirect
-	gopkg.in/redis.v5 v5.2.9 // indirect
 )
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20190514232624-e5e2953885df

@@ -9,7 +9,6 @@ import (
 	borda "github.com/getlantern/borda/client"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/proxybench"
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
@@ -43,7 +42,7 @@ func Configure(reportInterval time.Duration, enabled func(ctx map[string]interfa
 	if reportInterval > 0 {
 		log.Debug("Enabling borda")
 		once.Do(func() {
-			startBordaAndProxyBench(reportInterval, enabled)
+			startBorda(reportInterval, enabled)
 		})
 	} else {
 		log.Debug("Borda not enabled")
@@ -58,14 +57,10 @@ func Flush() {
 	}
 }
 
-func startBordaAndProxyBench(reportInterval time.Duration, enabled func(ctx map[string]interface{}) bool) {
+func startBorda(reportInterval time.Duration, enabled func(ctx map[string]interface{}) bool) {
 	bordaClient = createBordaClient(reportInterval)
 
 	reportToBorda := bordaClient.ReducingSubmitter("client_results", 1000)
-
-	proxybench.Start(&proxybench.Opts{}, func(timing time.Duration, ctx map[string]interface{}) {
-		// No need to do anything, this is now handled with the regular op reporting
-	})
 
 	reporter := func(failure error, ctx map[string]interface{}) {
 		if !enabled(ctx) {
