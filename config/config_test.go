@@ -251,7 +251,7 @@ func TestProductionGlobal(t *testing.T) {
 
 	f := newFetcher(newTestUserConfig(), &http.Transport{}, testURL)
 
-	cfgBytes, sleep, err := f.fetch(sleepFunc)
+	cfgBytes, _, err := f.fetch(sleepFunc)
 	if !assert.NoError(t, err, "Error fetching global config from %s", testURL) {
 		return
 	}
