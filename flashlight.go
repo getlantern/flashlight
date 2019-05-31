@@ -7,6 +7,7 @@ import (
 	"net"
 	"path/filepath"
 	"runtime"
+	"sync"
 	"time"
 
 	"github.com/getlantern/appdir"
@@ -16,6 +17,7 @@ import (
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/ops"
 	"github.com/getlantern/osversion"
+	"github.com/getlantern/proxybench"
 
 	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/borda"
@@ -45,6 +47,8 @@ var (
 
 	// Lightweight Ops are ops for which we record less than the full set of dimensions (e.g. omit error)
 	LightweightOps = []string{"balancer_dial", "proxy_dial"}
+
+	startProxyBenchOnce sync.Once
 )
 
 // Run runs a client proxy. It blocks as long as the proxy is running.
@@ -182,6 +186,13 @@ func applyClientConfig(c *client.Client, cfg *config.Global, autoReport func() b
 		fronted.Configure(certs, cfg.Client.FrontedProviders(), config.CloudfrontProviderID, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
 	} else {
 		log.Errorf("Unable to configured fronted (no config)")
+	}
+
+	// proxybench is governed by this configuration as well.
+	if cfg.BordaReportInterval > 0 {
+		startProxyBenchOnce.Do(func() {
+			proxybench.Start(&proxybench.Opts{}, func(timing time.Duration, ctx map[string]interface{}) {})
+		})
 	}
 
 	enableBorda := func(ctx map[string]interface{}) bool {
