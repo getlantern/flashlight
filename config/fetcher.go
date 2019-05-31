@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strconv"
+	"time"
 
 	"github.com/getlantern/detour"
 
@@ -17,7 +19,7 @@ import (
 
 // Fetcher is an interface for fetching config updates.
 type Fetcher interface {
-	fetch() ([]byte, error)
+	fetch(func() time.Duration) ([]byte, func() time.Duration, error)
 }
 
 // fetcher periodically fetches the latest cloud configuration.
@@ -48,20 +50,20 @@ func newFetcher(conf common.UserConfig, rt http.RoundTripper, originURL string) 
 	}
 }
 
-func (cf *fetcher) fetch() ([]byte, error) {
+func (cf *fetcher) fetch(sleep func() time.Duration) ([]byte, func() time.Duration, error) {
 	op, ctx := ops.BeginWithNewBeam("fetch_config", context.Background())
 	defer op.End()
-	result, err := cf.doFetch(ctx, op)
-	return result, op.FailIf(err)
+	result, sleepFunc, err := cf.doFetch(ctx, op, sleep)
+	return result, sleepFunc, op.FailIf(err)
 }
 
-func (cf *fetcher) doFetch(ctx context.Context, op *ops.Op) ([]byte, error) {
+func (cf *fetcher) doFetch(ctx context.Context, op *ops.Op, sleep func() time.Duration) ([]byte, func() time.Duration, error) {
 	log.Debugf("Fetching cloud config from %v", cf.originURL)
 
 	url := cf.originURL
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to construct request for cloud config at %s: %s", url, err)
+		return nil, nil, fmt.Errorf("Unable to construct request for cloud config at %s: %s", url, err)
 	}
 	if cf.lastCloudConfigETag[url] != "" {
 		// Don't bother fetching if unchanged
@@ -80,8 +82,22 @@ func (cf *fetcher) doFetch(ctx context.Context, op *ops.Op) ([]byte, error) {
 
 	resp, err := cf.rt.RoundTrip(req.WithContext(ctx))
 	if err != nil {
-		return nil, fmt.Errorf("Unable to fetch cloud config at %s: %s", url, err)
+		return nil, sleep, fmt.Errorf("Unable to fetch cloud config at %s: %s", url, err)
 	}
+
+	sleepFunc := sleep
+	sleepVal := resp.Header.Get("X-Lantern-Config-Sleep")
+	if sleepVal != "" {
+		seconds, err := strconv.ParseInt(sleepVal, 10, 64)
+		if err != nil {
+			log.Errorf("Could not parse sleep val: %v", err)
+		} else {
+			sleepFunc = func() time.Duration {
+				return time.Duration(seconds) * time.Second
+			}
+		}
+	}
+
 	dump, dumperr := httputil.DumpResponse(resp, false)
 	if dumperr != nil {
 		log.Errorf("Could not dump response: %v", dumperr)
@@ -97,20 +113,20 @@ func (cf *fetcher) doFetch(ctx context.Context, op *ops.Op) ([]byte, error) {
 	if resp.StatusCode == 304 {
 		op.Set("config_changed", false)
 		log.Debug("Config unchanged in cloud")
-		return nil, nil
+		return nil, sleepFunc, nil
 	} else if resp.StatusCode != 200 {
 		op.HTTPStatusCode(resp.StatusCode)
 		if dumperr != nil {
-			return nil, fmt.Errorf("Bad config response code: %v", resp.StatusCode)
+			return nil, sleepFunc, fmt.Errorf("Bad config response code: %v", resp.StatusCode)
 		}
-		return nil, fmt.Errorf("Bad config resp:\n%v", string(dump))
+		return nil, sleepFunc, fmt.Errorf("Bad config resp:\n%v", string(dump))
 	}
 
 	op.Set("config_changed", true)
 	cf.lastCloudConfigETag[url] = resp.Header.Get(common.EtagHeader)
 	gzReader, err := gzip.NewReader(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to open gzip reader: %s", err)
+		return nil, sleepFunc, fmt.Errorf("Unable to open gzip reader: %s", err)
 	}
 
 	defer func() {
@@ -120,5 +136,6 @@ func (cf *fetcher) doFetch(ctx context.Context, op *ops.Op) ([]byte, error) {
 	}()
 
 	log.Debugf("Fetched cloud config")
-	return ioutil.ReadAll(gzReader)
+	body, err := ioutil.ReadAll(gzReader)
+	return body, sleepFunc, err
 }
