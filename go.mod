@@ -78,7 +78,6 @@ require (
 	github.com/go-ole/go-ole v1.2.1 // indirect
 	github.com/golang/gddo v0.0.0-20180703174436-daffe1f90ec5 // indirect
 	github.com/golang/lint v0.0.0-20180702182130-06c8688daad7 // indirect
-	github.com/google/netstack v0.0.0-20190505230633-4391e4a763ab
 	github.com/gorilla/websocket v0.0.0-20180306181548-eb925808374e
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
