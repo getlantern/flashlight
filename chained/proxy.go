@@ -441,7 +441,7 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 		return conn, delta, err
 	}
 
-	if s.MultiplexedAddr != "" || s.PluggableTransport == "utp" {
+	if s.MultiplexedAddr != "" || s.PluggableTransport == "utphttp" || s.PluggableTransport == "utphttps" {
 		log.Debugf("Enabling multiplexing for %v", p.Label())
 		origDoDialServer := p.doDialServer
 		poolSize := s.MultiplexedPhysicalConns
@@ -458,7 +458,8 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 		p.doDialServer = func(ctx context.Context, p *proxy) (net.Conn, error) {
 			return multiplexedDial(ctx, "", "")
 		}
-	} else if len(s.KCPSettings) > 0 {
+	}
+	if len(s.KCPSettings) > 0 {
 		log.Debugf("Enabling KCP for %v (%v)", p.Label(), p.protocol)
 		err := enableKCP(p, s)
 		if err != nil {
