@@ -851,11 +851,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d73e45b16879bf77e665465acc2389f5451c29803bfe78be334bf9305a0a1760"
+  digest = "1:1660b431282613425855f28ed90b59f2a322447268ddc3664753e0d566469418"
   name = "github.com/getlantern/tinywss"
   packages = ["."]
   pruneopts = "UT"
-  revision = "72f4ddc309252beeb29b14920390be4a360c998b"
+  revision = "8d81aaf624e632fd8bcdda714ed13e9757476eca"
 
 [[projects]]
   branch = "master"
