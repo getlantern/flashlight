@@ -1,11 +1,12 @@
 package config
 
 import (
+	"crypto/x509"
 	"errors"
 	"time"
 
-	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/fronted"
+	"github.com/getlantern/keyman"
 	"github.com/getlantern/proxiedsites"
 )
 
@@ -22,7 +23,7 @@ type Global struct {
 	BordaReportInterval   time.Duration
 	BordaSamplePercentage float64
 	ReportIssueEmail      string
-	Client                *client.ClientConfig
+	Client                *ClientConfig
 
 	// AdSettings are the settings to use for showing ads to mobile clients
 	AdSettings *AdSettings
@@ -40,10 +41,24 @@ type Global struct {
 	ProxyConfigPollInterval time.Duration
 }
 
+// TrustedCACerts returns a certificate pool containing the TrustedCAs from this
+// config.
+func (cfg *Global) TrustedCACerts() (pool *x509.CertPool, err error) {
+	certs := make([]string, 0, len(cfg.TrustedCAs))
+	for _, ca := range cfg.TrustedCAs {
+		certs = append(certs, ca.Cert)
+	}
+	pool, err = keyman.PoolContainingCerts(certs...)
+	if err != nil {
+		log.Errorf("Could not create pool %v", err)
+	}
+	return
+}
+
 // newGlobal creates a new global config with otherwise nil values set.
 func newGlobal() *Global {
 	return &Global{
-		Client: client.NewConfig(),
+		Client: NewClientConfig(),
 		ProxiedSites: &proxiedsites.Config{
 			Delta: &proxiedsites.Delta{},
 		},

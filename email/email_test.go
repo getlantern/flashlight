@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/getlantern/appdir"
-	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/config/generated"
 	"github.com/getlantern/flashlight/proxied"
@@ -60,7 +59,7 @@ func TestSubmitIssue(t *testing.T) {
 			return
 		}
 
-		fronted.Configure(pool, cfg.Client.FrontedProviders(), client.CloudfrontProviderID, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
+		fronted.Configure(pool, cfg.Client.FrontedProviders(), config.CloudfrontProviderID, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
 		SetHTTPClient(proxied.DirectThenFrontedClient(5 * time.Second))
 		defer SetHTTPClient(&http.Client{})
 

@@ -59,7 +59,6 @@ func (s *Server) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 
 	defer closeConnection(connOut)
 	resp.WriteHeader(http.StatusOK)
-	fmt.Fprint(resp, "CONNECT OK")
 	fl.Flush()
 
 	connIn, _, err := hj.Hijack()

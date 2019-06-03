@@ -12,9 +12,9 @@ import (
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/autoupdate"
-	"github.com/getlantern/bandwidth"
 	"github.com/getlantern/dnsgrab"
 	"github.com/getlantern/flashlight"
+	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
@@ -374,7 +374,8 @@ func getBandwidth(quota *bandwidth.Quota) (int, int, int) {
 }
 
 func setBandwidth(session Session) {
-	percent, remaining, allowed := getBandwidth(bandwidth.GetQuota())
+	quota, _ := bandwidth.GetQuota()
+	percent, remaining, allowed := getBandwidth(quota)
 	if percent != 0 && remaining != 0 {
 		session.BandwidthUpdate(percent, remaining, allowed)
 	}

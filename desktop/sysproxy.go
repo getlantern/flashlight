@@ -3,17 +3,17 @@ package desktop
 import (
 	"fmt"
 	"path/filepath"
-	"runtime"
 	"sync"
 	"time"
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/filepersist"
-	"github.com/getlantern/flashlight/client"
-	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/sysproxy"
 
+	"github.com/getlantern/flashlight/client"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/icons"
+	"github.com/getlantern/flashlight/ops"
 )
 
 var (
@@ -23,7 +23,7 @@ var (
 
 func setUpSysproxyTool() error {
 	var iconFile string
-	if runtime.GOOS == "darwin" {
+	if common.Platform == "darwin" {
 		icon, err := icons.Asset("connected_32.ico")
 		if err != nil {
 			return fmt.Errorf("Unable to load escalation prompt icon: %v", err)

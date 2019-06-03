@@ -7,16 +7,16 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"runtime"
 	"strings"
 	"time"
+
+	"github.com/getlantern/idletiming"
+	"github.com/getlantern/proxy/filters"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/pro"
-	"github.com/getlantern/idletiming"
-	"github.com/getlantern/proxy/filters"
 )
 
 var adSwapJavaScriptInjections = map[string]string{
@@ -66,7 +66,7 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 	req.URL.Scheme = "http"
 	req.URL.Host = req.Host
 
-	if runtime.GOOS == "android" && req.URL != nil && req.URL.Host == "localhost" &&
+	if common.Platform == "android" && req.URL != nil && req.URL.Host == "localhost" &&
 		strings.HasPrefix(req.URL.Path, "/pro/") {
 		return client.interceptProRequest(ctx, req)
 	}

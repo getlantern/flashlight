@@ -57,7 +57,7 @@ func success(resp *http.Response) bool {
 func changeUserAgent(req *http.Request) {
 	secondary := req.Header.Get("User-Agent")
 	ua := strings.TrimSpace(fmt.Sprintf("Lantern/%s (%s/%s) %s",
-		common.Version, runtime.GOOS, runtime.GOARCH, secondary))
+		common.Version, common.Platform, runtime.GOARCH, secondary))
 	req.Header.Set("User-Agent", ua)
 }
 

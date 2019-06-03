@@ -43,10 +43,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/getlantern/bandwidth"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/getlantern/detour"
 
 [[constraint]]
@@ -294,3 +290,16 @@
 [[override]]
   name = "github.com/google/gopacket"
   version = "1.1.16"
+
+[[override]]
+  name = "github.com/google/netstack"
+  branch = "master"
+  source = "https://github.com/getlantern/netstack"
+
+[[override]]
+  name = "github.com/prometheus/client_golang"
+  version = "=0.9.2"
+
+[[override]]
+  name = "github.com/golang/protobuf"
+  version = "=1.2.0"

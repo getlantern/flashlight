@@ -81,6 +81,8 @@ type Message struct {
 	// string.  Make sure the compressed files doesn't cause the message to exceed
 	// the limit of Mandrill message size, which is 25MB.
 	MaxLogSize string `json:"maxLogSize,omitempty"`
+	// Logs allows the caller to specify an already zipped set of logs
+	Logs []byte
 }
 
 func Send(msg *Message) error {
@@ -96,7 +98,7 @@ func Send(msg *Message) error {
 				Set("issue_note", msg.Vars["note"]).
 				Set("email", msg.Vars["email"])
 		} else {
-			// get parameters from mobile template vars
+			// get parameters from android template vars
 			isPro, _ := strconv.ParseBool(fmt.Sprint(msg.Vars["prouser"]))
 			op.Set("pro", isPro).
 				Set("issue_type", msg.Vars["issue"]).
@@ -156,6 +158,13 @@ func sendTemplate(msg *Message) error {
 				})
 			}
 		}
+	}
+	if len(msg.Logs) > 0 {
+		mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
+			Type:    "application/zip",
+			Name:    "logs.zip",
+			Content: base64.StdEncoding.EncodeToString(msg.Logs),
+		})
 	}
 	responses, err := client.MessagesSendTemplate(mmsg, msg.Template, "")
 	if err != nil {

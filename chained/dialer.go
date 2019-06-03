@@ -14,9 +14,10 @@ import (
 
 	"github.com/mitchellh/go-server-timing"
 
-	"github.com/getlantern/bandwidth"
+	"github.com/getlantern/bufconn"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/balancer"
+	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
@@ -203,7 +204,9 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 	switch network {
 	case balancer.NetworkConnect:
 		log.Trace("Sending CONNECT request")
-		err = p.sendCONNECT(op, addr, conn, timeout)
+		bconn := bufconn.Wrap(conn)
+		conn = bconn
+		err = p.sendCONNECT(op, addr, bconn, timeout)
 	case balancer.NetworkPersistent:
 		log.Trace("Sending GET request to establish persistent HTTP connection")
 		err = p.initPersistentConnection(addr, conn)
@@ -228,7 +231,7 @@ func (p *proxy) onFinish(op *ops.Op) {
 	op.ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed)
 }
 
-func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn net.Conn, timeout time.Duration) error {
+func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn bufconn.Conn, timeout time.Duration) error {
 	reqTime := time.Now()
 	req, err := p.buildCONNECTRequest(addr, timeout)
 	if err != nil {
@@ -239,7 +242,7 @@ func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn net.Conn, timeout time
 		return fmt.Errorf("Unable to write CONNECT request: %s", err)
 	}
 
-	r := bufio.NewReader(conn)
+	r := conn.Head()
 	err = p.checkCONNECTResponse(op, r, req, reqTime)
 	return err
 }
