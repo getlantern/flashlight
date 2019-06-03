@@ -98,7 +98,7 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		return p, err
 	case "obfs4", "utpobfs4":
 		return newOBFS4Proxy(name, transport, proto, s, uc)
-	case "lampshade", "utplampshade":
+	case "lampshade":
 		return newLampshadeProxy(name, transport, proto, s, uc)
 	case "quic":
 		return newQUICProxy(name, s, uc)
