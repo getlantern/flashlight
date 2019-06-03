@@ -1,6 +1,6 @@
 module github.com/getlantern/flashlight
 
-go 1.11
+go 1.12
 
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v0.0.0-20180321061416-7d56ec4f381e

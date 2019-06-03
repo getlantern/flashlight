@@ -2,7 +2,7 @@
 
 ### Prerequisites
 
-* [Go 1.11](https://golang.org/dl/) is the minimum supported version of Go
+* [Go 1.12](https://golang.org/dl/) is the minimum supported version of Go
 * [GNU Make](https://www.gnu.org/software/make/) if you want to use the Makefile
 * Force git to use ssh instead of https by running
   `git config --global url."git@github.com:".insteadOf "https://github.com/"`
