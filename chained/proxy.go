@@ -16,9 +16,9 @@ import (
 
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
-	"github.com/anacrolix/go-libutp"
+	utp "github.com/anacrolix/go-libutp"
 	"github.com/mitchellh/mapstructure"
-	"github.com/refraction-networking/utls"
+	tls "github.com/refraction-networking/utls"
 	"github.com/tevino/abool"
 
 	"github.com/getlantern/cmux"
@@ -37,7 +37,6 @@ import (
 	"github.com/getlantern/tinywss"
 	"github.com/getlantern/tlsdialer"
 
-	
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained/config"
@@ -457,7 +456,7 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 		return conn, delta, err
 	}
 
-	if s.MultiplexedAddr != "" || s.PluggableTransport == "utphttp" || s.PluggableTransport == "utphttps" {
+	if s.MultiplexedAddr != "" || s.PluggableTransport == "utphttp" || s.PluggableTransport == "utphttps" || s.PluggableTransport == "utpobfs4" {
 		log.Debugf("Enabling multiplexing for %v", p.Label())
 		origDoDialServer := p.doDialServer
 		poolSize := s.MultiplexedPhysicalConns
