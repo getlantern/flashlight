@@ -16,8 +16,9 @@ import (
 
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
+	utp "github.com/anacrolix/go-libutp"
 	"github.com/mitchellh/mapstructure"
-	"github.com/refraction-networking/utls"
+	tls "github.com/refraction-networking/utls"
 	"github.com/tevino/abool"
 
 	"github.com/getlantern/cmux"
@@ -69,25 +70,36 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 	if s.Addr == "" {
 		return nil, errors.New("Empty addr")
 	}
-	switch s.PluggableTransport {
-	case "":
+	isUTP := strings.HasPrefix(s.PluggableTransport, "utp")
+	transport := s.PluggableTransport
+	proto := "tcp"
+	if isUTP {
+		proto = "udp"
+	}
+	switch transport {
+	case "", "http", "https", "utphttp", "utphttps":
+		transport := "http"
+		if isUTP {
+			transport = "utphttp"
+		}
 		var p *proxy
 		var err error
 		if s.Cert == "" {
 			log.Errorf("No Cert configured for %s, will dial with plain tcp", s.Addr)
-			p, err = newHTTPProxy(name, s, uc)
+			p, err = newHTTPProxy(name, transport, proto, s, uc)
 		} else if len(s.KCPSettings) > 0 {
 			log.Errorf("KCP configured for %s, not using tls", s.Addr)
-			p, err = newHTTPProxy(name, s, uc)
+			p, err = newHTTPProxy(name, transport, proto, s, uc)
 		} else {
-			log.Tracef("Cert configured for  %s, will dial with tls", s.Addr)
-			p, err = newHTTPSProxy(name, s, uc)
+			transport = transport + "s"
+			log.Tracef("Cert configured for %s, will dial with tls", s.Addr)
+			p, err = newHTTPSProxy(name, transport, proto, s, uc)
 		}
 		return p, err
-	case "obfs4":
-		return newOBFS4Proxy(name, s, uc)
+	case "obfs4", "utpobfs4":
+		return newOBFS4Proxy(name, transport, proto, s, uc)
 	case "lampshade":
-		return newLampshadeProxy(name, s, uc)
+		return newLampshadeProxy(name, transport, proto, s, uc)
 	case "quic":
 		return newQUICProxy(name, s, uc)
 	case "wss":
@@ -111,7 +123,7 @@ func forceProxy(s *ChainedServerInfo) {
 	s.PluggableTransport = ""
 }
 
-func newHTTPProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+func newHTTPProxy(name, transport, proto string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
 			return p.dialCore(op)(ctx)
@@ -142,10 +154,10 @@ func newHTTPProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pro
 			return dfConn, err
 		}
 	}
-	return newProxy(name, "http", "tcp", s, uc, s.ENHTTPURL != "", true, doDialServer, dialOrigin)
+	return newProxy(name, transport, proto, s, uc, s.ENHTTPURL != "", true, doDialServer, dialOrigin)
 }
 
-func newHTTPSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
@@ -189,10 +201,10 @@ func newHTTPSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pr
 			return overheadWrapper(true)(conn, op.FailIf(err))
 		})
 	}
-	return newProxy(name, "https", "tcp", s, uc, s.Trusted, true, doDialServer, defaultDialOrigin)
+	return newProxy(name, transport, proto, s, uc, s.Trusted, true, doDialServer, defaultDialOrigin)
 }
 
-func newOBFS4Proxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+func newOBFS4Proxy(name, transport, proto string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 	if s.Cert == "" {
 		return nil, fmt.Errorf("No Cert configured for obfs4 server, can't connect")
 	}
@@ -223,10 +235,10 @@ func newOBFS4Proxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pr
 			return overheadWrapper(true)(cf.Dial("tcp", p.addr, dialFn, args))
 		})
 	}
-	return newProxy(name, "obfs4", "tcp", s, uc, s.Trusted, true, doDialServer, defaultDialOrigin)
+	return newProxy(name, transport, proto, s, uc, s.Trusted, true, doDialServer, defaultDialOrigin)
 }
 
-func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
@@ -284,7 +296,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 		ServerPublicKey:       rsaPublicKey,
 	})
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
-		return p.reportedDial(s.Addr, "lampshade", "tcp", func(op *ops.Op) (net.Conn, error) {
+		return p.reportedDial(s.Addr, transport, proto, func(op *ops.Op) (net.Conn, error) {
 			op.Set("ls_win", windowSize).
 				Set("ls_pad", maxPadding).
 				Set("ls_streams", int(maxStreamsPerConn)).
@@ -299,8 +311,7 @@ func newLampshadeProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 			return overheadWrapper(true)(conn, err)
 		})
 	}
-
-	return newProxy(name, "lampshade", "tcp", s, uc, s.Trusted, false, doDialServer, defaultDialOrigin)
+	return newProxy(name, transport, proto, s, uc, s.Trusted, false, doDialServer, defaultDialOrigin)
 }
 
 func newQUICProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
@@ -445,7 +456,7 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 		return conn, delta, err
 	}
 
-	if s.MultiplexedAddr != "" {
+	if s.MultiplexedAddr != "" || s.PluggableTransport == "utphttp" || s.PluggableTransport == "utphttps" || s.PluggableTransport == "utpobfs4" {
 		log.Debugf("Enabling multiplexing for %v", p.Label())
 		origDoDialServer := p.doDialServer
 		poolSize := s.MultiplexedPhysicalConns
@@ -457,12 +468,14 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 				return origDoDialServer(ctx, p)
 			},
 			KeepAliveInterval: IdleTimeout / 2,
+			KeepAliveTimeout:  IdleTimeout,
 			PoolSize:          poolSize,
 		})
 		p.doDialServer = func(ctx context.Context, p *proxy) (net.Conn, error) {
 			return multiplexedDial(ctx, "", "")
 		}
-	} else if len(s.KCPSettings) > 0 {
+	}
+	if len(s.KCPSettings) > 0 {
 		log.Debugf("Enabling KCP for %v (%v)", p.Label(), p.protocol)
 		err := enableKCP(p, s)
 		if err != nil {
@@ -476,6 +489,13 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 			return nil, err
 		}
 		p.protocol = "quic"
+	} else if strings.HasPrefix(s.PluggableTransport, "utp") {
+		log.Debugf("Enabling UTP for %v (%v)", p.Label(), p.protocol)
+		err := enableUTP(p, s)
+		if err != nil {
+			return nil, err
+		}
+		p.protocol = "utp"
 	} else if s.PluggableTransport == "wss" {
 		log.Debugf("Enabling WSS for %v (%v)", p.Label(), p.protocol)
 		err := enableWSS(p, s)
@@ -664,6 +684,23 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 			log.Debug("established new multiplexed quic connection.")
 		}
 
+		delta := elapsed()
+		return conn, delta, err
+	}
+
+	return nil
+}
+
+func enableUTP(p *proxy, s *ChainedServerInfo) error {
+	socket, err := utp.NewSocket("udp", ":0")
+	if err != nil {
+		return errors.New("Unable to create utp socket: %v", err)
+	}
+
+	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
+		elapsed := mtime.Stopwatch()
+
+		conn, err := socket.DialContext(ctx, "udp", p.addr)
 		delta := elapsed()
 		return conn, delta, err
 	}

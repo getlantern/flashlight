@@ -256,11 +256,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:44ad36ecdc2ad331915f47646f3f793332f1b53d4ad35c7f2eed151e99ef59cd"
+  digest = "1:485c83288c888a8b58cb80e8be92122969467cba665d6c58b549432acfaacd52"
   name = "github.com/getlantern/cmux"
   packages = ["."]
   pruneopts = "UT"
-  revision = "ee58cae565e4f208c7eb59cb2e70acf2230a1d12"
+  revision = "e647fe9f0842cc4c0b51eae5d52f322cbcfc3a2c"
 
 [[projects]]
   branch = "master"
@@ -1690,6 +1690,7 @@
   input-imports = [
     "git.torproject.org/pluggable-transports/goptlib.git",
     "git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4",
+    "github.com/anacrolix/go-libutp",
     "github.com/davecgh/go-spew/spew",
     "github.com/dustin/go-humanize",
     "github.com/getlantern/appdir",

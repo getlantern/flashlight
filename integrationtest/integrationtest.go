@@ -18,7 +18,7 @@ import (
 	"time"
 
 	"github.com/getlantern/golog"
-	"github.com/getlantern/http-proxy-lantern"
+	proxy "github.com/getlantern/http-proxy-lantern"
 	"github.com/getlantern/tlsdefaults"
 	"github.com/getlantern/waitforserver"
 	"github.com/getlantern/yaml"
@@ -47,18 +47,21 @@ var (
 // Helper is a helper for running integration tests that provides its own web,
 // proxy and config servers.
 type Helper struct {
-	protocol                 atomic.Value
-	t                        *testing.T
-	ConfigDir                string
-	HTTPSProxyServerAddr     string
-	OBFS4ProxyServerAddr     string
-	LampshadeProxyServerAddr string
-	QUICProxyServerAddr      string
-	WSSProxyServerAddr       string
-	HTTPServerAddr           string
-	HTTPSServerAddr          string
-	ConfigServerAddr         string
-	listeners                []net.Listener
+	protocol                    atomic.Value
+	t                           *testing.T
+	ConfigDir                   string
+	HTTPSProxyServerAddr        string
+	HTTPSUTPAddr                string
+	OBFS4ProxyServerAddr        string
+	OBFS4UTPProxyServerAddr     string
+	LampshadeProxyServerAddr    string
+	LampshadeUTPProxyServerAddr string
+	QUICProxyServerAddr         string
+	WSSProxyServerAddr          string
+	HTTPServerAddr              string
+	HTTPSServerAddr             string
+	ConfigServerAddr            string
+	listeners                   []net.Listener
 }
 
 // NewHelper prepares a new integration test helper including a web server for
@@ -66,7 +69,7 @@ type Helper struct {
 // also enables ForceProxying on the client package to make sure even localhost
 // origins are served through the proxy. Make sure to close the Helper with
 // Close() when finished with the test.
-func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string, wssAddr string) (*Helper, error) {
+func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string, wssAddr string, httpsUTPAddr string, obfs4UTPAddr string, lampshadeUTPAddr string) (*Helper, error) {
 	ConfigDir, err := ioutil.TempDir("", "integrationtest_helper")
 	log.Debugf("ConfigDir is %v", ConfigDir)
 	if err != nil {
@@ -74,13 +77,16 @@ func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr s
 	}
 
 	helper := &Helper{
-		t:                        t,
-		ConfigDir:                ConfigDir,
-		HTTPSProxyServerAddr:     httpsAddr,
-		OBFS4ProxyServerAddr:     obfs4Addr,
-		LampshadeProxyServerAddr: lampshadeAddr,
-		QUICProxyServerAddr:      quicAddr,
-		WSSProxyServerAddr:       wssAddr,
+		t:                           t,
+		ConfigDir:                   ConfigDir,
+		HTTPSProxyServerAddr:        httpsAddr,
+		HTTPSUTPAddr:                httpsUTPAddr,
+		OBFS4ProxyServerAddr:        obfs4Addr,
+		OBFS4UTPProxyServerAddr:     obfs4UTPAddr,
+		LampshadeProxyServerAddr:    lampshadeAddr,
+		LampshadeUTPProxyServerAddr: lampshadeUTPAddr,
+		QUICProxyServerAddr:         quicAddr,
+		WSSProxyServerAddr:          wssAddr,
 	}
 	helper.SetProtocol("https")
 	client.ForceProxying()
@@ -174,18 +180,21 @@ func (helper *Helper) startProxyServer() error {
 	}
 
 	s1 := &proxy.Proxy{
-		TestingLocal:  true,
-		HTTPAddr:      helper.HTTPSProxyServerAddr,
-		Obfs4Addr:     helper.OBFS4ProxyServerAddr,
-		Obfs4Dir:      filepath.Join(helper.ConfigDir, obfs4SubDir),
-		LampshadeAddr: helper.LampshadeProxyServerAddr,
-		QUICAddr:      helper.QUICProxyServerAddr,
-		WSSAddr:       helper.WSSProxyServerAddr,
-		Token:         Token,
-		KeyFile:       KeyFile,
-		CertFile:      CertFile,
-		IdleTimeout:   30 * time.Second,
-		HTTPS:         true,
+		TestingLocal:     true,
+		HTTPAddr:         helper.HTTPSProxyServerAddr,
+		HTTPUTPAddr:      helper.HTTPSUTPAddr,
+		Obfs4Addr:        helper.OBFS4ProxyServerAddr,
+		Obfs4UTPAddr:     helper.OBFS4UTPProxyServerAddr,
+		Obfs4Dir:         filepath.Join(helper.ConfigDir, obfs4SubDir),
+		LampshadeAddr:    helper.LampshadeProxyServerAddr,
+		LampshadeUTPAddr: helper.LampshadeUTPProxyServerAddr,
+		QUICAddr:         helper.QUICProxyServerAddr,
+		WSSAddr:          helper.WSSProxyServerAddr,
+		Token:            Token,
+		KeyFile:          KeyFile,
+		CertFile:         CertFile,
+		IdleTimeout:      30 * time.Second,
+		HTTPS:            true,
 	}
 
 	// kcp server
@@ -284,6 +293,12 @@ func (helper *Helper) writeProxyConfig(resp http.ResponseWriter, req *http.Reque
 		version = "5"
 	} else if proto == "wss" {
 		version = "6"
+	} else if proto == "utphttps" {
+		version = "7"
+	} else if proto == "utpobfs4" {
+		version = "8"
+	} else if proto == "utplampshade" {
+		version = "9"
 	}
 
 	if req.Header.Get(IfNoneMatch) == version {
@@ -331,9 +346,13 @@ func (helper *Helper) buildProxies(proto string) ([]byte, error) {
 
 	srv := cfg["fallback-template"]
 	srv.AuthToken = Token
-	if proto == "obfs4" {
-		srv.Addr = helper.OBFS4ProxyServerAddr
-		srv.PluggableTransport = "obfs4"
+	if proto == "obfs4" || proto == "utpobfs4" {
+		if proto == "utpobfs4" {
+			srv.Addr = helper.OBFS4UTPProxyServerAddr
+		} else {
+			srv.Addr = helper.OBFS4ProxyServerAddr
+		}
+		srv.PluggableTransport = proto
 		srv.PluggableTransportSettings = map[string]string{
 			"iat-mode": "0",
 		}
@@ -362,6 +381,12 @@ func (helper *Helper) buildProxies(proto string) ([]byte, error) {
 			srv.PluggableTransportSettings = map[string]string{
 				"multiplexed": "true",
 			}
+		} else if proto == "utphttps" {
+			srv.Addr = helper.HTTPSUTPAddr
+			srv.PluggableTransport = "utphttps"
+		} else if proto == "utplampshade" {
+			srv.Addr = helper.LampshadeUTPProxyServerAddr
+			srv.PluggableTransport = "utplampshade"
 		} else {
 			srv.Addr = helper.HTTPSProxyServerAddr
 		}
