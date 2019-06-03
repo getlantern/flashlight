@@ -62,7 +62,7 @@
   version = "v1.0.1"
 
 [[projects]]
-  digest = "1:d260febfa75a48e72ef78b1859635741bad6eb722c5913846f23e7582767055b"
+  digest = "1:3447219f77f1eb64700a3834b1ef04d99568a31bb97ab6f44ca3f162f3b54d7e"
   name = "github.com/anacrolix/missinggo"
   packages = [
     ".",
@@ -71,19 +71,19 @@
     "perf",
   ]
   pruneopts = "UT"
-  revision = "1ab2af89c3c32bf788d1d1985c1b601489c7b331"
-  version = "v2.0.1"
+  revision = "06ffe87aef2930c1cbf3a82ce897a5068063c854"
+  version = "v2.1.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:26f2e8da5e7d4b3ebdebac5da81a1f617960a97efe82139b5f251623024d0895"
+  digest = "1:4fddfde9c720c471cbe3461e042123057f17330902a5c0d81357f2504ba3492a"
   name = "github.com/anacrolix/mmsg"
   packages = [
     ".",
     "socket",
   ]
   pruneopts = "UT"
-  revision = "5adb2c1127c0320bcebc8b13189db19493090cd4"
+  revision = "e49ae86000d76e6978b573bfaa4e9296713e2fd4"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
