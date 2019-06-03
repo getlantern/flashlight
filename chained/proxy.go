@@ -469,6 +469,7 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 				return origDoDialServer(ctx, p)
 			},
 			KeepAliveInterval: IdleTimeout / 2,
+			KeepAliveTimeout:  IdleTimeout,
 			PoolSize:          poolSize,
 		})
 		p.doDialServer = func(ctx context.Context, p *proxy) (net.Conn, error) {
