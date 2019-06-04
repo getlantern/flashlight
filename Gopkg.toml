@@ -31,10 +31,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/davecgh/go-spew"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/getlantern/appdir"
 
 [[constraint]]
