@@ -235,10 +235,6 @@ func TestPollGlobal(t *testing.T) {
 	})
 }
 
-func sleepFunc() time.Duration {
-	return 1 * time.Second
-}
-
 // TestProductionGlobal validates certain properties of the live production global config
 func TestProductionGlobal(t *testing.T) {
 
@@ -251,7 +247,7 @@ func TestProductionGlobal(t *testing.T) {
 
 	f := newFetcher(newTestUserConfig(), &http.Transport{}, testURL)
 
-	cfgBytes, _, err := f.fetch(sleepFunc)
+	cfgBytes, _, err := f.fetch()
 	if !assert.NoError(t, err, "Error fetching global config from %s", testURL) {
 		return
 	}

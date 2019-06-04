@@ -232,30 +232,33 @@ func (conf *config) embedded(data []byte) (interface{}, error) {
 	return conf.unmarshaler(data)
 }
 
-func (conf *config) poll(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, sleep func() time.Duration) {
+func (conf *config) poll(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, defaultSleep func() time.Duration) {
 	for {
-		sleepFunc := conf.fetchConfig(stopCh, dispatch, fetcher, sleep)
+		sleepDuration := conf.fetchConfig(stopCh, dispatch, fetcher)
+		if sleepDuration == noSleep {
+			sleepDuration = defaultSleep()
+		}
 		select {
 		case <-stopCh:
 			log.Debug("Stopping polling")
 			return
-		case <-time.After(sleepFunc()):
+		case <-time.After(sleepDuration):
 			continue
 		}
 	}
 }
 
-func (conf *config) fetchConfig(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, sleep func() time.Duration) func() time.Duration {
-	if bytes, newSleep, err := fetcher.fetch(sleep); err != nil {
+func (conf *config) fetchConfig(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher) time.Duration {
+	if bytes, sleepTime, err := fetcher.fetch(); err != nil {
 		log.Errorf("Error fetching config: %v", err)
-		return newSleep
+		return sleepTime
 	} else if bytes == nil {
 		// This is what fetcher returns for not-modified.
 		log.Debug("Ignoring not modified response")
-		return newSleep
+		return sleepTime
 	} else if cfg, err := conf.unmarshaler(bytes); err != nil {
 		log.Errorf("Error fetching config: %v", err)
-		return newSleep
+		return sleepTime
 	} else {
 		log.Debugf("Fetched config! %v", cfg)
 
@@ -264,7 +267,7 @@ func (conf *config) fetchConfig(stopCh chan bool, dispatch func(interface{}), fe
 		conf.saveChan <- cfg
 		log.Debugf("Sent to save chan")
 		dispatch(cfg)
-		return newSleep
+		return sleepTime
 	}
 }
 
