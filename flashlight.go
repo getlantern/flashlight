@@ -184,6 +184,7 @@ func applyClientConfig(c *client.Client, cfg *config.Global, autoReport func() b
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
 	} else if cfg.Client != nil && cfg.Client.Fronted != nil {
 		fronted.Configure(certs, cfg.Client.FrontedProviders(), config.CloudfrontProviderID, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
+		chained.ConfigureFronting(certs, cfg.Client.FrontedProviders(), appdir.General("Lantern"))
 	} else {
 		log.Errorf("Unable to configured fronted (no config)")
 	}

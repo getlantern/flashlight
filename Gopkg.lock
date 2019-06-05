@@ -370,12 +370,12 @@
   revision = "7f7919c8cf9be21bbe007d778ae641c06d858f79"
 
 [[projects]]
-  branch = "master"
-  digest = "1:e9352c28c58ba823fa2d5bba3eb0ed5bdc790130407db86de2c92e60c8636604"
+  branch = "hijack"
+  digest = "1:fa962f175676a2140d1979ac333f78f89c09425e7bae116696a3b29cc7aced9a"
   name = "github.com/getlantern/fronted"
   packages = ["."]
   pruneopts = "UT"
-  revision = "5b4f46cc8f8d4879d36461e52ee9c0ca4589a9de"
+  revision = "2048bc98b14691496b9597522c6f462c9720fac8"
 
 [[projects]]
   branch = "master"

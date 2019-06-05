@@ -66,7 +66,7 @@
   name = "github.com/getlantern/filepersist"
 
 [[constraint]]
-  branch = "master"
+  branch = "hijack"
   name = "github.com/getlantern/fronted"
 
 [[constraint]]
