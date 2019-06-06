@@ -54,14 +54,6 @@
   revision = "5312a61534124124185d41f09206b9fef1d88403"
 
 [[projects]]
-  digest = "1:9e4640c0d56e648789a443f456a38b6611756fe99878cecde657161990c17407"
-  name = "github.com/anacrolix/go-libutp"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "d7dd83bce17eb552d89dc42b7acdb8498e7e70db"
-  version = "v1.0.1"
-
-[[projects]]
   digest = "1:3447219f77f1eb64700a3834b1ef04d99568a31bb97ab6f44ca3f162f3b54d7e"
   name = "github.com/anacrolix/missinggo"
   packages = [
@@ -355,6 +347,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:43cbf521fcfd1349dbdb7c9047c9d1bd23d4fe44fd814ed67607967ddb56724b"
+  name = "github.com/getlantern/fdcount"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "6a6cb5839bc58a0e32ff20b505a848516836145e"
+
+[[projects]]
+  branch = "master"
   digest = "1:99c1c515274e6c3ead7bf68dcc77f56131d0f937adeb6808ba86e0911adfdda7"
   name = "github.com/getlantern/filepersist"
   packages = ["."]
@@ -363,11 +363,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:70a1ea4270b3a90c236308628b8922c71040acf976c7e7f321bb964cdcca4a4e"
+  digest = "1:4e9d0ff63025e3ef6613e5fe2b2067fecb627d8863b424785415e79843f5e702"
   name = "github.com/getlantern/framed"
   packages = ["."]
   pruneopts = "UT"
-  revision = "7f7919c8cf9be21bbe007d778ae641c06d858f79"
+  revision = "ceb6431eeede6b6f3bf430eabe739827a34a1ab7"
 
 [[projects]]
   branch = "master"
@@ -443,12 +443,20 @@
   revision = "cca714f7feb5df8e455f409b549d384441ac4578"
 
 [[projects]]
-  branch = "ox/simplify"
-  digest = "1:314da1a4b21cb13d4b650c5ada30f77635127a5a4f73231dcddd4b89f9abd0ce"
+  branch = "master"
+  digest = "1:892b489a85d434c96a36d09ab4fd2c187f1bac882ee61ecf989eaaf7725c93d7"
+  name = "github.com/getlantern/gonat"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "bd593073ee275219607f1b46555f85ec778a38f2"
+
+[[projects]]
+  branch = "master"
+  digest = "1:f9806bc8c7ca18ffabb86d46a6788d8726c1f2924516d10697ec4dec352fce3a"
   name = "github.com/getlantern/gotun"
   packages = ["."]
   pruneopts = "UT"
-  revision = "2fc27b245ae4b8c7436bdd8d2cd9643e973715b1"
+  revision = "885514e382d2e417edc17fccf42e8fd6c7294f8a"
 
 [[projects]]
   branch = "master"
@@ -457,6 +465,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "88fa116ddffcff84b63f35044e2a49f6bdde71b9"
+
+[[projects]]
+  branch = "master"
+  digest = "1:f735c748cecef2ac4759d8715bf50999b1a3e4e0380a801f1b29e49b630279c2"
+  name = "github.com/getlantern/grtrack"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "cbf67d3fa0fd7789243f89a5bc12e666fc8a7698"
 
 [[projects]]
   branch = "master"
@@ -489,7 +505,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e74d61fc8fb9d8819c086c9ecc8979e7a0867994833b76189e86ba42c106be05"
+  digest = "1:5d991e30862d8ed83afc3d8d6d55dbf32c6b3dba9451e98ec169b638cc797a0b"
   name = "github.com/getlantern/http-proxy-lantern"
   packages = [
     ".",
@@ -519,9 +535,10 @@
     "tokenfilter",
     "usage",
     "versioncheck",
+    "wss",
   ]
   pruneopts = "UT"
-  revision = "e005a9cd4425a6bcf12e73d57cfa6ba97c2456c1"
+  revision = "bdb461f6581b2b3812d23cdf749bc2c9d12a6465"
 
 [[projects]]
   branch = "master"
@@ -703,14 +720,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:39e1cd80f39b371a213c8bb1fb24cb57a25055d09f5a2cd47a7ad971ba981551"
+  digest = "1:59bdf6a7def8e344d38ec835ea7ca838468c3c1a843e97a68b7d5ab60f67ce00"
   name = "github.com/getlantern/packetforward"
   packages = [
     ".",
     "server",
   ]
   pruneopts = "UT"
-  revision = "5be78b74b0087a8aade4404ff973ea5752cdd357"
+  revision = "e72f3010afed80e975dc8bb741f7c8d2ce76e625"
 
 [[projects]]
   branch = "master"
@@ -859,11 +876,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1660b431282613425855f28ed90b59f2a322447268ddc3664753e0d566469418"
+  digest = "1:6801a52e11823d0988154520e122412fd3310de27884fe6e9f56fecd79fae8a1"
   name = "github.com/getlantern/tinywss"
   packages = ["."]
   pruneopts = "UT"
-  revision = "8d81aaf624e632fd8bcdda714ed13e9757476eca"
+  revision = "49fb977700a3d9155a20ccaa115808fb6329fd71"
 
 [[projects]]
   branch = "master"
@@ -1234,6 +1251,17 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:228c9afaf85aed4bc5a297182ae4ca26f7b8caf76d8da32c28f4cccd7746f90f"
+  name = "github.com/mdlayher/netlink"
+  packages = [
+    ".",
+    "nlenc",
+  ]
+  pruneopts = "UT"
+  revision = "85ef062a49155be964cd424f4bdae59fc0e07369"
+
+[[projects]]
+  branch = "master"
   digest = "1:450f3a64f7a76d3f229ff33a30f0a889629dde46b0f82ece7c53404528316665"
   name = "github.com/mdlayher/raw"
   packages = ["."]
@@ -1322,11 +1350,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:df63a8ddf6fd32f2cdf09db1ada151c8a27f5fe2516ee977b72d6a0707e94910"
+  digest = "1:8ad686b49b509bf03549281c04b5fe11f609e9b12bf34a0690acad8cecc94f15"
   name = "github.com/oxtoacart/bpool"
   packages = ["."]
   pruneopts = "UT"
-  revision = "4e1c5567d7c2dd59fa4c7c83d34c2f3528b025d6"
+  revision = "03653db5a59cd88b481403d312d7c324b56af377"
 
 [[projects]]
   branch = "master"
@@ -1495,6 +1523,22 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:9f2e2e8b6d27534719eb9c51b371c34b0282c48af08f2a804be6fbdc930bbb75"
+  name = "github.com/ti-mo/conntrack"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "733fb77b607125400c80c2ef1ac9c63111898e9e"
+
+[[projects]]
+  digest = "1:c54fb836ea698cb558913aae61f3f65ef4eb1a7812eb1fefd1135fe33f7bf10d"
+  name = "github.com/ti-mo/netfilter"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "21c243e0fa20377f111b44dec6c9451ef642912c"
+  version = "v0.2.0"
+
+[[projects]]
+  branch = "master"
   digest = "1:97293f3bd0b9f81484da18dba66a20de340307b43835a91157aaaee484c80e9b"
   name = "github.com/tjfoc/gmsm"
   packages = ["sm4"]
@@ -1583,7 +1627,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:41c13cada29d953aedd6e98918f11d662e8a84af9a4374df5f2cc9dbb4731664"
+  digest = "1:1de1085a25911e7fe81753788faa14336e8ad4201cec7b5d8be2746c66cd313f"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -1591,7 +1635,7 @@
     "windows/registry",
   ]
   pruneopts = "UT"
-  revision = "d47a0f3392421c5624713c9a19fe781f651f8a50"
+  revision = "4c4f7f33c9ed00de01c4c741d2177abfcfe19307"
 
 [[projects]]
   digest = "1:631ef6715072ab603861df0d7cf0313f85d8b5491c93f8ad0e6f7cbc55d19482"

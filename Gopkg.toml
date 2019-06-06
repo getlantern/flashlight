@@ -300,6 +300,10 @@
   name = "github.com/golang/protobuf"
   version = "=1.2.0"
 
+[[override]]
+  name = "github.com/getlantern/packetforward"
+  branch = "master"
+
 [[constraint]]
   branch = "master"
   name = "github.com/getlantern/go-libutp"
