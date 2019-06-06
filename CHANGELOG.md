@@ -1,5 +1,13 @@
 # Change Log
 
+## [5.4.2](https://github.com/getlantern/flashlight/tree/5.4.2) (2019-06-04)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.4.1...5.4.2)
+
+**Merged pull requests:**
+
+- Remove unused proxy package [\#626](https://github.com/getlantern/flashlight/pull/626) ([myleshorton](https://github.com/myleshorton))
+- Added support for using utp in place of tcp [\#609](https://github.com/getlantern/flashlight/pull/609) ([oxtoacart](https://github.com/oxtoacart))
+
 ## [5.4.1](https://github.com/getlantern/flashlight/tree/5.4.1) (2019-06-02)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.4.0...5.4.1)
 
@@ -27,7 +35,7 @@
 - Avoid potential data loss caused by use of bufio.Reader to read CONNECT response [\#610](https://github.com/getlantern/flashlight/pull/610) ([joesis](https://github.com/joesis))
 
 ## [5.3.8](https://github.com/getlantern/flashlight/tree/5.3.8) (2019-04-24)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.7...5.3.8)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.6...5.3.8)
 
 **Merged pull requests:**
 
@@ -35,11 +43,11 @@
 - Resetting whole balancer when connections get protected [\#605](https://github.com/getlantern/flashlight/pull/605) ([oxtoacart](https://github.com/oxtoacart))
 - Add beam to track requests end to end [\#598](https://github.com/getlantern/flashlight/pull/598) ([joesis](https://github.com/joesis))
 
-## [5.3.7](https://github.com/getlantern/flashlight/tree/5.3.7) (2019-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.6...5.3.7)
-
 ## [5.3.6](https://github.com/getlantern/flashlight/tree/5.3.6) (2019-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.5...5.3.6)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.7...5.3.6)
+
+## [5.3.7](https://github.com/getlantern/flashlight/tree/5.3.7) (2019-04-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.5...5.3.7)
 
 **Merged pull requests:**
 
@@ -72,7 +80,6 @@
 - Use new HTTPS Everywhere test domain that does not redirect itself [\#597](https://github.com/getlantern/flashlight/pull/597) ([myleshorton](https://github.com/myleshorton))
 - Ignoring EstRTT in deciding whether we have time to dial proxy [\#596](https://github.com/getlantern/flashlight/pull/596) ([oxtoacart](https://github.com/oxtoacart))
 - more logs to debug datacap [\#593](https://github.com/getlantern/flashlight/pull/593) ([myleshorton](https://github.com/myleshorton))
-- Removed unused cloud.yaml.tmpl and updateyaml.bash [\#521](https://github.com/getlantern/flashlight/pull/521) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [5.3.2](https://github.com/getlantern/flashlight/tree/5.3.2) (2019-03-12)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.1...5.3.2)
@@ -258,10 +265,6 @@
 
 ## [4.8.3](https://github.com/getlantern/flashlight/tree/4.8.3) (2018-10-12)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.2...4.8.3)
-
-**Merged pull requests:**
-
-- Updated desktop UI with Yinbi ad updates [\#522](https://github.com/getlantern/flashlight/pull/522) ([myleshorton](https://github.com/myleshorton))
 
 ## [4.8.2](https://github.com/getlantern/flashlight/tree/4.8.2) (2018-09-28)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.1...4.8.2)
