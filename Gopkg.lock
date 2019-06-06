@@ -395,6 +395,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:72d434f55b180727962481ae5475589bcbbc371791f918e1a7c3e499974c277c"
+  name = "github.com/getlantern/go-libutp"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "aa4145c0ec7521e2439b754a442cb4c990b600c5"
+
+[[projects]]
+  branch = "master"
   digest = "1:df855b6b668bfe66ecd19afc65b9701f757fa0a82ea085e3abc9d845ac2cdcd9"
   name = "github.com/getlantern/go-socks5"
   packages = ["."]
@@ -1690,7 +1698,6 @@
   input-imports = [
     "git.torproject.org/pluggable-transports/goptlib.git",
     "git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4",
-    "github.com/anacrolix/go-libutp",
     "github.com/dustin/go-humanize",
     "github.com/getlantern/appdir",
     "github.com/getlantern/autoupdate",
@@ -1707,6 +1714,7 @@
     "github.com/getlantern/filepersist",
     "github.com/getlantern/fronted",
     "github.com/getlantern/geolookup",
+    "github.com/getlantern/go-libutp",
     "github.com/getlantern/go-socks5",
     "github.com/getlantern/golog",
     "github.com/getlantern/gotun",

@@ -16,7 +16,6 @@ import (
 
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
-	utp "github.com/anacrolix/go-libutp"
 	"github.com/mitchellh/mapstructure"
 	tls "github.com/refraction-networking/utls"
 	"github.com/tevino/abool"
@@ -27,6 +26,7 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
+	utp "github.com/getlantern/go-libutp"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/kcpwrapper"
 	"github.com/getlantern/keyman"
@@ -291,9 +291,9 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 		IdleInterval:          idleInterval,
 		PingInterval:          pingInterval,
 		RedialSessionInterval: redialSessionInterval,
-		Pool:                  buffers.Pool,
-		Cipher:                cipherCode,
-		ServerPublicKey:       rsaPublicKey,
+		Pool:            buffers.Pool,
+		Cipher:          cipherCode,
+		ServerPublicKey: rsaPublicKey,
 	})
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(s.Addr, transport, proto, func(op *ops.Op) (net.Conn, error) {
