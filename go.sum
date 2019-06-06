@@ -108,6 +108,8 @@ github.com/getlantern/framed v0.0.0-20190306221922-7f7919c8cf9b h1:rLHDb6VkSBQZT
 github.com/getlantern/framed v0.0.0-20190306221922-7f7919c8cf9b/go.mod h1:c6/4xBJDKOXLNKPJH//5z5EEHiFBPt+HpDFAlcvjDWw=
 github.com/getlantern/fronted v0.0.0-20180905190541-5b4f46cc8f8d h1:zVGeo40l4YfGaJwRgf0PCL/7cCk7VQQOJHW2wi5DEsE=
 github.com/getlantern/fronted v0.0.0-20180905190541-5b4f46cc8f8d/go.mod h1:+2ylraMe5Yyd44hi9AlZqnKH5RPNMIDYpDLyYSwQh1E=
+github.com/getlantern/fronted v0.0.0-20190606212108-e7744195eded h1:zyE6PKoT+jY7GPhfOXKRy6NDyQR821L4A79sAnlaO2U=
+github.com/getlantern/fronted v0.0.0-20190606212108-e7744195eded/go.mod h1:+2ylraMe5Yyd44hi9AlZqnKH5RPNMIDYpDLyYSwQh1E=
 github.com/getlantern/geolookup v0.0.0-20180719190536-68d621f75f46 h1:Wn6iLKISC9f0EOzffdJqwC9ppLekPA47idBUP402nb4=
 github.com/getlantern/geolookup v0.0.0-20180719190536-68d621f75f46/go.mod h1:C4lSABOxuIeQi36iYsO7xrcBzLDNeeB/nPVqYbHEnbo=
 github.com/getlantern/go-cache v0.0.0-20141028142048-88b53914f467 h1:10ez8C+7zyHzmnIiYybx9Qji/zO2tAAde69DfJMbUKY=
@@ -226,8 +228,16 @@ github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4 h1:73U3J4ms
 github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4/go.mod h1:f8WmDYKFOaC5/y0d3GWl6UKf1ZbSlIoMzkuC8x7pUhg=
 github.com/getlantern/tlsdialer v0.0.0-20180712141225-bae89e3a58a7 h1:C9BC2oU+8kF5iHFPeDUO2UhHr2bImLgqwMCTeoIk1Q0=
 github.com/getlantern/tlsdialer v0.0.0-20180712141225-bae89e3a58a7/go.mod h1:O0cCO2crLwc02DtahTowM6jjUCvn6Jr26uDQaGVab4g=
+github.com/getlantern/tlsdialer v0.0.0-20190606180931-1ac26445d532 h1:rdmlf0r0lZpTHZLkY0aJeKXrY7ggX4WXuLtOepZvmXM=
+github.com/getlantern/tlsdialer v0.0.0-20190606180931-1ac26445d532/go.mod h1:O0cCO2crLwc02DtahTowM6jjUCvn6Jr26uDQaGVab4g=
+github.com/getlantern/tlsdialer v2.0.12+incompatible h1:12p0PU+6xA8/HjeODx9tZlP2fzhSgFq7W8kFoRukGZo=
+github.com/getlantern/tlsdialer v2.0.12+incompatible/go.mod h1:O0cCO2crLwc02DtahTowM6jjUCvn6Jr26uDQaGVab4g=
 github.com/getlantern/tlsredis v0.0.0-20180308045249-5d4ed6dd3836 h1:Qx9tRhqZdhF0RBxHe2OVE1OJ30ipOCPfMraDrZED3bc=
 github.com/getlantern/tlsredis v0.0.0-20180308045249-5d4ed6dd3836/go.mod h1:1ZJE0mXEdPyyuF1daUTDBo2nVWB/6nuZy7IcNmRnHrc=
+github.com/getlantern/utls v0.0.0-20190606183433-31821ca402171bb9ce8e423023bc988b81dfb036 h1:T4CIFeZmmgsZ5Drbz9v30Dx72FJ6DGmWrsivWpj6hm8=
+github.com/getlantern/utls v0.0.0-20190606183433-31821ca402171bb9ce8e423023bc988b81dfb036/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
+github.com/getlantern/utls v0.0.0-20190606185804-31821ca40217 h1:unrYXautLHJIjDUVq17N0dxNJJg2McIbmJ9tv0a8UpA=
+github.com/getlantern/utls v0.0.0-20190606185804-31821ca40217/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
 github.com/getlantern/uuid v1.2.0 h1:pGrGaCV7XEaG6lvjWkwf8Y92BjB/9yFmkKsNFpRQ7rc=
 github.com/getlantern/uuid v1.2.0/go.mod h1:uX10hOzZUUDR+oYNSIks+RcozOEiwTNC/K2rw9SUi1k=
 github.com/getlantern/vtime v0.0.0-20160810174823-dc1e573cf991/go.mod h1:Sfa815JjnYX/fxcE/nHKxyanK/2Iy+6FbMO4/ou3gWw=
