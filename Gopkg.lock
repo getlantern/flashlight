@@ -395,11 +395,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:72d434f55b180727962481ae5475589bcbbc371791f918e1a7c3e499974c277c"
+  digest = "1:4c83c6efc7706c0217a189f8d79776c794bb7b9ba46833f6b5b93e9a43165f88"
   name = "github.com/getlantern/go-libutp"
   packages = ["."]
   pruneopts = "UT"
-  revision = "aa4145c0ec7521e2439b754a442cb4c990b600c5"
+  revision = "29ac0bf665ea6a07a11e017c3dfba1ae58f1e542"
 
 [[projects]]
   branch = "master"
