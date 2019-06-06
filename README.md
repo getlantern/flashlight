@@ -7,14 +7,14 @@
 * Force git to use ssh instead of https by running
   `git config --global url."git@github.com:".insteadOf "https://github.com/"`
 
+### Dependency Management
+Dependencies are managed using Go modules. If using a Go version prior to 1.13, you'll need to set the environment variable `GO111MODULE=on` in order to pick up dependencies automatically.
+
+### Building
 This repo contains the core Lantern logic as well as the Lantern desktop
 program. To build using your gopath: 
 
-`make lantern`
-
-After running `make vendor` or `make novendor`, you don't need to run them again
-unless you want to switch to/from using vendored dependencies.  After that, you
-can just use `make`.
+`GO111MODULE=on make lantern`
 
 You can also just build using the usual `go install` etc.
 
