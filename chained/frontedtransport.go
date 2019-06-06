@@ -8,6 +8,7 @@ import (
 
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
+	tls "github.com/refraction-networking/utls"
 )
 
 const (
@@ -37,7 +38,7 @@ func ConfigureFronting(pool *x509.CertPool, providers map[string]*fronted.Provid
 	if p != nil {
 		p = fronted.NewProvider(p.HostAliases, p.TestURL, p.Masquerades, p.Validator, []string{"*.cloudfront.net"})
 		ponly := map[string]*fronted.Provider{pid: p}
-		frontingContexts[pid].Configure(pool, ponly, pid, filepath.Join(cacheFolder, fmt.Sprintf("masquerade_cache.%s", pid)))
+		frontingContexts[pid].ConfigureWithHello(pool, ponly, pid, filepath.Join(cacheFolder, fmt.Sprintf("masquerade_cache.%s", pid)), tls.HelloChrome_Auto)
 	}
 }
 

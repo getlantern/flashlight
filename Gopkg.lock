@@ -371,11 +371,11 @@
 
 [[projects]]
   branch = "hijack"
-  digest = "1:fa962f175676a2140d1979ac333f78f89c09425e7bae116696a3b29cc7aced9a"
+  digest = "1:e552a0cb9ec22a693b453c2fed7046f14dc801fa55595acda5f94d67e9205f4a"
   name = "github.com/getlantern/fronted"
   packages = ["."]
   pruneopts = "UT"
-  revision = "2048bc98b14691496b9597522c6f462c9720fac8"
+  revision = "84ad531eda495e49d63ec50325b0eedc974b3e26"
 
 [[projects]]
   branch = "master"
@@ -866,12 +866,12 @@
   revision = "cf35cfd0b1b460b031536c9846ffcd5f7811dddb"
 
 [[projects]]
-  branch = "master"
-  digest = "1:4c4d099a437d0a2405b920c46365bb25e3223ba9c33ba73a93d2c8161733dacd"
+  branch = "update_utls"
+  digest = "1:d22816a6bfefe8c43706255888f473cb23b99b17306a987e926eae638f090e69"
   name = "github.com/getlantern/tlsdialer"
   packages = ["."]
   pruneopts = "UT"
-  revision = "bae89e3a58a7d46e8b6ef7ddf40163e0a1fd9a7a"
+  revision = "5a60a5b8b3a31d587e0b9121862493ce66de2d8a"
 
 [[projects]]
   branch = "master"
@@ -1396,15 +1396,16 @@
   revision = "5867b95ac084bbfee6ea16595c4e05ab009021da"
 
 [[projects]]
-  branch = "master"
-  digest = "1:23d3fc1af86440b46f020fbc19dbfd57b03479bab2db88dcf234220753b451c5"
+  branch = "sni_fix"
+  digest = "1:a658246ebacf238e5491741bdeb7a92136e4a5c37bb9c3c9caf16b6e8702c48d"
   name = "github.com/refraction-networking/utls"
   packages = [
     ".",
     "cpu",
   ]
   pruneopts = "UT"
-  revision = "e0edd7863bd2c52945332a16219a8673d93884fb"
+  revision = "31821ca402171bb9ce8e423023bc988b81dfb036"
+  source = "https://github.com/getlantern/utls"
 
 [[projects]]
   digest = "1:7395b855a6078ad2e6c40311402a057a91125fb9f32cf228e1b32cdc57c33538"
@@ -1518,17 +1519,20 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ceaeda007e14ea4d082c7a6c1326bf23e55a46f937a4e3a52fd3594a4373d3a7"
+  digest = "1:2181fff48f1cc9421dc7bdd236407764a0ad30fdf3a9ce22314cc9023ba67d3f"
   name = "golang.org/x/crypto"
   packages = [
     "blowfish",
     "cast5",
     "chacha20poly1305",
+    "cryptobyte",
+    "cryptobyte/asn1",
     "curve25519",
     "ed25519",
     "ed25519/internal/edwards25519",
     "hkdf",
     "internal/chacha20",
+    "internal/subtle",
     "nacl/secretbox",
     "pbkdf2",
     "poly1305",
@@ -1540,7 +1544,7 @@
     "xtea",
   ]
   pruneopts = "UT"
-  revision = "2b6c08872f4b66da917bb4ce98df4f0307330f78"
+  revision = "f99c8df09eb5bff426315721bfa5f16a99cad32c"
 
 [[projects]]
   branch = "master"
@@ -1575,9 +1579,10 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:41c13cada29d953aedd6e98918f11d662e8a84af9a4374df5f2cc9dbb4731664"
+  digest = "1:0da319974e47c205beff2d4c2fc429f0b8ed8c8e80dd6c27e2b3c5628d0397d9"
   name = "golang.org/x/sys"
   packages = [
+    "cpu",
     "unix",
     "windows",
     "windows/registry",

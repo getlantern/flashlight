@@ -202,7 +202,7 @@
   name = "github.com/getlantern/tlsdefaults"
 
 [[constraint]]
-  branch = "master"
+  branch = "update_utls"
   name = "github.com/getlantern/tlsdialer"
 
 [[constraint]]
@@ -299,3 +299,8 @@
 [[override]]
   name = "github.com/golang/protobuf"
   version = "=1.2.0"
+
+[[override]]
+name = "github.com/refraction-networking/utls"
+branch = "sni_fix"
+source = "https://github.com/getlantern/utls"
