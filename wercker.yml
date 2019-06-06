@@ -3,7 +3,7 @@
 # If you want Google's container you would reference google/golang
 # Read more about containers on our dev center
 # http://devcenter.wercker.com/docs/containers/index.html
-box: golang:1.11
+box: golang:1.12.5
 # This is the build pipeline. Pipelines are the core of wercker
 # Read more about pipelines on our dev center
 # http://devcenter.wercker.com/docs/pipelines/index.html
@@ -28,16 +28,12 @@ build:
     - script:
       name: authenticate git
       code: git config --global url."https://71cee071ea22b7ffb10f68fa330d1130133bbfbd:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-    - script:
-      name: install dep
-      code: |-
-        curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
     - install-packages:
       packages: lsof libpcap-dev # lsof required by fdcount
     - script:
       name: make-lantern
       code: |
-        HEADLESS=true make vendor lantern
+        HEADLESS=true GO111MODULE=on make lantern
     - script:
       name: get goveralls
       code: |-
@@ -48,6 +44,6 @@ build:
       code: export GORACE=history_size=7
     - script:
       name: test-and-cover
-      code: make test-and-cover
+      code: GO111MODULE=on make test-and-cover
     - tcnksm/goveralls:
       token: 19Nno28mzRG0nIrWOc92flFUhZF2ty4Rc
