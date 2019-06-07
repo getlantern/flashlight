@@ -1,5 +1,22 @@
 # Change Log
 
+## [Unreleased](https://github.com/getlantern/flashlight/tree/HEAD)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.4.3...HEAD)
+
+**Merged pull requests:**
+
+- use master branch of utls fork [\#629](https://github.com/getlantern/flashlight/pull/629) ([forkner](https://github.com/forkner))
+
+## [5.4.3](https://github.com/getlantern/flashlight/tree/5.4.3) (2019-06-07)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.4.2...5.4.3)
+
+**Merged pull requests:**
+
+- add UTP support to Windows XP [\#628](https://github.com/getlantern/flashlight/pull/628) ([joesis](https://github.com/joesis))
+- enable domain fronting for wss [\#627](https://github.com/getlantern/flashlight/pull/627) ([forkner](https://github.com/forkner))
+- Use Go modules instead of dep [\#616](https://github.com/getlantern/flashlight/pull/616) ([atavism](https://github.com/atavism))
+
 ## [5.4.2](https://github.com/getlantern/flashlight/tree/5.4.2) (2019-06-04)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.4.1...5.4.2)
 
@@ -35,7 +52,7 @@
 - Avoid potential data loss caused by use of bufio.Reader to read CONNECT response [\#610](https://github.com/getlantern/flashlight/pull/610) ([joesis](https://github.com/joesis))
 
 ## [5.3.8](https://github.com/getlantern/flashlight/tree/5.3.8) (2019-04-24)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.6...5.3.8)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.7...5.3.8)
 
 **Merged pull requests:**
 
@@ -43,11 +60,11 @@
 - Resetting whole balancer when connections get protected [\#605](https://github.com/getlantern/flashlight/pull/605) ([oxtoacart](https://github.com/oxtoacart))
 - Add beam to track requests end to end [\#598](https://github.com/getlantern/flashlight/pull/598) ([joesis](https://github.com/joesis))
 
-## [5.3.6](https://github.com/getlantern/flashlight/tree/5.3.6) (2019-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.7...5.3.6)
-
 ## [5.3.7](https://github.com/getlantern/flashlight/tree/5.3.7) (2019-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.5...5.3.7)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.6...5.3.7)
+
+## [5.3.6](https://github.com/getlantern/flashlight/tree/5.3.6) (2019-04-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.5...5.3.6)
 
 **Merged pull requests:**
 
@@ -236,7 +253,6 @@
 - \[RFR\] Yinbi-154: Set `yinbiEnabled` based on `pro-server` call [\#533](https://github.com/getlantern/flashlight/pull/533) ([hchood](https://github.com/hchood))
 - Reporting proxy\_multiplexed dimension to borda [\#532](https://github.com/getlantern/flashlight/pull/532) ([oxtoacart](https://github.com/oxtoacart))
 - Added info about top proxies global borda context [\#531](https://github.com/getlantern/flashlight/pull/531) ([oxtoacart](https://github.com/oxtoacart))
-- Prevent Flashlight dev from hitting the outdated page [\#523](https://github.com/getlantern/flashlight/pull/523) ([joesis](https://github.com/joesis))
 
 ## [4.9.1-yinbi](https://github.com/getlantern/flashlight/tree/4.9.1-yinbi) (2018-11-06)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.9.0...4.9.1-yinbi)
@@ -251,17 +267,8 @@
 ## [4.9.0](https://github.com/getlantern/flashlight/tree/4.9.0) (2018-10-24)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.4...4.9.0)
 
-**Merged pull requests:**
-
-- prevent writing after newPipedWriteCloser is closed [\#526](https://github.com/getlantern/flashlight/pull/526) ([joesis](https://github.com/joesis))
-
 ## [4.8.4](https://github.com/getlantern/flashlight/tree/4.8.4) (2018-10-19)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.3...4.8.4)
-
-**Merged pull requests:**
-
-- adjust ca selection to tally by provider [\#525](https://github.com/getlantern/flashlight/pull/525) ([forkner](https://github.com/forkner))
-- Updated to latest proxybench [\#524](https://github.com/getlantern/flashlight/pull/524) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [4.8.3](https://github.com/getlantern/flashlight/tree/4.8.3) (2018-10-12)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.2...4.8.3)
