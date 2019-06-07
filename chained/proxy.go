@@ -16,6 +16,7 @@ import (
 
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
+	utp "github.com/anacrolix/go-libutp"
 	"github.com/mitchellh/mapstructure"
 	tls "github.com/refraction-networking/utls"
 	"github.com/tevino/abool"
@@ -26,7 +27,6 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
-	utp "github.com/getlantern/go-libutp"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/kcpwrapper"
 	"github.com/getlantern/keyman"
@@ -291,9 +291,9 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 		IdleInterval:          idleInterval,
 		PingInterval:          pingInterval,
 		RedialSessionInterval: redialSessionInterval,
-		Pool:            buffers.Pool,
-		Cipher:          cipherCode,
-		ServerPublicKey: rsaPublicKey,
+		Pool:                  buffers.Pool,
+		Cipher:                cipherCode,
+		ServerPublicKey:       rsaPublicKey,
 	})
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(s.Addr, transport, proto, func(op *ops.Op) (net.Conn, error) {
@@ -553,46 +553,28 @@ func enableKCP(p *proxy, s *ChainedServerInfo) error {
 }
 
 func enableWSS(p *proxy, s *ChainedServerInfo) error {
-	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
-	if err != nil {
-		return log.Error(errors.Wrap(err).With("addr", s.Addr))
-	}
-	x509cert := cert.X509()
+	var rt tinywss.RoundTripHijacker
+	var err error
 
-	tlsConf := &tls.Config{
-		CipherSuites:       orderedCipherSuitesFromConfig(s),
-		ServerName:         s.TLSServerNameIndicator,
-		InsecureSkipVerify: true,
-	}
-
-	td := &tlsdialer.Dialer{
-		DoDial:         netx.DialTimeout,
-		SendServerName: s.TLSServerNameIndicator != "",
-		Config:         tlsConf,
-		ClientHelloID:  s.clientHelloID(),
-		Timeout:        chainedDialTimeout,
-	}
-
-	rt := tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
-		log.Debugf("tinywss Roundtripper dial...")
-		conn, err := td.Dial(network, addr)
+	fctx_id := s.ptSetting("df_ctx")
+	if fctx_id != "" {
+		fctx := GetFrontingContext(fctx_id)
+		if fctx == nil {
+			return fmt.Errorf("unsupported wss df_ctx=%s! skipping.", fctx_id)
+		}
+		timeout, err := time.ParseDuration(s.ptSetting("df_timeout"))
+		if err != nil || timeout < 0 {
+			timeout = 1 * time.Minute
+		}
+		log.Debugf("Using wss fctx_id=%s timeout=%v", fctx_id, timeout)
+		rt = &wssFrontedRT{fctx, timeout}
+	} else {
+		log.Debugf("Using wss https direct")
+		rt, err = wssHTTPSRoundTripper(p, s)
 		if err != nil {
-			log.Errorf("tlsdialer failed with: %s", err)
-			return nil, err
+			return err
 		}
-		serverCert := conn.ConnectionState().PeerCertificates[0]
-		if !serverCert.Equal(x509cert) {
-			conn.Close()
-			received, err := keyman.LoadCertificateFromX509(serverCert)
-			if err != nil {
-				return nil, log.Errorf("Unable to parse received certificate: %v (%v)", err, serverCert)
-			}
-			return nil, log.Errorf("Server's certificate didn't match expected! Server had\n%s\nbut expected:\n%s",
-				string(received.PEMEncoded()), string(cert.PEMEncoded()))
-		}
-		log.Debugf("tinywss RoundTripper returning conn (connected)...")
-		return conn, nil
-	})
+	}
 
 	opts := &tinywss.ClientOpts{
 		URL:               fmt.Sprintf("wss://%s", p.addr),
@@ -614,6 +596,66 @@ func enableWSS(p *proxy, s *ChainedServerInfo) error {
 	}
 
 	return nil
+}
+
+type wssFrontedRT struct {
+	fctx    *fronted.FrontingContext
+	timeout time.Duration
+}
+
+func (rt *wssFrontedRT) RoundTripHijack(req *http.Request) (*http.Response, net.Conn, error) {
+	r, ok := rt.fctx.NewDirect(rt.timeout)
+	if !ok {
+		return nil, nil, fmt.Errorf("Unable to obtain fronted roundtripper after %v fctx=%s!", rt.timeout, rt.fctx)
+	}
+	if rth, ok := r.(tinywss.RoundTripHijacker); ok {
+		return rth.RoundTripHijack(req)
+	} else {
+		return nil, nil, fmt.Errorf("Unsupported roundtripper obtained from fronted!")
+	}
+}
+
+func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
+	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
+	if err != nil {
+		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
+	}
+	x509cert := cert.X509()
+
+	tlsConf := &tls.Config{
+		CipherSuites:       orderedCipherSuitesFromConfig(s),
+		ServerName:         s.TLSServerNameIndicator,
+		InsecureSkipVerify: true,
+	}
+
+	td := &tlsdialer.Dialer{
+		DoDial:         netx.DialTimeout,
+		SendServerName: s.TLSServerNameIndicator != "",
+		Config:         tlsConf,
+		ClientHelloID:  s.clientHelloID(),
+		Timeout:        chainedDialTimeout,
+	}
+
+	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
+		log.Debugf("tinywss Roundtripper dial...")
+		conn, err := td.Dial(network, addr)
+		if err != nil {
+			log.Errorf("tlsdialer failed with: %s", err)
+			return nil, err
+		}
+		serverCert := conn.ConnectionState().PeerCertificates[0]
+		if !serverCert.Equal(x509cert) {
+			conn.Close()
+			received, err := keyman.LoadCertificateFromX509(serverCert)
+			if err != nil {
+				return nil, log.Errorf("Unable to parse received certificate: %v (%v)", err, serverCert)
+			}
+			return nil, log.Errorf("Server's certificate didn't match expected! Server had\n%s\nbut expected:\n%s",
+				string(received.PEMEncoded()), string(cert.PEMEncoded()))
+		}
+		log.Debugf("tinywss RoundTripper returning conn (connected)...")
+		return conn, nil
+	}), nil
 }
 
 func enableQUIC(p *proxy, s *ChainedServerInfo) error {
