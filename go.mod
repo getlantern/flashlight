@@ -147,3 +147,5 @@ replace github.com/marten-seemann/qtls => github.com/marten-seemann/qtls-depreca
 replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20190314012628-8999826b821d
 
 replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20190606183433-31821ca402171bb9ce8e423023bc988b81dfb036
+
+replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3
