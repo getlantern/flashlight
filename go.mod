@@ -44,7 +44,7 @@ require (
 	github.com/getlantern/eventual v0.0.0-20180125201821-84b02499361b
 	github.com/getlantern/filepersist v0.0.0-20160317154340-c5f0cd24e799
 	github.com/getlantern/framed v0.0.0-20190306221922-7f7919c8cf9b
-	github.com/getlantern/fronted v0.0.0-20180905190541-5b4f46cc8f8d
+	github.com/getlantern/fronted v0.0.0-20190606212108-e7744195eded
 	github.com/getlantern/geolookup v0.0.0-20180719190536-68d621f75f46
 	github.com/getlantern/go-cache v0.0.0-20141028142048-88b53914f467
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
@@ -99,8 +99,9 @@ require (
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
 	github.com/getlantern/tinywss v0.0.0-20190602234724-8d81aaf624e6
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
-	github.com/getlantern/tlsdialer v0.0.0-20180712141225-bae89e3a58a7
+	github.com/getlantern/tlsdialer v0.0.0-20190606180931-1ac26445d532
 	github.com/getlantern/tlsredis v0.0.0-20180308045249-5d4ed6dd3836
+	github.com/getlantern/utls v0.0.0-20190606185804-31821ca40217 // indirect
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/wal v0.0.0-20180604193457-e99945fbd2d2
@@ -184,3 +185,5 @@ replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.
 replace github.com/marten-seemann/qtls => github.com/marten-seemann/qtls-deprecated v0.0.0-20190207043627-591c71538704
 
 replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20190314012628-8999826b821d
+
+replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20190606183433-31821ca402171bb9ce8e423023bc988b81dfb036
