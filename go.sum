@@ -245,10 +245,8 @@ github.com/getlantern/tlsdialer v2.0.12+incompatible h1:12p0PU+6xA8/HjeODx9tZlP2
 github.com/getlantern/tlsdialer v2.0.12+incompatible/go.mod h1:O0cCO2crLwc02DtahTowM6jjUCvn6Jr26uDQaGVab4g=
 github.com/getlantern/tlsredis v0.0.0-20180308045249-5d4ed6dd3836 h1:Qx9tRhqZdhF0RBxHe2OVE1OJ30ipOCPfMraDrZED3bc=
 github.com/getlantern/tlsredis v0.0.0-20180308045249-5d4ed6dd3836/go.mod h1:1ZJE0mXEdPyyuF1daUTDBo2nVWB/6nuZy7IcNmRnHrc=
-github.com/getlantern/utls v0.0.0-20190606183433-31821ca402171bb9ce8e423023bc988b81dfb036 h1:T4CIFeZmmgsZ5Drbz9v30Dx72FJ6DGmWrsivWpj6hm8=
-github.com/getlantern/utls v0.0.0-20190606183433-31821ca402171bb9ce8e423023bc988b81dfb036/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
-github.com/getlantern/utls v0.0.0-20190606185804-31821ca40217 h1:unrYXautLHJIjDUVq17N0dxNJJg2McIbmJ9tv0a8UpA=
-github.com/getlantern/utls v0.0.0-20190606185804-31821ca40217/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
+github.com/getlantern/utls v0.0.0-20190606225154-80c3ccb52074 h1:WNwzhKLr/yrQ6A2IBGRxJVByBkzu0k79UsEqBqxphHM=
+github.com/getlantern/utls v0.0.0-20190606225154-80c3ccb52074/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
 github.com/getlantern/uuid v1.2.0 h1:pGrGaCV7XEaG6lvjWkwf8Y92BjB/9yFmkKsNFpRQ7rc=
 github.com/getlantern/uuid v1.2.0/go.mod h1:uX10hOzZUUDR+oYNSIks+RcozOEiwTNC/K2rw9SUi1k=
 github.com/getlantern/vtime v0.0.0-20160810174823-dc1e573cf991/go.mod h1:Sfa815JjnYX/fxcE/nHKxyanK/2Iy+6FbMO4/ou3gWw=
@@ -409,8 +407,6 @@ github.com/prometheus/procfs v0.0.0-20181005140218-185b4288413d/go.mod h1:c3At6R
 github.com/prometheus/procfs v0.0.0-20181204211112-1dc9a6cbc91a/go.mod h1:c3At6R/oaqEKCNdg8wHV1ftS6bRYblBhIjjI8uT2IGk=
 github.com/prometheus/procfs v0.0.0-20190507164030-5867b95ac084 h1:sofwID9zm4tzrgykg80hfFph1mryUeLRsUfoocVVmRY=
 github.com/prometheus/procfs v0.0.0-20190507164030-5867b95ac084/go.mod h1:TjEm7ze935MbeOT/UhFTIMYKhuLP4wbCsTZCD3I8kEA=
-github.com/refraction-networking/utls v0.0.0-20180627181930-e0edd7863bd2 h1:ylRX8J9LXNVyW7+Z6AR+QsVtRiB4R16UJEurXTP+CRQ=
-github.com/refraction-networking/utls v0.0.0-20180627181930-e0edd7863bd2/go.mod h1:tz9gX959MEFfFN5whTIocCLUG57WiILqtdVxI8c6Wj0=
 github.com/retailnext/hllpp v1.0.0/go.mod h1:RDpi1RftBQPUCDRw6SmxeaREsAaRKnOclghuzp/WRzc=
 github.com/rickar/props v0.0.0-20170718221555-0b06aeb2f037/go.mod h1:F1p8BNM4IXv2UcptwSp8HJOapKurodd/PYu1D6Gtn9Y=
 github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46/go.mod h1:uAQ5PCi+MFsC7HjREoAz1BU+Mq60+05gifQSsHSDG/8=
