@@ -88,7 +88,6 @@ require (
 	github.com/getlantern/tinywss v0.0.0-20190602234724-8d81aaf624e6
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
 	github.com/getlantern/tlsdialer v0.0.0-20190606180931-1ac26445d532
-	github.com/getlantern/utls v0.0.0-20190606185804-31821ca40217 // indirect
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/wfilter v0.0.0-20160829163852-69cc8585ee9c
@@ -127,7 +126,7 @@ require (
 	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90 // indirect
 	github.com/prometheus/common v0.4.0 // indirect
 	github.com/prometheus/procfs v0.0.0-20190507164030-5867b95ac084 // indirect
-	github.com/refraction-networking/utls v0.0.0-20180627181930-e0edd7863bd2
+	github.com/refraction-networking/utls v0.0.0-00010101000000-000000000000
 	github.com/skratchdot/open-golang v0.0.0-20160302144031-75fb7ed4208c
 	github.com/stretchr/testify v1.3.0
 	github.com/templexxx/cpufeat v0.0.0-20170927014610-3794dfbfb047 // indirect
@@ -146,6 +145,6 @@ replace github.com/marten-seemann/qtls => github.com/marten-seemann/qtls-depreca
 
 replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20190314012628-8999826b821d
 
-replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20190606183433-31821ca402171bb9ce8e423023bc988b81dfb036
+replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20190606225154-80c3ccb52074
 
 replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3
