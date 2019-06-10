@@ -247,7 +247,7 @@ func TestProductionGlobal(t *testing.T) {
 
 	f := newFetcher(newTestUserConfig(), &http.Transport{}, testURL)
 
-	cfgBytes, err := f.fetch()
+	cfgBytes, _, err := f.fetch()
 	if !assert.NoError(t, err, "Error fetching global config from %s", testURL) {
 		return
 	}
@@ -270,7 +270,7 @@ func TestProductionGlobal(t *testing.T) {
 		return
 	}
 
-	for pid, _ := range expectedProviders {
+	for pid := range expectedProviders {
 		provider := cfg.Client.Fronted.Providers[pid]
 		if !assert.NotNil(t, provider, "global config %s missing expected fronted provider %s", testURL, pid) {
 			continue

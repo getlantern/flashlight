@@ -36,7 +36,7 @@ var (
 	// DefaultProxyConfigPollInterval determines how frequently to fetch proxies.yaml
 	DefaultProxyConfigPollInterval = 1 * time.Minute
 
-	// Overrides how frequently to fetch proxies.yaml if set (does not honor values from global.yaml)
+	// ForceProxyConfigPollInterval overrides how frequently to fetch proxies.yaml if set (does not honor values from global.yaml)
 	ForceProxyConfigPollInterval = 0 * time.Second
 
 	// DefaultGlobalConfigPollInterval determines how frequently to fetch global.yaml

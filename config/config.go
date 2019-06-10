@@ -232,31 +232,42 @@ func (conf *config) embedded(data []byte) (interface{}, error) {
 	return conf.unmarshaler(data)
 }
 
-func (conf *config) poll(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, sleep func() time.Duration) {
+func (conf *config) poll(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher, defaultSleep func() time.Duration) {
 	for {
-		if bytes, err := fetcher.fetch(); err != nil {
-			log.Errorf("Error fetching config: %v", err)
-		} else if bytes == nil {
-			// This is what fetcher returns for not-modified.
-			log.Debug("Ignoring not modified response")
-		} else if cfg, err := conf.unmarshaler(bytes); err != nil {
-			log.Errorf("Error fetching config: %v", err)
-		} else {
-			log.Debugf("Fetched config! %v", cfg)
-
-			// Push these to channels to avoid race conditions that might occur if
-			// we did these on go routines, for example.
-			conf.saveChan <- cfg
-			log.Debugf("Sent to save chan")
-			dispatch(cfg)
+		sleepDuration := conf.fetchConfig(stopCh, dispatch, fetcher)
+		if sleepDuration == noSleep {
+			sleepDuration = defaultSleep()
 		}
 		select {
 		case <-stopCh:
 			log.Debug("Stopping polling")
 			return
-		case <-time.After(sleep()):
+		case <-time.After(sleepDuration):
 			continue
 		}
+	}
+}
+
+func (conf *config) fetchConfig(stopCh chan bool, dispatch func(interface{}), fetcher Fetcher) time.Duration {
+	if bytes, sleepTime, err := fetcher.fetch(); err != nil {
+		log.Errorf("Error fetching config: %v", err)
+		return sleepTime
+	} else if bytes == nil {
+		// This is what fetcher returns for not-modified.
+		log.Debug("Ignoring not modified response")
+		return sleepTime
+	} else if cfg, err := conf.unmarshaler(bytes); err != nil {
+		log.Errorf("Error fetching config: %v", err)
+		return sleepTime
+	} else {
+		log.Debugf("Fetched config! %v", cfg)
+
+		// Push these to channels to avoid race conditions that might occur if
+		// we did these on go routines, for example.
+		conf.saveChan <- cfg
+		log.Debugf("Sent to save chan")
+		dispatch(cfg)
+		return sleepTime
 	}
 }
 
