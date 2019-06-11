@@ -16,7 +16,6 @@ import (
 
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
-	utp "github.com/anacrolix/go-libutp"
 	"github.com/mitchellh/mapstructure"
 	tls "github.com/refraction-networking/utls"
 	"github.com/tevino/abool"
@@ -726,23 +725,6 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 			log.Debug("established new multiplexed quic connection.")
 		}
 
-		delta := elapsed()
-		return conn, delta, err
-	}
-
-	return nil
-}
-
-func enableUTP(p *proxy, s *ChainedServerInfo) error {
-	socket, err := utp.NewSocket("udp", ":0")
-	if err != nil {
-		return errors.New("Unable to create utp socket: %v", err)
-	}
-
-	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
-		elapsed := mtime.Stopwatch()
-
-		conn, err := socket.DialContext(ctx, "udp", p.addr)
 		delta := elapsed()
 		return conn, delta, err
 	}
