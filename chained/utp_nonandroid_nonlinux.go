@@ -1,4 +1,4 @@
-// +build !android
+// +build !android, !linux
 
 package chained
 
