@@ -1,5 +1,12 @@
 # Change Log
 
+## [5.4.5](https://github.com/getlantern/flashlight/tree/5.4.5) (2019-06-11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.4.4...5.4.5)
+
+**Merged pull requests:**
+
+- disable utp on android [\#630](https://github.com/getlantern/flashlight/pull/630) ([joesis](https://github.com/joesis))
+
 ## [5.4.4](https://github.com/getlantern/flashlight/tree/5.4.4) (2019-06-10)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.4.3...5.4.4)
 
@@ -261,7 +268,6 @@
 
 - \[WIP\] Enable Yinbi on the desktop frontend [\#530](https://github.com/getlantern/flashlight/pull/530) ([hchood](https://github.com/hchood))
 - Updated embedded global.yaml [\#529](https://github.com/getlantern/flashlight/pull/529) ([oxtoacart](https://github.com/oxtoacart))
-- Using domain-fronting if submitting email directly to Mandrill fails [\#528](https://github.com/getlantern/flashlight/pull/528) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [4.9.0](https://github.com/getlantern/flashlight/tree/4.9.0) (2018-10-24)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.4...4.9.0)
@@ -282,13 +288,13 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.13...4.8.0)
 
 ## [4.7.13](https://github.com/getlantern/flashlight/tree/4.7.13) (2018-08-09)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.13)
-
-## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.13)
 
 ## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.12)
+
+## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.11)
 
 ## [4.7.10](https://github.com/getlantern/flashlight/tree/4.7.10) (2018-07-26)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.9...4.7.10)
@@ -327,13 +333,13 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.14...4.6.15)
 
 ## [4.6.14](https://github.com/getlantern/flashlight/tree/4.6.14) (2018-05-06)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.14)
-
-## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.14)
 
 ## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.13)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.13)
+
+## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.12)
 
 ## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.11)
@@ -342,13 +348,13 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.9...4.6.10)
 
 ## [4.6.9](https://github.com/getlantern/flashlight/tree/4.6.9) (2018-04-26)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.8...4.6.9)
-
-## [4.6.8](https://github.com/getlantern/flashlight/tree/4.6.8) (2018-04-26)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.7...4.6.8)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.7...4.6.9)
 
 ## [4.6.7](https://github.com/getlantern/flashlight/tree/4.6.7) (2018-04-26)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.6...4.6.7)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.8...4.6.7)
+
+## [4.6.8](https://github.com/getlantern/flashlight/tree/4.6.8) (2018-04-26)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.6...4.6.8)
 
 ## [4.6.6](https://github.com/getlantern/flashlight/tree/4.6.6) (2018-04-23)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.4...4.6.6)
@@ -357,13 +363,13 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.4)
 
 ## [4.6.3](https://github.com/getlantern/flashlight/tree/4.6.3) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.3)
-
-## [4.6.1](https://github.com/getlantern/flashlight/tree/4.6.1) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.1)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.3)
 
 ## [4.6.2](https://github.com/getlantern/flashlight/tree/4.6.2) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.2)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.2)
+
+## [4.6.1](https://github.com/getlantern/flashlight/tree/4.6.1) (2018-04-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.1)
 
 ## [4.6.0](https://github.com/getlantern/flashlight/tree/4.6.0) (2018-04-16)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.5.9...4.6.0)
@@ -417,13 +423,13 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/v1.5.12...0.0.3)
 
 ## [v1.5.12](https://github.com/getlantern/flashlight/tree/v1.5.12) (2014-11-19)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta2...v1.5.12)
-
-## [natty-beta2](https://github.com/getlantern/flashlight/tree/natty-beta2) (2014-11-10)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta1...natty-beta2)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta1...v1.5.12)
 
 ## [natty-beta1](https://github.com/getlantern/flashlight/tree/natty-beta1) (2014-11-10)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/natty...natty-beta1)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/natty-beta2...natty-beta1)
+
+## [natty-beta2](https://github.com/getlantern/flashlight/tree/natty-beta2) (2014-11-10)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/natty...natty-beta2)
 
 ## [natty](https://github.com/getlantern/flashlight/tree/natty) (2014-11-10)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/v1.6.0...natty)
