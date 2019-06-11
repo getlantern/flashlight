@@ -64,7 +64,7 @@ type Helper struct {
 	listeners                   []net.Listener
 }
 
-// newHelper prepares a new integration test helper including a web server for
+// NewHelper prepares a new integration test helper including a web server for
 // content, a proxy server and a config server that ties it all together. It
 // also enables ForceProxying on the client package to make sure even localhost
 // origins are served through the proxy. Make sure to close the Helper with
