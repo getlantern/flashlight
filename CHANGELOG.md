@@ -1,12 +1,12 @@
 # Change Log
 
-## [Unreleased](https://github.com/getlantern/flashlight/tree/HEAD)
-
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.4.3...HEAD)
+## [5.4.4](https://github.com/getlantern/flashlight/tree/5.4.4) (2019-06-10)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.4.3...5.4.4)
 
 **Merged pull requests:**
 
 - use master branch of utls fork [\#629](https://github.com/getlantern/flashlight/pull/629) ([forkner](https://github.com/forkner))
+- Dynamically sleep based on response from config server [\#624](https://github.com/getlantern/flashlight/pull/624) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.4.3](https://github.com/getlantern/flashlight/tree/5.4.3) (2019-06-07)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.4.2...5.4.3)
@@ -262,7 +262,6 @@
 - \[WIP\] Enable Yinbi on the desktop frontend [\#530](https://github.com/getlantern/flashlight/pull/530) ([hchood](https://github.com/hchood))
 - Updated embedded global.yaml [\#529](https://github.com/getlantern/flashlight/pull/529) ([oxtoacart](https://github.com/oxtoacart))
 - Using domain-fronting if submitting email directly to Mandrill fails [\#528](https://github.com/getlantern/flashlight/pull/528) ([oxtoacart](https://github.com/oxtoacart))
-- Updated to latest lampshade [\#527](https://github.com/getlantern/flashlight/pull/527) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [4.9.0](https://github.com/getlantern/flashlight/tree/4.9.0) (2018-10-24)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.4...4.9.0)
@@ -283,13 +282,13 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.13...4.8.0)
 
 ## [4.7.13](https://github.com/getlantern/flashlight/tree/4.7.13) (2018-08-09)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.13)
-
-## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.13)
 
 ## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.11)
+
+## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.12)
 
 ## [4.7.10](https://github.com/getlantern/flashlight/tree/4.7.10) (2018-07-26)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.9...4.7.10)
