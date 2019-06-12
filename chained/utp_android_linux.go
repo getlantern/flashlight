@@ -1,3 +1,5 @@
+// +build android linux
+
 package chained
 
 import "errors"
