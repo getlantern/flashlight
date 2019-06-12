@@ -135,12 +135,6 @@ func (helper *Helper) Close() {
 	}
 }
 
-// SetProtocol sets the protocol to use when connecting to the test proxy
-// (updates the config served by the config server).
-func (helper *Helper) SetProtocol(protocol string) {
-	helper.protocol.Store(protocol)
-}
-
 func (helper *Helper) startWebServer() error {
 	lh, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
