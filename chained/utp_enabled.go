@@ -1,12 +1,13 @@
-// +build !android,!linux
+// +build windows darwin,amd64
 
 package chained
 
 import (
 	"context"
-	utp "github.com/anacrolix/go-libutp"
 	"net"
 	"time"
+
+	utp "github.com/anacrolix/go-libutp"
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/mtime"
