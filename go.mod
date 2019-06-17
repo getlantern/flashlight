@@ -35,21 +35,20 @@ require (
 	github.com/getlantern/event v0.0.0-20170919023932-f16a5563f52e
 	github.com/getlantern/eventual v0.0.0-20180125201821-84b02499361b
 	github.com/getlantern/filepersist v0.0.0-20160317154340-c5f0cd24e799
-	github.com/getlantern/framed v0.0.0-20190306221922-7f7919c8cf9b // indirect
 	github.com/getlantern/fronted v0.0.0-20190606212108-e7744195eded
 	github.com/getlantern/geolookup v0.0.0-20180719190536-68d621f75f46
 	github.com/getlantern/go-cache v0.0.0-20141028142048-88b53914f467 // indirect
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
 	github.com/getlantern/go-update v0.0.0-20190510022740-79c495ab728c // indirect
 	github.com/getlantern/golog v0.0.0-20170508214112-cca714f7feb5
-	github.com/getlantern/gotun v0.0.0-20190422200803-35dee1b197b5
+	github.com/getlantern/gotun v0.0.0-20190523194503-885514e382d2
 	github.com/getlantern/gowin v0.0.0-20160824205538-88fa116ddffc // indirect
 	github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55
 	github.com/getlantern/http-proxy v0.0.0-20181211022424-5b96142859a8 // indirect
 	github.com/getlantern/http-proxy-lantern v0.0.0-20190510153715-e005a9cd4425
 	github.com/getlantern/httpseverywhere v0.0.0-20180326165025-9bdb93e40695
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
-	github.com/getlantern/idletiming v0.0.0-20190331182121-9540d1aeda2b
+	github.com/getlantern/idletiming v0.0.0-20190529182719-d2fbc83372a5
 	github.com/getlantern/ipproxy v0.0.0-20190508162323-6329c3cbf2fa
 	github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42
 	github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644
@@ -67,7 +66,7 @@ require (
 	github.com/getlantern/notifier v0.0.0-20190531021800-64e5c4112f43
 	github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f
 	github.com/getlantern/osversion v0.0.0-20180309120706-8f3fb296110c
-	github.com/getlantern/packetforward v0.0.0-20190504050844-5be78b74b008
+	github.com/getlantern/packetforward v0.0.0-20190617161814-583f227df593
 	github.com/getlantern/pcapper v0.0.0-20181212174440-a8b1a3ff0cde // indirect
 	github.com/getlantern/preconn v0.0.0-20180328114929-0b5766010efe // indirect
 	github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff
@@ -102,7 +101,6 @@ require (
 	github.com/gonum/lapack v0.0.0-20180125091020-f0b8b25edece // indirect
 	github.com/gonum/matrix v0.0.0-20180124231301-a41cc49d4c29 // indirect
 	github.com/gonum/stat v0.0.0-20180125090729-ec9c8a1062f4 // indirect
-	github.com/google/gopacket v1.1.16 // indirect
 	github.com/gorilla/websocket v0.0.0-20180306181548-eb925808374e
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/huandu/xstrings v1.2.0 // indirect
@@ -136,7 +134,7 @@ require (
 	github.com/tjfoc/gmsm v0.0.0-20180404022540-0effa9db1ba8 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.0.7 // indirect
-	golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c
+	golang.org/x/net v0.0.0-20190509222800-a4d6f7feada5
 )
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20190606183433-1266fdfeb581
