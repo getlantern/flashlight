@@ -51,12 +51,13 @@ type FrontedConfig struct {
 	Providers map[string]*ProviderConfig
 }
 
-// Configuration structure for a parciular fronting provider (cloudfront, akamai, etc)
+// Configuration structure for a particular fronting provider (cloudfront, akamai, etc)
 type ProviderConfig struct {
-	HostAliases map[string]string
-	TestURL     string
-	Masquerades []*fronted.Masquerade
-	Validator   *ValidatorConfig
+	HostAliases         map[string]string
+	TestURL             string
+	Masquerades         []*fronted.Masquerade
+	Validator           *ValidatorConfig
+	PassthroughPatterns []string
 }
 
 // returns a fronted.ResponseValidator specified by the
@@ -117,6 +118,7 @@ func (c *ClientConfig) FrontedProviders() map[string]*fronted.Provider {
 			CloudfrontTestURL,
 			c.MasqueradeSets[pid],
 			fronted.NewStatusCodeValidator(cloudfrontBadStatus),
+			nil,
 		)
 		log.Debugf("Added default provider details for '%s'", pid)
 	} else {
@@ -126,6 +128,7 @@ func (c *ClientConfig) FrontedProviders() map[string]*fronted.Provider {
 				p.TestURL,
 				p.Masquerades,
 				p.GetResponseValidator(pid),
+				p.PassthroughPatterns,
 			)
 		}
 	}

@@ -63,7 +63,12 @@ func (c testSession) SerializedInternalHeaders() string {
 
 func TestProxying(t *testing.T) {
 
-	helper, err := integrationtest.NewHelper(t, "localhost:19347", "localhost:19348", "localhost:19349", "localhost:19350", "localhost:19351")
+	listenPort := 24000
+	nextListenAddr := func() string {
+		listenPort++
+		return fmt.Sprintf("localhost:%d", listenPort)
+	}
+	helper, err := integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
 	if assert.NoError(t, err, "Unable to create temp configDir") {
 		defer helper.Close()
 		result, err := Start(helper.ConfigDir, "en_US", testSettings{}, testSession{})
