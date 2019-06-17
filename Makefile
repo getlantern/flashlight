@@ -41,7 +41,7 @@ define build-tags
 	EXTRA_LDFLAGS=$$(echo $$EXTRA_LDFLAGS | xargs) && echo "Extra ldflags: $$EXTRA_LDFLAGS"
 endef
 
-.PHONY: lantern update-icons vendor novendor
+.PHONY: lantern update-icons vendor
 
 lantern: $(SOURCES)
 	@$(call build-tags) && \
