@@ -22,7 +22,7 @@ if ipre.match(name_or_ip):
 else:
     name = name_or_ip
 
-access_data = r.hget('server->config', name)
+access_data = r.hget('server->config', name) if name else None
 if access_data:
     print "Loaded access data from redis"
     cfgs = yaml.load(access_data).values()

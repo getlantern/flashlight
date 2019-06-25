@@ -2,7 +2,7 @@
 
 ### Prerequisites
 
-* [Go 1.11](https://golang.org/dl/) is the minimum supported version of Go
+* [Go 1.12](https://golang.org/dl/) is the minimum supported version of Go
 * [GNU Make](https://www.gnu.org/software/make/) if you want to use the Makefile
 * Dependencies are managed with Go Modules. Use `GO111MODULE=on` in front of `go`
   command to automatically pick up dependencies.
@@ -13,10 +13,14 @@ This repo contains the core Lantern logic as well as the Lantern desktop
 program. To build using your gopath: 
 
 `make lantern`
+### Dependency Management
+Dependencies are managed using Go modules. If using a Go version prior to 1.13, you'll need to set the environment variable `GO111MODULE=on` in order to pick up dependencies automatically.
 
-After running `make vendor` or `make novendor`, you don't need to run them again
-unless you want to switch to/from using vendored dependencies.  After that, you
-can just use `make`.
+### Building
+This repo contains the core Lantern logic as well as the Lantern desktop
+program. To build using your gopath: 
+
+`GO111MODULE=on make lantern`
 
 You can also just build using the usual `go install` etc.
 

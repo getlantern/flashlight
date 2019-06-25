@@ -126,7 +126,7 @@ func Client(packetsOut Writer, configDir string, mtu int) (WriteCloser, error) {
 	c := &client{
 		packetsOut: packetsOut,
 		configDir:  configDir,
-		mtu:        mtu,
+		mtu:        mtu, // hardcoding this to support large segments
 	}
 
 	return c.start()
@@ -146,7 +146,7 @@ func (c *client) start() (WriteCloser, error) {
 	}
 	bal := balancer.New(30*time.Second, dialers...)
 
-	w := packetforward.Client(&writerAdapter{c.packetsOut}, c.mtu, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
+	w := packetforward.Client(&writerAdapter{c.packetsOut}, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
 		return bal.DialContext(ctx, "connect", "127.0.0.1:3000")
 	})
 	return &wc{

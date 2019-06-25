@@ -1,12 +1,9 @@
 DISABLE_PORT_RANDOMIZATION ?=
-DEP_BIN    ?= $(shell which dep)
 GOBINDATA_BIN ?= $(shell which go-bindata)
 
 SHELL := /bin/bash
 SOURCES := $(shell find . -name '*[^_test].go')
 BINARY_NAME := lantern
-
-.PHONY: lantern update-icons
 
 BUILD_RACE := '-race'
 REVISION_DATE := $(shell git log -1 --pretty=format:%ad --date=format:%Y%m%d.%H%M%S)
@@ -44,26 +41,27 @@ define build-tags
 	EXTRA_LDFLAGS=$$(echo $$EXTRA_LDFLAGS | xargs) && echo "Extra ldflags: $$EXTRA_LDFLAGS"
 endef
 
+.PHONY: lantern update-icons vendor
+
 lantern: $(SOURCES)
 	@$(call build-tags) && \
 	GO111MODULE=on CGO_ENABLED=1 go build $(BUILD_RACE) -o $$BINARY_NAME -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s" github.com/getlantern/flashlight/main;
 
 windowscli: $(SOURCES)
 	@$(call build-tags) && \
-	GO111MODULE=on GOOS=windows GOARCH=386 CGO_ENABLED=1 go build -o $$BINARY_NAME-cli.exe -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
+	GOOS=windows GOARCH=386 CGO_ENABLED=1 CXX=i686-w64-mingw32-g++ CC=i686-w64-mingw32-gcc CGO_LDFLAGS="-static" go build -o $$BINARY_NAME-cli.exe -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
 
 windowsgui: $(SOURCES)
 	@$(call build-tags) && \
-	GO111MODULE=on GOOS=windows GOARCH=386 CGO_ENABLED=1 go build -a -o $$BINARY_NAME-gui.exe -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS -H=windowsgui" github.com/getlantern/flashlight/main;
+	GOOS=windows GOARCH=386 CGO_ENABLED=1 CXX=i686-w64-mingw32-g++ CC=i686-w64-mingw32-gcc CGO_LDFLAGS="-static" go build -a -o $$BINARY_NAME-gui.exe -tags="$$BUILD_TAGS" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS -H=windowsgui" github.com/getlantern/flashlight/main;
 
 linux: $(SOURCES)
 	@$(call build-tags) && \
-	GO111MODULE=on HEADLESS=true GOOS=linux GOARCH=amd64 go build -o $$BINARY_NAME-linux -tags="$$BUILD_TAGS headless" -ldflags="$$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
+	HEADLESS=true GOOS=linux GOARCH=amd64 go build -o $$BINARY_NAME-linux -tags="$$BUILD_TAGS headless" -ldflags="$$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
 
-require-dep:
-	@if [ "$(DEP_BIN)" = "" ]; then \
-		echo 'Missing "dep" command. See https://github.com/golang/dep' && exit 1; \
-	fi
+# vendor installs vendored dependencies using Dep
+vendor:
+	GO111MODULE=on go mod vendor
 
 # test go-bindata dependency and update icons if up-to-date
 update-icons:

@@ -79,7 +79,7 @@ func ciphersFromNames(cipherNames []string) []uint16 {
 
 func (s *ChainedServerInfo) clientHelloID() tls.ClientHelloID {
 	chid := availableClientHelloIDs[s.TLSClientHelloID]
-	if chid.Browser == "" {
+	if chid.Client == "" {
 		chid = tls.HelloGolang
 	}
 	return chid
