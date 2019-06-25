@@ -227,6 +227,8 @@ github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0 h1:1VNkP55LM/W2Iw
 github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0/go.mod h1:u537FS7ld4Whf7h7/0ql/myAudWWBNgeRhgE9XXH4Pk=
 github.com/getlantern/netstack v0.0.0-20190314012628-8999826b821d h1:OdUecyGf1onSX0BF4nsgEcmKA5ipzNpLoSPsxmveRpU=
 github.com/getlantern/netstack v0.0.0-20190314012628-8999826b821d/go.mod h1:boCZS+mc2Ckrx/BUsPJx3yaoyidXIn/xzXwV9CQtHw4=
+github.com/getlantern/netstack v0.0.0-20190625160138-4119e572c899 h1:Av2+bFX7TRtunvp7gW7gUTRRTnANCtQd+mpUaDDajnM=
+github.com/getlantern/netstack v0.0.0-20190625160138-4119e572c899/go.mod h1:boCZS+mc2Ckrx/BUsPJx3yaoyidXIn/xzXwV9CQtHw4=
 github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd h1:mn98vs69Kqw56iKhR82mjk16Q1q5aDFFW0E89/QbXkQ=
 github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd/go.mod h1:wKdY0ikOgzrWSeB9UyBVKPRhjXQ+vTb+BPeJuypUuNE=
 github.com/getlantern/notifier v0.0.0-20170512210300-9d71672e9d5d/go.mod h1:dgCSWfbCX84zBubRz6GC/2GAcrglM0CEmwjjflGhr8k=
