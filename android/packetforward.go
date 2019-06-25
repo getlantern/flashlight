@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/gotun"
+	tun "github.com/getlantern/gotun"
 	"github.com/getlantern/packetforward"
 )
 
@@ -28,7 +28,7 @@ func Tun2PacketForward(fd int, tunAddr, gwAddr string, mtu int) error {
 		return errors.New("Unable to get balancer within 30 seconds")
 	}
 
-	w := packetforward.Client(dev, mtu, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
+	w := packetforward.Client(dev, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
 		return bal.DialContext(ctx, "connect", "127.0.0.1:3000")
 	})
 
