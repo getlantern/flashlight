@@ -1,4 +1,4 @@
-// +build windows darwin,amd64
+// +build linux windows darwin,amd64
 
 package chained
 
