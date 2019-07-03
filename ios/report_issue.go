@@ -11,7 +11,7 @@ import (
 )
 
 func init() {
-	email.SetDefaultRecipient("report-issue@getlantern.org")
+	email.SetDefaultRecipient("getlantern@inbox.groovehq.com")
 
 	go func() {
 		log.Debug("Getting fronted transport to use for submitting issues")
