@@ -43,6 +43,7 @@ github.com/aristanetworks/goarista v0.0.0-20190514202536-8f808a500156 h1:sdAZ4pJ
 github.com/aristanetworks/goarista v0.0.0-20190514202536-8f808a500156/go.mod h1:D/tb0zPVXnP7fmsLZjtdUhSsumbK/ij54UXjjVgMGxQ=
 github.com/aristanetworks/goarista v0.0.0-20190625195245-f3b0eb5a88b2 h1:j6qQji0+fi+Tq0mccuuvGBZ9xxukks+ingV70iHsub4=
 github.com/aristanetworks/goarista v0.0.0-20190625195245-f3b0eb5a88b2/go.mod h1:D/tb0zPVXnP7fmsLZjtdUhSsumbK/ij54UXjjVgMGxQ=
+github.com/aristanetworks/goarista v0.0.0-20190628000427-15fc8b0bfcde/go.mod h1:D/tb0zPVXnP7fmsLZjtdUhSsumbK/ij54UXjjVgMGxQ=
 github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc h1:/WQ8Tr5zbclKWAtvafIcAk/njNpW3gtd22TLLouv+6Q=
 github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
@@ -112,6 +113,8 @@ github.com/getlantern/bytemap v0.0.0-20180417025909-c7bf952233bc/go.mod h1:DFhUk
 github.com/getlantern/cmux v0.0.0-20181009211959-acf511a0dc7c/go.mod h1:fksim1JCv8KM8C2mKKIQ1XhUL/G8FYg14PW+E5upaWU=
 github.com/getlantern/cmux v0.0.0-20190603154336-e647fe9f0842 h1:rGqMX7aN1vLd6riOM9J26a82Jnyxe8MkT9207r9+DAo=
 github.com/getlantern/cmux v0.0.0-20190603154336-e647fe9f0842/go.mod h1:fksim1JCv8KM8C2mKKIQ1XhUL/G8FYg14PW+E5upaWU=
+github.com/getlantern/cmux v0.0.0-20190702172423-a16efed20804 h1:ngv6tmqAnJeYFcL+Yl3/O7TJp6nLJELTYh8rcLPH4Zw=
+github.com/getlantern/cmux v0.0.0-20190702172423-a16efed20804/go.mod h1:ak//nofE03p8SHfC3biXMf34fqC8xCdvIFveHWm8E7c=
 github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 h1:NRUJuo3v3WGC/g5YiyF790gut6oQr5f3FBI88Wv0dx4=
 github.com/getlantern/context v0.0.0-20190109183933-c447772a6520/go.mod h1:L+mq6/vvYHKjCX2oez0CgEAJmbq1fbb/oNJIWQkBybY=
 github.com/getlantern/detour v0.0.0-20190122161414-7107a599a170 h1:CdO/ANUQWFnUhbUnLUJvoeqfYE1dAO5Zhd/bvvhzNv4=
@@ -297,6 +300,8 @@ github.com/getlantern/tinywss v0.0.0-20190603141034-49fb977700a3 h1:26IYWRipBhnd
 github.com/getlantern/tinywss v0.0.0-20190603141034-49fb977700a3/go.mod h1:M/qiq0waagRvmKeCXo5afO0UxiGaHtqE2BX3BAyQlcE=
 github.com/getlantern/tinywss v0.0.0-20190706002441-04d50859cf88 h1:85LDlhLaoYZKdp4xzE/BFu07RmbQ4KTI2HCUTD50IFo=
 github.com/getlantern/tinywss v0.0.0-20190706002441-04d50859cf88/go.mod h1:BvZAb/JWDLza0l0WqFjtgBKsxutotdlJp871yokil20=
+github.com/getlantern/tinywss v0.0.0-20190708150441-b3c3bde6a6a5 h1:YVrpwVjrUkoK8rTEPT2u27L79Z9Ye8VLlgx4S6tw0uw=
+github.com/getlantern/tinywss v0.0.0-20190708150441-b3c3bde6a6a5/go.mod h1:BvZAb/JWDLza0l0WqFjtgBKsxutotdlJp871yokil20=
 github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4 h1:73U3J4msGw3cXeKtCEbY7hbOdD6aX8gJv8BOu+VagF8=
 github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4/go.mod h1:f8WmDYKFOaC5/y0d3GWl6UKf1ZbSlIoMzkuC8x7pUhg=
 github.com/getlantern/tlsdialer v0.0.0-20180712141225-bae89e3a58a7 h1:C9BC2oU+8kF5iHFPeDUO2UhHr2bImLgqwMCTeoIk1Q0=

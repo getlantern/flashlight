@@ -17,7 +17,7 @@ require (
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20190612212110-050956b70e0f
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
-	github.com/getlantern/cmux v0.0.0-20190603154336-e647fe9f0842
+	github.com/getlantern/cmux v0.0.0-20190702172423-a16efed20804
 	github.com/getlantern/detour v0.0.0-20190122161414-7107a599a170
 	github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041 // indirect
 	github.com/getlantern/dnsgrab v0.0.0-20171025121014-227f729dcb41
@@ -70,7 +70,7 @@ require (
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
 	github.com/getlantern/systray v0.0.0-20181206010516-eaad7114094d
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
-	github.com/getlantern/tinywss v0.0.0-20190706002441-04d50859cf88
+	github.com/getlantern/tinywss v0.0.0-20190708150441-b3c3bde6a6a5
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
 	github.com/getlantern/tlsdialer v0.0.0-20190606180931-1ac26445d532
 	github.com/getlantern/uuid v1.2.0
