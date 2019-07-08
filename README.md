@@ -4,9 +4,15 @@
 
 * [Go 1.12](https://golang.org/dl/) is the minimum supported version of Go
 * [GNU Make](https://www.gnu.org/software/make/) if you want to use the Makefile
+* Dependencies are managed with Go Modules. Use `GO111MODULE=on` in front of `go`
+  command to automatically pick up dependencies.
 * Force git to use ssh instead of https by running
   `git config --global url."git@github.com:".insteadOf "https://github.com/"`
 
+This repo contains the core Lantern logic as well as the Lantern desktop
+program. To build using your gopath: 
+
+`make lantern`
 ### Dependency Management
 Dependencies are managed using Go modules. If using a Go version prior to 1.13, you'll need to set the environment variable `GO111MODULE=on` in order to pick up dependencies automatically.
 

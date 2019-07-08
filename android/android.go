@@ -13,7 +13,9 @@ import (
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/autoupdate"
 	"github.com/getlantern/dnsgrab"
+	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight"
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
@@ -49,8 +51,7 @@ var (
 
 	startOnce sync.Once
 
-	cl   *client.Client
-	clMu sync.Mutex
+	cl = eventual.NewValue()
 )
 
 type Settings interface {
@@ -135,23 +136,34 @@ type SocketProtector interface {
 // The DNS server is used to resolve host only when dialing a protected connection
 // from within Lantern client.
 func ProtectConnections(protector SocketProtector, dnsServer string) {
+	log.Debug("Protecting connections")
 	p := protected.New(protector.ProtectConn, dnsServer)
 	netx.OverrideDial(p.DialContext)
 	netx.OverrideDialUDP(p.DialUDP)
 	netx.OverrideResolve(p.ResolveTCP)
 	netx.OverrideResolveUDP(p.ResolveUDP)
 	netx.OverrideListenUDP(p.ListenUDP)
-	clMu.Lock()
-	defer clMu.Unlock()
-	if cl != nil && cl.GetBalancer() != nil {
-		cl.GetBalancer().ResetFromExisting()
+	bal := GetBalancer(0)
+	if bal != nil {
+		log.Debug("Protected after balancer already created, force redial")
+		bal.ResetFromExisting()
 	}
 }
 
 // RemoveOverrides removes the protected tlsdialer overrides
 // that allowed connections to bypass the VPN.
 func RemoveOverrides() {
+	log.Debug("Removing overrides")
 	netx.Reset()
+}
+
+func GetBalancer(timeout time.Duration) *balancer.Balancer {
+	_cl, ok := cl.Get(timeout)
+	if !ok {
+		return nil
+	}
+	c := _cl.(*client.Client)
+	return c.GetBalancer()
 }
 
 type SurveyInfo struct {
@@ -239,6 +251,11 @@ func Exit() {
 	os.Exit(0)
 }
 
+// EnableLogging enables logging.
+func EnableLogging(configDir string) {
+	logging.EnableFileLogging(configDir)
+}
+
 func run(configDir, locale string,
 	settings Settings, session Session) {
 
@@ -266,8 +283,6 @@ func run(configDir, locale string,
 		flags["stickyconfig"] = true
 		flags["readableconfig"] = true
 	}
-
-	logging.EnableFileLogging(configDir)
 
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
@@ -304,9 +319,7 @@ func run(configDir, locale string,
 			return true
 		}, // beforeStart()
 		func(c *client.Client) {
-			clMu.Lock()
-			cl = c
-			clMu.Unlock()
+			cl.Set(c)
 			afterStart(session)
 		},
 		func(cfg *config.Global) {
