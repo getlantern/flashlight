@@ -41,6 +41,8 @@ github.com/aristanetworks/goarista v0.0.0-20190502180301-283422fc1708 h1:tS7jSmw
 github.com/aristanetworks/goarista v0.0.0-20190502180301-283422fc1708/go.mod h1:D/tb0zPVXnP7fmsLZjtdUhSsumbK/ij54UXjjVgMGxQ=
 github.com/aristanetworks/goarista v0.0.0-20190514202536-8f808a500156 h1:sdAZ4pJ5nD/EzLkcw4AonvhgrU1aBKxx6ga1b7Psr9o=
 github.com/aristanetworks/goarista v0.0.0-20190514202536-8f808a500156/go.mod h1:D/tb0zPVXnP7fmsLZjtdUhSsumbK/ij54UXjjVgMGxQ=
+github.com/aristanetworks/goarista v0.0.0-20190625195245-f3b0eb5a88b2/go.mod h1:D/tb0zPVXnP7fmsLZjtdUhSsumbK/ij54UXjjVgMGxQ=
+github.com/aristanetworks/goarista v0.0.0-20190704150520-f44d68189fd7/go.mod h1:D/tb0zPVXnP7fmsLZjtdUhSsumbK/ij54UXjjVgMGxQ=
 github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc h1:/WQ8Tr5zbclKWAtvafIcAk/njNpW3gtd22TLLouv+6Q=
 github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
@@ -101,6 +103,8 @@ github.com/getlantern/borda v0.0.0-20190612212110-050956b70e0f h1:RRdSAImLFelG6N
 github.com/getlantern/borda v0.0.0-20190612212110-050956b70e0f/go.mod h1:Q6bPwUEC2j5bRP323rj8LDRtc9OE/b9LocqxPomecgg=
 github.com/getlantern/bufconn v0.0.0-20190503112805-6402607914eb h1:zjMEZxOpOCurtNXOOpbR3BUiymg9RSOHg4Zpyrvv0nY=
 github.com/getlantern/bufconn v0.0.0-20190503112805-6402607914eb/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
+github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d h1:gE5pWSEYfMvSETsTanqINNLmv+nuyUjwcm9jOyqJJZI=
+github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
 github.com/getlantern/byteexec v0.0.0-20170405023437-4cfb26ec74f4 h1:Nqmy8i81dzokjNHpyOg24gnQBeGRF7D51m8HmBRNn0Y=
 github.com/getlantern/byteexec v0.0.0-20170405023437-4cfb26ec74f4/go.mod h1:4WCQkaCIwta0KlF9bQZA1jYqp8bzIS2PeCqjnef8nZ8=
 github.com/getlantern/bytemap v0.0.0-20180417025909-c7bf952233bc h1:TVT95IccIoeFnFPD169fak0Uxr0NSwgcqVI+oLPDdNo=
@@ -221,6 +225,7 @@ github.com/getlantern/mitm v0.0.0-20180205214248-4ce456bae650 h1:n3CmLDgXI1AUbyb
 github.com/getlantern/mitm v0.0.0-20180205214248-4ce456bae650/go.mod h1:jmIVbVxSVLdeY5hlD+6chiOR/9CdzPjVgIIQphviCl0=
 github.com/getlantern/mockconn v0.0.0-20190403061815-a8ffa60494a6 h1:+aO65ByJw74kV8vXqvkj49P5RtIqyUObyeRTIxMz218=
 github.com/getlantern/mockconn v0.0.0-20190403061815-a8ffa60494a6/go.mod h1:+F5GJ7qGpQ03DBtcOEyQpM30ix4BLswdaojecFtsdy8=
+github.com/getlantern/mockconn v0.0.0-20190708122800-637bd46d8034/go.mod h1:+F5GJ7qGpQ03DBtcOEyQpM30ix4BLswdaojecFtsdy8=
 github.com/getlantern/msgpack v3.1.4+incompatible h1:/XyJ9HTt8W31F6DjgOv+Nk+qKeKcv9kxp6hOww4pj1k=
 github.com/getlantern/msgpack v3.1.4+incompatible/go.mod h1:mUNR5C/x5E/8Jb8gU/lQd/ytwpKDhUvmGUj0STqInhc=
 github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0 h1:1VNkP55LM/W2IwWN+qi+5X3gZcEQHfj8X9E+FNxVgM4=
@@ -291,6 +296,8 @@ github.com/getlantern/tinywss v0.0.0-20190602234724-8d81aaf624e6 h1:E+rVf4nz1syn
 github.com/getlantern/tinywss v0.0.0-20190602234724-8d81aaf624e6/go.mod h1:M/qiq0waagRvmKeCXo5afO0UxiGaHtqE2BX3BAyQlcE=
 github.com/getlantern/tinywss v0.0.0-20190603141034-49fb977700a3 h1:26IYWRipBhndF6ICcm3w6J1+4RjVNKzKkaI6EPzTZPE=
 github.com/getlantern/tinywss v0.0.0-20190603141034-49fb977700a3/go.mod h1:M/qiq0waagRvmKeCXo5afO0UxiGaHtqE2BX3BAyQlcE=
+github.com/getlantern/tinywss v0.0.0-20190708150441-b3c3bde6a6a5 h1:YVrpwVjrUkoK8rTEPT2u27L79Z9Ye8VLlgx4S6tw0uw=
+github.com/getlantern/tinywss v0.0.0-20190708150441-b3c3bde6a6a5/go.mod h1:BvZAb/JWDLza0l0WqFjtgBKsxutotdlJp871yokil20=
 github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4 h1:73U3J4msGw3cXeKtCEbY7hbOdD6aX8gJv8BOu+VagF8=
 github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4/go.mod h1:f8WmDYKFOaC5/y0d3GWl6UKf1ZbSlIoMzkuC8x7pUhg=
 github.com/getlantern/tlsdialer v0.0.0-20180712141225-bae89e3a58a7 h1:C9BC2oU+8kF5iHFPeDUO2UhHr2bImLgqwMCTeoIk1Q0=
@@ -565,6 +572,8 @@ github.com/willf/bitset v1.1.10/go.mod h1:RjeCKbqT1RxIR/KWY6phxZiaY1IyutSBfGjNPy
 github.com/xtaci/smux v0.0.0-20181001031909-545ecee9d2a9/go.mod h1:f+nYm6SpuHMy/SH0zpbvAFHT1QoMcgLOsWcFip5KfPw=
 github.com/xtaci/smux v1.0.7 h1:ragFTIwevybZKibSfltLxG2biJ4Y9eFQGhcBntoEhz4=
 github.com/xtaci/smux v1.0.7/go.mod h1:f+nYm6SpuHMy/SH0zpbvAFHT1QoMcgLOsWcFip5KfPw=
+github.com/xtaci/smux v1.3.3 h1:+vnzZHTLGHrj+LzUZEkKmvu4KkG7fj4jwMPqhawvErg=
+github.com/xtaci/smux v1.3.3/go.mod h1:f+nYm6SpuHMy/SH0zpbvAFHT1QoMcgLOsWcFip5KfPw=
 github.com/xwb1989/sqlparser v0.0.0-20171128062118-da747e0c62c4/go.mod h1:hzfGeIUDq/j97IG+FhNqkowIyEcD88LrW6fyU3K3WqY=
 github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2 h1:zzrxE1FKn5ryBNl9eKOeqQ58Y/Qpo3Q9QNxKHX5uzzQ=
 github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2/go.mod h1:hzfGeIUDq/j97IG+FhNqkowIyEcD88LrW6fyU3K3WqY=
