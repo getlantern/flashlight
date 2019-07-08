@@ -43,6 +43,7 @@ github.com/aristanetworks/goarista v0.0.0-20190514202536-8f808a500156 h1:sdAZ4pJ
 github.com/aristanetworks/goarista v0.0.0-20190514202536-8f808a500156/go.mod h1:D/tb0zPVXnP7fmsLZjtdUhSsumbK/ij54UXjjVgMGxQ=
 github.com/aristanetworks/goarista v0.0.0-20190625195245-f3b0eb5a88b2 h1:j6qQji0+fi+Tq0mccuuvGBZ9xxukks+ingV70iHsub4=
 github.com/aristanetworks/goarista v0.0.0-20190625195245-f3b0eb5a88b2/go.mod h1:D/tb0zPVXnP7fmsLZjtdUhSsumbK/ij54UXjjVgMGxQ=
+github.com/aristanetworks/goarista v0.0.0-20190628000427-15fc8b0bfcde h1:K99m0kwjkqQ7hWRhWf4D+aC5BqUV5HREDlOzlZWb0/Q=
 github.com/aristanetworks/goarista v0.0.0-20190628000427-15fc8b0bfcde/go.mod h1:D/tb0zPVXnP7fmsLZjtdUhSsumbK/ij54UXjjVgMGxQ=
 github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc h1:/WQ8Tr5zbclKWAtvafIcAk/njNpW3gtd22TLLouv+6Q=
 github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
