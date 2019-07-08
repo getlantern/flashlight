@@ -636,10 +636,9 @@ func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHija
 	}
 
 	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
-		log.Debugf("tinywss Roundtripper dial...")
+		log.Debugf("tinywss Roundtripper dialing %v", addr)
 		conn, err := td.Dial(network, addr)
 		if err != nil {
-			log.Errorf("tlsdialer failed with: %s", err)
 			return nil, err
 		}
 		serverCert := conn.ConnectionState().PeerCertificates[0]
