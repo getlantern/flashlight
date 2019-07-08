@@ -41,8 +41,7 @@ import (
 )
 
 var (
-	log = golog.LoggerFor("flashlight.client")
-
+	clientLogger        = golog.LoggerFor("flashlight.client")
 	addr                = eventual.NewValue()
 	socksAddr           = eventual.NewValue()
 	proxiedCONNECTPorts = []int{
@@ -137,6 +136,8 @@ type Client struct {
 
 	httpProxyIP   string
 	httpProxyPort string
+	log           golog.Logger
+	ctx           context.Context
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -152,6 +153,7 @@ func NewClient(
 	lang func() string,
 	adSwapTargetURL func() string,
 	reverseDNS func(addr string) string,
+	ctx context.Context,
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
 	rewriteLRU, err := lru.New(100)
@@ -172,6 +174,8 @@ func NewClient(
 		lang:              lang,
 		adSwapTargetURL:   adSwapTargetURL,
 		reverseDNS:        reverseDNS,
+		log:               clientLogger,
+		ctx:               ctx,
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -211,7 +215,7 @@ func NewClient(
 		IdleTimeout:  keepAliveIdleTimeout,
 		BufferSource: buffers.Pool,
 		Filter:       filters.FilterFunc(client.filter),
-		OnError:      errorResponse,
+		OnError:      client.errorResponse,
 		Dial:         client.dial,
 		MITMOpts:     mitmOpts,
 		ShouldMITM: func(req *http.Request, upstreamAddr string) bool {
@@ -224,7 +228,7 @@ func NewClient(
 		},
 	})
 	if mitmErr != nil {
-		log.Errorf("Unable to initialize MITM: %v", mitmErr)
+		client.log.Errorf("Unable to initialize MITM: %v", mitmErr)
 	}
 	client.reportProxyLocationLoop()
 	client.iptool, err = iptool.New()
@@ -247,7 +251,7 @@ func (client *Client) reportProxyLocationLoop() {
 			if proxy.Name() == activeProxy {
 				continue
 			}
-			countryCode, country, city := proxyLoc(proxy)
+			countryCode, country, city := client.proxyLoc(proxy)
 			client.statsTracker.SetActiveProxyLocation(
 				city,
 				country,
@@ -290,11 +294,11 @@ func (client *Client) Socks5Addr(timeout time.Duration) (interface{}, bool) {
 func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn func()) error {
 	var err error
 	var l net.Listener
-	log.Debugf("About to listen at '%s'", requestedAddr)
+	client.log.Debugf("About to listen at '%s'", requestedAddr)
 	if l, err = net.Listen("tcp", requestedAddr); err != nil {
-		log.Debugf("Error listening at '%s', fallback to default: %v", requestedAddr, err)
+		client.log.Debugf("Error listening at '%s', fallback to default: %v", requestedAddr, err)
 		requestedAddr = "127.0.0.1:0"
-		log.Debugf("About to listen at '%s'", requestedAddr)
+		client.log.Debugf("About to listen at '%s'", requestedAddr)
 		if l, err = net.Listen("tcp", requestedAddr); err != nil {
 			return fmt.Errorf("Unable to listen: %q", err)
 		}
@@ -306,13 +310,13 @@ func (client *Client) ListenAndServeHTTP(requestedAddr string, onListeningFn fun
 	client.httpProxyIP, client.httpProxyPort, _ = net.SplitHostPort(listenAddr)
 	onListeningFn()
 
-	log.Debugf("About to start HTTP client proxy at %v", listenAddr)
+	client.log.Debugf("About to start HTTP client proxy at %v", listenAddr)
 	for {
 		start := time.Now()
 		conn, err := l.Accept()
 		if err != nil {
 			if time.Since(start) >= 10*time.Second {
-				log.Debugf("Error serving HTTP client proxy at %v, restarting: %v", listenAddr, err)
+				client.log.Debugf("Error serving HTTP client proxy at %v, restarting: %v", listenAddr, err)
 				time.Sleep(100 * time.Millisecond)
 				continue
 			}
@@ -340,7 +344,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 			addr := client.reverseDNS(fmt.Sprintf("%v:%v", req.DestAddr.IP, req.DestAddr.Port))
 			errOnReply := replySuccess(nil)
 			if errOnReply != nil {
-				return op.FailIf(log.Errorf("Unable to reply success to SOCKS5 client: %v", errOnReply))
+				return op.FailIf(client.log.Errorf("Unable to reply success to SOCKS5 client: %v", errOnReply))
 			}
 			return op.FailIf(client.proxy.Connect(ctx, req.BufConn, conn, addr))
 		},
@@ -350,17 +354,17 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 		return fmt.Errorf("Unable to create SOCKS5 server: %v", err)
 	}
 
-	log.Debugf("About to start SOCKS5 client proxy at %v", listenAddr)
+	client.log.Debugf("About to start SOCKS5 client proxy at %v", listenAddr)
 	return server.Serve(l)
 }
 
 // Configure updates the client's configuration. Configure can be called
 // before or after ListenAndServe, and can be called multiple times.
 func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo) {
-	log.Debug("Configure() called")
+	client.log.Debug("Configure() called")
 	err := client.initBalancer(proxies)
 	if err != nil {
-		log.Error(err)
+		client.log.Error(err)
 	}
 }
 
@@ -403,8 +407,8 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		}
 		start := time.Now()
 		conn, err := client.bal.DialContext(ctx, proto, addr)
-		if log.IsTraceEnabled() {
-			log.Tracef("Dialing proxy takes %v for %s", time.Since(start), addr)
+		if client.log.IsTraceEnabled() {
+			client.log.Tracef("Dialing proxy takes %v for %s", time.Since(start), addr)
 		}
 		return conn, err
 	}
@@ -414,7 +418,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 	}
 
 	if err := client.allowSendingToProxy(addr); err != nil {
-		log.Debugf("%v, sending directly to %v", err, addr)
+		client.log.Debugf("%v, sending directly to %v", err, addr)
 		op.Set("force_direct", true)
 		op.Set("force_direct_reason", err.Error())
 		// Use netx because on Android, we need a special protected dialer.
@@ -423,7 +427,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 	}
 
 	dialDirectForShortcut := func(ctx context.Context, network, addr string, ip net.IP) (net.Conn, error) {
-		log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
+		client.log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
 		op.Set("shortcut_direct", true)
 		op.Set("shortcut_direct_ip", ip)
 		return netx.DialContext(ctx, "tcp", addr)
@@ -482,7 +486,7 @@ func (client *Client) shouldSendToProxy(addr string) bool {
 		return true
 	}
 	if requiresProxy(addr) {
-		log.Debugf("Address %v requires a proxy", addr)
+		client.log.Debugf("Address %v requires a proxy", addr)
 		return true
 	}
 	return false
@@ -581,7 +585,7 @@ func (client *Client) portForAddress(addr string) (int, error) {
 	return port, nil
 }
 
-func errorResponse(ctx filters.Context, req *http.Request, read bool, err error) *http.Response {
+func (client *Client) errorResponse(ctx filters.Context, req *http.Request, read bool, err error) *http.Response {
 	var htmlerr []byte
 
 	if req == nil {
@@ -601,7 +605,7 @@ func errorResponse(ctx filters.Context, req *http.Request, read bool, err error)
 		// from getting just a blank screen.
 		htmlerr, err = status.ErrorAccessingPage(req.Host, err)
 		if err != nil {
-			log.Debugf("Got error while generating status page: %q", err)
+			client.log.Debugf("Got error while generating status page: %q", err)
 		}
 	}
 

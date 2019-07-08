@@ -71,7 +71,8 @@ func Run(httpProxyAddr string,
 	userID func() int64,
 	lang func() string,
 	adSwapTargetURL func() string,
-	reverseDNS func(host string) string) error {
+	reverseDNS func(host string) string,
+	ctx context.Context) error {
 
 	// check # of goroutines every minute, print the top 5 stacks with most
 	// goroutines if the # exceeds 2000 and is increasing.
@@ -98,6 +99,7 @@ func Run(httpProxyAddr string,
 		lang,
 		adSwapTargetURL,
 		reverseDNS,
+		ctx,
 	)
 	if err != nil {
 		fatalErr := fmt.Errorf("Unable to initialize client: %v", err)

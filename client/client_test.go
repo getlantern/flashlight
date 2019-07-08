@@ -73,6 +73,7 @@ func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *C
 		func() string { return lang },
 		func() string { return adSwapTargetURL },
 		func(host string) string { return host },
+		context.Background(),
 	)
 	return client
 }

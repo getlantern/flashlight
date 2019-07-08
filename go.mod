@@ -3,10 +3,13 @@ module github.com/getlantern/flashlight
 go 1.12
 
 require (
+	cloud.google.com/go v0.40.0 // indirect
+	contrib.go.opencensus.io/exporter/jaeger v0.1.0 // indirect
 	git.torproject.org/pluggable-transports/goptlib.git v0.0.0-20180321061416-7d56ec4f381e
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/go-libutp v1.0.1
 	github.com/anacrolix/mmsg v1.0.0 // indirect
+	github.com/aristanetworks/goarista v0.0.0-20190628180533-8e7d5b18fe7a // indirect
 	github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc // indirect
 	github.com/beorn7/perks v1.0.0 // indirect
 	github.com/bifurcation/mint v0.0.0-20190129141059-83ba9bc2ead9 // indirect
@@ -77,8 +80,13 @@ require (
 	github.com/getlantern/wfilter v0.0.0-20160829163852-69cc8585ee9c
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20160317154340-79303eb9c0d9
+	github.com/getlantern/zenodb v0.0.0-20190618200703-0869a10e3c9c // indirect
 	github.com/go-ole/go-ole v1.2.1 // indirect
+	github.com/gogo/protobuf v1.2.0 // indirect
 	github.com/golang/gddo v0.0.0-20180703174436-daffe1f90ec5 // indirect
+	github.com/google/pprof v0.0.0-20190515194954-54271f7e092f // indirect
+	github.com/googleapis/gax-go/v2 v2.0.5 // indirect
+	github.com/gorilla/mux v1.7.2 // indirect
 	github.com/gorilla/websocket v0.0.0-20180306181548-eb925808374e
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
@@ -89,17 +97,36 @@ require (
 	github.com/mitchellh/go-server-timing v0.0.0-20180226015900-d145200e1f90
 	github.com/mitchellh/mapstructure v0.0.0-20180220230111-00c29f56e238
 	github.com/mitchellh/panicwrap v0.0.0-20170106182340-fce601fe5557
+	github.com/opentracing/opentracing-go v1.1.0 // indirect
+	github.com/oschwald/geoip2-golang v1.3.0 // indirect
+	github.com/oschwald/maxminddb-golang v1.3.1 // indirect
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
+	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829 // indirect
 	github.com/prometheus/common v0.4.0 // indirect
 	github.com/prometheus/procfs v0.0.0-20190507164030-5867b95ac084 // indirect
+	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a // indirect
 	github.com/refraction-networking/utls v0.0.0-00010101000000-000000000000
 	github.com/skratchdot/open-golang v0.0.0-20160302144031-75fb7ed4208c
 	github.com/stretchr/testify v1.3.0
 	github.com/tevino/abool v0.0.0-20170917061928-9b9efcf221b5
 	github.com/tjfoc/gmsm v0.0.0-20180404022540-0effa9db1ba8 // indirect
+	github.com/uber/jaeger-client-go v2.16.0+incompatible // indirect
+	github.com/uber/jaeger-lib v2.0.0+incompatible // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.0.7 // indirect
-	golang.org/x/net v0.0.0-20190514140710-3ec191127204
+	go.opencensus.io v0.22.0 // indirect
+	golang.org/x/crypto v0.0.0-20190621222207-cc06ce4a13d4 // indirect
+	golang.org/x/exp v0.0.0-20190627132806-fd42eb6b336f // indirect
+	golang.org/x/image v0.0.0-20190622003408-7e034cad6442 // indirect
+	golang.org/x/mobile v0.0.0-20190607214518-6fa95d984e88 // indirect
+	golang.org/x/net v0.0.0-20190628185345-da137c7871d7
+	golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb // indirect
+	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
+	golang.org/x/tools v0.0.0-20190628203336-59bec042292d // indirect
+	google.golang.org/api v0.7.0 // indirect
+	google.golang.org/appengine v1.6.1 // indirect
+	google.golang.org/genproto v0.0.0-20190627203621-eb59cef1c072 // indirect
+	google.golang.org/grpc v1.21.1 // indirect
 )
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20190606183433-1266fdfeb581

@@ -1,7 +1,6 @@
 package client
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/proxy/filters"
+	"go.opencensus.io/trace"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
@@ -25,16 +25,19 @@ var adSwapJavaScriptInjections = map[string]string{
 }
 
 func (client *Client) handle(conn net.Conn) error {
-	op, ctx := ops.BeginWithNewBeam("proxy", context.Background())
+	ctx, span := trace.StartSpan(client.ctx, "client.handle")
+	defer span.End()
+
 	// Set user agent connection to idle a little before the upstream connection
 	// so that we don't read data from the client after the upstream connection
 	// has already timed out.
 	conn = idletiming.Conn(conn, chained.IdleTimeout-1*time.Second, nil)
 	err := client.proxy.Handle(ctx, conn, conn)
 	if err != nil {
-		log.Error(op.FailIf(err))
+		//client.log.Error(op.FailIf(err))
+		client.log.Errorf("Could not handle request: %v", err)
 	}
-	op.End()
+	//op.End()
 	return err
 }
 
@@ -54,7 +57,7 @@ func normalizeExoAd(req *http.Request) (*http.Request, bool) {
 
 func (client *Client) filter(ctx filters.Context, req *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
 	if client.isHTTPProxyPort(req) {
-		log.Debugf("Reject proxy request to myself: %s", req.Host)
+		client.log.Debugf("Reject proxy request to myself: %s", req.Host)
 		// Not reveal any error text to the application.
 		return filters.Fail(ctx, req, http.StatusBadRequest, errors.New(""))
 	}
@@ -71,8 +74,10 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 		return client.interceptProRequest(ctx, req)
 	}
 
-	op := ops.FromContext(ctx)
-	op.UserAgent(req.Header.Get("User-Agent")).OriginFromRequest(req)
+	/*
+		op := ops.FromContext(ctx)
+		op.UserAgent(req.Header.Get("User-Agent")).OriginFromRequest(req)
+	*/
 
 	// Disable Ad swapping for now given that Ad blocking is completely
 	// removed.  A limited form of Ad blocking should be re-introduced before
@@ -91,9 +96,9 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 		// connection, we've stripped the CONNECT and actually performed the MITM
 		// at this point, so we have to check for that and skip redirecting to
 		// HTTPS in that case.
-		log.Tracef("Intercepting CONNECT %s", req.URL)
+		client.log.Tracef("Intercepting CONNECT %s", req.URL)
 	} else {
-		log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
+		client.log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
 		if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
 			// Don't redirect CORS requests as it means the HTML pages that
 			// initiate the requests were not HTTPS redirected. Redirecting
@@ -101,16 +106,16 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 			if origin := req.Header.Get("Origin"); origin == "" {
 				// Not rewrite recently rewritten URL to avoid redirect loop.
 				if t, ok := client.rewriteLRU.Get(httpsURL); ok && time.Since(t.(time.Time)) < httpsRewriteInterval {
-					log.Debugf("Not httpseverywhere redirecting to %v to avoid redirect loop", httpsURL)
+					client.log.Debugf("Not httpseverywhere redirecting to %v to avoid redirect loop", httpsURL)
 				} else {
 					client.rewriteLRU.Add(httpsURL, time.Now())
-					return client.redirectHTTPS(ctx, req, httpsURL, op)
+					return client.redirectHTTPS(ctx, req, httpsURL)
 				}
 			}
 
 		}
 		// Direct proxying can only be used for plain HTTP connections.
-		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
+		client.log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
 		// consumed and removed by http-proxy-lantern/versioncheck
 		req.Header.Set(common.VersionHeader, common.Version)
 	}
@@ -150,13 +155,13 @@ func (client *Client) isHTTPProxyPort(r *http.Request) bool {
 // interceptProRequest specifically looks for and properly handles pro server
 // requests (similar to desktop's APIHandler)
 func (client *Client) interceptProRequest(ctx filters.Context, r *http.Request) (*http.Response, filters.Context, error) {
-	log.Debugf("Intercepting request to pro server: %v", r.URL.Path)
+	client.log.Debugf("Intercepting request to pro server: %v", r.URL.Path)
 	r.URL.Path = r.URL.Path[4:]
 	pro.PrepareProRequest(r, client.user)
 	r.Header.Del("Origin")
 	resp, err := pro.GetHTTPClient().Do(r.WithContext(ctx))
 	if err != nil {
-		log.Errorf("Error intercepting request to pro server: %v", err)
+		client.log.Errorf("Error intercepting request to pro server: %v", err)
 		resp = &http.Response{
 			StatusCode: http.StatusInternalServerError,
 			Close:      true,
@@ -166,7 +171,7 @@ func (client *Client) interceptProRequest(ctx filters.Context, r *http.Request) 
 }
 
 func (client *Client) easyblock(ctx filters.Context, req *http.Request) (*http.Response, filters.Context, error) {
-	log.Debugf("Blocking %v on %v", req.URL, req.Host)
+	client.log.Debugf("Blocking %v on %v", req.URL, req.Host)
 	client.statsTracker.IncAdsBlocked()
 	resp := &http.Response{
 		StatusCode: http.StatusForbidden,
@@ -175,9 +180,9 @@ func (client *Client) easyblock(ctx filters.Context, req *http.Request) (*http.R
 	return filters.ShortCircuit(ctx, req, resp)
 }
 
-func (client *Client) redirectHTTPS(ctx filters.Context, req *http.Request, httpsURL string, op *ops.Op) (*http.Response, filters.Context, error) {
-	log.Debugf("httpseverywhere redirecting to %v", httpsURL)
-	op.Set("forcedhttps", true)
+func (client *Client) redirectHTTPS(ctx filters.Context, req *http.Request, httpsURL string) (*http.Response, filters.Context, error) {
+	client.log.Debugf("httpseverywhere redirecting to %v", httpsURL)
+	//op.Set("forcedhttps", true)
 	client.statsTracker.IncHTTPSUpgrades()
 	// Tell the browser to only cache the redirect for a day. The browser
 	// generally caches permanent redirects permanently, but it will obey caching
@@ -204,7 +209,7 @@ func (client *Client) adSwapURL(req *http.Request) string {
 		return ""
 	}
 	lang := client.lang()
-	log.Debugf("Swapping javascript for %v to %v", urlString, jsURL)
+	client.log.Debugf("Swapping javascript for %v to %v", urlString, jsURL)
 	extra := ""
 	if common.ForceAds() {
 		extra = "&force=true"

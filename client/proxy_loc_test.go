@@ -3,6 +3,7 @@ package client
 import (
 	"testing"
 
+	"github.com/getlantern/golog"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,8 +25,9 @@ func TestProxyLoc(t *testing.T) {
 		"fp-usany1-20161214-001":    "US",
 		"fp-hongkong1-20161214-001": "HK",
 	}
+	client := &Client{log: golog.LoggerFor("proxy_loc_test")}
 	for proxy, cc := range embed_in_config {
-		code, _, _ := proxyLoc(newLocationDialer(proxy, cc))
+		code, _, _ := client.proxyLoc(newLocationDialer(proxy, cc))
 		assert.Equal(t, code, cc, "should use location info embeded in proxy config")
 	}
 
@@ -37,7 +39,7 @@ func TestProxyLoc(t *testing.T) {
 		"fp-obfs4-donyc3staging-20161214-001": "New York",
 	}
 	for proxy, c := range with_hardcoded_location {
-		code, _, city := proxyLoc(newLocationDialer(proxy, ""))
+		code, _, city := client.proxyLoc(newLocationDialer(proxy, ""))
 		if assert.NotEmpty(t, code) {
 			assert.Equal(t, city, c, "should use hardcoded data if no location in config")
 		}
@@ -47,7 +49,7 @@ func TestProxyLoc(t *testing.T) {
 		"fp-anhklb-20161214-001",
 	}
 	for _, proxy := range invalid_proxies {
-		code, country, city := proxyLoc(newLocationDialer(proxy, ""))
+		code, country, city := client.proxyLoc(newLocationDialer(proxy, ""))
 		assert.Equal(t, "N/A", code)
 		assert.Equal(t, "N/A", country)
 		assert.Equal(t, "N/A", city)

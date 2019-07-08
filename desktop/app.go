@@ -2,6 +2,7 @@
 package desktop
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"net"
@@ -66,6 +67,7 @@ type App struct {
 
 	uiServer *ui.Server
 	ws       ws.UIChannel
+	Ctx      context.Context
 }
 
 // Init initializes the App's state
@@ -163,6 +165,7 @@ func (app *App) Run() {
 				return app.PlansURL()
 			},
 			func(addr string) string { return addr }, // no dnsgrab reverse lookups on desktop
+			app.Ctx,
 		)
 		if err != nil {
 			app.Exit(err)

@@ -133,7 +133,7 @@ var (
 	}
 )
 
-func proxyLoc(proxy balancer.Dialer) (countryCode string, country string, city string) {
+func (client *Client) proxyLoc(proxy balancer.Dialer) (countryCode string, country string, city string) {
 	countryCode, country, city = proxy.Location()
 	if countryCode != "" {
 		return
@@ -146,6 +146,6 @@ func proxyLoc(proxy balancer.Dialer) (countryCode string, country string, city s
 			return v.countryCode, v.country, v.city
 		}
 	}
-	log.Debugf("Couldn't find location for %s", name)
+	client.log.Debugf("Couldn't find location for %s", name)
 	return "N/A", "N/A", "N/A"
 }
