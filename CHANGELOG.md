@@ -1,5 +1,25 @@
 # Change Log
 
+## [5.5.0](https://github.com/getlantern/flashlight/tree/5.5.0) (2019-07-08)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.4.7...5.5.0)
+
+**Merged pull requests:**
+
+- Fix erroneous checksum for arista [\#639](https://github.com/getlantern/flashlight/pull/639) ([myleshorton](https://github.com/myleshorton))
+- Bring in tinywss pull \#12 [\#637](https://github.com/getlantern/flashlight/pull/637) ([joesis](https://github.com/joesis))
+- Send iOS error reports straight to Groove [\#635](https://github.com/getlantern/flashlight/pull/635) ([oxtoacart](https://github.com/oxtoacart))
+- Added files to iOS report issue test [\#634](https://github.com/getlantern/flashlight/pull/634) ([oxtoacart](https://github.com/oxtoacart))
+- go mod dependencies fix [\#633](https://github.com/getlantern/flashlight/pull/633) ([myleshorton](https://github.com/myleshorton))
+- Added go tun2socks support [\#563](https://github.com/getlantern/flashlight/pull/563) ([oxtoacart](https://github.com/oxtoacart))
+
+## [5.4.7](https://github.com/getlantern/flashlight/tree/5.4.7) (2019-06-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.4.6...5.4.7)
+
+**Merged pull requests:**
+
+- Disabled compilation of utp on iOS [\#632](https://github.com/getlantern/flashlight/pull/632) ([oxtoacart](https://github.com/oxtoacart))
+- Fixed import path for packetforward server in ios/demo, switched to Go modules and updated to latest packetforward [\#619](https://github.com/getlantern/flashlight/pull/619) ([oxtoacart](https://github.com/oxtoacart))
+
 ## [5.4.6](https://github.com/getlantern/flashlight/tree/5.4.6) (2019-06-12)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.4.5...5.4.6)
 
@@ -195,7 +215,6 @@
 - updated resources for 5.2.3 [\#566](https://github.com/getlantern/flashlight/pull/566) ([myleshorton](https://github.com/myleshorton))
 - add email related ports [\#565](https://github.com/getlantern/flashlight/pull/565) ([joesis](https://github.com/joesis))
 - Add a test to validate certain basic properties of live global config [\#562](https://github.com/getlantern/flashlight/pull/562) ([forkner](https://github.com/forkner))
-- Added memory usage logging [\#536](https://github.com/getlantern/flashlight/pull/536) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [5.2.2](https://github.com/getlantern/flashlight/tree/5.2.2) (2018-12-13)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.1...5.2.2)
@@ -263,17 +282,9 @@
 - updated ui [\#541](https://github.com/getlantern/flashlight/pull/541) ([myleshorton](https://github.com/myleshorton))
 - Fix for system tray issue [\#540](https://github.com/getlantern/flashlight/pull/540) ([myleshorton](https://github.com/myleshorton))
 - Lantern Desktop to fetch user data more often [\#539](https://github.com/getlantern/flashlight/pull/539) ([joesis](https://github.com/joesis))
-- Update pro client test [\#538](https://github.com/getlantern/flashlight/pull/538) ([joesis](https://github.com/joesis))
-- \[RFR\] Yinbi-154: Set `yinbiEnabled` based on `pro-server` call [\#533](https://github.com/getlantern/flashlight/pull/533) ([hchood](https://github.com/hchood))
-- Reporting proxy\_multiplexed dimension to borda [\#532](https://github.com/getlantern/flashlight/pull/532) ([oxtoacart](https://github.com/oxtoacart))
-- Added info about top proxies global borda context [\#531](https://github.com/getlantern/flashlight/pull/531) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [4.9.1-yinbi](https://github.com/getlantern/flashlight/tree/4.9.1-yinbi) (2018-11-06)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.9.0...4.9.1-yinbi)
-
-**Merged pull requests:**
-
-- \[WIP\] Enable Yinbi on the desktop frontend [\#530](https://github.com/getlantern/flashlight/pull/530) ([hchood](https://github.com/hchood))
 
 ## [4.9.0](https://github.com/getlantern/flashlight/tree/4.9.0) (2018-10-24)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.8.4...4.9.0)
@@ -294,13 +305,13 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.13...4.8.0)
 
 ## [4.7.13](https://github.com/getlantern/flashlight/tree/4.7.13) (2018-08-09)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.13)
-
-## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.13)
 
 ## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.11)
+
+## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.12)
 
 ## [4.7.10](https://github.com/getlantern/flashlight/tree/4.7.10) (2018-07-26)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.9...4.7.10)
