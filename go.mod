@@ -111,3 +111,5 @@ replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-2019
 replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20190606225154-80c3ccb52074
 
 replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3
+
+replace github.com/xtaci/smux => github.com/getlantern/smux v1.0.4-0.20190710020150-e7738d03db71
