@@ -17,7 +17,7 @@ require (
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20190612212110-050956b70e0f
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
-	github.com/getlantern/cmux v0.0.0-20190702172423-a16efed20804
+	github.com/getlantern/cmux v0.0.0-20190711013109-98b1e3bae67b
 	github.com/getlantern/detour v0.0.0-20190122161414-7107a599a170
 	github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041 // indirect
 	github.com/getlantern/dnsgrab v0.0.0-20171025121014-227f729dcb41
@@ -50,7 +50,7 @@ require (
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
 	github.com/getlantern/mitm v0.0.0-20180205214248-4ce456bae650
-	github.com/getlantern/mockconn v0.0.0-20190403061815-a8ffa60494a6
+	github.com/getlantern/mockconn v0.0.0-20190708122800-637bd46d8034
 	github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0
 	github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd
 	github.com/getlantern/notifier v0.0.0-20190531021800-64e5c4112f43
@@ -70,7 +70,7 @@ require (
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
 	github.com/getlantern/systray v0.0.0-20181206010516-eaad7114094d
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
-	github.com/getlantern/tinywss v0.0.0-20190708150441-b3c3bde6a6a5
+	github.com/getlantern/tinywss v0.0.0-20190711013239-d816e122e1ae
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
 	github.com/getlantern/tlsdialer v0.0.0-20190606180931-1ac26445d532
 	github.com/getlantern/uuid v1.2.0
@@ -111,5 +111,3 @@ replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-2019
 replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20190606225154-80c3ccb52074
 
 replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3
-
-replace github.com/xtaci/smux => github.com/getlantern/smux v1.0.4-0.20190710020150-e7738d03db71
