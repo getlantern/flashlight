@@ -27,6 +27,7 @@ try:
         cfg = yaml.safe_dump({
             'userID': user_id,
             'userToken': token,
+            'proxyAll': 'true',
         }, encoding='utf-8', allow_unicode=True, default_flow_style=False)
         f.write(cfg)
         hitProxy.run_with_configdir(configdir)
