@@ -30,6 +30,6 @@ try:
             'proxyAll': 'true',
         }, encoding='utf-8', allow_unicode=True, default_flow_style=False)
         f.write(cfg)
-        hitProxy.run_with_configdir(configdir)
+        hitProxy.run_with_configdir(configdir, sticky=False)
 finally:
     shutil.rmtree(configdir)
