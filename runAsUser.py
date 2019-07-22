@@ -25,11 +25,11 @@ configdir = hitProxy.create_tmpdir()
 try:
     with open(os.path.join(configdir, "settings.yaml"), "w") as f:
         cfg = yaml.safe_dump({
-            'userID': user_id,
+            'userID': int(user_id),
             'userToken': token,
             'proxyAll': 'true',
         }, encoding='utf-8', allow_unicode=True, default_flow_style=False)
         f.write(cfg)
-        hitProxy.run_with_configdir(configdir, sticky=False)
+    hitProxy.run_with_configdir(configdir, sticky=False)
 finally:
     shutil.rmtree(configdir)
