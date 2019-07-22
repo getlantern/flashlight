@@ -12,7 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/mitchellh/go-server-timing"
+	servertiming "github.com/mitchellh/go-server-timing"
 
 	"github.com/getlantern/bufconn"
 	"github.com/getlantern/errors"
@@ -94,6 +94,7 @@ func (p *proxy) NumPreconnected() int {
 
 // DialContext dials using provided context
 func (p *proxy) DialContext(ctx context.Context, network, addr string) (net.Conn, bool, error) {
+	log.Debug("DialContext using protocol implementation...")
 	upstream := false
 	conn, err := p.doDial(ctx, network, addr)
 	if err != nil {
@@ -178,10 +179,11 @@ func (p *proxy) dialInternal(op *ops.Op, ctx context.Context, network, addr stri
 	}
 }
 
-// dialOrigin implements the method from serverConn. With standard proxies, this
+// defaultDialOrigin implements the method from serverConn. With standard proxies, this
 // involves sending either a CONNECT request or a GET request to initiate a
 // persistent connection to the upstream proxy.
 func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
+	log.Debugf("Dialing origin to %v", addr)
 	conn, err := p.dialServer(ctx)
 	if err != nil {
 		return nil, err
@@ -203,15 +205,16 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 	// that.
 	switch network {
 	case balancer.NetworkConnect:
-		log.Trace("Sending CONNECT request")
+		log.Debug("Sending CONNECT request")
 		bconn := bufconn.Wrap(conn)
 		conn = bconn
 		err = p.sendCONNECT(op, addr, bconn, timeout)
 	case balancer.NetworkPersistent:
-		log.Trace("Sending GET request to establish persistent HTTP connection")
+		log.Debug("Sending GET request to establish persistent HTTP connection")
 		err = p.initPersistentConnection(addr, conn)
 	}
 	if err != nil {
+		log.Debugf("Error ending CONNECT or persistent...closing connection to: %v", addr)
 		conn.Close()
 		return nil, err
 	}
