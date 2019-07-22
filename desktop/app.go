@@ -7,10 +7,12 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	"github.com/getlantern/appdir"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/golog"
@@ -72,7 +74,7 @@ type App struct {
 func (app *App) Init() {
 	golog.OnFatal(app.exitOnFatal)
 	app.Flags["staging"] = common.Staging
-	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate, common.Staging)
+	settings = app.loadSettings()
 	app.exited = eventual.NewValue()
 	app.statsTracker = NewStatsTracker()
 	pro.OnProStatusChange(func(isPro bool, yinbiEnabled bool) {
@@ -89,11 +91,24 @@ func (app *App) Init() {
 	app.ws = ws.NewUIChannel()
 }
 
+// loadSettings loads the initial settings at startup, either from disk or using defaults.
+func (app *App) loadSettings() *Settings {
+	dir := app.Flags["configdir"].(string)
+	if dir == "" {
+		dir = appdir.General("Lantern")
+	}
+	path := filepath.Join(dir, "settings.yaml")
+	if common.Staging {
+		path = filepath.Join(dir, "settings-staging.yaml")
+	}
+	return loadSettingsFrom(common.Version, common.RevisionDate, common.BuildDate, path)
+}
+
 // LogPanicAndExit logs a panic and then exits the application. This function
 // is only used in the panicwrap parent process.
 func (app *App) LogPanicAndExit(msg interface{}) {
 	// Reload settings to make sure we have an up-to-date addr
-	settings = loadSettings(common.Version, common.RevisionDate, common.BuildDate, common.Staging)
+	settings = app.loadSettings()
 	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
 }
 
