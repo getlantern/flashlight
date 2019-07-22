@@ -20,7 +20,7 @@ def create_tmpdir():
         wintemp = subprocess.check_output('wslpath $(cmd.exe /C "echo %TEMP%")', shell=True).strip()
         return tempfile.mkdtemp(dir=wintemp)
     else:
-        return tempfile.mkdtemp()
+        return tempfile.mkdtemp(prefix="lantern")
 
 def run_with_configdir(configdir, sticky=True, headless=False):
     path = ""

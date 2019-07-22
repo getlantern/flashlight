@@ -21,7 +21,12 @@ if len(sys.argv) < 2:
 user_id = sys.argv[1]
 token = r.hget('user->token', user_id)
 
+if not token:
+    print "Could not get user token. Is REDIS_URL set correctly as '{}'?".format(os.getenv("REDIS_URL"))
+    sys.exit(1)
+
 configdir = hitProxy.create_tmpdir()
+
 try:
     with open(os.path.join(configdir, "settings.yaml"), "w") as f:
         cfg = yaml.safe_dump({
