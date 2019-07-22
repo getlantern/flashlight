@@ -8,12 +8,10 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"sync"
 
-	"github.com/getlantern/appdir"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/launcher"
@@ -91,11 +89,6 @@ var settingMeta = map[SettingName]struct {
 	SNPACURL:       {stString, true, true},
 }
 
-var (
-	defaultPath        = filepath.Join(appdir.General("Lantern"), "settings.yaml")
-	defaultPathStaging = filepath.Join(appdir.General("Lantern"), "settings-staging.yaml")
-)
-
 // Settings is a struct of all settings unique to this particular Lantern instance.
 type Settings struct {
 	muNotifiers     sync.RWMutex
@@ -109,15 +102,6 @@ type Settings struct {
 	log golog.Logger
 }
 
-func loadSettings(version, revisionDate, buildDate string, isStaging bool) *Settings {
-	path := defaultPath
-	if isStaging {
-		path = defaultPathStaging
-	}
-	return loadSettingsFrom(version, revisionDate, buildDate, path)
-}
-
-// loadSettings loads the initial settings at startup, either from disk or using defaults.
 func loadSettingsFrom(version, revisionDate, buildDate, path string) *Settings {
 	log.Debug("Loading settings")
 	// Create default settings that may or may not be overridden from an existing file
