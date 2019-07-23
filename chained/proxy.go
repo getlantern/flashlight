@@ -93,9 +93,9 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		return p, err
 	case "obfs4", "utpobfs4":
 		return newOBFS4Proxy(name, transport, proto, s, uc)
-	case "lampshade":
-		lp := newLampshadeProxy()
-		return lp.newProxy(name, transport, proto, s, uc)
+	case lampshadeTransport:
+		lp := newLampshadeProxy(s, name, proto)
+		return lp.newProxy(name, proto, s, uc)
 	case "quic":
 		return newQUICProxy(name, s, uc)
 	case "wss":
@@ -331,6 +331,10 @@ type proxy struct {
 	mx                  sync.Mutex
 }
 
+func newProxyWithDialer(name, protocol, network string, s *ChainedServerInfo, uc common.UserConfig, trusted bool, allowPreconnecting bool, pd proxyDialer) (*proxy, error) {
+	return newProxy(name, protocol, network, s, uc, trusted, allowPreconnecting, pd.dialServer, pd.dialOrigin)
+}
+
 func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.UserConfig, trusted bool, allowPreconnecting bool, dialServer dialServerFn, dialOrigin dialOriginFn) (*proxy, error) {
 	addr := s.Addr
 	multiplexed := false
@@ -529,9 +533,8 @@ func (rt *wssFrontedRT) RoundTripHijack(req *http.Request) (*http.Response, net.
 	}
 	if rth, ok := r.(tinywss.RoundTripHijacker); ok {
 		return rth.RoundTripHijack(req)
-	} else {
-		return nil, nil, fmt.Errorf("Unsupported roundtripper obtained from fronted.")
 	}
+	return nil, nil, fmt.Errorf("Unsupported roundtripper obtained from fronted.")
 }
 
 func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {

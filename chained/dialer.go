@@ -38,6 +38,11 @@ var (
 	errUpstream = errors.New("Upstream error")
 )
 
+type proxyDialer interface {
+	dialServer(context.Context, *proxy) (net.Conn, error)
+	dialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error)
+}
+
 func (p *proxy) Stop() {
 	log.Tracef("Stopping dialer %s", p.Label())
 	p.closeOnce.Do(func() {
@@ -206,7 +211,7 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 		err = p.initPersistentConnection(addr, conn)
 	}
 	if err != nil {
-		log.Debugf("Error ending CONNECT or persistent...closing connection to: %v", addr)
+		log.Debugf("Error sending CONNECT or persistent...closing connection to: %v", addr)
 		conn.Close()
 		return nil, err
 	}
