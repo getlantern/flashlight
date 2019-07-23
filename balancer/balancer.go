@@ -170,7 +170,7 @@ func New(overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
 	ops.Go(b.periodicallyProbeDialers)
 	ops.Go(b.periodicallyPrintStats)
 	ops.Go(b.evalDialersLoop)
-	ops.Go(b.KeepLookingForSucceedingDialer)
+	ops.Go(b.keepLookingForSucceedingDialer)
 	if len(dialers) > 0 {
 		b.Reset(dialers)
 	}
@@ -412,6 +412,7 @@ func (bd *balancedDial) onFailure(dialer Dialer, failedUpstream bool, err error,
 			// check and re-evaluating should follow up if the dialer changes,
 			// to avoid permanently switching to a slow dialer due to outdated
 			// measurements.
+			log.Debugf("Evaluating dialers due to failure on %s: %v", dialer.Label(), err)
 			if bd.evalDialers() {
 				bd.requestEvalDialers("Top dialer changed because of failing")
 			}
@@ -648,7 +649,7 @@ func (b *Balancer) sortDialers() []Dialer {
 	return dialers
 }
 
-func (b *Balancer) KeepLookingForSucceedingDialer() {
+func (b *Balancer) keepLookingForSucceedingDialer() {
 	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
 	for {

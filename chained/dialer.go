@@ -24,12 +24,6 @@ import (
 	gp "github.com/getlantern/proxy"
 )
 
-const (
-	minCheckInterval      = 10 * time.Second
-	maxCheckInterval      = 15 * time.Minute
-	dialCoreCheckInterval = 30 * time.Second
-)
-
 var (
 	// IdleTimeout closes connections idle for a period to avoid dangling
 	// connections. Web applications tend to contact servers in 1 minute
@@ -94,7 +88,6 @@ func (p *proxy) NumPreconnected() int {
 
 // DialContext dials using provided context
 func (p *proxy) DialContext(ctx context.Context, network, addr string) (net.Conn, bool, error) {
-	log.Debug("DialContext using protocol implementation...")
 	upstream := false
 	conn, err := p.doDial(ctx, network, addr)
 	if err != nil {
@@ -130,7 +123,6 @@ func (p *proxy) MarkFailure() {
 	atomic.StoreInt64(&p.consecSuccesses, 0)
 	newCF := atomic.AddInt64(&p.consecFailures, 1)
 	log.Tracef("Dialer %s consecutive failures: %d -> %d", p.Label(), newCF-1, newCF)
-	return
 }
 
 func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -193,7 +185,7 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 	if deadline, set := ctx.Deadline(); set {
 		conn.SetDeadline(deadline)
 		// Set timeout based on our given deadline, minus a 2 second fudge factor
-		timeUntilDeadline := deadline.Sub(time.Now())
+		timeUntilDeadline := time.Until(deadline)
 		timeout = timeUntilDeadline - 2*time.Second
 		if timeout < 0 {
 			log.Errorf("Not enough time left for server to dial upstream within %v, return errUpstream immediately", timeUntilDeadline)

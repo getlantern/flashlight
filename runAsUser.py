@@ -24,7 +24,7 @@ user_id = sys.argv[1]
 
 # Since we'll often be running via a VPN with this script, use a little local cache to avoid
 # redis calls that may fail.
-user_file = 'user-data.txt'
+user_file = 'redis_data.txt'
 token = None
 if not path.isfile(user_file):
     data = {}

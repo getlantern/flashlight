@@ -322,7 +322,6 @@ type proxy struct {
 	emaRTTDev           *ema.EMA
 	emaSuccessRate      *ema.EMA
 	kcpConfig           *KCPConfig
-	forceRedial         *abool.AtomicBool
 	mostRecentABETime   time.Time
 	doDialCore          func(ctx context.Context) (net.Conn, time.Duration, error)
 	numPreconnecting    func() int
@@ -820,7 +819,7 @@ type KCPConfig struct {
 func timeoutFor(ctx context.Context) time.Duration {
 	deadline, ok := ctx.Deadline()
 	if ok {
-		return deadline.Sub(time.Now())
+		return time.Until(deadline)
 	}
 	return chainedDialTimeout
 }
