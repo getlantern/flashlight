@@ -16,6 +16,7 @@ import (
 	humanize "github.com/dustin/go-humanize"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog"
+	"github.com/opentracing/opentracing-go"
 )
 
 const (
@@ -235,6 +236,9 @@ func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 
 // DialContext is same as Dial but uses the provided context.
 func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "balancer")
+	defer span.Finish()
+
 	op := ops.BeginWithBeam("balancer_dial", ctx)
 	defer op.End()
 
