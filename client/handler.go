@@ -12,7 +12,10 @@ import (
 
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/proxy/filters"
+	"github.com/opentracing/basictracer-go"
+
 	"github.com/opentracing/opentracing-go"
+	"github.com/siddontang/go/log"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
@@ -27,6 +30,12 @@ var adSwapJavaScriptInjections = map[string]string{
 
 func (client *Client) handle(conn net.Conn) error {
 	span, ctx := opentracing.StartSpanFromContext(context.Background(), "handleConn")
+	ctx = context.WithValue(ctx, "same-ctx-or-no", "handleConn-fun-in-the-sun")
+
+	if sc, ok := span.Context().(basictracer.SpanContext); ok {
+		log.Debugf("Trace ID of handler context: %v", sc.TraceID)
+
+	}
 	defer span.Finish()
 
 	// Set user agent connection to idle a little before the upstream connection
