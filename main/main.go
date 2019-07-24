@@ -2,8 +2,8 @@
 package main
 
 import (
-	"context"
 	"flag"
+	"io"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -15,9 +15,12 @@ import (
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
+	"github.com/uber/jaeger-lib/metrics"
 
-	"contrib.go.opencensus.io/exporter/jaeger"
-	"go.opencensus.io/trace"
+	jaeger "github.com/uber/jaeger-client-go"
+
+	jaegercfg "github.com/uber/jaeger-client-go/config"
+	jaegerlog "github.com/uber/jaeger-client-go/log"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/desktop"
@@ -36,18 +39,16 @@ func main() {
 	debug.SetTraceback("all")
 	parseFlags()
 
-	initTracing()
-	ctx, span := trace.StartSpan(context.Background(), "lanternBackground")
+	traceCloser := initTracing()
 
 	a := &desktop.App{
 		ShowUI: !*headless,
 		Flags:  flagsAsMap(),
-		Ctx:    ctx,
 	}
 	a.Init()
 
 	a.AddExitFunc("Ending background tracing span", func() {
-		span.End()
+		traceCloser.Close()
 	})
 
 	if *help {
@@ -128,22 +129,27 @@ type nullCloser struct{}
 
 func (*nullCloser) Close() error { return nil }
 
-func initTracing() {
-	agentEndpointURI := "localhost:6831"
-	collectorEndpointURI := "http://localhost:14268/api/traces"
-
-	je, err := jaeger.NewExporter(jaeger.Options{
-		AgentEndpoint:     agentEndpointURI,
-		CollectorEndpoint: collectorEndpointURI,
-		ServiceName:       "lantern-client",
-	})
-	if err != nil {
-		log.Fatalf("Failed to create the Jaeger exporter: %v", err)
+func initTracing() io.Closer {
+	cfg := jaegercfg.Configuration{
+		Sampler: &jaegercfg.SamplerConfig{
+			Type:  jaeger.SamplerTypeConst,
+			Param: 1,
+		},
+		Reporter: &jaegercfg.ReporterConfig{
+			LogSpans: true,
+		},
 	}
 
-	trace.RegisterExporter(je)
-
-	trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+	closer, err := cfg.InitGlobalTracer(
+		"lantern",
+		jaegercfg.Logger(jaegerlog.StdLogger),
+		jaegercfg.Metrics(metrics.NullFactory),
+	)
+	if err != nil {
+		log.Errorf("Could not initialize jaeger tracer: %s", err.Error())
+		return &nullCloser{}
+	}
+	return closer
 }
 
 func parseFlags() {

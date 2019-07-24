@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -11,7 +12,7 @@ import (
 
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/proxy/filters"
-	"go.opencensus.io/trace"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
@@ -25,8 +26,8 @@ var adSwapJavaScriptInjections = map[string]string{
 }
 
 func (client *Client) handle(conn net.Conn) error {
-	ctx, span := trace.StartSpan(client.ctx, "client.handle")
-	defer span.End()
+	span, ctx := opentracing.StartSpanFromContext(context.Background(), "handleConn")
+	defer span.Finish()
 
 	// Set user agent connection to idle a little before the upstream connection
 	// so that we don't read data from the client after the upstream connection
