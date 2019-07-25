@@ -27,6 +27,7 @@ var adSwapJavaScriptInjections = map[string]string{
 }
 
 func (client *Client) handle(conn net.Conn) error {
+	op, ctx := ops.BeginWithNewBeam("proxy", context.Background())
 	span := opentracing.StartSpan("handleConn")
 	ctx := opentracing.ContextWithSpan(context.Background(), span)
 
@@ -38,10 +39,9 @@ func (client *Client) handle(conn net.Conn) error {
 	conn = idletiming.Conn(conn, chained.IdleTimeout-1*time.Second, nil)
 	err := client.proxy.Handle(ctx, conn, conn)
 	if err != nil {
-		//client.log.Error(op.FailIf(err))
-		client.log.Errorf("Could not handle request: %v", err)
+		client.log.Error(op.FailIf(err))
 	}
-	//op.End()
+	op.End()
 	return err
 }
 
@@ -78,10 +78,8 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 		return client.interceptProRequest(ctx, req)
 	}
 
-	/*
-		op := ops.FromContext(ctx)
-		op.UserAgent(req.Header.Get("User-Agent")).OriginFromRequest(req)
-	*/
+	op := ops.FromContext(ctx)
+	op.UserAgent(req.Header.Get("User-Agent")).OriginFromRequest(req)
 
 	// Disable Ad swapping for now given that Ad blocking is completely
 	// removed.  A limited form of Ad blocking should be re-introduced before
@@ -186,7 +184,7 @@ func (client *Client) easyblock(ctx filters.Context, req *http.Request) (*http.R
 
 func (client *Client) redirectHTTPS(ctx filters.Context, req *http.Request, httpsURL string) (*http.Response, filters.Context, error) {
 	client.log.Debugf("httpseverywhere redirecting to %v", httpsURL)
-	//op.Set("forcedhttps", true)
+	op.Set("forcedhttps", true)
 	client.statsTracker.IncHTTPSUpgrades()
 	// Tell the browser to only cache the redirect for a day. The browser
 	// generally caches permanent redirects permanently, but it will obey caching
