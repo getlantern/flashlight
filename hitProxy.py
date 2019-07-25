@@ -22,7 +22,7 @@ def create_tmpdir():
     else:
         return tempfile.mkdtemp(prefix="lantern")
 
-def run_with_configdir(configdir, sticky=True, headless=False):
+def run_with_configdir(configdir, sticky=True, headless=False, country=""):
     path = ""
     if on_windows:
         path = "./lantern-cli.exe"
@@ -40,6 +40,8 @@ def run_with_configdir(configdir, sticky=True, headless=False):
         args = args + ["-stickyconfig"]
     if headless:
         args = args + ["-headless"]
+    if country:
+        args = args + ["-force-config-country", country]
     subprocess.call(args)
 
 
