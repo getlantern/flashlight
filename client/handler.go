@@ -29,7 +29,7 @@ var adSwapJavaScriptInjections = map[string]string{
 func (client *Client) handle(conn net.Conn) error {
 	op, ctx := ops.BeginWithNewBeam("proxy", context.Background())
 	span := opentracing.StartSpan("handleConn")
-	ctx := opentracing.ContextWithSpan(context.Background(), span)
+	ctx = opentracing.ContextWithSpan(context.Background(), span)
 
 	defer span.Finish()
 
@@ -111,7 +111,7 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 					client.log.Debugf("Not httpseverywhere redirecting to %v to avoid redirect loop", httpsURL)
 				} else {
 					client.rewriteLRU.Add(httpsURL, time.Now())
-					return client.redirectHTTPS(ctx, req, httpsURL)
+					return client.redirectHTTPS(ctx, req, httpsURL, op)
 				}
 			}
 
@@ -182,7 +182,7 @@ func (client *Client) easyblock(ctx filters.Context, req *http.Request) (*http.R
 	return filters.ShortCircuit(ctx, req, resp)
 }
 
-func (client *Client) redirectHTTPS(ctx filters.Context, req *http.Request, httpsURL string) (*http.Response, filters.Context, error) {
+func (client *Client) redirectHTTPS(ctx filters.Context, req *http.Request, httpsURL string, op *ops.Op) (*http.Response, filters.Context, error) {
 	client.log.Debugf("httpseverywhere redirecting to %v", httpsURL)
 	op.Set("forcedhttps", true)
 	client.statsTracker.IncHTTPSUpgrades()
