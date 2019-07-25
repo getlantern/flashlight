@@ -15,10 +15,14 @@ import hitProxy
 r = ru.redis_shell
 
 if len(sys.argv) < 2:
-    print "Usage: %s user-id" % sys.argv[0]
+    print "Usage: %s user-id [country]" % sys.argv[0]
     sys.exit(1)
 
 user_id = sys.argv[1]
+country = ""
+if len(sys.argv) > 2:
+    country = sys.argv[2]
+
 token = r.hget('user->token', user_id)
 
 if not token:
@@ -35,6 +39,6 @@ try:
             'proxyAll': 'true',
         }, encoding='utf-8', allow_unicode=True, default_flow_style=False)
         f.write(cfg)
-    hitProxy.run_with_configdir(configdir, sticky=False, headless=True)
+    hitProxy.run_with_configdir(configdir, sticky=False, headless=True, country=country)
 finally:
     shutil.rmtree(configdir)

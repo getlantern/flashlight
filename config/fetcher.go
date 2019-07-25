@@ -9,6 +9,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strconv"
+	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/detour"
@@ -16,6 +17,16 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 )
+
+var (
+	forceCountry atomic.Value
+)
+
+// ForceCountry forces config fetches to pretend client is running in the
+// given countryCode (e.g. 'cn')
+func ForceCountry(countryCode string) {
+	forceCountry.Store(countryCode)
+}
 
 // Fetcher is an interface for fetching config updates.
 type Fetcher interface {
@@ -77,6 +88,13 @@ func (cf *fetcher) doFetch(ctx context.Context, op *ops.Op) ([]byte, time.Durati
 	// Prevents intermediate nodes (domain-fronters) from caching the content
 	req.Header.Set("Cache-Control", "no-cache")
 	common.AddCommonHeaders(cf.user, req)
+
+	_forceCountry := forceCountry.Load()
+	if _forceCountry != nil {
+		countryCode := _forceCountry.(string)
+		log.Debugf("Forcing config country to %v", countryCode)
+		req.Header.Set(common.ClientCountryHeader, countryCode)
+	}
 
 	// make sure to close the connection after reading the Body
 	// this prevents the occasional EOFs errors we're seeing with
