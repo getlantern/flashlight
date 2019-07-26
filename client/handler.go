@@ -29,7 +29,7 @@ var adSwapJavaScriptInjections = map[string]string{
 func (client *Client) handle(conn net.Conn) error {
 	op, ctx := ops.BeginWithNewBeam("proxy", context.Background())
 	span := opentracing.StartSpan("handleConn")
-	ctx = opentracing.ContextWithSpan(context.Background(), span)
+	ctx = opentracing.ContextWithSpan(ctx, span)
 
 	defer span.Finish()
 
