@@ -29,6 +29,7 @@ import (
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/goroutines"
 	fops "github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/pcap"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/stats"
@@ -121,6 +122,7 @@ func Run(httpProxyAddr string,
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
 		cl.Configure(proxyMap)
 		onProxiesUpdate(proxyMap)
+		pcap.Configure(proxyMap)
 	}
 	globalDispatch := func(conf interface{}) {
 		// Don't love the straight cast here, but we're also the ones defining
