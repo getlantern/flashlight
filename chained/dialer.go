@@ -152,30 +152,12 @@ func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, err
 }
 
 func (p *proxy) dialInternal(op *ops.Op, ctx context.Context, network, addr string) (net.Conn, error) {
-	var conn net.Conn
-	var err error
-	chDone := make(chan bool)
-	start := time.Now()
-	ops.Go(func() {
-		conn, err = p.dialOrigin(op, ctx, p, network, addr)
-		if err != nil {
-			op.Set("idled", idletiming.IsIdled(conn))
-		}
-		select {
-		case chDone <- true:
-		default:
-			if err == nil {
-				log.Debugf("Connection to %s established too late, closing", addr)
-				conn.Close()
-			}
-		}
-	})
-	select {
-	case <-chDone:
-		return p.withRateTracking(conn, addr, ctx), err
-	case <-ctx.Done():
-		return nil, errors.New("fail to dial origin after %+v", time.Since(start))
+	conn, err := p.dialOrigin(op, ctx, p, network, addr)
+	if err != nil {
+		op.Set("idled", idletiming.IsIdled(conn))
+		return nil, err
 	}
+	return p.withRateTracking(conn, addr, ctx), err
 }
 
 // dialOrigin implements the method from serverConn. With standard proxies, this
