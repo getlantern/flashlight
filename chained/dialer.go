@@ -133,31 +133,20 @@ func (p *proxy) MarkFailure() {
 }
 
 func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, error) {
-	var conn net.Conn
-	var err error
-
 	op := ops.Begin("dial_for_balancer").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed).Set("dial_type", network)
 	defer op.End()
 
-	conn, err = p.dialInternal(op, ctx, network, addr)
+	conn, err := p.dialOrigin(op, ctx, p, network, addr)
 	if err != nil {
+		op.Set("idled", idletiming.IsIdled(conn))
 		return nil, op.FailIf(err)
 	}
-	conn = idletiming.Conn(conn, IdleTimeout, func() {
+	conn = idletiming.Conn(p.withRateTracking(conn, addr, ctx), IdleTimeout, func() {
 		op := ops.BeginWithBeam("idle_close", ctx)
 		log.Debugf("Proxy connection to %s via %s idle for %v, closed", addr, conn.RemoteAddr(), IdleTimeout)
 		op.End()
 	})
 	return conn, nil
-}
-
-func (p *proxy) dialInternal(op *ops.Op, ctx context.Context, network, addr string) (net.Conn, error) {
-	conn, err := p.dialOrigin(op, ctx, p, network, addr)
-	if err != nil {
-		op.Set("idled", idletiming.IsIdled(conn))
-		return nil, err
-	}
-	return p.withRateTracking(conn, addr, ctx), err
 }
 
 // dialOrigin implements the method from serverConn. With standard proxies, this
