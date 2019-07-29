@@ -136,7 +136,9 @@ func initTracing() io.Closer {
 			Param: 1,
 		},
 		Reporter: &jaegercfg.ReporterConfig{
-			LogSpans: true,
+			CollectorEndpoint: "http://104.131.222.209:14268/api/traces",
+			//User:              "",
+			//Password:          "",
 		},
 	}
 

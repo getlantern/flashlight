@@ -43,7 +43,6 @@ require (
 	github.com/getlantern/httpseverywhere v0.0.0-20180326165025-9bdb93e40695
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
 	github.com/getlantern/idletiming v0.0.0-20190529182719-d2fbc83372a5
-	github.com/getlantern/ipproxy v0.0.0-20190508162323-6329c3cbf2fa
 	github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42
 	github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644
 	github.com/getlantern/kcpwrapper v0.0.0-20171114192627-a35c895f6de7
@@ -63,7 +62,7 @@ require (
 	github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff
 	github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8
 	github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c
-	github.com/getlantern/proxy v0.0.0-20190225163220-31d1cc06ed3d
+	github.com/getlantern/proxy v0.0.0-20190726221354-12a6499b23bc
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
 	github.com/getlantern/quicwrapper v0.0.0-20190722222217-23eaa92dfe00
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
@@ -93,15 +92,14 @@ require (
 	github.com/miekg/dns v0.0.0-20180406150955-01d59357d468 // indirect
 	github.com/mitchellh/go-server-timing v0.0.0-20180226015900-d145200e1f90
 	github.com/mitchellh/mapstructure v0.0.0-20180220230111-00c29f56e238
-	github.com/mitchellh/panicwrap v0.0.0-20170106182340-fce601fe5557
-	github.com/opentracing/basictracer-go v1.0.0
+	github.com/mitchellh/panicwrap v0.0.0-20170106182340-fce601fe5557 // indirect
+	github.com/opentracing/basictracer-go v1.0.0 // indirect
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/prometheus/common v0.4.0 // indirect
 	github.com/prometheus/procfs v0.0.0-20190507164030-5867b95ac084 // indirect
 	github.com/refraction-networking/utls v0.0.0-00010101000000-000000000000
-	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726
 	github.com/skratchdot/open-golang v0.0.0-20160302144031-75fb7ed4208c
 	github.com/stretchr/testify v1.3.0
 	github.com/tevino/abool v0.0.0-20170917061928-9b9efcf221b5
@@ -113,7 +111,7 @@ require (
 	gopkg.in/getlantern/yaml.v1 v1.0.0-20140912054538-97d86b60f57e // indirect
 	gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce // indirect
 	gopkg.in/vmihailenco/msgpack.v2 v2.9.1 // indirect
-	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0
+	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0 // indirect
 )
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20190606183433-1266fdfeb581

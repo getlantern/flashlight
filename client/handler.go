@@ -99,8 +99,10 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 		// at this point, so we have to check for that and skip redirecting to
 		// HTTPS in that case.
 		client.log.Tracef("Intercepting CONNECT %s", req.URL)
+		//client.log.Debugf("Intercepting CONNECT REQUEST HAS TRACE? %#v", req)
 	} else {
 		client.log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
+
 		if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
 			// Don't redirect CORS requests as it means the HTML pages that
 			// initiate the requests were not HTTPS redirected. Redirecting
@@ -120,6 +122,8 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 		client.log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
 		// consumed and removed by http-proxy-lantern/versioncheck
 		req.Header.Set(common.VersionHeader, common.Version)
+
+		client.log.Debugf("Intercepted NON-CONNECT REQUEST HAS TRACE? %#v", req)
 	}
 
 	return next(ctx, req)

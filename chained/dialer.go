@@ -12,7 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/mitchellh/go-server-timing"
+	servertiming "github.com/mitchellh/go-server-timing"
 
 	"github.com/getlantern/bufconn"
 	"github.com/getlantern/errors"
@@ -237,6 +237,7 @@ func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn bufconn.Conn, timeout 
 	if err != nil {
 		return fmt.Errorf("Unable to construct CONNECT request: %s", err)
 	}
+	log.Debugf("Sending CONNECT request to: %#v: %#v", req.URL, req)
 	err = req.Write(conn)
 	if err != nil {
 		return fmt.Errorf("Unable to write CONNECT request: %s", err)
