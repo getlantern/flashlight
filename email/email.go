@@ -83,6 +83,8 @@ type Message struct {
 	MaxLogSize string `json:"maxLogSize,omitempty"`
 	// Logs allows the caller to specify an already zipped set of logs
 	Logs []byte
+	// Diagnostics to attach to the message. Should be a JSON-encoded diagnostics.Report.
+	DiagnosticsJSON []byte
 }
 
 func Send(msg *Message) error {
@@ -143,6 +145,13 @@ func sendTemplate(msg *Message) error {
 			Content: base64.StdEncoding.EncodeToString(msg.SettingsData),
 		})
 		attachOpsCtx(msg, mmsg)
+	}
+	if msg.DiagnosticsJSON != nil {
+		mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
+			Type:    "application/json",
+			Name:    "diagnostics.json",
+			Content: base64.StdEncoding.EncodeToString(msg.DiagnosticsJSON),
+		})
 	}
 	if msg.MaxLogSize != "" {
 		if size, err := util.ParseFileSize(msg.MaxLogSize); err != nil {

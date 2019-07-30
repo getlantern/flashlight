@@ -3,11 +3,18 @@ package desktop
 import (
 	"bytes"
 	"fmt"
+	"strings"
+
+	"github.com/getlantern/diagnostics"
+	"github.com/getlantern/osversion"
 
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/ws"
-	"github.com/getlantern/osversion"
 )
+
+// The diagnostics (run when users report issues) need elevated permissions. This is the prompt
+// presented to the user when the diagnostics run.
+const diagnosticsPermissionsPrompt = "Lantern needs your permission to run diagnostics on this machine"
 
 type mandrillMessage struct {
 	email.Message
@@ -44,6 +51,14 @@ func read(service *ws.Service) {
 
 func handleMessage(service *ws.Service, data *mandrillMessage) {
 	fillDefaults(data)
+	if strings.HasPrefix(data.Template, "user-send-logs") {
+		diagnosticsJSON, err := diagnostics.JSONAsChildProcess(diagnosticsPermissionsPrompt)
+		if err != nil {
+			log.Errorf("failed to gather diagnostics: %v", err)
+		} else {
+			data.DiagnosticsJSON = diagnosticsJSON
+		}
+	}
 	if err := email.Send(&data.Message); err != nil {
 		service.Out <- err.Error()
 	} else {
