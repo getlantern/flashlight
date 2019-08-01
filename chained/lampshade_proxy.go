@@ -36,7 +36,7 @@ func newLampshadeProxy(s *ChainedServerInfo, name, proto string) *lampshadeProxy
 }
 
 func (l *lampshadeProxy) newProxy(name, proto string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
-	return newProxy(l.name, lampshadeTransport, l.proto, l.s, uc, s.Trusted, false, l)
+	return newProxy(l.name, lampshadeTransport, l.proto, l.s, uc, s.Trusted, false, l.dialServer, l.dialOrigin)
 }
 
 func (l *lampshadeProxy) dialServer(ctx context.Context, p *proxy) (net.Conn, error) {
