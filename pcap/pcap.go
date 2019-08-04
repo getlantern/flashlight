@@ -16,7 +16,7 @@ import (
 var (
 	log               = golog.LoggerFor("flashlight.pcap")
 	logdir            = appdir.Logs("Lantern")
-	params_template   = "-ni en0 -p -w %s/proxies.pcapng -C 20 -W 100 -s 200 (host %s) and not port ssh"
+	params_template   = "-ni en0 -p -w %s/proxies-%%F-%%R.pcapng -G 3600 -s 200 (host %s) and not port ssh"
 	activeProcesses   []*exec.Cmd
 	muActiveProcesses sync.Mutex
 )
