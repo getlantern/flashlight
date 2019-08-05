@@ -27,7 +27,7 @@ if len(sys.argv) > 2:
 
 # Since we'll often be running via a VPN with this script, use a little local cache to avoid
 # redis calls that may fail.
-user_file = 'redis_data.txt'
+user_file = '.rediscache.json'
 token = None
 if not path.isfile(user_file):
     data = {}
