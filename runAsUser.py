@@ -2,6 +2,7 @@
 
 import os
 import os.path
+from os import path
 import platform
 import shutil
 import subprocess
@@ -11,6 +12,7 @@ import yaml
 from misc_util import ipre
 import redis_util as ru
 import hitProxy
+import json
 
 r = ru.redis_shell
 
@@ -23,11 +25,28 @@ country = ""
 if len(sys.argv) > 2:
     country = sys.argv[2]
 
-token = r.hget('user->token', user_id)
+# Since we'll often be running via a VPN with this script, use a little local cache to avoid
+# redis calls that may fail.
+user_file = 'redis_data.txt'
+token = None
+if not path.isfile(user_file):
+    data = {}
+else:
+    with open(user_file) as json_file:
+        data = json.load(json_file)
+        if user_id in data:
+            token = data[user_id]
+
+if not token:
+    token = r.hget('user->token', user_id)
 
 if not token:
     print "Could not get user token. Is REDIS_URL set correctly as '{}'?".format(os.getenv("REDIS_URL"))
     sys.exit(1)
+
+data[user_id] = token
+with open(user_file, 'w') as outfile:
+    json.dump(data, outfile)
 
 configdir = hitProxy.create_tmpdir()
 
