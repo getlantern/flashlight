@@ -135,6 +135,13 @@ func sendTemplate(msg *Message) error {
 	if msg.CC != "" {
 		mmsg.To = append(mmsg.To, &mandrill.To{Email: msg.CC, Type: "cc"})
 	}
+	if msg.screenshot != nil {
+		mmmseg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
+			Type: "image/*",
+			Name: msg.screenshotName,
+			Content: base64.StdEncoding.EncodeToString(msg.screenshot),
+		})
+	}
 	mmsg.GlobalMergeVars = mandrill.MapToVars(msg.Vars)
 	if msg.SettingsData != nil {
 		mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
