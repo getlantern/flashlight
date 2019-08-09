@@ -137,7 +137,7 @@ func sendTemplate(msg *Message) error {
 	}
 	if msg.screenshot != nil {
 		mmmseg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
-			Type: "image/*",
+			Type: msg.screenshotType,
 			Name: msg.screenshotName,
 			Content: base64.StdEncoding.EncodeToString(msg.screenshot),
 		})
