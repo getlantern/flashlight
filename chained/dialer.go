@@ -176,8 +176,7 @@ func (p *proxy) dialInternal(op *ops.Op, ctx context.Context, network, addr stri
 	}
 }
 
-// defaultDialOrigin implements the method from serverConn. With standard proxies, this
-// involves sending either a CONNECT request or a GET request to initiate a
+// defaultDialOrigin sends either a CONNECT request or a GET request to initiate a
 // persistent connection to the upstream proxy.
 func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
 	log.Debugf("Dialing origin to %v", addr)
@@ -266,7 +265,7 @@ func (p *proxy) buildCONNECTRequest(addr string, timeout time.Duration) (*http.R
 func (p *proxy) checkCONNECTResponse(op *ops.Op, r *bufio.Reader, req *http.Request, reqTime time.Time) error {
 	resp, err := http.ReadResponse(r, req)
 	if err != nil {
-		return errors.New("Error reading CONNECT response: %s", err)
+		return errors.New("Error reading CONNECT response after %v: %s", time.Since(reqTime), err)
 	}
 	if !sameStatusCodeClass(http.StatusOK, resp.StatusCode) {
 		var body []byte
