@@ -595,7 +595,7 @@ func (b *Balancer) printStats() {
 			ProxyName(d.Name()).
 			Set("proxy_host", host).
 			SetMetricAvg("rank", rank).
-			SetMetricAvg("est_rtt", estRTT)
+			SetMetricAvg("est_rtt_ms", estRTT*1000)
 		if estBandwidth > 0 {
 			op.SetMetricAvg("est_mbps", estBandwidth)
 		}

@@ -46,6 +46,8 @@ github.com/aristanetworks/goarista v0.0.0-20190625195245-f3b0eb5a88b2 h1:j6qQji0
 github.com/aristanetworks/goarista v0.0.0-20190625195245-f3b0eb5a88b2/go.mod h1:D/tb0zPVXnP7fmsLZjtdUhSsumbK/ij54UXjjVgMGxQ=
 github.com/aristanetworks/goarista v0.0.0-20190628000427-15fc8b0bfcde h1:K99m0kwjkqQ7hWRhWf4D+aC5BqUV5HREDlOzlZWb0/Q=
 github.com/aristanetworks/goarista v0.0.0-20190628000427-15fc8b0bfcde/go.mod h1:D/tb0zPVXnP7fmsLZjtdUhSsumbK/ij54UXjjVgMGxQ=
+github.com/aristanetworks/goarista v0.0.0-20190712234253-ed1100a1c015 h1:7ABPr1+uJdqESAdlVevnc/2FJGiC/K3uMg1JiELeF+0=
+github.com/aristanetworks/goarista v0.0.0-20190712234253-ed1100a1c015/go.mod h1:D/tb0zPVXnP7fmsLZjtdUhSsumbK/ij54UXjjVgMGxQ=
 github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc h1:/WQ8Tr5zbclKWAtvafIcAk/njNpW3gtd22TLLouv+6Q=
 github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
@@ -129,6 +131,8 @@ github.com/getlantern/elevate v0.0.0-20180207094634-c2e2e4901072 h1:Sxd/u3rnHYAq
 github.com/getlantern/elevate v0.0.0-20180207094634-c2e2e4901072/go.mod h1:T4VB2POK13lsPLFV98WJQrL7gAXYD9TyJxBU2P8c8p4=
 github.com/getlantern/ema v0.0.0-20180718025023-42474605965c h1:bhg/AXGLB0lqBJLDuDd9y9ZiPTjyQESlZRbywKyhqaE=
 github.com/getlantern/ema v0.0.0-20180718025023-42474605965c/go.mod h1:tzRwT19aDrWSr6yRDs8iOvaXXCau96EgWsgGT9wIpoQ=
+github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4 h1:PMK8QQn9GLTQXdHnqoNhyToOa8snagaZVt9Xb36NEUc=
+github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4/go.mod h1:tzRwT19aDrWSr6yRDs8iOvaXXCau96EgWsgGT9wIpoQ=
 github.com/getlantern/enhttp v0.0.0-20190401024120-a974fa851e3c h1:+Cpxi/J9FwpwobhnCJXvlIhKGf1Z/Trfn4NbzwkHo8s=
 github.com/getlantern/enhttp v0.0.0-20190401024120-a974fa851e3c/go.mod h1:kHP/nfmHj9HJVN5Cb+1RFNRLR0O0nx40YENc4wKIe6s=
 github.com/getlantern/enproxy v0.0.0-20180913191734-002212d417a4 h1:PNbh29DNRJF7KTZi1h85KDR0x4vYiRrXq7lews4xe6o=
@@ -250,8 +254,8 @@ github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12/go.mod h1:0q
 github.com/getlantern/quic-go v0.7.1-0.20190606183433-1266fdfeb581 h1:uS5gwyKJSWdkXpYriYbpoEEsJ8PP9WHVYH/AzlpNTV4=
 github.com/getlantern/quic-go v0.7.1-0.20190606183433-1266fdfeb581/go.mod h1:uW88CoBr0zVnlyTAdwd9dd6qgk/CY23t6dRPqZ5TReU=
 github.com/getlantern/quicwrapper v0.0.0-20190103180943-9afd6b9b3c2f/go.mod h1:rs6eBHMycj48pN8Y7EB2hbQ9cBvVEKFxxen4HdKPrc8=
-github.com/getlantern/quicwrapper v0.0.0-20190110220323-f6dd70305d8e h1:DAjXhkqbxRX70qpUCESdePivcjyk9SpUdgufsnWsxMk=
-github.com/getlantern/quicwrapper v0.0.0-20190110220323-f6dd70305d8e/go.mod h1:rs6eBHMycj48pN8Y7EB2hbQ9cBvVEKFxxen4HdKPrc8=
+github.com/getlantern/quicwrapper v0.0.0-20190722222217-23eaa92dfe00 h1:E0pcdqcaIhLfrmkQXuA1LOwMcglaI7QM33xHqxqR6A4=
+github.com/getlantern/quicwrapper v0.0.0-20190722222217-23eaa92dfe00/go.mod h1:JurKHi9vuMmF6IE0fv2oUjW6w+UiWTZPXyz2rpdAlsI=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c h1:IkjF+RwRs8B/RsuD638eUFO2K/227OO2B1FLXGp17Ro=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c/go.mod h1:kExwbqTx1krUnT9ohmXG3jayDTEBfxUKeoRzU6XucLw=
 github.com/getlantern/ring v0.0.0-20181206150603-dd46ce8faa01 h1:JyXEChj4lHy5w3hlQVnYpcH4QrBXmhEJgkxb0FPkFlM=

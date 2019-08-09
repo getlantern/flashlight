@@ -801,7 +801,7 @@ func (p *proxy) dialCore(op *ops.Op) func(ctx context.Context) (net.Conn, error)
 	return func(ctx context.Context) (net.Conn, error) {
 		estRTT, estBandwidth := p.EstRTT(), p.EstBandwidth()
 		if estRTT > 0 {
-			op.SetMetricAvg("est_rtt", estRTT.Seconds()/1000)
+			op.SetMetricAvg("est_rtt_ms", estRTT.Seconds()*1000)
 		}
 		if estBandwidth > 0 {
 			op.SetMetricAvg("est_mbps", estBandwidth)

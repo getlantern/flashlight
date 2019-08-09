@@ -20,6 +20,7 @@ const (
 	PingHeader                          = "X-Lantern-Ping"
 	PlatformHeader                      = "X-Lantern-Platform"
 	ProxyDialTimeoutHeader              = "X-Lantern-Dial-Timeout"
+	ClientCountryHeader                 = "X-Lantern-Client-Country"
 )
 
 // AddCommonHeadersWithOptions sets standard http headers on a request bound

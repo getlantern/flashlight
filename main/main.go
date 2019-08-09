@@ -17,6 +17,7 @@ import (
 	"github.com/getlantern/i18n"
 
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/desktop"
 
 	"github.com/mitchellh/panicwrap"
@@ -84,6 +85,11 @@ func main() {
 
 	if *forceProxyAddr != "" {
 		chained.ForceProxy(*forceProxyAddr, *forceAuthToken)
+	}
+
+	if *forceConfigCountry != "" {
+		log.Debugf("Will force config fetches to pretend client country is: %v", *forceConfigCountry)
+		config.ForceCountry(*forceConfigCountry)
 	}
 
 	if a.ShowUI {

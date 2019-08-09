@@ -1,5 +1,18 @@
 # Change Log
 
+## [5.5.1](https://github.com/getlantern/flashlight/tree/5.5.1) (2019-07-30)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.0...5.5.1)
+
+**Merged pull requests:**
+
+- Assume transports can handle context correctly [\#646](https://github.com/getlantern/flashlight/pull/646) ([joesis](https://github.com/joesis))
+- Allow specifying client country when using runAsUser [\#645](https://github.com/getlantern/flashlight/pull/645) ([oxtoacart](https://github.com/oxtoacart))
+- Update to latest quicwrapper [\#644](https://github.com/getlantern/flashlight/pull/644) ([joesis](https://github.com/joesis))
+- Uniformly report est\_rtt in milliseconds [\#643](https://github.com/getlantern/flashlight/pull/643) ([oxtoacart](https://github.com/oxtoacart))
+- Add script to run flashlight on behalf of an user [\#642](https://github.com/getlantern/flashlight/pull/642) ([joesis](https://github.com/joesis))
+- Update dependencies to use xtaci/smux v1.3.4 [\#641](https://github.com/getlantern/flashlight/pull/641) ([joesis](https://github.com/joesis))
+- Incorporate https://github.com/xtaci/smux/pull/53 [\#640](https://github.com/getlantern/flashlight/pull/640) ([joesis](https://github.com/joesis))
+
 ## [5.5.0](https://github.com/getlantern/flashlight/tree/5.5.0) (2019-07-08)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.4.7...5.5.0)
 
@@ -267,21 +280,8 @@
 ## [5.0.1](https://github.com/getlantern/flashlight/tree/5.0.1) (2018-12-01)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.0.0...5.0.1)
 
-**Merged pull requests:**
-
-- Added mechanism for running memory limited Lantern with Docker [\#545](https://github.com/getlantern/flashlight/pull/545) ([oxtoacart](https://github.com/oxtoacart))
-
 ## [5.0.0](https://github.com/getlantern/flashlight/tree/5.0.0) (2018-11-30)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.9.1-yinbi...5.0.0)
-
-**Merged pull requests:**
-
-- Updated yinbi UI [\#544](https://github.com/getlantern/flashlight/pull/544) ([myleshorton](https://github.com/myleshorton))
-- Smaller IdleInterval for lampshade [\#543](https://github.com/getlantern/flashlight/pull/543) ([oxtoacart](https://github.com/oxtoacart))
-- Don't add wrap lampshade TCP connections with IdleTiming [\#542](https://github.com/getlantern/flashlight/pull/542) ([oxtoacart](https://github.com/oxtoacart))
-- updated ui [\#541](https://github.com/getlantern/flashlight/pull/541) ([myleshorton](https://github.com/myleshorton))
-- Fix for system tray issue [\#540](https://github.com/getlantern/flashlight/pull/540) ([myleshorton](https://github.com/myleshorton))
-- Lantern Desktop to fetch user data more often [\#539](https://github.com/getlantern/flashlight/pull/539) ([joesis](https://github.com/joesis))
 
 ## [4.9.1-yinbi](https://github.com/getlantern/flashlight/tree/4.9.1-yinbi) (2018-11-06)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.9.0...4.9.1-yinbi)

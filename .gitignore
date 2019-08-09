@@ -1,4 +1,4 @@
-redis_data
+.rediscache.json
 flashlight
 flashlight.ex?
 autoupdate-prod.go
