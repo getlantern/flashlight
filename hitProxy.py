@@ -21,7 +21,7 @@ def create_tmpdir():
     else:
         return tempfile.mkdtemp(prefix="lantern")
 
-def run_with_configdir(configdir, sticky=True, headless=False, country=""):
+def run_with_configdir(configdir, sticky=True, headless=False, country="", remainder=[]):
     path = ""
     if on_windows:
         path = "./lantern-cli.exe"
@@ -40,8 +40,8 @@ def run_with_configdir(configdir, sticky=True, headless=False, country=""):
     if headless:
         args = args + ["-headless"]
     if country:
-        args = args + ["-force-config-country", country]
-    subprocess.call(args)
+        args = args + ["-force-config-country="+country]
+    subprocess.call(args + remainder)
 
 
 def config_for(name_or_ip, direct, remote_user):
@@ -80,6 +80,7 @@ if __name__ == '__main__':
     parser.add_argument('name_or_ip', type=str, help='The name or ip of the proxy to hit')
     parser.add_argument('-u', '--remote-user', dest='remote_user', type=str, default='lantern', help='The SSH user on the proxy when fetching config from it')
     parser.add_argument('-d', '--direct', action='store_true', help='Skip Redis lookup and fetch directly from the proxy')
+    parser.add_argument('remainder', nargs=argparse.REMAINDER, help='the rest of the arguments are passed directly to the Lantern binary')
     args = parser.parse_args()
     cfgs = config_for(args.name_or_ip, args.direct, args.remote_user)
     print repr(cfgs)
@@ -96,6 +97,6 @@ if __name__ == '__main__':
             cfg = yaml.safe_dump(servers, encoding='utf-8', allow_unicode=True, default_flow_style=False)
             f.write(cfg)
         print cfg
-        run_with_configdir(configdir)
+        run_with_configdir(configdir, remainder=args.remainder)
     finally:
         shutil.rmtree(configdir)
