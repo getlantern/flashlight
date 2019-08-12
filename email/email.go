@@ -137,9 +137,9 @@ func sendTemplate(msg *Message) error {
 	}
 	if msg.Vars["file"] != nil {
 		mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
-			Type: msg.Vars["fileType"],
-			Name: msg.Vars["fileName"],
-			Content: base64.StdEncoding.EncodeToString(msg.Vars["file"]),
+			Type:    fmt.Sprintf("%v", msg.Vars["fileType"]),
+			Name:    fmt.Sprintf("%v", msg.Vars["fileName"]),
+			Content: base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%v", msg.Vars["file"]))),
 		})
 	}
 	mmsg.GlobalMergeVars = mandrill.MapToVars(msg.Vars)
