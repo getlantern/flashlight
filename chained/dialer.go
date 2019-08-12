@@ -21,6 +21,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
+	"github.com/getlantern/netx"
 	gp "github.com/getlantern/proxy"
 )
 
@@ -213,7 +214,10 @@ func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn bufconn.Conn, timeout 
 	}
 
 	r := conn.Head()
-	err = p.checkCONNECTResponse(op, r, req, reqTime)
+	err = p.checkCONNECTResponse(op, r, req, reqTime, conn)
+	if err != nil {
+		log.Errorf("Error checking CONNECT response on conn: %#v", conn.(netx.WrappedConn).Wrapped())
+	}
 	return err
 }
 
@@ -233,10 +237,10 @@ func (p *proxy) buildCONNECTRequest(addr string, timeout time.Duration) (*http.R
 	return req, nil
 }
 
-func (p *proxy) checkCONNECTResponse(op *ops.Op, r *bufio.Reader, req *http.Request, reqTime time.Time) error {
+func (p *proxy) checkCONNECTResponse(op *ops.Op, r *bufio.Reader, req *http.Request, reqTime time.Time, conn bufconn.Conn) error {
 	resp, err := http.ReadResponse(r, req)
 	if err != nil {
-		return errors.New("Error reading CONNECT response after %v: %s", time.Since(reqTime), err)
+		return errors.New("Error reading CONNECT response after %v: %s on %v", time.Since(reqTime), err, conn)
 	}
 	if !sameStatusCodeClass(http.StatusOK, resp.StatusCode) {
 		var body []byte

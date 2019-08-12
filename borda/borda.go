@@ -87,7 +87,7 @@ func startBorda(reportInterval time.Duration, enabled func(ctx map[string]interf
 	}
 
 	ops.RegisterReporter(reporter)
-	golog.RegisterReporter(func(err error, linePrefix string, severity golog.Severity, ctx map[string]interface{}) {
+	golog.RegisterReporter(func(err error, severity golog.Severity, ctx map[string]interface{}) {
 		// This code catches all logged errors that didn't happen inside an op
 		if ctx["op"] == nil {
 			var ctxErr errors.Error

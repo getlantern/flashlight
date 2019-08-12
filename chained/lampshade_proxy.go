@@ -35,7 +35,8 @@ func newLampshadeProxy(s *ChainedServerInfo, name, proto string) *lampshadeProxy
 	}
 }
 
-func (l *lampshadeProxy) newProxy(name, proto string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+func (l *lampshadeProxy) newProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+	l.log.Debugf("Creating lampshade proxy with ptSettings: %#v", l.s)
 	return newProxy(l.name, lampshadeTransport, l.proto, l.s, uc, s.Trusted, false, l.dialServer, l.dialOrigin)
 }
 
