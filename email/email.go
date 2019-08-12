@@ -136,7 +136,7 @@ func sendTemplate(msg *Message) error {
 		mmsg.To = append(mmsg.To, &mandrill.To{Email: msg.CC, Type: "cc"})
 	}
 	if msg.Vars["file"] != nil {
-		mmmseg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
+		mmseg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
 			Type: msg.Vars["fileType"],
 			Name: msg.Vars["fileName"],
 			Content: base64.StdEncoding.EncodeToString(msg.Vars["file"]),
