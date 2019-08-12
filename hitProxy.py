@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import argparse
 import os
 import os.path
 import platform
@@ -8,10 +9,8 @@ import subprocess
 import sys
 import tempfile
 import yaml
-from misc_util import ipre
-import redis_util as ru
 
-r = ru.redis_shell
+from misc_util import ipre
 
 on_windows = len([item for item in platform.uname() if "Microsoft" in item]) > 0
 
@@ -45,48 +44,44 @@ def run_with_configdir(configdir, sticky=True, headless=False, country=""):
     subprocess.call(args)
 
 
-def config_for(name_or_ip, remote_user="lantern"):
-    if ipre.match(name_or_ip):
-        name = r.hget('srvip->server', name_or_ip)
-    else:
-        name = name_or_ip
+def config_for(name_or_ip, direct, remote_user):
+    ip = name_or_ip # assuming IP in case when direct is true
 
-    access_data = r.hget('server->config', name) if name else None
-    if access_data:
-        print "Loaded access data from redis"
-        return yaml.load(access_data).values()
-    else:
-        print "No access data found in redis, fetching directly from server"
-
-        ip = name_or_ip
-        # Allow caller to also input server names
-        if not ipre.match(ip):
+    if not direct:
+        from redis_util import redis_shell as r
+        if ipre.match(name_or_ip):
+            name = r.hget('srvip->server', name_or_ip)
+        else:
+            name = name_or_ip
             ip = r.hget('server->srvip', name_or_ip)
-        if not ip:
-            print "Unable to resolve %s to ip" % (name_or_ip)
-            sys.exit(1)
-        try:
-            subprocess.check_call(["scp", "%s@%s:access_data.json" % (remote_user, ip), "."])
-        except subprocess.CalledProcessError:
-            print "Error copying access data from "+ip
-            sys.exit(1)
-        except OSError:
-            print "Error running scp"
-            sys.exit(1)
 
-        with open("access_data.json") as ad:
-            return yaml.load(ad.read())
+        access_data = r.hget('server->config', name) if name else None
+        if access_data:
+            print "Loaded access data from redis"
+            return yaml.load(access_data).values()
+        else:
+            print "No access data found in redis, fetching directly from server"
+
+    if not ipre.match(ip):
+        sys.exit("'%s' is not a valid IP address" % ip)
+    try:
+        subprocess.check_call(["scp", "%s@%s:access_data.json" % (remote_user, ip), "."])
+    except subprocess.CalledProcessError:
+        sys.exit("Error copying access data from "+ip)
+    except OSError:
+        print
+        sys.exit("Error running scp")
+
+    with open("access_data.json") as ad:
+        return yaml.load(ad.read())
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print "Usage: %s <name or ip> [user]" % sys.argv[0]
-        sys.exit(1)
-
-    name_or_ip = sys.argv[1]
-    remote_user = "lantern"
-    if len(sys.argv) > 2:
-        remote_user = sys.argv[2]
-    cfgs = config_for(name_or_ip, remote_user)
+    parser = argparse.ArgumentParser(description='Fetch config for one particular proxy and instructs Lantern to use it')
+    parser.add_argument('name_or_ip', type=str, help='The name or ip of the proxy to hit')
+    parser.add_argument('-u', '--remote-user', dest='remote_user', type=str, default='lantern', help='The SSH user on the proxy when fetching config from it')
+    parser.add_argument('-d', '--direct', action='store_true', help='Skip Redis lookup and fetch directly from the proxy')
+    args = parser.parse_args()
+    cfgs = config_for(args.name_or_ip, args.direct, args.remote_user)
     print repr(cfgs)
 
     servers = {}
