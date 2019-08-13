@@ -35,7 +35,7 @@ require (
 	github.com/getlantern/gotun v0.0.0-20190809092752-6d35bb1397ee
 	github.com/getlantern/gowin v0.0.0-20160824205538-88fa116ddffc // indirect
 	github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55
-	github.com/getlantern/http-proxy-lantern v0.1.4-0.20190813023228-ece629a8f3e2
+	github.com/getlantern/http-proxy-lantern v0.1.4-0.20190821135212-8812143b1548
 	github.com/getlantern/httpseverywhere v0.0.0-20180326165025-9bdb93e40695
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
 	github.com/getlantern/idletiming v0.0.0-20190529182719-d2fbc83372a5
@@ -61,7 +61,7 @@ require (
 	github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c
 	github.com/getlantern/proxy v0.0.0-20190225163220-31d1cc06ed3d
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
-	github.com/getlantern/quicwrapper v0.0.0-20190813024200-2aea933c703a
+	github.com/getlantern/quicwrapper v0.0.0-20190820201154-8079fdf487de
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/shortcut v0.0.0-20190117153616-bb4d4203cc25
@@ -99,7 +99,7 @@ require (
 	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80
 )
 
-replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20190606183433-1266fdfeb581
+replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20190818104938-28e3ca4262e1
 
 replace github.com/marten-seemann/qtls => github.com/marten-seemann/qtls-deprecated v0.0.0-20190207043627-591c71538704
 

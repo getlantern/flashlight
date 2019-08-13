@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rsa"
 	gtls "crypto/tls"
+	"encoding/base64"
 	"fmt"
 	"net"
 	"net/http"
@@ -99,7 +100,7 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		return newOBFS4Proxy(name, transport, proto, s, uc)
 	case "lampshade":
 		return newLampshadeProxy(name, transport, proto, s, uc)
-	case "quic":
+	case "quic", "oquic":
 		return newQUICProxy(name, s, uc)
 	case "wss":
 		return newWSSProxy(name, s, uc)
@@ -481,13 +482,13 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 			return nil, err
 		}
 		p.protocol = "kcp"
-	} else if s.PluggableTransport == "quic" {
+	} else if s.PluggableTransport == "quic" || s.PluggableTransport == "oquic" {
 		log.Debugf("Enabling QUIC for %v (%v)", p.Label(), p.protocol)
 		err := enableQUIC(p, s)
 		if err != nil {
 			return nil, err
 		}
-		p.protocol = "quic"
+		p.protocol = s.PluggableTransport
 	} else if strings.HasPrefix(s.PluggableTransport, "utp") {
 		log.Debugf("Enabling UTP for %v (%v)", p.Label(), p.protocol)
 		err := enableUTP(p, s)
@@ -674,12 +675,39 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 	}
 	pinnedCert := cert.X509()
 
+	dialFn := quicwrapper.DialWithNetx
+
+	if oquicKeyStr := s.ptSetting("oquic_key"); oquicKeyStr != "" {
+		oquicKey, err := base64.StdEncoding.DecodeString(oquicKeyStr)
+		if err != nil {
+			return log.Error(errors.Wrap(err).With("oquic_key", oquicKeyStr))
+		}
+		oquicConfig := quicwrapper.DefaultOQuicConfig(oquicKey)
+		if cipher := s.ptSetting("oquic_cipher"); cipher != "" {
+			oquicConfig.Cipher = cipher
+		}
+		if s.ptSetting("oquic_aggressive_padding") != "" {
+			oquicConfig.AggressivePadding = int64(s.ptSettingInt("oquic_aggressive_padding"))
+		}
+		if s.ptSetting("oquic_max_padding_hint") != "" {
+			oquicConfig.MaxPaddingHint = uint8(s.ptSettingInt("oquic_max_padding_hint"))
+		}
+		if s.ptSetting("oquic_min_padded") != "" {
+			oquicConfig.MinPadded = s.ptSettingInt("oquic_min_padded")
+		}
+
+		dialFn, err = quicwrapper.NewOQuicDialerWithUDPDialer(quicwrapper.DialUDPNetx, oquicConfig)
+		if err != nil {
+			return log.Errorf("Unable to create oquic dialer: %v", err)
+		}
+	}
+
 	newQUICDialer := func() *quicwrapper.Client {
 		d := quicwrapper.NewClientWithPinnedCert(
 			addr,
 			tlsConf,
 			quicConf,
-			quicwrapper.DialWithNetx,
+			dialFn,
 			pinnedCert,
 		)
 		return d
