@@ -16,7 +16,6 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/rotator"
-	"github.com/getlantern/wfilter"
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/util"
@@ -76,7 +75,16 @@ func EnableFileLoggingWith(werr io.WriteCloser, wout io.WriteCloser, logdir stri
 	logFile = rotator
 	errorPWC = newPipedWriteCloser(newNonStopWriteCloser(werr, logFile), 1000)
 	debugPWC = newPipedWriteCloser(newNonStopWriteCloser(wout, logFile), 100)
-	golog.SetOutputs(timestamped(errorPWC), timestamped(debugPWC))
+	golog.SetOutputs(errorPWC, debugPWC)
+
+	golog.SetPrepender(func(w io.Writer) {
+		ts := time.Now()
+		runningSecs := ts.Sub(processStart).Seconds()
+		secs := int(math.Mod(runningSecs, 60))
+		mins := int(runningSecs / 60)
+		fmt.Fprintf(w, "%s - %dm%ds ", ts.In(time.UTC).Format(logTimestampFormat), mins, secs)
+	})
+
 	return nil
 }
 
@@ -186,23 +194,8 @@ func Close() error {
 	if logFile != nil {
 		logFile.Close()
 	}
-	initLogging()
+	golog.ResetOutputs()
 	return nil
-}
-
-func initLogging() {
-	golog.SetOutputs(timestamped(os.Stderr), timestamped(os.Stdout))
-}
-
-// timestamped adds a timestamp to the beginning of log lines
-func timestamped(orig io.Writer) io.Writer {
-	return wfilter.SimplePrepender(orig, func(w io.Writer) (int, error) {
-		ts := time.Now()
-		runningSecs := ts.Sub(processStart).Seconds()
-		secs := int(math.Mod(runningSecs, 60))
-		mins := int(runningSecs / 60)
-		return fmt.Fprintf(w, "%s - %dm%ds ", ts.In(time.UTC).Format(logTimestampFormat), mins, secs)
-	})
 }
 
 type nonStopWriteCloser struct {
