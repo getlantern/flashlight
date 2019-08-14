@@ -344,15 +344,17 @@ func (bd *balancedDial) dialWithDialer(ctx context.Context, dialer Dialer, start
 		bd.onFailure(dialer, failedUpstream, err, attempts)
 		return nil
 	}
+
+	// Please leave this at Debug level, as it helps us understand
+	// performance issues caused by a poor proxy being selected.
+	log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", dialer.Label(), bd.network, bd.addr, attempts, time.Since(start))
+
 	// Multiplexed dialers don't wait for anything from the proxy when dialing
 	// "persistent" connections, so we can't blindly trust such connections as
 	// signals of success dialers.
 	if bd.network == NetworkPersistent {
 		return conn
 	}
-	// Please leave this at Debug level, as it helps us understand
-	// performance issues caused by a poor proxy being selected.
-	log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", dialer.Label(), bd.network, bd.addr, attempts, time.Since(start))
 	bd.onSuccess(dialer)
 	// Reevaluate all dialers if the top dialer performance dramatically changed
 	if attempts == 0 {
