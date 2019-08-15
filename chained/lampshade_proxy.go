@@ -115,7 +115,8 @@ func (l *lampshadeProxy) dialServer(ctx context.Context, p *proxy) (net.Conn, er
 			l.log.Debugf("Dialing lampshade TCP connection to %v", p.Label())
 			return p.dialCore(op)(ctx)
 		})
-		return overheadWrapper(true)(conn, err)
+		//return overheadWrapper(true)(conn, err)
+		return conn, err
 	})
 }
 

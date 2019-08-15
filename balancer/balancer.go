@@ -180,8 +180,16 @@ func New(overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
 // Reset closes existing dialers and replaces them with new ones.
 func (b *Balancer) Reset(dialers []Dialer) {
 	log.Debugf("Resetting with %d dialers", len(dialers))
-	dls := make(sortedDialers, len(dialers))
-	copy(dls, dialers)
+	//dls := make(sortedDialers, len(dialers))
+	//copy(dls, dialers)
+
+	dls := make(sortedDialers, 0)
+
+	for _, d := range dialers {
+		if d.Protocol() == "lampshade" {
+			dls = append(dls, d)
+		}
+	}
 
 	sessionStats := make(map[string]*dialStats, len(dls))
 	for _, d := range dls {

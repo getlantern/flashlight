@@ -182,7 +182,7 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 		err = p.initPersistentConnection(addr, conn)
 	}
 	if err != nil {
-		log.Debugf("Error sending CONNECT or persistent...closing connection to: %v", addr)
+		log.Debugf("Error sending CONNECT or persistent...closing possibly virtual connection to: %v", addr)
 		conn.Close()
 		return nil, err
 	}
@@ -216,7 +216,7 @@ func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn bufconn.Conn, timeout 
 	r := conn.Head()
 	err = p.checkCONNECTResponse(op, r, req, reqTime, conn)
 	if err != nil {
-		log.Errorf("Error checking CONNECT response on conn: %#v", conn.(netx.WrappedConn).Wrapped())
+		log.Errorf("Error checking CONNECT response on conn: %#v", conn.(netx.WrappedConn).Wrapped().(fmt.Stringer).String())
 	}
 	return err
 }
