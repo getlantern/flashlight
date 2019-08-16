@@ -57,7 +57,7 @@ func ReportIssue(appVersion string, deviceModel string, iosVersion string, email
 	
 	bytes, err := ioutil.ReadFile(proxiesYamlPath)
 	if err != nil {
-		log.Errorf("Unable to zip proxies.yaml: %v", err)
+		log.Errorf("Unable to read proxies.yaml for reporting issue: %v", err)
 	} else {
 		msg.Proxies = bytes
 	}

@@ -169,16 +169,15 @@ func sendTemplate(msg *Message) error {
 		})
 	}
 	if len(msg.Proxies) > 0 {
-		log.Debug("Adding proxies file and sending to mandrill")
 		mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment {
 			Type:  "text/yaml",
 			Name:  "proxies.yaml",
 			Content: base64.StdEncoding.EncodeToString(msg.Proxies),
 		})
 	} else {
-		log.Debug("Couldn't detect proxies file when sending to mandrill")
+		log.Debug("No proxies.yaml included to send to mandrill")
 	}
-	
+
 	responses, err := client.MessagesSendTemplate(mmsg, msg.Template, "")
 	if err != nil {
 		return err
