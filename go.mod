@@ -19,7 +19,6 @@ require (
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20190612212110-050956b70e0f
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
-	github.com/getlantern/bytecounting v0.0.0-20190530140808-3b3f10d3b9ab // indirect
 	github.com/getlantern/cmux v0.0.0-20190711013109-98b1e3bae67b
 	github.com/getlantern/detour v0.0.0-20190122161414-7107a599a170
 	github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041 // indirect
@@ -35,7 +34,7 @@ require (
 	github.com/getlantern/geolookup v0.0.0-20180719190536-68d621f75f46
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
 	github.com/getlantern/go-update v0.0.0-20190510022740-79c495ab728c // indirect
-	github.com/getlantern/golog v0.0.0-20170508214112-cca714f7feb5
+	github.com/getlantern/golog v0.0.0-20190809085441-26e09e6dd330
 	github.com/getlantern/gotun v0.0.0-20190523194503-885514e382d2
 	github.com/getlantern/gowin v0.0.0-20160824205538-88fa116ddffc // indirect
 	github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55
@@ -47,7 +46,7 @@ require (
 	github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644
 	github.com/getlantern/kcpwrapper v0.0.0-20171114192627-a35c895f6de7
 	github.com/getlantern/keyman v0.0.0-20180207174507-f55e7280e93a
-	github.com/getlantern/lampshade v0.0.0-20190507122828-84b870a67bd6
+	github.com/getlantern/lampshade v0.0.0-20190816205100-d7e25664dd67
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
@@ -62,7 +61,7 @@ require (
 	github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff
 	github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8
 	github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c
-	github.com/getlantern/proxy v0.0.0-20190726221354-12a6499b23bc
+	github.com/getlantern/proxy v0.0.0-20190225163220-31d1cc06ed3d
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
 	github.com/getlantern/quicwrapper v0.0.0-20190722222217-23eaa92dfe00
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
@@ -101,13 +100,16 @@ require (
 	github.com/prometheus/procfs v0.0.0-20190507164030-5867b95ac084 // indirect
 	github.com/refraction-networking/utls v0.0.0-00010101000000-000000000000
 	github.com/skratchdot/open-golang v0.0.0-20160302144031-75fb7ed4208c
-	github.com/stretchr/testify v1.3.0
+	github.com/stretchr/testify v1.4.0
 	github.com/tevino/abool v0.0.0-20170917061928-9b9efcf221b5
 	github.com/tjfoc/gmsm v0.0.0-20180404022540-0effa9db1ba8 // indirect
 	github.com/uber/jaeger-client-go v2.16.0+incompatible
 	github.com/uber/jaeger-lib v2.0.0+incompatible
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
-	golang.org/x/net v0.0.0-20190514140710-3ec191127204
+	golang.org/x/net v0.0.0-20190813141303-74dc4d7220e7
+	golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a // indirect
+	golang.org/x/tools v0.0.0-20190816200558-6889da9d5479 // indirect
+	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/getlantern/yaml.v1 v1.0.0-20140912054538-97d86b60f57e // indirect
 	gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce // indirect
 	gopkg.in/vmihailenco/msgpack.v2 v2.9.1 // indirect
