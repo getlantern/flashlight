@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"net/http"
 	"time"
+	"io/ioutil"
 
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/logging"
@@ -30,7 +31,7 @@ func init() {
 }
 
 // ReportIssue reports an issue via email.
-func ReportIssue(appVersion string, deviceModel string, iosVersion string, emailAddress string, issue string, appLogsDir string, tunnelLogsDir string) error {
+func ReportIssue(appVersion string, deviceModel string, iosVersion string, emailAddress string, issue string, appLogsDir string, tunnelLogsDir string, proxiesYamlPath string) error {
 	msg := &email.Message{
 		Template: "user-send-logs-ios",
 		From:     emailAddress,
@@ -53,5 +54,14 @@ func ReportIssue(appVersion string, deviceModel string, iosVersion string, email
 	} else {
 		msg.Logs = b.Bytes()
 	}
+	
+	bytes, err := ioutil.ReadFile(proxiesYamlPath)
+	if err != nil {
+		log.Errorf("Unable to zip proxies.yaml: %v", err)
+	} else {
+		msg.Proxies = bytes
+	}
+
+
 	return email.Send(msg)
 }
