@@ -1,131 +1,79 @@
 package config
 
 import (
+	"math/rand"
 	"strings"
+)
+
+const (
+	none = "none"
+	free = "free"
+	pro  = "pro"
 )
 
 // AdSettings are settings to use when showing ads to Android clients
 type AdSettings struct {
-	RegionsEnabled *map[string]bool
-	Whitelist      *map[string]bool
-	ShowAds        bool
-	MinDaysShowAds int `yaml:"mindaysshowads,omitempty"`
-	MaxDaysShowAds int `yaml:"maxdaysshowads,omitempty"`
-	Percentage     float64
-	Provider       string
-	Admob          *Admob
-	InMobi         *InMobi
+	NativeBannerZoneID   string `yaml:"nativebannerzoneid,omitempty"`
+	StandardBannerZoneID string `yaml:"standardbannerzoneid,omitempty"`
+	InterstitialZoneID   string `yaml:"interstitialzoneid,omitempty"`
+	DaysToSuppress       int    `yaml:"daystosuppress,omitempty"`
+	Percentage           float64
+	Countries            map[string]string
 }
 
-type Admob struct {
-	AppId            string
-	AdunitId         string
-	InterstitialAdId string
-	VideoAdunitId    string
+type AdProvider struct {
+	AdSettings
 }
 
-type InMobi struct {
-	AppId            string
-	InterstitialAdId string
-	NativeAdId       string
-}
-
-// showAds is a global indicator to show ads to clients at all
-func (settings *AdSettings) Enabled() bool {
-	if settings != nil {
-		return settings.ShowAds
+func (s *AdSettings) GetAdProvider(isPro bool, countryCode string, daysSinceInstalled int) *AdProvider {
+	if !s.adsEnabled(isPro, countryCode, daysSinceInstalled) {
+		return nil
 	}
-	return false
+
+	return &AdProvider{*s}
 }
 
-func (settings *AdSettings) UseWhitelist() bool {
-	return settings != nil && settings.Whitelist != nil
-}
-
-func (settings *AdSettings) IsRegionEnabled(region string) bool {
-	if settings == nil || settings.RegionsEnabled == nil {
+func (s *AdSettings) adsEnabled(isPro bool, countryCode string, daysSinceInstalled int) bool {
+	if s == nil {
 		return false
 	}
-	log.Debugf("Checking if ads are enabled for region: %v", region)
-	m := *settings.RegionsEnabled
-	_, exists := m[region]
-	return exists
-}
 
-// check whether we should show an ad for the given app
-func (settings *AdSettings) IsWhitelisted(app string) bool {
-	if settings == nil || settings.Whitelist == nil {
+	if daysSinceInstalled < s.DaysToSuppress {
 		return false
 	}
-	m := *settings.Whitelist
-	_, exists := m[app]
-	return exists
-}
 
-func (settings *AdSettings) GetMinDaysShowAds() int {
-	if settings != nil {
-		return settings.MinDaysShowAds
+	level := s.Countries[strings.ToLower(countryCode)]
+	switch level {
+	case free:
+		return !isPro
+	case pro:
+		return true
+	default:
+		return false
 	}
-	return 0
 }
 
-func (settings *AdSettings) GetMaxDaysShowAds() int {
-	if settings != nil {
-		return settings.MaxDaysShowAds
-	}
-	return 0
-}
-
-func (settings *AdSettings) GetProvider() string {
-	if settings != nil {
-		return settings.Provider
-	}
-	return ""
-}
-
-func (settings *AdSettings) GetPercentage() float64 {
-	if settings != nil {
-		return settings.Percentage
-	}
-	return 0
-}
-
-func (settings *AdSettings) AppId() string {
-	if settings != nil && settings.Admob != nil {
-		log.Debugf("Admob id is %s", settings.Admob.AppId)
-		return settings.Admob.AppId
-	}
-	return ""
-}
-
-func (settings *AdSettings) AdunitId() string {
-	if settings != nil && settings.Admob != nil {
-		return settings.Admob.AdunitId
-	}
-	return ""
-}
-
-func (settings *AdSettings) InterstitialAdId() string {
-	if settings == nil {
+func (p *AdProvider) GetNativeBannerZoneID() string {
+	if p == nil {
 		return ""
 	}
-	if strings.EqualFold(settings.Provider, "inmobi") {
-		return settings.InMobi.InterstitialAdId
-	} else {
-		return settings.Admob.InterstitialAdId
-	}
+	return p.NativeBannerZoneID
 }
 
-func (settings *AdSettings) NativeAdId() string {
-	if settings != nil && settings.InMobi != nil {
-		return settings.InMobi.NativeAdId
+func (p *AdProvider) GetStandardBannerZoneID() string {
+	if p == nil {
+		return ""
 	}
-	return ""
+	return p.StandardBannerZoneID
 }
 
-func (settings *AdSettings) VideoAdunitId() string {
-	if settings != nil && settings.Admob != nil {
-		return settings.Admob.VideoAdunitId
+func (p *AdProvider) GetInterstitialZoneID() string {
+	if p == nil {
+		return ""
 	}
-	return ""
+	return p.InterstitialZoneID
+}
+
+func (p *AdProvider) ShouldShowAd() bool {
+	return rand.Float64() <= p.Percentage/100
 }
