@@ -4,15 +4,22 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/getlantern/flashlight/diagnostics"
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/ws"
 	"github.com/getlantern/osversion"
+	"github.com/getlantern/yaml"
 )
 
 type mandrillMessage struct {
 	email.Message
+
 	// If attach the settings file to the email or not
 	WithSettings bool `json:"withSettings,omitempty"`
+
+	// If true, diagnostics will be run and a report will be attached to the email. The email will
+	// not be sent until the diagnostics have completed.
+	RunDiagnostics bool `json:"runDiagnostics,omitempty"`
 }
 
 // A proxy that accept requests from WebSocket and send email via 3rd party
@@ -44,6 +51,9 @@ func read(service *ws.Service) {
 
 func handleMessage(service *ws.Service, data *mandrillMessage) {
 	fillDefaults(data)
+	if data.RunDiagnostics {
+		data.DiagnosticsYAML = runDiagnostics()
+	}
 	if err := email.Send(&data.Message); err != nil {
 		service.Out <- err.Error()
 	} else {
@@ -77,4 +87,16 @@ func fillDefaults(msg *mandrillMessage) {
 		}
 		msg.SettingsData = buf.Bytes()
 	}
+}
+
+// Returns nil and logs an error if encoding fails.
+func runDiagnostics() (reportYAML []byte) {
+	r := diagnostics.Run()
+	b, err := yaml.Marshal(r)
+	if err != nil {
+		log.Errorf("failed to encode diagnostics report: %v", err)
+		log.Debugf("the following report failed to encode: %+v", r)
+		return nil
+	}
+	return b
 }
