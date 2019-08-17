@@ -19,12 +19,13 @@ import (
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/launcher"
 	"github.com/getlantern/memhelper"
-	"github.com/getlantern/notifier"
+	notify "github.com/getlantern/notifier"
 	"github.com/getlantern/profiling"
 
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/autoupdate"
 	"github.com/getlantern/flashlight/borda"
+	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
@@ -68,6 +69,11 @@ type App struct {
 
 	uiServer *ui.Server
 	ws       ws.UIChannel
+
+	// This map value (the map itself, not the map entries) is written to and read from
+	// concurrently. However, we have no synchronization mechanisms as we have no need to control
+	// access order.
+	proxiesMap map[string]*chained.ChainedServerInfo
 }
 
 // Init initializes the App's state
@@ -161,6 +167,7 @@ func (app *App) Run() {
 			app.beforeStart(listenAddr),
 			app.afterStart,
 			app.onConfigUpdate,
+			app.onProxiesUpdate,
 			settings,
 			app.statsTracker,
 			func(err error) {
@@ -288,7 +295,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		if err != nil {
 			log.Errorf("Unable to serve bandwidth to UI: %v", err)
 		}
-		err = serveEmailProxy(app.ws)
+		err = app.serveEmailProxy(app.ws)
 		if err != nil {
 			log.Errorf("Unable to serve mandrill to UI: %v", err)
 		}
@@ -413,6 +420,10 @@ func (app *App) onConfigUpdate(cfg *config.Global) {
 		return app.AddToken("/img/lantern_logo.png")
 	})
 	email.SetDefaultRecipient(cfg.ReportIssueEmail)
+}
+
+func (app *App) onProxiesUpdate(proxiesMap map[string]*chained.ChainedServerInfo) {
+	app.proxiesMap = proxiesMap
 }
 
 // showExistingUi triggers an existing Lantern running on the same system to

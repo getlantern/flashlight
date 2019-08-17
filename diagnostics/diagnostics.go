@@ -2,10 +2,13 @@
 package diagnostics
 
 import (
+	"net"
+
 	"github.com/jackpal/gateway"
 
 	"github.com/getlantern/diagnostics"
 	"github.com/getlantern/errors"
+	"github.com/getlantern/flashlight/chained"
 )
 
 const (
@@ -24,7 +27,7 @@ type Report struct {
 }
 
 // Run the diagnostics.
-func Run() Report {
+func Run(proxiesMap map[string]*chained.ChainedServerInfo) Report {
 	s := newSuite()
 	s.initAndAdd("ping default gateway", func() (diagnostics.Diagnostic, error) {
 		defaultGateway, err := gateway.DiscoverGateway()
@@ -36,6 +39,16 @@ func Run() Report {
 			Count:   pingCount,
 		}, nil
 	})
+	// TODO: should we include the names somehow?
+	if proxiesMap != nil {
+		for _, proxyInfo := range proxiesMap {
+			host, _, _ := net.SplitHostPort(proxyInfo.Addr)
+			s.add("ping proxies", &diagnostics.Ping{
+				Address: host,
+				Count:   pingCount,
+			})
+		}
+	}
 	return Report{
 		Version: reportVersion,
 		Results: s.run(),
