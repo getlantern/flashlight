@@ -5,8 +5,8 @@ go 1.12
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v0.0.0-20180321061416-7d56ec4f381e
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
-	github.com/anacrolix/go-libutp v1.0.1
-	github.com/anacrolix/mmsg v1.0.0 // indirect
+	github.com/anacrolix/go-libutp v1.0.2
+	github.com/anacrolix/torrent v1.6.0 // indirect
 	github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc // indirect
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dustin/go-humanize v1.0.0
@@ -87,6 +87,7 @@ require (
 	github.com/mitchellh/go-server-timing v1.0.0
 	github.com/mitchellh/mapstructure v0.0.0-20180220230111-00c29f56e238
 	github.com/mitchellh/panicwrap v0.0.0-20170106182340-fce601fe5557
+	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/refraction-networking/utls v0.0.0-20190415193640-32987941ebd3
