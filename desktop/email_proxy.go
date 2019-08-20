@@ -27,32 +27,30 @@ type mandrillMessage struct {
 // It intentionally uses direct connection to the 3rd party service, to serve
 // as an out-of-band channel when Lantern doesn't work well, say, when user
 // wants to report an issue.
-func serveEmailProxy(channel ws.UIChannel) error {
+func (app *App) serveEmailProxy(channel ws.UIChannel) error {
 	service, err := channel.RegisterWithMsgInitializer("email-proxy", nil,
 		func() interface{} { return &mandrillMessage{} })
 	if err != nil {
 		log.Errorf("Error registering with UI? %v", err)
 		return err
 	}
-	go read(service)
+	go func() {
+		for message := range service.In {
+			data, ok := message.(*mandrillMessage)
+			if !ok {
+				log.Errorf("Malformatted message %v", message)
+				continue
+			}
+			app.handleMandrillMessage(service, data)
+		}
+	}()
 	return nil
 }
 
-func read(service *ws.Service) {
-	for message := range service.In {
-		data, ok := message.(*mandrillMessage)
-		if !ok {
-			log.Errorf("Malformatted message %v", message)
-			continue
-		}
-		handleMessage(service, data)
-	}
-}
-
-func handleMessage(service *ws.Service, data *mandrillMessage) {
-	fillDefaults(data)
+func (app *App) handleMandrillMessage(service *ws.Service, data *mandrillMessage) {
+	fillMandrillDefaults(data)
 	if data.RunDiagnostics {
-		data.DiagnosticsYAML = runDiagnostics()
+		data.DiagnosticsYAML = app.runDiagnostics()
 	}
 	if err := email.Send(&data.Message); err != nil {
 		service.Out <- err.Error()
@@ -61,7 +59,7 @@ func handleMessage(service *ws.Service, data *mandrillMessage) {
 	}
 }
 
-func fillDefaults(msg *mandrillMessage) {
+func fillMandrillDefaults(msg *mandrillMessage) {
 	if msg.Vars == nil {
 		// avoid panicking in case the message is malformed
 		msg.Vars = make(map[string]interface{})
@@ -90,8 +88,11 @@ func fillDefaults(msg *mandrillMessage) {
 }
 
 // Returns nil and logs an error if encoding fails.
-func runDiagnostics() (reportYAML []byte) {
-	r := diagnostics.Run()
+func (app *App) runDiagnostics() (reportYAML []byte) {
+	app.proxiesMapLock.RLock()
+	r := diagnostics.Run(app.proxiesMap)
+	app.proxiesMapLock.RUnlock()
+
 	b, err := yaml.Marshal(r)
 	if err != nil {
 		log.Errorf("failed to encode diagnostics report: %v", err)

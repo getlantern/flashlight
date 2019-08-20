@@ -17,7 +17,7 @@ require (
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
 	github.com/getlantern/cmux v0.0.0-20190809092548-4b7adf243efe
 	github.com/getlantern/detour v0.0.0-20190122161414-7107a599a170
-	github.com/getlantern/diagnostics v0.0.0-20190801170507-8dda8cf26c5f
+	github.com/getlantern/diagnostics v0.0.0-20190820054534-b2070abd5177
 	github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041 // indirect
 	github.com/getlantern/dnsgrab v0.0.0-20171025121014-227f729dcb41
 	github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4
@@ -91,6 +91,7 @@ require (
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/refraction-networking/utls v0.0.0-20190415193640-32987941ebd3
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
+	github.com/sparrc/go-ping v0.0.0-20190613174326-4e5b6552494c
 	github.com/stretchr/testify v1.3.0
 	github.com/tevino/abool v0.0.0-20170917061928-9b9efcf221b5
 	github.com/tjfoc/gmsm v0.0.0-20180404022540-0effa9db1ba8 // indirect
