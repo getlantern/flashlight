@@ -64,6 +64,7 @@ func Run(httpProxyAddr string,
 	beforeStart func() bool,
 	afterStart func(cl *client.Client),
 	onConfigUpdate func(cfg *config.Global),
+	onProxiesUpdate func(map[string]*chained.ChainedServerInfo),
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
 	onError func(err error),
@@ -72,6 +73,16 @@ func Run(httpProxyAddr string,
 	lang func() string,
 	adSwapTargetURL func() string,
 	reverseDNS func(host string) string) error {
+
+	if onProxiesUpdate == nil {
+		onProxiesUpdate = func(_ map[string]*chained.ChainedServerInfo) {}
+	}
+	if onConfigUpdate == nil {
+		onConfigUpdate = func(_ *config.Global) {}
+	}
+	if onError == nil {
+		onError = func(_ error) {}
+	}
 
 	// check # of goroutines every minute, print the top 5 stacks with most
 	// goroutines if the # exceeds 2000 and is increasing.
@@ -112,6 +123,7 @@ func Run(httpProxyAddr string,
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
 		cl.Configure(proxyMap)
+		onProxiesUpdate(proxyMap)
 	}
 	globalDispatch := func(conf interface{}) {
 		// Don't love the straight cast here, but we're also the ones defining
