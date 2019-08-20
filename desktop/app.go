@@ -70,10 +70,8 @@ type App struct {
 	uiServer *ui.Server
 	ws       ws.UIChannel
 
-	// This map value (the map itself, not the map entries) is written to and read from
-	// concurrently. However, we have no synchronization mechanisms as we have no need to control
-	// access order.
-	proxiesMap map[string]*chained.ChainedServerInfo
+	proxiesMap     map[string]*chained.ChainedServerInfo
+	proxiesMapLock sync.RWMutex
 }
 
 // Init initializes the App's state
@@ -423,7 +421,9 @@ func (app *App) onConfigUpdate(cfg *config.Global) {
 }
 
 func (app *App) onProxiesUpdate(proxiesMap map[string]*chained.ChainedServerInfo) {
+	app.proxiesMapLock.Lock()
 	app.proxiesMap = proxiesMap
+	app.proxiesMapLock.Unlock()
 }
 
 // showExistingUi triggers an existing Lantern running on the same system to

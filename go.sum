@@ -116,8 +116,8 @@ github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 h1:NRUJuo3v3WGC
 github.com/getlantern/context v0.0.0-20190109183933-c447772a6520/go.mod h1:L+mq6/vvYHKjCX2oez0CgEAJmbq1fbb/oNJIWQkBybY=
 github.com/getlantern/detour v0.0.0-20190122161414-7107a599a170 h1:CdO/ANUQWFnUhbUnLUJvoeqfYE1dAO5Zhd/bvvhzNv4=
 github.com/getlantern/detour v0.0.0-20190122161414-7107a599a170/go.mod h1:8jrzlxU3igsPFFgNHZlYrOJ3lIf+S3/0n70g+4gR/w8=
-github.com/getlantern/diagnostics v0.0.0-20190801170507-8dda8cf26c5f h1:EZpRAIW4AIbH7W3uw8UoycmrPkTIv8+FS8GsMm5w0tI=
-github.com/getlantern/diagnostics v0.0.0-20190801170507-8dda8cf26c5f/go.mod h1:Xzkab6s+wdWDQTqIWawe0vIWp1STyBu1x645uV9xM3w=
+github.com/getlantern/diagnostics v0.0.0-20190820054534-b2070abd5177 h1:sB7mfmj8Nk4SZ4zAwwyEaRApwtzblC+kIyfU+HSFaEo=
+github.com/getlantern/diagnostics v0.0.0-20190820054534-b2070abd5177/go.mod h1:Xzkab6s+wdWDQTqIWawe0vIWp1STyBu1x645uV9xM3w=
 github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041 h1:0+6PMeuySx1d4G6JZcThwbqgdXYRzlvKIUJWqndZ4Tw=
 github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041/go.mod h1:CbTkjHHMyw9CPQKfTyYx2XldN/XJSmqTwHl3HLwvo2Y=
 github.com/getlantern/dnsgrab v0.0.0-20171025121014-227f729dcb41 h1:6YbIHCO4aVCRTSQWceiv0JssiXmXDKOlIp3OIc0sShg=

@@ -89,7 +89,10 @@ func fillMandrillDefaults(msg *mandrillMessage) {
 
 // Returns nil and logs an error if encoding fails.
 func (app *App) runDiagnostics() (reportYAML []byte) {
+	app.proxiesMapLock.RLock()
 	r := diagnostics.Run(app.proxiesMap)
+	app.proxiesMapLock.RUnlock()
+
 	b, err := yaml.Marshal(r)
 	if err != nil {
 		log.Errorf("failed to encode diagnostics report: %v", err)

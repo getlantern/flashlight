@@ -39,16 +39,12 @@ func Run(proxiesMap map[string]*chained.ChainedServerInfo) Report {
 			Count:   pingCount,
 		}, nil
 	})
-	// TODO: should we include the names somehow?
-	if proxiesMap != nil {
-		for _, proxyInfo := range proxiesMap {
-			host, _, _ := net.SplitHostPort(proxyInfo.Addr)
-			s.add("ping proxies", &diagnostics.Ping{
-				Address: host,
-				Count:   pingCount,
-			})
-		}
+	proxyHosts := map[string]string{}
+	for proxyName, proxyInfo := range proxiesMap {
+		host, _, _ := net.SplitHostPort(proxyInfo.Addr)
+		proxyHosts[proxyName] = host
 	}
+	s.add("ping proxies", multiPing{proxyHosts, pingCount})
 	return Report{
 		Version: reportVersion,
 		Results: s.run(),
