@@ -85,6 +85,8 @@ type Message struct {
 	Logs []byte
 	// DiagnosticsYAML is a YAML-encoded diagnostics report.
 	DiagnosticsYAML []byte
+	// PacketCaptures is a zipped set of pcap files related to diagnostics.
+	PacketCaptures []byte
 	// Proxies allows the caller to specify a proxies.yaml file
 	Proxies []byte
 }
