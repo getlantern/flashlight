@@ -1,5 +1,13 @@
 # Change Log
 
+## [5.5.3](https://github.com/getlantern/flashlight/tree/5.5.3) (2019-08-21)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.2...5.5.3)
+
+**Merged pull requests:**
+
+- added lantern free logo fix [\#659](https://github.com/getlantern/flashlight/pull/659) ([myleshorton](https://github.com/myleshorton))
+- oquic v0 [\#653](https://github.com/getlantern/flashlight/pull/653) ([forkner](https://github.com/forkner))
+
 ## [5.5.2](https://github.com/getlantern/flashlight/tree/5.5.2) (2019-08-20)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.1...5.5.2)
 
@@ -256,10 +264,6 @@
 
 ## [5.2.1](https://github.com/getlantern/flashlight/tree/5.2.1) (2018-12-07)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.0...5.2.1)
-
-**Merged pull requests:**
-
-- Updated ui [\#555](https://github.com/getlantern/flashlight/pull/555) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.2.0](https://github.com/getlantern/flashlight/tree/5.2.0) (2018-12-04)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.1.0...5.2.0)
