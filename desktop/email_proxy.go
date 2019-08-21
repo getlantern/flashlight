@@ -49,13 +49,12 @@ func (app *App) handleMandrillMessage(service *ws.Service, data *mandrillMessage
 	fillMandrillDefaults(data)
 	if data.RunDiagnostics {
 		app.proxiesMapLock.RLock()
-		diagnosticsYAML, err := runDiagnostics(app.proxiesMap)
-		app.proxiesMapLock.RUnlock()
-		if err != nil {
-			log.Errorf("failed to run diagnostics: %v", err)
-		} else {
-			data.DiagnosticsYAML = diagnosticsYAML
+		var errs []error
+		data.DiagnosticsYAML, data.PacketCaptures, errs = runDiagnostics(app.proxiesMap)
+		for _, err := range errs {
+			log.Errorf("error running diagnostics: %v", err)
 		}
+		app.proxiesMapLock.RUnlock()
 	}
 	if err := email.Send(&data.Message); err != nil {
 		service.Out <- err.Error()
