@@ -19,6 +19,7 @@ import (
 
 	"github.com/getlantern/golog"
 	proxy "github.com/getlantern/http-proxy-lantern"
+	"github.com/getlantern/quicwrapper"
 	"github.com/getlantern/tlsdefaults"
 	"github.com/getlantern/waitforserver"
 	"github.com/getlantern/yaml"
@@ -38,6 +39,8 @@ const (
 	IfNoneMatch = "X-Lantern-If-None-Match"
 
 	obfs4SubDir = ".obfs4"
+
+	oquicKey = "tAqXDihxfJDqyHy35k2NhImetkzKmoC7MFEELrYi6LI="
 )
 
 var (
@@ -57,6 +60,7 @@ type Helper struct {
 	LampshadeProxyServerAddr    string
 	LampshadeUTPProxyServerAddr string
 	QUICProxyServerAddr         string
+	OQUICProxyServerAddr        string
 	WSSProxyServerAddr          string
 	HTTPServerAddr              string
 	HTTPSServerAddr             string
@@ -69,7 +73,7 @@ type Helper struct {
 // also enables ForceProxying on the client package to make sure even localhost
 // origins are served through the proxy. Make sure to close the Helper with
 // Close() when finished with the test.
-func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string, wssAddr string, httpsUTPAddr string, obfs4UTPAddr string, lampshadeUTPAddr string) (*Helper, error) {
+func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string, oquicAddr string, wssAddr string, httpsUTPAddr string, obfs4UTPAddr string, lampshadeUTPAddr string) (*Helper, error) {
 	ConfigDir, err := ioutil.TempDir("", "integrationtest_helper")
 	log.Debugf("ConfigDir is %v", ConfigDir)
 	if err != nil {
@@ -86,6 +90,7 @@ func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr s
 		LampshadeProxyServerAddr:    lampshadeAddr,
 		LampshadeUTPProxyServerAddr: lampshadeUTPAddr,
 		QUICProxyServerAddr:         quicAddr,
+		OQUICProxyServerAddr:        oquicAddr,
 		WSSProxyServerAddr:          wssAddr,
 	}
 	helper.SetProtocol("https")
@@ -173,6 +178,8 @@ func (helper *Helper) startProxyServer() error {
 		return err
 	}
 
+	oqDefaults := quicwrapper.DefaultOQuicConfig([]byte(""))
+
 	s1 := &proxy.Proxy{
 		TestingLocal:     true,
 		HTTPAddr:         helper.HTTPSProxyServerAddr,
@@ -184,11 +191,19 @@ func (helper *Helper) startProxyServer() error {
 		LampshadeUTPAddr: helper.LampshadeUTPProxyServerAddr,
 		QUICAddr:         helper.QUICProxyServerAddr,
 		WSSAddr:          helper.WSSProxyServerAddr,
-		Token:            Token,
-		KeyFile:          KeyFile,
-		CertFile:         CertFile,
-		IdleTimeout:      30 * time.Second,
-		HTTPS:            true,
+
+		OQUICAddr:              helper.OQUICProxyServerAddr,
+		OQUICKey:               oquicKey,
+		OQUICCipher:            oqDefaults.Cipher,
+		OQUICAggressivePadding: uint64(oqDefaults.AggressivePadding),
+		OQUICMaxPaddingHint:    uint64(oqDefaults.MaxPaddingHint),
+		OQUICMinPadded:         uint64(oqDefaults.MinPadded),
+
+		Token:       Token,
+		KeyFile:     KeyFile,
+		CertFile:    CertFile,
+		IdleTimeout: 30 * time.Second,
+		HTTPS:       true,
 	}
 
 	// kcp server
@@ -293,6 +308,8 @@ func (helper *Helper) writeProxyConfig(resp http.ResponseWriter, req *http.Reque
 		version = "8"
 	} else if proto == "utplampshade" {
 		version = "9"
+	} else if proto == "oquic" {
+		version = "10"
 	}
 
 	if req.Header.Get(IfNoneMatch) == version {
@@ -369,6 +386,12 @@ func (helper *Helper) buildProxies(proto string) ([]byte, error) {
 		} else if proto == "quic" {
 			srv.Addr = helper.QUICProxyServerAddr
 			srv.PluggableTransport = "quic"
+		} else if proto == "oquic" {
+			srv.Addr = helper.OQUICProxyServerAddr
+			srv.PluggableTransport = "oquic"
+			srv.PluggableTransportSettings = map[string]string{
+				"oquic_key": oquicKey,
+			}
 		} else if proto == "wss" {
 			srv.Addr = helper.WSSProxyServerAddr
 			srv.PluggableTransport = "wss"
