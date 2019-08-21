@@ -3,7 +3,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"io"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -15,12 +15,16 @@ import (
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
+	"github.com/uber/jaeger-lib/metrics"
+
+	jaeger "github.com/uber/jaeger-client-go"
+
+	jaegercfg "github.com/uber/jaeger-client-go/config"
+	jaegerlog "github.com/uber/jaeger-client-go/log"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/desktop"
-
-	"github.com/mitchellh/panicwrap"
 )
 
 var (
@@ -36,35 +40,17 @@ func main() {
 	debug.SetTraceback("all")
 	parseFlags()
 
+	traceCloser := initTracing()
+
 	a := &desktop.App{
 		ShowUI: !*headless,
 		Flags:  flagsAsMap(),
 	}
 	a.Init()
-	wrapperC := handleWrapperSignals(a)
 
-	// environmental variables, etc.) and monitoring the stderr of the program.
-	exitStatus, err := panicwrap.BasicWrap(
-		func(output string) {
-			a.LogPanicAndExit(output)
-		})
-	if err != nil {
-		// Something went wrong setting up the panic wrapper. This won't be
-		// captured by panicwrap
-		// At this point, continue execution without panicwrap support. There
-		// are known cases where panicwrap will fail to fork, such as Windows
-		// GUI app
-		log.Errorf("Error setting up panic wrapper: %v", err)
-	} else {
-		// If exitStatus >= 0, then we're the parent process.
-		if exitStatus >= 0 {
-			os.Exit(exitStatus)
-		}
-	}
-
-	// We're in the child (wrapped) process
-	// Stop wrapper signal handling
-	signal.Stop(wrapperC)
+	a.AddExitFunc("Ending background tracing span", func() {
+		traceCloser.Close()
+	})
 
 	if *help {
 		flag.Usage()
@@ -145,6 +131,35 @@ func i18nInit(a *desktop.App) {
 	}
 }
 
+type nullCloser struct{}
+
+func (*nullCloser) Close() error { return nil }
+
+func initTracing() io.Closer {
+	cfg := jaegercfg.Configuration{
+		Sampler: &jaegercfg.SamplerConfig{
+			Type:  jaeger.SamplerTypeConst,
+			Param: 1,
+		},
+		Reporter: &jaegercfg.ReporterConfig{
+			CollectorEndpoint: "http://104.131.222.209:14268/api/traces",
+			//User:              "",
+			//Password:          "",
+		},
+	}
+
+	closer, err := cfg.InitGlobalTracer(
+		"lantern",
+		jaegercfg.Logger(jaegerlog.StdLogger),
+		jaegercfg.Metrics(metrics.NullFactory),
+	)
+	if err != nil {
+		log.Errorf("Could not initialize jaeger tracer: %s", err.Error())
+		return &nullCloser{}
+	}
+	return closer
+}
+
 func parseFlags() {
 	args := os.Args[1:]
 	// On OS X, the first time that the program is run after download it is
@@ -159,22 +174,6 @@ func parseFlags() {
 	// Note - we can ignore the returned error because CommandLine.Parse() will
 	// exit if it fails.
 	_ = flag.CommandLine.Parse(args)
-}
-
-// Handle system signals in panicwrap wrapper process for clean exit
-func handleWrapperSignals(a *desktop.App) chan os.Signal {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c,
-		syscall.SIGHUP,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGQUIT,
-		syscall.SIGPIPE) // it's okay to trap SIGPIPE in the wrapper but not in the main process because we can get it from failed network connections
-	go func() {
-		s := <-c
-		a.LogPanicAndExit(fmt.Sprintf("Panicwrapper received signal %v", s))
-	}()
-	return c
 }
 
 // Handle system signals for clean exit

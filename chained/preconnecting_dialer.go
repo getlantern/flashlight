@@ -45,7 +45,7 @@ func newPreconnectingDialer(name string, maxPreconnect int, expiration time.Dura
 	return pd
 }
 
-func (pd *preconnectingDialer) dial(ctx context.Context, p *proxy) (conn net.Conn, err error) {
+func (pd *preconnectingDialer) dial(ctx context.Context, proxyName, upstreamHost string, p *proxy) (conn net.Conn, err error) {
 	// Whenever we dial successfully, warm up the pool by preconnecting
 	defer func() {
 		if err == nil {
@@ -66,7 +66,7 @@ func (pd *preconnectingDialer) dial(ctx context.Context, p *proxy) (conn net.Con
 			pd.log.Tracef("preconnection expired before use")
 		default:
 			pd.log.Tracef("dialing on demand")
-			conn, err = pd.origDial(ctx, p)
+			conn, err = pd.origDial(ctx, proxyName, upstreamHost, p)
 			return
 		}
 	}
@@ -98,7 +98,7 @@ func (pd *preconnectingDialer) preconnect(p *proxy) {
 	defer cancel()
 
 	expiration := time.Now().Add(pd.expiration)
-	conn, err := pd.origDial(ctx, p)
+	conn, err := pd.origDial(ctx, "", "", p)
 	if err != nil {
 		pd.log.Errorf("error preconnecting: %v", err)
 		pd.decrementPreconnecting()

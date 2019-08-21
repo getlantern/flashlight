@@ -100,7 +100,7 @@ func (l *lampshadeProxy) newProxy(uc common.UserConfig) (*proxy, error) {
 	return newProxy(l.name, lampshadeTransport, l.proto, l.s, uc, l.s.Trusted, false, l.dialServer, l.dialOrigin)
 }
 
-func (l *lampshadeProxy) dialServer(ctx context.Context, p *proxy) (net.Conn, error) {
+func (l *lampshadeProxy) dialServer(ctx context.Context, proxyName, upstreamHost string, p *proxy) (net.Conn, error) {
 	return p.reportedDial(l.s.Addr, lampshadeTransport, l.proto, func(op *ops.Op) (net.Conn, error) {
 		op.Set("ls_win", l.opts.WindowSize).
 			Set("ls_pad", l.opts.MaxPadding).
@@ -108,7 +108,7 @@ func (l *lampshadeProxy) dialServer(ctx context.Context, p *proxy) (net.Conn, er
 			Set("ls_cipher", l.opts.Cipher.String())
 		// Note this can either dial a new TCP connection or, in most cases, create a new
 		// stream over an existing TCP connection/lampshade session.
-		conn, err := l.dialer.DialContext(ctx, func() (net.Conn, error) {
+		conn, err := l.dialer.DialContext(ctx, proxyName, upstreamHost, func() (net.Conn, error) {
 			// note - we do not wrap the TCP connection with IdleTiming because
 			// lampshade cleans up after itself and won't leave excess unused
 			// connections hanging around.

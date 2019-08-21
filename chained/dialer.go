@@ -40,7 +40,7 @@ var (
 )
 
 type proxyDialer interface {
-	dialServer(context.Context, *proxy) (net.Conn, error)
+	dialServer(context.Context, string, string, *proxy) (net.Conn, error)
 	dialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error)
 }
 
@@ -152,7 +152,7 @@ func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, err
 // persistent connection to the upstream proxy.
 func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
 	log.Debugf("Dialing origin to %v", addr)
-	conn, err := p.dialServer(ctx)
+	conn, err := p.dialServer(ctx, p.name, addr)
 	if err != nil {
 		return nil, err
 	}

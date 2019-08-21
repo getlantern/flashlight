@@ -126,7 +126,7 @@ func forceProxy(s *ChainedServerInfo) {
 }
 
 func newHTTPProxy(name, transport, proto string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
-	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
+	doDialServer := func(ctx context.Context, proxyName, upstreamHost string, p *proxy) (net.Conn, error) {
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
 			return p.dialCore(op)(ctx)
 		})
@@ -166,7 +166,7 @@ func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc commo
 	}
 	x509cert := cert.X509()
 
-	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
+	doDialServer := func(ctx context.Context, proxyName, upstreamHost string, p *proxy) (net.Conn, error) {
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
 			tlsConfig, clientHelloID := tlsConfigForProxy(s)
 			td := &tlsdialer.Dialer{
@@ -225,7 +225,7 @@ func newOBFS4Proxy(name, transport, proto string, s *ChainedServerInfo, uc commo
 		return nil, log.Errorf("Unable to parse client args: %v", err)
 	}
 
-	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
+	doDialServer := func(ctx context.Context, proxyName, upstreamHost string, p *proxy) (net.Conn, error) {
 		return p.reportedDial(p.Addr(), p.Protocol(), p.Network(), func(op *ops.Op) (net.Conn, error) {
 			dialFn := func(network, address string) (net.Conn, error) {
 				// We know for sure the network and address are the same as what
@@ -242,7 +242,7 @@ func newOBFS4Proxy(name, transport, proto string, s *ChainedServerInfo, uc commo
 
 func newQUICProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 
-	dialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
+	dialServer := func(ctx context.Context, proxyName, upstreamHost string, p *proxy) (net.Conn, error) {
 		return p.reportedDial(s.Addr, "quic", "udp", func(op *ops.Op) (net.Conn, error) {
 			conn, err := p.dialCore(op)(ctx)
 			return overheadWrapper(true)(conn, err)
@@ -254,7 +254,7 @@ func newQUICProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pro
 
 func newWSSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 
-	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
+	doDialServer := func(ctx context.Context, proxyName, upstreamHost string, p *proxy) (net.Conn, error) {
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
 			conn, err := p.dialCore(op)(ctx)
 			return overheadWrapper(true)(conn, err)
@@ -292,7 +292,7 @@ func (c *consecCounter) Get() int64 {
 	return atomic.LoadInt64(&c.v)
 }
 
-type dialServerFn func(context.Context, *proxy) (net.Conn, error)
+type dialServerFn func(context.Context, string, string, *proxy) (net.Conn, error)
 
 type dialOriginFn func(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error)
 
@@ -394,13 +394,13 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 		}
 		multiplexedDial := cmux.Dialer(&cmux.DialerOpts{
 			Dial: func(ctx context.Context, network, addr string) (net.Conn, error) {
-				return origDoDialServer(ctx, p)
+				return origDoDialServer(ctx, "", "", p)
 			},
 			KeepAliveInterval: IdleTimeout / 2,
 			KeepAliveTimeout:  IdleTimeout,
 			PoolSize:          poolSize,
 		})
-		p.doDialServer = func(ctx context.Context, p *proxy) (net.Conn, error) {
+		p.doDialServer = func(ctx context.Context, proxyName, upstreamHost string, p *proxy) (net.Conn, error) {
 			return multiplexedDial(ctx, "", "")
 		}
 	}
@@ -700,8 +700,8 @@ func (p *proxy) AdaptRequest(req *http.Request) {
 	req.Header.Add(common.TokenHeader, p.authToken)
 }
 
-func (p *proxy) dialServer(ctx context.Context) (net.Conn, error) {
-	conn, err := p.doDialServer(ctx, p)
+func (p *proxy) dialServer(ctx context.Context, proxyName, upstreamHost string) (net.Conn, error) {
+	conn, err := p.doDialServer(ctx, proxyName, upstreamHost, p)
 	if err != nil {
 		log.Errorf("Unable to dial server %v: %s", p.Label(), err)
 		p.MarkFailure()
