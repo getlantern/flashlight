@@ -677,7 +677,11 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 
 	dialFn := quicwrapper.DialWithNetx
 
-	if oquicKeyStr := s.ptSetting("oquic_key"); oquicKeyStr != "" {
+	if s.PluggableTransport == "oquic" {
+		oquicKeyStr := s.ptSetting("oquic_key")
+		if oquicKeyStr == "" {
+			return log.Error("Missing oquic_key for oquic transport")
+		}
 		oquicKey, err := base64.StdEncoding.DecodeString(oquicKeyStr)
 		if err != nil {
 			return log.Error(errors.Wrap(err).With("oquic_key", oquicKeyStr))
