@@ -15,6 +15,8 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/lampshade"
+	"github.com/opentracing/opentracing-go"
+	otlog "github.com/opentracing/opentracing-go/log"
 )
 
 const lampshadeTransport = "lampshade"
@@ -108,7 +110,8 @@ func (l *lampshadeProxy) dialServer(ctx context.Context, proxyName, upstreamHost
 			Set("ls_cipher", l.opts.Cipher.String())
 		// Note this can either dial a new TCP connection or, in most cases, create a new
 		// stream over an existing TCP connection/lampshade session.
-		conn, err := l.dialer.DialContext(ctx, proxyName, upstreamHost, func() (net.Conn, error) {
+		lifecycle := newLampshadeLifecycleListener(proxyName, upstreamHost)
+		conn, err := l.dialer.DialContext(ctx, lifecycle, func() (net.Conn, error) {
 			// note - we do not wrap the TCP connection with IdleTiming because
 			// lampshade cleans up after itself and won't leave excess unused
 			// connections hanging around.
@@ -122,4 +125,84 @@ func (l *lampshadeProxy) dialServer(ctx context.Context, proxyName, upstreamHost
 
 func (l *lampshadeProxy) dialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
 	return defaultDialOrigin(op, ctx, p, network, addr)
+}
+
+func newLampshadeLifecycleListener(proxyName, upstreamHost string) lampshade.LifecycleListener {
+	return &lampshadeLifecycleListener{
+		proxyName:    proxyName,
+		upstreamHost: upstreamHost,
+	}
+}
+
+func newLampshadeStreamListener(span opentracing.Span) lampshade.StreamLifecycleListener {
+	return &lampshadeStreamListener{
+		span: span,
+	}
+}
+
+type lampshadeLifecycleListener struct {
+	proxyName    string
+	upstreamHost string
+	dialSpan     opentracing.Span
+	sessionSpan  opentracing.Span
+}
+
+func (ll *lampshadeLifecycleListener) OnSessionInit(ctx context.Context) context.Context {
+	ll.sessionSpan = opentracing.StartSpan("lampshade-failed-TCP")
+	defer ll.sessionSpan.Finish()
+
+	return opentracing.ContextWithSpan(ctx, ll.sessionSpan)
+}
+func (ll *lampshadeLifecycleListener) OnTCPConnReceived()             {}
+func (ll *lampshadeLifecycleListener) OnReadClientInitError(string)   {}
+func (ll *lampshadeLifecycleListener) OnDecodeClientInitError(string) {}
+func (ll *lampshadeLifecycleListener) OnTCPStart(sessionContext context.Context) {
+	opts := []opentracing.StartSpanOption{opentracing.ChildOf(ll.sessionSpan.Context())}
+	ll.dialSpan = opentracing.GlobalTracer().StartSpan("lampshade-dial-init", opts...)
+}
+func (ll *lampshadeLifecycleListener) OnTCPConnectionError(err error) {
+	ll.dialSpan.SetTag("error", err.Error())
+}
+func (ll *lampshadeLifecycleListener) OnTCPEstablished(conn net.Conn) {
+	ll.dialSpan.Finish()
+	local := conn.LocalAddr().(*net.TCPAddr)
+	ll.sessionSpan.SetTag("proto", "lampshade")
+	ll.sessionSpan.SetTag("host", conn.RemoteAddr().String())
+	ll.sessionSpan.SetTag("clientport", local.Port)
+	ll.sessionSpan.SetOperationName(fmt.Sprintf("%s->%v", ll.proxyName, local.Port))
+
+	// We call finish here because the sessions's Close method is often not called, and
+	// without a finished parent span child spans seem to often be left orphaned.
+	ll.sessionSpan.Finish()
+}
+func (ll *lampshadeLifecycleListener) OnClientInitWritten(context.Context)          {}
+func (ll *lampshadeLifecycleListener) OnClientInitRead(context.Context)             {}
+func (ll *lampshadeLifecycleListener) OnSessionError(readErr error, writeErr error) {}
+
+func (ll *lampshadeLifecycleListener) OnStreamInit(ctx context.Context, id uint16) lampshade.StreamLifecycleListener {
+	// This is somewhat confusing as a result of the call to DialContext creating a new session
+	// as necessary. As a result, this lifecycle listener sometimes has a
+	opts := make([]opentracing.StartSpanOption, 0)
+	var span opentracing.Span
+	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
+		opts = append(opts, opentracing.ChildOf(parentSpan.Context()))
+		span = opentracing.GlobalTracer().StartSpan(fmt.Sprintf("stream-%v-%v", id, ll.upstreamHost), opts...)
+	} else {
+		noop := opentracing.NoopTracer{}
+		span = noop.StartSpan("noop")
+	}
+	return newLampshadeStreamListener(span)
+}
+func (ls *lampshadeStreamListener) OnStreamRead(num int) {
+	ls.span.LogFields(otlog.Int("r", num))
+}
+func (ls *lampshadeStreamListener) OnStreamWrite(num int) {
+	ls.span.LogFields(otlog.Int("w", num))
+}
+func (ls *lampshadeStreamListener) OnStreamClose() {
+	ls.span.Finish()
+}
+
+type lampshadeStreamListener struct {
+	span opentracing.Span
 }
