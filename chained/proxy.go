@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rsa"
 	gtls "crypto/tls"
+	"crypto/x509"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -621,45 +622,61 @@ func (rt *wssFrontedRT) RoundTripHijack(req *http.Request) (*http.Response, net.
 }
 
 func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
+
+	// Verify the SNI name if given, otherwise verify the hostname given and do not use SNI.
+	var err error
+	serverName := s.TLSServerNameIndicator
+	sendServerName := true
+	if serverName == "" {
+		sendServerName = false
+		serverName, _, err = net.SplitHostPort(s.Addr)
+		if err != nil {
+			serverName = s.Addr
+		}
+	}
+	helloID := s.clientHelloID()
+	pinnedCert := s.ptSettingBool("pin_certificate")
+
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 	}
 	x509cert := cert.X509()
 
-	tlsConf := &tls.Config{
-		CipherSuites:       orderedCipherSuitesFromConfig(s),
-		ServerName:         s.TLSServerNameIndicator,
-		InsecureSkipVerify: true,
-		KeyLogWriter:       getTLSKeyLogWriter(),
-	}
-
-	td := &tlsdialer.Dialer{
-		DoDial:         netx.DialTimeout,
-		SendServerName: s.TLSServerNameIndicator != "",
-		Config:         tlsConf,
-		ClientHelloID:  s.clientHelloID(),
-		Timeout:        chainedDialTimeout,
-	}
-
 	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
 		log.Debugf("tinywss Roundtripper dialing %v", addr)
-		conn, err := td.Dial(network, addr)
-		if err != nil {
-			return nil, err
-		}
-		serverCert := conn.ConnectionState().PeerCertificates[0]
-		if !serverCert.Equal(x509cert) {
-			conn.Close()
-			received, err := keyman.LoadCertificateFromX509(serverCert)
-			if err != nil {
-				return nil, log.Errorf("Unable to parse received certificate: %v (%v)", err, serverCert)
+
+		var certPool *x509.CertPool
+
+		if !pinnedCert {
+			certPool = GetFrontingCertPool(1 * time.Second)
+			if certPool == nil {
+				log.Debugf("wss cert pool is not available (yet?), falling back to pinned.")
 			}
-			return nil, log.Errorf("Server's certificate didn't match expected! Server had\n%s\nbut expected:\n%s",
-				string(received.PEMEncoded()), string(cert.PEMEncoded()))
 		}
-		log.Debugf("tinywss RoundTripper returning conn (connected)...")
-		return conn, nil
+
+		if certPool == nil {
+			certPool = x509.NewCertPool()
+			certPool.AddCert(x509cert)
+			log.Debugf("wss using pinned certificate")
+		}
+
+		tlsConf := &tls.Config{
+			CipherSuites: orderedCipherSuitesFromConfig(s),
+			ServerName:   serverName,
+			RootCAs:      certPool,
+			KeyLogWriter: getTLSKeyLogWriter(),
+		}
+
+		td := &tlsdialer.Dialer{
+			DoDial:         netx.DialTimeout,
+			SendServerName: sendServerName,
+			Config:         tlsConf,
+			ClientHelloID:  helloID,
+			Timeout:        chainedDialTimeout,
+		}
+
+		return td.Dial(network, addr)
 	}), nil
 }
 

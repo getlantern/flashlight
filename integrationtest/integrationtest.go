@@ -396,7 +396,8 @@ func (helper *Helper) buildProxies(proto string) ([]byte, error) {
 			srv.Addr = helper.WSSProxyServerAddr
 			srv.PluggableTransport = "wss"
 			srv.PluggableTransportSettings = map[string]string{
-				"multiplexed": "true",
+				"multiplexed":     "true",
+				"pin_certificate": "true",
 			}
 		} else if proto == "utphttps" {
 			srv.Addr = helper.HTTPSUTPAddr
