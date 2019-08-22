@@ -44,7 +44,7 @@ def run_with_configdir(configdir, sticky=True, headless=False, country="", remai
     subprocess.call(args + remainder)
 
 
-def config_for(name_or_ip, direct, remote_user):
+def config_for(name_or_ip, direct, remote_user='lantern'):
     ip = name_or_ip # assuming IP in case when direct is true
 
     if not direct:
