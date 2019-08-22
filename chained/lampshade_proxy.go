@@ -149,8 +149,6 @@ type lampshadeLifecycleListener struct {
 
 func (ll *lampshadeLifecycleListener) OnSessionInit(ctx context.Context) context.Context {
 	ll.sessionSpan = opentracing.StartSpan("lampshade-failed-TCP")
-	defer ll.sessionSpan.Finish()
-
 	return opentracing.ContextWithSpan(ctx, ll.sessionSpan)
 }
 func (ll *lampshadeLifecycleListener) OnTCPConnReceived()             {}
@@ -164,12 +162,13 @@ func (ll *lampshadeLifecycleListener) OnTCPConnectionError(err error) {
 	ll.dialSpan.SetTag("error", err.Error())
 }
 func (ll *lampshadeLifecycleListener) OnTCPEstablished(conn net.Conn) {
-	ll.dialSpan.Finish()
 	local := conn.LocalAddr().(*net.TCPAddr)
 	ll.sessionSpan.SetTag("proto", "lampshade")
 	ll.sessionSpan.SetTag("host", conn.RemoteAddr().String())
 	ll.sessionSpan.SetTag("clientport", local.Port)
 	ll.sessionSpan.SetOperationName(fmt.Sprintf("%s->%v", ll.proxyName, local.Port))
+
+	ll.dialSpan.Finish()
 
 	// We call finish here because the sessions's Close method is often not called, and
 	// without a finished parent span child spans seem to often be left orphaned.
