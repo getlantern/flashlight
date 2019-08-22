@@ -6,8 +6,10 @@ import (
 	gtls "crypto/tls"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
+	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -60,6 +62,9 @@ const (
 var (
 	chainedDialTimeout          = 1 * time.Minute
 	theForceAddr, theForceToken string
+
+	tlsKeyLogWriter        io.Writer
+	createKeyLogWriterOnce sync.Once
 )
 
 // CreateDialer creates a Proxy (balancer.Dialer) with supplied server info.
@@ -626,6 +631,7 @@ func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHija
 		CipherSuites:       orderedCipherSuitesFromConfig(s),
 		ServerName:         s.TLSServerNameIndicator,
 		InsecureSkipVerify: true,
+		KeyLogWriter:       getTLSKeyLogWriter(),
 	}
 
 	td := &tlsdialer.Dialer{
@@ -659,7 +665,10 @@ func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHija
 
 func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 	addr := s.Addr
-	tlsConf := &gtls.Config{InsecureSkipVerify: true}
+	tlsConf := &gtls.Config{
+		InsecureSkipVerify: true,
+		KeyLogWriter:       getTLSKeyLogWriter(),
+	}
 
 	maxStreamsPerConn := s.ptSettingInt("streams")
 
@@ -983,6 +992,7 @@ func tlsConfigForProxy(s *ChainedServerInfo) (*tls.Config, tls.ClientHelloID) {
 		CipherSuites:       cipherSuites,
 		ServerName:         s.TLSServerNameIndicator,
 		InsecureSkipVerify: true,
+		KeyLogWriter:       getTLSKeyLogWriter(),
 	}, s.clientHelloID()
 }
 
@@ -991,4 +1001,20 @@ func orderedCipherSuitesFromConfig(s *ChainedServerInfo) []uint16 {
 		return s.mobileOrderedCipherSuites()
 	}
 	return s.desktopOrderedCipherSuites()
+}
+
+// Write the session keys to file if SSLKEYLOGFILE is set, same as browsers.
+func getTLSKeyLogWriter() io.Writer {
+	createKeyLogWriterOnce.Do(func() {
+		path := os.Getenv("SSLKEYLOGFILE")
+		if path == "" {
+			return
+		}
+		var err error
+		tlsKeyLogWriter, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0600)
+		if err != nil {
+			log.Debugf("Error creating keylog file at %v: %s", path, err)
+		}
+	})
+	return tlsKeyLogWriter
 }
