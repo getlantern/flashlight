@@ -61,7 +61,7 @@ require (
 	github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c
 	github.com/getlantern/proxy v0.0.0-20190225163220-31d1cc06ed3d
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
-	github.com/getlantern/quicwrapper v0.0.0-20190820201154-8079fdf487de
+	github.com/getlantern/quicwrapper v0.0.0-20190822163127-f4cb66aff894
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/shortcut v0.0.0-20190117153616-bb4d4203cc25
