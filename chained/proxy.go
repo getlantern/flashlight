@@ -22,7 +22,6 @@ import (
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
 	"github.com/mitchellh/mapstructure"
 	tls "github.com/refraction-networking/utls"
-	"github.com/tevino/abool"
 
 	"github.com/getlantern/cmux"
 	"github.com/getlantern/ema"
@@ -408,7 +407,6 @@ type proxy struct {
 	emaRTTDev           *ema.EMA
 	emaSuccessRate      *ema.EMA
 	kcpConfig           *KCPConfig
-	forceRedial         *abool.AtomicBool
 	mostRecentABETime   time.Time
 	doDialCore          func(ctx context.Context) (net.Conn, time.Duration, error)
 	numPreconnecting    func() int
