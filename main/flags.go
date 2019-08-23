@@ -28,6 +28,7 @@ var (
 	readableconfig        = flag.Bool("readableconfig", false, "if specified, disables obfuscation of the config yaml so that it remains human readable")
 	bordaReportInterval   = flag.Duration("borda-report-interval", 15*time.Minute, "How frequently to report errors to borda. Set to 0 to disable reporting.")
 	bordaSamplePercentage = flag.Float64("borda-sample-percentage", 0.01, "The percentage of activity to report to Borda (0.01 = 1%)")
+	trace                 = flag.Bool("trace", false, "if specified, sends traces to the tracing server")
 	help                  = flag.Bool("help", false, "Get usage help")
 )
 

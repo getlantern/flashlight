@@ -127,7 +127,7 @@ func (l *lampshadeProxy) dialOrigin(op *ops.Op, ctx context.Context, p *proxy, n
 	return defaultDialOrigin(op, ctx, p, network, addr)
 }
 
-func newLampshadeLifecycleListener(proxyName, upstreamHost string) lampshade.LifecycleListener {
+func newLampshadeLifecycleListener(proxyName, upstreamHost string) lampshade.ClientLifecycleListener {
 	return &lampshadeLifecycleListener{
 		proxyName:    proxyName,
 		upstreamHost: upstreamHost,
@@ -149,11 +149,9 @@ type lampshadeLifecycleListener struct {
 
 func (ll *lampshadeLifecycleListener) OnSessionInit(ctx context.Context) context.Context {
 	ll.sessionSpan = opentracing.StartSpan("lampshade-failed-TCP")
+	ll.sessionSpan.SetTag("proxy", ll.proxyName)
 	return opentracing.ContextWithSpan(ctx, ll.sessionSpan)
 }
-func (ll *lampshadeLifecycleListener) OnTCPConnReceived()             {}
-func (ll *lampshadeLifecycleListener) OnReadClientInitError(string)   {}
-func (ll *lampshadeLifecycleListener) OnDecodeClientInitError(string) {}
 func (ll *lampshadeLifecycleListener) OnTCPStart(sessionContext context.Context) {
 	opts := []opentracing.StartSpanOption{opentracing.ChildOf(ll.sessionSpan.Context())}
 	ll.dialSpan = opentracing.GlobalTracer().StartSpan("lampshade-dial-init", opts...)
@@ -166,7 +164,7 @@ func (ll *lampshadeLifecycleListener) OnTCPEstablished(conn net.Conn) {
 	ll.sessionSpan.SetTag("proto", "lampshade")
 	ll.sessionSpan.SetTag("host", conn.RemoteAddr().String())
 	ll.sessionSpan.SetTag("clientport", local.Port)
-	ll.sessionSpan.SetOperationName(fmt.Sprintf("%s->%v", ll.proxyName, local.Port))
+	ll.sessionSpan.SetOperationName(fmt.Sprintf("%v->%v", local.Port, ll.proxyName))
 
 	ll.dialSpan.Finish()
 
@@ -174,9 +172,21 @@ func (ll *lampshadeLifecycleListener) OnTCPEstablished(conn net.Conn) {
 	// without a finished parent span child spans seem to often be left orphaned.
 	ll.sessionSpan.Finish()
 }
-func (ll *lampshadeLifecycleListener) OnClientInitWritten(context.Context)          {}
-func (ll *lampshadeLifecycleListener) OnClientInitRead(context.Context)             {}
-func (ll *lampshadeLifecycleListener) OnSessionError(readErr error, writeErr error) {}
+func (ll *lampshadeLifecycleListener) OnClientInitWritten(context.Context) {}
+func (ll *lampshadeLifecycleListener) OnSessionError(readErr error, writeErr error) {
+	if readErr != nil {
+		ll.sessionSpan.LogFields(otlog.Error(readErr))
+		ll.sessionSpan.SetTag("error", "true")
+		ll.sessionSpan.SetTag("fullerror", readErr.Error())
+	}
+	if writeErr != nil {
+		ll.sessionSpan.LogFields(otlog.Error(writeErr))
+		ll.sessionSpan.SetTag("error", "true")
+		ll.sessionSpan.SetTag("fullerror", writeErr.Error())
+	}
+
+	ll.sessionSpan.Finish()
+}
 
 func (ll *lampshadeLifecycleListener) OnStreamInit(ctx context.Context, id uint16) lampshade.StreamLifecycleListener {
 	// This is somewhat confusing as a result of the call to DialContext creating a new session
@@ -199,6 +209,7 @@ func (ls *lampshadeStreamListener) OnStreamWrite(num int) {
 	ls.span.LogFields(otlog.Int("w", num))
 }
 func (ls *lampshadeStreamListener) OnStreamClose() {
+	ls.span.LogFields(otlog.String("closed", "true"))
 	ls.span.Finish()
 }
 

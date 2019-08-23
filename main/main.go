@@ -40,7 +40,7 @@ func main() {
 	debug.SetTraceback("all")
 	parseFlags()
 
-	traceCloser := initTracing()
+	traceCloser := initTracing(*trace)
 
 	a := &desktop.App{
 		ShowUI: !*headless,
@@ -135,16 +135,17 @@ type nullCloser struct{}
 
 func (*nullCloser) Close() error { return nil }
 
-func initTracing() io.Closer {
+func initTracing(trace bool) io.Closer {
+	if !trace {
+		return &nullCloser{}
+	}
 	cfg := jaegercfg.Configuration{
 		Sampler: &jaegercfg.SamplerConfig{
 			Type:  jaeger.SamplerTypeConst,
 			Param: 1,
 		},
 		Reporter: &jaegercfg.ReporterConfig{
-			CollectorEndpoint: "http://104.131.222.209:14268/api/traces",
-			//User:              "",
-			//Password:          "",
+			CollectorEndpoint: "https://trace.lantern.io:14268/api/traces",
 		},
 	}
 
