@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"runtime"
+	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/errors"
@@ -134,9 +135,10 @@ func newLampshadeLifecycleListener(proxyName, upstreamHost string) lampshade.Cli
 	}
 }
 
-func newLampshadeStreamListener(span opentracing.Span) lampshade.StreamLifecycleListener {
+func newLampshadeStreamListener(span opentracing.Span, ll *lampshadeLifecycleListener) lampshade.StreamLifecycleListener {
 	return &lampshadeStreamListener{
 		span: span,
+		ll:   ll,
 	}
 }
 
@@ -145,6 +147,8 @@ type lampshadeLifecycleListener struct {
 	upstreamHost string
 	dialSpan     opentracing.Span
 	sessionSpan  opentracing.Span
+	totalRead    int64
+	totalWritten int64
 }
 
 func (ll *lampshadeLifecycleListener) OnSessionInit(ctx context.Context) context.Context {
@@ -200,13 +204,17 @@ func (ll *lampshadeLifecycleListener) OnStreamInit(ctx context.Context, id uint1
 		noop := opentracing.NoopTracer{}
 		span = noop.StartSpan("noop")
 	}
-	return newLampshadeStreamListener(span)
+	return newLampshadeStreamListener(span, ll)
 }
 func (ls *lampshadeStreamListener) OnStreamRead(num int) {
 	ls.span.LogFields(otlog.Int("r", num))
+	atomic.AddInt64(&ls.ll.totalRead, int64(num))
+	ls.ll.sessionSpan.SetTag("read", ls.ll.totalRead)
 }
 func (ls *lampshadeStreamListener) OnStreamWrite(num int) {
 	ls.span.LogFields(otlog.Int("w", num))
+	atomic.AddInt64(&ls.ll.totalWritten, int64(num))
+	ls.ll.sessionSpan.SetTag("written", ls.ll.totalWritten)
 }
 func (ls *lampshadeStreamListener) OnStreamClose() {
 	ls.span.LogFields(otlog.String("closed", "true"))
@@ -215,4 +223,5 @@ func (ls *lampshadeStreamListener) OnStreamClose() {
 
 type lampshadeStreamListener struct {
 	span opentracing.Span
+	ll   *lampshadeLifecycleListener
 }
