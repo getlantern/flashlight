@@ -252,8 +252,8 @@ github.com/getlantern/quic-go v0.7.1-0.20190818104938-28e3ca4262e1 h1:FN2NgPkFjU
 github.com/getlantern/quic-go v0.7.1-0.20190818104938-28e3ca4262e1/go.mod h1:uW88CoBr0zVnlyTAdwd9dd6qgk/CY23t6dRPqZ5TReU=
 github.com/getlantern/quicwrapper v0.0.0-20190820201154-8079fdf487de h1:DO8KyV1fB1Jbn7TQU+4ndYtBiLjJbLTCckamHiOV7Ok=
 github.com/getlantern/quicwrapper v0.0.0-20190820201154-8079fdf487de/go.mod h1:IV/3OVxvkcC8kviFM60BVvjZxaYxyb6ExrKwgO2c4R8=
-github.com/getlantern/quicwrapper v0.0.0-20190822163127-f4cb66aff894 h1:CWymH+4TmlPky7yvvFHxew2j383sskrDlOTV7+aaX2c=
-github.com/getlantern/quicwrapper v0.0.0-20190822163127-f4cb66aff894/go.mod h1:MSyqD3I6BuMxLkScZoH6kuJT1ssW5DuA3fxZe67BN00=
+github.com/getlantern/quicwrapper v0.0.0-20190823180104-f4c834140eac h1:CE0Zw3vxsCzo4AfCCXFfX+cXgI3gR8C2WsfiIFoWgaA=
+github.com/getlantern/quicwrapper v0.0.0-20190823180104-f4c834140eac/go.mod h1:MSyqD3I6BuMxLkScZoH6kuJT1ssW5DuA3fxZe67BN00=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c h1:IkjF+RwRs8B/RsuD638eUFO2K/227OO2B1FLXGp17Ro=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c/go.mod h1:kExwbqTx1krUnT9ohmXG3jayDTEBfxUKeoRzU6XucLw=
 github.com/getlantern/ring v0.0.0-20181206150603-dd46ce8faa01 h1:JyXEChj4lHy5w3hlQVnYpcH4QrBXmhEJgkxb0FPkFlM=
@@ -506,8 +506,6 @@ github.com/templexxx/reedsolomon v0.0.0-20170927015403-7092926d7d05 h1:XBQHunCjh
 github.com/templexxx/reedsolomon v0.0.0-20170927015403-7092926d7d05/go.mod h1:ToWcj2sZ6xHl14JjZiVDktYpFtrFZJXBlsu7TV23lNg=
 github.com/templexxx/xor v0.0.0-20170926022130-0af8e873c554 h1:pexgSe+JCFuxG+uoMZLO+ce8KHtdHGhst4cs6rw3gmk=
 github.com/templexxx/xor v0.0.0-20170926022130-0af8e873c554/go.mod h1:5XA7W9S6mni3h5uvOC75dA3m9CCCaS83lltmc0ukdi4=
-github.com/tevino/abool v0.0.0-20170917061928-9b9efcf221b5 h1:hNna6Fi0eP1f2sMBe/rJicDmaHmoXGe1Ta84FPYHLuE=
-github.com/tevino/abool v0.0.0-20170917061928-9b9efcf221b5/go.mod h1:f1SCnEOt6sc3fOJfPQDRDzHOtSXuTtnz0ImG9kPRDV0=
 github.com/ti-mo/conntrack v0.0.0-20190323132511-733fb77b6071 h1:NnXFjutDwCYD2AoSFSEuUKC1H0f0Y8jeYXapxZSlg84=
 github.com/ti-mo/conntrack v0.0.0-20190323132511-733fb77b6071/go.mod h1:4S0aZBgVjqDnOB7vilkmLDNHivyRGwPbDfTak5XQ0no=
 github.com/ti-mo/netfilter v0.2.0 h1:mMZ70vvHTlY9y8ElWflp5nVN5kkUDvm6D1JXRgartKI=
