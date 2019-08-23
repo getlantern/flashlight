@@ -1,5 +1,16 @@
 # Change Log
 
+## [5.5.4](https://github.com/getlantern/flashlight/tree/5.5.4) (2019-08-23)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.3...5.5.4)
+
+**Merged pull requests:**
+
+- no longer re-create quic dialer when error happens [\#662](https://github.com/getlantern/flashlight/pull/662) ([joesis](https://github.com/joesis))
+- update quicwrapper package [\#661](https://github.com/getlantern/flashlight/pull/661) ([forkner](https://github.com/forkner))
+- allow certificate validation in addition to pinned certs for wss [\#660](https://github.com/getlantern/flashlight/pull/660) ([forkner](https://github.com/forkner))
+- support writing TLS key log [\#658](https://github.com/getlantern/flashlight/pull/658) ([joesis](https://github.com/joesis))
+- hitProxy.py: Add the option to force fetching config directly from the proxy [\#651](https://github.com/getlantern/flashlight/pull/651) ([joesis](https://github.com/joesis))
+
 ## [5.5.3](https://github.com/getlantern/flashlight/tree/5.5.3) (2019-08-21)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.2...5.5.3)
 
@@ -256,11 +267,6 @@
 **Merged pull requests:**
 
 - updated UI [\#561](https://github.com/getlantern/flashlight/pull/561) ([myleshorton](https://github.com/myleshorton))
-- Updated to lampshade with threaded close [\#560](https://github.com/getlantern/flashlight/pull/560) ([myleshorton](https://github.com/myleshorton))
-- Check for go-bindata bin location and verison [\#559](https://github.com/getlantern/flashlight/pull/559) ([bcmertz](https://github.com/bcmertz))
-- Fixes for running from wsl [\#558](https://github.com/getlantern/flashlight/pull/558) ([myleshorton](https://github.com/myleshorton))
-- updated to latest systray [\#557](https://github.com/getlantern/flashlight/pull/557) ([myleshorton](https://github.com/myleshorton))
-- updated update-icons dependency [\#556](https://github.com/getlantern/flashlight/pull/556) ([bcmertz](https://github.com/bcmertz))
 
 ## [5.2.1](https://github.com/getlantern/flashlight/tree/5.2.1) (2018-12-07)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.0...5.2.1)
@@ -308,13 +314,13 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.13...4.8.0)
 
 ## [4.7.13](https://github.com/getlantern/flashlight/tree/4.7.13) (2018-08-09)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.13)
-
-## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.13)
 
 ## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.12)
+
+## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.11)
 
 ## [4.7.10](https://github.com/getlantern/flashlight/tree/4.7.10) (2018-07-26)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.9...4.7.10)
