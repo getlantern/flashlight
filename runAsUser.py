@@ -17,13 +17,10 @@ import json
 r = ru.redis_shell
 
 if len(sys.argv) < 2:
-    print "Usage: %s user-id [country]" % sys.argv[0]
+    print "Usage: %s user-id [args]" % sys.argv[0]
     sys.exit(1)
 
 user_id = sys.argv[1]
-country = ""
-if len(sys.argv) > 2:
-    country = sys.argv[2]
 
 # Since we'll often be running via a VPN with this script, use a little local cache to avoid
 # redis calls that may fail.
@@ -58,6 +55,8 @@ try:
             'proxyAll': 'true',
         }, encoding='utf-8', allow_unicode=True, default_flow_style=False)
         f.write(cfg)
-    hitProxy.run_with_configdir(configdir, sticky=False, headless=True, country=country)
+    args = ["-headless"]
+    args.extend(sys.argv[2:])
+    hitProxy.run_with_configdir(configdir, args)
 finally:
     shutil.rmtree(configdir)

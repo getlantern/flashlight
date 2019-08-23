@@ -22,7 +22,7 @@ def create_tmpdir():
     else:
         return tempfile.mkdtemp(prefix="lantern")
 
-def run_with_configdir(configdir, sticky=True, headless=False, country=""):
+def run_with_configdir(configdir, extraArgs):
     path = ""
     if on_windows:
         path = "./lantern-cli.exe"
@@ -36,14 +36,8 @@ def run_with_configdir(configdir, sticky=True, headless=False, country=""):
         path = "/Applications/Lantern.app/Contents/MacOS/lantern"
 
     args = [path, "-pprofaddr=:4000", "-readableconfig", "-configdir="+configdir]
-    if sticky:
-        args = args + ["-stickyconfig"]
-    if headless:
-        args = args + ["-headless"]
-    if country:
-        args = args + ["-force-config-country", country]
+    args.extend(extraArgs)
     subprocess.call(args)
-
 
 def config_for(name_or_ip, remote_user="lantern"):
     if ipre.match(name_or_ip):
@@ -101,6 +95,6 @@ if __name__ == '__main__':
             cfg = yaml.safe_dump(servers, encoding='utf-8', allow_unicode=True, default_flow_style=False)
             f.write(cfg)
         print cfg
-        run_with_configdir(configdir)
+        run_with_configdir(configdir, "-stickyconfig")
     finally:
         shutil.rmtree(configdir)
