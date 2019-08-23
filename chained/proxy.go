@@ -732,56 +732,28 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 		}
 	}
 
-	newQUICDialer := func() *quicwrapper.Client {
-		d := quicwrapper.NewClientWithPinnedCert(
-			addr,
-			tlsConf,
-			quicConf,
-			dialFn,
-			pinnedCert,
-		)
-		return d
-	}
-
-	dialer := newQUICDialer()
-	var dialerLock sync.Mutex
-	forceRedial := abool.New()
-
+	dialer := quicwrapper.NewClientWithPinnedCert(
+		addr,
+		tlsConf,
+		quicConf,
+		dialFn,
+		pinnedCert,
+	)
 	// when the proxy closes, close the dialer
 	go func() {
 		<-p.closeCh
 		log.Debug("Closing quic session: Proxy closed.")
-		dialerLock.Lock()
 		dialer.Close()
-		dialerLock.Unlock()
 	}()
 
 	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
 		elapsed := mtime.Stopwatch()
-
-		dialerLock.Lock()
-		if forceRedial.IsSet() {
-			select {
-			case <-p.closeCh:
-				log.Debug("not re-connecting after closed.")
-			default:
-				log.Debug("Connection state changed, re-connecting to server first")
-				dialer.Close()
-				dialer = newQUICDialer()
-			}
-			forceRedial.UnSet()
-		}
-		d := dialer
-		dialerLock.Unlock()
-
-		conn, err := d.DialContext(ctx)
+		conn, err := dialer.DialContext(ctx)
 		if err != nil {
 			log.Debugf("Failed to establish multiplexed connection: %s", err)
-			forceRedial.Set()
 		} else {
 			log.Debug("established new multiplexed quic connection.")
 		}
-
 		delta := elapsed()
 		return conn, delta, err
 	}
