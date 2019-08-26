@@ -219,11 +219,12 @@ func checkOverrides(flags map[string]interface{},
 // getProxyURL returns the proxy URL to use depending on whether or not
 // we're in staging.
 func getProxyURL(staging bool) string {
-	if staging {
-		log.Debug("Configuring for staging")
-		return proxiesStagingURL
-	}
-	log.Debugf("Not configuring for staging.")
+	// Staging config server is currently not working, ignore it
+	// if staging {
+	// log.Debug("Configuring for staging")
+	// return proxiesStagingURL
+	// }
+	log.Debug("Will obtain proxies.yaml from production service")
 	return proxiesURL
 }
 
@@ -231,9 +232,9 @@ func getProxyURL(staging bool) string {
 // we're in staging.
 func getGlobalURL(staging bool) string {
 	if staging {
-		log.Debug("Configuring for staging")
+		log.Debug("Will obtain global.yaml from staging service")
 		return globalStagingURL
 	}
-	log.Debugf("Not configuring for staging.")
+	log.Debug("Will obtain global.yaml from production service")
 	return globalURL
 }
