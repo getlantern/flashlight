@@ -75,6 +75,7 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
+	github.com/google/gopacket v1.1.17
 	github.com/google/netstack v0.0.0-20190505230633-4391e4a763ab // indirect
 	github.com/gorilla/websocket v0.0.0-20180306181548-eb925808374e
 	github.com/hashicorp/golang-lru v0.5.1

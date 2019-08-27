@@ -24,6 +24,11 @@ func TestCaptureProxyTraffic(t *testing.T) {
 
 	const serverResponseString = "TestCaptureProxyTraffic test server response"
 
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Fprintln(w, serverResponseString)
+	}))
+	defer s.Close()
+
 	tmpDir, err := ioutil.TempDir("", "flashlight-diagnostics-pcap-test")
 	require.NoError(t, err)
 	defer os.RemoveAll(tmpDir)
@@ -35,8 +40,7 @@ func TestCaptureProxyTraffic(t *testing.T) {
 		defer func() { close(captureComplete) }()
 
 		err = CaptureProxyTraffic(map[string]*chained.ChainedServerInfo{
-			// The port is ignored, so this will capture all localhost traffic.
-			"localhost": &chained.ChainedServerInfo{Addr: "127.0.0.1:999"},
+			"localhost": &chained.ChainedServerInfo{Addr: s.Listener.Addr().String()},
 		}, tmpDir)
 		if err != nil {
 			for proxyName, proxyErr := range err.(ErrorsMap) {
@@ -48,10 +52,6 @@ func TestCaptureProxyTraffic(t *testing.T) {
 
 	<-capturing
 	time.Sleep(time.Second)
-	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		fmt.Fprintln(w, serverResponseString)
-	}))
-	defer s.Close()
 	_, err = http.Get(s.URL)
 	require.NoError(t, err)
 
@@ -59,6 +59,7 @@ func TestCaptureProxyTraffic(t *testing.T) {
 	localhostPcap, err := os.Open(filepath.Join(tmpDir, "localhost.pcap"))
 	require.NoError(t, err)
 
+	// TODO: check file contents with gopacket, not tshark
 	buf := new(bytes.Buffer)
 	cmd := exec.Command(
 		"tshark",

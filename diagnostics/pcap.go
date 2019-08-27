@@ -1,20 +1,29 @@
 package diagnostics
 
 import (
-	"bytes"
 	"fmt"
 	"net"
-	"os/exec"
+	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/chained"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+	"github.com/google/gopacket/pcap"
+	"github.com/google/gopacket/pcapgo"
 )
 
-const captureSeconds = 10
+const (
+	// TODO: perhaps this should be configurable
+	captureDuration = 10 * time.Second
+
+	// Warning: do not set to >= 1 second: https://github.com/google/gopacket/issues/499
+	packetReadTimeout = 100 * time.Millisecond
+)
 
 // ErrorsMap represents multiple errors. ErrorsMap implements the error interface.
 type ErrorsMap map[string]error
@@ -35,6 +44,8 @@ func (em ErrorsMap) Error() string {
 //
 // Expects tshark to be installed, otherwise returns errors.
 func CaptureProxyTraffic(proxiesMap map[string]*chained.ChainedServerInfo, outputDir string) error {
+	// TODO: one file for all proxy traffic is probably more convenient
+
 	type captureError struct {
 		proxyName string
 		err       error
@@ -46,27 +57,9 @@ func CaptureProxyTraffic(proxiesMap map[string]*chained.ChainedServerInfo, outpu
 		wg.Add(1)
 		go func(pName, pAddr string) {
 			defer wg.Done()
-
-			pHost, _, _ := net.SplitHostPort(pAddr)
-			iface, err := interfaceFor(pHost)
+			err := writeCapture(pAddr, filepath.Join(outputDir, fmt.Sprintf("%s.pcap", pName)), captureDuration)
 			if err != nil {
-				captureErrors <- captureError{
-					pName, errors.New("failed to obtain interface for host: %v", err),
-				}
-				return
-			}
-
-			cmd := exec.Command(
-				"tshark",
-				"-w", filepath.Join(outputDir, fmt.Sprintf("%s.pcap", pName)),
-				"-i", iface.Name,
-				"-f", fmt.Sprintf("host %s", pHost),
-				"-a", fmt.Sprintf("duration:%d", captureSeconds),
-			)
-			stdErr := new(bytes.Buffer)
-			cmd.Stderr = stdErr
-			if err := cmd.Run(); err != nil {
-				captureErrors <- captureError{pName, errors.New("%v: %v", err, stdErr)}
+				captureErrors <- captureError{pName, err}
 			}
 		}(proxyName, proxyInfo.Addr)
 	}
@@ -75,7 +68,6 @@ func CaptureProxyTraffic(proxiesMap map[string]*chained.ChainedServerInfo, outpu
 
 	errorsMap := ErrorsMap{}
 	for capErr := range captureErrors {
-		fmt.Println("adding to errors map")
 		errorsMap[capErr.proxyName] = capErr.err
 	}
 	if len(errorsMap) == 0 {
@@ -84,16 +76,85 @@ func CaptureProxyTraffic(proxiesMap map[string]*chained.ChainedServerInfo, outpu
 	return errorsMap
 }
 
-func interfaceFor(host string) (*net.Interface, error) {
-	remoteIPs, err := net.LookupIP(host)
-	if err != nil || len(remoteIPs) < 1 {
-		return nil, errors.New("failed to find IP for host: %v", err)
-	}
-	localIP, err := preferredOutboundIP(remoteIPs[0])
+func writeCapture(addr, outputFile string, duration time.Duration) error {
+	f, err := os.Create(outputFile)
 	if err != nil {
-		return nil, errors.New("failed to find local IP for host: %v", err)
+		return errors.New("failed to open file for writing: %v", err)
 	}
-	return getInterface(localIP)
+	defer f.Close()
+
+	remoteHost, remotePort, err := net.SplitHostPort(addr)
+	if err != nil {
+		return errors.New("malformed address: %v", err)
+	}
+
+	remoteIPs, err := net.LookupIP(remoteHost)
+	if err != nil {
+		return errors.New("failed to find IP for host: %v", err)
+	}
+	if len(remoteIPs) < 1 {
+		return errors.New("failed to resolve host")
+	}
+	remoteIP := remoteIPs[0]
+
+	localIP, err := preferredOutboundIP(remoteIP)
+	if err != nil {
+		return errors.New("failed to obtain outbound IP: %v", err)
+	}
+
+	iface, err := interfaceFor(localIP)
+	if err != nil {
+		return errors.New("failed to obtain interface: %v", err)
+	}
+
+	// TODO: get proper MTU for interface
+	mtu := uint32(1500)
+
+	// TODO: use LinkTypeNull or LinkTypeLoop when appropriate
+	linkType := layers.LinkTypeEthernet
+
+	pcapW := pcapgo.NewWriter(f)
+	if err := pcapW.WriteFileHeader(mtu, linkType); err != nil {
+		return errors.New("failed to write header to capture file: %v", err)
+	}
+
+	handle, err := pcap.OpenLive(iface.Name, int32(mtu), false, packetReadTimeout)
+	if err != nil {
+		return errors.New("failed to open capture handle: %v", err)
+	}
+	defer handle.Close()
+
+	network := "ip"
+	if remoteIP.To4() == nil {
+		network = "ip6"
+	}
+	bpf := fmt.Sprintf(
+		"(%s) or (%s)",
+		fmt.Sprintf("%s dst %v and dst port %s", network, remoteIP, remotePort),
+		fmt.Sprintf("%s src %v and src port %s", network, remoteIP, remotePort),
+	)
+	if err := handle.SetBPFFilter(bpf); err != nil {
+		return errors.New("failed to set capture filter: %v", err)
+	}
+
+	// TODO: use loopback when appropriate
+	layerType := layers.LayerTypeEthernet
+
+	pktSrc := gopacket.NewPacketSource(handle, layerType).Packets()
+	pktWriteErrors := []error{}
+	for {
+		select {
+		case pkt := <-pktSrc:
+			if err := pcapW.WritePacket(pkt.Metadata().CaptureInfo, pkt.Data()); err != nil {
+				pktWriteErrors = append(pktWriteErrors, err)
+			}
+		case <-time.After(captureDuration):
+			if len(pktWriteErrors) == 0 {
+				return nil
+			}
+			return errors.New("%d errors writing packets; first error: %v", len(pktWriteErrors), pktWriteErrors[0])
+		}
+	}
 }
 
 func preferredOutboundIP(remoteIP net.IP) (net.IP, error) {
@@ -106,23 +167,15 @@ func preferredOutboundIP(remoteIP net.IP) (net.IP, error) {
 	return conn.LocalAddr().(*net.UDPAddr).IP, nil
 }
 
-func getInterface(ip net.IP) (*net.Interface, error) {
-	ifaces, err := net.Interfaces()
+func interfaceFor(ip net.IP) (*pcap.Interface, error) {
+	ifaces, err := pcap.FindAllDevs()
 	if err != nil {
 		return nil, errors.New("failed to obtain system interfaces: %v", err)
 	}
 
 	for _, iface := range ifaces {
-		addrs, err := iface.Addrs()
-		if err != nil {
-			return nil, errors.New("failed to obtain addresses for %s: %v", iface.Name, err)
-		}
-		for _, addr := range addrs {
-			ipNet, err := parseNetwork(addr.String())
-			if err != nil {
-				return nil, errors.New("failed to parse interface address %s as IP network: %v", addr.String(), err)
-			}
-			if ipNet.Contains(ip) {
+		for _, addr := range iface.Addresses {
+			if getIPNet(addr).Contains(ip) {
 				return &iface, nil
 			}
 		}
@@ -130,38 +183,15 @@ func getInterface(ip net.IP) (*net.Interface, error) {
 	return nil, errors.New("no network interface for %v", ip)
 }
 
-// Parses a network of addresses like 127.0.0.1/8. Inputs like 127.0.0.1 are valid and will be
-// interpreted as equivalent to 127.0.0.1/0.
-func parseNetwork(addr string) (*net.IPNet, error) {
-	splits := strings.Split(addr, "/")
-
-	var (
-		ip       net.IP
-		maskOnes int
-		err      error
-	)
-	switch len(splits) {
-	case 1:
-		ip = net.ParseIP(addr)
-		maskOnes = 0
-	case 2:
-		ip = net.ParseIP(splits[0])
-		maskOnes, err = strconv.Atoi(splits[1])
-		if err != nil {
-			return nil, errors.New("expected integer after '/' character, found %s", splits[1])
-		}
-	default:
-		return nil, errors.New("expected one or zero '/' characters in address, found %d", len(splits))
+func getIPNet(addr pcap.InterfaceAddress) *net.IPNet {
+	ipNet := net.IPNet{IP: addr.IP, Mask: addr.Netmask}
+	if ipNet.Mask != nil {
+		return &ipNet
 	}
-
-	if ip == nil {
-		return nil, errors.New("failed to parse network number as IP address")
-	}
-	var mask net.IPMask
-	if ip.To4() != nil {
-		mask = net.CIDRMask(maskOnes, 32)
+	if ipNet.IP.To4() != nil {
+		ipNet.Mask = net.CIDRMask(0, 32)
 	} else {
-		mask = net.CIDRMask(maskOnes, 128)
+		ipNet.Mask = net.CIDRMask(0, 128)
 	}
-	return &net.IPNet{IP: ip, Mask: mask}, nil
+	return &ipNet
 }
