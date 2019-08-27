@@ -2,6 +2,7 @@
 package desktop
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"net"
@@ -536,11 +537,12 @@ func (app *App) IsPro() bool {
 }
 
 // IsWorking checks if the application is running fine by hitting the proxy port
-func (app *App) IsWorking() error {
-	resp, err := http.Get("http://" + settings.GetAddr())
+func (app *App) IsWorking(ctx context.Context) error {
+	req, err := http.NewRequest("GET", "http://"+settings.GetAddr(), nil)
 	if err != nil {
 		return err
 	}
+	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
 	if resp.StatusCode != http.StatusBadRequest {
 		return fmt.Errorf("Unexpected HTTP status %v", resp.StatusCode)
 	}

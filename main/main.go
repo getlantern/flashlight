@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net/http"
@@ -55,9 +56,11 @@ func main() {
 		tk := time.NewTicker(30 * time.Second)
 		for {
 			<-tk.C
-			if err := a.IsWorking(); err != nil {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			if err := a.IsWorking(ctx); err != nil {
 				log.Errorf("Error checking if application is working: %v", err)
 			}
+			cancel()
 		}
 	}()
 
