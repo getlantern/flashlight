@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -110,8 +111,13 @@ func writeCapture(addr, outputFile string, duration time.Duration) error {
 	// TODO: get proper MTU for interface
 	mtu := uint32(1500)
 
-	// TODO: use LinkTypeNull or LinkTypeLoop when appropriate
+	// TODO: test on linux
 	linkType := layers.LinkTypeEthernet
+	if remoteIP.IsLoopback() && runtime.GOOS != "linux" {
+		// This is done to support testing.
+		linkType = layers.LinkTypeNull
+		// TODO: should this ever be LinkTypeLoop?
+	}
 
 	pcapW := pcapgo.NewWriter(f)
 	if err := pcapW.WriteFileHeader(mtu, linkType); err != nil {
@@ -137,8 +143,11 @@ func writeCapture(addr, outputFile string, duration time.Duration) error {
 		return errors.New("failed to set capture filter: %v", err)
 	}
 
-	// TODO: use loopback when appropriate
 	layerType := layers.LayerTypeEthernet
+	if remoteIP.IsLoopback() && runtime.GOOS != "linux" {
+		// This is done to support testing.
+		layerType = layers.LayerTypeLoopback
+	}
 
 	pktSrc := gopacket.NewPacketSource(handle, layerType).Packets()
 	pktWriteErrors := []error{}
