@@ -1,5 +1,16 @@
 # Change Log
 
+## [Unreleased](https://github.com/getlantern/flashlight/tree/HEAD)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.5...HEAD)
+
+**Merged pull requests:**
+
+- Don't use staging config server [\#663](https://github.com/getlantern/flashlight/pull/663) ([oxtoacart](https://github.com/oxtoacart))
+
+## [5.5.5](https://github.com/getlantern/flashlight/tree/5.5.5) (2019-08-23)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.4...5.5.5)
+
 ## [5.5.4](https://github.com/getlantern/flashlight/tree/5.5.4) (2019-08-23)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.3...5.5.4)
 
@@ -264,10 +275,6 @@
 ## [5.2.2](https://github.com/getlantern/flashlight/tree/5.2.2) (2018-12-13)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.1...5.2.2)
 
-**Merged pull requests:**
-
-- updated UI [\#561](https://github.com/getlantern/flashlight/pull/561) ([myleshorton](https://github.com/myleshorton))
-
 ## [5.2.1](https://github.com/getlantern/flashlight/tree/5.2.1) (2018-12-07)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.0...5.2.1)
 
@@ -314,13 +321,13 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.13...4.8.0)
 
 ## [4.7.13](https://github.com/getlantern/flashlight/tree/4.7.13) (2018-08-09)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.13)
-
-## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.13)
 
 ## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.11)
+
+## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.12)
 
 ## [4.7.10](https://github.com/getlantern/flashlight/tree/4.7.10) (2018-07-26)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.9...4.7.10)
