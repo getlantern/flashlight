@@ -535,6 +535,18 @@ func (app *App) IsPro() bool {
 	return isPro
 }
 
+// IsWorking checks if the application is running fine by hitting the proxy port
+func (app *App) IsWorking() error {
+	resp, err := http.Get("http://" + settings.GetAddr())
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusBadRequest {
+		return fmt.Errorf("Unexpected HTTP status %v", resp.StatusCode)
+	}
+	return nil
+}
+
 func recordStopped() {
 	ops.Begin("client_stopped").
 		SetMetricSum("uptime", time.Now().Sub(startTime).Seconds()).

@@ -12,6 +12,7 @@ import (
 	"runtime/debug"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/golog"
@@ -50,6 +51,15 @@ func main() {
 		// the child process writes to standard outputs as usual.
 	}
 	defer logFile.Close()
+	go func() {
+		tk := time.NewTicker(30 * time.Second)
+		for {
+			<-tk.C
+			if err := a.IsWorking(); err != nil {
+				log.Errorf("Error checking if application is working: %v", err)
+			}
+		}
+	}()
 
 	// panicwrap works by re-executing the running program (retaining arguments,
 	// environmental variables, etc.) and monitoring the stderr of the program.
