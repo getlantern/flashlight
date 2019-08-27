@@ -338,9 +338,10 @@ func run(configDir, locale string,
 			session.UpdateAdSettings(&adSettings{cfg.AdSettings})
 			email.SetDefaultRecipient(cfg.ReportIssueEmail)
 		}, // onConfigUpdate
+		nil, // onProxiesUpdate
 		newUserConfig(session),
 		NewStatsTracker(session),
-		func(err error) {}, // onError
+		nil, // onError
 		session.IsProUser,
 		session.GetUserID,
 		func() string { return "" }, // only used for desktop

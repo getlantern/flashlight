@@ -142,8 +142,8 @@ github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 h1:NRUJuo3v3WGC
 github.com/getlantern/context v0.0.0-20190109183933-c447772a6520/go.mod h1:L+mq6/vvYHKjCX2oez0CgEAJmbq1fbb/oNJIWQkBybY=
 github.com/getlantern/detour v0.0.0-20190122161414-7107a599a170 h1:CdO/ANUQWFnUhbUnLUJvoeqfYE1dAO5Zhd/bvvhzNv4=
 github.com/getlantern/detour v0.0.0-20190122161414-7107a599a170/go.mod h1:8jrzlxU3igsPFFgNHZlYrOJ3lIf+S3/0n70g+4gR/w8=
-github.com/getlantern/diagnostics v0.0.0-20190801170507-8dda8cf26c5f h1:EZpRAIW4AIbH7W3uw8UoycmrPkTIv8+FS8GsMm5w0tI=
-github.com/getlantern/diagnostics v0.0.0-20190801170507-8dda8cf26c5f/go.mod h1:Xzkab6s+wdWDQTqIWawe0vIWp1STyBu1x645uV9xM3w=
+github.com/getlantern/diagnostics v0.0.0-20190820054534-b2070abd5177 h1:sB7mfmj8Nk4SZ4zAwwyEaRApwtzblC+kIyfU+HSFaEo=
+github.com/getlantern/diagnostics v0.0.0-20190820054534-b2070abd5177/go.mod h1:Xzkab6s+wdWDQTqIWawe0vIWp1STyBu1x645uV9xM3w=
 github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041 h1:0+6PMeuySx1d4G6JZcThwbqgdXYRzlvKIUJWqndZ4Tw=
 github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041/go.mod h1:CbTkjHHMyw9CPQKfTyYx2XldN/XJSmqTwHl3HLwvo2Y=
 github.com/getlantern/dnsgrab v0.0.0-20171025121014-227f729dcb41 h1:6YbIHCO4aVCRTSQWceiv0JssiXmXDKOlIp3OIc0sShg=
@@ -151,7 +151,6 @@ github.com/getlantern/dnsgrab v0.0.0-20171025121014-227f729dcb41/go.mod h1:38jot
 github.com/getlantern/elevate v0.0.0-20180207094634-c2e2e4901072 h1:Sxd/u3rnHYAqXzpRXjOA7DPyRKYzcivMRBKtOhsRwW8=
 github.com/getlantern/elevate v0.0.0-20180207094634-c2e2e4901072/go.mod h1:T4VB2POK13lsPLFV98WJQrL7gAXYD9TyJxBU2P8c8p4=
 github.com/getlantern/ema v0.0.0-20170330162033-d906ee7c3465/go.mod h1:tzRwT19aDrWSr6yRDs8iOvaXXCau96EgWsgGT9wIpoQ=
-github.com/getlantern/ema v0.0.0-20180718025023-42474605965c/go.mod h1:tzRwT19aDrWSr6yRDs8iOvaXXCau96EgWsgGT9wIpoQ=
 github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4 h1:PMK8QQn9GLTQXdHnqoNhyToOa8snagaZVt9Xb36NEUc=
 github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4/go.mod h1:tzRwT19aDrWSr6yRDs8iOvaXXCau96EgWsgGT9wIpoQ=
 github.com/getlantern/enhttp v0.0.0-20190401024120-a974fa851e3c h1:+Cpxi/J9FwpwobhnCJXvlIhKGf1Z/Trfn4NbzwkHo8s=
@@ -203,8 +202,8 @@ github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55 h1:XYzSdCbkzOC0F
 github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55/go.mod h1:6mmzY2kW1TOOrVy+r41Za2MxXM+hhqTtY3oBKd2AgFA=
 github.com/getlantern/http-proxy v0.0.3-0.20190809090746-b2f0d5c04754 h1:BpmRKnNj5fxkvtSkk9nWO2nqSOBD/JjbYBuLWp9+duI=
 github.com/getlantern/http-proxy v0.0.3-0.20190809090746-b2f0d5c04754/go.mod h1:x5sqRt5/uZ+6Gn5tvFHx1pLoJBwIKS1lrFfhLEJWjNk=
-github.com/getlantern/http-proxy-lantern v0.1.4-0.20190813023228-ece629a8f3e2 h1:TLlUZ1lcHKfv2ShYVNuKxwyFmR13cFzebeTi70sSPag=
-github.com/getlantern/http-proxy-lantern v0.1.4-0.20190813023228-ece629a8f3e2/go.mod h1:KXo+fxFQqR3coXxUm8GrkyalZFmZuk+oXAg9QH067mE=
+github.com/getlantern/http-proxy-lantern v0.1.4-0.20190821135212-8812143b1548 h1:AQQV9tujOWqSAZoV4vTBZJCb0JfQgct9Xc9DhetKOtc=
+github.com/getlantern/http-proxy-lantern v0.1.4-0.20190821135212-8812143b1548/go.mod h1:HdjLjc8E0X5SxWVMp0nMzx2P7eeDATAp/2vw+oyP3wI=
 github.com/getlantern/httpseverywhere v0.0.0-20180326165025-9bdb93e40695 h1:OTTOB+KtDNRLDZwW56RiuCkK8cFE/iF4pMhpx+Pt2as=
 github.com/getlantern/httpseverywhere v0.0.0-20180326165025-9bdb93e40695/go.mod h1:4HB5d0IkyVGnvPSajTJQC5UkPub0t/toqULnaa0P3/4=
 github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c h1:+JnT+Rwa/3rksc4Zi0u6fJ/WX+tPK58GtsrcXWVUU2U=
@@ -275,11 +274,12 @@ github.com/getlantern/proxy v0.0.0-20190225163220-31d1cc06ed3d h1:OEYoa8d4QnXxez
 github.com/getlantern/proxy v0.0.0-20190225163220-31d1cc06ed3d/go.mod h1:z6u2OS1ynUdXIraWO04T1wcHFcGaIHwPed0n0bNilZU=
 github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12 h1:ofbl3nOfcM7CgGyInmuF79injlLFIKsPRFg9bpz17ow=
 github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12/go.mod h1:0q8eYDExExu4OEUGbKFbitxZ3UXbGHzewQ9o/ywIJaE=
-github.com/getlantern/quic-go v0.7.1-0.20190606183433-1266fdfeb581 h1:uS5gwyKJSWdkXpYriYbpoEEsJ8PP9WHVYH/AzlpNTV4=
-github.com/getlantern/quic-go v0.7.1-0.20190606183433-1266fdfeb581/go.mod h1:uW88CoBr0zVnlyTAdwd9dd6qgk/CY23t6dRPqZ5TReU=
-github.com/getlantern/quicwrapper v0.0.0-20190103180943-9afd6b9b3c2f/go.mod h1:rs6eBHMycj48pN8Y7EB2hbQ9cBvVEKFxxen4HdKPrc8=
-github.com/getlantern/quicwrapper v0.0.0-20190813024200-2aea933c703a h1:uj8xo9JJ/Lt5nZRMHH879FRqJwLjo5WTvh/YTlat4Gk=
-github.com/getlantern/quicwrapper v0.0.0-20190813024200-2aea933c703a/go.mod h1:IMRPr+tACDm/ckFjZOeiTN98/zkqv7BhobJDcBHImW8=
+github.com/getlantern/quic-go v0.7.1-0.20190818104938-28e3ca4262e1 h1:FN2NgPkFjUSQuPv4N17+Q4/eSwZIhs6hVSHXGw66u+s=
+github.com/getlantern/quic-go v0.7.1-0.20190818104938-28e3ca4262e1/go.mod h1:uW88CoBr0zVnlyTAdwd9dd6qgk/CY23t6dRPqZ5TReU=
+github.com/getlantern/quicwrapper v0.0.0-20190820201154-8079fdf487de h1:DO8KyV1fB1Jbn7TQU+4ndYtBiLjJbLTCckamHiOV7Ok=
+github.com/getlantern/quicwrapper v0.0.0-20190820201154-8079fdf487de/go.mod h1:IV/3OVxvkcC8kviFM60BVvjZxaYxyb6ExrKwgO2c4R8=
+github.com/getlantern/quicwrapper v0.0.0-20190823180104-f4c834140eac h1:CE0Zw3vxsCzo4AfCCXFfX+cXgI3gR8C2WsfiIFoWgaA=
+github.com/getlantern/quicwrapper v0.0.0-20190823180104-f4c834140eac/go.mod h1:MSyqD3I6BuMxLkScZoH6kuJT1ssW5DuA3fxZe67BN00=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c h1:IkjF+RwRs8B/RsuD638eUFO2K/227OO2B1FLXGp17Ro=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c/go.mod h1:kExwbqTx1krUnT9ohmXG3jayDTEBfxUKeoRzU6XucLw=
 github.com/getlantern/ring v0.0.0-20181206150603-dd46ce8faa01 h1:JyXEChj4lHy5w3hlQVnYpcH4QrBXmhEJgkxb0FPkFlM=
@@ -556,8 +556,6 @@ github.com/templexxx/reedsolomon v0.0.0-20170927015403-7092926d7d05 h1:XBQHunCjh
 github.com/templexxx/reedsolomon v0.0.0-20170927015403-7092926d7d05/go.mod h1:ToWcj2sZ6xHl14JjZiVDktYpFtrFZJXBlsu7TV23lNg=
 github.com/templexxx/xor v0.0.0-20170926022130-0af8e873c554 h1:pexgSe+JCFuxG+uoMZLO+ce8KHtdHGhst4cs6rw3gmk=
 github.com/templexxx/xor v0.0.0-20170926022130-0af8e873c554/go.mod h1:5XA7W9S6mni3h5uvOC75dA3m9CCCaS83lltmc0ukdi4=
-github.com/tevino/abool v0.0.0-20170917061928-9b9efcf221b5 h1:hNna6Fi0eP1f2sMBe/rJicDmaHmoXGe1Ta84FPYHLuE=
-github.com/tevino/abool v0.0.0-20170917061928-9b9efcf221b5/go.mod h1:f1SCnEOt6sc3fOJfPQDRDzHOtSXuTtnz0ImG9kPRDV0=
 github.com/ti-mo/conntrack v0.0.0-20190323132511-733fb77b6071 h1:NnXFjutDwCYD2AoSFSEuUKC1H0f0Y8jeYXapxZSlg84=
 github.com/ti-mo/conntrack v0.0.0-20190323132511-733fb77b6071/go.mod h1:4S0aZBgVjqDnOB7vilkmLDNHivyRGwPbDfTak5XQ0no=
 github.com/ti-mo/netfilter v0.2.0 h1:mMZ70vvHTlY9y8ElWflp5nVN5kkUDvm6D1JXRgartKI=
