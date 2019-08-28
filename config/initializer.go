@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"net/http"
 	"sync"
 	"time"
@@ -178,9 +177,6 @@ func newProxiesUnmarshaler() func(bytes []byte) (interface{}, error) {
 		servers := make(map[string]*chained.ChainedServerInfo)
 		if err := yaml.Unmarshal(bytes, servers); err != nil {
 			return nil, err
-		}
-		if len(servers) == 0 {
-			return nil, errors.New("No chained server")
 		}
 		return servers, nil
 	}
