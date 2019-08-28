@@ -543,6 +543,9 @@ func (app *App) IsWorking(ctx context.Context) error {
 		return err
 	}
 	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
+	if err != nil {
+		return err
+	}
 	if resp.StatusCode != http.StatusBadRequest {
 		return fmt.Errorf("Unexpected HTTP status %v", resp.StatusCode)
 	}
