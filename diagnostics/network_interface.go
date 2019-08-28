@@ -29,6 +29,13 @@ func networkInterfaceFor(ip net.IP) (*networkInterface, error) {
 				if getIPNet(addr).Contains(ip) {
 					return &iface, nil
 				}
+				if ip.IsLoopback() && strings.Contains(strings.ToLower(iface.Description), "loopback") {
+					// The Npcap loopback adapter on Windows may not have the loopback IP network in
+					// its address space. It is identifiable (reliably) only through mention of the
+					// word "loopback" in its description. Fortunately, this is only really an issue
+					// during local testing.
+					return &iface, nil
+				}
 			}
 		}
 		return nil, errors.New("no network interface for %v", ip)
