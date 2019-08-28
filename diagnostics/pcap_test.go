@@ -1,13 +1,11 @@
 package diagnostics
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"testing"
 	"time"
@@ -61,18 +59,11 @@ func TestCaptureProxyTraffic(t *testing.T) {
 	require.NoError(t, err)
 
 	<-captureComplete
-	localhostPcap, err := os.Open(filepath.Join(tmpDir, "localhost.pcap"))
+	pcapFile, err := os.Open(filepath.Join(tmpDir, "localhost.pcap"))
 	require.NoError(t, err)
+	defer pcapFile.Close()
 
-	// TODO: check file contents with gopacket, not tshark
-	buf := new(bytes.Buffer)
-	cmd := exec.Command(
-		"tshark",
-		"-r", localhostPcap.Name(),
-		"-T", "fields",
-		"-e", "text",
-	)
-	cmd.Stdout, cmd.Stderr = buf, buf
-	require.NoError(t, cmd.Run())
-	require.Contains(t, buf.String(), serverResponseString)
+	fileContents, err := ioutil.ReadAll(pcapFile)
+	require.NoError(t, err)
+	require.Contains(t, string(fileContents), serverResponseString)
 }
