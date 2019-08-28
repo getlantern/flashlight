@@ -278,10 +278,10 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 		pingInterval = 15 * time.Second
 		log.Debugf("%s: defaulted pinginterval to %v", name, pingInterval)
 	}
-	maxLiveConns := s.ptSettingInt("maxliveconns")
-	if maxLiveConns <= 0 {
-		maxLiveConns = 5
-		log.Debugf("%s: defaulted maxliveconns to %v", name, maxLiveConns)
+	liveConns := s.ptSettingInt("liveconns")
+	if liveConns <= 0 {
+		liveConns = 2
+		log.Debugf("%s: defaulted liveconns to %v", name, liveConns)
 	}
 	redialSessionInterval, parseErr := time.ParseDuration(s.ptSetting("redialsessioninterval"))
 	if parseErr != nil || redialSessionInterval < 0 {
@@ -291,7 +291,7 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 	dialer := lampshade.NewDialer(&lampshade.DialerOpts{
 		WindowSize:            windowSize,
 		MaxPadding:            maxPadding,
-		MaxLiveConns:          maxLiveConns,
+		LiveConns:             liveConns,
 		MaxStreamsPerConn:     maxStreamsPerConn,
 		IdleInterval:          idleInterval,
 		PingInterval:          pingInterval,
@@ -304,7 +304,11 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 			// lampshade cleans up after itself and won't leave excess unused
 			// connections hanging around.
 			log.Debugf("Dialing lampshade TCP connection to %v", name)
-			return netx.DialTimeout("tcp", s.Addr, 40*time.Second)
+			conn, err := netx.DialTimeout("tcp", s.Addr, 40*time.Second)
+			if err != nil {
+				log.Errorf("Could not dial TCP connection to %v", name)
+			}
+			return conn, err
 		},
 	})
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
