@@ -12,7 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/mitchellh/go-server-timing"
+	servertiming "github.com/mitchellh/go-server-timing"
 
 	"github.com/getlantern/bufconn"
 	"github.com/getlantern/errors"
@@ -143,13 +143,13 @@ func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, err
 	}
 	conn = idletiming.Conn(p.withRateTracking(conn, addr, ctx), IdleTimeout, func() {
 		op := ops.BeginWithBeam("idle_close", ctx)
-		log.Debugf("Proxy connection to %s via %s idle for %v, closed", addr, conn.RemoteAddr(), IdleTimeout)
+		log.Debugf("Proxy connection (virtual) to %s via %s idle for %v, closed", addr, conn.RemoteAddr(), IdleTimeout)
 		op.End()
 	})
 	return conn, nil
 }
 
-// dialOrigin implements the method from serverConn. With standard proxies, this
+// defaultDialOrigin implements the method from serverConn. With standard proxies, this
 // involves sending either a CONNECT request or a GET request to initiate a
 // persistent connection to the upstream proxy.
 func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
