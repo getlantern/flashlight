@@ -50,13 +50,14 @@ type Server struct {
 	// The address to listen on, in ":port" form if listen on all interfaces.
 	listenAddr string
 	// The address client should access. Available only if the server is started.
-	accessAddr     string
-	externalURL    string
-	requestPath    string
-	localHTTPToken string
-	listener       net.Listener
-	mux            *http.ServeMux
-	onceOpenExtURL sync.Once
+	accessAddr  string
+	externalURL string
+	// Prefixed to handler patterns when the http token is expected in the request path.
+	httpTokenRequestPathPrefix string
+	localHTTPToken             string
+	listener                   net.Listener
+	mux                        *http.ServeMux
+	onceOpenExtURL             sync.Once
 
 	translations eventual.Value
 }
@@ -80,13 +81,14 @@ func StartServer(requestedAddr, extURL, localHTTPToken string,
 }
 
 func newServer(extURL, localHTTPToken string) *Server {
-	requestPath := ""
-	if localHTTPToken != "" {
-		requestPath = "/" + localHTTPToken
-	}
 	server := &Server{
-		externalURL:    overrideManotoURL(extURL),
-		requestPath:    requestPath,
+		externalURL: overrideManotoURL(extURL),
+		httpTokenRequestPathPrefix: func() string {
+			if localHTTPToken == "" {
+				return ""
+			}
+			return "/" + localHTTPToken
+		}(),
 		mux:            http.NewServeMux(),
 		localHTTPToken: localHTTPToken,
 		translations:   eventual.NewValue(),
@@ -116,10 +118,10 @@ func (s *Server) handle(pattern string, handler http.Handler) {
 	// When the token is included in the request path, we need to strip it in
 	// order to serve the UI correctly (i.e. the static UI tarfs FileSystem knows
 	// nothing about the request path).
-	if s.requestPath != "" {
-		// If the request path is empty this will panic on adding the same pattern
+	if s.httpTokenRequestPathPrefix != "" {
+		// If the request path is empty this would panic on adding the same pattern
 		// twice.
-		s.mux.Handle(s.requestPath+pattern, util.NoCacheHandler(s.strippingHandler(handler)))
+		s.mux.Handle(s.httpTokenRequestPathPrefix+pattern, util.NoCacheHandler(s.strippingHandler(handler)))
 	}
 
 	// In the naked request cast, we need to verify the token is there in the
@@ -131,8 +133,8 @@ func (s *Server) handle(pattern string, handler http.Handler) {
 // static file server can properly serve it.
 func (s *Server) strippingHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Debugf("Stripping path from %v", r.URL.Path)
-		r.URL.Path = strings.Replace(r.URL.Path, s.requestPath, "", -1)
+		log.Debugf("Stripping path from %q", r.URL.Path)
+		r.URL.Path = strings.Replace(r.URL.Path, s.httpTokenRequestPathPrefix, "", -1)
 		h.ServeHTTP(w, r)
 	})
 }
@@ -272,7 +274,7 @@ func (s *Server) stop() error {
 // request path. Without that token, the backend will reject the request to
 // avoid web sites detecting Lantern.
 func (s *Server) AddToken(path string) string {
-	return "http://" + s.activeDomain() + s.requestPath + path
+	return "http://" + s.activeDomain() + s.httpTokenRequestPathPrefix + path
 }
 
 func (s *Server) activeDomain() string {
