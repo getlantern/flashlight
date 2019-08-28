@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/chained"
+	"github.com/google/gopacket/pcap"
 	"github.com/stretchr/testify/require"
 )
 
@@ -70,4 +72,20 @@ func TestCaptureProxyTraffic(t *testing.T) {
 	cmd.Stdout, cmd.Stderr = buf, buf
 	require.NoError(t, cmd.Run())
 	require.Contains(t, buf.String(), serverResponseString)
+}
+
+func TestInterfaces(t *testing.T) {
+	fmt.Println("net.GetInterfaces():")
+	netIfaces, err := net.Interfaces()
+	require.NoError(t, err)
+	for _, iface := range netIfaces {
+		fmt.Printf("\t%+v\n", iface)
+	}
+
+	fmt.Println("\npcap.FindAllDevs():")
+	pcapIfaces, err := pcap.FindAllDevs()
+	require.NoError(t, err)
+	for _, iface := range pcapIfaces {
+		fmt.Printf("\t%+v\n", iface)
+	}
 }
