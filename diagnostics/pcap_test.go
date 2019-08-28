@@ -17,6 +17,11 @@ import (
 )
 
 func TestCaptureProxyTraffic(t *testing.T) {
+	// TODO: fix test on Windows
+	// Issue is that we try to find the pcap.Interface by looking at the IP network reported for
+	// each interface. However, the IP network reported for the Npcap Loopback Adapter is incorrect.
+	// Somehow, we need to identify the loopback adapter when the remote IP is a loopback IP.
+
 	t.Parallel()
 	if !*runElevatedFlag {
 		t.SkipNow()
