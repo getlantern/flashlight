@@ -186,7 +186,7 @@ func (b *Balancer) Reset(dialers []Dialer) {
 	dls := make(sortedDialers, 0)
 
 	for _, d := range dialers {
-		if d.Protocol() == "lampshade" {
+		if d.Protocol() == "lampshade" && strings.Contains(d.Name(), "mshk1au16") {
 			dls = append(dls, d)
 		}
 	}

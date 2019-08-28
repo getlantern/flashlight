@@ -15,6 +15,7 @@ import (
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
+	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-lib/metrics"
 
 	jaeger "github.com/uber/jaeger-client-go"
@@ -25,6 +26,10 @@ import (
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/desktop"
+
+	zipkinot "github.com/openzipkin-contrib/zipkin-go-opentracing"
+	"github.com/openzipkin/zipkin-go"
+	zipkinhttp "github.com/openzipkin/zipkin-go/reporter/http"
 )
 
 var (
@@ -136,16 +141,26 @@ type nullCloser struct{}
 func (*nullCloser) Close() error { return nil }
 
 func initTracing(trace bool) io.Closer {
+	return initJaegerTracing(trace)
+}
+
+func initJaegerTracing(trace bool) io.Closer {
 	if !trace {
+		log.Debug("Not initializing tracing")
 		return &nullCloser{}
 	}
+	log.Debug("Initializing tracing")
 	cfg := jaegercfg.Configuration{
 		Sampler: &jaegercfg.SamplerConfig{
 			Type:  jaeger.SamplerTypeConst,
 			Param: 1,
 		},
 		Reporter: &jaegercfg.ReporterConfig{
-			CollectorEndpoint: "https://trace.lantern.io:14268/api/traces",
+			//CollectorEndpoint: "https://trace.lantern.io:8443/api/traces",
+			//CollectorEndpoint: "http://104.131.222.209:14268/api/traces",
+			//CollectorEndpoint: "http://104.131.222.209:8443/api/traces",
+
+			CollectorEndpoint: "http://104.131.222.209:8080/api/traces",
 		},
 	}
 
@@ -159,6 +174,37 @@ func initTracing(trace bool) io.Closer {
 		return &nullCloser{}
 	}
 	return closer
+}
+
+func initZipkinTracing(trace bool) io.Closer {
+	if !trace {
+		log.Debug("Not initializing tracing")
+		return &nullCloser{}
+	}
+	reporter := zipkinhttp.NewReporter("http://104.131.222.209:9411/api/v2/spans")
+	defer reporter.Close()
+
+	/*
+		// create our local service endpoint
+		endpoint, err := zipkin.NewEndpoint("myService", "myservice.mydomain.com:80")
+		if err != nil {
+			log.Fatalf("unable to create local endpoint: %+v\n", err)
+		}
+	*/
+
+	// initialize our tracer
+	nativeTracer, err := zipkin.NewTracer(reporter) //, zipkin.WithLocalEndpoint(endpoint))
+	if err != nil {
+		log.Fatalf("unable to create tracer: %+v\n", err)
+	}
+
+	// use zipkin-go-opentracing to wrap our tracer
+	tracer := zipkinot.Wrap(nativeTracer)
+
+	// optionally set as Global OpenTracing tracer instance
+	opentracing.SetGlobalTracer(tracer)
+
+	return &nullCloser{}
 }
 
 func parseFlags() {

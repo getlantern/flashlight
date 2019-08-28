@@ -21,7 +21,6 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/idletiming"
-	"github.com/getlantern/netx"
 	gp "github.com/getlantern/proxy"
 )
 
@@ -216,7 +215,7 @@ func (p *proxy) sendCONNECT(op *ops.Op, addr string, conn bufconn.Conn, timeout 
 	r := conn.Head()
 	err = p.checkCONNECTResponse(op, r, req, reqTime, conn)
 	if err != nil {
-		log.Errorf("Error checking CONNECT response on conn: %#v", conn.(netx.WrappedConn).Wrapped().(fmt.Stringer).String())
+		log.Errorf("Error checking CONNECT response on conn: %#v", conn)
 	}
 	return err
 }

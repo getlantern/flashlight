@@ -12,6 +12,7 @@ import (
 
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/proxy/filters"
+	"github.com/opentracing/opentracing-go"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
@@ -26,6 +27,11 @@ var adSwapJavaScriptInjections = map[string]string{
 
 func (client *Client) handle(conn net.Conn) error {
 	op, ctx := ops.BeginWithNewBeam("proxy", context.Background())
+
+	span := opentracing.StartSpan("handler")
+	defer span.Finish()
+	ctx = opentracing.ContextWithSpan(ctx, span)
+
 	// Set user agent connection to idle a little before the upstream connection
 	// so that we don't read data from the client after the upstream connection
 	// has already timed out.
@@ -53,6 +59,9 @@ func normalizeExoAd(req *http.Request) (*http.Request, bool) {
 }
 
 func (client *Client) filter(ctx filters.Context, req *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
+	span, spanContext := opentracing.StartSpanFromContext(ctx, "handler-filter")
+	defer span.Finish()
+	ctx = filters.AdaptContext(spanContext)
 	if client.isHTTPProxyPort(req) {
 		log.Debugf("Reject proxy request to myself: %s", req.Host)
 		// Not reveal any error text to the application.
