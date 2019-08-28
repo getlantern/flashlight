@@ -1,6 +1,7 @@
 package diagnostics
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 	"os"
@@ -108,8 +109,10 @@ func writeCapture(addr, outputFile string, duration time.Duration) error {
 		return errors.New("failed to obtain interface: %v", err)
 	}
 
-	// TODO: get proper MTU for interface
-	mtu := uint32(1500)
+	mtu, err := getMTU(*iface)
+	if err != nil {
+		return errors.New("failed to obtain interface MTU: %v", err)
+	}
 
 	// TODO: test on linux
 	linkType := layers.LinkTypeEthernet
@@ -120,7 +123,7 @@ func writeCapture(addr, outputFile string, duration time.Duration) error {
 	}
 
 	pcapW := pcapgo.NewWriter(f)
-	if err := pcapW.WriteFileHeader(mtu, linkType); err != nil {
+	if err := pcapW.WriteFileHeader(uint32(mtu), linkType); err != nil {
 		return errors.New("failed to write header to capture file: %v", err)
 	}
 
@@ -203,4 +206,34 @@ func getIPNet(addr pcap.InterfaceAddress) *net.IPNet {
 		ipNet.Mask = net.CIDRMask(0, 128)
 	}
 	return &ipNet
+}
+
+func getMTU(iface pcap.Interface) (int, error) {
+	// We use the interface's unicast addresses to associate with a net.Interface, then obtain the
+	// MTU from the net.Interface. This is pretty roundabout, but the MTU is not exposed on
+	// pcap.Interface. At the same time, pcap.Interface.Name can differ from net.Interface.Name and
+	// the pcap package requires the name given to pcap.Interface.
+
+	netIfaces, err := net.Interfaces()
+	if err != nil {
+		return 0, errors.New("failed to read interface information from net pkg: %v", err)
+	}
+	for _, netIface := range netIfaces {
+		addrs, err := netIface.Addrs()
+		if err != nil {
+			return 0, errors.New("failed to read addresses from net.Interface: %v", err)
+		}
+		for _, candidateAddr := range addrs {
+			candidateIPNet, ok := candidateAddr.(*net.IPNet)
+			if !ok {
+				continue
+			}
+			for _, ifaceAddr := range iface.Addresses {
+				if bytes.Equal(ifaceAddr.IP, candidateIPNet.IP) && bytes.Equal(ifaceAddr.Netmask, candidateIPNet.Mask) {
+					return netIface.MTU, nil
+				}
+			}
+		}
+	}
+	return 0, errors.New("unable to find interface metadata")
 }
