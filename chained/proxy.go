@@ -299,22 +299,17 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 		Pool:                  buffers.Pool,
 		Cipher:                cipherCode,
 		ServerPublicKey:       rsaPublicKey,
+		Dial: func() (net.Conn, error) {
+			// note - we do not wrap the TCP connection with IdleTiming because
+			// lampshade cleans up after itself and won't leave excess unused
+			// connections hanging around.
+			log.Debugf("Dialing lampshade TCP connection to %v", name)
+			return netx.DialTimeout("tcp", s.Addr, 40*time.Second)
+		},
 	})
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
-		return p.reportedDial(s.Addr, transport, proto, func(op *ops.Op) (net.Conn, error) {
-			op.Set("ls_win", windowSize).
-				Set("ls_pad", maxPadding).
-				Set("ls_streams", int(maxStreamsPerConn)).
-				Set("ls_cipher", cipherCode.String())
-			conn, err := dialer.DialContext(ctx, func() (net.Conn, error) {
-				// note - we do not wrap the TCP connection with IdleTiming because
-				// lampshade cleans up after itself and won't leave excess unused
-				// connections hanging around.
-				log.Debugf("Dialing lampshade TCP connection to %v", p.Label())
-				return p.dialCore(op)(ctx)
-			})
-			return overheadWrapper(true)(conn, err)
-		})
+		conn, err := dialer.DialContext(ctx)
+		return overheadWrapper(true)(conn, err)
 	}
 	return newProxy(name, transport, proto, s, uc, s.Trusted, false, doDialServer, defaultDialOrigin)
 }
