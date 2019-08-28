@@ -17,6 +17,7 @@ func TestUsers(t *testing.T) {
 
 	assert.NoError(t, err, "Unexpected error")
 	assert.NotNil(t, u, "Should have gotten a user")
+	assert.NotNil(t, u.Auth, "Should have gotten Auth")
 	t.Logf("user: %+v", u)
 
 	uc := common.NewUserConfigData(deviceID, u.Auth.ID, u.Auth.Token, nil, "en-US")
