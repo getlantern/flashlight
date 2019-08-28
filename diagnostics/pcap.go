@@ -12,6 +12,7 @@ import (
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/probednet/pktutil"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
@@ -151,6 +152,13 @@ func writeCapture(addr, outputFile string, duration time.Duration) error {
 	for {
 		select {
 		case pkt := <-pktSrc:
+			decoded, err := pktutil.DecodeTransportPacket(pkt.Data(), layerType)
+			if err != nil {
+				fmt.Println("failed to decode packet:", err)
+			} else {
+				fmt.Println(decoded.Pprint())
+			}
+
 			if err := pcapW.WritePacket(pkt.Metadata().CaptureInfo, pkt.Data()); err != nil {
 				pktWriteErrors = append(pktWriteErrors, err)
 			}

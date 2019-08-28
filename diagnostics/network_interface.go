@@ -25,11 +25,14 @@ func networkInterfaceFor(ip net.IP) (*networkInterface, error) {
 		}
 
 		for _, iface := range pcapIfaces {
-			for _, addr := range iface.Addresses {
-				if getIPNet(addr).Contains(ip) {
-					return &iface, nil
-				}
+			if strings.Contains(iface.Name, "31A2C3A2") {
+				return &iface, nil
 			}
+			//for _, addr := range iface.Addresses {
+			//	if getIPNet(addr).Contains(ip) {
+			//		return &iface, nil
+			//	}
+			//}
 		}
 		return nil, errors.New("no network interface for %v", ip)
 	}()

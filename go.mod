@@ -56,6 +56,7 @@ require (
 	github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f
 	github.com/getlantern/osversion v0.0.0-20180309120706-8f3fb296110c
 	github.com/getlantern/packetforward v0.0.0-20190809094443-386cbcc0d498
+	github.com/getlantern/probednet v0.0.0-20190826160128-4ccfcdaafd9a
 	github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff
 	github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8
 	github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c

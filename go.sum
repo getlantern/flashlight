@@ -236,6 +236,8 @@ github.com/getlantern/pcapper v0.0.0-20181212174440-a8b1a3ff0cde/go.mod h1:x9UkL
 github.com/getlantern/preconn v0.0.0-20170921211456-9d78068db81b/go.mod h1:FvIxQD61iYA42UjaJyzGl9DNne8jbowbgicdeNk/7kE=
 github.com/getlantern/preconn v0.0.0-20180328114929-0b5766010efe h1:6KgbumDfWYBJFgySAvSTBhDiBZCJ6r03PVdfWrkBZa4=
 github.com/getlantern/preconn v0.0.0-20180328114929-0b5766010efe/go.mod h1:FvIxQD61iYA42UjaJyzGl9DNne8jbowbgicdeNk/7kE=
+github.com/getlantern/probednet v0.0.0-20190826160128-4ccfcdaafd9a h1:BUhSMPMZJT+XGNcIbilIw01KRp8vHR5ltpsB6zjYeA0=
+github.com/getlantern/probednet v0.0.0-20190826160128-4ccfcdaafd9a/go.mod h1:7sl7hPjPDAqXyxVx7mhrKfvb4oCX/ROhcs16w2EhWX8=
 github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff h1:q5GcvgoGNRJ5yVCr5p0vUcXyYOGvTb+Lq/g4TW2HbfA=
 github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff/go.mod h1:eHf4vTrd0oaXLtbz+zM28cfsX4ylva7hbM2zt4+axZo=
 github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8 h1:T8WNx5V/ZqnL7LSBQGkhGVJ7PYzQfzkrExu0y8mCJXA=
