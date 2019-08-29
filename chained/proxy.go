@@ -300,18 +300,22 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 		Cipher:                cipherCode,
 		ServerPublicKey:       rsaPublicKey,
 		Dial: func() (net.Conn, error) {
+			start := time.Now()
 			// note - we do not wrap the TCP connection with IdleTiming because
 			// lampshade cleans up after itself and won't leave excess unused
 			// connections hanging around.
 			log.Debugf("Dialing lampshade TCP connection to %v", name)
 			conn, err := netx.DialTimeout("tcp", s.Addr, 40*time.Second)
+			elapsed := time.Since(start).Seconds()
 			if err != nil {
-				log.Errorf("Could not dial TCP connection to %v: %v", name, err)
+				log.Errorf("Could not dial TCP connection to %v after %v seconds: %v", name, elapsed, err)
 			} else {
-				log.Debugf("Successfully created lampshade TCP connection to %v", name)
+				log.Debugf("Successfully created lampshade TCP connection to %v in %v seconds", name, elapsed)
 			}
 			return conn, err
 		},
+		Lifecycle: newLampshadeLifecycleListener(name),
+		Context:   context.Background(),
 	})
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		conn, err := dialer.DialContext(ctx)

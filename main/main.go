@@ -4,6 +4,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -15,12 +16,22 @@ import (
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
+	"github.com/mitchellh/panicwrap"
+	"github.com/opentracing/opentracing-go"
+	"github.com/uber/jaeger-lib/metrics"
+
+	jaeger "github.com/uber/jaeger-client-go"
+
+	jaegercfg "github.com/uber/jaeger-client-go/config"
+	jaegerlog "github.com/uber/jaeger-client-go/log"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/desktop"
 
-	"github.com/mitchellh/panicwrap"
+	zipkinot "github.com/openzipkin-contrib/zipkin-go-opentracing"
+	"github.com/openzipkin/zipkin-go"
+	zipkinhttp "github.com/openzipkin/zipkin-go/reporter/http"
 )
 
 var (
@@ -36,35 +47,43 @@ func main() {
 	debug.SetTraceback("all")
 	parseFlags()
 
+	traceCloser := initTracing(*trace)
 	a := &desktop.App{
 		ShowUI: !*headless,
 		Flags:  flagsAsMap(),
 	}
 	a.Init()
-	wrapperC := handleWrapperSignals(a)
 
-	// environmental variables, etc.) and monitoring the stderr of the program.
-	exitStatus, err := panicwrap.BasicWrap(
-		func(output string) {
-			a.LogPanicAndExit(output)
-		})
-	if err != nil {
-		// Something went wrong setting up the panic wrapper. This won't be
-		// captured by panicwrap
-		// At this point, continue execution without panicwrap support. There
-		// are known cases where panicwrap will fail to fork, such as Windows
-		// GUI app
-		log.Errorf("Error setting up panic wrapper: %v", err)
-	} else {
-		// If exitStatus >= 0, then we're the parent process.
-		if exitStatus >= 0 {
-			os.Exit(exitStatus)
+	if !*trace {
+		wrapperC := handleWrapperSignals(a)
+
+		// environmental variables, etc.) and monitoring the stderr of the program.
+		exitStatus, err := panicwrap.BasicWrap(
+			func(output string) {
+				a.LogPanicAndExit(output)
+			})
+		if err != nil {
+			// Something went wrong setting up the panic wrapper. This won't be
+			// captured by panicwrap
+			// At this point, continue execution without panicwrap support. There
+			// are known cases where panicwrap will fail to fork, such as Windows
+			// GUI app
+			log.Errorf("Error setting up panic wrapper: %v", err)
+		} else {
+			// If exitStatus >= 0, then we're the parent process.
+			if exitStatus >= 0 {
+				os.Exit(exitStatus)
+			}
 		}
+
+		// We're in the child (wrapped) process
+		// Stop wrapper signal handling
+		signal.Stop(wrapperC)
 	}
 
-	// We're in the child (wrapped) process
-	// Stop wrapper signal handling
-	signal.Stop(wrapperC)
+	a.AddExitFunc("Ending background tracing span", func() {
+		traceCloser.Close()
+	})
 
 	if *help {
 		flag.Usage()
@@ -143,6 +162,77 @@ func i18nInit(a *desktop.App) {
 			a.SetLanguage(locale)
 		}
 	}
+}
+
+type nullCloser struct{}
+
+func (*nullCloser) Close() error { return nil }
+
+func initTracing(trace bool) io.Closer {
+	return initJaegerTracing(trace)
+}
+
+func initJaegerTracing(trace bool) io.Closer {
+	if !trace {
+		log.Debug("Not initializing tracing")
+		return &nullCloser{}
+	}
+	log.Debug("Initializing tracing")
+	cfg := jaegercfg.Configuration{
+		Sampler: &jaegercfg.SamplerConfig{
+			Type:  jaeger.SamplerTypeConst,
+			Param: 1,
+		},
+		Reporter: &jaegercfg.ReporterConfig{
+			//CollectorEndpoint: "https://trace.lantern.io:8443/api/traces",
+			//CollectorEndpoint: "http://104.131.222.209:14268/api/traces",
+			//CollectorEndpoint: "http://104.131.222.209:8443/api/traces",
+
+			CollectorEndpoint: "http://104.131.222.209:8080/api/traces",
+		},
+	}
+
+	closer, err := cfg.InitGlobalTracer(
+		"lantern",
+		jaegercfg.Logger(jaegerlog.StdLogger),
+		jaegercfg.Metrics(metrics.NullFactory),
+	)
+	if err != nil {
+		log.Errorf("Could not initialize jaeger tracer: %s", err.Error())
+		return &nullCloser{}
+	}
+	return closer
+}
+
+func initZipkinTracing(trace bool) io.Closer {
+	if !trace {
+		log.Debug("Not initializing tracing")
+		return &nullCloser{}
+	}
+	reporter := zipkinhttp.NewReporter("http://104.131.222.209:9411/api/v2/spans")
+	defer reporter.Close()
+
+	/*
+		// create our local service endpoint
+		endpoint, err := zipkin.NewEndpoint("myService", "myservice.mydomain.com:80")
+		if err != nil {
+			log.Fatalf("unable to create local endpoint: %+v\n", err)
+		}
+	*/
+
+	// initialize our tracer
+	nativeTracer, err := zipkin.NewTracer(reporter) //, zipkin.WithLocalEndpoint(endpoint))
+	if err != nil {
+		log.Fatalf("unable to create tracer: %+v\n", err)
+	}
+
+	// use zipkin-go-opentracing to wrap our tracer
+	tracer := zipkinot.Wrap(nativeTracer)
+
+	// optionally set as Global OpenTracing tracer instance
+	opentracing.SetGlobalTracer(tracer)
+
+	return &nullCloser{}
 }
 
 func parseFlags() {

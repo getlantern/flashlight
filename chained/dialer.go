@@ -153,6 +153,8 @@ func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, err
 // involves sending either a CONNECT request or a GET request to initiate a
 // persistent connection to the upstream proxy.
 func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
+	// Add the destination to the context for later tracing.
+	ctx = context.WithValue(ctx, upstreamHostKey, addr)
 	conn, err := p.dialServer(ctx)
 	if err != nil {
 		return nil, err
