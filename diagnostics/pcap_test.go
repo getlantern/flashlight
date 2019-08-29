@@ -1,12 +1,10 @@
 package diagnostics
 
 import (
+	"bytes"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -27,20 +25,21 @@ func TestCaptureProxyTraffic(t *testing.T) {
 	}))
 	defer s.Close()
 
-	tmpDir, err := ioutil.TempDir("", "flashlight-diagnostics-pcap-test")
-	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
-
 	capturing := make(chan struct{})
 	captureComplete := make(chan struct{})
+	captureBuf := new(bytes.Buffer)
 	go func() {
 		close(capturing)
 		defer func() { close(captureComplete) }()
 
-		err = CaptureProxyTraffic(map[string]*chained.ChainedServerInfo{
+		proxies := map[string]*chained.ChainedServerInfo{
 			"localhost": &chained.ChainedServerInfo{Addr: s.Listener.Addr().String()},
-		}, tmpDir)
-		if err != nil {
+		}
+		cfg := CaptureConfig{
+			StopChannel: CloseAfter(500 * time.Millisecond),
+			Output:      captureBuf,
+		}
+		if err := CaptureProxyTraffic(proxies, &cfg); err != nil {
 			for proxyName, proxyErr := range err.(ErrorsMap) {
 				t.Logf("error for %s:\n%v", proxyName, proxyErr)
 			}
@@ -49,16 +48,10 @@ func TestCaptureProxyTraffic(t *testing.T) {
 	}()
 
 	<-capturing
-	time.Sleep(time.Second)
-	_, err = http.Get(s.URL)
+	time.Sleep(100 * time.Millisecond)
+	_, err := http.Get(s.URL)
 	require.NoError(t, err)
 
 	<-captureComplete
-	pcapFile, err := os.Open(filepath.Join(tmpDir, "localhost.pcap"))
-	require.NoError(t, err)
-	defer pcapFile.Close()
-
-	fileContents, err := ioutil.ReadAll(pcapFile)
-	require.NoError(t, err)
-	require.Contains(t, string(fileContents), serverResponseString)
+	require.Contains(t, captureBuf.String(), serverResponseString)
 }

@@ -2,9 +2,9 @@ package diagnostics
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	// TODO: perhaps this should be configurable
-	captureDuration = 10 * time.Second
+	// DefaultCaptureDuration is the default duration for packet capture sessions.
+	DefaultCaptureDuration = 10 * time.Second
 
 	// Warning: do not set to >= 1 second: https://github.com/google/gopacket/issues/499
 	packetReadTimeout = 100 * time.Millisecond
@@ -37,6 +37,45 @@ func (em ErrorsMap) Error() string {
 	return fmt.Sprintf("errors for %s", strings.Join(keys, ", "))
 }
 
+// CaptureConfig is configuration for a packet capture session.
+type CaptureConfig struct {
+	// Defaults to CloseAfter(DefaultCaptureDuration).
+	StopChannel <-chan struct{}
+
+	// Defaults to os.Stdout.
+	Output io.Writer
+
+	setStopChannelOnce sync.Once
+}
+
+func (cc *CaptureConfig) getStopChannel() <-chan struct{} {
+	if cc.StopChannel == nil {
+		cc.setStopChannelOnce.Do(func() {
+			cc.StopChannel = CloseAfter(DefaultCaptureDuration)
+		})
+	}
+	return cc.StopChannel
+}
+
+func (cc *CaptureConfig) getOutput() io.Writer {
+	if cc.Output == nil {
+		return os.Stdout
+	}
+	return cc.Output
+}
+
+// CloseAfter returns a channel which will close after the specified duration.
+func CloseAfter(d time.Duration) <-chan struct{} {
+	c, ready := make(chan struct{}), make(chan struct{})
+	go func() {
+		close(ready)
+		<-time.After(d)
+		close(c)
+	}()
+	<-ready
+	return c
+}
+
 // CaptureProxyTraffic generates a pcap file for each proxy in the input map. These files are saved
 // in outputDir and named using the keys in proxiesMap.
 //
@@ -44,9 +83,7 @@ func (em ErrorsMap) Error() string {
 // proxiesMap. If no error occurred for a given proxy, it will have no entry in the returned map.
 //
 // Expects tshark to be installed, otherwise returns errors.
-func CaptureProxyTraffic(proxiesMap map[string]*chained.ChainedServerInfo, outputDir string) error {
-	// TODO: one file for all proxy traffic is probably more convenient
-
+func CaptureProxyTraffic(proxiesMap map[string]*chained.ChainedServerInfo, cfg *CaptureConfig) error {
 	type captureError struct {
 		proxyName string
 		err       error
@@ -58,7 +95,7 @@ func CaptureProxyTraffic(proxiesMap map[string]*chained.ChainedServerInfo, outpu
 		wg.Add(1)
 		go func(pName, pAddr string) {
 			defer wg.Done()
-			err := writeCapture(pAddr, filepath.Join(outputDir, fmt.Sprintf("%s.pcap", pName)), captureDuration)
+			err := writeCapture(pAddr, cfg.getOutput(), cfg.getStopChannel())
 			if err != nil {
 				captureErrors <- captureError{pName, err}
 			}
@@ -77,13 +114,7 @@ func CaptureProxyTraffic(proxiesMap map[string]*chained.ChainedServerInfo, outpu
 	return errorsMap
 }
 
-func writeCapture(addr, outputFile string, duration time.Duration) error {
-	f, err := os.Create(outputFile)
-	if err != nil {
-		return errors.New("failed to open file for writing: %v", err)
-	}
-	defer f.Close()
-
+func writeCapture(addr string, output io.Writer, stop <-chan struct{}) error {
 	remoteHost, remotePort, err := net.SplitHostPort(addr)
 	if err != nil {
 		return errors.New("malformed address: %v", err)
@@ -116,7 +147,7 @@ func writeCapture(addr, outputFile string, duration time.Duration) error {
 		// TODO: should this ever be LinkTypeLoop?
 	}
 
-	pcapW := pcapgo.NewWriter(f)
+	pcapW := pcapgo.NewWriter(output)
 	if err := pcapW.WriteFileHeader(uint32(iface.mtu), linkType); err != nil {
 		return errors.New("failed to write header to capture file: %v", err)
 	}
@@ -154,7 +185,7 @@ func writeCapture(addr, outputFile string, duration time.Duration) error {
 			if err := pcapW.WritePacket(pkt.Metadata().CaptureInfo, pkt.Data()); err != nil {
 				pktWriteErrors = append(pktWriteErrors, err)
 			}
-		case <-time.After(captureDuration):
+		case <-stop:
 			if len(pktWriteErrors) == 0 {
 				return nil
 			}
