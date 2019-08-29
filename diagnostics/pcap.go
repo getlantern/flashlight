@@ -139,12 +139,10 @@ func writeCapture(addr string, output io.Writer, stop <-chan struct{}) error {
 		return errors.New("failed to obtain interface: %v", err)
 	}
 
-	// TODO: test on linux
 	linkType := layers.LinkTypeEthernet
 	if remoteIP.IsLoopback() && runtime.GOOS != "linux" {
 		// This is done to support testing.
 		linkType = layers.LinkTypeNull
-		// TODO: should this ever be LinkTypeLoop?
 	}
 
 	pcapW := pcapgo.NewWriter(output)
