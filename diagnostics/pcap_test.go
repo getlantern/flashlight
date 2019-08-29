@@ -36,7 +36,7 @@ func TestCaptureProxyTraffic(t *testing.T) {
 			"localhost": &chained.ChainedServerInfo{Addr: s.Listener.Addr().String()},
 		}
 		cfg := CaptureConfig{
-			StopChannel: CloseAfter(500 * time.Millisecond),
+			StopChannel: CloseAfter(time.Second),
 			Output:      captureBuf,
 		}
 		if err := CaptureProxyTraffic(proxies, &cfg); err != nil {
@@ -48,7 +48,7 @@ func TestCaptureProxyTraffic(t *testing.T) {
 	}()
 
 	<-capturing
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 	_, err := http.Get(s.URL)
 	require.NoError(t, err)
 
