@@ -3,12 +3,13 @@ module github.com/getlantern/flashlight
 go 1.12
 
 require (
-	git.torproject.org/pluggable-transports/goptlib.git v0.0.0-20180321061416-7d56ec4f381e
+	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/go-libutp v1.0.1
 	github.com/anacrolix/mmsg v1.0.0 // indirect
 	github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc // indirect
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
+	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/set v0.2.1 // indirect
 	github.com/getlantern/appdir v0.0.0-20180320102544-7c0f9d241ea7
@@ -108,3 +109,7 @@ replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-2019
 replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20190606225154-80c3ccb52074
 
 replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3
+
+replace git.torproject.org/pluggable-transports/obfs4.git => gitlab.com/yawning/obfs4.git v0.0.0-20180421031126-89c21805c212
+
+replace git.torproject.org/pluggable-transports/goptlib.git => github.com/getlantern/goptlib v1.0.0
