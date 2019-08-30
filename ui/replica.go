@@ -15,6 +15,15 @@ type replicaHttpServer struct {
 	instancePrefix string
 }
 
+type countWriter struct {
+	bytesWritten int64
+}
+
+func (me *countWriter) Write(b []byte) (int, error) {
+	me.bytesWritten += int64(len(b))
+	return len(b), nil
+}
+
 func (me replicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Debugf("replica server request path: %q", r.URL.Path)
 	switch r.URL.Path {
@@ -23,9 +32,11 @@ func (me replicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-		s3Key := fmt.Sprintf("/%s/%s/%s", me.instancePrefix, u.String(), r.FormValue("name"))
+		s3Key := fmt.Sprintf("/%s/%s/%s", me.instancePrefix, u.String(), r.URL.Query().Get("name"))
 		log.Debugf("uploading replica key %q", s3Key)
-		err = replica.Upload(r.Body, s3Key)
+		var cw countWriter
+		err = replica.Upload(io.TeeReader(r.Body, &cw), s3Key)
+		log.Debugf("upload read %d bytes", cw.bytesWritten)
 		if err != nil {
 			panic(err)
 		}
