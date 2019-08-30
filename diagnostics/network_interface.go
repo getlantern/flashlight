@@ -2,22 +2,31 @@ package diagnostics
 
 import (
 	"net"
+	"runtime"
 	"strconv"
 	"strings"
 
 	"github.com/getlantern/errors"
+	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 )
 
-// The pcap package requires the interface name provided by pcap.Interface (which can differ from
-// that given to net.Interface). We also need the MTU, which is not provided by pcap.Interface. The
-// networkInterface type combines this information.
+// The network interfaces according to the pcap package are slightly different than the network
+// interfaces according to the net package. We need information from both, so we combine the two in
+// the networkInterface type.
 type networkInterface struct {
-	pcap.Interface
-	mtu int
+	pcapInterface pcap.Interface
+	netInterface  net.Interface
+	linkType      layers.LinkType
 }
 
-func networkInterfaceFor(ip net.IP) (*networkInterface, error) {
+// Returns the network interface used to connect to the host.
+func networkInterfaceFor(remoteIP net.IP) (*networkInterface, error) {
+	localIP, err := preferredOutboundIP(remoteIP)
+	if err != nil {
+		return nil, errors.New("failed to obtain outbound IP: %v", err)
+	}
+
 	pcapIface, err := func() (*pcap.Interface, error) {
 		pcapIfaces, err := pcap.FindAllDevs()
 		if err != nil {
@@ -26,10 +35,10 @@ func networkInterfaceFor(ip net.IP) (*networkInterface, error) {
 
 		for _, iface := range pcapIfaces {
 			for _, addr := range iface.Addresses {
-				if getIPNet(addr).Contains(ip) {
+				if getIPNet(addr).Contains(localIP) {
 					return &iface, nil
 				}
-				if ip.IsLoopback() && strings.Contains(strings.ToLower(iface.Description), "loopback") {
+				if localIP.IsLoopback() && strings.Contains(strings.ToLower(iface.Description), "loopback") {
 					// The Npcap loopback adapter on Windows may not have the loopback IP network in
 					// its address space. It is identifiable only through mention of the word
 					// "loopback" in its description. Fortunately, this is only really an issue
@@ -38,10 +47,16 @@ func networkInterfaceFor(ip net.IP) (*networkInterface, error) {
 				}
 			}
 		}
-		return nil, errors.New("no network interface for %v", ip)
+		return nil, errors.New("should connect through %v, but could not find network interface", localIP)
 	}()
 	if err != nil {
 		return nil, err
+	}
+
+	linkType := layers.LinkTypeEthernet
+	if remoteIP.IsLoopback() && runtime.GOOS != "linux" {
+		// This is done to support testing.
+		linkType = layers.LinkTypeNull
 	}
 
 	// We've found the network interface according to the pcap package. Unfortunately, the pcap
@@ -62,12 +77,42 @@ func networkInterfaceFor(ip net.IP) (*networkInterface, error) {
 			if err != nil {
 				return nil, errors.New("failed to parse interface address %s as IP network: %v", addr.String(), err)
 			}
-			if ipNet.Contains(ip) {
-				return &networkInterface{*pcapIface, iface.MTU}, nil
+			if ipNet.Contains(localIP) {
+				return &networkInterface{*pcapIface, iface, linkType}, nil
 			}
 		}
 	}
-	return nil, errors.New("no network interface for %v", ip)
+	return nil, errors.New("should connect through %v, but could not find network interface", localIP)
+}
+
+// The pcap and net packages sometimes report different names for the interfaces. Functions in the
+// pcap package require the name reported by the pcap package.
+func (ni networkInterface) pcapName() string {
+	return ni.pcapInterface.Name
+}
+
+// As noted above, the pcap and net packages sometimes report different names for the interfaces.
+// While the pcap name is needed sometimes, the net package's name is often the more conventional.
+func (ni networkInterface) name() string {
+	return ni.netInterface.Name
+}
+
+func (ni networkInterface) mtu() int {
+	return ni.netInterface.MTU
+}
+
+func (ni networkInterface) index() int {
+	return ni.netInterface.Index
+}
+
+func preferredOutboundIP(remoteIP net.IP) (net.IP, error) {
+	// Note: the choice of port below does not actually matter. It just needs to be non-zero.
+	conn, err := net.DialUDP("udp", nil, &net.UDPAddr{IP: remoteIP, Port: 999})
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	return conn.LocalAddr().(*net.UDPAddr).IP, nil
 }
 
 func getIPNet(addr pcap.InterfaceAddress) *net.IPNet {
