@@ -136,9 +136,10 @@ func sendTemplate(msg *Message) error {
 		mmsg.To = append(mmsg.To, &mandrill.To{Email: msg.CC, Type: "cc"})
 	}
 	if msg.Vars["file"] != nil {
+		fileName := util.SanitizePathString(fmt.Sprintf("%v", msg.Vars["fileName"]))
 		mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
 			Type:    fmt.Sprintf("%v", msg.Vars["fileType"]),
-			Name:    fmt.Sprintf("%v", msg.Vars["fileName"]),
+			Name:    fileName,
 			Content: fmt.Sprintf("%v", msg.Vars["file"]),
 		})
 	}
