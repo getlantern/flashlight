@@ -88,8 +88,8 @@ func EnableFileLoggingWith(werr io.WriteCloser, wout io.WriteCloser, logdir stri
 	}
 
 	logFile = rotator
-	errorPWC = newPipedWriteCloser(newNonStopWriteCloser(werr, logFile), 1000)
-	debugPWC = newPipedWriteCloser(newNonStopWriteCloser(wout, logFile), 100)
+	errorPWC = newPipedWriteCloser(NonStopWriteCloser(werr, logFile), 1000)
+	debugPWC = newPipedWriteCloser(NonStopWriteCloser(wout, logFile), 100)
 	golog.SetOutputs(errorPWC, debugPWC)
 	return nil
 }
@@ -208,10 +208,10 @@ type nonStopWriteCloser struct {
 	writers []io.WriteCloser
 }
 
-// newNonStopWriteCloser creates a WriteCloser that duplicates its writes to all the
-// provided WriteClosers, even if errors encountered while writing. It doesn't
-// close the provided WriteClosers.
-func newNonStopWriteCloser(writers ...io.WriteCloser) io.WriteCloser {
+// NonStopWriteCloser creates a WriteCloser that duplicates its writes to all
+// the provided WriteClosers, even if errors encountered while writing. It
+// doesn't close the provided WriteClosers.
+func NonStopWriteCloser(writers ...io.WriteCloser) io.WriteCloser {
 	w := make([]io.WriteCloser, len(writers))
 	copy(w, writers)
 	return &nonStopWriteCloser{w}

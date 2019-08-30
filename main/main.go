@@ -4,7 +4,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -57,14 +56,11 @@ func main() {
 	exitStatus, err := panicwrap.Wrap(
 		&panicwrap.WrapConfig{
 			Handler: a.LogPanicAndExit,
-			// Pipe child process output to log file instead of letting it
-			// write log file directly because we want to capture anything
-			// printed by go runtime and other libraries as well. It's vital to
-			// make sure logFile is the first one to MultiWriter, as writing to
-			// os.Stdout or os.Stderr is doomed to fail in environments like
-			// Windows GUI.
-			Stdout: io.MultiWriter(logFile, os.Stdout),
-			Writer: io.MultiWriter(logFile, os.Stderr), // standard error
+			// Pipe child process output to log files instead of letting the
+			// child to write directly because we want to capture anything
+			// printed by go runtime and other libraries as well.
+			Stdout: logging.NonStopWriteCloser(logFile, os.Stdout),
+			Writer: logging.NonStopWriteCloser(logFile, os.Stderr), // standard error
 		},
 	)
 	if err != nil {
