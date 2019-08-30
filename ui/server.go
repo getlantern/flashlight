@@ -69,9 +69,9 @@ type Server struct {
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func StartServer(requestedAddr, extURL, localHTTPToken string,
+func StartServer(requestedAddr, extURL, localHTTPToken, replicaS3Prefix string,
 	handlers ...*PathHandler) (*Server, error) {
-	server := newServer(extURL, localHTTPToken)
+	server := newServer(extURL, localHTTPToken, replicaS3Prefix)
 
 	for _, h := range handlers {
 		server.handle(h.Pattern, h.Handler)
@@ -83,7 +83,7 @@ func StartServer(requestedAddr, extURL, localHTTPToken string,
 	return server, nil
 }
 
-func newServer(extURL, localHTTPToken string) *Server {
+func newServer(extURL, localHTTPToken, replicaS3Prefix string) *Server {
 	server := &Server{
 		externalURL: overrideManotoURL(extURL),
 		httpTokenRequestPathPrefix: func() string {
@@ -97,11 +97,11 @@ func newServer(extURL, localHTTPToken string) *Server {
 		translations:   eventual.NewValue(),
 	}
 
-	server.attachHandlers()
+	server.attachHandlers(replicaS3Prefix)
 	return server
 }
 
-func (s *Server) attachHandlers() {
+func (s *Server) attachHandlers(replicaKeyPrefix string) {
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
 	startupHandler := func(resp http.ResponseWriter, req *http.Request) {
@@ -111,6 +111,9 @@ func (s *Server) attachHandlers() {
 
 	s.handle("/startup", http.HandlerFunc(startupHandler))
 	s.handle("/", http.FileServer(fs))
+	// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
+	// in their handlers.
+	s.handle("/replica/", http.StripPrefix("/replica", replicaHttpServer{replicaKeyPrefix}))
 }
 
 // handle directs the underlying server to handle the given pattern at both
@@ -136,8 +139,9 @@ func (s *Server) handle(pattern string, handler http.Handler) {
 // static file server can properly serve it.
 func (s *Server) strippingHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Debugf("Stripping path from %q", r.URL.Path)
-		r.URL.Path = strings.Replace(r.URL.Path, s.httpTokenRequestPathPrefix, "", -1)
+		stripped := strings.Replace(r.URL.Path, s.httpTokenRequestPathPrefix, "", -1)
+		log.Debugf("changing path from %q to %q", r.URL.Path, stripped)
+		r.URL.Path = stripped
 		h.ServeHTTP(w, r)
 	})
 }

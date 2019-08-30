@@ -62,6 +62,7 @@ require (
 	github.com/getlantern/proxy v0.0.0-20190225163220-31d1cc06ed3d
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
 	github.com/getlantern/quicwrapper v0.0.0-20190823180104-f4c834140eac
+	github.com/getlantern/replica v0.0.0-00010101000000-000000000000
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/shortcut v0.0.0-20190117153616-bb4d4203cc25
@@ -76,6 +77,7 @@ require (
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
 	github.com/google/netstack v0.0.0-20190505230633-4391e4a763ab // indirect
+	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v0.0.0-20180306181548-eb925808374e
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/jackpal/gateway v1.0.5
@@ -87,7 +89,6 @@ require (
 	github.com/mitchellh/go-server-timing v1.0.0
 	github.com/mitchellh/mapstructure v0.0.0-20180220230111-00c29f56e238
 	github.com/mitchellh/panicwrap v0.0.0-20170106182340-fce601fe5557
-	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/refraction-networking/utls v0.0.0-20190415193640-32987941ebd3
@@ -109,3 +110,5 @@ replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-2019
 replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20190606225154-80c3ccb52074
 
 replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3
+
+replace github.com/getlantern/replica => ./replica
