@@ -536,8 +536,9 @@ func (app *App) IsPro() bool {
 	return isPro
 }
 
-// IsWorking checks if the application is running fine by hitting the proxy port
-func (app *App) IsWorking(ctx context.Context) error {
+// ProxyAddrReachable checks if Lantern's HTTP proxy responds correct status
+// within the deadline.
+func (app *App) ProxyAddrReachable(ctx context.Context) error {
 	req, err := http.NewRequest("GET", "http://"+settings.GetAddr(), nil)
 	if err != nil {
 		return err
