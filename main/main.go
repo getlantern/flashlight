@@ -4,6 +4,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -13,18 +14,19 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/getlantern/appdir"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
+	"github.com/mitchellh/panicwrap"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/desktop"
-
-	"github.com/mitchellh/panicwrap"
+	"github.com/getlantern/flashlight/logging"
 )
 
 var (
-	log = golog.LoggerFor("flashlight")
+	log = golog.LoggerFor("flashlight.main")
 )
 
 func main() {
@@ -37,23 +39,38 @@ func main() {
 	parseFlags()
 
 	a := &desktop.App{
-		ShowUI: !*headless,
-		Flags:  flagsAsMap(),
+		Flags: flagsAsMap(),
 	}
-	a.Init()
 	wrapperC := handleWrapperSignals(a)
 
+	logFile, err := logging.RotatedLogsUnder(appdir.Logs("Lantern"))
+	if err != nil {
+		log.Error(err)
+		// Nothing we can do if fails to create log files, leave logFile nil so
+		// the child process writes to standard outputs as usual.
+	}
+	defer logFile.Close()
+
+	// panicwrap works by re-executing the running program (retaining arguments,
 	// environmental variables, etc.) and monitoring the stderr of the program.
-	exitStatus, err := panicwrap.BasicWrap(
-		func(output string) {
-			a.LogPanicAndExit(output)
-		})
+	exitStatus, err := panicwrap.Wrap(
+		&panicwrap.WrapConfig{
+			Handler: a.LogPanicAndExit,
+			// Pipe child process output to log file instead of letting it
+			// write log file directly because we want to capture anything
+			// printed by go runtime and other libraries as well. It's vital to
+			// make sure logFile is the first one to MultiWriter, as writing to
+			// os.Stdout or os.Stderr is doomed to fail in environments like
+			// Windows GUI.
+			Stdout: io.MultiWriter(logFile, os.Stdout),
+			Writer: io.MultiWriter(logFile, os.Stderr), // standard error
+		},
+	)
 	if err != nil {
 		// Something went wrong setting up the panic wrapper. This won't be
-		// captured by panicwrap
-		// At this point, continue execution without panicwrap support. There
-		// are known cases where panicwrap will fail to fork, such as Windows
-		// GUI app
+		// captured by panicwrap. At this point, continue execution without
+		// panicwrap support. There are known cases where panicwrap will fail
+		// to fork, such as Windows GUI app
 		log.Errorf("Error setting up panic wrapper: %v", err)
 	} else {
 		// If exitStatus >= 0, then we're the parent process.
@@ -62,9 +79,9 @@ func main() {
 		}
 	}
 
-	// We're in the child (wrapped) process
-	// Stop wrapper signal handling
+	// We're in the child (wrapped) process, stop wrapper signal handling.
 	signal.Stop(wrapperC)
+	golog.SetPrepender(logging.Timestamped)
 
 	if *help {
 		flag.Usage()
@@ -92,7 +109,8 @@ func main() {
 		config.ForceCountry(*forceConfigCountry)
 	}
 
-	if a.ShowUI {
+	a.Init()
+	if a.ShouldShowUI() {
 		runOnSystrayReady(a, func() {
 			runApp(a)
 		})
@@ -111,7 +129,7 @@ func main() {
 func runApp(a *desktop.App) {
 	// Schedule cleanup actions
 	handleSignals(a)
-	if a.ShowUI {
+	if a.ShouldShowUI() {
 		i18nInit(a)
 		go func() {
 			if err := configureSystemTray(a); err != nil {

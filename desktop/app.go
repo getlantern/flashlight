@@ -59,7 +59,6 @@ func init() {
 type App struct {
 	hasExited int64
 
-	ShowUI       bool
 	Flags        map[string]interface{}
 	exited       eventual.Value
 	statsTracker *statsTracker
@@ -110,7 +109,7 @@ func (app *App) loadSettings() *Settings {
 
 // LogPanicAndExit logs a panic and then exits the application. This function
 // is only used in the panicwrap parent process.
-func (app *App) LogPanicAndExit(msg interface{}) {
+func (app *App) LogPanicAndExit(msg string) {
 	// Reload settings to make sure we have an up-to-date addr
 	settings = app.loadSettings()
 	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
@@ -387,7 +386,7 @@ func (app *App) afterStart(cl *client.Client) {
 
 	app.AddExitFunc("turning off system proxy", sysproxyOff)
 	app.AddExitFunc("flushing to borda", borda.Flush)
-	if app.ShowUI && !app.Flags["startup"].(bool) {
+	if app.ShouldShowUI() && !app.Flags["startup"].(bool) {
 		// Launch a browser window with Lantern but only after the pac
 		// URL and the proxy server are all up and running to avoid
 		// race conditions where we change the proxy setup while the
@@ -544,7 +543,7 @@ func recordStopped() {
 
 // ShouldShowUI determines if we should show the UI or not.
 func (app *App) ShouldShowUI() bool {
-	return app.ShowUI
+	return !app.Flags["headless"].(bool)
 }
 
 // OnTrayShow indicates the user has selected to show lantern from the tray.
