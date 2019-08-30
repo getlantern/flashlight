@@ -76,6 +76,44 @@ func CloseAfter(d time.Duration) <-chan struct{} {
 	return c
 }
 
+type pcapngWriter struct {
+	sync.Mutex
+	w *pcapgo.NgWriter
+}
+
+func newPcapNgWriter(w io.Writer) (*pcapngWriter, error) {
+	// If other link types are needed, they will be added to the writer in calls to addInterface.
+	underlying, err := pcapgo.NewNgWriter(w, layers.LinkTypeEthernet)
+	if err != nil {
+		return nil, err
+	}
+	return &pcapngWriter{sync.Mutex{}, underlying}, nil
+}
+
+func (w pcapngWriter) addInterface(iface pcapgo.NgInterface) (id int, err error) {
+	w.Lock()
+	defer w.Unlock()
+	return w.w.AddInterface(iface)
+}
+
+func (w pcapngWriter) writePacket(p gopacket.Packet) error {
+	w.Lock()
+	defer w.Unlock()
+	return w.w.WritePacket(p.Metadata().CaptureInfo, p.Data())
+}
+
+func (w pcapngWriter) writeInterfaceStats(id int, stats pcapgo.NgInterfaceStatistics) error {
+	w.Lock()
+	defer w.Unlock()
+	return w.w.WriteInterfaceStats(id, stats)
+}
+
+func (w pcapngWriter) flush() error {
+	w.Lock()
+	defer w.Unlock()
+	return w.w.Flush()
+}
+
 // CaptureProxyTraffic generates a pcap file for each proxy in the input map. These files are saved
 // in outputDir and named using the keys in proxiesMap.
 //
@@ -89,13 +127,18 @@ func CaptureProxyTraffic(proxiesMap map[string]*chained.ChainedServerInfo, cfg *
 		err       error
 	}
 
+	w, err := newPcapNgWriter(cfg.getOutput())
+	if err != nil {
+		return errors.New("failed to initialize pcapng writer: %v", err)
+	}
+
 	wg := new(sync.WaitGroup)
 	captureErrors := make(chan captureError, len(proxiesMap))
 	for proxyName, proxyInfo := range proxiesMap {
 		wg.Add(1)
 		go func(pName, pAddr string) {
 			defer wg.Done()
-			err := writeCapture(pAddr, cfg.getOutput(), cfg.getStopChannel())
+			err := captureAndWrite(pAddr, w, cfg.getStopChannel())
 			if err != nil {
 				captureErrors <- captureError{pName, err}
 			}
@@ -103,6 +146,7 @@ func CaptureProxyTraffic(proxiesMap map[string]*chained.ChainedServerInfo, cfg *
 	}
 	wg.Wait()
 	close(captureErrors)
+	w.flush()
 
 	errorsMap := ErrorsMap{}
 	for capErr := range captureErrors {
@@ -114,7 +158,7 @@ func CaptureProxyTraffic(proxiesMap map[string]*chained.ChainedServerInfo, cfg *
 	return errorsMap
 }
 
-func writeCapture(addr string, output io.Writer, stop <-chan struct{}) error {
+func captureAndWrite(addr string, w *pcapngWriter, stop <-chan struct{}) error {
 	remoteHost, remotePort, err := net.SplitHostPort(addr)
 	if err != nil {
 		return errors.New("malformed address: %v", err)
@@ -145,10 +189,17 @@ func writeCapture(addr string, output io.Writer, stop <-chan struct{}) error {
 		linkType = layers.LinkTypeNull
 	}
 
-	pcapW := pcapgo.NewWriter(output)
-	if err := pcapW.WriteFileHeader(uint32(iface.mtu), linkType); err != nil {
-		return errors.New("failed to write header to capture file: %v", err)
+	ifaceID, err := w.addInterface(pcapgo.NgInterface{
+		Name:        iface.Name,
+		Description: iface.Description,
+		OS:          runtime.GOOS,
+		LinkType:    linkType,
+		SnapLength:  uint32(iface.mtu),
+	})
+	if err != nil {
+		return errors.New("failed to write interface information to output: %v", err)
 	}
+	ifaceStats := pcapgo.NgInterfaceStatistics{StartTime: time.Now()}
 
 	handle, err := pcap.OpenLive(iface.Name, int32(iface.mtu), false, packetReadTimeout)
 	if err != nil {
@@ -180,10 +231,16 @@ func writeCapture(addr string, output io.Writer, stop <-chan struct{}) error {
 	for {
 		select {
 		case pkt := <-pktSrc:
-			if err := pcapW.WritePacket(pkt.Metadata().CaptureInfo, pkt.Data()); err != nil {
+			if err := w.writePacket(pkt); err != nil {
 				pktWriteErrors = append(pktWriteErrors, err)
+				ifaceStats.PacketsDropped++
+			} else {
+				ifaceStats.PacketsReceived++
 			}
 		case <-stop:
+			ifaceStats.LastUpdate = time.Now()
+			ifaceStats.EndTime = time.Now()
+			w.writeInterfaceStats(ifaceID, ifaceStats)
 			if len(pktWriteErrors) == 0 {
 				return nil
 			}
