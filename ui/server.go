@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"bytes"
 	"fmt"
 	"mime"
 	"net"
@@ -10,8 +11,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"github.com/skratchdot/open-golang/open"
+	"golang.org/x/xerrors"
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
@@ -286,8 +289,16 @@ func checkRequestForToken(h http.Handler, tok string) http.Handler {
 		if HasToken(r, tok) {
 			h.ServeHTTP(w, r)
 		} else {
-			msg := fmt.Sprintf("No token found in. %v", r)
-			closeConn(msg, w, r)
+			b, err := httputil.DumpRequest(r, false)
+			if err != nil {
+				log.Errorf("error dumping request: %v", err)
+			}
+			log.Debugf("no token in request:\n%s", bytes.TrimRightFunc(b, unicode.IsSpace))
+			err = closeConn(w)
+			if err != nil {
+				log.Errorf("error closing request conn: %v", err)
+				http.Error(w, "token not found", http.StatusBadRequest)
+			}
 		}
 	}
 	return http.HandlerFunc(check)
@@ -306,19 +317,16 @@ func HasToken(r *http.Request, tok string) bool {
 }
 
 // closeConn closes the client connection without sending a response.
-func closeConn(msg string, w http.ResponseWriter, r *http.Request) {
+func closeConn(w http.ResponseWriter) error {
 	hj, ok := w.(http.Hijacker)
 	if !ok {
-		log.Error("Response doesn't allow hijacking!")
-		return
+		return errors.New("response doesn't implement hijacker")
 	}
 	connIn, _, err := hj.Hijack()
 	if err != nil {
-		log.Errorf("Unable to hijack connection: %s", err)
-		return
+		return xerrors.Errorf("hijacking response: %w", err)
 	}
-	dumpRequestHeaders(r)
-	connIn.Close()
+	return connIn.Close()
 }
 
 func dumpRequestHeaders(r *http.Request) {

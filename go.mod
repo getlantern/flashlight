@@ -97,6 +97,7 @@ require (
 	github.com/tjfoc/gmsm v0.0.0-20180404022540-0effa9db1ba8 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80
+	golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7
 )
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20190818104938-28e3ca4262e1
