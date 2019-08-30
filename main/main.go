@@ -41,6 +41,7 @@ func main() {
 	a := &desktop.App{
 		Flags: flagsAsMap(),
 	}
+	a.Init()
 	wrapperC := handleWrapperSignals(a)
 
 	logFile, err := logging.RotatedLogsUnder(appdir.Logs("Lantern"))
@@ -109,7 +110,6 @@ func main() {
 		config.ForceCountry(*forceConfigCountry)
 	}
 
-	a.Init()
 	if a.ShouldShowUI() {
 		runOnSystrayReady(a, func() {
 			runApp(a)
