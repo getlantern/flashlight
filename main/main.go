@@ -63,6 +63,8 @@ func main() {
 					// Can restart child process for better resiliency, but
 					// just print an error message for now to be safe.
 					fmt.Fprintf(logFile, "********* ERROR: Lantern HTTP proxy not working properly: %v", err)
+				} else {
+					fmt.Fprint(logFile, "DEBUG: Lantern HTTP proxy is working fine")
 				}
 				cancel()
 			}
