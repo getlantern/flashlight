@@ -59,8 +59,8 @@ func RotatedLogsUnder(logdir string) (io.WriteCloser, error) {
 	return rotator, nil
 }
 
-//Timestamped writes the current time and the duration since process start to
-//the writer, used by golog.SetPrepender().
+// Timestamped writes the current time and the duration since process start to
+// the writer, used by golog.SetPrepender().
 func Timestamped(w io.Writer) {
 	ts := time.Now()
 	runningSecs := ts.Sub(processStart).Seconds()
