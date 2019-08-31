@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"runtime/debug"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/golog"
@@ -50,6 +52,24 @@ func main() {
 		// the child process writes to standard outputs as usual.
 	}
 	defer logFile.Close()
+
+	if logFile != nil {
+		go func() {
+			tk := time.NewTicker(time.Minute)
+			for {
+				<-tk.C
+				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+				if err := a.ProxyAddrReachable(ctx); err != nil {
+					// Can restart child process for better resiliency, but
+					// just print an error message for now to be safe.
+					fmt.Fprintf(logFile, "********* ERROR: Lantern HTTP proxy not working properly: %v", err)
+				} else {
+					fmt.Fprint(logFile, "DEBUG: Lantern HTTP proxy is working fine")
+				}
+				cancel()
+			}
+		}()
+	}
 
 	// panicwrap works by re-executing the running program (retaining arguments,
 	// environmental variables, etc.) and monitoring the stderr of the program.

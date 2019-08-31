@@ -2,6 +2,7 @@
 package desktop
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"net"
@@ -533,6 +534,23 @@ func (app *App) WaitForExit() error {
 func (app *App) IsPro() bool {
 	isPro, _ := isProUserFast()
 	return isPro
+}
+
+// ProxyAddrReachable checks if Lantern's HTTP proxy responds correct status
+// within the deadline.
+func (app *App) ProxyAddrReachable(ctx context.Context) error {
+	req, err := http.NewRequest("GET", "http://"+settings.GetAddr(), nil)
+	if err != nil {
+		return err
+	}
+	resp, err := http.DefaultClient.Do(req.WithContext(ctx))
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusBadRequest {
+		return fmt.Errorf("Unexpected HTTP status %v", resp.StatusCode)
+	}
+	return nil
 }
 
 func recordStopped() {
