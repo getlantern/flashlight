@@ -13,6 +13,6 @@ var (
 )
 
 func SanitizePathString(s string) (output string) {
-	output = blacklist.ReplaceAllLiteralString(s, "")
+	output = blacklist.ReplaceAllLiteralString(s, "-")
 	return
 }
