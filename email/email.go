@@ -138,14 +138,9 @@ func sendTemplate(msg *Message) error {
 	}
 	if msg.Vars["file"] != nil {
 		fileName := fmt.Sprintf("%v", msg.Vars["fileName"])
-
-		// Trim fileName length: we only care about number of runes (encoded characters of variable bytes) so we don't cut up multibyte characters
-		runeName := []rune(fileName)
-		if len(runeName) > maxFileLength {
-			fileName = string(runeName[len(runeName)-maxFileLength:])
-		}
-
+		fileName = util.TrimStringAsRunes(maxFileLength, fileName, true)
 		fileName = util.SanitizePathString(fileName)
+
 		mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
 			Type:    fmt.Sprintf("%v", msg.Vars["fileType"]),
 			Name:    fileName,
