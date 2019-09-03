@@ -17,48 +17,69 @@ func testTrim(t *testing.T, numChars uint, input string, trimFront bool, expecte
 }
 
 func TestSanitizeAllBad(t *testing.T) {
+	input := "##########"
+	output := "-"
 	testSanitize(t, input, output)
 }
 
 func TestSanitizeMixed(t *testing.T) {
 	input := "/../th...is#*s!@#--$.&__%^&*(8)\n|][:11;]stringisbad..$$%%~~"
-	ouput := "-th-is-s----.-__-8-11-stringisbad-"
+	output := "-th-is-s----.-__-8-11-stringisbad-"
 	testSanitize(t, input, output)
 }
 
 func TestSanitizeAllGood(t *testing.T) {
-	testSanitize(t, input, output)
+	input := "hello_world.png"
+	testSanitize(t, input, input)
 }
 
 func TestSanitizeEmptyString(t *testing.T) {
+	input := ""
+	output := ""
 	testSanitize(t, input, output)
 }
 
 func TestSanitizeChinese(t *testing.T) {
-	testSanitize(t, input, output)
+	input := "中國哲學書電子化計劃"
+	testSanitize(t, input, input)
 }
 
 func TestSanitizeFarsi(t *testing.T) {
-	testSanitize(t, input, output)
+	input := "الفبایخنداشترحروف"
+	testSanitize(t, input, input)
 }
 
 func TestTrimEmptyString(t *testing.T) {
+	input := ""
+	var numChars uint
+	numChars = 5
+	trimFront := true
+	expectedOutput := ""
 	testTrim(t, numChars, input, trimFront, expectedOutput)
 }
 
-func TestTrimUTF8(t *testing.T) {
+func TestTrimNothing(t *testing.T) {
+	input := "this is a string"
+	var numChars uint
+	numChars = 17
+	trimFront := true
+	testTrim(t, numChars, input, trimFront, input)
+}
+
+func TestTrimWhitespace(t *testing.T) {
+	input := "       "
+	var numChars uint
+	numChars = 3
+	trimFront := true
+	expectedOutput := "   "
 	testTrim(t, numChars, input, trimFront, expectedOutput)
 }
 
-func TestTrimASCII(t *testing.T) {
+func TestTrimToEmpty(t *testing.T) {
+	input := "hello world"
+	var numChars uint
+	numChars = 0
+	trimFront := true
+	expectedOutput := ""
 	testTrim(t, numChars, input, trimFront, expectedOutput)
-}
-
-func TestTrimEntireString(t *testing.T) {
-	testTrim(t, numChars, input, trimFront, expectedOutput)
-}
-
-func TestTrimOutOfBounds(t *testing.T) {
-	testTrim(t, numChars, input, trimFront, expectedOutput)
-
 }
