@@ -28,7 +28,8 @@ var (
 
 	// Only allowed to call /send_template
 	MandrillAPIKey = "fmYlUdjEpGGonI4NDx9xeA"
-
+	// Number of runes(code points - characters of variable length bytes depending on encoding) allowed in fileName length
+	maxFileLength    = 60
 	defaultRecipient string
 	httpClient       = &http.Client{}
 	mu               sync.RWMutex
@@ -136,7 +137,15 @@ func sendTemplate(msg *Message) error {
 		mmsg.To = append(mmsg.To, &mandrill.To{Email: msg.CC, Type: "cc"})
 	}
 	if msg.Vars["file"] != nil {
-		fileName := util.SanitizePathString(fmt.Sprintf("%v", msg.Vars["fileName"]))
+		fileName := fmt.Sprintf("%v", msg.Vars["fileName"])
+
+		// Trim fileName length: we only care about number of runes (encoded characters of variable bytes) so we don't cut up multibyte characters
+		runeName := []rune(fileName)
+		if len(runeName) > maxFileLength {
+			fileName = string(runeName[len(runeName)-maxFileLength:])
+		}
+
+		fileName = util.SanitizePathString(fileName)
 		mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
 			Type:    fmt.Sprintf("%v", msg.Vars["fileType"]),
 			Name:    fileName,
