@@ -21,9 +21,9 @@ func SanitizePathString(s string) (output string) {
 func TrimStringAsRunes(numChars uint, s string, trimFront bool) string {
 	runes := []rune(s)
 
-	if len(runes) > numChars {
+	if uint(len(runes)) > numChars {
 		if trimFront {
-			s = string(runes[len(runes)-numChars:])
+			s = string(runes[uint(len(runes))-numChars:])
 		} else {
 			s = string(runes[:numChars])
 		}
