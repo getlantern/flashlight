@@ -315,7 +315,6 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 			return conn, err
 		},
 		Lifecycle: newLampshadeLifecycleListener(name),
-		Context:   context.Background(),
 	})
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		conn, err := dialer.DialContext(ctx)

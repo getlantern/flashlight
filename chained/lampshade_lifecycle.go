@@ -12,13 +12,20 @@ import (
 )
 
 func newLampshadeLifecycleListener(proxyName string) lampshade.ClientLifecycleListener {
-	return &lampshadeLifecycleListener{
+	return &lifecycleListener{
 		proxyName: proxyName,
+		ctx:       context.Background(),
 	}
 }
 
-func newLampshadeStreamListener(ctx context.Context, ll *lampshadeLifecycleListener) lampshade.StreamLifecycleListener {
-	return &lampshadeStreamListener{
+func newLampshadeSessionListener(ctx context.Context) lampshade.SessionLifecycleListener {
+	return &sessionLifecycleListener{
+		ctx: ctx,
+	}
+}
+
+func newLampshadeStreamListener(ctx context.Context, ll *sessionLifecycleListener) lampshade.StreamLifecycleListener {
+	return &streamListener{
 		ctx: ctx,
 		ll:  ll,
 	}
@@ -28,97 +35,84 @@ type hostKey string
 
 var upstreamHostKey = hostKey("uhk")
 
-type lampshadeLifecycleListener struct {
-	proxyName    string
-	totalRead    int64
-	totalWritten int64
+type lifecycleListener struct {
+	proxyName string
+	ctx       context.Context
 }
 
-type lampshadeStreamListener struct {
+type sessionLifecycleListener struct {
 	ctx context.Context
-	ll  *lampshadeLifecycleListener
 }
 
-func (ll *lampshadeLifecycleListener) OnStart(ctx context.Context) context.Context {
+type streamListener struct {
+	ctx context.Context
+	ll  *sessionLifecycleListener
+}
+
+func (ll *lifecycleListener) OnStart() {
 	span := opentracing.StartSpan("lampshade-" + ll.proxyName)
 	defer span.Finish()
-	return opentracing.ContextWithSpan(ctx, span)
+	ll.ctx = opentracing.ContextWithSpan(ll.ctx, span)
 }
 
-func (ll *lampshadeLifecycleListener) OnSessionInit(ctx context.Context) context.Context {
-	return ctx
+func (ll *lifecycleListener) OnTCPStart() lampshade.SessionLifecycleListener {
+	_, ctx := opentracing.StartSpanFromContext(ll.ctx, "lampshade-TCP-"+ll.proxyName)
+	return newLampshadeSessionListener(ctx)
 }
 
-func (ll *lampshadeLifecycleListener) OnTCPStart(ctx context.Context) context.Context {
-	if parentSpan := opentracing.SpanFromContext(ctx); parentSpan != nil {
-		opts := []opentracing.StartSpanOption{opentracing.ChildOf(parentSpan.Context())}
-		span := opentracing.StartSpan("lampshade-TCP-"+ll.proxyName, opts...)
-		return opentracing.ContextWithSpan(ctx, span)
-	}
-	return ctx
-}
+func (sll *sessionLifecycleListener) OnSessionInit() {}
 
-func (ll *lampshadeLifecycleListener) OnTCPConnectionError(ctx context.Context, err error) context.Context {
-	if span := opentracing.SpanFromContext(ctx); span != nil {
+func (sll *sessionLifecycleListener) OnTCPConnectionError(err error) {
+	if span := opentracing.SpanFromContext(sll.ctx); span != nil {
 		// We finish the span here because otherwise child spans will be orphaned.
 		defer span.Finish()
 		span.SetOperationName("tcp-error-" + err.Error())
 		span.SetTag("error", "tcp")
 	}
-	return ctx
 }
-func (ll *lampshadeLifecycleListener) OnTCPEstablished(ctx context.Context, conn net.Conn) context.Context {
-	if span := opentracing.SpanFromContext(ctx); span != nil {
+func (sll *sessionLifecycleListener) OnTCPEstablished(conn net.Conn) {
+	if span := opentracing.SpanFromContext(sll.ctx); span != nil {
 		// We finish the span here because otherwise child spans will be orphaned.
 		defer span.Finish()
 		span.SetTag("established", true)
 		span.LogFields(otlog.String("established", "true"))
 	}
-	return ctx
 }
 
-func (ll *lampshadeLifecycleListener) OnTCPClosed(ctx context.Context) context.Context {
-	if span := opentracing.SpanFromContext(ctx); span != nil {
+func (sll *sessionLifecycleListener) OnTCPClosed() {
+	if span := opentracing.SpanFromContext(sll.ctx); span != nil {
 		span.LogFields(otlog.String("closed", "true"))
 	}
-	return ctx
 }
-func (ll *lampshadeLifecycleListener) OnClientInitWritten(ctx context.Context) context.Context {
-	return ctx
-}
+func (sll *sessionLifecycleListener) OnClientInitWritten() {}
 
-func (ll *lampshadeLifecycleListener) OnSessionError(ctx context.Context, err1 error, err2 error) context.Context {
-	return ctx
-}
+func (sll *sessionLifecycleListener) OnSessionError(err1 error, err2 error) {}
 
-func (ll *lampshadeLifecycleListener) OnStreamInit(lampshadeContext context.Context, httpContext context.Context, id uint16) lampshade.StreamLifecycleListener {
-	if parentSpan := opentracing.SpanFromContext(lampshadeContext); parentSpan != nil {
+func (sll *sessionLifecycleListener) OnStreamStart(httpContext context.Context, id uint16) lampshade.StreamLifecycleListener {
+	if parentSpan := opentracing.SpanFromContext(sll.ctx); parentSpan != nil {
 		origin := httpContext.Value(upstreamHostKey)
 		opts := []opentracing.StartSpanOption{opentracing.ChildOf(parentSpan.Context())}
 		span := opentracing.StartSpan(fmt.Sprintf("stream-%v-%v", id, origin), opts...)
-		lampshadeContext = opentracing.ContextWithSpan(lampshadeContext, span)
-		return newLampshadeStreamListener(lampshadeContext, ll)
+		ctx := opentracing.ContextWithSpan(sll.ctx, span)
+		return newLampshadeStreamListener(ctx, sll)
 	}
 	return lampshade.NoopStreamLifecycleListener()
 }
 
-func (ls *lampshadeStreamListener) OnStreamRead(num int) context.Context {
+func (ls *streamListener) OnStreamRead(num int) {
 	if span := opentracing.SpanFromContext(ls.ctx); span != nil {
 		span.LogFields(otlog.Int("r", num))
 	}
-	return ls.ctx
 }
 
-func (ls *lampshadeStreamListener) OnStreamWrite(num int) context.Context {
+func (ls *streamListener) OnStreamWrite(num int) {
 	if span := opentracing.SpanFromContext(ls.ctx); span != nil {
 		span.LogFields(otlog.Int("w", num))
 	}
-	return ls.ctx
 }
 
-func (ls *lampshadeStreamListener) OnStreamClose() context.Context {
+func (ls *streamListener) OnStreamClose() {
 	if span := opentracing.SpanFromContext(ls.ctx); span != nil {
 		span.Finish()
 	}
-	return ls.ctx
 }
