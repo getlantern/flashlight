@@ -226,8 +226,7 @@ func startApp(t *testing.T, helper *integrationtest.Helper) (*App, error) {
 	}
 
 	a := &App{
-		ShowUI: false,
-		Flags:  flags,
+		Flags: flags,
 	}
 	a.Init()
 	// Set a non-zero User ID to make prochecker happy

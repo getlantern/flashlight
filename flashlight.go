@@ -32,9 +32,6 @@ import (
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/stats"
-
-	// Make sure logging is initialized
-	_ "github.com/getlantern/flashlight/logging"
 )
 
 var (
