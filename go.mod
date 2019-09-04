@@ -88,8 +88,6 @@ require (
 	github.com/mitchellh/mapstructure v0.0.0-20180220230111-00c29f56e238
 	github.com/mitchellh/panicwrap v0.0.0-20170106182340-fce601fe5557
 	github.com/opentracing/opentracing-go v1.1.0
-	github.com/openzipkin-contrib/zipkin-go-opentracing v0.4.2
-	github.com/openzipkin/zipkin-go v0.2.0
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/refraction-networking/utls v0.0.0-20190415193640-32987941ebd3
