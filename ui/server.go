@@ -69,9 +69,9 @@ type Server struct {
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func StartServer(requestedAddr, extURL, localHTTPToken, replicaS3Prefix string,
+func StartServer(requestedAddr, extURL, localHTTPToken string,
 	handlers ...*PathHandler) (*Server, error) {
-	server := newServer(extURL, localHTTPToken, replicaS3Prefix)
+	server := newServer(extURL, localHTTPToken)
 
 	for _, h := range handlers {
 		server.handle(h.Pattern, h.Handler)
@@ -83,7 +83,7 @@ func StartServer(requestedAddr, extURL, localHTTPToken, replicaS3Prefix string,
 	return server, nil
 }
 
-func newServer(extURL, localHTTPToken, replicaS3Prefix string) *Server {
+func newServer(extURL, localHTTPToken string) *Server {
 	server := &Server{
 		externalURL: overrideManotoURL(extURL),
 		httpTokenRequestPathPrefix: func() string {
@@ -97,11 +97,11 @@ func newServer(extURL, localHTTPToken, replicaS3Prefix string) *Server {
 		translations:   eventual.NewValue(),
 	}
 
-	server.attachHandlers(replicaS3Prefix)
+	server.attachHandlers()
 	return server
 }
 
-func (s *Server) attachHandlers(replicaKeyPrefix string) {
+func (s *Server) attachHandlers() {
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
 	startupHandler := func(resp http.ResponseWriter, req *http.Request) {
@@ -111,9 +111,6 @@ func (s *Server) attachHandlers(replicaKeyPrefix string) {
 
 	s.handle("/startup", http.HandlerFunc(startupHandler))
 	s.handle("/", http.FileServer(fs))
-	// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
-	// in their handlers.
-	s.handle("/replica/", http.StripPrefix("/replica", replicaHttpServer{replicaKeyPrefix}))
 }
 
 // handle directs the underlying server to handle the given pattern at both

@@ -270,9 +270,17 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		if app.uiServer, err = ui.StartServer(uiaddr,
 			startupURL,
 			localHTTPToken(settings),
-			settings.GetDeviceID(),
 			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
 			&ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
+			// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
+			// in their handlers.
+			&ui.PathHandler{
+				Pattern: "/replica/",
+				Handler: http.StripPrefix(
+					"/replica",
+					ui.ReplicaHttpServer{settings.GetDeviceID()},
+				),
+			},
 		); err != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		}

@@ -10,9 +10,9 @@ import (
 	"github.com/getlantern/replica"
 )
 
-type replicaHttpServer struct {
+type ReplicaHttpServer struct {
 	// This is the S3 key prefix used to group uploads for listing.
-	instancePrefix string
+	InstancePrefix string
 }
 
 type countWriter struct {
@@ -24,7 +24,7 @@ func (me *countWriter) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
-func (me replicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (me ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Debugf("replica server request path: %q", r.URL.Path)
 	switch r.URL.Path {
 	case "/upload":
@@ -32,7 +32,7 @@ func (me replicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-		s3Key := fmt.Sprintf("/%s/%s/%s", me.instancePrefix, u.String(), r.URL.Query().Get("name"))
+		s3Key := fmt.Sprintf("/%s/%s/%s", me.InstancePrefix, u.String(), r.URL.Query().Get("name"))
 		log.Debugf("uploading replica key %q", s3Key)
 		var cw countWriter
 		err = replica.Upload(io.TeeReader(r.Body, &cw), s3Key)
