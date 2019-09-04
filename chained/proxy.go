@@ -250,7 +250,7 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 	}
 	rsaPublicKey, ok := cert.X509().PublicKey.(*rsa.PublicKey)
 	if !ok {
-		return nil, errors.New("Public key is not an RSA public key!")
+		return nil, errors.New("public key is not an RSA public key")
 	}
 	cipherCode := lampshade.Cipher(s.ptSettingInt(fmt.Sprintf("cipher_%v", runtime.GOARCH)))
 	if cipherCode == 0 {
@@ -265,14 +265,6 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 	windowSize := s.ptSettingInt("windowsize")
 	maxPadding := s.ptSettingInt("maxpadding")
 	maxStreamsPerConn := uint16(s.ptSettingInt("streams"))
-	idleInterval, parseErr := time.ParseDuration(s.ptSetting("idleinterval"))
-	if parseErr != nil || idleInterval < 0 {
-		// This should be less than the server's IdleTimeout to avoid trying to use
-		// a connection that was just idled. The client's IdleTimeout is already set
-		// appropriately for this purpose, so use that.
-		idleInterval = IdleTimeout
-		log.Debugf("%s: defaulted idleinterval to %v", name, idleInterval)
-	}
 	pingInterval, parseErr := time.ParseDuration(s.ptSetting("pinginterval"))
 	if parseErr != nil || pingInterval < 0 {
 		pingInterval = 15 * time.Second
@@ -283,22 +275,15 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 		liveConns = 2
 		log.Debugf("%s: defaulted liveconns to %v", name, liveConns)
 	}
-	redialSessionInterval, parseErr := time.ParseDuration(s.ptSetting("redialsessioninterval"))
-	if parseErr != nil || redialSessionInterval < 0 {
-		redialSessionInterval = 5 * time.Second
-		log.Debugf("%s: defaulted redialsessioninterval to %v", name, redialSessionInterval)
-	}
 	dialer := lampshade.NewDialer(&lampshade.DialerOpts{
-		WindowSize:            windowSize,
-		MaxPadding:            maxPadding,
-		LiveConns:             liveConns,
-		MaxStreamsPerConn:     maxStreamsPerConn,
-		IdleInterval:          idleInterval,
-		PingInterval:          pingInterval,
-		RedialSessionInterval: redialSessionInterval,
-		Pool:                  buffers.Pool,
-		Cipher:                cipherCode,
-		ServerPublicKey:       rsaPublicKey,
+		WindowSize:        windowSize,
+		MaxPadding:        maxPadding,
+		LiveConns:         liveConns,
+		MaxStreamsPerConn: maxStreamsPerConn,
+		PingInterval:      pingInterval,
+		Pool:              buffers.Pool,
+		Cipher:            cipherCode,
+		ServerPublicKey:   rsaPublicKey,
 		Dial: func(timeout time.Duration) (net.Conn, error) {
 			start := time.Now()
 			// note - we do not wrap the TCP connection with IdleTiming because
