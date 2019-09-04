@@ -31,9 +31,7 @@ import (
 	"github.com/getlantern/flashlight/logging"
 )
 
-var (
-	log = golog.LoggerFor("flashlight.main")
-)
+var log = golog.LoggerFor("flashlight.main")
 
 func main() {
 	// systray requires the goroutine locked with main thread, or the whole
