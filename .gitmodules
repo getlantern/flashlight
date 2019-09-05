@@ -1,3 +1,9 @@
 [submodule "replica"]
 	path = replica
 	url = ../replica.git
+[submodule "confluence"]
+	path = confluence
+	url = ../../anacrolix/confluence.git
+[submodule "torrent"]
+	path = torrent
+	url = ../../anacrolix/torrent.git
