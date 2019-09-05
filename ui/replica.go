@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/anacrolix/confluence/confluence"
+	"github.com/anacrolix/torrent/metainfo"
 	"github.com/google/uuid"
 
 	"github.com/getlantern/replica"
@@ -34,7 +35,8 @@ func (me ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-		s3Key := fmt.Sprintf("/%s/%s/%s", me.InstancePrefix, u.String(), r.URL.Query().Get("name"))
+		name := r.URL.Query().Get("name")
+		s3Key := fmt.Sprintf("/%s/%s/%s", me.InstancePrefix, u.String(), name)
 		log.Debugf("uploading replica key %q", s3Key)
 		var cw countWriter
 		err = replica.Upload(io.TeeReader(r.Body, &cw), s3Key)
@@ -47,8 +49,12 @@ func (me ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 		defer t.Close()
+		mi, err := metainfo.Load(t)
+		if err != nil {
+			panic(err)
+		}
 		w.Header().Set("Content-Type", "application/x-bittorrent")
-		io.Copy(w, t)
+		fmt.Fprintf(w, "%s\n", mi.Magnet(name, mi.HashInfoBytes()))
 	default:
 		me.Confluence.ServeHTTP(w, r)
 	}
