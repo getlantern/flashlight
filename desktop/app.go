@@ -13,6 +13,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/anacrolix/confluence/confluence"
+	"github.com/anacrolix/torrent"
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight"
@@ -264,6 +266,12 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			}
 		}
 
+		torrentClient, err := torrent.NewClient(torrent.NewDefaultClientConfig())
+		if err != nil {
+			log.Errorf("error starting torrent client: %v", err)
+			app.Exit(err)
+		}
+
 		log.Debugf("Starting client UI at %v", uiaddr)
 
 		// ui will handle empty uiaddr correctly
@@ -278,8 +286,12 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 				Pattern: "/replica/",
 				Handler: http.StripPrefix(
 					"/replica",
-					ui.ReplicaHttpServer{settings.GetDeviceID()},
-				),
+					ui.ReplicaHttpServer{
+						InstancePrefix: settings.GetDeviceID(),
+						Confluence: confluence.Handler{
+							TC: torrentClient,
+						},
+					}),
 			},
 		); err != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))

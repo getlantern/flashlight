@@ -5,6 +5,7 @@ go 1.12
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v0.0.0-20180321061416-7d56ec4f381e
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
+	github.com/anacrolix/confluence v1.1.0
 	github.com/anacrolix/go-libutp v1.0.2
 	github.com/anacrolix/torrent v1.7.0
 	github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc // indirect
@@ -112,3 +113,7 @@ replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0
 replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3
 
 replace github.com/getlantern/replica => ./replica
+
+replace github.com/anacrolix/confluence => ./confluence
+
+replace github.com/anacrolix/torrent => ./torrent

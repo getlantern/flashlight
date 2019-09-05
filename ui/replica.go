@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/anacrolix/confluence/confluence"
 	"github.com/google/uuid"
 
 	"github.com/getlantern/replica"
@@ -13,6 +14,7 @@ import (
 type ReplicaHttpServer struct {
 	// This is the S3 key prefix used to group uploads for listing.
 	InstancePrefix string
+	Confluence     confluence.Handler
 }
 
 type countWriter struct {
@@ -48,6 +50,6 @@ func (me ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/x-bittorrent")
 		io.Copy(w, t)
 	default:
-		http.NotFound(w, r)
+		me.Confluence.ServeHTTP(w, r)
 	}
 }
