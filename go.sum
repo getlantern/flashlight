@@ -206,6 +206,8 @@ github.com/getlantern/lampshade v0.0.0-20190903223356-d30742300633 h1:gNO42/i4We
 github.com/getlantern/lampshade v0.0.0-20190903223356-d30742300633/go.mod h1:UCfj8tkC23ggfBGz8Uia6299iNlEuiwi/PNa3b4xRG4=
 github.com/getlantern/lampshade v0.0.0-20190904224454-4d412c80f964 h1:SdFV9pt/+fXI4bONfUeXKNskkjkJvDKkpsbr8LHJgWA=
 github.com/getlantern/lampshade v0.0.0-20190904224454-4d412c80f964/go.mod h1:UCfj8tkC23ggfBGz8Uia6299iNlEuiwi/PNa3b4xRG4=
+github.com/getlantern/lampshade v0.0.0-20190904225539-ee3e36398b21 h1:Tw9cf2STIk7ksug9nLm/S7+YItKJcN7Ve83Lj966iF0=
+github.com/getlantern/lampshade v0.0.0-20190904225539-ee3e36398b21/go.mod h1:UCfj8tkC23ggfBGz8Uia6299iNlEuiwi/PNa3b4xRG4=
 github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894 h1:Gzf64TTHyKH4HEe1dgwnf7BOaq5rJZg25Hqz5TmogEI=
 github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894/go.mod h1:h57jtqyH1HCLYu53nnr3WTUntPozt5ztqQ9aN687VEY=
 github.com/getlantern/measured v0.0.0-20170302221919-0582bf799783/go.mod h1:5OW2WJitCKExpSw2bploW2fM7PjOd6QnLqyp+IqToqU=
