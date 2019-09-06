@@ -86,7 +86,13 @@ func (sll *sessionLifecycleListener) OnTCPClosed() {
 }
 func (sll *sessionLifecycleListener) OnClientInitWritten() {}
 
-func (sll *sessionLifecycleListener) OnSessionError(err1 error, err2 error) {}
+func (sll *sessionLifecycleListener) OnSessionError(err1 error, err2 error) {
+	if span := opentracing.SpanFromContext(sll.ctx); span != nil {
+		logError(span, "sessionerror", err1)
+		logError(span, "sessionerror", err2)
+		span.SetTag("sessionerror", "true")
+	}
+}
 
 func (sll *sessionLifecycleListener) OnStreamStart(httpContext context.Context, id uint16) lampshade.StreamLifecycleListener {
 	if parentSpan := opentracing.SpanFromContext(sll.ctx); parentSpan != nil {
@@ -113,14 +119,14 @@ func (ls *streamListener) OnStreamWrite(num int) {
 
 func (ls *streamListener) OnStreamReadError(err error) {
 	if span := opentracing.SpanFromContext(ls.ctx); span != nil {
-		span.LogFields(otlog.String("ioerror", err.Error()))
+		logError(span, "ioerror", err)
 		span.SetTag("ioerror", "true")
 	}
 }
 
 func (ls *streamListener) OnStreamWriteError(err error) {
 	if span := opentracing.SpanFromContext(ls.ctx); span != nil {
-		span.LogFields(otlog.String("ioerror", err.Error()))
+		logError(span, "ioerror", err)
 		span.SetTag("ioerror", "true")
 	}
 }
@@ -128,5 +134,11 @@ func (ls *streamListener) OnStreamWriteError(err error) {
 func (ls *streamListener) OnStreamClose() {
 	if span := opentracing.SpanFromContext(ls.ctx); span != nil {
 		span.Finish()
+	}
+}
+
+func logError(span opentracing.Span, name string, err error) {
+	if err != nil {
+		span.LogFields(otlog.String(name, err.Error()))
 	}
 }
