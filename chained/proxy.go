@@ -293,9 +293,9 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 			conn, err := netx.DialTimeout("tcp", s.Addr, timeout)
 			elapsed := time.Since(start)
 			if err != nil {
-				log.Errorf("Could not dial TCP connection to %v after %v seconds: %v", name, elapsed, err)
+				log.Errorf("Could not dial TCP connection to %v after %v: %v", name, elapsed, err)
 			} else {
-				log.Debugf("Successfully created lampshade TCP connection to %v in %v seconds", name, elapsed)
+				log.Debugf("Successfully created lampshade TCP connection to %v in %v", name, elapsed)
 			}
 			return conn, err
 		},
