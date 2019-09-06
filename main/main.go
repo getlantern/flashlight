@@ -5,7 +5,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -47,9 +46,7 @@ func main() {
 		Flags: flagsAsMap(),
 	}
 	a.Init()
-	a.AddExitFunc("Ending background tracing span", func() {
-		traceCloser.Close()
-	})
+	a.AddExitFunc("Ending background tracing span", traceCloser)
 
 	var wrapperC chan os.Signal
 	if !*trace {
@@ -195,14 +192,10 @@ func i18nInit(a *desktop.App) {
 	}
 }
 
-type nullCloser struct{}
-
-func (*nullCloser) Close() error { return nil }
-
-func initTracing(trace bool) io.Closer {
+func initTracing(trace bool) func() {
 	if !trace {
 		log.Debug("Not initializing tracing")
-		return &nullCloser{}
+		return func() {}
 	}
 	log.Debug("Initializing tracing")
 	cfg := jaegercfg.Configuration{
@@ -226,9 +219,9 @@ func initTracing(trace bool) io.Closer {
 	)
 	if err != nil {
 		log.Errorf("Could not initialize jaeger tracer: %s", err.Error())
-		return &nullCloser{}
+		return func() {}
 	}
-	return closer
+	return func() { closer.Close() }
 }
 
 func parseFlags() {
