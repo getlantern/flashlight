@@ -111,6 +111,20 @@ func (ls *streamListener) OnStreamWrite(num int) {
 	}
 }
 
+func (ls *streamListener) OnStreamReadError(err error) {
+	if span := opentracing.SpanFromContext(ls.ctx); span != nil {
+		span.LogFields(otlog.String("ioerror", err.Error()))
+		span.SetTag("ioerror", "true")
+	}
+}
+
+func (ls *streamListener) OnStreamWriteError(err error) {
+	if span := opentracing.SpanFromContext(ls.ctx); span != nil {
+		span.LogFields(otlog.String("ioerror", err.Error()))
+		span.SetTag("ioerror", "true")
+	}
+}
+
 func (ls *streamListener) OnStreamClose() {
 	if span := opentracing.SpanFromContext(ls.ctx); span != nil {
 		span.Finish()
