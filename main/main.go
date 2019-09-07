@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net/http"
@@ -12,19 +13,21 @@ import (
 	"runtime/debug"
 	"strings"
 	"syscall"
+	"time"
 
+	"github.com/getlantern/appdir"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
+	"github.com/mitchellh/panicwrap"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/desktop"
-
-	"github.com/mitchellh/panicwrap"
+	"github.com/getlantern/flashlight/logging"
 )
 
 var (
-	log = golog.LoggerFor("flashlight")
+	log = golog.LoggerFor("flashlight.main")
 )
 
 func main() {
@@ -37,23 +40,54 @@ func main() {
 	parseFlags()
 
 	a := &desktop.App{
-		ShowUI: !*headless,
-		Flags:  flagsAsMap(),
+		Flags: flagsAsMap(),
 	}
 	a.Init()
 	wrapperC := handleWrapperSignals(a)
 
+	logFile, err := logging.RotatedLogsUnder(appdir.Logs("Lantern"))
+	if err != nil {
+		log.Error(err)
+		// Nothing we can do if fails to create log files, leave logFile nil so
+		// the child process writes to standard outputs as usual.
+	}
+	defer logFile.Close()
+
+	if logFile != nil {
+		go func() {
+			tk := time.NewTicker(time.Minute)
+			for {
+				<-tk.C
+				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+				if err := a.ProxyAddrReachable(ctx); err != nil {
+					// Can restart child process for better resiliency, but
+					// just print an error message for now to be safe.
+					fmt.Fprintf(logFile, "********* ERROR: Lantern HTTP proxy not working properly: %v", err)
+				} else {
+					fmt.Fprint(logFile, "DEBUG: Lantern HTTP proxy is working fine")
+				}
+				cancel()
+			}
+		}()
+	}
+
+	// panicwrap works by re-executing the running program (retaining arguments,
 	// environmental variables, etc.) and monitoring the stderr of the program.
-	exitStatus, err := panicwrap.BasicWrap(
-		func(output string) {
-			a.LogPanicAndExit(output)
-		})
+	exitStatus, err := panicwrap.Wrap(
+		&panicwrap.WrapConfig{
+			Handler: a.LogPanicAndExit,
+			// Pipe child process output to log files instead of letting the
+			// child to write directly because we want to capture anything
+			// printed by go runtime and other libraries as well.
+			Stdout: logging.NonStopWriteCloser(logFile, os.Stdout),
+			Writer: logging.NonStopWriteCloser(logFile, os.Stderr), // standard error
+		},
+	)
 	if err != nil {
 		// Something went wrong setting up the panic wrapper. This won't be
-		// captured by panicwrap
-		// At this point, continue execution without panicwrap support. There
-		// are known cases where panicwrap will fail to fork, such as Windows
-		// GUI app
+		// captured by panicwrap. At this point, continue execution without
+		// panicwrap support. There are known cases where panicwrap will fail
+		// to fork, such as Windows GUI app
 		log.Errorf("Error setting up panic wrapper: %v", err)
 	} else {
 		// If exitStatus >= 0, then we're the parent process.
@@ -62,9 +96,9 @@ func main() {
 		}
 	}
 
-	// We're in the child (wrapped) process
-	// Stop wrapper signal handling
+	// We're in the child (wrapped) process, stop wrapper signal handling.
 	signal.Stop(wrapperC)
+	golog.SetPrepender(logging.Timestamped)
 
 	if *help {
 		flag.Usage()
@@ -92,7 +126,7 @@ func main() {
 		config.ForceCountry(*forceConfigCountry)
 	}
 
-	if a.ShowUI {
+	if a.ShouldShowUI() {
 		runOnSystrayReady(a, func() {
 			runApp(a)
 		})
@@ -111,7 +145,7 @@ func main() {
 func runApp(a *desktop.App) {
 	// Schedule cleanup actions
 	handleSignals(a)
-	if a.ShowUI {
+	if a.ShouldShowUI() {
 		i18nInit(a)
 		go func() {
 			if err := configureSystemTray(a); err != nil {

@@ -53,7 +53,7 @@ func (c *nopCloser) Close() error { c.closeCalled = true; return nil }
 func TestNonStopWriter(t *testing.T) {
 	b, g := &badWriter{}, &goodWriter{}
 	ncb, ncg := &nopCloser{Writer: b}, &nopCloser{Writer: g}
-	ns := newNonStopWriteCloser(ncb, ncg)
+	ns := NonStopWriteCloser(ncb, ncg)
 	ns.Write([]byte("1234"))
 	assert.Equal(t, 4, g.counter, "Should write to all writers even when error encountered")
 	ns.Close()
