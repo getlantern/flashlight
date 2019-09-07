@@ -22,6 +22,12 @@ type networkInterface struct {
 
 // Returns the network interface used to connect to the host.
 func networkInterfaceFor(remoteIP net.IP) (*networkInterface, error) {
+	linkType := layers.LinkTypeEthernet
+	if remoteIP.IsLoopback() && runtime.GOOS != "linux" {
+		// This is done to support testing.
+		linkType = layers.LinkTypeNull
+	}
+
 	localIP, err := preferredOutboundIP(remoteIP)
 	if err != nil {
 		return nil, errors.New("failed to obtain outbound IP: %v", err)
@@ -52,16 +58,6 @@ func networkInterfaceFor(remoteIP net.IP) (*networkInterface, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	linkType := layers.LinkTypeEthernet
-	if remoteIP.IsLoopback() && runtime.GOOS != "linux" {
-		// This is done to support testing.
-		linkType = layers.LinkTypeNull
-	}
-
-	// We've found the network interface according to the pcap package. Unfortunately, the pcap
-	// package does not expose the interface MTU, so we need to go through a similar process with
-	// the net package.
 
 	netIfaces, err := net.Interfaces()
 	if err != nil {
