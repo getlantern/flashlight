@@ -161,13 +161,12 @@ func (w *pcapngWriter) flush() error {
 	return w.w.Flush()
 }
 
-// CaptureProxyTraffic generates a pcap file for each proxy in the input map. These files are saved
-// in outputDir and named using the keys in proxiesMap.
+// CaptureProxyTraffic captures all traffic for the proxies in the input map. Capture stops and the
+// function returns when a signal is sent on cfg.StopChannel (or the channel is closed). The output
+// will be in pcapng format.
 //
 // If an error is returned, it will be of type ErrorsMap. The keys of the map will be the keys in
 // proxiesMap. If no error occurred for a given proxy, it will have no entry in the returned map.
-//
-// Expects tshark to be installed, otherwise returns errors.
 func CaptureProxyTraffic(proxiesMap map[string]*chained.ChainedServerInfo, cfg *CaptureConfig) error {
 	type captureError struct {
 		proxyName string
