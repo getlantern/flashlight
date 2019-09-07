@@ -3,6 +3,8 @@ cloud.google.com/go v0.28.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 contrib.go.opencensus.io/exporter/stackdriver v0.6.0/go.mod h1:QeFzMJDAw8TXt5+aRaSuE8l5BwaMIOIlaVkBOPRuMuw=
 git.torproject.org/pluggable-transports/goptlib.git v0.0.0-20180321061416-7d56ec4f381e h1:PYcONLFUhr00kGrq7Mf14JRtoXHG7BOSKIfIha0Hu5Q=
 git.torproject.org/pluggable-transports/goptlib.git v0.0.0-20180321061416-7d56ec4f381e/go.mod h1:YT4XMSkuEXbtqlydr9+OxqFAyspUv0Gr9qhM3B++o/Q=
+git.torproject.org/pluggable-transports/goptlib.git v1.0.0 h1:ElTwFFPKf/tA6x5nuIk9g49JZzS4T5WN+eTQTjqd00A=
+git.torproject.org/pluggable-transports/goptlib.git v1.0.0/go.mod h1:YT4XMSkuEXbtqlydr9+OxqFAyspUv0Gr9qhM3B++o/Q=
 git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212 h1:eZYYuOo2u4PYSKHp3i2H3w4R+aYsP45jFD4yaydgETU=
 git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212/go.mod h1:LTaUxdtD/KoHBRDdLv25PjrQmzU/HsqHyJc6nf7YzQg=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
@@ -81,6 +83,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dchest/siphash v1.2.0 h1:YWOShuhvg0GqbQpMa60QlCGtEyf7O7HC1Jf0VjdQ60M=
 github.com/dchest/siphash v1.2.0/go.mod h1:q+IRvb2gOSrUnYoPqHiyHXS0FOBBOdl6tONBlVnOnt4=
+github.com/dchest/siphash v1.2.1 h1:4cLinnzVJDKxTCl9B01807Yiy+W7ZzVHj/KIroQRvT4=
+github.com/dchest/siphash v1.2.1/go.mod h1:q+IRvb2gOSrUnYoPqHiyHXS0FOBBOdl6tONBlVnOnt4=
 github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815/go.mod h1:WwZ+bS3ebgob9U8Nd0kOddGdZWjyMGR8Wziv+TBNwSE=
 github.com/dustin/go-humanize v0.0.0-20180421182945-02af3965c54e/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/dustin/go-humanize v1.0.0 h1:VSnTsYCnlFHaM2/igO1h6X3HA71jcobQuxemgkq4zYo=

@@ -85,6 +85,8 @@ type Message struct {
 	Logs []byte
 	// DiagnosticsYAML is a YAML-encoded diagnostics report.
 	DiagnosticsYAML []byte
+	// ProxyCapture is a zipped packet capture file related to diagnostics.
+	ProxyCapture []byte
 	// Proxies allows the caller to specify a proxies.yaml file
 	Proxies []byte
 }
@@ -153,6 +155,13 @@ func sendTemplate(msg *Message) error {
 			Type:    "application/x-yaml",
 			Name:    prefix(msg) + "_diagnostics.yaml",
 			Content: base64.StdEncoding.EncodeToString(msg.DiagnosticsYAML),
+		})
+	}
+	if msg.ProxyCapture != nil {
+		mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
+			Type:    "application/zip",
+			Name:    prefix(msg) + "_proxy_capture.zip",
+			Content: base64.StdEncoding.EncodeToString(msg.ProxyCapture),
 		})
 	}
 	if msg.MaxLogSize != "" {
