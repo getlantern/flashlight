@@ -1,20 +1,22 @@
 package desktop
 
 import (
+	"archive/zip"
 	"bytes"
-	"io/ioutil"
-	"path/filepath"
+	"time"
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/diagnostics"
-	"github.com/getlantern/flashlight/util"
 	"github.com/getlantern/yaml"
 )
 
+// When a user chooses to run diagnostics, we will capture all proxy traffic for captureDuration.
+const captureDuration = 30 * time.Second
+
 // runDiagnostics for the desktop app. Any of the return values may be nil.
 func runDiagnostics(proxiesMap map[string]*chained.ChainedServerInfo) (
-	reportYAML []byte, zippedPcapFiles []byte, errs []error) {
+	reportYAML []byte, zippedCapture []byte, errs []error) {
 
 	var err error
 	errs = []error{}
@@ -23,7 +25,7 @@ func runDiagnostics(proxiesMap map[string]*chained.ChainedServerInfo) (
 	if err != nil {
 		errs = append(errs, errors.New("failed to encode diagnostics report: %v", err))
 	}
-	zippedPcapFiles, err = captureAndZipProxyTraffic(proxiesMap)
+	zippedCapture, err = captureAndZipProxyTraffic(proxiesMap)
 	if err != nil {
 		errs = append(errs, errors.New("failed to capture proxy traffic: %v", err))
 	}
@@ -35,18 +37,21 @@ func runDiagnostics(proxiesMap map[string]*chained.ChainedServerInfo) (
 }
 
 func captureAndZipProxyTraffic(proxiesMap map[string]*chained.ChainedServerInfo) ([]byte, error) {
-	tmpDir, err := ioutil.TempDir("", "lantern-diagnostics-captures")
+	zippedCapture := new(bytes.Buffer)
+	zipWriter := zip.NewWriter(zippedCapture)
+	defer zipWriter.Close()
+
+	captureWriter, err := zipWriter.Create("proxy-traffic.pcapng")
 	if err != nil {
-		return nil, errors.New("failed to create temporary directory for pcap files: %v", err)
-	}
-	if err := diagnostics.CaptureProxyTraffic(proxiesMap, tmpDir); err != nil {
-		return nil, err
+		return nil, errors.New("failed to create zip file for capture: %v", err)
 	}
 
-	buf := new(bytes.Buffer)
-	opts := util.ZipOptions{Globs: map[string]string{"captures-by-proxy": filepath.Join(tmpDir, "*")}}
-	if err := util.ZipFiles(buf, opts); err != nil {
-		return nil, errors.New("failed to zip pcap files: %v", err)
+	captureConfig := diagnostics.CaptureConfig{
+		StopChannel: diagnostics.CloseAfter(captureDuration),
+		Output:      captureWriter,
 	}
-	return buf.Bytes(), nil
+	if err = diagnostics.CaptureProxyTraffic(proxiesMap, &captureConfig); err != nil {
+		return nil, err
+	}
+	return zippedCapture.Bytes(), nil
 }

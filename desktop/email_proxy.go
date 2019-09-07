@@ -50,7 +50,7 @@ func (app *App) handleMandrillMessage(service *ws.Service, data *mandrillMessage
 	if data.RunDiagnostics {
 		app.proxiesMapLock.RLock()
 		var errs []error
-		data.DiagnosticsYAML, data.PacketCaptures, errs = runDiagnostics(app.proxiesMap)
+		data.DiagnosticsYAML, data.ProxyCapture, errs = runDiagnostics(app.proxiesMap)
 		for _, err := range errs {
 			log.Errorf("error running diagnostics: %v", err)
 		}
