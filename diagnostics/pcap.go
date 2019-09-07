@@ -254,16 +254,12 @@ func captureAndWrite(addr string, w *pcapngWriter, stop <-chan struct{}) error {
 		layerType = layers.LayerTypeLoopback
 	}
 
-	fmt.Printf("capturing on %s at %v layer\n", iface.name(), layerType)
-
 	pktSrc := gopacket.NewPacketSource(handle, layerType).Packets()
 	pktWriteErrors := []error{}
 	for {
 		select {
 		case pkt := <-pktSrc:
-			fmt.Println("writing packet")
 			if err := w.writePacket(pkt); err != nil {
-				fmt.Println(err)
 				pktWriteErrors = append(pktWriteErrors, err)
 			}
 		case <-stop:
