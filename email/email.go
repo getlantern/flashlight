@@ -157,6 +157,13 @@ func sendTemplate(msg *Message) error {
 			Content: base64.StdEncoding.EncodeToString(msg.DiagnosticsYAML),
 		})
 	}
+	if msg.ProxyCapture != nil {
+		mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
+			Type:    "application/zip",
+			Name:    prefix(msg) + "_proxy_capture.zip",
+			Content: base64.StdEncoding.EncodeToString(msg.ProxyCapture),
+		})
+	}
 	if msg.MaxLogSize != "" {
 		if size, err := util.ParseFileSize(msg.MaxLogSize); err != nil {
 			log.Error(err)
