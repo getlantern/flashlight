@@ -1,9 +1,9 @@
 [submodule "replica"]
 	path = replica
-	url = ../replica.git
+	url = https://github.com/getlantern/replica.git
 [submodule "confluence"]
 	path = confluence
-	url = ../../anacrolix/confluence.git
+	url = https://github.com/anacrolix/confluence.git
 [submodule "torrent"]
 	path = torrent
-	url = ../../anacrolix/torrent.git
+	url = https://github.com/anacrolix/torrent.git
