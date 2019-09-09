@@ -29,7 +29,7 @@ var (
 	// Only allowed to call /send_template
 	MandrillAPIKey = "fmYlUdjEpGGonI4NDx9xeA"
 	// Number of runes(code points - characters of variable length bytes depending on encoding) allowed in fileName length
-	maxFileLength    = 60
+	maxFileLength    uint = 60
 	defaultRecipient string
 	httpClient       = &http.Client{}
 	mu               sync.RWMutex
