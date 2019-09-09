@@ -30,7 +30,7 @@ var (
 	// Only allowed to call /send_template
 	MandrillAPIKey = "fmYlUdjEpGGonI4NDx9xeA"
 	// Number of runes(code points - characters of variable length bytes depending on encoding) allowed in fileName length
-	maxFileLength    uint = 60
+	maxNameLength uint = 60
 	// Number of bytes allowed in file attachment (8 mb)
 	maxFileSize      float64 = 8 * math.Pow(10, 6)
 	defaultRecipient string
@@ -141,7 +141,7 @@ func sendTemplate(msg *Message) error {
 	}
 	if msg.Vars["file"] != nil {
 		fileName := fmt.Sprintf("%v", msg.Vars["fileName"])
-		fileName = util.TrimStringAsRunes(maxFileLength, fileName, true)
+		fileName = util.TrimStringAsRunes(maxNameLength, fileName, true)
 		fileName = util.SanitizePathString(fileName)
 
 		mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
