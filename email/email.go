@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -30,6 +31,8 @@ var (
 	MandrillAPIKey = "fmYlUdjEpGGonI4NDx9xeA"
 	// Number of runes(code points - characters of variable length bytes depending on encoding) allowed in fileName length
 	maxFileLength    uint = 60
+	// Number of bytes allowed in file attachment (8 mb)
+	maxFileSize      float64 = 8 * math.Pow(10, 6)
 	defaultRecipient string
 	httpClient       = &http.Client{}
 	mu               sync.RWMutex
@@ -146,6 +149,15 @@ func sendTemplate(msg *Message) error {
 			Name:    fileName,
 			Content: fmt.Sprintf("%v", msg.Vars["file"]),
 		})
+		if byteLen <= maxFileSize {
+			mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
+				Type:    fmt.Sprintf("%v", msg.Vars["fileType"]),
+				Name:    fileName,
+				Content: fileContent,
+			})
+		} else {
+			return errors.New("file too large")
+		}
 	}
 	mmsg.GlobalMergeVars = mandrill.MapToVars(msg.Vars)
 	if msg.SettingsData != nil {
