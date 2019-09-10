@@ -59,7 +59,7 @@ linux: $(SOURCES)
 	@$(call build-tags) && \
 	HEADLESS=true GOOS=linux GOARCH=amd64 go build -o $$BINARY_NAME-linux -tags="$$BUILD_TAGS headless" -ldflags="$$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
 
-# vendor installs vendored dependencies using Dep
+# vendor installs vendored dependencies using go modules
 vendor:
 	GO111MODULE=on go mod vendor
 

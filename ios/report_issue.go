@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"net/http"
 	"time"
+	"io/ioutil"
 
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/logging"
@@ -30,7 +31,7 @@ func init() {
 }
 
 // ReportIssue reports an issue via email.
-func ReportIssue(appVersion string, deviceModel string, iosVersion string, emailAddress string, issue string, appLogsDir string, tunnelLogsDir string) error {
+func ReportIssue(appVersion string, deviceModel string, iosVersion string, emailAddress string, issue string, appLogsDir string, tunnelLogsDir string, proxiesYamlPath string) error {
 	msg := &email.Message{
 		Template: "user-send-logs-ios",
 		From:     emailAddress,
@@ -43,11 +44,24 @@ func ReportIssue(appVersion string, deviceModel string, iosVersion string, email
 		},
 	}
 	b := &bytes.Buffer{}
-	err := logging.ZipLogFilesFrom(b, 5*1024*1024, map[string]string{"app": appLogsDir, "tunnel": tunnelLogsDir})
+	// 5MB is logfile size limit, and we have:
+	// two targets (app/netEx) with their own logs
+	// each target has 6 ios log files and 6 go log files
+	// for a total of 24 files * 5MB 
+	err := logging.ZipLogFilesFrom(b, 5*1024*1024*24, map[string]string{"app": appLogsDir, "tunnel": tunnelLogsDir})
 	if err != nil {
 		log.Errorf("Unable to zip log files: %v", err)
 	} else {
 		msg.Logs = b.Bytes()
 	}
+	
+	bytes, err := ioutil.ReadFile(proxiesYamlPath)
+	if err != nil {
+		log.Errorf("Unable to read proxies.yaml for reporting issue: %v", err)
+	} else {
+		msg.Proxies = bytes
+	}
+
+
 	return email.Send(msg)
 }

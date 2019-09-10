@@ -87,6 +87,10 @@ type Message struct {
 	MaxLogSize string `json:"maxLogSize,omitempty"`
 	// Logs allows the caller to specify an already zipped set of logs
 	Logs []byte
+	// DiagnosticsYAML is a YAML-encoded diagnostics report.
+	DiagnosticsYAML []byte
+	// Proxies allows the caller to specify a proxies.yaml file
+	Proxies []byte
 }
 
 func Send(msg *Message) error {
@@ -165,6 +169,13 @@ func sendTemplate(msg *Message) error {
 		})
 		attachOpsCtx(msg, mmsg)
 	}
+	if msg.DiagnosticsYAML != nil {
+		mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
+			Type:    "application/x-yaml",
+			Name:    prefix(msg) + "_diagnostics.yaml",
+			Content: base64.StdEncoding.EncodeToString(msg.DiagnosticsYAML),
+		})
+	}
 	if msg.MaxLogSize != "" {
 		if size, err := util.ParseFileSize(msg.MaxLogSize); err != nil {
 			log.Error(err)
@@ -187,6 +198,16 @@ func sendTemplate(msg *Message) error {
 			Content: base64.StdEncoding.EncodeToString(msg.Logs),
 		})
 	}
+	if len(msg.Proxies) > 0 {
+		mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
+			Type:    "text/yaml",
+			Name:    "proxies.yaml",
+			Content: base64.StdEncoding.EncodeToString(msg.Proxies),
+		})
+	} else {
+		log.Debug("No proxies.yaml included to send to mandrill")
+	}
+
 	responses, err := client.MessagesSendTemplate(mmsg, msg.Template, "")
 	if err != nil {
 		return err

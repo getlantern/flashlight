@@ -12,13 +12,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/getlantern/appdir"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/rotator"
-	"github.com/getlantern/wfilter"
 
-	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/util"
 )
 
@@ -38,23 +35,8 @@ var (
 	actualLogDirMx sync.RWMutex
 )
 
-func init() {
-	if common.Platform != "android" && common.Platform != "ios" {
-		EnableFileLogging("")
-	}
-}
-
-func EnableFileLogging(logdir string) {
-	err := EnableFileLoggingWith(os.Stdout, os.Stderr, logdir)
-	if err != nil {
-		log.Error(err)
-	}
-}
-
-func EnableFileLoggingWith(werr io.WriteCloser, wout io.WriteCloser, logdir string) error {
-	if logdir == "" {
-		logdir = appdir.Logs("Lantern")
-	}
+// RotatedLogsUnder creates rotated file logger under logdir.
+func RotatedLogsUnder(logdir string) (io.WriteCloser, error) {
 	actualLogDirMx.Lock()
 	actualLogDir = logdir
 	actualLogDirMx.Unlock()
@@ -63,20 +45,52 @@ func EnableFileLoggingWith(werr io.WriteCloser, wout io.WriteCloser, logdir stri
 		if os.IsNotExist(err) {
 			// Create log dir
 			if err := os.MkdirAll(logdir, 0755); err != nil {
-				return errors.New("Unable to create logdir at %s: %s", logdir, err)
+				return nil, errors.New("Unable to create logdir at %s: %s", logdir, err)
 			}
 		}
 	}
+
 	rotator := rotator.NewSizeRotator(filepath.Join(logdir, "lantern.log"))
 	// Set log files to 4 MB
 	rotator.RotationSize = 4 * 1024 * 1024
 	// Keep up to 5 log files
 	rotator.MaxRotation = 5
 
+	return rotator, nil
+}
+
+// Timestamped writes the current time and the duration since process start to
+// the writer, used by golog.SetPrepender().
+func Timestamped(w io.Writer) {
+	ts := time.Now()
+	runningSecs := ts.Sub(processStart).Seconds()
+	secs := int(math.Mod(runningSecs, 60))
+	mins := int(runningSecs / 60)
+	fmt.Fprintf(w, "%s - %dm%ds ", ts.In(time.UTC).Format(logTimestampFormat), mins, secs)
+}
+
+// EnableFileLogging configures golog to write to rotated files under the
+// logdir, in addition to standard outputs.
+func EnableFileLogging(logdir string) {
+	err := EnableFileLoggingWith(os.Stdout, os.Stderr, logdir)
+	if err != nil {
+		log.Error(err)
+	}
+}
+
+// EnableFileLoggingWith is similar to EnableFileLogging but allows overriding
+// standard outputs.
+func EnableFileLoggingWith(werr io.WriteCloser, wout io.WriteCloser, logdir string) error {
+	golog.SetPrepender(Timestamped)
+	rotator, err := RotatedLogsUnder(logdir)
+	if err != nil {
+		return err
+	}
+
 	logFile = rotator
-	errorPWC = newPipedWriteCloser(newNonStopWriteCloser(werr, logFile), 1000)
-	debugPWC = newPipedWriteCloser(newNonStopWriteCloser(wout, logFile), 100)
-	golog.SetOutputs(timestamped(errorPWC), timestamped(debugPWC))
+	errorPWC = newPipedWriteCloser(NonStopWriteCloser(werr, logFile), 1000)
+	debugPWC = newPipedWriteCloser(NonStopWriteCloser(wout, logFile), 100)
+	golog.SetOutputs(errorPWC, debugPWC)
 	return nil
 }
 
@@ -186,33 +200,18 @@ func Close() error {
 	if logFile != nil {
 		logFile.Close()
 	}
-	initLogging()
+	golog.ResetOutputs()
 	return nil
-}
-
-func initLogging() {
-	golog.SetOutputs(timestamped(os.Stderr), timestamped(os.Stdout))
-}
-
-// timestamped adds a timestamp to the beginning of log lines
-func timestamped(orig io.Writer) io.Writer {
-	return wfilter.SimplePrepender(orig, func(w io.Writer) (int, error) {
-		ts := time.Now()
-		runningSecs := ts.Sub(processStart).Seconds()
-		secs := int(math.Mod(runningSecs, 60))
-		mins := int(runningSecs / 60)
-		return fmt.Fprintf(w, "%s - %dm%ds ", ts.In(time.UTC).Format(logTimestampFormat), mins, secs)
-	})
 }
 
 type nonStopWriteCloser struct {
 	writers []io.WriteCloser
 }
 
-// newNonStopWriteCloser creates a WriteCloser that duplicates its writes to all the
-// provided WriteClosers, even if errors encountered while writing. It doesn't
-// close the provided WriteClosers.
-func newNonStopWriteCloser(writers ...io.WriteCloser) io.WriteCloser {
+// NonStopWriteCloser creates a WriteCloser that duplicates its writes to all
+// the provided WriteClosers, even if errors encountered while writing. It
+// doesn't close the provided WriteClosers.
+func NonStopWriteCloser(writers ...io.WriteCloser) io.WriteCloser {
 	w := make([]io.WriteCloser, len(writers))
 	copy(w, writers)
 	return &nonStopWriteCloser{w}

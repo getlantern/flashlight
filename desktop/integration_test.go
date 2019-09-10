@@ -87,7 +87,7 @@ func TestProxying(t *testing.T) {
 		listenPort++
 		return fmt.Sprintf("localhost:%d", listenPort)
 	}
-	helper, err := integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
+	helper, err := integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -135,6 +135,11 @@ func TestProxying(t *testing.T) {
 
 	// Switch to quic, wait for a new config and test request again
 	helper.SetProtocol("quic")
+	time.Sleep(2 * time.Second)
+	testRequest(t, helper)
+
+	// Switch to oquic, wait for a new config and test request again
+	helper.SetProtocol("oquic")
 	time.Sleep(2 * time.Second)
 	testRequest(t, helper)
 
@@ -221,8 +226,7 @@ func startApp(t *testing.T, helper *integrationtest.Helper) (*App, error) {
 	}
 
 	a := &App{
-		ShowUI: false,
-		Flags:  flags,
+		Flags: flags,
 	}
 	a.Init()
 	// Set a non-zero User ID to make prochecker happy

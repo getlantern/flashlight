@@ -4,9 +4,13 @@ import (
 	"context"
 	"crypto/rsa"
 	gtls "crypto/tls"
+	"crypto/x509"
+	"encoding/base64"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
+	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -18,7 +22,6 @@ import (
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
 	"github.com/mitchellh/mapstructure"
 	tls "github.com/refraction-networking/utls"
-	"github.com/tevino/abool"
 
 	"github.com/getlantern/cmux"
 	"github.com/getlantern/ema"
@@ -59,6 +62,9 @@ const (
 var (
 	chainedDialTimeout          = 1 * time.Minute
 	theForceAddr, theForceToken string
+
+	tlsKeyLogWriter        io.Writer
+	createKeyLogWriterOnce sync.Once
 )
 
 // CreateDialer creates a Proxy (balancer.Dialer) with supplied server info.
@@ -99,7 +105,7 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		return newOBFS4Proxy(name, transport, proto, s, uc)
 	case "lampshade":
 		return newLampshadeProxy(name, transport, proto, s, uc)
-	case "quic":
+	case "quic", "oquic":
 		return newQUICProxy(name, s, uc)
 	case "wss":
 		return newWSSProxy(name, s, uc)
@@ -401,7 +407,6 @@ type proxy struct {
 	emaRTTDev           *ema.EMA
 	emaSuccessRate      *ema.EMA
 	kcpConfig           *KCPConfig
-	forceRedial         *abool.AtomicBool
 	mostRecentABETime   time.Time
 	doDialCore          func(ctx context.Context) (net.Conn, time.Duration, error)
 	numPreconnecting    func() int
@@ -481,13 +486,13 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 			return nil, err
 		}
 		p.protocol = "kcp"
-	} else if s.PluggableTransport == "quic" {
+	} else if s.PluggableTransport == "quic" || s.PluggableTransport == "oquic" {
 		log.Debugf("Enabling QUIC for %v (%v)", p.Label(), p.protocol)
 		err := enableQUIC(p, s)
 		if err != nil {
 			return nil, err
 		}
-		p.protocol = "quic"
+		p.protocol = s.PluggableTransport
 	} else if strings.HasPrefix(s.PluggableTransport, "utp") {
 		log.Debugf("Enabling UTP for %v (%v)", p.Label(), p.protocol)
 		err := enableUTP(p, s)
@@ -615,50 +620,70 @@ func (rt *wssFrontedRT) RoundTripHijack(req *http.Request) (*http.Response, net.
 }
 
 func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
+
+	// Verify the SNI name if given, otherwise verify the hostname given and do not use SNI.
+	var err error
+	serverName := s.TLSServerNameIndicator
+	sendServerName := true
+	if serverName == "" {
+		sendServerName = false
+		serverName, _, err = net.SplitHostPort(s.Addr)
+		if err != nil {
+			serverName = s.Addr
+		}
+	}
+	helloID := s.clientHelloID()
+	pinnedCert := s.ptSettingBool("pin_certificate")
+
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 	}
 	x509cert := cert.X509()
 
-	tlsConf := &tls.Config{
-		CipherSuites:       orderedCipherSuitesFromConfig(s),
-		ServerName:         s.TLSServerNameIndicator,
-		InsecureSkipVerify: true,
-	}
-
-	td := &tlsdialer.Dialer{
-		DoDial:         netx.DialTimeout,
-		SendServerName: s.TLSServerNameIndicator != "",
-		Config:         tlsConf,
-		ClientHelloID:  s.clientHelloID(),
-		Timeout:        chainedDialTimeout,
-	}
-
 	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
 		log.Debugf("tinywss Roundtripper dialing %v", addr)
-		conn, err := td.Dial(network, addr)
-		if err != nil {
-			return nil, err
-		}
-		serverCert := conn.ConnectionState().PeerCertificates[0]
-		if !serverCert.Equal(x509cert) {
-			conn.Close()
-			received, err := keyman.LoadCertificateFromX509(serverCert)
-			if err != nil {
-				return nil, log.Errorf("Unable to parse received certificate: %v (%v)", err, serverCert)
+
+		var certPool *x509.CertPool
+
+		if !pinnedCert {
+			certPool = GetFrontingCertPool(1 * time.Second)
+			if certPool == nil {
+				log.Debugf("wss cert pool is not available (yet?), falling back to pinned.")
 			}
-			return nil, log.Errorf("Server's certificate didn't match expected! Server had\n%s\nbut expected:\n%s",
-				string(received.PEMEncoded()), string(cert.PEMEncoded()))
 		}
-		log.Debugf("tinywss RoundTripper returning conn (connected)...")
-		return conn, nil
+
+		if certPool == nil {
+			certPool = x509.NewCertPool()
+			certPool.AddCert(x509cert)
+			log.Debugf("wss using pinned certificate")
+		}
+
+		tlsConf := &tls.Config{
+			CipherSuites: orderedCipherSuitesFromConfig(s),
+			ServerName:   serverName,
+			RootCAs:      certPool,
+			KeyLogWriter: getTLSKeyLogWriter(),
+		}
+
+		td := &tlsdialer.Dialer{
+			DoDial:         netx.DialTimeout,
+			SendServerName: sendServerName,
+			Config:         tlsConf,
+			ClientHelloID:  helloID,
+			Timeout:        chainedDialTimeout,
+		}
+
+		return td.Dial(network, addr)
 	}), nil
 }
 
 func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 	addr := s.Addr
-	tlsConf := &gtls.Config{InsecureSkipVerify: true}
+	tlsConf := &gtls.Config{
+		InsecureSkipVerify: true,
+		KeyLogWriter:       getTLSKeyLogWriter(),
+	}
 
 	maxStreamsPerConn := s.ptSettingInt("streams")
 
@@ -674,56 +699,59 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 	}
 	pinnedCert := cert.X509()
 
-	newQUICDialer := func() *quicwrapper.Client {
-		d := quicwrapper.NewClientWithPinnedCert(
-			addr,
-			tlsConf,
-			quicConf,
-			quicwrapper.DialWithNetx,
-			pinnedCert,
-		)
-		return d
+	dialFn := quicwrapper.DialWithNetx
+
+	if s.PluggableTransport == "oquic" {
+		oquicKeyStr := s.ptSetting("oquic_key")
+		if oquicKeyStr == "" {
+			return log.Error("Missing oquic_key for oquic transport")
+		}
+		oquicKey, err := base64.StdEncoding.DecodeString(oquicKeyStr)
+		if err != nil {
+			return log.Error(errors.Wrap(err).With("oquic_key", oquicKeyStr))
+		}
+		oquicConfig := quicwrapper.DefaultOQuicConfig(oquicKey)
+		if cipher := s.ptSetting("oquic_cipher"); cipher != "" {
+			oquicConfig.Cipher = cipher
+		}
+		if s.ptSetting("oquic_aggressive_padding") != "" {
+			oquicConfig.AggressivePadding = int64(s.ptSettingInt("oquic_aggressive_padding"))
+		}
+		if s.ptSetting("oquic_max_padding_hint") != "" {
+			oquicConfig.MaxPaddingHint = uint8(s.ptSettingInt("oquic_max_padding_hint"))
+		}
+		if s.ptSetting("oquic_min_padded") != "" {
+			oquicConfig.MinPadded = s.ptSettingInt("oquic_min_padded")
+		}
+
+		dialFn, err = quicwrapper.NewOQuicDialerWithUDPDialer(quicwrapper.DialUDPNetx, oquicConfig)
+		if err != nil {
+			return log.Errorf("Unable to create oquic dialer: %v", err)
+		}
 	}
 
-	dialer := newQUICDialer()
-	var dialerLock sync.Mutex
-	forceRedial := abool.New()
-
+	dialer := quicwrapper.NewClientWithPinnedCert(
+		addr,
+		tlsConf,
+		quicConf,
+		dialFn,
+		pinnedCert,
+	)
 	// when the proxy closes, close the dialer
 	go func() {
 		<-p.closeCh
 		log.Debug("Closing quic session: Proxy closed.")
-		dialerLock.Lock()
 		dialer.Close()
-		dialerLock.Unlock()
 	}()
 
 	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
 		elapsed := mtime.Stopwatch()
-
-		dialerLock.Lock()
-		if forceRedial.IsSet() {
-			select {
-			case <-p.closeCh:
-				log.Debug("not re-connecting after closed.")
-			default:
-				log.Debug("Connection state changed, re-connecting to server first")
-				dialer.Close()
-				dialer = newQUICDialer()
-			}
-			forceRedial.UnSet()
-		}
-		d := dialer
-		dialerLock.Unlock()
-
-		conn, err := d.DialContext(ctx)
+		conn, err := dialer.DialContext(ctx)
 		if err != nil {
 			log.Debugf("Failed to establish multiplexed connection: %s", err)
-			forceRedial.Set()
 		} else {
 			log.Debug("established new multiplexed quic connection.")
 		}
-
 		delta := elapsed()
 		return conn, delta, err
 	}
@@ -951,6 +979,7 @@ func tlsConfigForProxy(s *ChainedServerInfo) (*tls.Config, tls.ClientHelloID) {
 		CipherSuites:       cipherSuites,
 		ServerName:         s.TLSServerNameIndicator,
 		InsecureSkipVerify: true,
+		KeyLogWriter:       getTLSKeyLogWriter(),
 	}, s.clientHelloID()
 }
 
@@ -959,4 +988,20 @@ func orderedCipherSuitesFromConfig(s *ChainedServerInfo) []uint16 {
 		return s.mobileOrderedCipherSuites()
 	}
 	return s.desktopOrderedCipherSuites()
+}
+
+// Write the session keys to file if SSLKEYLOGFILE is set, same as browsers.
+func getTLSKeyLogWriter() io.Writer {
+	createKeyLogWriterOnce.Do(func() {
+		path := os.Getenv("SSLKEYLOGFILE")
+		if path == "" {
+			return
+		}
+		var err error
+		tlsKeyLogWriter, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0600)
+		if err != nil {
+			log.Debugf("Error creating keylog file at %v: %s", path, err)
+		}
+	})
+	return tlsKeyLogWriter
 }

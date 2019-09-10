@@ -3,7 +3,7 @@
 # If you want Google's container you would reference google/golang
 # Read more about containers on our dev center
 # http://devcenter.wercker.com/docs/containers/index.html
-box: golang:1.12.5
+box: golang:1.12.9
 # This is the build pipeline. Pipelines are the core of wercker
 # Read more about pipelines on our dev center
 # http://devcenter.wercker.com/docs/pipelines/index.html
@@ -33,7 +33,7 @@ build:
     - script:
       name: make-lantern
       code: |
-        HEADLESS=true GO111MODULE=on make lantern
+        HEADLESS=true make lantern
     - script:
       name: get goveralls
       code: |-
@@ -44,6 +44,6 @@ build:
       code: export GORACE=history_size=7
     - script:
       name: test-and-cover
-      code: GO111MODULE=on make test-and-cover
+      code: make test-and-cover
     - tcnksm/goveralls:
-      token: 19Nno28mzRG0nIrWOc92flFUhZF2ty4Rc
+      token: $COVERALLS_TOKEN

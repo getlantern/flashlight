@@ -3,6 +3,7 @@ package android
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -52,6 +53,8 @@ var (
 	startOnce sync.Once
 
 	cl = eventual.NewValue()
+
+	errNoAdProviderAvailable = errors.New("no ad provider available")
 )
 
 type Settings interface {
@@ -185,19 +188,28 @@ type StartResult struct {
 // AdSettings is an interface for retrieving mobile ad settings from the
 // global config
 type AdSettings interface {
-	AppId() string
-	AdunitId() string
-	VideoAdunitId() string
-	InterstitialAdId() string
-	Enabled() bool
-	GetPercentage() float64
-	GetProvider() string
-	NativeAdId() string
-	GetMinDaysShowAds() int
-	GetMaxDaysShowAds() int
-	IsRegionEnabled(string) bool
-	IsWhitelisted(string) bool
-	UseWhitelist() bool
+	// GetAdProvider gets an ad provider if and only if ads are enabled based on the passed parameters.
+	GetAdProvider(isPro bool, countryCode string, daysSinceInstalled int) (AdProvider, error)
+}
+
+// AdProvider provides information for displaying an ad and makes decisions on whether or not to display it.
+type AdProvider interface {
+	GetNativeBannerZoneID() string
+	GetStandardBannerZoneID() string
+	GetInterstitialZoneID() string
+	ShouldShowAd() bool
+}
+
+type adSettings struct {
+	wrapped *config.AdSettings
+}
+
+func (s *adSettings) GetAdProvider(isPro bool, countryCode string, daysSinceInstalled int) (AdProvider, error) {
+	adProvider := s.wrapped.GetAdProvider(isPro, countryCode, daysSinceInstalled)
+	if adProvider == nil {
+		return nil, errNoAdProviderAvailable
+	}
+	return adProvider, nil
 }
 
 type Updater autoupdate.Updater
@@ -323,12 +335,13 @@ func run(configDir, locale string,
 			afterStart(session)
 		},
 		func(cfg *config.Global) {
-			session.UpdateAdSettings(cfg.AdSettings)
+			session.UpdateAdSettings(&adSettings{cfg.AdSettings})
 			email.SetDefaultRecipient(cfg.ReportIssueEmail)
 		}, // onConfigUpdate
+		nil, // onProxiesUpdate
 		newUserConfig(session),
 		NewStatsTracker(session),
-		func(err error) {}, // onError
+		nil, // onError
 		session.IsProUser,
 		session.GetUserID,
 		func() string { return "" }, // only used for desktop
