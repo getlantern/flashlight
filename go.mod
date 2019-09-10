@@ -7,7 +7,7 @@ require (
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/confluence v1.1.0
 	github.com/anacrolix/go-libutp v1.0.2
-	github.com/anacrolix/torrent v1.7.0
+	github.com/anacrolix/torrent v1.7.1
 	github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc // indirect
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dustin/go-humanize v1.0.0

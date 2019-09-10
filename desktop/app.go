@@ -266,7 +266,17 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			}
 		}
 
-		torrentClient, err := torrent.NewClient(torrent.NewDefaultClientConfig())
+		replicaDataDir := filepath.Join(os.TempDir(), "replica")
+		err = os.MkdirAll(replicaDataDir, 0644)
+		if err != nil {
+			// Deferring correct handling here: If we can't create or access this directory, The
+			// Replica torrent client will not be able to download.
+			panic(err)
+		}
+		cfg := torrent.NewDefaultClientConfig()
+		cfg.DataDir = replicaDataDir
+		cfg.Seed = true
+		torrentClient, err := torrent.NewClient(cfg)
 		if err != nil {
 			log.Errorf("error starting torrent client: %v", err)
 			app.Exit(err)
@@ -291,6 +301,8 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 						Confluence: confluence.Handler{
 							TC: torrentClient,
 						},
+						TorrentClient:    torrentClient,
+						StorageDirectory: replicaDataDir,
 					}),
 			},
 		); err != nil {

@@ -3,9 +3,13 @@ package ui
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/anacrolix/confluence/confluence"
+	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/google/uuid"
 
@@ -16,6 +20,9 @@ type ReplicaHttpServer struct {
 	// This is the S3 key prefix used to group uploads for listing.
 	InstancePrefix string
 	Confluence     confluence.Handler
+	TorrentClient  *torrent.Client
+	// Where to store torrent client data.
+	StorageDirectory string
 }
 
 type countWriter struct {
@@ -39,8 +46,19 @@ func (me ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s3Key := fmt.Sprintf("/%s/%s/%s", me.InstancePrefix, u.String(), name)
 		log.Debugf("uploading replica key %q", s3Key)
 		var cw countWriter
-		err = replica.Upload(io.TeeReader(r.Body, &cw), s3Key)
-		log.Debugf("upload read %d bytes", cw.bytesWritten)
+		replicaUploadReader := io.TeeReader(r.Body, &cw)
+		f, err := ioutil.TempFile("", "")
+		if err == nil {
+			defer os.Remove(f.Name())
+			defer f.Close()
+			replicaUploadReader = io.TeeReader(replicaUploadReader, f)
+		} else {
+			// This isn't good, but as long as we can add the torrent file metainfo to the local
+			// client, we can still spread the metadata, and S3 can take care of the data.
+			log.Errorf("error creating temporary file: %v", err)
+		}
+		err = replica.Upload(replicaUploadReader, s3Key)
+		log.Debugf("uploaded %d bytes", cw.bytesWritten)
 		if err != nil {
 			panic(err)
 		}
@@ -50,6 +68,19 @@ func (me ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		defer t.Close()
 		mi, err := metainfo.Load(t)
+		if err != nil {
+			panic(err)
+		}
+		info, err := mi.UnmarshalInfo()
+		if err != nil {
+			panic(err)
+		}
+		err = os.Rename(f.Name(), filepath.Join(me.StorageDirectory, info.Name))
+		if err != nil {
+			// Not fatal: See above, we only really need the metainfo to be added to the torrent.
+			log.Errorf("error renaming file: %v", err)
+		}
+		_, err = me.TorrentClient.AddTorrent(mi)
 		if err != nil {
 			panic(err)
 		}
