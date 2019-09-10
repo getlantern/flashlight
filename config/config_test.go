@@ -99,8 +99,8 @@ func TestEmbedded(t *testing.T) {
 			unmarshaler: newProxiesUnmarshaler(),
 		})
 
-		_, err := cfg.embedded(generated.EmbeddedProxies)
-		assert.NotNil(t, err)
+		proxies, _ := cfg.embedded(generated.EmbeddedProxies)
+		assert.NotNil(t, proxies)
 	})
 }
 
