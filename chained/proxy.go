@@ -303,8 +303,10 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 		Name:      name,
 	})
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
-		conn, err := dialer.DialContext(ctx)
-		return overheadWrapper(true)(conn, err)
+		return p.reportedDial(s.Addr, transport, proto, func(op *ops.Op) (net.Conn, error) {
+			conn, err := dialer.DialContext(ctx)
+			return overheadWrapper(true)(conn, err)
+		})
 	}
 	return newProxy(name, transport, proto, s, uc, s.Trusted, false, doDialServer, defaultDialOrigin)
 }
