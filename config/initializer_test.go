@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/config/generated"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,7 +23,9 @@ func TestInit(t *testing.T) {
 	// embedded ones, and remote ones.
 	proxiesDispatch := func(cfg interface{}) {
 		proxies := cfg.(map[string]*chained.ChainedServerInfo)
-		assert.True(t, len(proxies) > 0)
+		if len(generated.EmbeddedProxies) > 0 {
+			assert.True(t, len(proxies) > 0)
+		}
 		configChan <- true
 	}
 	globalDispatch := func(cfg interface{}) {
@@ -33,16 +36,22 @@ func TestInit(t *testing.T) {
 	stop := Init(".", flags, newTestUserConfig(), proxiesDispatch, globalDispatch, &http.Transport{})
 	defer stop()
 
+	var expected int
+	if len(generated.EmbeddedProxies) == 0 {
+		expected = 0
+	} else {
+		expected = 2
+	}
 	count := 0
-	for i := 0; i < 2; i++ {
+	for i := 0; i < expected; i++ {
 		select {
 		case <-configChan:
 			count++
-		case <-time.After(time.Second * 12):
+		case <-time.After(time.Second * 5):
 			assert.Fail(t, "Took too long to get configs")
 		}
 	}
-	assert.Equal(t, 2, count)
+	assert.Equal(t, expected, count)
 }
 
 // TestInitWithURLs tests that proxy and global configs are fetched at the
