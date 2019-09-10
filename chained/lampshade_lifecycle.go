@@ -119,15 +119,15 @@ func (ls *streamListener) OnStreamWrite(num int) {
 
 func (ls *streamListener) OnStreamReadError(err error) {
 	if span := opentracing.SpanFromContext(ls.ctx); span != nil {
-		logError(span, "ioerror", err)
-		span.SetTag("ioerror", "true")
+		logError(span, "readerror", err)
+		span.SetTag("readerror", "true")
 	}
 }
 
 func (ls *streamListener) OnStreamWriteError(err error) {
 	if span := opentracing.SpanFromContext(ls.ctx); span != nil {
-		logError(span, "ioerror", err)
-		span.SetTag("ioerror", "true")
+		logError(span, "writeerror", err)
+		span.SetTag("writeerror", "true")
 	}
 }
 
