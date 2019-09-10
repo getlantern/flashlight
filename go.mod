@@ -77,10 +77,11 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
+	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/google/netstack v0.0.0-20190505230633-4391e4a763ab // indirect
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v0.0.0-20180306181548-eb925808374e
-	github.com/hashicorp/golang-lru v0.5.1
+	github.com/hashicorp/golang-lru v0.5.3
 	github.com/jackpal/gateway v1.0.5
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
@@ -102,7 +103,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7
 )
 
-replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20190818104938-28e3ca4262e1
+replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20190819144938-28e3ca4262e1
 
 replace github.com/marten-seemann/qtls => github.com/marten-seemann/qtls-deprecated v0.0.0-20190207043627-591c71538704
 
@@ -117,3 +118,6 @@ replace github.com/getlantern/replica => ./replica
 replace github.com/anacrolix/confluence => ./confluence
 
 replace github.com/anacrolix/torrent => ./torrent
+
+// git.apache.org isn't working at the moment, use mirror (should probably switch back once we can)
+replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110319-2566ecd5d999
