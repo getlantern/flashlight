@@ -290,58 +290,25 @@ func (b *Balancer) newBalancedDial(network string, addr string) (*balancedDial, 
 	}, nil
 }
 
-func (bd *balancedDial) dial(ctx context.Context, start time.Time) (conn net.Conn, err error) {
+func (bd *balancedDial) dial(ctx context.Context, start time.Time) (net.Conn, error) {
 	newCTX, cancel := context.WithTimeout(ctx, bd.Balancer.overallDialTimeout)
 	defer cancel()
-	deadline, _ := newCTX.Deadline()
-	attempts := 0
-	for {
-		conn := bd.dialWithDialer(newCTX, bd.dialers[bd.idx], start, attempts)
-		if conn != nil {
-			return conn, nil
-		}
-		attempts++
-		if time.Now().After(deadline) {
-			break
-		}
-		if !bd.advanceToNextDialer() {
-			break
-		}
+
+	conn := bd.dialWithDialer(newCTX, bd.dialers[bd.idx], start)
+	if conn != nil {
+		return conn, nil
 	}
 
-	return nil, fmt.Errorf("Still unable to dial %s://%s after %d attempts", bd.network, bd.addr, attempts)
+	return nil, fmt.Errorf("Unable to dial %s://%s", bd.network, bd.addr)
 }
 
-// advanceToNextDialer advances this balancedDial to the next dialer, cycling
-// back to the beginning if necessary. If all dialers have failed upstream, this
-// method returns false.
-func (bd *balancedDial) advanceToNextDialer() bool {
-	if len(bd.failedUpstream) == len(bd.dialers) {
-		// all dialers failed upstream, give up
-		return false
-	}
-
-	for {
-		bd.idx++
-		if bd.idx >= len(bd.dialers) {
-			bd.idx = 0
-			time.Sleep(250 * time.Millisecond)
-		}
-		if bd.failedUpstream[bd.idx] != nil {
-			// this dialer failed upstream, don't bother trying again
-			continue
-		}
-		return true
-	}
-}
-
-func (bd *balancedDial) dialWithDialer(ctx context.Context, dialer Dialer, start time.Time, attempts int) net.Conn {
+func (bd *balancedDial) dialWithDialer(ctx context.Context, dialer Dialer, start time.Time) net.Conn {
 	deadline, _ := ctx.Deadline()
-	log.Debugf("Dialing %s://%s with %s on pass %v with timeout %v", bd.network, bd.addr, dialer.Label(), attempts, deadline.Sub(time.Now()))
+	log.Debugf("Dialing %s://%s with %s and timeout %v", bd.network, bd.addr, dialer.Label(), time.Until(deadline))
 	oldRTT, oldBW := dialer.EstRTT(), dialer.EstBandwidth()
 	conn, failedUpstream, err := dialer.DialContext(ctx, bd.network, bd.addr)
 	if err != nil {
-		bd.onFailure(dialer, failedUpstream, err, attempts)
+		bd.onFailure(dialer, failedUpstream, err)
 		return nil
 	}
 	// Multiplexed dialers don't wait for anything from the proxy when dialing
@@ -352,21 +319,19 @@ func (bd *balancedDial) dialWithDialer(ctx context.Context, dialer Dialer, start
 	}
 	// Please leave this at Debug level, as it helps us understand
 	// performance issues caused by a poor proxy being selected.
-	log.Debugf("Successfully dialed via %v to %v://%v on pass %v (%v)", dialer.Label(), bd.network, bd.addr, attempts, time.Since(start))
+	log.Debugf("Successfully dialed via %v to %v://%v after %v", dialer.Label(), bd.network, bd.addr, time.Since(start))
 	bd.onSuccess(dialer)
 	// Reevaluate all dialers if the top dialer performance dramatically changed
-	if attempts == 0 {
-		switch {
-		case dialer.EstRTT() > oldRTT*5:
-			reason := fmt.Sprintf("Dialer %s RTT increased from %v to %v",
-				dialer.Label(), oldRTT, dialer.EstRTT())
-			bd.requestEvalDialers(reason)
-		case dialer.EstBandwidth()*5 < oldBW:
-			reason := fmt.Sprintf("Dialer %s bandwidth decreased from %v to %v",
-				dialer.Label(), oldBW, dialer.EstBandwidth())
-			bd.requestEvalDialers(reason)
-		default:
-		}
+	switch {
+	case dialer.EstRTT() > oldRTT*5:
+		reason := fmt.Sprintf("Dialer %s RTT increased from %v to %v",
+			dialer.Label(), oldRTT, dialer.EstRTT())
+		bd.requestEvalDialers(reason)
+	case dialer.EstBandwidth()*5 < oldBW:
+		reason := fmt.Sprintf("Dialer %s bandwidth decreased from %v to %v",
+			dialer.Label(), oldBW, dialer.EstBandwidth())
+		bd.requestEvalDialers(reason)
+	default:
 	}
 	return conn
 }
@@ -389,32 +354,30 @@ func (bd *balancedDial) onSuccess(dialer Dialer) {
 	}
 }
 
-func (bd *balancedDial) onFailure(dialer Dialer, failedUpstream bool, err error, attempts int) {
+func (bd *balancedDial) onFailure(dialer Dialer, failedUpstream bool, err error) {
 	continueString := "...continuing"
 	if failedUpstream {
 		continueString = "...aborting"
 	}
-	msg := "%v dialing via %v to %s://%s: %v on pass %v%v"
+	msg := "%v dialing via %v to %s://%s: %v - %v"
 	if failedUpstream {
 		log.Debugf(msg,
-			"Upstream error", dialer.Label(), bd.network, bd.addr, err, attempts, continueString)
+			"Upstream error", dialer.Label(), bd.network, bd.addr, err, continueString)
 	} else {
 		log.Errorf(msg,
-			"Unexpected error", dialer.Label(), bd.network, bd.addr, err, attempts, continueString)
+			"Unexpected error", dialer.Label(), bd.network, bd.addr, err, continueString)
 	}
 	if failedUpstream {
 		bd.failedUpstream[bd.idx] = dialer
 	} else {
 		atomic.AddInt64(&bd.sessionStats[dialer.Label()].failure, 1)
-		if attempts == 0 {
-			// Whenever top dialer fails, re-evaluate dialers immediately
-			// without checking connectivity for faster convergence. A full
-			// check and re-evaluating should follow up if the dialer changes,
-			// to avoid permanently switching to a slow dialer due to outdated
-			// measurements.
-			if bd.evalDialers() {
-				bd.requestEvalDialers("Top dialer changed because of failing")
-			}
+		// Whenever top dialer fails, re-evaluate dialers immediately
+		// without checking connectivity for faster convergence. A full
+		// check and re-evaluating should follow up if the dialer changes,
+		// to avoid permanently switching to a slow dialer due to outdated
+		// measurements.
+		if bd.evalDialers() {
+			bd.requestEvalDialers("Top dialer changed because of failing")
 		}
 	}
 }
