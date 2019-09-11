@@ -24,12 +24,6 @@ import (
 	gp "github.com/getlantern/proxy"
 )
 
-const (
-	minCheckInterval      = 10 * time.Second
-	maxCheckInterval      = 15 * time.Minute
-	dialCoreCheckInterval = 30 * time.Second
-)
-
 var (
 	// IdleTimeout closes connections idle for a period to avoid dangling
 	// connections. Web applications tend to contact servers in 1 minute
@@ -129,7 +123,6 @@ func (p *proxy) MarkFailure() {
 	atomic.StoreInt64(&p.consecSuccesses, 0)
 	newCF := atomic.AddInt64(&p.consecFailures, 1)
 	log.Tracef("Dialer %s consecutive failures: %d -> %d", p.Label(), newCF-1, newCF)
-	return
 }
 
 func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, error) {

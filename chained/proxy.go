@@ -919,7 +919,7 @@ type KCPConfig struct {
 func timeoutFor(ctx context.Context) time.Duration {
 	deadline, ok := ctx.Deadline()
 	if ok {
-		return deadline.Sub(time.Now())
+		return time.Until(deadline)
 	}
 	return chainedDialTimeout
 }
