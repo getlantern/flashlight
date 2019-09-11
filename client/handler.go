@@ -54,7 +54,7 @@ func normalizeExoAd(req *http.Request) (*http.Request, bool) {
 
 func (client *Client) filter(ctx filters.Context, req *http.Request, next filters.Next) (*http.Response, filters.Context, error) {
 	if client.isHTTPProxyPort(req) {
-		log.Debugf("Reject proxy request to myself: %s", req.Host)
+		log.Debugf("Reject proxy request to myself: %#v", req)
 		// Not reveal any error text to the application.
 		return filters.Fail(ctx, req, http.StatusBadRequest, errors.New(""))
 	}
