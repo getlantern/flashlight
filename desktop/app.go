@@ -267,7 +267,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		}
 
 		replicaDataDir := filepath.Join(os.TempDir(), "replica")
-		err = os.MkdirAll(replicaDataDir, 0644)
+		err = os.MkdirAll(replicaDataDir, 0755)
 		if err != nil {
 			// Deferring correct handling here: If we can't create or access this directory, The
 			// Replica torrent client will not be able to download.
