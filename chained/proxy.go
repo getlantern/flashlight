@@ -275,6 +275,9 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 		liveConns = 2
 		log.Debugf("%s: defaulted liveconns to %v", name, liveConns)
 	}
+
+	longDialTimeout := s.ptSettingInt("longdialtimeout")
+	shortDialTimeout := s.ptSettingInt("shortdialtimeout")
 	dialer := lampshade.NewDialer(&lampshade.DialerOpts{
 		WindowSize:        windowSize,
 		MaxPadding:        maxPadding,
@@ -299,8 +302,10 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 			}
 			return conn, err
 		},
-		Lifecycle: newLampshadeLifecycleListener(name),
-		Name:      name,
+		Lifecycle:        newLampshadeLifecycleListener(name),
+		Name:             name,
+		LongDialTimeout:  longDialTimeout,
+		ShortDialTimeout: shortDialTimeout,
 	})
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(s.Addr, transport, proto, func(op *ops.Op) (net.Conn, error) {
@@ -556,7 +561,7 @@ func enableWSS(p *proxy, s *ChainedServerInfo) error {
 	if fctx_id != "" {
 		fctx := GetFrontingContext(fctx_id)
 		if fctx == nil {
-			return fmt.Errorf("unsupported wss df_ctx=%s! skipping.", fctx_id)
+			return fmt.Errorf("unsupported wss df_ctx=%s! skipping", fctx_id)
 		}
 		timeout, err := time.ParseDuration(s.ptSetting("df_timeout"))
 		if err != nil || timeout < 0 {
@@ -602,13 +607,12 @@ type wssFrontedRT struct {
 func (rt *wssFrontedRT) RoundTripHijack(req *http.Request) (*http.Response, net.Conn, error) {
 	r, ok := rt.fctx.NewDirect(rt.timeout)
 	if !ok {
-		return nil, nil, fmt.Errorf("Unable to obtain fronted roundtripper after %v fctx=%s!", rt.timeout, rt.fctx)
+		return nil, nil, fmt.Errorf("unable to obtain fronted roundtripper after %v fctx=%s", rt.timeout, rt.fctx)
 	}
 	if rth, ok := r.(tinywss.RoundTripHijacker); ok {
 		return rth.RoundTripHijack(req)
-	} else {
-		return nil, nil, fmt.Errorf("Unsupported roundtripper obtained from fronted!")
 	}
+	return nil, nil, fmt.Errorf("unsupported roundtripper obtained from fronted")
 }
 
 func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
