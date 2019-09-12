@@ -28,7 +28,7 @@ func newRingMap(maxLen int) *byteSliceRingMap {
 }
 
 // put a new slice in the ring map. This may cause old slices to get deleted. onDelete may be nil.
-func (buf *byteSliceRingMap) put(b []byte, key string, onDelete func()) error {
+func (buf *byteSliceRingMap) put(key string, b []byte, onDelete func()) error {
 	if onDelete == nil {
 		onDelete = func() {}
 	}

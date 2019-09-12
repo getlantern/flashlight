@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"runtime"
+	"sort"
 	"time"
 
 	"github.com/getlantern/errors"
@@ -28,6 +29,7 @@ type captureProcess struct {
 	stopChan       chan struct{}
 }
 
+// startCapture for the input address, saving packets to the provided buffer. Non-blocking.
 func startCapture(addr string, buffer *byteSliceRingMap) (*captureProcess, error) {
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
@@ -73,7 +75,6 @@ func startCapture(addr string, buffer *byteSliceRingMap) (*captureProcess, error
 		layerType = layers.LayerTypeLoopback
 	}
 	pktSrc := gopacket.NewPacketSource(handle, layerType).Packets()
-
 	proc := captureProcess{
 		addr:           addr,
 		buffer:         buffer,
@@ -88,7 +89,7 @@ func startCapture(addr string, buffer *byteSliceRingMap) (*captureProcess, error
 			case pkt := <-pktSrc:
 				ts := pkt.Metadata().Timestamp
 				pid := getPktID(addr, ts)
-				err := proc.buffer.put(pkt.Data(), pid, func() { delete(proc.captureInfoMap, ts) })
+				err := proc.buffer.put(pid, pkt.Data(), func() { delete(proc.captureInfoMap, ts) })
 				if err != nil {
 					log.Errorf("failed to write packet to capture buffer: %v", err)
 					continue
@@ -107,6 +108,7 @@ func (cp captureProcess) stop() {
 	close(cp.stopChan)
 }
 
+// Packets are not returned sorted.
 func (cp captureProcess) capturedSince(t time.Time) []capturedPacket {
 	capturedSince := []capturedPacket{}
 	for timestamp, ci := range cp.captureInfoMap {
@@ -181,19 +183,21 @@ func (tl *TrafficLog) SaveCaptures(address string, d time.Duration) error {
 		return nil
 	}
 	captures := proc.capturedSince(time.Now().Add(-1 * d))
+	before := func(i, j int) bool { return captures[i].info.Timestamp.Before(captures[j].info.Timestamp) }
+	sort.Slice(captures, before)
 
 	var (
 		numErrors int
 		lastError error
 	)
 	for _, capture := range captures {
-		pktID := getPktID(address, capture.info.Timestamp)
-		err := tl.savedCaptures.put(capture.data, pktID, func() { delete(tl.captureInfos, pktID) })
+		pid := getPktID(address, capture.info.Timestamp)
+		err := tl.savedCaptures.put(pid, capture.data, func() { delete(tl.captureInfos, pid) })
 		if err != nil {
 			numErrors++
 			lastError = err
 		} else {
-			tl.captureInfos[pktID] = captureInfo{capture.info, proc.iface}
+			tl.captureInfos[pid] = captureInfo{capture.info, proc.iface}
 		}
 	}
 	if numErrors > 0 {
