@@ -23,7 +23,7 @@ type byteSliceRingMap struct {
 	totalLen, maxLen int
 }
 
-func newRingMap(maxLen int) *byteSliceRingMap {
+func newByteSliceRingMap(maxLen int) *byteSliceRingMap {
 	return &byteSliceRingMap{new(queue), map[string][]byte{}, 0, maxLen}
 }
 

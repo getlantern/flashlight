@@ -128,7 +128,10 @@ type captureInfo struct {
 }
 
 // TrafficLog is a log of network traffic.
-// TODO: document ring-buffer mechanics of captured traffic and saved captures
+//
+// Captured packets are saved in a ring buffer and may be overwritten by newly captured packets. At
+// any time, a group of packets can be saved by calling SaveCaptures. These saved captures can then
+// be written out in pcapng format using WritePcapng.
 // TODO: determine if these methods need to be concurrency safe
 type TrafficLog struct {
 	captureBuffer *byteSliceRingMap
@@ -137,15 +140,31 @@ type TrafficLog struct {
 	captureProcs  map[string]captureProcess
 }
 
-// NewTrafficLog returns a new TrafficLog. Start capture by calling UpdateAddresses.
-func NewTrafficLog(addresses []string) (*TrafficLog, error) {
-	// TODO: implement me!
-	return nil, nil
+// NewTrafficLog returns a new TrafficLog. Capture will begin for the input addresses.
+//
+// Captured packets will be saved in a fixed-size ring buffer, the size of which is specified by
+// captureBytes. At any time, a group of captured packets can be saved by calling SaveCaptures. This
+// moves packets captured for a specified address and time period into a separate fixed-size ring
+// buffer. The size of this buffer is specified by saveBytes.
+func NewTrafficLog(addresses []string, captureBytes, saveBytes int) (*TrafficLog, error) {
+	tl := TrafficLog{
+		newByteSliceRingMap(captureBytes),
+		newByteSliceRingMap(saveBytes),
+		map[string]captureInfo{},
+		map[string]captureProcess{},
+	}
+	if err := tl.UpdateAddresses(addresses); err != nil {
+		return nil, err
+	}
+	return &tl, nil
 }
 
 // UpdateAddresses updates the addresses for which traffic is being captured. Capture will begin (or
 // continue) for all addresses in the input slice. Capture will be stopped for any addresses not in
 // the input slice.
+//
+// If an error is returned, the addresses have not been updated. In otherwise, a partial update is
+// not possible.
 func (tl *TrafficLog) UpdateAddresses(addresses []string) error {
 	newCaptureProcs := map[string]captureProcess{}
 	stopAllNewCaptures := func() {
@@ -161,7 +180,7 @@ func (tl *TrafficLog) UpdateAddresses(addresses []string) error {
 			proc, err := startCapture(addr, tl.captureBuffer)
 			if err != nil {
 				stopAllNewCaptures()
-				return err
+				return errors.New("failed to start capture for %s: %v", addr, err)
 			}
 			newCaptureProcs[addr] = *proc
 		}
@@ -175,7 +194,10 @@ func (tl *TrafficLog) UpdateAddresses(addresses []string) error {
 	return nil
 }
 
-// SaveCaptures saves all captures for the given address received in the past duration d.
+// SaveCaptures saves all captures for the given address received in the past duration d. These
+// captured packets will be moved from the main capture buffer into a fixed-size ring buffer
+// specifically for saved captures. Saved packets will only be overwritten upon future calls to
+// SaveCaptures.
 func (tl *TrafficLog) SaveCaptures(address string, d time.Duration) error {
 	proc, ok := tl.captureProcs[address]
 	if !ok {
