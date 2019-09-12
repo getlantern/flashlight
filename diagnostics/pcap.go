@@ -212,10 +212,10 @@ func captureAndWrite(addr string, w *pcapngWriter, stop <-chan struct{}) error {
 
 	remoteIPs, err := net.LookupIP(host)
 	if err != nil {
-		errors.New("failed to find IP for host: %v", err)
+		return errors.New("failed to find IP for host: %v", err)
 	}
 	if len(remoteIPs) < 1 {
-		errors.New("failed to resolve host")
+		return errors.New("failed to resolve host")
 	}
 	remoteIP := remoteIPs[0]
 
