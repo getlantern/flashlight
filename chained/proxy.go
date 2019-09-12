@@ -265,24 +265,27 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 	windowSize := s.ptSettingInt("windowsize")
 	maxPadding := s.ptSettingInt("maxpadding")
 	maxStreamsPerConn := uint16(s.ptSettingInt("streams"))
+	idleInterval, parseErr := time.ParseDuration(s.ptSetting("idleinterval"))
+	if parseErr != nil || idleInterval < 0 {
+		// This should be less than the server's IdleTimeout to avoid trying to use
+		// a connection that was just idled. The client's IdleTimeout is already set
+		// appropriately for this purpose, so use that.
+		idleInterval = IdleTimeout
+		log.Debugf("%s: defaulted idleinterval to %v", name, idleInterval)
+	}
 	pingInterval, parseErr := time.ParseDuration(s.ptSetting("pinginterval"))
 	if parseErr != nil || pingInterval < 0 {
 		pingInterval = 15 * time.Second
 		log.Debugf("%s: defaulted pinginterval to %v", name, pingInterval)
 	}
-	liveConns := s.ptSettingInt("liveconns")
-	if liveConns <= 0 {
-		liveConns = 2
-		log.Debugf("%s: defaulted liveconns to %v", name, liveConns)
-	}
 
-	longDialTimeout := s.ptSettingInt("longdialtimeout")
-	shortDialTimeout := s.ptSettingInt("shortdialtimeout")
+	slowDialTimeout, _ := time.ParseDuration(s.ptSetting("slowdialtimeout"))
+	fastDialTimeout, _ := time.ParseDuration(s.ptSetting("fastdialtimeout"))
 	dialer := lampshade.NewDialer(&lampshade.DialerOpts{
 		WindowSize:        windowSize,
 		MaxPadding:        maxPadding,
-		LiveConns:         liveConns,
 		MaxStreamsPerConn: maxStreamsPerConn,
+		IdleInterval:      idleInterval,
 		PingInterval:      pingInterval,
 		Pool:              buffers.Pool,
 		Cipher:            cipherCode,
@@ -302,10 +305,10 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 			}
 			return conn, err
 		},
-		Lifecycle:        newLampshadeLifecycleListener(name),
-		Name:             name,
-		LongDialTimeout:  longDialTimeout,
-		ShortDialTimeout: shortDialTimeout,
+		Lifecycle:       newLampshadeLifecycleListener(name),
+		Name:            name,
+		SlowDialTimeout: slowDialTimeout,
+		FastDialTimeout: fastDialTimeout,
 	})
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(s.Addr, transport, proto, func(op *ops.Op) (net.Conn, error) {
