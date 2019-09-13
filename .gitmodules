@@ -7,3 +7,12 @@
 [submodule "torrent"]
 	path = torrent
 	url = https://github.com/anacrolix/torrent.git
+[submodule "dht"]
+	path = dht
+	url = https://github.com/anacrolix/dht
+[submodule "envpprof"]
+	path = envpprof
+	url = https://github.com/anacrolix/envpprof
+[submodule "log"]
+	path = log
+	url = https://github.com/anacrolix/log
