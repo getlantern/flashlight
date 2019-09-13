@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/anacrolix/confluence/confluence"
+	"github.com/anacrolix/missinggo/conntrack"
 	"github.com/anacrolix/torrent"
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/eventual"
@@ -276,6 +277,19 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		cfg := torrent.NewDefaultClientConfig()
 		cfg.DataDir = replicaDataDir
 		cfg.Seed = true
+		cfg.Debug = true
+		// Pending a packet rate limit to prevent network overload and DNS failure. Also using S3 as
+		// a fallback means we have a great tracker to rely on.
+		cfg.NoDHT = true
+		// Household users may be behind a NAT/bad router, or on a limited device like a mobile. We
+		// don't want to overload their networks, so ensure the default connection tracking
+		// behaviour.
+		cfg.ConnTracker = conntrack.NewInstance()
+		// Helps debug connection tracking, for best configuring DHT and other limits.
+		http.HandleFunc("/debug/conntrack", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/plain")
+			cfg.ConnTracker.PrintStatus(w)
+		})
 		torrentClient, err := torrent.NewClient(cfg)
 		if err != nil {
 			log.Errorf("error starting torrent client: %v", err)
