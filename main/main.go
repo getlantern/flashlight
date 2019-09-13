@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/anacrolix/envpprof"
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
