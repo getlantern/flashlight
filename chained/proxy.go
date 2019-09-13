@@ -83,6 +83,9 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 	}
 	switch transport {
 	case "", "http", "https", "utphttp", "utphttps":
+		if true {
+			return nil, errors.New("Not supporting %v", transport)
+		}
 		transport := "http"
 		if isUTP {
 			transport = "utphttp"
@@ -102,12 +105,21 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		}
 		return p, err
 	case "obfs4", "utpobfs4":
+		if true {
+			return nil, errors.New("Not supporting %v", transport)
+		}
 		return newOBFS4Proxy(name, transport, proto, s, uc)
 	case "lampshade":
 		return newLampshadeProxy(name, transport, proto, s, uc)
 	case "quic", "oquic":
+		if true {
+			return nil, errors.New("Not supporting %v", transport)
+		}
 		return newQUICProxy(name, s, uc)
 	case "wss":
+		if true {
+			return nil, errors.New("Not supporting %v", transport)
+		}
 		return newWSSProxy(name, s, uc)
 	default:
 		return nil, errors.New("Unknown transport: %v", s.PluggableTransport).With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
