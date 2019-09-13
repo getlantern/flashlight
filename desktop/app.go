@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/anacrolix/confluence/confluence"
+	analog "github.com/anacrolix/log" // heuheuehue
 	"github.com/anacrolix/missinggo/conntrack"
 	"github.com/anacrolix/torrent"
 	"github.com/getlantern/appdir"
@@ -278,6 +279,9 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		cfg.DataDir = replicaDataDir
 		cfg.Seed = true
 		cfg.Debug = true
+		cfg.Logger = cfg.Logger.WithFilter(func(m analog.Msg) bool {
+			return !m.HasValue("upnp-discover")
+		})
 		// Pending a packet rate limit to prevent network overload and DNS failure. Also using S3 as
 		// a fallback means we have a great tracker to rely on.
 		cfg.NoDHT = true
