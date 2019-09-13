@@ -19,8 +19,9 @@ import (
 type ReplicaHttpServer struct {
 	// This is the S3 key prefix used to group uploads for listing.
 	InstancePrefix string
-	Confluence     confluence.Handler
-	TorrentClient  *torrent.Client
+	// Used to handle non-Replica specific routes. (All the hard work has been done!).
+	Confluence    confluence.Handler
+	TorrentClient *torrent.Client
 	// Where to store torrent client data.
 	StorageDirectory string
 }
