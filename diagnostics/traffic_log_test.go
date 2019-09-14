@@ -19,8 +19,7 @@ func TestTrafficLog(t *testing.T) {
 	}
 
 	const (
-		// TODO: make TrafficLog handle concurrent captures and bump this number up
-		captureAddresses     = 1
+		captureAddresses     = 5
 		serverResponseString = "TestCaptureProxyTraffic test server response"
 
 		// Make the buffers large enough that we will not lose any packets.

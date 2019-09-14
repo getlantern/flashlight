@@ -142,12 +142,15 @@ type captureInfo struct {
 // Captured packets are saved in a ring buffer and may be overwritten by newly captured packets. At
 // any time, a group of packets can be saved by calling SaveCaptures. These saved captures can then
 // be written out in pcapng format using WritePcapng.
-// TODO: determine if these methods need to be concurrency safe
 type TrafficLog struct {
 	captureBuffer *byteSliceRingMap
 	savedCaptures *byteSliceRingMap
 	captureInfo   map[string]captureInfo
 	captureProcs  map[string]*captureProcess
+
+	// Protects savedCaptures, captureInfo, and captureProcs. The captureBuffer is written to by
+	// captureProcesses which do not respect this lock.
+	mu sync.Mutex
 }
 
 // NewTrafficLog returns a new TrafficLog. Capture will begin for the input addresses. This is a
@@ -163,6 +166,7 @@ func NewTrafficLog(addresses []string, captureBytes, saveBytes int) (*TrafficLog
 		newByteSliceRingMap(saveBytes),
 		map[string]captureInfo{},
 		map[string]*captureProcess{},
+		sync.Mutex{},
 	}
 	if err := tl.UpdateAddresses(addresses); err != nil {
 		return nil, err
@@ -177,6 +181,9 @@ func NewTrafficLog(addresses []string, captureBytes, saveBytes int) (*TrafficLog
 // If an error is returned, the addresses have not been updated. In otherwise, a partial update is
 // not possible.
 func (tl *TrafficLog) UpdateAddresses(addresses []string) error {
+	tl.mu.Lock()
+	defer tl.mu.Unlock()
+
 	newCaptureProcs := map[string]*captureProcess{}
 	stopAllNewCaptures := func() {
 		for _, proc := range newCaptureProcs {
@@ -210,6 +217,9 @@ func (tl *TrafficLog) UpdateAddresses(addresses []string) error {
 // specifically for saved captures. Saved packets will only be overwritten upon future calls to
 // SaveCaptures.
 func (tl *TrafficLog) SaveCaptures(address string, d time.Duration) error {
+	tl.mu.Lock()
+	defer tl.mu.Unlock()
+
 	proc, ok := tl.captureProcs[address]
 	if !ok {
 		// Not really an error as it's possible the capture process has simply stopped.
@@ -241,6 +251,9 @@ func (tl *TrafficLog) SaveCaptures(address string, d time.Duration) error {
 
 // WritePcapng writes saved captures in pcapng file format.
 func (tl *TrafficLog) WritePcapng(w io.Writer) error {
+	tl.mu.Lock()
+	defer tl.mu.Unlock()
+
 	// If other link types are needed, they will be added to the writer in calls to addInterface.
 	pcapW, err := pcapgo.NewNgWriter(w, layers.LinkTypeEthernet)
 	if err != nil {
@@ -303,6 +316,9 @@ func (tl *TrafficLog) WritePcapng(w io.Writer) error {
 
 // Close the TrafficLog. All captures will stop and the log will be cleared.
 func (tl *TrafficLog) Close() error {
+	tl.mu.Lock()
+	defer tl.mu.Unlock()
+
 	for _, proc := range tl.captureProcs {
 		proc.stop()
 	}
