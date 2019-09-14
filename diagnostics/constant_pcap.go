@@ -223,7 +223,7 @@ func (tl *TrafficLog) SaveCaptures(address string, d time.Duration) error {
 		}
 	}
 	if numErrors > 0 {
-		return errors.New("%d errors saving packets; last error: %v", lastError)
+		return errors.New("%d errors saving packets; last error: %v", numErrors, lastError)
 	}
 	return nil
 }

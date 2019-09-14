@@ -1,88 +1,78 @@
 package diagnostics
 
 import (
-	"bytes"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestByteSliceRing(t *testing.T) {
+	// TODO: test onDelete
+
 	// Write 10 slices of length 10 to a ring of length 100.
 
-	buf := newByteSliceRingBuffer(100)
+	buf := newByteSliceRingMap(100)
+	expectedValues := map[string][]byte{}
 	for i := 0; i < 100; i = i + 10 {
 		b := []byte{}
 		for j := 0; j < 10; j++ {
 			b = append(b, byte(i+j))
 		}
-		n, err := buf.Write(b)
-		require.Equal(t, 10, n)
-		require.NoError(t, err)
+		key := strconv.Itoa(i)
+		require.NoError(t, buf.put(key, b, nil))
+		expectedValues[key] = b
 	}
 
-	bytesBuf := new(bytes.Buffer)
-	n, err := buf.WriteTo(bytesBuf)
-	require.NoError(t, err)
-	require.Equal(t, int64(100), n)
-
-	bufBytes := bytesBuf.Bytes()
-	require.Equal(t, 100, len(bufBytes))
-
-	for i := 0; i < 100; i++ {
-		require.Equal(t, i, int(bufBytes[i]))
-	}
+	buf.forEach(func(key string, value []byte) {
+		expectedValue, ok := expectedValues[key]
+		require.True(t, ok, "unexpected key: %s", key)
+		require.Equal(t, expectedValue, value)
+	})
 
 	// Write 10 slices of length 10 to a ring of length 99. The first slice should get deleted to
 	// make room for the last.
 
-	buf = newByteSliceRingBuffer(99)
+	buf = newByteSliceRingMap(99)
+	expectedValues = map[string][]byte{}
 	for i := 0; i < 100; i = i + 10 {
 		b := []byte{}
 		for j := 0; j < 10; j++ {
 			b = append(b, byte(i+j))
 		}
-		n, err := buf.Write(b)
-		require.Equal(t, 10, n)
-		require.NoError(t, err)
+		key := strconv.Itoa(i)
+		require.NoError(t, buf.put(key, b, nil))
+		expectedValues[key] = b
 	}
 
-	bytesBuf = new(bytes.Buffer)
-	n, err = buf.WriteTo(bytesBuf)
-	require.NoError(t, err)
-	require.Equal(t, int64(90), n)
-
-	bufBytes = bytesBuf.Bytes()
-	require.Equal(t, 90, len(bufBytes))
-
-	for i := 0; i < 90; i++ {
-		require.Equal(t, i+10, int(bufBytes[i]))
-	}
+	delete(expectedValues, "0")
+	buf.forEach(func(key string, value []byte) {
+		expectedValue, ok := expectedValues[key]
+		require.True(t, ok, "unexpected key: %s", key)
+		require.Equal(t, expectedValue, value)
+	})
 
 	// Write 2 slices of length 10 to a ring of length 19. Again, the first slice should get deleted.
 
-	buf = newByteSliceRingBuffer(19)
+	buf = newByteSliceRingMap(19)
+	expectedValues = map[string][]byte{}
 	for i := 0; i < 20; i = i + 10 {
 		b := []byte{}
 		for j := 0; j < 10; j++ {
 			b = append(b, byte(i+j))
 		}
-		n, err := buf.Write(b)
-		require.Equal(t, 10, n)
-		require.NoError(t, err)
+		key := strconv.Itoa(i)
+		require.NoError(t, buf.put(key, b, nil))
+		expectedValues[key] = b
 	}
 
-	bytesBuf = new(bytes.Buffer)
-	n, err = buf.WriteTo(bytesBuf)
-	require.NoError(t, err)
-	require.Equal(t, int64(10), n)
+	delete(expectedValues, "0")
+	buf.forEach(func(key string, value []byte) {
+		expectedValue, ok := expectedValues[key]
+		require.True(t, ok, "unexpected key: %s", key)
+		require.Equal(t, expectedValue, value)
+	})
 
-	bufBytes = bytesBuf.Bytes()
-	require.Equal(t, 10, len(bufBytes))
-
-	for i := 0; i < 10; i++ {
-		require.Equal(t, i+10, int(bufBytes[i]))
-	}
 }
 
 func TestByteSliceQueue(t *testing.T) {
