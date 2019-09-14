@@ -16,6 +16,9 @@ import (
 	"github.com/google/gopacket/pcapgo"
 )
 
+// Warning: do not set to >= 1 second: https://github.com/google/gopacket/issues/499
+const packetReadTimeout = 100 * time.Millisecond
+
 type capturedPacket struct {
 	data []byte
 	info gopacket.CaptureInfo
