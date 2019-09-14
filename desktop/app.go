@@ -31,6 +31,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/datacap"
+	"github.com/getlantern/flashlight/diagnostics"
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/notifier"
@@ -47,6 +48,14 @@ var (
 	settings *Settings
 
 	startTime = time.Now()
+)
+
+const (
+	// Bytes allocated to the App.trafficLog's buffer.
+	trafficLogBytes = 10 * 1024 * 1024
+
+	// Bytes allocated to the App.trafficLog's saved packets buffer.
+	trafficLogSavedBytes = 1024 * 1024
 )
 
 func init() {
@@ -69,6 +78,10 @@ type App struct {
 
 	uiServer *ui.Server
 	ws       ws.UIChannel
+
+	// Log of network traffic to and from the proxies. Used to attach packet capture files to
+	// reported issues.
+	trafficLog *diagnostics.TrafficLog
 
 	proxiesMap     map[string]*chained.ChainedServerInfo
 	proxiesMapLock sync.RWMutex
@@ -93,6 +106,7 @@ func (app *App) Init() {
 		app.statsTracker.SetHitDataCap(hitDataCap)
 	})
 	app.ws = ws.NewUIChannel()
+	app.trafficLog = diagnostics.NewTrafficLog(trafficLogBytes, trafficLogSavedBytes)
 }
 
 // loadSettings loads the initial settings at startup, either from disk or using defaults.
@@ -423,6 +437,13 @@ func (app *App) onConfigUpdate(cfg *config.Global) {
 func (app *App) onProxiesUpdate(proxiesMap map[string]*chained.ChainedServerInfo) {
 	app.proxiesMapLock.Lock()
 	app.proxiesMap = proxiesMap
+	proxyAddresses := []string{}
+	for _, serverInfo := range proxiesMap {
+		proxyAddresses = append(proxyAddresses, serverInfo.Addr)
+	}
+	if err := app.trafficLog.UpdateAddresses(proxyAddresses); err != nil {
+		log.Errorf("failed to update traffic log addresses: %v", err)
+	}
 	app.proxiesMapLock.Unlock()
 }
 

@@ -42,8 +42,8 @@ func TestTrafficLog(t *testing.T) {
 		addresses[i] = strings.Replace(servers[i].URL, "http://", "", -1)
 	}
 
-	tl, err := NewTrafficLog(addresses, captureBufferSize, saveBufferSize)
-	require.NoError(t, err)
+	tl := NewTrafficLog(captureBufferSize, saveBufferSize)
+	require.NoError(t, tl.UpdateAddresses(addresses))
 	defer tl.Close()
 
 	time.Sleep(500 * time.Millisecond)

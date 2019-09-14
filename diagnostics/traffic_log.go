@@ -160,25 +160,20 @@ type TrafficLog struct {
 	mu sync.Mutex
 }
 
-// NewTrafficLog returns a new TrafficLog. Capture will begin for the input addresses. This is a
-// non-blocking function.
+// NewTrafficLog returns a new TrafficLog. Start capture by calling UpdateAddresses.
 //
 // Captured packets will be saved in a fixed-size ring buffer, the size of which is specified by
 // captureBytes. At any time, a group of captured packets can be saved by calling SaveCaptures. This
 // moves packets captured for a specified address and time period into a separate fixed-size ring
 // buffer. The size of this buffer is specified by saveBytes.
-func NewTrafficLog(addresses []string, captureBytes, saveBytes int) (*TrafficLog, error) {
-	tl := TrafficLog{
+func NewTrafficLog(captureBytes, saveBytes int) *TrafficLog {
+	return &TrafficLog{
 		newByteSliceRingMap(captureBytes),
 		newByteSliceRingMap(saveBytes),
 		map[string]captureInfo{},
 		map[string]*captureProcess{},
 		sync.Mutex{},
 	}
-	if err := tl.UpdateAddresses(addresses); err != nil {
-		return nil, err
-	}
-	return &tl, nil
 }
 
 // UpdateAddresses updates the addresses for which traffic is being captured. Capture will begin (or
