@@ -11,11 +11,12 @@ import (
 	"github.com/getlantern/yaml"
 )
 
-// When a user chooses to run diagnostics, we will capture all proxy traffic for captureDuration.
-const captureDuration = 30 * time.Second
+// When a user chooses to run diagnostics, we also attach a packet capture file, generated from the
+// application's traffic log. This figure controls how far back in the log we go.
+const captureSaveDuration = 5 * time.Minute
 
 // runDiagnostics for the desktop app. Any of the return values may be nil.
-func runDiagnostics(proxiesMap map[string]*chained.ChainedServerInfo) (
+func runDiagnostics(proxiesMap map[string]*chained.ChainedServerInfo, trafficLog *diagnostics.TrafficLog) (
 	reportYAML []byte, zippedCapture []byte, errs []error) {
 
 	var err error
@@ -25,7 +26,12 @@ func runDiagnostics(proxiesMap map[string]*chained.ChainedServerInfo) (
 	if err != nil {
 		errs = append(errs, errors.New("failed to encode diagnostics report: %v", err))
 	}
-	zippedCapture, err = captureAndZipProxyTraffic(proxiesMap)
+
+	proxyAddresses := []string{}
+	for _, serverInfo := range proxiesMap {
+		proxyAddresses = append(proxyAddresses, serverInfo.Addr)
+	}
+	zippedCapture, err = saveAndZipProxyTraffic(proxyAddresses, trafficLog)
 	if err != nil {
 		errs = append(errs, errors.New("failed to capture proxy traffic: %v", err))
 	}
@@ -36,7 +42,7 @@ func runDiagnostics(proxiesMap map[string]*chained.ChainedServerInfo) (
 	return
 }
 
-func captureAndZipProxyTraffic(proxiesMap map[string]*chained.ChainedServerInfo) ([]byte, error) {
+func saveAndZipProxyTraffic(addresses []string, trafficLog *diagnostics.TrafficLog) ([]byte, error) {
 	zippedCapture := new(bytes.Buffer)
 	zipWriter := zip.NewWriter(zippedCapture)
 	defer zipWriter.Close()
@@ -45,13 +51,13 @@ func captureAndZipProxyTraffic(proxiesMap map[string]*chained.ChainedServerInfo)
 	if err != nil {
 		return nil, errors.New("failed to create zip file for capture: %v", err)
 	}
-
-	captureConfig := diagnostics.CaptureConfig{
-		StopChannel: diagnostics.CloseAfter(captureDuration),
-		Output:      captureWriter,
+	for _, addr := range addresses {
+		if err := trafficLog.SaveCaptures(addr, captureSaveDuration); err != nil {
+			return nil, errors.New("failed to save captures for %s: %v", addr, err)
+		}
 	}
-	if err = diagnostics.CaptureProxyTraffic(proxiesMap, &captureConfig); err != nil {
-		return nil, err
+	if err := trafficLog.WritePcapng(captureWriter); err != nil {
+		return nil, errors.New("failed to write saved captures to zip: %v", err)
 	}
 	return zippedCapture.Bytes(), nil
 }
