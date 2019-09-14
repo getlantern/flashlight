@@ -104,7 +104,9 @@ func startCapture(addr string, buffer *byteSliceRingMap) (*captureProcess, error
 					log.Errorf("failed to write packet to capture buffer: %v", err)
 					continue
 				}
+				proc.captureInfoLock.Lock()
 				proc.captureInfo[ts] = pkt.Metadata().CaptureInfo
+				proc.captureInfoLock.Unlock()
 			case <-proc.stopChan:
 				handle.Close()
 				return
@@ -258,7 +260,7 @@ func (tl *TrafficLog) WritePcapng(w io.Writer) error {
 	tl.mu.Lock()
 	defer tl.mu.Unlock()
 
-	// If other link types are needed, they will be added to the writer in calls to addInterface.
+	// If other link types are needed, they will be added to the writer in calls to AddInterface.
 	pcapW, err := pcapgo.NewNgWriter(w, layers.LinkTypeEthernet)
 	if err != nil {
 		return errors.New("failed to initialize pcapng writer: %v", err)
