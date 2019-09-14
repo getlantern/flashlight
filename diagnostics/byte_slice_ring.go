@@ -102,8 +102,3 @@ func (q *queue) dequeue() interface{} {
 	}
 	return dequeued.value
 }
-
-type byteSliceQueueNode struct {
-	next  *byteSliceQueueNode
-	value []byte
-}
