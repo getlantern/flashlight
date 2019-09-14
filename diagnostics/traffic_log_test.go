@@ -46,13 +46,13 @@ func TestTrafficLog(t *testing.T) {
 	tl, err := NewTrafficLog(addresses, captureBufferSize, saveBufferSize)
 	require.NoError(t, err)
 
-	time.Sleep(time.Second)
+	time.Sleep(500 * time.Millisecond)
 	for _, s := range servers {
 		_, err := http.Get(s.URL)
 		require.NoError(t, err)
 	}
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(500 * time.Millisecond)
 	for _, addr := range addresses {
 		require.NoError(t, tl.SaveCaptures(addr, time.Minute))
 	}
