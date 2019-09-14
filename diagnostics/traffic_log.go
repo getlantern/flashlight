@@ -9,11 +9,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/errors"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	"github.com/google/gopacket/pcapgo"
+
+	"github.com/getlantern/errors"
 )
 
 // Warning: do not set to >= 1 second: https://github.com/google/gopacket/issues/499
@@ -190,31 +191,33 @@ func (tl *TrafficLog) UpdateAddresses(addresses []string) error {
 	tl.mu.Lock()
 	defer tl.mu.Unlock()
 
-	newCaptureProcs := map[string]*captureProcess{}
+	newCaptureProcs := []*captureProcess{}
 	stopAllNewCaptures := func() {
 		for _, proc := range newCaptureProcs {
 			proc.stop()
 		}
 	}
 
+	captureProcs := map[string]*captureProcess{}
 	for _, addr := range addresses {
 		if proc, ok := tl.captureProcs[addr]; ok {
-			newCaptureProcs[addr] = proc
+			captureProcs[addr] = proc
 		} else {
 			proc, err := startCapture(addr, tl.captureBuffer)
 			if err != nil {
 				stopAllNewCaptures()
 				return errors.New("failed to start capture for %s: %v", addr, err)
 			}
-			newCaptureProcs[addr] = proc
+			captureProcs[addr] = proc
+			newCaptureProcs = append(newCaptureProcs, proc)
 		}
 	}
 	for addr, proc := range tl.captureProcs {
-		if _, ok := newCaptureProcs[addr]; !ok {
+		if _, ok := captureProcs[addr]; !ok {
 			proc.stop()
 		}
 	}
-	tl.captureProcs = newCaptureProcs
+	tl.captureProcs = captureProcs
 	return nil
 }
 
