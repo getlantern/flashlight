@@ -1,6 +1,8 @@
 package diagnostics
 
 import (
+	"sync"
+
 	"github.com/getlantern/errors"
 )
 
@@ -14,19 +16,23 @@ type ringMapEntry struct {
 // maximum size. As slices are written, old slices are deleted (in FIFO order) as necessary to make
 // room. Slices are written along with a key which can then be used to query the slice, provided it
 // has not yet been deleted.
-// TODO: this needs to be concurrency safe
 type byteSliceRingMap struct {
 	q                *queue
 	m                map[string][]byte
 	totalLen, maxLen int
+
+	sync.Mutex
 }
 
 func newByteSliceRingMap(maxLen int) *byteSliceRingMap {
-	return &byteSliceRingMap{new(queue), map[string][]byte{}, 0, maxLen}
+	return &byteSliceRingMap{new(queue), map[string][]byte{}, 0, maxLen, sync.Mutex{}}
 }
 
 // put a new slice in the ring map. This may cause old slices to get deleted. onDelete may be nil.
 func (buf *byteSliceRingMap) put(key string, b []byte, onDelete func()) error {
+	buf.Lock()
+	defer buf.Unlock()
+
 	if onDelete == nil {
 		onDelete = func() {}
 	}
@@ -47,6 +53,9 @@ func (buf *byteSliceRingMap) put(key string, b []byte, onDelete func()) error {
 }
 
 func (buf *byteSliceRingMap) get(key string) (b []byte, ok bool) {
+	buf.Lock()
+	defer buf.Unlock()
+
 	b, ok = buf.m[key]
 	return
 }

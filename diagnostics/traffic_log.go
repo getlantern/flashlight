@@ -6,6 +6,7 @@ import (
 	"net"
 	"runtime"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/getlantern/errors"
@@ -20,13 +21,13 @@ type capturedPacket struct {
 	info gopacket.CaptureInfo
 }
 
-// TODO: needs to be concurrency safe
 type captureProcess struct {
-	addr           string
-	buffer         *byteSliceRingMap
-	iface          *networkInterface
-	captureInfoMap map[time.Time]gopacket.CaptureInfo
-	stopChan       chan struct{}
+	addr            string
+	buffer          *byteSliceRingMap
+	iface           *networkInterface
+	captureInfo     map[time.Time]gopacket.CaptureInfo
+	captureInfoLock sync.Mutex
+	stopChan        chan struct{}
 }
 
 // startCapture for the input address, saving packets to the provided buffer. Non-blocking.
@@ -76,11 +77,12 @@ func startCapture(addr string, buffer *byteSliceRingMap) (*captureProcess, error
 	}
 	pktSrc := gopacket.NewPacketSource(handle, layerType).Packets()
 	proc := captureProcess{
-		addr:           addr,
-		buffer:         buffer,
-		iface:          iface,
-		captureInfoMap: map[time.Time]gopacket.CaptureInfo{},
-		stopChan:       make(chan struct{}),
+		addr:            addr,
+		buffer:          buffer,
+		iface:           iface,
+		captureInfo:     map[time.Time]gopacket.CaptureInfo{},
+		captureInfoLock: sync.Mutex{},
+		stopChan:        make(chan struct{}),
 	}
 
 	go func() {
@@ -89,12 +91,17 @@ func startCapture(addr string, buffer *byteSliceRingMap) (*captureProcess, error
 			case pkt := <-pktSrc:
 				ts := pkt.Metadata().Timestamp
 				pid := getPktID(addr, ts)
-				err := proc.buffer.put(pid, pkt.Data(), func() { delete(proc.captureInfoMap, ts) })
+				onDelete := func() {
+					proc.captureInfoLock.Lock()
+					delete(proc.captureInfo, ts)
+					proc.captureInfoLock.Unlock()
+				}
+				err := proc.buffer.put(pid, pkt.Data(), onDelete)
 				if err != nil {
 					log.Errorf("failed to write packet to capture buffer: %v", err)
 					continue
 				}
-				proc.captureInfoMap[ts] = pkt.Metadata().CaptureInfo
+				proc.captureInfo[ts] = pkt.Metadata().CaptureInfo
 			case <-proc.stopChan:
 				handle.Close()
 			}
@@ -104,14 +111,17 @@ func startCapture(addr string, buffer *byteSliceRingMap) (*captureProcess, error
 	return &proc, nil
 }
 
-func (cp captureProcess) stop() {
+func (cp *captureProcess) stop() {
 	close(cp.stopChan)
 }
 
 // Packets are not returned sorted.
-func (cp captureProcess) capturedSince(t time.Time) []capturedPacket {
+func (cp *captureProcess) capturedSince(t time.Time) []capturedPacket {
+	cp.captureInfoLock.Lock()
+	defer cp.captureInfoLock.Unlock()
+
 	capturedSince := []capturedPacket{}
-	for timestamp, ci := range cp.captureInfoMap {
+	for timestamp, ci := range cp.captureInfo {
 		if t.After(timestamp) {
 			continue
 		}
@@ -136,8 +146,8 @@ type captureInfo struct {
 type TrafficLog struct {
 	captureBuffer *byteSliceRingMap
 	savedCaptures *byteSliceRingMap
-	captureInfos  map[string]captureInfo
-	captureProcs  map[string]captureProcess
+	captureInfo   map[string]captureInfo
+	captureProcs  map[string]*captureProcess
 }
 
 // NewTrafficLog returns a new TrafficLog. Capture will begin for the input addresses. This is a
@@ -152,7 +162,7 @@ func NewTrafficLog(addresses []string, captureBytes, saveBytes int) (*TrafficLog
 		newByteSliceRingMap(captureBytes),
 		newByteSliceRingMap(saveBytes),
 		map[string]captureInfo{},
-		map[string]captureProcess{},
+		map[string]*captureProcess{},
 	}
 	if err := tl.UpdateAddresses(addresses); err != nil {
 		return nil, err
@@ -167,7 +177,7 @@ func NewTrafficLog(addresses []string, captureBytes, saveBytes int) (*TrafficLog
 // If an error is returned, the addresses have not been updated. In otherwise, a partial update is
 // not possible.
 func (tl *TrafficLog) UpdateAddresses(addresses []string) error {
-	newCaptureProcs := map[string]captureProcess{}
+	newCaptureProcs := map[string]*captureProcess{}
 	stopAllNewCaptures := func() {
 		for _, proc := range newCaptureProcs {
 			proc.stop()
@@ -183,7 +193,7 @@ func (tl *TrafficLog) UpdateAddresses(addresses []string) error {
 				stopAllNewCaptures()
 				return errors.New("failed to start capture for %s: %v", addr, err)
 			}
-			newCaptureProcs[addr] = *proc
+			newCaptureProcs[addr] = proc
 		}
 	}
 	for addr, proc := range tl.captureProcs {
@@ -215,12 +225,12 @@ func (tl *TrafficLog) SaveCaptures(address string, d time.Duration) error {
 	)
 	for _, capture := range captures {
 		pid := getPktID(address, capture.info.Timestamp)
-		err := tl.savedCaptures.put(pid, capture.data, func() { delete(tl.captureInfos, pid) })
+		err := tl.savedCaptures.put(pid, capture.data, func() { delete(tl.captureInfo, pid) })
 		if err != nil {
 			numErrors++
 			lastError = err
 		} else {
-			tl.captureInfos[pid] = captureInfo{capture.info, proc.iface}
+			tl.captureInfo[pid] = captureInfo{capture.info, proc.iface}
 		}
 	}
 	if numErrors > 0 {
@@ -262,7 +272,7 @@ func (tl *TrafficLog) WritePcapng(w io.Writer) error {
 	)
 	// TODO: do we need the statistics?
 	tl.savedCaptures.forEach(func(pktID string, pktData []byte) {
-		ci, ok := tl.captureInfos[pktID]
+		ci, ok := tl.captureInfo[pktID]
 		if !ok {
 			numErrors++
 			lastError = errors.New("could not find capture info for packet")
@@ -298,7 +308,7 @@ func (tl *TrafficLog) Close() error {
 	}
 	tl.captureBuffer = nil
 	tl.savedCaptures = nil
-	tl.captureInfos = nil
+	tl.captureInfo = nil
 	tl.captureProcs = nil
 	return nil
 }
