@@ -8,8 +8,6 @@ import (
 )
 
 func TestByteSliceRing(t *testing.T) {
-	// TODO: test onDelete
-
 	// Write 10 slices of length 10 to a ring of length 100.
 
 	buf := newByteSliceRingMap(100)
@@ -20,7 +18,7 @@ func TestByteSliceRing(t *testing.T) {
 			b = append(b, byte(i+j))
 		}
 		key := strconv.Itoa(i)
-		require.NoError(t, buf.put(key, b, nil))
+		require.NoError(t, buf.put(key, b, func() { t.Fatal("unexpected deletion") }))
 		expectedValues[key] = b
 	}
 
@@ -35,17 +33,22 @@ func TestByteSliceRing(t *testing.T) {
 
 	buf = newByteSliceRingMap(99)
 	expectedValues = map[string][]byte{}
+	onDeleteCalled := false
 	for i := 0; i < 100; i = i + 10 {
 		b := []byte{}
 		for j := 0; j < 10; j++ {
 			b = append(b, byte(i+j))
 		}
 		key := strconv.Itoa(i)
-		require.NoError(t, buf.put(key, b, nil))
-		expectedValues[key] = b
+		if i == 0 {
+			require.NoError(t, buf.put(key, b, func() { onDeleteCalled = true }))
+		} else {
+			require.NoError(t, buf.put(key, b, nil))
+			expectedValues[key] = b
+		}
 	}
 
-	delete(expectedValues, "0")
+	require.True(t, onDeleteCalled)
 	buf.forEach(func(key string, value []byte) {
 		expectedValue, ok := expectedValues[key]
 		require.True(t, ok, "unexpected key: %s", key)
@@ -56,23 +59,27 @@ func TestByteSliceRing(t *testing.T) {
 
 	buf = newByteSliceRingMap(19)
 	expectedValues = map[string][]byte{}
+	onDeleteCalled = false
 	for i := 0; i < 20; i = i + 10 {
 		b := []byte{}
 		for j := 0; j < 10; j++ {
 			b = append(b, byte(i+j))
 		}
 		key := strconv.Itoa(i)
-		require.NoError(t, buf.put(key, b, nil))
-		expectedValues[key] = b
+		if i == 0 {
+			require.NoError(t, buf.put(key, b, func() { onDeleteCalled = true }))
+		} else {
+			require.NoError(t, buf.put(key, b, nil))
+			expectedValues[key] = b
+		}
 	}
 
-	delete(expectedValues, "0")
+	require.True(t, onDeleteCalled)
 	buf.forEach(func(key string, value []byte) {
 		expectedValue, ok := expectedValues[key]
 		require.True(t, ok, "unexpected key: %s", key)
 		require.Equal(t, expectedValue, value)
 	})
-
 }
 
 func TestByteSliceQueue(t *testing.T) {
