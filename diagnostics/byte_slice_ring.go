@@ -61,6 +61,9 @@ func (buf *byteSliceRingMap) get(key string) (b []byte, ok bool) {
 }
 
 func (buf *byteSliceRingMap) forEach(do func(key string, value []byte)) {
+	buf.Lock()
+	defer buf.Unlock()
+
 	for k, v := range buf.m {
 		do(k, v)
 	}
