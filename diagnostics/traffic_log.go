@@ -180,7 +180,7 @@ func NewTrafficLog(captureBytes, saveBytes int) *TrafficLog {
 // continue) for all addresses in the input slice. Capture will be stopped for any addresses not in
 // the input slice.
 //
-// If an error is returned, the addresses have not been updated. In otherwise, a partial update is
+// If an error is returned, the addresses have not been updated. In other words, a partial update is
 // not possible.
 func (tl *TrafficLog) UpdateAddresses(addresses []string) error {
 	tl.mu.Lock()
