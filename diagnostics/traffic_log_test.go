@@ -45,6 +45,7 @@ func TestTrafficLog(t *testing.T) {
 
 	tl, err := NewTrafficLog(addresses, captureBufferSize, saveBufferSize)
 	require.NoError(t, err)
+	defer tl.Close()
 
 	time.Sleep(500 * time.Millisecond)
 	for _, s := range servers {

@@ -133,7 +133,6 @@ type captureInfo struct {
 // any time, a group of packets can be saved by calling SaveCaptures. These saved captures can then
 // be written out in pcapng format using WritePcapng.
 // TODO: determine if these methods need to be concurrency safe
-// TODO: implement Close
 type TrafficLog struct {
 	captureBuffer *byteSliceRingMap
 	savedCaptures *byteSliceRingMap
@@ -289,6 +288,18 @@ func (tl *TrafficLog) WritePcapng(w io.Writer) error {
 	if err := pcapW.Flush(); err != nil {
 		return errors.New("failed to flush writer: %v", err)
 	}
+	return nil
+}
+
+// Close the TrafficLog. All captures will stop and the log will be cleared.
+func (tl *TrafficLog) Close() error {
+	for _, proc := range tl.captureProcs {
+		proc.stop()
+	}
+	tl.captureBuffer = nil
+	tl.savedCaptures = nil
+	tl.captureInfos = nil
+	tl.captureProcs = nil
 	return nil
 }
 
