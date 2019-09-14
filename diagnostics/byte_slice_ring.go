@@ -1,8 +1,6 @@
 package diagnostics
 
 import (
-	"io"
-
 	"github.com/getlantern/errors"
 )
 
@@ -59,45 +57,6 @@ func (buf *byteSliceRingMap) forEach(do func(key string, value []byte)) {
 	}
 }
 
-// TODO: evaluate whether this needs to be concurrency-safe
-type byteSliceRing struct {
-	slices           *byteSliceQueue
-	totalLen, maxLen int
-}
-
-func newByteSliceRingBuffer(maxLen int) *byteSliceRing {
-	return &byteSliceRing{new(byteSliceQueue), 0, maxLen}
-}
-
-// Write the slice to the buffer. If the slice overflows the buffer, the oldest slice(s) will be
-// deleted to make room. Slices are deleted in their entirety.
-func (buf *byteSliceRing) Write(b []byte) (n int, err error) {
-	if len(b) > buf.maxLen {
-		return 0, errors.New("slice (len %d) is larger than ring (len %d)", len(b), buf.maxLen)
-	}
-
-	for buf.totalLen+len(b) > buf.maxLen {
-		buf.totalLen = buf.totalLen - len(buf.slices.dequeue())
-	}
-	buf.slices.enqueue(b)
-	buf.totalLen = buf.totalLen + len(b)
-	return len(b), nil
-}
-
-// WriteTo implements the io.WriterTo interface, writing the contents of the ring to w.
-func (buf *byteSliceRing) WriteTo(w io.Writer) (n int64, err error) {
-	var currentN int
-	buf.slices.forEach(func(b []byte) {
-		if err != nil {
-			// The io.WriterTo interfaces specifies that we stop on the first error.
-			return
-		}
-		currentN, err = w.Write(b)
-		n = n + int64(currentN)
-	})
-	return
-}
-
 type queueNode struct {
 	next  *queueNode
 	value interface{}
@@ -135,41 +94,4 @@ func (q *queue) dequeue() interface{} {
 type byteSliceQueueNode struct {
 	next  *byteSliceQueueNode
 	value []byte
-}
-
-// A queue with FIFO semantics. The zero value is an empty, ready-to-use queue.
-type byteSliceQueue struct {
-	first, last *byteSliceQueueNode
-}
-
-func (q *byteSliceQueue) enqueue(b []byte) {
-	if q.first == nil {
-		q.first = &byteSliceQueueNode{nil, b}
-		q.last = q.first
-		return
-	}
-	prevLast := q.last
-	q.last = &byteSliceQueueNode{nil, b}
-	prevLast.next = q.last
-}
-
-// Returns nil if the queue is empty.
-func (q *byteSliceQueue) dequeue() []byte {
-	if q.first == nil {
-		return nil
-	}
-	dequeued := q.first
-	q.first = dequeued.next
-	if q.first == nil {
-		q.last = nil
-	}
-	return dequeued.value
-}
-
-func (q *byteSliceQueue) forEach(f func(b []byte)) {
-	current := q.first
-	for current != nil {
-		f(current.value)
-		current = current.next
-	}
 }

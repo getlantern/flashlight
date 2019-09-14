@@ -82,27 +82,27 @@ func TestByteSliceRing(t *testing.T) {
 	})
 }
 
-func TestByteSliceQueue(t *testing.T) {
-	q := new(byteSliceQueue)
+func TestQueue(t *testing.T) {
+	q := new(queue)
 	for i := 0; i < 10; i++ {
-		q.enqueue([]byte{byte(i)})
+		q.enqueue(i)
 	}
 	for i := 0; i < 10; i++ {
-		require.Equal(t, i, int(q.dequeue()[0]))
+		require.Equal(t, i, q.dequeue())
 	}
 
-	q = new(byteSliceQueue)
+	q = new(queue)
 	for i := 0; i < 10; i++ {
-		q.enqueue([]byte{byte(i)})
+		q.enqueue(i)
 	}
 	for i := 0; i < 5; i++ {
 		q.dequeue()
 	}
 	for i := 10; i < 20; i++ {
-		q.enqueue([]byte{byte(i)})
+		q.enqueue(i)
 	}
 	for i := 5; i < 20; i++ {
-		require.Equal(t, i, int(q.dequeue()[0]))
+		require.Equal(t, i, q.dequeue())
 	}
 
 	// Further dequeue calls should just return nil.
@@ -112,9 +112,9 @@ func TestByteSliceQueue(t *testing.T) {
 
 	// The queue should still be usable.
 	for i := 0; i < 10; i++ {
-		q.enqueue([]byte{byte(i)})
+		q.enqueue(i)
 	}
 	for i := 0; i < 10; i++ {
-		require.Equal(t, i, int(q.dequeue()[0]))
+		require.Equal(t, i, q.dequeue())
 	}
 }
