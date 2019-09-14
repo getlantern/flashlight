@@ -112,10 +112,10 @@ func (cp captureProcess) stop() {
 func (cp captureProcess) capturedSince(t time.Time) []capturedPacket {
 	capturedSince := []capturedPacket{}
 	for timestamp, ci := range cp.captureInfoMap {
-		if !timestamp.After(t) {
+		if t.After(timestamp) {
 			continue
 		}
-		if pktData, ok := cp.buffer.get(getPktID(cp.addr, t)); ok {
+		if pktData, ok := cp.buffer.get(getPktID(cp.addr, timestamp)); ok {
 			capturedSince = append(capturedSince, capturedPacket{pktData, ci})
 		}
 	}
@@ -133,6 +133,7 @@ type captureInfo struct {
 // any time, a group of packets can be saved by calling SaveCaptures. These saved captures can then
 // be written out in pcapng format using WritePcapng.
 // TODO: determine if these methods need to be concurrency safe
+// TODO: implement Close
 type TrafficLog struct {
 	captureBuffer *byteSliceRingMap
 	savedCaptures *byteSliceRingMap
@@ -140,7 +141,8 @@ type TrafficLog struct {
 	captureProcs  map[string]captureProcess
 }
 
-// NewTrafficLog returns a new TrafficLog. Capture will begin for the input addresses.
+// NewTrafficLog returns a new TrafficLog. Capture will begin for the input addresses. This is a
+// non-blocking function.
 //
 // Captured packets will be saved in a fixed-size ring buffer, the size of which is specified by
 // captureBytes. At any time, a group of captured packets can be saved by calling SaveCaptures. This
@@ -291,5 +293,5 @@ func (tl *TrafficLog) WritePcapng(w io.Writer) error {
 }
 
 func getPktID(addr string, t time.Time) string {
-	return fmt.Sprintf("%s-%s", addr, t.Format(time.RFC3339))
+	return fmt.Sprintf("%s-%s", addr, t.Format(time.StampMicro))
 }
