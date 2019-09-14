@@ -104,6 +104,7 @@ func startCapture(addr string, buffer *byteSliceRingMap) (*captureProcess, error
 				proc.captureInfo[ts] = pkt.Metadata().CaptureInfo
 			case <-proc.stopChan:
 				handle.Close()
+				return
 			}
 		}
 	}()
