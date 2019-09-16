@@ -15,6 +15,9 @@ import (
 
 var log = golog.LoggerFor("goroutines")
 
+// Monitor keeps checking the number of goroutines in interval. If the number
+// reaching the limit, it logs the topN entries of the goroutine profile
+// whenever the number is higher than the previous check.
 func Monitor(interval time.Duration, limit int, topN int) (stop func()) {
 	chStop := make(chan struct{})
 	go func() {
@@ -26,7 +29,7 @@ func Monitor(interval time.Duration, limit int, topN int) (stop func()) {
 			case <-tk.C:
 				num := runtime.NumGoroutine()
 				if num >= limit && num > lastN {
-					printProfile(topN)
+					PrintProfile(topN)
 					lastN = num
 				} else {
 					log.Debugf("goroutine profile: total %v", num)
@@ -39,7 +42,8 @@ func Monitor(interval time.Duration, limit int, topN int) (stop func()) {
 	return func() { close(chStop) }
 }
 
-func printProfile(topN int) {
+// PrintProfile logs the topN entries of the goroutine profile
+func PrintProfile(topN int) {
 	var buf bytes.Buffer
 	p := pprof.Lookup("goroutine")
 	e := p.WriteTo(&buf, 1) // debug=1
