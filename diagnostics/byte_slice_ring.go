@@ -44,7 +44,8 @@ func (buf *byteSliceRingMap) put(key string, b []byte, onDelete func()) error {
 		dequeued := buf.q.dequeue().(ringMapEntry)
 		buf.totalLen = buf.totalLen - len(dequeued.value)
 		delete(buf.m, dequeued.key)
-		dequeued.onDelete()
+		// Process callback in a separate goroutine to avoid blocking progress of this function.
+		go dequeued.onDelete()
 	}
 	buf.q.enqueue(ringMapEntry{key, b, onDelete})
 	buf.m[key] = b
