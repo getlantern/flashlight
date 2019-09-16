@@ -239,7 +239,12 @@ func (tl *TrafficLog) SaveCaptures(address string, d time.Duration) error {
 	)
 	for _, capture := range captures {
 		pid := getPktID(address, capture.info.Timestamp)
-		err := tl.savedCaptures.put(pid, capture.data, func() { delete(tl.captureInfo, pid) })
+		onDelete := func() {
+			tl.mu.Lock()
+			delete(tl.captureInfo, pid)
+			tl.mu.Unlock()
+		}
+		err := tl.savedCaptures.put(pid, capture.data, onDelete)
 		if err != nil {
 			numErrors++
 			lastError = err
