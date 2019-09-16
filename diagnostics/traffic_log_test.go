@@ -20,7 +20,7 @@ func TestTrafficLog(t *testing.T) {
 
 	const (
 		captureAddresses     = 5
-		serverResponseString = "TestCaptureProxyTraffic test server response"
+		serverResponseString = "TestTrafficLog test server response"
 
 		// Make the buffers large enough that we will not lose any packets.
 		captureBufferSize = 1024 * 1024
