@@ -253,6 +253,7 @@ func (helper *Helper) startConfigServer() error {
 func (helper *Helper) serveConfig() func(http.ResponseWriter, *http.Request) {
 	return func(resp http.ResponseWriter, req *http.Request) {
 		log.Debugf("Reading request path: %v", req.URL.String())
+		defer log.Debugf("Done serving request path: %v", req.URL.String())
 		if strings.Contains(req.URL.String(), "global") {
 			helper.writeGlobalConfig(resp, req)
 		} else if strings.Contains(req.URL.String(), "prox") {
