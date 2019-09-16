@@ -285,7 +285,10 @@ func (helper *Helper) writeGlobalConfig(resp http.ResponseWriter, req *http.Requ
 	resp.WriteHeader(http.StatusOK)
 
 	w := gzip.NewWriter(resp)
-	w.Write(cfg)
+	_, err = w.Write(cfg)
+	if err != nil {
+		helper.t.Error(err)
+	}
 	w.Close()
 }
 
@@ -329,7 +332,10 @@ func (helper *Helper) writeProxyConfig(resp http.ResponseWriter, req *http.Reque
 	resp.WriteHeader(http.StatusOK)
 
 	w := gzip.NewWriter(resp)
-	w.Write(cfg)
+	_, err = w.Write(cfg)
+	if err != nil {
+		helper.t.Error(err)
+	}
 	w.Close()
 }
 
