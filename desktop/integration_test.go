@@ -20,6 +20,7 @@ import (
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
+	"github.com/getlantern/flashlight/goroutines"
 	"github.com/getlantern/flashlight/integrationtest"
 	"github.com/getlantern/flashlight/logging"
 
@@ -259,6 +260,7 @@ func testRequest(t *testing.T, helper *integrationtest.Helper) {
 
 	doRequest(t, client, "http://"+helper.HTTPServerAddr)
 	doRequest(t, client, "https://"+helper.HTTPSServerAddr)
+	goroutines.PrintProfile(10)
 }
 
 func doRequest(t *testing.T, client *http.Client, url string) {
