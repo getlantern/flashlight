@@ -61,13 +61,16 @@ func (buf *byteSliceRingMap) get(key string) (b []byte, ok bool) {
 	return
 }
 
+// forEach applies a function to each element in the ring, in insertion order. Calls to get and put
+// will be blocked while this function runs.
 func (buf *byteSliceRingMap) forEach(do func(key string, value []byte)) {
 	buf.Lock()
 	defer buf.Unlock()
 
-	for k, v := range buf.m {
-		do(k, v)
-	}
+	buf.q.forEach(func(i interface{}) {
+		entry := i.(ringMapEntry)
+		do(entry.key, entry.value)
+	})
 }
 
 type queueNode struct {
@@ -102,4 +105,12 @@ func (q *queue) dequeue() interface{} {
 		q.last = nil
 	}
 	return dequeued.value
+}
+
+func (q *queue) forEach(f func(interface{})) {
+	current := q.first
+	for current != nil {
+		f(current.value)
+		current = current.next
+	}
 }
