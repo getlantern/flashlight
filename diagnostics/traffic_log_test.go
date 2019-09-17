@@ -19,7 +19,7 @@ func TestTrafficLog(t *testing.T) {
 	}
 
 	const (
-		captureAddresses     = 5
+		captureAddresses     = 10
 		serverResponseString = "TestTrafficLog test server response"
 
 		// Make the buffers large enough that we will not lose any packets.
@@ -62,6 +62,19 @@ func TestTrafficLog(t *testing.T) {
 
 	pcapFile := pcapFileBuf.String()
 	for i := 0; i < captureAddresses; i++ {
-		require.Contains(t, pcapFile, responseFor(i))
+		requireContainsOnce(t, pcapFile, responseFor(i))
+	}
+}
+
+func requireContainsOnce(t *testing.T, s, substring string) {
+	t.Helper()
+
+	b, subslice := []byte(s), []byte(substring)
+	idx := bytes.Index(b, subslice)
+	if idx < 0 {
+		t.Fatalf("subslice does not appear")
+	}
+	if bytes.Index(b[idx+len(subslice):], subslice) > 0 {
+		t.Fatalf("subslice appears more than once")
 	}
 }
