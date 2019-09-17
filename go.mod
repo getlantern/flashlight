@@ -13,7 +13,7 @@ require (
 	github.com/fatih/set v0.2.1 // indirect
 	github.com/getlantern/appdir v0.0.0-20180320102544-7c0f9d241ea7
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
-	github.com/getlantern/borda v0.0.0-20190912160718-309a1f2164e0
+	github.com/getlantern/borda v0.0.0-20190917165417-36cadcff5e18
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
 	github.com/getlantern/cmux v0.0.0-20190809092548-4b7adf243efe
 	github.com/getlantern/detour v0.0.0-20190122161414-7107a599a170
@@ -97,6 +97,7 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/tjfoc/gmsm v0.0.0-20180404022540-0effa9db1ba8 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
+	github.com/zserge/webview v0.0.0-20190123072648-16c93bcaeaeb // indirect
 	golang.org/x/crypto v0.0.0-20190829043050-9756ffdc2472 // indirect
 	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297
 	golang.org/x/sys v0.0.0-20190902133755-9109b7679e13 // indirect
