@@ -116,6 +116,7 @@ github.com/getlantern/bytemap v0.0.0-20180417025909-c7bf952233bc h1:TVT95IccIoeF
 github.com/getlantern/bytemap v0.0.0-20180417025909-c7bf952233bc/go.mod h1:DFhUkF3XKDQgnCNVn203TVnRxy4oUnIIMClem8MQxKE=
 github.com/getlantern/bytemap v0.0.0-20190911140348-f17f27076bf9 h1:xpu/mmrhhkINppMPqVLrVkuK7tT7atRthPfzmzdJQr0=
 github.com/getlantern/bytemap v0.0.0-20190911140348-f17f27076bf9/go.mod h1:DFhUkF3XKDQgnCNVn203TVnRxy4oUnIIMClem8MQxKE=
+github.com/getlantern/bytemap v0.0.0-20190914004255-0acf4d58df56 h1:X4NKmX9VNoSWk5CpDJYkmvymfjj4jojGLKiDhwd+kuI=
 github.com/getlantern/bytemap v0.0.0-20190914004255-0acf4d58df56/go.mod h1:DFhUkF3XKDQgnCNVn203TVnRxy4oUnIIMClem8MQxKE=
 github.com/getlantern/cmux v0.0.0-20190809092548-4b7adf243efe h1:GOIyhXIt/VhW4vlYG42It2mtZztJPSLBL0DFlrSrsqs=
 github.com/getlantern/cmux v0.0.0-20190809092548-4b7adf243efe/go.mod h1:6YG7dGkCkWvp7wXlbONN3gjVQypSq6+NCvSEXBhgNC0=
@@ -318,6 +319,7 @@ github.com/getlantern/zenodb v0.0.0-20190809092412-0a2ce8ac3026 h1:xM0DWdV/eK7H2
 github.com/getlantern/zenodb v0.0.0-20190809092412-0a2ce8ac3026/go.mod h1:LDw7qTXBZJkjYVIvR2iyi1J4PN8plch0VZzTzc7mDoM=
 github.com/getlantern/zenodb v0.0.0-20190912160227-24b4a29a38ca h1:qMce0nFIyfdlU64i6zG2AvG2Bf8dD0xyjDSPn0anCFI=
 github.com/getlantern/zenodb v0.0.0-20190912160227-24b4a29a38ca/go.mod h1:NuQhvCpGXVMqfAIYJWQrDjZCbak3U5lXFSSpqDVUMs0=
+github.com/getlantern/zenodb v0.0.0-20190917165203-32a60251f38b h1:J+k1klLxUMt3JLBJayt+op0AWp45Vt4SOrxOscb7Pyg=
 github.com/getlantern/zenodb v0.0.0-20190917165203-32a60251f38b/go.mod h1:Uxs9BCNogjdqtqThOrKakeDhMXjN3KLjH40W1OPPGic=
 github.com/glendc/gopher-json v0.0.0-20170414221815-dc4743023d0c h1:iRTj5SRYwbvsygdwVp+y9kZT145Y1s6xOPpeOEIeGc4=
 github.com/glendc/gopher-json v0.0.0-20170414221815-dc4743023d0c/go.mod h1:Gja1A+xZ9BoviGJNA2E9vFkPjjsl+CoJxSXiQM1UXtw=
