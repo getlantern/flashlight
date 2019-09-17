@@ -115,6 +115,7 @@ autoupdateca: ""
 updateserverurl: ""
 bordareportinterval: 0s
 bordasamplepercentage: 0
+pingsamplepercentage: 0
 reportissueemail: ""
 client:
   dumpheaders: false

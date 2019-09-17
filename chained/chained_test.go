@@ -18,9 +18,9 @@ import (
 )
 
 var (
-	logger = golog.LoggerFor("chained-test")
-	ping   = []byte("ping")
-	pong   = []byte("pong")
+	logger    = golog.LoggerFor("chained-test")
+	pingBytes = []byte("ping")
+	pongBytes = []byte("pong")
 )
 
 func newTestUserConfig() *common.UserConfigData {
@@ -215,8 +215,8 @@ func test(t *testing.T, dialer func(network, addr string) (net.Conn, error)) {
 		if err != nil {
 			t.Fatalf("Unable to read from client: %s", err)
 		}
-		assert.Equal(t, ping, b, "Didn't receive correct ping message")
-		_, err = conn.Write(pong)
+		assert.Equal(t, pingBytes, b, "Didn't receive correct ping message")
+		_, err = conn.Write(pongBytes)
 		if err != nil {
 			t.Fatalf("Unable to write to client: %s", err)
 		}
@@ -232,7 +232,7 @@ func test(t *testing.T, dialer func(network, addr string) (net.Conn, error)) {
 		}
 	}()
 
-	_, err = conn.Write(ping)
+	_, err = conn.Write(pingBytes)
 	if err != nil {
 		t.Fatalf("Unable to write to server via proxy: %s", err)
 	}
@@ -242,7 +242,7 @@ func test(t *testing.T, dialer func(network, addr string) (net.Conn, error)) {
 	if err != nil {
 		t.Fatalf("Unable to read from server: %s", err)
 	}
-	assert.Equal(t, pong, b, "Didn't receive correct pong message")
+	assert.Equal(t, pongBytes, b, "Didn't receive correct pong message")
 }
 
 func (p *proxy) dial(network, addr string) (net.Conn, error) {

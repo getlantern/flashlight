@@ -263,7 +263,7 @@ func (op *Op) DialTime(elapsed time.Duration, err error) *Op {
 	if err != nil {
 		return op
 	}
-	return op.SetMetric("dial_time", borda.Percentile(float64(elapsed.Nanoseconds())/1000000))
+	return op.SetMetricPercentile("dial_time", float64(elapsed.Nanoseconds())/1000000)
 }
 
 // BalancerDialTime records a balancer dial time relative to a given start time (in
@@ -272,7 +272,7 @@ func (op *Op) BalancerDialTime(elapsed time.Duration, err error) *Op {
 	if err != nil {
 		return op
 	}
-	return op.SetMetric("balancer_dial_time", borda.Percentile(float64(elapsed.Nanoseconds())/1000000))
+	return op.SetMetricPercentile("balancer_dial_time", float64(elapsed.Nanoseconds())/1000000)
 }
 
 // CoreDialTime records a core dial time relative to a given start time (in
@@ -281,7 +281,7 @@ func (op *Op) CoreDialTime(elapsed time.Duration, err error) *Op {
 	if err != nil {
 		return op
 	}
-	return op.SetMetric("core_dial_time", borda.Percentile(float64(elapsed.Nanoseconds())/1000000))
+	return op.SetMetricPercentile("core_dial_time", float64(elapsed.Nanoseconds())/1000000)
 }
 
 // SetMetric sets a named metric. Metrics will be reported as borda values
@@ -304,4 +304,8 @@ func (op *Op) SetMetricMax(name string, value float64) *Op {
 
 func (op *Op) SetMetricAvg(name string, value float64) *Op {
 	return op.Set(name, borda.Avg(value))
+}
+
+func (op *Op) SetMetricPercentile(name string, value float64) *Op {
+	return op.Set(name, borda.Percentile(value))
 }
