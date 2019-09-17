@@ -3,6 +3,7 @@ package diagnostics
 import (
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -33,7 +34,7 @@ func TestByteSliceRing(t *testing.T) {
 
 	buf = newByteSliceRingMap(99)
 	expectedValues = map[string][]byte{}
-	onDeleteCalled := false
+	deleteCalled := make(chan struct{})
 	for i := 0; i < 100; i = i + 10 {
 		b := []byte{}
 		for j := 0; j < 10; j++ {
@@ -41,14 +42,18 @@ func TestByteSliceRing(t *testing.T) {
 		}
 		key := strconv.Itoa(i)
 		if i == 0 {
-			require.NoError(t, buf.put(key, b, func() { onDeleteCalled = true }))
+			require.NoError(t, buf.put(key, b, func() { close(deleteCalled) }))
 		} else {
 			require.NoError(t, buf.put(key, b, nil))
 			expectedValues[key] = b
 		}
 	}
 
-	require.True(t, onDeleteCalled)
+	select {
+	case <-deleteCalled:
+	case <-time.After(200 * time.Millisecond):
+		t.Fatal("delete callback was never called")
+	}
 	buf.forEach(func(key string, value []byte) {
 		expectedValue, ok := expectedValues[key]
 		require.True(t, ok, "unexpected key: %s", key)
@@ -59,7 +64,7 @@ func TestByteSliceRing(t *testing.T) {
 
 	buf = newByteSliceRingMap(19)
 	expectedValues = map[string][]byte{}
-	onDeleteCalled = false
+	deleteCalled = make(chan struct{})
 	for i := 0; i < 20; i = i + 10 {
 		b := []byte{}
 		for j := 0; j < 10; j++ {
@@ -67,14 +72,18 @@ func TestByteSliceRing(t *testing.T) {
 		}
 		key := strconv.Itoa(i)
 		if i == 0 {
-			require.NoError(t, buf.put(key, b, func() { onDeleteCalled = true }))
+			require.NoError(t, buf.put(key, b, func() { close(deleteCalled) }))
 		} else {
 			require.NoError(t, buf.put(key, b, nil))
 			expectedValues[key] = b
 		}
 	}
 
-	require.True(t, onDeleteCalled)
+	select {
+	case <-deleteCalled:
+	case <-time.After(200 * time.Millisecond):
+		t.Fatal("delete callback was never called")
+	}
 	buf.forEach(func(key string, value []byte) {
 		expectedValue, ok := expectedValues[key]
 		require.True(t, ok, "unexpected key: %s", key)
