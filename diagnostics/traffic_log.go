@@ -222,9 +222,8 @@ func (tl *TrafficLog) UpdateAddresses(addresses []string) error {
 // SaveCaptures.
 func (tl *TrafficLog) SaveCaptures(address string, d time.Duration) error {
 	tl.mu.Lock()
-	defer tl.mu.Unlock()
-
 	proc, ok := tl.captureProcs[address]
+	tl.mu.Unlock()
 	if !ok {
 		// Not really an error as it's possible the capture process has simply stopped.
 		return nil
@@ -249,7 +248,9 @@ func (tl *TrafficLog) SaveCaptures(address string, d time.Duration) error {
 			numErrors++
 			lastError = err
 		} else {
+			tl.mu.Lock()
 			tl.captureInfo[pid] = captureInfo{capture.info, proc.iface}
+			tl.mu.Unlock()
 		}
 	}
 	if numErrors > 0 {
