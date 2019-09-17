@@ -42,3 +42,9 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 
 	return nil
 }
+
+// PingProxies maybe pings the client's proxies depending on the
+// specified sample percentage.
+func (client *Client) PingProxies(pingSamplePercentage float64) {
+	client.bal.PingProxies(pingSamplePercentage)
+}

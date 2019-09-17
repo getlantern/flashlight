@@ -22,6 +22,7 @@ type Global struct {
 	UpdateServerURL       string
 	BordaReportInterval   time.Duration
 	BordaSamplePercentage float64
+	PingSamplePercentage  float64
 	ReportIssueEmail      string
 	Client                *ClientConfig
 

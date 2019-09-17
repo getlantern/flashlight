@@ -424,6 +424,8 @@ func (d *testDialer) Stop() {
 	d.stopped = true
 }
 
+func (d *testDialer) Ping() {}
+
 func roundTrip(client *Client, req *http.Request) (*response, error) {
 	toSend := &bytes.Buffer{}
 	err := req.Write(toSend)

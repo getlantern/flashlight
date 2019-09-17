@@ -176,3 +176,5 @@ func (d *testDialer) ProbeStats() (successes uint64, successKBs uint64, failures
 func (d *testDialer) Stop() {
 	atomic.StoreInt32(&d.stopped, 1)
 }
+
+func (d *testDialer) Ping() {}
