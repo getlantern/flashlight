@@ -26,7 +26,6 @@ import (
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
-	"github.com/getlantern/flashlight/config"
 )
 
 const (
@@ -433,19 +432,9 @@ func buildGlobal() ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Could not read config %v", err)
 	}
-
-	cfg := &config.Global{}
-	err = yaml.Unmarshal(bytes, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("Could not unmarshal config %v", err)
-	}
-
-	out, err := yaml.Marshal(cfg)
-	if err != nil {
-		return nil, fmt.Errorf("Could not marshal config %v", err)
-	}
-
-	return out, nil
+	// we assume the template is always in valid form, or the clients would
+	// fail to unmarshal it.
+	return bytes, nil
 }
 
 var kcpConf = map[string]interface{}{
