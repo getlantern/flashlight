@@ -47,7 +47,7 @@ func runOnSystrayReady(a systrayCallbacks, f func()) {
 	// systray and we need it to call systray.Quit().
 	a.AddExitFunc("quitting systray", systray.Quit)
 
-	systray.Run(f, func() {
+	systray.RunWithAppWindow("Lantern", 1024, 768, f, func() {
 		if a.Exit(nil) {
 			err := a.WaitForExit()
 			if err != nil {
