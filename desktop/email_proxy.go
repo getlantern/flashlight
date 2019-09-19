@@ -3,6 +3,9 @@ package desktop
 import (
 	"bytes"
 	"fmt"
+	"math/rand"
+	"os"
+	"runtime/pprof"
 
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/ws"
@@ -46,21 +49,31 @@ func (app *App) serveEmailProxy(channel ws.UIChannel) error {
 }
 
 func (app *App) handleMandrillMessage(service *ws.Service, data *mandrillMessage) {
-	fillMandrillDefaults(data)
-	if data.RunDiagnostics {
-		app.proxiesMapLock.RLock()
-		var errs []error
-		data.DiagnosticsYAML, data.ProxyCapture, errs = runDiagnostics(app.proxiesMap, app.trafficLog)
-		for _, err := range errs {
-			log.Errorf("error running diagnostics: %v", err)
-		}
-		app.proxiesMapLock.RUnlock()
+	f, err := os.Create(fmt.Sprintf("lantern-%d.mprof", rand.Int()))
+	if err != nil {
+		fmt.Printf("MEMPROF: failed to create file:", err)
+		service.Out <- fmt.Sprintf("failed to create file: %v", err)
+		return
 	}
-	if err := email.Send(&data.Message); err != nil {
-		service.Out <- err.Error()
-	} else {
-		service.Out <- "success"
-	}
+	pprof.WriteHeapProfile(f)
+	f.Close()
+	service.Out <- "success"
+
+	// fillMandrillDefaults(data)
+	// if data.RunDiagnostics {
+	// 	app.proxiesMapLock.RLock()
+	// 	var errs []error
+	// 	data.DiagnosticsYAML, data.ProxyCapture, errs = runDiagnostics(app.proxiesMap, app.trafficLog)
+	// 	for _, err := range errs {
+	// 		log.Errorf("error running diagnostics: %v", err)
+	// 	}
+	// 	app.proxiesMapLock.RUnlock()
+	// }
+	// if err := email.Send(&data.Message); err != nil {
+	// 	service.Out <- err.Error()
+	// } else {
+	// 	service.Out <- "success"
+	// }
 }
 
 func fillMandrillDefaults(msg *mandrillMessage) {

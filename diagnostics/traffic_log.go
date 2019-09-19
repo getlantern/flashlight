@@ -20,18 +20,51 @@ import (
 // Warning: do not set to >= 1 second: https://github.com/google/gopacket/issues/499
 const packetReadTimeout = 100 * time.Millisecond
 
+type captureInfo struct {
+	// gopacket.CaptureInfo
+	unixNano                              int64
+	captureLength, length, interfaceIndex int
+	iface                                 *networkInterface
+}
+
+func newCaptureInfo(pkt gopacket.Packet, iface *networkInterface) captureInfo {
+	pktCI := pkt.Metadata().CaptureInfo
+	return captureInfo{
+		pktCI.Timestamp.UnixNano(), pktCI.CaptureLength, pktCI.Length, pktCI.InterfaceIndex, iface,
+	}
+}
+
+func (ci captureInfo) gopacketCI() gopacket.CaptureInfo {
+	return gopacket.CaptureInfo{
+		Timestamp:      time.Unix(0, ci.unixNano),
+		CaptureLength:  ci.captureLength,
+		Length:         ci.length,
+		InterfaceIndex: ci.interfaceIndex,
+	}
+}
+
 type capturedPacket struct {
 	data []byte
-	info gopacket.CaptureInfo
+	info captureInfo
 }
 
 type captureProcess struct {
-	addr            string
-	buffer          *byteSliceRingMap
-	iface           *networkInterface
-	captureInfo     map[time.Time]gopacket.CaptureInfo
+	addr   string
+	buffer *byteSliceRingMap
+	iface  *networkInterface
+	// captureInfo     map[time.Time]gopacket.CaptureInfo
+	captureInfo     map[int64]captureInfo // keys are unix nano timestamps
 	captureInfoLock sync.Mutex
 	stopChan        chan struct{}
+}
+
+type packetID struct {
+	addr     string
+	unixNano int64
+}
+
+func (pid packetID) String() string {
+	return fmt.Sprintf("%s-%d", pid.addr, pid.unixNano)
 }
 
 // startCapture for the input address, saving packets to the provided buffer. Non-blocking.
@@ -84,7 +117,7 @@ func startCapture(addr string, buffer *byteSliceRingMap) (*captureProcess, error
 		addr:            addr,
 		buffer:          buffer,
 		iface:           iface,
-		captureInfo:     map[time.Time]gopacket.CaptureInfo{},
+		captureInfo:     map[int64]captureInfo{},
 		captureInfoLock: sync.Mutex{},
 		stopChan:        make(chan struct{}),
 	}
@@ -93,20 +126,20 @@ func startCapture(addr string, buffer *byteSliceRingMap) (*captureProcess, error
 		for {
 			select {
 			case pkt := <-pktSrc:
-				ts := pkt.Metadata().Timestamp
-				pid := getPktID(addr, ts)
+				ts := pkt.Metadata().Timestamp.UnixNano()
+				pid := packetID{proc.addr, ts}
 				onDelete := func() {
 					proc.captureInfoLock.Lock()
 					delete(proc.captureInfo, ts)
 					proc.captureInfoLock.Unlock()
 				}
-				err := proc.buffer.put(pid, pkt.Data(), onDelete)
+				err := proc.buffer.put(pid.String(), pkt.Data(), onDelete)
 				if err != nil {
 					log.Errorf("failed to write packet to capture buffer: %v", err)
 					continue
 				}
 				proc.captureInfoLock.Lock()
-				proc.captureInfo[ts] = pkt.Metadata().CaptureInfo
+				proc.captureInfo[ts] = newCaptureInfo(pkt, proc.iface)
 				proc.captureInfoLock.Unlock()
 			case <-proc.stopChan:
 				handle.Close()
@@ -128,20 +161,15 @@ func (cp *captureProcess) capturedSince(t time.Time) []capturedPacket {
 	defer cp.captureInfoLock.Unlock()
 
 	capturedSince := []capturedPacket{}
-	for timestamp, ci := range cp.captureInfo {
-		if t.After(timestamp) {
+	for _, ci := range cp.captureInfo {
+		if t.UnixNano() > ci.unixNano {
 			continue
 		}
-		if pktData, ok := cp.buffer.get(getPktID(cp.addr, timestamp)); ok {
+		if pktData, ok := cp.buffer.get(packetID{cp.addr, ci.unixNano}.String()); ok {
 			capturedSince = append(capturedSince, capturedPacket{pktData, ci})
 		}
 	}
 	return capturedSince
-}
-
-type captureInfo struct {
-	gopacket.CaptureInfo
-	iface *networkInterface
 }
 
 // TrafficLog is a log of network traffic.
@@ -229,7 +257,7 @@ func (tl *TrafficLog) SaveCaptures(address string, d time.Duration) error {
 		return nil
 	}
 	captures := proc.capturedSince(time.Now().Add(-1 * d))
-	before := func(i, j int) bool { return captures[i].info.Timestamp.Before(captures[j].info.Timestamp) }
+	before := func(i, j int) bool { return captures[i].info.unixNano < captures[i].info.unixNano }
 	sort.Slice(captures, before)
 
 	var (
@@ -237,7 +265,7 @@ func (tl *TrafficLog) SaveCaptures(address string, d time.Duration) error {
 		lastError error
 	)
 	for _, capture := range captures {
-		pid := getPktID(address, capture.info.Timestamp)
+		pid := packetID{address, capture.info.unixNano}.String()
 		onDelete := func() {
 			tl.mu.Lock()
 			delete(tl.captureInfo, pid)
@@ -249,7 +277,7 @@ func (tl *TrafficLog) SaveCaptures(address string, d time.Duration) error {
 			lastError = err
 		} else {
 			tl.mu.Lock()
-			tl.captureInfo[pid] = captureInfo{capture.info, proc.iface}
+			tl.captureInfo[pid] = capture.info
 			tl.mu.Unlock()
 		}
 	}
@@ -307,9 +335,10 @@ func (tl *TrafficLog) WritePcapng(w io.Writer) error {
 			lastError = errors.New("failed to register interface: %v", err)
 			return
 		}
+		gopacketCI := ci.gopacketCI()
 		// Oddly, the pcapgo package expects this to be the registration ID.
-		ci.InterfaceIndex = id
-		if err := pcapW.WritePacket(ci.CaptureInfo, pktData); err != nil {
+		gopacketCI.InterfaceIndex = id
+		if err := pcapW.WritePacket(gopacketCI, pktData); err != nil {
 			numErrors++
 			lastError = errors.New("failed to write packet: %v", err)
 			return
@@ -337,8 +366,4 @@ func (tl *TrafficLog) Close() error {
 	tl.captureInfo = nil
 	tl.captureProcs = nil
 	return nil
-}
-
-func getPktID(addr string, t time.Time) string {
-	return fmt.Sprintf("%s-%s", addr, t.Format(time.StampMicro))
 }

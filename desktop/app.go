@@ -52,10 +52,10 @@ var (
 
 const (
 	// Bytes allocated to the App.trafficLog's buffer.
-	trafficLogBytes = 10 * 1024 * 1024
+	trafficLogBytes = 100 * 1024 * 1024
 
 	// Bytes allocated to the App.trafficLog's saved packets buffer.
-	trafficLogSavedBytes = 1024 * 1024
+	trafficLogSavedBytes = 10 * 1024 * 1024
 )
 
 func init() {
@@ -207,6 +207,54 @@ func (app *App) Run() {
 
 func (app *App) beforeStart(listenAddr string) func() bool {
 	return func() bool {
+		// testing
+
+		// go func() {
+		// 	time.Sleep(5 * time.Minute)
+		// 	f, err := os.Create(fmt.Sprintf("lantern-%d.mprof", rand.Int()))
+		// 	if err != nil {
+		// 		fmt.Printf("MEMPROF: failed to create file:", err)
+		// 		return
+		// 	}
+		// 	pprof.WriteHeapProfile(f)
+		// 	f.Close()
+		// }()
+
+		// go func() {
+		// 	for i := 1; i < 6; i++ {
+		// 		func() {
+		// 			time.Sleep(time.Minute)
+		// 			fmt.Println("TESTFUNC: writing pcap file")
+
+		// 			filename := fmt.Sprintf("/Users/harryharpham/Desktop/test-captures/captures/proxy-traffic-%d.pcapng", i)
+		// 			f, err := os.Create(filename)
+		// 			if err != nil {
+		// 				fmt.Println("TESTFUNC: failed to create file:", err)
+		// 				return
+		// 			}
+		// 			defer f.Close()
+
+		// 			fmt.Println("TESTFUNC: asking for lock")
+		// 			app.proxiesMapLock.Lock()
+		// 			defer app.proxiesMapLock.Unlock()
+		// 			fmt.Println("TESTFUNC: obtained lock")
+
+		// 			for _, serverInfo := range app.proxiesMap {
+		// 				fmt.Println("TESTFUNC: saving captures for", serverInfo.Addr)
+		// 				// TODO: SaveCaptures sometimes hangs - race condition?
+		// 				if err := app.trafficLog.SaveCaptures(serverInfo.Addr, 10*time.Minute); err != nil {
+		// 					fmt.Printf("TESTFUNC: failed to save capture for %s: %v", serverInfo.Addr, err)
+		// 				}
+		// 			}
+		// 			fmt.Println("TESTFUNC: writing to file")
+		// 			if err := app.trafficLog.WritePcapng(f); err != nil {
+		// 				fmt.Println("TESTFUNC: failed to write pcap file:", err)
+		// 			}
+		// 			fmt.Println("TESTFUNC: successfully wrote pcap file", i)
+		// 		}()
+		// 	}
+		// }()
+
 		log.Debug("Got first config")
 		var cpuProf, memProf string
 		if cpu, cok := app.Flags["cpuprofile"]; cok {
