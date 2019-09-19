@@ -99,15 +99,8 @@ func TestEmbedded(t *testing.T) {
 			unmarshaler: newProxiesUnmarshaler(),
 		})
 
-		pr, err := cfg.embedded(generated.EmbeddedProxies)
-		assert.Nil(t, err)
-
-		proxies := pr.(map[string]*chained.ChainedServerInfo)
-		assert.Equal(t, 8, len(proxies))
-		for _, val := range proxies {
-			assert.True(t, val != nil)
-			assert.True(t, len(val.Addr) > 6)
-		}
+		_, err := cfg.embedded(generated.EmbeddedProxies)
+		assert.NotNil(t, err)
 	})
 }
 
