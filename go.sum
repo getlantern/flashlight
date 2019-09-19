@@ -200,8 +200,8 @@ github.com/getlantern/keyman v0.0.0-20180207174507-f55e7280e93a/go.mod h1:FMf0g7
 github.com/getlantern/lampshade v0.0.0-20171122120757-b10a301ad56e/go.mod h1:h0JxtfSix7rXr+2dnLTmUV2rApjQH364hfM5YLAFXYc=
 github.com/getlantern/lampshade v0.0.0-20190507122828-84b870a67bd6 h1:6CEX9wtE4/NhNOUMrGdTaFrj7PfqztjdAG0kpKB/628=
 github.com/getlantern/lampshade v0.0.0-20190507122828-84b870a67bd6/go.mod h1:h0JxtfSix7rXr+2dnLTmUV2rApjQH364hfM5YLAFXYc=
-github.com/getlantern/lampshade v0.0.0-20190911222635-97dcda069b6a h1:WT0qXH3AFCHNHCyt0C7m80sunOHz3vMEx9JVEBDlnIM=
-github.com/getlantern/lampshade v0.0.0-20190911222635-97dcda069b6a/go.mod h1:uUfBms9rUD3MXuTi1wihfR841WjlABmYuhg1mbkHGUk=
+github.com/getlantern/lampshade v0.0.0-20190918040947-53795c75d6e7 h1:CvQYiQqnstQahAlmcTIQE6KjWuNzDK7chRtwpbYEllI=
+github.com/getlantern/lampshade v0.0.0-20190918040947-53795c75d6e7/go.mod h1:uUfBms9rUD3MXuTi1wihfR841WjlABmYuhg1mbkHGUk=
 github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894 h1:Gzf64TTHyKH4HEe1dgwnf7BOaq5rJZg25Hqz5TmogEI=
 github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894/go.mod h1:h57jtqyH1HCLYu53nnr3WTUntPozt5ztqQ9aN687VEY=
 github.com/getlantern/measured v0.0.0-20170302221919-0582bf799783/go.mod h1:5OW2WJitCKExpSw2bploW2fM7PjOd6QnLqyp+IqToqU=
