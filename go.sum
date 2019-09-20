@@ -102,8 +102,6 @@ github.com/getlantern/bbrconn v0.0.0-20180619163322-86cf8c16f3d0 h1:OtUNxwmNp9+m
 github.com/getlantern/bbrconn v0.0.0-20180619163322-86cf8c16f3d0/go.mod h1:HMPEgWG0J3goTYFWoTohloqZ3BQywXMElZnd9EROxxU=
 github.com/getlantern/borda v0.0.0-20190809122504-668025f4c2b9 h1:zRujRezaBjhuLFahdzh01DbyvcEWKpUQ9vL5yCKJX+s=
 github.com/getlantern/borda v0.0.0-20190809122504-668025f4c2b9/go.mod h1:5gIMs+fPLaRRdTa3f3eMrYgJb/5JmO8/Fa060xvj44U=
-github.com/getlantern/borda v0.0.0-20190912160718-309a1f2164e0 h1:BSHKLxvssImZErbu82696EywC6ZpQyTw+tYqeImIDdY=
-github.com/getlantern/borda v0.0.0-20190912160718-309a1f2164e0/go.mod h1:5MMz/eVuZJFS7nAltX2ktuLT77SbqDlG6hoo3x6kIWE=
 github.com/getlantern/borda v0.0.0-20190917165417-36cadcff5e18 h1:Q9xkR+sYEovMalSOtQ0Q9tMCy9li1xlSgXLexoRVnRQ=
 github.com/getlantern/borda v0.0.0-20190917165417-36cadcff5e18/go.mod h1:htY57XPOAq+JMoRS21F97tSxb7Aa2P3A/pOjdd9sPls=
 github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d h1:gE5pWSEYfMvSETsTanqINNLmv+nuyUjwcm9jOyqJJZI=
@@ -114,8 +112,6 @@ github.com/getlantern/byteexec v0.0.0-20170405023437-4cfb26ec74f4 h1:Nqmy8i81dzo
 github.com/getlantern/byteexec v0.0.0-20170405023437-4cfb26ec74f4/go.mod h1:4WCQkaCIwta0KlF9bQZA1jYqp8bzIS2PeCqjnef8nZ8=
 github.com/getlantern/bytemap v0.0.0-20180417025909-c7bf952233bc h1:TVT95IccIoeFnFPD169fak0Uxr0NSwgcqVI+oLPDdNo=
 github.com/getlantern/bytemap v0.0.0-20180417025909-c7bf952233bc/go.mod h1:DFhUkF3XKDQgnCNVn203TVnRxy4oUnIIMClem8MQxKE=
-github.com/getlantern/bytemap v0.0.0-20190911140348-f17f27076bf9 h1:xpu/mmrhhkINppMPqVLrVkuK7tT7atRthPfzmzdJQr0=
-github.com/getlantern/bytemap v0.0.0-20190911140348-f17f27076bf9/go.mod h1:DFhUkF3XKDQgnCNVn203TVnRxy4oUnIIMClem8MQxKE=
 github.com/getlantern/bytemap v0.0.0-20190914004255-0acf4d58df56 h1:X4NKmX9VNoSWk5CpDJYkmvymfjj4jojGLKiDhwd+kuI=
 github.com/getlantern/bytemap v0.0.0-20190914004255-0acf4d58df56/go.mod h1:DFhUkF3XKDQgnCNVn203TVnRxy4oUnIIMClem8MQxKE=
 github.com/getlantern/cmux v0.0.0-20190809092548-4b7adf243efe h1:GOIyhXIt/VhW4vlYG42It2mtZztJPSLBL0DFlrSrsqs=
@@ -159,8 +155,6 @@ github.com/getlantern/go-cache v0.0.0-20141028142048-88b53914f467 h1:10ez8C+7zyH
 github.com/getlantern/go-cache v0.0.0-20141028142048-88b53914f467/go.mod h1:IQND0fl/mdTYNICpN/eDYKX+j90TqQYXdpNFWkJpCPs=
 github.com/getlantern/go-libutp v1.0.3 h1:ESmde7HKb1LaB+6G0eWUuWcjN4DmqOvTRqm49De33sI=
 github.com/getlantern/go-libutp v1.0.3/go.mod h1:59dYQcPvvYl4AsKVIoy1aS4wd08Q8lzlHG16y30c2V0=
-github.com/getlantern/go-ping v0.0.0-20190916231702-a255f24045b3 h1:ag8+Z+WeCn2OKyYtmtaDkE/9wNhF3LrTC0sejiFhWg4=
-github.com/getlantern/go-ping v0.0.0-20190916231702-a255f24045b3/go.mod h1:q/lVkkWTkTnjZ5y+52BOhwj1fu4TvApwEjekNvfS0eY=
 github.com/getlantern/go-ping v0.0.0-20190916232214-0d654d92ece9 h1:RYc8doE7YZXQpqzoL4bD/gZxd4kQSso7keiwXzKCo8M=
 github.com/getlantern/go-ping v0.0.0-20190916232214-0d654d92ece9/go.mod h1:q/lVkkWTkTnjZ5y+52BOhwj1fu4TvApwEjekNvfS0eY=
 github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5 h1:RBKofGGMt2k6eGBwX8mky9qunjL+KnAp9JdzXjiRkRw=
@@ -319,8 +313,6 @@ github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426 h1:lb2OElfhZzfgvNQ
 github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426/go.mod h1:SoTXbOvaDC1bH3QrlkU5kz/h12tU/hN54wSMUCdgEXs=
 github.com/getlantern/zenodb v0.0.0-20190809092412-0a2ce8ac3026 h1:xM0DWdV/eK7H2L4NxLj6LYcGUg9HbUNysk1SqSycL+s=
 github.com/getlantern/zenodb v0.0.0-20190809092412-0a2ce8ac3026/go.mod h1:LDw7qTXBZJkjYVIvR2iyi1J4PN8plch0VZzTzc7mDoM=
-github.com/getlantern/zenodb v0.0.0-20190912160227-24b4a29a38ca h1:qMce0nFIyfdlU64i6zG2AvG2Bf8dD0xyjDSPn0anCFI=
-github.com/getlantern/zenodb v0.0.0-20190912160227-24b4a29a38ca/go.mod h1:NuQhvCpGXVMqfAIYJWQrDjZCbak3U5lXFSSpqDVUMs0=
 github.com/getlantern/zenodb v0.0.0-20190917165203-32a60251f38b h1:J+k1klLxUMt3JLBJayt+op0AWp45Vt4SOrxOscb7Pyg=
 github.com/getlantern/zenodb v0.0.0-20190917165203-32a60251f38b/go.mod h1:Uxs9BCNogjdqtqThOrKakeDhMXjN3KLjH40W1OPPGic=
 github.com/glendc/gopher-json v0.0.0-20170414221815-dc4743023d0c h1:iRTj5SRYwbvsygdwVp+y9kZT145Y1s6xOPpeOEIeGc4=
@@ -613,8 +605,6 @@ golang.org/x/sys v0.0.0-20190516110030-61b9204099cb h1:k07iPOt0d6nEnwXF+kHB+iEg+
 golang.org/x/sys v0.0.0-20190516110030-61b9204099cb/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20190606165138-5da285871e9c h1:+EXw7AwNOKzPFXMZ1yNjO40aWCh3PIquJB2fYlv9wcs=
 golang.org/x/sys v0.0.0-20190606165138-5da285871e9c/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
-golang.org/x/sys v0.0.0-20190902133755-9109b7679e13 h1:tdsQdquKbTNMsSZLqnLELJGzCANp9oXhu6zFBW6ODx4=
-golang.org/x/sys v0.0.0-20190902133755-9109b7679e13/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20190904154756-749cb33beabd/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20190919044723-0c1ff786ef13 h1:/zi0zzlPHWXYXrO1LjNRByFu8sdGgCkj2JLDdBIB84k=
 golang.org/x/sys v0.0.0-20190919044723-0c1ff786ef13/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
