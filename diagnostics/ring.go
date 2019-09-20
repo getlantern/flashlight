@@ -8,11 +8,6 @@ type sharedBufferHook struct {
 	// put an item into the buffer.
 	put func(interface{})
 
-	// get the oldest existing item entered into the buffer using this hook. Returns nil if no such
-	// items exist in the buffer.
-	// TODO: probably don't need this
-	get func() interface{}
-
 	// forEach applies a function to each existing item entered into the buffer using this hook.
 	// Items are provided to the function in insertion order. This call blocks all calls on this and
 	// other hooks into the buffer.
@@ -71,13 +66,6 @@ func (buf *sharedRingBuffer) newHook() *sharedBufferHook {
 			q.enqueue(i)
 			buf.masterQueue.enqueue(qIndex)
 			buf.len++
-		},
-
-		get: func() interface{} {
-			buf.Lock()
-			defer buf.Unlock()
-
-			return q.peek()
 		},
 
 		forEach: func(do func(interface{})) {

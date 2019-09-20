@@ -21,7 +21,6 @@ import (
 const packetReadTimeout = 100 * time.Millisecond
 
 type captureInfo struct {
-	// gopacket.CaptureInfo
 	unixNano                              int64
 	captureLength, length, interfaceIndex int
 	iface                                 *networkInterface
@@ -49,13 +48,10 @@ type capturedPacket struct {
 }
 
 type captureProcess struct {
-	addr   string
-	buffer *byteSliceRingMap
-	iface  *networkInterface
-	// captureInfo     map[time.Time]gopacket.CaptureInfo
-	captureInfo     map[int64]captureInfo // keys are unix nano timestamps
-	captureInfoLock sync.Mutex
-	stopChan        chan struct{}
+	addr     string
+	buffer   *sharedBufferHook
+	iface    *networkInterface
+	stopChan chan struct{}
 }
 
 type packetID struct {
@@ -68,7 +64,7 @@ func (pid packetID) String() string {
 }
 
 // startCapture for the input address, saving packets to the provided buffer. Non-blocking.
-func startCapture(addr string, buffer *byteSliceRingMap) (*captureProcess, error) {
+func startCapture(addr string, buffer *sharedBufferHook) (*captureProcess, error) {
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
 		return nil, errors.New("malformed address: %v", err)
@@ -114,33 +110,17 @@ func startCapture(addr string, buffer *byteSliceRingMap) (*captureProcess, error
 	}
 	pktSrc := gopacket.NewPacketSource(handle, layerType).Packets()
 	proc := captureProcess{
-		addr:            addr,
-		buffer:          buffer,
-		iface:           iface,
-		captureInfo:     map[int64]captureInfo{},
-		captureInfoLock: sync.Mutex{},
-		stopChan:        make(chan struct{}),
+		addr:     addr,
+		buffer:   buffer,
+		iface:    iface,
+		stopChan: make(chan struct{}),
 	}
 
 	go func() {
 		for {
 			select {
 			case pkt := <-pktSrc:
-				ts := pkt.Metadata().Timestamp.UnixNano()
-				pid := packetID{proc.addr, ts}
-				onDelete := func() {
-					proc.captureInfoLock.Lock()
-					delete(proc.captureInfo, ts)
-					proc.captureInfoLock.Unlock()
-				}
-				err := proc.buffer.put(pid.String(), pkt.Data(), onDelete)
-				if err != nil {
-					log.Errorf("failed to write packet to capture buffer: %v", err)
-					continue
-				}
-				proc.captureInfoLock.Lock()
-				proc.captureInfo[ts] = newCaptureInfo(pkt, proc.iface)
-				proc.captureInfoLock.Unlock()
+				proc.buffer.put(capturedPacket{pkt.Data(), newCaptureInfo(pkt, proc.iface)})
 			case <-proc.stopChan:
 				handle.Close()
 				return
@@ -157,18 +137,14 @@ func (cp *captureProcess) stop() {
 
 // Packets are not returned sorted.
 func (cp *captureProcess) capturedSince(t time.Time) []capturedPacket {
-	cp.captureInfoLock.Lock()
-	defer cp.captureInfoLock.Unlock()
-
 	capturedSince := []capturedPacket{}
-	for _, ci := range cp.captureInfo {
-		if t.UnixNano() > ci.unixNano {
-			continue
+	tNano := t.UnixNano()
+	cp.buffer.forEach(func(i interface{}) {
+		pkt := i.(capturedPacket)
+		if pkt.info.unixNano > tNano {
+			capturedSince = append(capturedSince, i.(capturedPacket))
 		}
-		if pktData, ok := cp.buffer.get(packetID{cp.addr, ci.unixNano}.String()); ok {
-			capturedSince = append(capturedSince, capturedPacket{pktData, ci})
-		}
-	}
+	})
 	return capturedSince
 }
 
@@ -178,7 +154,7 @@ func (cp *captureProcess) capturedSince(t time.Time) []capturedPacket {
 // any time, a group of packets can be saved by calling SaveCaptures. These saved captures can then
 // be written out in pcapng format using WritePcapng.
 type TrafficLog struct {
-	captureBuffer *byteSliceRingMap
+	captureBuffer *sharedRingBuffer
 	savedCaptures *byteSliceRingMap
 	captureInfo   map[string]captureInfo
 	captureProcs  map[string]*captureProcess
@@ -194,9 +170,9 @@ type TrafficLog struct {
 // captureBytes. At any time, a group of captured packets can be saved by calling SaveCaptures. This
 // moves packets captured for a specified address and time period into a separate fixed-size ring
 // buffer. The size of this buffer is specified by saveBytes.
-func NewTrafficLog(captureBytes, saveBytes int) *TrafficLog {
+func NewTrafficLog(maxCapturePackets, saveBytes int) *TrafficLog {
 	return &TrafficLog{
-		newByteSliceRingMap(captureBytes),
+		newSharedRingBuffer(maxCapturePackets),
 		newByteSliceRingMap(saveBytes),
 		map[string]captureInfo{},
 		map[string]*captureProcess{},
@@ -226,7 +202,7 @@ func (tl *TrafficLog) UpdateAddresses(addresses []string) error {
 		if proc, ok := tl.captureProcs[addr]; ok {
 			captureProcs[addr] = proc
 		} else {
-			proc, err := startCapture(addr, tl.captureBuffer)
+			proc, err := startCapture(addr, tl.captureBuffer.newHook())
 			if err != nil {
 				stopAllNewCaptures()
 				return errors.New("failed to start capture for %s: %v", addr, err)
