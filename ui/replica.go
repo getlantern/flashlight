@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 
@@ -73,7 +74,12 @@ func (me ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 		defer t.Close()
-		mi, err := metainfo.Load(t)
+		p := filepath.Join(me.uploadsDir(), filepath.FromSlash(s3Key)+".torrent")
+		err = storeUploadedTorrent(t, p)
+		if err != nil {
+			panic(err)
+		}
+		mi, err := metainfo.LoadFromFile(p)
 		if err != nil {
 			panic(err)
 		}
@@ -86,13 +92,50 @@ func (me ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			// Not fatal: See above, we only really need the metainfo to be added to the torrent.
 			me.Logger.WithValues(analog.Error).Printf("error renaming file: %v", err)
 		}
-		_, err = me.TorrentClient.AddTorrent(mi)
+		tt, err := me.TorrentClient.AddTorrent(mi)
 		if err != nil {
 			panic(err)
 		}
-		w.Header().Set("Content-Type", "application/x-bittorrent")
-		fmt.Fprintf(w, "%s\n", mi.Magnet(name, mi.HashInfoBytes()))
+		//w.Header().Set("Content-Type", "application/x-bittorrent")
+		fmt.Fprintln(w, createReplicaUrl(tt, s3Key))
 	default:
 		me.Confluence.ServeHTTP(w, r)
 	}
+}
+
+//
+//func (me ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Request) {
+//
+//}
+
+func (me ReplicaHttpServer) uploadsDir() string {
+	return filepath.Join(me.StorageDirectory, "uploads")
+}
+
+func storeUploadedTorrent(r io.Reader, path string) error {
+	err := os.MkdirAll(filepath.Dir(path), 0750)
+	if err != nil {
+		return err
+	}
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0640)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	_, err = io.Copy(f, r)
+	if err != nil {
+		return err
+	}
+	return f.Close()
+}
+
+func createReplicaUrl(t *torrent.Torrent, s3Key string) string {
+	return (&url.URL{
+		Scheme: "https",
+		Host:   "replica.getlantern.org",
+		Path:   s3Key,
+		RawQuery: url.Values{
+			"ih": {t.InfoHash().HexString()},
+		}.Encode(),
+	}).String()
 }
