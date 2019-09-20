@@ -280,6 +280,14 @@ github.com/getlantern/systray v0.0.0-20190919184001-fdf131d2a9d9 h1:Ejdm24de9snI
 github.com/getlantern/systray v0.0.0-20190919184001-fdf131d2a9d9/go.mod h1:PviSGWMsy/2+EZ01rPH9mm33pLRsMtcnzACB4hZadQQ=
 github.com/getlantern/systray v0.0.0-20190920152215-ba2fcb6d0299 h1:+Qh3Ocktid5mnMSqDB0RmbIkuGxzQcGxLuIRGNyy5Tw=
 github.com/getlantern/systray v0.0.0-20190920152215-ba2fcb6d0299/go.mod h1:PviSGWMsy/2+EZ01rPH9mm33pLRsMtcnzACB4hZadQQ=
+github.com/getlantern/systray v0.0.0-20190920155720-569831f98486 h1:vyGENuYK3pJEj+J3raQ6/+3AXpBKSmhSldrctI4zwfw=
+github.com/getlantern/systray v0.0.0-20190920155720-569831f98486/go.mod h1:PviSGWMsy/2+EZ01rPH9mm33pLRsMtcnzACB4hZadQQ=
+github.com/getlantern/systray v0.0.0-20190920160302-b28003b454a3 h1:ujQH4rZbdY0agrmRAmLLdKU/vXGjpwSJ7wuXezizb7U=
+github.com/getlantern/systray v0.0.0-20190920160302-b28003b454a3/go.mod h1:PviSGWMsy/2+EZ01rPH9mm33pLRsMtcnzACB4hZadQQ=
+github.com/getlantern/systray v0.0.0-20190920161340-83e791c612ec h1:zZBgjhc9DhdDg5+k5yIxPs8KZMi9otGbprNTc2sfEJY=
+github.com/getlantern/systray v0.0.0-20190920161340-83e791c612ec/go.mod h1:PviSGWMsy/2+EZ01rPH9mm33pLRsMtcnzACB4hZadQQ=
+github.com/getlantern/systray v0.0.0-20190920161709-efe21586c2ec h1:dcZ+Rpbw+akbPtauaGrHx0ggrIbJOWjZeO4dWQTM7C8=
+github.com/getlantern/systray v0.0.0-20190920161709-efe21586c2ec/go.mod h1:PviSGWMsy/2+EZ01rPH9mm33pLRsMtcnzACB4hZadQQ=
 github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239 h1:PcBHV71YMbtbRo2xgFgEg6Cz56nWixU0Fjch3AIOidk=
 github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239/go.mod h1:T4fCOTFiRQXdY5WhfiEdmR5W+fv4sIYUm5DlhauOfuY=
 github.com/getlantern/testify v0.0.0-20160317154340-2eeb3906e78f h1:R6iv+VzCrbxlBm2TcgyJi9c7tQguNXi9JmIvuUJKrdc=

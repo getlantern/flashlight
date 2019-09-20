@@ -51,24 +51,24 @@ type Server struct {
 	// The address to listen on, in ":port" form if listen on all interfaces.
 	listenAddr string
 	// The address client should access. Available only if the server is started.
-	accessAddr       string
-	externalURL      string
-	requestPath      string
-	localHTTPToken   string
-	listener         net.Listener
-	mux              *http.ServeMux
-	onceOpenExtURL   sync.Once
-	translations     eventual.Value
-	useSystemBrowser bool
+	accessAddr     string
+	externalURL    string
+	requestPath    string
+	localHTTPToken string
+	listener       net.Listener
+	mux            *http.ServeMux
+	onceOpenExtURL sync.Once
+	translations   eventual.Value
+	standalone     bool
 }
 
 // StartServer creates and starts a new UI server.
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func StartServer(requestedAddr, extURL, localHTTPToken string, useSystemBrowser bool,
+func StartServer(requestedAddr, extURL, localHTTPToken string, standalone bool,
 	handlers ...*PathHandler) (*Server, error) {
-	server := newServer(extURL, localHTTPToken, useSystemBrowser)
+	server := newServer(extURL, localHTTPToken, standalone)
 
 	for _, h := range handlers {
 		server.handle(h.Pattern, h.Handler)
@@ -80,18 +80,18 @@ func StartServer(requestedAddr, extURL, localHTTPToken string, useSystemBrowser 
 	return server, nil
 }
 
-func newServer(extURL, localHTTPToken string, useSystemBrowser bool) *Server {
+func newServer(extURL, localHTTPToken string, standalone bool) *Server {
 	requestPath := ""
 	if localHTTPToken != "" {
 		requestPath = "/" + localHTTPToken
 	}
 	server := &Server{
-		externalURL:      overrideManotoURL(extURL),
-		requestPath:      requestPath,
-		mux:              http.NewServeMux(),
-		localHTTPToken:   localHTTPToken,
-		translations:     eventual.NewValue(),
-		useSystemBrowser: useSystemBrowser,
+		externalURL:    overrideManotoURL(extURL),
+		requestPath:    requestPath,
+		mux:            http.NewServeMux(),
+		localHTTPToken: localHTTPToken,
+		translations:   eventual.NewValue(),
+		standalone:     standalone,
 	}
 
 	server.attachHandlers()
@@ -214,18 +214,16 @@ func (s *Server) Show(destURL, campaign, medium string, st stats.Tracker) {
 	open := func(u string, t time.Duration) {
 		go func() {
 			time.Sleep(t)
-			var err error
-			if s.useSystemBrowser {
-				err = open.Run(u)
-			} else {
+			if s.standalone {
 				systray.ShowAppWindow(u)
-			}
-			if err != nil {
-				e := errors.New("Error opening external page to `%v`: %v",
-					s.externalURL, err)
-				log.Error(e)
-				if st != nil {
-					st.SetAlert(stats.FAIL_TO_OPEN_BROWSER, e.Error(), true)
+			} else {
+				if err := open.Run(u); err != nil {
+					e := errors.New("Error opening external page to `%v`: %v",
+						s.externalURL, err)
+					log.Error(e)
+					if st != nil {
+						st.SetAlert(stats.FAIL_TO_OPEN_BROWSER, e.Error(), true)
+					}
 				}
 			}
 		}()

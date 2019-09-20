@@ -266,11 +266,12 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 		log.Debugf("Starting client UI at %v", uiaddr)
 
+		standalone := app.Flags["standalone"] != nil && app.Flags["standalone"].(bool)
 		// ui will handle empty uiaddr correctly
 		if app.uiServer, err = ui.StartServer(uiaddr,
 			startupURL,
 			localHTTPToken(settings),
-			!app.Flags["standalone"].(bool),
+			standalone,
 			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
 			&ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
 		); err != nil {
