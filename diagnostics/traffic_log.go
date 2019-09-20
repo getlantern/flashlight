@@ -5,7 +5,6 @@ import (
 	"io"
 	"net"
 	"runtime"
-	"sort"
 	"sync"
 	"time"
 
@@ -24,22 +23,29 @@ type captureInfo struct {
 	unixNano                              int64
 	captureLength, length, interfaceIndex int
 	iface                                 *networkInterface
+
+	// debugging
+	ancillaryData []interface{}
+	originalCI    gopacket.CaptureInfo
 }
 
 func newCaptureInfo(pkt gopacket.Packet, iface *networkInterface) captureInfo {
 	pktCI := pkt.Metadata().CaptureInfo
 	return captureInfo{
-		pktCI.Timestamp.UnixNano(), pktCI.CaptureLength, pktCI.Length, pktCI.InterfaceIndex, iface,
+		pktCI.Timestamp.UnixNano(), pktCI.CaptureLength, pktCI.Length, pktCI.InterfaceIndex, iface, pktCI.AncillaryData, pktCI,
 	}
 }
 
 func (ci captureInfo) gopacketCI() gopacket.CaptureInfo {
-	return gopacket.CaptureInfo{
-		Timestamp:      time.Unix(0, ci.unixNano),
-		CaptureLength:  ci.captureLength,
-		Length:         ci.length,
-		InterfaceIndex: ci.interfaceIndex,
-	}
+	// return gopacket.CaptureInfo{
+	// 	Timestamp:      time.Unix(0, ci.unixNano),
+	// 	CaptureLength:  ci.captureLength,
+	// 	Length:         ci.length,
+	// 	InterfaceIndex: ci.interfaceIndex,
+	// 	AncillaryData:  ci.ancillaryData,
+	// }
+	// debugging
+	return ci.originalCI
 }
 
 type capturedPacket struct {
@@ -117,10 +123,31 @@ func startCapture(addr string, buffer *sharedBufferHook) (*captureProcess, error
 	}
 
 	go func() {
+		lastPacketTimestamp := time.Now()
+		numPackets := 0
+
 		for {
 			select {
 			case pkt := <-pktSrc:
+				// fmt.Println("TRAFFICLOG: new packet with timestamp", pkt.Metadata().CaptureInfo.Timestamp)
+				if pkt.Metadata().CaptureInfo.Timestamp.Before(lastPacketTimestamp) {
+					fmt.Println("TRAFFICLOG: out of order packet")
+				}
+				if len(pkt.Data()) != pkt.Metadata().CaptureLength {
+					fmt.Printf(
+						"TRAFFICLOG: len(pkt.Data()) (%d) != pkt.Metadata().CaptureLength (%d)\n",
+						len(pkt.Data()), pkt.Metadata().CaptureLength,
+					)
+				}
+				if pkt.Metadata().Truncated {
+					fmt.Println("TRAFFICLOG: packet reported as truncated")
+				}
+				lastPacketTimestamp = pkt.Metadata().CaptureInfo.Timestamp
 				proc.buffer.put(capturedPacket{pkt.Data(), newCaptureInfo(pkt, proc.iface)})
+				numPackets++
+				if numPackets%1000 == 0 {
+					fmt.Printf("TRAFFICLOG: captured %d packets\n", numPackets)
+				}
 			case <-proc.stopChan:
 				handle.Close()
 				return
@@ -133,18 +160,22 @@ func startCapture(addr string, buffer *sharedBufferHook) (*captureProcess, error
 
 func (cp *captureProcess) stop() {
 	close(cp.stopChan)
+	cp.buffer.close()
 }
 
-// Packets are not returned sorted.
+// Packets are sorted by timestamp, oldest first.
 func (cp *captureProcess) capturedSince(t time.Time) []capturedPacket {
 	capturedSince := []capturedPacket{}
 	tNano := t.UnixNano()
+	count := 0
 	cp.buffer.forEach(func(i interface{}) {
+		count++
 		pkt := i.(capturedPacket)
 		if pkt.info.unixNano > tNano {
-			capturedSince = append(capturedSince, i.(capturedPacket))
+			capturedSince = append(capturedSince, pkt)
 		}
 	})
+	fmt.Printf("CAPTUREPROC: iterated through %d packets; returning %d\n", count, len(capturedSince))
 	return capturedSince
 }
 
@@ -155,8 +186,7 @@ func (cp *captureProcess) capturedSince(t time.Time) []capturedPacket {
 // be written out in pcapng format using WritePcapng.
 type TrafficLog struct {
 	captureBuffer *sharedRingBuffer
-	savedCaptures *byteSliceRingMap
-	captureInfo   map[string]captureInfo
+	saveBuffer    *sharedRingBuffer
 	captureProcs  map[string]*captureProcess
 
 	// Protects savedCaptures, captureInfo, and captureProcs. The captureBuffer is written to by
@@ -170,11 +200,10 @@ type TrafficLog struct {
 // captureBytes. At any time, a group of captured packets can be saved by calling SaveCaptures. This
 // moves packets captured for a specified address and time period into a separate fixed-size ring
 // buffer. The size of this buffer is specified by saveBytes.
-func NewTrafficLog(maxCapturePackets, saveBytes int) *TrafficLog {
+func NewTrafficLog(maxCapturePackets, maxSavePackets int) *TrafficLog {
 	return &TrafficLog{
 		newSharedRingBuffer(maxCapturePackets),
-		newByteSliceRingMap(saveBytes),
-		map[string]captureInfo{},
+		newSharedRingBuffer(maxSavePackets),
 		map[string]*captureProcess{},
 		sync.Mutex{},
 	}
@@ -224,43 +253,20 @@ func (tl *TrafficLog) UpdateAddresses(addresses []string) error {
 // captured packets will be moved from the main capture buffer into a fixed-size ring buffer
 // specifically for saved captures. Saved packets will only be overwritten upon future calls to
 // SaveCaptures.
-func (tl *TrafficLog) SaveCaptures(address string, d time.Duration) error {
+func (tl *TrafficLog) SaveCaptures(address string, d time.Duration) {
 	tl.mu.Lock()
 	proc, ok := tl.captureProcs[address]
 	tl.mu.Unlock()
 	if !ok {
 		// Not really an error as it's possible the capture process has simply stopped.
-		return nil
+		return
 	}
-	captures := proc.capturedSince(time.Now().Add(-1 * d))
-	before := func(i, j int) bool { return captures[i].info.unixNano < captures[i].info.unixNano }
-	sort.Slice(captures, before)
 
-	var (
-		numErrors int
-		lastError error
-	)
+	captures := proc.capturedSince(time.Now().Add(-1 * d))
+	buf := tl.saveBuffer.newHook() // TODO: this creates a memory leak as the hook is never closed
 	for _, capture := range captures {
-		pid := packetID{address, capture.info.unixNano}.String()
-		onDelete := func() {
-			tl.mu.Lock()
-			delete(tl.captureInfo, pid)
-			tl.mu.Unlock()
-		}
-		err := tl.savedCaptures.put(pid, capture.data, onDelete)
-		if err != nil {
-			numErrors++
-			lastError = err
-		} else {
-			tl.mu.Lock()
-			tl.captureInfo[pid] = capture.info
-			tl.mu.Unlock()
-		}
+		buf.put(capture)
 	}
-	if numErrors > 0 {
-		return errors.New("%d errors saving packets; last error: %v", numErrors, lastError)
-	}
-	return nil
 }
 
 // WritePcapng writes saved captures in pcapng file format.
@@ -298,23 +304,18 @@ func (tl *TrafficLog) WritePcapng(w io.Writer) error {
 		lastError error
 	)
 	// TODO: do we need the statistics?
-	tl.savedCaptures.forEach(func(pktID string, pktData []byte) {
-		ci, ok := tl.captureInfo[pktID]
-		if !ok {
-			numErrors++
-			lastError = errors.New("could not find capture info for packet")
-			return
-		}
-		id, err := registerInterface(ci.iface)
+	tl.saveBuffer.forEach(func(i interface{}) {
+		pkt := i.(capturedPacket)
+		id, err := registerInterface(pkt.info.iface)
 		if err != nil {
 			numErrors++
 			lastError = errors.New("failed to register interface: %v", err)
 			return
 		}
-		gopacketCI := ci.gopacketCI()
+		gopacketCI := pkt.info.gopacketCI()
 		// Oddly, the pcapgo package expects this to be the registration ID.
 		gopacketCI.InterfaceIndex = id
-		if err := pcapW.WritePacket(gopacketCI, pktData); err != nil {
+		if err := pcapW.WritePacket(gopacketCI, pkt.data); err != nil {
 			numErrors++
 			lastError = errors.New("failed to write packet: %v", err)
 			return
@@ -338,8 +339,7 @@ func (tl *TrafficLog) Close() error {
 		proc.stop()
 	}
 	tl.captureBuffer = nil
-	tl.savedCaptures = nil
-	tl.captureInfo = nil
+	tl.saveBuffer = nil
 	tl.captureProcs = nil
 	return nil
 }

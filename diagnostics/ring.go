@@ -84,3 +84,35 @@ func (buf *sharedRingBuffer) newHook() *sharedBufferHook {
 		},
 	}
 }
+
+// forEach applies the input function to each element currently in the buffer. The function is
+// applied to elements in order of insertion. All other operations on this buffer and all hooks into
+// the buffer will be blocked while forEach is running.
+func (buf *sharedRingBuffer) forEach(do func(interface{})) {
+	buf.Lock()
+	defer buf.Unlock()
+
+	currentNodeFor := map[int]*queueNode{}
+	buf.masterQueue.forEach(func(i interface{}) {
+		queueNumber := i.(int)
+		currentQueue, ok := buf.queues[queueNumber]
+		if !ok {
+			// This queue has been closed.
+			return
+		}
+
+		currentNode, ok := currentNodeFor[queueNumber]
+		if !ok {
+			currentNode = currentQueue.first
+		}
+		if currentNode == nil {
+			// This shouldn't happen, but we'll ignore it.
+			//
+			// Warning: if this buffer is ever used for something mission-critical, an error should
+			// be returned here as this violates an invariant of the buffer.
+			return
+		}
+		do(currentNode.value)
+		currentNodeFor[queueNumber] = currentNode.next
+	})
+}
