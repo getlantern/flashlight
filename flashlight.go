@@ -82,8 +82,8 @@ func Run(httpProxyAddr string,
 	}
 
 	// check # of goroutines every minute, print the top 5 stacks with most
-	// goroutines if the # exceeds 2000 and is increasing.
-	stopMonitor := goroutines.Monitor(time.Minute, 2000, 5)
+	// goroutines if the # exceeds 800 and is increasing.
+	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
 	defer stopMonitor()
 	elapsed := mtime.Stopwatch()
 	displayVersion()
