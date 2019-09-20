@@ -13,6 +13,7 @@ import (
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/google/uuid"
 
+	analog "github.com/anacrolix/log"
 	"github.com/getlantern/replica"
 )
 
@@ -24,6 +25,7 @@ type ReplicaHttpServer struct {
 	TorrentClient *torrent.Client
 	// Where to store torrent client data.
 	StorageDirectory string
+	Logger           analog.Logger
 }
 
 type countWriter struct {
@@ -36,7 +38,7 @@ func (me *countWriter) Write(b []byte) (int, error) {
 }
 
 func (me ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	log.Debugf("replica server request path: %q", r.URL.Path)
+	me.Logger.WithValues(analog.Debug).Printf("replica server request path: %q", r.URL.Path)
 	switch r.URL.Path {
 	case "/upload":
 		u, err := uuid.NewRandom()
@@ -45,7 +47,7 @@ func (me ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		name := r.URL.Query().Get("name")
 		s3Key := fmt.Sprintf("/%s/%s/%s", me.InstancePrefix, u.String(), name)
-		log.Debugf("uploading replica key %q", s3Key)
+		me.Logger.WithValues(analog.Debug).Printf("uploading replica key %q", s3Key)
 		var cw countWriter
 		replicaUploadReader := io.TeeReader(r.Body, &cw)
 		f, err := ioutil.TempFile("", "")
@@ -56,10 +58,10 @@ func (me ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			// This isn't good, but as long as we can add the torrent file metainfo to the local
 			// client, we can still spread the metadata, and S3 can take care of the data.
-			log.Errorf("error creating temporary file: %v", err)
+			me.Logger.WithValues(analog.Error).Printf("error creating temporary file: %v", err)
 		}
 		err = replica.Upload(replicaUploadReader, s3Key)
-		log.Debugf("uploaded %d bytes", cw.bytesWritten)
+		me.Logger.WithValues(analog.Debug).Printf("uploaded %d bytes", cw.bytesWritten)
 		if err != nil {
 			panic(err)
 		}
@@ -79,7 +81,7 @@ func (me ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		err = os.Rename(f.Name(), filepath.Join(me.StorageDirectory, info.Name))
 		if err != nil {
 			// Not fatal: See above, we only really need the metainfo to be added to the torrent.
-			log.Errorf("error renaming file: %v", err)
+			me.Logger.WithValues(analog.Error).Printf("error renaming file: %v", err)
 		}
 		_, err = me.TorrentClient.AddTorrent(mi)
 		if err != nil {

@@ -321,6 +321,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 						},
 						TorrentClient:    torrentClient,
 						StorageDirectory: replicaDataDir,
+						Logger:           analog.Default,
 					}),
 			},
 		); err != nil {
