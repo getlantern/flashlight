@@ -57,7 +57,7 @@ func TestProxying(t *testing.T) {
 			if val == nil {
 				return 0
 			}
-			return val.Get()
+			return val.Get().(float64)
 		}
 
 		opsMx.Lock()

@@ -126,6 +126,9 @@ type Dialer interface {
 
 	// Stop stops background processing for this Dialer.
 	Stop()
+
+	// Ping performs an ICMP ping of the proxy used by this dialer
+	Ping()
 }
 
 type dialStats struct {

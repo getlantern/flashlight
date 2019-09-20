@@ -68,12 +68,12 @@ func TestRateTracking(t *testing.T) {
 	assert.Equal(t, "xfer", finalCtx["op"])
 
 	assert.EqualValues(t, float64(8), finalCtx["client_bytes_sent"])
-	assert.True(t, finalCtx["client_bps_sent_min"].(borda.Val).Get() > 0)
-	assert.True(t, finalCtx["client_bps_sent_max"].(borda.Val).Get() > 0)
-	assert.True(t, finalCtx["client_bps_sent_avg"].(borda.Val).Get() > 0)
+	assert.True(t, finalCtx["client_bps_sent_min"].(borda.Val).Get().(float64) > 0)
+	assert.True(t, finalCtx["client_bps_sent_max"].(borda.Val).Get().(float64) > 0)
+	assert.True(t, finalCtx["client_bps_sent_avg"].(borda.Val).Get().(float64) > 0)
 
 	assert.EqualValues(t, float64(10), finalCtx["client_bytes_recv"])
-	assert.True(t, finalCtx["client_bps_recv_min"].(borda.Val).Get() > 0)
-	assert.True(t, finalCtx["client_bps_recv_max"].(borda.Val).Get() > 0)
-	assert.True(t, finalCtx["client_bps_recv_avg"].(borda.Val).Get() > 0)
+	assert.True(t, finalCtx["client_bps_recv_min"].(borda.Val).Get().(float64) > 0)
+	assert.True(t, finalCtx["client_bps_recv_max"].(borda.Val).Get().(float64) > 0)
+	assert.True(t, finalCtx["client_bps_recv_avg"].(borda.Val).Get().(float64) > 0)
 }

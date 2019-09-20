@@ -104,6 +104,8 @@ github.com/getlantern/borda v0.0.0-20190809122504-668025f4c2b9 h1:zRujRezaBjhuLF
 github.com/getlantern/borda v0.0.0-20190809122504-668025f4c2b9/go.mod h1:5gIMs+fPLaRRdTa3f3eMrYgJb/5JmO8/Fa060xvj44U=
 github.com/getlantern/borda v0.0.0-20190912160718-309a1f2164e0 h1:BSHKLxvssImZErbu82696EywC6ZpQyTw+tYqeImIDdY=
 github.com/getlantern/borda v0.0.0-20190912160718-309a1f2164e0/go.mod h1:5MMz/eVuZJFS7nAltX2ktuLT77SbqDlG6hoo3x6kIWE=
+github.com/getlantern/borda v0.0.0-20190917165417-36cadcff5e18 h1:Q9xkR+sYEovMalSOtQ0Q9tMCy9li1xlSgXLexoRVnRQ=
+github.com/getlantern/borda v0.0.0-20190917165417-36cadcff5e18/go.mod h1:htY57XPOAq+JMoRS21F97tSxb7Aa2P3A/pOjdd9sPls=
 github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d h1:gE5pWSEYfMvSETsTanqINNLmv+nuyUjwcm9jOyqJJZI=
 github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
 github.com/getlantern/bytecounting v0.0.0-20190530140808-3b3f10d3b9ab h1:bKsTXN1XgjiWuciuEChVIPFXWD8sTASsvjkMAGMEb/4=
@@ -114,6 +116,8 @@ github.com/getlantern/bytemap v0.0.0-20180417025909-c7bf952233bc h1:TVT95IccIoeF
 github.com/getlantern/bytemap v0.0.0-20180417025909-c7bf952233bc/go.mod h1:DFhUkF3XKDQgnCNVn203TVnRxy4oUnIIMClem8MQxKE=
 github.com/getlantern/bytemap v0.0.0-20190911140348-f17f27076bf9 h1:xpu/mmrhhkINppMPqVLrVkuK7tT7atRthPfzmzdJQr0=
 github.com/getlantern/bytemap v0.0.0-20190911140348-f17f27076bf9/go.mod h1:DFhUkF3XKDQgnCNVn203TVnRxy4oUnIIMClem8MQxKE=
+github.com/getlantern/bytemap v0.0.0-20190914004255-0acf4d58df56 h1:X4NKmX9VNoSWk5CpDJYkmvymfjj4jojGLKiDhwd+kuI=
+github.com/getlantern/bytemap v0.0.0-20190914004255-0acf4d58df56/go.mod h1:DFhUkF3XKDQgnCNVn203TVnRxy4oUnIIMClem8MQxKE=
 github.com/getlantern/cmux v0.0.0-20190809092548-4b7adf243efe h1:GOIyhXIt/VhW4vlYG42It2mtZztJPSLBL0DFlrSrsqs=
 github.com/getlantern/cmux v0.0.0-20190809092548-4b7adf243efe/go.mod h1:6YG7dGkCkWvp7wXlbONN3gjVQypSq6+NCvSEXBhgNC0=
 github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 h1:NRUJuo3v3WGC/g5YiyF790gut6oQr5f3FBI88Wv0dx4=
@@ -155,6 +159,10 @@ github.com/getlantern/go-cache v0.0.0-20141028142048-88b53914f467 h1:10ez8C+7zyH
 github.com/getlantern/go-cache v0.0.0-20141028142048-88b53914f467/go.mod h1:IQND0fl/mdTYNICpN/eDYKX+j90TqQYXdpNFWkJpCPs=
 github.com/getlantern/go-libutp v1.0.3 h1:ESmde7HKb1LaB+6G0eWUuWcjN4DmqOvTRqm49De33sI=
 github.com/getlantern/go-libutp v1.0.3/go.mod h1:59dYQcPvvYl4AsKVIoy1aS4wd08Q8lzlHG16y30c2V0=
+github.com/getlantern/go-ping v0.0.0-20190916231702-a255f24045b3 h1:ag8+Z+WeCn2OKyYtmtaDkE/9wNhF3LrTC0sejiFhWg4=
+github.com/getlantern/go-ping v0.0.0-20190916231702-a255f24045b3/go.mod h1:q/lVkkWTkTnjZ5y+52BOhwj1fu4TvApwEjekNvfS0eY=
+github.com/getlantern/go-ping v0.0.0-20190916232214-0d654d92ece9 h1:RYc8doE7YZXQpqzoL4bD/gZxd4kQSso7keiwXzKCo8M=
+github.com/getlantern/go-ping v0.0.0-20190916232214-0d654d92ece9/go.mod h1:q/lVkkWTkTnjZ5y+52BOhwj1fu4TvApwEjekNvfS0eY=
 github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5 h1:RBKofGGMt2k6eGBwX8mky9qunjL+KnAp9JdzXjiRkRw=
 github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5/go.mod h1:kGHRXch95rnGLHjER/GhhFiHvfnqNz7KqWD9kGfATHY=
 github.com/getlantern/go-update v0.0.0-20190510022740-79c495ab728c h1:mP9bsvdddRSMwqO+lmNuSrsH7nD2nBIz7af+e/4je4c=
@@ -313,6 +321,8 @@ github.com/getlantern/zenodb v0.0.0-20190809092412-0a2ce8ac3026 h1:xM0DWdV/eK7H2
 github.com/getlantern/zenodb v0.0.0-20190809092412-0a2ce8ac3026/go.mod h1:LDw7qTXBZJkjYVIvR2iyi1J4PN8plch0VZzTzc7mDoM=
 github.com/getlantern/zenodb v0.0.0-20190912160227-24b4a29a38ca h1:qMce0nFIyfdlU64i6zG2AvG2Bf8dD0xyjDSPn0anCFI=
 github.com/getlantern/zenodb v0.0.0-20190912160227-24b4a29a38ca/go.mod h1:NuQhvCpGXVMqfAIYJWQrDjZCbak3U5lXFSSpqDVUMs0=
+github.com/getlantern/zenodb v0.0.0-20190917165203-32a60251f38b h1:J+k1klLxUMt3JLBJayt+op0AWp45Vt4SOrxOscb7Pyg=
+github.com/getlantern/zenodb v0.0.0-20190917165203-32a60251f38b/go.mod h1:Uxs9BCNogjdqtqThOrKakeDhMXjN3KLjH40W1OPPGic=
 github.com/glendc/gopher-json v0.0.0-20170414221815-dc4743023d0c h1:iRTj5SRYwbvsygdwVp+y9kZT145Y1s6xOPpeOEIeGc4=
 github.com/glendc/gopher-json v0.0.0-20170414221815-dc4743023d0c/go.mod h1:Gja1A+xZ9BoviGJNA2E9vFkPjjsl+CoJxSXiQM1UXtw=
 github.com/glycerine/go-unsnap-stream v0.0.0-20180323001048-9f0cb55181dd/go.mod h1:/20jfyN9Y5QPEAprSgKAUr+glWDY39ZiUEAYOEv5dsE=
@@ -518,6 +528,8 @@ github.com/stretchr/testify v1.2.1/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXf
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.3.0 h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0Q=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
+github.com/stretchr/testify v1.4.0 h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJyk=
+github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/syndtr/goleveldb v1.0.0 h1:fBdIW9lB4Iz0n9khmH8w27SJ3QEJ7+IgjPEwGSZiFdE=
 github.com/syndtr/goleveldb v1.0.0/go.mod h1:ZVVdQEZoIme9iO1Ch2Jdy24qqXrMMOU6lpPAyBWyWuQ=
 github.com/templexxx/cpufeat v0.0.0-20180724012125-cef66df7f161 h1:89CEmDvlq/F7SJEOqkIdNDGJXrQIhuIx9D2DBXjavSU=
@@ -550,8 +562,6 @@ github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2 h1:zzrxE1FKn5ryB
 github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2/go.mod h1:hzfGeIUDq/j97IG+FhNqkowIyEcD88LrW6fyU3K3WqY=
 github.com/yuin/gopher-lua v0.0.0-20190514113301-1cd887cd7036 h1:1b6PAtenNyhsmo/NKXVe34h7JEZKva1YB/ne7K7mqKM=
 github.com/yuin/gopher-lua v0.0.0-20190514113301-1cd887cd7036/go.mod h1:gqRgreBUhTSL0GeU64rtZ3Uq3wtjOa/TB2YfrtkCbVQ=
-github.com/zserge/webview v0.0.0-20190123072648-16c93bcaeaeb h1:zVjnyZIM7UtkG3dNckiudIm+TUHkZqi5xlVQPd3J6/c=
-github.com/zserge/webview v0.0.0-20190123072648-16c93bcaeaeb/go.mod h1:a1CV8KR4Dd1eP2g+mEijGOp+HKczwdKHWyx0aPHKvo4=
 go.opencensus.io v0.17.0/go.mod h1:mp1VrMQxhlqqDpKvH4UcQUa4YwlzNmymAjPrDdfxNpI=
 golang.org/x/crypto v0.0.0-20180308185624-c7dcf104e3a7/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
 golang.org/x/crypto v0.0.0-20180904163835-0709b304e793/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=

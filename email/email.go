@@ -148,7 +148,7 @@ func sendTemplate(msg *Message) error {
 		fileName = util.TrimStringAsRunes(maxNameLength, fileName, true)
 		fileName = util.SanitizePathString(fileName)
 
-		fileContent := fmt.Sprint("%v", msg.Vars["file"])
+		fileContent := fmt.Sprintf("%v", msg.Vars["file"])
 		byteLen := float64(len(fileContent))
 		if byteLen <= maxFileSize {
 			mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
