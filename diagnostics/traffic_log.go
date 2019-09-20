@@ -122,17 +122,13 @@ func startCapture(addr string, buffer *sharedBufferHook) (*captureProcess, error
 		stopChan: make(chan struct{}),
 	}
 
-	go func() {
-		lastPacketTimestamp := time.Now()
-		numPackets := 0
+	numPackets := 0
+	numPacketsLock := new(sync.Mutex)
 
+	capture := func() {
 		for {
 			select {
 			case pkt := <-pktSrc:
-				// fmt.Println("TRAFFICLOG: new packet with timestamp", pkt.Metadata().CaptureInfo.Timestamp)
-				if pkt.Metadata().CaptureInfo.Timestamp.Before(lastPacketTimestamp) {
-					fmt.Println("TRAFFICLOG: out of order packet")
-				}
 				if len(pkt.Data()) != pkt.Metadata().CaptureLength {
 					fmt.Printf(
 						"TRAFFICLOG: len(pkt.Data()) (%d) != pkt.Metadata().CaptureLength (%d)\n",
@@ -142,18 +138,31 @@ func startCapture(addr string, buffer *sharedBufferHook) (*captureProcess, error
 				if pkt.Metadata().Truncated {
 					fmt.Println("TRAFFICLOG: packet reported as truncated")
 				}
-				lastPacketTimestamp = pkt.Metadata().CaptureInfo.Timestamp
 				proc.buffer.put(capturedPacket{pkt.Data(), newCaptureInfo(pkt, proc.iface)})
+
+				numPacketsLock.Lock()
 				numPackets++
 				if numPackets%1000 == 0 {
-					fmt.Printf("TRAFFICLOG: captured %d packets\n", numPackets)
+					droppedPackets := 0
+					stats, err := handle.Stats()
+					if err != nil {
+						fmt.Printf("TRAFFICLOG: failed to obtain handle stats:", err)
+					} else {
+						droppedPackets = stats.PacketsDropped
+					}
+					fmt.Printf("TRAFFICLOG: captured %d packets, dropped %d\n", numPackets, droppedPackets)
 				}
+				numPacketsLock.Unlock()
 			case <-proc.stopChan:
 				handle.Close()
 				return
 			}
 		}
-	}()
+	}
+
+	for i := 0; i < 10; i++ {
+		go capture()
+	}
 
 	return &proc, nil
 }
