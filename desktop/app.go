@@ -305,7 +305,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		// ui will handle empty uiaddr correctly
 		if app.uiServer, err = ui.StartServer(uiaddr,
 			startupURL,
-			localHTTPToken(settings),
+			app.localHttpToken(),
 			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
 			&ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
 			// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
@@ -638,4 +638,11 @@ func (app *App) AddToken(path string) string {
 // GetTranslations adds our secure token to a given request path.
 func (app *App) GetTranslations(filename string) ([]byte, error) {
 	return ui.Translations(filename)
+}
+
+func (app *App) localHttpToken() string {
+	if app.Flags["noUiHttpToken"].(bool) {
+		return ""
+	}
+	return localHTTPToken(settings)
 }
