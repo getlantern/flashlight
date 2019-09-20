@@ -75,16 +75,14 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 	if s.Addr == "" {
 		return nil, errors.New("Empty addr")
 	}
-	isUTP := strings.HasPrefix(s.PluggableTransport, "utp")
 	transport := s.PluggableTransport
 	proto := "tcp"
-	if isUTP {
-		proto = "udp"
-	}
+
 	switch transport {
 	case "", "http", "https", "utphttp", "utphttps":
 		transport := "http"
-		if isUTP {
+		if strings.HasPrefix(s.PluggableTransport, "utp") {
+			proto = "udp"
 			transport = "utphttp"
 		}
 		var p *proxy
