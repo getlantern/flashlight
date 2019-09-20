@@ -19,7 +19,7 @@ import (
 
 type ReplicaHttpServer struct {
 	// This is the S3 key prefix used to group uploads for listing.
-	InstancePrefix string
+	//InstancePrefix string
 	// Used to handle non-Replica specific routes. (All the hard work has been done!).
 	Confluence    confluence.Handler
 	TorrentClient *torrent.Client
@@ -46,7 +46,10 @@ func (me ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 		name := r.URL.Query().Get("name")
-		s3Key := fmt.Sprintf("/%s/%s/%s", me.InstancePrefix, u.String(), name)
+		s3Key := u.String()
+		if name != "" {
+			s3Key += "/" + name
+		}
 		me.Logger.WithValues(analog.Debug).Printf("uploading replica key %q", s3Key)
 		var cw countWriter
 		replicaUploadReader := io.TeeReader(r.Body, &cw)
