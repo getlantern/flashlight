@@ -3,6 +3,7 @@ package diagnostics
 import (
 	"bytes"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -11,6 +12,17 @@ import (
 
 	"github.com/stretchr/testify/require"
 )
+
+func TestNetworkInterface(t *testing.T) {
+	ip, err := net.LookupIP("10.0.0.1")
+	require.NoError(t, err)
+
+	iface, err := networkInterfaceFor(ip[0])
+	require.NoError(t, err)
+
+	fmt.Println(iface.name())
+	fmt.Println(iface.mtu())
+}
 
 func TestTrafficLog(t *testing.T) {
 	t.Parallel()
@@ -54,7 +66,7 @@ func TestTrafficLog(t *testing.T) {
 
 	time.Sleep(500 * time.Millisecond)
 	for _, addr := range addresses {
-		require.NoError(t, tl.SaveCaptures(addr, time.Minute))
+		tl.SaveCaptures(addr, time.Minute)
 	}
 
 	pcapFileBuf := new(bytes.Buffer)
