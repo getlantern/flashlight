@@ -67,9 +67,7 @@ func (pid packetID) String() string {
 }
 
 // startCapture for the input address, saving packets to the provided buffer. Non-blocking.
-// func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.BufferPool) (*captureProcess, error) {
-func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.SizedBufferPool) (*captureProcess, error) {
-
+func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.BufferPool) (*captureProcess, error) {
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
 		return nil, errors.New("malformed address: %v", err)
@@ -190,9 +188,8 @@ func (cp *captureProcess) capturedSince(t time.Time) []capturedPacket {
 type TrafficLog struct {
 	captureBuffer *sharedRingBuffer
 	saveBuffer    *ringBuffer
-	// capturePool   *bpool.BufferPool
-	capturePool  *bpool.SizedBufferPool
-	captureProcs map[string]*captureProcess
+	capturePool   *bpool.BufferPool
+	captureProcs  map[string]*captureProcess
 
 	// Protects savedCaptures, captureInfo, and captureProcs. The captureBuffer is written to by
 	// captureProcesses which do not respect this lock.
@@ -209,8 +206,7 @@ func NewTrafficLog(maxCapturePackets, maxSavePackets int) *TrafficLog {
 	return &TrafficLog{
 		newSharedRingBuffer(maxCapturePackets),
 		newRingBuffer(maxSavePackets),
-		// bpool.NewBufferPool(maxCapturePackets),
-		bpool.NewSizedBufferPool(maxCapturePackets, 1500), // debugging
+		bpool.NewBufferPool(maxCapturePackets),
 		map[string]*captureProcess{},
 		sync.Mutex{},
 	}
