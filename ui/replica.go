@@ -48,6 +48,7 @@ func (me ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	me.initMuxOnce.Do(func() {
 		me.mux.HandleFunc("/upload", me.handleUpload)
 		me.mux.HandleFunc("/uploads", me.handleUploads)
+		me.mux.HandleFunc("/view", me.handleView)
 		me.mux.Handle("/", me.Confluence)
 	})
 	me.mux.ServeHTTP(w, r)
@@ -109,7 +110,7 @@ func (me ReplicaHttpServer) handleUpload(w http.ResponseWriter, r *http.Request)
 		panic(err)
 	}
 	w.Header().Set("Content-Type", "text/uri-list")
-	fmt.Fprintln(w, createReplicaUrl(tt.InfoHash(), s3Key))
+	fmt.Fprintln(w, createLink(tt.InfoHash(), s3Key))
 }
 
 func (me ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Request) {
@@ -135,7 +136,7 @@ func (me ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Request
 			me.Logger.WithValues(analog.Warning).Printf("error unmarshalling info: %v", err)
 			return nil
 		}
-		resp = append(resp, createReplicaUrl(mi.HashInfoBytes(), s3KeyFromInfoName(info.Name)))
+		resp = append(resp, createLink(mi.HashInfoBytes(), s3KeyFromInfoName(info.Name)))
 		return nil
 	})
 	if err != nil {
@@ -148,6 +149,40 @@ func (me ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Request
 	}
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, "%s\n", b)
+}
+
+func (me ReplicaHttpServer) handleView(w http.ResponseWriter, r *http.Request) {
+	l, err := decodeLink(r.URL.Query().Get("link"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	t, new, release := me.Confluence.GetTorrent(l.ih)
+	defer release()
+	if new && t.Info() == nil {
+		// Get another reference to the torrent that lasts until we're done fetching the metainfo.
+		_, _, release := me.Confluence.GetTorrent(l.ih)
+		go func() {
+			defer release()
+			tob, err := replica.GetObjectTorrent(l.s3Key)
+			if err != nil {
+				me.Logger.Printf("error getting metainfo from s3: %v", err)
+				return
+			}
+			defer tob.Close()
+			mi, err := metainfo.Load(tob)
+			if err != nil {
+				me.Logger.Print(err)
+				return
+			}
+			err = me.Confluence.PutMetainfo(t, mi)
+			if err != nil {
+				me.Logger.Printf("error putting metainfo from s3: %v")
+			}
+			me.Logger.Printf("added metainfo from s3")
+		}()
+	}
+	confluence.ServeTorrent(w, r, t)
 }
 
 func (me ReplicaHttpServer) uploadsDir() string {
@@ -171,7 +206,7 @@ func storeUploadedTorrent(r io.Reader, path string) error {
 	return f.Close()
 }
 
-func createReplicaUrl(ih torrent.InfoHash, s3Key string) string {
+func createLink(ih torrent.InfoHash, s3Key string) string {
 	return (&url.URL{
 		Scheme: "https",
 		Host:   "replica.getlantern.org",
@@ -184,4 +219,19 @@ func createReplicaUrl(ih torrent.InfoHash, s3Key string) string {
 
 func s3KeyFromInfoName(name string) string {
 	return strings.Replace(name, "_", "/", 1)
+}
+
+type link struct {
+	s3Key string
+	ih    torrent.InfoHash
+}
+
+func decodeLink(s string) (l link, err error) {
+	u, err := url.Parse(s)
+	if err != nil {
+		return
+	}
+	l.s3Key = u.Path
+	err = l.ih.FromHexString(u.Query().Get("ih"))
+	return
 }
