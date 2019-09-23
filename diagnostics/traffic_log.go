@@ -28,29 +28,21 @@ type captureInfo struct {
 	unixNano                              int64
 	captureLength, length, interfaceIndex int
 	iface                                 *networkInterface
-
-	// debugging
-	ancillaryData []interface{}
-	originalCI    gopacket.CaptureInfo
 }
 
-func newCaptureInfo(pkt gopacket.Packet, iface *networkInterface) captureInfo {
-	pktCI := pkt.Metadata().CaptureInfo
+func newCaptureInfo(ci gopacket.CaptureInfo, iface *networkInterface) captureInfo {
 	return captureInfo{
-		pktCI.Timestamp.UnixNano(), pktCI.CaptureLength, pktCI.Length, pktCI.InterfaceIndex, iface, pktCI.AncillaryData, pktCI,
+		ci.Timestamp.UnixNano(), ci.CaptureLength, ci.Length, ci.InterfaceIndex, iface,
 	}
 }
 
 func (ci captureInfo) gopacketCI() gopacket.CaptureInfo {
-	// return gopacket.CaptureInfo{
-	// 	Timestamp:      time.Unix(0, ci.unixNano),
-	// 	CaptureLength:  ci.captureLength,
-	// 	Length:         ci.length,
-	// 	InterfaceIndex: ci.interfaceIndex,
-	// 	AncillaryData:  ci.ancillaryData,
-	// }
-	// debugging
-	return ci.originalCI
+	return gopacket.CaptureInfo{
+		Timestamp:      time.Unix(0, ci.unixNano),
+		CaptureLength:  ci.captureLength,
+		Length:         ci.length,
+		InterfaceIndex: ci.interfaceIndex,
+	}
 }
 
 type capturedPacket struct {
@@ -150,19 +142,7 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.SizedBu
 				proc.logError(errors.New("failed to write packet data to buffer: %v", err))
 				continue
 			}
-			pktSrc <- capturedPacket{
-				dataBuf: dataBuf,
-				info: captureInfo{
-					unixNano:      ci.Timestamp.UnixNano(),
-					captureLength: ci.CaptureLength,
-					length:        ci.Length,
-					iface:         proc.iface,
-
-					// debugging
-					ancillaryData: ci.AncillaryData,
-					originalCI:    ci,
-				},
-			}
+			pktSrc <- capturedPacket{dataBuf, newCaptureInfo(ci, proc.iface)}
 
 			// debugging
 			count++
@@ -178,9 +158,6 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.SizedBu
 			case pkt := <-pktSrc:
 				// TODO: this doesn't seem like it'd benefit from concurrency since the put is locked
 				proc.buffer.put(pkt, func() { dataPool.Put(pkt.dataBuf) })
-
-				// debugging
-				incrementNumPackets()
 			case <-proc.stopChan:
 				// We will end up calling this multiple times, but that's okay.
 				handle.Close()
