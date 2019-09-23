@@ -13,7 +13,6 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	"github.com/google/gopacket/pcapgo"
-	"github.com/montanaflynn/stats"
 	"github.com/oxtoacart/bpool"
 
 	"github.com/getlantern/errors"
@@ -23,7 +22,7 @@ import (
 const packetReadTimeout = 100 * time.Millisecond
 
 // The number of goroutines per capture process.
-const captureProcessConcurrency = 10
+const captureProcessConcurrency = 1
 
 type captureInfo struct {
 	unixNano                              int64
@@ -63,7 +62,7 @@ type captureProcess struct {
 	addr      string
 	buffer    *sharedBufferHook
 	iface     *networkInterface
-	errorChan chan error
+	errorChan chan error // TODO: expose on traffic log
 	stopChan  chan struct{}
 
 	// TODO: track dropped captures and expose on traffic log
@@ -128,8 +127,14 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.SizedBu
 		stopChan:  make(chan struct{}),
 	}
 
+	// debugging
+	statsTracker := newHandleStatsTracker()
+
 	pktSrc := make(chan capturedPacket, captureProcessConcurrency*2)
 	go func() {
+		// debugging
+		count := 0
+
 		for {
 			data, ci, err := handle.ZeroCopyReadPacketData()
 			if err != nil && err == io.EOF {
@@ -158,11 +163,14 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.SizedBu
 					originalCI:    ci,
 				},
 			}
+
+			// debugging
+			count++
+			if count%10000 == 0 {
+				statsTracker.printStats(handle)
+			}
 		}
 	}()
-
-	// debugging
-	go watchHandle(handle)
 
 	capture := func() {
 		for {
@@ -212,39 +220,6 @@ func (cp *captureProcess) capturedSince(t time.Time) []capturedPacket {
 		}
 	})
 	return capturedSince
-}
-
-type trackedStats struct {
-	mean, percentile90, percentile95, percentile99 float64
-}
-
-// debugging
-func getStats(data []int) (*trackedStats, error) {
-	d := stats.LoadRawData(data)
-	mean, err := d.Mean()
-	if err != nil {
-		return nil, errors.New("failed to calculate mean: %v", err)
-	}
-	p90, err := d.Percentile(90)
-	if err != nil {
-		return nil, errors.New("failed to calculate 90th percentile: %v", err)
-	}
-	p95, err := d.Percentile(95)
-	if err != nil {
-		return nil, errors.New("failed to calculate 95th percentile: %v", err)
-	}
-	p99, err := d.Percentile(99)
-	if err != nil {
-		return nil, errors.New("failed to calculate 99th percentile: %v", err)
-	}
-	return &trackedStats{mean, p90, p95, p99}, nil
-}
-
-func (ts trackedStats) String() string {
-	return fmt.Sprintf(
-		"mean: %.2f; 90%%: %.2f; 95%%: %.2f; 99%%: %.2f",
-		ts.mean, ts.percentile90, ts.percentile95, ts.percentile99,
-	)
 }
 
 // TrafficLog is a log of network traffic.

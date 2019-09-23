@@ -2,16 +2,9 @@ package diagnostics
 
 import (
 	"fmt"
-	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/google/gopacket/pcap"
-)
-
-var (
-	numPackets  = int64(0)
-	metricsLock = new(sync.Mutex)
 )
 
 func println(a ...interface{}) {
@@ -22,37 +15,47 @@ func printf(s string, a ...interface{}) {
 	fmt.Printf("TRAFFICLOG: %s\n", fmt.Sprintf(s, a...))
 }
 
-func incrementNumPackets() {
-	newNumber := atomic.AddInt64(&numPackets, 1)
-	if newNumber%10000 == 0 {
-		printf("captured %d packets", newNumber)
-	}
+type handleStatsTracker struct {
+	received, dropped int
+	lastCall          time.Time
 }
 
-func watchHandle(handle *pcap.Handle) {
-	packetsLastMinute, droppedLastMinute := int64(0), int64(0)
-	for {
-		func() {
-			time.Sleep(time.Minute)
-			metricsLock.Lock()
-			defer metricsLock.Unlock()
+func newHandleStatsTracker() *handleStatsTracker {
+	return &handleStatsTracker{0, 0, time.Now()}
+}
 
-			handleStats, err := handle.Stats()
-			if err != nil {
-				println("failed to obtain handle stats:", err)
-				return
-			}
+// Should not be called concurrently with other methods on h.
+func (t *handleStatsTracker) printStats(h *pcap.Handle) {
+	const meanPacketSize = 875
 
-			pktsPastMinute := numPackets - packetsLastMinute
-			droppedPastMinute := int64(handleStats.PacketsDropped) - droppedLastMinute
-			printf(
-				"TRAFFICLOG:\n\tdrop rate past minute: %.2f %%\n\tingress past minute: %d\n\t; droppedPastMinute: %d\n",
-				100*float64(droppedPastMinute)/float64(pktsPastMinute+droppedPastMinute),
-				pktsPastMinute,
-				droppedPastMinute,
-			)
-			packetsLastMinute = numPackets
-			droppedLastMinute = int64(handleStats.PacketsDropped)
-		}()
+	handleStats, err := h.Stats()
+	if err != nil {
+		println("failed to obtain handle stats:", err)
+		return
 	}
+
+	var (
+		newlyReceived        = handleStats.PacketsReceived - t.received
+		newlyDropped         = handleStats.PacketsDropped - t.dropped
+		currentDropRate      = float64(newlyDropped) / float64(newlyDropped+newlyReceived)
+		overallDropRate      = float64(handleStats.PacketsDropped) / float64(handleStats.PacketsReceived+handleStats.PacketsDropped)
+		currentTime          = time.Now()
+		timePeriod           = currentTime.Sub(t.lastCall)
+		ingressRate          = (float64(newlyReceived) / float64(timePeriod)) * float64(1e9)
+		estimatedConsumption = ingressRate * float64(meanPacketSize) / float64(125000)
+	)
+
+	printf(
+		"capture stats:\n\ttotal received packets: %d\n\ttotal dropped packets: %d\n\tcurrent drop rate: %.2f %%\n\ttotal drop rate: %.2f %%\n\tingress rate: %.f pkt/s\n\testimated consumption: %.1f Mbps\n\ttime period: %v\n",
+		handleStats.PacketsReceived,
+		handleStats.PacketsDropped,
+		100*currentDropRate,
+		100*overallDropRate,
+		ingressRate,
+		estimatedConsumption,
+		timePeriod,
+	)
+	t.received = handleStats.PacketsReceived
+	t.dropped = handleStats.PacketsDropped
+	t.lastCall = currentTime
 }
