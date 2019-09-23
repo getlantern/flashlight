@@ -128,11 +128,6 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.SizedBu
 		stopChan:  make(chan struct{}),
 	}
 
-	// layerType := layers.LayerTypeEthernet
-	// if remoteIP.IsLoopback() && runtime.GOOS != "linux" {
-	// 	// This is done to support testing.
-	// 	layerType = layers.LayerTypeLoopback
-	// }
 	pktSrc := make(chan capturedPacket, captureProcessConcurrency*2)
 	go func() {
 		for {
@@ -166,40 +161,8 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.SizedBu
 		}
 	}()
 
-	// pktSrc := gopacket.NewPacketSource(handle, layerType).Packets()
-
-	numPackets := 0
-	alreadyDropped := 0 // also protected by numPacketsLock
-	packetLengths := []int{}
-	metricsLock := new(sync.Mutex)
-
-	go func() {
-		numPacketsLastMinute, numDroppedLastMinute := 0, 0
-		for {
-			func() {
-				time.Sleep(time.Minute)
-				metricsLock.Lock()
-				defer metricsLock.Unlock()
-
-				handleStats, err := handle.Stats()
-				if err != nil {
-					fmt.Println("TRAFFICLOG: failed to obtain handle stats:", err)
-					return
-				}
-
-				pktsPastMinute := numPackets - numPacketsLastMinute
-				droppedPastMinute := handleStats.PacketsDropped - numDroppedLastMinute
-				fmt.Printf(
-					"TRAFFICLOG:\n\tdrop rate past minute: %.2f %%\n\tingress rate past minute: %d ppm\n\tpktsPastMinute: %d; droppedPastMinute: %d\n",
-					100*float64(droppedPastMinute)/float64(pktsPastMinute+droppedPastMinute),
-					pktsPastMinute,
-					pktsPastMinute, droppedPastMinute,
-				)
-				numPacketsLastMinute = numPackets
-				numDroppedLastMinute = handleStats.PacketsDropped
-			}()
-		}
-	}()
+	// debugging
+	go watchHandle(handle)
 
 	capture := func() {
 		for {
@@ -208,29 +171,8 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.SizedBu
 				// TODO: this doesn't seem like it'd benefit from concurrency since the put is locked
 				proc.buffer.put(pkt, func() { dataPool.Put(pkt.dataBuf) })
 
-				metricsLock.Lock()
-				numPackets++
-				if numPackets%1000 == 0 {
-					droppedPackets := 0
-					handleStats, err := handle.Stats()
-					if err != nil {
-						fmt.Println("TRAFFICLOG: failed to obtain handle stats:", err)
-					} else {
-						droppedPackets = handleStats.PacketsDropped
-						if droppedPackets-alreadyDropped > 0 {
-							fmt.Printf("TRAFFICLOG: %d more packets dropped since last check\n", droppedPackets-alreadyDropped)
-						}
-						alreadyDropped = droppedPackets
-					}
-					fmt.Printf("TRAFFICLOG: captured %d packets, dropped %d\n", numPackets, droppedPackets)
-					if s, err := getStats(packetLengths); err != nil {
-						fmt.Println("TRAFFICLOG: failed to calculate packet length stats:", err)
-					} else {
-						fmt.Printf("TRAFFICLOG: packet length stats: %v\n", s)
-					}
-				}
-				packetLengths = append(packetLengths, pkt.dataBuf.Len())
-				metricsLock.Unlock()
+				// debugging
+				incrementNumPackets()
 			case <-proc.stopChan:
 				// We will end up calling this multiple times, but that's okay.
 				handle.Close()
@@ -263,17 +205,12 @@ func (cp *captureProcess) stop() {
 func (cp *captureProcess) capturedSince(t time.Time) []capturedPacket {
 	capturedSince := []capturedPacket{}
 	tNano := t.UnixNano()
-	count := 0
-	fmt.Printf("CAPTUREPROC: calling forEach\n")
 	cp.buffer.forEach(func(i interface{}) {
-		fmt.Printf("CAPTUREPROC: in forEach, count = %d\n", count)
-		count++
 		pkt := i.(capturedPacket)
 		if pkt.info.unixNano > tNano {
 			capturedSince = append(capturedSince, pkt)
 		}
 	})
-	fmt.Printf("CAPTUREPROC: iterated through %d packets; returning %d\n", count, len(capturedSince))
 	return capturedSince
 }
 

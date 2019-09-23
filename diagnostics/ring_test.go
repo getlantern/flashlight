@@ -1,16 +1,10 @@
 package diagnostics
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
-
-func TestTest(t *testing.T) {
-	p, d := 83164, 8879
-	fmt.Printf("%.1f\n", 100*float64(d)/(float64(p+d)))
-}
 
 func TestSharedRingBuffer(t *testing.T) {
 	t.Parallel()
