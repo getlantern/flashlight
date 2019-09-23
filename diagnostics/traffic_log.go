@@ -21,9 +21,6 @@ import (
 // Warning: do not set to >= 1 second: https://github.com/google/gopacket/issues/499
 const packetReadTimeout = 100 * time.Millisecond
 
-// The number of goroutines per capture process.
-const captureProcessConcurrency = 1
-
 type captureInfo struct {
 	unixNano                              int64
 	captureLength, length, interfaceIndex int
@@ -122,7 +119,6 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.SizedBu
 	// debugging
 	statsTracker := newHandleStatsTracker()
 
-	pktSrc := make(chan capturedPacket, captureProcessConcurrency*2)
 	go func() {
 		// debugging
 		count := 0
@@ -142,7 +138,8 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.SizedBu
 				proc.logError(errors.New("failed to write packet data to buffer: %v", err))
 				continue
 			}
-			pktSrc <- capturedPacket{dataBuf, newCaptureInfo(ci, proc.iface)}
+			pkt := capturedPacket{dataBuf, newCaptureInfo(ci, proc.iface)}
+			proc.buffer.put(pkt, func() { dataPool.Put(pkt.dataBuf) })
 
 			// debugging
 			count++
@@ -152,24 +149,10 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.SizedBu
 		}
 	}()
 
-	capture := func() {
-		for {
-			select {
-			case pkt := <-pktSrc:
-				// TODO: this doesn't seem like it'd benefit from concurrency since the put is locked
-				proc.buffer.put(pkt, func() { dataPool.Put(pkt.dataBuf) })
-			case <-proc.stopChan:
-				// We will end up calling this multiple times, but that's okay.
-				handle.Close()
-				return
-			}
-		}
-	}
-
-	// TODO: evaluate better how much this actually helps
-	for i := 0; i < captureProcessConcurrency; i++ {
-		go capture()
-	}
+	go func() {
+		<-proc.stopChan
+		handle.Close()
+	}()
 
 	return &proc, nil
 }
