@@ -17,9 +17,12 @@ import (
 	analog "github.com/anacrolix/log" // heuheuehue
 	"github.com/anacrolix/missinggo/conntrack"
 	"github.com/anacrolix/torrent"
+	"github.com/anacrolix/torrent/metainfo"
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight"
+	"github.com/getlantern/replica"
+
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/launcher"
@@ -268,10 +271,13 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			}
 		}
 
-		replicaDataDir := filepath.Join(os.TempDir(), "replica")
-		err = os.MkdirAll(replicaDataDir, 0755)
+		replicaLogger := analog.Default
+		replicaDir := filepath.Join(os.TempDir(), "replica")
+		replicaUploadsDir := filepath.Join(replicaDir, "uploads")
+		replicaDataDir := filepath.Join(replicaDir, "data")
+		err = os.MkdirAll(replicaDir, 0750)
 		if err != nil {
-			// Deferring correct handling here: If we can't create or access this directory, The
+			// Deferring correct handling here: If we can't create or access this directory, the
 			// Replica torrent client will not be able to download.
 			panic(err)
 		}
@@ -279,11 +285,11 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		cfg.DataDir = replicaDataDir
 		cfg.Seed = true
 		cfg.Debug = true
-		cfg.Logger = cfg.Logger.WithFilter(func(m analog.Msg) bool {
+		cfg.Logger = replicaLogger.WithFilter(func(m analog.Msg) bool {
 			return !m.HasValue("upnp-discover")
 		})
-		// Pending a packet rate limit to prevent network overload and DNS failure. Also using S3 as
-		// a fallback means we have a great tracker to rely on.
+		// DHT disabled pending a packet rate limit to prevent network overload and DNS failure.
+		// Also using S3 as a fallback means we have a great tracker to rely on.
 		cfg.NoDHT = true
 		// Household users may be behind a NAT/bad router, or on a limited device like a mobile. We
 		// don't want to overload their networks, so ensure the default connection tracking
@@ -299,6 +305,15 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			log.Errorf("error starting torrent client: %v", err)
 			app.Exit(err)
 		}
+
+		replica.IterUploads(replicaUploadsDir, func(mi *metainfo.MetaInfo, err error) {
+			if err != nil {
+				replicaLogger.Printf("error while iterating uploads: %v", err)
+				return
+			}
+			_, err = torrentClient.AddTorrent(mi)
+			replicaLogger.WithValues(analog.Error).Printf("error adding upload to torrent client: %v", err)
+		})
 
 		log.Debugf("Starting client UI at %v", uiaddr)
 
@@ -319,9 +334,10 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 						Confluence: confluence.Handler{
 							TC: torrentClient,
 						},
-						TorrentClient:    torrentClient,
-						StorageDirectory: replicaDataDir,
-						Logger:           analog.Default,
+						TorrentClient: torrentClient,
+						DataDir:       replicaDataDir,
+						Logger:        replicaLogger,
+						UploadsDir:    replicaUploadsDir,
 					}),
 			},
 		); err != nil {

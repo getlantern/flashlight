@@ -28,10 +28,11 @@ type ReplicaHttpServer struct {
 	Confluence    confluence.Handler
 	TorrentClient *torrent.Client
 	// Where to store torrent client data.
-	StorageDirectory string
-	Logger           analog.Logger
-	mux              http.ServeMux
-	initMuxOnce      sync.Once
+	DataDir     string
+	UploadsDir  string
+	Logger      analog.Logger
+	mux         http.ServeMux
+	initMuxOnce sync.Once
 }
 
 type countWriter struct {
@@ -100,7 +101,7 @@ func (me ReplicaHttpServer) handleUpload(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		panic(err)
 	}
-	err = os.Rename(f.Name(), filepath.Join(me.StorageDirectory, info.Name))
+	err = os.Rename(f.Name(), filepath.Join(me.DataDir, info.Name))
 	if err != nil {
 		// Not fatal: See above, we only really need the metainfo to be added to the torrent.
 		me.Logger.WithValues(analog.Error).Printf("error renaming file: %v", err)
@@ -115,29 +116,17 @@ func (me ReplicaHttpServer) handleUpload(w http.ResponseWriter, r *http.Request)
 
 func (me ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Request) {
 	var resp []string
-	err := filepath.Walk(me.uploadsDir(), func(path string, fi os.FileInfo, err error) error {
+	err := replica.IterUploads(me.uploadsDir(), func(mi *metainfo.MetaInfo, err error) {
 		if err != nil {
-			me.Logger.Printf("error walking to %q: %v", path, err)
-			return nil
-		}
-		if fi.IsDir() {
-			return nil
-		}
-		if filepath.Ext(path) != ".torrent" {
-			return nil
-		}
-		mi, err := metainfo.LoadFromFile(path)
-		if err != nil {
-			me.Logger.WithValues(analog.Warning).Printf("error loading metainfo from file %q: %v", path, err)
-			return nil
+			me.Logger.Printf("error iterating uploads: %v", err)
+			return
 		}
 		info, err := mi.UnmarshalInfo()
 		if err != nil {
 			me.Logger.WithValues(analog.Warning).Printf("error unmarshalling info: %v", err)
-			return nil
+			return
 		}
 		resp = append(resp, createLink(mi.HashInfoBytes(), s3KeyFromInfoName(info.Name)))
-		return nil
 	})
 	if err != nil {
 		me.Logger.Printf("error walking uploads dir: %v", err)
@@ -186,7 +175,7 @@ func (me ReplicaHttpServer) handleView(w http.ResponseWriter, r *http.Request) {
 }
 
 func (me ReplicaHttpServer) uploadsDir() string {
-	return filepath.Join(me.StorageDirectory, "uploads")
+	return me.UploadsDir
 }
 
 func storeUploadedTorrent(r io.Reader, path string) error {
