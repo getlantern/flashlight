@@ -52,9 +52,7 @@ func saveAndZipProxyTraffic(addresses []string, trafficLog *diagnostics.TrafficL
 		return nil, errors.New("failed to create zip file for capture: %v", err)
 	}
 	for _, addr := range addresses {
-		if err := trafficLog.SaveCaptures(addr, captureSaveDuration); err != nil {
-			return nil, errors.New("failed to save captures for %s: %v", addr, err)
-		}
+		trafficLog.SaveCaptures(addr, captureSaveDuration)
 	}
 	if err := trafficLog.WritePcapng(captureWriter); err != nil {
 		return nil, errors.New("failed to write saved captures to zip: %v", err)

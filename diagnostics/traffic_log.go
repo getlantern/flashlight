@@ -79,7 +79,8 @@ func (pid packetID) String() string {
 }
 
 // startCapture for the input address, saving packets to the provided buffer. Non-blocking.
-func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.BufferPool) (*captureProcess, error) {
+// func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.BufferPool) (*captureProcess, error) {
+func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.SizedBufferPool) (*captureProcess, error) {
 
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
@@ -171,6 +172,34 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.BufferP
 	alreadyDropped := 0 // also protected by numPacketsLock
 	packetLengths := []int{}
 	metricsLock := new(sync.Mutex)
+
+	go func() {
+		numPacketsLastMinute, numDroppedLastMinute := 0, 0
+		for {
+			func() {
+				time.Sleep(time.Minute)
+				metricsLock.Lock()
+				defer metricsLock.Unlock()
+
+				handleStats, err := handle.Stats()
+				if err != nil {
+					fmt.Println("TRAFFICLOG: failed to obtain handle stats:", err)
+					return
+				}
+
+				pktsPastMinute := numPackets - numPacketsLastMinute
+				droppedPastMinute := handleStats.PacketsDropped - numDroppedLastMinute
+				fmt.Printf(
+					"TRAFFICLOG:\n\tdrop rate past minute: %.2f %%\n\tingress rate past minute: %d ppm\n\tpktsPastMinute: %d; droppedPastMinute: %d\n",
+					100*float64(droppedPastMinute)/float64(pktsPastMinute+droppedPastMinute),
+					pktsPastMinute,
+					pktsPastMinute, droppedPastMinute,
+				)
+				numPacketsLastMinute = numPackets
+				numDroppedLastMinute = handleStats.PacketsDropped
+			}()
+		}
+	}()
 
 	capture := func() {
 		for {
@@ -289,8 +318,9 @@ func (ts trackedStats) String() string {
 type TrafficLog struct {
 	captureBuffer *sharedRingBuffer
 	saveBuffer    *ringBuffer
-	capturePool   *bpool.BufferPool
-	captureProcs  map[string]*captureProcess
+	// capturePool   *bpool.BufferPool
+	capturePool  *bpool.SizedBufferPool
+	captureProcs map[string]*captureProcess
 
 	// Protects savedCaptures, captureInfo, and captureProcs. The captureBuffer is written to by
 	// captureProcesses which do not respect this lock.
@@ -307,7 +337,8 @@ func NewTrafficLog(maxCapturePackets, maxSavePackets int) *TrafficLog {
 	return &TrafficLog{
 		newSharedRingBuffer(maxCapturePackets),
 		newRingBuffer(maxSavePackets),
-		bpool.NewBufferPool(maxCapturePackets),
+		// bpool.NewBufferPool(maxCapturePackets),
+		bpool.NewSizedBufferPool(maxCapturePackets, 1500), // debugging
 		map[string]*captureProcess{},
 		sync.Mutex{},
 	}

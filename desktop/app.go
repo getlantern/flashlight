@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sync"
 	"sync/atomic"
@@ -52,10 +53,14 @@ var (
 
 const (
 	// Bytes allocated to the App.trafficLog's buffer.
-	trafficLogBytes = 100 * 1024 * 1024
+	// trafficLogBytes = 100 * 1024 * 1024
+
+	// Maximum number of packets held by the traffic log at any time. Packets tend to be ~ 1KB with
+	// XXX overhead TODO: determine overhead
+	trafficLogMaxPackets = 1055000
 
 	// Bytes allocated to the App.trafficLog's saved packets buffer.
-	trafficLogSavedBytes = 10 * 1024 * 1024
+	trafficLogSavedBytes = 1024 * 1024 * 1024
 )
 
 func init() {
@@ -106,7 +111,7 @@ func (app *App) Init() {
 		app.statsTracker.SetHitDataCap(hitDataCap)
 	})
 	app.ws = ws.NewUIChannel()
-	app.trafficLog = diagnostics.NewTrafficLog(trafficLogBytes, trafficLogSavedBytes)
+	app.trafficLog = diagnostics.NewTrafficLog(trafficLogMaxPackets, trafficLogSavedBytes)
 }
 
 // loadSettings loads the initial settings at startup, either from disk or using defaults.
@@ -207,53 +212,55 @@ func (app *App) Run() {
 
 func (app *App) beforeStart(listenAddr string) func() bool {
 	return func() bool {
-		// testing
+		// debugging
+		go func() {
+			println := func(a ...interface{}) {
+				fmt.Printf("[%v] TESTFUNC: %s", time.Now(), fmt.Sprintln(a...))
+			}
 
-		// go func() {
-		// 	time.Sleep(5 * time.Minute)
-		// 	f, err := os.Create(fmt.Sprintf("lantern-%d.mprof", rand.Int()))
-		// 	if err != nil {
-		// 		fmt.Printf("MEMPROF: failed to create file:", err)
-		// 		return
-		// 	}
-		// 	pprof.WriteHeapProfile(f)
-		// 	f.Close()
-		// }()
+			tsharkCmd := exec.Command(
+				"tshark",
+				"-f", "host 167.71.87.46",
+				"-w", "/Users/harryharpham/Desktop/test-captures/tshark.pcapng",
+			)
+			if err := tsharkCmd.Start(); err != nil {
+				println("failed to run tshark:", err)
+			} else {
+				println("tshark running")
+			}
 
-		// go func() {
-		// 	for i := 1; i < 6; i++ {
-		// 		func() {
-		// 			time.Sleep(time.Minute)
-		// 			fmt.Println("TESTFUNC: writing pcap file")
+			time.Sleep(time.Minute)
 
-		// 			filename := fmt.Sprintf("/Users/harryharpham/Desktop/test-captures/captures/proxy-traffic-%d.pcapng", i)
-		// 			f, err := os.Create(filename)
-		// 			if err != nil {
-		// 				fmt.Println("TESTFUNC: failed to create file:", err)
-		// 				return
-		// 			}
-		// 			defer f.Close()
+			f, err := os.Create("/Users/harryharpham/Desktop/test-captures/lantern.pcapng")
+			if err != nil {
+				println("failed to create pcap file:", err)
+			}
+			defer f.Close()
 
-		// 			fmt.Println("TESTFUNC: asking for lock")
-		// 			app.proxiesMapLock.Lock()
-		// 			defer app.proxiesMapLock.Unlock()
-		// 			fmt.Println("TESTFUNC: obtained lock")
+			app.proxiesMapLock.Lock()
+			defer app.proxiesMapLock.Unlock()
 
-		// 			for _, serverInfo := range app.proxiesMap {
-		// 				fmt.Println("TESTFUNC: saving captures for", serverInfo.Addr)
-		// 				// TODO: SaveCaptures sometimes hangs - race condition?
-		// 				if err := app.trafficLog.SaveCaptures(serverInfo.Addr, 10*time.Minute); err != nil {
-		// 					fmt.Printf("TESTFUNC: failed to save capture for %s: %v", serverInfo.Addr, err)
-		// 				}
-		// 			}
-		// 			fmt.Println("TESTFUNC: writing to file")
-		// 			if err := app.trafficLog.WritePcapng(f); err != nil {
-		// 				fmt.Println("TESTFUNC: failed to write pcap file:", err)
-		// 			}
-		// 			fmt.Println("TESTFUNC: successfully wrote pcap file", i)
-		// 		}()
-		// 	}
-		// }()
+			println("killing tshark")
+			if err := tsharkCmd.Process.Signal(os.Interrupt); err != nil {
+				println("failed to kill tshark:", err)
+			}
+
+			for _, serverInfo := range app.proxiesMap {
+				println("saving captures for", serverInfo.Addr)
+				app.trafficLog.SaveCaptures(serverInfo.Addr, 10*time.Minute)
+			}
+
+			println("stopping traffic log")
+			if err := app.trafficLog.UpdateAddresses([]string{}); err != nil {
+				println("failed to stop traffic log:", err)
+			}
+
+			if err := app.trafficLog.WritePcapng(f); err != nil {
+				println("error writing pcapng:", err)
+			} else {
+				println("successfully wrote pcapng")
+			}
+		}()
 
 		log.Debug("Got first config")
 		var cpuProf, memProf string
