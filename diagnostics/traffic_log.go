@@ -23,7 +23,9 @@ const (
 	packetReadTimeout = 100 * time.Millisecond
 
 	packetsPerStatsUpdate = 100000
-	statsChanBufferSize   = 10
+
+	// Size of buffered channels readable via public API.
+	channelBufferSize = 10
 )
 
 type captureInfo struct {
@@ -61,11 +63,15 @@ type CaptureStats struct {
 	Dropped uint64
 }
 
+func (cs CaptureStats) String() string {
+	return fmt.Sprintf("received: %d; dropped: %d", cs.Received, cs.Dropped)
+}
+
 type captureProcess struct {
 	addr      string
 	buffer    *sharedBufferHook
 	iface     *networkInterface
-	errorChan chan error // TODO: expose on traffic log
+	errorChan chan error
 	statsChan chan CaptureStats
 	stopChan  chan struct{}
 }
@@ -219,16 +225,21 @@ type statsTracker struct {
 	sync.Mutex
 	current CaptureStats
 	output  chan CaptureStats
+	closed  bool
 }
 
 func newStatsTracker() *statsTracker {
-	return &statsTracker{sync.Mutex{}, CaptureStats{}, make(chan CaptureStats, statsChanBufferSize)}
+	return &statsTracker{sync.Mutex{}, CaptureStats{}, make(chan CaptureStats, channelBufferSize), false}
 }
 
 func (st *statsTracker) track(c <-chan CaptureStats) {
 	var received, dropped uint64
 	for stats := range c {
 		st.Lock()
+		if st.closed {
+			st.Unlock()
+			return
+		}
 		newlyReceived := stats.Received - received
 		newlyDropped := stats.Dropped - dropped
 		st.current.Received = st.current.Received + newlyReceived
@@ -237,6 +248,13 @@ func (st *statsTracker) track(c <-chan CaptureStats) {
 		st.output <- st.current
 		st.Unlock()
 	}
+}
+
+func (st *statsTracker) close() {
+	st.Lock()
+	close(st.output)
+	st.closed = true
+	st.Unlock()
 }
 
 // TrafficLog is a log of network traffic.
@@ -251,6 +269,7 @@ type TrafficLog struct {
 	captureProcs     map[string]*captureProcess
 	captureProcsLock sync.Mutex
 	statsTracker     *statsTracker
+	errorChan        chan error
 }
 
 // NewTrafficLog returns a new TrafficLog. Start capture by calling UpdateAddresses.
@@ -267,6 +286,7 @@ func NewTrafficLog(maxCapturePackets, maxSavePackets int) *TrafficLog {
 		map[string]*captureProcess{},
 		sync.Mutex{},
 		newStatsTracker(),
+		make(chan error, channelBufferSize),
 	}
 }
 
@@ -299,6 +319,7 @@ func (tl *TrafficLog) UpdateAddresses(addresses []string) error {
 			}
 			captureProcs[addr] = proc
 			go tl.statsTracker.track(proc.statsChan)
+			go tl.watchErrors(proc.errorChan)
 			newCaptureProcs = append(newCaptureProcs, proc)
 		}
 	}
@@ -393,7 +414,14 @@ func (tl *TrafficLog) Stats() <-chan CaptureStats {
 	return tl.statsTracker.output
 }
 
-// Close the TrafficLog. All captures will stop and the log will be cleared.
+// Errors returns a channel on which the traffic log will output any errors which occur during
+// packet capture. This channel is buffered and unread errors will be dropped as needed.
+func (tl *TrafficLog) Errors() <-chan error {
+	return tl.errorChan
+}
+
+// Close the TrafficLog. All captures will stop and the log will be cleared. Calling methods on a
+// closed TrafficLog may cause a panic.
 func (tl *TrafficLog) Close() error {
 	tl.captureProcsLock.Lock()
 	defer tl.captureProcsLock.Unlock()
@@ -404,5 +432,16 @@ func (tl *TrafficLog) Close() error {
 	tl.captureBuffer = nil
 	tl.saveBuffer = nil
 	tl.captureProcs = nil
+	tl.statsTracker.close()
+	close(tl.errorChan)
 	return nil
+}
+
+func (tl *TrafficLog) watchErrors(errChan <-chan error) {
+	for err := range errChan {
+		select {
+		case tl.errorChan <- err:
+		default:
+		}
+	}
 }
