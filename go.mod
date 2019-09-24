@@ -84,6 +84,7 @@ require (
 	github.com/google/netstack v0.0.0-20190505230633-4391e4a763ab // indirect
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v0.0.0-20180306181548-eb925808374e
+	github.com/gosuri/uilive v0.0.3 // indirect
 	github.com/hashicorp/golang-lru v0.5.3
 	github.com/jackpal/gateway v1.0.5
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
