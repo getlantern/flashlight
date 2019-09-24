@@ -4,6 +4,48 @@ import (
 	"sync"
 )
 
+type queueNode struct {
+	next  *queueNode
+	value interface{}
+}
+
+// A queue with FIFO semantics. The zero value is an empty, ready-to-use queue.
+type queue struct {
+	first, last *queueNode
+}
+
+func (q *queue) enqueue(i interface{}) {
+	if q.first == nil {
+		q.first = &queueNode{nil, i}
+		q.last = q.first
+		return
+	}
+	prevLast := q.last
+	q.last = &queueNode{nil, i}
+	prevLast.next = q.last
+}
+
+// Returns nil if the queue is empty.
+func (q *queue) dequeue() interface{} {
+	if q.first == nil {
+		return nil
+	}
+	dequeued := q.first
+	q.first = dequeued.next
+	if q.first == nil {
+		q.last = nil
+	}
+	return dequeued.value
+}
+
+func (q *queue) forEach(f func(interface{})) {
+	current := q.first
+	for current != nil {
+		f(current.value)
+		current = current.next
+	}
+}
+
 type ringBuffer struct {
 	len, maxLen int
 	q           queue
