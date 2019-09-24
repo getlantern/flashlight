@@ -1,5 +1,13 @@
 # Change Log
 
+## [5.5.8](https://github.com/getlantern/flashlight/tree/5.5.8) (2019-09-24)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.7...5.5.8)
+
+**Merged pull requests:**
+
+- print top stacks if the number of goroutines exceeds 800 [\#677](https://github.com/getlantern/flashlight/pull/677) ([joesis](https://github.com/joesis))
+- Remove embedded proxies, update global, tweak script [\#676](https://github.com/getlantern/flashlight/pull/676) ([myleshorton](https://github.com/myleshorton))
+
 ## [5.5.7](https://github.com/getlantern/flashlight/tree/5.5.7) (2019-09-19)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.6...5.5.7)
 
@@ -238,7 +246,6 @@
 - Add quic integration test [\#577](https://github.com/getlantern/flashlight/pull/577) ([forkner](https://github.com/forkner))
 - Update to the latest detour package [\#576](https://github.com/getlantern/flashlight/pull/576) ([joesis](https://github.com/joesis))
 - use the latest shortcut package [\#575](https://github.com/getlantern/flashlight/pull/575) ([joesis](https://github.com/joesis))
-- update to latest lampshade w/ session pooling [\#572](https://github.com/getlantern/flashlight/pull/572) ([joesis](https://github.com/joesis))
 
 ## [5.2.7](https://github.com/getlantern/flashlight/tree/5.2.7) (2019-01-19)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.6...5.2.7)
@@ -249,10 +256,6 @@
 
 ## [5.2.6](https://github.com/getlantern/flashlight/tree/5.2.6) (2019-01-18)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.5...5.2.6)
-
-**Merged pull requests:**
-
-- fixes for yinbi mouseover and translation [\#573](https://github.com/getlantern/flashlight/pull/573) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.2.5](https://github.com/getlantern/flashlight/tree/5.2.5) (2019-01-17)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.4...5.2.5)
