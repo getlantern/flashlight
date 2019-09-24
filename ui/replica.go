@@ -115,7 +115,7 @@ func (me ReplicaHttpServer) handleUpload(w http.ResponseWriter, r *http.Request)
 		panic(err)
 	}
 	w.Header().Set("Content-Type", "text/uri-list")
-	fmt.Fprintln(w, createLink(tt.InfoHash(), s3Key))
+	fmt.Fprintln(w, createLink(tt.InfoHash(), s3Key, name))
 }
 
 func (me ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Request) {
@@ -130,7 +130,7 @@ func (me ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Request
 			me.Logger.WithValues(analog.Warning).Printf("error unmarshalling info: %v", err)
 			return
 		}
-		resp = append(resp, createLink(mi.HashInfoBytes(), s3KeyFromInfoName(info.Name)))
+		resp = append(resp, createLink(mi.HashInfoBytes(), s3KeyFromInfoName(info.Name), displayNameFromInfoName(info.Name)))
 	})
 	if err != nil {
 		me.Logger.Printf("error walking uploads dir: %v", err)
@@ -145,21 +145,25 @@ func (me ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Request
 }
 
 func (me ReplicaHttpServer) handleView(w http.ResponseWriter, r *http.Request) {
-	l, err := decodeLink(r.URL.Query().Get("link"))
+	m, err := metainfo.ParseMagnetURI(r.URL.Query().Get("link"))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("error parsing magnet link: %v", err.Error()), http.StatusBadRequest)
 		return
 	}
-	t, new, release := me.Confluence.GetTorrent(l.ih)
+	s3Key, err := s3KeyFromMagnet(m)
+	if err != nil {
+		me.Logger.Printf("error getting s3 key from magnet: %v", err)
+	}
+	t, new, release := me.Confluence.GetTorrent(m.InfoHash)
 	defer release()
 	if new && t.Info() == nil {
 		// Get another reference to the torrent that lasts until we're done fetching the metainfo.
-		_, _, release := me.Confluence.GetTorrent(l.ih)
+		_, _, release := me.Confluence.GetTorrent(m.InfoHash)
 		go func() {
 			defer release()
-			tob, err := replica.GetObjectTorrent(l.s3Key)
+			tob, err := replica.GetObjectTorrent(s3Key)
 			if err != nil {
-				me.Logger.Printf("error getting metainfo from s3: %v", err)
+				me.Logger.Printf("error getting metainfo for %q from s3: %v", s3Key, err)
 				return
 			}
 			defer tob.Close()
@@ -172,7 +176,7 @@ func (me ReplicaHttpServer) handleView(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				me.Logger.Printf("error putting metainfo from s3: %v")
 			}
-			me.Logger.Printf("added metainfo from s3")
+			me.Logger.Printf("added metainfo for %q from s3", s3Key)
 		}()
 	}
 	confluence.ServeTorrent(w, r, t)
@@ -199,32 +203,34 @@ func storeUploadedTorrent(r io.Reader, path string) error {
 	return f.Close()
 }
 
-func createLink(ih torrent.InfoHash, s3Key string) string {
-	return (&url.URL{
-		Scheme: "https",
-		Host:   "replica.getlantern.org",
-		Path:   s3Key,
-		RawQuery: url.Values{
-			"ih": {ih.HexString()},
-		}.Encode(),
-	}).String()
+func createLink(ih torrent.InfoHash, s3Key, name string) string {
+	return metainfo.Magnet{
+		InfoHash:    ih,
+		DisplayName: name,
+		Trackers:    []string{"http://s3-tracker.ap-southeast-1.amazonaws.com:6969/announce"},
+		Params: url.Values{
+			"as": {"https://getlantern-replica.s3-ap-southeast-1.amazonaws.com" + s3Key},
+			"xs": {(&url.URL{Scheme: "replica", Path: s3Key}).String()},
+		},
+	}.String()
 }
 
 func s3KeyFromInfoName(name string) string {
-	return strings.Replace(name, "_", "/", 1)
+	return "/" + strings.Replace(name, "_", "/", 1)
 }
 
-type link struct {
-	s3Key string
-	ih    torrent.InfoHash
-}
-
-func decodeLink(s string) (l link, err error) {
-	u, err := url.Parse(s)
-	if err != nil {
-		return
+func displayNameFromInfoName(name string) string {
+	ss := strings.SplitN(name, "_", 2)
+	if len(ss) > 1 {
+		return ss[1]
 	}
-	l.s3Key = u.Path
-	err = l.ih.FromHexString(u.Query().Get("ih"))
-	return
+	return ss[0]
+}
+
+func s3KeyFromMagnet(m metainfo.Magnet) (string, error) {
+	u, err := url.Parse(m.Params.Get("xs"))
+	if err != nil {
+		return "", err
+	}
+	return u.Path, nil
 }
