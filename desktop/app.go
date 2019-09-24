@@ -55,12 +55,12 @@ const (
 	// Bytes allocated to the App.trafficLog's buffer.
 	// trafficLogBytes = 100 * 1024 * 1024
 
-	// Maximum number of packets held by the traffic log at any time. Packets tend to be ~ 1KB with
-	// XXX overhead TODO: determine overhead
-	trafficLogMaxPackets = 1055000
+	// Maximum number of packets held by the traffic log at any time.
+	// For a standard MTU of 1500, this should take up 75 MB of memory.
+	// This would represent about 30 seconds of capture on a constant 20 Mbps connection.
+	trafficLogMaxPackets = 50000
 
-	// Bytes allocated to the App.trafficLog's saved packets buffer.
-	trafficLogSavedBytes = 1024 * 1024 * 1024
+	trafficLogMaxSavePackets = 25000
 )
 
 func init() {
@@ -111,7 +111,7 @@ func (app *App) Init() {
 		app.statsTracker.SetHitDataCap(hitDataCap)
 	})
 	app.ws = ws.NewUIChannel()
-	app.trafficLog = diagnostics.NewTrafficLog(trafficLogMaxPackets, trafficLogSavedBytes)
+	app.trafficLog = diagnostics.NewTrafficLog(trafficLogMaxPackets, trafficLogMaxSavePackets)
 }
 
 // loadSettings loads the initial settings at startup, either from disk or using defaults.
