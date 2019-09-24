@@ -119,7 +119,7 @@ func (me ReplicaHttpServer) handleUpload(w http.ResponseWriter, r *http.Request)
 }
 
 func (me ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Request) {
-	var resp []string
+	resp := []string{}
 	err := replica.IterUploads(me.uploadsDir(), func(mi *metainfo.MetaInfo, err error) {
 		if err != nil {
 			me.Logger.Printf("error iterating uploads: %v", err)
