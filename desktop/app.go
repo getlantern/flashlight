@@ -214,6 +214,18 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 	return func() bool {
 		// debugging
 		go func() {
+			for {
+				select {
+				case stats := <-app.trafficLog.Stats():
+					fmt.Printf("[%v] TRAFFICLOG: capture stats: %v\n", time.Now(), stats)
+				case err := <-app.trafficLog.Errors():
+					fmt.Printf("[%v] TRAFFICLOG: error: %v\n", time.Now(), err)
+				}
+			}
+		}()
+
+		// debugging
+		go func() {
 			println := func(a ...interface{}) {
 				fmt.Printf("[%v] TESTFUNC: %s", time.Now(), fmt.Sprintln(a...))
 			}
