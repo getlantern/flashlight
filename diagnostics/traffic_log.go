@@ -139,7 +139,6 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.BufferP
 		for {
 			data, ci, err := handle.ZeroCopyReadPacketData()
 			if err != nil && err == io.EOF {
-				// TODO: ensure this actually happens so we don't leak this routine
 				return
 			}
 			if err != nil {
