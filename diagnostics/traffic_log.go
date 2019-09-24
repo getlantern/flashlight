@@ -143,8 +143,10 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.BufferP
 				return
 			}
 			if err != nil {
-				proc.logError(errors.New("failed to read packet from capture handle: %v", err))
-				continue
+				if nextErr, ok := err.(pcap.NextError); !ok || nextErr != pcap.NextErrorTimeoutExpired {
+					proc.logError(errors.New("failed to read packet from capture handle: %v", err))
+					continue
+				}
 			}
 			dataBuf := dataPool.Get()
 			if _, err := dataBuf.Write(data); err != nil {
