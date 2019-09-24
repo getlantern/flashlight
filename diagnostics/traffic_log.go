@@ -18,8 +18,13 @@ import (
 	"github.com/getlantern/errors"
 )
 
-// Warning: do not set to >= 1 second: https://github.com/google/gopacket/issues/499
-const packetReadTimeout = 100 * time.Millisecond
+const (
+	// Warning: do not set to >= 1 second: https://github.com/google/gopacket/issues/499
+	packetReadTimeout = 100 * time.Millisecond
+
+	packetsPerStatsUpdate = 100000
+	statsChanBufferSize   = 10
+)
 
 type captureInfo struct {
 	unixNano                              int64
@@ -47,14 +52,22 @@ type capturedPacket struct {
 	info    captureInfo
 }
 
+// CaptureStats holds information about packet capture statistics.
+type CaptureStats struct {
+	// Received is the total number of packets successfully processed.
+	Received uint64
+
+	// Dropped is the total number of packets dropped.
+	Dropped uint64
+}
+
 type captureProcess struct {
 	addr      string
 	buffer    *sharedBufferHook
 	iface     *networkInterface
 	errorChan chan error // TODO: expose on traffic log
+	statsChan chan CaptureStats
 	stopChan  chan struct{}
-
-	// TODO: track dropped captures and expose on traffic log
 }
 
 type packetID struct {
@@ -112,15 +125,11 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.BufferP
 		iface:     iface,
 		errorChan: make(chan error),
 		stopChan:  make(chan struct{}),
+		statsChan: make(chan CaptureStats),
 	}
 
-	// debugging
-	statsTracker := newHandleStatsTracker()
-
 	go func() {
-		// debugging
-		count := 0
-
+		var count uint64
 		for {
 			data, ci, err := handle.ZeroCopyReadPacketData()
 			if err != nil && err == io.EOF {
@@ -139,10 +148,9 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.BufferP
 			pkt := capturedPacket{dataBuf, newCaptureInfo(ci, proc.iface)}
 			proc.buffer.put(pkt, func() { dataPool.Put(pkt.dataBuf) })
 
-			// debugging
 			count++
-			if count%10000 == 0 {
-				statsTracker.printStats(handle)
+			if count%packetsPerStatsUpdate == 0 {
+				proc.logStats(handle)
 			}
 		}
 	}()
@@ -157,13 +165,39 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.BufferP
 
 func (cp *captureProcess) logError(err error) {
 	select {
+	case <-cp.stopChan:
+		return
+	default:
+	}
+	select {
 	case cp.errorChan <- err:
+	default:
+	}
+}
+
+// logStats should not be called concurrently with any other methods on h.
+func (cp *captureProcess) logStats(h *pcap.Handle) {
+	select {
+	case <-cp.stopChan:
+		return
+	default:
+	}
+
+	stats, err := h.Stats()
+	if err != nil {
+		cp.logError(errors.New("failed to read capture stats: %v", err))
+		return
+	}
+	select {
+	case cp.statsChan <- CaptureStats{uint64(stats.PacketsReceived), uint64(stats.PacketsDropped)}:
 	default:
 	}
 }
 
 func (cp *captureProcess) stop() {
 	close(cp.stopChan)
+	close(cp.errorChan)
+	close(cp.statsChan)
 	cp.buffer.close()
 }
 
@@ -180,6 +214,31 @@ func (cp *captureProcess) capturedSince(t time.Time) []capturedPacket {
 	return capturedSince
 }
 
+// statsTracker aggregates statistics from multiple channels.
+type statsTracker struct {
+	sync.Mutex
+	current CaptureStats
+	output  chan CaptureStats
+}
+
+func newStatsTracker() *statsTracker {
+	return &statsTracker{sync.Mutex{}, CaptureStats{}, make(chan CaptureStats, statsChanBufferSize)}
+}
+
+func (st *statsTracker) track(c <-chan CaptureStats) {
+	var received, dropped uint64
+	for stats := range c {
+		st.Lock()
+		newlyReceived := stats.Received - received
+		newlyDropped := stats.Dropped - dropped
+		st.current.Received = st.current.Received + newlyReceived
+		st.current.Dropped = st.current.Dropped + newlyDropped
+		received, dropped = stats.Received, stats.Dropped
+		st.output <- st.current
+		st.Unlock()
+	}
+}
+
 // TrafficLog is a log of network traffic.
 //
 // Captured packets are saved in a ring buffer and may be overwritten by newly captured packets. At
@@ -191,6 +250,7 @@ type TrafficLog struct {
 	capturePool      *bpool.BufferPool
 	captureProcs     map[string]*captureProcess
 	captureProcsLock sync.Mutex
+	statsTracker     *statsTracker
 }
 
 // NewTrafficLog returns a new TrafficLog. Start capture by calling UpdateAddresses.
@@ -206,6 +266,7 @@ func NewTrafficLog(maxCapturePackets, maxSavePackets int) *TrafficLog {
 		bpool.NewBufferPool(maxCapturePackets),
 		map[string]*captureProcess{},
 		sync.Mutex{},
+		newStatsTracker(),
 	}
 }
 
@@ -237,6 +298,7 @@ func (tl *TrafficLog) UpdateAddresses(addresses []string) error {
 				return errors.New("failed to start capture for %s: %v", addr, err)
 			}
 			captureProcs[addr] = proc
+			go tl.statsTracker.track(proc.statsChan)
 			newCaptureProcs = append(newCaptureProcs, proc)
 		}
 	}
@@ -323,6 +385,12 @@ func (tl *TrafficLog) WritePcapng(w io.Writer) error {
 		return errors.New("failed to flush writer: %v", err)
 	}
 	return nil
+}
+
+// Stats returns a channel on which the traffic log will periodically output capture statistics.
+// This channel is buffered and unread statistics will be dropped as needed.
+func (tl *TrafficLog) Stats() <-chan CaptureStats {
+	return tl.statsTracker.output
 }
 
 // Close the TrafficLog. All captures will stop and the log will be cleared.

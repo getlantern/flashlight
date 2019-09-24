@@ -3,26 +3,15 @@ package diagnostics
 import (
 	"bytes"
 	"fmt"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 )
-
-func TestNetworkInterface(t *testing.T) {
-	ip, err := net.LookupIP("10.0.0.1")
-	require.NoError(t, err)
-
-	iface, err := networkInterfaceFor(ip[0])
-	require.NoError(t, err)
-
-	fmt.Println(iface.name())
-	fmt.Println(iface.mtu())
-}
 
 func TestTrafficLog(t *testing.T) {
 	t.Parallel()
@@ -75,6 +64,49 @@ func TestTrafficLog(t *testing.T) {
 	pcapFile := pcapFileBuf.String()
 	for i := 0; i < captureAddresses; i++ {
 		requireContainsOnce(t, pcapFile, responseFor(i))
+	}
+}
+
+func TestStatsTracker(t *testing.T) {
+	t.Parallel()
+
+	const (
+		channels          = 10
+		sendsPerChannel   = 5
+		receivedPerSend   = uint64(10)
+		droppedPerSend    = uint64(3)
+		sleepBetweenSends = 10 * time.Millisecond
+	)
+
+	st := newStatsTracker()
+	st.output = make(chan CaptureStats, channels*sendsPerChannel)
+
+	wg := new(sync.WaitGroup)
+	for i := 0; i < channels; i++ {
+		c := make(chan CaptureStats)
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			var received, dropped uint64
+			for s := 0; s < sendsPerChannel; s++ {
+				received = received + receivedPerSend
+				dropped = dropped + droppedPerSend
+				c <- CaptureStats{received, dropped}
+			}
+		}()
+		go st.track(c)
+	}
+	wg.Wait()
+	close(st.output)
+
+	var received, dropped uint64
+	for stats := range st.output {
+		newlyReceived := stats.Received - received
+		newlyDropped := stats.Dropped - dropped
+		require.Equal(t, receivedPerSend, newlyReceived)
+		require.Equal(t, droppedPerSend, newlyDropped)
+		received, dropped = stats.Received, stats.Dropped
 	}
 }
 
