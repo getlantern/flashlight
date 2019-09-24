@@ -208,13 +208,18 @@ func (cp *captureProcess) stop() {
 	cp.buffer.close()
 }
 
-// Packets are sorted by timestamp, oldest first.
-func (cp *captureProcess) capturedSince(t time.Time) []capturedPacket {
-	capturedSince := []capturedPacket{}
+// Packets are sorted by timestamp, oldest first. The buffer pool is used to transer packet data
+// from the capture process buffers (which may be overwritten after this call returns).
+func (cp *captureProcess) capturedSince(t time.Time, bp *bpool.BufferPool) []capturedPacket {
 	tNano := t.UnixNano()
+	capturedSince := []capturedPacket{}
 	cp.buffer.forEach(func(i interface{}) {
 		pkt := i.(capturedPacket)
 		if pkt.info.unixNano > tNano {
+			// Note: writes to bytes.Buffers do not return errors.
+			newBuf := bp.Get()
+			newBuf.Write(pkt.dataBuf.Bytes())
+			pkt.dataBuf = newBuf
 			capturedSince = append(capturedSince, pkt)
 		}
 	})
@@ -267,6 +272,7 @@ type TrafficLog struct {
 	captureBuffer    *sharedRingBuffer
 	saveBuffer       *ringBuffer
 	capturePool      *bpool.BufferPool
+	savePool         *bpool.BufferPool
 	captureProcs     map[string]*captureProcess
 	captureProcsLock sync.Mutex
 	statsTracker     *statsTracker
@@ -284,6 +290,7 @@ func NewTrafficLog(maxCapturePackets, maxSavePackets int) *TrafficLog {
 		newSharedRingBuffer(maxCapturePackets),
 		newRingBuffer(maxSavePackets),
 		bpool.NewBufferPool(maxCapturePackets),
+		bpool.NewBufferPool(maxSavePackets),
 		map[string]*captureProcess{},
 		sync.Mutex{},
 		newStatsTracker(),
@@ -346,7 +353,7 @@ func (tl *TrafficLog) SaveCaptures(address string, d time.Duration) {
 		return
 	}
 
-	captures := proc.capturedSince(time.Now().Add(-1 * d))
+	captures := proc.capturedSince(time.Now().Add(-1*d), tl.savePool)
 	for _, capture := range captures {
 		tl.saveBuffer.put(capture)
 	}
