@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"mime"
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -119,7 +121,12 @@ func (me ReplicaHttpServer) handleUpload(w http.ResponseWriter, r *http.Request)
 }
 
 func (me ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Request) {
-	resp := []string{}
+	type upload struct {
+		Link                  string
+		FileName              string
+		FileExtensionMimeType string
+	}
+	resp := []upload{}
 	err := replica.IterUploads(me.uploadsDir(), func(mi *metainfo.MetaInfo, err error) {
 		if err != nil {
 			me.Logger.Printf("error iterating uploads: %v", err)
@@ -130,7 +137,13 @@ func (me ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Request
 			me.Logger.WithValues(analog.Warning).Printf("error unmarshalling info: %v", err)
 			return
 		}
-		resp = append(resp, createLink(mi.HashInfoBytes(), s3KeyFromInfoName(info.Name), displayNameFromInfoName(info.Name)))
+
+		dn := displayNameFromInfoName(info.Name)
+		resp = append(resp, upload{
+			Link:                  createLink(mi.HashInfoBytes(), s3KeyFromInfoName(info.Name), dn),
+			FileName:              dn,
+			FileExtensionMimeType: mime.TypeByExtension(path.Ext(dn)),
+		})
 	})
 	if err != nil {
 		me.Logger.Printf("error walking uploads dir: %v", err)
