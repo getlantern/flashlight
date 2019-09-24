@@ -84,7 +84,7 @@ func TestStatsTracker(t *testing.T) {
 	wg := new(sync.WaitGroup)
 	for i := 0; i < channels; i++ {
 		c := make(chan CaptureStats)
-		wg.Add(1)
+		wg.Add(2)
 		go func() {
 			defer wg.Done()
 
@@ -94,8 +94,9 @@ func TestStatsTracker(t *testing.T) {
 				dropped = dropped + droppedPerSend
 				c <- CaptureStats{received, dropped}
 			}
+			close(c)
 		}()
-		go st.track(c)
+		go func() { st.track(c); wg.Done() }()
 	}
 	wg.Wait()
 	close(st.output)
@@ -108,6 +109,8 @@ func TestStatsTracker(t *testing.T) {
 		require.Equal(t, droppedPerSend, newlyDropped)
 		received, dropped = stats.Received, stats.Dropped
 	}
+	require.Equal(t, received, channels*sendsPerChannel*receivedPerSend)
+	require.Equal(t, dropped, channels*sendsPerChannel*droppedPerSend)
 }
 
 func requireContainsOnce(t *testing.T, s, substring string) {
