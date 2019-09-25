@@ -136,7 +136,9 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.BufferP
 		statsChan: make(chan CaptureStats),
 	}
 
+	readRoutineDone := make(chan struct{})
 	go func() {
+		defer close(readRoutineDone)
 		var count uint64
 		for {
 			data, ci, err := handle.ZeroCopyReadPacketData()
@@ -164,17 +166,16 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.BufferP
 	go func() {
 		<-proc.stopChan
 		handle.Close()
+		<-readRoutineDone
+		close(proc.statsChan)
+		close(proc.errorChan)
+		proc.buffer.close()
 	}()
 
 	return &proc, nil
 }
 
 func (cp *captureProcess) logError(err error) {
-	select {
-	case <-cp.stopChan:
-		return
-	default:
-	}
 	select {
 	case cp.errorChan <- err:
 	default:
@@ -183,12 +184,6 @@ func (cp *captureProcess) logError(err error) {
 
 // logStats should not be called concurrently with any other methods on h.
 func (cp *captureProcess) logStats(h *pcap.Handle) {
-	select {
-	case <-cp.stopChan:
-		return
-	default:
-	}
-
 	stats, err := h.Stats()
 	if err != nil {
 		cp.logError(errors.New("failed to read capture stats: %v", err))
@@ -202,9 +197,6 @@ func (cp *captureProcess) logStats(h *pcap.Handle) {
 
 func (cp *captureProcess) stop() {
 	close(cp.stopChan)
-	close(cp.errorChan)
-	close(cp.statsChan)
-	cp.buffer.close()
 }
 
 // Packets are sorted by timestamp, oldest first. The buffer pool is used to transer packet data
