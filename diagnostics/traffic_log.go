@@ -2,6 +2,7 @@ package diagnostics
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"io"
 	"net"
@@ -27,6 +28,13 @@ const (
 	// Size of buffered channels readable via public API.
 	channelBufferSize = 10
 )
+
+// MaxAcceptableMTU is the maximum size MTU for network interfaces watched by TrafficLog. Attempting
+// capture on an interface with a larger MTU will result in an error.
+const MaxAcceptableMTU = 1500
+
+// FlagMTULimit allows the MTU limit (MaxAcceptableMTU) to be toggled.
+var FlagMTULimit = flag.Bool("pcapMTULimit", true, "toggles the MTU limit for captures (see diagnostics.MaxAcceptableMTU)")
 
 type captureInfo struct {
 	unixNano                              int64
@@ -104,6 +112,13 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.BufferP
 	iface, err := networkInterfaceFor(remoteIP)
 	if err != nil {
 		return nil, errors.New("failed to obtain interface: %v", err)
+	}
+
+	if *FlagMTULimit && iface.mtu() > MaxAcceptableMTU {
+		return nil, errors.New(
+			"interface MTU (%d) exceeds the maximum accepted MTU (%d)",
+			iface.mtu(), MaxAcceptableMTU,
+		)
 	}
 
 	handle, err := pcap.OpenLive(iface.pcapName(), int32(iface.mtu()), false, packetReadTimeout)
@@ -301,6 +316,9 @@ func NewTrafficLog(maxCapturePackets, maxSavePackets int) *TrafficLog {
 // UpdateAddresses updates the addresses for which traffic is being captured. Capture will begin (or
 // continue) for all addresses in the input slice. Capture will be stopped for any addresses not in
 // the input slice.
+//
+// If the network interface used to reach the address has an MTU exceeding MaxAcceptableMTU, this
+// will result in an error.
 //
 // If an error is returned, the addresses have not been updated. In other words, a partial update is
 // not possible.

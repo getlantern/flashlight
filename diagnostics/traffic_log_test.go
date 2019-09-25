@@ -14,7 +14,6 @@ import (
 )
 
 func TestTrafficLog(t *testing.T) {
-	t.Parallel()
 	if !*runElevatedFlag {
 		t.SkipNow()
 	}
@@ -26,7 +25,14 @@ func TestTrafficLog(t *testing.T) {
 		// Make the buffers large enough that we will not lose any packets.
 		captureBufferSize = 1024 * 1024
 		saveBufferSize    = 1024 * 1024
+
+		// The time we allow for capture to start or take place.
+		captureWaitTime = 200 * time.Millisecond
 	)
+
+	originalFlagMTULimit := *FlagMTULimit
+	*FlagMTULimit = false
+	defer func() { *FlagMTULimit = originalFlagMTULimit }()
 
 	responseFor := func(serverNumber int) string {
 		return fmt.Sprintf("%s - server number %d", serverResponseString, serverNumber)
@@ -47,13 +53,13 @@ func TestTrafficLog(t *testing.T) {
 	require.NoError(t, tl.UpdateAddresses(addresses))
 	defer tl.Close()
 
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(captureWaitTime)
 	for _, s := range servers {
 		_, err := http.Get(s.URL)
 		require.NoError(t, err)
 	}
 
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(captureWaitTime)
 	for _, addr := range addresses {
 		tl.SaveCaptures(addr, time.Minute)
 	}

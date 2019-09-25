@@ -56,7 +56,7 @@ const (
 	// trafficLogBytes = 100 * 1024 * 1024
 
 	// Maximum number of packets held by the traffic log at any time.
-	// For a standard MTU of 1500, this should take up 75 MB of memory.
+	// For a standard MTU of 1500, this should take up about 75 MB of memory.
 	// This would represent about 30 seconds of capture on a constant 20 Mbps connection.
 	trafficLogMaxPackets = 50000
 
