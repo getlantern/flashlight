@@ -76,21 +76,10 @@ func (cs CaptureStats) String() string {
 }
 
 type captureProcess struct {
-	addr      string
 	buffer    *sharedBufferHook
-	iface     *networkInterface
 	errorChan chan error
 	statsChan chan CaptureStats
 	stopChan  chan struct{}
-}
-
-type packetID struct {
-	addr     string
-	unixNano int64
-}
-
-func (pid packetID) String() string {
-	return fmt.Sprintf("%s-%d", pid.addr, pid.unixNano)
 }
 
 // startCapture for the input address, saving packets to the provided buffer. Non-blocking.
@@ -141,9 +130,7 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.BufferP
 	}
 
 	proc := captureProcess{
-		addr:      addr,
 		buffer:    buffer,
-		iface:     iface,
 		errorChan: make(chan error),
 		stopChan:  make(chan struct{}),
 		statsChan: make(chan CaptureStats),
@@ -162,12 +149,9 @@ func startCapture(addr string, buffer *sharedBufferHook, dataPool *bpool.BufferP
 					continue
 				}
 			}
-			dataBuf := dataPool.Get()
-			if _, err := dataBuf.Write(data); err != nil {
-				proc.logError(errors.New("failed to write packet data to buffer: %v", err))
-				continue
-			}
-			pkt := capturedPacket{dataBuf, newCaptureInfo(ci, proc.iface)}
+			// Note: writes to bytes.Buffers do not return errors.
+			pkt := capturedPacket{dataPool.Get(), newCaptureInfo(ci, iface)}
+			pkt.dataBuf.Write(data)
 			proc.buffer.put(pkt, func() { dataPool.Put(pkt.dataBuf) })
 
 			count++
@@ -425,11 +409,11 @@ func (tl *TrafficLog) WritePcapng(w io.Writer) error {
 			return
 		}
 	})
-	if numErrors > 0 {
-		return errors.New("%d errors writing packets; last error: %v", numErrors, lastError)
-	}
 	if err := pcapW.Flush(); err != nil {
 		return errors.New("failed to flush writer: %v", err)
+	}
+	if numErrors > 0 {
+		return errors.New("%d errors writing packets; last error: %v", numErrors, lastError)
 	}
 	return nil
 }
