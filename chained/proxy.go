@@ -681,6 +681,7 @@ func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHija
 func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 	addr := s.Addr
 	tlsConf := &gtls.Config{
+		ServerName:         s.TLSServerNameIndicator,
 		InsecureSkipVerify: true,
 		KeyLogWriter:       getTLSKeyLogWriter(),
 	}
