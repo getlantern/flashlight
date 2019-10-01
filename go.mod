@@ -73,6 +73,7 @@ require (
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
 	github.com/getlantern/systray v0.0.0-20190727060347-6f0e5a3c556c
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
+	github.com/getlantern/testify v0.0.0-20160317154340-2eeb3906e78f
 	github.com/getlantern/tinywss v0.0.0-20190809093313-4439caa924e5
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
 	github.com/getlantern/tlsdialer v0.0.0-20190606180931-1ac26445d532

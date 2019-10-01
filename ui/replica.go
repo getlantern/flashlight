@@ -158,7 +158,8 @@ func (me ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Request
 }
 
 func (me ReplicaHttpServer) handleView(w http.ResponseWriter, r *http.Request) {
-	m, err := metainfo.ParseMagnetURI(r.URL.Query().Get("link"))
+	link := r.URL.Query().Get("link")
+	m, err := metainfo.ParseMagnetURI(link)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error parsing magnet link: %v", err.Error()), http.StatusBadRequest)
 		return
@@ -166,10 +167,12 @@ func (me ReplicaHttpServer) handleView(w http.ResponseWriter, r *http.Request) {
 	s3Key, err := s3KeyFromMagnet(m)
 	if err != nil {
 		me.Logger.Printf("error getting s3 key from magnet: %v", err)
+	} else if s3Key == "" {
+		me.Logger.Printf("s3 key not found in view link %q", link)
 	}
 	t, new, release := me.Confluence.GetTorrent(m.InfoHash)
 	defer release()
-	if new && t.Info() == nil {
+	if new && t.Info() == nil && s3Key != "" {
 		// Get another reference to the torrent that lasts until we're done fetching the metainfo.
 		_, _, release := me.Confluence.GetTorrent(m.InfoHash)
 		go func() {
@@ -187,7 +190,7 @@ func (me ReplicaHttpServer) handleView(w http.ResponseWriter, r *http.Request) {
 			}
 			err = me.Confluence.PutMetainfo(t, mi)
 			if err != nil {
-				me.Logger.Printf("error putting metainfo from s3: %v")
+				me.Logger.Printf("error putting metainfo from s3: %v", err)
 			}
 			me.Logger.Printf("added metainfo for %q from s3", s3Key)
 		}()
