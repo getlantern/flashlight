@@ -97,7 +97,6 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/tjfoc/gmsm v0.0.0-20180404022540-0effa9db1ba8 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
-	github.com/zserge/webview v0.0.0-20190123072648-16c93bcaeaeb // indirect
 	golang.org/x/crypto v0.0.0-20190829043050-9756ffdc2472 // indirect
 	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297
 	golang.org/x/sys v0.0.0-20190902133755-9109b7679e13 // indirect
