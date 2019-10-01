@@ -52,7 +52,7 @@ func (me ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		me.mux.HandleFunc("/upload", me.handleUpload)
 		me.mux.HandleFunc("/uploads", me.handleUploads)
 		me.mux.HandleFunc("/view", me.handleView)
-		me.mux.Handle("/", me.Confluence)
+		me.mux.Handle("/", &me.Confluence)
 	})
 	// TODO(anacrolix): Check this is correct and secure. We might want to be given valid origins
 	// and apply them to appropriate routes, or only allow anything from localhost for example.
