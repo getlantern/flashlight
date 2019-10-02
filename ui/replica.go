@@ -195,7 +195,26 @@ func (me ReplicaHttpServer) handleView(w http.ResponseWriter, r *http.Request) {
 			me.Logger.Printf("added metainfo for %q from s3", s3Key)
 		}()
 	}
+	filename := firstNonEmptyString(
+		// Note that serving the torrent implies waiting for the info, and we could get a better
+		// name for it after that. Torrent.Name will also allow us to reuse previously given 'dn'
+		// values, if we don't have one now.
+		displayNameFromInfoName(t.Name()),
+		m.DisplayName,
+	)
+	if filename != "" {
+		w.Header().Set("Content-Disposition", "inline; filename*=UTF-8''"+url.QueryEscape(filename))
+	}
 	confluence.ServeTorrent(w, r, t)
+}
+
+func firstNonEmptyString(ss ...string) string {
+	for _, s := range ss {
+		if s != "" {
+			return s
+		}
+	}
+	return ""
 }
 
 func (me ReplicaHttpServer) uploadsDir() string {
