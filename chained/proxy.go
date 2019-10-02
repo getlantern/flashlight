@@ -75,32 +75,23 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 	if s.Addr == "" {
 		return nil, errors.New("Empty addr")
 	}
-	isUTP := strings.HasPrefix(s.PluggableTransport, "utp")
 	transport := s.PluggableTransport
 	proto := "tcp"
-	if isUTP {
+	if strings.HasPrefix(s.PluggableTransport, "utp") {
 		proto = "udp"
 	}
 	switch transport {
-	case "", "http", "https", "utphttp", "utphttps":
-		transport := "http"
-		if isUTP {
-			transport = "utphttp"
-		}
-		var p *proxy
-		var err error
+	case "":
+		transport = "http"
+		fallthrough
+	case "https", "utphttps":
 		if s.Cert == "" {
 			log.Errorf("No Cert configured for %s, will dial with plain tcp", s.Addr)
-			p, err = newHTTPProxy(name, transport, proto, s, uc)
-		} else if len(s.KCPSettings) > 0 {
-			log.Errorf("KCP configured for %s, not using tls", s.Addr)
-			p, err = newHTTPProxy(name, transport, proto, s, uc)
-		} else {
-			transport = transport + "s"
-			log.Tracef("Cert configured for %s, will dial with tls", s.Addr)
-			p, err = newHTTPSProxy(name, transport, proto, s, uc)
+			return newHTTPProxy(name, transport, proto, s, uc)
 		}
-		return p, err
+		return newHTTPSProxy(name, transport, proto, s, uc)
+	case "http", "utphttp":
+		return newHTTPProxy(name, transport, proto, s, uc)
 	case "obfs4", "utpobfs4":
 		return newOBFS4Proxy(name, transport, proto, s, uc)
 	case "lampshade":
@@ -159,7 +150,7 @@ func newHTTPProxy(name, transport, proto string, s *ChainedServerInfo, uc common
 			return dfConn, err
 		}
 	}
-	return newProxy(name, transport, proto, s, uc, s.ENHTTPURL != "", true, doDialServer, dialOrigin)
+	return newProxy(name, transport, proto, s, uc, s.Trusted, true, doDialServer, dialOrigin)
 }
 
 func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
@@ -250,7 +241,7 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 	}
 	rsaPublicKey, ok := cert.X509().PublicKey.(*rsa.PublicKey)
 	if !ok {
-		return nil, errors.New("Public key is not an RSA public key!")
+		return nil, errors.New("public key is not an RSA public key")
 	}
 	cipherCode := lampshade.Cipher(s.ptSettingInt(fmt.Sprintf("cipher_%v", runtime.GOARCH)))
 	if cipherCode == 0 {
