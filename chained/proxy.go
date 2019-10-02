@@ -82,12 +82,12 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 	}
 	switch transport {
 	case "":
-		transport = "http"
+		transport = "https"
 		fallthrough
 	case "https", "utphttps":
 		if s.Cert == "" {
 			log.Errorf("No Cert configured for %s, will dial with plain tcp", s.Addr)
-			return newHTTPProxy(name, transport, proto, s, uc)
+			return newHTTPProxy(name, strings.TrimSuffix(transport, "s"), proto, s, uc)
 		}
 		return newHTTPSProxy(name, transport, proto, s, uc)
 	case "http", "utphttp":
@@ -471,28 +471,28 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 		}
 	}
 	if len(s.KCPSettings) > 0 {
-		log.Debugf("Enabling KCP for %v (%v)", p.Label(), p.protocol)
+		log.Debugf("Enabling KCP for %v (%v)", p.Label(), s.PluggableTransport)
 		err := enableKCP(p, s)
 		if err != nil {
 			return nil, err
 		}
 		p.protocol = "kcp"
 	} else if s.PluggableTransport == "quic" || s.PluggableTransport == "oquic" {
-		log.Debugf("Enabling QUIC for %v (%v)", p.Label(), p.protocol)
+		log.Debugf("Enabling QUIC for %v (%v)", p.Label(), s.PluggableTransport)
 		err := enableQUIC(p, s)
 		if err != nil {
 			return nil, err
 		}
 		p.protocol = s.PluggableTransport
 	} else if strings.HasPrefix(s.PluggableTransport, "utp") {
-		log.Debugf("Enabling UTP for %v (%v)", p.Label(), p.protocol)
+		log.Debugf("Enabling UTP for %v (%v)", p.Label(), s.PluggableTransport)
 		err := enableUTP(p, s)
 		if err != nil {
 			return nil, err
 		}
 		p.protocol = "utp"
 	} else if s.PluggableTransport == "wss" {
-		log.Debugf("Enabling WSS for %v (%v)", p.Label(), p.protocol)
+		log.Debugf("Enabling WSS for %v (%v)", p.Label(), s.PluggableTransport)
 		err := enableWSS(p, s)
 		if err != nil {
 			return nil, err
