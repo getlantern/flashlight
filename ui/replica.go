@@ -172,6 +172,13 @@ func (me ReplicaHttpServer) handleView(w http.ResponseWriter, r *http.Request) {
 	}
 	t, new, release := me.Confluence.GetTorrent(m.InfoHash)
 	defer release()
+
+	// TODO: Perhaps we only want to do this if we're unable to get the metainfo from S3.
+	t.AddTrackers([][]string{m.Trackers})
+	if m.DisplayName != "" {
+		t.SetDisplayName(m.DisplayName)
+	}
+
 	if new && t.Info() == nil && s3Key != "" {
 		// Get another reference to the torrent that lasts until we're done fetching the metainfo.
 		_, _, release := me.Confluence.GetTorrent(m.InfoHash)
