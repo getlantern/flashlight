@@ -12,6 +12,7 @@ import (
 	"time"
 
 	bclient "github.com/getlantern/borda/client"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/ops"
 	"github.com/getlantern/waitforserver"
 
@@ -19,7 +20,9 @@ import (
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
+	"github.com/getlantern/flashlight/goroutines"
 	"github.com/getlantern/flashlight/integrationtest"
+	"github.com/getlantern/flashlight/logging"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -30,6 +33,7 @@ const (
 )
 
 func TestProxying(t *testing.T) {
+	golog.SetPrepender(logging.Timestamped)
 	onGeo := geolookup.OnRefresh()
 
 	var opsMx sync.RWMutex
@@ -53,7 +57,7 @@ func TestProxying(t *testing.T) {
 			if val == nil {
 				return 0
 			}
-			return val.Get()
+			return val.Get().(float64)
 		}
 
 		opsMx.Lock()
@@ -256,6 +260,7 @@ func testRequest(t *testing.T, helper *integrationtest.Helper) {
 
 	doRequest(t, client, "http://"+helper.HTTPServerAddr)
 	doRequest(t, client, "https://"+helper.HTTPSServerAddr)
+	goroutines.PrintProfile(10)
 }
 
 func doRequest(t *testing.T, client *http.Client, url string) {

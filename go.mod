@@ -17,7 +17,7 @@ require (
 	github.com/fatih/set v0.2.1 // indirect
 	github.com/getlantern/appdir v0.0.0-20180320102544-7c0f9d241ea7
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
-	github.com/getlantern/borda v0.0.0-20190809122504-668025f4c2b9
+	github.com/getlantern/borda v0.0.0-20190917165417-36cadcff5e18
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
 	github.com/getlantern/cmux v0.0.0-20190809092548-4b7adf243efe
 	github.com/getlantern/detour v0.0.0-20190122161414-7107a599a170
@@ -33,6 +33,7 @@ require (
 	github.com/getlantern/filepersist v0.0.0-20160317154340-c5f0cd24e799
 	github.com/getlantern/fronted v0.0.0-20190606212108-e7744195eded
 	github.com/getlantern/geolookup v0.0.0-20180719190536-68d621f75f46
+	github.com/getlantern/go-ping v0.0.0-20190916232214-0d654d92ece9
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
 	github.com/getlantern/go-update v0.0.0-20190510022740-79c495ab728c // indirect
 	github.com/getlantern/golog v0.0.0-20190809085441-26e09e6dd330
@@ -103,8 +104,13 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/tjfoc/gmsm v0.0.0-20180404022540-0effa9db1ba8 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
-	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80
+	golang.org/x/crypto v0.0.0-20190829043050-9756ffdc2472 // indirect
+	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297
 	golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7
+	google.golang.org/appengine v1.6.2 // indirect
+	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55 // indirect
+	google.golang.org/grpc v1.23.0 // indirect
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20190819144938-28e3ca4262e1
@@ -113,7 +119,7 @@ replace github.com/marten-seemann/qtls => github.com/marten-seemann/qtls-depreca
 
 replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20190625160138-4119e572c899
 
-replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20190606225154-80c3ccb52074
+replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20191001223343-79cda44164e3
 
 replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3
 

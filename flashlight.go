@@ -42,7 +42,7 @@ var (
 	// otherwise we will utilize too much bandwidth on the client.
 	FullyReportedOps = []string{"proxybench", "client_started", "client_stopped", "connect", "disconnect", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "sysproxy_off_force", "sysproxy_clear", "report_issue", "proxy_rank", "proxy_selection_stability", "probe", "balancer_dial", "proxy_dial"}
 
-	// Lightweight Ops are ops for which we record less than the full set of dimensions (e.g. omit error)
+	// LightweightOps are ops for which we record less than the full set of dimensions (e.g. omit error)
 	LightweightOps = []string{"balancer_dial", "proxy_dial"}
 
 	startProxyBenchOnce sync.Once
@@ -82,8 +82,8 @@ func Run(httpProxyAddr string,
 	}
 
 	// check # of goroutines every minute, print the top 5 stacks with most
-	// goroutines if the # exceeds 2000 and is increasing.
-	stopMonitor := goroutines.Monitor(time.Minute, 2000, 5)
+	// goroutines if the # exceeds 800 and is increasing.
+	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
 	defer stopMonitor()
 	elapsed := mtime.Stopwatch()
 	displayVersion()
@@ -127,8 +127,9 @@ func Run(httpProxyAddr string,
 		// the type in the factory method above.
 		cfg := conf.(*config.Global)
 		log.Debugf("Applying global config")
-		applyClientConfig(cl, cfg, autoReport, onBordaConfigured)
+		applyClientConfig(cfg, autoReport, onBordaConfigured)
 		onConfigUpdate(cfg)
+		cl.PingProxies(cfg.PingSamplePercentage)
 	}
 	rt := proxied.ParallelPreferChained()
 	stopConfig := config.Init(configDir, flagsAsMap, userConfig, proxiesDispatch, globalDispatch, rt)
@@ -187,7 +188,7 @@ func Run(httpProxyAddr string,
 	return nil
 }
 
-func applyClientConfig(c *client.Client, cfg *config.Global, autoReport func() bool, onBordaConfigured chan bool) {
+func applyClientConfig(cfg *config.Global, autoReport func() bool, onBordaConfigured chan bool) {
 	certs, err := cfg.TrustedCACerts()
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
