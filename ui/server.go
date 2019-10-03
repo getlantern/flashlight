@@ -330,13 +330,6 @@ func closeConn(w http.ResponseWriter) error {
 	return connIn.Close()
 }
 
-func dumpRequestHeaders(r *http.Request) {
-	dump, err := httputil.DumpRequest(r, false)
-	if err == nil {
-		log.Debugf("Request:\n%s", string(dump))
-	}
-}
-
 func addrCandidates(requested string) []string {
 	if strings.HasPrefix(requested, "http://") {
 		log.Errorf("Client tried to start at bad address: %v", requested)
