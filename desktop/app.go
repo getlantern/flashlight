@@ -312,7 +312,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 				return
 			}
 			_, err = torrentClient.AddTorrent(mi)
-			replicaLogger.WithValues(analog.Error).Printf("error adding upload to torrent client: %v", err)
+			replicaLogger.WithValues(analog.Error).Printf("error adding existing upload to torrent client: %v", err)
 		})
 
 		log.Debugf("Starting client UI at %v", uiaddr)
