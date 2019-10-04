@@ -21,6 +21,7 @@ import (
 	"github.com/mitchellh/panicwrap"
 
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/desktop"
 	"github.com/getlantern/flashlight/logging"
@@ -124,6 +125,11 @@ func main() {
 	if *forceConfigCountry != "" {
 		log.Debugf("Will force config fetches to pretend client country is: %v", *forceConfigCountry)
 		config.ForceCountry(*forceConfigCountry)
+	}
+
+	if *stealthMode {
+		log.Debug("Running in stealth mode")
+		common.ForceStealthMode()
 	}
 
 	if a.ShouldShowUI() {

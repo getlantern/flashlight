@@ -93,21 +93,23 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 		// HTTPS in that case.
 		log.Tracef("Intercepting CONNECT %s", req.URL)
 	} else {
-		log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
-		if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
-			// Don't redirect CORS requests as it means the HTML pages that
-			// initiate the requests were not HTTPS redirected. Redirecting
-			// them adds few benefits, but may break some sites.
-			if origin := req.Header.Get("Origin"); origin == "" {
-				// Not rewrite recently rewritten URL to avoid redirect loop.
-				if t, ok := client.rewriteLRU.Get(httpsURL); ok && time.Since(t.(time.Time)) < httpsRewriteInterval {
-					log.Debugf("Not httpseverywhere redirecting to %v to avoid redirect loop", httpsURL)
-				} else {
-					client.rewriteLRU.Add(httpsURL, time.Now())
-					return client.redirectHTTPS(ctx, req, httpsURL, op)
+		// Only rewrite to HTTPS if we're not in stealth mode
+		if !common.InStealthMode() {
+			log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
+			if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
+				// Don't redirect CORS requests as it means the HTML pages that
+				// initiate the requests were not HTTPS redirected. Redirecting
+				// them adds few benefits, but may break some sites.
+				if origin := req.Header.Get("Origin"); origin == "" {
+					// Not rewrite recently rewritten URL to avoid redirect loop.
+					if t, ok := client.rewriteLRU.Get(httpsURL); ok && time.Since(t.(time.Time)) < httpsRewriteInterval {
+						log.Debugf("Not httpseverywhere redirecting to %v to avoid redirect loop", httpsURL)
+					} else {
+						client.rewriteLRU.Add(httpsURL, time.Now())
+						return client.redirectHTTPS(ctx, req, httpsURL, op)
+					}
 				}
 			}
-
 		}
 		// Direct proxying can only be used for plain HTTP connections.
 		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
