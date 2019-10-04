@@ -45,7 +45,7 @@ func (me *countWriter) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
-func (me ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (me *ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	me.Logger.WithValues(analog.Debug).Printf("replica server request path: %q", r.URL.Path)
 	me.initMuxOnce.Do(func() {
 		me.mux.HandleFunc("/upload", me.handleUpload)
@@ -60,7 +60,7 @@ func (me ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	me.mux.ServeHTTP(w, r)
 }
 
-func (me ReplicaHttpServer) handleUpload(w http.ResponseWriter, r *http.Request) {
+func (me *ReplicaHttpServer) handleUpload(w http.ResponseWriter, r *http.Request) {
 	u, err := uuid.NewRandom()
 	if err != nil {
 		panic(err)
@@ -119,7 +119,7 @@ func (me ReplicaHttpServer) handleUpload(w http.ResponseWriter, r *http.Request)
 	fmt.Fprintln(w, createLink(tt.InfoHash(), s3Key, name))
 }
 
-func (me ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Request) {
+func (me *ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Request) {
 	type upload struct {
 		Link                  string
 		FileName              string
@@ -156,7 +156,7 @@ func (me ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Request
 	fmt.Fprintf(w, "%s\n", b)
 }
 
-func (me ReplicaHttpServer) handleView(w http.ResponseWriter, r *http.Request) {
+func (me *ReplicaHttpServer) handleView(w http.ResponseWriter, r *http.Request) {
 	link := r.URL.Query().Get("link")
 	m, err := metainfo.ParseMagnetURI(link)
 	if err != nil {
@@ -223,7 +223,7 @@ func firstNonEmptyString(ss ...string) string {
 	return ""
 }
 
-func (me ReplicaHttpServer) uploadsDir() string {
+func (me *ReplicaHttpServer) uploadsDir() string {
 	return me.UploadsDir
 }
 

@@ -329,7 +329,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 				Pattern: "/replica/",
 				Handler: http.StripPrefix(
 					"/replica",
-					ui.ReplicaHttpServer{
+					&ui.ReplicaHttpServer{
 						Confluence: confluence.Handler{
 							TC: torrentClient,
 						},
