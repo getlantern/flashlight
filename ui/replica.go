@@ -51,6 +51,8 @@ func (me *ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		me.mux.HandleFunc("/upload", me.handleUpload)
 		me.mux.HandleFunc("/uploads", me.handleUploads)
 		me.mux.HandleFunc("/view", me.handleView)
+		// TODO(anacrolix): Actually not much of Confluence is used now, probably none of the
+		// routes, so this might go away soon.
 		me.mux.Handle("/", &me.Confluence)
 	})
 	// TODO(anacrolix): Check this is correct and secure. We might want to be given valid origins
@@ -73,14 +75,14 @@ func (me *ReplicaHttpServer) handleUpload(w http.ResponseWriter, r *http.Request
 	me.Logger.WithValues(analog.Debug).Printf("uploading replica key %q", s3Key)
 	var cw countWriter
 	replicaUploadReader := io.TeeReader(r.Body, &cw)
-	f, err := ioutil.TempFile("", "")
+	tmpFile, err := ioutil.TempFile("", "")
 	if err == nil {
-		defer os.Remove(f.Name())
-		defer f.Close()
-		replicaUploadReader = io.TeeReader(replicaUploadReader, f)
+		defer os.Remove(tmpFile.Name())
+		defer tmpFile.Close()
+		replicaUploadReader = io.TeeReader(replicaUploadReader, tmpFile)
 	} else {
-		// This isn't good, but as long as we can add the torrent file metainfo to the local
-		// client, we can still spread the metadata, and S3 can take care of the data.
+		// This isn't good, but as long as we can add the torrent file metainfo to the local client,
+		// we can still spread the metadata, and S3 can take care of the data.
 		me.Logger.WithValues(analog.Error).Printf("error creating temporary file: %v", err)
 	}
 	err = replica.Upload(replicaUploadReader, s3Key)
@@ -106,7 +108,9 @@ func (me *ReplicaHttpServer) handleUpload(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		panic(err)
 	}
-	err = os.Rename(f.Name(), filepath.Join(me.DataDir, info.Name))
+	// Move the temporary file, which contains the upload body, to the data directory for the
+	// torrent client, in the location it expects.
+	err = os.Rename(tmpFile.Name(), filepath.Join(me.DataDir, info.Name))
 	if err != nil {
 		// Not fatal: See above, we only really need the metainfo to be added to the torrent.
 		me.Logger.WithValues(analog.Error).Printf("error renaming file: %v", err)
@@ -125,7 +129,7 @@ func (me *ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Reques
 		FileName              string
 		FileExtensionMimeType string
 	}
-	resp := []upload{}
+	resp := []upload{} // Ensure not nil: I don't like 'null' as a response.
 	err := replica.IterUploads(me.uploadsDir(), func(mi *metainfo.MetaInfo, err error) {
 		if err != nil {
 			me.Logger.Printf("error iterating uploads: %v", err)
@@ -172,7 +176,8 @@ func (me *ReplicaHttpServer) handleView(w http.ResponseWriter, r *http.Request) 
 	t, new, release := me.Confluence.GetTorrent(m.InfoHash)
 	defer release()
 
-	// TODO: Perhaps we only want to do this if we're unable to get the metainfo from S3.
+	// TODO: Perhaps we only want to do this if we're unable to get the metainfo from S3, to avoid
+	// bad parties injecting stuff into magnet links and sharing those.
 	t.AddTrackers([][]string{m.Trackers})
 	if m.DisplayName != "" {
 		t.SetDisplayName(m.DisplayName)
@@ -214,6 +219,7 @@ func (me *ReplicaHttpServer) handleView(w http.ResponseWriter, r *http.Request) 
 	confluence.ServeTorrent(w, r, t)
 }
 
+// What a bad language.
 func firstNonEmptyString(ss ...string) string {
 	for _, s := range ss {
 		if s != "" {
@@ -227,6 +233,7 @@ func (me *ReplicaHttpServer) uploadsDir() string {
 	return me.UploadsDir
 }
 
+// r is over the metainfo bytes.
 func storeUploadedTorrent(r io.Reader, path string) error {
 	err := os.MkdirAll(filepath.Dir(path), 0750)
 	if err != nil {
@@ -256,10 +263,12 @@ func createLink(ih torrent.InfoHash, s3Key, name string) string {
 	}.String()
 }
 
+// This reverses s3 key to info name change that AWS makes in its ObjectTorrent metainfos.
 func s3KeyFromInfoName(name string) string {
 	return "/" + strings.Replace(name, "_", "/", 1)
 }
 
+// Retrieve the original, user or file-system provided file name, before changes made by AWS.
 func displayNameFromInfoName(name string) string {
 	ss := strings.SplitN(name, "_", 2)
 	if len(ss) > 1 {
@@ -268,6 +277,7 @@ func displayNameFromInfoName(name string) string {
 	return ss[0]
 }
 
+// See createLink.
 func s3KeyFromMagnet(m metainfo.Magnet) (string, error) {
 	u, err := url.Parse(m.Params.Get("xs"))
 	if err != nil {
