@@ -6,7 +6,7 @@ require (
 	git.torproject.org/pluggable-transports/goptlib.git v0.0.0-20180321061416-7d56ec4f381e
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/confluence v1.1.0
-	github.com/anacrolix/envpprof v1.0.1
+	github.com/anacrolix/envpprof v1.1.0
 	github.com/anacrolix/go-libutp v1.0.2
 	github.com/anacrolix/log v0.3.1-0.20191001111012-13cede988bcd
 	github.com/anacrolix/missinggo v1.2.1
@@ -133,7 +133,5 @@ replace github.com/anacrolix/torrent => ./torrent
 replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110319-2566ecd5d999
 
 replace github.com/anacrolix/dht/v2 => ./dht
-
-replace github.com/anacrolix/envpprof => ./envpprof
 
 replace github.com/anacrolix/log => ./log
