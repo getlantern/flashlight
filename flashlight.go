@@ -129,7 +129,9 @@ func Run(httpProxyAddr string,
 		log.Debugf("Applying global config")
 		applyClientConfig(cfg, autoReport, onBordaConfigured)
 		onConfigUpdate(cfg)
-		cl.PingProxies(cfg.PingSamplePercentage)
+		if common.Platform != "android" && autoReport() {
+			cl.PingProxies(cfg.PingSamplePercentage)
+		}
 	}
 	rt := proxied.ParallelPreferChained()
 	stopConfig := config.Init(configDir, flagsAsMap, userConfig, proxiesDispatch, globalDispatch, rt)
