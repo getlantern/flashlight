@@ -11,6 +11,7 @@ import (
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/flashlight/balancer"
+	"github.com/getlantern/flashlight/common"
 )
 
 var (
@@ -44,6 +45,10 @@ func TrackStatsFor(dialers []balancer.Dialer) {
 }
 
 func probeIfRequired(dialers []balancer.Dialer) {
+	if common.InStealthMode() {
+		log.Debugf("In stealth mode, not probing")
+		return
+	}
 	sorted := balancer.SortDialers(dialers)
 	rttOfTopProxy := sorted[0].EstRTT()
 	for i, dialer := range sorted {

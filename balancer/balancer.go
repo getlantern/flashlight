@@ -14,6 +14,7 @@ import (
 	"time"
 
 	humanize "github.com/dustin/go-humanize"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog"
 )
@@ -499,6 +500,10 @@ func (b *Balancer) evalDialers() (changed bool) {
 }
 
 func (b *Balancer) checkConnectivityForAll() {
+	if common.InStealthMode() {
+		log.Debug("In stealth mode, not checking connectivity")
+		return
+	}
 	dialers := b.copyOfDialers()
 	if len(dialers) < 2 {
 		// nothing to do
