@@ -38,6 +38,7 @@ import (
 	"github.com/getlantern/quicwrapper"
 	"github.com/getlantern/tinywss"
 	"github.com/getlantern/tlsdialer"
+	"github.com/getlantern/tlsresumption"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
@@ -171,21 +172,22 @@ func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc commo
 
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
-			tlsConfig, clientHelloID := tlsConfigForProxy(s)
+			tlsConfig, clientHelloID, clientSessionState := tlsConfigForProxy(s)
 			td := &tlsdialer.Dialer{
 				DoDial: func(network, addr string, timeout time.Duration) (net.Conn, error) {
 					return p.dialCore(op)(ctx)
 				},
-				Timeout:        timeoutFor(ctx),
-				SendServerName: tlsConfig.ServerName != "",
-				Config:         tlsConfig,
-				ClientHelloID:  clientHelloID,
+				Timeout:            timeoutFor(ctx),
+				SendServerName:     tlsConfig.ServerName != "",
+				Config:             tlsConfig,
+				ClientHelloID:      clientHelloID,
+				ClientSessionState: clientSessionState,
 			}
 			conn, err := td.Dial("tcp", p.addr)
 			if err != nil {
 				return conn, err
 			}
-			if !conn.ConnectionState().PeerCertificates[0].Equal(x509cert) {
+			if clientSessionState == nil && !conn.ConnectionState().PeerCertificates[0].Equal(x509cert) {
 				if closeErr := conn.Close(); closeErr != nil {
 					log.Debugf("Error closing chained server connection: %s", closeErr)
 				}
@@ -966,7 +968,7 @@ func reportProxyDial(delta time.Duration, err error) {
 	}
 }
 
-func tlsConfigForProxy(s *ChainedServerInfo) (*tls.Config, tls.ClientHelloID) {
+func tlsConfigForProxy(s *ChainedServerInfo) (*tls.Config, tls.ClientHelloID, *tls.ClientSessionState) {
 	var sessionCache tls.ClientSessionCache
 	if s.TLSClientSessionCacheSize == 0 {
 		sessionCache = tls.NewLRUClientSessionCache(1000)
@@ -975,13 +977,32 @@ func tlsConfigForProxy(s *ChainedServerInfo) (*tls.Config, tls.ClientHelloID) {
 	}
 	cipherSuites := orderedCipherSuitesFromConfig(s)
 
-	return &tls.Config{
+	cfg := &tls.Config{
 		ClientSessionCache: sessionCache,
 		CipherSuites:       cipherSuites,
 		ServerName:         s.TLSServerNameIndicator,
 		InsecureSkipVerify: true,
 		KeyLogWriter:       getTLSKeyLogWriter(),
-	}, s.clientHelloID()
+	}
+
+	helloID := s.clientHelloID()
+
+	var ss *tls.ClientSessionState
+	var err error
+	if s.TLSClientSessionState != "" {
+		ss, err = tlsresumption.ParseClientSessionState(s.TLSClientSessionState)
+		if err != nil {
+			log.Errorf("Unable to parse serialized client session state, continuing with normal handshake: %v", err)
+		} else {
+			log.Debug("Using serialized client session state")
+			if helloID.Client == "Golang" {
+				log.Debug("Need to mimic browser hello for session resumption, defaulting to HelloChrome_Auto")
+				helloID = tls.HelloChrome_Auto
+			}
+		}
+	}
+
+	return cfg, helloID, ss
 }
 
 func orderedCipherSuitesFromConfig(s *ChainedServerInfo) []uint16 {
