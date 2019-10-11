@@ -10,7 +10,7 @@ import (
 
 	"github.com/getlantern/flashlight/chained/config"
 	"github.com/getlantern/golog"
-	"github.com/refraction-networking/utls"
+	tls "github.com/refraction-networking/utls"
 )
 
 var (

@@ -24,6 +24,7 @@ type Global struct {
 	BordaSamplePercentage float64
 	PingSamplePercentage  float64
 	ReportIssueEmail      string
+	StealthMode           bool
 	Client                *ClientConfig
 
 	// AdSettings are the settings to use for showing ads to mobile clients

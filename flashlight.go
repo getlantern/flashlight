@@ -53,8 +53,8 @@ func Run(httpProxyAddr string,
 	socksProxyAddr string,
 	configDir string,
 	disconnected func() bool,
-	useShortcut func() bool,
-	useDetour func() bool,
+	_useShortcut func() bool,
+	_useDetour func() bool,
 	allowPrivateHosts func() bool,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
@@ -70,6 +70,14 @@ func Run(httpProxyAddr string,
 	lang func() string,
 	adSwapTargetURL func() string,
 	reverseDNS func(host string) string) error {
+
+	useShortcut := func() bool {
+		return !common.InStealthMode() && _useShortcut()
+	}
+
+	useDetour := func() bool {
+		return !common.InStealthMode() && _useDetour()
+	}
 
 	if onProxiesUpdate == nil {
 		onProxiesUpdate = func(_ map[string]*chained.ChainedServerInfo) {}
@@ -128,8 +136,11 @@ func Run(httpProxyAddr string,
 		cfg := conf.(*config.Global)
 		log.Debugf("Applying global config")
 		applyClientConfig(cfg, autoReport, onBordaConfigured)
+		common.SetStealthMode(cfg.StealthMode)
 		onConfigUpdate(cfg)
-		cl.PingProxies(cfg.PingSamplePercentage)
+		if common.Platform != "android" && autoReport() {
+			cl.PingProxies(cfg.PingSamplePercentage)
+		}
 	}
 	rt := proxied.ParallelPreferChained()
 	stopConfig := config.Init(configDir, flagsAsMap, userConfig, proxiesDispatch, globalDispatch, rt)
@@ -200,7 +211,7 @@ func applyClientConfig(cfg *config.Global, autoReport func() bool, onBordaConfig
 	}
 
 	// proxybench is governed by this configuration as well.
-	if cfg.BordaReportInterval > 0 {
+	if cfg.BordaReportInterval > 0 && !cfg.StealthMode {
 		startProxyBenchOnce.Do(func() {
 			proxybench.Start(&proxybench.Opts{}, func(timing time.Duration, ctx map[string]interface{}) {})
 		})

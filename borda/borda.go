@@ -39,6 +39,11 @@ func Configure(reportInterval time.Duration, enabled func(ctx map[string]interfa
 		}
 	}
 
+	origEnabled := enabled
+	enabled = func(ctx map[string]interface{}) bool {
+		return !common.InStealthMode() && origEnabled(ctx)
+	}
+
 	if reportInterval > 0 {
 		log.Debug("Enabling borda")
 		once.Do(func() {
