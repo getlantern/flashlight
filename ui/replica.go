@@ -233,9 +233,11 @@ func (me *ReplicaHttpServer) uploadsDir() string {
 	return me.UploadsDir
 }
 
+const UploadDirPerms = 0750
+
 // r is over the metainfo bytes.
 func storeUploadedTorrent(r io.Reader, path string) error {
-	err := os.MkdirAll(filepath.Dir(path), 0750)
+	err := os.MkdirAll(filepath.Dir(path), UploadDirPerms)
 	if err != nil {
 		return err
 	}
