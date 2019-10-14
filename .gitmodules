@@ -15,4 +15,4 @@
 	url = https://github.com/anacrolix/log
 [submodule "envpprof"]
 	path = envpprof
-	url = ../../anacrolix/envpprof
+	url = https://github.com/anacrolix/envpprof
