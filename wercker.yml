@@ -31,6 +31,9 @@ build:
     - install-packages:
       packages: lsof libpcap-dev # lsof required by fdcount
     - script:
+      name: git submodules
+      code: git submodule update --init
+    - script:
       name: make-lantern
       code: |
         HEADLESS=true make lantern
