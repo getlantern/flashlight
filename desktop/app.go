@@ -288,9 +288,6 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		cfg.Logger = replicaLogger.WithFilter(func(m analog.Msg) bool {
 			return !m.HasValue("upnp-discover")
 		})
-		// DHT disabled pending a packet rate limit to prevent network overload and DNS failure.
-		// Also using S3 as a fallback means we have a great tracker to rely on.
-		cfg.NoDHT = true
 		// Household users may be behind a NAT/bad router, or on a limited device like a mobile. We
 		// don't want to overload their networks, so ensure the default connection tracking
 		// behaviour.
