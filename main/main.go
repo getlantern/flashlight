@@ -63,9 +63,9 @@ func main() {
 				if err := a.ProxyAddrReachable(ctx); err != nil {
 					// Can restart child process for better resiliency, but
 					// just print an error message for now to be safe.
-					fmt.Fprintf(logFile, "********* ERROR: Lantern HTTP proxy not working properly: %v", err)
+					fmt.Fprintf(logFile, "********* ERROR: Lantern HTTP proxy not working properly: %v\n", err)
 				} else {
-					fmt.Fprint(logFile, "DEBUG: Lantern HTTP proxy is working fine")
+					fmt.Fprintln(logFile, "DEBUG: Lantern HTTP proxy is working fine")
 				}
 				cancel()
 			}
