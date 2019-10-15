@@ -62,9 +62,9 @@ func addInternalHeaders(uc UserConfig, req *http.Request) {
 	}
 }
 
-// AddHeadersForInternalServices adds necessary http headers to any internal
-// services. overwriteAuth controls whether set auth related headers if they
-// are already present.
+// AddHeadersForInternalServices adds necessary http headers required by
+// internal services. overwriteAuth controls whether set auth related headers
+// if they are already present.
 func AddHeadersForInternalServices(req *http.Request, uc UserConfig, overwriteAuth bool) {
 	AddCommonHeaders(req)
 	setAuthHeaders(uc, req, overwriteAuth)
