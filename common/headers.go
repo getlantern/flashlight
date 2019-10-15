@@ -29,10 +29,13 @@ func AddCommonHeaders(req *http.Request) {
 	req.Header.Set(PlatformHeader, Platform)
 }
 
-// AddAuthHeaders adds the common 'auth' headers to the specific request.
-// 'overwrite' controls whether to set the header if it's already present with
-// non-empty value.
-func AddAuthHeaders(uc UserConfig, req *http.Request, overwrite bool) {
+// AddAuthHeaders adds the common 'auth' headers to the specific request if
+// they are not present.
+func AddAuthHeaders(uc UserConfig, req *http.Request) {
+	setAuthHeaders(uc, req, false)
+}
+
+func setAuthHeaders(uc UserConfig, req *http.Request, overwrite bool) {
 	if overwrite || req.Header.Get(DeviceIdHeader) == "" {
 		if deviceID := uc.GetDeviceID(); deviceID != "" {
 			req.Header.Set(DeviceIdHeader, deviceID)
@@ -59,8 +62,11 @@ func addInternalHeaders(uc UserConfig, req *http.Request) {
 	}
 }
 
-func AddHeadersForInternalServices(req *http.Request, uc UserConfig) {
+// AddHeadersForInternalServices adds necessary http headers to any internal
+// services. overwriteAuth controls whether set auth related headers if they
+// are already present.
+func AddHeadersForInternalServices(req *http.Request, uc UserConfig, overwriteAuth bool) {
 	AddCommonHeaders(req)
-	AddAuthHeaders(uc, req, true)
+	setAuthHeaders(uc, req, overwriteAuth)
 	addInternalHeaders(uc, req)
 }

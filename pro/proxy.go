@@ -117,7 +117,7 @@ func prepareProRequest(r *http.Request, uc common.UserConfig, overwrite bool) {
 		common.UserIdHeader,
 	}, ", "))
 
-	common.AddAuthHeaders(uc, r, overwrite)
+	common.AddHeadersForInternalServices(r, uc, overwrite)
 }
 
 // APIHandler returns an HTTP handler that specifically looks for and properly

@@ -236,7 +236,7 @@ func (cf *configurer) updateFromWeb(name string, etag string, cfg interface{}, u
 	req.Header.Set("Accept", "application/x-gzip")
 	// Prevents intermediate nodes (domain-fronters) from caching the content
 	req.Header.Set("Cache-Control", "no-cache")
-	common.AddHeadersForInternalServices(req, cf.uc)
+	common.AddHeadersForInternalServices(req, cf.uc, true)
 
 	// make sure to close the connection after reading the Body
 	// this prevents the occasional EOFs errors we're seeing with
