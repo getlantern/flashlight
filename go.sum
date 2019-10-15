@@ -54,6 +54,8 @@ github.com/aristanetworks/goarista v0.0.0-20190712234253-ed1100a1c015 h1:7ABPr1+
 github.com/aristanetworks/goarista v0.0.0-20190712234253-ed1100a1c015/go.mod h1:D/tb0zPVXnP7fmsLZjtdUhSsumbK/ij54UXjjVgMGxQ=
 github.com/aristanetworks/goarista v0.0.0-20191001182449-186a6201b8ef h1:22UUblKoiHkspXNKISqLtJWM42z+iECvHS9VymhhC7c=
 github.com/aristanetworks/goarista v0.0.0-20191001182449-186a6201b8ef/go.mod h1:Z4RTxGAuYhPzcq8+EdRM+R8M48Ssle2TsWtwRKa+vns=
+github.com/aristanetworks/goarista v0.0.0-20191015010157-ce4ff66f8dba h1:qJooJrmMFcjWARFXD0XppXRfEu+wGauDzyvGPfxR/ak=
+github.com/aristanetworks/goarista v0.0.0-20191015010157-ce4ff66f8dba/go.mod h1:Z4RTxGAuYhPzcq8+EdRM+R8M48Ssle2TsWtwRKa+vns=
 github.com/aristanetworks/splunk-hec-go v0.3.3/go.mod h1:1VHO9r17b0K7WmOlLb9nTk/2YanvOEnLMUgsFrxBROc=
 github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc h1:/WQ8Tr5zbclKWAtvafIcAk/njNpW3gtd22TLLouv+6Q=
 github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
@@ -269,8 +271,8 @@ github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c h1:AMJ/uG0
 github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c/go.mod h1:qqjnjfvpTJ8iAp3xlygB8sG8EbxWGAMjQLL1iyGt/dc=
 github.com/getlantern/proxy v0.0.0-20180713210748-e822de39af64/go.mod h1:z6u2OS1ynUdXIraWO04T1wcHFcGaIHwPed0n0bNilZU=
 github.com/getlantern/proxy v0.0.0-20181004033118-a1730c79960f/go.mod h1:z6u2OS1ynUdXIraWO04T1wcHFcGaIHwPed0n0bNilZU=
-github.com/getlantern/proxy v0.0.0-20190225163220-31d1cc06ed3d h1:OEYoa8d4QnXxezK6rMgBZ2siQ88zo0l/PkdBmpOEp9s=
-github.com/getlantern/proxy v0.0.0-20190225163220-31d1cc06ed3d/go.mod h1:z6u2OS1ynUdXIraWO04T1wcHFcGaIHwPed0n0bNilZU=
+github.com/getlantern/proxy v0.0.0-20191015165057-6cabbc8c6470 h1:mgIwgYJoFgSxZkpmHk8GJAPbX7GOc/HmpdwT8qkdjmI=
+github.com/getlantern/proxy v0.0.0-20191015165057-6cabbc8c6470/go.mod h1:bxNylSVdAlc+bv0245lIdf09a7N/2u3DeLHI73y4sQQ=
 github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12 h1:ofbl3nOfcM7CgGyInmuF79injlLFIKsPRFg9bpz17ow=
 github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12/go.mod h1:0q8eYDExExu4OEUGbKFbitxZ3UXbGHzewQ9o/ywIJaE=
 github.com/getlantern/quic-go v0.7.1-0.20190819144938-28e3ca4262e1 h1:ZninVtJJjpXgyljxDQ34ZKHTfBaj4kOsuSolVKhv0Ts=
