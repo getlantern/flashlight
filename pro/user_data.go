@@ -124,7 +124,7 @@ func newUserWithClient(uc common.UserConfig, hc *http.Client) (*client.User, err
 
 	// use deviceID, ignore userID, token
 	user := common.NewUserConfigData(deviceID, 0, "", uc.GetInternalHeaders(), uc.GetLanguage())
-	resp, err := client.NewClient(hc, PrepareProRequestWithOptions).UserCreate(user)
+	resp, err := client.NewClient(hc, PrepareProRequestOverwriteAuthHeaders).UserCreate(user)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +142,7 @@ func fetchUserDataWithClient(uc common.UserConfig, hc *http.Client) (*client.Use
 	userID := uc.GetUserID()
 	logger.Debugf("Fetching user status with device ID '%v', user ID '%v' and proToken %v", uc.GetDeviceID(), userID, uc.GetToken())
 
-	resp, err := client.NewClient(hc, PrepareProRequestWithOptions).UserData(uc)
+	resp, err := client.NewClient(hc, PrepareProRequestOverwriteAuthHeaders).UserData(uc)
 	if err != nil {
 		return nil, err
 	}
