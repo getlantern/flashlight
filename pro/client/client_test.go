@@ -30,9 +30,7 @@ func init() {
 }
 
 func TestCreateClient(t *testing.T) {
-	tc = NewClient(nil, func(req *http.Request, uc common.UserConfig) {
-		common.AddCommonHeaders(uc, req)
-	})
+	tc = NewClient(nil, common.AddHeadersForInternalServices)
 }
 
 func TestCreateUserA(t *testing.T) {

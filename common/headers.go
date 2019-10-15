@@ -23,41 +23,44 @@ const (
 	ClientCountryHeader                 = "X-Lantern-Client-Country"
 )
 
-// AddCommonHeadersWithOptions sets standard http headers on a request bound
-// for an internal service, representing auth and other configuration
-// metadata.  The caller may specify overwriteAuth=false to prevent overwriting
-// any of the common 'auth' headers (DeviceIdHeader, ProTokenHeader, UserIdHeader)
-// that are already present in the given request.
-func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth bool) {
+// AddCommonHeaders adds standard http headers the proxy requires.
+func AddCommonHeaders(req *http.Request) {
 	req.Header.Set(VersionHeader, Version)
-	for k, v := range uc.GetInternalHeaders() {
-		if v != "" {
-			req.Header.Set(k, v)
-		}
-	}
-
 	req.Header.Set(PlatformHeader, Platform)
+}
 
-	if overwriteAuth || req.Header.Get(DeviceIdHeader) == "" {
+// AddAuthHeaders adds the common 'auth' headers to the specific request.
+// 'overwrite' controls whether to set the header if it's already present with
+// non-empty value.
+func AddAuthHeaders(uc UserConfig, req *http.Request, overwrite bool) {
+	if overwrite || req.Header.Get(DeviceIdHeader) == "" {
 		if deviceID := uc.GetDeviceID(); deviceID != "" {
 			req.Header.Set(DeviceIdHeader, deviceID)
 		}
 	}
-	if overwriteAuth || req.Header.Get(ProTokenHeader) == "" {
+	if overwrite || req.Header.Get(ProTokenHeader) == "" {
 		if token := uc.GetToken(); token != "" {
 			req.Header.Set(ProTokenHeader, token)
 		}
 	}
-	if overwriteAuth || req.Header.Get(UserIdHeader) == "" {
+	if overwrite || req.Header.Get(UserIdHeader) == "" {
 		if userID := uc.GetUserID(); userID != 0 {
 			req.Header.Set(UserIdHeader, strconv.FormatInt(userID, 10))
 		}
 	}
 }
 
-// AddCommonHeaders sets standard http headers on a request
-// bound for an internal service, representing auth and other
-// configuration metadata.
-func AddCommonHeaders(uc UserConfig, req *http.Request) {
-	AddCommonHeadersWithOptions(uc, req, true)
+// addInternalHeaders adds http headers specific to internal services, if any.
+func addInternalHeaders(uc UserConfig, req *http.Request) {
+	for k, v := range uc.GetInternalHeaders() {
+		if v != "" {
+			req.Header.Set(k, v)
+		}
+	}
+}
+
+func AddHeadersForInternalServices(req *http.Request, uc UserConfig) {
+	AddCommonHeaders(req)
+	AddAuthHeaders(uc, req, true)
+	addInternalHeaders(uc, req)
 }
