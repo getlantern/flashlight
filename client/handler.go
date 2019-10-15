@@ -112,10 +112,6 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 			}
 		}
 
-		if v := req.Header.Get("Proxy-Connection"); v != "" {
-			req.Header.Set("Connection", v)
-			req.Header.Del("Proxy-Connection")
-		}
 		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
 	}
 
