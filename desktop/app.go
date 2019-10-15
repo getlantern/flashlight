@@ -659,7 +659,7 @@ func (app *App) GetTranslations(filename string) ([]byte, error) {
 }
 
 func (app *App) localHttpToken() string {
-	if app.Flags["noUiHttpToken"].(bool) {
+	if v, ok := app.Flags["noUiHttpToken"]; ok && v.(bool) {
 		return ""
 	}
 	return localHTTPToken(settings)
