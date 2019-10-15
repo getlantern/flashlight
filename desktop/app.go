@@ -284,7 +284,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		cfg := torrent.NewDefaultClientConfig()
 		cfg.DataDir = replicaDataDir
 		cfg.Seed = true
-		cfg.Debug = true
+		//cfg.Debug = true
 		cfg.Logger = replicaLogger.WithFilter(func(m analog.Msg) bool {
 			return !m.HasValue("upnp-discover")
 		})
@@ -309,8 +309,12 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 				replicaLogger.Printf("error while iterating uploads: %v", err)
 				return
 			}
-			_, err = torrentClient.AddTorrent(mi)
-			replicaLogger.WithValues(analog.Error).Printf("error adding existing upload to torrent client: %v", err)
+			t, err := torrentClient.AddTorrent(mi)
+			if err != nil {
+				replicaLogger.WithValues(analog.Error).Printf("error adding existing upload to torrent client: %v", err)
+			} else {
+				replicaLogger.Printf("added previous upload %q to torrent client", t.Name())
+			}
 		})
 
 		log.Debugf("Starting client UI at %v", uiaddr)
