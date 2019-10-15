@@ -1,7 +1,6 @@
 package client
 
 import (
-	"net/http"
 	"testing"
 
 	"github.com/pborman/uuid"
