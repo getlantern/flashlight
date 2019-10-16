@@ -131,6 +131,8 @@ github.com/getlantern/bytemap v0.0.0-20190914004255-0acf4d58df56 h1:X4NKmX9VNoSW
 github.com/getlantern/bytemap v0.0.0-20190914004255-0acf4d58df56/go.mod h1:DFhUkF3XKDQgnCNVn203TVnRxy4oUnIIMClem8MQxKE=
 github.com/getlantern/cmux v0.0.0-20190809092548-4b7adf243efe h1:GOIyhXIt/VhW4vlYG42It2mtZztJPSLBL0DFlrSrsqs=
 github.com/getlantern/cmux v0.0.0-20190809092548-4b7adf243efe/go.mod h1:6YG7dGkCkWvp7wXlbONN3gjVQypSq6+NCvSEXBhgNC0=
+github.com/getlantern/common v0.0.0-20191017131928-864ae49aeb6a h1:dvmzN/r32O8fl50QV5Pn7pwsEk1UyvsJp+H3FHQ6gS8=
+github.com/getlantern/common v0.0.0-20191017131928-864ae49aeb6a/go.mod h1:UTgpUrzCbisgRr4N5FkJubou6LsSpbrFjHcVM+1iF4w=
 github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 h1:NRUJuo3v3WGC/g5YiyF790gut6oQr5f3FBI88Wv0dx4=
 github.com/getlantern/context v0.0.0-20190109183933-c447772a6520/go.mod h1:L+mq6/vvYHKjCX2oez0CgEAJmbq1fbb/oNJIWQkBybY=
 github.com/getlantern/detour v0.0.0-20190122161414-7107a599a170 h1:CdO/ANUQWFnUhbUnLUJvoeqfYE1dAO5Zhd/bvvhzNv4=
