@@ -1,5 +1,23 @@
 # Change Log
 
+## [5.6.0](https://github.com/getlantern/flashlight/tree/5.6.0) (2019-10-17)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.8...5.6.0)
+
+**Merged pull requests:**
+
+- Adding modern-go dependencies -- dependent on go version [\#695](https://github.com/getlantern/flashlight/pull/695) ([myleshorton](https://github.com/myleshorton))
+- Server sets trusted [\#694](https://github.com/getlantern/flashlight/pull/694) ([myleshorton](https://github.com/myleshorton))
+- A simpler fix for not passing version header to origin sites closes getlantern/lantern-internal\#3047 [\#693](https://github.com/getlantern/flashlight/pull/693) ([oxtoacart](https://github.com/oxtoacart))
+- Using commonconfig package for chained config [\#692](https://github.com/getlantern/flashlight/pull/692) ([oxtoacart](https://github.com/oxtoacart))
+- Updated to latest proxy [\#691](https://github.com/getlantern/flashlight/pull/691) ([myleshorton](https://github.com/myleshorton))
+- Don't reveal Lantern headers when visiting sites directly [\#690](https://github.com/getlantern/flashlight/pull/690) ([joesis](https://github.com/joesis))
+- Added support for tls session resumption using pre-negotiated sessions [\#689](https://github.com/getlantern/flashlight/pull/689) ([oxtoacart](https://github.com/oxtoacart))
+- Only ping if auto report is enabled and not on Android [\#688](https://github.com/getlantern/flashlight/pull/688) ([oxtoacart](https://github.com/oxtoacart))
+- Added stealth mode which disables non-essential network traffic [\#687](https://github.com/getlantern/flashlight/pull/687) ([oxtoacart](https://github.com/oxtoacart))
+- Update to latest utls fork [\#684](https://github.com/getlantern/flashlight/pull/684) ([myleshorton](https://github.com/myleshorton))
+- allow hitProxy.py to run for multiple proxies [\#681](https://github.com/getlantern/flashlight/pull/681) ([joesis](https://github.com/joesis))
+- make QUIC honor tlsservernameindicator config option [\#680](https://github.com/getlantern/flashlight/pull/680) ([forkner](https://github.com/forkner))
+
 ## [5.5.8](https://github.com/getlantern/flashlight/tree/5.5.8) (2019-09-24)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.7...5.5.8)
 
@@ -222,37 +240,15 @@
 
 - Set a larger IdleTimeout [\#590](https://github.com/getlantern/flashlight/pull/590) ([joesis](https://github.com/joesis))
 - Don't log borda error as error to prevent recursion [\#589](https://github.com/getlantern/flashlight/pull/589) ([joesis](https://github.com/joesis))
-- don't mark persistent connections as successful [\#586](https://github.com/getlantern/flashlight/pull/586) ([joesis](https://github.com/joesis))
 
 ## [5.3.0](https://github.com/getlantern/flashlight/tree/5.3.0) (2019-02-20)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.8...5.3.0)
 
-**Merged pull requests:**
-
-- Update lampshade to the latest [\#587](https://github.com/getlantern/flashlight/pull/587) ([joesis](https://github.com/joesis))
-- add test to cover active probing [\#585](https://github.com/getlantern/flashlight/pull/585) ([joesis](https://github.com/joesis))
-- ping 3 times when probing a proxy for connectivity [\#584](https://github.com/getlantern/flashlight/pull/584) ([joesis](https://github.com/joesis))
-- remove the misleading 'CONNECT succeeded' log [\#583](https://github.com/getlantern/flashlight/pull/583) ([joesis](https://github.com/joesis))
-- update packages to avoid missing commit in qtls dep [\#582](https://github.com/getlantern/flashlight/pull/582) ([forkner](https://github.com/forkner))
-
 ## [5.2.8](https://github.com/getlantern/flashlight/tree/5.2.8) (2019-02-01)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.7...5.2.8)
 
-**Merged pull requests:**
-
-- New UI with react 16 and new material UI and accessibility improvements [\#581](https://github.com/getlantern/flashlight/pull/581) ([myleshorton](https://github.com/myleshorton))
-- Updated to latest quic-go to fix race condition [\#580](https://github.com/getlantern/flashlight/pull/580) ([oxtoacart](https://github.com/oxtoacart))
-- update quic packages to latest [\#579](https://github.com/getlantern/flashlight/pull/579) ([forkner](https://github.com/forkner))
-- Add quic integration test [\#577](https://github.com/getlantern/flashlight/pull/577) ([forkner](https://github.com/forkner))
-- Update to the latest detour package [\#576](https://github.com/getlantern/flashlight/pull/576) ([joesis](https://github.com/joesis))
-- use the latest shortcut package [\#575](https://github.com/getlantern/flashlight/pull/575) ([joesis](https://github.com/joesis))
-
 ## [5.2.7](https://github.com/getlantern/flashlight/tree/5.2.7) (2019-01-19)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.6...5.2.7)
-
-**Merged pull requests:**
-
-- Fix digest for context [\#574](https://github.com/getlantern/flashlight/pull/574) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.2.6](https://github.com/getlantern/flashlight/tree/5.2.6) (2019-01-18)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.5...5.2.6)
