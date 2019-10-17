@@ -25,7 +25,7 @@ var adSwapJavaScriptInjections = map[string]string{
 }
 
 func (client *Client) handle(conn net.Conn) error {
-	op, ctx := ops.BeginWithNewBeam("proxy", context.Background())
+	op, ctx := beginProxying(context.Background())
 	// Set user agent connection to idle a little before the upstream connection
 	// so that we don't read data from the client after the upstream connection
 	// has already timed out.
@@ -113,8 +113,10 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 		}
 		// Direct proxying can only be used for plain HTTP connections.
 		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
-		// consumed and removed by http-proxy-lantern/versioncheck
-		req.Header.Set(common.VersionHeader, common.Version)
+		if isProxied(ctx) {
+			// consumed and removed by http-proxy-lantern/versioncheck
+			req.Header.Set(common.VersionHeader, common.Version)
+		}
 	}
 
 	return next(ctx, req)
