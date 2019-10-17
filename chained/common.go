@@ -8,7 +8,7 @@ package chained
 import (
 	"strconv"
 
-	"github.com/getlantern/flashlight/chained/config"
+	"github.com/getlantern/common"
 	"github.com/getlantern/golog"
 	tls "github.com/refraction-networking/utls"
 )
@@ -19,7 +19,7 @@ var (
 
 // ChainedServerInfo contains all the data for connecting to a given chained
 // server.
-type ChainedServerInfo config.ChainedServerInfo
+type ChainedServerInfo common.ChainedServerInfo
 
 func (s *ChainedServerInfo) ptSetting(name string) string {
 	if s.PluggableTransportSettings == nil {
