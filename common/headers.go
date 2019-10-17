@@ -23,50 +23,41 @@ const (
 	ClientCountryHeader                 = "X-Lantern-Client-Country"
 )
 
-// AddCommonHeaders adds standard http headers the proxy requires.
-func AddCommonHeaders(req *http.Request) {
+// AddCommonHeadersWithOptions sets standard http headers on a request bound
+// for an internal service, representing auth and other configuration
+// metadata.  The caller may specify overwriteAuth=false to prevent overwriting
+// any of the common 'auth' headers (DeviceIdHeader, ProTokenHeader, UserIdHeader)
+// that are already present in the given request.
+func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth bool) {
 	req.Header.Set(VersionHeader, Version)
+	for k, v := range uc.GetInternalHeaders() {
+		if v != "" {
+			req.Header.Set(k, v)
+		}
+	}
+
 	req.Header.Set(PlatformHeader, Platform)
-}
 
-// AddAuthHeaders adds the common 'auth' headers to the specific request if
-// they are not present.
-func AddAuthHeaders(uc UserConfig, req *http.Request) {
-	setAuthHeaders(uc, req, false)
-}
-
-func setAuthHeaders(uc UserConfig, req *http.Request, overwrite bool) {
-	if overwrite || req.Header.Get(DeviceIdHeader) == "" {
+	if overwriteAuth || req.Header.Get(DeviceIdHeader) == "" {
 		if deviceID := uc.GetDeviceID(); deviceID != "" {
 			req.Header.Set(DeviceIdHeader, deviceID)
 		}
 	}
-	if overwrite || req.Header.Get(ProTokenHeader) == "" {
+	if overwriteAuth || req.Header.Get(ProTokenHeader) == "" {
 		if token := uc.GetToken(); token != "" {
 			req.Header.Set(ProTokenHeader, token)
 		}
 	}
-	if overwrite || req.Header.Get(UserIdHeader) == "" {
+	if overwriteAuth || req.Header.Get(UserIdHeader) == "" {
 		if userID := uc.GetUserID(); userID != 0 {
 			req.Header.Set(UserIdHeader, strconv.FormatInt(userID, 10))
 		}
 	}
 }
 
-// addInternalHeaders adds http headers specific to internal services, if any.
-func addInternalHeaders(uc UserConfig, req *http.Request) {
-	for k, v := range uc.GetInternalHeaders() {
-		if v != "" {
-			req.Header.Set(k, v)
-		}
-	}
-}
-
-// AddHeadersForInternalServices adds necessary http headers required by
-// internal services. overwriteAuth controls whether set auth related headers
-// if they are already present.
-func AddHeadersForInternalServices(req *http.Request, uc UserConfig, overwriteAuth bool) {
-	AddCommonHeaders(req)
-	setAuthHeaders(uc, req, overwriteAuth)
-	addInternalHeaders(uc, req)
+// AddCommonHeaders sets standard http headers on a request
+// bound for an internal service, representing auth and other
+// configuration metadata.
+func AddCommonHeaders(uc UserConfig, req *http.Request) {
+	AddCommonHeadersWithOptions(uc, req, true)
 }

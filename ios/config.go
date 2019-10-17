@@ -236,7 +236,7 @@ func (cf *configurer) updateFromWeb(name string, etag string, cfg interface{}, u
 	req.Header.Set("Accept", "application/x-gzip")
 	// Prevents intermediate nodes (domain-fronters) from caching the content
 	req.Header.Set("Cache-Control", "no-cache")
-	common.AddHeadersForInternalServices(req, cf.uc, true)
+	common.AddCommonHeaders(cf.uc, req)
 
 	// make sure to close the connection after reading the Body
 	// this prevents the occasional EOFs errors we're seeing with
@@ -300,9 +300,9 @@ func (cf *configurer) updateFromWeb(name string, etag string, cfg interface{}, u
 	cf.saveEtag(name, newEtag)
 
 	if name == "proxies.yaml" {
-		log.Debugf("Updated proxies.yaml from cloud:\n%v", string(bytes))
+   		log.Debugf("Updated proxies.yaml from cloud:\n%v", string(bytes))
 	} else {
-		log.Debugf("Updated %v from cloud", name)
+		log.Debugf("Updated %v from cloud", name)	
 	}
 
 	return newEtag != etag, nil

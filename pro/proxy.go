@@ -94,9 +94,9 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	return
 }
 
-// PrepareProRequestOverwriteAuthHeaders normalizes requests to the pro server with
+// PrepareProRequestWithOptions normalizes requests to the pro server with
 // device ID, user ID, etc set.
-func PrepareProRequestOverwriteAuthHeaders(r *http.Request, uc common.UserConfig) {
+func PrepareProRequestWithOptions(r *http.Request, uc common.UserConfig) {
 	prepareProRequest(r, uc, true)
 }
 
@@ -106,7 +106,7 @@ func PrepareProRequest(r *http.Request, uc common.UserConfig) {
 	prepareProRequest(r, uc, false)
 }
 
-func prepareProRequest(r *http.Request, uc common.UserConfig, overwrite bool) {
+func prepareProRequest(r *http.Request, uc common.UserConfig, options bool) {
 	r.URL.Scheme = "http"
 	r.URL.Host = common.ProAPIHost
 	r.Host = r.URL.Host
@@ -117,7 +117,10 @@ func prepareProRequest(r *http.Request, uc common.UserConfig, overwrite bool) {
 		common.UserIdHeader,
 	}, ", "))
 
-	common.AddHeadersForInternalServices(r, uc, overwrite)
+	// Add auth headers only if not present, to avoid race conditions
+	// when creating new user or switching user, i.e., linking device
+	// to a new account. (ovewriteAuth=false)
+	common.AddCommonHeadersWithOptions(uc, r, options)
 }
 
 // APIHandler returns an HTTP handler that specifically looks for and properly

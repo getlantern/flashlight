@@ -798,6 +798,10 @@ func (p *proxy) Trusted() bool {
 	return p.trusted
 }
 
+func (p *proxy) AdaptRequest(req *http.Request) {
+	req.Header.Add(common.TokenHeader, p.authToken)
+}
+
 func (p *proxy) dialServer(ctx context.Context) (net.Conn, error) {
 	conn, err := p.doDialServer(ctx, p)
 	if err != nil {
