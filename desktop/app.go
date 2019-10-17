@@ -271,16 +271,18 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			}
 		}
 
-		replicaLogger := analog.Default
-		replicaDir := filepath.Join(os.TempDir(), "replica")
-		replicaUploadsDir := filepath.Join(replicaDir, "uploads")
-		replicaDataDir := filepath.Join(replicaDir, "data")
-		err = os.MkdirAll(replicaDir, 0750)
+		userConfigDir, err := os.UserConfigDir()
 		if err != nil {
-			// Deferring correct handling here: If we can't create or access this directory, the
-			// Replica torrent client will not be able to download.
 			panic(err)
 		}
+		userCacheDir, err := os.UserCacheDir()
+		if err != nil {
+			panic(err)
+		}
+		replicaLogger := analog.Default
+		const replicaDirElem = "replica"
+		replicaUploadsDir := filepath.Join(userConfigDir, replicaDirElem, "uploads")
+		replicaDataDir := filepath.Join(userCacheDir, replicaDirElem, "data")
 		cfg := torrent.NewDefaultClientConfig()
 		cfg.DataDir = replicaDataDir
 		cfg.Seed = true
@@ -335,6 +337,10 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 					&ui.ReplicaHttpServer{
 						Confluence: confluence.Handler{
 							TC: torrentClient,
+							MetainfoCacheDir: func() *string {
+								s := filepath.Join(userCacheDir, replicaDirElem, "metainfos")
+								return &s
+							}(),
 						},
 						TorrentClient: torrentClient,
 						DataDir:       replicaDataDir,
