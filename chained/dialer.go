@@ -12,7 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/mitchellh/go-server-timing"
+	servertiming "github.com/mitchellh/go-server-timing"
 
 	"github.com/getlantern/bufconn"
 	"github.com/getlantern/errors"
@@ -194,6 +194,7 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 func (p *proxy) onRequest(req *http.Request) {
 	p.AdaptRequest(req)
 	common.AddCommonHeaders(p.user, req)
+	req.Header.Set(common.VersionHeader, common.Version)
 	// Request BBR metrics
 	req.Header.Set("X-BBR", "y")
 }
