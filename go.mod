@@ -119,7 +119,7 @@ replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-2019
 
 replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20191001223343-79cda44164e3
 
-replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3
+replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3-0.20190606045409-29ac0bf665ea
 
 replace github.com/getlantern/replica => ./replica
 
