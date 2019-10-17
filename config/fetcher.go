@@ -87,7 +87,7 @@ func (cf *fetcher) doFetch(ctx context.Context, op *ops.Op) ([]byte, time.Durati
 	req.Header.Set("Accept", "application/x-gzip")
 	// Prevents intermediate nodes (domain-fronters) from caching the content
 	req.Header.Set("Cache-Control", "no-cache")
-	common.AddHeadersForInternalServices(req, cf.user, true)
+	common.AddCommonHeaders(cf.user, req)
 
 	_forceCountry := forceCountry.Load()
 	if _forceCountry != nil {

@@ -192,9 +192,8 @@ func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr 
 }
 
 func (p *proxy) onRequest(req *http.Request) {
-	common.AddCommonHeaders(req)
-	common.AddAuthHeaders(p.user, req)
-	req.Header.Add(common.TokenHeader, p.authToken)
+	p.AdaptRequest(req)
+	common.AddCommonHeaders(p.user, req)
 	// Request BBR metrics
 	req.Header.Set("X-BBR", "y")
 }
