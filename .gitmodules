@@ -1,6 +1,7 @@
 [submodule "replica"]
 	path = replica
 	url = https://github.com/getlantern/replica.git
+        branch = delete-file
 [submodule "confluence"]
 	path = confluence
 	url = https://github.com/anacrolix/confluence.git
