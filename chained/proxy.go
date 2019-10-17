@@ -160,7 +160,7 @@ func newHTTPProxy(name, transport, proto string, s *ChainedServerInfo, uc common
 			return dfConn, err
 		}
 	}
-	return newProxy(name, transport, proto, s, uc, s.ENHTTPURL != "", true, doDialServer, dialOrigin)
+	return newProxy(name, transport, proto, s, uc, s.Trusted, true, doDialServer, dialOrigin)
 }
 
 func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
