@@ -303,6 +303,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			app.Exit(err)
 		}
 
+		// Create the root directory to avoid special-casing a missing root-directory error.
 		os.MkdirAll(replicaUploadsDir, ui.UploadDirPerms)
 		replica.IterUploads(replicaUploadsDir, func(mi *metainfo.MetaInfo, err error) {
 			if err != nil {
