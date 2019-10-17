@@ -60,7 +60,7 @@ require (
 	github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff
 	github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8
 	github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c
-	github.com/getlantern/proxy v0.0.0-20190225163220-31d1cc06ed3d
+	github.com/getlantern/proxy v0.0.0-20191015165057-6cabbc8c6470
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
 	github.com/getlantern/quicwrapper v0.0.0-20190823180104-f4c834140eac
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
