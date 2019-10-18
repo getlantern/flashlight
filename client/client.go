@@ -406,6 +406,9 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		if log.IsTraceEnabled() {
 			log.Tracef("Dialing proxy takes %v for %s", time.Since(start), addr)
 		}
+		if conn != nil {
+			conn = &proxiedConn{conn}
+		}
 		return conn, err
 	}
 
