@@ -51,6 +51,7 @@ func (me *ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		me.mux.HandleFunc("/upload", me.handleUpload)
 		me.mux.HandleFunc("/uploads", me.handleUploads)
 		me.mux.HandleFunc("/view", me.handleView)
+		me.mux.HandleFunc("/delete", me.handleDelete)
 		// TODO(anacrolix): Actually not much of Confluence is used now, probably none of the
 		// routes, so this might go away soon.
 		me.mux.Handle("/", &me.Confluence)
@@ -158,6 +159,25 @@ func (me *ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Reques
 	}
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, "%s\n", b)
+}
+
+func (me *ReplicaHttpServer) handleDelete(w http.ResponseWriter, r *http.Request) {
+	link := r.URL.Query().Get("link")
+	m, err := metainfo.ParseMagnetURI(link)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error parsing magnet link: %v", err.Error()), http.StatusBadRequest)
+		return
+	}
+	s3Key, err := s3KeyFromMagnet(m)
+	if err != nil {
+		me.Logger.Printf("error getting s3 key from magnet: %v", err)
+	} else if s3Key == "" {
+		me.Logger.Printf("s3 key not found in delete link %q", link)
+	}
+	err = replica.DeleteFile(s3Key)
+	if err != nil {
+		me.Logger.Printf("error deleting s3 link %v", err)
+	}
 }
 
 func (me *ReplicaHttpServer) handleView(w http.ResponseWriter, r *http.Request) {
