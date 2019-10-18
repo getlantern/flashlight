@@ -91,35 +91,6 @@ var (
 	forceProxying int64
 )
 
-type storedBool struct {
-	value bool
-}
-
-func (sb *storedBool) get() bool {
-	return sb.value
-}
-
-func (sb *storedBool) set(newValue bool) {
-	sb.value = newValue
-}
-
-const (
-	ctxKeyProxied = "proxied"
-)
-
-func beginProxying(ctx context.Context) (*ops.Op, context.Context) {
-	op, ctx := ops.BeginWithNewBeam("proxy", ctx)
-	return op, context.WithValue(ctx, ctxKeyProxied, &storedBool{})
-}
-
-func markProxied(ctx context.Context) {
-	ctx.Value(ctxKeyProxied).(*storedBool).set(true)
-}
-
-func isProxied(ctx context.Context) bool {
-	return ctx.Value(ctxKeyProxied).(*storedBool).get()
-}
-
 // ForceProxying forces everything to get proxied (useful for testing)
 func ForceProxying() {
 	atomic.StoreInt64(&forceProxying, 1)
@@ -364,7 +335,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 
 	conf := &socks5.Config{
 		HandleConnect: func(ctx context.Context, conn net.Conn, req *socks5.Request, replySuccess func(boundAddr net.Addr) error, replyError func(err error) error) error {
-			op, ctx := beginProxying(ctx)
+			op, ctx := ops.BeginWithNewBeam("proxy", ctx)
 			defer op.End()
 			addr := client.reverseDNS(fmt.Sprintf("%v:%v", req.DestAddr.IP, req.DestAddr.Port))
 			errOnReply := replySuccess(nil)
@@ -419,7 +390,6 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 
 	dialProxied := func(ctx context.Context, _unused, addr string) (net.Conn, error) {
 		op.Set("remotely_proxied", true)
-		markProxied(ctx)
 		proto := balancer.NetworkPersistent
 		if isCONNECT {
 			// UGLY HACK ALERT! In this case, we know we need to send a CONNECT request
@@ -435,6 +405,9 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		conn, err := client.bal.DialContext(ctx, proto, addr)
 		if log.IsTraceEnabled() {
 			log.Tracef("Dialing proxy takes %v for %s", time.Since(start), addr)
+		}
+		if conn != nil {
+			conn = &proxiedConn{conn}
 		}
 		return conn, err
 	}
