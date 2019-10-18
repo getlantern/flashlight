@@ -271,17 +271,14 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			}
 		}
 
-		userConfigDir, err := os.UserConfigDir()
-		if err != nil {
-			panic(err)
-		}
 		userCacheDir, err := os.UserCacheDir()
 		if err != nil {
 			panic(err)
 		}
 		replicaLogger := analog.Default
 		const replicaDirElem = "replica"
-		replicaUploadsDir := filepath.Join(userConfigDir, replicaDirElem, "uploads")
+		replicaConfigDir := appdir.General(replicaDirElem)
+		replicaUploadsDir := filepath.Join(replicaConfigDir, "uploads")
 		replicaDataDir := filepath.Join(userCacheDir, replicaDirElem, "data")
 		cfg := torrent.NewDefaultClientConfig()
 		cfg.DataDir = replicaDataDir
