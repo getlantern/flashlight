@@ -305,9 +305,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			app.Exit(err)
 		}
 
-		// Create the root directory to avoid special-casing a missing root-directory error.
-		os.MkdirAll(replicaUploadsDir, ui.UploadDirPerms)
-		replica.IterUploads(replicaUploadsDir, func(mi *metainfo.MetaInfo, err error) {
+		if err := replica.IterUploads(replicaUploadsDir, func(mi *metainfo.MetaInfo, err error) {
 			if err != nil {
 				replicaLogger.Printf("error while iterating uploads: %v", err)
 				return
@@ -318,7 +316,9 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			} else {
 				replicaLogger.Printf("added previous upload %q to torrent client", t.Name())
 			}
-		})
+		}); err != nil {
+			panic(err)
+		}
 
 		log.Debugf("Starting client UI at %v", uiaddr)
 

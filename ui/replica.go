@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -91,21 +92,24 @@ func (me *ReplicaHttpServer) handleUpload(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		panic(err)
 	}
-	t, err := replica.GetObjectTorrent(s3Key)
+	otr, err := replica.GetObjectTorrent(s3Key)
 	if err != nil {
 		panic(err)
 	}
-	defer t.Close()
-	p := filepath.Join(me.uploadsDir(), filepath.FromSlash(s3Key)+".torrent")
-	err = storeUploadedTorrent(t, p)
+	b, err := ioutil.ReadAll(otr)
+	otr.Close()
 	if err != nil {
 		panic(err)
 	}
-	mi, err := metainfo.LoadFromFile(p)
+	mi, err := metainfo.Load(bytes.NewReader(b))
 	if err != nil {
 		panic(err)
 	}
 	info, err := mi.UnmarshalInfo()
+	if err != nil {
+		panic(err)
+	}
+	err = storeUploadedTorrent(bytes.NewReader(b), me.uploadMetainfoPath(&info))
 	if err != nil {
 		panic(err)
 	}
@@ -168,15 +172,22 @@ func (me *ReplicaHttpServer) handleDelete(w http.ResponseWriter, r *http.Request
 		http.Error(w, fmt.Sprintf("error parsing magnet link: %v", err.Error()), http.StatusBadRequest)
 		return
 	}
-	s3Key, err := s3KeyFromMagnet(m)
-	if err != nil {
-		me.Logger.Printf("error getting s3 key from magnet: %v", err)
-	} else if s3Key == "" {
-		me.Logger.Printf("s3 key not found in delete link %q", link)
+	// For simplicity, let's assume that all uploads are loaded in the local torrent client and have
+	// their info, which is true at the point of writing unless the initial upload failed to
+	// retrieve the object torrent and the torrent client hasn't already obtained the info on its
+	// own.
+	t, ok := me.TorrentClient.Torrent(m.InfoHash)
+	if !ok {
+		http.Error(w, "torrent not in client", http.StatusBadRequest)
+		return
 	}
-	err = replica.DeleteFile(s3Key)
+	info := t.Info()
+	t.Drop()
+	os.Remove(filepath.Join(me.DataDir, info.Name))
+	os.Remove(me.uploadMetainfoPath(info))
+	err = replica.DeleteFile(s3KeyFromInfoName(info.Name))
 	if err != nil {
-		me.Logger.Printf("error deleting s3 link %v", err)
+		me.Logger.Printf("error deleting s3 object: %v", err)
 	}
 }
 
@@ -306,4 +317,8 @@ func s3KeyFromMagnet(m metainfo.Magnet) (string, error) {
 		return "", err
 	}
 	return u.Path, nil
+}
+
+func (me *ReplicaHttpServer) uploadMetainfoPath(info *metainfo.Info) string {
+	return filepath.Join(me.uploadsDir(), info.Name+".torrent")
 }
