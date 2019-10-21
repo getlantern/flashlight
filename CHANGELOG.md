@@ -1,5 +1,12 @@
 # Change Log
 
+## [5.6.2](https://github.com/getlantern/flashlight/tree/5.6.2) (2019-10-21)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.6.1...5.6.2)
+
+**Merged pull requests:**
+
+- Fix direct headers [\#698](https://github.com/getlantern/flashlight/pull/698) ([myleshorton](https://github.com/myleshorton))
+
 ## [5.6.1](https://github.com/getlantern/flashlight/tree/5.6.1) (2019-10-18)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.6.0...5.6.1)
 
@@ -242,10 +249,6 @@
 
 ## [5.3.1](https://github.com/getlantern/flashlight/tree/5.3.1) (2019-02-26)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.0...5.3.1)
-
-**Merged pull requests:**
-
-- Set a larger IdleTimeout [\#590](https://github.com/getlantern/flashlight/pull/590) ([joesis](https://github.com/joesis))
 
 ## [5.3.0](https://github.com/getlantern/flashlight/tree/5.3.0) (2019-02-20)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.2.8...5.3.0)
