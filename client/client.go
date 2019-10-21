@@ -419,7 +419,6 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 	dialDirect := func(ctx context.Context, network, addr string) (net.Conn, error) {
 		// Use netx because on Android, we need a special protected dialer.
 		// Same below.
-		log.Debugf("Dialing direct to %v", addr)
 		conn, err := netx.DialContext(ctx, network, addr)
 		if conn != nil {
 			conn = &directConn{conn}
