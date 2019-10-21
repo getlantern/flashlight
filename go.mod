@@ -17,7 +17,7 @@ require (
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
 	github.com/getlantern/cmux v0.0.0-20190809092548-4b7adf243efe
 	github.com/getlantern/common v0.0.0-20191017131928-864ae49aeb6a
-	github.com/getlantern/detour v0.0.0-20191019050339-dc1e8a857196
+	github.com/getlantern/detour v0.0.0-20191019154911-d59524282429
 	github.com/getlantern/diagnostics v0.0.0-20190820054534-b2070abd5177
 	github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041 // indirect
 	github.com/getlantern/dnsgrab v0.0.0-20171025121014-227f729dcb41
@@ -61,7 +61,7 @@ require (
 	github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff
 	github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8
 	github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c
-	github.com/getlantern/proxy v0.0.0-20191019051300-4b91fce560a8
+	github.com/getlantern/proxy v0.0.0-20191019155656-2dfdb0022ce1
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
 	github.com/getlantern/quicwrapper v0.0.0-20190823180104-f4c834140eac
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
