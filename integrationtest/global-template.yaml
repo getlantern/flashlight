@@ -5,7 +5,7 @@ frontedcloudconfig: ""
 cpuprofile: ""
 memprofile: ""
 updateserverurl: https://update.getlantern.org
-bordareportinterval: "5m"
+bordareportinterval: "10s"
 bordasamplepercentage: 0
 client:
   minqos: 0
