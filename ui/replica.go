@@ -3,6 +3,7 @@ package ui
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -77,15 +78,21 @@ func (me *ReplicaHttpServer) handleUpload(w http.ResponseWriter, r *http.Request
 	me.Logger.WithValues(analog.Debug).Printf("uploading replica key %q", s3Key)
 	var cw countWriter
 	replicaUploadReader := io.TeeReader(r.Body, &cw)
-	tmpFile, err := ioutil.TempFile("", "")
-	if err == nil {
+	tmpFile, tmpFileErr := func() (*os.File, error) {
+		if true {
+			return ioutil.TempFile("", "")
+		} else {
+			return nil, errors.New("sike")
+		}
+	}()
+	if tmpFileErr == nil {
 		defer os.Remove(tmpFile.Name())
 		defer tmpFile.Close()
 		replicaUploadReader = io.TeeReader(replicaUploadReader, tmpFile)
 	} else {
 		// This isn't good, but as long as we can add the torrent file metainfo to the local client,
 		// we can still spread the metadata, and S3 can take care of the data.
-		me.Logger.WithValues(analog.Error).Printf("error creating temporary file: %v", err)
+		me.Logger.WithValues(analog.Error).Printf("error creating temporary file: %v", tmpFileErr)
 	}
 	err = replica.Upload(replicaUploadReader, s3Key)
 	me.Logger.WithValues(analog.Debug).Printf("uploaded %d bytes", cw.bytesWritten)
@@ -113,12 +120,19 @@ func (me *ReplicaHttpServer) handleUpload(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		panic(err)
 	}
-	// Move the temporary file, which contains the upload body, to the data directory for the
-	// torrent client, in the location it expects.
-	err = os.Rename(tmpFile.Name(), filepath.Join(me.DataDir, info.Name))
-	if err != nil {
-		// Not fatal: See above, we only really need the metainfo to be added to the torrent.
-		me.Logger.WithValues(analog.Error).Printf("error renaming file: %v", err)
+	if tmpFileErr == nil {
+		// Windoze might complain if we don't close the handle before moving the file, plus it's
+		// considered good practice to check for close errors after writing to a file. (I'm not
+		// closing it, but at least I'm flushing anything, if it's incomplete at this point, the
+		// torrent client will complete it as required.
+		tmpFile.Close()
+		// Move the temporary file, which contains the upload body, to the data directory for the
+		// torrent client, in the location it expects.
+		err = os.Rename(tmpFile.Name(), filepath.Join(me.DataDir, info.Name))
+		if err != nil {
+			// Not fatal: See above, we only really need the metainfo to be added to the torrent.
+			me.Logger.WithValues(analog.Error).Printf("error renaming file: %v", err)
+		}
 	}
 	tt, err := me.TorrentClient.AddTorrent(mi)
 	if err != nil {
