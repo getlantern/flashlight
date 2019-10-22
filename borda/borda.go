@@ -32,8 +32,10 @@ var (
 // time before it reports to borda, however.
 func Configure(reportInterval time.Duration, enabled func(ctx map[string]interface{}) bool) {
 	if common.InDevelopment() {
-		log.Debug("In development, will report everything to borda every 1 minutes")
-		reportInterval = 1 * time.Minute
+		if reportInterval > 1*time.Minute {
+			log.Debug("In development, will report everything to borda every 1 minutes")
+			reportInterval = 1 * time.Minute
+		}
 		enabled = func(ctx map[string]interface{}) bool {
 			return true
 		}
@@ -88,7 +90,10 @@ func startBorda(reportInterval time.Duration, enabled func(ctx map[string]interf
 			}
 		}
 
-		reportToBorda(values, ctx)
+		err := reportToBorda(values, ctx)
+		if err != nil {
+			log.Debugf("failed to report to borda: %v", err)
+		}
 	}
 
 	ops.RegisterReporter(reporter)
@@ -136,12 +141,4 @@ func createBordaClient(reportInterval time.Duration) *borda.Client {
 		},
 		BeforeSubmit: BeforeSubmit,
 	})
-}
-
-func metricToValue(dim string, ctx map[string]interface{}, values map[string]float64) {
-	val, found := ctx[dim]
-	if found {
-		delete(ctx, dim)
-		values[dim] = val.(float64)
-	}
 }

@@ -165,8 +165,11 @@ func TestDialShortcut(t *testing.T) {
 	// used as a sign that the request is sent to proxy
 	mockResponse := []byte("HTTP/1.1 404 Not Found\r\n\r\n")
 	// add some delay before sending back data, as response before the request
-	// was sent is apparently not expected by http client.
-	resetBalancer(client, mockconn.SlowResponder(mockconn.SucceedingDialer(mockResponse), 10*time.Millisecond).Dial)
+	// was sent is apparently not expected by http client, which would cause
+	// http.Transport to print "Unsolicited response received on idle HTTP
+	// channel..." and return readLoopPeekFailLocked error.
+	delayed404 := mockconn.SlowResponder(mockconn.SucceedingDialer(mockResponse), 50*time.Millisecond)
+	resetBalancer(client, delayed404.Dial)
 
 	req, _ := http.NewRequest("GET", site.URL, nil)
 	res, _ := roundTrip(client, req)

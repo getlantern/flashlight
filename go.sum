@@ -311,8 +311,8 @@ github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4 h1:73U3J4ms
 github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4/go.mod h1:f8WmDYKFOaC5/y0d3GWl6UKf1ZbSlIoMzkuC8x7pUhg=
 github.com/getlantern/tlsdialer v0.0.0-20190606180931-1ac26445d532 h1:rdmlf0r0lZpTHZLkY0aJeKXrY7ggX4WXuLtOepZvmXM=
 github.com/getlantern/tlsdialer v0.0.0-20190606180931-1ac26445d532/go.mod h1:O0cCO2crLwc02DtahTowM6jjUCvn6Jr26uDQaGVab4g=
-github.com/getlantern/tlsdialer v0.0.0-20191010195314-f9c39bfa1852 h1:g5BJ5PnPGLR51tHUnpw8/OyNgjrneEmIbeJFtuDwlEM=
-github.com/getlantern/tlsdialer v0.0.0-20191010195314-f9c39bfa1852/go.mod h1:yTOVvHTvYlXJo8jSSOV+kuv/tya5i0eIILe8jjsPHe8=
+github.com/getlantern/tlsdialer v0.0.0-20191022033653-81b203ed2619 h1:gKoyStvVhhBkjNhG7Ob0kiNUADh6FKPZ3L8O8CwXb8g=
+github.com/getlantern/tlsdialer v0.0.0-20191022033653-81b203ed2619/go.mod h1:yTOVvHTvYlXJo8jSSOV+kuv/tya5i0eIILe8jjsPHe8=
 github.com/getlantern/tlsredis v0.0.0-20180308045249-5d4ed6dd3836 h1:Qx9tRhqZdhF0RBxHe2OVE1OJ30ipOCPfMraDrZED3bc=
 github.com/getlantern/tlsredis v0.0.0-20180308045249-5d4ed6dd3836/go.mod h1:1ZJE0mXEdPyyuF1daUTDBo2nVWB/6nuZy7IcNmRnHrc=
 github.com/getlantern/tlsresumption v0.0.0-20191010160602-a16b0c459d39 h1:pPpkmog922m05sekVKfPf7Aa61UqGMC4Sb8Dqr7yvms=
