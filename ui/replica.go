@@ -182,13 +182,15 @@ func (me *ReplicaHttpServer) handleDelete(w http.ResponseWriter, r *http.Request
 		return
 	}
 	info := t.Info()
-	t.Drop()
-	os.Remove(filepath.Join(me.DataDir, info.Name))
-	os.Remove(me.uploadMetainfoPath(info))
 	err = replica.DeleteFile(s3KeyFromInfoName(info.Name))
 	if err != nil {
 		me.Logger.Printf("error deleting s3 object: %v", err)
+		http.Error(w, "couldn't delete replica object", http.StatusInternalServerError)
+		return
 	}
+	t.Drop()
+	os.Remove(filepath.Join(me.DataDir, info.Name))
+	os.Remove(me.uploadMetainfoPath(info))
 }
 
 func (me *ReplicaHttpServer) handleView(w http.ResponseWriter, r *http.Request) {
