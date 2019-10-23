@@ -61,7 +61,7 @@ require (
 	github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff
 	github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8
 	github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c
-	github.com/getlantern/proxy v0.0.0-20191019155656-2dfdb0022ce1
+	github.com/getlantern/proxy v0.0.0-20191023194025-c2bffa9e292a
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
 	github.com/getlantern/quicwrapper v0.0.0-20190823180104-f4c834140eac
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
@@ -91,8 +91,6 @@ require (
 	github.com/mitchellh/go-server-timing v1.0.0
 	github.com/mitchellh/mapstructure v0.0.0-20180220230111-00c29f56e238
 	github.com/mitchellh/panicwrap v0.0.0-20190228164358-f67bf3f3d291
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/refraction-networking/utls v0.0.0-20190909200633-43c36d3c1f57
