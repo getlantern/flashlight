@@ -43,8 +43,17 @@ const (
 )
 
 var (
-	log = golog.LoggerFor("testsupport")
+	log       = golog.LoggerFor("testsupport")
+	globalCfg []byte
 )
+
+func init() {
+	bytes, err := ioutil.ReadFile("../integrationtest/global-template.yaml")
+	if err != nil {
+		panic(fmt.Sprintf("Could not read config %v", err))
+	}
+	globalCfg = bytes
+}
 
 // Helper is a helper for running integration tests that provides its own web,
 // proxy and config servers.
@@ -273,18 +282,11 @@ func (helper *Helper) writeGlobalConfig(resp http.ResponseWriter, req *http.Requ
 		return
 	}
 
-	cfg, err := buildGlobal()
-	if err != nil {
-		helper.t.Error(err)
-		resp.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
 	resp.Header().Set(Etag, version)
 	resp.WriteHeader(http.StatusOK)
 
 	w := gzip.NewWriter(resp)
-	_, err = w.Write(cfg)
+	_, err := w.Write(globalCfg)
 	if err != nil {
 		helper.t.Error(err)
 	}
@@ -425,16 +427,6 @@ func (helper *Helper) buildProxies(proto string) ([]byte, error) {
 	}
 
 	return out, nil
-}
-
-func buildGlobal() ([]byte, error) {
-	bytes, err := ioutil.ReadFile("../integrationtest/global-template.yaml")
-	if err != nil {
-		return nil, fmt.Errorf("Could not read config %v", err)
-	}
-	// we assume the template is always in valid form, or the clients would
-	// fail to unmarshal it.
-	return bytes, nil
 }
 
 var kcpConf = map[string]interface{}{
