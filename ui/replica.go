@@ -61,11 +61,14 @@ func (me *ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// TODO(anacrolix): Check this is correct and secure. We might want to be given valid origins
 	// and apply them to appropriate routes, or only allow anything from localhost for example.
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 	me.mux.ServeHTTP(w, r)
 }
 
 func (me *ReplicaHttpServer) handleUpload(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "OPTIONS" {
+		return
+	}
 	u, err := uuid.NewRandom()
 	if err != nil {
 		panic(err)
