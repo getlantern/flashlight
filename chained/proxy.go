@@ -532,8 +532,16 @@ func enableWSS(p *proxy, s *ChainedServerInfo) error {
 	var rt tinywss.RoundTripHijacker
 	var err error
 
+	force_http := s.ptSettingBool("force_http")
 	fctx_id := s.ptSetting("df_ctx")
-	if fctx_id != "" {
+
+	if force_http {
+		log.Debugf("Using wss http direct")
+		rt, err = wssHTTPRoundTripper(p, s)
+		if err != nil {
+			return err
+		}
+	} else if fctx_id != "" {
 		fctx := GetFrontingContext(fctx_id)
 		if fctx == nil {
 			return fmt.Errorf("unsupported wss df_ctx=%s! skipping.", fctx_id)
@@ -591,6 +599,13 @@ func (rt *wssFrontedRT) RoundTripHijack(req *http.Request) (*http.Response, net.
 	}
 }
 
+func wssHTTPRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
+	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
+		log.Debugf("tinywss HTTP Roundtripper dialing %v", addr)
+		return netx.DialTimeout(network, addr, chainedDialTimeout)
+	}), nil
+}
+
 func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
 
 	// Verify the SNI name if given, otherwise verify the hostname given and do not use SNI.
@@ -614,7 +629,7 @@ func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHija
 	x509cert := cert.X509()
 
 	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
-		log.Debugf("tinywss Roundtripper dialing %v", addr)
+		log.Debugf("tinywss HTTPS Roundtripper dialing %v", addr)
 
 		var certPool *x509.CertPool
 
