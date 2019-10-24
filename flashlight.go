@@ -6,20 +6,16 @@ import (
 	"math/rand"
 	"net"
 	"path/filepath"
-	"runtime"
 	"sync"
 	"time"
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/jibber_jabber"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/ops"
-	"github.com/getlantern/osversion"
 	"github.com/getlantern/proxybench"
 
-	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
@@ -95,7 +91,11 @@ func Run(httpProxyAddr string,
 	defer stopMonitor()
 	elapsed := mtime.Stopwatch()
 	displayVersion()
-	initContext(userConfig.GetDeviceID(), common.Version, common.RevisionDate, isPro, userID)
+	deviceID := userConfig.GetDeviceID()
+	if common.InDevelopment() {
+		log.Debugf("You can query for this device's activity in borda under device id: %v", deviceID)
+	}
+	fops.InitGlobalContext(deviceID, isPro, userID, func() string { return geolookup.GetCountry(0) }, func() string { return geolookup.GetIP(0) })
 	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 	op := fops.Begin("client_started")
 
@@ -268,46 +268,4 @@ func applyClientConfig(cfg *config.Global, autoReport func() bool, onBordaConfig
 func displayVersion() {
 	log.Debugf("---- flashlight version: %s, release: %s, build revision date: %s, build date: %s ----",
 		common.Version, common.PackageVersion, common.RevisionDate, common.BuildDate)
-}
-
-func initContext(deviceID string, version string, revisionDate string, isPro func() bool, userID func() int64) {
-	if common.InDevelopment() {
-		log.Debugf("You can query for this device's activity in borda under device id: %v", deviceID)
-	}
-	// Using "application" allows us to distinguish between errors from the
-	// lantern client vs other sources like the http-proxy, etop.
-	ops.SetGlobal("app", "lantern-client")
-	ops.SetGlobal("app_version", fmt.Sprintf("%v (%v)", version, revisionDate))
-	ops.SetGlobal("go_version", runtime.Version())
-	ops.SetGlobal("os_name", common.Platform)
-	ops.SetGlobal("os_arch", runtime.GOARCH)
-	ops.SetGlobal("device_id", deviceID)
-	ops.SetGlobalDynamic("geo_country", func() interface{} { return geolookup.GetCountry(0) })
-	ops.SetGlobalDynamic("client_ip", func() interface{} { return geolookup.GetIP(0) })
-	ops.SetGlobalDynamic("timezone", func() interface{} { return time.Now().Format("MST") })
-	ops.SetGlobalDynamic("locale_language", func() interface{} {
-		lang, _ := jibber_jabber.DetectLanguage()
-		return lang
-	})
-	ops.SetGlobalDynamic("locale_country", func() interface{} {
-		country, _ := jibber_jabber.DetectTerritory()
-		return country
-	})
-	ops.SetGlobalDynamic("is_pro", func() interface{} {
-		return isPro()
-	})
-	ops.SetGlobalDynamic("user_id", func() interface{} {
-		return userID()
-	})
-	ops.SetGlobalDynamic("is_data_capped", func() interface{} {
-		if isPro() {
-			return false
-		}
-		quota, _ := bandwidth.GetQuota()
-		return quota != nil && quota.MiBUsed >= quota.MiBAllowed
-	})
-
-	if osStr, err := osversion.GetHumanReadable(); err == nil {
-		ops.SetGlobal("os_version", osStr)
-	}
 }
