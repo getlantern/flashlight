@@ -66,7 +66,7 @@ func (me *ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (me *ReplicaHttpServer) handleUpload(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "OPTIONS" {
+	if r.Method != "POST" {
 		return
 	}
 	u, err := uuid.NewRandom()
