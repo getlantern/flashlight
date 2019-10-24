@@ -22,15 +22,19 @@ var (
 	// submitted. It's mostly useful for unit testing.
 	BeforeSubmit func(name string, ts time.Time, values map[string]borda.Val, dimensionsJSON []byte)
 
-	bordaClient *borda.Client
+	bordaClient   *borda.Client
+	bordaClientMx sync.Mutex
 
 	once sync.Once
 )
 
-// Configure starts borda reporting and proxy bench if reportInterval > 0. The
-// service never stops once enabled. The service will check enabled each
-// time before it reports to borda, however.
-func Configure(reportInterval time.Duration, enabled func(ctx map[string]interface{}) bool) {
+// EnabledFunc is a function that indicates whether reporting to borda is enabled for a specific context.
+type EnabledFunc func(ctx map[string]interface{}) bool
+
+// Configure starts borda reporting if reportInterval > 0. The service never stops once enabled.
+// The service will check enabled each time before it reports to borda, however.
+func Configure(reportInterval time.Duration, enabled EnabledFunc) {
+	log.Error(errors.New("Supplied report interval is %v", reportInterval))
 	if common.InDevelopment() {
 		if reportInterval > 1*time.Minute {
 			log.Debug("In development, will report everything to borda every 1 minutes")
@@ -41,19 +45,38 @@ func Configure(reportInterval time.Duration, enabled func(ctx map[string]interfa
 		}
 	}
 
+	log.Debugf("ReportInterval is %v", reportInterval)
+	if reportInterval <= 0 {
+		log.Debug("Borda not enabled")
+		return
+	}
+
+	bordaClientMx.Lock()
+	if bordaClient == nil {
+		log.Debugf("Creating new borda client with report interval %v", reportInterval)
+		bordaClient = createBordaClient(reportInterval)
+	} else {
+		log.Debugf("Updating report interval to %v", reportInterval)
+		bordaClient.SetBatchInterval(reportInterval)
+	}
+	bordaClientMx.Unlock()
+	reportToBorda := bordaClient.ReducingSubmitter("client_results", 1000)
+	ConfigureWithSubmitter(reportToBorda, enabled)
+}
+
+// ConfigureWithSubmitter starts borda reporting using the given submitter function to report.
+// to borda. The service never stops once enabled. The service will check enabled each time
+// before it reports to borda, however.
+func ConfigureWithSubmitter(submitter borda.Submitter, enabled EnabledFunc) {
 	origEnabled := enabled
 	enabled = func(ctx map[string]interface{}) bool {
 		return !common.InStealthMode() && origEnabled(ctx)
 	}
 
-	if reportInterval > 0 {
+	once.Do(func() {
 		log.Debug("Enabling borda")
-		once.Do(func() {
-			startBorda(reportInterval, enabled)
-		})
-	} else {
-		log.Debug("Borda not enabled")
-	}
+		startBorda(submitter, enabled)
+	})
 }
 
 // Flush flushes any pending submission
@@ -64,11 +87,7 @@ func Flush() {
 	}
 }
 
-func startBorda(reportInterval time.Duration, enabled func(ctx map[string]interface{}) bool) {
-	bordaClient = createBordaClient(reportInterval)
-
-	reportToBorda := bordaClient.ReducingSubmitter("client_results", 1000)
-
+func startBorda(reportToBorda borda.Submitter, enabled EnabledFunc) {
 	reporter := func(failure error, ctx map[string]interface{}) {
 		if !enabled(ctx) {
 			return
