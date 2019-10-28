@@ -3,7 +3,6 @@ package flashlight
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"net"
 	"path/filepath"
 	"sync"
@@ -32,14 +31,6 @@ import (
 
 var (
 	log = golog.LoggerFor("flashlight")
-
-	// FullyReportedOps are ops which are reported at 100% to borda, irrespective
-	// of the borda sample percentage. This should all be low-volume operations,
-	// otherwise we will utilize too much bandwidth on the client.
-	FullyReportedOps = []string{"proxybench", "client_started", "client_stopped", "connect", "disconnect", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "sysproxy_off_force", "sysproxy_clear", "report_issue", "proxy_rank", "proxy_selection_stability", "probe", "balancer_dial", "proxy_dial"}
-
-	// LightweightOps are ops for which we record less than the full set of dimensions (e.g. omit error)
-	LightweightOps = []string{"balancer_dial", "proxy_dial"}
 
 	startProxyBenchOnce sync.Once
 )
@@ -217,46 +208,18 @@ func applyClientConfig(cfg *config.Global, autoReport func() bool, onBordaConfig
 		})
 	}
 
+	_enableBorda := borda.Enabler(cfg.BordaSamplePercentage)
 	enableBorda := func(ctx map[string]interface{}) bool {
 		if !autoReport() {
 			// User has chosen not to automatically submit data
 			return false
 		}
 
-		if rand.Float64() <= cfg.BordaSamplePercentage/100 {
-			// Randomly included in sample
-			return true
-		}
-
-		delete(ctx, "beam") // beam is only useful within a single client session.
-		// For some ops, we don't randomly sample, we include all of them
-		op := ctx["op"]
-		switch t := op.(type) {
-		case string:
-			for _, lightweightOp := range LightweightOps {
-				if t == lightweightOp {
-					log.Tracef("Removing high dimensional data for lightweight op %v", lightweightOp)
-					delete(ctx, "error")
-					delete(ctx, "error_text")
-					delete(ctx, "origin")
-					delete(ctx, "origin_host")
-					delete(ctx, "origin_port")
-					delete(ctx, "root_op")
-				}
-			}
-
-			for _, fullyReportedOp := range FullyReportedOps {
-				if t == fullyReportedOp {
-					log.Tracef("Including fully reported op %v in borda sample", fullyReportedOp)
-					return true
-				}
-			}
-			return false
-		default:
-			return false
-		}
+		return _enableBorda(ctx)
 	}
+
 	borda.Configure(cfg.BordaReportInterval, enableBorda)
+
 	select {
 	case onBordaConfigured <- true:
 		// okay

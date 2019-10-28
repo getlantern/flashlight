@@ -2,6 +2,7 @@ package borda
 
 import (
 	"context"
+	"math/rand"
 	"net/http"
 	"sync"
 	"time"
@@ -18,6 +19,14 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.borda")
 
+	// FullyReportedOps are ops which are reported at 100% to borda, irrespective
+	// of the borda sample percentage. This should all be low-volume operations,
+	// otherwise we will utilize too much bandwidth on the client.
+	FullyReportedOps = []string{"proxybench", "client_started", "client_stopped", "connect", "disconnect", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "sysproxy_off_force", "sysproxy_clear", "report_issue", "proxy_rank", "proxy_selection_stability", "probe", "balancer_dial", "proxy_dial"}
+
+	// LightweightOps are ops for which we record less than the full set of dimensions (e.g. omit error)
+	LightweightOps = []string{"balancer_dial", "proxy_dial"}
+
 	// BeforeSubmit is an optional callback to capture when borda batches are
 	// submitted. It's mostly useful for unit testing.
 	BeforeSubmit func(name string, ts time.Time, values map[string]borda.Val, dimensionsJSON []byte)
@@ -30,6 +39,44 @@ var (
 
 // EnabledFunc is a function that indicates whether reporting to borda is enabled for a specific context.
 type EnabledFunc func(ctx map[string]interface{}) bool
+
+// Enabler creates an EnabledFunc for a given sample percentage
+func Enabler(samplePercentage float64) EnabledFunc {
+	return func(ctx map[string]interface{}) bool {
+		if rand.Float64() <= samplePercentage/100 {
+			// Randomly included in sample
+			return true
+		}
+
+		delete(ctx, "beam") // beam is only useful within a single client session.
+		// For some ops, we don't randomly sample, we include all of them
+		op := ctx["op"]
+		switch t := op.(type) {
+		case string:
+			for _, lightweightOp := range LightweightOps {
+				if t == lightweightOp {
+					log.Tracef("Removing high dimensional data for lightweight op %v", lightweightOp)
+					delete(ctx, "error")
+					delete(ctx, "error_text")
+					delete(ctx, "origin")
+					delete(ctx, "origin_host")
+					delete(ctx, "origin_port")
+					delete(ctx, "root_op")
+				}
+			}
+
+			for _, fullyReportedOp := range FullyReportedOps {
+				if t == fullyReportedOp {
+					log.Tracef("Including fully reported op %v in borda sample", fullyReportedOp)
+					return true
+				}
+			}
+			return false
+		default:
+			return false
+		}
+	}
+}
 
 // Configure starts borda reporting if reportInterval > 0. The service never stops once enabled.
 // The service will check enabled each time before it reports to borda, however.
@@ -83,7 +130,10 @@ func ConfigureWithSubmitter(submitter borda.Submitter, enabled EnabledFunc) {
 func Flush() {
 	if bordaClient != nil {
 		log.Debugf("Flushing pending borda submissions")
-		bordaClient.Flush()
+		bordaClientMx.Lock()
+		bc := bordaClient
+		bordaClientMx.Unlock()
+		bc.Flush()
 	}
 }
 
