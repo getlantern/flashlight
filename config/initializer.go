@@ -161,7 +161,7 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 
 func newGlobalUnmarshaler(flags map[string]interface{}) func(bytes []byte) (interface{}, error) {
 	return func(bytes []byte) (interface{}, error) {
-		gl := newGlobal()
+		gl := NewGlobal()
 		gl.applyFlags(flags)
 		if err := yaml.Unmarshal(bytes, gl); err != nil {
 			return nil, err
