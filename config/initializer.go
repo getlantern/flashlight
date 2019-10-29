@@ -219,11 +219,10 @@ func checkOverrides(flags map[string]interface{},
 // getProxyURL returns the proxy URL to use depending on whether or not
 // we're in staging.
 func getProxyURL(staging bool) string {
-	// Staging config server is currently not working, ignore it
-	// if staging {
-	// log.Debug("Configuring for staging")
-	// return proxiesStagingURL
-	// }
+	if staging {
+		log.Debug("Will obtain proxies.yaml from staging service")
+		return proxiesStagingURL
+	}
 	log.Debug("Will obtain proxies.yaml from production service")
 	return proxiesURL
 }
