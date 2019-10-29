@@ -1,5 +1,24 @@
 # Change Log
 
+## [5.6.4](https://github.com/getlantern/flashlight/tree/5.6.4) (2019-10-29)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.6.3...5.6.4)
+
+**Merged pull requests:**
+
+- Fix test failure with older go versions [\#705](https://github.com/getlantern/flashlight/pull/705) ([myleshorton](https://github.com/myleshorton))
+- Test for embedded global [\#704](https://github.com/getlantern/flashlight/pull/704) ([myleshorton](https://github.com/myleshorton))
+- make sure both proxies and global config are got in config/TestInit [\#703](https://github.com/getlantern/flashlight/pull/703) ([joesis](https://github.com/joesis))
+- Improved script and add sanity test for global config updates [\#702](https://github.com/getlantern/flashlight/pull/702) ([myleshorton](https://github.com/myleshorton))
+
+## [5.6.3](https://github.com/getlantern/flashlight/tree/5.6.3) (2019-10-28)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.6.2...5.6.3)
+
+**Merged pull requests:**
+
+- More CI fixes [\#701](https://github.com/getlantern/flashlight/pull/701) ([joesis](https://github.com/joesis))
+- Fix Proxy-Connection handling in persistent HTTP case [\#700](https://github.com/getlantern/flashlight/pull/700) ([myleshorton](https://github.com/myleshorton))
+- Various changes to make CI more reliable [\#699](https://github.com/getlantern/flashlight/pull/699) ([joesis](https://github.com/joesis))
+
 ## [5.6.2](https://github.com/getlantern/flashlight/tree/5.6.2) (2019-10-21)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.6.1...5.6.2)
 
@@ -191,7 +210,7 @@
 - Avoid potential data loss caused by use of bufio.Reader to read CONNECT response [\#610](https://github.com/getlantern/flashlight/pull/610) ([joesis](https://github.com/joesis))
 
 ## [5.3.8](https://github.com/getlantern/flashlight/tree/5.3.8) (2019-04-24)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.6...5.3.8)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.7...5.3.8)
 
 **Merged pull requests:**
 
@@ -199,11 +218,11 @@
 - Resetting whole balancer when connections get protected [\#605](https://github.com/getlantern/flashlight/pull/605) ([oxtoacart](https://github.com/oxtoacart))
 - Add beam to track requests end to end [\#598](https://github.com/getlantern/flashlight/pull/598) ([joesis](https://github.com/joesis))
 
-## [5.3.6](https://github.com/getlantern/flashlight/tree/5.3.6) (2019-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.7...5.3.6)
-
 ## [5.3.7](https://github.com/getlantern/flashlight/tree/5.3.7) (2019-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.5...5.3.7)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.6...5.3.7)
+
+## [5.3.6](https://github.com/getlantern/flashlight/tree/5.3.6) (2019-04-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.5...5.3.6)
 
 **Merged pull requests:**
 
@@ -233,19 +252,9 @@
 
 - fix the call to Timer.Reset [\#601](https://github.com/getlantern/flashlight/pull/601) ([joesis](https://github.com/joesis))
 - Used uuid that ignores touchbar address [\#600](https://github.com/getlantern/flashlight/pull/600) ([myleshorton](https://github.com/myleshorton))
-- Use new HTTPS Everywhere test domain that does not redirect itself [\#597](https://github.com/getlantern/flashlight/pull/597) ([myleshorton](https://github.com/myleshorton))
-- Ignoring EstRTT in deciding whether we have time to dial proxy [\#596](https://github.com/getlantern/flashlight/pull/596) ([oxtoacart](https://github.com/oxtoacart))
-- more logs to debug datacap [\#593](https://github.com/getlantern/flashlight/pull/593) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.3.2](https://github.com/getlantern/flashlight/tree/5.3.2) (2019-03-12)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.1...5.3.2)
-
-**Merged pull requests:**
-
-- Don't log individual errors when recording entries to borda [\#595](https://github.com/getlantern/flashlight/pull/595) ([oxtoacart](https://github.com/oxtoacart))
-- prevent a QUIC dialer from being null [\#594](https://github.com/getlantern/flashlight/pull/594) ([joesis](https://github.com/joesis))
-- cap the time to dial shortcut [\#592](https://github.com/getlantern/flashlight/pull/592) ([joesis](https://github.com/joesis))
-- Updated to latest gopacket release for go 1.12 fix [\#591](https://github.com/getlantern/flashlight/pull/591) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.3.1](https://github.com/getlantern/flashlight/tree/5.3.1) (2019-02-26)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.0...5.3.1)
@@ -320,13 +329,13 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.13...4.8.0)
 
 ## [4.7.13](https://github.com/getlantern/flashlight/tree/4.7.13) (2018-08-09)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.13)
-
-## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.13)
 
 ## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.11)
+
+## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.12)
 
 ## [4.7.10](https://github.com/getlantern/flashlight/tree/4.7.10) (2018-07-26)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.9...4.7.10)
