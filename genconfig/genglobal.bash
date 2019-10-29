@@ -15,6 +15,8 @@ echo '`)' >> ../config/generated/embeddedGlobal.go || die "Unable to generate em
 
 rm yaml-temp
 
+git checkout devel
+git pull
 cd ../config || die "Could not change directories"
 GO111MODULE=on go test -run TestGlobal || die "Global test failed"
 
