@@ -2,10 +2,13 @@ package config
 
 import (
 	"net/http"
+	"net/url"
 	"testing"
 	"time"
 
+	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,33 +19,35 @@ func TestInit(t *testing.T) {
 	flags := make(map[string]interface{})
 	flags["staging"] = true
 
-	configChan := make(chan bool)
+	gotProxies := eventual.NewValue()
+	gotGlobal := eventual.NewValue()
 
 	// Note these dispatch functions will receive multiple configs -- local ones,
 	// embedded ones, and remote ones.
 	proxiesDispatch := func(cfg interface{}) {
 		proxies := cfg.(map[string]*chained.ChainedServerInfo)
 		assert.True(t, len(proxies) > 0)
-		configChan <- true
+		gotProxies.Set(true)
 	}
 	globalDispatch := func(cfg interface{}) {
 		global := cfg.(*Global)
 		assert.True(t, len(global.Client.MasqueradeSets) > 1)
-		configChan <- true
+		gotGlobal.Set(true)
 	}
-	stop := Init(".", flags, newTestUserConfig(), proxiesDispatch, globalDispatch, &http.Transport{})
+	stop := Init(".", flags, newTestUserConfig(), proxiesDispatch, globalDispatch, &http.Transport{
+		Proxy: func(req *http.Request) (*url.URL, error) {
+			// the same token should also be configured on staging
+			// config-server, staging proxies and staging DDF distributions.
+			req.Header.Add(common.CfgSvrAuthTokenHeader, "staging-token")
+			return nil, nil
+		},
+	})
 	defer stop()
 
-	count := 0
-	for i := 0; i < 2; i++ {
-		select {
-		case <-configChan:
-			count++
-		case <-time.After(time.Second * 12):
-			assert.Fail(t, "Took too long to get configs")
-		}
-	}
-	assert.Equal(t, 2, count)
+	_, valid := gotProxies.Get(time.Second * 12)
+	assert.True(t, valid, "Should have got proxies config in a reasonable time")
+	_, valid = gotGlobal.Get(time.Second * 12)
+	assert.True(t, valid, "Should have got global config in a reasonable time")
 }
 
 // TestInitWithURLs tests that proxy and global configs are fetched at the
