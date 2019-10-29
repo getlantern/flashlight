@@ -416,28 +416,18 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		return dialProxied(ctx, "whatever", addr)
 	}
 
-	dialDirect := func(ctx context.Context, network, addr string) (net.Conn, error) {
-		// Use netx because on Android, we need a special protected dialer.
-		// Same below.
-		conn, err := netx.DialContext(ctx, network, addr)
-		if conn != nil {
-			conn = &directConn{conn}
-		}
-		return conn, err
-	}
-
 	if err := client.allowSendingToProxy(addr); err != nil {
 		log.Debugf("%v, sending directly to %v", err, addr)
 		op.Set("force_direct", true)
 		op.Set("force_direct_reason", err.Error())
-		return dialDirect(ctx, "tcp", addr)
+		return netx.DialContext(ctx, "tcp", addr)
 	}
 
 	dialDirectForShortcut := func(ctx context.Context, network, addr string, ip net.IP) (net.Conn, error) {
 		log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
 		op.Set("shortcut_direct", true)
 		op.Set("shortcut_direct_ip", ip)
-		return dialDirect(ctx, "tcp", addr)
+		return netx.DialContext(ctx, "tcp", addr)
 	}
 
 	dl, _ := ctx.Deadline()
@@ -455,7 +445,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 			defer cancel()
 			return dialDirectForShortcut(shortcutCTX, network, addr, ip)
 		}
-		return dialDirect(cappedCTX, network, addr)
+		return netx.DialContext(cappedCTX, network, addr)
 	}
 
 	var dialer func(ctx context.Context, network, addr string) (net.Conn, error)

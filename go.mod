@@ -51,7 +51,7 @@ require (
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
 	github.com/getlantern/mitm v0.0.0-20180205214248-4ce456bae650
-	github.com/getlantern/mockconn v0.0.0-20190708122800-637bd46d8034
+	github.com/getlantern/mockconn v0.0.0-20191023022503-481dbcceeb58
 	github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0
 	github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd
 	github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b
@@ -61,7 +61,7 @@ require (
 	github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff
 	github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8
 	github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c
-	github.com/getlantern/proxy v0.0.0-20191019155656-2dfdb0022ce1
+	github.com/getlantern/proxy v0.0.0-20191025190912-b5f45407d9f2
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
 	github.com/getlantern/quicwrapper v0.0.0-20190823180104-f4c834140eac
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
@@ -72,7 +72,7 @@ require (
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
 	github.com/getlantern/tinywss v0.0.0-20190809093313-4439caa924e5
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
-	github.com/getlantern/tlsdialer v0.0.0-20191010195314-f9c39bfa1852
+	github.com/getlantern/tlsdialer v0.0.0-20191022033653-81b203ed2619
 	github.com/getlantern/tlsresumption v0.0.0-20191010160602-a16b0c459d39
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
@@ -118,3 +118,5 @@ replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3
 
 // git.apache.org isn't working at the moment, use mirror (should probably switch back once we can)
 replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110319-2566ecd5d999
+
+replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358

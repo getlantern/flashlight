@@ -81,12 +81,15 @@ func (d *testDialer) DialContext(ctx context.Context, network, addr string) (net
 		err = fmt.Errorf("Not succeeding")
 	} else if d.failingUpstream {
 		err = fmt.Errorf("Failing upstream")
-	} else if network != "" {
-		var d net.Dialer
-		conn, err = d.DialContext(ctx, network, addr)
 	} else {
-		var buf bytes.Buffer
-		conn = mockconn.New(&buf, strings.NewReader(""))
+		time.Sleep(d.rtt)
+		if network != "" {
+			var d net.Dialer
+			conn, err = d.DialContext(ctx, network, addr)
+		} else {
+			var buf bytes.Buffer
+			conn = mockconn.New(&buf, strings.NewReader(""))
+		}
 	}
 	atomic.AddInt64(&d.attempts, 1)
 	if err == nil {
@@ -165,6 +168,7 @@ func (d *testDialer) DataRecv() uint64 {
 
 func (d *testDialer) Probe(forPerformance bool) bool {
 	d.recalcRTT()
+	time.Sleep(d.rtt)
 	atomic.AddInt32(&d.connectivityChecks, 1)
 	return true
 }

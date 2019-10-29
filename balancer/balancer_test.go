@@ -205,7 +205,7 @@ func TestSwitchAwayFromSlowDialer(t *testing.T) {
 	time.Sleep(time.Second)
 	_, err = b.Dial("tcp", addr)
 	assert.NoError(t, err, "Dialing should succeed with good dialers")
-	assert.Equal(t, fastDialer, b.copyOfDialers()[0], "The fast dialer should rise to top")
+	assert.Equal(t, fastDialer, b.copyOfDialers()[0], "The fast dialer should rise to the top")
 }
 
 func TestSorting(t *testing.T) {

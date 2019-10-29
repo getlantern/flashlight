@@ -15,6 +15,11 @@ echo '`)' >> ../config/generated/embeddedGlobal.go || die "Unable to generate em
 
 rm yaml-temp
 
-git add ../config/generated/embeddedGlobal.go || die "Could not add resources?"
+cd ../config || die "Could not change directories"
+GO111MODULE=on go test -run TestGlobal || die "Global test failed"
 
-echo "Finished generating resources and added ../config/generated/embeddedGlobal.go. Please simply commit that file after manually viewing it to make sure it looks sane"
+git add generated/embeddedGlobal.go || die "Could not add resources?"
+git commit -m "pushing auto-generated embedded global config" || die "Could not push new global config"
+git push origin devel || die "Could not push new global"
+
+echo "Finished generating resources and added embeddedGlobal.go."

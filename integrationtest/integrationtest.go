@@ -26,7 +26,6 @@ import (
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
-	"github.com/getlantern/flashlight/config"
 )
 
 const (
@@ -44,8 +43,25 @@ const (
 )
 
 var (
-	log = golog.LoggerFor("testsupport")
+	log             = golog.LoggerFor("testsupport")
+	globalCfg       []byte
+	proxiesTemplate []byte
 )
+
+func init() {
+	bytes, err := ioutil.ReadFile("../integrationtest/global-template.yaml")
+	if err != nil {
+		panic(fmt.Sprintf("Could not read global-template.yaml %v", err))
+	}
+	globalCfg = bytes
+
+	bytes, err = ioutil.ReadFile("../integrationtest/proxies-template.yaml")
+	if err != nil {
+		panic(fmt.Sprintf("Could not read proxies-template.yaml %v", err))
+	}
+	proxiesTemplate = bytes
+
+}
 
 // Helper is a helper for running integration tests that provides its own web,
 // proxy and config servers.
@@ -274,18 +290,11 @@ func (helper *Helper) writeGlobalConfig(resp http.ResponseWriter, req *http.Requ
 		return
 	}
 
-	cfg, err := buildGlobal()
-	if err != nil {
-		helper.t.Error(err)
-		resp.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
 	resp.Header().Set(Etag, version)
 	resp.WriteHeader(http.StatusOK)
 
 	w := gzip.NewWriter(resp)
-	_, err = w.Write(cfg)
+	_, err := w.Write(globalCfg)
 	if err != nil {
 		helper.t.Error(err)
 	}
@@ -351,13 +360,8 @@ func (helper *Helper) writeConfig() error {
 }
 
 func (helper *Helper) buildProxies(proto string) ([]byte, error) {
-	bytes, err := ioutil.ReadFile("../integrationtest/proxies-template.yaml")
-	if err != nil {
-		return nil, fmt.Errorf("Could not read config %v", err)
-	}
-
 	cfg := make(map[string]*chained.ChainedServerInfo)
-	err = yaml.Unmarshal(bytes, cfg)
+	err := yaml.Unmarshal(proxiesTemplate, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("Could not unmarshal config %v", err)
 	}
@@ -420,26 +424,6 @@ func (helper *Helper) buildProxies(proto string) ([]byte, error) {
 			srv.KCPSettings = kcpConf
 		}
 	}
-	out, err := yaml.Marshal(cfg)
-	if err != nil {
-		return nil, fmt.Errorf("Could not marshal config %v", err)
-	}
-
-	return out, nil
-}
-
-func buildGlobal() ([]byte, error) {
-	bytes, err := ioutil.ReadFile("../integrationtest/global-template.yaml")
-	if err != nil {
-		return nil, fmt.Errorf("Could not read config %v", err)
-	}
-
-	cfg := &config.Global{}
-	err = yaml.Unmarshal(bytes, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("Could not unmarshal config %v", err)
-	}
-
 	out, err := yaml.Marshal(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("Could not marshal config %v", err)
