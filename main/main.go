@@ -21,6 +21,7 @@ import (
 	"github.com/mitchellh/panicwrap"
 
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/desktop"
 	"github.com/getlantern/flashlight/logging"
@@ -62,9 +63,9 @@ func main() {
 				if err := a.ProxyAddrReachable(ctx); err != nil {
 					// Can restart child process for better resiliency, but
 					// just print an error message for now to be safe.
-					fmt.Fprintf(logFile, "********* ERROR: Lantern HTTP proxy not working properly: %v", err)
+					fmt.Fprintf(logFile, "********* ERROR: Lantern HTTP proxy not working properly: %v\n", err)
 				} else {
-					fmt.Fprint(logFile, "DEBUG: Lantern HTTP proxy is working fine")
+					fmt.Fprintln(logFile, "DEBUG: Lantern HTTP proxy is working fine")
 				}
 				cancel()
 			}
@@ -124,6 +125,11 @@ func main() {
 	if *forceConfigCountry != "" {
 		log.Debugf("Will force config fetches to pretend client country is: %v", *forceConfigCountry)
 		config.ForceCountry(*forceConfigCountry)
+	}
+
+	if *stealthMode {
+		log.Debug("Running in stealth mode")
+		common.ForceStealthMode()
 	}
 
 	if a.ShouldShowUI() {

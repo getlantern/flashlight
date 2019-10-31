@@ -406,6 +406,9 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		if log.IsTraceEnabled() {
 			log.Tracef("Dialing proxy takes %v for %s", time.Since(start), addr)
 		}
+		if conn != nil {
+			conn = &proxiedConn{conn}
+		}
 		return conn, err
 	}
 
@@ -417,8 +420,6 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		log.Debugf("%v, sending directly to %v", err, addr)
 		op.Set("force_direct", true)
 		op.Set("force_direct_reason", err.Error())
-		// Use netx because on Android, we need a special protected dialer.
-		// Same below.
 		return netx.DialContext(ctx, "tcp", addr)
 	}
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 function die() {
-  echo $*
+  echo "$@"
   exit 1
 }
 
@@ -18,24 +18,18 @@ if [ ! -d "$etc" ]; then
 fi
 
 echo "Generating proxies..."
-cd $etc
+cd $etc || die "Could not switch to etc directory?"
 git checkout master || die "Could not checkout master?"
 git pull || die "Could not pull latest code?"
 git submodule update  || die "Could not update submodules?"
 
-# As of this writing these are the tracks we're using to serve free proxies,
-# which are also the ones we keep populated with baked-in proxies ready to be
-# fetched.
-./fetch_bakedin_config.py doams3-baked-in >> proxies.yaml || die "Could not fetch proxy in doams3-baked-in track?"
-./fetch_bakedin_config.py doblr1-baked-in >> proxies.yaml || die "Could not fetch proxy in doblr1-baked-in track?"
-./fetch_bakedin_config.py dofra1-baked-in >> proxies.yaml || die "Could not fetch proxy in dofra1-baked-in track?"
-./fetch_bakedin_config.py dolon1-baked-in >> proxies.yaml || die "Could not fetch proxy in dolon1-baked-in track?"
-./fetch_bakedin_config.py donyc3-baked-in >> proxies.yaml || die "Could not fetch proxy in donyc3-baked-in track?"
-./fetch_bakedin_config.py dosgp1-baked-in >> proxies.yaml || die "Could not fetch proxy in dosgp1-baked-in track?"
-./fetch_bakedin_config.py vllos1-baked-in >> proxies.yaml || die "Could not fetch proxy in vllos1-baked-in track?"
-./fetch_bakedin_config.py vlsgp1-baked-in >> proxies.yaml || die "Could not fetch proxy in vlsgp1-baked-in track?"
+# We just select from a few key European and Asian data centers.
+./fetch_bakedin_config.py dosgp1u16-baked-in >> proxies.yaml || die "Could not fetch proxy in dosgp1u16-baked-in track?"
+./fetch_bakedin_config.py vltok1u16-baked-in >> proxies.yaml || die "Could not fetch proxy in vltok1u16-baked-in track?"
+./fetch_bakedin_config.py vlfra1u16-baked-in >> proxies.yaml || die "Could not fetch proxy in vlfra1u16-baked-in track?"
+./fetch_bakedin_config.py vllhr1u16-baked-in >> proxies.yaml || die "Could not fetch proxy in vllhr1u16-baked-in track?"
 
-cd -
+cd - || die "Could not cd?"
 
 echo 'package generated' > ../config/generated/embeddedProxies.go && \
 echo '' >> ../config/generated/embeddedProxies.go && \

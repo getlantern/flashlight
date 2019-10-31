@@ -24,6 +24,7 @@ type Global struct {
 	BordaSamplePercentage float64
 	PingSamplePercentage  float64
 	ReportIssueEmail      string
+	StealthMode           bool
 	Client                *ClientConfig
 
 	// AdSettings are the settings to use for showing ads to mobile clients
@@ -56,8 +57,8 @@ func (cfg *Global) TrustedCACerts() (pool *x509.CertPool, err error) {
 	return
 }
 
-// newGlobal creates a new global config with otherwise nil values set.
-func newGlobal() *Global {
+// NewGlobal creates a new global config with otherwise nil values set.
+func NewGlobal() *Global {
 	return &Global{
 		Client: NewClientConfig(),
 		ProxiedSites: &proxiedsites.Config{

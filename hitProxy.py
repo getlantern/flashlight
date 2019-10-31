@@ -77,19 +77,17 @@ def config_for(name_or_ip, direct, remote_user='lantern'):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Fetch config for one particular proxy and instructs Lantern to use it')
-    parser.add_argument('name_or_ip', type=str, help='The name or ip of the proxy to hit')
+    parser.add_argument('name_or_ips', nargs='+', type=str, help='The name or ip of the proxy to hit')
     parser.add_argument('-u', '--remote-user', dest='remote_user', type=str, default='lantern', help='The SSH user on the proxy when fetching config from it')
     parser.add_argument('-d', '--direct', action='store_true', help='Skip Redis lookup and fetch directly from the proxy')
     parser.add_argument('remainder', nargs=argparse.REMAINDER, help='the rest of the arguments are passed directly to the Lantern binary')
     args = parser.parse_args()
-    cfgs = config_for(args.name_or_ip, args.direct, args.remote_user)
-    print repr(cfgs)
-
     servers = {}
-    for i, cfg in enumerate(cfgs):
-        cfg['trusted'] = True
-        servers['server-%s' % i] = cfg
-
+    for name_or_ip in args.name_or_ips:
+        for i, cfg in enumerate(config_for(name_or_ip, args.direct, args.remote_user)):
+            cfg['trusted'] = True
+            servers['%s-%s' % (name_or_ip, i)] = cfg
+    print repr(servers)
 
     configdir = create_tmpdir()
     try:
