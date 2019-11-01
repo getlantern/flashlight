@@ -659,6 +659,8 @@ func (b *Balancer) sortDialers() []Dialer {
 func (b *Balancer) KeepLookingForSucceedingDialer() {
 	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
+	defer close(b.hasSucceedingDialer)
+
 	for {
 		select {
 		case <-ticker.C:
