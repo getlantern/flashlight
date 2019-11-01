@@ -24,7 +24,7 @@ type row struct {
 func ConfigureBorda(deviceID string, samplePercentage float64, bufferFile string) (finalErr error) {
 	initOnce.Do(func() {
 		ops.InitGlobalContext(deviceID, func() bool { return false }, func() int64 { return 0 }, func() string { return "" }, func() string { return "" })
-		bf, err := os.OpenFile(bufferFile, os.O_TRUNC|os.O_WRONLY, 0644)
+		bf, err := os.OpenFile(bufferFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 		if err != nil {
 			finalErr = err
 			return

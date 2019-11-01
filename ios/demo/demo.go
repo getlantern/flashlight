@@ -129,6 +129,10 @@ func main() {
 		}
 	}
 
+	if err := ios.ConfigureBorda("DEMO", 1, "/tmp/bbuffer.bin"); err != nil {
+		log.Fatal(err)
+	}
+
 	dev, err := tun.OpenTunDevice(*tunDevice, *tunAddr, *tunGW, *tunMask, 1500)
 	if err != nil {
 		log.Fatalf("Error opening TUN device: %v", err)
