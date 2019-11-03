@@ -20,7 +20,8 @@ require (
 	github.com/getlantern/borda v0.0.0-20190917165417-36cadcff5e18
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
 	github.com/getlantern/cmux v0.0.0-20190809092548-4b7adf243efe
-	github.com/getlantern/detour v0.0.0-20190122161414-7107a599a170
+	github.com/getlantern/common v0.0.0-20191017131928-864ae49aeb6a
+	github.com/getlantern/detour v0.0.0-20191019154911-d59524282429
 	github.com/getlantern/diagnostics v0.0.0-20190820054534-b2070abd5177
 	github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041 // indirect
 	github.com/getlantern/dnsgrab v0.0.0-20171025121014-227f729dcb41
@@ -54,7 +55,7 @@ require (
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
 	github.com/getlantern/mitm v0.0.0-20180205214248-4ce456bae650
-	github.com/getlantern/mockconn v0.0.0-20190708122800-637bd46d8034
+	github.com/getlantern/mockconn v0.0.0-20191023022503-481dbcceeb58
 	github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0
 	github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd
 	github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b
@@ -64,7 +65,7 @@ require (
 	github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff
 	github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8
 	github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c
-	github.com/getlantern/proxy v0.0.0-20190225163220-31d1cc06ed3d
+	github.com/getlantern/proxy v0.0.0-20191025190912-b5f45407d9f2
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
 	github.com/getlantern/quicwrapper v0.0.0-20190823180104-f4c834140eac
 	github.com/getlantern/replica v0.0.0-00010101000000-000000000000
@@ -77,7 +78,7 @@ require (
 	github.com/getlantern/testify v0.0.0-20160317154340-2eeb3906e78f
 	github.com/getlantern/tinywss v0.0.0-20190809093313-4439caa924e5
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
-	github.com/getlantern/tlsdialer v0.0.0-20191010195314-f9c39bfa1852
+	github.com/getlantern/tlsdialer v0.0.0-20191022033653-81b203ed2619
 	github.com/getlantern/tlsresumption v0.0.0-20191010160602-a16b0c459d39
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
@@ -96,7 +97,7 @@ require (
 	github.com/miekg/dns v0.0.0-20180406150955-01d59357d468 // indirect
 	github.com/mitchellh/go-server-timing v1.0.0
 	github.com/mitchellh/mapstructure v0.0.0-20180220230111-00c29f56e238
-	github.com/mitchellh/panicwrap v0.0.0-20170106182340-fce601fe5557
+	github.com/mitchellh/panicwrap v0.0.0-20190228164358-f67bf3f3d291
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/refraction-networking/utls v0.0.0-20190909200633-43c36d3c1f57
@@ -133,3 +134,5 @@ replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110
 replace github.com/anacrolix/dht/v2 => ./dht
 
 replace github.com/anacrolix/log => ./log
+
+replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358

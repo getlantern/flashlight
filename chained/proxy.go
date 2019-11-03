@@ -24,6 +24,7 @@ import (
 	tls "github.com/refraction-networking/utls"
 
 	"github.com/getlantern/cmux"
+	config "github.com/getlantern/common"
 	"github.com/getlantern/ema"
 	"github.com/getlantern/enhttp"
 	"github.com/getlantern/errors"
@@ -42,7 +43,6 @@ import (
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
-	"github.com/getlantern/flashlight/chained/config"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 )
@@ -160,7 +160,7 @@ func newHTTPProxy(name, transport, proto string, s *ChainedServerInfo, uc common
 			return dfConn, err
 		}
 	}
-	return newProxy(name, transport, proto, s, uc, s.ENHTTPURL != "", true, doDialServer, dialOrigin)
+	return newProxy(name, transport, proto, s, uc, s.Trusted, true, doDialServer, dialOrigin)
 }
 
 func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {

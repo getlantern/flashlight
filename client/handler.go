@@ -113,8 +113,6 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 		}
 		// Direct proxying can only be used for plain HTTP connections.
 		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
-		// consumed and removed by http-proxy-lantern/versioncheck
-		req.Header.Set(common.VersionHeader, common.Version)
 	}
 
 	return next(ctx, req)
