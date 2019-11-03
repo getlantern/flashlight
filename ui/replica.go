@@ -311,6 +311,9 @@ func createLink(ih torrent.InfoHash, s3Key, name string) string {
 		Params: url.Values{
 			"as": {"https://getlantern-replica.s3-ap-southeast-1.amazonaws.com" + s3Key},
 			"xs": {(&url.URL{Scheme: "replica", Path: s3Key}).String()},
+			// This might technically be more correct, but I couldn't find any torrent client that
+			// supports it. Make sure to change any assumptions about "xs" before changing it.
+			//"xs": {"https://getlantern-replica.s3-ap-southeast-1.amazonaws.com" + s3Key + "?torrent"},
 		},
 	}.String()
 }
