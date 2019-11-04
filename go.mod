@@ -9,7 +9,6 @@ require (
 	github.com/anacrolix/envpprof v1.1.0
 	github.com/anacrolix/go-libutp v1.0.2
 	github.com/anacrolix/log v0.3.1-0.20191001111012-13cede988bcd
-	github.com/anacrolix/missinggo v1.2.1
 	github.com/anacrolix/torrent v1.8.1
 	github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc // indirect
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
@@ -136,3 +135,5 @@ replace github.com/anacrolix/dht/v2 => ./dht
 replace github.com/anacrolix/log => ./log
 
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358
+
+replace github.com/anacrolix/missinggo/v2 => ./missinggo
