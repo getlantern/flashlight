@@ -805,7 +805,7 @@ func (p *proxy) AdaptRequest(req *http.Request) {
 func (p *proxy) dialServer(ctx context.Context) (net.Conn, error) {
 	conn, err := p.doDialServer(ctx, p)
 	if err != nil {
-		log.Errorf("Unable to dial server %v: %s", p.Label(), err)
+		log.Debugf("Unable to dial server %v: %s", p.Label(), err)
 		p.MarkFailure()
 	}
 	return conn, err
