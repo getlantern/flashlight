@@ -19,6 +19,8 @@ import (
 
 var (
 	initOnce sync.Once
+
+	forceFlush = make(chan bool, 0)
 )
 
 type row struct {
@@ -30,7 +32,8 @@ func init() {
 	msgpack.RegisterExt(10, &row{})
 }
 
-// ConfigureBorda configures borda for capturing metrics on iOS
+// ConfigureBorda configures borda for capturing metrics on iOS and starts a
+// process that buffers recorded metrics to disk for use by ReportToBorda.
 func ConfigureBorda(deviceID string, samplePercentage float64, bufferFlushInterval time.Duration, bufferFile, tempBufferFile string) (finalErr error) {
 	initOnce.Do(func() {
 		ops.InitGlobalContext(deviceID, func() bool { return false }, func() int64 { return 0 }, func() string { return "" }, func() string { return "" })
@@ -51,10 +54,10 @@ func ConfigureBorda(deviceID string, samplePercentage float64, bufferFlushInterv
 		var flushMx sync.Mutex
 		lastFlushed := time.Now()
 
-		flushBufferIfNecessary := func() {
+		flushBufferIf := func(necessary func() bool) {
 			flushMx.Lock()
 			defer flushMx.Unlock()
-			if time.Now().Sub(lastFlushed) > bufferFlushInterval {
+			if necessary() {
 				log.Debugf("Flushing temporary buffer %v to %v", tempBufferFile, bufferFile)
 				if err := os.Rename(tempBufferFile, bufferFile); err != nil {
 					log.Errorf("unable to rename temp buffer file %v to %v, will discard buffered data: %v", tempBufferFile, bufferFile)
@@ -63,6 +66,16 @@ func ConfigureBorda(deviceID string, samplePercentage float64, bufferFlushInterv
 				lastFlushed = time.Now()
 			}
 		}
+
+		flushBufferIfNecessary := func() {
+			flushBufferIf(func() bool { return time.Now().Sub(lastFlushed) > bufferFlushInterval })
+		}
+
+		go func() {
+			for range forceFlush {
+				flushBufferIf(func() bool { return true })
+			}
+		}()
 
 		borda.ConfigureWithSubmitter(func(values map[string]bclient.Val, dims map[string]interface{}) error {
 			if err := out.Encode(&row{Values: values, Dimensions: dims}); err != nil {
@@ -76,6 +89,7 @@ func ConfigureBorda(deviceID string, samplePercentage float64, bufferFlushInterv
 	return finalErr
 }
 
+// ReportToBorda reports buffered metrics to borda
 func ReportToBorda(bufferFile string) error {
 	rt, ok := fronted.NewDirect(1 * time.Minute)
 	if !ok {
@@ -113,5 +127,15 @@ func ReportToBorda(bufferFile string) error {
 		}
 
 		reportToBorda(row.Values, row.Dimensions)
+	}
+}
+
+// ForceFlush forces a flush
+func ForceFlush() {
+	select {
+	case forceFlush <- true:
+		log.Debug("Requested flush")
+	default:
+		// already pending, ignore
 	}
 }
