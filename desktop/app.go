@@ -13,13 +13,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/anacrolix/confluence/confluence"
-	analog "github.com/anacrolix/log" // heuheuehue
-	"github.com/anacrolix/missinggo/conntrack"
-	"github.com/anacrolix/torrent"
-	"github.com/anacrolix/torrent/metainfo"
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/eventual"
+
+	"github.com/anacrolix/confluence/confluence"
+	analog "github.com/anacrolix/log" // heuheuehue
+	"github.com/anacrolix/torrent"
+	"github.com/anacrolix/torrent/metainfo"
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/replica"
 
@@ -289,11 +289,11 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		})
 		// DHT disabled pending fixes to transaction query concurrency.	 Also using S3 as a
 		// fallback means we have a great tracker to rely on.
-		cfg.NoDHT = true
+		//cfg.NoDHT = true
 		// Household users may be behind a NAT/bad router, or on a limited device like a mobile. We
 		// don't want to overload their networks, so ensure the default connection tracking
 		// behaviour.
-		cfg.ConnTracker = conntrack.NewInstance()
+		//cfg.ConnTracker = conntrack.NewInstance()
 		// Helps debug connection tracking, for best configuring DHT and other limits.
 		http.HandleFunc("/debug/conntrack", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/plain")
