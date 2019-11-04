@@ -17,3 +17,6 @@
 [submodule "envpprof"]
 	path = envpprof
 	url = https://github.com/anacrolix/envpprof
+[submodule "missinggo"]
+	path = missinggo
+	url = ./missinggo
