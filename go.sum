@@ -117,14 +117,11 @@ github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99 h1:fnjb9PYZR
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99/go.mod h1:4rYfIUYagdnY0KCu5/zOBX5CIRIi+j+LHdQ+LmD/Lyg=
 github.com/getlantern/bbrconn v0.0.0-20180619163322-86cf8c16f3d0 h1:OtUNxwmNp9+mTZMuKw9MrNLJKMG731zWZIWwQfFGZfs=
 github.com/getlantern/bbrconn v0.0.0-20180619163322-86cf8c16f3d0/go.mod h1:HMPEgWG0J3goTYFWoTohloqZ3BQywXMElZnd9EROxxU=
-github.com/getlantern/borda v0.0.0-20190809122504-668025f4c2b9 h1:zRujRezaBjhuLFahdzh01DbyvcEWKpUQ9vL5yCKJX+s=
 github.com/getlantern/borda v0.0.0-20190809122504-668025f4c2b9/go.mod h1:5gIMs+fPLaRRdTa3f3eMrYgJb/5JmO8/Fa060xvj44U=
-github.com/getlantern/borda v0.0.0-20190917165417-36cadcff5e18 h1:Q9xkR+sYEovMalSOtQ0Q9tMCy9li1xlSgXLexoRVnRQ=
-github.com/getlantern/borda v0.0.0-20190917165417-36cadcff5e18/go.mod h1:htY57XPOAq+JMoRS21F97tSxb7Aa2P3A/pOjdd9sPls=
-github.com/getlantern/borda v0.0.0-20191024154530-971cc4deb186 h1:Fmd4nrBW+0pwWpnchoNTGsmY83MBPdxaT+pXwtWhJyE=
-github.com/getlantern/borda v0.0.0-20191024154530-971cc4deb186/go.mod h1:HCNuy39AMbEA24DrL/IZ6FTc108FgzK8tcxqbGQsBQI=
-github.com/getlantern/borda v0.0.0-20191024155115-bb3c070e6590 h1:OiC0bUIw7Dit7jFYxX4OopICccXAKTi28uBMjg3azl4=
-github.com/getlantern/borda v0.0.0-20191024155115-bb3c070e6590/go.mod h1:HCNuy39AMbEA24DrL/IZ6FTc108FgzK8tcxqbGQsBQI=
+github.com/getlantern/borda v0.0.0-20191104145845-33f18a7f01a4 h1:59Ax7O4r6pyH6UHC0qhu61feLqwu7Lh6WIHsz4GUDCk=
+github.com/getlantern/borda v0.0.0-20191104145845-33f18a7f01a4/go.mod h1:hzzaWNHKEtVnk803olisWbiDTPj/1acLS9vR+Rz9rjI=
+github.com/getlantern/borda v0.0.0-20191104151927-85673068af3b h1:Et7QQAmfBh4dwPZK5eIzo4LbWTeCnJp4mpWt4zM1YWQ=
+github.com/getlantern/borda v0.0.0-20191104151927-85673068af3b/go.mod h1:hzzaWNHKEtVnk803olisWbiDTPj/1acLS9vR+Rz9rjI=
 github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d h1:gE5pWSEYfMvSETsTanqINNLmv+nuyUjwcm9jOyqJJZI=
 github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
 github.com/getlantern/bytecounting v0.0.0-20190530140808-3b3f10d3b9ab h1:bKsTXN1XgjiWuciuEChVIPFXWD8sTASsvjkMAGMEb/4=
@@ -346,8 +343,6 @@ github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426 h1:lb2OElfhZzfgvNQ
 github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426/go.mod h1:SoTXbOvaDC1bH3QrlkU5kz/h12tU/hN54wSMUCdgEXs=
 github.com/getlantern/zenodb v0.0.0-20190809092412-0a2ce8ac3026 h1:xM0DWdV/eK7H2L4NxLj6LYcGUg9HbUNysk1SqSycL+s=
 github.com/getlantern/zenodb v0.0.0-20190809092412-0a2ce8ac3026/go.mod h1:LDw7qTXBZJkjYVIvR2iyi1J4PN8plch0VZzTzc7mDoM=
-github.com/getlantern/zenodb v0.0.0-20190917165203-32a60251f38b h1:J+k1klLxUMt3JLBJayt+op0AWp45Vt4SOrxOscb7Pyg=
-github.com/getlantern/zenodb v0.0.0-20190917165203-32a60251f38b/go.mod h1:Uxs9BCNogjdqtqThOrKakeDhMXjN3KLjH40W1OPPGic=
 github.com/getlantern/zenodb v0.0.0-20191017181222-5e98403b7237 h1:a916/nkKDXQBD940nXIzOp2nLTfUzwL0vPr7HCWKduI=
 github.com/getlantern/zenodb v0.0.0-20191017181222-5e98403b7237/go.mod h1:/QuMPlUCcgfXRy+yAwXWcAkBegF2Nl1lw0nJ+kSWEsA=
 github.com/glendc/gopher-json v0.0.0-20170414221815-dc4743023d0c h1:iRTj5SRYwbvsygdwVp+y9kZT145Y1s6xOPpeOEIeGc4=
@@ -441,8 +436,6 @@ github.com/juju/ratelimit v1.0.1/go.mod h1:qapgC/Gy+xNh9UxzV13HGGl/6UXNN+ct+vwSg
 github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7VTCxuUUipMqKk8s4w=
 github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1 h1:PJPDf8OUfOK1bb/NeTKd4f1QXZItOX389VN3B6qC8ro=
 github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1/go.mod h1:1NbS8ALrpOvjt0rHPNLyCIeMtbizbir8U//inJ+zuB8=
-github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41 h1:UKfGHZTAF2kEH9TkM4aw+IxpjiNXzB/c8+/N2yUQf+c=
-github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41/go.mod h1:+mEDstlvUwlcUrduEzwxRm8q3GnjOa7GlNVJdgvWpiU=
 github.com/klauspost/cpuid v1.2.1/go.mod h1:Pj4uuM528wm8OyEC2QMXAi2YiTZ96dNQPGgoMS4s3ek=
 github.com/klauspost/reedsolomon v1.9.2/go.mod h1:CwCi+NUr9pqSVktrkN+Ondf06rkhYZ/pcNv7fu+8Un4=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1 h1:mweAR1A6xJ3oS2pRaGiHgQ4OO8tzTaLawm8vnODuwDk=

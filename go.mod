@@ -13,7 +13,7 @@ require (
 	github.com/fatih/set v0.2.1 // indirect
 	github.com/getlantern/appdir v0.0.0-20180320102544-7c0f9d241ea7
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
-	github.com/getlantern/borda v0.0.0-20191024155115-bb3c070e6590
+	github.com/getlantern/borda v0.0.0-20191104151927-85673068af3b
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
 	github.com/getlantern/cmux v0.0.0-20190809092548-4b7adf243efe
 	github.com/getlantern/common v0.0.0-20191017131928-864ae49aeb6a
