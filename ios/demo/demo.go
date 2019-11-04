@@ -132,7 +132,7 @@ func main() {
 
 	bbuffer := filepath.Join(tmpDir, "bordabuffer.bin")
 	bbufferTemp := filepath.Join(tmpDir, "bordabuffer_temp.bin")
-	if err := ios.ConfigureBorda("DEMO", 1, 10*time.Second, bbuffer, bbufferTemp); err != nil {
+	if err := ios.ConfigureBorda(*deviceID, 1, 10*time.Second, bbuffer, bbufferTemp); err != nil {
 		log.Fatal(err)
 	}
 
