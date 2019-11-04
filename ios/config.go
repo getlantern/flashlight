@@ -41,6 +41,9 @@ type ConfigResult struct {
 	// IPSToExcludeFromVPN lists all IPS that should be excluded from the VPNS's
 	// routes in a comma-delimited string
 	IPSToExcludeFromVPN string
+
+	// BordaSamplePercentage specifies how much of data to sample for borda
+	BordaSamplePercentage float64
 }
 
 // Configure fetches updated configuration from the cloud and stores it in
@@ -116,6 +119,8 @@ func (cf *configurer) configure() (*ConfigResult, error) {
 			log.Debugf("Added %v", host)
 		}
 	}
+
+	result.BordaSamplePercentage = global.BordaSamplePercentage
 
 	return result, nil
 }
@@ -300,9 +305,9 @@ func (cf *configurer) updateFromWeb(name string, etag string, cfg interface{}, u
 	cf.saveEtag(name, newEtag)
 
 	if name == "proxies.yaml" {
-   		log.Debugf("Updated proxies.yaml from cloud:\n%v", string(bytes))
+		log.Debugf("Updated proxies.yaml from cloud:\n%v", string(bytes))
 	} else {
-		log.Debugf("Updated %v from cloud", name)	
+		log.Debugf("Updated %v from cloud", name)
 	}
 
 	return newEtag != etag, nil
