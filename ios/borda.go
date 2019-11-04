@@ -34,7 +34,7 @@ func init() {
 
 // ConfigureBorda configures borda for capturing metrics on iOS and starts a
 // process that buffers recorded metrics to disk for use by ReportToBorda.
-func ConfigureBorda(deviceID string, samplePercentage float64, bufferFlushInterval time.Duration, bufferFile, tempBufferFile string) (finalErr error) {
+func ConfigureBorda(deviceID string, samplePercentage float64, bufferFlushInterval string, bufferFile, tempBufferFile string) (finalErr error) {
 	initOnce.Do(func() {
 		ops.InitGlobalContext(deviceID, func() bool { return false }, func() int64 { return 0 }, func() string { return "" }, func() string { return "" })
 
@@ -67,8 +67,13 @@ func ConfigureBorda(deviceID string, samplePercentage float64, bufferFlushInterv
 			}
 		}
 
+		flushInterval, err := time.ParseDuration(bufferFlushInterval)
+		if err != nil {
+			finalErr = err
+			return
+		}
 		flushBufferIfNecessary := func() {
-			flushBufferIf(func() bool { return time.Now().Sub(lastFlushed) > bufferFlushInterval })
+			flushBufferIf(func() bool { return time.Now().Sub(lastFlushed) > flushInterval })
 		}
 
 		go func() {
