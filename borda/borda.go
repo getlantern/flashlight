@@ -44,37 +44,21 @@ type EnabledFunc func(ctx map[string]interface{}) bool
 func Enabler(samplePercentage float64) EnabledFunc {
 	return func(ctx map[string]interface{}) bool {
 		if rand.Float64() <= samplePercentage/100 {
-			// Randomly included in sample
 			return true
 		}
 
-		delete(ctx, "beam") // beam is only useful within a single client session.
 		// For some ops, we don't randomly sample, we include all of them
-		op := ctx["op"]
-		switch t := op.(type) {
-		case string:
-			for _, lightweightOp := range LightweightOps {
-				if t == lightweightOp {
-					log.Tracef("Removing high dimensional data for lightweight op %v", lightweightOp)
-					delete(ctx, "error")
-					delete(ctx, "error_text")
-					delete(ctx, "origin")
-					delete(ctx, "origin_host")
-					delete(ctx, "origin_port")
-					delete(ctx, "root_op")
-				}
-			}
-
+		_op := ctx["op"]
+		op, ok := _op.(string)
+		if ok {
 			for _, fullyReportedOp := range FullyReportedOps {
-				if t == fullyReportedOp {
+				if op == fullyReportedOp {
 					log.Tracef("Including fully reported op %v in borda sample", fullyReportedOp)
 					return true
 				}
 			}
-			return false
-		default:
-			return false
 		}
+		return false
 	}
 }
 
@@ -122,7 +106,28 @@ func ConfigureWithSubmitter(submitter borda.Submitter, enabled EnabledFunc) {
 
 	once.Do(func() {
 		log.Debug("Enabling borda")
-		startBorda(submitter, enabled)
+
+		pruningSubmitter := func(values map[string]borda.Val, dimensions map[string]interface{}) error {
+			delete(dimensions, "beam") // beam is only useful within a single client session.
+			// For some ops, we don't randomly sample, we include all of them
+			_op := dimensions["op"]
+			op, ok := _op.(string)
+			if ok {
+				for _, lightweightOp := range LightweightOps {
+					if op == lightweightOp {
+						log.Tracef("Removing high dimensional data for lightweight op %v", lightweightOp)
+						delete(dimensions, "error")
+						delete(dimensions, "error_text")
+						delete(dimensions, "origin")
+						delete(dimensions, "origin_host")
+						delete(dimensions, "origin_port")
+						delete(dimensions, "root_op")
+					}
+				}
+			}
+			return submitter(values, dimensions)
+		}
+		startBorda(pruningSubmitter, enabled)
 	})
 }
 
