@@ -129,13 +129,21 @@ func ConfigureBorda(configDir, bufferFile, tempBufferFile string) (finalErr erro
 
 // ReportToBorda reports buffered metrics to borda
 func ReportToBorda(bufferFile string) error {
+	hasReportedSomeData := false
+	defer func() {
+		if hasReportedSomeData {
+			os.Remove(bufferFile)
+		}
+	}()
+
 	file, err := os.OpenFile(bufferFile, os.O_RDONLY, 0644)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil
 		}
-		return fmt.Errorf("unable to borda open buffer file %v: %v", bufferFile, err)
+		return fmt.Errorf("unable to open borda buffer file %v: %v", bufferFile, err)
 	}
+	defer file.Close()
 
 	rt, ok := fronted.NewDirect(1 * time.Minute)
 	if !ok {
@@ -151,7 +159,6 @@ func ReportToBorda(bufferFile string) error {
 	})
 	defer bordaClient.Flush()
 
-	defer os.Remove(bufferFile)
 	reportToBorda := bordaClient.ReducingSubmitter("client_results", 1000)
 	dec := msgpack.NewDecoder(file)
 	for {
@@ -167,11 +174,15 @@ func ReportToBorda(bufferFile string) error {
 			return fmt.Errorf("unexpected type of row value from borda buffer file %v: %v", bufferFile, reflect.TypeOf(_row))
 		}
 
-		reportToBorda(row.Values, row.Dimensions)
+		if err := reportToBorda(row.Values, row.Dimensions); err != nil {
+			return err
+		}
+
+		hasReportedSomeData = true
 	}
 }
 
-// ForceFlush forces a flush and waits up to 5 minutes for the flush to finish
+// ForceFlush forces a flush and waits up to 15 seconds for the flush to finish
 func ForceFlush() {
 	flushed := make(chan interface{}, 0)
 	select {
