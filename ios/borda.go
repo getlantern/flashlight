@@ -20,7 +20,7 @@ import (
 var (
 	initOnce sync.Once
 
-	forceFlush = make(chan bool, 0)
+	forceFlush = make(chan chan interface{}, 0)
 )
 
 type row struct {
@@ -71,7 +71,7 @@ func ConfigureBorda(configDir, bufferFile, tempBufferFile string) (finalErr erro
 		var flushMx sync.Mutex
 		lastFlushed := time.Now()
 
-		flushBufferIf := func(necessary func() bool) {
+		flushBufferIf := func(necessary func() bool) bool {
 			flushMx.Lock()
 			defer flushMx.Unlock()
 			if necessary() {
@@ -81,7 +81,9 @@ func ConfigureBorda(configDir, bufferFile, tempBufferFile string) (finalErr erro
 				}
 				openTempBuffer()
 				lastFlushed = time.Now()
+				return true
 			}
+			return false
 		}
 
 		flushBufferIfNecessary := func() {
@@ -89,8 +91,10 @@ func ConfigureBorda(configDir, bufferFile, tempBufferFile string) (finalErr erro
 		}
 
 		go func() {
-			for range forceFlush {
-				flushBufferIf(func() bool { return true })
+			for flushed := range forceFlush {
+				if flushBufferIf(func() bool { return true }) {
+					close(flushed)
+				}
 			}
 		}()
 
@@ -108,6 +112,14 @@ func ConfigureBorda(configDir, bufferFile, tempBufferFile string) (finalErr erro
 
 // ReportToBorda reports buffered metrics to borda
 func ReportToBorda(bufferFile string) error {
+	file, err := os.OpenFile(bufferFile, os.O_RDONLY, 0644)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return fmt.Errorf("unable to borda open buffer file %v: %v", bufferFile, err)
+	}
+
 	rt, ok := fronted.NewDirect(1 * time.Minute)
 	if !ok {
 		return fmt.Errorf("Timed out waiting for fronting to finish configuring")
@@ -117,18 +129,13 @@ func ReportToBorda(bufferFile string) error {
 		BatchInterval: 10000 * time.Hour, // don't use on automated flush
 		HTTPClient: &http.Client{
 			Transport: rt,
+			Timeout:   3 * time.Minute,
 		},
 	})
 	defer bordaClient.Flush()
 
-	reportToBorda := bordaClient.ReducingSubmitter("client_results", 1000)
-
 	defer os.Remove(bufferFile)
-	file, err := os.OpenFile(bufferFile, os.O_RDONLY, 0644)
-	if err != nil {
-		return fmt.Errorf("unable to borda open buffer file %v: %v", bufferFile, err)
-	}
-
+	reportToBorda := bordaClient.ReducingSubmitter("client_results", 1000)
 	dec := msgpack.NewDecoder(file)
 	for {
 		_row, err := dec.DecodeInterface()
@@ -147,11 +154,17 @@ func ReportToBorda(bufferFile string) error {
 	}
 }
 
-// ForceFlush forces a flush
+// ForceFlush forces a flush and waits up to 5 minutes for the flush to finish
 func ForceFlush() {
+	flushed := make(chan interface{}, 0)
 	select {
-	case forceFlush <- true:
-		log.Debug("Requested flush")
+	case forceFlush <- flushed:
+		select {
+		case <-flushed:
+			return
+		case <-time.After(15 * time.Second):
+			return
+		}
 	default:
 		// already pending, ignore
 	}

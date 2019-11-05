@@ -41,9 +41,6 @@ type ConfigResult struct {
 	// IPSToExcludeFromVPN lists all IPS that should be excluded from the VPNS's
 	// routes in a comma-delimited string
 	IPSToExcludeFromVPN string
-
-	// BordaSamplePercentage specifies how much of data to sample for borda
-	BordaSamplePercentage float64
 }
 
 // Configure fetches updated configuration from the cloud and stores it in
@@ -119,8 +116,6 @@ func (cf *configurer) configure() (*ConfigResult, error) {
 			log.Debugf("Added %v", host)
 		}
 	}
-
-	result.BordaSamplePercentage = global.BordaSamplePercentage
 
 	return result, nil
 }
