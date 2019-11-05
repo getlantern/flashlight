@@ -41,12 +41,12 @@ func ConfigureBorda(configDir, bufferFile, tempBufferFile string) (finalErr erro
 		cf := &configurer{configFolderPath: configDir}
 		global, _, _, err := cf.openGlobal()
 		if err != nil {
-			finalErr = err
+			finalErr = fmt.Errorf("Unable to read global config: %v", err)
 			return
 		}
 		uc, err := cf.readUserConfig()
 		if err != nil {
-			finalErr = err
+			finalErr = fmt.Errorf("Unable to read user config: %v", err)
 			return
 		}
 		ops.InitGlobalContext(uc.DeviceID, func() bool { return false }, func() int64 { return 0 }, func() string { return "" }, func() string { return "" })
@@ -61,7 +61,8 @@ func ConfigureBorda(configDir, bufferFile, tempBufferFile string) (finalErr erro
 		openTempBuffer := func() {
 			bf, err = os.OpenFile(tempBufferFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 			if err != nil {
-				panic(fmt.Errorf("unable to open temp buffer file %v: %v", tempBufferFile, err))
+				finalErr = fmt.Errorf("unable to open temp buffer file %v: %v", tempBufferFile, err)
+				return
 			}
 			out = msgpack.NewEncoder(bf)
 		}
