@@ -34,12 +34,28 @@ func init() {
 
 // ConfigureBorda configures borda for capturing metrics on iOS and starts a
 // process that buffers recorded metrics to disk for use by ReportToBorda.
-func ConfigureBorda(deviceID string, samplePercentage float64, bufferFlushInterval string, bufferFile, tempBufferFile string) (finalErr error) {
+// ConfigureBorda reads configuration from disk and relies on Configure having
+// been called first.
+func ConfigureBorda(configDir, bufferFile, tempBufferFile string) (finalErr error) {
 	initOnce.Do(func() {
-		ops.InitGlobalContext(deviceID, func() bool { return false }, func() int64 { return 0 }, func() string { return "" }, func() string { return "" })
+		cf := &configurer{configFolderPath: configDir}
+		global, _, _, err := cf.openGlobal()
+		if err != nil {
+			finalErr = err
+			return
+		}
+		uc, err := cf.readUserConfig()
+		if err != nil {
+			finalErr = err
+			return
+		}
+		ops.InitGlobalContext(uc.DeviceID, func() bool { return false }, func() int64 { return 0 }, func() string { return "" }, func() string { return "" })
+
+		samplePercentage := global.BordaSamplePercentage
+		flushInterval := global.BordaReportInterval
+		log.Debugf("Configuring borda with sample percentage %v and flush interval %v", samplePercentage, flushInterval)
 
 		var bf *os.File
-		var err error
 		var out *msgpack.Encoder
 
 		openTempBuffer := func() {
@@ -67,11 +83,6 @@ func ConfigureBorda(deviceID string, samplePercentage float64, bufferFlushInterv
 			}
 		}
 
-		flushInterval, err := time.ParseDuration(bufferFlushInterval)
-		if err != nil {
-			finalErr = err
-			return
-		}
 		flushBufferIfNecessary := func() {
 			flushBufferIf(func() bool { return time.Now().Sub(lastFlushed) > flushInterval })
 		}

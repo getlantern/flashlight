@@ -132,14 +132,14 @@ func main() {
 
 	bbuffer := filepath.Join(tmpDir, "bordabuffer.bin")
 	bbufferTemp := filepath.Join(tmpDir, "bordabuffer_temp.bin")
-	if err := ios.ConfigureBorda(*deviceID, 1, "10s", bbuffer, bbufferTemp); err != nil {
+	if err := ios.ConfigureBorda(tmpDir, bbuffer, bbufferTemp); err != nil {
 		log.Fatal(err)
 	}
 
 	go func() {
 		// periodically report to borda
 		for {
-			time.Sleep(20 * time.Second)
+			time.Sleep(6 * time.Minute)
 			if err := ios.ReportToBorda(bbuffer); err != nil {
 				log.Errorf("Unable to report to borda: %v", err)
 			}
