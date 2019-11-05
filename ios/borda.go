@@ -1,6 +1,7 @@
 package ios
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"net/http"
@@ -56,15 +57,18 @@ func ConfigureBorda(configDir, bufferFile, tempBufferFile string) (finalErr erro
 		log.Debugf("Configuring borda with sample percentage %v and flush interval %v", samplePercentage, flushInterval)
 
 		var bf *os.File
+		var buf *bufio.Writer
 		var out *msgpack.Encoder
 
 		openTempBuffer := func() {
 			bf, err = os.OpenFile(tempBufferFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 			if err != nil {
-				finalErr = fmt.Errorf("unable to open temp buffer file %v: %v", tempBufferFile, err)
+				finalErr = log.Errorf("unable to open temp buffer file %v: %v", tempBufferFile, err)
+				out = nil
 				return
 			}
-			out = msgpack.NewEncoder(bf)
+			buf = bufio.NewWriter(bf)
+			out = msgpack.NewEncoder(buf)
 		}
 
 		openTempBuffer()
@@ -75,9 +79,17 @@ func ConfigureBorda(configDir, bufferFile, tempBufferFile string) (finalErr erro
 			flushMx.Lock()
 			defer flushMx.Unlock()
 			if necessary() {
-				log.Debugf("Flushing temporary buffer %v to %v", tempBufferFile, bufferFile)
-				if err := os.Rename(tempBufferFile, bufferFile); err != nil {
-					log.Errorf("unable to rename temp buffer file %v to %v, will discard buffered data: %v", tempBufferFile, bufferFile)
+				if out != nil {
+					log.Debugf("Flushing temporary buffer %v to %v", tempBufferFile, bufferFile)
+					if err := buf.Flush(); err != nil {
+						log.Errorf("Error flushing buffered writes to %v: %v", tempBufferFile, err)
+					}
+					if err := bf.Close(); err != nil {
+						log.Errorf("Error closing encoder on %v: %v", tempBufferFile, err)
+					}
+					if err := os.Rename(tempBufferFile, bufferFile); err != nil {
+						log.Errorf("unable to rename temp buffer file %v to %v, will discard buffered data: %v", tempBufferFile, bufferFile)
+					}
 				}
 				openTempBuffer()
 				lastFlushed = time.Now()
@@ -99,8 +111,13 @@ func ConfigureBorda(configDir, bufferFile, tempBufferFile string) (finalErr erro
 		}()
 
 		borda.ConfigureWithSubmitter(func(values map[string]bclient.Val, dims map[string]interface{}) error {
-			if err := out.Encode(&row{Values: values, Dimensions: dims}); err != nil {
-				return err
+			flushMx.Lock()
+			o := out
+			flushMx.Unlock()
+			if o != nil {
+				if err := o.Encode(&row{Values: values, Dimensions: dims}); err != nil {
+					return err
+				}
 			}
 			flushBufferIfNecessary()
 			return nil
