@@ -304,6 +304,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			log.Errorf("error starting torrent client: %v", err)
 			app.Exit(err)
 		}
+		app.AddExitFunc("close torrent client", torrentClient.Close)
 
 		if err := replica.IterUploads(replicaUploadsDir, func(mi *metainfo.MetaInfo, err error) {
 			if err != nil {
