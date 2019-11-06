@@ -76,6 +76,7 @@ type Session interface {
 	Locale() string
 	Code() string
 	GetCountryCode() string
+	GetForcedCountryCode() string
 	GetDNSServer() string
 	Provider() string
 	AppVersion() string
@@ -315,6 +316,11 @@ func run(configDir, locale string,
 	httpProxyAddr := fmt.Sprintf("%s:%d",
 		settings.GetHttpProxyHost(),
 		settings.GetHttpProxyPort())
+
+	forcedCountryCode := session.GetForcedCountryCode()
+	if forcedCountryCode != "" {
+		config.ForceCountry(forcedCountryCode)
+	}
 
 	flashlight.Run(httpProxyAddr, // listen for HTTP on provided address
 		"127.0.0.1:0",                // listen for SOCKS on random address
