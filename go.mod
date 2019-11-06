@@ -13,7 +13,7 @@ require (
 	github.com/fatih/set v0.2.1 // indirect
 	github.com/getlantern/appdir v0.0.0-20180320102544-7c0f9d241ea7
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
-	github.com/getlantern/borda v0.0.0-20190917165417-36cadcff5e18
+	github.com/getlantern/borda v0.0.0-20191105202701-77098b35c76c
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
 	github.com/getlantern/cmux v0.0.0-20190809092548-4b7adf243efe
 	github.com/getlantern/common v0.0.0-20191017131928-864ae49aeb6a
@@ -52,6 +52,7 @@ require (
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
 	github.com/getlantern/mitm v0.0.0-20180205214248-4ce456bae650
 	github.com/getlantern/mockconn v0.0.0-20191023022503-481dbcceeb58
+	github.com/getlantern/msgpack v3.1.4+incompatible
 	github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0
 	github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd
 	github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b

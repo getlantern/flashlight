@@ -117,10 +117,13 @@ github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99 h1:fnjb9PYZR
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99/go.mod h1:4rYfIUYagdnY0KCu5/zOBX5CIRIi+j+LHdQ+LmD/Lyg=
 github.com/getlantern/bbrconn v0.0.0-20180619163322-86cf8c16f3d0 h1:OtUNxwmNp9+mTZMuKw9MrNLJKMG731zWZIWwQfFGZfs=
 github.com/getlantern/bbrconn v0.0.0-20180619163322-86cf8c16f3d0/go.mod h1:HMPEgWG0J3goTYFWoTohloqZ3BQywXMElZnd9EROxxU=
-github.com/getlantern/borda v0.0.0-20190809122504-668025f4c2b9 h1:zRujRezaBjhuLFahdzh01DbyvcEWKpUQ9vL5yCKJX+s=
 github.com/getlantern/borda v0.0.0-20190809122504-668025f4c2b9/go.mod h1:5gIMs+fPLaRRdTa3f3eMrYgJb/5JmO8/Fa060xvj44U=
-github.com/getlantern/borda v0.0.0-20190917165417-36cadcff5e18 h1:Q9xkR+sYEovMalSOtQ0Q9tMCy9li1xlSgXLexoRVnRQ=
-github.com/getlantern/borda v0.0.0-20190917165417-36cadcff5e18/go.mod h1:htY57XPOAq+JMoRS21F97tSxb7Aa2P3A/pOjdd9sPls=
+github.com/getlantern/borda v0.0.0-20191104145845-33f18a7f01a4 h1:59Ax7O4r6pyH6UHC0qhu61feLqwu7Lh6WIHsz4GUDCk=
+github.com/getlantern/borda v0.0.0-20191104145845-33f18a7f01a4/go.mod h1:hzzaWNHKEtVnk803olisWbiDTPj/1acLS9vR+Rz9rjI=
+github.com/getlantern/borda v0.0.0-20191104151927-85673068af3b h1:Et7QQAmfBh4dwPZK5eIzo4LbWTeCnJp4mpWt4zM1YWQ=
+github.com/getlantern/borda v0.0.0-20191104151927-85673068af3b/go.mod h1:hzzaWNHKEtVnk803olisWbiDTPj/1acLS9vR+Rz9rjI=
+github.com/getlantern/borda v0.0.0-20191105202701-77098b35c76c h1:DpXRCuxcwcCjK8pUk7uPk42f/jolbrFj2AcY0vjDGnU=
+github.com/getlantern/borda v0.0.0-20191105202701-77098b35c76c/go.mod h1:hzzaWNHKEtVnk803olisWbiDTPj/1acLS9vR+Rz9rjI=
 github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d h1:gE5pWSEYfMvSETsTanqINNLmv+nuyUjwcm9jOyqJJZI=
 github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
 github.com/getlantern/bytecounting v0.0.0-20190530140808-3b3f10d3b9ab h1:bKsTXN1XgjiWuciuEChVIPFXWD8sTASsvjkMAGMEb/4=
@@ -342,8 +345,8 @@ github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426 h1:lb2OElfhZzfgvNQ
 github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426/go.mod h1:SoTXbOvaDC1bH3QrlkU5kz/h12tU/hN54wSMUCdgEXs=
 github.com/getlantern/zenodb v0.0.0-20190809092412-0a2ce8ac3026 h1:xM0DWdV/eK7H2L4NxLj6LYcGUg9HbUNysk1SqSycL+s=
 github.com/getlantern/zenodb v0.0.0-20190809092412-0a2ce8ac3026/go.mod h1:LDw7qTXBZJkjYVIvR2iyi1J4PN8plch0VZzTzc7mDoM=
-github.com/getlantern/zenodb v0.0.0-20190917165203-32a60251f38b h1:J+k1klLxUMt3JLBJayt+op0AWp45Vt4SOrxOscb7Pyg=
-github.com/getlantern/zenodb v0.0.0-20190917165203-32a60251f38b/go.mod h1:Uxs9BCNogjdqtqThOrKakeDhMXjN3KLjH40W1OPPGic=
+github.com/getlantern/zenodb v0.0.0-20191017181222-5e98403b7237 h1:a916/nkKDXQBD940nXIzOp2nLTfUzwL0vPr7HCWKduI=
+github.com/getlantern/zenodb v0.0.0-20191017181222-5e98403b7237/go.mod h1:/QuMPlUCcgfXRy+yAwXWcAkBegF2Nl1lw0nJ+kSWEsA=
 github.com/glendc/gopher-json v0.0.0-20170414221815-dc4743023d0c h1:iRTj5SRYwbvsygdwVp+y9kZT145Y1s6xOPpeOEIeGc4=
 github.com/glendc/gopher-json v0.0.0-20170414221815-dc4743023d0c/go.mod h1:Gja1A+xZ9BoviGJNA2E9vFkPjjsl+CoJxSXiQM1UXtw=
 github.com/glycerine/go-unsnap-stream v0.0.0-20180323001048-9f0cb55181dd/go.mod h1:/20jfyN9Y5QPEAprSgKAUr+glWDY39ZiUEAYOEv5dsE=
@@ -624,6 +627,8 @@ golang.org/x/crypto v0.0.0-20190605123033-f99c8df09eb5 h1:58fnuSXlxZmFdJyvtTFVmV
 golang.org/x/crypto v0.0.0-20190605123033-f99c8df09eb5/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
 golang.org/x/crypto v0.0.0-20191002192127-34f69633bfdc h1:c0o/qxkaO2LF5t6fQrT4b5hzyggAkLLlCUjqfRxd8Q4=
 golang.org/x/crypto v0.0.0-20191002192127-34f69633bfdc/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
+golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550 h1:ObdrDkeb4kJdCP557AjRjq69pTHfNouLtWZG7j9rPN8=
+golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
 golang.org/x/exp v0.0.0-20190121172915-509febef88a4/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
 golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=
 golang.org/x/lint v0.0.0-20190227174305-5b3e6a55c961/go.mod h1:wehouNa3lNwaWXcvxsM5YxQ5yQlVC4a0KAMCusXpPoU=

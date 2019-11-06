@@ -300,9 +300,9 @@ func (cf *configurer) updateFromWeb(name string, etag string, cfg interface{}, u
 	cf.saveEtag(name, newEtag)
 
 	if name == "proxies.yaml" {
-   		log.Debugf("Updated proxies.yaml from cloud:\n%v", string(bytes))
+		log.Debugf("Updated proxies.yaml from cloud:\n%v", string(bytes))
 	} else {
-		log.Debugf("Updated %v from cloud", name)	
+		log.Debugf("Updated %v from cloud", name)
 	}
 
 	return newEtag != etag, nil
