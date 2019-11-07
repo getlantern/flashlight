@@ -142,7 +142,7 @@ func (me *ReplicaHttpServer) handleUpload(w http.ResponseWriter, r *http.Request
 		panic(err)
 	}
 	w.Header().Set("Content-Type", "text/uri-list")
-	fmt.Fprintln(w, createLink(tt.InfoHash(), s3Key, name))
+	fmt.Fprintln(w, createLink(tt.InfoHash(), s3KeyFromInfoName(info.Name), name))
 }
 
 func (me *ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Request) {
@@ -266,6 +266,7 @@ func (me *ReplicaHttpServer) handleView(w http.ResponseWriter, r *http.Request) 
 	if filename != "" {
 		w.Header().Set("Content-Disposition", "inline; filename*=UTF-8''"+url.QueryEscape(filename))
 	}
+
 	confluence.ServeTorrent(w, r, t)
 }
 
