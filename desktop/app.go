@@ -304,6 +304,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			log.Errorf("error starting torrent client: %v", err)
 			app.Exit(err)
 		}
+		app.AddExitFunc("close torrent client", torrentClient.Close)
 
 		app.AddExitFunc("torrent", func() {
 			torrentClient.Close()
