@@ -25,12 +25,13 @@ import (
 
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/autoupdate"
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/borda"
-	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/datacap"
+	"github.com/getlantern/flashlight/diagnostics/trafficlog"
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/notifier"
@@ -70,8 +71,19 @@ type App struct {
 	uiServer *ui.Server
 	ws       ws.UIChannel
 
-	proxiesMap     map[string]*chained.ChainedServerInfo
-	proxiesMapLock sync.RWMutex
+	// If both the trafficLogLock and proxiesLock are needed, the trafficLogLock should be obtained
+	// first. Keeping the order consistent avoids deadlocking.
+
+	// Log of network traffic to and from the proxies. Used to attach packet capture files to
+	// reported issues. Nil if traffic logging is not enabled.
+	trafficLog     *trafficlog.TrafficLog
+	trafficLogLock sync.RWMutex
+
+	// proxies are tracked by the application solely for data collection purposes. This value should
+	// not be changed, except by App.onProxiesUpdate. State-changing methods on the dialers should
+	// not be called. In short, this slice and its elements should be treated as read-only.
+	proxies     []balancer.Dialer
+	proxiesLock sync.RWMutex
 }
 
 // Init initializes the App's state
@@ -418,12 +430,95 @@ func (app *App) onConfigUpdate(cfg *config.Global) {
 		return app.AddToken("/img/lantern_logo.png")
 	})
 	email.SetDefaultRecipient(cfg.ReportIssueEmail)
+	app.configureTrafficLog(*cfg)
 }
 
-func (app *App) onProxiesUpdate(proxiesMap map[string]*chained.ChainedServerInfo) {
-	app.proxiesMapLock.Lock()
-	app.proxiesMap = proxiesMap
-	app.proxiesMapLock.Unlock()
+func (app *App) onProxiesUpdate(proxies []balancer.Dialer) {
+	app.trafficLogLock.Lock()
+	app.proxiesLock.Lock()
+	app.proxies = proxies
+	if app.trafficLog != nil {
+		proxyAddresses := []string{}
+		for _, p := range proxies {
+			proxyAddresses = append(proxyAddresses, p.Addr())
+		}
+		if err := app.trafficLog.UpdateAddresses(proxyAddresses); err != nil {
+			log.Errorf("failed to update traffic log addresses: %v", err)
+		}
+	}
+	app.proxiesLock.Unlock()
+	app.trafficLogLock.Unlock()
+}
+
+func (app *App) configureTrafficLog(cfg config.Global) {
+	app.trafficLogLock.Lock()
+	app.proxiesLock.RLock()
+	defer app.trafficLogLock.Unlock()
+	defer app.proxiesLock.RUnlock()
+
+	enableTrafficLog := false
+	if app.Flags["force-traffic-log"].(bool) {
+		enableTrafficLog = true
+		// This flag is used in development to run the traffic log. We probably want to actually
+		// capture some packets if this flag is set.
+		if cfg.TrafficLogCaptureBytes == 0 {
+			cfg.TrafficLogCaptureBytes = 10 * 1024 * 1024
+		}
+		if cfg.TrafficLogSaveBytes == 0 {
+			cfg.TrafficLogSaveBytes = 10 * 1024 * 1024
+		}
+	} else {
+		for _, platform := range cfg.TrafficLogPlatforms {
+			enableTrafficLog = platform == common.Platform && rand.Float64() < cfg.TrafficLogPercentage
+		}
+	}
+
+	mtuLimit := app.Flags["tl-mtu-limit"].(int)
+	if mtuLimit == 0 {
+		mtuLimit = trafficlog.MTULimitNone
+	}
+
+	switch {
+	case enableTrafficLog && app.trafficLog == nil:
+		log.Debug("Turning traffic log on")
+		app.trafficLog = trafficlog.New(
+			cfg.TrafficLogCaptureBytes,
+			cfg.TrafficLogSaveBytes,
+			&trafficlog.Options{
+				MTULimit:       mtuLimit,
+				MutatorFactory: new(trafficlog.AppStripperFactory),
+			})
+		// These goroutines will close when the traffic log is closed.
+		go func() {
+			for err := range app.trafficLog.Errors() {
+				log.Debugf("Traffic log error: %v", err)
+			}
+		}()
+		go func() {
+			for stats := range app.trafficLog.Stats() {
+				log.Debugf("Traffic log stats: %v", stats)
+			}
+		}()
+		proxyAddrs := []string{}
+		for _, p := range app.proxies {
+			proxyAddrs = append(proxyAddrs, p.Addr())
+		}
+		if err := app.trafficLog.UpdateAddresses(proxyAddrs); err != nil {
+			log.Debugf("Failed to start traffic logging for proxies: %v", err)
+			app.trafficLog.Close()
+			app.trafficLog = nil
+		}
+
+	case enableTrafficLog && app.trafficLog != nil:
+		app.trafficLog.UpdateBufferSizes(cfg.TrafficLogCaptureBytes, cfg.TrafficLogSaveBytes)
+
+	case !enableTrafficLog && app.trafficLog != nil:
+		log.Debug("Turning traffic log off")
+		if err := app.trafficLog.Close(); err != nil {
+			log.Debugf("Failed to close traffic log (this will create a memory leak): %v", err)
+		}
+		app.trafficLog = nil
+	}
 }
 
 // showExistingUi triggers an existing Lantern running on the same system to

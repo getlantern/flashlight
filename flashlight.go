@@ -15,6 +15,7 @@ import (
 	"github.com/getlantern/ops"
 	"github.com/getlantern/proxybench"
 
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
@@ -48,7 +49,7 @@ func Run(httpProxyAddr string,
 	beforeStart func() bool,
 	afterStart func(cl *client.Client),
 	onConfigUpdate func(cfg *config.Global),
-	onProxiesUpdate func(map[string]*chained.ChainedServerInfo),
+	onProxiesUpdate func([]balancer.Dialer),
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
 	onError func(err error),
@@ -67,7 +68,7 @@ func Run(httpProxyAddr string,
 	}
 
 	if onProxiesUpdate == nil {
-		onProxiesUpdate = func(_ map[string]*chained.ChainedServerInfo) {}
+		onProxiesUpdate = func(_ []balancer.Dialer) {}
 	}
 	if onConfigUpdate == nil {
 		onConfigUpdate = func(_ *config.Global) {}
@@ -118,8 +119,10 @@ func Run(httpProxyAddr string,
 	proxiesDispatch := func(conf interface{}) {
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
-		cl.Configure(proxyMap)
-		onProxiesUpdate(proxyMap)
+		dialers := cl.Configure(proxyMap)
+		if dialers != nil {
+			onProxiesUpdate(dialers)
+		}
 	}
 	globalDispatch := func(conf interface{}) {
 		// Don't love the straight cast here, but we're also the ones defining

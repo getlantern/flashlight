@@ -27,6 +27,16 @@ type Global struct {
 	StealthMode           bool
 	Client                *ClientConfig
 
+	// If the client's platform appears in this list, traffic logging may be enabled.
+	TrafficLogPlatforms []string
+
+	// The percent chance a client will enable traffic logging (subject to platform restrictions).
+	TrafficLogPercentage float64
+
+	// Size of the traffic log's packet buffers (if enabled).
+	TrafficLogCaptureBytes int
+	TrafficLogSaveBytes    int
+
 	// AdSettings are the settings to use for showing ads to mobile clients
 	AdSettings *AdSettings
 
