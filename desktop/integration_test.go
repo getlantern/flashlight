@@ -226,6 +226,8 @@ func startApp(t *testing.T, helper *integrationtest.Helper) (*App, error) {
 		"borda-report-interval":   5 * time.Minute,
 		"borda-sample-percentage": 0.0, // this is 0 to disable random sampling, allowing us to test fully reported ops
 		"ui-domain":               "ui.lantern.io",
+		"force-traffic-log":       false,
+		"tl-mtu-limit":            1500,
 	}
 
 	a := &App{
