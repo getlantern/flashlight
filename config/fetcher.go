@@ -9,6 +9,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -25,6 +26,8 @@ var (
 // ForceCountry forces config fetches to pretend client is running in the
 // given countryCode (e.g. 'cn')
 func ForceCountry(countryCode string) {
+	countryCode = strings.ToLower(countryCode)
+	log.Debugf("Forcing config country to %v", countryCode)
 	forceCountry.Store(countryCode)
 }
 
