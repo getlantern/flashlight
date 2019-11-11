@@ -8,7 +8,7 @@ import (
 	"github.com/getlantern/flashlight/desktop"
 )
 
-func runOnSystrayReady(a *desktop.App, f func()) {
+func runOnSystrayReady(standalone bool, a *desktop.App, f func()) {
 	f()
 	err := a.WaitForExit()
 	if err != nil {
