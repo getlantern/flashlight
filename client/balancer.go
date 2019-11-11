@@ -8,10 +8,10 @@ import (
 )
 
 // initBalancer takes hosts from cfg.ChainedServers and it uses them to create a
-// balancer.
-func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo) error {
+// balancer. Returns the new dialers.
+func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo) ([]balancer.Dialer, error) {
 	if len(proxies) == 0 {
-		return fmt.Errorf("No chained servers configured, not initializing balancer")
+		return nil, fmt.Errorf("No chained servers configured, not initializing balancer")
 	}
 
 	log.Debugf("Adding %d chained servers", len(proxies))
@@ -40,7 +40,7 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 		}
 	}()
 
-	return nil
+	return dialers, nil
 }
 
 // PingProxies maybe pings the client's proxies depending on the

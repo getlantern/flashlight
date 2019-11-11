@@ -3,23 +3,19 @@ package flashlight
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"net"
 	"path/filepath"
-	"runtime"
 	"sync"
 	"time"
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/jibber_jabber"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/ops"
-	"github.com/getlantern/osversion"
 	"github.com/getlantern/proxybench"
 
-	"github.com/getlantern/flashlight/bandwidth"
+	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/client"
@@ -37,14 +33,6 @@ import (
 var (
 	log = golog.LoggerFor("flashlight")
 
-	// FullyReportedOps are ops which are reported at 100% to borda, irrespective
-	// of the borda sample percentage. This should all be low-volume operations,
-	// otherwise we will utilize too much bandwidth on the client.
-	FullyReportedOps = []string{"proxybench", "client_started", "client_stopped", "connect", "disconnect", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "sysproxy_off_force", "sysproxy_clear", "report_issue", "proxy_rank", "proxy_selection_stability", "probe", "balancer_dial", "proxy_dial"}
-
-	// LightweightOps are ops for which we record less than the full set of dimensions (e.g. omit error)
-	LightweightOps = []string{"balancer_dial", "proxy_dial"}
-
 	startProxyBenchOnce sync.Once
 )
 
@@ -61,7 +49,7 @@ func Run(httpProxyAddr string,
 	beforeStart func() bool,
 	afterStart func(cl *client.Client),
 	onConfigUpdate func(cfg *config.Global),
-	onProxiesUpdate func(map[string]*chained.ChainedServerInfo),
+	onProxiesUpdate func([]balancer.Dialer),
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
 	onError func(err error),
@@ -80,7 +68,7 @@ func Run(httpProxyAddr string,
 	}
 
 	if onProxiesUpdate == nil {
-		onProxiesUpdate = func(_ map[string]*chained.ChainedServerInfo) {}
+		onProxiesUpdate = func(_ []balancer.Dialer) {}
 	}
 	if onConfigUpdate == nil {
 		onConfigUpdate = func(_ *config.Global) {}
@@ -95,7 +83,11 @@ func Run(httpProxyAddr string,
 	defer stopMonitor()
 	elapsed := mtime.Stopwatch()
 	displayVersion()
-	initContext(userConfig.GetDeviceID(), common.Version, common.RevisionDate, isPro, userID)
+	deviceID := userConfig.GetDeviceID()
+	if common.InDevelopment() {
+		log.Debugf("You can query for this device's activity in borda under device id: %v", deviceID)
+	}
+	fops.InitGlobalContext(deviceID, isPro, userID, func() string { return geolookup.GetCountry(0) }, func() string { return geolookup.GetIP(0) })
 	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 	op := fops.Begin("client_started")
 
@@ -127,8 +119,10 @@ func Run(httpProxyAddr string,
 	proxiesDispatch := func(conf interface{}) {
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
-		cl.Configure(proxyMap)
-		onProxiesUpdate(proxyMap)
+		dialers := cl.Configure(proxyMap)
+		if dialers != nil {
+			onProxiesUpdate(dialers)
+		}
 	}
 	globalDispatch := func(conf interface{}) {
 		// Don't love the straight cast here, but we're also the ones defining
@@ -217,46 +211,18 @@ func applyClientConfig(cfg *config.Global, autoReport func() bool, onBordaConfig
 		})
 	}
 
+	_enableBorda := borda.Enabler(cfg.BordaSamplePercentage)
 	enableBorda := func(ctx map[string]interface{}) bool {
 		if !autoReport() {
 			// User has chosen not to automatically submit data
 			return false
 		}
 
-		if rand.Float64() <= cfg.BordaSamplePercentage/100 {
-			// Randomly included in sample
-			return true
-		}
-
-		delete(ctx, "beam") // beam is only useful within a single client session.
-		// For some ops, we don't randomly sample, we include all of them
-		op := ctx["op"]
-		switch t := op.(type) {
-		case string:
-			for _, lightweightOp := range LightweightOps {
-				if t == lightweightOp {
-					log.Tracef("Removing high dimensional data for lightweight op %v", lightweightOp)
-					delete(ctx, "error")
-					delete(ctx, "error_text")
-					delete(ctx, "origin")
-					delete(ctx, "origin_host")
-					delete(ctx, "origin_port")
-					delete(ctx, "root_op")
-				}
-			}
-
-			for _, fullyReportedOp := range FullyReportedOps {
-				if t == fullyReportedOp {
-					log.Tracef("Including fully reported op %v in borda sample", fullyReportedOp)
-					return true
-				}
-			}
-			return false
-		default:
-			return false
-		}
+		return _enableBorda(ctx)
 	}
+
 	borda.Configure(cfg.BordaReportInterval, enableBorda)
+
 	select {
 	case onBordaConfigured <- true:
 		// okay
@@ -268,46 +234,4 @@ func applyClientConfig(cfg *config.Global, autoReport func() bool, onBordaConfig
 func displayVersion() {
 	log.Debugf("---- flashlight version: %s, release: %s, build revision date: %s, build date: %s ----",
 		common.Version, common.PackageVersion, common.RevisionDate, common.BuildDate)
-}
-
-func initContext(deviceID string, version string, revisionDate string, isPro func() bool, userID func() int64) {
-	if common.InDevelopment() {
-		log.Debugf("You can query for this device's activity in borda under device id: %v", deviceID)
-	}
-	// Using "application" allows us to distinguish between errors from the
-	// lantern client vs other sources like the http-proxy, etop.
-	ops.SetGlobal("app", "lantern-client")
-	ops.SetGlobal("app_version", fmt.Sprintf("%v (%v)", version, revisionDate))
-	ops.SetGlobal("go_version", runtime.Version())
-	ops.SetGlobal("os_name", common.Platform)
-	ops.SetGlobal("os_arch", runtime.GOARCH)
-	ops.SetGlobal("device_id", deviceID)
-	ops.SetGlobalDynamic("geo_country", func() interface{} { return geolookup.GetCountry(0) })
-	ops.SetGlobalDynamic("client_ip", func() interface{} { return geolookup.GetIP(0) })
-	ops.SetGlobalDynamic("timezone", func() interface{} { return time.Now().Format("MST") })
-	ops.SetGlobalDynamic("locale_language", func() interface{} {
-		lang, _ := jibber_jabber.DetectLanguage()
-		return lang
-	})
-	ops.SetGlobalDynamic("locale_country", func() interface{} {
-		country, _ := jibber_jabber.DetectTerritory()
-		return country
-	})
-	ops.SetGlobalDynamic("is_pro", func() interface{} {
-		return isPro()
-	})
-	ops.SetGlobalDynamic("user_id", func() interface{} {
-		return userID()
-	})
-	ops.SetGlobalDynamic("is_data_capped", func() interface{} {
-		if isPro() {
-			return false
-		}
-		quota, _ := bandwidth.GetQuota()
-		return quota != nil && quota.MiBUsed >= quota.MiBAllowed
-	})
-
-	if osStr, err := osversion.GetHumanReadable(); err == nil {
-		ops.SetGlobal("os_version", osStr)
-	}
 }

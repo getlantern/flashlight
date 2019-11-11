@@ -28,5 +28,6 @@ func (p *proxy) Ping() {
 	op.SetMetricPercentile("ping_rtt_avg", stats.RTTAvg)
 	op.SetMetricPercentile("ping_rtt_max", stats.RTTMax)
 	op.SetMetricPercentile("ping_plr", stats.PLR)
+	log.Debugf("Packet Loss Rate: %v", stats.PLR)
 	log.Debugf("Successfully pinged %v", p.Name())
 }

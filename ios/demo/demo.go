@@ -53,6 +53,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/gotun"
@@ -129,6 +130,22 @@ func main() {
 		}
 	}
 
+	bbuffer := filepath.Join(tmpDir, "bordabuffer.bin")
+	bbufferTemp := filepath.Join(tmpDir, "bordabuffer_temp.bin")
+	if err := ios.ConfigureBorda(tmpDir, bbuffer, bbufferTemp); err != nil {
+		log.Fatal(err)
+	}
+
+	go func() {
+		// periodically report to borda
+		for {
+			time.Sleep(6 * time.Minute)
+			if err := ios.ReportToBorda(bbuffer); err != nil {
+				log.Errorf("Unable to report to borda: %v", err)
+			}
+		}
+	}()
+
 	dev, err := tun.OpenTunDevice(*tunDevice, *tunAddr, *tunGW, *tunMask, 1500)
 	if err != nil {
 		log.Fatalf("Error opening TUN device: %v", err)
@@ -140,13 +157,13 @@ func main() {
 		syscall.SIGHUP,
 		syscall.SIGINT,
 		syscall.SIGTERM,
-		syscall.SIGQUIT)
+		syscall.SIGQUIT,
+		syscall.SIGPIPE)
 	go func() {
 		<-ch
 		log.Debug("Stopping TUN device")
 		dev.Close()
 		log.Debug("Stopped TUN device")
-		os.Exit(0)
 	}()
 
 	doneAddingBypassRoutes := make(chan interface{})

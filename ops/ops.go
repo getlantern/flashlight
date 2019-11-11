@@ -4,15 +4,22 @@ package ops
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"regexp"
+	"runtime"
 	"strings"
 	"sync/atomic"
 	"time"
 
 	borda "github.com/getlantern/borda/client"
+	"github.com/getlantern/jibber_jabber"
 	"github.com/getlantern/ops"
+	"github.com/getlantern/osversion"
+
+	"github.com/getlantern/flashlight/bandwidth"
+	"github.com/getlantern/flashlight/common"
 )
 
 // ProxyType is the type of various proxy channel
@@ -308,4 +315,44 @@ func (op *Op) SetMetricAvg(name string, value float64) *Op {
 
 func (op *Op) SetMetricPercentile(name string, value float64) *Op {
 	return op.Set(name, borda.Percentile(value))
+}
+
+// InitGlobalContext configures global context info
+func InitGlobalContext(deviceID string, isPro func() bool, userID func() int64, getCountry func() string, getIP func() string) {
+	// Using "application" allows us to distinguish between errors from the
+	// lantern client vs other sources like the http-proxy, etop.
+	ops.SetGlobal("app", "lantern-client")
+	ops.SetGlobal("app_version", fmt.Sprintf("%v (%v)", common.Version, common.RevisionDate))
+	ops.SetGlobal("go_version", runtime.Version())
+	ops.SetGlobal("os_name", common.Platform)
+	ops.SetGlobal("os_arch", runtime.GOARCH)
+	ops.SetGlobal("device_id", deviceID)
+	ops.SetGlobalDynamic("geo_country", func() interface{} { return getCountry() })
+	ops.SetGlobalDynamic("client_ip", func() interface{} { return getIP() })
+	ops.SetGlobalDynamic("timezone", func() interface{} { return time.Now().Format("MST") })
+	ops.SetGlobalDynamic("locale_language", func() interface{} {
+		lang, _ := jibber_jabber.DetectLanguage()
+		return lang
+	})
+	ops.SetGlobalDynamic("locale_country", func() interface{} {
+		country, _ := jibber_jabber.DetectTerritory()
+		return country
+	})
+	ops.SetGlobalDynamic("is_pro", func() interface{} {
+		return isPro()
+	})
+	ops.SetGlobalDynamic("user_id", func() interface{} {
+		return userID()
+	})
+	ops.SetGlobalDynamic("is_data_capped", func() interface{} {
+		if isPro() {
+			return false
+		}
+		quota, _ := bandwidth.GetQuota()
+		return quota != nil && quota.MiBUsed >= quota.MiBAllowed
+	})
+
+	if osStr, err := osversion.GetHumanReadable(); err == nil {
+		ops.SetGlobal("os_version", osStr)
+	}
 }
