@@ -19,6 +19,7 @@ import (
 	pops "github.com/getlantern/ops"
 	"github.com/getlantern/yaml"
 
+	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/util"
@@ -115,6 +116,7 @@ func Send(msg *Message) error {
 				Set("issue_note", msg.Vars["report"]).
 				Set("email", msg.Vars["emailaddress"])
 		}
+		msg.Vars["country"] = geolookup.GetCountry(0)
 		log.Debug("Reporting issue")
 	} else {
 		op = ops.Begin("send_email").Set("template", msg.Template)

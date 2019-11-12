@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	appLogFileNames    = []string{"ios.log", "ios.log.1", "ios.log.2", "ios.log.3", "ios.log.4", "ios.log.5"}
-	tunnelLogFileNames = []string{"lantern.log", "lantern.log.1", "lantern.log.2", "lantern.log.3", "lantern.log.4", "lantern.log.5"}
+	appLogFileNames     = []string{"ios.log", "ios.log.1", "ios.log.2", "ios.log.3", "ios.log.4", "ios.log.5"}
+	tunnelLogFileNames  = []string{"lantern.log", "lantern.log.1", "lantern.log.2", "lantern.log.3", "lantern.log.4", "lantern.log.5"}
 	proxiesYamlFileName = "proxies.yaml"
 )
 
@@ -41,13 +41,13 @@ func TestReportIssue(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	defer proxiesYaml.Close() 
+	defer proxiesYaml.Close()
 	defer os.Remove(proxiesYaml.Name())
-	_, err = proxiesYaml.Write([]byte("I'm a proxies.yaml!")) 
+	_, err = proxiesYaml.Write([]byte("I'm a proxies.yaml!"))
 
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	assert.NoError(t, ReportIssue("0.0.1", "TestMachine", "1.0", "ox@getlantern.org", "This is just a test", appLogsDir, tunnelLogsDir, proxiesYaml.Name()))
+	assert.NoError(t, ReportIssue("0.0.1", "TestMachine", "1.0", "ox+unittest@getlantern.org", "This is just a test", appLogsDir, tunnelLogsDir, proxiesYaml.Name()))
 }
