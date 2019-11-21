@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/getlantern/appdir"
@@ -25,6 +26,7 @@ import (
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/memhelper"
 	"github.com/getlantern/mtime"
@@ -55,7 +57,26 @@ var (
 	cl = eventual.NewValue()
 
 	errNoAdProviderAvailable = errors.New("no ad provider available")
+
+	isProtecting int64
 )
+
+func init() {
+	fronted.SetDialAuditor(func(conn net.Conn, err error) (net.Conn, error) {
+		if err == nil {
+			connIsProtected := protected.IsTCPProtected(conn)
+			connShouldBeProtected := atomic.LoadInt64(&isProtecting) == 1
+			if connShouldBeProtected && !connIsProtected {
+				log.Debugf("WARNING!!!! Connection to %v should have been protected from VPN but wasn't", conn.RemoteAddr())
+			} else if !connShouldBeProtected && connIsProtected {
+				log.Debugf("WARNING!!!! Connection to %v should not have been protected from VPN but was", conn.RemoteAddr())
+			}
+		}
+
+		return conn, err
+	})
+
+}
 
 type Settings interface {
 	StickyConfig() bool
@@ -147,6 +168,7 @@ func ProtectConnections(protector SocketProtector, dnsServer string) {
 	netx.OverrideResolve(p.ResolveTCP)
 	netx.OverrideResolveUDP(p.ResolveUDP)
 	netx.OverrideListenUDP(p.ListenUDP)
+	atomic.StoreInt64(&isProtecting, 1)
 	bal := GetBalancer(0)
 	if bal != nil {
 		log.Debug("Protected after balancer already created, force redial")
@@ -159,6 +181,7 @@ func ProtectConnections(protector SocketProtector, dnsServer string) {
 func RemoveOverrides() {
 	log.Debug("Removing overrides")
 	netx.Reset()
+	atomic.StoreInt64(&isProtecting, 0)
 }
 
 func GetBalancer(timeout time.Duration) *balancer.Balancer {
@@ -258,8 +281,8 @@ func AddLoggingMetadata(key, value string) {
 }
 
 // Exit is used to immediately stop Lantern; it's called when the
-// the service Lantern is running in receives a signal to
-// stop (such as when a user s on another VPN)
+// the service that Lantern is running in receives a signal to
+// stop (such as when a user is on another VPN)
 func Exit() {
 	os.Exit(0)
 }
