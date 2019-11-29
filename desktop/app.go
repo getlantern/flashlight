@@ -31,7 +31,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/datacap"
-	"github.com/getlantern/flashlight/diagnostics/trafficlog"
+	//"github.com/getlantern/flashlight/diagnostics/trafficlog"
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/notifier"
@@ -76,8 +76,8 @@ type App struct {
 
 	// Log of network traffic to and from the proxies. Used to attach packet capture files to
 	// reported issues. Nil if traffic logging is not enabled.
-	trafficLog     *trafficlog.TrafficLog
-	trafficLogLock sync.RWMutex
+	//trafficLog     *trafficlog.TrafficLog
+	//trafficLogLock sync.RWMutex
 
 	// proxies are tracked by the application solely for data collection purposes. This value should
 	// not be changed, except by App.onProxiesUpdate. State-changing methods on the dialers should
@@ -432,11 +432,11 @@ func (app *App) onConfigUpdate(cfg *config.Global) {
 		return app.AddToken("/img/lantern_logo.png")
 	})
 	email.SetDefaultRecipient(cfg.ReportIssueEmail)
-	app.configureTrafficLog(*cfg)
+	//app.configureTrafficLog(*cfg)
 }
 
 func (app *App) onProxiesUpdate(proxies []balancer.Dialer) {
-	app.trafficLogLock.Lock()
+	//app.trafficLogLock.Lock()
 	app.proxiesLock.Lock()
 	app.proxies = proxies
 	if app.trafficLog != nil {
@@ -444,14 +444,17 @@ func (app *App) onProxiesUpdate(proxies []balancer.Dialer) {
 		for _, p := range proxies {
 			proxyAddresses = append(proxyAddresses, p.Addr())
 		}
-		if err := app.trafficLog.UpdateAddresses(proxyAddresses); err != nil {
-			log.Errorf("failed to update traffic log addresses: %v", err)
-		}
+		/*
+			if err := app.trafficLog.UpdateAddresses(proxyAddresses); err != nil {
+				log.Errorf("failed to update traffic log addresses: %v", err)
+			}
+		*/
 	}
 	app.proxiesLock.Unlock()
-	app.trafficLogLock.Unlock()
+	//app.trafficLogLock.Unlock()
 }
 
+/*
 func (app *App) configureTrafficLog(cfg config.Global) {
 	app.trafficLogLock.Lock()
 	app.proxiesLock.RLock()
@@ -522,6 +525,7 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 		app.trafficLog = nil
 	}
 }
+*/
 
 // showExistingUi triggers an existing Lantern running on the same system to
 // open a browser to the Lantern start page.
