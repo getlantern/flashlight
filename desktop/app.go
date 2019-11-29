@@ -439,17 +439,17 @@ func (app *App) onProxiesUpdate(proxies []balancer.Dialer) {
 	//app.trafficLogLock.Lock()
 	app.proxiesLock.Lock()
 	app.proxies = proxies
-	if app.trafficLog != nil {
-		proxyAddresses := []string{}
-		for _, p := range proxies {
-			proxyAddresses = append(proxyAddresses, p.Addr())
-		}
-		/*
+	/*
+		if app.trafficLog != nil {
+			proxyAddresses := []string{}
+			for _, p := range proxies {
+				proxyAddresses = append(proxyAddresses, p.Addr())
+			}
 			if err := app.trafficLog.UpdateAddresses(proxyAddresses); err != nil {
 				log.Errorf("failed to update traffic log addresses: %v", err)
 			}
-		*/
-	}
+		}
+	*/
 	app.proxiesLock.Unlock()
 	//app.trafficLogLock.Unlock()
 }
