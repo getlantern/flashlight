@@ -82,8 +82,8 @@ type App struct {
 	// proxies are tracked by the application solely for data collection purposes. This value should
 	// not be changed, except by App.onProxiesUpdate. State-changing methods on the dialers should
 	// not be called. In short, this slice and its elements should be treated as read-only.
-	proxies     []balancer.Dialer
-	proxiesLock sync.RWMutex
+	//proxies     []balancer.Dialer
+	//proxiesLock sync.RWMutex
 }
 
 // Init initializes the App's state
@@ -436,10 +436,10 @@ func (app *App) onConfigUpdate(cfg *config.Global) {
 }
 
 func (app *App) onProxiesUpdate(proxies []balancer.Dialer) {
-	//app.trafficLogLock.Lock()
-	app.proxiesLock.Lock()
-	app.proxies = proxies
 	/*
+		app.trafficLogLock.Lock()
+		app.proxiesLock.Lock()
+		app.proxies = proxies
 		if app.trafficLog != nil {
 			proxyAddresses := []string{}
 			for _, p := range proxies {
@@ -449,9 +449,9 @@ func (app *App) onProxiesUpdate(proxies []balancer.Dialer) {
 				log.Errorf("failed to update traffic log addresses: %v", err)
 			}
 		}
+		app.proxiesLock.Unlock()
+		app.trafficLogLock.Unlock()
 	*/
-	app.proxiesLock.Unlock()
-	//app.trafficLogLock.Unlock()
 }
 
 /*
