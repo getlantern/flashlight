@@ -47,17 +47,19 @@ func (app *App) serveEmailProxy(channel ws.UIChannel) error {
 
 func (app *App) handleMandrillMessage(service *ws.Service, data *mandrillMessage) {
 	fillMandrillDefaults(data)
-	if data.RunDiagnostics {
-		app.trafficLogLock.Lock()
-		app.proxiesLock.RLock()
-		var errs []error
-		data.DiagnosticsYAML, data.ProxyCapture, errs = collectDiagnostics(app.proxies, app.trafficLog)
-		for _, err := range errs {
-			log.Errorf("Error running diagnostics: %v", err)
+	/*
+		if data.RunDiagnostics {
+			app.trafficLogLock.Lock()
+			app.proxiesLock.RLock()
+			var errs []error
+			data.DiagnosticsYAML, data.ProxyCapture, errs = collectDiagnostics(app.proxies, app.trafficLog)
+			for _, err := range errs {
+				log.Errorf("Error running diagnostics: %v", err)
+			}
+			app.proxiesLock.RUnlock()
+			app.trafficLogLock.Unlock()
 		}
-		app.proxiesLock.RUnlock()
-		app.trafficLogLock.Unlock()
-	}
+	*/
 	if err := email.Send(&data.Message); err != nil {
 		service.Out <- err.Error()
 	} else {
