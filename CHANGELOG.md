@@ -1,5 +1,20 @@
 # Change Log
 
+## [5.7.0](https://github.com/getlantern/flashlight/tree/5.7.0) (2019-12-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.6.4...5.7.0)
+
+**Merged pull requests:**
+
+- Strip packet capture completely [\#713](https://github.com/getlantern/flashlight/pull/713) ([myleshorton](https://github.com/myleshorton))
+- Disable traffic log to compile on linux [\#712](https://github.com/getlantern/flashlight/pull/712) ([myleshorton](https://github.com/myleshorton))
+- Using optimized mainloop for windows app [\#711](https://github.com/getlantern/flashlight/pull/711) ([oxtoacart](https://github.com/oxtoacart))
+- Added country to issue reports [\#709](https://github.com/getlantern/flashlight/pull/709) ([oxtoacart](https://github.com/oxtoacart))
+- Allow forcing config country on Android [\#708](https://github.com/getlantern/flashlight/pull/708) ([oxtoacart](https://github.com/oxtoacart))
+- Support borda reporting on iOS [\#707](https://github.com/getlantern/flashlight/pull/707) ([oxtoacart](https://github.com/oxtoacart))
+- close hasSucceedingDialer when closing balancer [\#706](https://github.com/getlantern/flashlight/pull/706) ([joesis](https://github.com/joesis))
+- Client-side packet capture [\#682](https://github.com/getlantern/flashlight/pull/682) ([hwh33](https://github.com/hwh33))
+- Added standalone flag [\#679](https://github.com/getlantern/flashlight/pull/679) ([oxtoacart](https://github.com/oxtoacart))
+
 ## [5.6.4](https://github.com/getlantern/flashlight/tree/5.6.4) (2019-10-29)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.6.3...5.6.4)
 
@@ -61,7 +76,7 @@
 - Remove embedded proxies, update global, tweak script [\#676](https://github.com/getlantern/flashlight/pull/676) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.5.7](https://github.com/getlantern/flashlight/tree/5.5.7) (2019-09-19)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.6...5.5.7)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.4...5.5.7)
 
 **Merged pull requests:**
 
@@ -75,14 +90,14 @@
 - Don't use staging config server [\#663](https://github.com/getlantern/flashlight/pull/663) ([oxtoacart](https://github.com/oxtoacart))
 - Support Report Issue Screenshot Upload [\#650](https://github.com/getlantern/flashlight/pull/650) ([bcmertz](https://github.com/bcmertz))
 
-## [5.5.6](https://github.com/getlantern/flashlight/tree/5.5.6) (2019-08-23)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.5...5.5.6)
+## [5.5.4](https://github.com/getlantern/flashlight/tree/5.5.4) (2019-08-23)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.5...5.5.4)
 
 ## [5.5.5](https://github.com/getlantern/flashlight/tree/5.5.5) (2019-08-23)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.4...5.5.5)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.6...5.5.5)
 
-## [5.5.4](https://github.com/getlantern/flashlight/tree/5.5.4) (2019-08-23)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.3...5.5.4)
+## [5.5.6](https://github.com/getlantern/flashlight/tree/5.5.6) (2019-08-23)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.3...5.5.6)
 
 **Merged pull requests:**
 
@@ -210,48 +225,26 @@
 - Avoid potential data loss caused by use of bufio.Reader to read CONNECT response [\#610](https://github.com/getlantern/flashlight/pull/610) ([joesis](https://github.com/joesis))
 
 ## [5.3.8](https://github.com/getlantern/flashlight/tree/5.3.8) (2019-04-24)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.7...5.3.8)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.6...5.3.8)
 
 **Merged pull requests:**
 
 - Various changes for more prompt connection status [\#608](https://github.com/getlantern/flashlight/pull/608) ([joesis](https://github.com/joesis))
-- Resetting whole balancer when connections get protected [\#605](https://github.com/getlantern/flashlight/pull/605) ([oxtoacart](https://github.com/oxtoacart))
-- Add beam to track requests end to end [\#598](https://github.com/getlantern/flashlight/pull/598) ([joesis](https://github.com/joesis))
-
-## [5.3.7](https://github.com/getlantern/flashlight/tree/5.3.7) (2019-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.6...5.3.7)
 
 ## [5.3.6](https://github.com/getlantern/flashlight/tree/5.3.6) (2019-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.5...5.3.6)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.7...5.3.6)
 
-**Merged pull requests:**
-
-- Set X-Lantern-Platform as ios for lantern-ios [\#607](https://github.com/getlantern/flashlight/pull/607) ([joesis](https://github.com/joesis))
-- don't panic if checking shortcut list times out [\#603](https://github.com/getlantern/flashlight/pull/603) ([joesis](https://github.com/joesis))
-- Adds site UAE user suggested and cleans up genconfig [\#599](https://github.com/getlantern/flashlight/pull/599) ([myleshorton](https://github.com/myleshorton))
+## [5.3.7](https://github.com/getlantern/flashlight/tree/5.3.7) (2019-04-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.5...5.3.7)
 
 ## [5.3.5](https://github.com/getlantern/flashlight/tree/5.3.5) (2019-04-12)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.4...5.3.5)
 
-**Merged pull requests:**
-
-- new UI for 5.3.5 [\#606](https://github.com/getlantern/flashlight/pull/606) ([myleshorton](https://github.com/myleshorton))
-- Get rid of ad blocking altogether [\#604](https://github.com/getlantern/flashlight/pull/604) ([joesis](https://github.com/joesis))
-
 ## [5.3.4](https://github.com/getlantern/flashlight/tree/5.3.4) (2019-04-02)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.3...5.3.4)
 
-**Merged pull requests:**
-
-- Flags crash [\#602](https://github.com/getlantern/flashlight/pull/602) ([myleshorton](https://github.com/myleshorton))
-
 ## [5.3.3](https://github.com/getlantern/flashlight/tree/5.3.3) (2019-04-01)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.2...5.3.3)
-
-**Merged pull requests:**
-
-- fix the call to Timer.Reset [\#601](https://github.com/getlantern/flashlight/pull/601) ([joesis](https://github.com/joesis))
-- Used uuid that ignores touchbar address [\#600](https://github.com/getlantern/flashlight/pull/600) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.3.2](https://github.com/getlantern/flashlight/tree/5.3.2) (2019-03-12)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.1...5.3.2)
@@ -374,13 +367,13 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.14...4.6.15)
 
 ## [4.6.14](https://github.com/getlantern/flashlight/tree/4.6.14) (2018-05-06)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.14)
-
-## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.14)
 
 ## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.11)
+
+## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.12)
 
 ## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.13)
@@ -389,25 +382,25 @@
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.9...4.6.10)
 
 ## [4.6.9](https://github.com/getlantern/flashlight/tree/4.6.9) (2018-04-26)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.8...4.6.9)
-
-## [4.6.8](https://github.com/getlantern/flashlight/tree/4.6.8) (2018-04-26)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.7...4.6.8)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.7...4.6.9)
 
 ## [4.6.7](https://github.com/getlantern/flashlight/tree/4.6.7) (2018-04-26)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.6...4.6.7)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.8...4.6.7)
+
+## [4.6.8](https://github.com/getlantern/flashlight/tree/4.6.8) (2018-04-26)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.6...4.6.8)
 
 ## [4.6.6](https://github.com/getlantern/flashlight/tree/4.6.6) (2018-04-23)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.4...4.6.6)
 
 ## [4.6.4](https://github.com/getlantern/flashlight/tree/4.6.4) (2018-04-20)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.4)
-
-## [4.6.2](https://github.com/getlantern/flashlight/tree/4.6.2) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.2)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.4)
 
 ## [4.6.1](https://github.com/getlantern/flashlight/tree/4.6.1) (2018-04-18)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.1)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.1)
+
+## [4.6.2](https://github.com/getlantern/flashlight/tree/4.6.2) (2018-04-18)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.2)
 
 ## [4.6.3](https://github.com/getlantern/flashlight/tree/4.6.3) (2018-04-18)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.3)
