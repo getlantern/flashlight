@@ -28,6 +28,7 @@ import (
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/stats"
+	"github.com/getlantern/flashlight/vpn"
 )
 
 var (
@@ -153,6 +154,14 @@ func Run(httpProxyAddr string,
 					log.Errorf("Unable to start SOCKS5 proxy: %v", err)
 				}
 			}()
+
+			log.Debug("Enabling VPN mode")
+			closeVPN, vpnErr := vpn.Enable(socksProxyAddr, "192.168.1.1", "tun0", "10.0.0.2", "255.255.255.0")
+			if vpnErr != nil {
+				log.Error(vpnErr)
+			} else {
+				defer closeVPN()
+			}
 		}
 
 		log.Debug("Starting client HTTP proxy")
