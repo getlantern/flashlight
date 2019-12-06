@@ -41,7 +41,6 @@ require (
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
 	github.com/getlantern/go-update v0.0.0-20190510022740-79c495ab728c // indirect
 	github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7
-	github.com/getlantern/gotun v0.0.0-20190809092752-6d35bb1397ee
 	github.com/getlantern/gowin v0.0.0-20160824205538-88fa116ddffc // indirect
 	github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55
 	github.com/getlantern/http-proxy v0.0.3-0.20190809090746-b2f0d5c04754 // indirect
