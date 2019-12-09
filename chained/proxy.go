@@ -608,7 +608,6 @@ func wssHTTPRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijac
 
 func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
 
-	// Verify the SNI name if given, otherwise verify the hostname given and do not use SNI.
 	var err error
 	serverName := s.TLSServerNameIndicator
 	sendServerName := true
@@ -621,6 +620,9 @@ func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHija
 	}
 	helloID := s.clientHelloID()
 	pinnedCert := s.ptSettingBool("pin_certificate")
+
+	// if set, force validation of a name other than the SNI name
+	forceValidateName := s.ptSetting("force_validate_name")
 
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
@@ -654,11 +656,12 @@ func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHija
 		}
 
 		td := &tlsdialer.Dialer{
-			DoDial:         netx.DialTimeout,
-			SendServerName: sendServerName,
-			Config:         tlsConf,
-			ClientHelloID:  helloID,
-			Timeout:        chainedDialTimeout,
+			DoDial:            netx.DialTimeout,
+			SendServerName:    sendServerName,
+			ForceValidateName: forceValidateName,
+			Config:            tlsConf,
+			ClientHelloID:     helloID,
+			Timeout:           chainedDialTimeout,
 		}
 
 		return td.Dial(network, addr)
