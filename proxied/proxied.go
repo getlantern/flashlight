@@ -25,6 +25,7 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
+	"github.com/getlantern/netx"
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
@@ -487,10 +488,9 @@ func ChainedNonPersistent(rootCA string) (http.RoundTripper, error) {
 // keepalive connections across requests.
 func chained(rootCA string, persistent bool) (http.RoundTripper, error) {
 	tr := &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout:   60 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
+		Dial: func(network, addr string) (net.Conn, error) {
+			return netx.DialTimeout(network, addr, 60*time.Second)
+		},
 		TLSHandshakeTimeout: 10 * time.Second,
 
 		// This method is typically used for creating a one-off HTTP client

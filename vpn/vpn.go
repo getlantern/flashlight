@@ -2,10 +2,10 @@ package vpn
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net"
 	"os/exec"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -16,6 +16,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/ipproxy"
 	"github.com/getlantern/netx"
+	"github.com/miekg/dns"
 )
 
 var (
@@ -89,40 +90,103 @@ func Enable(socksAddr, internetGateway, tunDeviceName, tunAddr, tunMask string) 
 
 func (v *vpn) configureNetx() {
 	netx.OverrideDial(func(ctx context.Context, network string, addr string) (net.Conn, error) {
-		host, port, splitErr := net.SplitHostPort(addr)
-		if splitErr != nil {
-			return nil, log.Errorf("unable to determine host to protect: %v", splitErr)
+		log.Debugf("dialing %v %v", network, addr)
+		tcpAddr, resolveErr := netx.Resolve(network, addr)
+		if resolveErr != nil {
+			return nil, log.Errorf("unable to resolve IPs for %v in order to protect connection: %v", addr, resolveErr)
 		}
-		ips, lookupErr := net.LookupIP(host)
-		if lookupErr != nil {
-			return nil, log.Errorf("unable to lookup IPs for %v in order to protect connection: %v", host, lookupErr)
-		}
-		var ip net.IP
-		foundIP := false
-		for _, _ip := range ips {
-			// only support IPv4 at the moment
-			if _ip.To4() != nil {
-				ip = _ip
-				foundIP = true
-				break
-			}
-		}
-		if !foundIP {
-			return nil, log.Errorf("didn't resolve any IPv4 IPs for %v, can't protect outbound connection", host)
-		}
-		if protectErr := v.protect(ip); protectErr != nil {
+		if protectErr := v.protect(tcpAddr.IP); protectErr != nil {
 			return nil, log.Error(protectErr)
 		}
-		return v.dialer.DialContext(ctx, network, fmt.Sprintf("%v:%v", ip, port))
+		return v.dialer.DialContext(ctx, network, tcpAddr.String())
 	})
 
 	netx.OverrideDialUDP(func(network string, laddr, raddr *net.UDPAddr) (*net.UDPConn, error) {
+		log.Debugf("dialing %v %v", network, raddr)
 		if protectErr := v.protect(raddr.IP); protectErr != nil {
 			return nil, protectErr
 		}
 		return net.DialUDP(network, laddr, raddr)
 	})
 
+	netx.OverrideListenUDP(func(network string, laddr *net.UDPAddr) (*net.UDPConn, error) {
+		log.Debugf("listening %v %v", network, laddr)
+		return net.ListenUDP(network, laddr)
+	})
+
+	netx.OverrideResolve(func(network, addr string) (*net.TCPAddr, error) {
+		log.Debugf("resolving %v %v", network, addr)
+		host, _port, err := net.SplitHostPort(addr)
+		if err != nil {
+			return nil, err
+		}
+		port, err := strconv.Atoi(_port)
+		if err != nil {
+			return nil, err
+		}
+		ip := net.ParseIP(host)
+		if ip != nil {
+			return &net.TCPAddr{
+				IP:   ip,
+				Port: port,
+			}, nil
+		}
+
+		q := &dns.Msg{}
+		q.SetQuestion(host+".", dns.TypeA)
+
+		a, err := dns.Exchange(q, "8.8.8.8:53")
+		if err != nil {
+			return nil, err
+		}
+		for _, _a := range a.Answer {
+			a, ok := _a.(*dns.A)
+			if ok && a.A.To4() != nil {
+				return &net.TCPAddr{
+					IP:   a.A,
+					Port: port,
+				}, nil
+			}
+		}
+		return nil, errors.New("Unable to resolve host %v", host)
+	})
+
+	netx.OverrideResolveUDP(func(network, addr string) (*net.UDPAddr, error) {
+		log.Debugf("resolving %v %v", network, addr)
+		host, _port, err := net.SplitHostPort(addr)
+		if err != nil {
+			return nil, err
+		}
+		port, err := strconv.Atoi(_port)
+		if err != nil {
+			return nil, err
+		}
+		ip := net.ParseIP(host)
+		if ip != nil {
+			return &net.UDPAddr{
+				IP:   ip,
+				Port: port,
+			}, nil
+		}
+
+		q := &dns.Msg{}
+		q.SetQuestion(host+".", dns.TypeA)
+
+		a, err := dns.Exchange(q, "8.8.8.8:53")
+		if err != nil {
+			return nil, err
+		}
+		for _, _a := range a.Answer {
+			a, ok := _a.(*dns.A)
+			if ok && a.A.To4() != nil {
+				return &net.UDPAddr{
+					IP:   a.A,
+					Port: port,
+				}, nil
+			}
+		}
+		return nil, errors.New("Unable to resolve host %v", host)
+	})
 }
 
 func (v *vpn) protect(ip net.IP) error {

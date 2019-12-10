@@ -26,8 +26,7 @@ require (
 	github.com/getlantern/cmux v0.0.0-20190809092548-4b7adf243efe
 	github.com/getlantern/common v0.0.0-20191017131928-864ae49aeb6a
 	github.com/getlantern/detour v0.0.0-20191019154911-d59524282429
-	github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041 // indirect
-	github.com/getlantern/dnsgrab v0.0.0-20171025121014-227f729dcb41
+	github.com/getlantern/dnsgrab v0.0.0-20191210135853-75e1af428d50
 	github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4
 	github.com/getlantern/enhttp v0.0.0-20190401024120-a974fa851e3c
 	github.com/getlantern/enproxy v0.0.0-20180913191734-002212d417a4 // indirect
@@ -48,7 +47,7 @@ require (
 	github.com/getlantern/httpseverywhere v0.0.0-20180326165025-9bdb93e40695
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
 	github.com/getlantern/idletiming v0.0.0-20190529182719-d2fbc83372a5
-	github.com/getlantern/ipproxy v0.0.0-20191206174101-1a7e82796c27
+	github.com/getlantern/ipproxy v0.0.0-20191209204739-b3c5a6ac3703
 	github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42
 	github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644
 	github.com/getlantern/kcp-go v0.0.0-20171025115649-19559e0e938c // indirect
@@ -105,7 +104,7 @@ require (
 	github.com/lucas-clemente/quic-go v0.7.1-0.20190207125157-7dc4be2ce994 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
 	github.com/marten-seemann/qtls v0.0.0-20190207043627-591c71538704 // indirect
-	github.com/miekg/dns v0.0.0-20180406150955-01d59357d468 // indirect
+	github.com/miekg/dns v0.0.0-20180406150955-01d59357d468
 	github.com/mikioh/tcp v0.0.0-20180707144002-02a37043a4f7 // indirect
 	github.com/mikioh/tcpinfo v0.0.0-20180831101334-131b59fef27f // indirect
 	github.com/mikioh/tcpopt v0.0.0-20180707144150-7178f18b4ea8 // indirect

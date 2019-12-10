@@ -325,6 +325,7 @@ func run(configDir, locale string,
 	flashlight.Run(httpProxyAddr, // listen for HTTP on provided address
 		"127.0.0.1:0",                // listen for SOCKS on random address
 		configDir,                    // place to store lantern configuration
+		false,                        // don't enable vpn mode for Android (VPN is handled in Java layer)
 		func() bool { return false }, // always connected
 		func() bool { return !session.ProxyAll() }, // use shortcut
 		func() bool { return false },               // not use detour
