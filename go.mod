@@ -47,7 +47,7 @@ require (
 	github.com/getlantern/httpseverywhere v0.0.0-20180326165025-9bdb93e40695
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
 	github.com/getlantern/idletiming v0.0.0-20190529182719-d2fbc83372a5
-	github.com/getlantern/ipproxy v0.0.0-20191209204739-b3c5a6ac3703
+	github.com/getlantern/ipproxy v0.0.0-20191210203719-621a0bb68926
 	github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42
 	github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644
 	github.com/getlantern/kcp-go v0.0.0-20171025115649-19559e0e938c // indirect
@@ -136,3 +136,5 @@ replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3
 replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110319-2566ecd5d999
 
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358
+
+replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20191210203454-f54213f594e9

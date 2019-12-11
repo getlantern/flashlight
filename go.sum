@@ -125,10 +125,6 @@ github.com/getlantern/detour v0.0.0-20191019154911-d59524282429 h1:+eYEQq8RT/PSx
 github.com/getlantern/detour v0.0.0-20191019154911-d59524282429/go.mod h1:5iIcBTk/mor1hyVGucgUKLnH8ucQ0Gk+gmHog7g7NIw=
 github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041 h1:0+6PMeuySx1d4G6JZcThwbqgdXYRzlvKIUJWqndZ4Tw=
 github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041/go.mod h1:CbTkjHHMyw9CPQKfTyYx2XldN/XJSmqTwHl3HLwvo2Y=
-github.com/getlantern/dnsgrab v0.0.0-20171025121014-227f729dcb41 h1:6YbIHCO4aVCRTSQWceiv0JssiXmXDKOlIp3OIc0sShg=
-github.com/getlantern/dnsgrab v0.0.0-20171025121014-227f729dcb41/go.mod h1:38jotn+QngLPHJPd+vPa2GzgpluIbVyW/iO+C9t+6Kg=
-github.com/getlantern/dnsgrab v0.0.0-20191209223305-a3028445ac6a h1:jVKTIB3aPPLR6k16cD2+BypMGr+HaSCtB/Ww5g0Kpjw=
-github.com/getlantern/dnsgrab v0.0.0-20191209223305-a3028445ac6a/go.mod h1:38jotn+QngLPHJPd+vPa2GzgpluIbVyW/iO+C9t+6Kg=
 github.com/getlantern/dnsgrab v0.0.0-20191210135853-75e1af428d50 h1:5B8w/jbWJUNg+0nRnCxAbGNWTYNInpRRiYC9cU7XDig=
 github.com/getlantern/dnsgrab v0.0.0-20191210135853-75e1af428d50/go.mod h1:+WG9Z4QpyKCuHU+4ztgpyCKBmCJUvkkJqAm/S+pbhgw=
 github.com/getlantern/elevate v0.0.0-20180207094634-c2e2e4901072 h1:Sxd/u3rnHYAqXzpRXjOA7DPyRKYzcivMRBKtOhsRwW8=
@@ -195,10 +191,8 @@ github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c/go.mod h1:6yS3MFZm
 github.com/getlantern/idletiming v0.0.0-20170131220046-7a71d2e71cf2/go.mod h1:MGP8kEgZGgAhvHISt0hJGQgxg/VAqGdw3+kSZBnfC/4=
 github.com/getlantern/idletiming v0.0.0-20190529182719-d2fbc83372a5 h1:laM1s/bxUH8xbbC9TBGWsOc7A0KCAPZMa4pdwO5e6Vw=
 github.com/getlantern/idletiming v0.0.0-20190529182719-d2fbc83372a5/go.mod h1:MGP8kEgZGgAhvHISt0hJGQgxg/VAqGdw3+kSZBnfC/4=
-github.com/getlantern/ipproxy v0.0.0-20191206174101-1a7e82796c27 h1:LszFWYTg2qSd83sPxF86wCJ1uNAQQ3y5W6pEQuAjANQ=
-github.com/getlantern/ipproxy v0.0.0-20191206174101-1a7e82796c27/go.mod h1:fRwCqMcNpmfoOsV4L8Ymx5zrOXlCYIIt968jC01WXI4=
-github.com/getlantern/ipproxy v0.0.0-20191209204739-b3c5a6ac3703 h1:AliY/5N0UzCvjMwcwr5s/BFdNhP8ZcispJoyv0ygMME=
-github.com/getlantern/ipproxy v0.0.0-20191209204739-b3c5a6ac3703/go.mod h1:fRwCqMcNpmfoOsV4L8Ymx5zrOXlCYIIt968jC01WXI4=
+github.com/getlantern/ipproxy v0.0.0-20191210203719-621a0bb68926 h1:s/Irb6dinD6lD9+YwEO5MJxHth9uBalUk3h4QePyUFk=
+github.com/getlantern/ipproxy v0.0.0-20191210203719-621a0bb68926/go.mod h1:d6QW715Oc8n+tMX5vgHuSQ0Yrqu/4uRBDzq+KO/UOSQ=
 github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42 h1:uSvHE7r08LiSG9s7SnLhS5soMzzKSCBtG1cSrGQ/rP4=
 github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42/go.mod h1:gA+8p3g1vV3VKYfGdyDRebIYQdgLbkyCs6MXg7DLv5Y=
 github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644 h1:qEdoFWgwj/IjbL2mfdjUsqHIy0p6B0eQ2znpQnpder0=
@@ -233,6 +227,8 @@ github.com/getlantern/msgpack v3.1.4+incompatible h1:/XyJ9HTt8W31F6DjgOv+Nk+qKeK
 github.com/getlantern/msgpack v3.1.4+incompatible/go.mod h1:mUNR5C/x5E/8Jb8gU/lQd/ytwpKDhUvmGUj0STqInhc=
 github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0 h1:1VNkP55LM/W2IwWN+qi+5X3gZcEQHfj8X9E+FNxVgM4=
 github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0/go.mod h1:u537FS7ld4Whf7h7/0ql/myAudWWBNgeRhgE9XXH4Pk=
+github.com/getlantern/netstack v0.0.0-20191210203454-f54213f594e9 h1:XHpW+qW8T4cR7sTVT+HjjaRSCJXSvgv2dPoj47q6IrA=
+github.com/getlantern/netstack v0.0.0-20191210203454-f54213f594e9/go.mod h1:boCZS+mc2Ckrx/BUsPJx3yaoyidXIn/xzXwV9CQtHw4=
 github.com/getlantern/netx v0.0.0-20171024203529-06a8a15aede9/go.mod h1:wKdY0ikOgzrWSeB9UyBVKPRhjXQ+vTb+BPeJuypUuNE=
 github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd h1:mn98vs69Kqw56iKhR82mjk16Q1q5aDFFW0E89/QbXkQ=
 github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd/go.mod h1:wKdY0ikOgzrWSeB9UyBVKPRhjXQ+vTb+BPeJuypUuNE=
@@ -370,8 +366,6 @@ github.com/google/go-cmp v0.3.1/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMyw
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/google/gopacket v1.1.17 h1:rMrlX2ZY2UbvT+sdz3+6J+pp2z+msCq9MxTU6ymxbBY=
 github.com/google/gopacket v1.1.17/go.mod h1:UdDNZ1OO62aGYVnPhxT1U6aI7ukYtA/kB8vaU0diBUM=
-github.com/google/netstack v0.0.0-20191116005144-95bf25ab4723 h1:z92yYpQg57ql9n96PBLFhT+N5X44uQ2f3+CNp9Osmu8=
-github.com/google/netstack v0.0.0-20191116005144-95bf25ab4723/go.mod h1:r/rILWg3r1Qy9G1IFMhsqWLq2GjwuYoTuPgG7ckMAjk=
 github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e/go.mod h1:wJfORRmW1u3UXTncJ5qlYoELFm8eSnnEO6hX4iZ3EWY=
 github.com/gorilla/mux v1.7.1/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2zaAs=
 github.com/gorilla/securecookie v1.1.1/go.mod h1:ra0sb63/xPlUeL+yeDciTfxMRAA+MP+HVt/4epWDjd4=

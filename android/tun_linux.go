@@ -7,6 +7,7 @@ import (
 	"os"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/ipproxy"
@@ -40,6 +41,8 @@ func Tun2Socks(fd int, socksAddr, dnsAddr, dnsGrabAddr string, mtu int) error {
 	}
 
 	ipp, err := ipproxy.New(dev, &ipproxy.Opts{
+		IdleTimeout:         10 * time.Second,
+		StatsInterval:       15 * time.Second,
 		MTU:                 mtu,
 		OutboundBufferDepth: 10000,
 		TCPConnectBacklog:   100,

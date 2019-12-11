@@ -50,8 +50,8 @@ func Enable(socksAddr, internetGateway, tunDeviceName, tunAddr, tunMask string) 
 	}
 
 	proxy, err := ipproxy.New(dev, &ipproxy.Opts{
-		IdleTimeout:   70 * time.Second,
-		StatsInterval: 30 * time.Second,
+		IdleTimeout:   10 * time.Second,
+		StatsInterval: 15 * time.Second,
 		DialTCP: func(ctx context.Context, network, addr string) (net.Conn, error) {
 			log.Debugf("Dialing %v %v with SOCKS proxy at %v", network, addr, socksAddr)
 			return socksDialer.Dial(network, addr)
