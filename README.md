@@ -10,7 +10,7 @@
   `git config --global url."git@github.com:".insteadOf "https://github.com/"`
 
 This repo contains the core Lantern logic as well as the Lantern desktop
-program. To build using your gopath: 
+program. To build using your gopath:
 
 `make lantern`
 ### Dependency Management
@@ -18,7 +18,7 @@ Dependencies are managed using Go modules. If using a Go version prior to 1.13, 
 
 ### Building
 This repo contains the core Lantern logic as well as the Lantern desktop
-program. To build using your gopath: 
+program. To build using your gopath:
 
 `GO111MODULE=on make lantern`
 
@@ -53,8 +53,8 @@ proxies by IP, for example `throttle 1 104.131.91.213 1Mbit/s 0.05` throttles th
 proxy `104.131.91.213` to 1Mbit/s with a 5% packet loss rate.
 
 ### VPN Mode
-Flashlight has experimental support for running as a whole-device VPN. So far this has
-only been tested in Linux (Ubuntu 18.04 specifically).
+Flashlight has experimental support for running as a whole-device VPN. This is
+only supported on Linux and has only been tested on Ubuntu 18.04 specifically.
 
 1. Run `make lantern && sudo ./lantern -headless -stealth -vpn 2>&1`. Using `stealthmode` disables split tunneling, which seems to be necessary right now.
 2. Right now, the VPN doesn't play nicely with IPv6, so temporarily disable it with ```
