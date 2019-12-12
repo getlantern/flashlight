@@ -330,6 +330,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 	if l, err = net.Listen("tcp", requestedAddr); err != nil {
 		return fmt.Errorf("Unable to listen: %q", err)
 	}
+	l = &optimisticListener{l}
 	listenAddr := l.Addr().String()
 	socksAddr.Set(listenAddr)
 
