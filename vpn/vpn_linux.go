@@ -203,8 +203,9 @@ func (v *vpn) protect(ip net.IP) error {
 			if !strings.Contains(string(out), "File exists") {
 				return errors.New("unable to protect route to %v: %v", ipString, string(out))
 			}
+		} else {
+			v.protectedIPs[ipString] = true
 		}
-		v.protectedIPs[ipString] = true
 	}
 
 	return nil
