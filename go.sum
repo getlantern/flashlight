@@ -134,6 +134,12 @@ github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041 h1:0+6PMeuySx1d4G6J
 github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041/go.mod h1:CbTkjHHMyw9CPQKfTyYx2XldN/XJSmqTwHl3HLwvo2Y=
 github.com/getlantern/dnsgrab v0.0.0-20191210135853-75e1af428d50 h1:5B8w/jbWJUNg+0nRnCxAbGNWTYNInpRRiYC9cU7XDig=
 github.com/getlantern/dnsgrab v0.0.0-20191210135853-75e1af428d50/go.mod h1:+WG9Z4QpyKCuHU+4ztgpyCKBmCJUvkkJqAm/S+pbhgw=
+github.com/getlantern/dnsgrab v0.0.0-20191213223123-fe886c64cf7b h1:ggSEmt/HbpdvFVVuRCE6V1A3P9Q4ySfwPIxaXk8vt40=
+github.com/getlantern/dnsgrab v0.0.0-20191213223123-fe886c64cf7b/go.mod h1:+WG9Z4QpyKCuHU+4ztgpyCKBmCJUvkkJqAm/S+pbhgw=
+github.com/getlantern/dnsgrab v0.0.0-20191214033225-d46ba0194d65 h1:x2urnrEmW5a/utNUtFZZQwUxcnDfTehaj8zjaDqxZO8=
+github.com/getlantern/dnsgrab v0.0.0-20191214033225-d46ba0194d65/go.mod h1:+WG9Z4QpyKCuHU+4ztgpyCKBmCJUvkkJqAm/S+pbhgw=
+github.com/getlantern/dnsgrab v0.0.0-20191214040040-999d4d691717 h1:D6HJw4ZDmppHgaA2S2vrqDwHOQmjqhZW32m3K3RgU8Y=
+github.com/getlantern/dnsgrab v0.0.0-20191214040040-999d4d691717/go.mod h1:cUbRGdVp3qmD7cGWX6hHnqI8msuDYIF2rf9UgJ87nw8=
 github.com/getlantern/elevate v0.0.0-20180207094634-c2e2e4901072 h1:Sxd/u3rnHYAqXzpRXjOA7DPyRKYzcivMRBKtOhsRwW8=
 github.com/getlantern/elevate v0.0.0-20180207094634-c2e2e4901072/go.mod h1:T4VB2POK13lsPLFV98WJQrL7gAXYD9TyJxBU2P8c8p4=
 github.com/getlantern/ema v0.0.0-20170330162033-d906ee7c3465/go.mod h1:tzRwT19aDrWSr6yRDs8iOvaXXCau96EgWsgGT9wIpoQ=
