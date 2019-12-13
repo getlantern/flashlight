@@ -4,11 +4,12 @@ import (
 	"context"
 	"io"
 	"net"
+	"os"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/gotun"
 	"github.com/getlantern/ipproxy"
 	"github.com/getlantern/netx"
 	"golang.org/x/net/proxy"
@@ -27,14 +28,11 @@ var (
 // 2. All other udp packets are routed directly to their destination
 // 3. All TCP traffic is routed through the Lantern proxy at the given socksAddr.
 //
-func Tun2Socks(fd int, tunAddr, gwAddr, socksAddr, dnsAddr, dnsGrabAddr string, mtu int) error {
+func Tun2Socks(fd int, socksAddr, dnsAddr, dnsGrabAddr string, mtu int) error {
 	runtime.LockOSThread()
 
-	log.Debugf("Starting tun2socks at %v gw %v connecting to socks at %v with dns %v", tunAddr, gwAddr, socksAddr, dnsAddr)
-	dev, err := tun.WrapTunDevice(fd, tunAddr, gwAddr)
-	if err != nil {
-		return errors.New("Unable to wrap tun device: %v", err)
-	}
+	log.Debugf("Starting tun2socks connecting to socks at %v with dns %v", socksAddr, dnsAddr)
+	dev := os.NewFile(uintptr(fd), "tun")
 	defer dev.Close()
 
 	socksDialer, err := proxy.SOCKS5("tcp", socksAddr, nil, nil)
@@ -43,6 +41,8 @@ func Tun2Socks(fd int, tunAddr, gwAddr, socksAddr, dnsAddr, dnsGrabAddr string, 
 	}
 
 	ipp, err := ipproxy.New(dev, &ipproxy.Opts{
+		IdleTimeout:         10 * time.Second,
+		StatsInterval:       15 * time.Second,
 		MTU:                 mtu,
 		OutboundBufferDepth: 10000,
 		TCPConnectBacklog:   100,

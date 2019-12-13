@@ -31,6 +31,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/datacap"
+
 	//"github.com/getlantern/flashlight/diagnostics/trafficlog"
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/logging"
@@ -168,6 +169,7 @@ func (app *App) Run() {
 			listenAddr,
 			socksAddr,
 			app.Flags["configdir"].(string),
+			app.Flags["vpn"].(bool),
 			func() bool { return settings.getBool(SNDisconnected) }, // check whether we're disconnected
 			func() bool { return !settings.GetProxyAll() },          // use shortcut
 			func() bool { return !settings.GetProxyAll() },          // use detour

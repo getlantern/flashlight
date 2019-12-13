@@ -4,23 +4,20 @@ import (
 	"context"
 	"io"
 	"net"
+	"os"
 	"runtime"
 	"time"
 
 	"github.com/getlantern/errors"
-	tun "github.com/getlantern/gotun"
 	"github.com/getlantern/packetforward"
 )
 
 // Tun2PacketForward wraps the TUN device identified by fd with packet forwarding.
-func Tun2PacketForward(fd int, tunAddr, gwAddr string, mtu int) error {
+func Tun2PacketForward(fd int, mtu int) error {
 	runtime.LockOSThread()
 
-	log.Debugf("Starting tun2packetforward at %v gw %v", tunAddr, gwAddr)
-	dev, err := tun.WrapTunDevice(fd, tunAddr, gwAddr)
-	if err != nil {
-		return errors.New("Unable to wrap tun device: %v", err)
-	}
+	log.Debugf("Starting tun2packetforward")
+	dev := os.NewFile(uintptr(fd), "tun")
 	defer dev.Close()
 
 	bal := GetBalancer(30 * time.Second)

@@ -56,7 +56,7 @@ import (
 	"time"
 
 	"github.com/getlantern/golog"
-	"github.com/getlantern/gotun"
+	"github.com/getlantern/ipproxy"
 	"github.com/getlantern/uuid"
 
 	"github.com/getlantern/flashlight/ios"
@@ -146,7 +146,7 @@ func main() {
 		}
 	}()
 
-	dev, err := tun.OpenTunDevice(*tunDevice, *tunAddr, *tunGW, *tunMask, 1500)
+	dev, err := ipproxy.TUNDevice(*tunDevice, *tunAddr, *tunMask, 1500)
 	if err != nil {
 		log.Fatalf("Error opening TUN device: %v", err)
 	}
