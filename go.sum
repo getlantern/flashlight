@@ -128,8 +128,8 @@ github.com/getlantern/common v0.0.0-20191017131928-864ae49aeb6a h1:dvmzN/r32O8fl
 github.com/getlantern/common v0.0.0-20191017131928-864ae49aeb6a/go.mod h1:UTgpUrzCbisgRr4N5FkJubou6LsSpbrFjHcVM+1iF4w=
 github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 h1:NRUJuo3v3WGC/g5YiyF790gut6oQr5f3FBI88Wv0dx4=
 github.com/getlantern/context v0.0.0-20190109183933-c447772a6520/go.mod h1:L+mq6/vvYHKjCX2oez0CgEAJmbq1fbb/oNJIWQkBybY=
-github.com/getlantern/detour v0.0.0-20191019154911-d59524282429 h1:+eYEQq8RT/PSxjmN24Y0zp8Bc62kQv+Y51GKGQ+FehI=
-github.com/getlantern/detour v0.0.0-20191019154911-d59524282429/go.mod h1:5iIcBTk/mor1hyVGucgUKLnH8ucQ0Gk+gmHog7g7NIw=
+github.com/getlantern/detour v0.0.0-20191213192126-a4b3dcb2def2 h1:xUaA0/WLjFEP/4fv1TMGye+bdb3VgHMMcU25aj9Kun0=
+github.com/getlantern/detour v0.0.0-20191213192126-a4b3dcb2def2/go.mod h1:5iIcBTk/mor1hyVGucgUKLnH8ucQ0Gk+gmHog7g7NIw=
 github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041 h1:0+6PMeuySx1d4G6JZcThwbqgdXYRzlvKIUJWqndZ4Tw=
 github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041/go.mod h1:CbTkjHHMyw9CPQKfTyYx2XldN/XJSmqTwHl3HLwvo2Y=
 github.com/getlantern/dnsgrab v0.0.0-20191210135853-75e1af428d50 h1:5B8w/jbWJUNg+0nRnCxAbGNWTYNInpRRiYC9cU7XDig=
