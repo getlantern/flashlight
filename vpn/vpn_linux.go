@@ -56,13 +56,9 @@ func Enable(socksAddr, internetGateway, tunDeviceName, tunAddr, tunMask string) 
 			log.Debugf("Dialing %v %v with SOCKS proxy at %v", network, addr, socksAddr)
 			return socksDialer.Dial(network, addr)
 		},
-		DialUDP: func(ctx context.Context, network, addr string) (*net.UDPConn, error) {
+		DialUDP: func(ctx context.Context, network, addr string) (net.Conn, error) {
 			log.Debugf("Dialing %v %v directly", network, addr)
-			conn, err := netx.DialContext(ctx, network, addr)
-			if conn != nil {
-				return conn.(*net.UDPConn), err
-			}
-			return nil, err
+			return netx.DialContext(ctx, network, addr)
 		},
 	})
 	if err != nil {

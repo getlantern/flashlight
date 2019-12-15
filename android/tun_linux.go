@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/getlantern/errors"
+	"github.com/getlantern/idletiming"
 	"github.com/getlantern/ipproxy"
 	"github.com/getlantern/netx"
 	"golang.org/x/net/proxy"
@@ -41,7 +42,7 @@ func Tun2Socks(fd int, socksAddr, dnsAddr, dnsGrabAddr string, mtu int) error {
 	}
 
 	ipp, err := ipproxy.New(dev, &ipproxy.Opts{
-		IdleTimeout:         10 * time.Second,
+		IdleTimeout:         70 * time.Second,
 		StatsInterval:       15 * time.Second,
 		MTU:                 mtu,
 		OutboundBufferDepth: 10000,
@@ -49,16 +50,18 @@ func Tun2Socks(fd int, socksAddr, dnsAddr, dnsGrabAddr string, mtu int) error {
 		DialTCP: func(ctx context.Context, network, addr string) (net.Conn, error) {
 			return socksDialer.Dial(network, addr)
 		},
-		DialUDP: func(ctx context.Context, network, addr string) (*net.UDPConn, error) {
-			if addr == dnsAddr {
+		DialUDP: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			isDNS := addr == dnsAddr
+			if isDNS {
 				// reroute DNS requests to dnsgrab
 				addr = dnsGrabAddr
 			}
-			raddr, err := netx.ResolveUDPAddr(network, addr)
-			if err != nil {
-				return nil, err
+			conn, err := netx.DialContext(ctx, network, addr)
+			if isDNS && err == nil {
+				// wrap our DNS requests in a connection that closes immediately to avoid piling up file descriptors for DNS requests
+				conn = idletiming.Conn(conn, 10*time.Second, nil)
 			}
-			return netx.DialUDP(network, nil, raddr)
+			return conn, err
 		},
 	})
 	if err != nil {
