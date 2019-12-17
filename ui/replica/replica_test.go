@@ -1,4 +1,4 @@
-package ui
+package replicaUi
 
 import (
 	"net/url"

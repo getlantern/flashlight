@@ -1,4 +1,4 @@
-package ui
+package replicaUi
 
 import (
 	"bytes"
@@ -25,7 +25,7 @@ import (
 	"github.com/getlantern/replica"
 )
 
-type ReplicaHttpServer struct {
+type HttpHandler struct {
 	// Used to handle non-Replica specific routes. (Some of the hard work has been done!). This will
 	// probably go away soon, as I pick out the parts we actually need.
 	Confluence    confluence.Handler
@@ -47,7 +47,7 @@ func (me *countWriter) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
-func (me *ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (me *HttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	me.Logger.WithValues(analog.Debug).Printf("replica server request path: %q", r.URL.Path)
 	me.initMuxOnce.Do(func() {
 		me.mux.HandleFunc("/upload", me.handleUpload)
@@ -65,7 +65,7 @@ func (me *ReplicaHttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	me.mux.ServeHTTP(w, r)
 }
 
-func (me *ReplicaHttpServer) handleUpload(w http.ResponseWriter, r *http.Request) {
+func (me *HttpHandler) handleUpload(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		return
 	}
@@ -145,7 +145,7 @@ func (me *ReplicaHttpServer) handleUpload(w http.ResponseWriter, r *http.Request
 	fmt.Fprintln(w, createLink(tt.InfoHash(), s3KeyFromInfoName(info.Name), name))
 }
 
-func (me *ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Request) {
+func (me *HttpHandler) handleUploads(w http.ResponseWriter, r *http.Request) {
 	type upload struct {
 		Link                  string
 		FileName              string
@@ -182,7 +182,7 @@ func (me *ReplicaHttpServer) handleUploads(w http.ResponseWriter, r *http.Reques
 	fmt.Fprintf(w, "%s\n", b)
 }
 
-func (me *ReplicaHttpServer) handleDelete(w http.ResponseWriter, r *http.Request) {
+func (me *HttpHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	link := r.URL.Query().Get("link")
 	m, err := metainfo.ParseMagnetURI(link)
 	if err != nil {
@@ -210,7 +210,7 @@ func (me *ReplicaHttpServer) handleDelete(w http.ResponseWriter, r *http.Request
 	os.Remove(me.uploadMetainfoPath(info))
 }
 
-func (me *ReplicaHttpServer) handleView(w http.ResponseWriter, r *http.Request) {
+func (me *HttpHandler) handleView(w http.ResponseWriter, r *http.Request) {
 	link := r.URL.Query().Get("link")
 	m, err := metainfo.ParseMagnetURI(link)
 	if err != nil {
@@ -280,7 +280,7 @@ func firstNonEmptyString(ss ...string) string {
 	return ""
 }
 
-func (me *ReplicaHttpServer) uploadsDir() string {
+func (me *HttpHandler) uploadsDir() string {
 	return me.UploadsDir
 }
 
@@ -342,6 +342,6 @@ func s3KeyFromMagnet(m metainfo.Magnet) (string, error) {
 	return u.Path, nil
 }
 
-func (me *ReplicaHttpServer) uploadMetainfoPath(info *metainfo.Info) string {
+func (me *HttpHandler) uploadMetainfoPath(info *metainfo.Info) string {
 	return filepath.Join(me.uploadsDir(), info.Name+".torrent")
 }
