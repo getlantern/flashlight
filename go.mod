@@ -19,7 +19,7 @@ require (
 	github.com/getlantern/cmux v0.0.0-20190809092548-4b7adf243efe
 	github.com/getlantern/common v0.0.0-20191017131928-864ae49aeb6a
 	github.com/getlantern/detour v0.0.0-20191213192126-a4b3dcb2def2
-	github.com/getlantern/dnsgrab v0.0.0-20191214040040-999d4d691717
+	github.com/getlantern/dnsgrab v0.0.0-20191217020031-0e5f714410f9
 	github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4
 	github.com/getlantern/enhttp v0.0.0-20190401024120-a974fa851e3c
 	github.com/getlantern/enproxy v0.0.0-20180913191734-002212d417a4 // indirect
