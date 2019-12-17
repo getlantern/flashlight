@@ -134,6 +134,14 @@ github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041 h1:0+6PMeuySx1d4G6J
 github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041/go.mod h1:CbTkjHHMyw9CPQKfTyYx2XldN/XJSmqTwHl3HLwvo2Y=
 github.com/getlantern/dnsgrab v0.0.0-20191210135853-75e1af428d50 h1:5B8w/jbWJUNg+0nRnCxAbGNWTYNInpRRiYC9cU7XDig=
 github.com/getlantern/dnsgrab v0.0.0-20191210135853-75e1af428d50/go.mod h1:+WG9Z4QpyKCuHU+4ztgpyCKBmCJUvkkJqAm/S+pbhgw=
+github.com/getlantern/dnsgrab v0.0.0-20191213223123-fe886c64cf7b h1:ggSEmt/HbpdvFVVuRCE6V1A3P9Q4ySfwPIxaXk8vt40=
+github.com/getlantern/dnsgrab v0.0.0-20191213223123-fe886c64cf7b/go.mod h1:+WG9Z4QpyKCuHU+4ztgpyCKBmCJUvkkJqAm/S+pbhgw=
+github.com/getlantern/dnsgrab v0.0.0-20191214033225-d46ba0194d65 h1:x2urnrEmW5a/utNUtFZZQwUxcnDfTehaj8zjaDqxZO8=
+github.com/getlantern/dnsgrab v0.0.0-20191214033225-d46ba0194d65/go.mod h1:+WG9Z4QpyKCuHU+4ztgpyCKBmCJUvkkJqAm/S+pbhgw=
+github.com/getlantern/dnsgrab v0.0.0-20191214040040-999d4d691717 h1:D6HJw4ZDmppHgaA2S2vrqDwHOQmjqhZW32m3K3RgU8Y=
+github.com/getlantern/dnsgrab v0.0.0-20191214040040-999d4d691717/go.mod h1:cUbRGdVp3qmD7cGWX6hHnqI8msuDYIF2rf9UgJ87nw8=
+github.com/getlantern/dnsgrab v0.0.0-20191217020031-0e5f714410f9 h1:DYHsBAov+c2QKSSyS/cN7HLovfUGzAcEcU6M964b1U8=
+github.com/getlantern/dnsgrab v0.0.0-20191217020031-0e5f714410f9/go.mod h1:cUbRGdVp3qmD7cGWX6hHnqI8msuDYIF2rf9UgJ87nw8=
 github.com/getlantern/elevate v0.0.0-20180207094634-c2e2e4901072 h1:Sxd/u3rnHYAqXzpRXjOA7DPyRKYzcivMRBKtOhsRwW8=
 github.com/getlantern/elevate v0.0.0-20180207094634-c2e2e4901072/go.mod h1:T4VB2POK13lsPLFV98WJQrL7gAXYD9TyJxBU2P8c8p4=
 github.com/getlantern/ema v0.0.0-20170330162033-d906ee7c3465/go.mod h1:tzRwT19aDrWSr6yRDs8iOvaXXCau96EgWsgGT9wIpoQ=
@@ -201,6 +209,10 @@ github.com/getlantern/idletiming v0.0.0-20190529182719-d2fbc83372a5 h1:laM1s/bxU
 github.com/getlantern/idletiming v0.0.0-20190529182719-d2fbc83372a5/go.mod h1:MGP8kEgZGgAhvHISt0hJGQgxg/VAqGdw3+kSZBnfC/4=
 github.com/getlantern/ipproxy v0.0.0-20191212040324-c6ce138dbde0 h1:lLww2vKvylvfYfPKAZTth70bkHfvAtXOHJiPc9DtFtA=
 github.com/getlantern/ipproxy v0.0.0-20191212040324-c6ce138dbde0/go.mod h1:r+6WsxnlYZBFaNYk1qYMk1bPhe8KQd8FMUHPBMfh5ZE=
+github.com/getlantern/ipproxy v0.0.0-20191215175245-bde8e761a77b h1:MBJjjQlZT5mDAyNwNge+1TMNV5xxT85qaUZAyVXvlcw=
+github.com/getlantern/ipproxy v0.0.0-20191215175245-bde8e761a77b/go.mod h1:r+6WsxnlYZBFaNYk1qYMk1bPhe8KQd8FMUHPBMfh5ZE=
+github.com/getlantern/ipproxy v0.0.0-20191216171250-6f1aaa987f2f h1:aZSwnaPC547HT3QkTngevXFVxg5/FteS1AdUwmX+0mY=
+github.com/getlantern/ipproxy v0.0.0-20191216171250-6f1aaa987f2f/go.mod h1:r+6WsxnlYZBFaNYk1qYMk1bPhe8KQd8FMUHPBMfh5ZE=
 github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42 h1:uSvHE7r08LiSG9s7SnLhS5soMzzKSCBtG1cSrGQ/rP4=
 github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42/go.mod h1:gA+8p3g1vV3VKYfGdyDRebIYQdgLbkyCs6MXg7DLv5Y=
 github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644 h1:qEdoFWgwj/IjbL2mfdjUsqHIy0p6B0eQ2znpQnpder0=
