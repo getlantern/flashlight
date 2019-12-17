@@ -64,15 +64,7 @@ type Server struct {
 	onceOpenExtURL             sync.Once
 
 	translations eventual.Value
-	standalone     bool
-	accessAddr     string
-	externalURL    string
-	requestPath    string
-	localHTTPToken string
-	listener       net.Listener
-	mux            *http.ServeMux
-	onceOpenExtURL sync.Once
-	translations   eventual.Value
+	standalone   bool
 }
 
 // StartServer creates and starts a new UI server.
