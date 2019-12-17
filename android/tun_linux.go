@@ -4,11 +4,13 @@ import (
 	"context"
 	"io"
 	"net"
+	"os"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/gotun"
+	"github.com/getlantern/idletiming"
 	"github.com/getlantern/ipproxy"
 	"github.com/getlantern/netx"
 	"golang.org/x/net/proxy"
@@ -27,14 +29,11 @@ var (
 // 2. All other udp packets are routed directly to their destination
 // 3. All TCP traffic is routed through the Lantern proxy at the given socksAddr.
 //
-func Tun2Socks(fd int, tunAddr, gwAddr, socksAddr, dnsAddr, dnsGrabAddr string, mtu int) error {
+func Tun2Socks(fd int, socksAddr, dnsAddr, dnsGrabAddr string, mtu int) error {
 	runtime.LockOSThread()
 
-	log.Debugf("Starting tun2socks at %v gw %v connecting to socks at %v with dns %v", tunAddr, gwAddr, socksAddr, dnsAddr)
-	dev, err := tun.WrapTunDevice(fd, tunAddr, gwAddr)
-	if err != nil {
-		return errors.New("Unable to wrap tun device: %v", err)
-	}
+	log.Debugf("Starting tun2socks connecting to socks at %v with dns %v", socksAddr, dnsAddr)
+	dev := os.NewFile(uintptr(fd), "tun")
 	defer dev.Close()
 
 	socksDialer, err := proxy.SOCKS5("tcp", socksAddr, nil, nil)
@@ -43,22 +42,26 @@ func Tun2Socks(fd int, tunAddr, gwAddr, socksAddr, dnsAddr, dnsGrabAddr string, 
 	}
 
 	ipp, err := ipproxy.New(dev, &ipproxy.Opts{
+		IdleTimeout:         70 * time.Second,
+		StatsInterval:       15 * time.Second,
 		MTU:                 mtu,
 		OutboundBufferDepth: 10000,
 		TCPConnectBacklog:   100,
 		DialTCP: func(ctx context.Context, network, addr string) (net.Conn, error) {
 			return socksDialer.Dial(network, addr)
 		},
-		DialUDP: func(ctx context.Context, network, addr string) (*net.UDPConn, error) {
-			if addr == dnsAddr {
+		DialUDP: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			isDNS := addr == dnsAddr
+			if isDNS {
 				// reroute DNS requests to dnsgrab
 				addr = dnsGrabAddr
 			}
-			raddr, err := netx.ResolveUDPAddr(network, addr)
-			if err != nil {
-				return nil, err
+			conn, err := netx.DialContext(ctx, network, addr)
+			if isDNS && err == nil {
+				// wrap our DNS requests in a connection that closes immediately to avoid piling up file descriptors for DNS requests
+				conn = idletiming.Conn(conn, 10*time.Second, nil)
 			}
-			return netx.DialUDP(network, nil, raddr)
+			return conn, err
 		},
 	})
 	if err != nil {

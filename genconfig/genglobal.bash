@@ -7,6 +7,8 @@ function die() {
 
 curl https://globalconfig.flashlightproxy.com/global.yaml.gz | gunzip >> yaml-temp
 
+git checkout devel
+git pull
 echo 'package generated' > ../config/generated/embeddedGlobal.go && \
 echo '' >> ../config/generated/embeddedGlobal.go && \
 echo 'var GlobalConfig = []byte(`' >> ../config/generated/embeddedGlobal.go && \
@@ -15,8 +17,6 @@ echo '`)' >> ../config/generated/embeddedGlobal.go || die "Unable to generate em
 
 rm yaml-temp
 
-git checkout devel
-git pull
 cd ../config || die "Could not change directories"
 GO111MODULE=on go test -run TestGlobal || die "Global test failed"
 

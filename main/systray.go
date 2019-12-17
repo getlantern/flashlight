@@ -41,20 +41,26 @@ type systrayCallbacks interface {
 	OnStatsChange(func(stats.Stats))
 }
 
-func runOnSystrayReady(a systrayCallbacks, f func()) {
+func runOnSystrayReady(standalone bool, a systrayCallbacks, onReady func()) {
 	// Typically, systray.Quit will actually be what causes the app to exit, but
 	// in the case of an uncaught Fatal error, the app will exit before the
 	// systray and we need it to call systray.Quit().
 	a.AddExitFunc("quitting systray", systray.Quit)
 
-	systray.Run(f, func() {
+	onExit := func() {
 		if a.Exit(nil) {
 			err := a.WaitForExit()
 			if err != nil {
 				log.Errorf("Error exiting app: %v", err)
 			}
 		}
-	})
+	}
+
+	if standalone {
+		systray.RunWithAppWindow(i18n.T("TRAY_LANTERN"), 1024, 768, onReady, onExit)
+	} else {
+		systray.Run(onReady, onExit)
+	}
 }
 
 func configureSystemTray(a systrayCallbacks) error {

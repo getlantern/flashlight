@@ -16,7 +16,6 @@ import (
 	"github.com/getlantern/ops"
 	"github.com/getlantern/waitforserver"
 
-	"github.com/getlantern/flashlight"
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
@@ -176,7 +175,7 @@ func TestProxying(t *testing.T) {
 		for i := 0; i < 15; i++ {
 			missingOps = make([]string, 0)
 			opsMx.RLock()
-			for _, op := range flashlight.FullyReportedOps {
+			for _, op := range borda.FullyReportedOps {
 				if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" || op == "probe" || op == "proxy_rank" || op == "proxy_selection_stability" {
 					// ignore these, as we don't do them (reliably) during the integration test
 					continue
@@ -184,7 +183,7 @@ func TestProxying(t *testing.T) {
 				if reportedOps[op] == 0 {
 					missingOps = append(missingOps, op)
 				} else {
-					for _, lightweightOp := range flashlight.LightweightOps {
+					for _, lightweightOp := range borda.LightweightOps {
 						if op == lightweightOp {
 							if reportedOps[op] > 100 {
 								overreportedOps = append(overreportedOps, op)
@@ -220,6 +219,7 @@ func startApp(t *testing.T, helper *integrationtest.Helper) (*App, error) {
 		"headless":                true,
 		"proxyall":                true,
 		"configdir":               helper.ConfigDir,
+		"vpn":                     false,
 		"stickyconfig":            false,
 		"clear-proxy-settings":    false,
 		"readableconfig":          true,
@@ -227,6 +227,8 @@ func startApp(t *testing.T, helper *integrationtest.Helper) (*App, error) {
 		"borda-report-interval":   5 * time.Minute,
 		"borda-sample-percentage": 0.0, // this is 0 to disable random sampling, allowing us to test fully reported ops
 		"ui-domain":               "ui.lantern.io",
+		"force-traffic-log":       false,
+		"tl-mtu-limit":            1500,
 	}
 
 	a := &App{

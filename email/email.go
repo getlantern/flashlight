@@ -19,6 +19,7 @@ import (
 	pops "github.com/getlantern/ops"
 	"github.com/getlantern/yaml"
 
+	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/util"
@@ -89,6 +90,8 @@ type Message struct {
 	Logs []byte
 	// DiagnosticsYAML is a YAML-encoded diagnostics report.
 	DiagnosticsYAML []byte
+	// ProxyCapture is a gzipped pcapng file related to diagnostics.
+	ProxyCapture []byte
 	// Proxies allows the caller to specify a proxies.yaml file
 	Proxies []byte
 }
@@ -113,6 +116,7 @@ func Send(msg *Message) error {
 				Set("issue_note", msg.Vars["report"]).
 				Set("email", msg.Vars["emailaddress"])
 		}
+		msg.Vars["country"] = geolookup.GetCountry(0)
 		log.Debug("Reporting issue")
 	} else {
 		op = ops.Begin("send_email").Set("template", msg.Template)
@@ -174,6 +178,13 @@ func sendTemplate(msg *Message) error {
 			Type:    "application/x-yaml",
 			Name:    prefix(msg) + "_diagnostics.yaml",
 			Content: base64.StdEncoding.EncodeToString(msg.DiagnosticsYAML),
+		})
+	}
+	if msg.ProxyCapture != nil {
+		mmsg.Attachments = append(mmsg.Attachments, &mandrill.Attachment{
+			Type:    "application/zip",
+			Name:    prefix(msg) + "_proxy_capture.zip",
+			Content: base64.StdEncoding.EncodeToString(msg.ProxyCapture),
 		})
 	}
 	if msg.MaxLogSize != "" {

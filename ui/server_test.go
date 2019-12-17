@@ -18,7 +18,7 @@ func TestDoShow(t *testing.T) {
 		urlToShow = u
 	}
 
-	s := newServer("", "local-http-token")
+	s := newServer("", "local-http-token", false)
 
 	assert.Equal(t, "", urlToShow)
 	s.doShow(s.rootURL(), "campaign", "medium", show)
@@ -34,7 +34,7 @@ func TestDoShow(t *testing.T) {
 
 func TestStartServer(t *testing.T) {
 	startServer := func(addr string) *Server {
-		s := newServer("", "test-http-token")
+		s := newServer("", "test-http-token", false)
 		assert.NoError(t, s.start(addr), "should start server")
 		return s
 	}
@@ -93,7 +93,7 @@ func TestStartServer(t *testing.T) {
 }
 
 func TestCheckOrigin(t *testing.T) {
-	s := newServer("", "token")
+	s := newServer("", "token", false)
 	s.start("localhost:9898")
 	doTestCheckRequestToken(t, s, map[*http.Request]bool{
 		newRequest("http://localhost:9898"): false,
@@ -168,7 +168,7 @@ func doTestCheckRequestToken(t *testing.T, s *Server, testOrigins map[*http.Requ
 
 func TestStart(t *testing.T) {
 	serve, err := StartServer("127.0.0.1:0", "", "abcde",
-		&PathHandler{Pattern: "/testing", Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+		false, &PathHandler{Pattern: "/testing", Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 			resp.WriteHeader(http.StatusOK)
 		})})
 	assert.NoError(t, err)
@@ -204,7 +204,7 @@ func getTestHandler() http.Handler {
 }
 
 func getTestServer(token string) *Server {
-	s := newServer("", token)
+	s := newServer("", token, false)
 	s.start("localhost:")
 	return s
 }

@@ -104,6 +104,7 @@ func (c *wc) Write(b []byte) (int, error) {
 
 func (c *wc) Close() error {
 	c.bal.Close()
+	ForceFlush()
 	return nil
 }
 

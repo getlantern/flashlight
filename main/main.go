@@ -134,7 +134,8 @@ func main() {
 	}
 
 	if a.ShouldShowUI() {
-		runOnSystrayReady(a, func() {
+		i18nInit(a)
+		runOnSystrayReady(*standalone, a, func() {
 			runApp(a)
 		})
 	} else {
@@ -153,7 +154,6 @@ func runApp(a *desktop.App) {
 	// Schedule cleanup actions
 	handleSignals(a)
 	if a.ShouldShowUI() {
-		i18nInit(a)
 		go func() {
 			if err := configureSystemTray(a); err != nil {
 				return
@@ -176,7 +176,7 @@ func i18nInit(a *desktop.App) {
 	if _, err := i18n.SetLocale(locale); err != nil {
 		log.Debugf("i18n.SetLocale(%s) failed, fallback to OS default: %q", locale, err)
 
-		// On startup GetLangauge will return '', as the browser has not set the language yet.
+		// On startup GetLanguage will return '', as the browser has not set the language yet.
 		// We use the OS locale instead and make sure the language is populated.
 		if locale, err := i18n.UseOSLocale(); err != nil {
 			log.Debugf("i18n.UseOSLocale: %q", err)

@@ -4,11 +4,9 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/getlantern/flashlight/diagnostics"
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/ws"
 	"github.com/getlantern/osversion"
-	"github.com/getlantern/yaml"
 )
 
 type mandrillMessage struct {
@@ -49,9 +47,19 @@ func (app *App) serveEmailProxy(channel ws.UIChannel) error {
 
 func (app *App) handleMandrillMessage(service *ws.Service, data *mandrillMessage) {
 	fillMandrillDefaults(data)
-	if data.RunDiagnostics {
-		data.DiagnosticsYAML = app.runDiagnostics()
-	}
+	/*
+		if data.RunDiagnostics {
+			app.trafficLogLock.Lock()
+			app.proxiesLock.RLock()
+			var errs []error
+			data.DiagnosticsYAML, data.ProxyCapture, errs = collectDiagnostics(app.proxies, app.trafficLog)
+			for _, err := range errs {
+				log.Errorf("Error running diagnostics: %v", err)
+			}
+			app.proxiesLock.RUnlock()
+			app.trafficLogLock.Unlock()
+		}
+	*/
 	if err := email.Send(&data.Message); err != nil {
 		service.Out <- err.Error()
 	} else {
@@ -85,19 +93,4 @@ func fillMandrillDefaults(msg *mandrillMessage) {
 		}
 		msg.SettingsData = buf.Bytes()
 	}
-}
-
-// Returns nil and logs an error if encoding fails.
-func (app *App) runDiagnostics() (reportYAML []byte) {
-	app.proxiesMapLock.RLock()
-	r := diagnostics.Run(app.proxiesMap)
-	app.proxiesMapLock.RUnlock()
-
-	b, err := yaml.Marshal(r)
-	if err != nil {
-		log.Errorf("failed to encode diagnostics report: %v", err)
-		log.Debugf("the following report failed to encode: %+v", r)
-		return nil
-	}
-	return b
 }

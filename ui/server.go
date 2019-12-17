@@ -19,6 +19,7 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/systray"
 	"github.com/getlantern/tarfs"
 
 	"github.com/getlantern/flashlight/analytics"
@@ -63,15 +64,24 @@ type Server struct {
 	onceOpenExtURL             sync.Once
 
 	translations eventual.Value
+	standalone     bool
+	accessAddr     string
+	externalURL    string
+	requestPath    string
+	localHTTPToken string
+	listener       net.Listener
+	mux            *http.ServeMux
+	onceOpenExtURL sync.Once
+	translations   eventual.Value
 }
 
 // StartServer creates and starts a new UI server.
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func StartServer(requestedAddr, extURL, localHTTPToken string,
+func StartServer(requestedAddr, extURL, localHTTPToken string, standalone bool,
 	handlers ...*PathHandler) (*Server, error) {
-	server := newServer(extURL, localHTTPToken)
+	server := newServer(extURL, localHTTPToken, standalone)
 
 	for _, h := range handlers {
 		server.handle(h.Pattern, h.Handler)
@@ -83,7 +93,7 @@ func StartServer(requestedAddr, extURL, localHTTPToken string,
 	return server, nil
 }
 
-func newServer(extURL, localHTTPToken string) *Server {
+func newServer(extURL, localHTTPToken string, standalone bool) *Server {
 	server := &Server{
 		externalURL: overrideManotoURL(extURL),
 		httpTokenRequestPathPrefix: func() string {
@@ -95,9 +105,11 @@ func newServer(extURL, localHTTPToken string) *Server {
 		mux:            http.NewServeMux(),
 		localHTTPToken: localHTTPToken,
 		translations:   eventual.NewValue(),
+		standalone:     standalone,
 	}
 
 	server.attachHandlers()
+
 	return server
 }
 
@@ -217,13 +229,16 @@ func (s *Server) Show(destURL, campaign, medium string, st stats.Tracker) {
 	open := func(u string, t time.Duration) {
 		go func() {
 			time.Sleep(t)
-			err := open.Run(u)
-			if err != nil {
-				e := errors.New("Error opening external page to `%v`: %v",
-					s.externalURL, err)
-				log.Error(e)
-				if st != nil {
-					st.SetAlert(stats.FAIL_TO_OPEN_BROWSER, e.Error(), true)
+			if s.standalone {
+				systray.ShowAppWindow(u)
+			} else {
+				if err := open.Run(u); err != nil {
+					e := errors.New("Error opening external page to `%v`: %v",
+						s.externalURL, err)
+					log.Error(e)
+					if st != nil {
+						st.SetAlert(stats.FAIL_TO_OPEN_BROWSER, e.Error(), true)
+					}
 				}
 			}
 		}()

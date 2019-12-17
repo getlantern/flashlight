@@ -76,6 +76,7 @@ type Session interface {
 	Locale() string
 	Code() string
 	GetCountryCode() string
+	GetForcedCountryCode() string
 	GetDNSServer() string
 	Provider() string
 	AppVersion() string
@@ -316,9 +317,15 @@ func run(configDir, locale string,
 		settings.GetHttpProxyHost(),
 		settings.GetHttpProxyPort())
 
+	forcedCountryCode := session.GetForcedCountryCode()
+	if forcedCountryCode != "" {
+		config.ForceCountry(forcedCountryCode)
+	}
+
 	flashlight.Run(httpProxyAddr, // listen for HTTP on provided address
 		"127.0.0.1:0",                // listen for SOCKS on random address
 		configDir,                    // place to store lantern configuration
+		false,                        // don't enable vpn mode for Android (VPN is handled in Java layer)
 		func() bool { return false }, // always connected
 		func() bool { return !session.ProxyAll() }, // use shortcut
 		func() bool { return false },               // not use detour
@@ -354,11 +361,11 @@ func run(configDir, locale string,
 			ip := net.ParseIP(host)
 			if ip == nil {
 				log.Debugf("Unable to parse IP %v, passing through address as is", host)
-				return host
+				return addr
 			}
 			updatedHost := grabber.ReverseLookup(ip)
 			if updatedHost == "" {
-				log.Debugf("Unable to reverse lookup %v, passing through (this shouldn't happen much)", ip)
+				log.Debugf("Unable to reverse lookup %v, passing through address as is (this shouldn't happen much)", ip)
 				return addr
 			}
 			if splitErr != nil {

@@ -330,6 +330,7 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 	if l, err = net.Listen("tcp", requestedAddr); err != nil {
 		return fmt.Errorf("Unable to listen: %q", err)
 	}
+	l = &optimisticListener{l}
 	listenAddr := l.Addr().String()
 	socksAddr.Set(listenAddr)
 
@@ -355,13 +356,16 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 }
 
 // Configure updates the client's configuration. Configure can be called
-// before or after ListenAndServe, and can be called multiple times.
-func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo) {
+// before or after ListenAndServe, and can be called multiple times. If
+// no error occurred, then the new dialers are returned.
+func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo) []balancer.Dialer {
 	log.Debug("Configure() called")
-	err := client.initBalancer(proxies)
+	dialers, err := client.initBalancer(proxies)
 	if err != nil {
 		log.Error(err)
+		return nil
 	}
+	return dialers
 }
 
 // Stop is called when the client is no longer needed. It closes the
