@@ -302,6 +302,8 @@ github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035 h1:JN8roAfbXDp
 github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035/go.mod h1:h2YijnLbhHv96Px/sVUITlNMl7Q+pBONa0/MVK0ZIF4=
 github.com/getlantern/systray v0.0.0-20191210013027-82c477f5e254 h1:CUoBi2maxqmdPhGmEsvMImNqw6YP/aHqlxPhnAKKeYk=
 github.com/getlantern/systray v0.0.0-20191210013027-82c477f5e254/go.mod h1:4yRvwNSBNJtSOi3dRLNxhG40wXg9nEwdDjX2IrGZJo8=
+github.com/getlantern/systray v0.0.0-20191219131235-d922a91190d8 h1:oYdQDXyjSwVRs1qeBPHUKfDQ4goCMIK+wcjpWK4Ubyo=
+github.com/getlantern/systray v0.0.0-20191219131235-d922a91190d8/go.mod h1:4yRvwNSBNJtSOi3dRLNxhG40wXg9nEwdDjX2IrGZJo8=
 github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239 h1:PcBHV71YMbtbRo2xgFgEg6Cz56nWixU0Fjch3AIOidk=
 github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239/go.mod h1:T4fCOTFiRQXdY5WhfiEdmR5W+fv4sIYUm5DlhauOfuY=
 github.com/getlantern/testify v0.0.0-20160317154340-2eeb3906e78f h1:R6iv+VzCrbxlBm2TcgyJi9c7tQguNXi9JmIvuUJKrdc=
