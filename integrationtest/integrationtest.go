@@ -19,6 +19,7 @@ import (
 
 	"github.com/getlantern/golog"
 	proxy "github.com/getlantern/http-proxy-lantern"
+	"github.com/getlantern/http-proxy-lantern/instrument"
 	"github.com/getlantern/quicwrapper"
 	"github.com/getlantern/tlsdefaults"
 	"github.com/getlantern/waitforserver"
@@ -220,6 +221,7 @@ func (helper *Helper) startProxyServer() error {
 		CertFile:    CertFile,
 		IdleTimeout: 30 * time.Second,
 		HTTPS:       true,
+		Instrument:  instrument.NoInstrument{},
 	}
 
 	// kcp server
@@ -232,6 +234,7 @@ func (helper *Helper) startProxyServer() error {
 		CertFile:     CertFile,
 		IdleTimeout:  30 * time.Second,
 		HTTPS:        false,
+		Instrument:   instrument.NoInstrument{},
 	}
 
 	go s1.ListenAndServe()

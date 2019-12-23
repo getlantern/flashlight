@@ -688,11 +688,8 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 		KeyLogWriter:       getTLSKeyLogWriter(),
 	}
 
-	maxStreamsPerConn := s.ptSettingInt("streams")
-
 	quicConf := &quicwrapper.Config{
-		IdleTimeout:        IdleTimeout,
-		MaxIncomingStreams: maxStreamsPerConn,
+		MaxIncomingStreams: -1,
 		KeepAlive:          true,
 	}
 
