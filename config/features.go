@@ -1,0 +1,137 @@
+package config
+
+import (
+	"errors"
+	"fmt"
+	"math/rand"
+	"strings"
+
+	"github.com/blang/semver"
+
+	"github.com/getlantern/flashlight/common"
+)
+
+const (
+	FeatureProxyBench  = "proxy-bench"
+	FeaturePingProxies = "ping-proxies"
+	FeatureStealthMode = "stealth-mode"
+	FeatureTrafficLog  = "traffic-log"
+)
+
+type TrafficLogOptions struct {
+	// Size of the buffers for capturing packets in real time.
+	CaptureBytes uint64
+	// Size of the buffers for taking snapshots from live captures.
+	SaveBytes uint64
+}
+
+// ClientGroup represents a subgroup of Lantern clients chosen randomly or
+// based on certain criteria on which features can be selectively turned on.
+type ClientGroup struct {
+	// A label so that the group can be referred to when collecting/analyzing
+	// metrics. Better to be unique and meaningful.
+	Label string
+	// UserFloor and UserCeil defines the range of user IDs so that with
+	// precision p, any user ID u satisfies floor*p <= u%p < ceil*p belongs to
+	// the group. Precision is expressed in the code and can be changed freely.
+	//
+	// For example, given floor = 0.1 and ceil = 0.2, it matches user IDs end
+	// between 100 and 199 if precision is 1000, and IDs end between 1000 and
+	// 1999 if precision is 10000.
+	//
+	// Range: 0-1. When both are omitted, all users fall within the range.
+	UserFloor float64 /*json:user-floor*/
+	UserCeil  float64 /*json:user-ceil*/
+	// A semantic version range which only Lantern versions falls within is consided.
+	// Defaults to all versions.
+	VersionConstraints string /*json:version-constraints*/
+	// Comma separated list of platforms the group includes.
+	// Defaults to all platforms.
+	Platforms string
+	// Only include Lantern Free clients.
+	FreeOnly bool
+	// Only include Lantern Pro clients.
+	ProOnly bool
+	// Comma separated list of countries the group includes.
+	// Defaults to all countries.
+	GeoCountries string
+	// Fraction of clients to include from the final set where all other
+	// criteria match.
+	//
+	// Range: 0-1. Defaults to 1.
+	Fraction float64
+}
+
+// Validate checks if the ClientGroup fields are valid and do not conflict with
+// each other.
+func (g ClientGroup) Validate() error {
+	if g.UserFloor < 0 || g.UserFloor > 1.0 {
+		return errors.New("Invalid UserFloor")
+	}
+	if g.UserCeil < 0 || g.UserCeil > 1.0 {
+		return errors.New("Invalid UserCeil")
+	}
+	if g.UserCeil < g.UserFloor {
+		return errors.New("Invalid user range")
+	}
+	if g.Fraction < 0 || g.Fraction > 1.0 {
+		return errors.New("Invalid Fraction")
+	}
+	if g.FreeOnly && g.ProOnly {
+		return errors.New("Both FreeOnly and ProOnly is set")
+	}
+	if g.VersionConstraints != "" {
+		_, err := semver.ParseRange(g.VersionConstraints)
+		if err != nil {
+			return fmt.Errorf("Error parsing version constraints: %v", err)
+		}
+	}
+	return nil
+}
+
+//Includes checks if the ClientGroup includes the user, device and country
+//combination, assuming the group has been validated.
+func (g ClientGroup) Includes(userID int64, isPro bool, geoCountry string) bool {
+	if g.UserCeil > 0 {
+		percision := 1000.0
+		remainder := userID % int64(percision)
+		if remainder < int64(g.UserFloor*percision) || remainder >= int64(g.UserCeil*percision) {
+			return false
+		}
+	}
+	if g.FreeOnly && isPro {
+		return false
+	}
+	if g.ProOnly && !isPro {
+		return false
+	}
+	if g.VersionConstraints != "" {
+		expectedRange, err := semver.ParseRange(g.VersionConstraints)
+		if err != nil {
+			return false
+		}
+		if !expectedRange(semver.MustParse(common.Version)) {
+			return false
+		}
+	}
+	if g.Platforms != "" && !csvContains(g.Platforms, common.Platform) {
+		return false
+	}
+	if g.GeoCountries != "" && !csvContains(g.GeoCountries, geoCountry) {
+		return false
+	}
+	if g.Fraction > 0 && rand.Float64() >= g.Fraction {
+		return false
+	}
+	return true
+}
+
+func csvContains(csv, s string) bool {
+	fields := strings.Split(csv, ",")
+	for _, f := range fields {
+		if strings.EqualFold(s, strings.TrimSpace(f)) {
+			return true
+		}
+	}
+	return false
+}
