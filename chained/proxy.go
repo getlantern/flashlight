@@ -691,7 +691,7 @@ func enableQUIC(p *proxy, s *ChainedServerInfo) error {
 	maxStreamsPerConn := s.ptSettingInt("streams")
 
 	quicConf := &quicwrapper.Config{
-		IdleTimeout:        IdleTimeout,
+		MaxIdleTimeout:     IdleTimeout,
 		MaxIncomingStreams: maxStreamsPerConn,
 		KeepAlive:          true,
 	}
