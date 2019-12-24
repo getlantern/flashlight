@@ -32,7 +32,7 @@ require (
 	github.com/getlantern/filepersist v0.0.0-20160317154340-c5f0cd24e799
 	github.com/getlantern/fronted v0.0.0-20190606212108-e7744195eded
 	github.com/getlantern/geolookup v0.0.0-20180719190536-68d621f75f46
-	github.com/getlantern/go-ping v0.0.0-20190916232214-0d654d92ece9
+	github.com/getlantern/go-ping v0.0.0-20191213124541-9d4b7e6e7de6
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
 	github.com/getlantern/go-update v0.0.0-20190510022740-79c495ab728c // indirect
 	github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7
@@ -71,7 +71,7 @@ require (
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/shortcut v0.0.0-20190117153616-bb4d4203cc25
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
-	github.com/getlantern/systray v0.0.0-20191210013027-82c477f5e254
+	github.com/getlantern/systray v0.0.0-20191219131235-d922a91190d8
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
 	github.com/getlantern/testify v0.0.0-20160317154340-2eeb3906e78f
 	github.com/getlantern/tinywss v0.0.0-20190809093313-4439caa924e5
@@ -99,8 +99,8 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/stretchr/testify v1.4.0
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
-	golang.org/x/net v0.0.0-20191204025024-5ee1b9f4859a
 	golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7
+	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553
 	google.golang.org/appengine v1.6.2 // indirect
 	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
