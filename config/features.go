@@ -12,10 +12,10 @@ import (
 )
 
 const (
-	FeatureProxyBench  = "proxy-bench"
-	FeaturePingProxies = "ping-proxies"
-	FeatureStealthMode = "stealth-mode"
-	FeatureTrafficLog  = "traffic-log"
+	FeatureProxyBench  = "proxybench"
+	FeaturePingProxies = "pingproxies"
+	FeatureStealthMode = "stealthmode"
+	FeatureTrafficLog  = "trafficlog"
 )
 
 type TrafficLogOptions struct {
@@ -40,11 +40,11 @@ type ClientGroup struct {
 	// 1999 if precision is 10000.
 	//
 	// Range: 0-1. When both are omitted, all users fall within the range.
-	UserFloor float64 /*json:user-floor*/
-	UserCeil  float64 /*json:user-ceil*/
+	UserFloor float64
+	UserCeil  float64
 	// A semantic version range which only Lantern versions falls within is consided.
 	// Defaults to all versions.
-	VersionConstraints string /*json:version-constraints*/
+	VersionConstraints string
 	// Comma separated list of platforms the group includes.
 	// Defaults to all platforms.
 	Platforms string
