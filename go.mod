@@ -97,6 +97,7 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/stretchr/testify v1.4.0
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
+	golang.org/x/mobile v0.0.0-20191210151939-1a1fef82734d // indirect
 	golang.org/x/net v0.0.0-20190912160710-24e19bdeb0f2
 	google.golang.org/appengine v1.6.2 // indirect
 	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55 // indirect

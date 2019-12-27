@@ -191,7 +191,7 @@ func (c *client) loadDialers() ([]balancer.Dialer, error) {
 		dialers = append(dialers, dialer)
 	}
 
-	chained.TrackStatsFor(dialers)
+	chained.TrackStatsFor(dialers, false)
 
 	return dialers, nil
 }
