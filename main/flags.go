@@ -8,6 +8,7 @@ var (
 	addr               = flag.String("addr", "", "ip:port on which to listen for requests. When running as a client proxy, we'll listen with http, when running as a server proxy we'll listen with https (required)")
 	socksaddr          = flag.String("socksaddr", "", "ip:port on which to listen for SOCKS5 proxy requests.")
 	configdir          = flag.String("configdir", "", "directory in which to store configuration. Defaults to platform-specific directories.")
+	vpn                = flag.Bool("vpn", false, "specify this flag to enable vpn mode")
 	cloudconfig        = flag.String("cloudconfig", "", "optional http(s) URL to a cloud-based source for configuration updates")
 	cloudconfigca      = flag.String("cloudconfigca", "", "optional PEM encoded certificate used to verify TLS connections to fetch cloudconfig")
 	registerat         = flag.String("registerat", "", "base URL for peer DNS registry at which to register (e.g. https://peerscanner.getiantem.org)")

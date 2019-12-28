@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/dnsgrab"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mtime"
@@ -28,6 +29,7 @@ import (
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/shortcut"
 	"github.com/getlantern/flashlight/stats"
+	"github.com/getlantern/flashlight/vpn"
 )
 
 var (
@@ -40,6 +42,7 @@ var (
 func Run(httpProxyAddr string,
 	socksProxyAddr string,
 	configDir string,
+	vpnEnabled bool,
 	disconnected func() bool,
 	_useShortcut func() bool,
 	_useDetour func() bool,
@@ -90,6 +93,44 @@ func Run(httpProxyAddr string,
 	fops.InitGlobalContext(deviceID, isPro, userID, func() string { return geolookup.GetCountry(0) }, func() string { return geolookup.GetIP(0) })
 	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 	op := fops.Begin("client_started")
+
+	var grabber dnsgrab.Server
+	var grabberErr error
+	if vpnEnabled {
+		grabber, grabberErr = dnsgrab.Listen(50000,
+			"127.0.0.1:53",
+			"8.8.8.8")
+		if grabberErr != nil {
+			log.Errorf("dnsgrab unable to listen: %v", grabberErr)
+		}
+
+		go func() {
+			if err := grabber.Serve(); err != nil {
+				log.Errorf("dnsgrab stopped serving: %v", err)
+			}
+		}()
+
+		reverseDNS = func(addr string) string {
+			host, port, splitErr := net.SplitHostPort(addr)
+			if splitErr != nil {
+				host = addr
+			}
+			ip := net.ParseIP(host)
+			if ip == nil {
+				log.Debugf("Unable to parse IP %v, passing through address as is", host)
+				return addr
+			}
+			updatedHost := grabber.ReverseLookup(ip)
+			if updatedHost == "" {
+				log.Debugf("Unable to reverse lookup %v, passing through address as is (this shouldn't happen much)", ip)
+				return addr
+			}
+			if splitErr != nil {
+				return updatedHost
+			}
+			return fmt.Sprintf("%v:%v", updatedHost, port)
+		}
+	}
 
 	cl, err := client.NewClient(
 		disconnected,
@@ -153,6 +194,16 @@ func Run(httpProxyAddr string,
 					log.Errorf("Unable to start SOCKS5 proxy: %v", err)
 				}
 			}()
+
+			if vpnEnabled && grabberErr == nil {
+				log.Debug("Enabling VPN mode")
+				closeVPN, vpnErr := vpn.Enable(socksProxyAddr, "192.168.1.1", "", "10.0.0.2", "255.255.255.0")
+				if vpnErr != nil {
+					log.Error(vpnErr)
+				} else {
+					defer closeVPN()
+				}
+			}
 		}
 
 		log.Debug("Starting client HTTP proxy")

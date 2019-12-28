@@ -1,7 +1,19 @@
 # Change Log
 
+## [Unreleased](https://github.com/getlantern/flashlight/tree/HEAD)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.7.1...HEAD)
+
+**Merged pull requests:**
+
+- bring in systray windows fixes [\#717](https://github.com/getlantern/flashlight/pull/717) ([joesis](https://github.com/joesis))
+- Updated to latest lampshade with client init timestamping [\#714](https://github.com/getlantern/flashlight/pull/714) ([oxtoacart](https://github.com/oxtoacart))
+
 ## [5.7.1](https://github.com/getlantern/flashlight/tree/5.7.1) (2019-12-03)
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.7.0...5.7.1)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.7.2...5.7.1)
+
+## [5.7.2](https://github.com/getlantern/flashlight/tree/5.7.2) (2019-12-03)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.7.0...5.7.2)
 
 ## [5.7.0](https://github.com/getlantern/flashlight/tree/5.7.0) (2019-12-01)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.6.4...5.7.0)
@@ -200,7 +212,6 @@
 **Merged pull requests:**
 
 - Remove unused proxy package [\#626](https://github.com/getlantern/flashlight/pull/626) ([myleshorton](https://github.com/myleshorton))
-- Added support for using utp in place of tcp [\#609](https://github.com/getlantern/flashlight/pull/609) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [5.4.1](https://github.com/getlantern/flashlight/tree/5.4.1) (2019-06-02)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.4.0...5.4.1)
@@ -229,10 +240,6 @@
 
 ## [5.3.8](https://github.com/getlantern/flashlight/tree/5.3.8) (2019-04-24)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.6...5.3.8)
-
-**Merged pull requests:**
-
-- Various changes for more prompt connection status [\#608](https://github.com/getlantern/flashlight/pull/608) ([joesis](https://github.com/joesis))
 
 ## [5.3.6](https://github.com/getlantern/flashlight/tree/5.3.6) (2019-04-18)
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.7...5.3.6)
