@@ -24,11 +24,11 @@ var (
 
 // TrackStatsFor enables periodic checkpointing of the given proxies' stats to
 // disk.
-func TrackStatsFor(dialers []balancer.Dialer) {
+func TrackStatsFor(dialers []balancer.Dialer, probeIfNecessary bool) {
 	statsMx.Lock()
 
 	applyExistingStats(dialers)
-	if len(dialers) > 1 {
+	if probeIfNecessary && len(dialers) > 1 {
 		probeIfRequired(dialers)
 	}
 
