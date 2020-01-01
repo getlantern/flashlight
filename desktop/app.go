@@ -3,6 +3,7 @@ package desktop
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/rand"
 	"net"
@@ -163,6 +164,14 @@ func (app *App) Run() {
 		}
 		if socksAddr == "" {
 			socksAddr = defaultSOCKSProxyAddress
+		}
+
+		if app.Flags["initialize"].(bool) {
+			app.statsTracker.AddListener(func(newStats stats.Stats) {
+				if newStats.HasSucceedingProxy {
+					app.Exit(errors.New("finished initialization"))
+				}
+			})
 		}
 
 		err := flashlight.Run(
@@ -664,7 +673,7 @@ func recordStopped() {
 
 // ShouldShowUI determines if we should show the UI or not.
 func (app *App) ShouldShowUI() bool {
-	return !app.Flags["headless"].(bool)
+	return !app.Flags["headless"].(bool) && !app.Flags["initialize"].(bool)
 }
 
 // OnTrayShow indicates the user has selected to show lantern from the tray.
