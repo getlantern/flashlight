@@ -281,12 +281,28 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			}
 		}
 
-		replicaHandler, exitFunc, err := replica.NewHttpHandler()
-		if err != nil {
-			log.Errorf("error creating replica http server: %v", err)
-			app.Exit(err)
+		handlers := []*ui.PathHandler{
+			{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
+			{Pattern: "/data", Handler: app.ws.Handler()},
 		}
-		app.AddExitFunc("cleanup replica http server", exitFunc)
+
+		if common.ReplicaEnabled() {
+			replicaHandler, exitFunc, err := replica.NewHttpHandler()
+			if err != nil {
+				log.Errorf("error creating replica http server: %v", err)
+				app.Exit(err)
+			}
+			app.AddExitFunc("cleanup replica http server", exitFunc)
+
+			// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
+			// in their handlers.
+			handlers = append(handlers, &ui.PathHandler{
+				Pattern: "/replica/",
+				Handler: http.StripPrefix(
+					"/replica",
+					replicaHandler),
+			})
+		}
 
 		log.Debugf("Starting client UI at %v", uiaddr)
 
@@ -296,16 +312,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			startupURL,
 			app.localHttpToken(),
 			standalone,
-			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
-			&ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
-			// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
-			// in their handlers.
-			&ui.PathHandler{
-				Pattern: "/replica/",
-				Handler: http.StripPrefix(
-					"/replica",
-					replicaHandler),
-			},
+			handlers...,
 		); err != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		}
