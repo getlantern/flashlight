@@ -13,7 +13,6 @@ import (
 	"net/http/httputil"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/fronted"
@@ -48,13 +47,13 @@ type ConfigResult struct {
 // configFolderPath - global.yaml, global.yaml.etag, proxies.yaml,
 // proxies.yaml.etag and masquerade_cache. deviceID should be a string that
 // uniquely identifies the current device.
-func Configure(configFolderPath string, deviceID string) (*ConfigResult, error) {
+func Configure(configFolderPath string, userID int, proToken, deviceID string, refreshProxies bool) (*ConfigResult, error) {
 	log.Debugf("Configuring client for device '%v' at config path '%v'", deviceID, configFolderPath)
 	cf := &configurer{
 		configFolderPath: configFolderPath,
-		uc:               userConfigFor(deviceID),
+		uc:               userConfigFor(userID, proToken, deviceID),
 	}
-	return cf.configure()
+	return cf.configure(refreshProxies)
 }
 
 type configurer struct {
@@ -63,7 +62,7 @@ type configurer struct {
 	rt               http.RoundTripper
 }
 
-func (cf *configurer) configure() (*ConfigResult, error) {
+func (cf *configurer) configure(refreshProxies bool) (*ConfigResult, error) {
 	result := &ConfigResult{}
 
 	if err := cf.writeUserConfig(); err != nil {
@@ -89,7 +88,9 @@ func (cf *configurer) configure() (*ConfigResult, error) {
 	} else {
 		var globalUpdated, proxiesUpdated bool
 		global, globalUpdated = cf.updateGlobal(global, globalEtag)
-		proxies, proxiesUpdated = cf.updateProxies(proxies, proxiesEtag)
+		if refreshProxies {
+			proxies, proxiesUpdated = cf.updateProxies(proxies, proxiesEtag)
+		}
 
 		result.VPNNeedsReconfiguring = result.VPNNeedsReconfiguring || globalUpdated || proxiesUpdated
 	}
@@ -190,7 +191,7 @@ func (cf *configurer) configureFronting(global *config.Global) error {
 
 	fronted.Configure(certs, global.Client.FrontedProviders(), "cloudfront", cf.fullPathTo("masquerade_cache"))
 	chained.ConfigureFronting(certs, global.Client.FrontedProviders(), cf.configFolderPath)
-	rt, ok := fronted.NewDirect(1 * time.Minute)
+	rt, ok := fronted.NewDirect(frontedAvailableTimeout)
 	if !ok {
 		return errors.New("Timed out waiting for fronting to finish configuring")
 	}
