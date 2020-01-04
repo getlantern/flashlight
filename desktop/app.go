@@ -3,7 +3,6 @@ package desktop
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math/rand"
 	"net"
@@ -169,7 +168,8 @@ func (app *App) Run() {
 		if app.Flags["initialize"].(bool) {
 			app.statsTracker.AddListener(func(newStats stats.Stats) {
 				if newStats.HasSucceedingProxy {
-					app.Exit(errors.New("finished initialization"))
+					log.Debug("Finished initialization")
+					app.Exit(nil)
 				}
 			})
 		}
