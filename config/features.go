@@ -55,7 +55,7 @@ type ClientGroup struct {
 	// Comma separated list of countries the group includes.
 	// Defaults to all countries.
 	GeoCountries string
-	// Fraction of clients to include from the final set where all other
+	// Random fraction of clients to include from the final set where all other
 	// criteria match.
 	//
 	// Range: 0-1. Defaults to 1.
