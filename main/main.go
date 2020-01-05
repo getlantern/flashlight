@@ -41,6 +41,11 @@ func main() {
 	debug.SetTraceback("all")
 	parseFlags()
 
+	if *help {
+		flag.Usage()
+		log.Fatal("Wrong arguments")
+	}
+
 	a := &desktop.App{
 		Flags: flagsAsMap(),
 	}
@@ -73,8 +78,9 @@ func main() {
 		}()
 	}
 
-	// Skip panicwrap when initializing Lantern because the real exit status is required.
-	if !*initialize {
+	// Disable panicwrap for cases either unnecessary or when the exit status
+	// is desirable.
+	if !disablePanicWrap() {
 		// panicwrap works by re-executing the running program (retaining arguments,
 		// environmental variables, etc.) and monitoring the stderr of the program.
 		exitStatus, err := panicwrap.Wrap(
@@ -104,11 +110,6 @@ func main() {
 	// We're in the child (wrapped) process, stop wrapper signal handling.
 	signal.Stop(wrapperC)
 	golog.SetPrepender(logging.Timestamped)
-
-	if *help {
-		flag.Usage()
-		log.Fatal("Wrong arguments")
-	}
 
 	if *pprofAddr != "" {
 		go func() {
@@ -243,4 +244,8 @@ func handleSignals(a *desktop.App) {
 		log.Debugf("Got signal \"%s\", exiting...", s)
 		a.Exit(nil)
 	}()
+}
+
+func disablePanicWrap() bool {
+	return *headless || *initialize || *timeout > 0
 }
