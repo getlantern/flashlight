@@ -80,7 +80,9 @@ func main() {
 
 	// Disable panicwrap for cases either unnecessary or when the exit status
 	// is desirable.
-	if !disablePanicWrap() {
+	if disablePanicWrap() {
+		log.Debug("Not spawning child process via panicwrap")
+	} else {
 		// panicwrap works by re-executing the running program (retaining arguments,
 		// environmental variables, etc.) and monitoring the stderr of the program.
 		exitStatus, err := panicwrap.Wrap(
