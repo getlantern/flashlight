@@ -284,6 +284,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			if showErr := app.showExistingUI(uiaddr); showErr == nil {
 				log.Debug("Lantern already running, showing existing UI")
 				app.Exit(nil)
+				return false
 			}
 		}
 
