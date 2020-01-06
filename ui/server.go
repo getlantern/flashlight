@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -22,6 +23,8 @@ import (
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/util"
+	"github.com/getlantern/yinbi-server/keystore"
+	"github.com/getlantern/yinbi-server/yinbi"
 )
 
 func init() {
@@ -51,7 +54,18 @@ type Server struct {
 	// The address to listen on, in ":port" form if listen on all interfaces.
 	listenAddr string
 	// The address client should access. Available only if the server is started.
-	accessAddr     string
+	accessAddr string
+
+	//
+	authServerAddr string
+
+	httpClient  *http.Client
+	yinbiClient *yinbi.Client
+
+	proxy *httputil.ReverseProxy
+
+	keystore *keystore.Keystore
+
 	externalURL    string
 	requestPath    string
 	localHTTPToken string
@@ -62,13 +76,30 @@ type Server struct {
 	standalone     bool
 }
 
+type tcpKeepAliveListener struct {
+	*net.TCPListener
+}
+
+func (l tcpKeepAliveListener) Accept() (net.Conn, error) {
+	c, err := l.AcceptTCP()
+	if err != nil {
+		return nil, err
+	}
+	c.SetKeepAlive(true)
+	c.SetKeepAlivePeriod(5 * time.Minute)
+	return c, nil
+}
+
 // StartServer creates and starts a new UI server.
 // extURL: when supplied, open the URL in addition to the UI address.
+// authServerAddr: the Lantern auth server to connect to
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func StartServer(requestedAddr, extURL, localHTTPToken string, standalone bool,
+func StartServer(requestedAddr, authServerAddr,
+	extURL, localHTTPToken string, standalone bool,
 	handlers ...*PathHandler) (*Server, error) {
-	server := newServer(extURL, localHTTPToken, standalone)
+	server := newServer(extURL, authServerAddr,
+		localHTTPToken, standalone)
 
 	for _, h := range handlers {
 		server.handle(h.Pattern, h.Handler)
@@ -80,35 +111,66 @@ func StartServer(requestedAddr, extURL, localHTTPToken string, standalone bool,
 	return server, nil
 }
 
-func newServer(extURL, localHTTPToken string, standalone bool) *Server {
+func newServer(extURL, authServerAddr,
+	localHTTPToken string, standalone bool) *Server {
 	requestPath := ""
 	if localHTTPToken != "" {
 		requestPath = "/" + localHTTPToken
 	}
-	server := &Server{
+
+	u, err := url.Parse(authServerAddr)
+	if err != nil {
+		log.Fatal(fmt.Errorf("Bad auth server address: %s", authServerAddr))
+	}
+
+	httpClient := &http.Client{
+		Timeout: time.Duration(30 * time.Second),
+	}
+
+	s := &Server{
 		externalURL:    overrideManotoURL(extURL),
 		requestPath:    requestPath,
-		mux:            http.NewServeMux(),
+		httpClient:     httpClient,
+		yinbiClient:    yinbi.NewWithHTTPClient(httpClient),
+		authServerAddr: authServerAddr,
+		keystore:       keystore.New(),
+		proxy:          httputil.NewSingleHostReverseProxy(u),
 		localHTTPToken: localHTTPToken,
 		translations:   eventual.NewValue(),
 		standalone:     standalone,
 	}
 
-	server.attachHandlers()
+	s.attachHandlers()
 
-	return server
+	return s
 }
 
 func (s *Server) attachHandlers() {
-	// This allows a second Lantern running on the system to trigger the existing
-	// Lantern to show the UI, or at least try to
-	startupHandler := func(resp http.ResponseWriter, req *http.Request) {
-		s.ShowRoot("existing", "lantern", nil)
-		resp.WriteHeader(http.StatusOK)
-	}
-
-	s.handle("/startup", http.HandlerFunc(startupHandler))
+	mux := http.NewServeMux()
+	mux.Handle("/login", s.wrapAuthMiddleware(s.loginHandler()))
+	mux.Handle("/register", s.wrapAuthMiddleware(s.loginHandler()))
+	mux.Handle("/user/account/new", s.wrapMiddleware(s.createAccountHandler()))
+	mux.Handle("/account/details", s.wrapMiddleware(s.getAccountDetails()))
+	mux.Handle("/user/logout", s.wrapMiddleware(s.proxy))
+	mux.Handle("/user/mnemonic", s.wrapMiddleware(s.createMnemonic()))
+	s.mux = mux
+	s.handle("/startup", http.HandlerFunc(s.startupHandler))
 	s.handle("/", http.FileServer(fs))
+}
+
+// wrapMiddleware takes the given http.Handler and wraps it with
+// the auth middleware handlers
+func (s *Server) wrapMiddleware(handler http.Handler) http.Handler {
+	handler = s.corsHandler(handler)
+	return handler
+}
+
+// wrapAuthMiddleware takes the given http.Handler and wraps it with
+// the auth middleware handlers
+func (s *Server) wrapAuthMiddleware(handler http.Handler) http.Handler {
+	handler = s.authHandler(handler)
+	handler = s.corsHandler(handler)
+	return handler
 }
 
 // handle directs the underlying server to handle the given pattern at both
@@ -130,6 +192,13 @@ func (s *Server) handle(pattern string, handler http.Handler) {
 	s.mux.Handle(pattern, checkRequestForToken(util.NoCacheHandler(handler), s.localHTTPToken))
 }
 
+// This allows a second Lantern running on the system to trigger the existing
+// Lantern to show the UI, or at least try to
+func (s *Server) startupHandler(resp http.ResponseWriter, req *http.Request) {
+	s.ShowRoot("existing", "lantern", nil)
+	resp.WriteHeader(http.StatusOK)
+}
+
 // strippingHandler removes the secure request path from the URL so that the
 // static file server can properly serve it.
 func (s *Server) strippingHandler(h http.Handler) http.Handler {
@@ -145,13 +214,14 @@ func (s *Server) strippingHandler(h http.Handler) http.Handler {
 func (s *Server) start(requestedAddr string) error {
 	var listenErr error
 	for _, addr := range addrCandidates(requestedAddr) {
-		log.Debugf("Lantern UI server start listening at %v", addr)
 		l, err := net.Listen("tcp", addr)
 		if err != nil {
 			listenErr = fmt.Errorf("unable to listen at %v: %v", addr, err)
 			log.Debug(listenErr)
 			continue
 		}
+		log.Debugf("Lantern UI server listening at %v", addr)
+		l = tcpKeepAliveListener{l.(*net.TCPListener)}
 		s.listenAddr = addr
 		s.listener = l
 		goto serve
