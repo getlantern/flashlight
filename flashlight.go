@@ -154,9 +154,6 @@ func Run(httpProxyAddr string,
 		op.End()
 	}
 
-	proxied.SetProxyAddr(cl.Addr)
-
-	onBordaConfigured := make(chan bool, 1)
 	proxiesDispatch := func(conf interface{}) {
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
@@ -165,18 +162,33 @@ func Run(httpProxyAddr string,
 			onProxiesUpdate(dialers)
 		}
 	}
+
+	onBordaConfigured := make(chan bool, 1)
 	globalDispatch := func(conf interface{}) {
 		// Don't love the straight cast here, but we're also the ones defining
 		// the type in the factory method above.
 		cfg := conf.(*config.Global)
 		log.Debugf("Applying global config")
-		applyClientConfig(cfg, autoReport, onBordaConfigured)
-		common.SetStealthMode(cfg.StealthMode)
+		applyClientConfig(cfg)
+		featureEnabled := func(feature string) bool {
+			return cfg.FeatureEnabled(feature, userID(), isPro(), geolookup.GetCountry(0))
+		}
+		applyProxyBenchAndBorda(cfg, featureEnabled, autoReport)
+		select {
+		case onBordaConfigured <- true:
+			// okay
+		default:
+			// ignore
+		}
+
+		common.SetStealthMode(featureEnabled(config.FeatureStealthMode))
 		onConfigUpdate(cfg)
-		if common.Platform != "android" && autoReport() {
-			cl.PingProxies(cfg.PingSamplePercentage)
+		if common.InDevelopment() || (featureEnabled(config.FeaturePingProxies) && common.Platform != "android" && autoReport()) {
+			cl.PingProxies()
 		}
 	}
+
+	proxied.SetProxyAddr(cl.Addr)
 	rt := proxied.ParallelPreferChained()
 	stopConfig := config.Init(configDir, flagsAsMap, userConfig, proxiesDispatch, globalDispatch, rt)
 	defer stopConfig()
@@ -244,7 +256,7 @@ func Run(httpProxyAddr string,
 	return nil
 }
 
-func applyClientConfig(cfg *config.Global, autoReport func() bool, onBordaConfigured chan bool) {
+func applyClientConfig(cfg *config.Global) {
 	certs, err := cfg.TrustedCACerts()
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
@@ -254,9 +266,10 @@ func applyClientConfig(cfg *config.Global, autoReport func() bool, onBordaConfig
 	} else {
 		log.Errorf("Unable to configured fronted (no config)")
 	}
+}
 
-	// proxybench is governed by this configuration as well.
-	if cfg.BordaReportInterval > 0 && !cfg.StealthMode {
+func applyProxyBenchAndBorda(cfg *config.Global, featureEnabled func(feature string) bool, autoReport func() bool) {
+	if featureEnabled(config.FeatureProxyBench) && !featureEnabled(config.FeatureStealthMode) {
 		startProxyBenchOnce.Do(func() {
 			proxybench.Start(&proxybench.Opts{}, func(timing time.Duration, ctx map[string]interface{}) {})
 		})
@@ -274,12 +287,6 @@ func applyClientConfig(cfg *config.Global, autoReport func() bool, onBordaConfig
 
 	borda.Configure(cfg.BordaReportInterval, enableBorda)
 
-	select {
-	case onBordaConfigured <- true:
-		// okay
-	default:
-		// ignore
-	}
 }
 
 func displayVersion() {
