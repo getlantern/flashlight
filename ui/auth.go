@@ -40,14 +40,14 @@ var forwardHeaders = map[string]bool{
 // Hop headers removed prior to the request being sent
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html
 var hopHeaders = map[string]bool{
-	"Connection":          true,
-	"Keep-Alive":          true,
-	"Proxy-Authenticate":  true,
-	"Proxy-Authorization": true,
-	"Te":                  true, // canonicalized version of "TE"
-	"Trailers":            true,
-	"Transfer-Encoding":   true,
-	"Upgrade":             true,
+	"connection":          true,
+	"keep-alive":          true,
+	"proxy-authenticate":  true,
+	"proxy-authorization": true,
+	"te":                  true, // canonicalized version of "TE"
+	"trailers":            true,
+	"transfer-encoding":   true,
+	"upgrade":             true,
 }
 
 func withUserID(ctx context.Context, userID string) context.Context {
@@ -112,7 +112,6 @@ func (s *Server) proxyHandler(req *http.Request, w http.ResponseWriter,
 			continue
 		}
 		for _, v := range values {
-			log.Debugf("Adding header %s %s", k, v)
 			w.Header().Add(k, v)
 		}
 	}
