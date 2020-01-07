@@ -219,6 +219,7 @@ func startApp(t *testing.T, helper *integrationtest.Helper) (*App, error) {
 		"headless":                true,
 		"proxyall":                true,
 		"configdir":               helper.ConfigDir,
+		"initialize":              false,
 		"vpn":                     false,
 		"stickyconfig":            false,
 		"clear-proxy-settings":    false,
