@@ -22,7 +22,7 @@ var corsAllowedHeaders = []string{
 }
 
 func (s *Server) corsHandler(next http.Handler) http.Handler {
-	uiAddr := fmt.Sprintf("http://%s", s.listenAddr)
+	uiAddr := fmt.Sprintf("http://%s", s.accessAddr)
 	corsOrigins = append(corsOrigins, uiAddr)
 	cors := cors.New(cors.Options{
 		AllowedOrigins:   corsOrigins,
