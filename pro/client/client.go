@@ -25,6 +25,7 @@ var (
 
 var (
 	ErrAPIUnavailable = errors.New("API unavailable.")
+	ErrNotAuthorized  = errors.New("Not Authorized")
 )
 
 type Response struct {
@@ -139,6 +140,9 @@ func (c *Client) UserData(user common.UserConfig) (res *Response, err error) {
 	}
 
 	if res.Status == "error" {
+		if res.ErrorId == "not-authorized" {
+			return nil, ErrNotAuthorized
+		}
 		return nil, errors.New(res.Error)
 	}
 	return res, nil

@@ -59,6 +59,10 @@ func servePro(channel ws.UIChannel) error {
 			_, err := pro.FetchUserData(settings)
 			if err != nil {
 				logger.Errorf("Could not get user data for %v: %v", userID, err)
+				if err == client.ErrNotAuthorized {
+					logger.Debugf("Resetting user data, was %v(%v)", userID, settings.GetProToken())
+					settings.SetUserIDAndToken(0, "")
+				}
 				retryLater()
 			}
 		}
