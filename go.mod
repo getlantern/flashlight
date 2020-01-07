@@ -46,7 +46,7 @@ require (
 	github.com/getlantern/kcpwrapper v0.0.0-20171114192627-a35c895f6de7
 	github.com/getlantern/keyman v0.0.0-20180207174507-f55e7280e93a
 	github.com/getlantern/lampshade v0.0.0-20191205031149-d9108ba9d5ae
-	github.com/getlantern/lantern-server v0.0.0-00010101000000-000000000000
+	github.com/getlantern/lantern-server auth-server
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
@@ -69,7 +69,8 @@ require (
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/shortcut v0.0.0-20190117153616-bb4d4203cc25
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
-	github.com/getlantern/systray v0.0.0-00010101000000-000000000000
+	github.com/getlantern/systray v0.0.0-20200107154710-8503b3469c93
+	github.com/getlantern/yinbi-server v0.0.0-20200107165800-fed54badef6e
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
 	github.com/getlantern/tinywss v0.0.0-20190809093313-4439caa924e5
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
@@ -77,7 +78,6 @@ require (
 	github.com/getlantern/tlsresumption v0.0.0-20191010160602-a16b0c459d39
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
-	github.com/getlantern/yinbi-server v0.0.0-20200107165800-fed54badef6e
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
 	github.com/gorilla/websocket v0.0.0-20180306181548-eb925808374e
@@ -105,11 +105,7 @@ require (
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
 
-replace github.com/getlantern/lantern-server => ../lantern-server
-
 replace github.com/lucas-clemente/quic-go => ../quic-go
-
-replace github.com/getlantern/systray => ../systray
 
 replace github.com/lucas-clemente/quicwrapper => ../quicwrapper
 
