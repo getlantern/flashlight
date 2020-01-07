@@ -153,8 +153,10 @@ func newServer(extURL, authServerAddr,
 
 func (s *Server) attachHandlers() {
 	mux := http.NewServeMux()
-	mux.Handle("/login", s.wrapMiddleware(s.authHandler()))
-	mux.Handle("/register", s.wrapMiddleware(s.authHandler()))
+
+	authHandler := http.HandlerFunc(s.authHandler)
+	mux.Handle("/login", s.wrapMiddleware(authHandler))
+	mux.Handle("/register", s.wrapMiddleware(authHandler))
 	mux.Handle("/user/account/new", s.wrapMiddleware(s.createAccountHandler()))
 	mux.Handle("/account/details", s.wrapMiddleware(s.getAccountDetails()))
 	mux.Handle("/user/logout", s.wrapMiddleware(s.proxy))

@@ -141,41 +141,39 @@ func (s *Server) sendAuthRequest(method, url string, requestBody []byte) (*model
 	return decodeAuthResponse(body)
 }
 
-func (s *Server) authHandler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		params, srpClient, err := s.getSRPClient(req)
-		if err != nil {
-			s.errorHandler(w, err, http.StatusInternalServerError)
-			return
-		}
-		requestBody, err := json.Marshal(params)
-		if err != nil {
-			s.errorHandler(w, err, http.StatusInternalServerError)
-			return
-		}
-		req.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
+func (s *Server) authHandler(w http.ResponseWriter, req *http.Request) {
+	params, srpClient, err := s.getSRPClient(req)
+	if err != nil {
+		s.errorHandler(w, err, http.StatusInternalServerError)
+		return
+	}
+	requestBody, err := json.Marshal(params)
+	if err != nil {
+		s.errorHandler(w, err, http.StatusInternalServerError)
+		return
+	}
+	req.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
 
-		onResp := func(body []byte) error {
-			resp, err := decodeAuthResponse(body)
-			if err != nil {
-				return err
-			}
-			resp, err = s.sendMutualAuth(srpClient,
-				resp.Credentials, params.Username)
-			if err != nil {
-				return err
-			}
-			ok := srpClient.ServerOk(resp.Proof)
-			if !ok {
-				return ErrInvalidSRPProof
-			}
-			return nil
-		}
-
-		err = s.proxyHandler(req, w, onResp)
+	onResp := func(body []byte) error {
+		resp, err := decodeAuthResponse(body)
 		if err != nil {
-			s.errorHandler(w, err, http.StatusInternalServerError)
-			return
+			return err
 		}
-	})
+		resp, err = s.sendMutualAuth(srpClient,
+			resp.Credentials, params.Username)
+		if err != nil {
+			return err
+		}
+		ok := srpClient.ServerOk(resp.Proof)
+		if !ok {
+			return ErrInvalidSRPProof
+		}
+		return nil
+	}
+
+	err = s.proxyHandler(req, w, onResp)
+	if err != nil {
+		s.errorHandler(w, err, http.StatusInternalServerError)
+		return
+	}
 }
