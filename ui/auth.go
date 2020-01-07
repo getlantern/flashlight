@@ -80,20 +80,9 @@ func (s *Server) corsHandler(next http.Handler) http.Handler {
 	cors := cors.New(cors.Options{
 		AllowedOrigins:   corsOrigins,
 		AllowCredentials: true,
-		AllowedHeaders:   []string{"*"},
-		AllowedMethods:   []string{"*"},
+		Debug:            true,
 	})
-	return cors.Handler(corsMiddle(next))
-}
-
-func corsMiddle(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
-		if request.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-		next.ServeHTTP(w, request)
-	})
+	return cors.Handler(next)
 }
 
 func (s *Server) proxyHandler(req *http.Request, w http.ResponseWriter,
