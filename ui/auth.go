@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/getlantern/lantern-server/models"
-	"github.com/rs/cors"
 )
 
 const (
@@ -29,12 +28,6 @@ const (
 var (
 	ErrInvalidSRPProof = errors.New("The SRP proof supplied by the server is invalid")
 )
-
-var defaultCorsOrigins = []string{
-	"http://localhost:2000",
-	"http://localhost:8080",
-	"https://localhost:2000",
-}
 
 var forwardHeaders = map[string]bool{
 	"authorization":   true,
@@ -72,17 +65,6 @@ func (s *Server) signoutHandler() http.Handler {
 		s.proxy.ServeHTTP(w, r)
 		return
 	})
-}
-
-func (s *Server) corsHandler(next http.Handler) http.Handler {
-	corsOrigins := defaultCorsOrigins
-	corsOrigins = append(corsOrigins, fmt.Sprintf("http://%s", s.listenAddr))
-	cors := cors.New(cors.Options{
-		AllowedOrigins:   corsOrigins,
-		AllowCredentials: true,
-		Debug:            true,
-	})
-	return cors.Handler(next)
 }
 
 func (s *Server) proxyHandler(req *http.Request, w http.ResponseWriter,
