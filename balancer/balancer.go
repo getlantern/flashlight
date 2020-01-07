@@ -686,6 +686,14 @@ func (b *Balancer) KeepLookingForSucceedingDialer() {
 	}
 }
 
+// PingProxies pings the client's proxies.
+func (bal *Balancer) PingProxies() {
+	dialers := bal.copyOfDialers()
+	for _, dialer := range dialers {
+		go dialer.Ping()
+	}
+}
+
 func recordTopDialer(sortedDialers []Dialer) {
 	ops.SetGlobal("num_proxies", len(sortedDialers))
 

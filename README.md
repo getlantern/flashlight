@@ -2,27 +2,32 @@
 
 ### Prerequisites
 
-* [Go 1.12](https://golang.org/dl/) is the minimum supported version of Go
+* [Go 1.13](https://golang.org/dl/) is the minimum supported version of Go
 * [GNU Make](https://www.gnu.org/software/make/) if you want to use the Makefile
-* Dependencies are managed with Go Modules. Use `GO111MODULE=on` in front of `go`
-  command to automatically pick up dependencies.
+* Dependencies are managed with Go Modules.
 * Force git to use ssh instead of https by running
   `git config --global url."git@github.com:".insteadOf "https://github.com/"`
 
-This repo contains the core Lantern logic as well as the Lantern desktop
-program. To build using your gopath:
-
-`make lantern`
-### Dependency Management
-Dependencies are managed using Go modules. If using a Go version prior to 1.13, you'll need to set the environment variable `GO111MODULE=on` in order to pick up dependencies automatically.
-
 ### Building
 This repo contains the core Lantern logic as well as the Lantern desktop
-program. To build using your gopath:
+program. To build, run:
 
-`GO111MODULE=on make lantern`
+`make lantern`
 
-You can also just build using the usual `go install` etc.
+### Running against a specific proxy
+It is often useful to force lantern to use a specific proxy, either for testing some new
+change on the server side or for trying to replicate issues a specific user has seen.
+To do so, you can use either:
+
+`./hitProxy.py [name or ip]`
+
+or
+
+`./runAsUser.py [user id]`
+
+It can also be useful to do this in conjuction with running over a VPN in China, for example,
+to more closely simulate the user experience, albeit with the added latency of running 
+traffic through the VPS itself.
 
 ### Updating Icons
 

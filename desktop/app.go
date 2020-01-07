@@ -165,6 +165,15 @@ func (app *App) Run() {
 			socksAddr = defaultSOCKSProxyAddress
 		}
 
+		if app.Flags["initialize"].(bool) {
+			app.statsTracker.AddListener(func(newStats stats.Stats) {
+				if newStats.HasSucceedingProxy {
+					log.Debug("Finished initialization")
+					app.Exit(nil)
+				}
+			})
+		}
+
 		err := flashlight.Run(
 			listenAddr,
 			socksAddr,
@@ -275,6 +284,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			if showErr := app.showExistingUI(uiaddr); showErr == nil {
 				log.Debug("Lantern already running, showing existing UI")
 				app.Exit(nil)
+				return false
 			}
 		}
 
@@ -671,7 +681,7 @@ func recordStopped() {
 
 // ShouldShowUI determines if we should show the UI or not.
 func (app *App) ShouldShowUI() bool {
-	return !app.Flags["headless"].(bool)
+	return !app.Flags["headless"].(bool) && !app.Flags["initialize"].(bool)
 }
 
 // OnTrayShow indicates the user has selected to show lantern from the tray.

@@ -30,6 +30,8 @@ var (
 	readableconfig     = flag.Bool("readableconfig", false, "if specified, disables obfuscation of the config yaml so that it remains human readable")
 	help               = flag.Bool("help", false, "Get usage help")
 	standalone         = flag.Bool("standalone", false, "run Lantern in its own browser window (doesn't rely on system browser)")
+	initialize         = flag.Bool("initialize", false, "silently initialize Lantern to a state of having working proxy and exit, typically during installation.")
+	timeout            = flag.Duration("timeout", 0, "force stop Lantern with an exit status of -1 after the timeout.")
 )
 
 // flagsAsMap returns a map of all flags that were provided at runtime
