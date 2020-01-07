@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"html"
-	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -58,15 +57,7 @@ func (s *Server) getAPIAddr(uri string) string {
 	return fmt.Sprintf("%s%s", s.authServerAddr, uri)
 }
 
-func (s *Server) signoutHandler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Debugf("Received new %s %s request",
-			r.Method, r.RequestURI)
-		s.proxy.ServeHTTP(w, r)
-		return
-	})
-}
-
+// proxyHandler
 func (s *Server) proxyHandler(req *http.Request, w http.ResponseWriter,
 	onResp func(body []byte) error,
 ) error {
@@ -105,19 +96,18 @@ func (s *Server) proxyHandler(req *http.Request, w http.ResponseWriter,
 		}
 	}
 
-	resp.Body = ioutil.NopCloser(bytes.NewBuffer(body))
+	headers := w.Header()
 	for k, values := range resp.Header {
 		if _, ok := hopHeaders[strings.ToLower(k)]; ok {
 			// skip hop headers
 			continue
 		}
 		for _, v := range values {
-			w.Header().Add(k, v)
+			headers.Add(k, v)
 		}
 	}
 	w.WriteHeader(resp.StatusCode)
-	io.Copy(w, resp.Body)
-
+	w.Write(body)
 	return nil
 }
 

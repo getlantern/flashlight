@@ -7,7 +7,7 @@ import (
 	"github.com/rs/cors"
 )
 
-var defaultCorsOrigins = []string{
+var corsOrigins = []string{
 	"http://localhost:2000",
 	"http://localhost:8080",
 	"https://localhost:2000",
@@ -22,8 +22,9 @@ var corsAllowedHeaders = []string{
 }
 
 func (s *Server) corsHandler(next http.Handler) http.Handler {
-	corsOrigins := defaultCorsOrigins
-	corsOrigins = append(corsOrigins, fmt.Sprintf("http://%s", s.listenAddr))
+	uiAddr := fmt.Sprintf("http://%s", s.listenAddr)
+	log.Debugf("Adding %s to cors origins", uiAddr)
+	corsOrigins = append(corsOrigins, uiAddr)
 	cors := cors.New(cors.Options{
 		AllowedOrigins:   corsOrigins,
 		AllowedHeaders:   corsAllowedHeaders,
