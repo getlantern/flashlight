@@ -76,9 +76,9 @@ require (
 	github.com/getlantern/tlsresumption v0.0.0-20191010160602-a16b0c459d39
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
+	github.com/getlantern/yinbi-server v0.0.0-20200107165800-fed54badef6e
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getlantern/yinbi-server v0.0.0-00010101000000-000000000000
 	github.com/gorilla/websocket v0.0.0-20180306181548-eb925808374e
 	github.com/hashicorp/golang-lru v0.5.3
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
@@ -105,8 +105,6 @@ require (
 )
 
 replace github.com/getlantern/lantern-server => ../lantern-server
-
-replace github.com/getlantern/yinbi-server => ../yinbi-server
 
 replace github.com/lucas-clemente/quic-go => ../quic-go
 
