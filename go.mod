@@ -46,7 +46,7 @@ require (
 	github.com/getlantern/kcpwrapper v0.0.0-20171114192627-a35c895f6de7
 	github.com/getlantern/keyman v0.0.0-20180207174507-f55e7280e93a
 	github.com/getlantern/lampshade v0.0.0-20191205031149-d9108ba9d5ae
-	github.com/getlantern/lantern-server auth-server
+	github.com/getlantern/lantern-server v0.0.0-20200107170726-57b1d694890d
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
@@ -70,7 +70,6 @@ require (
 	github.com/getlantern/shortcut v0.0.0-20190117153616-bb4d4203cc25
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
 	github.com/getlantern/systray v0.0.0-20200107154710-8503b3469c93
-	github.com/getlantern/yinbi-server v0.0.0-20200107165800-fed54badef6e
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
 	github.com/getlantern/tinywss v0.0.0-20190809093313-4439caa924e5
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
@@ -80,6 +79,7 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
+	github.com/getlantern/yinbi-server v0.0.0-20200107165800-fed54badef6e
 	github.com/gorilla/websocket v0.0.0-20180306181548-eb925808374e
 	github.com/hashicorp/golang-lru v0.5.3
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
@@ -105,9 +105,7 @@ require (
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
 
-replace github.com/lucas-clemente/quic-go => ../quic-go
-
-replace github.com/lucas-clemente/quicwrapper => ../quicwrapper
+replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20190819144938-28e3ca4262e1
 
 replace github.com/marten-seemann/qtls => github.com/marten-seemann/qtls-deprecated v0.0.0-20190207043627-591c71538704
 
