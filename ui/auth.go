@@ -30,6 +30,12 @@ var (
 	ErrInvalidSRPProof = errors.New("The SRP proof supplied by the server is invalid")
 )
 
+var defaultCorsOrigins = []string{
+	"http://localhost:2000",
+	"http://localhost:8080",
+	"https://localhost:2000",
+}
+
 var forwardHeaders = map[string]bool{
 	"authorization":   true,
 	"cookie":          true,
@@ -68,26 +74,26 @@ func (s *Server) signoutHandler() http.Handler {
 	})
 }
 
-func (s *Server) loginHandler() http.Handler {
-	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		log.Debugf("Received new %s %s request",
-			req.Method, req.RequestURI)
-		return
-	})
-}
-
 func (s *Server) corsHandler(next http.Handler) http.Handler {
-	corsOrigins := []string{"http://localhost:2000,http://localhost:8080"}
+	corsOrigins := defaultCorsOrigins
 	corsOrigins = append(corsOrigins, fmt.Sprintf("http://%s", s.listenAddr))
 	cors := cors.New(cors.Options{
-		AllowedOrigins: []string{"*"},
-		//AllowedOrigins:   corsOrigins,
+		AllowedOrigins:   corsOrigins,
 		AllowCredentials: true,
 		AllowedHeaders:   []string{"*"},
-		AllowedMethods: []string{http.MethodGet, http.MethodPost, http.MethodHead,
-			http.MethodPut, http.MethodOptions},
+		AllowedMethods:   []string{"*"},
 	})
-	return cors.Handler(next)
+	return cors.Handler(corsMiddle(next))
+}
+
+func corsMiddle(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, request *http.Request) {
+		if request.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+		next.ServeHTTP(w, request)
+	})
 }
 
 func (s *Server) proxyHandler(req *http.Request, w http.ResponseWriter,
@@ -175,7 +181,7 @@ func (s *Server) sendAuthRequest(method, url string, requestBody []byte) (*model
 	return decodeAuthResponse(body)
 }
 
-func (s *Server) authHandler(next http.Handler) http.Handler {
+func (s *Server) authHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		params, srpClient, err := s.getSRPClient(req)
 		if err != nil {

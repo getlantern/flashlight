@@ -147,8 +147,8 @@ func newServer(extURL, authServerAddr,
 
 func (s *Server) attachHandlers() {
 	mux := http.NewServeMux()
-	mux.Handle("/login", s.wrapAuthMiddleware(s.loginHandler()))
-	mux.Handle("/register", s.wrapAuthMiddleware(s.loginHandler()))
+	mux.Handle("/login", s.wrapMiddleware(s.authHandler()))
+	mux.Handle("/register", s.wrapMiddleware(s.authHandler()))
 	mux.Handle("/user/account/new", s.wrapMiddleware(s.createAccountHandler()))
 	mux.Handle("/account/details", s.wrapMiddleware(s.getAccountDetails()))
 	mux.Handle("/user/logout", s.wrapMiddleware(s.proxy))
@@ -161,14 +161,6 @@ func (s *Server) attachHandlers() {
 // wrapMiddleware takes the given http.Handler and wraps it with
 // the auth middleware handlers
 func (s *Server) wrapMiddleware(handler http.Handler) http.Handler {
-	handler = s.corsHandler(handler)
-	return handler
-}
-
-// wrapAuthMiddleware takes the given http.Handler and wraps it with
-// the auth middleware handlers
-func (s *Server) wrapAuthMiddleware(handler http.Handler) http.Handler {
-	handler = s.authHandler(handler)
 	handler = s.corsHandler(handler)
 	return handler
 }

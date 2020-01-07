@@ -11,7 +11,10 @@ import (
 )
 
 const (
-	HeaderContentType = "Content-Type"
+	HeaderContentType              = "Content-Type"
+	HeaderAccessControlAllow       = "Access-Control-Allow-Headers"
+	HeaderAuthorization            = "Authorization"
+	HeaderAccessControlAllowOrigin = "Access-Control-Allow-Origin"
 
 	POST = "POST"
 	GET  = "GET"
