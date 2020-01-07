@@ -100,6 +100,14 @@ func StartServer(requestedAddr, authServerAddr,
 	handlers ...*PathHandler) (*Server, error) {
 	server := newServer(extURL, authServerAddr,
 		localHTTPToken, standalone)
+	err := server.listen(requestedAddr)
+	if err != nil {
+		return nil, err
+	}
+	// attach handlers here since the address the
+	// UI is listening on impacts how some are
+	// configured
+	server.attachHandlers()
 
 	for _, h := range handlers {
 		server.handle(h.Pattern, h.Handler)
@@ -139,8 +147,6 @@ func newServer(extURL, authServerAddr,
 		translations:   eventual.NewValue(),
 		standalone:     standalone,
 	}
-
-	s.attachHandlers()
 
 	return s
 }
@@ -201,9 +207,9 @@ func (s *Server) strippingHandler(h http.Handler) http.Handler {
 	})
 }
 
-// starts server listen at addr in host:port format, or arbitrary local port if
-// addr is empty.
-func (s *Server) start(requestedAddr string) error {
+// listen adds the requested address to the list of candidate addresses and
+// attempts to find an address for the UI to listen on
+func (s *Server) listen(requestedAddr string) error {
 	var listenErr error
 	for _, addr := range addrCandidates(requestedAddr) {
 		l, err := net.Listen("tcp", addr)
@@ -216,28 +222,30 @@ func (s *Server) start(requestedAddr string) error {
 		l = tcpKeepAliveListener{l.(*net.TCPListener)}
 		s.listenAddr = addr
 		s.listener = l
-		goto serve
+		actualPort := s.listener.Addr().(*net.TCPAddr).Port
+		host, port, err := net.SplitHostPort(s.listenAddr)
+		if err != nil {
+			panic("impossible")
+		}
+		if port == "" || port == "0" {
+			// On first run, we pick an arbitrary port, update our listenAddr to
+			// reflect the assigned port
+			s.listenAddr = fmt.Sprintf("%v:%v", host, actualPort)
+			log.Debugf("rewrote listen address to %v", s.listenAddr)
+		}
+		if host == "" {
+			host = "localhost"
+		}
+		s.accessAddr = net.JoinHostPort(host, strconv.Itoa(actualPort))
+		return nil
 	}
 	// couldn't start on any of the candidates.
 	return listenErr
+}
 
-serve:
-	actualPort := s.listener.Addr().(*net.TCPAddr).Port
-	host, port, err := net.SplitHostPort(s.listenAddr)
-	if err != nil {
-		panic("impossible")
-	}
-	if port == "" || port == "0" {
-		// On first run, we pick an arbitrary port, update our listenAddr to
-		// reflect the assigned port
-		s.listenAddr = fmt.Sprintf("%v:%v", host, actualPort)
-		log.Debugf("rewrote listen address to %v", s.listenAddr)
-	}
-	if host == "" {
-		host = "localhost"
-	}
-	s.accessAddr = net.JoinHostPort(host, strconv.Itoa(actualPort))
-
+// starts server listen at addr in host:port format, or arbitrary local port if
+// addr is empty.
+func (s *Server) start(requestedAddr string) error {
 	server := &http.Server{
 		Handler:  s.mux,
 		ErrorLog: log.AsStdLogger(),
