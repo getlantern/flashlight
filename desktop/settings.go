@@ -313,9 +313,9 @@ func (s *Settings) extensionsDir() (string, error) {
 		if runtime.GOOS == "windows" {
 			base = filepath.Join(configdir, "..", "Local", "Google", "Chrome", "User Data")
 		} else if runtime.GOOS == "darwin" {
-			base := filepath.Join(configdir, "Google", "Chrome")
+			base = filepath.Join(configdir, "Google", "Chrome")
 		} else {
-			base := filepath.Join(configdir, "google-chrome")
+			base = filepath.Join(configdir, "google-chrome")
 		}
 		path := filepath.Join(base, "Default", "Extensions", "akppoapgnchinmnbinihafkogdohpbmk")
 		if dirs, err := ioutil.ReadDir(path); err != nil {
