@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -309,9 +310,9 @@ func (s *Settings) extensionsDir() (string, error) {
 		return "", err
 	} else {
 		var base string
-		if os.GOOS == "windows" {
+		if runtime.GOOS == "windows" {
 			base = filepath.Join(configdir, "..", "Local", "Google", "Chrome", "User Data")
-		} else if os.GOOS == "darwin" { {
+		} else if runtime.GOOS == "darwin" {
 			base := filepath.Join(configdir, "Google", "Chrome")
 		} else {
 			base := filepath.Join(configdir, "google-chrome")
