@@ -8,9 +8,11 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/golog"
@@ -139,6 +141,8 @@ func loadSettingsFrom(version, revisionDate, buildDate, path string) *Settings {
 	set[SNVersion] = version
 	set[SNBuildDate] = buildDate
 	set[SNRevisionDate] = revisionDate
+
+	sett.saveJSONForExtension()
 	return sett
 }
 
@@ -274,6 +278,58 @@ func (s *Settings) setString(name SettingName, v interface{}) {
 
 // save saves settings to disk.
 func (s *Settings) save() {
+	s.saveDefault()
+	s.saveJSONForExtension()
+}
+
+// save saves settings to disk.
+func (s *Settings) saveJSONForExtension() {
+	log.Trace("Saving settings")
+	if path, err := s.extensionsDir(); err != nil {
+		s.log.Errorf("Could not find extensions dir: %v", err)
+	} else if f, err := os.Create(path); err != nil {
+		s.log.Errorf("Could not open settings file for writing: %v", err)
+	} else if _, err := s.writeJsonTo(f); err != nil {
+		s.log.Errorf("Could not save settings file: %v", err)
+	} else {
+		log.Tracef("Saved settings to %s", path)
+	}
+}
+
+func (s *Settings) extensionsDir() (string, error) {
+	const fn = "settings.json"
+	// This allows us to use a local extension during development.
+	dir := os.Getenv("LANTERN_CHROME_EXTENSION")
+	if dir != "" {
+		return dir + fn, nil
+	}
+	if configdir, err := os.UserConfigDir(); err != nil {
+		log.Errorf("Could not get config dir: %v", err)
+		return "", err
+	} else {
+		path := filepath.Join(configdir, "Google", "Chrome", "Default", "Extensions", "akppoapgnchinmnbinihafkogdohpbmk")
+		if dirs, err := ioutil.ReadDir(path); err != nil {
+			log.Errorf("Could not read extension folders %v", err)
+			return "", err
+		} else {
+			// Folders for different versions are under the extension -- make sure we get the newest one.
+			newest := time.Unix(0, 0)
+			dir := ""
+			for _, fi := range dirs {
+				if fi.IsDir() {
+					if fi.ModTime().After(newest) {
+						newest = fi.ModTime()
+						dir = fi.Name()
+					}
+				}
+			}
+			return filepath.Join(path, dir, fn), nil
+		}
+	}
+}
+
+// save saves settings to disk.
+func (s *Settings) saveDefault() {
 	log.Trace("Saving settings")
 	if f, err := os.Create(s.filePath); err != nil {
 		s.log.Errorf("Could not open settings file for writing: %v", err)
@@ -281,6 +337,15 @@ func (s *Settings) save() {
 		s.log.Errorf("Could not save settings file: %v", err)
 	} else {
 		log.Tracef("Saved settings to %s", s.filePath)
+	}
+}
+
+func (s *Settings) writeJsonTo(w io.Writer) (int, error) {
+	toBeSaved := s.mapToSave()
+	if bytes, err := json.Marshal(toBeSaved); err != nil {
+		return 0, err
+	} else {
+		return w.Write(bytes)
 	}
 }
 
