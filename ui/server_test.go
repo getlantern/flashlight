@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"path"
@@ -76,6 +77,22 @@ func TestStartServer(t *testing.T) {
 		"passing invalid port should fallback to default addresses")
 	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr(),
 		"passing invalid port should fallback to default addresses")
+	s.stop()
+
+	// Ensure that UI won't start on chrome restricted ports
+	var port int
+	// This test is non-deterministic in that it may not catch incorrect code because
+	// net.Listen is overwhelmingly likely to choose a port which is not prohibited
+	// However, it will never report a test failure if the code is behaving correctly
+	s = startServer("127.0.0.1:0")
+	port = s.listener.Addr().(*net.TCPAddr).Port
+	assert.False(t, prohibitedPorts[port])
+	s.stop()
+
+	// This test is deterministic
+	s = startServer("127.0.0.1:2049")
+	port = s.listener.Addr().(*net.TCPAddr).Port
+	assert.False(t, prohibitedPorts[port])
 	s.stop()
 
 	oldDefault := defaultUIAddresses

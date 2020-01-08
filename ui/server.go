@@ -24,6 +24,19 @@ import (
 	"github.com/getlantern/flashlight/util"
 )
 
+// A set of ports that chrome considers restricted
+var prohibitedPorts = map[int]bool{
+	2049: true, // nfs
+	3659: true, // apple-sasl / PasswordServer
+	4045: true, // lockd
+	6000: true, // X11
+	6665: true, // Alternate IRC [Apple addition]
+	6666: true, // Alternate IRC [Apple addition]
+	6667: true, // Standard IRC [Apple addition]
+	6668: true, // Alternate IRC [Apple addition]
+	6669: true, // Alternate IRC [Apple addition]
+}
+
 func init() {
 	// http.FileServer relies on OS to guess mime type, which can be wrong.
 	// Override system default for current process.
@@ -144,16 +157,39 @@ func (s *Server) strippingHandler(h http.Handler) http.Handler {
 // addr is empty.
 func (s *Server) start(requestedAddr string) error {
 	var listenErr error
+	var listener net.Listener
+
 	for _, addr := range addrCandidates(requestedAddr) {
+		_, port, err := net.SplitHostPort(addr)
+		if err != nil {
+			listenErr = fmt.Errorf("error parsing addr %v: %v", addr, err)
+			log.Debug(listenErr)
+			continue
+		}
+
 		log.Debugf("Lantern UI server start listening at %v", addr)
-		l, err := net.Listen("tcp", addr)
+		listener, err = net.Listen("tcp", addr)
 		if err != nil {
 			listenErr = fmt.Errorf("unable to listen at %v: %v", addr, err)
 			log.Debug(listenErr)
 			continue
 		}
+
+		if port == "" || port == "0" {
+			actualPort := listener.Addr().(*net.TCPAddr).Port
+			for prohibitedPorts[actualPort] == true {
+				listener, err = net.Listen("tcp", addr)
+				if err != nil {
+					listenErr = fmt.Errorf("unable to listen at %v: %v", addr, err)
+					log.Debug(listenErr)
+					continue
+				}
+				actualPort = listener.Addr().(*net.TCPAddr).Port
+			}
+		}
+
 		s.listenAddr = addr
-		s.listener = l
+		s.listener = listener
 		goto serve
 	}
 	// couldn't start on any of the candidates.
@@ -336,6 +372,23 @@ func addrCandidates(requested string) []string {
 	if strings.HasPrefix(requested, "http://") {
 		log.Errorf("Client tried to start at bad address: %v", requested)
 		requested = strings.TrimPrefix(requested, "http://")
+	}
+
+	_, portString, err := net.SplitHostPort(requested)
+	if err != nil {
+		log.Errorf("Client tried to start at unparseable address: %v", requested)
+		return defaultUIAddresses
+	}
+
+	port, err := strconv.Atoi(portString)
+	if err != nil {
+		log.Errorf("Client tried to start at unparseable port: %v", portString)
+		return defaultUIAddresses
+	}
+
+	if prohibitedPorts[port] {
+		log.Errorf("Client tried to start on prohibited port: %v", port)
+		return defaultUIAddresses
 	}
 
 	if requested != "" {
