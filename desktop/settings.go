@@ -296,6 +296,7 @@ func (s *Settings) saveJSONForExtension() {
 	}
 }
 
+// Gets the Chrome extensions directory for our extension across operating systems.
 func (s *Settings) extensionsDir() (string, error) {
 	const fn = "settings.json"
 	// This allows us to use a local extension during development.
@@ -307,7 +308,15 @@ func (s *Settings) extensionsDir() (string, error) {
 		log.Errorf("Could not get config dir: %v", err)
 		return "", err
 	} else {
-		path := filepath.Join(configdir, "Google", "Chrome", "Default", "Extensions", "akppoapgnchinmnbinihafkogdohpbmk")
+		var base string
+		if os.GOOS == "windows" {
+			base = filepath.Join(configdir, "..", "Local", "Google", "Chrome", "User Data")
+		} else if os.GOOS == "darwin" { {
+			base := filepath.Join(configdir, "Google", "Chrome")
+		} else {
+			base := filepath.Join(configdir, "google-chrome")
+		}
+		path := filepath.Join(base, "Default", "Extensions", "akppoapgnchinmnbinihafkogdohpbmk")
 		if dirs, err := ioutil.ReadDir(path); err != nil {
 			log.Errorf("Could not read extension folders %v", err)
 			return "", err
