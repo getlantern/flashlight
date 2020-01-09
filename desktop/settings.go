@@ -13,7 +13,6 @@ import (
 	"runtime"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/golog"
@@ -143,7 +142,7 @@ func loadSettingsFrom(version, revisionDate, buildDate, path string) *Settings {
 	set[SNBuildDate] = buildDate
 	set[SNRevisionDate] = revisionDate
 
-	sett.saveJSONForExtension()
+	go sett.saveJSONForExtension()
 	return sett
 }
 
@@ -286,28 +285,33 @@ func (s *Settings) save() {
 // save saves settings to disk.
 func (s *Settings) saveJSONForExtension() {
 	log.Trace("Saving settings")
-	if path, err := s.extensionsDir(); err != nil {
+	if paths, err := s.extensionDirs(); err != nil {
 		s.log.Errorf("Could not find extensions dir: %v", err)
-	} else if f, err := os.Create(path); err != nil {
-		s.log.Errorf("Could not open settings file for writing: %v", err)
-	} else if _, err := s.writeJsonTo(f); err != nil {
-		s.log.Errorf("Could not save settings file: %v", err)
 	} else {
-		log.Tracef("Saved settings to %s", path)
+		for _, path := range paths {
+			if f, err := os.Create(path); err != nil {
+				s.log.Errorf("Could not open settings file for writing: %v", err)
+			} else if _, err := s.writeJSONTo(f); err != nil {
+				s.log.Errorf("Could not save settings file: %v", err)
+			} else {
+				log.Tracef("Saved settings to %s", path)
+			}
+		}
 	}
 }
 
-// Gets the Chrome extensions directory for our extension across operating systems.
-func (s *Settings) extensionsDir() (string, error) {
+// Gets the Chrome extension directories for our extension across operating systems.
+func (s *Settings) extensionDirs() ([]string, error) {
+	paths := make([]string, 0)
 	const fn = "settings.json"
 	// This allows us to use a local extension during development.
 	dir := os.Getenv("LANTERN_CHROME_EXTENSION")
 	if dir != "" {
-		return filepath.Join(dir, fn), nil
+		paths = append(paths, filepath.Join(dir, fn))
 	}
 	if configdir, err := os.UserConfigDir(); err != nil {
 		log.Errorf("Could not get config dir: %v", err)
-		return "", err
+		return paths, err
 	} else {
 		var base string
 		if runtime.GOOS == "windows" {
@@ -316,25 +320,43 @@ func (s *Settings) extensionsDir() (string, error) {
 			base = filepath.Join(configdir, "Google", "Chrome")
 		} else {
 			base = filepath.Join(configdir, "google-chrome")
+			if _, err := os.Stat(base); os.IsNotExist(err) {
+				base = filepath.Join(configdir, "chromium")
+			}
 		}
-		path := filepath.Join(base, "Default", "Extensions", "akppoapgnchinmnbinihafkogdohpbmk")
-		if dirs, err := ioutil.ReadDir(path); err != nil {
-			log.Errorf("Could not read extension folders %v", err)
-			return "", err
-		} else {
-			// Folders for different versions are under the extension -- make sure we get the newest one.
-			newest := time.Unix(0, 0)
-			dir := ""
-			for _, fi := range dirs {
-				if fi.IsDir() {
-					if fi.ModTime().After(newest) {
-						newest = fi.ModTime()
-						dir = fi.Name()
+
+		if _, err := os.Stat(base); os.IsNotExist(err) {
+			return paths, err
+		}
+
+		// The user might have multiple profiles and/or multiple versions, so we just write to all
+		// the relevant directories.
+		if err := filepath.Walk(base, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				log.Errorf("Could not walk extensions directory? %v", err)
+				return err
+			}
+			if info.IsDir() && info.Name() == "akppoapgnchinmnbinihafkogdohpbmk" {
+				if dirs, err := ioutil.ReadDir(path); err != nil {
+					log.Errorf("Could not read extension folders %v", err)
+					return err
+				} else {
+					for _, fi := range dirs {
+						if fi.IsDir() {
+							// Just include the paths of all versions for simplicity.
+							paths = append(paths, filepath.Join(path, fi.Name(), "data", fn))
+						}
 					}
 				}
+				return nil
 			}
-			return filepath.Join(path, dir, "data", fn), nil
+			return nil
+		}); err != nil {
+			log.Errorf("Error walking extensions directory")
+			return paths, err
 		}
+		log.Debugf("Returning paths: %#v", paths)
+		return paths, nil
 	}
 }
 
@@ -350,7 +372,7 @@ func (s *Settings) saveDefault() {
 	}
 }
 
-func (s *Settings) writeJsonTo(w io.Writer) (int, error) {
+func (s *Settings) writeJSONTo(w io.Writer) (int, error) {
 	toBeSaved := s.mapToSave()
 	if bytes, err := json.Marshal(toBeSaved); err != nil {
 		return 0, err
