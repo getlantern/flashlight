@@ -178,6 +178,10 @@ func (s *Server) start(requestedAddr string) error {
 		if port == "" || port == "0" {
 			actualPort := listener.Addr().(*net.TCPAddr).Port
 			for prohibitedPorts[actualPort] == true {
+				err := listener.Close()
+				if err != nil {
+					log.Errorf("Could not close listener on prohibited port: %v", err)
+				}
 				listener, err = net.Listen("tcp", addr)
 				if err != nil {
 					listenErr = fmt.Errorf("unable to listen at %v: %v", addr, err)
