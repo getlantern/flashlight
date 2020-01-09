@@ -303,7 +303,7 @@ func (s *Settings) extensionsDir() (string, error) {
 	// This allows us to use a local extension during development.
 	dir := os.Getenv("LANTERN_CHROME_EXTENSION")
 	if dir != "" {
-		return dir + fn, nil
+		return filepath.Join(dir, fn), nil
 	}
 	if configdir, err := os.UserConfigDir(); err != nil {
 		log.Errorf("Could not get config dir: %v", err)
@@ -333,7 +333,7 @@ func (s *Settings) extensionsDir() (string, error) {
 					}
 				}
 			}
-			return filepath.Join(path, dir, fn), nil
+			return filepath.Join(path, dir, "data", fn), nil
 		}
 	}
 }
