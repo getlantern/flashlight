@@ -376,24 +376,24 @@ func dumpRequestHeaders(r *http.Request) {
 
 func addrCandidates(requested string) []string {
 	if strings.HasPrefix(requested, "http://") {
-		log.Errorf("Client tried to start at bad address: %v", requested)
+		log.Debugf("Client tried to start at bad address: %v", requested)
 		requested = strings.TrimPrefix(requested, "http://")
 	}
 
 	_, portString, err := net.SplitHostPort(requested)
 	if err != nil {
-		log.Errorf("Client tried to start at unparseable address: %v", requested)
+		log.Debugf("Client tried to start at unparseable address: %v", requested)
 		return defaultUIAddresses
 	}
 
 	port, err := strconv.Atoi(portString)
 	if err != nil {
-		log.Errorf("Client tried to start at unparseable port: %v", portString)
+		log.Debugf("Client tried to start at unparseable port: %v", portString)
 		return defaultUIAddresses
 	}
 
 	if prohibitedPorts[port] {
-		log.Errorf("Client tried to start on prohibited port: %v", port)
+		log.Debugf("Client tried to start on prohibited port: %v", port)
 		return defaultUIAddresses
 	}
 
