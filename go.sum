@@ -193,6 +193,8 @@ github.com/getlantern/http-proxy v0.0.3-0.20190809090746-b2f0d5c04754 h1:BpmRKnN
 github.com/getlantern/http-proxy v0.0.3-0.20190809090746-b2f0d5c04754/go.mod h1:x5sqRt5/uZ+6Gn5tvFHx1pLoJBwIKS1lrFfhLEJWjNk=
 github.com/getlantern/http-proxy-lantern v0.1.4-0.20191205031621-c79813277d70 h1:hGTavFKS///N/XA247bNBa/XxHD6F2mSgK+pGt09tRY=
 github.com/getlantern/http-proxy-lantern v0.1.4-0.20191205031621-c79813277d70/go.mod h1:JkiCK6XAtM/wWVkQbOFWryIY5p3YcQB4P1DryIWjFvI=
+github.com/getlantern/http-proxy-lantern v0.1.4-0.20200107052320-8aea176349c6 h1:rNkOKo5L50mnqKNS/sgHBKFB6oldtLD27mZdqL2yPOI=
+github.com/getlantern/http-proxy-lantern v0.1.4-0.20200107052320-8aea176349c6/go.mod h1:NBCoXRRkf66b90/mVQlgYe7bVGkaFqVzahfMmbvAeNI=
 github.com/getlantern/httpseverywhere v0.0.0-20180326165025-9bdb93e40695 h1:OTTOB+KtDNRLDZwW56RiuCkK8cFE/iF4pMhpx+Pt2as=
 github.com/getlantern/httpseverywhere v0.0.0-20180326165025-9bdb93e40695/go.mod h1:4HB5d0IkyVGnvPSajTJQC5UkPub0t/toqULnaa0P3/4=
 github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c h1:+JnT+Rwa/3rksc4Zi0u6fJ/WX+tPK58GtsrcXWVUU2U=
@@ -277,6 +279,7 @@ github.com/getlantern/quic-go v0.7.1-0.20190819144938-28e3ca4262e1 h1:ZninVtJJjp
 github.com/getlantern/quic-go v0.7.1-0.20190819144938-28e3ca4262e1/go.mod h1:uW88CoBr0zVnlyTAdwd9dd6qgk/CY23t6dRPqZ5TReU=
 github.com/getlantern/quicwrapper v0.0.0-20191010171358-6726e89fbe14 h1:zfbGNjLb0kI0vLcNdui7DUuQ77cuEgzDRUcoml/ZHX8=
 github.com/getlantern/quicwrapper v0.0.0-20191010171358-6726e89fbe14/go.mod h1:8S3cNfBSHZqsFcJBE9Nsj+EEg9WMnXCtOs4aww4KzOg=
+github.com/getlantern/quicwrapper v0.0.0-20191220185748-4721f84faa16/go.mod h1:NQ7m0azcOKZq8+1ltxlLbE2k8lV9I7qyYCoWWJ/ib5o=
 github.com/getlantern/quicwrapper v0.0.0-20191223175752-8594dffdffe7 h1:ZTJ8385waTPZ0HCDSuXrYsu4el/TTz9PYRMjNlrgfio=
 github.com/getlantern/quicwrapper v0.0.0-20191223175752-8594dffdffe7/go.mod h1:lpUCVWefiynqKV1NP5zCKuyqm3P5mp7ct6IXY7lM2AE=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c h1:IkjF+RwRs8B/RsuD638eUFO2K/227OO2B1FLXGp17Ro=
