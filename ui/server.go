@@ -153,53 +153,55 @@ func (s *Server) strippingHandler(h http.Handler) http.Handler {
 	})
 }
 
-// starts server listen at addr in host:port format, or arbitrary local port if
-// addr is empty.
-func (s *Server) start(requestedAddr string) error {
-	var listenErr error
+// takes a slice of address candidates and listens on the first
+// acceptable one returning the listener and address
+func listen(candidates []string) (net.Listener, string, error) {
 	var listener net.Listener
-
-	for _, addr := range addrCandidates(requestedAddr) {
+	var listenErr error
+	for _, addr := range candidates {
 		_, port, err := net.SplitHostPort(addr)
 		if err != nil {
 			listenErr = fmt.Errorf("error parsing addr %v: %v", addr, err)
 			log.Debug(listenErr)
 			continue
 		}
-
-		log.Debugf("Lantern UI server start listening at %v", addr)
-		listener, err = net.Listen("tcp", addr)
-		if err != nil {
-			listenErr = fmt.Errorf("unable to listen at %v: %v", addr, err)
-			log.Debug(listenErr)
-			continue
-		}
-
-		if port == "" || port == "0" {
+		for {
+			listener, err = net.Listen("tcp", addr)
+			if err != nil {
+				listenErr = fmt.Errorf("unable to listen at %v: %v", addr, err)
+				log.Debug(listenErr)
+				break // move to the next candidate
+			}
 			actualPort := listener.Addr().(*net.TCPAddr).Port
-			for prohibitedPorts[actualPort] == true {
-				err := listener.Close()
-				if err != nil {
-					log.Errorf("Could not close listener on prohibited port: %v", err)
+			if !prohibitedPorts[actualPort] {
+				return listener, addr, nil
+			} else {
+				listenErr = fmt.Errorf("Client tried to start on prohibited port: %v", port)
+				log.Debug(listenErr)
+				closeErr := listener.Close()
+				if closeErr != nil {
+					log.Errorf("Could not close listener on prohibited port: %v", closeErr)
 				}
-				listener, err = net.Listen("tcp", addr)
-				if err != nil {
-					listenErr = fmt.Errorf("unable to listen at %v: %v", addr, err)
-					log.Debug(listenErr)
+				if port == "" || port == "0" {
 					continue
+				} else {
+					break
 				}
-				actualPort = listener.Addr().(*net.TCPAddr).Port
 			}
 		}
-
-		s.listenAddr = addr
-		s.listener = listener
-		goto serve
 	}
-	// couldn't start on any of the candidates.
-	return listenErr
+	return nil, "", listenErr
+}
 
-serve:
+// starts server listen at addr in host:port format, or arbitrary local port if
+// addr is empty.
+func (s *Server) start(requestedAddr string) error {
+	listener, addr, err := listen(addrCandidates(requestedAddr))
+	if err != nil {
+		return err
+	}
+	s.listenAddr = addr
+	s.listener = listener
 	actualPort := s.listener.Addr().(*net.TCPAddr).Port
 	host, port, err := net.SplitHostPort(s.listenAddr)
 	if err != nil {

@@ -1,10 +1,12 @@
 package ui
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"path"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -31,6 +33,28 @@ func TestDoShow(t *testing.T) {
 	s.doShow(s.rootURL(), "campaign", "medium", show)
 
 	assert.Equal(t, "test", urlToShow)
+}
+
+func TestListen(t *testing.T) {
+	prohibitedPortInt := 2049
+	prohibitedPort := strconv.Itoa(prohibitedPortInt)
+	prohibitedPortAddr := fmt.Sprintf("localhost:%v", prohibitedPort)
+
+	// the listen function will choose a non-prohibited port when there's a backup candidate
+	{
+		l, _, err := listen([]string{prohibitedPortAddr, "localhost:0"})
+		assert.Nil(t, err)
+		actualPort := l.Addr().(*net.TCPAddr).Port
+		assert.NotEqual(t, actualPort, prohibitedPortInt)
+		l.Close()
+	}
+
+	// the listen function will return an error if *only* a prohibited port address
+	// is provided
+	{
+		_, _, err := listen([]string{prohibitedPortAddr})
+		assert.NotNil(t, err)
+	}
 }
 
 func TestStartServer(t *testing.T) {
