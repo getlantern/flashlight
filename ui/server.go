@@ -156,17 +156,10 @@ func (s *Server) strippingHandler(h http.Handler) http.Handler {
 // takes a slice of address candidates and listens on the first
 // acceptable one returning the listener and address
 func listen(candidates []string) (net.Listener, string, error) {
-	var listener net.Listener
 	var listenErr error
 	for _, addr := range candidates {
-		_, port, err := net.SplitHostPort(addr)
-		if err != nil {
-			listenErr = fmt.Errorf("error parsing addr %v: %v", addr, err)
-			log.Debug(listenErr)
-			continue
-		}
 		for {
-			listener, err = net.Listen("tcp", addr)
+			listener, err := net.Listen("tcp", addr)
 			if err != nil {
 				listenErr = fmt.Errorf("unable to listen at %v: %v", addr, err)
 				log.Debug(listenErr)
@@ -176,11 +169,17 @@ func listen(candidates []string) (net.Listener, string, error) {
 			if !prohibitedPorts[actualPort] {
 				return listener, addr, nil
 			} else {
-				listenErr = fmt.Errorf("Client tried to start on prohibited port: %v", port)
+				listenErr = fmt.Errorf("Client tried to start on prohibited port: %v", actualPort)
 				log.Debug(listenErr)
 				closeErr := listener.Close()
 				if closeErr != nil {
-					log.Errorf("Could not close listener on prohibited port: %v", closeErr)
+					log.Errorf("Could not close listener on prohibited port %v: %v", actualPort, closeErr)
+				}
+				_, port, err := net.SplitHostPort(addr)
+				if err != nil {
+					listenErr = fmt.Errorf("error parsing addr %v: %v", addr, err)
+					log.Debug(listenErr)
+					break
 				}
 				if port == "" || port == "0" {
 					continue
@@ -378,23 +377,6 @@ func addrCandidates(requested string) []string {
 	if strings.HasPrefix(requested, "http://") {
 		log.Debugf("Client tried to start at bad address: %v", requested)
 		requested = strings.TrimPrefix(requested, "http://")
-	}
-
-	_, portString, err := net.SplitHostPort(requested)
-	if err != nil {
-		log.Debugf("Client tried to start at unparseable address: %v", requested)
-		return defaultUIAddresses
-	}
-
-	port, err := strconv.Atoi(portString)
-	if err != nil {
-		log.Debugf("Client tried to start at unparseable port: %v", portString)
-		return defaultUIAddresses
-	}
-
-	if prohibitedPorts[port] {
-		log.Debugf("Client tried to start on prohibited port: %v", port)
-		return defaultUIAddresses
 	}
 
 	if requested != "" {

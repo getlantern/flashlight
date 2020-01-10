@@ -238,10 +238,6 @@ func TestAddrCandidates(t *testing.T) {
 
 	candidates = addrCandidates("")
 	assert.Equal(t, defaultUIAddresses, candidates)
-
-	// Replace chrome restricted port address
-	candidates = addrCandidates("127.0.0.1:2049")
-	assert.Equal(t, defaultUIAddresses, candidates)
 }
 
 func getTestHandler() http.Handler {
