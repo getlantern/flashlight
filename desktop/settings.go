@@ -311,14 +311,12 @@ func (s *Settings) extensionDirs() ([]string, error) {
 	}
 }
 
-func (s *Settings) includeLocalExtension(fn string) []string {
-	paths := make([]string, 0)
+func (s *Settings) includeLocalExtension(fileName string) []string {
 	// This allows us to use a local extension during development.
-	dir := os.Getenv("LANTERN_CHROME_EXTENSION")
-	if dir != "" {
-		paths = append(paths, filepath.Join(dir, fn))
+	if dir := os.Getenv("LANTERN_CHROME_EXTENSION"); dir != "" {
+		return []string{filepath.Join(dir, fileName)}
 	}
-	return paths
+	return make([]string, 0)
 }
 
 func (s *Settings) osExtensionBasePath(userOS string) (string, error) {
