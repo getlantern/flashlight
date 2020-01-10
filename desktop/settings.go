@@ -324,18 +324,18 @@ func (s *Settings) osExtensionBasePath(userOS string) (string, error) {
 		log.Errorf("Could not get config dir: %v", err)
 		return "", err
 	} else {
-		if userOS == "windows" {
+		switch userOS {
+		case "windows":
 			return filepath.Join(configdir, "..", "Local", "Google", "Chrome", "User Data"), nil
-		} else if userOS == "darwin" {
+		case "darwin":
 			return filepath.Join(configdir, "Google", "Chrome"), nil
-		} else if userOS == "linux" {
+		case "linux":
 			base := filepath.Join(configdir, "google-chrome")
 			if _, err := os.Stat(base); os.IsNotExist(err) {
 				return filepath.Join(configdir, "chromium"), nil
-			} else {
-				return base, nil
 			}
-		} else {
+			return base, nil
+		default:
 			return "", fmt.Errorf("Unsupported operating system: %v", userOS)
 		}
 	}
