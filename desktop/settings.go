@@ -300,64 +300,84 @@ func (s *Settings) saveJSONForExtension() {
 	}
 }
 
-// Gets the Chrome extension directories for our extension across operating systems.
 func (s *Settings) extensionDirs() ([]string, error) {
+	const fileName = "settings.json"
+	paths := s.includeLocalExtension(fileName)
+	if base, err := s.osExtensionBasePath(runtime.GOOS); err != nil {
+		return paths, err
+	} else {
+		const extensionID = "akppoapgnchinmnbinihafkogdohpbmk"
+		return s.extensionDirsForOS(extensionID, fileName, base, paths)
+	}
+}
+
+func (s *Settings) includeLocalExtension(fn string) []string {
 	paths := make([]string, 0)
-	const fn = "settings.json"
 	// This allows us to use a local extension during development.
 	dir := os.Getenv("LANTERN_CHROME_EXTENSION")
 	if dir != "" {
 		paths = append(paths, filepath.Join(dir, fn))
 	}
+	return paths
+}
+
+func (s *Settings) osExtensionBasePath(userOS string) (string, error) {
 	if configdir, err := os.UserConfigDir(); err != nil {
 		log.Errorf("Could not get config dir: %v", err)
-		return paths, err
+		return "", err
 	} else {
-		var base string
-		if runtime.GOOS == "windows" {
-			base = filepath.Join(configdir, "..", "Local", "Google", "Chrome", "User Data")
-		} else if runtime.GOOS == "darwin" {
-			base = filepath.Join(configdir, "Google", "Chrome")
-		} else {
-			base = filepath.Join(configdir, "google-chrome")
+		if userOS == "windows" {
+			return filepath.Join(configdir, "..", "Local", "Google", "Chrome", "User Data"), nil
+		} else if userOS == "darwin" {
+			return filepath.Join(configdir, "Google", "Chrome"), nil
+		} else if userOS == "linux" {
+			base := filepath.Join(configdir, "google-chrome")
 			if _, err := os.Stat(base); os.IsNotExist(err) {
-				base = filepath.Join(configdir, "chromium")
+				return filepath.Join(configdir, "chromium"), nil
+			} else {
+				return base, nil
 			}
+		} else {
+			return "", fmt.Errorf("Unsupported operating system: %v", userOS)
 		}
+	}
+}
 
-		if _, err := os.Stat(base); os.IsNotExist(err) {
-			return paths, err
+// Gets the Chrome extension directories for our extension across operating systems.
+func (s *Settings) extensionDirsForOS(extensionID, fileName, base string, paths []string) ([]string, error) {
+	if _, err := os.Stat(base); os.IsNotExist(err) {
+		return paths, err
+	}
+
+	// The user might have multiple profiles and/or multiple versions, so we just write to all
+	// the relevant directories.
+	if err := filepath.Walk(base, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			log.Errorf("Could not walk extensions directory? %v", err)
+			return err
 		}
-
-		// The user might have multiple profiles and/or multiple versions, so we just write to all
-		// the relevant directories.
-		if err := filepath.Walk(base, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				log.Errorf("Could not walk extensions directory? %v", err)
+		if info.IsDir() && info.Name() == extensionID {
+			if dirs, err := ioutil.ReadDir(path); err != nil {
+				log.Errorf("Could not read extension folders %v", err)
 				return err
-			}
-			if info.IsDir() && info.Name() == "akppoapgnchinmnbinihafkogdohpbmk" {
-				if dirs, err := ioutil.ReadDir(path); err != nil {
-					log.Errorf("Could not read extension folders %v", err)
-					return err
-				} else {
-					for _, fi := range dirs {
-						if fi.IsDir() {
-							// Just include the paths of all versions for simplicity.
-							paths = append(paths, filepath.Join(path, fi.Name(), "data", fn))
-						}
+			} else {
+				// This directory can include subdirectories for multiple versions of the extension.
+				// Just include the paths of all versions for simplicity and write to all of them.
+				for _, fi := range dirs {
+					if fi.IsDir() {
+						paths = append(paths, filepath.Join(path, fi.Name(), "data", fileName))
 					}
 				}
-				return nil
 			}
 			return nil
-		}); err != nil {
-			log.Errorf("Error walking extensions directory")
-			return paths, err
 		}
-		log.Debugf("Returning paths: %#v", paths)
-		return paths, nil
+		return nil
+	}); err != nil {
+		log.Errorf("Error walking extensions directory")
+		return paths, err
 	}
+	log.Debugf("Returning Chrome extension paths: %#v", paths)
+	return paths, nil
 }
 
 // save saves settings to disk.
