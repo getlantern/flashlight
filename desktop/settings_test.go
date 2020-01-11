@@ -24,7 +24,7 @@ func TestExtensionDirs(t *testing.T) {
 
 	basePath, err = s.osExtensionBasePath("darwin")
 	assert.NoError(t, err)
-	assert.True(t, strings.Contains(basePath, "Support"))
+	assert.True(t, strings.Contains(basePath, "Google"))
 
 	basePath, err = s.osExtensionBasePath("linux")
 	assert.NoError(t, err)
