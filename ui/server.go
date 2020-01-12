@@ -225,13 +225,13 @@ func (s *Server) strippingHandler(h http.Handler) http.Handler {
 // listen takes a slice of candidate addresses and
 // attempts to find an address for the UI to listen on
 func (s *Server) listen(candidates []string) error {
-	closeListener := func(l net.Listener, actualPort int) {
-		closeErr := l.Close()
-		if closeErr != nil {
-			log.Errorf("Could not close listener on prohibited port %v: %v", actualPort, closeErr)
-		}
-	}
 	for _, addr := range candidates {
+		host, port, err := net.SplitHostPort(addr)
+		if err != nil {
+			err := fmt.Errorf("error parsing addr %v: %v", addr, err)
+			log.Error(err)
+			continue
+		}
 		listener, err := net.Listen("tcp", addr)
 		if err != nil {
 			err = fmt.Errorf("unable to listen at %v: %v", addr, err)
@@ -242,20 +242,16 @@ func (s *Server) listen(candidates []string) error {
 		if prohibitedPorts[actualPort] {
 			err := fmt.Errorf("Client tried to start on prohibited port: %v", actualPort)
 			log.Error(err)
-			closeListener(listener, actualPort)
+			closeErr := listener.Close()
+			if closeErr != nil {
+				log.Errorf("Could not close listener on prohibited port %v: %v", actualPort, closeErr)
+			}
 			continue
 		}
 		log.Debugf("Lantern UI server listening at %v", addr)
 		listener = tcpKeepAliveListener{listener.(*net.TCPListener)}
 		s.listenAddr = addr
 		s.listener = listener
-		host, port, err := net.SplitHostPort(s.listenAddr)
-		if err != nil {
-			err := fmt.Errorf("error parsing addr %v: %v", addr, err)
-			log.Error(err)
-			closeListener(listener, actualPort)
-			continue
-		}
 		if port == "" || port == "0" {
 			// On first run, we pick an arbitrary port, update our listenAddr to
 			// reflect the assigned port
