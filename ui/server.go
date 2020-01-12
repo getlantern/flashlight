@@ -27,6 +27,19 @@ import (
 	"github.com/getlantern/yinbi-server/yinbi"
 )
 
+// A set of ports that chrome considers restricted
+var prohibitedPorts = map[int]bool{
+	2049: true, // nfs
+	3659: true, // apple-sasl / PasswordServer
+	4045: true, // lockd
+	6000: true, // X11
+	6665: true, // Alternate IRC [Apple addition]
+	6666: true, // Alternate IRC [Apple addition]
+	6667: true, // Standard IRC [Apple addition]
+	6668: true, // Alternate IRC [Apple addition]
+	6669: true, // Alternate IRC [Apple addition]
+}
+
 func init() {
 	// http.FileServer relies on OS to guess mime type, which can be wrong.
 	// Override system default for current process.
@@ -100,7 +113,7 @@ func StartServer(requestedAddr, authServerAddr,
 	handlers ...*PathHandler) (*Server, error) {
 	server := newServer(extURL, authServerAddr,
 		localHTTPToken, standalone)
-	err := server.listen(requestedAddr)
+	err := server.listen(addrCandidates(requestedAddr))
 	if err != nil {
 		return nil, err
 	}
@@ -209,25 +222,39 @@ func (s *Server) strippingHandler(h http.Handler) http.Handler {
 	})
 }
 
-// listen adds the requested address to the list of candidate addresses and
+// listen takes a slice of candidate addresses and
 // attempts to find an address for the UI to listen on
-func (s *Server) listen(requestedAddr string) error {
-	var listenErr error
-	for _, addr := range addrCandidates(requestedAddr) {
-		l, err := net.Listen("tcp", addr)
+func (s *Server) listen(candidates []string) error {
+	closeListener := func(l net.Listener, actualPort int) {
+		closeErr := l.Close()
+		if closeErr != nil {
+			log.Errorf("Could not close listener on prohibited port %v: %v", actualPort, closeErr)
+		}
+	}
+	for _, addr := range candidates {
+		listener, err := net.Listen("tcp", addr)
 		if err != nil {
-			listenErr = fmt.Errorf("unable to listen at %v: %v", addr, err)
-			log.Debug(listenErr)
+			err = fmt.Errorf("unable to listen at %v: %v", addr, err)
+			log.Debug(err)
+			continue // move to the next candidate
+		}
+		actualPort := listener.Addr().(*net.TCPAddr).Port
+		if prohibitedPorts[actualPort] {
+			err := fmt.Errorf("Client tried to start on prohibited port: %v", actualPort)
+			log.Error(err)
+			closeListener(listener, actualPort)
 			continue
 		}
 		log.Debugf("Lantern UI server listening at %v", addr)
-		l = tcpKeepAliveListener{l.(*net.TCPListener)}
+		listener = tcpKeepAliveListener{listener.(*net.TCPListener)}
 		s.listenAddr = addr
-		s.listener = l
-		actualPort := s.listener.Addr().(*net.TCPAddr).Port
+		s.listener = listener
 		host, port, err := net.SplitHostPort(s.listenAddr)
 		if err != nil {
-			panic("impossible")
+			err := fmt.Errorf("error parsing addr %v: %v", addr, err)
+			log.Error(err)
+			closeListener(listener, actualPort)
+			continue
 		}
 		if port == "" || port == "0" {
 			// On first run, we pick an arbitrary port, update our listenAddr to
@@ -242,12 +269,17 @@ func (s *Server) listen(requestedAddr string) error {
 		return nil
 	}
 	// couldn't start on any of the candidates.
-	return listenErr
+	return nil
 }
 
 // starts server listen at addr in host:port format, or arbitrary local port if
 // addr is empty.
 func (s *Server) start(requestedAddr string) error {
+	err := s.listen(addrCandidates(requestedAddr))
+	if err != nil {
+		return err
+	}
+
 	server := &http.Server{
 		Handler:  s.mux,
 		ErrorLog: log.AsStdLogger(),
@@ -406,7 +438,7 @@ func dumpRequestHeaders(r *http.Request) {
 
 func addrCandidates(requested string) []string {
 	if strings.HasPrefix(requested, "http://") {
-		log.Errorf("Client tried to start at bad address: %v", requested)
+		log.Debugf("Client tried to start at bad address: %v", requested)
 		requested = strings.TrimPrefix(requested, "http://")
 	}
 
