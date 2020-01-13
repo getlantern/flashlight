@@ -391,17 +391,18 @@ func (s *Settings) saveDefault() {
 }
 
 func (s *Settings) writeJSONTo(w io.Writer) (int, error) {
-	toBeSaved := s.mapToSave()
-	if bytes, err := json.Marshal(toBeSaved); err != nil {
-		return 0, err
-	} else {
-		return w.Write(bytes)
-	}
+	return s.writeWithMarshaler(w, json.Marshal)
 }
 
 func (s *Settings) writeTo(w io.Writer) (int, error) {
+	return s.writeWithMarshaler(w, yaml.Marshal)
+}
+
+type marshaler func(interface{}) ([]byte, error)
+
+func (s *Settings) writeWithMarshaler(w io.Writer, m marshaler) (int, error) {
 	toBeSaved := s.mapToSave()
-	if bytes, err := yaml.Marshal(toBeSaved); err != nil {
+	if bytes, err := m(toBeSaved); err != nil {
 		return 0, err
 	} else {
 		return w.Write(bytes)
