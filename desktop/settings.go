@@ -379,7 +379,7 @@ func (s *Settings) extensionDirsForOS(extensionID, fileName, base string, paths 
 	return paths, nil
 }
 
-// save saves settings to disk.
+// save saves settings to disk as yaml in the default lantern user settings directory.
 func (s *Settings) saveDefault() {
 	log.Trace("Saving settings")
 	if f, err := os.Create(s.filePath); err != nil {
