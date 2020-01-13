@@ -111,8 +111,13 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 				}
 			}
 		}
+		if req.URL.Host == "client.lantern.io" {
+			log.Debugf("Replacing host with local")
+			req.Host = "127.0.0.1:64113"
+			req.URL.Host = req.Host
+		}
 		// Direct proxying can only be used for plain HTTP connections.
-		log.Tracef("Intercepting HTTP request %s %v", req.Method, req.URL)
+		log.Debugf("Intercepting HTTP request %s %v", req.Method, req.URL)
 	}
 
 	return next(ctx, req)

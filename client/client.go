@@ -381,6 +381,7 @@ func (client *Client) dial(ctx context.Context, isConnect bool, network, addr st
 	defer op.End()
 	ctx, cancel := context.WithTimeout(ctx, client.requestTimeout)
 	defer cancel()
+	addr = strings.Replace(addr, "client.lantern.io", "127.0.0.1", 1)
 	return client.doDial(op, ctx, isConnect, addr)
 }
 
@@ -483,6 +484,9 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 }
 
 func (client *Client) shouldSendToProxy(addr string) bool {
+	if strings.Contains(addr, "client.lantern.io") {
+		return false
+	}
 	if shouldForceProxying() {
 		return true
 	}
