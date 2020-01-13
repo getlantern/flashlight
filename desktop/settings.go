@@ -285,7 +285,7 @@ func (s *Settings) save() {
 // saveJSONForExtension saves a copy of the settings as JSON for the lantern
 // chrome extension to read.
 func (s *Settings) saveJSONForExtension() {
-	log.Trace("Saving settings")
+	s.log.Trace("Saving settings")
 	if paths, err := s.extensionDirs(); err != nil {
 		s.log.Errorf("Could not find extensions dir: %v", err)
 	} else {
@@ -322,7 +322,7 @@ func (s *Settings) includeLocalExtension(fileName string) []string {
 
 func (s *Settings) osExtensionBasePath(userOS string) (string, error) {
 	if configdir, err := os.UserConfigDir(); err != nil {
-		log.Errorf("Could not get config dir: %v", err)
+		s.log.Errorf("Could not get config dir: %v", err)
 		return "", err
 	} else {
 		switch userOS {
@@ -352,12 +352,12 @@ func (s *Settings) extensionDirsForOS(extensionID, fileName, base string, paths 
 	// the relevant directories.
 	if err := filepath.Walk(base, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Errorf("Could not walk extensions directory? %v", err)
+			s.log.Errorf("Could not walk extensions directory? %v", err)
 			return err
 		}
 		if info.IsDir() && info.Name() == extensionID {
 			if dirs, err := ioutil.ReadDir(path); err != nil {
-				log.Errorf("Could not read extension folders %v", err)
+				s.log.Errorf("Could not read extension folders %v", err)
 				return err
 			} else {
 				// This directory can include subdirectories for multiple versions of the extension.
