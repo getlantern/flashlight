@@ -8,7 +8,9 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"sync"
 
@@ -103,7 +105,6 @@ type Settings struct {
 }
 
 func loadSettingsFrom(version, revisionDate, buildDate, path string) *Settings {
-	log.Debug("Loading settings")
 	// Create default settings that may or may not be overridden from an existing file
 	// on disk.
 	sett := newSettings(path)
@@ -139,6 +140,8 @@ func loadSettingsFrom(version, revisionDate, buildDate, path string) *Settings {
 	set[SNVersion] = version
 	set[SNBuildDate] = buildDate
 	set[SNRevisionDate] = revisionDate
+
+	go sett.saveJSONForExtension()
 	return sett
 }
 
@@ -274,19 +277,132 @@ func (s *Settings) setString(name SettingName, v interface{}) {
 
 // save saves settings to disk.
 func (s *Settings) save() {
-	log.Trace("Saving settings")
+	s.saveDefault()
+	s.saveJSONForExtension()
+}
+
+// saveJSONForExtension saves a copy of the settings as JSON for the lantern
+// chrome extension to read.
+func (s *Settings) saveJSONForExtension() {
+	s.log.Trace("Saving settings")
+	if paths, err := s.extensionDirs(); err != nil {
+		s.log.Errorf("Could not find extensions dir: %v", err)
+	} else {
+		for _, path := range paths {
+			if f, err := os.Create(path); err != nil {
+				s.log.Errorf("Could not open settings file for writing: %v", err)
+			} else if _, err := s.writeJSONTo(f); err != nil {
+				s.log.Errorf("Could not save settings file: %v", err)
+			} else {
+				s.log.Tracef("Saved settings to %s", path)
+			}
+		}
+	}
+}
+
+func (s *Settings) extensionDirs() ([]string, error) {
+	const fileName = "settings.json"
+	paths := s.includeLocalExtension(fileName)
+	if base, err := s.osExtensionBasePath(runtime.GOOS); err != nil {
+		return paths, err
+	} else {
+		const extensionID = "akppoapgnchinmnbinihafkogdohpbmk"
+		return s.extensionDirsForOS(extensionID, fileName, base, paths)
+	}
+}
+
+func (s *Settings) includeLocalExtension(fileName string) []string {
+	// This allows us to use a local extension during development.
+	if dir := os.Getenv("LANTERN_CHROME_EXTENSION"); dir != "" {
+		return []string{filepath.Join(dir, fileName)}
+	}
+	return make([]string, 0)
+}
+
+func (s *Settings) osExtensionBasePath(userOS string) (string, error) {
+	if configdir, err := os.UserConfigDir(); err != nil {
+		s.log.Errorf("Could not get config dir: %v", err)
+		return "", err
+	} else {
+		switch userOS {
+		case "windows":
+			return filepath.Join(configdir, "..", "Local", "Google", "Chrome", "User Data"), nil
+		case "darwin":
+			return filepath.Join(configdir, "Google", "Chrome"), nil
+		case "linux":
+			base := filepath.Join(configdir, "google-chrome")
+			if _, err := os.Stat(base); os.IsNotExist(err) {
+				return filepath.Join(configdir, "chromium"), nil
+			}
+			return base, nil
+		default:
+			return "", fmt.Errorf("Unsupported operating system: %v", userOS)
+		}
+	}
+}
+
+// Gets the Chrome extension directories for our extension across operating systems.
+func (s *Settings) extensionDirsForOS(extensionID, fileName, base string, paths []string) ([]string, error) {
+	if _, err := os.Stat(base); os.IsNotExist(err) {
+		return paths, err
+	}
+
+	// The user might have multiple profiles and/or multiple versions, so we just write to all
+	// the relevant directories.
+	if err := filepath.Walk(base, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			s.log.Errorf("Could not walk extensions directory? %v", err)
+			return err
+		}
+		if info.IsDir() && info.Name() == extensionID {
+			if dirs, err := ioutil.ReadDir(path); err != nil {
+				s.log.Errorf("Could not read extension folders %v", err)
+				return err
+			} else {
+				// This directory can include subdirectories for multiple versions of the extension.
+				// Just include the paths of all versions for simplicity and write to all of them.
+				for _, fi := range dirs {
+					if fi.IsDir() {
+						paths = append(paths, filepath.Join(path, fi.Name(), "data", fileName))
+					}
+				}
+			}
+			return nil
+		}
+		return nil
+	}); err != nil {
+		s.log.Errorf("Error walking extensions directory")
+		return paths, err
+	}
+	s.log.Debugf("Returning Chrome extension paths: %#v", paths)
+	return paths, nil
+}
+
+// save saves settings to disk as yaml in the default lantern user settings directory.
+func (s *Settings) saveDefault() {
+	s.log.Trace("Saving settings")
 	if f, err := os.Create(s.filePath); err != nil {
 		s.log.Errorf("Could not open settings file for writing: %v", err)
 	} else if _, err := s.writeTo(f); err != nil {
 		s.log.Errorf("Could not save settings file: %v", err)
 	} else {
-		log.Tracef("Saved settings to %s", s.filePath)
+		s.log.Tracef("Saved settings to %s", s.filePath)
 	}
 }
 
+func (s *Settings) writeJSONTo(w io.Writer) (int, error) {
+	return s.writeWithMarshaler(w, json.Marshal)
+}
+
 func (s *Settings) writeTo(w io.Writer) (int, error) {
+	return s.writeWithMarshaler(w, yaml.Marshal)
+}
+
+type marshaler func(interface{}) ([]byte, error)
+
+func (s *Settings) writeWithMarshaler(w io.Writer, m marshaler) (int, error) {
 	toBeSaved := s.mapToSave()
-	if bytes, err := yaml.Marshal(toBeSaved); err != nil {
+	if bytes, err := m(toBeSaved); err != nil {
 		return 0, err
 	} else {
 		return w.Write(bytes)
@@ -501,7 +617,7 @@ func (s *Settings) getInt64(name SettingName) int64 {
 }
 
 func (s *Settings) getVal(name SettingName) (interface{}, error) {
-	log.Tracef("Getting value for %v", name)
+	s.log.Tracef("Getting value for %v", name)
 	s.RLock()
 	defer s.RUnlock()
 	if val, ok := s.m[name]; ok {

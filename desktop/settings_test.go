@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -13,6 +14,49 @@ import (
 	"github.com/getlantern/uuid"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestExtensionDirs(t *testing.T) {
+	s := loadTemp()
+
+	basePath, err := s.osExtensionBasePath("windows")
+	assert.NoError(t, err)
+	assert.True(t, strings.Contains(basePath, "Local"))
+
+	basePath, err = s.osExtensionBasePath("darwin")
+	assert.NoError(t, err)
+	assert.True(t, strings.Contains(basePath, "Google"))
+
+	basePath, err = s.osExtensionBasePath("linux")
+	assert.NoError(t, err)
+	assert.True(t, strings.Contains(basePath, "chromium"))
+
+	_, err = s.osExtensionBasePath("eurequrq9ur")
+	assert.Error(t, err)
+
+	dirs, err := s.extensionDirsForOS("doesnotexist", "settings.json", "nodirectoryhere", make([]string, 0))
+	assert.Error(t, err)
+	assert.Equal(t, 0, len(dirs))
+
+	dir, err := ioutil.TempDir("", "testconfig")
+	assert.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	dirs, err = s.extensionDirsForOS("doesnotexist", "settings.json", dir, make([]string, 0))
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(dirs))
+
+	dirs, err = s.extensionDirsForOS("doesnotexist", "settings.json", dir, make([]string, 0))
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(dirs))
+
+	// Create a dummy extension directory under our temp config path.
+	err = os.MkdirAll(filepath.Join(dir, "direxists", "0.0.1"), 0700)
+	assert.NoError(t, err)
+
+	dirs, err = s.extensionDirsForOS("direxists", "settings.json", dir, make([]string, 0))
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(dirs))
+}
 
 func TestGetInt64Eventually(t *testing.T) {
 	s := loadTemp()
