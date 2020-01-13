@@ -124,7 +124,7 @@ func TestRead(t *testing.T) {
 
 func TestSetNum(t *testing.T) {
 	snTest := SettingName("test")
-	set := newSettings("/dev/null")
+	set := newSet("/dev/null")
 	var val json.Number = "4809"
 	var expected int64 = 4809
 	set.setNum(snTest, val)
@@ -144,7 +144,7 @@ func TestSetNum(t *testing.T) {
 }
 
 func TestStringArray(t *testing.T) {
-	set := newSettings("/dev/null")
+	set := newSet("/dev/null")
 	assert.Nil(t, set.getStringArray("key"), "string array should be nil initially")
 	set.setStringArray("key", []string{"value"})
 	assert.Equal(t, []string{"value"}, set.getStringArray("key"), "should set string array")
@@ -158,6 +158,10 @@ func TestStringArray(t *testing.T) {
 	set.setVal("key", []interface{}{"value3"})
 	assert.Equal(t, []string{"value3"}, set.getStringArray("key"),
 		"should read value from []interface{} too")
+}
+
+func newSet(path string) *Settings {
+	return newSettings(path, newChromeExtension())
 }
 
 func TestPersistAndLoad(t *testing.T) {
@@ -188,7 +192,7 @@ func TestLoadLowerCased(t *testing.T) {
 }
 
 func TestOnChange(t *testing.T) {
-	set := newSettings("/dev/null")
+	set := newSet("/dev/null")
 	in := make(chan interface{})
 	out := make(chan interface{})
 	var c1, c2 string
@@ -208,7 +212,7 @@ func TestOnChange(t *testing.T) {
 }
 
 func TestInvalidType(t *testing.T) {
-	set := newSettings("/dev/null")
+	set := newSet("/dev/null")
 	set.setVal("test", nil)
 	assert.Equal(t, "", set.getString("test"))
 	assert.Equal(t, false, set.getBool("test"))

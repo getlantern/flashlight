@@ -107,8 +107,7 @@ type Settings struct {
 func loadSettingsFrom(version, revisionDate, buildDate, path string, chrome chromeExtension) *Settings {
 	// Create default settings that may or may not be overridden from an existing file
 	// on disk.
-	sett := newSettings(path)
-	sett.chrome = chrome
+	sett := newSettings(path, chrome)
 	set := sett.m
 
 	// Use settings from disk if they're available.
@@ -156,7 +155,7 @@ func toCamelCase(m map[SettingName]interface{}) {
 	}
 }
 
-func newSettings(filePath string) *Settings {
+func newSettings(filePath string, chrome chromeExtension) *Settings {
 	return &Settings{
 		m: map[SettingName]interface{}{
 			SNUserID:         int64(0),
@@ -174,6 +173,7 @@ func newSettings(filePath string) *Settings {
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
 		log:             golog.LoggerFor("app.settings"),
+		chrome:          chrome,
 	}
 }
 
