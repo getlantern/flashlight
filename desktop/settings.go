@@ -105,7 +105,6 @@ type Settings struct {
 }
 
 func loadSettingsFrom(version, revisionDate, buildDate, path string) *Settings {
-	log.Debug("Loading settings")
 	// Create default settings that may or may not be overridden from an existing file
 	// on disk.
 	sett := newSettings(path)
@@ -295,7 +294,7 @@ func (s *Settings) saveJSONForExtension() {
 			} else if _, err := s.writeJSONTo(f); err != nil {
 				s.log.Errorf("Could not save settings file: %v", err)
 			} else {
-				log.Tracef("Saved settings to %s", path)
+				s.log.Tracef("Saved settings to %s", path)
 			}
 		}
 	}
@@ -372,22 +371,22 @@ func (s *Settings) extensionDirsForOS(extensionID, fileName, base string, paths 
 		}
 		return nil
 	}); err != nil {
-		log.Errorf("Error walking extensions directory")
+		s.log.Errorf("Error walking extensions directory")
 		return paths, err
 	}
-	log.Debugf("Returning Chrome extension paths: %#v", paths)
+	s.log.Debugf("Returning Chrome extension paths: %#v", paths)
 	return paths, nil
 }
 
 // save saves settings to disk as yaml in the default lantern user settings directory.
 func (s *Settings) saveDefault() {
-	log.Trace("Saving settings")
+	s.log.Trace("Saving settings")
 	if f, err := os.Create(s.filePath); err != nil {
 		s.log.Errorf("Could not open settings file for writing: %v", err)
 	} else if _, err := s.writeTo(f); err != nil {
 		s.log.Errorf("Could not save settings file: %v", err)
 	} else {
-		log.Tracef("Saved settings to %s", s.filePath)
+		s.log.Tracef("Saved settings to %s", s.filePath)
 	}
 }
 
@@ -618,7 +617,7 @@ func (s *Settings) getInt64(name SettingName) int64 {
 }
 
 func (s *Settings) getVal(name SettingName) (interface{}, error) {
-	log.Tracef("Getting value for %v", name)
+	s.log.Tracef("Getting value for %v", name)
 	s.RLock()
 	defer s.RUnlock()
 	if val, ok := s.m[name]; ok {
