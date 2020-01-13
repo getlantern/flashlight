@@ -44,15 +44,29 @@ func newChromeExtension() chromeExtension {
 }
 
 func (e *extension) install() {
-	if base, err := e.osExtensionBasePath(runtime.GOOS); err != nil {
-		e.log.Errorf("Could not get extension base path %v", err)
-	} else {
-		e.installTo(base)
+	// See https://developer.chrome.com/extensions/external_extensions for install
+	// locations and procedures.
+	switch runtime.GOOS {
+	case "darwin":
+		e.installDarwin()
+	case "linux":
+		e.installLinux()
 	}
 }
 
-func (e *extension) installTo(base string) {
-	externalPath := filepath.Join(base, "External Extensions")
+func (e *extension) installDarwin() {
+	if base, err := e.osExtensionBasePath(runtime.GOOS); err != nil {
+		e.log.Errorf("Could not get extension base path %v", err)
+	} else {
+		e.installTo(filepath.Join(base, "External Extensions"))
+	}
+}
+
+func (e *extension) installLinux() {
+	e.installTo(filepath.Join("usr", "share", "google-chrome", "extensions"))
+}
+
+func (e *extension) installTo(externalPath string) {
 	if err := os.MkdirAll(externalPath, 0700); err != nil {
 		e.log.Errorf("Could not make external extensions directory %v", err)
 	} else {
