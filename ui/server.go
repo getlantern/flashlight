@@ -174,6 +174,7 @@ serve:
 	if host == "" {
 		host = "localhost"
 	}
+	host = "client.lantern.io"
 	s.accessAddr = net.JoinHostPort(host, strconv.Itoa(actualPort))
 
 	server := &http.Server{
