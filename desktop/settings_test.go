@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -14,49 +13,6 @@ import (
 	"github.com/getlantern/uuid"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestExtensionDirs(t *testing.T) {
-	s := loadTemp()
-
-	basePath, err := s.osExtensionBasePath("windows")
-	assert.NoError(t, err)
-	assert.True(t, strings.Contains(basePath, "Local"))
-
-	basePath, err = s.osExtensionBasePath("darwin")
-	assert.NoError(t, err)
-	assert.True(t, strings.Contains(basePath, "Google"))
-
-	basePath, err = s.osExtensionBasePath("linux")
-	assert.NoError(t, err)
-	assert.True(t, strings.Contains(basePath, "chromium"))
-
-	_, err = s.osExtensionBasePath("eurequrq9ur")
-	assert.Error(t, err)
-
-	dirs, err := s.extensionDirsForOS("doesnotexist", "settings.json", "nodirectoryhere", make([]string, 0))
-	assert.Error(t, err)
-	assert.Equal(t, 0, len(dirs))
-
-	dir, err := ioutil.TempDir("", "testconfig")
-	assert.NoError(t, err)
-	defer os.RemoveAll(dir)
-
-	dirs, err = s.extensionDirsForOS("doesnotexist", "settings.json", dir, make([]string, 0))
-	assert.NoError(t, err)
-	assert.Equal(t, 0, len(dirs))
-
-	dirs, err = s.extensionDirsForOS("doesnotexist", "settings.json", dir, make([]string, 0))
-	assert.NoError(t, err)
-	assert.Equal(t, 0, len(dirs))
-
-	// Create a dummy extension directory under our temp config path.
-	err = os.MkdirAll(filepath.Join(dir, "direxists", "0.0.1"), 0700)
-	assert.NoError(t, err)
-
-	dirs, err = s.extensionDirsForOS("direxists", "settings.json", dir, make([]string, 0))
-	assert.NoError(t, err)
-	assert.Equal(t, 1, len(dirs))
-}
 
 func TestGetInt64Eventually(t *testing.T) {
 	s := loadTemp()
@@ -86,7 +42,7 @@ func loadTemp() *Settings {
 	tmpfile, _ := ioutil.TempFile("", "test")
 	defer os.Remove(tmpfile.Name()) // clean up
 
-	return loadSettingsFrom("1", "1/1/1", "1/1/1", tmpfile.Name())
+	return loadSettingsFrom("1", "1/1/1", "1/1/1", tmpfile.Name(), newChromeExtension())
 }
 
 func TestRead(t *testing.T) {
@@ -209,7 +165,7 @@ func TestPersistAndLoad(t *testing.T) {
 	revisionDate := "1970-1-1"
 	buildDate := "1970-1-1"
 	yamlFile := "./test.yaml"
-	set := loadSettingsFrom(version, revisionDate, buildDate, yamlFile)
+	set := loadSettingsFrom(version, revisionDate, buildDate, yamlFile, newChromeExtension())
 	assert.Equal(t, version, set.m["version"], "Should be set to version")
 	assert.Equal(t, revisionDate, set.m["revisionDate"], "Should be set to revisionDate")
 	assert.Equal(t, buildDate, set.m["buildDate"], "Should be set to buildDate")
@@ -218,7 +174,7 @@ func TestPersistAndLoad(t *testing.T) {
 
 	set.SetLanguage("leet")
 	set.SetUserIDAndToken(1234, "token")
-	set2 := loadSettingsFrom(version, revisionDate, buildDate, yamlFile)
+	set2 := loadSettingsFrom(version, revisionDate, buildDate, yamlFile, newChromeExtension())
 	assert.Equal(t, "leet", set2.GetLanguage(), "Should save language to file and reload")
 	assert.Equal(t, int64(1234), set2.GetUserID(), "Should save user id to file and reload")
 	set2.SetLanguage("en")
@@ -226,7 +182,7 @@ func TestPersistAndLoad(t *testing.T) {
 }
 
 func TestLoadLowerCased(t *testing.T) {
-	set := loadSettingsFrom("", "", "", "./lowercased.yaml")
+	set := loadSettingsFrom("", "", "", "./lowercased.yaml", newChromeExtension())
 	assert.Equal(t, int64(1234), set.GetUserID(), "Should load user id from lower cased yaml")
 	assert.Equal(t, "abcd", set.GetToken(), "Should load user token from lower cased yaml")
 }

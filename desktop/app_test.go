@@ -18,7 +18,7 @@ func TestLocalHTTPToken(t *testing.T) {
 	defer os.Remove(tmpfile.Name()) // clean up
 
 	//ui.Start(":", "", "", "", func() bool { return true })
-	set := loadSettingsFrom("1", "1/1/1", "1/1/1", tmpfile.Name())
+	set := loadSettingsFrom("1", "1/1/1", "1/1/1", tmpfile.Name(), newChromeExtension())
 
 	// Just make sure we correctly set the token.
 	set.SetLocalHTTPToken("fdada")
