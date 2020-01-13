@@ -81,9 +81,9 @@ type Server struct {
 	httpClient  *http.Client
 	yinbiClient *yinbi.Client
 
-	proxy *httputil.ReverseProxy
-
 	keystore *keystore.Keystore
+
+	proxy *httputil.ReverseProxy
 
 	externalURL    string
 	requestPath    string
@@ -160,9 +160,9 @@ func newServer(extURL, authServerAddr,
 		externalURL:    overrideManotoURL(extURL),
 		requestPath:    requestPath,
 		httpClient:     httpClient,
-		yinbiClient:    yinbi.NewWithHTTPClient(httpClient),
-		authServerAddr: authServerAddr,
+		yinbiClient:    newYinbiClient(httpClient),
 		keystore:       keystore.New(),
+		authServerAddr: authServerAddr,
 		proxy:          httputil.NewSingleHostReverseProxy(u),
 		localHTTPToken: localHTTPToken,
 		translations:   eventual.NewValue(),
@@ -312,7 +312,7 @@ func (s *Server) start(requestedAddr string) error {
 		log.Errorf("Error serving: %v", err)
 		return err
 	case <-time.After(100 * time.Millisecond):
-		log.Debugf("UI available at http://%v", s.listener.accessAddr)
+		log.Debugf("UI available at http://%v", s.GetUIAddr())
 		return nil
 	}
 }
@@ -407,7 +407,7 @@ func (s *Server) AddToken(path string) string {
 }
 
 func (s *Server) activeDomain() string {
-	return s.listener.accessAddr
+	return s.GetUIAddr()
 }
 
 func checkRequestForToken(h http.Handler, tok string) http.Handler {

@@ -8,7 +8,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/getlantern/yinbi-server/config"
 	"github.com/getlantern/yinbi-server/crypto"
+	"github.com/getlantern/yinbi-server/params"
 	"github.com/getlantern/yinbi-server/yinbi"
 	"github.com/stellar/go/keypair"
 )
@@ -20,6 +22,16 @@ const (
 var (
 	ErrInvalidMnemonic = errors.New("The provided words do not comprise a valid mnemonic")
 )
+
+func newYinbiClient(httpClient *http.Client) *yinbi.Client {
+	return yinbi.New(params.Params{
+		HttpClient: httpClient,
+		Config: &config.Config{
+			NetworkName: "test",
+			AssetCode:   "YNB",
+		},
+	})
+}
 
 func (s *Server) createMnemonic() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter,
@@ -79,7 +91,7 @@ func (s *Server) sendPaymentHandler() http.Handler {
 			return
 		}
 		log.Debug("Successfully retrieved keypair")
-		_, err = s.yinbiClient.SendPayment(
+		resp, err := s.yinbiClient.SendPayment(
 			r.Destination,
 			r.Amount,
 			r.Asset,
@@ -89,6 +101,11 @@ func (s *Server) sendPaymentHandler() http.Handler {
 			s.errorHandler(w, err, http.StatusInternalServerError)
 			return
 		}
+		writeJSON(w, http.StatusOK, map[string]interface{}{
+			"success": true,
+			"tx_id":   resp.Hash,
+		})
+		return
 	})
 }
 

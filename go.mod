@@ -109,6 +109,8 @@ replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.
 
 replace github.com/marten-seemann/qtls => github.com/marten-seemann/qtls-deprecated v0.0.0-20190207043627-591c71538704
 
+replace github.com/getlantern/yinbi-server => ../yinbi-server
+
 replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20191001223343-79cda44164e3
 
 replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3
