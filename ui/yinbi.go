@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -55,8 +56,9 @@ func (s *Server) sendPaymentHandler() http.Handler {
 		req *http.Request) {
 		var r struct {
 			Password    string `json:"password"`
-			Destination string `json:"address"`
+			Destination string `json:"destination"`
 			Amount      string `json:"amount"`
+			Asset       string `json:"asset"`
 		}
 		err := decodeJSONRequest(req, &r)
 		if err != nil {
@@ -66,18 +68,21 @@ func (s *Server) sendPaymentHandler() http.Handler {
 		// get key from keystore here
 		secretKey, err := s.keystore.GetKey(r.Password)
 		if err != nil {
+			err = fmt.Errorf("Error retrieving secret key: %v", err)
 			s.errorHandler(w, err, http.StatusInternalServerError)
 			return
 		}
 		pair, err := keypair.Parse(secretKey)
 		if err != nil {
+			err = fmt.Errorf("Error parsing keypair: %v", err)
 			s.errorHandler(w, err, http.StatusInternalServerError)
 			return
 		}
+		log.Debug("Successfully retrieved keypair")
 		_, err = s.yinbiClient.SendPayment(
 			r.Destination,
 			r.Amount,
-			"YNB",
+			r.Asset,
 			pair.(*keypair.Full),
 		)
 		if err != nil {

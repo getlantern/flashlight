@@ -62,14 +62,20 @@ type PathHandler struct {
 	Handler http.Handler
 }
 
-// Server serves the local UI.
-type Server struct {
+// Listener wraps a net.Listener and provides its
+// listen and access addresses
+type Listener struct {
+	net.Listener
 	// The address to listen on, in ":port" form if listen on all interfaces.
 	listenAddr string
 	// The address client should access. Available only if the server is started.
 	accessAddr string
+}
 
-	//
+// Server serves the local UI.
+type Server struct {
+	listener *Listener
+
 	authServerAddr string
 
 	httpClient  *http.Client
@@ -82,13 +88,14 @@ type Server struct {
 	externalURL    string
 	requestPath    string
 	localHTTPToken string
-	listener       net.Listener
 	mux            *http.ServeMux
 	onceOpenExtURL sync.Once
 	translations   eventual.Value
 	standalone     bool
 }
 
+// tcpKeepAliveListener is a TCPListener that sets TCP keep-alive
+// timeouts on accepted connections.
 type tcpKeepAliveListener struct {
 	*net.TCPListener
 }
@@ -113,10 +120,11 @@ func StartServer(requestedAddr, authServerAddr,
 	handlers ...*PathHandler) (*Server, error) {
 	server := newServer(extURL, authServerAddr,
 		localHTTPToken, standalone)
-	err := server.listen(addrCandidates(requestedAddr))
+	listener, err := server.tryListenCandidates(addrCandidates(requestedAddr))
 	if err != nil {
 		return nil, err
 	}
+	server.listener = listener
 	// attach handlers here since the address the
 	// UI is listening on impacts how some are
 	// configured
@@ -170,6 +178,7 @@ func (s *Server) attachHandlers() {
 	authHandler := http.HandlerFunc(s.authHandler)
 	mux.Handle("/login", s.wrapMiddleware(authHandler))
 	mux.Handle("/register", s.wrapMiddleware(authHandler))
+	mux.Handle("/payment/new", s.wrapMiddleware(s.sendPaymentHandler()))
 	mux.Handle("/user/account/new", s.wrapMiddleware(s.createAccountHandler()))
 	mux.Handle("/account/details", s.wrapMiddleware(s.getAccountDetails()))
 	mux.Handle("/user/logout", s.wrapMiddleware(s.proxy))
@@ -222,60 +231,70 @@ func (s *Server) strippingHandler(h http.Handler) http.Handler {
 	})
 }
 
-// listen takes a slice of candidate addresses and
-// attempts to find an address for the UI to listen on
-func (s *Server) listen(candidates []string) error {
+func closeListener(l net.Listener) {
+	err := l.Close()
+	if err != nil {
+		log.Errorf("Could not close listener: %v", err)
+	}
+}
+
+// newListener tries to open a connection on the given address.
+// If successful, it returns a new Listener
+func (s *Server) newListener(address string) (*Listener, error) {
+	listener, err := net.Listen("tcp", address)
+	if err != nil {
+		err = fmt.Errorf("unable to listen at %v: %v", address, err)
+		return nil, err
+	}
+	actualPort := listener.Addr().(*net.TCPAddr).Port
+	if prohibitedPorts[actualPort] {
+		err := fmt.Errorf("Client tried to start on prohibited port: %v", actualPort)
+		closeListener(listener)
+		return nil, err
+	}
+	log.Debugf("Lantern UI server listening at %v", address)
+	listenAddr := address
+	host, port, err := net.SplitHostPort(address)
+	if err != nil {
+		closeListener(listener)
+		return nil, err
+	}
+	listener = tcpKeepAliveListener{listener.(*net.TCPListener)}
+	if port == "" || port == "0" {
+		// On first run, we pick an arbitrary port, update our listenAddr to
+		// reflect the assigned port
+		listenAddr = fmt.Sprintf("%v:%v", host, actualPort)
+		log.Debugf("rewrote listen address to %v", listenAddr)
+	}
+	if host == "" {
+		host = "localhost"
+	}
+	accessAddr := net.JoinHostPort(host, strconv.Itoa(actualPort))
+	return &Listener{
+		listener,
+		listenAddr,
+		accessAddr,
+	}, nil
+}
+
+// tryListenCandidates takes a slice of candidate addresses and tries
+// to open a connection on one of them.
+func (s *Server) tryListenCandidates(candidates []string) (*Listener, error) {
 	for _, addr := range candidates {
-		host, port, err := net.SplitHostPort(addr)
+		l, err := s.newListener(addr)
 		if err != nil {
-			err := fmt.Errorf("error parsing addr %v: %v", addr, err)
 			log.Error(err)
 			continue
 		}
-		listener, err := net.Listen("tcp", addr)
-		if err != nil {
-			err = fmt.Errorf("unable to listen at %v: %v", addr, err)
-			log.Debug(err)
-			continue // move to the next candidate
-		}
-		actualPort := listener.Addr().(*net.TCPAddr).Port
-		if prohibitedPorts[actualPort] {
-			err := fmt.Errorf("Client tried to start on prohibited port: %v", actualPort)
-			log.Error(err)
-			closeErr := listener.Close()
-			if closeErr != nil {
-				log.Errorf("Could not close listener on prohibited port %v: %v", actualPort, closeErr)
-			}
-			continue
-		}
-		log.Debugf("Lantern UI server listening at %v", addr)
-		listener = tcpKeepAliveListener{listener.(*net.TCPListener)}
-		s.listenAddr = addr
-		s.listener = listener
-		if port == "" || port == "0" {
-			// On first run, we pick an arbitrary port, update our listenAddr to
-			// reflect the assigned port
-			s.listenAddr = fmt.Sprintf("%v:%v", host, actualPort)
-			log.Debugf("rewrote listen address to %v", s.listenAddr)
-		}
-		if host == "" {
-			host = "localhost"
-		}
-		s.accessAddr = net.JoinHostPort(host, strconv.Itoa(actualPort))
-		return nil
+		return l, nil
 	}
 	// couldn't start on any of the candidates.
-	return nil
+	return nil, errors.New("No address available")
 }
 
 // starts server listen at addr in host:port format, or arbitrary local port if
 // addr is empty.
 func (s *Server) start(requestedAddr string) error {
-	err := s.listen(addrCandidates(requestedAddr))
-	if err != nil {
-		return err
-	}
-
 	server := &http.Server{
 		Handler:  s.mux,
 		ErrorLog: log.AsStdLogger(),
@@ -293,7 +312,7 @@ func (s *Server) start(requestedAddr string) error {
 		log.Errorf("Error serving: %v", err)
 		return err
 	case <-time.After(100 * time.Millisecond):
-		log.Debugf("UI available at http://%v", s.accessAddr)
+		log.Debugf("UI available at http://%v", s.listener.accessAddr)
 		return nil
 	}
 }
@@ -358,12 +377,18 @@ func (s *Server) doShow(destURL, campaign, medium string, open func(string, time
 
 // GetUIAddr returns the current UI address.
 func (s *Server) GetUIAddr() string {
-	return s.accessAddr
+	if s.listener == nil {
+		return ""
+	}
+	return s.listener.accessAddr
 }
 
 // GetListenAddr returns the address the UI server is listening at.
 func (s *Server) GetListenAddr() string {
-	return s.listenAddr
+	if s.listener == nil {
+		return ""
+	}
+	return s.listener.listenAddr
 }
 
 func (s *Server) rootURL() string {
@@ -382,7 +407,7 @@ func (s *Server) AddToken(path string) string {
 }
 
 func (s *Server) activeDomain() string {
-	return s.accessAddr
+	return s.listener.accessAddr
 }
 
 func checkRequestForToken(h http.Handler, tok string) http.Handler {
