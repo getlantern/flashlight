@@ -282,7 +282,8 @@ func (s *Settings) save() {
 	s.saveJSONForExtension()
 }
 
-// save saves settings to disk.
+// saveJSONForExtension saves a copy of the settings as JSON for the lantern
+// chrome extension to read.
 func (s *Settings) saveJSONForExtension() {
 	log.Trace("Saving settings")
 	if paths, err := s.extensionDirs(); err != nil {
