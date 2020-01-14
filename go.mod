@@ -8,7 +8,8 @@ require (
 	github.com/anacrolix/confluence v1.1.0
 	github.com/anacrolix/envpprof v1.1.0
 	github.com/anacrolix/go-libutp v1.0.2
-	github.com/anacrolix/log v0.4.0
+	github.com/anacrolix/log v0.5.0
+	github.com/anacrolix/stm v0.2.0 // indirect
 	github.com/anacrolix/torrent v1.9.0
 	github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc // indirect
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
