@@ -19,7 +19,6 @@ import (
 	"github.com/anacrolix/confluence/confluence"
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/metainfo"
-	"github.com/google/uuid"
 
 	analog "github.com/anacrolix/log"
 	"github.com/getlantern/replica"
@@ -69,12 +68,8 @@ func (me *HttpHandler) handleUpload(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		return
 	}
-	u, err := uuid.NewRandom()
-	if err != nil {
-		panic(err)
-	}
 	name := r.URL.Query().Get("name")
-	s3Key := u.String()
+	s3Key := replica.NewPrefix()
 	if name != "" {
 		s3Key += "/" + name
 	}
@@ -97,7 +92,7 @@ func (me *HttpHandler) handleUpload(w http.ResponseWriter, r *http.Request) {
 		// we can still spread the metadata, and S3 can take care of the data.
 		me.Logger.WithValues(analog.Error).Printf("error creating temporary file: %v", tmpFileErr)
 	}
-	err = replica.Upload(replicaUploadReader, s3Key)
+	err := replica.Upload(replicaUploadReader, s3Key)
 	me.Logger.WithValues(analog.Debug).Printf("uploaded %d bytes", cw.bytesWritten)
 	if err != nil {
 		panic(err)
