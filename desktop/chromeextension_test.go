@@ -53,7 +53,7 @@ func TestChromeExtension(t *testing.T) {
 	assert.Equal(t, 1, len(dirs))
 
 	e.installTo(dir)
-	external := filepath.Join(dir, "External Extensions", extensionID+".json")
+	external := filepath.Join(dir, extensionID+".json")
 	content, err := ioutil.ReadFile(external)
 	assert.NoError(t, err)
 	assert.True(t, strings.Contains(string(content), "https://clients2.google.com/service/update2/crx"))
