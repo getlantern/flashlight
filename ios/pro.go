@@ -19,16 +19,10 @@ type ProCredentials struct {
 
 // IsActiveProDevice checks whether the given device is an active pro device
 func IsActiveProDevice(userID int, proToken, deviceID string) (bool, error) {
-	rt, ok := fronted.NewDirect(frontedAvailableTimeout)
-	if !ok {
-		return false, log.Errorf("timed out waiting for fronting to finish configuring")
+	pc, err := getProClient()
+	if err != nil {
+		return false, err
 	}
-
-	pc := proclient.NewClient(&http.Client{
-		Transport: rt,
-	}, func(req *http.Request, uc common.UserConfig) {
-		common.AddCommonHeaders(uc, req)
-	})
 
 	resp, err := pc.UserData(userConfigFor(userID, proToken, deviceID))
 	if err != nil {
@@ -57,16 +51,10 @@ func IsActiveProDevice(userID int, proToken, deviceID string) (bool, error) {
 
 // RecoverProAccount attempts to recover an existing Pro account linked to this email address and device ID
 func RecoverProAccount(deviceID, emailAddress string) (*ProCredentials, error) {
-	rt, ok := fronted.NewDirect(frontedAvailableTimeout)
-	if !ok {
-		return nil, log.Errorf("timed out waiting for fronting to finish configuring")
+	pc, err := getProClient()
+	if err != nil {
+		return nil, err
 	}
-
-	pc := proclient.NewClient(&http.Client{
-		Transport: rt,
-	}, func(req *http.Request, uc common.UserConfig) {
-		common.AddCommonHeaders(uc, req)
-	})
 
 	resp, err := pc.RecoverProAccount(partialUserConfigFor(deviceID), emailAddress)
 	if err != nil {
@@ -78,18 +66,12 @@ func RecoverProAccount(deviceID, emailAddress string) (*ProCredentials, error) {
 
 // RequestRecoveryEmail requests an account recovery email for linking to an existing pro account
 func RequestRecoveryEmail(deviceID, deviceName, emailAddress string) error {
-	rt, ok := fronted.NewDirect(frontedAvailableTimeout)
-	if !ok {
-		return log.Errorf("timed out waiting for fronting to finish configuring")
+	pc, err := getProClient()
+	if err != nil {
+		return err
 	}
 
-	pc := proclient.NewClient(&http.Client{
-		Transport: rt,
-	}, func(req *http.Request, uc common.UserConfig) {
-		common.AddCommonHeaders(uc, req)
-	})
-
-	err := pc.RequestRecoveryEmail(partialUserConfigFor(deviceID), deviceName, emailAddress)
+	err = pc.RequestRecoveryEmail(partialUserConfigFor(deviceID), deviceName, emailAddress)
 	if err != nil {
 		return log.Errorf("unable to request recovery email: %v", err)
 	}
@@ -99,16 +81,10 @@ func RequestRecoveryEmail(deviceID, deviceName, emailAddress string) error {
 
 // ValidateRecoveryCode validates the given recovery code and finishes linking the device, returning the user_id and pro_token for the account.
 func ValidateRecoveryCode(deviceID, code string) (*ProCredentials, error) {
-	rt, ok := fronted.NewDirect(frontedAvailableTimeout)
-	if !ok {
-		return nil, log.Errorf("timed out waiting for fronting to finish configuring")
+	pc, err := getProClient()
+	if err != nil {
+		return nil, err
 	}
-
-	pc := proclient.NewClient(&http.Client{
-		Transport: rt,
-	}, func(req *http.Request, uc common.UserConfig) {
-		common.AddCommonHeaders(uc, req)
-	})
 
 	resp, err := pc.ValidateRecoveryCode(partialUserConfigFor(deviceID), code)
 	if err != nil {
@@ -120,16 +96,10 @@ func ValidateRecoveryCode(deviceID, code string) (*ProCredentials, error) {
 
 // RequestDeviceLinkingCode requests a new device linking code to allow linking the current device to a pro account via an existing pro device.
 func RequestDeviceLinkingCode(deviceID, deviceName string) (string, error) {
-	rt, ok := fronted.NewDirect(frontedAvailableTimeout)
-	if !ok {
-		return "", log.Errorf("timed out waiting for fronting to finish configuring")
+	pc, err := getProClient()
+	if err != nil {
+		return "", err
 	}
-
-	pc := proclient.NewClient(&http.Client{
-		Transport: rt,
-	}, func(req *http.Request, uc common.UserConfig) {
-		common.AddCommonHeaders(uc, req)
-	})
 
 	resp, err := pc.RequestDeviceLinkingCode(partialUserConfigFor(deviceID), deviceName)
 	if err != nil {
@@ -158,17 +128,12 @@ func NewCanceler() *Canceler {
 // It will keep trying until it succeeds or the supplied Canceler is canceled. In the case of cancel, it will return nil credentials and a nil
 // error.
 func ValidateDeviceLinkingCode(c *Canceler, deviceID, deviceName, code string) (*ProCredentials, error) {
-	rt, ok := fronted.NewDirect(frontedAvailableTimeout)
-	if !ok {
-		return nil, log.Errorf("timed out waiting for fronting to finish configuring")
+	pc, err := getProClient()
+	if err != nil {
+		return nil, err
 	}
 
-	pc := proclient.NewClient(&http.Client{
-		Transport: rt,
-	}, func(req *http.Request, uc common.UserConfig) {
-		common.AddCommonHeaders(uc, req)
-	})
-
+	overallTimeout := time.After(5 * time.Minute)
 	for {
 		resp, err := pc.ValidateDeviceLinkingCode(partialUserConfigFor(deviceID), deviceName, code)
 		if err == nil {
@@ -182,9 +147,27 @@ func ValidateDeviceLinkingCode(c *Canceler, deviceID, deviceName, code string) (
 			continue
 
 		case <-c.c:
-
+			log.Debug("validating recovery code canceled")
 			return nil, nil
+
+		case <-overallTimeout:
+			return nil, log.Error("validating recovery code timed out")
 		}
 	}
 
+}
+
+func getProClient() (*proclient.Client, error) {
+	rt, ok := fronted.NewDirect(frontedAvailableTimeout)
+	if !ok {
+		return nil, log.Errorf("timed out waiting for fronting to finish configuring")
+	}
+
+	pc := proclient.NewClient(&http.Client{
+		Transport: rt,
+	}, func(req *http.Request, uc common.UserConfig) {
+		common.AddCommonHeaders(uc, req)
+	})
+
+	return pc, nil
 }
