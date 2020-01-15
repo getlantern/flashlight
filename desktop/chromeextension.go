@@ -39,8 +39,8 @@ type chromeExtension interface {
 
 	// save continues to attempt to save the specified data to the data/settings.json
 	// directory in the Lantern chrome extension. It stops when it successfully writes
-	// to a valid directory. This is because the extension can be installed at any
-	// time and may not be there on Lantern startup.
+	// to a valid directory one time. This is because the extension can be installed at
+	// any time and may not be there on Lantern startup.
 	save(func() map[string]interface{})
 
 	// saveOnce saves the specified data to data/settings.json a single time, returning
@@ -177,7 +177,9 @@ func (e *extension) extensionDirsForOS(extensionID, fileName, base string, paths
 	return paths, nil
 }
 
-// save saves a copy of the settings as JSON for the lantern chrome extension to read.
+// save continually looks for new extension directories to save to, stopping when it
+// successfully saves once. This is because the extension could be installed at any
+// time after startup.
 func (e *extension) save(dataFunc func() map[string]interface{}) {
 	e.log.Debug("Saving settings for extension")
 
@@ -189,7 +191,7 @@ func (e *extension) save(dataFunc func() map[string]interface{}) {
 	}
 }
 
-// save saves a copy of the settings as JSON for the lantern chrome extension to read.
+// saveOnce saves a copy of the settings as JSON for the lantern chrome extension to read.
 func (e *extension) saveOnce(dataFunc func() map[string]interface{}) bool {
 	e.log.Debug("Saving settings for extension")
 	savedOnce := false
