@@ -25,9 +25,10 @@ import (
 )
 
 const (
-	memLimitInMiB     = 12
-	memLimitInBytes   = memLimitInMiB * 1024 * 1024
-	quotaSaveInterval = 1 * time.Minute
+	memLimitInMiB           = 12
+	memLimitInBytes         = memLimitInMiB * 1024 * 1024
+	quotaSaveInterval       = 1 * time.Minute
+	frontedAvailableTimeout = 5 * time.Minute
 )
 
 var (
@@ -230,11 +231,15 @@ func limitMemory() {
 	}
 }
 
-func userConfigFor(deviceID string) *common.UserConfigData {
+func partialUserConfigFor(deviceID string) *common.UserConfigData {
+	return userConfigFor(0, "", deviceID)
+}
+
+func userConfigFor(userID int, proToken, deviceID string) *common.UserConfigData {
 	return common.NewUserConfigData(
 		deviceID,
-		0,   // UserID currently unused
-		"",  // Token currently unused
+		int64(userID),
+		proToken,
 		nil, // Headers currently unused
 		"",  // Language currently unused
 	)

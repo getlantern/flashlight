@@ -145,7 +145,7 @@ func ReportToBorda(bufferFile string) error {
 	}
 	defer file.Close()
 
-	rt, ok := fronted.NewDirect(1 * time.Minute)
+	rt, ok := fronted.NewDirect(frontedAvailableTimeout)
 	if !ok {
 		return fmt.Errorf("Timed out waiting for fronting to finish configuring")
 	}
