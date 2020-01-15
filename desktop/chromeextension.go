@@ -183,6 +183,8 @@ func (e *extension) extensionDirsForOS(extensionID, fileName, base string, paths
 func (e *extension) save(dataFunc func() map[string]interface{}) {
 	e.log.Debug("Saving settings for extension")
 
+	// We can leak a single goroutine here that doesn't get properly cleaned up at
+	// exit, but c'est la vie!
 	for {
 		time.Sleep(2 * time.Second)
 		if e.saveOnce(dataFunc) {
