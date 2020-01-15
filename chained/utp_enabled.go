@@ -1,4 +1,6 @@
-// +build windows darwin,amd64
+// +build !android
+// +build !ios
+// +build !linux
 
 package chained
 
