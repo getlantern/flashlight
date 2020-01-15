@@ -72,6 +72,9 @@ func ConfigureBorda(configDir, bufferFile, tempBufferFile string) (finalErr erro
 		}
 
 		openTempBuffer()
+
+		freeMemory()
+
 		var flushMx sync.Mutex
 		lastFlushed := time.Now()
 
@@ -122,6 +125,8 @@ func ConfigureBorda(configDir, bufferFile, tempBufferFile string) (finalErr erro
 			flushBufferIfNecessary()
 			return nil
 		}, borda.Enabler(samplePercentage))
+
+		freeMemory()
 	})
 
 	return finalErr

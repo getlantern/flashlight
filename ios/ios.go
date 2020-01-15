@@ -151,6 +151,9 @@ func (c *client) start() (WriteCloser, error) {
 	w := packetforward.Client(&writerAdapter{c.packetsOut}, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
 		return bal.DialContext(ctx, "connect", "127.0.0.1:3000")
 	})
+
+	freeMemory()
+
 	return &wc{
 		Writer:        w,
 		bal:           bal,
@@ -213,21 +216,20 @@ func (c *client) chainedDialer(name string, si *chained.ChainedServerInfo) (bala
 
 func trackMemory() {
 	for {
-		time.Sleep(5 * time.Second)
 		memstats := &runtime.MemStats{}
 		runtime.ReadMemStats(memstats)
 		log.Debugf("Memory InUse: %v    Alloc: %v    Sys: %v",
 			humanize.Bytes(memstats.HeapInuse),
 			humanize.Bytes(memstats.Alloc),
 			humanize.Bytes(memstats.Sys))
+		time.Sleep(5 * time.Second)
 	}
 }
 
 func limitMemory() {
 	for {
-		time.Sleep(5 * time.Second)
-		runtime.GC()
-		debug.FreeOSMemory()
+		freeMemory()
+		time.Sleep(250 * time.Millisecond)
 	}
 }
 
@@ -243,4 +245,9 @@ func userConfigFor(userID int, proToken, deviceID string) *common.UserConfigData
 		nil, // Headers currently unused
 		"",  // Language currently unused
 	)
+}
+
+func freeMemory() {
+	runtime.GC()
+	debug.FreeOSMemory()
 }
