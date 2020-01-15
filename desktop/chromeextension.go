@@ -3,10 +3,12 @@ package desktop
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 
 	"github.com/getlantern/golog"
 )
@@ -34,6 +36,16 @@ type chromeExtension interface {
 	// Chrome profiles, for example, as well as for a local directory for extension
 	// development.
 	extensionDirs() ([]string, error)
+
+	// save continues to attempt to save the specified data to the data/settings.json
+	// directory in the Lantern chrome extension. It stops when it successfully writes
+	// to a valid directory. This is because the extension can be installed at any
+	// time and may not be there on Lantern startup.
+	save(func() map[string]interface{})
+
+	// saveOnce saves the specified data to data/settings.json a single time, returning
+	// true if it wrote the file and otherwise false.
+	saveOnce(func() map[string]interface{}) bool
 }
 
 // newChromeExtension creates a new chrome extension instance.
@@ -163,4 +175,46 @@ func (e *extension) extensionDirsForOS(extensionID, fileName, base string, paths
 	}
 	e.log.Debugf("Returning Chrome extension paths: %#v", paths)
 	return paths, nil
+}
+
+// save saves a copy of the settings as JSON for the lantern chrome extension to read.
+func (e *extension) save(dataFunc func() map[string]interface{}) {
+	e.log.Debug("Saving settings for extension")
+
+	for {
+		time.Sleep(2 * time.Second)
+		if e.saveOnce(dataFunc) {
+			break
+		}
+	}
+}
+
+// save saves a copy of the settings as JSON for the lantern chrome extension to read.
+func (e *extension) saveOnce(dataFunc func() map[string]interface{}) bool {
+	e.log.Debug("Saving settings for extension")
+	savedOnce := false
+	if paths, err := e.extensionDirs(); err != nil {
+		e.log.Errorf("Could not find extensions dir: %v", err)
+	} else {
+		for _, path := range paths {
+			if f, err := os.Create(path); err != nil {
+				e.log.Errorf("Could not open settings file for writing: %v", err)
+			} else if _, err := e.writeJSONTo(dataFunc, f); err != nil {
+				e.log.Errorf("Could not save settings file: %v", err)
+			} else {
+				e.log.Debugf("Saved settings to %s", path)
+				savedOnce = true
+			}
+		}
+	}
+	return savedOnce
+}
+
+func (e *extension) writeJSONTo(dataFunc func() map[string]interface{}, w io.Writer) (int, error) {
+	toBeSaved := dataFunc()
+	if bytes, err := json.Marshal(toBeSaved); err != nil {
+		return 0, err
+	} else {
+		return w.Write(bytes)
+	}
 }

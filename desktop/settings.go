@@ -141,7 +141,7 @@ func loadSettingsFrom(version, revisionDate, buildDate, path string, chrome chro
 	set[SNBuildDate] = buildDate
 	set[SNRevisionDate] = revisionDate
 
-	go sett.saveJSONForExtension()
+	go chrome.save(sett.mapToSave)
 	return sett
 }
 
@@ -279,26 +279,7 @@ func (s *Settings) setString(name SettingName, v interface{}) {
 // save saves settings to disk.
 func (s *Settings) save() {
 	s.saveDefault()
-	s.saveJSONForExtension()
-}
-
-// saveJSONForExtension saves a copy of the settings as JSON for the lantern
-// chrome extension to read.
-func (s *Settings) saveJSONForExtension() {
-	s.log.Trace("Saving settings")
-	if paths, err := s.chrome.extensionDirs(); err != nil {
-		s.log.Errorf("Could not find extensions dir: %v", err)
-	} else {
-		for _, path := range paths {
-			if f, err := os.Create(path); err != nil {
-				s.log.Errorf("Could not open settings file for writing: %v", err)
-			} else if _, err := s.writeJSONTo(f); err != nil {
-				s.log.Errorf("Could not save settings file: %v", err)
-			} else {
-				s.log.Tracef("Saved settings to %s", path)
-			}
-		}
-	}
+	s.chrome.saveOnce(s.mapToSave)
 }
 
 // save saves settings to disk as yaml in the default lantern user settings directory.
@@ -313,19 +294,9 @@ func (s *Settings) saveDefault() {
 	}
 }
 
-func (s *Settings) writeJSONTo(w io.Writer) (int, error) {
-	return s.writeWithMarshaler(w, json.Marshal)
-}
-
 func (s *Settings) writeTo(w io.Writer) (int, error) {
-	return s.writeWithMarshaler(w, yaml.Marshal)
-}
-
-type marshaler func(interface{}) ([]byte, error)
-
-func (s *Settings) writeWithMarshaler(w io.Writer, m marshaler) (int, error) {
 	toBeSaved := s.mapToSave()
-	if bytes, err := m(toBeSaved); err != nil {
+	if bytes, err := yaml.Marshal(toBeSaved); err != nil {
 		return 0, err
 	} else {
 		return w.Write(bytes)
