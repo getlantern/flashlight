@@ -78,6 +78,7 @@ type Helper struct {
 	QUICProxyServerAddr         string
 	OQUICProxyServerAddr        string
 	WSSProxyServerAddr          string
+	TLSMasqProxyServerAddr      string
 	HTTPServerAddr              string
 	HTTPSServerAddr             string
 	ConfigServerAddr            string
@@ -89,7 +90,7 @@ type Helper struct {
 // also enables ForceProxying on the client package to make sure even localhost
 // origins are served through the proxy. Make sure to close the Helper with
 // Close() when finished with the test.
-func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string, oquicAddr string, wssAddr string, httpsUTPAddr string, obfs4UTPAddr string, lampshadeUTPAddr string) (*Helper, error) {
+func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string, oquicAddr string, wssAddr string, tlsmasqAddr string, httpsUTPAddr string, obfs4UTPAddr string, lampshadeUTPAddr string) (*Helper, error) {
 	ConfigDir, err := ioutil.TempDir("", "integrationtest_helper")
 	log.Debugf("ConfigDir is %v", ConfigDir)
 	if err != nil {
@@ -108,6 +109,7 @@ func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr s
 		QUICProxyServerAddr:         quicAddr,
 		OQUICProxyServerAddr:        oquicAddr,
 		WSSProxyServerAddr:          wssAddr,
+		TLSMasqProxyServerAddr:      tlsmasqAddr,
 	}
 	helper.SetProtocol("https")
 	client.ForceProxying()
@@ -207,6 +209,7 @@ func (helper *Helper) startProxyServer() error {
 		LampshadeUTPAddr: helper.LampshadeUTPProxyServerAddr,
 		QUICAddr:         helper.QUICProxyServerAddr,
 		WSSAddr:          helper.WSSProxyServerAddr,
+		// harry TODO: add tlsmasq address
 
 		OQUICAddr:              helper.OQUICProxyServerAddr,
 		OQUICKey:               oquicKey,
@@ -416,6 +419,14 @@ func (helper *Helper) buildProxies(proto string) ([]byte, error) {
 		} else if proto == "utplampshade" {
 			srv.Addr = helper.LampshadeUTPProxyServerAddr
 			srv.PluggableTransport = "utplampshade"
+		} else if proto == "tlsmasq" {
+			srv.Addr = helper.TLSMasqProxyServerAddr
+			srv.PluggableTransport = "tlsmasq"
+			srv.PluggableTransportSettings = map[string]string{
+				"tm_suites":        "0xcca9", // TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+				"tm_tlsminversion": "0x0303", // TLS 1.2
+				"tm_serversecret":  "0xd0cd0e2e50eb2ac7cb1dc2c94d1bc8871e48369970052ff866d1e7e876e77a13246980057f70d64a2bdffb545330279f69bce5fd",
+			}
 		} else {
 			srv.Addr = helper.HTTPSProxyServerAddr
 		}
