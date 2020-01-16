@@ -21,6 +21,7 @@ import (
 	"github.com/getlantern/tarfs"
 
 	"github.com/getlantern/flashlight/analytics"
+	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/util"
 	"github.com/getlantern/yinbi-server/keystore"
@@ -151,7 +152,8 @@ func newServer(extURL, authServerAddr,
 	}
 
 	httpClient := &http.Client{
-		Timeout: time.Duration(30 * time.Second),
+		Timeout:   time.Duration(30 * time.Second),
+		Transport: proxied.ChainedThenFronted(),
 	}
 
 	s := &Server{
