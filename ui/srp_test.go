@@ -27,7 +27,7 @@ func getClient(s *Server, t *testing.T, username, password string) *srp.SRPClien
 }
 
 func startServer(t *testing.T, authaddr, addr string) *Server {
-	s := newServer("", authaddr, "", false)
+	s := newServer("", authaddr, "test-http-token", false)
 	assert.NoError(t, s.start(addr), "should start server")
 	return s
 }

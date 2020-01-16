@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/util"
 	"github.com/stretchr/testify/assert"
 )
@@ -21,7 +22,7 @@ func TestDoShow(t *testing.T) {
 		urlToShow = u
 	}
 
-	s := newServer("", "local-http-token", false)
+	s := newServer("", "", "local-http-token", false)
 
 	assert.Equal(t, "", urlToShow)
 	s.doShow(s.rootURL(), "campaign", "medium", show)
@@ -39,10 +40,11 @@ func TestListen(t *testing.T) {
 	prohibitedPortInt := 2049
 	prohibitedPort := strconv.Itoa(prohibitedPortInt)
 	prohibitedPortAddr := fmt.Sprintf("localhost:%v", prohibitedPort)
+	s := newServer("", "", "test-http-token", false)
 
 	// the listen function will choose a non-prohibited port when there's a backup candidate
 	{
-		l, _, err := listen([]string{prohibitedPortAddr, "localhost:0"})
+		l, err := s.tryListenCandidates([]string{prohibitedPortAddr, "localhost:0"})
 		assert.Nil(t, err)
 		actualPort := l.Addr().(*net.TCPAddr).Port
 		assert.NotEqual(t, actualPort, prohibitedPortInt)
@@ -52,52 +54,52 @@ func TestListen(t *testing.T) {
 	// the listen function will return an error if *only* a prohibited port address
 	// is provided
 	{
-		_, _, err := listen([]string{prohibitedPortAddr})
+		_, err := s.tryListenCandidates([]string{prohibitedPortAddr})
 		assert.NotNil(t, err)
 	}
 }
 
 func TestStartServer(t *testing.T) {
 	startServer := func(addr string) *Server {
-		s := newServer("", "test-http-token", false)
+		s := newServer("", common.AuthServerAddr, "test-http-token", false)
 		assert.NoError(t, s.start(addr), "should start server")
 		return s
 	}
 	s := startServer("")
 	// make sure the port is non-zero, same below
-	assert.Regexp(t, "localhost:\\d{2,}$", s.listenAddr)
+	assert.Regexp(t, "localhost:\\d{2,}$", s.GetListenAddr())
 	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr())
 	s.stop()
 	s = startServer(":")
-	assert.Regexp(t, ":\\d{2,}$", s.listenAddr)
+	assert.Regexp(t, ":\\d{2,}$", s.GetListenAddr())
 	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr())
 	s.stop()
 	s = startServer(":0")
-	assert.Regexp(t, ":\\d{2,}$", s.listenAddr)
+	assert.Regexp(t, ":\\d{2,}$", s.GetListenAddr())
 	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr())
 	s.stop()
 	s = startServer("localhost:0")
-	assert.Regexp(t, "localhost:\\d{2,}$", s.listenAddr)
+	assert.Regexp(t, "localhost:\\d{2,}$", s.GetListenAddr())
 	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr())
 	s.stop()
 	s = startServer("localhost:9898")
-	assert.Equal(t, "localhost:9898", s.listenAddr)
+	assert.Equal(t, "localhost:9898", s.GetListenAddr())
 	assert.Equal(t, "localhost:9898", s.GetUIAddr())
 	s.stop()
 	s = startServer("127.0.0.1:9897")
-	assert.Equal(t, "127.0.0.1:9897", s.listenAddr)
+	assert.Equal(t, "127.0.0.1:9897", s.GetListenAddr())
 	assert.Equal(t, "127.0.0.1:9897", s.GetUIAddr())
 	s.stop()
 	s = startServer("127.0.0.1:0")
-	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.listenAddr)
+	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.GetListenAddr())
 	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.GetUIAddr())
 	s.stop()
 
 	// Simulate the case when unable to listen on saved uiaddr.
 	s = startServer("invalid-addr:9898")
-	assert.NotEqual(t, "invalid-addr:9898", s.listenAddr,
+	assert.NotEqual(t, "invalid-addr:9898", s.GetListenAddr(),
 		"should not listen on invalid host")
-	assert.Regexp(t, "localhost:\\d{2,}$", s.listenAddr,
+	assert.Regexp(t, "localhost:\\d{2,}$", s.GetListenAddr(),
 		"passing invalid port should fallback to default addresses")
 	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr(),
 		"passing invalid port should fallback to default addresses")
@@ -124,9 +126,9 @@ func TestStartServer(t *testing.T) {
 	// Simulate the case when unable to listen on localhost.
 	defaultUIAddresses = []string{"localhost:999999", "127.0.0.1:0"}
 	s = startServer("invalid-addr:9898")
-	assert.NotEqual(t, "invalid-addr:9898", s.listenAddr,
+	assert.NotEqual(t, "invalid-addr:9898", s.GetListenAddr(),
 		"should not listen on invalid host")
-	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.listenAddr,
+	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.GetListenAddr(),
 		"passing invalid port should fallback to default addresses")
 	assert.Regexp(t, "127.0.0.1:\\d{2,}$", s.GetUIAddr(),
 		"passing invalid port should fallback to default addresses")
@@ -134,7 +136,7 @@ func TestStartServer(t *testing.T) {
 }
 
 func TestCheckOrigin(t *testing.T) {
-	s := newServer("", "token", false)
+	s := newServer("", "", "token", false)
 	s.start("localhost:9898")
 	doTestCheckRequestToken(t, s, map[*http.Request]bool{
 		newRequest("http://localhost:9898"): false,
@@ -180,7 +182,7 @@ func doTestCheckRequestToken(t *testing.T, s *Server, testOrigins map[*http.Requ
 	assert.False(t, hit, "request without proper path should fail the check")
 
 	hit = false
-	url := util.SetURLParam("http://"+path.Join(s.accessAddr, "/abc"), "token", "wrong-token")
+	url := util.SetURLParam("http://"+path.Join(s.GetUIAddr(), "/abc"), "token", "wrong-token")
 	req, _ = http.NewRequest("GET", url, nil)
 	h.ServeHTTP(w, req)
 	assert.False(t, hit, "request with incorrect token should fail the check")
@@ -208,7 +210,7 @@ func doTestCheckRequestToken(t *testing.T, s *Server, testOrigins map[*http.Requ
 }
 
 func TestStart(t *testing.T) {
-	serve, err := StartServer("127.0.0.1:0", "", "abcde",
+	serve, err := StartServer("127.0.0.1:0", "", "", "abcde",
 		false, &PathHandler{Pattern: "/testing", Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 			resp.WriteHeader(http.StatusOK)
 		})})
@@ -245,7 +247,7 @@ func getTestHandler() http.Handler {
 }
 
 func getTestServer(token string) *Server {
-	s := newServer("", token, false)
+	s := newServer("", "", token, false)
 	s.start("localhost:")
 	return s
 }
