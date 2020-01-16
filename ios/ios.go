@@ -195,7 +195,7 @@ func (c *client) loadDialers() ([]balancer.Dialer, error) {
 		dialers = append(dialers, dialer)
 	}
 
-	chained.TrackStatsFor(dialers, false)
+	chained.TrackStatsFor(dialers, filepath.Join(c.configDir, "proxystats.csv"), false)
 
 	return dialers, nil
 }

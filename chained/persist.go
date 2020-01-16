@@ -24,7 +24,7 @@ var (
 
 // TrackStatsFor enables periodic checkpointing of the given proxies' stats to
 // disk.
-func TrackStatsFor(dialers []balancer.Dialer, probeIfNecessary bool) {
+func TrackStatsFor(dialers []balancer.Dialer, configDir string, probeIfNecessary bool) {
 	statsMx.Lock()
 
 	applyExistingStats(dialers)
@@ -40,7 +40,7 @@ func TrackStatsFor(dialers []balancer.Dialer, probeIfNecessary bool) {
 	statsMx.Unlock()
 
 	persistOnce.Do(func() {
-		go persistStats()
+		go persistStats(filepath.Join(configDir, "proxystats.csv"))
 	})
 }
 
@@ -163,7 +163,7 @@ func updateStats(p *proxy, row []string) error {
 	return nil
 }
 
-func persistStats() {
+func persistStats(statsFilePath string) {
 	for {
 		time.Sleep(15 * time.Second)
 		statsMx.Lock()
@@ -172,12 +172,11 @@ func persistStats() {
 			dialers = append(dialers, d)
 		}
 		statsMx.Unlock()
-		doPersistStats(dialers)
+		doPersistStats(statsFilePath, dialers)
 	}
 }
 
-func doPersistStats(dialers []balancer.Dialer) {
-	statsFile := statsFilePath()
+func doPersistStats(statsFile string, dialers []balancer.Dialer) {
 
 	out, err := os.OpenFile(fmt.Sprintf("%v.tmp", statsFile), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
