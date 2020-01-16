@@ -10,7 +10,6 @@ import (
 
 func (s *Server) sendMutualAuth(srpClient *srp.SRPClient,
 	credentials, username string) (*models.AuthResponse, error) {
-	log.Debugf("Sending %s mutual auth, credentials %s", username, credentials)
 	cauth, err := srpClient.Generate(credentials)
 	if err != nil {
 		return nil, err

@@ -48,21 +48,6 @@ func (s *Server) createMnemonic() http.Handler {
 	})
 }
 
-func (s *Server) errorHandler(w http.ResponseWriter, err error, errorCode int) {
-	log.Error(err)
-	e := map[string]interface{}{
-		"error": err.Error(),
-	}
-	js, err := json.Marshal(e)
-	if err != nil {
-		log.Error(err)
-		return
-	}
-	w.WriteHeader(errorCode)
-	w.Header().Set(HeaderContentType, MIMEApplicationJSON)
-	w.Write(js)
-}
-
 func (s *Server) sendPaymentHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter,
 		req *http.Request) {

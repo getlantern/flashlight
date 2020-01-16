@@ -118,17 +118,9 @@ func (l tcpKeepAliveListener) Accept() (net.Conn, error) {
 func StartServer(requestedAddr, authServerAddr,
 	extURL, localHTTPToken string, standalone bool,
 	handlers ...*PathHandler) (*Server, error) {
+
 	server := newServer(extURL, authServerAddr,
 		localHTTPToken, standalone)
-	listener, err := server.tryListenCandidates(addrCandidates(requestedAddr))
-	if err != nil {
-		return nil, err
-	}
-	server.listener = listener
-	// attach handlers here since the address the
-	// UI is listening on impacts how some are
-	// configured
-	server.attachHandlers()
 
 	for _, h := range handlers {
 		server.handle(h.Pattern, h.Handler)
@@ -168,6 +160,8 @@ func newServer(extURL, authServerAddr,
 		translations:   eventual.NewValue(),
 		standalone:     standalone,
 	}
+
+	s.attachHandlers()
 
 	return s
 }
@@ -295,6 +289,11 @@ func (s *Server) tryListenCandidates(candidates []string) (*Listener, error) {
 // starts server listen at addr in host:port format, or arbitrary local port if
 // addr is empty.
 func (s *Server) start(requestedAddr string) error {
+	listener, err := s.tryListenCandidates(addrCandidates(requestedAddr))
+	if err != nil {
+		return err
+	}
+	s.listener = listener
 	server := &http.Server{
 		Handler:  s.mux,
 		ErrorLog: log.AsStdLogger(),

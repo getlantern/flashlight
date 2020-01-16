@@ -3,6 +3,7 @@ package ui
 import (
 	"bytes"
 	"context"
+	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/getlantern/lantern-server/models"
+	"github.com/getlantern/lantern-server/srp"
 )
 
 const (
@@ -25,7 +27,8 @@ const (
 )
 
 var (
-	ErrInvalidSRPProof = errors.New("The SRP proof supplied by the server is invalid")
+	ErrInvalidSRPProof  = errors.New("The SRP proof supplied by the server is invalid")
+	ErrSRPKeysDifferent = errors.New("SRP client and server keys do not match")
 )
 
 var forwardHeaders = map[string]bool{
@@ -53,11 +56,13 @@ func withUserID(ctx context.Context, userID string) context.Context {
 	return context.WithValue(ctx, userKey, userID)
 }
 
+// getAPIAddr combines the given uri with the authentication server address
 func (s *Server) getAPIAddr(uri string) string {
 	return fmt.Sprintf("%s%s", s.authServerAddr, uri)
 }
 
-// proxyHandler
+// proxyHandler is a HTTP handler used to proxy requests
+// to the Lantern authentication server
 func (s *Server) proxyHandler(req *http.Request, w http.ResponseWriter,
 	onResp func(body []byte) error,
 ) error {
@@ -111,7 +116,10 @@ func (s *Server) proxyHandler(req *http.Request, w http.ResponseWriter,
 	return nil
 }
 
-func (s *Server) sendRequest(method, url string, requestBody []byte) (*http.Response, error) {
+// doRequest creates and sends a new HTTP request to the given url
+// with an optional requestBody. It returns an HTTP response
+func (s *Server) doRequest(method, url string,
+	requestBody []byte) (*http.Response, error) {
 	log.Debugf("Sending new request to url %s", url)
 	var req *http.Request
 	var err error
@@ -128,8 +136,9 @@ func (s *Server) sendRequest(method, url string, requestBody []byte) (*http.Resp
 	return s.httpClient.Do(req)
 }
 
-func (s *Server) sendAuthRequest(method, url string, requestBody []byte) (*models.AuthResponse, error) {
-	resp, err := s.sendRequest(method, url, requestBody)
+func (s *Server) sendAuthRequest(method, url string,
+	requestBody []byte) (*models.AuthResponse, error) {
+	resp, err := s.doRequest(method, url, requestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -141,6 +150,11 @@ func (s *Server) sendAuthRequest(method, url string, requestBody []byte) (*model
 	return decodeAuthResponse(body)
 }
 
+// authHandler is the HTTP handler used by the login and
+// registration endpoints. It creates a new SRP client from
+// the user params in the request and sends the
+// SRP params (i.e. verifier) generated to the authentication
+// server, establishing a fully authenticated session
 func (s *Server) authHandler(w http.ResponseWriter, req *http.Request) {
 	params, srpClient, err := s.getSRPClient(req)
 	if err != nil {
@@ -159,14 +173,26 @@ func (s *Server) authHandler(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			return err
 		}
+		// client generates a mutual auth and sends it to the server
 		resp, err = s.sendMutualAuth(srpClient,
 			resp.Credentials, params.Username)
 		if err != nil {
 			return err
 		}
+		// Verify the server's proof
 		ok := srpClient.ServerOk(resp.Proof)
 		if !ok {
 			return ErrInvalidSRPProof
+		}
+		srv, err := srp.UnmarshalServer(resp.Server)
+		if err != nil {
+			return err
+		}
+		// Client and server are successfully authenticated to each other
+		kc := srpClient.RawKey()
+		ks := srv.RawKey()
+		if 1 != subtle.ConstantTimeCompare(kc, ks) {
+			return ErrSRPKeysDifferent
 		}
 		return nil
 	}
