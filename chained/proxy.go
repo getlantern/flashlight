@@ -6,6 +6,8 @@ import (
 	gtls "crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net"
@@ -39,6 +41,8 @@ import (
 	"github.com/getlantern/quicwrapper"
 	"github.com/getlantern/tinywss"
 	"github.com/getlantern/tlsdialer"
+	"github.com/getlantern/tlsmasq"
+	"github.com/getlantern/tlsmasq/ptlshs"
 	"github.com/getlantern/tlsresumption"
 
 	"github.com/getlantern/flashlight/balancer"
@@ -110,6 +114,8 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		return newQUICProxy(name, s, uc)
 	case "wss":
 		return newWSSProxy(name, s, uc)
+	case "tlsmasq":
+		return newTLSMasqProxy(name, s, uc)
 	default:
 		return nil, errors.New("Unknown transport: %v", s.PluggableTransport).With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
 	}
@@ -343,6 +349,87 @@ func newWSSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*prox
 	}
 
 	return newProxy(name, "wss", "tcp", s, uc, s.Trusted, false, doDialServer, defaultDialOrigin)
+}
+
+func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+	decodeUint16 := func(s string) (uint16, error) {
+		b, err := hex.DecodeString(s)
+		if err != nil {
+			return 0, err
+		}
+		return binary.LittleEndian.Uint16(b), nil
+	}
+
+	suites := []uint16{}
+	suiteStrings := strings.Split(s.ptSetting("tm_suites"), ",")
+	if len(suiteStrings) == 0 {
+		return nil, errors.New("no cipher suites specified")
+	}
+	for _, s := range suiteStrings {
+		suite, err := decodeUint16(s)
+		if err != nil {
+			return nil, errors.New("bad cipher string '%s': %v", s, err)
+		}
+		suites = append(suites, suite)
+	}
+	minVersion, err := decodeUint16(s.ptSetting("tm_tlsminversion"))
+	if err != nil {
+		return nil, errors.New("bad TLS version string '%s': %v", err)
+	}
+	secretBytes, err := hex.DecodeString(s.ptSetting("tm_serversecret"))
+	if err != nil {
+		return nil, errors.New("bad server-secret string '%s': %v", err)
+	}
+	secret := ptlshs.Secret{}
+	if len(secretBytes) != len(secret) {
+		return nil, errors.New("expected %d-byte secret string, got %d bytes", len(secret), len(secretBytes))
+	}
+	// It's okay if this is unset - it'll just result in us using the default.
+	nonceTTL := time.Duration(s.ptSettingInt("tm_noncettl"))
+
+	cfg := tlsmasq.DialerConfig{
+		ProxiedHandshakeConfig: ptlshs.DialerConfig{
+			TLSConfig: &gtls.Config{
+				ServerName: s.TLSServerNameIndicator,
+			},
+			Secret:   secret,
+			NonceTTL: nonceTTL,
+		},
+		TLSConfig: &gtls.Config{
+			MinVersion:   minVersion,
+			CipherSuites: suites,
+		},
+	}
+
+	dialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
+		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
+			tcpConn, err := p.dialCore(op)(ctx)
+			if err != nil {
+				return nil, err
+			}
+			conn := tlsmasq.Client(tcpConn, cfg)
+
+			// We execute the handshake as part of the dial. Otherwise, preconnecting wouldn't do
+			// much for us.
+			errc := make(chan error)
+			go func() { errc <- conn.Handshake() }()
+			select {
+			case err := <-errc:
+				if err != nil {
+					conn.Close()
+					return nil, errors.New("handshake failed: %v", err)
+				}
+				return conn, nil
+			case <-ctx.Done():
+				conn.Close()
+				return nil, ctx.Err()
+			}
+		})
+	}
+
+	// harry TODO: preconnecting seems right, since the handshake can take a while, but validate
+	// harry TODO: defaultDialOrigin seems right, but validate
+	return newProxy(name, "tlsmasq", "tcp", s, uc, s.Trusted, true, dialServer, defaultDialOrigin)
 }
 
 // consecCounter is a counter that can extend on both directions. Its default
