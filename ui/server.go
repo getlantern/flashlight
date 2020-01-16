@@ -76,12 +76,18 @@ type Listener struct {
 type Server struct {
 	listener *Listener
 
+	// authServerAddr is the address of the Lantern
+	// authentication server
 	authServerAddr string
 
-	httpClient  *http.Client
+	// yinbiClient is a client for the Yinbi API which
+	// supports creating accounts and making payments
 	yinbiClient *yinbi.Client
 
+	// keystore manages encrypted storage of Yinbi private keys
 	keystore *keystore.Keystore
+
+	httpClient *http.Client
 
 	proxy *httputil.ReverseProxy
 
