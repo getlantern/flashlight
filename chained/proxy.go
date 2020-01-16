@@ -372,13 +372,15 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 		}
 		suites = append(suites, suite)
 	}
-	minVersion, err := decodeUint16(s.ptSetting("tm_tlsminversion"))
+	versStr := s.ptSetting("tm_tlsminversion")
+	minVersion, err := decodeUint16(versStr)
 	if err != nil {
-		return nil, errors.New("bad TLS version string '%s': %v", err)
+		return nil, errors.New("bad TLS version string '%s': %v", versStr, err)
 	}
-	secretBytes, err := hex.DecodeString(s.ptSetting("tm_serversecret"))
+	secrStr := s.ptSetting("tm_serversecret")
+	secretBytes, err := hex.DecodeString(secrStr)
 	if err != nil {
-		return nil, errors.New("bad server-secret string '%s': %v", err)
+		return nil, errors.New("bad server-secret string '%s': %v", secrStr, err)
 	}
 	secret := ptlshs.Secret{}
 	if len(secretBytes) != len(secret) {
@@ -427,8 +429,6 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 		})
 	}
 
-	// harry TODO: preconnecting seems right, since the handshake can take a while, but validate
-	// harry TODO: defaultDialOrigin seems right, but validate
 	return newProxy(name, "tlsmasq", "tcp", s, uc, s.Trusted, true, dialServer, defaultDialOrigin)
 }
 
