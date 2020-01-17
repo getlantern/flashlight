@@ -229,7 +229,7 @@ func trackMemory() {
 func limitMemory() {
 	for {
 		freeMemory()
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(5 * time.Second)
 	}
 }
 
