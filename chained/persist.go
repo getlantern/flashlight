@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/appdir"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
 )
@@ -27,7 +26,8 @@ var (
 func TrackStatsFor(dialers []balancer.Dialer, configDir string, probeIfNecessary bool) {
 	statsMx.Lock()
 
-	applyExistingStats(dialers)
+	statsFilePath := filepath.Join(configDir, "proxystats.csv")
+	applyExistingStats(statsFilePath, dialers)
 	if probeIfNecessary && len(dialers) > 1 {
 		probeIfRequired(dialers)
 	}
@@ -40,7 +40,7 @@ func TrackStatsFor(dialers []balancer.Dialer, configDir string, probeIfNecessary
 	statsMx.Unlock()
 
 	persistOnce.Do(func() {
-		go persistStats(filepath.Join(configDir, "proxystats.csv"))
+		go persistStats(statsFilePath)
 	})
 }
 
@@ -67,9 +67,7 @@ func probeIfRequired(dialers []balancer.Dialer) {
 	}
 }
 
-func applyExistingStats(dialers []balancer.Dialer) {
-	statsFile := statsFilePath()
-
+func applyExistingStats(statsFile string, dialers []balancer.Dialer) {
 	dialersMap := make(map[string]balancer.Dialer, len(dialers))
 	for _, d := range dialers {
 		dialersMap[d.Addr()] = d
@@ -211,8 +209,4 @@ func doPersistStats(statsFile string, dialers []balancer.Dialer) {
 	}
 
 	log.Debugf("Saved proxy stats to %v", statsFile)
-}
-
-func statsFilePath() string {
-	return filepath.Join(appdir.General("Lantern"), "proxystats.csv")
 }
