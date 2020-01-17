@@ -22,7 +22,7 @@ func NewHttpHandler() (_ *replicaUi.HttpHandler, exitFunc func(), err error) {
 	if err != nil {
 		panic(err)
 	}
-	replicaLogger := analog.Default
+	replicaLogger := analog.Default()
 	const replicaDirElem = "replica"
 	replicaConfigDir := appdir.General(replicaDirElem)
 	uploadsDir := filepath.Join(replicaConfigDir, "uploads")

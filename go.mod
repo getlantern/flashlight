@@ -5,12 +5,12 @@ go 1.12
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
-	github.com/anacrolix/confluence v1.1.0
+	github.com/anacrolix/confluence v1.3.0
+	github.com/anacrolix/dht/v2 v2.4.0 // indirect
 	github.com/anacrolix/envpprof v1.1.0
 	github.com/anacrolix/go-libutp v1.0.2
 	github.com/anacrolix/log v0.5.0
-	github.com/anacrolix/stm v0.2.0 // indirect
-	github.com/anacrolix/torrent v1.9.0
+	github.com/anacrolix/torrent v1.11.0
 	github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc // indirect
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
@@ -67,7 +67,7 @@ require (
 	github.com/getlantern/proxy v0.0.0-20191025190912-b5f45407d9f2
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
 	github.com/getlantern/quicwrapper v0.0.0-20191010171358-6726e89fbe14
-	github.com/getlantern/replica v0.0.0-00010101000000-000000000000
+	github.com/getlantern/replica v0.3.1-0.20200117054004-aceaa4d58c97
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/shortcut v0.0.0-20190117153616-bb4d4203cc25
@@ -101,7 +101,7 @@ require (
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553
 	golang.org/x/sys v0.0.0-20191228213918-04cbcbbfeed8 // indirect
-	golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7
+	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898
 	google.golang.org/appengine v1.6.2 // indirect
 	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
@@ -115,21 +115,9 @@ replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0
 
 replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3-0.20190606045409-29ac0bf665ea
 
-replace github.com/getlantern/replica => ./replica
-
-replace github.com/anacrolix/confluence => ./confluence
-
-replace github.com/anacrolix/torrent => ./torrent
-
 // git.apache.org isn't working at the moment, use mirror (should probably switch back once we can)
 replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110319-2566ecd5d999
 
-replace github.com/anacrolix/dht/v2 => ./dht
-
-replace github.com/anacrolix/log => ./log
-
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358
-
-replace github.com/anacrolix/missinggo/v2 => ./missinggo
 
 replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20191212040217-1650eee50330
