@@ -1,9 +1,12 @@
 package ui
 
 import (
+	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"path"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -30,6 +33,28 @@ func TestDoShow(t *testing.T) {
 	s.doShow(s.rootURL(), "campaign", "medium", show)
 
 	assert.Equal(t, "test", urlToShow)
+}
+
+func TestListen(t *testing.T) {
+	prohibitedPortInt := 2049
+	prohibitedPort := strconv.Itoa(prohibitedPortInt)
+	prohibitedPortAddr := fmt.Sprintf("localhost:%v", prohibitedPort)
+
+	// the listen function will choose a non-prohibited port when there's a backup candidate
+	{
+		l, _, err := listen([]string{prohibitedPortAddr, "localhost:0"})
+		assert.Nil(t, err)
+		actualPort := l.Addr().(*net.TCPAddr).Port
+		assert.NotEqual(t, actualPort, prohibitedPortInt)
+		l.Close()
+	}
+
+	// the listen function will return an error if *only* a prohibited port address
+	// is provided
+	{
+		_, _, err := listen([]string{prohibitedPortAddr})
+		assert.NotNil(t, err)
+	}
 }
 
 func TestStartServer(t *testing.T) {
@@ -76,6 +101,22 @@ func TestStartServer(t *testing.T) {
 		"passing invalid port should fallback to default addresses")
 	assert.Regexp(t, "localhost:\\d{2,}$", s.GetUIAddr(),
 		"passing invalid port should fallback to default addresses")
+	s.stop()
+
+	// Ensure that UI won't start on chrome restricted ports
+	var port int
+	// This test is non-deterministic in that it may not catch incorrect code because
+	// net.Listen is overwhelmingly likely to choose a port which is not prohibited
+	// However, it will never report a test failure if the code is behaving correctly
+	s = startServer("127.0.0.1:0")
+	port = s.listener.Addr().(*net.TCPAddr).Port
+	assert.False(t, prohibitedPorts[port])
+	s.stop()
+
+	// This test is deterministic
+	s = startServer("127.0.0.1:2049")
+	port = s.listener.Addr().(*net.TCPAddr).Port
+	assert.False(t, prohibitedPorts[port])
 	s.stop()
 
 	oldDefault := defaultUIAddresses

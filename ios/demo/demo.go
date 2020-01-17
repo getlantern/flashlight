@@ -77,6 +77,8 @@ var (
 	tunGW           = flag.String("tun-gw", "10.0.0.1", "tun device gateway")
 	pprofAddr       = flag.String("pprofaddr", "", "pprof address to listen on, not activate pprof if empty")
 	internetGateway = flag.String("gw", "192.168.1.1", "gateway for getting to Internet")
+	userID          = flag.Int("userid", 0, "user id to report to server")
+	proToken        = flag.String("protoken", "", "pro token to report to server")
 	deviceID        = flag.String("deviceid", base64.StdEncoding.EncodeToString(uuid.NodeID()), "deviceid to report to server")
 	bypassThreads   = flag.Int("bypassthreads", 0, "number of threads to use for configuring bypass routes. If set to 0, we don't bypass.")
 	proxiesYaml     = flag.String("proxiesyaml", "", "if specified, use the proxies.yaml at this location to configure client")
@@ -113,7 +115,7 @@ func main() {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cfgResult, err := ios.Configure(tmpDir, *deviceID)
+	cfgResult, err := ios.Configure(tmpDir, *userID, *proToken, *deviceID, true)
 	if err != nil {
 		log.Fatal(err)
 	}

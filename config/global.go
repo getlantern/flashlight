@@ -2,6 +2,7 @@ package config
 
 import (
 	"crypto/x509"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -16,29 +17,19 @@ import (
 type Global struct {
 	Version       int
 	CloudConfigCA string
-
 	// AutoUpdateCA is the CA key to pin for auto-updates.
 	AutoUpdateCA          string
 	UpdateServerURL       string
 	BordaReportInterval   time.Duration
 	BordaSamplePercentage float64
-	PingSamplePercentage  float64
-	ReportIssueEmail      string
-	StealthMode           bool
-	Client                *ClientConfig
-
-	// If the client's platform appears in this list, traffic logging may be enabled.
-	TrafficLogPlatforms []string
-
-	// The percent chance a client will enable traffic logging (subject to platform restrictions).
-	TrafficLogPercentage float64
-
-	// Size of the traffic log's packet buffers (if enabled).
-	TrafficLogCaptureBytes int
-	TrafficLogSaveBytes    int
+	// ReportIssueEmail is the recipient of the email sent when the user
+	// reports issue.
+	ReportIssueEmail string
 
 	// AdSettings are the settings to use for showing ads to mobile clients
 	AdSettings *AdSettings
+
+	Client *ClientConfig
 
 	// ProxiedSites are domains that get routed through Lantern rather than accessed directly.
 	ProxiedSites *proxiedsites.Config
@@ -51,6 +42,54 @@ type Global struct {
 
 	// ProxyConfigPollInterval sets interval at which to poll for proxy config
 	ProxyConfigPollInterval time.Duration
+
+	// FeaturesEnabled specifies which optional feature is enabled for certain
+	// groups of clients.
+	FeaturesEnabled map[string][]*ClientGroup
+	// FeatureOptions is a generic way to specify options for optional
+	// features. It's up to the feature code to handle the raw JSON message.
+	FeatureOptions map[string]json.RawMessage
+}
+
+// NewGlobal creates a new global config with otherwise nil values set.
+func NewGlobal() *Global {
+	return &Global{
+		Client: NewClientConfig(),
+		ProxiedSites: &proxiedsites.Config{
+			Delta: &proxiedsites.Delta{},
+		},
+	}
+}
+
+// FeatureEnabled checks if the feature is enabled given the client properties.
+func (cfg *Global) FeatureEnabled(feature string, userID int64, isPro bool,
+	geoCountry string) bool {
+	enabled, _ := cfg.FeatureEnabledWithLabel(feature, userID, isPro, geoCountry)
+	return enabled
+}
+
+// FeatureEnabledWithLabel is the same as FeatureEnabled but also returns the
+// label of the first matched ClientGroup if the feature is enabled.
+func (cfg *Global) FeatureEnabledWithLabel(feature string, userID int64, isPro bool,
+	geoCountry string) (enabled bool, label string) {
+	groups, exists := cfg.FeaturesEnabled[feature]
+	if !exists {
+		return false, ""
+	}
+	for _, g := range groups {
+		if g.Includes(userID, isPro, geoCountry) {
+			return true, g.Label
+		}
+	}
+	return false, ""
+}
+
+func (cfg *Global) UnmarshalFeatureOptions(feature string, opts interface{}) error {
+	rawMessage, exists := cfg.FeatureOptions[feature]
+	if !exists {
+		return nil
+	}
+	return json.Unmarshal(rawMessage, opts)
 }
 
 // TrustedCACerts returns a certificate pool containing the TrustedCAs from this
@@ -65,16 +104,6 @@ func (cfg *Global) TrustedCACerts() (pool *x509.CertPool, err error) {
 		log.Errorf("Could not create pool %v", err)
 	}
 	return
-}
-
-// NewGlobal creates a new global config with otherwise nil values set.
-func NewGlobal() *Global {
-	return &Global{
-		Client: NewClientConfig(),
-		ProxiedSites: &proxiedsites.Config{
-			Delta: &proxiedsites.Delta{},
-		},
-	}
 }
 
 // applyFlags updates this config from any command-line flags that were passed
@@ -100,6 +129,13 @@ func (cfg *Global) validate() error {
 	}
 	if len(cfg.TrustedCAs) == 0 {
 		return errors.New("No trusted CAs")
+	}
+	for _, groups := range cfg.FeaturesEnabled {
+		for _, g := range groups {
+			if err := g.Validate(); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

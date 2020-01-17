@@ -72,6 +72,9 @@ func ConfigureBorda(configDir, bufferFile, tempBufferFile string) (finalErr erro
 		}
 
 		openTempBuffer()
+
+		freeMemory()
+
 		var flushMx sync.Mutex
 		lastFlushed := time.Now()
 
@@ -122,6 +125,8 @@ func ConfigureBorda(configDir, bufferFile, tempBufferFile string) (finalErr erro
 			flushBufferIfNecessary()
 			return nil
 		}, borda.Enabler(samplePercentage))
+
+		freeMemory()
 	})
 
 	return finalErr
@@ -145,7 +150,7 @@ func ReportToBorda(bufferFile string) error {
 	}
 	defer file.Close()
 
-	rt, ok := fronted.NewDirect(1 * time.Minute)
+	rt, ok := fronted.NewDirect(frontedAvailableTimeout)
 	if !ok {
 		return fmt.Errorf("Timed out waiting for fronting to finish configuring")
 	}

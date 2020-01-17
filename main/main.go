@@ -17,6 +17,7 @@ import (
 
 	_ "github.com/anacrolix/envpprof"
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/mitchellh/panicwrap"
@@ -40,6 +41,11 @@ func main() {
 	// default, which may not reveal the root cause. Switch to all goroutines.
 	debug.SetTraceback("all")
 	parseFlags()
+
+	if *help {
+		flag.Usage()
+		log.Fatal("Wrong arguments")
+	}
 
 	a := &desktop.App{
 		Flags: flagsAsMap(),
@@ -73,39 +79,40 @@ func main() {
 		}()
 	}
 
-	// panicwrap works by re-executing the running program (retaining arguments,
-	// environmental variables, etc.) and monitoring the stderr of the program.
-	exitStatus, err := panicwrap.Wrap(
-		&panicwrap.WrapConfig{
-			Handler: a.LogPanicAndExit,
-			// Pipe child process output to log files instead of letting the
-			// child to write directly because we want to capture anything
-			// printed by go runtime and other libraries as well.
-			Stdout: logging.NonStopWriteCloser(logFile, os.Stdout),
-			Writer: logging.NonStopWriteCloser(logFile, os.Stderr), // standard error
-		},
-	)
-	if err != nil {
-		// Something went wrong setting up the panic wrapper. This won't be
-		// captured by panicwrap. At this point, continue execution without
-		// panicwrap support. There are known cases where panicwrap will fail
-		// to fork, such as Windows GUI app
-		log.Errorf("Error setting up panic wrapper: %v", err)
+	// Disable panicwrap for cases either unnecessary or when the exit status
+	// is desirable.
+	if disablePanicWrap() {
+		log.Debug("Not spawning child process via panicwrap")
 	} else {
-		// If exitStatus >= 0, then we're the parent process.
-		if exitStatus >= 0 {
-			os.Exit(exitStatus)
+		// panicwrap works by re-executing the running program (retaining arguments,
+		// environmental variables, etc.) and monitoring the stderr of the program.
+		exitStatus, err := panicwrap.Wrap(
+			&panicwrap.WrapConfig{
+				Handler: a.LogPanicAndExit,
+				// Pipe child process output to log files instead of letting the
+				// child to write directly because we want to capture anything
+				// printed by go runtime and other libraries as well.
+				Stdout: logging.NonStopWriteCloser(logFile, os.Stdout),
+				Writer: logging.NonStopWriteCloser(logFile, os.Stderr), // standard error
+			},
+		)
+		if err != nil {
+			// Something went wrong setting up the panic wrapper. This won't be
+			// captured by panicwrap. At this point, continue execution without
+			// panicwrap support. There are known cases where panicwrap will fail
+			// to fork, such as Windows GUI app
+			log.Errorf("Error setting up panic wrapper: %v", err)
+		} else {
+			// If exitStatus >= 0, then we're the parent process.
+			if exitStatus >= 0 {
+				os.Exit(exitStatus)
+			}
 		}
 	}
 
 	// We're in the child (wrapped) process, stop wrapper signal handling.
 	signal.Stop(wrapperC)
 	golog.SetPrepender(logging.Timestamped)
-
-	if *help {
-		flag.Usage()
-		log.Fatal("Wrong arguments")
-	}
 
 	if *pprofAddr != "" {
 		go func() {
@@ -116,6 +123,14 @@ func main() {
 			if err := srv.ListenAndServe(); err != nil {
 				log.Error(err)
 			}
+		}()
+	}
+
+	if *timeout > 0 {
+		go func() {
+			time.AfterFunc(*timeout, func() {
+				a.Exit(errors.New("timed out after running for %v", *timeout))
+			})
 		}()
 	}
 
@@ -143,7 +158,8 @@ func main() {
 		runApp(a)
 		err := a.WaitForExit()
 		if err != nil {
-			log.Error(err)
+			log.Errorf("Lantern stopped with error %v", err)
+			os.Exit(-1)
 		}
 		log.Debug("Lantern stopped")
 		os.Exit(0)
@@ -231,4 +247,8 @@ func handleSignals(a *desktop.App) {
 		log.Debugf("Got signal \"%s\", exiting...", s)
 		a.Exit(nil)
 	}()
+}
+
+func disablePanicWrap() bool {
+	return *headless || *initialize || *timeout > 0
 }
