@@ -31,9 +31,6 @@ build:
     - install-packages:
       packages: lsof libpcap-dev libappindicator3-dev libwebkit2gtk-4.0-dev # lsof required by fdcount
     - script:
-      name: git submodules
-      code: git submodule update --init
-    - script:
       name: make-lantern
       code: |
         HEADLESS=true make lantern
