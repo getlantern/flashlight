@@ -162,6 +162,7 @@ func newServer(extURL, authServerAddr,
 		httpClient:     httpClient,
 		yinbiClient:    newYinbiClient(httpClient),
 		keystore:       keystore.New(),
+		mux:            http.NewServeMux(),
 		authServerAddr: authServerAddr,
 		proxy:          httputil.NewSingleHostReverseProxy(u),
 		localHTTPToken: localHTTPToken,
@@ -174,18 +175,27 @@ func newServer(extURL, authServerAddr,
 	return s
 }
 
-func (s *Server) attachHandlers() {
-	mux := http.NewServeMux()
+type HandlerFunc func(http.ResponseWriter, *http.Request)
 
-	authHandler := http.HandlerFunc(s.authHandler)
-	mux.Handle("/login", s.wrapMiddleware(authHandler))
-	mux.Handle("/register", s.wrapMiddleware(authHandler))
-	mux.Handle("/payment/new", s.wrapMiddleware(s.sendPaymentHandler()))
-	mux.Handle("/user/account/new", s.wrapMiddleware(s.createAccountHandler()))
-	mux.Handle("/account/details", s.wrapMiddleware(s.getAccountDetails()))
-	mux.Handle("/user/logout", s.wrapMiddleware(s.proxy))
-	mux.Handle("/user/mnemonic", s.wrapMiddleware(s.createMnemonic()))
-	s.mux = mux
+func (s *Server) attachHandlers() {
+	proxyHandler := func(w http.ResponseWriter, r *http.Request) {
+		s.proxy.ServeHTTP(w, r)
+	}
+	// map of Lantern and Yinbi API endpoints to
+	// HTTP handlers to register with the ServeMux
+	routes := map[string]HandlerFunc{
+		"/login":            s.authHandler,
+		"/register":         s.authHandler,
+		"/payment/new":      s.sendPaymentHandler,
+		"/user/account/new": s.createAccountHandler,
+		"/account/details":  s.getAccountDetails,
+		"/user/mnemonic":    s.createMnemonic,
+		"/user/logout":      proxyHandler,
+	}
+	for pattern, handler := range routes {
+		s.mux.Handle(pattern,
+			s.wrapMiddleware(http.HandlerFunc(handler)))
+	}
 	s.handle("/startup", http.HandlerFunc(s.startupHandler))
 	s.handle("/", http.FileServer(fs))
 }
