@@ -1,10 +1,27 @@
 #! /usr/bin/env bash
 
+function die() {
+  echo "$@"
+  exit 1
+}
+
+function gen-list-for-country() {
+  grep $1 GeoLite2-Country-Blocks-IPv4.csv | cut -d "," -f 1 > resources/$2_ipv4.txt && \
+  grep $1 GeoLite2-Country-Blocks-IPv6.csv | cut -d "," -f 1 > resources/$2_ipv6.txt && \
+  cat resources/default_ipv4.txt >> resources/$2_ipv4.txt && \
+  cat resources/default_ipv6.txt >> resources/$2_ipv6.txt
+}
+
+which go-bindata >/dev/null || die 'Missing command "go-bindata". See https://github.com/jteeuwen/go-bindata.'
+[ ! -z "$MAXMIND_LICENSE_KEY" ] || die 'Missing envvar "MAXMIND_LICENSE_KEY".'
 mkdir -p resources && \
-(which go-bindata >/dev/null || (echo 'Missing command "go-bindata". Sett https://github.com/jteeuwen/go-bindata.' && exit 1)) && \
-(curl 'http://ftp.apnic.net/apnic/stats/apnic/delegated-apnic-latest' | grep CN | \
-tee >(grep ipv4 | awk -F\| '{ printf("%s/%d\n", $4, 32-log($5)/log(2)) }' > resources/cn_ipv4.txt) | \
-grep ipv6 | awk -F\| '{ printf("%s/%d\n", $4, $5) }' > resources/cn_ipv6.txt) && \
-cat resources/default_ipv4.txt >> resources/cn_ipv4.txt && \
-cat resources/default_ipv6.txt >> resources/cn_ipv6.txt && \
+curl "https://download.maxmind.com/app/geoip_download?license_key=$MAXMIND_LICENSE_KEY&edition_id=GeoLite2-Country-CSV&suffix=zip" > geoip2.zip && \
+unzip -j geoip2.zip && \
+# See resources/GeoLite2-Country-Locations-en.csv for the mapping of id to country code
+gen-list-for-country 1814991 cn && \
+gen-list-for-country 130758 ir && \
+gen-list-for-country 290557 ae && \
+rm geoip2.zip && \
+rm *.csv  && \
+rm *.txt  && \
 go-bindata -nomemcopy -nocompress -pkg shortcut -o resources.go resources
