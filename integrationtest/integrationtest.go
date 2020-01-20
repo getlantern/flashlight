@@ -209,7 +209,7 @@ func (helper *Helper) startProxyServer() error {
 		LampshadeUTPAddr: helper.LampshadeUTPProxyServerAddr,
 		QUICAddr:         helper.QUICProxyServerAddr,
 		WSSAddr:          helper.WSSProxyServerAddr,
-		// harry TODO: add tlsmasq address
+		TLSMasqAddr:      helper.TLSMasqProxyServerAddr,
 
 		OQUICAddr:              helper.OQUICProxyServerAddr,
 		OQUICKey:               oquicKey,
