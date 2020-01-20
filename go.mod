@@ -66,7 +66,7 @@ require (
 	github.com/getlantern/quicwrapper v0.0.0-20191010171358-6726e89fbe14
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
-	github.com/getlantern/shortcut v0.0.0-20190117153616-bb4d4203cc25
+	github.com/getlantern/shortcut v0.0.0-20200120121615-2dcb213d447c
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
 	github.com/getlantern/systray v0.0.0-20191219131235-d922a91190d8
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239

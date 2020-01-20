@@ -282,8 +282,8 @@ github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85 h1:+naZppl28oqpVs
 github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85/go.mod h1:93U9QFoHhldp+Lm7H8Xu3fUZUKI61CW6KJh6EL946Dk=
 github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2 h1:smFR/kESUKlcdyatoOO3HngBzzrUU6S0LRw2vCBYQPg=
 github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2/go.mod h1:Ap+QTDJeA24+0jjPHReq/LyP3ugEEDYvncluEgsm60A=
-github.com/getlantern/shortcut v0.0.0-20190117153616-bb4d4203cc25 h1:He6YMlNPIL16Jkl4/Shc5QaEedIAKQpZ4wzsMCWZ+0I=
-github.com/getlantern/shortcut v0.0.0-20190117153616-bb4d4203cc25/go.mod h1:g/pB1uekNFhXKYBFm76WDHtkZyrdPaIb91DEiP86+ZE=
+github.com/getlantern/shortcut v0.0.0-20200120121615-2dcb213d447c h1:dV5i/VIxAblLA5FFG/d/oH+hzFW4seJi7P3EHBEYGvY=
+github.com/getlantern/shortcut v0.0.0-20200120121615-2dcb213d447c/go.mod h1:3VQ6qvEBehqDBNbEKfNtSjK6MR5ydOdjMPgKjKay7vo=
 github.com/getlantern/smux v1.5.8-0.20200120021443-10a8d98940d3 h1:LcAZRCTNFvJLBUK8/3gxCkLc6JEo/9IKW8iFjrj061s=
 github.com/getlantern/smux v1.5.8-0.20200120021443-10a8d98940d3/go.mod h1:LhgGgaIuY39gb11XJpSc2gsWAy0Ex+nfBAaM6xJ1SLs=
 github.com/getlantern/sqlparser v0.0.0-20171012210704-a879d8035f3c h1:+N/dste38K0oW/1/p4ixoFM0JxJFnFKIf2onc0PMpAI=
