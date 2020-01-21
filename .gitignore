@@ -28,7 +28,7 @@ config/proxies.yaml
 config/generated/masquerades.go
 profile.cov
 profile_tmp.cov
-shortcut/resources/cn*
+shortcut/resources/*_ipv*.txt
 lantern-linux
 lantern.zip
 .DS_store
