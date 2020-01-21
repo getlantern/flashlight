@@ -36,7 +36,7 @@ require (
 	github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7
 	github.com/getlantern/gowin v0.0.0-20160824205538-88fa116ddffc // indirect
 	github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55
-	github.com/getlantern/http-proxy-lantern v0.1.4-0.20200117182047-069de5b5f999
+	github.com/getlantern/http-proxy-lantern v0.1.4-0.20200121005357-0832ffc24f87
 	github.com/getlantern/httpseverywhere v0.0.0-20180326165025-9bdb93e40695
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
 	github.com/getlantern/idletiming v0.0.0-20190529182719-d2fbc83372a5
