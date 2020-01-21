@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/getlantern/golog"
+	"github.com/getlantern/netx"
 	"github.com/getlantern/shortcut"
 
 	"github.com/getlantern/flashlight/geolookup"
@@ -38,6 +39,9 @@ func (s *nullShortcut) Allow(context.Context, string) (bool, net.IP) {
 	return false, nil
 }
 
+func (s *nullShortcut) SetResolver(func(context.Context, string) (net.IP, error)) {
+}
+
 func configure(country string) {
 	country = strings.ToLower(country)
 	var _sc shortcut.Shortcut
@@ -49,6 +53,28 @@ func configure(country string) {
 				bytes.NewReader(v4),
 				bytes.NewReader(v6),
 			)
+			_sc.SetResolver(func(ctx context.Context, addr string) (net.IP, error) {
+				// TODO: change netx to accept context
+				done := make(chan struct{})
+				var tcpAddr *net.TCPAddr
+				var err error
+				go func() {
+					tcpAddr, err = netx.Resolve("tcp", addr)
+					select {
+					case done <- struct{}{}:
+					default:
+					}
+				}()
+				select {
+				case <-done:
+					if err != nil {
+						return nil, err
+					}
+					return tcpAddr.IP, nil
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				}
+			})
 			break
 		}
 		log.Debugf("no shortcut list for country %s, fallback to default", country)
