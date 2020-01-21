@@ -17,7 +17,7 @@ require (
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20191105202701-77098b35c76c
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
-	github.com/getlantern/cmux v0.0.0-20190809092548-4b7adf243efe
+	github.com/getlantern/cmux v0.0.0-20200120072431-136083c8edb8
 	github.com/getlantern/common v0.0.0-20191017131928-864ae49aeb6a
 	github.com/getlantern/detour v0.0.0-20191213192126-a4b3dcb2def2
 	github.com/getlantern/dnsgrab v0.0.0-20191217020031-0e5f714410f9
@@ -29,14 +29,14 @@ require (
 	github.com/getlantern/eventual v0.0.0-20180125201821-84b02499361b
 	github.com/getlantern/filepersist v0.0.0-20160317154340-c5f0cd24e799
 	github.com/getlantern/fronted v0.0.0-20190606212108-e7744195eded
-	github.com/getlantern/geolookup v0.0.0-20180719190536-68d621f75f46
+	github.com/getlantern/geolookup v0.0.0-20200121184643-02217082e50f
 	github.com/getlantern/go-ping v0.0.0-20191213124541-9d4b7e6e7de6
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
 	github.com/getlantern/go-update v0.0.0-20190510022740-79c495ab728c // indirect
 	github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7
 	github.com/getlantern/gowin v0.0.0-20160824205538-88fa116ddffc // indirect
 	github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55
-	github.com/getlantern/http-proxy-lantern v0.1.4-0.20191205031621-c79813277d70
+	github.com/getlantern/http-proxy-lantern v0.1.4-0.20200121234748-09cf7701b9ce
 	github.com/getlantern/httpseverywhere v0.0.0-20180326165025-9bdb93e40695
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
 	github.com/getlantern/idletiming v0.0.0-20190529182719-d2fbc83372a5
@@ -63,14 +63,14 @@ require (
 	github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c
 	github.com/getlantern/proxy v0.0.0-20191025190912-b5f45407d9f2
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
-	github.com/getlantern/quicwrapper v0.0.0-20191010171358-6726e89fbe14
+	github.com/getlantern/quicwrapper v0.0.0-20191220185748-4721f84faa16
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/shortcut v0.0.0-20200120121615-2dcb213d447c
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
 	github.com/getlantern/systray v0.0.0-20191219131235-d922a91190d8
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
-	github.com/getlantern/tinywss v0.0.0-20190809093313-4439caa924e5
+	github.com/getlantern/tinywss v0.0.0-20200121221108-851921f95ad7
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
 	github.com/getlantern/tlsdialer v0.0.0-20191022033653-81b203ed2619
 	github.com/getlantern/tlsresumption v0.0.0-20191010160602-a16b0c459d39
