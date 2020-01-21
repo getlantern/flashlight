@@ -90,7 +90,7 @@ func TestProxying(t *testing.T) {
 		listenPort++
 		return fmt.Sprintf("localhost:%d", listenPort)
 	}
-	helper, err := integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
+	helper, err := integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -136,7 +136,7 @@ func TestProxying(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	testRequest(t, helper)
 
-	// Switch to quic, wait for a new config and test request again
+	// Switch to quic0 (legacy), wait for a new config and test request again
 	helper.SetProtocol("quic")
 	time.Sleep(2 * time.Second)
 	testRequest(t, helper)
@@ -148,6 +148,11 @@ func TestProxying(t *testing.T) {
 
 	// Switch to wss, wait for a new config and test request again
 	helper.SetProtocol("wss")
+	time.Sleep(2 * time.Second)
+	testRequest(t, helper)
+
+	// Switch to quic_ietf, wait for a new config and test request again
+	helper.SetProtocol("quic_ietf")
 	time.Sleep(2 * time.Second)
 	testRequest(t, helper)
 

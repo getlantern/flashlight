@@ -36,7 +36,7 @@ require (
 	github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7
 	github.com/getlantern/gowin v0.0.0-20160824205538-88fa116ddffc // indirect
 	github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55
-	github.com/getlantern/http-proxy-lantern v0.1.4-0.20200130190446-3028d2ef9381 // indirect
+	github.com/getlantern/http-proxy-lantern v0.1.4-0.20200130190446-3028d2ef9381
 	github.com/getlantern/httpseverywhere v0.0.0-20180326165025-9bdb93e40695
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
 	github.com/getlantern/idletiming v0.0.0-20190529182719-d2fbc83372a5
@@ -63,6 +63,8 @@ require (
 	github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c
 	github.com/getlantern/proxy v0.0.0-20191025190912-b5f45407d9f2
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
+	github.com/getlantern/quic0 v0.0.0-20200121154153-8b18c2ba09f9
+	github.com/getlantern/quicwrapper v0.0.0-20200129232925-8ef70253fcae
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/shortcut v0.0.0-20200120121615-2dcb213d447c

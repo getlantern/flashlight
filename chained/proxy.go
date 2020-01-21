@@ -36,6 +36,7 @@ import (
 	"github.com/getlantern/lampshade"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
+	"github.com/getlantern/quic0"
 	"github.com/getlantern/quicwrapper"
 	"github.com/getlantern/tinywss"
 	"github.com/getlantern/tlsdialer"
@@ -106,8 +107,8 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		return newOBFS4Proxy(name, transport, proto, s, uc)
 	case "lampshade":
 		return newLampshadeProxy(name, transport, proto, s, uc)
-	case "quic", "oquic":
-		return newQUICProxy(name, s, uc)
+	case "quic", "quic_ietf", "oquic":
+		return newQUICProxy(name, transport, s, uc)
 	case "wss":
 		return newWSSProxy(name, s, uc)
 	default:
@@ -321,7 +322,7 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 	return newProxy(name, transport, proto, s, uc, s.Trusted, false, doDialServer, defaultDialOrigin)
 }
 
-func newQUICProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+func newQUICProxy(name string, transport string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 
 	dialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(s.Addr, "quic", "udp", func(op *ops.Op) (net.Conn, error) {
@@ -330,7 +331,7 @@ func newQUICProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pro
 		})
 	}
 
-	return newProxy(name, "quic", "udp", s, uc, s.Trusted, false, dialServer, defaultDialOrigin)
+	return newProxy(name, transport, "udp", s, uc, s.Trusted, false, dialServer, defaultDialOrigin)
 }
 
 func newWSSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
@@ -488,8 +489,15 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 			return nil, err
 		}
 		p.protocol = "kcp"
-	} else if s.PluggableTransport == "quic" || s.PluggableTransport == "oquic" {
-		log.Debugf("Enabling QUIC for %v (%v)", p.Label(), p.protocol)
+	} else if s.PluggableTransport == "quic" {
+		log.Debugf("Enabling QUIC0 (legacy) for %v (%v)", p.Label(), p.protocol)
+		err := enableQUIC0(p, s)
+		if err != nil {
+			return nil, err
+		}
+		p.protocol = s.PluggableTransport
+	} else if s.PluggableTransport == "quic_ietf" || s.PluggableTransport == "oquic" {
+		log.Debugf("Enabling QUIC (%s) for %v (%v)", s.PluggableTransport, p.Label(), p.protocol)
 		err := enableQUIC(p, s)
 		if err != nil {
 			return nil, err
@@ -678,6 +686,55 @@ func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHija
 
 		return td.Dial(network, addr)
 	}), nil
+}
+
+func enableQUIC0(p *proxy, s *ChainedServerInfo) error {
+	addr := s.Addr
+	tlsConf := &gtls.Config{
+		ServerName:         s.TLSServerNameIndicator,
+		InsecureSkipVerify: true,
+		KeyLogWriter:       getTLSKeyLogWriter(),
+	}
+
+	quicConf := &quic0.Config{
+		MaxIncomingStreams: -1,
+		KeepAlive:          true,
+	}
+
+	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
+	if err != nil {
+		return log.Error(errors.Wrap(err).With("addr", s.Addr))
+	}
+	pinnedCert := cert.X509()
+
+	dialFn := quic0.DialWithNetx
+	dialer := quic0.NewClientWithPinnedCert(
+		addr,
+		tlsConf,
+		quicConf,
+		dialFn,
+		pinnedCert,
+	)
+	// when the proxy closes, close the dialer
+	go func() {
+		<-p.closeCh
+		log.Debug("Closing quic0 session: Proxy closed.")
+		dialer.Close()
+	}()
+
+	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
+		elapsed := mtime.Stopwatch()
+		conn, err := dialer.DialContext(ctx)
+		if err != nil {
+			log.Debugf("Failed to establish multiplexed quic0 connection: %s", err)
+		} else {
+			log.Debug("established new multiplexed quic0 connection.")
+		}
+		delta := elapsed()
+		return conn, delta, err
+	}
+
+	return nil
 }
 
 func enableQUIC(p *proxy, s *ChainedServerInfo) error {
