@@ -386,14 +386,17 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 	if len(secretBytes) != len(secret) {
 		return nil, errors.New("expected %d-byte secret string, got %d bytes", len(secret), len(secretBytes))
 	}
+	sni := s.ptSetting("tm_sni")
+	if sni == "" {
+		return nil, errors.New("server name indicator must be configured")
+	}
 	// It's okay if this is unset - it'll just result in us using the default.
 	nonceTTL := time.Duration(s.ptSettingInt("tm_noncettl"))
 
 	cfg := tlsmasq.DialerConfig{
 		ProxiedHandshakeConfig: ptlshs.DialerConfig{
 			TLSConfig: &gtls.Config{
-				// TODO: (Harry) maybe this should be a tlsmasq-specific SNI
-				ServerName: s.TLSServerNameIndicator,
+				ServerName: sni,
 			},
 			Secret:   secret,
 			NonceTTL: nonceTTL,
