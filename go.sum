@@ -828,6 +828,8 @@ github.com/ssdb/gossdb v0.0.0-20180723034631-88f6b59b84ec/go.mod h1:QBvMkMya+gXc
 github.com/stellar/go v0.0.0-20191017101339-613572f47839/go.mod h1:U4zGmzxsNw5Kr0Z8f0clhHVFOIfi80iVh8MBp7y8pY0=
 github.com/stellar/go v0.0.0-20200106170405-f04530d0e1f5 h1:UWFo42whQon0NBMPRUdrBz4vspUZgrE/Q2gBDL6OZwU=
 github.com/stellar/go v0.0.0-20200106170405-f04530d0e1f5/go.mod h1:/aqu78pdkDF8+7BLAr8eU/qIcrCoxqIlIzsT0dQRdvw=
+github.com/stellar/go v0.0.0-20200116182239-2a7c16b0b50a h1:+QGIltR0jaJlzmD8U7DjpabU8UjGlAP3/8IjDpEzgU0=
+github.com/stellar/go v0.0.0-20200116182239-2a7c16b0b50a/go.mod h1:/aqu78pdkDF8+7BLAr8eU/qIcrCoxqIlIzsT0dQRdvw=
 github.com/stellar/go-xdr v0.0.0-20180917104419-0bc96f33a18e h1:n/hfey8pO+RYMoGXyvyzuw5pdO8IFDoyAL/g5OiCesY=
 github.com/stellar/go-xdr v0.0.0-20180917104419-0bc96f33a18e/go.mod h1:gpOLVzy6TVYTQ3LvHSN9RJC700FkhFCpSE82u37aNRM=
 github.com/stellar/throttled v2.2.3-0.20190823235211-89d75816f59d+incompatible/go.mod h1:7CJ23pXirXBJq45DqvO6clzTEGM/l1SfKrgrzLry8b4=

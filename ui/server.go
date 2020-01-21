@@ -170,7 +170,7 @@ func newServer(extURL, authServerAddr,
 		standalone:     standalone,
 	}
 
-	s.attachHandlers()
+	//s.attachHandlers()
 
 	return s
 }
@@ -312,6 +312,8 @@ func (s *Server) start(requestedAddr string) error {
 		return err
 	}
 	s.listener = listener
+	s.attachHandlers()
+
 	server := &http.Server{
 		Handler:  s.mux,
 		ErrorLog: log.AsStdLogger(),
