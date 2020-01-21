@@ -392,6 +392,7 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 	cfg := tlsmasq.DialerConfig{
 		ProxiedHandshakeConfig: ptlshs.DialerConfig{
 			TLSConfig: &gtls.Config{
+				// TODO: (Harry) maybe this should be a tlsmasq-specific SNI
 				ServerName: s.TLSServerNameIndicator,
 			},
 			Secret:   secret,
