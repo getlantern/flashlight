@@ -353,7 +353,7 @@ func newWSSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*prox
 
 func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 	decodeUint16 := func(s string) (uint16, error) {
-		b, err := hex.DecodeString(s)
+		b, err := hex.DecodeString(strings.TrimPrefix(s, "0x"))
 		if err != nil {
 			return 0, err
 		}
@@ -377,10 +377,10 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 	if err != nil {
 		return nil, errors.New("bad TLS version string '%s': %v", versStr, err)
 	}
-	secrStr := s.ptSetting("tm_serversecret")
-	secretBytes, err := hex.DecodeString(secrStr)
+	secretString := s.ptSetting("tm_serversecret")
+	secretBytes, err := hex.DecodeString(strings.TrimPrefix(secretString, "0x"))
 	if err != nil {
-		return nil, errors.New("bad server-secret string '%s': %v", secrStr, err)
+		return nil, errors.New("bad server-secret string '%s': %v", secretString, err)
 	}
 	secret := ptlshs.Secret{}
 	if len(secretBytes) != len(secret) {
