@@ -4,6 +4,7 @@ package integrationtest
 
 import (
 	"compress/gzip"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -47,9 +48,10 @@ const (
 )
 
 var (
-	log             = golog.LoggerFor("testsupport")
-	globalCfg       []byte
-	proxiesTemplate []byte
+	log               = golog.LoggerFor("testsupport")
+	globalCfg         []byte
+	proxiesTemplate   []byte
+	tlsmasqOriginAddr string
 )
 
 func init() {
@@ -86,6 +88,7 @@ type Helper struct {
 	HTTPServerAddr              string
 	HTTPSServerAddr             string
 	ConfigServerAddr            string
+	tlsMasqOriginAddr           string
 	listeners                   []net.Listener
 }
 
@@ -147,6 +150,13 @@ func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr s
 	if err != nil {
 		helper.Close()
 		return nil, err
+	}
+
+	// Start an origin server for tlsmasq to masquerade as.
+	err = helper.startTLSMasqOrigin()
+	if err != nil {
+		helper.Close()
+		return nil, fmt.Errorf("failed to start tlsmasq origin: %v", err)
 	}
 
 	return helper, nil
@@ -223,7 +233,8 @@ func (helper *Helper) startProxyServer() error {
 		OQUICMinPadded:         uint64(oqDefaults.MinPadded),
 
 		// TODO: (Harry) tlsmasq origin address
-		TLSMasqSecret: tlsmasqServerSecret,
+		TLSMasqSecret:     tlsmasqServerSecret,
+		TLSMasqOriginAddr: helper.tlsMasqOriginAddr,
 
 		Token:       Token,
 		KeyFile:     KeyFile,
@@ -448,6 +459,40 @@ func (helper *Helper) buildProxies(proto string) ([]byte, error) {
 	}
 
 	return out, nil
+}
+
+func (helper *Helper) startTLSMasqOrigin() error {
+	// Self-signed cert.
+	var (
+		certPem = []byte(`-----BEGIN CERTIFICATE-----
+MIIBhTCCASugAwIBAgIQIRi6zePL6mKjOipn+dNuaTAKBggqhkjOPQQDAjASMRAw
+DgYDVQQKEwdBY21lIENvMB4XDTE3MTAyMDE5NDMwNloXDTE4MTAyMDE5NDMwNlow
+EjEQMA4GA1UEChMHQWNtZSBDbzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABD0d
+7VNhbWvZLWPuj/RtHFjvtJBEwOkhbN/BnnE8rnZR8+sbwnc/KhCk3FhnpHZnQz7B
+5aETbbIgmuvewdjvSBSjYzBhMA4GA1UdDwEB/wQEAwICpDATBgNVHSUEDDAKBggr
+BgEFBQcDATAPBgNVHRMBAf8EBTADAQH/MCkGA1UdEQQiMCCCDmxvY2FsaG9zdDo1
+NDUzgg4xMjcuMC4wLjE6NTQ1MzAKBggqhkjOPQQDAgNIADBFAiEA2zpJEPQyz6/l
+Wf86aX6PepsntZv2GYlA5UpabfT2EZICICpJ5h/iI+i341gBmLiAFQOyTDT+/wQc
+6MF9+Yw1Yy0t
+-----END CERTIFICATE-----`)
+		keyPem = []byte(`-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIIrYSSNQFaA2Hwf1duRSxKtLYX5CB04fSeQ6tF1aY/PuoAoGCCqGSM49
+AwEHoUQDQgAEPR3tU2Fta9ktY+6P9G0cWO+0kETA6SFs38GecTyudlHz6xvCdz8q
+EKTcWGekdmdDPsHloRNtsiCa697B2O9IFA==
+-----END EC PRIVATE KEY-----`)
+	)
+
+	cert, err := tls.X509KeyPair(certPem, keyPem)
+	if err != nil {
+		return fmt.Errorf("failed to parse certificate: %v", err)
+	}
+	l, err := tls.Listen("tcp", "", &tls.Config{Certificates: []tls.Certificate{cert}})
+	if err != nil {
+		return err
+	}
+	helper.tlsMasqOriginAddr = l.Addr().String()
+	helper.listeners = append(helper.listeners, l)
+	return nil
 }
 
 var kcpConf = map[string]interface{}{
