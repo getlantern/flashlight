@@ -397,6 +397,8 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 		ProxiedHandshakeConfig: ptlshs.DialerConfig{
 			TLSConfig: &gtls.Config{
 				ServerName: sni,
+				// TODO: (Harry) figure out how to test without this
+				InsecureSkipVerify: true,
 			},
 			Secret:   secret,
 			NonceTTL: nonceTTL,
@@ -404,6 +406,8 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 		TLSConfig: &gtls.Config{
 			MinVersion:   minVersion,
 			CipherSuites: suites,
+			// TODO: (Harry) figure out whether we need this
+			InsecureSkipVerify: true,
 		},
 	}
 
