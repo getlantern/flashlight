@@ -12,12 +12,15 @@ func runOnSystrayReady(standalone bool, a *desktop.App, f func()) {
 	f()
 	err := a.WaitForExit()
 	if err != nil {
-		log.Error(err)
+		log.Errorf("Lantern stopped with error %v", err)
+		os.Exit(-1)
 	}
+	log.Debug("Lantern stopped")
 	os.Exit(0)
 }
 
-func quitSystray() {
+func quitSystray(a *desktop.App) {
+	a.Exit(nil)
 }
 
 func configureSystemTray(a *desktop.App) error {

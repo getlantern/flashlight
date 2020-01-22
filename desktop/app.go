@@ -1,4 +1,4 @@
-// Package app implements the desktop application functionality of flashlight
+// Package desktop implements the desktop application functionality of flashlight
 package desktop
 
 import (
@@ -17,7 +17,6 @@ import (
 	"github.com/getlantern/eventual"
 
 	"github.com/getlantern/flashlight"
-	"github.com/getlantern/flashlight/desktop/replica"
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
@@ -34,6 +33,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/datacap"
+	"github.com/getlantern/flashlight/desktop/replica"
 
 	//"github.com/getlantern/flashlight/diagnostics/trafficlog"
 	"github.com/getlantern/flashlight/email"
