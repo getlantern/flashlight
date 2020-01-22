@@ -492,6 +492,28 @@ EKTcWGekdmdDPsHloRNtsiCa697B2O9IFA==
 	if err != nil {
 		return err
 	}
+
+	go func() {
+		for {
+			conn, err := l.Accept()
+			if err != nil && strings.Contains(err.Error(), "use of closed network connection") {
+				// Unexported, but stable error: https://golang.org/src/internal/poll/fd.go#L16
+				return
+			}
+			if err != nil {
+				log.Debugf("tlsmasq origin server: accept failure: %v", err)
+				continue
+			}
+			go func(c net.Conn) {
+				// Force the handshake so that it can be proxied.
+				if err := c.(*tls.Conn).Handshake(); err != nil {
+					log.Debugf("tlsmasq origin server: handshake failure: %v", err)
+					return
+				}
+			}(conn)
+		}
+	}()
+
 	helper.tlsMasqOriginAddr = l.Addr().String()
 	helper.listeners = append(helper.listeners, l)
 	return nil
