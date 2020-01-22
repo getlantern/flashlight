@@ -5,7 +5,10 @@ package integrationtest
 import (
 	"compress/gzip"
 	"crypto/tls"
+	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -515,11 +518,42 @@ o91tzH1xsfoYsMnt6AP4cIQ=
 -----END PRIVATE KEY-----`)
 	)
 
+	decodeUint16 := func(s string) (uint16, error) {
+		b, err := hex.DecodeString(strings.TrimPrefix(s, "0x"))
+		if err != nil {
+			return 0, err
+		}
+		return binary.LittleEndian.Uint16(b), nil
+	}
+
+	// We need to ensure the negotiated cipher suite and TLS version are acceptable to the dialer.
+	suites := []uint16{}
+	suiteStrings := strings.Split(tlsmasqSuites, ",")
+	if len(suiteStrings) == 0 {
+		return errors.New("no cipher suites specified")
+	}
+	for _, s := range suiteStrings {
+		suite, err := decodeUint16(s)
+		if err != nil {
+			return fmt.Errorf("bad cipher string '%s': %v", s, err)
+		}
+		suites = append(suites, suite)
+	}
+	versStr := tlsmasqMinVersion
+	minVersion, err := decodeUint16(versStr)
+	if err != nil {
+		return fmt.Errorf("bad TLS version string '%s': %v", versStr, err)
+	}
+
 	cert, err := tls.X509KeyPair(certPem, keyPem)
 	if err != nil {
 		return fmt.Errorf("failed to parse certificate: %v", err)
 	}
-	l, err := tls.Listen("tcp", "", &tls.Config{Certificates: []tls.Certificate{cert}})
+	l, err := tls.Listen("tcp", "", &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		CipherSuites: suites,
+		MinVersion:   minVersion,
+	})
 	if err != nil {
 		return err
 	}
