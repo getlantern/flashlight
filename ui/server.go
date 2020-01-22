@@ -20,6 +20,7 @@ import (
 	"github.com/getlantern/systray"
 	"github.com/getlantern/tarfs"
 
+	"github.com/getlantern/appdir"
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/stats"
@@ -161,7 +162,7 @@ func newServer(extURL, authServerAddr,
 		requestPath:    requestPath,
 		httpClient:     httpClient,
 		yinbiClient:    newYinbiClient(httpClient),
-		keystore:       keystore.New(),
+		keystore:       keystore.New(appdir.General("Lantern")),
 		mux:            http.NewServeMux(),
 		authServerAddr: authServerAddr,
 		proxy:          httputil.NewSingleHostReverseProxy(u),

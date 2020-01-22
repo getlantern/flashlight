@@ -51,6 +51,7 @@ func (s *Server) createMnemonic(w http.ResponseWriter, r *http.Request) {
 func (s *Server) sendPaymentHandler(w http.ResponseWriter,
 	req *http.Request) {
 	var r struct {
+		Username    string `json:"username"`
 		Password    string `json:"password"`
 		Destination string `json:"destination"`
 		Amount      string `json:"amount"`
@@ -62,7 +63,7 @@ func (s *Server) sendPaymentHandler(w http.ResponseWriter,
 		return
 	}
 	// get key from keystore here
-	secretKey, err := s.keystore.GetKey(r.Password)
+	secretKey, err := s.keystore.GetKey(r.Username, r.Password)
 	if err != nil {
 		err = fmt.Errorf("Error retrieving secret key: %v", err)
 		s.errorHandler(w, err, http.StatusInternalServerError)
@@ -76,7 +77,7 @@ func (s *Server) sendPaymentHandler(w http.ResponseWriter,
 		s.errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
-	log.Debug("Successfully retrieved keypair")
+	log.Debugf("Successfully retrieved keypair for %s", r.Username)
 	resp, err := s.yinbiClient.SendPayment(
 		r.Destination,
 		r.Amount,
@@ -107,16 +108,21 @@ func (s *Server) getAccountDetails(w http.ResponseWriter,
 		log.Debugf("Error decoding JSON: %v", err)
 		return
 	}
-	log.Debugf("Looking up balance for account with address %s", request.Address)
-	balances, err := s.yinbiClient.GetBalances(request.Address)
+	address := request.Address
+	log.Debugf("Looking up balance for account with address %s", address)
+	balances, err := s.yinbiClient.GetBalances(address)
 	if err != nil {
-		log.Error(err)
+		log.Debugf("Error retrieving balance: %v", err)
 		return
 	}
-	payments, err := s.yinbiClient.GetPayments(request.Address)
+	log.Debugf("Looking up payments for account with address %s", address)
+	payments, err := s.yinbiClient.GetPayments(address)
 	if err != nil {
+		log.Debugf("Error retrieving payments: %v", err)
 		return
 	}
+	log.Debugf("Successfully retrived balance and payments for %s",
+		address)
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"success":  true,
 		"balances": balances,
@@ -147,7 +153,8 @@ func (s *Server) createAccountHandler(w http.ResponseWriter,
 	r.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
 
 	// send secret key to keystore
-	err = s.keystore.Store(pair.Seed(), params.Password)
+	err = s.keystore.Store(pair.Seed(), params.Username,
+		params.Password)
 	if err != nil {
 		s.errorHandler(w, err, http.StatusInternalServerError)
 		return
