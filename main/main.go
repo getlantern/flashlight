@@ -228,6 +228,7 @@ func handleWrapperSignals(a *desktop.App) chan os.Signal {
 		syscall.SIGPIPE) // it's okay to trap SIGPIPE in the wrapper but not in the main process because we can get it from failed network connections
 	go func() {
 		s := <-c
+		log.Debugf("Got wrapper signal \"%s\", exiting...", s)
 		a.LogPanicAndExit(fmt.Sprintf("Panicwrapper received signal %v", s))
 	}()
 	return c
@@ -244,7 +245,7 @@ func handleSignals(a *desktop.App) {
 	go func() {
 		s := <-c
 		log.Debugf("Got signal \"%s\", exiting...", s)
-		a.Exit(nil)
+		quitSystray(a)
 	}()
 }
 
