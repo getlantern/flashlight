@@ -129,6 +129,13 @@ func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr s
 		return nil, err
 	}
 
+	// Start an origin server for tlsmasq to masquerade as.
+	err = helper.startTLSMasqOrigin()
+	if err != nil {
+		helper.Close()
+		return nil, fmt.Errorf("failed to start tlsmasq origin: %v", err)
+	}
+
 	// This is the remote proxy server
 	err = helper.startProxyServer()
 	if err != nil {
@@ -151,13 +158,6 @@ func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr s
 	if err != nil {
 		helper.Close()
 		return nil, err
-	}
-
-	// Start an origin server for tlsmasq to masquerade as.
-	err = helper.startTLSMasqOrigin()
-	if err != nil {
-		helper.Close()
-		return nil, fmt.Errorf("failed to start tlsmasq origin: %v", err)
 	}
 
 	return helper, nil
