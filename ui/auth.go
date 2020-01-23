@@ -97,6 +97,7 @@ func (s *Server) proxyHandler(req *http.Request, w http.ResponseWriter,
 	if onResp != nil {
 		err = onResp(body)
 		if err != nil {
+			log.Error(err)
 			return err
 		}
 	}
@@ -177,15 +178,18 @@ func (s *Server) authHandler(w http.ResponseWriter, req *http.Request) {
 		resp, err = s.sendMutualAuth(srpClient,
 			resp.Credentials, params.Username)
 		if err != nil {
+			s.errorHandler(w, err, http.StatusUnauthorized)
 			return err
 		}
 		// Verify the server's proof
 		ok := srpClient.ServerOk(resp.Proof)
 		if !ok {
+			s.errorHandler(w, err, http.StatusUnauthorized)
 			return ErrInvalidSRPProof
 		}
 		srv, err := srp.UnmarshalServer(resp.Server)
 		if err != nil {
+			s.errorHandler(w, err, http.StatusInternalServerError)
 			return err
 		}
 		// Client and server are successfully authenticated to each other
@@ -194,6 +198,7 @@ func (s *Server) authHandler(w http.ResponseWriter, req *http.Request) {
 		if 1 != subtle.ConstantTimeCompare(kc, ks) {
 			return ErrSRPKeysDifferent
 		}
+		log.Debug("Successfully created new SRP session")
 		return nil
 	}
 

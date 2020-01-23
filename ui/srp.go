@@ -23,6 +23,7 @@ func (s *Server) sendMutualAuth(srpClient *srp.SRPClient,
 		return nil, err
 	}
 	url := s.getAPIAddr(authEndpoint)
+	log.Debugf("Sending mutual auth to %s", url)
 	return s.sendAuthRequest(POST, url, requestBody)
 }
 
