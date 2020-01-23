@@ -396,6 +396,7 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 	if len(secretBytes) != len(secret) {
 		return nil, errors.New("expected %d-byte secret string, got %d bytes", len(secret), len(secretBytes))
 	}
+	copy(secret[:], secretBytes)
 	log.Debugf("tlsmasq secret: %#x\n", secret)
 	sni := s.ptSetting("tm_sni")
 	if sni == "" {
