@@ -195,7 +195,7 @@ func (c *client) loadDialers() ([]balancer.Dialer, error) {
 		dialers = append(dialers, dialer)
 	}
 
-	chained.TrackStatsFor(dialers, false)
+	chained.TrackStatsFor(dialers, filepath.Join(c.configDir, "proxystats.csv"), false)
 
 	return dialers, nil
 }
@@ -229,7 +229,7 @@ func trackMemory() {
 func limitMemory() {
 	for {
 		freeMemory()
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(5 * time.Second)
 	}
 }
 

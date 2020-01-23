@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/appdir"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
 )
@@ -24,10 +23,11 @@ var (
 
 // TrackStatsFor enables periodic checkpointing of the given proxies' stats to
 // disk.
-func TrackStatsFor(dialers []balancer.Dialer, probeIfNecessary bool) {
+func TrackStatsFor(dialers []balancer.Dialer, configDir string, probeIfNecessary bool) {
 	statsMx.Lock()
 
-	applyExistingStats(dialers)
+	statsFilePath := filepath.Join(configDir, "proxystats.csv")
+	applyExistingStats(statsFilePath, dialers)
 	if probeIfNecessary && len(dialers) > 1 {
 		probeIfRequired(dialers)
 	}
@@ -40,7 +40,7 @@ func TrackStatsFor(dialers []balancer.Dialer, probeIfNecessary bool) {
 	statsMx.Unlock()
 
 	persistOnce.Do(func() {
-		go persistStats()
+		go persistStats(statsFilePath)
 	})
 }
 
@@ -67,9 +67,7 @@ func probeIfRequired(dialers []balancer.Dialer) {
 	}
 }
 
-func applyExistingStats(dialers []balancer.Dialer) {
-	statsFile := statsFilePath()
-
+func applyExistingStats(statsFile string, dialers []balancer.Dialer) {
 	dialersMap := make(map[string]balancer.Dialer, len(dialers))
 	for _, d := range dialers {
 		dialersMap[d.Addr()] = d
@@ -163,7 +161,7 @@ func updateStats(p *proxy, row []string) error {
 	return nil
 }
 
-func persistStats() {
+func persistStats(statsFilePath string) {
 	for {
 		time.Sleep(15 * time.Second)
 		statsMx.Lock()
@@ -172,12 +170,11 @@ func persistStats() {
 			dialers = append(dialers, d)
 		}
 		statsMx.Unlock()
-		doPersistStats(dialers)
+		doPersistStats(statsFilePath, dialers)
 	}
 }
 
-func doPersistStats(dialers []balancer.Dialer) {
-	statsFile := statsFilePath()
+func doPersistStats(statsFile string, dialers []balancer.Dialer) {
 
 	out, err := os.OpenFile(fmt.Sprintf("%v.tmp", statsFile), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
@@ -212,8 +209,4 @@ func doPersistStats(dialers []balancer.Dialer) {
 	}
 
 	log.Debugf("Saved proxy stats to %v", statsFile)
-}
-
-func statsFilePath() string {
-	return filepath.Join(appdir.General("Lantern"), "proxystats.csv")
 }
