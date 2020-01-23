@@ -31,7 +31,6 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/datacap"
-	"github.com/getlantern/flashlight/desktop/replica"
 
 	//"github.com/getlantern/flashlight/diagnostics/trafficlog"
 	"github.com/getlantern/flashlight/email"
