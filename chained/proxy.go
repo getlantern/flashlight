@@ -363,7 +363,7 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 		if err != nil {
 			return 0, err
 		}
-		return binary.LittleEndian.Uint16(b), nil
+		return binary.BigEndian.Uint16(b), nil
 	}
 
 	suites := []uint16{}
@@ -396,6 +396,7 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 	if len(secretBytes) != len(secret) {
 		return nil, errors.New("expected %d-byte secret string, got %d bytes", len(secret), len(secretBytes))
 	}
+	log.Debugf("tlsmasq secret: %#x\n", secret)
 	sni := s.ptSetting("tm_sni")
 	if sni == "" {
 		return nil, errors.New("server name indicator must be configured")

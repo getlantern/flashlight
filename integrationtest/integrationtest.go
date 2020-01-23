@@ -442,6 +442,7 @@ func (helper *Helper) buildProxies(proto string) ([]byte, error) {
 			srv.Addr = helper.LampshadeUTPProxyServerAddr
 			srv.PluggableTransport = "utplampshade"
 		} else if proto == "tlsmasq" {
+			log.Debugf("tlsmasq server secret: %#x\n", tlsmasqServerSecret)
 			srv.Addr = helper.TLSMasqProxyServerAddr
 			srv.PluggableTransport = "tlsmasq"
 			srv.PluggableTransportSettings = map[string]string{
@@ -523,7 +524,7 @@ o91tzH1xsfoYsMnt6AP4cIQ=
 		if err != nil {
 			return 0, err
 		}
-		return binary.LittleEndian.Uint16(b), nil
+		return binary.BigEndian.Uint16(b), nil
 	}
 
 	// We need to ensure the negotiated cipher suite and TLS version are acceptable to the dialer.
