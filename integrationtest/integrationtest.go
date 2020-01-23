@@ -442,6 +442,7 @@ func (helper *Helper) buildProxies(proto string) ([]byte, error) {
 			srv.Addr = helper.LampshadeUTPProxyServerAddr
 			srv.PluggableTransport = "utplampshade"
 		} else if proto == "tlsmasq" {
+			log.Debugf("tlsmasq server secret: %#x\n", tlsmasqServerSecret)
 			srv.Addr = helper.TLSMasqProxyServerAddr
 			srv.PluggableTransport = "tlsmasq"
 			srv.PluggableTransportSettings = map[string]string{
