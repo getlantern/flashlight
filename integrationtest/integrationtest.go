@@ -46,8 +46,8 @@ const (
 	oquicKey = "tAqXDihxfJDqyHy35k2NhImetkzKmoC7MFEELrYi6LI="
 
 	tlsmasqSNI          = "test.com"
-	tlsmasqSuites       = "0xcca9" // TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
-	tlsmasqMinVersion   = "0x0303" // TLS 1.2
+	tlsmasqSuites       = "0xcca9,0x1301" // TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+	tlsmasqMinVersion   = "0x0303"        // TLS 1.2
 	tlsmasqServerSecret = "d0cd0e2e50eb2ac7cb1dc2c94d1bc8871e48369970052ff866d1e7e876e77a13246980057f70d64a2bdffb545330279f69bce5fd"
 )
 
