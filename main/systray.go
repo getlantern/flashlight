@@ -10,6 +10,7 @@ import (
 	"github.com/getlantern/systray"
 
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/desktop"
 	"github.com/getlantern/flashlight/icons"
 	"github.com/getlantern/flashlight/stats"
 )
@@ -42,11 +43,6 @@ type systrayCallbacks interface {
 }
 
 func runOnSystrayReady(standalone bool, a systrayCallbacks, onReady func()) {
-	// Typically, systray.Quit will actually be what causes the app to exit, but
-	// in the case of an uncaught Fatal error, the app will exit before the
-	// systray and we need it to call systray.Quit().
-	a.AddExitFunc("quitting systray", systray.Quit)
-
 	onExit := func() {
 		if a.Exit(nil) {
 			err := a.WaitForExit()
@@ -60,6 +56,17 @@ func runOnSystrayReady(standalone bool, a systrayCallbacks, onReady func()) {
 		systray.RunWithAppWindow(i18n.T("TRAY_LANTERN"), 1024, 768, onReady, onExit)
 	} else {
 		systray.Run(onReady, onExit)
+	}
+}
+
+func quitSystray(a *desktop.App) {
+	// Typically, systray.Quit will actually be what causes the app to exit, but
+	// in the case of an uncaught Fatal error or CTRL-C, the app will exit before the
+	// systray and we need it to call systray.Quit().
+	if a.ShouldShowUI() {
+		systray.Quit()
+	} else {
+		a.Exit(nil)
 	}
 }
 

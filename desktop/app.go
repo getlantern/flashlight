@@ -1,4 +1,4 @@
-// Package app implements the desktop application functionality of flashlight
+// Package desktop implements the desktop application functionality of flashlight
 package desktop
 
 import (
