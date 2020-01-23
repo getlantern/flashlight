@@ -371,16 +371,14 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 	if len(suiteStrings) == 0 {
 		return nil, errors.New("no cipher suites specified")
 	}
-	fmt.Print("tlsmasq suites:")
-	for _, s := range suiteStrings {
+	for i, s := range suiteStrings {
 		suite, err := decodeUint16(s)
 		if err != nil {
 			return nil, errors.New("bad cipher string '%s': %v", s, err)
 		}
 		suites = append(suites, suite)
-		fmt.Printf("%#x ", s)
+		log.Debugf("tlsmasq suite %d: %#x", i, s)
 	}
-	fmt.Println()
 	versStr := s.ptSetting("tm_tlsminversion")
 	minVersion, err := decodeUint16(versStr)
 	if err != nil {
