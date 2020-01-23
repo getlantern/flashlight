@@ -371,6 +371,9 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 	if len(suiteStrings) == 0 {
 		return nil, errors.New("no cipher suites specified")
 	}
+	if len(suiteStrings) == 0 {
+		log.Debug("no tlsmasq suites")
+	}
 	for i, s := range suiteStrings {
 		suite, err := decodeUint16(s)
 		if err != nil {
