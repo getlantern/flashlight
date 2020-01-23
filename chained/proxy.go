@@ -64,6 +64,12 @@ const (
 	defaultMultiplexedPhysicalConns = 1
 )
 
+// InsecureSkipVerifyTLSMasqOrigin controls whether the origin certificate is verified when dialing
+// a tlsmasq proxy. This can be used when testing against origins with self-signed certificates.
+// This should be false in production as allowing a 3rd party to impersonate the origin could allow
+// for a kind of probe.
+var InsecureSkipVerifyTLSMasqOrigin = false
+
 var (
 	chainedDialTimeout          = 1 * time.Minute
 	theForceAddr, theForceToken string
@@ -365,12 +371,16 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 	if len(suiteStrings) == 0 {
 		return nil, errors.New("no cipher suites specified")
 	}
-	for _, s := range suiteStrings {
+	if len(suiteStrings) == 0 {
+		log.Debug("no tlsmasq suites")
+	}
+	for i, s := range suiteStrings {
 		suite, err := decodeUint16(s)
 		if err != nil {
 			return nil, errors.New("bad cipher string '%s': %v", s, err)
 		}
 		suites = append(suites, suite)
+		log.Debugf("tlsmasq suite %d: %#x", i, s)
 	}
 	versStr := s.ptSetting("tm_tlsminversion")
 	minVersion, err := decodeUint16(versStr)
@@ -396,9 +406,8 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 	cfg := tlsmasq.DialerConfig{
 		ProxiedHandshakeConfig: ptlshs.DialerConfig{
 			TLSConfig: &gtls.Config{
-				ServerName: sni,
-				// TODO: (Harry) figure out how to test without this
-				InsecureSkipVerify: true,
+				ServerName:         sni,
+				InsecureSkipVerify: InsecureSkipVerifyTLSMasqOrigin,
 			},
 			Secret:   secret,
 			NonceTTL: nonceTTL,
