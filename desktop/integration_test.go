@@ -106,6 +106,8 @@ func TestProxying(t *testing.T) {
 		return
 	}
 
+	t.Fatal("quitting early for debugging purposes")
+
 	// Makes a test request
 	testRequest(t, helper)
 
