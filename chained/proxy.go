@@ -415,9 +415,8 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 			NonceTTL: nonceTTL,
 		},
 		TLSConfig: &gtls.Config{
-			MinVersion:   minVersion,
-			CipherSuites: suites,
-			// TODO: (Harry) figure out whether we need this
+			MinVersion:         minVersion,
+			CipherSuites:       suites,
 			InsecureSkipVerify: true,
 		},
 	}

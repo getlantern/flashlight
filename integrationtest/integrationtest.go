@@ -236,7 +236,6 @@ func (helper *Helper) startProxyServer() error {
 		OQUICMaxPaddingHint:    uint64(oqDefaults.MaxPaddingHint),
 		OQUICMinPadded:         uint64(oqDefaults.MinPadded),
 
-		// TODO: (Harry) tlsmasq origin address
 		TLSMasqSecret:     tlsmasqServerSecret,
 		TLSMasqOriginAddr: helper.tlsMasqOriginAddr,
 
