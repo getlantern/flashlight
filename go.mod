@@ -67,12 +67,14 @@ require (
 	github.com/getlantern/proxy v0.0.0-20191025190912-b5f45407d9f2
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
 	github.com/getlantern/quicwrapper v0.0.0-20191220185748-4721f84faa16
+	github.com/getlantern/replica v0.3.1-0.20200117054004-aceaa4d58c97
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/shortcut v0.0.0-20200120121615-2dcb213d447c
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
 	github.com/getlantern/systray v0.0.0-20191219131235-d922a91190d8
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
+	github.com/getlantern/testify v0.0.0-20160317154340-2eeb3906e78f
 	github.com/getlantern/tinywss v0.0.0-20200121221108-851921f95ad7
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
 	github.com/getlantern/tlsdialer v0.0.0-20191022033653-81b203ed2619
