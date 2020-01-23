@@ -523,7 +523,7 @@ o91tzH1xsfoYsMnt6AP4cIQ=
 		if err != nil {
 			return 0, err
 		}
-		return binary.LittleEndian.Uint16(b), nil
+		return binary.BigEndian.Uint16(b), nil
 	}
 
 	// We need to ensure the negotiated cipher suite and TLS version are acceptable to the dialer.

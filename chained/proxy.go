@@ -363,7 +363,7 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 		if err != nil {
 			return 0, err
 		}
-		return binary.LittleEndian.Uint16(b), nil
+		return binary.BigEndian.Uint16(b), nil
 	}
 
 	suites := []uint16{}
