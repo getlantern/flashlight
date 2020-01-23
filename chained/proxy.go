@@ -420,6 +420,17 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 		},
 	}
 
+	if s.Cert != "" {
+		pool, err := x509.SystemCertPool()
+		if err != nil {
+			return nil, errors.New("failed to load system cert pool: %v", err)
+		}
+		if !pool.AppendCertsFromPEM([]byte(s.Cert)) {
+			return nil, errors.New("failed to load proxy certificate")
+		}
+		cfg.TLSConfig.RootCAs = pool
+	}
+
 	dialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
 			tcpConn, err := p.dialCore(op)(ctx)
