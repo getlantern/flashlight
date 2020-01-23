@@ -157,7 +157,7 @@ func newServer(extURL, authServerAddr,
 		Transport: proxied.ChainedThenFronted(),
 	}
 
-	s := &Server{
+	server := &Server{
 		externalURL:    overrideManotoURL(extURL),
 		requestPath:    requestPath,
 		httpClient:     httpClient,
@@ -170,10 +170,7 @@ func newServer(extURL, authServerAddr,
 		translations:   eventual.NewValue(),
 		standalone:     standalone,
 	}
-
-	//s.attachHandlers()
-
-	return s
+	return server
 }
 
 type HandlerFunc func(http.ResponseWriter, *http.Request)
@@ -416,6 +413,10 @@ func (s *Server) rootURL() string {
 }
 
 func (s *Server) stop() error {
+	if s.listener == nil {
+		return nil
+	}
+	s.mux = http.NewServeMux()
 	return s.listener.Close()
 }
 
