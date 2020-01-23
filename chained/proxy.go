@@ -440,6 +440,9 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 		pool.AddCert(cert)
 		cfg.TLSConfig.RootCAs = pool
 		cfg.TLSConfig.ServerName = cert.Subject.CommonName
+	} else {
+		log.Debug("configuring tlsmasq dialer with Insecureskipverify = true")
+		cfg.TLSConfig.InsecureSkipVerify = true
 	}
 
 	dialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
