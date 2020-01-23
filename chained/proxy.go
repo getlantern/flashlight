@@ -64,6 +64,12 @@ const (
 	defaultMultiplexedPhysicalConns = 1
 )
 
+// InsecureSkipVerifyTLSMasqOrigin controls whether the origin certificate is verified when dialing
+// a tlsmasq proxy. This can be used when testing against origins with self-signed certificates.
+// This should be false in production as allowing a 3rd party to impersonate the origin could allow
+// for a kind of probe.
+var InsecureSkipVerifyTLSMasqOrigin = false
+
 var (
 	chainedDialTimeout          = 1 * time.Minute
 	theForceAddr, theForceToken string
@@ -396,9 +402,8 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 	cfg := tlsmasq.DialerConfig{
 		ProxiedHandshakeConfig: ptlshs.DialerConfig{
 			TLSConfig: &gtls.Config{
-				ServerName: sni,
-				// TODO: (Harry) figure out how to test without this
-				InsecureSkipVerify: true,
+				ServerName:         sni,
+				InsecureSkipVerify: InsecureSkipVerifyTLSMasqOrigin,
 			},
 			Secret:   secret,
 			NonceTTL: nonceTTL,

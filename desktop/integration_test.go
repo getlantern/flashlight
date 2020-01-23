@@ -17,6 +17,7 @@ import (
 	"github.com/getlantern/waitforserver"
 
 	"github.com/getlantern/flashlight/borda"
+	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/goroutines"
@@ -34,6 +35,9 @@ const (
 func TestProxying(t *testing.T) {
 	golog.SetPrepender(logging.Timestamped)
 	onGeo := geolookup.OnRefresh()
+
+	chained.InsecureSkipVerifyTLSMasqOrigin = true
+	defer func() { chained.InsecureSkipVerifyTLSMasqOrigin = false }()
 
 	var opsMx sync.RWMutex
 	reportedOps := make(map[string]int)
