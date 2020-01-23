@@ -416,6 +416,7 @@ func (s *Server) stop() error {
 	if s.listener == nil {
 		return nil
 	}
+	// reinitialize mux with http.DefaultServeMux
 	s.mux = http.NewServeMux()
 	return s.listener.Close()
 }

@@ -290,6 +290,8 @@ github.com/getlantern/lantern-server v0.0.0-20200107170726-57b1d694890d h1:6Ulnx
 github.com/getlantern/lantern-server v0.0.0-20200107170726-57b1d694890d/go.mod h1:Ob9DmRy7hJs3DYk3Xy0YWPclQGWRjPAej1S4OlLlJYE=
 github.com/getlantern/lantern-server v0.0.0-20200116200854-04567dec1e5e h1:+Uv6q/+XpRtt3yhEAPllCyxDyQoOjEAE8ujBjooAi5M=
 github.com/getlantern/lantern-server v0.0.0-20200116200854-04567dec1e5e/go.mod h1:Rt1MT5usWKuC2GxoIUcDaoL7Fd46klglhycgLRQmf7Q=
+github.com/getlantern/lantern-server v0.0.0-20200123185537-8d72f35be1da h1:5m8tW+UecBCfNj6WvdpODk0QI0JjNyMQEdLpvWsmxak=
+github.com/getlantern/lantern-server v0.0.0-20200123185537-8d72f35be1da/go.mod h1:Rt1MT5usWKuC2GxoIUcDaoL7Fd46klglhycgLRQmf7Q=
 github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894 h1:Gzf64TTHyKH4HEe1dgwnf7BOaq5rJZg25Hqz5TmogEI=
 github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894/go.mod h1:h57jtqyH1HCLYu53nnr3WTUntPozt5ztqQ9aN687VEY=
 github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358 h1:ZPe/LMCpCEuHtfBp2NP3/A9KRXQJbTxeSOVWmcBzXIc=
