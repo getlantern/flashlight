@@ -1,4 +1,4 @@
-// +build android linux darwin,!amd64
+// +build android ios linux
 
 package chained
 

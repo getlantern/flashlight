@@ -25,9 +25,10 @@ import (
 )
 
 const (
-	memLimitInMiB     = 12
-	memLimitInBytes   = memLimitInMiB * 1024 * 1024
-	quotaSaveInterval = 1 * time.Minute
+	memLimitInMiB           = 12
+	memLimitInBytes         = memLimitInMiB * 1024 * 1024
+	quotaSaveInterval       = 1 * time.Minute
+	frontedAvailableTimeout = 5 * time.Minute
 )
 
 var (
@@ -150,6 +151,9 @@ func (c *client) start() (WriteCloser, error) {
 	w := packetforward.Client(&writerAdapter{c.packetsOut}, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
 		return bal.DialContext(ctx, "connect", "127.0.0.1:3000")
 	})
+
+	freeMemory()
+
 	return &wc{
 		Writer:        w,
 		bal:           bal,
@@ -191,7 +195,7 @@ func (c *client) loadDialers() ([]balancer.Dialer, error) {
 		dialers = append(dialers, dialer)
 	}
 
-	chained.TrackStatsFor(dialers, false)
+	chained.TrackStatsFor(dialers, filepath.Join(c.configDir, "proxystats.csv"), false)
 
 	return dialers, nil
 }
@@ -212,30 +216,38 @@ func (c *client) chainedDialer(name string, si *chained.ChainedServerInfo) (bala
 
 func trackMemory() {
 	for {
-		time.Sleep(5 * time.Second)
 		memstats := &runtime.MemStats{}
 		runtime.ReadMemStats(memstats)
 		log.Debugf("Memory InUse: %v    Alloc: %v    Sys: %v",
 			humanize.Bytes(memstats.HeapInuse),
 			humanize.Bytes(memstats.Alloc),
 			humanize.Bytes(memstats.Sys))
+		time.Sleep(5 * time.Second)
 	}
 }
 
 func limitMemory() {
 	for {
+		freeMemory()
 		time.Sleep(5 * time.Second)
-		runtime.GC()
-		debug.FreeOSMemory()
 	}
 }
 
-func userConfigFor(deviceID string) *common.UserConfigData {
+func partialUserConfigFor(deviceID string) *common.UserConfigData {
+	return userConfigFor(0, "", deviceID)
+}
+
+func userConfigFor(userID int, proToken, deviceID string) *common.UserConfigData {
 	return common.NewUserConfigData(
 		deviceID,
-		0,   // UserID currently unused
-		"",  // Token currently unused
+		int64(userID),
+		proToken,
 		nil, // Headers currently unused
 		"",  // Language currently unused
 	)
+}
+
+func freeMemory() {
+	runtime.GC()
+	debug.FreeOSMemory()
 }

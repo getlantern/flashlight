@@ -1,4 +1,4 @@
-// Package app implements the desktop application functionality of flashlight
+// Package desktop implements the desktop application functionality of flashlight
 package desktop
 
 import (
@@ -71,6 +71,7 @@ type App struct {
 
 	uiServer *ui.Server
 	ws       ws.UIChannel
+	chrome   chromeExtension
 
 	// If both the trafficLogLock and proxiesLock are needed, the trafficLogLock should be obtained
 	// first. Keeping the order consistent avoids deadlocking.
@@ -91,6 +92,8 @@ type App struct {
 func (app *App) Init() {
 	golog.OnFatal(app.exitOnFatal)
 	app.Flags["staging"] = common.Staging
+	app.chrome = newChromeExtension()
+	app.chrome.install()
 	settings = app.loadSettings()
 	app.exited = eventual.NewValue()
 	app.statsTracker = NewStatsTracker()
@@ -118,7 +121,7 @@ func (app *App) loadSettings() *Settings {
 	if common.Staging {
 		path = filepath.Join(dir, "settings-staging.yaml")
 	}
-	return loadSettingsFrom(common.Version, common.RevisionDate, common.BuildDate, path)
+	return loadSettingsFrom(common.Version, common.RevisionDate, common.BuildDate, path, app.chrome)
 }
 
 // LogPanicAndExit logs a panic and then exits the application. This function

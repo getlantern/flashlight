@@ -100,13 +100,14 @@ type Settings struct {
 	filePath string
 
 	log golog.Logger
+
+	chrome chromeExtension
 }
 
-func loadSettingsFrom(version, revisionDate, buildDate, path string) *Settings {
-	log.Debug("Loading settings")
+func loadSettingsFrom(version, revisionDate, buildDate, path string, chrome chromeExtension) *Settings {
 	// Create default settings that may or may not be overridden from an existing file
 	// on disk.
-	sett := newSettings(path)
+	sett := newSettings(path, chrome)
 	set := sett.m
 
 	// Use settings from disk if they're available.
@@ -139,6 +140,8 @@ func loadSettingsFrom(version, revisionDate, buildDate, path string) *Settings {
 	set[SNVersion] = version
 	set[SNBuildDate] = buildDate
 	set[SNRevisionDate] = revisionDate
+
+	go chrome.save(sett.mapToSave)
 	return sett
 }
 
@@ -152,7 +155,7 @@ func toCamelCase(m map[SettingName]interface{}) {
 	}
 }
 
-func newSettings(filePath string) *Settings {
+func newSettings(filePath string, chrome chromeExtension) *Settings {
 	return &Settings{
 		m: map[SettingName]interface{}{
 			SNUserID:         int64(0),
@@ -170,6 +173,7 @@ func newSettings(filePath string) *Settings {
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
 		log:             golog.LoggerFor("app.settings"),
+		chrome:          chrome,
 	}
 }
 
@@ -274,13 +278,19 @@ func (s *Settings) setString(name SettingName, v interface{}) {
 
 // save saves settings to disk.
 func (s *Settings) save() {
-	log.Trace("Saving settings")
+	s.saveDefault()
+	s.chrome.saveOnce(s.mapToSave)
+}
+
+// save saves settings to disk as yaml in the default lantern user settings directory.
+func (s *Settings) saveDefault() {
+	s.log.Trace("Saving settings")
 	if f, err := os.Create(s.filePath); err != nil {
 		s.log.Errorf("Could not open settings file for writing: %v", err)
 	} else if _, err := s.writeTo(f); err != nil {
 		s.log.Errorf("Could not save settings file: %v", err)
 	} else {
-		log.Tracef("Saved settings to %s", s.filePath)
+		s.log.Tracef("Saved settings to %s", s.filePath)
 	}
 }
 
@@ -501,7 +511,7 @@ func (s *Settings) getInt64(name SettingName) int64 {
 }
 
 func (s *Settings) getVal(name SettingName) (interface{}, error) {
-	log.Tracef("Getting value for %v", name)
+	s.log.Tracef("Getting value for %v", name)
 	s.RLock()
 	defer s.RUnlock()
 	if val, ok := s.m[name]; ok {

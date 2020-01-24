@@ -42,7 +42,7 @@ func loadTemp() *Settings {
 	tmpfile, _ := ioutil.TempFile("", "test")
 	defer os.Remove(tmpfile.Name()) // clean up
 
-	return loadSettingsFrom("1", "1/1/1", "1/1/1", tmpfile.Name())
+	return loadSettingsFrom("1", "1/1/1", "1/1/1", tmpfile.Name(), newChromeExtension())
 }
 
 func TestRead(t *testing.T) {
@@ -124,7 +124,7 @@ func TestRead(t *testing.T) {
 
 func TestSetNum(t *testing.T) {
 	snTest := SettingName("test")
-	set := newSettings("/dev/null")
+	set := newSet("/dev/null")
 	var val json.Number = "4809"
 	var expected int64 = 4809
 	set.setNum(snTest, val)
@@ -144,7 +144,7 @@ func TestSetNum(t *testing.T) {
 }
 
 func TestStringArray(t *testing.T) {
-	set := newSettings("/dev/null")
+	set := newSet("/dev/null")
 	assert.Nil(t, set.getStringArray("key"), "string array should be nil initially")
 	set.setStringArray("key", []string{"value"})
 	assert.Equal(t, []string{"value"}, set.getStringArray("key"), "should set string array")
@@ -160,12 +160,16 @@ func TestStringArray(t *testing.T) {
 		"should read value from []interface{} too")
 }
 
+func newSet(path string) *Settings {
+	return newSettings(path, newChromeExtension())
+}
+
 func TestPersistAndLoad(t *testing.T) {
 	version := "version-not-on-disk"
 	revisionDate := "1970-1-1"
 	buildDate := "1970-1-1"
 	yamlFile := "./test.yaml"
-	set := loadSettingsFrom(version, revisionDate, buildDate, yamlFile)
+	set := loadSettingsFrom(version, revisionDate, buildDate, yamlFile, newChromeExtension())
 	assert.Equal(t, version, set.m["version"], "Should be set to version")
 	assert.Equal(t, revisionDate, set.m["revisionDate"], "Should be set to revisionDate")
 	assert.Equal(t, buildDate, set.m["buildDate"], "Should be set to buildDate")
@@ -174,7 +178,7 @@ func TestPersistAndLoad(t *testing.T) {
 
 	set.SetLanguage("leet")
 	set.SetUserIDAndToken(1234, "token")
-	set2 := loadSettingsFrom(version, revisionDate, buildDate, yamlFile)
+	set2 := loadSettingsFrom(version, revisionDate, buildDate, yamlFile, newChromeExtension())
 	assert.Equal(t, "leet", set2.GetLanguage(), "Should save language to file and reload")
 	assert.Equal(t, int64(1234), set2.GetUserID(), "Should save user id to file and reload")
 	set2.SetLanguage("en")
@@ -182,13 +186,13 @@ func TestPersistAndLoad(t *testing.T) {
 }
 
 func TestLoadLowerCased(t *testing.T) {
-	set := loadSettingsFrom("", "", "", "./lowercased.yaml")
+	set := loadSettingsFrom("", "", "", "./lowercased.yaml", newChromeExtension())
 	assert.Equal(t, int64(1234), set.GetUserID(), "Should load user id from lower cased yaml")
 	assert.Equal(t, "abcd", set.GetToken(), "Should load user token from lower cased yaml")
 }
 
 func TestOnChange(t *testing.T) {
-	set := newSettings("/dev/null")
+	set := newSet("/dev/null")
 	in := make(chan interface{})
 	out := make(chan interface{})
 	var c1, c2 string
@@ -208,7 +212,7 @@ func TestOnChange(t *testing.T) {
 }
 
 func TestInvalidType(t *testing.T) {
-	set := newSettings("/dev/null")
+	set := newSet("/dev/null")
 	set.setVal("test", nil)
 	assert.Equal(t, "", set.getString("test"))
 	assert.Equal(t, false, set.getBool("test"))
