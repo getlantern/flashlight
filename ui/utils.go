@@ -32,6 +32,8 @@ func decodeAuthResponse(body []byte) (*models.AuthResponse, error) {
 	return authResp, err
 }
 
+// decodeJSONRequest parses the JSON-encoded data in the provided request and
+// stores the result in dst
 func decodeJSONRequest(req *http.Request, dst interface{}) error {
 
 	ctype := req.Header.Get(HeaderContentType)
@@ -48,7 +50,7 @@ func decodeJSONRequest(req *http.Request, dst interface{}) error {
 	}
 }
 
-// errorHandler is an error handler that takes an err or Errors and writes the
+// errorHandler is an error handler that takes an error or Errors and writes the
 // encoded JSON response to the client
 func (s *Server) errorHandler(w http.ResponseWriter, err interface{}, errorCode int) {
 	log.Error(err)
@@ -62,6 +64,7 @@ func (s *Server) errorHandler(w http.ResponseWriter, err interface{}, errorCode 
 	writeJSON(w, errorCode, &resp)
 }
 
+// writeJSON writes the encoding of i to the provided http.ResponseWriter
 func writeJSON(w http.ResponseWriter, code int, i interface{}) {
 	w.Header().Set(HeaderContentType, MIMEApplicationJSON)
 	w.WriteHeader(code)
