@@ -26,11 +26,13 @@ const (
 
 var ErrUnsupportedMediaType = errors.New("The request media type is invalid")
 
-func writeJSON(w http.ResponseWriter,
-	code int, i interface{}) error {
+func writeJSON(w http.ResponseWriter, code int, i interface{}) {
 	w.Header().Set(HeaderContentType, MIMEApplicationJSON)
 	w.WriteHeader(code)
-	return json.NewEncoder(w).Encode(i)
+	err := json.NewEncoder(w).Encode(i)
+	if err != nil {
+		log.Error(err)
+	}
 }
 
 func decodeAuthResponse(body []byte) (*models.AuthResponse, error) {

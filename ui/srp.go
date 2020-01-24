@@ -8,6 +8,9 @@ import (
 	"github.com/getlantern/lantern-server/srp"
 )
 
+// The SRP client processes the server credentials
+// and generates a mutual auth that is sent to the
+// server as proof the client derived its keys
 func (s *Server) sendMutualAuth(srpClient *srp.SRPClient,
 	credentials, username string) (*models.AuthResponse, error) {
 	cauth, err := srpClient.Generate(credentials)
@@ -23,7 +26,6 @@ func (s *Server) sendMutualAuth(srpClient *srp.SRPClient,
 		return nil, err
 	}
 	url := s.getAPIAddr(authEndpoint)
-	log.Debugf("Sending mutual auth to %s", url)
 	return s.sendAuthRequest(POST, url, requestBody)
 }
 

@@ -34,15 +34,10 @@ func newYinbiClient(httpClient *http.Client) *yinbi.Client {
 }
 
 func (s *Server) createMnemonic(w http.ResponseWriter, r *http.Request) {
-	mnemonic := crypto.NewMnemonic()
-	result := map[string]interface{}{
-		"mnemonic": mnemonic,
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"mnemonic": crypto.NewMnemonic(),
 		"success":  true,
-	}
-	err := writeJSON(w, http.StatusOK, result)
-	if err != nil {
-		log.Error(err)
-	}
+	})
 }
 
 // sendPaymentHandler is the handler used to create Yinbi payments
