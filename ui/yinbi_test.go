@@ -62,17 +62,17 @@ func createPaymentRequest(params PaymentParams) *http.Request {
 	return req
 }
 
-func testPaymentHandler(t *testing.T, req *http.Request, responseCode int,
-	expectedResponse Response) {
+func testPaymentHandler(t *testing.T, req *http.Request,
+	hasErrors bool, pt PaymentTest) {
 	rec := httptest.NewRecorder()
 	s.sendPaymentHandler(rec, req)
 	dumpResponse(rec)
 	var resp Response
 	resp.Errors = make(Errors)
 	decodeResp(t, rec, &resp)
-	assert.Equal(t, rec.Code, http.StatusBadRequest)
-	assert.True(t, len(resp.Errors) > 0)
-	assert.Equal(t, resp, expectedResponse)
+	assert.Equal(t, rec.Code, pt.expectedCode)
+	assert.Equal(t, len(resp.Errors) > 0, hasErrors)
+	assert.Equal(t, resp, pt.expectedResponse)
 }
 
 func newPaymentParams(username, password, dst,
@@ -131,8 +131,7 @@ func TestSendPayment(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			req := createPaymentRequest(tc.params)
-			testPaymentHandler(t, req, tc.expectedCode,
-				tc.expectedResponse)
+			testPaymentHandler(t, req, true, tc)
 		})
 	}
 }
