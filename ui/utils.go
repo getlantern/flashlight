@@ -26,15 +26,6 @@ const (
 
 var ErrUnsupportedMediaType = errors.New("The request media type is invalid")
 
-func writeJSON(w http.ResponseWriter, code int, i interface{}) {
-	w.Header().Set(HeaderContentType, MIMEApplicationJSON)
-	w.WriteHeader(code)
-	err := json.NewEncoder(w).Encode(i)
-	if err != nil {
-		log.Error(err)
-	}
-}
-
 func decodeAuthResponse(body []byte) (*models.AuthResponse, error) {
 	authResp := new(models.AuthResponse)
 	err := json.Unmarshal(body, authResp)
@@ -57,17 +48,25 @@ func decodeJSONRequest(req *http.Request, dst interface{}) error {
 	}
 }
 
-func (s *Server) errorHandler(w http.ResponseWriter, err error, errorCode int) {
+// errorHandler is an error handler that takes an err or Errors and writes the
+// encoded JSON response to the client
+func (s *Server) errorHandler(w http.ResponseWriter, err interface{}, errorCode int) {
 	log.Error(err)
-	e := map[string]interface{}{
-		"error": err.Error(),
+	var resp Response
+	switch err.(type) {
+	case error:
+		resp.Error = err.(error).Error()
+	case Errors:
+		resp.Errors = err.(Errors)
 	}
-	js, err := json.Marshal(e)
+	writeJSON(w, errorCode, &resp)
+}
+
+func writeJSON(w http.ResponseWriter, code int, i interface{}) {
+	w.Header().Set(HeaderContentType, MIMEApplicationJSON)
+	w.WriteHeader(code)
+	err := json.NewEncoder(w).Encode(i)
 	if err != nil {
 		log.Error(err)
-		return
 	}
-	w.WriteHeader(errorCode)
-	w.Header().Set(HeaderContentType, MIMEApplicationJSON)
-	w.Write(js)
 }
