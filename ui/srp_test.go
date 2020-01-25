@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/lantern-server/constants"
 	"github.com/getlantern/lantern-server/models"
 	"github.com/getlantern/lantern-server/srp"
 	"github.com/getlantern/yinbi-server/utils"
@@ -21,6 +22,7 @@ type SRPTest struct {
 	endpoint     string
 	hasError     bool
 	expectedCode int
+	expectedResp *Response
 }
 
 const TestPassword = "p@sswor1234!"
@@ -76,6 +78,35 @@ func TestSRP(t *testing.T) {
 			registrationEndpoint,
 			false,
 			http.StatusOK,
+			nil,
+		},
+		{
+			"Register User - Username Taken",
+			models.UserParams{
+				Username: user.Username,
+				Email:    fmt.Sprintf("%s@test.com", utils.GenerateRandomString(12)),
+				Password: user.Password,
+			},
+			registrationEndpoint,
+			true,
+			http.StatusBadRequest,
+			&Response{
+				Error: constants.ErrUsernameTaken.Error(),
+			},
+		},
+		{
+			"Register User - Email Taken",
+			models.UserParams{
+				Username: utils.GenerateRandomString(12),
+				Email:    user.Email,
+				Password: user.Password,
+			},
+			registrationEndpoint,
+			true,
+			http.StatusBadRequest,
+			&Response{
+				Error: constants.ErrEmailTaken.Error(),
+			},
 		},
 		{
 			"Login User",
@@ -87,6 +118,7 @@ func TestSRP(t *testing.T) {
 			loginEndpoint,
 			false,
 			http.StatusOK,
+			nil,
 		},
 		{
 			"Bad Login",
@@ -98,6 +130,7 @@ func TestSRP(t *testing.T) {
 			loginEndpoint,
 			true,
 			http.StatusUnauthorized,
+			nil,
 		},
 	}
 
@@ -117,9 +150,11 @@ func TestSRP(t *testing.T) {
 			} else {
 				var resp Response
 				decodeResp(t, rec, &resp)
-				assert.Equal(t, rec.Code, http.StatusUnauthorized)
+				assert.Equal(t, rec.Code, tc.expectedCode)
 				assert.NotEmpty(t, resp.Error)
-				assert.Equal(t, resp.Error, ErrInvalidCredentials.Error())
+				if tc.expectedResp != nil {
+					assert.Equal(t, resp, *tc.expectedResp)
+				}
 			}
 		})
 	}

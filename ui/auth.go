@@ -86,15 +86,11 @@ func (s *Server) proxyHandler(req *http.Request, w http.ResponseWriter,
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		err = errors.New("Received an invalid response code")
-		return err
-	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
-	if onResp != nil {
+	if resp.StatusCode == http.StatusOK && onResp != nil {
 		err = onResp(body)
 		if err != nil {
 			log.Error(err)
