@@ -30,8 +30,8 @@ var (
 )
 
 type Response struct {
-	Error  string `json:"error"`
-	Errors Errors `json:"errors"`
+	Error  string `json:"error,omitempty"`
+	Errors Errors `json:"errors,omitempty"`
 }
 
 type Errors map[string]string

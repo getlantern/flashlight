@@ -22,7 +22,9 @@ func TestDoShow(t *testing.T) {
 		urlToShow = u
 	}
 
-	s := newServer("", "", "local-http-token", false)
+	s := newServer(ServerParams{
+		LocalHTTPToken: "local-http-token",
+	})
 
 	assert.Equal(t, "", urlToShow)
 	s.doShow(s.rootURL(), "campaign", "medium", show)
@@ -40,7 +42,9 @@ func TestListen(t *testing.T) {
 	prohibitedPortInt := 2049
 	prohibitedPort := strconv.Itoa(prohibitedPortInt)
 	prohibitedPortAddr := fmt.Sprintf("localhost:%v", prohibitedPort)
-	s := newServer("", "", "test-http-token", false)
+	s := newServer(ServerParams{
+		LocalHTTPToken: "test-http-token",
+	})
 
 	// the listen function will choose a non-prohibited port when there's a backup candidate
 	{
@@ -61,7 +65,10 @@ func TestListen(t *testing.T) {
 
 func TestStartServer(t *testing.T) {
 	startServer := func(addr string) *Server {
-		s := newServer("", common.AuthServerAddr, "test-http-token", false)
+		s := newServer(ServerParams{
+			AuthServerAddr: common.AuthServerAddr,
+			LocalHTTPToken: "test-http-token",
+		})
 		assert.NoError(t, s.start(addr), "should start server")
 		return s
 	}
@@ -136,7 +143,9 @@ func TestStartServer(t *testing.T) {
 }
 
 func TestCheckOrigin(t *testing.T) {
-	s := newServer("", "", "token", false)
+	s := newServer(ServerParams{
+		LocalHTTPToken: "token",
+	})
 	s.start("localhost:9898")
 	doTestCheckRequestToken(t, s, map[*http.Request]bool{
 		newRequest("http://localhost:9898"): false,
@@ -247,7 +256,9 @@ func getTestHandler() http.Handler {
 }
 
 func getTestServer(token string) *Server {
-	s := newServer("", "", token, false)
+	s := newServer(ServerParams{
+		LocalHTTPToken: token,
+	})
 	s.start("localhost:")
 	return s
 }

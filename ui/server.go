@@ -127,8 +127,12 @@ func StartServer(requestedAddr, authServerAddr,
 	extURL, localHTTPToken string, standalone bool,
 	handlers ...*PathHandler) (*Server, error) {
 
-	server := newServer(extURL, authServerAddr,
-		localHTTPToken, standalone)
+	server := newServer(ServerParams{
+		ExtURL:         extURL,
+		LocalHTTPToken: localHTTPToken,
+		AuthServerAddr: authServerAddr,
+		Standalone:     standalone,
+	})
 
 	for _, h := range handlers {
 		server.handle(h.Pattern, h.Handler)
@@ -140,35 +144,38 @@ func StartServer(requestedAddr, authServerAddr,
 	return server, nil
 }
 
-func newServer(extURL, authServerAddr,
-	localHTTPToken string, standalone bool) *Server {
+func newServer(params ServerParams) *Server {
+	//func newServer(extURL, authServerAddr,
+	//	localHTTPToken string, standalone bool) *Server {
 	requestPath := ""
-	if localHTTPToken != "" {
-		requestPath = "/" + localHTTPToken
+	if params.LocalHTTPToken != "" {
+		requestPath = "/" + params.LocalHTTPToken
 	}
 
-	u, err := url.Parse(authServerAddr)
+	u, err := url.Parse(params.AuthServerAddr)
 	if err != nil {
-		log.Fatal(fmt.Errorf("Bad auth server address: %s", authServerAddr))
+		log.Fatal(fmt.Errorf("Bad auth server address: %s", params.AuthServerAddr))
 	}
 
-	httpClient := &http.Client{
-		Timeout:   time.Duration(30 * time.Second),
-		Transport: proxied.ChainedThenFronted(),
+	if params.HTTPClient == nil {
+		params.HTTPClient = &http.Client{
+			Timeout:   time.Duration(30 * time.Second),
+			Transport: proxied.ChainedThenFronted(),
+		}
 	}
 
 	server := &Server{
-		externalURL:    overrideManotoURL(extURL),
+		externalURL:    overrideManotoURL(params.ExtURL),
 		requestPath:    requestPath,
-		httpClient:     httpClient,
-		yinbiClient:    newYinbiClient(httpClient),
+		httpClient:     params.HTTPClient,
+		yinbiClient:    newYinbiClient(params.HTTPClient),
 		keystore:       keystore.New(appdir.General("Lantern")),
 		mux:            http.NewServeMux(),
-		authServerAddr: authServerAddr,
+		authServerAddr: params.AuthServerAddr,
 		proxy:          httputil.NewSingleHostReverseProxy(u),
-		localHTTPToken: localHTTPToken,
+		localHTTPToken: params.LocalHTTPToken,
 		translations:   eventual.NewValue(),
-		standalone:     standalone,
+		standalone:     params.Standalone,
 	}
 	return server
 }

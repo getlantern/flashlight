@@ -6,15 +6,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/stretchr/testify/assert"
 )
-
-var s *Server
 
 type PaymentTest struct {
 	name             string
@@ -23,15 +20,8 @@ type PaymentTest struct {
 	expectedResponse Response
 }
 
-func TestMain(m *testing.M) {
-	s = newServer("", common.AuthServerAddr,
-		"test-http-token", false)
-	s.start(":0")
-	code := m.Run()
-	os.Exit(code)
-}
-
 func TestCreateMnemonic(t *testing.T) {
+	s := startServer(t, common.AuthServerAddr, ":0")
 	url := s.getAPIAddr("/user/mnemonic")
 	req, _ := http.NewRequest(GET, url,
 		nil)
@@ -54,7 +44,7 @@ func decodeResp(t *testing.T,
 	assert.Nil(t, err)
 }
 
-func createPaymentRequest(params PaymentParams) *http.Request {
+func createPaymentRequest(s *Server, params PaymentParams) *http.Request {
 	requestBody, _ := json.Marshal(params)
 	url := s.getAPIAddr("/payment/new")
 	req, _ := http.NewRequest(POST, url, bytes.NewBuffer(requestBody))
@@ -62,7 +52,8 @@ func createPaymentRequest(params PaymentParams) *http.Request {
 	return req
 }
 
-func testPaymentHandler(t *testing.T, req *http.Request,
+func testPaymentHandler(t *testing.T,
+	s *Server, req *http.Request,
 	hasErrors bool, pt PaymentTest) {
 	rec := httptest.NewRecorder()
 	s.sendPaymentHandler(rec, req)
@@ -94,6 +85,7 @@ func newResponse(err string, errors Errors) Response {
 }
 
 func TestSendPayment(t *testing.T) {
+	s := startServer(t, common.AuthServerAddr, ":0")
 	cases := []PaymentTest{
 		{
 			"MissingUsername",
@@ -130,8 +122,8 @@ func TestSendPayment(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			req := createPaymentRequest(tc.params)
-			testPaymentHandler(t, req, true, tc)
+			req := createPaymentRequest(s, tc.params)
+			testPaymentHandler(t, s, req, true, tc)
 		})
 	}
 }

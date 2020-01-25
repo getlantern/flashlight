@@ -6,8 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-
-	"github.com/getlantern/lantern-server/models"
 )
 
 const (
@@ -25,12 +23,6 @@ const (
 )
 
 var ErrUnsupportedMediaType = errors.New("The request media type is invalid")
-
-func decodeAuthResponse(body []byte) (*models.AuthResponse, error) {
-	authResp := new(models.AuthResponse)
-	err := json.Unmarshal(body, authResp)
-	return authResp, err
-}
 
 // decodeJSONRequest parses the JSON-encoded data in the provided request and
 // stores the result in dst
@@ -53,7 +45,6 @@ func decodeJSONRequest(req *http.Request, dst interface{}) error {
 // errorHandler is an error handler that takes an error or Errors and writes the
 // encoded JSON response to the client
 func (s *Server) errorHandler(w http.ResponseWriter, err interface{}, errorCode int) {
-	log.Error(err)
 	var resp Response
 	switch err.(type) {
 	case error:

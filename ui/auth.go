@@ -20,15 +20,15 @@ import (
 const (
 	userKey               = iota
 	authEndpoint          = "/auth"
-	loginEndpoint         = "/user/login"
-	registrationEndpoint  = "/user/register"
+	loginEndpoint         = "/login"
+	registrationEndpoint  = "/register"
 	balanceEndpoint       = "/user/balance"
 	createAccountEndpoint = "/user/account/new"
 )
 
 var (
-	ErrInvalidSRPProof  = errors.New("The SRP proof supplied by the server is invalid")
-	ErrSRPKeysDifferent = errors.New("SRP client and server keys do not match")
+	ErrInvalidCredentials = errors.New("The supplied user credentials were invalid")
+	ErrSRPKeysDifferent   = errors.New("SRP client and server keys do not match")
 )
 
 var forwardHeaders = map[string]bool{
@@ -151,6 +151,12 @@ func (s *Server) sendAuthRequest(method, url string,
 	return decodeAuthResponse(body)
 }
 
+func decodeAuthResponse(body []byte) (*models.AuthResponse, error) {
+	authResp := new(models.AuthResponse)
+	err := json.Unmarshal(body, authResp)
+	return authResp, err
+}
+
 // authHandler is the HTTP handler used by the login and
 // registration endpoints. It creates a new SRP client from
 // the user params in the request and sends the
@@ -159,12 +165,10 @@ func (s *Server) sendAuthRequest(method, url string,
 func (s *Server) authHandler(w http.ResponseWriter, req *http.Request) {
 	params, srpClient, err := s.getSRPClient(req)
 	if err != nil {
-		s.errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
 	requestBody, err := json.Marshal(params)
 	if err != nil {
-		s.errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
 	req.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
@@ -178,14 +182,12 @@ func (s *Server) authHandler(w http.ResponseWriter, req *http.Request) {
 		resp, err = s.sendMutualAuth(srpClient,
 			resp.Credentials, params.Username)
 		if err != nil {
-			s.errorHandler(w, err, http.StatusUnauthorized)
 			return err
 		}
 		// Verify the server's proof
 		ok := srpClient.ServerOk(resp.Proof)
 		if !ok {
-			s.errorHandler(w, err, http.StatusUnauthorized)
-			return ErrInvalidSRPProof
+			return ErrInvalidCredentials
 		}
 		srv, err := srp.UnmarshalServer(resp.Server)
 		if err != nil {
@@ -204,7 +206,7 @@ func (s *Server) authHandler(w http.ResponseWriter, req *http.Request) {
 
 	err = s.proxyHandler(req, w, onResp)
 	if err != nil {
-		s.errorHandler(w, err, http.StatusInternalServerError)
+		s.errorHandler(w, err, http.StatusUnauthorized)
 		return
 	}
 }
