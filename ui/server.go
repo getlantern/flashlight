@@ -145,8 +145,6 @@ func StartServer(requestedAddr, authServerAddr,
 }
 
 func newServer(params ServerParams) *Server {
-	//func newServer(extURL, authServerAddr,
-	//	localHTTPToken string, standalone bool) *Server {
 	requestPath := ""
 	if params.LocalHTTPToken != "" {
 		requestPath = "/" + params.LocalHTTPToken

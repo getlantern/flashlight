@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 
 	"github.com/getlantern/yinbi-server/config"
 	"github.com/getlantern/yinbi-server/crypto"
@@ -21,53 +20,8 @@ const (
 )
 
 var (
-	ErrInvalidMnemonic      = errors.New("The provided words do not comprise a valid mnemonic")
-	ErrMissingDestination   = errors.New("Payment destination is required")
-	ErrPaymentInvalidAmount = errors.New("Payment amount must be greater than zero")
-	ErrMissingPaymentAmount = errors.New("Payment amount is missing")
-	ErrMissingPassword      = errors.New("Password is required")
-	ErrMissingUsername      = errors.New("Username is required")
+	ErrInvalidMnemonic = errors.New("The provided words do not comprise a valid mnemonic")
 )
-
-type Response struct {
-	Error  string `json:"error,omitempty"`
-	Errors Errors `json:"errors,omitempty"`
-}
-
-type Errors map[string]string
-
-// PaymentParams specifies the necessary parameters for
-// sending a YNB payment
-type PaymentParams struct {
-	Username    string `json:"username"`
-	Password    string `json:"password"`
-	Destination string `json:"destination"`
-	Amount      string `json:"amount"`
-	Asset       string `json:"asset"`
-}
-
-// Validate validates the payment params and returns
-// a map of param names to errors
-func (p PaymentParams) Validate() Errors {
-	errors := make(Errors)
-	if p.Password == "" {
-		errors["password"] = ErrMissingPassword.Error()
-	}
-	if p.Username == "" {
-		errors["username"] = ErrMissingUsername.Error()
-	}
-	if p.Destination == "" {
-		errors["destination"] = ErrMissingDestination.Error()
-	}
-	if p.Amount == "" {
-		errors["amount"] = ErrMissingPaymentAmount.Error()
-	}
-	amount, err := strconv.Atoi(p.Amount)
-	if err != nil || amount < 0 {
-		errors["amount"] = ErrPaymentInvalidAmount.Error()
-	}
-	return errors
-}
 
 func newYinbiClient(httpClient *http.Client) *yinbi.Client {
 	return yinbi.New(params.Params{
