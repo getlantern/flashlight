@@ -96,6 +96,28 @@ func (c *Client) UserCreate(user common.UserConfig) (res *UserDataResponse, err 
 	return
 }
 
+// UserCreateWithID creates a new user with a randomly generated UUID on the
+// client without asking for any payment.
+func (c *Client) UserCreateWithID(user common.UserConfig, userID string) (res *UserDataResponse, err error) {
+	vals := url.Values{
+		"locale": {user.GetLanguage()},
+		"userID": {userID},
+	}
+	body := strings.NewReader(vals.Encode())
+	req, err := http.NewRequest(http.MethodPost,
+		"https://"+common.ProAPIHost+"/user-create-with-id", body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	payload, err := c.do(user, req)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(payload, &res)
+	return
+}
+
 // UserData Returns all user data, including payments, referrals and all
 // available fields.
 func (c *Client) UserData(user common.UserConfig) (*UserDataResponse, error) {
