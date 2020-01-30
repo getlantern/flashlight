@@ -174,6 +174,9 @@ func (s *Server) authHandler(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			return err
 		}
+		if resp.Error != "" {
+			return errors.New(resp.Error)
+		}
 		// client generates a mutual auth and sends it to the server
 		resp, err = s.sendMutualAuth(srpClient,
 			resp.Credentials, params.Username)
@@ -202,7 +205,7 @@ func (s *Server) authHandler(w http.ResponseWriter, req *http.Request) {
 
 	err = s.proxyHandler(req, w, onResp)
 	if err != nil {
-		s.errorHandler(w, err, http.StatusUnauthorized)
+		s.errorHandler(w, err, http.StatusOK)
 		return
 	}
 }
