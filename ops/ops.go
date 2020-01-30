@@ -318,7 +318,7 @@ func (op *Op) SetMetricPercentile(name string, value float64) *Op {
 }
 
 // InitGlobalContext configures global context info
-func InitGlobalContext(deviceID string, isPro func() bool, userID func() int64, getCountry func() string, getIP func() string) {
+func InitGlobalContext(deviceID string, isPro func() bool, userID func() string, getCountry func() string, getIP func() string) {
 	// Using "application" allows us to distinguish between errors from the
 	// lantern client vs other sources like the http-proxy, etop.
 	ops.SetGlobal("app", "lantern-client")

@@ -57,7 +57,7 @@ func Run(httpProxyAddr string,
 	statsTracker stats.Tracker,
 	onError func(err error),
 	isPro func() bool,
-	userID func() int64,
+	userID func() string,
 	lang func() string,
 	adSwapTargetURL func() string,
 	reverseDNS func(host string) string) error {

@@ -15,12 +15,12 @@ var logger = golog.LoggerFor("flashlight.app.pro")
 
 type userMap struct {
 	sync.RWMutex
-	data       map[int64]eventual.Value
+	data       map[string]eventual.Value
 	onUserData []func(current *client.User, new *client.User)
 }
 
 var userData = userMap{
-	data:       make(map[int64]eventual.Value),
+	data:       make(map[string]eventual.Value),
 	onUserData: make([]func(current *client.User, new *client.User), 0),
 }
 
@@ -44,7 +44,7 @@ func OnProStatusChange(cb func(isPro bool, yinbiEnabled bool)) {
 	})
 }
 
-func (m *userMap) save(userID int64, u *client.User) {
+func (m *userMap) save(userID string, u *client.User) {
 	m.Lock()
 	v := m.data[userID]
 	var current *client.User
@@ -63,7 +63,7 @@ func (m *userMap) save(userID int64, u *client.User) {
 	}
 }
 
-func (m *userMap) get(userID int64) (*client.User, bool) {
+func (m *userMap) get(userID string) (*client.User, bool) {
 	m.RLock()
 	v := m.data[userID]
 	m.RUnlock()
@@ -108,7 +108,7 @@ func isActive(status string) bool {
 }
 
 // GetUserDataFast gets the user data for the given userID if found.
-func GetUserDataFast(userID int64) (*client.User, bool) {
+func GetUserDataFast(userID string) (*client.User, bool) {
 	return userData.get(userID)
 }
 
@@ -122,8 +122,8 @@ func NewUser(uc common.UserConfig) (*client.User, error) {
 func newUserWithClient(uc common.UserConfig, hc *http.Client) (*client.User, error) {
 	deviceID := uc.GetDeviceID()
 	// use deviceID, generate a random user ID, and token
-	user := common.NewUserConfigData(deviceID, 0, "", uc.GetInternalHeaders(), uc.GetLanguage())
 	userID := uuid.Random()
+	user := common.NewUserConfigData(deviceID, userID, "", uc.GetInternalHeaders(), uc.GetLanguage())
 	logger.Debugf("Creating new user with device ID %v and userID %v",
 		deviceID, userID)
 	resp, err := client.NewClient(hc, PrepareProRequestWithOptions).UserCreateWithID(user, userID)
@@ -153,7 +153,7 @@ func fetchUserDataWithClient(uc common.UserConfig, hc *http.Client) (*client.Use
 	return &resp.User, nil
 }
 
-func setUserData(userID int64, user *client.User) {
+func setUserData(userID string, user *client.User) {
 	logger.Debugf("Storing user data for user %v", userID)
 	userData.save(userID, user)
 }

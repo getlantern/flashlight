@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
-	"strconv"
 	"strings"
 
 	"github.com/getlantern/flashlight/common"
@@ -52,14 +51,9 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 		return
 	}
 	// Try to update user data implicitly
-	_userID := req.Header.Get("X-Lantern-User-Id")
-	if _userID == "" {
+	userID := req.Header.Get("X-Lantern-User-Id")
+	if userID == "" {
 		log.Error("Request has an empty user ID")
-		return
-	}
-	userID, parseErr := strconv.ParseInt(_userID, 10, 64)
-	if parseErr != nil {
-		log.Errorf("User ID %s is invalid", _userID)
 		return
 	}
 	body, readErr := ioutil.ReadAll(resp.Body)
