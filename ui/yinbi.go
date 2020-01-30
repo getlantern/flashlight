@@ -80,6 +80,7 @@ func (s *Server) sendPaymentHandler(w http.ResponseWriter,
 		pair.(*keypair.Full),
 	)
 	if err != nil {
+		log.Debugf("Error sending payment: %v", err)
 		s.errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
@@ -101,6 +102,7 @@ func (s *Server) getAccountDetails(w http.ResponseWriter,
 	err := decodeJSONRequest(r, &request)
 	if err != nil {
 		log.Debugf("Error decoding JSON: %v", err)
+		s.errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
 	address := request.Address
@@ -108,19 +110,57 @@ func (s *Server) getAccountDetails(w http.ResponseWriter,
 	balances, err := s.yinbiClient.GetBalances(address)
 	if err != nil {
 		log.Debugf("Error retrieving balance: %v", err)
+		s.errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
-	log.Debugf("Looking up payments for account with address %s", address)
-	payments, err := s.yinbiClient.GetPayments(address)
-	if err != nil {
-		log.Debugf("Error retrieving payments: %v", err)
-		return
-	}
-	log.Debugf("Successfully retrived balance and payments for %s",
-		address)
+	log.Debugf("Successfully retrived balance for %s", address)
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"success":  true,
 		"balances": balances,
+	})
+	return
+}
+
+func (s *Server) getAccountTransactions(w http.ResponseWriter,
+	r *http.Request) {
+	var request struct {
+		Address        string `json:"address"`
+		Cursor         string `json:"cursor"`
+		Order          string `json:"order"`
+		RecordsPerPage int    `json:"recordsPerPage"`
+	}
+	err := decodeJSONRequest(r, &request)
+	if err != nil {
+		log.Debugf("Error decoding JSON: %v", err)
+		s.errorHandler(w, err, http.StatusInternalServerError)
+		return
+	}
+	log.Debugf("Request decoded: %+v", request)
+	address := request.Address
+	cursor := request.Cursor
+	order := request.Order
+	recordsPerPage := request.RecordsPerPage
+	log.Debugf("Looking up payments for account with address %s", address)
+	payments, err := s.yinbiClient.GetPayments(address, cursor,
+		order, recordsPerPage)
+
+	// An ascending order query means that we actually want the previous page.
+	// We reverse the returned payments so that they are still displayed
+	// in reverse chronological order
+	if order == "asc" {
+		for i, j := 0, len(payments)-1; i < j; i, j = i+1, j-1 {
+			payments[i], payments[j] = payments[j], payments[i]
+		}
+	}
+
+	if err != nil {
+		log.Debugf("Error retrieving payments: %v", err)
+		s.errorHandler(w, err, http.StatusInternalServerError)
+		return
+	}
+	log.Debugf("Successfully retrived payments for %s", address)
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"success":  true,
 		"payments": payments,
 	})
 	return
@@ -137,11 +177,13 @@ func (s *Server) createAccountHandler(w http.ResponseWriter,
 	r *http.Request) {
 	params, pair, err := yinbi.ParseAddress(r)
 	if err != nil {
+		log.Debugf("Error parsing address: %v", err)
 		s.errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
 	requestBody, err := json.Marshal(params)
 	if err != nil {
+		log.Debugf("Error marshalling request: %v", err)
 		s.errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
@@ -151,6 +193,7 @@ func (s *Server) createAccountHandler(w http.ResponseWriter,
 	err = s.keystore.Store(pair.Seed(), params.Username,
 		params.Password)
 	if err != nil {
+		log.Debugf("Error sending secret key to keystore: %v", err)
 		s.errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
@@ -163,6 +206,7 @@ func (s *Server) createAccountHandler(w http.ResponseWriter,
 
 	err = s.proxyHandler(r, w, onResp)
 	if err != nil {
+		log.Debugf("Error handling proxy: %v", err)
 		s.errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
