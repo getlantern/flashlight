@@ -8,6 +8,7 @@ require (
 	github.com/anacrolix/go-libutp v1.0.1
 	github.com/anacrolix/mmsg v1.0.0 // indirect
 	github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc // indirect
+	github.com/aws/aws-sdk-go v1.28.9 // indirect
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
@@ -79,7 +80,10 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getlantern/yinbi-server v0.0.0-20200123214200-bb2afda8315d
+	github.com/getlantern/yinbi-server v0.0.0-20200203174156-f03047c10cdf
+	github.com/gobuffalo/envy v1.9.0 // indirect
+	github.com/gobuffalo/packd v1.0.0 // indirect
+	github.com/golang/protobuf v1.3.3 // indirect
 	github.com/gorilla/websocket v0.0.0-20180306181548-eb925808374e
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
@@ -96,12 +100,15 @@ require (
 	github.com/refraction-networking/utls v0.0.0-20190909200633-43c36d3c1f57
 	github.com/rs/cors v1.7.0
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
-	github.com/stellar/go v0.0.0-20200123001337-573189a31c4f
+	github.com/stellar/go v0.0.0-20200131213215-a135d590c455
 	github.com/stretchr/testify v1.4.0
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
+	go.opencensus.io v0.22.3 // indirect
 	golang.org/x/crypto v0.0.0-20200128174031-69ecbb4d6d5d // indirect
-	golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa
-	golang.org/x/sys v0.0.0-20200124204421-9fbb57f87de9 // indirect
+	golang.org/x/net v0.0.0-20200202094626-16171245cfb2
+	golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5 // indirect
+	google.golang.org/genproto v0.0.0-20200128133413-58ce757ed39b // indirect
+	google.golang.org/grpc v1.27.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
 
