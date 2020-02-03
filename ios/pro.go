@@ -134,6 +134,8 @@ func ValidateDeviceLinkingCode(c *Canceler, deviceID, deviceName, code string) (
 	}
 
 	overallTimeout := time.After(5 * time.Minute)
+	retryDelay := 5 * time.Second
+	maxRetryDelay := 30 * time.Second
 	for {
 		resp, err := pc.ValidateDeviceLinkingCode(partialUserConfigFor(deviceID), deviceName, code)
 		if err == nil {
@@ -142,7 +144,11 @@ func ValidateDeviceLinkingCode(c *Canceler, deviceID, deviceName, code string) (
 
 		err = log.Errorf("unable to validate recovery code: %v", err)
 		select {
-		case <-time.After(5 * time.Second):
+		case <-time.After(retryDelay):
+			retryDelay *= 2
+			if retryDelay > maxRetryDelay {
+				retryDelay = maxRetryDelay
+			}
 			log.Debugf("trying to validate recovery code again")
 			continue
 
