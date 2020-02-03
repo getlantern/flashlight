@@ -116,7 +116,12 @@ type Canceler struct {
 
 // Cancel cancels an operation
 func (c *Canceler) Cancel() {
-	close(c.c)
+	select {
+	case c.c <- nil:
+		// submitted
+	default:
+		// nothing to cancel
+	}
 }
 
 // NewCanceler creates a Canceller
