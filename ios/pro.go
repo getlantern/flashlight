@@ -3,6 +3,7 @@ package ios
 import (
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/getlantern/fronted"
@@ -111,17 +112,15 @@ func RequestDeviceLinkingCode(deviceID, deviceName string) (string, error) {
 
 // Canceler providers a mechanism for canceling long running operations
 type Canceler struct {
-	c chan interface{}
+	c          chan interface{}
+	cancelOnce sync.Once
 }
 
 // Cancel cancels an operation
 func (c *Canceler) Cancel() {
-	select {
-	case c.c <- nil:
-		// submitted
-	default:
-		// nothing to cancel
-	}
+	c.cancelOnce.Do(func() {
+		close(c.c)
+	})
 }
 
 // NewCanceler creates a Canceller
