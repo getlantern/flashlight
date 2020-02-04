@@ -113,6 +113,3 @@ replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358
 
 replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20191212040217-1650eee50330
-
-// For smoother session error handling, see https://github.com/xtaci/smux/issues/61
-replace github.com/xtaci/smux => github.com/getlantern/smux v1.5.8-0.20200120021443-10a8d98940d3
