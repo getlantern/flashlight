@@ -166,9 +166,9 @@ func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc commo
 	}
 	x509cert := cert.X509()
 
+	tlsConfig, clientHelloID, clientSessionState := tlsConfigForProxy(s)
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
-			tlsConfig, clientHelloID, clientSessionState := tlsConfigForProxy(s)
 			td := &tlsdialer.Dialer{
 				DoDial: func(network, addr string, timeout time.Duration) (net.Conn, error) {
 					return p.dialCore(op)(ctx)
