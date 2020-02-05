@@ -133,9 +133,6 @@ func (app *App) loadSettings() *Settings {
 // LogPanicAndExit logs a panic and then exits the application. This function
 // is only used in the panicwrap parent process.
 func (app *App) LogPanicAndExit(msg string) {
-	// Reload settings to make sure we have an up-to-date addr
-	settings = app.loadSettings()
-
 	if ShouldReportToSentry() {
 		sentry.ConfigureScope(func(scope *sentry.Scope) {
 			scope.SetLevel(sentry.LevelFatal)
