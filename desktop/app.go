@@ -22,6 +22,7 @@ import (
 	"github.com/getlantern/memhelper"
 	notify "github.com/getlantern/notifier"
 	"github.com/getlantern/profiling"
+	"github.com/getsentry/sentry-go"
 
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/autoupdate"
@@ -42,6 +43,11 @@ import (
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
+)
+
+const (
+	SENTRY_DSN     = "https://f65aa492b9524df79b05333a0b0924c5@sentry.io/2222244"
+	SENTRY_TIMEOUT = time.Second * 30
 )
 
 var (
@@ -129,7 +135,18 @@ func (app *App) loadSettings() *Settings {
 func (app *App) LogPanicAndExit(msg string) {
 	// Reload settings to make sure we have an up-to-date addr
 	settings = app.loadSettings()
-	log.Fatal(fmt.Errorf("Uncaught panic: %v", msg))
+
+	if ShouldReportToSentry() {
+		sentry.ConfigureScope(func(scope *sentry.Scope) {
+			scope.SetLevel(sentry.LevelFatal)
+		})
+
+		sentry.CaptureMessage(msg)
+		if result := sentry.Flush(SENTRY_TIMEOUT); result == false {
+			log.Error("Flushing to Sentry timed out")
+		}
+	}
+	// No need to print error as child process has already done so
 }
 
 func (app *App) exitOnFatal(err error) {
@@ -678,6 +695,11 @@ func recordStopped() {
 // ShouldShowUI determines if we should show the UI or not.
 func (app *App) ShouldShowUI() bool {
 	return !app.Flags["headless"].(bool) && !app.Flags["initialize"].(bool)
+}
+
+// ShouldReportToSentry determines if we should report errors/panics to Sentry
+func ShouldReportToSentry() bool {
+	return !common.InDevelopment()
 }
 
 // OnTrayShow indicates the user has selected to show lantern from the tray.

@@ -79,7 +79,8 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/gorilla/websocket v0.0.0-20180306181548-eb925808374e
+	github.com/getsentry/sentry-go v0.5.0
+	github.com/gorilla/websocket v1.4.0
 	github.com/hashicorp/golang-lru v0.5.3
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
@@ -87,7 +88,7 @@ require (
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
 	github.com/miekg/dns v0.0.0-20180406150955-01d59357d468
 	github.com/mitchellh/go-server-timing v1.0.0
-	github.com/mitchellh/mapstructure v0.0.0-20180220230111-00c29f56e238
+	github.com/mitchellh/mapstructure v1.1.2
 	github.com/mitchellh/panicwrap v0.0.0-20190228164358-f67bf3f3d291
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
