@@ -100,9 +100,9 @@ func main() {
 				// Just forward signals to the child process so that it can cleanup appropriately
 				ForwardSignals: []os.Signal{
 					syscall.SIGHUP,
-					syscall.SIGINT,
 					syscall.SIGTERM,
 					syscall.SIGQUIT,
+					os.Interrupt,
 				},
 				// Pipe child process output to log files instead of letting the
 				// child to write directly because we want to capture anything
