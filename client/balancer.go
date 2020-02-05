@@ -33,6 +33,7 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 	}
 
 	chained.TrackStatsFor(dialers, appdir.General("Lantern"), true)
+	chained.PersistSessionStates("")
 	client.bal.Reset(dialers)
 
 	go func() {

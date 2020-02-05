@@ -166,9 +166,10 @@ func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc commo
 	}
 	x509cert := cert.X509()
 
+	tlsConfig, clientHelloID, defaultClientSessionState := tlsConfigForProxy(s)
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
-			tlsConfig, clientHelloID, clientSessionState := tlsConfigForProxy(s)
+			clientSessionState := persistedSessionStateFor(name, defaultClientSessionState)
 			td := &tlsdialer.Dialer{
 				DoDial: func(network, addr string, timeout time.Duration) (net.Conn, error) {
 					return p.dialCore(op)(ctx)
@@ -179,10 +180,11 @@ func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc commo
 				ClientHelloID:      clientHelloID,
 				ClientSessionState: clientSessionState,
 			}
-			conn, err := td.Dial("tcp", p.addr)
+			result, err := td.DialForTimings("tcp", p.addr)
 			if err != nil {
-				return conn, err
+				return nil, err
 			}
+			conn := result.Conn
 			if clientSessionState == nil && !conn.ConnectionState().PeerCertificates[0].Equal(x509cert) {
 				if closeErr := conn.Close(); closeErr != nil {
 					log.Debugf("Error closing chained server connection: %s", closeErr)
@@ -201,6 +203,7 @@ func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc commo
 				return nil, op.FailIf(log.Errorf("Server's certificate didn't match expected! Server had\n%v\nbut expected:\n%v",
 					received, expected))
 			}
+			saveSessionState(name, result.UConn.HandshakeState.Session)
 			return overheadWrapper(true)(conn, op.FailIf(err))
 		})
 	}
