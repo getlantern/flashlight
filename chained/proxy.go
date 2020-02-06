@@ -532,8 +532,16 @@ func enableWSS(p *proxy, s *ChainedServerInfo) error {
 	var rt tinywss.RoundTripHijacker
 	var err error
 
+	force_http := s.ptSettingBool("force_http")
 	fctx_id := s.ptSetting("df_ctx")
-	if fctx_id != "" {
+
+	if force_http {
+		log.Debugf("Using wss http direct")
+		rt, err = wssHTTPRoundTripper(p, s)
+		if err != nil {
+			return err
+		}
+	} else if fctx_id != "" {
 		fctx := GetFrontingContext(fctx_id)
 		if fctx == nil {
 			return fmt.Errorf("unsupported wss df_ctx=%s! skipping.", fctx_id)
@@ -591,9 +599,15 @@ func (rt *wssFrontedRT) RoundTripHijack(req *http.Request) (*http.Response, net.
 	}
 }
 
+func wssHTTPRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
+	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
+		log.Debugf("tinywss HTTP Roundtripper dialing %v", addr)
+		return netx.DialTimeout(network, addr, chainedDialTimeout)
+	}), nil
+}
+
 func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
 
-	// Verify the SNI name if given, otherwise verify the hostname given and do not use SNI.
 	var err error
 	serverName := s.TLSServerNameIndicator
 	sendServerName := true
@@ -607,6 +621,9 @@ func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHija
 	helloID := s.clientHelloID()
 	pinnedCert := s.ptSettingBool("pin_certificate")
 
+	// if set, force validation of a name other than the SNI name
+	forceValidateName := s.ptSetting("force_validate_name")
+
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
@@ -614,7 +631,7 @@ func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHija
 	x509cert := cert.X509()
 
 	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
-		log.Debugf("tinywss Roundtripper dialing %v", addr)
+		log.Debugf("tinywss HTTPS Roundtripper dialing %v", addr)
 
 		var certPool *x509.CertPool
 
@@ -639,11 +656,12 @@ func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHija
 		}
 
 		td := &tlsdialer.Dialer{
-			DoDial:         netx.DialTimeout,
-			SendServerName: sendServerName,
-			Config:         tlsConf,
-			ClientHelloID:  helloID,
-			Timeout:        chainedDialTimeout,
+			DoDial:            netx.DialTimeout,
+			SendServerName:    sendServerName,
+			ForceValidateName: forceValidateName,
+			Config:            tlsConf,
+			ClientHelloID:     helloID,
+			Timeout:           chainedDialTimeout,
 		}
 
 		return td.Dial(network, addr)
