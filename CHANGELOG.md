@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.8.1](https://github.com/getlantern/flashlight/tree/5.8.1) (2020-02-07)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.8.0...5.8.1)
+
+**Merged pull requests:**
+
+- disable chrome extension [\#751](https://github.com/getlantern/flashlight/pull/751) ([myleshorton](https://github.com/myleshorton))
+- New go mod tidy for latest go stable release [\#750](https://github.com/getlantern/flashlight/pull/750) ([myleshorton](https://github.com/myleshorton))
+
 ## [5.8.0](https://github.com/getlantern/flashlight/tree/5.8.0) (2020-02-07)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.7.2...5.8.0)
@@ -118,6 +127,7 @@
 - Update to latest utls fork [\#684](https://github.com/getlantern/flashlight/pull/684) ([myleshorton](https://github.com/myleshorton))
 - allow hitProxy.py to run for multiple proxies [\#681](https://github.com/getlantern/flashlight/pull/681) ([joesis](https://github.com/joesis))
 - make QUIC honor tlsservernameindicator config option [\#680](https://github.com/getlantern/flashlight/pull/680) ([forkner](https://github.com/forkner))
+- Remove embedded proxies, update global, tweak script [\#676](https://github.com/getlantern/flashlight/pull/676) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.5.8](https://github.com/getlantern/flashlight/tree/5.5.8) (2019-09-24)
 
@@ -126,7 +136,6 @@
 **Merged pull requests:**
 
 - print top stacks if the number of goroutines exceeds 800 [\#677](https://github.com/getlantern/flashlight/pull/677) ([joesis](https://github.com/joesis))
-- Remove embedded proxies, update global, tweak script [\#676](https://github.com/getlantern/flashlight/pull/676) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.5.7](https://github.com/getlantern/flashlight/tree/5.5.7) (2019-09-19)
 
@@ -197,8 +206,6 @@
 - Allow specifying client country when using runAsUser [\#645](https://github.com/getlantern/flashlight/pull/645) ([oxtoacart](https://github.com/oxtoacart))
 - Update to latest quicwrapper [\#644](https://github.com/getlantern/flashlight/pull/644) ([joesis](https://github.com/joesis))
 - Uniformly report est\_rtt in milliseconds [\#643](https://github.com/getlantern/flashlight/pull/643) ([oxtoacart](https://github.com/oxtoacart))
-- Add script to run flashlight on behalf of an user [\#642](https://github.com/getlantern/flashlight/pull/642) ([joesis](https://github.com/joesis))
-- Update dependencies to use xtaci/smux v1.3.4 [\#641](https://github.com/getlantern/flashlight/pull/641) ([joesis](https://github.com/joesis))
 
 ## [5.5.0](https://github.com/getlantern/flashlight/tree/5.5.0) (2019-07-08)
 
