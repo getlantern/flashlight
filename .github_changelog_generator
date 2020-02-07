@@ -1,1 +1,4 @@
-exclude-tags=0.0.1,0.0.2,0.0.3,natty,natty-beta1,natty-beta2,ipreify-test,docker,vdocker
+#exclude-tags=0.0.12,0.0.13,0.0.14
+#exclude-tags-regex=[4-9]\.\d\.\d+.*
+#exclude-tags-regex=[0-3]\.\d\.\d+.*
+exclude-tags-regex=^[0-3]\.\d\.\d+.*|^\D+.*
