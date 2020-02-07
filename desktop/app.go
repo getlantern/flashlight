@@ -99,7 +99,7 @@ func (app *App) Init() {
 	golog.OnFatal(app.exitOnFatal)
 	app.Flags["staging"] = common.Staging
 	app.chrome = newChromeExtension()
-	app.chrome.install()
+	//app.chrome.install()
 	settings = app.loadSettings()
 	app.exited = eventual.NewValue()
 	app.statsTracker = NewStatsTracker()
