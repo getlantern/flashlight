@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/getlantern/lantern-server/common"
 	"github.com/getlantern/lantern-server/models"
 	"github.com/getlantern/lantern-server/srp"
 )
@@ -129,7 +130,7 @@ func (s *Server) doRequest(method, url string,
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set(HeaderContentType, MIMEApplicationJSON)
+	req.Header.Set(common.HeaderContentType, common.MIMEApplicationJSON)
 	return s.httpClient.Do(req)
 }
 

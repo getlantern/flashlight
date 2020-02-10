@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/getlantern/lantern-server/common"
 	"github.com/getlantern/lantern-server/models"
 	"github.com/getlantern/lantern-server/srp"
 )
@@ -26,7 +27,7 @@ func (s *Server) sendMutualAuth(srpClient *srp.SRPClient,
 		return nil, err
 	}
 	url := s.getAPIAddr(authEndpoint)
-	return s.sendAuthRequest(POST, url, requestBody)
+	return s.sendAuthRequest(common.POST, url, requestBody)
 }
 
 // getSRPClient binds the provided request body to the userParams type
@@ -34,7 +35,7 @@ func (s *Server) sendMutualAuth(srpClient *srp.SRPClient,
 // The SRP parameters are attached to the returned user params
 func (s *Server) getSRPClient(req *http.Request) (*models.UserParams, *srp.SRPClient, error) {
 	var params models.UserParams
-	err := decodeJSONRequest(req, &params)
+	err := common.DecodeJSONRequest(req, &params)
 	if err != nil {
 		return nil, nil, err
 	}

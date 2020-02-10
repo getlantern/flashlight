@@ -187,13 +187,14 @@ func (s *Server) attachHandlers() {
 	// map of Lantern and Yinbi API endpoints to
 	// HTTP handlers to register with the ServeMux
 	routes := map[string]HandlerFunc{
-		"/login":            s.authHandler,
-		"/register":         s.authHandler,
-		"/payment/new":      s.sendPaymentHandler,
-		"/user/account/new": s.createAccountHandler,
-		"/account/details":  s.getAccountDetails,
-		"/user/mnemonic":    s.createMnemonic,
-		"/user/logout":      proxyHandler,
+		"/login":                s.authHandler,
+		"/register":             s.authHandler,
+		"/payment/new":          s.sendPaymentHandler,
+		"/user/account/new":     s.createAccountHandler,
+		"/account/details":      s.getAccountDetails,
+		"/account/transactions": s.getAccountTransactions,
+		"/user/mnemonic":        s.createMnemonic,
+		"/user/logout":          proxyHandler,
 	}
 	for pattern, handler := range routes {
 		s.mux.Handle(pattern,
