@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/getlantern/lantern-server/common"
 	"github.com/getlantern/yinbi-server/config"
 	"github.com/getlantern/yinbi-server/crypto"
 	"github.com/getlantern/yinbi-server/params"
@@ -33,8 +34,21 @@ func newYinbiClient(httpClient *http.Client) *yinbi.Client {
 	})
 }
 
+// errorHandler is an error handler that takes an error or Errors and writes the
+// encoded JSON response to the client
+func (s *Server) errorHandler(w http.ResponseWriter, err interface{}, errorCode int) {
+	var resp Response
+	switch err.(type) {
+	case error:
+		resp.Error = err.(error).Error()
+	case Errors:
+		resp.Errors = err.(Errors)
+	}
+	common.WriteJSON(w, errorCode, &resp)
+}
+
 func (s *Server) createMnemonic(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]interface{}{
+	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"mnemonic": crypto.NewMnemonic(),
 		"success":  true,
 	})
@@ -46,7 +60,7 @@ func (s *Server) createMnemonic(w http.ResponseWriter, r *http.Request) {
 func (s *Server) sendPaymentHandler(w http.ResponseWriter,
 	req *http.Request) {
 	var params PaymentParams
-	err := decodeJSONRequest(req, &params)
+	err := common.DecodeJSONRequest(req, &params)
 	if err != nil {
 		s.errorHandler(w, err, http.StatusBadRequest)
 		return
@@ -82,7 +96,7 @@ func (s *Server) sendPaymentHandler(w http.ResponseWriter,
 		s.errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]interface{}{
+	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
 		"tx_id":   resp.Hash,
 	})
@@ -97,7 +111,7 @@ func (s *Server) getAccountDetails(w http.ResponseWriter,
 	var request struct {
 		Address string `json:"address"`
 	}
-	err := decodeJSONRequest(r, &request)
+	err := common.DecodeJSONRequest(r, &request)
 	if err != nil {
 		log.Debugf("Error decoding JSON: %v", err)
 		return
@@ -117,7 +131,7 @@ func (s *Server) getAccountDetails(w http.ResponseWriter,
 	}
 	log.Debugf("Successfully retrived balance and payments for %s",
 		address)
-	writeJSON(w, http.StatusOK, map[string]interface{}{
+	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"success":  true,
 		"balances": balances,
 		"payments": payments,
