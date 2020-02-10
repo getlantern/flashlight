@@ -144,6 +144,12 @@ func (s *Server) getAccountTransactions(w http.ResponseWriter,
 	payments, err := s.yinbiClient.GetPayments(address, cursor,
 		order, recordsPerPage)
 
+	if err != nil {
+		log.Debugf("Error retrieving payments: %v", err)
+		s.errorHandler(w, err, http.StatusInternalServerError)
+		return
+	}
+
 	// An ascending order query means that we actually want the previous page.
 	// We reverse the returned payments so that they are still displayed
 	// in reverse chronological order
@@ -151,12 +157,6 @@ func (s *Server) getAccountTransactions(w http.ResponseWriter,
 		for i, j := 0, len(payments)-1; i < j; i, j = i+1, j-1 {
 			payments[i], payments[j] = payments[j], payments[i]
 		}
-	}
-
-	if err != nil {
-		log.Debugf("Error retrieving payments: %v", err)
-		s.errorHandler(w, err, http.StatusInternalServerError)
-		return
 	}
 	log.Debugf("Successfully retrived payments for %s", address)
 	writeJSON(w, http.StatusOK, map[string]interface{}{
