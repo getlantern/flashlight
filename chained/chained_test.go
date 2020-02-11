@@ -15,6 +15,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/lantern-server/uuid"
 )
 
 var (
@@ -24,7 +25,7 @@ var (
 )
 
 func newTestUserConfig() *common.UserConfigData {
-	return common.NewUserConfigData("device", 1234, "protoken", nil, "en-US")
+	return common.NewUserConfigData("device", uuid.Random(), "protoken", nil, "en-US")
 }
 
 func NewDialer(dialServer func(ctx context.Context, p *proxy) (net.Conn, error)) (func(network, addr string) (net.Conn, error), error) {

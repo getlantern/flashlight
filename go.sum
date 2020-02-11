@@ -54,6 +54,7 @@ github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRF
 github.com/alicebob/gopher-json v0.0.0-20180125190556-5a6b3ba71ee6/go.mod h1:SGnFV6hVsYE877CKEZ6tDNTjaSXYUk6QqoIK6PrAtcc=
 github.com/alicebob/miniredis v2.5.0+incompatible/go.mod h1:8HZjEj4yU0dwhYHky+DxYx+6BMjkBbe5ONFIF1MXffk=
 github.com/anacrolix/envpprof v0.0.0-20180404065416-323002cec2fa/go.mod h1:KgHhUaQMc8cC0+cEflSgCFNFbKwi5h54gqtVn8yhP7c=
+github.com/anacrolix/envpprof v1.0.0 h1:AwZ+mBP4rQ5f7JSsrsN3h7M2xDW/xSE66IPVOqlnuUc=
 github.com/anacrolix/envpprof v1.0.0/go.mod h1:KgHhUaQMc8cC0+cEflSgCFNFbKwi5h54gqtVn8yhP7c=
 github.com/anacrolix/missinggo v0.0.0-20180725070939-60ef2fbf63df/go.mod h1:kwGiTUTZ0+p4vAz3VbAI5a30t2YbvemcmspjKwrAz5s=
 github.com/anacrolix/missinggo v1.1.1 h1:i9QCef0XB57oXsPeKlnGCdXese5KSvx5jaTLivUuMTM=
@@ -98,6 +99,7 @@ github.com/blang/semver v0.0.0-20180723201105-3c1074078d32 h1:JN7dmcVkamyKIPCDJA
 github.com/blang/semver v0.0.0-20180723201105-3c1074078d32/go.mod h1:kRBLl5iJ+tD4TcOOxsy/0fnwebNt5EWlYSAyrTnjyyk=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
 github.com/bradfitz/iter v0.0.0-20140124041915-454541ec3da2/go.mod h1:PyRFw1Lt2wKX4ZVSQ2mk+PeDa1rxyObEDlApuIsUKuo=
+github.com/bradfitz/iter v0.0.0-20190303215204-33e6a9893b0c h1:FUUopH4brHNO2kJoNN3pV+OBEYmgraLT/KHZrMM69r0=
 github.com/bradfitz/iter v0.0.0-20190303215204-33e6a9893b0c/go.mod h1:PyRFw1Lt2wKX4ZVSQ2mk+PeDa1rxyObEDlApuIsUKuo=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cheekybits/genny v1.0.0 h1:uGGa4nei+j20rOSeDeP5Of12XVm7TGUd4dJA9RDitfE=
@@ -176,6 +178,7 @@ github.com/getlantern/borda v0.0.0-20191105202701-77098b35c76c h1:DpXRCuxcwcCjK8
 github.com/getlantern/borda v0.0.0-20191105202701-77098b35c76c/go.mod h1:hzzaWNHKEtVnk803olisWbiDTPj/1acLS9vR+Rz9rjI=
 github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d h1:gE5pWSEYfMvSETsTanqINNLmv+nuyUjwcm9jOyqJJZI=
 github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
+github.com/getlantern/bytecounting v0.0.0-20190530140808-3b3f10d3b9ab h1:bKsTXN1XgjiWuciuEChVIPFXWD8sTASsvjkMAGMEb/4=
 github.com/getlantern/bytecounting v0.0.0-20190530140808-3b3f10d3b9ab/go.mod h1:O/UvKlcgUd/tsplTbFesvYtqGENHVE/yO8DJ1sd+x+g=
 github.com/getlantern/byteexec v0.0.0-20170405023437-4cfb26ec74f4 h1:Nqmy8i81dzokjNHpyOg24gnQBeGRF7D51m8HmBRNn0Y=
 github.com/getlantern/byteexec v0.0.0-20170405023437-4cfb26ec74f4/go.mod h1:4WCQkaCIwta0KlF9bQZA1jYqp8bzIS2PeCqjnef8nZ8=
@@ -318,6 +321,7 @@ github.com/getlantern/preconn v0.0.0-20200108054315-514883d3a351 h1:UxZdswEJEO37
 github.com/getlantern/preconn v0.0.0-20200108054315-514883d3a351/go.mod h1:FvIxQD61iYA42UjaJyzGl9DNne8jbowbgicdeNk/7kE=
 github.com/getlantern/probe v0.0.0-20191107230642-ed284e08029a h1:WaiTdmGVQTEI7K7nD8/6LP227uGMLudFyd9dKSI7DmQ=
 github.com/getlantern/probe v0.0.0-20191107230642-ed284e08029a/go.mod h1:EPE0nd9YNS2FTIz+2EOkqojCuqaQlJ+fTiLPklsqe/E=
+github.com/getlantern/probednet v0.0.0-20190725133252-1cfdb2354b4d h1:9PBhNNIc3CErDnFbi0uc7WCasEtQ5hoz3jWgebHRYm0=
 github.com/getlantern/probednet v0.0.0-20190725133252-1cfdb2354b4d/go.mod h1:7sl7hPjPDAqXyxVx7mhrKfvb4oCX/ROhcs16w2EhWX8=
 github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff h1:q5GcvgoGNRJ5yVCr5p0vUcXyYOGvTb+Lq/g4TW2HbfA=
 github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff/go.mod h1:eHf4vTrd0oaXLtbz+zM28cfsX4ylva7hbM2zt4+axZo=
@@ -715,6 +719,7 @@ github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJ
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
 github.com/modern-go/reflect2 v1.0.1/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
+github.com/montanaflynn/stats v0.5.0 h1:2EkzeTSqBB4V4bJwWrt5gIIrZmpJBcoIRGS2kWLgzmk=
 github.com/montanaflynn/stats v0.5.0/go.mod h1:wL8QJuTMNUDYhXwkmfOly8iTdp5TEcJFWZD2D7SIkUc=
 github.com/moul/http2curl v0.0.0-20161031194548-4e24498b31db/go.mod h1:8UbvGypXm98wA/IqH45anm5Y2Z6ep6O31QGOAZ3H0fQ=
 github.com/moul/http2curl v1.0.0/go.mod h1:8UbvGypXm98wA/IqH45anm5Y2Z6ep6O31QGOAZ3H0fQ=
