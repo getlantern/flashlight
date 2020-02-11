@@ -352,8 +352,8 @@ github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426/go.mod h1:SoTXbOva
 github.com/getlantern/zenodb v0.0.0-20190809092412-0a2ce8ac3026/go.mod h1:LDw7qTXBZJkjYVIvR2iyi1J4PN8plch0VZzTzc7mDoM=
 github.com/getlantern/zenodb v0.0.0-20191017181222-5e98403b7237 h1:a916/nkKDXQBD940nXIzOp2nLTfUzwL0vPr7HCWKduI=
 github.com/getlantern/zenodb v0.0.0-20191017181222-5e98403b7237/go.mod h1:/QuMPlUCcgfXRy+yAwXWcAkBegF2Nl1lw0nJ+kSWEsA=
-github.com/getsentry/sentry-go v0.5.0 h1:TvIiQJIm9lQj8v4CGPL3oSfN+hqc6PTfEBBbt3rrE3c=
-github.com/getsentry/sentry-go v0.5.0/go.mod h1:B8H7x8TYDPkeWPRzGpIiFO97LZP6rL8A3hEt8lUItMw=
+github.com/getsentry/sentry-go v0.5.1 h1:MIPe7ScHADsrK2vznqmhksIUFxq7m0JfTh+ZIMkI+VQ=
+github.com/getsentry/sentry-go v0.5.1/go.mod h1:B8H7x8TYDPkeWPRzGpIiFO97LZP6rL8A3hEt8lUItMw=
 github.com/gin-contrib/sse v0.0.0-20190301062529-5545eab6dad3/go.mod h1:VJ0WA2NBN22VlZ2dKZQPAPnyWw5XTlK1KymzLKsr59s=
 github.com/gin-gonic/gin v1.4.0/go.mod h1:OW2EZn3DO8Ln9oIKOvM++LBO+5UPHJJDH72/q/3rZdM=
 github.com/glendc/gopher-json v0.0.0-20170414221815-dc4743023d0c h1:iRTj5SRYwbvsygdwVp+y9kZT145Y1s6xOPpeOEIeGc4=
