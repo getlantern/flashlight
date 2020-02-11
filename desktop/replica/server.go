@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/getlantern/appdir"
+	"golang.org/x/xerrors"
 
 	"github.com/anacrolix/confluence/confluence"
 	analog "github.com/anacrolix/log"
@@ -13,8 +14,6 @@ import (
 	"github.com/anacrolix/torrent/metainfo"
 	replicaUi "github.com/getlantern/flashlight/ui/replica"
 	"github.com/getlantern/replica"
-
-	"golang.org/x/xerrors"
 )
 
 func NewHttpHandler() (_ *replicaUi.HttpHandler, exitFunc func(), err error) {
@@ -48,8 +47,17 @@ func NewHttpHandler() (_ *replicaUi.HttpHandler, exitFunc func(), err error) {
 	})
 	torrentClient, err := torrent.NewClient(cfg)
 	if err != nil {
-		err = xerrors.Errorf("starting torrent client: %w", err)
-		return
+		replicaLogger.Printf("Error creating client: %v", err)
+		if torrentClient != nil {
+			torrentClient.Close()
+		}
+		// Try an ephemeral port in case there was an error binding.
+		cfg.ListenPort = 0
+		torrentClient, err = torrent.NewClient(cfg)
+		if err != nil {
+			err = xerrors.Errorf("starting torrent client: %w", err)
+			return
+		}
 	}
 
 	if err := replica.IterUploads(uploadsDir, func(mi *metainfo.MetaInfo, err error) {
