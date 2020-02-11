@@ -3,9 +3,7 @@ package chained
 import (
 	"context"
 	"crypto/rsa"
-	gtls "crypto/tls"
 	"crypto/x509"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"net"
@@ -20,7 +18,6 @@ import (
 
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
-	"github.com/mitchellh/mapstructure"
 	tls "github.com/refraction-networking/utls"
 
 	"github.com/getlantern/cmux"
@@ -36,7 +33,6 @@ import (
 	"github.com/getlantern/lampshade"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
-	"github.com/getlantern/quicwrapper"
 	"github.com/getlantern/tinywss"
 	"github.com/getlantern/tlsdialer"
 	"github.com/getlantern/tlsresumption"
@@ -106,8 +102,8 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		return newOBFS4Proxy(name, transport, proto, s, uc)
 	case "lampshade":
 		return newLampshadeProxy(name, transport, proto, s, uc)
-	case "quic", "oquic":
-		return newQUICProxy(name, s, uc)
+	case "quic", "quic_ietf", "oquic":
+		return newQUICProxy(name, transport, s, uc)
 	case "wss":
 		return newWSSProxy(name, s, uc)
 	default:
@@ -170,9 +166,10 @@ func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc commo
 	}
 	x509cert := cert.X509()
 
+	tlsConfig, clientHelloID, defaultClientSessionState := tlsConfigForProxy(s)
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
-			tlsConfig, clientHelloID, clientSessionState := tlsConfigForProxy(s)
+			clientSessionState := persistedSessionStateFor(name, defaultClientSessionState)
 			td := &tlsdialer.Dialer{
 				DoDial: func(network, addr string, timeout time.Duration) (net.Conn, error) {
 					return p.dialCore(op)(ctx)
@@ -183,10 +180,11 @@ func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc commo
 				ClientHelloID:      clientHelloID,
 				ClientSessionState: clientSessionState,
 			}
-			conn, err := td.Dial("tcp", p.addr)
+			result, err := td.DialForTimings("tcp", p.addr)
 			if err != nil {
-				return conn, err
+				return nil, err
 			}
+			conn := result.Conn
 			if clientSessionState == nil && !conn.ConnectionState().PeerCertificates[0].Equal(x509cert) {
 				if closeErr := conn.Close(); closeErr != nil {
 					log.Debugf("Error closing chained server connection: %s", closeErr)
@@ -205,6 +203,7 @@ func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc commo
 				return nil, op.FailIf(log.Errorf("Server's certificate didn't match expected! Server had\n%v\nbut expected:\n%v",
 					received, expected))
 			}
+			saveSessionState(name, result.UConn.HandshakeState.Session)
 			return overheadWrapper(true)(conn, op.FailIf(err))
 		})
 	}
@@ -321,7 +320,7 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 	return newProxy(name, transport, proto, s, uc, s.Trusted, false, doDialServer, defaultDialOrigin)
 }
 
-func newQUICProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+func newQUICProxy(name string, transport string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 
 	dialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(s.Addr, "quic", "udp", func(op *ops.Op) (net.Conn, error) {
@@ -330,7 +329,7 @@ func newQUICProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pro
 		})
 	}
 
-	return newProxy(name, "quic", "udp", s, uc, s.Trusted, false, dialServer, defaultDialOrigin)
+	return newProxy(name, transport, "udp", s, uc, s.Trusted, false, dialServer, defaultDialOrigin)
 }
 
 func newWSSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
@@ -488,8 +487,15 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 			return nil, err
 		}
 		p.protocol = "kcp"
-	} else if s.PluggableTransport == "quic" || s.PluggableTransport == "oquic" {
-		log.Debugf("Enabling QUIC for %v (%v)", p.Label(), p.protocol)
+	} else if s.PluggableTransport == "quic" {
+		log.Debugf("Enabling QUIC0 (legacy) for %v (%v)", p.Label(), p.protocol)
+		err := enableQUIC0(p, s)
+		if err != nil {
+			return nil, err
+		}
+		p.protocol = s.PluggableTransport
+	} else if s.PluggableTransport == "quic_ietf" || s.PluggableTransport == "oquic" {
+		log.Debugf("Enabling QUIC (%s) for %v (%v)", s.PluggableTransport, p.Label(), p.protocol)
 		err := enableQUIC(p, s)
 		if err != nil {
 			return nil, err
@@ -522,48 +528,20 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 	return p, nil
 }
 
-func enableKCP(p *proxy, s *ChainedServerInfo) error {
-	var cfg KCPConfig
-	err := mapstructure.Decode(s.KCPSettings, &cfg)
-	if err != nil {
-		return log.Errorf("Could not decode kcp transport settings?: %v", err)
-	}
-	p.kcpConfig = &cfg
-
-	// Fix address (comes across as kcp-placeholder)
-	p.addr = cfg.RemoteAddr
-	// KCP consumes a lot of bandwidth, so we want to bias against using it unless
-	// everything else is blocked. However, we prefer it to domain-fronting. We
-	// only default the bias if none was configured.
-	if p.bias == 0 {
-		p.bias = -1
-	}
-
-	addIdleTiming := func(conn net.Conn) net.Conn {
-		log.Debug("Wrapping KCP with idletiming")
-		return idletiming.Conn(conn, IdleTimeout*2, func() {
-			log.Debug("KCP connection idled")
-		})
-	}
-	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig, addIdleTiming)
-
-	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
-		elapsed := mtime.Stopwatch()
-
-		conn, err := dialKCP(ctx, "tcp", p.addr)
-		delta := elapsed()
-		return conn, delta, err
-	}
-
-	return nil
-}
-
 func enableWSS(p *proxy, s *ChainedServerInfo) error {
 	var rt tinywss.RoundTripHijacker
 	var err error
 
+	force_http := s.ptSettingBool("force_http")
 	fctx_id := s.ptSetting("df_ctx")
-	if fctx_id != "" {
+
+	if force_http {
+		log.Debugf("Using wss http direct")
+		rt, err = wssHTTPRoundTripper(p, s)
+		if err != nil {
+			return err
+		}
+	} else if fctx_id != "" {
 		fctx := GetFrontingContext(fctx_id)
 		if fctx == nil {
 			return fmt.Errorf("unsupported wss df_ctx=%s! skipping.", fctx_id)
@@ -621,9 +599,15 @@ func (rt *wssFrontedRT) RoundTripHijack(req *http.Request) (*http.Response, net.
 	}
 }
 
+func wssHTTPRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
+	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
+		log.Debugf("tinywss HTTP Roundtripper dialing %v", addr)
+		return netx.DialTimeout(network, addr, chainedDialTimeout)
+	}), nil
+}
+
 func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
 
-	// Verify the SNI name if given, otherwise verify the hostname given and do not use SNI.
 	var err error
 	serverName := s.TLSServerNameIndicator
 	sendServerName := true
@@ -637,6 +621,9 @@ func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHija
 	helloID := s.clientHelloID()
 	pinnedCert := s.ptSettingBool("pin_certificate")
 
+	// if set, force validation of a name other than the SNI name
+	forceValidateName := s.ptSetting("force_validate_name")
+
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
@@ -644,7 +631,7 @@ func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHija
 	x509cert := cert.X509()
 
 	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
-		log.Debugf("tinywss Roundtripper dialing %v", addr)
+		log.Debugf("tinywss HTTPS Roundtripper dialing %v", addr)
 
 		var certPool *x509.CertPool
 
@@ -669,97 +656,16 @@ func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHija
 		}
 
 		td := &tlsdialer.Dialer{
-			DoDial:         netx.DialTimeout,
-			SendServerName: sendServerName,
-			Config:         tlsConf,
-			ClientHelloID:  helloID,
-			Timeout:        chainedDialTimeout,
+			DoDial:            netx.DialTimeout,
+			SendServerName:    sendServerName,
+			ForceValidateName: forceValidateName,
+			Config:            tlsConf,
+			ClientHelloID:     helloID,
+			Timeout:           chainedDialTimeout,
 		}
 
 		return td.Dial(network, addr)
 	}), nil
-}
-
-func enableQUIC(p *proxy, s *ChainedServerInfo) error {
-	addr := s.Addr
-	tlsConf := &gtls.Config{
-		ServerName:         s.TLSServerNameIndicator,
-		InsecureSkipVerify: true,
-		KeyLogWriter:       getTLSKeyLogWriter(),
-	}
-
-	maxStreamsPerConn := s.ptSettingInt("streams")
-
-	quicConf := &quicwrapper.Config{
-		IdleTimeout:        IdleTimeout,
-		MaxIncomingStreams: maxStreamsPerConn,
-		KeepAlive:          true,
-	}
-
-	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
-	if err != nil {
-		return log.Error(errors.Wrap(err).With("addr", s.Addr))
-	}
-	pinnedCert := cert.X509()
-
-	dialFn := quicwrapper.DialWithNetx
-
-	if s.PluggableTransport == "oquic" {
-		oquicKeyStr := s.ptSetting("oquic_key")
-		if oquicKeyStr == "" {
-			return log.Error("Missing oquic_key for oquic transport")
-		}
-		oquicKey, err := base64.StdEncoding.DecodeString(oquicKeyStr)
-		if err != nil {
-			return log.Error(errors.Wrap(err).With("oquic_key", oquicKeyStr))
-		}
-		oquicConfig := quicwrapper.DefaultOQuicConfig(oquicKey)
-		if cipher := s.ptSetting("oquic_cipher"); cipher != "" {
-			oquicConfig.Cipher = cipher
-		}
-		if s.ptSetting("oquic_aggressive_padding") != "" {
-			oquicConfig.AggressivePadding = int64(s.ptSettingInt("oquic_aggressive_padding"))
-		}
-		if s.ptSetting("oquic_max_padding_hint") != "" {
-			oquicConfig.MaxPaddingHint = uint8(s.ptSettingInt("oquic_max_padding_hint"))
-		}
-		if s.ptSetting("oquic_min_padded") != "" {
-			oquicConfig.MinPadded = s.ptSettingInt("oquic_min_padded")
-		}
-
-		dialFn, err = quicwrapper.NewOQuicDialerWithUDPDialer(quicwrapper.DialUDPNetx, oquicConfig)
-		if err != nil {
-			return log.Errorf("Unable to create oquic dialer: %v", err)
-		}
-	}
-
-	dialer := quicwrapper.NewClientWithPinnedCert(
-		addr,
-		tlsConf,
-		quicConf,
-		dialFn,
-		pinnedCert,
-	)
-	// when the proxy closes, close the dialer
-	go func() {
-		<-p.closeCh
-		log.Debug("Closing quic session: Proxy closed.")
-		dialer.Close()
-	}()
-
-	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
-		elapsed := mtime.Stopwatch()
-		conn, err := dialer.DialContext(ctx)
-		if err != nil {
-			log.Debugf("Failed to establish multiplexed connection: %s", err)
-		} else {
-			log.Debug("established new multiplexed quic connection.")
-		}
-		delta := elapsed()
-		return conn, delta, err
-	}
-
-	return nil
 }
 
 func (p *proxy) Protocol() string {

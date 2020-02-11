@@ -37,7 +37,7 @@ require (
 	github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7
 	github.com/getlantern/gowin v0.0.0-20160824205538-88fa116ddffc // indirect
 	github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55
-	github.com/getlantern/http-proxy-lantern v0.1.4-0.20200121234748-09cf7701b9ce
+	github.com/getlantern/http-proxy-lantern v0.1.4-0.20200130190446-3028d2ef9381
 	github.com/getlantern/httpseverywhere v0.0.0-20180326165025-9bdb93e40695
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
 	github.com/getlantern/idletiming v0.0.0-20190529182719-d2fbc83372a5
@@ -46,8 +46,7 @@ require (
 	github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644
 	github.com/getlantern/kcpwrapper v0.0.0-20171114192627-a35c895f6de7
 	github.com/getlantern/keyman v0.0.0-20180207174507-f55e7280e93a
-	github.com/getlantern/lampshade v0.0.0-20191205031149-d9108ba9d5ae
-	github.com/getlantern/lantern-server v0.0.0-20200211180039-dab15a068fe8
+	github.com/getlantern/lampshade v0.0.0-20200123165158-e0efbb58c68b
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
@@ -65,7 +64,8 @@ require (
 	github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c
 	github.com/getlantern/proxy v0.0.0-20191025190912-b5f45407d9f2
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
-	github.com/getlantern/quicwrapper v0.0.0-20191220185748-4721f84faa16
+	github.com/getlantern/quic0 v0.0.0-20200121154153-8b18c2ba09f9
+	github.com/getlantern/quicwrapper v0.0.0-20200129232925-8ef70253fcae
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/shortcut v0.0.0-20200120121615-2dcb213d447c
@@ -74,17 +74,15 @@ require (
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
 	github.com/getlantern/tinywss v0.0.0-20200121221108-851921f95ad7
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
-	github.com/getlantern/tlsdialer v0.0.0-20191022033653-81b203ed2619
-	github.com/getlantern/tlsresumption v0.0.0-20191010160602-a16b0c459d39
+	github.com/getlantern/tlsdialer v0.0.0-20200205115148-9bde2ed72c94
+	github.com/getlantern/tlsresumption v0.0.0-20200205020452-74fc6ea4e074
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getlantern/yinbi-server v0.0.0-20200210173033-1bb7dee7d009
-	github.com/gobuffalo/envy v1.9.0 // indirect
-	github.com/gobuffalo/packd v1.0.0 // indirect
-	github.com/gorilla/websocket v0.0.0-20180306181548-eb925808374e
-	github.com/hashicorp/golang-lru v0.5.4
+	github.com/getsentry/sentry-go v0.5.1
+	github.com/gorilla/websocket v1.4.0
+	github.com/hashicorp/golang-lru v0.5.3
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
 	github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9 // indirect
@@ -102,19 +100,13 @@ require (
 	github.com/stellar/go v0.0.0-20200210221749-6c651ebf3c29
 	github.com/stretchr/testify v1.4.0
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
-	go.opencensus.io v0.22.3 // indirect
-	golang.org/x/crypto v0.0.0-20200210222208-86ce3cb69678 // indirect
-	golang.org/x/net v0.0.0-20200202094626-16171245cfb2
-	golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5 // indirect
-	google.golang.org/api v0.17.0 // indirect
-	google.golang.org/genproto v0.0.0-20200211111953-2dc5924e3898 // indirect
-	google.golang.org/grpc v1.27.1 // indirect
+	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553
+	google.golang.org/appengine v1.6.2 // indirect
+	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
 
-replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20190819144938-28e3ca4262e1
-
-replace github.com/marten-seemann/qtls => github.com/marten-seemann/qtls-deprecated v0.0.0-20190207043627-591c71538704
+replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.0.0-20200129225515-f0142adfc7dd
 
 replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20191001223343-79cda44164e3
 
@@ -126,6 +118,3 @@ replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358
 
 replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20191212040217-1650eee50330
-
-// For smoother session error handling, see https://github.com/xtaci/smux/issues/61
-replace github.com/xtaci/smux => github.com/getlantern/smux v1.5.8-0.20200120021443-10a8d98940d3
