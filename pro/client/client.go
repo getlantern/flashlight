@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"math"
 	"net/http"
@@ -101,11 +102,13 @@ func (c *Client) UserCreate(user common.UserConfig) (res *UserDataResponse, err 
 func (c *Client) UserCreateWithID(user common.UserConfig, userID string) (res *UserDataResponse, err error) {
 	vals := url.Values{
 		"locale": {user.GetLanguage()},
-		"userID": {userID},
 	}
 	body := strings.NewReader(vals.Encode())
-	req, err := http.NewRequest(http.MethodPost,
-		"https://"+common.ProAPIHost+"/user-create-with-id", body)
+
+	createUserURL := fmt.Sprintf("https://%s/user-create-with-id/%s",
+		common.ProAPIHost,
+		userID)
+	req, err := http.NewRequest(http.MethodPost, createUserURL, body)
 	if err != nil {
 		return nil, err
 	}

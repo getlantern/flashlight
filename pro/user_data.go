@@ -8,7 +8,6 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/pro/client"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/lantern-server/uuid"
 )
 
 var logger = golog.LoggerFor("flashlight.app.pro")
@@ -122,7 +121,7 @@ func NewUser(uc common.UserConfig) (*client.User, error) {
 func newUserWithClient(uc common.UserConfig, hc *http.Client) (*client.User, error) {
 	deviceID := uc.GetDeviceID()
 	// use deviceID, generate a random user ID, and token
-	userID := uuid.Random()
+	userID := uc.GetUserID()
 	user := common.NewUserConfigData(deviceID, userID, "", uc.GetInternalHeaders(), uc.GetLanguage())
 	logger.Debugf("Creating new user with device ID %v and userID %v",
 		deviceID, userID)
