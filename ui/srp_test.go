@@ -129,7 +129,7 @@ func TestSRP(t *testing.T) {
 			},
 			loginEndpoint,
 			true,
-			http.StatusUnauthorized,
+			http.StatusOK,
 			nil,
 		},
 	}

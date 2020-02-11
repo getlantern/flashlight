@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/getlantern/golog"
+	serverCommon "github.com/getlantern/lantern-server/common"
 )
 
 var (
@@ -15,6 +16,8 @@ var (
 	Staging = false
 
 	ProAPIHost = "api.getiantem.org"
+
+	AuthServerAddr = serverCommon.AuthServerAddr
 
 	log = golog.LoggerFor("flashlight.common")
 
