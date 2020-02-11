@@ -1,7 +1,6 @@
 package replica
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -48,9 +47,7 @@ func NewHttpHandler() (_ *replicaUi.HttpHandler, exitFunc func(), err error) {
 	})
 	torrentClient, err := torrent.NewClient(cfg)
 	if err != nil {
-		//err = xerrors.Errorf("starting torrent client: %w", err)
-		//return
-		fmt.Printf("Error creating client: %v", err)
+		replicaLogger.Printf("Error creating client: %v", err)
 		if torrentClient != nil {
 			torrentClient.Close()
 		}
