@@ -23,6 +23,7 @@ import (
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/stats"
+	"github.com/getlantern/lantern-server/uuid"
 )
 
 var logger = golog.LoggerFor("client-test")
@@ -48,7 +49,7 @@ func (m mockStatsTracker) SetAlert(stats.AlertType, string, bool)               
 func (m mockStatsTracker) ClearAlert(stats.AlertType)                               {}
 
 func newTestUserConfig() *common.UserConfigData {
-	return common.NewUserConfigData("device", 1234, "protoken", nil, "en-US")
+	return common.NewUserConfigData("device", uuid.Random(), "protoken", nil, "en-US")
 }
 
 func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {
