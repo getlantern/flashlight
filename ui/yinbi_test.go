@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/lantern-server/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,7 +23,7 @@ type PaymentTest struct {
 func TestCreateMnemonic(t *testing.T) {
 	s := startServer(t, common.AuthServerAddr, ":0")
 	url := s.getAPIAddr("/user/mnemonic")
-	req, _ := http.NewRequest(GET, url,
+	req, _ := http.NewRequest(common.GET, url,
 		nil)
 	resp := httptest.NewRecorder()
 	s.createMnemonic(resp, req)
@@ -47,8 +47,8 @@ func decodeResp(t *testing.T,
 func createPaymentRequest(s *Server, params PaymentParams) *http.Request {
 	requestBody, _ := json.Marshal(params)
 	url := s.getAPIAddr("/payment/new")
-	req, _ := http.NewRequest(POST, url, bytes.NewBuffer(requestBody))
-	req.Header.Add(HeaderContentType, MIMEApplicationJSON)
+	req, _ := http.NewRequest(common.POST, url, bytes.NewBuffer(requestBody))
+	req.Header.Add(common.HeaderContentType, common.MIMEApplicationJSON)
 	return req
 }
 

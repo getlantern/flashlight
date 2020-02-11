@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/lantern-server/common"
 	"github.com/getlantern/lantern-server/constants"
 	"github.com/getlantern/lantern-server/models"
 	"github.com/getlantern/lantern-server/srp"
@@ -40,8 +40,8 @@ func getClient(t *testing.T, params *models.UserParams, s *Server) (*models.User
 
 func createAuthRequest(params *models.UserParams, uri string) *http.Request {
 	requestBody, _ := json.Marshal(params)
-	req, _ := http.NewRequest(POST, uri, bytes.NewBuffer(requestBody))
-	req.Header.Set(HeaderContentType, MIMEApplicationJSON)
+	req, _ := http.NewRequest(common.POST, uri, bytes.NewBuffer(requestBody))
+	req.Header.Set(common.HeaderContentType, common.MIMEApplicationJSON)
 	return req
 }
 

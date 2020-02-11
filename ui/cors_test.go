@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/lantern-server/common"
 )
 
 type CorsSpec struct {
@@ -55,7 +55,7 @@ func TestCors(t *testing.T) {
 	cases := []CorsSpec{
 		{
 			"BadOrigin",
-			GET,
+			common.GET,
 			"/login",
 			map[string]string{
 				"Origin": "http://baddomain.com",
@@ -67,7 +67,7 @@ func TestCors(t *testing.T) {
 		},
 		{
 			"AllowedOrigin",
-			GET,
+			common.GET,
 			"/login",
 			map[string]string{
 				"Origin": uiAddr,

@@ -16,8 +16,6 @@ var (
 
 	ProAPIHost = "api.getiantem.org"
 
-	AuthServerAddr = "https://auth-staging.lantern.network"
-
 	log = golog.LoggerFor("flashlight.common")
 
 	forceAds bool

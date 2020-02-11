@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/util"
+	"github.com/getlantern/lantern-server/common"
 	"github.com/stretchr/testify/assert"
 )
 
