@@ -32,8 +32,8 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 		dialers = append(dialers, dialer)
 	}
 
-	chained.TrackStatsFor(dialers, appdir.General("Lantern"), true)
 	chained.PersistSessionStates("")
+	chained.TrackStatsFor(dialers, appdir.General("Lantern"), true)
 	client.bal.Reset(dialers)
 
 	go func() {
