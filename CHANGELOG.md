@@ -1,5 +1,22 @@
 # Changelog
 
+## [Unreleased](https://github.com/getlantern/flashlight/tree/HEAD)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.8.2...HEAD)
+
+**Merged pull requests:**
+
+- Exit if lantern is already running [\#755](https://github.com/getlantern/flashlight/pull/755) ([myleshorton](https://github.com/myleshorton))
+
+## [5.8.2](https://github.com/getlantern/flashlight/tree/5.8.2) (2020-02-11)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.8.1...5.8.2)
+
+**Merged pull requests:**
+
+- Updated to latest golang.org/x/sys and quic-go [\#753](https://github.com/getlantern/flashlight/pull/753) ([oxtoacart](https://github.com/oxtoacart))
+- Minor sentry upgrade [\#752](https://github.com/getlantern/flashlight/pull/752) ([myleshorton](https://github.com/myleshorton))
+
 ## [5.8.1](https://github.com/getlantern/flashlight/tree/5.8.1) (2020-02-07)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.8.0...5.8.1)
@@ -127,7 +144,6 @@
 - Update to latest utls fork [\#684](https://github.com/getlantern/flashlight/pull/684) ([myleshorton](https://github.com/myleshorton))
 - allow hitProxy.py to run for multiple proxies [\#681](https://github.com/getlantern/flashlight/pull/681) ([joesis](https://github.com/joesis))
 - make QUIC honor tlsservernameindicator config option [\#680](https://github.com/getlantern/flashlight/pull/680) ([forkner](https://github.com/forkner))
-- Remove embedded proxies, update global, tweak script [\#676](https://github.com/getlantern/flashlight/pull/676) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.5.8](https://github.com/getlantern/flashlight/tree/5.5.8) (2019-09-24)
 
@@ -136,6 +152,7 @@
 **Merged pull requests:**
 
 - print top stacks if the number of goroutines exceeds 800 [\#677](https://github.com/getlantern/flashlight/pull/677) ([joesis](https://github.com/joesis))
+- Remove embedded proxies, update global, tweak script [\#676](https://github.com/getlantern/flashlight/pull/676) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.5.7](https://github.com/getlantern/flashlight/tree/5.5.7) (2019-09-19)
 
@@ -199,13 +216,6 @@
 ## [5.5.1](https://github.com/getlantern/flashlight/tree/5.5.1) (2019-07-30)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.0...5.5.1)
-
-**Merged pull requests:**
-
-- Assume transports can handle context correctly [\#646](https://github.com/getlantern/flashlight/pull/646) ([joesis](https://github.com/joesis))
-- Allow specifying client country when using runAsUser [\#645](https://github.com/getlantern/flashlight/pull/645) ([oxtoacart](https://github.com/oxtoacart))
-- Update to latest quicwrapper [\#644](https://github.com/getlantern/flashlight/pull/644) ([joesis](https://github.com/joesis))
-- Uniformly report est\_rtt in milliseconds [\#643](https://github.com/getlantern/flashlight/pull/643) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [5.5.0](https://github.com/getlantern/flashlight/tree/5.5.0) (2019-07-08)
 
