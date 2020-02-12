@@ -50,7 +50,11 @@ func saveSessionState(server string, state *tls.ClientSessionState) {
 // PersistSessionStates makes sure that session states are stored on disk in the given configDir
 func PersistSessionStates(configDir string) {
 	initOnce.Do(func() {
+		// We need a write lock here because other go routines can try to access session states
+		// before this completes.
+		currentSessionStatesMx.Lock()
 		persistSessionStates(configDir, 15*time.Second)
+		currentSessionStatesMx.Unlock()
 	})
 }
 
