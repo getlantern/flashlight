@@ -1,14 +1,12 @@
 // +build headless
 
-package main
+package desktop
 
 import (
 	"os"
-
-	"github.com/getlantern/flashlight/desktop"
 )
 
-func runOnSystrayReady(standalone bool, a *desktop.App, f func()) {
+func RunOnSystrayReady(standalone bool, a *App, f func()) {
 	f()
 	err := a.WaitForExit()
 	if err != nil {
@@ -19,11 +17,11 @@ func runOnSystrayReady(standalone bool, a *desktop.App, f func()) {
 	os.Exit(0)
 }
 
-func quitSystray(a *desktop.App) {
+func QuitSystray(a *App) {
 	a.Exit(nil)
 }
 
-func configureSystemTray(a *desktop.App) error {
+func configureSystemTray(a *App) error {
 	return nil
 }
 
