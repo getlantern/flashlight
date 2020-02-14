@@ -164,7 +164,7 @@ func main() {
 
 	if a.ShouldShowUI() {
 		i18nInit(a)
-		runOnSystrayReady(*standalone, a, func() {
+		desktop.RunOnSystrayReady(*standalone, a, func() {
 			runApp(a)
 		})
 	} else {
@@ -183,17 +183,6 @@ func main() {
 func runApp(a *desktop.App) {
 	// Schedule cleanup actions
 	handleSignals(a)
-	if a.ShouldShowUI() {
-		go func() {
-			if err := configureSystemTray(a); err != nil {
-				return
-			}
-			a.OnSettingChange(desktop.SNLanguage, func(lang interface{}) {
-				refreshSystray(lang.(string))
-			})
-		}()
-	}
-
 	a.Run()
 }
 
@@ -243,7 +232,7 @@ func handleSignals(a *desktop.App) {
 	go func() {
 		s := <-c
 		log.Debugf("Got signal \"%s\", exiting...", s)
-		quitSystray(a)
+		desktop.QuitSystray(a)
 	}()
 }
 

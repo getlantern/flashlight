@@ -1,6 +1,6 @@
 // +build !headless
 
-package main
+package desktop
 
 import (
 	"fmt"
@@ -10,7 +10,6 @@ import (
 	"github.com/getlantern/systray"
 
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/desktop"
 	"github.com/getlantern/flashlight/icons"
 	"github.com/getlantern/flashlight/stats"
 )
@@ -42,7 +41,7 @@ type systrayCallbacks interface {
 	OnStatsChange(func(stats.Stats))
 }
 
-func runOnSystrayReady(standalone bool, a systrayCallbacks, onReady func()) {
+func RunOnSystrayReady(standalone bool, a systrayCallbacks, onReady func()) {
 	onExit := func() {
 		if a.Exit(nil) {
 			err := a.WaitForExit()
@@ -59,7 +58,7 @@ func runOnSystrayReady(standalone bool, a systrayCallbacks, onReady func()) {
 	}
 }
 
-func quitSystray(a *desktop.App) {
+func QuitSystray(a *App) {
 	// Typically, systray.Quit will actually be what causes the app to exit, but
 	// in the case of an uncaught Fatal error or CTRL-C, the app will exit before the
 	// systray and we need it to call systray.Quit().

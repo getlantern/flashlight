@@ -319,6 +319,18 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		}
 
+		if app.ShouldShowUI() {
+			go func() {
+				if err := configureSystemTray(app); err != nil {
+					log.Errorf("Unable to configure system tray: %s", err)
+					return
+				}
+				app.OnSettingChange(SNLanguage, func(lang interface{}) {
+					refreshSystray(lang.(string))
+				})
+			}()
+		}
+
 		if e := settings.StartService(app.ws); e != nil {
 			app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
 		}
