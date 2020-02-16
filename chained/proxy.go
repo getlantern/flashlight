@@ -3,7 +3,11 @@ package chained
 import (
 	"context"
 	"crypto/rsa"
+	stls "crypto/tls"
 	"crypto/x509"
+	"encoding/binary"
+	"encoding/hex"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"net"
@@ -35,6 +39,8 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/tinywss"
 	"github.com/getlantern/tlsdialer"
+	"github.com/getlantern/tlsmasq"
+	"github.com/getlantern/tlsmasq/ptlshs"
 	"github.com/getlantern/tlsresumption"
 
 	"github.com/getlantern/flashlight/balancer"
@@ -55,6 +61,12 @@ const (
 
 	defaultMultiplexedPhysicalConns = 1
 )
+
+// InsecureSkipVerifyTLSMasqOrigin controls whether the origin certificate is verified when dialing
+// a tlsmasq proxy. This can be used when testing against origins with self-signed certificates.
+// This should be false in production as allowing a 3rd party to impersonate the origin could allow
+// for a kind of probe.
+var InsecureSkipVerifyTLSMasqOrigin = false
 
 var (
 	chainedDialTimeout          = 1 * time.Minute
@@ -106,6 +118,8 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		return newQUICProxy(name, transport, s, uc)
 	case "wss":
 		return newWSSProxy(name, s, uc)
+	case "tlsmasq":
+		return newTLSMasqProxy(name, s, uc)
 	default:
 		return nil, errors.New("Unknown transport: %v", s.PluggableTransport).With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
 	}
@@ -342,6 +356,124 @@ func newWSSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*prox
 	}
 
 	return newProxy(name, "wss", "tcp", s, uc, s.Trusted, false, doDialServer, defaultDialOrigin)
+}
+
+func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+	decodeUint16 := func(s string) (uint16, error) {
+		b, err := hex.DecodeString(strings.TrimPrefix(s, "0x"))
+		if err != nil {
+			return 0, err
+		}
+		return binary.BigEndian.Uint16(b), nil
+	}
+
+	suites := []uint16{}
+	suiteStrings := strings.Split(s.ptSetting("tlsmasq_suites"), ",")
+	if len(suiteStrings) == 1 && suiteStrings[0] == "" {
+		return nil, errors.New("no cipher suites specified")
+	}
+	for _, s := range suiteStrings {
+		suite, err := decodeUint16(s)
+		if err != nil {
+			return nil, errors.New("bad cipher string '%s': %v", s, err)
+		}
+		suites = append(suites, suite)
+	}
+	versStr := s.ptSetting("tlsmasq_tlsminversion")
+	minVersion, err := decodeUint16(versStr)
+	if err != nil {
+		return nil, errors.New("bad TLS version string '%s': %v", versStr, err)
+	}
+	secretString := s.ptSetting("tlsmasq_secret")
+	secretBytes, err := hex.DecodeString(strings.TrimPrefix(secretString, "0x"))
+	if err != nil {
+		return nil, errors.New("bad server-secret string '%s': %v", secretString, err)
+	}
+	secret := ptlshs.Secret{}
+	if len(secretBytes) != len(secret) {
+		return nil, errors.New("expected %d-byte secret string, got %d bytes", len(secret), len(secretBytes))
+	}
+	copy(secret[:], secretBytes)
+	sni := s.ptSetting("tlsmasq_sni")
+	if sni == "" {
+		return nil, errors.New("server name indicator must be configured")
+	}
+	// It's okay if this is unset - it'll just result in us using the default.
+	nonceTTL := time.Duration(s.ptSettingInt("tlsmasq_noncettl"))
+
+	host, _, err := net.SplitHostPort(s.Addr)
+	if err != nil {
+		return nil, errors.New("malformed server address: %v", err)
+	}
+
+	// Add the proxy cert to the root CAs as proxy certs are self-signed.
+	if s.Cert == "" {
+		return nil, errors.New("no proxy certificate configured")
+	}
+	block, rest := pem.Decode([]byte(s.Cert))
+	if block == nil {
+		return nil, errors.New("failed to decode proxy certificate as PEM block")
+	}
+	if len(rest) > 0 {
+		return nil, errors.New("unexpected extra data in proxy certificate PEM")
+	}
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return nil, errors.New("failed to parse proxy certificate: %v", err)
+	}
+	pool, err := x509.SystemCertPool()
+	if err != nil {
+		return nil, errors.New("failed to load system cert pool: %v", err)
+	}
+	pool.AddCert(cert)
+
+	cfg := tlsmasq.DialerConfig{
+		ProxiedHandshakeConfig: ptlshs.DialerConfig{
+			TLSConfig: &stls.Config{
+				ServerName:         sni,
+				MinVersion:         minVersion,
+				CipherSuites:       suites,
+				InsecureSkipVerify: InsecureSkipVerifyTLSMasqOrigin,
+			},
+			Secret:   secret,
+			NonceTTL: nonceTTL,
+		},
+		TLSConfig: &stls.Config{
+			MinVersion:   minVersion,
+			CipherSuites: suites,
+			// Proxy certificates are valid for the host (usually their IP address).
+			ServerName: host,
+			RootCAs:    pool,
+		},
+	}
+
+	dialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
+		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
+			tcpConn, err := p.dialCore(op)(ctx)
+			if err != nil {
+				return nil, err
+			}
+			conn := tlsmasq.Client(tcpConn, cfg)
+
+			// We execute the handshake as part of the dial. Otherwise, preconnecting wouldn't do
+			// much for us.
+			errc := make(chan error)
+			go func() { errc <- conn.Handshake() }()
+			select {
+			case err := <-errc:
+				if err != nil {
+					conn.Close()
+					return nil, errors.New("handshake failed: %v", err)
+				}
+				return conn, nil
+			case <-ctx.Done():
+				conn.Close()
+				return nil, ctx.Err()
+			}
+		})
+	}
+
+	return newProxy(name, "tlsmasq", "tcp", s, uc, s.Trusted, true, dialServer, defaultDialOrigin)
 }
 
 // consecCounter is a counter that can extend on both directions. Its default

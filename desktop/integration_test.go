@@ -17,6 +17,7 @@ import (
 	"github.com/getlantern/waitforserver"
 
 	"github.com/getlantern/flashlight/borda"
+	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/goroutines"
@@ -34,6 +35,9 @@ const (
 func TestProxying(t *testing.T) {
 	golog.SetPrepender(logging.Timestamped)
 	onGeo := geolookup.OnRefresh()
+
+	chained.InsecureSkipVerifyTLSMasqOrigin = true
+	defer func() { chained.InsecureSkipVerifyTLSMasqOrigin = false }()
 
 	var opsMx sync.RWMutex
 	reportedOps := make(map[string]int)
@@ -90,7 +94,7 @@ func TestProxying(t *testing.T) {
 		listenPort++
 		return fmt.Sprintf("localhost:%d", listenPort)
 	}
-	helper, err := integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
+	helper, err := integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -148,6 +152,11 @@ func TestProxying(t *testing.T) {
 
 	// Switch to wss, wait for a new config and test request again
 	helper.SetProtocol("wss")
+	time.Sleep(2 * time.Second)
+	testRequest(t, helper)
+
+	// Switch to tlsmasq, wait for a new config and test request again
+	helper.SetProtocol("tlsmasq")
 	time.Sleep(2 * time.Second)
 	testRequest(t, helper)
 
