@@ -191,6 +191,8 @@ func (s *Server) attachHandlers() {
 		"/register":             s.authHandler,
 		"/payment/new":          s.sendPaymentHandler,
 		"/user/account/new":     s.createAccountHandler,
+		"/user/import/wallet":   s.importWalletHandler,
+		"/user/redeem/codes":    s.redeemCodesHandler,
 		"/account/details":      s.getAccountDetails,
 		"/account/transactions": s.getAccountTransactions,
 		"/user/mnemonic":        s.createMnemonic,

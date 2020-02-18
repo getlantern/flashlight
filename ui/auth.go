@@ -9,9 +9,7 @@ import (
 	"fmt"
 	"html"
 	"io/ioutil"
-	"net"
 	"net/http"
-	"strings"
 
 	"github.com/getlantern/lantern-server/common"
 	"github.com/getlantern/lantern-server/models"
@@ -32,27 +30,6 @@ var (
 	ErrSRPKeysDifferent   = errors.New("SRP client and server keys do not match")
 )
 
-var forwardHeaders = map[string]bool{
-	"authorization":   true,
-	"cookie":          true,
-	"accept-encoding": true,
-	"content-type":    true,
-	"accept":          true,
-}
-
-// Hop headers removed prior to the request being sent
-// http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html
-var hopHeaders = map[string]bool{
-	"connection":          true,
-	"keep-alive":          true,
-	"proxy-authenticate":  true,
-	"proxy-authorization": true,
-	"te":                  true, // canonicalized version of "TE"
-	"trailers":            true,
-	"transfer-encoding":   true,
-	"upgrade":             true,
-}
-
 func withUserID(ctx context.Context, userID string) context.Context {
 	return context.WithValue(ctx, userKey, userID)
 }
@@ -65,53 +42,11 @@ func (s *Server) getAPIAddr(uri string) string {
 // proxyHandler is a HTTP handler used to proxy requests
 // to the Lantern authentication server
 func (s *Server) proxyHandler(req *http.Request, w http.ResponseWriter,
-	onResp func(body []byte) error,
+	onResponse func(body []byte) error,
 ) error {
 	url := s.getAPIAddr(html.EscapeString(req.URL.Path))
-	proxyReq, err := http.NewRequest(req.Method, url, req.Body)
-	if err != nil {
-		return err
-	}
-	proxyReq.Header = make(http.Header)
-	for k, v := range req.Header {
-		if _, ok := forwardHeaders[strings.ToLower(k)]; ok {
-			proxyReq.Header[k] = v
-		}
-	}
-	clientIP, _, err := net.SplitHostPort(req.RemoteAddr)
-	if err == nil {
-		proxyReq.Header.Set("X-Forwarded-For", clientIP)
-	}
-	resp, err := s.httpClient.Do(proxyReq)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode == http.StatusOK && onResp != nil {
-		err = onResp(body)
-		if err != nil {
-			log.Error(err)
-			return err
-		}
-	}
-
-	headers := w.Header()
-	for k, values := range resp.Header {
-		if _, ok := hopHeaders[strings.ToLower(k)]; ok {
-			// skip hop headers
-			continue
-		}
-		for _, v := range values {
-			headers.Add(k, v)
-		}
-	}
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
-	return nil
+	return common.ProxyHandler(url, s.httpClient, req, w,
+		onResponse)
 }
 
 // doRequest creates and sends a new HTTP request to the given url
@@ -203,7 +138,6 @@ func (s *Server) authHandler(w http.ResponseWriter, req *http.Request) {
 		log.Debug("Successfully created new SRP session")
 		return nil
 	}
-
 	err = s.proxyHandler(req, w, onResp)
 	if err != nil {
 		s.errorHandler(w, err, http.StatusOK)

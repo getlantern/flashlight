@@ -21,6 +21,10 @@ type Response struct {
 	Errors Errors `json:"errors,omitempty"`
 }
 
+type RedeemParams struct {
+	Codes []string `json:"codes"`
+}
+
 // ServerParams specifies the parameters to use
 // when creating new UI server
 type ServerParams struct {
@@ -34,11 +38,36 @@ type ServerParams struct {
 // PaymentParams specifies the necessary parameters for
 // sending a YNB payment
 type PaymentParams struct {
-	Username    string `json:"username"`
-	Password    string `json:"password"`
+	AuthParams
 	Destination string `json:"destination"`
 	Amount      string `json:"amount"`
 	Asset       string `json:"asset"`
+}
+
+// AuthParams specifies the necessary params for requests that require a
+// user's credentials
+type AuthParams struct {
+	Email    string `json:"email,omitempty"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type ImportWalletResponse struct {
+	Username string `json:"username"`
+	Address  string `json:"address"`
+	Salt     string `json:"salt"`
+	Seed     string `json:"seed"`
+}
+
+func (p AuthParams) Validate() Errors {
+	errors := make(Errors)
+	if p.Password == "" {
+		errors["password"] = ErrMissingPassword.Error()
+	}
+	if p.Username == "" {
+		errors["username"] = ErrMissingUsername.Error()
+	}
+	return errors
 }
 
 // Validate validates the payment params and returns

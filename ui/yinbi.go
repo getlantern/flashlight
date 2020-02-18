@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"io/ioutil"
 	"net/http"
 
@@ -51,6 +52,78 @@ func (s *Server) createMnemonic(w http.ResponseWriter, r *http.Request) {
 	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"mnemonic": crypto.NewMnemonic(),
 		"success":  true,
+	})
+}
+
+// redeemCodesHandler is the handler used for redeeming yin.bi
+// voucher codes
+func (s *Server) redeemCodesHandler(w http.ResponseWriter,
+	req *http.Request) {
+	url := s.getAPIAddr(html.EscapeString(req.URL.Path))
+	proxyReq, err := common.NewProxyRequest(req, url)
+	if err != nil {
+		s.errorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	r, err := s.httpClient.Do(proxyReq)
+	if err != nil {
+		s.errorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+	var resp ImportWalletResponse
+	err = json.NewDecoder(r.Body).Decode(&resp)
+	if err != nil {
+		s.errorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+}
+
+// importWalletHandler is the handler used to import wallets
+// of existing yin.bi users
+func (s *Server) importWalletHandler(w http.ResponseWriter,
+	req *http.Request) {
+	var params AuthParams
+	err := common.DecodeJSONRequest(req, &params)
+	if err != nil {
+		s.errorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	requestBody, err := json.Marshal(params)
+	if err != nil {
+		s.errorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	req.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
+	url := s.getAPIAddr(html.EscapeString(req.URL.Path))
+	proxyReq, err := common.NewProxyRequest(req, url)
+	if err != nil {
+		s.errorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	r, err := s.httpClient.Do(proxyReq)
+	if err != nil {
+		s.errorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+	var resp ImportWalletResponse
+	err = json.NewDecoder(r.Body).Decode(&resp)
+	if err != nil {
+		s.errorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	pair, err := s.yinbiClient.DecryptSeed(resp.Seed, resp.Salt,
+		params.Password)
+	// send secret key to keystore
+	err = s.keystore.Store(pair.Seed(), params.Username,
+		params.Password)
+	if err != nil {
+		s.errorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"success": true,
 	})
 }
 
@@ -212,13 +285,11 @@ func (s *Server) createAccountHandler(w http.ResponseWriter,
 		return
 	}
 
-	onResp := func(body []byte) error {
+	err = s.proxyHandler(r, w, func(body []byte) error {
 		// after an account for the user is successfully created,
 		// create a trustline to the Yinbi asset
 		return s.yinbiClient.TrustAsset(issuer, pair)
-	}
-
-	err = s.proxyHandler(r, w, onResp)
+	})
 	if err != nil {
 		log.Debugf("Error handling proxy: %v", err)
 		s.errorHandler(w, err, http.StatusInternalServerError)
