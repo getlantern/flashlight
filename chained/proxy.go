@@ -431,6 +431,9 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 	pCfg.ServerName = sni
 	pCfg.InsecureSkipVerify = InsecureSkipVerifyTLSMasqOrigin
 
+	// Disabling session caching (and therefore resumption) until we know it works with tlsmasq.
+	pCfg.ClientSessionCache = nil
+
 	cfg := tlsmasq.DialerConfig{
 		ProxiedHandshakeConfig: ptlshs.DialerConfig{
 			Handshaker: utlsHandshaker{pCfg, helloID},
