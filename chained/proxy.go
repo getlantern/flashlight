@@ -427,16 +427,15 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 	}
 	pool.AddCert(cert)
 
+	pCfg, helloID, _ := tlsConfigForProxy(s)
+	pCfg.ServerName = sni
+	pCfg.InsecureSkipVerify = InsecureSkipVerifyTLSMasqOrigin
+
 	cfg := tlsmasq.DialerConfig{
 		ProxiedHandshakeConfig: ptlshs.DialerConfig{
-			TLSConfig: &stls.Config{
-				ServerName:         sni,
-				MinVersion:         minVersion,
-				CipherSuites:       suites,
-				InsecureSkipVerify: InsecureSkipVerifyTLSMasqOrigin,
-			},
-			Secret:   secret,
-			NonceTTL: nonceTTL,
+			Handshaker: utlsHandshaker{pCfg, helloID},
+			Secret:     secret,
+			NonceTTL:   nonceTTL,
 		},
 		TLSConfig: &stls.Config{
 			MinVersion:   minVersion,
@@ -1064,4 +1063,22 @@ func getTLSKeyLogWriter() io.Writer {
 		}
 	})
 	return tlsKeyLogWriter
+}
+
+// utlsHandshaker implements tlsmasq/ptlshs.Handshaker. This allows us to parrot browsers like
+// Chrome in our handshakes with tlsmasq origins.
+type utlsHandshaker struct {
+	cfg     *tls.Config
+	helloID tls.ClientHelloID
+}
+
+func (h utlsHandshaker) Handshake(conn net.Conn) (*ptlshs.HandshakeResult, error) {
+	uconn := tls.UClient(conn, h.cfg, h.helloID)
+	if err := uconn.Handshake(); err != nil {
+		return nil, err
+	}
+	return &ptlshs.HandshakeResult{
+		Version:     uconn.ConnectionState().Version,
+		CipherSuite: uconn.ConnectionState().CipherSuite,
+	}, nil
 }
