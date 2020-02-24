@@ -72,12 +72,13 @@ func TestProxy(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	req.Header.Set("X-Lantern-User-Id", uuid.Random())
+	userId := uuid.Random()
+	req.Header.Set("X-Lantern-User-Id", userId)
 	resp, err = (&http.Client{}).Do(req)
 	if assert.NoError(t, err, "GET request should have no error") {
 		assert.Equal(t, 200, resp.StatusCode, "should respond 200 ok")
 	}
-	user, found := GetUserDataFast(uuid.Random())
+	user, found := GetUserDataFast(userId)
 	if assert.True(t, found) {
 		assert.Equal(t, "a@a.com", user.Email, "should store user data implicitly if response is plain JSON")
 	}
@@ -93,7 +94,7 @@ func TestProxy(t *testing.T) {
 	if assert.NoError(t, err, "GET request should have no error") {
 		assert.Equal(t, 200, resp.StatusCode, "should respond 200 ok")
 	}
-	user, found = GetUserDataFast(uuid.Random())
+	user, found = GetUserDataFast(userId)
 	if assert.True(t, found) {
 		assert.Equal(t, "b@b.com", user.Email, "should store user data implicitly if response is gzipped JSON")
 	}
