@@ -129,6 +129,7 @@ func newUserWithClient(uc common.UserConfig, hc *http.Client) (*client.User, err
 	if err != nil {
 		return nil, err
 	}
+	logger.Debugf("Response: %+v", resp)
 	setUserData(resp.User.Auth.ID, &resp.User)
 	logger.Debugf("created user %+v", resp.User)
 	return &resp.User, nil
