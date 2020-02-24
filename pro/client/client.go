@@ -234,7 +234,7 @@ func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
 
 	for i := 0; i < maxRetries; i++ {
 		client := c.httpClient
-		log.Debugf("%s %s", req.Method, req.URL)
+		log.Debugf("%s %s %s", req.Method, req.URL, req.Header)
 		if len(buf) > 0 {
 			req.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
 		}
