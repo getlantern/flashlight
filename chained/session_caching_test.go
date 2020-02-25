@@ -6,27 +6,34 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestChooseBucketForUser(t *testing.T) {
+type testChoice int
+
+func (tc testChoice) weight() int {
+	return int(tc)
+}
+
+func TestWeightedChoiceForUser(t *testing.T) {
 	const numIDs = 100
 
-	bucketsToWeights := map[int]int{
-		1: 40,
-		2: 30,
-		3: 20,
-		4: 10,
+	choices := []weightedChoice{
+		testChoice(40),
+		testChoice(30),
+		testChoice(20),
+		testChoice(10),
 	}
-	weightsTotal := 0
-	for _, weight := range bucketsToWeights {
-		weightsTotal += weight
+	totalWeight := 0
+	for _, choice := range choices {
+		totalWeight += choice.weight()
 	}
 	// Sanity check as the test won't work otherwise.
-	require.Equal(t, numIDs, weightsTotal)
+	require.Equal(t, numIDs, totalWeight)
 
-	bucketsToChoices := map[int]int{}
+	weightsToChoices := map[int]int{}
 	for id := 0; id < numIDs; id++ {
-		bucketsToChoices[chooseBucketForUser(int64(id), bucketsToWeights)]++
+		choice := weightedChoiceForUser(int64(id), choices)
+		weightsToChoices[choice.weight()]++
 	}
-	for bucket, choices := range bucketsToChoices {
-		require.Equal(t, bucketsToWeights[bucket], choices)
+	for weight, timesChosen := range weightsToChoices {
+		require.Equal(t, weight, timesChosen)
 	}
 }

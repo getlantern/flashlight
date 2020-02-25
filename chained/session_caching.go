@@ -15,41 +15,46 @@ import (
 // We look up the client's geolocation to determine which browser to emulate.
 const geoLookupTimeout = 2 * time.Second
 
-type browserData struct {
+type browserChoice struct {
 	sessionTicketLifetime time.Duration
 }
 
-type regionalBrowserData struct {
-	browserData
+type weightedBrowserChoice struct {
+	browserChoice
 	marketShare float64
+}
+
+// Implements the weightedChoice interface.
+func (rbd weightedBrowserChoice) weight() int {
+	return int(rbd.marketShare * 100)
 }
 
 var (
 	// We treat Internet Explorer and Edge as the same thing below.
 
 	// https://github.com/getlantern/lantern-internal/issues/3315#issue-560602994
-	chrome     = browserData{30 * time.Minute}
-	safari     = browserData{24 * time.Hour}
-	firefox    = browserData{24 * time.Hour}
-	edge       = browserData{10 * time.Hour}
-	threeSixty = browserData{9 * time.Hour}
-	qq         = browserData{30 * time.Minute}
+	chrome     = browserChoice{30 * time.Minute}
+	safari     = browserChoice{24 * time.Hour}
+	firefox    = browserChoice{24 * time.Hour}
+	edge       = browserChoice{10 * time.Hour}
+	threeSixty = browserChoice{9 * time.Hour}
+	qq         = browserChoice{30 * time.Minute}
 
 	// https://gs.statcounter.com/browser-market-share#monthly-201910-201910-bar
-	globalBrowsers = []regionalBrowserData{
-		{chrome, 0.65},
-		{safari, 0.17},
-		{firefox, 0.04},
-		{edge, 0.04},
+	globalBrowserChoices = []weightedChoice{
+		weightedBrowserChoice{chrome, 0.65},
+		weightedBrowserChoice{safari, 0.17},
+		weightedBrowserChoice{firefox, 0.04},
+		weightedBrowserChoice{edge, 0.04},
 	}
 
 	// https://github.com/getlantern/lantern-internal/issues/3315#issuecomment-589253390
-	browsersByCountry = map[string][]regionalBrowserData{
-		"CN": []regionalBrowserData{
-			{edge, 0.36},
-			{threeSixty, 0.26},
-			{qq, 0.10},
-			{firefox, 0.03},
+	browserChoicesByCountry = map[string][]weightedChoice{
+		"CN": []weightedChoice{
+			weightedBrowserChoice{edge, 0.36},
+			weightedBrowserChoice{threeSixty, 0.26},
+			weightedBrowserChoice{qq, 0.10},
+			weightedBrowserChoice{firefox, 0.03},
 		},
 	}
 )
@@ -64,16 +69,12 @@ func chooseSessionTicketTTL(uc common.UserConfig) time.Duration {
 	if countryCode == "" {
 		log.Error("failed to retrieve country code; using default session ticket lifetime settings")
 	}
-	browsers, ok := browsersByCountry[countryCode]
+	choices, ok := browserChoicesByCountry[countryCode]
 	if !ok {
-		browsers = globalBrowsers
+		choices = globalBrowserChoices
 	}
-	browsersToWeights := map[int]int{}
-	for i, b := range browsers {
-		browsersToWeights[i] = int(b.marketShare * 100)
-	}
-	chosenBrowser := chooseBucketForUser(uc.GetUserID(), browsersToWeights)
-	return browsers[chosenBrowser].sessionTicketLifetime
+	choice := weightedChoiceForUser(uc.GetUserID(), choices)
+	return choice.(weightedBrowserChoice).sessionTicketLifetime
 }
 
 // expiringLRUSessionCache is a tls.ClientSessionCache implementation that uses an LRU caching
@@ -172,33 +173,31 @@ func (c *expiringLRUSessionCache) delete(elem *list.Element) {
 	delete(c.m, elem.Value.(*sessionCacheEntry).sessionKey)
 }
 
-// Choose a bucket for the user with the input user ID.
-//
-// The idea is to deterministically place users into buckets such that a given user is always placed
-// into the same bucket. The inputs must be the same every time to guarantee determinism.
-func chooseBucketForUser(userID int64, bucketsToWeights map[int]int) int {
-	type weightedBucket struct {
-		index, weight int
-	}
+type weightedChoice interface {
+	weight() int
+}
 
-	buckets := []weightedBucket{}
-	weightTotal := 0
-	for bucket, weight := range bucketsToWeights {
-		buckets = append(buckets, weightedBucket{bucket, weight})
-		weightTotal += weight
+// Makes a choice for the given user ID. This choice is deterministic given constant inputs.
+//
+// The total weight (the sum of c.weight() for all c in choices) cannot exceed the maximum assigned
+// user ID. Otherwise, proper distribution of users according to the weights cannot be guaranteed.
+func weightedChoiceForUser(userID int64, choices []weightedChoice) weightedChoice {
+	totalWeight := 0
+	for i := range choices {
+		totalWeight += choices[i].weight()
 	}
-	sort.Slice(buckets, func(i, j int) bool { return buckets[i].weight < buckets[j].weight })
+	sort.Slice(choices, func(i, j int) bool { return choices[i].weight() < choices[j].weight() })
 
 	if userID < 0 {
 		userID *= -1
 	}
-	choice := userID % int64(weightTotal)
-	for _, b := range buckets {
-		if choice < int64(b.weight) {
-			return b.index
+	choicePosition := userID % int64(totalWeight)
+	for i, b := range choices {
+		if choicePosition < int64(b.weight()) {
+			return choices[i]
 		}
-		choice -= int64(b.weight)
+		choicePosition -= int64(b.weight())
 	}
-	// Shouldn't be possible to reach this point unless bucketsToWeights is empty.
-	return 0
+	// Shouldn't be possible to reach this point unless choices is empty.
+	return nil
 }
