@@ -3,30 +3,31 @@ package chained
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestChooseBucketForUser(t *testing.T) {
+func TestChooseBrowserForUser(t *testing.T) {
 	const numIDs = 100
 
-	bucketsToWeights := map[int]int{
-		1: 40,
-		2: 30,
-		3: 20,
-		4: 10,
+	browsers := []browserMarketShare{
+		{chrome, .4},
+		{safari, .3},
+		{firefox, .2},
+		{edge, .1},
 	}
-	weightsTotal := 0
-	for _, weight := range bucketsToWeights {
-		weightsTotal += weight
+	weightsTotal := 0.0
+	for _, browser := range browsers {
+		weightsTotal += browser.marketShare
 	}
 	// Sanity check as the test won't work otherwise.
-	require.Equal(t, numIDs, weightsTotal)
+	assert.Equal(t, numIDs/100, weightsTotal)
 
-	bucketsToChoices := map[int]int{}
+	results := map[browser]int{}
 	for id := 0; id < numIDs; id++ {
-		bucketsToChoices[chooseBucketForUser(int64(id), bucketsToWeights)]++
+		results[chooseBrowserForUser(int64(id), browsers)]++
 	}
-	for bucket, choices := range bucketsToChoices {
-		require.Equal(t, bucketsToWeights[bucket], choices)
-	}
+	assert.Equal(t, 40, results[chrome])
+	assert.Equal(t, 30, results[safari])
+	assert.Equal(t, 20, results[firefox])
+	assert.Equal(t, 10, results[edge])
 }

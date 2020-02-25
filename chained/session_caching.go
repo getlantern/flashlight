@@ -15,12 +15,12 @@ import (
 // We look up the client's geolocation to determine which browser to emulate.
 const geoLookupTimeout = 2 * time.Second
 
-type browserData struct {
+type browser struct {
 	sessionTicketLifetime time.Duration
 }
 
-type regionalBrowserData struct {
-	browserData
+type browserMarketShare struct {
+	browser
 	marketShare float64
 }
 
@@ -28,15 +28,15 @@ var (
 	// We treat Internet Explorer and Edge as the same thing below.
 
 	// https://github.com/getlantern/lantern-internal/issues/3315#issue-560602994
-	chrome     = browserData{30 * time.Minute}
-	safari     = browserData{24 * time.Hour}
-	firefox    = browserData{24 * time.Hour}
-	edge       = browserData{10 * time.Hour}
-	threeSixty = browserData{9 * time.Hour}
-	qq         = browserData{30 * time.Minute}
+	chrome     = browser{30 * time.Minute}
+	safari     = browser{24 * time.Hour}
+	firefox    = browser{24 * time.Hour}
+	edge       = browser{10 * time.Hour}
+	threeSixty = browser{9 * time.Hour}
+	qq         = browser{30 * time.Minute}
 
 	// https://gs.statcounter.com/browser-market-share#monthly-201910-201910-bar
-	globalBrowsers = []regionalBrowserData{
+	globalBrowsers = []browserMarketShare{
 		{chrome, 0.65},
 		{safari, 0.17},
 		{firefox, 0.04},
@@ -44,8 +44,8 @@ var (
 	}
 
 	// https://github.com/getlantern/lantern-internal/issues/3315#issuecomment-589253390
-	browsersByCountry = map[string][]regionalBrowserData{
-		"CN": []regionalBrowserData{
+	browsersByCountry = map[string][]browserMarketShare{
+		"CN": []browserMarketShare{
 			{edge, 0.36},
 			{threeSixty, 0.26},
 			{qq, 0.10},
@@ -53,6 +53,14 @@ var (
 		},
 	}
 )
+
+func init() {
+	// sort browsers in preparation for chooseBrowserForUser
+	sortBrowsers(globalBrowsers)
+	for _, browsers := range browsersByCountry {
+		sortBrowsers(browsers)
+	}
+}
 
 // Chooses a TTL for session tickets for this client. This decision is made using data on market
 // share for the top 4 browsers and the session ticket lifetimes enforced by those browsers.
@@ -68,12 +76,7 @@ func chooseSessionTicketTTL(uc common.UserConfig) time.Duration {
 	if !ok {
 		browsers = globalBrowsers
 	}
-	browsersToWeights := map[int]int{}
-	for i, b := range browsers {
-		browsersToWeights[i] = int(b.marketShare * 100)
-	}
-	chosenBrowser := chooseBucketForUser(uc.GetUserID(), browsersToWeights)
-	return browsers[chosenBrowser].sessionTicketLifetime
+	return chooseBrowserForUser(uc.GetUserID(), browsers).sessionTicketLifetime
 }
 
 // expiringLRUSessionCache is a tls.ClientSessionCache implementation that uses an LRU caching
@@ -172,33 +175,29 @@ func (c *expiringLRUSessionCache) delete(elem *list.Element) {
 	delete(c.m, elem.Value.(*sessionCacheEntry).sessionKey)
 }
 
-// Choose a bucket for the user with the input user ID.
+// Choose a browser for the user with the input user ID.
 //
 // The idea is to deterministically place users into buckets such that a given user is always placed
 // into the same bucket. The inputs must be the same every time to guarantee determinism.
-func chooseBucketForUser(userID int64, bucketsToWeights map[int]int) int {
-	type weightedBucket struct {
-		index, weight int
+func chooseBrowserForUser(userID int64, browsers []browserMarketShare) browser {
+	marketTotal := 0.0
+	for _, browser := range browsers {
+		marketTotal += browser.marketShare
 	}
-
-	buckets := []weightedBucket{}
-	weightTotal := 0
-	for bucket, weight := range bucketsToWeights {
-		buckets = append(buckets, weightedBucket{bucket, weight})
-		weightTotal += weight
-	}
-	sort.Slice(buckets, func(i, j int) bool { return buckets[i].weight < buckets[j].weight })
 
 	if userID < 0 {
 		userID *= -1
 	}
-	choice := userID % int64(weightTotal)
-	for _, b := range buckets {
-		if choice < int64(b.weight) {
-			return b.index
+	choice := userID % int64(marketTotal*100)
+	for _, browser := range browsers {
+		if choice < int64(browser.marketShare*100) {
+			return browser.browser
 		}
-		choice -= int64(b.weight)
+		choice -= int64(browser.marketShare * 100)
 	}
-	// Shouldn't be possible to reach this point unless bucketsToWeights is empty.
-	return 0
+	return browsers[0].browser
+}
+
+func sortBrowsers(browsers []browserMarketShare) {
+	sort.Slice(browsers, func(i, j int) bool { return browsers[i].marketShare < browsers[j].marketShare })
 }
