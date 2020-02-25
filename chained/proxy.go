@@ -1010,12 +1010,11 @@ func tlsConfigForProxy(s *ChainedServerInfo, uc common.UserConfig) (
 
 	var sessionCache tls.ClientSessionCache
 	// sessionTTL := chooseSessionTicketTTL(uc)
+	sessionTTL := time.Hour
 	if s.TLSClientSessionCacheSize == 0 {
-		sessionCache = tls.NewLRUClientSessionCache(1000)
-		// sessionCache = newExpiringLRUSessionCache(1000, sessionTTL)
+		sessionCache = newExpiringLRUSessionCache(1000, sessionTTL)
 	} else if s.TLSClientSessionCacheSize > 0 {
-		sessionCache = tls.NewLRUClientSessionCache(s.TLSClientSessionCacheSize)
-		// sessionCache = newExpiringLRUSessionCache(s.TLSClientSessionCacheSize, sessionTTL)
+		sessionCache = newExpiringLRUSessionCache(s.TLSClientSessionCacheSize, sessionTTL)
 	}
 	cipherSuites := orderedCipherSuitesFromConfig(s)
 
