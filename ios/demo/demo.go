@@ -18,19 +18,19 @@
 // To have the demo program handle all your internet traffic, run:
 //
 // sudo route delete default
-// sudo route add default 10.0.0.2
+// sudo route add default gw 10.0.0.2 dev tun0
 //
 // If using a proxies.yaml, you'll also need to manually set up a direct route
 // for proxy traffic via the default gateway, like so:
 //
-// sudo route add 67.205.172.79 192.168.1.1
+// sudo route add 67.205.172.79 gw 192.168.1.1
 //
 // Now your network traffic will route through here to your proxy.
 //
 // When you're finished, you can fix your routing table with:
 //
 // sudo route delete default
-// sudo route add default 102.168.1.1
+// sudo route add default gw 102.168.1.1
 //
 // If you added a manual route for the proxy, you'll want to remove that too:
 //
