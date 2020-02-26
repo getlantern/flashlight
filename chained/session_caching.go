@@ -63,7 +63,7 @@ func chooseSessionTicketTTL(uc common.UserConfig) time.Duration {
 	log.Debugf("[%v] entering chooseSessionTicketTTL; looking up country", time.Now())
 
 	countryCode := geolookup.GetCountry(geoLookupTimeout)
-	log.Debug("[%v] completed country code lookup", time.Now())
+	log.Debugf("[%v] completed country code lookup", time.Now())
 	if countryCode == "" {
 		log.Error("failed to retrieve country code; using default session ticket lifetime settings")
 	}
