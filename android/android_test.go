@@ -76,12 +76,13 @@ func TestProxying(t *testing.T) {
 			newResult, err := Start("testapp", "en_US", testSettings{}, testSession{})
 			if assert.NoError(t, err, "Should have been able to start lantern twice") {
 				if assert.Equal(t, result.HTTPAddr, newResult.HTTPAddr, "2nd start should have resulted in the same address") {
-					log.Debug("android_test: testing proxying")
+					log.Debugf("[%v] android_test: testing proxying", time.Now())
 					err := testProxiedRequest(helper, result.HTTPAddr, false)
 					if assert.NoError(t, err, "Proxying request via HTTP should have worked") {
 						err := testProxiedRequest(helper, result.SOCKS5Addr, true)
 						assert.NoError(t, err, "Proxying request via SOCKS should have worked")
 					} else {
+						log.Debugf("[%v] test failed", time.Now())
 						log.Debug("sleeping to allow other log messages to come through")
 						time.Sleep(10 * time.Second)
 					}
