@@ -4,7 +4,11 @@ package integrationtest
 
 import (
 	"compress/gzip"
+	"crypto/tls"
+	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -41,12 +45,18 @@ const (
 	obfs4SubDir = ".obfs4"
 
 	oquicKey = "tAqXDihxfJDqyHy35k2NhImetkzKmoC7MFEELrYi6LI="
+
+	tlsmasqSNI          = "test.com"
+	tlsmasqSuites       = "0xcca9,0x1301" // TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_AES_128_GCM_SHA256
+	tlsmasqMinVersion   = "0x0303"        // TLS 1.2
+	tlsmasqServerSecret = "d0cd0e2e50eb2ac7cb1dc2c94d1bc8871e48369970052ff866d1e7e876e77a13246980057f70d64a2bdffb545330279f69bce5fd"
 )
 
 var (
-	log             = golog.LoggerFor("testsupport")
-	globalCfg       []byte
-	proxiesTemplate []byte
+	log               = golog.LoggerFor("testsupport")
+	globalCfg         []byte
+	proxiesTemplate   []byte
+	tlsmasqOriginAddr string
 )
 
 func init() {
@@ -80,9 +90,11 @@ type Helper struct {
 	QUIC0ProxyServerAddr        string
 	OQUICProxyServerAddr        string
 	WSSProxyServerAddr          string
+	TLSMasqProxyServerAddr      string
 	HTTPServerAddr              string
 	HTTPSServerAddr             string
 	ConfigServerAddr            string
+	tlsMasqOriginAddr           string
 	listeners                   []net.Listener
 }
 
@@ -91,7 +103,7 @@ type Helper struct {
 // also enables ForceProxying on the client package to make sure even localhost
 // origins are served through the proxy. Make sure to close the Helper with
 // Close() when finished with the test.
-func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string, quic0Addr string, oquicAddr string, wssAddr string, httpsUTPAddr string, obfs4UTPAddr string, lampshadeUTPAddr string) (*Helper, error) {
+func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string, quic0Addr string, oquicAddr string, wssAddr string, tlsmasqAddr string, httpsUTPAddr string, obfs4UTPAddr string, lampshadeUTPAddr string) (*Helper, error) {
 	ConfigDir, err := ioutil.TempDir("", "integrationtest_helper")
 	log.Debugf("ConfigDir is %v", ConfigDir)
 	if err != nil {
@@ -111,6 +123,7 @@ func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr s
 		QUIC0ProxyServerAddr:        quic0Addr,
 		OQUICProxyServerAddr:        oquicAddr,
 		WSSProxyServerAddr:          wssAddr,
+		TLSMasqProxyServerAddr:      tlsmasqAddr,
 	}
 	helper.SetProtocol("https")
 	client.ForceProxying()
@@ -120,6 +133,13 @@ func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr s
 	if err != nil {
 		helper.Close()
 		return nil, err
+	}
+
+	// Start an origin server for tlsmasq to masquerade as.
+	err = helper.startTLSMasqOrigin()
+	if err != nil {
+		helper.Close()
+		return nil, fmt.Errorf("failed to start tlsmasq origin: %v", err)
 	}
 
 	// This is the remote proxy server
@@ -211,6 +231,7 @@ func (helper *Helper) startProxyServer() error {
 		QUICIETFAddr:     helper.QUICIETFProxyServerAddr,
 		QUIC0Addr:        helper.QUIC0ProxyServerAddr,
 		WSSAddr:          helper.WSSProxyServerAddr,
+		TLSMasqAddr:      helper.TLSMasqProxyServerAddr,
 
 		OQUICAddr:              helper.OQUICProxyServerAddr,
 		OQUICKey:               oquicKey,
@@ -218,6 +239,9 @@ func (helper *Helper) startProxyServer() error {
 		OQUICAggressivePadding: uint64(oqDefaults.AggressivePadding),
 		OQUICMaxPaddingHint:    uint64(oqDefaults.MaxPaddingHint),
 		OQUICMinPadded:         uint64(oqDefaults.MinPadded),
+
+		TLSMasqSecret:     tlsmasqServerSecret,
+		TLSMasqOriginAddr: helper.tlsMasqOriginAddr,
 
 		Token:       Token,
 		KeyFile:     KeyFile,
@@ -427,6 +451,15 @@ func (helper *Helper) buildProxies(proto string) ([]byte, error) {
 		} else if proto == "utplampshade" {
 			srv.Addr = helper.LampshadeUTPProxyServerAddr
 			srv.PluggableTransport = "utplampshade"
+		} else if proto == "tlsmasq" {
+			srv.Addr = helper.TLSMasqProxyServerAddr
+			srv.PluggableTransport = "tlsmasq"
+			srv.PluggableTransportSettings = map[string]string{
+				"tlsmasq_sni":           tlsmasqSNI,
+				"tlsmasq_suites":        tlsmasqSuites,
+				"tlsmasq_tlsminversion": tlsmasqMinVersion,
+				"tlsmasq_secret":        tlsmasqServerSecret,
+			}
 		} else {
 			srv.Addr = helper.HTTPSProxyServerAddr
 		}
@@ -441,6 +474,124 @@ func (helper *Helper) buildProxies(proto string) ([]byte, error) {
 	}
 
 	return out, nil
+}
+
+func (helper *Helper) startTLSMasqOrigin() error {
+	// Self-signed cert, common name: test.com
+	var (
+		certPem = []byte(`-----BEGIN CERTIFICATE-----
+MIIC/jCCAeYCCQCfzdJ86xOcUjANBgkqhkiG9w0BAQsFADBBMRYwFAYDVQQKDA1J
+bm5vdmF0ZSBMYWJzMRQwEgYDVQQLDAtFbmdpbmVlcmluZzERMA8GA1UEAwwIdGVz
+dC5jb20wHhcNMjAwMTIyMTYyODQ5WhcNMzAwMTE5MTYyODQ5WjBBMRYwFAYDVQQK
+DA1Jbm5vdmF0ZSBMYWJzMRQwEgYDVQQLDAtFbmdpbmVlcmluZzERMA8GA1UEAwwI
+dGVzdC5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCo45LvJ5dS
+2Cx6WtfNuCb5IN5fR3dq9NZF9l4lToV39sWfSA9P87+yDvl5644qwHR5QTADNBc2
+ZP8D/2RYC4jb3piVsx7D+ylJ2ZWyi9YPzLJOYK4USp9bLwGB92upi5ahOBMkeXJG
+4W+DJ2O+IDlz23cr/CBazlwxr3aq17uT4I1OfR9xqWqRBmh9BdXLzhxX4naynPYc
+KLecnp/LZgR7xAVG9KjHIVpLOcx+85xeDf2JLIGf3RfRLKVL90UzXRuGdSjwm3b/
+mX60r3kRz0iZO+DEWIt8QIsX31NUcSUyerC/2DrQDQikW4ingL2r16qhHyrg6Tr0
+LK4LrZW23weZAgMBAAEwDQYJKoZIhvcNAQELBQADggEBAJwlrX5omzSKdH1PWPWC
+BfiH8CdK4lypoLH3PCPcRm6W5PvMW6qZWIN6fzrf/wn0p6wzo3LB+P4AXW6aduOj
+oOGXOeYjgqLN+xP5iEZAqrmFgDOJLUO0f465rsPY69LoCoGWXKnPZ2vqasGbfXF6
+KPKXirGGkAE41isKSLh1V6tyWSNWZYgcKccITyMMm75CDcZcChwApfZicw/NMU0W
+O44i+Ht6wTAa0UJd9fnezE5FjJTqZg1n15HhhUb83ymxEmcoGUfiJ/PYcQSXDE3E
+9mXD1VLPCzTX0QIQqo5McdHa385UokQya4BneK4MfpkHa8lUAYwWceGL02XgxFF1
+/GE=
+-----END CERTIFICATE-----`)
+		keyPem = []byte(`-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCo45LvJ5dS2Cx6
+WtfNuCb5IN5fR3dq9NZF9l4lToV39sWfSA9P87+yDvl5644qwHR5QTADNBc2ZP8D
+/2RYC4jb3piVsx7D+ylJ2ZWyi9YPzLJOYK4USp9bLwGB92upi5ahOBMkeXJG4W+D
+J2O+IDlz23cr/CBazlwxr3aq17uT4I1OfR9xqWqRBmh9BdXLzhxX4naynPYcKLec
+np/LZgR7xAVG9KjHIVpLOcx+85xeDf2JLIGf3RfRLKVL90UzXRuGdSjwm3b/mX60
+r3kRz0iZO+DEWIt8QIsX31NUcSUyerC/2DrQDQikW4ingL2r16qhHyrg6Tr0LK4L
+rZW23weZAgMBAAECggEAS+5tTFrXfSa18JjRN6uY0h9F+z5tYUgM4k2fDFTeSw5G
+0ZMbV032nL6AyaDvPSdj9nQpevc7jHgh85Eqcy9Ua84LehqbNW/Bo3NRC4I1Tssw
+S27KNVNLjDp5Cg7Md+DLa1aDvL1hdJ68fRIDlSJ10jIUxVDI1yq6ZphF2Q+/RP9Q
+W4U306ckXJq3w74lSXrQ00i4FER8B2FDZihmpclmN42tvgJBjVR792ZSEldg7Pa+
+0QY07UM7sGX12dSmmRPSof690wNRg55slYq3YQ6NBClsiiNqj2sS3rYkBMvh07BM
+BAQL1ybFeHyILcrq5H3FOupLK/FJErCDc8HhaO26lQKBgQDWFMMrbk2TP2Ih5DUL
+96i1KLdcIGpVrnMYe9k5fGGSXpqQUEvagmYFLxFMW5grYgGxkJFGt/pkpKCzcyQk
+kpOZhn5H4t6/WpjkJT3cO+KzNa5EHd0rvPSq2le9pEJSTU7dTRGkclrGpbeWUhH0
+Re7+hswAwSPuM7XHIGX3sh7njwKBgQDJ9XdfNc2a8Ac7ZMy2nQ2IohwJAOYbQYBA
+XrqaECYLFIApzdDakx33xdrmxpAAyjcHEQC6GRptSeqDsK43R+BaD7r3YnkBS6uI
++/dncIGsd6mmzVGjXpldORk4TGqTi0XFj8+4UWxUQ45H7YLwA49/jVXvczwnv6j4
+qH13OiFKVwKBgQDGR9yssTEwnJgrg86OEwgzIk8SCQPz7+uyVaNQVx+YDf9igrx+
+2h/b1UhUTNGX/OJMr/WeZnCIHuKo0pA7P3dtzt/PfRWKbkMFrGirPtwt2B5cAL0E
+8bI7PJffke/Lgsb0uZkJktD5BCwSElmGwe8l13vDhx/cVBCdKijHTjbJiQKBgCu7
+7E3B6PRUZjyGZ45kFDoyYL/SYgIk/RDzcpVKSfK8TcS/vSqYETVGs1CmTyjcoW32
+UKH8LazdBNvfttphxkO6hFJuEKYnLM5NQhY0VuBySVrFu5gVNEDrzHpUkf/BeSp/
+KgxQFZVpy7XnySMQolKM2L8xxSUWbBDs676V5/+hAoGAJDpng/G6J4WSaL0ilaLM
+gnvrmkW4QsmF+ijROgFOy+I8RpWlmMJkwJXRCj9N9ZC6rqaMSqahxVBmajOter4g
+rk3unSMy6rlHWxyOpqStPWjnZlNz+1R7a6dBD+L2tY5jNJCGL8L7PejgAZWd/uwK
+o91tzH1xsfoYsMnt6AP4cIQ=
+-----END PRIVATE KEY-----`)
+	)
+
+	decodeUint16 := func(s string) (uint16, error) {
+		b, err := hex.DecodeString(strings.TrimPrefix(s, "0x"))
+		if err != nil {
+			return 0, err
+		}
+		return binary.BigEndian.Uint16(b), nil
+	}
+
+	// We need to ensure the negotiated cipher suite and TLS version are acceptable to the dialer.
+	suites := []uint16{}
+	suiteStrings := strings.Split(tlsmasqSuites, ",")
+	if len(suiteStrings) == 0 {
+		return errors.New("no cipher suites specified")
+	}
+	for _, s := range suiteStrings {
+		suite, err := decodeUint16(s)
+		if err != nil {
+			return fmt.Errorf("bad cipher string '%s': %v", s, err)
+		}
+		suites = append(suites, suite)
+	}
+	versStr := tlsmasqMinVersion
+	minVersion, err := decodeUint16(versStr)
+	if err != nil {
+		return fmt.Errorf("bad TLS version string '%s': %v", versStr, err)
+	}
+
+	cert, err := tls.X509KeyPair(certPem, keyPem)
+	if err != nil {
+		return fmt.Errorf("failed to parse certificate: %v", err)
+	}
+	l, err := tls.Listen("tcp", "", &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		CipherSuites: suites,
+		MinVersion:   minVersion,
+	})
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		for {
+			conn, err := l.Accept()
+			if err != nil && strings.Contains(err.Error(), "use of closed network connection") {
+				// Unexported, but stable error: https://golang.org/src/internal/poll/fd.go#L16
+				return
+			}
+			if err != nil {
+				log.Debugf("tlsmasq origin server: accept failure: %v", err)
+				continue
+			}
+			go func(c net.Conn) {
+				// Force the handshake so that it can be proxied.
+				if err := c.(*tls.Conn).Handshake(); err != nil {
+					log.Debugf("tlsmasq origin server: handshake failure: %v", err)
+					return
+				}
+			}(conn)
+		}
+	}()
+
+	helper.tlsMasqOriginAddr = l.Addr().String()
+	helper.listeners = append(helper.listeners, l)
+	return nil
 }
 
 var kcpConf = map[string]interface{}{

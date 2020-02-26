@@ -346,8 +346,8 @@ github.com/getlantern/proxy v0.0.0-20191025190912-b5f45407d9f2 h1:EwBVuJWzA68ceS
 github.com/getlantern/proxy v0.0.0-20191025190912-b5f45407d9f2/go.mod h1:bxNylSVdAlc+bv0245lIdf09a7N/2u3DeLHI73y4sQQ=
 github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12 h1:ofbl3nOfcM7CgGyInmuF79injlLFIKsPRFg9bpz17ow=
 github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12/go.mod h1:0q8eYDExExu4OEUGbKFbitxZ3UXbGHzewQ9o/ywIJaE=
-github.com/getlantern/quic-go v0.0.0-20200129225515-f0142adfc7dd h1:4k+iwU6wUjbB81693LVTf3UGoHcT4fWShJfJHX3vfKo=
-github.com/getlantern/quic-go v0.0.0-20200129225515-f0142adfc7dd/go.mod h1:eQYBSwPmn3RPkQFvquHn6a0mFowpyfauR/UnGpEgn+w=
+github.com/getlantern/quic-go v0.7.1-0.20200211213545-301421f7c3c9 h1:Dzcr/8ySzz8ZiodqMLA7wneoKjjtzdFBaJTfIfPuOqM=
+github.com/getlantern/quic-go v0.7.1-0.20200211213545-301421f7c3c9/go.mod h1:dqgJKGJLaqeWbytE+WuqL0IJGLBtvx/gNinkUOuufg8=
 github.com/getlantern/quic0 v0.0.0-20200121154153-8b18c2ba09f9 h1:2mUoAxwY496WRXnj0R5xce0tq1xuKDeREhgp62fEzig=
 github.com/getlantern/quic0 v0.0.0-20200121154153-8b18c2ba09f9/go.mod h1:UygfmMF7wR6KkIbQtL1ceCfi5UC/9JsnCyCS8WzU3nY=
 github.com/getlantern/quicwrapper v0.0.0-20200129232925-8ef70253fcae h1:Is+Bvq12YUkVfIYDRr5OAtv1NL3Is57djELuMXI7HjQ=
@@ -381,6 +381,8 @@ github.com/getlantern/tlsdialer v0.0.0-20200205115148-9bde2ed72c94 h1:kX5zTm9JqE
 github.com/getlantern/tlsdialer v0.0.0-20200205115148-9bde2ed72c94/go.mod h1:yTOVvHTvYlXJo8jSSOV+kuv/tya5i0eIILe8jjsPHe8=
 github.com/getlantern/tlsmasq v0.1.0 h1:Z7coLA8/gxYQNM3U5Iwr5KuJUx/V4eb+myw0J12c8pw=
 github.com/getlantern/tlsmasq v0.1.0/go.mod h1:MKzh5QPCD33MjPDUn1sTHkoUXFjtShpIC8e+rlGCDRc=
+github.com/getlantern/tlsmasq v0.2.0 h1:+spFyiQWSh5TOklL4gsS3DyEXvSkZ4OoHfzZkkCERyo=
+github.com/getlantern/tlsmasq v0.2.0/go.mod h1:MKzh5QPCD33MjPDUn1sTHkoUXFjtShpIC8e+rlGCDRc=
 github.com/getlantern/tlsredis v0.0.0-20180308045249-5d4ed6dd3836 h1:Qx9tRhqZdhF0RBxHe2OVE1OJ30ipOCPfMraDrZED3bc=
 github.com/getlantern/tlsredis v0.0.0-20180308045249-5d4ed6dd3836/go.mod h1:1ZJE0mXEdPyyuF1daUTDBo2nVWB/6nuZy7IcNmRnHrc=
 github.com/getlantern/tlsresumption v0.0.0-20200205020452-74fc6ea4e074 h1:jTMIPFsft81lFB9b9IOJLrQprlNjsITjlLZ8J1muva0=
@@ -1141,6 +1143,8 @@ golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20200212091648-12a6c2dcc1e4/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200217220822-9197077df867 h1:JoRuNIf+rpHl+VhScRQQvzbHed86tKkqwPMV34T8myw=
 golang.org/x/sys v0.0.0-20200217220822-9197077df867/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5 h1:LfCXLvNmTYH9kEmVgqbnsWfruoXZIrh4YBgqVHtDvw0=
+golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=

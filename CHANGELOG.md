@@ -1,5 +1,24 @@
 # Changelog
 
+## [5.8.3](https://github.com/getlantern/flashlight/tree/5.8.3) (2020-02-12)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.8.2...5.8.3)
+
+**Merged pull requests:**
+
+- fix call order for concurrent access to session states [\#757](https://github.com/getlantern/flashlight/pull/757) ([myleshorton](https://github.com/myleshorton))
+- Lock session states on init [\#756](https://github.com/getlantern/flashlight/pull/756) ([myleshorton](https://github.com/myleshorton))
+- Exit if lantern is already running [\#755](https://github.com/getlantern/flashlight/pull/755) ([myleshorton](https://github.com/myleshorton))
+
+## [5.8.2](https://github.com/getlantern/flashlight/tree/5.8.2) (2020-02-11)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.8.1...5.8.2)
+
+**Merged pull requests:**
+
+- Updated to latest golang.org/x/sys and quic-go [\#753](https://github.com/getlantern/flashlight/pull/753) ([oxtoacart](https://github.com/oxtoacart))
+- Minor sentry upgrade [\#752](https://github.com/getlantern/flashlight/pull/752) ([myleshorton](https://github.com/myleshorton))
+
 ## [5.8.1](https://github.com/getlantern/flashlight/tree/5.8.1) (2020-02-07)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.8.0...5.8.1)
@@ -69,7 +88,6 @@
 - Support borda reporting on iOS [\#707](https://github.com/getlantern/flashlight/pull/707) ([oxtoacart](https://github.com/oxtoacart))
 - close hasSucceedingDialer when closing balancer [\#706](https://github.com/getlantern/flashlight/pull/706) ([joesis](https://github.com/joesis))
 - Client-side packet capture [\#682](https://github.com/getlantern/flashlight/pull/682) ([hwh33](https://github.com/hwh33))
-- Added standalone flag [\#679](https://github.com/getlantern/flashlight/pull/679) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [5.6.4](https://github.com/getlantern/flashlight/tree/5.6.4) (2019-10-29)
 
@@ -127,7 +145,7 @@
 - Update to latest utls fork [\#684](https://github.com/getlantern/flashlight/pull/684) ([myleshorton](https://github.com/myleshorton))
 - allow hitProxy.py to run for multiple proxies [\#681](https://github.com/getlantern/flashlight/pull/681) ([joesis](https://github.com/joesis))
 - make QUIC honor tlsservernameindicator config option [\#680](https://github.com/getlantern/flashlight/pull/680) ([forkner](https://github.com/forkner))
-- Remove embedded proxies, update global, tweak script [\#676](https://github.com/getlantern/flashlight/pull/676) ([myleshorton](https://github.com/myleshorton))
+- Added standalone flag [\#679](https://github.com/getlantern/flashlight/pull/679) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [5.5.8](https://github.com/getlantern/flashlight/tree/5.5.8) (2019-09-24)
 
@@ -136,6 +154,7 @@
 **Merged pull requests:**
 
 - print top stacks if the number of goroutines exceeds 800 [\#677](https://github.com/getlantern/flashlight/pull/677) ([joesis](https://github.com/joesis))
+- Remove embedded proxies, update global, tweak script [\#676](https://github.com/getlantern/flashlight/pull/676) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.5.7](https://github.com/getlantern/flashlight/tree/5.5.7) (2019-09-19)
 
@@ -194,18 +213,10 @@
 - Refactored AdSettings for Tapsell [\#654](https://github.com/getlantern/flashlight/pull/654) ([oxtoacart](https://github.com/oxtoacart))
 - Update to use the latest golog [\#652](https://github.com/getlantern/flashlight/pull/652) ([joesis](https://github.com/joesis))
 - bumps zip file size limit to ensure all log files are sent [\#649](https://github.com/getlantern/flashlight/pull/649) ([tomalley104](https://github.com/tomalley104))
-- Use local cache to avoid redis failure with VPN [\#648](https://github.com/getlantern/flashlight/pull/648) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.5.1](https://github.com/getlantern/flashlight/tree/5.5.1) (2019-07-30)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.0...5.5.1)
-
-**Merged pull requests:**
-
-- Assume transports can handle context correctly [\#646](https://github.com/getlantern/flashlight/pull/646) ([joesis](https://github.com/joesis))
-- Allow specifying client country when using runAsUser [\#645](https://github.com/getlantern/flashlight/pull/645) ([oxtoacart](https://github.com/oxtoacart))
-- Update to latest quicwrapper [\#644](https://github.com/getlantern/flashlight/pull/644) ([joesis](https://github.com/joesis))
-- Uniformly report est\_rtt in milliseconds [\#643](https://github.com/getlantern/flashlight/pull/643) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [5.5.0](https://github.com/getlantern/flashlight/tree/5.5.0) (2019-07-08)
 

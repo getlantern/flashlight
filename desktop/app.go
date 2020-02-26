@@ -301,7 +301,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			if showErr := app.showExistingUI(uiaddr); showErr == nil {
 				log.Debug("Lantern already running, showing existing UI")
 				app.Exit(nil)
-				return false
+				os.Exit(0)
 			}
 		}
 
@@ -324,6 +324,18 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			&ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
 		); err != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
+		}
+
+		if app.ShouldShowUI() {
+			go func() {
+				if err := configureSystemTray(app); err != nil {
+					log.Errorf("Unable to configure system tray: %s", err)
+					return
+				}
+				app.OnSettingChange(SNLanguage, func(lang interface{}) {
+					refreshSystray(lang.(string))
+				})
+			}()
 		}
 
 		if e := settings.StartService(app.ws); e != nil {
