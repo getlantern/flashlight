@@ -60,7 +60,10 @@ var (
 // If necessary, we use region-specific market share figures. This is based on the client's
 // geolocation and thus this function may block for a period while geolocation is determined.
 func chooseSessionTicketTTL(uc common.UserConfig) time.Duration {
+	log.Debug("entering chooseSessionTicketTTL; looking up country")
+
 	countryCode := geolookup.GetCountry(geoLookupTimeout)
+	log.Debug("completed country code lookup")
 	if countryCode == "" {
 		log.Error("failed to retrieve country code; using default session ticket lifetime settings")
 	}

@@ -13,7 +13,6 @@ import (
 
 	"golang.org/x/net/proxy"
 
-	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/integrationtest"
 
 	"github.com/stretchr/testify/assert"
@@ -64,10 +63,6 @@ func (c testSession) SerializedInternalHeaders() string {
 }
 
 func TestProxying(t *testing.T) {
-
-	// debugging
-	geolookup.GetCountry(5 * time.Second)
-
 	listenPort := 24000
 	nextListenAddr := func() string {
 		listenPort++
@@ -81,10 +76,14 @@ func TestProxying(t *testing.T) {
 			newResult, err := Start("testapp", "en_US", testSettings{}, testSession{})
 			if assert.NoError(t, err, "Should have been able to start lantern twice") {
 				if assert.Equal(t, result.HTTPAddr, newResult.HTTPAddr, "2nd start should have resulted in the same address") {
+					log.Debug("android_test: testing proxying")
 					err := testProxiedRequest(helper, result.HTTPAddr, false)
 					if assert.NoError(t, err, "Proxying request via HTTP should have worked") {
 						err := testProxiedRequest(helper, result.SOCKS5Addr, true)
 						assert.NoError(t, err, "Proxying request via SOCKS should have worked")
+					} else {
+						log.Debug("sleeping to allow other log messages to come through")
+						time.Sleep(10 * time.Second)
 					}
 				}
 			}
