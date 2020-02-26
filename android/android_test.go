@@ -13,6 +13,7 @@ import (
 
 	"golang.org/x/net/proxy"
 
+	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/integrationtest"
 
 	"github.com/stretchr/testify/assert"
@@ -63,6 +64,9 @@ func (c testSession) SerializedInternalHeaders() string {
 }
 
 func TestProxying(t *testing.T) {
+
+	// debugging
+	geolookup.GetCountry(5 * time.Second)
 
 	listenPort := 24000
 	nextListenAddr := func() string {

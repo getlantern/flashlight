@@ -1009,8 +1009,7 @@ func tlsConfigForProxy(s *ChainedServerInfo, uc common.UserConfig) (
 	*tls.Config, tls.ClientHelloID, *tls.ClientSessionState) {
 
 	var sessionCache tls.ClientSessionCache
-	// sessionTTL := chooseSessionTicketTTL(uc)
-	sessionTTL := time.Hour
+	sessionTTL := chooseSessionTicketTTL(uc)
 	if s.TLSClientSessionCacheSize == 0 {
 		sessionCache = newExpiringLRUSessionCache(1000, sessionTTL)
 	} else if s.TLSClientSessionCacheSize > 0 {
