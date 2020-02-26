@@ -3,11 +3,11 @@ package chained
 import (
 	"bytes"
 	"container/list"
-	"sort"
 	"sync"
 	"time"
 
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/deterministic"
 	"github.com/getlantern/flashlight/geolookup"
 	tls "github.com/refraction-networking/utls"
 )
@@ -24,8 +24,8 @@ type weightedBrowserChoice struct {
 	marketShare float64
 }
 
-// Implements the weightedChoice interface.
-func (rbd weightedBrowserChoice) weight() int {
+// Implements the deterministic.WeightedChoice interface.
+func (rbd weightedBrowserChoice) Weight() int {
 	return int(rbd.marketShare * 100)
 }
 
@@ -41,7 +41,7 @@ var (
 	qq         = browserChoice{30 * time.Minute}
 
 	// https://gs.statcounter.com/browser-market-share#monthly-201910-201910-bar
-	globalBrowserChoices = []weightedChoice{
+	globalBrowserChoices = []deterministic.WeightedChoice{
 		weightedBrowserChoice{chrome, 0.65},
 		weightedBrowserChoice{safari, 0.17},
 		weightedBrowserChoice{firefox, 0.04},
@@ -49,8 +49,8 @@ var (
 	}
 
 	// https://github.com/getlantern/lantern-internal/issues/3315#issuecomment-589253390
-	browserChoicesByCountry = map[string][]weightedChoice{
-		"CN": []weightedChoice{
+	browserChoicesByCountry = map[string][]deterministic.WeightedChoice{
+		"CN": []deterministic.WeightedChoice{
 			weightedBrowserChoice{edge, 0.36},
 			weightedBrowserChoice{threeSixty, 0.26},
 			weightedBrowserChoice{qq, 0.10},
@@ -73,7 +73,7 @@ func chooseSessionTicketTTL(uc common.UserConfig) time.Duration {
 	if !ok {
 		choices = globalBrowserChoices
 	}
-	choice := weightedChoiceForUser(uc.GetUserID(), choices)
+	choice := deterministic.MakeWeightedChoice(uc.GetUserID(), choices)
 	return choice.(weightedBrowserChoice).sessionTicketLifetime
 }
 
@@ -171,33 +171,4 @@ func (c *expiringLRUSessionCache) Get(sessionKey string) (*tls.ClientSessionStat
 func (c *expiringLRUSessionCache) delete(elem *list.Element) {
 	c.q.Remove(elem)
 	delete(c.m, elem.Value.(*sessionCacheEntry).sessionKey)
-}
-
-type weightedChoice interface {
-	weight() int
-}
-
-// Makes a choice for the given user ID. This choice is deterministic given constant inputs.
-//
-// The total weight (the sum of c.weight() for all c in choices) cannot exceed the maximum assigned
-// user ID. Otherwise, proper distribution of users according to the weights cannot be guaranteed.
-func weightedChoiceForUser(userID int64, choices []weightedChoice) weightedChoice {
-	totalWeight := 0
-	for i := range choices {
-		totalWeight += choices[i].weight()
-	}
-	sort.Slice(choices, func(i, j int) bool { return choices[i].weight() < choices[j].weight() })
-
-	if userID < 0 {
-		userID *= -1
-	}
-	choicePosition := userID % int64(totalWeight)
-	for i, b := range choices {
-		if choicePosition < int64(b.weight()) {
-			return choices[i]
-		}
-		choicePosition -= int64(b.weight())
-	}
-	// Shouldn't be possible to reach this point unless choices is empty.
-	return nil
 }
