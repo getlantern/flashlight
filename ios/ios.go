@@ -168,13 +168,13 @@ func (c *wc) Close() error {
 }
 
 type client struct {
-	packetsOut Writer
-	configDir  string
-	mtu        int
-	uc         common.UserConfig
+	configDir string
+	tunFD     int
+	mtu       int
+	uc        common.UserConfig
 }
 
-func Client(packetsOut Writer, configDir string, mtu int) (WriteCloser, error) {
+func StartClient(tunFD int, configDir string, mtu int) error {
 	go trackMemory()
 	go limitMemory()
 
@@ -184,17 +184,17 @@ func Client(packetsOut Writer, configDir string, mtu int) (WriteCloser, error) {
 	}
 
 	c := &client{
-		packetsOut: packetsOut,
-		configDir:  configDir,
-		mtu:        mtu, // hardcoding this to support large segments
+		configDir: configDir,
+		tunFD:     tunFD,
+		mtu:       mtu,
 	}
 
 	return c.start()
 }
 
-func (c *client) start() (WriteCloser, error) {
+func (c *client) start() error {
 	if err := c.loadUserConfig(); err != nil {
-		return nil, err
+		return err
 	}
 
 	log.Debugf("Running client for device '%v' at config path '%v'", c.uc.GetDeviceID(), c.configDir)
@@ -202,21 +202,44 @@ func (c *client) start() (WriteCloser, error) {
 
 	dialers, err := c.loadDialers()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	bal := balancer.New(30*time.Second, dialers...)
 
+<<<<<<< Updated upstream
 	w := packetforward.Client(newWriterAdapter(c.packetsOut), 30*time.Second, func(ctx context.Context) (net.Conn, error) {
+=======
+	tunDevice := wrapTunFD(c.tunFD)
+	w := packetforward.Client(tunDevice, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
+>>>>>>> Stashed changes
 		return bal.DialContext(ctx, "connect", "127.0.0.1:3000")
 	})
 
+	go func() {
+		for {
+			// TODO: use buffer pool
+			b := make([]byte, c.mtu)
+			n, err := tunDevice.Read(b)
+			if err != nil {
+				log.Errorf("Read error, stopping: %v", err)
+				return
+			}
+			if _, err := w.Write(b[:n]); err != nil {
+				log.Errorf("Write error, stopping: %v", err)
+				return
+			}
+		}
+	}()
+
 	freeMemory()
 
-	return &wc{
-		Writer:        w,
-		bal:           bal,
-		quotaTextPath: filepath.Join(c.configDir, "quota.txt"),
-	}, nil
+	return nil
+
+	// return &wc{
+	// 	Writer:        w,
+	// 	bal:           bal,
+	// 	quotaTextPath: filepath.Join(c.configDir, "quota.txt"),
+	// }, nil
 }
 
 func (c *client) loadUserConfig() error {
