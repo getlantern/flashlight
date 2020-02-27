@@ -11,7 +11,6 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/packetforward"
 
@@ -35,20 +34,75 @@ var (
 	log = golog.LoggerFor("ios")
 )
 
+type WriteBatch struct {
+	all [][]byte
+}
+
+func (b *WriteBatch) NumPackets() int {
+	return len(b.all)
+}
+
+func (b *WriteBatch) Packet(i int) []byte {
+	return b.all[i]
+}
+
 type Writer interface {
-	Write([]byte) bool
+	Write(*WriteBatch) bool
 }
 
 type writerAdapter struct {
 	Writer
+	out chan []byte
+}
+
+func newWriterAdapter(writer Writer) *writerAdapter {
+	wa := &writerAdapter{
+		Writer: writer,
+		out:    make(chan []byte, 50),
+	}
+	go wa.process()
+	return wa
 }
 
 func (wa *writerAdapter) Write(b []byte) (int, error) {
-	ok := wa.Writer.Write(b)
-	if !ok {
-		return 0, errors.New("error writing")
-	}
+	wa.out <- b
 	return len(b), nil
+}
+
+func (wa *writerAdapter) process() {
+	defer func() {
+		// drain packets
+		for range wa.out {
+			// ignore
+		}
+	}()
+
+	for {
+		b, more := <-wa.out
+		if !more {
+			log.Debug("Done writing")
+			return
+		}
+		all := [][]byte{b}
+
+	coalesce:
+		for {
+			select {
+			case b, more := <-wa.out:
+				if !more {
+					break coalesce
+				}
+				all = append(all, b)
+			default:
+				break coalesce
+			}
+		}
+
+		ok := wa.Writer.Write(&WriteBatch{all})
+		if !ok {
+			return
+		}
+	}
 }
 
 type WriteCloser interface {
@@ -66,6 +120,10 @@ type wc struct {
 	bal            *balancer.Balancer
 	quotaTextPath  string
 	lastSavedQuota time.Time
+}
+
+func (c *wc) MultiWrite(b [][]byte) (int, error) {
+	return 0, nil
 }
 
 func (c *wc) Write(b []byte) (int, error) {
@@ -148,7 +206,7 @@ func (c *client) start() (WriteCloser, error) {
 	}
 	bal := balancer.New(30*time.Second, dialers...)
 
-	w := packetforward.Client(&writerAdapter{c.packetsOut}, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
+	w := packetforward.Client(newWriterAdapter(c.packetsOut), 30*time.Second, func(ctx context.Context) (net.Conn, error) {
 		return bal.DialContext(ctx, "connect", "127.0.0.1:3000")
 	})
 
