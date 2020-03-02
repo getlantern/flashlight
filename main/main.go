@@ -19,6 +19,7 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
+	"github.com/getlantern/osversion"
 	"github.com/getsentry/sentry-go"
 	"github.com/mitchellh/panicwrap"
 
@@ -84,6 +85,15 @@ func main() {
 		sentry.Init(sentry.ClientOptions{
 			Dsn:     desktop.SENTRY_DSN,
 			Release: common.Version,
+		})
+
+		sentry.ConfigureScope(func(scope *sentry.Scope) {
+			os_version, err := osversion.GetHumanReadable()
+			if err != nil {
+				log.Errorf("Unable to get os version: %v", err)
+			} else {
+				scope.SetTag("os_version", os_version)
+			}
 		})
 	}
 
