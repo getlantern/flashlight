@@ -69,8 +69,10 @@ func testPaymentHandler(t *testing.T,
 func newPaymentParams(username, password, dst,
 	amount, asset string) PaymentParams {
 	return PaymentParams{
-		Username:    username,
-		Password:    password,
+		AuthParams: AuthParams{
+			Username: username,
+			Password: password,
+		},
 		Destination: dst,
 		Amount:      amount,
 		Asset:       asset,
