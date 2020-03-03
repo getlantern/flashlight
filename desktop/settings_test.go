@@ -27,7 +27,7 @@ func TestGetInt64Eventually(t *testing.T) {
 		}
 	}()
 
-	s.SetUserIDAndToken(77, "token")
+	s.SetUserIDAndToken("77", "token")
 	time.Sleep(100 * time.Millisecond)
 
 	assert.Equal(t, int64(77), aid.Load().(int64))
@@ -177,17 +177,17 @@ func TestPersistAndLoad(t *testing.T) {
 	assert.Equal(t, int64(1), set.GetUserID(), "Should load user id from file")
 
 	set.SetLanguage("leet")
-	set.SetUserIDAndToken(1234, "token")
+	set.SetUserIDAndToken("1234", "token")
 	set2 := loadSettingsFrom(version, revisionDate, buildDate, yamlFile, newChromeExtension())
 	assert.Equal(t, "leet", set2.GetLanguage(), "Should save language to file and reload")
-	assert.Equal(t, int64(1234), set2.GetUserID(), "Should save user id to file and reload")
+	assert.Equal(t, "1234", set2.GetUserID(), "Should save user id to file and reload")
 	set2.SetLanguage("en")
-	set2.SetUserIDAndToken(1, "token")
+	set2.SetUserIDAndToken("1", "token")
 }
 
 func TestLoadLowerCased(t *testing.T) {
 	set := loadSettingsFrom("", "", "", "./lowercased.yaml", newChromeExtension())
-	assert.Equal(t, int64(1234), set.GetUserID(), "Should load user id from lower cased yaml")
+	assert.Equal(t, "1234", set.GetUserID(), "Should load user id from lower cased yaml")
 	assert.Equal(t, "abcd", set.GetToken(), "Should load user token from lower cased yaml")
 }
 
