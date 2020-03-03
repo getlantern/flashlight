@@ -323,6 +323,8 @@ github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f h1:wrYrQttPS8FHIRSl
 github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=
 github.com/getlantern/osversion v0.0.0-20180309120706-8f3fb296110c h1:7DufmEQ3xDc5KIt0u6ZWxU0omkFQ2YTCovlyRm47GgI=
 github.com/getlantern/osversion v0.0.0-20180309120706-8f3fb296110c/go.mod h1:DdqHyeV80gZ5JgAmTbMImotRfWSP0xRlxFSuMUDelY0=
+github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031 h1:McfwCiwtcjceMKCpQjbJok70oEb7WfTd/LSr2ftlBJk=
+github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031/go.mod h1:DdqHyeV80gZ5JgAmTbMImotRfWSP0xRlxFSuMUDelY0=
 github.com/getlantern/packetforward v0.0.0-20190809094443-386cbcc0d498 h1:opKvV/XxA5l66QiHXGa/eY6ebDPKvWEQo534a5N28lA=
 github.com/getlantern/packetforward v0.0.0-20190809094443-386cbcc0d498/go.mod h1:IC5YaY4vsvEtK2KNMxdOJTKSET7bStSrBHsQLwl81rU=
 github.com/getlantern/pcapper v0.0.0-20181212174440-a8b1a3ff0cde h1:AOVE4+PXPV/DCUtXSqWkz3GEeaUzxlHROoruiaB/qqA=
