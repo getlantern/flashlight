@@ -300,7 +300,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		}
 
 		if common.ReplicaEnabled() {
-			replicaHandler, exitFunc, err := replica.NewHttpHandler()
+			replicaHandler, exitFunc, err := replica.NewHTTPHandler()
 			if err != nil {
 				log.Errorf("error creating replica http server: %v", err)
 				app.Exit(err)
