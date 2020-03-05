@@ -259,10 +259,12 @@ func (me *HttpHandler) handleView(w http.ResponseWriter, r *http.Request) {
 		m.DisplayName,
 	)
 	if filename != "" {
-		w.Header().Set("Content-Disposition", "inline; filename*=UTF-8''"+url.QueryEscape(filename))
 		displayOnly := r.Header.Get("x-display")
 		if displayOnly != "true" {
-			w.Header().Set("Content-Type", "application/force-download")
+			w.Header().Set("Content-Disposition", "attachment; filename*=UTF-8''"+url.QueryEscape(filename))
+
+		} else {
+			w.Header().Set("Content-Disposition", "inline; filename*=UTF-8''"+url.QueryEscape(filename))
 		}
 	}
 
