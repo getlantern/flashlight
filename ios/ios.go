@@ -105,7 +105,6 @@ func (c *wc) Write(b []byte) (int, error) {
 
 func (c *wc) Close() error {
 	c.bal.Close()
-	ForceFlush()
 	return nil
 }
 
@@ -113,7 +112,7 @@ type client struct {
 	packetsOut Writer
 	configDir  string
 	mtu        int
-	uc         common.UserConfig
+	uc         *UserConfig
 }
 
 func Client(packetsOut Writer, configDir string, mtu int) (WriteCloser, error) {
@@ -234,21 +233,28 @@ func limitMemory() {
 	}
 }
 
-func partialUserConfigFor(deviceID string) *common.UserConfigData {
+func partialUserConfigFor(deviceID string) *UserConfig {
 	return userConfigFor(0, "", deviceID)
 }
 
-func userConfigFor(userID int, proToken, deviceID string) *common.UserConfigData {
-	return common.NewUserConfigData(
-		deviceID,
-		int64(userID),
-		proToken,
-		nil, // Headers currently unused
-		"",  // Language currently unused
-	)
+func userConfigFor(userID int, proToken, deviceID string) *UserConfig {
+	return &UserConfig{
+		UserConfigData: *common.NewUserConfigData(
+			deviceID,
+			int64(userID),
+			proToken,
+			nil, // Headers currently unused
+			"",  // Language currently unused
+		),
+	}
 }
 
 func freeMemory() {
 	runtime.GC()
 	debug.FreeOSMemory()
+}
+
+func setStealthMode(stealthMode bool) {
+	log.Debugf("Stealth mode enabled?: %v", stealthMode)
+	common.SetStealthMode(stealthMode)
 }
