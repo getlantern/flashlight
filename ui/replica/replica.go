@@ -260,6 +260,10 @@ func (me *HttpHandler) handleView(w http.ResponseWriter, r *http.Request) {
 	)
 	if filename != "" {
 		w.Header().Set("Content-Disposition", "inline; filename*=UTF-8''"+url.QueryEscape(filename))
+		displayOnly := r.Header.Get("x-display")
+		if displayOnly != "true" {
+			w.Header().Set("Content-Type", "application/force-download")
+		}
 	}
 
 	confluence.ServeTorrent(w, r, t)
