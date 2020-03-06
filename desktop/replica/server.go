@@ -110,13 +110,13 @@ func NewHTTPHandler() (_ http.Handler, exitFunc func(), err error) {
 		logger:        replicaLogger,
 		uploadsDir:    uploadsDir,
 	}
-	handler.mux.HandleFunc("/upload", me.handleUpload)
-	handler.mux.HandleFunc("/uploads", me.handleUploads)
-	handler.mux.HandleFunc("/view", me.handleView)
-	handler.mux.HandleFunc("/delete", me.handleDelete)
+	handler.mux.HandleFunc("/upload", handler.handleUpload)
+	handler.mux.HandleFunc("/uploads", handler.handleUploads)
+	handler.mux.HandleFunc("/view", handler.handleView)
+	handler.mux.HandleFunc("/delete", handler.handleDelete)
 	// TODO(anacrolix): Actually not much of Confluence is used now, probably none of the
 	// routes, so this might go away soon.
-	handler.mux.Handle("/", &me.confluence)
+	handler.mux.Handle("/", &handler.confluence)
 
 	return handler, torrentClient.Close, nil
 }
