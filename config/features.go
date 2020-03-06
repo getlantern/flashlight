@@ -18,6 +18,11 @@ const (
 	FeatureTrafficLog  = "trafficlog"
 )
 
+var (
+	// to have stable calculation of fraction until the client restarts.
+	randomFloat = rand.Float64()
+)
+
 type TrafficLogOptions struct {
 	// Size of the buffers for capturing packets in real time.
 	CaptureBytes uint64
@@ -120,7 +125,7 @@ func (g ClientGroup) Includes(userID int64, isPro bool, geoCountry string) bool 
 	if g.GeoCountries != "" && !csvContains(g.GeoCountries, geoCountry) {
 		return false
 	}
-	if g.Fraction > 0 && rand.Float64() >= g.Fraction {
+	if g.Fraction > 0 && randomFloat >= g.Fraction {
 		return false
 	}
 	return true
