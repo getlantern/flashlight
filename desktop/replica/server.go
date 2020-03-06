@@ -29,12 +29,12 @@ import (
 type httpHandler struct {
 	// Used to handle non-Replica specific routes. (Some of the hard work has been done!). This will
 	// probably go away soon, as I pick out the parts we actually need.
-	Confluence    confluence.Handler
-	TorrentClient *torrent.Client
+	confluence    confluence.Handler
+	torrentClient *torrent.Client
 	// Where to store torrent client data.
-	DataDir     string
-	UploadsDir  string
-	Logger      analog.Logger
+	dataDir     string
+	uploadsDir  string
+	logger      analog.Logger
 	mux         http.ServeMux
 	initMuxOnce sync.Once
 }
@@ -100,17 +100,17 @@ func NewHTTPHandler() (_ http.Handler, exitFunc func(), err error) {
 	}
 
 	return &httpHandler{
-		Confluence: confluence.Handler{
+		confluence: confluence.Handler{
 			TC: torrentClient,
 			MetainfoCacheDir: func() *string {
 				s := filepath.Join(userCacheDir, replicaDirElem, "metainfos")
 				return &s
 			}(),
 		},
-		TorrentClient: torrentClient,
-		DataDir:       replicaDataDir,
-		Logger:        replicaLogger,
-		UploadsDir:    uploadsDir,
+		torrentClient: torrentClient,
+		dataDir:       replicaDataDir,
+		logger:        replicaLogger,
+		uploadsDir:    uploadsDir,
 	}, torrentClient.Close, nil
 }
 
@@ -124,7 +124,7 @@ func (me *countWriter) Write(b []byte) (int, error) {
 }
 
 func (me *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	me.Logger.WithValues(analog.Debug).Printf("replica server request path: %q", r.URL.Path)
+	me.logger.WithValues(analog.Debug).Printf("replica server request path: %q", r.URL.Path)
 	me.initMuxOnce.Do(func() {
 		me.mux.HandleFunc("/upload", me.handleUpload)
 		me.mux.HandleFunc("/uploads", me.handleUploads)
@@ -132,7 +132,7 @@ func (me *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		me.mux.HandleFunc("/delete", me.handleDelete)
 		// TODO(anacrolix): Actually not much of Confluence is used now, probably none of the
 		// routes, so this might go away soon.
-		me.mux.Handle("/", &me.Confluence)
+		me.mux.Handle("/", &me.confluence)
 	})
 	// TODO(anacrolix): Check this is correct and secure. We might want to be given valid origins
 	// and apply them to appropriate routes, or only allow anything from localhost for example.
@@ -150,7 +150,7 @@ func (me *httpHandler) handleUpload(w http.ResponseWriter, r *http.Request) {
 	if name != "" {
 		s3Key += "/" + name
 	}
-	me.Logger.WithValues(analog.Debug).Printf("uploading replica key %q", s3Key)
+	me.logger.WithValues(analog.Debug).Printf("uploading replica key %q", s3Key)
 	var cw countWriter
 	replicaUploadReader := io.TeeReader(r.Body, &cw)
 	tmpFile, tmpFileErr := func() (*os.File, error) {
@@ -166,10 +166,10 @@ func (me *httpHandler) handleUpload(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// This isn't good, but as long as we can add the torrent file metainfo to the local client,
 		// we can still spread the metadata, and S3 can take care of the data.
-		me.Logger.WithValues(analog.Error).Printf("error creating temporary file: %v", tmpFileErr)
+		me.logger.WithValues(analog.Error).Printf("error creating temporary file: %v", tmpFileErr)
 	}
 	err := replica.Upload(replicaUploadReader, s3Key)
-	me.Logger.WithValues(analog.Debug).Printf("uploaded %d bytes", cw.bytesWritten)
+	me.logger.WithValues(analog.Debug).Printf("uploaded %d bytes", cw.bytesWritten)
 	if err != nil {
 		panic(err)
 	}
@@ -202,13 +202,13 @@ func (me *httpHandler) handleUpload(w http.ResponseWriter, r *http.Request) {
 		tmpFile.Close()
 		// Move the temporary file, which contains the upload body, to the data directory for the
 		// torrent client, in the location it expects.
-		err = os.Rename(tmpFile.Name(), filepath.Join(me.DataDir, info.Name))
+		err = os.Rename(tmpFile.Name(), filepath.Join(me.dataDir, info.Name))
 		if err != nil {
 			// Not fatal: See above, we only really need the metainfo to be added to the torrent.
-			me.Logger.WithValues(analog.Error).Printf("error renaming file: %v", err)
+			me.logger.WithValues(analog.Error).Printf("error renaming file: %v", err)
 		}
 	}
-	tt, err := me.TorrentClient.AddTorrent(mi)
+	tt, err := me.torrentClient.AddTorrent(mi)
 	if err != nil {
 		panic(err)
 	}
@@ -223,14 +223,14 @@ func (me *httpHandler) handleUploads(w http.ResponseWriter, r *http.Request) {
 		FileExtensionMimeType string
 	}
 	resp := []upload{} // Ensure not nil: I don't like 'null' as a response.
-	err := replica.IterUploads(me.uploadsDir(), func(mi *metainfo.MetaInfo, err error) {
+	err := replica.IterUploads(me.uploadsDir, func(mi *metainfo.MetaInfo, err error) {
 		if err != nil {
-			me.Logger.Printf("error iterating uploads: %v", err)
+			me.logger.Printf("error iterating uploads: %v", err)
 			return
 		}
 		info, err := mi.UnmarshalInfo()
 		if err != nil {
-			me.Logger.WithValues(analog.Warning).Printf("error unmarshalling info: %v", err)
+			me.logger.WithValues(analog.Warning).Printf("error unmarshalling info: %v", err)
 			return
 		}
 
@@ -242,7 +242,7 @@ func (me *httpHandler) handleUploads(w http.ResponseWriter, r *http.Request) {
 		})
 	})
 	if err != nil {
-		me.Logger.Printf("error walking uploads dir: %v", err)
+		me.logger.Printf("error walking uploads dir: %v", err)
 	}
 	b, err := json.MarshalIndent(resp, "", "  ")
 	if err != nil {
@@ -264,7 +264,7 @@ func (me *httpHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	// their info, which is true at the point of writing unless the initial upload failed to
 	// retrieve the object torrent and the torrent client hasn't already obtained the info on its
 	// own.
-	t, ok := me.TorrentClient.Torrent(m.InfoHash)
+	t, ok := me.torrentClient.Torrent(m.InfoHash)
 	if !ok {
 		http.Error(w, "torrent not in client", http.StatusBadRequest)
 		return
@@ -272,12 +272,12 @@ func (me *httpHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	info := t.Info()
 	err = replica.DeleteFile(s3KeyFromInfoName(info.Name))
 	if err != nil {
-		me.Logger.Printf("error deleting s3 object: %v", err)
+		me.logger.Printf("error deleting s3 object: %v", err)
 		http.Error(w, "couldn't delete replica object", http.StatusInternalServerError)
 		return
 	}
 	t.Drop()
-	os.Remove(filepath.Join(me.DataDir, info.Name))
+	os.Remove(filepath.Join(me.dataDir, info.Name))
 	os.Remove(me.uploadMetainfoPath(info))
 }
 
@@ -290,11 +290,11 @@ func (me *httpHandler) handleView(w http.ResponseWriter, r *http.Request) {
 	}
 	s3Key, err := s3KeyFromMagnet(m)
 	if err != nil {
-		me.Logger.Printf("error getting s3 key from magnet: %v", err)
+		me.logger.Printf("error getting s3 key from magnet: %v", err)
 	} else if s3Key == "" {
-		me.Logger.Printf("s3 key not found in view link %q", link)
+		me.logger.Printf("s3 key not found in view link %q", link)
 	}
-	t, new, release := me.Confluence.GetTorrent(m.InfoHash)
+	t, new, release := me.confluence.GetTorrent(m.InfoHash)
 	defer release()
 
 	// TODO: Perhaps we only want to do this if we're unable to get the metainfo from S3, to avoid
@@ -306,25 +306,25 @@ func (me *httpHandler) handleView(w http.ResponseWriter, r *http.Request) {
 
 	if new && t.Info() == nil && s3Key != "" {
 		// Get another reference to the torrent that lasts until we're done fetching the metainfo.
-		_, _, release := me.Confluence.GetTorrent(m.InfoHash)
+		_, _, release := me.confluence.GetTorrent(m.InfoHash)
 		go func() {
 			defer release()
 			tob, err := replica.GetObjectTorrent(s3Key)
 			if err != nil {
-				me.Logger.Printf("error getting metainfo for %q from s3: %v", s3Key, err)
+				me.logger.Printf("error getting metainfo for %q from s3: %v", s3Key, err)
 				return
 			}
 			defer tob.Close()
 			mi, err := metainfo.Load(tob)
 			if err != nil {
-				me.Logger.Print(err)
+				me.logger.Print(err)
 				return
 			}
-			err = me.Confluence.PutMetainfo(t, mi)
+			err = me.confluence.PutMetainfo(t, mi)
 			if err != nil {
-				me.Logger.Printf("error putting metainfo from s3: %v", err)
+				me.logger.Printf("error putting metainfo from s3: %v", err)
 			}
-			me.Logger.Printf("added metainfo for %q from s3", s3Key)
+			me.logger.Printf("added metainfo for %q from s3", s3Key)
 		}()
 	}
 	filename := firstNonEmptyString(
@@ -355,10 +355,6 @@ func firstNonEmptyString(ss ...string) string {
 		}
 	}
 	return ""
-}
-
-func (me *httpHandler) uploadsDir() string {
-	return me.UploadsDir
 }
 
 const uploadDirPerms = 0750
@@ -420,5 +416,5 @@ func s3KeyFromMagnet(m metainfo.Magnet) (string, error) {
 }
 
 func (me *httpHandler) uploadMetainfoPath(info *metainfo.Info) string {
-	return filepath.Join(me.uploadsDir(), info.Name+".torrent")
+	return filepath.Join(me.uploadsDir, info.Name+".torrent")
 }
