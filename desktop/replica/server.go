@@ -14,7 +14,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"github.com/getlantern/appdir"
 	"golang.org/x/xerrors"
@@ -32,11 +31,10 @@ type httpHandler struct {
 	confluence    confluence.Handler
 	torrentClient *torrent.Client
 	// Where to store torrent client data.
-	dataDir     string
-	uploadsDir  string
-	logger      analog.Logger
-	mux         http.ServeMux
-	initMuxOnce sync.Once
+	dataDir    string
+	uploadsDir string
+	logger     analog.Logger
+	mux        http.ServeMux
 }
 
 // NewHTTPHandler creates a new http.Handler for calls to replica.
@@ -99,7 +97,7 @@ func NewHTTPHandler() (_ http.Handler, exitFunc func(), err error) {
 		panic(err)
 	}
 
-	return &httpHandler{
+	handler := &httpHandler{
 		confluence: confluence.Handler{
 			TC: torrentClient,
 			MetainfoCacheDir: func() *string {
@@ -111,7 +109,16 @@ func NewHTTPHandler() (_ http.Handler, exitFunc func(), err error) {
 		dataDir:       replicaDataDir,
 		logger:        replicaLogger,
 		uploadsDir:    uploadsDir,
-	}, torrentClient.Close, nil
+	}
+	handler.mux.HandleFunc("/upload", me.handleUpload)
+	handler.mux.HandleFunc("/uploads", me.handleUploads)
+	handler.mux.HandleFunc("/view", me.handleView)
+	handler.mux.HandleFunc("/delete", me.handleDelete)
+	// TODO(anacrolix): Actually not much of Confluence is used now, probably none of the
+	// routes, so this might go away soon.
+	handler.mux.Handle("/", &me.confluence)
+
+	return handler, torrentClient.Close, nil
 }
 
 type countWriter struct {
@@ -125,15 +132,6 @@ func (me *countWriter) Write(b []byte) (int, error) {
 
 func (me *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	me.logger.WithValues(analog.Debug).Printf("replica server request path: %q", r.URL.Path)
-	me.initMuxOnce.Do(func() {
-		me.mux.HandleFunc("/upload", me.handleUpload)
-		me.mux.HandleFunc("/uploads", me.handleUploads)
-		me.mux.HandleFunc("/view", me.handleView)
-		me.mux.HandleFunc("/delete", me.handleDelete)
-		// TODO(anacrolix): Actually not much of Confluence is used now, probably none of the
-		// routes, so this might go away soon.
-		me.mux.Handle("/", &me.confluence)
-	})
 	// TODO(anacrolix): Check this is correct and secure. We might want to be given valid origins
 	// and apply them to appropriate routes, or only allow anything from localhost for example.
 	w.Header().Set("Access-Control-Allow-Origin", "*")
