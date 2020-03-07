@@ -22,8 +22,8 @@ func TestPersistSessionStates(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	currentSessionStatesMx.Lock()
-	saveSessionStateCh = make(chan *sessionStateForServer, 100)
-	currentSessionStates = make(map[string]*tls.ClientSessionState)
+	saveSessionStateCh = make(chan sessionStateForServer, 100)
+	currentSessionStates = make(map[string]sessionStateForServer)
 	currentSessionStatesMx.Unlock()
 
 	persistSessionStates(tmpDir, 250*time.Millisecond)
@@ -52,14 +52,14 @@ func TestPersistSessionStates(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	currentSessionStatesMx.Lock()
-	saveSessionStateCh = make(chan *sessionStateForServer, 100)
-	currentSessionStates = make(map[string]*tls.ClientSessionState)
+	saveSessionStateCh = make(chan sessionStateForServer, 100)
+	currentSessionStates = make(map[string]sessionStateForServer)
 	currentSessionStatesMx.Unlock()
 
 	persistSessionStates(tmpDir, 250*time.Millisecond)
 
 	time.Sleep(1 * time.Second)
-	ss2 := persistedSessionStateFor("myserver", nil)
+	ss2 := persistedSessionStateFor("myserver", nil, time.Hour)
 	if assert.NotNil(t, ss2) {
 		_ss1, _ := tlsresumption.SerializeClientSessionState(ss1)
 		_ss2, _ := tlsresumption.SerializeClientSessionState(ss2)

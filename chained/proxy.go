@@ -180,10 +180,21 @@ func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc commo
 	}
 	x509cert := cert.X509()
 
-	tlsConfig, clientHelloID, defaultClientSessionState := tlsConfigForProxy(s)
+	var sessionTTL time.Duration
+	if sessionTTLString := s.ptSetting("sessionticketttl"); sessionTTLString != "" {
+		sessionTTL, err = time.ParseDuration(sessionTTLString)
+		if err != nil {
+			log.Errorf("failed to parse session ticket TTL: %v", err)
+		}
+	}
+	if sessionTTL == 0 {
+		sessionTTL = chooseSessionTicketTTL(uc)
+	}
+
+	tlsConfig, clientHelloID, defaultClientSessionState := tlsConfigForProxy(s, uc)
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
-			clientSessionState := persistedSessionStateFor(name, defaultClientSessionState)
+			clientSessionState := persistedSessionStateFor(name, defaultClientSessionState, sessionTTL)
 			td := &tlsdialer.Dialer{
 				DoDial: func(network, addr string, timeout time.Duration) (net.Conn, error) {
 					return p.dialCore(op)(ctx)
@@ -427,7 +438,7 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 	}
 	pool.AddCert(cert)
 
-	pCfg, helloID, _ := tlsConfigForProxy(s)
+	pCfg, helloID, _ := tlsConfigForProxy(s, uc)
 	pCfg.ServerName = sni
 	pCfg.InsecureSkipVerify = InsecureSkipVerifyTLSMasqOrigin
 
@@ -1005,12 +1016,15 @@ func reportProxyDial(delta time.Duration, err error) {
 	}
 }
 
-func tlsConfigForProxy(s *ChainedServerInfo) (*tls.Config, tls.ClientHelloID, *tls.ClientSessionState) {
+func tlsConfigForProxy(s *ChainedServerInfo, uc common.UserConfig) (
+	*tls.Config, tls.ClientHelloID, *tls.ClientSessionState) {
+
 	var sessionCache tls.ClientSessionCache
+	sessionTTL := chooseSessionTicketTTL(uc)
 	if s.TLSClientSessionCacheSize == 0 {
-		sessionCache = tls.NewLRUClientSessionCache(1000)
+		sessionCache = newExpiringLRUSessionCache(1000, sessionTTL)
 	} else if s.TLSClientSessionCacheSize > 0 {
-		sessionCache = tls.NewLRUClientSessionCache(s.TLSClientSessionCacheSize)
+		sessionCache = newExpiringLRUSessionCache(s.TLSClientSessionCacheSize, sessionTTL)
 	}
 	cipherSuites := orderedCipherSuitesFromConfig(s)
 
