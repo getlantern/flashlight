@@ -3,7 +3,6 @@ package client
 import (
 	"fmt"
 
-	"github.com/getlantern/appdir"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
 )
@@ -32,8 +31,6 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 		log.Debugf("Adding chained server: %v", dialer.JustifiedLabel())
 		dialers = append(dialers, dialer)
 	}
-
-	chained.TrackStatsFor(dialers, appdir.General("Lantern"), true)
 	client.bal.Reset(dialers)
 
 	go func() {

@@ -119,6 +119,7 @@ type Client struct {
 	l net.Listener
 
 	disconnected  func() bool
+	stealthMode   func() bool
 	allowShortcut func(ctx context.Context, addr string) (bool, net.IP)
 	useDetour     func() bool
 	user          common.UserConfig
@@ -144,6 +145,7 @@ type Client struct {
 // all traffic, and another function to get Lantern Pro token when required.
 func NewClient(
 	disconnected func() bool,
+	stealthMode func() bool,
 	allowShortcut func(ctx context.Context, addr string) (bool, net.IP),
 	useDetour func() bool,
 	userConfig common.UserConfig,
@@ -160,8 +162,9 @@ func NewClient(
 	}
 	client := &Client{
 		requestTimeout:    requestTimeout,
-		bal:               balancer.New(time.Duration(requestTimeout)),
+		bal:               balancer.New(func() bool { return !stealthMode() }, time.Duration(requestTimeout)),
 		disconnected:      disconnected,
+		stealthMode:       stealthMode,
 		allowShortcut:     allowShortcut,
 		useDetour:         useDetour,
 		user:              userConfig,
@@ -365,6 +368,8 @@ func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo) [
 		log.Error(err)
 		return nil
 	}
+	chained.PersistSessionStates("")
+	chained.TrackStatsFor(dialers, appdir.General("Lantern"), !client.stealthMode())
 	return dialers
 }
 

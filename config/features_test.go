@@ -37,9 +37,10 @@ func TestIncludes(t *testing.T) {
 	// Platforms tests are unlikely run
 	assert.False(t, ClientGroup{Platforms: "ios,android"}.Includes(111, true, "whatever"), "platform unmet")
 
-	assert.True(t, ClientGroup{GeoCountries: "ir   , cn"}.Includes(111, true, "IR"), "platform met")
-	assert.False(t, ClientGroup{GeoCountries: "us"}.Includes(111, true, "IR"), "platform met")
+	assert.True(t, ClientGroup{GeoCountries: "ir   , cn"}.Includes(111, true, "IR"), "country met")
+	assert.False(t, ClientGroup{GeoCountries: "us"}.Includes(111, true, "IR"), "country unmet")
 
+	// Fraction calculation should be stable
 	g := ClientGroup{Fraction: 0.1}
 	hits := 0
 	for i := 0; i < 1000; i++ {
@@ -47,5 +48,9 @@ func TestIncludes(t *testing.T) {
 			hits++
 		}
 	}
-	assert.InDelta(t, hits, 100, 50, "fraction should work as expected")
+	if randomFloat >= 0.1 {
+		assert.Equal(t, 0, hits)
+	} else {
+		assert.Equal(t, 1000, hits)
+	}
 }
