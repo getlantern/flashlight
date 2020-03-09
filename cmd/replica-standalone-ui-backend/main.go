@@ -16,7 +16,7 @@ func main() {
 }
 
 func mainCode() int {
-	handler, exitFunc, err := replica.NewHttpHandler()
+	handler, exitFunc, err := replica.NewHTTPHandler()
 	if err != nil {
 		log.Print("error creating replica http server: %v", err)
 		return 1
