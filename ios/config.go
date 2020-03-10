@@ -102,6 +102,7 @@ func (cf *configurer) configure(userID int, proToken string, refreshProxies bool
 				int64(cf.uc.UserID),
 				cf.uc.Token != "",
 				cf.uc.Country)
+			log.Debugf("Stealth mode enabled?: %v", cf.uc.StealthMode)
 			if err := cf.writeUserConfig(); err != nil {
 				log.Errorf("Unable to save updated UserConfig with country and stealth mode: %v", err)
 			}
