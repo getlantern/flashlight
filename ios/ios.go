@@ -172,6 +172,8 @@ func (c *client) loadUserConfig() error {
 
 func (c *client) loadDialers() ([]balancer.Dialer, error) {
 	cf := &configurer{configFolderPath: c.configDir}
+	chained.PersistSessionStates(c.configDir)
+
 	proxies := make(map[string]*chained.ChainedServerInfo)
 	_, _, err := cf.openConfig(proxiesYaml, proxies, []byte{})
 	if err != nil {
@@ -194,7 +196,6 @@ func (c *client) loadDialers() ([]balancer.Dialer, error) {
 		dialers = append(dialers, dialer)
 	}
 
-	chained.PersistSessionStates(c.configDir)
 	chained.TrackStatsFor(dialers, filepath.Join(c.configDir, "proxystats.csv"), false)
 
 	return dialers, nil

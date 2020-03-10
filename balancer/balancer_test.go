@@ -1,6 +1,7 @@
 package balancer
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"math/rand"
@@ -25,10 +26,13 @@ func init() {
 }
 
 func TestNoDialers(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+	defer cancel()
+
 	addr, l := echoServer()
 	defer func() { _ = l.Close() }()
 	b := newBalancer()
-	_, err := b.Dial("tcp", addr)
+	_, err := b.DialContext(ctx, "tcp", addr)
 	assert.Error(t, err, "Dialing with no dialers should have failed")
 }
 
