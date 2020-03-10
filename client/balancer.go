@@ -15,6 +15,7 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 		return nil, fmt.Errorf("No chained servers configured, not initializing balancer")
 	}
 
+	chained.PersistSessionStates("")
 	log.Debugf("Adding %d chained servers", len(proxies))
 	dialers := make([]balancer.Dialer, 0, len(proxies))
 	for name, s := range proxies {
@@ -32,7 +33,6 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 		dialers = append(dialers, dialer)
 	}
 
-	chained.PersistSessionStates("")
 	chained.TrackStatsFor(dialers, appdir.General("Lantern"), true)
 	client.bal.Reset(dialers)
 

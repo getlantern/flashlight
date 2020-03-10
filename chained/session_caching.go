@@ -2,7 +2,6 @@ package chained
 
 import (
 	"bytes"
-	"container/list"
 	"sync"
 	"time"
 
@@ -77,98 +76,61 @@ func chooseSessionTicketTTL(uc common.UserConfig) time.Duration {
 	return choice.(weightedBrowserChoice).sessionTicketLifetime
 }
 
-// expiringLRUSessionCache is a tls.ClientSessionCache implementation that uses an LRU caching
-// strategy and expires tickets older than the configured TTL.
-//
-// Adapted from crypto/tls.lruSessionCache.
-type expiringLRUSessionCache struct {
-	sync.Mutex
+// expiringSessionCache is a tls.ClientSessionCache that expires tickets older than the
+// configured TTL. Because we use one of these per proxy server, it does not need to care about
+// session key names nor LRU logic.
+type expiringSessionCache struct {
+	sync.RWMutex
 
-	m        map[string]*list.Element
-	q        *list.List
-	capacity int
-	keyTTL   time.Duration
+	server       string
+	ttl          time.Duration
+	defaultState *tls.ClientSessionState
+	currentState *tls.ClientSessionState
+	lastUpdated  time.Time
 }
 
-type sessionCacheEntry struct {
-	sessionKey string
-	state      *tls.ClientSessionState
-	expiration time.Time
-}
-
-// newExpiringLRUSessionCache returns an expiringLRUSessionCache. This cache uses an LRU caching
-// strategy to stick to the input capacity. Additionally, keys older than the configured TTL will
-// expire. If capacity is < 1, a default capacity is used instead.
-func newExpiringLRUSessionCache(capacity int, keyTTL time.Duration) *expiringLRUSessionCache {
-	const defaultSessionCacheCapacity = 64
-
-	if capacity < 1 {
-		capacity = defaultSessionCacheCapacity
+// newExpiringSessionCache returns an expiringSessionCache. It initializes the current state from whatever is stored on disk
+// for the given server. For this to work, PersistSessionStates has to be called prior to creating this cache.
+func newExpiringSessionCache(server string, ttl time.Duration, defaultState *tls.ClientSessionState) *expiringSessionCache {
+	currentState, lastUpdated := persistedSessionStateFor(server)
+	if currentState != nil {
+		log.Debugf("Found persisted session state for %v with timestamp %v", server, lastUpdated)
 	}
-	return &expiringLRUSessionCache{
-		m:        make(map[string]*list.Element),
-		q:        list.New(),
-		capacity: capacity,
-		keyTTL:   keyTTL,
+	return &expiringSessionCache{
+		server:       server,
+		ttl:          ttl,
+		defaultState: defaultState,
+		currentState: currentState,
+		lastUpdated:  lastUpdated,
 	}
 }
 
 // Put adds the provided (sessionKey, cs) pair to the cache. If cs is nil, the entry
 // corresponding to sessionKey is removed from the cache instead.
-func (c *expiringLRUSessionCache) Put(sessionKey string, cs *tls.ClientSessionState) {
+func (c *expiringSessionCache) Put(sessionKey string, cs *tls.ClientSessionState) {
 	c.Lock()
 	defer c.Unlock()
 
-	if elem, ok := c.m[sessionKey]; ok {
-		if cs == nil {
-			c.delete(elem)
-			return
-		}
-		entry := elem.Value.(*sessionCacheEntry)
-		if !bytes.Equal(entry.state.SessionTicket(), cs.SessionTicket()) {
-			// This is a new ticket, so update the expiration.
-			entry.expiration = time.Now().Add(c.keyTTL)
-		}
-		entry.state = cs
-		c.q.MoveToFront(elem)
+	if bytes.Equal(c.currentState.SessionTicket(), cs.SessionTicket()) {
+		// same as the old ticket, don't bother updating and leave timestamp alone
 		return
 	}
 
-	if c.q.Len() < c.capacity {
-		entry := &sessionCacheEntry{sessionKey, cs, time.Now().Add(c.keyTTL)}
-		c.m[sessionKey] = c.q.PushFront(entry)
-		return
-	}
-
-	elem := c.q.Back()
-	entry := elem.Value.(*sessionCacheEntry)
-	delete(c.m, entry.sessionKey)
-	entry.sessionKey = sessionKey
-	entry.state = cs
-	entry.expiration = time.Now().Add(c.keyTTL)
-	c.q.MoveToFront(elem)
-	c.m[sessionKey] = elem
+	c.currentState = cs
+	c.lastUpdated = time.Now()
+	saveSessionState(c.server, c.currentState, c.lastUpdated)
 }
 
 // Get returns the ClientSessionState value associated with a given key. It
 // returns (nil, false) if no value is found.
-func (c *expiringLRUSessionCache) Get(sessionKey string) (*tls.ClientSessionState, bool) {
-	c.Lock()
-	defer c.Unlock()
+func (c *expiringSessionCache) Get(sessionKey string) (*tls.ClientSessionState, bool) {
+	c.RLock()
+	defer c.RUnlock()
 
-	if elem, ok := c.m[sessionKey]; ok {
-		entry := elem.Value.(*sessionCacheEntry)
-		if entry.expiration.Before(time.Now()) {
-			c.delete(elem)
-			return nil, false
-		}
-		c.q.MoveToFront(elem)
-		return entry.state, true
+	state := c.currentState
+	if state == nil || time.Since(c.lastUpdated) > c.ttl {
+		state = c.defaultState
 	}
-	return nil, false
-}
 
-func (c *expiringLRUSessionCache) delete(elem *list.Element) {
-	c.q.Remove(elem)
-	delete(c.m, elem.Value.(*sessionCacheEntry).sessionKey)
+	return state, state != nil
 }
