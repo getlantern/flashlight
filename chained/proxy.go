@@ -191,26 +191,28 @@ func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc commo
 		sessionTTL = chooseSessionTicketTTL(uc)
 	}
 
-	tlsConfig, clientHelloID, defaultClientSessionState := tlsConfigForProxy(s, uc)
+	tlsConfig, clientHelloID := tlsConfigForProxy(name, s, uc)
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
-			clientSessionState := persistedSessionStateFor(name, defaultClientSessionState, sessionTTL)
 			td := &tlsdialer.Dialer{
 				DoDial: func(network, addr string, timeout time.Duration) (net.Conn, error) {
 					return p.dialCore(op)(ctx)
 				},
-				Timeout:            timeoutFor(ctx),
-				SendServerName:     tlsConfig.ServerName != "",
-				Config:             tlsConfig,
-				ClientHelloID:      clientHelloID,
-				ClientSessionState: clientSessionState,
+				Timeout:        timeoutFor(ctx),
+				SendServerName: tlsConfig.ServerName != "",
+				Config:         tlsConfig,
+				ClientHelloID:  clientHelloID,
 			}
 			result, err := td.DialForTimings("tcp", p.addr)
 			if err != nil {
 				return nil, err
 			}
 			conn := result.Conn
-			if clientSessionState == nil && !conn.ConnectionState().PeerCertificates[0].Equal(x509cert) {
+			peerCertificates := conn.ConnectionState().PeerCertificates
+			// when using tls session resumption from a stored session state, there will be no peer certificates.
+			// this is okay.
+			resumedSession := len(peerCertificates) == 0
+			if !resumedSession && !conn.ConnectionState().PeerCertificates[0].Equal(x509cert) {
 				if closeErr := conn.Close(); closeErr != nil {
 					log.Debugf("Error closing chained server connection: %s", closeErr)
 				}
@@ -228,7 +230,6 @@ func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc commo
 				return nil, op.FailIf(log.Errorf("Server's certificate didn't match expected! Server had\n%v\nbut expected:\n%v",
 					received, expected))
 			}
-			saveSessionState(name, result.UConn.HandshakeState.Session)
 			return overheadWrapper(true)(conn, op.FailIf(err))
 		})
 	}
@@ -438,7 +439,7 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 	}
 	pool.AddCert(cert)
 
-	pCfg, helloID, _ := tlsConfigForProxy(s, uc)
+	pCfg, helloID := tlsConfigForProxy(name, s, uc)
 	pCfg.ServerName = sni
 	pCfg.InsecureSkipVerify = InsecureSkipVerifyTLSMasqOrigin
 
@@ -1016,28 +1017,9 @@ func reportProxyDial(delta time.Duration, err error) {
 	}
 }
 
-func tlsConfigForProxy(s *ChainedServerInfo, uc common.UserConfig) (
-	*tls.Config, tls.ClientHelloID, *tls.ClientSessionState) {
-
-	var sessionCache tls.ClientSessionCache
-	sessionTTL := chooseSessionTicketTTL(uc)
-	if s.TLSClientSessionCacheSize == 0 {
-		sessionCache = newExpiringLRUSessionCache(1000, sessionTTL)
-	} else if s.TLSClientSessionCacheSize > 0 {
-		sessionCache = newExpiringLRUSessionCache(s.TLSClientSessionCacheSize, sessionTTL)
-	}
-	cipherSuites := orderedCipherSuitesFromConfig(s)
-
-	cfg := &tls.Config{
-		ClientSessionCache: sessionCache,
-		CipherSuites:       cipherSuites,
-		ServerName:         s.TLSServerNameIndicator,
-		InsecureSkipVerify: true,
-		KeyLogWriter:       getTLSKeyLogWriter(),
-	}
+func tlsConfigForProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*tls.Config, tls.ClientHelloID) {
 
 	helloID := s.clientHelloID()
-
 	var ss *tls.ClientSessionState
 	var err error
 	if s.TLSClientSessionState != "" {
@@ -1053,7 +1035,19 @@ func tlsConfigForProxy(s *ChainedServerInfo, uc common.UserConfig) (
 		}
 	}
 
-	return cfg, helloID, ss
+	sessionTTL := chooseSessionTicketTTL(uc)
+	sessionCache := newExpiringSessionCache(name, sessionTTL, ss)
+	cipherSuites := orderedCipherSuitesFromConfig(s)
+
+	cfg := &tls.Config{
+		ClientSessionCache: sessionCache,
+		CipherSuites:       cipherSuites,
+		ServerName:         s.TLSServerNameIndicator,
+		InsecureSkipVerify: true,
+		KeyLogWriter:       getTLSKeyLogWriter(),
+	}
+
+	return cfg, helloID
 }
 
 func orderedCipherSuitesFromConfig(s *ChainedServerInfo) []uint16 {

@@ -159,6 +159,7 @@ type Balancer struct {
 
 // New creates a new Balancer using the supplied Dialers.
 func New(overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
+	log.Debugf("Constructing new balancer with %d dialers", len(dialers))
 	// a small alpha to gradually adjust timeout based on performance of all
 	// dialers
 	hasSucceedingDialer := make(chan bool, 1000)

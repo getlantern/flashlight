@@ -29,24 +29,22 @@ var (
 	initOnce sync.Once
 )
 
-func persistedSessionStateFor(server string, defaultState *tls.ClientSessionState,
-	stateTTL time.Duration) *tls.ClientSessionState {
-
+func persistedSessionStateFor(server string) (*tls.ClientSessionState, time.Time) {
 	currentSessionStatesMx.RLock()
 	state, ok := currentSessionStates[server]
 	currentSessionStatesMx.RUnlock()
-	if ok && time.Now().Sub(state.timestamp) < stateTTL {
-		return state.state
+	if !ok {
+		return nil, time.Time{}
 	}
-	return defaultState
+	return state.state, state.timestamp
 }
 
-func saveSessionState(server string, state *tls.ClientSessionState) {
+func saveSessionState(server string, state *tls.ClientSessionState, updatedTime time.Time) {
 	if state == nil {
 		return
 	}
 	select {
-	case saveSessionStateCh <- sessionStateForServer{server, state, time.Now()}:
+	case saveSessionStateCh <- sessionStateForServer{server, state, updatedTime}:
 		// okay
 	default:
 		// channel full, drop update
