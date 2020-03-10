@@ -2,8 +2,10 @@ package config
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/getlantern/yaml"
 )
 
 func TestValidate(t *testing.T) {
@@ -53,4 +55,28 @@ func TestIncludes(t *testing.T) {
 	} else {
 		assert.Equal(t, 1000, hits)
 	}
+}
+
+func TestUnmarshalFeatureOptions(t *testing.T) {
+	yml := `
+featureoptions:
+  trafficlog:
+    capturebytes: 1
+    savebytes: 2
+  pingproxies:
+    interval: 1h
+`
+	gl := NewGlobal()
+	if !assert.NoError(t, yaml.Unmarshal([]byte(yml), gl)) {
+		return
+	}
+	var opts TrafficLogOptions
+	err := gl.UnmarshalFeatureOptions(FeatureTrafficLog, &opts)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, opts.CaptureBytes)
+
+	var opts2 PingProxiesOptions
+	err = gl.UnmarshalFeatureOptions(FeaturePingProxies, &opts2)
+	assert.NoError(t, err)
+	assert.Equal(t, time.Hour, opts2.Interval)
 }

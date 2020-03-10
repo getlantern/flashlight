@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net"
 	"net/http"
 	"path/filepath"
@@ -83,6 +84,8 @@ var (
 	// interval before rewriting the same URL to HTTPS, to avoid redirect loop.
 	httpsRewriteInterval = 10 * time.Second
 
+	forever = time.Duration(math.MaxInt64)
+
 	// See http://stackoverflow.com/questions/106179/regular-expression-to-match-dns-hostname-or-ip-address
 	validHostnameRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
@@ -108,6 +111,11 @@ func shouldForceProxying() bool {
 // Client is an HTTP proxy that accepts connections from local programs and
 // proxies these via remote flashlight servers.
 type Client struct {
+	// time.Duration. Should place at the start of the struct to avoid
+	// alignment issue.
+	pingProxiesInterval     int64
+	pingProxiesReconfigured chan struct{}
+
 	// requestTimeout: (optional) timeout to process the request from application
 	requestTimeout time.Duration
 
@@ -161,20 +169,21 @@ func NewClient(
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
 	client := &Client{
-		requestTimeout:    requestTimeout,
-		bal:               balancer.New(func() bool { return !stealthMode() }, time.Duration(requestTimeout)),
-		disconnected:      disconnected,
-		stealthMode:       stealthMode,
-		allowShortcut:     allowShortcut,
-		useDetour:         useDetour,
-		user:              userConfig,
-		rewriteToHTTPS:    httpseverywhere.Default(),
-		rewriteLRU:        rewriteLRU,
-		statsTracker:      statsTracker,
-		allowPrivateHosts: allowPrivateHosts,
-		lang:              lang,
-		adSwapTargetURL:   adSwapTargetURL,
-		reverseDNS:        reverseDNS,
+		requestTimeout:          requestTimeout,
+		bal:                     balancer.New(func() bool { return !stealthMode() }, time.Duration(requestTimeout)),
+		disconnected:            disconnected,
+		stealthMode:             stealthMode,
+		allowShortcut:           allowShortcut,
+		useDetour:               useDetour,
+		user:                    userConfig,
+		rewriteToHTTPS:          httpseverywhere.Default(),
+		rewriteLRU:              rewriteLRU,
+		statsTracker:            statsTracker,
+		allowPrivateHosts:       allowPrivateHosts,
+		lang:                    lang,
+		adSwapTargetURL:         adSwapTargetURL,
+		reverseDNS:              reverseDNS,
+		pingProxiesReconfigured: make(chan struct{}, 1),
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -234,6 +243,7 @@ func NewClient(
 	if err != nil {
 		return nil, errors.New("Unable to initialize iptool: %v", err)
 	}
+	go client.pingProxiesLoop()
 	return client, nil
 }
 

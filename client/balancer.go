@@ -2,6 +2,9 @@ package client
 
 import (
 	"fmt"
+	"math/rand"
+	"sync/atomic"
+	"time"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
@@ -42,7 +45,30 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 	return dialers, nil
 }
 
-// PingProxies pings the client's proxies.
-func (client *Client) PingProxies() {
-	client.bal.PingProxies()
+// ConfigurePingProxies configure the interval to ping proxies. The actual
+// time to sleep varies among iterations but keeps in the range of interval +/-
+// 50%. Pass 0 to pause pinging.
+func (client *Client) ConfigurePingProxies(interval time.Duration) {
+	if interval == 0 {
+		interval = forever
+	}
+	atomic.StoreInt64(&client.pingProxiesInterval, int64(interval))
+	client.pingProxiesReconfigured <- struct{}{}
+}
+
+func (client *Client) pingProxiesLoop() {
+	t := time.NewTimer(forever)
+	resetTimer := func() {
+		interval := atomic.LoadInt64(&client.pingProxiesInterval)
+		t.Reset(time.Duration(interval/2 + rand.Int63n(interval)))
+	}
+	for {
+		select {
+		case <-t.C:
+			client.bal.PingProxies()
+			resetTimer()
+		case <-client.pingProxiesReconfigured:
+			resetTimer()
+		}
+	}
 }

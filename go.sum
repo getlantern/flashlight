@@ -264,8 +264,6 @@ github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b h1:zmsspqmbtaR
 github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b/go.mod h1:8hWwZg+ROrvRlE/QHMOCRUzjKSObVv8FEOP6A5F6N0s=
 github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f h1:wrYrQttPS8FHIRSlsrcuKazukx/xqO/PpLZzZXsF+EA=
 github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=
-github.com/getlantern/osversion v0.0.0-20180309120706-8f3fb296110c h1:7DufmEQ3xDc5KIt0u6ZWxU0omkFQ2YTCovlyRm47GgI=
-github.com/getlantern/osversion v0.0.0-20180309120706-8f3fb296110c/go.mod h1:DdqHyeV80gZ5JgAmTbMImotRfWSP0xRlxFSuMUDelY0=
 github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031 h1:McfwCiwtcjceMKCpQjbJok70oEb7WfTd/LSr2ftlBJk=
 github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031/go.mod h1:DdqHyeV80gZ5JgAmTbMImotRfWSP0xRlxFSuMUDelY0=
 github.com/getlantern/packetforward v0.0.0-20190809094443-386cbcc0d498 h1:opKvV/XxA5l66QiHXGa/eY6ebDPKvWEQo534a5N28lA=

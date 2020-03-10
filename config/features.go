@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/blang/semver"
 
@@ -21,13 +22,48 @@ const (
 var (
 	// to have stable calculation of fraction until the client restarts.
 	randomFloat = rand.Float64()
+
+	errAbsentOption    = errors.New("option is absent")
+	errMalformedOption = errors.New("malformed option")
 )
+
+// FeatureOptions is an interface implemented by all feature options
+type FeatureOptions interface {
+	fromMap(map[string]interface{}) error
+}
+
+type PingProxiesOptions struct {
+	Interval time.Duration
+}
+
+func (o *PingProxiesOptions) fromMap(m map[string]interface{}) error {
+	interval, err := durationFromMap(m, "interval")
+	if err != nil {
+		return err
+	}
+	o.Interval = interval
+	return nil
+}
 
 type TrafficLogOptions struct {
 	// Size of the buffers for capturing packets in real time.
-	CaptureBytes uint64
+	CaptureBytes int
 	// Size of the buffers for taking snapshots from live captures.
-	SaveBytes uint64
+	SaveBytes int
+}
+
+func (o *TrafficLogOptions) fromMap(m map[string]interface{}) error {
+	captureBytes, err := intFromMap(m, "capturebytes")
+	if err != nil {
+		return err
+	}
+	o.CaptureBytes = captureBytes
+	saveBytes, err := intFromMap(m, "savebytes")
+	if err != nil {
+		return err
+	}
+	o.SaveBytes = saveBytes
+	return nil
 }
 
 // ClientGroup represents a subgroup of Lantern clients chosen randomly or
@@ -139,4 +175,32 @@ func csvContains(csv, s string) bool {
 		}
 	}
 	return false
+}
+
+func intFromMap(m map[string]interface{}, name string) (int, error) {
+	v, exists := m[name]
+	if !exists {
+		return 0, errAbsentOption
+	}
+	i, ok := v.(int)
+	if !ok {
+		return 0, errMalformedOption
+	}
+	return i, nil
+}
+
+func durationFromMap(m map[string]interface{}, name string) (time.Duration, error) {
+	v, exists := m[name]
+	if !exists {
+		return 0, errAbsentOption
+	}
+	s, ok := v.(string)
+	if !ok {
+		return 0, errMalformedOption
+	}
+	d, err := time.ParseDuration(s)
+	if err != nil {
+		return 0, errMalformedOption
+	}
+	return d, nil
 }

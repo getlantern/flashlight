@@ -2,6 +2,7 @@ package flashlight
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"path/filepath"
@@ -64,13 +65,15 @@ func (r *runner) onGlobalConfig(cfg *config.Global) {
 	default:
 		// ignore
 	}
-
 	r.onConfigUpdate(cfg)
-	// Running only when global config is changed doesn't look quite good, but
-	// keep it as is for now.
-	if common.InDevelopment() || (r.featureEnabled(config.FeaturePingProxies) && common.Platform != "android" && r.autoReport()) {
-		r.client.PingProxies()
+	if common.InDevelopment() || (r.featureEnabled(config.FeaturePingProxies) && r.autoReport()) {
+		var opts config.PingProxiesOptions
+		if r.featureOptions(config.FeaturePingProxies, &opts) != nil {
+			r.client.ConfigurePingProxies(opts.Interval)
+			return
+		}
 	}
+	r.client.ConfigurePingProxies(0)
 }
 
 func (r *runner) stealthMode() bool {
@@ -89,6 +92,17 @@ func (r *runner) featureEnabled(feature string) bool {
 		r.userConfig.GetUserID(),
 		r.isPro(),
 		geolookup.GetCountry(0))
+}
+
+func (r *runner) featureOptions(feature string, opts config.FeatureOptions) error {
+	r.mxGlobal.RLock()
+	global := r.global
+	r.mxGlobal.RUnlock()
+	if global == nil {
+		// just to be safe
+		return errors.New("No global configuration")
+	}
+	return global.UnmarshalFeatureOptions(feature, opts)
 }
 
 func (r *runner) startConfigFetch() func() {
