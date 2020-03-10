@@ -111,7 +111,7 @@ func (c *expiringSessionCache) Put(sessionKey string, cs *tls.ClientSessionState
 	c.Lock()
 	defer c.Unlock()
 
-	if bytes.Equal(c.currentState.SessionTicket(), cs.SessionTicket()) {
+	if c.currentState != nil && bytes.Equal(c.currentState.SessionTicket(), cs.SessionTicket()) {
 		// same as the old ticket, don't bother updating and leave timestamp alone
 		return
 	}
