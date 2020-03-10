@@ -395,7 +395,7 @@ func createLink(ih torrent.InfoHash, s3Key, name string) string {
 		Trackers:    []string{"http://s3-tracker.ap-southeast-1.amazonaws.com:6969/announce"},
 		Params: url.Values{
 			"as": {"https://getlantern-replica.s3-ap-southeast-1.amazonaws.com" + s3Key},
-			"xs": {(&url.URL{Scheme: "replica", Path: s3Key}).String()},
+			"xs": {(&url.URL{Scheme: "replica", Opaque: s3Key}).String()},
 			// This might technically be more correct, but I couldn't find any torrent client that
 			// supports it. Make sure to change any assumptions about "xs" before changing it.
 			//"xs": {"https://getlantern-replica.s3-ap-southeast-1.amazonaws.com" + s3Key + "?torrent"},
@@ -423,7 +423,7 @@ func s3KeyFromMagnet(m metainfo.Magnet) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return u.Path, nil
+	return u.Opaque, nil
 }
 
 func (me *httpHandler) uploadMetainfoPath(info *metainfo.Info) string {
