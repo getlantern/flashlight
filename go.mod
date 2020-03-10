@@ -9,7 +9,7 @@ require (
 	github.com/anacrolix/envpprof v1.1.0
 	github.com/anacrolix/go-libutp v1.0.2
 	github.com/anacrolix/log v0.6.0
-	github.com/anacrolix/torrent v1.12.0
+	github.com/anacrolix/torrent v1.14.1-0.20200227073344-7fe199992c7e
 	github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc // indirect
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
@@ -74,7 +74,6 @@ require (
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
 	github.com/getlantern/systray v0.0.0-20191219131235-d922a91190d8
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
-	github.com/getlantern/testify v0.0.0-20160317154340-2eeb3906e78f
 	github.com/getlantern/tinywss v0.0.0-20200121221108-851921f95ad7
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
 	github.com/getlantern/tlsdialer v0.0.0-20191022033653-81b203ed2619
