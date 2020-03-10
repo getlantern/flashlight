@@ -13,6 +13,7 @@ import (
 	"net/http/httputil"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/fronted"
@@ -23,6 +24,7 @@ import (
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/config/generated"
 	"github.com/getlantern/flashlight/email"
+	"github.com/getlantern/flashlight/geolookup"
 )
 
 const (
@@ -53,16 +55,22 @@ func Configure(configFolderPath string, userID int, proToken, deviceID string, r
 		configFolderPath: configFolderPath,
 		uc:               userConfigFor(userID, proToken, deviceID),
 	}
-	return cf.configure(refreshProxies)
+	return cf.configure(userID, proToken, refreshProxies)
+}
+
+type UserConfig struct {
+	common.UserConfigData
+	Country     string
+	StealthMode bool
 }
 
 type configurer struct {
 	configFolderPath string
-	uc               common.UserConfig
+	uc               *UserConfig
 	rt               http.RoundTripper
 }
 
-func (cf *configurer) configure(refreshProxies bool) (*ConfigResult, error) {
+func (cf *configurer) configure(userID int, proToken string, refreshProxies bool) (*ConfigResult, error) {
 	result := &ConfigResult{}
 
 	if err := cf.writeUserConfig(); err != nil {
@@ -74,8 +82,6 @@ func (cf *configurer) configure(refreshProxies bool) (*ConfigResult, error) {
 		return nil, err
 	}
 
-	email.SetDefaultRecipient(global.ReportIssueEmail)
-
 	proxies, proxiesEtag, proxiesInitialized, err := cf.openProxies()
 	if err != nil {
 		return nil, err
@@ -86,6 +92,19 @@ func (cf *configurer) configure(refreshProxies bool) (*ConfigResult, error) {
 	if frontingErr := cf.configureFronting(global); frontingErr != nil {
 		log.Errorf("Unable to configure fronting, sticking with embedded configuration: %v", err)
 	} else {
+		geolookup.Refresh()
+
+		go func() {
+			cf.uc.Country = geolookup.GetCountry(1 * time.Minute)
+			log.Debugf("Successful geolookup: country %s", cf.uc.Country)
+			stealthMode := global.FeatureEnabled("stealthmode", int64(cf.uc.UserID), cf.uc.Token != "", cf.uc.Country)
+			cf.uc.StealthMode = stealthMode
+			setStealthMode(stealthMode)
+			if err := cf.writeUserConfig(); err != nil {
+				log.Errorf("Unable to save updated UserConfig with country and stealth mode: %v", err)
+			}
+		}()
+
 		var globalUpdated, proxiesUpdated bool
 		global, globalUpdated = cf.updateGlobal(global, globalEtag)
 		if refreshProxies {
@@ -118,6 +137,8 @@ func (cf *configurer) configure(refreshProxies bool) (*ConfigResult, error) {
 		}
 	}
 
+	email.SetDefaultRecipient(global.ReportIssueEmail)
+
 	return result, nil
 }
 
@@ -132,7 +153,7 @@ func (cf *configurer) writeUserConfig() error {
 	return nil
 }
 
-func (cf *configurer) readUserConfig() (*common.UserConfigData, error) {
+func (cf *configurer) readUserConfig() (*UserConfig, error) {
 	bytes, err := ioutil.ReadFile(cf.fullPathTo(userConfigYaml))
 	if err != nil {
 		return nil, errors.New("Unable to read userconfig.yaml: %v", err)
@@ -140,10 +161,11 @@ func (cf *configurer) readUserConfig() (*common.UserConfigData, error) {
 	if len(bytes) == 0 {
 		return nil, errors.New("Empty userconfig.yaml")
 	}
-	uc := &common.UserConfigData{}
+	uc := &UserConfig{}
 	if parseErr := yaml.Unmarshal(bytes, uc); parseErr != nil {
 		return nil, errors.New("Unable to parse userconfig.yaml: %v", err)
 	}
+	setStealthMode(uc.StealthMode)
 	return uc, nil
 }
 

@@ -53,7 +53,6 @@ import (
 	"strings"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/ipproxy"
@@ -131,22 +130,6 @@ func main() {
 			log.Fatal(writeErr)
 		}
 	}
-
-	bbuffer := filepath.Join(tmpDir, "bordabuffer.bin")
-	bbufferTemp := filepath.Join(tmpDir, "bordabuffer_temp.bin")
-	if err := ios.ConfigureBorda(tmpDir, bbuffer, bbufferTemp); err != nil {
-		log.Fatal(err)
-	}
-
-	go func() {
-		// periodically report to borda
-		for {
-			time.Sleep(6 * time.Minute)
-			if err := ios.ReportToBorda(bbuffer); err != nil {
-				log.Errorf("Unable to report to borda: %v", err)
-			}
-		}
-	}()
 
 	dev, err := ipproxy.TUNDevice(*tunDevice, *tunAddr, *tunMask, 1500)
 	if err != nil {

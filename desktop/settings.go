@@ -141,7 +141,8 @@ func loadSettingsFrom(version, revisionDate, buildDate, path string, chrome chro
 	set[SNBuildDate] = buildDate
 	set[SNRevisionDate] = revisionDate
 
-	go chrome.save(sett.mapToSave)
+	// Disable for now to prevent performance issue particularly on Windows 7
+	// go chrome.save(sett.mapToSave)
 	return sett
 }
 
