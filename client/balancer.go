@@ -68,6 +68,9 @@ func (client *Client) pingProxiesLoop() {
 			client.bal.PingProxies()
 			resetTimer()
 		case <-client.pingProxiesReconfigured:
+			if !t.Stop() {
+				<-t.C
+			}
 			resetTimer()
 		}
 	}
