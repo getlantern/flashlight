@@ -13,6 +13,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/getlantern/appdir"
@@ -336,13 +337,25 @@ func (me *httpHandler) handleView(w http.ResponseWriter, r *http.Request) {
 		displayOnly := r.Header.Get("x-display")
 		if displayOnly != "true" {
 			w.Header().Set("Content-Disposition", "attachment; filename*=UTF-8''"+url.QueryEscape(filename))
-
 		} else {
 			w.Header().Set("Content-Disposition", "inline; filename*=UTF-8''"+url.QueryEscape(filename))
 		}
 	}
 
-	confluence.ServeTorrent(w, r, t)
+	selectOnly, err := strconv.ParseUint(m.Params.Get("so"), 10, 0)
+	// Assume that it should be present, as it'll be added going forward where possible. When it's
+	// missing, zero is a perfectly adequate default for now.
+	if err != nil {
+		me.logger.Printf("error parsing so field: %v", err)
+	}
+	select {
+	case <-r.Context().Done():
+		return
+	case <-t.GotInfo():
+	}
+	torrentFile := t.Files()[selectOnly]
+	fileReader := torrentFile.NewReader()
+	confluence.ServeTorrentReader(w, r, fileReader, torrentFile.Path())
 }
 
 // What a bad language.
