@@ -88,10 +88,17 @@ func (r *runner) featureEnabled(feature string) bool {
 		// just to be safe
 		return false
 	}
+	country := geolookup.GetCountry(0)
+	// Sepcial case: Force stealth mode until geolookup is finished to avoid
+	// accidentally generating traffic to trigger block.
+	if country == "" && feature == config.FeatureStealthMode {
+		log.Debug("Force stealth mode when geolookup is not done yet")
+		return true
+	}
 	return global.FeatureEnabled(feature,
 		r.userConfig.GetUserID(),
 		r.isPro(),
-		geolookup.GetCountry(0))
+		country)
 }
 
 func (r *runner) featureOptions(feature string, opts config.FeatureOptions) error {
