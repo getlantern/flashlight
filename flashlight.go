@@ -66,14 +66,18 @@ func (r *runner) onGlobalConfig(cfg *config.Global) {
 		// ignore
 	}
 	r.onConfigUpdate(cfg)
-	if common.InDevelopment() || (r.featureEnabled(config.FeaturePingProxies) && r.autoReport()) {
-		var opts config.PingProxiesOptions
-		if r.featureOptions(config.FeaturePingProxies, &opts) != nil {
-			r.client.ConfigurePingProxies(opts.Interval)
-			return
-		}
+	r.reconfigurePingProxies()
+}
+
+func (r *runner) reconfigurePingProxies() {
+	enabled := func() bool {
+		return common.InDevelopment() ||
+			(r.featureEnabled(config.FeaturePingProxies) && r.autoReport())
 	}
-	r.client.ConfigurePingProxies(0)
+	var opts config.PingProxiesOptions
+	// ignore the error because the zero value means disabling it.
+	_ = r.featureOptions(config.FeaturePingProxies, &opts)
+	r.client.ConfigurePingProxies(enabled, opts.Interval)
 }
 
 func (r *runner) stealthMode() bool {
@@ -84,16 +88,16 @@ func (r *runner) featureEnabled(feature string) bool {
 	r.mxGlobal.RLock()
 	global := r.global
 	r.mxGlobal.RUnlock()
-	if global == nil {
-		// just to be safe
-		return false
-	}
 	country := geolookup.GetCountry(0)
 	// Sepcial case: Force stealth mode until geolookup is finished to avoid
 	// accidentally generating traffic to trigger block.
 	if country == "" && feature == config.FeatureStealthMode {
 		log.Debug("Force stealth mode when geolookup is not done yet")
 		return true
+	}
+	if global == nil {
+		// just to be safe
+		return false
 	}
 	return global.FeatureEnabled(feature,
 		r.userConfig.GetUserID(),

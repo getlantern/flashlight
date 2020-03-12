@@ -111,11 +111,6 @@ func shouldForceProxying() bool {
 // Client is an HTTP proxy that accepts connections from local programs and
 // proxies these via remote flashlight servers.
 type Client struct {
-	// time.Duration. Should place at the start of the struct to avoid
-	// alignment issue.
-	pingProxiesInterval     int64
-	pingProxiesReconfigured chan struct{}
-
 	// requestTimeout: (optional) timeout to process the request from application
 	requestTimeout time.Duration
 
@@ -146,6 +141,8 @@ type Client struct {
 
 	httpProxyIP   string
 	httpProxyPort string
+
+	chPingProxiesConf chan pingProxiesConf
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -169,21 +166,21 @@ func NewClient(
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
 	client := &Client{
-		requestTimeout:          requestTimeout,
-		bal:                     balancer.New(func() bool { return !stealthMode() }, time.Duration(requestTimeout)),
-		disconnected:            disconnected,
-		stealthMode:             stealthMode,
-		allowShortcut:           allowShortcut,
-		useDetour:               useDetour,
-		user:                    userConfig,
-		rewriteToHTTPS:          httpseverywhere.Default(),
-		rewriteLRU:              rewriteLRU,
-		statsTracker:            statsTracker,
-		allowPrivateHosts:       allowPrivateHosts,
-		lang:                    lang,
-		adSwapTargetURL:         adSwapTargetURL,
-		reverseDNS:              reverseDNS,
-		pingProxiesReconfigured: make(chan struct{}, 1),
+		requestTimeout:    requestTimeout,
+		bal:               balancer.New(func() bool { return !stealthMode() }, time.Duration(requestTimeout)),
+		disconnected:      disconnected,
+		stealthMode:       stealthMode,
+		allowShortcut:     allowShortcut,
+		useDetour:         useDetour,
+		user:              userConfig,
+		rewriteToHTTPS:    httpseverywhere.Default(),
+		rewriteLRU:        rewriteLRU,
+		statsTracker:      statsTracker,
+		allowPrivateHosts: allowPrivateHosts,
+		lang:              lang,
+		adSwapTargetURL:   adSwapTargetURL,
+		reverseDNS:        reverseDNS,
+		chPingProxiesConf: make(chan pingProxiesConf, 1),
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
