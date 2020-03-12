@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/anacrolix/torrent"
+	"github.com/anacrolix/torrent/metainfo"
 	"github.com/stretchr/testify/require"
 )
 
@@ -17,4 +18,14 @@ func TestCreateLink(t *testing.T) {
 			"&as=https%3A%2F%2Fgetlantern-replica.s3-ap-southeast-1.amazonaws.combig+long+uuid%2Fherp.txt"+
 			"&dn=nice+name&tr=http%3A%2F%2Fs3-tracker.ap-southeast-1.amazonaws.com%3A6969%2Fannounce"+
 			"&xs=replica%3Abig+long+uuid%2Fherp.txt", link)
+}
+
+// This is to check that s3KeyFromMagnet doesn't return an error if there's no replica xs parameter.
+// This is valid for Replica magnet links that don't refer to items on S3.
+func TestS3KeyFromMagnetMissingXs(t *testing.T) {
+	m, err := metainfo.ParseMagnetURI("magnet:?xt=urn:btih:b84d0051d6cc64eb48bf8c47dd44320f69c17544&dn=Test+Drive+Unlimited+ReincarnaTion%2FTest+Drive+Unlimited+ReincarnaTion.exe&so=0")
+	require.NoError(t, err)
+	s3Key, err := s3KeyFromMagnet(m)
+	require.NoError(t, err)
+	require.EqualValues(t, "", s3Key)
 }

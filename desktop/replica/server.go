@@ -419,6 +419,7 @@ func displayNameFromInfoName(name string) string {
 
 // See createLink.
 func s3KeyFromMagnet(m metainfo.Magnet) (string, error) {
+	// url.Parse("") doesn't return an error! (which is currently what we want here).
 	u, err := url.Parse(m.Params.Get("xs"))
 	if err != nil {
 		return "", err
