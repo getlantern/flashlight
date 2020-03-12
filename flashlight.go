@@ -96,7 +96,7 @@ func (r *runner) featureEnabled(feature string) bool {
 		return true
 	}
 	if global == nil {
-		// just to be safe
+		log.Error("No global configuration!")
 		return false
 	}
 	return global.FeatureEnabled(feature,
