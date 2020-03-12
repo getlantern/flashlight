@@ -51,7 +51,6 @@ require (
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
 	github.com/getlantern/mitm v0.0.0-20180205214248-4ce456bae650
 	github.com/getlantern/mockconn v0.0.0-20191023022503-481dbcceeb58
-	github.com/getlantern/msgpack v3.1.4+incompatible
 	github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0
 	github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd
 	github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b

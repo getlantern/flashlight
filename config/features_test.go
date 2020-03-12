@@ -2,8 +2,10 @@ package config
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/getlantern/yaml"
 )
 
 func TestValidate(t *testing.T) {
@@ -37,9 +39,10 @@ func TestIncludes(t *testing.T) {
 	// Platforms tests are unlikely run
 	assert.False(t, ClientGroup{Platforms: "ios,android"}.Includes(111, true, "whatever"), "platform unmet")
 
-	assert.True(t, ClientGroup{GeoCountries: "ir   , cn"}.Includes(111, true, "IR"), "platform met")
-	assert.False(t, ClientGroup{GeoCountries: "us"}.Includes(111, true, "IR"), "platform met")
+	assert.True(t, ClientGroup{GeoCountries: "ir   , cn"}.Includes(111, true, "IR"), "country met")
+	assert.False(t, ClientGroup{GeoCountries: "us"}.Includes(111, true, "IR"), "country unmet")
 
+	// Fraction calculation should be stable
 	g := ClientGroup{Fraction: 0.1}
 	hits := 0
 	for i := 0; i < 1000; i++ {
@@ -47,5 +50,33 @@ func TestIncludes(t *testing.T) {
 			hits++
 		}
 	}
-	assert.InDelta(t, hits, 100, 50, "fraction should work as expected")
+	if randomFloat >= 0.1 {
+		assert.Equal(t, 0, hits)
+	} else {
+		assert.Equal(t, 1000, hits)
+	}
+}
+
+func TestUnmarshalFeatureOptions(t *testing.T) {
+	yml := `
+featureoptions:
+  trafficlog:
+    capturebytes: 1
+    savebytes: 2
+  pingproxies:
+    interval: 1h
+`
+	gl := NewGlobal()
+	if !assert.NoError(t, yaml.Unmarshal([]byte(yml), gl)) {
+		return
+	}
+	var opts TrafficLogOptions
+	err := gl.UnmarshalFeatureOptions(FeatureTrafficLog, &opts)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, opts.CaptureBytes)
+
+	var opts2 PingProxiesOptions
+	err = gl.UnmarshalFeatureOptions(FeaturePingProxies, &opts2)
+	assert.NoError(t, err)
+	assert.Equal(t, time.Hour, opts2.Interval)
 }

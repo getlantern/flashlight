@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net"
 	"net/http"
 	"path/filepath"
@@ -83,6 +84,8 @@ var (
 	// interval before rewriting the same URL to HTTPS, to avoid redirect loop.
 	httpsRewriteInterval = 10 * time.Second
 
+	forever = time.Duration(math.MaxInt64)
+
 	// See http://stackoverflow.com/questions/106179/regular-expression-to-match-dns-hostname-or-ip-address
 	validHostnameRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
@@ -119,6 +122,7 @@ type Client struct {
 	l net.Listener
 
 	disconnected  func() bool
+	stealthMode   func() bool
 	allowShortcut func(ctx context.Context, addr string) (bool, net.IP)
 	useDetour     func() bool
 	user          common.UserConfig
@@ -137,6 +141,8 @@ type Client struct {
 
 	httpProxyIP   string
 	httpProxyPort string
+
+	chPingProxiesConf chan pingProxiesConf
 }
 
 // NewClient creates a new client that does things like starts the HTTP and
@@ -144,6 +150,7 @@ type Client struct {
 // all traffic, and another function to get Lantern Pro token when required.
 func NewClient(
 	disconnected func() bool,
+	stealthMode func() bool,
 	allowShortcut func(ctx context.Context, addr string) (bool, net.IP),
 	useDetour func() bool,
 	userConfig common.UserConfig,
@@ -160,8 +167,9 @@ func NewClient(
 	}
 	client := &Client{
 		requestTimeout:    requestTimeout,
-		bal:               balancer.New(time.Duration(requestTimeout)),
+		bal:               balancer.New(func() bool { return !stealthMode() }, time.Duration(requestTimeout)),
 		disconnected:      disconnected,
+		stealthMode:       stealthMode,
 		allowShortcut:     allowShortcut,
 		useDetour:         useDetour,
 		user:              userConfig,
@@ -172,6 +180,7 @@ func NewClient(
 		lang:              lang,
 		adSwapTargetURL:   adSwapTargetURL,
 		reverseDNS:        reverseDNS,
+		chPingProxiesConf: make(chan pingProxiesConf, 1),
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -231,6 +240,7 @@ func NewClient(
 	if err != nil {
 		return nil, errors.New("Unable to initialize iptool: %v", err)
 	}
+	go client.pingProxiesLoop()
 	return client, nil
 }
 
@@ -365,6 +375,8 @@ func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo) [
 		log.Error(err)
 		return nil
 	}
+	chained.PersistSessionStates("")
+	chained.TrackStatsFor(dialers, appdir.General("Lantern"), !client.stealthMode())
 	return dialers
 }
 

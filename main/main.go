@@ -167,11 +167,6 @@ func main() {
 		config.ForceCountry(*forceConfigCountry)
 	}
 
-	if *stealthMode {
-		log.Debug("Running in stealth mode")
-		common.ForceStealthMode()
-	}
-
 	if a.ShouldShowUI() {
 		i18nInit(a)
 		desktop.RunOnSystrayReady(*standalone, a, func() {
