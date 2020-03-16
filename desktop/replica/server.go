@@ -410,7 +410,7 @@ func createLink(ih torrent.InfoHash, s3Key, name string) string {
 
 // This reverses s3 key to info name change that AWS makes in its ObjectTorrent metainfos.
 func s3KeyFromInfoName(name string) string {
-	return "/" + strings.Replace(name, "_", "/", 1)
+	return strings.Replace(name, "_", "/", 1)
 }
 
 // Retrieve the original, user or file-system provided file name, before changes made by AWS.
@@ -429,7 +429,10 @@ func s3KeyFromMagnet(m metainfo.Magnet) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return u.Opaque, nil
+	if u.Opaque != "" {
+		return u.Opaque, nil
+	}
+	return u.Path, nil
 }
 
 func (me *httpHandler) uploadMetainfoPath(info *metainfo.Info) string {
