@@ -16,7 +16,9 @@ func TestCreateLink(t *testing.T) {
 	require.EqualValues(t,
 		"magnet:?xt=urn:btih:deadbeefc0ffeec0ffeedeadbeefc0ffeec0ffee"+
 			"&as=https%3A%2F%2Fgetlantern-replica.s3-ap-southeast-1.amazonaws.combig+long+uuid%2Fherp.txt"+
-			"&dn=nice+name&tr=http%3A%2F%2Fs3-tracker.ap-southeast-1.amazonaws.com%3A6969%2Fannounce"+
+			"&dn=nice+name"+
+			"&so=0"+ // Not sure if we can rely on the ordering of params, hope so.
+			"&tr=http%3A%2F%2Fs3-tracker.ap-southeast-1.amazonaws.com%3A6969%2Fannounce"+
 			"&xs=replica%3Abig+long+uuid%2Fherp.txt", link)
 }
 
