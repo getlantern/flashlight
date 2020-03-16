@@ -22,8 +22,8 @@ func TestPersistSessionStates(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	currentSessionStatesMx.Lock()
-	saveSessionStateCh = make(chan *sessionStateForServer, 100)
-	currentSessionStates = make(map[string]*tls.ClientSessionState)
+	saveSessionStateCh = make(chan sessionStateForServer, 100)
+	currentSessionStates = make(map[string]sessionStateForServer)
 	currentSessionStatesMx.Unlock()
 
 	persistSessionStates(tmpDir, 250*time.Millisecond)
@@ -46,23 +46,25 @@ func TestPersistSessionStates(t *testing.T) {
 	log.Debug(result.Conn.RemoteAddr())
 
 	ss1 := result.UConn.HandshakeState.Session
-	saveSessionState("myserver", ss1)
+	expectedTS := time.Now()
+	saveSessionState("myserver", ss1, expectedTS)
 	close(saveSessionStateCh)
 
 	time.Sleep(1 * time.Second)
 
 	currentSessionStatesMx.Lock()
-	saveSessionStateCh = make(chan *sessionStateForServer, 100)
-	currentSessionStates = make(map[string]*tls.ClientSessionState)
+	saveSessionStateCh = make(chan sessionStateForServer, 100)
+	currentSessionStates = make(map[string]sessionStateForServer)
 	currentSessionStatesMx.Unlock()
 
 	persistSessionStates(tmpDir, 250*time.Millisecond)
 
 	time.Sleep(1 * time.Second)
-	ss2 := persistedSessionStateFor("myserver", nil)
+	ss2, ts := persistedSessionStateFor("myserver")
 	if assert.NotNil(t, ss2) {
 		_ss1, _ := tlsresumption.SerializeClientSessionState(ss1)
 		_ss2, _ := tlsresumption.SerializeClientSessionState(ss2)
 		assert.EqualValues(t, _ss1, _ss2)
+		assert.EqualValues(t, expectedTS.Truncate(time.Second), ts.Truncate(time.Second))
 	}
 }

@@ -2,7 +2,6 @@ package config
 
 import (
 	"crypto/x509"
-	"encoding/json"
 	"errors"
 	"time"
 
@@ -48,7 +47,7 @@ type Global struct {
 	FeaturesEnabled map[string][]*ClientGroup
 	// FeatureOptions is a generic way to specify options for optional
 	// features. It's up to the feature code to handle the raw JSON message.
-	FeatureOptions map[string]json.RawMessage
+	FeatureOptions map[string]map[string]interface{}
 }
 
 // NewGlobal creates a new global config with otherwise nil values set.
@@ -84,12 +83,12 @@ func (cfg *Global) FeatureEnabledWithLabel(feature string, userID string, isPro 
 	return false, ""
 }
 
-func (cfg *Global) UnmarshalFeatureOptions(feature string, opts interface{}) error {
-	rawMessage, exists := cfg.FeatureOptions[feature]
+func (cfg *Global) UnmarshalFeatureOptions(feature string, opts FeatureOptions) error {
+	m, exists := cfg.FeatureOptions[feature]
 	if !exists {
-		return nil
+		return errAbsentOption
 	}
-	return json.Unmarshal(rawMessage, opts)
+	return opts.fromMap(m)
 }
 
 // TrustedCACerts returns a certificate pool containing the TrustedCAs from this

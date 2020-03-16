@@ -99,11 +99,6 @@ func Configure(reportInterval time.Duration, enabled EnabledFunc) {
 // to borda. The service never stops once enabled. The service will check enabled each time
 // before it reports to borda, however.
 func ConfigureWithSubmitter(submitter borda.Submitter, enabled EnabledFunc) {
-	origEnabled := enabled
-	enabled = func(ctx map[string]interface{}) bool {
-		return !common.InStealthMode() && origEnabled(ctx)
-	}
-
 	once.Do(func() {
 		log.Debug("Enabling borda")
 

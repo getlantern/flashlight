@@ -97,9 +97,12 @@ func (cf *configurer) configure(userID int, proToken string, refreshProxies bool
 		go func() {
 			cf.uc.Country = geolookup.GetCountry(1 * time.Minute)
 			log.Debugf("Successful geolookup: country %s", cf.uc.Country)
-			stealthMode := global.FeatureEnabled("stealthmode", int64(cf.uc.UserID), cf.uc.Token != "", cf.uc.Country)
-			cf.uc.StealthMode = stealthMode
-			setStealthMode(stealthMode)
+			cf.uc.StealthMode = global.FeatureEnabled(
+				config.FeatureStealthMode,
+				int64(cf.uc.UserID),
+				cf.uc.Token != "",
+				cf.uc.Country)
+			log.Debugf("Stealth mode enabled?: %v", cf.uc.StealthMode)
 			if err := cf.writeUserConfig(); err != nil {
 				log.Errorf("Unable to save updated UserConfig with country and stealth mode: %v", err)
 			}
@@ -165,7 +168,6 @@ func (cf *configurer) readUserConfig() (*UserConfig, error) {
 	if parseErr := yaml.Unmarshal(bytes, uc); parseErr != nil {
 		return nil, errors.New("Unable to parse userconfig.yaml: %v", err)
 	}
-	setStealthMode(uc.StealthMode)
 	return uc, nil
 }
 

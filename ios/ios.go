@@ -145,7 +145,7 @@ func (c *client) start() (WriteCloser, error) {
 	if err != nil {
 		return nil, err
 	}
-	bal := balancer.New(30*time.Second, dialers...)
+	bal := balancer.New(func() bool { return !c.uc.StealthMode }, 30*time.Second, dialers...)
 
 	w := packetforward.Client(&writerAdapter{c.packetsOut}, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
 		return bal.DialContext(ctx, "connect", "127.0.0.1:3000")
@@ -172,6 +172,8 @@ func (c *client) loadUserConfig() error {
 
 func (c *client) loadDialers() ([]balancer.Dialer, error) {
 	cf := &configurer{configFolderPath: c.configDir}
+	chained.PersistSessionStates(c.configDir)
+
 	proxies := make(map[string]*chained.ChainedServerInfo)
 	_, _, err := cf.openConfig(proxiesYaml, proxies, []byte{})
 	if err != nil {
@@ -194,7 +196,6 @@ func (c *client) loadDialers() ([]balancer.Dialer, error) {
 		dialers = append(dialers, dialer)
 	}
 
-	chained.PersistSessionStates(c.configDir)
 	chained.TrackStatsFor(dialers, filepath.Join(c.configDir, "proxystats.csv"), false)
 
 	return dialers, nil
@@ -252,9 +253,4 @@ func userConfigFor(userID int, proToken, deviceID string) *UserConfig {
 func freeMemory() {
 	runtime.GC()
 	debug.FreeOSMemory()
-}
-
-func setStealthMode(stealthMode bool) {
-	log.Debugf("Stealth mode enabled?: %v", stealthMode)
-	common.SetStealthMode(stealthMode)
 }
