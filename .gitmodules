@@ -1,3 +1,6 @@
 [submodule "dht"]
 	path = dht
 	url = https://github.com/anacrolix/dht
+[submodule "replica"]
+	path = replica
+	url = https://github.com/getlantern/replica

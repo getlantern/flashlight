@@ -7,14 +7,13 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"mime"
 	"net/http"
 	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/getlantern/appdir"
 	"golang.org/x/xerrors"
@@ -83,12 +82,12 @@ func NewHTTPHandler() (_ http.Handler, exitFunc func(), err error) {
 		}
 	}
 
-	if err := replica.IterUploads(uploadsDir, func(mi *metainfo.MetaInfo, err error) {
-		if err != nil {
-			replicaLogger.Printf("error while iterating uploads: %v", err)
+	if err := replica.IterUploads(uploadsDir, func(iu replica.IteredUpload) {
+		if iu.Err != nil {
+			replicaLogger.Printf("error while iterating uploads: %v", iu.Err)
 			return
 		}
-		t, err := torrentClient.AddTorrent(mi)
+		t, err := torrentClient.AddTorrent(iu.MetaInfo)
 		if err != nil {
 			replicaLogger.WithValues(analog.Error).Printf("error adding existing upload to torrent client: %v", err)
 		} else {
@@ -211,18 +210,21 @@ func (me *httpHandler) handleUpload(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	w.Header().Set("Content-Type", "text/uri-list")
-	fmt.Fprintln(w, createLink(tt.InfoHash(), s3KeyFromInfoName(info.Name), name))
+	w.Header().Set("Content-Type", "application/json")
+	je := json.NewEncoder(w)
+	je.SetIndent("", "  ")
+	je.Encode(objectInfo{
+		FileSize:     info.TotalLength(),
+		LastModified: time.Now(),
+		Link:         createLink(tt.InfoHash(), s3KeyFromInfoName(info.Name), name),
+	})
 }
 
 func (me *httpHandler) handleUploads(w http.ResponseWriter, r *http.Request) {
-	type upload struct {
-		Link                  string
-		FileName              string
-		FileExtensionMimeType string
-	}
-	resp := []upload{} // Ensure not nil: I don't like 'null' as a response.
-	err := replica.IterUploads(me.uploadsDir, func(mi *metainfo.MetaInfo, err error) {
+	resp := []objectInfo{} // Ensure not nil: I don't like 'null' as a response.
+	err := replica.IterUploads(me.uploadsDir, func(iu replica.IteredUpload) {
+		mi := iu.MetaInfo
+		err := iu.Err
 		if err != nil {
 			me.logger.Printf("error iterating uploads: %v", err)
 			return
@@ -234,10 +236,10 @@ func (me *httpHandler) handleUploads(w http.ResponseWriter, r *http.Request) {
 		}
 
 		dn := displayNameFromInfoName(info.Name)
-		resp = append(resp, upload{
-			Link:                  createLink(mi.HashInfoBytes(), s3KeyFromInfoName(info.Name), dn),
-			FileName:              dn,
-			FileExtensionMimeType: mime.TypeByExtension(path.Ext(dn)),
+		resp = append(resp, objectInfo{
+			Link:         createLink(mi.HashInfoBytes(), s3KeyFromInfoName(info.Name), dn),
+			FileSize:     info.TotalLength(),
+			LastModified: iu.FileInfo.ModTime(),
 		})
 	})
 	if err != nil {

@@ -126,3 +126,5 @@ replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-2019
 replace github.com/xtaci/smux => github.com/getlantern/smux v1.5.8-0.20200120021443-10a8d98940d3
 
 replace github.com/anacrolix/dht/v2 => ./dht
+
+replace github.com/getlantern/replica => ./replica
