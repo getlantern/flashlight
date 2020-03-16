@@ -180,17 +180,6 @@ func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc commo
 	}
 	x509cert := cert.X509()
 
-	var sessionTTL time.Duration
-	if sessionTTLString := s.ptSetting("sessionticketttl"); sessionTTLString != "" {
-		sessionTTL, err = time.ParseDuration(sessionTTLString)
-		if err != nil {
-			log.Errorf("failed to parse session ticket TTL: %v", err)
-		}
-	}
-	if sessionTTL == 0 {
-		sessionTTL = chooseSessionTicketTTL(uc)
-	}
-
 	tlsConfig, clientHelloID := tlsConfigForProxy(name, s, uc)
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {

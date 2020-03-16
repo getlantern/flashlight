@@ -105,9 +105,13 @@ func newExpiringSessionCache(server string, ttl time.Duration, defaultState *tls
 	}
 }
 
-// Put adds the provided (sessionKey, cs) pair to the cache. If cs is nil, the entry
-// corresponding to sessionKey is removed from the cache instead.
+// Put adds the provided cs to the cache. It does nothing if cs is nil in
+// thinking that the handshake failure when resuming session may be temporary.
+// sessionKey is required by the ClientSessionCache interface but ignored here.
 func (c *expiringSessionCache) Put(sessionKey string, cs *tls.ClientSessionState) {
+	if cs == nil {
+		return
+	}
 	c.Lock()
 	defer c.Unlock()
 
@@ -121,8 +125,9 @@ func (c *expiringSessionCache) Put(sessionKey string, cs *tls.ClientSessionState
 	saveSessionState(c.server, c.currentState, c.lastUpdated)
 }
 
-// Get returns the ClientSessionState value associated with a given key. It
-// returns (nil, false) if no value is found.
+// Get returns the cached ClientSessionState if it's not expired, or
+// defaultState. sessionKey is required by the ClientSessionCache interface but
+// ignored here.
 func (c *expiringSessionCache) Get(sessionKey string) (*tls.ClientSessionState, bool) {
 	c.RLock()
 	defer c.RUnlock()
