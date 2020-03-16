@@ -123,8 +123,6 @@ github.com/aristanetworks/goarista v0.0.0-20191106175434-873d404c7f40/go.mod h1:
 github.com/aristanetworks/splunk-hec-go v0.3.3/go.mod h1:1VHO9r17b0K7WmOlLb9nTk/2YanvOEnLMUgsFrxBROc=
 github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc h1:/WQ8Tr5zbclKWAtvafIcAk/njNpW3gtd22TLLouv+6Q=
 github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.21.2 h1:CqbWrQzi7s8J2F0TRRdLvTr0+bt5Zxo2IDoFNGsAiUg=
-github.com/aws/aws-sdk-go v1.21.2/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/aws/aws-sdk-go v1.28.9 h1:grIuBQc+p3dTRXerh5+2OxSuWFi0iXuxbFdTSg0jaW0=
 github.com/aws/aws-sdk-go v1.28.9/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/benbjohnson/immutable v0.2.0 h1:t0rW3lNFwfQ85IDO1mhMbumxdVSti4nnVaal4r45Oio=
@@ -358,8 +356,6 @@ github.com/getlantern/quicwrapper v0.0.0-20191220185748-4721f84faa16 h1:IXRG8bb9
 github.com/getlantern/quicwrapper v0.0.0-20191220185748-4721f84faa16/go.mod h1:NQ7m0azcOKZq8+1ltxlLbE2k8lV9I7qyYCoWWJ/ib5o=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c h1:IkjF+RwRs8B/RsuD638eUFO2K/227OO2B1FLXGp17Ro=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c/go.mod h1:kExwbqTx1krUnT9ohmXG3jayDTEBfxUKeoRzU6XucLw=
-github.com/getlantern/replica v0.3.1-0.20200117054004-aceaa4d58c97 h1:aw1vz04JNUqDF1uYcaP57A6Xzf8I4CowCjRBLbpvxJY=
-github.com/getlantern/replica v0.3.1-0.20200117054004-aceaa4d58c97/go.mod h1:hE7NlZ6afMpb9B2jFTigbxMhxFNZaJ5X/2AKB12LjBo=
 github.com/getlantern/ring v0.0.0-20181206150603-dd46ce8faa01 h1:JyXEChj4lHy5w3hlQVnYpcH4QrBXmhEJgkxb0FPkFlM=
 github.com/getlantern/ring v0.0.0-20181206150603-dd46ce8faa01/go.mod h1:mnw3NsM0/oiJdZDMujNx+Kg60o72UClHB1UNqrEWqOM=
 github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85 h1:+naZppl28oqpVs0J+wOsVeh61c02OD/G3JP+PemAMCU=
