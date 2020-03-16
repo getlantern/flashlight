@@ -2,6 +2,7 @@ package chained
 
 import (
 	"bytes"
+	"strconv"
 	"sync"
 	"time"
 
@@ -72,7 +73,8 @@ func chooseSessionTicketTTL(uc common.UserConfig) time.Duration {
 	if !ok {
 		choices = globalBrowserChoices
 	}
-	choice := deterministic.MakeWeightedChoice(uc.GetUserID(), choices)
+	userID, _ := strconv.ParseInt(uc.GetUserID(), 10, 64)
+	choice := deterministic.MakeWeightedChoice(userID, choices)
 	return choice.(weightedBrowserChoice).sessionTicketLifetime
 }
 
