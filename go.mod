@@ -99,6 +99,7 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/stretchr/testify v1.4.0
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
+	go.etcd.io/bbolt v1.3.3 // indirect
 	golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	google.golang.org/appengine v1.6.2 // indirect
@@ -123,3 +124,5 @@ replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-2019
 
 // For smoother session error handling, see https://github.com/xtaci/smux/issues/61
 replace github.com/xtaci/smux => github.com/getlantern/smux v1.5.8-0.20200120021443-10a8d98940d3
+
+replace github.com/anacrolix/dht/v2 => ./dht
