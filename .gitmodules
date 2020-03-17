@@ -4,3 +4,6 @@
 [submodule "replica"]
 	path = replica
 	url = https://github.com/getlantern/replica
+[submodule "torrent"]
+	path = torrent
+	url = https://github.com/anacrolix/torrent

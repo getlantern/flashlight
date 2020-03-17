@@ -49,6 +49,7 @@ func NewHTTPHandler() (_ http.Handler, exitFunc func(), err error) {
 	uploadsDir := filepath.Join(replicaConfigDir, "uploads")
 	replicaDataDir := filepath.Join(userCacheDir, replicaDirElem, "data")
 	cfg := torrent.NewDefaultClientConfig()
+	cfg.DisableIPv6 = true
 	cfg.DataDir = replicaDataDir
 	cfg.Seed = true
 	//cfg.Debug = true
@@ -114,6 +115,11 @@ func NewHTTPHandler() (_ http.Handler, exitFunc func(), err error) {
 	handler.mux.HandleFunc("/uploads", handler.handleUploads)
 	handler.mux.HandleFunc("/view", handler.handleView)
 	handler.mux.HandleFunc("/delete", handler.handleDelete)
+	handler.mux.HandleFunc("/debug/dht", func(w http.ResponseWriter, r *http.Request) {
+		for _, ds := range torrentClient.DhtServers() {
+			ds.WriteStatus(w)
+		}
+	})
 	// TODO(anacrolix): Actually not much of Confluence is used now, probably none of the
 	// routes, so this might go away soon.
 	handler.mux.Handle("/", &handler.confluence)
