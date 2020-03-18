@@ -9,7 +9,7 @@ require (
 	github.com/anacrolix/envpprof v1.1.0
 	github.com/anacrolix/go-libutp v1.0.2
 	github.com/anacrolix/log v0.6.0
-	github.com/anacrolix/torrent v1.14.1-0.20200227073344-7fe199992c7e
+	github.com/anacrolix/torrent v1.14.1-0.20200317024809-378ccd0932c5
 	github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc // indirect
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
@@ -67,7 +67,7 @@ require (
 	github.com/getlantern/proxy v0.0.0-20191025190912-b5f45407d9f2
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
 	github.com/getlantern/quicwrapper v0.0.0-20191220185748-4721f84faa16
-	github.com/getlantern/replica v0.3.1-0.20200117054004-aceaa4d58c97
+	github.com/getlantern/replica v0.3.1-0.20200316060820-4e7266de8459
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/shortcut v0.0.0-20200120121615-2dcb213d447c
@@ -89,6 +89,7 @@ require (
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
 	github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
+	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/miekg/dns v0.0.0-20180406150955-01d59357d468
 	github.com/mitchellh/go-server-timing v1.0.0
 	github.com/mitchellh/mapstructure v0.0.0-20180220230111-00c29f56e238
@@ -98,9 +99,10 @@ require (
 	github.com/refraction-networking/utls v0.0.0-20190909200633-43c36d3c1f57
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/stretchr/testify v1.4.0
+	github.com/tinylib/msgp v1.1.2 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
-	go.etcd.io/bbolt v1.3.3 // indirect
 	golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa
+	golang.org/x/sys v0.0.0-20200317113312-5766fd39f98d // indirect
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	google.golang.org/appengine v1.6.2 // indirect
 	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55 // indirect
@@ -124,9 +126,3 @@ replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-2019
 
 // For smoother session error handling, see https://github.com/xtaci/smux/issues/61
 replace github.com/xtaci/smux => github.com/getlantern/smux v1.5.8-0.20200120021443-10a8d98940d3
-
-replace github.com/anacrolix/dht/v2 => ./dht
-
-replace github.com/getlantern/replica => ./replica
-
-replace github.com/anacrolix/torrent => ./torrent
