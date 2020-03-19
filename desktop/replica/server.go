@@ -202,18 +202,16 @@ func (me *httpHandler) handleUpload(w http.ResponseWriter, r *http.Request) {
 			me.logger.WithValues(analog.Error).Printf("error renaming file: %v", err)
 		}
 	}
-	tt, err := me.torrentClient.AddTorrent(mi)
+	_, err = me.torrentClient.AddTorrent(mi)
 	if err != nil {
 		panic(err)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	je := json.NewEncoder(w)
 	je.SetIndent("", "  ")
-	je.Encode(objectInfo{
-		FileSize:     info.TotalLength(),
-		LastModified: time.Now(),
-		Link:         createLink(tt.InfoHash(), s3KeyFromInfoName(info.Name), name),
-	})
+	var oi objectInfo
+	oi.fromS3UploadMetaInfo(mi, time.Now())
+	je.Encode(oi)
 }
 
 func (me *httpHandler) handleUploads(w http.ResponseWriter, r *http.Request) {
@@ -225,18 +223,9 @@ func (me *httpHandler) handleUploads(w http.ResponseWriter, r *http.Request) {
 			me.logger.Printf("error iterating uploads: %v", err)
 			return
 		}
-		info, err := mi.UnmarshalInfo()
-		if err != nil {
-			me.logger.WithValues(analog.Warning).Printf("error unmarshalling info: %v", err)
-			return
-		}
-
-		dn := displayNameFromInfoName(info.Name)
-		resp = append(resp, objectInfo{
-			Link:         createLink(mi.HashInfoBytes(), s3KeyFromInfoName(info.Name), dn),
-			FileSize:     info.TotalLength(),
-			LastModified: iu.FileInfo.ModTime(),
-		})
+		var oi objectInfo
+		oi.fromS3UploadMetaInfo(mi, iu.FileInfo.ModTime())
+		resp = append(resp, oi)
 	})
 	if err != nil {
 		me.logger.Printf("error walking uploads dir: %v", err)
