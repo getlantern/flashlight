@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+
+	"github.com/getlantern/flashlight/diagnostics/trafficlog"
 )
 
 var (
@@ -25,6 +27,8 @@ var (
 	forceProxyAddr     = flag.String("force-proxy-addr", "", "if specified, force chained proxying to use this address instead of the configured one, assuming an HTTP proxy")
 	forceAuthToken     = flag.String("force-auth-token", "", "if specified, force chained proxying to use this auth token instead of the configured one")
 	forceConfigCountry = flag.String("force-config-country", "", "if specified, force config fetches to pretend they're coming from this 2 letter country-code")
+	forceTrafficLog    = flag.Bool("force-traffic-log", false, "forces lantern to run with the traffic log enabled; may require root permissions to function")
+	trafficLogMTULimit = flag.Int("tl-mtu-limit", trafficlog.DefaultMaxMTU, "sets the MTU limit for the traffic log (see trafficlog.Options) (0 = none)")
 	readableconfig     = flag.Bool("readableconfig", false, "if specified, disables obfuscation of the config yaml so that it remains human readable")
 	help               = flag.Bool("help", false, "Get usage help")
 	standalone         = flag.Bool("standalone", false, "run Lantern in its own browser window (doesn't rely on system browser)")
