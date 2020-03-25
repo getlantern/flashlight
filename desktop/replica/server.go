@@ -321,12 +321,7 @@ func (me *httpHandler) handleView(w http.ResponseWriter, r *http.Request) {
 		m.DisplayName,
 	)
 	if filename != "" {
-		displayOnly := r.Header.Get("x-display")
-		if displayOnly != "true" {
-			w.Header().Set("Content-Disposition", "attachment; filename*=UTF-8''"+url.QueryEscape(filename))
-		} else {
-			w.Header().Set("Content-Disposition", "inline; filename*=UTF-8''"+url.QueryEscape(filename))
-		}
+		w.Header().Set("Content-Disposition", "inline; filename*=UTF-8''"+url.QueryEscape(filename))
 	}
 
 	selectOnly, err := strconv.ParseUint(m.Params.Get("so"), 10, 0)
