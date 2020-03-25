@@ -113,6 +113,7 @@ func NewHTTPHandler() (_ http.Handler, exitFunc func(), err error) {
 	handler.mux.HandleFunc("/upload", handler.handleUpload)
 	handler.mux.HandleFunc("/uploads", handler.handleUploads)
 	handler.mux.HandleFunc("/view", handler.handleView)
+	handler.mux.HandleFunc("/download", handler.handleDownload)
 	handler.mux.HandleFunc("/delete", handler.handleDelete)
 	handler.mux.HandleFunc("/debug/dht", func(w http.ResponseWriter, r *http.Request) {
 		for _, ds := range torrentClient.DhtServers() {
@@ -266,8 +267,15 @@ func (me *httpHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	os.Remove(filepath.Join(me.dataDir, info.Name))
 	os.Remove(me.uploadMetainfoPath(info))
 }
+func (me *httpHandler) handleDownload(w http.ResponseWriter, r *http.Request) {
+	me.handleViewWith(w, r, "attachment")
+}
 
 func (me *httpHandler) handleView(w http.ResponseWriter, r *http.Request) {
+	me.handleViewWith(w, r, "inline")
+}
+
+func (me *httpHandler) handleViewWith(w http.ResponseWriter, r *http.Request, inlineType string) {
 	link := r.URL.Query().Get("link")
 	m, err := metainfo.ParseMagnetURI(link)
 	if err != nil {
@@ -321,7 +329,7 @@ func (me *httpHandler) handleView(w http.ResponseWriter, r *http.Request) {
 		m.DisplayName,
 	)
 	if filename != "" {
-		w.Header().Set("Content-Disposition", "inline; filename*=UTF-8''"+url.QueryEscape(filename))
+		w.Header().Set("Content-Disposition", inlineType+"; filename*=UTF-8''"+url.QueryEscape(filename))
 	}
 
 	selectOnly, err := strconv.ParseUint(m.Params.Get("so"), 10, 0)
