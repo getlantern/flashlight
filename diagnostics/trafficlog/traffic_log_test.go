@@ -18,7 +18,8 @@ import (
 )
 
 // Some tests in this package require elevated permissions and are thus disabled by default. Set
-// runElevated to true to run these tests. Alternatively, use the flag from the command line.
+// runElevated to true to run these tests. Alternatively, use the flag from the command line
+// (preceded by the -args flag: https://golang.org/pkg/cmd/go/internal/test/#pkg-variables).
 const runElevated = false
 
 var runElevatedFlag = flag.Bool(
@@ -26,10 +27,6 @@ var runElevatedFlag = flag.Bool(
 	runElevated,
 	"run tests in github.com/getlantern/flashlight/diagnostics requiring elevated permissions",
 )
-
-func init() {
-	flag.Parse()
-}
 
 func TestTrafficLog(t *testing.T) {
 	if !*runElevatedFlag {

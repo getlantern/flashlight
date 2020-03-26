@@ -183,7 +183,7 @@ func (buf *sharedRingBuffer) newHook() *sharedBufferHook {
 			}
 
 			for buf.size+itemSize > buf.cap {
-				// Note: calling the eviction function in a new goroutine would avoid the possibility
+				// Note: calling the eviction function in a new goroutine would avoid the
 				// possibility of blocking the put function. However, the overhead of spawning new
 				// goroutines proved too much to keep up with packet ingress.
 				evictingFrom := buf.masterQueue.dequeue().(*queue)

@@ -216,10 +216,6 @@ func New(captureBytes, saveBytes int, opts *Options) *TrafficLog {
 	if opts == nil {
 		opts = &Options{}
 	}
-
-	// Note: It may seem unintuitive that we use buffer pools of size 1 here. However, the buffers
-	// are all held in a ring; each put call on a full ring will result in the pool's single buffer
-	// being replaced and ready for the next packet.
 	return &TrafficLog{
 		newSharedRingBuffer(captureBytes),
 		newRingBuffer(saveBytes),
