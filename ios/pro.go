@@ -3,6 +3,7 @@ package ios
 import (
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/getlantern/fronted"
@@ -111,12 +112,15 @@ func RequestDeviceLinkingCode(deviceID, deviceName string) (string, error) {
 
 // Canceler providers a mechanism for canceling long running operations
 type Canceler struct {
-	c chan interface{}
+	c          chan interface{}
+	cancelOnce sync.Once
 }
 
 // Cancel cancels an operation
 func (c *Canceler) Cancel() {
-	close(c.c)
+	c.cancelOnce.Do(func() {
+		close(c.c)
+	})
 }
 
 // NewCanceler creates a Canceller
@@ -134,6 +138,8 @@ func ValidateDeviceLinkingCode(c *Canceler, deviceID, deviceName, code string) (
 	}
 
 	overallTimeout := time.After(5 * time.Minute)
+	retryDelay := 5 * time.Second
+	maxRetryDelay := 30 * time.Second
 	for {
 		resp, err := pc.ValidateDeviceLinkingCode(partialUserConfigFor(deviceID), deviceName, code)
 		if err == nil {
@@ -142,7 +148,11 @@ func ValidateDeviceLinkingCode(c *Canceler, deviceID, deviceName, code string) (
 
 		err = log.Errorf("unable to validate recovery code: %v", err)
 		select {
-		case <-time.After(5 * time.Second):
+		case <-time.After(retryDelay):
+			retryDelay *= 2
+			if retryDelay > maxRetryDelay {
+				retryDelay = maxRetryDelay
+			}
 			log.Debugf("trying to validate recovery code again")
 			continue
 

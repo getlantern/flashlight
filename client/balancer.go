@@ -2,8 +2,9 @@ package client
 
 import (
 	"fmt"
+	"math/rand"
+	"time"
 
-	"github.com/getlantern/appdir"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
 )
@@ -15,6 +16,7 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 		return nil, fmt.Errorf("No chained servers configured, not initializing balancer")
 	}
 
+	chained.PersistSessionStates("")
 	log.Debugf("Adding %d chained servers", len(proxies))
 	dialers := make([]balancer.Dialer, 0, len(proxies))
 	for name, s := range proxies {
@@ -31,8 +33,6 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 		log.Debugf("Adding chained server: %v", dialer.JustifiedLabel())
 		dialers = append(dialers, dialer)
 	}
-
-	chained.TrackStatsFor(dialers, appdir.General("Lantern"), true)
 	client.bal.Reset(dialers)
 
 	go func() {
@@ -44,7 +44,40 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 	return dialers, nil
 }
 
-// PingProxies pings the client's proxies.
-func (client *Client) PingProxies() {
-	client.bal.PingProxies()
+type pingProxiesConf struct {
+	enabled  func() bool
+	interval int64
+}
+
+// ConfigurePingProxies configure the interval to ping proxies. The actual
+// time to sleep varies among iterations but keeps in the range of interval +/-
+// 50%. Pass 0 to pause pinging.
+func (client *Client) ConfigurePingProxies(enabled func() bool, interval time.Duration) {
+	if interval == 0 {
+		interval = forever
+	}
+	client.chPingProxiesConf <- pingProxiesConf{enabled, int64(interval)}
+}
+
+func (client *Client) pingProxiesLoop() {
+	var conf pingProxiesConf
+	t := time.NewTimer(forever)
+	resetTimer := func() {
+		next := time.Duration(conf.interval/2 + rand.Int63n(conf.interval))
+		t.Reset(next)
+	}
+	for {
+		select {
+		case <-t.C:
+			if conf.enabled() {
+				client.bal.PingProxies()
+			}
+			resetTimer()
+		case conf = <-client.chPingProxiesConf:
+			if !t.Stop() {
+				<-t.C
+			}
+			resetTimer()
+		}
+	}
 }

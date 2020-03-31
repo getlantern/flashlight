@@ -105,7 +105,6 @@ func (c *wc) Write(b []byte) (int, error) {
 
 func (c *wc) Close() error {
 	c.bal.Close()
-	ForceFlush()
 	return nil
 }
 
@@ -113,7 +112,7 @@ type client struct {
 	packetsOut Writer
 	configDir  string
 	mtu        int
-	uc         common.UserConfig
+	uc         *UserConfig
 }
 
 func Client(packetsOut Writer, configDir string, mtu int) (WriteCloser, error) {
@@ -146,7 +145,7 @@ func (c *client) start() (WriteCloser, error) {
 	if err != nil {
 		return nil, err
 	}
-	bal := balancer.New(30*time.Second, dialers...)
+	bal := balancer.New(func() bool { return !c.uc.StealthMode }, 30*time.Second, dialers...)
 
 	w := packetforward.Client(&writerAdapter{c.packetsOut}, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
 		return bal.DialContext(ctx, "connect", "127.0.0.1:3000")
@@ -173,6 +172,8 @@ func (c *client) loadUserConfig() error {
 
 func (c *client) loadDialers() ([]balancer.Dialer, error) {
 	cf := &configurer{configFolderPath: c.configDir}
+	chained.PersistSessionStates(c.configDir)
+
 	proxies := make(map[string]*chained.ChainedServerInfo)
 	_, _, err := cf.openConfig(proxiesYaml, proxies, []byte{})
 	if err != nil {
@@ -195,7 +196,7 @@ func (c *client) loadDialers() ([]balancer.Dialer, error) {
 		dialers = append(dialers, dialer)
 	}
 
-	chained.TrackStatsFor(dialers, filepath.Join(c.configDir, "proxystats.csv"), false)
+	chained.TrackStatsFor(dialers, c.configDir, false)
 
 	return dialers, nil
 }
@@ -233,18 +234,20 @@ func limitMemory() {
 	}
 }
 
-func partialUserConfigFor(deviceID string) *common.UserConfigData {
+func partialUserConfigFor(deviceID string) *UserConfig {
 	return userConfigFor(0, "", deviceID)
 }
 
-func userConfigFor(userID int, proToken, deviceID string) *common.UserConfigData {
-	return common.NewUserConfigData(
-		deviceID,
-		int64(userID),
-		proToken,
-		nil, // Headers currently unused
-		"",  // Language currently unused
-	)
+func userConfigFor(userID int, proToken, deviceID string) *UserConfig {
+	return &UserConfig{
+		UserConfigData: *common.NewUserConfigData(
+			deviceID,
+			int64(userID),
+			proToken,
+			nil, // Headers currently unused
+			"",  // Language currently unused
+		),
+	}
 }
 
 func freeMemory() {

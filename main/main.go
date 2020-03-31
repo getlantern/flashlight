@@ -20,6 +20,8 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
+	"github.com/getlantern/osversion"
+	"github.com/getsentry/sentry-go"
 	"github.com/mitchellh/panicwrap"
 
 	"github.com/getlantern/flashlight/chained"
@@ -51,7 +53,6 @@ func main() {
 		Flags: flagsAsMap(),
 	}
 	a.Init()
-	wrapperC := handleWrapperSignals(a)
 
 	logFile, err := logging.RotatedLogsUnder(appdir.Logs("Lantern"))
 	if err != nil {
@@ -79,6 +80,24 @@ func main() {
 		}()
 	}
 
+	// This init needs to be called before the panicwrapper fork so that it has been
+	// defined in the parent process
+	if desktop.ShouldReportToSentry() {
+		sentry.Init(sentry.ClientOptions{
+			Dsn:     desktop.SENTRY_DSN,
+			Release: common.Version,
+		})
+
+		sentry.ConfigureScope(func(scope *sentry.Scope) {
+			os_version, err := osversion.GetHumanReadable()
+			if err != nil {
+				log.Errorf("Unable to get os version: %v", err)
+			} else {
+				scope.SetTag("os_version", os_version)
+			}
+		})
+	}
+
 	// Disable panicwrap for cases either unnecessary or when the exit status
 	// is desirable.
 	if disablePanicWrap() {
@@ -89,6 +108,13 @@ func main() {
 		exitStatus, err := panicwrap.Wrap(
 			&panicwrap.WrapConfig{
 				Handler: a.LogPanicAndExit,
+				// Just forward signals to the child process so that it can cleanup appropriately
+				ForwardSignals: []os.Signal{
+					syscall.SIGHUP,
+					syscall.SIGTERM,
+					syscall.SIGQUIT,
+					os.Interrupt,
+				},
 				// Pipe child process output to log files instead of letting the
 				// child to write directly because we want to capture anything
 				// printed by go runtime and other libraries as well.
@@ -109,9 +135,8 @@ func main() {
 			}
 		}
 	}
+	// We're in the child (wrapped) process now
 
-	// We're in the child (wrapped) process, stop wrapper signal handling.
-	signal.Stop(wrapperC)
 	golog.SetPrepender(logging.Timestamped)
 
 	if *pprofAddr != "" {
@@ -143,14 +168,9 @@ func main() {
 		config.ForceCountry(*forceConfigCountry)
 	}
 
-	if *stealthMode {
-		log.Debug("Running in stealth mode")
-		common.ForceStealthMode()
-	}
-
 	if a.ShouldShowUI() {
 		i18nInit(a)
-		runOnSystrayReady(*standalone, a, func() {
+		desktop.RunOnSystrayReady(*standalone, a, func() {
 			runApp(a)
 		})
 	} else {
@@ -169,17 +189,6 @@ func main() {
 func runApp(a *desktop.App) {
 	// Schedule cleanup actions
 	handleSignals(a)
-	if a.ShouldShowUI() {
-		go func() {
-			if err := configureSystemTray(a); err != nil {
-				return
-			}
-			a.OnSettingChange(desktop.SNLanguage, func(lang interface{}) {
-				refreshSystray(lang.(string))
-			})
-		}()
-	}
-
 	a.Run()
 }
 
@@ -218,23 +227,6 @@ func parseFlags() {
 	_ = flag.CommandLine.Parse(args)
 }
 
-// Handle system signals in panicwrap wrapper process for clean exit
-func handleWrapperSignals(a *desktop.App) chan os.Signal {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c,
-		syscall.SIGHUP,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGQUIT,
-		syscall.SIGPIPE) // it's okay to trap SIGPIPE in the wrapper but not in the main process because we can get it from failed network connections
-	go func() {
-		s := <-c
-		log.Debugf("Got wrapper signal \"%s\", exiting...", s)
-		a.LogPanicAndExit(fmt.Sprintf("Panicwrapper received signal %v", s))
-	}()
-	return c
-}
-
 // Handle system signals for clean exit
 func handleSignals(a *desktop.App) {
 	c := make(chan os.Signal, 1)
@@ -246,7 +238,7 @@ func handleSignals(a *desktop.App) {
 	go func() {
 		s := <-c
 		log.Debugf("Got signal \"%s\", exiting...", s)
-		quitSystray(a)
+		desktop.QuitSystray(a)
 	}()
 }
 

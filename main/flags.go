@@ -25,7 +25,6 @@ var (
 	forceProxyAddr     = flag.String("force-proxy-addr", "", "if specified, force chained proxying to use this address instead of the configured one, assuming an HTTP proxy")
 	forceAuthToken     = flag.String("force-auth-token", "", "if specified, force chained proxying to use this auth token instead of the configured one")
 	forceConfigCountry = flag.String("force-config-country", "", "if specified, force config fetches to pretend they're coming from this 2 letter country-code")
-	stealthMode        = flag.Bool("stealth", false, "enables stealth mode whether or not it's enabled in the global config")
 	readableconfig     = flag.Bool("readableconfig", false, "if specified, disables obfuscation of the config yaml so that it remains human readable")
 	help               = flag.Bool("help", false, "Get usage help")
 	noUiHttpToken      = flag.Bool("noUiHttpToken", false, "don't require a HTTP token from the UI")

@@ -2,6 +2,7 @@ package flashlight
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"path/filepath"
@@ -38,6 +39,122 @@ var (
 	startProxyBenchOnce sync.Once
 )
 
+type runner struct {
+	configDir         string
+	flagsAsMap        map[string]interface{}
+	userConfig        common.UserConfig
+	isPro             func() bool
+	mxGlobal          sync.RWMutex
+	global            *config.Global
+	onProxiesUpdate   func([]balancer.Dialer)
+	onConfigUpdate    func(*config.Global)
+	onBordaConfigured chan bool
+	autoReport        func() bool
+	client            *client.Client
+}
+
+func (r *runner) onGlobalConfig(cfg *config.Global) {
+	r.mxGlobal.Lock()
+	r.global = cfg
+	r.mxGlobal.Unlock()
+	applyClientConfig(cfg)
+	r.applyProxyBenchAndBorda(cfg)
+	select {
+	case r.onBordaConfigured <- true:
+		// okay
+	default:
+		// ignore
+	}
+	r.onConfigUpdate(cfg)
+	r.reconfigurePingProxies()
+}
+
+func (r *runner) reconfigurePingProxies() {
+	enabled := func() bool {
+		return common.InDevelopment() ||
+			(r.featureEnabled(config.FeaturePingProxies) && r.autoReport())
+	}
+	var opts config.PingProxiesOptions
+	// ignore the error because the zero value means disabling it.
+	_ = r.featureOptions(config.FeaturePingProxies, &opts)
+	r.client.ConfigurePingProxies(enabled, opts.Interval)
+}
+
+func (r *runner) stealthMode() bool {
+	return r.featureEnabled(config.FeatureStealthMode)
+}
+
+func (r *runner) featureEnabled(feature string) bool {
+	r.mxGlobal.RLock()
+	global := r.global
+	r.mxGlobal.RUnlock()
+	country := geolookup.GetCountry(0)
+	// Sepcial case: Force stealth mode until geolookup is finished to avoid
+	// accidentally generating traffic to trigger block.
+	if country == "" && feature == config.FeatureStealthMode {
+		log.Debug("Force stealth mode when geolookup is not done yet")
+		return true
+	}
+	if global == nil {
+		log.Error("No global configuration!")
+		return false
+	}
+	return global.FeatureEnabled(feature,
+		r.userConfig.GetUserID(),
+		r.isPro(),
+		country)
+}
+
+func (r *runner) featureOptions(feature string, opts config.FeatureOptions) error {
+	r.mxGlobal.RLock()
+	global := r.global
+	r.mxGlobal.RUnlock()
+	if global == nil {
+		// just to be safe
+		return errors.New("No global configuration")
+	}
+	return global.UnmarshalFeatureOptions(feature, opts)
+}
+
+func (r *runner) startConfigFetch() func() {
+	proxiesDispatch := func(conf interface{}) {
+		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
+		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
+		dialers := r.client.Configure(proxyMap)
+		if dialers != nil {
+			r.onProxiesUpdate(dialers)
+		}
+	}
+	globalDispatch := func(conf interface{}) {
+		cfg := conf.(*config.Global)
+		log.Debugf("Applying global config")
+		r.onGlobalConfig(cfg)
+	}
+	rt := proxied.ParallelPreferChained()
+
+	stopConfig := config.Init(r.configDir, r.flagsAsMap, r.userConfig, proxiesDispatch, globalDispatch, rt)
+	return stopConfig
+}
+
+func (r *runner) applyProxyBenchAndBorda(cfg *config.Global) {
+	if r.featureEnabled(config.FeatureProxyBench) && !r.stealthMode() {
+		startProxyBenchOnce.Do(func() {
+			proxybench.Start(&proxybench.Opts{}, func(timing time.Duration, ctx map[string]interface{}) {})
+		})
+	}
+
+	_enableBorda := borda.Enabler(cfg.BordaSamplePercentage)
+	enableBorda := func(ctx map[string]interface{}) bool {
+		if !r.autoReport() || !r.stealthMode() {
+			// User has chosen not to automatically submit data
+			return false
+		}
+
+		return _enableBorda(ctx)
+	}
+	borda.Configure(cfg.BordaReportInterval, enableBorda)
+}
+
 // Run runs a client proxy. It blocks as long as the proxy is running.
 func Run(httpProxyAddr string,
 	socksProxyAddr string,
@@ -61,14 +178,6 @@ func Run(httpProxyAddr string,
 	lang func() string,
 	adSwapTargetURL func() string,
 	reverseDNS func(host string) string) error {
-
-	useShortcut := func() bool {
-		return !common.InStealthMode() && _useShortcut()
-	}
-
-	useDetour := func() bool {
-		return !common.InStealthMode() && _useDetour()
-	}
 
 	if onProxiesUpdate == nil {
 		onProxiesUpdate = func(_ []balancer.Dialer) {}
@@ -132,8 +241,28 @@ func Run(httpProxyAddr string,
 		}
 	}
 
+	r := runner{configDir: configDir,
+		flagsAsMap:        flagsAsMap,
+		userConfig:        userConfig,
+		isPro:             isPro,
+		global:            nil,
+		onProxiesUpdate:   onProxiesUpdate,
+		onConfigUpdate:    onConfigUpdate,
+		onBordaConfigured: make(chan bool, 1),
+		autoReport:        autoReport,
+	}
+
+	useShortcut := func() bool {
+		return !r.stealthMode() && _useShortcut()
+	}
+
+	useDetour := func() bool {
+		return !r.stealthMode() && _useDetour()
+	}
+
 	cl, err := client.NewClient(
 		disconnected,
+		r.stealthMode,
 		func(ctx context.Context, addr string) (bool, net.IP) {
 			if useShortcut() {
 				return shortcut.Allow(ctx, addr)
@@ -153,45 +282,11 @@ func Run(httpProxyAddr string,
 		op.FailIf(fatalErr)
 		op.End()
 	}
-
-	proxiesDispatch := func(conf interface{}) {
-		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
-		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
-		dialers := cl.Configure(proxyMap)
-		if dialers != nil {
-			onProxiesUpdate(dialers)
-		}
-	}
-
-	onBordaConfigured := make(chan bool, 1)
-	globalDispatch := func(conf interface{}) {
-		// Don't love the straight cast here, but we're also the ones defining
-		// the type in the factory method above.
-		cfg := conf.(*config.Global)
-		log.Debugf("Applying global config")
-		applyClientConfig(cfg)
-		featureEnabled := func(feature string) bool {
-			return cfg.FeatureEnabled(feature, userID(), isPro(), geolookup.GetCountry(0))
-		}
-		applyProxyBenchAndBorda(cfg, featureEnabled, autoReport)
-		select {
-		case onBordaConfigured <- true:
-			// okay
-		default:
-			// ignore
-		}
-
-		common.SetStealthMode(featureEnabled(config.FeatureStealthMode))
-		onConfigUpdate(cfg)
-		if common.InDevelopment() || (featureEnabled(config.FeaturePingProxies) && common.Platform != "android" && autoReport()) {
-			cl.PingProxies()
-		}
-	}
+	r.client = cl
 
 	proxied.SetProxyAddr(cl.Addr)
-	rt := proxied.ParallelPreferChained()
-	stopConfig := config.Init(configDir, flagsAsMap, userConfig, proxiesDispatch, globalDispatch, rt)
-	defer stopConfig()
+	stop := r.startConfigFetch()
+	defer stop()
 
 	if beforeStart() {
 		log.Debug("Preparing to start client proxy")
@@ -225,11 +320,9 @@ func Run(httpProxyAddr string,
 
 			// wait for borda to be configured before proceeding
 			select {
-			case <-onBordaConfigured:
-				// okay, now we're ready
+			case <-r.onBordaConfigured:
 			case <-time.After(5 * time.Second):
-				// borda didn't get configured quickly, proceed anyway
-				// anyway
+				log.Debug("borda didn't get configured quickly, proceed anyway")
 			}
 
 			ops.Go(func() {
@@ -237,10 +330,8 @@ func Run(httpProxyAddr string,
 				// country
 				select {
 				case <-onGeo:
-					// good to go
 				case <-time.After(5 * time.Minute):
-					// failed to get geolocation info within 5 minutes, just record end of
-					// startup anyway
+					log.Debug("failed to get geolocation info within 5 minutes, just record end of startup anyway")
 				}
 				op.End()
 			})
@@ -266,27 +357,6 @@ func applyClientConfig(cfg *config.Global) {
 	} else {
 		log.Errorf("Unable to configured fronted (no config)")
 	}
-}
-
-func applyProxyBenchAndBorda(cfg *config.Global, featureEnabled func(feature string) bool, autoReport func() bool) {
-	if featureEnabled(config.FeatureProxyBench) && !featureEnabled(config.FeatureStealthMode) {
-		startProxyBenchOnce.Do(func() {
-			proxybench.Start(&proxybench.Opts{}, func(timing time.Duration, ctx map[string]interface{}) {})
-		})
-	}
-
-	_enableBorda := borda.Enabler(cfg.BordaSamplePercentage)
-	enableBorda := func(ctx map[string]interface{}) bool {
-		if !autoReport() {
-			// User has chosen not to automatically submit data
-			return false
-		}
-
-		return _enableBorda(ctx)
-	}
-
-	borda.Configure(cfg.BordaReportInterval, enableBorda)
-
 }
 
 func displayVersion() {

@@ -3,9 +3,11 @@ package chained
 import (
 	"context"
 	"crypto/rsa"
-	gtls "crypto/tls"
+	stls "crypto/tls"
 	"crypto/x509"
-	"encoding/base64"
+	"encoding/binary"
+	"encoding/hex"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"net"
@@ -20,7 +22,6 @@ import (
 
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
-	"github.com/mitchellh/mapstructure"
 	tls "github.com/refraction-networking/utls"
 
 	"github.com/getlantern/cmux"
@@ -36,9 +37,10 @@ import (
 	"github.com/getlantern/lampshade"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
-	"github.com/getlantern/quicwrapper"
 	"github.com/getlantern/tinywss"
 	"github.com/getlantern/tlsdialer"
+	"github.com/getlantern/tlsmasq"
+	"github.com/getlantern/tlsmasq/ptlshs"
 	"github.com/getlantern/tlsresumption"
 
 	"github.com/getlantern/flashlight/balancer"
@@ -59,6 +61,12 @@ const (
 
 	defaultMultiplexedPhysicalConns = 1
 )
+
+// InsecureSkipVerifyTLSMasqOrigin controls whether the origin certificate is verified when dialing
+// a tlsmasq proxy. This can be used when testing against origins with self-signed certificates.
+// This should be false in production as allowing a 3rd party to impersonate the origin could allow
+// for a kind of probe.
+var InsecureSkipVerifyTLSMasqOrigin = false
 
 var (
 	chainedDialTimeout          = 1 * time.Minute
@@ -106,10 +114,12 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		return newOBFS4Proxy(name, transport, proto, s, uc)
 	case "lampshade":
 		return newLampshadeProxy(name, transport, proto, s, uc)
-	case "quic", "oquic":
-		return newQUICProxy(name, s, uc)
+	case "quic", "quic_ietf", "oquic":
+		return newQUICProxy(name, transport, s, uc)
 	case "wss":
 		return newWSSProxy(name, s, uc)
+	case "tlsmasq":
+		return newTLSMasqProxy(name, s, uc)
 	default:
 		return nil, errors.New("Unknown transport: %v", s.PluggableTransport).With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
 	}
@@ -170,24 +180,28 @@ func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc commo
 	}
 	x509cert := cert.X509()
 
+	tlsConfig, clientHelloID := tlsConfigForProxy(name, s, uc)
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
-			tlsConfig, clientHelloID, clientSessionState := tlsConfigForProxy(s)
 			td := &tlsdialer.Dialer{
 				DoDial: func(network, addr string, timeout time.Duration) (net.Conn, error) {
 					return p.dialCore(op)(ctx)
 				},
-				Timeout:            timeoutFor(ctx),
-				SendServerName:     tlsConfig.ServerName != "",
-				Config:             tlsConfig,
-				ClientHelloID:      clientHelloID,
-				ClientSessionState: clientSessionState,
+				Timeout:        timeoutFor(ctx),
+				SendServerName: tlsConfig.ServerName != "",
+				Config:         tlsConfig,
+				ClientHelloID:  clientHelloID,
 			}
-			conn, err := td.Dial("tcp", p.addr)
+			result, err := td.DialForTimings("tcp", p.addr)
 			if err != nil {
-				return conn, err
+				return nil, err
 			}
-			if clientSessionState == nil && !conn.ConnectionState().PeerCertificates[0].Equal(x509cert) {
+			conn := result.Conn
+			peerCertificates := conn.ConnectionState().PeerCertificates
+			// when using tls session resumption from a stored session state, there will be no peer certificates.
+			// this is okay.
+			resumedSession := len(peerCertificates) == 0
+			if !resumedSession && !conn.ConnectionState().PeerCertificates[0].Equal(x509cert) {
 				if closeErr := conn.Close(); closeErr != nil {
 					log.Debugf("Error closing chained server connection: %s", closeErr)
 				}
@@ -321,7 +335,7 @@ func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc c
 	return newProxy(name, transport, proto, s, uc, s.Trusted, false, doDialServer, defaultDialOrigin)
 }
 
-func newQUICProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+func newQUICProxy(name string, transport string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 
 	dialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(s.Addr, "quic", "udp", func(op *ops.Op) (net.Conn, error) {
@@ -330,7 +344,7 @@ func newQUICProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pro
 		})
 	}
 
-	return newProxy(name, "quic", "udp", s, uc, s.Trusted, false, dialServer, defaultDialOrigin)
+	return newProxy(name, transport, "udp", s, uc, s.Trusted, false, dialServer, defaultDialOrigin)
 }
 
 func newWSSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
@@ -343,6 +357,123 @@ func newWSSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*prox
 	}
 
 	return newProxy(name, "wss", "tcp", s, uc, s.Trusted, false, doDialServer, defaultDialOrigin)
+}
+
+func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+	decodeUint16 := func(s string) (uint16, error) {
+		b, err := hex.DecodeString(strings.TrimPrefix(s, "0x"))
+		if err != nil {
+			return 0, err
+		}
+		return binary.BigEndian.Uint16(b), nil
+	}
+
+	suites := []uint16{}
+	suiteStrings := strings.Split(s.ptSetting("tlsmasq_suites"), ",")
+	if len(suiteStrings) == 1 && suiteStrings[0] == "" {
+		return nil, errors.New("no cipher suites specified")
+	}
+	for _, s := range suiteStrings {
+		suite, err := decodeUint16(s)
+		if err != nil {
+			return nil, errors.New("bad cipher string '%s': %v", s, err)
+		}
+		suites = append(suites, suite)
+	}
+	versStr := s.ptSetting("tlsmasq_tlsminversion")
+	minVersion, err := decodeUint16(versStr)
+	if err != nil {
+		return nil, errors.New("bad TLS version string '%s': %v", versStr, err)
+	}
+	secretString := s.ptSetting("tlsmasq_secret")
+	secretBytes, err := hex.DecodeString(strings.TrimPrefix(secretString, "0x"))
+	if err != nil {
+		return nil, errors.New("bad server-secret string '%s': %v", secretString, err)
+	}
+	secret := ptlshs.Secret{}
+	if len(secretBytes) != len(secret) {
+		return nil, errors.New("expected %d-byte secret string, got %d bytes", len(secret), len(secretBytes))
+	}
+	copy(secret[:], secretBytes)
+	sni := s.ptSetting("tlsmasq_sni")
+	if sni == "" {
+		return nil, errors.New("server name indicator must be configured")
+	}
+	// It's okay if this is unset - it'll just result in us using the default.
+	nonceTTL := time.Duration(s.ptSettingInt("tlsmasq_noncettl"))
+
+	host, _, err := net.SplitHostPort(s.Addr)
+	if err != nil {
+		return nil, errors.New("malformed server address: %v", err)
+	}
+
+	// Add the proxy cert to the root CAs as proxy certs are self-signed.
+	if s.Cert == "" {
+		return nil, errors.New("no proxy certificate configured")
+	}
+	block, rest := pem.Decode([]byte(s.Cert))
+	if block == nil {
+		return nil, errors.New("failed to decode proxy certificate as PEM block")
+	}
+	if len(rest) > 0 {
+		return nil, errors.New("unexpected extra data in proxy certificate PEM")
+	}
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return nil, errors.New("failed to parse proxy certificate: %v", err)
+	}
+	pool, err := x509.SystemCertPool()
+	if err != nil {
+		return nil, errors.New("failed to load system cert pool: %v", err)
+	}
+	pool.AddCert(cert)
+
+	pCfg, helloID := tlsConfigForProxy(name, s, uc)
+	pCfg.ServerName = sni
+	pCfg.InsecureSkipVerify = InsecureSkipVerifyTLSMasqOrigin
+
+	cfg := tlsmasq.DialerConfig{
+		ProxiedHandshakeConfig: ptlshs.DialerConfig{
+			Handshaker: utlsHandshaker{pCfg, helloID},
+			Secret:     secret,
+			NonceTTL:   nonceTTL,
+		},
+		TLSConfig: &stls.Config{
+			MinVersion:   minVersion,
+			CipherSuites: suites,
+			// Proxy certificates are valid for the host (usually their IP address).
+			ServerName: host,
+			RootCAs:    pool,
+		},
+	}
+
+	dialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
+		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
+			tcpConn, err := p.dialCore(op)(ctx)
+			if err != nil {
+				return nil, err
+			}
+			conn := tlsmasq.Client(tcpConn, cfg)
+
+			// We execute the handshake as part of the dial. Otherwise, preconnecting wouldn't do
+			// much for us.
+			errc := make(chan error)
+			go func() { errc <- conn.Handshake() }()
+			select {
+			case err := <-errc:
+				if err != nil {
+					conn.Close()
+					return nil, errors.New("handshake failed: %v", err)
+				}
+				return conn, nil
+			case <-ctx.Done():
+				conn.Close()
+				return nil, ctx.Err()
+			}
+		})
+	}
+
+	return newProxy(name, "tlsmasq", "tcp", s, uc, s.Trusted, true, dialServer, defaultDialOrigin)
 }
 
 // consecCounter is a counter that can extend on both directions. Its default
@@ -488,8 +619,15 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 			return nil, err
 		}
 		p.protocol = "kcp"
-	} else if s.PluggableTransport == "quic" || s.PluggableTransport == "oquic" {
-		log.Debugf("Enabling QUIC for %v (%v)", p.Label(), p.protocol)
+	} else if s.PluggableTransport == "quic" {
+		log.Debugf("Enabling QUIC0 (legacy) for %v (%v)", p.Label(), p.protocol)
+		err := enableQUIC0(p, s)
+		if err != nil {
+			return nil, err
+		}
+		p.protocol = s.PluggableTransport
+	} else if s.PluggableTransport == "quic_ietf" || s.PluggableTransport == "oquic" {
+		log.Debugf("Enabling QUIC (%s) for %v (%v)", s.PluggableTransport, p.Label(), p.protocol)
 		err := enableQUIC(p, s)
 		if err != nil {
 			return nil, err
@@ -522,48 +660,20 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 	return p, nil
 }
 
-func enableKCP(p *proxy, s *ChainedServerInfo) error {
-	var cfg KCPConfig
-	err := mapstructure.Decode(s.KCPSettings, &cfg)
-	if err != nil {
-		return log.Errorf("Could not decode kcp transport settings?: %v", err)
-	}
-	p.kcpConfig = &cfg
-
-	// Fix address (comes across as kcp-placeholder)
-	p.addr = cfg.RemoteAddr
-	// KCP consumes a lot of bandwidth, so we want to bias against using it unless
-	// everything else is blocked. However, we prefer it to domain-fronting. We
-	// only default the bias if none was configured.
-	if p.bias == 0 {
-		p.bias = -1
-	}
-
-	addIdleTiming := func(conn net.Conn) net.Conn {
-		log.Debug("Wrapping KCP with idletiming")
-		return idletiming.Conn(conn, IdleTimeout*2, func() {
-			log.Debug("KCP connection idled")
-		})
-	}
-	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig, addIdleTiming)
-
-	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
-		elapsed := mtime.Stopwatch()
-
-		conn, err := dialKCP(ctx, "tcp", p.addr)
-		delta := elapsed()
-		return conn, delta, err
-	}
-
-	return nil
-}
-
 func enableWSS(p *proxy, s *ChainedServerInfo) error {
 	var rt tinywss.RoundTripHijacker
 	var err error
 
+	force_http := s.ptSettingBool("force_http")
 	fctx_id := s.ptSetting("df_ctx")
-	if fctx_id != "" {
+
+	if force_http {
+		log.Debugf("Using wss http direct")
+		rt, err = wssHTTPRoundTripper(p, s)
+		if err != nil {
+			return err
+		}
+	} else if fctx_id != "" {
 		fctx := GetFrontingContext(fctx_id)
 		if fctx == nil {
 			return fmt.Errorf("unsupported wss df_ctx=%s! skipping.", fctx_id)
@@ -621,9 +731,15 @@ func (rt *wssFrontedRT) RoundTripHijack(req *http.Request) (*http.Response, net.
 	}
 }
 
+func wssHTTPRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
+	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
+		log.Debugf("tinywss HTTP Roundtripper dialing %v", addr)
+		return netx.DialTimeout(network, addr, chainedDialTimeout)
+	}), nil
+}
+
 func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
 
-	// Verify the SNI name if given, otherwise verify the hostname given and do not use SNI.
 	var err error
 	serverName := s.TLSServerNameIndicator
 	sendServerName := true
@@ -637,6 +753,9 @@ func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHija
 	helloID := s.clientHelloID()
 	pinnedCert := s.ptSettingBool("pin_certificate")
 
+	// if set, force validation of a name other than the SNI name
+	forceValidateName := s.ptSetting("force_validate_name")
+
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
@@ -644,7 +763,7 @@ func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHija
 	x509cert := cert.X509()
 
 	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
-		log.Debugf("tinywss Roundtripper dialing %v", addr)
+		log.Debugf("tinywss HTTPS Roundtripper dialing %v", addr)
 
 		var certPool *x509.CertPool
 
@@ -669,97 +788,16 @@ func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHija
 		}
 
 		td := &tlsdialer.Dialer{
-			DoDial:         netx.DialTimeout,
-			SendServerName: sendServerName,
-			Config:         tlsConf,
-			ClientHelloID:  helloID,
-			Timeout:        chainedDialTimeout,
+			DoDial:            netx.DialTimeout,
+			SendServerName:    sendServerName,
+			ForceValidateName: forceValidateName,
+			Config:            tlsConf,
+			ClientHelloID:     helloID,
+			Timeout:           chainedDialTimeout,
 		}
 
 		return td.Dial(network, addr)
 	}), nil
-}
-
-func enableQUIC(p *proxy, s *ChainedServerInfo) error {
-	addr := s.Addr
-	tlsConf := &gtls.Config{
-		ServerName:         s.TLSServerNameIndicator,
-		InsecureSkipVerify: true,
-		KeyLogWriter:       getTLSKeyLogWriter(),
-	}
-
-	maxStreamsPerConn := s.ptSettingInt("streams")
-
-	quicConf := &quicwrapper.Config{
-		IdleTimeout:        IdleTimeout,
-		MaxIncomingStreams: maxStreamsPerConn,
-		KeepAlive:          true,
-	}
-
-	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
-	if err != nil {
-		return log.Error(errors.Wrap(err).With("addr", s.Addr))
-	}
-	pinnedCert := cert.X509()
-
-	dialFn := quicwrapper.DialWithNetx
-
-	if s.PluggableTransport == "oquic" {
-		oquicKeyStr := s.ptSetting("oquic_key")
-		if oquicKeyStr == "" {
-			return log.Error("Missing oquic_key for oquic transport")
-		}
-		oquicKey, err := base64.StdEncoding.DecodeString(oquicKeyStr)
-		if err != nil {
-			return log.Error(errors.Wrap(err).With("oquic_key", oquicKeyStr))
-		}
-		oquicConfig := quicwrapper.DefaultOQuicConfig(oquicKey)
-		if cipher := s.ptSetting("oquic_cipher"); cipher != "" {
-			oquicConfig.Cipher = cipher
-		}
-		if s.ptSetting("oquic_aggressive_padding") != "" {
-			oquicConfig.AggressivePadding = int64(s.ptSettingInt("oquic_aggressive_padding"))
-		}
-		if s.ptSetting("oquic_max_padding_hint") != "" {
-			oquicConfig.MaxPaddingHint = uint8(s.ptSettingInt("oquic_max_padding_hint"))
-		}
-		if s.ptSetting("oquic_min_padded") != "" {
-			oquicConfig.MinPadded = s.ptSettingInt("oquic_min_padded")
-		}
-
-		dialFn, err = quicwrapper.NewOQuicDialerWithUDPDialer(quicwrapper.DialUDPNetx, oquicConfig)
-		if err != nil {
-			return log.Errorf("Unable to create oquic dialer: %v", err)
-		}
-	}
-
-	dialer := quicwrapper.NewClientWithPinnedCert(
-		addr,
-		tlsConf,
-		quicConf,
-		dialFn,
-		pinnedCert,
-	)
-	// when the proxy closes, close the dialer
-	go func() {
-		<-p.closeCh
-		log.Debug("Closing quic session: Proxy closed.")
-		dialer.Close()
-	}()
-
-	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
-		elapsed := mtime.Stopwatch()
-		conn, err := dialer.DialContext(ctx)
-		if err != nil {
-			log.Debugf("Failed to establish multiplexed connection: %s", err)
-		} else {
-			log.Debug("established new multiplexed quic connection.")
-		}
-		delta := elapsed()
-		return conn, delta, err
-	}
-
-	return nil
 }
 
 func (p *proxy) Protocol() string {
@@ -968,25 +1006,9 @@ func reportProxyDial(delta time.Duration, err error) {
 	}
 }
 
-func tlsConfigForProxy(s *ChainedServerInfo) (*tls.Config, tls.ClientHelloID, *tls.ClientSessionState) {
-	var sessionCache tls.ClientSessionCache
-	if s.TLSClientSessionCacheSize == 0 {
-		sessionCache = tls.NewLRUClientSessionCache(1000)
-	} else if s.TLSClientSessionCacheSize > 0 {
-		sessionCache = tls.NewLRUClientSessionCache(s.TLSClientSessionCacheSize)
-	}
-	cipherSuites := orderedCipherSuitesFromConfig(s)
-
-	cfg := &tls.Config{
-		ClientSessionCache: sessionCache,
-		CipherSuites:       cipherSuites,
-		ServerName:         s.TLSServerNameIndicator,
-		InsecureSkipVerify: true,
-		KeyLogWriter:       getTLSKeyLogWriter(),
-	}
+func tlsConfigForProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*tls.Config, tls.ClientHelloID) {
 
 	helloID := s.clientHelloID()
-
 	var ss *tls.ClientSessionState
 	var err error
 	if s.TLSClientSessionState != "" {
@@ -1002,7 +1024,19 @@ func tlsConfigForProxy(s *ChainedServerInfo) (*tls.Config, tls.ClientHelloID, *t
 		}
 	}
 
-	return cfg, helloID, ss
+	sessionTTL := chooseSessionTicketTTL(uc)
+	sessionCache := newExpiringSessionCache(name, sessionTTL, ss)
+	cipherSuites := orderedCipherSuitesFromConfig(s)
+
+	cfg := &tls.Config{
+		ClientSessionCache: sessionCache,
+		CipherSuites:       cipherSuites,
+		ServerName:         s.TLSServerNameIndicator,
+		InsecureSkipVerify: true,
+		KeyLogWriter:       getTLSKeyLogWriter(),
+	}
+
+	return cfg, helloID
 }
 
 func orderedCipherSuitesFromConfig(s *ChainedServerInfo) []uint16 {
@@ -1026,4 +1060,22 @@ func getTLSKeyLogWriter() io.Writer {
 		}
 	})
 	return tlsKeyLogWriter
+}
+
+// utlsHandshaker implements tlsmasq/ptlshs.Handshaker. This allows us to parrot browsers like
+// Chrome in our handshakes with tlsmasq origins.
+type utlsHandshaker struct {
+	cfg     *tls.Config
+	helloID tls.ClientHelloID
+}
+
+func (h utlsHandshaker) Handshake(conn net.Conn) (*ptlshs.HandshakeResult, error) {
+	uconn := tls.UClient(conn, h.cfg, h.helloID)
+	if err := uconn.Handshake(); err != nil {
+		return nil, err
+	}
+	return &ptlshs.HandshakeResult{
+		Version:     uconn.ConnectionState().Version,
+		CipherSuite: uconn.ConnectionState().CipherSuite,
+	}, nil
 }

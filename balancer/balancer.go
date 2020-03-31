@@ -14,7 +14,7 @@ import (
 	"time"
 
 	humanize "github.com/dustin/go-humanize"
-	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog"
 )
@@ -139,33 +139,39 @@ type dialStats struct {
 
 // Balancer balances connections among multiple Dialers.
 type Balancer struct {
-	mu                  sync.RWMutex
-	overallDialTimeout  time.Duration
-	dialers             sortedDialers
-	trusted             sortedDialers
-	sessionStats        map[string]*dialStats
-	lastReset           time.Time
-	chEvalDialers       chan struct{}
-	closeOnce           sync.Once
-	closeCh             chan struct{}
-	onActiveDialer      chan Dialer
-	priorTopDialer      Dialer
-	hasSucceedingDialer chan bool
-	HasSucceedingDialer <-chan bool
+	mu                      sync.RWMutex
+	overallDialTimeout      time.Duration
+	dialers                 sortedDialers
+	trusted                 sortedDialers
+	sessionStats            map[string]*dialStats
+	lastReset               time.Time
+	chEvalDialers           chan struct{}
+	closeOnce               sync.Once
+	closeCh                 chan struct{}
+	onActiveDialer          chan Dialer
+	priorTopDialer          Dialer
+	hasSucceedingDialer     chan bool
+	HasSucceedingDialer     <-chan bool
+	configured              chan struct{}
+	closeConfiguredOnce     sync.Once
+	allowBackgroundChecking func() bool
 }
 
 // New creates a new Balancer using the supplied Dialers.
-func New(overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
+func New(allowBackgroundChecking func() bool, overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
+	log.Debugf("Constructing new balancer with %d dialers", len(dialers))
 	// a small alpha to gradually adjust timeout based on performance of all
 	// dialers
 	hasSucceedingDialer := make(chan bool, 1000)
 	b := &Balancer{
-		overallDialTimeout:  overallDialTimeout,
-		closeCh:             make(chan struct{}),
-		chEvalDialers:       make(chan struct{}, 1),
-		onActiveDialer:      make(chan Dialer, 1),
-		hasSucceedingDialer: hasSucceedingDialer,
-		HasSucceedingDialer: hasSucceedingDialer,
+		overallDialTimeout:      overallDialTimeout,
+		closeCh:                 make(chan struct{}),
+		chEvalDialers:           make(chan struct{}, 1),
+		onActiveDialer:          make(chan Dialer, 1),
+		hasSucceedingDialer:     hasSucceedingDialer,
+		HasSucceedingDialer:     hasSucceedingDialer,
+		configured:              make(chan struct{}),
+		allowBackgroundChecking: allowBackgroundChecking,
 	}
 
 	b.initOpsContext()
@@ -183,6 +189,10 @@ func New(overallDialTimeout time.Duration, dialers ...Dialer) *Balancer {
 
 // Reset closes existing dialers and replaces them with new ones.
 func (b *Balancer) Reset(dialers []Dialer) {
+	if len(dialers) > 0 {
+		defer b.closeConfiguredOnce.Do(func() { close(b.configured) })
+	}
+
 	log.Debugf("Resetting with %d dialers", len(dialers))
 	dls := make(sortedDialers, len(dialers))
 	copy(dls, dialers)
@@ -233,6 +243,9 @@ func (b *Balancer) ResetFromExisting() {
 // dial with the first available. If none are available, it keeps cycling
 // through the list in priority order until it finds one. It will keep trying
 // for up to 30 seconds, at which point it gives up.
+//
+// Blocks until dialers are available on the balancer (configured via the New
+// constructor or b.Reset).
 func (b *Balancer) Dial(network, addr string) (net.Conn, error) {
 	return b.DialContext(context.Background(), network, addr)
 }
@@ -244,6 +257,15 @@ func (b *Balancer) DialContext(ctx context.Context, network, addr string) (net.C
 
 	op = ops.Begin("balancer_dial_details")
 	defer op.End()
+
+	select {
+	case <-b.configured:
+		// The dialers are configured, so we can proceed.
+	case <-time.After(b.overallDialTimeout):
+		return nil, errors.New("timed out waiting for dialers to be configured")
+	case <-ctx.Done():
+		return nil, errors.New("no configured dialers: %v", ctx.Err())
+	}
 
 	start := time.Now()
 	bd, err := b.newBalancedDial(network, addr)
@@ -500,10 +522,6 @@ func (b *Balancer) evalDialers() (changed bool) {
 }
 
 func (b *Balancer) checkConnectivityForAll() {
-	if common.InStealthMode() {
-		log.Debug("In stealth mode, not checking connectivity")
-		return
-	}
 	dialers := b.copyOfDialers()
 	if len(dialers) < 2 {
 		// nothing to do
@@ -549,9 +567,11 @@ func (b *Balancer) periodicallyProbeDialers() {
 		t.Reset(randomize(10 * time.Minute))
 		select {
 		case <-t.C:
-			log.Debugf("Start periodical probing")
-			b.checkConnectivityForAll()
-			log.Debugf("End periodical probing")
+			if b.allowBackgroundChecking() {
+				log.Debugf("Start periodical probing")
+				b.checkConnectivityForAll()
+				log.Debugf("End periodical probing")
+			}
 		case <-b.closeCh:
 			return
 		}
