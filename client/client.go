@@ -121,11 +121,12 @@ type Client struct {
 
 	l net.Listener
 
-	disconnected  func() bool
-	stealthMode   func() bool
-	allowShortcut func(ctx context.Context, addr string) (bool, net.IP)
-	useDetour     func() bool
-	user          common.UserConfig
+	disconnected         func() bool
+	allowProbes          func() bool
+	allowShortcut        func(ctx context.Context, addr string) (bool, net.IP)
+	useDetour            func() bool
+	allowHTTPSEverywhere func() bool
+	user                 common.UserConfig
 
 	rewriteToHTTPS httpseverywhere.Rewrite
 	rewriteLRU     *lru.Cache
@@ -150,9 +151,10 @@ type Client struct {
 // all traffic, and another function to get Lantern Pro token when required.
 func NewClient(
 	disconnected func() bool,
-	stealthMode func() bool,
+	allowProbes func() bool,
 	allowShortcut func(ctx context.Context, addr string) (bool, net.IP),
 	useDetour func() bool,
+	allowHTTPSEverywhere func() bool,
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
 	allowPrivateHosts func() bool,
@@ -166,21 +168,22 @@ func NewClient(
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
 	client := &Client{
-		requestTimeout:    requestTimeout,
-		bal:               balancer.New(func() bool { return !stealthMode() }, time.Duration(requestTimeout)),
-		disconnected:      disconnected,
-		stealthMode:       stealthMode,
-		allowShortcut:     allowShortcut,
-		useDetour:         useDetour,
-		user:              userConfig,
-		rewriteToHTTPS:    httpseverywhere.Default(),
-		rewriteLRU:        rewriteLRU,
-		statsTracker:      statsTracker,
-		allowPrivateHosts: allowPrivateHosts,
-		lang:              lang,
-		adSwapTargetURL:   adSwapTargetURL,
-		reverseDNS:        reverseDNS,
-		chPingProxiesConf: make(chan pingProxiesConf, 1),
+		requestTimeout:       requestTimeout,
+		bal:                  balancer.New(allowProbes, time.Duration(requestTimeout)),
+		disconnected:         disconnected,
+		allowProbes:          allowProbes,
+		allowShortcut:        allowShortcut,
+		useDetour:            useDetour,
+		allowHTTPSEverywhere: allowHTTPSEverywhere,
+		user:                 userConfig,
+		rewriteToHTTPS:       httpseverywhere.Default(),
+		rewriteLRU:           rewriteLRU,
+		statsTracker:         statsTracker,
+		allowPrivateHosts:    allowPrivateHosts,
+		lang:                 lang,
+		adSwapTargetURL:      adSwapTargetURL,
+		reverseDNS:           reverseDNS,
+		chPingProxiesConf:    make(chan pingProxiesConf, 1),
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -376,7 +379,7 @@ func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo) [
 		return nil
 	}
 	chained.PersistSessionStates("")
-	chained.TrackStatsFor(dialers, appdir.General("Lantern"), !client.stealthMode())
+	chained.TrackStatsFor(dialers, appdir.General("Lantern"), client.allowProbes())
 	return dialers
 }
 

@@ -64,6 +64,7 @@ func NewGlobal() *Global {
 func (cfg *Global) FeatureEnabled(feature string, userID int64, isPro bool,
 	geoCountry string) bool {
 	enabled, _ := cfg.FeatureEnabledWithLabel(feature, userID, isPro, geoCountry)
+	log.Tracef("Feature enabled? %v: %v", feature, enabled)
 	return enabled
 }
 

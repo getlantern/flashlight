@@ -93,8 +93,7 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 		// HTTPS in that case.
 		log.Tracef("Intercepting CONNECT %s", req.URL)
 	} else {
-		// Only rewrite to HTTPS if we're not in stealth mode
-		if !client.stealthMode() {
+		if client.allowHTTPSEverywhere() {
 			log.Tracef("Checking for HTTP redirect for %v", req.URL.String())
 			if httpsURL, changed := client.rewriteToHTTPS(req.URL); changed {
 				// Don't redirect CORS requests as it means the HTML pages that

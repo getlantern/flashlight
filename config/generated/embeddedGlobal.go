@@ -13,11 +13,19 @@ logglysamplepercentage: 0.0001 # back compatiblity for Lantern before 3.6.0
 reportissueemail: getlantern@inbox.groovehq.com
 
 # featuresenabled selectively enables certain features to some of the clients.
-# So far the below 4 features are available:
+#
+# The available features are:
 # - proxybench
 # - pingproxies
-# - stealthmode
 # - trafficlog
+# - noborda
+# - noprobeproxies
+# - noshortcut
+# - nodetour
+# - nohttpseverywhere
+#
+# Note - if noshortcut and nodetour are enabled, then all traffic will be proxied (no split tunneling)
+#
 # Each feature can be enabled on a *list* of client groups each defined by a
 # combination of the following criteria. The zero value of each criterion means
 # wildcard match. See flashlight/config/features.go for reference.
@@ -31,10 +39,17 @@ reportissueemail: getlantern@inbox.groovehq.com
 #   BUG: It does not actually work for now, as geolookup has not done yet at the point this is checked.
 # - geocountries: Comma separated list of geolocated country of Lantern clients. Case-insensitive.
 # - fraction: The fraction of clients to included when all other criteria are met.
+#
 featuresenabled:
   proxybench:
     - fraction: 0.01 # it used to be governed by bordasamplepercentage
-  stealthmode:
+# we disable borda, probeproxies and httpseverywhere by default so that totally new clients don't start using those
+# until and unless the global config tells them to.
+  noborda:
+    - label: globally
+  noprobeproxies:
+    - label: globally
+  nohttpseverywhere:
     - label: globally
 featureoptions:
   trafficlog:
