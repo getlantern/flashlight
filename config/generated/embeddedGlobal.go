@@ -7,7 +7,7 @@ uiaddr: 127.0.0.1:16823
 bordareportinterval: 5m0s
 bordasamplepercentage: 0.01
 pingsamplepercentage: 0 # back compatiblity for Lantern 5.7.2 and below
-globalconfigpollinterval: 24h0m0s
+globalconfigpollinterval: 1h0m0s
 proxyconfigpollinterval: 1m0s
 logglysamplepercentage: 0.0001 # back compatiblity for Lantern before 3.6.0
 reportissueemail: getlantern@inbox.groovehq.com
@@ -51,6 +51,9 @@ featuresenabled:
     - label: globally
   nohttpseverywhere:
     - label: globally
+  nodetour:
+    - label: android
+    - geocountries: cn,ir
 featureoptions:
   trafficlog:
     capturebytes: 10485760

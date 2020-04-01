@@ -25,6 +25,7 @@ import (
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/flashlight/proxiedsites"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/memhelper"
 	"github.com/getlantern/mtime"
@@ -327,7 +328,7 @@ func run(configDir, locale string,
 		false,                        // don't enable vpn mode for Android (VPN is handled in Java layer)
 		func() bool { return false }, // always connected
 		func() bool { return !session.ProxyAll() }, // use shortcut
-		func() bool { return false },               // not use detour
+		func() bool { return !session.ProxyAll() }, // use detour
 		func() bool { return false },               // do not proxy private hosts on Android
 		// TODO: allow configuring whether or not to enable reporting (just like we
 		// already have in desktop)
@@ -341,6 +342,7 @@ func run(configDir, locale string,
 			afterStart(session)
 		},
 		func(cfg *config.Global) {
+			proxiedsites.Configure(cfg.ProxiedSites)
 			session.UpdateAdSettings(&adSettings{cfg.AdSettings})
 			email.SetDefaultRecipient(cfg.ReportIssueEmail)
 		}, // onConfigUpdate
