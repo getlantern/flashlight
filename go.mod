@@ -12,7 +12,6 @@ require (
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
-	github.com/fatih/set v0.2.1 // indirect
 	github.com/getlantern/appdir v0.0.0-20180320102544-7c0f9d241ea7
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20191105202701-77098b35c76c
@@ -59,7 +58,6 @@ require (
 	github.com/getlantern/packetforward v0.0.0-20190809094443-386cbcc0d498
 	github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff
 	github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8
-	github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c
 	github.com/getlantern/proxy v0.0.0-20191025190912-b5f45407d9f2
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
 	github.com/getlantern/quic0 v0.0.0-20200121154153-8b18c2ba09f9

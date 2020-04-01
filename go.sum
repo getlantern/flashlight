@@ -115,8 +115,6 @@ github.com/edsrzf/mmap-go v1.0.0/go.mod h1:YO35OhQPt3KJa3ryjFM5Bs14WD66h8eGKpfaB
 github.com/eknkc/amber v0.0.0-20171010120322-cdade1c07385/go.mod h1:0vRUJqYpeSZifjYj7uP3BG/gKcuzL9xWVV/Y+cK33KM=
 github.com/etcd-io/bbolt v1.3.3/go.mod h1:ZF2nL25h33cCyBtcyWeZ2/I3HQOfTP+0PIEvHjkjCrw=
 github.com/fasthttp-contrib/websocket v0.0.0-20160511215533-1f3b11f56072/go.mod h1:duJ4Jxv5lDcvg4QuQr0oowTf7dz4/CR8NtyCooz9HL8=
-github.com/fatih/set v0.2.1 h1:nn2CaJyknWE/6txyUDGwysr3G5QC6xWB/PtVjPBbeaA=
-github.com/fatih/set v0.2.1/go.mod h1:+RKtMCH+favT2+3YecHGxcc0b4KyVWA1QWWJUs4E0CI=
 github.com/fatih/structs v1.1.0/go.mod h1:9NiDSp5zOcgEDl+j00MP/WkGVPOlPRLejGD8Ga6PJ7M=
 github.com/felixge/httpsnoop v1.0.0 h1:gh8fMGz0rlOv/1WmRZm7OgncIOTsAj21iNJot48omJQ=
 github.com/felixge/httpsnoop v1.0.0/go.mod h1:3+D9sFq0ahK/JeJPhCBUV1xlf4/eIYrUQaxulT0VzX8=
@@ -282,8 +280,6 @@ github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff h1:q5GcvgoGNR
 github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff/go.mod h1:eHf4vTrd0oaXLtbz+zM28cfsX4ylva7hbM2zt4+axZo=
 github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8 h1:T8WNx5V/ZqnL7LSBQGkhGVJ7PYzQfzkrExu0y8mCJXA=
 github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8/go.mod h1:jzXXCfnGwdKwsqIY4kZmkX5Bsb6gahmyEsCVTOa8gNA=
-github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c h1:AMJ/uG0Og50179LDbG1Tcn37ky/Eh48Jzuf5afTkmkw=
-github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c/go.mod h1:qqjnjfvpTJ8iAp3xlygB8sG8EbxWGAMjQLL1iyGt/dc=
 github.com/getlantern/proxy v0.0.0-20180713210748-e822de39af64/go.mod h1:z6u2OS1ynUdXIraWO04T1wcHFcGaIHwPed0n0bNilZU=
 github.com/getlantern/proxy v0.0.0-20191025190912-b5f45407d9f2 h1:EwBVuJWzA68ceSZi7kWnNtEeA+/XWxwn0Oc666jM98U=
 github.com/getlantern/proxy v0.0.0-20191025190912-b5f45407d9f2/go.mod h1:bxNylSVdAlc+bv0245lIdf09a7N/2u3DeLHI73y4sQQ=
