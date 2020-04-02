@@ -3,43 +3,63 @@ package domainrouting
 import (
 	"testing"
 
+	"github.com/getlantern/domains"
 	"github.com/stretchr/testify/assert"
 )
 
 type change struct {
-	domain  string
 	oldRule Rule
 	newRule Rule
 }
 
-func TestUpdateNil(t *testing.T) {
+var (
+	oldRules = domains.NewTreeFromMap(domains.Map{
+		".d1": Direct,
+		".p1": Proxy,
+		".p2": Proxy,
+	})
 
-}
-func TestUpdate(t *testing.T) {
-	oldRules := Rules{
-		"d1": Direct,
-		"p1": Proxy,
-		"p2": Proxy,
-	}
-
-	newRules := Rules{
+	newRules = Rules{
 		"d1": Proxy,
 		"p1": Direct,
 		"p3": Proxy,
 	}
 
-	changes := make([]change, 0)
-	result := oldRules.Update(newRules, func(domain string, oldRule, newRule Rule) {
-		changes = append(changes, change{domain, oldRule, newRule})
+	expectedResult = domains.Map{
+		".d1": Proxy,
+		".p1": Direct,
+		".p3": Proxy,
+	}
+)
+
+func TestUpdateNil(t *testing.T) {
+	changes := make(map[string]change, 0)
+	result := update(nil, newRules, func(domain string, oldRule, newRule Rule) {
+		changes[domain] = change{oldRule, newRule}
 	})
 
-	expectedChanges := []change{
-		change{"d1", Direct, Proxy},
-		change{"p1", Proxy, Direct},
-		change{"p3", None, Proxy},
-		change{"p2", Proxy, None},
+	expectedChanges := map[string]change{
+		"d1": change{None, Proxy},
+		"p1": change{None, Direct},
+		"p3": change{None, Proxy},
 	}
 
-	assert.EqualValues(t, newRules, result)
+	assert.EqualValues(t, expectedResult, result.ToMap())
+	assert.EqualValues(t, expectedChanges, changes)
+}
+func TestUpdate(t *testing.T) {
+	changes := make(map[string]change, 0)
+	result := update(oldRules, newRules, func(domain string, oldRule, newRule Rule) {
+		changes[domain] = change{oldRule, newRule}
+	})
+
+	expectedChanges := map[string]change{
+		"d1": change{Direct, Proxy},
+		"p1": change{Proxy, Direct},
+		"p3": change{None, Proxy},
+		"p2": change{Proxy, None},
+	}
+
+	assert.EqualValues(t, expectedResult, result.ToMap())
 	assert.EqualValues(t, expectedChanges, changes)
 }

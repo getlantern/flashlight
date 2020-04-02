@@ -36,6 +36,7 @@ import (
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/status"
@@ -432,6 +433,11 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		return dialProxied(ctx, "whatever", addr)
 	}
 
+	if client.shouldSendDirect(addr) {
+		log.Debugf("Directly dialing %v per domain routing rules", addr)
+		return netx.DialContext(ctx, "tcp", addr)
+	}
+
 	if err := client.allowSendingToProxy(addr); err != nil {
 		log.Debugf("%v, sending directly to %v", err, addr)
 		op.Set("force_direct", true)
@@ -503,6 +509,15 @@ func (client *Client) shouldSendToProxy(addr string) bool {
 		return true
 	}
 	return false
+}
+
+func (client *Client) shouldSendDirect(addr string) bool {
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		host = addr
+	}
+	host = strings.TrimSpace(host)
+	return domainrouting.ShouldSendDirect(host)
 }
 
 func (client *Client) allowSendingToProxy(addr string) error {

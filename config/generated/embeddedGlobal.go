@@ -4093,6 +4093,12 @@ client:
   masqueradesets:
     cloudflare: []
     cloudfront: *cfmasq
+domainroutingrules:
+  huya.com: d
+  douyucdn2.cn: d
+  apple.com: d
+  microsoft.com: d
+  officecdn-microsoft-com.akamaized.net: d
 proxiedsites:
   delta:
     additions: []
