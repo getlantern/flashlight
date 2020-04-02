@@ -1,6 +1,7 @@
 package domainrouting
 
 import (
+	"strings"
 	"sync"
 	"time"
 
@@ -87,7 +88,7 @@ func ShouldSendDirect(domain string) bool {
 		return false
 	}
 
-	_rule, found := rules.BestMatch(domain)
+	_rule, found := rules.BestMatch(strings.ToLower(domain))
 	return found && _rule == Direct
 }
 
@@ -108,6 +109,13 @@ func update(oldRules *domains.Tree, newRules Rules, onChange func(domain string,
 		}
 		onChange(domain, oldRule, newRule)
 	}
+
+	// convert domains to lower case
+	_newRules := make(Rules, len(newRules))
+	for domain, rule := range newRules {
+		_newRules[strings.ToLower(domain)] = rule
+	}
+	newRules = _newRules
 
 	result := domains.NewTree()
 

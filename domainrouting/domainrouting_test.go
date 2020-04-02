@@ -20,9 +20,9 @@ var (
 	})
 
 	newRules = Rules{
-		"d1": Proxy,
-		"p1": Direct,
-		"p3": Proxy,
+		"D1": Proxy,
+		"P1": Direct,
+		"P3": Proxy,
 	}
 
 	expectedResult = domains.Map{
