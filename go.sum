@@ -170,6 +170,8 @@ github.com/getlantern/domains v0.0.0-20200402020622-255c214374f1 h1:2ijgimTb8Ff2
 github.com/getlantern/domains v0.0.0-20200402020622-255c214374f1/go.mod h1:au2O/xaJUN17QP5ndAXBS8tSp0P7G9WnitSvuO/k9k0=
 github.com/getlantern/domains v0.0.0-20200402122727-048300e257e5 h1:2U+GJJdTH86ZPXgudujo5NBorJfi+0KQr2AcsAc9xoQ=
 github.com/getlantern/domains v0.0.0-20200402122727-048300e257e5/go.mod h1:au2O/xaJUN17QP5ndAXBS8tSp0P7G9WnitSvuO/k9k0=
+github.com/getlantern/domains v0.0.0-20200402171649-efc86b844fcf h1:Qopz/FZOZyRp+Af3z7s3rFvk7cRINvBTvBaG4dBf4PQ=
+github.com/getlantern/domains v0.0.0-20200402171649-efc86b844fcf/go.mod h1:au2O/xaJUN17QP5ndAXBS8tSp0P7G9WnitSvuO/k9k0=
 github.com/getlantern/elevate v0.0.0-20180207094634-c2e2e4901072 h1:Sxd/u3rnHYAqXzpRXjOA7DPyRKYzcivMRBKtOhsRwW8=
 github.com/getlantern/elevate v0.0.0-20180207094634-c2e2e4901072/go.mod h1:T4VB2POK13lsPLFV98WJQrL7gAXYD9TyJxBU2P8c8p4=
 github.com/getlantern/ema v0.0.0-20170330162033-d906ee7c3465/go.mod h1:tzRwT19aDrWSr6yRDs8iOvaXXCau96EgWsgGT9wIpoQ=

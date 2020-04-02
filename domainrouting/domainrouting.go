@@ -20,7 +20,7 @@ var (
 
 const (
 	// how long to wait for initialization of rules when checking rules
-	initTimeout = 30 * time.Second
+	initTimeout = 5 * time.Second
 )
 
 var (
@@ -28,6 +28,12 @@ var (
 	None   = Rule("")
 	Direct = Rule("d")
 	Proxy  = Rule("p")
+
+	// Requests to these domains require proxies for security purposes and to
+	// ensure that config-server requests in particular always go through a proxy
+	// so that it can add the necessary authentication token and other headers.
+	// Direct connections to these domains are not allowed.
+	domainsRequiringProxy = []string{"getiantem.org", "lantern.io", "getlantern.org"}
 )
 
 // ProxiedSitesConfig is a legacy config structure that provides backwards compatibility with old config formats
@@ -44,52 +50,55 @@ type Rules map[string]Rule
 
 // Configure configures domain routing with the new Rules and ProxiedSitesConfig. The ProxiedSitesConfig is supported
 // for backwards compatibility. All domains in the ProxiedSitesConfig are treated as Proxy rules.
-func Configure(newRules Rules, proxiedSites *ProxiedSitesConfig) {
+func Configure(rules Rules, proxiedSites *ProxiedSitesConfig) {
+	log.Debugf("Configuring with %d rules and %d proxied sites", len(rules), len(proxiedSites.Cloud))
+
 	// For backwards compatibility, merge in ProxiedSites
-	if newRules == nil {
-		newRules = make(Rules)
+	if rules == nil {
+		rules = make(Rules)
 	}
 
 	for _, domain := range proxiedSites.Cloud {
-		_, alreadyDefined := newRules[domain]
+		_, alreadyDefined := rules[domain]
 		if !alreadyDefined {
-			newRules[domain] = Proxy
+			rules[domain] = Proxy
 		}
 	}
 
+	// There are certain domains that always require proxying no matter what, merge those in
+	for _, domain := range domainsRequiringProxy {
+		rules[domain] = Proxy
+	}
+
+	newRules := buildTree(rules)
 	mx.Lock()
 	// TODO: subscribe changes of geolookup and set country accordingly
 	// safe to hardcode here as IR has all detection rules
 	detour.SetCountry("IR")
-
-	updated := update(getCurrentRules(0), newRules, func(domain string, oldRule, newRule Rule) {
-		// maintain detour
-		if oldRule == Proxy {
-			log.Tracef("Removing from detour whitelist: %v", domain)
-			detour.RemoveFromWl(domain)
-		} else if newRule == Proxy {
-			log.Tracef("Adding to detour whitelist: %v", domain)
-			detour.AddToWl(domain, true)
-		}
-	})
-	currentRules.Set(updated)
-
+	currentRules.Set(newRules)
 	mx.Unlock()
 }
 
-// ShouldSendDirect identifies whether traffic to the given domain should always be sent direct (i.e. bypass proxy)
-func ShouldSendDirect(domain string) bool {
+// RuleFor returns the Rule most applicable to the given domain. If no such rule is defined,
+func RuleFor(domain string) Rule {
 	mx.RLock()
 	rules := getCurrentRules(initTimeout)
 	mx.RUnlock()
 
+	return ruleFor(domain, rules)
+}
+
+func ruleFor(domain string, rules *domains.Tree) Rule {
 	if rules == nil {
-		log.Debugf("domainrouting not initialized within %v, assuming not to send direct", initTimeout)
-		return false
+		log.Debugf("domainrouting not initialized within %v, assuming that domain should be proxied", initTimeout)
+		return Proxy
 	}
 
 	_rule, found := rules.BestMatch(strings.ToLower(domain))
-	return found && _rule == Direct
+	if !found {
+		return None
+	}
+	return _rule.(Rule)
 }
 
 func getCurrentRules(timeout time.Duration) *domains.Tree {
@@ -100,64 +109,18 @@ func getCurrentRules(timeout time.Duration) *domains.Tree {
 	return current.(*domains.Tree)
 }
 
-func update(oldRules *domains.Tree, newRules Rules, onChange func(domain string, oldRule, newRule Rule)) *domains.Tree {
-	loggingOnChange := func(domain string, oldRule, newRule Rule) {
-		if newRule == Direct {
-			log.Debugf("Will force direct traffic for %v", domain)
-		} else if oldRule == Direct {
-			log.Debugf("Will no longer force direct traffic for %v", domain)
-		}
-		onChange(domain, oldRule, newRule)
-	}
-
-	// convert domains to lower case
-	_newRules := make(Rules, len(newRules))
-	for domain, rule := range newRules {
-		_newRules[strings.ToLower(domain)] = rule
-	}
-	newRules = _newRules
-
+func buildTree(rules Rules) *domains.Tree {
 	result := domains.NewTree()
-
-	if oldRules == nil {
-		// Everything is new, report changes accordingly
-		for domain, newRule := range newRules {
-			result.Insert(dotted(domain), newRule)
-			loggingOnChange(domain, None, Rule(newRule))
+	for domain, rule := range rules {
+		if rule == Direct {
+			log.Debugf("Will force direct traffic for %v", domain)
 		}
-		return result
+		result.Insert(dotted(strings.ToLower(domain)), rule)
 	}
-
-	for domain, newRule := range newRules {
-		dd := dotted(domain)
-		result.Insert(dd, newRule)
-		_oldRule, found := oldRules.Get(dd)
-		var oldRule Rule
-		if found {
-			oldRule = _oldRule.(Rule)
-		}
-		if newRule != oldRule {
-			loggingOnChange(domain, oldRule, Rule(newRule))
-		}
-	}
-
-	oldRules.Walk(func(dd string, oldRule interface{}) bool {
-		domain := undotted(dd)
-		newRule, hasNewRule := newRules[domain]
-		if !hasNewRule {
-			loggingOnChange(domain, oldRule.(Rule), Rule(newRule))
-		}
-		return true
-	})
-
 	return result
 }
 
 // dotted prefixes domains with a dot to enable prefix matching (which we do for all of our rules)
 func dotted(domain string) string {
 	return "." + domain
-}
-
-func undotted(domain string) string {
-	return domain[1:]
 }
