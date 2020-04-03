@@ -145,6 +145,12 @@ func (s *Server) sendPaymentHandler(w http.ResponseWriter,
 	}
 	// get key from keystore here
 	secretKey, err := s.keystore.GetKey(params.Username, params.Password)
+	// This error means that the user entered
+    // the wrong password in the confirmation field
+	if err.Error() == "encrypted: decryption failed" {
+		s.errorHandler(w, ErrInvalidCredentials, http.StatusOK)
+		return
+	}
 	if err != nil {
 		err = fmt.Errorf("Error retrieving secret key: %v", err)
 		s.errorHandler(w, err, http.StatusInternalServerError)
