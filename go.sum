@@ -61,8 +61,6 @@ github.com/aristanetworks/goarista v0.0.0-20191106175434-873d404c7f40 h1:ZdRuixF
 github.com/aristanetworks/goarista v0.0.0-20191106175434-873d404c7f40/go.mod h1:Z4RTxGAuYhPzcq8+EdRM+R8M48Ssle2TsWtwRKa+vns=
 github.com/aristanetworks/splunk-hec-go v0.3.3/go.mod h1:1VHO9r17b0K7WmOlLb9nTk/2YanvOEnLMUgsFrxBROc=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=
-github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc h1:/WQ8Tr5zbclKWAtvafIcAk/njNpW3gtd22TLLouv+6Q=
-github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/aymerick/raymond v2.0.3-0.20180322193309-b565731e1464+incompatible/go.mod h1:osfaiScAUVup+UC9Nfq76eWqDhXlp+4UYaA8uhTBO6g=
@@ -156,20 +154,6 @@ github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041 h1:0+6PMeuySx1d4G6J
 github.com/getlantern/dns v0.0.0-20170920204204-630ccc2c3041/go.mod h1:CbTkjHHMyw9CPQKfTyYx2XldN/XJSmqTwHl3HLwvo2Y=
 github.com/getlantern/dnsgrab v0.0.0-20191217020031-0e5f714410f9 h1:DYHsBAov+c2QKSSyS/cN7HLovfUGzAcEcU6M964b1U8=
 github.com/getlantern/dnsgrab v0.0.0-20191217020031-0e5f714410f9/go.mod h1:cUbRGdVp3qmD7cGWX6hHnqI8msuDYIF2rf9UgJ87nw8=
-github.com/getlantern/domains v0.0.0-20200401215416-8452eb936bed h1:Ib7cTZlH0q+WDp2roc/3iRA4VEHrltGW0Umwf4TF6ao=
-github.com/getlantern/domains v0.0.0-20200401215416-8452eb936bed/go.mod h1:au2O/xaJUN17QP5ndAXBS8tSp0P7G9WnitSvuO/k9k0=
-github.com/getlantern/domains v0.0.0-20200402000856-5fcff26a28b5 h1:nQaCdkaCZiCXNGH9i7P//F0+FNN5dU67qNRZHlGaG8k=
-github.com/getlantern/domains v0.0.0-20200402000856-5fcff26a28b5/go.mod h1:au2O/xaJUN17QP5ndAXBS8tSp0P7G9WnitSvuO/k9k0=
-github.com/getlantern/domains v0.0.0-20200402000940-d2ae4921fb56 h1:AM4QfrlEIjgONUuSPdDQMXyp/zQD7jsB0xp6mwuU4Yc=
-github.com/getlantern/domains v0.0.0-20200402000940-d2ae4921fb56/go.mod h1:au2O/xaJUN17QP5ndAXBS8tSp0P7G9WnitSvuO/k9k0=
-github.com/getlantern/domains v0.0.0-20200402012216-e436bce6eea9 h1:j5FBtpZzAOWgl5Vyawulvg7KMOUXIs6xRIqbs8kpPqE=
-github.com/getlantern/domains v0.0.0-20200402012216-e436bce6eea9/go.mod h1:au2O/xaJUN17QP5ndAXBS8tSp0P7G9WnitSvuO/k9k0=
-github.com/getlantern/domains v0.0.0-20200402015056-b2df54620f6d h1:i5nvcyGV5otW9EE2YFeHlx64ImnqOc40s2fBFL8tQgQ=
-github.com/getlantern/domains v0.0.0-20200402015056-b2df54620f6d/go.mod h1:au2O/xaJUN17QP5ndAXBS8tSp0P7G9WnitSvuO/k9k0=
-github.com/getlantern/domains v0.0.0-20200402020622-255c214374f1 h1:2ijgimTb8Ff2nAtK12E6+VAzhwcZ3uHrhvQWLPMTZHk=
-github.com/getlantern/domains v0.0.0-20200402020622-255c214374f1/go.mod h1:au2O/xaJUN17QP5ndAXBS8tSp0P7G9WnitSvuO/k9k0=
-github.com/getlantern/domains v0.0.0-20200402122727-048300e257e5 h1:2U+GJJdTH86ZPXgudujo5NBorJfi+0KQr2AcsAc9xoQ=
-github.com/getlantern/domains v0.0.0-20200402122727-048300e257e5/go.mod h1:au2O/xaJUN17QP5ndAXBS8tSp0P7G9WnitSvuO/k9k0=
 github.com/getlantern/domains v0.0.0-20200402171649-efc86b844fcf h1:Qopz/FZOZyRp+Af3z7s3rFvk7cRINvBTvBaG4dBf4PQ=
 github.com/getlantern/domains v0.0.0-20200402171649-efc86b844fcf/go.mod h1:au2O/xaJUN17QP5ndAXBS8tSp0P7G9WnitSvuO/k9k0=
 github.com/getlantern/elevate v0.0.0-20180207094634-c2e2e4901072 h1:Sxd/u3rnHYAqXzpRXjOA7DPyRKYzcivMRBKtOhsRwW8=
@@ -198,7 +182,6 @@ github.com/getlantern/fronted v0.0.0-20190606212108-e7744195eded h1:zyE6PKoT+jY7
 github.com/getlantern/fronted v0.0.0-20190606212108-e7744195eded/go.mod h1:+2ylraMe5Yyd44hi9AlZqnKH5RPNMIDYpDLyYSwQh1E=
 github.com/getlantern/geolookup v0.0.0-20200121184643-02217082e50f h1:1yPtM1N/MTfSgzvEKbMhbaY7vFjp64nkzcDCX3JrdLs=
 github.com/getlantern/geolookup v0.0.0-20200121184643-02217082e50f/go.mod h1:C4lSABOxuIeQi36iYsO7xrcBzLDNeeB/nPVqYbHEnbo=
-github.com/getlantern/go v0.0.0-20160609135004-da425004cfa8 h1:h3qdGZUkIggsKLhtzaF7KAHxe/vw220hISQi0Pvu9Is=
 github.com/getlantern/go-cache v0.0.0-20141028142048-88b53914f467 h1:10ez8C+7zyHzmnIiYybx9Qji/zO2tAAde69DfJMbUKY=
 github.com/getlantern/go-cache v0.0.0-20141028142048-88b53914f467/go.mod h1:IQND0fl/mdTYNICpN/eDYKX+j90TqQYXdpNFWkJpCPs=
 github.com/getlantern/go-libutp v1.0.3 h1:ESmde7HKb1LaB+6G0eWUuWcjN4DmqOvTRqm49De33sI=
@@ -281,6 +264,8 @@ github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b h1:zmsspqmbtaR
 github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b/go.mod h1:8hWwZg+ROrvRlE/QHMOCRUzjKSObVv8FEOP6A5F6N0s=
 github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f h1:wrYrQttPS8FHIRSlsrcuKazukx/xqO/PpLZzZXsF+EA=
 github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=
+github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6 h1:QthAQCekS1YOeYWSvoHI6ZatlG4B+GBDLxV/2ZkBsTA=
+github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=
 github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031 h1:McfwCiwtcjceMKCpQjbJok70oEb7WfTd/LSr2ftlBJk=
 github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031/go.mod h1:DdqHyeV80gZ5JgAmTbMImotRfWSP0xRlxFSuMUDelY0=
 github.com/getlantern/packetforward v0.0.0-20190809094443-386cbcc0d498 h1:opKvV/XxA5l66QiHXGa/eY6ebDPKvWEQo534a5N28lA=

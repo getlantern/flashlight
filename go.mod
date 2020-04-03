@@ -53,7 +53,7 @@ require (
 	github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0
 	github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd
 	github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b
-	github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f
+	github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6
 	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
 	github.com/getlantern/packetforward v0.0.0-20190809094443-386cbcc0d498
 	github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff
