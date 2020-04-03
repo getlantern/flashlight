@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/detour"
 	"github.com/getlantern/domains"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/golog"
@@ -72,9 +71,6 @@ func Configure(rules Rules, proxiedSites *ProxiedSitesConfig) {
 
 	newRules := buildTree(rules)
 	mx.Lock()
-	// TODO: subscribe changes of geolookup and set country accordingly
-	// safe to hardcode here as IR has all detection rules
-	detour.SetCountry("IR")
 	currentRules.Set(newRules)
 	mx.Unlock()
 }
