@@ -10,7 +10,9 @@ import (
 	"time"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/detour"
 	"github.com/getlantern/dnsgrab"
+	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mtime"
@@ -292,6 +294,15 @@ func Run(httpProxyAddr string,
 		log.Debug("Preparing to start client proxy")
 		onGeo := geolookup.OnRefresh()
 		geolookup.Refresh()
+
+		// Until we know our country, default to IR which has all detection rules
+		log.Debug("Defaulting detour country to IR until real country is known")
+		detour.SetCountry("IR")
+		go func() {
+			country := geolookup.GetCountry(eventual.Forever)
+			log.Debugf("Setting detour country to %v", country)
+			detour.SetCountry(country)
+		}()
 
 		if socksProxyAddr != "" {
 			go func() {
