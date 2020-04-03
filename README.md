@@ -61,6 +61,8 @@ proxy `104.131.91.213` to 1Mbit/s with a 5% packet loss rate.
 Flashlight has experimental support for running as a whole-device VPN. This is
 only supported on Linux and has only been tested on Ubuntu 18.04 specifically.
 
+// TODO: update vpn mode docs now that stealth mode doesn't exist as a standalone concept.
+
 1. Run `make lantern && sudo ./lantern -headless -stealth -vpn 2>&1`. Using `stealthmode` disables split tunneling, which seems to be necessary right now.
 2. Right now, the VPN doesn't play nicely with IPv6, so temporarily disable it with ```
 sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1

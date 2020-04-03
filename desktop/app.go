@@ -34,7 +34,7 @@ import (
 	"github.com/getlantern/flashlight/datacap"
 
 	//"github.com/getlantern/flashlight/diagnostics/trafficlog"
-	"github.com/getlantern/flashlight/domainrouting"
+
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/notifier"
@@ -468,7 +468,6 @@ func (app *App) afterStart(cl *client.Client) {
 }
 
 func (app *App) onConfigUpdate(cfg *config.Global) {
-	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
 	autoupdate.Configure(cfg.UpdateServerURL, cfg.AutoUpdateCA, func() string {
 		return app.AddToken("/img/lantern_logo.png")
 	})

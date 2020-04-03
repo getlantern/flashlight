@@ -70,8 +70,9 @@ func newClient() *Client {
 func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *Client {
 	client, _ := NewClient(
 		func() bool { return false },
-		func() bool { return false },
+		func() bool { return true },
 		func(context.Context, string) (bool, net.IP) { return false, nil },
+		func() bool { return true },
 		func() bool { return true },
 		newTestUserConfig(),
 		mockStatsTracker{},

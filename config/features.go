@@ -13,10 +13,14 @@ import (
 )
 
 const (
-	FeatureProxyBench  = "proxybench"
-	FeaturePingProxies = "pingproxies"
-	FeatureStealthMode = "stealthmode"
-	FeatureTrafficLog  = "trafficlog"
+	FeatureProxyBench        = "proxybench"
+	FeaturePingProxies       = "pingproxies"
+	FeatureTrafficLog        = "trafficlog"
+	FeatureNoBorda           = "noborda"
+	FeatureNoProbeProxies    = "noprobeproxies"
+	FeatureNoShortcut        = "noshortcut"
+	FeatureNoDetour          = "nodetour"
+	FeatureNoHTTPSEverywhere = "nohttpseverywhere"
 )
 
 var (

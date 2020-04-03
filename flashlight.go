@@ -25,6 +25,7 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/goroutines"
@@ -39,6 +40,17 @@ var (
 	log = golog.LoggerFor("flashlight")
 
 	startProxyBenchOnce sync.Once
+
+	// blockingRelevantFeatures lists all features that might affect blocking and gives their
+	// default enabled status (until we know the country)
+	blockingRelevantFeatures = map[string]bool{
+		config.FeatureProxyBench:        false,
+		config.FeaturePingProxies:       false,
+		config.FeatureNoBorda:           true,
+		config.FeatureNoProbeProxies:    true,
+		config.FeatureNoDetour:          true,
+		config.FeatureNoHTTPSEverywhere: true,
+	}
 )
 
 type runner struct {
@@ -59,6 +71,7 @@ func (r *runner) onGlobalConfig(cfg *config.Global) {
 	r.mxGlobal.Lock()
 	r.global = cfg
 	r.mxGlobal.Unlock()
+	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
 	applyClientConfig(cfg)
 	r.applyProxyBenchAndBorda(cfg)
 	select {
@@ -82,24 +95,26 @@ func (r *runner) reconfigurePingProxies() {
 	r.client.ConfigurePingProxies(enabled, opts.Interval)
 }
 
-func (r *runner) stealthMode() bool {
-	return r.featureEnabled(config.FeatureStealthMode)
-}
-
 func (r *runner) featureEnabled(feature string) bool {
 	r.mxGlobal.RLock()
 	global := r.global
 	r.mxGlobal.RUnlock()
 	country := geolookup.GetCountry(0)
-	// Sepcial case: Force stealth mode until geolookup is finished to avoid
-	// accidentally generating traffic to trigger block.
-	if country == "" && feature == config.FeatureStealthMode {
-		log.Debug("Force stealth mode when geolookup is not done yet")
-		return true
+
+	// Sepcial case: Use defaults for blocking related features until geolookup is finished
+	// to avoid accidentally generating traffic that could trigger blocking.
+	enabled, blockingRelated := blockingRelevantFeatures[feature]
+	if country == "" && blockingRelated {
+		enabledText := "disabled"
+		if enabled {
+			enabledText = "enabled"
+		}
+		log.Debugf("Blocking related feature %v %v because geolookup has not yet finished", feature, enabledText)
+		return enabled
 	}
 	if global == nil {
 		log.Error("No global configuration!")
-		return false
+		return enabled
 	}
 	return global.FeatureEnabled(feature,
 		r.userConfig.GetUserID(),
@@ -139,7 +154,7 @@ func (r *runner) startConfigFetch() func() {
 }
 
 func (r *runner) applyProxyBenchAndBorda(cfg *config.Global) {
-	if r.featureEnabled(config.FeatureProxyBench) && !r.stealthMode() {
+	if r.featureEnabled(config.FeatureProxyBench) {
 		startProxyBenchOnce.Do(func() {
 			proxybench.Start(&proxybench.Opts{}, func(timing time.Duration, ctx map[string]interface{}) {})
 		})
@@ -147,8 +162,13 @@ func (r *runner) applyProxyBenchAndBorda(cfg *config.Global) {
 
 	_enableBorda := borda.Enabler(cfg.BordaSamplePercentage)
 	enableBorda := func(ctx map[string]interface{}) bool {
-		if !r.autoReport() || !r.stealthMode() {
+		if !r.autoReport() {
 			// User has chosen not to automatically submit data
+			return false
+		}
+
+		if r.featureEnabled(config.FeatureNoBorda) {
+			// Borda is disabled by global config
 			return false
 		}
 
@@ -255,16 +275,16 @@ func Run(httpProxyAddr string,
 	}
 
 	useShortcut := func() bool {
-		return !r.stealthMode() && _useShortcut()
+		return !r.featureEnabled(config.FeatureNoShortcut) && _useShortcut()
 	}
 
 	useDetour := func() bool {
-		return !r.stealthMode() && _useDetour()
+		return !r.featureEnabled(config.FeatureNoDetour) && _useDetour()
 	}
 
 	cl, err := client.NewClient(
 		disconnected,
-		r.stealthMode,
+		func() bool { return !r.featureEnabled(config.FeatureNoProbeProxies) },
 		func(ctx context.Context, addr string) (bool, net.IP) {
 			if useShortcut() {
 				return shortcut.Allow(ctx, addr)
@@ -272,6 +292,7 @@ func Run(httpProxyAddr string,
 			return false, nil
 		},
 		useDetour,
+		func() bool { return !r.featureEnabled(config.FeatureNoHTTPSEverywhere) },
 		userConfig,
 		statsTracker,
 		allowPrivateHosts,
