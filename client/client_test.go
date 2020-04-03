@@ -22,6 +22,7 @@ import (
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/flashlight/stats"
 )
 
@@ -46,6 +47,10 @@ func (m mockStatsTracker) SetIsPro(val bool)                                    
 func (m mockStatsTracker) SetYinbiEnabled(val bool)                                 {}
 func (m mockStatsTracker) SetAlert(stats.AlertType, string, bool)                   {}
 func (m mockStatsTracker) ClearAlert(stats.AlertType)                               {}
+
+func init() {
+	domainrouting.Configure(nil, &domainrouting.ProxiedSitesConfig{})
+}
 
 func newTestUserConfig() *common.UserConfigData {
 	return common.NewUserConfigData("device", 1234, "protoken", nil, "en-US")
@@ -458,14 +463,4 @@ type response struct {
 
 func (r *response) nested() (*http.Response, error) {
 	return http.ReadResponse(r.br, r.req)
-}
-
-func TestRequiresProxy(t *testing.T) {
-	assert.True(t, requiresProxy("getiantem.org"))
-	assert.True(t, requiresProxy("config.getiantem.org"))
-	assert.True(t, requiresProxy("borda.lantern.io:80"))
-	assert.True(t, requiresProxy("www.getlantern.org:443"))
-	assert.False(t, requiresProxy(""))
-	assert.False(t, requiresProxy("org"))
-	assert.False(t, requiresProxy("127.0.0.1"))
 }
