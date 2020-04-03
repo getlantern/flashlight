@@ -25,6 +25,7 @@ import (
 	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
+	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/goroutines"
@@ -70,6 +71,7 @@ func (r *runner) onGlobalConfig(cfg *config.Global) {
 	r.mxGlobal.Lock()
 	r.global = cfg
 	r.mxGlobal.Unlock()
+	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
 	applyClientConfig(cfg)
 	r.applyProxyBenchAndBorda(cfg)
 	select {

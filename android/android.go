@@ -25,7 +25,6 @@ import (
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/flashlight/proxied"
-	"github.com/getlantern/flashlight/proxiedsites"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/memhelper"
 	"github.com/getlantern/mtime"
@@ -342,7 +341,6 @@ func run(configDir, locale string,
 			afterStart(session)
 		},
 		func(cfg *config.Global) {
-			proxiedsites.Configure(cfg.ProxiedSites)
 			session.UpdateAdSettings(&adSettings{cfg.AdSettings})
 			email.SetDefaultRecipient(cfg.ReportIssueEmail)
 		}, // onConfigUpdate
