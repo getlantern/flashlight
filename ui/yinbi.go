@@ -135,11 +135,13 @@ func (s *Server) sendPaymentHandler(w http.ResponseWriter,
 	var params PaymentParams
 	err := common.DecodeJSONRequest(req, &params)
 	if err != nil {
+		log.Debugf("Error decoding json request, %v", err)
 		s.errorHandler(w, err, http.StatusBadRequest)
 		return
 	}
 	errors := params.Validate()
 	if len(errors) > 0 {
+		log.Debugf("Error validating parameters, %+v", errors)
 		s.errorHandler(w, errors, http.StatusBadRequest)
 		return
 	}
@@ -153,6 +155,7 @@ func (s *Server) sendPaymentHandler(w http.ResponseWriter,
 	}
 	if err != nil {
 		err = fmt.Errorf("Error retrieving secret key: %v", err)
+		log.Debug(err)
 		s.errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
@@ -161,6 +164,7 @@ func (s *Server) sendPaymentHandler(w http.ResponseWriter,
 	pair, err := keypair.Parse(secretKey)
 	if err != nil {
 		err = fmt.Errorf("Error parsing keypair: %v", err)
+		log.Debug(err)
 		s.errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
