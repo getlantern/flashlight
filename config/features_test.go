@@ -39,8 +39,8 @@ func TestIncludes(t *testing.T) {
 	// Platforms tests are unlikely run
 	assert.False(t, ClientGroup{Platforms: "ios,android"}.Includes("111", true, "whatever"), "platform unmet")
 
-	assert.True(t, ClientGroup{GeoCountries: "ir   , cn"}.Includes(111, true, "IR"), "country met")
-	assert.False(t, ClientGroup{GeoCountries: "us"}.Includes(111, true, "IR"), "country unmet")
+	assert.True(t, ClientGroup{GeoCountries: "ir   , cn"}.Includes("111", true, "IR"), "country met")
+	assert.False(t, ClientGroup{GeoCountries: "us"}.Includes("111", true, "IR"), "country unmet")
 
 	// Fraction calculation should be stable
 	g := ClientGroup{Fraction: 0.1}

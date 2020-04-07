@@ -30,7 +30,7 @@ func TestConfigure(t *testing.T) {
 	ioutil.WriteFile(filepath.Join(tmpDir, "masquerade_cache"), []byte{}, 0644)
 	ioutil.WriteFile(filepath.Join(tmpDir, "userconfig.yaml"), []byte{}, 0644)
 
-	result1, err := Configure(tmpDir, 0, "", testDeviceID1, true)
+	result1, err := Configure(tmpDir, "0", "", testDeviceID1, true)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -44,7 +44,7 @@ func TestConfigure(t *testing.T) {
 		assert.Equal(t, testDeviceID1, uc.GetDeviceID())
 	}
 
-	result2, err := Configure(tmpDir, 0, "", testDeviceID2, true)
+	result2, err := Configure(tmpDir, "0", "", testDeviceID2, true)
 	if !assert.NoError(t, err) {
 		return
 	}

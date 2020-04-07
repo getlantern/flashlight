@@ -235,14 +235,14 @@ func limitMemory() {
 }
 
 func partialUserConfigFor(deviceID string) *UserConfig {
-	return userConfigFor(0, "", deviceID)
+	return userConfigFor("0", "", deviceID)
 }
 
-func userConfigFor(userID int, proToken, deviceID string) *UserConfig {
+func userConfigFor(userID, proToken, deviceID string) *UserConfig {
 	return &UserConfig{
 		UserConfigData: *common.NewUserConfigData(
 			deviceID,
-			int64(userID),
+			userID,
 			proToken,
 			nil, // Headers currently unused
 			"",  // Language currently unused
