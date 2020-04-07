@@ -47,7 +47,6 @@ const (
 	SNVersion      SettingName = "version"
 	SNBuildDate    SettingName = "buildDate"
 	SNRevisionDate SettingName = "revisionDate"
-	SNPACURL       SettingName = "pacURL"
 )
 
 type settingType byte
@@ -86,7 +85,6 @@ var settingMeta = map[SettingName]struct {
 	SNVersion:      {stString, false, false},
 	SNBuildDate:    {stString, false, false},
 	SNRevisionDate: {stString, false, false},
-	SNPACURL:       {stString, true, true},
 }
 
 // Settings is a struct of all settings unique to this particular Lantern instance.
@@ -169,7 +167,6 @@ func newSettings(filePath string, chrome chromeExtension) *Settings {
 			SNLocalHTTPToken: "",
 			SNUserToken:      "",
 			SNUIAddr:         "",
-			SNPACURL:         "",
 		},
 		filePath:        filePath,
 		changeNotifiers: make(map[SettingName][]func(interface{})),
@@ -454,18 +451,6 @@ func (s *Settings) GetInternalHeaders() map[string]string {
 // GetSystemProxy returns whether or not to set system proxy when lantern starts
 func (s *Settings) GetSystemProxy() bool {
 	return s.getBool(SNSystemProxy)
-}
-
-// SetPACURL sets the last used PAC URL. Note this is used particularl on
-// Windows to make sure to turn off the PAC URL on startup in case it was not
-// turned off successfully. See https://github.com/getlantern/lantern/issues/2776
-func (s *Settings) SetPACURL(url string) {
-	s.setVal(SNPACURL, url)
-}
-
-// GetPACURL returns the last used PAC URL.
-func (s *Settings) GetPACURL() string {
-	return s.getString(SNPACURL)
 }
 
 func (s *Settings) getBool(name SettingName) bool {

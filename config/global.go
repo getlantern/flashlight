@@ -5,9 +5,9 @@ import (
 	"errors"
 	"time"
 
+	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/keyman"
-	"github.com/getlantern/proxiedsites"
 )
 
 // Global contains general configuration for Lantern either set globally via
@@ -31,7 +31,12 @@ type Global struct {
 	Client *ClientConfig
 
 	// ProxiedSites are domains that get routed through Lantern rather than accessed directly.
-	ProxiedSites *proxiedsites.Config
+	// This has been deprecated in favor of more precise DomainRoutingRules (see below).
+	// The client will continue to honor ProxiedSites configuration for now.
+	ProxiedSites *domainrouting.ProxiedSitesConfig
+
+	// DomainRoutingRules specifies routing rules for specific domains, such as forcing proxing, forcing direct dials, etc.
+	DomainRoutingRules domainrouting.Rules
 
 	// TrustedCAs are trusted CAs for domain fronting domains only.
 	TrustedCAs []*fronted.CA
@@ -53,10 +58,8 @@ type Global struct {
 // NewGlobal creates a new global config with otherwise nil values set.
 func NewGlobal() *Global {
 	return &Global{
-		Client: NewClientConfig(),
-		ProxiedSites: &proxiedsites.Config{
-			Delta: &proxiedsites.Delta{},
-		},
+		Client:       NewClientConfig(),
+		ProxiedSites: &domainrouting.ProxiedSitesConfig{},
 	}
 }
 
@@ -64,6 +67,7 @@ func NewGlobal() *Global {
 func (cfg *Global) FeatureEnabled(feature string, userID string, isPro bool,
 	geoCountry string) bool {
 	enabled, _ := cfg.FeatureEnabledWithLabel(feature, userID, isPro, geoCountry)
+	log.Tracef("Feature enabled? %v: %v", feature, enabled)
 	return enabled
 }
 

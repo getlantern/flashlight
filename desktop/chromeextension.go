@@ -86,6 +86,11 @@ func (e *extension) installTo(externalPath string) {
 		if f, err := os.Create(path); err != nil {
 			e.log.Errorf("Could not open extension file for writing: %v", err)
 		} else {
+			defer func() {
+				if err := f.Close(); err != nil {
+					e.log.Errorf("Could not close file %v", err)
+				}
+			}()
 			if bytes, err := json.Marshal(map[string]string{
 				"external_update_url": "https://clients2.google.com/service/update2/crx"}); err != nil {
 				e.log.Errorf("Error marshaling map to JSON: %v", err)
@@ -196,22 +201,29 @@ func (e *extension) save(dataFunc func() map[string]interface{}) {
 // saveOnce saves a copy of the settings as JSON for the lantern chrome extension to read.
 func (e *extension) saveOnce(dataFunc func() map[string]interface{}) bool {
 	e.log.Debug("Saving settings for extension")
-	savedOnce := false
 	if paths, err := e.extensionDirs(); err != nil {
 		e.log.Errorf("Could not find extensions dir: %v", err)
 	} else {
 		for _, path := range paths {
 			if f, err := os.Create(path); err != nil {
 				e.log.Errorf("Could not open settings file for writing: %v", err)
-			} else if _, err := e.writeJSONTo(dataFunc, f); err != nil {
-				e.log.Errorf("Could not save settings file: %v", err)
+				return false
 			} else {
-				e.log.Debugf("Saved settings to %s", path)
-				savedOnce = true
+				defer func() {
+					if err := f.Close(); err != nil {
+						e.log.Errorf("Could not close file %v", err)
+					}
+				}()
+				if _, err := e.writeJSONTo(dataFunc, f); err != nil {
+					e.log.Errorf("Could not save settings file: %v", err)
+				} else {
+					e.log.Debugf("Saved settings to %s", path)
+					return true
+				}
 			}
 		}
 	}
-	return savedOnce
+	return false
 }
 
 func (e *extension) writeJSONTo(dataFunc func() map[string]interface{}, w io.Writer) (int, error) {

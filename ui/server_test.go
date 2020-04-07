@@ -293,13 +293,6 @@ func TestKnownResourceWithNoOrigin(t *testing.T) {
 	assert.Equal(t, "", rw.HeaderMap.Get("Cache-Control"), "Expecting no reply")
 }
 
-func TestProxyPACWithNoToken(t *testing.T) {
-	var rw httptest.ResponseRecorder
-	req, _ := http.NewRequest("GET", "/proxy_on.pac", nil)
-	getTestHandler().ServeHTTP(&rw, req)
-	assert.Equal(t, "", rw.HeaderMap.Get("Cache-Control"), "Expecting no reply")
-}
-
 func TestKnownResourceWithNoOriginButWithToken(t *testing.T) {
 	var rw httptest.ResponseRecorder
 	s := getTestServer("token")
@@ -312,14 +305,6 @@ func TestLanternLogoWithToken(t *testing.T) {
 	var rw httptest.ResponseRecorder
 	s := getTestServer("token")
 	req, _ := http.NewRequest("GET", s.AddToken("/img/lantern_logo.png?foo=1"), nil)
-	s.mux.ServeHTTP(&rw, req)
-	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
-}
-
-func TestLanternPACURL(t *testing.T) {
-	var rw httptest.ResponseRecorder
-	s := getTestServer("token")
-	req, _ := http.NewRequest("GET", s.AddToken("/proxy_on.pac"), nil)
 	s.mux.ServeHTTP(&rw, req)
 	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
 }

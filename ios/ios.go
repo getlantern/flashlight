@@ -145,7 +145,7 @@ func (c *client) start() (WriteCloser, error) {
 	if err != nil {
 		return nil, err
 	}
-	bal := balancer.New(func() bool { return !c.uc.StealthMode }, 30*time.Second, dialers...)
+	bal := balancer.New(func() bool { return c.uc.AllowProbes }, 30*time.Second, dialers...)
 
 	w := packetforward.Client(&writerAdapter{c.packetsOut}, 30*time.Second, func(ctx context.Context) (net.Conn, error) {
 		return bal.DialContext(ctx, "connect", "127.0.0.1:3000")
@@ -196,7 +196,7 @@ func (c *client) loadDialers() ([]balancer.Dialer, error) {
 		dialers = append(dialers, dialer)
 	}
 
-	chained.TrackStatsFor(dialers, filepath.Join(c.configDir, "proxystats.csv"), false)
+	chained.TrackStatsFor(dialers, c.configDir, false)
 
 	return dialers, nil
 }
