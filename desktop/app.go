@@ -307,10 +307,10 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 		log.Debugf("Starting client UI at %v", uiaddr)
 
-        var authaddr string
-        if app.Flags["authaddr"] != nil {
-          authaddr = app.Flags["authaddr"].(string)
-        }
+		var authaddr string
+		if app.Flags["authaddr"] != nil {
+			authaddr = app.Flags["authaddr"].(string)
+		}
 		if authaddr == "" {
 			authaddr = common.AuthServerAddr
 		}
