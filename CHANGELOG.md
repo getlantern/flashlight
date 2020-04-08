@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.9.1](https://github.com/getlantern/flashlight/tree/5.9.1) (2020-04-07)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.0...5.9.1)
+
+**Merged pull requests:**
+
+- skip re-evaluating dialers when background checking is disabled [\#782](https://github.com/getlantern/flashlight/pull/782) ([joesis](https://github.com/joesis))
+
 ## [5.9.0](https://github.com/getlantern/flashlight/tree/5.9.0) (2020-04-03)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.8.6...5.9.0)
@@ -144,6 +152,7 @@
 - Test for embedded global [\#704](https://github.com/getlantern/flashlight/pull/704) ([myleshorton](https://github.com/myleshorton))
 - make sure both proxies and global config are got in config/TestInit [\#703](https://github.com/getlantern/flashlight/pull/703) ([joesis](https://github.com/joesis))
 - Improved script and add sanity test for global config updates [\#702](https://github.com/getlantern/flashlight/pull/702) ([myleshorton](https://github.com/myleshorton))
+- More CI fixes [\#701](https://github.com/getlantern/flashlight/pull/701) ([joesis](https://github.com/joesis))
 
 ## [5.6.3](https://github.com/getlantern/flashlight/tree/5.6.3) (2019-10-28)
 
@@ -151,7 +160,6 @@
 
 **Merged pull requests:**
 
-- More CI fixes [\#701](https://github.com/getlantern/flashlight/pull/701) ([joesis](https://github.com/joesis))
 - Fix Proxy-Connection handling in persistent HTTP case [\#700](https://github.com/getlantern/flashlight/pull/700) ([myleshorton](https://github.com/myleshorton))
 - Various changes to make CI more reliable [\#699](https://github.com/getlantern/flashlight/pull/699) ([joesis](https://github.com/joesis))
 
@@ -198,7 +206,6 @@
 **Merged pull requests:**
 
 - print top stacks if the number of goroutines exceeds 800 [\#677](https://github.com/getlantern/flashlight/pull/677) ([joesis](https://github.com/joesis))
-- Remove embedded proxies, update global, tweak script [\#676](https://github.com/getlantern/flashlight/pull/676) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.5.7](https://github.com/getlantern/flashlight/tree/5.5.7) (2019-09-19)
 
