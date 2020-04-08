@@ -39,7 +39,7 @@ func (c testSession) AfterStart()                   {}
 func (c testSession) BandwidthUpdate(int, int, int) {}
 func (c testSession) ConfigUpdate(bool)             {}
 func (c testSession) ShowSurvey(survey string)      {}
-func (c testSession) GetUserID() string             { return "0" }
+func (c testSession) GetUserID() int64              { return 0 }
 func (c testSession) GetToken() string              { return "" }
 func (c testSession) GetForcedCountryCode() string  { return "" }
 func (c testSession) GetDNSServer() string          { return "8.8.8.8" }

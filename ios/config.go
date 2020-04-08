@@ -49,7 +49,7 @@ type ConfigResult struct {
 // configFolderPath - global.yaml, global.yaml.etag, proxies.yaml,
 // proxies.yaml.etag and masquerade_cache. deviceID should be a string that
 // uniquely identifies the current device.
-func Configure(configFolderPath, userID, proToken, deviceID string, refreshProxies bool) (*ConfigResult, error) {
+func Configure(configFolderPath string, userID int, proToken, deviceID string, refreshProxies bool) (*ConfigResult, error) {
 	log.Debugf("Configuring client for device '%v' at config path '%v'", deviceID, configFolderPath)
 	cf := &configurer{
 		configFolderPath: configFolderPath,
@@ -70,7 +70,7 @@ type configurer struct {
 	rt               http.RoundTripper
 }
 
-func (cf *configurer) configure(userID, proToken string, refreshProxies bool) (*ConfigResult, error) {
+func (cf *configurer) configure(userID int, proToken string, refreshProxies bool) (*ConfigResult, error) {
 	result := &ConfigResult{}
 
 	if err := cf.writeUserConfig(); err != nil {
@@ -99,7 +99,7 @@ func (cf *configurer) configure(userID, proToken string, refreshProxies bool) (*
 			log.Debugf("Successful geolookup: country %s", cf.uc.Country)
 			cf.uc.AllowProbes = !global.FeatureEnabled(
 				config.FeatureNoProbeProxies,
-				cf.uc.UserID,
+				int64(cf.uc.UserID),
 				cf.uc.Token != "",
 				cf.uc.Country)
 			log.Debugf("Allow probes?: %v", cf.uc.AllowProbes)

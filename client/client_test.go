@@ -24,7 +24,6 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/flashlight/stats"
-	"github.com/getlantern/lantern-server/uuid"
 )
 
 var logger = golog.LoggerFor("client-test")
@@ -54,7 +53,7 @@ func init() {
 }
 
 func newTestUserConfig() *common.UserConfigData {
-	return common.NewUserConfigData("device", uuid.Random(), "protoken", nil, "en-US")
+	return common.NewUserConfigData("device", 1234, "protoken", nil, "en-US")
 }
 
 func resetBalancer(client *Client, dialer func(network, addr string) (net.Conn, error)) {

@@ -19,7 +19,7 @@ type ProCredentials struct {
 }
 
 // IsActiveProDevice checks whether the given device is an active pro device
-func IsActiveProDevice(userID, proToken, deviceID string) (bool, error) {
+func IsActiveProDevice(userID int, proToken, deviceID string) (bool, error) {
 	pc, err := getProClient()
 	if err != nil {
 		return false, err

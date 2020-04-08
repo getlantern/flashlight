@@ -98,7 +98,7 @@ type userConfig struct {
 }
 
 func (uc *userConfig) GetDeviceID() string { return uc.session.GetDeviceID() }
-func (uc *userConfig) GetUserID() string   { return uc.session.GetUserID() }
+func (uc *userConfig) GetUserID() int64    { return uc.session.GetUserID() }
 func (uc *userConfig) GetToken() string    { return uc.session.GetToken() }
 func (uc *userConfig) GetLanguage() string { return uc.session.Locale() }
 func (uc *userConfig) GetInternalHeaders() map[string]string {
