@@ -307,12 +307,14 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 		log.Debugf("Starting client UI at %v", uiaddr)
 
-		authaddr := app.Flags["authaddr"].(string)
+        var authaddr string
+        if app.Flags["authaddr"] != nil {
+          authaddr = app.Flags["authaddr"].(string)
+        }
 		if authaddr == "" {
 			authaddr = common.AuthServerAddr
 		}
 		log.Debugf("Using auth server at %v", authaddr)
-
 		standalone := app.Flags["standalone"] != nil && app.Flags["standalone"].(bool)
 		// ui will handle empty uiaddr correctly
 		if app.uiServer, err = ui.StartServer(uiaddr,
