@@ -196,7 +196,7 @@ func Run(httpProxyAddr string,
 	statsTracker stats.Tracker,
 	onError func(err error),
 	isPro func() bool,
-	userID func() string,
+	userID func() int64,
 	lang func() string,
 	adSwapTargetURL func() string,
 	reverseDNS func(host string) string) error {
