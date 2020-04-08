@@ -428,13 +428,13 @@ func (s *Settings) GetDeviceID() string {
 }
 
 // SetUserIDAndToken sets the user ID and token atomically
-func (s *Settings) SetUserIDAndToken(userID, token string) {
-	s.setVals(map[SettingName]interface{}{SNUserID: userID, SNUserToken: token})
+func (s *Settings) SetUserIDAndToken(id int64, token string) {
+	s.setVals(map[SettingName]interface{}{SNUserID: id, SNUserToken: token})
 }
 
 // GetUserID returns the user ID
-func (s *Settings) GetUserID() string {
-	return s.getString(SNUserID)
+func (s *Settings) GetUserID() int64 {
+	return s.getInt64(SNUserID)
 }
 
 // GetToken returns the user token

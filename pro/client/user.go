@@ -7,7 +7,7 @@ type Device struct {
 }
 
 type Auth struct {
-	ID    string `json:"userId"`
+	ID    int64  `json:"userId"`
 	Token string `json:"token"`
 }
 

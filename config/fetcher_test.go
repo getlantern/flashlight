@@ -10,7 +10,7 @@ import (
 )
 
 func newTestUserConfig() *common.UserConfigData {
-	return common.NewUserConfigData("deviceID", "10", "token", nil, "en-US")
+	return common.NewUserConfigData("deviceID", 10, "token", nil, "en-US")
 }
 
 // TestFetcher actually fetches a config file over the network.

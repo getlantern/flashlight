@@ -7,14 +7,13 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/pro/client"
-	"github.com/getlantern/lantern-server/uuid"
 )
 
 func TestUsers(t *testing.T) {
 	common.ForceStaging()
 
 	deviceID := "77777777"
-	u, err := newUserWithClient(common.NewUserConfigData(deviceID, uuid.Random(), "", nil, "en-US"), nil)
+	u, err := newUserWithClient(common.NewUserConfigData(deviceID, 0, "", nil, "en-US"), nil)
 
 	assert.NoError(t, err, "Unexpected error")
 	assert.NotNil(t, u, "Should have gotten a user")
@@ -36,7 +35,7 @@ func TestUsers(t *testing.T) {
 	pro, _ = IsProUserFast(uc)
 	assert.False(t, pro)
 
-	var waitUser string = uuid.Random()
+	var waitUser int64 = 88888
 	var changed int
 	var userDataSaved int
 	OnUserData(func(*client.User, *client.User) {

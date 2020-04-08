@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"math"
 	"net/http"
@@ -89,30 +88,6 @@ func (c *Client) UserCreate(user common.UserConfig) (res *UserDataResponse, err 
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	payload, err := c.do(user, req)
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(payload, &res)
-	return
-}
-
-// UserCreateWithID creates a new user with a randomly generated UUID on the
-// client without asking for any payment.
-func (c *Client) UserCreateWithID(user common.UserConfig, userID string) (res *UserDataResponse, err error) {
-	vals := url.Values{
-		"locale": {user.GetLanguage()},
-	}
-	body := strings.NewReader(vals.Encode())
-
-	createUserURL := fmt.Sprintf("https://%s/user-create-with-id/%s",
-		common.ProAPIHost,
-		userID)
-	req, err := http.NewRequest(http.MethodPost, createUserURL, body)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	payload, err := c.do(user, req)
 	if err != nil {
 		return nil, err
@@ -234,7 +209,7 @@ func (c *Client) do(user common.UserConfig, req *http.Request) ([]byte, error) {
 
 	for i := 0; i < maxRetries; i++ {
 		client := c.httpClient
-		log.Debugf("%s %s %s", req.Method, req.URL, req.Header)
+		log.Debugf("%s %s", req.Method, req.URL)
 		if len(buf) > 0 {
 			req.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
 		}

@@ -18,7 +18,6 @@ import (
 
 	"github.com/getlantern/flashlight/borda"
 	"github.com/getlantern/flashlight/chained"
-	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/goroutines"
@@ -239,7 +238,6 @@ func startApp(t *testing.T, helper *integrationtest.Helper) (*App, error) {
 		"stickyconfig":            false,
 		"clear-proxy-settings":    false,
 		"readableconfig":          true,
-		"authaddr":                common.AuthServerAddr,
 		"uiaddr":                  "127.0.0.1:16823",
 		"borda-report-interval":   5 * time.Minute,
 		"borda-sample-percentage": 0.0, // this is 0 to disable random sampling, allowing us to test fully reported ops
@@ -254,8 +252,8 @@ func startApp(t *testing.T, helper *integrationtest.Helper) (*App, error) {
 	a.Init()
 	// Set a non-zero User ID to make prochecker happy
 	id := settings.GetUserID()
-	if id == "0" {
-		settings.SetUserIDAndToken("1", "token")
+	if id == 0 {
+		settings.SetUserIDAndToken(1, "token")
 	}
 
 	go func() {

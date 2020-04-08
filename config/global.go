@@ -64,7 +64,7 @@ func NewGlobal() *Global {
 }
 
 // FeatureEnabled checks if the feature is enabled given the client properties.
-func (cfg *Global) FeatureEnabled(feature string, userID string, isPro bool,
+func (cfg *Global) FeatureEnabled(feature string, userID int64, isPro bool,
 	geoCountry string) bool {
 	enabled, _ := cfg.FeatureEnabledWithLabel(feature, userID, isPro, geoCountry)
 	log.Tracef("Feature %v enabled for user %v in country %v?: %v", feature, userID, geoCountry, enabled)
@@ -73,7 +73,7 @@ func (cfg *Global) FeatureEnabled(feature string, userID string, isPro bool,
 
 // FeatureEnabledWithLabel is the same as FeatureEnabled but also returns the
 // label of the first matched ClientGroup if the feature is enabled.
-func (cfg *Global) FeatureEnabledWithLabel(feature string, userID string, isPro bool,
+func (cfg *Global) FeatureEnabledWithLabel(feature string, userID int64, isPro bool,
 	geoCountry string) (enabled bool, label string) {
 	groups, exists := cfg.FeaturesEnabled[feature]
 	if !exists {

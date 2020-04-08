@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
-	"strconv"
 	"strings"
 	"time"
 
@@ -137,9 +136,8 @@ func (g ClientGroup) Validate() error {
 
 //Includes checks if the ClientGroup includes the user, device and country
 //combination, assuming the group has been validated.
-func (g ClientGroup) Includes(userIDStr string, isPro bool, geoCountry string) bool {
+func (g ClientGroup) Includes(userID int64, isPro bool, geoCountry string) bool {
 	if g.UserCeil > 0 {
-		userID, _ := strconv.ParseInt(userIDStr, 10, 64)
 		percision := 1000.0
 		remainder := userID % int64(percision)
 		if remainder < int64(g.UserFloor*percision) || remainder >= int64(g.UserCeil*percision) {

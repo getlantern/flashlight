@@ -16,11 +16,10 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/pro/client"
-	"github.com/getlantern/lantern-server/uuid"
 )
 
 func TestProxy(t *testing.T) {
-	uc := common.NewUserConfigData("device", uuid.Random(), "token", nil, "en-US")
+	uc := common.NewUserConfigData("device", 0, "token", nil, "en-US")
 	m := &mockRoundTripper{header: http.Header{}, body: strings.NewReader("GOOD")}
 	httpClient = &http.Client{Transport: m}
 	l, err := net.Listen("tcp", "localhost:0")
@@ -72,13 +71,12 @@ func TestProxy(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	userId := uuid.Random()
-	req.Header.Set("X-Lantern-User-Id", userId)
+	req.Header.Set("X-Lantern-User-Id", "1234")
 	resp, err = (&http.Client{}).Do(req)
 	if assert.NoError(t, err, "GET request should have no error") {
 		assert.Equal(t, 200, resp.StatusCode, "should respond 200 ok")
 	}
-	user, found := GetUserDataFast(userId)
+	user, found := GetUserDataFast(1234)
 	if assert.True(t, found) {
 		assert.Equal(t, "a@a.com", user.Email, "should store user data implicitly if response is plain JSON")
 	}
@@ -94,7 +92,7 @@ func TestProxy(t *testing.T) {
 	if assert.NoError(t, err, "GET request should have no error") {
 		assert.Equal(t, 200, resp.StatusCode, "should respond 200 ok")
 	}
-	user, found = GetUserDataFast(userId)
+	user, found = GetUserDataFast(1234)
 	if assert.True(t, found) {
 		assert.Equal(t, "b@b.com", user.Email, "should store user data implicitly if response is gzipped JSON")
 	}

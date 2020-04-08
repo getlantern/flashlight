@@ -2,6 +2,7 @@ package common
 
 import (
 	"net/http"
+	"strconv"
 )
 
 const (
@@ -48,8 +49,8 @@ func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth
 		}
 	}
 	if overwriteAuth || req.Header.Get(UserIdHeader) == "" {
-		if userID := uc.GetUserID(); userID != "" {
-			req.Header.Set(UserIdHeader, userID)
+		if userID := uc.GetUserID(); userID != 0 {
+			req.Header.Set(UserIdHeader, strconv.FormatInt(userID, 10))
 		}
 	}
 }
