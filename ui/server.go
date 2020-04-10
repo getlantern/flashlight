@@ -85,6 +85,16 @@ type Server struct {
 	standalone     bool
 }
 
+// ServerParams specifies the parameters to use
+// when creating new UI server
+type ServerParams struct {
+	ExtURL         string
+	AuthServerAddr string
+	LocalHTTPToken string
+	Standalone     bool
+	HTTPClient     *http.Client
+}
+
 // PathHandler contains a request path pattern and an HTTP handler for that
 // pattern.
 type PathHandler struct {
