@@ -1,4 +1,4 @@
-package ui
+package auth
 
 import (
 	"encoding/json"
@@ -12,7 +12,7 @@ import (
 // The SRP client processes the server credentials
 // and generates a mutual auth that is sent to the
 // server as proof the client derived its keys
-func (s *Server) sendMutualAuth(srpClient *srp.SRPClient,
+func (h AuthHandler) sendMutualAuth(srpClient *srp.SRPClient,
 	credentials, username string) (*models.AuthResponse, error) {
 	cauth, err := srpClient.Generate(credentials)
 	if err != nil {
@@ -26,14 +26,14 @@ func (s *Server) sendMutualAuth(srpClient *srp.SRPClient,
 	if err != nil {
 		return nil, err
 	}
-	url := s.getAPIAddr(authEndpoint)
-	return s.sendAuthRequest(common.POST, url, requestBody)
+	url := h.GetAPIAddr(authEndpoint)
+	return h.sendAuthRequest(common.POST, url, requestBody)
 }
 
 // getSRPClient binds the provided request body to the userParams type
 // and then creates a new SRP client instance from it
 // The SRP parameters are attached to the returned user params
-func (s *Server) getSRPClient(req *http.Request) (*models.UserParams, *srp.SRPClient, error) {
+func (h AuthHandler) getSRPClient(req *http.Request) (*models.UserParams, *srp.SRPClient, error) {
 	var params models.UserParams
 	err := common.DecodeJSONRequest(req, &params)
 	if err != nil {

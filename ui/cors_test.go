@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/http/httputil"
 	"strings"
 	"testing"
 
@@ -43,12 +42,6 @@ func assertHeaders(t *testing.T, resHeaders http.Header, expHeaders map[string]s
 	}
 }
 
-func dumpResponse(resp *httptest.ResponseRecorder) {
-	result := resp.Result()
-	dump, _ := httputil.DumpResponse(result, true)
-	log.Debugf("HTTP response is %q", dump)
-}
-
 func TestCors(t *testing.T) {
 	s := startServer(t, common.AuthServerAddr, ":0")
 	uiAddr := fmt.Sprintf("http://%s", s.GetUIAddr())
@@ -82,7 +75,7 @@ func TestCors(t *testing.T) {
 	for i := range cases {
 		tc := cases[i]
 		t.Run(tc.name, func(t *testing.T) {
-			url := s.getAPIAddr(tc.uri)
+			url := fmt.Sprintf("%s%s", s.authServerAddr, tc.uri)
 			req, _ := http.NewRequest(tc.method, url,
 				nil)
 			for name, value := range tc.reqHeaders {

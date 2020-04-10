@@ -20,13 +20,13 @@ import (
 	"github.com/getlantern/systray"
 	"github.com/getlantern/tarfs"
 
-	"github.com/getlantern/appdir"
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/stats"
+	"github.com/getlantern/flashlight/ui/auth"
+	"github.com/getlantern/flashlight/ui/handler"
+	"github.com/getlantern/flashlight/ui/yinbi"
 	"github.com/getlantern/flashlight/util"
-	"github.com/getlantern/yinbi-server/keystore"
-	"github.com/getlantern/yinbi-server/yinbi"
 )
 
 // A set of ports that chrome considers restricted
@@ -57,13 +57,6 @@ var (
 	translations = eventual.NewValue()
 )
 
-// PathHandler contains a request path pattern and an HTTP handler for that
-// pattern.
-type PathHandler struct {
-	Pattern string
-	Handler http.Handler
-}
-
 // Listener wraps a net.Listener and provides its
 // listen and access addresses
 type Listener struct {
@@ -82,13 +75,6 @@ type Server struct {
 	// authentication server
 	authServerAddr string
 
-	// yinbiClient is a client for the Yinbi API which
-	// supports creating accounts and making payments
-	yinbiClient *yinbi.Client
-
-	// keystore manages encrypted storage of Yinbi private keys
-	keystore *keystore.Keystore
-
 	httpClient *http.Client
 
 	proxy *httputil.ReverseProxy
@@ -100,6 +86,13 @@ type Server struct {
 	onceOpenExtURL sync.Once
 	translations   eventual.Value
 	standalone     bool
+}
+
+// PathHandler contains a request path pattern and an HTTP handler for that
+// pattern.
+type PathHandler struct {
+	Pattern string
+	Handler http.Handler
 }
 
 // tcpKeepAliveListener is a TCPListener that sets TCP keep-alive
@@ -127,7 +120,7 @@ func StartServer(requestedAddr, authServerAddr,
 	extURL, localHTTPToken string, standalone bool,
 	handlers ...*PathHandler) (*Server, error) {
 
-	server := newServer(ServerParams{
+	server := NewServer(ServerParams{
 		ExtURL:         extURL,
 		LocalHTTPToken: localHTTPToken,
 		AuthServerAddr: authServerAddr,
@@ -138,13 +131,13 @@ func StartServer(requestedAddr, authServerAddr,
 		server.handle(h.Pattern, h.Handler)
 	}
 
-	if err := server.start(requestedAddr); err != nil {
+	if err := server.Start(requestedAddr); err != nil {
 		return nil, err
 	}
 	return server, nil
 }
 
-func newServer(params ServerParams) *Server {
+func NewServer(params ServerParams) *Server {
 	requestPath := ""
 	if params.LocalHTTPToken != "" {
 		requestPath = "/" + params.LocalHTTPToken
@@ -166,8 +159,6 @@ func newServer(params ServerParams) *Server {
 		externalURL:    overrideManotoURL(params.ExtURL),
 		requestPath:    requestPath,
 		httpClient:     params.HTTPClient,
-		yinbiClient:    newYinbiClient(params.HTTPClient),
-		keystore:       keystore.New(appdir.General("Lantern")),
 		mux:            http.NewServeMux(),
 		authServerAddr: params.AuthServerAddr,
 		proxy:          httputil.NewSingleHostReverseProxy(u),
@@ -178,26 +169,33 @@ func newServer(params ServerParams) *Server {
 	return server
 }
 
-type HandlerFunc func(http.ResponseWriter, *http.Request)
-
 func (s *Server) attachHandlers() {
 	proxyHandler := func(w http.ResponseWriter, r *http.Request) {
 		s.proxy.ServeHTTP(w, r)
 	}
+
 	// map of Lantern and Yinbi API endpoints to
 	// HTTP handlers to register with the ServeMux
-	routes := map[string]HandlerFunc{
-		"/login":                s.authHandler,
-		"/register":             s.authHandler,
-		"/payment/new":          s.sendPaymentHandler,
-		"/user/account/new":     s.createAccountHandler,
-		"/user/import/wallet":   s.importWalletHandler,
-		"/user/redeem/codes":    s.redeemCodesHandler,
-		"/account/details":      s.getAccountDetails,
-		"/account/transactions": s.getAccountTransactions,
-		"/user/mnemonic":        s.createMnemonic,
-		"/user/logout":          proxyHandler,
+	routes := map[string]handler.HandlerFunc{
+		"/user/logout": proxyHandler,
 	}
+
+	params := handler.Params{
+		AuthServerAddr: s.authServerAddr,
+		HttpClient:     s.httpClient,
+	}
+
+	handlers := []handler.UIHandler{
+		yinbi.New(params),
+		auth.New(params),
+	}
+
+	for _, h := range handlers {
+		for route, handler := range h.Routes() {
+			routes[route] = handler
+		}
+	}
+
 	for pattern, handler := range routes {
 		s.mux.Handle(pattern,
 			s.wrapMiddleware(http.HandlerFunc(handler)))
@@ -310,9 +308,9 @@ func (s *Server) tryListenCandidates(candidates []string) (*Listener, error) {
 	return nil, errors.New("No address available")
 }
 
-// starts server listen at addr in host:port format, or arbitrary local port if
+// Start starts server listen at addr in host:port format, or arbitrary local port if
 // addr is empty.
-func (s *Server) start(requestedAddr string) error {
+func (s *Server) Start(requestedAddr string) error {
 	listener, err := s.tryListenCandidates(addrCandidates(requestedAddr))
 	if err != nil {
 		return err

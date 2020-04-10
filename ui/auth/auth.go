@@ -1,4 +1,4 @@
-package ui
+package auth
 
 import (
 	"bytes"
@@ -6,14 +6,15 @@ import (
 	"crypto/subtle"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"html"
 	"io/ioutil"
 	"net/http"
 
+	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/lantern-server/common"
 	"github.com/getlantern/lantern-server/models"
 	"github.com/getlantern/lantern-server/srp"
+	"github.com/siddontang/go/log"
 )
 
 const (
@@ -34,26 +35,38 @@ func withUserID(ctx context.Context, userID string) context.Context {
 	return context.WithValue(ctx, userKey, userID)
 }
 
-// getAPIAddr combines the given uri with the authentication server address
-func (s *Server) getAPIAddr(uri string) string {
-	return fmt.Sprintf("%s%s", s.authServerAddr, uri)
+type AuthHandler struct {
+	handler.Handler
+}
+
+func New(params handler.Params) AuthHandler {
+	return AuthHandler{
+		handler.New(params),
+	}
+}
+
+func (h AuthHandler) Routes() map[string]handler.HandlerFunc {
+	return map[string]handler.HandlerFunc{
+		"/login":    h.authHandler,
+		"/register": h.authHandler,
+	}
 }
 
 // proxyHandler is a HTTP handler used to proxy requests
 // to the Lantern authentication server
-func (s *Server) proxyHandler(req *http.Request, w http.ResponseWriter,
+func (h AuthHandler) proxyHandler(req *http.Request, w http.ResponseWriter,
 	onResponse common.HandleResponseFunc,
 	onError common.HandleErrorFunc,
 ) {
-	url := s.getAPIAddr(html.EscapeString(req.URL.Path))
-	common.ProxyHandler(url, s.httpClient, req, w,
+	url := h.GetAPIAddr(html.EscapeString(req.URL.Path))
+	common.ProxyHandler(url, h.HttpClient, req, w,
 		onResponse,
 		onError)
 }
 
 // doRequest creates and sends a new HTTP request to the given url
 // with an optional requestBody. It returns an HTTP response
-func (s *Server) doRequest(method, url string,
+func (h AuthHandler) doRequest(method, url string,
 	requestBody []byte) (*http.Response, error) {
 	log.Debugf("Sending new request to url %s", url)
 	var req *http.Request
@@ -68,12 +81,12 @@ func (s *Server) doRequest(method, url string,
 		return nil, err
 	}
 	req.Header.Set(common.HeaderContentType, common.MIMEApplicationJSON)
-	return s.httpClient.Do(req)
+	return h.HttpClient.Do(req)
 }
 
-func (s *Server) sendAuthRequest(method, url string,
+func (h AuthHandler) sendAuthRequest(method, url string,
 	requestBody []byte) (*models.AuthResponse, error) {
-	resp, err := s.doRequest(method, url, requestBody)
+	resp, err := h.doRequest(method, url, requestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +109,8 @@ func decodeAuthResponse(body []byte) (*models.AuthResponse, error) {
 // the user params in the request and sends the
 // SRP params (i.e. verifier) generated to the authentication
 // server, establishing a fully authenticated session
-func (s *Server) authHandler(w http.ResponseWriter, req *http.Request) {
-	params, srpClient, err := s.getSRPClient(req)
+func (h AuthHandler) authHandler(w http.ResponseWriter, req *http.Request) {
+	params, srpClient, err := h.getSRPClient(req)
 	if err != nil {
 		return
 	}
@@ -109,7 +122,7 @@ func (s *Server) authHandler(w http.ResponseWriter, req *http.Request) {
 
 	onError := func(resp *http.Response, err error) {
 		log.Debugf("Encountered error processing auth response: %v", err)
-		s.errorHandler(w, err, resp.StatusCode)
+		h.ErrorHandler(w, err, resp.StatusCode)
 	}
 
 	onResp := func(resp *http.Response, body []byte) error {
@@ -122,7 +135,7 @@ func (s *Server) authHandler(w http.ResponseWriter, req *http.Request) {
 			return err
 		}
 		// client generates a mutual auth and sends it to the server
-		authResp, err = s.sendMutualAuth(srpClient,
+		authResp, err = h.sendMutualAuth(srpClient,
 			authResp.Credentials, params.Username)
 		if err != nil {
 			return err
@@ -145,5 +158,5 @@ func (s *Server) authHandler(w http.ResponseWriter, req *http.Request) {
 		log.Debug("Successfully created new SRP session")
 		return nil
 	}
-	s.proxyHandler(req, w, onResp, onError)
+	h.proxyHandler(req, w, onResp, onError)
 }

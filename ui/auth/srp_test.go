@@ -1,4 +1,4 @@
-package ui
+package auth
 
 import (
 	"bytes"
@@ -8,6 +8,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/getlantern/flashlight/ui/handler"
+	"github.com/getlantern/flashlight/ui/params"
+	"github.com/getlantern/flashlight/ui/testutils"
 	"github.com/getlantern/lantern-server/common"
 	"github.com/getlantern/lantern-server/constants"
 	"github.com/getlantern/lantern-server/models"
@@ -22,14 +25,14 @@ type SRPTest struct {
 	endpoint     string
 	hasError     bool
 	expectedCode int
-	expectedResp *Response
+	expectedResp *params.Response
 }
 
 const TestPassword = "p@sswor1234!"
 
-func getClient(t *testing.T, params *models.UserParams, s *Server) (*models.UserParams, *srp.SRPClient) {
+func getClient(t *testing.T, params *models.UserParams, h AuthHandler) (*models.UserParams, *srp.SRPClient) {
 	req := createAuthRequest(params, loginEndpoint)
-	params, client, err := s.getSRPClient(req)
+	params, client, err := h.getSRPClient(req)
 	assert.NoError(t, err, "Should be no error creating SRP client")
 	assert.NotNil(t, client)
 	assert.Equal(t, params.Password, "")
@@ -55,18 +58,11 @@ func createUser() models.UserParams {
 	}
 }
 
-func startServer(t *testing.T, authaddr, addr string) *Server {
-	s := newServer(ServerParams{
-		AuthServerAddr: authaddr,
-		LocalHTTPToken: "test-http-token",
-		HTTPClient:     http.DefaultClient,
-	})
-	assert.NoError(t, s.start(addr), "should start server")
-	return s
-}
-
 func TestSRP(t *testing.T) {
-	s := startServer(t, common.AuthServerAddr, ":0")
+	h := New(handler.Params{
+		common.AuthServerAddr,
+		&http.Client{},
+	})
 
 	// Create new test user
 	user := createUser()
@@ -90,7 +86,7 @@ func TestSRP(t *testing.T) {
 			registrationEndpoint,
 			true,
 			http.StatusBadRequest,
-			&Response{
+			&params.Response{
 				Error: constants.ErrUsernameTaken.Error(),
 			},
 		},
@@ -104,7 +100,7 @@ func TestSRP(t *testing.T) {
 			registrationEndpoint,
 			true,
 			http.StatusBadRequest,
-			&Response{
+			&params.Response{
 				Error: constants.ErrEmailTaken.Error(),
 			},
 		},
@@ -139,17 +135,17 @@ func TestSRP(t *testing.T) {
 			req := createAuthRequest(&tc.user,
 				tc.endpoint)
 			rec := httptest.NewRecorder()
-			s.authHandler(rec, req)
-			dumpResponse(rec)
+			h.authHandler(rec, req)
+			testutils.DumpResponse(rec)
 			if !tc.hasError {
 				var resp models.AuthResponse
-				decodeResp(t, rec, &resp)
+				testutils.DecodeResp(t, rec, &resp)
 				assert.Equal(t, rec.Code, http.StatusOK)
 				assert.NotEmpty(t, resp.UserID)
 				assert.NotEmpty(t, resp.Credentials)
 			} else {
-				var resp Response
-				decodeResp(t, rec, &resp)
+				var resp params.Response
+				testutils.DecodeResp(t, rec, &resp)
 				assert.Equal(t, rec.Code, tc.expectedCode)
 				assert.NotEmpty(t, resp.Error)
 				if tc.expectedResp != nil {

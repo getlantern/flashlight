@@ -3,7 +3,6 @@ package ui
 import (
 	"errors"
 	"net/http"
-	"strconv"
 )
 
 var (
@@ -35,28 +34,12 @@ type ServerParams struct {
 	HTTPClient     *http.Client
 }
 
-// PaymentParams specifies the necessary parameters for
-// sending a YNB payment
-type PaymentParams struct {
-	AuthParams
-	Destination string `json:"destination"`
-	Amount      string `json:"amount"`
-	Asset       string `json:"asset"`
-}
-
 // AuthParams specifies the necessary params for requests that require a
 // user's credentials
 type AuthParams struct {
 	Email    string `json:"email,omitempty"`
 	Username string `json:"username"`
 	Password string `json:"password"`
-}
-
-type ImportWalletResponse struct {
-	Username string `json:"username"`
-	Address  string `json:"address"`
-	Salt     string `json:"salt"`
-	Seed     string `json:"seed"`
 }
 
 func (p AuthParams) Validate() Errors {
@@ -66,29 +49,6 @@ func (p AuthParams) Validate() Errors {
 	}
 	if p.Username == "" {
 		errors["username"] = ErrMissingUsername.Error()
-	}
-	return errors
-}
-
-// Validate validates the payment params and returns
-// a map of param names to errors
-func (p PaymentParams) Validate() Errors {
-	errors := make(Errors)
-	if p.Password == "" {
-		errors["password"] = ErrMissingPassword.Error()
-	}
-	if p.Username == "" {
-		errors["username"] = ErrMissingUsername.Error()
-	}
-	if p.Destination == "" {
-		errors["destination"] = ErrMissingDestination.Error()
-	}
-	if p.Amount == "" {
-		errors["amount"] = ErrMissingPaymentAmount.Error()
-	}
-	amount, err := strconv.Atoi(p.Amount)
-	if err != nil || amount < 0 {
-		errors["amount"] = ErrPaymentInvalidAmount.Error()
 	}
 	return errors
 }

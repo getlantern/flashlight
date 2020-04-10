@@ -22,7 +22,7 @@ func TestDoShow(t *testing.T) {
 		urlToShow = u
 	}
 
-	s := newServer(ServerParams{
+	s := NewServer(ServerParams{
 		LocalHTTPToken: "local-http-token",
 	})
 
@@ -42,7 +42,7 @@ func TestListen(t *testing.T) {
 	prohibitedPortInt := 2049
 	prohibitedPort := strconv.Itoa(prohibitedPortInt)
 	prohibitedPortAddr := fmt.Sprintf("localhost:%v", prohibitedPort)
-	s := newServer(ServerParams{
+	s := NewServer(ServerParams{
 		LocalHTTPToken: "test-http-token",
 	})
 
@@ -65,7 +65,7 @@ func TestListen(t *testing.T) {
 
 func TestStartServer(t *testing.T) {
 	startServer := func(addr string) *Server {
-		s := newServer(ServerParams{
+		s := NewServer(ServerParams{
 			AuthServerAddr: common.AuthServerAddr,
 			LocalHTTPToken: "test-http-token",
 		})
@@ -143,7 +143,7 @@ func TestStartServer(t *testing.T) {
 }
 
 func TestCheckOrigin(t *testing.T) {
-	s := newServer(ServerParams{
+	s := NewServer(ServerParams{
 		LocalHTTPToken: "token",
 	})
 	s.start("localhost:9898")
@@ -256,7 +256,7 @@ func getTestHandler() http.Handler {
 }
 
 func getTestServer(token string) *Server {
-	s := newServer(ServerParams{
+	s := NewServer(ServerParams{
 		LocalHTTPToken: token,
 	})
 	s.start("localhost:")
