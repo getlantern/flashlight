@@ -228,7 +228,7 @@ func New(
 	}
 	fops.InitGlobalContext(deviceID, isPro, userConfig.GetUserID, func() string { return geolookup.GetCountry(0) }, func() string { return geolookup.GetIP(0) })
 
-	r := &Flashlight{
+	f := &Flashlight{
 		configDir:         configDir,
 		flagsAsMap:        flagsAsMap,
 		userConfig:        userConfig,
@@ -277,20 +277,20 @@ func New(
 			}
 			return fmt.Sprintf("%v:%v", updatedHost, port)
 		}
-		r.vpnEnabled = true
+		f.vpnEnabled = true
 	}
 
 	useShortcut := func() bool {
-		return !r.featureEnabled(config.FeatureNoShortcut) && _useShortcut()
+		return !f.featureEnabled(config.FeatureNoShortcut) && _useShortcut()
 	}
 
 	useDetour := func() bool {
-		return !r.featureEnabled(config.FeatureNoDetour) && _useDetour()
+		return !f.featureEnabled(config.FeatureNoDetour) && _useDetour()
 	}
 
 	cl, err := client.NewClient(
 		disconnected,
-		func() bool { return !r.featureEnabled(config.FeatureNoProbeProxies) },
+		func() bool { return !f.featureEnabled(config.FeatureNoProbeProxies) },
 		func(ctx context.Context, addr string) (bool, net.IP) {
 			if useShortcut() {
 				return shortcut.Allow(ctx, addr)
@@ -298,7 +298,7 @@ func New(
 			return false, nil
 		},
 		useDetour,
-		func() bool { return !r.featureEnabled(config.FeatureNoHTTPSEverywhere) },
+		func() bool { return !f.featureEnabled(config.FeatureNoHTTPSEverywhere) },
 		userConfig,
 		statsTracker,
 		allowPrivateHosts,
@@ -308,12 +308,12 @@ func New(
 	)
 	if err != nil {
 		fatalErr := fmt.Errorf("Unable to initialize client: %v", err)
-		r.op.FailIf(fatalErr)
-		r.op.End()
+		f.op.FailIf(fatalErr)
+		f.op.End()
 		return nil, fatalErr
 	}
-	r.client = cl
-	return r, nil
+	f.client = cl
+	return f, nil
 }
 
 // Run runs the client proxy. It blocks as long as the proxy is running.
