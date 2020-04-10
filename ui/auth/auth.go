@@ -11,10 +11,10 @@ import (
 	"net/http"
 
 	"github.com/getlantern/flashlight/ui/handlers"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
 	"github.com/getlantern/lantern-server/models"
 	"github.com/getlantern/lantern-server/srp"
-	"github.com/siddontang/go/log"
 )
 
 const (
@@ -29,6 +29,7 @@ const (
 var (
 	ErrInvalidCredentials = errors.New("The supplied user credentials were invalid")
 	ErrSRPKeysDifferent   = errors.New("SRP client and server keys do not match")
+	log                   = golog.LoggerFor("flashlight.ui.auth")
 )
 
 func withUserID(ctx context.Context, userID string) context.Context {
