@@ -74,6 +74,7 @@ type App struct {
 	Flags        map[string]interface{}
 	exited       eventual.Value
 	statsTracker *statsTracker
+	features     *featuresService
 
 	muExitFuncs sync.RWMutex
 	exitFuncs   []func()
@@ -106,6 +107,7 @@ func (app *App) Init() {
 	settings = app.loadSettings()
 	app.exited = eventual.NewValue()
 	app.statsTracker = NewStatsTracker()
+	app.features = NewFeaturesService()
 	pro.OnProStatusChange(func(isPro bool, yinbiEnabled bool) {
 		app.statsTracker.SetIsPro(isPro)
 		app.statsTracker.SetYinbiEnabled(yinbiEnabled)
@@ -365,6 +367,10 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			log.Errorf("Unable to serve stats to UI: %v", err)
 		}
 
+		if err = app.features.StartService(app.ws); err != nil {
+			log.Errorf("Unable to serve features enabled to UI: %v", err)
+		}
+
 		setupUserSignal(app.ws, app.Connect, app.Disconnect)
 
 		err = datacap.ServeDataCap(app.ws, func() string {
@@ -497,6 +503,7 @@ func (app *App) onConfigUpdate(cfg *config.Global) {
 		return app.AddToken("/img/lantern_logo.png")
 	})
 	email.SetDefaultRecipient(cfg.ReportIssueEmail)
+	app.features.Update(cfg)
 	//app.configureTrafficLog(*cfg)
 }
 

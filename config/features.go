@@ -21,6 +21,7 @@ const (
 	FeatureNoShortcut        = "noshortcut"
 	FeatureNoDetour          = "nodetour"
 	FeatureNoHTTPSEverywhere = "nohttpseverywhere"
+	FeatureReplica           = "replica"
 )
 
 var (

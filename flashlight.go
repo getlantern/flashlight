@@ -306,13 +306,12 @@ func Run(httpProxyAddr string,
 		op.End()
 	}
 	r.client = cl
-
 	proxied.SetProxyAddr(cl.Addr)
-	stop := r.startConfigFetch()
-	defer stop()
 
 	if beforeStart() {
 		log.Debug("Preparing to start client proxy")
+		stop := r.startConfigFetch()
+		defer stop()
 		onGeo := geolookup.OnRefresh()
 		geolookup.Refresh()
 
