@@ -262,11 +262,6 @@ func (s *Server) getAccountTransactions(w http.ResponseWriter,
 // Yinbi asset
 func (s *Server) createAccountHandler(w http.ResponseWriter,
 	r *http.Request) {
-
-	onError := func(resp *http.Response, err error) {
-		s.errorHandler(w, err, resp.StatusCode)
-	}
-
 	params, pair, err := yinbi.ParseAddress(r)
 	if err != nil {
 		log.Debugf("Error parsing address: %v", err)
