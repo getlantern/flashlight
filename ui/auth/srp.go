@@ -26,7 +26,7 @@ func (h AuthHandler) sendMutualAuth(srpClient *srp.SRPClient,
 	if err != nil {
 		return nil, err
 	}
-	url := h.GetAPIAddr(authEndpoint)
+	url := h.GetAuthAddr(authEndpoint)
 	return h.sendAuthRequest(common.POST, url, requestBody)
 }
 

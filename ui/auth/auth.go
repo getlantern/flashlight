@@ -6,7 +6,6 @@ import (
 	"crypto/subtle"
 	"encoding/json"
 	"errors"
-	"html"
 	"io/ioutil"
 	"net/http"
 
@@ -51,18 +50,6 @@ func (h AuthHandler) Routes() map[string]handlers.HandlerFunc {
 		"/login":    h.authHandler,
 		"/register": h.authHandler,
 	}
-}
-
-// proxyHandler is a HTTP handler used to proxy requests
-// to the Lantern authentication server
-func (h AuthHandler) proxyHandler(req *http.Request, w http.ResponseWriter,
-	onResponse common.HandleResponseFunc,
-	onError common.HandleErrorFunc,
-) {
-	url := h.GetAPIAddr(html.EscapeString(req.URL.Path))
-	common.ProxyHandler(url, h.HttpClient, req, w,
-		onResponse,
-		onError)
 }
 
 // doRequest creates and sends a new HTTP request to the given url
@@ -159,5 +146,5 @@ func (h AuthHandler) authHandler(w http.ResponseWriter, req *http.Request) {
 		log.Debug("Successfully created new SRP session")
 		return nil
 	}
-	h.proxyHandler(req, w, onResp, onError)
+	h.ProxyHandler(req, w, onResp, onError)
 }

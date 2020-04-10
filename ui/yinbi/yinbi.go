@@ -73,18 +73,6 @@ func newYinbiClient(httpClient *http.Client) *yinbi.Client {
 	})
 }
 
-// proxyHandler is a HTTP handler used to proxy requests
-// to the Lantern authentication server
-func (h YinbiHandler) proxyHandler(req *http.Request, w http.ResponseWriter,
-	onResponse common.HandleResponseFunc,
-	onError common.HandleErrorFunc,
-) {
-	url := h.GetAPIAddr(html.EscapeString(req.URL.Path))
-	common.ProxyHandler(url, h.HttpClient, req, w,
-		onResponse,
-		onError)
-}
-
 func (s YinbiHandler) createMnemonic(w http.ResponseWriter, r *http.Request) {
 	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"mnemonic": crypto.NewMnemonic(),
@@ -96,7 +84,7 @@ func (s YinbiHandler) createMnemonic(w http.ResponseWriter, r *http.Request) {
 // voucher codes
 func (h YinbiHandler) redeemCodesHandler(w http.ResponseWriter,
 	req *http.Request) {
-	url := h.GetAPIAddr(html.EscapeString(req.URL.Path))
+	url := h.GetAuthAddr(html.EscapeString(req.URL.Path))
 	proxyReq, err := common.NewProxyRequest(req, url)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
@@ -132,7 +120,7 @@ func (h YinbiHandler) importWalletHandler(w http.ResponseWriter,
 		return
 	}
 	req.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
-	url := h.GetAPIAddr(html.EscapeString(req.URL.Path))
+	url := h.GetAuthAddr(html.EscapeString(req.URL.Path))
 	proxyReq, err := common.NewProxyRequest(req, url)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
@@ -324,7 +312,7 @@ func (h YinbiHandler) createAccountHandler(w http.ResponseWriter,
 	onResp := func(resp *http.Response, body []byte) error {
 		return h.yinbiClient.TrustAsset(issuer, pair)
 	}
-	h.proxyHandler(r, w, onResp, func(resp *http.Response, err error) {
+	h.ProxyHandler(r, w, onResp, func(resp *http.Response, err error) {
 		h.ErrorHandler(w, err, resp.StatusCode)
 	})
 }

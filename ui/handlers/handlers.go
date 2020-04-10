@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"html"
 	"net/http"
 
 	"github.com/getlantern/flashlight/ui/params"
@@ -36,9 +37,21 @@ func New(params Params) Handler {
 	}
 }
 
-// getAPIAddr combines the given uri with the authentication server address
-func (h Handler) GetAPIAddr(uri string) string {
+// GetAuthAddr combines the given uri with the Lantern authentication server address
+func (h Handler) GetAuthAddr(uri string) string {
 	return fmt.Sprintf("%s%s", h.authServerAddr, uri)
+}
+
+// proxyHandler is a HTTP handler used to proxy requests
+// to the Lantern authentication server
+func (h Handler) ProxyHandler(req *http.Request, w http.ResponseWriter,
+	onResponse common.HandleResponseFunc,
+	onError common.HandleErrorFunc,
+) {
+	url := h.GetAuthAddr(html.EscapeString(req.URL.Path))
+	common.ProxyHandler(url, h.HttpClient, req, w,
+		onResponse,
+		onError)
 }
 
 // ErrorHandler is an error handler that takes an error or Errors and writes the
