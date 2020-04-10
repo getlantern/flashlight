@@ -262,6 +262,11 @@ func (s *Server) getAccountTransactions(w http.ResponseWriter,
 // Yinbi asset
 func (s *Server) createAccountHandler(w http.ResponseWriter,
 	r *http.Request) {
+
+	onError := func(resp *http.Response, err error) {
+		s.errorHandler(w, err, resp.StatusCode)
+	}
+
 	params, pair, err := yinbi.ParseAddress(r)
 	if err != nil {
 		log.Debugf("Error parsing address: %v", err)
@@ -284,15 +289,10 @@ func (s *Server) createAccountHandler(w http.ResponseWriter,
 		s.errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
-
-	err = s.proxyHandler(r, w, func(body []byte) error {
-		// after an account for the user is successfully created,
-		// create a trustline to the Yinbi asset
+	onResp := func(resp *http.Response, body []byte) error {
 		return s.yinbiClient.TrustAsset(issuer, pair)
-	})
-	if err != nil {
-		log.Debugf("Error handling proxy: %v", err)
-		s.errorHandler(w, err, http.StatusInternalServerError)
-		return
 	}
+	s.proxyHandler(r, w, onResp, func(resp *http.Response, err error) {
+		s.errorHandler(w, err, resp.StatusCode)
+	})
 }

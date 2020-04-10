@@ -42,11 +42,13 @@ func (s *Server) getAPIAddr(uri string) string {
 // proxyHandler is a HTTP handler used to proxy requests
 // to the Lantern authentication server
 func (s *Server) proxyHandler(req *http.Request, w http.ResponseWriter,
-	onResponse func(body []byte) error,
-) error {
+	onResponse common.HandleResponseFunc,
+	onError common.HandleErrorFunc,
+) {
 	url := s.getAPIAddr(html.EscapeString(req.URL.Path))
-	return common.ProxyHandler(url, s.httpClient, req, w,
-		onResponse)
+	common.ProxyHandler(url, s.httpClient, req, w,
+		onResponse,
+		onError)
 }
 
 // doRequest creates and sends a new HTTP request to the given url
@@ -105,28 +107,33 @@ func (s *Server) authHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	req.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
 
-	onResp := func(body []byte) error {
-		resp, err := decodeAuthResponse(body)
+	onError := func(resp *http.Response, err error) {
+		log.Debugf("Encountered error processing auth response: %v", err)
+		s.errorHandler(w, err, resp.StatusCode)
+	}
+
+	onResp := func(resp *http.Response, body []byte) error {
+		authResp, err := decodeAuthResponse(body)
 		if err != nil {
 			return err
 		}
-		if resp.Error != "" {
-			return errors.New(resp.Error)
+		if resp.StatusCode != http.StatusOK || authResp.Error != "" {
+			err = errors.New(authResp.Error)
+			return err
 		}
 		// client generates a mutual auth and sends it to the server
-		resp, err = s.sendMutualAuth(srpClient,
-			resp.Credentials, params.Username)
+		authResp, err = s.sendMutualAuth(srpClient,
+			authResp.Credentials, params.Username)
 		if err != nil {
 			return err
 		}
 		// Verify the server's proof
-		ok := srpClient.ServerOk(resp.Proof)
+		ok := srpClient.ServerOk(authResp.Proof)
 		if !ok {
 			return ErrInvalidCredentials
 		}
-		srv, err := srp.UnmarshalServer(resp.Server)
+		srv, err := srp.UnmarshalServer(authResp.Server)
 		if err != nil {
-			s.errorHandler(w, err, http.StatusInternalServerError)
 			return err
 		}
 		// Client and server are successfully authenticated to each other
@@ -138,9 +145,5 @@ func (s *Server) authHandler(w http.ResponseWriter, req *http.Request) {
 		log.Debug("Successfully created new SRP session")
 		return nil
 	}
-	err = s.proxyHandler(req, w, onResp)
-	if err != nil {
-		s.errorHandler(w, err, http.StatusOK)
-		return
-	}
+	s.proxyHandler(req, w, onResp, onError)
 }
