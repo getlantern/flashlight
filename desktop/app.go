@@ -97,6 +97,12 @@ type App struct {
 	//proxiesLock sync.RWMutex
 }
 
+// Mock features struct
+type Features struct {
+	Replica bool `json:"replica"`
+	Yinbi   bool `json:"yinbi"`
+}
+
 // Init initializes the App's state
 func (app *App) Init() {
 	golog.OnFatal(app.exitOnFatal)
@@ -118,6 +124,15 @@ func (app *App) Init() {
 		app.statsTracker.SetHitDataCap(hitDataCap)
 	})
 	app.ws = ws.NewUIChannel()
+
+	featuresInitFn := func(write func(interface{})) {
+		features := &Features{
+			Replica: false,
+			Yinbi:   false,
+		}
+		write(features)
+	}
+	app.ws.Register("features", featuresInitFn)
 }
 
 // loadSettings loads the initial settings at startup, either from disk or using defaults.
