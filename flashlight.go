@@ -69,57 +69,57 @@ type Flashlight struct {
 	op                *fops.Op
 }
 
-func (r *Flashlight) onGlobalConfig(cfg *config.Global) {
-	r.mxGlobal.Lock()
-	r.global = cfg
-	r.mxGlobal.Unlock()
+func (f *Flashlight) onGlobalConfig(cfg *config.Global) {
+	f.mxGlobal.Lock()
+	f.global = cfg
+	f.mxGlobal.Unlock()
 	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
 	applyClientConfig(cfg)
-	r.applyProxyBenchAndBorda(cfg)
+	f.applyProxyBenchAndBorda(cfg)
 	select {
-	case r.onBordaConfigured <- true:
+	case f.onBordaConfigured <- true:
 		// okay
 	default:
 		// ignore
 	}
-	r.onConfigUpdate(cfg)
-	r.reconfigurePingProxies()
+	f.onConfigUpdate(cfg)
+	f.reconfigurePingProxies()
 }
 
-func (r *Flashlight) reconfigurePingProxies() {
+func (f *Flashlight) reconfigurePingProxies() {
 	enabled := func() bool {
 		return common.InDevelopment() ||
-			(r.featureEnabled(config.FeaturePingProxies) && r.autoReport())
+			(f.featureEnabled(config.FeaturePingProxies) && f.autoReport())
 	}
 	var opts config.PingProxiesOptions
 	// ignore the error because the zero value means disabling it.
-	_ = r.featureOptions(config.FeaturePingProxies, &opts)
-	r.client.ConfigurePingProxies(enabled, opts.Interval)
+	_ = f.featureOptions(config.FeaturePingProxies, &opts)
+	f.client.ConfigurePingProxies(enabled, opts.Interval)
 }
 
 // EnabledFeatures gets all features enabled based on current conditions
-func (r *Flashlight) EnabledFeatures() map[string]bool {
-	r.mxGlobal.RLock()
-	global := r.global
-	r.mxGlobal.RUnlock()
+func (f *Flashlight) EnabledFeatures() map[string]bool {
+	f.mxGlobal.RLock()
+	global := f.global
+	f.mxGlobal.RUnlock()
 	featuresEnabled := make(map[string]bool)
 	country := geolookup.GetCountry(0)
 	for feature, _ := range global.FeaturesEnabled {
-		if r.calcFeature(global, country, feature) {
+		if f.calcFeature(global, country, feature) {
 			featuresEnabled[feature] = true
 		}
 	}
 	return featuresEnabled
 }
 
-func (r *Flashlight) featureEnabled(feature string) bool {
-	r.mxGlobal.RLock()
-	global := r.global
-	r.mxGlobal.RUnlock()
-	return r.calcFeature(global, geolookup.GetCountry(0), feature)
+func (f *Flashlight) featureEnabled(feature string) bool {
+	f.mxGlobal.RLock()
+	global := f.global
+	f.mxGlobal.RUnlock()
+	return f.calcFeature(global, geolookup.GetCountry(0), feature)
 }
 
-func (r *Flashlight) calcFeature(global *config.Global, country, feature string) bool {
+func (f *Flashlight) calcFeature(global *config.Global, country, feature string) bool {
 	// Sepcial case: Use defaults for blocking related features until geolookup is finished
 	// to avoid accidentally generating traffic that could trigger blocking.
 	enabled, blockingRelated := blockingRelevantFeatures[feature]
@@ -136,15 +136,15 @@ func (r *Flashlight) calcFeature(global *config.Global, country, feature string)
 		return enabled
 	}
 	return global.FeatureEnabled(feature,
-		r.userConfig.GetUserID(),
-		r.isPro(),
+		f.userConfig.GetUserID(),
+		f.isPro(),
 		country)
 }
 
-func (r *Flashlight) featureOptions(feature string, opts config.FeatureOptions) error {
-	r.mxGlobal.RLock()
-	global := r.global
-	r.mxGlobal.RUnlock()
+func (f *Flashlight) featureOptions(feature string, opts config.FeatureOptions) error {
+	f.mxGlobal.RLock()
+	global := f.global
+	f.mxGlobal.RUnlock()
 	if global == nil {
 		// just to be safe
 		return errors.New("No global configuration")
@@ -152,28 +152,28 @@ func (r *Flashlight) featureOptions(feature string, opts config.FeatureOptions) 
 	return global.UnmarshalFeatureOptions(feature, opts)
 }
 
-func (r *Flashlight) startConfigFetch() func() {
+func (f *Flashlight) startConfigFetch() func() {
 	proxiesDispatch := func(conf interface{}) {
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
-		dialers := r.client.Configure(proxyMap)
+		dialers := f.client.Configure(proxyMap)
 		if dialers != nil {
-			r.onProxiesUpdate(dialers)
+			f.onProxiesUpdate(dialers)
 		}
 	}
 	globalDispatch := func(conf interface{}) {
 		cfg := conf.(*config.Global)
 		log.Debugf("Applying global config")
-		r.onGlobalConfig(cfg)
+		f.onGlobalConfig(cfg)
 	}
 	rt := proxied.ParallelPreferChained()
 
-	stopConfig := config.Init(r.configDir, r.flagsAsMap, r.userConfig, proxiesDispatch, globalDispatch, rt)
+	stopConfig := config.Init(f.configDir, f.flagsAsMap, f.userConfig, proxiesDispatch, globalDispatch, rt)
 	return stopConfig
 }
 
-func (r *Flashlight) applyProxyBenchAndBorda(cfg *config.Global) {
-	if r.featureEnabled(config.FeatureProxyBench) {
+func (f *Flashlight) applyProxyBenchAndBorda(cfg *config.Global) {
+	if f.featureEnabled(config.FeatureProxyBench) {
 		startProxyBenchOnce.Do(func() {
 			proxybench.Start(&proxybench.Opts{}, func(timing time.Duration, ctx map[string]interface{}) {})
 		})
@@ -181,12 +181,12 @@ func (r *Flashlight) applyProxyBenchAndBorda(cfg *config.Global) {
 
 	_enableBorda := borda.Enabler(cfg.BordaSamplePercentage)
 	enableBorda := func(ctx map[string]interface{}) bool {
-		if !r.autoReport() {
+		if !f.autoReport() {
 			// User has chosen not to automatically submit data
 			return false
 		}
 
-		if r.featureEnabled(config.FeatureNoBorda) {
+		if f.featureEnabled(config.FeatureNoBorda) {
 			// Borda is disabled by global config
 			return false
 		}
@@ -317,7 +317,7 @@ func New(
 }
 
 // Run runs the client proxy. It blocks as long as the proxy is running.
-func (r *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
+func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
 	afterStart func(cl *client.Client),
 	onError func(err error),
 ) {
@@ -332,7 +332,7 @@ func (r *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
 	elapsed := mtime.Stopwatch()
 
 	log.Debug("Preparing to start client proxy")
-	stop := r.startConfigFetch()
+	stop := f.startConfigFetch()
 	defer stop()
 	onGeo := geolookup.OnRefresh()
 	geolookup.Refresh()
@@ -349,13 +349,13 @@ func (r *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
 	if socksProxyAddr != "" {
 		go func() {
 			log.Debug("Starting client SOCKS5 proxy")
-			err := r.client.ListenAndServeSOCKS5(socksProxyAddr)
+			err := f.client.ListenAndServeSOCKS5(socksProxyAddr)
 			if err != nil {
 				log.Errorf("Unable to start SOCKS5 proxy: %v", err)
 			}
 		}()
 
-		if r.vpnEnabled {
+		if f.vpnEnabled {
 			log.Debug("Enabling VPN mode")
 			closeVPN, vpnErr := vpn.Enable(socksProxyAddr, "192.168.1.1", "", "10.0.0.2", "255.255.255.0")
 			if vpnErr != nil {
@@ -367,15 +367,15 @@ func (r *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
 	}
 
 	log.Debug("Starting client HTTP proxy")
-	err := r.client.ListenAndServeHTTP(httpProxyAddr, func() {
+	err := f.client.ListenAndServeHTTP(httpProxyAddr, func() {
 		log.Debug("Started client HTTP proxy")
-		proxied.SetProxyAddr(r.client.Addr)
+		proxied.SetProxyAddr(f.client.Addr)
 		email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
-		r.op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
+		f.op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
 
 		// wait for borda to be configured before proceeding
 		select {
-		case <-r.onBordaConfigured:
+		case <-f.onBordaConfigured:
 		case <-time.After(5 * time.Second):
 			log.Debug("borda didn't get configured quickly, proceed anyway")
 		}
@@ -388,10 +388,10 @@ func (r *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
 			case <-time.After(5 * time.Minute):
 				log.Debug("failed to get geolocation info within 5 minutes, just record end of startup anyway")
 			}
-			r.op.End()
+			f.op.End()
 		})
 
-		afterStart(r.client)
+		afterStart(f.client)
 	})
 	if err != nil {
 		log.Errorf("Error running client proxy: %v", err)
