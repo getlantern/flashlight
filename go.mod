@@ -11,12 +11,10 @@ require (
 	github.com/anacrolix/go-libutp v1.0.2
 	github.com/anacrolix/log v0.6.0
 	github.com/anacrolix/torrent v1.15.0
-	github.com/armon/go-radix v0.0.0-20170727155443-1fca145dffbc // indirect
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
-	github.com/fatih/set v0.2.1 // indirect
 	github.com/getlantern/appdir v0.0.0-20180320102544-7c0f9d241ea7
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20191105202701-77098b35c76c
@@ -25,6 +23,7 @@ require (
 	github.com/getlantern/common v0.0.0-20191017131928-864ae49aeb6a
 	github.com/getlantern/detour v0.0.0-20191213192126-a4b3dcb2def2
 	github.com/getlantern/dnsgrab v0.0.0-20191217020031-0e5f714410f9
+	github.com/getlantern/domains v0.0.0-20200402171649-efc86b844fcf
 	github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4
 	github.com/getlantern/enhttp v0.0.0-20190401024120-a974fa851e3c
 	github.com/getlantern/enproxy v0.0.0-20180913191734-002212d417a4 // indirect
@@ -58,12 +57,11 @@ require (
 	github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0
 	github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd
 	github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b
-	github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f
+	github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6
 	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
 	github.com/getlantern/packetforward v0.0.0-20190809094443-386cbcc0d498
 	github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff
 	github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8
-	github.com/getlantern/proxiedsites v0.0.0-20180805232824-5362487dd72c
 	github.com/getlantern/proxy v0.0.0-20191025190912-b5f45407d9f2
 	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
 	github.com/getlantern/quic0 v0.0.0-20200121154153-8b18c2ba09f9
@@ -103,7 +101,7 @@ require (
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/refraction-networking/utls v0.0.0-20190909200633-43c36d3c1f57
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	github.com/tinylib/msgp v1.1.2 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa

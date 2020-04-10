@@ -38,8 +38,9 @@ func TestBalancerSimulation(t *testing.T) {
 
 	// initialize Balancer
 	bal := &Balancer{
-		closeCh:    make(chan struct{}),
-		configured: make(chan struct{}),
+		closeCh:                 make(chan struct{}),
+		configured:              make(chan struct{}),
+		allowBackgroundChecking: func() bool { return true },
 	}
 	bal.Reset([]Dialer{a, b, c})
 	defer bal.Close()

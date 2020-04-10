@@ -36,6 +36,7 @@ import (
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/status"
@@ -68,12 +69,6 @@ var (
 		// Google Hangouts/Meet TCP Ports (see https://support.google.com/a/answer/7582935#ports)
 		19302, 19303, 19304, 19305, 19306, 19307, 19308, 19309,
 	}
-
-	// Requests to these domains require proxies for security purposes and to
-	// ensure that config-server requests in particular always go through a proxy
-	// so that it can add the necessary authentication token and other headers.
-	// Direct connections to these domains are not allowed.
-	domainsRequiringProxy = []string{"getiantem.org", "lantern.io", "getlantern.org"}
 
 	// Set a hard limit when processing proxy requests. Should be short enough to
 	// avoid applications bypassing Lantern.
@@ -121,11 +116,12 @@ type Client struct {
 
 	l net.Listener
 
-	disconnected  func() bool
-	stealthMode   func() bool
-	allowShortcut func(ctx context.Context, addr string) (bool, net.IP)
-	useDetour     func() bool
-	user          common.UserConfig
+	disconnected         func() bool
+	allowProbes          func() bool
+	allowShortcut        func(ctx context.Context, addr string) (bool, net.IP)
+	useDetour            func() bool
+	allowHTTPSEverywhere func() bool
+	user                 common.UserConfig
 
 	rewriteToHTTPS httpseverywhere.Rewrite
 	rewriteLRU     *lru.Cache
@@ -150,9 +146,10 @@ type Client struct {
 // all traffic, and another function to get Lantern Pro token when required.
 func NewClient(
 	disconnected func() bool,
-	stealthMode func() bool,
+	allowProbes func() bool,
 	allowShortcut func(ctx context.Context, addr string) (bool, net.IP),
 	useDetour func() bool,
+	allowHTTPSEverywhere func() bool,
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
 	allowPrivateHosts func() bool,
@@ -166,21 +163,22 @@ func NewClient(
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
 	client := &Client{
-		requestTimeout:    requestTimeout,
-		bal:               balancer.New(func() bool { return !stealthMode() }, time.Duration(requestTimeout)),
-		disconnected:      disconnected,
-		stealthMode:       stealthMode,
-		allowShortcut:     allowShortcut,
-		useDetour:         useDetour,
-		user:              userConfig,
-		rewriteToHTTPS:    httpseverywhere.Default(),
-		rewriteLRU:        rewriteLRU,
-		statsTracker:      statsTracker,
-		allowPrivateHosts: allowPrivateHosts,
-		lang:              lang,
-		adSwapTargetURL:   adSwapTargetURL,
-		reverseDNS:        reverseDNS,
-		chPingProxiesConf: make(chan pingProxiesConf, 1),
+		requestTimeout:       requestTimeout,
+		bal:                  balancer.New(allowProbes, time.Duration(requestTimeout)),
+		disconnected:         disconnected,
+		allowProbes:          allowProbes,
+		allowShortcut:        allowShortcut,
+		useDetour:            useDetour,
+		allowHTTPSEverywhere: allowHTTPSEverywhere,
+		user:                 userConfig,
+		rewriteToHTTPS:       httpseverywhere.Default(),
+		rewriteLRU:           rewriteLRU,
+		statsTracker:         statsTracker,
+		allowPrivateHosts:    allowPrivateHosts,
+		lang:                 lang,
+		adSwapTargetURL:      adSwapTargetURL,
+		reverseDNS:           reverseDNS,
+		chPingProxiesConf:    make(chan pingProxiesConf, 1),
 	}
 
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
@@ -376,7 +374,7 @@ func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo) [
 		return nil
 	}
 	chained.PersistSessionStates("")
-	chained.TrackStatsFor(dialers, appdir.General("Lantern"), !client.stealthMode())
+	chained.TrackStatsFor(dialers, appdir.General("Lantern"), client.allowProbes())
 	return dialers
 }
 
@@ -428,7 +426,10 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		return conn, err
 	}
 
-	if client.shouldSendToProxy(addr) {
+	if shouldForceProxying() {
+		log.Tracef("Proxying to %v because everything is forced to be proxied", addr)
+		op.Set("force_proxied", true)
+		op.Set("force_proxied_reason", "forceproxying")
 		return dialProxied(ctx, "whatever", addr)
 	}
 
@@ -437,6 +438,25 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		op.Set("force_direct", true)
 		op.Set("force_direct_reason", err.Error())
 		return netx.DialContext(ctx, "tcp", addr)
+	}
+
+	host, _, err := net.SplitHostPort(addr)
+	if err != nil {
+		host = addr
+	}
+	host = strings.ToLower(strings.TrimSpace(host))
+
+	switch domainrouting.RuleFor(host) {
+	case domainrouting.Direct:
+		log.Tracef("Directly dialing %v per domain routing rules", addr)
+		op.Set("force_direct", true)
+		op.Set("force_direct_reason", "routingrule")
+		return netx.DialContext(ctx, "tcp", addr)
+	case domainrouting.Proxy:
+		log.Tracef("Proxying to %v per domain routing rules", addr)
+		op.Set("force_proxied", true)
+		op.Set("force_proxied_reason", "routingrule")
+		return dialProxied(ctx, "whatever", addr)
 	}
 
 	dialDirectForShortcut := func(ctx context.Context, network, addr string, ip net.IP) (net.Conn, error) {
@@ -494,17 +514,6 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 	return dialer(ctx, "tcp", addr)
 }
 
-func (client *Client) shouldSendToProxy(addr string) bool {
-	if shouldForceProxying() {
-		return true
-	}
-	if requiresProxy(addr) {
-		log.Debugf("Address %v requires a proxy", addr)
-		return true
-	}
-	return false
-}
-
 func (client *Client) allowSendingToProxy(addr string) error {
 	if client.disconnected() {
 		return errLanternOff
@@ -560,30 +569,6 @@ func (client *Client) isAddressProxyable(addr string) error {
 		return fmt.Errorf("IP %v is private", host)
 	}
 	return nil
-}
-
-func requiresProxy(addr string) bool {
-	host, _, err := net.SplitHostPort(addr)
-	if err != nil {
-		host = addr
-	}
-	host = strings.TrimSpace(host)
-	parts := strings.Split(host, ".")
-
-domainsLoop:
-	for _, domain := range domainsRequiringProxy {
-		domainParts := strings.Split(domain, ".")
-		if len(parts) >= len(domainParts) {
-			for i := 1; i <= len(domainParts); i++ {
-				if !strings.EqualFold(domainParts[len(domainParts)-i], parts[len(parts)-i]) {
-					continue domainsLoop
-				}
-			}
-			return true
-		}
-	}
-
-	return false
 }
 
 func (client *Client) portForAddress(addr string) (int, error) {

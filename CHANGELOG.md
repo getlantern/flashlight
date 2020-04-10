@@ -1,5 +1,32 @@
 # Changelog
 
+## [5.9.1](https://github.com/getlantern/flashlight/tree/5.9.1) (2020-04-07)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.0...5.9.1)
+
+**Merged pull requests:**
+
+- skip re-evaluating dialers when background checking is disabled [\#782](https://github.com/getlantern/flashlight/pull/782) ([joesis](https://github.com/joesis))
+
+## [5.9.0](https://github.com/getlantern/flashlight/tree/5.9.0) (2020-04-03)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.8.6...5.9.0)
+
+**Merged pull requests:**
+
+- Added ability to force certain domains to be routed directly [\#779](https://github.com/getlantern/flashlight/pull/779) ([oxtoacart](https://github.com/oxtoacart))
+- Make sure to close file paths we create [\#778](https://github.com/getlantern/flashlight/pull/778) ([myleshorton](https://github.com/myleshorton))
+- Broke stealth mode into more fine grained features and enabled detour on Android [\#777](https://github.com/getlantern/flashlight/pull/777) ([oxtoacart](https://github.com/oxtoacart))
+- Allow proper saving of proxystats.csv on iOS [\#775](https://github.com/getlantern/flashlight/pull/775) ([oxtoacart](https://github.com/oxtoacart))
+
+## [5.8.6](https://github.com/getlantern/flashlight/tree/5.8.6) (2020-03-18)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.8.5...5.8.6)
+
+**Merged pull requests:**
+
+- Update tlsmasq to include bug fix [\#774](https://github.com/getlantern/flashlight/pull/774) ([hwh33](https://github.com/hwh33))
+
 ## [5.8.5](https://github.com/getlantern/flashlight/tree/5.8.5) (2020-03-16)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.8.4...5.8.5)
@@ -125,6 +152,7 @@
 - Test for embedded global [\#704](https://github.com/getlantern/flashlight/pull/704) ([myleshorton](https://github.com/myleshorton))
 - make sure both proxies and global config are got in config/TestInit [\#703](https://github.com/getlantern/flashlight/pull/703) ([joesis](https://github.com/joesis))
 - Improved script and add sanity test for global config updates [\#702](https://github.com/getlantern/flashlight/pull/702) ([myleshorton](https://github.com/myleshorton))
+- More CI fixes [\#701](https://github.com/getlantern/flashlight/pull/701) ([joesis](https://github.com/joesis))
 
 ## [5.6.3](https://github.com/getlantern/flashlight/tree/5.6.3) (2019-10-28)
 
@@ -132,7 +160,6 @@
 
 **Merged pull requests:**
 
-- More CI fixes [\#701](https://github.com/getlantern/flashlight/pull/701) ([joesis](https://github.com/joesis))
 - Fix Proxy-Connection handling in persistent HTTP case [\#700](https://github.com/getlantern/flashlight/pull/700) ([myleshorton](https://github.com/myleshorton))
 - Various changes to make CI more reliable [\#699](https://github.com/getlantern/flashlight/pull/699) ([joesis](https://github.com/joesis))
 
@@ -179,19 +206,10 @@
 **Merged pull requests:**
 
 - print top stacks if the number of goroutines exceeds 800 [\#677](https://github.com/getlantern/flashlight/pull/677) ([joesis](https://github.com/joesis))
-- Remove embedded proxies, update global, tweak script [\#676](https://github.com/getlantern/flashlight/pull/676) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.5.7](https://github.com/getlantern/flashlight/tree/5.5.7) (2019-09-19)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.6...5.5.7)
-
-**Merged pull requests:**
-
-- Clients now randomly ping proxies and report stats to borda [\#675](https://github.com/getlantern/flashlight/pull/675) ([oxtoacart](https://github.com/oxtoacart))
-- Add timestamp and goroutine dump to integration test [\#674](https://github.com/getlantern/flashlight/pull/674) ([joesis](https://github.com/joesis))
-- Using PERCENTILE for reporting dial times [\#673](https://github.com/getlantern/flashlight/pull/673) ([oxtoacart](https://github.com/oxtoacart))
-- Fix Go module timestamps for Go 1.13 [\#670](https://github.com/getlantern/flashlight/pull/670) ([anacrolix](https://github.com/anacrolix))
-- Update Thrift location [\#668](https://github.com/getlantern/flashlight/pull/668) ([bcmertz](https://github.com/bcmertz))
 
 ## [5.5.6](https://github.com/getlantern/flashlight/tree/5.5.6) (2019-08-23)
 

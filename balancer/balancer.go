@@ -544,6 +544,10 @@ func (b *Balancer) checkConnectivityForAll() {
 }
 
 func (b *Balancer) requestEvalDialers(reason string) {
+	if !b.allowBackgroundChecking() {
+		log.Debug("skip re-evaluating dialers because background checking is not allowed")
+		return
+	}
 	select {
 	case b.chEvalDialers <- struct{}{}:
 		log.Debug(reason + ", re-evaluating all dialers")
