@@ -196,8 +196,8 @@ func (r *Flashlight) applyProxyBenchAndBorda(cfg *config.Global) {
 	borda.Configure(cfg.BordaReportInterval, enableBorda)
 }
 
-// Init initializes a client proxy.
-func Init(
+// New creates a client proxy.
+func New(
 	configDir string,
 	enableVPN bool,
 	disconnected func() bool,

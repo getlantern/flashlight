@@ -321,7 +321,7 @@ func run(configDir, locale string,
 		config.ForceCountry(forcedCountryCode)
 	}
 
-	runner, err := flashlight.Init(configDir, // place to store lantern configuration
+	runner, err := flashlight.New(configDir, // place to store lantern configuration
 		false,                        // don't enable vpn mode for Android (VPN is handled in Java layer)
 		func() bool { return false }, // always connected
 		func() bool { return !session.ProxyAll() }, // use shortcut

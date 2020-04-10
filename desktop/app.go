@@ -200,7 +200,7 @@ func (app *App) Run() {
 		}
 
 		var err error
-		app.flashlight, err = flashlight.Init(
+		app.flashlight, err = flashlight.New(
 			app.Flags["configdir"].(string),
 			app.Flags["vpn"].(bool),
 			func() bool { return settings.getBool(SNDisconnected) }, // check whether we're disconnected
