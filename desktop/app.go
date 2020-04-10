@@ -217,7 +217,6 @@ func (app *App) Run() {
 				app.Exit(err)
 			},
 			app.IsPro,
-			settings.GetUserID,
 			settings.GetLanguage,
 			func() string {
 				isPro, statusKnown := isProUserFast()

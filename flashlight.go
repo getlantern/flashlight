@@ -196,7 +196,6 @@ func Run(httpProxyAddr string,
 	statsTracker stats.Tracker,
 	onError func(err error),
 	isPro func() bool,
-	userID func() int64,
 	lang func() string,
 	adSwapTargetURL func() string,
 	reverseDNS func(host string) string) error {
@@ -221,7 +220,7 @@ func Run(httpProxyAddr string,
 	if common.InDevelopment() {
 		log.Debugf("You can query for this device's activity in borda under device id: %v", deviceID)
 	}
-	fops.InitGlobalContext(deviceID, isPro, userID, func() string { return geolookup.GetCountry(0) }, func() string { return geolookup.GetIP(0) })
+	fops.InitGlobalContext(deviceID, isPro, userConfig.GetUserID, func() string { return geolookup.GetCountry(0) }, func() string { return geolookup.GetIP(0) })
 	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 	op := fops.Begin("client_started")
 

@@ -349,7 +349,6 @@ func run(configDir, locale string,
 		NewStatsTracker(session),
 		nil, // onError
 		session.IsProUser,
-		session.GetUserID,
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
 		func(addr string) string {
