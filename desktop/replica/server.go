@@ -288,7 +288,7 @@ func (me *httpHandler) handleViewWith(w http.ResponseWriter, r *http.Request, in
 	} else if s3Key == "" {
 		me.logger.Printf("s3 key not found in view link %q", link)
 	}
-	t, new, release := me.confluence.GetTorrent(m.InfoHash)
+	t, _, release := me.confluence.GetTorrent(m.InfoHash)
 	defer release()
 
 	// TODO: Perhaps we only want to do this if we're unable to get the metainfo from S3, to avoid
@@ -298,7 +298,7 @@ func (me *httpHandler) handleViewWith(w http.ResponseWriter, r *http.Request, in
 		t.SetDisplayName(m.DisplayName)
 	}
 
-	if new && t.Info() == nil && s3Key != "" {
+	if t.Info() == nil && s3Key != "" {
 		// Get another reference to the torrent that lasts until we're done fetching the metainfo.
 		_, _, release := me.confluence.GetTorrent(m.InfoHash)
 		go func() {
