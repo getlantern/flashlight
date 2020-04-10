@@ -23,7 +23,7 @@ type PaymentTest struct {
 }
 
 func newYinbiHandler(t *testing.T) YinbiHandler {
-	testutils.StartTestServer(t, common.AuthServerAddr, ":0")
+	//testutils.StartTestServer(t, common.AuthServerAddr, ":0")
 	return New(handlers.Params{
 		AuthServerAddr: common.AuthServerAddr,
 		HttpClient:     &http.Client{},
