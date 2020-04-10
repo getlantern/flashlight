@@ -65,7 +65,7 @@ func Enabler(samplePercentage float64) EnabledFunc {
 // Configure starts borda reporting if reportInterval > 0. The service never stops once enabled.
 // The service will check enabled each time before it reports to borda, however.
 func Configure(reportInterval time.Duration, enabled EnabledFunc) {
-	log.Error(errors.New("Supplied report interval is %v", reportInterval))
+	log.Debugf("Supplied report interval is %v", reportInterval)
 	if common.InDevelopment() {
 		if reportInterval > 1*time.Minute {
 			log.Debug("In development, will report everything to borda every 1 minutes")

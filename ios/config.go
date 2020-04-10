@@ -61,7 +61,7 @@ func Configure(configFolderPath string, userID int, proToken, deviceID string, r
 type UserConfig struct {
 	common.UserConfigData
 	Country     string
-	StealthMode bool
+	AllowProbes bool
 }
 
 type configurer struct {
@@ -97,14 +97,14 @@ func (cf *configurer) configure(userID int, proToken string, refreshProxies bool
 		go func() {
 			cf.uc.Country = geolookup.GetCountry(1 * time.Minute)
 			log.Debugf("Successful geolookup: country %s", cf.uc.Country)
-			cf.uc.StealthMode = global.FeatureEnabled(
-				config.FeatureStealthMode,
+			cf.uc.AllowProbes = !global.FeatureEnabled(
+				config.FeatureNoProbeProxies,
 				int64(cf.uc.UserID),
 				cf.uc.Token != "",
 				cf.uc.Country)
-			log.Debugf("Stealth mode enabled?: %v", cf.uc.StealthMode)
+			log.Debugf("Allow probes?: %v", cf.uc.AllowProbes)
 			if err := cf.writeUserConfig(); err != nil {
-				log.Errorf("Unable to save updated UserConfig with country and stealth mode: %v", err)
+				log.Errorf("Unable to save updated UserConfig with country and allow probes: %v", err)
 			}
 		}()
 
