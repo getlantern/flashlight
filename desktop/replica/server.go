@@ -321,16 +321,6 @@ func (me *httpHandler) handleViewWith(w http.ResponseWriter, r *http.Request, in
 			me.logger.Printf("added metainfo for %q from s3", s3Key)
 		}()
 	}
-	filename := firstNonEmptyString(
-		// Note that serving the torrent implies waiting for the info, and we could get a better
-		// name for it after that. Torrent.Name will also allow us to reuse previously given 'dn'
-		// values, if we don't have one now.
-		displayNameFromInfoName(t.Name()),
-		m.DisplayName,
-	)
-	if filename != "" {
-		w.Header().Set("Content-Disposition", inlineType+"; filename*=UTF-8''"+url.QueryEscape(filename))
-	}
 
 	selectOnly, err := strconv.ParseUint(m.Params.Get("so"), 10, 0)
 	// Assume that it should be present, as it'll be added going forward where possible. When it's
@@ -342,6 +332,16 @@ func (me *httpHandler) handleViewWith(w http.ResponseWriter, r *http.Request, in
 	case <-r.Context().Done():
 		return
 	case <-t.GotInfo():
+	}
+	filename := firstNonEmptyString(
+		// Note that serving the torrent implies waiting for the info, and we could get a better
+		// name for it after that. Torrent.Name will also allow us to reuse previously given 'dn'
+		// values, if we don't have one now.
+		displayNameFromInfoName(t.Name()),
+		m.DisplayName,
+	)
+	if filename != "" {
+		w.Header().Set("Content-Disposition", inlineType+"; filename*=UTF-8''"+url.QueryEscape(filename))
 	}
 	torrentFile := t.Files()[selectOnly]
 	fileReader := torrentFile.NewReader()
