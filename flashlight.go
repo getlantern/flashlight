@@ -53,7 +53,7 @@ var (
 	}
 )
 
-type runner struct {
+type Flashlight struct {
 	configDir         string
 	flagsAsMap        map[string]interface{}
 	userConfig        common.UserConfig
@@ -65,9 +65,11 @@ type runner struct {
 	onBordaConfigured chan bool
 	autoReport        func() bool
 	client            *client.Client
+	vpnEnabled        bool
+	op                *fops.Op
 }
 
-func (r *runner) onGlobalConfig(cfg *config.Global) {
+func (r *Flashlight) onGlobalConfig(cfg *config.Global) {
 	r.mxGlobal.Lock()
 	r.global = cfg
 	r.mxGlobal.Unlock()
@@ -84,7 +86,7 @@ func (r *runner) onGlobalConfig(cfg *config.Global) {
 	r.reconfigurePingProxies()
 }
 
-func (r *runner) reconfigurePingProxies() {
+func (r *Flashlight) reconfigurePingProxies() {
 	enabled := func() bool {
 		return common.InDevelopment() ||
 			(r.featureEnabled(config.FeaturePingProxies) && r.autoReport())
@@ -95,12 +97,29 @@ func (r *runner) reconfigurePingProxies() {
 	r.client.ConfigurePingProxies(enabled, opts.Interval)
 }
 
-func (r *runner) featureEnabled(feature string) bool {
+// EnabledFeatures gets all features enabled based on current conditions
+func (r *Flashlight) EnabledFeatures() map[string]bool {
 	r.mxGlobal.RLock()
 	global := r.global
 	r.mxGlobal.RUnlock()
+	featuresEnabled := make(map[string]bool)
 	country := geolookup.GetCountry(0)
+	for feature, _ := range global.FeaturesEnabled {
+		if r.calcFeature(global, country, feature) {
+			featuresEnabled[feature] = true
+		}
+	}
+	return featuresEnabled
+}
 
+func (r *Flashlight) featureEnabled(feature string) bool {
+	r.mxGlobal.RLock()
+	global := r.global
+	r.mxGlobal.RUnlock()
+	return r.calcFeature(global, geolookup.GetCountry(0), feature)
+}
+
+func (r *Flashlight) calcFeature(global *config.Global, country, feature string) bool {
 	// Sepcial case: Use defaults for blocking related features until geolookup is finished
 	// to avoid accidentally generating traffic that could trigger blocking.
 	enabled, blockingRelated := blockingRelevantFeatures[feature]
@@ -122,7 +141,7 @@ func (r *runner) featureEnabled(feature string) bool {
 		country)
 }
 
-func (r *runner) featureOptions(feature string, opts config.FeatureOptions) error {
+func (r *Flashlight) featureOptions(feature string, opts config.FeatureOptions) error {
 	r.mxGlobal.RLock()
 	global := r.global
 	r.mxGlobal.RUnlock()
@@ -133,7 +152,7 @@ func (r *runner) featureOptions(feature string, opts config.FeatureOptions) erro
 	return global.UnmarshalFeatureOptions(feature, opts)
 }
 
-func (r *runner) startConfigFetch() func() {
+func (r *Flashlight) startConfigFetch() func() {
 	proxiesDispatch := func(conf interface{}) {
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
@@ -153,7 +172,7 @@ func (r *runner) startConfigFetch() func() {
 	return stopConfig
 }
 
-func (r *runner) applyProxyBenchAndBorda(cfg *config.Global) {
+func (r *Flashlight) applyProxyBenchAndBorda(cfg *config.Global) {
 	if r.featureEnabled(config.FeatureProxyBench) {
 		startProxyBenchOnce.Do(func() {
 			proxybench.Start(&proxybench.Opts{}, func(timing time.Duration, ctx map[string]interface{}) {})
@@ -177,28 +196,24 @@ func (r *runner) applyProxyBenchAndBorda(cfg *config.Global) {
 	borda.Configure(cfg.BordaReportInterval, enableBorda)
 }
 
-// Run runs a client proxy. It blocks as long as the proxy is running.
-func Run(httpProxyAddr string,
-	socksProxyAddr string,
+// Init initializes a client proxy.
+func Init(
 	configDir string,
-	vpnEnabled bool,
+	enableVPN bool,
 	disconnected func() bool,
 	_useShortcut func() bool,
 	_useDetour func() bool,
 	allowPrivateHosts func() bool,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
-	beforeStart func() bool,
-	afterStart func(cl *client.Client),
 	onConfigUpdate func(cfg *config.Global),
 	onProxiesUpdate func([]balancer.Dialer),
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
-	onError func(err error),
 	isPro func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
-	reverseDNS func(host string) string) error {
+	reverseDNS func(host string) string) (*Flashlight, error) {
 
 	if onProxiesUpdate == nil {
 		onProxiesUpdate = func(_ []balancer.Dialer) {}
@@ -206,27 +221,29 @@ func Run(httpProxyAddr string,
 	if onConfigUpdate == nil {
 		onConfigUpdate = func(_ *config.Global) {}
 	}
-	if onError == nil {
-		onError = func(_ error) {}
-	}
-
-	// check # of goroutines every minute, print the top 5 stacks with most
-	// goroutines if the # exceeds 800 and is increasing.
-	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
-	defer stopMonitor()
-	elapsed := mtime.Stopwatch()
 	displayVersion()
 	deviceID := userConfig.GetDeviceID()
 	if common.InDevelopment() {
 		log.Debugf("You can query for this device's activity in borda under device id: %v", deviceID)
 	}
 	fops.InitGlobalContext(deviceID, isPro, userConfig.GetUserID, func() string { return geolookup.GetCountry(0) }, func() string { return geolookup.GetIP(0) })
-	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
-	op := fops.Begin("client_started")
+
+	r := &Flashlight{
+		configDir:         configDir,
+		flagsAsMap:        flagsAsMap,
+		userConfig:        userConfig,
+		isPro:             isPro,
+		global:            nil,
+		onProxiesUpdate:   onProxiesUpdate,
+		onConfigUpdate:    onConfigUpdate,
+		onBordaConfigured: make(chan bool, 1),
+		autoReport:        autoReport,
+		op:                fops.Begin("client_started"),
+	}
 
 	var grabber dnsgrab.Server
 	var grabberErr error
-	if vpnEnabled {
+	if enableVPN {
 		grabber, grabberErr = dnsgrab.Listen(50000,
 			"127.0.0.1:53",
 			"8.8.8.8")
@@ -260,17 +277,7 @@ func Run(httpProxyAddr string,
 			}
 			return fmt.Sprintf("%v:%v", updatedHost, port)
 		}
-	}
-
-	r := runner{configDir: configDir,
-		flagsAsMap:        flagsAsMap,
-		userConfig:        userConfig,
-		isPro:             isPro,
-		global:            nil,
-		onProxiesUpdate:   onProxiesUpdate,
-		onConfigUpdate:    onConfigUpdate,
-		onBordaConfigured: make(chan bool, 1),
-		autoReport:        autoReport,
+		r.vpnEnabled = true
 	}
 
 	useShortcut := func() bool {
@@ -301,80 +308,95 @@ func Run(httpProxyAddr string,
 	)
 	if err != nil {
 		fatalErr := fmt.Errorf("Unable to initialize client: %v", err)
-		op.FailIf(fatalErr)
-		op.End()
+		r.op.FailIf(fatalErr)
+		r.op.End()
+		return nil, fatalErr
 	}
 	r.client = cl
-	proxied.SetProxyAddr(cl.Addr)
+	return r, nil
+}
 
-	if beforeStart() {
-		log.Debug("Preparing to start client proxy")
-		stop := r.startConfigFetch()
-		defer stop()
-		onGeo := geolookup.OnRefresh()
-		geolookup.Refresh()
+// Run runs the client proxy. It blocks as long as the proxy is running.
+func (r *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
+	afterStart func(cl *client.Client),
+	onError func(err error),
+) {
+	if onError == nil {
+		onError = func(_ error) {}
+	}
 
-		// Until we know our country, default to IR which has all detection rules
-		log.Debug("Defaulting detour country to IR until real country is known")
-		detour.SetCountry("IR")
+	// check # of goroutines every minute, print the top 5 stacks with most
+	// goroutines if the # exceeds 800 and is increasing.
+	stopMonitor := goroutines.Monitor(time.Minute, 800, 5)
+	defer stopMonitor()
+	elapsed := mtime.Stopwatch()
+
+	log.Debug("Preparing to start client proxy")
+	stop := r.startConfigFetch()
+	defer stop()
+	onGeo := geolookup.OnRefresh()
+	geolookup.Refresh()
+
+	// Until we know our country, default to IR which has all detection rules
+	log.Debug("Defaulting detour country to IR until real country is known")
+	detour.SetCountry("IR")
+	go func() {
+		country := geolookup.GetCountry(eventual.Forever)
+		log.Debugf("Setting detour country to %v", country)
+		detour.SetCountry(country)
+	}()
+
+	if socksProxyAddr != "" {
 		go func() {
-			country := geolookup.GetCountry(eventual.Forever)
-			log.Debugf("Setting detour country to %v", country)
-			detour.SetCountry(country)
+			log.Debug("Starting client SOCKS5 proxy")
+			err := r.client.ListenAndServeSOCKS5(socksProxyAddr)
+			if err != nil {
+				log.Errorf("Unable to start SOCKS5 proxy: %v", err)
+			}
 		}()
 
-		if socksProxyAddr != "" {
-			go func() {
-				log.Debug("Starting client SOCKS5 proxy")
-				err := cl.ListenAndServeSOCKS5(socksProxyAddr)
-				if err != nil {
-					log.Errorf("Unable to start SOCKS5 proxy: %v", err)
-				}
-			}()
-
-			if vpnEnabled && grabberErr == nil {
-				log.Debug("Enabling VPN mode")
-				closeVPN, vpnErr := vpn.Enable(socksProxyAddr, "192.168.1.1", "", "10.0.0.2", "255.255.255.0")
-				if vpnErr != nil {
-					log.Error(vpnErr)
-				} else {
-					defer closeVPN()
-				}
+		if r.vpnEnabled {
+			log.Debug("Enabling VPN mode")
+			closeVPN, vpnErr := vpn.Enable(socksProxyAddr, "192.168.1.1", "", "10.0.0.2", "255.255.255.0")
+			if vpnErr != nil {
+				log.Error(vpnErr)
+			} else {
+				defer closeVPN()
 			}
-		}
-
-		log.Debug("Starting client HTTP proxy")
-		err := cl.ListenAndServeHTTP(httpProxyAddr, func() {
-			log.Debug("Started client HTTP proxy")
-			op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
-
-			// wait for borda to be configured before proceeding
-			select {
-			case <-r.onBordaConfigured:
-			case <-time.After(5 * time.Second):
-				log.Debug("borda didn't get configured quickly, proceed anyway")
-			}
-
-			ops.Go(func() {
-				// wait for geo info before reporting so that we know the client ip and
-				// country
-				select {
-				case <-onGeo:
-				case <-time.After(5 * time.Minute):
-					log.Debug("failed to get geolocation info within 5 minutes, just record end of startup anyway")
-				}
-				op.End()
-			})
-
-			afterStart(cl)
-		})
-		if err != nil {
-			log.Errorf("Error running client proxy: %v", err)
-			onError(err)
 		}
 	}
 
-	return nil
+	log.Debug("Starting client HTTP proxy")
+	err := r.client.ListenAndServeHTTP(httpProxyAddr, func() {
+		log.Debug("Started client HTTP proxy")
+		proxied.SetProxyAddr(r.client.Addr)
+		email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
+		r.op.SetMetricSum("startup_time", float64(elapsed().Seconds()))
+
+		// wait for borda to be configured before proceeding
+		select {
+		case <-r.onBordaConfigured:
+		case <-time.After(5 * time.Second):
+			log.Debug("borda didn't get configured quickly, proceed anyway")
+		}
+
+		ops.Go(func() {
+			// wait for geo info before reporting so that we know the client ip and
+			// country
+			select {
+			case <-onGeo:
+			case <-time.After(5 * time.Minute):
+				log.Debug("failed to get geolocation info within 5 minutes, just record end of startup anyway")
+			}
+			r.op.End()
+		})
+
+		afterStart(r.client)
+	})
+	if err != nil {
+		log.Errorf("Error running client proxy: %v", err)
+		onError(err)
+	}
 }
 
 func applyClientConfig(cfg *config.Global) {

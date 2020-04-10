@@ -321,9 +321,7 @@ func run(configDir, locale string,
 		config.ForceCountry(forcedCountryCode)
 	}
 
-	flashlight.Run(httpProxyAddr, // listen for HTTP on provided address
-		"127.0.0.1:0",                // listen for SOCKS on random address
-		configDir,                    // place to store lantern configuration
+	runner, err := flashlight.Init(configDir, // place to store lantern configuration
 		false,                        // don't enable vpn mode for Android (VPN is handled in Java layer)
 		func() bool { return false }, // always connected
 		func() bool { return !session.ProxyAll() }, // use shortcut
@@ -333,13 +331,6 @@ func run(configDir, locale string,
 		// already have in desktop)
 		func() bool { return true }, // auto report
 		flags,
-		func() bool {
-			return true
-		}, // beforeStart()
-		func(c *client.Client) {
-			cl.Set(c)
-			afterStart(session)
-		},
 		func(cfg *config.Global) {
 			session.UpdateAdSettings(&adSettings{cfg.AdSettings})
 			email.SetDefaultRecipient(cfg.ReportIssueEmail)
@@ -347,7 +338,6 @@ func run(configDir, locale string,
 		nil, // onProxiesUpdate
 		newUserConfig(session),
 		NewStatsTracker(session),
-		nil, // onError
 		session.IsProUser,
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
@@ -371,6 +361,19 @@ func run(configDir, locale string,
 			}
 			return fmt.Sprintf("%v:%v", updatedHost, port)
 		},
+	)
+	if err != nil {
+		log.Errorf("Failed to start flashlight: %v", err)
+		return
+	}
+	runner.Run(
+		httpProxyAddr, // listen for HTTP on provided address
+		"127.0.0.1:0", // listen for SOCKS on random address
+		func(c *client.Client) {
+			cl.Set(c)
+			afterStart(session)
+		},
+		nil, // onError
 	)
 }
 
