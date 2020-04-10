@@ -88,6 +88,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
+	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9 // indirect
 	github.com/lxn/walk v0.0.0-20191128110447-55ccb3a9f5c1 // indirect
 	github.com/lxn/win v0.0.0-20191128105842-2da648fda5b4 // indirect
