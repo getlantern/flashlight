@@ -6,8 +6,11 @@ import (
 	"crypto/subtle"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 
 	"github.com/getlantern/flashlight/ui/handlers"
 	"github.com/getlantern/golog"
@@ -37,18 +40,28 @@ func withUserID(ctx context.Context, userID string) context.Context {
 
 type AuthHandler struct {
 	handlers.Handler
+	proxy *httputil.ReverseProxy
 }
 
 func New(params handlers.Params) AuthHandler {
+	u, err := url.Parse(params.AuthServerAddr)
+	if err != nil {
+		log.Fatal(fmt.Errorf("Bad auth server address: %s", params.AuthServerAddr))
+	}
 	return AuthHandler{
 		handlers.New(params),
+		httputil.NewSingleHostReverseProxy(u),
 	}
 }
 
 func (h AuthHandler) Routes() map[string]handlers.HandlerFunc {
+	proxyHandler := func(w http.ResponseWriter, r *http.Request) {
+		h.proxy.ServeHTTP(w, r)
+	}
 	return map[string]handlers.HandlerFunc{
-		"/login":    h.authHandler,
-		"/register": h.authHandler,
+		"/login":       h.authHandler,
+		"/register":    h.authHandler,
+		"/user/logout": proxyHandler,
 	}
 }
 

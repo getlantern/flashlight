@@ -6,7 +6,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
-	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -143,11 +142,6 @@ func NewServer(params ServerParams) *Server {
 		requestPath = "/" + params.LocalHTTPToken
 	}
 
-	u, err := url.Parse(params.AuthServerAddr)
-	if err != nil {
-		log.Fatal(fmt.Errorf("Bad auth server address: %s", params.AuthServerAddr))
-	}
-
 	if params.HTTPClient == nil {
 		params.HTTPClient = &http.Client{
 			Timeout:   time.Duration(30 * time.Second),
@@ -161,7 +155,6 @@ func NewServer(params ServerParams) *Server {
 		httpClient:     params.HTTPClient,
 		mux:            http.NewServeMux(),
 		authServerAddr: params.AuthServerAddr,
-		proxy:          httputil.NewSingleHostReverseProxy(u),
 		localHTTPToken: params.LocalHTTPToken,
 		translations:   eventual.NewValue(),
 		standalone:     params.Standalone,
@@ -170,15 +163,10 @@ func NewServer(params ServerParams) *Server {
 }
 
 func (s *Server) attachHandlers() {
-	proxyHandler := func(w http.ResponseWriter, r *http.Request) {
-		s.proxy.ServeHTTP(w, r)
-	}
 
 	// map of Lantern and Yinbi API endpoints to
 	// HTTP handlers to register with the ServeMux
-	routes := map[string]handlers.HandlerFunc{
-		"/user/logout": proxyHandler,
-	}
+	routes := map[string]handlers.HandlerFunc{}
 
 	params := handlers.Params{
 		AuthServerAddr: s.authServerAddr,
