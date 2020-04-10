@@ -10,11 +10,14 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/getlantern/appdir"
+	"github.com/kennygrant/sanitize"
 	"golang.org/x/xerrors"
 
 	"github.com/anacrolix/confluence/confluence"
@@ -337,10 +340,14 @@ func (me *httpHandler) handleViewWith(w http.ResponseWriter, r *http.Request, in
 		// Note that serving the torrent implies waiting for the info, and we could get a better
 		// name for it after that. Torrent.Name will also allow us to reuse previously given 'dn'
 		// values, if we don't have one now.
-		displayNameFromInfoName(t.Name()),
 		m.DisplayName,
+		displayNameFromInfoName(t.Name()),
 	)
 	if filename != "" {
+		ext := path.Ext(filename)
+		if ext != "" {
+			filename = sanitize.BaseName(strings.TrimSuffix(filename, ext)) + ext
+		}
 		w.Header().Set("Content-Disposition", inlineType+"; filename*=UTF-8''"+url.QueryEscape(filename))
 	}
 	torrentFile := t.Files()[selectOnly]
