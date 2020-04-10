@@ -57,8 +57,8 @@ github.com/anacrolix/dht/v2 v2.2.1-0.20191103020011-1dba080fb358/go.mod h1:d7ARx
 github.com/anacrolix/dht/v2 v2.3.2-0.20200103043204-8dce00767ebd/go.mod h1:cgjKyErDnKS6Mej5D1fEqBKg3KwFF2kpFZJp3L6/fGI=
 github.com/anacrolix/dht/v2 v2.5.0/go.mod h1:7RLvyOjm+ZPA7vgFRP+1eRjFzrh27p/nF0VCk5LcjoU=
 github.com/anacrolix/dht/v2 v2.5.1-0.20200317023935-129f05e9b752/go.mod h1:7RLvyOjm+ZPA7vgFRP+1eRjFzrh27p/nF0VCk5LcjoU=
-github.com/anacrolix/dht/v2 v2.5.1-0.20200317030427-b100815cc433 h1:uTAEnicSfjpppH9ezKbL90lslO/2uNV8VxkCw/PwSnE=
-github.com/anacrolix/dht/v2 v2.5.1-0.20200317030427-b100815cc433/go.mod h1:7RLvyOjm+ZPA7vgFRP+1eRjFzrh27p/nF0VCk5LcjoU=
+github.com/anacrolix/dht/v2 v2.5.2-0.20200330033607-920d5b550970 h1:1R1U8H7K+2nNU32Sqfj6eyRMo+n2OTSjuINbwd9TaXQ=
+github.com/anacrolix/dht/v2 v2.5.2-0.20200330033607-920d5b550970/go.mod h1:w/8BeA5oDsnqYeom2yFStJ1vr7W1ocyZtZq+ALf5K1g=
 github.com/anacrolix/envpprof v0.0.0-20180404065416-323002cec2fa/go.mod h1:KgHhUaQMc8cC0+cEflSgCFNFbKwi5h54gqtVn8yhP7c=
 github.com/anacrolix/envpprof v1.0.0/go.mod h1:KgHhUaQMc8cC0+cEflSgCFNFbKwi5h54gqtVn8yhP7c=
 github.com/anacrolix/envpprof v1.0.1/go.mod h1:My7T5oSqVfEn4MD4Meczkw/f5lSIndGAKu/0SM/rkf4=

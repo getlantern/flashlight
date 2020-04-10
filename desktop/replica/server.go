@@ -291,7 +291,7 @@ func (me *httpHandler) handleViewWith(w http.ResponseWriter, r *http.Request, in
 	} else if s3Key == "" {
 		me.logger.Printf("s3 key not found in view link %q", link)
 	}
-	t, new, release := me.confluence.GetTorrent(m.InfoHash)
+	t, _, release := me.confluence.GetTorrent(m.InfoHash)
 	defer release()
 
 	// TODO: Perhaps we only want to do this if we're unable to get the metainfo from S3, to avoid
@@ -301,7 +301,7 @@ func (me *httpHandler) handleViewWith(w http.ResponseWriter, r *http.Request, in
 		t.SetDisplayName(m.DisplayName)
 	}
 
-	if new && t.Info() == nil && s3Key != "" {
+	if t.Info() == nil && s3Key != "" {
 		// Get another reference to the torrent that lasts until we're done fetching the metainfo.
 		_, _, release := me.confluence.GetTorrent(m.InfoHash)
 		go func() {
@@ -324,6 +324,18 @@ func (me *httpHandler) handleViewWith(w http.ResponseWriter, r *http.Request, in
 			me.logger.Printf("added metainfo for %q from s3", s3Key)
 		}()
 	}
+
+	selectOnly, err := strconv.ParseUint(m.Params.Get("so"), 10, 0)
+	// Assume that it should be present, as it'll be added going forward where possible. When it's
+	// missing, zero is a perfectly adequate default for now.
+	if err != nil {
+		me.logger.Printf("error parsing so field: %v", err)
+	}
+	select {
+	case <-r.Context().Done():
+		return
+	case <-t.GotInfo():
+	}
 	filename := firstNonEmptyString(
 		// Note that serving the torrent implies waiting for the info, and we could get a better
 		// name for it after that. Torrent.Name will also allow us to reuse previously given 'dn'
@@ -337,18 +349,6 @@ func (me *httpHandler) handleViewWith(w http.ResponseWriter, r *http.Request, in
 			filename = sanitize.BaseName(strings.TrimSuffix(filename, ext)) + ext
 		}
 		w.Header().Set("Content-Disposition", inlineType+"; filename*=UTF-8''"+url.QueryEscape(filename))
-	}
-
-	selectOnly, err := strconv.ParseUint(m.Params.Get("so"), 10, 0)
-	// Assume that it should be present, as it'll be added going forward where possible. When it's
-	// missing, zero is a perfectly adequate default for now.
-	if err != nil {
-		me.logger.Printf("error parsing so field: %v", err)
-	}
-	select {
-	case <-r.Context().Done():
-		return
-	case <-t.GotInfo():
 	}
 	torrentFile := t.Files()[selectOnly]
 	fileReader := torrentFile.NewReader()
