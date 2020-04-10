@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/getlantern/flashlight/ui/testutils"
 	"github.com/getlantern/lantern-server/common"
 )
 
@@ -42,8 +43,8 @@ func assertHeaders(t *testing.T, resHeaders http.Header, expHeaders map[string]s
 	}
 }
 
-func TestCors(t *testing.T) {
-	s := startServer(t, common.AuthServerAddr, ":0")
+func TestCORS(t *testing.T) {
+	s := startTestServer(t, common.AuthServerAddr, ":0")
 	uiAddr := fmt.Sprintf("http://%s", s.GetUIAddr())
 	cases := []CorsSpec{
 		{
@@ -75,7 +76,7 @@ func TestCors(t *testing.T) {
 	for i := range cases {
 		tc := cases[i]
 		t.Run(tc.name, func(t *testing.T) {
-			url := fmt.Sprintf("%s%s", s.authServerAddr, tc.uri)
+			url := fmt.Sprintf("%s%s", common.AuthServerAddr, tc.uri)
 			req, _ := http.NewRequest(tc.method, url,
 				nil)
 			for name, value := range tc.reqHeaders {
@@ -83,7 +84,7 @@ func TestCors(t *testing.T) {
 			}
 			resp := httptest.NewRecorder()
 			s.corsHandler(testHandler).ServeHTTP(resp, req)
-			dumpResponse(resp)
+			testutils.DumpResponse(resp)
 			assertHeaders(t, resp.Header(), tc.respHeaders)
 		})
 	}

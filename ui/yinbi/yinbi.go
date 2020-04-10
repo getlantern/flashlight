@@ -30,6 +30,8 @@ var (
 	log                = golog.LoggerFor("flashlight.ui.yinbi")
 )
 
+// YinbiHandler is the handler used for handling
+// yinbi-related requests to the UI server
 type YinbiHandler struct {
 	handlers.Handler
 

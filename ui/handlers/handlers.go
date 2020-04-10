@@ -10,16 +10,20 @@ import (
 
 type HandlerFunc func(http.ResponseWriter, *http.Request)
 
+// UIHandler is an interface UI handlers must implement
 type UIHandler interface {
 	Routes() map[string]HandlerFunc
 }
 
+// Handler  is a representation of a group of handlers
+// related to a specific product (i.e. Yinbi)
 type Handler struct {
 	UIHandler
 	authServerAddr string
 	HttpClient     *http.Client
 }
 
+// Params represents the parameters handlers are configured with
 type Params struct {
 	AuthServerAddr string
 	HttpClient     *http.Client

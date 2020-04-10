@@ -17,6 +17,7 @@ var (
 	log = golog.LoggerFor("flashlight.ui.testutils")
 )
 
+// StartTestServer starts a new test UI server on the given addr
 func StartTestServer(t *testing.T, authaddr, addr string) *ui.Server {
 	s := ui.NewServer(ui.ServerParams{
 		AuthServerAddr: authaddr,
@@ -27,14 +28,14 @@ func StartTestServer(t *testing.T, authaddr, addr string) *ui.Server {
 	return s
 }
 
-func DecodeResp(t *testing.T,
-	resp *httptest.ResponseRecorder,
-	r interface{}) {
+// DecodeResp is used to decode a httptest Response to the given interface r
+func DecodeResp(t *testing.T, resp *httptest.ResponseRecorder, r interface{}) {
 	body, _ := ioutil.ReadAll(resp.Body)
 	err := json.Unmarshal(body, r)
 	assert.Nil(t, err)
 }
 
+// DumpResponse dumps the test HTTP response resp
 func DumpResponse(resp *httptest.ResponseRecorder) {
 	result := resp.Result()
 	dump, _ := httputil.DumpResponse(result, true)

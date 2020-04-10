@@ -63,13 +63,24 @@ func TestListen(t *testing.T) {
 	}
 }
 
+// startTestServer starts a new test UI server on the given addr
+func startTestServer(t *testing.T, authaddr, addr string) *Server {
+	s := NewServer(ServerParams{
+		AuthServerAddr: authaddr,
+		LocalHTTPToken: "test-http-token",
+		HTTPClient:     http.DefaultClient,
+	})
+	assert.NoError(t, s.Start(addr), "should start server")
+	return s
+}
+
 func TestStartServer(t *testing.T) {
 	startServer := func(addr string) *Server {
 		s := NewServer(ServerParams{
 			AuthServerAddr: common.AuthServerAddr,
 			LocalHTTPToken: "test-http-token",
 		})
-		assert.NoError(t, s.start(addr), "should start server")
+		assert.NoError(t, s.Start(addr), "should start server")
 		return s
 	}
 	s := startServer("")
@@ -146,7 +157,7 @@ func TestCheckOrigin(t *testing.T) {
 	s := NewServer(ServerParams{
 		LocalHTTPToken: "token",
 	})
-	s.start("localhost:9898")
+	s.Start("localhost:9898")
 	doTestCheckRequestToken(t, s, map[*http.Request]bool{
 		newRequest("http://localhost:9898"): false,
 		newRequest("http://localhost:1243"): false,
@@ -155,7 +166,7 @@ func TestCheckOrigin(t *testing.T) {
 	})
 	s.stop()
 
-	s.start("127.0.0.1:9897")
+	s.Start("127.0.0.1:9897")
 	doTestCheckRequestToken(t, s, map[*http.Request]bool{
 		newRequest("http://127.0.0.1:9897"):              false,
 		newRequest("http://localhost:9897"):              false,
@@ -259,7 +270,7 @@ func getTestServer(token string) *Server {
 	s := NewServer(ServerParams{
 		LocalHTTPToken: token,
 	})
-	s.start("localhost:")
+	s.Start("localhost:")
 	return s
 }
 
