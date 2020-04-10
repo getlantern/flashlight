@@ -5,7 +5,6 @@ import (
 	"mime"
 	"net"
 	"net/http"
-	"net/http/httputil"
 	"strconv"
 	"strings"
 	"sync"
@@ -24,6 +23,7 @@ import (
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ui/auth"
 	"github.com/getlantern/flashlight/ui/handlers"
+	"github.com/getlantern/flashlight/ui/testutils"
 	"github.com/getlantern/flashlight/ui/yinbi"
 	"github.com/getlantern/flashlight/util"
 )
@@ -75,8 +75,6 @@ type Server struct {
 	authServerAddr string
 
 	httpClient *http.Client
-
-	proxy *httputil.ReverseProxy
 
 	externalURL    string
 	requestPath    string
@@ -462,15 +460,8 @@ func closeConn(msg string, w http.ResponseWriter, r *http.Request) {
 		log.Errorf("Unable to hijack connection: %s", err)
 		return
 	}
-	dumpRequestHeaders(r)
+	testutils.DumpRequestHeaders(r)
 	connIn.Close()
-}
-
-func dumpRequestHeaders(r *http.Request) {
-	dump, err := httputil.DumpRequest(r, false)
-	if err == nil {
-		log.Debugf("Request:\n%s", string(dump))
-	}
 }
 
 func addrCandidates(requested string) []string {
