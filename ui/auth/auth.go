@@ -10,7 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/getlantern/flashlight/ui/handler"
+	"github.com/getlantern/flashlight/ui/handlers"
 	"github.com/getlantern/lantern-server/common"
 	"github.com/getlantern/lantern-server/models"
 	"github.com/getlantern/lantern-server/srp"
@@ -36,17 +36,17 @@ func withUserID(ctx context.Context, userID string) context.Context {
 }
 
 type AuthHandler struct {
-	handler.Handler
+	handlers.Handler
 }
 
-func New(params handler.Params) AuthHandler {
+func New(params handlers.Params) AuthHandler {
 	return AuthHandler{
-		handler.New(params),
+		handlers.New(params),
 	}
 }
 
-func (h AuthHandler) Routes() map[string]handler.HandlerFunc {
-	return map[string]handler.HandlerFunc{
+func (h AuthHandler) Routes() map[string]handlers.HandlerFunc {
+	return map[string]handlers.HandlerFunc{
 		"/login":    h.authHandler,
 		"/register": h.authHandler,
 	}

@@ -10,7 +10,7 @@ import (
 	"net/http"
 
 	"github.com/getlantern/appdir"
-	"github.com/getlantern/flashlight/ui/handler"
+	"github.com/getlantern/flashlight/ui/handlers"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
 	"github.com/getlantern/yinbi-server/config"
@@ -31,7 +31,7 @@ var (
 )
 
 type YinbiHandler struct {
-	handler.Handler
+	handlers.Handler
 
 	// yinbiClient is a client for the Yinbi API which
 	// supports creating accounts and making payments
@@ -41,16 +41,16 @@ type YinbiHandler struct {
 	keystore *keystore.Keystore
 }
 
-func New(params handler.Params) YinbiHandler {
+func New(params handlers.Params) YinbiHandler {
 	return YinbiHandler{
-		Handler:     handler.New(params),
+		Handler:     handlers.New(params),
 		keystore:    keystore.New(appdir.General("Lantern")),
 		yinbiClient: newYinbiClient(params.HttpClient),
 	}
 }
 
-func (h YinbiHandler) Routes() map[string]handler.HandlerFunc {
-	return map[string]handler.HandlerFunc{
+func (h YinbiHandler) Routes() map[string]handlers.HandlerFunc {
+	return map[string]handlers.HandlerFunc{
 		"/payment/new":          h.sendPaymentHandler,
 		"/user/account/new":     h.createAccountHandler,
 		"/user/import/wallet":   h.importWalletHandler,

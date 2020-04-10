@@ -24,7 +24,7 @@ import (
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ui/auth"
-	"github.com/getlantern/flashlight/ui/handler"
+	"github.com/getlantern/flashlight/ui/handlers"
 	"github.com/getlantern/flashlight/ui/yinbi"
 	"github.com/getlantern/flashlight/util"
 )
@@ -176,16 +176,16 @@ func (s *Server) attachHandlers() {
 
 	// map of Lantern and Yinbi API endpoints to
 	// HTTP handlers to register with the ServeMux
-	routes := map[string]handler.HandlerFunc{
+	routes := map[string]handlers.HandlerFunc{
 		"/user/logout": proxyHandler,
 	}
 
-	params := handler.Params{
+	params := handlers.Params{
 		AuthServerAddr: s.authServerAddr,
 		HttpClient:     s.httpClient,
 	}
 
-	handlers := []handler.UIHandler{
+	handlers := []handlers.UIHandler{
 		yinbi.New(params),
 		auth.New(params),
 	}

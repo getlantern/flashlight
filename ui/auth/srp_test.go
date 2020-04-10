@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/getlantern/flashlight/ui/handler"
+	"github.com/getlantern/flashlight/ui/handlers"
 	"github.com/getlantern/flashlight/ui/params"
 	"github.com/getlantern/flashlight/ui/testutils"
 	"github.com/getlantern/lantern-server/common"
@@ -59,7 +59,7 @@ func createUser() models.UserParams {
 }
 
 func TestSRP(t *testing.T) {
-	h := New(handler.Params{
+	h := New(handlers.Params{
 		common.AuthServerAddr,
 		&http.Client{},
 	})
