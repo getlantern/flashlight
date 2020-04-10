@@ -371,7 +371,7 @@ func (app *App) beforeStart(listenAddr string) {
 	}
 
 	if err = app.features.StartService(app.ws); err != nil {
-		log.Errorf("Unable to serve features enabled to UI: %v", err)
+		log.Errorf("Unable to serve enabled features to UI: %v", err)
 	}
 
 	setupUserSignal(app.ws, app.Connect, app.Disconnect)
