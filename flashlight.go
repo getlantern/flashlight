@@ -120,7 +120,7 @@ func (f *Flashlight) featureEnabled(feature string) bool {
 }
 
 func (f *Flashlight) calcFeature(global *config.Global, country, feature string) bool {
-	// Sepcial case: Use defaults for blocking related features until geolookup is finished
+	// Special case: Use defaults for blocking related features until geolookup is finished
 	// to avoid accidentally generating traffic that could trigger blocking.
 	enabled, blockingRelated := blockingRelevantFeatures[feature]
 	if country == "" && blockingRelated {
