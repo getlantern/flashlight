@@ -102,6 +102,7 @@ func (f *Flashlight) EnabledFeatures() map[string]bool {
 	featuresEnabled := make(map[string]bool)
 	f.mxGlobal.RLock()
 	if f.global == nil {
+		f.mxGlobal.RUnlock()
 		return featuresEnabled
 	}
 	global := f.global
