@@ -16,7 +16,6 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/systray"
 	"github.com/getlantern/tarfs"
 
 	"github.com/getlantern/flashlight/analytics"
@@ -256,17 +255,20 @@ func (s *Server) Show(destURL, campaign, medium string, st stats.Tracker) {
 		go func() {
 			time.Sleep(t)
 			if s.standalone {
-				systray.ShowAppWindow(u)
-			} else {
-				if err := open.Run(u); err != nil {
-					e := errors.New("Error opening external page to `%v`: %v",
-						s.externalURL, err)
-					log.Error(e)
-					if st != nil {
-						st.SetAlert(stats.FAIL_TO_OPEN_BROWSER, e.Error(), true)
-					}
+				// systray.ShowAppWindow(u)
+				log.Error("Standalone mode currently not supported, opening in system browser")
+				// TODO: re-enable standalone mode when systray library has been stabilized
+			}
+			// } else {
+			if err := open.Run(u); err != nil {
+				e := errors.New("Error opening external page to `%v`: %v",
+					s.externalURL, err)
+				log.Error(e)
+				if st != nil {
+					st.SetAlert(stats.FAIL_TO_OPEN_BROWSER, e.Error(), true)
 				}
 			}
+			// }
 		}()
 	}
 	s.doShow(destURL, campaign, medium, open)

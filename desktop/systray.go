@@ -52,10 +52,12 @@ func RunOnSystrayReady(standalone bool, a systrayCallbacks, onReady func()) {
 	}
 
 	if standalone {
-		systray.RunWithAppWindow(i18n.T("TRAY_LANTERN"), 1024, 768, onReady, onExit)
-	} else {
-		systray.Run(onReady, onExit)
+		log.Error("Standalone mode currently not supported, opening in system browser")
+		// TODO: re-enable standalone mode when systray library has been stabilized
+		// systray.RunWithAppWindow(i18n.T("TRAY_LANTERN"), 1024, 768, onReady, onExit)
+		// } else {
 	}
+	systray.Run(onReady, onExit)
 }
 
 func QuitSystray(a *App) {
