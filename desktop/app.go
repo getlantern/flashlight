@@ -109,7 +109,6 @@ func (app *App) Init() {
 	app.exited = eventual.NewValue()
 	app.statsTracker = NewStatsTracker()
 	app.chGlobalConfigChanged = make(chan bool, 1)
-
 	chProStatusChanged := make(chan bool, 1)
 	pro.OnProStatusChange(func(isPro bool, yinbiEnabled bool) {
 		app.statsTracker.SetIsPro(isPro)
@@ -128,14 +127,6 @@ func (app *App) Init() {
 		app.statsTracker.SetHitDataCap(hitDataCap)
 	})
 	app.ws = ws.NewUIChannel()
-
-	startFeaturesService(app.ws, func() map[string]bool {
-		if app.flashlight == nil {
-			return make(map[string]bool)
-		}
-		return app.flashlight.EnabledFeatures()
-	}, app.chGlobalConfigChanged,
-		geolookup.OnRefresh(), chUserChanged, chProStatusChanged)
 }
 
 // loadSettings loads the initial settings at startup, either from disk or using defaults.
@@ -243,6 +234,10 @@ func (app *App) Run() {
 			return
 		}
 		app.beforeStart(listenAddr)
+
+		startFeaturesService(app.ws, app.flashlight.EnabledFeatures, app.chGlobalConfigChanged,
+			geolookup.OnRefresh(), app.chUserChanged, app.chProStatusChanged)
+
 		app.flashlight.Run(
 			listenAddr,
 			socksAddr,
