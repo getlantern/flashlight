@@ -82,6 +82,8 @@ type App struct {
 	ws                    ws.UIChannel
 	chrome                chromeExtension
 	chGlobalConfigChanged chan bool
+	chProStatusChanged    chan bool
+	chUserChanged         chan bool
 	flashlight            *flashlight.Flashlight
 
 	// If both the trafficLogLock and proxiesLock are needed, the trafficLogLock should be obtained
@@ -109,19 +111,19 @@ func (app *App) Init() {
 	app.exited = eventual.NewValue()
 	app.statsTracker = NewStatsTracker()
 	app.chGlobalConfigChanged = make(chan bool, 1)
-	chProStatusChanged := make(chan bool, 1)
+	app.chProStatusChanged = make(chan bool, 1)
 	pro.OnProStatusChange(func(isPro bool, yinbiEnabled bool) {
 		app.statsTracker.SetIsPro(isPro)
 		app.statsTracker.SetYinbiEnabled(yinbiEnabled)
-		chProStatusChanged <- isPro
+		app.chProStatusChanged <- isPro
 	})
 	settings.OnChange(SNDisconnected, func(disconnected interface{}) {
 		isDisconnected := disconnected.(bool)
 		app.statsTracker.SetDisconnected(isDisconnected)
 	})
-	chUserChanged := make(chan bool, 1)
+	app.chUserChanged = make(chan bool, 1)
 	settings.OnChange(SNUserID, func(v interface{}) {
-		chUserChanged <- true
+		app.chUserChanged <- true
 	})
 	datacap.AddDataCapListener(func(hitDataCap bool) {
 		app.statsTracker.SetHitDataCap(hitDataCap)
