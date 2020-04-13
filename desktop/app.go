@@ -129,7 +129,12 @@ func (app *App) Init() {
 	})
 	app.ws = ws.NewUIChannel()
 
-	startFeaturesService(app.ws, app.flashlight.EnabledFeatures, app.chGlobalConfigChanged,
+	startFeaturesService(app.ws, func() map[string]bool {
+		if app.flashlight == nil {
+			return make(map[string]bool)
+		}
+		return app.flashlight.EnabledFeatures()
+	}, app.chGlobalConfigChanged,
 		geolookup.OnRefresh(), chUserChanged, chProStatusChanged)
 }
 

@@ -99,13 +99,10 @@ func (f *Flashlight) reconfigurePingProxies() {
 
 // EnabledFeatures gets all features enabled based on current conditions
 func (f *Flashlight) EnabledFeatures() map[string]bool {
-	featuresEnabled := make(map[string]bool)
 	f.mxGlobal.RLock()
-	if f.global == nil {
-		return featuresEnabled
-	}
 	global := f.global
 	f.mxGlobal.RUnlock()
+	featuresEnabled := make(map[string]bool)
 	country := geolookup.GetCountry(0)
 	for feature := range global.FeaturesEnabled {
 		if f.calcFeature(global, country, feature) {
