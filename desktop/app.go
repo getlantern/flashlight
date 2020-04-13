@@ -718,6 +718,8 @@ func (app *App) updateEnabledFeatures() {
 	})
 
 	for {
+		// initialize once and run again for any changes
+		app.features.Update(app.flashlight.EnabledFeatures())
 		var reason string
 		select {
 		case <-onGeo:
@@ -730,7 +732,6 @@ func (app *App) updateEnabledFeatures() {
 			reason = fmt.Sprintf("pro status changed to %v", isPro)
 		}
 		log.Debug("Updating enabled features to UI because " + reason)
-		app.features.Update(app.flashlight.EnabledFeatures())
 	}
 }
 

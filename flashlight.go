@@ -104,7 +104,7 @@ func (f *Flashlight) EnabledFeatures() map[string]bool {
 	f.mxGlobal.RUnlock()
 	featuresEnabled := make(map[string]bool)
 	country := geolookup.GetCountry(0)
-	for feature, _ := range global.FeaturesEnabled {
+	for feature := range global.FeaturesEnabled {
 		if f.calcFeature(global, country, feature) {
 			featuresEnabled[feature] = true
 		}

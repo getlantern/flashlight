@@ -363,8 +363,7 @@ func run(configDir, locale string,
 		},
 	)
 	if err != nil {
-		log.Errorf("Failed to start flashlight: %v", err)
-		return
+		log.Fatalf("Failed to start flashlight: %v", err)
 	}
 	runner.Run(
 		httpProxyAddr, // listen for HTTP on provided address
