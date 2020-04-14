@@ -129,6 +129,8 @@ func loadSettingsFrom(version, revisionDate, buildDate, path string, chrome chro
 	switch id := set[SNUserID].(type) {
 	case int:
 		set[SNUserID] = int64(id)
+	case int64:
+		set[SNUserID] = id
 	}
 
 	// Always just sync the auto-launch configuration on startup.
