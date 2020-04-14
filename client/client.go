@@ -118,7 +118,9 @@ type Client struct {
 
 	disconnected         func() bool
 	allowProbes          func() bool
-	allowShortcut        func(ctx context.Context, addr string) (bool, net.IP)
+	proxyAll             func() bool
+	useShortcut          func() bool
+	allowShortcutTo      func(ctx context.Context, addr string) (bool, net.IP)
 	useDetour            func() bool
 	allowHTTPSEverywhere func() bool
 	user                 common.UserConfig
@@ -147,7 +149,9 @@ type Client struct {
 func NewClient(
 	disconnected func() bool,
 	allowProbes func() bool,
-	allowShortcut func(ctx context.Context, addr string) (bool, net.IP),
+	proxyAll func() bool,
+	useShortcut func() bool,
+	allowShortcutTo func(ctx context.Context, addr string) (bool, net.IP),
 	useDetour func() bool,
 	allowHTTPSEverywhere func() bool,
 	userConfig common.UserConfig,
@@ -167,7 +171,9 @@ func NewClient(
 		bal:                  balancer.New(allowProbes, time.Duration(requestTimeout)),
 		disconnected:         disconnected,
 		allowProbes:          allowProbes,
-		allowShortcut:        allowShortcut,
+		proxyAll:             proxyAll,
+		useShortcut:          useShortcut,
+		allowShortcutTo:      allowShortcutTo,
 		useDetour:            useDetour,
 		allowHTTPSEverywhere: allowHTTPSEverywhere,
 		user:                 userConfig,
@@ -402,6 +408,10 @@ func (client *Client) dial(ctx context.Context, isConnect bool, network, addr st
 // * Try dial the site directly with 1/5th of the requestTimeout, then try proxying.
 func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, addr string) (net.Conn, error) {
 
+	dialDirect := func(ctx context.Context, network, addr string) (net.Conn, error) {
+		return netx.DialContext(ctx, network, addr)
+	}
+
 	dialProxied := func(ctx context.Context, _unused, addr string) (net.Conn, error) {
 		op.Set("remotely_proxied", true)
 		proto := balancer.NetworkPersistent
@@ -437,7 +447,14 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		log.Debugf("%v, sending directly to %v", err, addr)
 		op.Set("force_direct", true)
 		op.Set("force_direct_reason", err.Error())
-		return netx.DialContext(ctx, "tcp", addr)
+		return dialDirect(ctx, "tcp", addr)
+	}
+
+	if client.proxyAll() {
+		log.Tracef("Proxying to %v because proxyall is enabled", addr)
+		op.Set("force_proxied", true)
+		op.Set("force_proxied_reason", "proxyall")
+		return dialProxied(ctx, "whatever", addr)
 	}
 
 	host, _, err := net.SplitHostPort(addr)
@@ -451,7 +468,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		log.Tracef("Directly dialing %v per domain routing rules", addr)
 		op.Set("force_direct", true)
 		op.Set("force_direct_reason", "routingrule")
-		return netx.DialContext(ctx, "tcp", addr)
+		return dialDirect(ctx, "tcp", addr)
 	case domainrouting.Proxy:
 		log.Tracef("Proxying to %v per domain routing rules", addr)
 		op.Set("force_proxied", true)
@@ -463,7 +480,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		log.Debugf("Use shortcut (dial directly) for %v(%v)", addr, ip)
 		op.Set("shortcut_direct", true)
 		op.Set("shortcut_direct_ip", ip)
-		return netx.DialContext(ctx, "tcp", addr)
+		return dialDirect(ctx, "tcp", addr)
 	}
 
 	dl, _ := ctx.Deadline()
@@ -475,25 +492,32 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 	defer cancel()
 
 	dialDirectForDetour := func(ctx context.Context, network, addr string) (net.Conn, error) {
-		if allow, ip := client.allowShortcut(cappedCTX, addr); allow {
-			// Arbitrarily have a larger timeout if the address is eligible for shortcut.
-			shortcutCTX, cancel := context.WithTimeout(ctx, directTimeout*2)
-			defer cancel()
-			return dialDirectForShortcut(shortcutCTX, network, addr, ip)
+		if client.useShortcut() {
+			if allow, ip := client.allowShortcutTo(cappedCTX, addr); allow {
+				// Arbitrarily have a larger timeout if the address is eligible for shortcut.
+				shortcutCTX, cancel := context.WithTimeout(ctx, directTimeout*2)
+				defer cancel()
+				return dialDirectForShortcut(shortcutCTX, network, addr, ip)
+			}
 		}
-		return netx.DialContext(cappedCTX, network, addr)
+		log.Tracef("Dialing %v directly for detour", addr)
+		return dialDirect(cappedCTX, network, addr)
 	}
 
 	var dialer func(ctx context.Context, network, addr string) (net.Conn, error)
 	if client.useDetour() {
 		op.Set("detour", true)
 		dialer = detour.Dialer(dialDirectForDetour, dialProxied)
+	} else if !client.useShortcut() {
+		dialer = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			log.Tracef("Dialing %v directly because neither detour nor shortcut is enabled", addr)
+			return dialDirect(ctx, network, addr)
+		}
 	} else {
-		op.Set("detour", false)
 		dialer = func(ctx context.Context, network, addr string) (net.Conn, error) {
 			var conn net.Conn
 			var err error
-			if allow, ip := client.allowShortcut(cappedCTX, addr); allow {
+			if allow, ip := client.allowShortcutTo(cappedCTX, addr); allow {
 				// Don't cap the context if the address is eligible for shortcut.
 				conn, err = dialDirectForShortcut(ctx, network, addr, ip)
 				if err == nil {

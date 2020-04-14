@@ -197,9 +197,8 @@ func (app *App) Run() {
 			app.Flags["configdir"].(string),
 			app.Flags["vpn"].(bool),
 			func() bool { return settings.getBool(SNDisconnected) }, // check whether we're disconnected
-			func() bool { return !settings.GetProxyAll() },          // use shortcut
-			func() bool { return !settings.GetProxyAll() },          // use detour
-			func() bool { return false },                            // on desktop, we do not allow private hosts
+			settings.GetProxyAll,
+			func() bool { return false }, // on desktop, we do not allow private hosts
 			settings.IsAutoReport,
 			app.Flags,
 			app.beforeStart(listenAddr),
