@@ -74,7 +74,6 @@ type App struct {
 	Flags        map[string]interface{}
 	exited       eventual.Value
 	statsTracker *statsTracker
-	features     *featuresService
 
 	muExitFuncs sync.RWMutex
 	exitFuncs   []func()
@@ -82,7 +81,9 @@ type App struct {
 	uiServer              *ui.Server
 	ws                    ws.UIChannel
 	chrome                chromeExtension
-	chGlobalConfigChanged chan *config.Global
+	chGlobalConfigChanged chan bool
+	chProStatusChanged    chan bool
+	chUserChanged         chan bool
 	flashlight            *flashlight.Flashlight
 
 	// If both the trafficLogLock and proxiesLock are needed, the trafficLogLock should be obtained
@@ -109,20 +110,25 @@ func (app *App) Init() {
 	settings = app.loadSettings()
 	app.exited = eventual.NewValue()
 	app.statsTracker = NewStatsTracker()
-	app.features = NewFeaturesService()
+	app.chGlobalConfigChanged = make(chan bool, 1)
+	app.chProStatusChanged = make(chan bool, 1)
 	pro.OnProStatusChange(func(isPro bool, yinbiEnabled bool) {
 		app.statsTracker.SetIsPro(isPro)
 		app.statsTracker.SetYinbiEnabled(yinbiEnabled)
+		app.chProStatusChanged <- isPro
 	})
 	settings.OnChange(SNDisconnected, func(disconnected interface{}) {
 		isDisconnected := disconnected.(bool)
 		app.statsTracker.SetDisconnected(isDisconnected)
 	})
+	app.chUserChanged = make(chan bool, 1)
+	settings.OnChange(SNUserID, func(v interface{}) {
+		app.chUserChanged <- true
+	})
 	datacap.AddDataCapListener(func(hitDataCap bool) {
 		app.statsTracker.SetHitDataCap(hitDataCap)
 	})
 	app.ws = ws.NewUIChannel()
-	app.chGlobalConfigChanged = make(chan *config.Global, 1)
 }
 
 // loadSettings loads the initial settings at startup, either from disk or using defaults.
@@ -230,7 +236,10 @@ func (app *App) Run() {
 			return
 		}
 		app.beforeStart(listenAddr)
-		go app.updateEnabledFeatures()
+
+		startFeaturesService(app.ws, app.flashlight.EnabledFeatures, app.chGlobalConfigChanged,
+			geolookup.OnRefresh(), app.chUserChanged, app.chProStatusChanged)
+
 		app.flashlight.Run(
 			listenAddr,
 			socksAddr,
@@ -370,10 +379,6 @@ func (app *App) beforeStart(listenAddr string) {
 		log.Errorf("Unable to serve stats to UI: %v", err)
 	}
 
-	if err = app.features.StartService(app.ws); err != nil {
-		log.Errorf("Unable to serve enabled features to UI: %v", err)
-	}
-
 	setupUserSignal(app.ws, app.Connect, app.Disconnect)
 
 	err = datacap.ServeDataCap(app.ws, func() string {
@@ -504,7 +509,7 @@ func (app *App) onConfigUpdate(cfg *config.Global) {
 		return app.AddToken("/img/lantern_logo.png")
 	})
 	email.SetDefaultRecipient(cfg.ReportIssueEmail)
-	app.chGlobalConfigChanged <- cfg
+	app.chGlobalConfigChanged <- true
 	//app.configureTrafficLog(*cfg)
 }
 
@@ -702,36 +707,6 @@ func (app *App) WaitForExit() error {
 		return nil
 	}
 	return err.(error)
-}
-
-// updateEnabledFeatures runs a loop to watch for changed conditions and update
-// the enabled features to the UI.
-func (app *App) updateEnabledFeatures() {
-	onGeo := geolookup.OnRefresh()
-	chUserChanged := make(chan int64, 1)
-	settings.OnChange(SNUserID, func(v interface{}) {
-		chUserChanged <- v.(int64)
-	})
-	chProStatusChanged := make(chan bool, 1)
-	pro.OnProStatusChange(func(isPro bool, yinbiEnabled bool) {
-		chProStatusChanged <- isPro
-	})
-
-	for {
-		var reason string
-		select {
-		case <-onGeo:
-			reason = "geolocation switched to " + geolookup.GetCountry(0)
-		case <-app.chGlobalConfigChanged:
-			reason = "global config updated"
-		case newID := <-chUserChanged:
-			reason = fmt.Sprintf("user ID changed to %v", newID)
-		case isPro := <-chProStatusChanged:
-			reason = fmt.Sprintf("pro status changed to %v", isPro)
-		}
-		log.Debug("Updating enabled features to UI because " + reason)
-		app.features.Update(app.flashlight.EnabledFeatures())
-	}
 }
 
 // IsPro indicates whether or not the app is pro

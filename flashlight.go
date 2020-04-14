@@ -99,10 +99,14 @@ func (f *Flashlight) reconfigurePingProxies() {
 
 // EnabledFeatures gets all features enabled based on current conditions
 func (f *Flashlight) EnabledFeatures() map[string]bool {
+	featuresEnabled := make(map[string]bool)
 	f.mxGlobal.RLock()
+	if f.global == nil {
+		f.mxGlobal.RUnlock()
+		return featuresEnabled
+	}
 	global := f.global
 	f.mxGlobal.RUnlock()
-	featuresEnabled := make(map[string]bool)
 	country := geolookup.GetCountry(0)
 	for feature := range global.FeaturesEnabled {
 		if f.calcFeature(global, country, feature) {
@@ -120,7 +124,7 @@ func (f *Flashlight) featureEnabled(feature string) bool {
 }
 
 func (f *Flashlight) calcFeature(global *config.Global, country, feature string) bool {
-	// Sepcial case: Use defaults for blocking related features until geolookup is finished
+	// Special case: Use defaults for blocking related features until geolookup is finished
 	// to avoid accidentally generating traffic that could trigger blocking.
 	enabled, blockingRelated := blockingRelevantFeatures[feature]
 	if country == "" && blockingRelated {

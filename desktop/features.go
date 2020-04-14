@@ -1,44 +1,32 @@
 package desktop
 
 import (
-	"sync"
-
 	"github.com/getlantern/flashlight/ws"
 )
 
-type featuresService struct {
-	service         *ws.Service
-	featuresEnabled map[string]bool
-	mx              sync.Mutex
-}
-
-func NewFeaturesService() *featuresService {
-	return &featuresService{
-		featuresEnabled: make(map[string]bool),
-	}
-}
-
-func (s *featuresService) Update(features map[string]bool) {
-	s.mx.Lock()
-	s.featuresEnabled = features
-	s.mx.Unlock()
-	select {
-	case s.service.Out <- features:
-		// ok
-	default:
-		// don't block if no-one is listening
-	}
-}
-
-func (s *featuresService) StartService(channel ws.UIChannel) (err error) {
-	helloFn := func(write func(interface{})) {
+// startFeaturesService starts a new features service that dispatches features to the
+// frontend.
+func startFeaturesService(channel ws.UIChannel, enabledFeatures func() map[string]bool,
+	chans ...<-chan bool) {
+	if service, err := channel.Register("features", func(write func(interface{})) {
 		log.Debugf("Sending features enabled to new client")
-		s.mx.Lock()
-		featuresEnabled := s.featuresEnabled
-		s.mx.Unlock()
-		write(featuresEnabled)
+		write(enabledFeatures())
+	}); err != nil {
+		log.Errorf("Unable to serve enabled features to UI: %v", err)
+	} else {
+		go func() {
+			for _, ch := range chans {
+				go func(c <-chan bool) {
+					for range c {
+						select {
+						case service.Out <- enabledFeatures():
+							// ok
+						default:
+							// don't block if no-one is listening
+						}
+					}
+				}(ch)
+			}
+		}()
 	}
-
-	s.service, err = channel.Register("features", helloFn)
-	return
 }
