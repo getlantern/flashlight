@@ -22,7 +22,7 @@ import (
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/domainrouting"
-	"github.com/go-yaml/yaml"
+	"github.com/getlantern/yaml"
 )
 
 func main() {
@@ -84,7 +84,7 @@ func readRemote(target string) ([]byte, error) {
 
 func parseProxies(bytes []byte) {
 	cfg := make(map[string]*chained.ChainedServerInfo)
-	err := yaml.UnmarshalStrict(bytes, cfg)
+	err := yaml.Unmarshal(bytes, cfg)
 	if err != nil {
 		fail("Unable to parse proxies config: %v", err)
 	}
@@ -100,7 +100,7 @@ func parseProxies(bytes []byte) {
 
 func parseGlobal(bytes []byte) {
 	cfg := &config.Global{}
-	err := yaml.UnmarshalStrict(bytes, cfg)
+	err := yaml.Unmarshal(bytes, cfg)
 	if err != nil {
 		fail("Unable to parse global config: %v", err)
 	}
