@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.9.2](https://github.com/getlantern/flashlight/tree/5.9.2) (2020-04-15)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.1...5.9.2)
+
+**Merged pull requests:**
+
+- Avoid nil pointer panic and add sentry reporting on app.Exit\(err\) [\#793](https://github.com/getlantern/flashlight/pull/793) ([max-b](https://github.com/max-b))
+- Added a new FeatureProxyWhitelistedOnly that causes clients to only p… [\#791](https://github.com/getlantern/flashlight/pull/791) ([oxtoacart](https://github.com/oxtoacart))
+- Add duplicate and missing field checks to config checker [\#790](https://github.com/getlantern/flashlight/pull/790) ([hwh33](https://github.com/hwh33))
+- Added simple config validator tool [\#789](https://github.com/getlantern/flashlight/pull/789) ([oxtoacart](https://github.com/oxtoacart))
+
 ## [5.9.1](https://github.com/getlantern/flashlight/tree/5.9.1) (2020-04-07)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.0...5.9.1)
@@ -139,8 +150,6 @@
 - Allow forcing config country on Android [\#708](https://github.com/getlantern/flashlight/pull/708) ([oxtoacart](https://github.com/oxtoacart))
 - Support borda reporting on iOS [\#707](https://github.com/getlantern/flashlight/pull/707) ([oxtoacart](https://github.com/oxtoacart))
 - close hasSucceedingDialer when closing balancer [\#706](https://github.com/getlantern/flashlight/pull/706) ([joesis](https://github.com/joesis))
-- Client-side packet capture [\#682](https://github.com/getlantern/flashlight/pull/682) ([hwh33](https://github.com/hwh33))
-- Added standalone flag [\#679](https://github.com/getlantern/flashlight/pull/679) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [5.6.4](https://github.com/getlantern/flashlight/tree/5.6.4) (2019-10-29)
 
@@ -152,7 +161,6 @@
 - Test for embedded global [\#704](https://github.com/getlantern/flashlight/pull/704) ([myleshorton](https://github.com/myleshorton))
 - make sure both proxies and global config are got in config/TestInit [\#703](https://github.com/getlantern/flashlight/pull/703) ([joesis](https://github.com/joesis))
 - Improved script and add sanity test for global config updates [\#702](https://github.com/getlantern/flashlight/pull/702) ([myleshorton](https://github.com/myleshorton))
-- More CI fixes [\#701](https://github.com/getlantern/flashlight/pull/701) ([joesis](https://github.com/joesis))
 
 ## [5.6.3](https://github.com/getlantern/flashlight/tree/5.6.3) (2019-10-28)
 
@@ -160,6 +168,7 @@
 
 **Merged pull requests:**
 
+- More CI fixes [\#701](https://github.com/getlantern/flashlight/pull/701) ([joesis](https://github.com/joesis))
 - Fix Proxy-Connection handling in persistent HTTP case [\#700](https://github.com/getlantern/flashlight/pull/700) ([myleshorton](https://github.com/myleshorton))
 - Various changes to make CI more reliable [\#699](https://github.com/getlantern/flashlight/pull/699) ([joesis](https://github.com/joesis))
 
@@ -192,20 +201,10 @@
 - Using commonconfig package for chained config [\#692](https://github.com/getlantern/flashlight/pull/692) ([oxtoacart](https://github.com/oxtoacart))
 - Updated to latest proxy [\#691](https://github.com/getlantern/flashlight/pull/691) ([myleshorton](https://github.com/myleshorton))
 - Don't reveal Lantern headers when visiting sites directly [\#690](https://github.com/getlantern/flashlight/pull/690) ([joesis](https://github.com/joesis))
-- Added support for tls session resumption using pre-negotiated sessions [\#689](https://github.com/getlantern/flashlight/pull/689) ([oxtoacart](https://github.com/oxtoacart))
-- Only ping if auto report is enabled and not on Android [\#688](https://github.com/getlantern/flashlight/pull/688) ([oxtoacart](https://github.com/oxtoacart))
-- Added stealth mode which disables non-essential network traffic [\#687](https://github.com/getlantern/flashlight/pull/687) ([oxtoacart](https://github.com/oxtoacart))
-- Update to latest utls fork [\#684](https://github.com/getlantern/flashlight/pull/684) ([myleshorton](https://github.com/myleshorton))
-- allow hitProxy.py to run for multiple proxies [\#681](https://github.com/getlantern/flashlight/pull/681) ([joesis](https://github.com/joesis))
-- make QUIC honor tlsservernameindicator config option [\#680](https://github.com/getlantern/flashlight/pull/680) ([forkner](https://github.com/forkner))
 
 ## [5.5.8](https://github.com/getlantern/flashlight/tree/5.5.8) (2019-09-24)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.7...5.5.8)
-
-**Merged pull requests:**
-
-- print top stacks if the number of goroutines exceeds 800 [\#677](https://github.com/getlantern/flashlight/pull/677) ([joesis](https://github.com/joesis))
 
 ## [5.5.7](https://github.com/getlantern/flashlight/tree/5.5.7) (2019-09-19)
 
@@ -477,15 +476,15 @@
 
 ## [4.6.9](https://github.com/getlantern/flashlight/tree/4.6.9) (2018-04-26)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.8...4.6.9)
-
-## [4.6.8](https://github.com/getlantern/flashlight/tree/4.6.8) (2018-04-26)
-
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.7...4.6.8)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.7...4.6.9)
 
 ## [4.6.7](https://github.com/getlantern/flashlight/tree/4.6.7) (2018-04-26)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.6...4.6.7)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.8...4.6.7)
+
+## [4.6.8](https://github.com/getlantern/flashlight/tree/4.6.8) (2018-04-26)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.6...4.6.8)
 
 ## [4.6.6](https://github.com/getlantern/flashlight/tree/4.6.6) (2018-04-23)
 
