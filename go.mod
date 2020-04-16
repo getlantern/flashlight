@@ -66,7 +66,7 @@ require (
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/shortcut v0.0.0-20200120121615-2dcb213d447c
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
-	github.com/getlantern/systray v0.0.0-20200313211918-6a2da1056d32
+	github.com/getlantern/systray v0.0.0-20190727060347-6f0e5a3c556c
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
 	github.com/getlantern/tinywss v0.0.0-20200121221108-851921f95ad7
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
@@ -83,8 +83,6 @@ require (
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
 	github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9 // indirect
-	github.com/lxn/walk v0.0.0-20191128110447-55ccb3a9f5c1 // indirect
-	github.com/lxn/win v0.0.0-20191128105842-2da648fda5b4 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
 	github.com/miekg/dns v0.0.0-20180406150955-01d59357d468
 	github.com/mitchellh/go-server-timing v1.0.0
