@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.9.3](https://github.com/getlantern/flashlight/tree/5.9.3) (2020-04-16)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.2...5.9.3)
+
+**Merged pull requests:**
+
+- Added Reconfigure API for iOS [\#794](https://github.com/getlantern/flashlight/pull/794) ([oxtoacart](https://github.com/oxtoacart))
+- Reverted to older systray that doesn't use lxn/walk, closes github.co… [\#788](https://github.com/getlantern/flashlight/pull/788) ([oxtoacart](https://github.com/oxtoacart))
+
 ## [5.9.2](https://github.com/getlantern/flashlight/tree/5.9.2) (2020-04-15)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.1...5.9.2)
@@ -199,8 +208,6 @@
 - Server sets trusted [\#694](https://github.com/getlantern/flashlight/pull/694) ([myleshorton](https://github.com/myleshorton))
 - A simpler fix for not passing version header to origin sites closes getlantern/lantern-internal\#3047 [\#693](https://github.com/getlantern/flashlight/pull/693) ([oxtoacart](https://github.com/oxtoacart))
 - Using commonconfig package for chained config [\#692](https://github.com/getlantern/flashlight/pull/692) ([oxtoacart](https://github.com/oxtoacart))
-- Updated to latest proxy [\#691](https://github.com/getlantern/flashlight/pull/691) ([myleshorton](https://github.com/myleshorton))
-- Don't reveal Lantern headers when visiting sites directly [\#690](https://github.com/getlantern/flashlight/pull/690) ([joesis](https://github.com/joesis))
 
 ## [5.5.8](https://github.com/getlantern/flashlight/tree/5.5.8) (2019-09-24)
 
