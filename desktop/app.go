@@ -86,6 +86,7 @@ type App struct {
 	chUserChanged         chan bool
 	flashlight            *flashlight.Flashlight
 	uiHandlers            chan *ui.PathHandler
+	startReplica          sync.Once
 
 	// If both the trafficLogLock and proxiesLock are needed, the trafficLogLock should be obtained
 	// first. Keeping the order consistent avoids deadlocking.
@@ -248,7 +249,7 @@ func (app *App) Run() {
 		}
 
 		onFeatures := func(features map[string]bool) {
-			go app.checkForReplica(features)
+			app.checkForReplica(features)
 			select {
 			case service.Out <- features:
 				// ok
@@ -423,21 +424,23 @@ func (app *App) beforeStart(listenAddr string) {
 
 func (app *App) checkForReplica(features map[string]bool) {
 	if val, ok := features[config.FeatureReplica]; ok && val {
-		replicaHandler, exitFunc, err := replica.NewHTTPHandler()
-		if err != nil {
-			log.Errorf("error creating replica http server: %v", err)
-			app.Exit(err)
-		}
-		app.AddExitFunc("cleanup replica http server", exitFunc)
+		app.startReplica.Do(func() {
+			replicaHandler, exitFunc, err := replica.NewHTTPHandler()
+			if err != nil {
+				log.Errorf("error creating replica http server: %v", err)
+				app.Exit(err)
+			}
+			app.AddExitFunc("cleanup replica http server", exitFunc)
 
-		// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
-		// in their handlers.
-		app.uiHandlers <- &ui.PathHandler{
-			Pattern: "/replica/",
-			Handler: http.StripPrefix(
-				"/replica",
-				replicaHandler),
-		}
+			// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
+			// in their handlers.
+			app.uiHandlers <- &ui.PathHandler{
+				Pattern: "/replica/",
+				Handler: http.StripPrefix(
+					"/replica",
+					replicaHandler),
+			}
+		})
 	}
 }
 
