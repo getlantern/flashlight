@@ -51,24 +51,28 @@ func (wa *writerAdapter) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
-type WriteCloser interface {
+type ClientWriter interface {
 	// Write writes the given bytes. As a side effect of writing, we periodically
 	// record updated bandwidth quota information in the configured quota.txt file.
 	// If user has exceeded bandwidth allowance, returns a positive integer
 	// representing the bandwidth allowance.
 	Write([]byte) (int, error)
 
+	// Reconfigure forces the ClientWriter to update its configuration
+	Reconfigure()
+
 	Close() error
 }
 
-type wc struct {
+type cw struct {
 	io.Writer
+	client         *client
 	bal            *balancer.Balancer
 	quotaTextPath  string
 	lastSavedQuota time.Time
 }
 
-func (c *wc) Write(b []byte) (int, error) {
+func (c *cw) Write(b []byte) (int, error) {
 	_, err := c.Writer.Write(b)
 
 	result := 0
@@ -103,7 +107,18 @@ func (c *wc) Write(b []byte) (int, error) {
 	return result, err
 }
 
-func (c *wc) Close() error {
+func (c *cw) Reconfigure() {
+	dialers, err := c.client.loadDialers()
+	if err != nil {
+		// this causes the NetworkExtension process to die. Since the VPN is configured as "on-demand",
+		// the OS will automatically restart the service, at which point we'll read the new config anyway.
+		panic(log.Errorf("Unable to load dialers on reconfigure: %v", err))
+	}
+
+	c.bal.Reset(dialers)
+}
+
+func (c *cw) Close() error {
 	c.bal.Close()
 	return nil
 }
@@ -115,7 +130,7 @@ type client struct {
 	uc         *UserConfig
 }
 
-func Client(packetsOut Writer, configDir string, mtu int) (WriteCloser, error) {
+func Client(packetsOut Writer, configDir string, mtu int) (ClientWriter, error) {
 	go trackMemory()
 	go limitMemory()
 
@@ -133,7 +148,7 @@ func Client(packetsOut Writer, configDir string, mtu int) (WriteCloser, error) {
 	return c.start()
 }
 
-func (c *client) start() (WriteCloser, error) {
+func (c *client) start() (ClientWriter, error) {
 	if err := c.loadUserConfig(); err != nil {
 		return nil, err
 	}
@@ -153,8 +168,9 @@ func (c *client) start() (WriteCloser, error) {
 
 	freeMemory()
 
-	return &wc{
+	return &cw{
 		Writer:        w,
+		client:        c,
 		bal:           bal,
 		quotaTextPath: filepath.Join(c.configDir, "quota.txt"),
 	}, nil
