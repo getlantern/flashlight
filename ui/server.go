@@ -85,12 +85,14 @@ type Server struct {
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
 func StartServer(requestedAddr, extURL, localHTTPToken string, standalone bool,
-	handlers ...*PathHandler) (*Server, error) {
+	handlers chan *PathHandler) (*Server, error) {
 	server := newServer(extURL, localHTTPToken, standalone)
 
-	for _, h := range handlers {
-		server.handle(h.Pattern, h.Handler)
-	}
+	go func() {
+		for h := range handlers {
+			server.handle(h.Pattern, h.Handler)
+		}
+	}()
 
 	if err := server.start(requestedAddr); err != nil {
 		return nil, err

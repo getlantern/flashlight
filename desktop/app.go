@@ -85,6 +85,7 @@ type App struct {
 	chProStatusChanged    chan bool
 	chUserChanged         chan bool
 	flashlight            *flashlight.Flashlight
+	uiHandlers            chan *ui.PathHandler
 
 	// If both the trafficLogLock and proxiesLock are needed, the trafficLogLock should be obtained
 	// first. Keeping the order consistent avoids deadlocking.
@@ -237,7 +238,28 @@ func (app *App) Run() {
 		}
 		app.beforeStart(listenAddr)
 
-		startFeaturesService(app.ws, app.flashlight.EnabledFeatures, app.chGlobalConfigChanged,
+		service, err := app.ws.Register("features", func(write func(interface{})) {
+			log.Debugf("Sending features enabled to new client")
+			write(app.flashlight.EnabledFeatures())
+		})
+		if err != nil {
+			log.Errorf("Unable to serve enabled features to UI: %v", err)
+			return
+		}
+
+		onFeatures := func(features map[string]bool) {
+			go app.checkForReplica(features)
+			select {
+			case service.Out <- features:
+				// ok
+			default:
+				// don't block if no-one is listening
+			}
+		}
+
+		// Just pass all of the channels that should trigger re-evaluating which features
+		// are enabled for this user, country, etc.
+		startFeaturesService(onFeatures, app.flashlight.EnabledFeatures, app.chGlobalConfigChanged,
 			geolookup.OnRefresh(), app.chUserChanged, app.chProStatusChanged)
 
 		app.flashlight.Run(
@@ -322,28 +344,7 @@ func (app *App) beforeStart(listenAddr string) {
 		}
 	}
 
-	handlers := []*ui.PathHandler{
-		{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
-		{Pattern: "/data", Handler: app.ws.Handler()},
-	}
-
-	if common.ReplicaEnabled() {
-		replicaHandler, exitFunc, err := replica.NewHTTPHandler()
-		if err != nil {
-			log.Errorf("error creating replica http server: %v", err)
-			app.Exit(err)
-		}
-		app.AddExitFunc("cleanup replica http server", exitFunc)
-
-		// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
-		// in their handlers.
-		handlers = append(handlers, &ui.PathHandler{
-			Pattern: "/replica/",
-			Handler: http.StripPrefix(
-				"/replica",
-				replicaHandler),
-		})
-	}
+	app.uiHandlers = make(chan *ui.PathHandler)
 
 	log.Debugf("Starting client UI at %v", uiaddr)
 
@@ -353,10 +354,12 @@ func (app *App) beforeStart(listenAddr string) {
 		startupURL,
 		app.localHttpToken(),
 		standalone,
-		handlers...,
+		app.uiHandlers,
 	); err != nil {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 	}
+	app.uiHandlers <- &ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)}
+	app.uiHandlers <- &ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()}
 
 	if app.ShouldShowUI() {
 		go func() {
@@ -416,6 +419,26 @@ func (app *App) beforeStart(listenAddr string) {
 			_ = notifier.ShowNotification(note, "alert-prompt")
 		}
 	})
+}
+
+func (app *App) checkForReplica(features map[string]bool) {
+	if val, ok := features[config.FeatureReplica]; ok && val {
+		replicaHandler, exitFunc, err := replica.NewHTTPHandler()
+		if err != nil {
+			log.Errorf("error creating replica http server: %v", err)
+			app.Exit(err)
+		}
+		app.AddExitFunc("cleanup replica http server", exitFunc)
+
+		// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
+		// in their handlers.
+		app.uiHandlers <- &ui.PathHandler{
+			Pattern: "/replica/",
+			Handler: http.StripPrefix(
+				"/replica",
+				replicaHandler),
+		}
+	}
 }
 
 // Connect turns on proxying
