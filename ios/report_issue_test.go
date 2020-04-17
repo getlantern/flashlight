@@ -10,9 +10,8 @@ import (
 )
 
 var (
-	appLogFileNames     = []string{"ios.log", "ios.log.1", "ios.log.2", "ios.log.3", "ios.log.4", "ios.log.5"}
-	tunnelLogFileNames  = []string{"lantern.log", "lantern.log.1", "lantern.log.2", "lantern.log.3", "lantern.log.4", "lantern.log.5"}
-	proxiesYamlFileName = "proxies.yaml"
+	appLogFileNames    = []string{"ios.log", "ios.log.1", "ios.log.2", "ios.log.3", "ios.log.4", "ios.log.5"}
+	tunnelLogFileNames = []string{"lantern.log", "lantern.log.1", "lantern.log.2", "lantern.log.3", "lantern.log.4", "lantern.log.5"}
 )
 
 func TestReportIssue(t *testing.T) {
