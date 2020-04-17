@@ -270,7 +270,14 @@ func (app *App) startFeaturesService(uiChan chan<- interface{},
 
 	for i, ch := range chans {
 		die := make(chan bool)
-		go func(c <-chan bool, die chan bool) {
+		go func(num int, c <-chan bool, die chan bool) {
+			// Make sure we cleanly kill these selects and goroutines.
+			app.AddExitFunc("features-select-"+strconv.Itoa(num), func() {
+				die <- true
+				<-die
+			})
+
+			// Cleanly handle senders closing channels.
 			chanOpen := true
 			for chanOpen {
 				select {
@@ -288,12 +295,7 @@ func (app *App) startFeaturesService(uiChan chan<- interface{},
 					return
 				}
 			}
-		}(ch, die)
-		// Make sure we cleanly kill these selects and goroutines.
-		app.AddExitFunc("features-select-"+strconv.Itoa(i), func() {
-			die <- true
-			<-die
-		})
+		}(i, ch, die)
 	}
 }
 
@@ -450,6 +452,7 @@ func (app *App) beforeStart(listenAddr string) {
 func (app *App) checkForReplica(features map[string]bool) {
 	if val, ok := features[config.FeatureReplica]; ok && val {
 		app.startReplica.Do(func() {
+			log.Debug("Starting replica from app")
 			replicaHandler, exitFunc, err := replica.NewHTTPHandler()
 			if err != nil {
 				log.Errorf("error creating replica http server: %v", err)
