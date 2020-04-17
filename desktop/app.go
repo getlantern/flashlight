@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -248,19 +249,9 @@ func (app *App) Run() {
 			return
 		}
 
-		onFeatures := func(features map[string]bool) {
-			app.checkForReplica(features)
-			select {
-			case service.Out <- features:
-				// ok
-			default:
-				// don't block if no-one is listening
-			}
-		}
-
 		// Just pass all of the channels that should trigger re-evaluating which features
 		// are enabled for this user, country, etc.
-		startFeaturesService(onFeatures, app.flashlight.EnabledFeatures, app.chGlobalConfigChanged,
+		app.startFeaturesService(service.Out, app.chGlobalConfigChanged,
 			geolookup.OnRefresh(), app.chUserChanged, app.chProStatusChanged)
 
 		app.flashlight.Run(
@@ -270,6 +261,40 @@ func (app *App) Run() {
 			func(err error) { _ = app.Exit(err) },
 		)
 	}()
+}
+
+// startFeaturesService starts a new features service that dispatches features to the
+// frontend.
+func (app *App) startFeaturesService(uiChan chan<- interface{},
+	chans ...<-chan bool) {
+
+	for i, ch := range chans {
+		die := make(chan bool)
+		go func(c <-chan bool, die chan bool) {
+			chanOpen := true
+			for chanOpen {
+				select {
+				case _, chanOpen = <-c:
+					features := app.flashlight.EnabledFeatures()
+					app.checkForReplica(features)
+					select {
+					case uiChan <- features:
+						// ok
+					default:
+						// don't block if no-one is listening
+					}
+				case <-die:
+					die <- true
+					return
+				}
+			}
+		}(ch, die)
+		// Make sure we cleanly kill these selects and goroutines.
+		app.AddExitFunc("features-select-"+strconv.Itoa(i), func() {
+			die <- true
+			<-die
+		})
+	}
 }
 
 func (app *App) beforeStart(listenAddr string) {
