@@ -262,21 +262,14 @@ func (app *App) startFeaturesService(chans ...<-chan bool) {
 	} else {
 		for i, ch := range chans {
 			go func(num int, c <-chan bool) {
-				// Cleanly handle senders closing channels.
-				chanOpen := true
-				for chanOpen {
+				for range c {
+					features := app.flashlight.EnabledFeatures()
+					app.checkForReplica(features)
 					select {
-					case _, chanOpen = <-c:
-						if chanOpen {
-							features := app.flashlight.EnabledFeatures()
-							app.checkForReplica(features)
-							select {
-							case service.Out <- features:
-								// ok
-							default:
-								// don't block if no-one is listening
-							}
-						}
+					case service.Out <- features:
+						// ok
+					default:
+						// don't block if no-one is listening
 					}
 				}
 			}(i, ch)
