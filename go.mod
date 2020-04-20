@@ -101,7 +101,6 @@ require (
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/refraction-networking/utls v0.0.0-20190909200633-43c36d3c1f57
 	github.com/rs/cors v1.7.0
-	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/stellar/go v0.0.0-20200218180811-579a15678e26
 	github.com/stretchr/testify v1.5.1
@@ -109,7 +108,6 @@ require (
 	golang.org/x/crypto v0.0.0-20200406173513-056763e48d71 // indirect
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
 	golang.org/x/sys v0.0.0-20200409092240-59c9f1ba88fa // indirect
-	google.golang.org/appengine v1.6.5
 	google.golang.org/genproto v0.0.0-20200218151345-dad8c97a84f5 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
