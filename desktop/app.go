@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -86,7 +85,6 @@ type App struct {
 	chProStatusChanged    chan bool
 	chUserChanged         chan bool
 	flashlight            *flashlight.Flashlight
-	uiHandlers            chan *ui.PathHandler
 	startReplica          sync.Once
 
 	// If both the trafficLogLock and proxiesLock are needed, the trafficLogLock should be obtained
@@ -240,19 +238,9 @@ func (app *App) Run() {
 		}
 		app.beforeStart(listenAddr)
 
-		service, err := app.ws.Register("features", func(write func(interface{})) {
-			log.Debugf("Sending features enabled to new client")
-			write(app.flashlight.EnabledFeatures())
-		})
-		if err != nil {
-			log.Errorf("Unable to serve enabled features to UI: %v", err)
-			return
-		}
-
 		// Just pass all of the channels that should trigger re-evaluating which features
 		// are enabled for this user, country, etc.
-		app.startFeaturesService(service.Out, app.chGlobalConfigChanged,
-			geolookup.OnRefresh(), app.chUserChanged, app.chProStatusChanged)
+		app.startFeaturesService(geolookup.OnRefresh(), app.chUserChanged, app.chProStatusChanged)
 
 		app.flashlight.Run(
 			listenAddr,
@@ -265,38 +253,36 @@ func (app *App) Run() {
 
 // startFeaturesService starts a new features service that dispatches features to the
 // frontend.
-func (app *App) startFeaturesService(uiChan chan<- interface{},
-	chans ...<-chan bool) {
-
-	for i, ch := range chans {
-		die := make(chan bool)
-		go func(num int, c <-chan bool, die chan bool) {
-			// Make sure we cleanly kill these selects and goroutines.
-			app.AddExitFunc("features-select-"+strconv.Itoa(num), func() {
-				die <- true
-				<-die
-			})
-
-			// Cleanly handle senders closing channels.
-			chanOpen := true
-			for chanOpen {
-				select {
-				case _, chanOpen = <-c:
-					features := app.flashlight.EnabledFeatures()
-					app.checkForReplica(features)
+func (app *App) startFeaturesService(chans ...<-chan bool) {
+	if service, err := app.ws.Register("features", func(write func(interface{})) {
+		log.Debugf("Sending features enabled to new client")
+		write(app.flashlight.EnabledFeatures())
+	}); err != nil {
+		log.Errorf("Unable to serve enabled features to UI: %v", err)
+	} else {
+		for i, ch := range chans {
+			go func(num int, c <-chan bool) {
+				// Cleanly handle senders closing channels.
+				chanOpen := true
+				for chanOpen {
 					select {
-					case uiChan <- features:
-						// ok
-					default:
-						// don't block if no-one is listening
+					case _, chanOpen = <-c:
+						if chanOpen {
+							features := app.flashlight.EnabledFeatures()
+							app.checkForReplica(features)
+							select {
+							case service.Out <- features:
+								// ok
+							default:
+								// don't block if no-one is listening
+							}
+						}
 					}
-				case <-die:
-					die <- true
-					return
 				}
-			}
-		}(i, ch, die)
+			}(i, ch)
+		}
 	}
+
 }
 
 func (app *App) beforeStart(listenAddr string) {
@@ -372,8 +358,6 @@ func (app *App) beforeStart(listenAddr string) {
 		}
 	}
 
-	app.uiHandlers = make(chan *ui.PathHandler)
-
 	log.Debugf("Starting client UI at %v", uiaddr)
 
 	standalone := app.Flags["standalone"] != nil && app.Flags["standalone"].(bool)
@@ -382,12 +366,12 @@ func (app *App) beforeStart(listenAddr string) {
 		startupURL,
 		app.localHttpToken(),
 		standalone,
-		app.uiHandlers,
 	); err != nil {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
+		return
 	}
-	app.uiHandlers <- &ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)}
-	app.uiHandlers <- &ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()}
+	app.uiServer.Handle("/pro/", pro.APIHandler(settings))
+	app.uiServer.Handle("/data", app.ws.Handler())
 
 	if app.ShouldShowUI() {
 		go func() {
@@ -462,12 +446,9 @@ func (app *App) checkForReplica(features map[string]bool) {
 
 			// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
 			// in their handlers.
-			app.uiHandlers <- &ui.PathHandler{
-				Pattern: "/replica/",
-				Handler: http.StripPrefix(
-					"/replica",
-					replicaHandler),
-			}
+			app.uiServer.Handle("/replica/", http.StripPrefix(
+				"/replica",
+				replicaHandler))
 		})
 	}
 }
