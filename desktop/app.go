@@ -82,8 +82,6 @@ type App struct {
 	ws                    ws.UIChannel
 	chrome                chromeExtension
 	chGlobalConfigChanged chan bool
-	chProStatusChanged    chan bool
-	chUserChanged         chan bool
 	flashlight            *flashlight.Flashlight
 	startReplica          sync.Once
 
@@ -112,19 +110,13 @@ func (app *App) Init() {
 	app.exited = eventual.NewValue()
 	app.statsTracker = NewStatsTracker()
 	app.chGlobalConfigChanged = make(chan bool, 1)
-	app.chProStatusChanged = make(chan bool, 1)
 	pro.OnProStatusChange(func(isPro bool, yinbiEnabled bool) {
 		app.statsTracker.SetIsPro(isPro)
 		app.statsTracker.SetYinbiEnabled(yinbiEnabled)
-		app.chProStatusChanged <- isPro
 	})
 	settings.OnChange(SNDisconnected, func(disconnected interface{}) {
 		isDisconnected := disconnected.(bool)
 		app.statsTracker.SetDisconnected(isDisconnected)
-	})
-	app.chUserChanged = make(chan bool, 1)
-	settings.OnChange(SNUserID, func(v interface{}) {
-		app.chUserChanged <- true
 	})
 	datacap.AddDataCapListener(func(hitDataCap bool) {
 		app.statsTracker.SetHitDataCap(hitDataCap)
@@ -238,9 +230,17 @@ func (app *App) Run() {
 		}
 		app.beforeStart(listenAddr)
 
+		chProStatusChanged := make(chan bool, 1)
+		pro.OnProStatusChange(func(isPro bool, yinbiEnabled bool) {
+			chProStatusChanged <- isPro
+		})
+		chUserChanged := make(chan bool, 1)
+		settings.OnChange(SNUserID, func(v interface{}) {
+			chUserChanged <- true
+		})
 		// Just pass all of the channels that should trigger re-evaluating which features
 		// are enabled for this user, country, etc.
-		app.startFeaturesService(geolookup.OnRefresh(), app.chUserChanged, app.chProStatusChanged)
+		app.startFeaturesService(geolookup.OnRefresh(), chUserChanged, chProStatusChanged, app.chGlobalConfigChanged)
 
 		app.flashlight.Run(
 			listenAddr,
