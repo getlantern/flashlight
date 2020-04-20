@@ -85,7 +85,7 @@ func TestSRP(t *testing.T) {
 			},
 			registrationEndpoint,
 			true,
-			http.StatusBadRequest,
+			http.StatusOK,
 			&params.Response{
 				Error: fmt.Sprintf(constants.ErrUsernameTaken, user.Username),
 			},
@@ -99,7 +99,7 @@ func TestSRP(t *testing.T) {
 			},
 			registrationEndpoint,
 			true,
-			http.StatusBadRequest,
+			http.StatusOK,
 			&params.Response{
 				Error: fmt.Sprintf(constants.ErrEmailTaken, user.Email),
 			},

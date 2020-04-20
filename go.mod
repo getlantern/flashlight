@@ -47,7 +47,7 @@ require (
 	github.com/getlantern/kcpwrapper v0.0.0-20171114192627-a35c895f6de7
 	github.com/getlantern/keyman v0.0.0-20180207174507-f55e7280e93a
 	github.com/getlantern/lampshade v0.0.0-20200123165158-e0efbb58c68b
-	github.com/getlantern/lantern-server v0.0.0-20200420182413-1db8bb4c2677
+	github.com/getlantern/lantern-server v0.0.0-20200420184938-fa1f11bf7163
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
