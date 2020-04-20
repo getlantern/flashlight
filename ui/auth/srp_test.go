@@ -3,6 +3,7 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -87,7 +88,7 @@ func TestSRP(t *testing.T) {
 			true,
 			http.StatusBadRequest,
 			&params.Response{
-				Error: constants.ErrUsernameTaken.Error(),
+				Error: errors.New(fmt.Sprintf(constants.ErrUsernameTaken, user.Username)),
 			},
 		},
 		{
@@ -101,7 +102,7 @@ func TestSRP(t *testing.T) {
 			true,
 			http.StatusBadRequest,
 			&params.Response{
-				Error: constants.ErrEmailTaken.Error(),
+				Error: errors.New(fmt.Sprintf(constants.ErrEmailTaken, user.Username)),
 			},
 		},
 		{
