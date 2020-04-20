@@ -251,8 +251,8 @@ func (app *App) Run() {
 	}()
 }
 
-// startFeaturesService starts a new features service that dispatches features to the
-// frontend.
+// startFeaturesService starts a new features service that dispatches features to any relevant
+// listeners.
 func (app *App) startFeaturesService(chans ...<-chan bool) {
 	if service, err := app.ws.Register("features", func(write func(interface{})) {
 		log.Debugf("Sending features enabled to new client")
