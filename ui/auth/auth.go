@@ -123,7 +123,11 @@ func (h AuthHandler) authHandler(w http.ResponseWriter, req *http.Request) {
 
 	onError := func(resp *http.Response, err error) {
 		log.Debugf("Encountered error processing auth response: %v", err)
-		h.ErrorHandler(w, err, resp.StatusCode)
+		statusCode := http.StatusBadRequest
+		if resp != nil {
+			statusCode = resp.StatusCode
+		}
+		h.ErrorHandler(w, err, statusCode)
 	}
 
 	onResp := func(resp *http.Response, body []byte) error {

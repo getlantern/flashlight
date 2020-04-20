@@ -47,7 +47,7 @@ require (
 	github.com/getlantern/kcpwrapper v0.0.0-20171114192627-a35c895f6de7
 	github.com/getlantern/keyman v0.0.0-20180207174507-f55e7280e93a
 	github.com/getlantern/lampshade v0.0.0-20200123165158-e0efbb58c68b
-	github.com/getlantern/lantern-server v0.0.0-20200410163145-f3be8685f82c
+	github.com/getlantern/lantern-server v0.0.0-20200420182413-1db8bb4c2677
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
@@ -105,11 +105,10 @@ require (
 	github.com/stellar/go v0.0.0-20200218180811-579a15678e26
 	github.com/stretchr/testify v1.5.1
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
-	golang.org/x/crypto v0.0.0-20200406173513-056763e48d71 // indirect
+	golang.org/x/crypto v0.0.0-20200420104511-884d27f42877 // indirect
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
-	golang.org/x/sys v0.0.0-20200409092240-59c9f1ba88fa // indirect
+	golang.org/x/sys v0.0.0-20200420163511-1957bb5e6d1f // indirect
 	google.golang.org/genproto v0.0.0-20200218151345-dad8c97a84f5 // indirect
-	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20200211213545-301421f7c3c9
