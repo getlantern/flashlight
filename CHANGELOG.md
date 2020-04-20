@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.9.4](https://github.com/getlantern/flashlight/tree/5.9.4) (2020-04-20)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.3...5.9.4)
+
+**Merged pull requests:**
+
+- Use systray with nil check [\#798](https://github.com/getlantern/flashlight/pull/798) ([myleshorton](https://github.com/myleshorton))
+- update cmux package for \#3603 [\#796](https://github.com/getlantern/flashlight/pull/796) ([joesis](https://github.com/joesis))
+
 ## [5.9.3](https://github.com/getlantern/flashlight/tree/5.9.3) (2020-04-16)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.2...5.9.3)
@@ -206,8 +215,6 @@
 
 - Adding modern-go dependencies -- dependent on go version [\#695](https://github.com/getlantern/flashlight/pull/695) ([myleshorton](https://github.com/myleshorton))
 - Server sets trusted [\#694](https://github.com/getlantern/flashlight/pull/694) ([myleshorton](https://github.com/myleshorton))
-- A simpler fix for not passing version header to origin sites closes getlantern/lantern-internal\#3047 [\#693](https://github.com/getlantern/flashlight/pull/693) ([oxtoacart](https://github.com/oxtoacart))
-- Using commonconfig package for chained config [\#692](https://github.com/getlantern/flashlight/pull/692) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [5.5.8](https://github.com/getlantern/flashlight/tree/5.5.8) (2019-09-24)
 
