@@ -55,13 +55,6 @@ var (
 	translations = eventual.NewValue()
 )
 
-// PathHandler contains a request path pattern and an HTTP handler for that
-// pattern.
-type PathHandler struct {
-	Pattern string
-	Handler http.Handler
-}
-
 // Server serves the local UI.
 type Server struct {
 	// The address to listen on, in ":port" form if listen on all interfaces.
@@ -84,14 +77,8 @@ type Server struct {
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func StartServer(requestedAddr, extURL, localHTTPToken string, standalone bool,
-	handlers ...*PathHandler) (*Server, error) {
+func StartServer(requestedAddr, extURL, localHTTPToken string, standalone bool) (*Server, error) {
 	server := newServer(extURL, localHTTPToken, standalone)
-
-	for _, h := range handlers {
-		server.handle(h.Pattern, h.Handler)
-	}
-
 	if err := server.start(requestedAddr); err != nil {
 		return nil, err
 	}
@@ -126,15 +113,15 @@ func (s *Server) attachHandlers() {
 		resp.WriteHeader(http.StatusOK)
 	}
 
-	s.handle("/startup", http.HandlerFunc(startupHandler))
-	s.handle("/", http.FileServer(fs))
+	s.Handle("/startup", http.HandlerFunc(startupHandler))
+	s.Handle("/", http.FileServer(fs))
 }
 
-// handle directs the underlying server to handle the given pattern at both
+// Handle directs the underlying server to handle the given pattern at both
 // the secure token path and the raw request path. In the case of the raw
 // request path, Lantern looks for the token in the Referer HTTP header and
 // rejects the request if it's not present.
-func (s *Server) handle(pattern string, handler http.Handler) {
+func (s *Server) Handle(pattern string, handler http.Handler) {
 	// When the token is included in the request path, we need to strip it in
 	// order to serve the UI correctly (i.e. the static UI tarfs FileSystem knows
 	// nothing about the request path).
