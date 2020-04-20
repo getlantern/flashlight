@@ -260,8 +260,8 @@ func (app *App) startFeaturesService(chans ...<-chan bool) {
 	}); err != nil {
 		log.Errorf("Unable to serve enabled features to UI: %v", err)
 	} else {
-		for i, ch := range chans {
-			go func(num int, c <-chan bool) {
+		for _, ch := range chans {
+			go func(c <-chan bool) {
 				for range c {
 					features := app.flashlight.EnabledFeatures()
 					app.checkForReplica(features)
@@ -272,7 +272,7 @@ func (app *App) startFeaturesService(chans ...<-chan bool) {
 						// don't block if no-one is listening
 					}
 				}
-			}(i, ch)
+			}(ch)
 		}
 	}
 
