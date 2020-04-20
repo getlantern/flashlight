@@ -66,7 +66,7 @@ require (
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/shortcut v0.0.0-20200120121615-2dcb213d447c
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
-	github.com/getlantern/systray v0.0.0-20190727060347-6f0e5a3c556c
+	github.com/getlantern/systray v0.0.0-20200420214849-6c0d20dff59f
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
 	github.com/getlantern/tinywss v0.0.0-20200121221108-851921f95ad7
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
