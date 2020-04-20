@@ -1,7 +1,6 @@
 package flashlight
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -44,12 +43,13 @@ var (
 	// blockingRelevantFeatures lists all features that might affect blocking and gives their
 	// default enabled status (until we know the country)
 	blockingRelevantFeatures = map[string]bool{
-		config.FeatureProxyBench:        false,
-		config.FeaturePingProxies:       false,
-		config.FeatureNoBorda:           true,
-		config.FeatureNoProbeProxies:    true,
-		config.FeatureNoDetour:          true,
-		config.FeatureNoHTTPSEverywhere: true,
+		config.FeatureProxyBench:           false,
+		config.FeaturePingProxies:          false,
+		config.FeatureNoBorda:              true,
+		config.FeatureNoProbeProxies:       true,
+		config.FeatureNoDetour:             true,
+		config.FeatureNoHTTPSEverywhere:    true,
+		config.FeatureProxyWhitelistedOnly: true,
 	}
 )
 
@@ -183,8 +183,7 @@ func Run(httpProxyAddr string,
 	configDir string,
 	vpnEnabled bool,
 	disconnected func() bool,
-	_useShortcut func() bool,
-	_useDetour func() bool,
+	_proxyAll func() bool,
 	allowPrivateHosts func() bool,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
@@ -275,22 +274,24 @@ func Run(httpProxyAddr string,
 	}
 
 	useShortcut := func() bool {
-		return !r.featureEnabled(config.FeatureNoShortcut) && _useShortcut()
+		return !_proxyAll() && !r.featureEnabled(config.FeatureNoShortcut) && !r.featureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	useDetour := func() bool {
-		return !r.featureEnabled(config.FeatureNoDetour) && _useDetour()
+		return !_proxyAll() && !r.featureEnabled(config.FeatureNoDetour) && !r.featureEnabled(config.FeatureProxyWhitelistedOnly)
+	}
+
+	proxyAll := func() bool {
+		useShortcutOrDetour := useShortcut() || useDetour()
+		return !useShortcutOrDetour && !r.featureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	cl, err := client.NewClient(
 		disconnected,
 		func() bool { return !r.featureEnabled(config.FeatureNoProbeProxies) },
-		func(ctx context.Context, addr string) (bool, net.IP) {
-			if useShortcut() {
-				return shortcut.Allow(ctx, addr)
-			}
-			return false, nil
-		},
+		proxyAll,
+		useShortcut,
+		shortcut.Allow,
 		useDetour,
 		func() bool { return !r.featureEnabled(config.FeatureNoHTTPSEverywhere) },
 		userConfig,
