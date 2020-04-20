@@ -197,9 +197,8 @@ func (app *App) Run() {
 			app.Flags["configdir"].(string),
 			app.Flags["vpn"].(bool),
 			func() bool { return settings.getBool(SNDisconnected) }, // check whether we're disconnected
-			func() bool { return !settings.GetProxyAll() },          // use shortcut
-			func() bool { return !settings.GetProxyAll() },          // use detour
-			func() bool { return false },                            // on desktop, we do not allow private hosts
+			settings.GetProxyAll,
+			func() bool { return false }, // on desktop, we do not allow private hosts
 			settings.IsAutoReport,
 			app.Flags,
 			app.beforeStart(listenAddr),
@@ -326,6 +325,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			&ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
 		); err != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
+			return false
 		}
 
 		if app.ShouldShowUI() {
@@ -342,6 +342,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 		if e := settings.StartService(app.ws); e != nil {
 			app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
+			return false
 		}
 		settings.SetUIAddr(app.uiServer.GetUIAddr())
 
@@ -628,6 +629,16 @@ func (app *App) Exit(err error) bool {
 func (app *App) doExit(err error) {
 	if err != nil {
 		log.Errorf("Exiting app %d(%d) because of %v", os.Getpid(), os.Getppid(), err)
+		if ShouldReportToSentry() {
+			sentry.ConfigureScope(func(scope *sentry.Scope) {
+				scope.SetLevel(sentry.LevelFatal)
+			})
+
+			sentry.CaptureException(err)
+			if result := sentry.Flush(SENTRY_TIMEOUT); result == false {
+				log.Error("Flushing to Sentry timed out")
+			}
+		}
 	} else {
 		log.Debugf("Exiting app %d(%d)", os.Getpid(), os.Getppid())
 	}
