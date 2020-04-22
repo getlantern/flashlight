@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/flashlight/ops"
 	"github.com/kennygrant/sanitize"
 	"golang.org/x/xerrors"
 
@@ -139,10 +140,13 @@ func (me *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	me.mux.ServeHTTP(w, r)
 }
 
-func (me *httpHandler) handleUpload(w http.ResponseWriter, r *http.Request) {
+func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		return
 	}
+	w := ops.InitInstrumentedResponseWriter(rw, "replica_upload")
+	defer w.Finish()
+
 	name := r.URL.Query().Get("name")
 	s3Key := replica.NewPrefix()
 	if name != "" {
@@ -278,8 +282,12 @@ func (me *httpHandler) handleView(w http.ResponseWriter, r *http.Request) {
 	me.handleViewWith(w, r, "inline")
 }
 
-func (me *httpHandler) handleViewWith(w http.ResponseWriter, r *http.Request, inlineType string) {
+func (me *httpHandler) handleViewWith(rw http.ResponseWriter, r *http.Request, inlineType string) {
+	w := ops.InitInstrumentedResponseWriter(rw, fmt.Sprintf("replica_view_%s", inlineType))
+	defer w.Finish()
+
 	link := r.URL.Query().Get("link")
+	w.Op.Set("link", link)
 	m, err := metainfo.ParseMagnetURI(link)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error parsing magnet link: %v", err.Error()), http.StatusBadRequest)
