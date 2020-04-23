@@ -50,10 +50,11 @@ type ConfigResult struct {
 // proxies.yaml.etag and masquerade_cache. deviceID should be a string that
 // uniquely identifies the current device. hardcodedProxies allows manually specifying
 // a proxies.yaml configuration that overrides whatever we fetch from the cloud.
-func Configure(configFolderPath string, userID int, proToken, deviceID string, refreshProxies bool, hardcodedProxies string) (*ConfigResult, error) {
+func Configure(configFolderPath string, userID int, proToken, deviceID string, refreshProxies bool, hardcodedCountry string, hardcodedProxies string) (*ConfigResult, error) {
 	log.Debugf("Configuring client for device '%v' at config path '%v'", deviceID, configFolderPath)
 	cf := &configurer{
 		configFolderPath: configFolderPath,
+		hardcodedCountry: hardcodedCountry,
 		hardcodedProxies: hardcodedProxies,
 		uc:               userConfigFor(userID, proToken, deviceID),
 	}
@@ -68,6 +69,7 @@ type UserConfig struct {
 
 type configurer struct {
 	configFolderPath string
+	hardcodedCountry string
 	hardcodedProxies string
 	uc               *UserConfig
 	rt               http.RoundTripper
@@ -98,8 +100,13 @@ func (cf *configurer) configure(userID int, proToken string, refreshProxies bool
 		geolookup.Refresh()
 
 		go func() {
-			cf.uc.Country = geolookup.GetCountry(1 * time.Minute)
-			log.Debugf("Successful geolookup: country %s", cf.uc.Country)
+			if cf.hardcodedCountry != "" {
+				cf.uc.Country = cf.hardcodedCountry
+				log.Debugf("Hardcoded country to %s", cf.hardcodedCountry)
+			} else {
+				cf.uc.Country = geolookup.GetCountry(1 * time.Minute)
+				log.Debugf("Successful geolookup: country %s", cf.uc.Country)
+			}
 			cf.uc.AllowProbes = !global.FeatureEnabled(
 				config.FeatureNoProbeProxies,
 				int64(cf.uc.UserID),
