@@ -3,10 +3,8 @@ package client
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -73,17 +71,6 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 
 	op := ops.FromContext(ctx)
 	op.UserAgent(req.Header.Get("User-Agent")).OriginFromRequest(req)
-
-	// Disable Ad swapping for now given that Ad blocking is completely
-	// removed.  A limited form of Ad blocking should be re-introduced before
-	// enabling it again.
-	//
-	// adSwapURL := client.adSwapURL(req)
-	// if !exoclick && adSwapURL != "" {
-	// // Don't record this as proxying
-	// 	op.Cancel()
-	// 	return client.redirectAdSwap(ctx, req, adSwapURL, op)
-	// }
 
 	isConnect := req.Method == http.MethodConnect
 	if isConnect || ctx.IsMITMing() {
@@ -189,35 +176,5 @@ func (client *Client) redirectHTTPS(ctx filters.Context, req *http.Request, http
 	resp.Header.Set("Location", httpsURL)
 	resp.Header.Set("Cache-Control", "max-age:86400")
 	resp.Header.Set("Expires", time.Now().Add(time.Duration(24)*time.Hour).Format(http.TimeFormat))
-	return filters.ShortCircuit(ctx, req, resp)
-}
-
-func (client *Client) adSwapURL(req *http.Request) string {
-	urlString := req.URL.String()
-	jsURL, urlFound := adSwapJavaScriptInjections[strings.ToLower(urlString)]
-	if !urlFound {
-		return ""
-	}
-	targetURL := client.adSwapTargetURL()
-	if targetURL == "" {
-		return ""
-	}
-	lang := client.lang()
-	log.Debugf("Swapping javascript for %v to %v", urlString, jsURL)
-	extra := ""
-	if common.ForceAds() {
-		extra = "&force=true"
-	}
-	return fmt.Sprintf("%v?lang=%v&url=%v%v", jsURL, url.QueryEscape(lang), url.QueryEscape(targetURL), extra)
-}
-
-func (client *Client) redirectAdSwap(ctx filters.Context, req *http.Request, adSwapURL string, op *ops.Op) (*http.Response, filters.Context, error) {
-	op.Set("adswapped", true)
-	resp := &http.Response{
-		StatusCode: http.StatusTemporaryRedirect,
-		Header:     make(http.Header, 1),
-		Close:      true,
-	}
-	resp.Header.Set("Location", adSwapURL)
 	return filters.ShortCircuit(ctx, req, resp)
 }

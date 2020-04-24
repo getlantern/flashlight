@@ -61,13 +61,13 @@ type runner struct {
 	mxGlobal          sync.RWMutex
 	global            *config.Global
 	onProxiesUpdate   func([]balancer.Dialer)
-	onConfigUpdate    func(*config.Global)
+	onGlobalConfig    func(*config.Global)
 	onBordaConfigured chan bool
 	autoReport        func() bool
 	client            *client.Client
 }
 
-func (r *runner) onGlobalConfig(cfg *config.Global) {
+func (r *runner) fetchedGlobalConfig(cfg *config.Global) {
 	r.mxGlobal.Lock()
 	r.global = cfg
 	r.mxGlobal.Unlock()
@@ -80,7 +80,7 @@ func (r *runner) onGlobalConfig(cfg *config.Global) {
 	default:
 		// ignore
 	}
-	r.onConfigUpdate(cfg)
+	r.onGlobalConfig(cfg)
 	r.reconfigurePingProxies()
 }
 
@@ -145,7 +145,7 @@ func (r *runner) startConfigFetch() func() {
 	globalDispatch := func(conf interface{}) {
 		cfg := conf.(*config.Global)
 		log.Debugf("Applying global config")
-		r.onGlobalConfig(cfg)
+		r.fetchedGlobalConfig(cfg)
 	}
 	rt := proxied.ParallelPreferChained()
 
@@ -188,8 +188,8 @@ func Run(httpProxyAddr string,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
 	beforeStart func() bool,
-	afterStart func(cl *client.Client),
-	onConfigUpdate func(cfg *config.Global),
+	afterStart func(*client.Client),
+	onGlobalConfig func(cfg *config.Global),
 	onProxiesUpdate func([]balancer.Dialer),
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
@@ -197,14 +197,13 @@ func Run(httpProxyAddr string,
 	isPro func() bool,
 	userID func() int64,
 	lang func() string,
-	adSwapTargetURL func() string,
 	reverseDNS func(host string) string) error {
 
 	if onProxiesUpdate == nil {
 		onProxiesUpdate = func(_ []balancer.Dialer) {}
 	}
-	if onConfigUpdate == nil {
-		onConfigUpdate = func(_ *config.Global) {}
+	if onGlobalConfig == nil {
+		onGlobalConfig = func(_ *config.Global) {}
 	}
 	if onError == nil {
 		onError = func(_ error) {}
@@ -268,7 +267,7 @@ func Run(httpProxyAddr string,
 		isPro:             isPro,
 		global:            nil,
 		onProxiesUpdate:   onProxiesUpdate,
-		onConfigUpdate:    onConfigUpdate,
+		onGlobalConfig:    onGlobalConfig,
 		onBordaConfigured: make(chan bool, 1),
 		autoReport:        autoReport,
 	}
@@ -298,7 +297,6 @@ func Run(httpProxyAddr string,
 		statsTracker,
 		allowPrivateHosts,
 		lang,
-		adSwapTargetURL,
 		reverseDNS,
 	)
 	if err != nil {

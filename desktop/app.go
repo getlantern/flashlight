@@ -75,9 +75,8 @@ type App struct {
 	muExitFuncs sync.RWMutex
 	exitFuncs   []func()
 
-	uiServer *ui.Server
-	ws       ws.UIChannel
-	chrome   chromeExtension
+	ws     ws.UIChannel
+	chrome chromeExtension
 
 	// If both the trafficLogLock and proxiesLock are needed, the trafficLogLock should be obtained
 	// first. Keeping the order consistent avoids deadlocking.
@@ -156,42 +155,104 @@ func (app *App) Run() {
 	golog.OnFatal(app.exitOnFatal)
 
 	memhelper.Track(15*time.Second, 15*time.Second)
+	log.Debug(app.Flags)
+	if app.Flags["proxyall"].(bool) {
+		// If proxyall flag was supplied, force proxying of all
+		settings.SetProxyAll(true)
+	}
+
+	listenAddr := app.Flags["addr"].(string)
+	if listenAddr == "" {
+		listenAddr = settings.getString(SNAddr)
+	}
+	if listenAddr == "" {
+		listenAddr = defaultHTTPProxyAddress
+	}
+
+	socksAddr := app.Flags["socksaddr"].(string)
+	if socksAddr == "" {
+		socksAddr = settings.getString(SNSOCKSAddr)
+	}
+	if socksAddr == "" {
+		socksAddr = defaultSOCKSProxyAddress
+	}
+
+	if app.Flags["initialize"].(bool) {
+		app.statsTracker.AddListener(func(newStats stats.Stats) {
+			if newStats.HasSucceedingProxy {
+				log.Debug("Finished initialization")
+				app.Exit(nil)
+			}
+		})
+	}
+
+	var cpuProf, memProf string
+	if cpu, cok := app.Flags["cpuprofile"]; cok {
+		cpuProf = cpu.(string)
+	}
+	if mem, cok := app.Flags["memprofile"]; cok {
+		memProf = mem.(string)
+	}
+	if cpuProf != "" || memProf != "" {
+		log.Debugf("Start profiling with cpu file %s and mem file %s", cpuProf, memProf)
+		finishProfiling := profiling.Start(cpuProf, memProf)
+		app.AddExitFunc("finish profiling", finishProfiling)
+	}
+
+	if err := setUpSysproxyTool(); err != nil {
+		app.Exit(err)
+	}
+
+	app.clearProxySettings(listenAddr)
+
+	uiServer, err := app.startUI()
+	if err != nil {
+		app.Exit(err)
+		return
+	}
+
+	openUI := func() {
+		if app.ShouldShowUI() && !app.Flags["startup"].(bool) {
+			// Launch a browser window with Lantern but only after the pac
+			// URL and the proxy server are all up and running to avoid
+			// race conditions where we change the proxy setup while the
+			// UI server and proxy server are still coming up.
+			uiServer.ShowRoot("startup", "lantern", app.statsTracker)
+		} else {
+			log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
+		}
+	}
+
+	onGlobalConfig := func(cfg *config.Global) {
+		autoupdate.Configure(cfg.UpdateServerURL, cfg.AutoUpdateCA, func() string {
+			return uiServer.AddToken("/img/lantern_logo.png")
+		})
+		email.SetDefaultRecipient(cfg.ReportIssueEmail)
+	}
+
+	// Only run analytics once on startup.
+	if settings.IsAutoReport() {
+		stopAnalytics := analytics.Start(settings.GetDeviceID(), common.Version)
+		app.AddExitFunc("stopping analytics", stopAnalytics)
+	}
+
+	app.AddExitFunc("stopping notifier", notifier.NotificationsLoop())
+	app.OnStatsChange(func(newStats stats.Stats) {
+		for _, alert := range newStats.Alerts {
+			note := &notify.Notification{
+				Title:      i18n.T("BACKEND_ALERT_TITLE"),
+				Message:    i18n.T("status." + alert.Alert()),
+				ClickLabel: i18n.T("BACKEND_CLICK_LABEL_HELP"),
+				ClickURL:   alert.HelpURL,
+			}
+			_ = notifier.ShowNotification(note, "alert-prompt")
+		}
+	})
 
 	// Run below in separate goroutine as config.Init() can potentially block when Lantern runs
 	// for the first time. User can still quit Lantern through systray menu when it happens.
 	go func() {
-		log.Debug(app.Flags)
-		if app.Flags["proxyall"].(bool) {
-			// If proxyall flag was supplied, force proxying of all
-			settings.SetProxyAll(true)
-		}
-
-		listenAddr := app.Flags["addr"].(string)
-		if listenAddr == "" {
-			listenAddr = settings.getString(SNAddr)
-		}
-		if listenAddr == "" {
-			listenAddr = defaultHTTPProxyAddress
-		}
-
-		socksAddr := app.Flags["socksaddr"].(string)
-		if socksAddr == "" {
-			socksAddr = settings.getString(SNSOCKSAddr)
-		}
-		if socksAddr == "" {
-			socksAddr = defaultSOCKSProxyAddress
-		}
-
-		if app.Flags["initialize"].(bool) {
-			app.statsTracker.AddListener(func(newStats stats.Stats) {
-				if newStats.HasSucceedingProxy {
-					log.Debug("Finished initialization")
-					app.Exit(nil)
-				}
-			})
-		}
-
-		err := flashlight.Run(
+		err = flashlight.Run(
 			listenAddr,
 			socksAddr,
 			app.Flags["configdir"].(string),
@@ -202,8 +263,11 @@ func (app *App) Run() {
 			settings.IsAutoReport,
 			app.Flags,
 			app.beforeStart(listenAddr),
-			app.afterStart,
-			app.onConfigUpdate,
+			func(cl *client.Client) {
+				openUI()
+				app.afterStart(cl)
+			},
+			onGlobalConfig,
 			app.onProxiesUpdate,
 			settings,
 			app.statsTracker,
@@ -213,14 +277,6 @@ func (app *App) Run() {
 			app.IsPro,
 			settings.GetUserID,
 			settings.GetLanguage,
-			func() string {
-				isPro, statusKnown := isProUserFast()
-				if (isPro || !statusKnown) && !common.ForceAds() {
-					// pro user (or status unknown), don't ad swap
-					return ""
-				}
-				return app.PlansURL()
-			},
 			func(addr string) string { return addr }, // no dnsgrab reverse lookups on desktop
 		)
 		if err != nil {
@@ -232,7 +288,6 @@ func (app *App) Run() {
 
 func (app *App) beforeStart(listenAddr string) func() bool {
 	return func() bool {
-		log.Debug("Got first config")
 		var cpuProf, memProf string
 		if cpu, cok := app.Flags["cpuprofile"]; cok {
 			cpuProf = cpu.(string)
@@ -250,112 +305,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			app.Exit(err)
 		}
 
-		var startupURL string
-		bootstrap, err := config.ReadBootstrapSettings()
-		if err != nil {
-			log.Debugf("Could not read bootstrap settings: %v", err)
-		} else {
-			startupURL = bootstrap.StartupUrl
-		}
-
-		uiaddr := app.Flags["uiaddr"].(string)
-		if uiaddr == "" {
-			// stick with the last one if not specified from command line.
-			if uiaddr = settings.GetUIAddr(); uiaddr != "" {
-				host, port, splitErr := net.SplitHostPort(uiaddr)
-				if splitErr != nil {
-					log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
-					uiaddr = ""
-				}
-				// To allow Edge to open the UI, we force the UI address to be
-				// localhost if it's 127.0.0.1 (the default for previous versions).
-				// We do the same for all platforms for simplicity though it's only
-				// useful on Windows 10 and above.
-				if host == "127.0.0.1" {
-					uiaddr = "localhost:" + port
-				}
-			}
-		}
-
-		if app.Flags["clear-proxy-settings"].(bool) {
-			// This is a workaround that attempts to fix a Windows-only problem where
-			// Lantern was unable to clean the system's proxy settings before logging
-			// off.
-			//
-			// See: https://github.com/getlantern/lantern/issues/2776
-			log.Debug("Requested clearing of proxy settings")
-			_, port, splitErr := net.SplitHostPort(listenAddr)
-			if splitErr == nil && port != "0" {
-				log.Debugf("Clearing system proxy settings for: %v", listenAddr)
-				clearSysproxyFor(listenAddr)
-			} else {
-				log.Debugf("Can't clear proxy settings for: %v", listenAddr)
-			}
-			app.Exit(nil)
-			os.Exit(0)
-		}
-
-		if uiaddr != "" {
-			// Is something listening on that port?
-			if showErr := app.showExistingUI(uiaddr); showErr == nil {
-				log.Debug("Lantern already running, showing existing UI")
-				app.Exit(nil)
-				os.Exit(0)
-			}
-		}
-
-		log.Debugf("Starting client UI at %v", uiaddr)
-
-		standalone := app.Flags["standalone"] != nil && app.Flags["standalone"].(bool)
-		// ui will handle empty uiaddr correctly
-		if app.uiServer, err = ui.StartServer(uiaddr,
-			startupURL,
-			localHTTPToken(settings),
-			standalone,
-			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
-			&ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
-		); err != nil {
-			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
-			return false
-		}
-
-		if app.ShouldShowUI() {
-			go func() {
-				if err := configureSystemTray(app); err != nil {
-					log.Errorf("Unable to configure system tray: %s", err)
-					return
-				}
-				app.OnSettingChange(SNLanguage, func(lang interface{}) {
-					refreshSystray(lang.(string))
-				})
-			}()
-		}
-
-		if e := settings.StartService(app.ws); e != nil {
-			app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
-			return false
-		}
-		settings.SetUIAddr(app.uiServer.GetUIAddr())
-
-		if err = app.statsTracker.StartService(app.ws); err != nil {
-			log.Errorf("Unable to serve stats to UI: %v", err)
-		}
-
-		setupUserSignal(app.ws, app.Connect, app.Disconnect)
-
-		err = datacap.ServeDataCap(app.ws, func() string {
-			return app.AddToken("/img/lantern_logo.png")
-		}, app.PlansURL, isProUser)
-		if err != nil {
-			log.Errorf("Unable to serve bandwidth to UI: %v", err)
-		}
-		err = app.serveEmailProxy(app.ws)
-		if err != nil {
-			log.Errorf("Unable to serve mandrill to UI: %v", err)
-		}
-
-		// Don't block on fetching the location for the UI.
-		go serveLocation(app.ws)
+		app.clearProxySettings(listenAddr)
 
 		// Only run analytics once on startup.
 		if settings.IsAutoReport() {
@@ -363,9 +313,6 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			app.AddExitFunc("stopping analytics", stopAnalytics)
 		}
 
-		app.AddExitFunc("stopping loconf scanner", LoconfScanner(4*time.Hour, isProUser, func() string {
-			return app.AddToken("/img/lantern_logo.png")
-		}))
 		app.AddExitFunc("stopping notifier", notifier.NotificationsLoop())
 		app.OnStatsChange(func(newStats stats.Stats) {
 			for _, alert := range newStats.Alerts {
@@ -380,6 +327,125 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		})
 		return true
 	}
+}
+
+func (app *App) clearProxySettings(listenAddr string) {
+	if app.Flags["clear-proxy-settings"].(bool) {
+		// This is a workaround that attempts to fix a Windows-only problem where
+		// Lantern was unable to clean the system's proxy settings before logging
+		// off.
+		//
+		// See: https://github.com/getlantern/lantern/issues/2776
+		log.Debug("Requested clearing of proxy settings")
+		_, port, splitErr := net.SplitHostPort(listenAddr)
+		if splitErr == nil && port != "0" {
+			log.Debugf("Clearing system proxy settings for: %v", listenAddr)
+			clearSysproxyFor(listenAddr)
+		} else {
+			log.Debugf("Can't clear proxy settings for: %v", listenAddr)
+		}
+		app.Exit(nil)
+		os.Exit(0)
+	}
+}
+
+func (app *App) startUI() (*ui.Server, error) {
+	var startupURL string
+	bootstrap, err := config.ReadBootstrapSettings()
+	if err != nil {
+		log.Debugf("Could not read bootstrap settings: %v", err)
+	} else {
+		startupURL = bootstrap.StartupUrl
+	}
+
+	uiaddr := app.Flags["uiaddr"].(string)
+	if uiaddr == "" {
+		// stick with the last one if not specified from command line.
+		if uiaddr = settings.GetUIAddr(); uiaddr != "" {
+			host, port, splitErr := net.SplitHostPort(uiaddr)
+			if splitErr != nil {
+				log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
+				uiaddr = ""
+			}
+			// To allow Edge to open the UI, we force the UI address to be
+			// localhost if it's 127.0.0.1 (the default for previous versions).
+			// We do the same for all platforms for simplicity though it's only
+			// useful on Windows 10 and above.
+			if host == "127.0.0.1" {
+				uiaddr = "localhost:" + port
+			}
+		}
+	}
+
+	if uiaddr != "" {
+		// Is something listening on that port?
+		if showErr := app.showExistingUI(uiaddr); showErr == nil {
+			log.Debug("Lantern already running, showing existing UI")
+			app.Exit(nil)
+			os.Exit(0)
+		}
+	}
+
+	log.Debugf("Starting client UI at %v", uiaddr)
+
+	standalone := app.Flags["standalone"] != nil && app.Flags["standalone"].(bool)
+	// ui will handle empty uiaddr correctly
+	var uiServer *ui.Server
+	if uiServer, err = ui.StartServer(uiaddr,
+		startupURL,
+		localHTTPToken(settings),
+		standalone,
+		&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
+		&ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
+	); err != nil {
+		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
+		return func() {}, func(cfg *config.Global) {}, err
+	}
+
+	app.AddExitFunc("stopping loconf scanner", LoconfScanner(4*time.Hour, isProUser, func() string {
+		return uiServer.AddToken("/img/lantern_logo.png")
+	}))
+
+	if app.ShouldShowUI() {
+		go func() {
+			if err := configureSystemTray(app.newSystrayCallbacks(uiServer)); err != nil {
+				log.Errorf("Unable to configure system tray: %s", err)
+				return
+			}
+			app.OnSettingChange(SNLanguage, func(lang interface{}) {
+				refreshSystray(lang.(string))
+			})
+		}()
+	}
+
+	if err := settings.StartService(app.ws); err != nil {
+		app.Exit(fmt.Errorf("Unable to register settings service: %q", err))
+		return func() {}, func(cfg *config.Global) {}, err
+	}
+	settings.SetUIAddr(uiServer.GetUIAddr())
+
+	if err = app.statsTracker.StartService(app.ws); err != nil {
+		log.Errorf("Unable to serve stats to UI: %v", err)
+	}
+
+	setupUserSignal(app.ws, app.Connect, app.Disconnect)
+
+	err = datacap.ServeDataCap(app.ws, func() string {
+		return uiServer.AddToken("/img/lantern_logo.png")
+	}, func() string {
+		return uiServer.AddToken("/") + "#/plans"
+	}, isProUser)
+	if err != nil {
+		log.Errorf("Unable to serve bandwidth to UI: %v", err)
+	}
+	err = app.serveEmailProxy(app.ws)
+	if err != nil {
+		log.Errorf("Unable to serve mandrill to UI: %v", err)
+	}
+
+	// Don't block on fetching the location for the UI.
+	go serveLocation(app.ws)
+	return uiServer, nil
 }
 
 // Connect turns on proxying
@@ -443,15 +509,6 @@ func (app *App) afterStart(cl *client.Client) {
 
 	app.AddExitFunc("turning off system proxy", sysproxyOff)
 	app.AddExitFunc("flushing to borda", borda.Flush)
-	if app.ShouldShowUI() && !app.Flags["startup"].(bool) {
-		// Launch a browser window with Lantern but only after the pac
-		// URL and the proxy server are all up and running to avoid
-		// race conditions where we change the proxy setup while the
-		// UI server and proxy server are still coming up.
-		app.uiServer.ShowRoot("startup", "lantern", app.statsTracker)
-	} else {
-		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
-	}
 	if addr, ok := client.Addr(6 * time.Second); ok {
 		settings.setString(SNAddr, addr)
 	} else {
@@ -466,14 +523,6 @@ func (app *App) afterStart(cl *client.Client) {
 	if err != nil {
 		log.Errorf("Unable to serve pro data to UI: %v", err)
 	}
-}
-
-func (app *App) onConfigUpdate(cfg *config.Global) {
-	autoupdate.Configure(cfg.UpdateServerURL, cfg.AutoUpdateCA, func() string {
-		return app.AddToken("/img/lantern_logo.png")
-	})
-	email.SetDefaultRecipient(cfg.ReportIssueEmail)
-	//app.configureTrafficLog(*cfg)
 }
 
 func (app *App) onProxiesUpdate(proxies []balancer.Dialer) {
@@ -721,27 +770,31 @@ func ShouldReportToSentry() bool {
 	return !common.InDevelopment()
 }
 
-// OnTrayShow indicates the user has selected to show lantern from the tray.
-func (app *App) OnTrayShow() {
-	app.uiServer.ShowRoot("show-lantern", "tray", app.statsTracker)
-}
-
-// OnTrayUpgrade indicates the user has selected to upgrade lantern from the tray.
-func (app *App) OnTrayUpgrade() {
-	app.uiServer.Show(app.PlansURL(), "proupgrade", "tray", app.statsTracker)
-}
-
-// PlansURL returns the URL for accessing the checkout/plans page directly.
-func (app *App) PlansURL() string {
-	return app.uiServer.AddToken("/") + "#/plans"
-}
-
-// AddToken adds our secure token to a given request path.
-func (app *App) AddToken(path string) string {
-	return app.uiServer.AddToken(path)
-}
-
 // GetTranslations adds our secure token to a given request path.
 func (app *App) GetTranslations(filename string) ([]byte, error) {
 	return ui.Translations(filename)
+}
+
+type systrayCb struct {
+	App
+	uiServer *ui.Server
+}
+
+// OnTrayShow indicates the user has selected to show lantern from the tray.
+func (cb *systrayCb) OnTrayShow() {
+	cb.uiServer.ShowRoot("show-lantern", "tray", cb.statsTracker)
+}
+
+// OnTrayUpgrade indicates the user has selected to upgrade lantern from the tray.
+func (cb *systrayCb) OnTrayUpgrade() {
+	cb.uiServer.Show(cb.PlansURL(), "proupgrade", "tray", cb.statsTracker)
+}
+
+// PlansURL returns the URL for accessing the checkout/plans page directly.
+func (cb *systrayCb) PlansURL() string {
+	return cb.uiServer.AddToken("/") + "#/plans"
+}
+
+func (app *App) newSystrayCallbacks(uiServer *ui.Server) systrayCallbacks {
+	return &systrayCb{*app, uiServer}
 }

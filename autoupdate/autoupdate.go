@@ -10,7 +10,7 @@ import (
 	"github.com/getlantern/autoupdate"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
-	"github.com/getlantern/notifier"
+	notify "github.com/getlantern/notifier"
 
 	"github.com/getlantern/flashlight/notifier"
 	"github.com/getlantern/flashlight/proxied"
@@ -32,6 +32,9 @@ var (
 func Configure(updateURL, updateCA string, iconURL func() string) {
 	setUpdateURL(updateURL)
 	fnIconURL = iconURL
+
+	// This is necessary because Configure can be called multiple times as new
+	// global configs are fetched.
 	httpClient.Store(
 		&http.Client{
 			Transport: proxied.ChainedThenFrontedWith(updateCA),

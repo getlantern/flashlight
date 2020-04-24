@@ -338,7 +338,7 @@ func run(configDir, locale string,
 		func(c *client.Client) {
 			cl.Set(c)
 			afterStart(session)
-		},
+		}, // afterStart()
 		func(cfg *config.Global) {
 			session.UpdateAdSettings(&adSettings{cfg.AdSettings})
 			email.SetDefaultRecipient(cfg.ReportIssueEmail)
@@ -349,7 +349,6 @@ func run(configDir, locale string,
 		nil, // onError
 		session.IsProUser,
 		session.GetUserID,
-		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
 		func(addr string) string {
 			host, port, splitErr := net.SplitHostPort(addr)

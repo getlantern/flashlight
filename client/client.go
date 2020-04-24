@@ -133,7 +133,6 @@ type Client struct {
 	iptool            iptool.Tool
 	allowPrivateHosts func() bool
 	lang              func() string
-	adSwapTargetURL   func() string
 
 	reverseDNS func(addr string) string
 
@@ -158,7 +157,6 @@ func NewClient(
 	statsTracker stats.Tracker,
 	allowPrivateHosts func() bool,
 	lang func() string,
-	adSwapTargetURL func() string,
 	reverseDNS func(addr string) string,
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
@@ -182,7 +180,6 @@ func NewClient(
 		statsTracker:         statsTracker,
 		allowPrivateHosts:    allowPrivateHosts,
 		lang:                 lang,
-		adSwapTargetURL:      adSwapTargetURL,
 		reverseDNS:           reverseDNS,
 		chPingProxiesConf:    make(chan pingProxiesConf, 1),
 	}
