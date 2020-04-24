@@ -75,6 +75,7 @@ require (
 	github.com/getlantern/tlsdialer v0.0.0-20200205115148-9bde2ed72c94
 	github.com/getlantern/tlsmasq v0.3.0
 	github.com/getlantern/tlsresumption v0.0.0-20200205020452-74fc6ea4e074
+	github.com/getlantern/trafficlog v0.0.0-20200417192526-a0b1f8bd93bd
 	github.com/getlantern/trafficlog-flashlight v0.0.0-20200424084501-8e28c0ad7343
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
@@ -122,3 +123,7 @@ replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-2019
 // TODO: upload repos and use remote versions
 
 replace github.com/getlantern/trafficlog-flashlight => ../trafficlog-flashlight
+
+replace github.com/getlantern/trafficlog => ../trafficlog
+
+replace github.com/getlantern/authipc => ../authipc

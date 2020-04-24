@@ -22,6 +22,8 @@ import (
 	"github.com/getlantern/memhelper"
 	notify "github.com/getlantern/notifier"
 	"github.com/getlantern/profiling"
+	"github.com/getlantern/trafficlog"
+	"github.com/getlantern/trafficlog/tlproc"
 	"github.com/getsentry/sentry-go"
 
 	"github.com/getlantern/flashlight/analytics"
@@ -32,8 +34,6 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/datacap"
-
-	//"github.com/getlantern/flashlight/diagnostics/trafficlog"
 
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/logging"
@@ -50,11 +50,24 @@ const (
 	SENTRY_TIMEOUT = time.Second * 30
 )
 
+const (
+	trafficlogStartTimeout   = 5 * time.Second
+	trafficlogRequestTimeout = time.Second
+)
+
 var (
 	log      = golog.LoggerFor("flashlight.app")
 	settings *Settings
 
 	startTime = time.Now()
+
+	// The traffic log is run as a separate process, with the executable installed at the following
+	// path. For platforms unrepresented in the map below, the executable will be installed in the
+	// default location specified by github.com/getlantern/byteexec.New.
+	trafficlogPathToExecutable = map[string]string{
+		// TODO: pick darwin location
+		"darwin": "",
+	}
 )
 
 func init() {
@@ -84,14 +97,14 @@ type App struct {
 
 	// Log of network traffic to and from the proxies. Used to attach packet capture files to
 	// reported issues. Nil if traffic logging is not enabled.
-	//trafficLog     *trafficlog.TrafficLog
-	//trafficLogLock sync.RWMutex
+	trafficLog     *tlproc.TrafficLogProcess
+	trafficLogLock sync.RWMutex
 
 	// proxies are tracked by the application solely for data collection purposes. This value should
 	// not be changed, except by App.onProxiesUpdate. State-changing methods on the dialers should
 	// not be called. In short, this slice and its elements should be treated as read-only.
-	//proxies     []balancer.Dialer
-	//proxiesLock sync.RWMutex
+	proxies     []balancer.Dialer
+	proxiesLock sync.RWMutex
 }
 
 // Init initializes the App's state
@@ -473,29 +486,26 @@ func (app *App) onConfigUpdate(cfg *config.Global) {
 		return app.AddToken("/img/lantern_logo.png")
 	})
 	email.SetDefaultRecipient(cfg.ReportIssueEmail)
-	//app.configureTrafficLog(*cfg)
+	app.configureTrafficLog(*cfg)
 }
 
 func (app *App) onProxiesUpdate(proxies []balancer.Dialer) {
-	/*
-		app.trafficLogLock.Lock()
-		app.proxiesLock.Lock()
-		app.proxies = proxies
-		if app.trafficLog != nil {
-			proxyAddresses := []string{}
-			for _, p := range proxies {
-				proxyAddresses = append(proxyAddresses, p.Addr())
-			}
-			if err := app.trafficLog.UpdateAddresses(proxyAddresses); err != nil {
-				log.Errorf("failed to update traffic log addresses: %v", err)
-			}
+	app.trafficLogLock.Lock()
+	app.proxiesLock.Lock()
+	app.proxies = proxies
+	if app.trafficLog != nil {
+		proxyAddresses := []string{}
+		for _, p := range proxies {
+			proxyAddresses = append(proxyAddresses, p.Addr())
 		}
-		app.proxiesLock.Unlock()
-		app.trafficLogLock.Unlock()
-	*/
+		if err := app.trafficLog.UpdateAddresses(proxyAddresses); err != nil {
+			log.Errorf("failed to update traffic log addresses: %v", err)
+		}
+	}
+	app.proxiesLock.Unlock()
+	app.trafficLogLock.Unlock()
 }
 
-/*
 func (app *App) configureTrafficLog(cfg config.Global) {
 	app.trafficLogLock.Lock()
 	app.proxiesLock.RLock()
@@ -524,16 +534,26 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 		mtuLimit = trafficlog.MTULimitNone
 	}
 
+	var err error
 	switch {
 	case enableTrafficLog && app.trafficLog == nil:
 		log.Debug("Turning traffic log on")
-		app.trafficLog = trafficlog.New(
+		app.trafficLog, err = tlproc.New(
 			cfg.TrafficLogCaptureBytes,
 			cfg.TrafficLogSaveBytes,
-			&trafficlog.Options{
-				MTULimit:       mtuLimit,
-				MutatorFactory: new(trafficlog.AppStripperFactory),
+			&tlproc.Options{
+				Options: trafficlog.Options{
+					MTULimit:       mtuLimit,
+					MutatorFactory: new(trafficlog.AppStripperFactory),
+				},
+				PathToExecutable: trafficlogPathToExecutable[common.Platform],
+				StartTimeout:     trafficlogStartTimeout,
+				RequestTimeout:   trafficlogRequestTimeout,
 			})
+		if err != nil {
+			log.Debugf("Failed to start traffic log process: %v", err)
+			return
+		}
 		// These goroutines will close when the traffic log is closed.
 		go func() {
 			for err := range app.trafficLog.Errors() {
@@ -556,17 +576,19 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 		}
 
 	case enableTrafficLog && app.trafficLog != nil:
-		app.trafficLog.UpdateBufferSizes(cfg.TrafficLogCaptureBytes, cfg.TrafficLogSaveBytes)
+		err = app.trafficLog.UpdateBufferSizes(cfg.TrafficLogCaptureBytes, cfg.TrafficLogSaveBytes)
+		if err != nil {
+			log.Debugf("Failed to update traffic log buffer sizes: %v", err)
+		}
 
 	case !enableTrafficLog && app.trafficLog != nil:
 		log.Debug("Turning traffic log off")
 		if err := app.trafficLog.Close(); err != nil {
-			log.Debugf("Failed to close traffic log (this will create a memory leak): %v", err)
+			log.Errorf("Failed to close traffic log (this will create a memory leak): %v", err)
 		}
 		app.trafficLog = nil
 	}
 }
-*/
 
 // showExistingUi triggers an existing Lantern running on the same system to
 // open a browser to the Lantern start page.

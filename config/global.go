@@ -53,6 +53,16 @@ type Global struct {
 	// FeatureOptions is a generic way to specify options for optional
 	// features. It's up to the feature code to handle the raw JSON message.
 	FeatureOptions map[string]map[string]interface{}
+
+	// If the client's platform appears in this list, traffic logging may be enabled.
+	TrafficLogPlatforms []string
+
+	// The percent chance a client will enable traffic logging (subject to platform restrictions).
+	TrafficLogPercentage float64
+
+	// Size of the traffic log's packet buffers (if enabled).
+	TrafficLogCaptureBytes int
+	TrafficLogSaveBytes    int
 }
 
 // NewGlobal creates a new global config with otherwise nil values set.
