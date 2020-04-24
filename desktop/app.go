@@ -153,11 +153,9 @@ func (app *App) exitOnFatal(err error) {
 }
 
 func (app *App) uiServer() *ui.Server {
-	select {
-	case server := <-app.uiServerCh:
-		app.uiServerCh <- server
-		return server
-	}
+	server := <-app.uiServerCh
+	app.uiServerCh <- server
+	return server
 }
 
 // Run starts the app. It will block until the app exits.
