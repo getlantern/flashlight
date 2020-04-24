@@ -75,9 +75,9 @@ type App struct {
 	muExitFuncs sync.RWMutex
 	exitFuncs   []func()
 
-	uiServer *ui.Server
-	ws       ws.UIChannel
-	chrome   chromeExtension
+	uiServerCh chan *ui.Server
+	ws         ws.UIChannel
+	chrome     chromeExtension
 
 	// If both the trafficLogLock and proxiesLock are needed, the trafficLogLock should be obtained
 	// first. Keeping the order consistent avoids deadlocking.
@@ -98,6 +98,7 @@ type App struct {
 func (app *App) Init() {
 	golog.OnFatal(app.exitOnFatal)
 	app.Flags["staging"] = common.Staging
+	app.uiServerCh = make(chan *ui.Server, 1)
 	app.chrome = newChromeExtension()
 	//app.chrome.install()
 	settings = app.loadSettings()
@@ -149,6 +150,14 @@ func (app *App) LogPanicAndExit(msg string) {
 func (app *App) exitOnFatal(err error) {
 	_ = logging.Close()
 	app.Exit(err)
+}
+
+func (app *App) uiServer() *ui.Server {
+	select {
+	case server := <-app.uiServerCh:
+		app.uiServerCh <- server
+		return server
+	}
 }
 
 // Run starts the app. It will block until the app exits.
@@ -308,16 +317,18 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 		standalone := app.Flags["standalone"] != nil && app.Flags["standalone"].(bool)
 		// ui will handle empty uiaddr correctly
-		if app.uiServer, err = ui.StartServer(uiaddr,
+		uiServer, err := ui.StartServer(uiaddr,
 			startupURL,
 			localHTTPToken(settings),
 			standalone,
 			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
 			&ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
-		); err != nil {
+		)
+		if err != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 			return false
 		}
+		app.uiServerCh <- uiServer
 
 		if app.ShouldShowUI() {
 			go func() {
@@ -335,7 +346,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
 			return false
 		}
-		settings.SetUIAddr(app.uiServer.GetUIAddr())
+		settings.SetUIAddr(uiServer.GetUIAddr())
 
 		if err = app.statsTracker.StartService(app.ws); err != nil {
 			log.Errorf("Unable to serve stats to UI: %v", err)
@@ -448,7 +459,7 @@ func (app *App) afterStart(cl *client.Client) {
 		// URL and the proxy server are all up and running to avoid
 		// race conditions where we change the proxy setup while the
 		// UI server and proxy server are still coming up.
-		app.uiServer.ShowRoot("startup", "lantern", app.statsTracker)
+		app.uiServer().ShowRoot("startup", "lantern", app.statsTracker)
 	} else {
 		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
 	}
@@ -723,22 +734,22 @@ func ShouldReportToSentry() bool {
 
 // OnTrayShow indicates the user has selected to show lantern from the tray.
 func (app *App) OnTrayShow() {
-	app.uiServer.ShowRoot("show-lantern", "tray", app.statsTracker)
+	app.uiServer().ShowRoot("show-lantern", "tray", app.statsTracker)
 }
 
 // OnTrayUpgrade indicates the user has selected to upgrade lantern from the tray.
 func (app *App) OnTrayUpgrade() {
-	app.uiServer.Show(app.PlansURL(), "proupgrade", "tray", app.statsTracker)
+	app.uiServer().Show(app.PlansURL(), "proupgrade", "tray", app.statsTracker)
 }
 
 // PlansURL returns the URL for accessing the checkout/plans page directly.
 func (app *App) PlansURL() string {
-	return app.uiServer.AddToken("/") + "#/plans"
+	return app.uiServer().AddToken("/") + "#/plans"
 }
 
 // AddToken adds our secure token to a given request path.
 func (app *App) AddToken(path string) string {
-	return app.uiServer.AddToken(path)
+	return app.uiServer().AddToken(path)
 }
 
 // GetTranslations adds our secure token to a given request path.
