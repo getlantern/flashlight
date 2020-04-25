@@ -1,5 +1,23 @@
 # Changelog
 
+## [Unreleased](https://github.com/getlantern/flashlight/tree/HEAD)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.5...HEAD)
+
+**Merged pull requests:**
+
+- Exclude 10.10.x.x from Iran shortcut list [\#801](https://github.com/getlantern/flashlight/pull/801) ([joesis](https://github.com/joesis))
+
+## [5.9.5](https://github.com/getlantern/flashlight/tree/5.9.5) (2020-04-24)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.4...5.9.5)
+
+**Merged pull requests:**
+
+- Use more unique fingerprints in an attempt to prevent sentry from grouping distinct panics with the same top level message [\#803](https://github.com/getlantern/flashlight/pull/803) ([max-b](https://github.com/max-b))
+- Get UI server from channel [\#802](https://github.com/getlantern/flashlight/pull/802) ([myleshorton](https://github.com/myleshorton))
+- Added ability to use hardcoded proxies on iOS [\#797](https://github.com/getlantern/flashlight/pull/797) ([oxtoacart](https://github.com/oxtoacart))
+
 ## [5.9.4](https://github.com/getlantern/flashlight/tree/5.9.4) (2020-04-20)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.3...5.9.4)
@@ -188,33 +206,18 @@
 
 - More CI fixes [\#701](https://github.com/getlantern/flashlight/pull/701) ([joesis](https://github.com/joesis))
 - Fix Proxy-Connection handling in persistent HTTP case [\#700](https://github.com/getlantern/flashlight/pull/700) ([myleshorton](https://github.com/myleshorton))
-- Various changes to make CI more reliable [\#699](https://github.com/getlantern/flashlight/pull/699) ([joesis](https://github.com/joesis))
 
 ## [5.6.2](https://github.com/getlantern/flashlight/tree/5.6.2) (2019-10-21)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.6.1...5.6.2)
 
-**Merged pull requests:**
-
-- Fix direct headers [\#698](https://github.com/getlantern/flashlight/pull/698) ([myleshorton](https://github.com/myleshorton))
-
 ## [5.6.1](https://github.com/getlantern/flashlight/tree/5.6.1) (2019-10-18)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.6.0...5.6.1)
 
-**Merged pull requests:**
-
-- Integrating UI that fixes account recovery [\#697](https://github.com/getlantern/flashlight/pull/697) ([myleshorton](https://github.com/myleshorton))
-- Different approach to fixing version header issue [\#696](https://github.com/getlantern/flashlight/pull/696) ([oxtoacart](https://github.com/oxtoacart))
-
 ## [5.6.0](https://github.com/getlantern/flashlight/tree/5.6.0) (2019-10-17)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.8...5.6.0)
-
-**Merged pull requests:**
-
-- Adding modern-go dependencies -- dependent on go version [\#695](https://github.com/getlantern/flashlight/pull/695) ([myleshorton](https://github.com/myleshorton))
-- Server sets trusted [\#694](https://github.com/getlantern/flashlight/pull/694) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.5.8](https://github.com/getlantern/flashlight/tree/5.5.8) (2019-09-24)
 
