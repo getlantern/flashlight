@@ -135,9 +135,8 @@ func (app *App) loadSettings() *Settings {
 func truncateString(s string, maxLength int) string {
 	if maxLength < len(s) {
 		return s[:maxLength]
-	} else {
-		return s
 	}
+	return s
 }
 
 // LogPanicAndExit logs a panic and then exits the application. This function
