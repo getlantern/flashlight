@@ -46,8 +46,9 @@ import (
 )
 
 const (
-	SENTRY_DSN     = "https://f65aa492b9524df79b05333a0b0924c5@sentry.io/2222244"
-	SENTRY_TIMEOUT = time.Second * 30
+	SENTRY_DSN               = "https://f65aa492b9524df79b05333a0b0924c5@sentry.io/2222244"
+	SENTRY_TIMEOUT           = time.Second * 30
+	SENTRY_MAX_MESSAGE_CHARS = 8000
 )
 
 var (
