@@ -28,6 +28,7 @@ import (
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/desktop"
 	"github.com/getlantern/flashlight/logging"
+	"github.com/getlantern/flashlight/util"
 )
 
 var (
@@ -95,6 +96,11 @@ func main() {
 					fingerprint = strings.Join([]string{messageLines[0], messageLines[1], messageLines[4], messageLines[5]}, "\n")
 				}
 				event.Fingerprint = []string{"{{ default }}", fingerprint}
+
+				// sentry's sdk has a somewhat undocumented max message length
+				// after which it seems it will silently drop/fail to send messages
+				// https://github.com/getlantern/flashlight/pull/806
+				event.Message = util.TrimStringAsBytes(event.Message, desktop.SENTRY_MAX_MESSAGE_CHARS)
 				return event
 			},
 		})

@@ -132,13 +132,6 @@ func (app *App) loadSettings() *Settings {
 	return loadSettingsFrom(common.Version, common.RevisionDate, common.BuildDate, path, app.chrome)
 }
 
-func truncateString(s string, maxLength int) string {
-	if maxLength < len(s) {
-		return s[:maxLength]
-	}
-	return s
-}
-
 // LogPanicAndExit logs a panic and then exits the application. This function
 // is only used in the panicwrap parent process.
 func (app *App) LogPanicAndExit(msg string) {
@@ -147,7 +140,7 @@ func (app *App) LogPanicAndExit(msg string) {
 			scope.SetLevel(sentry.LevelFatal)
 		})
 
-		sentry.CaptureMessage(truncateString(msg, SENTRY_MAX_MESSAGE_CHARS))
+		sentry.CaptureMessage(msg)
 		if result := sentry.Flush(SENTRY_TIMEOUT); result == false {
 			log.Error("Flushing to Sentry timed out")
 		}
