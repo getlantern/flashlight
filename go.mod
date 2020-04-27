@@ -9,8 +9,8 @@ require (
 	github.com/anacrolix/dht/v2 v2.5.2-0.20200330033607-920d5b550970 // indirect
 	github.com/anacrolix/envpprof v1.1.0
 	github.com/anacrolix/go-libutp v1.0.2
-	github.com/anacrolix/log v0.6.0
-	github.com/anacrolix/torrent v1.15.0
+	github.com/anacrolix/log v0.7.0
+	github.com/anacrolix/torrent v1.15.2-0.20200427233100-c3321193474c
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
