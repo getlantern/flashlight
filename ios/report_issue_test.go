@@ -48,5 +48,5 @@ func TestReportIssue(t *testing.T) {
 		return
 	}
 
-	assert.NoError(t, ReportIssue(1, "protoken", "Test's iPhone", "0.0.1", "TestMachine", "1.0", "ox+unittest@getlantern.org", "This is just a test", appLogsDir, tunnelLogsDir, proxiesYaml.Name()))
+	assert.NoError(t, ReportIssue(false, 1, "protoken", "Test's iPhone", "0.0.1", "TestMachine", "1.0", "ox+unittest@getlantern.org", "This is just a test", appLogsDir, tunnelLogsDir, proxiesYaml.Name()))
 }
