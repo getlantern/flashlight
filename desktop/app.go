@@ -46,8 +46,9 @@ import (
 )
 
 const (
-	SENTRY_DSN     = "https://f65aa492b9524df79b05333a0b0924c5@sentry.io/2222244"
-	SENTRY_TIMEOUT = time.Second * 30
+	SENTRY_DSN               = "https://f65aa492b9524df79b05333a0b0924c5@sentry.io/2222244"
+	SENTRY_TIMEOUT           = time.Second * 30
+	SENTRY_MAX_MESSAGE_CHARS = 8000
 )
 
 var (
@@ -131,6 +132,14 @@ func (app *App) loadSettings() *Settings {
 	return loadSettingsFrom(common.Version, common.RevisionDate, common.BuildDate, path, app.chrome)
 }
 
+func truncateString(s string, maxLength int) string {
+	if maxLength < len(s) {
+		return s[:maxLength]
+	} else {
+		return s
+	}
+}
+
 // LogPanicAndExit logs a panic and then exits the application. This function
 // is only used in the panicwrap parent process.
 func (app *App) LogPanicAndExit(msg string) {
@@ -139,7 +148,7 @@ func (app *App) LogPanicAndExit(msg string) {
 			scope.SetLevel(sentry.LevelFatal)
 		})
 
-		sentry.CaptureMessage(msg)
+		sentry.CaptureMessage(truncateString(msg, SENTRY_MAX_MESSAGE_CHARS))
 		if result := sentry.Flush(SENTRY_TIMEOUT); result == false {
 			log.Error("Flushing to Sentry timed out")
 		}
