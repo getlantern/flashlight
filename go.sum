@@ -131,8 +131,8 @@ github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99/go.mod h1:4r
 github.com/getlantern/bbrconn v0.0.0-20180619163322-86cf8c16f3d0 h1:OtUNxwmNp9+mTZMuKw9MrNLJKMG731zWZIWwQfFGZfs=
 github.com/getlantern/bbrconn v0.0.0-20180619163322-86cf8c16f3d0/go.mod h1:HMPEgWG0J3goTYFWoTohloqZ3BQywXMElZnd9EROxxU=
 github.com/getlantern/borda v0.0.0-20190809122504-668025f4c2b9/go.mod h1:5gIMs+fPLaRRdTa3f3eMrYgJb/5JmO8/Fa060xvj44U=
-github.com/getlantern/borda v0.0.0-20191105202701-77098b35c76c h1:DpXRCuxcwcCjK8pUk7uPk42f/jolbrFj2AcY0vjDGnU=
-github.com/getlantern/borda v0.0.0-20191105202701-77098b35c76c/go.mod h1:hzzaWNHKEtVnk803olisWbiDTPj/1acLS9vR+Rz9rjI=
+github.com/getlantern/borda v0.0.0-20200427033127-b36d009c6252 h1:wXyiXECubfqSOaTLoFmGZf5lgU74wBPTTpvtVmNtG5Y=
+github.com/getlantern/borda v0.0.0-20200427033127-b36d009c6252/go.mod h1:jkIALYPaKafmDOUx7/GkM8C10j7dQcom69ApTUNCG6U=
 github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d h1:gE5pWSEYfMvSETsTanqINNLmv+nuyUjwcm9jOyqJJZI=
 github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d/go.mod h1:d6O4RY+V87kIt4o9wru4SaNo7C2NAkD3YnmJFXEpODo=
 github.com/getlantern/bytecounting v0.0.0-20190530140808-3b3f10d3b9ab h1:bKsTXN1XgjiWuciuEChVIPFXWD8sTASsvjkMAGMEb/4=
@@ -356,8 +356,8 @@ github.com/getlantern/withtimeout v0.0.0-20160829163843-511f017cd913/go.mod h1:b
 github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426 h1:lb2OElfhZzfgvNQym79ONvv4yvDh/gShHkLQI6qzriA=
 github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426/go.mod h1:SoTXbOvaDC1bH3QrlkU5kz/h12tU/hN54wSMUCdgEXs=
 github.com/getlantern/zenodb v0.0.0-20190809092412-0a2ce8ac3026/go.mod h1:LDw7qTXBZJkjYVIvR2iyi1J4PN8plch0VZzTzc7mDoM=
-github.com/getlantern/zenodb v0.0.0-20191017181222-5e98403b7237 h1:a916/nkKDXQBD940nXIzOp2nLTfUzwL0vPr7HCWKduI=
-github.com/getlantern/zenodb v0.0.0-20191017181222-5e98403b7237/go.mod h1:/QuMPlUCcgfXRy+yAwXWcAkBegF2Nl1lw0nJ+kSWEsA=
+github.com/getlantern/zenodb v0.0.0-20191107150234-58f0e128172a h1:ejSod6/RRkzDJNB+L1Ntv8AxsgezDkKQvFb8Au4Tey0=
+github.com/getlantern/zenodb v0.0.0-20191107150234-58f0e128172a/go.mod h1:/QuMPlUCcgfXRy+yAwXWcAkBegF2Nl1lw0nJ+kSWEsA=
 github.com/getsentry/sentry-go v0.5.1 h1:MIPe7ScHADsrK2vznqmhksIUFxq7m0JfTh+ZIMkI+VQ=
 github.com/getsentry/sentry-go v0.5.1/go.mod h1:B8H7x8TYDPkeWPRzGpIiFO97LZP6rL8A3hEt8lUItMw=
 github.com/gin-contrib/sse v0.0.0-20190301062529-5545eab6dad3/go.mod h1:VJ0WA2NBN22VlZ2dKZQPAPnyWw5XTlK1KymzLKsr59s=
