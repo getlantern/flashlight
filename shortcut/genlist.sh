@@ -8,7 +8,11 @@ function die() {
 function gen-list-for-country() {
   grep $1 GeoLite2-Country-Blocks-IPv4.csv | cut -d "," -f 1 > resources/$2_ipv4.txt && \
   grep $1 GeoLite2-Country-Blocks-IPv6.csv | cut -d "," -f 1 > resources/$2_ipv6.txt && \
-  cat resources/default_ipv4.txt >> resources/$2_ipv4.txt && \
+  if [[ $2 == "ir" ]]; then \
+    grep -v -e "^#" resources/default_ipv4_$2.txt >> resources/$2_ipv4.txt; \
+  else
+    cat resources/default_ipv4.txt >> resources/$2_ipv4.txt; \
+  fi && \
   cat resources/default_ipv6.txt >> resources/$2_ipv6.txt
 }
 
