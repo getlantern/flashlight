@@ -14,7 +14,6 @@ import (
 
 	"github.com/getlantern/flashlight/ui/handlers"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/lantern-server/common"
 	"github.com/getlantern/lantern-server/models"
 	"github.com/getlantern/lantern-server/srp"
 )
@@ -65,29 +64,9 @@ func (h AuthHandler) Routes() map[string]handlers.HandlerFunc {
 	}
 }
 
-// doRequest creates and sends a new HTTP request to the given url
-// with an optional requestBody. It returns an HTTP response
-func (h AuthHandler) doRequest(method, url string,
-	requestBody []byte) (*http.Response, error) {
-	log.Debugf("Sending new request to url %s", url)
-	var req *http.Request
-	var err error
-	if requestBody != nil {
-		req, err = http.NewRequest(method, url,
-			bytes.NewBuffer(requestBody))
-	} else {
-		req, err = http.NewRequest(method, url, nil)
-	}
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set(common.HeaderContentType, common.MIMEApplicationJSON)
-	return h.HttpClient.Do(req)
-}
-
 func (h AuthHandler) sendAuthRequest(method, url string,
 	requestBody []byte) (*models.AuthResponse, error) {
-	resp, err := h.doRequest(method, url, requestBody)
+	resp, err := h.DoRequest(method, url, requestBody)
 	if err != nil {
 		return nil, err
 	}

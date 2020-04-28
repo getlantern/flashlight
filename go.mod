@@ -3,12 +3,12 @@ module github.com/getlantern/flashlight
 go 1.12
 
 require (
-	cloud.google.com/go v0.53.0 // indirect
+	cloud.google.com/go v0.56.0 // indirect
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/go-libutp v1.0.1
 	github.com/anacrolix/mmsg v1.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.29.4 // indirect
+	github.com/aws/aws-sdk-go v1.30.15 // indirect
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
@@ -47,7 +47,7 @@ require (
 	github.com/getlantern/kcpwrapper v0.0.0-20171114192627-a35c895f6de7
 	github.com/getlantern/keyman v0.0.0-20180207174507-f55e7280e93a
 	github.com/getlantern/lampshade v0.0.0-20200123165158-e0efbb58c68b
-	github.com/getlantern/lantern-server v0.0.0-20200427153028-93e57ecdf03a
+	github.com/getlantern/lantern-server v0.0.0-20200428174633-818fe99a5d72
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
@@ -80,14 +80,17 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getlantern/yinbi-server v0.0.0-20200218062425-a3bd55a40a2b
+	github.com/getlantern/yinbi-server v0.0.0-20200428180218-900c16008373
 	github.com/getsentry/sentry-go v0.5.1
+	github.com/go-chi/chi v4.1.1+incompatible // indirect
+	github.com/go-errors/errors v1.0.2 // indirect
 	github.com/gobuffalo/envy v1.9.0 // indirect
-	github.com/gobuffalo/packd v1.0.0 // indirect
+	github.com/golang/protobuf v1.4.0 // indirect
 	github.com/gorilla/websocket v1.4.0
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
+	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9 // indirect
 	github.com/labstack/echo/v4 v4.1.16 // indirect
 	github.com/lib/pq v1.4.0 // indirect
@@ -98,18 +101,30 @@ require (
 	github.com/mitchellh/go-server-timing v1.0.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/mitchellh/panicwrap v0.0.0-20190228164358-f67bf3f3d291
+	github.com/olivere/elastic/v7 v7.0.9 // indirect
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/refraction-networking/utls v0.0.0-20190909200633-43c36d3c1f57
 	github.com/rs/cors v1.7.0
+	github.com/shopspring/decimal v0.0.0-20200428023536-480f653de814 // indirect
+	github.com/sirupsen/logrus v1.5.0 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
-	github.com/stellar/go v0.0.0-20200218180811-579a15678e26
+	github.com/stellar/go v0.0.0-20200427192452-698593a43c97
+	github.com/stellar/go-xdr v0.0.0-20200331223602-71a1e6d555f2 // indirect
+	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.5.1
+	github.com/tyler-smith/go-bip39 v1.0.2 // indirect
+	github.com/ulule/limiter/v3 v3.5.0 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
+	github.com/xdrpp/stc v0.0.0-20191113232203-b257d8ace4e0 // indirect
 	golang.org/x/crypto v0.0.0-20200427165652-729f1e841bcc // indirect
 	golang.org/x/net v0.0.0-20200425230154-ff2c4b7c35a0
 	golang.org/x/sys v0.0.0-20200427175716-29b57079015a // indirect
-	google.golang.org/genproto v0.0.0-20200218151345-dad8c97a84f5 // indirect
+	google.golang.org/api v0.22.0 // indirect
+	google.golang.org/appengine v1.6.6 // indirect
+	google.golang.org/genproto v0.0.0-20200428115010-c45acf45369a // indirect
+	google.golang.org/grpc v1.29.1 // indirect
+	gopkg.in/ezzarghili/recaptcha-go.v4 v4.1.0 // indirect
 )
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20200211213545-301421f7c3c9

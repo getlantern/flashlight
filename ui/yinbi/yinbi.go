@@ -13,6 +13,7 @@ import (
 	"github.com/getlantern/flashlight/ui/handlers"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
+	"github.com/getlantern/lantern-server/models"
 	"github.com/getlantern/yinbi-server/config"
 	"github.com/getlantern/yinbi-server/crypto"
 	"github.com/getlantern/yinbi-server/keystore"
@@ -22,7 +23,8 @@ import (
 )
 
 const (
-	issuer = "GBAUT37VU4WN466IGBMDOOWJSIGIULAQM62WB467HS4R3TJ3IEDH3FPK"
+	issuer                 = "GBAUT37VU4WN466IGBMDOOWJSIGIULAQM62WB467HS4R3TJ3IEDH3FPK"
+	recoverAccountEndpoint = "/account/recover"
 )
 
 var (
@@ -57,6 +59,7 @@ func (h YinbiHandler) Routes() map[string]handlers.HandlerFunc {
 		"/user/account/new":     h.createAccountHandler,
 		"/user/import/wallet":   h.importWalletHandler,
 		"/account/details":      h.getAccountDetails,
+		"/account/recover":      h.recoverYinbiAccount,
 		"/account/transactions": h.getAccountTransactions,
 		"/user/mnemonic":        h.createMnemonic,
 		"/user/redeem/codes":    h.redeemCodesHandler,
@@ -232,6 +235,61 @@ func (h YinbiHandler) getAccountDetails(w http.ResponseWriter,
 	return
 }
 
+func (h YinbiHandler) recoverYinbiAccount(w http.ResponseWriter,
+	r *http.Request) {
+	var request struct {
+		Words string `json:"words"`
+	}
+	err := common.DecodeJSONRequest(r, &request)
+	if err != nil {
+		h.ErrorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	log.Debugf("Received new recover account request: Words are %s", request.Words)
+	address, err := h.yinbiClient.IsMnemonicValid(request.Words)
+	if err != nil {
+		h.ErrorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	userResponse, err := h.sendRecoverRequest(address.Address)
+	if err != nil {
+		h.ErrorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	log.Debugf("Successfully recovered user %s's account using Yinbi key",
+		userResponse.User.Username)
+	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"success": true,
+		"user":    userResponse.User,
+	})
+}
+
+func (h YinbiHandler) sendRecoverRequest(address string) (*models.UserResponse, error) {
+	params := &models.AccountParams{
+		PublicKey: address,
+	}
+	requestBody, err := json.Marshal(params)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := h.DoRequest(http.MethodPost, h.GetAuthAddr(recoverAccountEndpoint),
+		requestBody)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	userResponse := new(models.UserResponse)
+	err = json.Unmarshal(body, userResponse)
+	if err != nil {
+		return nil, err
+	}
+	return userResponse, nil
+}
+
 func (h YinbiHandler) getAccountTransactions(w http.ResponseWriter,
 	r *http.Request) {
 	var request struct {
@@ -246,7 +304,6 @@ func (h YinbiHandler) getAccountTransactions(w http.ResponseWriter,
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
-	log.Debugf("Request decoded: %+v", request)
 	address := request.Address
 	cursor := request.Cursor
 	order := request.Order

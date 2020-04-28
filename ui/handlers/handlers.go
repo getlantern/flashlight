@@ -1,12 +1,18 @@
 package handlers
 
 import (
+	"bytes"
 	"fmt"
 	"html"
 	"net/http"
 
 	"github.com/getlantern/flashlight/ui/params"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
+)
+
+var (
+	log = golog.LoggerFor("flashlight.ui.handlers")
 )
 
 type HandlerFunc func(http.ResponseWriter, *http.Request)
@@ -40,6 +46,24 @@ func New(params Params) Handler {
 // GetAuthAddr combines the given uri with the Lantern authentication server address
 func (h Handler) GetAuthAddr(uri string) string {
 	return fmt.Sprintf("%s%s", h.authServerAddr, uri)
+}
+
+func (h Handler) DoRequest(method, url string,
+	requestBody []byte) (*http.Response, error) {
+	log.Debugf("Sending new request to url %s", url)
+	var req *http.Request
+	var err error
+	if requestBody != nil {
+		req, err = http.NewRequest(method, url,
+			bytes.NewBuffer(requestBody))
+	} else {
+		req, err = http.NewRequest(method, url, nil)
+	}
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set(common.HeaderContentType, common.MIMEApplicationJSON)
+	return h.HttpClient.Do(req)
 }
 
 // proxyHandler is a HTTP handler used to proxy requests
