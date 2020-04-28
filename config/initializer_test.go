@@ -24,12 +24,12 @@ func TestInit(t *testing.T) {
 
 	// Note these dispatch functions will receive multiple configs -- local ones,
 	// embedded ones, and remote ones.
-	proxiesDispatch := func(cfg interface{}) {
+	proxiesDispatch := func(cfg interface{}, src Source) {
 		proxies := cfg.(map[string]*chained.ChainedServerInfo)
 		assert.True(t, len(proxies) > 0)
 		gotProxies.Set(true)
 	}
-	globalDispatch := func(cfg interface{}) {
+	globalDispatch := func(cfg interface{}, src Source) {
 		global := cfg.(*Global)
 		assert.True(t, len(global.Client.MasqueradeSets) > 1)
 		gotGlobal.Set(true)
@@ -78,10 +78,8 @@ func TestInitWithURLs(t *testing.T) {
 		flags := make(map[string]interface{})
 		flags["staging"] = true
 
-		// Note these dispatch functions will receive multiple configs -- local ones,
-		// embedded ones, and remote ones.
-		proxiesDispatch := func(cfg interface{}) {}
-		globalDispatch := func(cfg interface{}) {}
+		proxiesDispatch := func(interface{}, Source) {}
+		globalDispatch := func(interface{}, Source) {}
 		stop := InitWithURLs(inTempDir("."), flags, newTestUserConfig(), proxiesDispatch, globalDispatch,
 			proxyConfigURL, globalConfigURL, &http.Transport{})
 		defer stop()

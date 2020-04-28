@@ -17,6 +17,15 @@ import (
 	"github.com/getlantern/flashlight/ops"
 )
 
+// Source specifies where the config is from when dispatching.
+type Source string
+
+const (
+	Saved    Source = "saved"
+	Embedded Source = "embedded"
+	Fetched  Source = "fetched"
+)
+
 // Config is an interface for getting proxy data saved locally, embedded
 // in the binary, or fetched over the network.
 type Config interface {
@@ -70,7 +79,7 @@ type options struct {
 
 	// dispatch is essentially a callback function for processing retrieved
 	// yaml configs.
-	dispatch func(cfg interface{})
+	dispatch func(cfg interface{}, src Source)
 
 	// embeddedData is the data for embedded configs, using tarfs.
 	embeddedData []byte
@@ -107,14 +116,14 @@ func pipeConfig(opts *options) (stop func()) {
 	// goroutines, however, since the polling routine is started after the prior
 	// calls to dispatch return.
 	var lastCfg interface{}
-	dispatch := func(cfg interface{}) {
+	dispatch := func(cfg interface{}, src Source) {
 		a := lastCfg
 		b := yamlRoundTrip(cfg)
 		if reflect.DeepEqual(a, b) {
 			log.Debug("Config unchanged, ignoring")
 		} else {
 			log.Debug("Dispatching updated config")
-			opts.dispatch(cfg)
+			opts.dispatch(cfg, src)
 			lastCfg = b
 		}
 	}
@@ -133,18 +142,18 @@ func pipeConfig(opts *options) (stop func()) {
 			log.Errorf("Could not load embedded config %v", errr)
 		} else {
 			log.Debugf("Sending embedded config for %v", opts.name)
-			dispatch(embedded)
+			dispatch(embedded, Embedded)
 		}
 	} else {
 		log.Debugf("Sending saved config for %v", opts.name)
-		dispatch(saved)
+		dispatch(saved, Saved)
 	}
 
 	// Now continually poll for new configs and pipe them back to the dispatch
 	// function.
 	if !opts.sticky {
 		fetcher := newFetcher(opts.userConfig, opts.rt, opts.originURL)
-		go conf.poll(stopCh, dispatch, fetcher, opts.sleep)
+		go conf.poll(stopCh, func(cfg interface{}) { dispatch(cfg, Fetched) }, fetcher, opts.sleep)
 	} else {
 		log.Debugf("Using sticky config")
 	}
