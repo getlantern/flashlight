@@ -311,6 +311,8 @@ github.com/getlantern/lampshade v0.0.0-20200123165158-e0efbb58c68b h1:vj38qXPBAw
 github.com/getlantern/lampshade v0.0.0-20200123165158-e0efbb58c68b/go.mod h1:LUY/ad1TCBCGnBIF5os1WwLZ+LVnlaG4pIUaIdkrmFw=
 github.com/getlantern/lantern-server v0.0.0-20200428191617-8f053361c5f4 h1:eZ2iqz/KO0mUkDyi6EQ1ijhd0ofeLB3RGMSL9ilFkw4=
 github.com/getlantern/lantern-server v0.0.0-20200428191617-8f053361c5f4/go.mod h1:WIp/q8x/5w2QqfNdIvulJ9cMpx9HNjd4sf6HRTNKvPI=
+github.com/getlantern/lantern-server v0.0.0-20200428204212-63fc858a16f5 h1:tsLEyP6/+hGneJrprP0LsmVWubi0bQURvPbmVbIJelw=
+github.com/getlantern/lantern-server v0.0.0-20200428204212-63fc858a16f5/go.mod h1:WIp/q8x/5w2QqfNdIvulJ9cMpx9HNjd4sf6HRTNKvPI=
 github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894 h1:Gzf64TTHyKH4HEe1dgwnf7BOaq5rJZg25Hqz5TmogEI=
 github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894/go.mod h1:h57jtqyH1HCLYu53nnr3WTUntPozt5ztqQ9aN687VEY=
 github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358 h1:ZPe/LMCpCEuHtfBp2NP3/A9KRXQJbTxeSOVWmcBzXIc=
