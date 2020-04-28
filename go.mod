@@ -3,12 +3,10 @@ module github.com/getlantern/flashlight
 go 1.12
 
 require (
-	cloud.google.com/go v0.56.0 // indirect
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/go-libutp v1.0.1
 	github.com/anacrolix/mmsg v1.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.30.15 // indirect
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
@@ -47,7 +45,7 @@ require (
 	github.com/getlantern/kcpwrapper v0.0.0-20171114192627-a35c895f6de7
 	github.com/getlantern/keyman v0.0.0-20180207174507-f55e7280e93a
 	github.com/getlantern/lampshade v0.0.0-20200123165158-e0efbb58c68b
-	github.com/getlantern/lantern-server v0.0.0-20200428191617-8f053361c5f4
+	github.com/getlantern/lantern-server v0.0.0-20200428204212-63fc858a16f5
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
@@ -84,6 +82,7 @@ require (
 	github.com/getsentry/sentry-go v0.5.1
 	github.com/go-chi/chi v4.1.1+incompatible // indirect
 	github.com/go-errors/errors v1.0.2 // indirect
+	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/gobuffalo/envy v1.9.0 // indirect
 	github.com/golang/protobuf v1.4.0 // indirect
 	github.com/gorilla/websocket v1.4.0
@@ -101,7 +100,6 @@ require (
 	github.com/mitchellh/go-server-timing v1.0.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/mitchellh/panicwrap v0.0.0-20190228164358-f67bf3f3d291
-	github.com/olivere/elastic/v7 v7.0.9 // indirect
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/refraction-networking/utls v0.0.0-20190909200633-43c36d3c1f57
@@ -114,18 +112,16 @@ require (
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.5.1
 	github.com/tyler-smith/go-bip39 v1.0.2 // indirect
-	github.com/ulule/limiter/v3 v3.5.0 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
-	github.com/xdrpp/stc v0.0.0-20191113232203-b257d8ace4e0 // indirect
 	golang.org/x/crypto v0.0.0-20200427165652-729f1e841bcc // indirect
 	golang.org/x/net v0.0.0-20200425230154-ff2c4b7c35a0
-	golang.org/x/sys v0.0.0-20200427175716-29b57079015a // indirect
-	google.golang.org/api v0.22.0 // indirect
+	golang.org/x/sys v0.0.0-20200428200454-593003d681fa // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/genproto v0.0.0-20200428115010-c45acf45369a // indirect
 	google.golang.org/grpc v1.29.1 // indirect
-	gopkg.in/ezzarghili/recaptcha-go.v4 v4.1.0 // indirect
 )
+
+replace github.com/getlantern/lantern-server => ../lantern-server
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20200211213545-301421f7c3c9
 
