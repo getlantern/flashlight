@@ -58,8 +58,8 @@ func (h AuthHandler) Routes() map[string]handlers.HandlerFunc {
 		h.proxy.ServeHTTP(w, r)
 	}
 	return map[string]handlers.HandlerFunc{
-		"/login":       h.AuthHandle,
-		"/register":    h.AuthHandle,
+		"/login":       h.authHandler,
+		"/register":    h.authHandler,
 		"/user/logout": proxyHandler,
 	}
 }
@@ -136,7 +136,7 @@ func (h AuthHandler) HandleAuthResponse(srpClient *srp.SRPClient,
 // authHandler is the HTTP handler used by the login and
 // registration endpoints. It creates a new SRP client from
 // the user params in the request
-func (h AuthHandler) AuthHandle(w http.ResponseWriter, req *http.Request) {
+func (h AuthHandler) authHandler(w http.ResponseWriter, req *http.Request) {
 	params, srpClient, err := h.GetSRPClient(req, false)
 	if err != nil {
 		return

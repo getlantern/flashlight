@@ -32,7 +32,7 @@ const TestPassword = "p@sswor1234!"
 
 func getClient(t *testing.T, params *models.UserParams, h AuthHandler) (*models.UserParams, *srp.SRPClient) {
 	req := createAuthRequest(params, loginEndpoint)
-	params, client, err := h.getSRPClient(req)
+	params, client, err := h.GetSRPClient(req, true)
 	assert.NoError(t, err, "Should be no error creating SRP client")
 	assert.NotNil(t, client)
 	assert.Equal(t, params.Password, "")
