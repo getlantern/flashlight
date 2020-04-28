@@ -48,6 +48,8 @@ func (h Handler) GetAuthAddr(uri string) string {
 	return fmt.Sprintf("%s%s", h.authServerAddr, uri)
 }
 
+// DoRequest creates and sends a new HTTP request to the given url
+// with an optional requestBody. It returns an HTTP response
 func (h Handler) DoRequest(method, url string,
 	requestBody []byte) (*http.Response, error) {
 	log.Debugf("Sending new request to url %s", url)

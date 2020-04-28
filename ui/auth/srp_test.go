@@ -77,7 +77,7 @@ func TestSRP(t *testing.T) {
 			nil,
 		},
 		{
-			"Register User - Username Taken",
+			"Username Taken",
 			models.UserParams{
 				Username: user.Username,
 				Email:    fmt.Sprintf("%s@test.com", utils.GenerateRandomString(12)),
@@ -91,7 +91,7 @@ func TestSRP(t *testing.T) {
 			},
 		},
 		{
-			"Register User - Email Taken",
+			"Email Taken",
 			models.UserParams{
 				Username: utils.GenerateRandomString(12),
 				Email:    user.Email,
@@ -141,7 +141,7 @@ func TestSRP(t *testing.T) {
 				var resp models.AuthResponse
 				testutils.DecodeResp(t, rec, &resp)
 				assert.Equal(t, rec.Code, http.StatusOK)
-				assert.NotEmpty(t, resp.UserID)
+				assert.NotEmpty(t, resp.User)
 				assert.NotEmpty(t, resp.Credentials)
 			} else {
 				var resp params.Response
