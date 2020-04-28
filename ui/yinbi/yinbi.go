@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/flashlight/ui/auth"
 	"github.com/getlantern/flashlight/ui/handlers"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
@@ -25,6 +26,7 @@ import (
 const (
 	issuer                 = "GBAUT37VU4WN466IGBMDOOWJSIGIULAQM62WB467HS4R3TJ3IEDH3FPK"
 	recoverAccountEndpoint = "/account/recover"
+	resetPasswordEndpoint  = "/account/password/reset"
 )
 
 var (
@@ -35,7 +37,7 @@ var (
 // YinbiHandler is the group of handlers used for handling
 // yinbi-related requests to the UI server
 type YinbiHandler struct {
-	handlers.Handler
+	auth.AuthHandler
 
 	// yinbiClient is a client for the Yinbi API which
 	// supports creating accounts and making payments
@@ -47,7 +49,15 @@ type YinbiHandler struct {
 
 func New(params handlers.Params) YinbiHandler {
 	return YinbiHandler{
-		Handler:     handlers.New(params),
+		keystore:    keystore.New(appdir.General("Lantern")),
+		yinbiClient: newYinbiClient(params.HttpClient),
+	}
+}
+
+func NewWithAuth(params handlers.Params,
+	authHandler auth.AuthHandler) YinbiHandler {
+	return YinbiHandler{
+		AuthHandler: authHandler,
 		keystore:    keystore.New(appdir.General("Lantern")),
 		yinbiClient: newYinbiClient(params.HttpClient),
 	}
@@ -55,14 +65,15 @@ func New(params handlers.Params) YinbiHandler {
 
 func (h YinbiHandler) Routes() map[string]handlers.HandlerFunc {
 	return map[string]handlers.HandlerFunc{
-		"/payment/new":          h.sendPaymentHandler,
-		"/user/account/new":     h.createAccountHandler,
-		"/user/import/wallet":   h.importWalletHandler,
-		"/account/details":      h.getAccountDetails,
-		"/account/recover":      h.recoverYinbiAccount,
-		"/account/transactions": h.getAccountTransactions,
-		"/user/mnemonic":        h.createMnemonic,
-		"/user/redeem/codes":    h.redeemCodesHandler,
+		"/payment/new":            h.sendPaymentHandler,
+		"/user/account/new":       h.createAccountHandler,
+		"/user/import/wallet":     h.importWalletHandler,
+		"/account/details":        h.getAccountDetails,
+		"/account/password/reset": h.resetPasswordHandler,
+		"/account/recover":        h.recoverYinbiAccount,
+		"/account/transactions":   h.getAccountTransactions,
+		"/user/mnemonic":          h.createMnemonic,
+		"/user/redeem/codes":      h.redeemCodesHandler,
 	}
 }
 
@@ -235,18 +246,56 @@ func (h YinbiHandler) getAccountDetails(w http.ResponseWriter,
 	return
 }
 
-func (h YinbiHandler) recoverYinbiAccount(w http.ResponseWriter,
-	r *http.Request) {
-	var request struct {
-		Words string `json:"words"`
-	}
-	err := common.DecodeJSONRequest(r, &request)
+func (h YinbiHandler) resetPasswordHandler(w http.ResponseWriter,
+	req *http.Request) {
+	_, pair, err := yinbi.ParseAddress(req)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
 	}
-	log.Debugf("Received new recover account request: Words are %s", request.Words)
-	address, err := h.yinbiClient.IsMnemonicValid(request.Words)
+	params, srpClient, err := h.GetSRPClient(req, true)
+	if err != nil {
+		h.ErrorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	newPassword := params.Password
+	params.Password = ""
+	log.Debugf("Received new reset password request from %s", params.Username)
+	requestBody, err := json.Marshal(params)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	req.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
+	onResp := func(resp *http.Response, body []byte) error {
+		err := h.HandleAuthResponse(srpClient, params, resp, body)
+		if err != nil {
+			return err
+		}
+		// send secret key to keystore
+		err = h.keystore.Store(pair.Seed(), params.Username,
+			newPassword)
+		if err != nil {
+			log.Debugf("Error sending secret key to keystore: %v", err)
+			return err
+		}
+		return nil
+	}
+	h.ProxyHandler(req, w, onResp, h.HandleAuthError)
+}
+
+func (h YinbiHandler) recoverYinbiAccount(w http.ResponseWriter,
+	r *http.Request) {
+	var params struct {
+		Words string `json:"words"`
+	}
+	err := common.DecodeJSONRequest(r, &params)
+	if err != nil {
+		h.ErrorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	log.Debug("Received new recover account request")
+	address, err := h.yinbiClient.IsMnemonicValid(params.Words)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
@@ -369,7 +418,8 @@ func (h YinbiHandler) createAccountHandler(w http.ResponseWriter,
 	onResp := func(resp *http.Response, body []byte) error {
 		return h.yinbiClient.TrustAsset(issuer, pair)
 	}
-	h.ProxyHandler(r, w, onResp, func(resp *http.Response, err error) {
+	h.ProxyHandler(r, w, onResp, func(w http.ResponseWriter,
+		resp *http.Response, err error) {
 		h.ErrorHandler(w, err, resp.StatusCode)
 	})
 }

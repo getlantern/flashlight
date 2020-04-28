@@ -58,8 +58,8 @@ func (h AuthHandler) Routes() map[string]handlers.HandlerFunc {
 		h.proxy.ServeHTTP(w, r)
 	}
 	return map[string]handlers.HandlerFunc{
-		"/login":       h.authHandler,
-		"/register":    h.authHandler,
+		"/login":       h.AuthHandle,
+		"/register":    h.AuthHandle,
 		"/user/logout": proxyHandler,
 	}
 }
@@ -84,13 +84,60 @@ func decodeAuthResponse(body []byte) (*models.AuthResponse, error) {
 	return authResp, err
 }
 
+func (h AuthHandler) HandleAuthError(w http.ResponseWriter,
+	resp *http.Response, err error) {
+	log.Debugf("Encountered error processing auth response: %v", err)
+	statusCode := http.StatusBadRequest
+	if resp != nil {
+		statusCode = resp.StatusCode
+	}
+	h.ErrorHandler(w, err, statusCode)
+}
+
+// HandleAuthResponse sends the SRP params (i.e. verifier) generated
+// on the client to the authentication server, establishing
+// a fully authenticated session
+func (h AuthHandler) HandleAuthResponse(srpClient *srp.SRPClient,
+	params *models.UserParams,
+	resp *http.Response, body []byte) error {
+	authResp, err := decodeAuthResponse(body)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK || authResp.Error != "" {
+		err = errors.New(authResp.Error)
+		return err
+	}
+	// client generates a mutual auth and sends it to the server
+	authResp, err = h.sendMutualAuth(srpClient,
+		authResp.Credentials, params.Username)
+	if err != nil {
+		return err
+	}
+	// Verify the server's proof
+	ok := srpClient.ServerOk(authResp.Proof)
+	if !ok {
+		return ErrInvalidCredentials
+	}
+	srv, err := srp.UnmarshalServer(authResp.Server)
+	if err != nil {
+		return err
+	}
+	// Client and server are successfully authenticated to each other
+	kc := srpClient.RawKey()
+	ks := srv.RawKey()
+	if 1 != subtle.ConstantTimeCompare(kc, ks) {
+		return ErrSRPKeysDifferent
+	}
+	log.Debug("Successfully created new SRP session")
+	return nil
+}
+
 // authHandler is the HTTP handler used by the login and
 // registration endpoints. It creates a new SRP client from
-// the user params in the request and sends the
-// SRP params (i.e. verifier) generated to the authentication
-// server, establishing a fully authenticated session
-func (h AuthHandler) authHandler(w http.ResponseWriter, req *http.Request) {
-	params, srpClient, err := h.getSRPClient(req)
+// the user params in the request
+func (h AuthHandler) AuthHandle(w http.ResponseWriter, req *http.Request) {
+	params, srpClient, err := h.GetSRPClient(req, false)
 	if err != nil {
 		return
 	}
@@ -99,48 +146,8 @@ func (h AuthHandler) authHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	req.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
-
-	onError := func(resp *http.Response, err error) {
-		log.Debugf("Encountered error processing auth response: %v", err)
-		statusCode := http.StatusBadRequest
-		if resp != nil {
-			statusCode = resp.StatusCode
-		}
-		h.ErrorHandler(w, err, statusCode)
-	}
-
 	onResp := func(resp *http.Response, body []byte) error {
-		authResp, err := decodeAuthResponse(body)
-		if err != nil {
-			return err
-		}
-		if resp.StatusCode != http.StatusOK || authResp.Error != "" {
-			err = errors.New(authResp.Error)
-			return err
-		}
-		// client generates a mutual auth and sends it to the server
-		authResp, err = h.sendMutualAuth(srpClient,
-			authResp.Credentials, params.Username)
-		if err != nil {
-			return err
-		}
-		// Verify the server's proof
-		ok := srpClient.ServerOk(authResp.Proof)
-		if !ok {
-			return ErrInvalidCredentials
-		}
-		srv, err := srp.UnmarshalServer(authResp.Server)
-		if err != nil {
-			return err
-		}
-		// Client and server are successfully authenticated to each other
-		kc := srpClient.RawKey()
-		ks := srv.RawKey()
-		if 1 != subtle.ConstantTimeCompare(kc, ks) {
-			return ErrSRPKeysDifferent
-		}
-		log.Debug("Successfully created new SRP session")
-		return nil
+		return h.HandleAuthResponse(srpClient, params, resp, body)
 	}
-	h.ProxyHandler(req, w, onResp, onError)
+	h.ProxyHandler(req, w, onResp, h.HandleAuthError)
 }
