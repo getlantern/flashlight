@@ -389,6 +389,8 @@ github.com/getlantern/yinbi-server v0.0.0-20200429173718-66632617a53c h1:4soiJnD
 github.com/getlantern/yinbi-server v0.0.0-20200429173718-66632617a53c/go.mod h1:SUBy9+rWKsqmSrvhUlVg+Yujk1ukVS/1rrG9+yf5v8k=
 github.com/getlantern/yinbi-server v0.0.0-20200429175227-b5a5aa68ca6b h1:PsOul2aPORHB+y2QaoZW/9ZgcV0PU3Woj9kp4qkcgwU=
 github.com/getlantern/yinbi-server v0.0.0-20200429175227-b5a5aa68ca6b/go.mod h1:6dW17E6t4IFMfCjaVbfTsQpEvZXXPhBoYlGGsiLTQ/g=
+github.com/getlantern/yinbi-server v0.0.0-20200429185349-f9fc8b7b036a h1:f3GGzk6s8SmhgGSh3h/bLixSL+sqnSOb8pgXoAEaMZM=
+github.com/getlantern/yinbi-server v0.0.0-20200429185349-f9fc8b7b036a/go.mod h1:6dW17E6t4IFMfCjaVbfTsQpEvZXXPhBoYlGGsiLTQ/g=
 github.com/getlantern/zenodb v0.0.0-20190809092412-0a2ce8ac3026/go.mod h1:LDw7qTXBZJkjYVIvR2iyi1J4PN8plch0VZzTzc7mDoM=
 github.com/getlantern/zenodb v0.0.0-20191107150234-58f0e128172a/go.mod h1:/QuMPlUCcgfXRy+yAwXWcAkBegF2Nl1lw0nJ+kSWEsA=
 github.com/getsentry/raven-go v0.0.0-20160805001729-c9d3cc542ad1/go.mod h1:KungGk8q33+aIAZUIVWZDr2OfAEBsO49PX4NzFV5kcQ=
