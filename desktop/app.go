@@ -444,6 +444,7 @@ func (app *App) checkForReplica(features map[string]bool) {
 			if err != nil {
 				log.Errorf("error creating replica http server: %v", err)
 				app.Exit(err)
+				return
 			}
 			app.AddExitFunc("cleanup replica http server", exitFunc)
 
