@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	issuer                 = "GBAUT37VU4WN466IGBMDOOWJSIGIULAQM62WB467HS4R3TJ3IEDH3FPK"
+	issuer                 = "GDVT32BZETHUQGGEVOEQBSADVT4Z7F6DDBUOXUVATRHRFTT6J7RDOS76"
 	recoverAccountEndpoint = "/account/recover"
 	resetPasswordEndpoint  = "/account/password/reset"
 )
