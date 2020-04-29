@@ -180,9 +180,11 @@ func (s *Server) attachHandlers() {
 		HttpClient:     s.httpClient,
 	}
 
+	authHandler := auth.New(params)
+
 	handlers := []handlers.UIHandler{
-		yinbi.New(params),
-		auth.New(params),
+		yinbi.NewWithAuth(params, authHandler),
+		authHandler,
 	}
 
 	for _, h := range handlers {

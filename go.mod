@@ -3,10 +3,12 @@ module github.com/getlantern/flashlight
 go 1.12
 
 require (
+	cloud.google.com/go v0.56.0 // indirect
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/go-libutp v1.0.1
 	github.com/anacrolix/mmsg v1.0.0 // indirect
+	github.com/aws/aws-sdk-go v1.30.16 // indirect
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
@@ -78,7 +80,7 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getlantern/yinbi-server v0.0.0-20200428180218-900c16008373
+	github.com/getlantern/yinbi-server v0.0.0-20200429173718-66632617a53c
 	github.com/getsentry/sentry-go v0.5.1
 	github.com/go-chi/chi v4.1.1+incompatible // indirect
 	github.com/go-errors/errors v1.0.2 // indirect
@@ -104,21 +106,24 @@ require (
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/refraction-networking/utls v0.0.0-20190909200633-43c36d3c1f57
 	github.com/rs/cors v1.7.0
-	github.com/shopspring/decimal v0.0.0-20200428023536-480f653de814 // indirect
+	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.5.0 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
-	github.com/stellar/go v0.0.0-20200427192452-698593a43c97
-	github.com/stellar/go-xdr v0.0.0-20200331223602-71a1e6d555f2 // indirect
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.5.1
 	github.com/tyler-smith/go-bip39 v1.0.2 // indirect
+	github.com/ulule/limiter/v3 v3.5.0 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	golang.org/x/crypto v0.0.0-20200427165652-729f1e841bcc // indirect
 	golang.org/x/net v0.0.0-20200425230154-ff2c4b7c35a0
 	golang.org/x/sys v0.0.0-20200428200454-593003d681fa // indirect
+	google.golang.org/api v0.22.0 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
-	google.golang.org/genproto v0.0.0-20200428115010-c45acf45369a // indirect
+	google.golang.org/genproto v0.0.0-20200429120912-1f37eeb960b2 // indirect
 	google.golang.org/grpc v1.29.1 // indirect
+	gopkg.in/ezzarghili/recaptcha-go.v4 v4.1.0 // indirect
+	gopkg.in/validator.v2 v2.0.0-20191107172027-c3144fdedc21 // indirect
+	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20200211213545-301421f7c3c9
