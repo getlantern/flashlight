@@ -49,8 +49,9 @@ import (
 )
 
 const (
-	SENTRY_DSN     = "https://f65aa492b9524df79b05333a0b0924c5@sentry.io/2222244"
-	SENTRY_TIMEOUT = time.Second * 30
+	SENTRY_DSN               = "https://f65aa492b9524df79b05333a0b0924c5@sentry.io/2222244"
+	SENTRY_TIMEOUT           = time.Second * 30
+	SENTRY_MAX_MESSAGE_CHARS = 8000
 )
 
 var (
@@ -78,7 +79,7 @@ type App struct {
 	muExitFuncs sync.RWMutex
 	exitFuncs   []func()
 
-	uiServer              *ui.Server
+	uiServerCh            chan *ui.Server
 	ws                    ws.UIChannel
 	chrome                chromeExtension
 	chGlobalConfigChanged chan bool
@@ -104,6 +105,7 @@ type App struct {
 func (app *App) Init() {
 	golog.OnFatal(app.exitOnFatal)
 	app.Flags["staging"] = common.Staging
+	app.uiServerCh = make(chan *ui.Server, 1)
 	app.chrome = newChromeExtension()
 	//app.chrome.install()
 	settings = app.loadSettings()
@@ -158,6 +160,12 @@ func (app *App) exitOnFatal(err error) {
 	app.Exit(err)
 }
 
+func (app *App) uiServer() *ui.Server {
+	server := <-app.uiServerCh
+	app.uiServerCh <- server
+	return server
+}
+
 // Run starts the app. It will block until the app exits.
 func (app *App) Run() {
 	golog.OnFatal(app.exitOnFatal)
@@ -203,9 +211,8 @@ func (app *App) Run() {
 			app.Flags["configdir"].(string),
 			app.Flags["vpn"].(bool),
 			func() bool { return settings.getBool(SNDisconnected) }, // check whether we're disconnected
-			func() bool { return !settings.GetProxyAll() },          // use shortcut
-			func() bool { return !settings.GetProxyAll() },          // use detour
-			func() bool { return false },                            // on desktop, we do not allow private hosts
+			settings.GetProxyAll,
+			func() bool { return false }, // on desktop, we do not allow private hosts
 			settings.IsAutoReport,
 			app.Flags,
 			app.onConfigUpdate,
@@ -355,16 +362,17 @@ func (app *App) beforeStart(listenAddr string) {
 
 	standalone := app.Flags["standalone"] != nil && app.Flags["standalone"].(bool)
 	// ui will handle empty uiaddr correctly
-	if app.uiServer, err = ui.StartServer(uiaddr,
+	uiServer, err := ui.StartServer(uiaddr,
 		startupURL,
 		app.localHttpToken(),
 		standalone,
-	); err != nil {
+	)
+	if err != nil {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		return
 	}
-	app.uiServer.Handle("/pro/", pro.APIHandler(settings))
-	app.uiServer.Handle("/data", app.ws.Handler())
+	uiServer.Handle("/pro/", pro.APIHandler(settings))
+	uiServer.Handle("/data", app.ws.Handler())
 
 	if app.ShouldShowUI() {
 		go func() {
@@ -377,11 +385,13 @@ func (app *App) beforeStart(listenAddr string) {
 			})
 		}()
 	}
+	app.uiServerCh <- uiServer
 
 	if e := settings.StartService(app.ws); e != nil {
 		app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
+		return
 	}
-	settings.SetUIAddr(app.uiServer.GetUIAddr())
+	settings.SetUIAddr(uiServer.GetUIAddr())
 
 	if err = app.statsTracker.StartService(app.ws); err != nil {
 		log.Errorf("Unable to serve stats to UI: %v", err)
@@ -434,12 +444,13 @@ func (app *App) checkForReplica(features map[string]bool) {
 			if err != nil {
 				log.Errorf("error creating replica http server: %v", err)
 				app.Exit(err)
+				return
 			}
 			app.AddExitFunc("cleanup replica http server", exitFunc)
 
 			// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
 			// in their handlers.
-			app.uiServer.Handle("/replica/", http.StripPrefix(
+			app.uiServer().Handle("/replica/", http.StripPrefix(
 				"/replica",
 				replicaHandler))
 		})
@@ -512,7 +523,7 @@ func (app *App) afterStart(cl *client.Client) {
 		// URL and the proxy server are all up and running to avoid
 		// race conditions where we change the proxy setup while the
 		// UI server and proxy server are still coming up.
-		app.uiServer.ShowRoot("startup", "lantern", app.statsTracker)
+		app.uiServer().ShowRoot("startup", "lantern", app.statsTracker)
 	} else {
 		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
 	}
@@ -685,6 +696,16 @@ func (app *App) Exit(err error) bool {
 func (app *App) doExit(err error) {
 	if err != nil {
 		log.Errorf("Exiting app %d(%d) because of %v", os.Getpid(), os.Getppid(), err)
+		if ShouldReportToSentry() {
+			sentry.ConfigureScope(func(scope *sentry.Scope) {
+				scope.SetLevel(sentry.LevelFatal)
+			})
+
+			sentry.CaptureException(err)
+			if result := sentry.Flush(SENTRY_TIMEOUT); result == false {
+				log.Error("Flushing to Sentry timed out")
+			}
+		}
 	} else {
 		log.Debugf("Exiting app %d(%d)", os.Getpid(), os.Getppid())
 	}
@@ -778,22 +799,22 @@ func ShouldReportToSentry() bool {
 
 // OnTrayShow indicates the user has selected to show lantern from the tray.
 func (app *App) OnTrayShow() {
-	app.uiServer.ShowRoot("show-lantern", "tray", app.statsTracker)
+	app.uiServer().ShowRoot("show-lantern", "tray", app.statsTracker)
 }
 
 // OnTrayUpgrade indicates the user has selected to upgrade lantern from the tray.
 func (app *App) OnTrayUpgrade() {
-	app.uiServer.Show(app.PlansURL(), "proupgrade", "tray", app.statsTracker)
+	app.uiServer().Show(app.PlansURL(), "proupgrade", "tray", app.statsTracker)
 }
 
 // PlansURL returns the URL for accessing the checkout/plans page directly.
 func (app *App) PlansURL() string {
-	return app.uiServer.AddToken("/") + "#/plans"
+	return app.uiServer().AddToken("/") + "#/plans"
 }
 
 // AddToken adds our secure token to a given request path.
 func (app *App) AddToken(path string) string {
-	return app.uiServer.AddToken(path)
+	return app.uiServer().AddToken(path)
 }
 
 // GetTranslations adds our secure token to a given request path.
