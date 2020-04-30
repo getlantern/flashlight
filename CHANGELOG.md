@@ -2,7 +2,15 @@
 
 ## [Unreleased](https://github.com/getlantern/flashlight/tree/HEAD)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.6...HEAD)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.7...HEAD)
+
+**Merged pull requests:**
+
+- report a bit more information when flashlight timeout is hit [\#807](https://github.com/getlantern/flashlight/pull/807) ([joesis](https://github.com/joesis))
+
+## [5.9.7](https://github.com/getlantern/flashlight/tree/5.9.7) (2020-04-29)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.6...5.9.7)
 
 **Merged pull requests:**
 
@@ -135,6 +143,7 @@
 **Merged pull requests:**
 
 - disable chrome extension [\#751](https://github.com/getlantern/flashlight/pull/751) ([myleshorton](https://github.com/myleshorton))
+- New go mod tidy for latest go stable release [\#750](https://github.com/getlantern/flashlight/pull/750) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.8.0](https://github.com/getlantern/flashlight/tree/5.8.0) (2020-02-07)
 
@@ -142,7 +151,6 @@
 
 **Merged pull requests:**
 
-- New go mod tidy for latest go stable release [\#750](https://github.com/getlantern/flashlight/pull/750) ([myleshorton](https://github.com/myleshorton))
 - Added exclude tags [\#749](https://github.com/getlantern/flashlight/pull/749) ([myleshorton](https://github.com/myleshorton))
 - Add Sentry panic reporting and adjust panicwrapper signal handling [\#748](https://github.com/getlantern/flashlight/pull/748) ([max-b](https://github.com/max-b))
 - Respect server's session tickets when possible even when using config… [\#747](https://github.com/getlantern/flashlight/pull/747) ([oxtoacart](https://github.com/oxtoacart))
@@ -204,7 +212,6 @@
 **Merged pull requests:**
 
 - Fix test failure with older go versions [\#705](https://github.com/getlantern/flashlight/pull/705) ([myleshorton](https://github.com/myleshorton))
-- Test for embedded global [\#704](https://github.com/getlantern/flashlight/pull/704) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.6.3](https://github.com/getlantern/flashlight/tree/5.6.3) (2019-10-28)
 
