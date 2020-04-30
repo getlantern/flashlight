@@ -22,10 +22,31 @@ var (
 	// FullyReportedOps are ops which are reported at 100% to borda, irrespective
 	// of the borda sample percentage. This should all be low-volume operations,
 	// otherwise we will utilize too much bandwidth on the client.
-	FullyReportedOps = []string{"proxybench", "client_started", "client_stopped", "connect", "disconnect", "traffic", "catchall_fatal", "sysproxy_on", "sysproxy_off", "sysproxy_off_force", "sysproxy_clear", "report_issue", "proxy_rank", "proxy_selection_stability", "probe", "balancer_dial", "proxy_dial"}
+	FullyReportedOps = []string{
+		"proxybench",
+		"client_started",
+		"client_stopped",
+		"connect",
+		"disconnect",
+		"traffic",
+		"catchall_fatal",
+		"sysproxy_on",
+		"sysproxy_off",
+		"sysproxy_off_force",
+		"sysproxy_clear",
+		"report_issue",
+		"proxy_rank",
+		"proxy_selection_stability",
+		"probe",
+		"balancer_dial",
+		"proxy_dial",
+		"youtube_view"}
 
 	// LightweightOps are ops for which we record less than the full set of dimensions (e.g. omit error)
-	LightweightOps = []string{"balancer_dial", "proxy_dial"}
+	LightweightOps = []string{
+		"balancer_dial",
+		"proxy_dial",
+		"youtube_view"}
 
 	// BeforeSubmit is an optional callback to capture when borda batches are
 	// submitted. It's mostly useful for unit testing.
