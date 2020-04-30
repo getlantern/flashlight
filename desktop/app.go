@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/golog"
@@ -67,7 +68,9 @@ func init() {
 
 // App is the core of the Lantern desktop application, in the form of a library.
 type App struct {
-	hasExited int64
+	hasExited            int64
+	fetchedGlobalConfig  int32
+	fetchedProxiesConfig int32
 
 	Flags        map[string]interface{}
 	exited       eventual.Value
@@ -188,6 +191,15 @@ func (app *App) Run() {
 		}
 		if socksAddr == "" {
 			socksAddr = defaultSOCKSProxyAddress
+		}
+
+		if timeout := app.Flags["timeout"].(time.Duration); timeout > 0 {
+			go func() {
+				time.AfterFunc(timeout, func() {
+					app.Exit(errors.New("No succeeding proxy got after running for %v, global config fetched: %v, proxies fetched: %v",
+						timeout, atomic.LoadInt32(&app.fetchedGlobalConfig) == 1, atomic.LoadInt32(&app.fetchedProxiesConfig) == 1))
+				})
+			}()
 		}
 
 		if app.Flags["initialize"].(bool) {
@@ -487,7 +499,10 @@ func (app *App) afterStart(cl *client.Client) {
 	}
 }
 
-func (app *App) onConfigUpdate(cfg *config.Global) {
+func (app *App) onConfigUpdate(cfg *config.Global, src config.Source) {
+	if src == config.Fetched {
+		atomic.StoreInt32(&app.fetchedGlobalConfig, 1)
+	}
 	autoupdate.Configure(cfg.UpdateServerURL, cfg.AutoUpdateCA, func() string {
 		return app.AddToken("/img/lantern_logo.png")
 	})
@@ -495,7 +510,10 @@ func (app *App) onConfigUpdate(cfg *config.Global) {
 	//app.configureTrafficLog(*cfg)
 }
 
-func (app *App) onProxiesUpdate(proxies []balancer.Dialer) {
+func (app *App) onProxiesUpdate(proxies []balancer.Dialer, src config.Source) {
+	if src == config.Fetched {
+		atomic.StoreInt32(&app.fetchedProxiesConfig, 1)
+	}
 	/*
 		app.trafficLogLock.Lock()
 		app.proxiesLock.Lock()

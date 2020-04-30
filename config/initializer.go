@@ -48,8 +48,8 @@ var (
 // fetching per-user proxies as well as the global config. It returns a function
 // that can be used to stop the reading of configs.
 func Init(configDir string, flags map[string]interface{},
-	userConfig common.UserConfig, proxiesDispatch func(interface{}),
-	origGlobalDispatch func(interface{}), rt http.RoundTripper) (stop func()) {
+	userConfig common.UserConfig, proxiesDispatch func(interface{}, Source),
+	origGlobalDispatch func(interface{}, Source), rt http.RoundTripper) (stop func()) {
 	staging := isStaging(flags)
 	proxyConfigURL := checkOverrides(flags, getProxyURL(staging), "proxies.yaml.gz")
 	globalConfigURL := checkOverrides(flags, getGlobalURL(staging), "global.yaml.gz")
@@ -58,13 +58,18 @@ func Init(configDir string, flags map[string]interface{},
 		origGlobalDispatch, proxyConfigURL, globalConfigURL, rt)
 }
 
+type cfgWithSource struct {
+	cfg interface{}
+	src Source
+}
+
 // InitWithURLs initializes the config setup for both fetching per-user proxies
 // as well as the global config given a set of URLs for fetching proxy and
 // global config. It returns a function that can be used to stop the reading of
 // configs.
 func InitWithURLs(configDir string, flags map[string]interface{},
-	userConfig common.UserConfig, origProxiesDispatch func(interface{}),
-	origGlobalDispatch func(interface{}), proxyURL string,
+	userConfig common.UserConfig, origProxiesDispatch func(interface{}, Source),
+	origGlobalDispatch func(interface{}, Source), proxyURL string,
 	globalURL string, rt http.RoundTripper) (stop func()) {
 	var mx sync.RWMutex
 	globalConfigPollInterval := DefaultGlobalConfigPollInterval
@@ -73,20 +78,20 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 		proxyConfigPollInterval = ForceProxyConfigPollInterval
 	}
 
-	globalDispatchCh := make(chan interface{})
-	proxiesDispatchCh := make(chan interface{})
+	globalDispatchCh := make(chan cfgWithSource)
+	proxiesDispatchCh := make(chan cfgWithSource)
 	go func() {
-		for cfg := range globalDispatchCh {
-			origGlobalDispatch(cfg)
+		for c := range globalDispatchCh {
+			origGlobalDispatch(c.cfg, c.src)
 		}
 	}()
 	go func() {
-		for cfg := range proxiesDispatchCh {
-			origProxiesDispatch(cfg)
+		for c := range proxiesDispatchCh {
+			origProxiesDispatch(c.cfg, c.src)
 		}
 	}()
 
-	globalDispatch := func(cfg interface{}) {
+	globalDispatch := func(cfg interface{}, src Source) {
 		globalConfig, ok := cfg.(*Global)
 		if ok {
 			mx.Lock()
@@ -103,11 +108,11 @@ func InitWithURLs(configDir string, flags map[string]interface{},
 		// `globalDispatchCh`. This (a) avoids blocking Lantern startup when
 		// applying new configuration and (b) allows us to serialize application of
 		// config changes.
-		globalDispatchCh <- cfg
+		globalDispatchCh <- cfgWithSource{cfg, src}
 	}
 
-	proxiesDispatch := func(cfg interface{}) {
-		proxiesDispatchCh <- cfg
+	proxiesDispatch := func(cfg interface{}, src Source) {
+		proxiesDispatchCh <- cfgWithSource{cfg, src}
 	}
 
 	// These are the options for fetching the per-user proxy config.
