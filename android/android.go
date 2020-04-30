@@ -339,7 +339,7 @@ func run(configDir, locale string,
 			cl.Set(c)
 			afterStart(session)
 		},
-		func(cfg *config.Global) {
+		func(cfg *config.Global, src config.Source) {
 			session.UpdateAdSettings(&adSettings{cfg.AdSettings})
 			email.SetDefaultRecipient(cfg.ReportIssueEmail)
 		}, // onConfigUpdate

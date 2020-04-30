@@ -16,7 +16,6 @@ import (
 	"time"
 
 	"github.com/getlantern/appdir"
-	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/osversion"
@@ -165,14 +164,6 @@ func main() {
 			if err := srv.ListenAndServe(); err != nil {
 				log.Error(err)
 			}
-		}()
-	}
-
-	if *timeout > 0 {
-		go func() {
-			time.AfterFunc(*timeout, func() {
-				a.Exit(errors.New("timed out after running for %v", *timeout))
-			})
 		}()
 	}
 
