@@ -71,7 +71,11 @@ func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *C
 	client, _ := NewClient(
 		func() bool { return false },
 		func() bool { return true },
-		func(context.Context, string) (bool, net.IP) { return false, nil },
+		func() bool { return false },
+		func() bool { return false },
+		func(ctx context.Context, addr string) (bool, net.IP) {
+			return false, nil
+		},
 		func() bool { return true },
 		func() bool { return true },
 		newTestUserConfig(),
@@ -165,10 +169,16 @@ func TestDialShortcut(t *testing.T) {
 	client := newClient()
 	shortcutVisited := 0
 
-	client.allowShortcut = func(ctx context.Context, addr string) (bool, net.IP) {
+	client.allowShortcutTo = func(ctx context.Context, addr string) (bool, net.IP) {
 		shortcutVisited++
 		return true, net.ParseIP(addr)
 	}
+
+	req, _ := http.NewRequest("GET", site.URL, nil)
+	res, _ := roundTrip(client, req)
+	assert.Zero(t, shortcutVisited, "should not check shortcut list when shortcut is disabled")
+
+	client.useShortcut = func() bool { return true }
 	// used as a sign that the request is sent to proxy
 	mockResponse := []byte("HTTP/1.1 404 Not Found\r\n\r\n")
 	// add some delay before sending back data, as response before the request
@@ -178,8 +188,8 @@ func TestDialShortcut(t *testing.T) {
 	delayed404 := mockconn.SlowResponder(mockconn.SucceedingDialer(mockResponse), 50*time.Millisecond)
 	resetBalancer(client, delayed404.Dial)
 
-	req, _ := http.NewRequest("GET", site.URL, nil)
-	res, _ := roundTrip(client, req)
+	req, _ = http.NewRequest("GET", site.URL, nil)
+	res, _ = roundTrip(client, req)
 	assert.Equal(t, 1, shortcutVisited, "should check shortcut list")
 	assert.Equal(t, 200, res.StatusCode, "should respond with 200 when a shortcutted site is reachable")
 	body, _ := ioutil.ReadAll(res.Body)
@@ -199,7 +209,8 @@ func TestDialShortcut(t *testing.T) {
 	}
 	assert.Equal(t, 404, nestedResp.StatusCode, "should dial proxy if the shortcutted site is unreachable")
 
-	client.allowShortcut = func(context.Context, string) (bool, net.IP) {
+	client.useShortcut = func() bool { return true }
+	client.allowShortcutTo = func(context.Context, string) (bool, net.IP) {
 		shortcutVisited++
 		return false, nil
 	}
@@ -237,7 +248,8 @@ func TestTimeoutCheckingShortcut(t *testing.T) {
 	client := newClient()
 	client.requestTimeout = requestTimeout
 	client.useDetour = func() bool { return false }
-	client.allowShortcut = func(ctx context.Context, addr string) (bool, net.IP) {
+	client.useShortcut = func() bool { return true }
+	client.allowShortcutTo = func(ctx context.Context, addr string) (bool, net.IP) {
 		// In theory allowShortcut should never exceed the context deadline,
 		// but it could happen in cases like computer resuming from sleeping.
 		time.Sleep(requestTimeout * 2)

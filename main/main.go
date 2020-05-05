@@ -29,6 +29,7 @@ import (
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/desktop"
 	"github.com/getlantern/flashlight/logging"
+	"github.com/getlantern/flashlight/util"
 )
 
 var (
@@ -86,6 +87,23 @@ func main() {
 		sentry.Init(sentry.ClientOptions{
 			Dsn:     desktop.SENTRY_DSN,
 			Release: common.Version,
+			BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+				// An attempt at keeping sentry from grouping distinct panics with the same top level message
+				// see https://github.com/getlantern/lantern-internal/issues/3651
+				// and https://docs.sentry.io/data-management/event-grouping/sdk-fingerprinting/?platform=go
+				fingerprint := event.Message
+				messageLines := strings.Split(event.Message, "\n")
+				if len(messageLines) > 5 {
+					fingerprint = strings.Join([]string{messageLines[0], messageLines[1], messageLines[4], messageLines[5]}, "\n")
+				}
+				event.Fingerprint = []string{"{{ default }}", fingerprint}
+
+				// sentry's sdk has a somewhat undocumented max message length
+				// after which it seems it will silently drop/fail to send messages
+				// https://github.com/getlantern/flashlight/pull/806
+				event.Message = util.TrimStringAsBytes(event.Message, desktop.SENTRY_MAX_MESSAGE_CHARS)
+				return event
+			},
 		})
 
 		sentry.ConfigureScope(func(scope *sentry.Scope) {

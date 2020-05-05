@@ -114,7 +114,7 @@ func main() {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cfgResult, err := ios.Configure(tmpDir, *userID, *proToken, *deviceID, true)
+	cfgResult, err := ios.Configure(tmpDir, *userID, *proToken, *deviceID, true, "")
 	if err != nil {
 		log.Fatal(err)
 	}
