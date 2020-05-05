@@ -248,12 +248,15 @@ func (h YinbiHandler) getAccountDetails(w http.ResponseWriter,
 
 func (h YinbiHandler) resetPasswordHandler(w http.ResponseWriter,
 	req *http.Request) {
-	_, pair, err := yinbi.ParseAddress(req)
+	addressParams, pair, err := yinbi.ParseAddress(req)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
 	}
-	params, srpClient, err := h.GetSRPClient(req, true)
+	params, srpClient, err := h.NewSRPClient(models.UserParams{
+		Username: addressParams.Username,
+		Password: addressParams.Password,
+	}, true)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return

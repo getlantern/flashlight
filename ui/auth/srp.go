@@ -30,23 +30,13 @@ func (h AuthHandler) sendMutualAuth(srpClient *srp.SRPClient,
 	return h.sendAuthRequest(common.POST, url, requestBody)
 }
 
-// getSRPClient binds the provided request body to the userParams type
-// and then creates a new SRP client instance from it
-// The SRP parameters are attached to the returned user params
-func (h AuthHandler) GetSRPClient(req *http.Request, keepPassword bool) (*models.UserParams, *srp.SRPClient, error) {
-	var params models.UserParams
-	err := common.DecodeJSONRequest(req, &params)
-	if err != nil {
-		return nil, nil, err
-	}
-	username := params.Username
-	client, err := srp.NewSRPClient([]byte(username),
+func (h AuthHandler) NewSRPClient(params models.UserParams, keepPassword bool) (*models.UserParams, *srp.SRPClient, error) {
+	client, err := srp.NewSRPClient([]byte(params.Username),
 		[]byte(params.Password))
 	if err != nil {
 		return nil, nil, err
 	}
 	ih, vh := client.Encode()
-
 	// Remove user password since we have
 	// a verifier now
 	if !keepPassword {
@@ -57,4 +47,16 @@ func (h AuthHandler) GetSRPClient(req *http.Request, keepPassword bool) (*models
 	params.Verifier = vh
 	params.Credentials = client.Credentials()
 	return &params, client, nil
+}
+
+// GetSRPClient binds the provided request body to the userParams type
+// and then creates a new SRP client instance from it
+// The SRP parameters are attached to the returned user params
+func (h AuthHandler) GetSRPClient(req *http.Request, keepPassword bool) (*models.UserParams, *srp.SRPClient, error) {
+	var params models.UserParams
+	err := common.DecodeJSONRequest(req, &params)
+	if err != nil {
+		return nil, nil, err
+	}
+	return h.NewSRPClient(params, keepPassword)
 }
