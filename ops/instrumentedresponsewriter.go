@@ -37,12 +37,16 @@ func (w *InstrumentedResponseWriter) Finish() {
 
 func (w *InstrumentedResponseWriter) WriteHeader(statusCode int) {
 	w.ResponseWriter.WriteHeader(statusCode)
-	w.Op.Set("status", statusCode)
-	w.Op.SetMetricPercentile(fmt.Sprintf("%s_header_time", w.label), time.Now().Sub(w.start).Seconds())
 }
 
 func (w *InstrumentedResponseWriter) Write(p []byte) (n int, err error) {
 	written, err := w.ResponseWriter.Write(p)
+
+	timeBeforeWrite := time.Now()
+	if written > 0 && w.written == 0 {
+		w.Op.SetMetricPercentile(fmt.Sprintf("%s_first_byte", w.label), timeBeforeWrite.Sub(w.start).Seconds())
+	}
+
 	w.written += written
 	return written, err
 }
