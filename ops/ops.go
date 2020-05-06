@@ -291,11 +291,6 @@ func (op *Op) CoreDialTime(elapsed time.Duration, err error) *Op {
 	return op.SetMetricPercentile("core_dial_time", float64(elapsed.Nanoseconds())/1000000)
 }
 
-// ReplicaTime records replica timing relative to a given start with a label
-func (op *Op) ReplicaTime(elapsed time.Duration, label string) *Op {
-	return op.SetMetricPercentile("label", float64(elapsed.Nanoseconds())/1000000)
-}
-
 // SetMetric sets a named metric. Metrics will be reported as borda values
 // rather than dimensions.
 func (op *Op) SetMetric(name string, value borda.Val) *Op {
