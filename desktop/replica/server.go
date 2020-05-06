@@ -152,7 +152,10 @@ func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 	if name != "" {
 		s3Key += "/" + name
 	}
+
 	me.logger.WithValues(analog.Debug).Printf("uploading replica key %q", s3Key)
+	w.Op.Set("upload_s3_key", s3Key)
+
 	var cw countWriter
 	replicaUploadReader := io.TeeReader(r.Body, &cw)
 	tmpFile, tmpFileErr := func() (*os.File, error) {
@@ -283,22 +286,28 @@ func (me *httpHandler) handleView(w http.ResponseWriter, r *http.Request) {
 }
 
 func (me *httpHandler) handleViewWith(rw http.ResponseWriter, r *http.Request, inlineType string) {
-	w := ops.InitInstrumentedResponseWriter(rw, fmt.Sprintf("replica_view_%s", inlineType))
+	w := ops.InitInstrumentedResponseWriter(rw, "replica_view")
 	defer w.Finish()
 
+	w.Op.Set("inline_type", inlineType)
+
 	link := r.URL.Query().Get("link")
-	w.Op.Set("link", link)
+
 	m, err := metainfo.ParseMagnetURI(link)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error parsing magnet link: %v", err.Error()), http.StatusBadRequest)
 		return
 	}
+
+	w.Op.Set("info_hash", m.InfoHash)
+
 	s3Key, err := s3KeyFromMagnet(m)
 	if err != nil {
 		me.logger.Printf("error getting s3 key from magnet: %v", err)
 	} else if s3Key == "" {
 		me.logger.Printf("s3 key not found in view link %q", link)
 	}
+
 	t, _, release := me.confluence.GetTorrent(m.InfoHash)
 	defer release()
 
@@ -358,6 +367,8 @@ func (me *httpHandler) handleViewWith(rw http.ResponseWriter, r *http.Request, i
 		}
 		w.Header().Set("Content-Disposition", inlineType+"; filename*=UTF-8''"+url.QueryEscape(filename))
 	}
+
+	w.Op.Set("download_filename", filename)
 	torrentFile := t.Files()[selectOnly]
 	fileReader := torrentFile.NewReader()
 	confluence.ServeTorrentReader(w, r, fileReader, torrentFile.Path())
