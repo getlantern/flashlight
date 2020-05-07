@@ -60,8 +60,8 @@ type Flashlight struct {
 	isPro             func() bool
 	mxGlobal          sync.RWMutex
 	global            *config.Global
-	onProxiesUpdate   func([]balancer.Dialer)
-	onConfigUpdate    func(*config.Global)
+	onProxiesUpdate   func([]balancer.Dialer, config.Source)
+	onConfigUpdate    func(*config.Global, config.Source)
 	onBordaConfigured chan bool
 	autoReport        func() bool
 	client            *client.Client
@@ -69,7 +69,7 @@ type Flashlight struct {
 	op                *fops.Op
 }
 
-func (f *Flashlight) onGlobalConfig(cfg *config.Global) {
+func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	f.mxGlobal.Lock()
 	f.global = cfg
 	f.mxGlobal.Unlock()
@@ -82,7 +82,7 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global) {
 	default:
 		// ignore
 	}
-	f.onConfigUpdate(cfg)
+	f.onConfigUpdate(cfg, src)
 	f.reconfigurePingProxies()
 }
 
@@ -157,18 +157,18 @@ func (f *Flashlight) featureOptions(feature string, opts config.FeatureOptions) 
 }
 
 func (f *Flashlight) startConfigFetch() func() {
-	proxiesDispatch := func(conf interface{}) {
+	proxiesDispatch := func(conf interface{}, src config.Source) {
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
 		dialers := f.client.Configure(proxyMap)
 		if dialers != nil {
-			f.onProxiesUpdate(dialers)
+			f.onProxiesUpdate(dialers, src)
 		}
 	}
-	globalDispatch := func(conf interface{}) {
+	globalDispatch := func(conf interface{}, src config.Source) {
 		cfg := conf.(*config.Global)
 		log.Debugf("Applying global config")
-		f.onGlobalConfig(cfg)
+		f.onGlobalConfig(cfg, src)
 	}
 	rt := proxied.ParallelPreferChained()
 
@@ -209,8 +209,8 @@ func New(
 	allowPrivateHosts func() bool,
 	autoReport func() bool,
 	flagsAsMap map[string]interface{},
-	onConfigUpdate func(cfg *config.Global),
-	onProxiesUpdate func([]balancer.Dialer),
+	onConfigUpdate func(*config.Global, config.Source),
+	onProxiesUpdate func([]balancer.Dialer, config.Source),
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
 	isPro func() bool,
@@ -219,10 +219,10 @@ func New(
 	reverseDNS func(host string) string) (*Flashlight, error) {
 
 	if onProxiesUpdate == nil {
-		onProxiesUpdate = func(_ []balancer.Dialer) {}
+		onProxiesUpdate = func(_ []balancer.Dialer, src config.Source) {}
 	}
 	if onConfigUpdate == nil {
-		onConfigUpdate = func(_ *config.Global) {}
+		onConfigUpdate = func(_ *config.Global, src config.Source) {}
 	}
 	displayVersion()
 	deviceID := userConfig.GetDeviceID()
