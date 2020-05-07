@@ -266,6 +266,11 @@ func (cf *configurer) updateFromWeb(name string, etag string, cfg interface{}, u
 		return false, err
 	}
 
+	if bytes == nil {
+		// config unchanged
+		return false, nil
+	}
+
 	cf.saveConfig(name, bytes)
 	cf.saveEtag(name, newETag)
 
