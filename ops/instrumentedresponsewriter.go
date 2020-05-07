@@ -40,9 +40,10 @@ func (w *InstrumentedResponseWriter) WriteHeader(statusCode int) {
 }
 
 func (w *InstrumentedResponseWriter) Write(p []byte) (n int, err error) {
+	timeBeforeWrite := time.Now()
+
 	written, err := w.ResponseWriter.Write(p)
 
-	timeBeforeWrite := time.Now()
 	if written > 0 && w.written == 0 {
 		w.Op.SetMetricPercentile(fmt.Sprintf("%s_first_byte", w.label), timeBeforeWrite.Sub(w.start).Seconds())
 	}
