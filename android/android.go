@@ -330,7 +330,14 @@ func run(configDir, locale string,
 		// already have in desktop)
 		func() bool { return true }, // auto report
 		flags,
-		func(cfg *config.Global) {
+		func() bool {
+			return true
+		}, // beforeStart()
+		func(c *client.Client) {
+			cl.Set(c)
+			afterStart(session)
+		},
+		func(cfg *config.Global, src config.Source) {
 			session.UpdateAdSettings(&adSettings{cfg.AdSettings})
 			email.SetDefaultRecipient(cfg.ReportIssueEmail)
 		}, // onConfigUpdate
