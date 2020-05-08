@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -15,8 +16,16 @@ import (
 )
 
 func TestInstrumentedResponseWriterMetrics(t *testing.T) {
+	inTest := int64(1)
+	defer func() {
+		atomic.StoreInt64(&inTest, 0)
+	}()
 
 	RegisterReporter(func(failure error, ctx map[string]interface{}) {
+		if atomic.LoadInt64(&inTest) == 0 {
+			// not in this test anymore
+			return
+		}
 		expectedByteCount := 10000.0
 		actualByteCount := ctx["testing_bytes"]
 		expectedFirstByteTime := []float64{1000.0}
