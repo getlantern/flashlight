@@ -18,13 +18,19 @@ func TestInstrumentedResponseWriterMetrics(t *testing.T) {
 
 	RegisterReporter(func(failure error, ctx map[string]interface{}) {
 		expectedByteCount := 10000.0
-		expectedFirstByteTime := 1000.0
-		expectedResponseTime := 2000.0
+		actualByteCount := ctx["testing_bytes"]
+		expectedFirstByteTime := []float64{1000.0}
+		actualFirstByteTime := ctx["testing_first_byte_ms"].(borda.Ptile)
+		expectedResponseTime := []float64{2000.0}
+		actualResponseTime := ctx["testing_response_time_ms"].(borda.Ptile)
+		expectedResponseRate := []float64{((expectedByteCount / 1000000 / expectedResponseTime[0]) * 8.0 * 1000)}
+		actualResponseRate := ctx["testing_response_rate_mbps"].(borda.Ptile)
+
 		assert.Equal(t, "testing", ctx["op"])
-		assert.Equal(t, borda.Sum(expectedByteCount), ctx["testing_bytes"])
-		assert.Equal(t, borda.Percentile(expectedFirstByteTime), ctx["testing_first_byte_ms"])
-		assert.Equal(t, borda.Percentile(expectedResponseTime), ctx["testing_response_time_ms"])
-		assert.Equal(t, borda.Percentile((expectedByteCount/1000000/expectedResponseTime)*8.0*1000), ctx["testing_response_rate_mbps"])
+		assert.Equal(t, borda.Sum(expectedByteCount), actualByteCount)
+		assert.InDeltaSlice(t, expectedFirstByteTime, actualFirstByteTime, 5.0)
+		assert.InDeltaSlice(t, expectedResponseTime, actualResponseTime, 5.0)
+		assert.InDeltaSlice(t, expectedResponseRate, actualResponseRate, 0.01)
 	})
 
 	handler := func(w http.ResponseWriter, r *http.Request) {

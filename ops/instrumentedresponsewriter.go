@@ -30,8 +30,12 @@ func InitInstrumentedResponseWriter(w http.ResponseWriter, label string) *Instru
 func (w *InstrumentedResponseWriter) Finish() {
 	totalTime := time.Now().Sub(w.start).Milliseconds()
 	w.Op.SetMetricPercentile(fmt.Sprintf("%s_response_time_ms", w.label), float64(totalTime))
-	rate := float64(w.written/int(totalTime)) / 125 // bytes/ms -> mbps
+	rate := 0.0
+	if totalTime > 0 {
+		rate = float64(w.written/int(totalTime)) / 125 // bytes/ms -> mbps
+	}
 	w.Op.SetMetricPercentile(fmt.Sprintf("%s_response_rate_mbps", w.label), rate)
+
 	w.Op.SetMetricSum(fmt.Sprintf("%s_bytes", w.label), float64(w.written))
 	w.Op.End()
 }
