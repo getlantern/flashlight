@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/flashlight/ops"
 	"github.com/kennygrant/sanitize"
 	"golang.org/x/xerrors"
 
@@ -139,16 +140,22 @@ func (me *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	me.mux.ServeHTTP(w, r)
 }
 
-func (me *httpHandler) handleUpload(w http.ResponseWriter, r *http.Request) {
+func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		return
 	}
+	w := ops.InitInstrumentedResponseWriter(rw, "replica_upload")
+	defer w.Finish()
+
 	name := r.URL.Query().Get("name")
 	s3Key := replica.NewPrefix()
 	if name != "" {
 		s3Key += "/" + name
 	}
+
 	me.logger.WithValues(analog.Debug).Printf("uploading replica key %q", s3Key)
+	w.Op.Set("upload_s3_key", s3Key)
+
 	var cw countWriter
 	replicaUploadReader := io.TeeReader(r.Body, &cw)
 	tmpFile, tmpFileErr := func() (*os.File, error) {
@@ -278,19 +285,29 @@ func (me *httpHandler) handleView(w http.ResponseWriter, r *http.Request) {
 	me.handleViewWith(w, r, "inline")
 }
 
-func (me *httpHandler) handleViewWith(w http.ResponseWriter, r *http.Request, inlineType string) {
+func (me *httpHandler) handleViewWith(rw http.ResponseWriter, r *http.Request, inlineType string) {
+	w := ops.InitInstrumentedResponseWriter(rw, "replica_view")
+	defer w.Finish()
+
+	w.Op.Set("inline_type", inlineType)
+
 	link := r.URL.Query().Get("link")
+
 	m, err := metainfo.ParseMagnetURI(link)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error parsing magnet link: %v", err.Error()), http.StatusBadRequest)
 		return
 	}
+
+	w.Op.Set("info_hash", m.InfoHash)
+
 	s3Key, err := s3KeyFromMagnet(m)
 	if err != nil {
 		me.logger.Printf("error getting s3 key from magnet: %v", err)
 	} else if s3Key == "" {
 		me.logger.Printf("s3 key not found in view link %q", link)
 	}
+
 	t, _, release := me.confluence.GetTorrent(m.InfoHash)
 	defer release()
 
@@ -350,6 +367,8 @@ func (me *httpHandler) handleViewWith(w http.ResponseWriter, r *http.Request, in
 		}
 		w.Header().Set("Content-Disposition", inlineType+"; filename*=UTF-8''"+url.QueryEscape(filename))
 	}
+
+	w.Op.Set("download_filename", filename)
 	torrentFile := t.Files()[selectOnly]
 	fileReader := torrentFile.NewReader()
 	confluence.ServeTorrentReader(w, r, fileReader, torrentFile.Path())
