@@ -33,6 +33,9 @@ const (
 )
 
 func TestProxying(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skip test in short mode")
+	}
 	golog.SetPrepender(logging.Timestamped)
 	onGeo := geolookup.OnRefresh()
 
@@ -244,6 +247,7 @@ func startApp(t *testing.T, helper *integrationtest.Helper) (*App, error) {
 		"ui-domain":               "ui.lantern.io",
 		"force-traffic-log":       false,
 		"tl-mtu-limit":            1500,
+		"timeout":                 time.Duration(0),
 	}
 
 	a := &App{

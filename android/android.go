@@ -330,7 +330,7 @@ func run(configDir, locale string,
 		// already have in desktop)
 		func() bool { return true }, // auto report
 		flags,
-		func(cfg *config.Global) {
+		func(cfg *config.Global, src config.Source) {
 			session.UpdateAdSettings(&adSettings{cfg.AdSettings})
 			email.SetDefaultRecipient(cfg.ReportIssueEmail)
 		}, // onConfigUpdate
