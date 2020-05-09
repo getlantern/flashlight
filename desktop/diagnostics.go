@@ -8,7 +8,7 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/diagnostics"
-	"github.com/getlantern/trafficlog/tlproc"
+	"github.com/getlantern/trafficlog-flashlight/tlproc"
 	"github.com/getlantern/yaml"
 )
 

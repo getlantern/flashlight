@@ -1,12 +1,28 @@
 package desktop
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"testing"
 
+	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/trafficlog-flashlight/tlproc"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+// TODO: delete me
+func TestTLInstall(t *testing.T) {
+	path := trafficlogPathToExecutable[common.Platform]
+	fmt.Println("path:", path)
+	require.NotEmpty(t, path)
+	u, err := user.Current()
+	require.NoError(t, err)
+	fmt.Println("user:", u.Username)
+	require.NoError(t, tlproc.Install(path, u.Username, trafficlogInstallPrompt, trafficlogInstallIcon, false))
+}
 
 func TestLocalHTTPToken(t *testing.T) {
 	// Avoid polluting real settings.

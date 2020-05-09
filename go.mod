@@ -12,7 +12,6 @@ require (
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/getlantern/appdir v0.0.0-20180320102544-7c0f9d241ea7
-	github.com/getlantern/authipc v0.0.0-20200417191816-cd39f96b445b
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20191105202701-77098b35c76c
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
@@ -75,8 +74,8 @@ require (
 	github.com/getlantern/tlsdialer v0.0.0-20200205115148-9bde2ed72c94
 	github.com/getlantern/tlsmasq v0.3.0
 	github.com/getlantern/tlsresumption v0.0.0-20200205020452-74fc6ea4e074
-	github.com/getlantern/trafficlog v0.0.0-20200417192526-a0b1f8bd93bd
-	github.com/getlantern/trafficlog-flashlight v0.0.0-20200424084501-8e28c0ad7343
+	github.com/getlantern/trafficlog v1.0.0
+	github.com/getlantern/trafficlog-flashlight v0.0.0-20200509022217-244db5b4f7fe
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
@@ -101,7 +100,6 @@ require (
 	github.com/stretchr/testify v1.5.1
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553
-	golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527 // indirect
 	google.golang.org/appengine v1.6.2 // indirect
 	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect

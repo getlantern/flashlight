@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/user"
 	"path/filepath"
 	"sync"
 	"sync/atomic"
@@ -23,7 +24,7 @@ import (
 	notify "github.com/getlantern/notifier"
 	"github.com/getlantern/profiling"
 	"github.com/getlantern/trafficlog"
-	"github.com/getlantern/trafficlog/tlproc"
+	"github.com/getlantern/trafficlog-flashlight/tlproc"
 	"github.com/getsentry/sentry-go"
 
 	"github.com/getlantern/flashlight/analytics"
@@ -53,6 +54,12 @@ const (
 const (
 	trafficlogStartTimeout   = 5 * time.Second
 	trafficlogRequestTimeout = time.Second
+
+	// This message is only displayed when the traffic log needs to be installed. This should really
+	// only happen once on a given machine.
+	// TODO: track when a user last denied install permission
+	trafficlogInstallPrompt = "Lantern needs your permissions to install diagnostic tools"
+	trafficlogInstallIcon   = "" // TODO: find an icon
 )
 
 var (
@@ -66,7 +73,7 @@ var (
 	// default location specified by github.com/getlantern/byteexec.New.
 	trafficlogPathToExecutable = map[string]string{
 		// TODO: pick darwin location
-		"darwin": "",
+		"darwin": "/Users/harryharpham/Library/Application Support/Lantern/tlserver",
 	}
 )
 
@@ -486,7 +493,7 @@ func (app *App) onConfigUpdate(cfg *config.Global) {
 		return app.AddToken("/img/lantern_logo.png")
 	})
 	email.SetDefaultRecipient(cfg.ReportIssueEmail)
-	app.configureTrafficLog(*cfg)
+	go app.configureTrafficLog(*cfg)
 }
 
 func (app *App) onProxiesUpdate(proxies []balancer.Dialer) {
@@ -506,6 +513,8 @@ func (app *App) onProxiesUpdate(proxies []balancer.Dialer) {
 	app.trafficLogLock.Unlock()
 }
 
+// This should be run in an independent routine as it may need to install and block for a
+// user-action granting permissions.
 func (app *App) configureTrafficLog(cfg config.Global) {
 	app.trafficLogLock.Lock()
 	app.proxiesLock.RLock()
@@ -529,6 +538,11 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 		}
 	}
 
+	path := trafficlogPathToExecutable[common.Platform]
+	if path == "" {
+		log.Errorf("traffic log executable path undefined for platform (%s)", common.Platform)
+		return
+	}
 	mtuLimit := app.Flags["tl-mtu-limit"].(int)
 	if mtuLimit == 0 {
 		mtuLimit = trafficlog.MTULimitNone
@@ -537,21 +551,40 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 	var err error
 	switch {
 	case enableTrafficLog && app.trafficLog == nil:
+		log.Debugf("Installing traffic log if necessary at %s", path)
+		u, err := user.Current()
+		if err != nil {
+			log.Errorf("Failed to look up current user for traffic log install: %w", err)
+			return
+		}
+		// Note that this is a no-op if the traffic log is already installed.
+		// TODO: need to make sure the above is true or we will prompt the user annoyingly often
+		// TODO: make overwrite remotely configurable
+		err = tlproc.Install(path, u.Username, trafficlogInstallPrompt, trafficlogInstallIcon, true)
+		if err != nil {
+			log.Errorf("Failed to install traffic log: %w", err)
+			return
+		}
+
 		log.Debug("Turning traffic log on")
 		app.trafficLog, err = tlproc.New(
 			cfg.TrafficLogCaptureBytes,
 			cfg.TrafficLogSaveBytes,
+			path,
 			&tlproc.Options{
 				Options: trafficlog.Options{
 					MTULimit:       mtuLimit,
 					MutatorFactory: new(trafficlog.AppStripperFactory),
+
+					// debugging
+					// TODO: remove me
+					StatsInterval: time.Second,
 				},
-				PathToExecutable: trafficlogPathToExecutable[common.Platform],
-				StartTimeout:     trafficlogStartTimeout,
-				RequestTimeout:   trafficlogRequestTimeout,
+				StartTimeout:   trafficlogStartTimeout,
+				RequestTimeout: trafficlogRequestTimeout,
 			})
 		if err != nil {
-			log.Debugf("Failed to start traffic log process: %v", err)
+			log.Errorf("Failed to start traffic log process: %v", err)
 			return
 		}
 		// These goroutines will close when the traffic log is closed.
