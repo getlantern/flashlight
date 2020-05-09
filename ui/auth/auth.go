@@ -14,6 +14,7 @@ import (
 
 	"github.com/getlantern/flashlight/ui/handlers"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/lantern-server/common"
 	"github.com/getlantern/lantern-server/models"
 	"github.com/getlantern/lantern-server/srp"
 )
@@ -29,6 +30,7 @@ const (
 
 var (
 	ErrInvalidCredentials = errors.New("The supplied user credentials were invalid")
+	ErrBadRequest         = errors.New("The request parameters were invalid")
 	ErrSRPKeysDifferent   = errors.New("SRP client and server keys do not match")
 	log                   = golog.LoggerFor("flashlight.ui.auth")
 )
@@ -66,6 +68,7 @@ func (h AuthHandler) Routes() map[string]handlers.HandlerFunc {
 
 func (h AuthHandler) sendAuthRequest(method, url string,
 	requestBody []byte) (*models.AuthResponse, error) {
+	log.Debugf("Sending new auth request to %s", url)
 	resp, err := h.DoRequest(method, url, requestBody)
 	if err != nil {
 		return nil, err
@@ -99,12 +102,21 @@ func (h AuthHandler) HandleAuthError(w http.ResponseWriter,
 // a fully authenticated session
 func (h AuthHandler) HandleAuthResponse(srpClient *srp.SRPClient,
 	params *models.UserParams,
-	resp *http.Response, body []byte) error {
+	resp *http.Response) error {
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("Received an invalid response from auth server")
+	}
+	body, err := common.ReadResponseBody(resp)
+	if err != nil {
+		return err
+	}
 	authResp, err := decodeAuthResponse(body)
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK || authResp.Error != "" {
+	log.Debugf("Auth Response: status %v %v",
+		resp.StatusCode, authResp)
+	if authResp.Error != "" {
 		err = errors.New(authResp.Error)
 		return err
 	}
@@ -139,15 +151,18 @@ func (h AuthHandler) HandleAuthResponse(srpClient *srp.SRPClient,
 func (h AuthHandler) authHandler(w http.ResponseWriter, req *http.Request) {
 	params, srpClient, err := h.GetSRPClient(req, false)
 	if err != nil {
+		log.Errorf("Couldn't create SRP client from request: %v", err)
+		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
 	}
 	requestBody, err := json.Marshal(params)
 	if err != nil {
+		log.Errorf("Error marshaling request body: %v", err)
+		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
 	}
 	req.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
-	onResp := func(resp *http.Response, body []byte) error {
-		return h.HandleAuthResponse(srpClient, params, resp, body)
-	}
-	h.ProxyHandler(req, w, onResp, h.HandleAuthError)
+	h.ProxyHandler(req, w, func(resp *http.Response) error {
+		return h.HandleAuthResponse(srpClient, params, resp)
+	})
 }

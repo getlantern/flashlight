@@ -72,12 +72,10 @@ func (h Handler) DoRequest(method, url string,
 // to the Lantern authentication server
 func (h Handler) ProxyHandler(req *http.Request, w http.ResponseWriter,
 	onResponse common.HandleResponseFunc,
-	onError common.HandleErrorFunc,
-) {
+) error {
 	url := h.GetAuthAddr(html.EscapeString(req.URL.Path))
-	common.ProxyHandler(url, h.HttpClient, req, w,
-		onResponse,
-		onError)
+	return common.ProxyHandler(url, h.HttpClient, req, w,
+		onResponse)
 }
 
 // ErrorHandler is an error handler that takes an error or Errors and writes the

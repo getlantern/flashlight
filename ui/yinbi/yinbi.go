@@ -270,8 +270,8 @@ func (h YinbiHandler) resetPasswordHandler(w http.ResponseWriter,
 		return
 	}
 	req.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
-	onResp := func(resp *http.Response, body []byte) error {
-		err := h.HandleAuthResponse(srpClient, params, resp, body)
+	onResp := func(resp *http.Response) error {
+		err := h.HandleAuthResponse(srpClient, params, resp)
 		if err != nil {
 			return err
 		}
@@ -284,7 +284,10 @@ func (h YinbiHandler) resetPasswordHandler(w http.ResponseWriter,
 		}
 		return nil
 	}
-	h.ProxyHandler(req, w, onResp, h.HandleAuthError)
+	err = h.ProxyHandler(req, w, onResp)
+	if err != nil {
+		h.ErrorHandler(w, err, http.StatusBadRequest)
+	}
 }
 
 func (h YinbiHandler) recoverYinbiAccount(w http.ResponseWriter,
@@ -418,11 +421,11 @@ func (h YinbiHandler) createAccountHandler(w http.ResponseWriter,
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
-	onResp := func(resp *http.Response, body []byte) error {
+	onResp := func(resp *http.Response) error {
 		return h.yinbiClient.TrustAsset(issuer, pair)
 	}
-	h.ProxyHandler(r, w, onResp, func(w http.ResponseWriter,
-		resp *http.Response, err error) {
-		h.ErrorHandler(w, err, resp.StatusCode)
-	})
+	err = h.ProxyHandler(r, w, onResp)
+	if err != nil {
+		h.ErrorHandler(w, err, http.StatusBadRequest)
+	}
 }
