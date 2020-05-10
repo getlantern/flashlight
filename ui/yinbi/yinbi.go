@@ -264,29 +264,25 @@ func (h YinbiHandler) resetPasswordHandler(w http.ResponseWriter,
 	newPassword := params.Password
 	params.Password = ""
 	log.Debugf("Received new reset password request from %s", params.Username)
-	requestBody, err := json.Marshal(params)
+	resp, authResp, err := h.SendAuthRequest(common.POST, resetPasswordEndpoint, params)
 	if err != nil {
 		log.Error(err)
 		return
 	}
-	req.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
-	onResp := func(resp *http.Response) error {
-		err := h.HandleAuthResponse(srpClient, params, resp)
-		if err != nil {
-			return err
-		}
-		// send secret key to keystore
-		err = h.keystore.Store(pair.Seed(), params.Username,
-			newPassword)
-		if err != nil {
-			log.Debugf("Error sending secret key to keystore: %v", err)
-			return err
-		}
-		return nil
+	if resp.StatusCode != http.StatusOK {
+		h.ErrorHandler(w, errors.New("Service unavailable"), http.StatusInternalServerError)
+		return
 	}
-	err = h.ProxyHandler(req, w, onResp)
+	err = h.HandleAuthResponse(srpClient, w, params, authResp)
 	if err != nil {
-		h.ErrorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	// send secret key to keystore
+	err = h.keystore.Store(pair.Seed(), params.Username,
+		newPassword)
+	if err != nil {
+		log.Debugf("Error sending secret key to keystore: %v", err)
+		return
 	}
 }
 

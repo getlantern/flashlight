@@ -1,13 +1,11 @@
 package auth
 
 import (
-	"bytes"
 	"context"
 	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -66,21 +64,6 @@ func (h AuthHandler) Routes() map[string]handlers.HandlerFunc {
 	}
 }
 
-func (h AuthHandler) sendAuthRequest(method, url string,
-	requestBody []byte) (*models.AuthResponse, error) {
-	log.Debugf("Sending new auth request to %s", url)
-	resp, err := h.DoRequest(method, url, requestBody)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	return decodeAuthResponse(body)
-}
-
 func decodeAuthResponse(body []byte) (*models.AuthResponse, error) {
 	authResp := new(models.AuthResponse)
 	err := json.Unmarshal(body, authResp)
@@ -101,48 +84,43 @@ func (h AuthHandler) HandleAuthError(w http.ResponseWriter,
 // on the client to the authentication server, establishing
 // a fully authenticated session
 func (h AuthHandler) HandleAuthResponse(srpClient *srp.SRPClient,
-	params *models.UserParams,
-	resp *http.Response) error {
-	if resp.StatusCode != http.StatusOK {
-		return errors.New("Received an invalid response from auth server")
-	}
-	body, err := common.ReadResponseBody(resp)
-	if err != nil {
-		return err
-	}
-	authResp, err := decodeAuthResponse(body)
-	if err != nil {
-		return err
-	}
-	log.Debugf("Auth Response: status %v %v",
-		resp.StatusCode, authResp)
+	w http.ResponseWriter,
+	params *models.UserParams, authResp *models.AuthResponse) error {
 	if authResp.Error != "" {
-		err = errors.New(authResp.Error)
-		return err
+		return errors.New(authResp.Error)
 	}
+	onResp := func(resp *http.Response) error {
+		body, err := common.ReadResponseBody(resp)
+		if err != nil {
+			return err
+		}
+		log.Debugf("Got auth response: %v", string(body))
+		authResp, err := decodeAuthResponse(body)
+		if err != nil {
+			return err
+		}
+		// Verify the server's proof
+		ok := srpClient.ServerOk(authResp.Proof)
+		if !ok {
+			return ErrInvalidCredentials
+		}
+		srv, err := srp.UnmarshalServer(authResp.Server)
+		if err != nil {
+			return err
+		}
+		// Client and server are successfully authenticated to each other
+		kc := srpClient.RawKey()
+		ks := srv.RawKey()
+		if 1 != subtle.ConstantTimeCompare(kc, ks) {
+			return ErrSRPKeysDifferent
+		}
+		log.Debug("Successfully created new SRP session")
+		return nil
+	}
+
 	// client generates a mutual auth and sends it to the server
-	authResp, err = h.sendMutualAuth(srpClient,
-		authResp.Credentials, params.Username)
-	if err != nil {
-		return err
-	}
-	// Verify the server's proof
-	ok := srpClient.ServerOk(authResp.Proof)
-	if !ok {
-		return ErrInvalidCredentials
-	}
-	srv, err := srp.UnmarshalServer(authResp.Server)
-	if err != nil {
-		return err
-	}
-	// Client and server are successfully authenticated to each other
-	kc := srpClient.RawKey()
-	ks := srv.RawKey()
-	if 1 != subtle.ConstantTimeCompare(kc, ks) {
-		return ErrSRPKeysDifferent
-	}
-	log.Debug("Successfully created new SRP session")
-	return nil
+	return h.sendMutualAuth(srpClient, w,
+		authResp.Credentials, params.Username, onResp)
 }
 
 // authHandler is the HTTP handler used by the login and
@@ -155,14 +133,16 @@ func (h AuthHandler) authHandler(w http.ResponseWriter, req *http.Request) {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
 	}
-	requestBody, err := json.Marshal(params)
+	resp, authResp, err := h.SendAuthRequest(common.POST, loginEndpoint, params)
 	if err != nil {
-		log.Errorf("Error marshaling request body: %v", err)
-		h.ErrorHandler(w, err, http.StatusBadRequest)
+		if authResp.Error != "" {
+			h.ErrorHandler(w, errors.New(authResp.Error), resp.StatusCode)
+		}
 		return
 	}
-	req.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
-	h.ProxyHandler(req, w, func(resp *http.Response) error {
-		return h.HandleAuthResponse(srpClient, params, resp)
-	})
+	if resp.StatusCode != http.StatusOK {
+		h.ErrorHandler(w, errors.New("Service unavailable"), http.StatusInternalServerError)
+		return
+	}
+	h.HandleAuthResponse(srpClient, w, params, authResp)
 }

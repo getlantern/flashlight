@@ -387,6 +387,7 @@ github.com/getlantern/withtimeout v0.0.0-20160829163843-511f017cd913/go.mod h1:b
 github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426 h1:lb2OElfhZzfgvNQym79ONvv4yvDh/gShHkLQI6qzriA=
 github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426/go.mod h1:SoTXbOvaDC1bH3QrlkU5kz/h12tU/hN54wSMUCdgEXs=
 github.com/getlantern/yinbi-server v0.0.0-20200107165800-fed54badef6e/go.mod h1://uV7IjxSz+9TiVSRUHdQqnQECCTCCM7mvmoGrDTmNI=
+github.com/getlantern/yinbi-server v0.0.0-20200331173550-880b9e1dcd46 h1:P+eG9JZ6raNWIcN0kmyvzaAf+fqJ1UjdQAdA/h3i8Tc=
 github.com/getlantern/yinbi-server v0.0.0-20200429173718-66632617a53c h1:4soiJnDAcIekA25qwwAPhBn4Z/tqZrRygemxADF0tU8=
 github.com/getlantern/yinbi-server v0.0.0-20200429173718-66632617a53c/go.mod h1:SUBy9+rWKsqmSrvhUlVg+Yujk1ukVS/1rrG9+yf5v8k=
 github.com/getlantern/yinbi-server v0.0.0-20200429175227-b5a5aa68ca6b h1:PsOul2aPORHB+y2QaoZW/9ZgcV0PU3Woj9kp4qkcgwU=

@@ -25,7 +25,7 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
-	
+
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 )
@@ -49,7 +49,7 @@ var (
 )
 
 func success(resp *http.Response) bool {
-	return resp.StatusCode > 199 && resp.StatusCode < 400
+	return resp.StatusCode > 199 && resp.StatusCode < 500
 }
 
 // changeUserAgent prepends Lantern version and OSARCH to the User-Agent header
