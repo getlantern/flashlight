@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -133,7 +134,8 @@ func (h AuthHandler) authHandler(w http.ResponseWriter, req *http.Request) {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
 	}
-	resp, authResp, err := h.SendAuthRequest(common.POST, loginEndpoint, params)
+	endpoint := html.EscapeString(req.URL.Path)
+	resp, authResp, err := h.SendAuthRequest(common.POST, endpoint, params)
 	if err != nil {
 		if authResp.Error != "" {
 			h.ErrorHandler(w, errors.New(authResp.Error), resp.StatusCode)
