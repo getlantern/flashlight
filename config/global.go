@@ -63,6 +63,11 @@ type Global struct {
 	// Size of the traffic log's packet buffers (if enabled).
 	TrafficLogCaptureBytes int
 	TrafficLogSaveBytes    int
+
+	// Whether to overwrite the traffic log binary. This may result in user's being re-prompted for
+	// their password. The binary will never be overwritten if the existing binary matches the
+	// embedded version.
+	TrafficLogReinstall bool
 }
 
 // NewGlobal creates a new global config with otherwise nil values set.

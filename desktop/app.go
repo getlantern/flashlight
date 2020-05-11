@@ -60,6 +60,9 @@ const (
 	// TODO: track when a user last denied install permission
 	trafficlogInstallPrompt = "Lantern needs your permissions to install diagnostic tools"
 	trafficlogInstallIcon   = "" // TODO: find an icon
+
+	// The name of the traffic log executable placed in the config directory.
+	trafficlogExecutable = "tlserver"
 )
 
 var (
@@ -67,14 +70,6 @@ var (
 	settings *Settings
 
 	startTime = time.Now()
-
-	// The traffic log is run as a separate process, with the executable installed at the following
-	// path. For platforms unrepresented in the map below, the executable will be installed in the
-	// default location specified by github.com/getlantern/byteexec.New.
-	trafficlogPathToExecutable = map[string]string{
-		// TODO: pick darwin location
-		"darwin": "/Users/harryharpham/Library/Application Support/Lantern/tlserver",
-	}
 )
 
 func init() {
@@ -532,15 +527,17 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 		if cfg.TrafficLogSaveBytes == 0 {
 			cfg.TrafficLogSaveBytes = 10 * 1024 * 1024
 		}
+		// Use the most up-to-date binary in development.
+		cfg.TrafficLogReinstall = true
 	} else {
 		for _, platform := range cfg.TrafficLogPlatforms {
 			enableTrafficLog = platform == common.Platform && rand.Float64() < cfg.TrafficLogPercentage
 		}
 	}
 
-	path := trafficlogPathToExecutable[common.Platform]
-	if path == "" {
-		log.Errorf("traffic log executable path undefined for platform (%s)", common.Platform)
+	path, err := common.InConfigDir("", trafficlogExecutable)
+	if err != nil {
+		log.Errorf("failed to create path to traffic log executable: %v", err)
 		return
 	}
 	mtuLimit := app.Flags["tl-mtu-limit"].(int)
@@ -548,7 +545,6 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 		mtuLimit = trafficlog.MTULimitNone
 	}
 
-	var err error
 	switch {
 	case enableTrafficLog && app.trafficLog == nil:
 		log.Debugf("Installing traffic log if necessary at %s", path)
@@ -558,9 +554,10 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 			return
 		}
 		// Note that this is a no-op if the traffic log is already installed.
-		// TODO: need to make sure the above is true or we will prompt the user annoyingly often
-		// TODO: make overwrite remotely configurable
-		err = tlproc.Install(path, u.Username, trafficlogInstallPrompt, trafficlogInstallIcon, true)
+		err = tlproc.Install(
+			path, u.Username,
+			trafficlogInstallPrompt, trafficlogInstallIcon,
+			cfg.TrafficLogReinstall)
 		if err != nil {
 			log.Errorf("Failed to install traffic log: %w", err)
 			return
@@ -575,10 +572,6 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 				Options: trafficlog.Options{
 					MTULimit:       mtuLimit,
 					MutatorFactory: new(trafficlog.AppStripperFactory),
-
-					// debugging
-					// TODO: remove me
-					StatsInterval: time.Second,
 				},
 				StartTimeout:   trafficlogStartTimeout,
 				RequestTimeout: trafficlogRequestTimeout,
