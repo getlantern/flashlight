@@ -4,6 +4,7 @@ package desktop
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
@@ -35,6 +36,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/datacap"
+	"github.com/getlantern/flashlight/icons"
 
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/logging"
@@ -58,8 +60,10 @@ const (
 	// This message is only displayed when the traffic log needs to be installed. This should really
 	// only happen once on a given machine.
 	// TODO: track when a user last denied install permission
-	trafficlogInstallPrompt = "Lantern needs your permissions to install diagnostic tools"
-	trafficlogInstallIcon   = "" // TODO: find an icon
+	trafficlogInstallPrompt = "Lantern needs your permission to install diagnostic tools"
+
+	// An asset in the icons package.
+	trafficlogInstallIcon = "connected_32.ico"
 
 	// The name of the traffic log executable placed in the config directory.
 	trafficlogExecutable = "tlserver"
@@ -553,11 +557,22 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 			log.Errorf("Failed to look up current user for traffic log install: %w", err)
 			return
 		}
+
+		var iconFile string
+		icon, err := icons.Asset(trafficlogInstallIcon)
+		if err != nil {
+			log.Debugf("Unable to load prompt icon during traffic log install: %v", err)
+		} else {
+			iconFile = filepath.Join(os.TempDir(), "lantern_tlinstall.ico")
+			if err := ioutil.WriteFile(iconFile, icon, 0644); err != nil {
+				// Failed to save the icon file, just use no icon.
+				iconFile = ""
+			}
+		}
+
 		// Note that this is a no-op if the traffic log is already installed.
 		err = tlproc.Install(
-			path, u.Username,
-			trafficlogInstallPrompt, trafficlogInstallIcon,
-			cfg.TrafficLogReinstall)
+			path, u.Username, trafficlogInstallPrompt, iconFile, cfg.TrafficLogReinstall)
 		if err != nil {
 			log.Errorf("Failed to install traffic log: %w", err)
 			return
