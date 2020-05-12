@@ -81,6 +81,7 @@ type Server struct {
 	mux            *http.ServeMux
 	onceOpenExtURL sync.Once
 	translations   eventual.Value
+	skipTokenCheck bool
 	standalone     bool
 }
 
@@ -89,7 +90,10 @@ type Server struct {
 type ServerParams struct {
 	ExtURL         string
 	AuthServerAddr string
+	Handlers       []*PathHandler
 	LocalHTTPToken string
+	RequestedAddr  string
+	SkipTokenCheck bool
 	Standalone     bool
 	HTTPClient     *http.Client
 }
@@ -122,22 +126,15 @@ func (l tcpKeepAliveListener) Accept() (net.Conn, error) {
 // authServerAddr: the Lantern auth server to connect to
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func StartServer(requestedAddr, authServerAddr,
-	extURL, localHTTPToken string, standalone bool,
-	handlers ...*PathHandler) (*Server, error) {
+func StartServer(params ServerParams) (*Server, error) {
 
-	server := NewServer(ServerParams{
-		ExtURL:         extURL,
-		LocalHTTPToken: localHTTPToken,
-		AuthServerAddr: authServerAddr,
-		Standalone:     standalone,
-	})
+	server := NewServer(params)
 
-	for _, h := range handlers {
+	for _, h := range params.Handlers {
 		server.handle(h.Pattern, h.Handler)
 	}
 
-	if err := server.Start(requestedAddr); err != nil {
+	if err := server.Start(params.RequestedAddr); err != nil {
 		return nil, err
 	}
 	return server, nil
@@ -164,6 +161,7 @@ func NewServer(params ServerParams) *Server {
 		authServerAddr: params.AuthServerAddr,
 		localHTTPToken: params.LocalHTTPToken,
 		translations:   eventual.NewValue(),
+		skipTokenCheck: params.SkipTokenCheck,
 		standalone:     params.Standalone,
 	}
 	return server
@@ -224,7 +222,7 @@ func (s *Server) handle(pattern string, handler http.Handler) {
 
 	// In the naked request cast, we need to verify the token is there in the
 	// referer header.
-	s.mux.Handle(pattern, checkRequestForToken(util.NoCacheHandler(handler), s.localHTTPToken))
+	s.mux.Handle(pattern, s.checkRequestForToken(util.NoCacheHandler(handler), s.localHTTPToken))
 }
 
 // This allows a second Lantern running on the system to trigger the existing
@@ -438,16 +436,16 @@ func (s *Server) activeDomain() string {
 	return s.GetUIAddr()
 }
 
-func checkRequestForToken(h http.Handler, tok string) http.Handler {
+func (s *Server) checkRequestForToken(h http.Handler, tok string) http.Handler {
 	check := func(w http.ResponseWriter, r *http.Request) {
-		if HasToken(r, tok) {
+		if HasToken(r, tok) || s.skipTokenCheck {
 			h.ServeHTTP(w, r)
 		} else {
 			msg := fmt.Sprintf("No token found in. %v", r)
 			closeConn(msg, w, r)
 		}
 	}
-	return http.HandlerFunc(check)
+	return s.wrapMiddleware(http.HandlerFunc(check))
 }
 
 // HasToken checks for our secure token in the HTTP request.

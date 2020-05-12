@@ -334,16 +334,22 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			authaddr = common.AuthServerAddr
 		}
 		log.Debugf("Using auth server at %v", authaddr)
+		// skip checking for local auth token if we are running in staging mode
+		skipTokenCheck := app.Flags["staging"] != nil && app.Flags["staging"].(bool)
 		standalone := app.Flags["standalone"] != nil && app.Flags["standalone"].(bool)
 		// ui will handle empty uiaddr correctly
-		uiServer, err := ui.StartServer(uiaddr,
-			authaddr,
-			startupURL,
-			localHTTPToken(settings),
-			standalone,
-			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
-			&ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
-		)
+		uiServer, err := ui.StartServer(ui.ServerParams{
+			AuthServerAddr: authaddr,
+			ExtURL:         startupURL,
+			RequestedAddr:  uiaddr,
+			LocalHTTPToken: localHTTPToken(settings),
+			SkipTokenCheck: skipTokenCheck,
+			Standalone:     standalone,
+			Handlers: []*ui.PathHandler{
+				&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
+				&ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
+			},
+		})
 		if err != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 			return false
