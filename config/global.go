@@ -54,20 +54,7 @@ type Global struct {
 	// features. It's up to the feature code to handle the raw JSON message.
 	FeatureOptions map[string]map[string]interface{}
 
-	// If the client's platform appears in this list, traffic logging may be enabled.
-	TrafficLogPlatforms []string
-
-	// The percent chance a client will enable traffic logging (subject to platform restrictions).
-	TrafficLogPercentage float64
-
-	// Size of the traffic log's packet buffers (if enabled).
-	TrafficLogCaptureBytes int
-	TrafficLogSaveBytes    int
-
-	// Whether to overwrite the traffic log binary. This may result in user's being re-prompted for
-	// their password. The binary will never be overwritten if the existing binary matches the
-	// embedded version.
-	TrafficLogReinstall bool
+	TrafficLog TrafficLogConfig
 }
 
 // NewGlobal creates a new global config with otherwise nil values set.

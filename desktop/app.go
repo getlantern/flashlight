@@ -59,7 +59,6 @@ const (
 
 	// This message is only displayed when the traffic log needs to be installed. This should really
 	// only happen once on a given machine.
-	// TODO: track when a user last denied install permission
 	trafficlogInstallPrompt = "Lantern needs your permission to install diagnostic tools"
 
 	// An asset in the icons package.
@@ -67,6 +66,10 @@ const (
 
 	// The name of the traffic log executable placed in the config directory.
 	trafficlogExecutable = "tlserver"
+
+	// TODO: track when a user last denied install permission
+	// This file holds a timestamp indicating the last time the user denied install permission.
+	trafficlogLastDeniedFile = "tl_last_denied"
 )
 
 var (
@@ -525,17 +528,17 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 		enableTrafficLog = true
 		// This flag is used in development to run the traffic log. We probably want to actually
 		// capture some packets if this flag is set.
-		if cfg.TrafficLogCaptureBytes == 0 {
-			cfg.TrafficLogCaptureBytes = 10 * 1024 * 1024
+		if cfg.TrafficLog.CaptureBytes == 0 {
+			cfg.TrafficLog.CaptureBytes = 10 * 1024 * 1024
 		}
-		if cfg.TrafficLogSaveBytes == 0 {
-			cfg.TrafficLogSaveBytes = 10 * 1024 * 1024
+		if cfg.TrafficLog.SaveBytes == 0 {
+			cfg.TrafficLog.SaveBytes = 10 * 1024 * 1024
 		}
 		// Use the most up-to-date binary in development.
-		cfg.TrafficLogReinstall = true
+		cfg.TrafficLog.Reinstall = true
 	} else {
-		for _, platform := range cfg.TrafficLogPlatforms {
-			enableTrafficLog = platform == common.Platform && rand.Float64() < cfg.TrafficLogPercentage
+		for _, platform := range cfg.TrafficLog.Platforms {
+			enableTrafficLog = platform == common.Platform && rand.Float64() < cfg.TrafficLog.PercentClients
 		}
 	}
 
@@ -572,7 +575,7 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 
 		// Note that this is a no-op if the traffic log is already installed.
 		err = tlproc.Install(
-			path, u.Username, trafficlogInstallPrompt, iconFile, cfg.TrafficLogReinstall)
+			path, u.Username, trafficlogInstallPrompt, iconFile, cfg.TrafficLog.Reinstall)
 		if err != nil {
 			log.Errorf("Failed to install traffic log: %w", err)
 			return
@@ -580,8 +583,8 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 
 		log.Debug("Turning traffic log on")
 		app.trafficLog, err = tlproc.New(
-			cfg.TrafficLogCaptureBytes,
-			cfg.TrafficLogSaveBytes,
+			cfg.TrafficLog.CaptureBytes,
+			cfg.TrafficLog.SaveBytes,
 			path,
 			&tlproc.Options{
 				Options: trafficlog.Options{
@@ -617,7 +620,7 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 		}
 
 	case enableTrafficLog && app.trafficLog != nil:
-		err = app.trafficLog.UpdateBufferSizes(cfg.TrafficLogCaptureBytes, cfg.TrafficLogSaveBytes)
+		err = app.trafficLog.UpdateBufferSizes(cfg.TrafficLog.CaptureBytes, cfg.TrafficLog.SaveBytes)
 		if err != nil {
 			log.Debugf("Failed to update traffic log buffer sizes: %v", err)
 		}
