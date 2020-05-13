@@ -3,6 +3,7 @@ package desktop
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -67,8 +68,8 @@ const (
 	// The name of the traffic log executable placed in the config directory.
 	trafficlogExecutable = "tlserver"
 
-	// TODO: track when a user last denied install permission
-	// This file holds a timestamp indicating the last time the user denied install permission.
+	// This file, in the config directory, holds a timestamp indicating the last time the user
+	// denied install permission.
 	trafficlogLastDeniedFile = "tl_last_denied"
 )
 
@@ -573,10 +574,54 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 			}
 		}
 
+		lastDeniedPath, err := common.InConfigDir("", trafficlogLastDeniedFile)
+		if err != nil {
+			log.Errorf("Failed to create path to traffic log install-last-denied file: %v", err)
+			return
+		}
+		lastDeniedRaw, err := ioutil.ReadFile(lastDeniedPath)
+		if err != nil && !os.IsNotExist(err) {
+			log.Errorf("Unable to open traffic log install-last-denied file: %v", err)
+			return
+		}
+		if lastDeniedRaw != nil {
+			if cfg.TrafficLog.WaitTimeSinceDenial == 0 {
+				log.Debug("Aborting traffic log install; user previously denied permission")
+				return
+			}
+			lastDenied := new(time.Time)
+			if err := lastDenied.UnmarshalText(lastDeniedRaw); err != nil {
+				log.Errorf("Failed to parse traffic log install-last-denied file: %v", err)
+				return
+			}
+			if time.Since(*lastDenied) < cfg.TrafficLog.WaitTimeSinceDenial {
+				log.Debugf(
+					"Aborting traffic log install; last denied %v ago, wait time is %v",
+					time.Since(*lastDenied), cfg.TrafficLog.WaitTimeSinceDenial,
+				)
+				return
+			}
+		}
+
 		// Note that this is a no-op if the traffic log is already installed.
 		err = tlproc.Install(
 			path, u.Username, trafficlogInstallPrompt, iconFile, cfg.TrafficLog.Reinstall)
 		if err != nil {
+			if errors.Is(err, tlproc.ErrPermissionDenied) {
+				log.Debug("User denied traffic log install; creating install-last-denied file")
+				b, err := time.Now().MarshalText()
+				if err != nil {
+					log.Errorf(
+						"Failed to marshal time for traffic log install-last-denied file: %v", err)
+					return
+				}
+				if err := ioutil.WriteFile(lastDeniedPath, b, 0644); err != nil {
+					log.Errorf("Failed to write traffic log install-last-denied file: %v", err)
+					return
+				}
+			}
+			// TODO: we probably also don't want to fail repeatedly, annoying the user with prompts
+			// Maybe generalize to a last-failed file?
 			log.Errorf("Failed to install traffic log: %w", err)
 			return
 		}
