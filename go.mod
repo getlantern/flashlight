@@ -6,8 +6,8 @@ require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/confluence v1.4.0
-	github.com/anacrolix/envpprof v1.1.0
-	github.com/anacrolix/go-libutp v1.0.2
+	github.com/anacrolix/envpprof v1.1.1
+	github.com/anacrolix/go-libutp v1.0.3
 	github.com/anacrolix/log v0.7.0
 	github.com/anacrolix/torrent v1.15.2-0.20200427233100-c3321193474c
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
