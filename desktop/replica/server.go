@@ -200,7 +200,9 @@ func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 		tmpFile.Close()
 		// Move the temporary file, which contains the upload body, to the data directory for the
 		// torrent client, in the location it expects.
-		err = os.Rename(tmpFile.Name(), filepath.Join(me.dataDir, s3Prefix.String(), info.Name))
+		dst := filepath.Join(append([]string{me.dataDir, s3Prefix.String()}, info.UpvertedFiles()[0].Path...)...)
+		os.MkdirAll(filepath.Dir(dst), 0700)
+		err = os.Rename(tmpFile.Name(), dst)
 		if err != nil {
 			// Not fatal: See above, we only really need the metainfo to be added to the torrent.
 			me.logger.WithValues(analog.Error).Printf("error renaming file: %v", err)
