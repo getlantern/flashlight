@@ -86,21 +86,6 @@ func NewHTTPHandler() (_ http.Handler, exitFunc func(), err error) {
 		}
 	}
 
-	if err := replica.IterUploads(uploadsDir, func(iu replica.IteredUpload) {
-		if iu.Err != nil {
-			replicaLogger.Printf("error while iterating uploads: %v", iu.Err)
-			return
-		}
-		t, err := torrentClient.AddTorrent(iu.MetaInfo)
-		if err != nil {
-			replicaLogger.WithValues(analog.Error).Printf("error adding existing upload to torrent client: %v", err)
-		} else {
-			replicaLogger.Printf("added previous upload %q to torrent client", t.Name())
-		}
-	}); err != nil {
-		panic(err)
-	}
-
 	handler := &httpHandler{
 		confluence: confluence.Handler{
 			TC: torrentClient,
@@ -128,6 +113,21 @@ func NewHTTPHandler() (_ http.Handler, exitFunc func(), err error) {
 	// routes, so this might go away soon.
 	handler.mux.Handle("/", &handler.confluence)
 
+	if err := replica.IterUploads(uploadsDir, func(iu replica.IteredUpload) {
+		if iu.Err != nil {
+			replicaLogger.Printf("error while iterating uploads: %v", iu.Err)
+			return
+		}
+		err := handler.addTorrent(iu.Metainfo)
+		if err != nil {
+			replicaLogger.WithValues(analog.Error).Printf("error adding existing upload to torrent client: %v", err)
+		} else {
+			replicaLogger.Printf("added previous upload %q to torrent client", iu.S3Prefix())
+		}
+	}); err != nil {
+		panic(err)
+	}
+
 	return handler, torrentClient.Close, nil
 }
 
@@ -142,27 +142,22 @@ func (me *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
+		http.Error(rw, "expected POST", http.StatusMethodNotAllowed)
 		return
 	}
 	w := ops.InitInstrumentedResponseWriter(rw, "replica_upload")
 	defer w.Finish()
 
 	name := r.URL.Query().Get("name")
-	s3Key := replica.NewPrefix()
-	if name != "" {
-		s3Key += "/" + name
-	}
-
-	me.logger.WithValues(analog.Debug).Printf("uploading replica key %q", s3Key)
-	w.Op.Set("upload_s3_key", s3Key)
-
-	var cw countWriter
+	var cw replica.CountWriter
 	replicaUploadReader := io.TeeReader(r.Body, &cw)
+
 	tmpFile, tmpFileErr := func() (*os.File, error) {
-		if true {
-			return ioutil.TempFile("", "")
+		const forceTempFileFailure = false
+		if forceTempFileFailure {
+			return nil, errors.New("sike")
 		}
-		return nil, errors.New("sike")
+		return ioutil.TempFile("", "")
 	}()
 	if tmpFileErr == nil {
 		defer os.Remove(tmpFile.Name())
@@ -173,29 +168,27 @@ func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 		// we can still spread the metadata, and S3 can take care of the data.
 		me.logger.WithValues(analog.Error).Printf("error creating temporary file: %v", tmpFileErr)
 	}
-	err := replica.Upload(replicaUploadReader, s3Key)
-	me.logger.WithValues(analog.Debug).Printf("uploaded %d bytes", cw.bytesWritten)
+
+	output, err := replica.Upload(replicaUploadReader, r.URL.Query().Get("name"))
+	s3Prefix := output.S3Prefix
+	mi := output.Metainfo
+	me.logger.WithValues(analog.Debug).Printf("uploaded replica key %q", s3Prefix)
+	w.Op.Set("upload_s3_key", s3Prefix)
+	me.logger.WithValues(analog.Debug).Printf("uploaded %d bytes", cw.BytesWritten)
 	if err != nil {
 		panic(err)
 	}
-	otr, err := replica.GetObjectTorrent(s3Key)
+
+	info, err := output.Metainfo.UnmarshalInfo()
 	if err != nil {
 		panic(err)
 	}
-	b, err := ioutil.ReadAll(otr)
-	otr.Close()
+	var metainfoBytes bytes.Buffer
+	err = output.Metainfo.Write(&metainfoBytes)
 	if err != nil {
 		panic(err)
 	}
-	mi, err := metainfo.Load(bytes.NewReader(b))
-	if err != nil {
-		panic(err)
-	}
-	info, err := mi.UnmarshalInfo()
-	if err != nil {
-		panic(err)
-	}
-	err = storeUploadedTorrent(bytes.NewReader(b), me.uploadMetainfoPath(&info))
+	err = storeUploadedTorrent(&metainfoBytes, me.uploadMetainfoPath(s3Prefix))
 	if err != nil {
 		panic(err)
 	}
@@ -207,13 +200,13 @@ func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 		tmpFile.Close()
 		// Move the temporary file, which contains the upload body, to the data directory for the
 		// torrent client, in the location it expects.
-		err = os.Rename(tmpFile.Name(), filepath.Join(me.dataDir, info.Name))
+		err = os.Rename(tmpFile.Name(), filepath.Join(me.dataDir, s3Prefix.String(), info.Name))
 		if err != nil {
 			// Not fatal: See above, we only really need the metainfo to be added to the torrent.
 			me.logger.WithValues(analog.Error).Printf("error renaming file: %v", err)
 		}
 	}
-	_, err = me.torrentClient.AddTorrent(mi)
+	err = me.addTorrent(output.Metainfo)
 	if err != nil {
 		panic(err)
 	}
@@ -221,21 +214,34 @@ func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 	je := json.NewEncoder(w)
 	je.SetIndent("", "  ")
 	var oi objectInfo
-	oi.fromS3UploadMetaInfo(mi, time.Now())
+	oi.fromS3UploadMetaInfo(mi, time.Now(), s3Prefix, name)
 	je.Encode(oi)
+}
+
+func (me *httpHandler) addTorrent(mi *metainfo.MetaInfo) error {
+	_, err := me.torrentClient.AddTorrent(mi)
+	return err
 }
 
 func (me *httpHandler) handleUploads(w http.ResponseWriter, r *http.Request) {
 	resp := []objectInfo{} // Ensure not nil: I don't like 'null' as a response.
 	err := replica.IterUploads(me.uploadsDir, func(iu replica.IteredUpload) {
-		mi := iu.MetaInfo
+		mi := iu.Metainfo
 		err := iu.Err
 		if err != nil {
 			me.logger.Printf("error iterating uploads: %v", err)
 			return
 		}
+		info, err := mi.UnmarshalInfo()
+		if err != nil {
+			panic(err)
+		}
 		var oi objectInfo
-		oi.fromS3UploadMetaInfo(mi, iu.FileInfo.ModTime())
+		oi.fromS3UploadMetaInfo(
+			mi,
+			iu.FileInfo.ModTime(),
+			iu.S3Prefix(),
+			info.Name)
 		resp = append(resp, oi)
 	})
 	if err != nil {
@@ -266,16 +272,21 @@ func (me *httpHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "torrent not in client", http.StatusBadRequest)
 		return
 	}
-	info := t.Info()
-	err = replica.DeleteFile(s3KeyFromInfoName(info.Name))
+	s3Prefix, err := replica.S3PrefixFromMagnet(m)
+	if err != nil {
+		me.logger.Printf("error getting s3 prefix from magnet link: %v", err)
+		http.Error(w, fmt.Sprintf("error parsing replica uri: %v", err.Error()), http.StatusBadRequest)
+		return
+	}
+	err = replica.DeletePrefix(s3Prefix)
 	if err != nil {
 		me.logger.Printf("error deleting s3 object: %v", err)
 		http.Error(w, "couldn't delete replica object", http.StatusInternalServerError)
 		return
 	}
 	t.Drop()
-	os.Remove(filepath.Join(me.dataDir, info.Name))
-	os.Remove(me.uploadMetainfoPath(info))
+	os.RemoveAll(filepath.Join(me.dataDir, s3Prefix.String()))
+	os.Remove(me.uploadMetainfoPath(s3Prefix))
 }
 func (me *httpHandler) handleDownload(w http.ResponseWriter, r *http.Request) {
 	me.handleViewWith(w, r, "attachment")
@@ -301,31 +312,40 @@ func (me *httpHandler) handleViewWith(rw http.ResponseWriter, r *http.Request, i
 
 	w.Op.Set("info_hash", m.InfoHash)
 
-	s3Key, err := s3KeyFromMagnet(m)
+	s3Prefix, err := replica.S3PrefixFromMagnet(m)
 	if err != nil {
 		me.logger.Printf("error getting s3 key from magnet: %v", err)
-	} else if s3Key == "" {
+	} else if s3Prefix == "" {
 		me.logger.Printf("s3 key not found in view link %q", link)
 	}
 
 	t, _, release := me.confluence.GetTorrent(m.InfoHash)
 	defer release()
 
-	// TODO: Perhaps we only want to do this if we're unable to get the metainfo from S3, to avoid
-	// bad parties injecting stuff into magnet links and sharing those.
-	t.AddTrackers([][]string{m.Trackers})
+	// The for a torrent should overlap with those used by replica-peer. Also replica-search might
+	// provide this dynamically via the magnet links (except that uploaders will need a way to use
+	// the same list). As an ad-hoc practice, we'll use trackers provided via the magnet link in the
+	// first tier, and our forcibly injected ones in the second.
+	t.AddTrackers([][]string{
+		m.Trackers,
+		{
+			"https://tracker.gbitt.info:443/announce",
+			"http://tracker.opentrackr.org:1337/announce",
+			"udp://tracker.leechers-paradise.org:6969/announce",
+		},
+	})
 	if m.DisplayName != "" {
 		t.SetDisplayName(m.DisplayName)
 	}
 
-	if t.Info() == nil && s3Key != "" {
+	if t.Info() == nil && s3Prefix != "" {
 		// Get another reference to the torrent that lasts until we're done fetching the metainfo.
 		_, _, release := me.confluence.GetTorrent(m.InfoHash)
 		go func() {
 			defer release()
-			tob, err := replica.GetObjectTorrent(s3Key)
+			tob, err := replica.GetMetainfo(s3Prefix)
 			if err != nil {
-				me.logger.Printf("error getting metainfo for %q from s3: %v", s3Key, err)
+				me.logger.Printf("error getting metainfo for %q from s3: %v", s3Prefix, err)
 				return
 			}
 			defer tob.Close()
@@ -338,7 +358,7 @@ func (me *httpHandler) handleViewWith(rw http.ResponseWriter, r *http.Request, i
 			if err != nil {
 				me.logger.Printf("error putting metainfo from s3: %v", err)
 			}
-			me.logger.Printf("added metainfo for %q from s3", s3Key)
+			me.logger.Printf("added metainfo for %q from s3", s3Prefix)
 		}()
 	}
 
@@ -358,7 +378,7 @@ func (me *httpHandler) handleViewWith(rw http.ResponseWriter, r *http.Request, i
 		// name for it after that. Torrent.Name will also allow us to reuse previously given 'dn'
 		// values, if we don't have one now.
 		m.DisplayName,
-		displayNameFromInfoName(t.Name()),
+		t.Name(),
 	)
 	if filename != "" {
 		ext := path.Ext(filename)
@@ -404,6 +424,6 @@ func storeUploadedTorrent(r io.Reader, path string) error {
 	return f.Close()
 }
 
-func (me *httpHandler) uploadMetainfoPath(info *metainfo.Info) string {
-	return filepath.Join(me.uploadsDir, info.Name+".torrent")
+func (me *httpHandler) uploadMetainfoPath(s3Prefix replica.S3Prefix) string {
+	return filepath.Join(me.uploadsDir, s3Prefix.String()+".torrent")
 }

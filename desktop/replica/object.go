@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/anacrolix/torrent/metainfo"
+	"github.com/getlantern/replica"
 )
 
 // This is supposed to mirror parts of SearchResultItem in replica-search.
@@ -19,17 +20,16 @@ type objectInfo struct {
 }
 
 // Inits from a BitTorrent metainfo that must contain a valid info.
-func (me *objectInfo) fromS3UploadMetaInfo(mi *metainfo.MetaInfo, lastModified time.Time) {
+func (me *objectInfo) fromS3UploadMetaInfo(mi *metainfo.MetaInfo, lastModified time.Time, s3Prefix replica.S3Prefix, fileName string) {
 	info, err := mi.UnmarshalInfo()
 	if err != nil {
 		panic(err) // Don't pass a bad metainfo...
 	}
-	dn := displayNameFromInfoName(info.Name)
 	*me = objectInfo{
 		FileSize:     info.TotalLength(),
 		LastModified: lastModified,
-		Link:         createLink(mi.HashInfoBytes(), s3KeyFromInfoName(info.Name), dn),
-		DisplayName:  dn,
-		MimeTypes:    []string{mime.TypeByExtension(path.Ext(dn))},
+		Link:         replica.CreateLink(mi.HashInfoBytes(), s3Prefix, fileName),
+		DisplayName:  fileName,
+		MimeTypes:    []string{mime.TypeByExtension(path.Ext(fileName))},
 	}
 }
