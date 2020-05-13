@@ -21,7 +21,8 @@ type TrafficLogConfig struct {
 	// embedded version.
 	Reinstall bool
 
-	// The minimum amount of time to wait before re-prompt the user since the last time the user
-	// denied permission to install the traffic log. If 0, the user will never be re-prompted.
-	WaitTimeSinceDenial time.Duration
+	// The minimum amount of time to wait before re-prompting the user since the last time we failed
+	// to install the traffic log. The most likely reason for a failed install is denial of
+	// permission by the user. A value of 0 means we never re-attempt installation.
+	WaitTimeSinceFailedInstall time.Duration
 }

@@ -3,7 +3,6 @@ package desktop
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -68,9 +67,8 @@ const (
 	// The name of the traffic log executable placed in the config directory.
 	trafficlogExecutable = "tlserver"
 
-	// This file, in the config directory, holds a timestamp indicating the last time the user
-	// denied install permission.
-	trafficlogLastDeniedFile = "tl_last_denied"
+	// This file, in the config directory, holds a timestamp from the last failed installation.
+	trafficlogLastFailedInstallFile = "tl_last_failed"
 )
 
 var (
@@ -574,30 +572,30 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 			}
 		}
 
-		lastDeniedPath, err := common.InConfigDir("", trafficlogLastDeniedFile)
+		lastFailedPath, err := common.InConfigDir("", trafficlogLastFailedInstallFile)
 		if err != nil {
-			log.Errorf("Failed to create path to traffic log install-last-denied file: %v", err)
+			log.Errorf("Failed to create path to traffic log install-last-failed file: %v", err)
 			return
 		}
-		lastDeniedRaw, err := ioutil.ReadFile(lastDeniedPath)
+		lastFailedRaw, err := ioutil.ReadFile(lastFailedPath)
 		if err != nil && !os.IsNotExist(err) {
-			log.Errorf("Unable to open traffic log install-last-denied file: %v", err)
+			log.Errorf("Unable to open traffic log install-last-failed file: %v", err)
 			return
 		}
-		if lastDeniedRaw != nil {
-			if cfg.TrafficLog.WaitTimeSinceDenial == 0 {
-				log.Debug("Aborting traffic log install; user previously denied permission")
+		if lastFailedRaw != nil {
+			if cfg.TrafficLog.WaitTimeSinceFailedInstall == 0 {
+				log.Debug("Aborting traffic log install; install previously failed")
 				return
 			}
-			lastDenied := new(time.Time)
-			if err := lastDenied.UnmarshalText(lastDeniedRaw); err != nil {
-				log.Errorf("Failed to parse traffic log install-last-denied file: %v", err)
+			lastFailed := new(time.Time)
+			if err := lastFailed.UnmarshalText(lastFailedRaw); err != nil {
+				log.Errorf("Failed to parse traffic log install-last-failed file: %v", err)
 				return
 			}
-			if time.Since(*lastDenied) < cfg.TrafficLog.WaitTimeSinceDenial {
+			if time.Since(*lastFailed) < cfg.TrafficLog.WaitTimeSinceFailedInstall {
 				log.Debugf(
-					"Aborting traffic log install; last denied %v ago, wait time is %v",
-					time.Since(*lastDenied), cfg.TrafficLog.WaitTimeSinceDenial,
+					"Aborting traffic log install; last failed %v ago, wait time is %v",
+					time.Since(*lastFailed), cfg.TrafficLog.WaitTimeSinceFailedInstall,
 				)
 				return
 			}
@@ -607,21 +605,15 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 		err = tlproc.Install(
 			path, u.Username, trafficlogInstallPrompt, iconFile, cfg.TrafficLog.Reinstall)
 		if err != nil {
-			if errors.Is(err, tlproc.ErrPermissionDenied) {
-				log.Debug("User denied traffic log install; creating install-last-denied file")
-				b, err := time.Now().MarshalText()
-				if err != nil {
-					log.Errorf(
-						"Failed to marshal time for traffic log install-last-denied file: %v", err)
-					return
-				}
-				if err := ioutil.WriteFile(lastDeniedPath, b, 0644); err != nil {
-					log.Errorf("Failed to write traffic log install-last-denied file: %v", err)
-					return
-				}
+			b, err := time.Now().MarshalText()
+			if err != nil {
+				log.Errorf("Failed to marshal time for traffic log install-last-failed file: %v", err)
+				return
 			}
-			// TODO: we probably also don't want to fail repeatedly, annoying the user with prompts
-			// Maybe generalize to a last-failed file?
+			if err := ioutil.WriteFile(lastFailedPath, b, 0644); err != nil {
+				log.Errorf("Failed to write traffic log install-last-failed file: %v", err)
+				return
+			}
 			log.Errorf("Failed to install traffic log: %w", err)
 			return
 		}
