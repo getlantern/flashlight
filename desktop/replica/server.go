@@ -148,7 +148,6 @@ func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 	w := ops.InitInstrumentedResponseWriter(rw, "replica_upload")
 	defer w.Finish()
 
-	name := r.URL.Query().Get("name")
 	var cw replica.CountWriter
 	replicaUploadReader := io.TeeReader(r.Body, &cw)
 
@@ -216,7 +215,10 @@ func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 	je := json.NewEncoder(w)
 	je.SetIndent("", "  ")
 	var oi objectInfo
-	oi.fromS3UploadMetaInfo(mi, time.Now(), s3Prefix, name)
+	err = oi.fromS3UploadMetaInfo(mi, time.Now())
+	if err != nil {
+		panic(err)
+	}
 	je.Encode(oi)
 }
 
@@ -234,16 +236,10 @@ func (me *httpHandler) handleUploads(w http.ResponseWriter, r *http.Request) {
 			me.logger.Printf("error iterating uploads: %v", err)
 			return
 		}
-		info, err := mi.UnmarshalInfo()
-		if err != nil {
-			panic(err)
-		}
 		var oi objectInfo
 		oi.fromS3UploadMetaInfo(
 			mi,
-			iu.FileInfo.ModTime(),
-			iu.S3Prefix(),
-			info.Name)
+			iu.FileInfo.ModTime())
 		resp = append(resp, oi)
 	})
 	if err != nil {
