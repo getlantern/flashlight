@@ -211,15 +211,12 @@ func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	w.Header().Set("Content-Type", "application/json")
-	je := json.NewEncoder(w)
-	je.SetIndent("", "  ")
 	var oi objectInfo
 	err = oi.fromS3UploadMetaInfo(mi, time.Now())
 	if err != nil {
 		panic(err)
 	}
-	je.Encode(oi)
+	encodeJsonResponse(w, oi)
 }
 
 func (me *httpHandler) addTorrent(mi *metainfo.MetaInfo) error {
@@ -245,13 +242,7 @@ func (me *httpHandler) handleUploads(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		me.logger.Printf("error walking uploads dir: %v", err)
 	}
-	b, err := json.MarshalIndent(resp, "", "  ")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprintf(w, "%s\n", b)
+	encodeJsonResponse(w, resp)
 }
 
 func (me *httpHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
@@ -424,4 +415,15 @@ func storeUploadedTorrent(r io.Reader, path string) error {
 
 func (me *httpHandler) uploadMetainfoPath(s3Prefix replica.S3Prefix) string {
 	return filepath.Join(me.uploadsDir, s3Prefix.String()+".torrent")
+}
+
+func encodeJsonResponse(w http.ResponseWriter, resp interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	je := json.NewEncoder(w)
+	je.SetIndent("", "  ")
+	je.SetEscapeHTML(false)
+	err := je.Encode(resp)
+	if err != nil {
+		panic(err)
+	}
 }
