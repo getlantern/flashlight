@@ -534,6 +534,13 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 		}
 		// Use the most up-to-date binary in development.
 		cfg.TrafficLog.Reinstall = true
+		// Always try to install the traffic log in development.
+		lastFailedPath, err := common.InConfigDir("", trafficlogLastFailedInstallFile)
+		if err != nil {
+			log.Debugf("Failed to create path to traffic log install-last-failed file: %v", err)
+		} else if err := os.Remove(lastFailedPath); err != nil {
+			log.Debugf("Failed to remove traffic log install-last-failed file: %v", err)
+		}
 	} else {
 		for _, platform := range cfg.TrafficLog.Platforms {
 			enableTrafficLog = platform == common.Platform && rand.Float64() < cfg.TrafficLog.PercentClients
