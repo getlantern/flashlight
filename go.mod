@@ -75,7 +75,7 @@ require (
 	github.com/getlantern/tlsmasq v0.3.0
 	github.com/getlantern/tlsresumption v0.0.0-20200205020452-74fc6ea4e074
 	github.com/getlantern/trafficlog v1.0.0
-	github.com/getlantern/trafficlog-flashlight v0.0.0-20200509022217-244db5b4f7fe
+	github.com/getlantern/trafficlog-flashlight v0.0.0-20200514234855-7d646d50892a
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
@@ -117,11 +117,3 @@ replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358
 
 replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20191212040217-1650eee50330
-
-// TODO: upload repos and use remote versions
-
-replace github.com/getlantern/trafficlog-flashlight => ../trafficlog-flashlight
-
-replace github.com/getlantern/trafficlog => ../trafficlog
-
-replace github.com/getlantern/authipc => ../authipc
