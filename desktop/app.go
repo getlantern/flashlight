@@ -57,8 +57,7 @@ const (
 	trafficlogStartTimeout   = 5 * time.Second
 	trafficlogRequestTimeout = time.Second
 
-	// This message is only displayed when the traffic log needs to be installed. This should really
-	// only happen once on a given machine.
+	// This message is only displayed when the traffic log needs to be installed.
 	trafficlogInstallPrompt = "Lantern needs your permission to install diagnostic tools"
 
 	// An asset in the icons package.
@@ -602,9 +601,9 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 		}
 
 		// Note that this is a no-op if the traffic log is already installed.
-		err = tlproc.Install(
+		installErr := tlproc.Install(
 			path, u.Username, trafficlogInstallPrompt, iconFile, cfg.TrafficLog.Reinstall)
-		if err != nil {
+		if installErr != nil {
 			b, err := time.Now().MarshalText()
 			if err != nil {
 				log.Errorf("Failed to marshal time for traffic log install-last-failed file: %v", err)
@@ -614,7 +613,7 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 				log.Errorf("Failed to write traffic log install-last-failed file: %v", err)
 				return
 			}
-			log.Errorf("Failed to install traffic log: %w", err)
+			log.Errorf("Failed to install traffic log: %v", installErr)
 			return
 		}
 

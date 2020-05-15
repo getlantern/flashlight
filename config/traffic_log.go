@@ -4,8 +4,6 @@ import "time"
 
 // TrafficLogConfig is configuration for github.com/getlantern/trafficlog-flashlight.
 type TrafficLogConfig struct {
-	// TODO: think about existing clients pulling down old config values in Global
-
 	// If the client's platform appears in this list, traffic logging may be enabled.
 	Platforms []string
 
