@@ -201,6 +201,14 @@ func NewClient(
 			InstallPrompt:      i18n.T("BACKEND_MITM_INSTALL_CERT"),
 			WindowsPromptTitle: i18n.T("BACKEND_MITM_INSTALL_CERT"),
 			WindowsPromptBody:  i18n.T("BACKEND_MITM_INSTALL_CERT_WINDOWS_BODY", "certimporter.exe"),
+			InstallCertResult: func(installErr error) {
+				op := ops.Begin("install_mitm_cert")
+				op.FailIf(installErr)
+				if installErr == nil {
+					log.Debug("Successfully installed MITM cert")
+				}
+				op.End()
+			},
 			Domains: []string{
 				// Currently don't bother MITM'ing ad sites since we're not doing ad swapping
 				// "*.doubleclick.net",
