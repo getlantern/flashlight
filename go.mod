@@ -48,7 +48,7 @@ require (
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
-	github.com/getlantern/mitm v0.0.0-20180205214248-4ce456bae650
+	github.com/getlantern/mitm v0.0.0-20200517210030-e913809c7038
 	github.com/getlantern/mockconn v0.0.0-20191023022503-481dbcceeb58
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd

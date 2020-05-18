@@ -160,6 +160,8 @@ github.com/getlantern/domains v0.0.0-20200402171649-efc86b844fcf h1:Qopz/FZOZyRp
 github.com/getlantern/domains v0.0.0-20200402171649-efc86b844fcf/go.mod h1:au2O/xaJUN17QP5ndAXBS8tSp0P7G9WnitSvuO/k9k0=
 github.com/getlantern/elevate v0.0.0-20180207094634-c2e2e4901072 h1:Sxd/u3rnHYAqXzpRXjOA7DPyRKYzcivMRBKtOhsRwW8=
 github.com/getlantern/elevate v0.0.0-20180207094634-c2e2e4901072/go.mod h1:T4VB2POK13lsPLFV98WJQrL7gAXYD9TyJxBU2P8c8p4=
+github.com/getlantern/elevate v0.0.0-20200430163644-2881a121236d h1:o0EHYAq7u9/umRZE0PpJ00GYQvxPxVUvtoDkUca2guQ=
+github.com/getlantern/elevate v0.0.0-20200430163644-2881a121236d/go.mod h1:+nYKXAqGigcDHB3as7WikMzg3eIHzGUbLnBKOCBJeUE=
 github.com/getlantern/ema v0.0.0-20170330162033-d906ee7c3465/go.mod h1:tzRwT19aDrWSr6yRDs8iOvaXXCau96EgWsgGT9wIpoQ=
 github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4 h1:PMK8QQn9GLTQXdHnqoNhyToOa8snagaZVt9Xb36NEUc=
 github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4/go.mod h1:tzRwT19aDrWSr6yRDs8iOvaXXCau96EgWsgGT9wIpoQ=
@@ -249,6 +251,12 @@ github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231 h1:E8kVrX/zRm
 github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231/go.mod h1:bcE9B93SzvnTI0AJM+138sfvio7WK9e0NTAI8ba0l5Q=
 github.com/getlantern/mitm v0.0.0-20180205214248-4ce456bae650 h1:n3CmLDgXI1AUbybRxYcU48fAmfe4MPwL/ek4DgJHfcc=
 github.com/getlantern/mitm v0.0.0-20180205214248-4ce456bae650/go.mod h1:jmIVbVxSVLdeY5hlD+6chiOR/9CdzPjVgIIQphviCl0=
+github.com/getlantern/mitm v0.0.0-20200517203949-b0cf708d6377 h1:m3DjPZjeFKD2H+Z/2BIq2iODMuMn7Ze5F8i0DsgoIWA=
+github.com/getlantern/mitm v0.0.0-20200517203949-b0cf708d6377/go.mod h1:N2SON702opnEqJQ37ougGjh3YsZ/nkTmPl9/+I+643A=
+github.com/getlantern/mitm v0.0.0-20200517204510-bc1821a69906 h1:T8JrWMpK2KcW00dv68o0Turkt80HyhSK5WrjsqWWPI8=
+github.com/getlantern/mitm v0.0.0-20200517204510-bc1821a69906/go.mod h1:N2SON702opnEqJQ37ougGjh3YsZ/nkTmPl9/+I+643A=
+github.com/getlantern/mitm v0.0.0-20200517210030-e913809c7038 h1:z3ptQ0oO940ON/a2VZaMcXJpJm0aQAKV1mw8jIQ41lI=
+github.com/getlantern/mitm v0.0.0-20200517210030-e913809c7038/go.mod h1:N2SON702opnEqJQ37ougGjh3YsZ/nkTmPl9/+I+643A=
 github.com/getlantern/mockconn v0.0.0-20161230140259-422a5afd4432/go.mod h1:+F5GJ7qGpQ03DBtcOEyQpM30ix4BLswdaojecFtsdy8=
 github.com/getlantern/mockconn v0.0.0-20190708122800-637bd46d8034/go.mod h1:+F5GJ7qGpQ03DBtcOEyQpM30ix4BLswdaojecFtsdy8=
 github.com/getlantern/mockconn v0.0.0-20191023022503-481dbcceeb58 h1:95ogd2dX0JeYDUI4Ssl9ARhVAh+kvOTpN6TOD/tX0Vs=
