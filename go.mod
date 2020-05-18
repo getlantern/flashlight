@@ -48,7 +48,7 @@ require (
 	github.com/getlantern/kcpwrapper v0.0.0-20171114192627-a35c895f6de7
 	github.com/getlantern/keyman v0.0.0-20180207174507-f55e7280e93a
 	github.com/getlantern/lampshade v0.0.0-20200123165158-e0efbb58c68b
-	github.com/getlantern/lantern-server v0.0.0-20200509221411-6c410064d06c
+	github.com/getlantern/lantern-server v0.0.0-20200518151831-cf65c07a18c4
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
@@ -70,7 +70,7 @@ require (
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/shortcut v0.0.0-20200120121615-2dcb213d447c
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
-	github.com/getlantern/systray v0.0.0-20200324212034-d3ab4fd25d99
+	github.com/getlantern/systray v0.0.0-20200420204311-62d1bb735771
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
 	github.com/getlantern/tinywss v0.0.0-20200121221108-851921f95ad7
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
@@ -85,7 +85,6 @@ require (
 	github.com/getsentry/sentry-go v0.5.1
 	github.com/go-chi/chi v4.1.1+incompatible // indirect
 	github.com/go-errors/errors v1.0.2 // indirect
-	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/gobuffalo/envy v1.9.0 // indirect
 	github.com/golang/protobuf v1.4.0 // indirect
 	github.com/gorilla/mux v1.7.2 // indirect
@@ -97,7 +96,6 @@ require (
 	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9 // indirect
 	github.com/labstack/echo v3.3.10+incompatible // indirect
-	github.com/labstack/echo/v4 v4.1.16 // indirect
 	github.com/lxn/walk v0.0.0-20191128110447-55ccb3a9f5c1 // indirect
 	github.com/lxn/win v0.0.0-20191128105842-2da648fda5b4 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
@@ -129,11 +127,7 @@ require (
 	google.golang.org/genproto v0.0.0-20200429120912-1f37eeb960b2 // indirect
 	google.golang.org/grpc v1.29.1 // indirect
 	gopkg.in/ezzarghili/recaptcha-go.v4 v4.1.0 // indirect
-	gopkg.in/validator.v2 v2.0.0-20191107172027-c3144fdedc21 // indirect
-	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
-
-replace github.com/getlantern/lantern-server => ../lantern-server
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20200211213545-301421f7c3c9
 

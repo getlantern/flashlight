@@ -454,10 +454,7 @@ func HasToken(r *http.Request, tok string) bool {
 		return true
 	}
 	referer := r.Header.Get("referer")
-	if strings.Contains(referer, tok) {
-		return true
-	}
-	return false
+	return strings.Contains(referer, tok)
 }
 
 // closeConn closes the client connection without sending a response.
