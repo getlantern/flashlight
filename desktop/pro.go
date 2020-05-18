@@ -3,10 +3,12 @@ package desktop
 import (
 	"time"
 
+	"github.com/getlantern/errors"
+	"github.com/getlantern/golog"
+
 	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/flashlight/pro/client"
 	"github.com/getlantern/flashlight/ws"
-	"github.com/getlantern/golog"
 )
 
 // isProUser blocks itself to check if current user is Pro, or !ok if error
@@ -37,39 +39,40 @@ func isProUserFast() (isPro bool, statusKnown bool) {
 func servePro(channel ws.UIChannel) error {
 	logger := golog.LoggerFor("flashlight.app.pro")
 	chFetch := make(chan bool)
-	retry := time.NewTimer(0)
-	retryLater := func() {
-		if !retry.Stop() {
-			<-retry.C
-		}
-		retry.Reset(10 * time.Second)
-	}
-
-	fetchOrCreate := func() {
-		userID := settings.GetUserID()
-		if userID == 0 {
-			user, err := pro.NewUser(settings)
-			if err != nil {
-				logger.Errorf("Could not create new Pro user: %v", err)
-				retryLater()
-			} else {
-				settings.SetUserIDAndToken(user.Auth.ID, user.Auth.Token)
-			}
-		} else {
-			_, err := pro.FetchUserData(settings)
-			if err != nil {
-				logger.Errorf("Could not get user data for %v: %v", userID, err)
-				retryLater()
-			}
-		}
-	}
 	go func() {
+		fetchOrCreate := func() error {
+			userID := settings.GetUserID()
+			if userID == 0 {
+				user, err := pro.NewUser(settings)
+				if err != nil {
+					return errors.New("Could not create new Pro user: %v", err)
+				} else {
+					settings.SetUserIDAndToken(user.Auth.ID, user.Auth.Token)
+				}
+			} else {
+				_, err := pro.FetchUserData(settings)
+				if err != nil {
+					return errors.New("Could not get user data for %v: %v", userID, err)
+				}
+			}
+			return nil
+		}
+
+		retry := time.NewTimer(0)
+		retryOnFail := func(drainChannel bool) {
+			if err := fetchOrCreate(); err != nil {
+				if drainChannel && !retry.Stop() {
+					<-retry.C
+				}
+				retry.Reset(10 * time.Second)
+			}
+		}
 		for {
 			select {
 			case <-chFetch:
-				fetchOrCreate()
+				retryOnFail(true)
 			case <-retry.C:
-				fetchOrCreate()
+				retryOnFail(false)
 			}
 		}
 	}()
