@@ -220,8 +220,12 @@ func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (me *httpHandler) addTorrent(mi *metainfo.MetaInfo) error {
-	_, err := me.torrentClient.AddTorrent(mi)
-	return err
+	t, err := me.torrentClient.AddTorrent(mi)
+	if err != nil {
+		return err
+	}
+	me.addImplicitTrackers(t)
+	return nil
 }
 
 func (me *httpHandler) handleUploads(w http.ResponseWriter, r *http.Request) {
@@ -317,12 +321,8 @@ func (me *httpHandler) handleViewWith(rw http.ResponseWriter, r *http.Request, i
 	// first tier, and our forcibly injected ones in the second.
 	t.AddTrackers([][]string{
 		m.Trackers,
-		{
-			"https://tracker.gbitt.info:443/announce",
-			"http://tracker.opentrackr.org:1337/announce",
-			"udp://tracker.leechers-paradise.org:6969/announce",
-		},
 	})
+	me.addImplicitTrackers(t)
 	if m.DisplayName != "" {
 		t.SetDisplayName(m.DisplayName)
 	}
@@ -426,4 +426,11 @@ func encodeJsonResponse(w http.ResponseWriter, resp interface{}) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (me *httpHandler) addImplicitTrackers(t *torrent.Torrent) {
+	t.AddTrackers([][]string{
+		nil,
+		replica.Trackers(),
+	})
 }
