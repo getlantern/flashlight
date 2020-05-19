@@ -145,6 +145,10 @@ github.com/anacrolix/torrent v1.9.0/go.mod h1:jJJ6lsd2LD1eLHkUwFOhy7I0FcLYH0tHKw
 github.com/anacrolix/torrent v1.11.0/go.mod h1:FwBai7SyOFlflvfEOaM88ag/jjcBWxTOqD6dVU/lKKA=
 github.com/anacrolix/torrent v1.12.0/go.mod h1:vCkQMgViw2b6GbrTECqql4o2AZCCPujZaq3iEYnH0p4=
 github.com/anacrolix/torrent v1.15.0/go.mod h1:MFc6KcbpAyfwGqOyRkdarUK9QnKA/FkVg0usFk1OQxU=
+github.com/anacrolix/torrent v1.15.1-0.20200519050008-91afef873386 h1:0gj30/Quy++OCtUTnDKfflW9ltFzOtbPWqUROsvBI3Y=
+github.com/anacrolix/torrent v1.15.1-0.20200519050008-91afef873386/go.mod h1:QlOfgrCz5kbvhOz8M58dUwHY5SfZ9VbIvReZ0z0MdIk=
+github.com/anacrolix/torrent v1.15.1-0.20200519052258-e33d77339134 h1:xlqdkeKWTzIu6N4U2lbWID1W5K+Fy4mggCi2Ou2ZyKg=
+github.com/anacrolix/torrent v1.15.1-0.20200519052258-e33d77339134/go.mod h1:QlOfgrCz5kbvhOz8M58dUwHY5SfZ9VbIvReZ0z0MdIk=
 github.com/anacrolix/torrent v1.15.2-0.20200427233100-c3321193474c h1:/i6VSTOIvIymuoHEVLrlLOAAA02TQx0c0G4P379ZOSQ=
 github.com/anacrolix/torrent v1.15.2-0.20200427233100-c3321193474c/go.mod h1:sJtcAZtlGaZLo7wCXT/EZV+hATsq0Bg6pVhhzACY0E0=
 github.com/anacrolix/upnp v0.1.1 h1:v5C+wBiku2zmwFR5B+pUfdNBL5TfPtyO+sWuw+/VEDg=
@@ -720,6 +724,7 @@ github.com/montanaflynn/stats v0.5.0/go.mod h1:wL8QJuTMNUDYhXwkmfOly8iTdp5TEcJFW
 github.com/moul/http2curl v1.0.0/go.mod h1:8UbvGypXm98wA/IqH45anm5Y2Z6ep6O31QGOAZ3H0fQ=
 github.com/mschoch/smat v0.0.0-20160514031455-90eadee771ae h1:VeRdUYdCw49yizlSbMEn2SZ+gT+3IUKx8BqxyQdz+BY=
 github.com/mschoch/smat v0.0.0-20160514031455-90eadee771ae/go.mod h1:qAyveg+e4CE+eKJXWVjKXM4ck2QobLqTDytGJbLLhJg=
+github.com/mschoch/smat v0.2.0 h1:8imxQsjDm8yFEAVBe7azKmKSgzSkZXDuKkSq9374khM=
 github.com/mschoch/smat v0.2.0/go.mod h1:kc9mz7DoBKqDyiRL7VZN8KvXQMWeTaVnttLRXOlotKw=
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/nats-io/nats.go v1.8.1/go.mod h1:BrFz9vVn0fU3AcH9Vn4Kd7W0NpJ651tD5omQ3M8LwxM=
@@ -772,6 +777,7 @@ github.com/pion/logging v0.2.2 h1:M9+AIj/+pxNsDfAT64+MAVgJO0rsyLnoJKCqf//DoeY=
 github.com/pion/logging v0.2.2/go.mod h1:k0/tDVsRCX2Mb2ZEmTqNa7CWsQPc+YYCB7Q+5pahoms=
 github.com/pion/mdns v0.0.4 h1:O4vvVqr4DGX63vzmO6Fw9vpy3lfztVWHGCQfyw0ZLSY=
 github.com/pion/mdns v0.0.4/go.mod h1:R1sL0p50l42S5lJs91oNdUL58nm0QHrhxnSegr++qC0=
+github.com/pion/quic v0.1.1 h1:D951FV+TOqI9A0rTF7tHx0Loooqz+nyzjEyj8o3PuMA=
 github.com/pion/quic v0.1.1/go.mod h1:zEU51v7ru8Mp4AUBJvj6psrSth5eEFNnVQK5K48oV3k=
 github.com/pion/rtcp v1.2.1 h1:S3yG4KpYAiSmBVqKAfgRa5JdwBNj4zK3RLUa8JYdhak=
 github.com/pion/rtcp v1.2.1/go.mod h1:a5dj2d6BKIKHl43EnAOIrCczcjESrtPuMgfmL6/K6QM=

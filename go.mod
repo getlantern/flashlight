@@ -9,7 +9,7 @@ require (
 	github.com/anacrolix/envpprof v1.1.1
 	github.com/anacrolix/go-libutp v1.0.3
 	github.com/anacrolix/log v0.7.0
-	github.com/anacrolix/torrent v1.15.2-0.20200427233100-c3321193474c
+	github.com/anacrolix/torrent v1.15.1-0.20200519052258-e33d77339134
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
@@ -82,6 +82,7 @@ require (
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
 	github.com/getsentry/sentry-go v0.5.1
+	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
