@@ -100,6 +100,8 @@ func configureSystemTray(a systrayCallbacks) error {
 	menu.quit = systray.AddMenuItem("", "")
 	refreshMenuItems()
 
+	// Suppress showing "Update to Pro" until user status is got from pro-server.
+	menu.st.IsPro = true
 	menu.st.Status = stats.STATUS_CONNECTING
 	statsUpdated()
 	a.OnStatsChange(func(newStats stats.Stats) {
