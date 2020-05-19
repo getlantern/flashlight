@@ -267,20 +267,28 @@ func (me *httpHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	s3Prefix, err := replica.S3PrefixFromMagnet(m)
 	if err != nil {
-		me.logger.Printf("error getting s3 prefix from magnet link: %v", err)
+		me.logger.Printf("error getting s3 prefix from magnet link %q: %v", m, err)
 		http.Error(w, fmt.Sprintf("error parsing replica uri: %v", err.Error()), http.StatusBadRequest)
 		return
 	}
-	err = replica.DeletePrefix(s3Prefix)
-	if err != nil {
-		me.logger.Printf("error deleting s3 object: %v", err)
-		http.Error(w, "couldn't delete replica object", http.StatusInternalServerError)
+
+	if errs := replica.DeletePrefix(s3Prefix, func() (ret [][]string) {
+		for _, f := range t.Info().Files {
+			ret = append(ret, f.Path)
+		}
+		return
+	}()...); len(errs) != 0 {
+		for _, e := range errs {
+			me.logger.Printf("error deleting prefix %q: %v", s3Prefix, e)
+		}
+		http.Error(w, "couldn't delete replica prefix", http.StatusInternalServerError)
 		return
 	}
 	t.Drop()
 	os.RemoveAll(filepath.Join(me.dataDir, s3Prefix.String()))
 	os.Remove(me.uploadMetainfoPath(s3Prefix))
 }
+
 func (me *httpHandler) handleDownload(w http.ResponseWriter, r *http.Request) {
 	me.handleViewWith(w, r, "attachment")
 }
