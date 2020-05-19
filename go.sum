@@ -313,8 +313,8 @@ github.com/getlantern/sqlparser v0.0.0-20171012210704-a879d8035f3c h1:+N/dste38K
 github.com/getlantern/sqlparser v0.0.0-20171012210704-a879d8035f3c/go.mod h1:wGjYYh1vSkRes1bNy+zio7cmmI9cLbST+H8eqnt5Mg4=
 github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035 h1:JN8roAfbXDpGfSHE/3rJDWb5C5Ezqo8eVw3LE38fvxY=
 github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035/go.mod h1:h2YijnLbhHv96Px/sVUITlNMl7Q+pBONa0/MVK0ZIF4=
-github.com/getlantern/systray v0.0.0-20200420214849-6c0d20dff59f h1:c/Rb0KBMGFLmdfzTiGv5SDvXM5igljUInriw8S+IcbA=
-github.com/getlantern/systray v0.0.0-20200420214849-6c0d20dff59f/go.mod h1:7Splj4WBQSps8jODnMgrIV6goKL0N1HR+mhCAEVWlA0=
+github.com/getlantern/systray v1.0.2 h1:ejmaksuHORxNP+rdgExcfMpCOsP/evbNA43RFvGAobU=
+github.com/getlantern/systray v1.0.2/go.mod h1:AecygODWIsBquJCJFop8MEQcJbWFfw/1yWbVabNgpCM=
 github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239 h1:PcBHV71YMbtbRo2xgFgEg6Cz56nWixU0Fjch3AIOidk=
 github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239/go.mod h1:T4fCOTFiRQXdY5WhfiEdmR5W+fv4sIYUm5DlhauOfuY=
 github.com/getlantern/testify v0.0.0-20160317154340-2eeb3906e78f h1:R6iv+VzCrbxlBm2TcgyJi9c7tQguNXi9JmIvuUJKrdc=
@@ -771,8 +771,8 @@ golang.org/x/sys v0.0.0-20200116001909-b77594299b42 h1:vEOn+mP2zCOVzKckCZy6YsCtD
 golang.org/x/sys v0.0.0-20200116001909-b77594299b42/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5 h1:LfCXLvNmTYH9kEmVgqbnsWfruoXZIrh4YBgqVHtDvw0=
 golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
-golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527 h1:uYVVQ9WP/Ds2ROhcaGPeIdVq0RIXVLwsHlnvJ+cT1So=
-golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20200515095857-1151b9dac4a9 h1:YTzHMGlqJu67/uEo1lBv0n3wBXhXNeUbB1XfN2vmTm0=
+golang.org/x/sys v0.0.0-20200515095857-1151b9dac4a9/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.2 h1:tW2bmiBqwgJj/UpqtC8EpXEZVYOwU0yG4iWbprSVAcs=
