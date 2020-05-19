@@ -106,15 +106,13 @@ func Send(msg *Message) error {
 			op.UserAgent(fmt.Sprint(msg.Vars["userAgent"])).
 				Set("pro", isPro).
 				Set("issue_type", msg.Vars["issueType"]).
-				Set("issue_note", msg.Vars["note"]).
-				Set("email", msg.Vars["email"])
+				Set("issue_note", msg.Vars["note"])
 		} else {
 			// get parameters from android template vars
 			isPro, _ := strconv.ParseBool(fmt.Sprint(msg.Vars["prouser"]))
 			op.Set("pro", isPro).
 				Set("issue_type", msg.Vars["issue"]).
-				Set("issue_note", msg.Vars["report"]).
-				Set("email", msg.Vars["emailaddress"])
+				Set("issue_note", msg.Vars["report"])
 		}
 		msg.Vars["country"] = geolookup.GetCountry(0)
 		log.Debug("Reporting issue")

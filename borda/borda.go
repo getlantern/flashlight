@@ -4,6 +4,7 @@ import (
 	"context"
 	"math/rand"
 	"net/http"
+	"regexp"
 	"sync"
 	"time"
 
@@ -57,6 +58,9 @@ var (
 	bordaClientMx sync.Mutex
 
 	once sync.Once
+
+	// Regexp based on code from https://codverter.com/blog/articles/tech/20190105-extract-ipv4-ipv6-ip-addresses-using-regex.html
+	sanitizeAddrsRegex = regexp.MustCompile(`(((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])){3}))|:)))(%.+)?|(\d{1,3}\.){3}\d{1,3})(:[0-9]+)?`)
 )
 
 // EnabledFunc is a function that indicates whether reporting to borda is enabled for a specific context.
@@ -142,6 +146,8 @@ func ConfigureWithSubmitter(submitter borda.Submitter, enabled EnabledFunc) {
 					}
 				}
 			}
+
+			sanitizeDimensions(dimensions)
 			return submitter(values, dimensions)
 		}
 		startBorda(pruningSubmitter, enabled)
@@ -232,4 +238,16 @@ func createBordaClient(reportInterval time.Duration) *borda.Client {
 		},
 		BeforeSubmit: BeforeSubmit,
 	})
+}
+
+// sanitizeDimensions sanitizes error strings in a context the same way that they're already sanitized in Borda using the SANITIZE alias
+func sanitizeDimensions(dims map[string]interface{}) {
+	for key, value := range dims {
+		if key == "error" || key == "error_text" {
+			errorString, ok := value.(string)
+			if ok {
+				dims[key] = sanitizeAddrsRegex.ReplaceAllString(errorString, "<addr>")
+			}
+		}
+	}
 }
