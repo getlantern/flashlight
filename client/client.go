@@ -154,6 +154,7 @@ func NewClient(
 	allowShortcutTo func(ctx context.Context, addr string) (bool, net.IP),
 	useDetour func() bool,
 	allowHTTPSEverywhere func() bool,
+	allowMITM func() bool,
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
 	allowPrivateHosts func() bool,
@@ -190,8 +191,8 @@ func NewClient(
 	keepAliveIdleTimeout := chained.IdleTimeout - 5*time.Second
 
 	var mitmOpts *mitm.Opts
-	// Totally disabling MITM for now
-	if common.Platform != "android" && false {
+	if allowMITM() {
+		log.Debug("Enabling MITM")
 		mitmOpts = &mitm.Opts{
 			PKFile:             filepath.Join(appdir.General("Lantern"), "mitmkey.pem"),
 			CertFile:           filepath.Join(appdir.General("Lantern"), "mitmcert.pem"),
@@ -200,16 +201,26 @@ func NewClient(
 			InstallPrompt:      i18n.T("BACKEND_MITM_INSTALL_CERT"),
 			WindowsPromptTitle: i18n.T("BACKEND_MITM_INSTALL_CERT"),
 			WindowsPromptBody:  i18n.T("BACKEND_MITM_INSTALL_CERT_WINDOWS_BODY", "certimporter.exe"),
+			InstallCertResult: func(installErr error) {
+				op := ops.Begin("install_mitm_cert")
+				op.FailIf(installErr)
+				if installErr == nil {
+					log.Debug("Successfully installed MITM cert")
+				}
+				op.End()
+			},
 			Domains: []string{
-				"*.doubleclick.net",
-				"*.g.doubleclick.net",
-				"adservice.google.com",
-				"adservice.google.com.hk",
-				"adservice.google.co.jp",
-				"adservice.google.nl",
-				"*.googlesyndication.com",
-				"*.googletagservices.com",
-				"googleadservices.com",
+				// Currently don't bother MITM'ing ad sites since we're not doing ad swapping
+				// "*.doubleclick.net",
+				// "*.g.doubleclick.net",
+				// "adservice.google.com",
+				// "adservice.google.com.hk",
+				// "adservice.google.co.jp",
+				// "adservice.google.nl",
+				// "*.googlesyndication.com",
+				// "*.googletagservices.com",
+				// "googleadservices.com",
+				// MITM YouTube domains to track statistics on watched videos
 				"*.youtube.com",
 				"*.youtube.com.hk",
 				"*.youtube.hk",

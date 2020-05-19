@@ -52,7 +52,7 @@ require (
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
-	github.com/getlantern/mitm v0.0.0-20180205214248-4ce456bae650
+	github.com/getlantern/mitm v0.0.0-20200517210030-e913809c7038
 	github.com/getlantern/mockconn v0.0.0-20191023022503-481dbcceeb58
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd
@@ -70,7 +70,7 @@ require (
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/shortcut v0.0.0-20200120121615-2dcb213d447c
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
-	github.com/getlantern/systray v0.0.0-20200420204311-62d1bb735771
+	github.com/getlantern/systray v1.0.2
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
 	github.com/getlantern/tinywss v0.0.0-20200121221108-851921f95ad7
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
@@ -120,13 +120,10 @@ require (
 	github.com/tyler-smith/go-bip39 v1.0.2 // indirect
 	github.com/ulule/limiter/v3 v3.5.0 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
-	golang.org/x/net v0.0.0-20200506145744-7e3656a0809f
-	golang.org/x/tools/gopls v0.4.0 // indirect
-	google.golang.org/api v0.22.0 // indirect
-	google.golang.org/appengine v1.6.6 // indirect
-	google.golang.org/genproto v0.0.0-20200429120912-1f37eeb960b2 // indirect
-	google.golang.org/grpc v1.29.1 // indirect
-	gopkg.in/ezzarghili/recaptcha-go.v4 v4.1.0 // indirect
+	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553
+	google.golang.org/appengine v1.6.2 // indirect
+	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55 // indirect
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20200211213545-301421f7c3c9
