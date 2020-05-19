@@ -99,6 +99,9 @@ func configureSystemTray(a systrayCallbacks) error {
 	systray.AddSeparator()
 	menu.quit = systray.AddMenuItem("", "")
 	refreshMenuItems()
+
+	menu.st.Status = stats.STATUS_CONNECTING
+	statsUpdated()
 	a.OnStatsChange(func(newStats stats.Stats) {
 		menu.stMx.Lock()
 		menu.st = newStats
