@@ -238,9 +238,10 @@ func (me *httpHandler) handleUploads(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		var oi objectInfo
-		oi.fromS3UploadMetaInfo(
-			mi,
-			iu.FileInfo.ModTime())
+		oi.fromS3UploadMetaInfo(mi, iu.FileInfo.ModTime())
+		if oi.FileSize == 0 {
+			return
+		}
 		resp = append(resp, oi)
 	})
 	if err != nil {
