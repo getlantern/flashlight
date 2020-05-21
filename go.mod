@@ -120,10 +120,7 @@ require (
 	github.com/tyler-smith/go-bip39 v1.0.2 // indirect
 	github.com/ulule/limiter/v3 v3.5.0 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
-	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553
-	google.golang.org/appengine v1.6.2 // indirect
-	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55 // indirect
-	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
+	golang.org/x/net v0.0.0-20200506145744-7e3656a0809f
 )
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20200211213545-301421f7c3c9
