@@ -127,6 +127,7 @@ github.com/getlantern/appdir v0.0.0-20160830121117-659a155d06e8/go.mod h1:3vR6+j
 github.com/getlantern/appdir v0.0.0-20180320102544-7c0f9d241ea7 h1:4b2ht7EWptzPz/e6shqGZn3p5dXh4E3VETyKMTTPfGo=
 github.com/getlantern/appdir v0.0.0-20180320102544-7c0f9d241ea7/go.mod h1:3vR6+jQdWfWojZ77w+htCqEF5MO/Y2twJOpAvFuM9po=
 github.com/getlantern/authipc v0.1.0/go.mod h1:nDXd7xyGPMbPwEi4QAL3PPMzvwSFYbQxzk4ipANL25M=
+github.com/getlantern/authipc v0.2.0/go.mod h1:nDXd7xyGPMbPwEi4QAL3PPMzvwSFYbQxzk4ipANL25M=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99 h1:fnjb9PYZRMU6Tok5i3anP/bAqhUtG2kn9xgff3IlA+8=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99/go.mod h1:4rYfIUYagdnY0KCu5/zOBX5CIRIi+j+LHdQ+LmD/Lyg=
 github.com/getlantern/bbrconn v0.0.0-20180619163322-86cf8c16f3d0 h1:OtUNxwmNp9+mTZMuKw9MrNLJKMG731zWZIWwQfFGZfs=
@@ -347,6 +348,10 @@ github.com/getlantern/trafficlog-flashlight v0.0.0-20200514234855-7d646d50892a h
 github.com/getlantern/trafficlog-flashlight v0.0.0-20200514234855-7d646d50892a/go.mod h1:/8rI/0ZTL4rqwdrHWaYBF6KZuArk0099LHzddOkUPDk=
 github.com/getlantern/trafficlog-flashlight v0.0.0-20200515150242-a2eaa90e5b17 h1:QnxwzCUSIf57WXgF1eN0Iylo3GDcdlpH6I9/tX2FeFY=
 github.com/getlantern/trafficlog-flashlight v0.0.0-20200515150242-a2eaa90e5b17/go.mod h1:/8rI/0ZTL4rqwdrHWaYBF6KZuArk0099LHzddOkUPDk=
+github.com/getlantern/trafficlog-flashlight v0.0.0-20200521024524-6d4f47837012 h1:G2SWYG4KESTZ1oZ4UUOp1XeS3DsQkzK3CSxN3nx8grA=
+github.com/getlantern/trafficlog-flashlight v0.0.0-20200521024524-6d4f47837012/go.mod h1:C0nrxW8MZa8aoo+OiEPTTCDfOHvZqHAFq5n+zjKQ6kU=
+github.com/getlantern/trafficlog-flashlight v0.0.0-20200521024745-35a162731b23 h1:sZOOME2eQ6s4h4jQKTuHRyQcVLCR7IktSfawy36hMKc=
+github.com/getlantern/trafficlog-flashlight v0.0.0-20200521024745-35a162731b23/go.mod h1:C0nrxW8MZa8aoo+OiEPTTCDfOHvZqHAFq5n+zjKQ6kU=
 github.com/getlantern/utls v0.0.0-20191001223343-79cda44164e3 h1:ITOeD+knFdONp9DqyIZgIDt8P3scAsJXOgBiuxYX3hA=
 github.com/getlantern/utls v0.0.0-20191001223343-79cda44164e3/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
 github.com/getlantern/utls v0.0.0-20191119185840-3db8c755b682 h1:gK0+CerB0oFReyfhHZhTDywm7YU7NIx/xrhRGDhgiK0=
