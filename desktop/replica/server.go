@@ -141,8 +141,8 @@ func (me *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(rw, "expected POST", http.StatusMethodNotAllowed)
+	if r.Method != "POST" && r.Method != "OPTIONS" {
+		http.Error(rw, "expected POST or OPTIONS", http.StatusMethodNotAllowed)
 		return
 	}
 	w := ops.InitInstrumentedResponseWriter(rw, "replica_upload")
