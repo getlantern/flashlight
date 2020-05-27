@@ -141,8 +141,14 @@ func (me *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" && r.Method != "OPTIONS" {
-		http.Error(rw, "expected POST or OPTIONS", http.StatusMethodNotAllowed)
+	// Set status code to 204 to handle preflight cors check
+	if r.Method == "OPTIONS" {
+		rw.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	if r.Method != "POST" {
+		http.Error(rw, "expected POST", http.StatusMethodNotAllowed)
 		return
 	}
 	w := ops.InitInstrumentedResponseWriter(rw, "replica_upload")
