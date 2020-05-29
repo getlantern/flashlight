@@ -412,6 +412,8 @@ github.com/getlantern/quicwrapper v0.0.0-20200129232925-8ef70253fcae h1:Is+Bvq12
 github.com/getlantern/quicwrapper v0.0.0-20200129232925-8ef70253fcae/go.mod h1:DDN8Ouc3Mq+buV5UsQGznJ7Lu4gvUljxm6EkpXdMA6o=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c h1:IkjF+RwRs8B/RsuD638eUFO2K/227OO2B1FLXGp17Ro=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c/go.mod h1:kExwbqTx1krUnT9ohmXG3jayDTEBfxUKeoRzU6XucLw=
+github.com/getlantern/replica v0.3.1-0.20200529004833-3ecf9aa8d0b1 h1:6CqPH429GsKOgsH5mTx47YwnKjUdg6DV3unlP6gVW9M=
+github.com/getlantern/replica v0.3.1-0.20200529004833-3ecf9aa8d0b1/go.mod h1:yVPKsYdI/RSVBzFJhLg/IxANWx8Ec6So/rHTGx84TsQ=
 github.com/getlantern/ring v0.0.0-20181206150603-dd46ce8faa01 h1:JyXEChj4lHy5w3hlQVnYpcH4QrBXmhEJgkxb0FPkFlM=
 github.com/getlantern/ring v0.0.0-20181206150603-dd46ce8faa01/go.mod h1:mnw3NsM0/oiJdZDMujNx+Kg60o72UClHB1UNqrEWqOM=
 github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85 h1:+naZppl28oqpVs0J+wOsVeh61c02OD/G3JP+PemAMCU=
