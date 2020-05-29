@@ -18,6 +18,7 @@ import (
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/flashlight/ops"
+	"github.com/getlantern/flashlight/proxied"
 	"github.com/kennygrant/sanitize"
 	"golang.org/x/xerrors"
 
@@ -38,6 +39,7 @@ type httpHandler struct {
 	uploadsDir string
 	logger     analog.Logger
 	mux        http.ServeMux
+	rep        replica.Replica
 }
 
 // NewHTTPHandler creates a new http.Handler for calls to replica.
@@ -98,6 +100,11 @@ func NewHTTPHandler() (_ http.Handler, exitFunc func(), err error) {
 		dataDir:       replicaDataDir,
 		logger:        replicaLogger,
 		uploadsDir:    uploadsDir,
+		rep: replica.New(&http.Client{
+			Transport: proxied.AsRoundTripper(func(req *http.Request) (*http.Response, error) {
+				return proxied.ChainedThenFrontedWith("").RoundTrip(req)
+			}),
+		}),
 	}
 	handler.mux.HandleFunc("/upload", handler.handleUpload)
 	handler.mux.HandleFunc("/uploads", handler.handleUploads)
@@ -113,7 +120,7 @@ func NewHTTPHandler() (_ http.Handler, exitFunc func(), err error) {
 	// routes, so this might go away soon.
 	handler.mux.Handle("/", &handler.confluence)
 
-	if err := replica.IterUploads(uploadsDir, func(iu replica.IteredUpload) {
+	if err := handler.rep.IterUploads(uploadsDir, func(iu replica.IteredUpload) {
 		if iu.Err != nil {
 			replicaLogger.Printf("error while iterating uploads: %v", iu.Err)
 			return
@@ -174,7 +181,7 @@ func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 		me.logger.WithValues(analog.Error).Printf("error creating temporary file: %v", tmpFileErr)
 	}
 
-	output, err := replica.Upload(replicaUploadReader, r.URL.Query().Get("name"))
+	output, err := me.rep.Upload(replicaUploadReader, r.URL.Query().Get("name"))
 	s3Prefix := output.S3Prefix
 	mi := output.Metainfo
 	me.logger.WithValues(analog.Debug).Printf("uploaded replica key %q", s3Prefix)
@@ -236,7 +243,7 @@ func (me *httpHandler) addTorrent(mi *metainfo.MetaInfo) error {
 
 func (me *httpHandler) handleUploads(w http.ResponseWriter, r *http.Request) {
 	resp := []objectInfo{} // Ensure not nil: I don't like 'null' as a response.
-	err := replica.IterUploads(me.uploadsDir, func(iu replica.IteredUpload) {
+	err := me.rep.IterUploads(me.uploadsDir, func(iu replica.IteredUpload) {
 		mi := iu.Metainfo
 		err := iu.Err
 		if err != nil {
@@ -280,7 +287,7 @@ func (me *httpHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if errs := replica.DeletePrefix(s3Prefix, func() (ret [][]string) {
+	if errs := me.rep.DeletePrefix(s3Prefix, func() (ret [][]string) {
 		for _, f := range t.Info().Files {
 			ret = append(ret, f.Path)
 		}
@@ -348,7 +355,7 @@ func (me *httpHandler) handleViewWith(rw http.ResponseWriter, r *http.Request, i
 		_, _, release := me.confluence.GetTorrent(m.InfoHash)
 		go func() {
 			defer release()
-			tob, err := replica.GetMetainfo(s3Prefix)
+			tob, err := me.rep.GetMetainfo(s3Prefix)
 			if err != nil {
 				me.logger.Printf("error getting metainfo for %q from s3: %v", s3Prefix, err)
 				return
