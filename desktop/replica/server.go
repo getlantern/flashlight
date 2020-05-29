@@ -102,7 +102,11 @@ func NewHTTPHandler() (_ http.Handler, exitFunc func(), err error) {
 		uploadsDir:    uploadsDir,
 		rep: replica.New(&http.Client{
 			Transport: proxied.AsRoundTripper(func(req *http.Request) (*http.Response, error) {
-				return proxied.ChainedThenFrontedWith("").RoundTrip(req)
+				chained, err := proxied.ChainedNonPersistent("")
+				if err != nil {
+					return nil, fmt.Errorf("Error connecting to proxy: %v", err)
+				}
+				return chained.RoundTrip(req)
 			}),
 		}),
 	}
