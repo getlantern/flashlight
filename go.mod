@@ -16,7 +16,7 @@ require (
 	github.com/getlantern/borda v0.0.0-20200427033127-b36d009c6252
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
 	github.com/getlantern/cmux v0.0.0-20200420023238-ddfd0a83b995
-	github.com/getlantern/common v0.0.0-20191017131928-864ae49aeb6a
+	github.com/getlantern/common v1.1.0
 	github.com/getlantern/detour v0.0.0-20191213192126-a4b3dcb2def2
 	github.com/getlantern/dnsgrab v0.0.0-20191217020031-0e5f714410f9
 	github.com/getlantern/domains v0.0.0-20200402171649-efc86b844fcf
@@ -34,6 +34,7 @@ require (
 	github.com/getlantern/go-update v0.0.0-20190510022740-79c495ab728c // indirect
 	github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7
 	github.com/getlantern/gowin v0.0.0-20160824205538-88fa116ddffc // indirect
+	github.com/getlantern/hellosplitter v0.1.0
 	github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55
 	github.com/getlantern/http-proxy-lantern v0.1.4-0.20200130190446-3028d2ef9381
 	github.com/getlantern/httpseverywhere v0.0.0-20180326165025-9bdb93e40695

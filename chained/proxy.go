@@ -10,6 +10,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
@@ -31,6 +32,7 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
+	"github.com/getlantern/hellosplitter"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/kcpwrapper"
 	"github.com/getlantern/keyman"
@@ -185,7 +187,14 @@ func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc commo
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
 			td := &tlsdialer.Dialer{
 				DoDial: func(network, addr string, timeout time.Duration) (net.Conn, error) {
-					return p.dialCore(op)(ctx)
+					tcpConn, err := p.dialCore(op)(ctx)
+					if err != nil {
+						return nil, err
+					}
+					if s.TLSClientHelloSplitting {
+						tcpConn = hellosplitter.Wrap(tcpConn, splitClientHello)
+					}
+					return tcpConn, err
 				},
 				Timeout:        timeoutFor(ctx),
 				SendServerName: tlsConfig.ServerName != "",
@@ -452,6 +461,9 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 			tcpConn, err := p.dialCore(op)(ctx)
 			if err != nil {
 				return nil, err
+			}
+			if s.TLSClientHelloSplitting {
+				tcpConn = hellosplitter.Wrap(tcpConn, splitClientHello)
 			}
 			conn := tlsmasq.Client(tcpConn, cfg)
 
@@ -1078,4 +1090,21 @@ func (h utlsHandshaker) Handshake(conn net.Conn) (*ptlshs.HandshakeResult, error
 		Version:     uconn.ConnectionState().Version,
 		CipherSuite: uconn.ConnectionState().CipherSuite,
 	}, nil
+}
+
+func splitClientHello(hello []byte) [][]byte {
+	const minSplits, maxSplits = 2, 5
+	var (
+		maxLen = len(hello) / minSplits
+		splits = [][]byte{}
+		start  = 0
+		end    = start + rand.Intn(maxLen) + 1
+	)
+	for end < len(hello) && len(splits) < maxSplits-1 {
+		splits = append(splits, hello[start:end])
+		start = end
+		end = start + rand.Intn(maxLen) + 1
+	}
+	splits = append(splits, hello[start:])
+	return splits
 }
