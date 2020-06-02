@@ -146,10 +146,6 @@ github.com/getlantern/cmux v0.0.0-20200120072431-136083c8edb8 h1:MljTva0fcc/zBry
 github.com/getlantern/cmux v0.0.0-20200120072431-136083c8edb8/go.mod h1:imgbvmGS4GkyCTBEnVVdCB2TgBQNEaP+nuegf/SzXIQ=
 github.com/getlantern/cmux v0.0.0-20200420023238-ddfd0a83b995 h1:EJpPVoUn5IsksnCX/eAk5CqUovCJp5PpXrGkXqXEnio=
 github.com/getlantern/cmux v0.0.0-20200420023238-ddfd0a83b995/go.mod h1:48COjs7jITfhkdw82LeMDQtrISx0CQG3/W0Ycr2UafM=
-github.com/getlantern/common v0.0.0-20200529004456-aa73fe6af6d6 h1:bLvuJcIhUv7dp9VEFFoUb0fHlHvlJs2/IusXHIaLyTc=
-github.com/getlantern/common v0.0.0-20200529004456-aa73fe6af6d6/go.mod h1:UTgpUrzCbisgRr4N5FkJubou6LsSpbrFjHcVM+1iF4w=
-github.com/getlantern/common v0.0.0-20200529041911-f8c96a26be26 h1:GN6qPF7z+24yM3KlFuJkBmRXrFiOZcJcMG6EkFZ21Vc=
-github.com/getlantern/common v0.0.0-20200529041911-f8c96a26be26/go.mod h1:UTgpUrzCbisgRr4N5FkJubou6LsSpbrFjHcVM+1iF4w=
 github.com/getlantern/common v1.1.0 h1:nYCBFBfxl8EcoDvTt1tNX4EZeEdWCqE+DCHajj67Kqk=
 github.com/getlantern/common v1.1.0/go.mod h1:UTgpUrzCbisgRr4N5FkJubou6LsSpbrFjHcVM+1iF4w=
 github.com/getlantern/context v0.0.0-20190109183933-c447772a6520 h1:NRUJuo3v3WGC/g5YiyF790gut6oQr5f3FBI88Wv0dx4=
