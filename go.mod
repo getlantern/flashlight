@@ -91,7 +91,7 @@ require (
 	github.com/mitchellh/panicwrap v0.0.0-20190228164358-f67bf3f3d291
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
-	github.com/refraction-networking/utls v0.0.0-20190909200633-43c36d3c1f57
+	github.com/refraction-networking/utls v0.0.0-20200601200209-ada0bb9b38a0
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/stretchr/testify v1.5.1
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
