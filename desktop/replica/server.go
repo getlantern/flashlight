@@ -236,12 +236,12 @@ func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 	encodeJsonResponse(w, oi)
 }
 
-func (me *httpHandler) addTorrent(mi *metainfo.MetaInfo, disallowUpload bool) error {
+func (me *httpHandler) addTorrent(mi *metainfo.MetaInfo, concealUploaderIdentity bool) error {
 	t, err := me.torrentClient.AddTorrent(mi)
 	if err != nil {
 		return err
 	}
-	if disallowUpload {
+	if concealUploaderIdentity {
 		t.DisallowDataUpload()
 	}
 	me.addImplicitTrackers(t)
