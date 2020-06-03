@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.9.10](https://github.com/getlantern/flashlight/tree/5.9.10) (2020-06-03)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.9...5.9.10)
+
+**Merged pull requests:**
+
+- Multiplex tlsmasq connections [\#825](https://github.com/getlantern/flashlight/pull/825) ([hwh33](https://github.com/hwh33))
+
 ## [5.9.9](https://github.com/getlantern/flashlight/tree/5.9.9) (2020-06-02)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.8...5.9.9)
@@ -12,7 +20,6 @@
 - Remove personally identifiable data from borda submissions [\#817](https://github.com/getlantern/flashlight/pull/817) ([oxtoacart](https://github.com/oxtoacart))
 - show systray as connecting when starting up [\#816](https://github.com/getlantern/flashlight/pull/816) ([joesis](https://github.com/joesis))
 - Drain retry timer only when if it's not consumed [\#815](https://github.com/getlantern/flashlight/pull/815) ([joesis](https://github.com/joesis))
-- Enabled YouTube tracking as an optional feature on MacOS [\#810](https://github.com/getlantern/flashlight/pull/810) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [5.9.8](https://github.com/getlantern/flashlight/tree/5.9.8) (2020-05-12)
 
@@ -21,6 +28,7 @@
 **Merged pull requests:**
 
 - Don't clear out configs when config is unchanged in cloud [\#811](https://github.com/getlantern/flashlight/pull/811) ([oxtoacart](https://github.com/oxtoacart))
+- Enabled YouTube tracking as an optional feature on MacOS [\#810](https://github.com/getlantern/flashlight/pull/810) ([oxtoacart](https://github.com/oxtoacart))
 - Include exception 'value' in sentry fingerprint for correct grouping [\#809](https://github.com/getlantern/flashlight/pull/809) ([max-b](https://github.com/max-b))
 - report a bit more information when flashlight timeout is hit [\#807](https://github.com/getlantern/flashlight/pull/807) ([joesis](https://github.com/joesis))
 
@@ -117,7 +125,6 @@
 - Skip putting nil session state to session cache [\#773](https://github.com/getlantern/flashlight/pull/773) ([joesis](https://github.com/joesis))
 - Update systray dep [\#772](https://github.com/getlantern/flashlight/pull/772) ([max-b](https://github.com/max-b))
 - Unified session key persistence and session caching for TLS proxies [\#770](https://github.com/getlantern/flashlight/pull/770) ([oxtoacart](https://github.com/oxtoacart))
-- Build all tests in CI [\#769](https://github.com/getlantern/flashlight/pull/769) ([anacrolix](https://github.com/anacrolix))
 - Determine if a feature is enabled dynamically [\#768](https://github.com/getlantern/flashlight/pull/768) ([joesis](https://github.com/joesis))
 - Respecting stealthmode on iOS and removed borda [\#765](https://github.com/getlantern/flashlight/pull/765) ([oxtoacart](https://github.com/oxtoacart))
 - Expire session tickets like Chrome [\#760](https://github.com/getlantern/flashlight/pull/760) ([hwh33](https://github.com/hwh33))
@@ -189,8 +196,6 @@
 - allow tunneling SSH port by default [\#725](https://github.com/getlantern/flashlight/pull/725) ([joesis](https://github.com/joesis))
 - Add GOPRIVATE [\#724](https://github.com/getlantern/flashlight/pull/724) ([myleshorton](https://github.com/myleshorton))
 - Add initialize option [\#723](https://github.com/getlantern/flashlight/pull/723) ([joesis](https://github.com/joesis))
-- Don't run initial performance probes on iOS to avoid exceeding memory… [\#722](https://github.com/getlantern/flashlight/pull/722) ([oxtoacart](https://github.com/oxtoacart))
-- support enabling optional features by various criteria [\#721](https://github.com/getlantern/flashlight/pull/721) ([joesis](https://github.com/joesis))
 
 ## [5.7.2](https://github.com/getlantern/flashlight/tree/5.7.2) (2019-12-03)
 
