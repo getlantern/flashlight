@@ -606,7 +606,10 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 		return conn, delta, err
 	}
 
-	if s.MultiplexedAddr != "" || s.PluggableTransport == "utphttp" || s.PluggableTransport == "utphttps" || s.PluggableTransport == "utpobfs4" {
+	if s.MultiplexedAddr != "" || s.PluggableTransport == "utphttp" ||
+		s.PluggableTransport == "utphttps" || s.PluggableTransport == "utpobfs4" ||
+		s.PluggableTransport == "tlsmasq" {
+
 		log.Debugf("Enabling multiplexing for %v", p.Label())
 		origDoDialServer := p.doDialServer
 		poolSize := s.MultiplexedPhysicalConns
