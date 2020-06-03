@@ -129,7 +129,7 @@ func NewHTTPHandler() (_ http.Handler, exitFunc func(), err error) {
 			replicaLogger.Printf("error while iterating uploads: %v", iu.Err)
 			return
 		}
-		err := handler.addTorrent(iu.Metainfo)
+		err := handler.addTorrent(iu.Metainfo, true)
 		if err != nil {
 			replicaLogger.WithValues(analog.Error).Printf("error adding existing upload to torrent client: %v", err)
 		} else {
@@ -224,7 +224,7 @@ func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 			me.logger.WithValues(analog.Error).Printf("error renaming file: %v", err)
 		}
 	}
-	err = me.addTorrent(output.Metainfo)
+	err = me.addTorrent(output.Metainfo, true)
 	if err != nil {
 		panic(err)
 	}
@@ -236,10 +236,13 @@ func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 	encodeJsonResponse(w, oi)
 }
 
-func (me *httpHandler) addTorrent(mi *metainfo.MetaInfo) error {
+func (me *httpHandler) addTorrent(mi *metainfo.MetaInfo, concealUploaderIdentity bool) error {
 	t, err := me.torrentClient.AddTorrent(mi)
 	if err != nil {
 		return err
+	}
+	if concealUploaderIdentity {
+		t.DisallowDataUpload()
 	}
 	me.addImplicitTrackers(t)
 	return nil
