@@ -243,8 +243,9 @@ func (me *httpHandler) addTorrent(mi *metainfo.MetaInfo, concealUploaderIdentity
 	}
 	if concealUploaderIdentity {
 		t.DisallowDataUpload()
+	} else {
+		me.addImplicitTrackers(t)
 	}
-	me.addImplicitTrackers(t)
 	return nil
 }
 
