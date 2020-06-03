@@ -9,7 +9,7 @@ require (
 	github.com/anacrolix/envpprof v1.1.1
 	github.com/anacrolix/go-libutp v1.0.3
 	github.com/anacrolix/log v0.7.0
-	github.com/anacrolix/torrent v1.15.1-0.20200602012039-d7627143bc7a
+	github.com/anacrolix/torrent v1.15.1-0.20200603012508-86063859850c
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
