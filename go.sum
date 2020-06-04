@@ -82,6 +82,8 @@ github.com/anacrolix/log v0.6.0/go.mod h1:lWvLTqzAnCWPJA08T2HCstZi0L1y2Wyvm3FJgw
 github.com/anacrolix/log v0.6.1-0.20200416071330-f58a030e6149/go.mod h1:s5yBP/j046fm9odtUTbHOfDUq/zh1W8OkPpJtnX0oQI=
 github.com/anacrolix/log v0.7.0 h1:koGkC/K0LjIbrhLhwfpsfMuvu8nhvY7J4TmLVc1mAwE=
 github.com/anacrolix/log v0.7.0/go.mod h1:s5yBP/j046fm9odtUTbHOfDUq/zh1W8OkPpJtnX0oQI=
+github.com/anacrolix/log v0.7.1-0.20200604014615-c244de44fd2d h1:AkY1QtaxDBPLr1hrxLD8tUL04EPI0asYc2VB8v7Bg2U=
+github.com/anacrolix/log v0.7.1-0.20200604014615-c244de44fd2d/go.mod h1:s5yBP/j046fm9odtUTbHOfDUq/zh1W8OkPpJtnX0oQI=
 github.com/anacrolix/missinggo v0.0.0-20180522035225-b4a5853e62ff/go.mod h1:b0p+7cn+rWMIphK1gDH2hrDuwGOcbB6V4VXeSsEfHVk=
 github.com/anacrolix/missinggo v0.0.0-20180725070939-60ef2fbf63df/go.mod h1:kwGiTUTZ0+p4vAz3VbAI5a30t2YbvemcmspjKwrAz5s=
 github.com/anacrolix/missinggo v0.0.0-20181129073415-3237bf955fed/go.mod h1:IN+9GUe7OxKMIs/XeXEbT/rMUolmJzmlZiXHS7FwD/Y=
@@ -141,6 +143,10 @@ github.com/anacrolix/torrent v1.15.1-0.20200602012039-d7627143bc7a h1:ETWLGSJTBf
 github.com/anacrolix/torrent v1.15.1-0.20200602012039-d7627143bc7a/go.mod h1:QlOfgrCz5kbvhOz8M58dUwHY5SfZ9VbIvReZ0z0MdIk=
 github.com/anacrolix/torrent v1.15.1-0.20200603012508-86063859850c h1:YmEBoTb+9Q4ywM+IANXH7pHEjS1heEaNbcCvZwkFMGw=
 github.com/anacrolix/torrent v1.15.1-0.20200603012508-86063859850c/go.mod h1:QlOfgrCz5kbvhOz8M58dUwHY5SfZ9VbIvReZ0z0MdIk=
+github.com/anacrolix/torrent v1.15.1-0.20200604003750-645901636d0c h1:ihaSHMsrwhLFlM9aFtUbEnp6V+3GQT97rz4YYxEsY6g=
+github.com/anacrolix/torrent v1.15.1-0.20200604003750-645901636d0c/go.mod h1:QlOfgrCz5kbvhOz8M58dUwHY5SfZ9VbIvReZ0z0MdIk=
+github.com/anacrolix/torrent v1.15.1-0.20200604015117-62e7f29a0c02 h1:i66Gp8A2L8Wb9kxgQADtU5Dxd7rAXvAUYSdtJeLn61k=
+github.com/anacrolix/torrent v1.15.1-0.20200604015117-62e7f29a0c02/go.mod h1:zEo+gUuz2BlE3OcYphQC//FHbzPyYOfWpE2DrRUvaaM=
 github.com/anacrolix/upnp v0.1.1/go.mod h1:LXsbsp5h+WGN7YR+0A7iVXm5BL1LYryDev1zuJMWYQo=
 github.com/anacrolix/upnp v0.1.2-0.20200416075019-5e9378ed1425 h1:/Wi6l2ONI1FUFWN4cBwHOO90V4ylp4ud/eov6GUcVFk=
 github.com/anacrolix/upnp v0.1.2-0.20200416075019-5e9378ed1425/go.mod h1:Pz94W3kl8rf+wxH3IbCa9Sq+DTJr8OSbV2Q3/y51vYs=
