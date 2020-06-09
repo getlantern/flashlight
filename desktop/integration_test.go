@@ -159,9 +159,9 @@ func TestProxying(t *testing.T) {
 	testRequest(t, helper)
 
 	// Switch to tlsmasq, wait for a new config and test request again
-	helper.SetProtocol("tlsmasq")
-	time.Sleep(2 * time.Second)
-	testRequest(t, helper)
+	// helper.SetProtocol("tlsmasq")
+	// time.Sleep(2 * time.Second)
+	// testRequest(t, helper)
 
 	// Switch to quic_ietf, wait for a new config and test request again
 	helper.SetProtocol("quic_ietf")
