@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.9.12](https://github.com/getlantern/flashlight/tree/5.9.12) (2020-06-09)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.11...5.9.12)
+
+**Merged pull requests:**
+
+- Fix chromeextension test failure on linux [\#828](https://github.com/getlantern/flashlight/pull/828) ([max-b](https://github.com/max-b))
+- Update to latest utls and update a few other repos [\#827](https://github.com/getlantern/flashlight/pull/827) ([myleshorton](https://github.com/myleshorton))
+
 ## [5.9.11](https://github.com/getlantern/flashlight/tree/5.9.11) (2020-06-05)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.10...5.9.11)
@@ -199,8 +208,6 @@
 - Stores a copy of our settings for the Lantern Chrome Extension to read [\#727](https://github.com/getlantern/flashlight/pull/727) ([myleshorton](https://github.com/myleshorton))
 - Prohibit UI from starting on chrome restricted ports [\#726](https://github.com/getlantern/flashlight/pull/726) ([max-b](https://github.com/max-b))
 - allow tunneling SSH port by default [\#725](https://github.com/getlantern/flashlight/pull/725) ([joesis](https://github.com/joesis))
-- Add GOPRIVATE [\#724](https://github.com/getlantern/flashlight/pull/724) ([myleshorton](https://github.com/myleshorton))
-- Add initialize option [\#723](https://github.com/getlantern/flashlight/pull/723) ([joesis](https://github.com/joesis))
 
 ## [5.7.2](https://github.com/getlantern/flashlight/tree/5.7.2) (2019-12-03)
 
