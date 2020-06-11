@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.9.13](https://github.com/getlantern/flashlight/tree/5.9.13) (2020-06-11)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.12...5.9.13)
+
+**Merged pull requests:**
+
+- Update to latest systray with OSX crash workaround [\#829](https://github.com/getlantern/flashlight/pull/829) ([myleshorton](https://github.com/myleshorton))
+
 ## [5.9.12](https://github.com/getlantern/flashlight/tree/5.9.12) (2020-06-09)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.11...5.9.12)
@@ -160,7 +168,6 @@
 
 **Merged pull requests:**
 
-- fix call order for concurrent access to session states [\#757](https://github.com/getlantern/flashlight/pull/757) ([myleshorton](https://github.com/myleshorton))
 - Lock session states on init [\#756](https://github.com/getlantern/flashlight/pull/756) ([myleshorton](https://github.com/myleshorton))
 - Exit if lantern is already running [\#755](https://github.com/getlantern/flashlight/pull/755) ([myleshorton](https://github.com/myleshorton))
 
@@ -207,7 +214,6 @@
 - support quic ietf draft 24 [\#729](https://github.com/getlantern/flashlight/pull/729) ([forkner](https://github.com/forkner))
 - Stores a copy of our settings for the Lantern Chrome Extension to read [\#727](https://github.com/getlantern/flashlight/pull/727) ([myleshorton](https://github.com/myleshorton))
 - Prohibit UI from starting on chrome restricted ports [\#726](https://github.com/getlantern/flashlight/pull/726) ([max-b](https://github.com/max-b))
-- allow tunneling SSH port by default [\#725](https://github.com/getlantern/flashlight/pull/725) ([joesis](https://github.com/joesis))
 
 ## [5.7.2](https://github.com/getlantern/flashlight/tree/5.7.2) (2019-12-03)
 
