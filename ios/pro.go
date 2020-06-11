@@ -1,6 +1,8 @@
 package ios
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"sync"
@@ -9,6 +11,7 @@ import (
 	"github.com/getlantern/fronted"
 
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/flfronting"
 	proclient "github.com/getlantern/flashlight/pro/client"
 )
 
@@ -168,9 +171,12 @@ func ValidateDeviceLinkingCode(c *Canceler, deviceID, deviceName, code string) (
 }
 
 func getProClient() (*proclient.Client, error) {
-	rt, ok := fronted.NewDirect(frontedAvailableTimeout)
-	if !ok {
-		return nil, log.Errorf("timed out waiting for fronting to finish configuring")
+	ctx, cancel := context.WithTimeout(context.Background(), frontedAvailableTimeout)
+	defer cancel()
+
+	rt, err := flfronting.NewRoundTripper(ctx, fronted.RoundTripperOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("unable to get fronted round tripper: %w", err)
 	}
 
 	pc := proclient.NewClient(&http.Client{

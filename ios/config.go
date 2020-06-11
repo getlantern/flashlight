@@ -3,6 +3,7 @@ package ios
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
@@ -24,6 +25,7 @@ import (
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/config/generated"
 	"github.com/getlantern/flashlight/email"
+	"github.com/getlantern/flashlight/flfronting"
 	"github.com/getlantern/flashlight/geolookup"
 )
 
@@ -216,14 +218,14 @@ func (cf *configurer) configureFronting(global *config.Global) error {
 		return errors.New("Unable to read trusted CAs from global config, can't configure domain fronting: %v", err)
 	}
 
-	fronted.Configure(certs, global.Client.FrontedProviders(), "cloudfront", cf.fullPathTo("masquerade_cache"))
-	chained.ConfigureFronting(certs, global.Client.FrontedProviders(), cf.configFolderPath)
-	rt, ok := fronted.NewDirect(frontedAvailableTimeout)
-	if !ok {
-		return errors.New("Timed out waiting for fronting to finish configuring")
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), frontedAvailableTimeout)
+	defer cancel()
 
-	cf.rt = rt
+	flfronting.Configure(global.Client.FrontedProviders(), certs, cf.configFolderPath)
+	cf.rt, err = flfronting.NewRoundTripper(ctx, fronted.RoundTripperOptions{})
+	if err != nil {
+		return fmt.Errorf("unable to obtain fronted round tripper: %w", err)
+	}
 	return nil
 }
 

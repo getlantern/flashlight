@@ -6,6 +6,7 @@ package proxied
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
@@ -25,8 +26,9 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
-	
+
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/flfronting"
 	"github.com/getlantern/flashlight/ops"
 )
 
@@ -237,9 +239,12 @@ type frontedRT struct {
 // `dualFetcher.RoundTrip` when fronted is not yet available, especially when
 // the application is starting up
 func (f frontedRT) RoundTrip(req *http.Request) (*http.Response, error) {
-	rt, ok := fronted.NewDirect(f.masqueradeTimeout)
-	if !ok {
-		return nil, errors.New("Unable to obtain direct fronter")
+	ctx, cancel := context.WithTimeout(context.Background(), f.masqueradeTimeout)
+	defer cancel()
+
+	rt, err := flfronting.NewRoundTripper(ctx, fronted.RoundTripperOptions{})
+	if err != nil {
+		return nil, errors.New("unable to obtain direct fronter: %w", err)
 	}
 	changeUserAgent(req)
 	return rt.RoundTrip(req)

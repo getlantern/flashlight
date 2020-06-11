@@ -27,7 +27,7 @@ require (
 	github.com/getlantern/event v0.0.0-20170919023932-f16a5563f52e
 	github.com/getlantern/eventual v0.0.0-20180125201821-84b02499361b
 	github.com/getlantern/filepersist v0.0.0-20160317154340-c5f0cd24e799
-	github.com/getlantern/fronted v0.0.0-20190606212108-e7744195eded
+	github.com/getlantern/fronted v0.0.0-20200611152130-71c5bec5ab35
 	github.com/getlantern/geolookup v0.0.0-20200121184643-02217082e50f
 	github.com/getlantern/go-ping v0.0.0-20191213124541-9d4b7e6e7de6
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
@@ -39,7 +39,7 @@ require (
 	github.com/getlantern/http-proxy-lantern v0.1.4-0.20200130190446-3028d2ef9381
 	github.com/getlantern/httpseverywhere v0.0.0-20180326165025-9bdb93e40695
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
-	github.com/getlantern/idletiming v0.0.0-20190529182719-d2fbc83372a5
+	github.com/getlantern/idletiming v0.0.0-20200228204104-10036786eac5
 	github.com/getlantern/ipproxy v0.0.0-20191216171250-6f1aaa987f2f
 	github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42
 	github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644
@@ -93,10 +93,10 @@ require (
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/refraction-networking/utls v0.0.0-20200601200209-ada0bb9b38a0
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.0
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553
-	google.golang.org/appengine v1.6.2 // indirect
+	google.golang.org/appengine v1.6.2
 	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )

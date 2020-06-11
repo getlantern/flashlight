@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -12,7 +11,6 @@ import (
 	"github.com/getlantern/detour"
 	"github.com/getlantern/dnsgrab"
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/ops"
@@ -26,6 +24,7 @@ import (
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/flashlight/email"
+	"github.com/getlantern/flashlight/flfronting"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/goroutines"
 	fops "github.com/getlantern/flashlight/ops"
@@ -386,8 +385,7 @@ func applyClientConfig(cfg *config.Global) {
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
 	} else if cfg.Client != nil && cfg.Client.Fronted != nil {
-		fronted.Configure(certs, cfg.Client.FrontedProviders(), config.CloudfrontProviderID, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
-		chained.ConfigureFronting(certs, cfg.Client.FrontedProviders(), appdir.General("Lantern"))
+		flfronting.Configure(cfg.Client.FrontedProviders(), certs, appdir.General("lantern"))
 	} else {
 		log.Errorf("Unable to configured fronted (no config)")
 	}

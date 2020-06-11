@@ -2,11 +2,13 @@ package ios
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"net/http"
 	"time"
 
 	"github.com/getlantern/flashlight/email"
+	"github.com/getlantern/flashlight/flfronting"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/fronted"
 )
@@ -16,15 +18,20 @@ func init() {
 
 	go func() {
 		log.Debug("Getting fronted transport to use for submitting issues")
+
+		ctx, cancel := context.WithTimeout(context.Background(), frontedAvailableTimeout)
+		defer cancel()
+
 		start := time.Now()
-		tr, ok := fronted.NewDirect(frontedAvailableTimeout)
-		if ok {
-			log.Debugf("Got fronted transport for submitting issues within %v", time.Now().Sub(start))
+		tr, err := flfronting.NewRoundTripper(ctx, fronted.RoundTripperOptions{})
+		if err != nil {
+			log.Debugf("Failed to obtain fronted transport for submitting issue: %w", err)
 		} else {
-			log.Debug("Failed to get fronted transport for submitting issues")
+			log.Debugf("Got fronted transport for submitting issues within %v", time.Since(start))
 		}
 		email.SetHTTPClient(&http.Client{
-			Timeout:   20 * time.Second,
+			Timeout: 20 * time.Second,
+			// If we failed to get a fronted transport, this will default to http.DefaultTransport.
 			Transport: tr,
 		})
 	}()

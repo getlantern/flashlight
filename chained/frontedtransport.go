@@ -1,59 +1,128 @@
 package chained
 
 import (
+	"context"
 	"crypto/x509"
+	"encoding/pem"
 	"fmt"
+	"net"
 	"net/http"
-	"path/filepath"
+	"net/url"
 	"time"
 
+	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
+	"github.com/getlantern/flashlight/flfronting"
 	"github.com/getlantern/fronted"
+	"github.com/getlantern/netx"
+	"github.com/getlantern/tinywss"
+	"github.com/getlantern/tlsdialer"
 	tls "github.com/refraction-networking/utls"
 )
 
-const (
-	cloudfrontID = "cloudfront"
-)
-
-var (
-	// special contexts for wss
-	frontingContexts = map[string]*fronted.FrontingContext{
-		cloudfrontID: fronted.NewFrontingContext(cloudfrontID),
-	}
-
-	frontingCertPool = eventual.NewValue()
-)
-
 type frontedTransport struct {
-	rt eventual.Value
+	rt eventual.Value // http.RoundTripper
 }
 
-func (ft *frontedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	rt, _ := ft.rt.Get(eventual.Forever)
+func newFrontedTransport(opts fronted.RoundTripperOptions, msgIfErr string) frontedTransport {
+	ft := frontedTransport{eventual.NewValue()}
+	go func() {
+		rt, err := flfronting.NewRoundTripper(context.Background(), opts)
+		if err != nil {
+			log.Errorf("%s: %v", msgIfErr, err)
+			return
+		}
+		ft.rt.Set(rt)
+	}()
+	return ft
+}
+
+func (ft frontedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	rt, err := getEventualContext(req.Context(), ft.rt)
+	if err != nil {
+		return nil, fmt.Errorf("unable to obtain fronted roundtripper: %w", err)
+	}
 	return rt.(http.RoundTripper).RoundTrip(req)
 }
 
-func ConfigureFronting(pool *x509.CertPool, providers map[string]*fronted.Provider, cacheFolder string) {
-	frontingCertPool.Set(pool)
-
-	// cloudfront only for wss.
-	pid := cloudfrontID
-	p := providers[pid]
-	if p != nil {
-		p = fronted.NewProvider(p.HostAliases, p.TestURL, p.Masquerades, p.Validator, []string{"*.cloudfront.net"})
-		ponly := map[string]*fronted.Provider{pid: p}
-		frontingContexts[pid].ConfigureWithHello(pool, ponly, pid, filepath.Join(cacheFolder, fmt.Sprintf("masquerade_cache.%s", pid)), tls.HelloChrome_Auto)
-	}
+func wssHTTPRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
+	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
+		log.Debugf("tinywss HTTP Roundtripper dialing %v", addr)
+		// the configured proxy address is always contacted
+		return netx.DialTimeout(network, p.addr, chainedDialTimeout)
+	}), nil
 }
 
-func GetFrontingContext(id string) *fronted.FrontingContext {
-	return frontingContexts[id]
+func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
+
+	serverName := s.TLSServerNameIndicator
+	sendServerName := true
+	if serverName == "" {
+		sendServerName = false
+		u, err := url.Parse(s.ptSetting("url"))
+		if err != nil {
+			return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
+		}
+		serverName = u.Hostname()
+	}
+
+	forceValidateName := s.ptSetting("force_validate_name")
+	helloID := s.clientHelloID()
+	certPool := x509.NewCertPool()
+	rest := []byte(s.Cert)
+	var block *pem.Block
+	for {
+		block, rest = pem.Decode(rest)
+		if block == nil {
+			break
+		}
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
+		}
+		certPool.AddCert(cert)
+	}
+
+	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
+		tlsConf := &tls.Config{
+			CipherSuites: orderedCipherSuitesFromConfig(s),
+			ServerName:   serverName,
+			RootCAs:      certPool,
+			KeyLogWriter: getTLSKeyLogWriter(),
+		}
+
+		td := &tlsdialer.Dialer{
+			DoDial:            netx.DialTimeout,
+			SendServerName:    sendServerName,
+			ForceValidateName: forceValidateName,
+			Config:            tlsConf,
+			ClientHelloID:     helloID,
+			Timeout:           chainedDialTimeout,
+		}
+		// the configured proxy address is always contacted.
+		return td.Dial(network, p.addr)
+	}), nil
 }
 
-func GetFrontingCertPool(timeout time.Duration) *x509.CertPool {
-	if v, ok := frontingCertPool.Get(timeout); ok {
-		return v.(*x509.CertPool)
+func getEventualContext(ctx context.Context, v eventual.Value) (interface{}, error) {
+	// The default timeout is large enough that it shouldn't supercede the context timeout, but
+	// short enough that we'll eventually clean up launched routines.
+	const defaultTimeout = time.Hour
+
+	timeout := defaultTimeout
+	if deadline, ok := ctx.Deadline(); ok {
+		// Add 10s to the context timeout to ensure ctx.Done() closes before v.Get times out.
+		timeout = time.Until(deadline) + 10*time.Second
 	}
-	return nil
+	resultCh := make(chan interface{})
+	go func() {
+		result, _ := v.Get(timeout)
+		resultCh <- result
+	}()
+	select {
+	case r := <-resultCh:
+		return r, nil
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
 }

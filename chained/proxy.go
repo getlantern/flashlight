@@ -13,7 +13,6 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"runtime"
 	"strconv"
@@ -31,7 +30,6 @@ import (
 	"github.com/getlantern/ema"
 	"github.com/getlantern/enhttp"
 	"github.com/getlantern/errors"
-	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/hellosplitter"
 	"github.com/getlantern/idletiming"
@@ -49,6 +47,7 @@ import (
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/flfronting"
 	"github.com/getlantern/flashlight/ops"
 )
 
@@ -151,15 +150,10 @@ func newHTTPProxy(name, transport, proto string, s *ChainedServerInfo, uc common
 
 	dialOrigin := defaultDialOrigin
 	if s.ENHTTPURL != "" {
-		tr := &frontedTransport{rt: eventual.NewValue()}
-		go func() {
-			rt, ok := fronted.NewDirect(5 * time.Minute)
-			if !ok {
-				log.Errorf("Unable to initialize domain-fronting for enhttp")
-				return
-			}
-			tr.rt.Set(rt)
-		}()
+		tr := newFrontedTransport(
+			fronted.RoundTripperOptions{ClientHelloID: s.clientHelloID()},
+			"unable to initialize domain-fronting for enhttp",
+		)
 		dial := enhttp.NewDialer(&http.Client{
 			Transport: tr,
 		}, s.ENHTTPURL)
@@ -691,16 +685,33 @@ func enableWSS(p *proxy, s *ChainedServerInfo) error {
 			return err
 		}
 	} else if fctx_id != "" {
-		fctx := GetFrontingContext(fctx_id)
-		if fctx == nil {
-			return fmt.Errorf("unsupported wss df_ctx=%s! skipping.", fctx_id)
-		}
 		timeout, err := time.ParseDuration(s.ptSetting("df_timeout"))
 		if err != nil || timeout < 0 {
 			timeout = 1 * time.Minute
 		}
 		log.Debugf("Using wss fctx_id=%s timeout=%v", fctx_id, timeout)
-		rt = &wssFrontedRT{fctx, timeout}
+
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		dialTransport := netx.DialContext
+		if s.TLSClientHelloSplitting {
+			dialTransport = func(ctx context.Context, network, addr string) (net.Conn, error) {
+				conn, err := netx.DialContext(ctx, network, addr)
+				if err == nil {
+					conn = hellosplitter.Wrap(conn, splitClientHello)
+				}
+				return conn, err
+			}
+		}
+		rt, err = flfronting.NewRoundTripper(ctx, fronted.RoundTripperOptions{
+			DialTransport: dialTransport,
+			ClientHelloID: s.clientHelloID(),
+			CacheFile:     fmt.Sprintf("masquerade_cache.%s", fctx_id),
+		})
+		if err != nil {
+			return fmt.Errorf("unable to obtain fronting round tripper: %w", err)
+		}
 	} else {
 		log.Debugf("Using wss https direct")
 		rt, err = wssHTTPSRoundTripper(p, s)
@@ -729,82 +740,6 @@ func enableWSS(p *proxy, s *ChainedServerInfo) error {
 	}
 
 	return nil
-}
-
-type wssFrontedRT struct {
-	fctx    *fronted.FrontingContext
-	timeout time.Duration
-}
-
-func (rt *wssFrontedRT) RoundTripHijack(req *http.Request) (*http.Response, net.Conn, error) {
-	r, ok := rt.fctx.NewDirect(rt.timeout)
-	if !ok {
-		return nil, nil, fmt.Errorf("Unable to obtain fronted roundtripper after %v fctx=%s!", rt.timeout, rt.fctx)
-	}
-	if rth, ok := r.(tinywss.RoundTripHijacker); ok {
-		return rth.RoundTripHijack(req)
-	} else {
-		return nil, nil, fmt.Errorf("Unsupported roundtripper obtained from fronted!")
-	}
-}
-
-func wssHTTPRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
-	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
-		log.Debugf("tinywss HTTP Roundtripper dialing %v", addr)
-		// the configured proxy address is always contacted
-		return netx.DialTimeout(network, p.addr, chainedDialTimeout)
-	}), nil
-}
-
-func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
-
-	serverName := s.TLSServerNameIndicator
-	sendServerName := true
-	if serverName == "" {
-		sendServerName = false
-		u, err := url.Parse(s.ptSetting("url"))
-		if err != nil {
-			return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
-		}
-		serverName = u.Hostname()
-	}
-
-	forceValidateName := s.ptSetting("force_validate_name")
-	helloID := s.clientHelloID()
-	certPool := x509.NewCertPool()
-	rest := []byte(s.Cert)
-	var block *pem.Block
-	for {
-		block, rest = pem.Decode(rest)
-		if block == nil {
-			break
-		}
-		cert, err := x509.ParseCertificate(block.Bytes)
-		if err != nil {
-			return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
-		}
-		certPool.AddCert(cert)
-	}
-
-	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
-		tlsConf := &tls.Config{
-			CipherSuites: orderedCipherSuitesFromConfig(s),
-			ServerName:   serverName,
-			RootCAs:      certPool,
-			KeyLogWriter: getTLSKeyLogWriter(),
-		}
-
-		td := &tlsdialer.Dialer{
-			DoDial:            netx.DialTimeout,
-			SendServerName:    sendServerName,
-			ForceValidateName: forceValidateName,
-			Config:            tlsConf,
-			ClientHelloID:     helloID,
-			Timeout:           chainedDialTimeout,
-		}
-		// the configured proxy address is always contacted.
-		return td.Dial(network, p.addr)
-	}), nil
 }
 
 func (p *proxy) Protocol() string {
