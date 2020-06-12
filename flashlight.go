@@ -385,11 +385,7 @@ func applyClientConfig(cfg *config.Global) {
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
 	} else if cfg.Client != nil && cfg.Client.Fronted != nil {
-		frontedfl.SetDefaults(frontedfl.Config{
-			Providers:   cfg.Client.FrontedProviders(),
-			CertPool:    certs,
-			CacheFolder: appdir.General("lantern"),
-		})
+		frontedfl.Configure(cfg.Client.FrontedProviders(), certs, appdir.General("lantern"))
 	} else {
 		log.Errorf("Unable to configured fronted (no config)")
 	}
