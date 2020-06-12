@@ -221,7 +221,11 @@ func (cf *configurer) configureFronting(global *config.Global) error {
 	ctx, cancel := context.WithTimeout(context.Background(), frontedAvailableTimeout)
 	defer cancel()
 
-	frontedfl.Configure(global.Client.FrontedProviders(), certs, cf.configFolderPath)
+	frontedfl.SetDefaults(frontedfl.Config{
+		Providers:   global.Client.FrontedProviders(),
+		CertPool:    certs,
+		CacheFolder: cf.configFolderPath,
+	})
 	cf.rt, err = frontedfl.NewRoundTripper(ctx, fronted.RoundTripperOptions{})
 	if err != nil {
 		return fmt.Errorf("unable to obtain fronted round tripper: %w", err)

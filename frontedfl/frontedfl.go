@@ -1,6 +1,5 @@
 // Package frontedfl is used to configure and interface with github.com/getlantern/fronted for use
 // in the Flashlight client.
-// TODO: maybe this should be flfronted
 package frontedfl
 
 import (
@@ -18,45 +17,34 @@ import (
 // CloudFront is the only provider we use.
 const defaultProviderID = "cloudfront"
 
-var globalConfig eventual.Value // type config
+var defaultConfig eventual.Value // type Config
 
-type config struct {
-	providers   map[string]*fronted.Provider
-	pool        *x509.CertPool
-	cacheFolder string
+// Config represents configuration for creating fronted round trippers.
+type Config struct {
+	Providers   map[string]*fronted.Provider
+	CertPool    *x509.CertPool
+	CacheFolder string
 }
 
-// Configure fronting defaults for global usage. Calls to NewRoundTripper block until Configure is
-// called.
-func Configure(providers map[string]*fronted.Provider, pool *x509.CertPool, cacheFolder string) {
-	globalConfig.Set(config{providers, pool, cacheFolder})
-}
-
-// NewRoundTripper initializes a round tripper using the configured defaults. Blocks until Configure
-// is called. Also blocks until the RoundTripper is ready (see fronted.NewRoundTripper). Will return
-// an error if the context completes before the RoundTripper can be returned.
+// NewRoundTripper initializes a round tripper using the configuration. Blocks until a RoundTripper
+// is ready (see fronted.NewRoundTripper). Will return an error if the context expires before the
+// RoundTripper can be returned.
 //
-// Fields set in opts will override anything provided to Configure. If opts.CacheFile is a relative
-// path, it will be interpreted to reside within the globally-configured cache folder.
-func NewRoundTripper(ctx context.Context, opts fronted.RoundTripperOptions) (fronted.RoundTripper, error) {
-	_cfg, err := getEventualContext(ctx, globalConfig)
-	if err != nil {
-		return nil, fmt.Errorf("unable to obtain global config: %w", err)
-	}
-	cfg := _cfg.(config)
-
+// Fields set in opts will override anything in cfg. If opts.CacheFile is a relative path, it will
+// be interpreted to reside with cfg.CacheFolder.
+func (cfg Config) NewRoundTripper(ctx context.Context, opts fronted.RoundTripperOptions) (fronted.RoundTripper, error) {
 	if opts.CertPool == nil {
-		opts.CertPool = cfg.pool
+		opts.CertPool = cfg.CertPool
 	}
 	if opts.CacheFile != "" && !filepath.IsAbs(opts.CacheFile) {
-		opts.CacheFile = filepath.Join(cfg.cacheFolder, opts.CacheFile)
+		opts.CacheFile = filepath.Join(cfg.CacheFolder, opts.CacheFile)
 	}
 	if opts.CacheFile == "" {
-		opts.CacheFile = filepath.Join(cfg.cacheFolder, "masquerade_cache")
+		opts.CacheFile = filepath.Join(cfg.CacheFolder, "masquerade_cache")
 	}
 
 	// CloudFront only for wss.
-	p := cfg.providers[defaultProviderID]
+	p := cfg.Providers[defaultProviderID]
 	if p == nil {
 		return nil, errors.New("no CloudFront provider in global config (only CloudFront is used)")
 	}
@@ -64,6 +52,26 @@ func NewRoundTripper(ctx context.Context, opts fronted.RoundTripperOptions) (fro
 	pOnly := map[string]*fronted.Provider{defaultProviderID: p}
 
 	return fronted.NewRoundTripperContext(ctx, pOnly, defaultProviderID, fronted.RoundTripperOptions{})
+}
+
+// SetDefaults sets fronting defaults for global usage. Calls to NewRoundTripper will use this
+// configuration and will block until this function is called.
+func SetDefaults(cfg Config) {
+	defaultConfig.Set(cfg)
+}
+
+// NewRoundTripper initializes a round tripper using the configured defaults. Blocks until
+// SetDefaults is called. Also blocks until the RoundTripper is ready (see fronted.NewRoundTripper).
+// Will return an error if the context expires before the RoundTripper can be returned.
+//
+// Fields set in opts will override anything provided to SetDefaults. If opts.CacheFile is a
+// relative path, it will be interpreted to reside within the globally-configured cache folder.
+func NewRoundTripper(ctx context.Context, opts fronted.RoundTripperOptions) (fronted.RoundTripper, error) {
+	cfg, err := getEventualContext(ctx, defaultConfig)
+	if err != nil {
+		return nil, fmt.Errorf("unable to obtain global config: %w", err)
+	}
+	return cfg.(Config).NewRoundTripper(ctx, opts)
 }
 
 // Essentially creating our own v.Get(ctx) function, instead of v.Get(timeout).
