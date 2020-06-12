@@ -244,7 +244,7 @@ func (f frontedRT) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	rt, err := frontedfl.NewRoundTripper(ctx, fronted.RoundTripperOptions{})
 	if err != nil {
-		return nil, errors.New("unable to obtain direct fronter: %w", err)
+		return nil, fmt.Errorf("unable to obtain direct fronter: %w", err)
 	}
 	changeUserAgent(req)
 	return rt.RoundTrip(req)
