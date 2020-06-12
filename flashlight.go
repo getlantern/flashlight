@@ -24,7 +24,7 @@ import (
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/flashlight/email"
-	"github.com/getlantern/flashlight/flfronting"
+	"github.com/getlantern/flashlight/frontedfl"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/goroutines"
 	fops "github.com/getlantern/flashlight/ops"
@@ -385,7 +385,7 @@ func applyClientConfig(cfg *config.Global) {
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
 	} else if cfg.Client != nil && cfg.Client.Fronted != nil {
-		flfronting.Configure(cfg.Client.FrontedProviders(), certs, appdir.General("lantern"))
+		frontedfl.Configure(cfg.Client.FrontedProviders(), certs, appdir.General("lantern"))
 	} else {
 		log.Errorf("Unable to configured fronted (no config)")
 	}

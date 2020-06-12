@@ -47,7 +47,7 @@ import (
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/flfronting"
+	"github.com/getlantern/flashlight/frontedfl"
 	"github.com/getlantern/flashlight/ops"
 )
 
@@ -704,7 +704,7 @@ func enableWSS(p *proxy, s *ChainedServerInfo) error {
 				return conn, err
 			}
 		}
-		rt, err = flfronting.NewRoundTripper(ctx, fronted.RoundTripperOptions{
+		rt, err = frontedfl.NewRoundTripper(ctx, fronted.RoundTripperOptions{
 			DialTransport: dialTransport,
 			ClientHelloID: s.clientHelloID(),
 			CacheFile:     fmt.Sprintf("masquerade_cache.%s", fctx_id),

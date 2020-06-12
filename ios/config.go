@@ -25,7 +25,7 @@ import (
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/config/generated"
 	"github.com/getlantern/flashlight/email"
-	"github.com/getlantern/flashlight/flfronting"
+	"github.com/getlantern/flashlight/frontedfl"
 	"github.com/getlantern/flashlight/geolookup"
 )
 
@@ -221,8 +221,8 @@ func (cf *configurer) configureFronting(global *config.Global) error {
 	ctx, cancel := context.WithTimeout(context.Background(), frontedAvailableTimeout)
 	defer cancel()
 
-	flfronting.Configure(global.Client.FrontedProviders(), certs, cf.configFolderPath)
-	cf.rt, err = flfronting.NewRoundTripper(ctx, fronted.RoundTripperOptions{})
+	frontedfl.Configure(global.Client.FrontedProviders(), certs, cf.configFolderPath)
+	cf.rt, err = frontedfl.NewRoundTripper(ctx, fronted.RoundTripperOptions{})
 	if err != nil {
 		return fmt.Errorf("unable to obtain fronted round tripper: %w", err)
 	}

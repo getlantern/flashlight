@@ -12,7 +12,7 @@ import (
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/flashlight/flfronting"
+	"github.com/getlantern/flashlight/frontedfl"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/tinywss"
@@ -27,7 +27,7 @@ type frontedTransport struct {
 func newFrontedTransport(opts fronted.RoundTripperOptions, msgIfErr string) frontedTransport {
 	ft := frontedTransport{eventual.NewValue()}
 	go func() {
-		rt, err := flfronting.NewRoundTripper(context.Background(), opts)
+		rt, err := frontedfl.NewRoundTripper(context.Background(), opts)
 		if err != nil {
 			log.Errorf("%s: %v", msgIfErr, err)
 			return

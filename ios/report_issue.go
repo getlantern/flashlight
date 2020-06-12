@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/getlantern/flashlight/email"
-	"github.com/getlantern/flashlight/flfronting"
+	"github.com/getlantern/flashlight/frontedfl"
 	"github.com/getlantern/flashlight/logging"
 	"github.com/getlantern/fronted"
 )
@@ -23,7 +23,7 @@ func init() {
 		defer cancel()
 
 		start := time.Now()
-		tr, err := flfronting.NewRoundTripper(ctx, fronted.RoundTripperOptions{})
+		tr, err := frontedfl.NewRoundTripper(ctx, fronted.RoundTripperOptions{})
 		if err != nil {
 			log.Debugf("Failed to obtain fronted transport for submitting issue: %w", err)
 		} else {

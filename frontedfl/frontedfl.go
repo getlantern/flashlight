@@ -1,7 +1,7 @@
-// Package flfronting is used to configure and interface with github.com/getlantern/fronted for use
+// Package frontedfl is used to configure and interface with github.com/getlantern/fronted for use
 // in the Flashlight client.
 // TODO: maybe this should be flfronted
-package flfronting
+package frontedfl
 
 import (
 	"context"

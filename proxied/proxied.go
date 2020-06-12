@@ -28,7 +28,7 @@ import (
 	"github.com/getlantern/keyman"
 
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/flfronting"
+	"github.com/getlantern/flashlight/frontedfl"
 	"github.com/getlantern/flashlight/ops"
 )
 
@@ -242,7 +242,7 @@ func (f frontedRT) RoundTrip(req *http.Request) (*http.Response, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), f.masqueradeTimeout)
 	defer cancel()
 
-	rt, err := flfronting.NewRoundTripper(ctx, fronted.RoundTripperOptions{})
+	rt, err := frontedfl.NewRoundTripper(ctx, fronted.RoundTripperOptions{})
 	if err != nil {
 		return nil, errors.New("unable to obtain direct fronter: %w", err)
 	}

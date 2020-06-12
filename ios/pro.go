@@ -11,7 +11,7 @@ import (
 	"github.com/getlantern/fronted"
 
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/flfronting"
+	"github.com/getlantern/flashlight/frontedfl"
 	proclient "github.com/getlantern/flashlight/pro/client"
 )
 
@@ -174,7 +174,7 @@ func getProClient() (*proclient.Client, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), frontedAvailableTimeout)
 	defer cancel()
 
-	rt, err := flfronting.NewRoundTripper(ctx, fronted.RoundTripperOptions{})
+	rt, err := frontedfl.NewRoundTripper(ctx, fronted.RoundTripperOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("unable to get fronted round tripper: %w", err)
 	}
