@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/flashlight/config/generated"
+	"github.com/getlantern/flashlight/frontedfl"
 )
 
 // TestInvalidFile test an empty or malformed config file
@@ -106,7 +106,7 @@ func TestEmbedded(t *testing.T) {
 
 func TestPollProxies(t *testing.T) {
 	withTempDir(t, func(inTempDir func(string) string) {
-		fronted.ConfigureForTest(t)
+		frontedfl.ConfigureForTest(t)
 
 		file := inTempDir("proxies.yaml")
 		proxyConfig := newProxiesConfig(t)
@@ -166,7 +166,7 @@ func TestPollProxies(t *testing.T) {
 
 func TestPollGlobal(t *testing.T) {
 	withTempDir(t, func(inTempDir func(string) string) {
-		fronted.ConfigureForTest(t)
+		frontedfl.ConfigureForTest(t)
 
 		file := inTempDir("global.yaml")
 		globalConfig := newGlobalConfig(t)
@@ -280,7 +280,7 @@ func TestProductionGlobal(t *testing.T) {
 
 func TestPollIntervals(t *testing.T) {
 	withTempDir(t, func(inTempDir func(string) string) {
-		fronted.ConfigureForTest(t)
+		frontedfl.ConfigureForTest(t)
 
 		file := inTempDir("global.yaml")
 		globalConfig := newGlobalConfig(t)

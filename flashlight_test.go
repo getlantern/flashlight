@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/fronted"
+	"github.com/getlantern/flashlight/frontedfl"
 	"github.com/getlantern/uuid"
 	"github.com/stretchr/testify/assert"
 )
@@ -42,7 +42,7 @@ func testRequest(testCase string, t *testing.T, requests chan *http.Request, htt
 		return
 	}
 	defer os.RemoveAll(dir)
-	fronted.ConfigureForTest(t)
+	frontedfl.ConfigureForTest(t)
 
 	log.Debug("Making request")
 	httpClient := &http.Client{Transport: &http.Transport{

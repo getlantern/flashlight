@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getlantern/fronted"
+	"github.com/getlantern/flashlight/frontedfl"
 )
 
 func TestFronted(t *testing.T) {
-	fronted.ConfigureHostAlaisesForTest(t, map[string]string{
+	frontedfl.ConfigureHostAliasesForTest(t, map[string]string{
 		"geo.getiantem.org": "d3u5fqukq7qrhd.cloudfront.net",
 	})
 	ch := OnRefresh()

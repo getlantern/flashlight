@@ -15,7 +15,7 @@ import (
 	"github.com/mailgun/oxy/forward"
 
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/fronted"
+	"github.com/getlantern/flashlight/frontedfl"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -179,7 +179,7 @@ func doTestChainedAndFronted(t *testing.T, build func() RoundTripper) {
 
 	SetProxyAddr(eventual.DefaultGetter(l.Addr().String()))
 
-	fronted.ConfigureForTest(t)
+	frontedfl.ConfigureForTest(t)
 	geo := "http://d3u5fqukq7qrhd.cloudfront.net/lookup/198.199.72.101"
 	req, err := http.NewRequest("GET", geo, nil)
 
@@ -200,7 +200,7 @@ func doTestChainedAndFronted(t *testing.T, build func() RoundTripper) {
 	// resolve and make sure even the delayed req server still gives us the result
 	goodhost := "d3u5fqukq7qrhd.cloudfront.net"
 	badhost := "48290.cloudfront.net"
-	fronted.ConfigureHostAlaisesForTest(t, map[string]string{goodhost: badhost})
+	frontedfl.ConfigureHostAliasesForTest(t, map[string]string{goodhost: badhost})
 
 	req, err = http.NewRequest("GET", geo, nil)
 
@@ -219,7 +219,7 @@ func doTestChainedAndFronted(t *testing.T, build func() RoundTripper) {
 	//log.Debugf("Running test with bad URL in the req server")
 	bad := "http://48290.cloudfront.net/lookup/198.199.72.101"
 	req, err = http.NewRequest("GET", bad, nil)
-	fronted.ConfigureHostAlaisesForTest(t, map[string]string{badhost: goodhost})
+	frontedfl.ConfigureHostAliasesForTest(t, map[string]string{badhost: goodhost})
 
 	assert.NoError(t, err)
 	cf = build()
