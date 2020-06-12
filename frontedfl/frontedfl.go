@@ -18,7 +18,7 @@ import (
 // CloudFront is the only provider we use.
 const defaultProviderID = "cloudfront"
 
-var globalConfig eventual.Value // type config
+var globalConfig = eventual.NewValue() // type config
 
 type config struct {
 	providers   map[string]*fronted.Provider
