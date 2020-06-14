@@ -137,7 +137,8 @@ func (h AuthHandler) authHandler(w http.ResponseWriter, req *http.Request) {
 	endpoint := html.EscapeString(req.URL.Path)
 	resp, authResp, err := h.SendAuthRequest(common.POST, endpoint, params)
 	if err != nil {
-		if authResp.Error != "" {
+		log.Error(err)
+		if authResp != nil && authResp.Error != "" {
 			h.ErrorHandler(w, errors.New(authResp.Error), resp.StatusCode)
 		}
 		return
