@@ -1,5 +1,48 @@
 # Changelog
 
+## [5.9.13](https://github.com/getlantern/flashlight/tree/5.9.13) (2020-06-11)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.12...5.9.13)
+
+**Merged pull requests:**
+
+- Update to latest systray with OSX crash workaround [\#829](https://github.com/getlantern/flashlight/pull/829) ([myleshorton](https://github.com/myleshorton))
+
+## [5.9.12](https://github.com/getlantern/flashlight/tree/5.9.12) (2020-06-09)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.11...5.9.12)
+
+**Merged pull requests:**
+
+- Fix chromeextension test failure on linux [\#828](https://github.com/getlantern/flashlight/pull/828) ([max-b](https://github.com/max-b))
+- Update to latest utls and update a few other repos [\#827](https://github.com/getlantern/flashlight/pull/827) ([myleshorton](https://github.com/myleshorton))
+
+## [5.9.11](https://github.com/getlantern/flashlight/tree/5.9.11) (2020-06-05)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.10...5.9.11)
+
+## [5.9.10](https://github.com/getlantern/flashlight/tree/5.9.10) (2020-06-03)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.9...5.9.10)
+
+**Merged pull requests:**
+
+- Multiplex tlsmasq connections [\#825](https://github.com/getlantern/flashlight/pull/825) ([hwh33](https://github.com/hwh33))
+
+## [5.9.9](https://github.com/getlantern/flashlight/tree/5.9.9) (2020-06-02)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.8...5.9.9)
+
+**Merged pull requests:**
+
+- update to latest utls with chrome 83 support [\#823](https://github.com/getlantern/flashlight/pull/823) ([myleshorton](https://github.com/myleshorton))
+- updates for ip based wss [\#822](https://github.com/getlantern/flashlight/pull/822) ([forkner](https://github.com/forkner))
+- Support split ClientHellos [\#821](https://github.com/getlantern/flashlight/pull/821) ([hwh33](https://github.com/hwh33))
+- Remove personally identifiable data from borda submissions [\#817](https://github.com/getlantern/flashlight/pull/817) ([oxtoacart](https://github.com/oxtoacart))
+- show systray as connecting when starting up [\#816](https://github.com/getlantern/flashlight/pull/816) ([joesis](https://github.com/joesis))
+- Drain retry timer only when if it's not consumed [\#815](https://github.com/getlantern/flashlight/pull/815) ([joesis](https://github.com/joesis))
+- Enabled YouTube tracking as an optional feature on MacOS [\#810](https://github.com/getlantern/flashlight/pull/810) ([oxtoacart](https://github.com/oxtoacart))
+
 ## [5.9.8](https://github.com/getlantern/flashlight/tree/5.9.8) (2020-05-12)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.7...5.9.8)
@@ -125,7 +168,6 @@
 
 **Merged pull requests:**
 
-- fix call order for concurrent access to session states [\#757](https://github.com/getlantern/flashlight/pull/757) ([myleshorton](https://github.com/myleshorton))
 - Lock session states on init [\#756](https://github.com/getlantern/flashlight/pull/756) ([myleshorton](https://github.com/myleshorton))
 - Exit if lantern is already running [\#755](https://github.com/getlantern/flashlight/pull/755) ([myleshorton](https://github.com/myleshorton))
 
@@ -172,18 +214,6 @@
 - support quic ietf draft 24 [\#729](https://github.com/getlantern/flashlight/pull/729) ([forkner](https://github.com/forkner))
 - Stores a copy of our settings for the Lantern Chrome Extension to read [\#727](https://github.com/getlantern/flashlight/pull/727) ([myleshorton](https://github.com/myleshorton))
 - Prohibit UI from starting on chrome restricted ports [\#726](https://github.com/getlantern/flashlight/pull/726) ([max-b](https://github.com/max-b))
-- allow tunneling SSH port by default [\#725](https://github.com/getlantern/flashlight/pull/725) ([joesis](https://github.com/joesis))
-- Add GOPRIVATE [\#724](https://github.com/getlantern/flashlight/pull/724) ([myleshorton](https://github.com/myleshorton))
-- Add initialize option [\#723](https://github.com/getlantern/flashlight/pull/723) ([joesis](https://github.com/joesis))
-- Don't run initial performance probes on iOS to avoid exceeding memory… [\#722](https://github.com/getlantern/flashlight/pull/722) ([oxtoacart](https://github.com/oxtoacart))
-- support enabling optional features by various criteria [\#721](https://github.com/getlantern/flashlight/pull/721) ([joesis](https://github.com/joesis))
-- Update to latest dnsgrab [\#720](https://github.com/getlantern/flashlight/pull/720) ([oxtoacart](https://github.com/oxtoacart))
-- update go-ping to latest to avoid command window on Windows [\#719](https://github.com/getlantern/flashlight/pull/719) ([joesis](https://github.com/joesis))
-- Updates to latest detour with close fix [\#718](https://github.com/getlantern/flashlight/pull/718) ([myleshorton](https://github.com/myleshorton))
-- bring in systray windows fixes [\#717](https://github.com/getlantern/flashlight/pull/717) ([joesis](https://github.com/joesis))
-- Switch to latest netstack and added experimental VPN mode on desktop for tun2socks [\#716](https://github.com/getlantern/flashlight/pull/716) ([oxtoacart](https://github.com/oxtoacart))
-- Wss fake sni [\#715](https://github.com/getlantern/flashlight/pull/715) ([forkner](https://github.com/forkner))
-- Updated to latest lampshade with client init timestamping [\#714](https://github.com/getlantern/flashlight/pull/714) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [5.7.2](https://github.com/getlantern/flashlight/tree/5.7.2) (2019-12-03)
 
@@ -196,12 +226,6 @@
 ## [5.7.0](https://github.com/getlantern/flashlight/tree/5.7.0) (2019-12-01)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.6.4...5.7.0)
-
-**Merged pull requests:**
-
-- Strip packet capture completely [\#713](https://github.com/getlantern/flashlight/pull/713) ([myleshorton](https://github.com/myleshorton))
-- Disable traffic log to compile on linux [\#712](https://github.com/getlantern/flashlight/pull/712) ([myleshorton](https://github.com/myleshorton))
-- Using optimized mainloop for windows app [\#711](https://github.com/getlantern/flashlight/pull/711) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [5.6.4](https://github.com/getlantern/flashlight/tree/5.6.4) (2019-10-29)
 
@@ -229,7 +253,11 @@
 
 ## [5.5.7](https://github.com/getlantern/flashlight/tree/5.5.7) (2019-09-19)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.5...5.5.7)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.6...5.5.7)
+
+## [5.5.6](https://github.com/getlantern/flashlight/tree/5.5.6) (2019-08-23)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.5...5.5.6)
 
 ## [5.5.5](https://github.com/getlantern/flashlight/tree/5.5.5) (2019-08-23)
 
@@ -237,11 +265,7 @@
 
 ## [5.5.4](https://github.com/getlantern/flashlight/tree/5.5.4) (2019-08-23)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.6...5.5.4)
-
-## [5.5.6](https://github.com/getlantern/flashlight/tree/5.5.6) (2019-08-23)
-
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.3...5.5.6)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.5.3...5.5.4)
 
 ## [5.5.3](https://github.com/getlantern/flashlight/tree/5.5.3) (2019-08-21)
 

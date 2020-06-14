@@ -18,6 +18,7 @@ import (
 	"github.com/getlantern/tarfs"
 
 	"github.com/getlantern/flashlight/analytics"
+
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ui/auth"
@@ -73,6 +74,9 @@ type Server struct {
 	// authentication server
 	authServerAddr string
 
+	// yinbiServerAddr is the address of the Yinbi server
+	yinbiServerAddr string
+
 	httpClient *http.Client
 
 	externalURL    string
@@ -88,14 +92,15 @@ type Server struct {
 // ServerParams specifies the parameters to use
 // when creating new UI server
 type ServerParams struct {
-	ExtURL         string
-	AuthServerAddr string
-	Handlers       []*PathHandler
-	LocalHTTPToken string
-	RequestedAddr  string
-	SkipTokenCheck bool
-	Standalone     bool
-	HTTPClient     *http.Client
+	ExtURL          string
+	AuthServerAddr  string
+	YinbiServerAddr string
+	Handlers        []*PathHandler
+	LocalHTTPToken  string
+	RequestedAddr   string
+	SkipTokenCheck  bool
+	Standalone      bool
+	HTTPClient      *http.Client
 }
 
 // PathHandler contains a request path pattern and an HTTP handler for that
@@ -154,15 +159,16 @@ func NewServer(params ServerParams) *Server {
 	}
 
 	server := &Server{
-		externalURL:    overrideManotoURL(params.ExtURL),
-		requestPath:    requestPath,
-		httpClient:     params.HTTPClient,
-		mux:            http.NewServeMux(),
-		authServerAddr: params.AuthServerAddr,
-		localHTTPToken: params.LocalHTTPToken,
-		translations:   eventual.NewValue(),
-		skipTokenCheck: params.SkipTokenCheck,
-		standalone:     params.Standalone,
+		externalURL:     overrideManotoURL(params.ExtURL),
+		requestPath:     requestPath,
+		httpClient:      params.HTTPClient,
+		mux:             http.NewServeMux(),
+		authServerAddr:  params.AuthServerAddr,
+		yinbiServerAddr: params.YinbiServerAddr,
+		localHTTPToken:  params.LocalHTTPToken,
+		translations:    eventual.NewValue(),
+		skipTokenCheck:  params.SkipTokenCheck,
+		standalone:      params.Standalone,
 	}
 	return server
 }
@@ -174,8 +180,9 @@ func (s *Server) attachHandlers() {
 	routes := map[string]handlers.HandlerFunc{}
 
 	params := handlers.Params{
-		AuthServerAddr: s.authServerAddr,
-		HttpClient:     s.httpClient,
+		AuthServerAddr:  s.authServerAddr,
+		YinbiServerAddr: s.yinbiServerAddr,
+		HttpClient:      s.httpClient,
 	}
 
 	authHandler := auth.New(params)

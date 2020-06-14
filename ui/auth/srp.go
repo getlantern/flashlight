@@ -6,9 +6,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/getlantern/auth-server/models"
+	"github.com/getlantern/auth-server/srp"
 	"github.com/getlantern/lantern-server/common"
-	"github.com/getlantern/lantern-server/models"
-	"github.com/getlantern/lantern-server/srp"
 )
 
 // The SRP client processes the server credentials
@@ -38,7 +38,7 @@ func (h AuthHandler) sendMutualAuth(srpClient *srp.SRPClient,
 		return err
 	}
 	req.Header.Set(common.HeaderContentType, common.MIMEApplicationJSON)
-	h.ProxyHandler(req, w, onResponse)
+	h.ProxyHandler(url, req, w, onResponse)
 	return nil
 }
 

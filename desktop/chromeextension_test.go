@@ -23,7 +23,7 @@ func TestChromeExtension(t *testing.T) {
 
 	basePath, err = e.osExtensionBasePath("linux")
 	assert.NoError(t, err)
-	assert.True(t, strings.Contains(basePath, "chromium"))
+	assert.True(t, strings.Contains(basePath, "chromium") || strings.Contains(basePath, "google-chrome"))
 
 	_, err = e.osExtensionBasePath("eurequrq9ur")
 	assert.Error(t, err)

@@ -17,7 +17,8 @@ var (
 
 	ProAPIHost = "api.getiantem.org"
 
-	AuthServerAddr = serverCommon.AuthServerAddr
+	AuthServerAddr  = serverCommon.AuthServerAddr
+	YinbiServerAddr = serverCommon.YinbiServerAddr
 
 	log = golog.LoggerFor("flashlight.common")
 

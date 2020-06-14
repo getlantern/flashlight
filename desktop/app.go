@@ -326,25 +326,22 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 		log.Debugf("Starting client UI at %v", uiaddr)
 
-		var authaddr string
-		if app.Flags["authaddr"] != nil {
-			authaddr = app.Flags["authaddr"].(string)
-		}
-		if authaddr == "" {
-			authaddr = common.AuthServerAddr
-		}
+		authaddr := app.GetStringFlag("authaddr", common.AuthServerAddr)
 		log.Debugf("Using auth server at %v", authaddr)
+		yinbiaddr := app.GetStringFlag("yinbiaddr", common.YinbiServerAddr)
+		log.Debugf("Using Yinbi server %s", yinbiaddr)
 		// skip checking for local auth token if we are running in staging mode
 		skipTokenCheck := app.Flags["staging"] != nil && app.Flags["staging"].(bool)
 		standalone := app.Flags["standalone"] != nil && app.Flags["standalone"].(bool)
 		// ui will handle empty uiaddr correctly
 		uiServer, err := ui.StartServer(ui.ServerParams{
-			AuthServerAddr: authaddr,
-			ExtURL:         startupURL,
-			RequestedAddr:  uiaddr,
-			LocalHTTPToken: localHTTPToken(settings),
-			SkipTokenCheck: skipTokenCheck,
-			Standalone:     standalone,
+			AuthServerAddr:  authaddr,
+			YinbiServerAddr: yinbiaddr,
+			ExtURL:          startupURL,
+			RequestedAddr:   uiaddr,
+			LocalHTTPToken:  localHTTPToken(settings),
+			SkipTokenCheck:  skipTokenCheck,
+			Standalone:      standalone,
 			Handlers: []*ui.PathHandler{
 				&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
 				&ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
@@ -439,6 +436,19 @@ func (app *App) GetLanguage() string {
 // SetLanguage sets the user language
 func (app *App) SetLanguage(lang string) {
 	settings.SetLanguage(lang)
+}
+
+// GetStringFlag gets the app flag with the given name. If the flag
+// is missing, defaultValue is used
+func (app *App) GetStringFlag(name, defaultValue string) string {
+	var val string
+	if app.Flags[name] != nil {
+		val = app.Flags[name].(string)
+	}
+	if val == "" {
+		val = defaultValue
+	}
+	return val
 }
 
 // OnSettingChange sets a callback cb to get called when attr is changed from UI.

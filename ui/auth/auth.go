@@ -11,11 +11,11 @@ import (
 	"net/http/httputil"
 	"net/url"
 
+	"github.com/getlantern/auth-server/models"
+	"github.com/getlantern/auth-server/srp"
 	"github.com/getlantern/flashlight/ui/handlers"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
-	"github.com/getlantern/lantern-server/models"
-	"github.com/getlantern/lantern-server/srp"
 )
 
 const (
@@ -95,7 +95,7 @@ func (h AuthHandler) HandleAuthResponse(srpClient *srp.SRPClient,
 		if err != nil {
 			return err
 		}
-		log.Debugf("Got auth response: %v", string(body))
+		log.Debugf("Got mutual auth response: %v", string(body))
 		authResp, err := decodeAuthResponse(body)
 		if err != nil {
 			return err

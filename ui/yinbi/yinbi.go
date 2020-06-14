@@ -8,13 +8,16 @@ import (
 	"html"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/auth-server/models"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ui/auth"
 	"github.com/getlantern/flashlight/ui/handlers"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/lantern-server/common"
-	"github.com/getlantern/lantern-server/models"
+	scommon "github.com/getlantern/lantern-server/common"
 	"github.com/getlantern/yinbi-server/config"
 	"github.com/getlantern/yinbi-server/crypto"
 	"github.com/getlantern/yinbi-server/keystore"
@@ -45,6 +48,8 @@ type YinbiHandler struct {
 
 	// keystore manages encrypted storage of Yinbi private keys
 	keystore *keystore.Keystore
+
+	proxy *httputil.ReverseProxy
 }
 
 func New(params handlers.Params) YinbiHandler {
@@ -56,39 +61,55 @@ func New(params handlers.Params) YinbiHandler {
 
 func NewWithAuth(params handlers.Params,
 	authHandler auth.AuthHandler) YinbiHandler {
+	u, err := url.Parse(params.YinbiServerAddr)
+	if err != nil {
+		log.Fatal(fmt.Errorf("Bad Yinbi server address: %s", params.AuthServerAddr))
+	}
 	return YinbiHandler{
 		AuthHandler: authHandler,
 		keystore:    keystore.New(appdir.General("Lantern")),
 		yinbiClient: newYinbiClient(params.HttpClient),
+		proxy:       httputil.NewSingleHostReverseProxy(u),
 	}
 }
 
 func (h YinbiHandler) Routes() map[string]handlers.HandlerFunc {
+	proxyHandler := func(w http.ResponseWriter, r *http.Request) {
+		h.proxy.ServeHTTP(w, r)
+	}
 	return map[string]handlers.HandlerFunc{
 		"/payment/new":            h.sendPaymentHandler,
 		"/user/account/new":       h.createAccountHandler,
-		"/user/import/wallet":     h.importWalletHandler,
+		"/wallet/import":          h.importWalletHandler,
 		"/account/details":        h.getAccountDetails,
 		"/account/password/reset": h.resetPasswordHandler,
 		"/account/recover":        h.recoverYinbiAccount,
 		"/account/transactions":   h.getAccountTransactions,
 		"/user/mnemonic":          h.createMnemonic,
-		"/user/redeem/codes":      h.redeemCodesHandler,
+		"/wallet/redeem/codes":    proxyHandler,
 	}
 }
 
 func newYinbiClient(httpClient *http.Client) *yinbi.Client {
+	code := "YNB"
+	networkName := "test"
+	horizonAddr := "https://horizon-testnet.stellar.org"
+	issuer := "GDVT32BZETHUQGGEVOEQBSADVT4Z7F6DDBUOXUVATRHRFTT6J7RDOS76"
+	if !common.Staging {
+		networkName = "public"
+		code = "Yinbi"
+		horizonAddr = "https://horizon.stellar.org"
+		issuer = "GDTFHBTWLOYSMX54QZKTWWKFHAYCI3NSZADKY3M7PATARUUKVWOAEY2E"
+	}
+	cfg := config.GetStellarConfig(networkName, horizonAddr, issuer, code)
 	return yinbi.New(yparams.Params{
 		HttpClient: httpClient,
-		Config: &config.Config{
-			NetworkName: "test",
-			AssetCode:   "YNB",
-		},
+		Config:     cfg,
 	})
 }
 
 func (s YinbiHandler) createMnemonic(w http.ResponseWriter, r *http.Request) {
-	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"mnemonic": crypto.NewMnemonic(),
 		"success":  true,
 	})
@@ -98,8 +119,9 @@ func (s YinbiHandler) createMnemonic(w http.ResponseWriter, r *http.Request) {
 // voucher codes
 func (h YinbiHandler) redeemCodesHandler(w http.ResponseWriter,
 	req *http.Request) {
-	url := h.GetAuthAddr(html.EscapeString(req.URL.Path))
-	proxyReq, err := common.NewProxyRequest(req, url)
+	url := h.GetYinbiAddr(html.EscapeString(req.URL.Path))
+	log.Debugf("Making redeem codes request to %s", url)
+	proxyReq, err := scommon.NewProxyRequest(req, url)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
@@ -110,7 +132,7 @@ func (h YinbiHandler) redeemCodesHandler(w http.ResponseWriter,
 		return
 	}
 	defer r.Body.Close()
-	var resp ImportWalletResponse
+	var resp RedeemCodesResponse
 	err = json.NewDecoder(r.Body).Decode(&resp)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
@@ -123,7 +145,7 @@ func (h YinbiHandler) redeemCodesHandler(w http.ResponseWriter,
 func (h YinbiHandler) importWalletHandler(w http.ResponseWriter,
 	req *http.Request) {
 	var params AuthParams
-	err := common.DecodeJSONRequest(req, &params)
+	err := scommon.DecodeJSONRequest(req, &params)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
@@ -134,8 +156,8 @@ func (h YinbiHandler) importWalletHandler(w http.ResponseWriter,
 		return
 	}
 	req.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
-	url := h.GetAuthAddr(html.EscapeString(req.URL.Path))
-	proxyReq, err := common.NewProxyRequest(req, url)
+	url := h.GetYinbiAddr(html.EscapeString(req.URL.Path))
+	proxyReq, err := scommon.NewProxyRequest(req, url)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
@@ -161,7 +183,7 @@ func (h YinbiHandler) importWalletHandler(w http.ResponseWriter,
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
 	}
-	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
 	})
 }
@@ -172,7 +194,7 @@ func (h YinbiHandler) importWalletHandler(w http.ResponseWriter,
 func (h YinbiHandler) sendPaymentHandler(w http.ResponseWriter,
 	req *http.Request) {
 	var params PaymentParams
-	err := common.DecodeJSONRequest(req, &params)
+	err := scommon.DecodeJSONRequest(req, &params)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
@@ -209,7 +231,7 @@ func (h YinbiHandler) sendPaymentHandler(w http.ResponseWriter,
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
-	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
 		"tx_id":   resp.Hash,
 	})
@@ -224,7 +246,7 @@ func (h YinbiHandler) getAccountDetails(w http.ResponseWriter,
 	var request struct {
 		Address string `json:"address"`
 	}
-	err := common.DecodeJSONRequest(r, &request)
+	err := scommon.DecodeJSONRequest(r, &request)
 	if err != nil {
 		log.Debugf("Error decoding JSON: %v", err)
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
@@ -239,7 +261,7 @@ func (h YinbiHandler) getAccountDetails(w http.ResponseWriter,
 		return
 	}
 	log.Debugf("Successfully retrived balance for %s", address)
-	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"success":  true,
 		"balances": balances,
 	})
@@ -264,7 +286,7 @@ func (h YinbiHandler) resetPasswordHandler(w http.ResponseWriter,
 	newPassword := params.Password
 	params.Password = ""
 	log.Debugf("Received new reset password request from %s", params.Username)
-	resp, authResp, err := h.SendAuthRequest(common.POST, resetPasswordEndpoint, params)
+	resp, authResp, err := h.SendAuthRequest(scommon.POST, resetPasswordEndpoint, params)
 	if err != nil {
 		log.Error(err)
 		return
@@ -291,7 +313,7 @@ func (h YinbiHandler) recoverYinbiAccount(w http.ResponseWriter,
 	var params struct {
 		Words string `json:"words"`
 	}
-	err := common.DecodeJSONRequest(r, &params)
+	err := scommon.DecodeJSONRequest(r, &params)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
@@ -309,7 +331,7 @@ func (h YinbiHandler) recoverYinbiAccount(w http.ResponseWriter,
 	}
 	log.Debugf("Successfully recovered user %s's account using Yinbi key",
 		userResponse.User.Username)
-	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
 		"user":    userResponse.User,
 	})
@@ -349,7 +371,7 @@ func (h YinbiHandler) getAccountTransactions(w http.ResponseWriter,
 		Order          string `json:"order"`
 		RecordsPerPage int    `json:"recordsPerPage"`
 	}
-	err := common.DecodeJSONRequest(r, &request)
+	err := scommon.DecodeJSONRequest(r, &request)
 	if err != nil {
 		log.Debugf("Error decoding JSON: %v", err)
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
@@ -379,7 +401,7 @@ func (h YinbiHandler) getAccountTransactions(w http.ResponseWriter,
 	}
 	log.Debugf("Successfully retrived payments for %s",
 		address)
-	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"success":  true,
 		"payments": payments,
 	})
@@ -418,9 +440,11 @@ func (h YinbiHandler) createAccountHandler(w http.ResponseWriter,
 		return
 	}
 	onResp := func(resp *http.Response) error {
-		return h.yinbiClient.TrustAsset(issuer, pair)
+		assetCode := h.yinbiClient.GetAssetCode()
+		return h.yinbiClient.TrustAsset(assetCode, issuer, pair)
 	}
-	err = h.ProxyHandler(r, w, onResp)
+	url := h.GetYinbiAddr(html.EscapeString(r.URL.Path))
+	err = h.ProxyHandler(url, r, w, onResp)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 	}

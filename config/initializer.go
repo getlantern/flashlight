@@ -226,7 +226,7 @@ func checkOverrides(flags map[string]interface{},
 func getProxyURL(staging bool) string {
 	if staging {
 		log.Debug("Will obtain proxies.yaml from staging service")
-		return proxiesStagingURL
+		//return proxiesStagingURL
 	}
 	log.Debug("Will obtain proxies.yaml from production service")
 	return proxiesURL

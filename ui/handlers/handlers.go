@@ -3,7 +3,6 @@ package handlers
 import (
 	"bytes"
 	"fmt"
-	"html"
 	"net/http"
 
 	"github.com/getlantern/flashlight/ui/params"
@@ -26,26 +25,34 @@ type UIHandler interface {
 // related to a specific product (i.e. Yinbi)
 type Handler struct {
 	UIHandler
-	authServerAddr string
-	HttpClient     *http.Client
+	authServerAddr  string
+	yinbiServerAddr string
+	HttpClient      *http.Client
 }
 
 // Params represents the parameters handlers are configured with
 type Params struct {
-	AuthServerAddr string
-	HttpClient     *http.Client
+	AuthServerAddr  string
+	YinbiServerAddr string
+	HttpClient      *http.Client
 }
 
 func New(params Params) Handler {
 	return Handler{
-		authServerAddr: params.AuthServerAddr,
-		HttpClient:     params.HttpClient,
+		authServerAddr:  params.AuthServerAddr,
+		yinbiServerAddr: params.YinbiServerAddr,
+		HttpClient:      params.HttpClient,
 	}
 }
 
 // GetAuthAddr combines the given uri with the Lantern authentication server address
 func (h Handler) GetAuthAddr(uri string) string {
 	return fmt.Sprintf("%s%s", h.authServerAddr, uri)
+}
+
+// GetYinbiAddr combines the given uri with the Yinbi server address
+func (h Handler) GetYinbiAddr(uri string) string {
+	return fmt.Sprintf("%s%s", h.yinbiServerAddr, uri)
 }
 
 // DoRequest creates and sends a new HTTP request to the given url
@@ -70,10 +77,9 @@ func (h Handler) DoRequest(method, url string,
 
 // proxyHandler is a HTTP handler used to proxy requests
 // to the Lantern authentication server
-func (h Handler) ProxyHandler(req *http.Request, w http.ResponseWriter,
+func (h Handler) ProxyHandler(url string, req *http.Request, w http.ResponseWriter,
 	onResponse common.HandleResponseFunc,
 ) error {
-	url := h.GetAuthAddr(html.EscapeString(req.URL.Path))
 	return common.ProxyHandler(url, h.HttpClient, req, w,
 		onResponse)
 }

@@ -22,6 +22,13 @@ type ImportWalletResponse struct {
 	Seed     string `json:"seed"`
 }
 
+type RedeemCodesResponse struct {
+	Error         string            `json:"error"`
+	Errors        map[string]string `json:"errors"`
+	Success       bool              `json:"success"`
+	AmountAwarded int               `json:"amountAwarded"`
+}
+
 // PaymentParams specifies the necessary parameters for
 // sending a YNB payment
 type PaymentParams struct {
