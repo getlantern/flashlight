@@ -199,9 +199,9 @@ func (s *Server) attachHandlers() {
 	}
 
 	for pattern, handler := range routes {
-		useCors := pattern == "/login" || pattern == "/register"
+		//useCors := pattern == "/login" || pattern == "/register"
 		s.mux.Handle(pattern,
-			s.wrapMiddleware(useCors, http.HandlerFunc(handler)))
+			s.wrapMiddleware(http.HandlerFunc(handler)))
 	}
 	s.handle("/startup", http.HandlerFunc(s.startupHandler))
 	s.handle("/", http.FileServer(fs))
@@ -209,10 +209,8 @@ func (s *Server) attachHandlers() {
 
 // wrapMiddleware takes the given http.Handler and optionally wraps it with
 // the cors middleware handler
-func (s *Server) wrapMiddleware(useCors bool, handler http.Handler) http.Handler {
-	if useCors {
-		handler = s.corsHandler(handler)
-	}
+func (s *Server) wrapMiddleware(handler http.Handler) http.Handler {
+	handler = s.corsHandler(handler)
 	return handler
 }
 

@@ -115,36 +115,12 @@ func (s YinbiHandler) createMnemonic(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// redeemCodesHandler is the handler used for redeeming yin.bi
-// voucher codes
-func (h YinbiHandler) redeemCodesHandler(w http.ResponseWriter,
-	req *http.Request) {
-	url := h.GetYinbiAddr(html.EscapeString(req.URL.Path))
-	log.Debugf("Making redeem codes request to %s", url)
-	proxyReq, err := scommon.NewProxyRequest(req, url)
-	if err != nil {
-		h.ErrorHandler(w, err, http.StatusBadRequest)
-		return
-	}
-	r, err := h.HttpClient.Do(proxyReq)
-	if err != nil {
-		h.ErrorHandler(w, err, http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close()
-	var resp RedeemCodesResponse
-	err = json.NewDecoder(r.Body).Decode(&resp)
-	if err != nil {
-		h.ErrorHandler(w, err, http.StatusBadRequest)
-		return
-	}
-}
-
 // importWalletHandler is the handler used to import wallets
 // of existing yin.bi users
 func (h YinbiHandler) importWalletHandler(w http.ResponseWriter,
 	req *http.Request) {
 	var params AuthParams
+	log.Debug("New import wallet request")
 	err := scommon.DecodeJSONRequest(req, &params)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
@@ -183,6 +159,7 @@ func (h YinbiHandler) importWalletHandler(w http.ResponseWriter,
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
 	}
+	log.Debug("Successfully imported yin.bi wallet")
 	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
 	})
