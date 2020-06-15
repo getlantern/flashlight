@@ -16,10 +16,12 @@ var (
 )
 
 type ImportWalletResponse struct {
-	Username string `json:"username"`
-	Address  string `json:"address"`
-	Salt     string `json:"salt"`
-	Seed     string `json:"seed"`
+	Error    string            `json:"error"`
+	Errors   map[string]string `json:"errors"`
+	Username string            `json:"username"`
+	Address  string            `json:"address"`
+	Salt     string            `json:"salt"`
+	Seed     string            `json:"seed"`
 }
 
 type RedeemCodesResponse struct {

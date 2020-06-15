@@ -108,7 +108,7 @@ func newYinbiClient(httpClient *http.Client) *yinbi.Client {
 	})
 }
 
-func (s YinbiHandler) createMnemonic(w http.ResponseWriter, r *http.Request) {
+func (s *YinbiHandler) createMnemonic(w http.ResponseWriter, r *http.Request) {
 	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"mnemonic": crypto.NewMnemonic(),
 		"success":  true,
@@ -117,7 +117,7 @@ func (s YinbiHandler) createMnemonic(w http.ResponseWriter, r *http.Request) {
 
 // importWalletHandler is the handler used to import wallets
 // of existing yin.bi users
-func (h YinbiHandler) importWalletHandler(w http.ResponseWriter,
+func (h *YinbiHandler) importWalletHandler(w http.ResponseWriter,
 	req *http.Request) {
 	var params AuthParams
 	log.Debug("New import wallet request")
@@ -144,18 +144,14 @@ func (h YinbiHandler) importWalletHandler(w http.ResponseWriter,
 		return
 	}
 	defer r.Body.Close()
-	var resp ImportWalletResponse
-	err = json.NewDecoder(r.Body).Decode(&resp)
+	pair, err := h.decryptSeed(r, params)
 	if err != nil {
-		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
 	}
-	pair, err := h.yinbiClient.DecryptSeed(resp.Seed, resp.Salt,
-		params.Password)
-	// send secret key to keystore
 	err = h.keystore.Store(pair.Seed(), params.Username,
 		params.Password)
 	if err != nil {
+		log.Errorf("Error storing key in keystore: %v", err)
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
 	}
@@ -163,6 +159,21 @@ func (h YinbiHandler) importWalletHandler(w http.ResponseWriter,
 	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
 	})
+}
+
+func (h YinbiHandler) decryptSeed(r *http.Response, params AuthParams) (*keypair.Full, error) {
+	var resp ImportWalletResponse
+	err := json.NewDecoder(r.Body).Decode(&resp)
+	if err != nil {
+		return nil, err
+	}
+	pair, err := h.yinbiClient.DecryptSeed(resp.Seed, resp.Salt,
+		params.Password)
+	if err != nil {
+		log.Errorf("Unable to decrypt seed: %v", err)
+		return nil, err
+	}
+	return pair, nil
 }
 
 // sendPaymentHandler is the handler used to create Yinbi payments
@@ -394,6 +405,7 @@ func (h YinbiHandler) getAccountTransactions(w http.ResponseWriter,
 // Yinbi asset
 func (h YinbiHandler) createAccountHandler(w http.ResponseWriter,
 	r *http.Request) {
+	log.Debug("Received new create Yinbi account request")
 	params, pair, err := yinbi.ParseAddress(r)
 	if err != nil {
 		log.Debugf("Error parsing address: %v", err)
@@ -420,9 +432,6 @@ func (h YinbiHandler) createAccountHandler(w http.ResponseWriter,
 		assetCode := h.yinbiClient.GetAssetCode()
 		return h.yinbiClient.TrustAsset(assetCode, issuer, pair)
 	}
-	url := h.GetYinbiAddr(html.EscapeString(r.URL.Path))
-	err = h.ProxyHandler(url, r, w, onResp)
-	if err != nil {
-		h.ErrorHandler(w, err, http.StatusBadRequest)
-	}
+	url := h.GetAuthAddr(html.EscapeString(r.URL.Path))
+	h.ProxyHandler(url, r, w, onResp)
 }

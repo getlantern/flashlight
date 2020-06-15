@@ -49,7 +49,7 @@ var (
 )
 
 func success(resp *http.Response) bool {
-	return resp.StatusCode > 199 && resp.StatusCode < 400
+	return resp.StatusCode > 199 && resp.StatusCode < 500
 }
 
 // changeUserAgent prepends Lantern version and OSARCH to the User-Agent header
