@@ -8,13 +8,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/getlantern/auth-server/models"
+	"github.com/getlantern/auth-server/srp"
 	"github.com/getlantern/flashlight/ui/handlers"
 	"github.com/getlantern/flashlight/ui/params"
 	"github.com/getlantern/flashlight/ui/testutils"
 	"github.com/getlantern/lantern-server/common"
 	"github.com/getlantern/lantern-server/constants"
-	"github.com/getlantern/lantern-server/models"
-	"github.com/getlantern/lantern-server/srp"
 	"github.com/getlantern/yinbi-server/utils"
 	"github.com/stretchr/testify/assert"
 )
