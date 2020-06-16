@@ -26,6 +26,7 @@ import (
 	analog "github.com/anacrolix/log"
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/metainfo"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/replica"
 )
 
@@ -40,10 +41,11 @@ type httpHandler struct {
 	logger     analog.Logger
 	mux        http.ServeMux
 	rep        replica.Replica
+	userConfig common.UserConfig
 }
 
 // NewHTTPHandler creates a new http.Handler for calls to replica.
-func NewHTTPHandler() (_ http.Handler, exitFunc func(), err error) {
+func NewHTTPHandler(uc common.UserConfig) (_ http.Handler, exitFunc func(), err error) {
 	userCacheDir, err := os.UserCacheDir()
 	if err != nil {
 		panic(err)
@@ -100,6 +102,7 @@ func NewHTTPHandler() (_ http.Handler, exitFunc func(), err error) {
 		dataDir:       replicaDataDir,
 		logger:        replicaLogger,
 		uploadsDir:    uploadsDir,
+		userConfig:    uc,
 		rep: replica.New(&http.Client{
 			Transport: proxied.AsRoundTripper(func(req *http.Request) (*http.Response, error) {
 				chained, err := proxied.ChainedNonPersistent("")
@@ -110,6 +113,7 @@ func NewHTTPHandler() (_ http.Handler, exitFunc func(), err error) {
 			}),
 		}),
 	}
+	handler.mux.Handle("/search", http.StripPrefix("/search", searchHandler(uc)))
 	handler.mux.HandleFunc("/upload", handler.handleUpload)
 	handler.mux.HandleFunc("/uploads", handler.handleUploads)
 	handler.mux.HandleFunc("/view", handler.handleView)

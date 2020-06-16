@@ -452,7 +452,7 @@ func (app *App) checkForReplica(features map[string]bool) {
 	if val, ok := features[config.FeatureReplica]; ok && val {
 		app.startReplica.Do(func() {
 			log.Debug("Starting replica from app")
-			replicaHandler, exitFunc, err := replica.NewHTTPHandler()
+			replicaHandler, exitFunc, err := replica.NewHTTPHandler(settings)
 			if err != nil {
 				log.Errorf("error creating replica http server: %v", err)
 				app.Exit(err)
