@@ -504,7 +504,13 @@ github.com/getlantern/withtimeout v0.0.0-20160829163843-511f017cd913/go.mod h1:b
 github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426 h1:lb2OElfhZzfgvNQym79ONvv4yvDh/gShHkLQI6qzriA=
 github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426/go.mod h1:SoTXbOvaDC1bH3QrlkU5kz/h12tU/hN54wSMUCdgEXs=
 github.com/getlantern/yinbi-server v0.0.0-20200429175227-b5a5aa68ca6b/go.mod h1:6dW17E6t4IFMfCjaVbfTsQpEvZXXPhBoYlGGsiLTQ/g=
+github.com/getlantern/yinbi-server v0.0.0-20200429185349-f9fc8b7b036a h1:f3GGzk6s8SmhgGSh3h/bLixSL+sqnSOb8pgXoAEaMZM=
 github.com/getlantern/yinbi-server v0.0.0-20200429185349-f9fc8b7b036a/go.mod h1:6dW17E6t4IFMfCjaVbfTsQpEvZXXPhBoYlGGsiLTQ/g=
+github.com/getlantern/yinbi-server v0.0.0-20200603163635-d95732904bdf h1:1qn5Fa7b7d20+wkkVwAiugX3M4dYyFlhmI7OEw5X1Js=
+github.com/getlantern/yinbi-server v0.0.0-20200616193407-b64d6c8a5a53 h1:N+dsXJQlUKBp6kWfMbFxGLGTmIrjBT321y2h5l+UNJE=
+github.com/getlantern/yinbi-server v0.0.0-20200616193407-b64d6c8a5a53/go.mod h1:eMj3niIqPISRKKDOcXxN07gHqOO7S1wH2xRhcxGNoxg=
+github.com/getlantern/yinbi-server v0.0.0-20200616193535-2c94618e6400 h1:am5nspLmCBL4X1lLOPbyFdWmC0XAShXedSiK0hN8HIE=
+github.com/getlantern/yinbi-server v0.0.0-20200616193535-2c94618e6400/go.mod h1:eMj3niIqPISRKKDOcXxN07gHqOO7S1wH2xRhcxGNoxg=
 github.com/getlantern/zenodb v0.0.0-20190809092412-0a2ce8ac3026/go.mod h1:LDw7qTXBZJkjYVIvR2iyi1J4PN8plch0VZzTzc7mDoM=
 github.com/getlantern/zenodb v0.0.0-20191017181222-5e98403b7237 h1:a916/nkKDXQBD940nXIzOp2nLTfUzwL0vPr7HCWKduI=
 github.com/getlantern/zenodb v0.0.0-20191017181222-5e98403b7237/go.mod h1:/QuMPlUCcgfXRy+yAwXWcAkBegF2Nl1lw0nJ+kSWEsA=
@@ -928,6 +934,7 @@ github.com/nats-io/nkeys v0.0.2/go.mod h1:dab7URMsZm6Z/jp9Z5UGa87Uutgc2mVpXLC4B7
 github.com/nats-io/nuid v1.0.1/go.mod h1:19wcPz3Ph3q0Jbyiqsd0kePYG7A95tJPxeL+1OSON2c=
 github.com/nleof/goyesql v1.0.1 h1:AynOKT0zEDdE3rouyUYlmnLSwJ1pjwOL0gmvjLkKI1o=
 github.com/nleof/goyesql v1.0.1/go.mod h1:tpOzlGZT8etKGAEp2dlYX2CFeVHQiC9VMYY1kaeHrC4=
+github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d h1:VhgPp6v9qf9Agr/56bj7Y/xa04UccTW04VP0Qed4vnQ=
 github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d/go.mod h1:YUTz3bUH2ZwIWBy3CJBeOBEugqcmXREj14T+iG/4k4U=
 github.com/nullstyle/go-xdr v0.0.0-20180726165426-f4c839f75077/go.mod h1:sZZi9x5aHXGZ/RRp7Ne5rkvtDxZb7pd7vgVA+gmE35A=
 github.com/nwaples/rardecode v1.0.0/go.mod h1:5DzqNKiOdpKKBH87u8VlvAnPZMXcGRhxWkRpHbbfGS0=

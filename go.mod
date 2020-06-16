@@ -3,19 +3,19 @@ module github.com/getlantern/flashlight
 go 1.12
 
 require (
-	cloud.google.com/go v0.56.0 // indirect
+	cloud.google.com/go v0.58.0 // indirect
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/1Password/srp v0.0.0-20190404030337-a659551f75f7 // indirect
 	github.com/anacrolix/go-libutp v1.0.1
 	github.com/anacrolix/mmsg v1.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.30.16 // indirect
+	github.com/aws/aws-sdk-go v1.32.3 // indirect
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
-	github.com/getlantern/appdir v0.0.0-20180320102544-7c0f9d241ea7
-	github.com/getlantern/auth-server v0.0.0-20200616192928-f3e59e75f110 // indirect
+	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
+	github.com/getlantern/auth-server v0.0.0-20200616192928-f3e59e75f110
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20200427033127-b36d009c6252
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
@@ -83,12 +83,11 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getlantern/yinbi-server v0.0.0-20200429185349-f9fc8b7b036a
+	github.com/getlantern/yinbi-server v0.0.0-20200616193535-2c94618e6400
 	github.com/getsentry/sentry-go v0.5.1
-	github.com/go-chi/chi v4.1.1+incompatible // indirect
-	github.com/go-errors/errors v1.0.2 // indirect
+	github.com/go-chi/chi v4.1.2+incompatible // indirect
+	github.com/go-errors/errors v1.1.1 // indirect
 	github.com/gobuffalo/envy v1.9.0 // indirect
-	github.com/golang/protobuf v1.4.0 // indirect
 	github.com/gorilla/mux v1.7.2 // indirect
 	github.com/gorilla/pat v0.0.0-20180118222023-199c85a7f6d1 // indirect
 	github.com/gorilla/websocket v1.4.0
@@ -110,11 +109,15 @@ require (
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/refraction-networking/utls v0.0.0-20200601200209-ada0bb9b38a0
+	github.com/rogpeppe/go-internal v1.6.0 // indirect
 	github.com/rs/cors v0.0.0-20160617231935-a62a804a8a00
+	github.com/shopspring/decimal v1.2.0 // indirect
+	github.com/sirupsen/logrus v1.6.0 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/stellar/go v0.0.0-20200320182048-8fca4a5d1434
+	github.com/stellar/go-xdr v0.0.0-20200331223602-71a1e6d555f2 // indirect
 	github.com/stretchr/objx v0.2.0 // indirect
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.1
 	github.com/tidwall/gjson v1.2.1 // indirect
 	github.com/tidwall/match v1.0.1 // indirect
 	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65 // indirect
@@ -125,8 +128,11 @@ require (
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
 	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1 // indirect
 	golang.org/x/text v0.3.3 // indirect
+	google.golang.org/genproto v0.0.0-20200615140333-fd031eab31e7 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/validator.v2 v2.0.0-20200605151824-2b28d334fa05 // indirect
+	gopkg.in/yaml.v2 v2.3.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 )
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20200211213545-301421f7c3c9
