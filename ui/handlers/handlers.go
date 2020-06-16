@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/getlantern/auth-server/models"
 	"github.com/getlantern/flashlight/ui/params"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
@@ -91,8 +92,8 @@ func (h Handler) ErrorHandler(w http.ResponseWriter, err interface{}, errorCode 
 	switch err.(type) {
 	case error:
 		resp.Error = err.(error).Error()
-	case params.Errors:
-		resp.Errors = err.(params.Errors)
+	case models.Errors:
+		resp.Errors = err.(models.Errors)
 	}
 	common.WriteJSON(w, errorCode, &resp)
 }

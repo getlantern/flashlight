@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/getlantern/flashlight/ui/params"
+	"github.com/getlantern/auth-server/models"
 )
 
 var (
@@ -50,8 +50,8 @@ type AuthParams struct {
 
 // Validate validates the payment params and returns
 // a map of param names to errors
-func (p PaymentParams) Validate() params.Errors {
-	errors := make(params.Errors)
+func (p PaymentParams) Validate() models.Errors {
+	errors := make(models.Errors)
 	if p.Password == "" {
 		errors["password"] = ErrMissingPassword.Error()
 	}

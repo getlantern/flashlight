@@ -3,7 +3,7 @@ package auth
 import (
 	"errors"
 
-	"github.com/getlantern/flashlight/ui/params"
+	"github.com/getlantern/auth-server/models"
 )
 
 var (
@@ -19,8 +19,8 @@ type AuthParams struct {
 	Password string `json:"password"`
 }
 
-func (p AuthParams) Validate() params.Errors {
-	errors := make(params.Errors)
+func (p AuthParams) Validate() models.Errors {
+	errors := make(models.Errors)
 	if p.Password == "" {
 		errors["password"] = ErrMissingPassword.Error()
 	}

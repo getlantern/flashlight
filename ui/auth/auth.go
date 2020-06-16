@@ -136,15 +136,17 @@ func (h AuthHandler) authHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	endpoint := html.EscapeString(req.URL.Path)
 	resp, authResp, err := h.SendAuthRequest(common.POST, endpoint, params)
-	if err != nil {
-		log.Error(err)
-		if authResp != nil && authResp.Error != "" {
-			h.ErrorHandler(w, errors.New(authResp.Error), resp.StatusCode)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		if err != nil {
+			log.Error(err)
 		}
-		return
-	}
-	if resp.StatusCode != http.StatusOK {
-		h.ErrorHandler(w, errors.New("Service unavailable"), http.StatusInternalServerError)
+		if authResp != nil {
+			if authResp.Error != "" {
+				h.ErrorHandler(w, errors.New(authResp.Error), http.StatusBadRequest)
+			}
+			log.Debugf("Authresp errors is %v", authResp.Errors)
+			h.ErrorHandler(w, authResp.Errors, http.StatusBadRequest)
+		}
 		return
 	}
 	h.HandleAuthResponse(srpClient, w, params, authResp)

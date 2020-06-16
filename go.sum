@@ -218,6 +218,10 @@ github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da/go.mod h1:3vR6+j
 github.com/getlantern/auth-server v0.0.0-20200525203904-0b1c197e4654 h1:QLajR65GRrrVDHb2ACVUfgce6nOs5iAZm0DXNKiGgZw=
 github.com/getlantern/auth-server v0.0.0-20200616192928-f3e59e75f110 h1:Nf5hB0ADDxrzry47Lb6eXRV2MzESkrlWC9zqSZun3ig=
 github.com/getlantern/auth-server v0.0.0-20200616192928-f3e59e75f110/go.mod h1:JBY5PixdewYDTKcWBhgI9xeckjDHBYKS+1MydKyluAk=
+github.com/getlantern/auth-server v0.0.0-20200616215649-704bfa1118f6 h1:EP+nn8j1vBRP9q/1LoG6Tny74cIVYMuRNv4kWIkd6BI=
+github.com/getlantern/auth-server v0.0.0-20200616215649-704bfa1118f6/go.mod h1:sP5sge/3SKZNiNrNgp34s7VoD/rm0cn/uszl/AcGpBQ=
+github.com/getlantern/auth-server v0.0.0-20200616220905-f24dc9c75135 h1:oxB53BcNda7PVJQ3lnZZTrZ6iogFNas7EwyCy1FCkhM=
+github.com/getlantern/auth-server v0.0.0-20200616220905-f24dc9c75135/go.mod h1:sP5sge/3SKZNiNrNgp34s7VoD/rm0cn/uszl/AcGpBQ=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99 h1:fnjb9PYZRMU6Tok5i3anP/bAqhUtG2kn9xgff3IlA+8=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99/go.mod h1:4rYfIUYagdnY0KCu5/zOBX5CIRIi+j+LHdQ+LmD/Lyg=
 github.com/getlantern/bbrconn v0.0.0-20180619163322-86cf8c16f3d0 h1:OtUNxwmNp9+mTZMuKw9MrNLJKMG731zWZIWwQfFGZfs=
@@ -357,6 +361,8 @@ github.com/getlantern/lampshade v0.0.0-20200303040944-fe53f13203e9/go.mod h1:Zqi
 github.com/getlantern/lantern-server v0.0.0-20200525180339-4c8d10e22306 h1:PMNCow0jLW+h7l6M186w1LP8E3/aHPIPvnxIbqC3ocY=
 github.com/getlantern/lantern-server v0.0.0-20200615160426-fc19bbac97d9 h1:4cbJNQYMyDPNwR3njNXo0LUmWgUZSMOTJ1kkDEZAGnQ=
 github.com/getlantern/lantern-server v0.0.0-20200615160426-fc19bbac97d9/go.mod h1:H/002YqbKVNRzgmBRKp87OHtuAiG13E5hmaeIT7VqJE=
+github.com/getlantern/lantern-server v0.0.0-20200616212232-3fb5bf433b35 h1:jq5VfalaBQfTRTBT3ox9WYty9sRqcKX2UsO9kF1Y1FI=
+github.com/getlantern/lantern-server v0.0.0-20200616212232-3fb5bf433b35/go.mod h1:H/002YqbKVNRzgmBRKp87OHtuAiG13E5hmaeIT7VqJE=
 github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894 h1:Gzf64TTHyKH4HEe1dgwnf7BOaq5rJZg25Hqz5TmogEI=
 github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894/go.mod h1:h57jtqyH1HCLYu53nnr3WTUntPozt5ztqQ9aN687VEY=
 github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358 h1:ZPe/LMCpCEuHtfBp2NP3/A9KRXQJbTxeSOVWmcBzXIc=
