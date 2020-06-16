@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.9.14](https://github.com/getlantern/flashlight/tree/5.9.14) (2020-06-15)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.13...5.9.14)
+
+**Merged pull requests:**
+
+- Update to new version of http-proxy-lantern to fix TestProxying [\#830](https://github.com/getlantern/flashlight/pull/830) ([hwh33](https://github.com/hwh33))
+
 ## [5.9.13](https://github.com/getlantern/flashlight/tree/5.9.13) (2020-06-11)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.12...5.9.13)
@@ -168,6 +176,7 @@
 
 **Merged pull requests:**
 
+- fix call order for concurrent access to session states [\#757](https://github.com/getlantern/flashlight/pull/757) ([myleshorton](https://github.com/myleshorton))
 - Lock session states on init [\#756](https://github.com/getlantern/flashlight/pull/756) ([myleshorton](https://github.com/myleshorton))
 - Exit if lantern is already running [\#755](https://github.com/getlantern/flashlight/pull/755) ([myleshorton](https://github.com/myleshorton))
 
@@ -213,7 +222,6 @@
 - Install chrome extension via external installation method [\#730](https://github.com/getlantern/flashlight/pull/730) ([myleshorton](https://github.com/myleshorton))
 - support quic ietf draft 24 [\#729](https://github.com/getlantern/flashlight/pull/729) ([forkner](https://github.com/forkner))
 - Stores a copy of our settings for the Lantern Chrome Extension to read [\#727](https://github.com/getlantern/flashlight/pull/727) ([myleshorton](https://github.com/myleshorton))
-- Prohibit UI from starting on chrome restricted ports [\#726](https://github.com/getlantern/flashlight/pull/726) ([max-b](https://github.com/max-b))
 
 ## [5.7.2](https://github.com/getlantern/flashlight/tree/5.7.2) (2019-12-03)
 
