@@ -117,3 +117,5 @@ replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358
 
 replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20191212040217-1650eee50330
+
+replace github.com/getlantern/replica => ./replica/

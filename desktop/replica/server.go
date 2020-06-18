@@ -40,7 +40,7 @@ type httpHandler struct {
 	uploadsDir string
 	logger     analog.Logger
 	mux        http.ServeMux
-	rep        replica.Replica
+	rep        replica.Client
 	userConfig common.UserConfig
 }
 
@@ -103,15 +103,18 @@ func NewHTTPHandler(uc common.UserConfig) (_ http.Handler, exitFunc func(), err 
 		logger:        replicaLogger,
 		uploadsDir:    uploadsDir,
 		userConfig:    uc,
-		rep: replica.New(&http.Client{
-			Transport: proxied.AsRoundTripper(func(req *http.Request) (*http.Response, error) {
-				chained, err := proxied.ChainedNonPersistent("")
-				if err != nil {
-					return nil, fmt.Errorf("Error connecting to proxy: %v", err)
-				}
-				return chained.RoundTrip(req)
-			}),
-		}),
+		rep: replica.Client{
+			HttpClient: &http.Client{
+				Transport: proxied.AsRoundTripper(func(req *http.Request) (*http.Response, error) {
+					chained, err := proxied.ChainedNonPersistent("")
+					if err != nil {
+						return nil, fmt.Errorf("Error connecting to proxy: %v", err)
+					}
+					return chained.RoundTrip(req)
+				}),
+			},
+			Endpoint: replica.DefaultEndpoint,
+		},
 	}
 	handler.mux.Handle("/search", http.StripPrefix("/search", searchHandler(uc)))
 	handler.mux.HandleFunc("/upload", handler.handleUpload)
@@ -133,11 +136,11 @@ func NewHTTPHandler(uc common.UserConfig) (_ http.Handler, exitFunc func(), err 
 			replicaLogger.Printf("error while iterating uploads: %v", iu.Err)
 			return
 		}
-		err := handler.addTorrent(iu.Metainfo, true)
+		err := handler.addTorrent(iu.Metainfo.MetaInfo, true)
 		if err != nil {
-			replicaLogger.WithValues(analog.Error).Printf("error adding existing upload to torrent client: %v", err)
+			replicaLogger.WithValues(analog.Error).Printf("error adding existing upload from %q to torrent client: %v", iu.FileInfo.Name(), err)
 		} else {
-			replicaLogger.Printf("added previous upload %q to torrent client", iu.S3Prefix())
+			replicaLogger.Printf("added previous upload %q to torrent client from file %q", iu.Metainfo.Upload, iu.FileInfo.Name())
 		}
 	}); err != nil {
 		panic(err)
@@ -190,21 +193,16 @@ func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	output, err := me.rep.Upload(replicaUploadReader, r.URL.Query().Get("name"))
-	s3Prefix := output.S3Prefix
-	mi := output.Metainfo
+	s3Prefix := output.Upload
 	me.logger.WithValues(analog.Debug).Printf("uploaded replica key %q", s3Prefix)
 	w.Op.Set("upload_s3_key", s3Prefix)
 	me.logger.WithValues(analog.Debug).Printf("uploaded %d bytes", cw.BytesWritten)
 	if err != nil {
 		panic(err)
 	}
-
-	info, err := output.Metainfo.UnmarshalInfo()
-	if err != nil {
-		panic(err)
-	}
+	info := output.Info
 	var metainfoBytes bytes.Buffer
-	err = output.Metainfo.Write(&metainfoBytes)
+	err = output.MetaInfo.Write(&metainfoBytes)
 	if err != nil {
 		panic(err)
 	}
@@ -228,12 +226,12 @@ func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 			me.logger.WithValues(analog.Error).Printf("error renaming file: %v", err)
 		}
 	}
-	err = me.addTorrent(output.Metainfo, true)
+	err = me.addTorrent(output.MetaInfo, true)
 	if err != nil {
 		panic(err)
 	}
 	var oi objectInfo
-	err = oi.fromS3UploadMetaInfo(mi, time.Now())
+	err = oi.fromS3UploadMetaInfo(output.UploadMetainfo, time.Now())
 	if err != nil {
 		panic(err)
 	}
@@ -292,14 +290,15 @@ func (me *httpHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "torrent not in client", http.StatusBadRequest)
 		return
 	}
-	s3Prefix, err := replica.S3PrefixFromMagnet(m)
+	var s3Prefix replica.Upload
+	err = s3Prefix.FromMagnet(m)
 	if err != nil {
 		me.logger.Printf("error getting s3 prefix from magnet link %q: %v", m, err)
 		http.Error(w, fmt.Sprintf("error parsing replica uri: %v", err.Error()), http.StatusBadRequest)
 		return
 	}
 
-	if errs := me.rep.DeletePrefix(s3Prefix, func() (ret [][]string) {
+	if errs := me.rep.DeleteUpload(s3Prefix, func() (ret [][]string) {
 		for _, f := range t.Info().Files {
 			ret = append(ret, f.Path)
 		}
@@ -340,11 +339,10 @@ func (me *httpHandler) handleViewWith(rw http.ResponseWriter, r *http.Request, i
 
 	w.Op.Set("info_hash", m.InfoHash)
 
-	s3Prefix, err := replica.S3PrefixFromMagnet(m)
-	if err != nil {
+	var s3Prefix replica.Upload
+	uploadErr := s3Prefix.FromMagnet(m)
+	if uploadErr != nil {
 		me.logger.Printf("error getting s3 key from magnet: %v", err)
-	} else if s3Prefix == "" {
-		me.logger.Printf("s3 key not found in view link %q", link)
 	}
 
 	t, _, release := me.confluence.GetTorrent(m.InfoHash)
@@ -362,7 +360,7 @@ func (me *httpHandler) handleViewWith(rw http.ResponseWriter, r *http.Request, i
 		t.SetDisplayName(m.DisplayName)
 	}
 
-	if t.Info() == nil && s3Prefix != "" {
+	if t.Info() == nil && uploadErr == nil {
 		// Get another reference to the torrent that lasts until we're done fetching the metainfo.
 		_, _, release := me.confluence.GetTorrent(m.InfoHash)
 		go func() {
@@ -448,7 +446,7 @@ func storeUploadedTorrent(r io.Reader, path string) error {
 	return f.Close()
 }
 
-func (me *httpHandler) uploadMetainfoPath(s3Prefix replica.S3Prefix) string {
+func (me *httpHandler) uploadMetainfoPath(s3Prefix replica.Upload) string {
 	return filepath.Join(me.uploadsDir, s3Prefix.String()+".torrent")
 }
 
