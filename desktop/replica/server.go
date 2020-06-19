@@ -18,7 +18,6 @@ import (
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/flashlight/proxied"
 	"github.com/kennygrant/sanitize"
 	"golang.org/x/xerrors"
 
@@ -30,7 +29,7 @@ import (
 	"github.com/getlantern/replica"
 )
 
-type httpHandler struct {
+type HttpHandler struct {
 	// Used to handle non-Replica specific routes. (Some of the hard work has been done!). This will
 	// probably go away soon, as I pick out the parts we actually need.
 	confluence    confluence.Handler
@@ -41,11 +40,10 @@ type httpHandler struct {
 	logger     analog.Logger
 	mux        http.ServeMux
 	rep        replica.Client
-	userConfig common.UserConfig
 }
 
 // NewHTTPHandler creates a new http.Handler for calls to replica.
-func NewHTTPHandler(uc common.UserConfig) (_ http.Handler, exitFunc func(), err error) {
+func NewHTTPHandler(uc common.UserConfig, replicaHttpClient *http.Client) (_ *HttpHandler, exitFunc func(), err error) {
 	userCacheDir, err := os.UserCacheDir()
 	if err != nil {
 		panic(err)
@@ -90,7 +88,7 @@ func NewHTTPHandler(uc common.UserConfig) (_ http.Handler, exitFunc func(), err 
 		}
 	}
 
-	handler := &httpHandler{
+	handler := &HttpHandler{
 		confluence: confluence.Handler{
 			TC: torrentClient,
 			MetainfoCacheDir: func() *string {
@@ -102,18 +100,9 @@ func NewHTTPHandler(uc common.UserConfig) (_ http.Handler, exitFunc func(), err 
 		dataDir:       replicaDataDir,
 		logger:        replicaLogger,
 		uploadsDir:    uploadsDir,
-		userConfig:    uc,
 		rep: replica.Client{
-			HttpClient: &http.Client{
-				Transport: proxied.AsRoundTripper(func(req *http.Request) (*http.Response, error) {
-					chained, err := proxied.ChainedNonPersistent("")
-					if err != nil {
-						return nil, fmt.Errorf("Error connecting to proxy: %v", err)
-					}
-					return chained.RoundTrip(req)
-				}),
-			},
-			Endpoint: replica.DefaultEndpoint,
+			HttpClient: replicaHttpClient,
+			Endpoint:   replica.DefaultEndpoint,
 		},
 	}
 	handler.mux.Handle("/search", http.StripPrefix("/search", searchHandler(uc)))
@@ -149,7 +138,7 @@ func NewHTTPHandler(uc common.UserConfig) (_ http.Handler, exitFunc func(), err 
 	return handler, torrentClient.Close, nil
 }
 
-func (me *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (me *HttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	me.logger.WithValues(analog.Debug).Printf("replica server request path: %q", r.URL.Path)
 	// TODO(anacrolix): Check this is correct and secure. We might want to be given valid origins
 	// and apply them to appropriate routes, or only allow anything from localhost for example.
@@ -158,7 +147,7 @@ func (me *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	me.mux.ServeHTTP(w, r)
 }
 
-func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
+func (me *HttpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 	// Set status code to 204 to handle preflight cors check
 	if r.Method == "OPTIONS" {
 		rw.WriteHeader(http.StatusNoContent)
@@ -238,7 +227,7 @@ func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 	encodeJsonResponse(w, oi)
 }
 
-func (me *httpHandler) addTorrent(mi *metainfo.MetaInfo, concealUploaderIdentity bool) error {
+func (me *HttpHandler) addTorrent(mi *metainfo.MetaInfo, concealUploaderIdentity bool) error {
 	t, err := me.torrentClient.AddTorrent(mi)
 	if err != nil {
 		return err
@@ -251,7 +240,7 @@ func (me *httpHandler) addTorrent(mi *metainfo.MetaInfo, concealUploaderIdentity
 	return nil
 }
 
-func (me *httpHandler) handleUploads(w http.ResponseWriter, r *http.Request) {
+func (me *HttpHandler) handleUploads(w http.ResponseWriter, r *http.Request) {
 	resp := []objectInfo{} // Ensure not nil: I don't like 'null' as a response.
 	err := me.rep.IterUploads(me.uploadsDir, func(iu replica.IteredUpload) {
 		mi := iu.Metainfo
@@ -274,7 +263,7 @@ func (me *httpHandler) handleUploads(w http.ResponseWriter, r *http.Request) {
 	encodeJsonResponse(w, resp)
 }
 
-func (me *httpHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
+func (me *HttpHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	link := r.URL.Query().Get("link")
 	m, err := metainfo.ParseMagnetURI(link)
 	if err != nil {
@@ -315,15 +304,15 @@ func (me *httpHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	os.Remove(me.uploadMetainfoPath(s3Prefix))
 }
 
-func (me *httpHandler) handleDownload(w http.ResponseWriter, r *http.Request) {
+func (me *HttpHandler) handleDownload(w http.ResponseWriter, r *http.Request) {
 	me.handleViewWith(w, r, "attachment")
 }
 
-func (me *httpHandler) handleView(w http.ResponseWriter, r *http.Request) {
+func (me *HttpHandler) handleView(w http.ResponseWriter, r *http.Request) {
 	me.handleViewWith(w, r, "inline")
 }
 
-func (me *httpHandler) handleViewWith(rw http.ResponseWriter, r *http.Request, inlineType string) {
+func (me *HttpHandler) handleViewWith(rw http.ResponseWriter, r *http.Request, inlineType string) {
 	w := ops.InitInstrumentedResponseWriter(rw, "replica_view")
 	defer w.Finish()
 
@@ -446,7 +435,7 @@ func storeUploadedTorrent(r io.Reader, path string) error {
 	return f.Close()
 }
 
-func (me *httpHandler) uploadMetainfoPath(s3Prefix replica.Upload) string {
+func (me *HttpHandler) uploadMetainfoPath(s3Prefix replica.Upload) string {
 	return filepath.Join(me.uploadsDir, s3Prefix.String()+".torrent")
 }
 
@@ -461,7 +450,7 @@ func encodeJsonResponse(w http.ResponseWriter, resp interface{}) {
 	}
 }
 
-func (me *httpHandler) addImplicitTrackers(t *torrent.Torrent) {
+func (me *HttpHandler) addImplicitTrackers(t *torrent.Torrent) {
 	t.AddTrackers([][]string{
 		nil,
 		replica.Trackers(),

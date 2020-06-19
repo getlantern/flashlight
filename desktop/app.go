@@ -16,6 +16,7 @@ import (
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
+	"github.com/getlantern/flashlight/proxied"
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
@@ -452,7 +453,20 @@ func (app *App) checkForReplica(features map[string]bool) {
 	if val, ok := features[config.FeatureReplica]; ok && val {
 		app.startReplica.Do(func() {
 			log.Debug("Starting replica from app")
-			replicaHandler, exitFunc, err := replica.NewHTTPHandler(settings)
+			replicaHandler, exitFunc, err := replica.NewHTTPHandler(
+				settings,
+				&http.Client{
+					Transport: proxied.AsRoundTripper(
+						func(req *http.Request) (*http.Response, error) {
+							chained, err := proxied.ChainedNonPersistent("")
+							if err != nil {
+								return nil, fmt.Errorf("connecting to proxy: %w", err)
+							}
+							return chained.RoundTrip(req)
+						},
+					),
+				},
+			)
 			if err != nil {
 				log.Errorf("error creating replica http server: %v", err)
 				app.Exit(err)

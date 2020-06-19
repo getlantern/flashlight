@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/getlantern/flashlight/common"
 	"github.com/anacrolix/log"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/desktop/replica"
 )
 
@@ -18,7 +18,7 @@ func main() {
 
 func mainCode() int {
 	uc := common.NewUserConfigData("replica-standalone", 0, "replica-standalone-token", nil, "en-US")
-	handler, exitFunc, err := replica.NewHTTPHandler(uc)
+	handler, exitFunc, err := replica.NewHTTPHandler(uc, http.DefaultClient)
 	if err != nil {
 		log.Printf("error creating replica http server: %v", err)
 		return 1
