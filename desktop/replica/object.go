@@ -1,4 +1,4 @@
-package replica
+package desktopReplica
 
 import (
 	"mime"

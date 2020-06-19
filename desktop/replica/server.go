@@ -1,4 +1,4 @@
-package replica
+package desktopReplica
 
 import (
 	"bytes"
@@ -35,15 +35,15 @@ type HttpHandler struct {
 	confluence    confluence.Handler
 	torrentClient *torrent.Client
 	// Where to store torrent client data.
-	dataDir    string
-	uploadsDir string
-	logger     analog.Logger
-	mux        http.ServeMux
-	rep        replica.Client
+	dataDir       string
+	uploadsDir    string
+	logger        analog.Logger
+	mux           http.ServeMux
+	replicaClient *replica.Client
 }
 
 // NewHTTPHandler creates a new http.Handler for calls to replica.
-func NewHTTPHandler(uc common.UserConfig, replicaHttpClient *http.Client) (_ *HttpHandler, exitFunc func(), err error) {
+func NewHTTPHandler(uc common.UserConfig, replicaClient *replica.Client) (_ *HttpHandler, exitFunc func(), err error) {
 	userCacheDir, err := os.UserCacheDir()
 	if err != nil {
 		panic(err)
@@ -100,10 +100,7 @@ func NewHTTPHandler(uc common.UserConfig, replicaHttpClient *http.Client) (_ *Ht
 		dataDir:       replicaDataDir,
 		logger:        replicaLogger,
 		uploadsDir:    uploadsDir,
-		rep: replica.Client{
-			HttpClient: replicaHttpClient,
-			Endpoint:   replica.DefaultEndpoint,
-		},
+		replicaClient: replicaClient,
 	}
 	handler.mux.Handle("/search", http.StripPrefix("/search", searchHandler(uc)))
 	handler.mux.HandleFunc("/upload", handler.handleUpload)
@@ -120,7 +117,7 @@ func NewHTTPHandler(uc common.UserConfig, replicaHttpClient *http.Client) (_ *Ht
 	// routes, so this might go away soon.
 	handler.mux.Handle("/", &handler.confluence)
 
-	if err := handler.rep.IterUploads(uploadsDir, func(iu replica.IteredUpload) {
+	if err := handler.replicaClient.IterUploads(uploadsDir, func(iu replica.IteredUpload) {
 		if iu.Err != nil {
 			replicaLogger.Printf("error while iterating uploads: %v", iu.Err)
 			return
@@ -181,7 +178,7 @@ func (me *HttpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 		me.logger.WithValues(analog.Error).Printf("error creating temporary file: %v", tmpFileErr)
 	}
 
-	output, err := me.rep.Upload(replicaUploadReader, r.URL.Query().Get("name"))
+	output, err := me.replicaClient.Upload(replicaUploadReader, r.URL.Query().Get("name"))
 	s3Prefix := output.Upload
 	me.logger.WithValues(analog.Debug).Printf("uploaded replica key %q", s3Prefix)
 	w.Op.Set("upload_s3_key", s3Prefix)
@@ -242,7 +239,7 @@ func (me *HttpHandler) addTorrent(mi *metainfo.MetaInfo, concealUploaderIdentity
 
 func (me *HttpHandler) handleUploads(w http.ResponseWriter, r *http.Request) {
 	resp := []objectInfo{} // Ensure not nil: I don't like 'null' as a response.
-	err := me.rep.IterUploads(me.uploadsDir, func(iu replica.IteredUpload) {
+	err := me.replicaClient.IterUploads(me.uploadsDir, func(iu replica.IteredUpload) {
 		mi := iu.Metainfo
 		err := iu.Err
 		if err != nil {
@@ -287,7 +284,7 @@ func (me *HttpHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if errs := me.rep.DeleteUpload(s3Prefix, func() (ret [][]string) {
+	if errs := me.replicaClient.DeleteUpload(s3Prefix, func() (ret [][]string) {
 		for _, f := range t.Info().Files {
 			ret = append(ret, f.Path)
 		}
@@ -329,34 +326,40 @@ func (me *HttpHandler) handleViewWith(rw http.ResponseWriter, r *http.Request, i
 	w.Op.Set("info_hash", m.InfoHash)
 
 	var s3Prefix replica.Upload
-	uploadErr := s3Prefix.FromMagnet(m)
-	if uploadErr != nil {
+	unwrapUploadSpecErr := s3Prefix.FromMagnet(m)
+	if unwrapUploadSpecErr != nil {
 		me.logger.Printf("error getting s3 key from magnet: %v", err)
 	}
 
 	t, _, release := me.confluence.GetTorrent(m.InfoHash)
 	defer release()
 
-	// The for a torrent should overlap with those used by replica-peer. Also replica-search might
-	// provide this dynamically via the magnet links (except that uploaders will need a way to use
-	// the same list). As an ad-hoc practice, we'll use trackers provided via the magnet link in the
-	// first tier, and our forcibly injected ones in the second.
-	t.AddTrackers([][]string{
-		m.Trackers,
-	})
-	me.addImplicitTrackers(t)
-	if m.DisplayName != "" {
-		t.SetDisplayName(m.DisplayName)
+	// The trackers for a torrent should overlap with those used by replica-peer. Also
+	// replica-search might provide this dynamically via the magnet links (except that uploaders
+	// will need a way to use the same list). As an ad-hoc practice, we'll use trackers provided via
+	// the magnet link in the first tier, and our forcibly injected ones in the second.
+	if err := t.MergeSpec(func() *torrent.TorrentSpec {
+		// We're unnecessary parsing a Magnet here.
+		spec, err := torrent.TorrentSpecFromMagnetURI(link)
+		if err != nil {
+			panic(err)
+		}
+		// Override the use of "xs", as this is replica-specific here.
+		spec.Sources = m.Params["as"]
+		return spec
+	}()); err != nil {
+		panic(err)
 	}
+	me.addImplicitTrackers(t)
 
-	if t.Info() == nil && uploadErr == nil {
+	if t.Info() == nil && unwrapUploadSpecErr == nil {
 		// Get another reference to the torrent that lasts until we're done fetching the metainfo.
 		_, _, release := me.confluence.GetTorrent(m.InfoHash)
 		go func() {
 			defer release()
-			tob, err := me.rep.GetMetainfo(s3Prefix)
+			tob, err := me.replicaClient.GetMetainfo(s3Prefix)
 			if err != nil {
-				me.logger.Printf("error getting metainfo for %q from s3: %v", s3Prefix, err)
+				me.logger.Printf("error getting metainfo for %q from s3 API: %v", s3Prefix, err)
 				return
 			}
 			defer tob.Close()
@@ -369,7 +372,7 @@ func (me *HttpHandler) handleViewWith(rw http.ResponseWriter, r *http.Request, i
 			if err != nil {
 				me.logger.Printf("error putting metainfo from s3: %v", err)
 			}
-			me.logger.Printf("added metainfo for %q from s3", s3Prefix)
+			me.logger.Printf("added metainfo for %q from s3 API", s3Prefix)
 		}()
 	}
 

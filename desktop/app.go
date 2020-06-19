@@ -35,10 +35,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/datacap"
-	"github.com/getlantern/flashlight/desktop/replica"
 	"github.com/getlantern/flashlight/geolookup"
-
-	//"github.com/getlantern/flashlight/diagnostics/trafficlog"
 
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/logging"
@@ -48,6 +45,9 @@ import (
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
+
+	desktopReplica "github.com/getlantern/flashlight/desktop/replica"
+	"github.com/getlantern/replica"
 )
 
 const (
@@ -453,18 +453,21 @@ func (app *App) checkForReplica(features map[string]bool) {
 	if val, ok := features[config.FeatureReplica]; ok && val {
 		app.startReplica.Do(func() {
 			log.Debug("Starting replica from app")
-			replicaHandler, exitFunc, err := replica.NewHTTPHandler(
+			replicaHandler, exitFunc, err := desktopReplica.NewHTTPHandler(
 				settings,
-				&http.Client{
-					Transport: proxied.AsRoundTripper(
-						func(req *http.Request) (*http.Response, error) {
-							chained, err := proxied.ChainedNonPersistent("")
-							if err != nil {
-								return nil, fmt.Errorf("connecting to proxy: %w", err)
-							}
-							return chained.RoundTrip(req)
-						},
-					),
+				&replica.Client{
+					HttpClient: &http.Client{
+						Transport: proxied.AsRoundTripper(
+							func(req *http.Request) (*http.Response, error) {
+								chained, err := proxied.ChainedNonPersistent("")
+								if err != nil {
+									return nil, fmt.Errorf("connecting to proxy: %w", err)
+								}
+								return chained.RoundTrip(req)
+							},
+						),
+					},
+					Endpoint: replica.DefaultEndpoint,
 				},
 			)
 			if err != nil {

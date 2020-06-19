@@ -5,20 +5,33 @@ import (
 	"os"
 
 	"github.com/anacrolix/log"
+	"github.com/anacrolix/tagflag"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/desktop/replica"
+	"github.com/getlantern/replica"
 )
 
+type flags struct {
+	replica.Endpoint
+}
+
 func main() {
-	code := mainCode()
+	flags := flags{
+		Endpoint: replica.DefaultEndpoint,
+	}
+	tagflag.Parse(&flags)
+	code := mainCode(flags)
 	if code != 0 {
 		os.Exit(code)
 	}
 }
 
-func mainCode() int {
+func mainCode(flags flags) int {
 	uc := common.NewUserConfigData("replica-standalone", 0, "replica-standalone-token", nil, "en-US")
-	handler, exitFunc, err := replica.NewHTTPHandler(uc, http.DefaultClient)
+	handler, exitFunc, err := desktopReplica.NewHTTPHandler(uc, &replica.Client{
+		HttpClient: http.DefaultClient,
+		Endpoint:   flags.Endpoint,
+	})
 	if err != nil {
 		log.Printf("error creating replica http server: %v", err)
 		return 1
