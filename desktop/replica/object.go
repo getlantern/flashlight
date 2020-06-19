@@ -26,7 +26,12 @@ func (me *objectInfo) fromS3UploadMetaInfo(mi replica.UploadMetainfo, lastModifi
 		LastModified: lastModified,
 		Link:         replica.CreateLink(mi.HashInfoBytes(), mi.Upload, filePath),
 		DisplayName:  path.Join(filePath...),
-		MimeTypes:    []string{mime.TypeByExtension(path.Ext(filePath[len(filePath)-1]))},
+		MimeTypes: func() []string {
+			if len(filePath) == 0 {
+				return nil
+			}
+			return []string{mime.TypeByExtension(path.Ext(filePath[len(filePath)-1]))}
+		}(),
 	}
 	return nil
 }
