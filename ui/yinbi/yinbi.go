@@ -119,8 +119,9 @@ func (s *YinbiHandler) createMnemonic(w http.ResponseWriter, r *http.Request) {
 // of existing yin.bi users
 func (h *YinbiHandler) importWalletHandler(w http.ResponseWriter,
 	req *http.Request) {
-	var params AuthParams
 	log.Debug("New import wallet request")
+	url := h.GetYinbiAddr(html.EscapeString(req.URL.Path))
+	var params ImportWalletParams
 	err := scommon.DecodeJSONRequest(req, &params)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
@@ -132,20 +133,10 @@ func (h *YinbiHandler) importWalletHandler(w http.ResponseWriter,
 		return
 	}
 	req.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
-	url := h.GetYinbiAddr(html.EscapeString(req.URL.Path))
-	proxyReq, err := scommon.NewProxyRequest(req, url)
+	pair, resp, err := h.sendImportWallet(url, &params, req)
 	if err != nil {
-		h.ErrorHandler(w, err, http.StatusBadRequest)
-		return
-	}
-	r, err := h.HttpClient.Do(proxyReq)
-	if err != nil {
-		h.ErrorHandler(w, err, http.StatusBadRequest)
-		return
-	}
-	defer r.Body.Close()
-	pair, err := h.decryptSeed(r, params)
-	if err != nil {
+		log.Errorf("Error sending import wallet request: %v %v", resp.Error, err)
+		h.sendImportError(w, resp)
 		return
 	}
 	err = h.keystore.Store(pair.Seed(), params.Username,
@@ -156,19 +147,100 @@ func (h *YinbiHandler) importWalletHandler(w http.ResponseWriter,
 		return
 	}
 	log.Debug("Successfully imported yin.bi wallet")
+
+	if params.Email != "" {
+		err = h.createUserAccount(w, &params)
+		if err != nil {
+			log.Errorf("Error creating user account: %v", err)
+			h.ErrorHandler(w, err, http.StatusBadRequest)
+			return
+		}
+		log.Debugf("Created new user account with username %s", params.Username)
+		return
+	}
+
+	h.sendSuccess(w)
+}
+
+func (h YinbiHandler) sendImportError(w http.ResponseWriter, resp *ImportWalletResponse) {
+	if resp == nil {
+		return
+	}
+	if resp.Error != "" {
+		h.ErrorHandler(w, resp.Error, http.StatusBadRequest)
+	} else if len(resp.Errors) > 0 {
+		h.ErrorHandler(w, resp.Errors, http.StatusBadRequest)
+	}
+}
+
+func (h YinbiHandler) sendSuccess(w http.ResponseWriter) {
 	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
 	})
 }
 
-func (h YinbiHandler) decryptSeed(r *http.Response, params AuthParams) (*keypair.Full, error) {
-	var resp ImportWalletResponse
-	err := json.NewDecoder(r.Body).Decode(&resp)
+func (h YinbiHandler) confirmImportHandler(w http.ResponseWriter,
+	req *http.Request) {
+	log.Debug("New confirm import wallet request")
+	var params ImportWalletParams
+	err := scommon.DecodeJSONRequest(req, &params)
 	if err != nil {
-		return nil, err
+		log.Error(err)
+		return
 	}
+	err = h.createUserAccount(w, &params)
+	if err != nil {
+		log.Errorf("Error creating user account: %v", err)
+		h.ErrorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	log.Debugf("Created new user account with username %s", params.Username)
+	h.sendSuccess(w)
+}
+
+func (h YinbiHandler) sendImportWallet(uri string, params *ImportWalletParams, req *http.Request) (*keypair.Full, *ImportWalletResponse, error) {
+	proxyReq, err := scommon.NewProxyRequest(req, uri)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := h.HttpClient.Do(proxyReq)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer resp.Body.Close()
+	var importResp ImportWalletResponse
+	err = json.NewDecoder(resp.Body).Decode(&importResp)
+	if err != nil {
+		return nil, nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, &importResp, errors.New("Invalid response")
+	}
+	pair, err := h.decryptSeed(&importResp, params.Password)
+	if err != nil {
+		return nil, nil, err
+	}
+	return pair, &importResp, nil
+}
+
+func (h YinbiHandler) createUserAccount(w http.ResponseWriter, params *ImportWalletParams) error {
+	endpoint := "/register"
+	userParams := models.UserParams{
+		Email:    params.Email,
+		Username: params.Username,
+		Password: params.Password,
+	}
+	_, srpClient, err := h.NewSRPClient(userParams, false)
+	if err != nil {
+		return err
+	}
+	h.SendAuth(w, endpoint, srpClient, &userParams)
+	return nil
+}
+
+func (h YinbiHandler) decryptSeed(resp *ImportWalletResponse, password string) (*keypair.Full, error) {
 	pair, err := h.yinbiClient.DecryptSeed(resp.Seed, resp.Salt,
-		params.Password)
+		password)
 	if err != nil {
 		log.Errorf("Unable to decrypt seed: %v", err)
 		return nil, err

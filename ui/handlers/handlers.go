@@ -90,6 +90,8 @@ func (h Handler) ProxyHandler(url string, req *http.Request, w http.ResponseWrit
 func (h Handler) ErrorHandler(w http.ResponseWriter, err interface{}, errorCode int) {
 	var resp params.Response
 	switch err.(type) {
+	case string:
+		resp.Error = err.(string)
 	case error:
 		resp.Error = err.(error).Error()
 	case models.Errors:

@@ -48,6 +48,8 @@ type AuthParams struct {
 	Password string `json:"password"`
 }
 
+type ImportWalletParams = AuthParams
+
 // Validate validates the payment params and returns
 // a map of param names to errors
 func (p PaymentParams) Validate() models.Errors {

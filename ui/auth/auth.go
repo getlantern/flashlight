@@ -135,6 +135,11 @@ func (h AuthHandler) authHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	endpoint := html.EscapeString(req.URL.Path)
+	h.SendAuth(w, endpoint, srpClient, params)
+}
+
+func (h AuthHandler) SendAuth(w http.ResponseWriter, endpoint string, srpClient *srp.SRPClient,
+	params *models.UserParams) {
 	resp, authResp, err := h.SendAuthRequest(common.POST, endpoint, params)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		if err != nil {
@@ -144,7 +149,6 @@ func (h AuthHandler) authHandler(w http.ResponseWriter, req *http.Request) {
 			if authResp.Error != "" {
 				h.ErrorHandler(w, errors.New(authResp.Error), http.StatusBadRequest)
 			}
-			log.Debugf("Authresp errors is %v", authResp.Errors)
 			h.ErrorHandler(w, authResp.Errors, http.StatusBadRequest)
 		}
 		return

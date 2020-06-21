@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/getlantern/golog"
-	serverCommon "github.com/getlantern/lantern-server/common"
+	"github.com/getlantern/lantern-server/common"
 )
 
 var (
@@ -17,8 +17,8 @@ var (
 
 	ProAPIHost = "api.getiantem.org"
 
-	AuthServerAddr  = serverCommon.AuthServerAddr
-	YinbiServerAddr = serverCommon.YinbiServerAddr
+	AuthServerAddr  = common.AuthProdAddr
+	YinbiServerAddr = common.YinbiProdAddr
 
 	log = golog.LoggerFor("flashlight.common")
 
@@ -45,6 +45,8 @@ func initInternal() {
 	}
 	if Staging {
 		ProAPIHost = "api-staging.getiantem.org"
+		AuthServerAddr = common.AuthStagingAddr
+		YinbiServerAddr = common.YinbiStagingAddr
 	}
 	forceAds, _ = strconv.ParseBool(os.Getenv("FORCEADS"))
 }
