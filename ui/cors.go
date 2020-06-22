@@ -26,9 +26,10 @@ func (s *Server) corsHandler(next http.Handler) http.Handler {
 		return next
 	}
 	uiAddr := fmt.Sprintf("http://%s", s.listener.accessAddr)
-	corsOrigins = append(corsOrigins, uiAddr)
+	origins := append(corsOrigins, uiAddr)
+	log.Debugf("Cors origins: %v", origins)
 	cors := cors.New(cors.Options{
-		AllowedOrigins:   corsOrigins,
+		AllowedOrigins:   origins,
 		AllowedHeaders:   corsAllowedHeaders,
 		AllowCredentials: true,
 		Debug:            true,

@@ -43,9 +43,11 @@ type PaymentParams struct {
 // AuthParams specifies the necessary params for requests that require a
 // user's credentials
 type AuthParams struct {
-	Email    string `json:"email,omitempty"`
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Email         string `json:"email,omitempty"`
+	Username      string `json:"username"`
+	Password      string `json:"password"`
+	Address       string `json:"address"`
+	Authenticated bool   `json:"authenticated,omitempty"`
 }
 
 type ImportWalletParams = AuthParams

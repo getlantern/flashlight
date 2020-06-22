@@ -138,7 +138,8 @@ func (h AuthHandler) authHandler(w http.ResponseWriter, req *http.Request) {
 	h.SendAuth(w, endpoint, srpClient, params)
 }
 
-func (h AuthHandler) SendAuth(w http.ResponseWriter, endpoint string, srpClient *srp.SRPClient,
+func (h AuthHandler) SendAuth(w http.ResponseWriter, endpoint string,
+	srpClient *srp.SRPClient,
 	params *models.UserParams) {
 	resp, authResp, err := h.SendAuthRequest(common.POST, endpoint, params)
 	if err != nil || resp.StatusCode != http.StatusOK {

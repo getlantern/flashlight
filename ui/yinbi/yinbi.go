@@ -49,7 +49,8 @@ type YinbiHandler struct {
 	// keystore manages encrypted storage of Yinbi private keys
 	keystore *keystore.Keystore
 
-	proxy *httputil.ReverseProxy
+	proxy     *httputil.ReverseProxy
+	authProxy *httputil.ReverseProxy
 }
 
 func New(params handlers.Params) YinbiHandler {
@@ -61,16 +62,21 @@ func New(params handlers.Params) YinbiHandler {
 
 func NewWithAuth(params handlers.Params,
 	authHandler auth.AuthHandler) YinbiHandler {
-	u, err := url.Parse(params.YinbiServerAddr)
-	if err != nil {
-		log.Fatal(fmt.Errorf("Bad Yinbi server address: %s", params.AuthServerAddr))
-	}
 	return YinbiHandler{
 		AuthHandler: authHandler,
 		keystore:    keystore.New(appdir.General("Lantern")),
 		yinbiClient: newYinbiClient(params.HttpClient),
-		proxy:       httputil.NewSingleHostReverseProxy(u),
+		authProxy:   newReverseProxy(params.AuthServerAddr),
+		proxy:       newReverseProxy(params.YinbiServerAddr),
 	}
+}
+
+func newReverseProxy(uri string) *httputil.ReverseProxy {
+	u, err := url.Parse(uri)
+	if err != nil {
+		log.Fatal(fmt.Errorf("Bad server address: %s", uri))
+	}
+	return httputil.NewSingleHostReverseProxy(u)
 }
 
 func (h YinbiHandler) Routes() map[string]handlers.HandlerFunc {
@@ -85,6 +91,7 @@ func (h YinbiHandler) Routes() map[string]handlers.HandlerFunc {
 		"/account/password/reset": h.resetPasswordHandler,
 		"/account/recover":        h.recoverYinbiAccount,
 		"/account/transactions":   h.getAccountTransactions,
+		"/user/address":           h.saveAddressHandler,
 		"/user/mnemonic":          h.createMnemonic,
 		"/wallet/redeem/codes":    proxyHandler,
 	}
@@ -139,6 +146,7 @@ func (h *YinbiHandler) importWalletHandler(w http.ResponseWriter,
 		h.sendImportError(w, resp)
 		return
 	}
+	// store the imported wallet in the keystore
 	err = h.keystore.Store(pair.Seed(), params.Username,
 		params.Password)
 	if err != nil {
@@ -148,7 +156,8 @@ func (h *YinbiHandler) importWalletHandler(w http.ResponseWriter,
 	}
 	log.Debug("Successfully imported yin.bi wallet")
 
-	if params.Email != "" {
+	if params.Email != "" && !params.Authenticated {
+		params.Address = pair.Address()
 		err = h.createUserAccount(w, &params)
 		if err != nil {
 			log.Errorf("Error creating user account: %v", err)
@@ -159,7 +168,10 @@ func (h *YinbiHandler) importWalletHandler(w http.ResponseWriter,
 		return
 	}
 
-	h.sendSuccess(w)
+	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
+		"address": pair.Address(),
+		"success": true,
+	})
 }
 
 func (h YinbiHandler) sendImportError(w http.ResponseWriter, resp *ImportWalletResponse) {
@@ -224,17 +236,20 @@ func (h YinbiHandler) sendImportWallet(uri string, params *ImportWalletParams, r
 }
 
 func (h YinbiHandler) createUserAccount(w http.ResponseWriter, params *ImportWalletParams) error {
-	endpoint := "/register"
+	endpoint := "/import"
 	userParams := models.UserParams{
 		Email:    params.Email,
 		Username: params.Username,
 		Password: params.Password,
+		Address:  params.Address,
 	}
-	_, srpClient, err := h.NewSRPClient(userParams, false)
+	log.Debugf("Sending create user account request with address %s",
+		params.Address)
+	srpParams, srpClient, err := h.NewSRPClient(userParams, false)
 	if err != nil {
 		return err
 	}
-	h.SendAuth(w, endpoint, srpClient, &userParams)
+	h.SendAuth(w, endpoint, srpClient, srpParams)
 	return nil
 }
 
@@ -368,7 +383,15 @@ func (h YinbiHandler) resetPasswordHandler(w http.ResponseWriter,
 	}
 }
 
-func (h YinbiHandler) recoverYinbiAccount(w http.ResponseWriter,
+func (h *YinbiHandler) saveAddressHandler(w http.ResponseWriter,
+	r *http.Request) {
+	address := r.URL.Query().Get("address")
+	url := h.GetAuthAddr(fmt.Sprintf("/user/address/%s", address))
+	log.Debugf("Sending save address request to %s", url)
+	h.ProxyHandler(url, r, w, nil)
+}
+
+func (h *YinbiHandler) recoverYinbiAccount(w http.ResponseWriter,
 	r *http.Request) {
 	var params struct {
 		Words string `json:"words"`

@@ -15,7 +15,7 @@ require (
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
-	github.com/getlantern/auth-server v0.0.0-20200616220905-f24dc9c75135
+	github.com/getlantern/auth-server v0.0.0-20200622171814-056bdd5843f6
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20200427033127-b36d009c6252
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
@@ -92,7 +92,7 @@ require (
 	github.com/gorilla/pat v0.0.0-20180118222023-199c85a7f6d1 // indirect
 	github.com/gorilla/websocket v1.4.0
 	github.com/hashicorp/golang-lru v0.5.4
-	github.com/jinzhu/gorm v1.9.13 // indirect
+	github.com/jinzhu/gorm v1.9.14 // indirect
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
 	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
@@ -123,10 +123,11 @@ require (
 	github.com/tidwall/pretty v0.0.0-20190325153808-1166b9ac2b65 // indirect
 	github.com/tyler-smith/go-bip39 v1.0.2 // indirect
 	github.com/ulule/limiter/v3 v3.5.0 // indirect
+	github.com/valyala/fasttemplate v1.1.1 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9 // indirect
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9
-	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1 // indirect
+	golang.org/x/sys v0.0.0-20200620081246-981b61492c35 // indirect
 	golang.org/x/text v0.3.3 // indirect
 	google.golang.org/genproto v0.0.0-20200615140333-fd031eab31e7 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
