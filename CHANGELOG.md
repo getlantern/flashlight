@@ -1,5 +1,9 @@
 # Changelog
 
+## [5.9.15](https://github.com/getlantern/flashlight/tree/5.9.15) (2020-06-23)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.14...5.9.15)
+
 ## [5.9.14](https://github.com/getlantern/flashlight/tree/5.9.14) (2020-06-15)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.13...5.9.14)
@@ -141,16 +145,13 @@
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.8.5...5.8.6)
 
-**Merged pull requests:**
-
-- Update tlsmasq to include bug fix [\#774](https://github.com/getlantern/flashlight/pull/774) ([hwh33](https://github.com/hwh33))
-
 ## [5.8.5](https://github.com/getlantern/flashlight/tree/5.8.5) (2020-03-16)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.8.4...5.8.5)
 
 **Merged pull requests:**
 
+- Update tlsmasq to include bug fix [\#774](https://github.com/getlantern/flashlight/pull/774) ([hwh33](https://github.com/hwh33))
 - Skip putting nil session state to session cache [\#773](https://github.com/getlantern/flashlight/pull/773) ([joesis](https://github.com/joesis))
 - Update systray dep [\#772](https://github.com/getlantern/flashlight/pull/772) ([max-b](https://github.com/max-b))
 - Unified session key persistence and session caching for TLS proxies [\#770](https://github.com/getlantern/flashlight/pull/770) ([oxtoacart](https://github.com/oxtoacart))
@@ -221,7 +222,6 @@
 - Added support for pro API to iOS [\#731](https://github.com/getlantern/flashlight/pull/731) ([oxtoacart](https://github.com/oxtoacart))
 - Install chrome extension via external installation method [\#730](https://github.com/getlantern/flashlight/pull/730) ([myleshorton](https://github.com/myleshorton))
 - support quic ietf draft 24 [\#729](https://github.com/getlantern/flashlight/pull/729) ([forkner](https://github.com/forkner))
-- Stores a copy of our settings for the Lantern Chrome Extension to read [\#727](https://github.com/getlantern/flashlight/pull/727) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.7.2](https://github.com/getlantern/flashlight/tree/5.7.2) (2019-12-03)
 
