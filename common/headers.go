@@ -3,6 +3,7 @@ package common
 import (
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -60,4 +61,23 @@ func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth
 // configuration metadata.
 func AddCommonHeaders(uc UserConfig, req *http.Request) {
 	AddCommonHeadersWithOptions(uc, req, true)
+}
+
+// ProcessCORS processes CORS requests on localhost.
+func ProcessCORS(responseHeaders http.Header, r *http.Request) {
+	origin := r.Header.Get("origin")
+	if origin == "" {
+		log.Debugf("Request is not a CORS request")
+		return
+	}
+	// The origin can have include arbitrary ports, so we just make sure
+	// it's on localhost.
+	if strings.HasPrefix(origin, "http://localhost:") ||
+		strings.HasPrefix(origin, "http://127.0.0.1:") {
+
+		responseHeaders.Set("Access-Control-Allow-Origin", origin)
+		responseHeaders.Add("Access-Control-Allow-Methods", "GET")
+		responseHeaders.Add("Access-Control-Allow-Methods", "POST")
+		responseHeaders.Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
+	}
 }

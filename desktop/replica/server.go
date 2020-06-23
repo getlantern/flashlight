@@ -19,6 +19,7 @@ import (
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/golog"
 	"github.com/kennygrant/sanitize"
 	"golang.org/x/xerrors"
 
@@ -38,7 +39,7 @@ type httpHandler struct {
 	// Where to store torrent client data.
 	dataDir    string
 	uploadsDir string
-	logger     analog.Logger
+	logger     golog.Logger
 	mux        http.ServeMux
 	rep        replica.Replica
 	userConfig common.UserConfig
@@ -100,7 +101,7 @@ func NewHTTPHandler(uc common.UserConfig) (_ http.Handler, exitFunc func(), err 
 		},
 		torrentClient: torrentClient,
 		dataDir:       replicaDataDir,
-		logger:        replicaLogger,
+		logger:        golog.LoggerFor("replica.server"),
 		uploadsDir:    uploadsDir,
 		userConfig:    uc,
 		rep: replica.New(&http.Client{
@@ -147,11 +148,7 @@ func NewHTTPHandler(uc common.UserConfig) (_ http.Handler, exitFunc func(), err 
 }
 
 func (me *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	me.logger.WithValues(analog.Debug).Printf("replica server request path: %q", r.URL.Path)
-	// TODO(anacrolix): Check this is correct and secure. We might want to be given valid origins
-	// and apply them to appropriate routes, or only allow anything from localhost for example.
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "*")
+	common.ProcessCORS(w.Header(), r)
 	me.mux.ServeHTTP(w, r)
 }
 
@@ -186,15 +183,15 @@ func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 	} else {
 		// This isn't good, but as long as we can add the torrent file metainfo to the local client,
 		// we can still spread the metadata, and S3 can take care of the data.
-		me.logger.WithValues(analog.Error).Printf("error creating temporary file: %v", tmpFileErr)
+		me.logger.Errorf("error creating temporary file: %v", tmpFileErr)
 	}
 
 	output, err := me.rep.Upload(replicaUploadReader, r.URL.Query().Get("name"))
 	s3Prefix := output.S3Prefix
 	mi := output.Metainfo
-	me.logger.WithValues(analog.Debug).Printf("uploaded replica key %q", s3Prefix)
+	me.logger.Debugf("uploaded replica key %q", s3Prefix)
 	w.Op.Set("upload_s3_key", s3Prefix)
-	me.logger.WithValues(analog.Debug).Printf("uploaded %d bytes", cw.BytesWritten)
+	me.logger.Debugf("uploaded %d bytes", cw.BytesWritten)
 	if err != nil {
 		panic(err)
 	}
@@ -225,7 +222,7 @@ func (me *httpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 		err = os.Rename(tmpFile.Name(), dst)
 		if err != nil {
 			// Not fatal: See above, we only really need the metainfo to be added to the torrent.
-			me.logger.WithValues(analog.Error).Printf("error renaming file: %v", err)
+			me.logger.Debugf("error renaming file: %v", err)
 		}
 	}
 	err = me.addTorrent(output.Metainfo, true)
@@ -259,19 +256,19 @@ func (me *httpHandler) handleUploads(w http.ResponseWriter, r *http.Request) {
 		mi := iu.Metainfo
 		err := iu.Err
 		if err != nil {
-			me.logger.Printf("error iterating uploads: %v", err)
+			me.logger.Debugf("error iterating uploads: %v", err)
 			return
 		}
 		var oi objectInfo
 		err = oi.fromS3UploadMetaInfo(mi, iu.FileInfo.ModTime())
 		if err != nil {
-			me.logger.Printf("error parsing upload metainfo for %q: %v", iu.FileInfo.Name(), err)
+			me.logger.Debugf("error parsing upload metainfo for %q: %v", iu.FileInfo.Name(), err)
 			return
 		}
 		resp = append(resp, oi)
 	})
 	if err != nil {
-		me.logger.Printf("error walking uploads dir: %v", err)
+		me.logger.Debugf("error walking uploads dir: %v", err)
 	}
 	encodeJsonResponse(w, resp)
 }
@@ -294,7 +291,7 @@ func (me *httpHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	s3Prefix, err := replica.S3PrefixFromMagnet(m)
 	if err != nil {
-		me.logger.Printf("error getting s3 prefix from magnet link %q: %v", m, err)
+		me.logger.Debugf("error getting s3 prefix from magnet link %q: %v", m, err)
 		http.Error(w, fmt.Sprintf("error parsing replica uri: %v", err.Error()), http.StatusBadRequest)
 		return
 	}
@@ -306,7 +303,7 @@ func (me *httpHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}()...); len(errs) != 0 {
 		for _, e := range errs {
-			me.logger.Printf("error deleting prefix %q: %v", s3Prefix, e)
+			me.logger.Debugf("error deleting prefix %q: %v", s3Prefix, e)
 		}
 		http.Error(w, "couldn't delete replica prefix", http.StatusInternalServerError)
 		return
@@ -342,9 +339,9 @@ func (me *httpHandler) handleViewWith(rw http.ResponseWriter, r *http.Request, i
 
 	s3Prefix, err := replica.S3PrefixFromMagnet(m)
 	if err != nil {
-		me.logger.Printf("error getting s3 key from magnet: %v", err)
+		me.logger.Debugf("error getting s3 key from magnet: %v", err)
 	} else if s3Prefix == "" {
-		me.logger.Printf("s3 key not found in view link %q", link)
+		me.logger.Debugf("s3 key not found in view link %q", link)
 	}
 
 	t, _, release := me.confluence.GetTorrent(m.InfoHash)
@@ -369,20 +366,20 @@ func (me *httpHandler) handleViewWith(rw http.ResponseWriter, r *http.Request, i
 			defer release()
 			tob, err := me.rep.GetMetainfo(s3Prefix)
 			if err != nil {
-				me.logger.Printf("error getting metainfo for %q from s3: %v", s3Prefix, err)
+				me.logger.Debugf("error getting metainfo for %q from s3: %v", s3Prefix, err)
 				return
 			}
 			defer tob.Close()
 			mi, err := metainfo.Load(tob)
 			if err != nil {
-				me.logger.Print(err)
+				me.logger.Debugf("error loading meta info %v", err)
 				return
 			}
 			err = me.confluence.PutMetainfo(t, mi)
 			if err != nil {
-				me.logger.Printf("error putting metainfo from s3: %v", err)
+				me.logger.Debugf("error putting metainfo from s3: %v", err)
 			}
-			me.logger.Printf("added metainfo for %q from s3", s3Prefix)
+			me.logger.Debugf("added metainfo for %q from s3", s3Prefix)
 		}()
 	}
 
@@ -390,7 +387,7 @@ func (me *httpHandler) handleViewWith(rw http.ResponseWriter, r *http.Request, i
 	// Assume that it should be present, as it'll be added going forward where possible. When it's
 	// missing, zero is a perfectly adequate default for now.
 	if err != nil {
-		me.logger.Printf("error parsing so field: %v", err)
+		me.logger.Debugf("error parsing so field: %v", err)
 	}
 	select {
 	case <-r.Context().Done():
