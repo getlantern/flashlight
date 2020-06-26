@@ -63,9 +63,6 @@ const (
 	// An asset in the icons package.
 	trafficlogInstallIcon = "connected_32.ico"
 
-	// The name of the traffic log executable placed in the config directory.
-	trafficlogExecutable = "tlserver"
-
 	// This file, in the config directory, holds a timestamp from the last failed installation.
 	trafficlogLastFailedInstallFile = "tl_last_failed"
 )
@@ -547,19 +544,10 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 		}
 	}
 
-	path, err := common.InConfigDir("", trafficlogExecutable)
-	if err != nil {
-		log.Errorf("failed to create path to traffic log executable: %v", err)
-		return
-	}
-	mtuLimit := app.Flags["tl-mtu-limit"].(int)
-	if mtuLimit == 0 {
-		mtuLimit = trafficlog.MTULimitNone
-	}
-
 	switch {
 	case enableTrafficLog && app.trafficLog == nil:
-		log.Debugf("Installing traffic log if necessary at %s", path)
+		installDir := appdir.General("Lantern")
+		log.Debugf("Installing traffic log if necessary in %s", installDir)
 		u, err := user.Current()
 		if err != nil {
 			log.Errorf("Failed to look up current user for traffic log install: %w", err)
@@ -609,7 +597,7 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 
 		// Note that this is a no-op if the traffic log is already installed.
 		installErr := tlproc.Install(
-			path, u.Username, trafficlogInstallPrompt, iconFile, cfg.TrafficLog.Reinstall)
+			installDir, u.Username, trafficlogInstallPrompt, iconFile, cfg.TrafficLog.Reinstall)
 		if installErr != nil {
 			b, err := time.Now().MarshalText()
 			if err != nil {
@@ -628,10 +616,9 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 		app.trafficLog, err = tlproc.New(
 			cfg.TrafficLog.CaptureBytes,
 			cfg.TrafficLog.SaveBytes,
-			path,
+			installDir,
 			&tlproc.Options{
 				Options: trafficlog.Options{
-					MTULimit:       mtuLimit,
 					MutatorFactory: new(trafficlog.AppStripperFactory),
 				},
 				StartTimeout:   trafficlogStartTimeout,
@@ -663,7 +650,7 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 		}
 
 	case enableTrafficLog && app.trafficLog != nil:
-		err = app.trafficLog.UpdateBufferSizes(cfg.TrafficLog.CaptureBytes, cfg.TrafficLog.SaveBytes)
+		err := app.trafficLog.UpdateBufferSizes(cfg.TrafficLog.CaptureBytes, cfg.TrafficLog.SaveBytes)
 		if err != nil {
 			log.Debugf("Failed to update traffic log buffer sizes: %v", err)
 		}

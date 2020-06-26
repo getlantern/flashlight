@@ -75,7 +75,7 @@ require (
 	github.com/getlantern/tlsmasq v0.3.0
 	github.com/getlantern/tlsresumption v0.0.0-20200205020452-74fc6ea4e074
 	github.com/getlantern/trafficlog v1.0.0
-	github.com/getlantern/trafficlog-flashlight v0.0.0-20200521024745-35a162731b23
+	github.com/getlantern/trafficlog-flashlight v0.0.0-20200626031927-1279155670d4
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect

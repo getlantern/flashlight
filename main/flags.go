@@ -2,8 +2,6 @@ package main
 
 import (
 	"flag"
-
-	"github.com/getlantern/trafficlog"
 )
 
 var (
@@ -33,7 +31,6 @@ var (
 	initialize         = flag.Bool("initialize", false, "silently initialize Lantern to a state of having working proxy and exit, typically during installation.")
 	timeout            = flag.Duration("timeout", 0, "force stop Lantern with an exit status of -1 after the timeout.")
 	forceTrafficLog    = flag.Bool("force-traffic-log", false, "forces lantern to run with the traffic log enabled; may require root permissions to function")
-	trafficLogMTULimit = flag.Int("tl-mtu-limit", trafficlog.DefaultMaxMTU, "sets the MTU limit for the traffic log (see trafficlog.Options) (0 = none)")
 )
 
 // flagsAsMap returns a map of all flags that were provided at runtime
