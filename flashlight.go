@@ -73,7 +73,8 @@ func (r *runner) onGlobalConfig(cfg *config.Global, src config.Source) {
 	r.mxGlobal.Unlock()
 	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
 	applyClientConfig(cfg)
-	r.applyProxyBenchAndBorda(cfg)
+	r.applyProxyBench(cfg)
+	r.applyBorda(cfg)
 	select {
 	case r.onBordaConfigured <- true:
 		// okay
@@ -153,13 +154,24 @@ func (r *runner) startConfigFetch() func() {
 	return stopConfig
 }
 
-func (r *runner) applyProxyBenchAndBorda(cfg *config.Global) {
-	if r.featureEnabled(config.FeatureProxyBench) {
-		startProxyBenchOnce.Do(func() {
-			proxybench.Start(&proxybench.Opts{}, func(timing time.Duration, ctx map[string]interface{}) {})
-		})
-	}
+func (r *runner) applyProxyBench(cfg *config.Global) {
+	go func() {
+		// Wait a while for geolookup to happen before checking if we can turn on proxybench
+		geolookup.GetCountry(1 * time.Minute)
+		if r.featureEnabled(config.FeatureProxyBench) {
+			startProxyBenchOnce.Do(func() {
+				opts := &proxybench.Opts{
+					UpdateURL: "https://s3.amazonaws.com/lantern/proxybench_test.json",
+				}
+				proxybench.Start(opts, func(timing time.Duration, ctx map[string]interface{}) {})
+			})
+		} else {
+			log.Debug("proxybench disabled")
+		}
+	}()
+}
 
+func (r *runner) applyBorda(cfg *config.Global) {
 	_enableBorda := borda.Enabler(cfg.BordaSamplePercentage)
 	enableBorda := func(ctx map[string]interface{}) bool {
 		if !r.autoReport() {
