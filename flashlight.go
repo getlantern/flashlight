@@ -161,7 +161,7 @@ func (r *runner) applyProxyBench(cfg *config.Global) {
 		if r.featureEnabled(config.FeatureProxyBench) {
 			startProxyBenchOnce.Do(func() {
 				opts := &proxybench.Opts{
-					UpdateURL: "https://s3.amazonaws.com/lantern/proxybench_test.json",
+					UpdateURL: "https://s3.amazonaws.com/lantern/proxybench.json",
 				}
 				proxybench.Start(opts, func(timing time.Duration, ctx map[string]interface{}) {})
 			})
