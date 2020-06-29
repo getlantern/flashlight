@@ -57,6 +57,8 @@ func NewHTTPHandler(uc common.UserConfig, replicaClient *replica.Client) (_ *Htt
 	cfg.DisableIPv6 = true
 	cfg.DataDir = replicaDataDir
 	cfg.Seed = true
+	cfg.HeaderObfuscationPolicy.Preferred = true
+	cfg.HeaderObfuscationPolicy.RequirePreferred = true
 	//cfg.Debug = true
 	cfg.Logger = replicaLogger.WithFilter(func(m analog.Msg) bool {
 		return !m.HasValue("upnp-discover")
