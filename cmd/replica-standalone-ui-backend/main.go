@@ -7,7 +7,7 @@ import (
 	"github.com/anacrolix/log"
 	"github.com/anacrolix/tagflag"
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/desktop/replica"
+	desktopreplica "github.com/getlantern/flashlight/desktop/replica"
 	"github.com/getlantern/replica"
 )
 
@@ -28,7 +28,7 @@ func main() {
 
 func mainCode(flags flags) int {
 	uc := common.NewUserConfigData("replica-standalone", 0, "replica-standalone-token", nil, "en-US")
-	handler, exitFunc, err := desktopReplica.NewHTTPHandler(uc, &replica.Client{
+	handler, exitFunc, err := desktopreplica.NewHTTPHandler(uc, &replica.Client{
 		HttpClient: http.DefaultClient,
 		Endpoint:   flags.Endpoint,
 	})
