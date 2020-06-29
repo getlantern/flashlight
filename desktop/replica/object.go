@@ -1,12 +1,10 @@
-package replica
+package desktopreplica
 
 import (
-	"fmt"
 	"mime"
 	"path"
 	"time"
 
-	"github.com/anacrolix/torrent/metainfo"
 	"github.com/getlantern/replica"
 )
 
@@ -21,23 +19,19 @@ type objectInfo struct {
 }
 
 // Inits from a BitTorrent metainfo that must contain a valid info.
-func (me *objectInfo) fromS3UploadMetaInfo(mi *metainfo.MetaInfo, lastModified time.Time) error {
-	info, err := mi.UnmarshalInfo()
-	if err != nil {
-		panic(err) // Don't pass a bad metainfo...
-	}
-	var replicaInfo replica.Info
-	err = replicaInfo.FromTorrentInfo(&info)
-	if err != nil {
-		return fmt.Errorf("unwrapping torrent info: %w", err)
-	}
-	filePath := replicaInfo.FilePath()
+func (me *objectInfo) fromS3UploadMetaInfo(mi replica.UploadMetainfo, lastModified time.Time) error {
+	filePath := mi.FilePath()
 	*me = objectInfo{
-		FileSize:     info.TotalLength(),
+		FileSize:     mi.TotalLength(),
 		LastModified: lastModified,
-		Link:         replica.CreateLink(mi.HashInfoBytes(), replicaInfo.S3Prefix(), replicaInfo.FilePath()),
+		Link:         replica.CreateLink(mi.HashInfoBytes(), mi.Upload, filePath),
 		DisplayName:  path.Join(filePath...),
-		MimeTypes:    []string{mime.TypeByExtension(path.Ext(filePath[len(filePath)-1]))},
+		MimeTypes: func() []string {
+			if len(filePath) == 0 {
+				return nil
+			}
+			return []string{mime.TypeByExtension(path.Ext(filePath[len(filePath)-1]))}
+		}(),
 	}
 	return nil
 }

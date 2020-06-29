@@ -1,4 +1,4 @@
-package replica
+package desktopreplica
 
 import (
 	"fmt"
