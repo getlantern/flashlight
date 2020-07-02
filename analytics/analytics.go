@@ -57,7 +57,7 @@ type session struct {
 	muVals            sync.RWMutex
 	rt                http.RoundTripper
 	keepaliveInterval time.Duration
-	keepaliveTimer    *time.Timer
+	chDoneTracking    chan struct{}
 }
 
 func newSession(deviceID, version string, keepalive time.Duration, rt http.RoundTripper) *session {
@@ -65,7 +65,7 @@ func newSession(deviceID, version string, keepalive time.Duration, rt http.Round
 		vals:              sessionVals(version, deviceID),
 		rt:                rt,
 		keepaliveInterval: keepalive,
-		keepaliveTimer:    time.NewTimer(keepalive),
+		chDoneTracking:    make(chan struct{}),
 	}
 }
 
@@ -99,8 +99,16 @@ func (s *session) End() {
 // keepalive keeps tracking session with the latest parameters to avoid GA from
 // ending the session.
 func (s *session) keepalive() {
-	for range s.keepaliveTimer.C {
-		s.track()
+	keepaliveTimer := time.NewTimer(s.keepaliveInterval)
+	for {
+		select {
+		case <-s.chDoneTracking:
+			// Note this does not drain the channel before resetting, so
+			// keepalive may be sent more than required, but that is okay.
+			keepaliveTimer.Reset(s.keepaliveInterval)
+		case <-keepaliveTimer.C:
+			go s.track()
+		}
 	}
 }
 
@@ -108,9 +116,13 @@ func (s *session) track() {
 	s.muVals.RLock()
 	args := s.vals.Encode()
 	s.muVals.RUnlock()
-	// Note this does not drain the channel before resetting, so keepalive may be
-	// sent more than required, but that is okay.
-	defer s.keepaliveTimer.Reset(s.keepaliveInterval)
+	defer func() {
+		select {
+		case s.chDoneTracking <- struct{}{}:
+		default:
+			// tests may not have keepalive loop to receive from the channel
+		}
+	}()
 
 	r, err := http.NewRequest("POST", endpoint, bytes.NewBufferString(args))
 

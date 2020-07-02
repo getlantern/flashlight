@@ -55,14 +55,14 @@ func TestKeepalive(t *testing.T) {
 	go session.keepalive()
 	time.Sleep(110 * time.Millisecond)
 	assert.EqualValues(t, 1, atomic.LoadInt32(&st.numRequests), "Should have sent keepalive after the inteval")
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(20 * time.Millisecond)
 	session.Event("category", "action")
 	// have to wait because event is sent asynchronously
 	time.Sleep(10 * time.Millisecond)
 	assert.EqualValues(t, 2, atomic.LoadInt32(&st.numRequests), "Should have sent event")
 	time.Sleep(80 * time.Millisecond)
 	assert.EqualValues(t, 2, atomic.LoadInt32(&st.numRequests), "Other requests should reset the keepalive timer")
-	time.Sleep(20 * time.Millisecond)
+	time.Sleep(30 * time.Millisecond)
 	assert.EqualValues(t, 3, atomic.LoadInt32(&st.numRequests), "Should have sent another keepalive after the new timer expired")
 }
 
