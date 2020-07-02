@@ -5,17 +5,12 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/getlantern/eventual"
-	"github.com/getlantern/golog"
-
-	"github.com/getlantern/flashlight/common"
 )
 
 type errorTripper struct {
@@ -28,11 +23,13 @@ func (et *errorTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 }
 
 type successTripper struct {
-	request *http.Request
+	numRequests int32
+	request     *http.Request
 }
 
 func (st *successTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 	st.request = r
+	atomic.AddInt32(&st.numRequests, 1)
 	t := &http.Response{
 		Body: ioutil.NopCloser(bytes.NewBufferString("Hello World")),
 	}
@@ -41,47 +38,39 @@ func (st *successTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 }
 
 func TestRoundTrip(t *testing.T) {
-	vals := make(url.Values, 0)
-	vals.Add("v", "1")
-	args := vals.Encode()
 	et := &errorTripper{}
-	doTrackSession(args, et)
-
+	session := newSession("1", "2.2.0", 0, et)
+	session.track()
 	assert.Equal(t, "application/x-www-form-urlencoded", et.request.Header.Get("Content-Type"), "unexpected content type")
 
 	st := &successTripper{}
-	doTrackSession(args, st)
-
+	session.rt = st
+	session.track()
 	assert.Equal(t, "application/x-www-form-urlencoded", st.request.Header.Get("Content-Type"), "unexpected content type")
 }
 
-func TestAddCampaign(t *testing.T) {
-	startURL := "https://test.com"
-	campaignURL, err := AddCampaign(startURL, "test-campaign", "test-content", "test-medium")
-	assert.NoError(t, err, "unexpected error")
-	assert.Equal(t, "https://test.com?utm_campaign=test-campaign&utm_content=test-content&utm_medium=test-medium&utm_source="+common.Platform, campaignURL)
-
-	// Now test a URL that will produce an error
-	startURL = ":"
-	_, err = AddCampaign(startURL, "test-campaign", "test-content", "test-medium")
-	assert.Error(t, err)
+func TestKeepalive(t *testing.T) {
+	st := &successTripper{}
+	session := newSession("1", "2.2.0", 100*time.Millisecond, st)
+	go session.keepalive()
+	time.Sleep(110 * time.Millisecond)
+	assert.EqualValues(t, 1, atomic.LoadInt32(&st.numRequests), "Should have sent keepalive after the inteval")
+	time.Sleep(10 * time.Millisecond)
+	session.Event("category", "action")
+	// have to wait because event is sent asynchronously
+	time.Sleep(10 * time.Millisecond)
+	assert.EqualValues(t, 2, atomic.LoadInt32(&st.numRequests), "Should have sent event")
+	time.Sleep(80 * time.Millisecond)
+	assert.EqualValues(t, 2, atomic.LoadInt32(&st.numRequests), "Other requests should reset the keepalive timer")
+	time.Sleep(20 * time.Millisecond)
+	assert.EqualValues(t, 3, atomic.LoadInt32(&st.numRequests), "Should have sent another keepalive after the new timer expired")
 }
 
 func TestAnalytics(t *testing.T) {
-	logger := golog.LoggerFor("flashlight.analytics_test")
+	session := newSession("1", "2.2.0", 0, http.DefaultTransport)
+	session.SetIP("127.0.0.1")
 
-	params := eventual.NewValue()
-	stop := start("1", "2.2.0", func(time.Duration) string {
-		return "127.0.0.1"
-	}, func(args string) {
-		logger.Debugf("Got args %v", args)
-		params.Set(args)
-	})
-
-	args, ok := params.Get(40 * time.Second)
-	assert.True(t, ok)
-
-	argString := args.(string)
+	argString := session.vals.Encode()
 	assert.True(t, strings.Contains(argString, "pageview"))
 	assert.True(t, strings.Contains(argString, "127.0.0.1"))
 
@@ -98,5 +87,5 @@ func TestAnalytics(t *testing.T) {
 
 	assert.True(t, strings.Contains(string(body), "\"valid\": true"), "Should be a valid hit")
 
-	stop()
+	session.End()
 }
