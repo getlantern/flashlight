@@ -394,7 +394,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		app.AddExitFunc("stopping loconf scanner", LoconfScanner(4*time.Hour, isProUser, func() string {
 			return app.AddToken("/img/lantern_logo.png")
 		}))
-		app.AddExitFunc("stopping notifier", notifier.NotificationsLoop())
+		app.AddExitFunc("stopping notifier", notifier.NotificationsLoop(app.gaSession))
 		app.OnStatsChange(func(newStats stats.Stats) {
 			for _, alert := range newStats.Alerts {
 				note := &notify.Notification{

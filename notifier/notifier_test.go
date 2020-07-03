@@ -8,14 +8,15 @@ import (
 	"github.com/getlantern/notifier"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/common"
 )
 
 func TestNotify(t *testing.T) {
-	stop := loopFor(10 * time.Millisecond)
+	stop := loopFor(10*time.Millisecond, analytics.NullSession{})
 	stop()
 
-	stop = loopFor(10 * time.Millisecond)
+	stop = loopFor(10*time.Millisecond, analytics.NullSession{})
 	note := &notify.Notification{
 		Title:    "test",
 		Message:  "test",
@@ -48,7 +49,7 @@ func TestNormalizeClickURL(t *testing.T) {
 	err = normalizeClickURL(note, "test-campaign")
 	assert.Error(t, err, "expected an error")
 
-	stop := loopFor(10 * time.Millisecond)
+	stop := loopFor(10*time.Millisecond, analytics.NullSession{})
 	defer stop()
 	assert.False(t, ShowNotification(note, "test-campaign"))
 }
