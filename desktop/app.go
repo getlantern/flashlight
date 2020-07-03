@@ -33,6 +33,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/datacap"
+	"github.com/getlantern/flashlight/geolookup"
 
 	//"github.com/getlantern/flashlight/diagnostics/trafficlog"
 
@@ -74,6 +75,7 @@ type App struct {
 
 	Flags        map[string]interface{}
 	exited       eventual.Value
+	gaSession    analytics.Session
 	statsTracker *statsTracker
 
 	muExitFuncs sync.RWMutex
@@ -107,6 +109,8 @@ func (app *App) Init() {
 	//app.chrome.install()
 	settings = app.loadSettings()
 	app.exited = eventual.NewValue()
+	// overridden later if auto report is allowed
+	app.gaSession = analytics.NullSession{}
 	app.statsTracker = NewStatsTracker()
 	pro.OnProStatusChange(func(isPro bool, yinbiEnabled bool) {
 		app.statsTracker.SetIsPro(isPro)
@@ -379,16 +383,18 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		// Don't block on fetching the location for the UI.
 		go serveLocation(app.ws)
 
-		// Only run analytics once on startup.
 		if settings.IsAutoReport() {
-			stopAnalytics := analytics.Start(settings.GetDeviceID(), common.Version)
-			app.AddExitFunc("stopping analytics", stopAnalytics)
+			app.gaSession = analytics.Start(settings.GetDeviceID(), common.Version)
+			app.AddExitFunc("stopping analytics", app.gaSession.End)
+			go func() {
+				app.gaSession.SetIP(geolookup.GetIP(eventual.Forever))
+			}()
 		}
 
 		app.AddExitFunc("stopping loconf scanner", LoconfScanner(4*time.Hour, isProUser, func() string {
 			return app.AddToken("/img/lantern_logo.png")
 		}))
-		app.AddExitFunc("stopping notifier", notifier.NotificationsLoop())
+		app.AddExitFunc("stopping notifier", notifier.NotificationsLoop(app.gaSession))
 		app.OnStatsChange(func(newStats stats.Stats) {
 			for _, alert := range newStats.Alerts {
 				note := &notify.Notification{
@@ -406,12 +412,14 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 // Connect turns on proxying
 func (app *App) Connect() {
+	app.gaSession.Event("systray-menu", "connect")
 	ops.Begin("connect").End()
 	settings.setBool(SNDisconnected, false)
 }
 
 // Disconnect turns off proxying
 func (app *App) Disconnect() {
+	app.gaSession.Event("systray-menu", "disconnect")
 	ops.Begin("disconnect").End()
 	settings.setBool(SNDisconnected, true)
 }
@@ -492,6 +500,7 @@ func (app *App) afterStart(cl *client.Client) {
 
 func (app *App) onConfigUpdate(cfg *config.Global, src config.Source) {
 	if src == config.Fetched {
+		app.gaSession.Event("config", "global-fetched")
 		atomic.StoreInt32(&app.fetchedGlobalConfig, 1)
 	}
 	autoupdate.Configure(cfg.UpdateServerURL, cfg.AutoUpdateCA, func() string {
@@ -503,6 +512,7 @@ func (app *App) onConfigUpdate(cfg *config.Global, src config.Source) {
 
 func (app *App) onProxiesUpdate(proxies []balancer.Dialer, src config.Source) {
 	if src == config.Fetched {
+		app.gaSession.Event("config", "proxies-fetched")
 		atomic.StoreInt32(&app.fetchedProxiesConfig, 1)
 	}
 	/*
@@ -751,11 +761,13 @@ func ShouldReportToSentry() bool {
 
 // OnTrayShow indicates the user has selected to show lantern from the tray.
 func (app *App) OnTrayShow() {
+	app.gaSession.Event("systray-menu", "show")
 	app.uiServer().ShowRoot("show-lantern", "tray", app.statsTracker)
 }
 
 // OnTrayUpgrade indicates the user has selected to upgrade lantern from the tray.
 func (app *App) OnTrayUpgrade() {
+	app.gaSession.Event("systray-menu", "upgrade")
 	app.uiServer().Show(app.PlansURL(), "proupgrade", "tray", app.statsTracker)
 }
 
