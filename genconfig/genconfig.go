@@ -98,7 +98,9 @@ func init() {
 			"update.getlantern.org":            "update.dsa.akamai.getiantem.org",
 			"github.com":                       "github.dsa.akamai.getiantem.org",
 			"github-production-release-asset-2e65be.s3.amazonaws.com": "github-release-asset.dsa.akamai.getiantem.org",
-			"mandrillapp.com": "mandrillapp.dsa.akamai.getiantem.org",
+			"mandrillapp.com":                   "mandrillapp.dsa.akamai.getiantem.org",
+			"replica-search.lantern.io":         "replica-search.dsa.akamai.lantern.io",
+			"replica-search-staging.lantern.io": "replica-search-staging.dsa.akamai.lantern.io",
 		},
 		&config.ValidatorConfig{RejectStatus: []int{403}},
 	)
