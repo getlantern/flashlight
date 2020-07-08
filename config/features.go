@@ -23,6 +23,7 @@ const (
 	FeatureNoHTTPSEverywhere    = "nohttpseverywhere"
 	FeatureReplica              = "replica"
 	FeatureProxyWhitelistedOnly = "proxywhitelistedonly"
+	FeatureTrackYouTube         = "trackyoutube"
 )
 
 var (

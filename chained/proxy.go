@@ -10,8 +10,10 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io"
+	"math/rand"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"runtime"
 	"strconv"
@@ -31,6 +33,7 @@ import (
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
+	"github.com/getlantern/hellosplitter"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/kcpwrapper"
 	"github.com/getlantern/keyman"
@@ -185,7 +188,14 @@ func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc commo
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
 			td := &tlsdialer.Dialer{
 				DoDial: func(network, addr string, timeout time.Duration) (net.Conn, error) {
-					return p.dialCore(op)(ctx)
+					tcpConn, err := p.dialCore(op)(ctx)
+					if err != nil {
+						return nil, err
+					}
+					if s.TLSClientHelloSplitting {
+						tcpConn = hellosplitter.Wrap(tcpConn, splitClientHello)
+					}
+					return tcpConn, err
 				},
 				Timeout:        timeoutFor(ctx),
 				SendServerName: tlsConfig.ServerName != "",
@@ -453,6 +463,9 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 			if err != nil {
 				return nil, err
 			}
+			if s.TLSClientHelloSplitting {
+				tcpConn = hellosplitter.Wrap(tcpConn, splitClientHello)
+			}
 			conn := tlsmasq.Client(tcpConn, cfg)
 
 			// We execute the handshake as part of the dial. Otherwise, preconnecting wouldn't do
@@ -593,7 +606,10 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 		return conn, delta, err
 	}
 
-	if s.MultiplexedAddr != "" || s.PluggableTransport == "utphttp" || s.PluggableTransport == "utphttps" || s.PluggableTransport == "utpobfs4" {
+	if s.MultiplexedAddr != "" || s.PluggableTransport == "utphttp" ||
+		s.PluggableTransport == "utphttps" || s.PluggableTransport == "utpobfs4" ||
+		s.PluggableTransport == "tlsmasq" {
+
 		log.Debugf("Enabling multiplexing for %v", p.Label())
 		origDoDialServer := p.doDialServer
 		poolSize := s.MultiplexedPhysicalConns
@@ -664,6 +680,7 @@ func enableWSS(p *proxy, s *ChainedServerInfo) error {
 	var rt tinywss.RoundTripHijacker
 	var err error
 
+	url := s.ptSetting("url")
 	force_http := s.ptSettingBool("force_http")
 	fctx_id := s.ptSetting("df_ctx")
 
@@ -693,7 +710,7 @@ func enableWSS(p *proxy, s *ChainedServerInfo) error {
 	}
 
 	opts := &tinywss.ClientOpts{
-		URL:               fmt.Sprintf("wss://%s", p.addr),
+		URL:               url,
 		RoundTrip:         rt,
 		KeepAliveInterval: IdleTimeout / 2,
 		KeepAliveTimeout:  IdleTimeout,
@@ -734,52 +751,42 @@ func (rt *wssFrontedRT) RoundTripHijack(req *http.Request) (*http.Response, net.
 func wssHTTPRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
 	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
 		log.Debugf("tinywss HTTP Roundtripper dialing %v", addr)
-		return netx.DialTimeout(network, addr, chainedDialTimeout)
+		// the configured proxy address is always contacted
+		return netx.DialTimeout(network, p.addr, chainedDialTimeout)
 	}), nil
 }
 
 func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
 
-	var err error
 	serverName := s.TLSServerNameIndicator
 	sendServerName := true
 	if serverName == "" {
 		sendServerName = false
-		serverName, _, err = net.SplitHostPort(s.Addr)
+		u, err := url.Parse(s.ptSetting("url"))
 		if err != nil {
-			serverName = s.Addr
+			return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 		}
+		serverName = u.Hostname()
 	}
-	helloID := s.clientHelloID()
-	pinnedCert := s.ptSettingBool("pin_certificate")
 
-	// if set, force validation of a name other than the SNI name
 	forceValidateName := s.ptSetting("force_validate_name")
-
-	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
-	if err != nil {
-		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
+	helloID := s.clientHelloID()
+	certPool := x509.NewCertPool()
+	rest := []byte(s.Cert)
+	var block *pem.Block
+	for {
+		block, rest = pem.Decode(rest)
+		if block == nil {
+			break
+		}
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
+		}
+		certPool.AddCert(cert)
 	}
-	x509cert := cert.X509()
 
 	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
-		log.Debugf("tinywss HTTPS Roundtripper dialing %v", addr)
-
-		var certPool *x509.CertPool
-
-		if !pinnedCert {
-			certPool = GetFrontingCertPool(1 * time.Second)
-			if certPool == nil {
-				log.Debugf("wss cert pool is not available (yet?), falling back to pinned.")
-			}
-		}
-
-		if certPool == nil {
-			certPool = x509.NewCertPool()
-			certPool.AddCert(x509cert)
-			log.Debugf("wss using pinned certificate")
-		}
-
 		tlsConf := &tls.Config{
 			CipherSuites: orderedCipherSuitesFromConfig(s),
 			ServerName:   serverName,
@@ -795,8 +802,8 @@ func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHija
 			ClientHelloID:     helloID,
 			Timeout:           chainedDialTimeout,
 		}
-
-		return td.Dial(network, addr)
+		// the configured proxy address is always contacted.
+		return td.Dial(network, p.addr)
 	}), nil
 }
 
@@ -1078,4 +1085,21 @@ func (h utlsHandshaker) Handshake(conn net.Conn) (*ptlshs.HandshakeResult, error
 		Version:     uconn.ConnectionState().Version,
 		CipherSuite: uconn.ConnectionState().CipherSuite,
 	}, nil
+}
+
+func splitClientHello(hello []byte) [][]byte {
+	const minSplits, maxSplits = 2, 5
+	var (
+		maxLen = len(hello) / minSplits
+		splits = [][]byte{}
+		start  = 0
+		end    = start + rand.Intn(maxLen) + 1
+	)
+	for end < len(hello) && len(splits) < maxSplits-1 {
+		splits = append(splits, hello[start:end])
+		start = end
+		end = start + rand.Intn(maxLen) + 1
+	}
+	splits = append(splits, hello[start:])
+	return splits
 }

@@ -20,10 +20,10 @@ require (
 	github.com/getlantern/borda v0.0.0-20200427033127-b36d009c6252
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
 	github.com/getlantern/cmux v0.0.0-20200420023238-ddfd0a83b995
-	github.com/getlantern/common v0.0.0-20191017131928-864ae49aeb6a
+	github.com/getlantern/common v1.1.0
 	github.com/getlantern/detour v0.0.0-20191213192126-a4b3dcb2def2
 	github.com/getlantern/dnsgrab v0.0.0-20191217020031-0e5f714410f9
-	github.com/getlantern/domains v0.0.0-20200402171649-efc86b844fcf
+	github.com/getlantern/domains v0.0.0-20200402172102-34a8db1e0e83
 	github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4
 	github.com/getlantern/enhttp v0.0.0-20190401024120-a974fa851e3c
 	github.com/getlantern/enproxy v0.0.0-20180913191734-002212d417a4 // indirect
@@ -38,32 +38,33 @@ require (
 	github.com/getlantern/go-update v0.0.0-20190510022740-79c495ab728c // indirect
 	github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7
 	github.com/getlantern/gowin v0.0.0-20160824205538-88fa116ddffc // indirect
+	github.com/getlantern/hellosplitter v0.1.0
 	github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55
-	github.com/getlantern/http-proxy-lantern v0.1.4-0.20200130190446-3028d2ef9381
-	github.com/getlantern/httpseverywhere v0.0.0-20180326165025-9bdb93e40695
+	github.com/getlantern/http-proxy-lantern v0.1.4-0.20200611211409-add33b9f0173
+	github.com/getlantern/httpseverywhere v0.0.0-20190322220559-c364cfbfeb57
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
-	github.com/getlantern/idletiming v0.0.0-20190529182719-d2fbc83372a5
+	github.com/getlantern/idletiming v0.0.0-20200228204104-10036786eac5
 	github.com/getlantern/ipproxy v0.0.0-20191216171250-6f1aaa987f2f
 	github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42
 	github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644
 	github.com/getlantern/kcpwrapper v0.0.0-20171114192627-a35c895f6de7
 	github.com/getlantern/keyman v0.0.0-20180207174507-f55e7280e93a
-	github.com/getlantern/lampshade v0.0.0-20200123165158-e0efbb58c68b
+	github.com/getlantern/lampshade v0.0.0-20200303040944-fe53f13203e9
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
-	github.com/getlantern/mitm v0.0.0-20180205214248-4ce456bae650
+	github.com/getlantern/mitm v0.0.0-20200517210030-e913809c7038
 	github.com/getlantern/mockconn v0.0.0-20191023022503-481dbcceeb58
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd
 	github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b
 	github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6
 	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
-	github.com/getlantern/packetforward v0.0.0-20190809094443-386cbcc0d498
+	github.com/getlantern/packetforward v0.0.0-20200421081927-11933f311913
 	github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff
 	github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8
-	github.com/getlantern/proxy v0.0.0-20191025190912-b5f45407d9f2
-	github.com/getlantern/proxybench v0.0.0-20181017151515-2acfa62efd12
+	github.com/getlantern/proxy v0.0.0-20200302183216-36afa00d0126
+	github.com/getlantern/proxybench v0.0.0-20200626174328-a2580b5e8a59
 	github.com/getlantern/quic0 v0.0.0-20200121154153-8b18c2ba09f9
 	github.com/getlantern/quicwrapper v0.0.0-20200129232925-8ef70253fcae
 	github.com/getlantern/replica v0.3.1-0.20200623004346-367f62a981a7
@@ -71,7 +72,7 @@ require (
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
 	github.com/getlantern/shortcut v0.0.0-20200120121615-2dcb213d447c
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
-	github.com/getlantern/systray v0.0.0-20200420214849-6c0d20dff59f
+	github.com/getlantern/systray v1.0.3-0.20200611154022-031edda14837
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
 	github.com/getlantern/tinywss v0.0.0-20200121221108-851921f95ad7
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
@@ -93,10 +94,10 @@ require (
 	github.com/miekg/dns v0.0.0-20180406150955-01d59357d468
 	github.com/mitchellh/go-server-timing v1.0.0
 	github.com/mitchellh/mapstructure v1.1.2
-	github.com/mitchellh/panicwrap v0.0.0-20190228164358-f67bf3f3d291
+	github.com/mitchellh/panicwrap v1.0.0
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
-	github.com/refraction-networking/utls v0.0.0-20190909200633-43c36d3c1f57
+	github.com/refraction-networking/utls v0.0.0-20200601200209-ada0bb9b38a0
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/stretchr/testify v1.5.1
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
@@ -108,7 +109,7 @@ require (
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20200211213545-301421f7c3c9
 
-replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20191001223343-79cda44164e3
+replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20200609191416-c359cb589c95
 
 replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3-0.20190606045409-29ac0bf665ea
 

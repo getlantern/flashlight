@@ -75,7 +75,8 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	f.mxGlobal.Unlock()
 	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
 	applyClientConfig(cfg)
-	f.applyProxyBenchAndBorda(cfg)
+	f.applyProxyBench(cfg)
+	f.applyBorda(cfg)
 	select {
 	case f.onBordaConfigured <- true:
 		// okay
@@ -176,13 +177,24 @@ func (f *Flashlight) startConfigFetch() func() {
 	return stopConfig
 }
 
-func (f *Flashlight) applyProxyBenchAndBorda(cfg *config.Global) {
-	if f.featureEnabled(config.FeatureProxyBench) {
-		startProxyBenchOnce.Do(func() {
-			proxybench.Start(&proxybench.Opts{}, func(timing time.Duration, ctx map[string]interface{}) {})
-		})
-	}
+func (f *Flashlight) applyProxyBench(cfg *config.Global) {
+	go func() {
+		// Wait a while for geolookup to happen before checking if we can turn on proxybench
+		geolookup.GetCountry(1 * time.Minute)
+		if f.featureEnabled(config.FeatureProxyBench) {
+			startProxyBenchOnce.Do(func() {
+				opts := &proxybench.Opts{
+					UpdateURL: "https://s3.amazonaws.com/lantern/proxybench.json",
+				}
+				proxybench.Start(opts, func(timing time.Duration, ctx map[string]interface{}) {})
+			})
+		} else {
+			log.Debug("proxybench disabled")
+		}
+	}()
+}
 
+func (f *Flashlight) applyBorda(cfg *config.Global) {
 	_enableBorda := borda.Enabler(cfg.BordaSamplePercentage)
 	enableBorda := func(ctx map[string]interface{}) bool {
 		if !f.autoReport() {
@@ -229,7 +241,8 @@ func New(
 	if common.InDevelopment() {
 		log.Debugf("You can query for this device's activity in borda under device id: %v", deviceID)
 	}
-	fops.InitGlobalContext(deviceID, isPro, userConfig.GetUserID, func() string { return geolookup.GetCountry(0) }, func() string { return geolookup.GetIP(0) })
+	fops.InitGlobalContext(deviceID, isPro, func() string { return geolookup.GetCountry(0) })
+	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 
 	f := &Flashlight{
 		configDir:         configDir,
@@ -304,6 +317,7 @@ func New(
 		shortcut.Allow,
 		useDetour,
 		func() bool { return !f.featureEnabled(config.FeatureNoHTTPSEverywhere) },
+		func() bool { return common.Platform != "android" && f.featureEnabled(config.FeatureTrackYouTube) },
 		userConfig,
 		statsTracker,
 		allowPrivateHosts,
