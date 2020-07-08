@@ -1,5 +1,15 @@
 # Changelog
 
+## [5.9.17](https://github.com/getlantern/flashlight/tree/5.9.17) (2020-07-08)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.16...5.9.17)
+
+**Merged pull requests:**
+
+- update utls package to include https://github.com/getlantern/utls/pull/4 [\#839](https://github.com/getlantern/flashlight/pull/839) ([joesis](https://github.com/joesis))
+- Add replica search to domain fronting lists [\#837](https://github.com/getlantern/flashlight/pull/837) ([max-b](https://github.com/max-b))
+- Send keepalive to maintain GA session [\#835](https://github.com/getlantern/flashlight/pull/835) ([joesis](https://github.com/joesis))
+
 ## [5.9.16](https://github.com/getlantern/flashlight/tree/5.9.16) (2020-07-02)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.15...5.9.16)
@@ -134,10 +144,6 @@
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.0...5.9.1)
 
-**Merged pull requests:**
-
-- skip re-evaluating dialers when background checking is disabled [\#782](https://github.com/getlantern/flashlight/pull/782) ([joesis](https://github.com/joesis))
-
 ## [5.9.0](https://github.com/getlantern/flashlight/tree/5.9.0) (2020-04-03)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.8.6...5.9.0)
@@ -180,7 +186,6 @@
 - disable the chrome extension saving loop [\#767](https://github.com/getlantern/flashlight/pull/767) ([joesis](https://github.com/joesis))
 - Add osversion to sentry reporting [\#764](https://github.com/getlantern/flashlight/pull/764) ([max-b](https://github.com/max-b))
 - Wait to configure systray until desktop.App.uiServer has been instantiated [\#758](https://github.com/getlantern/flashlight/pull/758) ([max-b](https://github.com/max-b))
-- tlsmasq integration [\#734](https://github.com/getlantern/flashlight/pull/734) ([hwh33](https://github.com/hwh33))
 
 ## [5.8.3](https://github.com/getlantern/flashlight/tree/5.8.3) (2020-02-12)
 
@@ -227,10 +232,6 @@
 - generate shortcut list from GeoLite2 country database instead [\#739](https://github.com/getlantern/flashlight/pull/739) ([joesis](https://github.com/joesis))
 - override shortcut resolver to be able to find real IP of the host on … [\#738](https://github.com/getlantern/flashlight/pull/738) ([joesis](https://github.com/joesis))
 - Bring in https://github.com/getlantern/smux/pull/1 [\#737](https://github.com/getlantern/flashlight/pull/737) ([joesis](https://github.com/joesis))
-- More iOS pro improvements [\#735](https://github.com/getlantern/flashlight/pull/735) ([oxtoacart](https://github.com/oxtoacart))
-- Managing memory usage on iOS more aggressively [\#733](https://github.com/getlantern/flashlight/pull/733) ([oxtoacart](https://github.com/oxtoacart))
-- Using more accurate build tags to disable UTP on Linux and iOS [\#732](https://github.com/getlantern/flashlight/pull/732) ([oxtoacart](https://github.com/oxtoacart))
-- Added support for pro API to iOS [\#731](https://github.com/getlantern/flashlight/pull/731) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [5.7.2](https://github.com/getlantern/flashlight/tree/5.7.2) (2019-12-03)
 
