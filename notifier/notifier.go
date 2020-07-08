@@ -3,10 +3,12 @@ package notifier
 import (
 	"time"
 
-	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
-	"github.com/getlantern/notifier"
+	notify "github.com/getlantern/notifier"
+
+	"github.com/getlantern/flashlight/analytics"
+	"github.com/getlantern/flashlight/ui"
 )
 
 const (
@@ -15,6 +17,7 @@ const (
 
 type notifierRequest struct {
 	note     *notify.Notification
+	campaign string
 	chResult chan bool
 }
 
@@ -33,6 +36,7 @@ func ShowNotification(note *notify.Notification, campaign string) bool {
 	chResult := make(chan bool)
 	ch <- notifierRequest{
 		note,
+		campaign,
 		chResult,
 	}
 
@@ -40,7 +44,7 @@ func ShowNotification(note *notify.Notification, campaign string) bool {
 }
 
 func normalizeClickURL(note *notify.Notification, campaign string) error {
-	ga, err := analytics.AddCampaign(note.ClickURL, campaign, note.Title+"-"+note.Message, "notification")
+	ga, err := ui.AddCampaign(note.ClickURL, campaign, note.Title+"-"+note.Message, "notification")
 	if err != nil {
 		return err
 	}
@@ -53,15 +57,15 @@ func normalizeClickURL(note *notify.Notification, campaign string) error {
 // submitted by showNotification one by one with a minimum 10 seconds interval.
 //
 // Returns a function to stop the loop.
-func NotificationsLoop() (stop func()) {
-	return loopFor(notificationTimeout)
+func NotificationsLoop(gaSession analytics.Session) (stop func()) {
+	return loopFor(notificationTimeout, gaSession)
 }
 
 // NotificationsLoop starts a goroutine to show the desktop notifications
 // submitted by showNotification one by one with a minimum 10 seconds interval.
 //
 // Returns a function to stop the loop.
-func loopFor(delay time.Duration) (stop func()) {
+func loopFor(delay time.Duration, gaSession analytics.Session) (stop func()) {
 	notifier := notify.NewNotifications()
 	// buffered channel to avoid blocking stop() when goroutine is sleeping
 	chStop := make(chan bool, 1)
@@ -81,6 +85,7 @@ func loopFor(delay time.Duration) (stop func()) {
 				} else {
 					n.chResult <- true
 				}
+				gaSession.Event("notification", n.campaign)
 				time.Sleep(delay)
 			case <-chStop:
 				return

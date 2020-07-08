@@ -23,7 +23,6 @@ import (
 
 	"github.com/getlantern/golog"
 	proxy "github.com/getlantern/http-proxy-lantern"
-	"github.com/getlantern/http-proxy-lantern/instrument"
 	"github.com/getlantern/quicwrapper"
 	"github.com/getlantern/tlsdefaults"
 	"github.com/getlantern/waitforserver"
@@ -248,7 +247,6 @@ func (helper *Helper) startProxyServer() error {
 		CertFile:    CertFile,
 		IdleTimeout: 30 * time.Second,
 		HTTPS:       true,
-		Instrument:  instrument.NoInstrument{},
 	}
 
 	// kcp server
@@ -261,7 +259,6 @@ func (helper *Helper) startProxyServer() error {
 		CertFile:     CertFile,
 		IdleTimeout:  30 * time.Second,
 		HTTPS:        false,
-		Instrument:   instrument.NoInstrument{},
 	}
 
 	go s1.ListenAndServe()
@@ -442,8 +439,8 @@ func (helper *Helper) buildProxies(proto string) ([]byte, error) {
 			srv.Addr = helper.WSSProxyServerAddr
 			srv.PluggableTransport = "wss"
 			srv.PluggableTransportSettings = map[string]string{
-				"multiplexed":     "true",
-				"pin_certificate": "true",
+				"url":         fmt.Sprintf("https://%s", helper.WSSProxyServerAddr),
+				"multiplexed": "true",
 			}
 		} else if proto == "utphttps" {
 			srv.Addr = helper.HTTPSUTPAddr
