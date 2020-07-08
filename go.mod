@@ -103,7 +103,7 @@ require (
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20200211213545-301421f7c3c9
 
-replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20200609191416-c359cb589c95
+replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20200708025417-3b1d9d0bb892
 
 replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3
 
