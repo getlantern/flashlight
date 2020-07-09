@@ -31,7 +31,11 @@ func init() {
 }
 
 // ReportIssue reports an issue via email.
-func ReportIssue(userID int, proToken, deviceID, appVersion, deviceModel, iosVersion, emailAddress, issue, appLogsDir, tunnelLogsDir, proxiesYamlPath string) error {
+func ReportIssue(isPro bool, userID int, proToken, deviceID, appVersion, deviceModel, iosVersion, emailAddress, issue, appLogsDir, tunnelLogsDir, proxiesYamlPath string) error {
+	proText := "no"
+	if isPro {
+		proText = "yes"
+	}
 	msg := &email.Message{
 		Template: "user-send-logs-ios",
 		From:     emailAddress,
@@ -39,7 +43,7 @@ func ReportIssue(userID int, proToken, deviceID, appVersion, deviceModel, iosVer
 			"issue":        issue,
 			"userid":       userID,
 			"protoken":     proToken,
-			"prouser":      "true",
+			"prouser":      proText,
 			"deviceID":     deviceID,
 			"emailaddress": emailAddress,
 			"appversion":   appVersion,

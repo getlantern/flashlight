@@ -16,7 +16,6 @@ import (
 	"time"
 
 	"github.com/getlantern/appdir"
-	"github.com/getlantern/errors"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/osversion"
@@ -28,6 +27,7 @@ import (
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/desktop"
 	"github.com/getlantern/flashlight/logging"
+	"github.com/getlantern/flashlight/util"
 )
 
 var (
@@ -82,19 +82,7 @@ func main() {
 	// This init needs to be called before the panicwrapper fork so that it has been
 	// defined in the parent process
 	if desktop.ShouldReportToSentry() {
-		sentry.Init(sentry.ClientOptions{
-			Dsn:     desktop.SENTRY_DSN,
-			Release: common.Version,
-		})
-
-		sentry.ConfigureScope(func(scope *sentry.Scope) {
-			os_version, err := osversion.GetHumanReadable()
-			if err != nil {
-				log.Errorf("Unable to get os version: %v", err)
-			} else {
-				scope.SetTag("os_version", os_version)
-			}
-		})
+		initSentry()
 	}
 
 	// Disable panicwrap for cases either unnecessary or when the exit status
@@ -150,14 +138,6 @@ func main() {
 		}()
 	}
 
-	if *timeout > 0 {
-		go func() {
-			time.AfterFunc(*timeout, func() {
-				a.Exit(errors.New("timed out after running for %v", *timeout))
-			})
-		}()
-	}
-
 	if *forceProxyAddr != "" {
 		chained.ForceProxy(*forceProxyAddr, *forceAuthToken)
 	}
@@ -208,6 +188,48 @@ func i18nInit(a *desktop.App) {
 			a.SetLanguage(locale)
 		}
 	}
+}
+
+func initSentry() {
+	sentry.Init(sentry.ClientOptions{
+		Dsn:     desktop.SENTRY_DSN,
+		Release: common.Version,
+		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+			// An attempt at keeping sentry from grouping distinct panics with the same top level message
+			// see https://github.com/getlantern/lantern-internal/issues/3651
+			// and https://docs.sentry.io/data-management/event-grouping/sdk-fingerprinting/?platform=go
+			messageFingerprint := ""
+			messageLines := strings.Split(event.Message, "\n")
+			if len(messageLines) > 5 {
+				messageFingerprint = strings.Join([]string{messageLines[0], messageLines[1], messageLines[4], messageLines[5]}, "\n")
+			}
+
+			exceptionFingerprint := ""
+			for _, exception := range event.Exception {
+				// Sentry is already correctly separating exceptions by stack traces, but inexplicably not
+				// by the exception.Value, so we have to add it here
+				// https://github.com/getlantern/lantern-internal/issues/3666
+				exceptionFingerprint += fmt.Sprintf("%v", exception.Value)
+			}
+
+			event.Fingerprint = []string{"{{ default }}", messageFingerprint, exceptionFingerprint}
+
+			// sentry's sdk has a somewhat undocumented max message length
+			// after which it seems it will silently drop/fail to send messages
+			// https://github.com/getlantern/flashlight/pull/806
+			event.Message = util.TrimStringAsBytes(event.Message, desktop.SENTRY_MAX_MESSAGE_CHARS)
+			return event
+		},
+	})
+
+	sentry.ConfigureScope(func(scope *sentry.Scope) {
+		os_version, err := osversion.GetHumanReadable()
+		if err != nil {
+			log.Errorf("Unable to get os version: %v", err)
+		} else {
+			scope.SetTag("os_version", os_version)
+		}
+	})
 }
 
 func parseFlags() {

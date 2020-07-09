@@ -60,27 +60,28 @@ type runner struct {
 	isPro             func() bool
 	mxGlobal          sync.RWMutex
 	global            *config.Global
-	onProxiesUpdate   func([]balancer.Dialer)
-	onConfigUpdate    func(*config.Global)
+	onProxiesUpdate   func([]balancer.Dialer, config.Source)
+	onConfigUpdate    func(*config.Global, config.Source)
 	onBordaConfigured chan bool
 	autoReport        func() bool
 	client            *client.Client
 }
 
-func (r *runner) onGlobalConfig(cfg *config.Global) {
+func (r *runner) onGlobalConfig(cfg *config.Global, src config.Source) {
 	r.mxGlobal.Lock()
 	r.global = cfg
 	r.mxGlobal.Unlock()
 	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
 	applyClientConfig(cfg)
-	r.applyProxyBenchAndBorda(cfg)
+	r.applyProxyBench(cfg)
+	r.applyBorda(cfg)
 	select {
 	case r.onBordaConfigured <- true:
 		// okay
 	default:
 		// ignore
 	}
-	r.onConfigUpdate(cfg)
+	r.onConfigUpdate(cfg, src)
 	r.reconfigurePingProxies()
 }
 
@@ -134,18 +135,18 @@ func (r *runner) featureOptions(feature string, opts config.FeatureOptions) erro
 }
 
 func (r *runner) startConfigFetch() func() {
-	proxiesDispatch := func(conf interface{}) {
+	proxiesDispatch := func(conf interface{}, src config.Source) {
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
 		dialers := r.client.Configure(proxyMap)
 		if dialers != nil {
-			r.onProxiesUpdate(dialers)
+			r.onProxiesUpdate(dialers, src)
 		}
 	}
-	globalDispatch := func(conf interface{}) {
+	globalDispatch := func(conf interface{}, src config.Source) {
 		cfg := conf.(*config.Global)
 		log.Debugf("Applying global config")
-		r.onGlobalConfig(cfg)
+		r.onGlobalConfig(cfg, src)
 	}
 	rt := proxied.ParallelPreferChained()
 
@@ -153,13 +154,24 @@ func (r *runner) startConfigFetch() func() {
 	return stopConfig
 }
 
-func (r *runner) applyProxyBenchAndBorda(cfg *config.Global) {
-	if r.featureEnabled(config.FeatureProxyBench) {
-		startProxyBenchOnce.Do(func() {
-			proxybench.Start(&proxybench.Opts{}, func(timing time.Duration, ctx map[string]interface{}) {})
-		})
-	}
+func (r *runner) applyProxyBench(cfg *config.Global) {
+	go func() {
+		// Wait a while for geolookup to happen before checking if we can turn on proxybench
+		geolookup.GetCountry(1 * time.Minute)
+		if r.featureEnabled(config.FeatureProxyBench) {
+			startProxyBenchOnce.Do(func() {
+				opts := &proxybench.Opts{
+					UpdateURL: "https://s3.amazonaws.com/lantern/proxybench.json",
+				}
+				proxybench.Start(opts, func(timing time.Duration, ctx map[string]interface{}) {})
+			})
+		} else {
+			log.Debug("proxybench disabled")
+		}
+	}()
+}
 
+func (r *runner) applyBorda(cfg *config.Global) {
 	_enableBorda := borda.Enabler(cfg.BordaSamplePercentage)
 	enableBorda := func(ctx map[string]interface{}) bool {
 		if !r.autoReport() {
@@ -189,8 +201,8 @@ func Run(httpProxyAddr string,
 	flagsAsMap map[string]interface{},
 	beforeStart func() bool,
 	afterStart func(cl *client.Client),
-	onConfigUpdate func(cfg *config.Global),
-	onProxiesUpdate func([]balancer.Dialer),
+	onConfigUpdate func(*config.Global, config.Source),
+	onProxiesUpdate func([]balancer.Dialer, config.Source),
 	userConfig common.UserConfig,
 	statsTracker stats.Tracker,
 	onError func(err error),
@@ -201,10 +213,10 @@ func Run(httpProxyAddr string,
 	reverseDNS func(host string) string) error {
 
 	if onProxiesUpdate == nil {
-		onProxiesUpdate = func(_ []balancer.Dialer) {}
+		onProxiesUpdate = func(_ []balancer.Dialer, src config.Source) {}
 	}
 	if onConfigUpdate == nil {
-		onConfigUpdate = func(_ *config.Global) {}
+		onConfigUpdate = func(_ *config.Global, src config.Source) {}
 	}
 	if onError == nil {
 		onError = func(_ error) {}
@@ -220,7 +232,7 @@ func Run(httpProxyAddr string,
 	if common.InDevelopment() {
 		log.Debugf("You can query for this device's activity in borda under device id: %v", deviceID)
 	}
-	fops.InitGlobalContext(deviceID, isPro, userID, func() string { return geolookup.GetCountry(0) }, func() string { return geolookup.GetIP(0) })
+	fops.InitGlobalContext(deviceID, isPro, func() string { return geolookup.GetCountry(0) })
 	email.SetHTTPClient(proxied.DirectThenFrontedClient(1 * time.Minute))
 	op := fops.Begin("client_started")
 
@@ -294,6 +306,7 @@ func Run(httpProxyAddr string,
 		shortcut.Allow,
 		useDetour,
 		func() bool { return !r.featureEnabled(config.FeatureNoHTTPSEverywhere) },
+		func() bool { return common.Platform != "android" && r.featureEnabled(config.FeatureTrackYouTube) },
 		userConfig,
 		statsTracker,
 		allowPrivateHosts,

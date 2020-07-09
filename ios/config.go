@@ -48,11 +48,13 @@ type ConfigResult struct {
 // configFolderPath. There are 5 files that must be initialized in
 // configFolderPath - global.yaml, global.yaml.etag, proxies.yaml,
 // proxies.yaml.etag and masquerade_cache. deviceID should be a string that
-// uniquely identifies the current device.
-func Configure(configFolderPath string, userID int, proToken, deviceID string, refreshProxies bool) (*ConfigResult, error) {
+// uniquely identifies the current device. hardcodedProxies allows manually specifying
+// a proxies.yaml configuration that overrides whatever we fetch from the cloud.
+func Configure(configFolderPath string, userID int, proToken, deviceID string, refreshProxies bool, hardcodedProxies string) (*ConfigResult, error) {
 	log.Debugf("Configuring client for device '%v' at config path '%v'", deviceID, configFolderPath)
 	cf := &configurer{
 		configFolderPath: configFolderPath,
+		hardcodedProxies: hardcodedProxies,
 		uc:               userConfigFor(userID, proToken, deviceID),
 	}
 	return cf.configure(userID, proToken, refreshProxies)
@@ -66,6 +68,7 @@ type UserConfig struct {
 
 type configurer struct {
 	configFolderPath string
+	hardcodedProxies string
 	uc               *UserConfig
 	rt               http.RoundTripper
 }
@@ -250,9 +253,40 @@ func (cf *configurer) updateProxies(cfg map[string]*chained.ChainedServerInfo, e
 
 // TODO: DRY violation with ../config/fetcher.go
 func (cf *configurer) updateFromWeb(name string, etag string, cfg interface{}, url string) (bool, error) {
+	var bytes []byte
+	var newETag string
+	var err error
+
+	if name == proxiesYaml && cf.hardcodedProxies != "" {
+		bytes, newETag, err = cf.updateFromHardcodedProxies()
+	} else {
+		bytes, newETag, err = cf.doUpdateFromWeb(name, etag, cfg, url)
+	}
+	if err != nil {
+		return false, err
+	}
+
+	if bytes == nil {
+		// config unchanged
+		return false, nil
+	}
+
+	cf.saveConfig(name, bytes)
+	cf.saveEtag(name, newETag)
+
+	if name == proxiesYaml {
+		log.Debugf("Updated proxies.yaml from cloud:\n%v", string(bytes))
+	} else {
+		log.Debugf("Updated %v from cloud", name)
+	}
+
+	return newETag != etag, nil
+}
+
+func (cf *configurer) doUpdateFromWeb(name string, etag string, cfg interface{}, url string) ([]byte, string, error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return false, errors.New("Unable to construct request to fetch %v from %v: %v", name, url, err)
+		return nil, "", errors.New("Unable to construct request to fetch %v from %v: %v", name, url, err)
 	}
 
 	if etag != "" {
@@ -270,7 +304,7 @@ func (cf *configurer) updateFromWeb(name string, etag string, cfg interface{}, u
 
 	resp, err := cf.rt.RoundTrip(req)
 	if err != nil {
-		return false, errors.New("Unable to fetch cloud config at %s: %s", url, err)
+		return nil, "", errors.New("Unable to fetch cloud config at %s: %s", url, err)
 	}
 	dump, dumperr := httputil.DumpResponse(resp, false)
 	if dumperr != nil {
@@ -286,12 +320,12 @@ func (cf *configurer) updateFromWeb(name string, etag string, cfg interface{}, u
 
 	if resp.StatusCode == 304 {
 		log.Debugf("%v unchanged in cloud", name)
-		return false, nil
+		return nil, "", nil
 	} else if resp.StatusCode != 200 {
 		if dumperr != nil {
-			return false, errors.New("Bad config response code for %v: %v", name, resp.StatusCode)
+			return nil, "", errors.New("Bad config response code for %v: %v", name, resp.StatusCode)
 		}
-		return false, errors.New("Bad config resp for %v:\n%v", name, string(dump))
+		return nil, "", errors.New("Bad config resp for %v:\n%v", name, string(dump))
 	}
 
 	newEtag := resp.Header.Get(common.EtagHeader)
@@ -299,7 +333,7 @@ func (cf *configurer) updateFromWeb(name string, etag string, cfg interface{}, u
 	body := io.TeeReader(resp.Body, buf)
 	gzReader, err := gzip.NewReader(body)
 	if err != nil {
-		return false, errors.New("Unable to open gzip reader: %s", err)
+		return nil, "", errors.New("Unable to open gzip reader: %s", err)
 	}
 
 	defer func() {
@@ -310,27 +344,23 @@ func (cf *configurer) updateFromWeb(name string, etag string, cfg interface{}, u
 
 	bytes, err := ioutil.ReadAll(gzReader)
 	if err != nil {
-		return false, errors.New("Unable to read response for %v: %v", name, err)
+		return nil, "", errors.New("Unable to read response for %v: %v", name, err)
 	}
 
 	if parseErr := yaml.Unmarshal(bytes, cfg); parseErr != nil {
-		return false, errors.New("Unable to parse update for %v: %v", name, parseErr)
+		return nil, "", errors.New("Unable to parse update for %v: %v", name, parseErr)
 	}
 
 	if newEtag == "" {
 		sum := md5.Sum(buf.Bytes())
 		newEtag = hex.EncodeToString(sum[:])
 	}
-	cf.saveConfig(name, bytes)
-	cf.saveEtag(name, newEtag)
 
-	if name == "proxies.yaml" {
-		log.Debugf("Updated proxies.yaml from cloud:\n%v", string(bytes))
-	} else {
-		log.Debugf("Updated %v from cloud", name)
-	}
+	return bytes, newEtag, nil
+}
 
-	return newEtag != etag, nil
+func (cf *configurer) updateFromHardcodedProxies() ([]byte, string, error) {
+	return []byte(cf.hardcodedProxies), "hardcoded", nil
 }
 
 func (cf *configurer) openFile(filename string) (*os.File, error) {

@@ -22,6 +22,7 @@ const (
 	FeatureNoDetour             = "nodetour"
 	FeatureNoHTTPSEverywhere    = "nohttpseverywhere"
 	FeatureProxyWhitelistedOnly = "proxywhitelistedonly"
+	FeatureTrackYouTube         = "trackyoutube"
 )
 
 var (

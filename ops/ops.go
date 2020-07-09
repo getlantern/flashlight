@@ -318,7 +318,7 @@ func (op *Op) SetMetricPercentile(name string, value float64) *Op {
 }
 
 // InitGlobalContext configures global context info
-func InitGlobalContext(deviceID string, isPro func() bool, userID func() int64, getCountry func() string, getIP func() string) {
+func InitGlobalContext(deviceID string, isPro func() bool, getCountry func() string) {
 	// Using "application" allows us to distinguish between errors from the
 	// lantern client vs other sources like the http-proxy, etop.
 	ops.SetGlobal("app", "lantern-client")
@@ -328,7 +328,6 @@ func InitGlobalContext(deviceID string, isPro func() bool, userID func() int64, 
 	ops.SetGlobal("os_arch", runtime.GOARCH)
 	ops.SetGlobal("device_id", deviceID)
 	ops.SetGlobalDynamic("geo_country", func() interface{} { return getCountry() })
-	ops.SetGlobalDynamic("client_ip", func() interface{} { return getIP() })
 	ops.SetGlobalDynamic("timezone", func() interface{} { return time.Now().Format("MST") })
 	ops.SetGlobalDynamic("locale_language", func() interface{} {
 		lang, _ := jibber_jabber.DetectLanguage()
@@ -340,9 +339,6 @@ func InitGlobalContext(deviceID string, isPro func() bool, userID func() int64, 
 	})
 	ops.SetGlobalDynamic("is_pro", func() interface{} {
 		return isPro()
-	})
-	ops.SetGlobalDynamic("user_id", func() interface{} {
-		return userID()
 	})
 	ops.SetGlobalDynamic("is_data_capped", func() interface{} {
 		if isPro() {

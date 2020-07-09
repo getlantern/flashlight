@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/golog"
@@ -36,6 +37,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/datacap"
+	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/icons"
 
 	"github.com/getlantern/flashlight/email"
@@ -49,8 +51,9 @@ import (
 )
 
 const (
-	SENTRY_DSN     = "https://f65aa492b9524df79b05333a0b0924c5@sentry.io/2222244"
-	SENTRY_TIMEOUT = time.Second * 30
+	SENTRY_DSN               = "https://f65aa492b9524df79b05333a0b0924c5@sentry.io/2222244"
+	SENTRY_TIMEOUT           = time.Second * 30
+	SENTRY_MAX_MESSAGE_CHARS = 8000
 )
 
 const (
@@ -83,18 +86,21 @@ func init() {
 
 // App is the core of the Lantern desktop application, in the form of a library.
 type App struct {
-	hasExited int64
+	hasExited            int64
+	fetchedGlobalConfig  int32
+	fetchedProxiesConfig int32
 
 	Flags        map[string]interface{}
 	exited       eventual.Value
+	gaSession    analytics.Session
 	statsTracker *statsTracker
 
 	muExitFuncs sync.RWMutex
 	exitFuncs   []func()
 
-	uiServer *ui.Server
-	ws       ws.UIChannel
-	chrome   chromeExtension
+	uiServerCh chan *ui.Server
+	ws         ws.UIChannel
+	chrome     chromeExtension
 
 	// If both the trafficLogLock and proxiesLock are needed, the trafficLogLock should be obtained
 	// first. Keeping the order consistent avoids deadlocking.
@@ -115,10 +121,13 @@ type App struct {
 func (app *App) Init() {
 	golog.OnFatal(app.exitOnFatal)
 	app.Flags["staging"] = common.Staging
+	app.uiServerCh = make(chan *ui.Server, 1)
 	app.chrome = newChromeExtension()
 	//app.chrome.install()
 	settings = app.loadSettings()
 	app.exited = eventual.NewValue()
+	// overridden later if auto report is allowed
+	app.gaSession = analytics.NullSession{}
 	app.statsTracker = NewStatsTracker()
 	pro.OnProStatusChange(func(isPro bool, yinbiEnabled bool) {
 		app.statsTracker.SetIsPro(isPro)
@@ -168,6 +177,12 @@ func (app *App) exitOnFatal(err error) {
 	app.Exit(err)
 }
 
+func (app *App) uiServer() *ui.Server {
+	server := <-app.uiServerCh
+	app.uiServerCh <- server
+	return server
+}
+
 // Run starts the app. It will block until the app exits.
 func (app *App) Run() {
 	golog.OnFatal(app.exitOnFatal)
@@ -197,6 +212,15 @@ func (app *App) Run() {
 		}
 		if socksAddr == "" {
 			socksAddr = defaultSOCKSProxyAddress
+		}
+
+		if timeout := app.Flags["timeout"].(time.Duration); timeout > 0 {
+			go func() {
+				time.AfterFunc(timeout, func() {
+					app.Exit(errors.New("No succeeding proxy got after running for %v, global config fetched: %v, proxies fetched: %v",
+						timeout, atomic.LoadInt32(&app.fetchedGlobalConfig) == 1, atomic.LoadInt32(&app.fetchedProxiesConfig) == 1))
+				})
+			}()
 		}
 
 		if app.Flags["initialize"].(bool) {
@@ -325,16 +349,18 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 		standalone := app.Flags["standalone"] != nil && app.Flags["standalone"].(bool)
 		// ui will handle empty uiaddr correctly
-		if app.uiServer, err = ui.StartServer(uiaddr,
+		uiServer, err := ui.StartServer(uiaddr,
 			startupURL,
 			localHTTPToken(settings),
 			standalone,
 			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
 			&ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
-		); err != nil {
+		)
+		if err != nil {
 			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 			return false
 		}
+		app.uiServerCh <- uiServer
 
 		if app.ShouldShowUI() {
 			go func() {
@@ -352,7 +378,7 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 			app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
 			return false
 		}
-		settings.SetUIAddr(app.uiServer.GetUIAddr())
+		settings.SetUIAddr(uiServer.GetUIAddr())
 
 		if err = app.statsTracker.StartService(app.ws); err != nil {
 			log.Errorf("Unable to serve stats to UI: %v", err)
@@ -374,16 +400,18 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 		// Don't block on fetching the location for the UI.
 		go serveLocation(app.ws)
 
-		// Only run analytics once on startup.
 		if settings.IsAutoReport() {
-			stopAnalytics := analytics.Start(settings.GetDeviceID(), common.Version)
-			app.AddExitFunc("stopping analytics", stopAnalytics)
+			app.gaSession = analytics.Start(settings.GetDeviceID(), common.Version)
+			app.AddExitFunc("stopping analytics", app.gaSession.End)
+			go func() {
+				app.gaSession.SetIP(geolookup.GetIP(eventual.Forever))
+			}()
 		}
 
 		app.AddExitFunc("stopping loconf scanner", LoconfScanner(4*time.Hour, isProUser, func() string {
 			return app.AddToken("/img/lantern_logo.png")
 		}))
-		app.AddExitFunc("stopping notifier", notifier.NotificationsLoop())
+		app.AddExitFunc("stopping notifier", notifier.NotificationsLoop(app.gaSession))
 		app.OnStatsChange(func(newStats stats.Stats) {
 			for _, alert := range newStats.Alerts {
 				note := &notify.Notification{
@@ -401,12 +429,14 @@ func (app *App) beforeStart(listenAddr string) func() bool {
 
 // Connect turns on proxying
 func (app *App) Connect() {
+	app.gaSession.Event("systray-menu", "connect")
 	ops.Begin("connect").End()
 	settings.setBool(SNDisconnected, false)
 }
 
 // Disconnect turns off proxying
 func (app *App) Disconnect() {
+	app.gaSession.Event("systray-menu", "disconnect")
 	ops.Begin("disconnect").End()
 	settings.setBool(SNDisconnected, true)
 }
@@ -465,7 +495,7 @@ func (app *App) afterStart(cl *client.Client) {
 		// URL and the proxy server are all up and running to avoid
 		// race conditions where we change the proxy setup while the
 		// UI server and proxy server are still coming up.
-		app.uiServer.ShowRoot("startup", "lantern", app.statsTracker)
+		app.uiServer().ShowRoot("startup", "lantern", app.statsTracker)
 	} else {
 		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
 	}
@@ -485,7 +515,11 @@ func (app *App) afterStart(cl *client.Client) {
 	}
 }
 
-func (app *App) onConfigUpdate(cfg *config.Global) {
+func (app *App) onConfigUpdate(cfg *config.Global, src config.Source) {
+	if src == config.Fetched {
+		app.gaSession.Event("config", "global-fetched")
+		atomic.StoreInt32(&app.fetchedGlobalConfig, 1)
+	}
 	autoupdate.Configure(cfg.UpdateServerURL, cfg.AutoUpdateCA, func() string {
 		return app.AddToken("/img/lantern_logo.png")
 	})
@@ -493,7 +527,11 @@ func (app *App) onConfigUpdate(cfg *config.Global) {
 	go app.configureTrafficLog(*cfg)
 }
 
-func (app *App) onProxiesUpdate(proxies []balancer.Dialer) {
+func (app *App) onProxiesUpdate(proxies []balancer.Dialer, src config.Source) {
+	if src == config.Fetched {
+		app.gaSession.Event("config", "proxies-fetched")
+		atomic.StoreInt32(&app.fetchedProxiesConfig, 1)
+	}
 	app.trafficLogLock.Lock()
 	app.proxiesLock.Lock()
 	app.proxies = proxies
@@ -819,22 +857,24 @@ func ShouldReportToSentry() bool {
 
 // OnTrayShow indicates the user has selected to show lantern from the tray.
 func (app *App) OnTrayShow() {
-	app.uiServer.ShowRoot("show-lantern", "tray", app.statsTracker)
+	app.gaSession.Event("systray-menu", "show")
+	app.uiServer().ShowRoot("show-lantern", "tray", app.statsTracker)
 }
 
 // OnTrayUpgrade indicates the user has selected to upgrade lantern from the tray.
 func (app *App) OnTrayUpgrade() {
-	app.uiServer.Show(app.PlansURL(), "proupgrade", "tray", app.statsTracker)
+	app.gaSession.Event("systray-menu", "upgrade")
+	app.uiServer().Show(app.PlansURL(), "proupgrade", "tray", app.statsTracker)
 }
 
 // PlansURL returns the URL for accessing the checkout/plans page directly.
 func (app *App) PlansURL() string {
-	return app.uiServer.AddToken("/") + "#/plans"
+	return app.uiServer().AddToken("/") + "#/plans"
 }
 
 // AddToken adds our secure token to a given request path.
 func (app *App) AddToken(path string) string {
-	return app.uiServer.AddToken(path)
+	return app.uiServer().AddToken(path)
 }
 
 // GetTranslations adds our secure token to a given request path.

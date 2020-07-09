@@ -30,3 +30,10 @@ func TrimStringAsRunes(numChars uint, s string, trimFront bool) string {
 	}
 	return s
 }
+
+func TrimStringAsBytes(s string, maxLength int) string {
+	if maxLength < len(s) {
+		return s[:maxLength]
+	}
+	return s
+}

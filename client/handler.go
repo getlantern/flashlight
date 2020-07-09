@@ -59,6 +59,8 @@ func (client *Client) filter(ctx filters.Context, req *http.Request, next filter
 		return filters.Fail(ctx, req, http.StatusBadRequest, errors.New(""))
 	}
 
+	trackYoutubeWatches(req)
+
 	// Add the scheme back for CONNECT requests. It is cleared
 	// intentionally by the standard library, see
 	// https://golang.org/src/net/http/request.go#L938. The easylist
@@ -220,4 +222,12 @@ func (client *Client) redirectAdSwap(ctx filters.Context, req *http.Request, adS
 	}
 	resp.Header.Set("Location", adSwapURL)
 	return filters.ShortCircuit(ctx, req, resp)
+}
+
+func trackYoutubeWatches(req *http.Request) {
+	if strings.Contains(strings.ToLower(req.Host), "youtube") && req.URL.Path == "/watch" {
+		op := ops.Begin("youtube_view").Set("video", req.URL.Query().Get("v"))
+		defer op.End()
+		log.Debugf("Requested YouTube video")
+	}
 }
