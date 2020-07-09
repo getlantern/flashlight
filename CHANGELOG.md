@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.9.18](https://github.com/getlantern/flashlight/tree/5.9.18) (2020-07-09)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.17...5.9.18)
+
+**Merged pull requests:**
+
+- hotfix for quic session deadlock [\#840](https://github.com/getlantern/flashlight/pull/840) ([myleshorton](https://github.com/myleshorton))
+
 ## [5.9.17](https://github.com/getlantern/flashlight/tree/5.9.17) (2020-07-08)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.16...5.9.17)
@@ -82,6 +90,7 @@
 - Don't clear out configs when config is unchanged in cloud [\#811](https://github.com/getlantern/flashlight/pull/811) ([oxtoacart](https://github.com/oxtoacart))
 - Include exception 'value' in sentry fingerprint for correct grouping [\#809](https://github.com/getlantern/flashlight/pull/809) ([max-b](https://github.com/max-b))
 - report a bit more information when flashlight timeout is hit [\#807](https://github.com/getlantern/flashlight/pull/807) ([joesis](https://github.com/joesis))
+- Actually record pro status when submitting iOS issues [\#804](https://github.com/getlantern/flashlight/pull/804) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [5.9.7](https://github.com/getlantern/flashlight/tree/5.9.7) (2020-04-29)
 
@@ -90,6 +99,7 @@
 **Merged pull requests:**
 
 - Truncate the message sent to sentry to max allowable chars [\#806](https://github.com/getlantern/flashlight/pull/806) ([max-b](https://github.com/max-b))
+- Bundle lantern-desktop-ui replica api path fix [\#800](https://github.com/getlantern/flashlight/pull/800) ([max-b](https://github.com/max-b))
 
 ## [5.9.6](https://github.com/getlantern/flashlight/tree/5.9.6) (2020-04-27)
 
@@ -98,7 +108,6 @@
 **Merged pull requests:**
 
 - update to latest borda package [\#805](https://github.com/getlantern/flashlight/pull/805) ([joesis](https://github.com/joesis))
-- Actually record pro status when submitting iOS issues [\#804](https://github.com/getlantern/flashlight/pull/804) ([oxtoacart](https://github.com/oxtoacart))
 - Exclude 10.10.x.x from Iran shortcut list [\#801](https://github.com/getlantern/flashlight/pull/801) ([joesis](https://github.com/joesis))
 
 ## [5.9.5](https://github.com/getlantern/flashlight/tree/5.9.5) (2020-04-24)
@@ -143,6 +152,10 @@
 ## [5.9.1](https://github.com/getlantern/flashlight/tree/5.9.1) (2020-04-07)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.0...5.9.1)
+
+**Merged pull requests:**
+
+- skip re-evaluating dialers when background checking is disabled [\#782](https://github.com/getlantern/flashlight/pull/782) ([joesis](https://github.com/joesis))
 
 ## [5.9.0](https://github.com/getlantern/flashlight/tree/5.9.0) (2020-04-03)
 
@@ -231,7 +244,6 @@
 - update all dependencies to use latest smux [\#741](https://github.com/getlantern/flashlight/pull/741) ([joesis](https://github.com/joesis))
 - generate shortcut list from GeoLite2 country database instead [\#739](https://github.com/getlantern/flashlight/pull/739) ([joesis](https://github.com/joesis))
 - override shortcut resolver to be able to find real IP of the host on … [\#738](https://github.com/getlantern/flashlight/pull/738) ([joesis](https://github.com/joesis))
-- Bring in https://github.com/getlantern/smux/pull/1 [\#737](https://github.com/getlantern/flashlight/pull/737) ([joesis](https://github.com/joesis))
 
 ## [5.7.2](https://github.com/getlantern/flashlight/tree/5.7.2) (2019-12-03)
 
@@ -523,15 +535,15 @@
 
 ## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.13)
-
-## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
-
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.13)
 
 ## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.11)
+
+## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.12)
 
 ## [4.6.10](https://github.com/getlantern/flashlight/tree/4.6.10) (2018-04-30)
 
