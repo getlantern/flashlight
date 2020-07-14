@@ -26,6 +26,7 @@ import (
 	"github.com/anacrolix/torrent"
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/getlantern/flashlight/common"
+	metascrubber "github.com/getlantern/meta-scrubber"
 	"github.com/getlantern/replica"
 )
 
@@ -160,8 +161,13 @@ func (me *HttpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 	w := ops.InitInstrumentedResponseWriter(rw, "replica_upload")
 	defer w.Finish()
 
+	scrubbedReader, err := metascrubber.GetScrubber(r.Body)
+	if err != nil {
+		panic(err)
+	}
+
 	var cw replica.CountWriter
-	replicaUploadReader := io.TeeReader(r.Body, &cw)
+	replicaUploadReader := io.TeeReader(scrubbedReader, &cw)
 
 	tmpFile, tmpFileErr := func() (*os.File, error) {
 		const forceTempFileFailure = false
