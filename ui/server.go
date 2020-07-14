@@ -5,6 +5,7 @@ import (
 	"mime"
 	"net"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -17,8 +18,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/tarfs"
 
-	"github.com/getlantern/flashlight/analytics"
-
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ui/auth"
@@ -387,7 +387,7 @@ func (s *Server) Show(destURL, campaign, medium string, st stats.Tracker) {
 // ones reading from those incoming sockets the fact that reading starts
 // asynchronously is not a problem.
 func (s *Server) doShow(destURL, campaign, medium string, open func(string, time.Duration)) {
-	campaignURL, err := analytics.AddCampaign(destURL, campaign, "", medium)
+	campaignURL, err := AddCampaign(destURL, campaign, "", medium)
 	var uiURL string
 	if err != nil {
 		uiURL = destURL
@@ -522,4 +522,22 @@ func Translations(filename string) ([]byte, error) {
 		return nil, fmt.Errorf("Could not get traslation for file name: %v", filename)
 	}
 	return tr.(*tarfs.FileSystem).Get(filename)
+}
+
+// AddCampaign adds Google Analytics campaign tracking to a URL and returns
+// that URL.
+func AddCampaign(urlStr, campaign, content, medium string) (string, error) {
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		log.Errorf("Could not parse click URL: %v", err)
+		return "", err
+	}
+
+	q := u.Query()
+	q.Set("utm_source", common.Platform)
+	q.Set("utm_medium", medium)
+	q.Set("utm_campaign", campaign)
+	q.Set("utm_content", content)
+	u.RawQuery = q.Encode()
+	return u.String(), nil
 }

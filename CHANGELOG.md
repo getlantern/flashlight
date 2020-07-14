@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.9.16](https://github.com/getlantern/flashlight/tree/5.9.16) (2020-07-02)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.15...5.9.16)
+
+**Merged pull requests:**
+
+- Wait for geolookup before determining whether proxybench is enabled [\#833](https://github.com/getlantern/flashlight/pull/833) ([oxtoacart](https://github.com/oxtoacart))
+
+## [5.9.15](https://github.com/getlantern/flashlight/tree/5.9.15) (2020-06-23)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.14...5.9.15)
+
 ## [5.9.14](https://github.com/getlantern/flashlight/tree/5.9.14) (2020-06-15)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.13...5.9.14)
@@ -219,9 +231,6 @@
 - Managing memory usage on iOS more aggressively [\#733](https://github.com/getlantern/flashlight/pull/733) ([oxtoacart](https://github.com/oxtoacart))
 - Using more accurate build tags to disable UTP on Linux and iOS [\#732](https://github.com/getlantern/flashlight/pull/732) ([oxtoacart](https://github.com/oxtoacart))
 - Added support for pro API to iOS [\#731](https://github.com/getlantern/flashlight/pull/731) ([oxtoacart](https://github.com/oxtoacart))
-- Install chrome extension via external installation method [\#730](https://github.com/getlantern/flashlight/pull/730) ([myleshorton](https://github.com/myleshorton))
-- support quic ietf draft 24 [\#729](https://github.com/getlantern/flashlight/pull/729) ([forkner](https://github.com/forkner))
-- Stores a copy of our settings for the Lantern Chrome Extension to read [\#727](https://github.com/getlantern/flashlight/pull/727) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.7.2](https://github.com/getlantern/flashlight/tree/5.7.2) (2019-12-03)
 
