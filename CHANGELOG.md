@@ -1,5 +1,9 @@
 # Changelog
 
+## [5.9.19](https://github.com/getlantern/flashlight/tree/5.9.19) (2020-07-14)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.18...5.9.19)
+
 ## [5.9.18](https://github.com/getlantern/flashlight/tree/5.9.18) (2020-07-08)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.17...5.9.18)
@@ -242,7 +246,6 @@
 - Cleanup Lantern exit for CTRL-C case. [\#742](https://github.com/getlantern/flashlight/pull/742) ([myleshorton](https://github.com/myleshorton))
 - update all dependencies to use latest smux [\#741](https://github.com/getlantern/flashlight/pull/741) ([joesis](https://github.com/joesis))
 - generate shortcut list from GeoLite2 country database instead [\#739](https://github.com/getlantern/flashlight/pull/739) ([joesis](https://github.com/joesis))
-- override shortcut resolver to be able to find real IP of the host on … [\#738](https://github.com/getlantern/flashlight/pull/738) ([joesis](https://github.com/joesis))
 
 ## [5.7.2](https://github.com/getlantern/flashlight/tree/5.7.2) (2019-12-03)
 
