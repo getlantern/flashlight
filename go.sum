@@ -437,12 +437,14 @@ github.com/getlantern/proxy v0.0.0-20200302183216-36afa00d0126 h1:1vQsmvWO75QO9V
 github.com/getlantern/proxy v0.0.0-20200302183216-36afa00d0126/go.mod h1:40zgzXJCOqbq4JVe1geITEbgVJsPUgOIsQmaMoQsN2I=
 github.com/getlantern/proxybench v0.0.0-20200626174328-a2580b5e8a59 h1:z6oVlPwEMVWHuCfGTYbsJB99a39o2qaQIFMayz5GRXw=
 github.com/getlantern/proxybench v0.0.0-20200626174328-a2580b5e8a59/go.mod h1:0q8eYDExExu4OEUGbKFbitxZ3UXbGHzewQ9o/ywIJaE=
-github.com/getlantern/quic-go v0.7.1-0.20200211213545-301421f7c3c9 h1:Dzcr/8ySzz8ZiodqMLA7wneoKjjtzdFBaJTfIfPuOqM=
-github.com/getlantern/quic-go v0.7.1-0.20200211213545-301421f7c3c9/go.mod h1:dqgJKGJLaqeWbytE+WuqL0IJGLBtvx/gNinkUOuufg8=
+github.com/getlantern/quic-go v0.7.1-0.20200708221337-157ddc277592 h1:n89jsK18ZgJH8mn8guvzDpVPXcmJ2koL6kKi//RX08g=
+github.com/getlantern/quic-go v0.7.1-0.20200708221337-157ddc277592/go.mod h1:dqgJKGJLaqeWbytE+WuqL0IJGLBtvx/gNinkUOuufg8=
 github.com/getlantern/quic0 v0.0.0-20200121154153-8b18c2ba09f9 h1:2mUoAxwY496WRXnj0R5xce0tq1xuKDeREhgp62fEzig=
 github.com/getlantern/quic0 v0.0.0-20200121154153-8b18c2ba09f9/go.mod h1:UygfmMF7wR6KkIbQtL1ceCfi5UC/9JsnCyCS8WzU3nY=
 github.com/getlantern/quicwrapper v0.0.0-20200129232925-8ef70253fcae h1:Is+Bvq12YUkVfIYDRr5OAtv1NL3Is57djELuMXI7HjQ=
 github.com/getlantern/quicwrapper v0.0.0-20200129232925-8ef70253fcae/go.mod h1:DDN8Ouc3Mq+buV5UsQGznJ7Lu4gvUljxm6EkpXdMA6o=
+github.com/getlantern/quicwrapper v0.0.0-20200708222210-66fc59a379b5 h1:hQBId4Wsefs6Fe5FDKDiCdZfk9sqgloe792izRdSGEE=
+github.com/getlantern/quicwrapper v0.0.0-20200708222210-66fc59a379b5/go.mod h1:lutBCM7WQivIXXZ5NEaPy5VMxjtBwecLRhbpm2eMV40=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c h1:IkjF+RwRs8B/RsuD638eUFO2K/227OO2B1FLXGp17Ro=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c/go.mod h1:kExwbqTx1krUnT9ohmXG3jayDTEBfxUKeoRzU6XucLw=
 github.com/getlantern/ring v0.0.0-20181206150603-dd46ce8faa01/go.mod h1:mnw3NsM0/oiJdZDMujNx+Kg60o72UClHB1UNqrEWqOM=
@@ -474,8 +476,8 @@ github.com/getlantern/tlsresumption v0.0.0-20200205020452-74fc6ea4e074/go.mod h1
 github.com/getlantern/tlsutil v0.2.0 h1:i1X/r3w6FLaceoNBkTsRXWcE3Ujz7rbWmtipS28vvQo=
 github.com/getlantern/tlsutil v0.2.0/go.mod h1:Vxsyr9DVnYwsqHaEzMYkg9fT8aBrnO2eI+gdICMQbQU=
 github.com/getlantern/utls v0.0.0-20191119185840-3db8c755b682/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
-github.com/getlantern/utls v0.0.0-20200609191416-c359cb589c95 h1:RdYBF7vwOtjaXvTukuBrZEYh3k0ALzBJUjrLkoxQhrk=
-github.com/getlantern/utls v0.0.0-20200609191416-c359cb589c95/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
+github.com/getlantern/utls v0.0.0-20200708025417-3b1d9d0bb892 h1:/vuZ7+WXAsHxlH4h8DR9FppTpr6SwVPKQ76uRfK6ozo=
+github.com/getlantern/utls v0.0.0-20200708025417-3b1d9d0bb892/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
 github.com/getlantern/uuid v1.1.2-0.20190507182000-5c9436b8c718/go.mod h1:uX10hOzZUUDR+oYNSIks+RcozOEiwTNC/K2rw9SUi1k=
 github.com/getlantern/uuid v1.2.0 h1:pGrGaCV7XEaG6lvjWkwf8Y92BjB/9yFmkKsNFpRQ7rc=
 github.com/getlantern/uuid v1.2.0/go.mod h1:uX10hOzZUUDR+oYNSIks+RcozOEiwTNC/K2rw9SUi1k=
