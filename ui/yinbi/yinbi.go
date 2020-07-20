@@ -156,18 +156,6 @@ func (h *YinbiHandler) importWalletHandler(w http.ResponseWriter,
 	}
 	log.Debug("Successfully imported yin.bi wallet")
 
-	if params.Email != "" && !params.Authenticated {
-		params.Address = pair.Address()
-		err = h.createUserAccount(w, &params)
-		if err != nil {
-			log.Errorf("Error creating user account: %v", err)
-			h.ErrorHandler(w, err, http.StatusBadRequest)
-			return
-		}
-		log.Debugf("Created new user account with username %s", params.Username)
-		return
-	}
-
 	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"address": pair.Address(),
 		"success": true,
@@ -189,25 +177,6 @@ func (h YinbiHandler) sendSuccess(w http.ResponseWriter) {
 	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
 	})
-}
-
-func (h YinbiHandler) confirmImportHandler(w http.ResponseWriter,
-	req *http.Request) {
-	log.Debug("New confirm import wallet request")
-	var params ImportWalletParams
-	err := scommon.DecodeJSONRequest(req, &params)
-	if err != nil {
-		log.Error(err)
-		return
-	}
-	err = h.createUserAccount(w, &params)
-	if err != nil {
-		log.Errorf("Error creating user account: %v", err)
-		h.ErrorHandler(w, err, http.StatusBadRequest)
-		return
-	}
-	log.Debugf("Created new user account with username %s", params.Username)
-	h.sendSuccess(w)
 }
 
 func (h YinbiHandler) sendImportWallet(uri string, params *ImportWalletParams, req *http.Request) (*keypair.Full, *ImportWalletResponse, error) {
