@@ -1,10 +1,14 @@
 # Changelog
 
+## [5.10.0](https://github.com/getlantern/flashlight/tree/5.10.0) (2020-07-20)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.19...5.10.0)
+
 ## [5.9.19](https://github.com/getlantern/flashlight/tree/5.9.19) (2020-07-14)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.18...5.9.19)
 
-## [5.9.18](https://github.com/getlantern/flashlight/tree/5.9.18) (2020-07-08)
+## [5.9.18](https://github.com/getlantern/flashlight/tree/5.9.18) (2020-07-09)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.17...5.9.18)
 
@@ -170,6 +174,7 @@
 - Make sure to close file paths we create [\#778](https://github.com/getlantern/flashlight/pull/778) ([myleshorton](https://github.com/myleshorton))
 - Broke stealth mode into more fine grained features and enabled detour on Android [\#777](https://github.com/getlantern/flashlight/pull/777) ([oxtoacart](https://github.com/oxtoacart))
 - Allow proper saving of proxystats.csv on iOS [\#775](https://github.com/getlantern/flashlight/pull/775) ([oxtoacart](https://github.com/oxtoacart))
+- Build all tests in CI [\#769](https://github.com/getlantern/flashlight/pull/769) ([anacrolix](https://github.com/anacrolix))
 
 ## [5.8.6](https://github.com/getlantern/flashlight/tree/5.8.6) (2020-03-18)
 
@@ -188,7 +193,6 @@
 - Skip putting nil session state to session cache [\#773](https://github.com/getlantern/flashlight/pull/773) ([joesis](https://github.com/joesis))
 - Update systray dep [\#772](https://github.com/getlantern/flashlight/pull/772) ([max-b](https://github.com/max-b))
 - Unified session key persistence and session caching for TLS proxies [\#770](https://github.com/getlantern/flashlight/pull/770) ([oxtoacart](https://github.com/oxtoacart))
-- Build all tests in CI [\#769](https://github.com/getlantern/flashlight/pull/769) ([anacrolix](https://github.com/anacrolix))
 - Determine if a feature is enabled dynamically [\#768](https://github.com/getlantern/flashlight/pull/768) ([joesis](https://github.com/joesis))
 - Respecting stealthmode on iOS and removed borda [\#765](https://github.com/getlantern/flashlight/pull/765) ([oxtoacart](https://github.com/oxtoacart))
 - Expire session tickets like Chrome [\#760](https://github.com/getlantern/flashlight/pull/760) ([hwh33](https://github.com/hwh33))
