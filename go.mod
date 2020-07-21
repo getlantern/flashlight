@@ -11,6 +11,8 @@ require (
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
+	github.com/ethereum/go-ethereum v1.9.9
+	github.com/geph-official/geph2 v0.22.2
 	github.com/getlantern/appdir v0.0.0-20180320102544-7c0f9d241ea7
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20200427033127-b36d009c6252
@@ -79,13 +81,13 @@ require (
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
 	github.com/getsentry/sentry-go v0.5.1
-	github.com/gorilla/websocket v1.4.0
-	github.com/hashicorp/golang-lru v0.5.3
-	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
+	github.com/gorilla/websocket v1.4.1-0.20190629185528-ae1634f6a989
+	github.com/hashicorp/golang-lru v0.5.4
+	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
 	github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
-	github.com/miekg/dns v0.0.0-20180406150955-01d59357d468
+	github.com/miekg/dns v1.1.27
 	github.com/mitchellh/go-server-timing v1.0.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/mitchellh/panicwrap v1.0.0
@@ -95,6 +97,7 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/stretchr/testify v1.5.1
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
+	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
 	google.golang.org/appengine v1.6.2 // indirect
 	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55 // indirect

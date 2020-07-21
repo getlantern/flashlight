@@ -24,6 +24,7 @@ import (
 
 	pt "git.torproject.org/pluggable-transports/goptlib.git"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
+	"github.com/geph-official/geph2/libs/cshirt2"
 	tls "github.com/refraction-networking/utls"
 
 	"github.com/getlantern/cmux"
@@ -123,6 +124,8 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		return newWSSProxy(name, s, uc)
 	case "tlsmasq":
 		return newTLSMasqProxy(name, s, uc)
+	case "geph":
+		return newGephProxy(name, s, uc)
 	default:
 		return nil, errors.New("Unknown transport: %v", s.PluggableTransport).With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
 	}
@@ -487,6 +490,29 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 	}
 
 	return newProxy(name, "tlsmasq", "tcp", s, uc, s.Trusted, true, dialServer, defaultDialOrigin)
+}
+
+func newGephProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
+		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
+			tcpConn, err := p.dialCore(op)(ctx)
+			if err != nil {
+				return nil, err
+			}
+			tcpConn.SetDeadline(time.Now().Add(time.Second * 10))
+			pk, e := hex.DecodeString(s.ptSetting("geph_public_key"))
+			if e != nil {
+				panic(e)
+			}
+			obfsConn, e := cshirt2.Client(pk, tcpConn)
+			if e != nil {
+				return nil, e
+			}
+			cryptConn, e := negotiateTinySS(nil, obfsConn, pk, 0)
+			return overheadWrapper(true)(cryptConn, e)
+		})
+	}
+	return newProxy(name, "geph", "tcp", s, uc, s.Trusted, false, doDialServer, defaultDialOrigin)
 }
 
 // consecCounter is a counter that can extend on both directions. Its default
