@@ -3,7 +3,6 @@ package chained
 import (
 	"fmt"
 	"net"
-	"os"
 	"time"
 
 	"github.com/getlantern/errors"
@@ -13,9 +12,9 @@ import (
 	"github.com/geph-official/geph2/libs/tinyss"
 )
 
-func negotiateTinySS(greeting *[2][]byte, rawConn net.Conn, pk []byte, nextProto byte) (cryptConn *tinyss.Socket, err error) {
+func negotiateTinySS(rawConn net.Conn, pk []byte) (cryptConn *tinyss.Socket, err error) {
 	rawConn.SetDeadline(time.Now().Add(time.Second * 20))
-	cryptConn, err = tinyss.Handshake(rawConn, nextProto)
+	cryptConn, err = tinyss.Handshake(rawConn, 0 /*nextProto*/)
 	if err != nil {
 		err = fmt.Errorf("tinyss handshake failed: %w", err)
 		rawConn.Close()
@@ -33,24 +32,6 @@ func negotiateTinySS(greeting *[2][]byte, rawConn net.Conn, pk []byte, nextProto
 		err = errors.New("man in the middle")
 		rawConn.Close()
 		return
-	}
-	if greeting != nil {
-		// send the greeting
-		rlp.Encode(cryptConn, greeting)
-		// wait for the reply
-		var reply string
-		err = rlp.Decode(cryptConn, &reply)
-		if err != nil {
-			err = fmt.Errorf("cannot decode reply: %w", err)
-			rawConn.Close()
-			return
-		}
-		if reply != "OK" {
-			err = errors.New("authentication failed")
-			rawConn.Close()
-			log.Debugf("authentication failed", reply)
-			os.Exit(11)
-		}
 	}
 	return
 }

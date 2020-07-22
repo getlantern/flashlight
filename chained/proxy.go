@@ -508,7 +508,7 @@ func newGephProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*pro
 			if e != nil {
 				return nil, e
 			}
-			cryptConn, e := negotiateTinySS(nil, obfsConn, pk, 0)
+			cryptConn, e := negotiateTinySS(obfsConn, pk)
 			return overheadWrapper(true)(cryptConn, e)
 		})
 	}
