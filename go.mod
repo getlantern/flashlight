@@ -67,7 +67,7 @@ require (
 	github.com/getlantern/proxy v0.0.0-20200302183216-36afa00d0126
 	github.com/getlantern/proxybench v0.0.0-20200626174328-a2580b5e8a59
 	github.com/getlantern/quic0 v0.0.0-20200121154153-8b18c2ba09f9
-	github.com/getlantern/quicwrapper v0.0.0-20200129232925-8ef70253fcae
+	github.com/getlantern/quicwrapper v0.0.0-20200708222210-66fc59a379b5
 	github.com/getlantern/replica v0.3.1-0.20200623004346-367f62a981a7
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
@@ -108,9 +108,9 @@ require (
 	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55 // indirect
 )
 
-replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20200211213545-301421f7c3c9
+replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20200708221337-157ddc277592
 
-replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20200609191416-c359cb589c95
+replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20200708025417-3b1d9d0bb892
 
 replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3-0.20190606045409-29ac0bf665ea
 
