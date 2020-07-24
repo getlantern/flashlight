@@ -20,8 +20,10 @@ require (
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20200427033127-b36d009c6252
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
-	github.com/getlantern/cmux v0.0.0-20200420023238-ddfd0a83b995
-	github.com/getlantern/common v1.1.0
+	github.com/getlantern/cmux v0.0.0-20200420023238-ddfd0a83b995 // indirect
+	github.com/getlantern/cmux/v2 v2.0.0-20200723153654-f1f4014b42e2
+	github.com/getlantern/cmuxprivate v0.0.0-20200724171700-eadeb0495ca7
+	github.com/getlantern/common v1.1.1-0.20200724165030-b80e5cc4a6bb
 	github.com/getlantern/detour v0.0.0-20191213192126-a4b3dcb2def2
 	github.com/getlantern/dnsgrab v0.0.0-20191217020031-0e5f714410f9
 	github.com/getlantern/domains v0.0.0-20200402172102-34a8db1e0e83
@@ -67,6 +69,7 @@ require (
 	github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8
 	github.com/getlantern/proxy v0.0.0-20200302183216-36afa00d0126
 	github.com/getlantern/proxybench v0.0.0-20200626174328-a2580b5e8a59
+	github.com/getlantern/psmux v1.5.15-0.20200829020804-fbef5fb6a105
 	github.com/getlantern/quic0 v0.0.0-20200121154153-8b18c2ba09f9
 	github.com/getlantern/quicwrapper v0.0.0-20200902185207-c4742ad7448c
 	github.com/getlantern/replica v0.3.1-0.20200623004346-367f62a981a7
@@ -103,6 +106,7 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/stretchr/testify v1.6.1
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
+	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
 	golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	google.golang.org/appengine v1.6.2 // indirect

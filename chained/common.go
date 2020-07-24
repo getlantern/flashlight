@@ -21,15 +21,15 @@ var (
 // server.
 type ChainedServerInfo common.ChainedServerInfo
 
-func (s *ChainedServerInfo) ptSetting(name string) string {
-	if s.PluggableTransportSettings == nil {
+func _setting(settings map[string]string, name string) string {
+	if settings == nil {
 		return ""
 	}
-	return s.PluggableTransportSettings[name]
+	return settings[name]
 }
 
-func (s *ChainedServerInfo) ptSettingInt(name string) int {
-	_val := s.ptSetting(name)
+func _settingInt(settings map[string]string, name string) int {
+	_val := _setting(settings, name)
 	if _val == "" {
 		return 0
 	}
@@ -41,8 +41,21 @@ func (s *ChainedServerInfo) ptSettingInt(name string) int {
 	return val
 }
 
-func (s *ChainedServerInfo) ptSettingBool(name string) bool {
-	_val := s.ptSetting(name)
+func _settingFloat(settings map[string]string, name string) float64 {
+	_val := _setting(settings, name)
+	if _val == "" {
+		return 0.0
+	}
+	val, err := strconv.ParseFloat(_val, 64)
+	if err != nil {
+		log.Errorf("Setting %v: %v is not a float", name, _val)
+		return 0.0
+	}
+	return val
+}
+
+func _settingBool(settings map[string]string, name string) bool {
+	_val := _setting(settings, name)
 	if _val == "" {
 		return false
 	}
@@ -52,6 +65,38 @@ func (s *ChainedServerInfo) ptSettingBool(name string) bool {
 		return false
 	}
 	return val
+}
+
+func (s *ChainedServerInfo) ptSetting(name string) string {
+	return _setting(s.PluggableTransportSettings, name)
+}
+
+func (s *ChainedServerInfo) ptSettingInt(name string) int {
+	return _settingInt(s.PluggableTransportSettings, name)
+}
+
+func (s *ChainedServerInfo) ptSettingBool(name string) bool {
+	return _settingBool(s.PluggableTransportSettings, name)
+}
+
+func (s *ChainedServerInfo) ptSettingFloat(name string) float64 {
+	return _settingFloat(s.PluggableTransportSettings, name)
+}
+
+func (s *ChainedServerInfo) muxSetting(name string) string {
+	return _setting(s.MultiplexedSettings, name)
+}
+
+func (s *ChainedServerInfo) muxSettingInt(name string) int {
+	return _settingInt(s.MultiplexedSettings, name)
+}
+
+func (s *ChainedServerInfo) muxSettingBool(name string) bool {
+	return _settingBool(s.MultiplexedSettings, name)
+}
+
+func (s *ChainedServerInfo) muxSettingFloat(name string) float64 {
+	return _settingFloat(s.MultiplexedSettings, name)
 }
 
 func (s *ChainedServerInfo) desktopOrderedCipherSuites() []uint16 {
