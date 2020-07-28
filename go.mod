@@ -74,6 +74,7 @@ require (
 	github.com/getlantern/tlsdialer v0.0.0-20200205115148-9bde2ed72c94
 	github.com/getlantern/tlsmasq v0.3.0
 	github.com/getlantern/tlsresumption v0.0.0-20200205020452-74fc6ea4e074
+	github.com/getlantern/tlsutil v0.2.0
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
@@ -99,6 +100,7 @@ require (
 	google.golang.org/appengine v1.6.2 // indirect
 	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
+	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20200708221337-157ddc277592
