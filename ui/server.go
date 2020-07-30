@@ -201,6 +201,12 @@ func (s *Server) attachHandlers() {
 		}
 	}
 
+	for pattern, handler := range routes {
+		useCors := true
+		s.mux.Handle(pattern,
+			s.wrapMiddleware(http.HandlerFunc(handler), useCors))
+	}
+
 	s.Handle("/startup", http.HandlerFunc(s.startupHandler))
 	s.Handle("/", http.FileServer(fs))
 }
