@@ -3,7 +3,7 @@
 # If you want Google's container you would reference google/golang
 # Read more about containers on our dev center
 # http://devcenter.wercker.com/docs/containers/index.html
-box: golang:1.13.5
+box: golang:1.14.3
 # This is the build pipeline. Pipelines are the core of wercker
 # Read more about pipelines on our dev center
 # http://devcenter.wercker.com/docs/pipelines/index.html
@@ -30,6 +30,9 @@ build:
       code: git config --global url."https://71cee071ea22b7ffb10f68fa330d1130133bbfbd:x-oauth-basic@github.com/".insteadOf "https://github.com/"
     - install-packages:
       packages: lsof libpcap-dev libappindicator3-dev libwebkit2gtk-4.0-dev # lsof required by fdcount
+    - script:
+        name: git submodules
+        code: git submodule update --init
     - script:
       name: make-lantern
       code: |

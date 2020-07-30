@@ -16,6 +16,8 @@ var (
 
 	ProAPIHost = "api.getiantem.org"
 
+	ReplicaSearchAPIHost = "replica-search.lantern.io"
+
 	log = golog.LoggerFor("flashlight.common")
 
 	forceAds bool
@@ -41,6 +43,7 @@ func initInternal() {
 	}
 	if Staging {
 		ProAPIHost = "api-staging.getiantem.org"
+		ReplicaSearchAPIHost = "replica-search-staging.lantern.io"
 	}
 	forceAds, _ = strconv.ParseBool(os.Getenv("FORCEADS"))
 }
