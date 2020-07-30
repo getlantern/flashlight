@@ -1,17 +1,21 @@
 package ui
 
 import (
+	"bytes"
 	"fmt"
 	"mime"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"github.com/skratchdot/open-golang/open"
+	"golang.org/x/xerrors"
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
@@ -78,15 +82,16 @@ type Server struct {
 	yinbiServerAddr string
 
 	httpClient *http.Client
-
-	externalURL    string
-	requestPath    string
-	localHTTPToken string
-	mux            *http.ServeMux
-	onceOpenExtURL sync.Once
-	translations   eventual.Value
-	skipTokenCheck bool
-	standalone     bool
+	// The address client should access. Available only if the server is started.
+	accessAddr  string
+	externalURL string
+	// Prefixed to handler patterns when the http token is expected in the request path.
+	httpTokenRequestPathPrefix string
+	localHTTPToken             string
+	mux                        *http.ServeMux
+	onceOpenExtURL             sync.Once
+	translations               eventual.Value
+	standalone                 bool
 }
 
 // ServerParams specifies the parameters to use
@@ -146,11 +151,6 @@ func StartServer(params ServerParams) (*Server, error) {
 }
 
 func NewServer(params ServerParams) *Server {
-	requestPath := ""
-	if params.LocalHTTPToken != "" {
-		requestPath = "/" + params.LocalHTTPToken
-	}
-
 	if params.HTTPClient == nil {
 		params.HTTPClient = &http.Client{
 			Timeout:   time.Duration(30 * time.Second),
@@ -159,10 +159,15 @@ func NewServer(params ServerParams) *Server {
 	}
 
 	server := &Server{
-		externalURL:     overrideManotoURL(params.ExtURL),
-		requestPath:     requestPath,
-		httpClient:      params.HTTPClient,
-		mux:             http.NewServeMux(),
+		externalURL: overrideManotoURL(params.ExtURL),
+		httpClient:  params.HTTPClient,
+		mux:         http.NewServeMux(),
+		httpTokenRequestPathPrefix: func() string {
+			if localHTTPToken == "" {
+				return ""
+			}
+			return "/" + localHTTPToken
+		}(),
 		authServerAddr:  params.AuthServerAddr,
 		yinbiServerAddr: params.YinbiServerAddr,
 		localHTTPToken:  params.LocalHTTPToken,
@@ -198,11 +203,6 @@ func (s *Server) attachHandlers() {
 		}
 	}
 
-	for pattern, handler := range routes {
-		useCors := true
-		s.mux.Handle(pattern,
-			s.wrapMiddleware(http.HandlerFunc(handler), useCors))
-	}
 	s.handle("/startup", http.HandlerFunc(s.startupHandler))
 	s.handle("/", http.FileServer(fs))
 }
@@ -216,18 +216,18 @@ func (s *Server) wrapMiddleware(handler http.Handler, useCors bool) http.Handler
 	return handler
 }
 
-// handle directs the underlying server to handle the given pattern at both
+// Handle directs the underlying server to handle the given pattern at both
 // the secure token path and the raw request path. In the case of the raw
 // request path, Lantern looks for the token in the Referer HTTP header and
 // rejects the request if it's not present.
-func (s *Server) handle(pattern string, handler http.Handler) {
+func (s *Server) Handle(pattern string, handler http.Handler) {
 	// When the token is included in the request path, we need to strip it in
 	// order to serve the UI correctly (i.e. the static UI tarfs FileSystem knows
 	// nothing about the request path).
-	if s.requestPath != "" {
-		// If the request path is empty this will panic on adding the same pattern
+	if s.httpTokenRequestPathPrefix != "" {
+		// If the request path is empty this would panic on adding the same pattern
 		// twice.
-		s.mux.Handle(s.requestPath+pattern, util.NoCacheHandler(s.strippingHandler(handler)))
+		s.mux.Handle(s.httpTokenRequestPathPrefix+pattern, util.NoCacheHandler(s.strippingHandler(handler)))
 	}
 
 	// In the naked request cast, we need to verify the token is there in the
@@ -246,8 +246,9 @@ func (s *Server) startupHandler(resp http.ResponseWriter, req *http.Request) {
 // static file server can properly serve it.
 func (s *Server) strippingHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Debugf("Stripping path from %v", r.URL.Path)
-		r.URL.Path = strings.Replace(r.URL.Path, s.requestPath, "", -1)
+		stripped := strings.Replace(r.URL.Path, s.httpTokenRequestPathPrefix, "", -1)
+		log.Debugf("changing path from %q to %q", r.URL.Path, stripped)
+		r.URL.Path = stripped
 		h.ServeHTTP(w, r)
 	})
 }
@@ -439,7 +440,7 @@ func (s *Server) stop() error {
 // request path. Without that token, the backend will reject the request to
 // avoid web sites detecting Lantern.
 func (s *Server) AddToken(path string) string {
-	return "http://" + s.activeDomain() + s.requestPath + path
+	return "http://" + s.activeDomain() + s.httpTokenRequestPathPrefix + path
 }
 
 func (s *Server) activeDomain() string {
@@ -451,8 +452,16 @@ func (s *Server) checkRequestForToken(h http.Handler, tok string) http.Handler {
 		if HasToken(r, tok) || s.skipTokenCheck {
 			h.ServeHTTP(w, r)
 		} else {
-			msg := fmt.Sprintf("No token found in. %v", r)
-			closeConn(msg, w, r)
+			b, err := httputil.DumpRequest(r, false)
+			if err != nil {
+				log.Errorf("error dumping request: %v", err)
+			}
+			log.Debugf("no token in request:\n%s", bytes.TrimRightFunc(b, unicode.IsSpace))
+			err = closeConn(w)
+			if err != nil {
+				log.Errorf("error closing request conn: %v", err)
+				http.Error(w, "token not found", http.StatusBadRequest)
+			}
 		}
 	}
 	return http.HandlerFunc(check)
@@ -468,19 +477,18 @@ func HasToken(r *http.Request, tok string) bool {
 }
 
 // closeConn closes the client connection without sending a response.
-func closeConn(msg string, w http.ResponseWriter, r *http.Request) {
+func closeConn(w http.ResponseWriter) error {
 	hj, ok := w.(http.Hijacker)
 	if !ok {
-		log.Error("Response doesn't allow hijacking!")
-		return
+		return errors.New("response doesn't implement hijacker")
 	}
 	connIn, _, err := hj.Hijack()
 	if err != nil {
 		log.Errorf("Unable to hijack connection: %s", err)
-		return
+		return xerrors.Errorf("hijacking response: %w", err)
 	}
 	testutils.DumpRequestHeaders(r)
-	connIn.Close()
+	return connIn.Close()
 }
 
 func addrCandidates(requested string) []string {

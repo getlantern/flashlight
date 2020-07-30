@@ -16,7 +16,8 @@ import (
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
-	"github.com/getlantern/flashlight"
+	"github.com/getlantern/flashlight/proxied"
+
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
 	"github.com/getlantern/launcher"
@@ -25,6 +26,7 @@ import (
 	"github.com/getlantern/profiling"
 	"github.com/getsentry/sentry-go"
 
+	"github.com/getlantern/flashlight"
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/autoupdate"
 	"github.com/getlantern/flashlight/balancer"
@@ -45,6 +47,9 @@ import (
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ui"
 	"github.com/getlantern/flashlight/ws"
+
+	desktopReplica "github.com/getlantern/flashlight/desktop/replica"
+	"github.com/getlantern/replica"
 )
 
 const (
@@ -81,9 +86,12 @@ type App struct {
 	muExitFuncs sync.RWMutex
 	exitFuncs   []func()
 
-	uiServerCh chan *ui.Server
-	ws         ws.UIChannel
-	chrome     chromeExtension
+	uiServerCh            chan *ui.Server
+	ws                    ws.UIChannel
+	chrome                chromeExtension
+	chGlobalConfigChanged chan bool
+	flashlight            *flashlight.Flashlight
+	startReplica          sync.Once
 
 	// If both the trafficLogLock and proxiesLock are needed, the trafficLogLock should be obtained
 	// first. Keeping the order consistent avoids deadlocking.
@@ -112,6 +120,7 @@ func (app *App) Init() {
 	// overridden later if auto report is allowed
 	app.gaSession = analytics.NullSession{}
 	app.statsTracker = NewStatsTracker()
+	app.chGlobalConfigChanged = make(chan bool, 1)
 	pro.OnProStatusChange(func(isPro bool, yinbiEnabled bool) {
 		app.statsTracker.SetIsPro(isPro)
 		app.statsTracker.SetYinbiEnabled(yinbiEnabled)
@@ -215,9 +224,8 @@ func (app *App) Run() {
 			})
 		}
 
-		err := flashlight.Run(
-			listenAddr,
-			socksAddr,
+		var err error
+		app.flashlight, err = flashlight.New(
 			app.Flags["configdir"].(string),
 			app.Flags["vpn"].(bool),
 			func() bool { return settings.getBool(SNDisconnected) }, // check whether we're disconnected
@@ -225,17 +233,11 @@ func (app *App) Run() {
 			func() bool { return false }, // on desktop, we do not allow private hosts
 			settings.IsAutoReport,
 			app.Flags,
-			app.beforeStart(listenAddr),
-			app.afterStart,
 			app.onConfigUpdate,
 			app.onProxiesUpdate,
 			settings,
 			app.statsTracker,
-			func(err error) {
-				app.Exit(err)
-			},
 			app.IsPro,
-			settings.GetUserID,
 			settings.GetLanguage,
 			func() string {
 				isPro, statusKnown := isProUserFast()
@@ -251,174 +253,254 @@ func (app *App) Run() {
 			app.Exit(err)
 			return
 		}
+		app.beforeStart(listenAddr)
+
+		chProStatusChanged := make(chan bool, 1)
+		pro.OnProStatusChange(func(isPro bool, yinbiEnabled bool) {
+			chProStatusChanged <- isPro
+		})
+		chUserChanged := make(chan bool, 1)
+		settings.OnChange(SNUserID, func(v interface{}) {
+			chUserChanged <- true
+		})
+		// Just pass all of the channels that should trigger re-evaluating which features
+		// are enabled for this user, country, etc.
+		app.startFeaturesService(geolookup.OnRefresh(), chUserChanged, chProStatusChanged, app.chGlobalConfigChanged)
+
+		app.flashlight.Run(
+			listenAddr,
+			socksAddr,
+			app.afterStart,
+			func(err error) { _ = app.Exit(err) },
+		)
 	}()
 }
 
-func (app *App) beforeStart(listenAddr string) func() bool {
-	return func() bool {
-		log.Debug("Got first config")
-		var cpuProf, memProf string
-		if cpu, cok := app.Flags["cpuprofile"]; cok {
-			cpuProf = cpu.(string)
+// startFeaturesService starts a new features service that dispatches features to any relevant
+// listeners.
+func (app *App) startFeaturesService(chans ...<-chan bool) {
+	if service, err := app.ws.Register("features", func(write func(interface{})) {
+		log.Debugf("Sending features enabled to new client")
+		write(app.flashlight.EnabledFeatures())
+	}); err != nil {
+		log.Errorf("Unable to serve enabled features to UI: %v", err)
+	} else {
+		for _, ch := range chans {
+			go func(c <-chan bool) {
+				for range c {
+					features := app.flashlight.EnabledFeatures()
+					app.checkForReplica(features)
+					select {
+					case service.Out <- features:
+						// ok
+					default:
+						// don't block if no-one is listening
+					}
+				}
+			}(ch)
 		}
-		if mem, cok := app.Flags["memprofile"]; cok {
-			memProf = mem.(string)
-		}
-		if cpuProf != "" || memProf != "" {
-			log.Debugf("Start profiling with cpu file %s and mem file %s", cpuProf, memProf)
-			finishProfiling := profiling.Start(cpuProf, memProf)
-			app.AddExitFunc("finish profiling", finishProfiling)
-		}
+	}
 
-		if err := setUpSysproxyTool(); err != nil {
-			app.Exit(err)
-		}
+}
 
-		var startupURL string
-		bootstrap, err := config.ReadBootstrapSettings()
-		if err != nil {
-			log.Debugf("Could not read bootstrap settings: %v", err)
+func (app *App) beforeStart(listenAddr string) {
+	log.Debug("Got first config")
+	var cpuProf, memProf string
+	if cpu, cok := app.Flags["cpuprofile"]; cok {
+		cpuProf = cpu.(string)
+	}
+	if mem, cok := app.Flags["memprofile"]; cok {
+		memProf = mem.(string)
+	}
+	if cpuProf != "" || memProf != "" {
+		log.Debugf("Start profiling with cpu file %s and mem file %s", cpuProf, memProf)
+		finishProfiling := profiling.Start(cpuProf, memProf)
+		app.AddExitFunc("finish profiling", finishProfiling)
+	}
+
+	if err := setUpSysproxyTool(); err != nil {
+		app.Exit(err)
+	}
+
+	var startupURL string
+	bootstrap, err := config.ReadBootstrapSettings()
+	if err != nil {
+		log.Debugf("Could not read bootstrap settings: %v", err)
+	} else {
+		startupURL = bootstrap.StartupUrl
+	}
+
+	uiaddr := app.Flags["uiaddr"].(string)
+	if uiaddr == "" {
+		// stick with the last one if not specified from command line.
+		if uiaddr = settings.GetUIAddr(); uiaddr != "" {
+			host, port, splitErr := net.SplitHostPort(uiaddr)
+			if splitErr != nil {
+				log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
+				uiaddr = ""
+			}
+			// To allow Edge to open the UI, we force the UI address to be
+			// localhost if it's 127.0.0.1 (the default for previous versions).
+			// We do the same for all platforms for simplicity though it's only
+			// useful on Windows 10 and above.
+			if host == "127.0.0.1" {
+				uiaddr = "localhost:" + port
+			}
+		}
+	}
+
+	if app.Flags["clear-proxy-settings"].(bool) {
+		// This is a workaround that attempts to fix a Windows-only problem where
+		// Lantern was unable to clean the system's proxy settings before logging
+		// off.
+		//
+		// See: https://github.com/getlantern/lantern/issues/2776
+		log.Debug("Requested clearing of proxy settings")
+		_, port, splitErr := net.SplitHostPort(listenAddr)
+		if splitErr == nil && port != "0" {
+			log.Debugf("Clearing system proxy settings for: %v", listenAddr)
+			clearSysproxyFor(listenAddr)
 		} else {
-			startupURL = bootstrap.StartupUrl
+			log.Debugf("Can't clear proxy settings for: %v", listenAddr)
 		}
+		app.Exit(nil)
+		os.Exit(0)
+	}
 
-		uiaddr := app.Flags["uiaddr"].(string)
-		if uiaddr == "" {
-			// stick with the last one if not specified from command line.
-			if uiaddr = settings.GetUIAddr(); uiaddr != "" {
-				host, port, splitErr := net.SplitHostPort(uiaddr)
-				if splitErr != nil {
-					log.Errorf("Invalid uiaddr in settings: %s", uiaddr)
-					uiaddr = ""
-				}
-				// To allow Edge to open the UI, we force the UI address to be
-				// localhost if it's 127.0.0.1 (the default for previous versions).
-				// We do the same for all platforms for simplicity though it's only
-				// useful on Windows 10 and above.
-				if host == "127.0.0.1" {
-					uiaddr = "localhost:" + port
-				}
-			}
-		}
-
-		if app.Flags["clear-proxy-settings"].(bool) {
-			// This is a workaround that attempts to fix a Windows-only problem where
-			// Lantern was unable to clean the system's proxy settings before logging
-			// off.
-			//
-			// See: https://github.com/getlantern/lantern/issues/2776
-			log.Debug("Requested clearing of proxy settings")
-			_, port, splitErr := net.SplitHostPort(listenAddr)
-			if splitErr == nil && port != "0" {
-				log.Debugf("Clearing system proxy settings for: %v", listenAddr)
-				clearSysproxyFor(listenAddr)
-			} else {
-				log.Debugf("Can't clear proxy settings for: %v", listenAddr)
-			}
+	if uiaddr != "" {
+		// Is something listening on that port?
+		if showErr := app.showExistingUI(uiaddr); showErr == nil {
+			log.Debug("Lantern already running, showing existing UI")
 			app.Exit(nil)
 			os.Exit(0)
 		}
+	}
 
-		if uiaddr != "" {
-			// Is something listening on that port?
-			if showErr := app.showExistingUI(uiaddr); showErr == nil {
-				log.Debug("Lantern already running, showing existing UI")
-				app.Exit(nil)
-				os.Exit(0)
+	log.Debugf("Starting client UI at %v", uiaddr)
+
+	authaddr := app.GetStringFlag("authaddr", common.AuthServerAddr)
+	log.Debugf("Using auth server at %v", authaddr)
+	yinbiaddr := app.GetStringFlag("yinbiaddr", common.YinbiServerAddr)
+	log.Debugf("Using Yinbi server %s", yinbiaddr)
+	// skip checking for local auth token if we are running in staging mode
+	skipTokenCheck := app.Flags["staging"] != nil && app.Flags["staging"].(bool)
+	standalone := app.Flags["standalone"] != nil && app.Flags["standalone"].(bool)
+	// ui will handle empty uiaddr correctly
+	uiServer, err := ui.StartServer(uiaddr, ui.ServerParams{
+		AuthServerAddr:  authaddr,
+		YinbiServerAddr: yinbiaddr,
+		ExtURL:          startupURL,
+		RequestedAddr:   uiaddr,
+		LocalHTTPToken:  app.localHttpToken(),
+		SkipTokenCheck:  skipTokenCheck,
+		Standalone:      standalone,
+		Handlers: []*ui.PathHandler{
+			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
+			&ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
+		},
+	})
+	if err != nil {
+		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
+		return false
+	}
+
+	if app.ShouldShowUI() {
+		go func() {
+			if err := configureSystemTray(app); err != nil {
+				log.Errorf("Unable to configure system tray: %s", err)
+				return
 			}
-		}
+			app.OnSettingChange(SNLanguage, func(lang interface{}) {
+				refreshSystray(lang.(string))
+			})
+		}()
+	}
+	app.uiServerCh <- uiServer
 
-		log.Debugf("Starting client UI at %v", uiaddr)
+	if e := settings.StartService(app.ws); e != nil {
+		app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
+		return
+	}
+	settings.SetUIAddr(uiServer.GetUIAddr())
 
-		authaddr := app.GetStringFlag("authaddr", common.AuthServerAddr)
-		log.Debugf("Using auth server at %v", authaddr)
-		yinbiaddr := app.GetStringFlag("yinbiaddr", common.YinbiServerAddr)
-		log.Debugf("Using Yinbi server %s", yinbiaddr)
-		// skip checking for local auth token if we are running in staging mode
-		skipTokenCheck := app.Flags["staging"] != nil && app.Flags["staging"].(bool)
-		standalone := app.Flags["standalone"] != nil && app.Flags["standalone"].(bool)
-		// ui will handle empty uiaddr correctly
-		uiServer, err := ui.StartServer(ui.ServerParams{
-			AuthServerAddr:  authaddr,
-			YinbiServerAddr: yinbiaddr,
-			ExtURL:          startupURL,
-			RequestedAddr:   uiaddr,
-			LocalHTTPToken:  localHTTPToken(settings),
-			SkipTokenCheck:  skipTokenCheck,
-			Standalone:      standalone,
-			Handlers: []*ui.PathHandler{
-				&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
-				&ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
-			},
-		})
-		if err != nil {
-			app.Exit(fmt.Errorf("Unable to start UI: %s", err))
-			return false
-		}
-		app.uiServerCh <- uiServer
+	if err = app.statsTracker.StartService(app.ws); err != nil {
+		log.Errorf("Unable to serve stats to UI: %v", err)
+	}
 
-		if app.ShouldShowUI() {
-			go func() {
-				if err := configureSystemTray(app); err != nil {
-					log.Errorf("Unable to configure system tray: %s", err)
-					return
-				}
-				app.OnSettingChange(SNLanguage, func(lang interface{}) {
-					refreshSystray(lang.(string))
-				})
-			}()
-		}
+	setupUserSignal(app.ws, app.Connect, app.Disconnect)
 
-		if e := settings.StartService(app.ws); e != nil {
-			app.Exit(fmt.Errorf("Unable to register settings service: %q", e))
-			return false
-		}
-		settings.SetUIAddr(uiServer.GetUIAddr())
+	err = datacap.ServeDataCap(app.ws, func() string {
+		return app.AddToken("/img/lantern_logo.png")
+	}, app.PlansURL, isProUser)
+	if err != nil {
+		log.Errorf("Unable to serve bandwidth to UI: %v", err)
+	}
+	err = app.serveEmailProxy(app.ws)
+	if err != nil {
+		log.Errorf("Unable to serve mandrill to UI: %v", err)
+	}
 
-		if err = app.statsTracker.StartService(app.ws); err != nil {
-			log.Errorf("Unable to serve stats to UI: %v", err)
-		}
+	// Don't block on fetching the location for the UI.
+	go serveLocation(app.ws)
 
-		setupUserSignal(app.ws, app.Connect, app.Disconnect)
-
-		err = datacap.ServeDataCap(app.ws, func() string {
-			return app.AddToken("/img/lantern_logo.png")
-		}, app.PlansURL, isProUser)
-		if err != nil {
-			log.Errorf("Unable to serve bandwidth to UI: %v", err)
-		}
-		err = app.serveEmailProxy(app.ws)
-		if err != nil {
-			log.Errorf("Unable to serve mandrill to UI: %v", err)
-		}
-
-		// Don't block on fetching the location for the UI.
-		go serveLocation(app.ws)
-
-		if settings.IsAutoReport() {
-			app.gaSession = analytics.Start(settings.GetDeviceID(), common.Version)
-			app.AddExitFunc("stopping analytics", app.gaSession.End)
-			go func() {
-				app.gaSession.SetIP(geolookup.GetIP(eventual.Forever))
-			}()
-		}
-
-		app.AddExitFunc("stopping loconf scanner", LoconfScanner(4*time.Hour, isProUser, func() string {
-			return app.AddToken("/img/lantern_logo.png")
-		}))
-		app.AddExitFunc("stopping notifier", notifier.NotificationsLoop(app.gaSession))
-		app.OnStatsChange(func(newStats stats.Stats) {
-			for _, alert := range newStats.Alerts {
-				note := &notify.Notification{
-					Title:      i18n.T("BACKEND_ALERT_TITLE"),
-					Message:    i18n.T("status." + alert.Alert()),
-					ClickLabel: i18n.T("BACKEND_CLICK_LABEL_HELP"),
-					ClickURL:   alert.HelpURL,
-				}
-				_ = notifier.ShowNotification(note, "alert-prompt")
+	if settings.IsAutoReport() {
+		app.gaSession = analytics.Start(settings.GetDeviceID(), common.Version)
+		app.AddExitFunc("stopping analytics", app.gaSession.End)
+		go func() {
+			app.gaSession.SetIP(geolookup.GetIP(eventual.Forever))
+		}()
+	}
+	app.AddExitFunc("stopping loconf scanner", LoconfScanner(4*time.Hour, isProUser, func() string {
+		return app.AddToken("/img/lantern_logo.png")
+	}))
+	app.AddExitFunc("stopping notifier", notifier.NotificationsLoop(app.gaSession))
+	app.OnStatsChange(func(newStats stats.Stats) {
+		for _, alert := range newStats.Alerts {
+			note := &notify.Notification{
+				Title:      i18n.T("BACKEND_ALERT_TITLE"),
+				Message:    i18n.T("status." + alert.Alert()),
+				ClickLabel: i18n.T("BACKEND_CLICK_LABEL_HELP"),
+				ClickURL:   alert.HelpURL,
 			}
+			_ = notifier.ShowNotification(note, "alert-prompt")
+		}
+	})
+}
+
+func (app *App) checkForReplica(features map[string]bool) {
+	if val, ok := features[config.FeatureReplica]; ok && val {
+		app.startReplica.Do(func() {
+			log.Debug("Starting replica from app")
+			replicaHandler, exitFunc, err := desktopReplica.NewHTTPHandler(
+				settings,
+				&replica.Client{
+					HttpClient: &http.Client{
+						Transport: proxied.AsRoundTripper(
+							func(req *http.Request) (*http.Response, error) {
+								chained, err := proxied.ChainedNonPersistent("")
+								if err != nil {
+									return nil, fmt.Errorf("connecting to proxy: %w", err)
+								}
+								return chained.RoundTrip(req)
+							},
+						),
+					},
+					Endpoint: replica.DefaultEndpoint,
+				},
+			)
+			if err != nil {
+				log.Errorf("error creating replica http server: %v", err)
+				app.Exit(err)
+				return
+			}
+			app.AddExitFunc("cleanup replica http server", exitFunc)
+
+			// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
+			// in their handlers.
+			app.uiServer().Handle("/replica/", http.StripPrefix(
+				"/replica",
+				replicaHandler))
 		})
-		return true
 	}
 }
 
@@ -532,6 +614,7 @@ func (app *App) onConfigUpdate(cfg *config.Global, src config.Source) {
 		return app.AddToken("/img/lantern_logo.png")
 	})
 	email.SetDefaultRecipient(cfg.ReportIssueEmail)
+	app.chGlobalConfigChanged <- true
 	//app.configureTrafficLog(*cfg)
 }
 
@@ -809,4 +892,11 @@ func (app *App) AddToken(path string) string {
 // GetTranslations adds our secure token to a given request path.
 func (app *App) GetTranslations(filename string) ([]byte, error) {
 	return ui.Translations(filename)
+}
+
+func (app *App) localHttpToken() string {
+	if v, ok := app.Flags["noUiHttpToken"]; ok && v.(bool) {
+		return ""
+	}
+	return localHTTPToken(settings)
 }

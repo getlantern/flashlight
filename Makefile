@@ -76,7 +76,7 @@ update-icons:
 
 test-and-cover: $(SOURCES)
 	@echo "mode: count" > profile.cov && \
-	TP=$$(find . -name "*_test.go" -printf '%h\n' | grep  -v vendor | sort -u) && \
+	TP=$$(go list ./...) && \
 	CP=$$(echo $$TP | tr ' ', ',') && \
 	set -x && \
 	for pkg in $$TP; do \

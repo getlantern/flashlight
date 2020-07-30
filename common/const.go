@@ -20,6 +20,8 @@ var (
 	AuthServerAddr  = common.AuthProdAddr
 	YinbiServerAddr = common.YinbiProdAddr
 
+	ReplicaSearchAPIHost = "replica-search.lantern.io"
+
 	log = golog.LoggerFor("flashlight.common")
 
 	forceAds bool
@@ -47,6 +49,7 @@ func initInternal() {
 		ProAPIHost = "api-staging.getiantem.org"
 		AuthServerAddr = common.AuthStagingAddr
 		YinbiServerAddr = common.YinbiStagingAddr
+		ReplicaSearchAPIHost = "replica-search-staging.lantern.io"
 	}
 	forceAds, _ = strconv.ParseBool(os.Getenv("FORCEADS"))
 }

@@ -236,6 +236,9 @@ func TestStart(t *testing.T) {
 			resp.WriteHeader(http.StatusOK)
 		})})
 	assert.NoError(t, err)
+	serve.Handle("/testing", http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+		resp.WriteHeader(http.StatusOK)
+	}))
 
 	uiAddr := serve.GetUIAddr()
 	assert.NotEqual(t, "", uiAddr)
