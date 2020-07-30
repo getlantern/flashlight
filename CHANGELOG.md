@@ -1,5 +1,34 @@
 # Changelog
 
+## [6.0.0](https://github.com/getlantern/flashlight/tree/6.0.0) (2020-07-30)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.10.0...6.0.0)
+
+**Merged pull requests:**
+
+- Try longer geolookup test timeout to fix CI failures [\#842](https://github.com/getlantern/flashlight/pull/842) ([max-b](https://github.com/max-b))
+- Integrate metascrubber for removing png and jpeg exif/metadata [\#841](https://github.com/getlantern/flashlight/pull/841) ([max-b](https://github.com/max-b))
+- Merge devel into replica [\#838](https://github.com/getlantern/flashlight/pull/838) ([max-b](https://github.com/max-b))
+- Pull in production UI updates [\#836](https://github.com/getlantern/flashlight/pull/836) ([max-b](https://github.com/max-b))
+- Reduce plaintext in Replica [\#834](https://github.com/getlantern/flashlight/pull/834) ([anacrolix](https://github.com/anacrolix))
+- Support alternate bucket names [\#831](https://github.com/getlantern/flashlight/pull/831) ([anacrolix](https://github.com/anacrolix))
+- Implement proxying and domain fronting for replica-search [\#826](https://github.com/getlantern/flashlight/pull/826) ([max-b](https://github.com/max-b))
+- Disable seeding for uploader [\#824](https://github.com/getlantern/flashlight/pull/824) ([max-b](https://github.com/max-b))
+- Configure http client for replica s3 connections [\#820](https://github.com/getlantern/flashlight/pull/820) ([myleshorton](https://github.com/myleshorton))
+- Second try [\#819](https://github.com/getlantern/flashlight/pull/819) ([bcmertz](https://github.com/bcmertz))
+- Allow upload options [\#818](https://github.com/getlantern/flashlight/pull/818) ([bcmertz](https://github.com/bcmertz))
+- Explicit s3 torrenting [\#814](https://github.com/getlantern/flashlight/pull/814) ([anacrolix](https://github.com/anacrolix))
+- Replica merge from devel [\#812](https://github.com/getlantern/flashlight/pull/812) ([myleshorton](https://github.com/myleshorton))
+- Merge devel into replica [\#808](https://github.com/getlantern/flashlight/pull/808) ([max-b](https://github.com/max-b))
+- Bundle lantern-desktop-ui replica api path fix [\#800](https://github.com/getlantern/flashlight/pull/800) ([max-b](https://github.com/max-b))
+- Report replica response metrics to borda [\#799](https://github.com/getlantern/flashlight/pull/799) ([max-b](https://github.com/max-b))
+- Enable replica on backend only if enabled in features [\#795](https://github.com/getlantern/flashlight/pull/795) ([myleshorton](https://github.com/myleshorton))
+- a little more stateless approach [\#787](https://github.com/getlantern/flashlight/pull/787) ([myleshorton](https://github.com/myleshorton))
+- Merge from devel branch [\#786](https://github.com/getlantern/flashlight/pull/786) ([joesis](https://github.com/joesis))
+- update enabled features to desktop UI [\#785](https://github.com/getlantern/flashlight/pull/785) ([joesis](https://github.com/joesis))
+- Better file name creation [\#784](https://github.com/getlantern/flashlight/pull/784) ([myleshorton](https://github.com/myleshorton))
+- Fix replica api url for UI in production [\#783](https://github.com/getlantern/flashlight/pull/783) ([max-b](https://github.com/max-b))
+
 ## [5.10.0](https://github.com/getlantern/flashlight/tree/5.10.0) (2020-07-20)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.19...5.10.0)
@@ -8,7 +37,7 @@
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.18...5.9.19)
 
-## [5.9.18](https://github.com/getlantern/flashlight/tree/5.9.18) (2020-07-09)
+## [5.9.18](https://github.com/getlantern/flashlight/tree/5.9.18) (2020-07-08)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.17...5.9.18)
 
@@ -174,7 +203,6 @@
 - Make sure to close file paths we create [\#778](https://github.com/getlantern/flashlight/pull/778) ([myleshorton](https://github.com/myleshorton))
 - Broke stealth mode into more fine grained features and enabled detour on Android [\#777](https://github.com/getlantern/flashlight/pull/777) ([oxtoacart](https://github.com/oxtoacart))
 - Allow proper saving of proxystats.csv on iOS [\#775](https://github.com/getlantern/flashlight/pull/775) ([oxtoacart](https://github.com/oxtoacart))
-- Build all tests in CI [\#769](https://github.com/getlantern/flashlight/pull/769) ([anacrolix](https://github.com/anacrolix))
 
 ## [5.8.6](https://github.com/getlantern/flashlight/tree/5.8.6) (2020-03-18)
 
@@ -193,6 +221,7 @@
 - Skip putting nil session state to session cache [\#773](https://github.com/getlantern/flashlight/pull/773) ([joesis](https://github.com/joesis))
 - Update systray dep [\#772](https://github.com/getlantern/flashlight/pull/772) ([max-b](https://github.com/max-b))
 - Unified session key persistence and session caching for TLS proxies [\#770](https://github.com/getlantern/flashlight/pull/770) ([oxtoacart](https://github.com/oxtoacart))
+- Build all tests in CI [\#769](https://github.com/getlantern/flashlight/pull/769) ([anacrolix](https://github.com/anacrolix))
 - Determine if a feature is enabled dynamically [\#768](https://github.com/getlantern/flashlight/pull/768) ([joesis](https://github.com/joesis))
 - Respecting stealthmode on iOS and removed borda [\#765](https://github.com/getlantern/flashlight/pull/765) ([oxtoacart](https://github.com/oxtoacart))
 - Expire session tickets like Chrome [\#760](https://github.com/getlantern/flashlight/pull/760) ([hwh33](https://github.com/hwh33))
@@ -237,7 +266,7 @@
 
 ## [5.8.0](https://github.com/getlantern/flashlight/tree/5.8.0) (2020-02-07)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.7.2...5.8.0)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.7.1...5.8.0)
 
 **Merged pull requests:**
 
@@ -249,15 +278,14 @@
 - Added backoff for retrying device linking code validation [\#743](https://github.com/getlantern/flashlight/pull/743) ([oxtoacart](https://github.com/oxtoacart))
 - Cleanup Lantern exit for CTRL-C case. [\#742](https://github.com/getlantern/flashlight/pull/742) ([myleshorton](https://github.com/myleshorton))
 - update all dependencies to use latest smux [\#741](https://github.com/getlantern/flashlight/pull/741) ([joesis](https://github.com/joesis))
-- generate shortcut list from GeoLite2 country database instead [\#739](https://github.com/getlantern/flashlight/pull/739) ([joesis](https://github.com/joesis))
-
-## [5.7.2](https://github.com/getlantern/flashlight/tree/5.7.2) (2019-12-03)
-
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.7.1...5.7.2)
 
 ## [5.7.1](https://github.com/getlantern/flashlight/tree/5.7.1) (2019-12-03)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.7.0...5.7.1)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.7.2...5.7.1)
+
+## [5.7.2](https://github.com/getlantern/flashlight/tree/5.7.2) (2019-12-03)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.7.0...5.7.2)
 
 ## [5.7.0](https://github.com/getlantern/flashlight/tree/5.7.0) (2019-12-01)
 
