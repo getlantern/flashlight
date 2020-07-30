@@ -401,14 +401,6 @@ func (s *Server) doShow(destURL, campaign, medium string, open func(string, time
 	}
 	log.Debugf("Opening browser at %v", uiURL)
 	open(uiURL, 0*time.Second)
-
-	// This is for opening exernal URLs in a new browser window for
-	// partners such as Manoto.
-	if s.externalURL != "" {
-		s.onceOpenExtURL.Do(func() {
-			open(s.externalURL, 4*time.Second)
-		})
-	}
 }
 
 // GetUIAddr returns the current UI address.
