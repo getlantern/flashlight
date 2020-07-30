@@ -27,7 +27,6 @@ import (
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ui/auth"
 	"github.com/getlantern/flashlight/ui/handlers"
-	"github.com/getlantern/flashlight/ui/testutils"
 	"github.com/getlantern/flashlight/ui/yinbi"
 	"github.com/getlantern/flashlight/util"
 )
@@ -141,7 +140,7 @@ func StartServer(params ServerParams) (*Server, error) {
 	server := NewServer(params)
 
 	for _, h := range params.Handlers {
-		server.handle(h.Pattern, h.Handler)
+		server.Handle(h.Pattern, h.Handler)
 	}
 
 	if err := server.Start(params.RequestedAddr); err != nil {
@@ -157,7 +156,7 @@ func NewServer(params ServerParams) *Server {
 			Transport: proxied.ChainedThenFronted(),
 		}
 	}
-
+	localHTTPToken := params.LocalHTTPToken
 	server := &Server{
 		externalURL: overrideManotoURL(params.ExtURL),
 		httpClient:  params.HTTPClient,
@@ -170,9 +169,8 @@ func NewServer(params ServerParams) *Server {
 		}(),
 		authServerAddr:  params.AuthServerAddr,
 		yinbiServerAddr: params.YinbiServerAddr,
-		localHTTPToken:  params.LocalHTTPToken,
+		localHTTPToken:  localHTTPToken,
 		translations:    eventual.NewValue(),
-		skipTokenCheck:  params.SkipTokenCheck,
 		standalone:      params.Standalone,
 	}
 	return server
@@ -203,8 +201,8 @@ func (s *Server) attachHandlers() {
 		}
 	}
 
-	s.handle("/startup", http.HandlerFunc(s.startupHandler))
-	s.handle("/", http.FileServer(fs))
+	s.Handle("/startup", http.HandlerFunc(s.startupHandler))
+	s.Handle("/", http.FileServer(fs))
 }
 
 // wrapMiddleware takes the given http.Handler and optionally wraps it with
@@ -449,7 +447,7 @@ func (s *Server) activeDomain() string {
 
 func (s *Server) checkRequestForToken(h http.Handler, tok string) http.Handler {
 	check := func(w http.ResponseWriter, r *http.Request) {
-		if HasToken(r, tok) || s.skipTokenCheck {
+		if HasToken(r, tok) {
 			h.ServeHTTP(w, r)
 		} else {
 			b, err := httputil.DumpRequest(r, false)
@@ -484,10 +482,8 @@ func closeConn(w http.ResponseWriter) error {
 	}
 	connIn, _, err := hj.Hijack()
 	if err != nil {
-		log.Errorf("Unable to hijack connection: %s", err)
 		return xerrors.Errorf("hijacking response: %w", err)
 	}
-	testutils.DumpRequestHeaders(r)
 	return connIn.Close()
 }
 

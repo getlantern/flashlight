@@ -386,7 +386,7 @@ func (app *App) beforeStart(listenAddr string) {
 	skipTokenCheck := app.Flags["staging"] != nil && app.Flags["staging"].(bool)
 	standalone := app.Flags["standalone"] != nil && app.Flags["standalone"].(bool)
 	// ui will handle empty uiaddr correctly
-	uiServer, err := ui.StartServer(uiaddr, ui.ServerParams{
+	uiServer, err := ui.StartServer(ui.ServerParams{
 		AuthServerAddr:  authaddr,
 		YinbiServerAddr: yinbiaddr,
 		ExtURL:          startupURL,
@@ -401,7 +401,7 @@ func (app *App) beforeStart(listenAddr string) {
 	})
 	if err != nil {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
-		return false
+		return
 	}
 
 	if app.ShouldShowUI() {
