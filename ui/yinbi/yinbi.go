@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	issuer                 = "GDVT32BZETHUQGGEVOEQBSADVT4Z7F6DDBUOXUVATRHRFTT6J7RDOS76"
+	issuer                 = "GBHV7FVZILTLVWSJI5TVH25UBNZ2CXWAZERKH4CI4CUQM6HN5IVM3HOS"
 	recoverAccountEndpoint = "/account/recover"
 	resetPasswordEndpoint  = "/account/password/reset"
 )
@@ -101,7 +101,7 @@ func newYinbiClient(httpClient *http.Client) *yinbi.Client {
 	code := "YNB"
 	networkName := "test"
 	horizonAddr := "https://horizon-testnet.stellar.org"
-	issuer := "GDVT32BZETHUQGGEVOEQBSADVT4Z7F6DDBUOXUVATRHRFTT6J7RDOS76"
+	issuer := "GBHV7FVZILTLVWSJI5TVH25UBNZ2CXWAZERKH4CI4CUQM6HN5IVM3HOS"
 	if !common.Staging {
 		networkName = "public"
 		code = "Yinbi"
