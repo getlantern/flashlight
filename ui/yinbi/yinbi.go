@@ -487,6 +487,7 @@ func (h YinbiHandler) createAccountHandler(w http.ResponseWriter,
 	}
 	onResp := func(resp *http.Response) error {
 		assetCode := h.yinbiClient.GetAssetCode()
+		log.Debugf("Trusting asset %s", assetCode)
 		return h.yinbiClient.TrustAsset(assetCode, issuer, pair)
 	}
 	url := h.GetAuthAddr(html.EscapeString(r.URL.Path))
