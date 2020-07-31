@@ -13,7 +13,6 @@ import (
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/auth-server/models"
-	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ui/auth"
 	"github.com/getlantern/flashlight/ui/handlers"
 	"github.com/getlantern/golog"
@@ -102,12 +101,6 @@ func newYinbiClient(httpClient *http.Client) *yinbi.Client {
 	networkName := "test"
 	horizonAddr := "https://horizon-testnet.stellar.org"
 	issuer := "GBHV7FVZILTLVWSJI5TVH25UBNZ2CXWAZERKH4CI4CUQM6HN5IVM3HOS"
-	if !common.Staging {
-		networkName = "public"
-		code = "Yinbi"
-		horizonAddr = "https://horizon.stellar.org"
-		issuer = "GDTFHBTWLOYSMX54QZKTWWKFHAYCI3NSZADKY3M7PATARUUKVWOAEY2E"
-	}
 	cfg := config.GetStellarConfig(networkName, horizonAddr, issuer, code)
 	return yinbi.New(yparams.Params{
 		HttpClient: httpClient,
