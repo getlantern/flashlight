@@ -152,7 +152,7 @@ func StartServer(params ServerParams) (*Server, error) {
 func NewServer(params ServerParams) *Server {
 	if params.HTTPClient == nil {
 		params.HTTPClient = &http.Client{
-			Timeout:   time.Duration(30 * time.Second),
+			Timeout:   time.Duration(60 * time.Second),
 			Transport: proxied.ChainedThenFronted(),
 		}
 	}
