@@ -19,13 +19,25 @@ import (
 	"github.com/getlantern/tlsutil"
 )
 
+// A DomainMapper is used to ensure that captured ClientHellos are accurate for a specific domain.
+// Because browsers may send one type of hello to one domain and another type of hello to others, it
+// is important to capture the correct ClientHello for the intended domain.
+//
+// When MapTo is called, all connections to the domain should go to the specified address. This is
+// analogous to editing the system's /etc/hosts file. Clear should undo this.
+type DomainMapper interface {
+	Domain() string
+	MapTo(address string) error
+	Clear() error
+}
+
 // GetBrowserHello returns a sample ClientHello from the system's default web browser.
-func GetBrowserHello(ctx context.Context) ([]byte, error) {
+func GetBrowserHello(ctx context.Context, dm DomainMapper) ([]byte, error) {
 	b, err := defaultBrowser(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to obtain user's default browser: %w", err)
 	}
-	return getBrowserHello(ctx, b)
+	return getBrowserHello(ctx, b, dm)
 }
 
 type browser interface {
@@ -57,7 +69,7 @@ func (c chrome) get(ctx context.Context, addr string) error {
 	return nil
 }
 
-func getBrowserHello(ctx context.Context, browser browser) ([]byte, error) {
+func getBrowserHello(ctx context.Context, browser browser, dm DomainMapper) ([]byte, error) {
 	type helloResult struct {
 		hello []byte
 		err   error
@@ -78,13 +90,24 @@ func getBrowserHello(ctx context.Context, browser browser) ([]byte, error) {
 	}
 	defer s.Close()
 
+	sHost, sPort, err := net.SplitHostPort(s.address())
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse local server address: %w", err)
+	}
+
+	if err := dm.MapTo(sHost); err != nil {
+		return nil, fmt.Errorf("failed to map domain: %w", err)
+	}
+	defer dm.Clear()
+
 	go func() {
 		if err := s.listenAndServeTLS(); err != nil {
 			serverErrChan <- err
 		}
 	}()
 	go func() {
-		if err := browser.get(ctx, fmt.Sprintf("https://%s", s.address())); err != nil {
+		// TODO: think about whether replacing the port here will work w.r.t. the proxy dialer
+		if err := browser.get(ctx, fmt.Sprintf("https://%s:%s", dm.Domain(), sPort)); err != nil {
 			browserErrChan <- err
 		}
 	}()
@@ -158,7 +181,8 @@ func (l capturingListener) Accept() (net.Conn, error) {
 }
 
 func listenAndCaptureTCP(onHello onHello) (*capturingListener, error) {
-	l, err := net.Listen("tcp", "")
+	// TODO: explain why we use IPv4... or do we need to?
+	l, err := net.Listen("tcp4", "127.0.0.1:")
 	if err != nil {
 		return nil, err
 	}
