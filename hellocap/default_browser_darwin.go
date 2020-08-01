@@ -29,6 +29,10 @@ func (s safari) name() string { return "Safari" }
 
 func (s safari) get(ctx context.Context, addr string) error {
 	// TODO: implement me!
+	// Safari does not support a headless mode. It may be possible to achieve something similar
+	// using WebKit or even chromedp, but doing so in a reliable way without installing dependencies
+	// on users' machines is non-trivial if not impossible.
+	// TODO: capture a Safari hello and hard-code it somehow
 	return nil
 }
 
