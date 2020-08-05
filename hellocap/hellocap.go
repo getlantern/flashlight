@@ -60,11 +60,23 @@ type chrome struct {
 func (c chrome) name() string { return "Chrome" }
 
 func (c chrome) get(ctx context.Context, addr string) error {
-	// TODO: make sure this works on all platforms
-	if err := exec.CommandContext(ctx, c.path, "--headless", addr).Run(); err != nil {
+	// debugging
+	const path = `C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`
+
+	// The --disable-gpu flag is necessary to run headless Chrom on Windows:
+	// https://bugs.chromium.org/p/chromium/issues/detail?id=737678
+	// TODO: make sure this still works on macOS with --disable-gpu
+	fmt.Println("running Chrome, hitting", addr)
+	// if err := exec.CommandContext(ctx, c.path, "--headless", "--disable-gpu", addr).Run(); err != nil {
+	if output, err := exec.CommandContext(ctx, path, "--headless", "--disable-gpu", addr).CombinedOutput(); err != nil {
 		// The Chrome binary does not appear to ever exit non-zero, so we don't need to worry about
 		// catching and ignoring errors due to things like certificate validity checks.
+		fmt.Println("error running Chrome:", err)
 		return fmt.Errorf("failed to execute binary: %w", err)
+	} else {
+		fmt.Println("Chrome output:")
+		fmt.Println(string(output))
+		fmt.Println()
 	}
 	return nil
 }
@@ -187,6 +199,17 @@ func listenAndCaptureTCP(onHello onHello) (*capturingListener, error) {
 		return nil, err
 	}
 	return &capturingListener{l, onHello}, nil
+}
+
+// StartServer is for debugging.
+// TODO: delete
+func StartServer(onHello func(hello []byte, err error), serverErrors chan<- error) (addr string, close func() error, err error) {
+	s, err := newCapturingServer(onHello)
+	if err != nil {
+		return "", nil, err
+	}
+	go func() { serverErrors <- s.listenAndServeTLS() }()
+	return s.l.Addr().String(), s.Close, nil
 }
 
 type capturingServer struct {

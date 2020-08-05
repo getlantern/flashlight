@@ -2,8 +2,11 @@
 
 package hellocap
 
-import "errors"
+import (
+	"context"
+	"errors"
+)
 
-func defaultBrowser() (browser, error) {
+func defaultBrowser(ctx context.Context) (browser, error) {
 	return nil, errors.New("unsupported platform")
 }

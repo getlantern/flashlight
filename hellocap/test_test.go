@@ -3,10 +3,12 @@ package hellocap
 import (
 	"bufio"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
-	"net"
+	"net/http"
 	"os"
+	"os/exec"
 	"testing"
 
 	"github.com/getlantern/tlsutil"
@@ -96,7 +98,7 @@ func (nhm noopHostMapper) Clear() error         { return nil }
 func TestHello(t *testing.T) {
 	fmt.Println("starting test")
 
-	hello, err := GetBrowserHello(context.Background(), noopHostMapper("i.scdn.co"))
+	hello, err := GetBrowserHello(context.Background(), noopHostMapper("localhost"))
 	require.NoError(t, err)
 
 	fmt.Println("len(hello):", len(hello))
@@ -114,13 +116,39 @@ func TestHFMClear(t *testing.T) {
 	require.NoError(t, hostsFileMapper{}.Clear())
 }
 
-func TestTest(t *testing.T) {
-	l, err := net.Listen("tcp", "")
+func TestDefaultBrowser(t *testing.T) {
+	b, err := defaultBrowser(context.Background())
 	require.NoError(t, err)
-	defer l.Close()
 
-	fmt.Println("addr:", l.Addr().String())
-	host, _, err := net.SplitHostPort(l.Addr().String())
+	fmt.Printf("type(browser): %T\n", b)
+}
+
+func TestHitHellocapServer(t *testing.T) {
+	c := http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
+	}
+
+	resp, err := c.Get("https://localhost:51134")
 	require.NoError(t, err)
-	fmt.Println("host:", host)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	require.NoError(t, err)
+	fmt.Println(string(body))
+}
+
+func TestRunChrome(t *testing.T) {
+	const (
+		pathToChrome = `C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`
+		uri          = `https://localhost:51134`
+	)
+	out, err := exec.Command(pathToChrome, "--headless", "--disable-gpu", uri).CombinedOutput()
+	require.NoError(t, err)
+	fmt.Println("output:")
+	fmt.Println(string(out))
 }
