@@ -57,26 +57,16 @@ type chrome struct {
 	path string
 }
 
-func (c chrome) name() string { return "Chrome" }
+func (c chrome) name() string { return "Google Chrome" }
 
 func (c chrome) get(ctx context.Context, addr string) error {
-	// debugging
-	const path = `C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`
-
-	// The --disable-gpu flag is necessary to run headless Chrom on Windows:
+	// The --disable-gpu flag is necessary to run headless Chrome on Windows:
 	// https://bugs.chromium.org/p/chromium/issues/detail?id=737678
 	// TODO: make sure this still works on macOS with --disable-gpu
-	fmt.Println("running Chrome, hitting", addr)
-	// if err := exec.CommandContext(ctx, c.path, "--headless", "--disable-gpu", addr).Run(); err != nil {
-	if output, err := exec.CommandContext(ctx, path, "--headless", "--disable-gpu", addr).CombinedOutput(); err != nil {
+	if err := exec.CommandContext(ctx, c.path, "--headless", "--disable-gpu", addr).Run(); err != nil {
 		// The Chrome binary does not appear to ever exit non-zero, so we don't need to worry about
 		// catching and ignoring errors due to things like certificate validity checks.
-		fmt.Println("error running Chrome:", err)
 		return fmt.Errorf("failed to execute binary: %w", err)
-	} else {
-		fmt.Println("Chrome output:")
-		fmt.Println(string(output))
-		fmt.Println()
 	}
 	return nil
 }

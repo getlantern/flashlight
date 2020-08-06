@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os/exec"
 	"regexp"
-	"strings"
 
 	"golang.org/x/sys/windows/registry"
 )
@@ -15,36 +15,12 @@ var execPathRegexp = regexp.MustCompile(`"(.*)".*".*"`)
 func defaultBrowser(ctx context.Context) (browser, error) {
 	// TODO: test on Windows < 10 ?
 
-	// https://stackoverflow.com/a/2178637
-	// TODO: or maybe https://stackoverflow.com/a/12444963?
-	// k, err := registry.OpenKey(registry.CURRENT_USER, `Software\Classes\http\shell\open\command\(Default)`, registry.READ)
+	// https://stackoverflow.com/a/12444963?
+	// TODO: may need https://stackoverflow.com/a/2178637 for older versions of Windows
 	userChoice, err := registry.OpenKey(registry.CURRENT_USER, `Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.html\UserChoice`, registry.READ)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read default browser from registry: %w", err)
 	}
-
-	// debugging
-	// names, err := k.ReadSubKeyNames(100)
-	// if err != nil {
-	// 	fmt.Println("failed to read subkey names:", err)
-	// } else {
-	// 	fmt.Println("read", len(names), "subkey names:")
-	// 	for _, name := range names {
-	// 		fmt.Println(name)
-	// 	}
-	// 	fmt.Println()
-	// }
-	// names, err = k.ReadValueNames(100)
-	// if err != nil {
-	// 	fmt.Println("failed to read value names:", err)
-	// } else {
-	// 	fmt.Println("read", len(names), "value names:")
-	// 	for _, name := range names {
-	// 		fmt.Println(name)
-	// 	}
-	// 	fmt.Println()
-	// }
-
 	progID, _, err := userChoice.GetStringValue(`ProgId`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read browser program ID from registry: %w", err)
@@ -69,32 +45,60 @@ func defaultBrowser(ctx context.Context) (browser, error) {
 	}
 	fmt.Println("execPath:", execPath)
 
-	switch {
-	case strings.Contains(appName, "MicrosoftEdge"):
+	switch appName {
+	case "Microsoft Edge":
+		// TODO: detect difference between Edge and EdgeHTML
 		fmt.Println("default browser is Edge")
-	case appName == "Google Chrome":
+
+		matches := execPathRegexp.FindStringSubmatch(execPath)
+		if len(matches) <= 1 {
+			return nil, errors.New("unexpected executable path structure for Edge - Chromium")
+		}
+		fmt.Printf("using Edge with path '%s'\n", matches[1])
+		return edgeChromium{matches[1]}, nil
+
+	case "Google Chrome":
 		fmt.Println("default browser is Chrome")
 
+		// TODO: this is duplicated with Edge - abstract if this is a common pattern
 		matches := execPathRegexp.FindStringSubmatch(execPath)
 		if len(matches) <= 1 {
 			return nil, errors.New("unexpected executable path structure for Chrome")
 		}
 		fmt.Printf("using Chrome with path '%s'\n", matches[1])
 		return chrome{matches[1]}, nil
-	}
 
-	switch appName {
-	// TODO: figure out key for IE and Edge
-	case "IE.AssocFile.HTM": // TODO: .HTML?
-		// TODO: implement me!
-		return nil, nil
-	case "FirefoxHTML":
-		// TODO: implement me!
-		return nil, nil
-	case "ChromeHTML":
-		// TODO: implement me!
-		return nil, nil
 	default:
 		return nil, fmt.Errorf("unsupported browser %s", appName)
 	}
+}
+
+// TODO: the edge browsers may apply to other OSes as well
+
+type edgeChromium struct {
+	path string
+}
+
+func (ec edgeChromium) name() string {
+	return "Microsoft Edge - Chromium"
+}
+
+func (ec edgeChromium) get(ctx context.Context, addr string) error {
+	if err := exec.CommandContext(ctx, ec.path, "--headless", addr).Run(); err != nil {
+		return fmt.Errorf("failed to execute binary: %w", err)
+	}
+	return nil
+}
+
+// EdgeHTML or Microsoft Edge Legacy is the older, HTML-based version of the Edge browser.
+// https://support.microsoft.com/en-us/help/4026494/microsoft-edge-difference-between-legacy
+type edgeHTML struct{}
+
+func (eh edgeHTML) name() string {
+	return "Microsoft Edge - HTML"
+}
+
+func (eh edgeHTML) get(ctx context.Context, addr string) error {
+	// TODO: implement me!
+	return errors.New("edge HTML is not supported")
 }

@@ -152,3 +152,12 @@ func TestRunChrome(t *testing.T) {
 	fmt.Println("output:")
 	fmt.Println(string(out))
 }
+
+func TestRunEdge(t *testing.T) {
+	const uri = `https://localhost:51134`
+
+	out, err := exec.Command("start", fmt.Sprintf("microsoft-edge:%s", uri)).CombinedOutput()
+	require.NoError(t, err)
+	fmt.Println("output:")
+	fmt.Println(string(out))
+}
