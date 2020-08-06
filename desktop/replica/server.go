@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/kennygrant/sanitize"
 	"golang.org/x/xerrors"
@@ -41,10 +42,12 @@ type HttpHandler struct {
 	logger        analog.Logger
 	mux           http.ServeMux
 	replicaClient *replica.Client
+	searchProxy   http.Handler
+	gaSession     analytics.Session
 }
 
 // NewHTTPHandler creates a new http.Handler for calls to replica.
-func NewHTTPHandler(uc common.UserConfig, replicaClient *replica.Client) (_ *HttpHandler, exitFunc func(), err error) {
+func NewHTTPHandler(uc common.UserConfig, replicaClient *replica.Client, gaSession analytics.Session) (_ *HttpHandler, exitFunc func(), err error) {
 	userCacheDir, err := os.UserCacheDir()
 	if err != nil {
 		panic(err)
@@ -104,8 +107,10 @@ func NewHTTPHandler(uc common.UserConfig, replicaClient *replica.Client) (_ *Htt
 		logger:        replicaLogger,
 		uploadsDir:    uploadsDir,
 		replicaClient: replicaClient,
+		searchProxy:   http.StripPrefix("/search", searchHandler(uc)),
+		gaSession:     gaSession,
 	}
-	handler.mux.Handle("/search", http.StripPrefix("/search", searchHandler(uc)))
+	handler.mux.HandleFunc("/search", handler.handleSearch)
 	handler.mux.HandleFunc("/upload", handler.handleUpload)
 	handler.mux.HandleFunc("/uploads", handler.handleUploads)
 	handler.mux.HandleFunc("/view", handler.handleView)
@@ -190,6 +195,7 @@ func (me *HttpHandler) handleUpload(rw http.ResponseWriter, r *http.Request) {
 	s3Prefix := output.Upload
 	me.logger.WithValues(analog.Debug).Printf("uploaded replica key %q", s3Prefix)
 	w.Op.Set("upload_s3_key", s3Prefix)
+	me.gaSession.Event("replica", "upload")
 	me.logger.WithValues(analog.Debug).Printf("uploaded %d bytes", cw.BytesWritten)
 	if err != nil {
 		panic(err)
@@ -309,6 +315,18 @@ func (me *HttpHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	os.Remove(me.uploadMetainfoPath(s3Prefix))
 }
 
+func (me *HttpHandler) handleSearch(rw http.ResponseWriter, r *http.Request) {
+	w := ops.InitInstrumentedResponseWriter(rw, "replica_search")
+	defer w.Finish()
+
+	searchTerm := r.URL.Query().Get("q")
+
+	w.Op.Set("search_term", searchTerm)
+	me.gaSession.EventWithLabel("replica", "search", searchTerm)
+
+	me.searchProxy.ServeHTTP(rw, r)
+}
+
 func (me *HttpHandler) handleDownload(w http.ResponseWriter, r *http.Request) {
 	me.handleViewWith(w, r, "attachment")
 }
@@ -411,6 +429,8 @@ func (me *HttpHandler) handleViewWith(rw http.ResponseWriter, r *http.Request, i
 	}
 
 	w.Op.Set("download_filename", filename)
+	me.gaSession.EventWithLabel("replica", "view", filename)
+
 	torrentFile := t.Files()[selectOnly]
 	fileReader := torrentFile.NewReader()
 	confluence.ServeTorrentReader(w, r, fileReader, torrentFile.Path())

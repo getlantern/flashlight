@@ -475,6 +475,7 @@ func (app *App) checkForReplica(features map[string]bool) {
 					},
 					Endpoint: replica.DefaultEndpoint,
 				},
+				app.gaSession,
 			)
 			if err != nil {
 				log.Errorf("error creating replica http server: %v", err)
