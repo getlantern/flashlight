@@ -26,15 +26,23 @@ func defaultBrowser(ctx context.Context) (browser, error) {
 		return nil, fmt.Errorf("failed to read browser program ID from registry: %w", err)
 	}
 	fmt.Println("progID:", progID)
-	application, err := registry.OpenKey(registry.CLASSES_ROOT, fmt.Sprintf(`%s\Application`, progID), registry.READ)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read default browser application info from registry: %w", err)
-	}
-	appName, _, err := application.GetStringValue(`ApplicationName`)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read default browser name from registry: %w", err)
+
+	var appName string
+	if progID == "htmlfile" {
+		// The default browser is Internet Explorer and there is no application entry in the registry.
+		appName = "Microsoft Internet Explorer"
+	} else {
+		application, err := registry.OpenKey(registry.CLASSES_ROOT, fmt.Sprintf(`%s\Application`, progID), registry.READ)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read default browser application info from registry: %w", err)
+		}
+		appName, _, err = application.GetStringValue(`ApplicationName`)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read default browser name from registry: %w", err)
+		}
 	}
 	fmt.Println("appName:", appName)
+
 	appExec, err := registry.OpenKey(registry.CLASSES_ROOT, fmt.Sprintf(`%s\Shell\open\command`, progID), registry.READ)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read default browser executable info from registry: %w", err)
@@ -56,6 +64,10 @@ func defaultBrowser(ctx context.Context) (browser, error) {
 		}
 		fmt.Printf("using Edge with path '%s'\n", matches[1])
 		return edgeChromium{matches[1]}, nil
+
+	case "Microsoft Internet Explorer":
+		// TODO: implement me!
+		return nil, errors.New("unsupported browser - Internet Explorer")
 
 	case "Google Chrome":
 		fmt.Println("default browser is Chrome")

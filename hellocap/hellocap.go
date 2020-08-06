@@ -49,7 +49,7 @@ type browser interface {
 	// never see the request.
 	get(ctx context.Context, addr string) error
 
-	// The browser's name, e.g. Chrome.
+	// The browser's name, e.g. Google Chrome.
 	name() string
 }
 
