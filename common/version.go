@@ -6,7 +6,7 @@ const (
 	// applied. Using a big number here prevents such auto-updates without
 	// disabling the feature completely. The "make package-*" tool will take care
 	// of bumping this version number so you don't have to do it by hand.
-	DefaultPackageVersion = "9999.99.99+replica"
+	DefaultPackageVersion = "9999.99.99"
 )
 
 var (
