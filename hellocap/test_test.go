@@ -11,6 +11,8 @@ import (
 	"os/exec"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/getlantern/tlsutil"
 	"github.com/stretchr/testify/require"
 )
@@ -142,22 +144,57 @@ func TestHitHellocapServer(t *testing.T) {
 	fmt.Println(string(body))
 }
 
+func TestExecPathRegexp(t *testing.T) {
+	for _, testCase := range []struct {
+		input, expected string
+	}{
+		{`"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" -- "%1"`, `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`},
+		{`"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" -- "%1"`, `C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`},
+		{`"C:\Program Files\Mozilla Firefox\firefox.exe" -osint -url "%1"`, `C:\Program Files\Mozilla Firefox\firefox.exe`},
+	} {
+		matches := execPathRegexp.FindStringSubmatch(testCase.input)
+		if !assert.Greater(t, len(matches), 1) {
+			continue
+		}
+		assert.Equal(t, testCase.expected, matches[1])
+	}
+}
+
+const hcserverAddr = `https://localhost:52312`
+
 func TestRunChrome(t *testing.T) {
-	const (
-		pathToChrome = `C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`
-		uri          = `https://localhost:51134`
-	)
-	out, err := exec.Command(pathToChrome, "--headless", "--disable-gpu", uri).CombinedOutput()
+	const pathToChrome = `C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`
+	out, err := exec.Command(pathToChrome, "--headless", "--disable-gpu", hcserverAddr).CombinedOutput()
 	require.NoError(t, err)
 	fmt.Println("output:")
 	fmt.Println(string(out))
 }
 
 func TestRunEdge(t *testing.T) {
-	const uri = `https://localhost:51134`
-
-	out, err := exec.Command("start", fmt.Sprintf("microsoft-edge:%s", uri)).CombinedOutput()
+	out, err := exec.Command("start", fmt.Sprintf("microsoft-edge:%s", hcserverAddr)).CombinedOutput()
 	require.NoError(t, err)
 	fmt.Println("output:")
 	fmt.Println(string(out))
+}
+
+func TestRunFirefox(t *testing.T) {
+	const (
+		pathToFirefox = `C:\Program Files\Mozilla Firefox\firefox.exe`
+	)
+	// var (
+	// 	runDll32 = filepath.Join(os.Getenv("SYSTEMROOT"), "System32", "rundll32.exe")
+	// )
+	// fmt.Println("runDll32:", runDll32)
+
+	// out, err := exec.Command(pathToFirefox, "-P", "test-profile", "-headless", "-osint", "-url", hcserverAddr).CombinedOutput()
+	// require.NoError(t, err)
+	// fmt.Println("output:")
+	// fmt.Println(string(out))
+
+	out, err := exec.Command("cmd", "/C", "start", "firefox", "-P", "default", "-headless", hcserverAddr).CombinedOutput()
+	if len(out) > 0 {
+		fmt.Println("output:")
+		fmt.Println(string(out))
+	}
+	require.NoError(t, err)
 }

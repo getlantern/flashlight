@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os/exec"
 	"regexp"
+	"strings"
 
 	"golang.org/x/sys/windows/registry"
 )
@@ -28,10 +29,12 @@ func defaultBrowser(ctx context.Context) (browser, error) {
 	fmt.Println("progID:", progID)
 
 	var appName string
-	if progID == "htmlfile" {
-		// The default browser is Internet Explorer and there is no application entry in the registry.
+	switch {
+	case progID == "htmlfile":
 		appName = "Microsoft Internet Explorer"
-	} else {
+	case strings.Contains(progID, "Firefox"):
+		appName = "Mozilla Firefox"
+	default:
 		application, err := registry.OpenKey(registry.CLASSES_ROOT, fmt.Sprintf(`%s\Application`, progID), registry.READ)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read default browser application info from registry: %w", err)
@@ -57,13 +60,11 @@ func defaultBrowser(ctx context.Context) (browser, error) {
 	case "Microsoft Edge":
 		// TODO: detect difference between Edge and EdgeHTML
 		fmt.Println("default browser is Edge")
-
-		matches := execPathRegexp.FindStringSubmatch(execPath)
-		if len(matches) <= 1 {
-			return nil, errors.New("unexpected executable path structure for Edge - Chromium")
+		execPath, err := execPathFromRegistryEntry(execPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse executable path for Edge (Chromium): %w", err)
 		}
-		fmt.Printf("using Edge with path '%s'\n", matches[1])
-		return edgeChromium{matches[1]}, nil
+		return edgeChromium{execPath}, nil
 
 	case "Microsoft Internet Explorer":
 		// TODO: implement me!
@@ -71,18 +72,28 @@ func defaultBrowser(ctx context.Context) (browser, error) {
 
 	case "Google Chrome":
 		fmt.Println("default browser is Chrome")
-
-		// TODO: this is duplicated with Edge - abstract if this is a common pattern
-		matches := execPathRegexp.FindStringSubmatch(execPath)
-		if len(matches) <= 1 {
-			return nil, errors.New("unexpected executable path structure for Chrome")
+		execPath, err := execPathFromRegistryEntry(execPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse executable path for Chrome: %w", err)
 		}
-		fmt.Printf("using Chrome with path '%s'\n", matches[1])
-		return chrome{matches[1]}, nil
+		return chrome{execPath}, nil
+
+	case "Mozilla Firefox":
+		fmt.Println("default browser is Firefox")
+		return firefox{}, nil
 
 	default:
 		return nil, fmt.Errorf("unsupported browser %s", appName)
 	}
+}
+
+func execPathFromRegistryEntry(regEntry string) (string, error) {
+	matches := execPathRegexp.FindStringSubmatch(regEntry)
+	if len(matches) <= 1 {
+		return "", errors.New("unexpected executable path structure")
+	}
+	fmt.Printf("using path '%s'\n", matches[1])
+	return matches[1], nil
 }
 
 // TODO: the edge browsers may apply to other OSes as well
@@ -113,4 +124,17 @@ func (eh edgeHTML) name() string {
 func (eh edgeHTML) get(ctx context.Context, addr string) error {
 	// TODO: implement me!
 	return errors.New("edge HTML is not supported")
+}
+
+type firefox struct{}
+
+func (f firefox) name() string { return "Mozilla Firefox" }
+
+func (f firefox) get(ctx context.Context, addr string) error {
+	// TODO: is there always a 'default' profile? Is it always unused? What is the UX if it's in use?
+	// TODO: this firefox process (or a descendent?) never seems to die
+	if err := exec.CommandContext(ctx, "cmd", "/C", "start", "firefox", "-P", "default", "-headless", addr).Run(); err != nil {
+		return fmt.Errorf("failed to execute binary: %w", err)
+	}
+	return nil
 }
