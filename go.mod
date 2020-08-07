@@ -87,6 +87,7 @@ require (
 	github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
 	github.com/miekg/dns v0.0.0-20180406150955-01d59357d468
+	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/go-server-timing v1.0.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/mitchellh/panicwrap v1.0.0

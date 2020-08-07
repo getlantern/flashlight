@@ -9,10 +9,15 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"howett.net/plist"
 )
+
+// Just to get the tests to compile on Darwin
+// TODO: delete me
+var execPathRegexp = regexp.MustCompile(`"(.*)".*".*"`)
 
 type lshandler struct {
 	URLScheme string `plist:"LSHandlerURLScheme"`

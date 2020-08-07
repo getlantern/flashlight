@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -178,18 +179,7 @@ func TestRunEdge(t *testing.T) {
 }
 
 func TestRunFirefox(t *testing.T) {
-	const (
-		pathToFirefox = `C:\Program Files\Mozilla Firefox\firefox.exe`
-	)
-	// var (
-	// 	runDll32 = filepath.Join(os.Getenv("SYSTEMROOT"), "System32", "rundll32.exe")
-	// )
-	// fmt.Println("runDll32:", runDll32)
-
-	// out, err := exec.Command(pathToFirefox, "-P", "test-profile", "-headless", "-osint", "-url", hcserverAddr).CombinedOutput()
-	// require.NoError(t, err)
-	// fmt.Println("output:")
-	// fmt.Println(string(out))
+	const pathToFirefox = `C:\Program Files\Mozilla Firefox\firefox.exe`
 
 	out, err := exec.Command("cmd", "/C", "start", "firefox", "-P", "default", "-headless", hcserverAddr).CombinedOutput()
 	if len(out) > 0 {
@@ -197,4 +187,55 @@ func TestRunFirefox(t *testing.T) {
 		fmt.Println(string(out))
 	}
 	require.NoError(t, err)
+}
+
+// Unix only.
+func TestProcessTree(t *testing.T) {
+	const script = `#! /bin/bash
+
+for i in $(seq 1 10)
+do
+	sleep 120 & sleep_pid=$!
+	echo "process sleeping with PID $sleep_pid"
+done
+
+sleep 120`
+
+	tempFile, err := ioutil.TempFile("", "test-proc-tree")
+	require.NoError(t, err)
+	require.NoError(t, os.Chmod(tempFile.Name(), 0744))
+	require.NoError(t, ioutil.WriteFile(tempFile.Name(), []byte(script), 0744))
+
+	cmd := exec.Command(tempFile.Name())
+	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+	require.NoError(t, cmd.Start())
+
+	time.Sleep(time.Second)
+	root, err := processTree()
+	require.NoError(t, err)
+	fmt.Println()
+	fmt.Println("current tree:")
+	printTree(*root, 0)
+
+	require.Equal(t, 1, len(root.children))
+	fmt.Println()
+	fmt.Println("killing tree rooted at", root.children[0].Executable())
+	fmt.Println()
+	require.NoError(t, root.children[0].kill())
+
+	time.Sleep(5 * time.Second)
+	root, err = processTree()
+	require.NoError(t, err)
+	fmt.Println("new tree:")
+	printTree(*root, 0)
+}
+
+func printTree(root process, level int) {
+	for i := 0; i < level; i++ {
+		fmt.Print("\t")
+	}
+	fmt.Println(root.Executable())
+	for _, child := range root.children {
+		printTree(child, level+1)
+	}
 }
