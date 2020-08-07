@@ -29,9 +29,9 @@ require (
 	github.com/getlantern/enproxy v0.0.0-20180913191734-002212d417a4 // indirect
 	github.com/getlantern/errors v0.0.0-20190325191628-abdb3e3e36f7
 	github.com/getlantern/event v0.0.0-20170919023932-f16a5563f52e
-	github.com/getlantern/eventual v0.0.0-20180125201821-84b02499361b
+	github.com/getlantern/eventual v1.0.0
 	github.com/getlantern/filepersist v0.0.0-20160317154340-c5f0cd24e799
-	github.com/getlantern/fronted v0.0.0-20190606212108-e7744195eded
+	github.com/getlantern/fronted v0.0.0-20200807235213-54b06952ddc6
 	github.com/getlantern/geolookup v0.0.0-20200121184643-02217082e50f
 	github.com/getlantern/go-ping v0.0.0-20191213124541-9d4b7e6e7de6
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
@@ -98,7 +98,7 @@ require (
 	github.com/mitchellh/panicwrap v1.0.0
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
-	github.com/refraction-networking/utls v0.0.0-20200601200209-ada0bb9b38a0
+	github.com/refraction-networking/utls v0.0.0-20200729012536-186025ac7b77
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/stretchr/testify v1.6.1
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
