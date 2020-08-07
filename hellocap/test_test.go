@@ -179,14 +179,20 @@ func TestRunEdge(t *testing.T) {
 }
 
 func TestRunFirefox(t *testing.T) {
-	const pathToFirefox = `C:\Program Files\Mozilla Firefox\firefox.exe`
-
-	out, err := exec.Command("cmd", "/C", "start", "firefox", "-P", "default", "-headless", hcserverAddr).CombinedOutput()
-	if len(out) > 0 {
-		fmt.Println("output:")
-		fmt.Println(string(out))
-	}
+	pTree, err := processTree()
 	require.NoError(t, err)
+	fmt.Println("process tree before command:")
+	printTree(*pTree, 0)
+	fmt.Println()
+
+	cmd := exec.Command("cmd", "/C", "start", "firefox", "-P", "default", "-headless", hcserverAddr)
+	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+	require.NoError(t, cmd.Run())
+
+	pTree, err = processTree()
+	require.NoError(t, err)
+	fmt.Println("\nprocess tree after command:")
+	printTree(*pTree, 0)
 }
 
 // Unix only.
