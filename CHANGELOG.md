@@ -1,5 +1,16 @@
 # Changelog
 
+## [6.0.1](https://github.com/getlantern/flashlight/tree/6.0.1) (2020-08-08)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/6.0.0...6.0.1)
+
+**Merged pull requests:**
+
+- Adding new UI with surveys and features flags synced [\#846](https://github.com/getlantern/flashlight/pull/846) ([myleshorton](https://github.com/myleshorton))
+- Remove replica specific default package version [\#845](https://github.com/getlantern/flashlight/pull/845) ([max-b](https://github.com/max-b))
+- Removed unused replica.go [\#844](https://github.com/getlantern/flashlight/pull/844) ([oxtoacart](https://github.com/oxtoacart))
+- Add google analytics tracking to replica events [\#843](https://github.com/getlantern/flashlight/pull/843) ([max-b](https://github.com/max-b))
+
 ## [6.0.0](https://github.com/getlantern/flashlight/tree/6.0.0) (2020-07-30)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.10.0...6.0.0)
@@ -27,7 +38,6 @@
 - Merge from devel branch [\#786](https://github.com/getlantern/flashlight/pull/786) ([joesis](https://github.com/joesis))
 - update enabled features to desktop UI [\#785](https://github.com/getlantern/flashlight/pull/785) ([joesis](https://github.com/joesis))
 - Better file name creation [\#784](https://github.com/getlantern/flashlight/pull/784) ([myleshorton](https://github.com/myleshorton))
-- Fix replica api url for UI in production [\#783](https://github.com/getlantern/flashlight/pull/783) ([max-b](https://github.com/max-b))
 
 ## [5.10.0](https://github.com/getlantern/flashlight/tree/5.10.0) (2020-07-20)
 
@@ -117,6 +127,7 @@
 - show systray as connecting when starting up [\#816](https://github.com/getlantern/flashlight/pull/816) ([joesis](https://github.com/joesis))
 - Drain retry timer only when if it's not consumed [\#815](https://github.com/getlantern/flashlight/pull/815) ([joesis](https://github.com/joesis))
 - Enabled YouTube tracking as an optional feature on MacOS [\#810](https://github.com/getlantern/flashlight/pull/810) ([oxtoacart](https://github.com/oxtoacart))
+- report a bit more information when flashlight timeout is hit [\#807](https://github.com/getlantern/flashlight/pull/807) ([joesis](https://github.com/joesis))
 
 ## [5.9.8](https://github.com/getlantern/flashlight/tree/5.9.8) (2020-05-12)
 
@@ -126,7 +137,6 @@
 
 - Don't clear out configs when config is unchanged in cloud [\#811](https://github.com/getlantern/flashlight/pull/811) ([oxtoacart](https://github.com/oxtoacart))
 - Include exception 'value' in sentry fingerprint for correct grouping [\#809](https://github.com/getlantern/flashlight/pull/809) ([max-b](https://github.com/max-b))
-- report a bit more information when flashlight timeout is hit [\#807](https://github.com/getlantern/flashlight/pull/807) ([joesis](https://github.com/joesis))
 
 ## [5.9.7](https://github.com/getlantern/flashlight/tree/5.9.7) (2020-04-29)
 
@@ -191,6 +201,7 @@
 
 **Merged pull requests:**
 
+- Fix replica api url for UI in production [\#783](https://github.com/getlantern/flashlight/pull/783) ([max-b](https://github.com/max-b))
 - skip re-evaluating dialers when background checking is disabled [\#782](https://github.com/getlantern/flashlight/pull/782) ([joesis](https://github.com/joesis))
 
 ## [5.9.0](https://github.com/getlantern/flashlight/tree/5.9.0) (2020-04-03)
@@ -266,7 +277,7 @@
 
 ## [5.8.0](https://github.com/getlantern/flashlight/tree/5.8.0) (2020-02-07)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.7.1...5.8.0)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.7.2...5.8.0)
 
 **Merged pull requests:**
 
@@ -274,18 +285,14 @@
 - Add Sentry panic reporting and adjust panicwrapper signal handling [\#748](https://github.com/getlantern/flashlight/pull/748) ([max-b](https://github.com/max-b))
 - Respect server's session tickets when possible even when using config… [\#747](https://github.com/getlantern/flashlight/pull/747) ([oxtoacart](https://github.com/oxtoacart))
 - switch back to upstream smux package [\#746](https://github.com/getlantern/flashlight/pull/746) ([joesis](https://github.com/joesis))
-- Various iOS fixes [\#744](https://github.com/getlantern/flashlight/pull/744) ([oxtoacart](https://github.com/oxtoacart))
-- Added backoff for retrying device linking code validation [\#743](https://github.com/getlantern/flashlight/pull/743) ([oxtoacart](https://github.com/oxtoacart))
-- Cleanup Lantern exit for CTRL-C case. [\#742](https://github.com/getlantern/flashlight/pull/742) ([myleshorton](https://github.com/myleshorton))
-- update all dependencies to use latest smux [\#741](https://github.com/getlantern/flashlight/pull/741) ([joesis](https://github.com/joesis))
-
-## [5.7.1](https://github.com/getlantern/flashlight/tree/5.7.1) (2019-12-03)
-
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.7.2...5.7.1)
 
 ## [5.7.2](https://github.com/getlantern/flashlight/tree/5.7.2) (2019-12-03)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.7.0...5.7.2)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.7.1...5.7.2)
+
+## [5.7.1](https://github.com/getlantern/flashlight/tree/5.7.1) (2019-12-03)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.7.0...5.7.1)
 
 ## [5.7.0](https://github.com/getlantern/flashlight/tree/5.7.0) (2019-12-01)
 
@@ -565,19 +572,19 @@
 
 ## [4.6.14](https://github.com/getlantern/flashlight/tree/4.6.14) (2018-05-06)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.14)
-
-## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
-
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.13)
-
-## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
-
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.14)
 
 ## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.11...4.6.12)
+
+## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.11)
+
+## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.13)
 
 ## [4.6.10](https://github.com/getlantern/flashlight/tree/4.6.10) (2018-04-30)
 
