@@ -108,12 +108,15 @@ func TestHello(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	fmt.Printf("[%v] calling func\n", time.Now())
+	start := time.Now()
+	fmt.Printf("[%v] calling func\n", start)
 	hello, err := GetBrowserHello(ctx, noopHostMapper("localhost"))
-	fmt.Printf("[%v] func returned\n", time.Now())
+	end := time.Now()
+	fmt.Printf("[%v] func returned\n", end)
 	require.NoError(t, err)
 
 	fmt.Println("len(hello):", len(hello))
+	fmt.Println("took", end.Sub(start))
 
 	_, err = tlsutil.ValidateClientHello(hello)
 	require.NoError(t, err)

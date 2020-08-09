@@ -2,7 +2,6 @@ package hellocap
 
 // TODO: support the following browser/OS combinations:
 //	- 360 Browser / windows
-//	- Firefox / windows
 //	- QQ Browser / windows
 //	- 360 Browser / linux?
 //	- QQ Browser / linux?
@@ -13,8 +12,9 @@ package hellocap
 //
 // Done:
 //	- Edge Chromium / windows
-//	- Chrome / macOS
 //	- Chrome / windows
+//	- Firefox / windows
+//	- Chrome / macOS
 //
 // Difficult to run headless:
 //	- Internet Explorer / windows
