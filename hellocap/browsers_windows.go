@@ -4,10 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
+	"github.com/mitchellh/go-ps"
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -80,7 +85,11 @@ func defaultBrowser(ctx context.Context) (browser, error) {
 
 	case "Mozilla Firefox":
 		fmt.Println("default browser is Firefox")
-		return firefox{}, nil
+		f, err := newFirefoxInstance()
+		if err != nil {
+			return nil, fmt.Errorf("failed to create new Firefox instance: %w", err)
+		}
+		return f, nil
 
 	default:
 		return nil, fmt.Errorf("unsupported browser %s", appName)
@@ -102,9 +111,8 @@ type edgeChromium struct {
 	path string
 }
 
-func (ec edgeChromium) name() string {
-	return "Microsoft Edge - Chromium"
-}
+func (ec edgeChromium) name() string { return "Microsoft Edge - Chromium" }
+func (ec edgeChromium) close() error { return nil }
 
 func (ec edgeChromium) get(ctx context.Context, addr string) error {
 	if err := exec.CommandContext(ctx, ec.path, "--headless", addr).Run(); err != nil {
@@ -117,24 +125,111 @@ func (ec edgeChromium) get(ctx context.Context, addr string) error {
 // https://support.microsoft.com/en-us/help/4026494/microsoft-edge-difference-between-legacy
 type edgeHTML struct{}
 
-func (eh edgeHTML) name() string {
-	return "Microsoft Edge - HTML"
-}
+func (eh edgeHTML) name() string { return "Microsoft Edge - HTML" }
+func (eh edgeHTML) close() error { return nil }
 
 func (eh edgeHTML) get(ctx context.Context, addr string) error {
 	// TODO: implement me!
 	return errors.New("edge HTML is not supported")
 }
 
-type firefox struct{}
+type firefox struct {
+	profileDirectory string
+	cmdPIDs          []int
+}
 
-func (f firefox) name() string { return "Mozilla Firefox" }
+func newFirefoxInstance() (*firefox, error) {
+	// Firefox only allows one active instance per profile. We create a new profile in a
+	// temporary directory and clean it up when we're done.
 
-func (f firefox) get(ctx context.Context, addr string) error {
-	// TODO: is there always a 'default' profile? Is it always unused? What is the UX if it's in use?
-	// TODO: this firefox process (or a descendent?) never seems to die
-	if err := exec.CommandContext(ctx, "cmd", "/C", "start", "firefox", "-P", "default", "-headless", addr).Run(); err != nil {
+	tmpDir, err := ioutil.TempDir("", "lantern.test-firefox-profile")
+	if err != nil {
+		return nil, fmt.Errorf("failed to set up temporary directory: %w", err)
+	}
+	success := false
+	defer func() {
+		if !success {
+			os.RemoveAll(tmpDir)
+		}
+	}()
+
+	timestampData := fmt.Sprintf(`{
+"created": %d,
+"firstUse": null
+}`, time.Now().Unix()*1000)
+
+	err = ioutil.WriteFile(filepath.Join(tmpDir, "times.json"), []byte(timestampData), 0644)
+	if err != nil {
+		return nil, fmt.Errorf("failed to write timestamp file: %w", err)
+	}
+	success = true
+	fmt.Println("using profile in", tmpDir)
+	return &firefox{tmpDir, []int{}}, nil
+}
+
+func (f *firefox) name() string { return "Mozilla Firefox" }
+
+func (f *firefox) get(ctx context.Context, addr string) error {
+	cmd := exec.CommandContext(
+		ctx, "cmd", "/C", "start", "firefox", "--profile", f.profileDirectory, "-headless", addr)
+	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to execute binary: %w", err)
 	}
+	f.cmdPIDs = append(f.cmdPIDs, cmd.Process.Pid)
 	return nil
+}
+
+func (f *firefox) close() error {
+	fmt.Println("cleaning up firefox resources")
+	if err := f.killChildProcesses(); err != nil {
+		os.RemoveAll(f.profileDirectory)
+		return fmt.Errorf("failed to kill spawned firefox processes: %w", err)
+	}
+	return os.RemoveAll(f.profileDirectory)
+}
+
+// On Windows, running Firefox in headless mode with the start command results in an orphaned tree
+// of processes. This function cleans up any such trees.
+func (f *firefox) killChildProcesses() error {
+	if len(f.cmdPIDs) == 0 {
+		return nil
+	}
+
+	fmt.Println("killing child Firefox processes")
+	allProcs, err := ps.Processes()
+	if err != nil {
+		return fmt.Errorf("failed to obtain process snapshot: %w", err)
+	}
+	errs := []error{}
+	for _, ppid := range f.cmdPIDs {
+		for _, p := range allProcs {
+			if p.PPid() != ppid {
+				continue
+			}
+			pTree, err := processTree(p.Pid(), allProcs)
+			if err != nil {
+				errs = append(errs, fmt.Errorf(
+					"failed to obtain process tree for process with executable '%s': %v",
+					p.Executable(), err,
+				))
+				continue
+			}
+			fmt.Printf("killing process tree with executable '%s'\n", p.Executable())
+			if err := pTree.kill(); err != nil {
+				errs = append(errs, fmt.Errorf(
+					"failed to kill process tree for executable '%s': %v",
+					p.Executable(), err,
+				))
+			}
+		}
+	}
+	f.cmdPIDs = []int{}
+	switch len(errs) {
+	case 0:
+		return nil
+	case 1:
+		return errs[0]
+	default:
+		return fmt.Errorf("%d errors; first: %w", len(errs), errs[0])
+	}
 }

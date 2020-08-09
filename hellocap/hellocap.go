@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os/exec"
 	"sync"
+	"time"
 
 	"github.com/getlantern/tlsutil"
 )
@@ -37,6 +38,7 @@ func GetBrowserHello(ctx context.Context, dm DomainMapper) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to obtain user's default browser: %w", err)
 	}
+	defer b.close()
 	return getBrowserHello(ctx, b, dm)
 }
 
@@ -51,6 +53,9 @@ type browser interface {
 
 	// The browser's name, e.g. Google Chrome.
 	name() string
+
+	// TODO: implement on macOS
+	close() error
 }
 
 type chrome struct {
@@ -58,6 +63,7 @@ type chrome struct {
 }
 
 func (c chrome) name() string { return "Google Chrome" }
+func (c chrome) close() error { return nil }
 
 func (c chrome) get(ctx context.Context, addr string) error {
 	// The --disable-gpu flag is necessary to run headless Chrome on Windows:
@@ -113,6 +119,10 @@ func getBrowserHello(ctx context.Context, browser browser, dm DomainMapper) ([]b
 			browserErrChan <- err
 		}
 	}()
+
+	// debugging
+	// TODO: delete me
+	defer func() { fmt.Printf("[%v] returning hello\n", time.Now()) }()
 
 	select {
 	case result := <-helloChan:

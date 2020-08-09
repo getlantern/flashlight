@@ -21,15 +21,18 @@ type process struct {
 	children []process
 }
 
-// processTree returns a tree of processes and their children, rooted at the current process.
-func processTree() (root *process, err error) {
-	allProcessesSnapshot, err := ps.Processes()
-	if err != nil {
-		return nil, fmt.Errorf("failed to look up snapshot of current processes: %w", err)
+// processTree returns a tree of processes and their children, rooted at the input process. If
+// procSnapshot is nil, a new snapshot will be taken.
+func processTree(pid int, procSnapshot []ps.Process) (root *process, err error) {
+	if procSnapshot == nil {
+		procSnapshot, err = ps.Processes()
+		if err != nil {
+			return nil, fmt.Errorf("failed to obtain snapshot of current processes: %w", err)
+		}
 	}
-	root, err = ptHelper(os.Getpid(), allProcessesSnapshot)
+	root, err = ptHelper(pid, procSnapshot)
 	if _, ok := err.(errNoSuchProcess); ok {
-		return nil, errors.New("failed to look up self")
+		return nil, errors.New("could not find input process")
 	}
 	return
 }

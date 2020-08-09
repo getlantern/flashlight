@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mitchellh/go-ps"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/tlsutil"
@@ -99,9 +100,17 @@ func (nhm noopHostMapper) Clear() error         { return nil }
 
 // TODO: delete or figure out a way to make this a reliable, useful test
 func TestHello(t *testing.T) {
+	// It's currently important for the test to have this builtin timeout for Firefox cleanup.
+	const timeout = 5 * time.Second
+
 	fmt.Println("starting test")
 
-	hello, err := GetBrowserHello(context.Background(), noopHostMapper("localhost"))
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	fmt.Printf("[%v] calling func\n", time.Now())
+	hello, err := GetBrowserHello(ctx, noopHostMapper("localhost"))
+	fmt.Printf("[%v] func returned\n", time.Now())
 	require.NoError(t, err)
 
 	fmt.Println("len(hello):", len(hello))
@@ -179,7 +188,10 @@ func TestRunEdge(t *testing.T) {
 }
 
 func TestRunFirefox(t *testing.T) {
-	pTree, err := processTree()
+	fmt.Println("my PID:", os.Getpid())
+	fmt.Println()
+
+	pTree, err := processTree(os.Getpid(), nil)
 	require.NoError(t, err)
 	fmt.Println("process tree before command:")
 	printTree(*pTree, 0)
@@ -188,11 +200,31 @@ func TestRunFirefox(t *testing.T) {
 	cmd := exec.Command("cmd", "/C", "start", "firefox", "-P", "default", "-headless", hcserverAddr)
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
 	require.NoError(t, cmd.Run())
+	cmdPID := cmd.Process.Pid
+	fmt.Println("cmd PID:", cmdPID)
+	fmt.Println()
 
-	pTree, err = processTree()
+	time.Sleep(2 * time.Second)
+
+	pTree, err = processTree(os.Getpid(), nil)
 	require.NoError(t, err)
 	fmt.Println("\nprocess tree after command:")
 	printTree(*pTree, 0)
+
+	allProcs, err := ps.Processes()
+	require.NoError(t, err)
+
+	for _, p := range allProcs {
+		if p.PPid() != cmdPID {
+			continue
+		}
+		fmt.Println("\nfound child; executable = ", p.Executable())
+		pTree, err = ptHelper(p.Pid(), allProcs)
+		require.NoError(t, err)
+		fmt.Println("process tree:")
+		printTree(*pTree, 0)
+	}
+
 }
 
 // Unix only.
@@ -217,7 +249,7 @@ sleep 120`
 	require.NoError(t, cmd.Start())
 
 	time.Sleep(time.Second)
-	root, err := processTree()
+	root, err := processTree(os.Getpid(), nil)
 	require.NoError(t, err)
 	fmt.Println()
 	fmt.Println("current tree:")
@@ -230,7 +262,7 @@ sleep 120`
 	require.NoError(t, root.children[0].kill())
 
 	time.Sleep(5 * time.Second)
-	root, err = processTree()
+	root, err = processTree(os.Getpid(), nil)
 	require.NoError(t, err)
 	fmt.Println("new tree:")
 	printTree(*root, 0)
