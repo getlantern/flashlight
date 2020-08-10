@@ -319,7 +319,7 @@ func (me *HttpHandler) handleSearch(rw http.ResponseWriter, r *http.Request) {
 	w := ops.InitInstrumentedResponseWriter(rw, "replica_search")
 	defer w.Finish()
 
-	searchTerm := r.URL.Query().Get("q")
+	searchTerm := r.URL.Query().Get("s")
 
 	w.Op.Set("search_term", searchTerm)
 	me.gaSession.EventWithLabel("replica", "search", searchTerm)
