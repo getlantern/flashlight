@@ -20,9 +20,9 @@ var execPathRegexp = regexp.MustCompile(`"(.*)".*".*"`)
 
 func defaultBrowser(ctx context.Context) (browser, error) {
 	// TODO: test on Windows < 10 ?
+	// may need https://stackoverflow.com/a/2178637 for older versions of Windows
 
 	// https://stackoverflow.com/a/12444963?
-	// TODO: may need https://stackoverflow.com/a/2178637 for older versions of Windows
 	userChoice, err := registry.OpenKey(registry.CURRENT_USER, `Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.html\UserChoice`, registry.READ)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read default browser from registry: %w", err)

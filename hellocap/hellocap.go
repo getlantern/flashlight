@@ -54,7 +54,7 @@ type browser interface {
 	// The browser's name, e.g. Google Chrome.
 	name() string
 
-	// TODO: implement on macOS
+	// Free up resources used by this browser instance.
 	close() error
 }
 
@@ -68,7 +68,6 @@ func (c chrome) close() error { return nil }
 func (c chrome) get(ctx context.Context, addr string) error {
 	// The --disable-gpu flag is necessary to run headless Chrome on Windows:
 	// https://bugs.chromium.org/p/chromium/issues/detail?id=737678
-	// TODO: make sure this still works on macOS with --disable-gpu
 	if err := exec.CommandContext(ctx, c.path, "--headless", "--disable-gpu", addr).Run(); err != nil {
 		// The Chrome binary does not appear to ever exit non-zero, so we don't need to worry about
 		// catching and ignoring errors due to things like certificate validity checks.

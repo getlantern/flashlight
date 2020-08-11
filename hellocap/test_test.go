@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/mitchellh/go-ps"
-	"github.com/stretchr/testify/assert"
 
 	"github.com/getlantern/tlsutil"
 	"github.com/stretchr/testify/require"
@@ -155,22 +154,6 @@ func TestHitHellocapServer(t *testing.T) {
 	body, err := ioutil.ReadAll(resp.Body)
 	require.NoError(t, err)
 	fmt.Println(string(body))
-}
-
-func TestExecPathRegexp(t *testing.T) {
-	for _, testCase := range []struct {
-		input, expected string
-	}{
-		{`"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" -- "%1"`, `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`},
-		{`"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" -- "%1"`, `C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`},
-		{`"C:\Program Files\Mozilla Firefox\firefox.exe" -osint -url "%1"`, `C:\Program Files\Mozilla Firefox\firefox.exe`},
-	} {
-		matches := execPathRegexp.FindStringSubmatch(testCase.input)
-		if !assert.Greater(t, len(matches), 1) {
-			continue
-		}
-		assert.Equal(t, testCase.expected, matches[1])
-	}
 }
 
 const hcserverAddr = `https://localhost:52312`
