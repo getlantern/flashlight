@@ -4,13 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/mitchellh/go-ps"
 	"golang.org/x/sys/windows/registry"
@@ -139,32 +136,12 @@ type firefox struct {
 }
 
 func newFirefoxInstance() (*firefox, error) {
-	// Firefox only allows one active instance per profile. We create a new profile in a
-	// temporary directory and clean it up when we're done.
-
-	tmpDir, err := ioutil.TempDir("", "lantern.test-firefox-profile")
+	pDir, err := newFirefoxProfileDirectory()
 	if err != nil {
-		return nil, fmt.Errorf("failed to set up temporary directory: %w", err)
+		return nil, fmt.Errorf("failed to create temporary Firefox profile: %w", err)
 	}
-	success := false
-	defer func() {
-		if !success {
-			os.RemoveAll(tmpDir)
-		}
-	}()
-
-	timestampData := fmt.Sprintf(`{
-"created": %d,
-"firstUse": null
-}`, time.Now().Unix()*1000)
-
-	err = ioutil.WriteFile(filepath.Join(tmpDir, "times.json"), []byte(timestampData), 0644)
-	if err != nil {
-		return nil, fmt.Errorf("failed to write timestamp file: %w", err)
-	}
-	success = true
-	fmt.Println("using profile in", tmpDir)
-	return &firefox{tmpDir, []int{}}, nil
+	fmt.Println("using profile in", pDir)
+	return &firefox{pDir, []int{}}, nil
 }
 
 func (f *firefox) name() string { return "Mozilla Firefox" }

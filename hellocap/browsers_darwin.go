@@ -25,7 +25,7 @@ type launchServicesDefaults struct {
 
 type safari struct{}
 
-func (s safari) name() string { return "Safari" }
+func (s safari) name() string { return "Apple Safari" }
 func (s safari) close() error { return nil }
 
 func (s safari) get(ctx context.Context, addr string) error {
@@ -35,6 +35,34 @@ func (s safari) get(ctx context.Context, addr string) error {
 	// on users' machines is non-trivial at the least.
 	// TODO: capture a Safari hello and hard-code it somehow
 	return nil
+}
+
+type firefox struct {
+	path, profileDirectory string
+}
+
+func newFirefoxInstance(path string) (*firefox, error) {
+	pDir, err := newFirefoxProfileDirectory()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temporary Firefox profile: %w", err)
+	}
+	return &firefox{path, pDir}, nil
+}
+
+func (f *firefox) name() string { return "Mozilla Firefox" }
+
+// get is implemented differently for Firefox based on the OS.
+func (f firefox) get(ctx context.Context, addr string) error {
+	cmd := exec.CommandContext(ctx, f.path, "--profile", f.profileDirectory, "--headless", addr)
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to execute binary: %w", err)
+	}
+	return nil
+}
+
+// close is implemented differently for Firefox based on the OS.
+func (f firefox) close() error {
+	return os.RemoveAll(f.profileDirectory)
 }
 
 // If no default browser is explicitly configured, we assume Safari.
@@ -86,6 +114,17 @@ func browserFromBundleID(ctx context.Context, bundleID string) (browser, error) 
 			return nil, fmt.Errorf("%w", err)
 		}
 		return chrome{filepath.Join(bundle, "Contents", "MacOS", "Google Chrome")}, nil
+
+	case "org.mozilla.firefox":
+		bundle, err := appBundleFromID(ctx, bundleID)
+		if err != nil {
+			return nil, fmt.Errorf("%w", err)
+		}
+		f, err := newFirefoxInstance(filepath.Join(bundle, "Contents", "MacOS", "firefox"))
+		if err != nil {
+			return nil, fmt.Errorf("failed to create firefox instance: %w", err)
+		}
+		return f, nil
 
 	case "com.apple.safari":
 		// TODO: implement me!
