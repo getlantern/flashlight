@@ -28,6 +28,20 @@ func (c chrome) get(ctx context.Context, addr string) error {
 	return nil
 }
 
+type edgeChromium struct {
+	path string
+}
+
+func (ec edgeChromium) name() string { return "Microsoft Edge - Chromium" }
+func (ec edgeChromium) close() error { return nil }
+
+func (ec edgeChromium) get(ctx context.Context, addr string) error {
+	if err := exec.CommandContext(ctx, ec.path, "--headless", addr).Run(); err != nil {
+		return fmt.Errorf("failed to execute binary: %w", err)
+	}
+	return nil
+}
+
 // Firefox only allows one active instance per profile. We create a new profile in a
 // temporary directory and clean it up when we're done.
 func newFirefoxProfileDirectory() (string, error) {

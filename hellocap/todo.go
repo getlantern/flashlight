@@ -1,13 +1,8 @@
 package hellocap
 
 // TODO: support the following browser/OS combinations:
-//	- 360 Browser / windows
-//	- QQ Browser / windows
-//	- 360 Browser / linux?
-//	- QQ Browser / linux?
 //  - Chrome / linux
 //	- Safari / macOS
-//	- Firefox / macOS
 //  - Firefox / linux
 //
 // Done:
@@ -15,6 +10,8 @@ package hellocap
 //	- Chrome / windows
 //	- Firefox / windows
 //	- Chrome / macOS
+//	- Firefox / macOS
+//  - Edge Chromium / macOS
 //
 // Difficult to run headless:
 //	- Internet Explorer / windows
@@ -23,3 +20,7 @@ package hellocap
 //		https://github.com/sdesalas/trifleJS/blob/master/Native/Browser.cs
 //	- Edge Legacy (HTML-based) / windows
 //		Likely the same process as Internet Explorer
+//	- 360 Browser / windows
+//		No command line switches, can't find any documentation on headless support
+//	- QQ Browser / windows
+//		No command line switches, can't find any documentation on headless support

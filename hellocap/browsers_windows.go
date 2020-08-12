@@ -104,20 +104,6 @@ func execPathFromRegistryEntry(regEntry string) (string, error) {
 
 // TODO: the edge browsers may apply to other OSes as well
 
-type edgeChromium struct {
-	path string
-}
-
-func (ec edgeChromium) name() string { return "Microsoft Edge - Chromium" }
-func (ec edgeChromium) close() error { return nil }
-
-func (ec edgeChromium) get(ctx context.Context, addr string) error {
-	if err := exec.CommandContext(ctx, ec.path, "--headless", addr).Run(); err != nil {
-		return fmt.Errorf("failed to execute binary: %w", err)
-	}
-	return nil
-}
-
 // EdgeHTML or Microsoft Edge Legacy is the older, HTML-based version of the Edge browser.
 // https://support.microsoft.com/en-us/help/4026494/microsoft-edge-difference-between-legacy
 type edgeHTML struct{}

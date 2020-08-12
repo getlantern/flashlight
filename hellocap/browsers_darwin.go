@@ -126,6 +126,13 @@ func browserFromBundleID(ctx context.Context, bundleID string) (browser, error) 
 		}
 		return f, nil
 
+	case "com.microsoft.edgemac":
+		bundle, err := appBundleFromID(ctx, bundleID)
+		if err != nil {
+			return nil, fmt.Errorf("%w", err)
+		}
+		return edgeChromium{filepath.Join(bundle, "Contents", "MacOS", "Microsoft Edge")}, nil
+
 	case "com.apple.safari":
 		// TODO: implement me!
 		return nil, nil
