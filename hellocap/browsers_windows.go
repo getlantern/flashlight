@@ -13,13 +13,11 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-var execPathRegexp = regexp.MustCompile(`"(.*)".*".*"`)
-
 func defaultBrowser(ctx context.Context) (browser, error) {
 	// TODO: test on Windows < 10 ?
 	// may need https://stackoverflow.com/a/2178637 for older versions of Windows
 
-	// https://stackoverflow.com/a/12444963?
+	// https://stackoverflow.com/a/12444963
 	userChoice, err := registry.OpenKey(registry.CURRENT_USER, `Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.html\UserChoice`, registry.READ)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read default browser from registry: %w", err)
@@ -36,6 +34,10 @@ func defaultBrowser(ctx context.Context) (browser, error) {
 		appName = "Microsoft Internet Explorer"
 	case strings.Contains(progID, "Firefox"):
 		appName = "Mozilla Firefox"
+	case progID == "360BrowserURL":
+		return nil, errors.New("unsupported browser 'Qihoo 360 Secure Browser'")
+	case progID == "QQBrowser.File":
+		return nil, errors.New("unsupported browser 'Tencent QQBrowser'")
 	default:
 		application, err := registry.OpenKey(registry.CLASSES_ROOT, fmt.Sprintf(`%s\Application`, progID), registry.READ)
 		if err != nil {
@@ -89,9 +91,11 @@ func defaultBrowser(ctx context.Context) (browser, error) {
 		return f, nil
 
 	default:
-		return nil, fmt.Errorf("unsupported browser %s", appName)
+		return nil, fmt.Errorf("unsupported browser '%s'", appName)
 	}
 }
+
+var execPathRegexp = regexp.MustCompile(`"(.*)".*".*"`)
 
 func execPathFromRegistryEntry(regEntry string) (string, error) {
 	matches := execPathRegexp.FindStringSubmatch(regEntry)
@@ -101,8 +105,6 @@ func execPathFromRegistryEntry(regEntry string) (string, error) {
 	fmt.Printf("using path '%s'\n", matches[1])
 	return matches[1], nil
 }
-
-// TODO: the edge browsers may apply to other OSes as well
 
 // EdgeHTML or Microsoft Edge Legacy is the older, HTML-based version of the Edge browser.
 // https://support.microsoft.com/en-us/help/4026494/microsoft-edge-difference-between-legacy
@@ -132,6 +134,7 @@ func newFirefoxInstance() (*firefox, error) {
 
 func (f *firefox) name() string { return "Mozilla Firefox" }
 
+// get is implemented differently for Firefox based on the OS.
 func (f *firefox) get(ctx context.Context, addr string) error {
 	cmd := exec.CommandContext(
 		ctx, "cmd", "/C", "start", "firefox", "--profile", f.profileDirectory, "-headless", addr)
@@ -142,8 +145,8 @@ func (f *firefox) get(ctx context.Context, addr string) error {
 	return nil
 }
 
+// close is implemented differently for Firefox based on the OS.
 func (f *firefox) close() error {
-	fmt.Println("cleaning up firefox resources")
 	if err := f.killChildProcesses(); err != nil {
 		os.RemoveAll(f.profileDirectory)
 		return fmt.Errorf("failed to kill spawned firefox processes: %w", err)
