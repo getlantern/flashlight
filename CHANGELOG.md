@@ -1,5 +1,14 @@
 # Changelog
 
+## [6.0.2](https://github.com/getlantern/flashlight/tree/6.0.2) (2020-08-12)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/6.0.1...6.0.2)
+
+**Merged pull requests:**
+
+- Updated ui with version display [\#849](https://github.com/getlantern/flashlight/pull/849) ([myleshorton](https://github.com/myleshorton))
+- Fix wrong search term in replica analytics reporting [\#847](https://github.com/getlantern/flashlight/pull/847) ([max-b](https://github.com/max-b))
+
 ## [6.0.1](https://github.com/getlantern/flashlight/tree/6.0.1) (2020-08-08)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/6.0.0...6.0.1)
@@ -29,7 +38,6 @@
 - Second try [\#819](https://github.com/getlantern/flashlight/pull/819) ([bcmertz](https://github.com/bcmertz))
 - Allow upload options [\#818](https://github.com/getlantern/flashlight/pull/818) ([bcmertz](https://github.com/bcmertz))
 - Explicit s3 torrenting [\#814](https://github.com/getlantern/flashlight/pull/814) ([anacrolix](https://github.com/anacrolix))
-- Replica merge from devel [\#812](https://github.com/getlantern/flashlight/pull/812) ([myleshorton](https://github.com/myleshorton))
 - Merge devel into replica [\#808](https://github.com/getlantern/flashlight/pull/808) ([max-b](https://github.com/max-b))
 - Bundle lantern-desktop-ui replica api path fix [\#800](https://github.com/getlantern/flashlight/pull/800) ([max-b](https://github.com/max-b))
 - Report replica response metrics to borda [\#799](https://github.com/getlantern/flashlight/pull/799) ([max-b](https://github.com/max-b))
@@ -38,6 +46,7 @@
 - Merge from devel branch [\#786](https://github.com/getlantern/flashlight/pull/786) ([joesis](https://github.com/joesis))
 - update enabled features to desktop UI [\#785](https://github.com/getlantern/flashlight/pull/785) ([joesis](https://github.com/joesis))
 - Better file name creation [\#784](https://github.com/getlantern/flashlight/pull/784) ([myleshorton](https://github.com/myleshorton))
+- Fix replica api url for UI in production [\#783](https://github.com/getlantern/flashlight/pull/783) ([max-b](https://github.com/max-b))
 
 ## [5.10.0](https://github.com/getlantern/flashlight/tree/5.10.0) (2020-07-20)
 
@@ -127,7 +136,6 @@
 - show systray as connecting when starting up [\#816](https://github.com/getlantern/flashlight/pull/816) ([joesis](https://github.com/joesis))
 - Drain retry timer only when if it's not consumed [\#815](https://github.com/getlantern/flashlight/pull/815) ([joesis](https://github.com/joesis))
 - Enabled YouTube tracking as an optional feature on MacOS [\#810](https://github.com/getlantern/flashlight/pull/810) ([oxtoacart](https://github.com/oxtoacart))
-- report a bit more information when flashlight timeout is hit [\#807](https://github.com/getlantern/flashlight/pull/807) ([joesis](https://github.com/joesis))
 
 ## [5.9.8](https://github.com/getlantern/flashlight/tree/5.9.8) (2020-05-12)
 
@@ -135,8 +143,10 @@
 
 **Merged pull requests:**
 
+- Replica merge from devel [\#812](https://github.com/getlantern/flashlight/pull/812) ([myleshorton](https://github.com/myleshorton))
 - Don't clear out configs when config is unchanged in cloud [\#811](https://github.com/getlantern/flashlight/pull/811) ([oxtoacart](https://github.com/oxtoacart))
 - Include exception 'value' in sentry fingerprint for correct grouping [\#809](https://github.com/getlantern/flashlight/pull/809) ([max-b](https://github.com/max-b))
+- report a bit more information when flashlight timeout is hit [\#807](https://github.com/getlantern/flashlight/pull/807) ([joesis](https://github.com/joesis))
 
 ## [5.9.7](https://github.com/getlantern/flashlight/tree/5.9.7) (2020-04-29)
 
@@ -164,7 +174,6 @@
 
 - Use more unique fingerprints in an attempt to prevent sentry from grouping distinct panics with the same top level message [\#803](https://github.com/getlantern/flashlight/pull/803) ([max-b](https://github.com/max-b))
 - Get UI server from channel [\#802](https://github.com/getlantern/flashlight/pull/802) ([myleshorton](https://github.com/myleshorton))
-- Added ability to use hardcoded proxies on iOS [\#797](https://github.com/getlantern/flashlight/pull/797) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [5.9.4](https://github.com/getlantern/flashlight/tree/5.9.4) (2020-04-20)
 
@@ -190,6 +199,7 @@
 
 **Merged pull requests:**
 
+- Added ability to use hardcoded proxies on iOS [\#797](https://github.com/getlantern/flashlight/pull/797) ([oxtoacart](https://github.com/oxtoacart))
 - Avoid nil pointer panic and add sentry reporting on app.Exit\(err\) [\#793](https://github.com/getlantern/flashlight/pull/793) ([max-b](https://github.com/max-b))
 - Added a new FeatureProxyWhitelistedOnly that causes clients to only p… [\#791](https://github.com/getlantern/flashlight/pull/791) ([oxtoacart](https://github.com/oxtoacart))
 - Add duplicate and missing field checks to config checker [\#790](https://github.com/getlantern/flashlight/pull/790) ([hwh33](https://github.com/hwh33))
@@ -201,7 +211,6 @@
 
 **Merged pull requests:**
 
-- Fix replica api url for UI in production [\#783](https://github.com/getlantern/flashlight/pull/783) ([max-b](https://github.com/max-b))
 - skip re-evaluating dialers when background checking is disabled [\#782](https://github.com/getlantern/flashlight/pull/782) ([joesis](https://github.com/joesis))
 
 ## [5.9.0](https://github.com/getlantern/flashlight/tree/5.9.0) (2020-04-03)
@@ -284,7 +293,6 @@
 - Added exclude tags [\#749](https://github.com/getlantern/flashlight/pull/749) ([myleshorton](https://github.com/myleshorton))
 - Add Sentry panic reporting and adjust panicwrapper signal handling [\#748](https://github.com/getlantern/flashlight/pull/748) ([max-b](https://github.com/max-b))
 - Respect server's session tickets when possible even when using config… [\#747](https://github.com/getlantern/flashlight/pull/747) ([oxtoacart](https://github.com/oxtoacart))
-- switch back to upstream smux package [\#746](https://github.com/getlantern/flashlight/pull/746) ([joesis](https://github.com/joesis))
 
 ## [5.7.2](https://github.com/getlantern/flashlight/tree/5.7.2) (2019-12-03)
 
