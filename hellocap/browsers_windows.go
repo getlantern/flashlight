@@ -39,24 +39,38 @@ func defaultBrowser(ctx context.Context) (browser, error) {
 	case progID == "QQBrowser.File":
 		return nil, errors.New("unsupported browser 'Tencent QQBrowser'")
 	default:
-		application, err := registry.OpenKey(registry.CLASSES_ROOT, fmt.Sprintf(`%s\Application`, progID), registry.READ)
+		application, err := registry.OpenKey(
+			registry.CLASSES_ROOT, fmt.Sprintf(`%s\Application`, progID), registry.READ)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read default browser application info from registry: %w", err)
+			return nil, fmt.Errorf(
+				"failed to read browser info from registry using program ID '%s': %w",
+				progID, err,
+			)
 		}
 		appName, _, err = application.GetStringValue(`ApplicationName`)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read default browser name from registry: %w", err)
+			return nil, fmt.Errorf(
+				"failed to read browser name from registry using program ID '%s': %w",
+				progID, err,
+			)
 		}
 	}
 	fmt.Println("appName:", appName)
 
-	appExec, err := registry.OpenKey(registry.CLASSES_ROOT, fmt.Sprintf(`%s\Shell\open\command`, progID), registry.READ)
+	appExec, err := registry.OpenKey(
+		registry.CLASSES_ROOT, fmt.Sprintf(`%s\Shell\open\command`, progID), registry.READ)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read default browser executable info from registry: %w", err)
+		return nil, fmt.Errorf(
+			"failed to read browser executable info from registry using prorgam ID '%s': %w",
+			progID, err,
+		)
 	}
 	execPath, _, err := appExec.GetStringValue("")
 	if err != nil {
-		return nil, fmt.Errorf("failed to read path to default browser executable from registry: %w", err)
+		return nil, fmt.Errorf(
+			"failed to read path to browser executable from registry using program ID '%s': %w",
+			progID, err,
+		)
 	}
 	fmt.Println("execPath:", execPath)
 
