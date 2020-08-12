@@ -231,7 +231,7 @@ func TestPollGlobal(t *testing.T) {
 // TestProductionGlobal validates certain properties of the live production global config
 func TestProductionGlobal(t *testing.T) {
 
-	testURL := globalURL // this should always point to the live production configuration (not staging etc)
+	testURL := GlobalURL // this should always point to the live production configuration (not staging etc)
 
 	expectedProviders := map[string]bool{
 		"cloudfront": true,
