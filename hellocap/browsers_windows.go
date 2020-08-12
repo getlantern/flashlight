@@ -28,16 +28,19 @@ func defaultBrowser(ctx context.Context) (browser, error) {
 	}
 	fmt.Println("progID:", progID)
 
+	switch progID {
+	case "htmlfile":
+		return nil, errors.New("unsupported browser 'Microsoft Internet Explorer'")
+	case "360BrowserURL":
+		return nil, errors.New("unsupported browser 'Qihoo 360 Secure Browser'")
+	case "QQBrowser.File":
+		return nil, errors.New("unsupported browser 'Tencent QQBrowser'")
+	}
+
 	var appName string
 	switch {
-	case progID == "htmlfile":
-		appName = "Microsoft Internet Explorer"
 	case strings.Contains(progID, "Firefox"):
 		appName = "Mozilla Firefox"
-	case progID == "360BrowserURL":
-		return nil, errors.New("unsupported browser 'Qihoo 360 Secure Browser'")
-	case progID == "QQBrowser.File":
-		return nil, errors.New("unsupported browser 'Tencent QQBrowser'")
 	default:
 		application, err := registry.OpenKey(
 			registry.CLASSES_ROOT, fmt.Sprintf(`%s\Application`, progID), registry.READ)
@@ -77,6 +80,9 @@ func defaultBrowser(ctx context.Context) (browser, error) {
 	switch appName {
 	case "Microsoft Edge":
 		// TODO: detect difference between Edge and EdgeHTML
+		// EdgeHTML or Microsoft Edge Legacy is the older, HTML-based version of the Edge browser.
+		// https://support.microsoft.com/en-us/help/4026494/microsoft-edge-difference-between-legacy
+
 		fmt.Println("default browser is Edge")
 		execPath, err := execPathFromRegistryEntry(execPath)
 		if err != nil {
@@ -85,7 +91,6 @@ func defaultBrowser(ctx context.Context) (browser, error) {
 		return edgeChromium{execPath}, nil
 
 	case "Microsoft Internet Explorer":
-		// TODO: implement me!
 		return nil, errors.New("unsupported browser - Internet Explorer")
 
 	case "Google Chrome":
@@ -118,18 +123,6 @@ func execPathFromRegistryEntry(regEntry string) (string, error) {
 	}
 	fmt.Printf("using path '%s'\n", matches[1])
 	return matches[1], nil
-}
-
-// EdgeHTML or Microsoft Edge Legacy is the older, HTML-based version of the Edge browser.
-// https://support.microsoft.com/en-us/help/4026494/microsoft-edge-difference-between-legacy
-type edgeHTML struct{}
-
-func (eh edgeHTML) name() string { return "Microsoft Edge - HTML" }
-func (eh edgeHTML) close() error { return nil }
-
-func (eh edgeHTML) get(ctx context.Context, addr string) error {
-	// TODO: implement me!
-	return errors.New("edge HTML is not supported")
 }
 
 type firefox struct {
