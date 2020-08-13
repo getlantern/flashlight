@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.0.4](https://github.com/getlantern/flashlight/tree/6.0.4) (2020-08-13)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/6.0.3...6.0.4)
+
+**Merged pull requests:**
+
+- Fixed vertical alignment for cn and translations [\#851](https://github.com/getlantern/flashlight/pull/851) ([myleshorton](https://github.com/myleshorton))
+
 ## [6.0.3](https://github.com/getlantern/flashlight/tree/6.0.3) (2020-08-13)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/6.0.2...6.0.3)
@@ -50,7 +58,6 @@
 - Merge devel into replica [\#808](https://github.com/getlantern/flashlight/pull/808) ([max-b](https://github.com/max-b))
 - Bundle lantern-desktop-ui replica api path fix [\#800](https://github.com/getlantern/flashlight/pull/800) ([max-b](https://github.com/max-b))
 - Report replica response metrics to borda [\#799](https://github.com/getlantern/flashlight/pull/799) ([max-b](https://github.com/max-b))
-- Enable replica on backend only if enabled in features [\#795](https://github.com/getlantern/flashlight/pull/795) ([myleshorton](https://github.com/myleshorton))
 - a little more stateless approach [\#787](https://github.com/getlantern/flashlight/pull/787) ([myleshorton](https://github.com/myleshorton))
 - Merge from devel branch [\#786](https://github.com/getlantern/flashlight/pull/786) ([joesis](https://github.com/joesis))
 - update enabled features to desktop UI [\#785](https://github.com/getlantern/flashlight/pull/785) ([joesis](https://github.com/joesis))
@@ -199,6 +206,7 @@
 
 **Merged pull requests:**
 
+- Enable replica on backend only if enabled in features [\#795](https://github.com/getlantern/flashlight/pull/795) ([myleshorton](https://github.com/myleshorton))
 - Added Reconfigure API for iOS [\#794](https://github.com/getlantern/flashlight/pull/794) ([oxtoacart](https://github.com/oxtoacart))
 - Reverted to older systray that doesn't use lxn/walk, closes github.co… [\#788](https://github.com/getlantern/flashlight/pull/788) ([oxtoacart](https://github.com/oxtoacart))
 
@@ -299,7 +307,6 @@
 **Merged pull requests:**
 
 - Added exclude tags [\#749](https://github.com/getlantern/flashlight/pull/749) ([myleshorton](https://github.com/myleshorton))
-- Add Sentry panic reporting and adjust panicwrapper signal handling [\#748](https://github.com/getlantern/flashlight/pull/748) ([max-b](https://github.com/max-b))
 
 ## [5.7.2](https://github.com/getlantern/flashlight/tree/5.7.2) (2019-12-03)
 
