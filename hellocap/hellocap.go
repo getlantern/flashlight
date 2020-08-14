@@ -20,27 +20,23 @@ import (
 	"github.com/getlantern/tlsutil"
 )
 
-// A DomainMapper is used to ensure that captured ClientHellos are accurate for a specific domain.
-// Because browsers may send one type of hello to one domain and another type of hello to others, it
-// is important to capture the correct ClientHello for the intended domain.
-//
-// When MapTo is called, all connections to the domain should go to the specified address. This is
-// analogous to editing the system's /etc/hosts file. Clear should undo this.
-type DomainMapper interface {
-	Domain() string
-	MapTo(address string) error
-	Clear() error
-}
+// Browser represents a specific web browser.
+type Browser int
 
-// GetBrowserHello returns a sample ClientHello from the system's default web browser.
-func GetBrowserHello(ctx context.Context, dm DomainMapper) ([]byte, error) {
-	b, err := defaultBrowser(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("unable to obtain user's default browser: %w", err)
-	}
-	defer b.close()
-	return getBrowserHello(ctx, b, dm)
-}
+// Possible Browsers.
+const (
+	Unknown Browser = iota
+	Chrome
+	Firefox
+	Edge
+	InternetExplorer
+	Safari
+	ThreeSixtySecureBrowser
+	QQ
+
+	// EdgeLegacy is the older, HTML-based version of Microsoft Edge.
+	EdgeLegacy
+)
 
 type browser interface {
 	// Uses the browser to make an HTTP GET request of the input address.
@@ -56,6 +52,33 @@ type browser interface {
 
 	// Free up resources used by this browser instance.
 	close() error
+
+	// The corresponding (public) Browser type.
+	publicType() Browser
+}
+
+// A DomainMapper is used to ensure that captured ClientHellos are accurate for a specific domain.
+// Because browsers may send one type of hello to one domain and another type of hello to others, it
+// is important to capture the correct ClientHello for the intended domain.
+//
+// When MapTo is called, all connections to the domain should go to the specified address. This is
+// analogous to editing the system's /etc/hosts file. Clear should undo this.
+type DomainMapper interface {
+	Domain() string
+	MapTo(address string) error
+	Clear() error
+}
+
+// GetBrowserHello returns a sample ClientHello from the system's default web browser. The default
+// browser is returned if it could be determined, even when an error is returned.
+func GetBrowserHello(ctx context.Context, dm DomainMapper) ([]byte, Browser, error) {
+	b, err := defaultBrowser(ctx)
+	if err != nil {
+		return nil, Unknown, fmt.Errorf("unable to obtain user's default browser: %w", err)
+	}
+	defer b.close()
+	hello, err := getBrowserHello(ctx, b, dm)
+	return hello, b.publicType(), err
 }
 
 func getBrowserHello(ctx context.Context, browser browser, dm DomainMapper) ([]byte, error) {

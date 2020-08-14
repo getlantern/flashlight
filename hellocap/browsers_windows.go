@@ -139,7 +139,8 @@ func newFirefoxInstance() (*firefox, error) {
 	return &firefox{pDir, []int{}}, nil
 }
 
-func (f *firefox) name() string { return "Mozilla Firefox" }
+func (f *firefox) name() string        { return "Mozilla Firefox" }
+func (f *firefox) publicType() Browser { return Firefox }
 
 // get is implemented differently for Firefox based on the OS.
 func (f *firefox) get(ctx context.Context, addr string) error {

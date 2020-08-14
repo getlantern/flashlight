@@ -25,8 +25,9 @@ type launchServicesDefaults struct {
 
 type safari struct{}
 
-func (s safari) name() string { return "Apple Safari" }
-func (s safari) close() error { return nil }
+func (s safari) name() string        { return "Apple Safari" }
+func (s safari) close() error        { return nil }
+func (s safari) publicType() Browser { return Safari }
 
 func (s safari) get(ctx context.Context, addr string) error {
 	// TODO: implement me!
@@ -49,7 +50,8 @@ func newFirefoxInstance(path string) (*firefox, error) {
 	return &firefox{path, pDir}, nil
 }
 
-func (f *firefox) name() string { return "Mozilla Firefox" }
+func (f firefox) name() string        { return "Mozilla Firefox" }
+func (f firefox) publicType() Browser { return Firefox }
 
 // get is implemented differently for Firefox based on the OS.
 func (f firefox) get(ctx context.Context, addr string) error {

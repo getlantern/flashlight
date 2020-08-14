@@ -14,8 +14,9 @@ type chrome struct {
 	path string
 }
 
-func (c chrome) name() string { return "Google Chrome" }
-func (c chrome) close() error { return nil }
+func (c chrome) name() string        { return "Google Chrome" }
+func (c chrome) close() error        { return nil }
+func (c chrome) publicType() Browser { return Chrome }
 
 func (c chrome) get(ctx context.Context, addr string) error {
 	// The --disable-gpu flag is necessary to run headless Chrome on Windows:
@@ -32,8 +33,9 @@ type edgeChromium struct {
 	path string
 }
 
-func (ec edgeChromium) name() string { return "Microsoft Edge - Chromium" }
-func (ec edgeChromium) close() error { return nil }
+func (ec edgeChromium) name() string        { return "Microsoft Edge" }
+func (ec edgeChromium) close() error        { return nil }
+func (ec edgeChromium) publicType() Browser { return Edge }
 
 func (ec edgeChromium) get(ctx context.Context, addr string) error {
 	if err := exec.CommandContext(ctx, ec.path, "--headless", addr).Run(); err != nil {
