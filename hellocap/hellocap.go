@@ -20,24 +20,6 @@ import (
 	"github.com/getlantern/tlsutil"
 )
 
-// Browser represents a specific web browser.
-type Browser int
-
-// Possible Browsers.
-const (
-	Unknown Browser = iota
-	Chrome
-	Firefox
-	Edge
-	InternetExplorer
-	Safari
-	ThreeSixtySecureBrowser
-	QQ
-
-	// EdgeLegacy is the older, HTML-based version of Microsoft Edge.
-	EdgeLegacy
-)
-
 type browser interface {
 	// Uses the browser to make an HTTP GET request of the input address.
 	//
@@ -52,9 +34,6 @@ type browser interface {
 
 	// Free up resources used by this browser instance.
 	close() error
-
-	// The corresponding (public) Browser type.
-	publicType() Browser
 }
 
 // A DomainMapper is used to ensure that captured ClientHellos are accurate for a specific domain.
@@ -69,16 +48,14 @@ type DomainMapper interface {
 	Clear() error
 }
 
-// GetBrowserHello returns a sample ClientHello from the system's default web browser. The default
-// browser is returned if it could be determined, even when an error is returned.
-func GetBrowserHello(ctx context.Context, dm DomainMapper) ([]byte, Browser, error) {
+// GetBrowserHello returns a sample ClientHello from the system's default web browser.
+func GetBrowserHello(ctx context.Context, dm DomainMapper) ([]byte, error) {
 	b, err := defaultBrowser(ctx)
 	if err != nil {
-		return nil, Unknown, fmt.Errorf("unable to obtain user's default browser: %w", err)
+		return nil, fmt.Errorf("unable to obtain user's default browser: %w", err)
 	}
 	defer b.close()
-	hello, err := getBrowserHello(ctx, b, dm)
-	return hello, b.publicType(), err
+	return getBrowserHello(ctx, b, dm)
 }
 
 func getBrowserHello(ctx context.Context, browser browser, dm DomainMapper) ([]byte, error) {

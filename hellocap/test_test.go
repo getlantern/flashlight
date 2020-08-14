@@ -109,7 +109,7 @@ func TestHello(t *testing.T) {
 
 	start := time.Now()
 	fmt.Printf("[%v] calling func\n", start)
-	hello, _, err := GetBrowserHello(ctx, noopHostMapper("localhost"))
+	hello, err := GetBrowserHello(ctx, noopHostMapper("localhost"))
 	end := time.Now()
 	fmt.Printf("[%v] func returned\n", end)
 	require.NoError(t, err)
