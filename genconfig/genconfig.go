@@ -214,7 +214,7 @@ func main() {
 		generateTemplate(model, masqueradesTmpl, *masqueradesOutFile)
 		_, err = run("gofmt", "-w", *masqueradesOutFile)
 		if err != nil {
-			log.Fatalf("Unable to format %s: %s", *masqueradesOutFile, err)
+			log.Errorf("Unable to format %s: %s", *masqueradesOutFile, err)
 		}
 	}
 	if *fallbacksOutFile != "" {
@@ -222,7 +222,7 @@ func main() {
 		generateTemplate(model, fallbacksTmpl, *fallbacksOutFile)
 		_, err = run("gofmt", "-w", *fallbacksOutFile)
 		if err != nil {
-			log.Fatalf("Unable to format %s: %s", *fallbacksOutFile, err)
+			log.Errorf("Unable to format %s: %s", *fallbacksOutFile, err)
 		}
 	}
 }
