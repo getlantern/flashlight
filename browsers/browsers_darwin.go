@@ -90,7 +90,7 @@ func (b Browser) AppBundle(ctx context.Context) (string, error) {
 }
 
 // SystemDefault returns the default web browser. Specifically, this is the default launch
-// service for HTTPS or HTTP links.
+// service for HTTPS or HTTP links. May return ErrorUnknownBundleID.
 func SystemDefault(ctx context.Context) (Browser, error) {
 	u, err := user.Current()
 	if err != nil {
