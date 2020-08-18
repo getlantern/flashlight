@@ -46,6 +46,9 @@ type DomainMapper interface {
 
 // GetDefaultBrowserHello returns a sample ClientHello from the system's default web browser. This
 // function may take a couple of seconds.
+//
+// Note that this may generate a log from the http package along the lines of "http: TLS handshake
+// error... use of closed network connection".
 func GetDefaultBrowserHello(ctx context.Context, dm DomainMapper) ([]byte, error) {
 	b, err := defaultBrowser(ctx)
 	if err != nil {
@@ -115,7 +118,6 @@ func getBrowserHello(ctx context.Context, browser browser, dm DomainMapper) ([]b
 // regardless of further data from the connection.
 type onHello func(hello []byte, err error)
 
-// TODO: port tests from helloreader
 type capturingConn struct {
 	// Wraps a TCP connection.
 	net.Conn

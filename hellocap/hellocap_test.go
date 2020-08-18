@@ -2,18 +2,17 @@ package hellocap
 
 import (
 	"crypto/tls"
-	"fmt"
+	"errors"
+	"net/http"
 	"testing"
 
 	"github.com/getlantern/tlsutil"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCapturingServer(t *testing.T) {
 	callbackInvoked := make(chan struct{})
 	s, err := newCapturingServer(func(hello []byte, err error) {
-		fmt.Println("callback invoked")
 		close(callbackInvoked)
 		require.NoError(t, err)
 		// Testing with tlsutil.ValidateClientHello is a bit circular, but we don't have another
@@ -25,7 +24,15 @@ func TestCapturingServer(t *testing.T) {
 	defer s.Close()
 
 	go func() {
-		assert.NoError(t, s.listenAndServeTLS())
+		err := s.listenAndServeTLS()
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			select {
+			case <-callbackInvoked:
+			default:
+				t.Log("error returned by listenAndServeTLS:", err)
+				t.Fail()
+			}
+		}
 	}()
 
 	conn, err := tls.Dial("tcp", s.address(), &tls.Config{InsecureSkipVerify: true})
