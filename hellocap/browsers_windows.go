@@ -2,127 +2,42 @@ package hellocap
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
-	"regexp"
-	"strings"
 
 	"github.com/mitchellh/go-ps"
-	"golang.org/x/sys/windows/registry"
+
+	"github.com/getlantern/flashlight/browsers"
 )
 
 func defaultBrowser(ctx context.Context) (browser, error) {
-	// TODO: test on Windows < 10 ?
-	// may need https://stackoverflow.com/a/2178637 for older versions of Windows
-
-	// https://stackoverflow.com/a/12444963
-	userChoice, err := registry.OpenKey(registry.CURRENT_USER, `Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.html\UserChoice`, registry.READ)
+	_browser, err := browsers.SystemDefault(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read default browser from registry: %w", err)
-	}
-	progID, _, err := userChoice.GetStringValue(`ProgId`)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read browser program ID from registry: %w", err)
-	}
-	fmt.Println("progID:", progID)
-
-	switch progID {
-	case "htmlfile":
-		return nil, errors.New("unsupported browser 'Microsoft Internet Explorer'")
-	case "360BrowserURL":
-		return nil, errors.New("unsupported browser 'Qihoo 360 Secure Browser'")
-	case "QQBrowser.File":
-		return nil, errors.New("unsupported browser 'Tencent QQBrowser'")
+		return nil, err
 	}
 
-	var appName string
-	switch {
-	case strings.Contains(progID, "Firefox"):
-		appName = "Mozilla Firefox"
-	default:
-		application, err := registry.OpenKey(
-			registry.CLASSES_ROOT, fmt.Sprintf(`%s\Application`, progID), registry.READ)
-		if err != nil {
-			return nil, fmt.Errorf(
-				"failed to read browser info from registry using program ID '%s': %w",
-				progID, err,
-			)
-		}
-		appName, _, err = application.GetStringValue(`ApplicationName`)
-		if err != nil {
-			return nil, fmt.Errorf(
-				"failed to read browser name from registry using program ID '%s': %w",
-				progID, err,
-			)
-		}
-	}
-	fmt.Println("appName:", appName)
-
-	appExec, err := registry.OpenKey(
-		registry.CLASSES_ROOT, fmt.Sprintf(`%s\Shell\open\command`, progID), registry.READ)
-	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to read browser executable info from registry using prorgam ID '%s': %w",
-			progID, err,
-		)
-	}
-	execPath, _, err := appExec.GetStringValue("")
-	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to read path to browser executable from registry using program ID '%s': %w",
-			progID, err,
-		)
-	}
-	fmt.Println("execPath:", execPath)
-
-	switch appName {
-	case "Microsoft Edge":
-		// TODO: detect difference between Edge and EdgeHTML
-		// EdgeHTML or Microsoft Edge Legacy is the older, HTML-based version of the Edge browser.
-		// https://support.microsoft.com/en-us/help/4026494/microsoft-edge-difference-between-legacy
-
-		fmt.Println("default browser is Edge")
-		execPath, err := execPathFromRegistryEntry(execPath)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse executable path for Edge (Chromium): %w", err)
-		}
-		return edgeChromium{execPath}, nil
-
-	case "Microsoft Internet Explorer":
-		return nil, errors.New("unsupported browser - Internet Explorer")
-
-	case "Google Chrome":
-		fmt.Println("default browser is Chrome")
-		execPath, err := execPathFromRegistryEntry(execPath)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse executable path for Chrome: %w", err)
-		}
-		return chrome{execPath}, nil
-
-	case "Mozilla Firefox":
-		fmt.Println("default browser is Firefox")
+	if _browser == browsers.Firefox {
 		f, err := newFirefoxInstance()
 		if err != nil {
 			return nil, fmt.Errorf("failed to create new Firefox instance: %w", err)
 		}
 		return f, nil
+	}
 
+	execPath, err := _browser.Executable()
+	if err != nil {
+		return nil, fmt.Errorf("failed to obtain executable for '%v': %w", _browser, err)
+	}
+
+	switch _browser {
+	case browsers.Edge:
+		return edgeChromium{execPath}, nil
+	case browsers.Chrome:
+		return chrome{execPath}, nil
 	default:
-		return nil, fmt.Errorf("unsupported browser '%s'", appName)
+		return nil, fmt.Errorf("unsupported browser '%v'", _browser)
 	}
-}
-
-var execPathRegexp = regexp.MustCompile(`"(.*)".*".*"`)
-
-func execPathFromRegistryEntry(regEntry string) (string, error) {
-	matches := execPathRegexp.FindStringSubmatch(regEntry)
-	if len(matches) <= 1 {
-		return "", errors.New("unexpected executable path structure")
-	}
-	fmt.Printf("using path '%s'\n", matches[1])
-	return matches[1], nil
 }
 
 type firefox struct {
