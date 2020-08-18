@@ -92,7 +92,6 @@ func getBrowserHello(ctx context.Context, browser browser, dm DomainMapper) ([]b
 		}
 	}()
 	go func() {
-		// TODO: think about whether replacing the port here will work w.r.t. the proxy dialer
 		if err := browser.get(ctx, fmt.Sprintf("https://%s:%s", dm.Domain(), sPort)); err != nil {
 			browserErrChan <- err
 		}
