@@ -2,7 +2,6 @@ package hellocap
 
 // TODO: support the following browser/OS combinations:
 //  - Chrome / linux
-//	- Safari / macOS
 //  - Firefox / linux
 //
 // Done:
@@ -18,6 +17,8 @@ package hellocap
 //      Might be possible via integration with .NET, but not sure that's worth the effort:
 //		https://docs.microsoft.com/en-us/dotnet/api/system.windows.forms.webbrowser?view=netcore-3.1
 //		https://github.com/sdesalas/trifleJS/blob/master/Native/Browser.cs
+//	- Safari / macOS
+//		Might be possible via WebKit, but not sure that's worth the effort
 //	- Edge Legacy (HTML-based) / windows
 //		Likely the same process as Internet Explorer
 //	- 360 Browser / windows

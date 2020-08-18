@@ -1,7 +1,4 @@
-// Package hellocap is used to capture example TLS ClientHellos from the user's default browser.
-//
-// TODO: add more context
-// TODO: should this be a subdirectory of chained or some other package?
+// Package hellocap is used to capture sample TLS ClientHellos from web browsers on this machine.
 package hellocap
 
 import (
@@ -47,8 +44,9 @@ type DomainMapper interface {
 	Clear() error
 }
 
-// GetBrowserHello returns a sample ClientHello from the system's default web browser.
-func GetBrowserHello(ctx context.Context, dm DomainMapper) ([]byte, error) {
+// GetDefaultBrowserHello returns a sample ClientHello from the system's default web browser. This
+// function may take a couple of seconds.
+func GetDefaultBrowserHello(ctx context.Context, dm DomainMapper) ([]byte, error) {
 	b, err := defaultBrowser(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to obtain user's default browser: %w", err)
