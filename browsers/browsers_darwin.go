@@ -62,7 +62,7 @@ func (b Browser) AppBundle(ctx context.Context) (string, error) {
 	case Edge:
 		bundleID = "com.microsoft.edgemac"
 	case Safari:
-		bundleID = "com.apple.safari"
+		bundleID = "com.apple.Safari"
 	default:
 		return "", ErrUnsupportedAction
 	}

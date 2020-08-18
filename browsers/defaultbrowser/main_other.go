@@ -1,4 +1,6 @@
-// +build !windows
+// +build !windows,!darwin
+
+package main
 
 import "github.com/getlantern/flashlight/browsers"
 
