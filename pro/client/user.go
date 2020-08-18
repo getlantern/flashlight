@@ -12,15 +12,16 @@ type Auth struct {
 }
 
 type User struct {
-	Auth         `json:",inline"`
-	Email        string   `json:"email"`
-	PhoneNumber  string   `json:"telephone"`
-	UserStatus   string   `json:"userStatus"`
-	Locale       string   `json:"locale"`
-	Expiration   int64    `json:"expiration"`
-	Devices      []Device `json:"devices"`
-	Code         string   `json:"code"`
-	ExpireAt     int64    `json:"expireAt"`
-	Referral     string   `json:"referral"`
-	YinbiEnabled bool     `json:"yinbiEnabled"`
+	Auth           `json:",inline"`
+	Email          string   `json:"email"`
+	PhoneNumber    string   `json:"telephone"`
+	UserStatus     string   `json:"userStatus"`
+	Locale         string   `json:"locale"`
+	Expiration     int64    `json:"expiration"`
+	Devices        []Device `json:"devices"`
+	Code           string   `json:"code"`
+	ExpireAt       int64    `json:"expireAt"`
+	Referral       string   `json:"referral"`
+	YinbiEnabled   bool     `json:"yinbiEnabled"`
+	RelpicaEnabled bool     `json:"replicaEnabled"`
 }

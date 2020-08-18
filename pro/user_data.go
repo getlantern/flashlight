@@ -37,6 +37,7 @@ func OnProStatusChange(cb func(isPro bool, yinbiEnabled bool)) {
 	OnUserData(func(current *client.User, new *client.User) {
 		if current == nil ||
 			isActive(current.UserStatus) != isActive(new.UserStatus) ||
+			current.ReplicaEnabled != new.ReplicaEnabled ||
 			current.YinbiEnabled != new.YinbiEnabled {
 			cb(isActive(new.UserStatus), new.YinbiEnabled)
 		}
