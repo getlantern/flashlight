@@ -50,7 +50,6 @@ func newFirefoxInstance() (*firefox, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temporary Firefox profile: %w", err)
 	}
-	fmt.Println("using profile in", pDir)
 	return &firefox{pDir, []int{}}, nil
 }
 
@@ -83,7 +82,6 @@ func (f *firefox) killChildProcesses() error {
 		return nil
 	}
 
-	fmt.Println("killing child Firefox processes")
 	allProcs, err := ps.Processes()
 	if err != nil {
 		return fmt.Errorf("failed to obtain process snapshot: %w", err)
@@ -102,7 +100,6 @@ func (f *firefox) killChildProcesses() error {
 				))
 				continue
 			}
-			fmt.Printf("killing process tree with executable '%s'\n", p.Executable())
 			if err := pTree.kill(); err != nil {
 				errs = append(errs, fmt.Errorf(
 					"failed to kill process tree for executable '%s': %v",

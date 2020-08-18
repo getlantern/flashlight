@@ -15,7 +15,6 @@ import (
 	"net/http"
 	"os/exec"
 	"sync"
-	"time"
 
 	"github.com/getlantern/tlsutil"
 )
@@ -100,10 +99,6 @@ func getBrowserHello(ctx context.Context, browser browser, dm DomainMapper) ([]b
 			browserErrChan <- err
 		}
 	}()
-
-	// debugging
-	// TODO: delete me
-	defer func() { fmt.Printf("[%v] returning hello\n", time.Now()) }()
 
 	select {
 	case result := <-helloChan:

@@ -12,7 +12,7 @@ import (
 	"golang.org/x/sys/windows/registry"
 )
 
-// ErrorUnknownProgramID means that an unknown progran ID was encountered. However, this prorgam ID
+// ErrorUnknownProgramID means that an unknown progran ID was encountered. However, this program ID
 // may still be useful.
 type ErrorUnknownProgramID string
 
@@ -143,7 +143,6 @@ func SystemDefault(ctx context.Context) (Browser, error) {
 	if err != nil {
 		return Unknown, fmt.Errorf("failed to read browser program ID from registry: %w", err)
 	}
-	fmt.Println("progID:", progID)
 
 	if strings.Contains(progID, "Firefox") {
 		return Firefox, nil
