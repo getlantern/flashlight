@@ -246,7 +246,7 @@ func NewClient(
 				strings.Contains(userAgent, "MSIE") || strings.Contains(userAgent, "Trident") || // Internet Explorer
 				strings.Contains(userAgent, "Edge") || // Microsoft Edge
 				strings.Contains(userAgent, "QQBrowser") || // QQ
-				strings.Contains(userAgent, "360Browser") // 360
+				strings.Contains(userAgent, "360Browser") || strings.Contains(userAgent, "360SE") || strings.Contains(userAgent, "360EE") // 360
 			return shouldMITM
 		},
 	})
