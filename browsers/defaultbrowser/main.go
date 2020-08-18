@@ -28,4 +28,6 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Printf("The default browser is %v.\nThis operation took %v\n", b, time.Now().Sub(start))
+
+	printBrowserDetails(b)
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"golang.org/x/sys/windows/registry"
@@ -81,14 +82,16 @@ func (b Browser) programID() (string, error) {
 	}
 }
 
+var execPathRegexp = regexp.MustCompile(`"([^"]*)".*`)
+
 // Executable returns the absolute path to the executable file for this browser.
 func (b Browser) Executable() (string, error) {
 	if b == Firefox {
 		// The program ID for Firefox is unpredictable (as far as we know anyway), so we can't use
 		// it to reliably find the executable. We just look in expected locations instead.
 		for _, execPath := range []string{
-			filepath.Join("C:", "Program Files", "Mozilla Firefox", "firefox.exe"),
-			filepath.Join("C:", "Program Files (x86)", "Mozilla Firefox", "firefox.exe"),
+			filepath.Join(`C:\`, "Program Files", "Mozilla Firefox", "firefox.exe"),
+			filepath.Join(`C:\`, "Program Files (x86)", "Mozilla Firefox", "firefox.exe"),
 		} {
 			_, err := os.Stat(execPath)
 			if err == nil {
@@ -110,11 +113,15 @@ func (b Browser) Executable() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to read browser executable info from registry: %w", err)
 	}
-	execPath, _, err := appExec.GetStringValue("")
+	regEntry, _, err := appExec.GetStringValue("")
 	if err != nil {
 		return "", fmt.Errorf("failed to read path to browser executable from registry: %w", err)
 	}
-	return execPath, nil
+	matches := execPathRegexp.FindStringSubmatch(regEntry)
+	if len(matches) <= 1 {
+		return "", errors.New("unexpected executable path structure")
+	}
+	return matches[1], nil
 }
 
 // SystemDefault returns the default web browser. Specifically, this is the default handler for HTML
