@@ -40,6 +40,9 @@ define build-tags
 	if [[ ! -z "$$REPLICA" ]]; then \
 		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/config.GlobalURL=https://globalconfig.flashlightproxy.com/global-replica.yaml.gz"; \
 	fi && \
+	if [[ ! -z "$$YINBI" ]]; then \
+		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/config.GlobalURL=https://globalconfig.flashlightproxy.com/global-yinbi-replica.yaml.gz"; \
+	fi && \
 	BUILD_TAGS=$$(echo $$BUILD_TAGS | xargs) && echo "Build tags: $$BUILD_TAGS" && \
 	EXTRA_LDFLAGS=$$(echo $$EXTRA_LDFLAGS | xargs) && echo "Extra ldflags: $$EXTRA_LDFLAGS"
 endef
