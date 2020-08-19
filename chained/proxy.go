@@ -470,7 +470,7 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 
 			// We execute the handshake as part of the dial. Otherwise, preconnecting wouldn't do
 			// much for us.
-			errc := make(chan error)
+			errc := make(chan error, 1)
 			go func() { errc <- conn.Handshake() }()
 			select {
 			case err := <-errc:
