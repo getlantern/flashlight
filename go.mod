@@ -44,7 +44,7 @@ require (
 	github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42
 	github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644
 	github.com/getlantern/kcpwrapper v0.0.0-20171114192627-a35c895f6de7
-	github.com/getlantern/keyman v0.0.0-20180207174507-f55e7280e93a
+	github.com/getlantern/keyman v0.0.0-20200819205636-76fef27c39f1
 	github.com/getlantern/lampshade v0.0.0-20200303040944-fe53f13203e9
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
@@ -72,6 +72,7 @@ require (
 	github.com/getlantern/tinywss v0.0.0-20200121221108-851921f95ad7
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
 	github.com/getlantern/tlsdialer v0.0.0-20200205115148-9bde2ed72c94
+	github.com/getlantern/tlsdialer/v3 v3.0.1-0.20200819212748-a098113dd9f3
 	github.com/getlantern/tlsmasq v0.3.0
 	github.com/getlantern/tlsresumption v0.0.0-20200205020452-74fc6ea4e074
 	github.com/getlantern/tlsutil v0.2.0
@@ -107,7 +108,7 @@ require (
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20200708221337-157ddc277592
 
-replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20200708025417-3b1d9d0bb892
+replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20200814165010-a20f07cc4a90
 
 replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3
 

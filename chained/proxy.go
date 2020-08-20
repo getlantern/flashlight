@@ -14,7 +14,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -41,10 +40,9 @@ import (
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
 	"github.com/getlantern/tinywss"
-	"github.com/getlantern/tlsdialer"
+	"github.com/getlantern/tlsdialer/v3"
 	"github.com/getlantern/tlsmasq"
 	"github.com/getlantern/tlsmasq/ptlshs"
-	"github.com/getlantern/tlsresumption"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/buffers"
@@ -177,13 +175,18 @@ func newHTTPProxy(name, transport, proto string, s *ChainedServerInfo, uc common
 }
 
 func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+	const tlsConfigTimeout = 5 * time.Second
+
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
 	}
 	x509cert := cert.X509()
 
-	tlsConfig, clientHelloID := tlsConfigForProxy(name, s, uc)
+	tlsConfigCtx, cancelTLSConfig := context.WithTimeout(context.Background(), tlsConfigTimeout)
+	defer cancelTLSConfig()
+
+	tlsConfig, clientHelloID, clientHelloSpec := tlsConfigForProxy(tlsConfigCtx, name, s, uc)
 	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
 		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
 			td := &tlsdialer.Dialer{
@@ -197,10 +200,11 @@ func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc commo
 					}
 					return tcpConn, err
 				},
-				Timeout:        timeoutFor(ctx),
-				SendServerName: tlsConfig.ServerName != "",
-				Config:         tlsConfig,
-				ClientHelloID:  clientHelloID,
+				Timeout:         timeoutFor(ctx),
+				SendServerName:  tlsConfig.ServerName != "",
+				Config:          tlsConfig,
+				ClientHelloID:   clientHelloID,
+				ClientHelloSpec: clientHelloSpec,
 			}
 			result, err := td.DialForTimings("tcp", p.addr)
 			if err != nil {
@@ -370,6 +374,8 @@ func newWSSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*prox
 }
 
 func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
+	const tlsConfigTimeout = 5 * time.Second
+
 	decodeUint16 := func(s string) (uint16, error) {
 		b, err := hex.DecodeString(strings.TrimPrefix(s, "0x"))
 		if err != nil {
@@ -438,13 +444,16 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 	}
 	pool.AddCert(cert)
 
-	pCfg, helloID := tlsConfigForProxy(name, s, uc)
+	tlsCfgCtx, cancelTLSCfg := context.WithTimeout(context.Background(), tlsConfigTimeout)
+	defer cancelTLSCfg()
+
+	pCfg, helloID, helloSpec := tlsConfigForProxy(tlsCfgCtx, name, s, uc)
 	pCfg.ServerName = sni
 	pCfg.InsecureSkipVerify = InsecureSkipVerifyTLSMasqOrigin
 
 	cfg := tlsmasq.DialerConfig{
 		ProxiedHandshakeConfig: ptlshs.DialerConfig{
-			Handshaker: utlsHandshaker{pCfg, helloID},
+			Handshaker: utlsHandshaker{pCfg, helloID, helloSpec},
 			Secret:     secret,
 			NonceTTL:   nonceTTL,
 		},
@@ -1013,71 +1022,26 @@ func reportProxyDial(delta time.Duration, err error) {
 	}
 }
 
-func tlsConfigForProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*tls.Config, tls.ClientHelloID) {
-
-	helloID := s.clientHelloID()
-	var ss *tls.ClientSessionState
-	var err error
-	if s.TLSClientSessionState != "" {
-		ss, err = tlsresumption.ParseClientSessionState(s.TLSClientSessionState)
-		if err != nil {
-			log.Errorf("Unable to parse serialized client session state, continuing with normal handshake: %v", err)
-		} else {
-			log.Debug("Using serialized client session state")
-			if helloID.Client == "Golang" {
-				log.Debug("Need to mimic browser hello for session resumption, defaulting to HelloChrome_Auto")
-				helloID = tls.HelloChrome_Auto
-			}
-		}
-	}
-
-	sessionTTL := chooseSessionTicketTTL(uc)
-	sessionCache := newExpiringSessionCache(name, sessionTTL, ss)
-	cipherSuites := orderedCipherSuitesFromConfig(s)
-
-	cfg := &tls.Config{
-		ClientSessionCache: sessionCache,
-		CipherSuites:       cipherSuites,
-		ServerName:         s.TLSServerNameIndicator,
-		InsecureSkipVerify: true,
-		KeyLogWriter:       getTLSKeyLogWriter(),
-	}
-
-	return cfg, helloID
-}
-
-func orderedCipherSuitesFromConfig(s *ChainedServerInfo) []uint16 {
-	if common.Platform == "android" {
-		return s.mobileOrderedCipherSuites()
-	}
-	return s.desktopOrderedCipherSuites()
-}
-
-// Write the session keys to file if SSLKEYLOGFILE is set, same as browsers.
-func getTLSKeyLogWriter() io.Writer {
-	createKeyLogWriterOnce.Do(func() {
-		path := os.Getenv("SSLKEYLOGFILE")
-		if path == "" {
-			return
-		}
-		var err error
-		tlsKeyLogWriter, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0600)
-		if err != nil {
-			log.Debugf("Error creating keylog file at %v: %s", path, err)
-		}
-	})
-	return tlsKeyLogWriter
-}
-
 // utlsHandshaker implements tlsmasq/ptlshs.Handshaker. This allows us to parrot browsers like
 // Chrome in our handshakes with tlsmasq origins.
 type utlsHandshaker struct {
 	cfg     *tls.Config
 	helloID tls.ClientHelloID
+
+	// Must be provided if helloID is set to tls.HelloCustom. Ignored otherwise.
+	helloSpec *tls.ClientHelloSpec
 }
 
 func (h utlsHandshaker) Handshake(conn net.Conn) (*ptlshs.HandshakeResult, error) {
 	uconn := tls.UClient(conn, h.cfg, h.helloID)
+	if h.helloID == tls.HelloCustom {
+		if h.helloSpec == nil {
+			return nil, errors.New("hello spec must be provided if HelloCustom is used")
+		}
+		if err := uconn.ApplyPreset(h.helloSpec); err != nil {
+			return nil, fmt.Errorf("failed to set custom hello spec: %w", err)
+		}
+	}
 	if err := uconn.Handshake(); err != nil {
 		return nil, err
 	}
