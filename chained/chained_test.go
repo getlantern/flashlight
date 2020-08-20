@@ -5,8 +5,12 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -15,6 +19,8 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog"
+	lanternProxy "github.com/getlantern/http-proxy-lantern"
+	"github.com/getlantern/keyman"
 )
 
 var (
@@ -152,6 +158,80 @@ func TestBadAddressToServer(t *testing.T) {
 	defer op.End()
 	err = p.checkCONNECTResponse(op, r, req, time.Now())
 	assert.Error(t, err, "Connect response should be bad")
+}
+
+func TestRandomizedHello(t *testing.T) {
+	token := "proxy-auth-token"
+	dir, err := ioutil.TempDir("", "flashlight-chained-test")
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer os.RemoveAll(dir)
+	keyFile := filepath.Join(dir, "key.pem")
+	certFile := filepath.Join(dir, "cert.pem")
+	pk, err := keyman.GeneratePK(2048)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	pk.WriteToFile(keyFile)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	cert, err := pk.TLSCertificateFor(time.Now().Add(1*time.Hour), true, nil, "chained_test", "localhost")
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	err = cert.WriteToFile(certFile)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	proxyAddr := "localhost:8088"
+	s1 := &lanternProxy.Proxy{
+		TestingLocal: true,
+		HTTPAddr:     proxyAddr,
+		Token:        token,
+		KeyFile:      keyFile,
+		CertFile:     certFile,
+		IdleTimeout:  30 * time.Second,
+		HTTPS:        true,
+	}
+
+	go s1.ListenAndServe()
+
+	if !assert.NoError(t, err) {
+		return
+	}
+	p, err := newHTTPSProxy("test", "transport", "https", &ChainedServerInfo{
+		Addr:             proxyAddr,
+		AuthToken:        token,
+		TLSClientHelloID: "HelloRandomized",
+		// TLSClientHelloID:       "HelloChrome_Auto",
+		TLSServerNameIndicator: "foobar",
+		Cert:                   string(cert.PEMEncoded()),
+	},
+		newTestUserConfig())
+	if !assert.NoError(t, err) {
+		return
+	}
+	dialer := p.dial
+
+	if !assert.NoError(t, err) {
+		return
+	}
+	var wg sync.WaitGroup
+	for i := 0; i < 100; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			test(t, dialer)
+		}()
+	}
+
+	wg.Wait()
 }
 
 func TestSuccess(t *testing.T) {
