@@ -5,13 +5,16 @@ import (
 	"context"
 	"time"
 
-	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/deterministic"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/golog"
 	tls "github.com/refraction-networking/utls"
 )
+
+// This timeout should be longer than anything a caller might pass to us. We use this to avoid
+// goroutine leaks.
+const longTimeout = 10 * time.Minute
 
 var log = golog.LoggerFor("simbrowser")
 
@@ -31,13 +34,18 @@ type Browser interface {
 // context expires before the client's geolocation can be determined, global market shares will be
 // used.
 func ChooseForUser(ctx context.Context, uc common.UserConfig) Browser {
-	geolookupTimeout := time.Duration(eventual.Forever)
+	geolookupTimeout := longTimeout
 	if deadline, ok := ctx.Deadline(); ok {
-		geolookupTimeout = deadline.Sub(time.Now())
+		// A timeout of 0 tells geolookup to return immediately.
+		geolookupTimeout = max(deadline.Sub(time.Now()), 0)
 	}
 
 	countryCodeC := make(chan string, 1)
-	go func() { countryCodeC <- geolookup.GetCountry(geolookupTimeout) }()
+	go func() {
+		if countryCode := geolookup.GetCountry(geolookupTimeout); countryCode != "" {
+			countryCodeC <- countryCode
+		}
+	}()
 
 	choices := globalBrowserChoices
 	select {
@@ -51,4 +59,11 @@ func ChooseForUser(ctx context.Context, uc common.UserConfig) Browser {
 
 	choice := deterministic.MakeWeightedChoice(uc.GetUserID(), choices)
 	return choice.(browserChoice).browserBehavior
+}
+
+func max(a, b time.Duration) time.Duration {
+	if a > b {
+		return a
+	}
+	return b
 }
