@@ -11,6 +11,7 @@ import (
 
 	"github.com/getlantern/flashlight/browsers/simbrowser"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/flashlight/hellocap"
 	"github.com/getlantern/tlsresumption"
 )
@@ -42,10 +43,14 @@ func tlsConfigForProxy(ctx context.Context, name string, s *ChainedServerInfo, u
 		}
 	}
 
+	// TODO: delete the log statements below
 	var helloSpec *tls.ClientHelloSpec
 	if helloID == helloBrowser {
-		helloSpec = getBrowserHello(ctx, uc)
+		log.Debug("[3349] obtaining browser hello spec")
+		helloSpec = getBrowserHello(ctx, s, uc)
 		helloID = tls.HelloCustom
+	} else {
+		log.Debug("[3349] not using helloBrowser")
 	}
 
 	sessionTTL := simbrowser.ChooseForUser(ctx, uc).SessionTicketLifetime()
@@ -67,11 +72,11 @@ func tlsConfigForProxy(ctx context.Context, name string, s *ChainedServerInfo, u
 // few possible failure points in making this determination, e.g. a failure to obtain the default
 // browser or a failure to capture a hello from the browser. However, this function will always find
 // something reasonable to fall back on.
-func getBrowserHello(ctx context.Context, uc common.UserConfig) *tls.ClientHelloSpec {
+func getBrowserHello(ctx context.Context, s *ChainedServerInfo, uc common.UserConfig) *tls.ClientHelloSpec {
 	// We have a number of ways to approximate the browser's ClientHello format. We begin with the
 	// most desirable, progressively falling back to less desirable options on failure.
 
-	helloSpec, err := activelyObtainBrowserHello(ctx)
+	helloSpec, err := activelyObtainBrowserHello(ctx, s.TLSServerNameIndicator)
 	if err == nil {
 		return helloSpec
 	}
@@ -82,17 +87,14 @@ func getBrowserHello(ctx context.Context, uc common.UserConfig) *tls.ClientHello
 	return &simulatedHelloSpec
 }
 
-func activelyObtainBrowserHello(ctx context.Context) (*tls.ClientHelloSpec, error) {
-	// TODO: come up with an implementation of this.
-	var domainMapper hellocap.DomainMapper
-
+func activelyObtainBrowserHello(ctx context.Context, sni string) (*tls.ClientHelloSpec, error) {
 	helloSpec, err := activeCaptureHelloCache.readAndParse()
 	if err == nil {
 		return helloSpec, nil
 	}
 	log.Debugf("failed to read actively obtained hello from cache: %v", err)
 
-	sampleHello, err := hellocap.GetDefaultBrowserHello(ctx, domainMapper)
+	sampleHello, err := hellocap.GetDefaultBrowserHello(ctx, domainMapper(sni))
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
@@ -159,4 +161,19 @@ func (f helloCacheFile) readAndParse() (*tls.ClientHelloSpec, error) {
 		return nil, fmt.Errorf("failed to parse file contents: %w", err)
 	}
 	return spec, nil
+}
+
+// Implements hellocap.DomainMapper.
+type domainMapper string
+
+func (dm domainMapper) Domain() string { return string(dm) }
+
+func (dm domainMapper) MapTo(address string) error {
+	_, err := domainrouting.AddRule(dm.Domain(), domainrouting.RuleReroute(address))
+	return err
+}
+
+func (dm domainMapper) Clear() error {
+	_, err := domainrouting.AddRule(dm.Domain(), domainrouting.RuleNone{})
+	return err
 }
