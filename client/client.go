@@ -474,13 +474,13 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 	}
 	host = strings.ToLower(strings.TrimSpace(host))
 
-	switch domainrouting.RuleFor(host).(type) {
-	case domainrouting.RuleDirect:
+	switch domainrouting.RuleFor(host) {
+	case domainrouting.Direct:
 		log.Tracef("Directly dialing %v per domain routing rules", addr)
 		op.Set("force_direct", true)
 		op.Set("force_direct_reason", "routingrule")
 		return dialDirect(ctx, "tcp", addr)
-	case domainrouting.RuleProxy:
+	case domainrouting.Proxy:
 		log.Tracef("Proxying to %v per domain routing rules", addr)
 		op.Set("force_proxied", true)
 		op.Set("force_proxied_reason", "routingrule")

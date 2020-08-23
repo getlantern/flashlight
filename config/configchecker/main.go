@@ -109,10 +109,10 @@ func parseGlobal(bytes []byte) {
 
 	var direct, proxied int
 	for _, rule := range cfg.DomainRoutingRules {
-		switch rule.(type) {
-		case domainrouting.RuleDirect:
+		switch rule {
+		case domainrouting.Direct:
 			direct++
-		case domainrouting.RuleProxy:
+		case domainrouting.Proxy:
 			proxied++
 		}
 	}

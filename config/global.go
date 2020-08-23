@@ -36,7 +36,7 @@ type Global struct {
 	ProxiedSites *domainrouting.ProxiedSitesConfig
 
 	// DomainRoutingRules specifies routing rules for specific domains, such as forcing proxing, forcing direct dials, etc.
-	DomainRoutingRules domainrouting.RuleSet
+	DomainRoutingRules domainrouting.Rules
 
 	// TrustedCAs are trusted CAs for domain fronting domains only.
 	TrustedCAs []*fronted.CA
