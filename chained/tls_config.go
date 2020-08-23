@@ -16,6 +16,8 @@ import (
 	"github.com/getlantern/tlsresumption"
 )
 
+// TODO: delete [3349] log statements
+
 var (
 	activeCaptureHelloCache = helloCacheInConfigDir("hello-cache.active-capture")
 )
@@ -43,7 +45,6 @@ func tlsConfigForProxy(ctx context.Context, name string, s *ChainedServerInfo, u
 		}
 	}
 
-	// TODO: delete the log statements below
 	var helloSpec *tls.ClientHelloSpec
 	if helloID == helloBrowser {
 		log.Debug("[3349] obtaining browser hello spec")
@@ -76,11 +77,16 @@ func getBrowserHello(ctx context.Context, s *ChainedServerInfo, uc common.UserCo
 	// We have a number of ways to approximate the browser's ClientHello format. We begin with the
 	// most desirable, progressively falling back to less desirable options on failure.
 
+	log.Debugf("[3349] obtaining browser hello spec for SNI '%s'", s.TLSServerNameIndicator)
+
+	// TODO: determine if it's really necessary to get hello for domain because the timing is difficult
+	// Passively capturing the hello for the domain would be tricky too
+
 	helloSpec, err := activelyObtainBrowserHello(ctx, s.TLSServerNameIndicator)
 	if err == nil {
 		return helloSpec
 	}
-	log.Debugf("failed to actively obtain browser hello: %v", err)
+	log.Debugf("[3349] failed to actively obtain browser hello: %v", err) // TODO: remove [3349], keep log
 
 	// Our last option is to simulate a browser choice for the user based on market share.
 	simulatedHelloSpec := simbrowser.ChooseForUser(ctx, uc).ClientHelloSpec()
@@ -88,11 +94,20 @@ func getBrowserHello(ctx context.Context, s *ChainedServerInfo, uc common.UserCo
 }
 
 func activelyObtainBrowserHello(ctx context.Context, sni string) (*tls.ClientHelloSpec, error) {
+	log.Debugf("[3349] reading from cache")
 	helloSpec, err := activeCaptureHelloCache.readAndParse()
 	if err == nil {
+		log.Debugf("[3349] read hello from cache")
 		return helloSpec, nil
 	}
-	log.Debugf("failed to read actively obtained hello from cache: %v", err)
+	log.Debugf("[3349] failed to read actively obtained hello from cache: %v", err) // TODO: remove [3349], keep log
+
+	log.Debug("[3349] waiting for domain routing to be configured")
+	// Domain routing must be configured before we can use our domain mapper.
+	if err := domainrouting.WaitForConfigure(ctx); err != nil {
+		return nil, fmt.Errorf("domain routing was not configured in time: %w", err)
+	}
+	log.Debug("[3349] domain routing configured")
 
 	sampleHello, err := hellocap.GetDefaultBrowserHello(ctx, domainMapper(sni))
 	if err != nil {
@@ -103,7 +118,7 @@ func activelyObtainBrowserHello(ctx context.Context, sni string) (*tls.ClientHel
 		return nil, fmt.Errorf("failed to fingerprint sample hello: %w", err)
 	}
 	if err := activeCaptureHelloCache.write(sampleHello); err != nil {
-		log.Debugf("failed to write actively obtained hello to cache: %v", err)
+		log.Debugf("[3349] failed to write actively obtained hello to cache: %v", err) // TODO: remove [3349], keep log
 	}
 	return helloSpec, nil
 }

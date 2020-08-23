@@ -19,6 +19,10 @@ var (
 	ruleSet  = eventual.NewValue() // RuleSet
 	ruleTree = eventual.NewValue() // *domains.Tree
 	mx       sync.RWMutex
+
+	// Closed when Configure is called for the first time.
+	configured          = make(chan struct{})
+	closeConfiguredOnce sync.Once
 )
 
 const (
@@ -107,6 +111,7 @@ func (r RuleSet) SetYAML(_ string, value interface{}) bool {
 		log.Errorf("failed to unmarshal Rules: unexpected type %T", value)
 		return false
 	}
+	r = map[string]Rule{}
 	for k, v := range m {
 		domain, ok := k.(string)
 		if !ok {
@@ -138,6 +143,7 @@ func (r RuleSet) SetYAML(_ string, value interface{}) bool {
 // The ProxiedSitesConfig is supported for backwards compatibility. All domains in the
 // ProxiedSitesConfig are treated as Proxy rules.
 func Configure(rules RuleSet, proxiedSites *ProxiedSitesConfig) {
+	log.Debug("[3349] Configure called")
 	log.Debugf("Configuring with %d rules and %d proxied sites", len(rules), len(proxiedSites.Cloud))
 
 	// For backwards compatibility, merge in ProxiedSites
@@ -162,6 +168,18 @@ func Configure(rules RuleSet, proxiedSites *ProxiedSitesConfig) {
 	ruleSet.Set(rules)
 	ruleTree.Set(newRuleTree)
 	mx.Unlock()
+	closeConfiguredOnce.Do(func() { close(configured) })
+}
+
+// WaitForConfigure waits until Configure is called for the first time. Returns an error if the
+// context expires first. Use this function to determine when it is safe to call AddRule.
+func WaitForConfigure(ctx context.Context) error {
+	select {
+	case <-configured:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 // AddRule for a domain. Replaces existing rules for the domain. Use RuleNone to clear rules.
@@ -195,6 +213,8 @@ func AddRule(domain string, r Rule) (previous Rule, err error) {
 
 // RuleFor returns the Rule most applicable to the given domain. If no such rule is defined,
 func RuleFor(domain string) Rule {
+	log.Debugf("[3349] RuleFor(%s)", domain)
+
 	mx.RLock()
 	ctx, cancel := context.WithTimeout(context.Background(), initTimeout)
 	rules := getCurrentRules(ctx)

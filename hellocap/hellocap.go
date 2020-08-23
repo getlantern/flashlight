@@ -95,6 +95,7 @@ func getBrowserHello(ctx context.Context, browser browser, dm DomainMapper) ([]b
 		}
 	}()
 	go func() {
+		fmt.Printf("[3349] sending request to %s:%s\n", dm.Domain(), sPort)
 		if err := browser.get(ctx, fmt.Sprintf("https://%s:%s", dm.Domain(), sPort)); err != nil {
 			browserErrChan <- err
 		}
