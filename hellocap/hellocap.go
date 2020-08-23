@@ -40,7 +40,7 @@ type browser interface {
 func GetDefaultBrowserHello(ctx context.Context) ([]byte, error) {
 	b, err := defaultBrowser(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to obtain user's default browser: %w", err)
+		return nil, err
 	}
 	defer b.close()
 	return getBrowserHello(ctx, b)

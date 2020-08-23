@@ -16,7 +16,7 @@ import (
 func defaultBrowser(ctx context.Context) (browser, error) {
 	_browser, err := browsers.SystemDefault(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to obtain default browser: %w", err)
 	}
 	bundle, err := _browser.AppBundle(ctx)
 	if errors.Is(err, browsers.ErrUnsupportedAction) {
