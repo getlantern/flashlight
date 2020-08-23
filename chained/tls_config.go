@@ -109,7 +109,7 @@ func activelyObtainBrowserHello(ctx context.Context, sni string) (*tls.ClientHel
 	}
 	log.Debug("[3349] domain routing configured")
 
-	sampleHello, err := hellocap.GetDefaultBrowserHello(ctx, domainMapper(sni))
+	sampleHello, err := hellocap.GetDefaultBrowserHello(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
@@ -176,19 +176,4 @@ func (f helloCacheFile) readAndParse() (*tls.ClientHelloSpec, error) {
 		return nil, fmt.Errorf("failed to parse file contents: %w", err)
 	}
 	return spec, nil
-}
-
-// Implements hellocap.DomainMapper.
-type domainMapper string
-
-func (dm domainMapper) Domain() string { return string(dm) }
-
-func (dm domainMapper) MapTo(address string) error {
-	_, err := domainrouting.AddRule(dm.Domain(), domainrouting.RuleReroute(address))
-	return err
-}
-
-func (dm domainMapper) Clear() error {
-	_, err := domainrouting.AddRule(dm.Domain(), domainrouting.RuleNone{})
-	return err
 }

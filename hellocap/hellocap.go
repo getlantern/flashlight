@@ -32,33 +32,21 @@ type browser interface {
 	close() error
 }
 
-// A DomainMapper is used to ensure that captured ClientHellos are accurate for a specific domain.
-// Because browsers may send one type of hello to one domain and another type of hello to others, it
-// is important to capture the correct ClientHello for the intended domain.
-//
-// When MapTo is called, all connections to the domain should go to the specified address. This is
-// analogous to editing the system's /etc/hosts file. Clear should undo this.
-type DomainMapper interface {
-	Domain() string
-	MapTo(address string) error
-	Clear() error
-}
-
 // GetDefaultBrowserHello returns a sample ClientHello from the system's default web browser. This
 // function may take a couple of seconds.
 //
 // Note that this may generate a log from the http package along the lines of "http: TLS handshake
 // error... use of closed network connection".
-func GetDefaultBrowserHello(ctx context.Context, dm DomainMapper) ([]byte, error) {
+func GetDefaultBrowserHello(ctx context.Context) ([]byte, error) {
 	b, err := defaultBrowser(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to obtain user's default browser: %w", err)
 	}
 	defer b.close()
-	return getBrowserHello(ctx, b, dm)
+	return getBrowserHello(ctx, b)
 }
 
-func getBrowserHello(ctx context.Context, browser browser, dm DomainMapper) ([]byte, error) {
+func getBrowserHello(ctx context.Context, browser browser) ([]byte, error) {
 	type helloResult struct {
 		hello []byte
 		err   error
@@ -79,24 +67,13 @@ func getBrowserHello(ctx context.Context, browser browser, dm DomainMapper) ([]b
 	}
 	defer s.Close()
 
-	sHost, sPort, err := net.SplitHostPort(s.address())
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse local server address: %w", err)
-	}
-
-	if err := dm.MapTo(sHost); err != nil {
-		return nil, fmt.Errorf("failed to map domain: %w", err)
-	}
-	defer dm.Clear()
-
 	go func() {
 		if err := s.listenAndServeTLS(); err != nil {
 			serverErrChan <- err
 		}
 	}()
 	go func() {
-		fmt.Printf("[3349] sending request to %s:%s\n", dm.Domain(), sPort)
-		if err := browser.get(ctx, fmt.Sprintf("https://%s:%s", dm.Domain(), sPort)); err != nil {
+		if err := browser.get(ctx, fmt.Sprintf("https://%s", s.address())); err != nil {
 			browserErrChan <- err
 		}
 	}()
