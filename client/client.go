@@ -256,7 +256,6 @@ func NewClient(
 		return nil, errors.New("Unable to initialize iptool: %v", err)
 	}
 	go client.pingProxiesLoop()
-	log.Debug("[3349] returning client")
 	return client, nil
 }
 
@@ -403,8 +402,6 @@ func (client *Client) Stop() error {
 }
 
 func (client *Client) dial(ctx context.Context, isConnect bool, network, addr string) (conn net.Conn, err error) {
-	log.Debugf("[3349] dialing %s", addr)
-
 	op := ops.BeginWithBeam("proxied_dialer", ctx)
 	op.Set("local_proxy_type", "http")
 	op.Origin(addr, "")
@@ -477,7 +474,7 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 	}
 	host = strings.ToLower(strings.TrimSpace(host))
 
-	switch r := domainrouting.RuleFor(host).(type) {
+	switch domainrouting.RuleFor(host).(type) {
 	case domainrouting.RuleDirect:
 		log.Tracef("Directly dialing %v per domain routing rules", addr)
 		op.Set("force_direct", true)
@@ -488,14 +485,6 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		op.Set("force_proxied", true)
 		op.Set("force_proxied_reason", "routingrule")
 		return dialProxied(ctx, "whatever", addr)
-	case domainrouting.RuleReroute:
-		log.Debugf("[3349] rerouting from %s to %s", addr, r.RouteTo())
-		log.Tracef("Rerouting from %s to %s per domain routing rules", addr, r.RouteTo())
-		// TODO: do these op keys need to be registered somewhere?
-		op.Set("force_reroute", true)
-		op.Set("force_reroute_to", r.RouteTo())
-		op.Set("force_reroute_reason", "routingrule")
-		return client.doDial(op, ctx, isCONNECT, r.RouteTo())
 	}
 
 	dialDirectForShortcut := func(ctx context.Context, network, addr string, ip net.IP) (net.Conn, error) {
