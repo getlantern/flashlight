@@ -46,7 +46,7 @@ func tlsConfigForProxy(ctx context.Context, name string, s *ChainedServerInfo, u
 	var helloSpec *tls.ClientHelloSpec
 	if helloID == helloBrowser {
 		log.Debug("[3349] obtaining browser hello spec")
-		helloSpec = getBrowserHello(ctx, s, uc)
+		helloSpec = getBrowserHello(ctx, uc)
 		helloID = tls.HelloCustom
 	} else {
 		log.Debug("[3349] not using helloBrowser")
@@ -71,11 +71,11 @@ func tlsConfigForProxy(ctx context.Context, name string, s *ChainedServerInfo, u
 // few possible failure points in making this determination, e.g. a failure to obtain the default
 // browser or a failure to capture a hello from the browser. However, this function will always find
 // something reasonable to fall back on.
-func getBrowserHello(ctx context.Context, s *ChainedServerInfo, uc common.UserConfig) *tls.ClientHelloSpec {
+func getBrowserHello(ctx context.Context, uc common.UserConfig) *tls.ClientHelloSpec {
 	// We have a number of ways to approximate the browser's ClientHello format. We begin with the
 	// most desirable, progressively falling back to less desirable options on failure.
 
-	helloSpec, err := activelyObtainBrowserHello(ctx, s.TLSServerNameIndicator)
+	helloSpec, err := activelyObtainBrowserHello(ctx)
 	if err == nil {
 		return helloSpec
 	}
@@ -86,7 +86,7 @@ func getBrowserHello(ctx context.Context, s *ChainedServerInfo, uc common.UserCo
 	return &simulatedHelloSpec
 }
 
-func activelyObtainBrowserHello(ctx context.Context, sni string) (*tls.ClientHelloSpec, error) {
+func activelyObtainBrowserHello(ctx context.Context) (*tls.ClientHelloSpec, error) {
 	helloSpec, err := activeCaptureHelloCache.readAndParse()
 	if err == nil {
 		return helloSpec, nil
