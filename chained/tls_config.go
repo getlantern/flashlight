@@ -42,14 +42,10 @@ func tlsConfigForProxy(ctx context.Context, name string, s *ChainedServerInfo, u
 		}
 	}
 
-	// TODO: delete the log statements below
 	var helloSpec *tls.ClientHelloSpec
 	if helloID == helloBrowser {
-		log.Debug("[3349] obtaining browser hello spec")
 		helloSpec = getBrowserHello(ctx, uc)
 		helloID = tls.HelloCustom
-	} else {
-		log.Debug("[3349] not using helloBrowser")
 	}
 
 	sessionTTL := simbrowser.ChooseForUser(ctx, uc).SessionTicketLifetime()
@@ -87,6 +83,8 @@ func getBrowserHello(ctx context.Context, uc common.UserConfig) *tls.ClientHello
 }
 
 func activelyObtainBrowserHello(ctx context.Context) (*tls.ClientHelloSpec, error) {
+	const tlsRecordHeaderLen = 5
+
 	helloSpec, err := activeCaptureHelloCache.readAndParse()
 	if err == nil {
 		return helloSpec, nil
@@ -97,7 +95,7 @@ func activelyObtainBrowserHello(ctx context.Context) (*tls.ClientHelloSpec, erro
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
 	}
-	helloSpec, err = tls.FingerprintClientHello(sampleHello)
+	helloSpec, err = tls.FingerprintClientHello(sampleHello[tlsRecordHeaderLen:])
 	if err != nil {
 		return nil, fmt.Errorf("failed to fingerprint sample hello: %w", err)
 	}
