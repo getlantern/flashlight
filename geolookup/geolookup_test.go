@@ -13,7 +13,7 @@ func TestFronted(t *testing.T) {
 	})
 	ch := OnRefresh()
 	Refresh()
-	country := GetCountry(15 * time.Second)
+	country := GetCountry(60 * time.Second)
 	ip := GetIP(5 * time.Second)
 	if len(country) != 2 {
 		t.Fatalf("Bad country '%v' for ip %v", country, ip)

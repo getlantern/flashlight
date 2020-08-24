@@ -27,6 +27,7 @@ var (
 	forceConfigCountry = flag.String("force-config-country", "", "if specified, force config fetches to pretend they're coming from this 2 letter country-code")
 	readableconfig     = flag.Bool("readableconfig", false, "if specified, disables obfuscation of the config yaml so that it remains human readable")
 	help               = flag.Bool("help", false, "Get usage help")
+	noUiHttpToken      = flag.Bool("noUiHttpToken", false, "don't require a HTTP token from the UI")
 	standalone         = flag.Bool("standalone", false, "run Lantern in its own browser window (doesn't rely on system browser)")
 	initialize         = flag.Bool("initialize", false, "silently initialize Lantern to a state of having working proxy and exit, typically during installation.")
 	timeout            = flag.Duration("timeout", 0, "force stop Lantern with an exit status of -1 after the timeout.")

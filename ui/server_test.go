@@ -210,10 +210,11 @@ func doTestCheckRequestToken(t *testing.T, s *Server, testOrigins map[*http.Requ
 
 func TestStart(t *testing.T) {
 	serve, err := StartServer("127.0.0.1:0", "", "abcde",
-		false, &PathHandler{Pattern: "/testing", Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
-			resp.WriteHeader(http.StatusOK)
-		})})
+		false)
 	assert.NoError(t, err)
+	serve.Handle("/testing", http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+		resp.WriteHeader(http.StatusOK)
+	}))
 
 	uiAddr := serve.GetUIAddr()
 	assert.NotEqual(t, "", uiAddr)

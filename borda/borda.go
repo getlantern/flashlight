@@ -42,6 +42,8 @@ var (
 		"balancer_dial",
 		"proxy_dial",
 		"youtube_view",
+		"replica_upload",
+		"replica_view",
 		"install_mitm_cert"}
 
 	// LightweightOps are ops for which we record less than the full set of dimensions (e.g. omit error)

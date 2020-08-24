@@ -17,8 +17,8 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.config")
 
-	// URL for fetching the global config.
-	globalURL = "https://globalconfig.flashlightproxy.com/global.yaml.gz"
+	// GlobalURL URL for fetching the global config.
+	GlobalURL = "https://globalconfig.flashlightproxy.com/global.yaml.gz"
 
 	// URL for fetching the global config in a staging environment.
 	globalStagingURL = "https://globalconfig.flashlightproxy.com/global.yaml.gz"
@@ -239,6 +239,6 @@ func getGlobalURL(staging bool) string {
 		log.Debug("Will obtain global.yaml from staging service")
 		return globalStagingURL
 	}
-	log.Debug("Will obtain global.yaml from production service")
-	return globalURL
+	log.Debugf("Will obtain global.yaml from production service at %v", GlobalURL)
+	return GlobalURL
 }
