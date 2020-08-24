@@ -14,7 +14,6 @@ import (
 	"github.com/getlantern/flashlight/ui/params"
 	"github.com/getlantern/flashlight/ui/testutils"
 	"github.com/getlantern/lantern-server/common"
-	"github.com/getlantern/lantern-server/constants"
 	"github.com/getlantern/yinbi-server/utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -60,7 +59,8 @@ func createUser() models.UserParams {
 
 func TestSRP(t *testing.T) {
 	h := New(handlers.Params{
-		common.AuthServerAddr,
+		common.AuthStagingAddr,
+		common.YinbiStagingAddr,
 		&http.Client{},
 	})
 
@@ -85,9 +85,11 @@ func TestSRP(t *testing.T) {
 			},
 			registrationEndpoint,
 			true,
-			http.StatusOK,
+			http.StatusBadRequest,
 			&params.Response{
-				Error: fmt.Sprintf(constants.ErrUsernameTaken, user.Username),
+				Errors: map[string]string{
+					"username": "username_taken",
+				},
 			},
 		},
 		{
@@ -99,9 +101,11 @@ func TestSRP(t *testing.T) {
 			},
 			registrationEndpoint,
 			true,
-			http.StatusOK,
+			http.StatusBadRequest,
 			&params.Response{
-				Error: fmt.Sprintf(constants.ErrEmailTaken, user.Email),
+				Errors: map[string]string{
+					"email": "email_taken",
+				},
 			},
 		},
 		{
@@ -125,7 +129,7 @@ func TestSRP(t *testing.T) {
 			},
 			loginEndpoint,
 			true,
-			http.StatusOK,
+			http.StatusBadRequest,
 			nil,
 		},
 	}
@@ -147,7 +151,6 @@ func TestSRP(t *testing.T) {
 				var resp params.Response
 				testutils.DecodeResp(t, rec, &resp)
 				assert.Equal(t, rec.Code, tc.expectedCode)
-				assert.NotEmpty(t, resp.Error)
 				if tc.expectedResp != nil {
 					assert.Equal(t, resp, *tc.expectedResp)
 				}
