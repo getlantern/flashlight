@@ -13,7 +13,7 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/util"
-	"github.com/getlantern/lantern-server/common"
+	scommon "github.com/getlantern/lantern-server/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -78,7 +78,7 @@ func startTestServer(t *testing.T, authaddr, addr string) *Server {
 func TestStartServer(t *testing.T) {
 	startServer := func(addr string) *Server {
 		s := NewServer(ServerParams{
-			AuthServerAddr: common.AuthServerAddr,
+			AuthServerAddr: scommon.AuthStagingAddr,
 			LocalHTTPToken: "test-http-token",
 		})
 		assert.NoError(t, s.Start(addr), "should start server")
@@ -190,7 +190,7 @@ func doTestCheckRequestToken(t *testing.T, s *Server, testOrigins map[*http.Requ
 	var basic http.HandlerFunc = func(http.ResponseWriter, *http.Request) {
 		hit = true
 	}
-	h := checkRequestForToken(basic, s.localHTTPToken)
+	h := s.checkRequestForToken(basic, s.localHTTPToken)
 
 	req, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
@@ -231,10 +231,13 @@ func doTestCheckRequestToken(t *testing.T, s *Server, testOrigins map[*http.Requ
 }
 
 func TestStart(t *testing.T) {
-	serve, err := StartServer("127.0.0.1:0", "", "", "abcde",
-		false, &PathHandler{Pattern: "/testing", Handler: http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
-			resp.WriteHeader(http.StatusOK)
-		})})
+	params := ServerParams{
+		RequestedAddr:  "127.0.0.1:0",
+		ExtURL:         "",
+		LocalHTTPToken: "",
+		Handlers:       []*PathHandler{},
+	}
+	serve, err := StartServer(params)
 	assert.NoError(t, err)
 	serve.Handle("/testing", http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 		resp.WriteHeader(http.StatusOK)

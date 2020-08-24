@@ -44,7 +44,7 @@ func assertHeaders(t *testing.T, resHeaders http.Header, expHeaders map[string]s
 }
 
 func TestCORS(t *testing.T) {
-	s := startTestServer(t, common.AuthServerAddr, ":0")
+	s := startTestServer(t, common.AuthStagingAddr, ":0")
 	uiAddr := fmt.Sprintf("http://%s", s.GetUIAddr())
 	cases := []CorsSpec{
 		{
@@ -76,7 +76,7 @@ func TestCORS(t *testing.T) {
 	for i := range cases {
 		tc := cases[i]
 		t.Run(tc.name, func(t *testing.T) {
-			url := fmt.Sprintf("%s%s", common.AuthServerAddr, tc.uri)
+			url := fmt.Sprintf("%s%s", common.AuthStagingAddr, tc.uri)
 			req, _ := http.NewRequest(tc.method, url,
 				nil)
 			for name, value := range tc.reqHeaders {
