@@ -154,17 +154,6 @@ func listenAndCaptureTCP(onHello onHello) (*capturingListener, error) {
 	return &capturingListener{l, onHello}, nil
 }
 
-// StartServer is for debugging.
-// TODO: delete
-func StartServer(onHello func(hello []byte, err error), serverErrors chan<- error) (addr string, close func() error, err error) {
-	s, err := newCapturingServer(onHello)
-	if err != nil {
-		return "", nil, err
-	}
-	go func() { serverErrors <- s.listenAndServeTLS() }()
-	return s.l.Addr().String(), s.Close, nil
-}
-
 type capturingServer struct {
 	s *http.Server
 	l capturingListener
