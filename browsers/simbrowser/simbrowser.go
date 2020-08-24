@@ -25,20 +25,32 @@ type Browser interface {
 	ClientHelloSpec() tls.ClientHelloSpec
 }
 
-// ChooseForUser chooses a web browser for the input user. This choice is deterministic for a given
-// user ID, and the distribution of choices across user IDs will reflect the market share of the top
-// 4 browsers.
+// ChooseForUser chooses a web browser for the input user. If it is possible to determine the
+// system's default web browser, a corresponding Browser instance will be returned. If not, this
+// function chooses a browser to mimic. This choice is deterministic for a given user ID, and the
+// distribution of choices across user IDs will reflect the market share of the top 4 browsers.
 //
 // If necessary, we use region-specific market share figures. This is based on the client's
 // geolocation and thus this function may block for a period while geolocation is determined. If the
 // context expires before the client's geolocation can be determined, global market shares will be
 // used.
 func ChooseForUser(ctx context.Context, uc common.UserConfig) Browser {
+	type browserResult struct {
+		b   Browser
+		err error
+	}
+
 	geolookupTimeout := longTimeout
 	if deadline, ok := ctx.Deadline(); ok {
 		// A timeout of 0 tells geolookup to return immediately.
 		geolookupTimeout = max(deadline.Sub(time.Now()), 0)
 	}
+
+	defaultBrowserC := make(chan browserResult, 1)
+	go func() {
+		b, err := mimicDefaultBrowser(ctx)
+		defaultBrowserC <- browserResult{b, err}
+	}()
 
 	countryCodeC := make(chan string, 1)
 	go func() {
@@ -47,13 +59,23 @@ func ChooseForUser(ctx context.Context, uc common.UserConfig) Browser {
 		}
 	}()
 
+	select {
+	case res := <-defaultBrowserC:
+		if res.err == nil {
+			return res.b
+		}
+		log.Debugf("failed to mimic default browser: %v; falling back to weighted choice", res.err)
+	case <-ctx.Done():
+		log.Debugf("context expired determining default browser, falling back to weighted choice")
+	}
+
 	choices := globalBrowserChoices
 	select {
 	case countryCode := <-countryCodeC:
 		if countryChoices, ok := browserChoicesByCountry[countryCode]; ok {
 			choices = countryChoices
 		}
-	case <-ctx.Done():
+	default:
 		log.Debug("context expired retrieving country code, falling back to global browser choices")
 	}
 

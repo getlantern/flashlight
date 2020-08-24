@@ -34,6 +34,7 @@ var (
 	safari     = browserBehavior{"Safari", 24 * time.Hour, tls.ClientHelloSpec{}}
 	firefox    = browserBehavior{"Firefox", 24 * time.Hour, tls.ClientHelloSpec{}}
 	edge       = browserBehavior{"Edge", 10 * time.Hour, tls.ClientHelloSpec{}}
+	explorer   = browserBehavior{"Internet Explorer", 600 * time.Minute, tls.ClientHelloSpec{}}
 	threeSixty = browserBehavior{"360 Secure Browser", 9 * time.Hour, tls.ClientHelloSpec{}}
 	qq         = browserBehavior{"QQ Browser", 30 * time.Minute, tls.ClientHelloSpec{}}
 
