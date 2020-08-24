@@ -1,5 +1,15 @@
 # Changelog
 
+## [6.0.5](https://github.com/getlantern/flashlight/tree/6.0.5) (2020-08-21)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/6.0.4...6.0.5)
+
+**Merged pull requests:**
+
+- not crashing genconfig if gofmt is not installed [\#854](https://github.com/getlantern/flashlight/pull/854) ([joesis](https://github.com/joesis))
+- Improve sentry fingerprinting [\#853](https://github.com/getlantern/flashlight/pull/853) ([max-b](https://github.com/max-b))
+- Now MITM'ing QQ and 360 safe browsers, closes getlantern/lantern-inte… [\#852](https://github.com/getlantern/flashlight/pull/852) ([oxtoacart](https://github.com/oxtoacart))
+
 ## [6.0.4](https://github.com/getlantern/flashlight/tree/6.0.4) (2020-08-13)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/6.0.3...6.0.4)
@@ -58,6 +68,7 @@
 - Merge devel into replica [\#808](https://github.com/getlantern/flashlight/pull/808) ([max-b](https://github.com/max-b))
 - Bundle lantern-desktop-ui replica api path fix [\#800](https://github.com/getlantern/flashlight/pull/800) ([max-b](https://github.com/max-b))
 - Report replica response metrics to borda [\#799](https://github.com/getlantern/flashlight/pull/799) ([max-b](https://github.com/max-b))
+- Enable replica on backend only if enabled in features [\#795](https://github.com/getlantern/flashlight/pull/795) ([myleshorton](https://github.com/myleshorton))
 - a little more stateless approach [\#787](https://github.com/getlantern/flashlight/pull/787) ([myleshorton](https://github.com/myleshorton))
 - Merge from devel branch [\#786](https://github.com/getlantern/flashlight/pull/786) ([joesis](https://github.com/joesis))
 - update enabled features to desktop UI [\#785](https://github.com/getlantern/flashlight/pull/785) ([joesis](https://github.com/joesis))
@@ -72,7 +83,7 @@
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.18...5.9.19)
 
-## [5.9.18](https://github.com/getlantern/flashlight/tree/5.9.18) (2020-07-08)
+## [5.9.18](https://github.com/getlantern/flashlight/tree/5.9.18) (2020-07-09)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.17...5.9.18)
 
@@ -206,7 +217,6 @@
 
 **Merged pull requests:**
 
-- Enable replica on backend only if enabled in features [\#795](https://github.com/getlantern/flashlight/pull/795) ([myleshorton](https://github.com/myleshorton))
 - Added Reconfigure API for iOS [\#794](https://github.com/getlantern/flashlight/pull/794) ([oxtoacart](https://github.com/oxtoacart))
 - Reverted to older systray that doesn't use lxn/walk, closes github.co… [\#788](https://github.com/getlantern/flashlight/pull/788) ([oxtoacart](https://github.com/oxtoacart))
 
@@ -239,6 +249,7 @@
 - Make sure to close file paths we create [\#778](https://github.com/getlantern/flashlight/pull/778) ([myleshorton](https://github.com/myleshorton))
 - Broke stealth mode into more fine grained features and enabled detour on Android [\#777](https://github.com/getlantern/flashlight/pull/777) ([oxtoacart](https://github.com/oxtoacart))
 - Allow proper saving of proxystats.csv on iOS [\#775](https://github.com/getlantern/flashlight/pull/775) ([oxtoacart](https://github.com/oxtoacart))
+- Update systray dep [\#772](https://github.com/getlantern/flashlight/pull/772) ([max-b](https://github.com/max-b))
 
 ## [5.8.6](https://github.com/getlantern/flashlight/tree/5.8.6) (2020-03-18)
 
@@ -255,7 +266,6 @@
 **Merged pull requests:**
 
 - Skip putting nil session state to session cache [\#773](https://github.com/getlantern/flashlight/pull/773) ([joesis](https://github.com/joesis))
-- Update systray dep [\#772](https://github.com/getlantern/flashlight/pull/772) ([max-b](https://github.com/max-b))
 - Unified session key persistence and session caching for TLS proxies [\#770](https://github.com/getlantern/flashlight/pull/770) ([oxtoacart](https://github.com/oxtoacart))
 - Build all tests in CI [\#769](https://github.com/getlantern/flashlight/pull/769) ([anacrolix](https://github.com/anacrolix))
 - Determine if a feature is enabled dynamically [\#768](https://github.com/getlantern/flashlight/pull/768) ([joesis](https://github.com/joesis))
@@ -295,18 +305,9 @@
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.8.0...5.8.1)
 
-**Merged pull requests:**
-
-- disable chrome extension [\#751](https://github.com/getlantern/flashlight/pull/751) ([myleshorton](https://github.com/myleshorton))
-- New go mod tidy for latest go stable release [\#750](https://github.com/getlantern/flashlight/pull/750) ([myleshorton](https://github.com/myleshorton))
-
 ## [5.8.0](https://github.com/getlantern/flashlight/tree/5.8.0) (2020-02-07)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.7.2...5.8.0)
-
-**Merged pull requests:**
-
-- Added exclude tags [\#749](https://github.com/getlantern/flashlight/pull/749) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.7.2](https://github.com/getlantern/flashlight/tree/5.7.2) (2019-12-03)
 
@@ -594,7 +595,11 @@
 
 ## [4.6.14](https://github.com/getlantern/flashlight/tree/4.6.14) (2018-05-06)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.14)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.14)
+
+## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.12...4.6.13)
 
 ## [4.6.12](https://github.com/getlantern/flashlight/tree/4.6.12) (2018-05-01)
 
@@ -602,11 +607,7 @@
 
 ## [4.6.11](https://github.com/getlantern/flashlight/tree/4.6.11) (2018-05-01)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.13...4.6.11)
-
-## [4.6.13](https://github.com/getlantern/flashlight/tree/4.6.13) (2018-05-01)
-
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.13)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.10...4.6.11)
 
 ## [4.6.10](https://github.com/getlantern/flashlight/tree/4.6.10) (2018-04-30)
 
@@ -634,15 +635,15 @@
 
 ## [4.6.3](https://github.com/getlantern/flashlight/tree/4.6.3) (2018-04-18)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.3)
-
-## [4.6.2](https://github.com/getlantern/flashlight/tree/4.6.2) (2018-04-18)
-
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.2)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.1...4.6.3)
 
 ## [4.6.1](https://github.com/getlantern/flashlight/tree/4.6.1) (2018-04-18)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.1)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.1)
+
+## [4.6.2](https://github.com/getlantern/flashlight/tree/4.6.2) (2018-04-18)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.2)
 
 ## [4.6.0](https://github.com/getlantern/flashlight/tree/4.6.0) (2018-04-16)
 
