@@ -447,6 +447,7 @@ func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*
 	tlsCfgCtx, cancelTLSCfg := context.WithTimeout(context.Background(), tlsConfigTimeout)
 	defer cancelTLSCfg()
 
+	// TODO: use the hello spec when helloID == HelloCustom
 	pCfg, helloID, helloSpec := tlsConfigForProxy(tlsCfgCtx, name, s, uc)
 	pCfg.ServerName = sni
 	pCfg.InsecureSkipVerify = InsecureSkipVerifyTLSMasqOrigin
