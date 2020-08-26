@@ -22,13 +22,13 @@ import (
 
 type tlsMasqImpl struct {
 	nopCloser
+	reportDialCore          reportDialCoreFn
 	addr                    string
 	cfg                     tlsmasq.DialerConfig
 	tlsClientHelloSplitting bool
 }
 
-func newTLSMasqImpl(name, addr string, s *ChainedServerInfo, uc common.UserConfig) (proxyImpl, error) {
-
+func newTLSMasqImpl(name, addr string, s *ChainedServerInfo, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	decodeUint16 := func(s string) (uint16, error) {
 		b, err := hex.DecodeString(strings.TrimPrefix(s, "0x"))
 		if err != nil {
@@ -116,11 +116,13 @@ func newTLSMasqImpl(name, addr string, s *ChainedServerInfo, uc common.UserConfi
 		},
 	}
 
-	return &tlsMasqImpl{addr: addr, cfg: cfg, tlsClientHelloSplitting: s.TLSClientHelloSplitting}, nil
+	return &tlsMasqImpl{reportDialCore: reportDialCore, addr: addr, cfg: cfg, tlsClientHelloSplitting: s.TLSClientHelloSplitting}, nil
 }
 
-func (impl *tlsMasqImpl) dialServer(op *ops.Op, ctx context.Context, dialCore dialCoreFn) (net.Conn, error) {
-	tcpConn, err := dialCore(op, ctx)
+func (impl *tlsMasqImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+	tcpConn, err := impl.reportDialCore(op, func() (net.Conn, error) {
+		return netx.DialContext(ctx, "tcp", impl.addr)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -144,8 +146,4 @@ func (impl *tlsMasqImpl) dialServer(op *ops.Op, ctx context.Context, dialCore di
 		conn.Close()
 		return nil, ctx.Err()
 	}
-}
-
-func (impl *tlsMasqImpl) dialCore(op *ops.Op, ctx context.Context) (net.Conn, error) {
-	return netx.DialTimeout("tcp", impl.addr, timeoutFor(ctx))
 }

@@ -14,7 +14,7 @@ type multiplexedImpl struct {
 	multiplexedDial cmux.DialFN
 }
 
-func multiplexed(wrapped proxyImpl, name string, poolSize int, dialCore dialCoreFn) proxyImpl {
+func multiplexed(wrapped proxyImpl, name string, poolSize int) proxyImpl {
 	log.Debugf("Enabling multiplexing for %v", name)
 	if poolSize < 1 {
 		poolSize = defaultMultiplexedPhysicalConns
@@ -23,7 +23,7 @@ func multiplexed(wrapped proxyImpl, name string, poolSize int, dialCore dialCore
 		Dial: func(ctx context.Context, network, addr string) (net.Conn, error) {
 			op := ops.Begin("dial_multiplexed")
 			defer op.End()
-			return wrapped.dialServer(op, ctx, dialCore)
+			return wrapped.dialServer(op, ctx)
 		},
 		KeepAliveInterval: IdleTimeout / 2,
 		KeepAliveTimeout:  IdleTimeout,
@@ -32,6 +32,6 @@ func multiplexed(wrapped proxyImpl, name string, poolSize int, dialCore dialCore
 	return &multiplexedImpl{wrapped, multiplexedDial}
 }
 
-func (impl *multiplexedImpl) dialServer(op *ops.Op, ctx context.Context, dialCore dialCoreFn) (net.Conn, error) {
+func (impl *multiplexedImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return impl.multiplexedDial(ctx, "", "")
 }

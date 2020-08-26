@@ -32,9 +32,10 @@ func TestRateTracking(t *testing.T) {
 	p, err := newProxy("test", "addr:567", "proto", "netw", &ChainedServerInfo{
 		AuthToken: "token",
 		Trusted:   true,
-	}, newTestUserConfig(), false, &testImpl{d: func(ctx context.Context, dialCore dialCoreFn) (net.Conn, error) {
+	}, newTestUserConfig())
+	p.impl = &testImpl{d: func(ctx context.Context) (net.Conn, error) {
 		return sd.Dial("", "")
-	}})
+	}}
 
 	conn, err := p.dial("tcp", "origin:443")
 	if !assert.NoError(t, err) {

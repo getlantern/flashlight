@@ -1,3 +1,5 @@
+// +build !ios
+
 package chained
 
 import (
@@ -13,11 +15,12 @@ import (
 )
 
 type quicImpl struct {
-	addr   string
-	dialer *quicwrapper.Client
+	reportDialCore reportDialCoreFn
+	addr           string
+	dialer         *quicwrapper.Client
 }
 
-func newQUICImpl(name, addr string, s *ChainedServerInfo) (proxyImpl, error) {
+func newQUICImpl(name, addr string, s *ChainedServerInfo, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	tlsConf := &gtls.Config{
 		ServerName:         s.TLSServerNameIndicator,
 		InsecureSkipVerify: true,
@@ -73,13 +76,7 @@ func newQUICImpl(name, addr string, s *ChainedServerInfo) (proxyImpl, error) {
 		dialFn,
 		pinnedCert,
 	)
-	// // when the proxy closes, close the dialer
-	// go func() {
-	// 	<-p.closeCh
-	// 	log.Debug("Closing quic session: Proxy closed.")
-	// 	dialer.Close()
-	// }()
-	return &quicImpl{addr, dialer}, nil
+	return &quicImpl{reportDialCore, addr, dialer}, nil
 }
 
 func (impl *quicImpl) close() {
@@ -87,16 +84,14 @@ func (impl *quicImpl) close() {
 	impl.dialer.Close()
 }
 
-func (impl *quicImpl) dialServer(op *ops.Op, ctx context.Context, dialCore dialCoreFn) (net.Conn, error) {
-	return dialCore(op, ctx)
-}
-
-func (impl *quicImpl) dialCore(op *ops.Op, ctx context.Context) (net.Conn, error) {
-	conn, err := impl.dialer.DialContext(ctx)
-	if err != nil {
-		log.Debugf("Failed to establish multiplexed connection: %s", err)
-	} else {
-		log.Debug("established new multiplexed quic connection.")
-	}
-	return conn, err
+func (impl *quicImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+	return impl.reportDialCore(op, func() (net.Conn, error) {
+		conn, err := impl.dialer.DialContext(ctx)
+		if err != nil {
+			log.Debugf("Failed to establish multiplexed connection: %s", err)
+		} else {
+			log.Debug("established new multiplexed quic connection.")
+		}
+		return conn, err
+	})
 }

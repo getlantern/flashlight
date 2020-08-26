@@ -10,13 +10,12 @@ import (
 
 type httpImpl struct {
 	nopCloser
-	addr string
+	reportDialCore reportDialCoreFn
+	addr           string
 }
 
-func (impl *httpImpl) dialServer(op *ops.Op, ctx context.Context, dialCore dialCoreFn) (net.Conn, error) {
-	return dialCore(op, ctx)
-}
-
-func (impl *httpImpl) dialCore(op *ops.Op, ctx context.Context) (net.Conn, error) {
-	return netx.DialTimeout("tcp", impl.addr, timeoutFor(ctx))
+func (impl *httpImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+	return impl.reportDialCore(op, func() (net.Conn, error) {
+		return netx.DialContext(ctx, "tcp", impl.addr)
+	})
 }

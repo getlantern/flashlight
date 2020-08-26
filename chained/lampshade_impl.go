@@ -18,13 +18,14 @@ import (
 
 type lampshadeImpl struct {
 	nopCloser
-	name   string
-	addr   string
-	dialer lampshade.Dialer
-	setOp  func(op *ops.Op)
+	reportDialCore reportDialCoreFn
+	name           string
+	addr           string
+	dialer         lampshade.Dialer
+	setOp          func(op *ops.Op)
 }
 
-func newLampshadeImpl(name, addr string, s *ChainedServerInfo) (proxyImpl, error) {
+func newLampshadeImpl(name, addr string, s *ChainedServerInfo, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", addr))
@@ -87,20 +88,18 @@ func newLampshadeImpl(name, addr string, s *ChainedServerInfo) (proxyImpl, error
 			Set("ls_streams", int(maxStreamsPerConn)).
 			Set("ls_cipher", cipherCode.String())
 	}
-	return &lampshadeImpl{name: name, addr: addr, dialer: dialer, setOp: setOp}, nil
+	return &lampshadeImpl{reportDialCore: reportDialCore, name: name, addr: addr, dialer: dialer, setOp: setOp}, nil
 }
 
-func (impl *lampshadeImpl) dialServer(op *ops.Op, ctx context.Context, dialCore dialCoreFn) (net.Conn, error) {
+func (impl *lampshadeImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	impl.setOp(op)
 	return impl.dialer.DialContext(ctx, func() (net.Conn, error) {
 		// note - we do not wrap the TCP connection with IdleTiming because
 		// lampshade cleans up after itself and won't leave excess unused
 		// connections hanging around.
 		log.Debugf("Dialing lampshade TCP connection to %v", impl.name)
-		return dialCore(op, ctx)
+		return impl.reportDialCore(op, func() (net.Conn, error) {
+			return netx.DialContext(ctx, "tcp", impl.addr)
+		})
 	})
-}
-
-func (impl *lampshadeImpl) dialCore(op *ops.Op, ctx context.Context) (net.Conn, error) {
-	return netx.DialTimeout("tcp", impl.addr, timeoutFor(ctx))
 }

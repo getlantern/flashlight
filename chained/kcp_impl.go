@@ -1,3 +1,5 @@
+// +build !ios
+
 package chained
 
 import (
@@ -21,11 +23,12 @@ type KCPConfig struct {
 
 type kcpImpl struct {
 	nopCloser
-	addr    string
-	dialKCP func(ctx context.Context, network, addr string) (net.Conn, error)
+	reportDialCore reportDialCoreFn
+	addr           string
+	dialKCP        func(ctx context.Context, network, addr string) (net.Conn, error)
 }
 
-func newKCPImpl(s *ChainedServerInfo) (proxyImpl, error) {
+func newKCPImpl(s *ChainedServerInfo, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	var cfg KCPConfig
 	err := mapstructure.Decode(s.KCPSettings, &cfg)
 	if err != nil {
@@ -38,18 +41,16 @@ func newKCPImpl(s *ChainedServerInfo) (proxyImpl, error) {
 		})
 	}
 	dialKCP := kcpwrapper.Dialer(&cfg.DialerConfig, addIdleTiming)
-	log.Errorf("********dialKCP==%+v", dialKCP)
 	return &kcpImpl{
+		reportDialCore: reportDialCore,
 		// Fix address (comes across as kcp-placeholder)
 		addr:    cfg.RemoteAddr,
 		dialKCP: dialKCP,
 	}, nil
 }
 
-func (impl *kcpImpl) dialServer(op *ops.Op, ctx context.Context, dialCore dialCoreFn) (net.Conn, error) {
-	return dialCore(op, ctx)
-}
-
-func (impl *kcpImpl) dialCore(op *ops.Op, ctx context.Context) (net.Conn, error) {
-	return impl.dialKCP(ctx, "tcp", impl.addr)
+func (impl *kcpImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+	return impl.reportDialCore(op, func() (net.Conn, error) {
+		return impl.dialKCP(ctx, "tcp", impl.addr)
+	})
 }

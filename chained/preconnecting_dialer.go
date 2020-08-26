@@ -48,11 +48,11 @@ func newPreconnectingDialer(name string, maxPreconnect int, expiration time.Dura
 	return pd
 }
 
-func (pd *preconnectingDialer) dialServer(op *ops.Op, ctx context.Context, dialCore dialCoreFn) (conn net.Conn, err error) {
+func (pd *preconnectingDialer) dialServer(op *ops.Op, ctx context.Context) (conn net.Conn, err error) {
 	// Whenever we dial successfully, warm up the pool by preconnecting
 	defer func() {
 		if err == nil {
-			pd.preconnectIfNecessary(op, dialCore)
+			pd.preconnectIfNecessary(op)
 		}
 	}()
 
@@ -69,13 +69,13 @@ func (pd *preconnectingDialer) dialServer(op *ops.Op, ctx context.Context, dialC
 			pd.log.Tracef("preconnection expired before use")
 		default:
 			pd.log.Tracef("dialing on demand")
-			conn, err = pd.wrapped.dialServer(op, ctx, dialCore)
+			conn, err = pd.wrapped.dialServer(op, ctx)
 			return
 		}
 	}
 }
 
-func (pd *preconnectingDialer) preconnectIfNecessary(op *ops.Op, dialCore dialCoreFn) {
+func (pd *preconnectingDialer) preconnectIfNecessary(op *ops.Op) {
 	pd.statsMutex.Lock()
 	defer pd.statsMutex.Unlock()
 	if pd.preconnected+pd.preconnecting >= pd.maxPreconnect {
@@ -91,17 +91,17 @@ func (pd *preconnectingDialer) preconnectIfNecessary(op *ops.Op, dialCore dialCo
 			pd.decrementPreconnecting()
 			return
 		default:
-			pd.preconnect(op, dialCore)
+			pd.preconnect(op)
 		}
 	}()
 }
 
-func (pd *preconnectingDialer) preconnect(op *ops.Op, dialCore dialCoreFn) {
+func (pd *preconnectingDialer) preconnect(op *ops.Op) {
 	ctx, cancel := context.WithTimeout(context.Background(), chainedDialTimeout)
 	defer cancel()
 
 	expiration := time.Now().Add(pd.expiration)
-	conn, err := pd.wrapped.dialServer(op, ctx, dialCore)
+	conn, err := pd.wrapped.dialServer(op, ctx)
 	if err != nil {
 		pd.log.Errorf("error preconnecting: %v", err)
 		pd.decrementPreconnecting()

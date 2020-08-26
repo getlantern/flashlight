@@ -18,6 +18,7 @@ import (
 
 type httpsImpl struct {
 	nopCloser
+	reportDialCore          reportDialCoreFn
 	addr                    string
 	certPEM                 string
 	x509cert                *x509.Certificate
@@ -26,13 +27,14 @@ type httpsImpl struct {
 	tlsClientHelloSplitting bool
 }
 
-func newHTTPSImpl(name, addr string, s *ChainedServerInfo, uc common.UserConfig) (proxyImpl, error) {
+func newHTTPSImpl(name, addr string, s *ChainedServerInfo, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", addr))
 	}
 	tlsConfig, clientHelloID := tlsConfigForProxy(name, s, uc)
 	return &httpsImpl{
+		reportDialCore:          reportDialCore,
 		addr:                    addr,
 		certPEM:                 string(cert.PEMEncoded()),
 		x509cert:                cert.X509(),
@@ -42,10 +44,12 @@ func newHTTPSImpl(name, addr string, s *ChainedServerInfo, uc common.UserConfig)
 	}, nil
 }
 
-func (impl *httpsImpl) dialServer(op *ops.Op, ctx context.Context, dialCore dialCoreFn) (net.Conn, error) {
+func (impl *httpsImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	td := &tlsdialer.Dialer{
 		DoDial: func(network, addr string, timeout time.Duration) (net.Conn, error) {
-			tcpConn, err := dialCore(op, ctx)
+			tcpConn, err := impl.reportDialCore(op, func() (net.Conn, error) {
+				return netx.DialContext(ctx, "tcp", impl.addr)
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -89,6 +93,10 @@ func (impl *httpsImpl) dialServer(op *ops.Op, ctx context.Context, dialCore dial
 	return conn, nil
 }
 
-func (impl *httpsImpl) dialCore(op *ops.Op, ctx context.Context) (net.Conn, error) {
-	return netx.DialTimeout("tcp", impl.addr, timeoutFor(ctx))
+func timeoutFor(ctx context.Context) time.Duration {
+	deadline, ok := ctx.Deadline()
+	if ok {
+		return deadline.Sub(time.Now())
+	}
+	return chainedDialTimeout
 }

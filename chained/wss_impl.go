@@ -20,11 +20,12 @@ import (
 )
 
 type wssImpl struct {
-	addr   string
-	dialer tinywss.Client
+	reportDialCore reportDialCoreFn
+	addr           string
+	dialer         tinywss.Client
 }
 
-func newWSSImpl(addr string, s *ChainedServerInfo) (proxyImpl, error) {
+func newWSSImpl(addr string, s *ChainedServerInfo, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	var rt tinywss.RoundTripHijacker
 	var err error
 
@@ -68,7 +69,7 @@ func newWSSImpl(addr string, s *ChainedServerInfo) (proxyImpl, error) {
 	}
 
 	client := tinywss.NewClient(opts)
-	return &wssImpl{addr, client}, nil
+	return &wssImpl{reportDialCore, addr, client}, nil
 }
 
 func (impl *wssImpl) close() {
@@ -76,12 +77,10 @@ func (impl *wssImpl) close() {
 	impl.dialer.Close()
 }
 
-func (impl *wssImpl) dialServer(op *ops.Op, ctx context.Context, dialCore dialCoreFn) (net.Conn, error) {
-	return dialCore(op, ctx)
-}
-
-func (impl *wssImpl) dialCore(op *ops.Op, ctx context.Context) (net.Conn, error) {
-	return impl.dialer.DialContext(ctx)
+func (impl *wssImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+	return impl.reportDialCore(op, func() (net.Conn, error) {
+		return impl.dialer.DialContext(ctx)
+	})
 }
 
 func wssHTTPRoundTripper(s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {

@@ -63,19 +63,13 @@ var (
 // different types of pluggable transports.
 type proxyImpl interface {
 	// dialServer is to establish connection to the proxy server to the point
-	// of being able to transfer application data. It may call dialCore at
-	// appropriate time (but not always, in case of multiplexed, preconnected,
-	// etc), which will eventually call dialCore in this interface.
-	dialServer(op *ops.Op, ctx context.Context, dialCore dialCoreFn) (net.Conn, error)
-	// dialCore specifies how to establish physical conections, i.e. TCP or UDP,
-	// to the proxy server.
-	dialCore(op *ops.Op, ctx context.Context) (net.Conn, error)
-
+	// of being able to transfer application data.
+	dialServer(op *ops.Op, ctx context.Context) (net.Conn, error)
 	// close releases the resources associated with the implementation, if any.
 	close()
 }
 
-// nopCloser is a mixin to implement the close() method of proxyImpl.
+// nopCloser is a mixin to implement a do-nothing close() method of proxyImpl.
 type nopCloser struct{}
 
 func (c nopCloser) close() {}
@@ -93,43 +87,77 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		addr = s.MultiplexedAddr
 	}
 	transport := s.PluggableTransport
-	network := "tcp"
-	if strings.HasPrefix(transport, "utp") {
-		network = "udp"
-	}
-	var impl proxyImpl
-	var err error
 	switch transport {
 	case "":
 		transport = "http"
-		fallthrough
 	case "http", "https", "utphttp", "utphttps":
 		transport = strings.TrimRight(transport, "s")
 		if s.Cert == "" {
-			log.Errorf("No Cert configured for %s, will dial with plain tcp", addr)
-			impl = &httpImpl{addr: addr}
 		} else if len(s.KCPSettings) > 0 {
-			log.Errorf("KCP configured for %s, not using tls", addr)
-			impl, err = newKCPImpl(s)
+			transport = "kcp"
 		} else {
 			transport = transport + "s"
+		}
+	}
+	network := "tcp"
+	switch transport {
+	case "utphttp", "utphttps", "utpobfs4", "quic", "quic_ietf", "oquic":
+		network = "udp"
+	}
+	allowPreconnecting := false
+	switch transport {
+	case "http", "https", "utphttp", "utphttps", "obfs4", "utpobfs4", "tlsmasq":
+		allowPreconnecting = true
+	}
+	p, err := newProxy(name, addr, transport, network, s, uc)
+
+	impl, err := createImpl(name, addr, transport, s, uc, p.reportDialCore)
+	if err != nil {
+		return nil, err
+	}
+	p.impl = impl
+	if s.MultiplexedAddr != "" || transport == "utphttp" ||
+		transport == "utphttps" || transport == "utpobfs4" ||
+		transport == "tlsmasq" {
+		p.impl = multiplexed(p.impl, name, s.MultiplexedPhysicalConns)
+	} else if strings.HasPrefix(transport, "utp") {
+		p.impl, err = enableUTP(p.impl, addr)
+	} else if allowPreconnecting && s.MaxPreconnect > 0 {
+		log.Debugf("Enabling preconnecting for %v", p.Label())
+		// give ourselves a large margin for making sure we're not using idled preconnected connections
+		expiration := IdleTimeout / 2
+		p.impl = newPreconnectingDialer(name, s.MaxPreconnect, expiration, p.impl)
+	}
+	return p, err
+}
+
+func createImpl(name, addr, transport string, s *ChainedServerInfo, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+	var impl proxyImpl
+	var err error
+	switch transport {
+	case "", "http", "https", "utphttp", "utphttps":
+		if s.Cert == "" {
+			log.Errorf("No Cert configured for %s, will dial with plain tcp", addr)
+			impl = &httpImpl{reportDialCore: reportDialCore, addr: addr}
+		} else if len(s.KCPSettings) > 0 {
+			log.Errorf("KCP configured for %s, not using tls", addr)
+			impl, err = newKCPImpl(s, reportDialCore)
+		} else {
 			log.Tracef("Cert configured for %s, will dial with tls", addr)
-			impl, err = newHTTPSImpl(name, addr, s, uc)
+			impl, err = newHTTPSImpl(name, addr, s, uc, reportDialCore)
 		}
 	case "obfs4", "utpobfs4":
-		impl, err = newOBFS4Impl(name, addr, s)
+		impl, err = newOBFS4Impl(name, addr, s, reportDialCore)
 	case "lampshade":
-		impl, err = newLampshadeImpl(name, addr, s)
+		impl, err = newLampshadeImpl(name, addr, s, reportDialCore)
 	case "quic":
-		network = "udp"
-		impl, err = newQUIC0Impl(name, addr, s)
+		impl, err = newQUIC0Impl(name, addr, s, reportDialCore)
 	case "quic_ietf", "oquic":
-		network = "udp"
-		impl, err = newQUICImpl(name, addr, s)
+		impl, err = newQUICImpl(name, addr, s, reportDialCore)
 	case "wss":
-		impl, err = newWSSImpl(addr, s)
+		impl, err = newWSSImpl(addr, s, reportDialCore)
 	case "tlsmasq":
-		impl, err = newTLSMasqImpl(name, addr, s, uc)
+		impl, err = newTLSMasqImpl(name, addr, s, uc, reportDialCore)
 	default:
 		err = errors.New("Unknown transport: %v", transport).With("addr", addr).With("plugabble-transport", transport)
 	}
@@ -137,12 +165,7 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		return nil, err
 	}
 
-	allowPreconnecting := false
-	switch transport {
-	case "http", "https", "utphttp", "utphttps", "obfs4", "utpobfs4", "tlsmasq":
-		allowPreconnecting = true
-	}
-	return newProxy(name, addr, transport, network, s, uc, allowPreconnecting, impl)
+	return impl, err
 }
 
 // ForceProxy forces everything through the HTTP proxy at forceAddr using
@@ -187,9 +210,7 @@ func (c *consecCounter) Get() int64 {
 	return atomic.LoadInt64(&c.v)
 }
 
-type dialCoreFn func(op *ops.Op, ctx context.Context) (net.Conn, error)
-type dialServerFn func(op *ops.Op, ctx context.Context, dialCore dialCoreFn) (net.Conn, error)
-
+type reportDialCoreFn func(op *ops.Op, dialCore func() (net.Conn, error)) (net.Conn, error)
 type dialOriginFn func(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error)
 
 type proxy struct {
@@ -232,19 +253,18 @@ type proxy struct {
 	mx                  sync.Mutex
 }
 
-func newProxy(name, addr, protocol, network string, s *ChainedServerInfo, uc common.UserConfig, allowPreconnecting bool, impl proxyImpl) (*proxy, error) {
+func newProxy(name, addr, protocol, network string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 	p := &proxy{
 		name:             name,
 		protocol:         protocol,
 		network:          network,
-		multiplexed:      false,
+		multiplexed:      s.MultiplexedAddr != "",
 		addr:             addr,
 		location:         s.Location,
 		authToken:        s.AuthToken,
 		user:             uc,
 		trusted:          s.Trusted,
 		bias:             s.Bias,
-		impl:             impl,
 		dialOrigin:       defaultDialOrigin,
 		emaRTT:           ema.NewDuration(0, rttAlpha),
 		emaRTTDev:        ema.NewDuration(0, rttDevAlpha),
@@ -254,11 +274,8 @@ func newProxy(name, addr, protocol, network string, s *ChainedServerInfo, uc com
 		closeCh:          make(chan bool, 1),
 		consecSuccesses:  1, // be optimistic
 	}
-	if s.MultiplexedAddr != "" {
-		p.multiplexed = true
-	}
 
-	if s.Bias == 0 && s.ENHTTPURL != "" {
+	if p.bias == 0 && s.ENHTTPURL != "" {
 		// By default, do not prefer ENHTTP proxies. Use a very low bias as domain-
 		// fronting is our very-last resort.
 		p.bias = -10
@@ -293,27 +310,6 @@ func newProxy(name, addr, protocol, network string, s *ChainedServerInfo, uc com
 			return dfConn, err
 		}
 	}
-
-	if s.MultiplexedAddr != "" || s.PluggableTransport == "utphttp" ||
-		s.PluggableTransport == "utphttps" || s.PluggableTransport == "utpobfs4" ||
-		s.PluggableTransport == "tlsmasq" {
-		p.impl = multiplexed(p.impl, name, s.MultiplexedPhysicalConns, p.dialCore)
-	} else if strings.HasPrefix(s.PluggableTransport, "utp") {
-		impl, err := enableUTP(p.impl, addr)
-		if err != nil {
-			return nil, err
-		}
-		p.impl = impl
-	} else if allowPreconnecting && s.MaxPreconnect > 0 {
-		log.Debugf("Enabling preconnecting for %v", p.Label())
-		// give ourselves a large margin for making sure we're not using idled preconnected connections
-		expiration := IdleTimeout / 2
-		pd := newPreconnectingDialer(name, s.MaxPreconnect, expiration, p.impl)
-		p.impl = pd
-		p.numPreconnecting = pd.numPreconnecting
-		p.numPreconnected = pd.numPreconnected
-	}
-
 	return p, nil
 }
 
@@ -451,7 +447,7 @@ func (p *proxy) collectBBRInfo(reqTime time.Time, resp *http.Response) {
 	}
 }
 
-func (p *proxy) dialCore(op *ops.Op, ctx context.Context) (net.Conn, error) {
+func (p *proxy) reportDialCore(op *ops.Op, dialCore func() (net.Conn, error)) (net.Conn, error) {
 	estRTT, estBandwidth := p.EstRTT(), p.EstBandwidth()
 	if estRTT > 0 {
 		op.SetMetricAvg("est_rtt_ms", estRTT.Seconds()*1000)
@@ -460,7 +456,7 @@ func (p *proxy) dialCore(op *ops.Op, ctx context.Context) (net.Conn, error) {
 		op.SetMetricAvg("est_mbps", estBandwidth)
 	}
 	elapsed := mtime.Stopwatch()
-	conn, err := p.impl.dialCore(op, ctx)
+	conn, err := dialCore()
 	delta := elapsed()
 	log.Tracef("Core dial time to %v was %v", p.name, delta)
 	op.CoreDialTime(delta, err)
@@ -498,14 +494,6 @@ func reportProxyDial(delta time.Duration, err error) {
 		innerOp.FailIf(err)
 		innerOp.End()
 	}
-}
-
-func timeoutFor(ctx context.Context) time.Duration {
-	deadline, ok := ctx.Deadline()
-	if ok {
-		return deadline.Sub(time.Now())
-	}
-	return chainedDialTimeout
 }
 
 func tlsConfigForProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*tls.Config, tls.ClientHelloID) {

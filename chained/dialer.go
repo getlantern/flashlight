@@ -150,7 +150,7 @@ func (p *proxy) MarkFailure() {
 // persistent connection to the upstream proxy.
 func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
 	conn, err := p.reportedDial(func(op *ops.Op) (net.Conn, error) {
-		return p.impl.dialServer(op, ctx, p.dialCore)
+		return p.impl.dialServer(op, ctx)
 	})
 	if err != nil {
 		log.Debugf("Unable to dial server %v: %s", p.Label(), err)

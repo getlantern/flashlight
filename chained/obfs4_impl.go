@@ -14,12 +14,13 @@ import (
 
 type obfs4Impl struct {
 	nopCloser
-	addr string
-	cf   base.ClientFactory
-	args interface{}
+	reportDialCore reportDialCoreFn
+	addr           string
+	cf             base.ClientFactory
+	args           interface{}
 }
 
-func newOBFS4Impl(name, addr string, s *ChainedServerInfo) (proxyImpl, error) {
+func newOBFS4Impl(name, addr string, s *ChainedServerInfo, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	if s.Cert == "" {
 		return nil, fmt.Errorf("No Cert configured for obfs4 server, can't connect")
 	}
@@ -39,22 +40,21 @@ func newOBFS4Impl(name, addr string, s *ChainedServerInfo) (proxyImpl, error) {
 	}
 
 	return &obfs4Impl{
-		addr: addr,
-		cf:   cf,
-		args: args,
+		reportDialCore: reportDialCore,
+		addr:           addr,
+		cf:             cf,
+		args:           args,
 	}, nil
 }
 
-func (impl *obfs4Impl) dialServer(op *ops.Op, ctx context.Context, dialCore dialCoreFn) (net.Conn, error) {
+func (impl *obfs4Impl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	dial := func(network, address string) (net.Conn, error) {
 		// We know for sure the network and address are the same as what
 		// the inner DailServer uses.
-		return dialCore(op, ctx)
+		return netx.DialContext(ctx, "tcp", impl.addr)
 	}
 	// The proxy it wrapped already has timeout applied.
-	return impl.cf.Dial("tcp", impl.addr, dial, impl.args)
-}
-
-func (impl *obfs4Impl) dialCore(op *ops.Op, ctx context.Context) (net.Conn, error) {
-	return netx.DialTimeout("tcp", impl.addr, timeoutFor(ctx))
+	return impl.reportDialCore(op, func() (net.Conn, error) {
+		return impl.cf.Dial("tcp", impl.addr, dial, impl.args)
+	})
 }

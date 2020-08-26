@@ -1,3 +1,5 @@
+// +build !ios
+
 package chained
 
 import (
@@ -12,11 +14,12 @@ import (
 )
 
 type quic0Impl struct {
-	addr   string
-	dialer *quic0.Client
+	reportDialCore reportDialCoreFn
+	addr           string
+	dialer         *quic0.Client
 }
 
-func newQUIC0Impl(name, addr string, s *ChainedServerInfo) (proxyImpl, error) {
+func newQUIC0Impl(name, addr string, s *ChainedServerInfo, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	tlsConf := &gtls.Config{
 		ServerName:         s.TLSServerNameIndicator,
 		InsecureSkipVerify: true,
@@ -42,7 +45,7 @@ func newQUIC0Impl(name, addr string, s *ChainedServerInfo) (proxyImpl, error) {
 		dialFn,
 		pinnedCert,
 	)
-	return &quic0Impl{addr, dialer}, nil
+	return &quic0Impl{reportDialCore, addr, dialer}, nil
 }
 
 func (impl *quic0Impl) close() {
@@ -50,16 +53,14 @@ func (impl *quic0Impl) close() {
 	impl.dialer.Close()
 }
 
-func (impl *quic0Impl) dialServer(op *ops.Op, ctx context.Context, dialCore dialCoreFn) (net.Conn, error) {
-	return dialCore(op, ctx)
-}
-
-func (impl *quic0Impl) dialCore(op *ops.Op, ctx context.Context) (net.Conn, error) {
-	conn, err := impl.dialer.DialContext(ctx)
-	if err != nil {
-		log.Debugf("Failed to establish multiplexed quic0 connection: %s", err)
-	} else {
-		log.Debug("established new multiplexed quic0 connection.")
-	}
-	return conn, err
+func (impl *quic0Impl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+	return impl.reportDialCore(op, func() (net.Conn, error) {
+		conn, err := impl.dialer.DialContext(ctx)
+		if err != nil {
+			log.Debugf("Failed to establish multiplexed quic0 connection: %s", err)
+		} else {
+			log.Debug("established new multiplexed quic0 connection.")
+		}
+		return conn, err
+	})
 }
