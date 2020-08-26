@@ -48,6 +48,7 @@ func (p *proxy) Stop() {
 	log.Tracef("Stopping dialer %s", p.Label())
 	p.closeOnce.Do(func() {
 		close(p.closeCh)
+		p.impl.close()
 	})
 }
 
@@ -93,21 +94,33 @@ func (p *proxy) NumPreconnected() int {
 }
 
 // DialContext dials using provided context
-func (p *proxy) DialContext(ctx context.Context, network, addr string) (net.Conn, bool, error) {
-	upstream := false
-	conn, err := p.doDial(ctx, network, addr)
+func (p *proxy) DialContext(ctx context.Context, network, addr string) (conn net.Conn, isUpstreamError bool, err error) {
+	op := ops.Begin("dial_for_balancer").
+		ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed).
+		Set("dial_type", network)
+	defer op.End()
+
+	conn, err = p.dialOrigin(op, ctx, p, network, addr)
 	if err != nil {
-		if err == errUpstream {
-			upstream = true
-		} else {
+		op.Set("idled", idletiming.IsIdled(conn))
+		op.FailIf(err)
+		if err != errUpstream {
 			p.MarkFailure()
 		}
-	} else if network == balancer.NetworkConnect {
+		return nil, err == errUpstream, err
+	}
+
+	conn = idletiming.Conn(p.withRateTracking(conn, addr, ctx), IdleTimeout, func() {
+		op := ops.BeginWithBeam("idle_close", ctx)
+		log.Debugf("Proxy connection to %s via %s idle for %v, closed", addr, conn.RemoteAddr(), IdleTimeout)
+		op.End()
+	})
+	if network == balancer.NetworkConnect {
 		// only mark success if we did a CONNECT request because that involves a
 		// full round-trip to/from the proxy
 		p.markSuccess()
 	}
-	return conn, upstream, err
+	return conn, false, nil
 }
 
 func (p *proxy) markSuccess() {
@@ -132,32 +145,19 @@ func (p *proxy) MarkFailure() {
 	return
 }
 
-func (p *proxy) doDial(ctx context.Context, network, addr string) (net.Conn, error) {
-	op := ops.Begin("dial_for_balancer").ChainedProxy(p.Name(), p.Addr(), p.Protocol(), p.Network(), p.multiplexed).Set("dial_type", network)
-	defer op.End()
-
-	conn, err := p.dialOrigin(op, ctx, p, network, addr)
-	if err != nil {
-		op.Set("idled", idletiming.IsIdled(conn))
-		return nil, op.FailIf(err)
-	}
-	conn = idletiming.Conn(p.withRateTracking(conn, addr, ctx), IdleTimeout, func() {
-		op := ops.BeginWithBeam("idle_close", ctx)
-		log.Debugf("Proxy connection to %s via %s idle for %v, closed", addr, conn.RemoteAddr(), IdleTimeout)
-		op.End()
-	})
-	return conn, nil
-}
-
-// dialOrigin implements the method from serverConn. With standard proxies, this
+// defaultDialOrigin implements the method from serverConn. With standard proxies, this
 // involves sending either a CONNECT request or a GET request to initiate a
 // persistent connection to the upstream proxy.
 func defaultDialOrigin(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
-	conn, err := p.dialServer(ctx)
+	conn, err := p.reportedDial(func(op *ops.Op) (net.Conn, error) {
+		return p.impl.dialServer(op, ctx, p.dialCore)
+	})
 	if err != nil {
+		log.Debugf("Unable to dial server %v: %s", p.Label(), err)
 		return nil, err
 	}
 
+	conn, err = overheadWrapper(true)(conn, op.FailIf(err))
 	var timeout time.Duration
 	if deadline, set := ctx.Deadline(); set {
 		conn.SetDeadline(deadline)

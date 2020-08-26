@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog"
 )
 
@@ -20,10 +21,11 @@ func (pc *preconnectedConn) expired() bool {
 }
 
 type preconnectingDialer struct {
+	proxyImpl
+	wrapped       proxyImpl
 	log           golog.Logger
 	maxPreconnect int
 	expiration    time.Duration
-	origDial      dialServerFn
 	pool          chan *preconnectedConn
 	preconnected  int
 	preconnecting int
@@ -31,25 +33,26 @@ type preconnectingDialer struct {
 	closeCh       chan bool
 }
 
-func newPreconnectingDialer(name string, maxPreconnect int, expiration time.Duration, closeCh chan bool, origDial dialServerFn) *preconnectingDialer {
+func newPreconnectingDialer(name string, maxPreconnect int, expiration time.Duration, wrapped proxyImpl) *preconnectingDialer {
 	pd := &preconnectingDialer{
+		proxyImpl:     wrapped,
+		wrapped:       wrapped,
 		log:           golog.LoggerFor(fmt.Sprintf("chained.preconnect.%v", name)),
-		origDial:      origDial,
 		maxPreconnect: maxPreconnect,
 		expiration:    expiration,
 		pool:          make(chan *preconnectedConn, maxPreconnect),
-		closeCh:       closeCh,
+		closeCh:       make(chan bool),
 	}
 	pd.log.Debugf("will preconnect up to %d times", maxPreconnect)
 	go pd.closeWhenNecessary()
 	return pd
 }
 
-func (pd *preconnectingDialer) dial(ctx context.Context, p *proxy) (conn net.Conn, err error) {
+func (pd *preconnectingDialer) dialServer(op *ops.Op, ctx context.Context, dialCore dialCoreFn) (conn net.Conn, err error) {
 	// Whenever we dial successfully, warm up the pool by preconnecting
 	defer func() {
 		if err == nil {
-			pd.preconnectIfNecessary(p)
+			pd.preconnectIfNecessary(op, dialCore)
 		}
 	}()
 
@@ -66,13 +69,13 @@ func (pd *preconnectingDialer) dial(ctx context.Context, p *proxy) (conn net.Con
 			pd.log.Tracef("preconnection expired before use")
 		default:
 			pd.log.Tracef("dialing on demand")
-			conn, err = pd.origDial(ctx, p)
+			conn, err = pd.wrapped.dialServer(op, ctx, dialCore)
 			return
 		}
 	}
 }
 
-func (pd *preconnectingDialer) preconnectIfNecessary(p *proxy) {
+func (pd *preconnectingDialer) preconnectIfNecessary(op *ops.Op, dialCore dialCoreFn) {
 	pd.statsMutex.Lock()
 	defer pd.statsMutex.Unlock()
 	if pd.preconnected+pd.preconnecting >= pd.maxPreconnect {
@@ -88,17 +91,17 @@ func (pd *preconnectingDialer) preconnectIfNecessary(p *proxy) {
 			pd.decrementPreconnecting()
 			return
 		default:
-			pd.preconnect(p)
+			pd.preconnect(op, dialCore)
 		}
 	}()
 }
 
-func (pd *preconnectingDialer) preconnect(p *proxy) {
+func (pd *preconnectingDialer) preconnect(op *ops.Op, dialCore dialCoreFn) {
 	ctx, cancel := context.WithTimeout(context.Background(), chainedDialTimeout)
 	defer cancel()
 
 	expiration := time.Now().Add(pd.expiration)
-	conn, err := pd.origDial(ctx, p)
+	conn, err := pd.wrapped.dialServer(op, ctx, dialCore)
 	if err != nil {
 		pd.log.Errorf("error preconnecting: %v", err)
 		pd.decrementPreconnecting()
@@ -155,4 +158,8 @@ func (pd *preconnectingDialer) closeWhenNecessary() {
 			return
 		}
 	}
+}
+
+func (pd *preconnectingDialer) close() {
+	close(pd.closeCh)
 }
