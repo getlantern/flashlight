@@ -71,6 +71,8 @@ func getBrowserHello(ctx context.Context, uc common.UserConfig) *tls.ClientHello
 	// We have a number of ways to approximate the browser's ClientHello format. We begin with the
 	// most desirable, progressively falling back to less desirable options on failure.
 
+	// TODO: use op package to report successes and failures
+
 	helloSpec, err := activelyObtainBrowserHello(ctx)
 	if err == nil {
 		return helloSpec
