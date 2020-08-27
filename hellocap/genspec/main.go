@@ -127,6 +127,15 @@ var pskModesToNames = map[uint8]string{
 	tls.PskModeDHE:   "PskModeDHE",
 }
 
+type extensionInfo struct {
+	name    string
+	weblink string
+}
+
+var additionalKnownExtensions = map[uint16]extensionInfo{
+	27: {"Certificate Compression", "https://tools.ietf.org/html/draft-ietf-tls-certificate-compression-10"},
+}
+
 func genSpec(timeout time.Duration) (*tls.ClientHelloSpec, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -309,7 +318,13 @@ func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
 			fmt.Fprintln(w, "\t\t},")
 		case *tls.GenericExtension:
 			fmt.Fprintf(w, "\t\t&%s{\n", tlsName("GenericExtension"))
-			fmt.Fprintf(w, "\t\t\tId: %#x,\n", typedExt.Id)
+			if info, ok := additionalKnownExtensions[typedExt.Id]; ok {
+				fmt.Fprintf(w, "\t\t\t// %s:\n", info.name)
+				fmt.Fprintf(w, "\t\t\t// %s\n", info.weblink)
+			} else {
+				fmt.Fprintln(w, "\t\t\t// XXX: unknown extension")
+			}
+			fmt.Fprintf(w, "\t\t\tId: %d,\n", typedExt.Id)
 			fmt.Fprintln(w, "\t\t\tData: []byte{")
 			printBytes(typedExt.Data, w, 4, 10)
 			fmt.Fprintln(w)
