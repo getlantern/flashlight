@@ -97,6 +97,8 @@ var curvesToNames = map[tls.CurveID]string{
 	24: "CurveP384",
 	25: "CurveP521",
 	29: "X25519",
+
+	0x0a0a: "GREASE_PLACEHOLDER",
 }
 
 var sigAlgsToNames = map[tls.SignatureScheme]string{
@@ -270,6 +272,13 @@ func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
 					fmt.Fprintf(w, "\t\t\t\t\tGroup: %d, // unrecognized curve ID\n", ks.Group)
 				} else {
 					fmt.Fprintf(w, "\t\t\t\t\tGroup: %s,\n", tlsName(curveName))
+				}
+				// Don't include keyshare data unless this is GREASE.
+				if ks.Group == tls.GREASE_PLACEHOLDER {
+					fmt.Fprintln(w, "\t\t\t\t\tData: []byte{")
+					printBytes(ks.Data, w, 6, 10)
+					fmt.Fprintln(w)
+					fmt.Fprintln(w, "\t\t\t\t\t}")
 				}
 				fmt.Fprintln(w, "\t\t\t\t},")
 			}
