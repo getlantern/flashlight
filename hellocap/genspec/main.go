@@ -4,11 +4,13 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"text/tabwriter"
 	"time"
@@ -21,8 +23,12 @@ import (
 const tlsRecordHeaderLen = 5
 
 var (
-	timeout   = flag.Duration("timeout", 10*time.Second, "")
-	tlsPrefix = flag.Bool("tlsPrefix", false, "true: tls.SomeType; false: SomeType")
+	timeout      = flag.Duration("timeout", 10*time.Second, "")
+	tlsPrefix    = flag.Bool("tlsPrefix", false, "true: tls.SomeType; false: SomeType")
+	launchServer = flag.Bool(
+		"startServer", false,
+		"true: launch a server to capture the hello; false: capture the hello from the default browser",
+	)
 )
 
 // Disable logs from the standard library (in particular, 'http: TLS handshake error...')
@@ -137,7 +143,7 @@ var additionalKnownExtensions = map[uint16]extensionInfo{
 	28: {"Record Size Limit", "https://tools.ietf.org/html/rfc8449"},
 }
 
-func genSpec(timeout time.Duration) (*tls.ClientHelloSpec, error) {
+func defaultBrowserSpec(timeout time.Duration) (*tls.ClientHelloSpec, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
@@ -383,13 +389,52 @@ func printBytes(b []byte, w io.Writer, indentationLevel, bytesPerLine int) {
 	fmt.Fprint(w, ",")
 }
 
+func fail(a ...interface{}) {
+	fmt.Fprintln(os.Stderr, a...)
+	os.Exit(1)
+}
+
 func main() {
 	flag.Parse()
 
-	spec, err := genSpec(*timeout)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+	if !*launchServer {
+		spec, err := defaultBrowserSpec(*timeout)
+		if err != nil {
+			fail(err)
+		}
+		marshalAsCode(*spec, os.Stdout, *tlsPrefix)
+		return
 	}
-	marshalAsCode(*spec, os.Stdout, *tlsPrefix)
+
+	onHello := func(hello []byte, err error) {
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "error capturing hello:", err)
+			return
+		}
+		spec, err := tls.FingerprintClientHello(hello[tlsRecordHeaderLen:])
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "failed to fingerprint captured hello:", err)
+			fmt.Fprintln(os.Stderr, "here is the hello we failed to fingerprint, base64-encoded:")
+			fmt.Fprintln(os.Stderr, base64.StdEncoding.EncodeToString(hello))
+			return
+		}
+		marshalAsCode(*spec, os.Stdout, *tlsPrefix)
+	}
+
+	s, err := hellocap.NewServer(onHello)
+	if err != nil {
+		fail("failed to start server:", err)
+	}
+	defer s.Close()
+
+	// Grab the port and encourage use of localhost so that SNIs are included.
+	_, port, err := net.SplitHostPort(s.Addr().String())
+	if err != nil {
+		fail("failed to parse server address:", err)
+	}
+
+	fmt.Fprintf(os.Stderr, "listening on https://localhost:%s\n", port)
+	if err := s.Start(); err != nil {
+		fail("server error:", err)
+	}
 }
