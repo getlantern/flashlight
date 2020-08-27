@@ -188,7 +188,6 @@ func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
 
 		switch typedExt := ext.(type) {
 		case *tls.SNIExtension:
-			// TODO: why is there no SNI extension in Chrome hello?
 			printEmptyStruct("SNIExtension")
 		case *tls.NPNExtension:
 			printEmptyStruct("NPNExtension")
@@ -272,11 +271,6 @@ func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
 				} else {
 					fmt.Fprintf(w, "\t\t\t\t\tGroup: %s,\n", tlsName(curveName))
 				}
-				// TODO: may not actually need the key share data (it may be per-connection)
-				fmt.Fprintf(w, "\t\t\t\t\tData: []byte{\n")
-				printBytes(ks.Data, w, 6, 10)
-				fmt.Fprintln(w)
-				fmt.Fprintln(w, "\t\t\t\t\t},")
 				fmt.Fprintln(w, "\t\t\t\t},")
 			}
 			fmt.Fprintln(w, "\t\t\t},")
