@@ -21,6 +21,7 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/mtime"
+	"github.com/getlantern/multipath"
 	"github.com/getlantern/netx"
 
 	"github.com/getlantern/flashlight/balancer"
@@ -72,17 +73,100 @@ func (c nopCloser) close() {}
 
 // CreateDialer creates a Proxy (balancer.Dialer) with supplied server info.
 func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (balancer.Dialer, error) {
+	addr, transport, network, err := extractParams(s)
+	if err != nil {
+		return nil, err
+	}
+	p, err := newProxy(name, addr, transport, network, s, uc)
+	p.impl, err = createImpl(name, addr, transport, s, uc, p.reportDialCore)
+	if err != nil {
+		return nil, err
+	}
+	return p, nil
+}
+
+type mpDialerAdapter struct {
+	impl proxyImpl
+	name string
+}
+
+func (d *mpDialerAdapter) DialContext(ctx context.Context) (net.Conn, error) {
+	var op *ops.Op
+	if value := ctx.Value("op"); value != nil {
+		if existing, ok := value.(*ops.Op); ok {
+			op = existing
+		}
+	}
+	if op == nil {
+		op = ops.Begin("dial_subflow")
+		defer op.End()
+	}
+	return d.impl.dialServer(op, ctx)
+}
+
+func (d *mpDialerAdapter) Label() string {
+	return d.name
+}
+
+type multipathImpl struct {
+	nopCloser
+	dialer multipath.Dialer
+}
+
+func (impl *multipathImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+	return impl.dialer.DialContext(context.WithValue(ctx, "op", op))
+}
+
+func (impl *multipathImpl) dialCore(op *ops.Op, ctx context.Context) (net.Conn, error) {
+	panic("should never be called")
+}
+
+func CreateMPDialer(endpoint string, ss map[string]*ChainedServerInfo, uc common.UserConfig) (balancer.Dialer, error) {
+	if len(ss) < 1 {
+		return nil, errors.New("no dilers")
+	}
+	var p *proxy
+	var err error
+	var dialers []multipath.Dialer
+	for name, s := range ss {
+		if p == nil {
+			// Note: we pass the first server info to newProxy for the attributes shared by all paths
+			p, err = newProxy(endpoint, "multipath", "multipath", "multipath", s, uc)
+			if err != nil {
+				return nil, err
+			}
+		}
+		addr, transport, _, err := extractParams(s)
+		if err != nil {
+			return nil, err
+		}
+		impl, err := createImpl(name, addr, transport, s, uc, p.reportDialCore)
+		if err != nil {
+			log.Errorf("failed to add %v to %v, continuing: %v", s.Addr, name, err)
+			continue
+		}
+		dialers = append(dialers, &mpDialerAdapter{impl, name})
+	}
+	if len(dialers) == 0 {
+		return nil, errors.New("no subflow dialer")
+	}
+	p.impl = &multipathImpl{dialer: multipath.MPDialer(dialers...)}
+	return p, nil
+}
+
+func extractParams(s *ChainedServerInfo) (addr, transport, network string, err error) {
 	if theForceAddr != "" && theForceToken != "" {
 		forceProxy(s)
 	}
 	if s.Addr == "" {
-		return nil, errors.New("Empty addr")
+		err = errors.New("Empty addr")
+		return
 	}
-	addr := s.Addr
+	addr = s.Addr
 	if s.MultiplexedAddr != "" {
 		addr = s.MultiplexedAddr
 	}
-	transport := s.PluggableTransport
+	transport = s.PluggableTransport
 	switch transport {
 	case "":
 		transport = "http"
@@ -95,40 +179,12 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 			transport = transport + "s"
 		}
 	}
-	network := "tcp"
+	network = "tcp"
 	switch transport {
 	case "utphttp", "utphttps", "utpobfs4", "quic", "quic_ietf", "oquic":
 		network = "udp"
 	}
-	p, err := newProxy(name, addr, transport, network, s, uc)
-
-	impl, err := createImpl(name, addr, transport, s, uc, p.reportDialCore)
-	if err != nil {
-		return nil, err
-	}
-	p.impl = impl
-
-	if s.MultiplexedAddr != "" || transport == "utphttp" ||
-		transport == "utphttps" || transport == "utpobfs4" ||
-		transport == "tlsmasq" {
-		p.impl, err = multiplexed(p.impl, name, s)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	allowPreconnecting := false
-	switch transport {
-	case "http", "https", "utphttp", "utphttps", "obfs4", "utpobfs4", "tlsmasq":
-		allowPreconnecting = true
-	}
-	if allowPreconnecting && s.MaxPreconnect > 0 {
-		log.Debugf("Enabling preconnecting for %v", p.Label())
-		// give ourselves a large margin for making sure we're not using idled preconnected connections
-		expiration := IdleTimeout / 2
-		p.impl = newPreconnectingDialer(name, s.MaxPreconnect, expiration, p.impl)
-	}
-	return p, err
+	return
 }
 
 func createImpl(name, addr, transport string, s *ChainedServerInfo, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
@@ -179,6 +235,26 @@ func createImpl(name, addr, transport string, s *ChainedServerInfo, uc common.Us
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	allowPreconnecting := false
+	switch transport {
+	case "http", "https", "utphttp", "utphttps", "obfs4", "utpobfs4", "tlsmasq":
+		allowPreconnecting = true
+	}
+
+	if s.MultiplexedAddr != "" || transport == "utphttp" ||
+		transport == "utphttps" || transport == "utpobfs4" ||
+		transport == "tlsmasq" {
+		impl, err = multiplexed(impl, name, s)
+		if err != nil {
+			return nil, err
+		}
+	} else if allowPreconnecting && s.MaxPreconnect > 0 {
+		log.Debugf("Enabling preconnecting for %v", name)
+		// give ourselves a large margin for making sure we're not using idled preconnected connections
+		expiration := IdleTimeout / 2
+		impl = newPreconnectingDialer(name, s.MaxPreconnect, expiration, impl)
 	}
 
 	return impl, err
