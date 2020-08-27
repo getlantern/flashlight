@@ -12,7 +12,7 @@ import (
 
 func TestCapturingServer(t *testing.T) {
 	callbackInvoked := make(chan struct{})
-	s, err := newCapturingServer(func(hello []byte, err error) {
+	s, err := NewServer(func(hello []byte, err error) {
 		close(callbackInvoked)
 		require.NoError(t, err)
 		// Testing with tlsutil.ValidateClientHello is a bit circular, but we don't have another
@@ -24,7 +24,7 @@ func TestCapturingServer(t *testing.T) {
 	defer s.Close()
 
 	go func() {
-		err := s.listenAndServeTLS()
+		err := s.Start()
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			select {
 			case <-callbackInvoked:
@@ -35,7 +35,7 @@ func TestCapturingServer(t *testing.T) {
 		}
 	}()
 
-	conn, err := tls.Dial("tcp", s.address(), &tls.Config{InsecureSkipVerify: true})
+	conn, err := tls.Dial("tcp", s.Addr().String(), &tls.Config{InsecureSkipVerify: true})
 	require.NoError(t, err)
 	require.NoError(t, conn.Handshake())
 
