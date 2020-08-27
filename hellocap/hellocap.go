@@ -73,7 +73,13 @@ func getBrowserHello(ctx context.Context, browser browser) ([]byte, error) {
 		}
 	}()
 	go func() {
-		if err := browser.get(ctx, fmt.Sprintf("https://%s", s.address())); err != nil {
+		// Grab the port and use localhost to ensure the browser sends an SNI.
+		_, port, err := net.SplitHostPort(s.address())
+		if err != nil {
+			browserErrChan <- fmt.Errorf("failed to parse test server address: %w", err)
+			return
+		}
+		if err := browser.get(ctx, fmt.Sprintf("https://localhost:%s", port)); err != nil {
 			browserErrChan <- err
 		}
 	}()
