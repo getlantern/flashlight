@@ -156,6 +156,10 @@ func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
 		return name
 	}
 
+	if spec.GetSessionID != nil {
+		panic("expected GetSessionID to be nil")
+	}
+
 	fmt.Fprintf(w, "%s{\n", tlsName("ClientHelloSpec"))
 	fmt.Fprintln(w, "\tCipherSuites: []uint16{")
 	for _, suite := range spec.CipherSuites {
@@ -182,10 +186,6 @@ func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
 			fmt.Fprintf(w, "\t\t&%s{},\n", tlsName(name))
 		}
 
-		// TODO: add default case for unknown extensions
-		// TODO: check for all implementations of extension interface
-		// TODO: consider checking assumptions like "BoringPaddingStyle"
-		// TODO: note assumptions like randomized session IDs
 		switch typedExt := ext.(type) {
 		case *tls.SNIExtension:
 			// TODO: why is there no SNI extension in Chrome hello?
@@ -272,6 +272,7 @@ func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
 				} else {
 					fmt.Fprintf(w, "\t\t\t\t\tGroup: %s,\n", tlsName(curveName))
 				}
+				// TODO: may not actually need the key share data (it may be per-connection)
 				fmt.Fprintf(w, "\t\t\t\t\tData: []byte{\n")
 				printBytes(ks.Data, w, 6, 10)
 				fmt.Fprintln(w)
@@ -296,6 +297,10 @@ func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
 		case *tls.UtlsExtendedMasterSecretExtension:
 			printEmptyStruct("UtlsExtendedMasterSecretExtension")
 		case *tls.UtlsPaddingExtension:
+			// Compare the addresses of the function values to see if we got BoringPaddingStyle.
+			if fmt.Sprint(typedExt.GetPaddingLen) != fmt.Sprint(tls.BoringPaddingStyle) {
+				panic("expected BoringPaddingStyle")
+			}
 			fmt.Fprintf(w, "\t\t&%s{\n", tlsName("UtlsPaddingExtension"))
 			fmt.Fprintf(w, "\t\t\tGetPaddingLen: %s,\n", tlsName("BoringPaddingStyle"))
 			fmt.Fprintln(w, "\t\t},")
@@ -309,6 +314,8 @@ func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
 			fmt.Fprintln(w, "\t\t},")
 		case *tls.UtlsGREASEExtension:
 			printEmptyStruct("UtlsGREASEExtension")
+		default:
+			panic(fmt.Sprintf("unknown extension type %T", ext))
 		}
 	}
 	fmt.Fprintln(w, "\t},")
