@@ -134,6 +134,7 @@ type extensionInfo struct {
 
 var additionalKnownExtensions = map[uint16]extensionInfo{
 	27: {"Certificate Compression", "https://tools.ietf.org/html/draft-ietf-tls-certificate-compression-10"},
+	28: {"Record Size Limit", "https://tools.ietf.org/html/rfc8449"},
 }
 
 func genSpec(timeout time.Duration) (*tls.ClientHelloSpec, error) {
