@@ -146,8 +146,7 @@ func (l capturingListener) Accept() (net.Conn, error) {
 }
 
 func listenAndCaptureTCP(onHello onHello) (*capturingListener, error) {
-	// TODO: explain why we use IPv4... or do we need to?
-	l, err := net.Listen("tcp4", "127.0.0.1:")
+	l, err := net.Listen("tcp", "")
 	if err != nil {
 		return nil, err
 	}
