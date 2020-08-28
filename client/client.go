@@ -220,7 +220,7 @@ func NewClient(
 				// "*.googlesyndication.com",
 				// "*.googletagservices.com",
 				// "googleadservices.com",
-				// MITM YouTube domains to track statistics on watched videos (list of obtained by running ../youtubescanner/youtubescanner.go)
+				// MITM YouTube domains to track statistics on watched videos (list of obtained by running ../cmd/youtubescanner/youtubescanner.go)
 				"*.youtube.ae",
 				"*.youtube.co.ae",
 				"*.youtube.com.ar",
