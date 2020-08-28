@@ -237,18 +237,15 @@ func trackYoutubeWatches(req *http.Request) {
 func youtubeVideoFor(req *http.Request) string {
 	if !strings.Contains(strings.ToLower(req.Host), "youtube") && !strings.Contains(strings.ToLower(req.URL.Host), "youtube") {
 		// not a youtube domain
-		log.Debug("not youtube")
 		return ""
 	}
 	if req.URL.Path != "/watch" {
 		// not a watch url
-		log.Debug("not watch url")
 		return ""
 	}
 	candidate := req.URL.Query().Get("v")
 	if len(candidate) < 11 {
 		// invalid/corrupt video id
-		log.Debug("bad length")
 		return ""
 	}
 	return candidate[0:11]
