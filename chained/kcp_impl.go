@@ -51,6 +51,6 @@ func newKCPImpl(s *ChainedServerInfo, reportDialCore reportDialCoreFn) (proxyImp
 
 func (impl *kcpImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	return impl.reportDialCore(op, func() (net.Conn, error) {
-		return impl.dialKCP(ctx, "tcp", impl.addr)
+		return impl.dialKCP(ctx, "unused", impl.addr)
 	})
 }

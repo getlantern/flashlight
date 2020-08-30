@@ -2,8 +2,12 @@
 
 package chained
 
-import "errors"
+import (
+	"context"
+	"errors"
+	"net"
+)
 
-func enableUTP(wrapped proxyImpl, addr string) (proxyImpl, error) {
+func utpDialer() (func(ctx context.Context, addr string) (net.Conn, error), error) {
 	return nil, errors.New("UTP is not supported on Android, iOS or Linux")
 }

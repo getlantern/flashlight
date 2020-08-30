@@ -9,18 +9,17 @@ import (
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/base"
 	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
 	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/netx"
 )
 
 type obfs4Impl struct {
 	nopCloser
-	reportDialCore reportDialCoreFn
-	addr           string
-	cf             base.ClientFactory
-	args           interface{}
+	dialCore coreDialer
+	addr     string
+	cf       base.ClientFactory
+	args     interface{}
 }
 
-func newOBFS4Impl(name, addr string, s *ChainedServerInfo, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newOBFS4Impl(name, addr string, s *ChainedServerInfo, dialCore coreDialer) (proxyImpl, error) {
 	if s.Cert == "" {
 		return nil, fmt.Errorf("No Cert configured for obfs4 server, can't connect")
 	}
@@ -40,10 +39,10 @@ func newOBFS4Impl(name, addr string, s *ChainedServerInfo, reportDialCore report
 	}
 
 	return &obfs4Impl{
-		reportDialCore: reportDialCore,
-		addr:           addr,
-		cf:             cf,
-		args:           args,
+		dialCore: dialCore,
+		addr:     addr,
+		cf:       cf,
+		args:     args,
 	}, nil
 }
 
@@ -51,10 +50,8 @@ func (impl *obfs4Impl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, er
 	dial := func(network, address string) (net.Conn, error) {
 		// We know for sure the network and address are the same as what
 		// the inner DailServer uses.
-		return netx.DialContext(ctx, "tcp", impl.addr)
+		return impl.dialCore(op, ctx, impl.addr)
 	}
 	// The proxy it wrapped already has timeout applied.
-	return impl.reportDialCore(op, func() (net.Conn, error) {
-		return impl.cf.Dial("tcp", impl.addr, dial, impl.args)
-	})
+	return impl.cf.Dial("whatever", "whatever", dial, impl.args)
 }

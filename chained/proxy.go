@@ -24,6 +24,7 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/mtime"
+	"github.com/getlantern/netx"
 	"github.com/getlantern/tlsmasq/ptlshs"
 	"github.com/getlantern/tlsresumption"
 
@@ -120,8 +121,6 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		transport == "utphttps" || transport == "utpobfs4" ||
 		transport == "tlsmasq" {
 		p.impl = multiplexed(p.impl, name, s.MultiplexedPhysicalConns)
-	} else if strings.HasPrefix(transport, "utp") {
-		p.impl, err = enableUTP(p.impl, addr)
 	} else if allowPreconnecting && s.MaxPreconnect > 0 {
 		log.Debugf("Enabling preconnecting for %v", p.Label())
 		// give ourselves a large margin for making sure we're not using idled preconnected connections
@@ -132,22 +131,38 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 }
 
 func createImpl(name, addr, transport string, s *ChainedServerInfo, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+	coreDialer := func(op *ops.Op, ctx context.Context, addr string) (net.Conn, error) {
+		return reportDialCore(op, func() (net.Conn, error) {
+			return netx.DialContext(ctx, "tcp", addr)
+		})
+	}
+	if strings.HasPrefix(transport, "utp") {
+		dialer, err := utpDialer()
+		if err != nil {
+			return nil, err
+		}
+		coreDialer = func(op *ops.Op, ctx context.Context, addr string) (net.Conn, error) {
+			return reportDialCore(op, func() (net.Conn, error) {
+				return dialer(ctx, addr)
+			})
+		}
+	}
 	var impl proxyImpl
 	var err error
 	switch transport {
 	case "", "http", "https", "utphttp", "utphttps":
 		if s.Cert == "" {
 			log.Errorf("No Cert configured for %s, will dial with plain tcp", addr)
-			impl = &httpImpl{reportDialCore: reportDialCore, addr: addr}
+			impl = newHTTPImpl(addr, coreDialer)
 		} else if len(s.KCPSettings) > 0 {
 			log.Errorf("KCP configured for %s, not using tls", addr)
 			impl, err = newKCPImpl(s, reportDialCore)
 		} else {
 			log.Tracef("Cert configured for %s, will dial with tls", addr)
-			impl, err = newHTTPSImpl(name, addr, s, uc, reportDialCore)
+			impl, err = newHTTPSImpl(name, addr, s, uc, coreDialer)
 		}
 	case "obfs4", "utpobfs4":
-		impl, err = newOBFS4Impl(name, addr, s, reportDialCore)
+		impl, err = newOBFS4Impl(name, addr, s, coreDialer)
 	case "lampshade":
 		impl, err = newLampshadeImpl(name, addr, s, reportDialCore)
 	case "quic":
@@ -209,6 +224,8 @@ func (c *consecCounter) Dec() {
 func (c *consecCounter) Get() int64 {
 	return atomic.LoadInt64(&c.v)
 }
+
+type coreDialer func(op *ops.Op, ctx context.Context, addr string) (net.Conn, error)
 
 type reportDialCoreFn func(op *ops.Op, dialCore func() (net.Conn, error)) (net.Conn, error)
 type dialOriginFn func(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error)

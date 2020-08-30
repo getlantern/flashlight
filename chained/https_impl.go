@@ -11,14 +11,13 @@ import (
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/hellosplitter"
 	"github.com/getlantern/keyman"
-	"github.com/getlantern/netx"
 	"github.com/getlantern/tlsdialer"
 	tls "github.com/refraction-networking/utls"
 )
 
 type httpsImpl struct {
 	nopCloser
-	reportDialCore          reportDialCoreFn
+	dialCore                coreDialer
 	addr                    string
 	certPEM                 string
 	x509cert                *x509.Certificate
@@ -27,14 +26,14 @@ type httpsImpl struct {
 	tlsClientHelloSplitting bool
 }
 
-func newHTTPSImpl(name, addr string, s *ChainedServerInfo, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newHTTPSImpl(name, addr string, s *ChainedServerInfo, uc common.UserConfig, dialCore coreDialer) (proxyImpl, error) {
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", addr))
 	}
 	tlsConfig, clientHelloID := tlsConfigForProxy(name, s, uc)
 	return &httpsImpl{
-		reportDialCore:          reportDialCore,
+		dialCore:                dialCore,
 		addr:                    addr,
 		certPEM:                 string(cert.PEMEncoded()),
 		x509cert:                cert.X509(),
@@ -47,9 +46,7 @@ func newHTTPSImpl(name, addr string, s *ChainedServerInfo, uc common.UserConfig,
 func (impl *httpsImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
 	td := &tlsdialer.Dialer{
 		DoDial: func(network, addr string, timeout time.Duration) (net.Conn, error) {
-			tcpConn, err := impl.reportDialCore(op, func() (net.Conn, error) {
-				return netx.DialContext(ctx, "tcp", impl.addr)
-			})
+			tcpConn, err := impl.dialCore(op, ctx, impl.addr)
 			if err != nil {
 				return nil, err
 			}
