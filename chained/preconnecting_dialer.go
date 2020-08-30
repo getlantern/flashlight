@@ -21,7 +21,6 @@ func (pc *preconnectedConn) expired() bool {
 }
 
 type preconnectingDialer struct {
-	proxyImpl
 	wrapped       proxyImpl
 	log           golog.Logger
 	maxPreconnect int
@@ -35,7 +34,6 @@ type preconnectingDialer struct {
 
 func newPreconnectingDialer(name string, maxPreconnect int, expiration time.Duration, wrapped proxyImpl) *preconnectingDialer {
 	pd := &preconnectingDialer{
-		proxyImpl:     wrapped,
 		wrapped:       wrapped,
 		log:           golog.LoggerFor(fmt.Sprintf("chained.preconnect.%v", name)),
 		maxPreconnect: maxPreconnect,
