@@ -124,11 +124,9 @@ replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-2019
 
 replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20191212040217-1650eee50330
 
-replace github.com/getlantern/lantern-server => ../lantern-server
-
-replace github.com/getlantern/yinbi-server => ../yinbi-server
-
-replace github.com/getlantern/auth-server => ../auth-server
+//replace github.com/getlantern/lantern-server => ../lantern-server
+//replace github.com/getlantern/yinbi-server => ../yinbi-server
+//replace github.com/getlantern/auth-server => ../auth-server
 
 replace github.com/getlantern/http-proxy-lantern => ../http-proxy-lantern
 
