@@ -139,9 +139,11 @@ type extensionInfo struct {
 }
 
 var additionalKnownExtensions = map[uint16]extensionInfo{
-	24: {"Token Binding", "https://tools.ietf.org/html/rfc8472"},
-	27: {"Certificate Compression", "https://tools.ietf.org/html/draft-ietf-tls-certificate-compression-10"},
-	28: {"Record Size Limit", "https://tools.ietf.org/html/rfc8449"},
+	24:    {"Token Binding", "https://tools.ietf.org/html/rfc8472"},
+	27:    {"Certificate Compression", "https://tools.ietf.org/html/draft-ietf-tls-certificate-compression-10"},
+	28:    {"Record Size Limit", "https://tools.ietf.org/html/rfc8449"},
+	30031: {"Channel ID (old extension ID)", "https://tools.ietf.org/id/draft-balfanz-tls-channelid-01.html"},
+	30032: {"Channel ID", "https://tools.ietf.org/id/draft-balfanz-tls-channelid-01.html"},
 }
 
 func defaultBrowserSpec(timeout time.Duration) (*tls.ClientHelloSpec, error) {
