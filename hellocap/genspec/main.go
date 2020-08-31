@@ -201,7 +201,7 @@ func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
 		fmt.Fprintln(w)
 	}
 	fmt.Fprintln(w, "\t},")
-	fmt.Fprintln(w, "\tExtensions: []tls.TLSExtension{")
+	fmt.Fprintf(w, "\tExtensions: []%s{\n", tlsName("TLSExtension"))
 	for _, ext := range spec.Extensions {
 		printEmptyStruct := func(name string) {
 			fmt.Fprintf(w, "\t\t&%s{},\n", tlsName(name))
@@ -297,7 +297,7 @@ func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
 					fmt.Fprintln(w, "\t\t\t\t\tData: []byte{")
 					printBytes(ks.Data, w, 6, 10)
 					fmt.Fprintln(w)
-					fmt.Fprintln(w, "\t\t\t\t\t}")
+					fmt.Fprintln(w, "\t\t\t\t\t},")
 				}
 				fmt.Fprintln(w, "\t\t\t\t},")
 			}
