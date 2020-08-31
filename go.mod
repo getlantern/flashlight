@@ -3,7 +3,6 @@ module github.com/getlantern/flashlight
 go 1.12
 
 require (
-	bitbucket.org/ww/goautoneg v0.0.0-20120707110453-75cd24fc2f2c // indirect
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/confluence v1.4.0
@@ -12,18 +11,12 @@ require (
 	github.com/anacrolix/log v0.7.1-0.20200604014615-c244de44fd2d
 	github.com/anacrolix/tagflag v1.1.1-0.20200411025953-9bb5209d56c2
 	github.com/anacrolix/torrent v1.15.1-0.20200619022403-dd51e99b88cc
-	github.com/badoux/checkmail v1.2.0 // indirect
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
-	github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51 // indirect
-	github.com/facebookgo/inject v0.0.0-20161006174721-cc1aa653e50f // indirect
-	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
-	github.com/facebookgo/structtag v0.0.0-20150214074306-217e25fb9691 // indirect
-	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
-	github.com/getlantern/auth-server v0.0.0-20200831031036-a34660162940
+	github.com/getlantern/auth-server v0.0.0-00010101000000-000000000000
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20200427033127-b36d009c6252
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
@@ -49,6 +42,7 @@ require (
 	github.com/getlantern/hellosplitter v0.1.0
 	github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55
 	github.com/getlantern/http-proxy-lantern v0.1.4-0.20200611211409-add33b9f0173
+	github.com/getlantern/http-proxy-lantern/v2 v2.6.18 // indirect
 	github.com/getlantern/httpseverywhere v0.0.0-20190322220559-c364cfbfeb57
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
 	github.com/getlantern/idletiming v0.0.0-20200228204104-10036786eac5
@@ -56,9 +50,9 @@ require (
 	github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42
 	github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644
 	github.com/getlantern/kcpwrapper v0.0.0-20171114192627-a35c895f6de7
-	github.com/getlantern/keyman v0.0.0-20180207174507-f55e7280e93a
+	github.com/getlantern/keyman v0.0.0-20200820153608-cfd0ee278507
 	github.com/getlantern/lampshade v0.0.0-20200303040944-fe53f13203e9
-	github.com/getlantern/lantern-server v0.0.0-20200831030357-6a6390b7fa6c
+	github.com/getlantern/lantern-server v0.0.0-20200831051332-5af458a11c94
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
@@ -73,7 +67,7 @@ require (
 	github.com/getlantern/packetforward v0.0.0-20200421081927-11933f311913
 	github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff
 	github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8
-	github.com/getlantern/proxy v0.0.0-20200302183216-36afa00d0126
+	github.com/getlantern/proxy v0.0.0-20200828020017-9c052c8ea590
 	github.com/getlantern/proxybench v0.0.0-20200626174328-a2580b5e8a59
 	github.com/getlantern/quic0 v0.0.0-20200121154153-8b18c2ba09f9
 	github.com/getlantern/quicwrapper v0.0.0-20200708222210-66fc59a379b5
@@ -93,66 +87,29 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getlantern/yinbi-server v0.0.0-20200831030637-f234bfd94ba4
+	github.com/getlantern/yinbi-server v0.0.0-00010101000000-000000000000
 	github.com/getsentry/sentry-go v0.5.1
-	github.com/go-chi/chi v4.1.2+incompatible // indirect
-	github.com/go-errors/errors v1.1.1 // indirect
-	github.com/go-ini/ini v1.23.0 // indirect
-	github.com/gobuffalo/attrs v0.0.0-20190224210810-a9411de4debd // indirect
-	github.com/gobuffalo/depgen v0.0.0-20190329151759-d478694a28d3 // indirect
-	github.com/gobuffalo/envy v1.9.0 // indirect
-	github.com/gobuffalo/genny v0.4.1 // indirect
-	github.com/gobuffalo/gitgen v0.0.0-20190315122116-cc086187d211 // indirect
-	github.com/gobuffalo/gogen v0.2.0 // indirect
-	github.com/gobuffalo/mapi v1.2.0 // indirect
-	github.com/gobuffalo/packr/v2 v2.8.0 // indirect
-	github.com/gobuffalo/syncx v0.1.0 // indirect
-	github.com/goji/httpauth v0.0.0-20160601135302-2da839ab0f4d // indirect
-	github.com/golang-migrate/migrate v3.5.4+incompatible // indirect
-	github.com/golang/protobuf v1.4.2 // indirect
-	github.com/google/go-github v17.0.0+incompatible // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/golang-lru v0.5.4
-	github.com/jinzhu/gorm v1.9.16 // indirect
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
-	github.com/karrick/godirwalk v1.15.5 // indirect
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9 // indirect
-	github.com/lib/pq v1.8.0 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
-	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/miekg/dns v0.0.0-20180406150955-01d59357d468
 	github.com/mitchellh/go-server-timing v1.0.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/mitchellh/panicwrap v1.0.0
-	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
-	github.com/nullstyle/go-xdr v0.0.0-20180726165426-f4c839f75077 // indirect
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
 	github.com/pivotal-cf-experimental/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/refraction-networking/utls v0.0.0-20200601200209-ada0bb9b38a0
-	github.com/rogpeppe/go-internal v1.6.1 // indirect
-	github.com/rs/cors v0.0.0-20160617231935-a62a804a8a00
-	github.com/shopspring/decimal v1.2.0 // indirect
-	github.com/sirupsen/logrus v1.6.0 // indirect
+	github.com/rs/cors v1.7.0
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
-	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stellar/go v0.0.0-20200827221214-3ad0378dd691
-	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.6.1
-	github.com/tyler-smith/go-bip39 v1.0.2 // indirect
-	github.com/valyala/fasttemplate v1.2.1 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	golang.org/x/net v0.0.0-20200822124328-c89045814202
-	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
-	google.golang.org/appengine v1.6.6 // indirect
-	google.golang.org/protobuf v1.25.0 // indirect
-	gopkg.in/airbrake/gobrake.v2 v2.0.9 // indirect
-	gopkg.in/ezzarghili/recaptcha-go.v4 v4.0.0 // indirect
-	gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2 // indirect
-	gopkg.in/go-playground/validator.v9 v9.29.1 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 )
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20200708221337-157ddc277592
@@ -168,7 +125,13 @@ replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-2019
 
 replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20191212040217-1650eee50330
 
-//replace github.com/getlantern/lantern-server => ../lantern-server
+replace github.com/getlantern/lantern-server => ../lantern-server
+
+replace github.com/getlantern/yinbi-server => ../yinbi-server
+
+replace github.com/getlantern/auth-server => ../auth-server
+
+replace github.com/getlantern/http-proxy-lantern => ../http-proxy-lantern
 
 //replace github.com/getlantern/replica => ./replica/
 
