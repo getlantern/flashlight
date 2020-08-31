@@ -135,8 +135,6 @@ replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-2019
 //replace github.com/getlantern/yinbi-server => ../yinbi-server
 //replace github.com/getlantern/auth-server => ../auth-server
 
-replace github.com/getlantern/http-proxy-lantern => ../http-proxy-lantern
-
 //replace github.com/getlantern/replica => ./replica/
 
 //replace github.com/anacrolix/torrent => ./torrent/
