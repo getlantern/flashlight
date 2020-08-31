@@ -21,7 +21,6 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/mtime"
-	"github.com/getlantern/multipath"
 	"github.com/getlantern/netx"
 
 	"github.com/getlantern/flashlight/balancer"
@@ -82,75 +81,6 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 	if err != nil {
 		return nil, err
 	}
-	return p, nil
-}
-
-type mpDialerAdapter struct {
-	impl proxyImpl
-	name string
-}
-
-func (d *mpDialerAdapter) DialContext(ctx context.Context) (net.Conn, error) {
-	var op *ops.Op
-	if value := ctx.Value("op"); value != nil {
-		if existing, ok := value.(*ops.Op); ok {
-			op = existing
-		}
-	}
-	if op == nil {
-		op = ops.Begin("dial_subflow")
-		defer op.End()
-	}
-	return d.impl.dialServer(op, ctx)
-}
-
-func (d *mpDialerAdapter) Label() string {
-	return d.name
-}
-
-type multipathImpl struct {
-	nopCloser
-	dialer multipath.Dialer
-}
-
-func (impl *multipathImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
-	return impl.dialer.DialContext(context.WithValue(ctx, "op", op))
-}
-
-func (impl *multipathImpl) dialCore(op *ops.Op, ctx context.Context) (net.Conn, error) {
-	panic("should never be called")
-}
-
-func CreateMPDialer(endpoint string, ss map[string]*ChainedServerInfo, uc common.UserConfig) (balancer.Dialer, error) {
-	if len(ss) < 1 {
-		return nil, errors.New("no dilers")
-	}
-	var p *proxy
-	var err error
-	var dialers []multipath.Dialer
-	for name, s := range ss {
-		if p == nil {
-			// Note: we pass the first server info to newProxy for the attributes shared by all paths
-			p, err = newProxy(endpoint, "multipath", "multipath", "multipath", s, uc)
-			if err != nil {
-				return nil, err
-			}
-		}
-		addr, transport, _, err := extractParams(s)
-		if err != nil {
-			return nil, err
-		}
-		impl, err := createImpl(name, addr, transport, s, uc, p.reportDialCore)
-		if err != nil {
-			log.Errorf("failed to add %v to %v, continuing: %v", s.Addr, name, err)
-			continue
-		}
-		dialers = append(dialers, &mpDialerAdapter{impl, name})
-	}
-	if len(dialers) == 0 {
-		return nil, errors.New("no subflow dialer")
-	}
-	p.impl = &multipathImpl{dialer: multipath.MPDialer(dialers...)}
 	return p, nil
 }
 
