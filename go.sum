@@ -434,8 +434,6 @@ github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358/go.mod h1:koTn
 github.com/getlantern/measured v0.0.0-20170302221919-0582bf799783/go.mod h1:5OW2WJitCKExpSw2bploW2fM7PjOd6QnLqyp+IqToqU=
 github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198 h1:J0CxRQc8J4iDyMTeSqXa338ZLDpAFf4jLZHBzw+iCMs=
 github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198/go.mod h1:5OW2WJitCKExpSw2bploW2fM7PjOd6QnLqyp+IqToqU=
-github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231 h1:E8kVrX/zRmoiNf1U4SKgtKBLzLOEQRT0V/U/T+fJwxM=
-github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231/go.mod h1:bcE9B93SzvnTI0AJM+138sfvio7WK9e0NTAI8ba0l5Q=
 github.com/getlantern/meta-scrubber v0.0.1 h1:WknyffbSpb5kEwDQ6lrN9+KohCGnqhs5zQfGk4sFRGo=
 github.com/getlantern/meta-scrubber v0.0.1/go.mod h1:nYmOMQXbex3emWMNbt/iDKTXE1q53x1dDxCspxjwxyY=
 github.com/getlantern/mitm v0.0.0-20180205214248-4ce456bae650/go.mod h1:jmIVbVxSVLdeY5hlD+6chiOR/9CdzPjVgIIQphviCl0=
