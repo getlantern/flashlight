@@ -105,11 +105,6 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 	case "utphttp", "utphttps", "utpobfs4", "quic", "quic_ietf", "oquic":
 		network = "udp"
 	}
-	allowPreconnecting := false
-	switch transport {
-	case "http", "https", "utphttp", "utphttps", "obfs4", "utpobfs4", "tlsmasq":
-		allowPreconnecting = true
-	}
 	p, err := newProxy(name, addr, transport, network, s, uc)
 
 	impl, err := createImpl(name, addr, transport, s, uc, p.reportDialCore)
@@ -117,11 +112,19 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 		return nil, err
 	}
 	p.impl = impl
+
 	if s.MultiplexedAddr != "" || transport == "utphttp" ||
 		transport == "utphttps" || transport == "utpobfs4" ||
 		transport == "tlsmasq" {
 		p.impl = multiplexed(p.impl, name, s.MultiplexedPhysicalConns)
-	} else if allowPreconnecting && s.MaxPreconnect > 0 {
+	}
+
+	allowPreconnecting := false
+	switch transport {
+	case "http", "https", "utphttp", "utphttps", "obfs4", "utpobfs4", "tlsmasq":
+		allowPreconnecting = true
+	}
+	if allowPreconnecting && s.MaxPreconnect > 0 {
 		log.Debugf("Enabling preconnecting for %v", p.Label())
 		// give ourselves a large margin for making sure we're not using idled preconnected connections
 		expiration := IdleTimeout / 2
