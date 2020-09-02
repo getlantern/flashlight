@@ -142,6 +142,11 @@ var pskModesToNames = map[uint8]string{
 	tls.PskModeDHE:   "PskModeDHE",
 }
 
+var certCompressionAlgosToNames = map[tls.CertCompressionAlgo]string{
+	0x0001: "CertCompressionZlib",
+	0x0002: "CertCompressionBrotli",
+}
+
 type extensionInfo struct {
 	name    string
 	weblink string
@@ -334,6 +339,40 @@ func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
 			}
 			fmt.Fprintf(w, "\t\t&%s{\n", tlsName("UtlsPaddingExtension"))
 			fmt.Fprintf(w, "\t\t\tGetPaddingLen: %s,\n", tlsName("BoringPaddingStyle"))
+			fmt.Fprintln(w, "\t\t},")
+		case *tls.FakeTokenBindingExtension:
+			// TODO: check with Explorer
+			fmt.Fprintf(w, "\t\t&%s{\n", tlsName("FakeTokenBindingExtension"))
+			fmt.Fprintf(w, "\t\t\tMajorVersion: %d,\n", typedExt.MajorVersion)
+			fmt.Fprintf(w, "\t\t\tMinorVersion: %d,\n", typedExt.MinorVersion)
+			fmt.Fprintln(w, "\t\t\t[]uint8{")
+			printBytes(typedExt.KeyParameters, w, 4, 10)
+			fmt.Fprintln(w, "\n\t\t\t},")
+			fmt.Fprintln(w, "\t\t},")
+		case *tls.FakeCertCompressionAlgsExtension:
+			// TODO: check with QQ
+			fmt.Fprintf(w, "\t\t&%s{\n", tlsName("FakeCertCompressionAlgsExtension"))
+			fmt.Fprintf(w, "\t\t\tMethods: []%s{\n", tlsName("CertCompressionAlgo"))
+			for _, method := range typedExt.Methods {
+				name, ok := certCompressionAlgosToNames[method]
+				if !ok {
+					fmt.Fprintf(w, "\t\t\t\t%d, // unrecognized method\n", method)
+				} else {
+					fmt.Fprintf(w, "\t\t\t\t%s,\n", tlsName(name))
+				}
+			}
+			fmt.Fprintln(w, "\t\t\t},")
+			fmt.Fprintln(w, "\t\t},")
+		case *tls.FakeRecordSizeLimitExtension:
+			// TODO: test with Firefox
+			fmt.Fprintf(w, "\t\t&%s{\n", tlsName("FakeRecordSizeLimitExtension"))
+			fmt.Fprintf(w, "\t\t\tLimit: %d,\n", typedExt.Limit)
+			fmt.Fprintln(w, "\n\t\t\t},")
+			fmt.Fprintln(w, "\t\t},")
+		case *tls.FakeChannelIDExtension:
+			fmt.Fprintf(w, "\t\t&%s{\n", tlsName("FakeChannelIDExtension"))
+			fmt.Fprintf(w, "\t\t\tOldExtensionID: %t,\n", typedExt.OldExtensionID)
+			fmt.Fprintln(w, "\n\t\t\t},")
 			fmt.Fprintln(w, "\t\t},")
 		case *tls.GenericExtension:
 			fmt.Fprintf(w, "\t\t&%s{\n", tlsName("GenericExtension"))

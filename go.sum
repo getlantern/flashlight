@@ -470,6 +470,12 @@ github.com/getlantern/utls v0.0.0-20200814165010-a20f07cc4a90 h1:mHrGni50b0KZEw0
 github.com/getlantern/utls v0.0.0-20200814165010-a20f07cc4a90/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
 github.com/getlantern/utls v0.0.0-20200831144844-5826064da0ce h1:A1+baJfxq1yIvYM6dZgHievZUpDFgRIFTPHlMDachME=
 github.com/getlantern/utls v0.0.0-20200831144844-5826064da0ce/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
+github.com/getlantern/utls v0.0.0-20200831192127-a49939b574a1 h1:8g1aBAoO17MnU513npymMlPz3dlZnYcDk0hW5k8ULCA=
+github.com/getlantern/utls v0.0.0-20200831192127-a49939b574a1/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
+github.com/getlantern/utls v0.0.0-20200831193946-4b3bc0abaefd h1:wWlMLSHBhM/9PJd2ryWblPzPmfBlDtxK0Wl1LfgXJpw=
+github.com/getlantern/utls v0.0.0-20200831193946-4b3bc0abaefd/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
+github.com/getlantern/utls v0.0.0-20200901191524-cbb7347a9f0c h1:w222wiq/0ic4sGCoZX565Y+LEsstqUzAJeIU73x89fU=
+github.com/getlantern/utls v0.0.0-20200901191524-cbb7347a9f0c/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
 github.com/getlantern/uuid v1.1.2-0.20190507182000-5c9436b8c718/go.mod h1:uX10hOzZUUDR+oYNSIks+RcozOEiwTNC/K2rw9SUi1k=
 github.com/getlantern/uuid v1.2.0 h1:pGrGaCV7XEaG6lvjWkwf8Y92BjB/9yFmkKsNFpRQ7rc=
 github.com/getlantern/uuid v1.2.0/go.mod h1:uX10hOzZUUDR+oYNSIks+RcozOEiwTNC/K2rw9SUi1k=
