@@ -83,6 +83,10 @@ var cipherSuitesToNames = map[uint16]string{
 	0x0033: "FAKE_TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
 	0x0039: "FAKE_TLS_DHE_RSA_WITH_AES_256_CBC_SHA",
 	0x0004: "FAKE_TLS_RSA_WITH_RC4_128_MD5",
+	0x009f: "FAKE_TLS_DHE_RSA_WITH_AES_256_GCM_SHA384",
+	0x0032: "FAKE_TLS_DHE_DSS_WITH_AES_128_CBC_SHA",
+	0x006b: "FAKE_TLS_DHE_RSA_WITH_AES_256_CBC_SHA256",
+	0x0067: "FAKE_TLS_DHE_RSA_WITH_AES_128_CBC_SHA256",
 	0x00ff: "FAKE_TLS_EMPTY_RENEGOTIATION_INFO_SCSV",
 
 	0x0a0a: "GREASE_PLACEHOLDER",
@@ -126,6 +130,11 @@ var sigAlgsToNames = map[tls.SignatureScheme]string{
 	// Legacy signature and hash algorithms for TLS 1.2.
 	0x0201: "PKCS1WithSHA1",
 	0x0203: "ECDSAWithSHA1",
+
+	0x0202: "FakeSHA1WithDSA",
+	0x0402: "FakeSHA256WithDSA",
+	0x0301: "FakePKCS1WithSHA224",
+	0x0303: "FakeECDSAWithSHA224",
 }
 
 var pskModesToNames = map[uint8]string{
