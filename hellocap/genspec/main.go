@@ -152,15 +152,6 @@ type extensionInfo struct {
 	weblink string
 }
 
-// TODO: delete
-var additionalKnownExtensions = map[uint16]extensionInfo{
-	24:    {"Token Binding", "https://tools.ietf.org/html/rfc8472"},
-	27:    {"Certificate Compression", "https://tools.ietf.org/html/draft-ietf-tls-certificate-compression-10"},
-	28:    {"Record Size Limit", "https://tools.ietf.org/html/rfc8449"},
-	30031: {"Channel ID (old extension ID)", "https://tools.ietf.org/id/draft-balfanz-tls-channelid-01.html"},
-	30032: {"Channel ID", "https://tools.ietf.org/id/draft-balfanz-tls-channelid-01.html"},
-}
-
 func defaultBrowserSpec(timeout time.Duration) (*tls.ClientHelloSpec, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -181,6 +172,15 @@ func defaultBrowserSpec(timeout time.Duration) (*tls.ClientHelloSpec, error) {
 		return nil, fmt.Errorf("failed to fingerprint captured hello: %w", err)
 	}
 	return spec, nil
+}
+
+func hasSNI(spec tls.ClientHelloSpec) bool {
+	for _, ext := range spec.Extensions {
+		if _, ok := ext.(*tls.SNIExtension); ok {
+			return true
+		}
+	}
+	return false
 }
 
 func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
@@ -367,7 +367,6 @@ func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
 			fmt.Fprintf(w, "\t\t\tLimit: %d,\n", typedExt.Limit)
 			fmt.Fprintln(w, "\t\t},")
 		case *tls.FakeChannelIDExtension:
-			// TODO: check with 360
 			fmt.Fprintf(w, "\t\t&%s{", tlsName("FakeChannelIDExtension"))
 			if typedExt.OldExtensionID {
 				fmt.Fprintf(w, "\n\t\t\tOldExtensionID: %t,\n", typedExt.OldExtensionID)
@@ -377,12 +376,7 @@ func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
 			}
 		case *tls.GenericExtension:
 			fmt.Fprintf(w, "\t\t&%s{\n", tlsName("GenericExtension"))
-			if info, ok := additionalKnownExtensions[typedExt.Id]; ok {
-				fmt.Fprintf(w, "\t\t\t// %s:\n", info.name)
-				fmt.Fprintf(w, "\t\t\t// %s\n", info.weblink)
-			} else {
-				fmt.Fprintln(w, "\t\t\t// XXX: unknown extension")
-			}
+			fmt.Fprintln(w, "\t\t\t// XXX: unknown extension")
 			fmt.Fprintf(w, "\t\t\tId: %d,\n", typedExt.Id)
 			fmt.Fprintln(w, "\t\t\tData: []byte{")
 			printBytes(typedExt.Data, w, 4, 10)
@@ -454,6 +448,9 @@ func main() {
 		if err != nil {
 			fail(err)
 		}
+		if !hasSNI(*spec) {
+			fmt.Fprintln(os.Stderr, "Warning: no SNI in hello")
+		}
 		marshalAsCode(*spec, os.Stdout, *tlsPrefix)
 		return
 	}
@@ -469,6 +466,9 @@ func main() {
 			fmt.Fprintln(os.Stderr, "here is the hello we failed to fingerprint, base64-encoded:")
 			fmt.Fprintln(os.Stderr, base64.StdEncoding.EncodeToString(hello))
 			return
+		}
+		if !hasSNI(*spec) {
+			fmt.Fprintln(os.Stderr, "Warning: no SNI in hello")
 		}
 		marshalAsCode(*spec, os.Stdout, *tlsPrefix)
 	}
