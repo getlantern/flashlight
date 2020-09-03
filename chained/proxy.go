@@ -546,7 +546,8 @@ func tlsConfigForProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 		KeyLogWriter:       getTLSKeyLogWriter(),
 	}
 
-	return cfg, helloID
+	// return cfg, helloID
+	return cfg, tls.HelloFirefox_65
 }
 
 func orderedCipherSuitesFromConfig(s *ChainedServerInfo) []uint16 {
