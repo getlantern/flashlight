@@ -22,7 +22,7 @@ var log = golog.LoggerFor("simbrowser")
 type Browser interface {
 	Name() string
 	SessionTicketLifetime() time.Duration
-	ClientHelloSpec() tls.ClientHelloSpec
+	ClientHelloID() tls.ClientHelloID
 }
 
 // ChooseForUser chooses a web browser for the input user. If it is possible to determine the
