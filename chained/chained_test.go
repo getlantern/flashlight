@@ -27,19 +27,29 @@ func newTestUserConfig() *common.UserConfigData {
 	return common.NewUserConfigData("device", 1234, "protoken", nil, "en-US")
 }
 
-func NewDialer(dialServer func(ctx context.Context, p *proxy) (net.Conn, error)) (func(network, addr string) (net.Conn, error), error) {
-	p, err := newProxy("test", "proto", "netw", &ChainedServerInfo{
-		Addr:      "addr:567",
+type testImpl struct {
+	nopCloser
+	d func(ctx context.Context) (net.Conn, error)
+}
+
+func (impl *testImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
+	return impl.d(ctx)
+}
+
+func newDialer(dialServer func(ctx context.Context) (net.Conn, error)) (func(network, addr string) (net.Conn, error), error) {
+	p, err := newProxy("test", "addr:567", "proto", "netw", &ChainedServerInfo{
 		AuthToken: "token",
-	}, newTestUserConfig(), true, false, dialServer, defaultDialOrigin)
+		Trusted:   true,
+	}, newTestUserConfig())
 	if err != nil {
 		return nil, err
 	}
+	p.impl = &testImpl{d: dialServer}
 	return p.dial, nil
 }
 
 func TestBadDialServer(t *testing.T) {
-	dialer, err := NewDialer(func(ctx context.Context, p *proxy) (net.Conn, error) {
+	dialer, err := newDialer(func(ctx context.Context) (net.Conn, error) {
 		return nil, fmt.Errorf("I refuse to dial")
 	})
 	if !assert.NoError(t, err) {
@@ -50,7 +60,7 @@ func TestBadDialServer(t *testing.T) {
 }
 
 func TestBadProtocol(t *testing.T) {
-	dialer, err := NewDialer(func(ctx context.Context, p *proxy) (net.Conn, error) {
+	dialer, err := newDialer(func(ctx context.Context) (net.Conn, error) {
 		return net.Dial("tcp", "www.google.com")
 	})
 	if !assert.NoError(t, err) {
@@ -75,7 +85,7 @@ func TestBadServer(t *testing.T) {
 		}
 	}()
 
-	dialer, err := NewDialer(func(ctx context.Context, p *proxy) (net.Conn, error) {
+	dialer, err := newDialer(func(ctx context.Context) (net.Conn, error) {
 		return net.Dial("tcp", l.Addr().String())
 	})
 	if !assert.NoError(t, err) {
@@ -103,7 +113,7 @@ func TestBadConnectStatus(t *testing.T) {
 		}
 	}()
 
-	dialer, err := NewDialer(func(ctx context.Context, p *proxy) (net.Conn, error) {
+	dialer, err := newDialer(func(ctx context.Context) (net.Conn, error) {
 		return net.DialTimeout("tcp", l.Addr().String(), 2*time.Second)
 	})
 	if !assert.NoError(t, err) {
@@ -123,15 +133,16 @@ func TestBadMethodToServer(t *testing.T) {
 }
 
 func TestBadAddressToServer(t *testing.T) {
-	p, err := newProxy("test", "proto", "netw", &ChainedServerInfo{
-		Addr:      "addr:567",
+	p, err := newProxy("test", "addr:567", "proto", "netw", &ChainedServerInfo{
 		AuthToken: "token",
-	}, newTestUserConfig(), true, false, func(ctx context.Context, p *proxy) (net.Conn, error) {
-		return nil, fmt.Errorf("fail intentionally")
-	}, defaultDialOrigin)
+		Trusted:   true,
+	}, newTestUserConfig())
 	if !assert.NoError(t, err) {
 		return
 	}
+	p.impl = &testImpl{d: func(ctx context.Context) (net.Conn, error) {
+		return nil, fmt.Errorf("fail intentionally")
+	}}
 	l := startServer(t)
 	req, err := p.buildCONNECTRequest("somebadaddressasdfdasfds.asdfasdf.dfads:532400", 5*time.Second+2*time.Millisecond+1*time.Nanosecond)
 	if err != nil {
@@ -157,7 +168,7 @@ func TestBadAddressToServer(t *testing.T) {
 func TestSuccess(t *testing.T) {
 	l := startServer(t)
 
-	dialer, err := NewDialer(func(ctx context.Context, p *proxy) (net.Conn, error) {
+	dialer, err := newDialer(func(ctx context.Context) (net.Conn, error) {
 		logger.Debugf("Dialing with timeout to: %v", l.Addr())
 		conn, err := net.DialTimeout(l.Addr().Network(), l.Addr().String(), 2*time.Second)
 		logger.Debugf("Got conn %v and err %v", conn, err)

@@ -124,3 +124,15 @@ func TestRejectHTTPProxyPort(t *testing.T) {
 	req, _ = http.NewRequest("GET", "wss://localhost", nil)
 	assert.True(t, client.isHTTPProxyPort(req))
 }
+
+func TestVideoForYoutubeURL(t *testing.T) {
+	getVideo := func(url string) string {
+		req, _ := http.NewRequest(http.MethodGet, url, nil)
+		return youtubeVideoFor(req)
+	}
+	assert.Equal(t, "ixmjlbXvi30", getVideo("https://www.youtube.com/watch?v=ixmjlbXvi30"), "simple correct url")
+	assert.Equal(t, "ixmjlbXvi30", getVideo("https://www.youtube.com/watch?v=ixmjlbXvi30%23list=PLaYqF7AnyNPebzL8P8M_9a3F7O61JPEcN"), "url with spurious anchor")
+	assert.Empty(t, getVideo("https://www.youtube.com/watch?v=ixmjlbXvi3"), "video too short")
+	assert.Empty(t, getVideo("https://www.youtube.com/watch?vy=ixmjlbXvi30"), "wrong parameter name")
+	assert.Empty(t, getVideo("https://www.ytube.com/watch?v=ixmjlbXvi30"), "wrong domain")
+}

@@ -64,6 +64,8 @@ github.com/anacrolix/dht/v2 v2.5.0/go.mod h1:7RLvyOjm+ZPA7vgFRP+1eRjFzrh27p/nF0V
 github.com/anacrolix/dht/v2 v2.5.1-0.20200317023935-129f05e9b752/go.mod h1:7RLvyOjm+ZPA7vgFRP+1eRjFzrh27p/nF0VCk5LcjoU=
 github.com/anacrolix/dht/v2 v2.6.1-0.20200416071723-3850fa1b802a h1:58guripRs92DmhNDoShrCHPjKJ8yhjwTtbaAyCpS+RI=
 github.com/anacrolix/dht/v2 v2.6.1-0.20200416071723-3850fa1b802a/go.mod h1:7jf6kAZRU7FFwyeLP3f4LVH8WglAHdMte1mGcq8HQAg=
+github.com/anacrolix/dht/v2 v2.6.1 h1:ItcXTeOMNDh3FXGg+O8CPGgteOkWZ7kE/alG1OJ3TXI=
+github.com/anacrolix/dht/v2 v2.6.1/go.mod h1:7jf6kAZRU7FFwyeLP3f4LVH8WglAHdMte1mGcq8HQAg=
 github.com/anacrolix/envpprof v0.0.0-20180404065416-323002cec2fa/go.mod h1:KgHhUaQMc8cC0+cEflSgCFNFbKwi5h54gqtVn8yhP7c=
 github.com/anacrolix/envpprof v1.0.0/go.mod h1:KgHhUaQMc8cC0+cEflSgCFNFbKwi5h54gqtVn8yhP7c=
 github.com/anacrolix/envpprof v1.0.1/go.mod h1:My7T5oSqVfEn4MD4Meczkw/f5lSIndGAKu/0SM/rkf4=
@@ -422,8 +424,8 @@ github.com/getlantern/quic0 v0.0.0-20200121154153-8b18c2ba09f9 h1:2mUoAxwY496WRX
 github.com/getlantern/quic0 v0.0.0-20200121154153-8b18c2ba09f9/go.mod h1:UygfmMF7wR6KkIbQtL1ceCfi5UC/9JsnCyCS8WzU3nY=
 github.com/getlantern/quicwrapper v0.0.0-20200129232925-8ef70253fcae h1:Is+Bvq12YUkVfIYDRr5OAtv1NL3Is57djELuMXI7HjQ=
 github.com/getlantern/quicwrapper v0.0.0-20200129232925-8ef70253fcae/go.mod h1:DDN8Ouc3Mq+buV5UsQGznJ7Lu4gvUljxm6EkpXdMA6o=
-github.com/getlantern/quicwrapper v0.0.0-20200708222210-66fc59a379b5 h1:hQBId4Wsefs6Fe5FDKDiCdZfk9sqgloe792izRdSGEE=
-github.com/getlantern/quicwrapper v0.0.0-20200708222210-66fc59a379b5/go.mod h1:lutBCM7WQivIXXZ5NEaPy5VMxjtBwecLRhbpm2eMV40=
+github.com/getlantern/quicwrapper v0.0.0-20200902185207-c4742ad7448c h1:2HVTmLCEl8fRxheEfKz2ZgmZN5JHpXQ+LyIywbI909g=
+github.com/getlantern/quicwrapper v0.0.0-20200902185207-c4742ad7448c/go.mod h1:lutBCM7WQivIXXZ5NEaPy5VMxjtBwecLRhbpm2eMV40=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c h1:IkjF+RwRs8B/RsuD638eUFO2K/227OO2B1FLXGp17Ro=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c/go.mod h1:kExwbqTx1krUnT9ohmXG3jayDTEBfxUKeoRzU6XucLw=
 github.com/getlantern/replica v0.3.1-0.20200623004346-367f62a981a7 h1:30aLGrAllhD4xUnqWvsCG1eZKSHqTZXBF3DJINWzY00=
