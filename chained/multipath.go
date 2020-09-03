@@ -78,6 +78,6 @@ func CreateMPDialer(endpoint string, ss map[string]*ChainedServerInfo, uc common
 	if len(dialers) == 0 {
 		return nil, errors.New("no subflow dialer")
 	}
-	p.impl = &multipathImpl{dialer: multipath.MPDialer(endpoint, dialers...)}
+	p.impl = &multipathImpl{dialer: multipath.MPDialer(endpoint, dialers)}
 	return p, nil
 }

@@ -387,8 +387,8 @@ github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0/go.mod h1:u537FS7
 github.com/getlantern/mtime v0.0.0-20200228202836-084e1d8282b0/go.mod h1:GfzwugvtH7YcmNIrHHizeyImsgEdyL88YkdnK28B14c=
 github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7 h1:03J6Cb42EG06lHgpOFGm5BOax4qFqlSbSeKO2RGrj2g=
 github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7/go.mod h1:GfzwugvtH7YcmNIrHHizeyImsgEdyL88YkdnK28B14c=
-github.com/getlantern/multipath v0.0.0-20200831015725-86eebeb98849 h1:Ct5bmFTbnqf2yLHE8nEhfwXh/pdgGMPCY1xSZMMgM7M=
-github.com/getlantern/multipath v0.0.0-20200831015725-86eebeb98849/go.mod h1:qNUAUYDscvKjHSoEEey60/AEgZn8ISkOB0oLF8HU9xM=
+github.com/getlantern/multipath v0.0.0-20200908064331-db0c849500dc h1:pK5AsLmpYcqJnrUQTx6Yy07zCZG3T71iYg2CHtHKscg=
+github.com/getlantern/multipath v0.0.0-20200908064331-db0c849500dc/go.mod h1:H/0vJMf1amR3WEUVuoDctZ0ymrMXK8nvxCmeNB+0Pn4=
 github.com/getlantern/netstack v0.0.0-20200917193938-4067a7f942d1 h1:XjPbXtkTn2Tj3sD+/LLy7WHvbSrS3bMJQCe9fkPfh3g=
 github.com/getlantern/netstack v0.0.0-20200917193938-4067a7f942d1/go.mod h1:d0fO4IQYyc/ITUgC2r1s+/4X9OT6LgAu3QkSuUfU5yM=
 github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd h1:mn98vs69Kqw56iKhR82mjk16Q1q5aDFFW0E89/QbXkQ=
@@ -585,6 +585,8 @@ github.com/google/gopacket v1.1.17 h1:rMrlX2ZY2UbvT+sdz3+6J+pp2z+msCq9MxTU6ymxbB
 github.com/google/gopacket v1.1.17/go.mod h1:UdDNZ1OO62aGYVnPhxT1U6aI7ukYtA/kB8vaU0diBUM=
 github.com/google/uuid v1.1.1 h1:Gkbcsh/GbpXz7lPftLA3P6TYMwjCLYm83jiFQZF/3gY=
 github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/google/uuid v1.1.2 h1:EVhdT+1Kseyi1/pUmXKaFxYsDNy9RQYkMWRH68J/W7Y=
+github.com/google/uuid v1.1.2/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/googleapis/gax-go v2.0.0+incompatible/go.mod h1:SFVmujtThgffbyetf+mdk2eWhX2bMyUtNHzFKcPA9HY=
 github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1/go.mod h1:wJfORRmW1u3UXTncJ5qlYoELFm8eSnnEO6hX4iZ3EWY=
 github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e/go.mod h1:wJfORRmW1u3UXTncJ5qlYoELFm8eSnnEO6hX4iZ3EWY=

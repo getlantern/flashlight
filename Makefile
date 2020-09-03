@@ -5,7 +5,7 @@ SHELL := /bin/bash
 SOURCES := $(shell find . -name '*[^_test].go')
 BINARY_NAME := lantern
 
-BUILD_RACE := '-race'
+BUILD_RACE ?= '-race'
 REVISION_DATE := $(shell git log -1 --pretty=format:%ad --date=format:%Y%m%d.%H%M%S)
 BUILD_DATE := $(shell date -u +%Y%m%d.%H%M%S)
 
