@@ -385,7 +385,6 @@ github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0/go.mod h1:u537FS7
 github.com/getlantern/mtime v0.0.0-20200228202836-084e1d8282b0/go.mod h1:GfzwugvtH7YcmNIrHHizeyImsgEdyL88YkdnK28B14c=
 github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7 h1:03J6Cb42EG06lHgpOFGm5BOax4qFqlSbSeKO2RGrj2g=
 github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7/go.mod h1:GfzwugvtH7YcmNIrHHizeyImsgEdyL88YkdnK28B14c=
-github.com/getlantern/multipath v0.0.0-20200821080734-faa9df960f3f h1:X+Q6NxKd43irgBMuT4z7CRM3rbbcLczcLd4sN7aQWNo=
 github.com/getlantern/netstack v0.0.0-20191212040217-1650eee50330 h1:Qz89wXWpWPCIDeTjgD08dhc76Fj90N24QaIa3xxTTkQ=
 github.com/getlantern/netstack v0.0.0-20191212040217-1650eee50330/go.mod h1:boCZS+mc2Ckrx/BUsPJx3yaoyidXIn/xzXwV9CQtHw4=
 github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd h1:mn98vs69Kqw56iKhR82mjk16Q1q5aDFFW0E89/QbXkQ=
@@ -423,8 +422,8 @@ github.com/getlantern/quic0 v0.0.0-20200121154153-8b18c2ba09f9 h1:2mUoAxwY496WRX
 github.com/getlantern/quic0 v0.0.0-20200121154153-8b18c2ba09f9/go.mod h1:UygfmMF7wR6KkIbQtL1ceCfi5UC/9JsnCyCS8WzU3nY=
 github.com/getlantern/quicwrapper v0.0.0-20200129232925-8ef70253fcae h1:Is+Bvq12YUkVfIYDRr5OAtv1NL3Is57djELuMXI7HjQ=
 github.com/getlantern/quicwrapper v0.0.0-20200129232925-8ef70253fcae/go.mod h1:DDN8Ouc3Mq+buV5UsQGznJ7Lu4gvUljxm6EkpXdMA6o=
-github.com/getlantern/quicwrapper v0.0.0-20200708222210-66fc59a379b5 h1:hQBId4Wsefs6Fe5FDKDiCdZfk9sqgloe792izRdSGEE=
-github.com/getlantern/quicwrapper v0.0.0-20200708222210-66fc59a379b5/go.mod h1:lutBCM7WQivIXXZ5NEaPy5VMxjtBwecLRhbpm2eMV40=
+github.com/getlantern/quicwrapper v0.0.0-20200902185207-c4742ad7448c h1:2HVTmLCEl8fRxheEfKz2ZgmZN5JHpXQ+LyIywbI909g=
+github.com/getlantern/quicwrapper v0.0.0-20200902185207-c4742ad7448c/go.mod h1:lutBCM7WQivIXXZ5NEaPy5VMxjtBwecLRhbpm2eMV40=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c h1:IkjF+RwRs8B/RsuD638eUFO2K/227OO2B1FLXGp17Ro=
 github.com/getlantern/reconn v0.0.0-20161128113912-7053d017511c/go.mod h1:kExwbqTx1krUnT9ohmXG3jayDTEBfxUKeoRzU6XucLw=
 github.com/getlantern/replica v0.3.1-0.20200623004346-367f62a981a7 h1:30aLGrAllhD4xUnqWvsCG1eZKSHqTZXBF3DJINWzY00=
