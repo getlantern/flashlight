@@ -6,12 +6,14 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"runtime"
 
 	tls "github.com/refraction-networking/utls"
 
 	"github.com/getlantern/flashlight/browsers/simbrowser"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/hellocap"
+	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/tlsresumption"
 )
 
@@ -70,10 +72,15 @@ func getBrowserHello(ctx context.Context, uc common.UserConfig) (tls.ClientHello
 	// We have a number of ways to approximate the browser's ClientHello format. We begin with the
 	// most desirable, progressively falling back to less desirable options on failure.
 
+	op := ops.Begin("get_browser_hello")
+	op.Set("platform", runtime.GOOS)
+	defer op.End()
+
 	helloSpec, err := activelyObtainBrowserHello(ctx)
 	if err == nil {
 		return tls.HelloCustom, helloSpec
 	}
+	op.FailIf(err)
 	log.Debugf("failed to actively obtain browser hello: %v", err)
 
 	// Our last option is to simulate a browser choice for the user based on market share.
