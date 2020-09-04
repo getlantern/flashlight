@@ -128,7 +128,7 @@ func (b Browser) Executable() (string, error) {
 // SystemDefault returns the default web browser. Specifically, this is the default handler for HTML
 // files. May return ErrorUnknownProgramID.
 func SystemDefault(ctx context.Context) (Browser, error) {
-	op := ops.Begin("")
+	op := ops.Begin("get_default_browser")
 	op.Set("os", "windows")
 	b, err := systemDefault(ctx)
 	op.FailIf(err)

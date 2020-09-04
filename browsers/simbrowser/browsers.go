@@ -1,16 +1,66 @@
 package simbrowser
 
 import (
+	"fmt"
+	"sync"
 	"time"
 
+	"github.com/getlantern/flashlight/browsers"
 	"github.com/getlantern/flashlight/deterministic"
 	tls "github.com/refraction-networking/utls"
 )
+
+// CountryCode is a 2-letter ISO country code.
+type CountryCode [2]rune
+
+var globally CountryCode = [2]rune{'*', '*'}
+
+// MarketShare is a value between 0 and 1 representing a fraction of the global market.
+type MarketShare float64
+
+// Platform describes an operating system and should match a GOOS value. Run 'go tool dist list' to
+// see available options. An exception is made for iOS, which should be specifed with the value
+// 'ios'.
+type Platform string
+
+// MarketShareData encapsulates market share information for a given combination of browser and
+// platform.
+type MarketShareData struct {
+	Browser             browsers.Browser
+	Platform            Platform
+	GlobalMarketShare   MarketShare
+	RegionalMarketShare map[CountryCode]MarketShare
+}
+
+var (
+	marketShareData map[Platform]map[CountryCode]map[browsers.Browser]MarketShare
+	marketShareLock sync.Mutex
+)
+
+// SetMarketShareData sets the data used by this package to assign browsers to users.
+func SetMarketShareData(data []MarketShareData) error {
+	msData := map[Platform]map[CountryCode]map[browsers.Browser]MarketShare{}
+	for _, dataPoint := range data {
+		msData[dataPoint.Platform][globally][dataPoint.Browser] = dataPoint.GlobalMarketShare
+	}
+}
 
 type browserBehavior struct {
 	name                  string
 	sessionTicketLifetime time.Duration
 	clientHelloID         tls.ClientHelloID
+}
+
+// TODO: this function needs to be platform specific
+func getBrowserBehavior(b browsers.Browser) (*browserBehavior, error) {
+	switch b {
+	case browsers.Chrome:
+	case browsers.Safari:
+	case browsers.Firefox:
+	case browsers.Edge:
+	default:
+		return nil, fmt.Errorf("unsupported browser %v", b)
+	}
 }
 
 func (bb browserBehavior) Name() string                         { return bb.name }
