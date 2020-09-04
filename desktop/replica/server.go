@@ -320,6 +320,10 @@ func (me *HttpHandler) handleSearch(rw http.ResponseWriter, r *http.Request) {
 	defer w.Finish()
 
 	searchTerm := r.URL.Query().Get("s")
+	if searchTerm == "" {
+		http.Error(rw, "s param is empty", http.StatusBadRequest)
+		return
+	}
 
 	w.Op.Set("search_term", searchTerm)
 	me.gaSession.EventWithLabel("replica", "search", searchTerm)
