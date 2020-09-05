@@ -116,7 +116,10 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 	if s.MultiplexedAddr != "" || transport == "utphttp" ||
 		transport == "utphttps" || transport == "utpobfs4" ||
 		transport == "tlsmasq" {
-		p.impl = multiplexed(p.impl, name, s.MultiplexedPhysicalConns)
+		p.impl, err = multiplexed(p.impl, name, s)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	allowPreconnecting := false

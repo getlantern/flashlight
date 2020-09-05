@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/getlantern/golog"
-	proxy "github.com/getlantern/http-proxy-lantern"
+	proxy "github.com/getlantern/http-proxy-lantern/v2"
 	"github.com/getlantern/quicwrapper"
 	"github.com/getlantern/tlsdefaults"
 	"github.com/getlantern/waitforserver"
@@ -90,6 +90,8 @@ type Helper struct {
 	OQUICProxyServerAddr        string
 	WSSProxyServerAddr          string
 	TLSMasqProxyServerAddr      string
+	HTTPSSmuxProxyServerAddr    string
+	HTTPSPsmuxProxyServerAddr   string
 	HTTPServerAddr              string
 	HTTPSServerAddr             string
 	ConfigServerAddr            string
@@ -102,7 +104,7 @@ type Helper struct {
 // also enables ForceProxying on the client package to make sure even localhost
 // origins are served through the proxy. Make sure to close the Helper with
 // Close() when finished with the test.
-func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string, quic0Addr string, oquicAddr string, wssAddr string, tlsmasqAddr string, httpsUTPAddr string, obfs4UTPAddr string, lampshadeUTPAddr string) (*Helper, error) {
+func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string, quic0Addr string, oquicAddr string, wssAddr string, tlsmasqAddr string, httpsUTPAddr string, obfs4UTPAddr string, lampshadeUTPAddr string, httpsSmuxAddr string, httpsPsmuxAddr string) (*Helper, error) {
 	ConfigDir, err := ioutil.TempDir("", "integrationtest_helper")
 	log.Debugf("ConfigDir is %v", ConfigDir)
 	if err != nil {
@@ -123,6 +125,8 @@ func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr s
 		OQUICProxyServerAddr:        oquicAddr,
 		WSSProxyServerAddr:          wssAddr,
 		TLSMasqProxyServerAddr:      tlsmasqAddr,
+		HTTPSSmuxProxyServerAddr:    httpsSmuxAddr,
+		HTTPSPsmuxProxyServerAddr:   httpsPsmuxAddr,
 	}
 	helper.SetProtocol("https")
 	client.ForceProxying()
@@ -219,18 +223,19 @@ func (helper *Helper) startProxyServer() error {
 	oqDefaults := quicwrapper.DefaultOQuicConfig([]byte(""))
 
 	s1 := &proxy.Proxy{
-		TestingLocal:     true,
-		HTTPAddr:         helper.HTTPSProxyServerAddr,
-		HTTPUTPAddr:      helper.HTTPSUTPAddr,
-		Obfs4Addr:        helper.OBFS4ProxyServerAddr,
-		Obfs4UTPAddr:     helper.OBFS4UTPProxyServerAddr,
-		Obfs4Dir:         filepath.Join(helper.ConfigDir, obfs4SubDir),
-		LampshadeAddr:    helper.LampshadeProxyServerAddr,
-		LampshadeUTPAddr: helper.LampshadeUTPProxyServerAddr,
-		QUICIETFAddr:     helper.QUICIETFProxyServerAddr,
-		QUIC0Addr:        helper.QUIC0ProxyServerAddr,
-		WSSAddr:          helper.WSSProxyServerAddr,
-		TLSMasqAddr:      helper.TLSMasqProxyServerAddr,
+		TestingLocal:      true,
+		HTTPAddr:          helper.HTTPSProxyServerAddr,
+		HTTPMultiplexAddr: helper.HTTPSSmuxProxyServerAddr,
+		HTTPUTPAddr:       helper.HTTPSUTPAddr,
+		Obfs4Addr:         helper.OBFS4ProxyServerAddr,
+		Obfs4UTPAddr:      helper.OBFS4UTPProxyServerAddr,
+		Obfs4Dir:          filepath.Join(helper.ConfigDir, obfs4SubDir),
+		LampshadeAddr:     helper.LampshadeProxyServerAddr,
+		LampshadeUTPAddr:  helper.LampshadeUTPProxyServerAddr,
+		QUICIETFAddr:      helper.QUICIETFProxyServerAddr,
+		QUIC0Addr:         helper.QUIC0ProxyServerAddr,
+		WSSAddr:           helper.WSSProxyServerAddr,
+		TLSMasqAddr:       helper.TLSMasqProxyServerAddr,
 
 		OQUICAddr:              helper.OQUICProxyServerAddr,
 		OQUICKey:               oquicKey,
@@ -261,6 +266,19 @@ func (helper *Helper) startProxyServer() error {
 		HTTPS:        false,
 	}
 
+	// psmux multiplexed http
+	// smux multiplexed http
+	s3 := &proxy.Proxy{
+		TestingLocal:      true,
+		HTTPS:             true,
+		HTTPMultiplexAddr: helper.HTTPSPsmuxProxyServerAddr,
+		MultiplexProtocol: "psmux",
+		Token:             Token,
+		KeyFile:           KeyFile,
+		CertFile:          CertFile,
+		IdleTimeout:       30 * time.Second,
+	}
+
 	go s1.ListenAndServe()
 	go s2.ListenAndServe()
 
@@ -277,7 +295,15 @@ func (helper *Helper) startProxyServer() error {
 			time.Sleep(25 * time.Millisecond)
 		}
 	}
-	return statErr
+	if statErr != nil {
+		return statErr
+	}
+
+	// only launch / wait for this one after the cert is in place (can race otherwise.)
+	go s3.ListenAndServe()
+	err = waitforserver.WaitForServer("tcp", helper.HTTPSPsmuxProxyServerAddr, 10*time.Second)
+
+	return err
 }
 
 func (helper *Helper) startConfigServer() error {
@@ -352,6 +378,10 @@ func (helper *Helper) writeProxyConfig(resp http.ResponseWriter, req *http.Reque
 		version = "10"
 	} else if proto == "quic_ietf" {
 		version = "11"
+	} else if proto == "https+smux" {
+		version = "12"
+	} else if proto == "https+psmux" {
+		version = "13"
 	}
 
 	if req.Header.Get(IfNoneMatch) == version {
@@ -457,6 +487,14 @@ func (helper *Helper) buildProxies(proto string) ([]byte, error) {
 				"tlsmasq_tlsminversion": tlsmasqMinVersion,
 				"tlsmasq_secret":        tlsmasqServerSecret,
 			}
+		} else if proto == "https+smux" {
+			srv.Addr = "multiplexed"
+			srv.MultiplexedAddr = helper.HTTPSSmuxProxyServerAddr
+			// the default is smux, so srv.MultiplexedProtocol is unset
+		} else if proto == "https+psmux" {
+			srv.Addr = "multiplexed"
+			srv.MultiplexedAddr = helper.HTTPSPsmuxProxyServerAddr
+			srv.MultiplexedProtocol = "psmux"
 		} else {
 			srv.Addr = helper.HTTPSProxyServerAddr
 		}
