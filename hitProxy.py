@@ -29,6 +29,8 @@ def run_with_configdir(configdir, sticky=True, headless=False, country="", remai
         subprocess.call('file lantern.exe | grep console', shell=True)
         # Get Windows path for tempdir
         configdir = subprocess.check_output('wslpath -w {}'.format(tmpdir), shell=True).strip()
+    elif os.path.isfile("./lantern-linux"):
+        path = "./lantern-linux"
     elif os.path.isfile("./lantern"):
         path = "./lantern"
     else:
