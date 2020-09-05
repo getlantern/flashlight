@@ -42,15 +42,17 @@ func Start(deviceID, version string) *session {
 
 type Session interface {
 	SetIP(string)
+	EventWithLabel(string, string, string)
 	Event(string, string)
 	End()
 }
 
 type NullSession struct{}
 
-func (s NullSession) SetIP(string)         {}
-func (s NullSession) Event(string, string) {}
-func (s NullSession) End()                 {}
+func (s NullSession) SetIP(string)                          {}
+func (s NullSession) EventWithLabel(string, string, string) {}
+func (s NullSession) Event(string, string)                  {}
+func (s NullSession) End()                                  {}
 
 type session struct {
 	vals              url.Values
@@ -78,14 +80,20 @@ func (s *session) SetIP(ip string) {
 	go s.track()
 }
 
-// Event tells GA that some event happens in the current page.
-func (s *session) Event(category, action string) {
+// EventWithLabel tells GA that some event happens in the current page with a label
+func (s *session) EventWithLabel(category, action, label string) {
 	s.muVals.Lock()
 	s.vals.Set("ec", category)
 	s.vals.Set("ea", action)
+	s.vals.Set("el", label)
 	s.vals.Set("t", "event")
 	s.muVals.Unlock()
 	go s.track()
+}
+
+// Event tells GA that some event happens in the current page.
+func (s *session) Event(category, action string) {
+	s.EventWithLabel(category, action, "")
 }
 
 // End tells GA to force end the current session.

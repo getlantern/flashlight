@@ -82,6 +82,13 @@ func Tun2Socks(fd int, socksAddr, dnsAddr, dnsGrabAddr string, mtu int) error {
 
 // StopTun2Socks stops the current tun device.
 func StopTun2Socks() {
+	defer func() {
+		p := recover()
+		if p != nil {
+			log.Errorf("Panic while stopping: %v", p)
+		}
+	}()
+
 	currentDeviceMx.Lock()
 	dev := currentDevice
 	ipp := currentIPP

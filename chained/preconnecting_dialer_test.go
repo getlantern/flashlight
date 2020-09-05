@@ -28,11 +28,11 @@ func (conn *testConn) Close() error {
 	return nil
 }
 
-func newEmptyDialer() dialServerFn {
+func newEmptyDialer() proxyImpl {
 	iod := int64(0)
 	ipc := int64(0)
 
-	return func(ctx context.Context, p *proxy) (net.Conn, error) {
+	return &testImpl{d: func(ctx context.Context) (net.Conn, error) {
 		var id string
 		if ctx == nil {
 			if atomic.LoadInt64(&iod) >= maxSuccessfulDials {
@@ -46,16 +46,14 @@ func newEmptyDialer() dialServerFn {
 			id = fmt.Sprintf("preconnected-%d", atomic.AddInt64(&ipc, 1))
 		}
 		return &testConn{emptyConn, id}, nil
-	}
+	}}
 }
 
 func TestPreconnecting(t *testing.T) {
-	closeCh := make(chan bool)
-	defer close(closeCh)
+	pd := newPreconnectingDialer("testPreconnecting", 2, 10*time.Second, newEmptyDialer())
+	defer pd.close()
 
-	pd := newPreconnectingDialer("testPreconnecting", 2, 10*time.Second, closeCh, newEmptyDialer())
-
-	conn, err := pd.dial(nil, nil)
+	conn, err := pd.dialServer(nil, nil)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -64,7 +62,7 @@ func TestPreconnecting(t *testing.T) {
 	for i := 1; i <= maxSuccessfulPreconnects; i++ {
 		time.Sleep(25 * time.Millisecond)
 		assert.Equal(t, 1, pd.numPreconnected())
-		conn, err = pd.dial(nil, nil)
+		conn, err = pd.dialServer(nil, nil)
 		if !assert.NoError(t, err) {
 			return
 		}
@@ -74,46 +72,42 @@ func TestPreconnecting(t *testing.T) {
 	for i := 1; i < maxSuccessfulDials; i++ {
 		t.Log(i)
 		time.Sleep(25 * time.Millisecond)
-		conn, err = pd.dial(nil, nil)
+		conn, err = pd.dialServer(nil, nil)
 		if !assert.NoError(t, err) {
 			return
 		}
 		assert.Equal(t, fmt.Sprintf("ondemand-%d", i+1), conn.(*testConn).id, "Should have gotten on demand dialed connection after preconnects started failing")
 	}
 
-	conn, err = pd.dial(nil, nil)
+	conn, err = pd.dialServer(nil, nil)
 	assert.Error(t, err, "Should have failed to dial after on demand dials started failing")
 }
 
 func TestPreconnectingTimeout(t *testing.T) {
-	closeCh := make(chan bool)
-	defer close(closeCh)
-
 	expiration := 250 * time.Millisecond
-	pd := newPreconnectingDialer("testPreconnectingTimeout", 2, expiration, closeCh, newEmptyDialer())
+	pd := newPreconnectingDialer("testPreconnectingTimeout", 2, expiration, newEmptyDialer())
+	defer pd.close()
 
 	for i := 1; i <= maxSuccessfulPreconnects; i++ {
 		// dial to fill up pool
-		pd.dial(nil, nil)
+		pd.dialServer(nil, nil)
 	}
 
 	// wait for preconnected connections to expire
 	time.Sleep(expiration * 2)
-	conn, err := pd.dial(nil, nil)
+	conn, err := pd.dialServer(nil, nil)
 	if assert.NoError(t, err) {
 		assert.NotContains(t, conn.(*testConn).id, "preconnected", "After all preconnected connections expired, we should dial on demand")
 	}
 }
 
 func TestPreconnectingClose(t *testing.T) {
-	closeCh := make(chan bool)
-
 	expiration := 250 * time.Millisecond
-	pd := newPreconnectingDialer("testPreconnectingTimeout", 2, expiration, closeCh, newEmptyDialer())
+	pd := newPreconnectingDialer("testPreconnectingTimeout", 2, expiration, newEmptyDialer())
 
 	for i := 1; i <= maxSuccessfulPreconnects; i++ {
 		// dial to fill up pool
-		pd.dial(nil, nil)
+		pd.dialServer(nil, nil)
 	}
 
 	// wait a little for preconnecting to finish
@@ -121,14 +115,14 @@ func TestPreconnectingClose(t *testing.T) {
 	assert.True(t, len(pd.pool) >= 2, "should have at least 2 preconnections")
 	assert.True(t, len(pd.pool) <= 4, "should have no more than 4 preconnections")
 
-	close(closeCh)
+	pd.close()
 	// wait a little for closing to happen
 	time.Sleep(25 * time.Millisecond)
 	assert.Empty(t, pd.pool)
 
 	// wait for preconnected connections to expire
 	time.Sleep(expiration * 2)
-	conn, err := pd.dial(nil, nil)
+	conn, err := pd.dialServer(nil, nil)
 	if assert.NoError(t, err) {
 		assert.NotContains(t, conn.(*testConn).id, "preconnected", "After all preconnected connections expired, we should dial on demand")
 	}

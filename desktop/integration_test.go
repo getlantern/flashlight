@@ -97,7 +97,7 @@ func TestProxying(t *testing.T) {
 		listenPort++
 		return fmt.Sprintf("localhost:%d", listenPort)
 	}
-	helper, err := integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
+	helper, err := integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -168,6 +168,14 @@ func TestProxying(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	testRequest(t, helper)
 
+	helper.SetProtocol("https+smux")
+	time.Sleep(2 * time.Second)
+	testRequest(t, helper)
+
+	helper.SetProtocol("https+psmux")
+	time.Sleep(2 * time.Second)
+	testRequest(t, helper)
+
 	// Disconnected Lantern and try again
 	a.Disconnect()
 	testRequest(t, helper)
@@ -193,7 +201,7 @@ func TestProxying(t *testing.T) {
 			missingOps = make([]string, 0)
 			opsMx.RLock()
 			for _, op := range borda.FullyReportedOps {
-				if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" || op == "probe" || op == "proxy_rank" || op == "proxy_selection_stability" || op == "youtube_view" || op == "install_mitm_cert" {
+				if op == "report_issue" || op == "sysproxy_off" || op == "sysproxy_off_force" || op == "sysproxy_clear" || op == "probe" || op == "proxy_rank" || op == "proxy_selection_stability" || op == "youtube_view" || op == "install_mitm_cert" || op == "replica_upload" || op == "replica_view" {
 					// ignore these, as we don't do them (reliably) during the integration test
 					continue
 				}
