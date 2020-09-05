@@ -469,8 +469,8 @@ github.com/getlantern/tlsutil v0.2.0 h1:i1X/r3w6FLaceoNBkTsRXWcE3Ujz7rbWmtipS28v
 github.com/getlantern/tlsutil v0.2.0/go.mod h1:Vxsyr9DVnYwsqHaEzMYkg9fT8aBrnO2eI+gdICMQbQU=
 github.com/getlantern/utls v0.0.0-20191119185840-3db8c755b682 h1:gK0+CerB0oFReyfhHZhTDywm7YU7NIx/xrhRGDhgiK0=
 github.com/getlantern/utls v0.0.0-20191119185840-3db8c755b682/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
-github.com/getlantern/utls v0.0.0-20200708025417-3b1d9d0bb892 h1:/vuZ7+WXAsHxlH4h8DR9FppTpr6SwVPKQ76uRfK6ozo=
-github.com/getlantern/utls v0.0.0-20200708025417-3b1d9d0bb892/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
+github.com/getlantern/utls v0.0.0-20200903013459-0c02248f7ce1 h1:+Egmu6VMMPm8/FHz8TOtQ1Usn3zg0gkS7ZHrLFycyok=
+github.com/getlantern/utls v0.0.0-20200903013459-0c02248f7ce1/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
 github.com/getlantern/uuid v1.1.2-0.20190507182000-5c9436b8c718/go.mod h1:uX10hOzZUUDR+oYNSIks+RcozOEiwTNC/K2rw9SUi1k=
 github.com/getlantern/uuid v1.2.0 h1:pGrGaCV7XEaG6lvjWkwf8Y92BjB/9yFmkKsNFpRQ7rc=
 github.com/getlantern/uuid v1.2.0/go.mod h1:uX10hOzZUUDR+oYNSIks+RcozOEiwTNC/K2rw9SUi1k=
@@ -1190,5 +1190,7 @@ gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C
 honnef.co/go/tools v0.0.0-20180728063816-88497007e858/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.0-20190102054323-c2f93a96b099/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
+howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5 h1:AQkaJpH+/FmqRjmXZPELom5zIERYZfwTjnHpfoVMQEc=
+howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5/go.mod h1:vMygbs4qMhSZSc4lCUl2OEE+rDiIIJAIdR4m7MiMcm0=
 rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
 rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=
