@@ -29,6 +29,7 @@ import (
 	"github.com/getlantern/tlsresumption"
 
 	"github.com/getlantern/flashlight/balancer"
+	"github.com/getlantern/flashlight/browsers/simbrowser"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 )
@@ -520,6 +521,10 @@ func reportProxyDial(delta time.Duration, err error) {
 }
 
 func tlsConfigForProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*tls.Config, tls.ClientHelloID) {
+	const timeout = 5 * time.Second
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 
 	helloID := s.clientHelloID()
 	var ss *tls.ClientSessionState
@@ -537,13 +542,14 @@ func tlsConfigForProxy(name string, s *ChainedServerInfo, uc common.UserConfig) 
 		}
 	}
 
-	sessionTTL := chooseSessionTicketTTL(uc)
-	sessionCache := newExpiringSessionCache(name, sessionTTL, ss)
-	cipherSuites := orderedCipherSuitesFromConfig(s)
+	b := simbrowser.ChooseForUser(ctx, uc)
+	if helloID == helloBrowser {
+		helloID = b.ClientHelloID
+	}
 
 	cfg := &tls.Config{
-		ClientSessionCache: sessionCache,
-		CipherSuites:       cipherSuites,
+		ClientSessionCache: newExpiringSessionCache(name, b.SessionTicketLifetime, ss),
+		CipherSuites:       orderedCipherSuitesFromConfig(s),
 		ServerName:         s.TLSServerNameIndicator,
 		InsecureSkipVerify: true,
 		KeyLogWriter:       getTLSKeyLogWriter(),

@@ -155,6 +155,14 @@ var availableTLSCiphers = map[string]uint16{
 	"TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305":  tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
 }
 
+// helloBrowser is a special hello ID denoting that ClientHellos should be based on those used by
+// the system default browser. This structure does not actually get passed to utls code. It is
+// caught by tlsConfigForProxy and converted to the appropriate ClientHelloID.
+var helloBrowser = tls.ClientHelloID{
+	Client:  "Browser",
+	Version: "0",
+}
+
 var availableClientHelloIDs = map[string]tls.ClientHelloID{
 	"HelloGolang":           tls.HelloGolang,
 	"HelloRandomized":       tls.HelloRandomized,
@@ -166,4 +174,5 @@ var availableClientHelloIDs = map[string]tls.ClientHelloID{
 	"HelloChrome_Auto":      tls.HelloChrome_Auto,
 	"HelloChrome_58":        tls.HelloChrome_58,
 	"HelloChrome_62":        tls.HelloChrome_62,
+	"HelloBrowser":          helloBrowser,
 }

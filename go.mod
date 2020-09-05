@@ -107,14 +107,16 @@ require (
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
 	golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2
+	golang.org/x/sys v0.0.0-20200515095857-1151b9dac4a9
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	google.golang.org/appengine v1.6.2 // indirect
 	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55 // indirect
+	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 
 replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20200720170941-b1abc08ed4ee
 
-replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20200708025417-3b1d9d0bb892
+replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20200903013459-0c02248f7ce1
 
 replace github.com/anacrolix/go-libutp => github.com/getlantern/go-libutp v1.0.3-0.20190606045409-29ac0bf665ea
 
