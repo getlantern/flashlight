@@ -49,7 +49,7 @@ func tlsConfigForProxy(ctx context.Context, name string, s *ChainedServerInfo, u
 		helloID, helloSpec = getBrowserHello(ctx, uc)
 	}
 
-	sessionTTL := simbrowser.ChooseForUser(ctx, uc).SessionTicketLifetime()
+	sessionTTL := simbrowser.ChooseForUser(ctx, uc).SessionTicketLifetime
 	sessionCache := newExpiringSessionCache(name, sessionTTL, ss)
 	cipherSuites := orderedCipherSuitesFromConfig(s)
 
@@ -84,7 +84,7 @@ func getBrowserHello(ctx context.Context, uc common.UserConfig) (tls.ClientHello
 	log.Debugf("failed to actively obtain browser hello: %v", err)
 
 	// Our last option is to simulate a browser choice for the user based on market share.
-	return simbrowser.ChooseForUser(ctx, uc).ClientHelloID(), nil
+	return simbrowser.ChooseForUser(ctx, uc).ClientHelloID, nil
 }
 
 func activelyObtainBrowserHello(ctx context.Context) (*tls.ClientHelloSpec, error) {
