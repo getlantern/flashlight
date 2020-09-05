@@ -634,8 +634,9 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 		}
 
 		// Note that this is a no-op if the traffic log is already installed.
+		installOpts := tlproc.InstallOptions{Overwrite: cfg.TrafficLog.Reinstall}
 		installErr := tlproc.Install(
-			installDir, u.Username, trafficlogInstallPrompt, iconFile, cfg.TrafficLog.Reinstall)
+			installDir, u.Username, trafficlogInstallPrompt, iconFile, &installOpts)
 		if installErr != nil {
 			b, err := time.Now().MarshalText()
 			if err != nil {

@@ -342,6 +342,8 @@ github.com/getlantern/trafficlog v1.0.0 h1:JYCcTptI7kKXjvppdE5JQPx31m/78Q1xbXpIM
 github.com/getlantern/trafficlog v1.0.0/go.mod h1:oaj53OJ67FEPsiKbQBz2dpYCnh8Yq4bBbww3C6vMgAQ=
 github.com/getlantern/trafficlog-flashlight v0.0.0-20200709021352-209a5e036161 h1:PQa/gCIevGts6AqUFo0RGaUVACo2rk4agMO91ASZCVs=
 github.com/getlantern/trafficlog-flashlight v0.0.0-20200709021352-209a5e036161/go.mod h1:fMn3LcwRfIlD4COXKwZAhvsxgo+qIrbhvhHRff+dxxg=
+github.com/getlantern/trafficlog-flashlight v0.0.0-20200903233829-b5869baf5329 h1:IZ0JaOBIzFDa2eFoFHEG646zFEGS/QbQgJ9x0sW8/ug=
+github.com/getlantern/trafficlog-flashlight v0.0.0-20200903233829-b5869baf5329/go.mod h1:fMn3LcwRfIlD4COXKwZAhvsxgo+qIrbhvhHRff+dxxg=
 github.com/getlantern/utls v0.0.0-20191119185840-3db8c755b682 h1:gK0+CerB0oFReyfhHZhTDywm7YU7NIx/xrhRGDhgiK0=
 github.com/getlantern/utls v0.0.0-20191119185840-3db8c755b682/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
 github.com/getlantern/utls v0.0.0-20200708025417-3b1d9d0bb892 h1:/vuZ7+WXAsHxlH4h8DR9FppTpr6SwVPKQ76uRfK6ozo=
