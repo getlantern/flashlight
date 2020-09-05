@@ -132,6 +132,9 @@ func SystemDefault(ctx context.Context) (Browser, error) {
 	op.Set("os", "windows")
 	b, err := systemDefault(ctx)
 	op.FailIf(err)
+	if b != Unknown {
+		op.Set("browser", b.String())
+	}
 	op.End()
 	return b, err
 }
