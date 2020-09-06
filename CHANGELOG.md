@@ -1,5 +1,23 @@
 # Changelog
 
+## [6.0.6](https://github.com/getlantern/flashlight/tree/6.0.6) (2020-09-06)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/6.0.5...6.0.6)
+
+**Merged pull requests:**
+
+- Update sentry and other minor ui fixes [\#869](https://github.com/getlantern/flashlight/pull/869) ([myleshorton](https://github.com/myleshorton))
+- Report default browser as part of op [\#866](https://github.com/getlantern/flashlight/pull/866) ([hwh33](https://github.com/hwh33))
+- Add lantern-linux to hitProxy.py executable options [\#865](https://github.com/getlantern/flashlight/pull/865) ([max-b](https://github.com/max-b))
+- Don't propagate panics from stopping Go tun2socks implementation [\#863](https://github.com/getlantern/flashlight/pull/863) ([oxtoacart](https://github.com/oxtoacart))
+- Add support for browser-based simulated ClientHellos [\#862](https://github.com/getlantern/flashlight/pull/862) ([hwh33](https://github.com/hwh33))
+- Update to latest quicwrapper fixing panic [\#861](https://github.com/getlantern/flashlight/pull/861) ([myleshorton](https://github.com/myleshorton))
+- Pull DHT race fix [\#860](https://github.com/getlantern/flashlight/pull/860) ([anacrolix](https://github.com/anacrolix))
+- allow configuration of smux or psmux and options [\#858](https://github.com/getlantern/flashlight/pull/858) ([forkner](https://github.com/forkner))
+- Tightened up Youtube video URL parsing and added more Youtube domains [\#857](https://github.com/getlantern/flashlight/pull/857) ([oxtoacart](https://github.com/oxtoacart))
+- refactor chained package in preparation for supporting multipath [\#856](https://github.com/getlantern/flashlight/pull/856) ([joesis](https://github.com/joesis))
+- Add ability to hit different global config for replica [\#848](https://github.com/getlantern/flashlight/pull/848) ([myleshorton](https://github.com/myleshorton))
+
 ## [6.0.5](https://github.com/getlantern/flashlight/tree/6.0.5) (2020-08-21)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/6.0.4...6.0.5)
@@ -83,7 +101,7 @@
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.18...5.9.19)
 
-## [5.9.18](https://github.com/getlantern/flashlight/tree/5.9.18) (2020-07-09)
+## [5.9.18](https://github.com/getlantern/flashlight/tree/5.9.18) (2020-07-08)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.17...5.9.18)
 
@@ -249,7 +267,6 @@
 - Make sure to close file paths we create [\#778](https://github.com/getlantern/flashlight/pull/778) ([myleshorton](https://github.com/myleshorton))
 - Broke stealth mode into more fine grained features and enabled detour on Android [\#777](https://github.com/getlantern/flashlight/pull/777) ([oxtoacart](https://github.com/oxtoacart))
 - Allow proper saving of proxystats.csv on iOS [\#775](https://github.com/getlantern/flashlight/pull/775) ([oxtoacart](https://github.com/oxtoacart))
-- Update systray dep [\#772](https://github.com/getlantern/flashlight/pull/772) ([max-b](https://github.com/max-b))
 
 ## [5.8.6](https://github.com/getlantern/flashlight/tree/5.8.6) (2020-03-18)
 
@@ -266,11 +283,11 @@
 **Merged pull requests:**
 
 - Skip putting nil session state to session cache [\#773](https://github.com/getlantern/flashlight/pull/773) ([joesis](https://github.com/joesis))
+- Update systray dep [\#772](https://github.com/getlantern/flashlight/pull/772) ([max-b](https://github.com/max-b))
 - Unified session key persistence and session caching for TLS proxies [\#770](https://github.com/getlantern/flashlight/pull/770) ([oxtoacart](https://github.com/oxtoacart))
 - Build all tests in CI [\#769](https://github.com/getlantern/flashlight/pull/769) ([anacrolix](https://github.com/anacrolix))
 - Determine if a feature is enabled dynamically [\#768](https://github.com/getlantern/flashlight/pull/768) ([joesis](https://github.com/joesis))
 - Respecting stealthmode on iOS and removed borda [\#765](https://github.com/getlantern/flashlight/pull/765) ([oxtoacart](https://github.com/oxtoacart))
-- Expire session tickets like Chrome [\#760](https://github.com/getlantern/flashlight/pull/760) ([hwh33](https://github.com/hwh33))
 
 ## [5.8.4](https://github.com/getlantern/flashlight/tree/5.8.4) (2020-03-06)
 
@@ -280,26 +297,14 @@
 
 - disable the chrome extension saving loop [\#767](https://github.com/getlantern/flashlight/pull/767) ([joesis](https://github.com/joesis))
 - Add osversion to sentry reporting [\#764](https://github.com/getlantern/flashlight/pull/764) ([max-b](https://github.com/max-b))
-- Wait to configure systray until desktop.App.uiServer has been instantiated [\#758](https://github.com/getlantern/flashlight/pull/758) ([max-b](https://github.com/max-b))
 
 ## [5.8.3](https://github.com/getlantern/flashlight/tree/5.8.3) (2020-02-12)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.8.2...5.8.3)
 
-**Merged pull requests:**
-
-- fix call order for concurrent access to session states [\#757](https://github.com/getlantern/flashlight/pull/757) ([myleshorton](https://github.com/myleshorton))
-- Lock session states on init [\#756](https://github.com/getlantern/flashlight/pull/756) ([myleshorton](https://github.com/myleshorton))
-- Exit if lantern is already running [\#755](https://github.com/getlantern/flashlight/pull/755) ([myleshorton](https://github.com/myleshorton))
-
 ## [5.8.2](https://github.com/getlantern/flashlight/tree/5.8.2) (2020-02-11)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.8.1...5.8.2)
-
-**Merged pull requests:**
-
-- Updated to latest golang.org/x/sys and quic-go [\#753](https://github.com/getlantern/flashlight/pull/753) ([oxtoacart](https://github.com/oxtoacart))
-- Minor sentry upgrade [\#752](https://github.com/getlantern/flashlight/pull/752) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.8.1](https://github.com/getlantern/flashlight/tree/5.8.1) (2020-02-07)
 
