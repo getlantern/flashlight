@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.0.7](https://github.com/getlantern/flashlight/tree/6.0.7) (2020-09-08)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/6.0.6...6.0.7)
+
+**Merged pull requests:**
+
+- Fixed lantern version for sentry [\#871](https://github.com/getlantern/flashlight/pull/871) ([myleshorton](https://github.com/myleshorton))
+
 ## [6.0.6](https://github.com/getlantern/flashlight/tree/6.0.6) (2020-09-06)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/6.0.5...6.0.6)
