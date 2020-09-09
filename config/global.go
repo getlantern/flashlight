@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/getlantern/flashlight/browsers/simbrowser"
 	"github.com/getlantern/flashlight/domainrouting"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/keyman"
@@ -53,6 +54,10 @@ type Global struct {
 	// FeatureOptions is a generic way to specify options for optional
 	// features. It's up to the feature code to handle the raw JSON message.
 	FeatureOptions map[string]map[string]interface{}
+
+	// Market share data used by the simbrowser package when picking a browser to simulate.
+	GlobalBrowserMarketShareData   simbrowser.MarketShareData
+	RegionalBrowserMarketShareData map[simbrowser.CountryCode]simbrowser.MarketShareData
 }
 
 // NewGlobal creates a new global config with otherwise nil values set.

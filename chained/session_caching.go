@@ -5,76 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/deterministic"
-	"github.com/getlantern/flashlight/geolookup"
 	tls "github.com/refraction-networking/utls"
 )
-
-// We look up the client's geolocation to determine which browser to emulate.
-const geoLookupTimeout = 2 * time.Second
-
-type browserChoice struct {
-	sessionTicketLifetime time.Duration
-}
-
-type weightedBrowserChoice struct {
-	browserChoice
-	marketShare float64
-}
-
-// Implements the deterministic.WeightedChoice interface.
-func (rbd weightedBrowserChoice) Weight() int {
-	return int(rbd.marketShare * 100)
-}
-
-var (
-	// We treat Internet Explorer and Edge as the same thing below.
-
-	// https://github.com/getlantern/lantern-internal/issues/3315#issue-560602994
-	chrome     = browserChoice{30 * time.Minute}
-	safari     = browserChoice{24 * time.Hour}
-	firefox    = browserChoice{24 * time.Hour}
-	edge       = browserChoice{10 * time.Hour}
-	threeSixty = browserChoice{9 * time.Hour}
-	qq         = browserChoice{30 * time.Minute}
-
-	// https://gs.statcounter.com/browser-market-share#monthly-201910-201910-bar
-	globalBrowserChoices = []deterministic.WeightedChoice{
-		weightedBrowserChoice{chrome, 0.65},
-		weightedBrowserChoice{safari, 0.17},
-		weightedBrowserChoice{firefox, 0.04},
-		weightedBrowserChoice{edge, 0.04},
-	}
-
-	// https://github.com/getlantern/lantern-internal/issues/3315#issuecomment-589253390
-	browserChoicesByCountry = map[string][]deterministic.WeightedChoice{
-		"CN": []deterministic.WeightedChoice{
-			weightedBrowserChoice{edge, 0.36},
-			weightedBrowserChoice{threeSixty, 0.26},
-			weightedBrowserChoice{qq, 0.10},
-			weightedBrowserChoice{firefox, 0.03},
-		},
-	}
-)
-
-// Chooses a TTL for session tickets for this client. This decision is made using data on market
-// share for the top 4 browsers and the session ticket lifetimes enforced by those browsers.
-//
-// If necessary, we use region-specific market share figures. This is based on the client's
-// geolocation and thus this function may block for a period while geolocation is determined.
-func chooseSessionTicketTTL(uc common.UserConfig) time.Duration {
-	countryCode := geolookup.GetCountry(geoLookupTimeout)
-	if countryCode == "" {
-		log.Error("failed to retrieve country code; using default session ticket lifetime settings")
-	}
-	choices, ok := browserChoicesByCountry[countryCode]
-	if !ok {
-		choices = globalBrowserChoices
-	}
-	choice := deterministic.MakeWeightedChoice(uc.GetUserID(), choices)
-	return choice.(weightedBrowserChoice).sessionTicketLifetime
-}
 
 // expiringSessionCache is a tls.ClientSessionCache that expires tickets older than the
 // configured TTL. Because we use one of these per proxy server, it does not need to care about

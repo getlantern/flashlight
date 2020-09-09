@@ -19,7 +19,7 @@ func TestProbe(t *testing.T) {
 				requests = append(requests, req)
 			}))
 
-		proxy, err := newHTTPProxy("test-proxy", "http", "tcp", &ChainedServerInfo{
+		proxy, err := CreateDialer("test-proxy", &ChainedServerInfo{
 			Addr: server.Listener.Addr().String(),
 		}, &common.UserConfigData{})
 		assert.NoError(t, err)
@@ -48,7 +48,7 @@ func TestProbe(t *testing.T) {
 func TestProbeFailing(t *testing.T) {
 	uc := &common.UserConfigData{}
 	addr := "localhost:1"
-	proxy, err := newHTTPProxy("test-proxy", "http", "tcp", &ChainedServerInfo{Addr: addr}, uc)
+	proxy, err := CreateDialer("test-proxy", &ChainedServerInfo{Addr: addr}, uc)
 	assert.NoError(t, err)
 	assert.False(t, proxy.Probe(false),
 		"testing against non-existent port should have failed")
@@ -58,7 +58,7 @@ func TestProbeFailing(t *testing.T) {
 			rw.WriteHeader(http.StatusServiceUnavailable)
 		}))
 	addr = server.Listener.Addr().String()
-	proxy, err = newHTTPProxy("test-proxy", "http", "tcp", &ChainedServerInfo{Addr: addr}, uc)
+	proxy, err = CreateDialer("test-proxy", &ChainedServerInfo{Addr: addr}, uc)
 	assert.NoError(t, err)
 	// Disable below to avoid wasting 20s in CI
 	// assert.False(t, proxy.Probe(false),
