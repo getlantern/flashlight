@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.0.8](https://github.com/getlantern/flashlight/tree/6.0.8) (2020-09-09)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/6.0.7...6.0.8)
+
+**Merged pull requests:**
+
+- Fixed simplified Chinese translation [\#872](https://github.com/getlantern/flashlight/pull/872) ([myleshorton](https://github.com/myleshorton))
+
 ## [6.0.7](https://github.com/getlantern/flashlight/tree/6.0.7) (2020-09-08)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/6.0.6...6.0.7)
@@ -95,6 +103,7 @@
 - Bundle lantern-desktop-ui replica api path fix [\#800](https://github.com/getlantern/flashlight/pull/800) ([max-b](https://github.com/max-b))
 - Report replica response metrics to borda [\#799](https://github.com/getlantern/flashlight/pull/799) ([max-b](https://github.com/max-b))
 - Enable replica on backend only if enabled in features [\#795](https://github.com/getlantern/flashlight/pull/795) ([myleshorton](https://github.com/myleshorton))
+- Added a new FeatureProxyWhitelistedOnly that causes clients to only p… [\#791](https://github.com/getlantern/flashlight/pull/791) ([oxtoacart](https://github.com/oxtoacart))
 - a little more stateless approach [\#787](https://github.com/getlantern/flashlight/pull/787) ([myleshorton](https://github.com/myleshorton))
 - Merge from devel branch [\#786](https://github.com/getlantern/flashlight/pull/786) ([joesis](https://github.com/joesis))
 - update enabled features to desktop UI [\#785](https://github.com/getlantern/flashlight/pull/785) ([joesis](https://github.com/joesis))
@@ -253,7 +262,6 @@
 **Merged pull requests:**
 
 - Avoid nil pointer panic and add sentry reporting on app.Exit\(err\) [\#793](https://github.com/getlantern/flashlight/pull/793) ([max-b](https://github.com/max-b))
-- Added a new FeatureProxyWhitelistedOnly that causes clients to only p… [\#791](https://github.com/getlantern/flashlight/pull/791) ([oxtoacart](https://github.com/oxtoacart))
 - Add duplicate and missing field checks to config checker [\#790](https://github.com/getlantern/flashlight/pull/790) ([hwh33](https://github.com/hwh33))
 - Added simple config validator tool [\#789](https://github.com/getlantern/flashlight/pull/789) ([oxtoacart](https://github.com/oxtoacart))
 
@@ -304,7 +312,6 @@
 **Merged pull requests:**
 
 - disable the chrome extension saving loop [\#767](https://github.com/getlantern/flashlight/pull/767) ([joesis](https://github.com/joesis))
-- Add osversion to sentry reporting [\#764](https://github.com/getlantern/flashlight/pull/764) ([max-b](https://github.com/max-b))
 
 ## [5.8.3](https://github.com/getlantern/flashlight/tree/5.8.3) (2020-02-12)
 
