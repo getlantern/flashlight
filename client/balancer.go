@@ -17,30 +17,7 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 	}
 
 	chained.PersistSessionStates("")
-	dialers := make([]balancer.Dialer, 0, len(proxies))
-	groups := groupByMultipathEndpoint(proxies)
-	for endpoint, group := range groups {
-		if endpoint == "" {
-			log.Debugf("Adding %d individual chained servers", len(group))
-			for name, s := range group {
-				dialer, err := chained.CreateDialer(name, s, client.user)
-				if err != nil {
-					log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)
-					continue
-				}
-				log.Debugf("Adding chained server: %v", dialer.JustifiedLabel())
-				dialers = append(dialers, dialer)
-			}
-		} else {
-			log.Debugf("Adding %d chained servers for multipath endpoint %s", len(group), endpoint)
-			dialer, err := chained.CreateMPDialer(endpoint, group, client.user)
-			if err != nil {
-				log.Errorf("Unable to configure multipath server to %v. Received error: %v", endpoint, err)
-				continue
-			}
-			dialers = append(dialers, dialer)
-		}
-	}
+	dialers := chained.CreateDialers(proxies, client.user)
 	client.bal.Reset(dialers)
 
 	go func() {
@@ -88,17 +65,4 @@ func (client *Client) pingProxiesLoop() {
 			resetTimer()
 		}
 	}
-}
-
-func groupByMultipathEndpoint(proxies map[string]*chained.ChainedServerInfo) map[string]map[string]*chained.ChainedServerInfo {
-	groups := make(map[string]map[string]*chained.ChainedServerInfo)
-	for name, s := range proxies {
-		group, exists := groups[s.MultipathEndpoint]
-		if !exists {
-			group = make(map[string]*chained.ChainedServerInfo)
-			groups[s.MultipathEndpoint] = group
-		}
-		group[name] = s
-	}
-	return groups
 }

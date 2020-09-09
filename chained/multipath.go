@@ -58,7 +58,7 @@ func CreateMPDialer(endpoint string, ss map[string]*ChainedServerInfo, uc common
 	for name, s := range ss {
 		if p == nil {
 			// Note: we pass the first server info to newProxy for the attributes shared by all paths
-			p, err = newProxy(endpoint, "multipath", "multipath", "multipath", s, uc)
+			p, err = newProxy(endpoint, endpoint+":0", "multipath", "multipath", s, uc)
 			if err != nil {
 				return nil, err
 			}
@@ -80,4 +80,17 @@ func CreateMPDialer(endpoint string, ss map[string]*ChainedServerInfo, uc common
 	}
 	p.impl = &multipathImpl{dialer: multipath.MPDialer(endpoint, dialers)}
 	return p, nil
+}
+
+func groupByMultipathEndpoint(proxies map[string]*ChainedServerInfo) map[string]map[string]*ChainedServerInfo {
+	groups := make(map[string]map[string]*ChainedServerInfo)
+	for name, s := range proxies {
+		group, exists := groups[s.MultipathEndpoint]
+		if !exists {
+			group = make(map[string]*ChainedServerInfo)
+			groups[s.MultipathEndpoint] = group
+		}
+		group[name] = s
+	}
+	return groups
 }

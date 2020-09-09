@@ -70,6 +70,35 @@ type nopCloser struct{}
 
 func (c nopCloser) close() {}
 
+// CreateDialers creates a list of Proxies (balancer.Dialer) with supplied server info.
+func CreateDialers(proxies map[string]*ChainedServerInfo, uc common.UserConfig) []balancer.Dialer {
+	dialers := make([]balancer.Dialer, 0, len(proxies))
+	groups := groupByMultipathEndpoint(proxies)
+	for endpoint, group := range groups {
+		if endpoint == "" {
+			log.Debugf("Adding %d individual chained servers", len(group))
+			for name, s := range group {
+				dialer, err := CreateDialer(name, s, uc)
+				if err != nil {
+					log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)
+					continue
+				}
+				log.Debugf("Adding chained server: %v", dialer.JustifiedLabel())
+				dialers = append(dialers, dialer)
+			}
+		} else {
+			log.Debugf("Adding %d chained servers for multipath endpoint %s", len(group), endpoint)
+			dialer, err := CreateMPDialer(endpoint, group, uc)
+			if err != nil {
+				log.Errorf("Unable to configure multipath server to %v. Received error: %v", endpoint, err)
+				continue
+			}
+			dialers = append(dialers, dialer)
+		}
+	}
+	return dialers
+}
+
 // CreateDialer creates a Proxy (balancer.Dialer) with supplied server info.
 func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (balancer.Dialer, error) {
 	addr, transport, network, err := extractParams(s)

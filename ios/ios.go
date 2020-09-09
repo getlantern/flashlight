@@ -197,39 +197,9 @@ func (c *client) loadDialers() ([]balancer.Dialer, error) {
 		return nil, err
 	}
 
-	dialers := make([]balancer.Dialer, 0, len(proxies))
-	for name, s := range proxies {
-		if s.PluggableTransport == "obfs4-tcp" {
-			log.Debugf("Ignoring obfs4-tcp server: %v", name)
-			// Ignore obfs4-tcp as these are already included as plain obfs4
-			continue
-		}
-		dialer, err := c.chainedDialer(name, s)
-		if err != nil {
-			log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)
-			continue
-		}
-		log.Debugf("Adding chained server: %v", dialer.JustifiedLabel())
-		dialers = append(dialers, dialer)
-	}
-
+	dialers := chained.CreateDialers(proxies, c.uc)
 	chained.TrackStatsFor(dialers, c.configDir, false)
-
 	return dialers, nil
-}
-
-// chainedDialer creates a *balancer.Dialer backed by a chained server.
-func (c *client) chainedDialer(name string, si *chained.ChainedServerInfo) (balancer.Dialer, error) {
-	// Copy server info to allow modifying
-	sic := &chained.ChainedServerInfo{}
-	*sic = *si
-	// Backwards-compatibility for clients that still have old obfs4
-	// configurations on disk.
-	if sic.PluggableTransport == "obfs4-tcp" {
-		sic.PluggableTransport = "obfs4"
-	}
-
-	return chained.CreateDialer(name, sic, c.uc)
 }
 
 func trackMemory() {

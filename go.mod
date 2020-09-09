@@ -59,7 +59,7 @@ require (
 	github.com/getlantern/mitm v0.0.0-20200517210030-e913809c7038
 	github.com/getlantern/mockconn v0.0.0-20191023022503-481dbcceeb58
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
-	github.com/getlantern/multipath v0.0.0-20200908072705-d724b30f8857
+	github.com/getlantern/multipath v0.0.0-20200914055716-a0b4261a18ca
 	github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd
 	github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b
 	github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6
