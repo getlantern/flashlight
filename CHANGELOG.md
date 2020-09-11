@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.0.9](https://github.com/getlantern/flashlight/tree/6.0.9) (2020-09-11)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/6.0.8...6.0.9)
+
+**Merged pull requests:**
+
+- Avoid setting global marketShareData to an empty map [\#873](https://github.com/getlantern/flashlight/pull/873) ([max-b](https://github.com/max-b))
+
 ## [6.0.8](https://github.com/getlantern/flashlight/tree/6.0.8) (2020-09-09)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/6.0.7...6.0.8)
@@ -103,7 +111,6 @@
 - Bundle lantern-desktop-ui replica api path fix [\#800](https://github.com/getlantern/flashlight/pull/800) ([max-b](https://github.com/max-b))
 - Report replica response metrics to borda [\#799](https://github.com/getlantern/flashlight/pull/799) ([max-b](https://github.com/max-b))
 - Enable replica on backend only if enabled in features [\#795](https://github.com/getlantern/flashlight/pull/795) ([myleshorton](https://github.com/myleshorton))
-- Added a new FeatureProxyWhitelistedOnly that causes clients to only p… [\#791](https://github.com/getlantern/flashlight/pull/791) ([oxtoacart](https://github.com/oxtoacart))
 - a little more stateless approach [\#787](https://github.com/getlantern/flashlight/pull/787) ([myleshorton](https://github.com/myleshorton))
 - Merge from devel branch [\#786](https://github.com/getlantern/flashlight/pull/786) ([joesis](https://github.com/joesis))
 - update enabled features to desktop UI [\#785](https://github.com/getlantern/flashlight/pull/785) ([joesis](https://github.com/joesis))
@@ -262,6 +269,7 @@
 **Merged pull requests:**
 
 - Avoid nil pointer panic and add sentry reporting on app.Exit\(err\) [\#793](https://github.com/getlantern/flashlight/pull/793) ([max-b](https://github.com/max-b))
+- Added a new FeatureProxyWhitelistedOnly that causes clients to only p… [\#791](https://github.com/getlantern/flashlight/pull/791) ([oxtoacart](https://github.com/oxtoacart))
 - Add duplicate and missing field checks to config checker [\#790](https://github.com/getlantern/flashlight/pull/790) ([hwh33](https://github.com/hwh33))
 - Added simple config validator tool [\#789](https://github.com/getlantern/flashlight/pull/789) ([oxtoacart](https://github.com/oxtoacart))
 
@@ -303,7 +311,6 @@
 - Unified session key persistence and session caching for TLS proxies [\#770](https://github.com/getlantern/flashlight/pull/770) ([oxtoacart](https://github.com/oxtoacart))
 - Build all tests in CI [\#769](https://github.com/getlantern/flashlight/pull/769) ([anacrolix](https://github.com/anacrolix))
 - Determine if a feature is enabled dynamically [\#768](https://github.com/getlantern/flashlight/pull/768) ([joesis](https://github.com/joesis))
-- Respecting stealthmode on iOS and removed borda [\#765](https://github.com/getlantern/flashlight/pull/765) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [5.8.4](https://github.com/getlantern/flashlight/tree/5.8.4) (2020-03-06)
 
@@ -431,15 +438,15 @@
 
 ## [5.3.8](https://github.com/getlantern/flashlight/tree/5.3.8) (2019-04-24)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.7...5.3.8)
-
-## [5.3.7](https://github.com/getlantern/flashlight/tree/5.3.7) (2019-04-18)
-
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.6...5.3.7)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.6...5.3.8)
 
 ## [5.3.6](https://github.com/getlantern/flashlight/tree/5.3.6) (2019-04-18)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.5...5.3.6)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.7...5.3.6)
+
+## [5.3.7](https://github.com/getlantern/flashlight/tree/5.3.7) (2019-04-18)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.5...5.3.7)
 
 ## [5.3.5](https://github.com/getlantern/flashlight/tree/5.3.5) (2019-04-12)
 
