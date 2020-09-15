@@ -3,9 +3,12 @@ package sentry
 import (
 	"testing"
 
+	"github.com/getlantern/hidden"
 	sentrySDK "github.com/getsentry/sentry-go"
 	"github.com/stretchr/testify/assert"
 )
+
+var mockOpts = Opts{"fakedsn", 100000}
 
 type panicTest struct {
 	panicMessage   string
@@ -267,13 +270,18 @@ main.main()
 			Message: pTest.panicMessage,
 		}
 
-		output := generateFingerprint(&event)
-		assert.Equal(t, pTest.expectedOutput, output[1])
+		output := beforeSend(&event, nil, mockOpts)
+		expectedFingerprint := []string{
+			"{{ default }}",
+			pTest.expectedOutput,
+			"",
+		}
+		assert.Equal(t, expectedFingerprint, output.Fingerprint)
 	}
 }
 
 type exceptionTest struct {
-	exceptionValue   string
+	exceptionValue string
 	expectedOutput string
 }
 
@@ -291,13 +299,24 @@ func TestSentryException(t *testing.T) {
 			exceptionValue: `Unable to accept connection: accept tcp 127.0.0.1:50292: setsockopt: A system call has failed.`,
 			expectedOutput: `Unable to accept connection: accept tcp : setsockopt: A system call has failed.`,
 		},
+		{
+			exceptionValue: "No succeeding proxy got after running for 30s, global config fetched: false, proxies fetched: true\u0000\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0002\u000f\u0014\u0000",
+			expectedOutput: "No succeeding proxy got after running for 30s, global config fetched: false, proxies fetched: true",
+		},
 	}
 	for _, eTest := range exceptionTests {
 		event := sentrySDK.Event{
 			Exception: []sentrySDK.Exception{{Value: eTest.exceptionValue}},
 		}
 
-		output := generateFingerprint(&event)
-		assert.Equal(t, eTest.expectedOutput, output[2])
+		output := beforeSend(&event, nil, mockOpts)
+		expectedFingerprint := []string{
+			"{{ default }}",
+			"",
+			eTest.expectedOutput,
+		}
+		assert.Equal(t, expectedFingerprint, output.Fingerprint)
+
+		assert.Equal(t, hidden.Clean(eTest.exceptionValue), output.Exception[0].Value)
 	}
 }
