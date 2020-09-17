@@ -359,8 +359,8 @@ github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c/go.mod h1:6yS3MFZm
 github.com/getlantern/idletiming v0.0.0-20190529182719-d2fbc83372a5/go.mod h1:MGP8kEgZGgAhvHISt0hJGQgxg/VAqGdw3+kSZBnfC/4=
 github.com/getlantern/idletiming v0.0.0-20200228204104-10036786eac5 h1:HSxg8YIb4yUn/62i3M/2Eo/9Bz4u+n7yHOiGiiKEE5I=
 github.com/getlantern/idletiming v0.0.0-20200228204104-10036786eac5/go.mod h1:McaLC6faRlxJ9QjjqSjpEeYIjKnKA8+dzjoR+eYXCio=
-github.com/getlantern/ipproxy v0.0.0-20191216171250-6f1aaa987f2f h1:aZSwnaPC547HT3QkTngevXFVxg5/FteS1AdUwmX+0mY=
-github.com/getlantern/ipproxy v0.0.0-20191216171250-6f1aaa987f2f/go.mod h1:r+6WsxnlYZBFaNYk1qYMk1bPhe8KQd8FMUHPBMfh5ZE=
+github.com/getlantern/ipproxy v0.0.0-20200917195736-1c86e2b237ef h1:Gna5UXZqGdSrdhpQkdppcxLeQKR+xAIgw7vySKGnzSs=
+github.com/getlantern/ipproxy v0.0.0-20200917195736-1c86e2b237ef/go.mod h1:kwHJV62S5YxojNVIV0tQm15NAjqWAWKKTNOSwoaJErk=
 github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42 h1:uSvHE7r08LiSG9s7SnLhS5soMzzKSCBtG1cSrGQ/rP4=
 github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42/go.mod h1:gA+8p3g1vV3VKYfGdyDRebIYQdgLbkyCs6MXg7DLv5Y=
 github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644 h1:qEdoFWgwj/IjbL2mfdjUsqHIy0p6B0eQ2znpQnpder0=
@@ -398,8 +398,8 @@ github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0/go.mod h1:u537FS7
 github.com/getlantern/mtime v0.0.0-20200228202836-084e1d8282b0/go.mod h1:GfzwugvtH7YcmNIrHHizeyImsgEdyL88YkdnK28B14c=
 github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7 h1:03J6Cb42EG06lHgpOFGm5BOax4qFqlSbSeKO2RGrj2g=
 github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7/go.mod h1:GfzwugvtH7YcmNIrHHizeyImsgEdyL88YkdnK28B14c=
-github.com/getlantern/netstack v0.0.0-20191212040217-1650eee50330 h1:Qz89wXWpWPCIDeTjgD08dhc76Fj90N24QaIa3xxTTkQ=
-github.com/getlantern/netstack v0.0.0-20191212040217-1650eee50330/go.mod h1:boCZS+mc2Ckrx/BUsPJx3yaoyidXIn/xzXwV9CQtHw4=
+github.com/getlantern/netstack v0.0.0-20200917193938-4067a7f942d1 h1:XjPbXtkTn2Tj3sD+/LLy7WHvbSrS3bMJQCe9fkPfh3g=
+github.com/getlantern/netstack v0.0.0-20200917193938-4067a7f942d1/go.mod h1:d0fO4IQYyc/ITUgC2r1s+/4X9OT6LgAu3QkSuUfU5yM=
 github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd h1:mn98vs69Kqw56iKhR82mjk16Q1q5aDFFW0E89/QbXkQ=
 github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd/go.mod h1:wKdY0ikOgzrWSeB9UyBVKPRhjXQ+vTb+BPeJuypUuNE=
 github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b h1:zmsspqmbtaRMndpJRPSX40ebZBuu2MbBDpJ7Xb0RXQA=
@@ -1017,6 +1017,7 @@ golang.org/x/crypto v0.0.0-20200323165209-0ec3e9974c59/go.mod h1:LzIPMQfyMNhhGPh
 golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37 h1:cg5LA/zNPRzIXIWSCxQW10Rvpy94aQh3LT/ShoCpkHw=
 golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
+golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de h1:ikNHVSjEfnvz6sxdSPCaPt572qowuyMDMJLLm3Db3ig=
 golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/exp v0.0.0-20190121172915-509febef88a4/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
@@ -1059,6 +1060,8 @@ golang.org/x/net v0.0.0-20200501053045-e0ff5e5a1de5/go.mod h1:qpuaurCH72eLCgpAm/
 golang.org/x/net v0.0.0-20200513185701-a91f0712d120/go.mod h1:qpuaurCH72eLCgpAm/N6yyVIVM9cpaDIP3A8BGJEC5A=
 golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2 h1:eDrdRpKgkcCqKZQwyZRyeFZgfqt37SL7Kv3tok06cKE=
 golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2/go.mod h1:qpuaurCH72eLCgpAm/N6yyVIVM9cpaDIP3A8BGJEC5A=
+golang.org/x/net v0.0.0-20200904194848-62affa334b73 h1:MXfv8rhZWmFeqX3GNZRsd6vOLoaCHjYEX3qkRo3YBUA=
+golang.org/x/net v0.0.0-20200904194848-62affa334b73/go.mod h1:/O7V0waA8r7cgGh81Ro3o1hOxt32SMVPicZroKQ2sZA=
 golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be/go.mod h1:N/0e6XlmueqKjAGxoOufVs8QHGRruUQn6yWY3a++T0U=
 golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421/go.mod h1:gOpvHmFTYa4IltrdGE7lF6nIHvwfUNPOp7c8zoXwtLw=
 golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
@@ -1099,7 +1102,6 @@ golang.org/x/sys v0.0.0-20190912141932-bc967efca4b8/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20191005200804-aed5e4c7ecf9/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191008105621-543471e840be/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191105231009-c1f44814a5cd/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
-golang.org/x/sys v0.0.0-20191120155948-bd437916bb0e/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191126131656-8a8471f7e56d/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191210023423-ac6580df4449/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191220142924-d4481acd189f/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
@@ -1113,6 +1115,8 @@ golang.org/x/sys v0.0.0-20200413165638-669c56c373c4/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20200501145240-bc7a7d42d5c3/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200515095857-1151b9dac4a9 h1:YTzHMGlqJu67/uEo1lBv0n3wBXhXNeUbB1XfN2vmTm0=
 golang.org/x/sys v0.0.0-20200515095857-1151b9dac4a9/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20200916084744-dbad9cb7cb7a h1:chkwkn8HYWVtTE5DCQNKYlkyptadXYY0+PuyaVdyMo4=
+golang.org/x/sys v0.0.0-20200916084744-dbad9cb7cb7a/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.2 h1:tW2bmiBqwgJj/UpqtC8EpXEZVYOwU0yG4iWbprSVAcs=
@@ -1123,6 +1127,8 @@ golang.org/x/time v0.0.0-20190308202827-9d24e82272b4/go.mod h1:tRJNPiyCQ0inRvYxb
 golang.org/x/time v0.0.0-20191024005414-555d28b269f0/go.mod h1:tRJNPiyCQ0inRvYxbN9jk5I+vvW/OXSQhTDSoE431IQ=
 golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 h1:NusfzzA6yGQ+ua51ck7E3omNUX/JuqbFSaRGqU8CcLI=
 golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1/go.mod h1:tRJNPiyCQ0inRvYxbN9jk5I+vvW/OXSQhTDSoE431IQ=
+golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e h1:EHBhcS0mlXEAVwNyO2dLfjToGsyY4j24pTs2ScHnX7s=
+golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e/go.mod h1:tRJNPiyCQ0inRvYxbN9jk5I+vvW/OXSQhTDSoE431IQ=
 golang.org/x/tools v0.0.0-20180828015842-6cd1fcedba52/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
 golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
 golang.org/x/tools v0.0.0-20181221001348-537d06c36207/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=

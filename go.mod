@@ -46,7 +46,7 @@ require (
 	github.com/getlantern/httpseverywhere v0.0.0-20190322220559-c364cfbfeb57
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
 	github.com/getlantern/idletiming v0.0.0-20200228204104-10036786eac5
-	github.com/getlantern/ipproxy v0.0.0-20191216171250-6f1aaa987f2f
+	github.com/getlantern/ipproxy v0.0.0-20200917195736-1c86e2b237ef
 	github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42
 	github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644
 	github.com/getlantern/kcpwrapper v0.0.0-20171114192627-a35c895f6de7
@@ -106,8 +106,8 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
-	golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2
-	golang.org/x/sys v0.0.0-20200515095857-1151b9dac4a9
+	golang.org/x/net v0.0.0-20200904194848-62affa334b73
+	golang.org/x/sys v0.0.0-20200916084744-dbad9cb7cb7a
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	google.golang.org/appengine v1.6.2 // indirect
 	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55 // indirect
@@ -125,7 +125,7 @@ replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110
 
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358
 
-replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20191212040217-1650eee50330
+replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20200917193938-4067a7f942d1
 
 //replace github.com/getlantern/replica => ./replica/
 
