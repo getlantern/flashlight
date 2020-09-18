@@ -21,13 +21,13 @@ func (d *mpDialerAdapter) DialContext(ctx context.Context) (net.Conn, error) {
 	var op *ops.Op
 	if value := ctx.Value("op"); value != nil {
 		if existing, ok := value.(*ops.Op); ok {
-			op = existing
+			op = existing.Begin("dial_subflow")
 		}
 	}
 	if op == nil {
 		op = ops.Begin("dial_subflow")
-		defer op.End()
 	}
+	defer op.End()
 	return d.impl.dialServer(op, ctx)
 }
 
@@ -50,7 +50,7 @@ func (impl *multipathImpl) FormatStats() []string {
 
 func CreateMPDialer(endpoint string, ss map[string]*ChainedServerInfo, uc common.UserConfig) (balancer.Dialer, error) {
 	if len(ss) < 1 {
-		return nil, errors.New("no dilers")
+		return nil, errors.New("no dialers")
 	}
 	var p *proxy
 	var err error
@@ -78,7 +78,7 @@ func CreateMPDialer(endpoint string, ss map[string]*ChainedServerInfo, uc common
 	if len(dialers) == 0 {
 		return nil, errors.New("no subflow dialer")
 	}
-	p.impl = &multipathImpl{dialer: multipath.MPDialer(endpoint, dialers)}
+	p.impl = &multipathImpl{dialer: multipath.NewDialer(endpoint, dialers)}
 	return p, nil
 }
 

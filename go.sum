@@ -387,8 +387,8 @@ github.com/getlantern/mtime v0.0.0-20170117193331-ba114e4a82b0/go.mod h1:u537FS7
 github.com/getlantern/mtime v0.0.0-20200228202836-084e1d8282b0/go.mod h1:GfzwugvtH7YcmNIrHHizeyImsgEdyL88YkdnK28B14c=
 github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7 h1:03J6Cb42EG06lHgpOFGm5BOax4qFqlSbSeKO2RGrj2g=
 github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7/go.mod h1:GfzwugvtH7YcmNIrHHizeyImsgEdyL88YkdnK28B14c=
-github.com/getlantern/multipath v0.0.0-20200915080815-12588ad37784 h1:3SvMgU3RWQX70DJiht7tQXgLvI9CxUg6IPs2NLL/QUY=
-github.com/getlantern/multipath v0.0.0-20200915080815-12588ad37784/go.mod h1:H/0vJMf1amR3WEUVuoDctZ0ymrMXK8nvxCmeNB+0Pn4=
+github.com/getlantern/multipath v0.0.0-20200917073238-e784b032ca84 h1:dCk3aESjWRdxi17sBwiyltyhRwYjSbDt7TnN7qXrQdw=
+github.com/getlantern/multipath v0.0.0-20200917073238-e784b032ca84/go.mod h1:H/0vJMf1amR3WEUVuoDctZ0ymrMXK8nvxCmeNB+0Pn4=
 github.com/getlantern/netstack v0.0.0-20200917193938-4067a7f942d1 h1:XjPbXtkTn2Tj3sD+/LLy7WHvbSrS3bMJQCe9fkPfh3g=
 github.com/getlantern/netstack v0.0.0-20200917193938-4067a7f942d1/go.mod h1:d0fO4IQYyc/ITUgC2r1s+/4X9OT6LgAu3QkSuUfU5yM=
 github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd h1:mn98vs69Kqw56iKhR82mjk16Q1q5aDFFW0E89/QbXkQ=
