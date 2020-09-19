@@ -18,6 +18,12 @@ func TestSessionCache(t *testing.T) {
 	assert.True(t, got)
 	assert.Equal(t, state, defaultState, "Should get the default state if nothing is in the cache")
 
+	tlsv13State := tls.MakeClientSessionState([]uint8{1, 2, 3}, tls.VersionTLS13, 0, nil, nil, nil)
+	cache.Put("key", tlsv13State)
+	state, got = cache.Get("key")
+	assert.True(t, got)
+	assert.Equal(t, state, defaultState, "Should get the default state because no tls v1.3 state should be added")
+
 	cache.Put("key", someState)
 	state, got = cache.Get("key")
 	assert.True(t, got)
