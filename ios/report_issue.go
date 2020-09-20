@@ -17,7 +17,7 @@ func init() {
 	go func() {
 		log.Debug("Getting fronted transport to use for submitting issues")
 		start := time.Now()
-		tr, ok := fronted.NewDirect(frontedAvailableTimeout)
+		tr, ok := fronted.NewDirect(longFrontedAvailableTimeout)
 		if ok {
 			log.Debugf("Got fronted transport for submitting issues within %v", time.Now().Sub(start))
 		} else {
