@@ -6,12 +6,14 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"runtime"
 
 	tls "github.com/refraction-networking/utls"
 
 	"github.com/getlantern/flashlight/browsers/simbrowser"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/hellocap"
+	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/tlsresumption"
 )
 
@@ -22,11 +24,14 @@ var (
 // Generates TLS configuration for connecting to proxy specified by the ChainedServerInfo. This
 // function may block while determining things like how to mimic the default browser's client hello.
 //
-// The ClientHelloSpec will be non-nil if and only if the ClientHelloID is tls.HelloCustom.
+// Returns a slice of ClientHellos to be used for dialing. These hellos are in priority order: the
+// first hello is the "ideal" one and the remaining hellos serve as backup in case something is
+// wrong with the previous hellos. There will always be at least one hello. For each hello, the
+// ClientHelloSpec will be non-nil if and only if the ClientHelloID is tls.HelloCustom.
 func tlsConfigForProxy(ctx context.Context, name string, s *ChainedServerInfo, uc common.UserConfig) (
-	*tls.Config, tls.ClientHelloID, *tls.ClientHelloSpec) {
+	*tls.Config, []hello) {
 
-	helloID := s.clientHelloID()
+	configuredHelloID := s.clientHelloID()
 	var ss *tls.ClientSessionState
 	var err error
 	if s.TLSClientSessionState != "" {
@@ -35,20 +40,19 @@ func tlsConfigForProxy(ctx context.Context, name string, s *ChainedServerInfo, u
 			log.Errorf("Unable to parse serialized client session state, continuing with normal handshake: %v", err)
 		} else {
 			log.Debug("Using serialized client session state")
-			if helloID.Client == "Golang" {
+			if configuredHelloID.Client == "Golang" {
 				log.Debug("Need to mimic browser hello for session resumption, defaulting to HelloChrome_Auto")
-				helloID = tls.HelloChrome_Auto
+				configuredHelloID = tls.HelloChrome_Auto
 			}
 		}
 	}
 
-	var helloSpec *tls.ClientHelloSpec
-	if helloID == helloBrowser {
-		helloSpec = getBrowserHello(ctx, uc)
-		helloID = tls.HelloCustom
+	var configuredHelloSpec *tls.ClientHelloSpec
+	if configuredHelloID == helloBrowser {
+		configuredHelloID, configuredHelloSpec = getBrowserHello(ctx, uc)
 	}
 
-	sessionTTL := simbrowser.ChooseForUser(ctx, uc).SessionTicketLifetime()
+	sessionTTL := simbrowser.ChooseForUser(ctx, uc).SessionTicketLifetime
 	sessionCache := newExpiringSessionCache(name, sessionTTL, ss)
 	cipherSuites := orderedCipherSuitesFromConfig(s)
 
@@ -59,29 +63,36 @@ func tlsConfigForProxy(ctx context.Context, name string, s *ChainedServerInfo, u
 		InsecureSkipVerify: true,
 		KeyLogWriter:       getTLSKeyLogWriter(),
 	}
+	hellos := []hello{
+		{configuredHelloID, configuredHelloSpec},
+		{tls.HelloChrome_Auto, nil},
+		{tls.HelloGolang, nil},
+	}
 
-	return cfg, helloID, helloSpec
+	return cfg, hellos
 }
 
 // getBrowserHello determines the best way to mimic the system's default web browser. There are a
 // few possible failure points in making this determination, e.g. a failure to obtain the default
 // browser or a failure to capture a hello from the browser. However, this function will always find
 // something reasonable to fall back on.
-func getBrowserHello(ctx context.Context, uc common.UserConfig) *tls.ClientHelloSpec {
+func getBrowserHello(ctx context.Context, uc common.UserConfig) (tls.ClientHelloID, *tls.ClientHelloSpec) {
 	// We have a number of ways to approximate the browser's ClientHello format. We begin with the
 	// most desirable, progressively falling back to less desirable options on failure.
 
-	// TODO: use op package to report successes and failures
+	op := ops.Begin("get_browser_hello")
+	op.Set("platform", runtime.GOOS)
+	defer op.End()
 
 	helloSpec, err := activelyObtainBrowserHello(ctx)
 	if err == nil {
-		return helloSpec
+		return tls.HelloCustom, helloSpec
 	}
+	op.FailIf(err)
 	log.Debugf("failed to actively obtain browser hello: %v", err)
 
 	// Our last option is to simulate a browser choice for the user based on market share.
-	simulatedHelloSpec := simbrowser.ChooseForUser(ctx, uc).ClientHelloSpec()
-	return &simulatedHelloSpec
+	return simbrowser.ChooseForUser(ctx, uc).ClientHelloID, nil
 }
 
 func activelyObtainBrowserHello(ctx context.Context) (*tls.ClientHelloSpec, error) {

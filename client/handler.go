@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+
 	"net/http"
 	"net/url"
 	"strings"
@@ -225,9 +226,27 @@ func (client *Client) redirectAdSwap(ctx filters.Context, req *http.Request, adS
 }
 
 func trackYoutubeWatches(req *http.Request) {
-	if strings.Contains(strings.ToLower(req.Host), "youtube") && req.URL.Path == "/watch" {
-		op := ops.Begin("youtube_view").Set("video", req.URL.Query().Get("v"))
+	video := youtubeVideoFor(req)
+	if video != "" {
+		op := ops.Begin("youtube_view").Set("video", video)
 		defer op.End()
 		log.Debugf("Requested YouTube video")
 	}
+}
+
+func youtubeVideoFor(req *http.Request) string {
+	if !strings.Contains(strings.ToLower(req.Host), "youtube") && !strings.Contains(strings.ToLower(req.URL.Host), "youtube") {
+		// not a youtube domain
+		return ""
+	}
+	if req.URL.Path != "/watch" {
+		// not a watch url
+		return ""
+	}
+	candidate := req.URL.Query().Get("v")
+	if len(candidate) < 11 {
+		// invalid/corrupt video id
+		return ""
+	}
+	return candidate[0:11]
 }

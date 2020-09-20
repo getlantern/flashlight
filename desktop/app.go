@@ -16,6 +16,7 @@ import (
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
+	"github.com/getlantern/flashlight/browsers/simbrowser"
 	"github.com/getlantern/flashlight/proxied"
 
 	"github.com/getlantern/golog"
@@ -591,6 +592,13 @@ func (app *App) onConfigUpdate(cfg *config.Global, src config.Source) {
 	})
 	email.SetDefaultRecipient(cfg.ReportIssueEmail)
 	app.chGlobalConfigChanged <- true
+	if len(cfg.GlobalBrowserMarketShareData) > 0 {
+		err := simbrowser.SetMarketShareData(
+			cfg.GlobalBrowserMarketShareData, cfg.RegionalBrowserMarketShareData)
+		if err != nil {
+			log.Errorf("failed to set browser market share data: %v", err)
+		}
+	}
 	//app.configureTrafficLog(*cfg)
 }
 

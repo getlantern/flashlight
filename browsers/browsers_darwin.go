@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/getlantern/flashlight/ops"
 	"howett.net/plist"
 )
 
@@ -94,6 +95,18 @@ func (b Browser) AppBundle(ctx context.Context) (string, error) {
 // SystemDefault returns the default web browser. Specifically, this is the default launch
 // service for HTTPS or HTTP links. May return ErrorUnknownBundleID.
 func SystemDefault(ctx context.Context) (Browser, error) {
+	op := ops.Begin("get_default_browser")
+	op.Set("os", "darwin")
+	b, err := systemDefault(ctx)
+	op.FailIf(err)
+	if b != Unknown {
+		op.Set("browser", b.String())
+	}
+	op.End()
+	return b, err
+}
+
+func systemDefault(ctx context.Context) (Browser, error) {
 	u, err := user.Current()
 	if err != nil {
 		return Unknown, fmt.Errorf("unable to retrieve current user information: %w", err)

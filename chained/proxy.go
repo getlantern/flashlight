@@ -2,50 +2,28 @@ package chained
 
 import (
 	"context"
-	"crypto/rsa"
-	stls "crypto/tls"
-	"crypto/x509"
-	"encoding/binary"
-	"encoding/hex"
-	"encoding/pem"
 	"fmt"
 	"io"
 	"math/rand"
 	"net"
 	"net/http"
-	"net/url"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	pt "git.torproject.org/pluggable-transports/goptlib.git"
-	"git.torproject.org/pluggable-transports/obfs4.git/transports/obfs4"
-	tls "github.com/refraction-networking/utls"
-
-	"github.com/getlantern/cmux"
 	config "github.com/getlantern/common"
 	"github.com/getlantern/ema"
 	"github.com/getlantern/enhttp"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
-	"github.com/getlantern/hellosplitter"
 	"github.com/getlantern/idletiming"
-	"github.com/getlantern/kcpwrapper"
-	"github.com/getlantern/keyman"
-	"github.com/getlantern/lampshade"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
-	"github.com/getlantern/tinywss"
-	"github.com/getlantern/tlsdialer/v3"
-	"github.com/getlantern/tlsmasq"
-	"github.com/getlantern/tlsmasq/ptlshs"
 
 	"github.com/getlantern/flashlight/balancer"
-	"github.com/getlantern/flashlight/buffers"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 )
@@ -77,6 +55,21 @@ var (
 	createKeyLogWriterOnce sync.Once
 )
 
+// proxyImpl is the interface to hide the details of client side logic for
+// different types of pluggable transports.
+type proxyImpl interface {
+	// dialServer is to establish connection to the proxy server to the point
+	// of being able to transfer application data.
+	dialServer(op *ops.Op, ctx context.Context) (net.Conn, error)
+	// close releases the resources associated with the implementation, if any.
+	close()
+}
+
+// nopCloser is a mixin to implement a do-nothing close() method of proxyImpl.
+type nopCloser struct{}
+
+func (c nopCloser) close() {}
+
 // CreateDialer creates a Proxy (balancer.Dialer) with supplied server info.
 func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (balancer.Dialer, error) {
 	if theForceAddr != "" && theForceToken != "" {
@@ -85,45 +78,110 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 	if s.Addr == "" {
 		return nil, errors.New("Empty addr")
 	}
-	isUTP := strings.HasPrefix(s.PluggableTransport, "utp")
-	transport := s.PluggableTransport
-	proto := "tcp"
-	if isUTP {
-		proto = "udp"
+	addr := s.Addr
+	if s.MultiplexedAddr != "" {
+		addr = s.MultiplexedAddr
 	}
+	transport := s.PluggableTransport
 	switch transport {
-	case "", "http", "https", "utphttp", "utphttps":
-		transport := "http"
-		if isUTP {
-			transport = "utphttp"
-		}
-		var p *proxy
-		var err error
+	case "":
+		transport = "http"
+	case "http", "https", "utphttp", "utphttps":
+		transport = strings.TrimRight(transport, "s")
 		if s.Cert == "" {
-			log.Errorf("No Cert configured for %s, will dial with plain tcp", s.Addr)
-			p, err = newHTTPProxy(name, transport, proto, s, uc)
 		} else if len(s.KCPSettings) > 0 {
-			log.Errorf("KCP configured for %s, not using tls", s.Addr)
-			p, err = newHTTPProxy(name, transport, proto, s, uc)
+			transport = "kcp"
 		} else {
 			transport = transport + "s"
-			log.Tracef("Cert configured for %s, will dial with tls", s.Addr)
-			p, err = newHTTPSProxy(name, transport, proto, s, uc)
 		}
-		return p, err
-	case "obfs4", "utpobfs4":
-		return newOBFS4Proxy(name, transport, proto, s, uc)
-	case "lampshade":
-		return newLampshadeProxy(name, transport, proto, s, uc)
-	case "quic", "quic_ietf", "oquic":
-		return newQUICProxy(name, transport, s, uc)
-	case "wss":
-		return newWSSProxy(name, s, uc)
-	case "tlsmasq":
-		return newTLSMasqProxy(name, s, uc)
-	default:
-		return nil, errors.New("Unknown transport: %v", s.PluggableTransport).With("addr", s.Addr).With("plugabble-transport", s.PluggableTransport)
 	}
+	network := "tcp"
+	switch transport {
+	case "utphttp", "utphttps", "utpobfs4", "quic", "quic_ietf", "oquic":
+		network = "udp"
+	}
+	p, err := newProxy(name, addr, transport, network, s, uc)
+
+	impl, err := createImpl(name, addr, transport, s, uc, p.reportDialCore)
+	if err != nil {
+		return nil, err
+	}
+	p.impl = impl
+
+	if s.MultiplexedAddr != "" || transport == "utphttp" ||
+		transport == "utphttps" || transport == "utpobfs4" ||
+		transport == "tlsmasq" {
+		p.impl, err = multiplexed(p.impl, name, s)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	allowPreconnecting := false
+	switch transport {
+	case "http", "https", "utphttp", "utphttps", "obfs4", "utpobfs4", "tlsmasq":
+		allowPreconnecting = true
+	}
+	if allowPreconnecting && s.MaxPreconnect > 0 {
+		log.Debugf("Enabling preconnecting for %v", p.Label())
+		// give ourselves a large margin for making sure we're not using idled preconnected connections
+		expiration := IdleTimeout / 2
+		p.impl = newPreconnectingDialer(name, s.MaxPreconnect, expiration, p.impl)
+	}
+	return p, err
+}
+
+func createImpl(name, addr, transport string, s *ChainedServerInfo, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+	coreDialer := func(op *ops.Op, ctx context.Context, addr string) (net.Conn, error) {
+		return reportDialCore(op, func() (net.Conn, error) {
+			return netx.DialContext(ctx, "tcp", addr)
+		})
+	}
+	if strings.HasPrefix(transport, "utp") {
+		dialer, err := utpDialer()
+		if err != nil {
+			return nil, err
+		}
+		coreDialer = func(op *ops.Op, ctx context.Context, addr string) (net.Conn, error) {
+			return reportDialCore(op, func() (net.Conn, error) {
+				return dialer(ctx, addr)
+			})
+		}
+	}
+	var impl proxyImpl
+	var err error
+	switch transport {
+	case "", "http", "https", "utphttp", "utphttps":
+		if s.Cert == "" {
+			log.Errorf("No Cert configured for %s, will dial with plain tcp", addr)
+			impl = newHTTPImpl(addr, coreDialer)
+		} else if len(s.KCPSettings) > 0 {
+			log.Errorf("KCP configured for %s, not using tls", addr)
+			impl, err = newKCPImpl(s, reportDialCore)
+		} else {
+			log.Tracef("Cert configured for %s, will dial with tls", addr)
+			impl, err = newHTTPSImpl(name, addr, s, uc, coreDialer)
+		}
+	case "obfs4", "utpobfs4":
+		impl, err = newOBFS4Impl(name, addr, s, coreDialer)
+	case "lampshade":
+		impl, err = newLampshadeImpl(name, addr, s, reportDialCore)
+	case "quic":
+		impl, err = newQUIC0Impl(name, addr, s, reportDialCore)
+	case "quic_ietf", "oquic":
+		impl, err = newQUICImpl(name, addr, s, reportDialCore)
+	case "wss":
+		impl, err = newWSSImpl(addr, s, reportDialCore)
+	case "tlsmasq":
+		impl, err = newTLSMasqImpl(name, addr, s, uc, reportDialCore)
+	default:
+		err = errors.New("Unknown transport: %v", transport).With("addr", addr).With("plugabble-transport", transport)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return impl, err
 }
 
 // ForceProxy forces everything through the HTTP proxy at forceAddr using
@@ -138,364 +196,6 @@ func forceProxy(s *ChainedServerInfo) {
 	s.AuthToken = theForceToken
 	s.Cert = ""
 	s.PluggableTransport = ""
-}
-
-func newHTTPProxy(name, transport, proto string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
-	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
-		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
-			return p.dialCore(op)(ctx)
-		})
-	}
-
-	dialOrigin := defaultDialOrigin
-	if s.ENHTTPURL != "" {
-		tr := &frontedTransport{rt: eventual.NewValue()}
-		go func() {
-			rt, ok := fronted.NewDirect(5 * time.Minute)
-			if !ok {
-				log.Errorf("Unable to initialize domain-fronting for enhttp")
-				return
-			}
-			tr.rt.Set(rt)
-		}()
-		dial := enhttp.NewDialer(&http.Client{
-			Transport: tr,
-		}, s.ENHTTPURL)
-		dialOrigin = func(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
-			dfConn, err := dial(network, addr)
-			if err == nil {
-				dfConn = idletiming.Conn(dfConn, IdleTimeout, func() {
-					log.Debug("enhttp connection idled")
-				})
-			}
-			return dfConn, err
-		}
-	}
-	return newProxy(name, transport, proto, s, uc, s.Trusted, true, doDialServer, dialOrigin)
-}
-
-func newHTTPSProxy(name, transport, proto string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
-	const tlsConfigTimeout = 5 * time.Second
-
-	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
-	if err != nil {
-		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
-	}
-	x509cert := cert.X509()
-
-	tlsConfigCtx, cancelTLSConfig := context.WithTimeout(context.Background(), tlsConfigTimeout)
-	defer cancelTLSConfig()
-
-	tlsConfig, clientHelloID, clientHelloSpec := tlsConfigForProxy(tlsConfigCtx, name, s, uc)
-	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
-		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
-			td := &tlsdialer.Dialer{
-				DoDial: func(network, addr string, timeout time.Duration) (net.Conn, error) {
-					tcpConn, err := p.dialCore(op)(ctx)
-					if err != nil {
-						return nil, err
-					}
-					if s.TLSClientHelloSplitting {
-						tcpConn = hellosplitter.Wrap(tcpConn, splitClientHello)
-					}
-					return tcpConn, err
-				},
-				Timeout:         timeoutFor(ctx),
-				SendServerName:  tlsConfig.ServerName != "",
-				Config:          tlsConfig,
-				ClientHelloID:   clientHelloID,
-				ClientHelloSpec: clientHelloSpec,
-			}
-			result, err := td.DialForTimings("tcp", p.addr)
-			if err != nil {
-				return nil, err
-			}
-			conn := result.Conn
-			peerCertificates := conn.ConnectionState().PeerCertificates
-			// when using tls session resumption from a stored session state, there will be no peer certificates.
-			// this is okay.
-			resumedSession := len(peerCertificates) == 0
-			if !resumedSession && !conn.ConnectionState().PeerCertificates[0].Equal(x509cert) {
-				if closeErr := conn.Close(); closeErr != nil {
-					log.Debugf("Error closing chained server connection: %s", closeErr)
-				}
-				var received interface{}
-				var expected interface{}
-				_received, certErr := keyman.LoadCertificateFromX509(conn.ConnectionState().PeerCertificates[0])
-				if certErr != nil {
-					log.Errorf("Unable to parse received certificate: %v", certErr)
-					received = conn.ConnectionState().PeerCertificates[0]
-					expected = x509cert
-				} else {
-					received = string(_received.PEMEncoded())
-					expected = string(cert.PEMEncoded())
-				}
-				return nil, op.FailIf(log.Errorf("Server's certificate didn't match expected! Server had\n%v\nbut expected:\n%v",
-					received, expected))
-			}
-			return overheadWrapper(true)(conn, op.FailIf(err))
-		})
-	}
-	return newProxy(name, transport, proto, s, uc, s.Trusted, true, doDialServer, defaultDialOrigin)
-}
-
-func newOBFS4Proxy(name, transport, proto string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
-	if s.Cert == "" {
-		return nil, fmt.Errorf("No Cert configured for obfs4 server, can't connect")
-	}
-
-	cf, err := (&obfs4.Transport{}).ClientFactory("")
-	if err != nil {
-		return nil, log.Errorf("Unable to create obfs4 client factory: %v", err)
-	}
-
-	ptArgs := &pt.Args{}
-	ptArgs.Add("cert", s.Cert)
-	ptArgs.Add("iat-mode", s.ptSetting("iat-mode"))
-
-	args, err := cf.ParseArgs(ptArgs)
-	if err != nil {
-		return nil, log.Errorf("Unable to parse client args: %v", err)
-	}
-
-	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
-		return p.reportedDial(p.Addr(), p.Protocol(), p.Network(), func(op *ops.Op) (net.Conn, error) {
-			dialFn := func(network, address string) (net.Conn, error) {
-				// We know for sure the network and address are the same as what
-				// the inner DailServer uses.
-				return p.dialCore(op)(ctx)
-			}
-
-			// The proxy it wrapped already has timeout applied.
-			return overheadWrapper(true)(cf.Dial("tcp", p.addr, dialFn, args))
-		})
-	}
-	return newProxy(name, transport, proto, s, uc, s.Trusted, true, doDialServer, defaultDialOrigin)
-}
-
-func newLampshadeProxy(name, transport, proto string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
-	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
-	if err != nil {
-		return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
-	}
-	rsaPublicKey, ok := cert.X509().PublicKey.(*rsa.PublicKey)
-	if !ok {
-		return nil, errors.New("Public key is not an RSA public key!")
-	}
-	cipherCode := lampshade.Cipher(s.ptSettingInt(fmt.Sprintf("cipher_%v", runtime.GOARCH)))
-	if cipherCode == 0 {
-		if runtime.GOARCH == "amd64" {
-			// On 64-bit Intel, default to AES128_GCM which is hardware accelerated
-			cipherCode = lampshade.AES128GCM
-		} else {
-			// default to ChaCha20Poly1305 which is fast even without hardware acceleration
-			cipherCode = lampshade.ChaCha20Poly1305
-		}
-	}
-	windowSize := s.ptSettingInt("windowsize")
-	maxPadding := s.ptSettingInt("maxpadding")
-	maxStreamsPerConn := uint16(s.ptSettingInt("streams"))
-	idleInterval, parseErr := time.ParseDuration(s.ptSetting("idleinterval"))
-	if parseErr != nil || idleInterval < 0 {
-		// This should be less than the server's IdleTimeout to avoid trying to use
-		// a connection that was just idled. The client's IdleTimeout is already set
-		// appropriately for this purpose, so use that.
-		idleInterval = IdleTimeout
-		log.Debugf("%s: defaulted idleinterval to %v", name, idleInterval)
-	}
-	pingInterval, parseErr := time.ParseDuration(s.ptSetting("pinginterval"))
-	if parseErr != nil || pingInterval < 0 {
-		pingInterval = 15 * time.Second
-		log.Debugf("%s: defaulted pinginterval to %v", name, pingInterval)
-	}
-	maxLiveConns := s.ptSettingInt("maxliveconns")
-	if maxLiveConns <= 0 {
-		maxLiveConns = 5
-		log.Debugf("%s: defaulted maxliveconns to %v", name, maxLiveConns)
-	}
-	redialSessionInterval, parseErr := time.ParseDuration(s.ptSetting("redialsessioninterval"))
-	if parseErr != nil || redialSessionInterval < 0 {
-		redialSessionInterval = 5 * time.Second
-		log.Debugf("%s: defaulted redialsessioninterval to %v", name, redialSessionInterval)
-	}
-	dialer := lampshade.NewDialer(&lampshade.DialerOpts{
-		WindowSize:            windowSize,
-		MaxPadding:            maxPadding,
-		MaxLiveConns:          maxLiveConns,
-		MaxStreamsPerConn:     maxStreamsPerConn,
-		IdleInterval:          idleInterval,
-		PingInterval:          pingInterval,
-		RedialSessionInterval: redialSessionInterval,
-		Pool:                  buffers.Pool,
-		Cipher:                cipherCode,
-		ServerPublicKey:       rsaPublicKey,
-	})
-	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
-		return p.reportedDial(s.Addr, transport, proto, func(op *ops.Op) (net.Conn, error) {
-			op.Set("ls_win", windowSize).
-				Set("ls_pad", maxPadding).
-				Set("ls_streams", int(maxStreamsPerConn)).
-				Set("ls_cipher", cipherCode.String())
-			conn, err := dialer.DialContext(ctx, func() (net.Conn, error) {
-				// note - we do not wrap the TCP connection with IdleTiming because
-				// lampshade cleans up after itself and won't leave excess unused
-				// connections hanging around.
-				log.Debugf("Dialing lampshade TCP connection to %v", p.Label())
-				return p.dialCore(op)(ctx)
-			})
-			return overheadWrapper(true)(conn, err)
-		})
-	}
-	return newProxy(name, transport, proto, s, uc, s.Trusted, false, doDialServer, defaultDialOrigin)
-}
-
-func newQUICProxy(name string, transport string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
-
-	dialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
-		return p.reportedDial(s.Addr, "quic", "udp", func(op *ops.Op) (net.Conn, error) {
-			conn, err := p.dialCore(op)(ctx)
-			return overheadWrapper(true)(conn, err)
-		})
-	}
-
-	return newProxy(name, transport, "udp", s, uc, s.Trusted, false, dialServer, defaultDialOrigin)
-}
-
-func newWSSProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
-
-	doDialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
-		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
-			conn, err := p.dialCore(op)(ctx)
-			return overheadWrapper(true)(conn, err)
-		})
-	}
-
-	return newProxy(name, "wss", "tcp", s, uc, s.Trusted, false, doDialServer, defaultDialOrigin)
-}
-
-func newTLSMasqProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
-	const tlsConfigTimeout = 5 * time.Second
-
-	decodeUint16 := func(s string) (uint16, error) {
-		b, err := hex.DecodeString(strings.TrimPrefix(s, "0x"))
-		if err != nil {
-			return 0, err
-		}
-		return binary.BigEndian.Uint16(b), nil
-	}
-
-	suites := []uint16{}
-	suiteStrings := strings.Split(s.ptSetting("tlsmasq_suites"), ",")
-	if len(suiteStrings) == 1 && suiteStrings[0] == "" {
-		return nil, errors.New("no cipher suites specified")
-	}
-	for _, s := range suiteStrings {
-		suite, err := decodeUint16(s)
-		if err != nil {
-			return nil, errors.New("bad cipher string '%s': %v", s, err)
-		}
-		suites = append(suites, suite)
-	}
-	versStr := s.ptSetting("tlsmasq_tlsminversion")
-	minVersion, err := decodeUint16(versStr)
-	if err != nil {
-		return nil, errors.New("bad TLS version string '%s': %v", versStr, err)
-	}
-	secretString := s.ptSetting("tlsmasq_secret")
-	secretBytes, err := hex.DecodeString(strings.TrimPrefix(secretString, "0x"))
-	if err != nil {
-		return nil, errors.New("bad server-secret string '%s': %v", secretString, err)
-	}
-	secret := ptlshs.Secret{}
-	if len(secretBytes) != len(secret) {
-		return nil, errors.New("expected %d-byte secret string, got %d bytes", len(secret), len(secretBytes))
-	}
-	copy(secret[:], secretBytes)
-	sni := s.ptSetting("tlsmasq_sni")
-	if sni == "" {
-		return nil, errors.New("server name indicator must be configured")
-	}
-	// It's okay if this is unset - it'll just result in us using the default.
-	nonceTTL := time.Duration(s.ptSettingInt("tlsmasq_noncettl"))
-
-	host, _, err := net.SplitHostPort(s.Addr)
-	if err != nil {
-		return nil, errors.New("malformed server address: %v", err)
-	}
-
-	// Add the proxy cert to the root CAs as proxy certs are self-signed.
-	if s.Cert == "" {
-		return nil, errors.New("no proxy certificate configured")
-	}
-	block, rest := pem.Decode([]byte(s.Cert))
-	if block == nil {
-		return nil, errors.New("failed to decode proxy certificate as PEM block")
-	}
-	if len(rest) > 0 {
-		return nil, errors.New("unexpected extra data in proxy certificate PEM")
-	}
-	cert, err := x509.ParseCertificate(block.Bytes)
-	if err != nil {
-		return nil, errors.New("failed to parse proxy certificate: %v", err)
-	}
-	pool, err := x509.SystemCertPool()
-	if err != nil {
-		return nil, errors.New("failed to load system cert pool: %v", err)
-	}
-	pool.AddCert(cert)
-
-	tlsCfgCtx, cancelTLSCfg := context.WithTimeout(context.Background(), tlsConfigTimeout)
-	defer cancelTLSCfg()
-
-	pCfg, helloID, helloSpec := tlsConfigForProxy(tlsCfgCtx, name, s, uc)
-	pCfg.ServerName = sni
-	pCfg.InsecureSkipVerify = InsecureSkipVerifyTLSMasqOrigin
-
-	cfg := tlsmasq.DialerConfig{
-		ProxiedHandshakeConfig: ptlshs.DialerConfig{
-			Handshaker: utlsHandshaker{pCfg, helloID, helloSpec},
-			Secret:     secret,
-			NonceTTL:   nonceTTL,
-		},
-		TLSConfig: &stls.Config{
-			MinVersion:   minVersion,
-			CipherSuites: suites,
-			// Proxy certificates are valid for the host (usually their IP address).
-			ServerName: host,
-			RootCAs:    pool,
-		},
-	}
-
-	dialServer := func(ctx context.Context, p *proxy) (net.Conn, error) {
-		return p.reportedDial(p.addr, p.protocol, p.network, func(op *ops.Op) (net.Conn, error) {
-			tcpConn, err := p.dialCore(op)(ctx)
-			if err != nil {
-				return nil, err
-			}
-			if s.TLSClientHelloSplitting {
-				tcpConn = hellosplitter.Wrap(tcpConn, splitClientHello)
-			}
-			conn := tlsmasq.Client(tcpConn, cfg)
-
-			// We execute the handshake as part of the dial. Otherwise, preconnecting wouldn't do
-			// much for us.
-			errc := make(chan error, 1)
-			go func() { errc <- conn.Handshake() }()
-			select {
-			case err := <-errc:
-				if err != nil {
-					conn.Close()
-					return nil, errors.New("handshake failed: %v", err)
-				}
-				return conn, nil
-			case <-ctx.Done():
-				conn.Close()
-				return nil, ctx.Err()
-			}
-		})
-	}
-
-	return newProxy(name, "tlsmasq", "tcp", s, uc, s.Trusted, true, dialServer, defaultDialOrigin)
 }
 
 // consecCounter is a counter that can extend on both directions. Its default
@@ -526,8 +226,9 @@ func (c *consecCounter) Get() int64 {
 	return atomic.LoadInt64(&c.v)
 }
 
-type dialServerFn func(context.Context, *proxy) (net.Conn, error)
+type coreDialer func(op *ops.Op, ctx context.Context, addr string) (net.Conn, error)
 
+type reportDialCoreFn func(op *ops.Op, dialCore func() (net.Conn, error)) (net.Conn, error)
 type dialOriginFn func(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error)
 
 type proxy struct {
@@ -556,14 +257,13 @@ type proxy struct {
 	user                common.UserConfig
 	trusted             bool
 	bias                int
-	doDialServer        dialServerFn
+	impl                proxyImpl
 	dialOrigin          dialOriginFn
 	emaRTT              *ema.EMA
 	emaRTTDev           *ema.EMA
 	emaSuccessRate      *ema.EMA
 	kcpConfig           *KCPConfig
 	mostRecentABETime   time.Time
-	doDialCore          func(ctx context.Context) (net.Conn, time.Duration, error)
 	numPreconnecting    func() int
 	numPreconnected     func() int
 	closeCh             chan bool
@@ -571,27 +271,19 @@ type proxy struct {
 	mx                  sync.Mutex
 }
 
-func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.UserConfig, trusted bool, allowPreconnecting bool, dialServer dialServerFn, dialOrigin dialOriginFn) (*proxy, error) {
-	addr := s.Addr
-	multiplexed := false
-	if s.MultiplexedAddr != "" {
-		addr = s.MultiplexedAddr
-		multiplexed = true
-	}
-
+func newProxy(name, addr, protocol, network string, s *ChainedServerInfo, uc common.UserConfig) (*proxy, error) {
 	p := &proxy{
 		name:             name,
 		protocol:         protocol,
 		network:          network,
-		multiplexed:      multiplexed,
+		multiplexed:      s.MultiplexedAddr != "",
 		addr:             addr,
 		location:         s.Location,
 		authToken:        s.AuthToken,
 		user:             uc,
-		trusted:          trusted,
+		trusted:          s.Trusted,
 		bias:             s.Bias,
-		doDialServer:     dialServer,
-		dialOrigin:       dialOrigin,
+		dialOrigin:       defaultDialOrigin,
 		emaRTT:           ema.NewDuration(0, rttAlpha),
 		emaRTTDev:        ema.NewDuration(0, rttDevAlpha),
 		emaSuccessRate:   ema.New(1, successRateAlpha), // Consider a proxy success when initializing
@@ -601,219 +293,42 @@ func newProxy(name, protocol, network string, s *ChainedServerInfo, uc common.Us
 		consecSuccesses:  1, // be optimistic
 	}
 
-	if s.Bias == 0 && s.ENHTTPURL != "" {
+	if p.bias == 0 && s.ENHTTPURL != "" {
 		// By default, do not prefer ENHTTP proxies. Use a very low bias as domain-
 		// fronting is our very-last resort.
 		p.bias = -10
+	} else if len(s.KCPSettings) > 0 && p.bias == 0 {
+		// KCP consumes a lot of bandwidth, so we want to bias against using it
+		// unless everything else is blocked. However, we prefer it to
+		// domain-fronting. We only default the bias if none was configured.
+		p.bias = -1
 	}
 
-	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
-		elapsed := mtime.Stopwatch()
-		conn, err := netx.DialTimeout("tcp", p.addr, timeoutFor(ctx))
-		delta := elapsed()
-		log.Tracef("Core dial time to %v was %v", p.Name(), delta)
-		return conn, delta, err
-	}
-
-	if s.MultiplexedAddr != "" || s.PluggableTransport == "utphttp" ||
-		s.PluggableTransport == "utphttps" || s.PluggableTransport == "utpobfs4" ||
-		s.PluggableTransport == "tlsmasq" {
-
-		log.Debugf("Enabling multiplexing for %v", p.Label())
-		origDoDialServer := p.doDialServer
-		poolSize := s.MultiplexedPhysicalConns
-		if poolSize < 1 {
-			poolSize = defaultMultiplexedPhysicalConns
-		}
-		multiplexedDial := cmux.Dialer(&cmux.DialerOpts{
-			Dial: func(ctx context.Context, network, addr string) (net.Conn, error) {
-				return origDoDialServer(ctx, p)
-			},
-			KeepAliveInterval: IdleTimeout / 2,
-			KeepAliveTimeout:  IdleTimeout,
-			PoolSize:          poolSize,
-		})
-		p.doDialServer = func(ctx context.Context, p *proxy) (net.Conn, error) {
-			return multiplexedDial(ctx, "", "")
+	if s.ENHTTPURL != "" {
+		tr := &frontedTransport{rt: eventual.NewValue()}
+		go func() {
+			rt, ok := fronted.NewDirect(5 * time.Minute)
+			if !ok {
+				log.Errorf("Unable to initialize domain-fronting for enhttp")
+				return
+			}
+			tr.rt.Set(rt)
+		}()
+		dial := enhttp.NewDialer(&http.Client{
+			Transport: tr,
+		}, s.ENHTTPURL)
+		p.dialOrigin = func(op *ops.Op, ctx context.Context, p *proxy, network, addr string) (net.Conn, error) {
+			dfConn, err := p.reportedDial(func(op *ops.Op) (net.Conn, error) { return dial(network, addr) })
+			dfConn, err = overheadWrapper(true)(dfConn, op.FailIf(err))
+			if err == nil {
+				dfConn = idletiming.Conn(dfConn, IdleTimeout, func() {
+					log.Debug("enhttp connection idled")
+				})
+			}
+			return dfConn, err
 		}
 	}
-	if len(s.KCPSettings) > 0 {
-		log.Debugf("Enabling KCP for %v (%v)", p.Label(), p.protocol)
-		err := enableKCP(p, s)
-		if err != nil {
-			return nil, err
-		}
-		p.protocol = "kcp"
-	} else if s.PluggableTransport == "quic" {
-		log.Debugf("Enabling QUIC0 (legacy) for %v (%v)", p.Label(), p.protocol)
-		err := enableQUIC0(p, s)
-		if err != nil {
-			return nil, err
-		}
-		p.protocol = s.PluggableTransport
-	} else if s.PluggableTransport == "quic_ietf" || s.PluggableTransport == "oquic" {
-		log.Debugf("Enabling QUIC (%s) for %v (%v)", s.PluggableTransport, p.Label(), p.protocol)
-		err := enableQUIC(p, s)
-		if err != nil {
-			return nil, err
-		}
-		p.protocol = s.PluggableTransport
-	} else if strings.HasPrefix(s.PluggableTransport, "utp") {
-		log.Debugf("Enabling UTP for %v (%v)", p.Label(), p.protocol)
-		err := enableUTP(p, s)
-		if err != nil {
-			return nil, err
-		}
-		p.protocol = "utp"
-	} else if s.PluggableTransport == "wss" {
-		log.Debugf("Enabling WSS for %v (%v)", p.Label(), p.protocol)
-		err := enableWSS(p, s)
-		if err != nil {
-			return nil, err
-		}
-		p.protocol = "wss"
-	} else if allowPreconnecting && s.MaxPreconnect > 0 {
-		log.Debugf("Enabling preconnecting for %v", p.Label())
-		// give ourselves a large margin for making sure we're not using idled preconnected connections
-		expiration := IdleTimeout / 2
-		pd := newPreconnectingDialer(name, s.MaxPreconnect, expiration, p.closeCh, p.doDialServer)
-		p.doDialServer = pd.dial
-		p.numPreconnecting = pd.numPreconnecting
-		p.numPreconnected = pd.numPreconnected
-	}
-
 	return p, nil
-}
-
-func enableWSS(p *proxy, s *ChainedServerInfo) error {
-	var rt tinywss.RoundTripHijacker
-	var err error
-
-	url := s.ptSetting("url")
-	force_http := s.ptSettingBool("force_http")
-	fctx_id := s.ptSetting("df_ctx")
-
-	if force_http {
-		log.Debugf("Using wss http direct")
-		rt, err = wssHTTPRoundTripper(p, s)
-		if err != nil {
-			return err
-		}
-	} else if fctx_id != "" {
-		fctx := GetFrontingContext(fctx_id)
-		if fctx == nil {
-			return fmt.Errorf("unsupported wss df_ctx=%s! skipping.", fctx_id)
-		}
-		timeout, err := time.ParseDuration(s.ptSetting("df_timeout"))
-		if err != nil || timeout < 0 {
-			timeout = 1 * time.Minute
-		}
-		log.Debugf("Using wss fctx_id=%s timeout=%v", fctx_id, timeout)
-		rt = &wssFrontedRT{fctx, timeout}
-	} else {
-		log.Debugf("Using wss https direct")
-		rt, err = wssHTTPSRoundTripper(p, s)
-		if err != nil {
-			return err
-		}
-	}
-
-	opts := &tinywss.ClientOpts{
-		URL:               url,
-		RoundTrip:         rt,
-		KeepAliveInterval: IdleTimeout / 2,
-		KeepAliveTimeout:  IdleTimeout,
-		Multiplexed:       s.ptSettingBool("multiplexed"),
-		MaxFrameSize:      s.ptSettingInt("max_frame_size"),
-		MaxReceiveBuffer:  s.ptSettingInt("max_receive_buffer"),
-	}
-
-	client := tinywss.NewClient(opts)
-
-	p.doDialCore = func(ctx context.Context) (net.Conn, time.Duration, error) {
-		elapsed := mtime.Stopwatch()
-		conn, err := client.DialContext(ctx)
-		delta := elapsed()
-		return conn, delta, err
-	}
-
-	return nil
-}
-
-type wssFrontedRT struct {
-	fctx    *fronted.FrontingContext
-	timeout time.Duration
-}
-
-func (rt *wssFrontedRT) RoundTripHijack(req *http.Request) (*http.Response, net.Conn, error) {
-	r, ok := rt.fctx.NewDirect(rt.timeout)
-	if !ok {
-		return nil, nil, fmt.Errorf("Unable to obtain fronted roundtripper after %v fctx=%s!", rt.timeout, rt.fctx)
-	}
-	if rth, ok := r.(tinywss.RoundTripHijacker); ok {
-		return rth.RoundTripHijack(req)
-	} else {
-		return nil, nil, fmt.Errorf("Unsupported roundtripper obtained from fronted!")
-	}
-}
-
-func wssHTTPRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
-	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
-		log.Debugf("tinywss HTTP Roundtripper dialing %v", addr)
-		// the configured proxy address is always contacted
-		return netx.DialTimeout(network, p.addr, chainedDialTimeout)
-	}), nil
-}
-
-func wssHTTPSRoundTripper(p *proxy, s *ChainedServerInfo) (tinywss.RoundTripHijacker, error) {
-
-	serverName := s.TLSServerNameIndicator
-	sendServerName := true
-	if serverName == "" {
-		sendServerName = false
-		u, err := url.Parse(s.ptSetting("url"))
-		if err != nil {
-			return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
-		}
-		serverName = u.Hostname()
-	}
-
-	forceValidateName := s.ptSetting("force_validate_name")
-	helloID := s.clientHelloID()
-	certPool := x509.NewCertPool()
-	rest := []byte(s.Cert)
-	var block *pem.Block
-	for {
-		block, rest = pem.Decode(rest)
-		if block == nil {
-			break
-		}
-		cert, err := x509.ParseCertificate(block.Bytes)
-		if err != nil {
-			return nil, log.Error(errors.Wrap(err).With("addr", s.Addr))
-		}
-		certPool.AddCert(cert)
-	}
-
-	return tinywss.NewRoundTripper(func(network, addr string) (net.Conn, error) {
-		tlsConf := &tls.Config{
-			CipherSuites: orderedCipherSuitesFromConfig(s),
-			ServerName:   serverName,
-			RootCAs:      certPool,
-			KeyLogWriter: getTLSKeyLogWriter(),
-		}
-
-		td := &tlsdialer.Dialer{
-			DoDial:            netx.DialTimeout,
-			SendServerName:    sendServerName,
-			ForceValidateName: forceValidateName,
-			Config:            tlsConf,
-			ClientHelloID:     helloID,
-			Timeout:           chainedDialTimeout,
-		}
-		// the configured proxy address is always contacted.
-		return td.Dial(network, p.addr)
-	}), nil
 }
 
 func (p *proxy) Protocol() string {
@@ -854,15 +369,6 @@ func (p *proxy) Trusted() bool {
 
 func (p *proxy) AdaptRequest(req *http.Request) {
 	req.Header.Add(common.TokenHeader, p.authToken)
-}
-
-func (p *proxy) dialServer(ctx context.Context) (net.Conn, error) {
-	conn, err := p.doDialServer(ctx, p)
-	if err != nil {
-		log.Debugf("Unable to dial server %v: %s", p.Label(), err)
-		p.MarkFailure()
-	}
-	return conn, err
 }
 
 // update both RTT and its deviation per rfc6298
@@ -959,38 +465,24 @@ func (p *proxy) collectBBRInfo(reqTime time.Time, resp *http.Response) {
 	}
 }
 
-func (p *proxy) dialCore(op *ops.Op) func(ctx context.Context) (net.Conn, error) {
-	return func(ctx context.Context) (net.Conn, error) {
-		estRTT, estBandwidth := p.EstRTT(), p.EstBandwidth()
-		if estRTT > 0 {
-			op.SetMetricAvg("est_rtt_ms", estRTT.Seconds()*1000)
-		}
-		if estBandwidth > 0 {
-			op.SetMetricAvg("est_mbps", estBandwidth)
-		}
-		conn, delta, err := p.doDialCore(ctx)
-		op.CoreDialTime(delta, err)
-		return overheadWrapper(false)(conn, err)
+func (p *proxy) reportDialCore(op *ops.Op, dialCore func() (net.Conn, error)) (net.Conn, error) {
+	estRTT, estBandwidth := p.EstRTT(), p.EstBandwidth()
+	if estRTT > 0 {
+		op.SetMetricAvg("est_rtt_ms", estRTT.Seconds()*1000)
 	}
-}
-
-// KCPConfig adapts kcpwrapper.DialerConfig to the currently deployed
-// configurations in order to provide backward-compatibility.
-type KCPConfig struct {
-	kcpwrapper.DialerConfig `mapstructure:",squash"`
-	RemoteAddr              string `json:"remoteaddr"`
-}
-
-func timeoutFor(ctx context.Context) time.Duration {
-	deadline, ok := ctx.Deadline()
-	if ok {
-		return deadline.Sub(time.Now())
+	if estBandwidth > 0 {
+		op.SetMetricAvg("est_mbps", estBandwidth)
 	}
-	return chainedDialTimeout
+	elapsed := mtime.Stopwatch()
+	conn, err := dialCore()
+	delta := elapsed()
+	log.Tracef("Core dial time to %v was %v", p.name, delta)
+	op.CoreDialTime(delta, err)
+	return overheadWrapper(false)(conn, err)
 }
 
-func (p *proxy) reportedDial(addr, protocol, network string, dial func(op *ops.Op) (net.Conn, error)) (net.Conn, error) {
-	op := ops.Begin("dial_to_chained").ChainedProxy(p.Name(), addr, protocol, network, p.multiplexed)
+func (p *proxy) reportedDial(dial func(op *ops.Op) (net.Conn, error)) (net.Conn, error) {
+	op := ops.Begin("dial_to_chained").ChainedProxy(p.name, p.addr, p.protocol, p.network, p.multiplexed)
 	defer op.End()
 
 	elapsed := mtime.Stopwatch()
@@ -1020,35 +512,6 @@ func reportProxyDial(delta time.Duration, err error) {
 		innerOp.FailIf(err)
 		innerOp.End()
 	}
-}
-
-// utlsHandshaker implements tlsmasq/ptlshs.Handshaker. This allows us to parrot browsers like
-// Chrome in our handshakes with tlsmasq origins.
-type utlsHandshaker struct {
-	cfg     *tls.Config
-	helloID tls.ClientHelloID
-
-	// Must be provided if helloID is set to tls.HelloCustom. Ignored otherwise.
-	helloSpec *tls.ClientHelloSpec
-}
-
-func (h utlsHandshaker) Handshake(conn net.Conn) (*ptlshs.HandshakeResult, error) {
-	uconn := tls.UClient(conn, h.cfg, h.helloID)
-	if h.helloID == tls.HelloCustom {
-		if h.helloSpec == nil {
-			return nil, errors.New("hello spec must be provided if HelloCustom is used")
-		}
-		if err := uconn.ApplyPreset(h.helloSpec); err != nil {
-			return nil, fmt.Errorf("failed to set custom hello spec: %w", err)
-		}
-	}
-	if err := uconn.Handshake(); err != nil {
-		return nil, err
-	}
-	return &ptlshs.HandshakeResult{
-		Version:     uconn.ConnectionState().Version,
-		CipherSuite: uconn.ConnectionState().CipherSuite,
-	}, nil
 }
 
 func splitClientHello(hello []byte) [][]byte {

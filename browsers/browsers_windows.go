@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/getlantern/flashlight/ops"
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -127,6 +128,18 @@ func (b Browser) Executable() (string, error) {
 // SystemDefault returns the default web browser. Specifically, this is the default handler for HTML
 // files. May return ErrorUnknownProgramID.
 func SystemDefault(ctx context.Context) (Browser, error) {
+	op := ops.Begin("get_default_browser")
+	op.Set("os", "windows")
+	b, err := systemDefault(ctx)
+	op.FailIf(err)
+	if b != Unknown {
+		op.Set("browser", b.String())
+	}
+	op.End()
+	return b, err
+}
+
+func systemDefault(ctx context.Context) (Browser, error) {
 	// TODO: test on Windows < 10 ? Probably just Windows 7 is good
 	// may need https://stackoverflow.com/a/2178637 for older versions of Windows
 

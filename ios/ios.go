@@ -25,10 +25,11 @@ import (
 )
 
 const (
-	memLimitInMiB           = 12
-	memLimitInBytes         = memLimitInMiB * 1024 * 1024
-	quotaSaveInterval       = 1 * time.Minute
-	frontedAvailableTimeout = 5 * time.Minute
+	memLimitInMiB                = 12
+	memLimitInBytes              = memLimitInMiB * 1024 * 1024
+	quotaSaveInterval            = 1 * time.Minute
+	shortFrontedAvailableTimeout = 30 * time.Second
+	longFrontedAvailableTimeout  = 5 * time.Minute
 )
 
 var (
