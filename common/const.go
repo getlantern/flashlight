@@ -14,9 +14,13 @@ var (
 
 	Staging = false
 
+	AuthAPIHost = "auth-staging.lantern.network"
+
 	ProAPIHost = "api.getiantem.org"
 
 	ReplicaSearchAPIHost = "replica-search.lantern.io"
+
+	YinbiAPIHost = "api.yin.bi"
 
 	log = golog.LoggerFor("flashlight.common")
 
@@ -42,8 +46,10 @@ func initInternal() {
 		return
 	}
 	if Staging {
+		AuthAPIHost = "auth-staging.lantern.network"
 		ProAPIHost = "api-staging.getiantem.org"
 		ReplicaSearchAPIHost = "replica-search-staging.lantern.io"
+		YinbiAPIHost = "may38fjstaging.yin.bi"
 	}
 	forceAds, _ = strconv.ParseBool(os.Getenv("FORCEADS"))
 }
