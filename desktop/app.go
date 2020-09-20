@@ -618,7 +618,7 @@ func (app *App) onConfigUpdate(cfg *config.Global, src config.Source) {
 	})
 	email.SetDefaultRecipient(cfg.ReportIssueEmail)
 	app.chGlobalConfigChanged <- true
-	if cfg.GlobalBrowserMarketShareData != nil {
+	if len(cfg.GlobalBrowserMarketShareData) > 0 {
 		err := simbrowser.SetMarketShareData(
 			cfg.GlobalBrowserMarketShareData, cfg.RegionalBrowserMarketShareData)
 		if err != nil {

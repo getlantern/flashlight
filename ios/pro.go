@@ -168,7 +168,7 @@ func ValidateDeviceLinkingCode(c *Canceler, deviceID, deviceName, code string) (
 }
 
 func getProClient() (*proclient.Client, error) {
-	rt, ok := fronted.NewDirect(frontedAvailableTimeout)
+	rt, ok := fronted.NewDirect(longFrontedAvailableTimeout)
 	if !ok {
 		return nil, log.Errorf("timed out waiting for fronting to finish configuring")
 	}

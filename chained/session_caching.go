@@ -19,6 +19,7 @@ type expiringSessionCache struct {
 	defaultState *tls.ClientSessionState
 	currentState *tls.ClientSessionState
 	lastUpdated  time.Time
+	allowTLS13   bool
 }
 
 // newExpiringSessionCache returns an expiringSessionCache. It initializes the current state from whatever is stored on disk
@@ -46,6 +47,13 @@ func (c *expiringSessionCache) Put(sessionKey string, cs *tls.ClientSessionState
 	}
 	c.Lock()
 	defer c.Unlock()
+
+	// don't save v1.3 session states because we can't actually resume them when using parrots
+	// https://github.com/getlantern/lantern-internal/issues/4170
+	// https://github.com/getlantern/lantern-internal/issues/3850
+	if cs.Vers() == tls.VersionTLS13 && !c.allowTLS13 {
+		return
+	}
 
 	if c.currentState != nil && bytes.Equal(c.currentState.SessionTicket(), cs.SessionTicket()) {
 		// same as the old ticket, don't bother updating and leave timestamp alone

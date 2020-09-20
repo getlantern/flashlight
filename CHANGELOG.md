@@ -1,5 +1,21 @@
 # Changelog
 
+## [6.0.9](https://github.com/getlantern/flashlight/tree/6.0.9) (2020-09-11)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/6.0.8...6.0.9)
+
+**Merged pull requests:**
+
+- Avoid setting global marketShareData to an empty map [\#873](https://github.com/getlantern/flashlight/pull/873) ([max-b](https://github.com/max-b))
+
+## [6.0.8](https://github.com/getlantern/flashlight/tree/6.0.8) (2020-09-09)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/6.0.7...6.0.8)
+
+**Merged pull requests:**
+
+- Fixed simplified Chinese translation [\#872](https://github.com/getlantern/flashlight/pull/872) ([myleshorton](https://github.com/myleshorton))
+
 ## [6.0.7](https://github.com/getlantern/flashlight/tree/6.0.7) (2020-09-08)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/6.0.6...6.0.7)
@@ -295,7 +311,6 @@
 - Unified session key persistence and session caching for TLS proxies [\#770](https://github.com/getlantern/flashlight/pull/770) ([oxtoacart](https://github.com/oxtoacart))
 - Build all tests in CI [\#769](https://github.com/getlantern/flashlight/pull/769) ([anacrolix](https://github.com/anacrolix))
 - Determine if a feature is enabled dynamically [\#768](https://github.com/getlantern/flashlight/pull/768) ([joesis](https://github.com/joesis))
-- Respecting stealthmode on iOS and removed borda [\#765](https://github.com/getlantern/flashlight/pull/765) ([oxtoacart](https://github.com/oxtoacart))
 
 ## [5.8.4](https://github.com/getlantern/flashlight/tree/5.8.4) (2020-03-06)
 
@@ -304,7 +319,6 @@
 **Merged pull requests:**
 
 - disable the chrome extension saving loop [\#767](https://github.com/getlantern/flashlight/pull/767) ([joesis](https://github.com/joesis))
-- Add osversion to sentry reporting [\#764](https://github.com/getlantern/flashlight/pull/764) ([max-b](https://github.com/max-b))
 
 ## [5.8.3](https://github.com/getlantern/flashlight/tree/5.8.3) (2020-02-12)
 
@@ -424,15 +438,15 @@
 
 ## [5.3.8](https://github.com/getlantern/flashlight/tree/5.3.8) (2019-04-24)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.7...5.3.8)
-
-## [5.3.7](https://github.com/getlantern/flashlight/tree/5.3.7) (2019-04-18)
-
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.6...5.3.7)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.6...5.3.8)
 
 ## [5.3.6](https://github.com/getlantern/flashlight/tree/5.3.6) (2019-04-18)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.5...5.3.6)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.7...5.3.6)
+
+## [5.3.7](https://github.com/getlantern/flashlight/tree/5.3.7) (2019-04-18)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.5...5.3.7)
 
 ## [5.3.5](https://github.com/getlantern/flashlight/tree/5.3.5) (2019-04-12)
 
