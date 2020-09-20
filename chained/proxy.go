@@ -13,8 +13,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	tls "github.com/refraction-networking/utls"
-
 	config "github.com/getlantern/common"
 	"github.com/getlantern/ema"
 	"github.com/getlantern/enhttp"
@@ -24,7 +22,6 @@ import (
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
-	"github.com/getlantern/tlsmasq/ptlshs"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
@@ -515,35 +512,6 @@ func reportProxyDial(delta time.Duration, err error) {
 		innerOp.FailIf(err)
 		innerOp.End()
 	}
-}
-
-// utlsHandshaker implements tlsmasq/ptlshs.Handshaker. This allows us to parrot browsers like
-// Chrome in our handshakes with tlsmasq origins.
-type utlsHandshaker struct {
-	cfg     *tls.Config
-	helloID tls.ClientHelloID
-
-	// Must be provided if helloID is set to tls.HelloCustom. Ignored otherwise.
-	helloSpec *tls.ClientHelloSpec
-}
-
-func (h utlsHandshaker) Handshake(conn net.Conn) (*ptlshs.HandshakeResult, error) {
-	uconn := tls.UClient(conn, h.cfg, h.helloID)
-	if h.helloID == tls.HelloCustom {
-		if h.helloSpec == nil {
-			return nil, errors.New("hello spec must be provided if HelloCustom is used")
-		}
-		if err := uconn.ApplyPreset(h.helloSpec); err != nil {
-			return nil, fmt.Errorf("failed to set custom hello spec: %w", err)
-		}
-	}
-	if err := uconn.Handshake(); err != nil {
-		return nil, err
-	}
-	return &ptlshs.HandshakeResult{
-		Version:     uconn.ConnectionState().Version,
-		CipherSuite: uconn.ConnectionState().CipherSuite,
-	}, nil
 }
 
 func splitClientHello(hello []byte) [][]byte {

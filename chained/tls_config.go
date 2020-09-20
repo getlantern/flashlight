@@ -24,11 +24,14 @@ var (
 // Generates TLS configuration for connecting to proxy specified by the ChainedServerInfo. This
 // function may block while determining things like how to mimic the default browser's client hello.
 //
-// The ClientHelloSpec will be non-nil if and only if the ClientHelloID is tls.HelloCustom.
+// Returns a slice of ClientHellos to be used for dialing. These hellos are in priority order: the
+// first hello is the "ideal" one and the remaining hellos serve as backup in case something is
+// wrong with the previous hellos. There will always be at least one hello. For each hello, the
+// ClientHelloSpec will be non-nil if and only if the ClientHelloID is tls.HelloCustom.
 func tlsConfigForProxy(ctx context.Context, name string, s *ChainedServerInfo, uc common.UserConfig) (
-	*tls.Config, tls.ClientHelloID, *tls.ClientHelloSpec) {
+	*tls.Config, []hello) {
 
-	helloID := s.clientHelloID()
+	configuredHelloID := s.clientHelloID()
 	var ss *tls.ClientSessionState
 	var err error
 	if s.TLSClientSessionState != "" {
@@ -37,16 +40,16 @@ func tlsConfigForProxy(ctx context.Context, name string, s *ChainedServerInfo, u
 			log.Errorf("Unable to parse serialized client session state, continuing with normal handshake: %v", err)
 		} else {
 			log.Debug("Using serialized client session state")
-			if helloID.Client == "Golang" {
+			if configuredHelloID.Client == "Golang" {
 				log.Debug("Need to mimic browser hello for session resumption, defaulting to HelloChrome_Auto")
-				helloID = tls.HelloChrome_Auto
+				configuredHelloID = tls.HelloChrome_Auto
 			}
 		}
 	}
 
-	var helloSpec *tls.ClientHelloSpec
-	if helloID == helloBrowser {
-		helloID, helloSpec = getBrowserHello(ctx, uc)
+	var configuredHelloSpec *tls.ClientHelloSpec
+	if configuredHelloID == helloBrowser {
+		configuredHelloID, configuredHelloSpec = getBrowserHello(ctx, uc)
 	}
 
 	sessionTTL := simbrowser.ChooseForUser(ctx, uc).SessionTicketLifetime
@@ -60,8 +63,13 @@ func tlsConfigForProxy(ctx context.Context, name string, s *ChainedServerInfo, u
 		InsecureSkipVerify: true,
 		KeyLogWriter:       getTLSKeyLogWriter(),
 	}
+	hellos := []hello{
+		{configuredHelloID, configuredHelloSpec},
+		{tls.HelloChrome_Auto, nil},
+		{tls.HelloGolang, nil},
+	}
 
-	return cfg, helloID, helloSpec
+	return cfg, hellos
 }
 
 // getBrowserHello determines the best way to mimic the system's default web browser. There are a

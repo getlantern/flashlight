@@ -7,8 +7,10 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/pem"
+	"fmt"
 	"net"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/getlantern/errors"
@@ -18,6 +20,7 @@ import (
 	"github.com/getlantern/netx"
 	"github.com/getlantern/tlsmasq"
 	"github.com/getlantern/tlsmasq/ptlshs"
+	tls "github.com/refraction-networking/utls"
 )
 
 type tlsMasqImpl struct {
@@ -102,13 +105,13 @@ func newTLSMasqImpl(name, addr string, s *ChainedServerInfo, uc common.UserConfi
 	}
 	pool.AddCert(cert)
 
-	pCfg, helloID, helloSpec := tlsConfigForProxy(ctx, name, s, uc)
+	pCfg, hellos := tlsConfigForProxy(ctx, name, s, uc)
 	pCfg.ServerName = sni
 	pCfg.InsecureSkipVerify = InsecureSkipVerifyTLSMasqOrigin
 
 	cfg := tlsmasq.DialerConfig{
 		ProxiedHandshakeConfig: ptlshs.DialerConfig{
-			Handshaker: utlsHandshaker{pCfg, helloID, helloSpec},
+			Handshaker: &utlsHandshaker{pCfg, &helloRoller{hellos: hellos}, sync.Mutex{}},
 			Secret:     secret,
 			NonceTTL:   nonceTTL,
 		},
@@ -151,4 +154,54 @@ func (impl *tlsMasqImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, 
 		conn.Close()
 		return nil, ctx.Err()
 	}
+}
+
+// utlsHandshaker implements tlsmasq/ptlshs.Handshaker. This allows us to parrot browsers like
+// Chrome in our handshakes with tlsmasq origins.
+type utlsHandshaker struct {
+	cfg    *tls.Config
+	roller *helloRoller
+	sync.Mutex
+}
+
+func (h *utlsHandshaker) Handshake(conn net.Conn) (*ptlshs.HandshakeResult, error) {
+	r := h.roller.getCopy()
+	defer h.roller.updateTo(r)
+
+	isHelloErr := func(err error) bool {
+		if strings.Contains(err.Error(), "hello spec") {
+			// These errors are created below.
+			return true
+		}
+		if strings.Contains(err.Error(), "tls: ") {
+			// A TLS-level error is likely related to a bad hello.
+			return true
+		}
+		return false
+	}
+
+	currentHello := r.current()
+	uconn := tls.UClient(conn, h.cfg, currentHello.id)
+	res, err := func() (*ptlshs.HandshakeResult, error) {
+		if currentHello.id == tls.HelloCustom {
+			if currentHello.spec == nil {
+				return nil, errors.New("hello spec must be provided if HelloCustom is used")
+			}
+			if err := uconn.ApplyPreset(currentHello.spec); err != nil {
+				return nil, fmt.Errorf("failed to set custom hello spec: %w", err)
+			}
+		}
+		if err := uconn.Handshake(); err != nil {
+			return nil, err
+		}
+		return &ptlshs.HandshakeResult{
+			Version:     uconn.ConnectionState().Version,
+			CipherSuite: uconn.ConnectionState().CipherSuite,
+		}, nil
+	}()
+	if err != nil && isHelloErr(err) {
+		log.Debugf("got error likely related to bad hello; advancing roller: %v", err)
+		r.advance()
+	}
+	return res, err
 }
