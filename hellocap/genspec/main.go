@@ -4,11 +4,13 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"text/tabwriter"
 	"time"
@@ -21,8 +23,12 @@ import (
 const tlsRecordHeaderLen = 5
 
 var (
-	timeout   = flag.Duration("timeout", 10*time.Second, "")
-	tlsPrefix = flag.Bool("tlsPrefix", false, "true: tls.SomeType; false: SomeType")
+	timeout      = flag.Duration("timeout", 10*time.Second, "")
+	tlsPrefix    = flag.Bool("tlsPrefix", false, "true: tls.SomeType; false: SomeType")
+	launchServer = flag.Bool(
+		"startServer", false,
+		"true: launch a server to capture the hello; false: capture the hello from the default browser",
+	)
 )
 
 // Disable logs from the standard library (in particular, 'http: TLS handshake error...')
@@ -77,6 +83,10 @@ var cipherSuitesToNames = map[uint16]string{
 	0x0033: "FAKE_TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
 	0x0039: "FAKE_TLS_DHE_RSA_WITH_AES_256_CBC_SHA",
 	0x0004: "FAKE_TLS_RSA_WITH_RC4_128_MD5",
+	0x009f: "FAKE_TLS_DHE_RSA_WITH_AES_256_GCM_SHA384",
+	0x0032: "FAKE_TLS_DHE_DSS_WITH_AES_128_CBC_SHA",
+	0x006b: "FAKE_TLS_DHE_RSA_WITH_AES_256_CBC_SHA256",
+	0x0067: "FAKE_TLS_DHE_RSA_WITH_AES_128_CBC_SHA256",
 	0x00ff: "FAKE_TLS_EMPTY_RENEGOTIATION_INFO_SCSV",
 
 	0x0a0a: "GREASE_PLACEHOLDER",
@@ -120,6 +130,11 @@ var sigAlgsToNames = map[tls.SignatureScheme]string{
 	// Legacy signature and hash algorithms for TLS 1.2.
 	0x0201: "PKCS1WithSHA1",
 	0x0203: "ECDSAWithSHA1",
+
+	0x0202: "FakeSHA1WithDSA",
+	0x0402: "FakeSHA256WithDSA",
+	0x0301: "FakePKCS1WithSHA224",
+	0x0303: "FakeECDSAWithSHA224",
 }
 
 var pskModesToNames = map[uint8]string{
@@ -127,17 +142,17 @@ var pskModesToNames = map[uint8]string{
 	tls.PskModeDHE:   "PskModeDHE",
 }
 
+var certCompressionAlgosToNames = map[tls.CertCompressionAlgo]string{
+	0x0001: "CertCompressionZlib",
+	0x0002: "CertCompressionBrotli",
+}
+
 type extensionInfo struct {
 	name    string
 	weblink string
 }
 
-var additionalKnownExtensions = map[uint16]extensionInfo{
-	27: {"Certificate Compression", "https://tools.ietf.org/html/draft-ietf-tls-certificate-compression-10"},
-	28: {"Record Size Limit", "https://tools.ietf.org/html/rfc8449"},
-}
-
-func genSpec(timeout time.Duration) (*tls.ClientHelloSpec, error) {
+func defaultBrowserSpec(timeout time.Duration) (*tls.ClientHelloSpec, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
@@ -157,6 +172,15 @@ func genSpec(timeout time.Duration) (*tls.ClientHelloSpec, error) {
 		return nil, fmt.Errorf("failed to fingerprint captured hello: %w", err)
 	}
 	return spec, nil
+}
+
+func hasSNI(spec tls.ClientHelloSpec) bool {
+	for _, ext := range spec.Extensions {
+		if _, ok := ext.(*tls.SNIExtension); ok {
+			return true
+		}
+	}
+	return false
 }
 
 func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
@@ -192,7 +216,7 @@ func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
 		fmt.Fprintln(w)
 	}
 	fmt.Fprintln(w, "\t},")
-	fmt.Fprintln(w, "\tExtensions: []tls.TLSExtension{")
+	fmt.Fprintf(w, "\tExtensions: []%s{\n", tlsName("TLSExtension"))
 	for _, ext := range spec.Extensions {
 		printEmptyStruct := func(name string) {
 			fmt.Fprintf(w, "\t\t&%s{},\n", tlsName(name))
@@ -288,7 +312,7 @@ func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
 					fmt.Fprintln(w, "\t\t\t\t\tData: []byte{")
 					printBytes(ks.Data, w, 6, 10)
 					fmt.Fprintln(w)
-					fmt.Fprintln(w, "\t\t\t\t\t}")
+					fmt.Fprintln(w, "\t\t\t\t\t},")
 				}
 				fmt.Fprintln(w, "\t\t\t\t},")
 			}
@@ -317,14 +341,42 @@ func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
 			fmt.Fprintf(w, "\t\t&%s{\n", tlsName("UtlsPaddingExtension"))
 			fmt.Fprintf(w, "\t\t\tGetPaddingLen: %s,\n", tlsName("BoringPaddingStyle"))
 			fmt.Fprintln(w, "\t\t},")
+		case *tls.FakeTokenBindingExtension:
+			fmt.Fprintf(w, "\t\t&%s{\n", tlsName("FakeTokenBindingExtension"))
+			fmt.Fprintf(w, "\t\t\tMajorVersion: %d,\n", typedExt.MajorVersion)
+			fmt.Fprintf(w, "\t\t\tMinorVersion: %d,\n", typedExt.MinorVersion)
+			fmt.Fprintln(w, "\t\t\tKeyParameters: []uint8{")
+			printBytes(typedExt.KeyParameters, w, 4, 10)
+			fmt.Fprintln(w, "\n\t\t\t},")
+			fmt.Fprintln(w, "\t\t},")
+		case *tls.FakeCertCompressionAlgsExtension:
+			fmt.Fprintf(w, "\t\t&%s{\n", tlsName("FakeCertCompressionAlgsExtension"))
+			fmt.Fprintf(w, "\t\t\tMethods: []%s{\n", tlsName("CertCompressionAlgo"))
+			for _, method := range typedExt.Methods {
+				name, ok := certCompressionAlgosToNames[method]
+				if !ok {
+					fmt.Fprintf(w, "\t\t\t\t%d, // unrecognized method\n", method)
+				} else {
+					fmt.Fprintf(w, "\t\t\t\t%s,\n", tlsName(name))
+				}
+			}
+			fmt.Fprintln(w, "\t\t\t},")
+			fmt.Fprintln(w, "\t\t},")
+		case *tls.FakeRecordSizeLimitExtension:
+			fmt.Fprintf(w, "\t\t&%s{\n", tlsName("FakeRecordSizeLimitExtension"))
+			fmt.Fprintf(w, "\t\t\tLimit: %d,\n", typedExt.Limit)
+			fmt.Fprintln(w, "\t\t},")
+		case *tls.FakeChannelIDExtension:
+			fmt.Fprintf(w, "\t\t&%s{", tlsName("FakeChannelIDExtension"))
+			if typedExt.OldExtensionID {
+				fmt.Fprintf(w, "\n\t\t\tOldExtensionID: %t,\n", typedExt.OldExtensionID)
+				fmt.Fprintln(w, "\t\t},")
+			} else {
+				fmt.Fprintln(w, "},")
+			}
 		case *tls.GenericExtension:
 			fmt.Fprintf(w, "\t\t&%s{\n", tlsName("GenericExtension"))
-			if info, ok := additionalKnownExtensions[typedExt.Id]; ok {
-				fmt.Fprintf(w, "\t\t\t// %s:\n", info.name)
-				fmt.Fprintf(w, "\t\t\t// %s\n", info.weblink)
-			} else {
-				fmt.Fprintln(w, "\t\t\t// XXX: unknown extension")
-			}
+			fmt.Fprintln(w, "\t\t\t// XXX: unknown extension")
 			fmt.Fprintf(w, "\t\t\tId: %d,\n", typedExt.Id)
 			fmt.Fprintln(w, "\t\t\tData: []byte{")
 			printBytes(typedExt.Data, w, 4, 10)
@@ -383,13 +435,58 @@ func printBytes(b []byte, w io.Writer, indentationLevel, bytesPerLine int) {
 	fmt.Fprint(w, ",")
 }
 
+func fail(a ...interface{}) {
+	fmt.Fprintln(os.Stderr, a...)
+	os.Exit(1)
+}
+
 func main() {
 	flag.Parse()
 
-	spec, err := genSpec(*timeout)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+	if !*launchServer {
+		spec, err := defaultBrowserSpec(*timeout)
+		if err != nil {
+			fail(err)
+		}
+		if !hasSNI(*spec) {
+			fmt.Fprintln(os.Stderr, "Warning: no SNI in hello")
+		}
+		marshalAsCode(*spec, os.Stdout, *tlsPrefix)
+		return
 	}
-	marshalAsCode(*spec, os.Stdout, *tlsPrefix)
+
+	onHello := func(hello []byte, err error) {
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "error capturing hello:", err)
+			return
+		}
+		spec, err := tls.FingerprintClientHello(hello[tlsRecordHeaderLen:])
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "failed to fingerprint captured hello:", err)
+			fmt.Fprintln(os.Stderr, "here is the hello we failed to fingerprint, base64-encoded:")
+			fmt.Fprintln(os.Stderr, base64.StdEncoding.EncodeToString(hello))
+			return
+		}
+		if !hasSNI(*spec) {
+			fmt.Fprintln(os.Stderr, "Warning: no SNI in hello")
+		}
+		marshalAsCode(*spec, os.Stdout, *tlsPrefix)
+	}
+
+	s, err := hellocap.NewServer(onHello)
+	if err != nil {
+		fail("failed to start server:", err)
+	}
+	defer s.Close()
+
+	// Grab the port and encourage use of localhost so that SNIs are included.
+	_, port, err := net.SplitHostPort(s.Addr().String())
+	if err != nil {
+		fail("failed to parse server address:", err)
+	}
+
+	fmt.Fprintf(os.Stderr, "listening on https://localhost:%s\n", port)
+	if err := s.Start(); err != nil {
+		fail("server error:", err)
+	}
 }

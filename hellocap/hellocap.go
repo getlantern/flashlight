@@ -59,7 +59,7 @@ func getBrowserHello(ctx context.Context, browser browser) ([]byte, error) {
 		sendHelloOnce  = sync.Once{}
 	)
 
-	s, err := newCapturingServer(func(hello []byte, err error) {
+	s, err := NewServer(func(hello []byte, err error) {
 		sendHelloOnce.Do(func() { helloChan <- helloResult{hello, err} })
 	})
 	if err != nil {
@@ -68,13 +68,13 @@ func getBrowserHello(ctx context.Context, browser browser) ([]byte, error) {
 	defer s.Close()
 
 	go func() {
-		if err := s.listenAndServeTLS(); err != nil {
+		if err := s.Start(); err != nil {
 			serverErrChan <- err
 		}
 	}()
 	go func() {
 		// Grab the port and use localhost to ensure the browser sends an SNI.
-		_, port, err := net.SplitHostPort(s.address())
+		_, port, err := net.SplitHostPort(s.Addr().String())
 		if err != nil {
 			browserErrChan <- fmt.Errorf("failed to parse test server address: %w", err)
 			return
@@ -96,11 +96,11 @@ func getBrowserHello(ctx context.Context, browser browser) ([]byte, error) {
 	}
 }
 
-// onHello is a callback invoked when a ClientHello is captured. Only one of hello or err will be
+// OnHello is a callback invoked when a ClientHello is captured. Only one of hello or err will be
 // non-nil. This callback is not invoked for incomplete ClientHellos. In other words, err is non-nil
 // only if what has been read off the connection could not possibly constitute a ClientHello,
 // regardless of further data from the connection.
-type onHello func(hello []byte, err error)
+type OnHello func(hello []byte, err error)
 
 type capturingConn struct {
 	// Wraps a TCP connection.
@@ -109,7 +109,7 @@ type capturingConn struct {
 	helloLock sync.Mutex
 	helloRead bool
 	helloBuf  bytes.Buffer
-	onHello   onHello
+	onHello   OnHello
 }
 
 func (c *capturingConn) Read(b []byte) (n int, err error) {
@@ -140,7 +140,7 @@ func (c *capturingConn) checkHello(newBytes []byte) {
 
 type capturingListener struct {
 	net.Listener
-	onHello onHello
+	onHello OnHello
 }
 
 func (l capturingListener) Accept() (net.Conn, error) {
@@ -151,7 +151,7 @@ func (l capturingListener) Accept() (net.Conn, error) {
 	return &capturingConn{Conn: tcpConn, onHello: l.onHello}, nil
 }
 
-func listenAndCaptureTCP(onHello onHello) (*capturingListener, error) {
+func listenAndCaptureTCP(onHello OnHello) (*capturingListener, error) {
 	l, err := net.Listen("tcp", "")
 	if err != nil {
 		return nil, err
@@ -159,12 +159,15 @@ func listenAndCaptureTCP(onHello onHello) (*capturingListener, error) {
 	return &capturingListener{l, onHello}, nil
 }
 
-type capturingServer struct {
+// A Server which captures incoming ClientHellos.
+type Server struct {
 	s *http.Server
 	l capturingListener
 }
 
-func newCapturingServer(onHello onHello) (*capturingServer, error) {
+// NewServer returns a TLS server which will capture any incoming ClientHellos and invoke the
+// provided callback.
+func NewServer(onHello OnHello) (*Server, error) {
 	l, err := listenAndCaptureTCP(onHello)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start TLS server for capturing hellos: %w", err)
@@ -175,18 +178,21 @@ func newCapturingServer(onHello onHello) (*capturingServer, error) {
 			w.WriteHeader(http.StatusNoContent)
 		}),
 	}
-	return &capturingServer{&s, *l}, nil
+	return &Server{&s, *l}, nil
 }
 
-func (cs *capturingServer) listenAndServeTLS() error {
+// Start the server. This function blocks until Close is called.
+func (cs *Server) Start() error {
 	return cs.s.ServeTLS(cs.l, "", "")
 }
 
-func (cs *capturingServer) address() string {
-	return cs.l.Addr().String()
+// Addr returns the servers network address.
+func (cs *Server) Addr() net.Addr {
+	return cs.l.Addr()
 }
 
-func (cs *capturingServer) Close() error {
+// Close the server.
+func (cs *Server) Close() error {
 	return cs.s.Close()
 }
 
