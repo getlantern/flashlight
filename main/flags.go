@@ -18,6 +18,8 @@ var (
 	uiaddr             = flag.String("uiaddr", "", "if specified, indicates host:port the UI HTTP server should be started on")
 	proxyAll           = flag.Bool("proxyall", false, "set to true to proxy all traffic through Lantern network")
 	stickyConfig       = flag.Bool("stickyconfig", false, "set to true to only use the local config file")
+	authaddr           = flag.String("authaddr", "", "if specified, indicates the address to use for the Lantern auth server")
+	yinbiaddr          = flag.String("yinbiaddr", "", "if specified, indicates the address to use for the Yinbi server")
 	headless           = flag.Bool("headless", false, "if true, lantern will run with no ui")
 	startup            = flag.Bool("startup", false, "if true, Lantern was automatically run on system startup")
 	clearProxySettings = flag.Bool("clear-proxy-settings", false, "if true, Lantern removes proxy settings from the system.")
