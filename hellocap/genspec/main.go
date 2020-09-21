@@ -89,6 +89,9 @@ var cipherSuitesToNames = map[uint16]string{
 	0x0067: "FAKE_TLS_DHE_RSA_WITH_AES_128_CBC_SHA256",
 	0x00ff: "FAKE_TLS_EMPTY_RENEGOTIATION_INFO_SCSV",
 
+	// https://docs.microsoft.com/en-us/dotnet/api/system.net.security.tlsciphersuite?view=netcore-3.1
+	0xc008: "FAKE_TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA",
+
 	0x0a0a: "GREASE_PLACEHOLDER",
 }
 
