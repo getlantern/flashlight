@@ -9,7 +9,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/getlantern/flashlight/ops"
+	// We use getlantern/ops over flashlight/ops because:
+	//  (a) The latter imports common which prints to stdout, messing with command-line output.
+	//	(b) Our use of the ops package doesn't include anything specific to flashlight/ops.
+	"github.com/getlantern/ops"
 	"golang.org/x/sys/windows/registry"
 )
 
