@@ -338,7 +338,10 @@ func marshalAsCode(spec tls.ClientHelloSpec, w io.Writer, tlsPrefix bool) {
 			printEmptyStruct("UtlsExtendedMasterSecretExtension")
 		case *tls.UtlsPaddingExtension:
 			// Compare the addresses of the function values to see if we got BoringPaddingStyle.
-			if fmt.Sprint(typedExt.GetPaddingLen) != fmt.Sprint(tls.BoringPaddingStyle) {
+			// Assigning the functions to interface{} types is done to sneak past vet. Vet is used
+			// in CI and without this, the build would not pass.
+			var paddingFn, boringPadding interface{} = typedExt.GetPaddingLen, tls.BoringPaddingStyle
+			if fmt.Sprint(paddingFn) != fmt.Sprint(boringPadding) {
 				panic("expected BoringPaddingStyle")
 			}
 			fmt.Fprintf(w, "\t\t&%s{\n", tlsName("UtlsPaddingExtension"))
