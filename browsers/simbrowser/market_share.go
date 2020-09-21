@@ -99,6 +99,9 @@ const (
 // each regional market must fall within the bounds established by AcceptableMinTotalMarketShare and
 // AcceptableMaxTotalMarketShare.
 func SetMarketShareData(global MarketShareData, regional map[CountryCode]MarketShareData) error {
+	if len(global) == 0 {
+		return fmt.Errorf("global MarketShareData parameter must not be empty")
+	}
 	msd := map[CountryCode][]browserChoice{}
 	totals := map[CountryCode]MarketShare{}
 	for browserType, marketShare := range global {
