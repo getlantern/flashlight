@@ -20,8 +20,6 @@ var (
 
 	ReplicaSearchAPIHost = "replica-search.lantern.io"
 
-	YinbiAPIHost = "api.yin.bi"
-
 	log = golog.LoggerFor("flashlight.common")
 
 	forceAds bool
