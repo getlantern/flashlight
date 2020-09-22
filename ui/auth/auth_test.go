@@ -10,8 +10,10 @@ import (
 
 	"github.com/getlantern/auth-server/models"
 	"github.com/getlantern/auth-server/srp"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ui/api"
-	"github.com/getlantern/lantern-server/common"
+	"github.com/getlantern/flashlight/ui/testutils"
+	scommon "github.com/getlantern/lantern-server/common"
 	"github.com/getlantern/yinbi-server/utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -40,8 +42,8 @@ func getClient(t *testing.T, params *models.UserParams, h AuthHandler) (*models.
 
 func createAuthRequest(params *models.UserParams, uri string) *http.Request {
 	requestBody, _ := json.Marshal(params)
-	req, _ := http.NewRequest(common.POST, uri, bytes.NewBuffer(requestBody))
-	req.Header.Set(common.HeaderContentType, common.MIMEApplicationJSON)
+	req, _ := http.NewRequest(scommon.POST, uri, bytes.NewBuffer(requestBody))
+	req.Header.Set(scommon.HeaderContentType, scommon.MIMEApplicationJSON)
 	return req
 }
 
@@ -57,9 +59,9 @@ func createUser() models.UserParams {
 
 func TestSRP(t *testing.T) {
 	h := New(api.Params{
-		common.AuthStagingAddr,
-		common.YinbiStagingAddr,
-		&http.Client{},
+		AuthServerAddr:  common.AuthServerAddr,
+		YinbiServerAddr: common.YinbiServerAddr,
+		HttpClient:      &http.Client{},
 	})
 
 	// Create new test user
@@ -138,13 +140,16 @@ func TestSRP(t *testing.T) {
 				tc.endpoint)
 			rec := httptest.NewRecorder()
 			h.authHandler(rec, req)
+			testutils.DumpResponse(rec)
 			if !tc.hasError {
 				var resp models.AuthResponse
+				testutils.DecodeResp(t, rec, &resp)
 				assert.Equal(t, rec.Code, http.StatusOK)
 				assert.NotEmpty(t, resp.User)
 				assert.NotEmpty(t, resp.Credentials)
 			} else {
 				var resp api.ApiResponse
+				testutils.DecodeResp(t, rec, &resp)
 				assert.Equal(t, rec.Code, tc.expectedCode)
 				if tc.expectedResp != nil {
 					assert.Equal(t, resp, *tc.expectedResp)

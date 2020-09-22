@@ -25,9 +25,9 @@ type UIHandler interface {
 // related to a specific product (i.e. Yinbi)
 type Handler struct {
 	UIHandler
-	authServerAddr  string
-	yinbiServerAddr string
-	HttpClient      *http.Client
+	authAddr   string
+	yinbiAddr  string
+	HttpClient *http.Client
 }
 
 type Params struct {
@@ -38,20 +38,20 @@ type Params struct {
 
 func NewHandler(params Params) Handler {
 	return Handler{
-		authServerAddr:  params.AuthServerAddr,
-		yinbiServerAddr: params.AuthServerAddr,
-		HttpClient:      params.HttpClient,
+		authAddr:   params.AuthServerAddr,
+		yinbiAddr:  params.YinbiServerAddr,
+		HttpClient: params.HttpClient,
 	}
 }
 
 // GetAuthAddr combines the given uri with the Lantern authentication server address
 func (h Handler) GetAuthAddr(uri string) string {
-	return fmt.Sprintf("%s%s", h.authServerAddr, uri)
+	return fmt.Sprintf("%s%s", h.authAddr, uri)
 }
 
 // GetYinbiAddr combines the given uri with the Yinbi server address
 func (h Handler) GetYinbiAddr(uri string) string {
-	return fmt.Sprintf("%s%s", h.yinbiServerAddr, uri)
+	return fmt.Sprintf("%s%s", h.yinbiAddr, uri)
 }
 
 // DoHTTPRequest creates and sends a new HTTP request to the given url
