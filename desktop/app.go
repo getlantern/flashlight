@@ -381,19 +381,27 @@ func (app *App) beforeStart(listenAddr string) {
 	log.Debugf("Starting client UI at %v", uiaddr)
 
 	standalone := app.Flags["standalone"] != nil && app.Flags["standalone"].(bool)
+	authaddr := app.GetStringFlag("authaddr", common.AuthAPIHost)
+	log.Debugf("Using auth server at %v", authaddr)
+	yinbiaddr := app.GetStringFlag("yinbiaddr", common.YinbiAPIHost)
+	log.Debugf("Using Yinbi server %s", yinbiaddr)
 	// ui will handle empty uiaddr correctly
-	uiServer, err := ui.StartServer(uiaddr,
-		startupURL,
-		app.localHttpToken(),
-		standalone,
-	)
+	uiServer, err := ui.StartServer(ui.ServerParams{
+		AuthServerAddr:  authaddr,
+		YinbiServerAddr: yinbiaddr,
+		ExtURL:          startupURL,
+		RequestedAddr:   uiaddr,
+		LocalHTTPToken:  app.localHttpToken(),
+		Standalone:      standalone,
+		Handlers: []*ui.PathHandler{
+			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
+			&ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
+		},
+	})
 	if err != nil {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		return
 	}
-	uiServer.Handle("/pro/", pro.APIHandler(settings))
-	uiServer.Handle("/data", app.ws.Handler())
-
 	if app.ShouldShowUI() {
 		go func() {
 			if err := configureSystemTray(app); err != nil {
@@ -517,6 +525,19 @@ func (app *App) GetLanguage() string {
 // SetLanguage sets the user language
 func (app *App) SetLanguage(lang string) {
 	settings.SetLanguage(lang)
+}
+
+// GetStringFlag gets the app flag with the given name. If the flag
+// is missing, defaultValue is used
+func (app *App) GetStringFlag(name, defaultValue string) string {
+	var val string
+	if app.Flags[name] != nil {
+		val = app.Flags[name].(string)
+	}
+	if val == "" {
+		val = defaultValue
+	}
+	return val
 }
 
 // OnSettingChange sets a callback cb to get called when attr is changed from UI.
