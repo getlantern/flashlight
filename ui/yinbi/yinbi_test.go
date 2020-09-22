@@ -8,8 +8,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ui/api"
-	"github.com/getlantern/lantern-server/common"
+	"github.com/getlantern/flashlight/ui/testutils"
+	scommon "github.com/getlantern/lantern-server/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,30 +24,33 @@ type PaymentTest struct {
 
 func newYinbiHandler(t *testing.T) YinbiHandler {
 	return New(api.Params{
-		AuthServerAddr: common.AuthStagingAddr,
-		HttpClient:     &http.Client{},
+		AuthServerAddr:  common.AuthServerAddr,
+		YinbiServerAddr: common.YinbiServerAddr,
+		HttpClient:      &http.Client{},
 	})
 }
 
 func TestCreateMnemonic(t *testing.T) {
 	h := newYinbiHandler(t)
 	url := h.GetAuthAddr("/user/mnemonic")
-	req, _ := http.NewRequest(common.GET, url,
+	req, _ := http.NewRequest(scommon.GET, url,
 		nil)
 	resp := httptest.NewRecorder()
 	h.createMnemonic(resp, req)
+	testutils.DumpResponse(resp)
 	var r struct {
 		Mnemonic string `json:"mnemonic"`
 	}
+	testutils.DecodeResp(t, resp, &r)
 	words := strings.Split(r.Mnemonic, " ")
-	assert.Equal(t, len(words), 24)
+	assert.Equal(t, 24, len(words))
 }
 
 func createPaymentRequest(h YinbiHandler, params PaymentParams) *http.Request {
 	requestBody, _ := json.Marshal(params)
 	url := h.GetAuthAddr("/payment/new")
-	req, _ := http.NewRequest(common.POST, url, bytes.NewBuffer(requestBody))
-	req.Header.Add(common.HeaderContentType, common.MIMEApplicationJSON)
+	req, _ := http.NewRequest(scommon.POST, url, bytes.NewBuffer(requestBody))
+	req.Header.Add(scommon.HeaderContentType, scommon.MIMEApplicationJSON)
 	return req
 }
 
@@ -54,11 +59,13 @@ func testPaymentHandler(t *testing.T,
 	hasErrors bool, pt PaymentTest) {
 	rec := httptest.NewRecorder()
 	h.sendPaymentHandler(rec, req)
+	testutils.DumpResponse(rec)
 	var resp api.ApiResponse
 	resp.Errors = make(api.Errors)
-	assert.Equal(t, rec.Code, pt.expectedCode)
+	testutils.DecodeResp(t, rec, &resp)
+	assert.Equal(t, pt.expectedCode, rec.Code)
 	assert.Equal(t, len(resp.Errors) > 0, hasErrors)
-	assert.Equal(t, resp, pt.expectedResponse)
+	assert.Equal(t, pt.expectedResponse, resp)
 }
 
 func newPaymentParams(username, password, dst,

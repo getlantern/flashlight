@@ -14,7 +14,7 @@ var (
 
 	Staging = false
 
-	AuthAPIHost = "auth-staging.lantern.network"
+	AuthServerAddr = "https://auth-staging.lantern.network"
 
 	ProAPIHost = "api.getiantem.org"
 
@@ -44,10 +44,10 @@ func initInternal() {
 		return
 	}
 	if Staging {
-		AuthAPIHost = "auth-staging.lantern.network"
+		AuthServerAddr = "https://auth-staging.lantern.network"
 		ProAPIHost = "api-staging.getiantem.org"
 		ReplicaSearchAPIHost = "replica-search-staging.lantern.io"
-		YinbiAPIHost = "may38fjstaging.yin.bi"
+		YinbiServerAddr = "https://may38fjstaging.yin.bi"
 	}
 	forceAds, _ = strconv.ParseBool(os.Getenv("FORCEADS"))
 }

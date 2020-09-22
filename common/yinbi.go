@@ -1,5 +1,5 @@
 package common
 
 var (
-	YinbiAPIHost = "api.yin.bi"
+	YinbiServerAddr = "https://may38fjstaging.yin.bi"
 )
