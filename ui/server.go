@@ -23,7 +23,11 @@ import (
 	"github.com/getlantern/tarfs"
 
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/stats"
+	"github.com/getlantern/flashlight/ui/api"
+	"github.com/getlantern/flashlight/ui/auth"
+	"github.com/getlantern/flashlight/ui/yinbi"
 	"github.com/getlantern/flashlight/util"
 )
 
@@ -73,21 +77,48 @@ type Server struct {
 	standalone   bool
 }
 
+// ServerParams specifies the parameters to use
+// when creating new UI server
+type ServerParams struct {
+	ExtURL          string
+	AuthServerAddr  string
+	YinbiServerAddr string
+	Handlers        []*PathHandler
+	LocalHTTPToken  string
+	RequestedAddr   string
+	SkipTokenCheck  bool
+	Standalone      bool
+	HTTPClient      *http.Client
+}
+
+// PathHandler contains a request path pattern and an HTTP handler for that
+// pattern.
+type PathHandler struct {
+	Pattern string
+	Handler http.Handler
+}
+
 // StartServer creates and starts a new UI server.
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
-func StartServer(requestedAddr, extURL, localHTTPToken string, standalone bool) (*Server, error) {
-	server := newServer(extURL, localHTTPToken, standalone)
-	if err := server.start(requestedAddr); err != nil {
+func StartServer(params ServerParams) (*Server, error) {
+	server := newServer(params)
+
+	for _, h := range params.Handlers {
+		server.Handle(h.Pattern, h.Handler)
+	}
+
+	if err := server.start(params.RequestedAddr); err != nil {
 		return nil, err
 	}
 	return server, nil
 }
 
-func newServer(extURL, localHTTPToken string, standalone bool) *Server {
+func newServer(params ServerParams) *Server {
+	localHTTPToken := params.LocalHTTPToken
 	server := &Server{
-		externalURL: overrideManotoURL(extURL),
+		externalURL: overrideManotoURL(params.ExtURL),
 		httpTokenRequestPathPrefix: func() string {
 			if localHTTPToken == "" {
 				return ""
@@ -97,15 +128,20 @@ func newServer(extURL, localHTTPToken string, standalone bool) *Server {
 		mux:            http.NewServeMux(),
 		localHTTPToken: localHTTPToken,
 		translations:   eventual.NewValue(),
-		standalone:     standalone,
+		standalone:     params.Standalone,
 	}
 
-	server.attachHandlers()
+	server.attachHandlers(params)
 
 	return server
 }
 
-func (s *Server) attachHandlers() {
+func (s *Server) attachHandlers(params ServerParams) {
+
+	// map of Lantern and Yinbi API endpoints to
+	// HTTP handlers to register with the ServeMux
+	routes := map[string]api.HandlerFunc{}
+
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
 	startupHandler := func(resp http.ResponseWriter, req *http.Request) {
@@ -113,8 +149,49 @@ func (s *Server) attachHandlers() {
 		resp.WriteHeader(http.StatusOK)
 	}
 
+	apiParams := api.Params{
+		AuthServerAddr:  params.AuthServerAddr,
+		YinbiServerAddr: params.YinbiServerAddr,
+		HttpClient: &http.Client{
+			Transport: proxied.AsRoundTripper(
+				func(req *http.Request) (*http.Response, error) {
+					chained, err := proxied.ChainedNonPersistent("")
+					if err != nil {
+						return nil, fmt.Errorf("connecting to proxy: %w", err)
+					}
+					return chained.RoundTrip(req)
+				},
+			),
+		},
+	}
+
+	authHandler := auth.New(apiParams)
+
+	handlers := []api.UIHandler{
+		yinbi.NewWithAuth(apiParams, authHandler),
+		authHandler,
+	}
+
+	for _, h := range handlers {
+		for route, handler := range h.Routes() {
+			routes[route] = handler
+		}
+	}
+
+	for pattern, handler := range routes {
+		s.mux.Handle(pattern,
+			s.wrapMiddleware(http.HandlerFunc(handler)))
+	}
+
 	s.Handle("/startup", http.HandlerFunc(startupHandler))
 	s.Handle("/", http.FileServer(fs))
+}
+
+// wrapMiddleware takes the given http.Handler and optionally wraps it with
+// the cors middleware handler
+func (s *Server) wrapMiddleware(handler http.Handler) http.Handler {
+	handler = s.corsHandler(handler)
+	return handler
 }
 
 // Handle directs the underlying server to handle the given pattern at both
