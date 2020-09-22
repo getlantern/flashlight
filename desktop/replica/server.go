@@ -107,7 +107,7 @@ func NewHTTPHandler(uc common.UserConfig, replicaClient *replica.Client, gaSessi
 		},
 		torrentClient: torrentClient,
 		dataDir:       replicaDataDir,
-		logger:        golog.LoggerFor("replica.server"),
+		logger:        logger,
 		uploadsDir:    uploadsDir,
 		replicaClient: replicaClient,
 		searchProxy:   http.StripPrefix("/search", searchHandler(uc)),
@@ -190,19 +190,23 @@ func (me *HttpHandler) wrapHandlerError(opName string, handler func(*ops.Instrum
 				return
 			}
 
+			var statusCode int
+			if e, ok := err.(handlerError); ok {
+				statusCode = e.statusCode
+			} else {
+				statusCode = http.StatusInternalServerError
+			}
+
 			resp := map[string]interface{}{
-				"error": err.Error(),
+				"statusCode": statusCode,
+				"error":      err.Error(),
 			}
 
 			var writingEncodingErr error
-			if e, ok := err.(handlerError); ok {
-				writingEncodingErr = encodeJsonErrorResponse(rw, resp, e.statusCode)
-			} else {
-				writingEncodingErr = encodeJsonErrorResponse(rw, resp, http.StatusInternalServerError)
-			}
+			writingEncodingErr = encodeJsonErrorResponse(rw, resp, statusCode)
 
 			if writingEncodingErr != nil {
-				me.logger.Errorf("error writing json: %v", writingEncodingErr)
+				me.logger.Errorf("error writing json error response: %v", writingEncodingErr)
 			}
 		}
 	}
