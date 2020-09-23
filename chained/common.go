@@ -157,7 +157,8 @@ var availableTLSCiphers = map[string]uint16{
 
 // helloBrowser is a special hello ID denoting that ClientHellos should be based on those used by
 // the system default browser. This structure does not actually get passed to utls code. It is
-// caught by tlsConfigForProxy and converted to the appropriate ClientHelloID.
+// caught by tlsConfigForProxy and converted to tls.HelloCustom with a proper corresponding
+// ClientHelloSpec.
 var helloBrowser = tls.ClientHelloID{
 	Client:  "Browser",
 	Version: "0",
