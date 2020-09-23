@@ -62,7 +62,7 @@ func TestListen(t *testing.T) {
 
 func startTestServer(t *testing.T, addr string) *Server {
 	s := newServer(ServerParams{
-		AuthServerAddr: common.AuthAPIHost,
+		AuthServerAddr: common.AuthServerAddr,
 		LocalHTTPToken: "local-http-token",
 	})
 	assert.NoError(t, s.start(addr), "should start server")
