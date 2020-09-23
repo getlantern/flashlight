@@ -381,9 +381,9 @@ func (app *App) beforeStart(listenAddr string) {
 	log.Debugf("Starting client UI at %v", uiaddr)
 
 	standalone := app.Flags["standalone"] != nil && app.Flags["standalone"].(bool)
-	authaddr := app.GetStringFlag("authaddr", common.AuthAPIHost)
+	authaddr := app.GetStringFlag("authaddr", common.AuthServerAddr)
 	log.Debugf("Using auth server at %v", authaddr)
-	yinbiaddr := app.GetStringFlag("yinbiaddr", common.YinbiAPIHost)
+	yinbiaddr := app.GetStringFlag("yinbiaddr", common.YinbiServerAddr)
 	log.Debugf("Using Yinbi server %s", yinbiaddr)
 	// ui will handle empty uiaddr correctly
 	uiServer, err := ui.StartServer(ui.ServerParams{
