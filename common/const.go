@@ -47,7 +47,7 @@ func initInternal() {
 		AuthServerAddr = "https://auth-staging.lantern.network"
 		ProAPIHost = "api-staging.getiantem.org"
 		ReplicaSearchAPIHost = "replica-search-staging.lantern.io"
-		YinbiServerAddr = "https://may38fjstaging.yin.bi"
+		useYinbiStaging()
 	}
 	forceAds, _ = strconv.ParseBool(os.Getenv("FORCEADS"))
 }

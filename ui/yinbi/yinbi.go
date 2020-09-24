@@ -13,6 +13,7 @@ import (
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/auth-server/models"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ui/api"
 	"github.com/getlantern/flashlight/ui/auth"
 	"github.com/getlantern/golog"
@@ -26,7 +27,7 @@ import (
 )
 
 const (
-	issuer                 = "GBHV7FVZILTLVWSJI5TVH25UBNZ2CXWAZERKH4CI4CUQM6HN5IVM3HOS"
+	importEndpoint         = "/import"
 	recoverAccountEndpoint = "/account/recover"
 	resetPasswordEndpoint  = "/account/password/reset"
 )
@@ -97,10 +98,10 @@ func (h YinbiHandler) Routes() map[string]api.HandlerFunc {
 }
 
 func newYinbiClient(httpClient *http.Client) *yinbi.Client {
-	code := "YNB"
-	networkName := "test"
-	horizonAddr := "https://horizon-testnet.stellar.org"
-	issuer := "GBHV7FVZILTLVWSJI5TVH25UBNZ2CXWAZERKH4CI4CUQM6HN5IVM3HOS"
+	code := common.YinbiAssetCode
+	networkName := common.NetworkName
+	horizonAddr := common.HorizonAddr
+	issuer := common.YinbiIssuerAccount
 	cfg := config.GetStellarConfig(networkName, horizonAddr, issuer, code)
 	return yinbi.New(params.Params{
 		HttpClient: httpClient,
@@ -198,7 +199,6 @@ func (h YinbiHandler) sendImportWallet(uri string, params *ImportWalletParams, r
 }
 
 func (h YinbiHandler) createUserAccount(w http.ResponseWriter, params *ImportWalletParams) error {
-	endpoint := "/import"
 	userParams := models.UserParams{
 		Email:    params.Email,
 		Username: params.Username,
@@ -211,7 +211,7 @@ func (h YinbiHandler) createUserAccount(w http.ResponseWriter, params *ImportWal
 	if err != nil {
 		return err
 	}
-	h.SendAuth(w, endpoint, srpClient, srpParams)
+	h.SendAuth(w, importEndpoint, srpClient, srpParams)
 	return nil
 }
 
@@ -488,6 +488,7 @@ func (h YinbiHandler) createAccountHandler(w http.ResponseWriter,
 	onResp := func(resp *http.Response) error {
 		assetCode := h.yinbiClient.GetAssetCode()
 		log.Debugf("Trusting asset %s", assetCode)
+		issuer := common.YinbiIssuerAccount
 		return h.yinbiClient.TrustAsset(assetCode, issuer, pair)
 	}
 	url := h.GetAuthAddr(html.EscapeString(r.URL.Path))
