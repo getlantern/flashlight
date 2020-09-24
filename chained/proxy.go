@@ -7,14 +7,11 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
-
-	tls "github.com/refraction-networking/utls"
 
 	config "github.com/getlantern/common"
 	"github.com/getlantern/ema"
@@ -25,11 +22,8 @@ import (
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/netx"
-	"github.com/getlantern/tlsmasq/ptlshs"
-	"github.com/getlantern/tlsresumption"
 
 	"github.com/getlantern/flashlight/balancer"
-	"github.com/getlantern/flashlight/browsers/simbrowser"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 )
@@ -518,85 +512,6 @@ func reportProxyDial(delta time.Duration, err error) {
 		innerOp.FailIf(err)
 		innerOp.End()
 	}
-}
-
-func tlsConfigForProxy(name string, s *ChainedServerInfo, uc common.UserConfig) (*tls.Config, tls.ClientHelloID) {
-	const timeout = 5 * time.Second
-
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	helloID := s.clientHelloID()
-	var ss *tls.ClientSessionState
-	var err error
-	if s.TLSClientSessionState != "" {
-		ss, err = tlsresumption.ParseClientSessionState(s.TLSClientSessionState)
-		if err != nil {
-			log.Errorf("Unable to parse serialized client session state, continuing with normal handshake: %v", err)
-		} else {
-			log.Debug("Using serialized client session state")
-			if helloID.Client == "Golang" {
-				log.Debug("Need to mimic browser hello for session resumption, defaulting to HelloChrome_Auto")
-				helloID = tls.HelloChrome_Auto
-			}
-		}
-	}
-
-	b := simbrowser.ChooseForUser(ctx, uc)
-	if helloID == helloBrowser {
-		helloID = b.ClientHelloID
-	}
-
-	cfg := &tls.Config{
-		ClientSessionCache: newExpiringSessionCache(name, b.SessionTicketLifetime, ss),
-		CipherSuites:       orderedCipherSuitesFromConfig(s),
-		ServerName:         s.TLSServerNameIndicator,
-		InsecureSkipVerify: true,
-		KeyLogWriter:       getTLSKeyLogWriter(),
-	}
-
-	return cfg, helloID
-}
-
-func orderedCipherSuitesFromConfig(s *ChainedServerInfo) []uint16 {
-	if common.Platform == "android" {
-		return s.mobileOrderedCipherSuites()
-	}
-	return s.desktopOrderedCipherSuites()
-}
-
-// Write the session keys to file if SSLKEYLOGFILE is set, same as browsers.
-func getTLSKeyLogWriter() io.Writer {
-	createKeyLogWriterOnce.Do(func() {
-		path := os.Getenv("SSLKEYLOGFILE")
-		if path == "" {
-			return
-		}
-		var err error
-		tlsKeyLogWriter, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0600)
-		if err != nil {
-			log.Debugf("Error creating keylog file at %v: %s", path, err)
-		}
-	})
-	return tlsKeyLogWriter
-}
-
-// utlsHandshaker implements tlsmasq/ptlshs.Handshaker. This allows us to parrot browsers like
-// Chrome in our handshakes with tlsmasq origins.
-type utlsHandshaker struct {
-	cfg     *tls.Config
-	helloID tls.ClientHelloID
-}
-
-func (h utlsHandshaker) Handshake(conn net.Conn) (*ptlshs.HandshakeResult, error) {
-	uconn := tls.UClient(conn, h.cfg, h.helloID)
-	if err := uconn.Handshake(); err != nil {
-		return nil, err
-	}
-	return &ptlshs.HandshakeResult{
-		Version:     uconn.ConnectionState().Version,
-		CipherSuite: uconn.ConnectionState().CipherSuite,
-	}, nil
 }
 
 func splitClientHello(hello []byte) [][]byte {
