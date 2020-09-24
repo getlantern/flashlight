@@ -14,6 +14,7 @@ import (
 	"github.com/getlantern/auth-server/models"
 	"github.com/getlantern/auth-server/srp"
 	"github.com/getlantern/flashlight/ui/api"
+	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
 )
@@ -39,7 +40,7 @@ func withUserID(ctx context.Context, userID string) context.Context {
 }
 
 type AuthHandler struct {
-	api.Handler
+	handler.Handler
 	proxy *httputil.ReverseProxy
 }
 
@@ -49,16 +50,16 @@ func New(params api.Params) AuthHandler {
 		log.Fatal(fmt.Errorf("Bad auth server address: %s", params.AuthServerAddr))
 	}
 	return AuthHandler{
-		api.NewHandler(params),
+		handler.NewHandler(params),
 		httputil.NewSingleHostReverseProxy(u),
 	}
 }
 
-func (h AuthHandler) Routes() map[string]api.HandlerFunc {
+func (h AuthHandler) Routes() map[string]handler.HandlerFunc {
 	proxyHandler := func(w http.ResponseWriter, r *http.Request) {
 		h.proxy.ServeHTTP(w, r)
 	}
-	return map[string]api.HandlerFunc{
+	return map[string]handler.HandlerFunc{
 		"/login":       h.authHandler,
 		"/register":    h.authHandler,
 		"/user/logout": proxyHandler,

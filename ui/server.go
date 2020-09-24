@@ -27,6 +27,7 @@ import (
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ui/api"
 	"github.com/getlantern/flashlight/ui/auth"
+	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/flashlight/ui/yinbi"
 	"github.com/getlantern/flashlight/util"
 )
@@ -140,7 +141,7 @@ func (s *Server) attachHandlers(params ServerParams) {
 
 	// map of Lantern and Yinbi API endpoints to
 	// HTTP handlers to register with the ServeMux
-	routes := map[string]api.HandlerFunc{}
+	routes := map[string]handler.HandlerFunc{}
 
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
@@ -167,7 +168,7 @@ func (s *Server) attachHandlers(params ServerParams) {
 
 	authHandler := auth.New(apiParams)
 
-	handlers := []api.UIHandler{
+	handlers := []handler.UIHandler{
 		yinbi.NewWithAuth(apiParams, authHandler),
 		authHandler,
 	}

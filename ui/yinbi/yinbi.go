@@ -16,6 +16,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ui/api"
 	"github.com/getlantern/flashlight/ui/auth"
+	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/golog"
 	scommon "github.com/getlantern/lantern-server/common"
 	"github.com/getlantern/yinbi-server/config"
@@ -79,11 +80,11 @@ func newReverseProxy(uri string) *httputil.ReverseProxy {
 	return httputil.NewSingleHostReverseProxy(u)
 }
 
-func (h YinbiHandler) Routes() map[string]api.HandlerFunc {
+func (h YinbiHandler) Routes() map[string]handler.HandlerFunc {
 	proxyHandler := func(w http.ResponseWriter, r *http.Request) {
 		h.proxy.ServeHTTP(w, r)
 	}
-	return map[string]api.HandlerFunc{
+	return map[string]handler.HandlerFunc{
 		"/payment/new":            h.sendPaymentHandler,
 		"/user/account/new":       h.createAccountHandler,
 		"/wallet/import":          h.importWalletHandler,

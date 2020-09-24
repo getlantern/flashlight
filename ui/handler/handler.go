@@ -1,4 +1,4 @@
-package api
+package handler
 
 import (
 	"bytes"
@@ -6,18 +6,20 @@ import (
 	"net/http"
 
 	"github.com/getlantern/auth-server/models"
+	"github.com/getlantern/flashlight/ui/api"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
 )
 
 var (
-	log = golog.LoggerFor("flashlight.ui.api")
+	log = golog.LoggerFor("flashlight.ui.handler")
 )
 
 type HandlerFunc func(http.ResponseWriter, *http.Request)
 
 // UIHandler is an interface UI handlers must implement
 type UIHandler interface {
+	// Routes is a map of UI server paths to handler funcs
 	Routes() map[string]HandlerFunc
 }
 
@@ -30,13 +32,7 @@ type Handler struct {
 	HttpClient *http.Client
 }
 
-type Params struct {
-	AuthServerAddr  string
-	YinbiServerAddr string
-	HttpClient      *http.Client
-}
-
-func NewHandler(params Params) Handler {
+func NewHandler(params api.Params) Handler {
 	return Handler{
 		authAddr:   params.AuthServerAddr,
 		yinbiAddr:  params.YinbiServerAddr,
@@ -86,7 +82,7 @@ func (h Handler) ProxyHandler(url string, req *http.Request, w http.ResponseWrit
 // ErrorHandler is an error handler that takes an error or Errors and writes the
 // encoded JSON response to the client
 func (h Handler) ErrorHandler(w http.ResponseWriter, err interface{}, errorCode int) {
-	var resp ApiResponse
+	var resp api.ApiResponse
 	switch err.(type) {
 	case string:
 		resp.Error = err.(string)
