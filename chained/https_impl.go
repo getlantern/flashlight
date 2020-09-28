@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/x509"
 	"net"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/getlantern/errors"
@@ -11,7 +13,7 @@ import (
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/hellosplitter"
 	"github.com/getlantern/keyman"
-	"github.com/getlantern/tlsdialer"
+	"github.com/getlantern/tlsdialer/v3"
 	tls "github.com/refraction-networking/utls"
 )
 
@@ -22,29 +24,42 @@ type httpsImpl struct {
 	certPEM                 string
 	x509cert                *x509.Certificate
 	tlsConfig               *tls.Config
-	clientHelloID           tls.ClientHelloID
+	roller                  *helloRoller
 	tlsClientHelloSplitting bool
+	sync.Mutex
 }
 
 func newHTTPSImpl(name, addr string, s *ChainedServerInfo, uc common.UserConfig, dialCore coreDialer) (proxyImpl, error) {
+	const timeout = 5 * time.Second
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
 	cert, err := keyman.LoadCertificateFromPEMBytes([]byte(s.Cert))
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", addr))
 	}
-	tlsConfig, clientHelloID := tlsConfigForProxy(name, s, uc)
+	tlsConfig, hellos := tlsConfigForProxy(ctx, name, s, uc)
+	if len(hellos) == 0 {
+		return nil, log.Error(errors.New("expected at least one hello"))
+	}
 	return &httpsImpl{
 		dialCore:                dialCore,
 		addr:                    addr,
 		certPEM:                 string(cert.PEMEncoded()),
 		x509cert:                cert.X509(),
 		tlsConfig:               tlsConfig,
-		clientHelloID:           clientHelloID,
+		roller:                  &helloRoller{hellos: hellos},
 		tlsClientHelloSplitting: s.TLSClientHelloSplitting,
 	}, nil
 }
 
 func (impl *httpsImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, error) {
-	td := &tlsdialer.Dialer{
+	r := impl.roller.getCopy()
+	defer impl.roller.updateTo(r)
+
+	currentHello := r.current()
+	d := tlsdialer.Dialer{
 		DoDial: func(network, addr string, timeout time.Duration) (net.Conn, error) {
 			tcpConn, err := impl.dialCore(op, ctx, impl.addr)
 			if err != nil {
@@ -55,13 +70,20 @@ func (impl *httpsImpl) dialServer(op *ops.Op, ctx context.Context) (net.Conn, er
 			}
 			return tcpConn, err
 		},
-		Timeout:        timeoutFor(ctx),
-		SendServerName: impl.tlsConfig.ServerName != "",
-		Config:         impl.tlsConfig,
-		ClientHelloID:  impl.clientHelloID,
+		Timeout:         timeoutFor(ctx),
+		SendServerName:  impl.tlsConfig.ServerName != "",
+		Config:          impl.tlsConfig,
+		ClientHelloID:   currentHello.id,
+		ClientHelloSpec: currentHello.spec,
 	}
-	result, err := td.DialForTimings("tcp", impl.addr)
+	result, err := d.DialForTimings("tcp", impl.addr)
 	if err != nil {
+		if strings.Contains(err.Error(), "tls: ") ||
+			strings.Contains(err.Error(), "failed to apply custom client hello spec: ") {
+			// A TLS-level error is likely related to a bad hello.
+			log.Debugf("got error likely related to bad hello; advancing roller: %v", err)
+			r.advance()
+		}
 		return nil, err
 	}
 	conn := result.Conn

@@ -51,7 +51,7 @@ require (
 	github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42
 	github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644
 	github.com/getlantern/kcpwrapper v0.0.0-20171114192627-a35c895f6de7
-	github.com/getlantern/keyman v0.0.0-20180207174507-f55e7280e93a
+	github.com/getlantern/keyman v0.0.0-20200819205636-76fef27c39f1
 	github.com/getlantern/lampshade v0.0.0-20200303040944-fe53f13203e9
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
@@ -82,8 +82,10 @@ require (
 	github.com/getlantern/tinywss v0.0.0-20200121221108-851921f95ad7
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
 	github.com/getlantern/tlsdialer v0.0.0-20200205115148-9bde2ed72c94
+	github.com/getlantern/tlsdialer/v3 v3.0.1-0.20200819212748-a098113dd9f3
 	github.com/getlantern/tlsmasq v0.3.0
 	github.com/getlantern/tlsresumption v0.0.0-20200205020452-74fc6ea4e074
+	github.com/getlantern/tlsutil v0.2.0
 	github.com/getlantern/trafficlog v1.0.0
 	github.com/getlantern/trafficlog-flashlight v0.0.0-20200903233829-b5869baf5329
 	github.com/getlantern/uuid v1.2.0
@@ -100,6 +102,7 @@ require (
 	github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
 	github.com/miekg/dns v0.0.0-20180406150955-01d59357d468
+	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/go-server-timing v1.0.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/mitchellh/panicwrap v1.0.0
