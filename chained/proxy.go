@@ -262,7 +262,6 @@ type proxy struct {
 	emaRTT              *ema.EMA
 	emaRTTDev           *ema.EMA
 	emaSuccessRate      *ema.EMA
-	kcpConfig           *KCPConfig
 	mostRecentABETime   time.Time
 	numPreconnecting    func() int
 	numPreconnected     func() int
