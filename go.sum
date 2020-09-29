@@ -289,6 +289,8 @@ github.com/getlantern/enproxy v0.0.0-20180913191734-002212d417a4 h1:PNbh29DNRJF7
 github.com/getlantern/enproxy v0.0.0-20180913191734-002212d417a4/go.mod h1:Gg8JT6crCL+8vd1+KPtLIC2+KHGiaB0l+Q8bDbj7B30=
 github.com/getlantern/errors v0.0.0-20190325191628-abdb3e3e36f7 h1:6uJ+sZ/e03gkbqZ0kUG6mfKoqDb4XMAzMIwlajq19So=
 github.com/getlantern/errors v0.0.0-20190325191628-abdb3e3e36f7/go.mod h1:l+xpFBrCtDLpK9qNjxs+cHU6+BAdlBaxHqikB6Lku3A=
+github.com/getlantern/errors v1.0.0 h1:q48Hh3N0uxLLD52zO8LpxdDgSuT3ge3uLpZqfMsOmQo=
+github.com/getlantern/errors v1.0.0/go.mod h1:l+xpFBrCtDLpK9qNjxs+cHU6+BAdlBaxHqikB6Lku3A=
 github.com/getlantern/event v0.0.0-20170919023932-f16a5563f52e h1:Oz7PGDawrMy0ybDvdmcFYXjU8EI1c+jk6+yUcAoRlXw=
 github.com/getlantern/event v0.0.0-20170919023932-f16a5563f52e/go.mod h1:iToZ3dqm/iFxRHPHUHUrF1JZtg0e06ZSXD1BuiGoUaY=
 github.com/getlantern/eventual v0.0.0-20180125201821-84b02499361b/go.mod h1:O8T3zFEcY6+LRXFcVV4q8mEu2tDIixG8edC84DfswBc=
