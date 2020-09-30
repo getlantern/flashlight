@@ -71,7 +71,6 @@ require (
 	github.com/getlantern/proxy v0.0.0-20200828020017-9c052c8ea590
 	github.com/getlantern/proxybench v0.0.0-20200806214955-5d56065f9f77
 	github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683
-	github.com/getlantern/quic0 v0.0.0-20200121154153-8b18c2ba09f9
 	github.com/getlantern/quicwrapper v0.0.0-20200928203901-ebae34874fb5
 	github.com/getlantern/replica v0.3.1-0.20200623004346-367f62a981a7
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
@@ -114,7 +113,7 @@ require (
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73
 	golang.org/x/sys v0.0.0-20200929083018-4d22bbb62b3c
-	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/appengine v1.6.2 // indirect
 	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55 // indirect
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5

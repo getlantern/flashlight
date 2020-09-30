@@ -87,7 +87,6 @@ type Helper struct {
 	LampshadeProxyServerAddr    string
 	LampshadeUTPProxyServerAddr string
 	QUICIETFProxyServerAddr     string
-	QUIC0ProxyServerAddr        string
 	OQUICProxyServerAddr        string
 	WSSProxyServerAddr          string
 	TLSMasqProxyServerAddr      string
@@ -105,7 +104,7 @@ type Helper struct {
 // also enables ForceProxying on the client package to make sure even localhost
 // origins are served through the proxy. Make sure to close the Helper with
 // Close() when finished with the test.
-func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string, quic0Addr string, oquicAddr string, wssAddr string, tlsmasqAddr string, httpsUTPAddr string, obfs4UTPAddr string, lampshadeUTPAddr string, httpsSmuxAddr string, httpsPsmuxAddr string) (*Helper, error) {
+func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string, oquicAddr string, wssAddr string, tlsmasqAddr string, httpsUTPAddr string, obfs4UTPAddr string, lampshadeUTPAddr string, httpsSmuxAddr string, httpsPsmuxAddr string) (*Helper, error) {
 	ConfigDir, err := ioutil.TempDir("", "integrationtest_helper")
 	log.Debugf("ConfigDir is %v", ConfigDir)
 	if err != nil {
@@ -122,7 +121,6 @@ func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr s
 		LampshadeProxyServerAddr:    lampshadeAddr,
 		LampshadeUTPProxyServerAddr: lampshadeUTPAddr,
 		QUICIETFProxyServerAddr:     quicAddr,
-		QUIC0ProxyServerAddr:        quic0Addr,
 		OQUICProxyServerAddr:        oquicAddr,
 		WSSProxyServerAddr:          wssAddr,
 		TLSMasqProxyServerAddr:      tlsmasqAddr,
@@ -234,7 +232,6 @@ func (helper *Helper) startProxyServer() error {
 		LampshadeAddr:     helper.LampshadeProxyServerAddr,
 		LampshadeUTPAddr:  helper.LampshadeUTPProxyServerAddr,
 		QUICIETFAddr:      helper.QUICIETFProxyServerAddr,
-		QUIC0Addr:         helper.QUIC0ProxyServerAddr,
 		WSSAddr:           helper.WSSProxyServerAddr,
 		TLSMasqAddr:       helper.TLSMasqProxyServerAddr,
 
@@ -455,9 +452,6 @@ func (helper *Helper) buildProxies(proto string) (map[string]*chained.ChainedSer
 		} else if proto == "quic_ietf" {
 			srv.Addr = helper.QUICIETFProxyServerAddr
 			srv.PluggableTransport = "quic_ietf"
-		} else if proto == "quic" {
-			srv.Addr = helper.QUIC0ProxyServerAddr
-			srv.PluggableTransport = "quic"
 		} else if proto == "oquic" {
 			srv.Addr = helper.OQUICProxyServerAddr
 			srv.PluggableTransport = "oquic"
