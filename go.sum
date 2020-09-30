@@ -475,8 +475,8 @@ github.com/getlantern/tlsutil v0.2.0 h1:i1X/r3w6FLaceoNBkTsRXWcE3Ujz7rbWmtipS28v
 github.com/getlantern/tlsutil v0.2.0/go.mod h1:Vxsyr9DVnYwsqHaEzMYkg9fT8aBrnO2eI+gdICMQbQU=
 github.com/getlantern/trafficlog v1.0.0 h1:JYCcTptI7kKXjvppdE5JQPx31m/78Q1xbXpIM6X0rXc=
 github.com/getlantern/trafficlog v1.0.0/go.mod h1:oaj53OJ67FEPsiKbQBz2dpYCnh8Yq4bBbww3C6vMgAQ=
-github.com/getlantern/trafficlog-flashlight v0.0.0-20200903233829-b5869baf5329 h1:IZ0JaOBIzFDa2eFoFHEG646zFEGS/QbQgJ9x0sW8/ug=
-github.com/getlantern/trafficlog-flashlight v0.0.0-20200903233829-b5869baf5329/go.mod h1:fMn3LcwRfIlD4COXKwZAhvsxgo+qIrbhvhHRff+dxxg=
+github.com/getlantern/trafficlog-flashlight v1.0.0 h1:r/iSB9RKFafOo6zkds5X9x99RibxoBLBS3fyMgak3M4=
+github.com/getlantern/trafficlog-flashlight v1.0.0/go.mod h1:fMn3LcwRfIlD4COXKwZAhvsxgo+qIrbhvhHRff+dxxg=
 github.com/getlantern/utls v0.0.0-20191119185840-3db8c755b682 h1:gK0+CerB0oFReyfhHZhTDywm7YU7NIx/xrhRGDhgiK0=
 github.com/getlantern/utls v0.0.0-20191119185840-3db8c755b682/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
 github.com/getlantern/utls v0.0.0-20200903013459-0c02248f7ce1 h1:+Egmu6VMMPm8/FHz8TOtQ1Usn3zg0gkS7ZHrLFycyok=
