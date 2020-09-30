@@ -70,19 +70,62 @@ type nopCloser struct{}
 
 func (c nopCloser) close() {}
 
+// CreateDialers creates a list of Proxies (balancer.Dialer) with supplied server info.
+func CreateDialers(proxies map[string]*ChainedServerInfo, uc common.UserConfig) []balancer.Dialer {
+	dialers := make([]balancer.Dialer, 0, len(proxies))
+	groups := groupByMultipathEndpoint(proxies)
+	for endpoint, group := range groups {
+		if endpoint == "" {
+			log.Debugf("Adding %d individual chained servers", len(group))
+			for name, s := range group {
+				dialer, err := CreateDialer(name, s, uc)
+				if err != nil {
+					log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)
+					continue
+				}
+				log.Debugf("Adding chained server: %v", dialer.JustifiedLabel())
+				dialers = append(dialers, dialer)
+			}
+		} else {
+			log.Debugf("Adding %d chained servers for multipath endpoint %s", len(group), endpoint)
+			dialer, err := CreateMPDialer(endpoint, group, uc)
+			if err != nil {
+				log.Errorf("Unable to configure multipath server to %v. Received error: %v", endpoint, err)
+				continue
+			}
+			dialers = append(dialers, dialer)
+		}
+	}
+	return dialers
+}
+
 // CreateDialer creates a Proxy (balancer.Dialer) with supplied server info.
 func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (balancer.Dialer, error) {
+	addr, transport, network, err := extractParams(s)
+	if err != nil {
+		return nil, err
+	}
+	p, err := newProxy(name, addr, transport, network, s, uc)
+	p.impl, err = createImpl(name, addr, transport, s, uc, p.reportDialCore)
+	if err != nil {
+		return nil, err
+	}
+	return p, nil
+}
+
+func extractParams(s *ChainedServerInfo) (addr, transport, network string, err error) {
 	if theForceAddr != "" && theForceToken != "" {
 		forceProxy(s)
 	}
 	if s.Addr == "" {
-		return nil, errors.New("Empty addr")
+		err = errors.New("Empty addr")
+		return
 	}
-	addr := s.Addr
+	addr = s.Addr
 	if s.MultiplexedAddr != "" {
 		addr = s.MultiplexedAddr
 	}
-	transport := s.PluggableTransport
+	transport = s.PluggableTransport
 	switch transport {
 	case "":
 		transport = "http"
@@ -95,40 +138,12 @@ func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (bala
 			transport = transport + "s"
 		}
 	}
-	network := "tcp"
+	network = "tcp"
 	switch transport {
 	case "utphttp", "utphttps", "utpobfs4", "quic", "quic_ietf", "oquic":
 		network = "udp"
 	}
-	p, err := newProxy(name, addr, transport, network, s, uc)
-
-	impl, err := createImpl(name, addr, transport, s, uc, p.reportDialCore)
-	if err != nil {
-		return nil, err
-	}
-	p.impl = impl
-
-	if s.MultiplexedAddr != "" || transport == "utphttp" ||
-		transport == "utphttps" || transport == "utpobfs4" ||
-		transport == "tlsmasq" {
-		p.impl, err = multiplexed(p.impl, name, s)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	allowPreconnecting := false
-	switch transport {
-	case "http", "https", "utphttp", "utphttps", "obfs4", "utpobfs4", "tlsmasq":
-		allowPreconnecting = true
-	}
-	if allowPreconnecting && s.MaxPreconnect > 0 {
-		log.Debugf("Enabling preconnecting for %v", p.Label())
-		// give ourselves a large margin for making sure we're not using idled preconnected connections
-		expiration := IdleTimeout / 2
-		p.impl = newPreconnectingDialer(name, s.MaxPreconnect, expiration, p.impl)
-	}
-	return p, err
+	return
 }
 
 func createImpl(name, addr, transport string, s *ChainedServerInfo, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
@@ -179,6 +194,26 @@ func createImpl(name, addr, transport string, s *ChainedServerInfo, uc common.Us
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	allowPreconnecting := false
+	switch transport {
+	case "http", "https", "utphttp", "utphttps", "obfs4", "utpobfs4", "tlsmasq":
+		allowPreconnecting = true
+	}
+
+	if s.MultiplexedAddr != "" || transport == "utphttp" ||
+		transport == "utphttps" || transport == "utpobfs4" ||
+		transport == "tlsmasq" {
+		impl, err = multiplexed(impl, name, s)
+		if err != nil {
+			return nil, err
+		}
+	} else if allowPreconnecting && s.MaxPreconnect > 0 {
+		log.Debugf("Enabling preconnecting for %v", name)
+		// give ourselves a large margin for making sure we're not using idled preconnected connections
+		expiration := IdleTimeout / 2
+		impl = newPreconnectingDialer(name, s.MaxPreconnect, expiration, impl)
 	}
 
 	return impl, err

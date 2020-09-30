@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -109,80 +110,56 @@ func TestProxying(t *testing.T) {
 		return
 	}
 
-	// Makes a test request
-	testRequest(t, helper)
+	testRequest := func(t *testing.T) {
+		proxyURL, _ := url.Parse("http://" + LocalProxyAddr)
+		client := &http.Client{
+			Transport: &http.Transport{
+				Proxy: http.ProxyURL(proxyURL),
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		}
 
-	// Switch to utphttps, wait for a new config and test request again
-	helper.SetProtocol("utphttps")
-	time.Sleep(2 * time.Second)
-	testRequest(t, helper)
+		doRequest(t, client, "http://"+helper.HTTPServerAddr)
+		doRequest(t, client, "https://"+helper.HTTPSServerAddr)
+		goroutines.PrintProfile(10)
+	}
 
-	// Switch to obfs4, wait for a new config and test request again
-	helper.SetProtocol("obfs4")
-	time.Sleep(2 * time.Second)
-	testRequest(t, helper)
+	protocols := []string{
+		"https",
+		"utphttps",
+		"obfs4",
+		"utpobfs4",
+		"lampshade",
+		// utplampshade doesn't currently work for some reason
+		// "utplampshade",
+		"kcp",
+		"quic", // quic0 (legacy)
+		"oquic",
+		"quic_ietf",
+		"wss",
+		"tlsmasq",
+		"https+smux",
+		"https+psmux",
+	}
 
-	// Switch to utpobfs4, wait for a new config and test request again
-	helper.SetProtocol("utpobfs4")
-	time.Sleep(2 * time.Second)
-	testRequest(t, helper)
-
-	// Switch to lampshade, wait for a new config and test request again
-	helper.SetProtocol("lampshade")
-	time.Sleep(2 * time.Second)
-	testRequest(t, helper)
-
-	// utplampshade doesn't currently work for some reason
-	// // Switch to utplampshade, wait for a new config and test request again
-	// helper.SetProtocol("utplampshade")
-	// time.Sleep(2 * time.Second)
-	// testRequest(t, helper)
-
-	// Switch to kcp, wait for a new config and test request again
-	helper.SetProtocol("kcp")
-	time.Sleep(2 * time.Second)
-	testRequest(t, helper)
-
-	// Switch to quic0 (legacy), wait for a new config and test request again
-	helper.SetProtocol("quic")
-	time.Sleep(2 * time.Second)
-	testRequest(t, helper)
-
-	// Switch to oquic, wait for a new config and test request again
-	helper.SetProtocol("oquic")
-	time.Sleep(2 * time.Second)
-	testRequest(t, helper)
-
-	// Switch to wss, wait for a new config and test request again
-	helper.SetProtocol("wss")
-	time.Sleep(2 * time.Second)
-	testRequest(t, helper)
-
-	// Switch to tlsmasq, wait for a new config and test request again
-	helper.SetProtocol("tlsmasq")
-	time.Sleep(2 * time.Second)
-	testRequest(t, helper)
-
-	// Switch to quic_ietf, wait for a new config and test request again
-	helper.SetProtocol("quic_ietf")
-	time.Sleep(2 * time.Second)
-	testRequest(t, helper)
-
-	helper.SetProtocol("https+smux")
-	time.Sleep(2 * time.Second)
-	testRequest(t, helper)
-
-	helper.SetProtocol("https+psmux")
-	time.Sleep(2 * time.Second)
-	testRequest(t, helper)
+	for i, proto := range protocols {
+		if i > 0 {
+			// https is the default
+			helper.SetProtocol(proto)
+			time.Sleep(2 * time.Second)
+		}
+		t.Run(proto, testRequest)
+	}
 
 	// Disconnected Lantern and try again
 	a.Disconnect()
-	testRequest(t, helper)
+	t.Run("disconnected", testRequest)
 
 	// Connect Lantern and try again
 	a.Connect()
-	testRequest(t, helper)
+	t.Run("reconnected", testRequest)
 
 	// Do a fake proxybench op to make sure it gets reported
 	ops.Begin("proxybench").Set("success", false).End()
@@ -232,6 +209,24 @@ func TestProxying(t *testing.T) {
 	case <-time.After(1 * time.Minute):
 		assert.Fail(t, "Geolookup never succeeded")
 	}
+
+	// now starts a new helper and application test multipath with all protocols
+	helper, err = integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer helper.Close()
+
+	a, err = startApp(t, helper)
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer a.Exit(nil)
+
+	proto := strings.Join(protocols, ",")
+	helper.SetProtocol(proto)
+	time.Sleep(2 * time.Second)
+	t.Run("multipath with "+proto, testRequest)
 }
 
 func startApp(t *testing.T, helper *integrationtest.Helper) (*App, error) {
@@ -274,22 +269,6 @@ func startApp(t *testing.T, helper *integrationtest.Helper) (*App, error) {
 	}()
 
 	return a, waitforserver.WaitForServer("tcp", LocalProxyAddr, 10*time.Second)
-}
-
-func testRequest(t *testing.T, helper *integrationtest.Helper) {
-	proxyURL, _ := url.Parse("http://" + LocalProxyAddr)
-	client := &http.Client{
-		Transport: &http.Transport{
-			Proxy: http.ProxyURL(proxyURL),
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true,
-			},
-		},
-	}
-
-	doRequest(t, client, "http://"+helper.HTTPServerAddr)
-	doRequest(t, client, "https://"+helper.HTTPSServerAddr)
-	goroutines.PrintProfile(10)
 }
 
 func doRequest(t *testing.T, client *http.Client, url string) {
