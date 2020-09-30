@@ -77,9 +77,9 @@ func TestProxying(t *testing.T) {
 			newResult, err := Start("testapp", "en_US", testSettings{}, testSession{})
 			if assert.NoError(t, err, "Should have been able to start lantern twice") {
 				if assert.Equal(t, result.HTTPAddr, newResult.HTTPAddr, "2nd start should have resulted in the same address") {
-					err := testProxiedRequest(helper, result.HTTPAddr, false)
+					err := testProxiedRequest(helper, result.HTTPAddr, result.DNSGrabAddr, false)
 					if assert.NoError(t, err, "Proxying request via HTTP should have worked") {
-						err := testProxiedRequest(helper, result.SOCKS5Addr, true)
+						err := testProxiedRequest(helper, result.SOCKS5Addr, result.DNSGrabAddr, true)
 						assert.NoError(t, err, "Proxying request via SOCKS should have worked")
 					}
 				}
@@ -88,14 +88,14 @@ func TestProxying(t *testing.T) {
 	}
 }
 
-func testProxiedRequest(helper *integrationtest.Helper, proxyAddr string, socks bool) error {
+func testProxiedRequest(helper *integrationtest.Helper, proxyAddr string, dnsGrabAddr string, socks bool) error {
 	host := helper.HTTPServerAddr
 	if socks {
 		resolver := &net.Resolver{
 			PreferGo: true,
 			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
 				// use dnsgrabber to resolve
-				return net.DialTimeout("udp", "127.0.0.1:8153", 2*time.Second)
+				return net.DialTimeout("udp", dnsGrabAddr, 2*time.Second)
 			},
 		}
 		resolved, err := resolver.LookupHost(context.Background(), host)
