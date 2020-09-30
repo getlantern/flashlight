@@ -27,7 +27,7 @@ build:
       type: rsa
     - script:
       name: install git-lfs
-      code: git lfs install
+      code: apt-get update && apt-get install git-lfs
     - script:
       name: authenticate git
       code: git config --global url."https://71cee071ea22b7ffb10f68fa330d1130133bbfbd:x-oauth-basic@github.com/".insteadOf "https://github.com/"
