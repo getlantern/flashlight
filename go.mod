@@ -72,7 +72,7 @@ require (
 	github.com/getlantern/proxybench v0.0.0-20200806214955-5d56065f9f77
 	github.com/getlantern/psmux v1.5.15-0.20200903210100-947ca5d91683
 	github.com/getlantern/quic0 v0.0.0-20200121154153-8b18c2ba09f9
-	github.com/getlantern/quicwrapper v0.0.0-20200902185207-c4742ad7448c
+	github.com/getlantern/quicwrapper v0.0.0-20200928203901-ebae34874fb5
 	github.com/getlantern/replica v0.3.1-0.20200623004346-367f62a981a7
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
@@ -120,7 +120,7 @@ require (
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 
-replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.7.1-0.20200720170941-b1abc08ed4ee
+replace github.com/lucas-clemente/quic-go => github.com/getlantern/quic-go v0.0.0-20200928202259-321b05978e05
 
 replace github.com/refraction-networking/utls => github.com/getlantern/utls v0.0.0-20200903013459-0c02248f7ce1
 
