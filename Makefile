@@ -3,7 +3,7 @@ GOBINDATA_BIN ?= $(shell which go-bindata)
 
 SHELL := /bin/bash
 SOURCES := $(shell find . -name '*[^_test].go')
-BINARY_NAME := lantern
+BINARY_NAME ?= lantern
 
 BUILD_RACE ?= '-race'
 REVISION_DATE := $(shell git log -1 --pretty=format:%ad --date=format:%Y%m%d.%H%M%S)
@@ -44,11 +44,14 @@ define build-tags
 	EXTRA_LDFLAGS=$$(echo $$EXTRA_LDFLAGS | xargs) && echo "Extra ldflags: $$EXTRA_LDFLAGS"
 endef
 
-.PHONY: lantern update-icons vendor
+.PHONY: lantern beam update-icons vendor
 
 lantern: $(SOURCES)
 	@$(call build-tags) && \
 	GO111MODULE=on GOPRIVATE="github.com/getlantern" CGO_ENABLED=1 go build $(BUILD_RACE) -o $$BINARY_NAME -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s" github.com/getlantern/flashlight/main;
+
+beam: $(SOURCES)
+	BUILD_TAGS="beam" BINARY_NAME="beam" make lantern
 
 windowscli: $(SOURCES)
 	@$(call build-tags) && \
