@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/getlantern/yaml"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestValidate(t *testing.T) {
@@ -24,6 +24,7 @@ func TestIncludes(t *testing.T) {
 	assert.True(t, ClientGroup{}.Includes(111, false, "whatever"), "zero value should include all combinations")
 	assert.True(t, ClientGroup{UserCeil: 0.12}.Includes(111, false, "whatever"), "match user range")
 	assert.False(t, ClientGroup{UserCeil: 0.11}.Includes(111, false, "whatever"), "user range does not match")
+	assert.False(t, ClientGroup{UserCeil: 0.11}.Includes(0, false, "whatever"), "unknown user ID should not belong to any user range")
 
 	assert.True(t, ClientGroup{FreeOnly: true}.Includes(111, false, "whatever"), "user status met")
 	assert.False(t, ClientGroup{ProOnly: true}.Includes(111, false, "whatever"), "user status unmet")

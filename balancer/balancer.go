@@ -5,6 +5,7 @@ package balancer
 import (
 	"context"
 	"fmt"
+	"io"
 	"math/rand"
 	"net"
 	"sort"
@@ -13,7 +14,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	humanize "github.com/dustin/go-humanize"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog"
@@ -130,6 +130,8 @@ type Dialer interface {
 
 	// Ping performs an ICMP ping of the proxy used by this dialer
 	Ping()
+
+	WriteStats(w io.Writer)
 }
 
 type dialStats struct {
@@ -598,28 +600,17 @@ func (b *Balancer) periodicallyPrintStats() {
 func (b *Balancer) printStats() {
 	b.mu.Lock()
 	dialers := b.dialers
-	sessionStats := b.sessionStats
 	lastReset := b.lastReset
 	b.mu.Unlock()
 	log.Debugf("----------- Dialer Stats (%v) -----------", time.Since(lastReset))
 	rank := float64(1)
+	var buf strings.Builder
 	for _, d := range dialers {
 		estRTT := d.EstRTT().Seconds()
 		estBandwidth := d.EstBandwidth()
-		ds := sessionStats[d.Label()]
-		sessionAttempts := atomic.LoadInt64(&ds.success) + atomic.LoadInt64(&ds.failure)
-		probeSuccesses, probeSuccessKBs, probeFailures, probeFailedKBs := d.ProbeStats()
-		log.Debugf("%s  P:%3d  R:%3d  A: %4d(%5d)  S: %4d(%5d)  CS: %3d  F: %4d(%5d)  CF: %3d  R: %4.3f  L: %4.0fms  B: %6.2fMbps  T: %7s/%7s  P: %3d(%3dkb)/%3d(%3dkb)",
-			d.JustifiedLabel(),
-			d.NumPreconnected(),
-			d.NumPreconnecting(),
-			sessionAttempts, d.Attempts(),
-			atomic.LoadInt64(&ds.success), d.Successes(), d.ConsecSuccesses(),
-			atomic.LoadInt64(&ds.failure), d.Failures(), d.ConsecFailures(),
-			d.EstSuccessRate(),
-			estRTT*1000, estBandwidth,
-			humanize.Bytes(d.DataSent()), humanize.Bytes(d.DataRecv()),
-			probeSuccesses, probeSuccessKBs, probeFailures, probeFailedKBs)
+		d.WriteStats(&buf)
+		log.Debug(buf.String())
+		buf.Reset()
 		host, _, _ := net.SplitHostPort(d.Addr())
 		// Report stats to borda
 		op := ops.Begin("proxy_rank").

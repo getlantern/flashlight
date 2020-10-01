@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math"
 	"net"
@@ -12,16 +13,18 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/mitchellh/go-server-timing"
 
 	"github.com/getlantern/bufconn"
 	"github.com/getlantern/errors"
+	"github.com/getlantern/idletiming"
+	gp "github.com/getlantern/proxy"
+
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/bandwidth"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
-	"github.com/getlantern/idletiming"
-	gp "github.com/getlantern/proxy"
 )
 
 const (
@@ -91,6 +94,28 @@ func (p *proxy) NumPreconnecting() int {
 
 func (p *proxy) NumPreconnected() int {
 	return p.numPreconnected()
+}
+
+func (p *proxy) WriteStats(w io.Writer) {
+	estRTT := p.EstRTT().Seconds()
+	estBandwidth := p.EstBandwidth()
+	probeSuccesses, probeSuccessKBs, probeFailures, probeFailedKBs := p.ProbeStats()
+	_, _ = fmt.Fprintf(w, "%s  P:%3d  R:%3d  A: %5d  S: %5d  CS: %3d  F: %5d  CF: %3d  R: %4.3f  L: %4.0fms  B: %6.2fMbps  T: %7s/%7s  P: %3d(%3dkb)/%3d(%3dkb)\n",
+		p.JustifiedLabel(),
+		p.NumPreconnected(),
+		p.NumPreconnecting(),
+		p.Attempts(),
+		p.Successes(), p.ConsecSuccesses(),
+		p.Failures(), p.ConsecFailures(),
+		p.EstSuccessRate(),
+		estRTT*1000, estBandwidth,
+		humanize.Bytes(p.DataSent()), humanize.Bytes(p.DataRecv()),
+		probeSuccesses, probeSuccessKBs, probeFailures, probeFailedKBs)
+	if impl, ok := p.impl.(*multipathImpl); ok {
+		for _, line := range impl.FormatStats() {
+			_, _ = fmt.Fprintf(w, "\t%s\n", line)
+		}
+	}
 }
 
 // DialContext dials using provided context

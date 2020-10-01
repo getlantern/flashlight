@@ -29,7 +29,6 @@ import (
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/chained"
-	"github.com/getlantern/flashlight/client"
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 
@@ -610,7 +609,7 @@ func buildModel(configName string, cas map[string]*castat, useFallbacks bool) (m
 
 			info := f
 			userConfig := common.NewUserConfigData(defaultDeviceID, 0, "", nil, "en-US")
-			dialer, err := client.ChainedDialer(name, info, userConfig)
+			dialer, err := chained.CreateDialer(name, info, userConfig)
 			if err != nil {
 				log.Debugf("Skipping fallback %v because of error building dialer: %v", f.Addr, err)
 				continue
