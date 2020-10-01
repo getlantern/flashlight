@@ -89,7 +89,9 @@ test-and-cover: $(SOURCES)
 
 test: $(SOURCES)
 	@TP=$$(go list ./... | grep -v /vendor/) && \
-	GO111MODULE=on go test -race -v -tags="headless" $$TP || exit 1; \
+	for pkg in $$TP; do \
+		GO111MODULE=on go test -failfast -race -v -tags="headless" $$pkg || exit 1; \
+	done
 
 clean:
 	rm -f lantern

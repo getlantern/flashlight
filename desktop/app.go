@@ -13,7 +13,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/getlantern/appdir"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/browsers/simbrowser"
@@ -80,6 +79,7 @@ type App struct {
 	fetchedProxiesConfig int32
 
 	Flags        map[string]interface{}
+	ConfigDir    string
 	exited       eventual.Value
 	gaSession    analytics.Session
 	statsTracker *statsTracker
@@ -112,7 +112,11 @@ type App struct {
 // Init initializes the App's state
 func (app *App) Init() {
 	golog.OnFatal(app.exitOnFatal)
+
+	log.Debugf("Using configdir: %v", app.ConfigDir)
+
 	app.Flags["staging"] = common.Staging
+
 	app.uiServerCh = make(chan *ui.Server, 1)
 	app.chrome = newChromeExtension()
 	//app.chrome.install()
@@ -138,13 +142,9 @@ func (app *App) Init() {
 
 // loadSettings loads the initial settings at startup, either from disk or using defaults.
 func (app *App) loadSettings() *Settings {
-	dir := app.Flags["configdir"].(string)
-	if dir == "" {
-		dir = appdir.General("Lantern")
-	}
-	path := filepath.Join(dir, "settings.yaml")
+	path := filepath.Join(app.ConfigDir, "settings.yaml")
 	if common.Staging {
-		path = filepath.Join(dir, "settings-staging.yaml")
+		path = filepath.Join(app.ConfigDir, "settings-staging.yaml")
 	}
 	return loadSettingsFrom(common.Version, common.RevisionDate, common.BuildDate, path, app.chrome)
 }
@@ -227,7 +227,7 @@ func (app *App) Run() {
 
 		var err error
 		app.flashlight, err = flashlight.New(
-			app.Flags["configdir"].(string),
+			app.ConfigDir,
 			app.Flags["vpn"].(bool),
 			func() bool { return settings.getBool(SNDisconnected) }, // check whether we're disconnected
 			settings.GetProxyAll,
@@ -324,7 +324,7 @@ func (app *App) beforeStart(listenAddr string) {
 	}
 
 	var startupURL string
-	bootstrap, err := config.ReadBootstrapSettings()
+	bootstrap, err := config.ReadBootstrapSettings(app.ConfigDir)
 	if err != nil {
 		log.Debugf("Could not read bootstrap settings: %v", err)
 	} else {
@@ -439,7 +439,7 @@ func (app *App) beforeStart(listenAddr string) {
 			app.gaSession.SetIP(geolookup.GetIP(eventual.Forever))
 		}()
 	}
-	app.AddExitFunc("stopping loconf scanner", LoconfScanner(4*time.Hour, isProUser, func() string {
+	app.AddExitFunc("stopping loconf scanner", LoconfScanner(app.ConfigDir, 4*time.Hour, isProUser, func() string {
 		return app.AddToken("/img/lantern_logo.png")
 	}))
 	app.AddExitFunc("stopping notifier", notifier.NotificationsLoop(app.gaSession))

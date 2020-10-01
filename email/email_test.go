@@ -1,21 +1,37 @@
 package email
 
 import (
+	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
-	"github.com/getlantern/appdir"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/config/generated"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/fronted"
+	"github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
 	"github.com/getlantern/yaml"
 	"github.com/keighl/mandrill"
 	"github.com/stretchr/testify/assert"
 )
+
+var logger = golog.LoggerFor("email-test")
+
+var tempConfigDir string
+
+func TestMain(m *testing.M) {
+	tempConfigDir, err := ioutil.TempDir("", "email_test")
+	if err != nil {
+		logger.Errorf("Unable to create temp config dir: %v", err)
+		os.Exit(1)
+	}
+	defer os.RemoveAll(tempConfigDir)
+	os.Exit(m.Run())
+}
 
 func TestReadResponses(t *testing.T) {
 
@@ -59,7 +75,7 @@ func TestSubmitIssue(t *testing.T) {
 			return
 		}
 
-		fronted.Configure(pool, cfg.Client.FrontedProviders(), config.CloudfrontProviderID, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
+		fronted.Configure(pool, cfg.Client.FrontedProviders(), config.CloudfrontProviderID, filepath.Join(tempConfigDir, "masquerade_cache"))
 		SetHTTPClient(proxied.DirectThenFrontedClient(5 * time.Second))
 		defer SetHTTPClient(&http.Client{})
 

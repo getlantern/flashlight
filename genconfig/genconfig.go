@@ -32,7 +32,7 @@ import (
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 
-	"github.com/refraction-networking/utls"
+	tls "github.com/refraction-networking/utls"
 )
 
 const (
@@ -198,12 +198,18 @@ func main() {
 	cas, masqs := coalesceMasquerades()
 	vetAndAssignMasquerades(cas, masqs)
 
-	model, err := buildModel("cloud.yaml", cas, false)
+	tempConfigDir, err := ioutil.TempDir("", "genconfig")
+	if err != nil {
+		log.Fatalf("Unable to create temp configdir: %v", tempConfigDir)
+	}
+	defer os.RemoveAll(tempConfigDir)
+
+	model, err := buildModel(tempConfigDir, "cloud.yaml", cas, false)
 	if err != nil {
 		log.Fatalf("Invalid configuration: %s", err)
 	}
 	generateTemplate(model, yamlTmpl, "cloud.yaml")
-	model, err = buildModel("lantern.yaml", cas, true)
+	model, err = buildModel(tempConfigDir, "lantern.yaml", cas, true)
 	if err != nil {
 		log.Fatalf("Invalid configuration: %s", err)
 	}
@@ -553,7 +559,7 @@ func doVetMasquerades(certPool *x509.CertPool, inCh chan *masquerade, outCh chan
 	wg.Done()
 }
 
-func buildModel(configName string, cas map[string]*castat, useFallbacks bool) (map[string]interface{}, error) {
+func buildModel(configDir string, configName string, cas map[string]*castat, useFallbacks bool) (map[string]interface{}, error) {
 	casList := make([]*castat, 0, len(cas))
 	for _, ca := range cas {
 		casList = append(casList, ca)
@@ -609,7 +615,7 @@ func buildModel(configName string, cas map[string]*castat, useFallbacks bool) (m
 
 			info := f
 			userConfig := common.NewUserConfigData(defaultDeviceID, 0, "", nil, "en-US")
-			dialer, err := chained.CreateDialer(name, info, userConfig)
+			dialer, err := chained.CreateDialer(configDir, name, info, userConfig)
 			if err != nil {
 				log.Debugf("Skipping fallback %v because of error building dialer: %v", f.Addr, err)
 				continue

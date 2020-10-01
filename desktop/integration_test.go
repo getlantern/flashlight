@@ -254,7 +254,8 @@ func startApp(t *testing.T, helper *integrationtest.Helper) (*App, error) {
 	}
 
 	a := &App{
-		Flags: flags,
+		ConfigDir: helper.ConfigDir,
+		Flags:     flags,
 	}
 	a.Init()
 	// Set a non-zero User ID to make prochecker happy

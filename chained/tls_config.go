@@ -17,10 +17,6 @@ import (
 	"github.com/getlantern/tlsresumption"
 )
 
-var (
-	activeCaptureHelloCache = helloCacheInConfigDir("hello-cache.active-capture")
-)
-
 // Generates TLS configuration for connecting to proxy specified by the ChainedServerInfo. This
 // function may block while determining things like how to mimic the default browser's client hello.
 //
@@ -28,7 +24,7 @@ var (
 // first hello is the "ideal" one and the remaining hellos serve as backup in case something is
 // wrong with the previous hellos. There will always be at least one hello. For each hello, the
 // ClientHelloSpec will be non-nil if and only if the ClientHelloID is tls.HelloCustom.
-func tlsConfigForProxy(ctx context.Context, name string, s *ChainedServerInfo, uc common.UserConfig) (
+func tlsConfigForProxy(configDir string, ctx context.Context, name string, s *ChainedServerInfo, uc common.UserConfig) (
 	*tls.Config, []hello) {
 
 	configuredHelloID := s.clientHelloID()
@@ -49,7 +45,7 @@ func tlsConfigForProxy(ctx context.Context, name string, s *ChainedServerInfo, u
 
 	var configuredHelloSpec *tls.ClientHelloSpec
 	if configuredHelloID == helloBrowser {
-		configuredHelloID, configuredHelloSpec = getBrowserHello(ctx, uc)
+		configuredHelloID, configuredHelloSpec = getBrowserHello(configDir, ctx, uc)
 	}
 
 	sessionTTL := simbrowser.ChooseForUser(ctx, uc).SessionTicketLifetime
@@ -76,7 +72,7 @@ func tlsConfigForProxy(ctx context.Context, name string, s *ChainedServerInfo, u
 // few possible failure points in making this determination, e.g. a failure to obtain the default
 // browser or a failure to capture a hello from the browser. However, this function will always find
 // something reasonable to fall back on.
-func getBrowserHello(ctx context.Context, uc common.UserConfig) (tls.ClientHelloID, *tls.ClientHelloSpec) {
+func getBrowserHello(configDir string, ctx context.Context, uc common.UserConfig) (tls.ClientHelloID, *tls.ClientHelloSpec) {
 	// We have a number of ways to approximate the browser's ClientHello format. We begin with the
 	// most desirable, progressively falling back to less desirable options on failure.
 
@@ -84,7 +80,7 @@ func getBrowserHello(ctx context.Context, uc common.UserConfig) (tls.ClientHello
 	op.Set("platform", runtime.GOOS)
 	defer op.End()
 
-	helloSpec, err := activelyObtainBrowserHello(ctx)
+	helloSpec, err := activelyObtainBrowserHello(configDir, ctx)
 	if err == nil {
 		return tls.HelloCustom, helloSpec
 	}
@@ -95,8 +91,10 @@ func getBrowserHello(ctx context.Context, uc common.UserConfig) (tls.ClientHello
 	return simbrowser.ChooseForUser(ctx, uc).ClientHelloID, nil
 }
 
-func activelyObtainBrowserHello(ctx context.Context) (*tls.ClientHelloSpec, error) {
+func activelyObtainBrowserHello(configDir string, ctx context.Context) (*tls.ClientHelloSpec, error) {
 	const tlsRecordHeaderLen = 5
+
+	activeCaptureHelloCache := helloCacheInConfigDir(configDir, "hello-cache.active-capture")
 
 	helloSpec, err := activeCaptureHelloCache.readAndParse()
 	if err == nil {
@@ -146,8 +144,8 @@ type helloCacheFile struct {
 	initErr  error
 }
 
-func helloCacheInConfigDir(relativeFilename string) helloCacheFile {
-	absoluteFilename, err := common.InConfigDir("", relativeFilename)
+func helloCacheInConfigDir(configDir string, relativeFilename string) helloCacheFile {
+	absoluteFilename, err := common.InConfigDir(configDir, relativeFilename)
 	return helloCacheFile{absoluteFilename, err}
 }
 

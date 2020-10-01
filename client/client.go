@@ -17,7 +17,6 @@ import (
 
 	lru "github.com/hashicorp/golang-lru"
 
-	"github.com/getlantern/appdir"
 	"github.com/getlantern/detour"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
@@ -106,6 +105,8 @@ func shouldForceProxying() bool {
 // Client is an HTTP proxy that accepts connections from local programs and
 // proxies these via remote flashlight servers.
 type Client struct {
+	configDir string
+
 	// requestTimeout: (optional) timeout to process the request from application
 	requestTimeout time.Duration
 
@@ -147,6 +148,7 @@ type Client struct {
 // SOCKS proxies. It take a function for determing whether or not to proxy
 // all traffic, and another function to get Lantern Pro token when required.
 func NewClient(
+	configDir string,
 	disconnected func() bool,
 	allowProbes func() bool,
 	proxyAll func() bool,
@@ -168,6 +170,7 @@ func NewClient(
 		return nil, errors.New("Unable to create rewrite LRU: %v", err)
 	}
 	client := &Client{
+		configDir:            configDir,
 		requestTimeout:       requestTimeout,
 		bal:                  balancer.New(allowProbes, time.Duration(requestTimeout)),
 		disconnected:         disconnected,
@@ -194,8 +197,8 @@ func NewClient(
 	if allowMITM() {
 		log.Debug("Enabling MITM")
 		mitmOpts = &mitm.Opts{
-			PKFile:             filepath.Join(appdir.General("Lantern"), "mitmkey.pem"),
-			CertFile:           filepath.Join(appdir.General("Lantern"), "mitmcert.pem"),
+			PKFile:             filepath.Join(configDir, "mitmkey.pem"),
+			CertFile:           filepath.Join(configDir, "mitmcert.pem"),
 			Organization:       "Lantern",
 			InstallCert:        true,
 			InstallPrompt:      i18n.T("BACKEND_MITM_INSTALL_CERT"),
@@ -531,8 +534,8 @@ func (client *Client) Configure(proxies map[string]*chained.ChainedServerInfo) [
 		log.Error(err)
 		return nil
 	}
-	chained.PersistSessionStates("")
-	chained.TrackStatsFor(dialers, appdir.General("Lantern"), client.allowProbes())
+	chained.PersistSessionStates(client.configDir)
+	chained.TrackStatsFor(dialers, client.configDir, client.allowProbes())
 	return dialers
 }
 

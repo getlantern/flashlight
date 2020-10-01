@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getlantern/appdir"
 	"github.com/getlantern/detour"
 	"github.com/getlantern/dnsgrab"
 	"github.com/getlantern/eventual"
@@ -74,7 +73,7 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 	f.global = cfg
 	f.mxGlobal.Unlock()
 	domainrouting.Configure(cfg.DomainRoutingRules, cfg.ProxiedSites)
-	applyClientConfig(cfg)
+	f.applyClientConfig(cfg)
 	f.applyProxyBench(cfg)
 	f.applyBorda(cfg)
 	select {
@@ -230,6 +229,8 @@ func New(
 	adSwapTargetURL func() string,
 	reverseDNS func(host string) string) (*Flashlight, error) {
 
+	log.Debugf("Using configdir: %v", configDir)
+
 	if onProxiesUpdate == nil {
 		onProxiesUpdate = func(_ []balancer.Dialer, src config.Source) {}
 	}
@@ -310,6 +311,7 @@ func New(
 	}
 
 	cl, err := client.NewClient(
+		f.configDir,
 		disconnected,
 		func() bool { return !f.featureEnabled(config.FeatureNoProbeProxies) },
 		proxyAll,
@@ -418,13 +420,13 @@ func (f *Flashlight) Run(httpProxyAddr, socksProxyAddr string,
 	}
 }
 
-func applyClientConfig(cfg *config.Global) {
+func (f *Flashlight) applyClientConfig(cfg *config.Global) {
 	certs, err := cfg.TrustedCACerts()
 	if err != nil {
 		log.Errorf("Unable to get trusted ca certs, not configuring fronted: %s", err)
 	} else if cfg.Client != nil && cfg.Client.Fronted != nil {
-		fronted.Configure(certs, cfg.Client.FrontedProviders(), config.CloudfrontProviderID, filepath.Join(appdir.General("Lantern"), "masquerade_cache"))
-		chained.ConfigureFronting(certs, cfg.Client.FrontedProviders(), appdir.General("Lantern"))
+		fronted.Configure(certs, cfg.Client.FrontedProviders(), config.CloudfrontProviderID, filepath.Join(f.configDir, "masquerade_cache"))
+		chained.ConfigureFronting(certs, cfg.Client.FrontedProviders(), f.configDir)
 	} else {
 		log.Errorf("Unable to configured fronted (no config)")
 	}
