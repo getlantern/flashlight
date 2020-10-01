@@ -98,7 +98,7 @@ func (loc *loconfer) setUninstallURL(lc *loconf.LoConf, isPro bool) {
 		return
 	}
 
-	survey := lc.GetUninstallSurvey(settings.GetLanguage(), geolookup.GetCountry(time.Second*30), isPro)
+	survey := lc.GetUninstallSurvey(getSettings().GetLanguage(), geolookup.GetCountry(time.Second*30), isPro)
 	if survey == nil {
 		loc.log.Debugf("No available uninstall survey")
 		return
@@ -130,6 +130,7 @@ func (loc *loconfer) writeURL(path string, survey *loconf.UninstallSurvey, isPro
 }
 
 func (loc *loconfer) makeAnnouncements(lc *loconf.LoConf, isPro bool) {
+	settings := getSettings()
 	lang := settings.GetLanguage()
 	current, err := lc.GetAnnouncement(lang, isPro)
 	if err != nil {

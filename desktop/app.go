@@ -59,8 +59,9 @@ const (
 )
 
 var (
-	log      = golog.LoggerFor("flashlight.app")
-	settings *Settings
+	log        = golog.LoggerFor("flashlight.app")
+	_settings  *Settings
+	settingsMx sync.RWMutex
 
 	startTime = time.Now()
 )
@@ -70,6 +71,18 @@ func init() {
 	autoupdate.PublicKey = []byte(packagePublicKey)
 
 	rand.Seed(time.Now().UnixNano())
+}
+
+func getSettings() *Settings {
+	settingsMx.RLock()
+	defer settingsMx.RUnlock()
+	return _settings
+}
+
+func setSettings(newSettings *Settings) {
+	settingsMx.Lock()
+	_settings = newSettings
+	settingsMx.Unlock()
 }
 
 // App is the core of the Lantern desktop application, in the form of a library.
@@ -120,7 +133,8 @@ func (app *App) Init() {
 	app.uiServerCh = make(chan *ui.Server, 1)
 	app.chrome = newChromeExtension()
 	//app.chrome.install()
-	settings = app.loadSettings()
+	settings := app.loadSettings()
+	setSettings(settings)
 	app.exited = eventual.NewValue()
 	// overridden later if auto report is allowed
 	app.gaSession = analytics.NullSession{}
@@ -181,6 +195,8 @@ func (app *App) Run() {
 	golog.OnFatal(app.exitOnFatal)
 
 	memhelper.Track(15*time.Second, 15*time.Second)
+
+	settings := getSettings()
 
 	// Run below in separate goroutine as config.Init() can potentially block when Lantern runs
 	// for the first time. User can still quit Lantern through systray menu when it happens.
@@ -331,6 +347,7 @@ func (app *App) beforeStart(listenAddr string) {
 		startupURL = bootstrap.StartupUrl
 	}
 
+	settings := getSettings()
 	uiaddr := app.Flags["uiaddr"].(string)
 	if uiaddr == "" {
 		// stick with the last one if not specified from command line.
@@ -461,7 +478,7 @@ func (app *App) checkForReplica(features map[string]bool) {
 		app.startReplica.Do(func() {
 			log.Debug("Starting replica from app")
 			replicaHandler, exitFunc, err := desktopReplica.NewHTTPHandler(
-				settings,
+				getSettings(),
 				&replica.Client{
 					HttpClient: &http.Client{
 						Transport: proxied.AsRoundTripper(
@@ -498,30 +515,30 @@ func (app *App) checkForReplica(features map[string]bool) {
 func (app *App) Connect() {
 	app.gaSession.Event("systray-menu", "connect")
 	ops.Begin("connect").End()
-	settings.setBool(SNDisconnected, false)
+	getSettings().setBool(SNDisconnected, false)
 }
 
 // Disconnect turns off proxying
 func (app *App) Disconnect() {
 	app.gaSession.Event("systray-menu", "disconnect")
 	ops.Begin("disconnect").End()
-	settings.setBool(SNDisconnected, true)
+	getSettings().setBool(SNDisconnected, true)
 }
 
 // GetLanguage returns the user language
 func (app *App) GetLanguage() string {
-	return settings.GetLanguage()
+	return getSettings().GetLanguage()
 }
 
 // SetLanguage sets the user language
 func (app *App) SetLanguage(lang string) {
-	settings.SetLanguage(lang)
+	getSettings().SetLanguage(lang)
 }
 
 // OnSettingChange sets a callback cb to get called when attr is changed from UI.
 // When calling multiple times for same attr, only the last one takes effect.
 func (app *App) OnSettingChange(attr SettingName, cb func(interface{})) {
-	settings.OnChange(attr, cb)
+	getSettings().OnChange(attr, cb)
 }
 
 // OnStatsChange adds a listener for Stats changes.
@@ -537,7 +554,7 @@ func (app *App) sysproxyOn() {
 }
 
 func (app *App) afterStart(cl *client.Client) {
-	if settings.GetSystemProxy() {
+	if getSettings().GetSystemProxy() {
 		app.sysproxyOn()
 	}
 
@@ -566,6 +583,8 @@ func (app *App) afterStart(cl *client.Client) {
 	} else {
 		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
 	}
+
+	settings := getSettings()
 	if addr, ok := client.Addr(6 * time.Second); ok {
 		settings.setString(SNAddr, addr)
 	} else {
@@ -701,7 +720,7 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 // showExistingUi triggers an existing Lantern running on the same system to
 // open a browser to the Lantern start page.
 func (app *App) showExistingUI(addr string) error {
-	url := "http://" + addr + "/" + localHTTPToken(settings) + "/startup"
+	url := "http://" + addr + "/" + localHTTPToken(getSettings()) + "/startup"
 	log.Debugf("Hitting local URL: %v", url)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -821,7 +840,7 @@ func (app *App) IsPro() bool {
 // ProxyAddrReachable checks if Lantern's HTTP proxy responds correct status
 // within the deadline.
 func (app *App) ProxyAddrReachable(ctx context.Context) error {
-	req, err := http.NewRequest("GET", "http://"+settings.GetAddr(), nil)
+	req, err := http.NewRequest("GET", "http://"+getSettings().GetAddr(), nil)
 	if err != nil {
 		return err
 	}
@@ -882,5 +901,5 @@ func (app *App) localHttpToken() string {
 	if v, ok := app.Flags["noUiHttpToken"]; ok && v.(bool) {
 		return ""
 	}
-	return localHTTPToken(settings)
+	return localHTTPToken(getSettings())
 }

@@ -259,6 +259,7 @@ func startApp(t *testing.T, helper *integrationtest.Helper) (*App, error) {
 	}
 	a.Init()
 	// Set a non-zero User ID to make prochecker happy
+	settings := getSettings()
 	id := settings.GetUserID()
 	if id == 0 {
 		settings.SetUserIDAndToken(1, "token")
