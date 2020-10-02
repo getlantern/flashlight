@@ -478,6 +478,7 @@ func (app *App) checkForReplica(features map[string]bool) {
 		app.startReplica.Do(func() {
 			log.Debug("Starting replica from app")
 			replicaHandler, exitFunc, err := desktopReplica.NewHTTPHandler(
+				app.ConfigDir,
 				getSettings(),
 				&replica.Client{
 					HttpClient: &http.Client{
