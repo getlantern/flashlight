@@ -12,6 +12,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var logger = golog.LoggerFor("desktop-test")
+
+var tempConfigDir string
+
+func TestMain(m *testing.M) {
+	tempConfigDir, err := ioutil.TempDir("", "loconfscanner_test")
+	if err != nil {
+		logger.Errorf("Unable to create temp config dir: %v", err)
+		os.Exit(1)
+	}
+	defer os.RemoveAll(tempConfigDir)
+	os.Exit(m.Run())
+}
+
 func TestWriteURL(t *testing.T) {
 	loc := &loconfer{
 		log: golog.LoggerFor("loconfer"),
@@ -37,11 +51,11 @@ func TestWriteURL(t *testing.T) {
 
 func TestParsing(t *testing.T) {
 	logger := golog.LoggerFor("loconfloop-test")
-	stop := LoconfScanner(4*time.Hour, func() (bool, bool) {
+	stop := LoconfScanner(tempConfigDir, 4*time.Hour, func() (bool, bool) {
 		return true, false
 	}, func() string { return "" })
 	stop()
-	stop = LoconfScanner(4*time.Hour, func() (bool, bool) {
+	stop = LoconfScanner(tempConfigDir, 4*time.Hour, func() (bool, bool) {
 		return true, true
 	}, func() string { return "" })
 	logger.Debug("Stopping")

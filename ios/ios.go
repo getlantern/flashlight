@@ -197,7 +197,7 @@ func (c *client) loadDialers() ([]balancer.Dialer, error) {
 		return nil, err
 	}
 
-	dialers := chained.CreateDialers(proxies, c.uc)
+	dialers := chained.CreateDialers(c.configDir, proxies, c.uc)
 	chained.TrackStatsFor(dialers, c.configDir, false)
 	return dialers, nil
 }

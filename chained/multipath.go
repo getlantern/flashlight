@@ -48,7 +48,7 @@ func (impl *multipathImpl) FormatStats() []string {
 	return impl.dialer.(multipath.Stats).FormatStats()
 }
 
-func CreateMPDialer(endpoint string, ss map[string]*ChainedServerInfo, uc common.UserConfig) (balancer.Dialer, error) {
+func CreateMPDialer(configDir, endpoint string, ss map[string]*ChainedServerInfo, uc common.UserConfig) (balancer.Dialer, error) {
 	if len(ss) < 1 {
 		return nil, errors.New("no dialers")
 	}
@@ -67,7 +67,7 @@ func CreateMPDialer(endpoint string, ss map[string]*ChainedServerInfo, uc common
 		if err != nil {
 			return nil, err
 		}
-		impl, err := createImpl(name, addr, transport, s, uc, p.reportDialCore)
+		impl, err := createImpl(configDir, name, addr, transport, s, uc, p.reportDialCore)
 		if err != nil {
 			log.Errorf("failed to add %v to %v, continuing: %v", s.Addr, name, err)
 			continue

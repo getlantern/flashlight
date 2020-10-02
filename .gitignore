@@ -16,6 +16,9 @@ lantern
 lantern-headless*
 lantern-staging*
 lantern_darwin_amd64
+beam
+beam-headless*
+beam-staging*
 *.exe
 proxies.yaml
 global.yaml

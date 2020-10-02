@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/getlantern/appdir"
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog"
@@ -57,7 +56,11 @@ func NewHTTPHandler(uc common.UserConfig, replicaClient *replica.Client, gaSessi
 
 	logger := golog.LoggerFor("replica.server")
 	const replicaDirElem = "replica"
-	replicaConfigDir := appdir.General(replicaDirElem)
+	replicaConfigDir, configErr := common.InConfigDir("", replicaDirElem)
+	if configErr != nil {
+		err = configErr
+		return
+	}
 	uploadsDir := filepath.Join(replicaConfigDir, "uploads")
 	replicaDataDir := filepath.Join(userCacheDir, replicaDirElem, "data")
 	cfg := torrent.NewDefaultClientConfig()

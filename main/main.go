@@ -46,12 +46,18 @@ func main() {
 		log.Fatal("Wrong arguments")
 	}
 
+	cdir := *configdir
+	if cdir == "" {
+		cdir = appdir.General(appName)
+	}
+
 	a := &desktop.App{
-		Flags: flagsAsMap(),
+		ConfigDir: cdir,
+		Flags:     flagsAsMap(),
 	}
 	a.Init()
 
-	logFile, err := logging.RotatedLogsUnder(appdir.Logs("Lantern"))
+	logFile, err := logging.RotatedLogsUnder(appdir.Logs(appName))
 	if err != nil {
 		log.Error(err)
 		// Nothing we can do if fails to create log files, leave logFile nil so
