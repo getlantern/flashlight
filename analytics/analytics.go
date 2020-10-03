@@ -18,8 +18,6 @@ import (
 )
 
 const (
-	trackingID = "UA-21815217-12"
-
 	// endpoint is the endpoint to report GA data to.
 	endpoint = `https://ssl.google-analytics.com/collect`
 )
