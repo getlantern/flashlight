@@ -48,10 +48,15 @@ endef
 
 lantern: $(SOURCES)
 	@$(call build-tags) && \
-	BUILD_TAGS="lantern" GO111MODULE=on GOPRIVATE="github.com/getlantern" CGO_ENABLED=1 go build $(BUILD_RACE) -o $$BINARY_NAME -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s" github.com/getlantern/flashlight/main;
+	BUILD_TAGS="$$BUILD_TAGS lantern" && \
+	GO111MODULE=on GOPRIVATE="github.com/getlantern" CGO_ENABLED=1 go build $(BUILD_RACE) -o $$BINARY_NAME -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s" github.com/getlantern/flashlight/main;
 
 beam: $(SOURCES)
-	BUILD_TAGS="beam" BINARY_NAME="beam" make lantern
+	@$(call build-tags) && \
+	BUILD_TAGS="$$BUILD_TAGS beam" && \
+	BINARY_NAME="beam" && \
+	GO111MODULE=on GOPRIVATE="github.com/getlantern" CGO_ENABLED=1 go build $(BUILD_RACE) -o $$BINARY_NAME -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s" github.com/getlantern/flashlight/main;
+
 
 windowscli: $(SOURCES)
 	@$(call build-tags) && \
