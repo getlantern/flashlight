@@ -4,11 +4,18 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/getlantern/appdir"
 )
 
 // InConfigDir returns the path of the specified file name in the given
 // configuration directory
 func InConfigDir(configDir string, filename string) (string, error) {
+
+	cdir := configDir
+	if cdir == "" {
+		cdir = appdir.General(AppName)
+	}
 	log.Debugf("Using config dir %v", configDir)
 	if _, err := os.Stat(configDir); err != nil {
 		if os.IsNotExist(err) {
