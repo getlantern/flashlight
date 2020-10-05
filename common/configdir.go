@@ -16,15 +16,15 @@ func InConfigDir(configDir string, filename string) (string, error) {
 	if cdir == "" {
 		cdir = appdir.General(AppName)
 	}
-	log.Debugf("Using config dir %v", configDir)
-	if _, err := os.Stat(configDir); err != nil {
+	log.Debugf("Using config dir %v", cdir)
+	if _, err := os.Stat(cdir); err != nil {
 		if os.IsNotExist(err) {
 			// Create config dir
-			if err := os.MkdirAll(configDir, 0750); err != nil {
-				return "", fmt.Errorf("Unable to create configdir at %s: %s", configDir, err)
+			if err := os.MkdirAll(cdir, 0750); err != nil {
+				return "", fmt.Errorf("Unable to create configdir at %s: %s", cdir, err)
 			}
 		}
 	}
 
-	return filepath.Join(configDir, filename), nil
+	return filepath.Join(cdir, filename), nil
 }
