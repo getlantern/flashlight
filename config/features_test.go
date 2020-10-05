@@ -64,6 +64,8 @@ featureoptions:
   trafficlog:
     capturebytes: 1
     savebytes: 2
+    reinstall: true
+    waittimesincefailedinstall: 24h
   pingproxies:
     interval: 1h
 `
@@ -75,6 +77,9 @@ featureoptions:
 	err := gl.UnmarshalFeatureOptions(FeatureTrafficLog, &opts)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, opts.CaptureBytes)
+	assert.Equal(t, 2, opts.SaveBytes)
+	assert.Equal(t, true, opts.Reinstall)
+	assert.Equal(t, 24*time.Hour, opts.WaitTimeSinceFailedInstall)
 
 	var opts2 PingProxiesOptions
 	err = gl.UnmarshalFeatureOptions(FeaturePingProxies, &opts2)

@@ -1,9 +1,12 @@
 package flashlight
 
 import (
-	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net"
+	"os"
+	"os/user"
 	"path/filepath"
 	"sync"
 	"time"
@@ -11,12 +14,15 @@ import (
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/detour"
 	"github.com/getlantern/dnsgrab"
+	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/ops"
 	"github.com/getlantern/proxybench"
+	"github.com/getlantern/trafficlog"
+	"github.com/getlantern/trafficlog-flashlight/tlproc"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/borda"
@@ -28,6 +34,7 @@ import (
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/geolookup"
 	"github.com/getlantern/flashlight/goroutines"
+	"github.com/getlantern/flashlight/icons"
 	fops "github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/shortcut"
@@ -67,6 +74,20 @@ type Flashlight struct {
 	client            *client.Client
 	vpnEnabled        bool
 	op                *fops.Op
+
+	// If both the trafficLogLock and proxiesLock are needed, the trafficLogLock should be obtained
+	// first. Keeping the order consistent avoids deadlocking.
+
+	// Log of network traffic to and from the proxies. Used to attach packet capture files to
+	// reported issues. Nil if traffic logging is not enabled.
+	trafficLog     *tlproc.TrafficLogProcess
+	trafficLogLock sync.RWMutex
+
+	// proxies are tracked by the application solely for data collection purposes. This value should
+	// not be changed, except by Flashlight.onProxiesUpdate. State-changing methods on the dialers
+	// should not be called. In short, this slice and its elements should be treated as read-only.
+	proxies     []balancer.Dialer
+	proxiesLock sync.RWMutex
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
@@ -162,19 +183,43 @@ func (f *Flashlight) startConfigFetch() func() {
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
 		dialers := f.client.Configure(proxyMap)
-		if dialers != nil {
-			f.onProxiesUpdate(dialers, src)
-		}
+		f.handleProxiesUpdate(dialers, src)
 	}
 	globalDispatch := func(conf interface{}, src config.Source) {
 		cfg := conf.(*config.Global)
 		log.Debugf("Applying global config")
-		f.onGlobalConfig(cfg, src)
+		f.handleConfigUpdate(cfg, src)
 	}
 	rt := proxied.ParallelPreferChained()
 
 	stopConfig := config.Init(f.configDir, f.flagsAsMap, f.userConfig, proxiesDispatch, globalDispatch, rt)
 	return stopConfig
+}
+
+func (f *Flashlight) handleProxiesUpdate(dialers []balancer.Dialer, src config.Source) {
+	if dialers == nil {
+		return
+	}
+	f.onProxiesUpdate(dialers, src)
+	f.trafficLogLock.Lock()
+	f.proxiesLock.Lock()
+	f.proxies = dialers
+	if f.trafficLog != nil {
+		proxyAddresses := []string{}
+		for _, p := range dialers {
+			proxyAddresses = append(proxyAddresses, p.Addr())
+		}
+		if err := f.trafficLog.UpdateAddresses(proxyAddresses); err != nil {
+			log.Errorf("failed to update traffic log addresses: %v", err)
+		}
+	}
+	f.proxiesLock.Unlock()
+	f.trafficLogLock.Unlock()
+}
+
+func (f *Flashlight) handleConfigUpdate(cfg *config.Global, src config.Source) {
+	f.onGlobalConfig(cfg, src)
+	go f.configureTrafficLog(cfg)
 }
 
 func (f *Flashlight) applyProxyBench(cfg *config.Global) {
@@ -210,6 +255,202 @@ func (f *Flashlight) applyBorda(cfg *config.Global) {
 		return _enableBorda(ctx)
 	}
 	borda.Configure(cfg.BordaReportInterval, enableBorda)
+}
+
+const (
+	trafficlogStartTimeout   = 5 * time.Second
+	trafficlogRequestTimeout = time.Second
+
+	// This message is only displayed when the traffic log needs to be installed.
+	trafficlogInstallPrompt = "Lantern needs your permission to install diagnostic tools"
+
+	// An asset in the icons package.
+	trafficlogInstallIcon = "connected_32.ico"
+
+	// This file, in the config directory, holds a timestamp from the last failed installation.
+	trafficlogLastFailedInstallFile = "tl_last_failed"
+)
+
+// This should be run in an independent routine as it may need to install and block for a
+// user-action granting permissions.
+func (f *Flashlight) configureTrafficLog(cfg *config.Global) {
+	f.trafficLogLock.Lock()
+	f.proxiesLock.RLock()
+	defer f.trafficLogLock.Unlock()
+	defer f.proxiesLock.RUnlock()
+
+	forceTrafficLog := f.flagsAsMap["force-traffic-log"].(bool)
+	enableTrafficLog := false
+	enableTrafficLog = f.featureEnabled(config.FeatureTrafficLog) || forceTrafficLog
+	opts := new(config.TrafficLogOptions)
+	if err := f.featureOptions(config.FeatureTrafficLog, opts); err != nil && !forceTrafficLog {
+		log.Errorf("failed to unmarshal traffic log options: %v", err)
+		return
+	}
+	if forceTrafficLog {
+		// This flag is used in development to run the traffic log. We probably want to actually
+		// capture some packets if this flag is set.
+		if opts.CaptureBytes == 0 {
+			opts.CaptureBytes = 10 * 1024 * 1024
+		}
+		if opts.SaveBytes == 0 {
+			opts.SaveBytes = 10 * 1024 * 1024
+		}
+		// Use the most up-to-date binary in development.
+		opts.Reinstall = true
+		// Always try to install the traffic log in development.
+		lastFailedPath, err := common.InConfigDir("", trafficlogLastFailedInstallFile)
+		if err != nil {
+			log.Debugf("Failed to create path to traffic log install-last-failed file: %v", err)
+		} else if err := os.Remove(lastFailedPath); err != nil {
+			log.Debugf("Failed to remove traffic log install-last-failed file: %v", err)
+		}
+	}
+
+	switch {
+	case enableTrafficLog && f.trafficLog == nil:
+		installDir := appdir.General("Lantern")
+		log.Debugf("Installing traffic log if necessary in %s", installDir)
+		u, err := user.Current()
+		if err != nil {
+			log.Errorf("Failed to look up current user for traffic log install: %w", err)
+			return
+		}
+
+		var iconFile string
+		icon, err := icons.Asset(trafficlogInstallIcon)
+		if err != nil {
+			log.Debugf("Unable to load prompt icon during traffic log install: %v", err)
+		} else {
+			iconFile = filepath.Join(os.TempDir(), "lantern_tlinstall.ico")
+			if err := ioutil.WriteFile(iconFile, icon, 0644); err != nil {
+				// Failed to save the icon file, just use no icon.
+				iconFile = ""
+			}
+		}
+
+		lastFailedPath, err := common.InConfigDir("", trafficlogLastFailedInstallFile)
+		if err != nil {
+			log.Errorf("Failed to create path to traffic log install-last-failed file: %v", err)
+			return
+		}
+		lastFailedRaw, err := ioutil.ReadFile(lastFailedPath)
+		if err != nil && !os.IsNotExist(err) {
+			log.Errorf("Unable to open traffic log install-last-failed file: %v", err)
+			return
+		}
+		if lastFailedRaw != nil {
+			if opts.WaitTimeSinceFailedInstall == 0 {
+				log.Debug("Aborting traffic log install; install previously failed")
+				return
+			}
+			lastFailed := new(time.Time)
+			if err := lastFailed.UnmarshalText(lastFailedRaw); err != nil {
+				log.Errorf("Failed to parse traffic log install-last-failed file: %v", err)
+				return
+			}
+			if time.Since(*lastFailed) < opts.WaitTimeSinceFailedInstall {
+				log.Debugf(
+					"Aborting traffic log install; last failed %v ago, wait time is %v",
+					time.Since(*lastFailed), opts.WaitTimeSinceFailedInstall,
+				)
+				return
+			}
+		}
+
+		// Note that this is a no-op if the traffic log is already installed.
+		installOpts := tlproc.InstallOptions{Overwrite: opts.Reinstall}
+		installErr := tlproc.Install(
+			installDir, u.Username, trafficlogInstallPrompt, iconFile, &installOpts)
+		if installErr != nil {
+			log.Errorf("Failed to install traffic log: %v", installErr)
+			if b, err := time.Now().MarshalText(); err != nil {
+				log.Errorf("Failed to marshal time for traffic log install-last-failed file: %v", err)
+			} else if err := ioutil.WriteFile(lastFailedPath, b, 0644); err != nil {
+				log.Errorf("Failed to write traffic log install-last-failed file: %v", err)
+			}
+			return
+		}
+
+		log.Debug("Turning traffic log on")
+		f.trafficLog, err = tlproc.New(
+			opts.CaptureBytes,
+			opts.SaveBytes,
+			installDir,
+			&tlproc.Options{
+				Options: trafficlog.Options{
+					MutatorFactory: new(trafficlog.AppStripperFactory),
+				},
+				StartTimeout:   trafficlogStartTimeout,
+				RequestTimeout: trafficlogRequestTimeout,
+			})
+		if err != nil {
+			log.Errorf("Failed to start traffic log process: %v", err)
+			return
+		}
+		// These goroutines will close when the traffic log is closed.
+		go func() {
+			for err := range f.trafficLog.Errors() {
+				log.Debugf("Traffic log error: %v", err)
+			}
+		}()
+		go func() {
+			for stats := range f.trafficLog.Stats() {
+				log.Debugf("Traffic log stats: %v", stats)
+			}
+		}()
+		proxyAddrs := []string{}
+		for _, p := range f.proxies {
+			proxyAddrs = append(proxyAddrs, p.Addr())
+		}
+		if err := f.trafficLog.UpdateAddresses(proxyAddrs); err != nil {
+			log.Debugf("Failed to start traffic logging for proxies: %v", err)
+			f.trafficLog.Close()
+			f.trafficLog = nil
+		}
+
+	case enableTrafficLog && f.trafficLog != nil:
+		err := f.trafficLog.UpdateBufferSizes(opts.CaptureBytes, opts.SaveBytes)
+		if err != nil {
+			log.Debugf("Failed to update traffic log buffer sizes: %v", err)
+		}
+
+	case !enableTrafficLog && f.trafficLog != nil:
+		log.Debug("Turning traffic log off")
+		if err := f.trafficLog.Close(); err != nil {
+			log.Errorf("Failed to close traffic log (this will create a memory leak): %v", err)
+		}
+		f.trafficLog = nil
+	}
+}
+
+// GetProxies returns the currently configured proxies. State-changing methods on these dialers
+// should not be called. In short, the elements of this slice should be treated as read-only.
+func (f *Flashlight) GetProxies() []balancer.Dialer {
+	f.proxiesLock.RLock()
+	copied := make([]balancer.Dialer, len(f.proxies))
+	copy(copied, f.proxies)
+	f.proxiesLock.RUnlock()
+	return copied
+}
+
+// GetCapturedPackets writes all packets captured during the input duration. The traffic log must be
+// enabled. The packets are written to w in pcapng format.
+func (f *Flashlight) GetCapturedPackets(w io.Writer, since time.Duration) error {
+	f.trafficLogLock.Lock()
+	f.proxiesLock.RLock()
+	defer f.trafficLogLock.Unlock()
+	defer f.proxiesLock.RUnlock()
+
+	for _, p := range f.proxies {
+		if err := f.trafficLog.SaveCaptures(p.Addr(), since); err != nil {
+			return errors.New("failed to save captures for %s: %v", p.Name(), err)
+		}
+	}
+	if err := f.trafficLog.WritePcapng(w); err != nil {
+		return errors.New("failed to write saved packets: %v", err)
+	}
+	return nil
 }
 
 // New creates a client proxy.

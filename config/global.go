@@ -55,8 +55,6 @@ type Global struct {
 	// features. It's up to the feature code to handle the raw JSON message.
 	FeatureOptions map[string]map[string]interface{}
 
-	TrafficLog TrafficLogConfig
-
 	// Market share data used by the simbrowser package when picking a browser to simulate.
 	GlobalBrowserMarketShareData   simbrowser.MarketShareData
 	RegionalBrowserMarketShareData map[simbrowser.CountryCode]simbrowser.MarketShareData

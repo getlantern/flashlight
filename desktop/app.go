@@ -4,12 +4,10 @@ package desktop
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
 	"os"
-	"os/user"
 	"path/filepath"
 	"sync"
 	"sync/atomic"
@@ -27,8 +25,6 @@ import (
 	"github.com/getlantern/memhelper"
 	notify "github.com/getlantern/notifier"
 	"github.com/getlantern/profiling"
-	"github.com/getlantern/trafficlog"
-	"github.com/getlantern/trafficlog-flashlight/tlproc"
 	"github.com/getsentry/sentry-go"
 
 	"github.com/getlantern/flashlight"
@@ -41,7 +37,6 @@ import (
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/datacap"
 	"github.com/getlantern/flashlight/geolookup"
-	"github.com/getlantern/flashlight/icons"
 
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/logging"
@@ -60,20 +55,6 @@ const (
 	SENTRY_DSN               = "https://f65aa492b9524df79b05333a0b0924c5@sentry.io/2222244"
 	SENTRY_TIMEOUT           = time.Second * 30
 	SENTRY_MAX_MESSAGE_CHARS = 8000
-)
-
-const (
-	trafficlogStartTimeout   = 5 * time.Second
-	trafficlogRequestTimeout = time.Second
-
-	// This message is only displayed when the traffic log needs to be installed.
-	trafficlogInstallPrompt = "Lantern needs your permission to install diagnostic tools"
-
-	// An asset in the icons package.
-	trafficlogInstallIcon = "connected_32.ico"
-
-	// This file, in the config directory, holds a timestamp from the last failed installation.
-	trafficlogLastFailedInstallFile = "tl_last_failed"
 )
 
 var (
@@ -110,20 +91,6 @@ type App struct {
 	chGlobalConfigChanged chan bool
 	flashlight            *flashlight.Flashlight
 	startReplica          sync.Once
-
-	// If both the trafficLogLock and proxiesLock are needed, the trafficLogLock should be obtained
-	// first. Keeping the order consistent avoids deadlocking.
-
-	// Log of network traffic to and from the proxies. Used to attach packet capture files to
-	// reported issues. Nil if traffic logging is not enabled.
-	trafficLog     *tlproc.TrafficLogProcess
-	trafficLogLock sync.RWMutex
-
-	// proxies are tracked by the application solely for data collection purposes. This value should
-	// not be changed, except by App.onProxiesUpdate. State-changing methods on the dialers should
-	// not be called. In short, this slice and its elements should be treated as read-only.
-	proxies     []balancer.Dialer
-	proxiesLock sync.RWMutex
 }
 
 // Init initializes the App's state
@@ -608,7 +575,6 @@ func (app *App) onConfigUpdate(cfg *config.Global, src config.Source) {
 		return app.AddToken("/img/lantern_logo.png")
 	})
 	email.SetDefaultRecipient(cfg.ReportIssueEmail)
-	go app.configureTrafficLog(*cfg)
 	if len(cfg.GlobalBrowserMarketShareData) > 0 {
 		err := simbrowser.SetMarketShareData(
 			cfg.GlobalBrowserMarketShareData, cfg.RegionalBrowserMarketShareData)
@@ -623,175 +589,6 @@ func (app *App) onProxiesUpdate(proxies []balancer.Dialer, src config.Source) {
 	if src == config.Fetched {
 		app.gaSession.Event("config", "proxies-fetched")
 		atomic.StoreInt32(&app.fetchedProxiesConfig, 1)
-	}
-	app.trafficLogLock.Lock()
-	app.proxiesLock.Lock()
-	app.proxies = proxies
-	if app.trafficLog != nil {
-		proxyAddresses := []string{}
-		for _, p := range proxies {
-			proxyAddresses = append(proxyAddresses, p.Addr())
-		}
-		if err := app.trafficLog.UpdateAddresses(proxyAddresses); err != nil {
-			log.Errorf("failed to update traffic log addresses: %v", err)
-		}
-	}
-	app.proxiesLock.Unlock()
-	app.trafficLogLock.Unlock()
-}
-
-// This should be run in an independent routine as it may need to install and block for a
-// user-action granting permissions.
-func (app *App) configureTrafficLog(cfg config.Global) {
-	app.trafficLogLock.Lock()
-	app.proxiesLock.RLock()
-	defer app.trafficLogLock.Unlock()
-	defer app.proxiesLock.RUnlock()
-
-	enableTrafficLog := false
-	if app.Flags["force-traffic-log"].(bool) {
-		enableTrafficLog = true
-		// This flag is used in development to run the traffic log. We probably want to actually
-		// capture some packets if this flag is set.
-		if cfg.TrafficLog.CaptureBytes == 0 {
-			cfg.TrafficLog.CaptureBytes = 10 * 1024 * 1024
-		}
-		if cfg.TrafficLog.SaveBytes == 0 {
-			cfg.TrafficLog.SaveBytes = 10 * 1024 * 1024
-		}
-		// Use the most up-to-date binary in development.
-		cfg.TrafficLog.Reinstall = true
-		// Always try to install the traffic log in development.
-		lastFailedPath, err := common.InConfigDir("", trafficlogLastFailedInstallFile)
-		if err != nil {
-			log.Debugf("Failed to create path to traffic log install-last-failed file: %v", err)
-		} else if err := os.Remove(lastFailedPath); err != nil {
-			log.Debugf("Failed to remove traffic log install-last-failed file: %v", err)
-		}
-	} else {
-		for _, platform := range cfg.TrafficLog.Platforms {
-			enableTrafficLog = platform == common.Platform && rand.Float64() < cfg.TrafficLog.PercentClients
-		}
-	}
-
-	switch {
-	case enableTrafficLog && app.trafficLog == nil:
-		installDir := appdir.General("Lantern")
-		log.Debugf("Installing traffic log if necessary in %s", installDir)
-		u, err := user.Current()
-		if err != nil {
-			log.Errorf("Failed to look up current user for traffic log install: %w", err)
-			return
-		}
-
-		var iconFile string
-		icon, err := icons.Asset(trafficlogInstallIcon)
-		if err != nil {
-			log.Debugf("Unable to load prompt icon during traffic log install: %v", err)
-		} else {
-			iconFile = filepath.Join(os.TempDir(), "lantern_tlinstall.ico")
-			if err := ioutil.WriteFile(iconFile, icon, 0644); err != nil {
-				// Failed to save the icon file, just use no icon.
-				iconFile = ""
-			}
-		}
-
-		lastFailedPath, err := common.InConfigDir("", trafficlogLastFailedInstallFile)
-		if err != nil {
-			log.Errorf("Failed to create path to traffic log install-last-failed file: %v", err)
-			return
-		}
-		lastFailedRaw, err := ioutil.ReadFile(lastFailedPath)
-		if err != nil && !os.IsNotExist(err) {
-			log.Errorf("Unable to open traffic log install-last-failed file: %v", err)
-			return
-		}
-		if lastFailedRaw != nil {
-			if cfg.TrafficLog.WaitTimeSinceFailedInstall == 0 {
-				log.Debug("Aborting traffic log install; install previously failed")
-				return
-			}
-			lastFailed := new(time.Time)
-			if err := lastFailed.UnmarshalText(lastFailedRaw); err != nil {
-				log.Errorf("Failed to parse traffic log install-last-failed file: %v", err)
-				return
-			}
-			if time.Since(*lastFailed) < cfg.TrafficLog.WaitTimeSinceFailedInstall {
-				log.Debugf(
-					"Aborting traffic log install; last failed %v ago, wait time is %v",
-					time.Since(*lastFailed), cfg.TrafficLog.WaitTimeSinceFailedInstall,
-				)
-				return
-			}
-		}
-
-		// Note that this is a no-op if the traffic log is already installed.
-		installOpts := tlproc.InstallOptions{Overwrite: cfg.TrafficLog.Reinstall}
-		installErr := tlproc.Install(
-			installDir, u.Username, trafficlogInstallPrompt, iconFile, &installOpts)
-		if installErr != nil {
-			b, err := time.Now().MarshalText()
-			if err != nil {
-				log.Errorf("Failed to marshal time for traffic log install-last-failed file: %v", err)
-				return
-			}
-			if err := ioutil.WriteFile(lastFailedPath, b, 0644); err != nil {
-				log.Errorf("Failed to write traffic log install-last-failed file: %v", err)
-				return
-			}
-			log.Errorf("Failed to install traffic log: %v", installErr)
-			return
-		}
-
-		log.Debug("Turning traffic log on")
-		app.trafficLog, err = tlproc.New(
-			cfg.TrafficLog.CaptureBytes,
-			cfg.TrafficLog.SaveBytes,
-			installDir,
-			&tlproc.Options{
-				Options: trafficlog.Options{
-					MutatorFactory: new(trafficlog.AppStripperFactory),
-				},
-				StartTimeout:   trafficlogStartTimeout,
-				RequestTimeout: trafficlogRequestTimeout,
-			})
-		if err != nil {
-			log.Errorf("Failed to start traffic log process: %v", err)
-			return
-		}
-		// These goroutines will close when the traffic log is closed.
-		go func() {
-			for err := range app.trafficLog.Errors() {
-				log.Debugf("Traffic log error: %v", err)
-			}
-		}()
-		go func() {
-			for stats := range app.trafficLog.Stats() {
-				log.Debugf("Traffic log stats: %v", stats)
-			}
-		}()
-		proxyAddrs := []string{}
-		for _, p := range app.proxies {
-			proxyAddrs = append(proxyAddrs, p.Addr())
-		}
-		if err := app.trafficLog.UpdateAddresses(proxyAddrs); err != nil {
-			log.Debugf("Failed to start traffic logging for proxies: %v", err)
-			app.trafficLog.Close()
-			app.trafficLog = nil
-		}
-
-	case enableTrafficLog && app.trafficLog != nil:
-		err := app.trafficLog.UpdateBufferSizes(cfg.TrafficLog.CaptureBytes, cfg.TrafficLog.SaveBytes)
-		if err != nil {
-			log.Debugf("Failed to update traffic log buffer sizes: %v", err)
-		}
-
-	case !enableTrafficLog && app.trafficLog != nil:
-		log.Debug("Turning traffic log off")
-		if err := app.trafficLog.Close(); err != nil {
-			log.Errorf("Failed to close traffic log (this will create a memory leak): %v", err)
-		}
-		app.trafficLog = nil
 	}
 }
 
