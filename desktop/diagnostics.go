@@ -3,16 +3,11 @@ package desktop
 import (
 	"bytes"
 	"compress/gzip"
-	"time"
 
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/diagnostics"
 	"github.com/getlantern/yaml"
 )
-
-// When a user chooses to run diagnostics, we also attach a packet capture file, generated from the
-// application's traffic log. This figure controls how far back in the log we go.
-const captureSaveDuration = 5 * time.Minute
 
 func (app *App) runDiagnostics() (reportYAML, gzippedPcapng []byte, err error) {
 	errs := []error{}
@@ -20,7 +15,7 @@ func (app *App) runDiagnostics() (reportYAML, gzippedPcapng []byte, err error) {
 	if err != nil {
 		errs = append(errs, err)
 	}
-	gzippedPcapng, err = app.saveAndZipProxyTraffic(captureSaveDuration)
+	gzippedPcapng, err = app.saveAndZipProxyTraffic()
 	if err != nil {
 		errs = append(errs, err)
 	}
@@ -28,10 +23,10 @@ func (app *App) runDiagnostics() (reportYAML, gzippedPcapng []byte, err error) {
 }
 
 // Saves proxy traffic for captureSaveDuration and gzips the resulting pcapng.
-func (app *App) saveAndZipProxyTraffic(since time.Duration) ([]byte, error) {
+func (app *App) saveAndZipProxyTraffic() ([]byte, error) {
 	buf := new(bytes.Buffer)
 	gzipW := gzip.NewWriter(buf)
-	if err := app.flashlight.GetCapturedPackets(gzipW, since); err != nil {
+	if err := app.flashlight.GetCapturedPackets(gzipW); err != nil {
 		return nil, err
 	}
 	if err := gzipW.Close(); err != nil {

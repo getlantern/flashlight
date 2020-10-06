@@ -2,7 +2,6 @@ package flashlight
 
 import (
 	"fmt"
-	"io"
 	"net"
 	"path/filepath"
 	"sync"
@@ -77,6 +76,9 @@ type Flashlight struct {
 	// reported issues. Nil if traffic logging is not enabled.
 	trafficLog     *tlproc.TrafficLogProcess
 	trafficLogLock sync.RWMutex
+
+	// Also protected by trafficLogLock.
+	captureSaveDuration time.Duration
 
 	// proxies are tracked by the application solely for data collection purposes. This value should
 	// not be changed, except by Flashlight.onProxiesUpdate. State-changing methods on the dialers
@@ -260,25 +262,6 @@ func (f *Flashlight) GetProxies() []balancer.Dialer {
 	copy(copied, f.proxies)
 	f.proxiesLock.RUnlock()
 	return copied
-}
-
-// GetCapturedPackets writes all packets captured during the input duration. The traffic log must be
-// enabled. The packets are written to w in pcapng format.
-func (f *Flashlight) GetCapturedPackets(w io.Writer, since time.Duration) error {
-	f.trafficLogLock.Lock()
-	f.proxiesLock.RLock()
-	defer f.trafficLogLock.Unlock()
-	defer f.proxiesLock.RUnlock()
-
-	for _, p := range f.proxies {
-		if err := f.trafficLog.SaveCaptures(p.Addr(), since); err != nil {
-			return errors.New("failed to save captures for %s: %v", p.Name(), err)
-		}
-	}
-	if err := f.trafficLog.WritePcapng(w); err != nil {
-		return errors.New("failed to write saved packets: %v", err)
-	}
-	return nil
 }
 
 // New creates a client proxy.

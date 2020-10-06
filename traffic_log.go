@@ -1,6 +1,7 @@
 package flashlight
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"os/user"
@@ -17,8 +18,9 @@ import (
 )
 
 const (
-	trafficlogStartTimeout   = 5 * time.Second
-	trafficlogRequestTimeout = time.Second
+	trafficlogStartTimeout        = 5 * time.Second
+	trafficlogRequestTimeout      = time.Second
+	trafficlogDefaultSaveDuration = 5 * time.Minute
 
 	// This message is only displayed when the traffic log needs to be installed.
 	trafficlogInstallPrompt = "Lantern needs your permission to install diagnostic tools"
@@ -29,6 +31,25 @@ const (
 	// This file, in the config directory, holds a timestamp from the last failed installation.
 	trafficlogLastFailedInstallFile = "tl_last_failed"
 )
+
+// GetCapturedPackets writes all packets captured during the input duration. The traffic log must be
+// enabled. The packets are written to w in pcapng format.
+func (f *Flashlight) GetCapturedPackets(w io.Writer) error {
+	f.trafficLogLock.Lock()
+	f.proxiesLock.RLock()
+	defer f.trafficLogLock.Unlock()
+	defer f.proxiesLock.RUnlock()
+
+	for _, p := range f.proxies {
+		if err := f.trafficLog.SaveCaptures(p.Addr(), f.captureSaveDuration); err != nil {
+			return errors.New("failed to save captures for %s: %v", p.Name(), err)
+		}
+	}
+	if err := f.trafficLog.WritePcapng(w); err != nil {
+		return errors.New("failed to write saved packets: %v", err)
+	}
+	return nil
+}
 
 // This should be run in an independent routine as it may need to install and block for a
 // user-action granting permissions.
@@ -77,6 +98,10 @@ func (f *Flashlight) configureTrafficLog(cfg *config.Global) {
 		log.Debug("Turning traffic log on")
 		if err := f.turnOnTrafficLog(installDir, *opts); err != nil {
 			log.Errorf("Failed to turn on traffic log: %v", err)
+		}
+		f.captureSaveDuration = opts.CaptureSaveDuration
+		if f.captureSaveDuration == 0 {
+			f.captureSaveDuration = trafficlogDefaultSaveDuration
 		}
 
 	case enableTrafficLog && f.trafficLog != nil:

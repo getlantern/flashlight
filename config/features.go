@@ -58,6 +58,9 @@ type TrafficLogOptions struct {
 	CaptureBytes int
 	SaveBytes    int
 
+	// How far back to go when attaching packets to an issue report.
+	CaptureSaveDuration time.Duration
+
 	// Whether to overwrite the traffic log binary. This may result in users being re-prompted for
 	// their passwords. The binary will never be overwritten if the existing binary matches the
 	// embedded version.
