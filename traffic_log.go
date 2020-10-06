@@ -59,7 +59,10 @@ func (f *Flashlight) configureTrafficLog(cfg *config.Global) {
 	defer f.trafficLogLock.Unlock()
 	defer f.proxiesLock.RUnlock()
 
-	forceTrafficLog := f.flagsAsMap["force-traffic-log"].(bool)
+	forceTrafficLog := false
+	if ftl, ok := f.flagsAsMap["force-traffic-log"]; ok {
+		forceTrafficLog = ftl.(bool)
+	}
 	enableTrafficLog := false
 	enableTrafficLog = f.featureEnabled(config.FeatureTrafficLog) || forceTrafficLog
 	opts := new(config.TrafficLogOptions)
