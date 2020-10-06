@@ -10,6 +10,12 @@ import (
 )
 
 func (app *App) runDiagnostics() (reportYAML, gzippedPcapng []byte, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = errors.New("recovered from panic while collecting diagnostics: %v", r)
+		}
+	}()
+
 	errs := []error{}
 	reportYAML, err = yaml.Marshal(diagnostics.Run(app.flashlight.GetProxies()))
 	if err != nil {
