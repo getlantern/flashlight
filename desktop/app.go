@@ -297,7 +297,7 @@ func (app *App) Run() {
 // listeners.
 func (app *App) startFeaturesService(chans ...<-chan bool) {
 	if service, err := app.ws.Register("features", func(write func(interface{})) {
-		log.Debugf("Sending features enabled to new client")
+		log.Debugf("Sending features enabled to new client: %v", app.flashlight.EnabledFeatures())
 		write(app.flashlight.EnabledFeatures())
 	}); err != nil {
 		log.Errorf("Unable to serve enabled features to UI: %v", err)
@@ -306,6 +306,7 @@ func (app *App) startFeaturesService(chans ...<-chan bool) {
 			go func(c <-chan bool) {
 				for range c {
 					features := app.flashlight.EnabledFeatures()
+					log.Debugf("EnabledFeatures: %v", features)
 					app.checkForReplica(features)
 					select {
 					case service.Out <- features:

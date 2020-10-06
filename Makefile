@@ -37,6 +37,9 @@ define build-tags
 		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/common.StagingMode=$$STAGING"; \
 		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/lantern.StagingMode=$$STAGING"; \
 	fi && \
+	if [[ ! -z "$$NOREPLICA" ]]; then \
+		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/config.GlobalURL=https://globalconfig.flashlightproxy.com/global-no-replica.yaml.gz"; \
+	fi && \
 	if [[ ! -z "$$REPLICA" ]]; then \
 		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/config.GlobalURL=https://globalconfig.flashlightproxy.com/global-replica.yaml.gz"; \
 	fi && \
