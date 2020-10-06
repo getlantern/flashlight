@@ -18,6 +18,7 @@ import (
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/browsers/simbrowser"
 	"github.com/getlantern/flashlight/proxied"
+	"github.com/getlantern/trafficlog-flashlight/tlproc"
 
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
@@ -91,6 +92,23 @@ type App struct {
 	chGlobalConfigChanged chan bool
 	flashlight            *flashlight.Flashlight
 	startReplica          sync.Once
+
+	// If both the trafficLogLock and proxiesLock are needed, the trafficLogLock should be obtained
+	// first. Keeping the order consistent avoids deadlocking.
+
+	// Log of network traffic to and from the proxies. Used to attach packet capture files to
+	// reported issues. Nil if traffic logging is not enabled.
+	trafficLog     *tlproc.TrafficLogProcess
+	trafficLogLock sync.RWMutex
+
+	// Also protected by trafficLogLock.
+	captureSaveDuration time.Duration
+
+	// proxies are tracked by the application solely for data collection purposes. This value should
+	// not be changed, except by Flashlight.onProxiesUpdate. State-changing methods on the dialers
+	// should not be called. In short, this slice and its elements should be treated as read-only.
+	proxies     []balancer.Dialer
+	proxiesLock sync.RWMutex
 }
 
 // Init initializes the App's state
@@ -582,6 +600,7 @@ func (app *App) onConfigUpdate(cfg *config.Global, src config.Source) {
 			log.Errorf("failed to set browser market share data: %v", err)
 		}
 	}
+	go app.configureTrafficLog(cfg)
 	app.chGlobalConfigChanged <- true
 }
 
@@ -590,6 +609,30 @@ func (app *App) onProxiesUpdate(proxies []balancer.Dialer, src config.Source) {
 		app.gaSession.Event("config", "proxies-fetched")
 		atomic.StoreInt32(&app.fetchedProxiesConfig, 1)
 	}
+	app.trafficLogLock.Lock()
+	app.proxiesLock.Lock()
+	app.proxies = proxies
+	if app.trafficLog != nil {
+		proxyAddresses := []string{}
+		for _, p := range proxies {
+			proxyAddresses = append(proxyAddresses, p.Addr())
+		}
+		if err := app.trafficLog.UpdateAddresses(proxyAddresses); err != nil {
+			log.Errorf("failed to update traffic log addresses: %v", err)
+		}
+	}
+	app.proxiesLock.Unlock()
+	app.trafficLogLock.Unlock()
+}
+
+// getProxies returns the currently configured proxies. State-changing methods on these dialers
+// should not be called. In short, the elements of this slice should be treated as read-only.
+func (app *App) getProxies() []balancer.Dialer {
+	app.proxiesLock.RLock()
+	copied := make([]balancer.Dialer, len(app.proxies))
+	copy(copied, app.proxies)
+	app.proxiesLock.RUnlock()
+	return copied
 }
 
 // showExistingUi triggers an existing Lantern running on the same system to

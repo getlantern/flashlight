@@ -17,7 +17,6 @@ import (
 	"github.com/getlantern/mtime"
 	"github.com/getlantern/ops"
 	"github.com/getlantern/proxybench"
-	"github.com/getlantern/trafficlog-flashlight/tlproc"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/borda"
@@ -68,23 +67,6 @@ type Flashlight struct {
 	client            *client.Client
 	vpnEnabled        bool
 	op                *fops.Op
-
-	// If both the trafficLogLock and proxiesLock are needed, the trafficLogLock should be obtained
-	// first. Keeping the order consistent avoids deadlocking.
-
-	// Log of network traffic to and from the proxies. Used to attach packet capture files to
-	// reported issues. Nil if traffic logging is not enabled.
-	trafficLog     *tlproc.TrafficLogProcess
-	trafficLogLock sync.RWMutex
-
-	// Also protected by trafficLogLock.
-	captureSaveDuration time.Duration
-
-	// proxies are tracked by the application solely for data collection purposes. This value should
-	// not be changed, except by Flashlight.onProxiesUpdate. State-changing methods on the dialers
-	// should not be called. In short, this slice and its elements should be treated as read-only.
-	proxies     []balancer.Dialer
-	proxiesLock sync.RWMutex
 }
 
 func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
@@ -108,11 +90,11 @@ func (f *Flashlight) onGlobalConfig(cfg *config.Global, src config.Source) {
 func (f *Flashlight) reconfigurePingProxies() {
 	enabled := func() bool {
 		return common.InDevelopment() ||
-			(f.featureEnabled(config.FeaturePingProxies) && f.autoReport())
+			(f.FeatureEnabled(config.FeaturePingProxies) && f.autoReport())
 	}
 	var opts config.PingProxiesOptions
 	// ignore the error because the zero value means disabling it.
-	_ = f.featureOptions(config.FeaturePingProxies, &opts)
+	_ = f.FeatureOptions(config.FeaturePingProxies, &opts)
 	f.client.ConfigurePingProxies(enabled, opts.Interval)
 }
 
@@ -135,7 +117,9 @@ func (f *Flashlight) EnabledFeatures() map[string]bool {
 	return featuresEnabled
 }
 
-func (f *Flashlight) featureEnabled(feature string) bool {
+// FeatureEnabled returns true if the input feature is enabled for this flashlight instance. Feature
+// names are tracked in the config package.
+func (f *Flashlight) FeatureEnabled(feature string) bool {
 	f.mxGlobal.RLock()
 	global := f.global
 	f.mxGlobal.RUnlock()
@@ -164,7 +148,9 @@ func (f *Flashlight) calcFeature(global *config.Global, country, feature string)
 		country)
 }
 
-func (f *Flashlight) featureOptions(feature string, opts config.FeatureOptions) error {
+// FeatureOptions unmarshals options for the input feature. Feature names are tracked in the config
+// package.
+func (f *Flashlight) FeatureOptions(feature string, opts config.FeatureOptions) error {
 	f.mxGlobal.RLock()
 	global := f.global
 	f.mxGlobal.RUnlock()
@@ -180,12 +166,14 @@ func (f *Flashlight) startConfigFetch() func() {
 		proxyMap := conf.(map[string]*chained.ChainedServerInfo)
 		log.Debugf("Applying proxy config with proxies: %v", proxyMap)
 		dialers := f.client.Configure(proxyMap)
-		f.handleProxiesUpdate(dialers, src)
+		if dialers != nil {
+			f.onProxiesUpdate(dialers, src)
+		}
 	}
 	globalDispatch := func(conf interface{}, src config.Source) {
 		cfg := conf.(*config.Global)
 		log.Debugf("Applying global config")
-		f.handleConfigUpdate(cfg, src)
+		f.onGlobalConfig(cfg, src)
 	}
 	rt := proxied.ParallelPreferChained()
 
@@ -193,37 +181,11 @@ func (f *Flashlight) startConfigFetch() func() {
 	return stopConfig
 }
 
-func (f *Flashlight) handleProxiesUpdate(dialers []balancer.Dialer, src config.Source) {
-	if dialers == nil {
-		return
-	}
-	f.onProxiesUpdate(dialers, src)
-	f.trafficLogLock.Lock()
-	f.proxiesLock.Lock()
-	f.proxies = dialers
-	if f.trafficLog != nil {
-		proxyAddresses := []string{}
-		for _, p := range dialers {
-			proxyAddresses = append(proxyAddresses, p.Addr())
-		}
-		if err := f.trafficLog.UpdateAddresses(proxyAddresses); err != nil {
-			log.Errorf("failed to update traffic log addresses: %v", err)
-		}
-	}
-	f.proxiesLock.Unlock()
-	f.trafficLogLock.Unlock()
-}
-
-func (f *Flashlight) handleConfigUpdate(cfg *config.Global, src config.Source) {
-	f.onGlobalConfig(cfg, src)
-	go f.configureTrafficLog(cfg)
-}
-
 func (f *Flashlight) applyProxyBench(cfg *config.Global) {
 	go func() {
 		// Wait a while for geolookup to happen before checking if we can turn on proxybench
 		geolookup.GetCountry(1 * time.Minute)
-		if f.featureEnabled(config.FeatureProxyBench) {
+		if f.FeatureEnabled(config.FeatureProxyBench) {
 			startProxyBenchOnce.Do(func() {
 				opts := &proxybench.Opts{
 					UpdateURL: "https://s3.amazonaws.com/lantern/proxybench.json",
@@ -244,7 +206,7 @@ func (f *Flashlight) applyBorda(cfg *config.Global) {
 			return false
 		}
 
-		if f.featureEnabled(config.FeatureNoBorda) {
+		if f.FeatureEnabled(config.FeatureNoBorda) {
 			// Borda is disabled by global config
 			return false
 		}
@@ -252,16 +214,6 @@ func (f *Flashlight) applyBorda(cfg *config.Global) {
 		return _enableBorda(ctx)
 	}
 	borda.Configure(cfg.BordaReportInterval, enableBorda)
-}
-
-// GetProxies returns the currently configured proxies. State-changing methods on these dialers
-// should not be called. In short, the elements of this slice should be treated as read-only.
-func (f *Flashlight) GetProxies() []balancer.Dialer {
-	f.proxiesLock.RLock()
-	copied := make([]balancer.Dialer, len(f.proxies))
-	copy(copied, f.proxies)
-	f.proxiesLock.RUnlock()
-	return copied
 }
 
 // New creates a client proxy.
@@ -349,27 +301,27 @@ func New(
 	}
 
 	useShortcut := func() bool {
-		return !_proxyAll() && !f.featureEnabled(config.FeatureNoShortcut) && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
+		return !_proxyAll() && !f.FeatureEnabled(config.FeatureNoShortcut) && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	useDetour := func() bool {
-		return !_proxyAll() && !f.featureEnabled(config.FeatureNoDetour) && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
+		return !_proxyAll() && !f.FeatureEnabled(config.FeatureNoDetour) && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	proxyAll := func() bool {
 		useShortcutOrDetour := useShortcut() || useDetour()
-		return !useShortcutOrDetour && !f.featureEnabled(config.FeatureProxyWhitelistedOnly)
+		return !useShortcutOrDetour && !f.FeatureEnabled(config.FeatureProxyWhitelistedOnly)
 	}
 
 	cl, err := client.NewClient(
 		disconnected,
-		func() bool { return !f.featureEnabled(config.FeatureNoProbeProxies) },
+		func() bool { return !f.FeatureEnabled(config.FeatureNoProbeProxies) },
 		proxyAll,
 		useShortcut,
 		shortcut.Allow,
 		useDetour,
-		func() bool { return !f.featureEnabled(config.FeatureNoHTTPSEverywhere) },
-		func() bool { return common.Platform != "android" && f.featureEnabled(config.FeatureTrackYouTube) },
+		func() bool { return !f.FeatureEnabled(config.FeatureNoHTTPSEverywhere) },
+		func() bool { return common.Platform != "android" && f.FeatureEnabled(config.FeatureTrackYouTube) },
 		userConfig,
 		statsTracker,
 		allowPrivateHosts,

@@ -17,7 +17,7 @@ func (app *App) runDiagnostics() (reportYAML, gzippedPcapng []byte, err error) {
 	}()
 
 	errs := []error{}
-	reportYAML, err = yaml.Marshal(diagnostics.Run(app.flashlight.GetProxies()))
+	reportYAML, err = yaml.Marshal(diagnostics.Run(app.getProxies()))
 	if err != nil {
 		errs = append(errs, err)
 	}
@@ -32,7 +32,7 @@ func (app *App) runDiagnostics() (reportYAML, gzippedPcapng []byte, err error) {
 func (app *App) saveAndZipProxyTraffic() ([]byte, error) {
 	buf := new(bytes.Buffer)
 	gzipW := gzip.NewWriter(buf)
-	if err := app.flashlight.GetCapturedPackets(gzipW); err != nil {
+	if err := app.getCapturedPackets(gzipW); err != nil {
 		return nil, err
 	}
 	if err := gzipW.Close(); err != nil {

@@ -1,4 +1,4 @@
-package flashlight
+package desktop
 
 import (
 	"io"
@@ -32,20 +32,20 @@ const (
 	trafficlogLastFailedInstallFile = "tl_last_failed"
 )
 
-// GetCapturedPackets writes all packets captured during the input duration. The traffic log must be
+// getCapturedPackets writes all packets captured during the input duration. The traffic log must be
 // enabled. The packets are written to w in pcapng format.
-func (f *Flashlight) GetCapturedPackets(w io.Writer) error {
-	f.trafficLogLock.Lock()
-	f.proxiesLock.RLock()
-	defer f.trafficLogLock.Unlock()
-	defer f.proxiesLock.RUnlock()
+func (app *App) getCapturedPackets(w io.Writer) error {
+	app.trafficLogLock.Lock()
+	app.proxiesLock.RLock()
+	defer app.trafficLogLock.Unlock()
+	defer app.proxiesLock.RUnlock()
 
-	for _, p := range f.proxies {
-		if err := f.trafficLog.SaveCaptures(p.Addr(), f.captureSaveDuration); err != nil {
+	for _, p := range app.proxies {
+		if err := app.trafficLog.SaveCaptures(p.Addr(), app.captureSaveDuration); err != nil {
 			return errors.New("failed to save captures for %s: %v", p.Name(), err)
 		}
 	}
-	if err := f.trafficLog.WritePcapng(w); err != nil {
+	if err := app.trafficLog.WritePcapng(w); err != nil {
 		return errors.New("failed to write saved packets: %v", err)
 	}
 	return nil
@@ -53,20 +53,21 @@ func (f *Flashlight) GetCapturedPackets(w io.Writer) error {
 
 // This should be run in an independent routine as it may need to install and block for a
 // user-action granting permissions.
-func (f *Flashlight) configureTrafficLog(cfg *config.Global) {
-	f.trafficLogLock.Lock()
-	f.proxiesLock.RLock()
-	defer f.trafficLogLock.Unlock()
-	defer f.proxiesLock.RUnlock()
+func (app *App) configureTrafficLog(cfg *config.Global) {
+	app.trafficLogLock.Lock()
+	app.proxiesLock.RLock()
+	defer app.trafficLogLock.Unlock()
+	defer app.proxiesLock.RUnlock()
 
 	forceTrafficLog := false
-	if ftl, ok := f.flagsAsMap["force-traffic-log"]; ok {
+	if ftl, ok := app.Flags["force-traffic-log"]; ok {
 		forceTrafficLog = ftl.(bool)
 	}
 	enableTrafficLog := false
-	enableTrafficLog = f.featureEnabled(config.FeatureTrafficLog) || forceTrafficLog
+	enableTrafficLog = app.flashlight.FeatureEnabled(config.FeatureTrafficLog) || forceTrafficLog
 	opts := new(config.TrafficLogOptions)
-	if err := f.featureOptions(config.FeatureTrafficLog, opts); err != nil && !forceTrafficLog {
+	err := app.flashlight.FeatureOptions(config.FeatureTrafficLog, opts)
+	if err != nil && !forceTrafficLog {
 		log.Errorf("failed to unmarshal traffic log options: %v", err)
 		return
 	}
@@ -91,39 +92,39 @@ func (f *Flashlight) configureTrafficLog(cfg *config.Global) {
 	}
 
 	switch {
-	case enableTrafficLog && f.trafficLog == nil:
+	case enableTrafficLog && app.trafficLog == nil:
 		installDir := appdir.General("Lantern")
 		log.Debugf("Installing traffic log if necessary in %s", installDir)
-		if err := f.tryTrafficLogInstall(installDir, *opts); err != nil {
+		if err := app.tryTrafficLogInstall(installDir, *opts); err != nil {
 			log.Errorf("Failed to install traffic log: %v", err)
 			return
 		}
 		log.Debug("Turning traffic log on")
-		if err := f.turnOnTrafficLog(installDir, *opts); err != nil {
+		if err := app.turnOnTrafficLog(installDir, *opts); err != nil {
 			log.Errorf("Failed to turn on traffic log: %v", err)
 		}
-		f.captureSaveDuration = opts.CaptureSaveDuration
-		if f.captureSaveDuration == 0 {
-			f.captureSaveDuration = trafficlogDefaultSaveDuration
+		app.captureSaveDuration = opts.CaptureSaveDuration
+		if app.captureSaveDuration == 0 {
+			app.captureSaveDuration = trafficlogDefaultSaveDuration
 		}
 
-	case enableTrafficLog && f.trafficLog != nil:
-		err := f.trafficLog.UpdateBufferSizes(opts.CaptureBytes, opts.SaveBytes)
+	case enableTrafficLog && app.trafficLog != nil:
+		err := app.trafficLog.UpdateBufferSizes(opts.CaptureBytes, opts.SaveBytes)
 		if err != nil {
 			log.Debugf("Failed to update traffic log buffer sizes: %v", err)
 		}
 
-	case !enableTrafficLog && f.trafficLog != nil:
+	case !enableTrafficLog && app.trafficLog != nil:
 		log.Debug("Turning traffic log off")
-		if err := f.trafficLog.Close(); err != nil {
+		if err := app.trafficLog.Close(); err != nil {
 			log.Errorf("Failed to close traffic log (this will create a memory leak): %v", err)
 		}
-		f.trafficLog = nil
+		app.trafficLog = nil
 	}
 }
 
 // Not concurrency-safe. Intended to serve as a helper to configureTrafficLog.
-func (f *Flashlight) tryTrafficLogInstall(installDir string, opts config.TrafficLogOptions) error {
+func (app *App) tryTrafficLogInstall(installDir string, opts config.TrafficLogOptions) error {
 	u, err := user.Current()
 	if err != nil {
 		return errors.New("failed to look up current user for traffic log install: %v", err)
@@ -181,9 +182,9 @@ func (f *Flashlight) tryTrafficLogInstall(installDir string, opts config.Traffic
 }
 
 // Not concurrency-safe. Intended to serve as a helper to configureTrafficLog.
-func (f *Flashlight) turnOnTrafficLog(installDir string, opts config.TrafficLogOptions) error {
+func (app *App) turnOnTrafficLog(installDir string, opts config.TrafficLogOptions) error {
 	var err error
-	f.trafficLog, err = tlproc.New(
+	app.trafficLog, err = tlproc.New(
 		opts.CaptureBytes,
 		opts.SaveBytes,
 		installDir,
@@ -199,22 +200,22 @@ func (f *Flashlight) turnOnTrafficLog(installDir string, opts config.TrafficLogO
 	}
 	// These goroutines will close when the traffic log is closed.
 	go func() {
-		for err := range f.trafficLog.Errors() {
+		for err := range app.trafficLog.Errors() {
 			log.Debugf("Traffic log error: %v", err)
 		}
 	}()
 	go func() {
-		for stats := range f.trafficLog.Stats() {
+		for stats := range app.trafficLog.Stats() {
 			log.Debugf("Traffic log stats: %v", stats)
 		}
 	}()
 	proxyAddrs := []string{}
-	for _, p := range f.proxies {
+	for _, p := range app.proxies {
 		proxyAddrs = append(proxyAddrs, p.Addr())
 	}
-	if err := f.trafficLog.UpdateAddresses(proxyAddrs); err != nil {
-		f.trafficLog.Close()
-		f.trafficLog = nil
+	if err := app.trafficLog.UpdateAddresses(proxyAddrs); err != nil {
+		app.trafficLog.Close()
+		app.trafficLog = nil
 		return errors.New("failed to start traffic logging for proxies: %v", err)
 	}
 	return nil
