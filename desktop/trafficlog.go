@@ -66,10 +66,12 @@ func (app *App) configureTrafficLog(cfg *config.Global) {
 	enableTrafficLog := false
 	enableTrafficLog = app.flashlight.FeatureEnabled(config.FeatureTrafficLog) || forceTrafficLog
 	opts := new(config.TrafficLogOptions)
-	err := app.flashlight.FeatureOptions(config.FeatureTrafficLog, opts)
-	if err != nil && !forceTrafficLog {
-		log.Errorf("failed to unmarshal traffic log options: %v", err)
-		return
+	if enableTrafficLog {
+		err := app.flashlight.FeatureOptions(config.FeatureTrafficLog, opts)
+		if err != nil && !forceTrafficLog {
+			log.Errorf("failed to unmarshal traffic log options: %v", err)
+			return
+		}
 	}
 	if forceTrafficLog {
 		// This flag is used in development to run the traffic log. We probably want to actually
