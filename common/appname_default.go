@@ -3,4 +3,4 @@
 
 package common
 
-const AppName = "Beam"
+const AppName = "Lantern"
