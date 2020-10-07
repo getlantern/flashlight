@@ -3,4 +3,4 @@
 
 package common
 
-const AppName = "Lantern"
+const AppName = "Default"
