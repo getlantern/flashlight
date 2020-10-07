@@ -11,7 +11,7 @@ require (
 	github.com/anacrolix/go-libutp v1.0.3
 	github.com/anacrolix/log v0.7.1-0.20200604014615-c244de44fd2d
 	github.com/anacrolix/tagflag v1.1.1-0.20200411025953-9bb5209d56c2
-	github.com/anacrolix/torrent v1.15.1-0.20200619022403-dd51e99b88cc
+	github.com/anacrolix/torrent v1.17.1-0.20201006232255-d3daaaf75a46
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
