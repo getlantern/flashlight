@@ -3,6 +3,7 @@ package datacap
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/getlantern/golog"
@@ -10,6 +11,7 @@ import (
 	notify "github.com/getlantern/notifier"
 
 	"github.com/getlantern/flashlight/bandwidth"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/notifier"
 	"github.com/getlantern/flashlight/ws"
 )
@@ -24,6 +26,8 @@ var (
 	dataCapListeners   = make([]func(hitDataCap bool), 0)
 	dataCapListenersMx sync.RWMutex
 	log                = golog.LoggerFor("flashlight.datacap")
+
+	translationAppName = strings.ToUpper(common.AppName)
 )
 
 type dataCap struct {
@@ -114,16 +118,20 @@ func (dc *dataCap) percentMsg(msg string, percent int) string {
 	return fmt.Sprintf(msg, str)
 }
 
+func (dc *dataCap) percentFormatted(percent int) string {
+	return strconv.Itoa(percent) + "%"
+}
+
 func (dc *dataCap) notifyPercent(percent int) {
-	title := dc.percentMsg(i18n.T("BACKEND_DATA_PERCENT_TITLE"), percent)
-	msg := dc.percentMsg(i18n.T("BACKEND_DATA_PERCENT_MESSAGE"), percent)
+	title := i18n.T("BACKEND_DATA_PERCENT_TITLE", dc.percentFormatted(percent), i18n.T(translationAppName))
+	msg := i18n.T("BACKEND_DATA_PERCENT_MESSAGE", dc.percentFormatted(percent), i18n.T(translationAppName))
 
 	dc.notifyFreeUser(title, msg, "data-cap-"+strconv.Itoa(percent))
 }
 
 func (dc *dataCap) notifyCapHit() {
-	title := i18n.T("BACKEND_DATA_TITLE")
-	msg := i18n.T("BACKEND_DATA_MESSAGE")
+	title := i18n.T("BACKEND_DATA_TITLE", i18n.T(translationAppName))
+	msg := i18n.T("BACKEND_DATA_MESSAGE", i18n.T(translationAppName))
 
 	dc.notifyFreeUser(title, msg, "data-cap-100")
 }
