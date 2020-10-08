@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -107,8 +109,13 @@ func countMessages(b []byte) int {
 }
 
 func TestCloseAndInit(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "logging_test")
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer os.RemoveAll(tmpDir)
 	for i := 0; i < 10; i++ {
-		EnableFileLogging("")
+		EnableFileLogging(tmpDir)
 		Close()
 	}
 }
