@@ -17,22 +17,6 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.config")
 
-	// GlobalURL URL for fetching the global config.
-	//GlobalURL = "https://globalconfig.flashlightproxy.com/global.yaml.gz"
-
-	// URL for fetching the global config in a staging environment.
-	//globalStagingURL = "https://globalconfig.flashlightproxy.com/global.yaml.gz"
-
-	// The following are over HTTP because proxies do not forward X-Forwarded-For
-	// with HTTPS and because we only support falling back to direct domain
-	// fronting through the local proxy for HTTP.
-
-	// URL for fetching the per user proxy config.
-	//proxiesURL = "http://config.getiantem.org/proxies.yaml.gz"
-
-	// URLs for fetching the per user proxy config in a staging environment.
-	//proxiesStagingURL = "http://config-staging.getiantem.org/proxies.yaml.gz"
-
 	// DefaultProxyConfigPollInterval determines how frequently to fetch proxies.yaml
 	DefaultProxyConfigPollInterval = 1 * time.Minute
 
