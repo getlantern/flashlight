@@ -3,6 +3,7 @@
 package common
 
 const (
+	// AppName is the name of this specific app.
 	AppName = "Beam"
 
 	// TrackingID is the Google Analytics tracking ID.
