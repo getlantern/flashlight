@@ -1,7 +1,6 @@
 package datacap
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -111,11 +110,6 @@ func (dc *dataCap) notifyEighty() {
 
 func (dc *dataCap) notifyFifty() {
 	dc.notifyPercent(50)
-}
-
-func (dc *dataCap) percentMsg(msg string, percent int) string {
-	str := strconv.Itoa(percent) + "%"
-	return fmt.Sprintf(msg, str)
 }
 
 func (dc *dataCap) percentFormatted(percent int) string {
