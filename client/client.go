@@ -44,6 +44,8 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.client")
 
+	translationAppName = strings.ToUpper(common.AppName)
+
 	addr                = eventual.NewValue()
 	socksAddr           = eventual.NewValue()
 	proxiedCONNECTPorts = []int{
@@ -201,8 +203,8 @@ func NewClient(
 			CertFile:           filepath.Join(configDir, "mitmcert.pem"),
 			Organization:       "Lantern",
 			InstallCert:        true,
-			InstallPrompt:      i18n.T("BACKEND_MITM_INSTALL_CERT"),
-			WindowsPromptTitle: i18n.T("BACKEND_MITM_INSTALL_CERT"),
+			InstallPrompt:      i18n.T("BACKEND_MITM_INSTALL_CERT", i18n.T(translationAppName)),
+			WindowsPromptTitle: i18n.T("BACKEND_MITM_INSTALL_CERT", i18n.T(translationAppName)),
 			WindowsPromptBody:  i18n.T("BACKEND_MITM_INSTALL_CERT_WINDOWS_BODY", "certimporter.exe"),
 			InstallCertResult: func(installErr error) {
 				op := ops.Begin("install_mitm_cert")

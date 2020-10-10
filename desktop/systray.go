@@ -4,6 +4,7 @@ package desktop
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/getlantern/i18n"
@@ -26,7 +27,8 @@ var menu struct {
 }
 
 var (
-	iconsByName = make(map[string][]byte)
+	iconsByName        = make(map[string][]byte)
+	translationAppName = strings.ToUpper(common.AppName)
 )
 
 type systrayCallbacks interface {
@@ -101,7 +103,12 @@ func configureSystemTray(a systrayCallbacks) error {
 	refreshMenuItems()
 
 	// Suppress showing "Update to Pro" until user status is got from pro-server.
-	menu.st.IsPro = true
+	if common.ProAvailable {
+		menu.st.IsPro = true
+	} else {
+		menu.upgrade.Hide()
+	}
+
 	menu.st.Status = stats.STATUS_CONNECTING
 	statsUpdated()
 	a.OnStatsChange(func(newStats stats.Stats) {
@@ -149,9 +156,9 @@ func refreshSystray(language string) {
 }
 
 func refreshMenuItems() {
-	systray.SetTooltip(i18n.T("TRAY_LANTERN"))
+	systray.SetTooltip(i18n.T(translationAppName))
 	menu.upgrade.SetTitle(i18n.T("TRAY_UPGRADE_TO_PRO"))
-	menu.show.SetTitle(i18n.T("TRAY_SHOW_LANTERN"))
+	menu.show.SetTitle(i18n.T("TRAY_SHOW", i18n.T(translationAppName)))
 	menu.quit.SetTitle(i18n.T("TRAY_QUIT"))
 }
 
@@ -180,7 +187,7 @@ func statsUpdated() {
 	status := i18n.T("TRAY_STATUS", i18n.T("status."+statusKey))
 	menu.status.SetTitle(status)
 
-	if st.IsPro {
+	if st.IsPro || !common.ProAvailable {
 		menu.upgrade.Hide()
 	} else {
 		menu.upgrade.Show()
