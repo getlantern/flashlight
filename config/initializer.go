@@ -17,22 +17,6 @@ import (
 var (
 	log = golog.LoggerFor("flashlight.config")
 
-	// GlobalURL URL for fetching the global config.
-	GlobalURL = "https://globalconfig.flashlightproxy.com/global.yaml.gz"
-
-	// URL for fetching the global config in a staging environment.
-	globalStagingURL = "https://globalconfig.flashlightproxy.com/global.yaml.gz"
-
-	// The following are over HTTP because proxies do not forward X-Forwarded-For
-	// with HTTPS and because we only support falling back to direct domain
-	// fronting through the local proxy for HTTP.
-
-	// URL for fetching the per user proxy config.
-	proxiesURL = "http://config.getiantem.org/proxies.yaml.gz"
-
-	// URLs for fetching the per user proxy config in a staging environment.
-	proxiesStagingURL = "http://config-staging.getiantem.org/proxies.yaml.gz"
-
 	// DefaultProxyConfigPollInterval determines how frequently to fetch proxies.yaml
 	DefaultProxyConfigPollInterval = 1 * time.Minute
 
@@ -40,7 +24,7 @@ var (
 	ForceProxyConfigPollInterval = 0 * time.Second
 
 	// DefaultGlobalConfigPollInterval determines how frequently to fetch global.yaml
-	DefaultGlobalConfigPollInterval = 24 * time.Hour
+	DefaultGlobalConfigPollInterval = 1 * time.Hour
 )
 
 // Init determines the URLs at which to fetch proxy and global config and
@@ -226,10 +210,10 @@ func checkOverrides(flags map[string]interface{},
 func getProxyURL(staging bool) string {
 	if staging {
 		log.Debug("Will obtain proxies.yaml from staging service")
-		return proxiesStagingURL
+		return common.ProxiesStagingURL
 	}
 	log.Debug("Will obtain proxies.yaml from production service")
-	return proxiesURL
+	return common.ProxiesURL
 }
 
 // getGlobalURL returns the global URL to use depending on whether or not
@@ -237,8 +221,8 @@ func getProxyURL(staging bool) string {
 func getGlobalURL(staging bool) string {
 	if staging {
 		log.Debug("Will obtain global.yaml from staging service")
-		return globalStagingURL
+		return common.GlobalStagingURL
 	}
-	log.Debugf("Will obtain global.yaml from production service at %v", GlobalURL)
-	return GlobalURL
+	log.Debugf("Will obtain global.yaml from production service at %v", common.GlobalURL)
+	return common.GlobalURL
 }
