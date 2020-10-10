@@ -6,6 +6,7 @@ import (
 )
 
 const (
+	AppHeader                           = "X-Lantern-App"
 	VersionHeader                       = "X-Lantern-Version"
 	DeviceIdHeader                      = "X-Lantern-Device-Id"
 	TokenHeader                         = "X-Lantern-Auth-Token"
@@ -37,6 +38,7 @@ func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth
 	}
 
 	req.Header.Set(PlatformHeader, Platform)
+	req.Header.Set(AppHeader, AppName)
 
 	if overwriteAuth || req.Header.Get(DeviceIdHeader) == "" {
 		if deviceID := uc.GetDeviceID(); deviceID != "" {

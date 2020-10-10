@@ -162,7 +162,7 @@ func sessionVals(version, clientID string) url.Values {
 
 	vals.Add("v", "1")
 	vals.Add("cid", clientID)
-	vals.Add("tid", trackingID)
+	vals.Add("tid", common.TrackingID)
 
 	// Make call to anonymize the user's IP address -- basically a policy thing
 	// where Google agrees not to store it.
