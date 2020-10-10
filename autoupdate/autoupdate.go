@@ -88,7 +88,7 @@ func watchForUpdate() {
 func notifyUser(newVersion string) {
 	note := &notify.Notification{
 		Title:      i18n.T("BACKEND_AUTOUPDATED_TITLE", i18n.T(translationAppName), newVersion),
-		Message:    i18n.T("BACKEND_AUTOUPDATED_MESSAGE", i18n.T(translationAppName), newVersion),
+		Message:    i18n.T("BACKEND_AUTOUPDATED_MESSAGE", i18n.T(translationAppName), newVersion, i18n.T(translationAppName)),
 		IconURL:    fnIconURL(),
 		ClickLabel: i18n.T("BACKEND_CLICK_LABEL_GOT_IT"),
 	}
