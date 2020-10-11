@@ -20,4 +20,6 @@ func TestGlobal(t *testing.T) {
 	assert.True(t, len(gl.Client.Fronted.Providers["cloudfront"].Masquerades) > 20)
 	assert.Containsf(t, gl.Client.Fronted.Providers["cloudfront"].HostAliases, "replica-search.lantern.io", "embedded global config does not contain replica-search cloudfront fronted provider")
 	assert.Containsf(t, gl.Client.Fronted.Providers["akamai"].HostAliases, "replica-search.lantern.io", "embedded global config does not contain replica-search akamai fronted provider")
+	assert.Containsf(t, gl.Client.Fronted.Providers["cloudfront"].HostAliases, "config.ss7hc6jm.io", "embedded global config does not contain beam config cloudfront fronted provider")
+	assert.Containsf(t, gl.Client.Fronted.Providers["akamai"].HostAliases, "config.ss7hc6jm.io", "embedded global config does not contain beam config akamai fronted provider")
 }
