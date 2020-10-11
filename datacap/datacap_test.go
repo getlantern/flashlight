@@ -1,6 +1,8 @@
 package datacap
 
 import (
+	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -59,5 +61,10 @@ func TestPercents(t *testing.T) {
 
 	msg := "you have used %s of your data"
 	expected := "you have used 80% of your data"
-	assert.Equal(t, expected, ns.percentMsg(msg, 80))
+	assert.Equal(t, expected, percentMsg(msg, 80))
+}
+
+func percentMsg(msg string, percent int) string {
+	str := strconv.Itoa(percent) + "%"
+	return fmt.Sprintf(msg, str)
 }
