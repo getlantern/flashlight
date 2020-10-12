@@ -23,6 +23,9 @@ const (
 
 	// ProxiesStagingURL is the URL for fetching the per user proxy config in a staging environment.
 	ProxiesStagingURL = "http://config-staging.getiantem.org/proxies.yaml.gz"
+
+	// UpdateServerURL is the URL of the update server.
+	UpdateServerURL = "https://update.getlantern.org"
 )
 
 var (
