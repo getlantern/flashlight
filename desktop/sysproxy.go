@@ -24,7 +24,7 @@ var (
 func setUpSysproxyTool() error {
 	var iconFile string
 	if common.Platform == "darwin" {
-		icon, err := icons.Asset("connected_32.ico")
+		icon, err := icons.Asset(appIcon("connected_32.ico"))
 		if err != nil {
 			return fmt.Errorf("Unable to load escalation prompt icon: %v", err)
 		}

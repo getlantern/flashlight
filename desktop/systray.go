@@ -85,6 +85,7 @@ func configureSystemTray(a systrayCallbacks) error {
 	}
 
 	for _, name := range []string{"connected", "connectedalert", "disconnected", "disconnectedalert"} {
+		name = appIcon(name)
 		icon, err := icons.Asset(fmt.Sprintf(iconTemplate, name))
 		if err != nil {
 			return fmt.Errorf("Unable to load %v icon for system tray: %v", name, err)
@@ -162,6 +163,10 @@ func refreshMenuItems() {
 	menu.quit.SetTitle(i18n.T("TRAY_QUIT", i18n.T(translationAppName)))
 }
 
+func appIcon(name string) string {
+	return strings.ToLower(common.AppName) + "_" + name
+}
+
 func statsUpdated() {
 	menu.stMx.RLock()
 	st := menu.st
@@ -172,6 +177,8 @@ func statsUpdated() {
 	if st.Disconnected || !st.HasSucceedingProxy {
 		iconName = "disconnected"
 	}
+
+	iconName = appIcon(iconName)
 	if st.HitDataCap && !st.IsPro {
 		iconName += "alert"
 		if !st.Disconnected {
