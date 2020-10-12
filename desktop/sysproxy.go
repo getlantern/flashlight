@@ -130,14 +130,16 @@ func getProxyAddr() (addr string, found bool) {
 }
 
 func appIcon(name string) string {
-	iconTemplate := "%s_16.ico"
+	return strings.ToLower(common.AppName) + "_" + fmt.Sprintf(iconTemplate(), name)
+}
+
+func iconTemplate() string {
 	if common.Platform == "darwin" {
 		if common.AppName == "Beam" {
-			iconTemplate = "%s_32.png"
-		} else {
-			// Lantern doesn't have png files to support dark mode yet
-			iconTemplate = "%s_32.ico"
+			return "%s_32.png"
 		}
+		// Lantern doesn't have png files to support dark mode yet
+		return "%s_32.ico"
 	}
-	return strings.ToLower(common.AppName) + "_" + fmt.Sprintf(iconTemplate, name)
+	return "%s_16.ico"
 }
