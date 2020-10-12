@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -875,7 +876,7 @@ func ShouldReportToSentry() bool {
 // OnTrayShow indicates the user has selected to show lantern from the tray.
 func (app *App) OnTrayShow() {
 	app.gaSession.Event("systray-menu", "show")
-	app.uiServer().ShowRoot("show-lantern", "tray", app.statsTracker)
+	app.uiServer().ShowRoot("show-"+strings.ToLower(common.AppName), "tray", app.statsTracker)
 }
 
 // OnTrayUpgrade indicates the user has selected to upgrade lantern from the tray.
