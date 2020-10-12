@@ -19,7 +19,7 @@ import (
 
 var (
 	log                = golog.LoggerFor("flashlight.autoupdate")
-	updateServerURL    = "https://update.getlantern.org"
+	updateServerURL    = common.UpdateServerURL
 	PublicKey          = []byte(autoupdate.PackagePublicKey)
 	Version            string
 	translationAppName = strings.ToUpper(common.AppName)
