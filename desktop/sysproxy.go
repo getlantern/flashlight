@@ -3,6 +3,7 @@ package desktop
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -126,4 +127,8 @@ func getProxyAddr() (addr string, found bool) {
 		addr = _addr.(string)
 	}
 	return
+}
+
+func appIcon(name string) string {
+	return strings.ToLower(common.AppName) + "_" + name
 }

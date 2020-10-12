@@ -163,10 +163,6 @@ func refreshMenuItems() {
 	menu.quit.SetTitle(i18n.T("TRAY_QUIT", i18n.T(translationAppName)))
 }
 
-func appIcon(name string) string {
-	return strings.ToLower(common.AppName) + "_" + name
-}
-
 func statsUpdated() {
 	menu.stMx.RLock()
 	st := menu.st
