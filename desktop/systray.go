@@ -190,7 +190,7 @@ func statsUpdated() {
 		statusKey = st.Alerts[0].Alert()
 	}
 
-	systray.SetIcon(iconsByName[iconName])
+	systray.SetTemplateIcon(iconsByName[iconName], iconsByName[iconName])
 	status := i18n.T("TRAY_STATUS", i18n.T("status."+statusKey))
 	menu.status.SetTitle(status)
 
