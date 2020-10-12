@@ -79,14 +79,8 @@ func configureSystemTray(a systrayCallbacks) error {
 		return nil
 	}
 
-	iconTemplate := "%s_16.ico"
-	if common.Platform == "darwin" {
-		iconTemplate = "%s_32.ico"
-	}
-
 	for _, name := range []string{"connected", "connectedalert", "disconnected", "disconnectedalert"} {
-		name = appIcon(name)
-		icon, err := icons.Asset(fmt.Sprintf(iconTemplate, name))
+		icon, err := icons.Asset(appIcon(name))
 		if err != nil {
 			return fmt.Errorf("Unable to load %v icon for system tray: %v", name, err)
 		}
@@ -174,7 +168,6 @@ func statsUpdated() {
 		iconName = "disconnected"
 	}
 
-	iconName = appIcon(iconName)
 	if st.HitDataCap && !st.IsPro {
 		iconName += "alert"
 		if !st.Disconnected {
@@ -186,7 +179,12 @@ func statsUpdated() {
 		statusKey = st.Alerts[0].Alert()
 	}
 
-	systray.SetTemplateIcon(iconsByName[iconName], iconsByName[iconName])
+	if common.AppName == "Beam" {
+		systray.SetTemplateIcon(iconsByName[iconName], iconsByName[iconName])
+	} else {
+		// Lantern icons do not support dark mode yet
+		systray.SetIcon(iconsByName[iconName])
+	}
 	status := i18n.T("TRAY_STATUS", i18n.T("status."+statusKey))
 	menu.status.SetTitle(status)
 
