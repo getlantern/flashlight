@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -44,6 +45,14 @@ func TestConfigure(t *testing.T) {
 		assert.Equal(t, testDeviceID1, uc.GetDeviceID())
 	}
 
+	watcher, err := fsnotify.NewWatcher()
+	if !assert.NoError(t, err) {
+		return
+	}
+	err = watcher.Add(c.fullPathTo(userConfigYaml))
+	if !assert.NoError(t, err) {
+		return
+	}
 	result2, err := Configure(tmpDir, 0, "", testDeviceID2, true, "")
 	if !assert.NoError(t, err) {
 		return
@@ -58,6 +67,8 @@ func TestConfigure(t *testing.T) {
 		assert.Equal(t, ips1, ips2)
 	}
 
+	// make sure the config file has been changed
+	<-watcher.Events
 	uc, err = c.readUserConfig()
 	if assert.NoError(t, err) {
 		assert.Equal(t, testDeviceID2, uc.GetDeviceID())
