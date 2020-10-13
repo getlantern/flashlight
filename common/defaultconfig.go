@@ -11,5 +11,5 @@ const (
 	ProAvailable = false
 
 	// TrackingID is the Google Analytics tracking ID.
-	TrackingID = "default"
+	TrackingID = "UA-21815217-23"
 )
