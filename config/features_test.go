@@ -1,11 +1,14 @@
 package config
 
 import (
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/getlantern/yaml"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/getlantern/flashlight/common"
 )
 
 func TestValidate(t *testing.T) {
@@ -33,8 +36,8 @@ func TestIncludes(t *testing.T) {
 	assert.False(t, ClientGroup{FreeOnly: true}.Includes(111, true, "whatever"), "user status unmet")
 
 	// The default AppName is "Default"
-	assert.True(t, ClientGroup{Application: "Default"}.Includes(111, true, "whatever"), "application met, case insensitive")
-	assert.True(t, ClientGroup{Application: "dEFault"}.Includes(111, true, "whatever"), "application met, case insensitive")
+	assert.True(t, ClientGroup{Application: common.AppName}.Includes(111, true, "whatever"), "application met, case insensitive")
+	assert.True(t, ClientGroup{Application: strings.ToUpper(common.AppName)}.Includes(111, true, "whatever"), "application met, case insensitive")
 	assert.False(t, ClientGroup{Application: "Beam"}.Includes(111, true, "whatever"), "application unmet, case insensitive")
 	assert.False(t, ClientGroup{Application: "beam"}.Includes(111, true, "whatever"), "application unmet, case insensitive")
 
