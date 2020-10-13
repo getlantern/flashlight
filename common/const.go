@@ -8,6 +8,9 @@ import (
 )
 
 const (
+	// GlobalURL URL for fetching the global config.
+	GlobalURL = "https://globalconfig.flashlightproxy.com/global.yaml.gz"
+
 	// GlobalStagingURL is the URL for fetching the global config in a staging environment.
 	GlobalStagingURL = "https://globalconfig.flashlightproxy.com/global.yaml.gz"
 
