@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -582,7 +581,7 @@ func (app *App) afterStart(cl *client.Client) {
 		// URL and the proxy server are all up and running to avoid
 		// race conditions where we change the proxy setup while the
 		// UI server and proxy server are still coming up.
-		app.uiServer().ShowRoot("startup", "lantern", app.statsTracker)
+		app.uiServer().ShowRoot("startup", common.AppName, app.statsTracker)
 	} else {
 		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
 	}
@@ -876,7 +875,7 @@ func ShouldReportToSentry() bool {
 // OnTrayShow indicates the user has selected to show lantern from the tray.
 func (app *App) OnTrayShow() {
 	app.gaSession.Event("systray-menu", "show")
-	app.uiServer().ShowRoot("show-"+strings.ToLower(common.AppName), "tray", app.statsTracker)
+	app.uiServer().ShowRoot("show-"+common.AppName, "tray", app.statsTracker)
 }
 
 // OnTrayUpgrade indicates the user has selected to upgrade lantern from the tray.
