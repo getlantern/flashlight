@@ -16,7 +16,8 @@ func TestValidate(t *testing.T) {
 	assert.Error(t, ClientGroup{UserFloor: 0.1, UserCeil: 0}.Validate(), "invalid user range")
 	assert.Error(t, ClientGroup{Fraction: 1.1}.Validate(), "invalid fraction")
 	assert.Error(t, ClientGroup{FreeOnly: true, ProOnly: true}.Validate(), "conflict user status requirements")
-	assert.NoError(t, ClientGroup{VersionConstraints: ">3.2.1 || <= 9.2.0 "}.Validate(), "conflict user status requirements")
+	assert.NoError(t, ClientGroup{VersionConstraints: ">3.2.1 <= 9.2.0 "}.Validate(), "compound version constraits")
+	assert.NoError(t, ClientGroup{VersionConstraints: "<3.2.1 || >= 9.2.0 "}.Validate(), "compound version constraits")
 }
 
 func TestIncludes(t *testing.T) {
@@ -33,6 +34,7 @@ func TestIncludes(t *testing.T) {
 
 	// The client version is 9999.99.99-dev when in development mode
 	assert.True(t, ClientGroup{VersionConstraints: "> 5.1.0"}.Includes(111, true, "whatever"), "version met")
+	assert.True(t, ClientGroup{VersionConstraints: "> 5.1.0 < 10000.0.0"}.Includes(111, true, "whatever"), "version met")
 	assert.False(t, ClientGroup{VersionConstraints: "< 5.1.0"}.Includes(111, true, "whatever"), "version unmet")
 
 	// Platforms tests are likely run
