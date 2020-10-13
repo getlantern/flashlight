@@ -12,4 +12,7 @@ const (
 
 	// TrackingID is the Google Analytics tracking ID.
 	TrackingID = "default"
+
+	// GlobalURL URL for fetching the global config.
+	GlobalURL = "https://globalconfig.flashlightproxy.com/global.yaml.gz"
 )
