@@ -38,10 +38,10 @@ define build-tags
 		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/lantern.StagingMode=$$STAGING"; \
 	fi && \
 	if [[ ! -z "$$NOREPLICA" ]]; then \
-		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/config.GlobalURL=https://globalconfig.flashlightproxy.com/global-no-replica.yaml.gz"; \
+		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/common.GlobalURL=https://globalconfig.flashlightproxy.com/global-no-replica.yaml.gz"; \
 	fi && \
 	if [[ ! -z "$$REPLICA" ]]; then \
-		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/config.GlobalURL=https://globalconfig.flashlightproxy.com/global-replica.yaml.gz"; \
+		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/common.GlobalURL=https://globalconfig.flashlightproxy.com/global-replica.yaml.gz"; \
 	fi && \
 	BUILD_TAGS=$$(echo $$BUILD_TAGS | xargs) && echo "Build tags: $$BUILD_TAGS" && \
 	EXTRA_LDFLAGS=$$(echo $$EXTRA_LDFLAGS | xargs) && echo "Extra ldflags: $$EXTRA_LDFLAGS"
@@ -50,14 +50,13 @@ endef
 .PHONY: lantern beam update-icons vendor
 
 lantern: $(SOURCES)
-	@$(call build-tags) && \
 	BUILD_TAGS="$$BUILD_TAGS lantern" BINARY_NAME="lantern" make app
 
 beam: $(SOURCES)
-	@$(call build-tags) && \
 	BUILD_TAGS="$$BUILD_TAGS beam" BINARY_NAME="beam" make app
 
 app:
+	@$(call build-tags) && \
 	GO111MODULE=on GOPRIVATE="github.com/getlantern" CGO_ENABLED=1 go build $(BUILD_RACE) -o $$BINARY_NAME -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s" github.com/getlantern/flashlight/main;
 
 windowscli: $(SOURCES)
