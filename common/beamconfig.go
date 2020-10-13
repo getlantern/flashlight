@@ -12,8 +12,3 @@ const (
 	// TrackingID is the Google Analytics tracking ID.
 	TrackingID = "UA-21815217-23"
 )
-
-var (
-	// GlobalURL URL for fetching the global config.
-	GlobalURL = "https://globalconfig.flashlightproxy.com/beamglobal.yaml.gz"
-)
