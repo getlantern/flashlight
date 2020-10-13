@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/getlantern/appdir"
 	"github.com/getlantern/yaml"
 
 	"github.com/getlantern/flashlight/common"
@@ -16,13 +15,6 @@ import (
 var (
 	name            = ".packaged-lantern.yaml"
 	lanternYamlName = "lantern.yaml"
-
-	// This is the local copy of our embedded ration file. This is necessary
-	// to ensure we remember the embedded ration across auto-updated
-	// binaries. We write to the local file system instead of to the package
-	// itself (app bundle on OSX, install directory on Windows) because
-	// we're not always sure we can write to that directory.
-	local = appdir.General("Lantern") + "/" + name
 )
 
 // BootstrapSettings provides access to configuration embedded directly in Lantern installation
@@ -37,7 +29,7 @@ type BootstrapSettings struct {
 
 // ReadBootstrapSettings reads packaged settings from pre-determined paths
 // on the various OSes.
-func ReadBootstrapSettings() (*BootstrapSettings, error) {
+func ReadBootstrapSettings(configDir string) (*BootstrapSettings, error) {
 	_, yamlPath, err := bootstrapPath(name)
 	if err != nil {
 		return &BootstrapSettings{}, err
@@ -45,6 +37,15 @@ func ReadBootstrapSettings() (*BootstrapSettings, error) {
 
 	ps, er := readSettingsFromFile(yamlPath)
 	if er != nil {
+		// This is the local copy of our embedded ration file. This is necessary
+		// to ensure we remember the embedded ration across auto-updated
+		// binaries. We write to the local file system instead of to the package
+		// itself (app bundle on OSX, install directory on Windows) because
+		// we're not always sure we can write to that directory.
+		local, err := common.InConfigDir(configDir, name)
+		if err != nil {
+			return &BootstrapSettings{}, err
+		}
 		return readSettingsFromFile(local)
 	}
 	return ps, nil

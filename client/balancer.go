@@ -16,8 +16,8 @@ func (client *Client) initBalancer(proxies map[string]*chained.ChainedServerInfo
 		return nil, fmt.Errorf("No chained servers configured, not initializing balancer")
 	}
 
-	chained.PersistSessionStates("")
-	dialers := chained.CreateDialers(proxies, client.user)
+	chained.PersistSessionStates(client.configDir)
+	dialers := chained.CreateDialers(client.configDir, proxies, client.user)
 	client.bal.Reset(dialers)
 
 	go func() {

@@ -3,7 +3,7 @@ GOBINDATA_BIN ?= $(shell which go-bindata)
 
 SHELL := /bin/bash
 SOURCES := $(shell find . -name '*[^_test].go')
-BINARY_NAME := lantern
+BINARY_NAME ?= lantern
 
 BUILD_RACE ?= '-race'
 REVISION_DATE := $(shell git log -1 --pretty=format:%ad --date=format:%Y%m%d.%H%M%S)
@@ -37,16 +37,25 @@ define build-tags
 		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/common.StagingMode=$$STAGING"; \
 		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/lantern.StagingMode=$$STAGING"; \
 	fi && \
+	if [[ ! -z "$$NOREPLICA" ]]; then \
+		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/common.GlobalURL=https://globalconfig.flashlightproxy.com/global-no-replica.yaml.gz"; \
+	fi && \
 	if [[ ! -z "$$REPLICA" ]]; then \
-		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/config.GlobalURL=https://globalconfig.flashlightproxy.com/global-replica.yaml.gz"; \
+		EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -X github.com/getlantern/flashlight/common.GlobalURL=https://globalconfig.flashlightproxy.com/global-replica.yaml.gz"; \
 	fi && \
 	BUILD_TAGS=$$(echo $$BUILD_TAGS | xargs) && echo "Build tags: $$BUILD_TAGS" && \
 	EXTRA_LDFLAGS=$$(echo $$EXTRA_LDFLAGS | xargs) && echo "Extra ldflags: $$EXTRA_LDFLAGS"
 endef
 
-.PHONY: lantern update-icons vendor
+.PHONY: lantern beam update-icons vendor
 
 lantern: $(SOURCES)
+	BUILD_TAGS="$$BUILD_TAGS lantern" BINARY_NAME="lantern" make app
+
+beam: $(SOURCES)
+	BUILD_TAGS="$$BUILD_TAGS beam" BINARY_NAME="beam" make app
+
+app:
 	@$(call build-tags) && \
 	GO111MODULE=on GOPRIVATE="github.com/getlantern" CGO_ENABLED=1 go build $(BUILD_RACE) -o $$BINARY_NAME -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s" github.com/getlantern/flashlight/main;
 
@@ -83,13 +92,15 @@ test-and-cover: $(SOURCES)
 	CP=$$(echo $$TP | tr ' ', ',') && \
 	set -x && \
 	for pkg in $$TP; do \
-		GO111MODULE=on go test -race -v -tags="headless" -covermode=atomic -coverprofile=profile_tmp.cov -coverpkg "$$CP" $$pkg || exit 1; \
+		GO111MODULE=on go test -race -v -tags="headless,lantern" -covermode=atomic -coverprofile=profile_tmp.cov -coverpkg "$$CP" $$pkg || exit 1; \
 		tail -n +2 profile_tmp.cov >> profile.cov; \
 	done
 
 test: $(SOURCES)
 	@TP=$$(go list ./... | grep -v /vendor/) && \
-	GO111MODULE=on go test -race -v -tags="headless" $$TP || exit 1; \
+	for pkg in $$TP; do \
+		GO111MODULE=on go test -failfast -race -v -tags="headless" $$pkg || exit 1; \
+	done
 
 clean:
 	rm -f lantern

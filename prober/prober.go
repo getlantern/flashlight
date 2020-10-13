@@ -62,7 +62,13 @@ func main() {
 		log.Fatalf("Unable to read yaml config: %v", err)
 	}
 
-	dialer, err := chained.CreateDialer(os.Args[1], server, &common.UserConfigData{
+	tempConfigDir, err := ioutil.TempDir("", "prober")
+	if err != nil {
+		log.Fatalf("Unable to create temporary config directory: %v", err)
+	}
+	defer os.RemoveAll(tempConfigDir)
+
+	dialer, err := chained.CreateDialer(tempConfigDir, os.Args[1], server, &common.UserConfigData{
 		DeviceID: "XXXXXXXX",
 		UserID:   0,
 		Token:    "protoken",

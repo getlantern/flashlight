@@ -31,7 +31,7 @@ type tlsMasqImpl struct {
 	tlsClientHelloSplitting bool
 }
 
-func newTLSMasqImpl(name, addr string, s *ChainedServerInfo, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func newTLSMasqImpl(configDir, name, addr string, s *ChainedServerInfo, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	const timeout = 5 * time.Second
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -105,7 +105,7 @@ func newTLSMasqImpl(name, addr string, s *ChainedServerInfo, uc common.UserConfi
 	}
 	pool.AddCert(cert)
 
-	pCfg, hellos := tlsConfigForProxy(ctx, name, s, uc)
+	pCfg, hellos := tlsConfigForProxy(configDir, ctx, name, s, uc)
 	pCfg.ServerName = sni
 	pCfg.InsecureSkipVerify = InsecureSkipVerifyTLSMasqOrigin
 

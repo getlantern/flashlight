@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/getlantern/appdir"
 	"github.com/getlantern/flashlight/analytics"
 	"github.com/getlantern/flashlight/ops"
 	"github.com/getlantern/golog"
@@ -48,7 +47,7 @@ type HttpHandler struct {
 }
 
 // NewHTTPHandler creates a new http.Handler for calls to replica.
-func NewHTTPHandler(uc common.UserConfig, replicaClient *replica.Client, gaSession analytics.Session) (_ *HttpHandler, exitFunc func(), err error) {
+func NewHTTPHandler(configDir string, uc common.UserConfig, replicaClient *replica.Client, gaSession analytics.Session) (_ *HttpHandler, exitFunc func(), err error) {
 	userCacheDir, err := os.UserCacheDir()
 	if err != nil {
 		err = fmt.Errorf("accessing the user cache dir: %w", err)
@@ -57,7 +56,11 @@ func NewHTTPHandler(uc common.UserConfig, replicaClient *replica.Client, gaSessi
 
 	logger := golog.LoggerFor("replica.server")
 	const replicaDirElem = "replica"
-	replicaConfigDir := appdir.General(replicaDirElem)
+	replicaConfigDir, configErr := common.InConfigDir(configDir, replicaDirElem)
+	if configErr != nil {
+		err = configErr
+		return
+	}
 	uploadsDir := filepath.Join(replicaConfigDir, "uploads")
 	replicaDataDir := filepath.Join(userCacheDir, replicaDirElem, "data")
 	cfg := torrent.NewDefaultClientConfig()
@@ -77,11 +80,6 @@ func NewHTTPHandler(uc common.UserConfig, replicaClient *replica.Client, gaSessi
 	// don't want to overload their networks, so ensure the default connection tracking
 	// behaviour.
 	//cfg.ConnTracker = conntrack.NewInstance()
-	// Helps debug connection tracking, for best configuring DHT and other limits.
-	http.HandleFunc("/debug/conntrack", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/plain")
-		cfg.ConnTracker.PrintStatus(w)
-	})
 	torrentClient, err := torrent.NewClient(cfg)
 	if err != nil {
 		logger.Errorf("Error creating client: %v", err)
@@ -123,6 +121,11 @@ func NewHTTPHandler(uc common.UserConfig, replicaClient *replica.Client, gaSessi
 		for _, ds := range torrentClient.DhtServers() {
 			ds.WriteStatus(w)
 		}
+	})
+	// Helps debug connection tracking, for best configuring DHT and other limits.
+	handler.mux.HandleFunc("/debug/conntrack", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		cfg.ConnTracker.PrintStatus(w)
 	})
 	// TODO(anacrolix): Actually not much of Confluence is used now, probably none of the
 	// routes, so this might go away soon.

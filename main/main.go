@@ -22,6 +22,7 @@ import (
 	"github.com/mitchellh/panicwrap"
 
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/desktop"
 	"github.com/getlantern/flashlight/logging"
@@ -46,12 +47,18 @@ func main() {
 		log.Fatal("Wrong arguments")
 	}
 
+	cdir := *configdir
+	if cdir == "" {
+		cdir = appdir.General(common.AppName)
+	}
+
 	a := &desktop.App{
-		Flags: flagsAsMap(),
+		ConfigDir: cdir,
+		Flags:     flagsAsMap(),
 	}
 	a.Init()
 
-	logFile, err := logging.RotatedLogsUnder(appdir.Logs("Lantern"))
+	logFile, err := logging.RotatedLogsUnder(appdir.Logs(common.AppName))
 	if err != nil {
 		log.Error(err)
 		// Nothing we can do if fails to create log files, leave logFile nil so

@@ -5,8 +5,10 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
@@ -22,6 +24,18 @@ var (
 	pingBytes = []byte("ping")
 	pongBytes = []byte("pong")
 )
+
+var tempConfigDir string
+
+func TestMain(m *testing.M) {
+	tempConfigDir, err := ioutil.TempDir("", "chained_test")
+	if err != nil {
+		logger.Errorf("Unable to create temp config dir: %v", err)
+		os.Exit(1)
+	}
+	defer os.RemoveAll(tempConfigDir)
+	os.Exit(m.Run())
+}
 
 func newTestUserConfig() *common.UserConfigData {
 	return common.NewUserConfigData("device", 1234, "protoken", nil, "en-US")

@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"strconv"
 	"sync/atomic"
 	"testing"
@@ -28,6 +29,18 @@ import (
 )
 
 var logger = golog.LoggerFor("client-test")
+
+var tempConfigDir string
+
+func TestMain(m *testing.M) {
+	tempConfigDir, err := ioutil.TempDir("", "client_test")
+	if err != nil {
+		logger.Errorf("Unable to create temp config dir: %v", err)
+		os.Exit(1)
+	}
+	defer os.RemoveAll(tempConfigDir)
+	os.Exit(m.Run())
+}
 
 const (
 	testLang            = "en"
@@ -70,6 +83,7 @@ func newClient() *Client {
 
 func newClientWithLangAndAdSwapTargetURL(lang string, adSwapTargetURL string) *Client {
 	client, _ := NewClient(
+		tempConfigDir,
 		func() bool { return false },
 		func() bool { return true },
 		func() bool { return false },

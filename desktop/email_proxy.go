@@ -62,6 +62,8 @@ func (app *App) handleMandrillMessage(service *ws.Service, data *mandrillMessage
 }
 
 func fillMandrillDefaults(msg *mandrillMessage) {
+	settings := getSettings()
+
 	if msg.Vars == nil {
 		// avoid panicking in case the message is malformed
 		msg.Vars = make(map[string]interface{})

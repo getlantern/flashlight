@@ -71,14 +71,14 @@ type nopCloser struct{}
 func (c nopCloser) close() {}
 
 // CreateDialers creates a list of Proxies (balancer.Dialer) with supplied server info.
-func CreateDialers(proxies map[string]*ChainedServerInfo, uc common.UserConfig) []balancer.Dialer {
+func CreateDialers(configDir string, proxies map[string]*ChainedServerInfo, uc common.UserConfig) []balancer.Dialer {
 	dialers := make([]balancer.Dialer, 0, len(proxies))
 	groups := groupByMultipathEndpoint(proxies)
 	for endpoint, group := range groups {
 		if endpoint == "" {
 			log.Debugf("Adding %d individual chained servers", len(group))
 			for name, s := range group {
-				dialer, err := CreateDialer(name, s, uc)
+				dialer, err := CreateDialer(configDir, name, s, uc)
 				if err != nil {
 					log.Errorf("Unable to configure chained server %v. Received error: %v", name, err)
 					continue
@@ -88,7 +88,7 @@ func CreateDialers(proxies map[string]*ChainedServerInfo, uc common.UserConfig) 
 			}
 		} else {
 			log.Debugf("Adding %d chained servers for multipath endpoint %s", len(group), endpoint)
-			dialer, err := CreateMPDialer(endpoint, group, uc)
+			dialer, err := CreateMPDialer(configDir, endpoint, group, uc)
 			if err != nil {
 				log.Errorf("Unable to configure multipath server to %v. Received error: %v", endpoint, err)
 				continue
@@ -100,13 +100,13 @@ func CreateDialers(proxies map[string]*ChainedServerInfo, uc common.UserConfig) 
 }
 
 // CreateDialer creates a Proxy (balancer.Dialer) with supplied server info.
-func CreateDialer(name string, s *ChainedServerInfo, uc common.UserConfig) (balancer.Dialer, error) {
+func CreateDialer(configDir, name string, s *ChainedServerInfo, uc common.UserConfig) (balancer.Dialer, error) {
 	addr, transport, network, err := extractParams(s)
 	if err != nil {
 		return nil, err
 	}
 	p, err := newProxy(name, addr, transport, network, s, uc)
-	p.impl, err = createImpl(name, addr, transport, s, uc, p.reportDialCore)
+	p.impl, err = createImpl(configDir, name, addr, transport, s, uc, p.reportDialCore)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func extractParams(s *ChainedServerInfo) (addr, transport, network string, err e
 	return
 }
 
-func createImpl(name, addr, transport string, s *ChainedServerInfo, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
+func createImpl(configDir, name, addr, transport string, s *ChainedServerInfo, uc common.UserConfig, reportDialCore reportDialCoreFn) (proxyImpl, error) {
 	coreDialer := func(op *ops.Op, ctx context.Context, addr string) (net.Conn, error) {
 		return reportDialCore(op, func() (net.Conn, error) {
 			return netx.DialContext(ctx, "tcp", addr)
@@ -175,7 +175,7 @@ func createImpl(name, addr, transport string, s *ChainedServerInfo, uc common.Us
 			impl, err = newKCPImpl(s, reportDialCore)
 		} else {
 			log.Tracef("Cert configured for %s, will dial with tls", addr)
-			impl, err = newHTTPSImpl(name, addr, s, uc, coreDialer)
+			impl, err = newHTTPSImpl(configDir, name, addr, s, uc, coreDialer)
 		}
 	case "obfs4", "utpobfs4":
 		impl, err = newOBFS4Impl(name, addr, s, coreDialer)
@@ -188,7 +188,7 @@ func createImpl(name, addr, transport string, s *ChainedServerInfo, uc common.Us
 	case "wss":
 		impl, err = newWSSImpl(addr, s, reportDialCore)
 	case "tlsmasq":
-		impl, err = newTLSMasqImpl(name, addr, s, uc, reportDialCore)
+		impl, err = newTLSMasqImpl(configDir, name, addr, s, uc, reportDialCore)
 	default:
 		err = errors.New("Unknown transport: %v", transport).With("addr", addr).With("plugabble-transport", transport)
 	}

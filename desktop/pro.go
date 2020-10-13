@@ -16,6 +16,7 @@ import (
 // because the user can become Pro or free at any time. It waits until
 // the user ID becomes non-zero.
 func isProUser() (isPro bool, ok bool) {
+	settings := getSettings()
 	_, err := settings.GetInt64Eventually(SNUserID)
 	if err != nil {
 		return false, false
@@ -28,7 +29,7 @@ func isProUser() (isPro bool, ok bool) {
 // user when starts up. The pro proxy also updates user data implicitly for
 // '/userData' calls initiated from desktop UI.
 func isProUserFast() (isPro bool, statusKnown bool) {
-	return pro.IsProUserFast(settings)
+	return pro.IsProUserFast(getSettings())
 }
 
 // servePro fetches user data or creates new user when the application starts
@@ -38,6 +39,7 @@ func isProUserFast() (isPro bool, statusKnown bool) {
 // created, as it's fundamental for the UI to work.
 func servePro(channel ws.UIChannel) error {
 	logger := golog.LoggerFor("flashlight.app.pro")
+	settings := getSettings()
 	chFetch := make(chan bool)
 	go func() {
 		fetchOrCreate := func() error {
