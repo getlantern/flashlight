@@ -32,6 +32,12 @@ func TestIncludes(t *testing.T) {
 	assert.True(t, ClientGroup{ProOnly: true}.Includes(111, true, "whatever"), "user status met")
 	assert.False(t, ClientGroup{FreeOnly: true}.Includes(111, true, "whatever"), "user status unmet")
 
+	// The default AppName is "Default"
+	assert.True(t, ClientGroup{Application: "Default"}.Includes(111, true, "whatever"), "application met, case insensitive")
+	assert.True(t, ClientGroup{Application: "dEFault"}.Includes(111, true, "whatever"), "application met, case insensitive")
+	assert.False(t, ClientGroup{Application: "Beam"}.Includes(111, true, "whatever"), "application unmet, case insensitive")
+	assert.False(t, ClientGroup{Application: "beam"}.Includes(111, true, "whatever"), "application unmet, case insensitive")
+
 	// The client version is 9999.99.99-dev when in development mode
 	assert.True(t, ClientGroup{VersionConstraints: "> 5.1.0"}.Includes(111, true, "whatever"), "version met")
 	assert.True(t, ClientGroup{VersionConstraints: "> 5.1.0 < 10000.0.0"}.Includes(111, true, "whatever"), "version met")
@@ -58,6 +64,27 @@ func TestIncludes(t *testing.T) {
 	} else {
 		assert.Equal(t, 1000, hits)
 	}
+}
+
+func TestUnmarshalFeaturesEnabled(t *testing.T) {
+	yml := `
+featuresenabled:
+  replica:
+    - userfloor: 0
+      userceil: 0.2
+      versionconstraints: ">3.0.0"
+      geocountries: us,cn,au,ir
+    - versionconstraints: "=9999.99.99-dev"
+      proonly: true
+`
+	gl := NewGlobal()
+	if !assert.NoError(t, yaml.Unmarshal([]byte(yml), gl)) {
+		return
+	}
+	assert.True(t, gl.FeatureEnabled(FeatureReplica, 111, false, "au"), "met the first group")
+	assert.True(t, gl.FeatureEnabled(FeatureReplica, 111, true, ""), "met the second group")
+	assert.False(t, gl.FeatureEnabled(FeatureReplica, 211, false, "au"), "unmet both groups")
+	assert.False(t, gl.FeatureEnabled(FeatureReplica, 111, false, ""), "unmet both groups")
 }
 
 func TestUnmarshalFeatureOptions(t *testing.T) {
