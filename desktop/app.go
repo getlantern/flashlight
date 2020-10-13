@@ -52,12 +52,6 @@ import (
 	"github.com/getlantern/replica"
 )
 
-const (
-	SENTRY_DSN               = "https://f65aa492b9524df79b05333a0b0924c5@sentry.io/2222244"
-	SENTRY_TIMEOUT           = time.Second * 30
-	SENTRY_MAX_MESSAGE_CHARS = 8000
-)
-
 var (
 	log        = golog.LoggerFor("flashlight.app")
 	_settings  *Settings
@@ -172,7 +166,7 @@ func (app *App) LogPanicAndExit(msg string) {
 		})
 
 		sentry.CaptureMessage(msg)
-		if result := sentry.Flush(SENTRY_TIMEOUT); result == false {
+		if result := sentry.Flush(common.SentryTimeout); result == false {
 			log.Error("Flushing to Sentry timed out")
 		}
 	}
@@ -777,7 +771,7 @@ func (app *App) doExit(err error) {
 			})
 
 			sentry.CaptureException(err)
-			if result := sentry.Flush(SENTRY_TIMEOUT); result == false {
+			if result := sentry.Flush(common.SentryTimeout); result == false {
 				log.Error("Flushing to Sentry timed out")
 			}
 		}

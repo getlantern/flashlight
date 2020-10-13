@@ -88,8 +88,8 @@ func main() {
 	// defined in the parent process
 	if desktop.ShouldReportToSentry() {
 		sentry.InitSentry(sentry.Opts{
-			DSN:             desktop.SENTRY_DSN,
-			MaxMessageChars: desktop.SENTRY_MAX_MESSAGE_CHARS,
+			DSN:             common.SentryDSN,
+			MaxMessageChars: common.SentryMaxMessageChars,
 		})
 	}
 

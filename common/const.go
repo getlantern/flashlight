@@ -3,6 +3,7 @@ package common
 import (
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/getlantern/golog"
 )
@@ -20,6 +21,10 @@ const (
 
 	// UpdateServerURL is the URL of the update server.
 	UpdateServerURL = "https://update.getlantern.org"
+
+	// Sentry Configurations
+	SentryTimeout         = time.Second * 30
+	SentryMaxMessageChars = 8000
 )
 
 var (
