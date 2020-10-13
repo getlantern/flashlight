@@ -14,4 +14,7 @@ const (
 
 	// SentryDSN is Sentry's project ID thing
 	SentryDSN = "https://620a7fa8dcf8463086bb4c77ebc3d4b0@o75725.ingest.sentry.io/5462658"
+
+	// UpdateServerURL is the URL of the update server.
+	UpdateServerURL = "https://update.getlantern.org/update/getlantern/beam"
 )
