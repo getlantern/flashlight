@@ -1,6 +1,7 @@
 package autoupdate
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"sync"
@@ -45,6 +46,7 @@ func setUpdateURL(url string) {
 	if url == "" {
 		return
 	}
+	url = fmt.Sprintf("%s/%s/%s/%s", strings.TrimRight(url, "/"), "update", "getlantern", strings.ToLower(common.AppName))
 	cfgMutex.Lock()
 	defer cfgMutex.Unlock()
 	updateServerURL = url
@@ -53,7 +55,7 @@ func setUpdateURL(url string) {
 func getUpdateURL() string {
 	cfgMutex.RLock()
 	defer cfgMutex.RUnlock()
-	return updateServerURL + "/update"
+	return updateServerURL
 }
 
 func enableAutoupdate() {
