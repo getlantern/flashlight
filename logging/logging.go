@@ -1,4 +1,4 @@
-// package logging configures the golog subsystem for use with Lantern
+// Package logging configures the golog subsystem for use with Lantern
 // Import this to make sure golog is initialized before you log.
 package logging
 
@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/rotator"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/util"
 )
 
@@ -50,7 +52,7 @@ func RotatedLogsUnder(logdir string) (io.WriteCloser, error) {
 		}
 	}
 
-	rotator := rotator.NewSizeRotator(filepath.Join(logdir, "lantern.log"))
+	rotator := rotator.NewSizeRotator(filepath.Join(logdir, strings.ToLower(common.AppName)+".log"))
 	// Set log files to 4 MB
 	rotator.RotationSize = 4 * 1024 * 1024
 	// Keep up to 5 log files
