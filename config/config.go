@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"reflect"
 	"time"
 
@@ -128,7 +129,7 @@ func pipeConfig(opts *options) (stop func()) {
 		}
 	}
 
-	configPath := common.InConfigDir(opts.saveDir, opts.name)
+	configPath := filepath.Join(opts.saveDir, opts.name)
 
 	log.Tracef("Obfuscating %v", opts.obfuscate)
 	conf := newConfig(configPath, opts)

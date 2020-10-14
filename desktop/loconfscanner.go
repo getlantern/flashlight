@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/getlantern/golog"
@@ -92,7 +93,7 @@ func (loc *loconfer) onLoconf(lc *loconf.LoConf, isPro bool) {
 }
 
 func (loc *loconfer) setUninstallURL(lc *loconf.LoConf, isPro bool) {
-	path := common.InConfigDir(loc.configDir, "uninstall_url.txt")
+	path := filepath.Join(loc.configDir, "uninstall_url.txt")
 
 	survey := lc.GetUninstallSurvey(getSettings().GetLanguage(), geolookup.GetCountry(time.Second*30), isPro)
 	if survey == nil {

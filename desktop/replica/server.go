@@ -56,7 +56,7 @@ func NewHTTPHandler(configDir string, uc common.UserConfig, replicaClient *repli
 
 	logger := golog.LoggerFor("replica.server")
 	const replicaDirElem = "replica"
-	replicaConfigDir := common.InConfigDir(configDir, replicaDirElem)
+	replicaConfigDir := filepath.Join(configDir, replicaDirElem)
 	uploadsDir := filepath.Join(replicaConfigDir, "uploads")
 	replicaDataDir := filepath.Join(userCacheDir, replicaDirElem, "data")
 	cfg := torrent.NewDefaultClientConfig()

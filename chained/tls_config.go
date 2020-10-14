@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"runtime"
 
 	tls "github.com/refraction-networking/utls"
@@ -142,7 +143,7 @@ func getTLSKeyLogWriter() io.Writer {
 type helloCacheFile string
 
 func helloCacheInConfigDir(configDir string, relativeFilename string) helloCacheFile {
-	return helloCacheFile(common.InConfigDir(configDir, relativeFilename))
+	return helloCacheFile(filepath.Join(configDir, relativeFilename))
 }
 
 func (f helloCacheFile) write(hello []byte) error {

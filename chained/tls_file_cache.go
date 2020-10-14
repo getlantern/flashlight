@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/getlantern/errors"
-	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/tlsresumption"
 	tls "github.com/refraction-networking/utls"
 )
@@ -63,7 +63,7 @@ func PersistSessionStates(configDir string) {
 }
 
 func persistSessionStates(configDir string, saveInterval time.Duration) {
-	filename := common.InConfigDir(configDir, "tls_session_states")
+	filename := filepath.Join(configDir, "tls_session_states")
 
 	existing, err := ioutil.ReadFile(filename)
 	if err == nil {
