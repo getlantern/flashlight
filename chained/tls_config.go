@@ -139,28 +139,18 @@ func getTLSKeyLogWriter() io.Writer {
 	return tlsKeyLogWriter
 }
 
-type helloCacheFile struct {
-	filename string
-	initErr  error
-}
+type helloCacheFile string
 
 func helloCacheInConfigDir(configDir string, relativeFilename string) helloCacheFile {
-	absoluteFilename := common.InConfigDir(configDir, relativeFilename)
-	return helloCacheFile{absoluteFilename, nil}
+	return helloCacheFile(common.InConfigDir(configDir, relativeFilename))
 }
 
 func (f helloCacheFile) write(hello []byte) error {
-	if f.initErr != nil {
-		return fmt.Errorf("cache initilization failed: %w", f.initErr)
-	}
-	return ioutil.WriteFile(f.filename, hello, 0644)
+	return ioutil.WriteFile(string(f), hello, 0644)
 }
 
 func (f helloCacheFile) readAndParse() (*tls.ClientHelloSpec, error) {
-	if f.initErr != nil {
-		return nil, fmt.Errorf("cache initilization failed: %w", f.initErr)
-	}
-	hello, err := ioutil.ReadFile(f.filename)
+	hello, err := ioutil.ReadFile(string(f))
 	if err != nil {
 		return nil, fmt.Errorf("read failed: %w", err)
 	}
