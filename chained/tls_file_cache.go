@@ -63,11 +63,7 @@ func PersistSessionStates(configDir string) {
 }
 
 func persistSessionStates(configDir string, saveInterval time.Duration) {
-	filename, err := common.InConfigDir(configDir, "tls_session_states")
-	if err != nil {
-		log.Errorf("unable to get filename for persisting session states: %v", err)
-		return
-	}
+	filename := common.InConfigDir(configDir, "tls_session_states")
 
 	existing, err := ioutil.ReadFile(filename)
 	if err == nil {

@@ -145,8 +145,8 @@ type helloCacheFile struct {
 }
 
 func helloCacheInConfigDir(configDir string, relativeFilename string) helloCacheFile {
-	absoluteFilename, err := common.InConfigDir(configDir, relativeFilename)
-	return helloCacheFile{absoluteFilename, err}
+	absoluteFilename := common.InConfigDir(configDir, relativeFilename)
+	return helloCacheFile{absoluteFilename, nil}
 }
 
 func (f helloCacheFile) write(hello []byte) error {

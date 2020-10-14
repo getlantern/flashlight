@@ -42,11 +42,7 @@ func ReadBootstrapSettings(configDir string) (*BootstrapSettings, error) {
 		// binaries. We write to the local file system instead of to the package
 		// itself (app bundle on OSX, install directory on Windows) because
 		// we're not always sure we can write to that directory.
-		local, err := common.InConfigDir(configDir, name)
-		if err != nil {
-			return &BootstrapSettings{}, err
-		}
-		return readSettingsFromFile(local)
+		return readSettingsFromFile(common.InConfigDir(configDir, name))
 	}
 	return ps, nil
 }

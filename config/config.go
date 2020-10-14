@@ -128,10 +128,7 @@ func pipeConfig(opts *options) (stop func()) {
 		}
 	}
 
-	configPath, err := common.InConfigDir(opts.saveDir, opts.name)
-	if err != nil {
-		log.Errorf("Could not get config path? %v", err)
-	}
+	configPath := common.InConfigDir(opts.saveDir, opts.name)
 
 	log.Tracef("Obfuscating %v", opts.obfuscate)
 	conf := newConfig(configPath, opts)
