@@ -134,4 +134,5 @@ replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-2020
 
 //replace github.com/getlantern/replica => ./replica/
 
-//replace github.com/anacrolix/torrent => ./torrent/
+// Workaround for https://github.com/getlantern/lantern-internal/issues/4277
+replace github.com/anacrolix/torrent => github.com/anacrolix/torrent v1.15.1-0.20200715061614-7ee0fdafe3cb
