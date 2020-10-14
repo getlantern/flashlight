@@ -55,21 +55,35 @@ lantern: $(SOURCES)
 beam: $(SOURCES)
 	BUILD_TAGS="$$BUILD_TAGS beam" BINARY_NAME="beam" make app
 
-app:
-	@$(call build-tags) && \
-	GO111MODULE=on GOPRIVATE="github.com/getlantern" CGO_ENABLED=1 go build $(BUILD_RACE) -o $$BINARY_NAME -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s" github.com/getlantern/flashlight/main;
-
 windowscli: $(SOURCES)
 	@$(call build-tags) && \
-	GO111MODULE=on GOPRIVATE="github.com/getlantern" CGO_ENABLED=1 GOOS=windows GOARCH=386 CGO_ENABLED=1 CXX=i686-w64-mingw32-g++ CC=i686-w64-mingw32-gcc CGO_LDFLAGS="-static" go build -o $$BINARY_NAME-cli.exe -tags="$$BUILD_TAGS walk_use_cgo" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
+	BUILD_TAGS="$$BUILD_TAGS lantern" BINARY_NAME=$$BINARY_NAME-cli.exe make windows
 
 windowsgui: $(SOURCES)
 	@$(call build-tags) && \
-	GO111MODULE=on GOPRIVATE="github.com/getlantern" CGO_ENABLED=1 GOOS=windows GOARCH=386 CGO_ENABLED=1 CXX=i686-w64-mingw32-g++ CC=i686-w64-mingw32-gcc CGO_LDFLAGS="-static" go build -a -o $$BINARY_NAME-gui.exe -tags="$$BUILD_TAGS walk_use_cgo" -ldflags="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS -H=windowsgui" github.com/getlantern/flashlight/main;
+	BUILD_TAGS="$$BUILD_TAGS lantern" BINARY_NAME=$$BINARY_NAME-gui.exe EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -H=windowsgui" make windows
+
+beam-windowscli: $(SOURCES)
+	@$(call build-tags) && \
+	BUILD_TAGS="$$BUILD_TAGS beam" BINARY_NAME="beam-cli.exe" make windows
+
+beam-windowsgui: $(SOURCES)
+	@$(call build-tags) && \
+	BUILD_TAGS="$$BUILD_TAGS beam" BINARY_NAME="beam-gui.exe" EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -H=windowsgui" make windows
+
+windows:
+	GOOS=windows GOARCH=386 CXX=i686-w64-mingw32-g++ CC=i686-w64-mingw32-gcc CGO_LDFLAGS="-static" EXTRA_LDFLAGS="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" make app
 
 linux: $(SOURCES)
 	@$(call build-tags) && \
-	GO111MODULE=on GOPRIVATE="github.com/getlantern" CGO_ENABLED=1 HEADLESS=true GOOS=linux GOARCH=amd64 go build -o $$BINARY_NAME-linux -tags="$$BUILD_TAGS headless" -ldflags="$$EXTRA_LDFLAGS" github.com/getlantern/flashlight/main;
+	HEADLESS=true GOOS=linux GOARCH=amd64 BINARY_NAME=$$BINARY_NAME-linux BUILD_TAGS="$$BUILD_TAGS headless" make app
+
+beam-linux: $(SOURCES)
+	@$(call build-tags) && \
+	HEADLESS=true GOOS=linux GOARCH=amd64 BINARY_NAME=beam-linux BUILD_TAGS="$$BUILD_TAGS headless" make app
+
+app:
+	GO111MODULE=on GOPRIVATE="github.com/getlantern" CGO_ENABLED=1 go build $(BUILD_RACE) -o $$BINARY_NAME -tags="$$BUILD_TAGS" -ldflags="$$EXTRA_LDFLAGS -s " github.com/getlantern/flashlight/main;
 
 # vendor installs vendored dependencies using go modules
 vendor:
