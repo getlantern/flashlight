@@ -47,10 +47,7 @@ func main() {
 		log.Fatal("Wrong arguments")
 	}
 
-	cdir := *configdir
-	if cdir == "" {
-		cdir = appdir.General(common.AppName)
-	}
+	cdir := configDir()
 
 	a := &desktop.App{
 		ConfigDir: cdir,
@@ -171,6 +168,23 @@ func main() {
 		log.Debug("Lantern stopped")
 		os.Exit(0)
 	}
+}
+
+func configDir() string {
+	cdir := *configdir
+	if cdir == "" {
+		cdir = appdir.General(common.AppName)
+	}
+	log.Debugf("Using config dir %v", cdir)
+	if _, err := os.Stat(cdir); err != nil {
+		if os.IsNotExist(err) {
+			// Create config dir
+			if err := os.MkdirAll(cdir, 0750); err != nil {
+				log.Errorf("Unable to create configdir at %s: %s", configDir, err)
+			}
+		}
+	}
+	return cdir
 }
 
 func runApp(a *desktop.App) {
