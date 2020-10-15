@@ -21,6 +21,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/mockconn"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/getlantern/flashlight/balancer"
 	"github.com/getlantern/flashlight/common"
@@ -256,6 +257,60 @@ func TestDialShortcut(t *testing.T) {
 		return
 	}
 	assert.Equal(t, 404, nestedResp.StatusCode, "should dial proxy if the site is whitelisted")
+}
+
+// See https://github.com/getlantern/lantern-internal/issues/4267
+func TestLeakingProxiedDomains(t *testing.T) {
+	site := httptest.NewServer(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("abc"))
+		}),
+	)
+	addr := site.Listener.Addr().String()
+	_, p, _ := net.SplitHostPort(addr)
+	port, _ := strconv.Atoi(p)
+	proxiedCONNECTPorts = append(proxiedCONNECTPorts, port)
+	client := newClient()
+
+	client.allowShortcutTo = func(ctx context.Context, addr string) (bool, net.IP) {
+		return false, nil
+	}
+	client.useShortcut = func() bool { return false }
+
+	detour.AddToWl(addr, true)
+	defer detour.RemoveFromWl(site.URL)
+
+	// used as a sign that the request is sent to proxy
+
+	mockResponse := []byte("HTTP/1.1 418 I'm a Teapot\r\n\r\n")
+	// add some delay before sending back data, as response before the request
+	// was sent is apparently not expected by http client, which would cause
+	// http.Transport to print "Unsolicited response received on idle HTTP
+	// channel..." and return readLoopPeekFailLocked error.
+	delayed418 := mockconn.SlowResponder(mockconn.SucceedingDialer(mockResponse), 50*time.Millisecond)
+	resetBalancer(client, delayed418.Dial)
+
+	req, _ := http.NewRequest("GET", "http://getiantem.org", nil)
+	res, _ := roundTrip(client, req)
+	assert.Equal(t, 418, res.StatusCode, "should dial proxy for domain requiring proxying")
+
+	req, _ = http.NewRequest("GET", site.URL, nil)
+	res, _ = roundTrip(client, req)
+	assert.Equal(t, 418, res.StatusCode, "should dial via proxy for random site if client is connected")
+
+	// setting disconnected status
+	client.disconnected = func() bool { return true }
+
+	req, _ = http.NewRequest("GET", site.URL, nil)
+	res, _ = roundTrip(client, req)
+	body, err := ioutil.ReadAll(res.Body)
+	require.NoError(t, err)
+	assert.Equal(t, 200, res.StatusCode, "should dial directly for random site if client is disconnected")
+	assert.Equal(t, "abc", string(body), "should dial directly for random site if client is disconnected")
+
+	req, _ = http.NewRequest("GET", "http://getiantem.org", nil)
+	res, _ = roundTrip(client, req)
+	assert.Equal(t, 418, res.StatusCode, "should dial proxy for domain requiring proxying even if client is disconnected")
 }
 
 // See https://github.com/getlantern/lantern-internal/issues/2724

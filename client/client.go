@@ -600,20 +600,6 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		return dialProxied(ctx, "whatever", addr)
 	}
 
-	if err := client.allowSendingToProxy(addr); err != nil {
-		log.Debugf("%v, sending directly to %v", err, addr)
-		op.Set("force_direct", true)
-		op.Set("force_direct_reason", err.Error())
-		return dialDirect(ctx, "tcp", addr)
-	}
-
-	if client.proxyAll() {
-		log.Tracef("Proxying to %v because proxyall is enabled", addr)
-		op.Set("force_proxied", true)
-		op.Set("force_proxied_reason", "proxyall")
-		return dialProxied(ctx, "whatever", addr)
-	}
-
 	host, _, err := net.SplitHostPort(addr)
 	if err != nil {
 		host = addr
@@ -630,6 +616,20 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		log.Tracef("Proxying to %v per domain routing rules", addr)
 		op.Set("force_proxied", true)
 		op.Set("force_proxied_reason", "routingrule")
+		return dialProxied(ctx, "whatever", addr)
+	}
+
+	if err := client.allowSendingToProxy(addr); err != nil {
+		log.Debugf("%v, sending directly to %v", err, addr)
+		op.Set("force_direct", true)
+		op.Set("force_direct_reason", err.Error())
+		return dialDirect(ctx, "tcp", addr)
+	}
+
+	if client.proxyAll() {
+		log.Tracef("Proxying to %v because proxyall is enabled", addr)
+		op.Set("force_proxied", true)
+		op.Set("force_proxied_reason", "proxyall")
 		return dialProxied(ctx, "whatever", addr)
 	}
 
