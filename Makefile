@@ -50,14 +50,16 @@ endef
 .PHONY: lantern beam update-icons vendor
 
 lantern: $(SOURCES)
-	BUILD_TAGS="$$BUILD_TAGS lantern" BINARY_NAME="lantern" make app
+	@$(call build-tags) && \
+	BUILD_TAGS="$$BUILD_TAGS lantern" BINARY_NAME="lantern" EXTRA_LDFLAGS=$$EXTRA_LDFLAGS make app
 
 beam: $(SOURCES)
-	BUILD_TAGS="$$BUILD_TAGS beam" BINARY_NAME="beam" make app
+	@$(call build-tags) && \
+	BUILD_TAGS="$$BUILD_TAGS beam" BINARY_NAME="beam" EXTRA_LDFLAGS=$$EXTRA_LDFLAGS make app
 
 windowscli: $(SOURCES)
 	@$(call build-tags) && \
-	BUILD_TAGS="$$BUILD_TAGS lantern" BINARY_NAME=$$BINARY_NAME-cli.exe make windows
+	BUILD_TAGS="$$BUILD_TAGS lantern" BINARY_NAME=$$BINARY_NAME-cli.exe EXTRA_LDFLAGS=$$EXTRA_LDFLAGS make windows
 
 windowsgui: $(SOURCES)
 	@$(call build-tags) && \
@@ -65,7 +67,7 @@ windowsgui: $(SOURCES)
 
 beam-windowscli: $(SOURCES)
 	@$(call build-tags) && \
-	BUILD_TAGS="$$BUILD_TAGS beam" BINARY_NAME="beam-cli.exe" make windows
+	BUILD_TAGS="$$BUILD_TAGS beam" BINARY_NAME="beam-cli.exe" EXTRA_LDFLAGS=$$EXTRA_LDFLAGS make windows
 
 beam-windowsgui: $(SOURCES)
 	@$(call build-tags) && \

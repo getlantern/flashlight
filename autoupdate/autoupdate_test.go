@@ -9,7 +9,7 @@ import (
 )
 
 func TestSetUpdateURL(t *testing.T) {
-	expected := "https://update.abc.com/update/getlantern/" + strings.ToLower(common.AppName)
+	expected := "https://update.abc.com/update/" + strings.ToLower(common.AppName)
 	setUpdateURL("https://update.abc.com")
 	assert.Equal(t, expected, getUpdateURL(), "should append correct path to the url")
 	setUpdateURL("https://update.abc.com/")
