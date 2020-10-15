@@ -606,14 +606,10 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 	}
 	host = strings.ToLower(strings.TrimSpace(host))
 
-	switch domainrouting.RuleFor(host) {
-	case domainrouting.Direct:
-		log.Tracef("Directly dialing %v per domain routing rules", addr)
-		op.Set("force_direct", true)
-		op.Set("force_direct_reason", "routingrule")
-		return dialDirect(ctx, "tcp", addr)
-	case domainrouting.Proxy:
-		log.Tracef("Proxying to %v per domain routing rules", addr)
+	routingRuleForDomain := domainrouting.RuleFor(host)
+
+	if routingRuleForDomain == domainrouting.MustProxy {
+		log.Tracef("Proxying to %v per domain routing rules (MustProxy)", addr)
 		op.Set("force_proxied", true)
 		op.Set("force_proxied_reason", "routingrule")
 		return dialProxied(ctx, "whatever", addr)
@@ -638,6 +634,19 @@ func (client *Client) doDial(op *ops.Op, ctx context.Context, isCONNECT bool, ad
 		op.Set("shortcut_direct", true)
 		op.Set("shortcut_direct_ip", ip)
 		return dialDirect(ctx, "tcp", addr)
+	}
+
+	switch domainrouting.RuleFor(host) {
+	case domainrouting.Direct:
+		log.Tracef("Directly dialing %v per domain routing rules (Direct)", addr)
+		op.Set("force_direct", true)
+		op.Set("force_direct_reason", "routingrule")
+		return dialDirect(ctx, "tcp", addr)
+	case domainrouting.Proxy:
+		log.Tracef("Proxying to %v per domain routing rules (Proxy)", addr)
+		op.Set("force_proxied", true)
+		op.Set("force_proxied_reason", "routingrule")
+		return dialProxied(ctx, "whatever", addr)
 	}
 
 	dl, _ := ctx.Deadline()

@@ -260,7 +260,12 @@ func TestDialShortcut(t *testing.T) {
 }
 
 // See https://github.com/getlantern/lantern-internal/issues/4267
-func TestLeakingProxiedDomains(t *testing.T) {
+func TestLeakingDomainsRequiringProxy(t *testing.T) {
+	domainrouting.Configure(nil, &domainrouting.ProxiedSitesConfig{
+		Cloud: []string{"proxy.me"},
+	})
+	defer domainrouting.Configure(nil, &domainrouting.ProxiedSitesConfig{})
+
 	site := httptest.NewServer(
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("abc"))
@@ -294,6 +299,10 @@ func TestLeakingProxiedDomains(t *testing.T) {
 	res, _ := roundTrip(client, req)
 	assert.Equal(t, 418, res.StatusCode, "should dial proxy for domain requiring proxying")
 
+	req, _ = http.NewRequest("GET", "http://proxy.me", nil)
+	res, _ = roundTrip(client, req)
+	assert.Equal(t, 418, res.StatusCode, "should dial proxy for domain with proxy domainrouting rule")
+
 	req, _ = http.NewRequest("GET", site.URL, nil)
 	res, _ = roundTrip(client, req)
 	assert.Equal(t, 418, res.StatusCode, "should dial via proxy for random site if client is connected")
@@ -311,6 +320,22 @@ func TestLeakingProxiedDomains(t *testing.T) {
 	req, _ = http.NewRequest("GET", "http://getiantem.org", nil)
 	res, _ = roundTrip(client, req)
 	assert.Equal(t, 418, res.StatusCode, "should dial proxy for domain requiring proxying even if client is disconnected")
+
+	req, _ = http.NewRequest("GET", "http://subdomain.getiantem.org", nil)
+	res, _ = roundTrip(client, req)
+	assert.Equal(t, 418, res.StatusCode, "should dial proxy for subdomain requiring proxying even if client is disconnected")
+
+	domainrouting.Configure(nil, &domainrouting.ProxiedSitesConfig{
+		Cloud: []string{"localhost"},
+	})
+
+	req, _ = http.NewRequest("GET", site.URL, nil)
+	res, _ = roundTrip(client, req)
+	body, err = ioutil.ReadAll(res.Body)
+	require.NoError(t, err)
+	assert.Equal(t, 200, res.StatusCode, "should dial directly for domain with proxy domainrouting rule when client is disconnected")
+	assert.Equal(t, "abc", string(body), "should dial directly for domain with proxy domainrouting rule when client is disconnected")
+
 }
 
 // See https://github.com/getlantern/lantern-internal/issues/2724
