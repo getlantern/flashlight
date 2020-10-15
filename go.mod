@@ -135,4 +135,4 @@ replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-2020
 //replace github.com/getlantern/replica => ./replica/
 
 // For https://github.com/getlantern/lantern-internal/issues/4277
-replace crawshaw.io/sqlite => github.com/getlantern/sqlite v0.3.3-0.20201015031201-1ef2bb3889cb
+replace crawshaw.io/sqlite => github.com/getlantern/sqlite v0.3.3-0.20201015053730-228fbc4f607f
