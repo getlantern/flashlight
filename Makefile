@@ -72,7 +72,7 @@ beam-windowsgui: $(SOURCES)
 	BUILD_TAGS="$$BUILD_TAGS beam" BINARY_NAME="beam-gui.exe" EXTRA_LDFLAGS="$$EXTRA_LDFLAGS -H=windowsgui" make windows
 
 windows:
-	GOOS=windows GOARCH=386 CXX=i686-w64-mingw32-g++ CC=i686-w64-mingw32-gcc CGO_LDFLAGS="-static" EXTRA_LDFLAGS="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" make app
+	GOOS=windows GOARCH=386 BUILD_RACE='' CXX=i686-w64-mingw32-g++ CC=i686-w64-mingw32-gcc CGO_LDFLAGS="-static" EXTRA_LDFLAGS="$(LDFLAGS_NOSTRIP) $$EXTRA_LDFLAGS" make app
 
 linux: $(SOURCES)
 	@$(call build-tags) && \
