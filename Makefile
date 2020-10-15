@@ -50,9 +50,11 @@ endef
 .PHONY: lantern beam update-icons vendor
 
 lantern: $(SOURCES)
+	@$(call build-tags) && \
 	BUILD_TAGS="$$BUILD_TAGS lantern" BINARY_NAME="lantern" make app
 
 beam: $(SOURCES)
+	@$(call build-tags) && \
 	BUILD_TAGS="$$BUILD_TAGS beam" BINARY_NAME="beam" make app
 
 windowscli: $(SOURCES)
