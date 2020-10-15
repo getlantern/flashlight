@@ -281,9 +281,14 @@ func TestLeakingProxiedDomains(t *testing.T) {
 	defer detour.RemoveFromWl(site.URL)
 
 	// used as a sign that the request is sent to proxy
+
 	mockResponse := []byte("HTTP/1.1 418 I'm a Teapot\r\n\r\n")
-	dialer := mockconn.SucceedingDialer(mockResponse)
-	resetBalancer(client, dialer.Dial)
+	// add some delay before sending back data, as response before the request
+	// was sent is apparently not expected by http client, which would cause
+	// http.Transport to print "Unsolicited response received on idle HTTP
+	// channel..." and return readLoopPeekFailLocked error.
+	delayed418 := mockconn.SlowResponder(mockconn.SucceedingDialer(mockResponse), 50*time.Millisecond)
+	resetBalancer(client, delayed418.Dial)
 
 	req, _ := http.NewRequest("GET", "http://getiantem.org", nil)
 	res, _ := roundTrip(client, req)
