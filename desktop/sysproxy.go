@@ -141,5 +141,5 @@ func iconTemplate() string {
 		// Lantern doesn't have png files to support dark mode yet
 		return "%s_32.ico"
 	}
-	return "%s_16.ico"
+	return "%s_32.ico"
 }
