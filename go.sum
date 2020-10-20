@@ -292,6 +292,8 @@ github.com/getlantern/enproxy v0.0.0-20180913191734-002212d417a4 h1:PNbh29DNRJF7
 github.com/getlantern/enproxy v0.0.0-20180913191734-002212d417a4/go.mod h1:Gg8JT6crCL+8vd1+KPtLIC2+KHGiaB0l+Q8bDbj7B30=
 github.com/getlantern/errors v0.0.0-20190325191628-abdb3e3e36f7 h1:6uJ+sZ/e03gkbqZ0kUG6mfKoqDb4XMAzMIwlajq19So=
 github.com/getlantern/errors v0.0.0-20190325191628-abdb3e3e36f7/go.mod h1:l+xpFBrCtDLpK9qNjxs+cHU6+BAdlBaxHqikB6Lku3A=
+github.com/getlantern/errors v1.0.1 h1:XukU2whlh7OdpxnkXhNH9VTLVz0EVPGKDV5K0oWhvzw=
+github.com/getlantern/errors v1.0.1/go.mod h1:l+xpFBrCtDLpK9qNjxs+cHU6+BAdlBaxHqikB6Lku3A=
 github.com/getlantern/event v0.0.0-20170919023932-f16a5563f52e h1:Oz7PGDawrMy0ybDvdmcFYXjU8EI1c+jk6+yUcAoRlXw=
 github.com/getlantern/event v0.0.0-20170919023932-f16a5563f52e/go.mod h1:iToZ3dqm/iFxRHPHUHUrF1JZtg0e06ZSXD1BuiGoUaY=
 github.com/getlantern/eventual v0.0.0-20180125201821-84b02499361b/go.mod h1:O8T3zFEcY6+LRXFcVV4q8mEu2tDIixG8edC84DfswBc=
@@ -325,6 +327,8 @@ github.com/getlantern/goexpr v0.0.0-20190618200516-431684af4c0b/go.mod h1:SHcmnW
 github.com/getlantern/golog v0.0.0-20190809085441-26e09e6dd330/go.mod h1:zx/1xUUeYPy3Pcmet8OSXLbF47l+3y6hIPpyLWoR9oc=
 github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7 h1:guBYzEaLz0Vfc/jv0czrr2z7qyzTOGC9hiQ0VC+hKjk=
 github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7/go.mod h1:zx/1xUUeYPy3Pcmet8OSXLbF47l+3y6hIPpyLWoR9oc=
+github.com/getlantern/golog v0.0.0-20200929154820-62107891371a h1:97NO5ovLBt5jj7TUzfPSwNDL6gyYhXEbaFhgzLB6h1o=
+github.com/getlantern/golog v0.0.0-20200929154820-62107891371a/go.mod h1:ZyIjgH/1wTCl+B+7yH1DqrWp6MPJqESmwmEQ89ZfhvA=
 github.com/getlantern/gonat v0.0.0-20200420153910-d0d331e11ce4/go.mod h1:WPIIQ92vvQ7WvKc8Q6xvekg2JV+ayD5YaUyRuj8QRqs=
 github.com/getlantern/gonat v0.0.0-20200709180430-97f0eb3d96b3 h1:KFemZKOPMjAoogOlWNv79IGBrEjHg1LwHJnDfjOO6SY=
 github.com/getlantern/gonat v0.0.0-20200709180430-97f0eb3d96b3/go.mod h1:WPIIQ92vvQ7WvKc8Q6xvekg2JV+ayD5YaUyRuj8QRqs=
@@ -350,8 +354,8 @@ github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c/go.mod h1:6yS3MFZm
 github.com/getlantern/idletiming v0.0.0-20190529182719-d2fbc83372a5/go.mod h1:MGP8kEgZGgAhvHISt0hJGQgxg/VAqGdw3+kSZBnfC/4=
 github.com/getlantern/idletiming v0.0.0-20200228204104-10036786eac5 h1:HSxg8YIb4yUn/62i3M/2Eo/9Bz4u+n7yHOiGiiKEE5I=
 github.com/getlantern/idletiming v0.0.0-20200228204104-10036786eac5/go.mod h1:McaLC6faRlxJ9QjjqSjpEeYIjKnKA8+dzjoR+eYXCio=
-github.com/getlantern/ipproxy v0.0.0-20200917195736-1c86e2b237ef h1:Gna5UXZqGdSrdhpQkdppcxLeQKR+xAIgw7vySKGnzSs=
-github.com/getlantern/ipproxy v0.0.0-20200917195736-1c86e2b237ef/go.mod h1:kwHJV62S5YxojNVIV0tQm15NAjqWAWKKTNOSwoaJErk=
+github.com/getlantern/ipproxy v0.0.0-20201020142114-ed7e3a8d5d87 h1:AWhpwnC6n/a7NLgRwhSm8bNauGUtOrRUvYXeiZ6vSwE=
+github.com/getlantern/ipproxy v0.0.0-20201020142114-ed7e3a8d5d87/go.mod h1:n2pvzFBL6JmhwaBOUQa7eM45kInmrVq/b78qdKh5BUk=
 github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42 h1:uSvHE7r08LiSG9s7SnLhS5soMzzKSCBtG1cSrGQ/rP4=
 github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42/go.mod h1:gA+8p3g1vV3VKYfGdyDRebIYQdgLbkyCs6MXg7DLv5Y=
 github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644 h1:qEdoFWgwj/IjbL2mfdjUsqHIy0p6B0eQ2znpQnpder0=
@@ -1117,6 +1121,8 @@ golang.org/x/sys v0.0.0-20200501145240-bc7a7d42d5c3/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20200515095857-1151b9dac4a9/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200916084744-dbad9cb7cb7a h1:chkwkn8HYWVtTE5DCQNKYlkyptadXYY0+PuyaVdyMo4=
 golang.org/x/sys v0.0.0-20200916084744-dbad9cb7cb7a/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20200929083018-4d22bbb62b3c h1:/h0vtH0PyU0xAoZJVcRw1k0Ng+U0JAy3QDiFmppIlIE=
+golang.org/x/sys v0.0.0-20200929083018-4d22bbb62b3c/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.2 h1:tW2bmiBqwgJj/UpqtC8EpXEZVYOwU0yG4iWbprSVAcs=
