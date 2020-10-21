@@ -25,7 +25,6 @@ type proxyTransport struct {
 }
 
 func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
-	origin := req.Header.Get("Origin")
 	if req.Method == "OPTIONS" {
 		// No need to proxy the OPTIONS request.
 		resp = &http.Response{
@@ -39,6 +38,7 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 			Body: ioutil.NopCloser(strings.NewReader("preflight complete")),
 		}
 	} else {
+		origin := req.Header.Get("Origin")
 		// Workaround for https://github.com/getlantern/pro-server/issues/192
 		req.Header.Del("Origin")
 		resp, err = GetHTTPClient().Do(req)
@@ -46,8 +46,11 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 			log.Errorf("Could not issue HTTP request? %v", err)
 			return
 		}
+
+		// Put the header back for subsequent CORS processing.
+		req.Header.Set("Origin", origin)
 	}
-	resp.Header.Set("Access-Control-Allow-Origin", origin)
+	common.ProcessCORS(resp.Header, req)
 	if req.URL.Path != "/user-data" || resp.StatusCode != http.StatusOK {
 		return
 	}
