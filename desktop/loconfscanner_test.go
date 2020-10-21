@@ -9,6 +9,7 @@ import (
 
 	"github.com/getlantern/flashlight/loconf"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/golog/testlog"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,6 +28,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestWriteURL(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
+
 	loc := &loconfer{
 		log: golog.LoggerFor("loconfer"),
 		r:   rand.New(rand.NewSource(time.Now().UnixNano())),
@@ -50,6 +54,9 @@ func TestWriteURL(t *testing.T) {
 }
 
 func TestParsing(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
+
 	logger := golog.LoggerFor("loconfloop-test")
 	stop := LoconfScanner(tempConfigDir, 4*time.Hour, func() (bool, bool) {
 		return true, false

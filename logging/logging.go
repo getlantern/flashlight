@@ -35,7 +35,13 @@ var (
 
 	actualLogDir   string
 	actualLogDirMx sync.RWMutex
+
+	resetLogs atomic.Value
 )
+
+func init() {
+	resetLogs.Store(func() {})
+}
 
 // RotatedLogsUnder creates rotated file logger under logdir.
 func RotatedLogsUnder(logdir string) (io.WriteCloser, error) {
@@ -92,7 +98,7 @@ func EnableFileLoggingWith(werr io.WriteCloser, wout io.WriteCloser, logdir stri
 	logFile = rotator
 	errorPWC = newPipedWriteCloser(NonStopWriteCloser(werr, logFile), 1000)
 	debugPWC = newPipedWriteCloser(NonStopWriteCloser(wout, logFile), 100)
-	golog.SetOutputs(errorPWC, debugPWC)
+	resetLogs.Store(golog.SetOutputs(errorPWC, debugPWC))
 	return nil
 }
 
@@ -202,7 +208,9 @@ func Close() error {
 	if logFile != nil {
 		logFile.Close()
 	}
-	golog.ResetOutputs()
+
+	resetLogs.Load().(func())()
+
 	return nil
 }
 

@@ -329,6 +329,10 @@ github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7 h1:guBYzEaLz0Vfc/
 github.com/getlantern/golog v0.0.0-20190830074920-4ef2e798c2d7/go.mod h1:zx/1xUUeYPy3Pcmet8OSXLbF47l+3y6hIPpyLWoR9oc=
 github.com/getlantern/golog v0.0.0-20200929154820-62107891371a h1:97NO5ovLBt5jj7TUzfPSwNDL6gyYhXEbaFhgzLB6h1o=
 github.com/getlantern/golog v0.0.0-20200929154820-62107891371a/go.mod h1:ZyIjgH/1wTCl+B+7yH1DqrWp6MPJqESmwmEQ89ZfhvA=
+github.com/getlantern/golog v0.0.0-20201021154922-f6f5e8390d0d h1:vjS64F0RuEKmkMdmDoN0UsVKkaQ8Nzvqjr/y9q/rRMY=
+github.com/getlantern/golog v0.0.0-20201021154922-f6f5e8390d0d/go.mod h1:ZyIjgH/1wTCl+B+7yH1DqrWp6MPJqESmwmEQ89ZfhvA=
+github.com/getlantern/golog v0.0.0-20201022140317-a8d13dc71777 h1:eOIlF+ZnlZS5bnhYLZUCLH9jS++e2JEbih1kgMLUCDc=
+github.com/getlantern/golog v0.0.0-20201022140317-a8d13dc71777/go.mod h1:ZyIjgH/1wTCl+B+7yH1DqrWp6MPJqESmwmEQ89ZfhvA=
 github.com/getlantern/gonat v0.0.0-20200420153910-d0d331e11ce4/go.mod h1:WPIIQ92vvQ7WvKc8Q6xvekg2JV+ayD5YaUyRuj8QRqs=
 github.com/getlantern/gonat v0.0.0-20200709180430-97f0eb3d96b3 h1:KFemZKOPMjAoogOlWNv79IGBrEjHg1LwHJnDfjOO6SY=
 github.com/getlantern/gonat v0.0.0-20200709180430-97f0eb3d96b3/go.mod h1:WPIIQ92vvQ7WvKc8Q6xvekg2JV+ayD5YaUyRuj8QRqs=

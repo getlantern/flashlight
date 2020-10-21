@@ -34,6 +34,7 @@ const (
 	// ProxyFronted means access through domain fronting
 	ProxyFronted ProxyType = "fronted"
 
+	// NB - a beam is like a tracing ID and has nothing to do with the application named "beam"
 	CtxKeyBeam = contextKey("beam")
 	ctxKeyOp   = contextKey("op")
 )
@@ -321,7 +322,7 @@ func (op *Op) SetMetricPercentile(name string, value float64) *Op {
 func InitGlobalContext(deviceID string, isPro func() bool, getCountry func() string) {
 	// Using "application" allows us to distinguish between errors from the
 	// lantern client vs other sources like the http-proxy, etop.
-	ops.SetGlobal("app", "lantern-client")
+	ops.SetGlobal("app", fmt.Sprintf("%s-client", strings.ToLower(common.AppName)))
 	ops.SetGlobal("app_version", fmt.Sprintf("%v (%v)", common.Version, common.RevisionDate))
 	ops.SetGlobal("go_version", runtime.Version())
 	ops.SetGlobal("os_name", common.Platform)
