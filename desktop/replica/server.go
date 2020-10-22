@@ -147,10 +147,7 @@ func NewHTTPHandler(configDir string, uc common.UserConfig, replicaClient *repli
 
 func (me *HttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	me.logger.Debugf("replica server request path: %q", r.URL.Path)
-	// TODO(anacrolix): Check this is correct and secure. We might want to be given valid origins
-	// and apply them to appropriate routes, or only allow anything from localhost for example.
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "*")
+	common.ProcessCORS(w.Header(), r)
 	me.mux.ServeHTTP(w, r)
 }
 
