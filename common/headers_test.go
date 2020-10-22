@@ -18,8 +18,8 @@ func TestProcessCORS(t *testing.T) {
 	origin := "http://localhost:47899"
 	r.Header.Set("Origin", origin)
 	ProcessCORS(resp.Header, r)
-	assert.Equal(t, origin, resp.Header.Get("Access-Control-Allow-Origin"))
 
+	assert.Equal(t, origin, resp.Header.Get("Access-Control-Allow-Origin"))
 	methods := resp.Header.Values("Access-Control-Allow-Methods")
 	sort.Strings(methods)
 	assert.EqualValues(t, []string{"GET", "POST"}, methods)
@@ -32,10 +32,7 @@ func TestProcessCORS(t *testing.T) {
 	r.Header.Set("Origin", origin)
 	ProcessCORS(resp.Header, r)
 
-	fmt.Printf("methods: %v\n", resp.Header.Values("Access-Control-Allow-Methods"))
-	fmt.Printf("methods: %v\n", resp.Header.Get("Access-Control-Allow-Methods"))
 	assert.Equal(t, origin, resp.Header.Get("Access-Control-Allow-Origin"))
-
 	methods = resp.Header.Values("Access-Control-Allow-Methods")
 	sort.Strings(methods)
 	assert.Equal(t, []string{"GET", "POST"}, methods)
