@@ -57,6 +57,7 @@ func TestProxy(t *testing.T) {
 	if assert.NoError(t, err, "GET request should have no error") {
 		assert.Equal(t, 200, resp.StatusCode, "should respond 200 ok")
 		assert.Equal(t, origin, resp.Header.Get("Access-Control-Allow-Origin"), "should respond with correct header")
+		assert.NotEmpty(t, resp.Header.Get("Access-Control-Allow-Methods"), "should respond with correct header")
 		msg, _ := ioutil.ReadAll(resp.Body)
 		_ = resp.Body.Close()
 		assert.Equal(t, "GOOD", string(msg), "should respond expected body")
@@ -64,6 +65,7 @@ func TestProxy(t *testing.T) {
 	if assert.NotNil(t, m.Req, "should pass through non-OPTIONS requests to origin server") {
 		t.Log(m.Req)
 		assert.Equal(t, origin, resp.Header.Get("Access-Control-Allow-Origin"), "should respond with correct header")
+		assert.NotEmpty(t, resp.Header.Get("Access-Control-Allow-Methods"), "should respond with correct header")
 	}
 
 	url = fmt.Sprintf("http://%s/pro/user-data", addr)
