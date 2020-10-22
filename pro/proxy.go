@@ -30,10 +30,8 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 		resp = &http.Response{
 			StatusCode: http.StatusOK,
 			Header: http.Header{
-				"Connection":                   {"keep-alive"},
-				"Access-Control-Allow-Methods": {"GET, POST"},
-				"Access-Control-Allow-Headers": {req.Header.Get("Access-Control-Request-Headers")},
-				"Via":                          {"Lantern Client"},
+				"Connection": {"keep-alive"},
+				"Via":        {"Lantern Client"},
 			},
 			Body: ioutil.NopCloser(strings.NewReader("preflight complete")),
 		}
