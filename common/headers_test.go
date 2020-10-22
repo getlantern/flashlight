@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"net/http"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,10 +20,9 @@ func TestProcessCORS(t *testing.T) {
 	ProcessCORS(resp.Header, r)
 	assert.Equal(t, origin, resp.Header.Get("Access-Control-Allow-Origin"))
 
-	first := resp.Header.Values("Access-Control-Allow-Methods")[0]
-	second := resp.Header.Values("Access-Control-Allow-Methods")[1]
-	assert.True(t, first == "GET" || first == "POST")
-	assert.True(t, second == "GET" || second == "POST")
+	methods := resp.Header.Values("Access-Control-Allow-Methods")
+	sort.Strings(methods)
+	assert.EqualValues(t, []string{"GET", "POST"}, methods)
 
 	// CORS headers in response to 127.0.0.1 origin
 	resp = &http.Response{Header: http.Header{}}
@@ -35,10 +35,10 @@ func TestProcessCORS(t *testing.T) {
 	fmt.Printf("methods: %v\n", resp.Header.Values("Access-Control-Allow-Methods"))
 	fmt.Printf("methods: %v\n", resp.Header.Get("Access-Control-Allow-Methods"))
 	assert.Equal(t, origin, resp.Header.Get("Access-Control-Allow-Origin"))
-	first = resp.Header.Values("Access-Control-Allow-Methods")[0]
-	second = resp.Header.Values("Access-Control-Allow-Methods")[1]
-	assert.True(t, first == "GET" || first == "POST")
-	assert.True(t, second == "GET" || second == "POST")
+
+	methods = resp.Header.Values("Access-Control-Allow-Methods")
+	sort.Strings(methods)
+	assert.Equal(t, []string{"GET", "POST"}, methods)
 
 	// No CORS headers in response to public origin
 	resp = &http.Response{Header: http.Header{}}
