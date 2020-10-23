@@ -7,10 +7,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/getlantern/golog/testlog"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestChromeExtension(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
+
 	e := newChromeExtension().(*extension)
 
 	basePath, err := e.osExtensionBasePath("windows")
