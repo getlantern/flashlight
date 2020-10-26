@@ -153,8 +153,13 @@ func refreshSystray(language string) {
 func refreshMenuItems() {
 	systray.SetTooltip(i18n.T(translationAppName))
 	menu.upgrade.SetTitle(i18n.T("TRAY_UPGRADE_TO_PRO"))
-	menu.show.SetTitle(i18n.T("TRAY_SHOW", i18n.T(translationAppName)))
-	menu.quit.SetTitle(i18n.T("TRAY_QUIT", i18n.T(translationAppName)))
+	if translationAppName == "BEAM" {
+		menu.show.SetTitle(i18n.T("TRAY_SHOW", i18n.T(translationAppName)))
+		menu.quit.SetTitle(i18n.T("TRAY_QUIT", i18n.T(translationAppName)))
+	} else {
+		menu.show.SetTitle(i18n.T("TRAY_SHOW_LANTERN"))
+		menu.quit.SetTitle(i18n.T("TRAY_QUIT"))
+	}
 }
 
 func statsUpdated() {
