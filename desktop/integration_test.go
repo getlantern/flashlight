@@ -104,7 +104,7 @@ func TestProxying(t *testing.T) {
 		listenPort++
 		return fmt.Sprintf("localhost:%d", listenPort)
 	}
-	helper, err := integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
+	helper, err := integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -126,7 +126,6 @@ func TestProxying(t *testing.T) {
 				},
 			},
 		}
-
 		doRequest(t, client, "http://"+helper.HTTPServerAddr)
 		doRequest(t, client, "https://"+helper.HTTPSServerAddr)
 		goroutines.PrintProfile(10)
@@ -141,7 +140,6 @@ func TestProxying(t *testing.T) {
 		// utplampshade doesn't currently work for some reason
 		// "utplampshade",
 		"kcp",
-		"quic", // quic0 (legacy)
 		"oquic",
 		"quic_ietf",
 		"wss",
@@ -217,7 +215,7 @@ func TestProxying(t *testing.T) {
 	}
 
 	// now starts a new helper and application test multipath with all protocols
-	helper, err = integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
+	helper, err = integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
 	if !assert.NoError(t, err) {
 		return
 	}
