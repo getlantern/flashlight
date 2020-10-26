@@ -37,13 +37,14 @@ type HttpHandler struct {
 	confluence    confluence.Handler
 	torrentClient *torrent.Client
 	// Where to store torrent client data.
-	dataDir       string
-	uploadsDir    string
-	logger        golog.Logger
-	mux           http.ServeMux
-	replicaClient *replica.Client
-	searchProxy   http.Handler
-	gaSession     analytics.Session
+	dataDir          string
+	uploadsDir       string
+	logger           golog.Logger
+	mux              http.ServeMux
+	replicaClient    *replica.Client
+	searchProxy      http.Handler
+	thumbnailerProxy http.Handler
+	gaSession        analytics.Session
 }
 
 // NewHTTPHandler creates a new http.Handler for calls to replica.
@@ -99,15 +100,17 @@ func NewHTTPHandler(configDir string, uc common.UserConfig, replicaClient *repli
 				return &s
 			}(),
 		},
-		torrentClient: torrentClient,
-		dataDir:       replicaDataDir,
-		logger:        logger,
-		uploadsDir:    uploadsDir,
-		replicaClient: replicaClient,
-		searchProxy:   http.StripPrefix("/search", searchHandler(uc)),
-		gaSession:     gaSession,
+		torrentClient:    torrentClient,
+		dataDir:          replicaDataDir,
+		logger:           logger,
+		uploadsDir:       uploadsDir,
+		replicaClient:    replicaClient,
+		searchProxy:      http.StripPrefix("/search", proxyHandler(uc, common.ReplicaSearchAPIHost)),
+		thumbnailerProxy: http.StripPrefix("/thumbnail", proxyHandler(uc, common.ReplicaThumbnailerHost)),
+		gaSession:        gaSession,
 	}
 	handler.mux.HandleFunc("/search", handler.wrapHandlerError("replica_search", handler.handleSearch))
+	handler.mux.HandleFunc("/thumbnail", handler.wrapHandlerError("replica_thumbnail", handler.handleThumbnail))
 	handler.mux.HandleFunc("/upload", handler.wrapHandlerError("replica_upload", handler.handleUpload))
 	handler.mux.HandleFunc("/uploads", handler.wrapHandlerError("replica_uploads", handler.handleUploads))
 	handler.mux.HandleFunc("/view", handler.wrapHandlerError("replica_view", handler.handleView))
@@ -363,6 +366,11 @@ func (me *HttpHandler) handleDelete(rw *ops.InstrumentedResponseWriter, r *http.
 	t.Drop()
 	os.RemoveAll(filepath.Join(me.dataDir, s3Prefix.String()))
 	os.Remove(me.uploadMetainfoPath(s3Prefix))
+	return nil
+}
+
+func (me *HttpHandler) handleThumbnail(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
+	me.thumbnailerProxy.ServeHTTP(rw, r)
 	return nil
 }
 

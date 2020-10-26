@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	log                     = golog.LoggerFor("flashlight.replica.search")
+	log                     = golog.LoggerFor("flashlight.replica.proxy")
 	httpClient *http.Client = genHTTPClient()
 )
 
@@ -59,20 +59,20 @@ func (pt *proxyTransport) RoundTrip(req *http.Request) (resp *http.Response, err
 	return
 }
 
-func prepareRequest(r *http.Request, uc common.UserConfig) {
+func prepareRequest(r *http.Request, uc common.UserConfig, host string) {
 	r.URL.Scheme = "http"
-	r.URL.Host = common.ReplicaSearchAPIHost
+	r.URL.Host = host
 	r.Host = r.URL.Host
 	r.RequestURI = "" // http: Request.RequestURI can't be set in client requests.
 
 	common.AddCommonHeaders(uc, r)
 }
 
-func searchHandler(uc common.UserConfig) http.Handler {
+func proxyHandler(uc common.UserConfig, host string) http.Handler {
 	return &httputil.ReverseProxy{
 		Transport: &proxyTransport{},
 		Director: func(r *http.Request) {
-			prepareRequest(r, uc)
+			prepareRequest(r, uc, host)
 		},
 	}
 }
