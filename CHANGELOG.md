@@ -6,7 +6,9 @@
 
 **Merged pull requests:**
 
+- Use old lantern keys for old ui translations for now [\#930](https://github.com/getlantern/flashlight/pull/930) ([myleshorton](https://github.com/myleshorton))
 - Updated lantern ui to typescript [\#929](https://github.com/getlantern/flashlight/pull/929) ([myleshorton](https://github.com/myleshorton))
+- Proxy and domain front replica thumbnails [\#928](https://github.com/getlantern/flashlight/pull/928) ([max-b](https://github.com/max-b))
 - suggested changes [\#927](https://github.com/getlantern/flashlight/pull/927) ([joesis](https://github.com/joesis))
 - Setting app name for borda based on app [\#926](https://github.com/getlantern/flashlight/pull/926) ([oxtoacart](https://github.com/oxtoacart))
 - Consolidate CORS handling [\#925](https://github.com/getlantern/flashlight/pull/925) ([myleshorton](https://github.com/myleshorton))
@@ -30,6 +32,7 @@
 - adapt to the new update server URL [\#907](https://github.com/getlantern/flashlight/pull/907) ([joesis](https://github.com/joesis))
 - Add separate Sentry DSN for beam [\#906](https://github.com/getlantern/flashlight/pull/906) ([max-b](https://github.com/max-b))
 - Fixes for beam UI [\#905](https://github.com/getlantern/flashlight/pull/905) ([myleshorton](https://github.com/myleshorton))
+- Update to quic v0.18.1 [\#904](https://github.com/getlantern/flashlight/pull/904) ([forkner](https://github.com/forkner))
 - add make targets to build beam on windows [\#903](https://github.com/getlantern/flashlight/pull/903) ([joesis](https://github.com/joesis))
 - add the ability to enable feature based on application [\#902](https://github.com/getlantern/flashlight/pull/902) ([joesis](https://github.com/joesis))
 - Use different global config file for beam [\#901](https://github.com/getlantern/flashlight/pull/901) ([myleshorton](https://github.com/myleshorton))
@@ -170,7 +173,6 @@
 - Pull in production UI updates [\#836](https://github.com/getlantern/flashlight/pull/836) ([max-b](https://github.com/max-b))
 - Reduce plaintext in Replica [\#834](https://github.com/getlantern/flashlight/pull/834) ([anacrolix](https://github.com/anacrolix))
 - Support alternate bucket names [\#831](https://github.com/getlantern/flashlight/pull/831) ([anacrolix](https://github.com/anacrolix))
-- Implement proxying and domain fronting for replica-search [\#826](https://github.com/getlantern/flashlight/pull/826) ([max-b](https://github.com/max-b))
 
 ## [5.10.0](https://github.com/getlantern/flashlight/tree/5.10.0) (2020-07-20)
 
@@ -233,7 +235,6 @@
 **Merged pull requests:**
 
 - Fix chromeextension test failure on linux [\#828](https://github.com/getlantern/flashlight/pull/828) ([max-b](https://github.com/max-b))
-- Update to latest utls and update a few other repos [\#827](https://github.com/getlantern/flashlight/pull/827) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.9.11](https://github.com/getlantern/flashlight/tree/5.9.11) (2020-06-05)
 
@@ -242,10 +243,6 @@
 ## [5.9.10](https://github.com/getlantern/flashlight/tree/5.9.10) (2020-06-03)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.9...5.9.10)
-
-**Merged pull requests:**
-
-- Multiplex tlsmasq connections [\#825](https://github.com/getlantern/flashlight/pull/825) ([hwh33](https://github.com/hwh33))
 
 ## [5.9.9](https://github.com/getlantern/flashlight/tree/5.9.9) (2020-06-02)
 
