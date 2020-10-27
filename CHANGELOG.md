@@ -6,6 +6,7 @@
 
 **Merged pull requests:**
 
+- include multipath panicking workarounds [\#931](https://github.com/getlantern/flashlight/pull/931) ([joesis](https://github.com/joesis))
 - Use old lantern keys for old ui translations for now [\#930](https://github.com/getlantern/flashlight/pull/930) ([myleshorton](https://github.com/myleshorton))
 - Updated lantern ui to typescript [\#929](https://github.com/getlantern/flashlight/pull/929) ([myleshorton](https://github.com/myleshorton))
 - Proxy and domain front replica thumbnails [\#928](https://github.com/getlantern/flashlight/pull/928) ([max-b](https://github.com/max-b))
@@ -69,7 +70,6 @@
 
 - Prevent tls v1.3 client sessions from being cached to deal with utls bug [\#877](https://github.com/getlantern/flashlight/pull/877) ([max-b](https://github.com/max-b))
 - Upgraded to latest netstack [\#875](https://github.com/getlantern/flashlight/pull/875) ([oxtoacart](https://github.com/oxtoacart))
-- Filter hiddenID from our error Error\(\) method when creating an Exception.Value [\#874](https://github.com/getlantern/flashlight/pull/874) ([max-b](https://github.com/max-b))
 - Updated dependencies [\#868](https://github.com/getlantern/flashlight/pull/868) ([myleshorton](https://github.com/myleshorton))
 - Fall back to fetching global config directly from GitHub if necessary [\#859](https://github.com/getlantern/flashlight/pull/859) ([oxtoacart](https://github.com/oxtoacart))
 
@@ -79,6 +79,7 @@
 
 **Merged pull requests:**
 
+- Filter hiddenID from our error Error\(\) method when creating an Exception.Value [\#874](https://github.com/getlantern/flashlight/pull/874) ([max-b](https://github.com/max-b))
 - Avoid setting global marketShareData to an empty map [\#873](https://github.com/getlantern/flashlight/pull/873) ([max-b](https://github.com/max-b))
 
 ## [6.0.8](https://github.com/getlantern/flashlight/tree/6.0.8) (2020-09-09)
@@ -231,10 +232,6 @@
 ## [5.9.12](https://github.com/getlantern/flashlight/tree/5.9.12) (2020-06-09)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.11...5.9.12)
-
-**Merged pull requests:**
-
-- Fix chromeextension test failure on linux [\#828](https://github.com/getlantern/flashlight/pull/828) ([max-b](https://github.com/max-b))
 
 ## [5.9.11](https://github.com/getlantern/flashlight/tree/5.9.11) (2020-06-05)
 
@@ -414,15 +411,15 @@
 
 ## [5.3.8](https://github.com/getlantern/flashlight/tree/5.3.8) (2019-04-24)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.7...5.3.8)
-
-## [5.3.7](https://github.com/getlantern/flashlight/tree/5.3.7) (2019-04-18)
-
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.6...5.3.7)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.6...5.3.8)
 
 ## [5.3.6](https://github.com/getlantern/flashlight/tree/5.3.6) (2019-04-18)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.5...5.3.6)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.7...5.3.6)
+
+## [5.3.7](https://github.com/getlantern/flashlight/tree/5.3.7) (2019-04-18)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/5.3.5...5.3.7)
 
 ## [5.3.5](https://github.com/getlantern/flashlight/tree/5.3.5) (2019-04-12)
 
