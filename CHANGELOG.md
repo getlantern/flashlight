@@ -70,6 +70,7 @@
 
 - Prevent tls v1.3 client sessions from being cached to deal with utls bug [\#877](https://github.com/getlantern/flashlight/pull/877) ([max-b](https://github.com/max-b))
 - Upgraded to latest netstack [\#875](https://github.com/getlantern/flashlight/pull/875) ([oxtoacart](https://github.com/oxtoacart))
+- Filter hiddenID from our error Error\(\) method when creating an Exception.Value [\#874](https://github.com/getlantern/flashlight/pull/874) ([max-b](https://github.com/max-b))
 - Updated dependencies [\#868](https://github.com/getlantern/flashlight/pull/868) ([myleshorton](https://github.com/myleshorton))
 - Fall back to fetching global config directly from GitHub if necessary [\#859](https://github.com/getlantern/flashlight/pull/859) ([oxtoacart](https://github.com/oxtoacart))
 
@@ -79,7 +80,6 @@
 
 **Merged pull requests:**
 
-- Filter hiddenID from our error Error\(\) method when creating an Exception.Value [\#874](https://github.com/getlantern/flashlight/pull/874) ([max-b](https://github.com/max-b))
 - Avoid setting global marketShareData to an empty map [\#873](https://github.com/getlantern/flashlight/pull/873) ([max-b](https://github.com/max-b))
 
 ## [6.0.8](https://github.com/getlantern/flashlight/tree/6.0.8) (2020-09-09)
