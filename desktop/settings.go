@@ -279,7 +279,7 @@ func (s *Settings) setString(name SettingName, v interface{}) {
 // save saves settings to disk.
 func (s *Settings) save() {
 	s.saveDefault()
-	s.chrome.saveOnce(s.mapToSave)
+	//s.chrome.saveOnce(s.mapToSave)
 }
 
 // save saves settings to disk as yaml in the default lantern user settings directory.
