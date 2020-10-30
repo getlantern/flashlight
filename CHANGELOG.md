@@ -6,6 +6,12 @@
 
 **Merged pull requests:**
 
+- Beam overlay for Chinese users [\#938](https://github.com/getlantern/flashlight/pull/938) ([myleshorton](https://github.com/myleshorton))
+- Updated with beam overlay [\#937](https://github.com/getlantern/flashlight/pull/937) ([myleshorton](https://github.com/myleshorton))
+- Update anacrolix/torrent with request fix [\#935](https://github.com/getlantern/flashlight/pull/935) ([anacrolix](https://github.com/anacrolix))
+- Revert "Update anacrolix/torrent" [\#934](https://github.com/getlantern/flashlight/pull/934) ([myleshorton](https://github.com/myleshorton))
+- Fix systray tooltip for lantern [\#933](https://github.com/getlantern/flashlight/pull/933) ([myleshorton](https://github.com/myleshorton))
+- Update anacrolix/torrent [\#932](https://github.com/getlantern/flashlight/pull/932) ([anacrolix](https://github.com/anacrolix))
 - include multipath panicking workarounds [\#931](https://github.com/getlantern/flashlight/pull/931) ([joesis](https://github.com/joesis))
 - Use old lantern keys for old ui translations for now [\#930](https://github.com/getlantern/flashlight/pull/930) ([myleshorton](https://github.com/myleshorton))
 - Updated lantern ui to typescript [\#929](https://github.com/getlantern/flashlight/pull/929) ([myleshorton](https://github.com/myleshorton))
@@ -172,8 +178,6 @@
 - Integrate metascrubber for removing png and jpeg exif/metadata [\#841](https://github.com/getlantern/flashlight/pull/841) ([max-b](https://github.com/max-b))
 - Merge devel into replica [\#838](https://github.com/getlantern/flashlight/pull/838) ([max-b](https://github.com/max-b))
 - Pull in production UI updates [\#836](https://github.com/getlantern/flashlight/pull/836) ([max-b](https://github.com/max-b))
-- Reduce plaintext in Replica [\#834](https://github.com/getlantern/flashlight/pull/834) ([anacrolix](https://github.com/anacrolix))
-- Support alternate bucket names [\#831](https://github.com/getlantern/flashlight/pull/831) ([anacrolix](https://github.com/anacrolix))
 
 ## [5.10.0](https://github.com/getlantern/flashlight/tree/5.10.0) (2020-07-20)
 
@@ -205,10 +209,6 @@
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.15...5.9.16)
 
-**Merged pull requests:**
-
-- Wait for geolookup before determining whether proxybench is enabled [\#833](https://github.com/getlantern/flashlight/pull/833) ([oxtoacart](https://github.com/oxtoacart))
-
 ## [5.9.15](https://github.com/getlantern/flashlight/tree/5.9.15) (2020-06-23)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.14...5.9.15)
@@ -217,17 +217,9 @@
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.13...5.9.14)
 
-**Merged pull requests:**
-
-- Update to new version of http-proxy-lantern to fix TestProxying [\#830](https://github.com/getlantern/flashlight/pull/830) ([hwh33](https://github.com/hwh33))
-
 ## [5.9.13](https://github.com/getlantern/flashlight/tree/5.9.13) (2020-06-11)
 
 [Full Changelog](https://github.com/getlantern/flashlight/compare/5.9.12...5.9.13)
-
-**Merged pull requests:**
-
-- Update to latest systray with OSX crash workaround [\#829](https://github.com/getlantern/flashlight/pull/829) ([myleshorton](https://github.com/myleshorton))
 
 ## [5.9.12](https://github.com/getlantern/flashlight/tree/5.9.12) (2020-06-09)
 
@@ -535,15 +527,15 @@
 
 ## [4.7.13](https://github.com/getlantern/flashlight/tree/4.7.13) (2018-08-09)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.13)
-
-## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
-
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.12)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.11...4.7.13)
 
 ## [4.7.11](https://github.com/getlantern/flashlight/tree/4.7.11) (2018-08-01)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.11)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.12...4.7.11)
+
+## [4.7.12](https://github.com/getlantern/flashlight/tree/4.7.12) (2018-08-01)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.7.10...4.7.12)
 
 ## [4.7.10](https://github.com/getlantern/flashlight/tree/4.7.10) (2018-07-26)
 
@@ -631,7 +623,11 @@
 
 ## [4.6.4](https://github.com/getlantern/flashlight/tree/4.6.4) (2018-04-20)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.4)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.4)
+
+## [4.6.3](https://github.com/getlantern/flashlight/tree/4.6.3) (2018-04-18)
+
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.2...4.6.3)
 
 ## [4.6.2](https://github.com/getlantern/flashlight/tree/4.6.2) (2018-04-18)
 
@@ -639,11 +635,7 @@
 
 ## [4.6.1](https://github.com/getlantern/flashlight/tree/4.6.1) (2018-04-18)
 
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.3...4.6.1)
-
-## [4.6.3](https://github.com/getlantern/flashlight/tree/4.6.3) (2018-04-18)
-
-[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.3)
+[Full Changelog](https://github.com/getlantern/flashlight/compare/4.6.0...4.6.1)
 
 ## [4.6.0](https://github.com/getlantern/flashlight/tree/4.6.0) (2018-04-16)
 
