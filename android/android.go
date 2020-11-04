@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -41,12 +42,6 @@ var (
 
 	// XXX mobile does not respect the autoupdate global config
 	updateClient = &http.Client{Transport: proxied.ChainedThenFrontedWith("")}
-	updateCfg    = &autoupdate.Config{
-		CurrentVersion: common.CompileTimePackageVersion,
-		URL:            "https://update.getlantern.org/update",
-		HTTPClient:     updateClient,
-		PublicKey:      []byte(autoupdate.PackagePublicKey),
-	}
 
 	defaultLocale = `en-US`
 
@@ -445,6 +440,10 @@ func handleError(err error) {
 
 // CheckForUpdates checks to see if a new version of Lantern is available
 func CheckForUpdates() (string, error) {
+	return checkForUpdates(buildUpdateCfg())
+}
+
+func checkForUpdates(updateCfg *autoupdate.Config) (string, error) {
 	return autoupdate.CheckMobileUpdate(updateCfg)
 }
 
@@ -452,4 +451,13 @@ func CheckForUpdates() (string, error) {
 // file destination.
 func DownloadUpdate(url, apkPath string, updater Updater) {
 	autoupdate.UpdateMobile(url, apkPath, updater, updateClient)
+}
+
+func buildUpdateCfg() *autoupdate.Config {
+	return &autoupdate.Config{
+		CurrentVersion: common.CompileTimePackageVersion,
+		URL:            fmt.Sprintf("https://update.getlantern.org/update/%s", strings.ToLower(common.AppName)),
+		HTTPClient:     updateClient,
+		PublicKey:      []byte(autoupdate.PackagePublicKey),
+	}
 }

@@ -8,14 +8,17 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
 	"golang.org/x/net/proxy"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/integrationtest"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type testProtector struct{}
@@ -192,4 +195,32 @@ func TestInternalHeaders(t *testing.T) {
 		got := s.GetInternalHeaders()
 		assert.Equal(t, test.expected, got, "Headers did not decode as expected")
 	}
+}
+
+// This test requires the tag "lantern" to be set at testing time like:
+//
+//    go test -tags="lantern"
+//
+func TestAutoUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skip test in short mode")
+	}
+
+	updateCfg := buildUpdateCfg()
+	updateCfg.HTTPClient = &http.Client{}
+	updateCfg.CurrentVersion = "0.0.1"
+	updateCfg.OS = "android"
+	updateCfg.Arch = "arm"
+
+	// Update available
+	result, err := checkForUpdates(updateCfg)
+	require.NoError(t, err)
+	assert.Contains(t, result, "update_android_arm.bz2")
+	assert.Contains(t, result, strings.ToLower(common.AppName))
+
+	// No update available
+	updateCfg.CurrentVersion = "9999.9.9"
+	result, err = checkForUpdates(updateCfg)
+	require.NoError(t, err)
+	assert.Empty(t, result)
 }
