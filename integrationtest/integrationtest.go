@@ -4,6 +4,7 @@ package integrationtest
 
 import (
 	"compress/gzip"
+	"crypto/sha256"
 	"crypto/tls"
 	"encoding/binary"
 	"encoding/hex"
@@ -86,7 +87,6 @@ type Helper struct {
 	LampshadeProxyServerAddr    string
 	LampshadeUTPProxyServerAddr string
 	QUICIETFProxyServerAddr     string
-	QUIC0ProxyServerAddr        string
 	OQUICProxyServerAddr        string
 	WSSProxyServerAddr          string
 	TLSMasqProxyServerAddr      string
@@ -104,7 +104,7 @@ type Helper struct {
 // also enables ForceProxying on the client package to make sure even localhost
 // origins are served through the proxy. Make sure to close the Helper with
 // Close() when finished with the test.
-func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string, quic0Addr string, oquicAddr string, wssAddr string, tlsmasqAddr string, httpsUTPAddr string, obfs4UTPAddr string, lampshadeUTPAddr string, httpsSmuxAddr string, httpsPsmuxAddr string) (*Helper, error) {
+func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr string, quicAddr string, oquicAddr string, wssAddr string, tlsmasqAddr string, httpsUTPAddr string, obfs4UTPAddr string, lampshadeUTPAddr string, httpsSmuxAddr string, httpsPsmuxAddr string) (*Helper, error) {
 	ConfigDir, err := ioutil.TempDir("", "integrationtest_helper")
 	log.Debugf("ConfigDir is %v", ConfigDir)
 	if err != nil {
@@ -121,7 +121,6 @@ func NewHelper(t *testing.T, httpsAddr string, obfs4Addr string, lampshadeAddr s
 		LampshadeProxyServerAddr:    lampshadeAddr,
 		LampshadeUTPProxyServerAddr: lampshadeUTPAddr,
 		QUICIETFProxyServerAddr:     quicAddr,
-		QUIC0ProxyServerAddr:        quic0Addr,
 		OQUICProxyServerAddr:        oquicAddr,
 		WSSProxyServerAddr:          wssAddr,
 		TLSMasqProxyServerAddr:      tlsmasqAddr,
@@ -233,7 +232,6 @@ func (helper *Helper) startProxyServer() error {
 		LampshadeAddr:     helper.LampshadeProxyServerAddr,
 		LampshadeUTPAddr:  helper.LampshadeUTPProxyServerAddr,
 		QUICIETFAddr:      helper.QUICIETFProxyServerAddr,
-		QUIC0Addr:         helper.QUIC0ProxyServerAddr,
 		WSSAddr:           helper.WSSProxyServerAddr,
 		TLSMasqAddr:       helper.TLSMasqProxyServerAddr,
 
@@ -357,50 +355,30 @@ func (helper *Helper) writeGlobalConfig(resp http.ResponseWriter, req *http.Requ
 func (helper *Helper) writeProxyConfig(resp http.ResponseWriter, req *http.Request) {
 	log.Debug("Writing proxy config")
 	proto := helper.protocol.Load().(string)
-	version := "1"
-	if proto == "obfs4" {
-		version = "2"
-	} else if proto == "lampshade" {
-		version = "3"
-	} else if proto == "kcp" {
-		version = "4"
-	} else if proto == "quic" {
-		version = "5"
-	} else if proto == "wss" {
-		version = "6"
-	} else if proto == "utphttps" {
-		version = "7"
-	} else if proto == "utpobfs4" {
-		version = "8"
-	} else if proto == "utplampshade" {
-		version = "9"
-	} else if proto == "oquic" {
-		version = "10"
-	} else if proto == "quic_ietf" {
-		version = "11"
-	} else if proto == "https+smux" {
-		version = "12"
-	} else if proto == "https+psmux" {
-		version = "13"
-	}
-
-	if req.Header.Get(IfNoneMatch) == version {
-		resp.WriteHeader(http.StatusNotModified)
-		return
-	}
-
 	cfg, err := helper.buildProxies(proto)
 	if err != nil {
 		helper.t.Error(err)
 		resp.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	out, err := yaml.Marshal(cfg)
+	if err != nil {
+		helper.t.Error(err)
+		resp.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-	resp.Header().Set(Etag, version)
+	etag := fmt.Sprintf("%x", sha256.Sum256(out))
+	if req.Header.Get(IfNoneMatch) == etag {
+		resp.WriteHeader(http.StatusNotModified)
+		return
+	}
+
+	resp.Header().Set(Etag, etag)
 	resp.WriteHeader(http.StatusOK)
 
 	w := gzip.NewWriter(resp)
-	_, err = w.Write(cfg)
+	_, err = w.Write(out)
 	if err != nil {
 		helper.t.Error(err)
 	}
@@ -414,18 +392,36 @@ func (helper *Helper) writeConfig() error {
 	if err != nil {
 		return err
 	}
-
-	return ioutil.WriteFile(filename, cfg, 0644)
+	out, err := yaml.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(filename, out, 0644)
 }
 
-func (helper *Helper) buildProxies(proto string) ([]byte, error) {
-	cfg := make(map[string]*chained.ChainedServerInfo)
-	err := yaml.Unmarshal(proxiesTemplate, cfg)
+func (helper *Helper) buildProxies(proto string) (map[string]*chained.ChainedServerInfo, error) {
+	protos := strings.Split(proto, ",")
+	// multipath
+	if len(protos) > 1 {
+		proxies := make(map[string]*chained.ChainedServerInfo)
+		for _, p := range protos {
+			cfgs, err := helper.buildProxies(p)
+			if err != nil {
+				return nil, err
+			}
+			for name, cfg := range cfgs {
+				cfg.MultipathEndpoint = "multipath-endpoint"
+				proxies[name] = cfg
+			}
+		}
+		return proxies, nil
+	}
+	var srv chained.ChainedServerInfo
+	err := yaml.Unmarshal(proxiesTemplate, &srv)
 	if err != nil {
 		return nil, fmt.Errorf("Could not unmarshal config %v", err)
 	}
 
-	srv := cfg["fallback-template"]
 	srv.AuthToken = Token
 	if proto == "obfs4" || proto == "utpobfs4" {
 		if proto == "utpobfs4" {
@@ -456,9 +452,6 @@ func (helper *Helper) buildProxies(proto string) ([]byte, error) {
 		} else if proto == "quic_ietf" {
 			srv.Addr = helper.QUICIETFProxyServerAddr
 			srv.PluggableTransport = "quic_ietf"
-		} else if proto == "quic" {
-			srv.Addr = helper.QUIC0ProxyServerAddr
-			srv.PluggableTransport = "quic"
 		} else if proto == "oquic" {
 			srv.Addr = helper.OQUICProxyServerAddr
 			srv.PluggableTransport = "oquic"
@@ -503,12 +496,7 @@ func (helper *Helper) buildProxies(proto string) ([]byte, error) {
 			srv.KCPSettings = kcpConf
 		}
 	}
-	out, err := yaml.Marshal(cfg)
-	if err != nil {
-		return nil, fmt.Errorf("Could not marshal config %v", err)
-	}
-
-	return out, nil
+	return map[string]*chained.ChainedServerInfo{"proxy-" + proto: &srv}, nil
 }
 
 func (helper *Helper) startTLSMasqOrigin() error {

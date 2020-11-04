@@ -9,10 +9,28 @@ import (
 
 	"github.com/getlantern/flashlight/loconf"
 	"github.com/getlantern/golog"
+	"github.com/getlantern/golog/testlog"
 	"github.com/stretchr/testify/assert"
 )
 
+var logger = golog.LoggerFor("desktop-test")
+
+var tempConfigDir string
+
+func TestMain(m *testing.M) {
+	tempConfigDir, err := ioutil.TempDir("", "loconfscanner_test")
+	if err != nil {
+		logger.Errorf("Unable to create temp config dir: %v", err)
+		os.Exit(1)
+	}
+	defer os.RemoveAll(tempConfigDir)
+	os.Exit(m.Run())
+}
+
 func TestWriteURL(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
+
 	loc := &loconfer{
 		log: golog.LoggerFor("loconfer"),
 		r:   rand.New(rand.NewSource(time.Now().UnixNano())),
@@ -36,12 +54,15 @@ func TestWriteURL(t *testing.T) {
 }
 
 func TestParsing(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
+
 	logger := golog.LoggerFor("loconfloop-test")
-	stop := LoconfScanner(4*time.Hour, func() (bool, bool) {
+	stop := LoconfScanner(tempConfigDir, 4*time.Hour, func() (bool, bool) {
 		return true, false
 	}, func() string { return "" })
 	stop()
-	stop = LoconfScanner(4*time.Hour, func() (bool, bool) {
+	stop = LoconfScanner(tempConfigDir, 4*time.Hour, func() (bool, bool) {
 		return true, true
 	}, func() string { return "" })
 	logger.Debug("Stopping")

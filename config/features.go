@@ -90,6 +90,8 @@ type ClientGroup struct {
 	// Range: 0-1. When both are omitted, all users fall within the range.
 	UserFloor float64
 	UserCeil  float64
+	// The application the feature applies to. Defaults to all applications.
+	Application string
 	// A semantic version range which only Lantern versions falls within is consided.
 	// Defaults to all versions.
 	VersionConstraints string
@@ -141,6 +143,10 @@ func (g ClientGroup) Validate() error {
 //combination, assuming the group has been validated.
 func (g ClientGroup) Includes(userID int64, isPro bool, geoCountry string) bool {
 	if g.UserCeil > 0 {
+		// Unknown user ID doesn't belong to any user range
+		if userID == 0 {
+			return false
+		}
 		percision := 1000.0
 		remainder := userID % int64(percision)
 		if remainder < int64(g.UserFloor*percision) || remainder >= int64(g.UserCeil*percision) {
@@ -151,6 +157,9 @@ func (g ClientGroup) Includes(userID int64, isPro bool, geoCountry string) bool 
 		return false
 	}
 	if g.ProOnly && !isPro {
+		return false
+	}
+	if g.Application != "" && strings.ToLower(g.Application) != strings.ToLower(common.AppName) {
 		return false
 	}
 	if g.VersionConstraints != "" {

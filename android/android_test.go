@@ -8,14 +8,17 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
 	"golang.org/x/net/proxy"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/integrationtest"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type testProtector struct{}
@@ -69,7 +72,7 @@ func TestProxying(t *testing.T) {
 		listenPort++
 		return fmt.Sprintf("localhost:%d", listenPort)
 	}
-	helper, err := integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
+	helper, err := integrationtest.NewHelper(t, nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr(), nextListenAddr())
 	if assert.NoError(t, err, "Unable to create temp configDir") {
 		defer helper.Close()
 		result, err := Start(helper.ConfigDir, "en_US", testSettings{}, testSession{})
@@ -77,9 +80,9 @@ func TestProxying(t *testing.T) {
 			newResult, err := Start("testapp", "en_US", testSettings{}, testSession{})
 			if assert.NoError(t, err, "Should have been able to start lantern twice") {
 				if assert.Equal(t, result.HTTPAddr, newResult.HTTPAddr, "2nd start should have resulted in the same address") {
-					err := testProxiedRequest(helper, result.HTTPAddr, false)
+					err := testProxiedRequest(helper, result.HTTPAddr, result.DNSGrabAddr, false)
 					if assert.NoError(t, err, "Proxying request via HTTP should have worked") {
-						err := testProxiedRequest(helper, result.SOCKS5Addr, true)
+						err := testProxiedRequest(helper, result.SOCKS5Addr, result.DNSGrabAddr, true)
 						assert.NoError(t, err, "Proxying request via SOCKS should have worked")
 					}
 				}
@@ -88,14 +91,14 @@ func TestProxying(t *testing.T) {
 	}
 }
 
-func testProxiedRequest(helper *integrationtest.Helper, proxyAddr string, socks bool) error {
+func testProxiedRequest(helper *integrationtest.Helper, proxyAddr string, dnsGrabAddr string, socks bool) error {
 	host := helper.HTTPServerAddr
 	if socks {
 		resolver := &net.Resolver{
 			PreferGo: true,
 			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
 				// use dnsgrabber to resolve
-				return net.DialTimeout("udp", "127.0.0.1:8153", 2*time.Second)
+				return net.DialTimeout("udp", dnsGrabAddr, 2*time.Second)
 			},
 		}
 		resolved, err := resolver.LookupHost(context.Background(), host)
@@ -192,4 +195,32 @@ func TestInternalHeaders(t *testing.T) {
 		got := s.GetInternalHeaders()
 		assert.Equal(t, test.expected, got, "Headers did not decode as expected")
 	}
+}
+
+// This test requires the tag "lantern" to be set at testing time like:
+//
+//    go test -tags="lantern"
+//
+func TestAutoUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skip test in short mode")
+	}
+
+	updateCfg := buildUpdateCfg()
+	updateCfg.HTTPClient = &http.Client{}
+	updateCfg.CurrentVersion = "0.0.1"
+	updateCfg.OS = "android"
+	updateCfg.Arch = "arm"
+
+	// Update available
+	result, err := checkForUpdates(updateCfg)
+	require.NoError(t, err)
+	assert.Contains(t, result, "update_android_arm.bz2")
+	assert.Contains(t, result, strings.ToLower(common.AppName))
+
+	// No update available
+	updateCfg.CurrentVersion = "9999.9.9"
+	result, err = checkForUpdates(updateCfg)
+	require.NoError(t, err)
+	assert.Empty(t, result)
 }

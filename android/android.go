@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -41,18 +42,13 @@ var (
 
 	// XXX mobile does not respect the autoupdate global config
 	updateClient = &http.Client{Transport: proxied.ChainedThenFrontedWith("")}
-	updateCfg    = &autoupdate.Config{
-		CurrentVersion: common.CompileTimePackageVersion,
-		URL:            "https://update.getlantern.org/update",
-		HTTPClient:     updateClient,
-		PublicKey:      []byte(autoupdate.PackagePublicKey),
-	}
 
 	defaultLocale = `en-US`
 
 	startOnce sync.Once
 
-	cl = eventual.NewValue()
+	cl          = eventual.NewValue()
+	dnsGrabAddr = eventual.NewValue()
 
 	errNoAdProviderAvailable = errors.New("no ad provider available")
 )
@@ -182,8 +178,9 @@ type SurveyInfo struct {
 
 // StartResult provides information about the started Lantern
 type StartResult struct {
-	HTTPAddr   string
-	SOCKS5Addr string
+	HTTPAddr    string
+	SOCKS5Addr  string
+	DNSGrabAddr string
 }
 
 // AdSettings is an interface for retrieving mobile ad settings from the
@@ -235,21 +232,30 @@ func Start(configDir string, locale string,
 		go run(configDir, locale, settings, session)
 	})
 
+	startTimeout := time.Duration(settings.TimeoutMillis()) * time.Millisecond
+
 	elapsed := mtime.Stopwatch()
-	addr, ok := client.Addr(time.Duration(settings.TimeoutMillis()) * time.Millisecond)
+	addr, ok := client.Addr(startTimeout)
 	if !ok {
-		return nil, fmt.Errorf("HTTP Proxy didn't start within %vms timeout", settings.TimeoutMillis())
+		return nil, fmt.Errorf("HTTP Proxy didn't start within %v timeout", startTimeout)
 	}
 
-	socksAddr, ok := client.Socks5Addr((time.Duration(settings.TimeoutMillis()) * time.Millisecond) - elapsed())
+	socksAddr, ok := client.Socks5Addr(startTimeout - elapsed())
 	if !ok {
-		err := fmt.Errorf("SOCKS5 Proxy didn't start within %vms timeout", settings.TimeoutMillis())
+		err := fmt.Errorf("SOCKS5 Proxy didn't start within %v timeout", startTimeout)
 		log.Error(err.Error())
 		return nil, err
 	}
 	log.Debugf("Starting socks proxy at %s", socksAddr)
 
-	return &StartResult{addr.(string), socksAddr.(string)}, nil
+	dnsGrabberAddr, ok := dnsGrabAddr.Get(startTimeout - elapsed())
+	if !ok {
+		err := fmt.Errorf("dnsgrab didn't start within %v timeout", startTimeout)
+		log.Error(err.Error())
+		return nil, err
+	}
+
+	return &StartResult{addr.(string), socksAddr.(string), dnsGrabberAddr.(string)}, nil
 }
 
 // AddLoggingMetadata adds metadata for reporting to cloud logging services
@@ -299,12 +305,13 @@ func run(configDir, locale string,
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
 	grabber, err := dnsgrab.Listen(maxDNSGrabCache,
-		":8153",
+		"127.0.0.1:0",
 		session.GetDNSServer())
 	if err != nil {
 		log.Errorf("Unable to start dnsgrab: %v", err)
 		return
 	}
+	dnsGrabAddr.Set(grabber.LocalAddr().String())
 	go func() {
 		serveErr := grabber.Serve()
 		if serveErr != nil {
@@ -364,7 +371,7 @@ func run(configDir, locale string,
 	if err != nil {
 		log.Fatalf("Failed to start flashlight: %v", err)
 	}
-	runner.Run(
+	go runner.Run(
 		httpProxyAddr, // listen for HTTP on provided address
 		"127.0.0.1:0", // listen for SOCKS on random address
 		func(c *client.Client) {
@@ -433,6 +440,10 @@ func handleError(err error) {
 
 // CheckForUpdates checks to see if a new version of Lantern is available
 func CheckForUpdates() (string, error) {
+	return checkForUpdates(buildUpdateCfg())
+}
+
+func checkForUpdates(updateCfg *autoupdate.Config) (string, error) {
 	return autoupdate.CheckMobileUpdate(updateCfg)
 }
 
@@ -440,4 +451,13 @@ func CheckForUpdates() (string, error) {
 // file destination.
 func DownloadUpdate(url, apkPath string, updater Updater) {
 	autoupdate.UpdateMobile(url, apkPath, updater, updateClient)
+}
+
+func buildUpdateCfg() *autoupdate.Config {
+	return &autoupdate.Config{
+		CurrentVersion: common.CompileTimePackageVersion,
+		URL:            fmt.Sprintf("https://update.getlantern.org/update/%s", strings.ToLower(common.AppName)),
+		HTTPClient:     updateClient,
+		PublicKey:      []byte(autoupdate.PackagePublicKey),
+	}
 }

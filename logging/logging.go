@@ -1,4 +1,4 @@
-// package logging configures the golog subsystem for use with Lantern
+// Package logging configures the golog subsystem for use with Lantern
 // Import this to make sure golog is initialized before you log.
 package logging
 
@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/rotator"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/util"
 )
 
@@ -33,7 +35,13 @@ var (
 
 	actualLogDir   string
 	actualLogDirMx sync.RWMutex
+
+	resetLogs atomic.Value
 )
+
+func init() {
+	resetLogs.Store(func() {})
+}
 
 // RotatedLogsUnder creates rotated file logger under logdir.
 func RotatedLogsUnder(logdir string) (io.WriteCloser, error) {
@@ -50,7 +58,7 @@ func RotatedLogsUnder(logdir string) (io.WriteCloser, error) {
 		}
 	}
 
-	rotator := rotator.NewSizeRotator(filepath.Join(logdir, "lantern.log"))
+	rotator := rotator.NewSizeRotator(filepath.Join(logdir, strings.ToLower(common.AppName)+".log"))
 	// Set log files to 4 MB
 	rotator.RotationSize = 4 * 1024 * 1024
 	// Keep up to 5 log files
@@ -90,7 +98,7 @@ func EnableFileLoggingWith(werr io.WriteCloser, wout io.WriteCloser, logdir stri
 	logFile = rotator
 	errorPWC = newPipedWriteCloser(NonStopWriteCloser(werr, logFile), 1000)
 	debugPWC = newPipedWriteCloser(NonStopWriteCloser(wout, logFile), 100)
-	golog.SetOutputs(errorPWC, debugPWC)
+	resetLogs.Store(golog.SetOutputs(errorPWC, debugPWC))
 	return nil
 }
 
@@ -200,7 +208,9 @@ func Close() error {
 	if logFile != nil {
 		logFile.Close()
 	}
-	golog.ResetOutputs()
+
+	resetLogs.Load().(func())()
+
 	return nil
 }
 

@@ -235,7 +235,7 @@ func (s *Server) start(requestedAddr string) error {
 
 // ShowRoot shows the UI at the root level (default).
 func (s *Server) ShowRoot(campaign, medium string, st stats.Tracker) {
-	s.Show(s.rootURL(), campaign, medium, st)
+	s.Show(s.rootURL(), strings.ToLower(campaign), strings.ToLower(medium), st)
 }
 
 // Show opens the UI in a browser. Note we know the UI server is

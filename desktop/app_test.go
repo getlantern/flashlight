@@ -5,10 +5,14 @@ import (
 	"os"
 	"testing"
 
+	"github.com/getlantern/golog/testlog"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestLocalHTTPToken(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
+
 	// Avoid polluting real settings.
 	tmpfile, err := ioutil.TempFile("", "TestLocalHTTPToken")
 	if err != nil {
