@@ -1,4 +1,15 @@
 
+<a name="beam-0.1.11"></a>
+## [beam-0.1.11](https://github.com/getlantern/flashlight/compare/beam-0.1.10...beam-0.1.11)
+
+> 2020-11-04
+
+### Pull Requests
+
+* Merge pull request [#942](https://github.com/getlantern/flashlight/issues/942) from getlantern/ox/issue4410
+* Merge pull request [#940](https://github.com/getlantern/flashlight/issues/940) from getlantern/harry/make-fix
+
+
 <a name="beam-0.1.10"></a>
 ## [beam-0.1.10](https://github.com/getlantern/flashlight/compare/6.1.0...beam-0.1.10)
 
