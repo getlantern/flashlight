@@ -100,6 +100,7 @@ func init() {
 			"mandrillapp.com":                   "mandrillapp.dsa.akamai.getiantem.org",
 			"replica-search.lantern.io":         "replica-search.dsa.akamai.lantern.io",
 			"replica-search-staging.lantern.io": "replica-search-staging.dsa.akamai.lantern.io",
+			"replica-thumbnailer.lantern.io":    "replica-thumbnailer.dsa.akamai.lantern.io",
 		},
 		&config.ValidatorConfig{RejectStatus: []int{403}},
 	)

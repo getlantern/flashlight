@@ -32,6 +32,7 @@ var (
 		"mandrillapp.com":                   "d2rh3u0miqci5a.cloudfront.net",
 		"replica-search.lantern.io":         "d7kybcoknm3oo.cloudfront.net",
 		"replica-search-staging.lantern.io": "d36vwf34kviguu.cloudfront.net",
+		"replica-thumbnailer.lantern.io":    "d2b627m7r9v7iw.cloudfront.net",
 	}
 )
 
