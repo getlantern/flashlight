@@ -402,8 +402,8 @@ func (app *App) beforeStart(listenAddr string) {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		return
 	}
-	uiServer.Handle("/pro/", pro.APIHandler(settings))
-	uiServer.Handle("/data", app.ws.Handler())
+	uiServer.Handle("/pro/", pro.APIHandler(settings), true)
+	uiServer.Handle("/data", app.ws.Handler(), true)
 
 	if app.ShouldShowUI() {
 		go func() {
@@ -501,9 +501,14 @@ func (app *App) checkForReplica(features map[string]bool) {
 
 			// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
 			// in their handlers.
-			app.uiServer().Handle("/replica/", http.StripPrefix(
-				"/replica",
-				replicaHandler))
+			app.uiServer().Handle(
+				"/replica/",
+				http.StripPrefix(
+					"/replica",
+					replicaHandler,
+				),
+				false,
+			)
 		})
 	}
 }
