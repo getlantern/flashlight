@@ -472,7 +472,7 @@ func (app *App) checkForReplica(features map[string]bool) {
 	if val, ok := features[config.FeatureReplica]; ok && val {
 		app.startReplica.Do(func() {
 			log.Debug("Starting replica from app")
-			replicaHandler, exitFunc, err := desktopReplica.NewHTTPHandler(
+			replicaHandler, err := desktopReplica.NewHTTPHandler(
 				app.ConfigDir,
 				getSettings(),
 				&replica.Client{
@@ -490,13 +490,14 @@ func (app *App) checkForReplica(features map[string]bool) {
 					Endpoint: replica.DefaultEndpoint,
 				},
 				app.gaSession,
+				desktopReplica.DefaultNewHttpHandlerOpts(),
 			)
 			if err != nil {
 				log.Errorf("error creating replica http server: %v", err)
 				app.Exit(err)
 				return
 			}
-			app.AddExitFunc("cleanup replica http server", exitFunc)
+			app.AddExitFunc("cleanup replica http server", replicaHandler.Close)
 
 			// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
 			// in their handlers.
