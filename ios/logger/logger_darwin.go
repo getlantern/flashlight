@@ -1,4 +1,4 @@
-package ios
+package logger
 
 // #include <os/log.h>
 //

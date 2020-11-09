@@ -16,6 +16,7 @@ require (
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
+	github.com/eycorsican/go-tun2socks v1.16.11
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
@@ -25,7 +26,7 @@ require (
 	github.com/getlantern/cmuxprivate v0.0.0-20200905032931-afb63438e40b
 	github.com/getlantern/common v1.1.1-0.20200824002646-ca4a48d3a74c
 	github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1
-	github.com/getlantern/dnsgrab v0.0.0-20191217020031-0e5f714410f9
+	github.com/getlantern/dnsgrab v0.0.0-20201111172057-eb9a9a065f71
 	github.com/getlantern/domains v0.0.0-20200402172102-34a8db1e0e83
 	github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4
 	github.com/getlantern/enhttp v0.0.0-20190401024120-a974fa851e3c
@@ -52,7 +53,7 @@ require (
 	github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644
 	github.com/getlantern/kcpwrapper v0.0.0-20171114192627-a35c895f6de7
 	github.com/getlantern/keyman v0.0.0-20200819205636-76fef27c39f1
-	github.com/getlantern/lampshade v0.0.0-20200303040944-fe53f13203e9
+	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
@@ -61,7 +62,7 @@ require (
 	github.com/getlantern/mockconn v0.0.0-20191023022503-481dbcceeb58
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20201027015000-69ed0bd15259
-	github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd
+	github.com/getlantern/netx v0.0.0-20201202133732-af5244d26505
 	github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b
 	github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6
 	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
@@ -91,7 +92,8 @@ require (
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
 	github.com/getsentry/sentry-go v0.7.0
-	github.com/google/netstack v0.0.0-20191116005144-95bf25ab4723 // indirect
+	github.com/google/gopacket v1.1.17
+	github.com/google/netstack v0.0.0-20191123085552-55fcc16cd0eb
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
@@ -111,6 +113,7 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
+	golang.org/x/mobile v0.0.0-20200801112145-973feb4309de // indirect
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73
 	golang.org/x/sys v0.0.0-20200929083018-4d22bbb62b3c
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1

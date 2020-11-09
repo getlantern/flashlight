@@ -347,7 +347,7 @@ func run(configDir, locale string,
 		session.IsProUser,
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
-		func(addr string) string {
+		func(addr string) (string, error) {
 			host, port, splitErr := net.SplitHostPort(addr)
 			if splitErr != nil {
 				host = addr
@@ -355,17 +355,16 @@ func run(configDir, locale string,
 			ip := net.ParseIP(host)
 			if ip == nil {
 				log.Debugf("Unable to parse IP %v, passing through address as is", host)
-				return addr
+				return addr, nil
 			}
-			updatedHost := grabber.ReverseLookup(ip)
-			if updatedHost == "" {
-				log.Debugf("Unable to reverse lookup %v, passing through address as is (this shouldn't happen much)", ip)
-				return addr
+			updatedHost, ok := grabber.ReverseLookup(ip)
+			if !ok {
+				return "", errors.New("Invalid IP address")
 			}
 			if splitErr != nil {
-				return updatedHost
+				return updatedHost, nil
 			}
-			return fmt.Sprintf("%v:%v", updatedHost, port)
+			return fmt.Sprintf("%v:%v", updatedHost, port), nil
 		},
 	)
 	if err != nil {
