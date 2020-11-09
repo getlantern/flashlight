@@ -3,6 +3,7 @@ package desktop
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -24,13 +25,13 @@ var (
 func setUpSysproxyTool() error {
 	var iconFile string
 	if common.Platform == "darwin" {
-		icon, err := icons.Asset("connected_32.ico")
+		icon, err := icons.Asset(appIcon("connected"))
 		if err != nil {
 			return fmt.Errorf("Unable to load escalation prompt icon: %v", err)
 		}
 		// We have to use a short filepath here because Cocoa won't display the
 		// icon if the path is too long.
-		iconFile = filepath.Join("/tmp", "escalatelantern.ico")
+		iconFile = filepath.Join("/tmp", appIcon("escalate"))
 		err = filepersist.Save(iconFile, icon, 0644)
 		if err != nil {
 			log.Errorf("Unable to persist icon to disk, fallback to default icon: %v", err)
@@ -126,4 +127,19 @@ func getProxyAddr() (addr string, found bool) {
 		addr = _addr.(string)
 	}
 	return
+}
+
+func appIcon(name string) string {
+	return strings.ToLower(common.AppName) + "_" + fmt.Sprintf(iconTemplate(), name)
+}
+
+func iconTemplate() string {
+	if common.Platform == "darwin" {
+		if common.AppName == "Beam" {
+			return "%s_32.png"
+		}
+		// Lantern doesn't have png files to support dark mode yet
+		return "%s_32.ico"
+	}
+	return "%s_32.ico"
 }

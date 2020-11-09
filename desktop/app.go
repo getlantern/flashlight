@@ -13,7 +13,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/getlantern/appdir"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight/browsers/simbrowser"
@@ -53,15 +52,10 @@ import (
 	"github.com/getlantern/replica"
 )
 
-const (
-	SENTRY_DSN               = "https://f65aa492b9524df79b05333a0b0924c5@sentry.io/2222244"
-	SENTRY_TIMEOUT           = time.Second * 30
-	SENTRY_MAX_MESSAGE_CHARS = 8000
-)
-
 var (
-	log      = golog.LoggerFor("flashlight.app")
-	settings *Settings
+	log        = golog.LoggerFor("flashlight.app")
+	_settings  *Settings
+	settingsMx sync.RWMutex
 
 	startTime = time.Now()
 )
@@ -73,6 +67,18 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
+func getSettings() *Settings {
+	settingsMx.RLock()
+	defer settingsMx.RUnlock()
+	return _settings
+}
+
+func setSettings(newSettings *Settings) {
+	settingsMx.Lock()
+	_settings = newSettings
+	settingsMx.Unlock()
+}
+
 // App is the core of the Lantern desktop application, in the form of a library.
 type App struct {
 	hasExited            int64
@@ -80,6 +86,7 @@ type App struct {
 	fetchedProxiesConfig int32
 
 	Flags        map[string]interface{}
+	ConfigDir    string
 	exited       eventual.Value
 	gaSession    analytics.Session
 	statsTracker *statsTracker
@@ -112,11 +119,16 @@ type App struct {
 // Init initializes the App's state
 func (app *App) Init() {
 	golog.OnFatal(app.exitOnFatal)
+
+	log.Debugf("Using configdir: %v", app.ConfigDir)
+
 	app.Flags["staging"] = common.Staging
+
 	app.uiServerCh = make(chan *ui.Server, 1)
 	app.chrome = newChromeExtension()
 	//app.chrome.install()
-	settings = app.loadSettings()
+	settings := app.loadSettings()
+	setSettings(settings)
 	app.exited = eventual.NewValue()
 	// overridden later if auto report is allowed
 	app.gaSession = analytics.NullSession{}
@@ -138,13 +150,9 @@ func (app *App) Init() {
 
 // loadSettings loads the initial settings at startup, either from disk or using defaults.
 func (app *App) loadSettings() *Settings {
-	dir := app.Flags["configdir"].(string)
-	if dir == "" {
-		dir = appdir.General("Lantern")
-	}
-	path := filepath.Join(dir, "settings.yaml")
+	path := filepath.Join(app.ConfigDir, "settings.yaml")
 	if common.Staging {
-		path = filepath.Join(dir, "settings-staging.yaml")
+		path = filepath.Join(app.ConfigDir, "settings-staging.yaml")
 	}
 	return loadSettingsFrom(common.Version, common.RevisionDate, common.BuildDate, path, app.chrome)
 }
@@ -158,7 +166,7 @@ func (app *App) LogPanicAndExit(msg string) {
 		})
 
 		sentry.CaptureMessage(msg)
-		if result := sentry.Flush(SENTRY_TIMEOUT); result == false {
+		if result := sentry.Flush(common.SentryTimeout); result == false {
 			log.Error("Flushing to Sentry timed out")
 		}
 	}
@@ -181,6 +189,8 @@ func (app *App) Run() {
 	golog.OnFatal(app.exitOnFatal)
 
 	memhelper.Track(15*time.Second, 15*time.Second)
+
+	settings := getSettings()
 
 	// Run below in separate goroutine as config.Init() can potentially block when Lantern runs
 	// for the first time. User can still quit Lantern through systray menu when it happens.
@@ -227,7 +237,7 @@ func (app *App) Run() {
 
 		var err error
 		app.flashlight, err = flashlight.New(
-			app.Flags["configdir"].(string),
+			app.ConfigDir,
 			app.Flags["vpn"].(bool),
 			func() bool { return settings.getBool(SNDisconnected) }, // check whether we're disconnected
 			settings.GetProxyAll,
@@ -291,6 +301,7 @@ func (app *App) startFeaturesService(chans ...<-chan bool) {
 			go func(c <-chan bool) {
 				for range c {
 					features := app.flashlight.EnabledFeatures()
+					log.Debugf("EnabledFeatures: %v", features)
 					app.checkForReplica(features)
 					select {
 					case service.Out <- features:
@@ -325,13 +336,14 @@ func (app *App) beforeStart(listenAddr string) {
 	}
 
 	var startupURL string
-	bootstrap, err := config.ReadBootstrapSettings()
+	bootstrap, err := config.ReadBootstrapSettings(app.ConfigDir)
 	if err != nil {
 		log.Debugf("Could not read bootstrap settings: %v", err)
 	} else {
 		startupURL = bootstrap.StartupUrl
 	}
 
+	settings := getSettings()
 	uiaddr := app.Flags["uiaddr"].(string)
 	if uiaddr == "" {
 		// stick with the last one if not specified from command line.
@@ -448,7 +460,7 @@ func (app *App) beforeStart(listenAddr string) {
 			app.gaSession.SetIP(geolookup.GetIP(eventual.Forever))
 		}()
 	}
-	app.AddExitFunc("stopping loconf scanner", LoconfScanner(4*time.Hour, isProUser, func() string {
+	app.AddExitFunc("stopping loconf scanner", LoconfScanner(app.ConfigDir, 4*time.Hour, isProUser, func() string {
 		return app.AddToken("/img/lantern_logo.png")
 	}))
 	app.AddExitFunc("stopping notifier", notifier.NotificationsLoop(app.gaSession))
@@ -469,8 +481,9 @@ func (app *App) checkForReplica(features map[string]bool) {
 	if val, ok := features[config.FeatureReplica]; ok && val {
 		app.startReplica.Do(func() {
 			log.Debug("Starting replica from app")
-			replicaHandler, exitFunc, err := desktopReplica.NewHTTPHandler(
-				settings,
+			replicaHandler, err := desktopReplica.NewHTTPHandler(
+				app.ConfigDir,
+				getSettings(),
 				&replica.Client{
 					HttpClient: &http.Client{
 						Transport: proxied.AsRoundTripper(
@@ -486,19 +499,25 @@ func (app *App) checkForReplica(features map[string]bool) {
 					Endpoint: replica.DefaultEndpoint,
 				},
 				app.gaSession,
+				desktopReplica.DefaultNewHttpHandlerOpts(),
 			)
 			if err != nil {
 				log.Errorf("error creating replica http server: %v", err)
 				app.Exit(err)
 				return
 			}
-			app.AddExitFunc("cleanup replica http server", exitFunc)
+			app.AddExitFunc("cleanup replica http server", replicaHandler.Close)
 
 			// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
 			// in their handlers.
-			app.uiServer().Handle("/replica/", http.StripPrefix(
-				"/replica",
-				replicaHandler))
+			app.uiServer().Handle(
+				"/replica/",
+				http.StripPrefix(
+					"/replica",
+					replicaHandler,
+				),
+				false,
+			)
 		})
 	}
 }
@@ -507,24 +526,24 @@ func (app *App) checkForReplica(features map[string]bool) {
 func (app *App) Connect() {
 	app.gaSession.Event("systray-menu", "connect")
 	ops.Begin("connect").End()
-	settings.setBool(SNDisconnected, false)
+	getSettings().setBool(SNDisconnected, false)
 }
 
 // Disconnect turns off proxying
 func (app *App) Disconnect() {
 	app.gaSession.Event("systray-menu", "disconnect")
 	ops.Begin("disconnect").End()
-	settings.setBool(SNDisconnected, true)
+	getSettings().setBool(SNDisconnected, true)
 }
 
 // GetLanguage returns the user language
 func (app *App) GetLanguage() string {
-	return settings.GetLanguage()
+	return getSettings().GetLanguage()
 }
 
 // SetLanguage sets the user language
 func (app *App) SetLanguage(lang string) {
-	settings.SetLanguage(lang)
+	getSettings().SetLanguage(lang)
 }
 
 // GetStringFlag gets the app flag with the given name. If the flag
@@ -543,7 +562,7 @@ func (app *App) GetStringFlag(name, defaultValue string) string {
 // OnSettingChange sets a callback cb to get called when attr is changed from UI.
 // When calling multiple times for same attr, only the last one takes effect.
 func (app *App) OnSettingChange(attr SettingName, cb func(interface{})) {
-	settings.OnChange(attr, cb)
+	getSettings().OnChange(attr, cb)
 }
 
 // OnStatsChange adds a listener for Stats changes.
@@ -559,7 +578,7 @@ func (app *App) sysproxyOn() {
 }
 
 func (app *App) afterStart(cl *client.Client) {
-	if settings.GetSystemProxy() {
+	if getSettings().GetSystemProxy() {
 		app.sysproxyOn()
 	}
 
@@ -584,10 +603,12 @@ func (app *App) afterStart(cl *client.Client) {
 		// URL and the proxy server are all up and running to avoid
 		// race conditions where we change the proxy setup while the
 		// UI server and proxy server are still coming up.
-		app.uiServer().ShowRoot("startup", "lantern", app.statsTracker)
+		app.uiServer().ShowRoot("startup", common.AppName, app.statsTracker)
 	} else {
 		log.Debugf("Not opening browser. Startup is: %v", app.Flags["startup"])
 	}
+
+	settings := getSettings()
 	if addr, ok := client.Addr(6 * time.Second); ok {
 		settings.setString(SNAddr, addr)
 	} else {
@@ -723,7 +744,7 @@ func (app *App) configureTrafficLog(cfg config.Global) {
 // showExistingUi triggers an existing Lantern running on the same system to
 // open a browser to the Lantern start page.
 func (app *App) showExistingUI(addr string) error {
-	url := "http://" + addr + "/" + localHTTPToken(settings) + "/startup"
+	url := "http://" + addr + "/" + localHTTPToken(getSettings()) + "/startup"
 	log.Debugf("Hitting local URL: %v", url)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -778,7 +799,7 @@ func (app *App) doExit(err error) {
 			})
 
 			sentry.CaptureException(err)
-			if result := sentry.Flush(SENTRY_TIMEOUT); result == false {
+			if result := sentry.Flush(common.SentryTimeout); result == false {
 				log.Error("Flushing to Sentry timed out")
 			}
 		}
@@ -843,7 +864,7 @@ func (app *App) IsPro() bool {
 // ProxyAddrReachable checks if Lantern's HTTP proxy responds correct status
 // within the deadline.
 func (app *App) ProxyAddrReachable(ctx context.Context) error {
-	req, err := http.NewRequest("GET", "http://"+settings.GetAddr(), nil)
+	req, err := http.NewRequest("GET", "http://"+getSettings().GetAddr(), nil)
 	if err != nil {
 		return err
 	}
@@ -876,7 +897,7 @@ func ShouldReportToSentry() bool {
 // OnTrayShow indicates the user has selected to show lantern from the tray.
 func (app *App) OnTrayShow() {
 	app.gaSession.Event("systray-menu", "show")
-	app.uiServer().ShowRoot("show-lantern", "tray", app.statsTracker)
+	app.uiServer().ShowRoot("show-"+common.AppName, "tray", app.statsTracker)
 }
 
 // OnTrayUpgrade indicates the user has selected to upgrade lantern from the tray.
@@ -904,5 +925,5 @@ func (app *App) localHttpToken() string {
 	if v, ok := app.Flags["noUiHttpToken"]; ok && v.(bool) {
 		return ""
 	}
-	return localHTTPToken(settings)
+	return localHTTPToken(getSettings())
 }

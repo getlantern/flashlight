@@ -22,6 +22,7 @@ import (
 	"github.com/mitchellh/panicwrap"
 
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/desktop"
 	"github.com/getlantern/flashlight/logging"
@@ -46,12 +47,15 @@ func main() {
 		log.Fatal("Wrong arguments")
 	}
 
+	cdir := configDir()
+
 	a := &desktop.App{
-		Flags: flagsAsMap(),
+		ConfigDir: cdir,
+		Flags:     flagsAsMap(),
 	}
 	a.Init()
 
-	logFile, err := logging.RotatedLogsUnder(appdir.Logs("Lantern"))
+	logFile, err := logging.RotatedLogsUnder(appdir.Logs(common.AppName))
 	if err != nil {
 		log.Error(err)
 		// Nothing we can do if fails to create log files, leave logFile nil so
@@ -81,8 +85,8 @@ func main() {
 	// defined in the parent process
 	if desktop.ShouldReportToSentry() {
 		sentry.InitSentry(sentry.Opts{
-			DSN:             desktop.SENTRY_DSN,
-			MaxMessageChars: desktop.SENTRY_MAX_MESSAGE_CHARS,
+			DSN:             common.SentryDSN,
+			MaxMessageChars: common.SentryMaxMessageChars,
 		})
 	}
 
@@ -164,6 +168,23 @@ func main() {
 		log.Debug("Lantern stopped")
 		os.Exit(0)
 	}
+}
+
+func configDir() string {
+	cdir := *configdir
+	if cdir == "" {
+		cdir = appdir.General(common.AppName)
+	}
+	log.Debugf("Using config dir %v", cdir)
+	if _, err := os.Stat(cdir); err != nil {
+		if os.IsNotExist(err) {
+			// Create config dir
+			if err := os.MkdirAll(cdir, 0750); err != nil {
+				log.Errorf("Unable to create configdir at %s: %s", configDir, err)
+			}
+		}
+	}
+	return cdir
 }
 
 func runApp(a *desktop.App) {

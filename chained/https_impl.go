@@ -29,7 +29,7 @@ type httpsImpl struct {
 	sync.Mutex
 }
 
-func newHTTPSImpl(name, addr string, s *ChainedServerInfo, uc common.UserConfig, dialCore coreDialer) (proxyImpl, error) {
+func newHTTPSImpl(configDir, name, addr string, s *ChainedServerInfo, uc common.UserConfig, dialCore coreDialer) (proxyImpl, error) {
 	const timeout = 5 * time.Second
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -39,7 +39,7 @@ func newHTTPSImpl(name, addr string, s *ChainedServerInfo, uc common.UserConfig,
 	if err != nil {
 		return nil, log.Error(errors.Wrap(err).With("addr", addr))
 	}
-	tlsConfig, hellos := tlsConfigForProxy(ctx, name, s, uc)
+	tlsConfig, hellos := tlsConfigForProxy(configDir, ctx, name, s, uc)
 	if len(hellos) == 0 {
 		return nil, log.Error(errors.New("expected at least one hello"))
 	}

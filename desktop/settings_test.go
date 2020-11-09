@@ -10,11 +10,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/getlantern/golog/testlog"
 	"github.com/getlantern/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetInt64Eventually(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
+
 	s := loadTemp()
 	id := s.GetUserID()
 	assert.Equal(t, int64(0), id)
@@ -46,6 +50,9 @@ func loadTemp() *Settings {
 }
 
 func TestRead(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
+
 	s := loadTemp()
 	var uid int64
 	assert.Equal(t, s.GetProxyAll(), false)
@@ -123,6 +130,9 @@ func TestRead(t *testing.T) {
 }
 
 func TestSetNum(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
+
 	snTest := SettingName("test")
 	set := newSet("/dev/null")
 	var val json.Number = "4809"
@@ -144,6 +154,9 @@ func TestSetNum(t *testing.T) {
 }
 
 func TestStringArray(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
+
 	set := newSet("/dev/null")
 	assert.Nil(t, set.getStringArray("key"), "string array should be nil initially")
 	set.setStringArray("key", []string{"value"})
@@ -165,6 +178,9 @@ func newSet(path string) *Settings {
 }
 
 func TestPersistAndLoad(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
+
 	version := "version-not-on-disk"
 	revisionDate := "1970-1-1"
 	buildDate := "1970-1-1"
@@ -186,12 +202,18 @@ func TestPersistAndLoad(t *testing.T) {
 }
 
 func TestLoadLowerCased(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
+
 	set := loadSettingsFrom("", "", "", "./lowercased.yaml", newChromeExtension())
 	assert.Equal(t, int64(1234), set.GetUserID(), "Should load user id from lower cased yaml")
 	assert.Equal(t, "abcd", set.GetToken(), "Should load user token from lower cased yaml")
 }
 
 func TestOnChange(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
+
 	set := newSet("/dev/null")
 	in := make(chan interface{})
 	out := make(chan interface{})
@@ -212,6 +234,9 @@ func TestOnChange(t *testing.T) {
 }
 
 func TestInvalidType(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
+
 	set := newSet("/dev/null")
 	set.setVal("test", nil)
 	assert.Equal(t, "", set.getString("test"))

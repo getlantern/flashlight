@@ -11,14 +11,18 @@ import (
 
 	"github.com/getlantern/flashlight/email"
 	"github.com/getlantern/flashlight/ws"
+	"github.com/getlantern/golog/testlog"
 )
 
 func TestEmailProxy(t *testing.T) {
+	stopCapture := testlog.Capture(t)
+	defer stopCapture()
+
 	channel := ws.NewUIChannel()
 	s := httptest.NewServer(channel.Handler())
 	defer s.Close()
 	// avoid panicking when attaching settings to the email.
-	settings = loadSettingsFrom("version", "revisionDate", "buildDate", "", newChromeExtension())
+	setSettings(loadSettingsFrom("version", "revisionDate", "buildDate", "", newChromeExtension()))
 	err := (&App{}).serveEmailProxy(channel)
 	assert.NoError(t, err, "should start service")
 	defer channel.Unregister("email-proxy")

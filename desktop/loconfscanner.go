@@ -4,10 +4,11 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/getlantern/golog"
-	"github.com/getlantern/notifier"
+	notify "github.com/getlantern/notifier"
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/geolookup"
@@ -26,11 +27,12 @@ import (
 // show the announcement or not).
 //
 // Returns a function to stop the loop.
-func LoconfScanner(interval time.Duration, proChecker func() (bool, bool), iconURL func() string) (stop func()) {
+func LoconfScanner(configDir string, interval time.Duration, proChecker func() (bool, bool), iconURL func() string) (stop func()) {
 	loc := &loconfer{
-		log:     golog.LoggerFor("loconfer"),
-		r:       rand.New(rand.NewSource(time.Now().UnixNano())),
-		iconURL: iconURL,
+		log:       golog.LoggerFor("loconfer"),
+		configDir: configDir,
+		r:         rand.New(rand.NewSource(time.Now().UnixNano())),
+		iconURL:   iconURL,
 	}
 	return loc.scan(interval, proChecker, loc.onLoconf)
 }
@@ -79,9 +81,10 @@ func in(s string, coll []string) bool {
 }
 
 type loconfer struct {
-	log     golog.Logger
-	r       *rand.Rand
-	iconURL func() string
+	log       golog.Logger
+	configDir string
+	r         *rand.Rand
+	iconURL   func() string
 }
 
 func (loc *loconfer) onLoconf(lc *loconf.LoConf, isPro bool) {
@@ -90,13 +93,9 @@ func (loc *loconfer) onLoconf(lc *loconf.LoConf, isPro bool) {
 }
 
 func (loc *loconfer) setUninstallURL(lc *loconf.LoConf, isPro bool) {
-	path, err := common.InConfigDir("", "uninstall_url.txt")
-	if err != nil {
-		loc.log.Errorf("Could not get config path? %v", err)
-		return
-	}
+	path := filepath.Join(loc.configDir, "uninstall_url.txt")
 
-	survey := lc.GetUninstallSurvey(settings.GetLanguage(), geolookup.GetCountry(time.Second*30), isPro)
+	survey := lc.GetUninstallSurvey(getSettings().GetLanguage(), geolookup.GetCountry(time.Second*30), isPro)
 	if survey == nil {
 		loc.log.Debugf("No available uninstall survey")
 		return
@@ -128,6 +127,7 @@ func (loc *loconfer) writeURL(path string, survey *loconf.UninstallSurvey, isPro
 }
 
 func (loc *loconfer) makeAnnouncements(lc *loconf.LoConf, isPro bool) {
+	settings := getSettings()
 	lang := settings.GetLanguage()
 	current, err := lc.GetAnnouncement(lang, isPro)
 	if err != nil {

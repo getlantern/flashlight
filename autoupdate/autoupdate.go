@@ -3,6 +3,7 @@ package autoupdate
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -10,17 +11,19 @@ import (
 	"github.com/getlantern/autoupdate"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/i18n"
-	"github.com/getlantern/notifier"
+	notify "github.com/getlantern/notifier"
 
+	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/notifier"
 	"github.com/getlantern/flashlight/proxied"
 )
 
 var (
-	log             = golog.LoggerFor("flashlight.autoupdate")
-	updateServerURL = "https://update.getlantern.org"
-	PublicKey       = []byte(autoupdate.PackagePublicKey)
-	Version         string
+	log                = golog.LoggerFor("flashlight.autoupdate")
+	updateServerURL    = common.UpdateServerURL
+	PublicKey          = []byte(autoupdate.PackagePublicKey)
+	Version            string
+	translationAppName = strings.ToUpper(common.AppName)
 
 	cfgMutex           sync.RWMutex
 	watchForUpdateOnce sync.Once
@@ -51,7 +54,7 @@ func setUpdateURL(url string) {
 func getUpdateURL() string {
 	cfgMutex.RLock()
 	defer cfgMutex.RUnlock()
-	return updateServerURL + "/update"
+	return fmt.Sprintf("%s/%s/%s", strings.TrimRight(updateServerURL, "/"), "update", strings.ToLower(common.AppName))
 }
 
 func enableAutoupdate() {
@@ -85,8 +88,8 @@ func watchForUpdate() {
 
 func notifyUser(newVersion string) {
 	note := &notify.Notification{
-		Title:      fmt.Sprintf(i18n.T("BACKEND_AUTOUPDATED_TITLE"), newVersion),
-		Message:    fmt.Sprintf(i18n.T("BACKEND_AUTOUPDATED_MESSAGE"), newVersion),
+		Title:      i18n.T("BACKEND_AUTOUPDATED_TITLE", i18n.T(translationAppName), newVersion),
+		Message:    i18n.T("BACKEND_AUTOUPDATED_MESSAGE", i18n.T(translationAppName), newVersion, i18n.T(translationAppName)),
 		IconURL:    fnIconURL(),
 		ClickLabel: i18n.T("BACKEND_CLICK_LABEL_GOT_IT"),
 	}

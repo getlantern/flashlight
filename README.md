@@ -14,6 +14,10 @@ program. To build, run:
 
 `make lantern`
 
+Or to build beam:
+
+`make beam`
+
 ### Running against a specific proxy
 It is often useful to force lantern to use a specific proxy, either for testing some new
 change on the server side or for trying to replicate issues a specific user has seen.

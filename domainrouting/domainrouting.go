@@ -24,15 +24,16 @@ const (
 
 var (
 	// Rules
-	None   = Rule("")
-	Direct = Rule("d")
-	Proxy  = Rule("p")
+	None      = Rule("")
+	Direct    = Rule("d")
+	Proxy     = Rule("p")
+	MustProxy = Rule("m")
 
 	// Requests to these domains require proxies for security purposes and to
 	// ensure that config-server requests in particular always go through a proxy
 	// so that it can add the necessary authentication token and other headers.
 	// Direct connections to these domains are not allowed.
-	domainsRequiringProxy = []string{"getiantem.org", "lantern.io", "getlantern.org"}
+	domainsRequiringProxy = []string{"getiantem.org", "lantern.io", "getlantern.org", "ss7hc6jm.io", "beam.place", "beam.dance"}
 )
 
 // ProxiedSitesConfig is a legacy config structure that provides backwards compatibility with old config formats
@@ -66,7 +67,7 @@ func Configure(rules Rules, proxiedSites *ProxiedSitesConfig) {
 
 	// There are certain domains that always require proxying no matter what, merge those in
 	for _, domain := range domainsRequiringProxy {
-		rules[domain] = Proxy
+		rules[domain] = MustProxy
 	}
 
 	newRules := buildTree(rules)

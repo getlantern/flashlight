@@ -229,7 +229,7 @@ func TestStart(t *testing.T) {
 	assert.NoError(t, err)
 	serve.Handle("/testing", http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 		resp.WriteHeader(http.StatusOK)
-	}))
+	}), false)
 
 	uiAddr := serve.GetUIAddr()
 	assert.NotEqual(t, "", uiAddr)
@@ -274,6 +274,23 @@ func TestNoCache(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/some-token/", nil)
 	getTestHandler().ServeHTTP(&rw, req)
 	assert.Equal(t, "no-cache, no-store, must-revalidate", rw.HeaderMap.Get("Cache-Control"))
+}
+
+func TestAllowCache(t *testing.T) {
+	s := getTestServer("some-token")
+
+	s.Handle("/cache-me",
+		http.HandlerFunc(
+			func(resp http.ResponseWriter, req *http.Request) {
+				resp.WriteHeader(http.StatusOK)
+			},
+		), true)
+
+	var rw httptest.ResponseRecorder
+	req, _ := http.NewRequest("GET", "/cache-me/", nil)
+
+	s.mux.ServeHTTP(&rw, req)
+	assert.Equal(t, "", rw.HeaderMap.Get("Cache-Control"))
 }
 
 func TestProAPI(t *testing.T) {
