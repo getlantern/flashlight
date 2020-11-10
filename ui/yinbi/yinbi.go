@@ -50,8 +50,7 @@ type YinbiHandler struct {
 	// keystore manages encrypted storage of Yinbi private keys
 	keystore *keystore.Keystore
 
-	proxy     *httputil.ReverseProxy
-	authProxy *httputil.ReverseProxy
+	proxy *httputil.ReverseProxy
 }
 
 func New(params api.Params) YinbiHandler {
@@ -67,7 +66,6 @@ func NewWithAuth(params api.Params,
 		AuthHandler: authHandler,
 		keystore:    keystore.New(appdir.General("Lantern")),
 		yinbiClient: newYinbiClient(params.HttpClient),
-		authProxy:   newReverseProxy(params.AuthServerAddr),
 		proxy:       newReverseProxy(params.YinbiServerAddr),
 	}
 }
