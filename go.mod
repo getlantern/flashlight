@@ -1,6 +1,6 @@
 module github.com/getlantern/flashlight
 
-go 1.12
+go 1.14
 
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
@@ -25,7 +25,7 @@ require (
 	github.com/getlantern/cmuxprivate v0.0.0-20200905032931-afb63438e40b
 	github.com/getlantern/common v1.1.1-0.20200824002646-ca4a48d3a74c
 	github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1
-	github.com/getlantern/dnsgrab v0.0.0-20191217020031-0e5f714410f9
+	github.com/getlantern/dnsgrab v0.0.0-20201109151847-ac8bdee22ef9
 	github.com/getlantern/domains v0.0.0-20200402172102-34a8db1e0e83
 	github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4
 	github.com/getlantern/enhttp v0.0.0-20190401024120-a974fa851e3c
@@ -52,7 +52,7 @@ require (
 	github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644
 	github.com/getlantern/kcpwrapper v0.0.0-20171114192627-a35c895f6de7
 	github.com/getlantern/keyman v0.0.0-20200819205636-76fef27c39f1
-	github.com/getlantern/lampshade v0.0.0-20200303040944-fe53f13203e9
+	github.com/getlantern/lampshade v0.0.0-20201109225444-b06082e15f3a
 	github.com/getlantern/launcher v0.0.0-20160824210503-bc9fc3b11894
 	github.com/getlantern/measured v0.0.0-20180919192309-c70b16bb4198
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
@@ -65,7 +65,7 @@ require (
 	github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b
 	github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6
 	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
-	github.com/getlantern/packetforward v0.0.0-20200421081927-11933f311913
+	github.com/getlantern/packetforward v0.0.0-20201110181325-8a743a7f548b
 	github.com/getlantern/profiling v0.0.0-20160317154340-2a15afbadcff
 	github.com/getlantern/protected v0.0.0-20190111224713-cc3b5f4a0fb8
 	github.com/getlantern/proxy v0.0.0-20200828020017-9c052c8ea590
@@ -91,7 +91,6 @@ require (
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
 	github.com/getsentry/sentry-go v0.7.0
-	github.com/google/netstack v0.0.0-20191116005144-95bf25ab4723 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
