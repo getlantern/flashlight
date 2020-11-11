@@ -110,7 +110,7 @@ func (h YinbiHandler) Routes() []handler.Route {
 		handler.Route{
 			redeemCodesEndpoint,
 			common.POST,
-			h.redeemCodeHandler,
+			h.redeemCodesHandler,
 		},
 	}
 }
@@ -148,6 +148,12 @@ func (s *YinbiHandler) createMnemonic(w http.ResponseWriter, r *http.Request) {
 		"mnemonic": crypto.NewMnemonic(),
 		"success":  true,
 	})
+}
+
+func (s *YinbiHandler) redeemCodesHandler(w http.ResponseWriter, req *http.Request) {
+	url := s.GetAuthAddr(redeemCodesEndpoint)
+	log.Debugf("Sending redeem codes request to %s", url)
+	s.ProxyHandler(url, req, w, nil)
 }
 
 // importWalletHandler is the handler used to import wallets
@@ -522,8 +528,7 @@ func (h YinbiHandler) createAccountHandler(w http.ResponseWriter,
 	onResp := func(resp *http.Response) error {
 		assetCode := h.yinbiClient.GetAssetCode()
 		log.Debugf("Trusting asset %s", assetCode)
-		issuer := common.YinbiIssuerAccount
-		return h.yinbiClient.TrustAsset(assetCode, issuer, pair)
+		return h.yinbiClient.TrustAsset(assetCode, YinbiIssuerAccount, pair)
 	}
 	url := h.GetAuthAddr(html.EscapeString(r.URL.Path))
 	h.ProxyHandler(url, r, w, onResp)

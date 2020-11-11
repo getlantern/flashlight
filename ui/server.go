@@ -174,14 +174,14 @@ func (s *Server) attachHandlers(params ServerParams) {
 	}
 
 	for _, h := range handlers {
-		for route, handler := range h.Routes() {
-			routes[route] = handler
+		for _, route := range h.Routes() {
+			routes = append(routes, route)
 		}
 	}
 
-	for pattern, handler := range routes {
-		s.mux.Handle(pattern,
-			handler.WrapMiddleware(http.HandlerFunc(handler)))
+	for _, route := range routes {
+		s.mux.Handle(route.Pattern,
+			handler.WrapMiddleware(route.HandlerFunc))
 	}
 
 	s.Handle("/startup", http.HandlerFunc(startupHandler), false)
