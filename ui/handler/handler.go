@@ -15,12 +15,20 @@ var (
 	log = golog.LoggerFor("flashlight.ui.handler")
 )
 
-type HandlerFunc func(http.ResponseWriter, *http.Request)
+// Middleware
+type Middleware func(http.HandlerFunc) http.HandlerFunc
+
+// Route defines a structure for UI routes
+type Route struct {
+	Pattern     string
+	Method      string
+	HandlerFunc http.HandlerFunc
+}
 
 // UIHandler is an interface UI handlers must implement
 type UIHandler interface {
 	// Routes is a map of UI server paths to handler funcs
-	Routes() map[string]HandlerFunc
+	Routes() []Route
 }
 
 // Handler  is a representation of a group of handlers
@@ -30,6 +38,20 @@ type Handler struct {
 	authAddr   string
 	yinbiAddr  string
 	HttpClient *http.Client
+}
+
+// wrapMiddleware takes the given http.Handler and optionally wraps it with
+// the cors middleware handler
+func WrapMiddleware(h http.HandlerFunc, m ...Middleware) http.HandlerFunc {
+	if len(m) < 1 {
+		return h
+	}
+	wrapped := h
+	for i := len(m) - 1; i >= 0; i-- {
+		wrapped = m[i](wrapped)
+	}
+
+	return wrapped
 }
 
 func NewHandler(params api.Params) Handler {

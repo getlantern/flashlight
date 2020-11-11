@@ -141,7 +141,7 @@ func (s *Server) attachHandlers(params ServerParams) {
 
 	// map of Lantern and Yinbi API endpoints to
 	// HTTP handlers to register with the ServeMux
-	routes := map[string]handler.HandlerFunc{}
+	routes := []handler.Route{}
 
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
@@ -181,18 +181,11 @@ func (s *Server) attachHandlers(params ServerParams) {
 
 	for pattern, handler := range routes {
 		s.mux.Handle(pattern,
-			s.wrapMiddleware(http.HandlerFunc(handler)))
+			handler.WrapMiddleware(http.HandlerFunc(handler)))
 	}
 
 	s.Handle("/startup", http.HandlerFunc(startupHandler), false)
 	s.Handle("/", http.FileServer(fs), false)
-}
-
-// wrapMiddleware takes the given http.Handler and optionally wraps it with
-// the cors middleware handler
-func (s *Server) wrapMiddleware(handler http.Handler) http.Handler {
-	handler = s.corsHandler(handler)
-	return handler
 }
 
 // Handle directs the underlying server to handle the given pattern at both

@@ -3,7 +3,6 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/getlantern/auth-server/models"
@@ -19,6 +18,8 @@ func (h AuthHandler) sendMutualAuth(srpClient *srp.SRPClient,
 	credentials, username string,
 	onResponse common.HandleResponseFunc,
 ) error {
+	// Generate the server public credentials and session key
+	// Return the mutual authenticator
 	cauth, err := srpClient.Generate(credentials)
 	if err != nil {
 		return err
@@ -40,26 +41,6 @@ func (h AuthHandler) sendMutualAuth(srpClient *srp.SRPClient,
 	req.Header.Set(common.HeaderContentType, common.MIMEApplicationJSON)
 	h.ProxyHandler(url, req, w, onResponse)
 	return nil
-}
-
-func (h AuthHandler) SendAuthRequest(method string, endpoint string, params *models.UserParams) (*http.Response, *models.AuthResponse, error) {
-	requestBody, err := json.Marshal(params)
-	if err != nil {
-		return nil, nil, err
-	}
-	url := h.GetAuthAddr(endpoint)
-	log.Debugf("Sending new auth request to %s", url)
-	resp, err := h.DoHTTPRequest(method, url, requestBody)
-	if err != nil {
-		return nil, nil, err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, nil, err
-	}
-	authResp, err := decodeAuthResponse(body)
-	return resp, authResp, err
 }
 
 func (h AuthHandler) NewSRPClient(params models.UserParams, keepPassword bool) (*models.UserParams, *srp.SRPClient, error) {

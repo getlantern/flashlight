@@ -9,16 +9,15 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
-	"net/url"
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/auth-server/models"
-	"github.com/getlantern/flashlight/common"
+	. "github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ui/api"
 	"github.com/getlantern/flashlight/ui/auth"
 	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/golog"
-	scommon "github.com/getlantern/lantern-server/common"
+	"github.com/getlantern/lantern-server/common"
 	"github.com/getlantern/yinbi-server/config"
 	"github.com/getlantern/yinbi-server/crypto"
 	"github.com/getlantern/yinbi-server/keystore"
@@ -28,9 +27,17 @@ import (
 )
 
 const (
-	importEndpoint         = "/import"
-	recoverAccountEndpoint = "/account/recover"
-	resetPasswordEndpoint  = "/account/password/reset"
+	accountDetailsEndpoint      = "/account/details"
+	accountTransactionsEndpoint = "/account/transactions"
+	createAccountEndpoint       = "/user/account/new"
+	createMnemonicEndpoint      = "/user/mnemonic"
+	importEndpoint              = "/import"
+	importWalletEndpoint        = "/wallet/import"
+	recoverAccountEndpoint      = "/account/recover"
+	redeemCodesEndpoint         = "/wallet/redeem/codes"
+	resetPasswordEndpoint       = "/account/password/reset"
+	saveAddressEndpoint         = "/user/address"
+	sendPaymentEndpoint         = "/payment/new"
 )
 
 var (
@@ -53,6 +60,61 @@ type YinbiHandler struct {
 	proxy *httputil.ReverseProxy
 }
 
+func (h YinbiHandler) Routes() []handler.Route {
+	return []handler.Route{
+		handler.Route{
+			sendPaymentEndpoint,
+			common.POST,
+			h.sendPaymentHandler,
+		},
+		handler.Route{
+			createAccountEndpoint,
+			common.POST,
+			h.createAccountHandler,
+		},
+		handler.Route{
+			importWalletEndpoint,
+			common.POST,
+			h.importWalletHandler,
+		},
+		handler.Route{
+			accountDetailsEndpoint,
+			common.GET,
+			h.getAccountDetails,
+		},
+		handler.Route{
+			resetPasswordEndpoint,
+			common.POST,
+			h.resetPasswordHandler,
+		},
+		handler.Route{
+			recoverAccountEndpoint,
+			common.POST,
+			h.recoverYinbiAccount,
+		},
+		handler.Route{
+			accountTransactionsEndpoint,
+			common.POST,
+			h.getAccountTransactions,
+		},
+		handler.Route{
+			saveAddressEndpoint,
+			common.POST,
+			h.saveAddressHandler,
+		},
+		handler.Route{
+			createMnemonicEndpoint,
+			common.POST,
+			h.createMnemonic,
+		},
+		handler.Route{
+			redeemCodesEndpoint,
+			common.POST,
+			h.redeemCodeHandler,
+		},
+	}
+}
+
 func New(params api.Params) YinbiHandler {
 	return YinbiHandler{
 		keystore:    keystore.New(appdir.General("Lantern")),
@@ -66,41 +128,14 @@ func NewWithAuth(params api.Params,
 		AuthHandler: authHandler,
 		keystore:    keystore.New(appdir.General("Lantern")),
 		yinbiClient: newYinbiClient(params.HttpClient),
-		proxy:       newReverseProxy(params.YinbiServerAddr),
-	}
-}
-
-func newReverseProxy(uri string) *httputil.ReverseProxy {
-	u, err := url.Parse(uri)
-	if err != nil {
-		log.Fatal(fmt.Errorf("Bad server address: %s", uri))
-	}
-	return httputil.NewSingleHostReverseProxy(u)
-}
-
-func (h YinbiHandler) Routes() map[string]handler.HandlerFunc {
-	proxyHandler := func(w http.ResponseWriter, r *http.Request) {
-		h.proxy.ServeHTTP(w, r)
-	}
-	return map[string]handler.HandlerFunc{
-		"/payment/new":            h.sendPaymentHandler,
-		"/user/account/new":       h.createAccountHandler,
-		"/wallet/import":          h.importWalletHandler,
-		"/account/details":        h.getAccountDetails,
-		"/account/password/reset": h.resetPasswordHandler,
-		"/account/recover":        h.recoverYinbiAccount,
-		"/account/transactions":   h.getAccountTransactions,
-		"/user/address":           h.saveAddressHandler,
-		"/user/mnemonic":          h.createMnemonic,
-		"/wallet/redeem/codes":    proxyHandler,
 	}
 }
 
 func newYinbiClient(httpClient *http.Client) *yinbi.Client {
-	code := common.YinbiAssetCode
-	networkName := common.NetworkName
-	horizonAddr := common.HorizonAddr
-	issuer := common.YinbiIssuerAccount
+	code := YinbiAssetCode
+	networkName := NetworkName
+	horizonAddr := HorizonAddr
+	issuer := YinbiIssuerAccount
 	cfg := config.GetStellarConfig(networkName, horizonAddr, issuer, code)
 	return yinbi.New(params.Params{
 		HttpClient: httpClient,
@@ -109,7 +144,7 @@ func newYinbiClient(httpClient *http.Client) *yinbi.Client {
 }
 
 func (s *YinbiHandler) createMnemonic(w http.ResponseWriter, r *http.Request) {
-	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"mnemonic": crypto.NewMnemonic(),
 		"success":  true,
 	})
@@ -122,7 +157,7 @@ func (h *YinbiHandler) importWalletHandler(w http.ResponseWriter,
 	log.Debug("New import wallet request")
 	url := h.GetYinbiAddr(html.EscapeString(req.URL.Path))
 	var params ImportWalletParams
-	err := scommon.DecodeJSONRequest(req, &params)
+	err := common.DecodeJSONRequest(req, &params)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
@@ -149,7 +184,7 @@ func (h *YinbiHandler) importWalletHandler(w http.ResponseWriter,
 	}
 	log.Debug("Successfully imported yin.bi wallet")
 
-	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"address": pair.Address(),
 		"success": true,
 	})
@@ -167,13 +202,13 @@ func (h YinbiHandler) sendImportError(w http.ResponseWriter, resp *ImportWalletR
 }
 
 func (h YinbiHandler) sendSuccess(w http.ResponseWriter) {
-	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
 	})
 }
 
 func (h YinbiHandler) sendImportWallet(uri string, params *ImportWalletParams, req *http.Request) (*keypair.Full, *ImportWalletResponse, error) {
-	proxyReq, err := scommon.NewProxyRequest(req, uri)
+	proxyReq, err := common.NewProxyRequest(req, uri)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -230,7 +265,7 @@ func (h YinbiHandler) decryptSeed(resp *ImportWalletResponse, password string) (
 func (h YinbiHandler) sendPaymentHandler(w http.ResponseWriter,
 	req *http.Request) {
 	var params PaymentParams
-	err := scommon.DecodeJSONRequest(req, &params)
+	err := common.DecodeJSONRequest(req, &params)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
@@ -267,7 +302,7 @@ func (h YinbiHandler) sendPaymentHandler(w http.ResponseWriter,
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
-	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
 		"tx_id":   resp.Hash,
 	})
@@ -282,7 +317,7 @@ func (h YinbiHandler) getAccountDetails(w http.ResponseWriter,
 	var request struct {
 		Address string `json:"address"`
 	}
-	err := scommon.DecodeJSONRequest(r, &request)
+	err := common.DecodeJSONRequest(r, &request)
 	if err != nil {
 		log.Debugf("Error decoding JSON: %v", err)
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
@@ -297,7 +332,7 @@ func (h YinbiHandler) getAccountDetails(w http.ResponseWriter,
 		return
 	}
 	log.Debugf("Successfully retrived balance for %s", address)
-	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"success":  true,
 		"balances": balances,
 	})
@@ -322,7 +357,7 @@ func (h YinbiHandler) resetPasswordHandler(w http.ResponseWriter,
 	newPassword := params.Password
 	params.Password = ""
 	log.Debugf("Received new reset password request from %s", params.Username)
-	resp, authResp, err := h.SendAuthRequest(scommon.POST, resetPasswordEndpoint, params)
+	resp, authResp, err := h.SendAuthRequest(common.POST, resetPasswordEndpoint, params)
 	if err != nil {
 		log.Error(err)
 		return
@@ -357,7 +392,7 @@ func (h *YinbiHandler) recoverYinbiAccount(w http.ResponseWriter,
 	var params struct {
 		Words string `json:"words"`
 	}
-	err := scommon.DecodeJSONRequest(r, &params)
+	err := common.DecodeJSONRequest(r, &params)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
@@ -375,7 +410,7 @@ func (h *YinbiHandler) recoverYinbiAccount(w http.ResponseWriter,
 	}
 	log.Debugf("Successfully recovered user %s's account using Yinbi key",
 		userResponse.User.Username)
-	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
 		"user":    userResponse.User,
 	})
@@ -415,7 +450,7 @@ func (h YinbiHandler) getAccountTransactions(w http.ResponseWriter,
 		Order          string `json:"order"`
 		RecordsPerPage int    `json:"recordsPerPage"`
 	}
-	err := scommon.DecodeJSONRequest(r, &request)
+	err := common.DecodeJSONRequest(r, &request)
 	if err != nil {
 		log.Debugf("Error decoding JSON: %v", err)
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
@@ -445,7 +480,7 @@ func (h YinbiHandler) getAccountTransactions(w http.ResponseWriter,
 	}
 	log.Debugf("Successfully retrived payments for %s",
 		address)
-	scommon.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"success":  true,
 		"payments": payments,
 	})

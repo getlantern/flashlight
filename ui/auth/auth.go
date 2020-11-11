@@ -5,11 +5,9 @@ import (
 	"crypto/subtle"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"html"
+	"io/ioutil"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 
 	"github.com/getlantern/auth-server/models"
 	"github.com/getlantern/auth-server/srp"
@@ -23,6 +21,7 @@ const (
 	userKey               = iota
 	authEndpoint          = "/auth"
 	loginEndpoint         = "/login"
+	signOutEndpoint       = "/user/logout"
 	registrationEndpoint  = "/register"
 	balanceEndpoint       = "/user/balance"
 	createAccountEndpoint = "/user/account/new"
@@ -41,29 +40,39 @@ func withUserID(ctx context.Context, userID string) context.Context {
 
 type AuthHandler struct {
 	handler.Handler
-	proxy *httputil.ReverseProxy
 }
 
 func New(params api.Params) AuthHandler {
-	u, err := url.Parse(params.AuthServerAddr)
-	if err != nil {
-		log.Fatal(fmt.Errorf("Bad auth server address: %s", params.AuthServerAddr))
-	}
 	return AuthHandler{
 		handler.NewHandler(params),
-		httputil.NewSingleHostReverseProxy(u),
 	}
 }
 
-func (h AuthHandler) Routes() map[string]handler.HandlerFunc {
-	proxyHandler := func(w http.ResponseWriter, r *http.Request) {
-		h.proxy.ServeHTTP(w, r)
+func (h AuthHandler) Routes() []handler.Route {
+	authHandler := handler.WrapMiddleware(
+		h.authHandler(),
+	)
+	signOutHandler := handler.WrapMiddleware(
+		h.signOutHandler(),
+	)
+	authRoutes := []handler.Route{
+		handler.Route{
+			loginEndpoint,
+			common.POST,
+			authHandler,
+		},
+		handler.Route{
+			registrationEndpoint,
+			common.POST,
+			authHandler,
+		},
+		handler.Route{
+			signOutEndpoint,
+			common.POST,
+			signOutHandler,
+		},
 	}
-	return map[string]handler.HandlerFunc{
-		"/login":       h.authHandler,
-		"/register":    h.authHandler,
-		"/user/logout": proxyHandler,
-	}
+	return authRoutes
 }
 
 func decodeAuthResponse(body []byte) (*models.AuthResponse, error) {
@@ -128,15 +137,45 @@ func (h AuthHandler) HandleAuthResponse(srpClient *srp.SRPClient,
 // authHandler is the HTTP handler used by the login and
 // registration endpoints. It creates a new SRP client from
 // the user params in the request
-func (h AuthHandler) authHandler(w http.ResponseWriter, req *http.Request) {
-	params, srpClient, err := h.GetSRPClient(req, false)
-	if err != nil {
-		log.Errorf("Couldn't create SRP client from request: %v", err)
-		h.ErrorHandler(w, err, http.StatusBadRequest)
-		return
+func (h AuthHandler) authHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		params, srpClient, err := h.GetSRPClient(req, false)
+		if err != nil {
+			log.Errorf("Couldn't create SRP client from request: %v", err)
+			h.ErrorHandler(w, err, http.StatusBadRequest)
+			return
+		}
+		endpoint := html.EscapeString(req.URL.Path)
+		h.SendAuth(w, endpoint, srpClient, params)
 	}
-	endpoint := html.EscapeString(req.URL.Path)
-	h.SendAuth(w, endpoint, srpClient, params)
+}
+
+func (h AuthHandler) signOutHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		url := h.GetAuthAddr(signOutEndpoint)
+		log.Debugf("Sending sign out request to %s", url)
+		h.ProxyHandler(url, req, w, nil)
+	}
+}
+
+func (h AuthHandler) SendAuthRequest(method string, endpoint string, params *models.UserParams) (*http.Response, *models.AuthResponse, error) {
+	requestBody, err := json.Marshal(params)
+	if err != nil {
+		return nil, nil, err
+	}
+	url := h.GetAuthAddr(endpoint)
+	log.Debugf("Sending new auth request to %s", url)
+	resp, err := h.DoHTTPRequest(method, url, requestBody)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, nil, err
+	}
+	authResp, err := decodeAuthResponse(body)
+	return resp, authResp, err
 }
 
 func (h AuthHandler) SendAuth(w http.ResponseWriter, endpoint string,
