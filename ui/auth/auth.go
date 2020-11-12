@@ -150,6 +150,12 @@ func (h AuthHandler) authHandler() http.HandlerFunc {
 	}
 }
 
+func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		next(w, req)
+	}
+}
+
 func (h AuthHandler) signOutHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		url := h.GetAuthAddr(signOutEndpoint)

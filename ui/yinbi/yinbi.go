@@ -21,6 +21,7 @@ import (
 	"github.com/getlantern/yinbi-server/config"
 	"github.com/getlantern/yinbi-server/crypto"
 	"github.com/getlantern/yinbi-server/keystore"
+	ymodels "github.com/getlantern/yinbi-server/models"
 	"github.com/getlantern/yinbi-server/params"
 	"github.com/getlantern/yinbi-server/yinbi"
 	"github.com/stellar/go/keypair"
@@ -345,16 +346,24 @@ func (h YinbiHandler) getAccountDetails(w http.ResponseWriter,
 	return
 }
 
+// resetPasswordHandler is the handler used to reset a user's
+// wallet password
 func (h YinbiHandler) resetPasswordHandler(w http.ResponseWriter,
 	req *http.Request) {
-	addressParams, pair, err := yinbi.ParseAddress(req)
+	params, err := h.getCreateAccountParams(req)
+	if err != nil {
+		log.Debugf("Error parsing address: %v", err)
+		h.ErrorHandler(w, err, http.StatusInternalServerError)
+		return
+	}
+	pair, err := yinbi.GetKeyPair(params)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
 	}
-	params, srpClient, err := h.NewSRPClient(models.UserParams{
-		Username: addressParams.Username,
-		Password: addressParams.Password,
+	srpParams, srpClient, err := h.NewSRPClient(models.UserParams{
+		Username: params.Username,
+		Password: params.Password,
 	}, true)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
@@ -363,16 +372,18 @@ func (h YinbiHandler) resetPasswordHandler(w http.ResponseWriter,
 	newPassword := params.Password
 	params.Password = ""
 	log.Debugf("Received new reset password request from %s", params.Username)
-	resp, authResp, err := h.SendAuthRequest(common.POST, resetPasswordEndpoint, params)
+	resp, authResp, err := h.SendAuthRequest(common.POST, resetPasswordEndpoint,
+		srpParams)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 	if resp.StatusCode != http.StatusOK {
-		h.ErrorHandler(w, errors.New("Service unavailable"), http.StatusInternalServerError)
+		h.ErrorHandler(w, errors.New("Service unavailable"),
+			http.StatusInternalServerError)
 		return
 	}
-	err = h.HandleAuthResponse(srpClient, w, params, authResp)
+	err = h.HandleAuthResponse(srpClient, w, srpParams, authResp)
 	if err != nil {
 		return
 	}
@@ -493,6 +504,16 @@ func (h YinbiHandler) getAccountTransactions(w http.ResponseWriter,
 	return
 }
 
+// getCreateAccuntParams decodes the JSON request to create an account
+func (h YinbiHandler) getCreateAccountParams(req *http.Request) (*ymodels.CreateAccountParams, error) {
+	var params ymodels.CreateAccountParams
+	err := common.DecodeJSONRequest(req, &params)
+	if err != nil {
+		return nil, err
+	}
+	return &params, nil
+}
+
 // createAccountHandler is the HTTP handler used to create new
 // Yinbi accounts
 // First, the mnemonic is extracted from the request.
@@ -503,10 +524,15 @@ func (h YinbiHandler) getAccountTransactions(w http.ResponseWriter,
 func (h YinbiHandler) createAccountHandler(w http.ResponseWriter,
 	r *http.Request) {
 	log.Debug("Received new create Yinbi account request")
-	params, pair, err := yinbi.ParseAddress(r)
+	params, err := h.getCreateAccountParams(r)
 	if err != nil {
 		log.Debugf("Error parsing address: %v", err)
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
+		return
+	}
+	pair, err := yinbi.GetKeyPair(params)
+	if err != nil {
+		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
 	}
 	requestBody, err := json.Marshal(params)

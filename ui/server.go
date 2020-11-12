@@ -139,10 +139,6 @@ func newServer(params ServerParams) *Server {
 
 func (s *Server) attachHandlers(params ServerParams) {
 
-	// map of Lantern and Yinbi API endpoints to
-	// HTTP handlers to register with the ServeMux
-	routes := []handler.Route{}
-
 	// This allows a second Lantern running on the system to trigger the existing
 	// Lantern to show the UI, or at least try to
 	startupHandler := func(resp http.ResponseWriter, req *http.Request) {
@@ -167,21 +163,17 @@ func (s *Server) attachHandlers(params ServerParams) {
 	}
 
 	authHandler := auth.New(apiParams)
+	yinbiHandler := yinbi.NewWithAuth(apiParams, authHandler)
 
-	handlers := []handler.UIHandler{
-		yinbi.NewWithAuth(apiParams, authHandler),
-		authHandler,
-	}
+	var routes []handler.Route
 
-	for _, h := range handlers {
-		for _, route := range h.Routes() {
-			routes = append(routes, route)
-		}
-	}
+	routes = append(routes, authHandler.Routes()...)
+	routes = append(routes, yinbiHandler.Routes()...)
 
 	for _, route := range routes {
-		s.mux.Handle(route.Pattern,
-			handler.WrapMiddleware(route.HandlerFunc))
+		s.mux.HandleFunc(route.Pattern,
+			handler.WrapMiddleware(route.HandlerFunc),
+		)
 	}
 
 	s.Handle("/startup", http.HandlerFunc(startupHandler), false)
