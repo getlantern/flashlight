@@ -356,7 +356,7 @@ func (h YinbiHandler) resetPasswordHandler(w http.ResponseWriter,
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
-	pair, err := yinbi.GetKeyPair(params)
+	pair, err := yinbi.KeyPairFromMnemonic(params.Words)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
@@ -530,7 +530,7 @@ func (h YinbiHandler) createAccountHandler(w http.ResponseWriter,
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
-	pair, err := yinbi.GetKeyPair(params)
+	pair, err := yinbi.KeyPairFromMnemonic(params.Words)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
