@@ -1,4 +1,10 @@
 
+<a name="beam-0.1.14"></a>
+## [beam-0.1.14](https://github.com/getlantern/flashlight/compare/beam-0.1.13...beam-0.1.14)
+
+> 2020-11-13
+
+
 <a name="beam-0.1.13"></a>
 ## [beam-0.1.13](https://github.com/getlantern/flashlight/compare/beam-0.1.12...beam-0.1.13)
 
