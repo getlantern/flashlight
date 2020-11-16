@@ -393,7 +393,7 @@ func (me *HttpHandler) handleUploads(rw *ops.InstrumentedResponseWriter, r *http
 
 func (me *HttpHandler) handleDelete(rw *ops.InstrumentedResponseWriter, r *http.Request) error {
 	link := r.URL.Query().Get("link")
-	m, err := metainfo.ParseMagnetURI(link)
+	m, err := metainfo.ParseMagnetUri(link)
 	if err != nil {
 		return handlerError{http.StatusBadRequest, fmt.Errorf("parsing magnet link: %v", err)}
 	}
@@ -458,7 +458,7 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 
 	link := r.URL.Query().Get("link")
 
-	m, err := metainfo.ParseMagnetURI(link)
+	m, err := metainfo.ParseMagnetUri(link)
 	if err != nil {
 		return handlerError{http.StatusBadRequest, fmt.Errorf("parsing magnet link: %w", err)}
 	}
@@ -480,7 +480,7 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 	// the magnet link in the first tier, and our forcibly injected ones in the second.
 
 	// We're unnecessary parsing a Magnet here.
-	spec, err := torrent.TorrentSpecFromMagnetURI(link)
+	spec, err := torrent.TorrentSpecFromMagnetUri(link)
 	if err != nil {
 		return fmt.Errorf("getting spec from magnet URI: %w", err)
 	}
