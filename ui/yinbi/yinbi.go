@@ -142,12 +142,6 @@ func (s *YinbiHandler) redeemCodesHandler(w http.ResponseWriter, req *http.Reque
 	s.ProxyHandler(url, req, w, nil)
 }
 
-func (h YinbiHandler) getWalletParams(req *http.Request) (*client.ImportWalletParams, error) {
-	var params client.ImportWalletParams
-	err := common.DecodeJSONRequest(req, &params)
-	return &params, err
-}
-
 // importWalletHandler is the handler used to import wallets
 // of existing yin.bi users
 func (h *YinbiHandler) importWalletHandler(w http.ResponseWriter,
@@ -166,14 +160,9 @@ func (h *YinbiHandler) importWalletHandler(w http.ResponseWriter,
 		return
 	}
 
-	h.sendSuccess(w, map[string]interface{}{
+	h.successResponse(w, map[string]interface{}{
 		"address": pair.Address(),
 	})
-}
-
-func (h YinbiHandler) sendSuccess(w http.ResponseWriter, args map[string]interface{}) {
-	args["success"] = true
-	common.WriteJSON(w, http.StatusOK, args)
 }
 
 func (h YinbiHandler) createUserAccount(w http.ResponseWriter, params *client.ImportWalletParams) error {
@@ -248,7 +237,7 @@ func (h YinbiHandler) sendPaymentHandler(w http.ResponseWriter,
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
-	h.sendSuccess(w, map[string]interface{}{
+	h.successResponse(w, map[string]interface{}{
 		"tx_id": resp.Hash,
 	})
 	return
@@ -277,7 +266,7 @@ func (h YinbiHandler) getAccountDetails(w http.ResponseWriter,
 		return
 	}
 	log.Debugf("Successfully retrived balance for %s", address)
-	h.sendSuccess(w, map[string]interface{}{
+	h.successResponse(w, map[string]interface{}{
 		"balances": details.Balances,
 	})
 }
@@ -292,22 +281,9 @@ func (h YinbiHandler) resetPasswordHandler(w http.ResponseWriter,
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
 	}
-	pair, err := client.KeyPairFromMnemonic(params.Words)
+	err = h.yinbiClient.ResetPassword(&params)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
-		return
-	}
-	newPassword := params.Password
-	_, err = h.authClient.ResetPassword(params.Username, params.Password, newPassword)
-	if err != nil {
-		h.ErrorHandler(w, err, http.StatusInternalServerError)
-		return
-	}
-	// send secret key to keystore
-	err = h.yinbiClient.StoreKey(pair.Seed(), params.Username,
-		newPassword)
-	if err != nil {
-		log.Debugf("Error sending secret key to keystore: %v", err)
 		return
 	}
 }
@@ -338,7 +314,7 @@ func (h *YinbiHandler) recoverYinbiAccount(w http.ResponseWriter,
 	}
 	log.Debugf("Successfully recovered user %s's account using Yinbi key",
 		userResponse.User.Username)
-	h.sendSuccess(w, map[string]interface{}{
+	h.successResponse(w, map[string]interface{}{
 		"user": userResponse.User,
 	})
 }
@@ -381,7 +357,7 @@ func (h YinbiHandler) getAccountTransactions(w http.ResponseWriter,
 	}
 	log.Debugf("Successfully retrived payments for %s",
 		address)
-	h.sendSuccess(w, map[string]interface{}{
+	h.successResponse(w, map[string]interface{}{
 		"payments": payments,
 	})
 }
