@@ -1,4 +1,89 @@
 
+<a name="lantern-6.1.4"></a>
+## [lantern-6.1.4](https://github.com/getlantern/flashlight/compare/beam-0.1.14...lantern-6.1.4)
+
+> 2020-11-16
+
+
+<a name="beam-0.1.14"></a>
+## [beam-0.1.14](https://github.com/getlantern/flashlight/compare/beam-0.1.13...beam-0.1.14)
+
+> 2020-11-13
+
+
+<a name="beam-0.1.13"></a>
+## [beam-0.1.13](https://github.com/getlantern/flashlight/compare/beam-0.1.12...beam-0.1.13)
+
+> 2020-11-11
+
+
+<a name="beam-0.1.12"></a>
+## [beam-0.1.12](https://github.com/getlantern/flashlight/compare/beam-0.1.11...beam-0.1.12)
+
+> 2020-11-07
+
+### Pull Requests
+
+* Merge pull request [#941](https://github.com/getlantern/flashlight/issues/941) from getlantern/4403-update-golog
+
+
+<a name="beam-0.1.11"></a>
+## [beam-0.1.11](https://github.com/getlantern/flashlight/compare/beam-0.1.10...beam-0.1.11)
+
+> 2020-11-04
+
+### Pull Requests
+
+* Merge pull request [#942](https://github.com/getlantern/flashlight/issues/942) from getlantern/ox/issue4410
+* Merge pull request [#940](https://github.com/getlantern/flashlight/issues/940) from getlantern/harry/make-fix
+
+
+<a name="beam-0.1.10"></a>
+## [beam-0.1.10](https://github.com/getlantern/flashlight/compare/6.1.0...beam-0.1.10)
+
+> 2020-11-02
+
+### Reverts
+
+* Update anacrolix/torrent
+
+### Pull Requests
+
+* Merge pull request [#939](https://github.com/getlantern/flashlight/issues/939) from getlantern/changlelog-tweaks
+* Merge pull request [#938](https://github.com/getlantern/flashlight/issues/938) from getlantern/lantern-ui-6.1.3-2
+* Merge pull request [#937](https://github.com/getlantern/flashlight/issues/937) from getlantern/lantern-ui-6.1.3
+* Merge pull request [#934](https://github.com/getlantern/flashlight/issues/934) from getlantern/revert-932-fix-replica-arbitrary-file-write
+* Merge pull request [#933](https://github.com/getlantern/flashlight/issues/933) from getlantern/fix-systray-tooltip
+* Merge pull request [#932](https://github.com/getlantern/flashlight/issues/932) from getlantern/fix-replica-arbitrary-file-write
+* Merge pull request [#931](https://github.com/getlantern/flashlight/issues/931) from getlantern/upgrade-multipath
+* Merge pull request [#930](https://github.com/getlantern/flashlight/issues/930) from getlantern/systray-old-ui
+* Merge pull request [#904](https://github.com/getlantern/flashlight/issues/904) from getlantern/quic_18
+
+
+<a name="6.1.0"></a>
+## [6.1.0](https://github.com/getlantern/flashlight/compare/6.1.1...6.1.0)
+
+> 2020-11-02
+
+
+<a name="6.1.1"></a>
+## [6.1.1](https://github.com/getlantern/flashlight/compare/6.1.2...6.1.1)
+
+> 2020-11-02
+
+
+<a name="6.1.2"></a>
+## [6.1.2](https://github.com/getlantern/flashlight/compare/6.1.3...6.1.2)
+
+> 2020-11-02
+
+
+<a name="6.1.3"></a>
+## [6.1.3](https://github.com/getlantern/flashlight/compare/lantern-6.1.3...6.1.3)
+
+> 2020-11-02
+
+
 <a name="lantern-6.1.3"></a>
 ## [lantern-6.1.3](https://github.com/getlantern/flashlight/compare/lantern-6.1.2...lantern-6.1.3)
 
@@ -34,17 +119,17 @@
 ### Pull Requests
 
 * Merge pull request [#931](https://github.com/getlantern/flashlight/issues/931) from getlantern/upgrade-multipath
+* Merge pull request [#930](https://github.com/getlantern/flashlight/issues/930) from getlantern/systray-old-ui
+* Merge pull request [#904](https://github.com/getlantern/flashlight/issues/904) from getlantern/quic_18
 
 
 <a name="lantern-6.1.0"></a>
 ## [lantern-6.1.0](https://github.com/getlantern/flashlight/compare/6.0.11...lantern-6.1.0)
 
-> 2020-10-26
+> 2020-10-24
 
 ### Pull Requests
 
-* Merge pull request [#930](https://github.com/getlantern/flashlight/issues/930) from getlantern/systray-old-ui
-* Merge pull request [#904](https://github.com/getlantern/flashlight/issues/904) from getlantern/quic_18
 * Merge pull request [#929](https://github.com/getlantern/flashlight/issues/929) from getlantern/lantern-ui-6.1.0
 * Merge pull request [#926](https://github.com/getlantern/flashlight/issues/926) from getlantern/ox/beam-borda-app
 * Merge pull request [#925](https://github.com/getlantern/flashlight/issues/925) from getlantern/replica-cors-take2
