@@ -115,9 +115,10 @@ func New(params api.APIParams) YinbiHandler {
 	appDir := appdir.General(params.AppName)
 	httpClient := params.HTTPClient
 	yinbiAddr := params.YinbiServerAddr
+	authClient := authclient.New(params.AuthServerAddr, httpClient)
 	return YinbiHandler{
-		yinbiClient: client.New(appDir, yinbiAddr, httpClient),
-		authClient:  authclient.New(params.AuthServerAddr, httpClient),
+		yinbiClient: client.New(appDir, yinbiAddr, authClient, httpClient),
+		authClient:  authClient,
 	}
 }
 
@@ -317,28 +318,8 @@ func (h YinbiHandler) sendPaymentHandler(w http.ResponseWriter,
 		h.ErrorHandler(w, errors, http.StatusBadRequest)
 		return
 	}
-	// get key from keystore here
-	secretKey, err := h.yinbiClient.GetSecretKey(params.Username, params.Password)
-	if err != nil {
-		err = fmt.Errorf("Error retrieving secret key: %v", err)
-		h.ErrorHandler(w, err, http.StatusInternalServerError)
-		return
-	}
-	// create a new keypair from the secret key
-	// once we have the keypair, we can sign transactions
-	pair, err := keypair.Parse(secretKey)
-	if err != nil {
-		err = fmt.Errorf("Error parsing keypair: %v", err)
-		h.ErrorHandler(w, err, http.StatusInternalServerError)
-		return
-	}
 	log.Debugf("Successfully retrieved keypair for %s", params.Username)
-	resp, err := h.yinbiClient.SendPayment(
-		params.Destination,
-		params.Amount,
-		params.Asset,
-		pair.(*keypair.Full),
-	)
+	resp, err := h.yinbiClient.SendPayment(params)
 	if err != nil {
 		log.Debugf("Error sending payment: %v", err)
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
@@ -430,12 +411,7 @@ func (h *YinbiHandler) recoverYinbiAccount(w http.ResponseWriter,
 		return
 	}
 	log.Debug("Received new recover account request")
-	address, err := h.yinbiClient.IsMnemonicValid(params.Words)
-	if err != nil {
-		h.ErrorHandler(w, err, http.StatusBadRequest)
-		return
-	}
-	userResponse, err := h.sendRecoverRequest(address.Address)
+	userResponse, err := h.yinbiClient.RecoverAccount(params.Words)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
@@ -446,32 +422,6 @@ func (h *YinbiHandler) recoverYinbiAccount(w http.ResponseWriter,
 		"success": true,
 		"user":    userResponse.User,
 	})
-}
-
-func (h YinbiHandler) sendRecoverRequest(address string) (*models.UserResponse, error) {
-	params := &models.AccountParams{
-		PublicKey: address,
-	}
-	requestBody, err := json.Marshal(params)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := h.DoHTTPRequest(http.MethodPost, h.GetAuthAddr(recoverAccountEndpoint),
-		requestBody)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	userResponse := new(models.UserResponse)
-	err = json.Unmarshal(body, userResponse)
-	if err != nil {
-		return nil, err
-	}
-	return userResponse, nil
 }
 
 func (h YinbiHandler) getAccountTransactions(w http.ResponseWriter,
