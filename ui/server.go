@@ -24,6 +24,7 @@ import (
 
 	"github.com/getlantern/auth-server/api"
 	"github.com/getlantern/flashlight/common"
+	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ui/auth"
 	"github.com/getlantern/flashlight/ui/handler"
@@ -145,7 +146,10 @@ func (s *Server) attachHandlers(params ServerParams) {
 		resp.WriteHeader(http.StatusOK)
 	}
 
-	apiParams := api.NewAPIParams(params.AuthServerAddr, params.YinbiServerAddr)
+	httpClient := createHTTPClient()
+
+	apiParams := api.NewAPIParams(params.AuthServerAddr,
+		params.YinbiServerAddr, httpClient)
 
 	authHandler := auth.New(apiParams)
 	yinbiHandler := yinbi.NewWithAuth(apiParams, authHandler)
@@ -163,6 +167,16 @@ func (s *Server) attachHandlers(params ServerParams) {
 
 	s.Handle("/startup", http.HandlerFunc(startupHandler), false)
 	s.Handle("/", http.FileServer(fs), false)
+}
+
+func createHTTPClient() *http.Client {
+	rt := proxied.ChainedThenFronted()
+	rt.SetMasqueradeTimeout(30 * time.Second)
+	return &http.Client{
+		Transport: proxied.AsRoundTripper(func(req *http.Request) (*http.Response, error) {
+			return rt.RoundTrip(req)
+		}),
+	}
 }
 
 // Handle directs the underlying server to handle the given pattern at both

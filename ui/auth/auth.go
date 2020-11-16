@@ -45,7 +45,7 @@ type AuthHandler struct {
 func New(params api.APIParams) AuthHandler {
 	return AuthHandler{
 		handler.NewHandler(params),
-		client.New(params.AuthServerAddr),
+		client.New(params.AuthServerAddr, params.HTTPClient),
 	}
 }
 
