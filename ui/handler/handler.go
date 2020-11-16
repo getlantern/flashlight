@@ -37,7 +37,7 @@ type Handler struct {
 	UIHandler
 	authAddr   string
 	yinbiAddr  string
-	HttpClient *http.Client
+	HTTPClient *http.Client
 }
 
 // wrapMiddleware takes the given http.Handler and optionally wraps it with
@@ -58,7 +58,7 @@ func NewHandler(params api.APIParams) Handler {
 	return Handler{
 		authAddr:   params.AuthServerAddr,
 		yinbiAddr:  params.YinbiServerAddr,
-		HttpClient: params.HttpClient,
+		HTTPClient: params.HTTPClient,
 	}
 }
 
@@ -89,7 +89,7 @@ func (h Handler) DoHTTPRequest(method, url string,
 		return nil, err
 	}
 	req.Header.Set(common.HeaderContentType, common.MIMEApplicationJSON)
-	return h.HttpClient.Do(req)
+	return h.HTTPClient.Do(req)
 }
 
 // proxyHandler is a HTTP handler used to proxy requests
@@ -97,7 +97,7 @@ func (h Handler) DoHTTPRequest(method, url string,
 func (h Handler) ProxyHandler(url string, req *http.Request, w http.ResponseWriter,
 	onResponse common.HandleResponseFunc,
 ) error {
-	return common.ProxyHandler(url, h.HttpClient, req, w,
+	return common.ProxyHandler(url, h.HTTPClient, req, w,
 		onResponse)
 }
 

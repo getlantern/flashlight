@@ -8,23 +8,17 @@ import (
 	"html"
 	"io/ioutil"
 	"net/http"
-	"net/http/httputil"
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/auth-server/api"
-	"github.com/getlantern/auth-server/client"
+	authclient "github.com/getlantern/auth-server/client"
 	"github.com/getlantern/auth-server/models"
 	. "github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ui/auth"
 	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
-	"github.com/getlantern/yinbi-server/config"
-	"github.com/getlantern/yinbi-server/crypto"
-	"github.com/getlantern/yinbi-server/keystore"
-	ymodels "github.com/getlantern/yinbi-server/models"
-	"github.com/getlantern/yinbi-server/params"
-	"github.com/getlantern/yinbi-server/yinbi"
+	"github.com/getlantern/yinbi-server/client"
 	"github.com/stellar/go/keypair"
 )
 
@@ -54,15 +48,13 @@ type YinbiHandler struct {
 
 	// yinbiClient is a client for the Yinbi API which
 	// supports creating accounts and making payments
-	yinbiClient *yinbi.Client
+	yinbiClient *client.YinbiClient
 
-	authClient *client.AuthClient
-
-	// keystore manages encrypted storage of Yinbi private keys
-	keystore *keystore.Keystore
-
-	proxy *httputil.ReverseProxy
+	authClient *authclient.AuthClient
 }
+
+type ImportWalletParams = client.ImportWalletParams
+type ImportWalletResponse = client.ImportWalletResponse
 
 func (h YinbiHandler) Routes() []handler.Route {
 	return []handler.Route{
@@ -120,39 +112,31 @@ func (h YinbiHandler) Routes() []handler.Route {
 }
 
 func New(params api.APIParams) YinbiHandler {
+	appDir := appdir.General(params.AppName)
+	httpClient := params.HTTPClient
+	yinbiAddr := params.YinbiServerAddr
 	return YinbiHandler{
-		keystore:    keystore.New(appdir.General("Lantern")),
-		yinbiClient: newYinbiClient(params.HttpClient),
-		authClient:  client.New(params.AuthServerAddr),
+		yinbiClient: client.New(appDir, yinbiAddr, httpClient),
+		authClient:  authclient.New(params.AuthServerAddr, httpClient),
 	}
 }
 
 func NewWithAuth(params api.APIParams,
 	authHandler auth.AuthHandler) YinbiHandler {
-	return YinbiHandler{
-		AuthHandler: authHandler,
-		keystore:    keystore.New(appdir.General("Lantern")),
-		yinbiClient: newYinbiClient(params.HttpClient),
-		authClient:  client.New(params.AuthServerAddr),
-	}
+	yinbiHandler := New(params)
+	yinbiHandler.AuthHandler = authHandler
+	return yinbiHandler
 }
 
-func newYinbiClient(httpClient *http.Client) *yinbi.Client {
-	code := YinbiAssetCode
-	networkName := NetworkName
-	horizonAddr := HorizonAddr
-	issuer := YinbiIssuerAccount
-	cfg := config.GetStellarConfig(networkName, horizonAddr, issuer, code)
-	return yinbi.New(params.Params{
-		HttpClient: httpClient,
-		Config:     cfg,
-	})
+func (s *YinbiHandler) successResponse(w http.ResponseWriter, args map[string]interface{}) {
+	args["success"] = true
+	common.WriteJSON(w, http.StatusOK, args)
 }
 
 func (s *YinbiHandler) createMnemonic(w http.ResponseWriter, r *http.Request) {
-	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"mnemonic": crypto.NewMnemonic(),
-		"success":  true,
+	mnemonic := s.yinbiClient.CreateMnemonic()
+	s.successResponse(w, map[string]interface{}{
+		"mnemonic": mnemonic,
 	})
 }
 
@@ -168,7 +152,7 @@ func (h *YinbiHandler) importWalletHandler(w http.ResponseWriter,
 	req *http.Request) {
 	log.Debug("New import wallet request")
 	url := h.GetYinbiAddr(html.EscapeString(req.URL.Path))
-	var params ImportWalletParams
+	var params client.ImportWalletParams
 	err := common.DecodeJSONRequest(req, &params)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
@@ -187,7 +171,7 @@ func (h *YinbiHandler) importWalletHandler(w http.ResponseWriter,
 		return
 	}
 	// store the imported wallet in the keystore
-	err = h.keystore.Store(pair.Seed(), params.Username,
+	err = h.yinbiClient.StoreKey(pair.Seed(), params.Username,
 		params.Password)
 	if err != nil {
 		log.Errorf("Error storing key in keystore: %v", err)
@@ -202,7 +186,7 @@ func (h *YinbiHandler) importWalletHandler(w http.ResponseWriter,
 	})
 }
 
-func (h YinbiHandler) sendImportError(w http.ResponseWriter, resp *ImportWalletResponse) {
+func (h YinbiHandler) sendImportError(w http.ResponseWriter, resp *client.ImportWalletResponse) {
 	if resp == nil {
 		return
 	}
@@ -219,17 +203,17 @@ func (h YinbiHandler) sendSuccess(w http.ResponseWriter) {
 	})
 }
 
-func (h YinbiHandler) sendImportWallet(uri string, params *ImportWalletParams, req *http.Request) (*keypair.Full, *ImportWalletResponse, error) {
+func (h YinbiHandler) sendImportWallet(uri string, params *ImportWalletParams, req *http.Request) (*keypair.Full, *client.ImportWalletResponse, error) {
 	proxyReq, err := common.NewProxyRequest(req, uri)
 	if err != nil {
 		return nil, nil, err
 	}
-	resp, err := h.HttpClient.Do(proxyReq)
+	resp, err := h.HTTPClient.Do(proxyReq)
 	if err != nil {
 		return nil, nil, err
 	}
 	defer resp.Body.Close()
-	var importResp ImportWalletResponse
+	var importResp client.ImportWalletResponse
 	err = json.NewDecoder(resp.Body).Decode(&importResp)
 	if err != nil {
 		return nil, nil, err
@@ -244,7 +228,7 @@ func (h YinbiHandler) sendImportWallet(uri string, params *ImportWalletParams, r
 	return pair, &importResp, nil
 }
 
-func (h YinbiHandler) createUserAccount(w http.ResponseWriter, params *ImportWalletParams) error {
+func (h YinbiHandler) createUserAccount(w http.ResponseWriter, params *client.ImportWalletParams) error {
 	userParams := &models.UserParams{
 		Email:    params.Email,
 		Username: params.Username,
@@ -271,12 +255,58 @@ func (h YinbiHandler) decryptSeed(resp *ImportWalletResponse, password string) (
 	return pair, nil
 }
 
+// createAccountHandler is the HTTP handler used to create new
+// Yinbi accounts
+// First, the mnemonic is extracted from the request.
+// This returns a full keypair with signing capabilities
+// After the account has been created, we store the encrypted
+// secret key in the key store and create a trust line to the
+// Yinbi asset
+func (h YinbiHandler) createAccountHandler(w http.ResponseWriter,
+	r *http.Request) {
+	log.Debug("Received new create Yinbi account request")
+	params, err := h.getCreateAccountParams(r)
+	if err != nil {
+		log.Debugf("Error parsing address: %v", err)
+		h.ErrorHandler(w, err, http.StatusInternalServerError)
+		return
+	}
+	pair, err := client.KeyPairFromMnemonic(params.Words)
+	if err != nil {
+		h.ErrorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	requestBody, err := json.Marshal(params)
+	if err != nil {
+		log.Debugf("Error marshalling request: %v", err)
+		h.ErrorHandler(w, err, http.StatusInternalServerError)
+		return
+	}
+	r.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
+
+	// send secret key to keystore
+	err = h.yinbiClient.StoreKey(pair.Seed(), params.Username,
+		params.Password)
+	if err != nil {
+		log.Debugf("Error sending secret key to keystore: %v", err)
+		h.ErrorHandler(w, err, http.StatusInternalServerError)
+		return
+	}
+	onResp := func(resp *http.Response) error {
+		assetCode := h.yinbiClient.GetAssetCode()
+		log.Debugf("Trusting asset %s", assetCode)
+		return h.yinbiClient.TrustAsset(assetCode, YinbiIssuerAccount, pair)
+	}
+	url := h.GetAuthAddr(html.EscapeString(r.URL.Path))
+	h.ProxyHandler(url, r, w, onResp)
+}
+
 // sendPaymentHandler is the handler used to create Yinbi payments
 // The password included with the request is used to look up the
 // user's secret key in the Yinbi keystore.
 func (h YinbiHandler) sendPaymentHandler(w http.ResponseWriter,
 	req *http.Request) {
-	var params PaymentParams
+	var params client.PaymentParams
 	err := common.DecodeJSONRequest(req, &params)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
@@ -288,7 +318,7 @@ func (h YinbiHandler) sendPaymentHandler(w http.ResponseWriter,
 		return
 	}
 	// get key from keystore here
-	secretKey, err := h.keystore.GetKey(params.Username, params.Password)
+	secretKey, err := h.yinbiClient.GetSecretKey(params.Username, params.Password)
 	if err != nil {
 		err = fmt.Errorf("Error retrieving secret key: %v", err)
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
@@ -337,7 +367,7 @@ func (h YinbiHandler) getAccountDetails(w http.ResponseWriter,
 	}
 	address := request.Address
 	log.Debugf("Looking up balance for account with address %s", address)
-	balances, err := h.yinbiClient.GetBalances(address)
+	details, err := h.yinbiClient.GetAccountDetails(address)
 	if err != nil {
 		log.Debugf("Error retrieving balance: %v", err)
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
@@ -346,7 +376,7 @@ func (h YinbiHandler) getAccountDetails(w http.ResponseWriter,
 	log.Debugf("Successfully retrived balance for %s", address)
 	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"success":  true,
-		"balances": balances,
+		"balances": details.Balances,
 	})
 	return
 }
@@ -361,7 +391,7 @@ func (h YinbiHandler) resetPasswordHandler(w http.ResponseWriter,
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
-	pair, err := yinbi.KeyPairFromMnemonic(params.Words)
+	pair, err := client.KeyPairFromMnemonic(params.Words)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
@@ -373,7 +403,7 @@ func (h YinbiHandler) resetPasswordHandler(w http.ResponseWriter,
 		return
 	}
 	// send secret key to keystore
-	err = h.keystore.Store(pair.Seed(), params.Username,
+	err = h.yinbiClient.StoreKey(pair.Seed(), params.Username,
 		newPassword)
 	if err != nil {
 		log.Debugf("Error sending secret key to keystore: %v", err)
@@ -490,57 +520,11 @@ func (h YinbiHandler) getAccountTransactions(w http.ResponseWriter,
 }
 
 // getCreateAccuntParams decodes the JSON request to create an account
-func (h YinbiHandler) getCreateAccountParams(req *http.Request) (*ymodels.CreateAccountParams, error) {
-	var params ymodels.CreateAccountParams
+func (h YinbiHandler) getCreateAccountParams(req *http.Request) (*client.CreateAccountParams, error) {
+	var params client.CreateAccountParams
 	err := common.DecodeJSONRequest(req, &params)
 	if err != nil {
 		return nil, err
 	}
 	return &params, nil
-}
-
-// createAccountHandler is the HTTP handler used to create new
-// Yinbi accounts
-// First, the mnemonic is extracted from the request.
-// This returns a full keypair with signing capabilities
-// After the account has been created, we store the encrypted
-// secret key in the key store and create a trust line to the
-// Yinbi asset
-func (h YinbiHandler) createAccountHandler(w http.ResponseWriter,
-	r *http.Request) {
-	log.Debug("Received new create Yinbi account request")
-	params, err := h.getCreateAccountParams(r)
-	if err != nil {
-		log.Debugf("Error parsing address: %v", err)
-		h.ErrorHandler(w, err, http.StatusInternalServerError)
-		return
-	}
-	pair, err := yinbi.KeyPairFromMnemonic(params.Words)
-	if err != nil {
-		h.ErrorHandler(w, err, http.StatusBadRequest)
-		return
-	}
-	requestBody, err := json.Marshal(params)
-	if err != nil {
-		log.Debugf("Error marshalling request: %v", err)
-		h.ErrorHandler(w, err, http.StatusInternalServerError)
-		return
-	}
-	r.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
-
-	// send secret key to keystore
-	err = h.keystore.Store(pair.Seed(), params.Username,
-		params.Password)
-	if err != nil {
-		log.Debugf("Error sending secret key to keystore: %v", err)
-		h.ErrorHandler(w, err, http.StatusInternalServerError)
-		return
-	}
-	onResp := func(resp *http.Response) error {
-		assetCode := h.yinbiClient.GetAssetCode()
-		log.Debugf("Trusting asset %s", assetCode)
-		return h.yinbiClient.TrustAsset(assetCode, YinbiIssuerAccount, pair)
-	}
-	url := h.GetAuthAddr(html.EscapeString(r.URL.Path))
-	h.ProxyHandler(url, r, w, onResp)
 }
