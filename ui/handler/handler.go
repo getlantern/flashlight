@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/getlantern/auth-server/api"
 	"github.com/getlantern/auth-server/models"
-	"github.com/getlantern/flashlight/ui/api"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
 )
@@ -54,7 +54,7 @@ func WrapMiddleware(h http.HandlerFunc, m ...Middleware) http.HandlerFunc {
 	return corsHandler(wrapped)
 }
 
-func NewHandler(params api.Params) Handler {
+func NewHandler(params api.APIParams) Handler {
 	return Handler{
 		authAddr:   params.AuthServerAddr,
 		yinbiAddr:  params.YinbiServerAddr,

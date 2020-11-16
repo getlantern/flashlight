@@ -22,10 +22,9 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/tarfs"
 
+	"github.com/getlantern/auth-server/api"
 	"github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/proxied"
 	"github.com/getlantern/flashlight/stats"
-	"github.com/getlantern/flashlight/ui/api"
 	"github.com/getlantern/flashlight/ui/auth"
 	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/flashlight/ui/yinbi"
@@ -146,21 +145,7 @@ func (s *Server) attachHandlers(params ServerParams) {
 		resp.WriteHeader(http.StatusOK)
 	}
 
-	apiParams := api.Params{
-		AuthServerAddr:  params.AuthServerAddr,
-		YinbiServerAddr: params.YinbiServerAddr,
-		HttpClient: &http.Client{
-			Transport: proxied.AsRoundTripper(
-				func(req *http.Request) (*http.Response, error) {
-					chained, err := proxied.ChainedNonPersistent("")
-					if err != nil {
-						return nil, fmt.Errorf("connecting to proxy: %w", err)
-					}
-					return chained.RoundTrip(req)
-				},
-			),
-		},
-	}
+	apiParams := api.NewAPIParams(params.AuthServerAddr, params.YinbiServerAddr)
 
 	authHandler := auth.New(apiParams)
 	yinbiHandler := yinbi.NewWithAuth(apiParams, authHandler)

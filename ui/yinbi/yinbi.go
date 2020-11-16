@@ -11,10 +11,10 @@ import (
 	"net/http/httputil"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/auth-server/api"
 	"github.com/getlantern/auth-server/client"
 	"github.com/getlantern/auth-server/models"
 	. "github.com/getlantern/flashlight/common"
-	"github.com/getlantern/flashlight/ui/api"
 	"github.com/getlantern/flashlight/ui/auth"
 	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/golog"
@@ -119,7 +119,7 @@ func (h YinbiHandler) Routes() []handler.Route {
 	}
 }
 
-func New(params api.Params) YinbiHandler {
+func New(params api.APIParams) YinbiHandler {
 	return YinbiHandler{
 		keystore:    keystore.New(appdir.General("Lantern")),
 		yinbiClient: newYinbiClient(params.HttpClient),
@@ -127,7 +127,7 @@ func New(params api.Params) YinbiHandler {
 	}
 }
 
-func NewWithAuth(params api.Params,
+func NewWithAuth(params api.APIParams,
 	authHandler auth.AuthHandler) YinbiHandler {
 	return YinbiHandler{
 		AuthHandler: authHandler,

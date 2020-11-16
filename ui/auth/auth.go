@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/getlantern/auth-server/api"
 	"github.com/getlantern/auth-server/client"
 	"github.com/getlantern/auth-server/models"
-	"github.com/getlantern/flashlight/ui/api"
 	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
@@ -42,7 +42,7 @@ type AuthHandler struct {
 }
 
 // New creates a new auth handler
-func New(params api.Params) AuthHandler {
+func New(params api.APIParams) AuthHandler {
 	return AuthHandler{
 		handler.NewHandler(params),
 		client.New(params.AuthServerAddr),
@@ -104,10 +104,7 @@ func (h AuthHandler) authHandler() http.HandlerFunc {
 func (h AuthHandler) getUserParams(req *http.Request) (*models.UserParams, error) {
 	var params models.UserParams
 	err := common.DecodeJSONRequest(req, &params)
-	if err != nil {
-		return nil, err
-	}
-	return &params, nil
+	return &params, err
 }
 
 func (h AuthHandler) signOutHandler() http.HandlerFunc {

@@ -1,7 +1,7 @@
 package yinbi
 
 import (
-	"github.com/getlantern/flashlight/ui/api"
+	"github.com/getlantern/auth-server/api"
 )
 
 type ImportWalletResponse struct {
