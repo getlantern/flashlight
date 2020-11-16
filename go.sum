@@ -322,6 +322,7 @@ github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da h1:T/pxF37Z9SIQC
 github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da/go.mod h1:3vR6+jQdWfWojZ77w+htCqEF5MO/Y2twJOpAvFuM9po=
 github.com/getlantern/auth-server v0.0.0-20200831031036-a34660162940 h1:Yfmj2Z4BdAJLz7bEuVpSAVNDhF8Qgb3GsG1C0KJpYDw=
 github.com/getlantern/auth-server v0.0.0-20200831031036-a34660162940/go.mod h1:tEbrL0sopEDK6ZZGznDdY4knmGOBx6l+YHwhdUkaQ84=
+github.com/getlantern/auth-server v0.0.0-20201110145109-3cb2d88f5089 h1:K7R5ajAG3fplYfCKrD+6ESdKKTxkixGtp/oD/DJdKBU=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99 h1:fnjb9PYZRMU6Tok5i3anP/bAqhUtG2kn9xgff3IlA+8=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99/go.mod h1:4rYfIUYagdnY0KCu5/zOBX5CIRIi+j+LHdQ+LmD/Lyg=
 github.com/getlantern/bbrconn v0.0.0-20180619163322-86cf8c16f3d0 h1:OtUNxwmNp9+mTZMuKw9MrNLJKMG731zWZIWwQfFGZfs=

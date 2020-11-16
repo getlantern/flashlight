@@ -11,6 +11,7 @@ import (
 	"net/http/httputil"
 
 	"github.com/getlantern/appdir"
+	"github.com/getlantern/auth-server/client"
 	"github.com/getlantern/auth-server/models"
 	. "github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ui/api"
@@ -54,6 +55,8 @@ type YinbiHandler struct {
 	// yinbiClient is a client for the Yinbi API which
 	// supports creating accounts and making payments
 	yinbiClient *yinbi.Client
+
+	authClient *client.AuthClient
 
 	// keystore manages encrypted storage of Yinbi private keys
 	keystore *keystore.Keystore
@@ -120,6 +123,7 @@ func New(params api.Params) YinbiHandler {
 	return YinbiHandler{
 		keystore:    keystore.New(appdir.General("Lantern")),
 		yinbiClient: newYinbiClient(params.HttpClient),
+		authClient:  client.New(params.AuthServerAddr),
 	}
 }
 
@@ -129,6 +133,7 @@ func NewWithAuth(params api.Params,
 		AuthHandler: authHandler,
 		keystore:    keystore.New(appdir.General("Lantern")),
 		yinbiClient: newYinbiClient(params.HttpClient),
+		authClient:  client.New(params.AuthServerAddr),
 	}
 }
 
@@ -240,7 +245,7 @@ func (h YinbiHandler) sendImportWallet(uri string, params *ImportWalletParams, r
 }
 
 func (h YinbiHandler) createUserAccount(w http.ResponseWriter, params *ImportWalletParams) error {
-	userParams := models.UserParams{
+	userParams := &models.UserParams{
 		Email:    params.Email,
 		Username: params.Username,
 		Password: params.Password,
@@ -248,11 +253,11 @@ func (h YinbiHandler) createUserAccount(w http.ResponseWriter, params *ImportWal
 	}
 	log.Debugf("Sending create user account request with address %s",
 		params.Address)
-	srpParams, srpClient, err := h.NewSRPClient(userParams, false)
+	_, err := h.authClient.ImportWallet(userParams)
 	if err != nil {
+		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return err
 	}
-	h.SendAuth(w, importEndpoint, srpClient, srpParams)
 	return nil
 }
 
@@ -361,30 +366,10 @@ func (h YinbiHandler) resetPasswordHandler(w http.ResponseWriter,
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
 	}
-	srpParams, srpClient, err := h.NewSRPClient(models.UserParams{
-		Username: params.Username,
-		Password: params.Password,
-	}, true)
-	if err != nil {
-		h.ErrorHandler(w, err, http.StatusBadRequest)
-		return
-	}
 	newPassword := params.Password
-	params.Password = ""
-	log.Debugf("Received new reset password request from %s", params.Username)
-	resp, authResp, err := h.SendAuthRequest(common.POST, resetPasswordEndpoint,
-		srpParams)
+	_, err = h.authClient.ResetPassword(params.Username, params.Password, newPassword)
 	if err != nil {
-		log.Error(err)
-		return
-	}
-	if resp.StatusCode != http.StatusOK {
-		h.ErrorHandler(w, errors.New("Service unavailable"),
-			http.StatusInternalServerError)
-		return
-	}
-	err = h.HandleAuthResponse(srpClient, w, srpParams, authResp)
-	if err != nil {
+		h.ErrorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
 	// send secret key to keystore
