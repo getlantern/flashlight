@@ -1,19 +1,14 @@
 package yinbi
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"html"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/auth-server/api"
 	authclient "github.com/getlantern/auth-server/client"
 	"github.com/getlantern/auth-server/models"
-	. "github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ui/auth"
 	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/golog"
@@ -226,34 +221,11 @@ func (h YinbiHandler) createAccountHandler(w http.ResponseWriter,
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
-	pair, err := client.KeyPairFromMnemonic(params.Words)
-	if err != nil {
-		h.ErrorHandler(w, err, http.StatusBadRequest)
-		return
-	}
-	requestBody, err := json.Marshal(params)
-	if err != nil {
-		log.Debugf("Error marshalling request: %v", err)
-		h.ErrorHandler(w, err, http.StatusInternalServerError)
-		return
-	}
-	r.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
 
-	// send secret key to keystore
-	err = h.yinbiClient.StoreKey(pair.Seed(), params.Username,
-		params.Password)
+	err = h.yinbiClient.CreateAccount(params)
 	if err != nil {
-		log.Debugf("Error sending secret key to keystore: %v", err)
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
-		return
 	}
-	onResp := func(resp *http.Response) error {
-		assetCode := h.yinbiClient.GetAssetCode()
-		log.Debugf("Trusting asset %s", assetCode)
-		return h.yinbiClient.TrustAsset(assetCode, YinbiIssuerAccount, pair)
-	}
-	url := h.GetAuthAddr(html.EscapeString(r.URL.Path))
-	h.ProxyHandler(url, r, w, onResp)
 }
 
 // sendPaymentHandler is the handler used to create Yinbi payments
@@ -424,8 +396,8 @@ func (h YinbiHandler) getAccountTransactions(w http.ResponseWriter,
 }
 
 // getCreateAccuntParams decodes the JSON request to create an account
-func (h YinbiHandler) getCreateAccountParams(req *http.Request) (*client.CreateAccountParams, error) {
-	var params client.CreateAccountParams
+func (h YinbiHandler) getCreateAccountParams(req *http.Request) (*authclient.CreateAccountParams, error) {
+	var params authclient.CreateAccountParams
 	err := common.DecodeJSONRequest(req, &params)
 	if err != nil {
 		return nil, err
