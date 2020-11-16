@@ -166,16 +166,14 @@ func (h *YinbiHandler) importWalletHandler(w http.ResponseWriter,
 		return
 	}
 
-	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
+	h.sendSuccess(w, map[string]interface{}{
 		"address": pair.Address(),
-		"success": true,
 	})
 }
 
-func (h YinbiHandler) sendSuccess(w http.ResponseWriter) {
-	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"success": true,
-	})
+func (h YinbiHandler) sendSuccess(w http.ResponseWriter, args map[string]interface{}) {
+	args["success"] = true
+	common.WriteJSON(w, http.StatusOK, args)
 }
 
 func (h YinbiHandler) createUserAccount(w http.ResponseWriter, params *client.ImportWalletParams) error {
@@ -213,16 +211,15 @@ func (h YinbiHandler) decryptSeed(resp *ImportWalletResponse, password string) (
 // secret key in the key store and create a trust line to the
 // Yinbi asset
 func (h YinbiHandler) createAccountHandler(w http.ResponseWriter,
-	r *http.Request) {
+	req *http.Request) {
 	log.Debug("Received new create Yinbi account request")
-	params, err := h.getCreateAccountParams(r)
+	var params authclient.CreateAccountParams
+	err := common.DecodeJSONRequest(req, &params)
 	if err != nil {
-		log.Debugf("Error parsing address: %v", err)
-		h.ErrorHandler(w, err, http.StatusInternalServerError)
+		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
 	}
-
-	err = h.yinbiClient.CreateAccount(params)
+	err = h.yinbiClient.CreateAccount(&params)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
 	}
@@ -251,9 +248,8 @@ func (h YinbiHandler) sendPaymentHandler(w http.ResponseWriter,
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
-	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"success": true,
-		"tx_id":   resp.Hash,
+	h.sendSuccess(w, map[string]interface{}{
+		"tx_id": resp.Hash,
 	})
 	return
 }
@@ -281,21 +277,19 @@ func (h YinbiHandler) getAccountDetails(w http.ResponseWriter,
 		return
 	}
 	log.Debugf("Successfully retrived balance for %s", address)
-	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"success":  true,
+	h.sendSuccess(w, map[string]interface{}{
 		"balances": details.Balances,
 	})
-	return
 }
 
 // resetPasswordHandler is the handler used to reset a user's
 // wallet password
 func (h YinbiHandler) resetPasswordHandler(w http.ResponseWriter,
 	req *http.Request) {
-	params, err := h.getCreateAccountParams(req)
+	var params authclient.CreateAccountParams
+	err := common.DecodeJSONRequest(req, &params)
 	if err != nil {
-		log.Debugf("Error parsing address: %v", err)
-		h.ErrorHandler(w, err, http.StatusInternalServerError)
+		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
 	}
 	pair, err := client.KeyPairFromMnemonic(params.Words)
@@ -344,9 +338,8 @@ func (h *YinbiHandler) recoverYinbiAccount(w http.ResponseWriter,
 	}
 	log.Debugf("Successfully recovered user %s's account using Yinbi key",
 		userResponse.User.Username)
-	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"success": true,
-		"user":    userResponse.User,
+	h.sendSuccess(w, map[string]interface{}{
+		"user": userResponse.User,
 	})
 }
 
@@ -388,19 +381,7 @@ func (h YinbiHandler) getAccountTransactions(w http.ResponseWriter,
 	}
 	log.Debugf("Successfully retrived payments for %s",
 		address)
-	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
-		"success":  true,
+	h.sendSuccess(w, map[string]interface{}{
 		"payments": payments,
 	})
-	return
-}
-
-// getCreateAccuntParams decodes the JSON request to create an account
-func (h YinbiHandler) getCreateAccountParams(req *http.Request) (*authclient.CreateAccountParams, error) {
-	var params authclient.CreateAccountParams
-	err := common.DecodeJSONRequest(req, &params)
-	if err != nil {
-		return nil, err
-	}
-	return &params, nil
 }
