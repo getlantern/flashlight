@@ -14,7 +14,6 @@ import (
 	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
 	"github.com/getlantern/yinbi-server/client"
-	"github.com/stellar/go/keypair"
 )
 
 const (
@@ -182,16 +181,6 @@ func (h YinbiHandler) createUserAccount(w http.ResponseWriter, params *client.Im
 	return nil
 }
 
-func (h YinbiHandler) decryptSeed(resp *ImportWalletResponse, password string) (*keypair.Full, error) {
-	pair, err := h.yinbiClient.DecryptSeed(resp.Seed, resp.Salt,
-		password)
-	if err != nil {
-		log.Errorf("Unable to decrypt seed: %v", err)
-		return nil, err
-	}
-	return pair, nil
-}
-
 // createAccountHandler is the HTTP handler used to create new
 // Yinbi accounts
 // First, the mnemonic is extracted from the request.
@@ -321,42 +310,18 @@ func (h *YinbiHandler) recoverYinbiAccount(w http.ResponseWriter,
 
 func (h YinbiHandler) getAccountTransactions(w http.ResponseWriter,
 	r *http.Request) {
-	var request struct {
-		Address        string `json:"address"`
-		Cursor         string `json:"cursor"`
-		Order          string `json:"order"`
-		RecordsPerPage int    `json:"recordsPerPage"`
-	}
-	err := common.DecodeJSONRequest(r, &request)
+	var params client.AccountTransactionParams
+	err := common.DecodeJSONRequest(r, &params)
 	if err != nil {
 		log.Debugf("Error decoding JSON: %v", err)
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
-	address := request.Address
-	cursor := request.Cursor
-	order := request.Order
-	recordsPerPage := request.RecordsPerPage
-	log.Debugf("Looking up payments for account with address %s", address)
-	payments, err := h.yinbiClient.GetPayments(address, cursor,
-		order, recordsPerPage)
-
+	payments, err := h.yinbiClient.GetPayments(&params)
 	if err != nil {
-		log.Debugf("Error retrieving payments: %v", err)
 		h.ErrorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
-
-	// An ascending order query means that we actually want the previous page.
-	// We reverse the returned payments so that they are still displayed
-	// in reverse chronological order
-	if order == "asc" {
-		for i, j := 0, len(payments)-1; i < j; i, j = i+1, j-1 {
-			payments[i], payments[j] = payments[j], payments[i]
-		}
-	}
-	log.Debugf("Successfully retrived payments for %s",
-		address)
 	h.successResponse(w, map[string]interface{}{
 		"payments": payments,
 	})
