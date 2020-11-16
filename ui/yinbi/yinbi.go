@@ -147,39 +147,29 @@ func (s *YinbiHandler) redeemCodesHandler(w http.ResponseWriter, req *http.Reque
 	s.ProxyHandler(url, req, w, nil)
 }
 
+func (h YinbiHandler) getWalletParams(req *http.Request) (*client.ImportWalletParams, error) {
+	var params client.ImportWalletParams
+	err := common.DecodeJSONRequest(req, &params)
+	return &params, err
+}
+
 // importWalletHandler is the handler used to import wallets
 // of existing yin.bi users
 func (h *YinbiHandler) importWalletHandler(w http.ResponseWriter,
 	req *http.Request) {
 	log.Debug("New import wallet request")
-	url := h.GetYinbiAddr(html.EscapeString(req.URL.Path))
 	var params client.ImportWalletParams
 	err := common.DecodeJSONRequest(req, &params)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
 	}
-	requestBody, err := json.Marshal(params)
+	pair, err := h.yinbiClient.ImportWallet(&params)
 	if err != nil {
+		log.Errorf("Error sending import wallet request: %v", err)
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 		return
 	}
-	req.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
-	pair, resp, err := h.sendImportWallet(url, &params, req)
-	if err != nil {
-		log.Errorf("Error sending import wallet request: %v %v", resp.Error, err)
-		h.sendImportError(w, resp)
-		return
-	}
-	// store the imported wallet in the keystore
-	err = h.yinbiClient.StoreKey(pair.Seed(), params.Username,
-		params.Password)
-	if err != nil {
-		log.Errorf("Error storing key in keystore: %v", err)
-		h.ErrorHandler(w, err, http.StatusBadRequest)
-		return
-	}
-	log.Debug("Successfully imported yin.bi wallet")
 
 	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"address": pair.Address(),
@@ -187,46 +177,10 @@ func (h *YinbiHandler) importWalletHandler(w http.ResponseWriter,
 	})
 }
 
-func (h YinbiHandler) sendImportError(w http.ResponseWriter, resp *client.ImportWalletResponse) {
-	if resp == nil {
-		return
-	}
-	if resp.Error != "" {
-		h.ErrorHandler(w, resp.Error, http.StatusBadRequest)
-	} else if len(resp.Errors) > 0 {
-		h.ErrorHandler(w, resp.Errors, http.StatusBadRequest)
-	}
-}
-
 func (h YinbiHandler) sendSuccess(w http.ResponseWriter) {
 	common.WriteJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
 	})
-}
-
-func (h YinbiHandler) sendImportWallet(uri string, params *ImportWalletParams, req *http.Request) (*keypair.Full, *client.ImportWalletResponse, error) {
-	proxyReq, err := common.NewProxyRequest(req, uri)
-	if err != nil {
-		return nil, nil, err
-	}
-	resp, err := h.HTTPClient.Do(proxyReq)
-	if err != nil {
-		return nil, nil, err
-	}
-	defer resp.Body.Close()
-	var importResp client.ImportWalletResponse
-	err = json.NewDecoder(resp.Body).Decode(&importResp)
-	if err != nil {
-		return nil, nil, err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, &importResp, errors.New("Invalid response")
-	}
-	pair, err := h.decryptSeed(&importResp, params.Password)
-	if err != nil {
-		return nil, nil, err
-	}
-	return pair, &importResp, nil
 }
 
 func (h YinbiHandler) createUserAccount(w http.ResponseWriter, params *client.ImportWalletParams) error {
