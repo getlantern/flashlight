@@ -6,15 +6,16 @@ require (
 	cloud.google.com/go v0.72.0 // indirect
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
-	github.com/anacrolix/confluence v1.4.0
+	github.com/anacrolix/confluence v1.6.2-0.20201116033747-ba09085bd120
+	github.com/anacrolix/dht v1.0.1 // indirect
 	github.com/anacrolix/dht/v2 v2.6.1 // indirect
 	github.com/anacrolix/envpprof v1.1.1
 	github.com/anacrolix/go-libutp v1.0.3
 	github.com/anacrolix/log v0.7.1-0.20200604014615-c244de44fd2d
 	github.com/anacrolix/tagflag v1.1.1-0.20200411025953-9bb5209d56c2
-	github.com/anacrolix/torrent v1.18.1-0.20201103041712-96b640065a9f
 	github.com/aws/aws-sdk-go v1.35.29 // indirect
 	github.com/badoux/checkmail v1.2.1 // indirect
+	github.com/anacrolix/torrent v1.18.1-0.20201116053711-8ef37cb2e682
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
