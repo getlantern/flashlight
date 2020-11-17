@@ -1,4 +1,15 @@
 
+<a name="lantern-6.2.0"></a>
+## [lantern-6.2.0](https://github.com/getlantern/flashlight/compare/lantern-6.1.4...lantern-6.2.0)
+
+> 2020-11-16
+
+### Pull Requests
+
+* Merge pull request [#946](https://github.com/getlantern/flashlight/issues/946) from getlantern/systray-ts-ui
+* Merge pull request [#945](https://github.com/getlantern/flashlight/issues/945) from getlantern/user-agent
+
+
 <a name="lantern-6.1.4"></a>
 ## [lantern-6.1.4](https://github.com/getlantern/flashlight/compare/beam-0.1.14...lantern-6.1.4)
 
@@ -119,17 +130,17 @@
 ### Pull Requests
 
 * Merge pull request [#931](https://github.com/getlantern/flashlight/issues/931) from getlantern/upgrade-multipath
-* Merge pull request [#930](https://github.com/getlantern/flashlight/issues/930) from getlantern/systray-old-ui
-* Merge pull request [#904](https://github.com/getlantern/flashlight/issues/904) from getlantern/quic_18
 
 
 <a name="lantern-6.1.0"></a>
 ## [lantern-6.1.0](https://github.com/getlantern/flashlight/compare/6.0.11...lantern-6.1.0)
 
-> 2020-10-24
+> 2020-10-26
 
 ### Pull Requests
 
+* Merge pull request [#930](https://github.com/getlantern/flashlight/issues/930) from getlantern/systray-old-ui
+* Merge pull request [#904](https://github.com/getlantern/flashlight/issues/904) from getlantern/quic_18
 * Merge pull request [#929](https://github.com/getlantern/flashlight/issues/929) from getlantern/lantern-ui-6.1.0
 * Merge pull request [#926](https://github.com/getlantern/flashlight/issues/926) from getlantern/ox/beam-borda-app
 * Merge pull request [#925](https://github.com/getlantern/flashlight/issues/925) from getlantern/replica-cors-take2
