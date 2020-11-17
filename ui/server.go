@@ -187,6 +187,8 @@ func (s *Server) wrapMiddleware(h http.HandlerFunc, m ...Middleware) http.Handle
 	return s.corsHandler(wrapped)
 }
 
+// createHTTPClient creates a chained-then-fronted configured HTTP client
+// to be used by multiple UI handlers
 func createHTTPClient() *http.Client {
 	rt := proxied.ChainedThenFronted()
 	rt.SetMasqueradeTimeout(30 * time.Second)
