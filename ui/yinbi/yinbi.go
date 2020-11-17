@@ -277,13 +277,18 @@ func (h YinbiHandler) resetPasswordHandler(w http.ResponseWriter,
 	}
 }
 
+// saveAddressHandler is the handler used to save new account
+// addresses for the given user
 func (h *YinbiHandler) saveAddressHandler(w http.ResponseWriter,
 	r *http.Request) {
 	address := r.URL.Query().Get("address")
-
-	url := h.GetAuthAddr(fmt.Sprintf("/user/address/%s", address))
-	log.Debugf("Sending save address request to %s", url)
-	h.ProxyHandler(url, r, w, nil)
+	_, err := h.authClient.SaveAddress(address)
+	if err != nil {
+		err = fmt.Errorf("Error saving user address: %v", err)
+		h.ErrorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	log.Debug("Successfully saved address")
 }
 
 func (h *YinbiHandler) recoverYinbiAccount(w http.ResponseWriter,
