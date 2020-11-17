@@ -402,6 +402,7 @@ func (app *App) beforeStart(listenAddr string) {
 		AuthServerAddr:  authaddr,
 		YinbiServerAddr: yinbiaddr,
 		ExtURL:          startupURL,
+		AppName:         common.AppName,
 		RequestedAddr:   uiaddr,
 		LocalHTTPToken:  app.localHttpToken(),
 		Standalone:      standalone,

@@ -84,6 +84,7 @@ type ServerParams struct {
 	ExtURL          string
 	AuthServerAddr  string
 	YinbiServerAddr string
+	AppName         string
 	Handlers        []*PathHandler
 	LocalHTTPToken  string
 	RequestedAddr   string
@@ -151,7 +152,7 @@ func (s *Server) attachHandlers(params ServerParams) {
 
 	httpClient := createHTTPClient()
 
-	apiParams := api.NewAPIParams(params.AuthServerAddr,
+	apiParams := api.NewAPIParams(params.AppName, params.AuthServerAddr,
 		params.YinbiServerAddr, httpClient)
 
 	authHandler := auth.New(apiParams)

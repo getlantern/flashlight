@@ -13,16 +13,16 @@ require (
 	github.com/anacrolix/go-libutp v1.0.3
 	github.com/anacrolix/log v0.7.1-0.20200604014615-c244de44fd2d
 	github.com/anacrolix/tagflag v1.1.1-0.20200411025953-9bb5209d56c2
+	github.com/anacrolix/torrent v1.18.1-0.20201116053711-8ef37cb2e682
 	github.com/aws/aws-sdk-go v1.35.29 // indirect
 	github.com/badoux/checkmail v1.2.1 // indirect
-	github.com/anacrolix/torrent v1.18.1-0.20201116053711-8ef37cb2e682
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
-	github.com/getlantern/auth-server v0.0.0-20201117153121-fc1cae21ef83
+	github.com/getlantern/auth-server v0.0.0-20201117154438-93be15801d34
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20200613191039-d7b1c2cc6021
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d

@@ -355,6 +355,8 @@ github.com/getlantern/auth-server v0.0.0-20201117151734-f9805e65d323 h1:h9kj/E+l
 github.com/getlantern/auth-server v0.0.0-20201117151734-f9805e65d323/go.mod h1:gBrtg42AJKjxbm1mJCnwXGcz3uvGLDl6+wxbWAgqpZI=
 github.com/getlantern/auth-server v0.0.0-20201117153121-fc1cae21ef83 h1:L0d8U0dWRCwflMg67Kf0hMVP/SfxHkQThHbegnurNcY=
 github.com/getlantern/auth-server v0.0.0-20201117153121-fc1cae21ef83/go.mod h1:gBrtg42AJKjxbm1mJCnwXGcz3uvGLDl6+wxbWAgqpZI=
+github.com/getlantern/auth-server v0.0.0-20201117154438-93be15801d34 h1:e9xv+zj204Iilh1wkyUkHzK0Wfp08weSbe0rhHDjxSw=
+github.com/getlantern/auth-server v0.0.0-20201117154438-93be15801d34/go.mod h1:gBrtg42AJKjxbm1mJCnwXGcz3uvGLDl6+wxbWAgqpZI=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99 h1:fnjb9PYZRMU6Tok5i3anP/bAqhUtG2kn9xgff3IlA+8=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99/go.mod h1:4rYfIUYagdnY0KCu5/zOBX5CIRIi+j+LHdQ+LmD/Lyg=
 github.com/getlantern/bbrconn v0.0.0-20180619163322-86cf8c16f3d0 h1:OtUNxwmNp9+mTZMuKw9MrNLJKMG731zWZIWwQfFGZfs=
@@ -972,7 +974,15 @@ github.com/labstack/echo/v4 v4.1.17 h1:PQIBaRplyRy3OjwILGkPg89JRtH2x5bssi59G2EL3
 github.com/labstack/echo/v4 v4.1.17/go.mod h1:Tn2yRQL/UclUalpb5rPdXDevbkJ+lp/2svdyFBg6CHQ=
 github.com/labstack/gommon v0.3.0 h1:JEeO0bvc78PKdyHxloTKiF8BD5iGrH8T6MSeGvSgob0=
 github.com/labstack/gommon v0.3.0/go.mod h1:MULnywXg0yavhxWKc+lOruYdAhDwPK9wf0OL7NoOu+k=
+github.com/lann/builder v0.0.0-20140829050551-c603884a2c1f/go.mod h1:dXGbAdH5GtBTC4WfIxhKZfyBF/HBFgRZSWwZ9g/He9o=
 github.com/leanovate/gopter v0.2.9/go.mod h1:U2L/78B+KVFIx2VmW6onHJQzXtFb+p5y3y2Sh+Jxxv8=
+github.com/leodido/go-urn v1.2.0/go.mod h1:+8+nEpDfqqsY+g338gtMEUOtuK+4dEMhiQEgxpxOKII=
+github.com/lib/pq v1.0.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
+github.com/lib/pq v1.1.1/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
+github.com/lib/pq v1.2.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
+github.com/lib/pq v1.5.2/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
+github.com/lib/pq v1.8.0 h1:9xohqzkUwzR4Ga4ivdTcawVS89YSDVxXMa3xJX3cGzg=
+github.com/lib/pq v1.8.0/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
 github.com/libp2p/go-buffer-pool v0.0.2 h1:QNK2iAFa8gjAe1SPz6mHSMuCcjs+X1wlHzeOSqcmlfs=
 github.com/libp2p/go-buffer-pool v0.0.2/go.mod h1:MvaB6xw5vOrDl8rYZGLFdKAuk/hRoRZd1Vi32+RXyFM=
 github.com/lukechampine/stm v0.0.0-20191022212748-05486c32d236/go.mod h1:wTLsd5FC9rts7GkMpsPGk64CIuea+03yaLAp19Jmlg8=
