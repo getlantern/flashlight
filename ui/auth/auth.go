@@ -69,7 +69,9 @@ func (h AuthHandler) Routes() []handler.Route {
 // registration endpoints. It creates a new SRP client from
 // the user params in the request
 func (h AuthHandler) authHandler(w http.ResponseWriter, req *http.Request) {
-	params, err := h.getUserParams(req)
+	var params models.UserParams
+	// extract user credentials from HTTP request to send to AuthClient
+	err := common.DecodeJSONRequest(req, &params)
 	if err != nil {
 		log.Errorf("Couldn't create SRP client from request: %v", err)
 		h.ErrorHandler(w, err, http.StatusBadRequest)
@@ -84,14 +86,6 @@ func (h AuthHandler) authHandler(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
 	}
-}
-
-// getUserParams extracts user credentials from the HTTP request
-// and passes those to the auth client based on the endpoint specified
-func (h AuthHandler) getUserParams(req *http.Request) (*models.UserParams, error) {
-	var params models.UserParams
-	err := common.DecodeJSONRequest(req, &params)
-	return &params, err
 }
 
 func (h AuthHandler) signOutHandler(w http.ResponseWriter, req *http.Request) {
