@@ -25,7 +25,7 @@ import (
 	"github.com/getlantern/fronted"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/keyman"
-	
+
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/ops"
 )
@@ -52,12 +52,12 @@ func success(resp *http.Response) bool {
 	return resp.StatusCode > 199 && resp.StatusCode < 400
 }
 
-// changeUserAgent prepends Lantern version and OSARCH to the User-Agent header
+// changeUserAgent prepends app version and OSARCH to the User-Agent header
 // of req to facilitate debugging on server side.
 func changeUserAgent(req *http.Request) {
 	secondary := req.Header.Get("User-Agent")
-	ua := strings.TrimSpace(fmt.Sprintf("Lantern/%s (%s/%s) %s",
-		common.Version, common.Platform, runtime.GOARCH, secondary))
+	ua := strings.TrimSpace(fmt.Sprintf("%s/%s (%s/%s) %s",
+		common.AppName, common.Version, common.Platform, runtime.GOARCH, secondary))
 	req.Header.Set("User-Agent", ua)
 }
 
