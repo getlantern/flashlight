@@ -89,7 +89,17 @@ func (h AuthHandler) authHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h AuthHandler) signOutHandler(w http.ResponseWriter, req *http.Request) {
-	url := h.GetAuthAddr(signOutEndpoint)
-	log.Debugf("Sending sign out request to %s", url)
-	h.ProxyHandler(url, req, w, nil)
+	var params models.UserParams
+	// extract user credentials from HTTP request to send to AuthClient
+	err := common.DecodeJSONRequest(req, &params)
+	if err != nil {
+		h.ErrorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	_, err = h.authClient.SignOut(params.Username)
+	if err != nil {
+		h.ErrorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	log.Debugf("User %s successfully signed out", params.Username)
 }
