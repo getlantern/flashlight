@@ -339,8 +339,13 @@ github.com/getlantern/appdir v0.0.0-20160830121117-659a155d06e8/go.mod h1:3vR6+j
 github.com/getlantern/appdir v0.0.0-20180320102544-7c0f9d241ea7/go.mod h1:3vR6+jQdWfWojZ77w+htCqEF5MO/Y2twJOpAvFuM9po=
 github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da h1:T/pxF37Z9SIQCHhMMUITZ3rhKRL0Noi9XxNwxKdBNw0=
 github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da/go.mod h1:3vR6+jQdWfWojZ77w+htCqEF5MO/Y2twJOpAvFuM9po=
+github.com/getlantern/auth-server v0.0.0-20201110145109-3cb2d88f5089/go.mod h1:tEbrL0sopEDK6ZZGznDdY4knmGOBx6l+YHwhdUkaQ84=
 github.com/getlantern/auth-server v0.0.0-20201117145459-0963478c2829 h1:RDFkNmcd+3ATdOUlSv8EiPaO5WPhUjPrkR4+e6uM834=
 github.com/getlantern/auth-server v0.0.0-20201117145459-0963478c2829/go.mod h1:gBrtg42AJKjxbm1mJCnwXGcz3uvGLDl6+wxbWAgqpZI=
+github.com/getlantern/auth-server v0.0.0-20201117151734-f9805e65d323 h1:h9kj/E+lOXrtZMbByraUf/59P5py+CMkdP0vpsaMc8Q=
+github.com/getlantern/auth-server v0.0.0-20201117151734-f9805e65d323/go.mod h1:gBrtg42AJKjxbm1mJCnwXGcz3uvGLDl6+wxbWAgqpZI=
+github.com/getlantern/auth-server v0.0.0-20201117153121-fc1cae21ef83 h1:L0d8U0dWRCwflMg67Kf0hMVP/SfxHkQThHbegnurNcY=
+github.com/getlantern/auth-server v0.0.0-20201117153121-fc1cae21ef83/go.mod h1:gBrtg42AJKjxbm1mJCnwXGcz3uvGLDl6+wxbWAgqpZI=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99 h1:fnjb9PYZRMU6Tok5i3anP/bAqhUtG2kn9xgff3IlA+8=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99/go.mod h1:4rYfIUYagdnY0KCu5/zOBX5CIRIi+j+LHdQ+LmD/Lyg=
 github.com/getlantern/bbrconn v0.0.0-20180619163322-86cf8c16f3d0 h1:OtUNxwmNp9+mTZMuKw9MrNLJKMG731zWZIWwQfFGZfs=
@@ -606,6 +611,8 @@ github.com/getlantern/yinbi-server v0.0.0-20201117150005-cb47b4e3d93d h1:TEX+vua
 github.com/getlantern/yinbi-server v0.0.0-20201117150005-cb47b4e3d93d/go.mod h1:4KtZl2s4eBWALVAse16fNQEn+o4wkGEWdKJxFVP+Pp0=
 github.com/getlantern/yinbi-server v0.0.0-20201117150134-b38d909020ef h1:V80QIMQ7At06Bn1y0+r//bAcly4UqKpRCe6jLTPpGT4=
 github.com/getlantern/yinbi-server v0.0.0-20201117150134-b38d909020ef/go.mod h1:4KtZl2s4eBWALVAse16fNQEn+o4wkGEWdKJxFVP+Pp0=
+github.com/getlantern/yinbi-server v0.0.0-20201117153346-db0046e337a3 h1:gg52JK40Q2WC4mQuoQaAHKZVi7j8Gwktj1sfx/V0kjw=
+github.com/getlantern/yinbi-server v0.0.0-20201117153346-db0046e337a3/go.mod h1:O0mHYnx4q3PmhiM2yhEHKJVANxm39NkZ3XfXZRZp8uU=
 github.com/getlantern/zenodb v0.0.0-20191107150234-58f0e128172a/go.mod h1:/QuMPlUCcgfXRy+yAwXWcAkBegF2Nl1lw0nJ+kSWEsA=
 github.com/getlantern/zenodb v0.0.0-20200613184607-425f1dea9db1 h1:2S3iHuoFuwfxMkeizLJZuTAPojoMJb3eP4iUZiciZVg=
 github.com/getlantern/zenodb v0.0.0-20200613184607-425f1dea9db1/go.mod h1:jttohOig8lld+9Dm2VsQXPNzRy3+dF6SZZSTn3SMttI=
@@ -1472,6 +1479,8 @@ golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897 h1:pLI5jrR7OSLijeIDcmRxNm
 golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/crypto v0.0.0-20201116153603-4be66e5b6582 h1:0WDrJ1E7UolDk1KhTXxxw3Fc8qtk5x7dHP431KHEJls=
 golang.org/x/crypto v0.0.0-20201116153603-4be66e5b6582/go.mod h1:tCqSYrHVcf3i63Co2FzBkTCo2gdF6Zak62921dSfraU=
+golang.org/x/crypto v0.0.0-20201117144127-c1f2f97bffc9 h1:phUcVbl53swtrUN8kQEXFhUxPlIlWyBfKmidCu7P95o=
+golang.org/x/crypto v0.0.0-20201117144127-c1f2f97bffc9/go.mod h1:jdWPYTVW3xRLrWPugEBEK3UY2ZEsg3UU495nc5E+M+I=
 golang.org/x/exp v0.0.0-20190121172915-509febef88a4/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
 golang.org/x/exp v0.0.0-20190306152737-a1d7652674e8/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
 golang.org/x/exp v0.0.0-20190510132918-efd6b22b2522/go.mod h1:ZjyILWgesfNpC6sMxTJOJm9Kp84zZh5NQWvqDGG3Qr8=
@@ -1660,6 +1669,7 @@ golang.org/x/sys v0.0.0-20201110211018-35f3e6cf4a65/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20201116194326-cc9327a14d48 h1:AYCWBZhgIw6XobZ5CibNJr0Rc4ZofGGKvWa1vcx2IGk=
 golang.org/x/sys v0.0.0-20201116194326-cc9327a14d48/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/term v0.0.0-20201113234701-d7a72108b828/go.mod h1:Nr5EML6q2oocZ2LXRh80K7BxOlk5/8JxuGnuhpl+muw=
+golang.org/x/term v0.0.0-20201117132131-f5c789dd3221/go.mod h1:Nr5EML6q2oocZ2LXRh80K7BxOlk5/8JxuGnuhpl+muw=
 golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
@@ -1872,6 +1882,7 @@ gopkg.in/square/go-jose.v2 v2.4.1/go.mod h1:M9dMgbHiYLoDGQrXy7OpJDJWiKiU//h+vD76
 gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 h1:uRGJdciOHaEIrze2W8Q3AKkepLTh2hOroT7a+7czfdQ=
 gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7/go.mod h1:dt/ZhP58zS4L8KSrWDmTeBkI65Dw0HsyUHuEVlX15mw=
 gopkg.in/tylerb/graceful.v1 v1.2.13/go.mod h1:yBhekWvR20ACXVObSSdD3u6S9DeSylanL2PAbAC/uJ8=
+gopkg.in/validator.v2 v2.0.0-20191107172027-c3144fdedc21/go.mod h1:o4V0GXN9/CAmCsvJ0oXYZvrZOe7syiDZSN1GWGZTGzc=
 gopkg.in/validator.v2 v2.0.0-20200605151824-2b28d334fa05 h1:l9eKDCWy9n7C5NAiQAMvDePh0vyLAweR6LcSUVXFUGg=
 gopkg.in/validator.v2 v2.0.0-20200605151824-2b28d334fa05/go.mod h1:o4V0GXN9/CAmCsvJ0oXYZvrZOe7syiDZSN1GWGZTGzc=
 gopkg.in/vmihailenco/msgpack.v2 v2.9.1 h1:kb0VV7NuIojvRfzwslQeP3yArBqJHW9tOl4t38VS1jM=

@@ -21,7 +21,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
-	github.com/getlantern/auth-server v0.0.0-20201117145459-0963478c2829
+	github.com/getlantern/auth-server v0.0.0-20201117153121-fc1cae21ef83
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20200613191039-d7b1c2cc6021
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
@@ -95,7 +95,7 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getlantern/yinbi-server v0.0.0-20201117150134-b38d909020ef
+	github.com/getlantern/yinbi-server v0.0.0-20201117153346-db0046e337a3
 	github.com/getsentry/sentry-go v0.7.0
 	github.com/google/go-cmp v0.5.3 // indirect
 	github.com/google/netstack v0.0.0-20191116005144-95bf25ab4723 // indirect
@@ -126,6 +126,7 @@ require (
 	github.com/ulule/limiter/v3 v3.7.1 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
+	golang.org/x/crypto v0.0.0-20201117144127-c1f2f97bffc9 // indirect
 	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
 	golang.org/x/oauth2 v0.0.0-20201109201403-9fd604954f58 // indirect
 	golang.org/x/sys v0.0.0-20201116194326-cc9327a14d48
@@ -151,7 +152,9 @@ replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-2020
 //replace github.com/getlantern/replica => ./replica/
 
 //replace github.com/getlantern/yinbi-server => ../yinbi-server
+
 //replace github.com/getlantern/auth-server => ../auth-server
+
 //replace github.com/getlantern/lantern-server => ../lantern-server
 
 // For https://github.com/getlantern/lantern-internal/issues/4277

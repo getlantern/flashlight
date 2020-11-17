@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/getlantern/auth-server/api"
-	"github.com/getlantern/auth-server/models"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
 )
@@ -96,8 +95,8 @@ func (h Handler) ErrorHandler(w http.ResponseWriter, err interface{}, errorCode 
 		resp.Error = err.(string)
 	case error:
 		resp.Error = err.(error).Error()
-	case models.Errors:
-		resp.Errors = err.(models.Errors)
+	case api.Errors:
+		resp.Errors = err.(api.Errors)
 	}
 	common.WriteJSON(w, errorCode, &resp)
 }

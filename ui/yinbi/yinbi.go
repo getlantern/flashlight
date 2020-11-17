@@ -191,7 +191,7 @@ func (h YinbiHandler) createUserAccount(w http.ResponseWriter, params *client.Im
 func (h YinbiHandler) createAccountHandler(w http.ResponseWriter,
 	req *http.Request) {
 	log.Debug("Received new create Yinbi account request")
-	var params authclient.CreateAccountParams
+	var params api.CreateAccountParams
 	err := common.DecodeJSONRequest(req, &params)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
@@ -264,7 +264,7 @@ func (h YinbiHandler) getAccountDetails(w http.ResponseWriter,
 // wallet password
 func (h YinbiHandler) resetPasswordHandler(w http.ResponseWriter,
 	req *http.Request) {
-	var params authclient.CreateAccountParams
+	var params api.CreateAccountParams
 	err := common.DecodeJSONRequest(req, &params)
 	if err != nil {
 		h.ErrorHandler(w, err, http.StatusBadRequest)
@@ -280,6 +280,7 @@ func (h YinbiHandler) resetPasswordHandler(w http.ResponseWriter,
 func (h *YinbiHandler) saveAddressHandler(w http.ResponseWriter,
 	r *http.Request) {
 	address := r.URL.Query().Get("address")
+
 	url := h.GetAuthAddr(fmt.Sprintf("/user/address/%s", address))
 	log.Debugf("Sending save address request to %s", url)
 	h.ProxyHandler(url, r, w, nil)

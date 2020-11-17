@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"errors"
 	"html"
 	"net/http"
@@ -31,10 +30,6 @@ var (
 	ErrSRPKeysDifferent   = errors.New("SRP client and server keys do not match")
 	log                   = golog.LoggerFor("flashlight.ui.auth")
 )
-
-func withUserID(ctx context.Context, userID string) context.Context {
-	return context.WithValue(ctx, userKey, userID)
-}
 
 type AuthHandler struct {
 	handler.Handler
