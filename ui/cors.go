@@ -1,6 +1,7 @@
-package handler
+package ui
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/rs/cors"
@@ -20,12 +21,11 @@ var corsAllowedHeaders = []string{
 	"Cache",
 }
 
-func corsHandler(next http.HandlerFunc) http.HandlerFunc {
-	//uiAddr := fmt.Sprintf("http://%s", s.listenAddr)
-	//origins := append(corsOrigins, uiAddr)
-	log.Debugf("Cors origins: %v", corsOrigins)
+func (s *Server) corsHandler(next http.HandlerFunc) http.HandlerFunc {
+	uiAddr := fmt.Sprintf("http://%s", s.listenAddr)
+	origins := append(corsOrigins, uiAddr)
 	cors := cors.New(cors.Options{
-		AllowedOrigins:   corsOrigins,
+		AllowedOrigins:   origins,
 		AllowedHeaders:   corsAllowedHeaders,
 		AllowCredentials: true,
 		Debug:            true,

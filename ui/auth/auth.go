@@ -50,27 +50,21 @@ func New(params api.APIParams) AuthHandler {
 }
 
 func (h AuthHandler) Routes() []handler.Route {
-	authHandler := handler.WrapMiddleware(
-		h.authHandler(),
-	)
-	signOutHandler := handler.WrapMiddleware(
-		h.signOutHandler(),
-	)
 	authRoutes := []handler.Route{
 		handler.Route{
 			loginEndpoint,
 			common.POST,
-			authHandler,
+			h.authHandler,
 		},
 		handler.Route{
 			registrationEndpoint,
 			common.POST,
-			authHandler,
+			h.authHandler,
 		},
 		handler.Route{
 			signOutEndpoint,
 			common.POST,
-			signOutHandler,
+			h.signOutHandler,
 		},
 	}
 	return authRoutes
@@ -79,23 +73,21 @@ func (h AuthHandler) Routes() []handler.Route {
 // authHandler is the HTTP handler used by the login and
 // registration endpoints. It creates a new SRP client from
 // the user params in the request
-func (h AuthHandler) authHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
-		params, err := h.getUserParams(req)
-		if err != nil {
-			log.Errorf("Couldn't create SRP client from request: %v", err)
-			h.ErrorHandler(w, err, http.StatusBadRequest)
-			return
-		}
-		endpoint := html.EscapeString(req.URL.Path)
-		if strings.Contains(endpoint, loginEndpoint) {
-			_, err = h.authClient.SignIn(params.Username, params.Password)
-		} else {
-			_, err = h.authClient.Register(params.Username, params.Password)
-		}
-		if err != nil {
-			h.ErrorHandler(w, err, http.StatusBadRequest)
-		}
+func (h AuthHandler) authHandler(w http.ResponseWriter, req *http.Request) {
+	params, err := h.getUserParams(req)
+	if err != nil {
+		log.Errorf("Couldn't create SRP client from request: %v", err)
+		h.ErrorHandler(w, err, http.StatusBadRequest)
+		return
+	}
+	endpoint := html.EscapeString(req.URL.Path)
+	if strings.Contains(endpoint, loginEndpoint) {
+		_, err = h.authClient.SignIn(params.Username, params.Password)
+	} else {
+		_, err = h.authClient.Register(params.Username, params.Password)
+	}
+	if err != nil {
+		h.ErrorHandler(w, err, http.StatusBadRequest)
 	}
 }
 
@@ -107,10 +99,8 @@ func (h AuthHandler) getUserParams(req *http.Request) (*models.UserParams, error
 	return &params, err
 }
 
-func (h AuthHandler) signOutHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
-		url := h.GetAuthAddr(signOutEndpoint)
-		log.Debugf("Sending sign out request to %s", url)
-		h.ProxyHandler(url, req, w, nil)
-	}
+func (h AuthHandler) signOutHandler(w http.ResponseWriter, req *http.Request) {
+	url := h.GetAuthAddr(signOutEndpoint)
+	log.Debugf("Sending sign out request to %s", url)
+	h.ProxyHandler(url, req, w, nil)
 }

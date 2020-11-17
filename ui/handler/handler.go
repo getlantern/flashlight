@@ -40,20 +40,6 @@ type Handler struct {
 	HTTPClient *http.Client
 }
 
-// wrapMiddleware takes the given http.Handler and optionally wraps it with
-// the cors middleware handler
-func WrapMiddleware(h http.HandlerFunc, m ...Middleware) http.HandlerFunc {
-	if len(m) < 1 {
-		return corsHandler(h)
-	}
-	wrapped := h
-	for i := len(m) - 1; i >= 0; i-- {
-		wrapped = m[i](wrapped)
-	}
-
-	return corsHandler(wrapped)
-}
-
 func NewHandler(params api.APIParams) Handler {
 	return Handler{
 		authAddr:   params.AuthServerAddr,

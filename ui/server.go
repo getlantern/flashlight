@@ -92,6 +92,9 @@ type ServerParams struct {
 	HTTPClient      *http.Client
 }
 
+// Middleware
+type Middleware func(http.HandlerFunc) http.HandlerFunc
+
 // PathHandler contains a request path pattern and an HTTP handler for that
 // pattern.
 type PathHandler struct {
@@ -161,12 +164,26 @@ func (s *Server) attachHandlers(params ServerParams) {
 
 	for _, route := range routes {
 		s.mux.HandleFunc(route.Pattern,
-			handler.WrapMiddleware(route.HandlerFunc),
+			s.wrapMiddleware(route.HandlerFunc),
 		)
 	}
 
 	s.Handle("/startup", http.HandlerFunc(startupHandler), false)
 	s.Handle("/", http.FileServer(fs), false)
+}
+
+// wrapMiddleware takes the given http.Handler and optionally wraps it with
+// the cors middleware handler
+func (s *Server) wrapMiddleware(h http.HandlerFunc, m ...Middleware) http.HandlerFunc {
+	if len(m) < 1 {
+		return s.corsHandler(h)
+	}
+	wrapped := h
+	for i := len(m) - 1; i >= 0; i-- {
+		wrapped = m[i](wrapped)
+	}
+
+	return s.corsHandler(wrapped)
 }
 
 func createHTTPClient() *http.Client {
