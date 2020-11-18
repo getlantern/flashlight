@@ -1,4 +1,10 @@
 
+<a name="lantern-6.2.1"></a>
+## [lantern-6.2.1](https://github.com/getlantern/flashlight/compare/lantern-6.2.0...lantern-6.2.1)
+
+> 2020-11-17
+
+
 <a name="lantern-6.2.0"></a>
 ## [lantern-6.2.0](https://github.com/getlantern/flashlight/compare/lantern-6.1.4...lantern-6.2.0)
 
