@@ -24,6 +24,7 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/stats"
+	"github.com/getlantern/flashlight/util"
 )
 
 // A set of ports that chrome considers restricted
@@ -112,8 +113,8 @@ func (s *Server) attachHandlers() {
 		resp.WriteHeader(http.StatusOK)
 	}
 
-	s.Handle("/startup", http.HandlerFunc(startupHandler))
-	s.Handle("/", http.FileServer(fs))
+	s.Handle("/startup", util.NoCache(http.HandlerFunc(startupHandler)))
+	s.Handle("/", util.NoCache(http.FileServer(fs)))
 }
 
 // Handle directs the underlying server to handle the given pattern at both
