@@ -24,7 +24,6 @@ import (
 
 	"github.com/getlantern/flashlight/common"
 	"github.com/getlantern/flashlight/stats"
-	"github.com/getlantern/flashlight/util"
 )
 
 // A set of ports that chrome considers restricted
@@ -113,36 +112,27 @@ func (s *Server) attachHandlers() {
 		resp.WriteHeader(http.StatusOK)
 	}
 
-	s.Handle("/startup", http.HandlerFunc(startupHandler), false)
-	s.Handle("/", http.FileServer(fs), false)
+	s.Handle("/startup", http.HandlerFunc(startupHandler))
+	s.Handle("/", http.FileServer(fs))
 }
 
 // Handle directs the underlying server to handle the given pattern at both
 // the secure token path and the raw request path. In the case of the raw
 // request path, Lantern looks for the token in the Referer HTTP header and
 // rejects the request if it's not present.
-func (s *Server) Handle(pattern string, handler http.Handler, allowCache bool) {
+func (s *Server) Handle(pattern string, handler http.Handler) {
 	// When the token is included in the request path, we need to strip it in
 	// order to serve the UI correctly (i.e. the static UI tarfs FileSystem knows
 	// nothing about the request path).
 	if s.httpTokenRequestPathPrefix != "" {
 		// If the request path is empty this would panic on adding the same pattern
 		// twice.
-		s.mux.Handle(s.httpTokenRequestPathPrefix+pattern, maybeCacheHandler(s.strippingHandler(handler), allowCache))
+		s.mux.Handle(s.httpTokenRequestPathPrefix+pattern, s.strippingHandler(handler))
 	}
 
 	// In the naked request cast, we need to verify the token is there in the
 	// referer header.
-	s.mux.Handle(pattern, checkRequestForToken(maybeCacheHandler(handler, allowCache), s.localHTTPToken))
-}
-
-// maybeCacheHandler returns a handler which optionally adds no-cache headers
-func maybeCacheHandler(h http.Handler, allowCache bool) http.Handler {
-	if !allowCache {
-		return util.NoCacheHandler(h)
-	} else {
-		return h
-	}
+	s.mux.Handle(pattern, checkRequestForToken(handler, s.localHTTPToken))
 }
 
 // strippingHandler removes the secure request path from the URL so that the
