@@ -2,10 +2,12 @@
 <a name="lantern-6.2.1"></a>
 ## [lantern-6.2.1](https://github.com/getlantern/flashlight/compare/lantern-6.2.0...lantern-6.2.1)
 
-> 2020-11-17
+> 2020-11-19
 
 ### Pull Requests
 
+* Merge pull request [#950](https://github.com/getlantern/flashlight/issues/950) from getlantern/ui-fix-6.2.1
+* Merge pull request [#948](https://github.com/getlantern/flashlight/issues/948) from getlantern/4453-allow-caching-thumbnail
 * Merge pull request [#947](https://github.com/getlantern/flashlight/issues/947) from getlantern/ui-6.2.1
 
 
