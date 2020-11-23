@@ -18,6 +18,8 @@ Or to build beam:
 
 `make beam`
 
+To develop in tandem with the [lantern-desktop-ui](https://github.com/getlantern/lantern-desktop-ui) frontend, prefix the make invocation with `env DISABLE_PORT_RANDOMIZATION=1` so that the development ui can reliably connect to this backend.
+
 ### Running against a specific proxy
 It is often useful to force lantern to use a specific proxy, either for testing some new
 change on the server side or for trying to replicate issues a specific user has seen.
