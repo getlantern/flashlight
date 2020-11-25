@@ -1,4 +1,26 @@
 
+<a name="beam-0.1.16"></a>
+## [beam-0.1.16](https://github.com/getlantern/flashlight/compare/lantern-6.2.3...beam-0.1.16)
+
+> 2020-11-25
+
+
+<a name="lantern-6.2.3"></a>
+## [lantern-6.2.3](https://github.com/getlantern/flashlight/compare/lantern-6.2.2...lantern-6.2.3)
+
+> 2020-11-21
+
+### Pull Requests
+
+* Merge pull request [#951](https://github.com/getlantern/flashlight/issues/951) from getlantern/ui-6.2.3
+
+
+<a name="lantern-6.2.2"></a>
+## [lantern-6.2.2](https://github.com/getlantern/flashlight/compare/beam-0.1.15...lantern-6.2.2)
+
+> 2020-11-19
+
+
 <a name="beam-0.1.15"></a>
 ## [beam-0.1.15](https://github.com/getlantern/flashlight/compare/lantern-6.2.1...beam-0.1.15)
 
