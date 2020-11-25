@@ -1,4 +1,36 @@
 
+<a name="lantern-6.2.4"></a>
+## [lantern-6.2.4](https://github.com/getlantern/flashlight/compare/beam-0.1.18...lantern-6.2.4)
+
+> 2020-11-25
+
+### Pull Requests
+
+* Merge pull request [#953](https://github.com/getlantern/flashlight/issues/953) from getlantern/typescript-ui-updates
+
+
+<a name="beam-0.1.18"></a>
+## [beam-0.1.18](https://github.com/getlantern/flashlight/compare/beam-0.1.17...beam-0.1.18)
+
+> 2020-11-25
+
+### Pull Requests
+
+* Merge pull request [#952](https://github.com/getlantern/flashlight/issues/952) from getlantern/4449-report-issue-app-name
+
+
+<a name="beam-0.1.17"></a>
+## [beam-0.1.17](https://github.com/getlantern/flashlight/compare/beam-0.1.16...beam-0.1.17)
+
+> 2020-11-25
+
+
+<a name="beam-0.1.16"></a>
+## [beam-0.1.16](https://github.com/getlantern/flashlight/compare/lantern-6.2.3...beam-0.1.16)
+
+> 2020-11-25
+
+
 <a name="lantern-6.2.3"></a>
 ## [lantern-6.2.3](https://github.com/getlantern/flashlight/compare/lantern-6.2.2...lantern-6.2.3)
 
