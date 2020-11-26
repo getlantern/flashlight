@@ -75,10 +75,13 @@ func NewHTTPHandler(
 		logger.Errorf("accessing the user cache dir, fallback to temp dir: %w", err)
 		userCacheDir = os.TempDir()
 	}
-	replicaCacheDir := filepath.Join(userCacheDir, "replica")
+	const replicaDirElem = "replica"
+	replicaCacheDir := filepath.Join(userCacheDir, common.AppName, replicaDirElem)
 	_ = os.MkdirAll(replicaCacheDir, 0700)
-	uploadsDir := filepath.Join(replicaCacheDir, "uploads")
+	uploadsDir := filepath.Join(configDir, replicaDirElem, "uploads")
+	_ = os.MkdirAll(uploadsDir, 0700)
 	replicaDataDir := filepath.Join(replicaCacheDir, "data")
+	_ = os.MkdirAll(replicaDataDir, 0700)
 	cfg := torrent.NewDefaultClientConfig()
 	cfg.DisableIPv6 = true
 	// This should not be used, we're specifying our own storage for uploads and general views
