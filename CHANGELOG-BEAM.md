@@ -1,11 +1,23 @@
 
 <a name="beam-0.1.18"></a>
-## [beam-0.1.18](https://github.com/getlantern/flashlight/compare/beam-0.1.17...beam-0.1.18)
+## [beam-0.1.18](https://github.com/getlantern/flashlight/compare/lantern-6.2.4...beam-0.1.18)
+
+> 2020-11-26
+
+### Pull Requests
+
+* Merge pull request [#954](https://github.com/getlantern/flashlight/issues/954) from getlantern/4538-create-cache-dir
+* Merge pull request [#955](https://github.com/getlantern/flashlight/issues/955) from getlantern/appdirs-replica
+
+
+<a name="lantern-6.2.4"></a>
+## [lantern-6.2.4](https://github.com/getlantern/flashlight/compare/beam-0.1.17...lantern-6.2.4)
 
 > 2020-11-25
 
 ### Pull Requests
 
+* Merge pull request [#953](https://github.com/getlantern/flashlight/issues/953) from getlantern/typescript-ui-updates
 * Merge pull request [#952](https://github.com/getlantern/flashlight/issues/952) from getlantern/4449-report-issue-app-name
 
 
