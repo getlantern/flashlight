@@ -153,10 +153,7 @@ func (s *Server) attachHandlers(params ServerParams) {
 	routes = append(routes, yinbiHandler.Routes()...)
 
 	for _, route := range routes {
-		path := route.Pattern
-		handler := s.wrapMiddleware(route.HandlerFunc)
-		s.Handle(path, route.HttpMethod, handler)
-
+		s.Handle(route.Pattern, route.HttpMethod, s.wrapMiddleware(route.HandlerFunc))
 	}
 
 	s.Handle("/startup", "", util.NoCache(http.HandlerFunc(startupHandler)))
