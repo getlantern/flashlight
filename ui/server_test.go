@@ -224,10 +224,9 @@ func TestStart(t *testing.T) {
 		RequestedAddr:  "127.0.0.1:0",
 		ExtURL:         "",
 		LocalHTTPToken: "abcde",
-		Handlers:       []*PathHandler{},
 	})
 	assert.NoError(t, err)
-	serve.Handle("/testing", http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+	serve.Handle("/testing", "", http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 		resp.WriteHeader(http.StatusOK)
 	}))
 
@@ -262,10 +261,10 @@ func getTestHandler() http.Handler {
 }
 
 func getTestServer(token string) *Server {
-	s := newServer(ServerParams{
+	s, _ := StartServer(ServerParams{
 		LocalHTTPToken: token,
+		RequestedAddr:  "localhost:",
 	})
-	s.start("localhost:")
 	return s
 }
 
@@ -279,7 +278,7 @@ func TestNoCache(t *testing.T) {
 func TestAllowCache(t *testing.T) {
 	s := getTestServer("some-token")
 
-	s.Handle("/cache-me",
+	s.Handle("/cache-me", "",
 		http.HandlerFunc(
 			func(resp http.ResponseWriter, req *http.Request) {
 				resp.WriteHeader(http.StatusOK)

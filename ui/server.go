@@ -196,19 +196,18 @@ func (s *Server) Handle(pattern, method string, handler http.Handler) {
 	if s.httpTokenRequestPathPrefix != "" {
 		// If the request path is empty this would panic on adding the same pattern
 		// twice.
-		pattern = s.httpTokenRequestPathPrefix + pattern
-		handler = s.strippingHandler(handler)
+		s.mux.Handle(s.httpTokenRequestPathPrefix+pattern, s.strippingHandler(handler))
 	}
 
-	// If an HTTP method is specified, the route is restricted to it
-	if method != "" {
-		s.mux.Handle(pattern, checkRequestForToken(handler, s.localHTTPToken)).Methods(method)
+	checkTokenHandler := checkRequestForToken(handler, s.localHTTPToken)
+
+	if pattern == "/" {
+		s.mux.PathPrefix(pattern).Handler(checkTokenHandler)
 	} else {
 		// In the naked request cast, we need to verify the token is there in the
 		// referer header.
-		s.mux.Handle(pattern, checkRequestForToken(handler, s.localHTTPToken))
+		s.mux.Handle(pattern, checkTokenHandler)
 	}
-
 }
 
 // strippingHandler removes the secure request path from the URL so that the
@@ -476,7 +475,7 @@ func unpackUI() {
 
 // Translations returns the translations for a given locale file.
 func Translations(filename string) ([]byte, error) {
-	log.Tracef("Accessing translations %v", filename)
+	log.Debugf("Accessing translations %v", filename)
 	tr, ok := translations.Get(30 * time.Second)
 	if !ok || tr == nil {
 		return nil, fmt.Errorf("Could not get traslation for file name: %v", filename)
