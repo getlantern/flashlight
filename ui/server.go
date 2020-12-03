@@ -183,9 +183,7 @@ func createHTTPClient() *http.Client {
 	rt := proxied.ChainedThenFronted()
 	rt.SetMasqueradeTimeout(30 * time.Second)
 	return &http.Client{
-		Transport: proxied.AsRoundTripper(func(req *http.Request) (*http.Response, error) {
-			return rt.RoundTrip(req)
-		}),
+		Transport: rt,
 	}
 }
 
