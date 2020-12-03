@@ -48,17 +48,17 @@ func (h AuthHandler) Routes() []handler.Route {
 	authRoutes := []handler.Route{
 		handler.Route{
 			loginEndpoint,
-			common.POST,
+			http.MethodPost,
 			h.authHandler,
 		},
 		handler.Route{
 			registrationEndpoint,
-			common.POST,
+			http.MethodPost,
 			h.authHandler,
 		},
 		handler.Route{
 			signOutEndpoint,
-			common.POST,
+			http.MethodPost,
 			h.signOutHandler,
 		},
 	}

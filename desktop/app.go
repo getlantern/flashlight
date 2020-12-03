@@ -406,15 +406,12 @@ func (app *App) beforeStart(listenAddr string) {
 		RequestedAddr:   uiaddr,
 		LocalHTTPToken:  app.localHttpToken(),
 		Standalone:      standalone,
-		Handlers: []*ui.PathHandler{
-			&ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
-			&ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
-		},
 	})
 	if err != nil {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		return
 	}
+
 	if app.ShouldShowUI() {
 		go func() {
 			if err := configureSystemTray(app); err != nil {
@@ -511,14 +508,7 @@ func (app *App) checkForReplica(features map[string]bool) {
 
 			// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
 			// in their handlers.
-			app.uiServer().Handle(
-				"/replica/",
-				http.StripPrefix(
-					"/replica",
-					replicaHandler,
-				),
-				false,
-			)
+			app.uiServer().Handle("/replica/", "", http.StripPrefix("/replica", replicaHandler))
 		})
 	}
 }

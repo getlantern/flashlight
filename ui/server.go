@@ -30,6 +30,7 @@ import (
 	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/flashlight/ui/yinbi"
 	"github.com/getlantern/flashlight/util"
+	"github.com/gorilla/mux"
 )
 
 // A set of ports that chrome considers restricted
@@ -71,7 +72,7 @@ type Server struct {
 	httpTokenRequestPathPrefix string
 	localHTTPToken             string
 	listener                   net.Listener
-	mux                        *http.ServeMux
+	mux                        *mux.Router
 	onceOpenExtURL             sync.Once
 
 	translations eventual.Value
@@ -85,7 +86,6 @@ type ServerParams struct {
 	AuthServerAddr  string
 	YinbiServerAddr string
 	AppName         string
-	Handlers        []*PathHandler
 	LocalHTTPToken  string
 	RequestedAddr   string
 	SkipTokenCheck  bool
@@ -96,23 +96,12 @@ type ServerParams struct {
 // Middleware
 type Middleware func(http.HandlerFunc) http.HandlerFunc
 
-// PathHandler contains a request path pattern and an HTTP handler for that
-// pattern.
-type PathHandler struct {
-	Pattern string
-	Handler http.Handler
-}
-
 // StartServer creates and starts a new UI server.
 // extURL: when supplied, open the URL in addition to the UI address.
 // localHTTPToken: if set, close client connection directly if the request
 // doesn't bring the token in query parameters nor have the same origin.
 func StartServer(params ServerParams) (*Server, error) {
 	server := newServer(params)
-
-	for _, h := range params.Handlers {
-		server.Handle(h.Pattern, h.Handler, false)
-	}
 
 	if err := server.start(params.RequestedAddr); err != nil {
 		return nil, err
@@ -130,7 +119,7 @@ func newServer(params ServerParams) *Server {
 			}
 			return "/" + localHTTPToken
 		}(),
-		mux:            http.NewServeMux(),
+		mux:            mux.NewRouter(),
 		localHTTPToken: localHTTPToken,
 		translations:   eventual.NewValue(),
 		standalone:     params.Standalone,
@@ -164,18 +153,19 @@ func (s *Server) attachHandlers(params ServerParams) {
 	routes = append(routes, yinbiHandler.Routes()...)
 
 	for _, route := range routes {
-		s.mux.HandleFunc(route.Pattern,
-			s.wrapMiddleware(route.HandlerFunc),
-		)
+		path := route.Pattern
+		handler := s.wrapMiddleware(route.HandlerFunc)
+		s.Handle(path, route.HttpMethod, handler)
+
 	}
 
-	s.Handle("/startup", http.HandlerFunc(startupHandler), false)
-	s.Handle("/", http.FileServer(fs), false)
+	s.Handle("/startup", "", util.NoCache(http.HandlerFunc(startupHandler)))
+	s.Handle("/", "", util.NoCache(http.FileServer(fs)))
 }
 
 // wrapMiddleware takes the given http.Handler and optionally wraps it with
 // the cors middleware handler
-func (s *Server) wrapMiddleware(h http.HandlerFunc, m ...Middleware) http.HandlerFunc {
+func (s *Server) wrapMiddleware(h http.HandlerFunc, m ...Middleware) http.Handler {
 	if len(m) < 1 {
 		return s.corsHandler(h)
 	}
@@ -203,28 +193,25 @@ func createHTTPClient() *http.Client {
 // the secure token path and the raw request path. In the case of the raw
 // request path, Lantern looks for the token in the Referer HTTP header and
 // rejects the request if it's not present.
-func (s *Server) Handle(pattern string, handler http.Handler, allowCache bool) {
+func (s *Server) Handle(pattern, method string, handler http.Handler) {
 	// When the token is included in the request path, we need to strip it in
 	// order to serve the UI correctly (i.e. the static UI tarfs FileSystem knows
 	// nothing about the request path).
 	if s.httpTokenRequestPathPrefix != "" {
 		// If the request path is empty this would panic on adding the same pattern
 		// twice.
-		s.mux.Handle(s.httpTokenRequestPathPrefix+pattern, maybeCacheHandler(s.strippingHandler(handler), allowCache))
+		pattern = s.httpTokenRequestPathPrefix + pattern
+		handler = s.strippingHandler(handler)
 	}
 
 	// In the naked request cast, we need to verify the token is there in the
 	// referer header.
-	s.mux.Handle(pattern, checkRequestForToken(maybeCacheHandler(handler, allowCache), s.localHTTPToken))
-}
-
-// maybeCacheHandler returns a handler which optionally adds no-cache headers
-func maybeCacheHandler(h http.Handler, allowCache bool) http.Handler {
-	if !allowCache {
-		return util.NoCacheHandler(h)
+	if method != "" {
+		s.mux.Handle(pattern, checkRequestForToken(handler, s.localHTTPToken)).Methods(method)
 	} else {
-		return h
+		s.mux.Handle(pattern, checkRequestForToken(handler, s.localHTTPToken))
 	}
+
 }
 
 // strippingHandler removes the secure request path from the URL so that the

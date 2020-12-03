@@ -100,6 +100,7 @@ require (
 	github.com/getsentry/sentry-go v0.7.0
 	github.com/google/go-cmp v0.5.3 // indirect
 	github.com/google/netstack v0.0.0-20191116005144-95bf25ab4723 // indirect
+	github.com/gorilla/mux v1.7.1
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/go-retryablehttp v0.6.8 // indirect
 	github.com/hashicorp/golang-lru v0.5.4

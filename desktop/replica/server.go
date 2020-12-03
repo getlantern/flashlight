@@ -69,17 +69,19 @@ func NewHTTPHandler(
 	gaSession analytics.Session,
 	opts NewHttpHandlerOpts,
 ) (_ *HttpHandler, err error) {
+	logger := golog.LoggerFor("replica.server")
 	userCacheDir, err := os.UserCacheDir()
 	if err != nil {
-		err = fmt.Errorf("accessing the user cache dir: %w", err)
-		return
+		logger.Errorf("accessing the user cache dir, fallback to temp dir: %w", err)
+		userCacheDir = os.TempDir()
 	}
-
-	logger := golog.LoggerFor("replica.server")
 	const replicaDirElem = "replica"
-	replicaConfigDir := filepath.Join(configDir, replicaDirElem)
-	uploadsDir := filepath.Join(replicaConfigDir, "uploads")
-	replicaDataDir := filepath.Join(userCacheDir, replicaDirElem, "data")
+	replicaCacheDir := filepath.Join(userCacheDir, common.AppName, replicaDirElem)
+	_ = os.MkdirAll(replicaCacheDir, 0700)
+	uploadsDir := filepath.Join(configDir, replicaDirElem, "uploads")
+	_ = os.MkdirAll(uploadsDir, 0700)
+	replicaDataDir := filepath.Join(replicaCacheDir, "data")
+	_ = os.MkdirAll(replicaDataDir, 0700)
 	cfg := torrent.NewDefaultClientConfig()
 	cfg.DisableIPv6 = true
 	// This should not be used, we're specifying our own storage for uploads and general views
@@ -93,7 +95,7 @@ func NewHTTPHandler(
 		return !m.HasValue("upnp-discover")
 	})
 	defaultStorage, err := sqliteStorage.NewPiecesStorage(sqliteStorage.NewPoolOpts{
-		Path:     filepath.Join(userCacheDir, replicaDirElem, "storage-cache.db"),
+		Path:     filepath.Join(replicaCacheDir, "storage-cache.db"),
 		Capacity: 5 << 30,
 	})
 	if err != nil {
@@ -125,7 +127,7 @@ func NewHTTPHandler(
 		confluence: confluence.Handler{
 			TC: torrentClient,
 			MetainfoCacheDir: func() *string {
-				s := filepath.Join(userCacheDir, replicaDirElem, "metainfos")
+				s := filepath.Join(replicaCacheDir, "metainfos")
 				return &s
 			}(),
 		},
@@ -325,7 +327,7 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 		// Move the temporary file, which contains the upload body, to the data directory for the
 		// torrent client, in the location it expects.
 		dst := filepath.Join(append([]string{me.dataDir, s3Prefix.String()}, info.UpvertedFiles()[0].Path...)...)
-		os.MkdirAll(filepath.Dir(dst), 0700)
+		_ = os.MkdirAll(filepath.Dir(dst), 0700)
 		err = os.Rename(tmpFile.Name(), dst)
 		if err != nil {
 			// Not fatal: See above, we only really need the metainfo to be added to the torrent.
