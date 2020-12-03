@@ -20,17 +20,12 @@ type Middleware func(http.HandlerFunc) http.HandlerFunc
 // Route defines a structure for UI routes
 type Route struct {
 	Pattern     string
-	HttpMethod  string
+	Method      string
 	HandlerFunc http.HandlerFunc
 }
 
 func NewRoute(pattern string, handler http.HandlerFunc) Route {
 	return Route{Pattern: pattern, HandlerFunc: handler}
-}
-
-func (r Route) Method(method string) Route {
-	r.HttpMethod = method
-	return r
 }
 
 // UIHandler is an interface UI handlers must implement

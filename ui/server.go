@@ -153,7 +153,8 @@ func (s *Server) attachHandlers(params ServerParams) {
 	routes = append(routes, yinbiHandler.Routes()...)
 
 	for _, route := range routes {
-		s.Handle(route.Pattern, route.HttpMethod, s.wrapMiddleware(route.HandlerFunc))
+		s.Handle(route.Pattern, route.Method,
+			s.wrapMiddleware(route.HandlerFunc))
 	}
 
 	s.Handle("/startup", "", util.NoCache(http.HandlerFunc(startupHandler)))
@@ -199,11 +200,12 @@ func (s *Server) Handle(pattern, method string, handler http.Handler) {
 		handler = s.strippingHandler(handler)
 	}
 
-	// In the naked request cast, we need to verify the token is there in the
-	// referer header.
+	// If an HTTP method is specified, the route is restricted to it
 	if method != "" {
 		s.mux.Handle(pattern, checkRequestForToken(handler, s.localHTTPToken)).Methods(method)
 	} else {
+		// In the naked request cast, we need to verify the token is there in the
+		// referer header.
 		s.mux.Handle(pattern, checkRequestForToken(handler, s.localHTTPToken))
 	}
 
