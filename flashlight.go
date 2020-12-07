@@ -286,9 +286,8 @@ func New(
 			}
 			updatedHost, ok := grabber.ReverseLookup(ip)
 			if !ok {
-				// This means that the IP is one of our fake IPs (like 240.0.0.5) but dnsgrab doesn't know it. This could happen
-				// if the VPN was restarted and a user-agent is using the IP from a previous lookup. Shouldn't happen much, but
-				// we might as well fail here because we won't be able to successfully dial that IP and might just time out.
+				// This means that the IP is one of our fake IPs (like 240.0.0.5) but dnsgrab doesn't know it. We cache dnsgrab entries
+				// on disk for 24 hours, so this should almost never happen.
 				return "", errors.New("Invalid IP address")
 			}
 			if splitErr != nil {

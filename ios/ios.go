@@ -11,6 +11,7 @@ import (
 	tun2socks "github.com/eycorsican/go-tun2socks/core"
 
 	"github.com/getlantern/dnsgrab"
+	"github.com/getlantern/dnsgrab/persistentcache"
 	"github.com/getlantern/errors"
 
 	"github.com/getlantern/flashlight/balancer"
@@ -23,7 +24,7 @@ import (
 const (
 	memLimitInMiB   = 12
 	memLimitInBytes = memLimitInMiB * 1024 * 1024
-	maxDNSGrabCache = 10000
+	maxDNSGrabAge   = 24 * time.Hour
 
 	quotaSaveInterval            = 1 * time.Minute
 	shortFrontedAvailableTimeout = 30 * time.Second
@@ -189,9 +190,15 @@ func (c *client) start() (ClientWriter, error) {
 	}
 	bal := balancer.New(func() bool { return c.uc.AllowProbes }, 30*time.Second, dialers...)
 
-	grabber, err := dnsgrab.Listen(maxDNSGrabCache,
+	cache, err := persistentcache.New(filepath.Join(c.configDir, "dnsgrab.cache"), maxDNSGrabAge)
+	if err != nil {
+		return nil, errors.New("Unable to open dnsgrab cache: %v", err)
+	}
+
+	grabber, err := dnsgrab.ListenWithCache(
 		"127.0.0.1:0",
 		c.realDNSHost,
+		cache,
 	)
 	if err != nil {
 		return nil, errors.New("Unable to start dnsgrab: %v", err)

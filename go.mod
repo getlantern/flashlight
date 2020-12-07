@@ -26,7 +26,7 @@ require (
 	github.com/getlantern/cmuxprivate v0.0.0-20200905032931-afb63438e40b
 	github.com/getlantern/common v1.1.1-0.20200824002646-ca4a48d3a74c
 	github.com/getlantern/detour v0.0.0-20200814023224-28e20f4ac2d1
-	github.com/getlantern/dnsgrab v0.0.0-20201111172057-eb9a9a065f71
+	github.com/getlantern/dnsgrab v0.0.0-20201207181718-aa66e90d9a6d
 	github.com/getlantern/domains v0.0.0-20200402172102-34a8db1e0e83
 	github.com/getlantern/ema v0.0.0-20190620044903-5943d28f40e4
 	github.com/getlantern/enhttp v0.0.0-20190401024120-a974fa851e3c
@@ -59,7 +59,7 @@ require (
 	github.com/getlantern/memhelper v0.0.0-20181113170838-777ea7552231
 	github.com/getlantern/meta-scrubber v0.0.1
 	github.com/getlantern/mitm v0.0.0-20200517210030-e913809c7038
-	github.com/getlantern/mockconn v0.0.0-20191023022503-481dbcceeb58
+	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20201027015000-69ed0bd15259
 	github.com/getlantern/netx v0.0.0-20201202133732-af5244d26505
@@ -93,7 +93,6 @@ require (
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
 	github.com/getsentry/sentry-go v0.7.0
 	github.com/google/gopacket v1.1.17
-	github.com/google/netstack v0.0.0-20191123085552-55fcc16cd0eb
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
@@ -101,7 +100,7 @@ require (
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
-	github.com/miekg/dns v0.0.0-20180406150955-01d59357d468
+	github.com/miekg/dns v1.1.35
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/mitchellh/go-server-timing v1.0.0
 	github.com/mitchellh/mapstructure v1.1.2
@@ -133,7 +132,7 @@ replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110
 
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358
 
-replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20200917193938-4067a7f942d1
+replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20200930032729-4d26a3d146e1
 
 //replace github.com/getlantern/replica => ./replica/
 

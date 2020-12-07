@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/autoupdate"
 	"github.com/getlantern/dnsgrab"
+	"github.com/getlantern/dnsgrab/persistentcache"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/flashlight/balancer"
@@ -34,7 +36,7 @@ import (
 )
 
 const (
-	maxDNSGrabCache = 10000
+	maxDNSGrabAge = 24 * time.Hour
 )
 
 var (
@@ -304,9 +306,17 @@ func run(configDir, locale string,
 
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
-	grabber, err := dnsgrab.Listen(maxDNSGrabCache,
+	cache, err := persistentcache.New(filepath.Join(configDir, "dnsgrab.cache"), maxDNSGrabAge)
+	if err != nil {
+		log.Errorf("Unable to open dnsgrab cache: %v", err)
+		return
+	}
+
+	grabber, err := dnsgrab.ListenWithCache(
 		"127.0.0.1:0",
-		session.GetDNSServer())
+		session.GetDNSServer(),
+		cache,
+	)
 	if err != nil {
 		log.Errorf("Unable to start dnsgrab: %v", err)
 		return
