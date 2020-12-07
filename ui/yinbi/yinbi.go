@@ -28,6 +28,7 @@ const (
 	resetPasswordEndpoint       = "/account/password/reset"
 	saveAddressEndpoint         = "/user/address"
 	sendPaymentEndpoint         = "/payment/new"
+	redemptionCodesEndpoint     = "/wallet/codes"
 )
 
 var (
@@ -66,6 +67,11 @@ func (h YinbiHandler) Routes() []handler.Route {
 			importWalletEndpoint,
 			common.POST,
 			h.importWalletHandler,
+		},
+		handler.Route{
+			redemptionCodesEndpoint,
+			common.GET,
+			h.getRedemptionCodes,
 		},
 		handler.Route{
 			accountDetailsEndpoint,
@@ -257,6 +263,23 @@ func (h YinbiHandler) getAccountDetails(w http.ResponseWriter,
 	log.Debugf("Successfully retrived balance for %s", address)
 	h.successResponse(w, map[string]interface{}{
 		"balances": details.Balances,
+	})
+}
+
+// getRedemptionCodes is the handler used to look up
+// voucher codes belonging to a Yinbi user
+func (h YinbiHandler) getRedemptionCodes(w http.ResponseWriter,
+	r *http.Request) {
+	log.Debugf("Looking up redemption codes")
+	codes, err := h.yinbiClient.GetRedemptionCodes()
+	if err != nil {
+		log.Debugf("Error retrieving codes: %v", err)
+		h.ErrorHandler(w, err, http.StatusInternalServerError)
+		return
+	}
+	log.Debugf("Successfully retrived %d voucher codes", len(codes))
+	h.successResponse(w, map[string]interface{}{
+		"codes": codes,
 	})
 }
 

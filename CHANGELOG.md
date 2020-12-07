@@ -1,4 +1,16 @@
 
+<a name="lantern-6.2.7"></a>
+## [lantern-6.2.7](https://github.com/getlantern/flashlight/compare/lantern-6.2.5...lantern-6.2.7)
+
+> 2020-12-04
+
+### Pull Requests
+
+* Merge pull request [#959](https://github.com/getlantern/flashlight/issues/959) from getlantern/update-netstack-go1.15
+* Merge pull request [#958](https://github.com/getlantern/flashlight/issues/958) from getlantern/ui-6.2.7
+* Merge pull request [#956](https://github.com/getlantern/flashlight/issues/956) from getlantern/ui-6.2.6
+
+
 <a name="lantern-6.2.5"></a>
 ## [lantern-6.2.5](https://github.com/getlantern/flashlight/compare/beam-0.1.19...lantern-6.2.5)
 
