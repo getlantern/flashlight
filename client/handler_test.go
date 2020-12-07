@@ -65,7 +65,7 @@ func TestRewriteHTTPSRedirectLoop(t *testing.T) {
 	httpsRewriteInterval = 100 * time.Millisecond
 	client := newClient()
 	client.rewriteToHTTPS = httpseverywhere.Eager()
-	testURL := "http://cdn2.shoptiques.net"
+	testURL := "http://www.google.com"
 
 	req, _ := http.NewRequest("GET", testURL, nil)
 	resp, err := roundTrip(client, req)
