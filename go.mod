@@ -94,7 +94,7 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getlantern/yinbi-server v0.0.0-20201206225914-9e1e4f19c867
+	github.com/getlantern/yinbi-server v0.0.0-20201207212130-1d0a8dfe4a60
 	github.com/getsentry/sentry-go v0.7.0
 	github.com/google/netstack v0.0.0-20191116005144-95bf25ab4723 // indirect
 	github.com/gorilla/mux v1.7.1
