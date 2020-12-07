@@ -3,7 +3,7 @@ module github.com/getlantern/flashlight
 go 1.12
 
 require (
-	cloud.google.com/go v0.72.0 // indirect
+	cloud.google.com/go v0.73.0 // indirect
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
 	github.com/anacrolix/confluence v1.6.2-0.20201116033747-ba09085bd120
@@ -12,7 +12,7 @@ require (
 	github.com/anacrolix/log v0.7.1-0.20200604014615-c244de44fd2d
 	github.com/anacrolix/tagflag v1.1.1-0.20200411025953-9bb5209d56c2
 	github.com/anacrolix/torrent v1.18.1-0.20201116053711-8ef37cb2e682
-	github.com/aws/aws-sdk-go v1.35.29 // indirect
+	github.com/aws/aws-sdk-go v1.36.2 // indirect
 	github.com/badoux/checkmail v1.2.1 // indirect
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
@@ -94,19 +94,20 @@ require (
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
 	github.com/getlantern/yaml v0.0.0-20190801163808-0c9bb1ebf426
-	github.com/getlantern/yinbi-server v0.0.0-20201117153346-db0046e337a3
+	github.com/getlantern/yinbi-server v0.0.0-20201206225914-9e1e4f19c867
 	github.com/getsentry/sentry-go v0.7.0
-	github.com/google/go-cmp v0.5.3 // indirect
 	github.com/google/netstack v0.0.0-20191116005144-95bf25ab4723 // indirect
 	github.com/gorilla/mux v1.7.1
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/go-retryablehttp v0.6.8 // indirect
 	github.com/hashicorp/golang-lru v0.5.4
+	github.com/ipinfo/go-ipinfo v1.0.0 // indirect
 	github.com/jinzhu/gorm v1.9.16 // indirect
 	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1
 	github.com/keighl/mandrill v0.0.0-20170605120353-1775dd4b3b41
 	github.com/kennygrant/sanitize v1.2.4
 	github.com/kr/binarydist v0.0.0-20160721043806-3035450ff8b9 // indirect
+	github.com/lib/pq v1.9.0 // indirect
 	github.com/mailgun/oxy v0.0.0-20180330141130-3a0f6c4b456b
 	github.com/miekg/dns v0.0.0-20180406150955-01d59357d468
 	github.com/mitchellh/go-ps v1.0.0
@@ -120,19 +121,20 @@ require (
 	github.com/rs/cors v1.7.0
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
-	github.com/stellar/go v0.0.0-20201116203338-b36146208491 // indirect
+	github.com/stellar/go v0.0.0-20201204214128-5ed04d24078b // indirect
 	github.com/stretchr/testify v1.6.1
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
-	github.com/ulule/limiter/v3 v3.7.1 // indirect
+	github.com/ulule/limiter/v3 v3.8.0 // indirect
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
-	golang.org/x/crypto v0.0.0-20201117144127-c1f2f97bffc9 // indirect
-	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
-	golang.org/x/oauth2 v0.0.0-20201109201403-9fd604954f58 // indirect
-	golang.org/x/sys v0.0.0-20201116194326-cc9327a14d48
+	golang.org/x/crypto v0.0.0-20201203163018-be400aefbc4c // indirect
+	golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb
+	golang.org/x/oauth2 v0.0.0-20201207163604-931764155e3f // indirect
+	golang.org/x/sys v0.0.0-20201204225414-ed752295db88
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20201117123952-62d171c70ae1 // indirect
+	google.golang.org/genproto v0.0.0-20201207150747-9ee31aac76e7 // indirect
+	google.golang.org/grpc v1.34.0 // indirect
 	howett.net/plist v0.0.0-20200419221736-3b63eb3a43b5
 )
 
