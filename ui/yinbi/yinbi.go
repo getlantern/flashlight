@@ -87,6 +87,8 @@ func NewWithAuth(params api.APIParams,
 	return yinbiHandler
 }
 
+// walletHandler is the http.Handler used for Yinbi wallet related
+// UI routes
 func (h YinbiHandler) walletHandler() http.Handler {
 
 	r := mux.NewRouter()
@@ -95,7 +97,7 @@ func (h YinbiHandler) walletHandler() http.Handler {
 		url := h.GetAuthAddr(redeemCodesEndpoint)
 		log.Debugf("Sending redeem codes request to %s", url)
 		h.ProxyHandler(url, r, w, nil)
-	})
+	}).Methods(http.MethodGet)
 
 	r.HandleFunc(importEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		// importWalletHandler is the handler used to import wallets
@@ -115,7 +117,7 @@ func (h YinbiHandler) walletHandler() http.Handler {
 		h.SuccessResponse(w, map[string]interface{}{
 			"address": pair.Address(),
 		})
-	}).Methods("POST")
+	}).Methods(http.MethodPost)
 
 	r.HandleFunc(redemptionCodesEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		// getRedemptionCodes is the handler used to look up
@@ -164,6 +166,8 @@ func (h YinbiHandler) paymentHandler() http.Handler {
 	return paymentRouter
 }
 
+// userHandler is the http.Handler used for Yinbi wallet user related
+// UI routes
 func (h YinbiHandler) userHandler() http.Handler {
 	r := mux.NewRouter()
 
