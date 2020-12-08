@@ -16,23 +16,21 @@ import (
 )
 
 const (
+	// top-level routes
 	accountEndpoint = "/account"
 	paymentEndpoint = "/payment"
 	userEndpoint    = "/user"
 	walletEndpoint  = "/wallet"
 
-	importEndpoint      = "/import"
-	saveAddressEndpoint = "/address"
-
 	// wallet endpoints
+	importEndpoint          = "/import"
 	redeemCodesEndpoint     = "/redeem/codes"
 	redemptionCodesEndpoint = "/codes"
 
 	// user endpoints
 	createAccountEndpoint  = "/account/new"
 	createMnemonicEndpoint = "/mnemonic"
-
-	importWalletEndpoint = "/wallet/import"
+	saveAddressEndpoint    = "/address"
 
 	// payment endpoints
 	sendPaymentEndpoint = "/new"
@@ -117,7 +115,7 @@ func (h YinbiHandler) walletHandler() http.Handler {
 		h.SuccessResponse(w, map[string]interface{}{
 			"address": pair.Address(),
 		})
-	})
+	}).Methods("POST")
 
 	r.HandleFunc(redemptionCodesEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		// getRedemptionCodes is the handler used to look up
@@ -168,6 +166,7 @@ func (h YinbiHandler) paymentHandler() http.Handler {
 
 func (h YinbiHandler) userHandler() http.Handler {
 	r := mux.NewRouter()
+
 	// createAccountHandler is the HTTP handler used to create new
 	// Yinbi accounts
 	// First, the mnemonic is extracted from the request.
@@ -175,6 +174,7 @@ func (h YinbiHandler) userHandler() http.Handler {
 	// After the account has been created, we store the encrypted
 	// secret key in the key store and create a trust line to the
 	// Yinbi asset
+
 	r.HandleFunc(createAccountEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		log.Debug("Received new create Yinbi account request")
 		var params api.CreateAccountParams
@@ -186,13 +186,13 @@ func (h YinbiHandler) userHandler() http.Handler {
 		if err != nil {
 			h.ErrorHandler(w, err, http.StatusInternalServerError)
 		}
-	}).Methods("POST")
+	}).Methods(http.MethodPost)
 	r.HandleFunc(createMnemonicEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		mnemonic := h.yinbiClient.CreateMnemonic()
 		h.SuccessResponse(w, map[string]interface{}{
 			"mnemonic": mnemonic,
 		})
-	}).Methods("POST")
+	}).Methods(http.MethodPost)
 	r.HandleFunc(saveAddressEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		// saveAddressHandler is the handler used to save new account
 		// addresses for the given user
@@ -204,8 +204,6 @@ func (h YinbiHandler) userHandler() http.Handler {
 			return
 		}
 		log.Debug("Successfully saved address")
-	}).Methods("POST")
-	r.Handle(accountTransactionsEndpoint, h.getAccountTransactions()).Methods("GET")
-	r.Handle(accountRecoverEndpoint, h.recoverAccount()).Methods("POST")
+	}).Methods(http.MethodPost)
 	return r
 }
