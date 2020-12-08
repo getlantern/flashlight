@@ -145,20 +145,28 @@ func (s *Server) attachHandlers(params ServerParams) {
 		params.YinbiServerAddr, httpClient)
 
 	authHandler := auth.New(apiParams)
-	yinbiHandler := yinbi.NewWithAuth(apiParams, authHandler)
 
-	var routes []handler.Route
-
-	routes = append(routes, authHandler.Routes()...)
-	routes = append(routes, yinbiHandler.Routes()...)
-
-	for _, route := range routes {
-		s.Handle(route.Pattern, route.Method,
-			s.wrapMiddleware(route.HandlerFunc))
+	handlers := []handler.UIHandler{
+		authHandler,
+		yinbi.NewWithAuth(apiParams, authHandler),
 	}
 
-	s.Handle("/startup", "", util.NoCache(http.HandlerFunc(startupHandler)))
-	s.Handle("/", "", util.NoCache(http.FileServer(fs)))
+	for _, handler := range handlers {
+		s.Handle("/", handler.ConfigureRoutes(s.mux))
+	}
+
+	s.Handle("/startup", util.NoCache(http.HandlerFunc(startupHandler)))
+	s.Handle("/", util.NoCache(http.FileServer(fs)))
+}
+
+// createHTTPClient creates a chained-then-fronted configured HTTP client
+// to be used by multiple UI handlers
+func createHTTPClient() *http.Client {
+	rt := proxied.ChainedThenFronted()
+	rt.SetMasqueradeTimeout(30 * time.Second)
+	return &http.Client{
+		Transport: rt,
+	}
 }
 
 // wrapMiddleware takes the given http.Handler and optionally wraps it with
@@ -175,28 +183,18 @@ func (s *Server) wrapMiddleware(h http.HandlerFunc, m ...Middleware) http.Handle
 	return s.corsHandler(wrapped)
 }
 
-// createHTTPClient creates a chained-then-fronted configured HTTP client
-// to be used by multiple UI handlers
-func createHTTPClient() *http.Client {
-	rt := proxied.ChainedThenFronted()
-	rt.SetMasqueradeTimeout(30 * time.Second)
-	return &http.Client{
-		Transport: rt,
-	}
-}
-
 // Handle directs the underlying server to handle the given pattern at both
 // the secure token path and the raw request path. In the case of the raw
 // request path, Lantern looks for the token in the Referer HTTP header and
 // rejects the request if it's not present.
-func (s *Server) Handle(pattern, method string, handler http.Handler) {
+func (s *Server) Handle(pattern string, handler http.Handler) {
 	// When the token is included in the request path, we need to strip it in
 	// order to serve the UI correctly (i.e. the static UI tarfs FileSystem knows
 	// nothing about the request path).
 	if s.httpTokenRequestPathPrefix != "" {
 		// If the request path is empty this would panic on adding the same pattern
 		// twice.
-		s.mux.Handle(s.httpTokenRequestPathPrefix+pattern, s.strippingHandler(handler)).Methods(method)
+		s.mux.Handle(s.httpTokenRequestPathPrefix+pattern, s.strippingHandler(handler))
 	}
 
 	checkTokenHandler := checkRequestForToken(handler, s.localHTTPToken)
@@ -206,7 +204,7 @@ func (s *Server) Handle(pattern, method string, handler http.Handler) {
 	} else {
 		// In the naked request cast, we need to verify the token is there in the
 		// referer header.
-		s.mux.Handle(pattern, checkTokenHandler).Methods(method)
+		s.mux.Handle(pattern, checkTokenHandler)
 	}
 }
 

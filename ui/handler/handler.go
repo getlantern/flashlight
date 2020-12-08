@@ -4,34 +4,23 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"path"
+	"strings"
 
 	"github.com/getlantern/auth-server/api"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
+	"github.com/gorilla/mux"
 )
 
 var (
 	log = golog.LoggerFor("flashlight.ui.handler")
 )
 
-// Middleware
-type Middleware func(http.HandlerFunc) http.HandlerFunc
-
-// Route defines a structure for UI routes
-type Route struct {
-	Pattern     string
-	Method      string
-	HandlerFunc http.HandlerFunc
-}
-
-func NewRoute(pattern string, handler http.HandlerFunc) Route {
-	return Route{Pattern: pattern, HandlerFunc: handler}
-}
-
 // UIHandler is an interface UI handlers must implement
 type UIHandler interface {
 	// Routes is a map of UI server paths to handler funcs
-	Routes() []Route
+	ConfigureRoutes(r *mux.Router) http.Handler
 }
 
 // Handler  is a representation of a group of handlers
@@ -49,6 +38,20 @@ func NewHandler(params api.APIParams) Handler {
 		yinbiAddr:  params.YinbiServerAddr,
 		HTTPClient: params.HTTPClient,
 	}
+}
+
+func (h Handler) ShiftPath(p string) (head, tail string) {
+	p = path.Clean("/" + p)
+	i := strings.Index(p[1:], "/") + 1
+	if i <= 0 {
+		return p[1:], "/"
+	}
+	return p[1:i], p[i:]
+}
+
+func (h Handler) SuccessResponse(w http.ResponseWriter, args map[string]interface{}) {
+	args["success"] = true
+	common.WriteJSON(w, http.StatusOK, args)
 }
 
 // GetAuthAddr combines the given uri with the Lantern authentication server address
