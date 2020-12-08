@@ -5,13 +5,12 @@ go 1.12
 require (
 	git.torproject.org/pluggable-transports/goptlib.git v1.0.0
 	git.torproject.org/pluggable-transports/obfs4.git v0.0.0-20180421031126-89c21805c212
-	github.com/anacrolix/confluence v1.4.0
-	github.com/anacrolix/dht/v2 v2.6.1 // indirect
+	github.com/anacrolix/confluence v1.6.2-0.20201116033747-ba09085bd120
 	github.com/anacrolix/envpprof v1.1.1
 	github.com/anacrolix/go-libutp v1.0.3
 	github.com/anacrolix/log v0.7.1-0.20200604014615-c244de44fd2d
 	github.com/anacrolix/tagflag v1.1.1-0.20200411025953-9bb5209d56c2
-	github.com/anacrolix/torrent v1.18.1-0.20201103041712-96b640065a9f
+	github.com/anacrolix/torrent v1.18.1-0.20201116053711-8ef37cb2e682
 	github.com/blang/semver v0.0.0-20180723201105-3c1074078d32
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
@@ -132,9 +131,7 @@ replace git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110
 
 replace github.com/keighl/mandrill => github.com/getlantern/mandrill v0.0.0-20191024010305-7094d8b40358
 
-replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20200930032729-4d26a3d146e1
-
-//replace github.com/getlantern/replica => ./replica/
+replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-20201204183614-c95cc8f8f085
 
 // For https://github.com/getlantern/lantern-internal/issues/4277
 replace crawshaw.io/sqlite => github.com/getlantern/sqlite v0.3.3-0.20201015053730-228fbc4f607f

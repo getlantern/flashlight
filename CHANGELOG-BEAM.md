@@ -1,4 +1,117 @@
 
+<a name="beam-0.1.19"></a>
+## [beam-0.1.19](https://github.com/getlantern/flashlight/compare/beam-0.1.18...beam-0.1.19)
+
+> 2020-11-26
+
+
+<a name="beam-0.1.18"></a>
+## [beam-0.1.18](https://github.com/getlantern/flashlight/compare/lantern-6.2.4...beam-0.1.18)
+
+> 2020-11-26
+
+### Pull Requests
+
+* Merge pull request [#954](https://github.com/getlantern/flashlight/issues/954) from getlantern/4538-create-cache-dir
+* Merge pull request [#955](https://github.com/getlantern/flashlight/issues/955) from getlantern/appdirs-replica
+
+
+<a name="lantern-6.2.4"></a>
+## [lantern-6.2.4](https://github.com/getlantern/flashlight/compare/beam-0.1.17...lantern-6.2.4)
+
+> 2020-11-25
+
+### Pull Requests
+
+* Merge pull request [#953](https://github.com/getlantern/flashlight/issues/953) from getlantern/typescript-ui-updates
+* Merge pull request [#952](https://github.com/getlantern/flashlight/issues/952) from getlantern/4449-report-issue-app-name
+
+
+<a name="beam-0.1.17"></a>
+## [beam-0.1.17](https://github.com/getlantern/flashlight/compare/beam-0.1.16...beam-0.1.17)
+
+> 2020-11-25
+
+
+<a name="beam-0.1.16"></a>
+## [beam-0.1.16](https://github.com/getlantern/flashlight/compare/lantern-6.2.3...beam-0.1.16)
+
+> 2020-11-25
+
+
+<a name="lantern-6.2.3"></a>
+## [lantern-6.2.3](https://github.com/getlantern/flashlight/compare/lantern-6.2.2...lantern-6.2.3)
+
+> 2020-11-21
+
+### Pull Requests
+
+* Merge pull request [#951](https://github.com/getlantern/flashlight/issues/951) from getlantern/ui-6.2.3
+
+
+<a name="lantern-6.2.2"></a>
+## [lantern-6.2.2](https://github.com/getlantern/flashlight/compare/beam-0.1.15...lantern-6.2.2)
+
+> 2020-11-19
+
+
+<a name="beam-0.1.15"></a>
+## [beam-0.1.15](https://github.com/getlantern/flashlight/compare/lantern-6.2.1...beam-0.1.15)
+
+> 2020-11-19
+
+
+<a name="lantern-6.2.1"></a>
+## [lantern-6.2.1](https://github.com/getlantern/flashlight/compare/lantern-6.2.0...lantern-6.2.1)
+
+> 2020-11-19
+
+### Pull Requests
+
+* Merge pull request [#950](https://github.com/getlantern/flashlight/issues/950) from getlantern/ui-fix-6.2.1
+* Merge pull request [#948](https://github.com/getlantern/flashlight/issues/948) from getlantern/4453-allow-caching-thumbnail
+* Merge pull request [#947](https://github.com/getlantern/flashlight/issues/947) from getlantern/ui-6.2.1
+
+
+<a name="lantern-6.2.0"></a>
+## [lantern-6.2.0](https://github.com/getlantern/flashlight/compare/lantern-6.1.4...lantern-6.2.0)
+
+> 2020-11-16
+
+### Pull Requests
+
+* Merge pull request [#946](https://github.com/getlantern/flashlight/issues/946) from getlantern/systray-ts-ui
+* Merge pull request [#945](https://github.com/getlantern/flashlight/issues/945) from getlantern/user-agent
+
+
+<a name="lantern-6.1.4"></a>
+## [lantern-6.1.4](https://github.com/getlantern/flashlight/compare/beam-0.1.14...lantern-6.1.4)
+
+> 2020-11-16
+
+
+<a name="beam-0.1.14"></a>
+## [beam-0.1.14](https://github.com/getlantern/flashlight/compare/beam-0.1.13...beam-0.1.14)
+
+> 2020-11-13
+
+
+<a name="beam-0.1.13"></a>
+## [beam-0.1.13](https://github.com/getlantern/flashlight/compare/beam-0.1.12...beam-0.1.13)
+
+> 2020-11-11
+
+
+<a name="beam-0.1.12"></a>
+## [beam-0.1.12](https://github.com/getlantern/flashlight/compare/beam-0.1.11...beam-0.1.12)
+
+> 2020-11-07
+
+### Pull Requests
+
+* Merge pull request [#941](https://github.com/getlantern/flashlight/issues/941) from getlantern/4403-update-golog
+
+
 <a name="beam-0.1.11"></a>
 ## [beam-0.1.11](https://github.com/getlantern/flashlight/compare/beam-0.1.10...beam-0.1.11)
 

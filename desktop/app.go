@@ -46,6 +46,7 @@ import (
 	"github.com/getlantern/flashlight/pro"
 	"github.com/getlantern/flashlight/stats"
 	"github.com/getlantern/flashlight/ui"
+	"github.com/getlantern/flashlight/util"
 	"github.com/getlantern/flashlight/ws"
 
 	desktopReplica "github.com/getlantern/flashlight/desktop/replica"
@@ -402,8 +403,8 @@ func (app *App) beforeStart(listenAddr string) {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))
 		return
 	}
-	uiServer.Handle("/pro/", pro.APIHandler(settings))
-	uiServer.Handle("/data", app.ws.Handler())
+	uiServer.Handle("/pro/", util.NoCache(pro.APIHandler(settings)))
+	uiServer.Handle("/data", util.NoCache(app.ws.Handler()))
 
 	if app.ShouldShowUI() {
 		go func() {
@@ -501,9 +502,7 @@ func (app *App) checkForReplica(features map[string]bool) {
 
 			// Need a trailing '/' to capture all sub-paths :|, but we don't want to strip the leading '/'
 			// in their handlers.
-			app.uiServer().Handle("/replica/", http.StripPrefix(
-				"/replica",
-				replicaHandler))
+			app.uiServer().Handle("/replica/", http.StripPrefix("/replica", replicaHandler))
 		})
 	}
 }

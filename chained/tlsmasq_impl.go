@@ -99,10 +99,7 @@ func newTLSMasqImpl(configDir, name, addr string, s *ChainedServerInfo, uc commo
 	if err != nil {
 		return nil, errors.New("failed to parse proxy certificate: %v", err)
 	}
-	pool, err := x509.SystemCertPool()
-	if err != nil {
-		return nil, errors.New("failed to load system cert pool: %v", err)
-	}
+	pool := x509.NewCertPool()
 	pool.AddCert(cert)
 
 	pCfg, hellos := tlsConfigForProxy(configDir, ctx, name, s, uc)
