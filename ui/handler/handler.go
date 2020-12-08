@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
-	"path"
-	"strings"
 
 	"github.com/getlantern/auth-server/api"
 	"github.com/getlantern/golog"
@@ -39,15 +37,6 @@ func NewHandler(params api.APIParams) Handler {
 		yinbiAddr:  params.YinbiServerAddr,
 		HTTPClient: params.HTTPClient,
 	}
-}
-
-func (h Handler) GetPath(p string) (head, tail string) {
-	p = path.Clean("/" + p)
-	i := strings.Index(p[1:], "/") + 1
-	if i <= 0 {
-		return p[1:], "/"
-	}
-	return p[1:i], p[i:]
 }
 
 func (h Handler) SuccessResponse(w http.ResponseWriter, args map[string]interface{}) {
