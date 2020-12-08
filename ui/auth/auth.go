@@ -71,8 +71,8 @@ func (h AuthHandler) ConfigureRoutes() http.Handler {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc(loginEndpoint, authHandler).Methods("POST")
-	r.HandleFunc(registrationEndpoint, authHandler).Methods("POST")
+	r.HandleFunc(loginEndpoint, authHandler).Methods(http.MethodPost)
+	r.HandleFunc(registrationEndpoint, authHandler).Methods(http.MethodPost)
 	r.HandleFunc(signOutEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		var params models.UserParams
 		// extract user credentials from HTTP request to send to AuthClient
@@ -87,6 +87,6 @@ func (h AuthHandler) ConfigureRoutes() http.Handler {
 			return
 		}
 		log.Debugf("User %s successfully signed out", params.Username)
-	}).Methods("POST")
+	}).Methods(http.MethodPost)
 	return r
 }
