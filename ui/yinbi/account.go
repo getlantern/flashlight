@@ -15,9 +15,9 @@ func (h YinbiHandler) accountHandler() http.Handler {
 			h.SuccessResponse(w, args)
 		}
 		switch tail {
-		case "/details":
+		case accountDetailsEndpoint:
 			h.getAccountDetails(w, r)
-		case "/password/reset":
+		case resetPasswordEndpoint:
 			// resetPasswordHandler is the handler used to reset a user's
 			// wallet password
 			var params api.CreateAccountParams
@@ -30,9 +30,9 @@ func (h YinbiHandler) accountHandler() http.Handler {
 			if err != nil {
 				h.ErrorHandler(w, err, http.StatusBadRequest)
 			}
-		case "/transactions":
+		case accountTransactionsEndpoint:
 			h.getAccountTransactions(w, r)
-		case "/recover":
+		case accountRecoverEndpoint:
 		default:
 			var params struct {
 				Words string `json:"words"`

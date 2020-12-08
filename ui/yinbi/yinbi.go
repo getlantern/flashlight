@@ -21,18 +21,24 @@ const (
 	userEndpoint    = "/user"
 	walletEndpoint  = "/wallet"
 
-	accountDetailsEndpoint      = "/account/details"
-	accountTransactionsEndpoint = "/account/transactions"
-	createAccountEndpoint       = "/user/account/new"
-	createMnemonicEndpoint      = "/user/mnemonic"
-	importEndpoint              = "/import"
-	importWalletEndpoint        = "/wallet/import"
-	recoverAccountEndpoint      = "/account/recover"
-	redeemCodesEndpoint         = "/wallet/redeem/codes"
-	resetPasswordEndpoint       = "/account/password/reset"
-	saveAddressEndpoint         = "/user/address"
-	sendPaymentEndpoint         = "/payment/new"
-	redemptionCodesEndpoint     = "/wallet/codes"
+	// account endpoints
+	accountDetailsEndpoint      = "/details"
+	accountTransactionsEndpoint = "/transactions"
+	accountRecoverEndpoint      = "/recover"
+	resetPasswordEndpoint       = "/password/reset"
+
+	importEndpoint      = "/import"
+	saveAddressEndpoint = "/address"
+
+	// user endpoints
+	createAccountEndpoint  = "/account/new"
+	createMnemonicEndpoint = "/mnemonic"
+
+	importWalletEndpoint    = "/wallet/import"
+	recoverAccountEndpoint  = "/account/recover"
+	redeemCodesEndpoint     = "/wallet/redeem/codes"
+	sendPaymentEndpoint     = "/payment/new"
+	redemptionCodesEndpoint = "/wallet/codes"
 )
 
 var (
@@ -181,7 +187,7 @@ func (h YinbiHandler) userHandler() http.Handler {
 		// After the account has been created, we store the encrypted
 		// secret key in the key store and create a trust line to the
 		// Yinbi asset
-		case "/account/new":
+		case createAccountEndpoint:
 			log.Debug("Received new create Yinbi account request")
 			var params api.CreateAccountParams
 			err := common.DecodeJSONRequest(r, &params)
@@ -192,12 +198,12 @@ func (h YinbiHandler) userHandler() http.Handler {
 			if err != nil {
 				h.ErrorHandler(w, err, http.StatusInternalServerError)
 			}
-		case "/mnemonic":
+		case createMnemonicEndpoint:
 			mnemonic := h.yinbiClient.CreateMnemonic()
 			h.SuccessResponse(w, map[string]interface{}{
 				"mnemonic": mnemonic,
 			})
-		case "/address":
+		case saveAddressEndpoint:
 			// saveAddressHandler is the handler used to save new account
 			// addresses for the given user
 			address := r.URL.Query().Get("address")
