@@ -299,6 +299,8 @@ github.com/getlantern/dnsgrab v0.0.0-20201207181718-aa66e90d9a6d h1:PoKL421ghrRD
 github.com/getlantern/dnsgrab v0.0.0-20201207181718-aa66e90d9a6d/go.mod h1:9LRmxmPpIIEW0fxvNoarT3OKvDOdoiNMSZeXaQBhh8I=
 github.com/getlantern/dnsgrab v0.0.0-20201207191923-47c82c48c058 h1:9QbHeobKcl5VE1f+GALsKUlhsIKF+fQyRSB73+NZWSQ=
 github.com/getlantern/dnsgrab v0.0.0-20201207191923-47c82c48c058/go.mod h1:9LRmxmPpIIEW0fxvNoarT3OKvDOdoiNMSZeXaQBhh8I=
+github.com/getlantern/dnsgrab v0.0.0-20201208164403-a151a076e1c9 h1:4kiUV4dXMifyEeEnMEqWaPVvQkNyXzBxOm8Mts1Pm24=
+github.com/getlantern/dnsgrab v0.0.0-20201208164403-a151a076e1c9/go.mod h1:9LRmxmPpIIEW0fxvNoarT3OKvDOdoiNMSZeXaQBhh8I=
 github.com/getlantern/domains v0.0.0-20200402172102-34a8db1e0e83 h1:KUQkZaAOrpCdbtJWfL0WqaFoB5IxbQdchLUIq6+dG1Y=
 github.com/getlantern/domains v0.0.0-20200402172102-34a8db1e0e83/go.mod h1:au2O/xaJUN17QP5ndAXBS8tSp0P7G9WnitSvuO/k9k0=
 github.com/getlantern/elevate v0.0.0-20180207094634-c2e2e4901072/go.mod h1:T4VB2POK13lsPLFV98WJQrL7gAXYD9TyJxBU2P8c8p4=
@@ -327,6 +329,12 @@ github.com/getlantern/framed v0.0.0-20190601192238-ceb6431eeede h1:yrU6Px3ZkvCsD
 github.com/getlantern/framed v0.0.0-20190601192238-ceb6431eeede/go.mod h1:nhnoiS6DE6zfe+BaCMU4YI01UpsuiXnDqM5S8jxHuuI=
 github.com/getlantern/fronted v0.0.0-20200807235213-54b06952ddc6 h1:O4Vr01mhAPUWOUnupTU2ay8EF8haMExatvAbe6LtY8Q=
 github.com/getlantern/fronted v0.0.0-20200807235213-54b06952ddc6/go.mod h1:PiQruSLjH2pusuwOOMTesd/nc3rnWkh1x/BZTBsx7p0=
+github.com/getlantern/fronted v0.0.0-20201208182812-17ec0705a410 h1:0tRA9Vr4QYQO8rH91E43MIEF8LE/kwSvCZOXiGVMppk=
+github.com/getlantern/fronted v0.0.0-20201208182812-17ec0705a410/go.mod h1:PiQruSLjH2pusuwOOMTesd/nc3rnWkh1x/BZTBsx7p0=
+github.com/getlantern/fronted v0.0.0-20201208193724-3869f8883a02 h1:B7Y84jQUqqmmWgwiN6NMM5kM4UDnKC2v5BzHOmp+xHY=
+github.com/getlantern/fronted v0.0.0-20201208193724-3869f8883a02/go.mod h1:PiQruSLjH2pusuwOOMTesd/nc3rnWkh1x/BZTBsx7p0=
+github.com/getlantern/fronted v0.0.0-20201209110050-b2198063e40c h1:W/XzBdn3B6IdAjk9gWLRE/56AyTfSgfDvCFhpnGuVTI=
+github.com/getlantern/fronted v0.0.0-20201209110050-b2198063e40c/go.mod h1:PiQruSLjH2pusuwOOMTesd/nc3rnWkh1x/BZTBsx7p0=
 github.com/getlantern/geo v0.0.0-20200716105557-5b87700e3d54 h1:ADPpPso4Tdu8Eo5sQ95w5N/s/lJKQRkk3HZcPBUzk90=
 github.com/getlantern/geo v0.0.0-20200716105557-5b87700e3d54/go.mod h1:ul0vx2453iL3abtagTRgTipWjK0p3hU98uHQl0e+EhE=
 github.com/getlantern/geolookup v0.0.0-20200121184643-02217082e50f h1:1yPtM1N/MTfSgzvEKbMhbaY7vFjp64nkzcDCX3JrdLs=

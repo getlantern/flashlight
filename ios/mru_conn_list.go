@@ -63,19 +63,20 @@ func (l *mruConnList) removeAll() map[io.Closer]int64 {
 }
 
 func (l *mruConnList) removeNewest() (io.Closer, bool) {
-	l.RLock()
+	l.Lock()
+	defer l.Unlock()
+
+	if len(l.conns) == 0 {
+		return nil, false
+	}
+
 	conns := make(bySequenceReversed, 0, len(l.conns))
 	for conn, sequence := range l.conns {
 		conns = append(conns, &connWithSequence{Closer: conn, sequence: sequence})
 	}
-	l.RUnlock()
-
-	if len(conns) == 0 {
-		return nil, false
-	}
 
 	sort.Sort(conns)
 	conn := conns[0].Closer
-	l.remove(conn)
+	delete(l.conns, conn)
 	return conn, true
 }

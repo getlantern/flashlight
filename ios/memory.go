@@ -3,6 +3,7 @@ package ios
 import (
 	"runtime"
 	"runtime/debug"
+	"sync/atomic"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -23,12 +24,9 @@ const (
 	logMemoryInterval     = 5 * time.Second
 	forcedGCInterval      = 1 * time.Second
 	checkCriticalInterval = 15 * time.Millisecond
+	postCloseNewestDelay  = 50 * time.Millisecond
+	postResetDelay        = 5 * time.Second
 )
-
-func init() {
-	// Use a more aggressive idle timeout to reduce memory usage
-	// chained.IdleTimeout = 15 * time.Second
-}
 
 // MemChecker checks the system's memory level
 type MemChecker interface {
@@ -55,6 +53,7 @@ func periodicGC() {
 	debug.SetGCPercent(20)
 	ticker := time.NewTicker(forcedGCInterval)
 	for range ticker.C {
+		// this select ensures that if ticker fired while freeMemory() was running (i.e. it took longer than forcedGCInterval), we wait until the ticket fires again to run freeMemory
 		select {
 		case <-ticker.C:
 			continue
@@ -67,17 +66,16 @@ func periodicGC() {
 func (c *client) checkForCriticallyLowMemory() {
 	ticker := time.NewTicker(checkCriticalInterval)
 	for range ticker.C {
+		// this select ensures that if ticker fired while we were checking memory (i.e. it took longer than checkCriticalInterval), we wait until the ticket fires again to check memory
 		select {
 		case <-ticker.C:
 			continue
 		default:
 			for c.memChecker.Check().Critical {
-				if c.tcpHandler.closeNewestConn() {
+				if c.tcpHandler.closeNewestConn() || c.udpHandler.closeNewestConn() {
 					statsLog.Debug("Memory critically low, closed newest TCP connection")
-					freeMemory()
-					c.logMemory()
-				} else if c.udpHandler.closeNewestConn() {
-					statsLog.Debug("Memory critically low, closed newest UDP connection")
+					// wait a little bit to give the connection a chance to finish closing, then GC
+					time.Sleep(postCloseNewestDelay)
 					freeMemory()
 					c.logMemory()
 				} else {
@@ -85,6 +83,9 @@ func (c *client) checkForCriticallyLowMemory() {
 					c.clientWriter.Reset()
 					freeMemory()
 					c.logMemory()
+
+					// This was the most drastic action we could take in response to a low memory condition, don't bother again for a little while
+					time.Sleep(postResetDelay)
 				}
 			}
 		}
@@ -126,6 +127,7 @@ func (c *client) logMemory() {
 	debug.ReadGCStats(&stats)
 	elapsed := time.Now().Sub(c.started)
 	statsLog.Debugf("Memory GC num: %v    total pauses: %v (%.2f%%)    pause percentiles: %v", stats.NumGC, stats.PauseTotal, float64(stats.PauseTotal)*100/float64(elapsed), stats.PauseQuantiles)
+	statsLog.Debugf("Resets: %d", atomic.LoadInt64(&c.resets))
 }
 
 func freeMemory() {

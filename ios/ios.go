@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	tun2socks "github.com/eycorsican/go-tun2socks/core"
@@ -129,9 +130,17 @@ func (c *cw) Reset() {
 	c.ipStack.Close()
 	c.ipStack = tun2socks.NewLWIPStack()
 	c.mx.Unlock()
+	atomic.AddInt64(&c.client.resets, 1)
+}
+
+func (c *cw) closeIPStack() {
+	c.client.tcpHandler.disconnect()
+	c.client.udpHandler.disconnect()
+	c.ipStack.Close()
 }
 
 func (c *cw) Close() error {
+	c.closeIPStack()
 	c.bal.Close()
 	return nil
 }
@@ -150,6 +159,7 @@ type client struct {
 	ipStack         tun2socks.LWIPStack
 	clientWriter    *cw
 	started         time.Time
+	resets          int64
 }
 
 func Client(packetsOut Writer, udpDialer UDPDialer, memChecker MemChecker, configDir string, mtu int, capturedDNSHost, realDNSHost string) (ClientWriter, error) {

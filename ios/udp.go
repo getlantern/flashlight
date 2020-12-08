@@ -145,10 +145,24 @@ func (h *directUDPHandler) Connect(downstream core.UDPConn, target *net.UDPAddr)
 		return nil
 	}
 
+	// Since UDP traffic is sent directly, do a reverse lookup of the IP and then resolve the UDP address
+	host, found := h.grabber.ReverseLookup(target.IP)
+	if !found {
+		return log.Errorf("Unknown IP %v, not connecting", target.IP)
+	}
+	if found {
+		ip, err := net.ResolveIPAddr("ip", host)
+		if err != nil {
+			return log.Errorf("Unable to resolve IP address for %v, not connecting: %v", host, err)
+		}
+		target.IP = ip.IP
+	}
+
+	// Dial
 	atomic.AddInt64(&h.dialingConns, 1)
 	defer atomic.AddInt64(&h.dialingConns, -1)
 
-	// note - the below convoluted structure is necessary because of limitations in what kind
+	// note - the below convoluted flow is necessary because of limitations in what kind
 	// of APIs can be bound to Swift using gomobile.
 	upstream := h.dialer.Dial(target.IP.String(), target.Port)
 
@@ -176,8 +190,8 @@ func (h *directUDPHandler) Connect(downstream core.UDPConn, target *net.UDPAddr)
 		// Request to receive first datagram
 		upstream.ReceiveDatagram()
 	case <-time.After(dialTimeout):
-		log.Errorf("Timed out dialing %v", target)
-		downstream.Close()
+		upstream.Close()
+		return log.Errorf("Timed out dialing %v", target)
 	}
 
 	h.mruConns.mark(downstream)
@@ -228,7 +242,7 @@ func (h *directUDPHandler) trackStats() {
 		activeConns := len(h.upstreams)
 		h.RUnlock()
 
-		statsLog.Debugf("UDP Conns    Active: %v    Dialing: %v", activeConns, atomic.LoadInt64(&h.dialingConns))
+		statsLog.Debugf("UDP Conns    Active: %d    Dialing: %d", activeConns, atomic.LoadInt64(&h.dialingConns))
 		time.Sleep(1 * time.Second)
 	}
 }

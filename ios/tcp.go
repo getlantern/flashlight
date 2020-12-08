@@ -24,6 +24,7 @@ type proxiedTCPHandler struct {
 	grabber      dnsgrab.Server
 	mtu          int
 	dialingConns int64
+	copyingConns int64
 	mruConns     *mruConnList
 }
 
@@ -53,6 +54,8 @@ func (h *proxiedTCPHandler) Handle(downstream net.Conn, addr *net.TCPAddr) error
 }
 
 func (h *proxiedTCPHandler) copy(downstream net.Conn, upstream net.Conn) {
+	atomic.AddInt64(&h.copyingConns, 1)
+	defer atomic.AddInt64(&h.copyingConns, -1)
 	defer downstream.Close()
 	defer upstream.Close()
 	defer h.mruConns.remove(downstream)
@@ -92,7 +95,7 @@ func (h *proxiedTCPHandler) disconnect() {
 
 func (h *proxiedTCPHandler) trackStats() {
 	for {
-		statsLog.Debugf("TCP Conns    Active: %v    Dialing: %v", h.mruConns.len(), atomic.LoadInt64(&h.dialingConns))
+		statsLog.Debugf("TCP Conns    Active: %d    Dialing: %d   Copying: %d", h.mruConns.len(), atomic.LoadInt64(&h.dialingConns), atomic.LoadInt64(&h.copyingConns))
 		time.Sleep(1 * time.Second)
 	}
 }
