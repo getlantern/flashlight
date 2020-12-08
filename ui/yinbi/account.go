@@ -10,7 +10,7 @@ import (
 
 func (h YinbiHandler) accountHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, tail := h.ShiftPath(r.URL.Path)
+		_, tail := h.GetPath(r.URL.Path)
 		successResponse := func(args map[string]interface{}) {
 			h.SuccessResponse(w, args)
 		}

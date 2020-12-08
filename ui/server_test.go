@@ -226,7 +226,7 @@ func TestStart(t *testing.T) {
 		LocalHTTPToken: "abcde",
 	})
 	assert.NoError(t, err)
-	serve.Handle("/testing", "", http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+	serve.Handle("/testing", http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 		resp.WriteHeader(http.StatusOK)
 	}))
 
@@ -278,7 +278,7 @@ func TestNoCache(t *testing.T) {
 func TestAllowCache(t *testing.T) {
 	s := getTestServer("some-token")
 
-	s.Handle("/cache-me", "",
+	s.Handle("/cache-me",
 		http.HandlerFunc(
 			func(resp http.ResponseWriter, req *http.Request) {
 				resp.WriteHeader(http.StatusOK)

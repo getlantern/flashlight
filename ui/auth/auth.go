@@ -45,59 +45,51 @@ func New(params api.APIParams) AuthHandler {
 	}
 }
 
-func (h AuthHandler) ConfigureRoutes(r *mux.Router) http.Handler {
-	// authHandler is the HTTP handler used by the login and
-	// registration endpoints. It creates a new SRP client from
-	// the user params in the request
-
-	authHandler := func(w http.ResponseWriter, r *http.Request) {
-		var params models.UserParams
-		// extract user credentials from HTTP request to send to AuthClient
-		err := common.DecodeJSONRequest(r, &params)
-		if err != nil {
-			log.Errorf("Couldn't create SRP client from request: %v", err)
-			h.ErrorHandler(w, err, http.StatusBadRequest)
-			return
-		}
-		endpoint := html.EscapeString(r.URL.Path)
-		if strings.Contains(endpoint, loginEndpoint) {
-			_, err = h.authClient.SignIn(params.Username, params.Password)
-		} else {
-			_, err = h.authClient.Register(params.Username, params.Password)
-		}
-		if err != nil {
-			h.ErrorHandler(w, err, http.StatusBadRequest)
-		}
+func (h AuthHandler) ConfigureRoutes(r *mux.Router) (next func(http.Handler) http.Handler) {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			head, _ := h.GetPath(r.URL.Path)
+			switch head {
+			case loginEndpoint:
+			case registrationEndpoint:
+				// HTTP handler used by the login and
+				// registration endpoints. It creates a new SRP client from
+				// the user params in the request
+				var params models.UserParams
+				// extract user credentials from HTTP request to send to AuthClient
+				err := common.DecodeJSONRequest(r, &params)
+				if err != nil {
+					log.Errorf("Couldn't create SRP client from request: %v", err)
+					h.ErrorHandler(w, err, http.StatusBadRequest)
+					return
+				}
+				endpoint := html.EscapeString(r.URL.Path)
+				if strings.Contains(endpoint, loginEndpoint) {
+					_, err = h.authClient.SignIn(params.Username, params.Password)
+				} else {
+					_, err = h.authClient.Register(params.Username, params.Password)
+				}
+				if err != nil {
+					h.ErrorHandler(w, err, http.StatusBadRequest)
+				}
+			case signOutEndpoint:
+				var params models.UserParams
+				// extract user credentials from HTTP request to send to AuthClient
+				err := common.DecodeJSONRequest(r, &params)
+				if err != nil {
+					h.ErrorHandler(w, err, http.StatusBadRequest)
+					return
+				}
+				_, err = h.authClient.SignOut(params.Username)
+				if err != nil {
+					h.ErrorHandler(w, err, http.StatusBadRequest)
+					return
+				}
+				log.Debugf("User %s successfully signed out", params.Username)
+			default:
+				// no default case
+			}
+			next.ServeHTTP(w, r)
+		})
 	}
-
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		head, _ := h.ShiftPath(r.URL.Path)
-		switch head {
-		case "/login":
-		case "/register":
-			authHandler(w, r)
-		default:
-			h.signOutHandler(w, r)
-		}
-	})
-}
-
-// authHandler is the HTTP handler used by the login and
-// registration endpoints. It creates a new SRP client from
-// the user params in the request
-
-func (h AuthHandler) signOutHandler(w http.ResponseWriter, req *http.Request) {
-	var params models.UserParams
-	// extract user credentials from HTTP request to send to AuthClient
-	err := common.DecodeJSONRequest(req, &params)
-	if err != nil {
-		h.ErrorHandler(w, err, http.StatusBadRequest)
-		return
-	}
-	_, err = h.authClient.SignOut(params.Username)
-	if err != nil {
-		h.ErrorHandler(w, err, http.StatusBadRequest)
-		return
-	}
-	log.Debugf("User %s successfully signed out", params.Username)
 }

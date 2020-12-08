@@ -20,13 +20,14 @@ var (
 // UIHandler is an interface UI handlers must implement
 type UIHandler interface {
 	// Routes is a map of UI server paths to handler funcs
-	ConfigureRoutes(r *mux.Router) http.Handler
+	ConfigureRoutes(r *mux.Router) func(http.Handler) http.Handler
 }
 
 // Handler  is a representation of a group of handlers
 // related to a specific product (i.e. Yinbi)
 type Handler struct {
 	UIHandler
+	http.Handler
 	authAddr   string
 	yinbiAddr  string
 	HTTPClient *http.Client
@@ -40,7 +41,7 @@ func NewHandler(params api.APIParams) Handler {
 	}
 }
 
-func (h Handler) ShiftPath(p string) (head, tail string) {
+func (h Handler) GetPath(p string) (head, tail string) {
 	p = path.Clean("/" + p)
 	i := strings.Index(p[1:], "/") + 1
 	if i <= 0 {

@@ -16,6 +16,11 @@ import (
 )
 
 const (
+	accountEndpoint = "/account"
+	paymentEndpoint = "/payment"
+	userEndpoint    = "/user"
+	walletEndpoint  = "/wallet"
+
 	accountDetailsEndpoint      = "/account/details"
 	accountTransactionsEndpoint = "/account/transactions"
 	createAccountEndpoint       = "/user/account/new"
@@ -50,29 +55,33 @@ type YinbiHandler struct {
 type ImportWalletParams = client.ImportWalletParams
 type ImportWalletResponse = client.ImportWalletResponse
 
-func (h YinbiHandler) ConfigureRoutes(r *mux.Router) http.Handler {
+func (h YinbiHandler) ConfigureRoutes(r *mux.Router) func(http.Handler) http.Handler {
 
 	log.Debug("Configuring Yinbi routes")
 
-	accountRouter := r.PathPrefix("/account").Subrouter()
-	walletRouter := r.PathPrefix("/wallet").Subrouter()
-	paymentRouter := r.PathPrefix("/payment").Subrouter()
-	userRouter := r.PathPrefix("/user").Subrouter()
+	accountRouter := r.PathPrefix(accountEndpoint).Subrouter()
+	walletRouter := r.PathPrefix(walletEndpoint).Subrouter()
+	paymentRouter := r.PathPrefix(paymentEndpoint).Subrouter()
+	userRouter := r.PathPrefix(userEndpoint).Subrouter()
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		head, _ := h.ShiftPath(r.URL.Path)
-		switch head {
-		case "/payment":
-			paymentRouter.ServeHTTP(w, r)
-		case "/account":
-			accountRouter.ServeHTTP(w, r)
-		case "/user":
-			userRouter.ServeHTTP(w, r)
-		case "/wallet":
-		default:
-			walletRouter.ServeHTTP(w, r)
-		}
-	})
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			head, _ := h.GetPath(r.URL.Path)
+			switch head {
+			case paymentEndpoint:
+				paymentRouter.ServeHTTP(w, r)
+			case accountEndpoint:
+				accountRouter.ServeHTTP(w, r)
+			case userEndpoint:
+				userRouter.ServeHTTP(w, r)
+			case walletEndpoint:
+				walletRouter.ServeHTTP(w, r)
+			default:
+				// no default case
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 func New(params api.APIParams) YinbiHandler {
@@ -94,7 +103,7 @@ func NewWithAuth(params api.APIParams,
 }
 
 func (h YinbiHandler) walletHandler(w http.ResponseWriter, r *http.Request) {
-	_, tail := h.ShiftPath(r.URL.Path)
+	_, tail := h.GetPath(r.URL.Path)
 	switch tail {
 	case "/redeem/codes":
 		url := h.GetAuthAddr(redeemCodesEndpoint)
@@ -163,7 +172,7 @@ func (h YinbiHandler) paymentHandler() http.Handler {
 
 func (h YinbiHandler) userHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, tail := h.ShiftPath(r.URL.Path)
+		_, tail := h.GetPath(r.URL.Path)
 		switch tail {
 		// createAccountHandler is the HTTP handler used to create new
 		// Yinbi accounts

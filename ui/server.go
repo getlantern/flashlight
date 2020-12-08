@@ -152,7 +152,7 @@ func (s *Server) attachHandlers(params ServerParams) {
 	}
 
 	for _, handler := range handlers {
-		s.Handle("/", handler.ConfigureRoutes(s.mux))
+		s.mux.Use(handler.ConfigureRoutes(s.mux))
 	}
 
 	s.Handle("/startup", util.NoCache(http.HandlerFunc(startupHandler)))
