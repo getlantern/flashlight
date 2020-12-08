@@ -10,7 +10,6 @@ import (
 	"github.com/getlantern/auth-server/api"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
-	"github.com/gorilla/mux"
 )
 
 var (
@@ -19,8 +18,9 @@ var (
 
 // UIHandler is an interface UI handlers must implement
 type UIHandler interface {
-	// Routes is a map of UI server paths to handler funcs
-	ConfigureRoutes(r *mux.Router) func(http.Handler) http.Handler
+	// ConfigureRoutes is used to setup a collection of routes
+	// used by the given UI handler. It returns an http.Handler
+	ConfigureRoutes() http.Handler
 }
 
 // Handler  is a representation of a group of handlers

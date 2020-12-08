@@ -21,24 +21,21 @@ const (
 	userEndpoint    = "/user"
 	walletEndpoint  = "/wallet"
 
-	// account endpoints
-	accountDetailsEndpoint      = "/details"
-	accountTransactionsEndpoint = "/transactions"
-	accountRecoverEndpoint      = "/recover"
-	resetPasswordEndpoint       = "/password/reset"
-
 	importEndpoint      = "/import"
 	saveAddressEndpoint = "/address"
+
+	// wallet endpoints
+	redeemCodesEndpoint     = "/redeem/codes"
+	redemptionCodesEndpoint = "/codes"
 
 	// user endpoints
 	createAccountEndpoint  = "/account/new"
 	createMnemonicEndpoint = "/mnemonic"
 
-	importWalletEndpoint    = "/wallet/import"
-	recoverAccountEndpoint  = "/account/recover"
-	redeemCodesEndpoint     = "/wallet/redeem/codes"
-	sendPaymentEndpoint     = "/payment/new"
-	redemptionCodesEndpoint = "/wallet/codes"
+	importWalletEndpoint = "/wallet/import"
+
+	// payment endpoints
+	sendPaymentEndpoint = "/new"
 )
 
 var (
@@ -61,33 +58,17 @@ type YinbiHandler struct {
 type ImportWalletParams = client.ImportWalletParams
 type ImportWalletResponse = client.ImportWalletResponse
 
-func (h YinbiHandler) ConfigureRoutes(r *mux.Router) func(http.Handler) http.Handler {
+func (h YinbiHandler) ConfigureRoutes() http.Handler {
 
 	log.Debug("Configuring Yinbi routes")
 
-	accountRouter := r.PathPrefix(accountEndpoint).Subrouter()
-	walletRouter := r.PathPrefix(walletEndpoint).Subrouter()
-	paymentRouter := r.PathPrefix(paymentEndpoint).Subrouter()
-	userRouter := r.PathPrefix(userEndpoint).Subrouter()
+	yinbiRouter := mux.NewRouter()
 
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			head, _ := h.GetPath(r.URL.Path)
-			switch head {
-			case paymentEndpoint:
-				paymentRouter.ServeHTTP(w, r)
-			case accountEndpoint:
-				accountRouter.ServeHTTP(w, r)
-			case userEndpoint:
-				userRouter.ServeHTTP(w, r)
-			case walletEndpoint:
-				walletRouter.ServeHTTP(w, r)
-			default:
-				// no default case
-			}
-			next.ServeHTTP(w, r)
-		})
-	}
+	yinbiRouter.PathPrefix(accountEndpoint).Subrouter().Handle("/", h.accountHandler())
+	yinbiRouter.PathPrefix(walletEndpoint).Subrouter().Handle("/", h.walletHandler())
+	yinbiRouter.PathPrefix(paymentEndpoint).Subrouter().Handle("/", h.paymentHandler())
+	yinbiRouter.PathPrefix(userEndpoint).Subrouter().Handle("/", h.userHandler())
+	return yinbiRouter
 }
 
 func New(params api.APIParams) YinbiHandler {
@@ -108,14 +89,17 @@ func NewWithAuth(params api.APIParams,
 	return yinbiHandler
 }
 
-func (h YinbiHandler) walletHandler(w http.ResponseWriter, r *http.Request) {
-	_, tail := h.GetPath(r.URL.Path)
-	switch tail {
-	case "/redeem/codes":
+func (h YinbiHandler) walletHandler() http.Handler {
+
+	r := mux.NewRouter()
+
+	r.HandleFunc(redeemCodesEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		url := h.GetAuthAddr(redeemCodesEndpoint)
 		log.Debugf("Sending redeem codes request to %s", url)
 		h.ProxyHandler(url, r, w, nil)
-	case "/import":
+	})
+
+	r.HandleFunc(importEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		// importWalletHandler is the handler used to import wallets
 		// of existing yin.bi users
 		var params client.ImportWalletParams
@@ -133,7 +117,9 @@ func (h YinbiHandler) walletHandler(w http.ResponseWriter, r *http.Request) {
 		h.SuccessResponse(w, map[string]interface{}{
 			"address": pair.Address(),
 		})
-	case "/codes":
+	})
+
+	r.HandleFunc(redemptionCodesEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		// getRedemptionCodes is the handler used to look up
 		// voucher codes belonging to a Yinbi user
 		log.Debugf("Looking up redemption codes")
@@ -144,14 +130,17 @@ func (h YinbiHandler) walletHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		log.Debugf("Successfully retrived %d voucher codes", len(codes))
-	}
+	})
+
+	return r
 }
 
 // sendPaymentHandler is the handler used to create Yinbi payments
 // The password included with the request is used to look up the
 // user's secret key in the Yinbi keystore.
 func (h YinbiHandler) paymentHandler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	paymentRouter := mux.NewRouter()
+	paymentRouter.HandleFunc(sendPaymentEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		var params client.PaymentParams
 		err := common.DecodeJSONRequest(r, &params)
 		if err != nil {
@@ -173,47 +162,50 @@ func (h YinbiHandler) paymentHandler() http.Handler {
 		h.SuccessResponse(w, map[string]interface{}{
 			"tx_id": resp.Hash,
 		})
-	})
+	}).Methods("POST")
+	return paymentRouter
 }
 
 func (h YinbiHandler) userHandler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, tail := h.GetPath(r.URL.Path)
-		switch tail {
-		// createAccountHandler is the HTTP handler used to create new
-		// Yinbi accounts
-		// First, the mnemonic is extracted from the request.
-		// This returns a full keypair with signing capabilities
-		// After the account has been created, we store the encrypted
-		// secret key in the key store and create a trust line to the
-		// Yinbi asset
-		case createAccountEndpoint:
-			log.Debug("Received new create Yinbi account request")
-			var params api.CreateAccountParams
-			err := common.DecodeJSONRequest(r, &params)
-			if err != nil {
-				return
-			}
-			err = h.yinbiClient.CreateAccount(&params)
-			if err != nil {
-				h.ErrorHandler(w, err, http.StatusInternalServerError)
-			}
-		case createMnemonicEndpoint:
-			mnemonic := h.yinbiClient.CreateMnemonic()
-			h.SuccessResponse(w, map[string]interface{}{
-				"mnemonic": mnemonic,
-			})
-		case saveAddressEndpoint:
-			// saveAddressHandler is the handler used to save new account
-			// addresses for the given user
-			address := r.URL.Query().Get("address")
-			_, err := h.authClient.SaveAddress(address)
-			if err != nil {
-				err = fmt.Errorf("Error saving user address: %v", err)
-				h.ErrorHandler(w, err, http.StatusBadRequest)
-				return
-			}
-			log.Debug("Successfully saved address")
+	r := mux.NewRouter()
+	// createAccountHandler is the HTTP handler used to create new
+	// Yinbi accounts
+	// First, the mnemonic is extracted from the request.
+	// This returns a full keypair with signing capabilities
+	// After the account has been created, we store the encrypted
+	// secret key in the key store and create a trust line to the
+	// Yinbi asset
+	r.HandleFunc(createAccountEndpoint, func(w http.ResponseWriter, r *http.Request) {
+		log.Debug("Received new create Yinbi account request")
+		var params api.CreateAccountParams
+		err := common.DecodeJSONRequest(r, &params)
+		if err != nil {
+			return
 		}
-	})
+		err = h.yinbiClient.CreateAccount(&params)
+		if err != nil {
+			h.ErrorHandler(w, err, http.StatusInternalServerError)
+		}
+	}).Methods("POST")
+	r.HandleFunc(createMnemonicEndpoint, func(w http.ResponseWriter, r *http.Request) {
+		mnemonic := h.yinbiClient.CreateMnemonic()
+		h.SuccessResponse(w, map[string]interface{}{
+			"mnemonic": mnemonic,
+		})
+	}).Methods("POST")
+	r.HandleFunc(saveAddressEndpoint, func(w http.ResponseWriter, r *http.Request) {
+		// saveAddressHandler is the handler used to save new account
+		// addresses for the given user
+		address := r.URL.Query().Get("address")
+		_, err := h.authClient.SaveAddress(address)
+		if err != nil {
+			err = fmt.Errorf("Error saving user address: %v", err)
+			h.ErrorHandler(w, err, http.StatusBadRequest)
+			return
+		}
+		log.Debug("Successfully saved address")
+	}).Methods("POST")
+	r.Handle(accountTransactionsEndpoint, h.getAccountTransactions()).Methods("GET")
+	r.Handle(accountRecoverEndpoint, h.recoverAccount()).Methods("POST")
+	return r
 }
