@@ -95,10 +95,6 @@ func (h Handler) ProxyHandler(url string, req *http.Request, w http.ResponseWrit
 		onResponse)
 }
 
-/*func (h Handler) ErrorHandler(w http.ResponseWriter, err interface{}, errorCode int) {
-	ErrorHandler(w, err, errorCode)
-}*/
-
 // ErrorHandler is an error handler that takes an error or Errors and writes the
 // encoded JSON response to the client
 func ErrorHandler(w http.ResponseWriter, err interface{}, errorCode int) {
