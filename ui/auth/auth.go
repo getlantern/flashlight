@@ -11,8 +11,6 @@ import (
 	"github.com/getlantern/auth-server/models"
 	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/lantern-server/common"
-	"github.com/gorilla/mux"
 )
 
 const (
@@ -52,10 +50,9 @@ func (h AuthHandler) ConfigureRoutes() http.Handler {
 		// the user params in the request
 		var params models.UserParams
 		// extract user credentials from HTTP request to send to AuthClient
-		err := common.DecodeJSONRequest(r, &params)
+		err := handler.DecodeJSONRequest(w, r, &params)
 		if err != nil {
 			log.Errorf("Couldn't create SRP client from request: %v", err)
-			h.ErrorHandler(w, err, http.StatusBadRequest)
 			return
 		}
 		endpoint := html.EscapeString(r.URL.Path)
@@ -65,25 +62,24 @@ func (h AuthHandler) ConfigureRoutes() http.Handler {
 			_, err = h.authClient.Register(params.Username, params.Password)
 		}
 		if err != nil {
-			h.ErrorHandler(w, err, http.StatusBadRequest)
+			handler.ErrorHandler(w, err, http.StatusBadRequest)
 		}
 	}
 
-	r := mux.NewRouter()
+	r := handler.NewRouter()
 
 	r.HandleFunc(loginEndpoint, authHandler).Methods(http.MethodPost)
 	r.HandleFunc(registrationEndpoint, authHandler).Methods(http.MethodPost)
 	r.HandleFunc(signOutEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		var params models.UserParams
 		// extract user credentials from HTTP request to send to AuthClient
-		err := common.DecodeJSONRequest(r, &params)
+		err := handler.DecodeJSONRequest(w, r, &params)
 		if err != nil {
-			h.ErrorHandler(w, err, http.StatusBadRequest)
 			return
 		}
 		_, err = h.authClient.SignOut(params.Username)
 		if err != nil {
-			h.ErrorHandler(w, err, http.StatusBadRequest)
+			handler.ErrorHandler(w, err, http.StatusBadRequest)
 			return
 		}
 		log.Debugf("User %s successfully signed out", params.Username)

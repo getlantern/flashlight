@@ -9,10 +9,9 @@ import (
 	"github.com/getlantern/auth-server/api"
 	authclient "github.com/getlantern/auth-server/client"
 	"github.com/getlantern/flashlight/ui/auth"
+	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/golog"
-	"github.com/getlantern/lantern-server/common"
 	"github.com/getlantern/yinbi-server/client"
-	"github.com/gorilla/mux"
 )
 
 const (
@@ -60,7 +59,7 @@ func (h YinbiHandler) ConfigureRoutes() http.Handler {
 
 	log.Debug("Configuring Yinbi routes")
 
-	yinbiRouter := mux.NewRouter()
+	yinbiRouter := handler.NewRouter()
 
 	yinbiRouter.PathPrefix(accountEndpoint).Subrouter().Handle("/", h.accountHandler())
 	yinbiRouter.PathPrefix(walletEndpoint).Subrouter().Handle("/", h.walletHandler())
@@ -91,7 +90,7 @@ func NewWithAuth(params api.APIParams,
 // UI routes
 func (h YinbiHandler) walletHandler() http.Handler {
 
-	r := mux.NewRouter()
+	r := handler.NewRouter()
 
 	r.HandleFunc(redeemCodesEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		url := h.GetAuthAddr(redeemCodesEndpoint)
@@ -103,15 +102,14 @@ func (h YinbiHandler) walletHandler() http.Handler {
 		// importWalletHandler is the handler used to import wallets
 		// of existing yin.bi users
 		var params client.ImportWalletParams
-		err := common.DecodeJSONRequest(r, &params)
+		err := handler.DecodeJSONRequest(w, r, &params)
 		if err != nil {
-			h.ErrorHandler(w, err, http.StatusBadRequest)
 			return
 		}
 		pair, err := h.yinbiClient.ImportWallet(&params)
 		if err != nil {
 			log.Errorf("Error sending import wallet request: %v", err)
-			h.ErrorHandler(w, err, http.StatusBadRequest)
+			handler.ErrorHandler(w, err, http.StatusBadRequest)
 			return
 		}
 		h.SuccessResponse(w, map[string]interface{}{
@@ -126,7 +124,7 @@ func (h YinbiHandler) walletHandler() http.Handler {
 		codes, err := h.yinbiClient.GetRedemptionCodes()
 		if err != nil {
 			log.Debugf("Error retrieving codes: %v", err)
-			h.ErrorHandler(w, err, http.StatusInternalServerError)
+			handler.ErrorHandler(w, err, http.StatusInternalServerError)
 			return
 		}
 		log.Debugf("Successfully retrived %d voucher codes", len(codes))
@@ -139,24 +137,23 @@ func (h YinbiHandler) walletHandler() http.Handler {
 // The password included with the request is used to look up the
 // user's secret key in the Yinbi keystore.
 func (h YinbiHandler) paymentHandler() http.Handler {
-	paymentRouter := mux.NewRouter()
+	paymentRouter := handler.NewRouter()
 	paymentRouter.HandleFunc(sendPaymentEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		var params client.PaymentParams
-		err := common.DecodeJSONRequest(r, &params)
+		err := handler.DecodeJSONRequest(w, r, &params)
 		if err != nil {
-			h.ErrorHandler(w, err, http.StatusBadRequest)
 			return
 		}
 		errors := params.Validate()
 		if len(errors) > 0 {
-			h.ErrorHandler(w, errors, http.StatusBadRequest)
+			handler.ErrorHandler(w, errors, http.StatusBadRequest)
 			return
 		}
 		log.Debugf("Successfully retrieved keypair for %s", params.Username)
 		resp, err := h.yinbiClient.SendPayment(params)
 		if err != nil {
 			log.Debugf("Error sending payment: %v", err)
-			h.ErrorHandler(w, err, http.StatusInternalServerError)
+			handler.ErrorHandler(w, err, http.StatusInternalServerError)
 			return
 		}
 		h.SuccessResponse(w, map[string]interface{}{
@@ -169,7 +166,7 @@ func (h YinbiHandler) paymentHandler() http.Handler {
 // userHandler is the http.Handler used for Yinbi wallet user related
 // UI routes
 func (h YinbiHandler) userHandler() http.Handler {
-	r := mux.NewRouter()
+	r := handler.NewRouter()
 
 	// createAccountHandler is the HTTP handler used to create new
 	// Yinbi accounts
@@ -182,13 +179,13 @@ func (h YinbiHandler) userHandler() http.Handler {
 	r.HandleFunc(createAccountEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		log.Debug("Received new create Yinbi account request")
 		var params api.CreateAccountParams
-		err := common.DecodeJSONRequest(r, &params)
+		err := handler.DecodeJSONRequest(w, r, &params)
 		if err != nil {
 			return
 		}
 		err = h.yinbiClient.CreateAccount(&params)
 		if err != nil {
-			h.ErrorHandler(w, err, http.StatusInternalServerError)
+			handler.ErrorHandler(w, err, http.StatusInternalServerError)
 		}
 	}).Methods(http.MethodPost)
 	r.HandleFunc(createMnemonicEndpoint, func(w http.ResponseWriter, r *http.Request) {
@@ -204,7 +201,7 @@ func (h YinbiHandler) userHandler() http.Handler {
 		_, err := h.authClient.SaveAddress(address)
 		if err != nil {
 			err = fmt.Errorf("Error saving user address: %v", err)
-			h.ErrorHandler(w, err, http.StatusBadRequest)
+			handler.ErrorHandler(w, err, http.StatusBadRequest)
 			return
 		}
 		log.Debug("Successfully saved address")

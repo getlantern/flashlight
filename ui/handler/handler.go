@@ -8,6 +8,7 @@ import (
 	"github.com/getlantern/auth-server/api"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
+	"github.com/gorilla/mux"
 )
 
 var (
@@ -31,6 +32,7 @@ type Handler struct {
 	HTTPClient *http.Client
 }
 
+// NewHandler creates a new UI Handler
 func NewHandler(params api.APIParams) Handler {
 	return Handler{
 		authAddr:   params.AuthServerAddr,
@@ -39,6 +41,16 @@ func NewHandler(params api.APIParams) Handler {
 	}
 }
 
+// NewRouter creates and returns a new mux.Router
+// instance, configured to use the default UI middleware
+func NewRouter() *mux.Router {
+	r := mux.NewRouter()
+	r.Use(BodyParser)
+	return r
+}
+
+// SuccessResponse is an API response used to inform the
+// UI a request succeeded. It includes `success: true`
 func (h Handler) SuccessResponse(w http.ResponseWriter, args map[string]interface{}) {
 	args["success"] = true
 	common.WriteJSON(w, http.StatusOK, args)
@@ -83,9 +95,13 @@ func (h Handler) ProxyHandler(url string, req *http.Request, w http.ResponseWrit
 		onResponse)
 }
 
+/*func (h Handler) ErrorHandler(w http.ResponseWriter, err interface{}, errorCode int) {
+	ErrorHandler(w, err, errorCode)
+}*/
+
 // ErrorHandler is an error handler that takes an error or Errors and writes the
 // encoded JSON response to the client
-func (h Handler) ErrorHandler(w http.ResponseWriter, err interface{}, errorCode int) {
+func ErrorHandler(w http.ResponseWriter, err interface{}, errorCode int) {
 	var resp api.ApiResponse
 	switch err.(type) {
 	case string:
@@ -95,5 +111,6 @@ func (h Handler) ErrorHandler(w http.ResponseWriter, err interface{}, errorCode 
 	case api.Errors:
 		resp.Errors = err.(api.Errors)
 	}
+	log.Errorf("Unable to process HTTP request: %v", resp)
 	common.WriteJSON(w, errorCode, &resp)
 }
