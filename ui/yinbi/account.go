@@ -37,6 +37,8 @@ func (h YinbiHandler) resetPassword(w http.ResponseWriter, r *http.Request) {
 	err = h.yinbiClient.ResetPassword(&params)
 	if err != nil {
 		handler.ErrorHandler(w, err, http.StatusBadRequest)
+	} else {
+		handler.SuccessResponse(w, nil)
 	}
 }
 
@@ -56,7 +58,7 @@ func (h YinbiHandler) recoverAccount(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Debugf("Successfully recovered user %s's account using Yinbi key",
 		userResponse.User.Username)
-	h.SuccessResponse(w, map[string]interface{}{
+	handler.SuccessResponse(w, map[string]interface{}{
 		"user": userResponse.User,
 	})
 }
@@ -81,7 +83,7 @@ func (h YinbiHandler) getAccountDetails(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	log.Debugf("Successfully retrived balance for %s", address)
-	h.SuccessResponse(w, map[string]interface{}{
+	handler.SuccessResponse(w, map[string]interface{}{
 		"balances": details.Balances,
 	})
 
@@ -98,7 +100,7 @@ func (h YinbiHandler) getAccountTransactions(w http.ResponseWriter, r *http.Requ
 		handler.ErrorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
-	h.SuccessResponse(w, map[string]interface{}{
+	handler.SuccessResponse(w, map[string]interface{}{
 		"payments": payments,
 	})
 }

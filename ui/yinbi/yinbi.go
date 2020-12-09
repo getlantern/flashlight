@@ -112,7 +112,7 @@ func (h YinbiHandler) walletHandler() http.Handler {
 			handler.ErrorHandler(w, err, http.StatusBadRequest)
 			return
 		}
-		h.SuccessResponse(w, map[string]interface{}{
+		handler.SuccessResponse(w, map[string]interface{}{
 			"address": pair.Address(),
 		})
 	}).Methods(http.MethodPost)
@@ -128,6 +128,9 @@ func (h YinbiHandler) walletHandler() http.Handler {
 			return
 		}
 		log.Debugf("Successfully retrived %d voucher codes", len(codes))
+		handler.SuccessResponse(w, map[string]interface{}{
+			"codes": codes,
+		})
 	})
 
 	return r
@@ -156,7 +159,7 @@ func (h YinbiHandler) paymentHandler() http.Handler {
 			handler.ErrorHandler(w, err, http.StatusInternalServerError)
 			return
 		}
-		h.SuccessResponse(w, map[string]interface{}{
+		handler.SuccessResponse(w, map[string]interface{}{
 			"tx_id": resp.Hash,
 		})
 	}).Methods("POST")
@@ -186,11 +189,13 @@ func (h YinbiHandler) userHandler() http.Handler {
 		err = h.yinbiClient.CreateAccount(&params)
 		if err != nil {
 			handler.ErrorHandler(w, err, http.StatusInternalServerError)
+		} else {
+			handler.SuccessResponse(w)
 		}
 	}).Methods(http.MethodPost)
 	r.HandleFunc(createMnemonicEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		mnemonic := h.yinbiClient.CreateMnemonic()
-		h.SuccessResponse(w, map[string]interface{}{
+		handler.SuccessResponse(w, map[string]interface{}{
 			"mnemonic": mnemonic,
 		})
 	}).Methods(http.MethodPost)
@@ -202,9 +207,10 @@ func (h YinbiHandler) userHandler() http.Handler {
 		if err != nil {
 			err = fmt.Errorf("Error saving user address: %v", err)
 			handler.ErrorHandler(w, err, http.StatusBadRequest)
-			return
+		} else {
+			log.Debug("Successfully saved address")
+			handler.SuccessResponse(w)
 		}
-		log.Debug("Successfully saved address")
 	}).Methods(http.MethodPost)
 	return r
 }

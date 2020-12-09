@@ -12,7 +12,10 @@ import (
 )
 
 var (
-	log = golog.LoggerFor("flashlight.ui.handler")
+	log             = golog.LoggerFor("flashlight.ui.handler")
+	successResponse = map[string]interface{}{
+		"success": true,
+	}
 )
 
 // UIHandler is an interface UI handlers must implement
@@ -47,13 +50,6 @@ func NewRouter() *mux.Router {
 	r := mux.NewRouter()
 	r.Use(BodyParser)
 	return r
-}
-
-// SuccessResponse is an API response used to inform the
-// UI a request succeeded. It includes `success: true`
-func (h Handler) SuccessResponse(w http.ResponseWriter, args map[string]interface{}) {
-	args["success"] = true
-	common.WriteJSON(w, http.StatusOK, args)
 }
 
 // GetAuthAddr combines the given uri with the Lantern authentication server address
@@ -93,6 +89,18 @@ func (h Handler) ProxyHandler(url string, req *http.Request, w http.ResponseWrit
 ) error {
 	return common.ProxyHandler(url, h.HTTPClient, req, w,
 		onResponse)
+}
+
+// SuccessResponse is an API response used to inform the
+// UI a request succeeded. It includes `success: true`
+func SuccessResponse(w http.ResponseWriter, vargs ...map[string]interface{}) {
+	if len(vargs) == 0 {
+		common.WriteJSON(w, http.StatusOK, successResponse)
+	} else {
+		args := vargs[0]
+		args["success"] = true
+		common.WriteJSON(w, http.StatusOK, args)
+	}
 }
 
 // ErrorHandler is an error handler that takes an error or Errors and writes the
