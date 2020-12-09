@@ -11,10 +11,16 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// successKey is the name of the boolean field
+// a successful API response is populated with
+const successKey = "success"
+
 var (
-	log             = golog.LoggerFor("flashlight.ui.handler")
+	log = golog.LoggerFor("flashlight.ui.handler")
+	// successResponse is the default args returned
+	// with a successful API response
 	successResponse = map[string]interface{}{
-		"success": true,
+		successKey: true,
 	}
 )
 
@@ -94,13 +100,14 @@ func (h Handler) ProxyHandler(url string, req *http.Request, w http.ResponseWrit
 // SuccessResponse is an API response used to inform the
 // UI a request succeeded. It includes `success: true`
 func SuccessResponse(w http.ResponseWriter, vargs ...map[string]interface{}) {
+	var args map[string]interface{}
 	if len(vargs) == 0 {
-		common.WriteJSON(w, http.StatusOK, successResponse)
+		args = successResponse
 	} else {
-		args := vargs[0]
-		args["success"] = true
-		common.WriteJSON(w, http.StatusOK, args)
+		args = vargs[0]
+		args[successKey] = true
 	}
+	common.WriteJSON(w, http.StatusOK, args)
 }
 
 // ErrorHandler is an error handler that takes an error or Errors and writes the
