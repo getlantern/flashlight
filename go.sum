@@ -359,8 +359,8 @@ github.com/getlantern/http-proxy v0.0.3-0.20200407205042-2382946d79e7 h1:pMuvepv
 github.com/getlantern/http-proxy v0.0.3-0.20200407205042-2382946d79e7/go.mod h1:w1u+Y1H2eEhJrUARfzPxVKMEHvvW96PcYujowufGV1s=
 github.com/getlantern/http-proxy-lantern/v2 v2.6.23 h1:mVjHkSht0wcJ5NKUdhvgWqtJsL5npEPorT/7Lgy8A70=
 github.com/getlantern/http-proxy-lantern/v2 v2.6.23/go.mod h1:xjmg6dahhQAPXJZnxJni3UJprwnD7NM3x0oT38Lq9/I=
-github.com/getlantern/httpseverywhere v0.0.0-20190322220559-c364cfbfeb57 h1:pKgsEq/uk8TX1hsavQ/dVa/4VDew8c+eHnMtgNAr0uE=
-github.com/getlantern/httpseverywhere v0.0.0-20190322220559-c364cfbfeb57/go.mod h1:4HB5d0IkyVGnvPSajTJQC5UkPub0t/toqULnaa0P3/4=
+github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca h1:Of3VwFEfKbVnK5/VGy05XUbi6QvTs5Y2eLDfPv3O50E=
+github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca/go.mod h1:TNC/xJFmctsSGyXqcnVWwCRCPD/4zGQP7yBVnLDRa/U=
 github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c h1:+JnT+Rwa/3rksc4Zi0u6fJ/WX+tPK58GtsrcXWVUU2U=
 github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c/go.mod h1:6yS3MFZmWDK0zxWXX0619QzZpqmCaHJ8P83Ee4QcTq0=
 github.com/getlantern/idletiming v0.0.0-20190529182719-d2fbc83372a5/go.mod h1:MGP8kEgZGgAhvHISt0hJGQgxg/VAqGdw3+kSZBnfC/4=
