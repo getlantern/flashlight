@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
+	"github.com/getlantern/flashlight/chained"
 )
 
 // Memory management on iOS is critical because we're running in a network extension that's limited to 15 MB of memory. We handle this using several techniques.
@@ -35,6 +36,11 @@ var (
 	profilePath   string
 	profilePathMx sync.RWMutex
 )
+
+func init() {
+	// set a more aggressive idle timeout to reduce memory usage
+	chained.IdleTimeout = 10 * time.Second
+}
 
 func SetProfilePath(path string) {
 	profilePathMx.Lock()
