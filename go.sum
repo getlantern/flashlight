@@ -245,6 +245,8 @@ github.com/elliotchance/orderedmap v1.2.2/go.mod h1:8hdSl6jmveQw8ScByd3AaNHNk51R
 github.com/etcd-io/bbolt v1.3.3/go.mod h1:ZF2nL25h33cCyBtcyWeZ2/I3HQOfTP+0PIEvHjkjCrw=
 github.com/eycorsican/go-tun2socks v1.16.11 h1:+hJDNgisrYaGEqoSxhdikMgMJ4Ilfwm/IZDrWRrbaH8=
 github.com/eycorsican/go-tun2socks v1.16.11/go.mod h1:wgB2BFT8ZaPKyKOQ/5dljMG/YIow+AIXyq4KBwJ5sGQ=
+github.com/eycorsican/go-tun2socks v1.16.12-0.20201107203946-301549c435ff h1:SRx8t8Kk8oPRLPC1Y09kwYgRdkc38O8QYXTbqwzRb5g=
+github.com/eycorsican/go-tun2socks v1.16.12-0.20201107203946-301549c435ff/go.mod h1:wgB2BFT8ZaPKyKOQ/5dljMG/YIow+AIXyq4KBwJ5sGQ=
 github.com/eycorsican/go-tun2socks v1.16.12-0.20201127215618-425fb2eb0eb1 h1:viYVgLmJAU/sKWKCqT/+Xw1L8M6qKqDMeuWsWplJkk0=
 github.com/eycorsican/go-tun2socks v1.16.12-0.20201127215618-425fb2eb0eb1/go.mod h1:qWv5Hxi8RbVaC0Omn/fnXSTm7tDv6AM/n23UGKMlFEg=
 github.com/fasthttp-contrib/websocket v0.0.0-20160511215533-1f3b11f56072/go.mod h1:duJ4Jxv5lDcvg4QuQr0oowTf7dz4/CR8NtyCooz9HL8=
@@ -351,6 +353,10 @@ github.com/getlantern/fronted v0.0.0-20201209110050-b2198063e40c h1:W/XzBdn3B6Id
 github.com/getlantern/fronted v0.0.0-20201209110050-b2198063e40c/go.mod h1:PiQruSLjH2pusuwOOMTesd/nc3rnWkh1x/BZTBsx7p0=
 github.com/getlantern/fronted v0.0.0-20201211142346-2212686329d7 h1:Ddyil5JcrgN/lTcmTsWoUfED///isKKozGwN2SeznZw=
 github.com/getlantern/fronted v0.0.0-20201211142346-2212686329d7/go.mod h1:PiQruSLjH2pusuwOOMTesd/nc3rnWkh1x/BZTBsx7p0=
+github.com/getlantern/fronted v0.0.0-20201211160006-8fe16c07bec6 h1:gJLuvWwcndADBSrFgiak0fofvD7ox1MJI06b2+iwx9g=
+github.com/getlantern/fronted v0.0.0-20201211160006-8fe16c07bec6/go.mod h1:PiQruSLjH2pusuwOOMTesd/nc3rnWkh1x/BZTBsx7p0=
+github.com/getlantern/fronted v0.0.0-20201211172922-2b863d32ad35 h1:zaMk34RUuEOPlHaV4kA7tQVKZ4mbioAFN3Um8oxC6LU=
+github.com/getlantern/fronted v0.0.0-20201211172922-2b863d32ad35/go.mod h1:PiQruSLjH2pusuwOOMTesd/nc3rnWkh1x/BZTBsx7p0=
 github.com/getlantern/geo v0.0.0-20200716105557-5b87700e3d54 h1:ADPpPso4Tdu8Eo5sQ95w5N/s/lJKQRkk3HZcPBUzk90=
 github.com/getlantern/geo v0.0.0-20200716105557-5b87700e3d54/go.mod h1:ul0vx2453iL3abtagTRgTipWjK0p3hU98uHQl0e+EhE=
 github.com/getlantern/geolookup v0.0.0-20200121184643-02217082e50f h1:1yPtM1N/MTfSgzvEKbMhbaY7vFjp64nkzcDCX3JrdLs=
@@ -455,6 +461,10 @@ github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd h1:mn98vs69Kqw56iK
 github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd/go.mod h1:wKdY0ikOgzrWSeB9UyBVKPRhjXQ+vTb+BPeJuypUuNE=
 github.com/getlantern/netx v0.0.0-20201202133732-af5244d26505 h1:lmuV92VGIatNmx0ABvsZh/pf+io1y3JuQiOq3ITee/4=
 github.com/getlantern/netx v0.0.0-20201202133732-af5244d26505/go.mod h1:wKdY0ikOgzrWSeB9UyBVKPRhjXQ+vTb+BPeJuypUuNE=
+github.com/getlantern/netx v0.0.0-20201211180402-e90eb69bdaba h1:dV6cb5QNmx/9f7NVQLoofln5qu6mSwqr48PVzmGp9Cw=
+github.com/getlantern/netx v0.0.0-20201211180402-e90eb69bdaba/go.mod h1:wKdY0ikOgzrWSeB9UyBVKPRhjXQ+vTb+BPeJuypUuNE=
+github.com/getlantern/netx v0.0.0-20201211181711-08fda61c8b17 h1:M3EjMtf37htXt+rBKjGa+yVzW+CXKGlNC66jknw62Dg=
+github.com/getlantern/netx v0.0.0-20201211181711-08fda61c8b17/go.mod h1:wKdY0ikOgzrWSeB9UyBVKPRhjXQ+vTb+BPeJuypUuNE=
 github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b h1:zmsspqmbtaRMndpJRPSX40ebZBuu2MbBDpJ7Xb0RXQA=
 github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b/go.mod h1:8hWwZg+ROrvRlE/QHMOCRUzjKSObVv8FEOP6A5F6N0s=
 github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=

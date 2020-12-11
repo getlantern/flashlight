@@ -15,7 +15,7 @@ require (
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/dustin/go-humanize v1.0.0
-	github.com/eycorsican/go-tun2socks v1.16.12-0.20201127215618-425fb2eb0eb1
+	github.com/eycorsican/go-tun2socks v1.16.12-0.20201107203946-301549c435ff
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
@@ -34,7 +34,7 @@ require (
 	github.com/getlantern/event v0.0.0-20170919023932-f16a5563f52e
 	github.com/getlantern/eventual v1.0.0
 	github.com/getlantern/filepersist v0.0.0-20160317154340-c5f0cd24e799
-	github.com/getlantern/fronted v0.0.0-20201211142346-2212686329d7
+	github.com/getlantern/fronted v0.0.0-20201211172922-2b863d32ad35
 	github.com/getlantern/geolookup v0.0.0-20200121184643-02217082e50f
 	github.com/getlantern/go-ping v0.0.0-20191213124541-9d4b7e6e7de6
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
@@ -61,7 +61,7 @@ require (
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20201027015000-69ed0bd15259
-	github.com/getlantern/netx v0.0.0-20201202133732-af5244d26505
+	github.com/getlantern/netx v0.0.0-20201211181711-08fda61c8b17
 	github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b
 	github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6
 	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
