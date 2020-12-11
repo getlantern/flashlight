@@ -98,8 +98,11 @@ func (c *client) checkForCriticallyLowMemory() {
 
 func (c *client) reduceMemoryPressureIfNecessary() {
 	for c.memChecker.Check().Critical {
-		captureProfiles()
 		c.reduceMemoryPressure()
+	}
+	if c.memChecker.Check().Critical {
+		statsLog.Debug("Memory still critically low after taking all possible measures to reduce, capturing profiles")
+		captureProfiles()
 	}
 }
 
