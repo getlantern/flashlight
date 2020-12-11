@@ -65,7 +65,7 @@ func TestRewriteHTTPSRedirectLoop(t *testing.T) {
 	httpsRewriteInterval = 100 * time.Millisecond
 	client := newClient()
 	client.rewriteToHTTPS = httpseverywhere.Eager()
-	testURL := "http://www.google.com"
+	testURL := "http://www.hrc.org/"
 
 	req, _ := http.NewRequest("GET", testURL, nil)
 	resp, err := roundTrip(client, req)
@@ -73,13 +73,19 @@ func TestRewriteHTTPSRedirectLoop(t *testing.T) {
 		return
 	}
 	assert.Equal(t, http.StatusMovedPermanently, resp.StatusCode, "should rewrite to HTTPS at first")
+	assert.Equal(t, resp.Header.Get("Location"), "https://www.hrc.org/", "HTTPS Everywhere should redirect us.")
 
+	// The following is a bit brittle because it actually sends the request to the remote
+	// server, so we are beholden to what the server does. In this case, the server
+	// redirects to https://www.hrc.org:443/ as of this writing, which HTTPS Everywhere does
+	// not do, allowing us to differentiate between a local and a remote redirect.
 	req, _ = http.NewRequest("GET", testURL, nil)
 	resp, err = roundTrip(client, req)
 	if !assert.NoError(t, err) {
 		return
 	}
-	assert.NotEqual(t, http.StatusMovedPermanently, resp.StatusCode, "second request with same URL should not rewrite to avoid redirect loop")
+	assert.Equal(t, http.StatusMovedPermanently, resp.StatusCode, "second request should still hit the remote server and get redirected")
+	assert.Equal(t, resp.Header.Get("Location"), "https://www.hrc.org:443/", "second request with same URL should skip HTTPS Everywhere but still be redirected from the origin server")
 
 	time.Sleep(2 * httpsRewriteInterval)
 	req, _ = http.NewRequest("GET", testURL, nil)
@@ -88,6 +94,8 @@ func TestRewriteHTTPSRedirectLoop(t *testing.T) {
 		return
 	}
 	assert.Equal(t, http.StatusMovedPermanently, resp.StatusCode, "should rewrite to HTTPS some time later")
+	assert.Equal(t, resp.Header.Get("Location"), "https://www.hrc.org/", "HTTPS Everywhere should redirect us.")
+
 }
 
 // func TestAdSwap(t *testing.T) {
