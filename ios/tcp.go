@@ -3,7 +3,9 @@ package ios
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -21,14 +23,21 @@ const (
 // via our proxies.
 type proxiedTCPHandler struct {
 	dialOut      func(ctx context.Context, network, addr string) (net.Conn, error)
+	client       *client
 	grabber      dnsgrab.Server
 	mtu          int
 	dialingConns int64
 	copyingConns int64
-	mruConns     *mruConnList
+	closingConns int64
+	downstreams  *lruConnList
+	upstreams    map[io.Closer]io.Closer
+	mx           sync.RWMutex
 }
 
 func (h *proxiedTCPHandler) Handle(downstream net.Conn, addr *net.TCPAddr) error {
+	// before handling a new connection, make sure we're okay on memory
+	h.client.reduceMemoryPressureIfNecessary()
+
 	host, ok := h.grabber.ReverseLookup(addr.IP)
 	if !ok {
 		return log.Errorf("Invalid ip address %v, will not connect", addr.IP)
@@ -43,9 +52,12 @@ func (h *proxiedTCPHandler) Handle(downstream net.Conn, addr *net.TCPAddr) error
 		cancelContext()
 		return log.Errorf("Unable to dial %v: %v", addrString, err)
 	}
+	h.mx.Lock()
+	h.upstreams[downstream] = upstream
+	h.mx.Unlock()
 
 	go func() {
-		h.mruConns.mark(downstream)
+		h.downstreams.mark(downstream)
 		h.copy(downstream, upstream)
 		cancelContext()
 	}()
@@ -56,9 +68,15 @@ func (h *proxiedTCPHandler) Handle(downstream net.Conn, addr *net.TCPAddr) error
 func (h *proxiedTCPHandler) copy(downstream net.Conn, upstream net.Conn) {
 	atomic.AddInt64(&h.copyingConns, 1)
 	defer atomic.AddInt64(&h.copyingConns, -1)
+
 	defer downstream.Close()
 	defer upstream.Close()
-	defer h.mruConns.remove(downstream)
+	defer h.downstreams.remove(downstream)
+	defer func() {
+		h.mx.Lock()
+		delete(h.upstreams, downstream)
+		h.mx.Unlock()
+	}()
 
 	// Note - we don't pool these as pooling seems to create additional memory pressure somehow
 	bufOut := make([]byte, h.mtu)
@@ -66,7 +84,7 @@ func (h *proxiedTCPHandler) copy(downstream net.Conn, upstream net.Conn) {
 
 	// keeps the connection fresh in the LRU cache as long as we're reading or writing to it
 	keepFresh := func(_ int) {
-		h.mruConns.mark(downstream)
+		h.downstreams.mark(downstream)
 	}
 
 	outErr, inErr := netx.BidiCopyWithTracking(downstream, upstream, bufOut, bufIn, keepFresh, keepFresh)
@@ -86,16 +104,46 @@ func (h *proxiedTCPHandler) copy(downstream net.Conn, upstream net.Conn) {
 	logError(inErr)
 }
 
-func (h *proxiedTCPHandler) disconnect() {
-	conns := h.mruConns.removeAll()
-	for conn := range conns {
-		conn.Close()
+func (h *proxiedTCPHandler) closeOldestConn() bool {
+	downstream, ok := h.downstreams.removeOldest()
+	if ok {
+		h.forceClose(downstream)
 	}
+	return ok
+}
+
+func (h *proxiedTCPHandler) disconnect() {
+	downstreams := h.downstreams.removeAll()
+	for downstream := range downstreams {
+		// Close can actually take a while due to logic in both idletiming and measured, so to speed up our forced close, close downstream and upstream at the same time
+		// and on goroutines
+		go h.forceClose(downstream)
+	}
+}
+
+func (h *proxiedTCPHandler) forceClose(downstream io.Closer) {
+	h.mx.RLock()
+	upstream := h.upstreams[downstream.(net.Conn)]
+	h.mx.RUnlock()
+
+	h.closeConn(downstream)
+	if upstream != nil {
+		h.closeConn(upstream)
+	}
+}
+
+func (h *proxiedTCPHandler) closeConn(conn io.Closer) {
+	atomic.AddInt64(&h.closingConns, 1)
+	conn.Close()
+	atomic.AddInt64(&h.closingConns, -1)
 }
 
 func (h *proxiedTCPHandler) trackStats() {
 	for {
-		statsLog.Debugf("TCP Conns    Active: %d    Dialing: %d   Copying: %d", h.mruConns.len(), atomic.LoadInt64(&h.dialingConns), atomic.LoadInt64(&h.copyingConns))
+		h.mx.RLock()
+		numUpstreams := len(h.upstreams)
+		h.mx.RUnlock()
+		statsLog.Debugf("TCP Conns    Downstreams: %d    Upstreams: %d   Dialing: %d   Copying: %d   Closing: %d", h.downstreams.len(), numUpstreams, atomic.LoadInt64(&h.dialingConns), atomic.LoadInt64(&h.copyingConns), atomic.LoadInt64(&h.closingConns))
 		time.Sleep(1 * time.Second)
 	}
 }

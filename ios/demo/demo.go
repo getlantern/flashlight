@@ -46,6 +46,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -214,6 +215,7 @@ func main() {
 		}()
 	}
 
+	ios.SetProfilePath("/tmp/")
 	writer, err := ios.Client(&writerAdapter{dev}, &noopUDPDialer{}, &noopMemChecker{}, tmpDir, *mtu, "8.8.8.8", "8.8.4.4")
 	if err != nil {
 		log.Fatal(err)
@@ -241,7 +243,7 @@ func main() {
 type noopMemChecker struct{}
 
 func (c *noopMemChecker) Check() *ios.MemInfo {
-	return &ios.MemInfo{0, false}
+	return &ios.MemInfo{0, rand.Float64() > 0.95}
 }
 
 type writerAdapter struct {

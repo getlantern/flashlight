@@ -1,6 +1,7 @@
 package ios
 
 import (
+	"io"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -62,7 +63,7 @@ func (cb *UDPCallbacks) OnError(err error) {
 
 // OnClose is called when the connection is closed.
 func (cb *UDPCallbacks) OnClose() {
-	cb.h.mruConns.remove(cb.downstream)
+	cb.h.lruConns.remove(cb.downstream)
 	cb.h.Lock()
 	delete(cb.h.upstreams, cb.downstream)
 	cb.h.Unlock()
@@ -96,8 +97,8 @@ func (cb *UDPCallbacks) idleTiming() {
 		next := time.Duration(chained.IdleTimeout)
 		t.Reset(next)
 
-		// keep active connection fresh in LRU cache
-		cb.h.mruConns.mark(cb.downstream)
+		// keep active connection fresh in LRU list
+		cb.h.lruConns.mark(cb.downstream)
 	}
 
 	for {
@@ -119,23 +120,26 @@ func (cb *UDPCallbacks) idleTiming() {
 type directUDPHandler struct {
 	sync.RWMutex
 
+	client          *client
 	dialer          UDPDialer
 	grabber         dnsgrab.Server
 	capturedDNSHost string
 
 	upstreams map[core.UDPConn]UDPConn
-	mruConns  *mruConnList
+	lruConns  *lruConnList
 
 	dialingConns int64
+	closingConns int64
 }
 
-func newDirectUDPHandler(dialer UDPDialer, grabber dnsgrab.Server, capturedDNSHost string) *directUDPHandler {
+func newDirectUDPHandler(client *client, dialer UDPDialer, grabber dnsgrab.Server, capturedDNSHost string) *directUDPHandler {
 	return &directUDPHandler{
+		client:          client,
 		dialer:          dialer,
 		capturedDNSHost: capturedDNSHost,
 		grabber:         grabber,
 		upstreams:       make(map[core.UDPConn]UDPConn),
-		mruConns:        newMRUConnList(),
+		lruConns:        newLRUConnList(),
 	}
 }
 
@@ -144,6 +148,9 @@ func (h *directUDPHandler) Connect(downstream core.UDPConn, target *net.UDPAddr)
 		// Captured dns, handle internally with dnsgrab
 		return nil
 	}
+
+	// before handling a new connection, make sure we're okay on memory
+	h.client.reduceMemoryPressureIfNecessary()
 
 	// Since UDP traffic is sent directly, do a reverse lookup of the IP and then resolve the UDP address
 	host, found := h.grabber.ReverseLookup(target.IP)
@@ -194,7 +201,7 @@ func (h *directUDPHandler) Connect(downstream core.UDPConn, target *net.UDPAddr)
 		return log.Errorf("Timed out dialing %v", target)
 	}
 
-	h.mruConns.mark(downstream)
+	h.lruConns.mark(downstream)
 	go cb.idleTiming()
 
 	return nil
@@ -224,16 +231,34 @@ func (h *directUDPHandler) receiveDNS(downstream core.UDPConn, data []byte, addr
 	return writeErr
 }
 
-func (h *directUDPHandler) disconnect() {
-	downstreams := h.mruConns.removeAll()
-	for downstream := range downstreams {
-		h.RLock()
-		upstream := h.upstreams[downstream.(core.UDPConn)]
-		h.RUnlock()
-		if upstream != nil {
-			upstream.Close()
-		}
+func (h *directUDPHandler) closeOldestConn() bool {
+	downstream, ok := h.lruConns.removeOldest()
+	if ok {
+		h.forceClose(downstream)
 	}
+	return ok
+}
+
+func (h *directUDPHandler) disconnect() {
+	downstreams := h.lruConns.removeAll()
+	for downstream := range downstreams {
+		go h.forceClose(downstream) // close on goroutine because close can take a while
+	}
+}
+
+func (h *directUDPHandler) forceClose(downstream io.Closer) {
+	h.RLock()
+	upstream := h.upstreams[downstream.(core.UDPConn)]
+	h.RUnlock()
+	if upstream != nil {
+		h.closeConn(upstream) // we don't close downstream because that'll happen automatically once upstream finishes closing
+	}
+}
+
+func (h *directUDPHandler) closeConn(conn UDPConn) {
+	atomic.AddInt64(&h.closingConns, 1)
+	conn.Close()
+	atomic.AddInt64(&h.closingConns, -1)
 }
 
 func (h *directUDPHandler) trackStats() {
@@ -242,7 +267,7 @@ func (h *directUDPHandler) trackStats() {
 		activeConns := len(h.upstreams)
 		h.RUnlock()
 
-		statsLog.Debugf("UDP Conns    Active: %d    Dialing: %d", activeConns, atomic.LoadInt64(&h.dialingConns))
+		statsLog.Debugf("UDP Conns    Active: %d    Dialing: %d   Closing: %d", activeConns, atomic.LoadInt64(&h.dialingConns), atomic.LoadInt64(&h.closingConns))
 		time.Sleep(1 * time.Second)
 	}
 }

@@ -66,7 +66,6 @@ type ClientWriter interface {
 
 type cw struct {
 	ipStack        io.WriteCloser
-	mx             sync.RWMutex
 	client         *client
 	bal            *balancer.Balancer
 	quotaTextPath  string
@@ -74,11 +73,7 @@ type cw struct {
 }
 
 func (c *cw) Write(b []byte) (int, error) {
-	c.mx.RLock()
-	w := c.ipStack
-	c.mx.RUnlock()
-
-	_, err := w.Write(b)
+	_, err := c.ipStack.Write(b)
 
 	result := 0
 	if time.Since(c.lastSavedQuota) > quotaSaveInterval {
@@ -124,23 +119,15 @@ func (c *cw) Reconfigure() {
 }
 
 func (c *cw) Reset() {
-	c.mx.Lock()
+	c.client.acceptMx.Lock()
 	c.client.tcpHandler.disconnect()
 	c.client.udpHandler.disconnect()
-	c.ipStack.Close()
-	c.ipStack = tun2socks.NewLWIPStack()
-	c.mx.Unlock()
+	c.bal.ResetFromExisting()
+	c.client.acceptMx.Unlock()
 	atomic.AddInt64(&c.client.resets, 1)
 }
 
-func (c *cw) closeIPStack() {
-	c.client.tcpHandler.disconnect()
-	c.client.udpHandler.disconnect()
-	c.ipStack.Close()
-}
-
 func (c *cw) Close() error {
-	c.closeIPStack()
 	c.bal.Close()
 	return nil
 }
@@ -157,6 +144,7 @@ type client struct {
 	tcpHandler      *proxiedTCPHandler
 	udpHandler      *directUDPHandler
 	ipStack         tun2socks.LWIPStack
+	acceptMx        sync.RWMutex
 	clientWriter    *cw
 	started         time.Time
 	resets          int64
@@ -215,12 +203,14 @@ func (c *client) start() (ClientWriter, error) {
 	}
 
 	c.tcpHandler = &proxiedTCPHandler{
-		dialOut:  bal.DialContext,
-		grabber:  grabber,
-		mtu:      c.mtu,
-		mruConns: newMRUConnList(),
+		dialOut:     bal.DialContext,
+		client:      c,
+		grabber:     grabber,
+		mtu:         c.mtu,
+		downstreams: newLRUConnList(),
+		upstreams:   make(map[io.Closer]io.Closer),
 	}
-	c.udpHandler = newDirectUDPHandler(c.udpDialer, grabber, c.capturedDNSHost)
+	c.udpHandler = newDirectUDPHandler(c, c.udpDialer, grabber, c.capturedDNSHost)
 
 	go c.tcpHandler.trackStats()
 	go c.udpHandler.trackStats()

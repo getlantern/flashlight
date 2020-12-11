@@ -11,8 +11,10 @@ var (
 	swiftLog = golog.LoggerFor("ios.swift")
 )
 
-// ConfigureFileLogging configures logging to log to files at the given fullLogFilePath.
-func ConfigureFileLogging(fullLogFilePath string) error {
+// ConfigureFileLogging configures logging to log to files at the given fullLogFilePath
+// and capture heap and goroutine profiles at the given profile path.
+func ConfigureFileLogging(fullLogFilePath string, profilePath string) error {
+	SetProfilePath(profilePath)
 	return logger.ConfigureFileLogging(fullLogFilePath)
 }
 

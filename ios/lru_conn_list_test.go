@@ -7,24 +7,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMRUConnList(t *testing.T) {
+func TestLRUConnList(t *testing.T) {
 	a := noopCloser("a")
 	b := noopCloser("b")
 	c := noopCloser("c")
 
-	list := newMRUConnList()
+	list := newLRUConnList()
 	list.mark(a)
 	list.mark(b)
 	list.mark(c)
 
-	list.remove(c)
-	removed, ok := list.removeNewest()
+	list.remove(a)
+	removed, ok := list.removeOldest()
 	require.True(t, ok)
 	assert.Equal(t, removed, b)
-	removed, ok = list.removeNewest()
+	removed, ok = list.removeOldest()
 	require.True(t, ok)
-	assert.Equal(t, removed, a)
-	_, ok = list.removeNewest()
+	assert.Equal(t, removed, c)
+	_, ok = list.removeOldest()
 	assert.False(t, ok)
 }
 

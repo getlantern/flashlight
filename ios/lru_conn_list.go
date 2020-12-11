@@ -16,45 +16,45 @@ func (l *connWithSequence) String() string {
 	return fmt.Sprintf("%v: %d", l.Closer, l.sequence)
 }
 
-type bySequenceReversed []*connWithSequence
+type bySequence []*connWithSequence
 
-func (a bySequenceReversed) Len() int           { return len(a) }
-func (a bySequenceReversed) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a bySequenceReversed) Less(i, j int) bool { return a[i].sequence > a[j].sequence }
+func (a bySequence) Len() int           { return len(a) }
+func (a bySequence) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a bySequence) Less(i, j int) bool { return a[i].sequence < a[j].sequence }
 
-func newMRUConnList() *mruConnList {
-	return &mruConnList{
+func newLRUConnList() *lruConnList {
+	return &lruConnList{
 		conns: make(map[io.Closer]int64),
 	}
 }
 
-type mruConnList struct {
+type lruConnList struct {
 	sync.RWMutex
 	conns    map[io.Closer]int64
 	sequence int64
 }
 
-func (l *mruConnList) mark(conn io.Closer) {
+func (l *lruConnList) mark(conn io.Closer) {
 	l.Lock()
 	l.conns[conn] = l.sequence
 	l.sequence += 1
 	l.Unlock()
 }
 
-func (l *mruConnList) remove(conn io.Closer) {
+func (l *lruConnList) remove(conn io.Closer) {
 	l.Lock()
 	delete(l.conns, conn)
 	l.Unlock()
 }
 
-func (l *mruConnList) len() int {
+func (l *lruConnList) len() int {
 	l.RLock()
 	length := len(l.conns)
 	l.RUnlock()
 	return length
 }
 
-func (l *mruConnList) removeAll() map[io.Closer]int64 {
+func (l *lruConnList) removeAll() map[io.Closer]int64 {
 	l.Lock()
 	conns := l.conns
 	l.conns = make(map[io.Closer]int64)
@@ -62,7 +62,7 @@ func (l *mruConnList) removeAll() map[io.Closer]int64 {
 	return conns
 }
 
-func (l *mruConnList) removeNewest() (io.Closer, bool) {
+func (l *lruConnList) removeOldest() (io.Closer, bool) {
 	l.Lock()
 	defer l.Unlock()
 
@@ -70,7 +70,7 @@ func (l *mruConnList) removeNewest() (io.Closer, bool) {
 		return nil, false
 	}
 
-	conns := make(bySequenceReversed, 0, len(l.conns))
+	conns := make(bySequence, 0, len(l.conns))
 	for conn, sequence := range l.conns {
 		conns = append(conns, &connWithSequence{Closer: conn, sequence: sequence})
 	}
