@@ -43,8 +43,7 @@ func assertHeaders(t *testing.T, resHeaders http.Header, expHeaders map[string]s
 }
 
 func TestCORS(t *testing.T) {
-	s := startTestServer(t, "")
-	uiAddr := fmt.Sprintf("http://%s", s.GetUIAddr())
+	uiAddr := "http://localhost:2000"
 	cases := []CorsSpec{
 		{
 			"BadOrigin",
@@ -82,7 +81,7 @@ func TestCORS(t *testing.T) {
 				req.Header.Add(name, value)
 			}
 			resp := httptest.NewRecorder()
-			s.corsHandler(testHandler).ServeHTTP(resp, req)
+			CORSMiddleware(testHandler).ServeHTTP(resp, req)
 			assertHeaders(t, resp.Header(), tc.respHeaders)
 		})
 	}

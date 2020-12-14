@@ -60,7 +60,7 @@ func TestListen(t *testing.T) {
 	}
 }
 
-func startTestServer(t *testing.T, addr string) *Server {
+func StartTestServer(t *testing.T, addr string) *Server {
 	s := newServer(ServerParams{
 		AuthServerAddr: common.AuthServerAddr,
 		LocalHTTPToken: "local-http-token",
@@ -71,7 +71,7 @@ func startTestServer(t *testing.T, addr string) *Server {
 
 func TestStartServer(t *testing.T) {
 	startServer := func(addr string) *Server {
-		return startTestServer(t, addr)
+		return StartTestServer(t, addr)
 	}
 	s := startServer("")
 	// make sure the port is non-zero, same below
