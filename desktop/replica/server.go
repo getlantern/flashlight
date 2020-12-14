@@ -537,20 +537,20 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 		m.DisplayName,
 		t.Name(),
 	)
+	ext := path.Ext(filename)
+	if ext != "" {
+		filename = sanitize.BaseName(strings.TrimSuffix(filename, ext)) + ext
+	}
 	if filename != "" {
-		ext := path.Ext(filename)
-		if ext != "" {
-			filename = sanitize.BaseName(strings.TrimSuffix(filename, ext)) + ext
-		}
 		rw.Header().Set("Content-Disposition", inlineType+"; filename*=UTF-8''"+url.QueryEscape(filename))
 	}
 
 	rw.Op.Set("download_filename", filename)
 	switch inlineType {
 	case "inline":
-		me.gaSession.EventWithLabel("replica", "view", filename)
+		me.gaSession.EventWithLabel("replica", "view", ext)
 	case "attachment":
-		me.gaSession.EventWithLabel("replica", "download", filename)
+		me.gaSession.EventWithLabel("replica", "download", ext)
 	}
 
 	torrentFile := t.Files()[selectOnly]
