@@ -38,6 +38,10 @@
 //
 // sudo route delete 67.205.172.79
 //
+// The utility scripts vpn.bash and direct.bash provide convenient ways to route traffic via the VPN
+// or go back to routing traffic directly. You'll need to change the settings in routes.bash to match
+// your system.
+//
 package main
 
 import (
@@ -243,7 +247,7 @@ func main() {
 type noopMemChecker struct{}
 
 func (c *noopMemChecker) Check() *ios.MemInfo {
-	return &ios.MemInfo{0, rand.Float64() > 0.95}
+	return &ios.MemInfo{0, false && rand.Float64() > 0.95}
 }
 
 type writerAdapter struct {

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
+	"github.com/getlantern/flashlight/chained"
 )
 
 // Memory management on iOS is critical because we're running in a network extension that's limited to 15 MB of memory. We handle this using several techniques.
@@ -30,6 +31,11 @@ const (
 	checkCriticalInterval = 15 * time.Millisecond
 	postResetDelay        = 10 * time.Second
 )
+
+func init() {
+	// set more aggressive IdleTimeout to help deal with memory constraints on iOS
+	chained.IdleTimeout = 15 * time.Second
+}
 
 var (
 	profilePath   string
@@ -97,12 +103,19 @@ func (c *client) checkForCriticallyLowMemory() {
 }
 
 func (c *client) reduceMemoryPressureIfNecessary() {
-	for c.memChecker.Check().Critical {
-		c.reduceMemoryPressure()
+	if c.checkCriticalAndLogMemoryIfNecessary() {
+		statsLog.Debug("Memory critically low, forcing garbage collection")
+		freeMemory()
+
+		if c.checkCriticalAndLogMemoryIfNecessary() {
+			statsLog.Debug("Memory still critically low after freeing memory, closing some connections")
+			captureProfiles()
+			c.reduceMemoryPressure()
+		}
 	}
-	if c.memChecker.Check().Critical {
-		statsLog.Debug("Memory still critically low after taking all possible measures to reduce, capturing profiles")
-		captureProfiles()
+
+	if c.checkCriticalAndLogMemoryIfNecessary() {
+		statsLog.Debug("Memory still critically low after taking all possible measures to reduce")
 	}
 }
 
@@ -123,11 +136,6 @@ func (c *client) reduceMemoryPressure() {
 	c.acceptMx.Unlock()
 
 	freeMemory()
-	c.logMemory()
-
-	if c.memChecker.Check().Critical {
-		// panic("Memory still critically low, panicking")
-	}
 }
 
 func (c *client) closeConnectionsToReduceMemoryPressure() (numConnsClosed int, resolved bool) {
@@ -141,9 +149,8 @@ func (c *client) closeConnectionsToReduceMemoryPressure() (numConnsClosed int, r
 			numConnsClosed++
 
 			freeMemory()
-			c.logMemory()
 
-			if !c.memChecker.Check().Critical {
+			if !c.checkCriticalAndLogMemoryIfNecessary() {
 				statsLog.Debugf("Closing %d connections resolved memory pressure", numConnsClosed)
 				resolved = true
 				return
@@ -155,17 +162,32 @@ func (c *client) closeConnectionsToReduceMemoryPressure() (numConnsClosed int, r
 	}
 }
 
-func (c *client) logMemory() {
-	memstats := &runtime.MemStats{}
-	runtime.ReadMemStats(memstats)
+func (c *client) checkCriticalAndLogMemoryIfNecessary() bool {
 	memInfo := c.memChecker.Check()
+	critical := memInfo != nil && memInfo.Critical
+	if critical {
+		c.doLogMemory(memInfo)
+	}
+	return critical
+}
+
+func (c *client) logMemory() {
+	memInfo := c.memChecker.Check()
+	c.doLogMemory(memInfo)
+}
+
+func (c *client) doLogMemory(memInfo *MemInfo) {
 	if memInfo != nil {
+		memstats := &runtime.MemStats{}
+		runtime.ReadMemStats(memstats)
+
 		statsLog.Debugf("Memory System: %v    Go InUse: %v    Go Alloc: %v    Go Sys: %v",
 			humanize.Bytes(uint64(memInfo.Bytes)),
 			humanize.Bytes(memstats.HeapInuse),
 			humanize.Bytes(memstats.Alloc),
 			humanize.Bytes(memstats.Sys))
 	}
+
 	stats := debug.GCStats{
 		PauseQuantiles: make([]time.Duration, 10),
 	}
@@ -180,37 +202,54 @@ func freeMemory() {
 }
 
 func captureProfiles() {
+	if true {
+		log.Debug("Not capturing profiles in production")
+		return
+	}
+
+	log.Debug("Capturing profiles")
+
 	path := getProfilePath()
 	if path == "" {
 		log.Error("No profile path set, can't capture profiles")
 		return
 	}
 
-	heap, err := os.OpenFile(filepath.Join(path, "heap.profile"), os.O_TRUNC|os.O_CREATE|os.O_RDWR|os.O_SYNC, 0644)
+	heap, err := os.OpenFile(filepath.Join(path, "heap.profile.tmp"), os.O_TRUNC|os.O_CREATE|os.O_RDWR|os.O_SYNC, 0644)
 	if err != nil {
 		log.Errorf("Unable to open heap profile file %v for writing: %v", path, err)
 		return
 	}
 	defer heap.Close()
 
-	goroutine, err := os.OpenFile(filepath.Join(path, "goroutine_profile.txt"), os.O_TRUNC|os.O_CREATE|os.O_RDWR|os.O_SYNC, 0644)
+	goroutine, err := os.OpenFile(filepath.Join(path, "goroutine_profile.txt.tmp"), os.O_TRUNC|os.O_CREATE|os.O_RDWR|os.O_SYNC, 0644)
 	if err != nil {
 		log.Errorf("Unable to open heap profile file %v for writing: %v", path, err)
 		return
 	}
 	defer goroutine.Close()
 
-	err = pprof.Lookup("heap").WriteTo(heap, 0)
+	err = pprof.WriteHeapProfile(heap)
 	if err != nil {
 		log.Errorf("Unable to capture heap profile: %v", err)
 	} else {
-		log.Debugf("Captured heap profile")
+		err = os.Rename(filepath.Join(path, "heap.profile.tmp"), filepath.Join(path, "heap.profile"))
+		if err != nil {
+			log.Errorf("Unable to rename heap profile: %v", err)
+		} else {
+			log.Debugf("Captured heap profile")
+		}
 	}
 
 	err = pprof.Lookup("goroutine").WriteTo(goroutine, 1)
 	if err != nil {
 		log.Errorf("Unable to capture goroutine profile: %v", err)
 	} else {
-		log.Debugf("Captured goroutine profile")
+		err = os.Rename(filepath.Join(path, "goroutine_profile.txt.tmp"), filepath.Join(path, "goroutine_profile.txt"))
+		if err != nil {
+			log.Errorf("Unable to rename goroutine profile: %v", err)
+		} else {
+			log.Debugf("Captured goroutine profile")
+		}
 	}
 }

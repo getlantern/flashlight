@@ -11,13 +11,22 @@ import (
 
 	"github.com/getlantern/dnsgrab"
 	"github.com/getlantern/flashlight/balancer"
+	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/netx"
 )
 
 const (
-	dialTimeout = 30 * time.Second
+	dialTimeout        = 30 * time.Second
+	maxConcurrentDials = 8
 )
+
+type dialRequest struct {
+	ctx      context.Context
+	addr     string
+	upstream chan net.Conn
+	err      chan error
+}
 
 // proxiedTCPHandler implements TCPConnHandler from go-tun2socks by routing TCP connections
 // via our proxies.
@@ -29,12 +38,46 @@ type proxiedTCPHandler struct {
 	dialingConns int64
 	copyingConns int64
 	closingConns int64
+	dialRequests chan *dialRequest
 	downstreams  *lruConnList
 	upstreams    map[io.Closer]io.Closer
 	mx           sync.RWMutex
 }
 
-func (h *proxiedTCPHandler) Handle(downstream net.Conn, addr *net.TCPAddr) error {
+func newProxiedTCPHandler(c *client, bal *balancer.Balancer, grabber dnsgrab.Server) *proxiedTCPHandler {
+	result := &proxiedTCPHandler{
+		dialOut:      bal.DialContext,
+		client:       c,
+		grabber:      grabber,
+		mtu:          c.mtu,
+		dialRequests: make(chan *dialRequest),
+		downstreams:  newLRUConnList(),
+		upstreams:    make(map[io.Closer]io.Closer),
+	}
+	go result.handleDials()
+	return result
+}
+
+// dialing is very memory intensive because of the cryptography involved, so we limit the concurrency of dialing to keep our memory usage
+// under control
+func (h *proxiedTCPHandler) handleDials() {
+	for i := 0; i < maxConcurrentDials; i++ {
+		go h.handleDial()
+	}
+}
+
+func (h *proxiedTCPHandler) handleDial() {
+	for req := range h.dialRequests {
+		upstream, err := h.dialOut(req.ctx, balancer.NetworkConnect, req.addr)
+		if err == nil {
+			req.upstream <- upstream
+		} else {
+			req.err <- err
+		}
+	}
+}
+
+func (h *proxiedTCPHandler) Handle(_downstream net.Conn, addr *net.TCPAddr) error {
 	// before handling a new connection, make sure we're okay on memory
 	h.client.reduceMemoryPressureIfNecessary()
 
@@ -43,15 +86,33 @@ func (h *proxiedTCPHandler) Handle(downstream net.Conn, addr *net.TCPAddr) error
 		return log.Errorf("Invalid ip address %v, will not connect", addr.IP)
 	}
 
-	addrString := fmt.Sprintf("%v:%d", host, addr.Port)
-	atomic.AddInt64(&h.dialingConns, 1)
 	ctx, cancelContext := context.WithTimeout(context.Background(), dialTimeout)
-	upstream, err := h.dialOut(ctx, balancer.NetworkConnect, addrString)
+	addrString := fmt.Sprintf("%v:%d", host, addr.Port)
+	req := &dialRequest{
+		ctx:      ctx,
+		addr:     addrString,
+		upstream: make(chan net.Conn),
+		err:      make(chan error),
+	}
+	var upstream net.Conn
+	var err error
+
+	atomic.AddInt64(&h.dialingConns, 1)
+	h.dialRequests <- req
+	select {
+	case upstream = <-req.upstream:
+		// okay
+	case err = <-req.err:
+		// error
+	}
 	atomic.AddInt64(&h.dialingConns, -1)
+
 	if err != nil {
 		cancelContext()
 		return log.Errorf("Unable to dial %v: %v", addrString, err)
 	}
+
+	downstream := idletiming.Conn(_downstream, chained.IdleTimeout, nil)
 	h.mx.Lock()
 	h.upstreams[downstream] = upstream
 	h.mx.Unlock()

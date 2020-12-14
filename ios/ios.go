@@ -12,7 +12,6 @@ import (
 	tun2socks "github.com/eycorsican/go-tun2socks/core"
 
 	"github.com/getlantern/dnsgrab"
-	"github.com/getlantern/dnsgrab/persistentcache"
 	"github.com/getlantern/errors"
 
 	"github.com/getlantern/flashlight/balancer"
@@ -73,6 +72,10 @@ type cw struct {
 }
 
 func (c *cw) Write(b []byte) (int, error) {
+	// Briefly obtain the acceptMx to make sure we're not in the process of reducing memory pressure
+	c.client.acceptMx.RLock()
+	c.client.acceptMx.RUnlock()
+
 	_, err := c.ipStack.Write(b)
 
 	result := 0
@@ -188,28 +191,16 @@ func (c *client) start() (ClientWriter, error) {
 	}
 	bal := balancer.New(func() bool { return c.uc.AllowProbes }, 30*time.Second, dialers...)
 
-	cache, err := persistentcache.New(filepath.Join(c.configDir, "dnsgrab.cache"), maxDNSGrabAge)
-	if err != nil {
-		return nil, errors.New("Unable to open dnsgrab cache: %v", err)
-	}
-
-	grabber, err := dnsgrab.ListenWithCache(
+	grabber, err := dnsgrab.Listen(
+		1000,
 		"127.0.0.1:0",
 		c.realDNSHost,
-		cache,
 	)
 	if err != nil {
 		return nil, errors.New("Unable to start dnsgrab: %v", err)
 	}
 
-	c.tcpHandler = &proxiedTCPHandler{
-		dialOut:     bal.DialContext,
-		client:      c,
-		grabber:     grabber,
-		mtu:         c.mtu,
-		downstreams: newLRUConnList(),
-		upstreams:   make(map[io.Closer]io.Closer),
-	}
+	c.tcpHandler = newProxiedTCPHandler(c, bal, grabber)
 	c.udpHandler = newDirectUDPHandler(c, c.udpDialer, grabber, c.capturedDNSHost)
 
 	go c.tcpHandler.trackStats()

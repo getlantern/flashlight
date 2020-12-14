@@ -46,7 +46,7 @@ require (
 	github.com/getlantern/http-proxy-lantern/v2 v2.6.23
 	github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
-	github.com/getlantern/idletiming v0.0.0-20201209171027-68e579004f28
+	github.com/getlantern/idletiming v0.0.0-20201214155000-1177e7c23966
 	github.com/getlantern/ipproxy v0.0.0-20201020142114-ed7e3a8d5d87
 	github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42
 	github.com/getlantern/jibber_jabber v0.0.0-20160317154340-7346f98d2644
@@ -111,7 +111,7 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
-	golang.org/x/mobile v0.0.0-20200801112145-973feb4309de // indirect
+	golang.org/x/mobile v0.0.0-20201208152944-da85bec010a2 // indirect
 	golang.org/x/net v0.0.0-20201021035429-f5854403a974
 	golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
