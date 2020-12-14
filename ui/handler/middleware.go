@@ -7,8 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-
-	"github.com/gorilla/mux"
 )
 
 const (
@@ -17,8 +15,8 @@ const (
 	BodyKey = "body"
 )
 
-// Middleware
-type Middleware func(http.Handler) http.Handler
+// MiddlewareFunc
+type MiddlewareFunc func(http.Handler) http.Handler
 
 // BodyParser is an HTTP middleware used to
 // convert the io.Reader body of an http.Request
@@ -37,7 +35,7 @@ func BodyParser(next http.Handler) http.Handler {
 
 // StrippingMiddleware removes the secure request path from the URL so that the
 // static file server can properly serve it.
-func StrippingMiddleware(prefix string) mux.MiddlewareFunc {
+func StrippingMiddleware(prefix string) MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			stripped := strings.Replace(r.URL.Path, prefix, "", -1)
