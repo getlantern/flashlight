@@ -51,7 +51,7 @@ func NewHandler(params api.APIParams) Handler {
 	}
 }
 
-// NewRouter creates and returns a new mux.Router
+// NewRouter creates and returns a new chi.Router
 // instance, configured to use the default UI middleware
 func NewRouter() *chi.Mux {
 	r := chi.NewRouter()
