@@ -406,6 +406,10 @@ func (app *App) beforeStart(listenAddr string) {
 		RequestedAddr:   uiaddr,
 		LocalHTTPToken:  app.localHttpToken(),
 		Standalone:      standalone,
+		Handlers: []ui.PathHandler{
+			ui.PathHandler{Pattern: "/pro/", Handler: pro.APIHandler(settings)},
+			ui.PathHandler{Pattern: "/data", Handler: app.ws.Handler()},
+		},
 	})
 	if err != nil {
 		app.Exit(fmt.Errorf("Unable to start UI: %s", err))

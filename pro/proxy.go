@@ -131,6 +131,7 @@ func APIHandler(uc common.UserConfig) http.Handler {
 	return &httputil.ReverseProxy{
 		Transport: &proxyTransport{},
 		Director: func(r *http.Request) {
+			log.Debug("Here?????")
 			// Strip /pro from path.
 			if strings.HasPrefix(r.URL.Path, "/pro/") {
 				r.URL.Path = r.URL.Path[4:]

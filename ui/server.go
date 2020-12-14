@@ -30,7 +30,6 @@ import (
 	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/flashlight/ui/yinbi"
 	"github.com/getlantern/flashlight/util"
-	"github.com/gorilla/mux"
 )
 
 // A set of ports that chrome considers restricted
@@ -72,11 +71,18 @@ type Server struct {
 	httpTokenRequestPathPrefix string
 	localHTTPToken             string
 	listener                   net.Listener
-	mux                        *mux.Router
+	mux                        *http.ServeMux
 	onceOpenExtURL             sync.Once
 
 	translations eventual.Value
 	standalone   bool
+}
+
+// PathHandler contains a request path pattern and an HTTP handler for that
+// pattern.
+type PathHandler struct {
+	Pattern string
+	Handler http.Handler
 }
 
 // ServerParams specifies the parameters to use
@@ -91,6 +97,7 @@ type ServerParams struct {
 	SkipTokenCheck  bool
 	Standalone      bool
 	HTTPClient      *http.Client
+	Handlers        []PathHandler
 }
 
 // Middleware
@@ -119,7 +126,7 @@ func newServer(params ServerParams) *Server {
 			}
 			return "/" + localHTTPToken
 		}(),
-		mux:            mux.NewRouter(),
+		mux:            http.NewServeMux(),
 		localHTTPToken: localHTTPToken,
 		translations:   eventual.NewValue(),
 		standalone:     params.Standalone,
@@ -151,15 +158,17 @@ func (s *Server) attachHandlers(params ServerParams) {
 		yinbi.NewWithAuth(apiParams, authHandler),
 	}
 
-	// attach middleware
-	s.mux.Use(handler.CORSMiddleware)
-
 	for _, handler := range handlers {
 		handler.ConfigureRoutes(s.mux)
 	}
 
 	s.Handle("/startup", util.NoCache(http.HandlerFunc(startupHandler)))
 	s.Handle("/", util.NoCache(http.FileServer(fs)))
+
+	// configure routes passed with server params
+	for _, h := range params.Handlers {
+		s.Handle(h.Pattern, h.Handler)
+	}
 }
 
 // createHTTPClient creates a chained-then-fronted configured HTTP client
@@ -186,15 +195,10 @@ func (s *Server) Handle(pattern string, handler http.Handler) {
 		s.mux.Handle(s.httpTokenRequestPathPrefix+pattern, s.strippingHandler(handler))
 	}
 
-	checkTokenHandler := checkRequestForToken(handler, s.localHTTPToken)
+	// In the naked request cast, we need to verify the token is there in the
+	// referer header.
+	s.mux.Handle(pattern, checkRequestForToken(handler, s.localHTTPToken))
 
-	if pattern == "/" {
-		s.mux.PathPrefix(pattern).Handler(checkTokenHandler)
-	} else {
-		// In the naked request cast, we need to verify the token is there in the
-		// referer header.
-		s.mux.Handle(pattern, checkTokenHandler)
-	}
 }
 
 // strippingHandler removes the secure request path from the URL so that the

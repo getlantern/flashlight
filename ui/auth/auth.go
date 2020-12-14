@@ -11,7 +11,6 @@ import (
 	"github.com/getlantern/auth-server/models"
 	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/golog"
-	"github.com/gorilla/mux"
 )
 
 const (
@@ -44,7 +43,7 @@ func New(params api.APIParams) AuthHandler {
 	}
 }
 
-func (h AuthHandler) ConfigureRoutes(r *mux.Router) {
+func (h AuthHandler) ConfigureRoutes(r *http.ServeMux) {
 	authHandler := func(w http.ResponseWriter, r *http.Request) {
 		// HTTP handler used by the login and
 		// registration endpoints. It creates a new SRP client from
@@ -66,8 +65,8 @@ func (h AuthHandler) ConfigureRoutes(r *mux.Router) {
 			handler.ErrorHandler(w, err, http.StatusBadRequest)
 		}
 	}
-	r.HandleFunc(loginEndpoint, authHandler).Methods(http.MethodPost)
-	r.HandleFunc(registrationEndpoint, authHandler).Methods(http.MethodPost)
+	r.HandleFunc(loginEndpoint, authHandler)
+	r.HandleFunc(registrationEndpoint, authHandler)
 	r.HandleFunc(signOutEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		var params models.UserParams
 		// extract user credentials from HTTP request to send to AuthClient
@@ -81,5 +80,5 @@ func (h AuthHandler) ConfigureRoutes(r *mux.Router) {
 			return
 		}
 		log.Debugf("User %s successfully signed out", params.Username)
-	}).Methods(http.MethodPost)
+	})
 }

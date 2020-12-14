@@ -97,6 +97,7 @@ require (
 	github.com/getlantern/yinbi-server v0.0.0-20201207212130-1d0a8dfe4a60
 	github.com/getsentry/sentry-go v0.7.0
 	github.com/google/netstack v0.0.0-20191116005144-95bf25ab4723 // indirect
+	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.7.1
 	github.com/gorilla/websocket v1.4.2
 	github.com/hashicorp/go-retryablehttp v0.6.8 // indirect

@@ -28,7 +28,7 @@ var (
 type UIHandler interface {
 	// ConfigureRoutes is used to setup a collection of routes
 	// used by the given UI handler. It returns an http.Handler
-	ConfigureRoutes(r *mux.Router)
+	ConfigureRoutes(r *http.ServeMux)
 }
 
 // Handler  is a representation of a group of handlers

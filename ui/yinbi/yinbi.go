@@ -12,8 +12,6 @@ import (
 	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/yinbi-server/client"
-
-	"github.com/gorilla/mux"
 )
 
 const (
@@ -57,7 +55,7 @@ type YinbiHandler struct {
 type ImportWalletParams = client.ImportWalletParams
 type ImportWalletResponse = client.ImportWalletResponse
 
-func (h YinbiHandler) ConfigureRoutes(r *mux.Router) {
+func (h YinbiHandler) ConfigureRoutes(r *http.ServeMux) {
 
 	log.Debug("Configuring Yinbi routes")
 
@@ -69,7 +67,7 @@ func (h YinbiHandler) ConfigureRoutes(r *mux.Router) {
 	}
 
 	for endpoint, handler := range routes {
-		r.PathPrefix(endpoint).Subrouter().Handle("/", handler())
+		r.Handle(endpoint, handler())
 	}
 }
 
