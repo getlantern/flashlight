@@ -203,9 +203,6 @@ func (c *client) start() (ClientWriter, error) {
 	c.tcpHandler = newProxiedTCPHandler(c, bal, grabber)
 	c.udpHandler = newDirectUDPHandler(c, c.udpDialer, grabber, c.capturedDNSHost)
 
-	go c.tcpHandler.trackStats()
-	go c.udpHandler.trackStats()
-
 	ipStack := tun2socks.NewLWIPStack()
 	wa := &writerAdapter{c.packetsOut}
 	tun2socks.RegisterOutputFn(wa.Write)

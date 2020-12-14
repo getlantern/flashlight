@@ -55,6 +55,7 @@ func newProxiedTCPHandler(c *client, bal *balancer.Balancer, grabber dnsgrab.Ser
 		upstreams:    make(map[io.Closer]io.Closer),
 	}
 	go result.handleDials()
+	go result.trackStats()
 	return result
 }
 

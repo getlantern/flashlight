@@ -133,7 +133,7 @@ type directUDPHandler struct {
 }
 
 func newDirectUDPHandler(client *client, dialer UDPDialer, grabber dnsgrab.Server, capturedDNSHost string) *directUDPHandler {
-	return &directUDPHandler{
+	result := &directUDPHandler{
 		client:          client,
 		dialer:          dialer,
 		capturedDNSHost: capturedDNSHost,
@@ -141,6 +141,8 @@ func newDirectUDPHandler(client *client, dialer UDPDialer, grabber dnsgrab.Serve
 		upstreams:       make(map[core.UDPConn]UDPConn),
 		lruConns:        newLRUConnList(),
 	}
+	go result.trackStats()
+	return result
 }
 
 func (h *directUDPHandler) Connect(downstream core.UDPConn, target *net.UDPAddr) error {
