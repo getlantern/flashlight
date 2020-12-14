@@ -17,12 +17,14 @@ import (
 // Memory management on iOS is critical because we're running in a network extension that's limited to 15 MB of memory. We handle this using several techniques.
 //
 // 1. We force garbage collection frequently and immediately request that memory be released to the OS
-// 2. We use the MemChecker abstraction to find out when we're running critically low on memory. If we are, we started forcibly closing the oldest connections
-//    until we're no longer critically low. If that didn't work, we reset the IP stack completely.
-//    - we close the most oldest connections first because those are likeliest to be idle
+// 2. We use the MemChecker abstraction to find out when we're running critically low on memory. If we are, we start forcibly closing the oldest connections
+//    until we're no longer critically low. If that didn't work, we reset our TCP and UDP handlers as well as the balancer.
+//    - We close the most oldest connections first because those are likeliest to be idle
+//    - We close multiple connections at once because single connections rarely relieve enough memory pressure
 //    - This does disrupt the user experience for some connections, but it gives the tunnel a chance to continue working for others. The alternative is for the tunnel to
 //      get terminated by the OS, which is more disruptive
-//    - We check for memory pressure before accepting new connections
+// 3. While resolving low memory conditions, we do not accept new connections or upload packets for existing TCP connections
+// 4. Dialing to the proxy with TLS connections is quite memory intensive due to the public key cryptography, so we limit the number of concurrent dials
 //
 
 const (
@@ -109,7 +111,7 @@ func (c *client) reduceMemoryPressureIfNecessary() {
 		freeMemory()
 
 		if c.checkCriticalAndLogMemoryIfNecessary() {
-			captureProfiles()
+			// captureProfiles()
 			c.reduceMemoryPressure()
 		}
 	}
@@ -120,7 +122,7 @@ func (c *client) reduceMemoryPressureIfNecessary() {
 }
 
 func (c *client) reduceMemoryPressure() {
-	numConnsClosed, resolved := c.closeConnectionsToReduceMemoryPressure()
+	numConnsClosed, resolved := c.closeOldestConnectionsToReduceMemoryPressure()
 
 	if resolved {
 		return
@@ -138,7 +140,7 @@ func (c *client) reduceMemoryPressure() {
 	freeMemory()
 }
 
-func (c *client) closeConnectionsToReduceMemoryPressure() (totalNumConnsClosed int, resolved bool) {
+func (c *client) closeOldestConnectionsToReduceMemoryPressure() (totalNumConnsClosed int, resolved bool) {
 	// stop traffic while we try to free memory
 	c.acceptMx.Lock()
 	defer c.acceptMx.Unlock()
@@ -167,6 +169,7 @@ func (c *client) closeConnectionsToReduceMemoryPressure() (totalNumConnsClosed i
 				return
 			}
 		} else {
+			resolved = false // noop, just for clarity
 			return
 		}
 	}
@@ -212,11 +215,6 @@ func freeMemory() {
 }
 
 func captureProfiles() {
-	if true {
-		log.Debug("Not capturing profiles in production")
-		return
-	}
-
 	log.Debug("Capturing profiles")
 
 	path := getProfilePath()
