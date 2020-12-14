@@ -151,8 +151,11 @@ func (s *Server) attachHandlers(params ServerParams) {
 		yinbi.NewWithAuth(apiParams, authHandler),
 	}
 
+	// attach middleware
+	s.mux.Use(handler.CORSMiddleware)
+
 	for _, handler := range handlers {
-		s.Handle("/", util.NoCache(handler.ConfigureRoutes()))
+		handler.ConfigureRoutes(s.mux)
 	}
 
 	s.Handle("/startup", util.NoCache(http.HandlerFunc(startupHandler)))
@@ -167,20 +170,6 @@ func createHTTPClient() *http.Client {
 	return &http.Client{
 		Transport: rt,
 	}
-}
-
-// wrapMiddleware takes the given http.Handler and optionally wraps it with
-// the cors middleware handler
-func (s *Server) wrapMiddleware(h http.HandlerFunc, m ...Middleware) http.Handler {
-	if len(m) < 1 {
-		return s.corsHandler(h)
-	}
-	wrapped := h
-	for i := len(m) - 1; i >= 0; i-- {
-		wrapped = m[i](wrapped)
-	}
-
-	return s.corsHandler(wrapped)
 }
 
 // Handle directs the underlying server to handle the given pattern at both

@@ -481,6 +481,7 @@ github.com/getlantern/lampshade v0.0.0-20200303040944-fe53f13203e9 h1:n2t63QvweE
 github.com/getlantern/lampshade v0.0.0-20200303040944-fe53f13203e9/go.mod h1:Zqiq4op+E689yjuJACMLURzE9XUGj48UDZP7h8aN+kk=
 github.com/getlantern/lantern-build v0.0.0-20201208145213-12f0ccf1fc79 h1:HErlEp18eUP9jmlJEPs9Gk5IJU8OdSvIpbhfQJU+5FQ=
 github.com/getlantern/lantern-build v0.0.0-20201208163804-47f9cc2f501b h1:8GIbRfEB5eVwysmHtD+pKUb+GQpcmibdUKBIjY1NXNA=
+github.com/getlantern/lantern-build v0.0.0-20201210203921-9b50f2497a44 h1:pFj0HWN1ROxtPBoIENoJiTzb0+cqk2fMAInjxOALBiw=
 github.com/getlantern/lantern-server v0.0.0-20200831030357-6a6390b7fa6c/go.mod h1:AwEmeSHxQsheqKVx1gENHlwxWyFn0xMd2K/kk8wlYdk=
 github.com/getlantern/lantern-server v0.0.0-20201117145320-03d934ec00e0 h1:eGC/r+VgjMcPZ7xXjyVdykmu3jgZejn7gj037lfD788=
 github.com/getlantern/lantern-server v0.0.0-20201117145320-03d934ec00e0/go.mod h1:hh4us2ARyHRGmR0m1b3NUP7oQSLfasS9tYTmN7/kn6U=
