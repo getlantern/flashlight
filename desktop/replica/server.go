@@ -299,11 +299,12 @@ func (me *HttpHandler) handleUpload(rw *ops.InstrumentedResponseWriter, r *http.
 		}
 	}
 
-	output, err := me.replicaClient.Upload(replicaUploadReader, r.URL.Query().Get("name"))
+	fileName := r.URL.Query().Get("name")
+	output, err := me.replicaClient.Upload(replicaUploadReader, fileName)
 	s3Prefix := output.Upload
 	me.logger.Debugf("uploaded replica key %q", s3Prefix)
 	rw.Op.Set("upload_s3_key", s3Prefix)
-	me.gaSession.Event("replica", "upload")
+	me.gaSession.EventWithLabel("replica", "upload", path.Ext(fileName))
 	me.logger.Debugf("uploaded %d bytes", cw.BytesWritten)
 	if err != nil {
 		return fmt.Errorf("uploading with replicaClient: %w", err)
@@ -545,7 +546,12 @@ func (me *HttpHandler) handleViewWith(rw *ops.InstrumentedResponseWriter, r *htt
 	}
 
 	rw.Op.Set("download_filename", filename)
-	me.gaSession.EventWithLabel("replica", "view", filename)
+	switch inlineType {
+	case "inline":
+		me.gaSession.EventWithLabel("replica", "view", filename)
+	case "attachment":
+		me.gaSession.EventWithLabel("replica", "download", filename)
+	}
 
 	torrentFile := t.Files()[selectOnly]
 	fileReader := torrentFile.NewReader()
