@@ -19,10 +19,10 @@ const (
 // accountHandler is the http.Handler used for handling account-related requests
 func (h YinbiHandler) accountHandler() http.Handler {
 	r := handler.NewRouter()
-	r.HandleFunc(accountDetailsEndpoint, h.getAccountDetails).Methods(http.MethodGet)
-	r.HandleFunc(resetPasswordEndpoint, h.resetPassword).Methods(http.MethodPost)
-	r.HandleFunc(accountTransactionsEndpoint, h.getAccountTransactions).Methods(http.MethodGet)
-	r.HandleFunc(accountRecoverEndpoint, h.recoverAccount).Methods(http.MethodPost)
+	r.Get(accountDetailsEndpoint, h.getAccountDetails)
+	r.Post(resetPasswordEndpoint, h.resetPassword)
+	r.Get(accountTransactionsEndpoint, h.getAccountTransactions)
+	r.Post(accountRecoverEndpoint, h.recoverAccount)
 	return r
 }
 

@@ -8,7 +8,7 @@ import (
 	"github.com/getlantern/auth-server/api"
 	"github.com/getlantern/golog"
 	"github.com/getlantern/lantern-server/common"
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi"
 )
 
 // successKey is the name of the boolean field
@@ -28,7 +28,8 @@ var (
 type UIHandler interface {
 	// ConfigureRoutes is used to setup a collection of routes
 	// used by the given UI handler. It returns an http.Handler
-	ConfigureRoutes(r *http.ServeMux)
+	ConfigureRoutes() http.Handler
+	GetPathPrefix() string
 }
 
 // Handler  is a representation of a group of handlers
@@ -52,9 +53,10 @@ func NewHandler(params api.APIParams) Handler {
 
 // NewRouter creates and returns a new mux.Router
 // instance, configured to use the default UI middleware
-func NewRouter() *mux.Router {
-	r := mux.NewRouter()
+func NewRouter() *chi.Mux {
+	r := chi.NewRouter()
 	r.Use(BodyParser)
+	r.Use(CORSMiddleware)
 	return r
 }
 

@@ -158,17 +158,19 @@ func (s *Server) attachHandlers(params ServerParams) {
 		yinbi.NewWithAuth(apiParams, authHandler),
 	}
 
-	for _, handler := range handlers {
-		handler.ConfigureRoutes(s.mux)
+	// configure UI handlers with routes setup internally
+	for _, h := range handlers {
+		prefix := h.GetPathPrefix()
+		s.Handle(prefix, http.StripPrefix(prefix, h.ConfigureRoutes()))
 	}
-
-	s.Handle("/startup", util.NoCache(http.HandlerFunc(startupHandler)))
-	s.Handle("/", util.NoCache(http.FileServer(fs)))
 
 	// configure routes passed with server params
 	for _, h := range params.Handlers {
 		s.Handle(h.Pattern, h.Handler)
 	}
+
+	s.Handle("/startup", util.NoCache(http.HandlerFunc(startupHandler)))
+	s.Handle("/", util.NoCache(http.FileServer(fs)))
 }
 
 // createHTTPClient creates a chained-then-fronted configured HTTP client

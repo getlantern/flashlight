@@ -14,13 +14,16 @@ import (
 )
 
 const (
-	userKey               = iota
+	userKey = iota
+
+	pathPrefix = "/user"
+
 	authEndpoint          = "/auth"
 	loginEndpoint         = "/login"
-	signOutEndpoint       = "/user/logout"
+	signOutEndpoint       = "/logout"
 	registrationEndpoint  = "/register"
-	balanceEndpoint       = "/user/balance"
-	createAccountEndpoint = "/user/account/new"
+	balanceEndpoint       = "/balance"
+	createAccountEndpoint = "/account/new"
 )
 
 var (
@@ -43,7 +46,11 @@ func New(params api.APIParams) AuthHandler {
 	}
 }
 
-func (h AuthHandler) ConfigureRoutes(r *http.ServeMux) {
+func (h AuthHandler) GetPathPrefix() string {
+	return pathPrefix
+}
+
+func (h AuthHandler) ConfigureRoutes() http.Handler {
 	authHandler := func(w http.ResponseWriter, r *http.Request) {
 		// HTTP handler used by the login and
 		// registration endpoints. It creates a new SRP client from
@@ -65,9 +72,10 @@ func (h AuthHandler) ConfigureRoutes(r *http.ServeMux) {
 			handler.ErrorHandler(w, err, http.StatusBadRequest)
 		}
 	}
-	r.HandleFunc(loginEndpoint, authHandler)
-	r.HandleFunc(registrationEndpoint, authHandler)
-	r.HandleFunc(signOutEndpoint, func(w http.ResponseWriter, r *http.Request) {
+	s := handler.NewRouter()
+	s.Post(loginEndpoint, authHandler)
+	s.Post(registrationEndpoint, authHandler)
+	s.Post(signOutEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		var params models.UserParams
 		// extract user credentials from HTTP request to send to AuthClient
 		err := handler.DecodeJSONRequest(w, r, &params)
@@ -81,4 +89,6 @@ func (h AuthHandler) ConfigureRoutes(r *http.ServeMux) {
 		}
 		log.Debugf("User %s successfully signed out", params.Username)
 	})
+
+	return s
 }
