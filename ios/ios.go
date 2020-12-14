@@ -24,7 +24,7 @@ import (
 const (
 	memLimitInMiB   = 12
 	memLimitInBytes = memLimitInMiB * 1024 * 1024
-	maxDNSGrabAge   = 24 * time.Hour
+	maxDNSGrabCache = 1000 // this doesn't need to be huge because our fake DNS records have a TTL of only 1 second
 
 	quotaSaveInterval            = 1 * time.Minute
 	shortFrontedAvailableTimeout = 30 * time.Second
@@ -192,7 +192,7 @@ func (c *client) start() (ClientWriter, error) {
 	bal := balancer.New(func() bool { return c.uc.AllowProbes }, 30*time.Second, dialers...)
 
 	grabber, err := dnsgrab.Listen(
-		1000,
+		maxDNSGrabCache,
 		"127.0.0.1:0",
 		c.realDNSHost,
 	)

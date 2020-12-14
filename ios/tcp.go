@@ -18,7 +18,7 @@ import (
 
 const (
 	dialTimeout        = 30 * time.Second
-	maxConcurrentDials = 8
+	maxConcurrentDials = 4
 )
 
 type dialRequest struct {
