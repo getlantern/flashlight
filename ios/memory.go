@@ -26,10 +26,11 @@ import (
 //
 
 const (
-	logMemoryInterval     = 5 * time.Second
-	forcedGCInterval      = 1 * time.Second
-	checkCriticalInterval = 15 * time.Millisecond
-	postResetDelay        = 10 * time.Second
+	logMemoryInterval                = 5 * time.Second
+	forcedGCInterval                 = 1 * time.Second
+	checkCriticalInterval            = 15 * time.Millisecond
+	postResetDelay                   = 10 * time.Second
+	numberOfConnectionsToCloseAtOnce = 8
 )
 
 func init() {
@@ -108,7 +109,6 @@ func (c *client) reduceMemoryPressureIfNecessary() {
 		freeMemory()
 
 		if c.checkCriticalAndLogMemoryIfNecessary() {
-			statsLog.Debug("Memory still critically low after freeing memory, closing some connections")
 			captureProfiles()
 			c.reduceMemoryPressure()
 		}
@@ -138,25 +138,35 @@ func (c *client) reduceMemoryPressure() {
 	freeMemory()
 }
 
-func (c *client) closeConnectionsToReduceMemoryPressure() (numConnsClosed int, resolved bool) {
+func (c *client) closeConnectionsToReduceMemoryPressure() (totalNumConnsClosed int, resolved bool) {
 	// stop traffic while we try to free memory
 	c.acceptMx.Lock()
 	defer c.acceptMx.Unlock()
 
 	for {
-		if c.tcpHandler.closeOldestConn() || c.udpHandler.closeOldestConn() {
-			statsLog.Debug("Memory critically low, closed 1 old connection")
-			numConnsClosed++
+		statsLog.Debugf("Memory still critically low, closing up to %d connections at once", numberOfConnectionsToCloseAtOnce)
+
+		numClosed := 0
+		for i := 0; i < numberOfConnectionsToCloseAtOnce; i++ {
+			if !c.tcpHandler.closeOldestConn() && !c.udpHandler.closeOldestConn() {
+				// nothing left to close
+				break
+			}
+			numClosed++
+		}
+
+		if numClosed > 0 {
+			statsLog.Debugf("Closed %d oldest connections", numClosed)
+			totalNumConnsClosed += numClosed
 
 			freeMemory()
 
 			if !c.checkCriticalAndLogMemoryIfNecessary() {
-				statsLog.Debugf("Closing %d connections resolved memory pressure", numConnsClosed)
+				statsLog.Debugf("Closing a total of %d connections resolved memory pressure", totalNumConnsClosed)
 				resolved = true
 				return
 			}
 		} else {
-			// no more connections to close
 			return
 		}
 	}
