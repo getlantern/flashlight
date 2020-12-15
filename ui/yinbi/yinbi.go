@@ -56,6 +56,7 @@ type YinbiHandler struct {
 type ImportWalletParams = client.ImportWalletParams
 type ImportWalletResponse = client.ImportWalletResponse
 
+// ConfigureRoutes returns an http.Handler for the Yinbi-related routes
 func (h YinbiHandler) ConfigureRoutes() http.Handler {
 
 	log.Debug("Configuring Yinbi routes")
