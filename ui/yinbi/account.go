@@ -6,6 +6,7 @@ import (
 	"github.com/getlantern/auth-server/api"
 	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/yinbi-server/client"
+	"github.com/go-chi/chi"
 )
 
 const (
@@ -19,10 +20,12 @@ const (
 // accountHandler is the http.Handler used for handling account-related requests
 func (h YinbiHandler) accountHandler() http.Handler {
 	r := handler.NewRouter()
-	r.Get(accountDetailsEndpoint, h.getAccountDetails)
-	r.Post(resetPasswordEndpoint, h.resetPassword)
-	r.Get(accountTransactionsEndpoint, h.getAccountTransactions)
-	r.Post(accountRecoverEndpoint, h.recoverAccount)
+	r.Group(func(r chi.Router) {
+		r.Get(accountDetailsEndpoint, h.getAccountDetails)
+		r.Post(resetPasswordEndpoint, h.resetPassword)
+		r.Get(accountTransactionsEndpoint, h.getAccountTransactions)
+		r.Post(accountRecoverEndpoint, h.recoverAccount)
+	})
 	return r
 }
 

@@ -56,8 +56,7 @@ func (h AuthHandler) GetPathPrefix() string {
 // ConfigureRoutes returns an http.Handler for the auth-based routes
 func (h AuthHandler) ConfigureRoutes() http.Handler {
 	r := handler.NewRouter()
-	r.Route("/", func(r chi.Router) {
-
+	r.Group(func(r chi.Router) {
 		authHandler := func(w http.ResponseWriter, r *http.Request) {
 			// HTTP handler used by the login and
 			// registration endpoints. It creates a new SRP client from
