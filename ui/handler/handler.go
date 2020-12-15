@@ -29,6 +29,8 @@ type UIHandler interface {
 	// ConfigureRoutes is used to setup a collection of routes
 	// used by the given UI handler. It returns an http.Handler
 	ConfigureRoutes() http.Handler
+	// GetPathPrefix specifies the internal top-level route
+	// used by the UIHandler
 	GetPathPrefix() string
 }
 
