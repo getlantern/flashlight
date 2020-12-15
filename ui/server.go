@@ -30,6 +30,7 @@ import (
 	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/flashlight/ui/yinbi"
 	"github.com/getlantern/flashlight/util"
+	"github.com/go-chi/chi"
 )
 
 // A set of ports that chrome considers restricted
@@ -71,7 +72,7 @@ type Server struct {
 	httpTokenRequestPathPrefix string
 	localHTTPToken             string
 	listener                   net.Listener
-	mux                        *http.ServeMux
+	mux                        *chi.Mux
 	onceOpenExtURL             sync.Once
 
 	translations eventual.Value
@@ -126,7 +127,7 @@ func newServer(params ServerParams) *Server {
 			}
 			return "/" + localHTTPToken
 		}(),
-		mux:            http.NewServeMux(),
+		mux:            chi.NewRouter(),
 		localHTTPToken: localHTTPToken,
 		translations:   eventual.NewValue(),
 		standalone:     params.Standalone,
@@ -161,12 +162,12 @@ func (s *Server) attachHandlers(params ServerParams) {
 	// configure UI handlers with routes setup internally
 	for _, h := range handlers {
 		prefix := h.GetPathPrefix()
-		s.Handle(prefix, http.StripPrefix(prefix, h.ConfigureRoutes()))
+		s.mux.Mount(prefix, h.ConfigureRoutes())
 	}
 
 	// configure routes passed with server params
 	for _, h := range params.Handlers {
-		s.Handle(h.Pattern, h.Handler)
+		s.mux.Mount(h.Pattern, util.NoCache(h.Handler))
 	}
 
 	s.Handle("/startup", util.NoCache(http.HandlerFunc(startupHandler)))
@@ -194,13 +195,14 @@ func (s *Server) Handle(pattern string, handler http.Handler) {
 	if s.httpTokenRequestPathPrefix != "" {
 		// If the request path is empty this would panic on adding the same pattern
 		// twice.
-		s.mux.Handle(s.httpTokenRequestPathPrefix+pattern, s.strippingHandler(handler))
+		s.mux.Mount(s.httpTokenRequestPathPrefix+pattern, s.strippingHandler(handler))
 	}
+
+	checkTokenHandler := checkRequestForToken(handler, s.localHTTPToken)
 
 	// In the naked request cast, we need to verify the token is there in the
 	// referer header.
-	s.mux.Handle(pattern, checkRequestForToken(handler, s.localHTTPToken))
-
+	s.mux.Mount(pattern, checkTokenHandler)
 }
 
 // strippingHandler removes the secure request path from the URL so that the
