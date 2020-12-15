@@ -11,6 +11,7 @@ import (
 	"github.com/getlantern/auth-server/models"
 	"github.com/getlantern/flashlight/ui/handler"
 	"github.com/getlantern/golog"
+	"github.com/go-chi/chi"
 )
 
 const (
@@ -54,44 +55,47 @@ func (h AuthHandler) GetPathPrefix() string {
 
 // ConfigureRoutes returns an http.Handler for the auth-based routes
 func (h AuthHandler) ConfigureRoutes() http.Handler {
-	authHandler := func(w http.ResponseWriter, r *http.Request) {
-		// HTTP handler used by the login and
-		// registration endpoints. It creates a new SRP client from
-		// the user params in the request
-		var params models.UserParams
-		// extract user credentials from HTTP request to send to AuthClient
-		err := handler.DecodeJSONRequest(w, r, &params)
-		if err != nil {
-			log.Errorf("Couldn't create SRP client from request: %v", err)
-			return
-		}
-		endpoint := html.EscapeString(r.URL.Path)
-		if strings.Contains(endpoint, loginEndpoint) {
-			_, err = h.authClient.SignIn(params.Username, params.Password)
-		} else {
-			_, err = h.authClient.Register(params.Username, params.Password)
-		}
-		if err != nil {
-			handler.ErrorHandler(w, err, http.StatusBadRequest)
-		}
-	}
-	s := handler.NewRouter()
-	s.Post(loginEndpoint, authHandler)
-	s.Post(registrationEndpoint, authHandler)
-	s.Post(signOutEndpoint, func(w http.ResponseWriter, r *http.Request) {
-		var params models.UserParams
-		// extract user credentials from HTTP request to send to AuthClient
-		err := handler.DecodeJSONRequest(w, r, &params)
-		if err != nil {
-			return
-		}
-		_, err = h.authClient.SignOut(params.Username)
-		if err != nil {
-			handler.ErrorHandler(w, err, http.StatusBadRequest)
-			return
-		}
-		log.Debugf("User %s successfully signed out", params.Username)
-	})
+	r := handler.NewRouter()
+	r.Route("/", func(r chi.Router) {
 
-	return s
+		authHandler := func(w http.ResponseWriter, r *http.Request) {
+			// HTTP handler used by the login and
+			// registration endpoints. It creates a new SRP client from
+			// the user params in the request
+			var params models.UserParams
+			// extract user credentials from HTTP request to send to AuthClient
+			err := handler.DecodeJSONRequest(w, r, &params)
+			if err != nil {
+				log.Errorf("Couldn't create SRP client from request: %v", err)
+				return
+			}
+			endpoint := html.EscapeString(r.URL.Path)
+			if strings.Contains(endpoint, loginEndpoint) {
+				_, err = h.authClient.SignIn(params.Username, params.Password)
+			} else {
+				_, err = h.authClient.Register(params.Username, params.Password)
+			}
+			if err != nil {
+				handler.ErrorHandler(w, err, http.StatusBadRequest)
+			}
+		}
+
+		r.Post(loginEndpoint, authHandler)
+		r.Post(registrationEndpoint, authHandler)
+		r.Post(signOutEndpoint, func(w http.ResponseWriter, r *http.Request) {
+			var params models.UserParams
+			// extract user credentials from HTTP request to send to AuthClient
+			err := handler.DecodeJSONRequest(w, r, &params)
+			if err != nil {
+				return
+			}
+			_, err = h.authClient.SignOut(params.Username)
+			if err != nil {
+				handler.ErrorHandler(w, err, http.StatusBadRequest)
+				return
+			}
+			log.Debugf("User %s successfully signed out", params.Username)
+		})
+	})
+	return r
 }
