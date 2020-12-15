@@ -2,9 +2,7 @@ package auth
 
 import (
 	"errors"
-	"html"
 	"net/http"
-	"strings"
 
 	"github.com/getlantern/auth-server/api"
 	"github.com/getlantern/auth-server/client"
@@ -53,34 +51,34 @@ func (h AuthHandler) GetPathPrefix() string {
 	return pathPrefix
 }
 
+type AuthMethod func(username string, password string) (*api.AuthResponse, error)
+
+// authHandler is the HTTP handler used by the login and
+// registration endpoints. It creates a new SRP client from
+// the user params in the request
+func (h AuthHandler) authHandler(authenticate AuthMethod) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var params models.UserParams
+		// extract user credentials from HTTP request to send to AuthClient
+		err := handler.DecodeJSONRequest(w, r, &params)
+		if err != nil {
+			log.Errorf("Couldn't create SRP client from request: %v", err)
+			return
+		}
+		_, err = authenticate(params.Username, params.Password)
+		if err != nil {
+			handler.ErrorHandler(w, err, http.StatusBadRequest)
+		}
+	})
+}
+
 // ConfigureRoutes returns an http.Handler for the auth-based routes
 func (h AuthHandler) ConfigureRoutes() http.Handler {
 	r := handler.NewRouter()
 	r.Group(func(r chi.Router) {
-		authHandler := func(w http.ResponseWriter, r *http.Request) {
-			// HTTP handler used by the login and
-			// registration endpoints. It creates a new SRP client from
-			// the user params in the request
-			var params models.UserParams
-			// extract user credentials from HTTP request to send to AuthClient
-			err := handler.DecodeJSONRequest(w, r, &params)
-			if err != nil {
-				log.Errorf("Couldn't create SRP client from request: %v", err)
-				return
-			}
-			endpoint := html.EscapeString(r.URL.Path)
-			if strings.Contains(endpoint, loginEndpoint) {
-				_, err = h.authClient.SignIn(params.Username, params.Password)
-			} else {
-				_, err = h.authClient.Register(params.Username, params.Password)
-			}
-			if err != nil {
-				handler.ErrorHandler(w, err, http.StatusBadRequest)
-			}
-		}
 
-		r.Post(loginEndpoint, authHandler)
-		r.Post(registrationEndpoint, authHandler)
+		r.Post(loginEndpoint, h.authHandler(h.authClient.SignIn))
+		r.Post(registrationEndpoint, h.authHandler(h.authClient.Register))
 		r.Post(signOutEndpoint, func(w http.ResponseWriter, r *http.Request) {
 			var params models.UserParams
 			// extract user credentials from HTTP request to send to AuthClient
