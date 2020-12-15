@@ -26,6 +26,7 @@ func (h YinbiHandler) accountHandler() http.Handler {
 	return r
 }
 
+// resetPassword is the http.Handler used for handling password reset requests
 func (h YinbiHandler) resetPassword(w http.ResponseWriter, r *http.Request) {
 	// resetPasswordHandler is the handler used to reset a user's
 	// wallet password
@@ -42,6 +43,8 @@ func (h YinbiHandler) resetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// recoverAccount is the http.Handler used for handling account recovery
+// requests
 func (h YinbiHandler) recoverAccount(w http.ResponseWriter, r *http.Request) {
 	var params struct {
 		Words string `json:"words"`
