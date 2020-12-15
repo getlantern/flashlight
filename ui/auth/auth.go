@@ -46,10 +46,13 @@ func New(params api.APIParams) AuthHandler {
 	}
 }
 
+// GetPathPrefix returns the top-level route prefix used
+// by the AuthHandler
 func (h AuthHandler) GetPathPrefix() string {
 	return pathPrefix
 }
 
+// ConfigureRoutes returns an http.Handler for the auth-based routes
 func (h AuthHandler) ConfigureRoutes() http.Handler {
 	authHandler := func(w http.ResponseWriter, r *http.Request) {
 		// HTTP handler used by the login and
