@@ -11,14 +11,14 @@ import (
 
 	"github.com/getlantern/dnsgrab"
 	"github.com/getlantern/flashlight/balancer"
-	"github.com/getlantern/flashlight/chained"
 	"github.com/getlantern/idletiming"
 	"github.com/getlantern/netx"
 )
 
 const (
 	dialTimeout        = 30 * time.Second
-	maxConcurrentDials = 4
+	closeTimeout       = 1 * time.Second
+	maxConcurrentDials = 1
 )
 
 type dialRequest struct {
@@ -78,7 +78,7 @@ func (h *proxiedTCPHandler) handleDial() {
 	}
 }
 
-func (h *proxiedTCPHandler) Handle(_downstream net.Conn, addr *net.TCPAddr) error {
+func (h *proxiedTCPHandler) Handle(downstream net.Conn, addr *net.TCPAddr) error {
 	// before handling a new connection, make sure we're okay on memory
 	h.client.reduceMemoryPressureIfNecessary()
 
@@ -100,20 +100,20 @@ func (h *proxiedTCPHandler) Handle(_downstream net.Conn, addr *net.TCPAddr) erro
 
 	atomic.AddInt64(&h.dialingConns, 1)
 	h.dialRequests <- req
+	atomic.AddInt64(&h.dialingConns, -1)
+
 	select {
 	case upstream = <-req.upstream:
 		// okay
 	case err = <-req.err:
 		// error
 	}
-	atomic.AddInt64(&h.dialingConns, -1)
 
 	if err != nil {
 		cancelContext()
 		return log.Errorf("Unable to dial %v: %v", addrString, err)
 	}
 
-	downstream := idletiming.Conn(_downstream, chained.IdleTimeout, nil)
 	h.mx.Lock()
 	h.upstreams[downstream] = upstream
 	h.mx.Unlock()
@@ -144,26 +144,67 @@ func (h *proxiedTCPHandler) copy(downstream net.Conn, upstream net.Conn) {
 	bufOut := make([]byte, h.mtu)
 	bufIn := make([]byte, h.mtu)
 
-	// keeps the connection fresh in the LRU cache as long as we're reading or writing to it
-	keepFresh := func(_ int) {
+	closeTimer := time.NewTimer(closeTimeout)
+	keepFresh := func() {
 		h.downstreams.mark(downstream)
+		if !closeTimer.Stop() {
+			<-closeTimer.C
+		}
+		closeTimer.Reset(closeTimeout)
 	}
 
-	outErr, inErr := netx.BidiCopyWithTracking(downstream, upstream, bufOut, bufIn, keepFresh, keepFresh)
+	outErrCh, inErrCh := netx.BidiCopyReturningChannels(upstream, downstream, bufOut, bufIn, func(n int) {
+		keepFresh()
+	}, func(n int) {
+		keepFresh()
+		// // stall if memory gets low
+		// h.client.memcap.get(n)
+	})
 
-	isIdled := idletiming.IsIdled(upstream)
 	logError := func(err error) {
 		if err == nil {
 			return
-		} else if isIdled {
+		} else if idletiming.IsIdled(upstream) {
 			log.Debug(err)
 		} else {
 			log.Error(err)
 		}
 	}
 
-	logError(outErr)
-	logError(inErr)
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+
+		outErr := <-outErrCh
+		logError(outErr)
+		select {
+		case inErr := <-inErrCh:
+			logError(inErr)
+		case <-closeTimer.C:
+			log.Trace("opposite direction idle for more than closeTimeout, close everything")
+			upstream.Close()
+			downstream.Close()
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		inErr := <-inErrCh
+		logError(inErr)
+		select {
+		case outErr := <-outErrCh:
+			logError(outErr)
+		case <-closeTimer.C:
+			log.Trace("opposite direction idle for more than closeTimeout, close everything")
+			upstream.Close()
+			downstream.Close()
+		}
+	}()
+
+	wg.Wait()
 }
 
 func (h *proxiedTCPHandler) closeOldestConn() bool {

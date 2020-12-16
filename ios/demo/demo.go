@@ -50,13 +50,13 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"syscall"
@@ -246,8 +246,10 @@ func main() {
 
 type noopMemChecker struct{}
 
-func (c *noopMemChecker) Check() *ios.MemInfo {
-	return &ios.MemInfo{0, false && rand.Float64() > 0.95}
+func (c *noopMemChecker) BytesBeforeCritical() int {
+	memstats := &runtime.MemStats{}
+	runtime.ReadMemStats(memstats)
+	return 8000000 - int(memstats.HeapInuse)
 }
 
 type writerAdapter struct {

@@ -42,7 +42,7 @@ require (
 	github.com/getlantern/golog v0.0.0-20201105130739-9586b8bde3a9
 	github.com/getlantern/gowin v0.0.0-20160824205538-88fa116ddffc // indirect
 	github.com/getlantern/hellosplitter v0.1.0
-	github.com/getlantern/hidden v0.0.0-20190325191715-f02dbb02be55
+	github.com/getlantern/hidden v0.0.0-20201215190232-20a287a67ea5
 	github.com/getlantern/http-proxy-lantern/v2 v2.6.23
 	github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
@@ -61,7 +61,7 @@ require (
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20201027015000-69ed0bd15259
-	github.com/getlantern/netx v0.0.0-20201211181711-08fda61c8b17
+	github.com/getlantern/netx v0.0.0-20201215185514-fb4d0ff4d3e3
 	github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b
 	github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6
 	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
@@ -136,4 +136,4 @@ replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-2020
 // For https://github.com/getlantern/lantern-internal/issues/4277
 replace crawshaw.io/sqlite => github.com/getlantern/sqlite v0.3.3-0.20201015053730-228fbc4f607f
 
-// replace github.com/eycorsican/go-tun2socks => github.com/getlantern/go-tun2socks v1.16.12-0.20201210223909-e91e6ac5088c
+replace github.com/eycorsican/go-tun2socks => github.com/getlantern/go-tun2socks v1.16.12-0.20201216173418-fc2587d04288

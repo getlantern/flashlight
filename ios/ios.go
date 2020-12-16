@@ -5,7 +5,6 @@ import (
 	"io"
 	"io/ioutil"
 	"path/filepath"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -22,8 +21,6 @@ import (
 )
 
 const (
-	memLimitInMiB   = 12
-	memLimitInBytes = memLimitInMiB * 1024 * 1024
 	maxDNSGrabCache = 1000 // this doesn't need to be huge because our fake DNS records have a TTL of only 1 second
 
 	quotaSaveInterval            = 1 * time.Minute
@@ -36,11 +33,18 @@ type Writer interface {
 }
 
 type writerAdapter struct {
-	Writer
+	client *client
 }
 
 func (wa *writerAdapter) Write(b []byte) (int, error) {
-	ok := wa.Writer.Write(b)
+	// drop if memory gets low
+	if !wa.client.memcap.allowed(len(b)) {
+		atomic.AddInt64(&wa.client.droppedPacketsSent, 1)
+		return 0, nil
+	}
+	atomic.AddInt64(&wa.client.packetsSent, 1)
+
+	ok := wa.client.packetsOut.Write(b)
 	if !ok {
 		return 0, errors.New("error writing")
 	}
@@ -72,9 +76,12 @@ type cw struct {
 }
 
 func (c *cw) Write(b []byte) (int, error) {
-	// Briefly obtain the acceptMx to make sure we're not in the process of reducing memory pressure
-	c.client.acceptMx.RLock()
-	c.client.acceptMx.RUnlock()
+	// drop if memory gets low
+	if !c.client.memcap.allowed(len(b)) {
+		atomic.AddInt64(&c.client.droppedPacketsRecv, 1)
+		return 0, nil
+	}
+	atomic.AddInt64(&c.client.packetsRecv, 1)
 
 	_, err := c.ipStack.Write(b)
 
@@ -122,11 +129,9 @@ func (c *cw) Reconfigure() {
 }
 
 func (c *cw) Reset() {
-	c.client.acceptMx.Lock()
 	c.client.tcpHandler.disconnect()
 	c.client.udpHandler.disconnect()
 	c.bal.ResetFromExisting()
-	c.client.acceptMx.Unlock()
 	atomic.AddInt64(&c.client.resets, 1)
 }
 
@@ -136,26 +141,28 @@ func (c *cw) Close() error {
 }
 
 type client struct {
-	packetsOut      Writer
-	udpDialer       UDPDialer
-	memChecker      MemChecker
-	configDir       string
-	mtu             int
-	capturedDNSHost string
-	realDNSHost     string
-	uc              *UserConfig
-	tcpHandler      *proxiedTCPHandler
-	udpHandler      *directUDPHandler
-	ipStack         tun2socks.LWIPStack
-	acceptMx        sync.RWMutex
-	clientWriter    *cw
-	started         time.Time
-	resets          int64
+	packetsOut         Writer
+	udpDialer          UDPDialer
+	memChecker         MemChecker
+	configDir          string
+	mtu                int
+	capturedDNSHost    string
+	realDNSHost        string
+	memcap             *memCapper
+	uc                 *UserConfig
+	tcpHandler         *proxiedTCPHandler
+	udpHandler         *directUDPHandler
+	ipStack            tun2socks.LWIPStack
+	clientWriter       *cw
+	started            time.Time
+	packetsRecv        int64
+	droppedPacketsRecv int64
+	packetsSent        int64
+	droppedPacketsSent int64
+	resets             int64
 }
 
 func Client(packetsOut Writer, udpDialer UDPDialer, memChecker MemChecker, configDir string, mtu int, capturedDNSHost, realDNSHost string) (ClientWriter, error) {
-	go periodicGC()
-
 	if mtu <= 0 {
 		log.Debug("Defaulting MTU to 1500")
 		mtu = 1500
@@ -169,10 +176,12 @@ func Client(packetsOut Writer, udpDialer UDPDialer, memChecker MemChecker, confi
 		mtu:             mtu,
 		capturedDNSHost: capturedDNSHost,
 		realDNSHost:     realDNSHost,
+		memcap:          newMemCapper(memChecker.BytesBeforeCritical()),
 		started:         time.Now(),
 	}
 	go c.trackMemory()
 	go c.checkForCriticallyLowMemory()
+	go c.trackPacketLoss()
 
 	return c.start()
 }
@@ -204,7 +213,7 @@ func (c *client) start() (ClientWriter, error) {
 	c.udpHandler = newDirectUDPHandler(c, c.udpDialer, grabber, c.capturedDNSHost)
 
 	ipStack := tun2socks.NewLWIPStack()
-	wa := &writerAdapter{c.packetsOut}
+	wa := &writerAdapter{c}
 	tun2socks.RegisterOutputFn(wa.Write)
 	tun2socks.RegisterTCPConnHandler(c.tcpHandler)
 	tun2socks.RegisterUDPConnHandler(c.udpHandler)
@@ -258,5 +267,16 @@ func userConfigFor(userID int, proToken, deviceID string) *UserConfig {
 			nil, // Headers currently unused
 			"",  // Language currently unused
 		),
+	}
+}
+
+func (c *client) trackPacketLoss() {
+	for {
+		time.Sleep(5 * time.Second)
+		recv, droppedRecv := atomic.LoadInt64(&c.packetsRecv), atomic.LoadInt64(&c.droppedPacketsRecv)
+		sent, droppedSent := atomic.LoadInt64(&c.packetsSent), atomic.LoadInt64(&c.droppedPacketsSent)
+		recvPLR := float64(droppedRecv) * 100 / float64(droppedRecv+recv)
+		sendPLR := float64(droppedSent) * 100 / float64(droppedSent+sent)
+		statsLog.Debugf("Packet Loss   Recv: %.2f%%    Send: %.2f%%", recvPLR, sendPLR)
 	}
 }

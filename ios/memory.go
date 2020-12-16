@@ -16,28 +16,34 @@ import (
 
 // Memory management on iOS is critical because we're running in a network extension that's limited to 15 MB of memory. We handle this using several techniques.
 //
-// 1. We force garbage collection frequently and immediately request that memory be released to the OS
-// 2. We use the MemChecker abstraction to find out when we're running critically low on memory. If we are, we start forcibly closing the oldest connections
+// 1. Set an aggressive GCPercent
+// 2. Use the MemChecker abstraction to find out when we're running critically low on memory. If we are, we start forcibly closing the oldest connections in batches
 //    until we're no longer critically low. If that didn't work, we reset our TCP and UDP handlers as well as the balancer.
-//    - We close the most oldest connections first because those are likeliest to be idle
+//    - We close the oldest connections first because those are likeliest to be idle
 //    - We close multiple connections at once because single connections rarely relieve enough memory pressure
 //    - This does disrupt the user experience for some connections, but it gives the tunnel a chance to continue working for others. The alternative is for the tunnel to
 //      get terminated by the OS, which is more disruptive
 // 3. While resolving low memory conditions, we do not accept new connections or upload packets for existing TCP connections
 // 4. Dialing to the proxy with TLS connections is quite memory intensive due to the public key cryptography, so we limit the number of concurrent dials
+// 5. Use short idle timeouts to reduce the number of simultaneously open connections
 //
 
 const (
 	logMemoryInterval                = 5 * time.Second
-	forcedGCInterval                 = 1 * time.Second
-	checkCriticalInterval            = 15 * time.Millisecond
+	forceGCInterval                  = 25 * time.Millisecond
+	checkCriticalInterval            = 25 * time.Millisecond
 	postResetDelay                   = 10 * time.Second
-	numberOfConnectionsToCloseAtOnce = 8
+	postFreeDelay                    = 50 * time.Millisecond
+	cyclesToWaitForMemoryReduction   = 4
+	numberOfConnectionsToCloseAtOnce = 4
 )
 
 func init() {
 	// set more aggressive IdleTimeout to help deal with memory constraints on iOS
 	chained.IdleTimeout = 15 * time.Second
+
+	// set an aggressive target for triggering GC after new allocations reach 20% of heap
+	debug.SetGCPercent(20)
 }
 
 var (
@@ -59,16 +65,8 @@ func getProfilePath() string {
 
 // MemChecker checks the system's memory level
 type MemChecker interface {
-	// Check checks system memory
-	Check() *MemInfo
-}
-
-// MemInfo provides information about system memory usage
-type MemInfo struct {
-	// Bytes gives the total memory in use
-	Bytes int
-	// Critical indicates if memory levels are getting critical
-	Critical bool
+	// BytesBeforeCritical returns the number of bytes of memory left available for use before getting critically low
+	BytesBeforeCritical() int
 }
 
 func (c *client) trackMemory() {
@@ -78,11 +76,10 @@ func (c *client) trackMemory() {
 	}
 }
 
-func periodicGC() {
-	debug.SetGCPercent(20)
-	ticker := time.NewTicker(forcedGCInterval)
+func (c *client) gcPeriodically() {
+	ticker := time.NewTicker(forceGCInterval)
 	for range ticker.C {
-		// this select ensures that if ticker fired while freeMemory() was running (i.e. it took longer than forcedGCInterval), we wait until the ticket fires again to run freeMemory
+		// this select ensures that if ticker fired while we were checking memory (i.e. it took longer than forceGCInterval), we wait until the ticket fires again to check memory
 		select {
 		case <-ticker.C:
 			continue
@@ -107,13 +104,8 @@ func (c *client) checkForCriticallyLowMemory() {
 
 func (c *client) reduceMemoryPressureIfNecessary() {
 	if c.checkCriticalAndLogMemoryIfNecessary() {
-		statsLog.Debug("Memory critically low, forcing garbage collection")
-		freeMemory()
-
-		if c.checkCriticalAndLogMemoryIfNecessary() {
-			// captureProfiles()
-			c.reduceMemoryPressure()
-		}
+		captureProfiles()
+		c.reduceMemoryPressure()
 	}
 
 	if c.checkCriticalAndLogMemoryIfNecessary() {
@@ -131,20 +123,13 @@ func (c *client) reduceMemoryPressure() {
 	statsLog.Debugf("Memory still critically low after closing %d connections, resetting client completely", numConnsClosed)
 	c.clientWriter.Reset()
 
-	// stop accepting connections for a bit to keep things from getting worse, and wait a bit for
-	// connections to finish closing, then GC
-	c.acceptMx.Lock()
+	// wwait a bit for connections to finish closing, then GC
 	time.Sleep(postResetDelay)
-	c.acceptMx.Unlock()
 
-	freeMemory()
+	c.checkCriticalAndLogMemoryIfNecessary()
 }
 
 func (c *client) closeOldestConnectionsToReduceMemoryPressure() (totalNumConnsClosed int, resolved bool) {
-	// stop traffic while we try to free memory
-	c.acceptMx.Lock()
-	defer c.acceptMx.Unlock()
-
 	for {
 		statsLog.Debugf("Memory still critically low, closing up to %d connections at once", numberOfConnectionsToCloseAtOnce)
 
@@ -161,8 +146,6 @@ func (c *client) closeOldestConnectionsToReduceMemoryPressure() (totalNumConnsCl
 			statsLog.Debugf("Closed %d oldest connections", numClosed)
 			totalNumConnsClosed += numClosed
 
-			freeMemory()
-
 			if !c.checkCriticalAndLogMemoryIfNecessary() {
 				statsLog.Debugf("Closing a total of %d connections resolved memory pressure", totalNumConnsClosed)
 				resolved = true
@@ -176,30 +159,43 @@ func (c *client) closeOldestConnectionsToReduceMemoryPressure() (totalNumConnsCl
 }
 
 func (c *client) checkCriticalAndLogMemoryIfNecessary() bool {
-	memInfo := c.memChecker.Check()
-	critical := memInfo != nil && memInfo.Critical
-	if critical {
-		c.doLogMemory(memInfo)
+	bytesBeforeCritical := 0
+	for i := 0; i < cyclesToWaitForMemoryReduction; i++ {
+		bytesBeforeCritical = c.memChecker.BytesBeforeCritical()
+		c.memcap.setAvailable(bytesBeforeCritical)
+		critical := bytesBeforeCritical < 0
+		if !critical {
+			// all good
+			return false
+		}
+
+		// memory is critically low
+		freeMemory()
+		time.Sleep(postFreeDelay)
 	}
-	return critical
+
+	c.doLogMemory(bytesBeforeCritical)
+	return true
 }
 
 func (c *client) logMemory() {
-	memInfo := c.memChecker.Check()
-	c.doLogMemory(memInfo)
+	bytesBeforeCritical := c.memChecker.BytesBeforeCritical()
+	c.memcap.setAvailable(bytesBeforeCritical)
+	c.doLogMemory(bytesBeforeCritical)
 }
 
-func (c *client) doLogMemory(memInfo *MemInfo) {
-	if memInfo != nil {
-		memstats := &runtime.MemStats{}
-		runtime.ReadMemStats(memstats)
+func (c *client) doLogMemory(bytesBeforeCritical int) {
+	memstats := &runtime.MemStats{}
+	runtime.ReadMemStats(memstats)
 
-		statsLog.Debugf("Memory System: %v    Go InUse: %v    Go Alloc: %v    Go Sys: %v",
-			humanize.Bytes(uint64(memInfo.Bytes)),
-			humanize.Bytes(memstats.HeapInuse),
-			humanize.Bytes(memstats.Alloc),
-			humanize.Bytes(memstats.Sys))
+	if bytesBeforeCritical < 0 {
+		bytesBeforeCritical = 0
 	}
+
+	statsLog.Debugf("Memory System Bytes before Critical: %v    Go InUse: %v    Go Alloc: %v",
+		humanize.Bytes(uint64(bytesBeforeCritical)),
+		humanize.Bytes(memstats.HeapInuse),
+		humanize.Bytes(memstats.Alloc))
 
 	stats := debug.GCStats{
 		PauseQuantiles: make([]time.Duration, 10),
@@ -216,6 +212,9 @@ func freeMemory() {
 
 func captureProfiles() {
 	log.Debug("Capturing profiles")
+
+	// always free memory before capturing profiles because we need at least one GC before capturing heap data to get appropriate stats
+	freeMemory()
 
 	path := getProfilePath()
 	if path == "" {

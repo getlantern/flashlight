@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"regexp"
 	"runtime"
 	"strings"
 	"sync/atomic"
@@ -40,8 +39,6 @@ const (
 )
 
 var (
-	proxyNameRegex = regexp.MustCompile(`(fp-([a-z0-9]+-)?([a-z0-9]+)-[0-9]{8}-[0-9]+)(-.+)?`)
-
 	beam_seq uint64
 )
 
@@ -210,12 +207,26 @@ func (op *Op) ProxyName(name string) *Op {
 
 // ProxyNameAndDC extracts the canonical proxy name and datacenter from a given
 // full proxy name.
-func ProxyNameAndDC(name string) (string, string) {
-	match := proxyNameRegex.FindStringSubmatch(name)
-	if len(match) == 5 {
-		return match[1], match[3]
+func ProxyNameAndDC(name string) (proxyName string, dc string) {
+	hyphenIndexes := make([]int, 0, 5)
+	for i, r := range name {
+		if r == '-' {
+			hyphenIndexes = append(hyphenIndexes, i)
+		}
 	}
-	return "", ""
+
+	if len(hyphenIndexes) < 2 {
+		return
+	}
+
+	dc = name[hyphenIndexes[0]+1 : hyphenIndexes[1]]
+	if len(hyphenIndexes) > 3 {
+		proxyName = name[:hyphenIndexes[3]]
+	} else {
+		proxyName = name
+	}
+
+	return
 }
 
 // ProxyAddr attaches proxy server address to the Context
