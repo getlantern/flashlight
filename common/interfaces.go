@@ -14,3 +14,20 @@ type UserConfig interface {
 	GetTimeZone() (string, error)
 	GetInternalHeaders() map[string]string
 }
+
+// NullAuthConfig is useful for testing
+type NullAuthConfig struct{}
+
+func (a NullAuthConfig) GetDeviceID() string { return "" }
+func (a NullAuthConfig) GetUserID() int64    { return int64(10) }
+func (a NullAuthConfig) GetToken() string    { return "" }
+
+var _ AuthConfig = (*NullAuthConfig)(nil)
+
+// NullUserConfig is useful for testing
+type NullUserConfig struct{ NullAuthConfig }
+
+func (s NullUserConfig) GetLanguage() string                   { return "" }
+func (s NullUserConfig) GetInternalHeaders() map[string]string { return make(map[string]string) }
+
+var _ UserConfig = (*NullUserConfig)(nil)
