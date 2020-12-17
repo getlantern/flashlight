@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"reflect"
 
 	"github.com/getlantern/auth-server/api"
 	"github.com/getlantern/golog"
@@ -103,13 +104,18 @@ func (h Handler) ProxyHandler(url string, req *http.Request, w http.ResponseWrit
 
 // SuccessResponse is an API response used to inform the
 // UI a request succeeded. It includes `success: true`
-func SuccessResponse(w http.ResponseWriter, vargs ...map[string]interface{}) {
-	var args map[string]interface{}
+func SuccessResponse(w http.ResponseWriter, vargs ...interface{}) {
+	var args interface{}
 	if len(vargs) == 0 {
 		args = successResponse
+	} else if reflect.ValueOf(vargs).Kind() == reflect.Map {
+		// if the args returned in the success response
+		//  represent a map, attach the success key to it
+		m := vargs[0].(map[string]interface{})
+		m[successKey] = true
+		args = m
 	} else {
-		args = vargs[0]
-		args[successKey] = true
+		args = vargs
 	}
 	common.WriteJSON(w, http.StatusOK, args)
 }

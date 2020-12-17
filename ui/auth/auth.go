@@ -51,7 +51,7 @@ func (h AuthHandler) GetPathPrefix() string {
 	return pathPrefix
 }
 
-type AuthMethod func(username string, password string) (*api.AuthResponse, error)
+type AuthMethod func(params *models.UserParams) (*api.AuthResponse, error)
 
 // authHandler is the HTTP handler used by the login and
 // registration endpoints. It creates a new SRP client from
@@ -62,12 +62,14 @@ func (h AuthHandler) authHandler(authenticate AuthMethod) http.HandlerFunc {
 		// extract user credentials from HTTP request to send to AuthClient
 		err := handler.DecodeJSONRequest(w, r, &params)
 		if err != nil {
-			log.Errorf("Couldn't create SRP client from request: %v", err)
+			log.Errorf("Couldn't decode user params: %v", err)
 			return
 		}
-		_, err = authenticate(params.Username, params.Password)
+		authResp, err := authenticate(&params)
 		if err != nil {
 			handler.ErrorHandler(w, err, http.StatusBadRequest)
+		} else {
+			handler.SuccessResponse(w, authResp)
 		}
 	})
 }
