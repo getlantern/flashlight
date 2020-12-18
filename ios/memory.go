@@ -16,27 +16,11 @@ import (
 
 // Memory management on iOS is critical because we're running in a network extension that's limited to 15 MB of memory. We handle this using several techniques.
 //
-// 1. Set an aggressive GCPercent
-// 2. Use the MemChecker abstraction to find out when we're running critically low on memory. If we are, we start forcibly closing the oldest connections in batches
-//    until we're no longer critically low. If that didn't work, we reset our TCP and UDP handlers as well as the balancer.
-//    - We close the oldest connections first because those are likeliest to be idle
-//    - We close multiple connections at once because single connections rarely relieve enough memory pressure
-//    - This does disrupt the user experience for some connections, but it gives the tunnel a chance to continue working for others. The alternative is for the tunnel to
-//      get terminated by the OS, which is more disruptive
-// 3. While resolving low memory conditions, we do not accept new connections or upload packets for existing TCP connections
+// 1. Use a fork of go-tun2socks tuned for low memory usage (see https://lwip.fandom.com/wiki/Tuning_TCP and https://lwip.fandom.com/wiki/Lwipopts.h)
+// 2. Set an aggressive GCPercent
+// 3. Use the MemChecker abstraction to find out how much memory is left before hitting our limit and use this to limit the throughput of IP packets to/from tun2socks. As the system becomes memory constrained, we start dropping packets.
 // 4. Dialing to the proxy with TLS connections is quite memory intensive due to the public key cryptography, so we limit the number of concurrent dials
 // 5. Use short idle timeouts to reduce the number of simultaneously open connections
-//
-
-const (
-	logMemoryInterval                = 5 * time.Second
-	forceGCInterval                  = 25 * time.Millisecond
-	checkCriticalInterval            = 25 * time.Millisecond
-	postResetDelay                   = 10 * time.Second
-	postFreeDelay                    = 50 * time.Millisecond
-	cyclesToWaitForMemoryReduction   = 4
-	numberOfConnectionsToCloseAtOnce = 4
-)
 
 func init() {
 	// set more aggressive IdleTimeout to help deal with memory constraints on iOS
@@ -69,10 +53,29 @@ type MemChecker interface {
 	BytesBeforeCritical() int
 }
 
+type memCapper struct {
+	available int64
+}
+
+func newMemCapper(initialAvailable int) *memCapper {
+	return &memCapper{
+		available: int64(30000),
+	}
+}
+
+func (mc *memCapper) allowed(n int) bool {
+	newAvailable := atomic.AddInt64(&mc.available, -1*int64(n))
+	return newAvailable >= 0
+}
+
+func (mc *memCapper) setAvailable(available int) {
+	atomic.StoreInt64(&mc.available, int64(available))
+}
+
 func (c *client) trackMemory() {
 	for {
-		c.logMemory()
-		time.Sleep(logMemoryInterval)
+		c.doTrackMemory()
+		time.Sleep(trackMemoryInterval)
 	}
 }
 
@@ -89,102 +92,10 @@ func (c *client) gcPeriodically() {
 	}
 }
 
-func (c *client) checkForCriticallyLowMemory() {
-	ticker := time.NewTicker(checkCriticalInterval)
-	for range ticker.C {
-		// this select ensures that if ticker fired while we were checking memory (i.e. it took longer than checkCriticalInterval), we wait until the ticket fires again to check memory
-		select {
-		case <-ticker.C:
-			continue
-		default:
-			c.reduceMemoryPressureIfNecessary()
-		}
-	}
-}
-
-func (c *client) reduceMemoryPressureIfNecessary() {
-	if c.checkCriticalAndLogMemoryIfNecessary() {
-		captureProfiles()
-		c.reduceMemoryPressure()
-	}
-
-	if c.checkCriticalAndLogMemoryIfNecessary() {
-		statsLog.Debug("Memory still critically low after taking all possible measures to reduce")
-	}
-}
-
-func (c *client) reduceMemoryPressure() {
-	numConnsClosed, resolved := c.closeOldestConnectionsToReduceMemoryPressure()
-
-	if resolved {
-		return
-	}
-
-	statsLog.Debugf("Memory still critically low after closing %d connections, resetting client completely", numConnsClosed)
-	c.clientWriter.Reset()
-
-	// wwait a bit for connections to finish closing, then GC
-	time.Sleep(postResetDelay)
-
-	c.checkCriticalAndLogMemoryIfNecessary()
-}
-
-func (c *client) closeOldestConnectionsToReduceMemoryPressure() (totalNumConnsClosed int, resolved bool) {
-	for {
-		statsLog.Debugf("Memory still critically low, closing up to %d connections at once", numberOfConnectionsToCloseAtOnce)
-
-		numClosed := 0
-		for i := 0; i < numberOfConnectionsToCloseAtOnce; i++ {
-			if !c.tcpHandler.closeOldestConn() && !c.udpHandler.closeOldestConn() {
-				// nothing left to close
-				break
-			}
-			numClosed++
-		}
-
-		if numClosed > 0 {
-			statsLog.Debugf("Closed %d oldest connections", numClosed)
-			totalNumConnsClosed += numClosed
-
-			if !c.checkCriticalAndLogMemoryIfNecessary() {
-				statsLog.Debugf("Closing a total of %d connections resolved memory pressure", totalNumConnsClosed)
-				resolved = true
-				return
-			}
-		} else {
-			resolved = false // noop, just for clarity
-			return
-		}
-	}
-}
-
-func (c *client) checkCriticalAndLogMemoryIfNecessary() bool {
-	bytesBeforeCritical := 0
-	for i := 0; i < cyclesToWaitForMemoryReduction; i++ {
-		bytesBeforeCritical = c.memChecker.BytesBeforeCritical()
-		c.memcap.setAvailable(bytesBeforeCritical)
-		critical := bytesBeforeCritical < 0
-		if !critical {
-			// all good
-			return false
-		}
-
-		// memory is critically low
-		freeMemory()
-		time.Sleep(postFreeDelay)
-	}
-
-	c.doLogMemory(bytesBeforeCritical)
-	return true
-}
-
-func (c *client) logMemory() {
+func (c *client) doTrackMemory() {
 	bytesBeforeCritical := c.memChecker.BytesBeforeCritical()
 	c.memcap.setAvailable(bytesBeforeCritical)
-	c.doLogMemory(bytesBeforeCritical)
-}
 
-func (c *client) doLogMemory(bytesBeforeCritical int) {
 	memstats := &runtime.MemStats{}
 	runtime.ReadMemStats(memstats)
 
@@ -203,7 +114,12 @@ func (c *client) doLogMemory(bytesBeforeCritical int) {
 	debug.ReadGCStats(&stats)
 	elapsed := time.Now().Sub(c.started)
 	statsLog.Debugf("Memory GC num: %v    total pauses: %v (%.2f%%)    pause percentiles: %v", stats.NumGC, stats.PauseTotal, float64(stats.PauseTotal)*100/float64(elapsed), stats.PauseQuantiles)
-	statsLog.Debugf("Resets: %d", atomic.LoadInt64(&c.resets))
+
+	recv, droppedRecv := atomic.LoadInt64(&c.packetsRecv), atomic.LoadInt64(&c.droppedPacketsRecv)
+	sent, droppedSent := atomic.LoadInt64(&c.packetsSent), atomic.LoadInt64(&c.droppedPacketsSent)
+	recvPLR := float64(droppedRecv) * 100 / float64(droppedRecv+recv)
+	sendPLR := float64(droppedSent) * 100 / float64(droppedSent+sent)
+	statsLog.Debugf("Packet Loss   Recv: %.2f%%    Send: %.2f%%", recvPLR, sendPLR)
 }
 
 func freeMemory() {

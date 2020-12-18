@@ -5,12 +5,14 @@ import (
 	"io"
 	"io/ioutil"
 	"path/filepath"
+	"runtime"
 	"sync/atomic"
 	"time"
 
 	tun2socks "github.com/eycorsican/go-tun2socks/core"
 
 	"github.com/getlantern/dnsgrab"
+	"github.com/getlantern/dnsgrab/persistentcache"
 	"github.com/getlantern/errors"
 
 	"github.com/getlantern/flashlight/balancer"
@@ -22,10 +24,18 @@ import (
 
 const (
 	maxDNSGrabCache = 1000 // this doesn't need to be huge because our fake DNS records have a TTL of only 1 second
+	dnsCacheMaxAge  = 1 * time.Hour
 
 	quotaSaveInterval            = 1 * time.Minute
 	shortFrontedAvailableTimeout = 30 * time.Second
 	longFrontedAvailableTimeout  = 5 * time.Minute
+
+	trackMemoryInterval = 5 * time.Second
+	forceGCInterval     = 25 * time.Millisecond
+
+	dialTimeout        = 30 * time.Second
+	closeTimeout       = 1 * time.Second
+	maxConcurrentDials = 4
 )
 
 type Writer interface {
@@ -37,11 +47,11 @@ type writerAdapter struct {
 }
 
 func (wa *writerAdapter) Write(b []byte) (int, error) {
-	// drop if memory gets low
-	if !wa.client.memcap.allowed(len(b)) {
-		atomic.AddInt64(&wa.client.droppedPacketsSent, 1)
-		return 0, nil
-	}
+	// // drop if memory gets low
+	// if !wa.client.memcap.allowed(len(b)) {
+	// 	atomic.AddInt64(&wa.client.droppedPacketsSent, 1)
+	// 	return 0, nil
+	// }
 	atomic.AddInt64(&wa.client.packetsSent, 1)
 
 	ok := wa.client.packetsOut.Write(b)
@@ -61,9 +71,6 @@ type ClientWriter interface {
 	// Reconfigure forces the ClientWriter to update its configuration
 	Reconfigure()
 
-	// Reset() resets the client writer, closing and restarting the ip stack.
-	Reset()
-
 	Close() error
 }
 
@@ -76,11 +83,11 @@ type cw struct {
 }
 
 func (c *cw) Write(b []byte) (int, error) {
-	// drop if memory gets low
-	if !c.client.memcap.allowed(len(b)) {
-		atomic.AddInt64(&c.client.droppedPacketsRecv, 1)
-		return 0, nil
-	}
+	// // drop if memory gets low
+	// if !c.client.memcap.allowed(len(b)) {
+	// 	atomic.AddInt64(&c.client.droppedPacketsRecv, 1)
+	// 	return 0, nil
+	// }
 	atomic.AddInt64(&c.client.packetsRecv, 1)
 
 	_, err := c.ipStack.Write(b)
@@ -128,13 +135,6 @@ func (c *cw) Reconfigure() {
 	c.bal.Reset(dialers)
 }
 
-func (c *cw) Reset() {
-	c.client.tcpHandler.disconnect()
-	c.client.udpHandler.disconnect()
-	c.bal.ResetFromExisting()
-	atomic.AddInt64(&c.client.resets, 1)
-}
-
 func (c *cw) Close() error {
 	c.bal.Close()
 	return nil
@@ -159,10 +159,14 @@ type client struct {
 	droppedPacketsRecv int64
 	packetsSent        int64
 	droppedPacketsSent int64
-	resets             int64
 }
 
 func Client(packetsOut Writer, udpDialer UDPDialer, memChecker MemChecker, configDir string, mtu int, capturedDNSHost, realDNSHost string) (ClientWriter, error) {
+	// Lock to the current thread and limit the number of OS threads we use to keep memory usage down
+	// Each OS thread has a stack of 512KB, which adds up quickly.
+	runtime.LockOSThread()
+	runtime.GOMAXPROCS(1)
+
 	if mtu <= 0 {
 		log.Debug("Defaulting MTU to 1500")
 		mtu = 1500
@@ -180,8 +184,6 @@ func Client(packetsOut Writer, udpDialer UDPDialer, memChecker MemChecker, confi
 		started:         time.Now(),
 	}
 	go c.trackMemory()
-	go c.checkForCriticallyLowMemory()
-	go c.trackPacketLoss()
 
 	return c.start()
 }
@@ -200,10 +202,15 @@ func (c *client) start() (ClientWriter, error) {
 	}
 	bal := balancer.New(func() bool { return c.uc.AllowProbes }, 30*time.Second, dialers...)
 
-	grabber, err := dnsgrab.Listen(
-		maxDNSGrabCache,
+	cacheFile := filepath.Join(c.configDir, "dnsgrab.cache")
+	cache, err := persistentcache.New(cacheFile, dnsCacheMaxAge)
+	if err != nil {
+		return nil, errors.New("Unable to initialize dnsgrab cache at %v: %v", cacheFile, err)
+	}
+	grabber, err := dnsgrab.ListenWithCache(
 		"127.0.0.1:0",
 		c.realDNSHost,
+		cache,
 	)
 	if err != nil {
 		return nil, errors.New("Unable to start dnsgrab: %v", err)
@@ -226,6 +233,7 @@ func (c *client) start() (ClientWriter, error) {
 		bal:           bal,
 		quotaTextPath: filepath.Join(c.configDir, "quota.txt"),
 	}
+
 	return c.clientWriter, nil
 }
 
@@ -267,16 +275,5 @@ func userConfigFor(userID int, proToken, deviceID string) *UserConfig {
 			nil, // Headers currently unused
 			"",  // Language currently unused
 		),
-	}
-}
-
-func (c *client) trackPacketLoss() {
-	for {
-		time.Sleep(5 * time.Second)
-		recv, droppedRecv := atomic.LoadInt64(&c.packetsRecv), atomic.LoadInt64(&c.droppedPacketsRecv)
-		sent, droppedSent := atomic.LoadInt64(&c.packetsSent), atomic.LoadInt64(&c.droppedPacketsSent)
-		recvPLR := float64(droppedRecv) * 100 / float64(droppedRecv+recv)
-		sendPLR := float64(droppedSent) * 100 / float64(droppedSent+sent)
-		statsLog.Debugf("Packet Loss   Recv: %.2f%%    Send: %.2f%%", recvPLR, sendPLR)
 	}
 }

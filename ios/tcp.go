@@ -15,12 +15,6 @@ import (
 	"github.com/getlantern/netx"
 )
 
-const (
-	dialTimeout        = 30 * time.Second
-	closeTimeout       = 1 * time.Second
-	maxConcurrentDials = 1
-)
-
 type dialRequest struct {
 	ctx      context.Context
 	addr     string
@@ -37,9 +31,7 @@ type proxiedTCPHandler struct {
 	mtu          int
 	dialingConns int64
 	copyingConns int64
-	closingConns int64
 	dialRequests chan *dialRequest
-	downstreams  *lruConnList
 	upstreams    map[io.Closer]io.Closer
 	mx           sync.RWMutex
 }
@@ -51,7 +43,6 @@ func newProxiedTCPHandler(c *client, bal *balancer.Balancer, grabber dnsgrab.Ser
 		grabber:      grabber,
 		mtu:          c.mtu,
 		dialRequests: make(chan *dialRequest),
-		downstreams:  newLRUConnList(),
 		upstreams:    make(map[io.Closer]io.Closer),
 	}
 	go result.handleDials()
@@ -79,9 +70,6 @@ func (h *proxiedTCPHandler) handleDial() {
 }
 
 func (h *proxiedTCPHandler) Handle(downstream net.Conn, addr *net.TCPAddr) error {
-	// before handling a new connection, make sure we're okay on memory
-	h.client.reduceMemoryPressureIfNecessary()
-
 	host, ok := h.grabber.ReverseLookup(addr.IP)
 	if !ok {
 		return log.Errorf("Invalid ip address %v, will not connect", addr.IP)
@@ -100,7 +88,6 @@ func (h *proxiedTCPHandler) Handle(downstream net.Conn, addr *net.TCPAddr) error
 
 	atomic.AddInt64(&h.dialingConns, 1)
 	h.dialRequests <- req
-	atomic.AddInt64(&h.dialingConns, -1)
 
 	select {
 	case upstream = <-req.upstream:
@@ -108,6 +95,7 @@ func (h *proxiedTCPHandler) Handle(downstream net.Conn, addr *net.TCPAddr) error
 	case err = <-req.err:
 		// error
 	}
+	atomic.AddInt64(&h.dialingConns, -1)
 
 	if err != nil {
 		cancelContext()
@@ -119,7 +107,6 @@ func (h *proxiedTCPHandler) Handle(downstream net.Conn, addr *net.TCPAddr) error
 	h.mx.Unlock()
 
 	go func() {
-		h.downstreams.mark(downstream)
 		h.copy(downstream, upstream)
 		cancelContext()
 	}()
@@ -133,7 +120,6 @@ func (h *proxiedTCPHandler) copy(downstream net.Conn, upstream net.Conn) {
 
 	defer downstream.Close()
 	defer upstream.Close()
-	defer h.downstreams.remove(downstream)
 	defer func() {
 		h.mx.Lock()
 		delete(h.upstreams, downstream)
@@ -145,21 +131,14 @@ func (h *proxiedTCPHandler) copy(downstream net.Conn, upstream net.Conn) {
 	bufIn := make([]byte, h.mtu)
 
 	closeTimer := time.NewTimer(closeTimeout)
-	keepFresh := func() {
-		h.downstreams.mark(downstream)
+	keepFresh := func(_ int) {
 		if !closeTimer.Stop() {
 			<-closeTimer.C
 		}
 		closeTimer.Reset(closeTimeout)
 	}
 
-	outErrCh, inErrCh := netx.BidiCopyReturningChannels(upstream, downstream, bufOut, bufIn, func(n int) {
-		keepFresh()
-	}, func(n int) {
-		keepFresh()
-		// // stall if memory gets low
-		// h.client.memcap.get(n)
-	})
+	outErrCh, inErrCh := netx.BidiCopyReturningChannels(upstream, downstream, bufOut, bufIn, keepFresh, keepFresh)
 
 	logError := func(err error) {
 		if err == nil {
@@ -207,46 +186,12 @@ func (h *proxiedTCPHandler) copy(downstream net.Conn, upstream net.Conn) {
 	wg.Wait()
 }
 
-func (h *proxiedTCPHandler) closeOldestConn() bool {
-	downstream, ok := h.downstreams.removeOldest()
-	if ok {
-		h.forceClose(downstream)
-	}
-	return ok
-}
-
-func (h *proxiedTCPHandler) disconnect() {
-	downstreams := h.downstreams.removeAll()
-	for downstream := range downstreams {
-		// Close can actually take a while due to logic in both idletiming and measured, so to speed up our forced close, close downstream and upstream at the same time
-		// and on goroutines
-		go h.forceClose(downstream)
-	}
-}
-
-func (h *proxiedTCPHandler) forceClose(downstream io.Closer) {
-	h.mx.RLock()
-	upstream := h.upstreams[downstream.(net.Conn)]
-	h.mx.RUnlock()
-
-	h.closeConn(downstream)
-	if upstream != nil {
-		h.closeConn(upstream)
-	}
-}
-
-func (h *proxiedTCPHandler) closeConn(conn io.Closer) {
-	atomic.AddInt64(&h.closingConns, 1)
-	conn.Close()
-	atomic.AddInt64(&h.closingConns, -1)
-}
-
 func (h *proxiedTCPHandler) trackStats() {
 	for {
 		h.mx.RLock()
 		numUpstreams := len(h.upstreams)
 		h.mx.RUnlock()
-		statsLog.Debugf("TCP Conns    Downstreams: %d    Upstreams: %d   Dialing: %d   Copying: %d   Closing: %d", h.downstreams.len(), numUpstreams, atomic.LoadInt64(&h.dialingConns), atomic.LoadInt64(&h.copyingConns), atomic.LoadInt64(&h.closingConns))
+		statsLog.Debugf("TCP Conns    Upstreams: %d   Dialing: %d   Copying: %d", numUpstreams, atomic.LoadInt64(&h.dialingConns), atomic.LoadInt64(&h.copyingConns))
 		time.Sleep(1 * time.Second)
 	}
 }

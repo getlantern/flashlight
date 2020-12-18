@@ -59,15 +59,6 @@ func TestClientUDP(t *testing.T) {
 	case <-time.After(1 * time.Second):
 		t.Fatal("Timed out waiting for echo response")
 	}
-
-	w.Reset()
-
-	time.Sleep(1 * time.Second)
-	udpHandler := w.(*cw).client.udpHandler
-	udpHandler.Lock()
-	numConns := len(udpHandler.upstreams)
-	udpHandler.Unlock()
-	assert.Zero(t, numConns)
 }
 
 func startUDPEchoServer(t *testing.T) (string, func()) {
@@ -193,6 +184,6 @@ func (conn *realUDPConn) closeOnError(err error) {
 
 type noopMemChecker struct{}
 
-func (c *noopMemChecker) Check() *MemInfo {
-	return &MemInfo{0, false}
+func (c *noopMemChecker) BytesBeforeCritical() int {
+	return 1000000
 }
