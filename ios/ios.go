@@ -6,13 +6,13 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"runtime"
-	"sync/atomic"
+	"runtime/debug"
+	"sync"
 	"time"
 
 	tun2socks "github.com/eycorsican/go-tun2socks/core"
 
 	"github.com/getlantern/dnsgrab"
-	"github.com/getlantern/dnsgrab/persistentcache"
 	"github.com/getlantern/errors"
 
 	"github.com/getlantern/flashlight/balancer"
@@ -23,8 +23,8 @@ import (
 )
 
 const (
-	maxDNSGrabCache = 1000 // this doesn't need to be huge because our fake DNS records have a TTL of only 1 second
-	dnsCacheMaxAge  = 1 * time.Hour
+	maxDNSGrabCache = 1000          // this doesn't need to be huge because our fake DNS records have a TTL of only 1 second
+	dnsCacheMaxAge  = 1 * time.Hour // this doesn't need to be long because our fake DNS records have a TTL of only 1 second
 
 	quotaSaveInterval            = 1 * time.Minute
 	shortFrontedAvailableTimeout = 30 * time.Second
@@ -35,30 +35,67 @@ const (
 
 	dialTimeout        = 30 * time.Second
 	closeTimeout       = 1 * time.Second
-	maxConcurrentDials = 4
+	maxConcurrentDials = 8
+
+	ipWriteBufferDepth = 100
 )
+
+func init() {
+	// limit the number of threads used because each thread gets 0.5 MB of stack, which adds up quickly
+	runtime.GOMAXPROCS(1)
+	debug.SetMaxThreads(3)
+}
 
 type Writer interface {
 	Write([]byte) bool
 }
 
+type writeRequest struct {
+	b  []byte
+	ok chan bool
+}
+
 type writerAdapter struct {
-	client *client
+	writer    Writer
+	requests  chan *writeRequest
+	closeOnce sync.Once
+}
+
+func newWriterAdapter(writer Writer) io.WriteCloser {
+	wa := &writerAdapter{
+		writer:   writer,
+		requests: make(chan *writeRequest, ipWriteBufferDepth),
+	}
+
+	// handle all writing of output packets on a goroutine that's locked to the OS thread in order to avoid creating more native threads
+	go wa.handleWrites()
+	return wa
 }
 
 func (wa *writerAdapter) Write(b []byte) (int, error) {
-	// // drop if memory gets low
-	// if !wa.client.memcap.allowed(len(b)) {
-	// 	atomic.AddInt64(&wa.client.droppedPacketsSent, 1)
-	// 	return 0, nil
-	// }
-	atomic.AddInt64(&wa.client.packetsSent, 1)
-
-	ok := wa.client.packetsOut.Write(b)
+	req := &writeRequest{
+		b:  b,
+		ok: make(chan bool),
+	}
+	wa.requests <- req
+	ok := <-req.ok
 	if !ok {
 		return 0, errors.New("error writing")
 	}
 	return len(b), nil
+}
+
+func (wa *writerAdapter) handleWrites() {
+	for req := range wa.requests {
+		req.ok <- wa.writer.Write(req.b)
+	}
+}
+
+func (wa *writerAdapter) Close() error {
+	wa.closeOnce.Do(func() {
+		close(wa.requests)
+	})
+	return nil
 }
 
 type ClientWriter interface {
@@ -83,13 +120,6 @@ type cw struct {
 }
 
 func (c *cw) Write(b []byte) (int, error) {
-	// // drop if memory gets low
-	// if !c.client.memcap.allowed(len(b)) {
-	// 	atomic.AddInt64(&c.client.droppedPacketsRecv, 1)
-	// 	return 0, nil
-	// }
-	atomic.AddInt64(&c.client.packetsRecv, 1)
-
 	_, err := c.ipStack.Write(b)
 
 	result := 0
@@ -137,50 +167,40 @@ func (c *cw) Reconfigure() {
 
 func (c *cw) Close() error {
 	c.bal.Close()
+	c.client.packetsOut.Close()
 	return nil
 }
 
 type client struct {
-	packetsOut         Writer
-	udpDialer          UDPDialer
-	memChecker         MemChecker
-	configDir          string
-	mtu                int
-	capturedDNSHost    string
-	realDNSHost        string
-	memcap             *memCapper
-	uc                 *UserConfig
-	tcpHandler         *proxiedTCPHandler
-	udpHandler         *directUDPHandler
-	ipStack            tun2socks.LWIPStack
-	clientWriter       *cw
-	started            time.Time
-	packetsRecv        int64
-	droppedPacketsRecv int64
-	packetsSent        int64
-	droppedPacketsSent int64
+	packetsOut      io.WriteCloser
+	udpDialer       UDPDialer
+	memChecker      MemChecker
+	configDir       string
+	mtu             int
+	capturedDNSHost string
+	realDNSHost     string
+	uc              *UserConfig
+	tcpHandler      *proxiedTCPHandler
+	udpHandler      *directUDPHandler
+	ipStack         tun2socks.LWIPStack
+	clientWriter    *cw
+	started         time.Time
 }
 
 func Client(packetsOut Writer, udpDialer UDPDialer, memChecker MemChecker, configDir string, mtu int, capturedDNSHost, realDNSHost string) (ClientWriter, error) {
-	// Lock to the current thread and limit the number of OS threads we use to keep memory usage down
-	// Each OS thread has a stack of 512KB, which adds up quickly.
-	runtime.LockOSThread()
-	runtime.GOMAXPROCS(1)
-
 	if mtu <= 0 {
 		log.Debug("Defaulting MTU to 1500")
 		mtu = 1500
 	}
 
 	c := &client{
-		packetsOut:      packetsOut,
+		packetsOut:      newWriterAdapter(packetsOut),
 		udpDialer:       udpDialer,
 		memChecker:      memChecker,
 		configDir:       configDir,
 		mtu:             mtu,
 		capturedDNSHost: capturedDNSHost,
 		realDNSHost:     realDNSHost,
-		memcap:          newMemCapper(memChecker.BytesBeforeCritical()),
 		started:         time.Now(),
 	}
 	go c.trackMemory()
@@ -202,15 +222,20 @@ func (c *client) start() (ClientWriter, error) {
 	}
 	bal := balancer.New(func() bool { return c.uc.AllowProbes }, 30*time.Second, dialers...)
 
-	cacheFile := filepath.Join(c.configDir, "dnsgrab.cache")
-	cache, err := persistentcache.New(cacheFile, dnsCacheMaxAge)
-	if err != nil {
-		return nil, errors.New("Unable to initialize dnsgrab cache at %v: %v", cacheFile, err)
-	}
-	grabber, err := dnsgrab.ListenWithCache(
+	// cacheFile := filepath.Join(c.configDir, "dnsgrab.cache")
+	// cache, err := persistentcache.New(cacheFile, dnsCacheMaxAge)
+	// if err != nil {
+	// 	return nil, errors.New("Unable to initialize dnsgrab cache at %v: %v", cacheFile, err)
+	// }
+	// grabber, err := dnsgrab.ListenWithCache(
+	// 	"127.0.0.1:0",
+	// 	c.realDNSHost,
+	// 	cache,
+	// )
+	grabber, err := dnsgrab.Listen(
+		maxDNSGrabCache,
 		"127.0.0.1:0",
 		c.realDNSHost,
-		cache,
 	)
 	if err != nil {
 		return nil, errors.New("Unable to start dnsgrab: %v", err)
@@ -220,8 +245,7 @@ func (c *client) start() (ClientWriter, error) {
 	c.udpHandler = newDirectUDPHandler(c, c.udpDialer, grabber, c.capturedDNSHost)
 
 	ipStack := tun2socks.NewLWIPStack()
-	wa := &writerAdapter{c}
-	tun2socks.RegisterOutputFn(wa.Write)
+	tun2socks.RegisterOutputFn(c.packetsOut.Write)
 	tun2socks.RegisterTCPConnHandler(c.tcpHandler)
 	tun2socks.RegisterUDPConnHandler(c.udpHandler)
 

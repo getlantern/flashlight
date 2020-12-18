@@ -45,7 +45,7 @@ func newProxiedTCPHandler(c *client, bal *balancer.Balancer, grabber dnsgrab.Ser
 		dialRequests: make(chan *dialRequest),
 		upstreams:    make(map[io.Closer]io.Closer),
 	}
-	go result.handleDials()
+	result.handleDials()
 	go result.trackStats()
 	return result
 }
@@ -138,7 +138,12 @@ func (h *proxiedTCPHandler) copy(downstream net.Conn, upstream net.Conn) {
 		closeTimer.Reset(closeTimeout)
 	}
 
-	outErrCh, inErrCh := netx.BidiCopyReturningChannels(upstream, downstream, bufOut, bufIn, keepFresh, keepFresh)
+	outErrCh, inErrCh := netx.BidiCopyWithOpts(upstream, downstream, &netx.CopyOpts{
+		BufOut: bufOut,
+		BufIn:  bufIn,
+		OnOut:  keepFresh,
+		OnIn:   keepFresh,
+	})
 
 	logError := func(err error) {
 		if err == nil {

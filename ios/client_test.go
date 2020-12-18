@@ -184,6 +184,6 @@ func (conn *realUDPConn) closeOnError(err error) {
 
 type noopMemChecker struct{}
 
-func (c *noopMemChecker) BytesBeforeCritical() int {
-	return 1000000
+func (c *noopMemChecker) BytesRemain() int {
+	return 123456
 }

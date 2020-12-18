@@ -7,7 +7,6 @@ import (
 	"runtime/debug"
 	"runtime/pprof"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -49,27 +48,8 @@ func getProfilePath() string {
 
 // MemChecker checks the system's memory level
 type MemChecker interface {
-	// BytesBeforeCritical returns the number of bytes of memory left available for use before getting critically low
-	BytesBeforeCritical() int
-}
-
-type memCapper struct {
-	available int64
-}
-
-func newMemCapper(initialAvailable int) *memCapper {
-	return &memCapper{
-		available: int64(30000),
-	}
-}
-
-func (mc *memCapper) allowed(n int) bool {
-	newAvailable := atomic.AddInt64(&mc.available, -1*int64(n))
-	return newAvailable >= 0
-}
-
-func (mc *memCapper) setAvailable(available int) {
-	atomic.StoreInt64(&mc.available, int64(available))
+	// BytesRemain returns the number of bytes of memory left before we hit the system limit
+	BytesRemain() int
 }
 
 func (c *client) trackMemory() {
@@ -93,18 +73,17 @@ func (c *client) gcPeriodically() {
 }
 
 func (c *client) doTrackMemory() {
-	bytesBeforeCritical := c.memChecker.BytesBeforeCritical()
-	c.memcap.setAvailable(bytesBeforeCritical)
+	bytesRemain := c.memChecker.BytesRemain()
 
 	memstats := &runtime.MemStats{}
 	runtime.ReadMemStats(memstats)
 
-	if bytesBeforeCritical < 0 {
-		bytesBeforeCritical = 0
+	if bytesRemain < 0 {
+		bytesRemain = 0
 	}
 
-	statsLog.Debugf("Memory System Bytes before Critical: %v    Go InUse: %v    Go Alloc: %v",
-		humanize.Bytes(uint64(bytesBeforeCritical)),
+	statsLog.Debugf("Memory System Bytes Remain: %v    Go InUse: %v    Go Alloc: %v",
+		humanize.Bytes(uint64(bytesRemain)),
 		humanize.Bytes(memstats.HeapInuse),
 		humanize.Bytes(memstats.Alloc))
 
@@ -114,12 +93,6 @@ func (c *client) doTrackMemory() {
 	debug.ReadGCStats(&stats)
 	elapsed := time.Now().Sub(c.started)
 	statsLog.Debugf("Memory GC num: %v    total pauses: %v (%.2f%%)    pause percentiles: %v", stats.NumGC, stats.PauseTotal, float64(stats.PauseTotal)*100/float64(elapsed), stats.PauseQuantiles)
-
-	recv, droppedRecv := atomic.LoadInt64(&c.packetsRecv), atomic.LoadInt64(&c.droppedPacketsRecv)
-	sent, droppedSent := atomic.LoadInt64(&c.packetsSent), atomic.LoadInt64(&c.droppedPacketsSent)
-	recvPLR := float64(droppedRecv) * 100 / float64(droppedRecv+recv)
-	sendPLR := float64(droppedSent) * 100 / float64(droppedSent+sent)
-	statsLog.Debugf("Packet Loss   Recv: %.2f%%    Send: %.2f%%", recvPLR, sendPLR)
 }
 
 func freeMemory() {

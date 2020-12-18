@@ -61,7 +61,7 @@ require (
 	github.com/getlantern/mockconn v0.0.0-20200818071412-cb30d065a848
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20201027015000-69ed0bd15259
-	github.com/getlantern/netx v0.0.0-20201215185514-fb4d0ff4d3e3
+	github.com/getlantern/netx v0.0.0-20201218162808-d868a9ee3c1f
 	github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b
 	github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6
 	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
@@ -75,6 +75,7 @@ require (
 	github.com/getlantern/replica v0.3.1-0.20200623004346-367f62a981a7
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
+	github.com/getlantern/safechannels v0.0.0-20201218165855-a29935d08fc9 // indirect
 	github.com/getlantern/shortcut v0.0.0-20200404021120-6e9e99fe45a0
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
 	github.com/getlantern/systray v1.0.3-0.20200611154022-031edda14837

@@ -246,7 +246,7 @@ func main() {
 
 type noopMemChecker struct{}
 
-func (c *noopMemChecker) BytesBeforeCritical() int {
+func (c *noopMemChecker) BytesRemain() int {
 	memstats := &runtime.MemStats{}
 	runtime.ReadMemStats(memstats)
 	return 8000000 - int(memstats.HeapInuse)

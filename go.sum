@@ -543,6 +543,8 @@ github.com/getlantern/netx v0.0.0-20201215184536-e045806cf70a h1:3P9iO70gs/k5+lx
 github.com/getlantern/netx v0.0.0-20201215184536-e045806cf70a/go.mod h1:g7yY/ImU8M+7lS09wVG3GTsxNvtPMTvkeWZVfxowtMo=
 github.com/getlantern/netx v0.0.0-20201215185514-fb4d0ff4d3e3 h1:mPMd4xqy8AzwAQvO+QcLipOKmOA3b5R1ZKMNzID+CAk=
 github.com/getlantern/netx v0.0.0-20201215185514-fb4d0ff4d3e3/go.mod h1:g7yY/ImU8M+7lS09wVG3GTsxNvtPMTvkeWZVfxowtMo=
+github.com/getlantern/netx v0.0.0-20201218162808-d868a9ee3c1f h1:8hO6yuWUgQBZFxj1UVt2CZyqn8dD5mHoEoJl8Bhc1lQ=
+github.com/getlantern/netx v0.0.0-20201218162808-d868a9ee3c1f/go.mod h1:g7yY/ImU8M+7lS09wVG3GTsxNvtPMTvkeWZVfxowtMo=
 github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b h1:zmsspqmbtaRMndpJRPSX40ebZBuu2MbBDpJ7Xb0RXQA=
 github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b/go.mod h1:8hWwZg+ROrvRlE/QHMOCRUzjKSObVv8FEOP6A5F6N0s=
 github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=
@@ -591,6 +593,8 @@ github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2 h1:smFR/kESUKlc
 github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2/go.mod h1:Ap+QTDJeA24+0jjPHReq/LyP3ugEEDYvncluEgsm60A=
 github.com/getlantern/safechannels v0.0.0-20201214202826-022546a5608e h1:nn8SLzJ71q0mVEJzpKUqO1VvrbvAo1M83l0mTQHlWi0=
 github.com/getlantern/safechannels v0.0.0-20201214202826-022546a5608e/go.mod h1:QJUudepmTj/KQXnReV6DZSJY/xO05fnfcZf3t8zkNLg=
+github.com/getlantern/safechannels v0.0.0-20201218165855-a29935d08fc9 h1:5cMYgulyr6fU2qfCT9vapuQleJx2655DcHU9X0VbJr0=
+github.com/getlantern/safechannels v0.0.0-20201218165855-a29935d08fc9/go.mod h1:QJUudepmTj/KQXnReV6DZSJY/xO05fnfcZf3t8zkNLg=
 github.com/getlantern/shortcut v0.0.0-20200404021120-6e9e99fe45a0 h1:oGgGsBGhXOcToPgIW/R0hK5482FxTltO5h5JG0hx8f0=
 github.com/getlantern/shortcut v0.0.0-20200404021120-6e9e99fe45a0/go.mod h1:3VQ6qvEBehqDBNbEKfNtSjK6MR5ydOdjMPgKjKay7vo=
 github.com/getlantern/sqlite v0.3.3-0.20201015053730-228fbc4f607f h1:/1FvD3lvKEKPZshonNAc7HtAhN5lKp7BBEGSeYN72MQ=
