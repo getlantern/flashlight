@@ -75,7 +75,7 @@ require (
 	github.com/getlantern/replica v0.3.1-0.20200623004346-367f62a981a7
 	github.com/getlantern/rot13 v0.0.0-20160824200123-33f93fc1fe85
 	github.com/getlantern/rotator v0.0.0-20160829164113-013d4f8e36a2
-	github.com/getlantern/safechannels v0.0.0-20201218165855-a29935d08fc9 // indirect
+	github.com/getlantern/safechannels v0.0.0-20201218194342-b4e5383e9627
 	github.com/getlantern/shortcut v0.0.0-20200404021120-6e9e99fe45a0
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
 	github.com/getlantern/systray v1.0.3-0.20200611154022-031edda14837

@@ -15,14 +15,17 @@ import (
 
 // Memory management on iOS is critical because we're running in a network extension that's limited to 15 MB of memory. We handle this using several techniques.
 //
-// 1. Use a fork of go-tun2socks tuned for low memory usage (see https://lwip.fandom.com/wiki/Tuning_TCP and https://lwip.fandom.com/wiki/Lwipopts.h)
-// 2. Set an aggressive GCPercent
-// 3. Use the MemChecker abstraction to find out how much memory is left before hitting our limit and use this to limit the throughput of IP packets to/from tun2socks. As the system becomes memory constrained, we start dropping packets.
-// 4. Dialing to the proxy with TLS connections is quite memory intensive due to the public key cryptography, so we limit the number of concurrent dials
-// 5. Use short idle timeouts to reduce the number of simultaneously open connections
+// All places in the code that do odd stuff in order to help with memory optimization are marked with MEMORY_OPTIMIZATION
+//
+// 1. Limit the number of goroutines that write to/from lwip in order to limit the number of OS threads (each OS thread has 0.5MB of stack allocated to it, which gets big pretty quickly)
+// 2. Limit dialing upstream to a single goroutine in order to limit the memory involved with public key cryptography
+// 3. Use a fork of go-tun2socks tuned for low memory usage (see https://lwip.fandom.com/wiki/Tuning_TCP and https://lwip.fandom.com/wiki/Lwipopts.h)
+// 4. Set an aggressive GCPercent
+// 5. Use Go 1.14 instead of 1.15 (seems to have lower memory usage for some reason)
+// 6. Use short idle timeouts to reduce the number of simultaneously open connections
 
 func init() {
-	// set more aggressive IdleTimeout to help deal with memory constraints on iOS
+	// MEMORY_OPTIMIZATION set more aggressive IdleTimeout to help deal with memory constraints on iOS
 	chained.IdleTimeout = 15 * time.Second
 
 	// set an aggressive target for triggering GC after new allocations reach 20% of heap
@@ -82,15 +85,17 @@ func (c *client) doTrackMemory() {
 		bytesRemain = 0
 	}
 
-	statsLog.Debugf("Memory System Bytes Remain: %v    Go InUse: %v    Go Alloc: %v",
+	numOSThreads, _ := runtime.ThreadCreateProfile(nil)
+	statsLog.Debugf("Memory System Bytes Remain: %v    Num OS Threads: %d    Go InUse: %v",
 		humanize.Bytes(uint64(bytesRemain)),
-		humanize.Bytes(memstats.HeapInuse),
-		humanize.Bytes(memstats.Alloc))
+		numOSThreads,
+		humanize.Bytes(memstats.HeapInuse))
 
 	stats := debug.GCStats{
 		PauseQuantiles: make([]time.Duration, 10),
 	}
 	debug.ReadGCStats(&stats)
+
 	elapsed := time.Now().Sub(c.started)
 	statsLog.Debugf("Memory GC num: %v    total pauses: %v (%.2f%%)    pause percentiles: %v", stats.NumGC, stats.PauseTotal, float64(stats.PauseTotal)*100/float64(elapsed), stats.PauseQuantiles)
 }

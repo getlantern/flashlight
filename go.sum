@@ -595,6 +595,10 @@ github.com/getlantern/safechannels v0.0.0-20201214202826-022546a5608e h1:nn8SLzJ
 github.com/getlantern/safechannels v0.0.0-20201214202826-022546a5608e/go.mod h1:QJUudepmTj/KQXnReV6DZSJY/xO05fnfcZf3t8zkNLg=
 github.com/getlantern/safechannels v0.0.0-20201218165855-a29935d08fc9 h1:5cMYgulyr6fU2qfCT9vapuQleJx2655DcHU9X0VbJr0=
 github.com/getlantern/safechannels v0.0.0-20201218165855-a29935d08fc9/go.mod h1:QJUudepmTj/KQXnReV6DZSJY/xO05fnfcZf3t8zkNLg=
+github.com/getlantern/safechannels v0.0.0-20201218191721-ebebc0a9cf21 h1:i3HGb5QxrDZ0P79BKE3gbW8K/AfRe37TLY6Mj6NlVhM=
+github.com/getlantern/safechannels v0.0.0-20201218191721-ebebc0a9cf21/go.mod h1:QJUudepmTj/KQXnReV6DZSJY/xO05fnfcZf3t8zkNLg=
+github.com/getlantern/safechannels v0.0.0-20201218194342-b4e5383e9627 h1:eYXtxjRyiP9f1rMvbnyT4DBWFEiIPY3zzMA5KqVshyc=
+github.com/getlantern/safechannels v0.0.0-20201218194342-b4e5383e9627/go.mod h1:QJUudepmTj/KQXnReV6DZSJY/xO05fnfcZf3t8zkNLg=
 github.com/getlantern/shortcut v0.0.0-20200404021120-6e9e99fe45a0 h1:oGgGsBGhXOcToPgIW/R0hK5482FxTltO5h5JG0hx8f0=
 github.com/getlantern/shortcut v0.0.0-20200404021120-6e9e99fe45a0/go.mod h1:3VQ6qvEBehqDBNbEKfNtSjK6MR5ydOdjMPgKjKay7vo=
 github.com/getlantern/sqlite v0.3.3-0.20201015053730-228fbc4f607f h1:/1FvD3lvKEKPZshonNAc7HtAhN5lKp7BBEGSeYN72MQ=

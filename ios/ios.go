@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"runtime"
-	"runtime/debug"
 	"sync"
 	"time"
 
@@ -33,18 +32,11 @@ const (
 	trackMemoryInterval = 5 * time.Second
 	forceGCInterval     = 25 * time.Millisecond
 
-	dialTimeout        = 30 * time.Second
-	closeTimeout       = 1 * time.Second
-	maxConcurrentDials = 8
+	dialTimeout  = 30 * time.Second
+	closeTimeout = 1 * time.Second
 
 	ipWriteBufferDepth = 100
 )
-
-func init() {
-	// limit the number of threads used because each thread gets 0.5 MB of stack, which adds up quickly
-	runtime.GOMAXPROCS(1)
-	debug.SetMaxThreads(3)
-}
 
 type Writer interface {
 	Write([]byte) bool
@@ -67,7 +59,7 @@ func newWriterAdapter(writer Writer) io.WriteCloser {
 		requests: make(chan *writeRequest, ipWriteBufferDepth),
 	}
 
-	// handle all writing of output packets on a goroutine that's locked to the OS thread in order to avoid creating more native threads
+	// MEMORY_OPTIMIZATION handle all writing of output packets on a single goroutine to avoid creating more native threads
 	go wa.handleWrites()
 	return wa
 }
@@ -188,6 +180,9 @@ type client struct {
 }
 
 func Client(packetsOut Writer, udpDialer UDPDialer, memChecker MemChecker, configDir string, mtu int, capturedDNSHost, realDNSHost string) (ClientWriter, error) {
+	// limit the number of CPUs used to reduce the number of OS threads (and associated stack) to keep memory usage down
+	runtime.GOMAXPROCS(1)
+
 	if mtu <= 0 {
 		log.Debug("Defaulting MTU to 1500")
 		mtu = 1500
