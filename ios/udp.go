@@ -131,7 +131,7 @@ func newDirectUDPHandler(client *client, dialer UDPDialer, grabber dnsgrab.Serve
 		dialer:                dialer,
 		capturedDNSHost:       capturedDNSHost,
 		grabber:               grabber,
-		downstreamWriteWorker: newWorker(0),
+		downstreamWriteWorker: newWorker(100),
 		upstreams:             make(map[core.UDPConn]UDPConn),
 	}
 	go result.trackStats()

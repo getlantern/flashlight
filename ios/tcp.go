@@ -32,7 +32,6 @@ type proxiedTCPHandler struct {
 	mtu                   int
 	dialRequests          chan *dialRequest
 	downstreamWriteWorker *worker
-	upstreamWriteWorker   *worker
 	upstreams             map[io.Closer]io.Closer
 	dialingConns          int64
 	copyingConns          int64
@@ -46,8 +45,7 @@ func newProxiedTCPHandler(c *client, bal *balancer.Balancer, grabber dnsgrab.Ser
 		grabber:               grabber,
 		mtu:                   c.mtu,
 		dialRequests:          make(chan *dialRequest),
-		downstreamWriteWorker: newWorker(0),
-		upstreamWriteWorker:   newWorker(0),
+		downstreamWriteWorker: newWorker(100),
 		upstreams:             make(map[io.Closer]io.Closer),
 	}
 	go result.trackStats()
@@ -70,7 +68,7 @@ func (h *proxiedTCPHandler) handleDial() {
 	for req := range h.dialRequests {
 		upstream, err := h.dialOut(req.ctx, balancer.NetworkConnect, req.addr)
 		if err == nil {
-			req.upstream <- newThreadLimitingTCPConn(upstream, h.upstreamWriteWorker)
+			req.upstream <- upstream
 		} else {
 			req.err <- err
 		}
