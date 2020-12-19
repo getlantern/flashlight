@@ -31,6 +31,7 @@ type proxiedTCPHandler struct {
 	mtu                   int
 	dialWorker            *worker
 	downstreamWriteWorker *worker
+	upstreamWriteWorker   *worker
 	upstreams             map[io.Closer]io.Closer
 	dialingConns          int64
 	copyingConns          int64
@@ -44,14 +45,15 @@ func newProxiedTCPHandler(c *client, bal *balancer.Balancer, grabber dnsgrab.Ser
 		grabber:               grabber,
 		mtu:                   c.mtu,
 		dialWorker:            newWorker(0),
-		downstreamWriteWorker: newWorker(10),
+		downstreamWriteWorker: newWorker(0),
+		upstreamWriteWorker:   newWorker(0),
 		upstreams:             make(map[io.Closer]io.Closer),
 	}
 	go result.trackStats()
 	return result
 }
 
-func (h *proxiedTCPHandler) Handle(downstream net.Conn, addr *net.TCPAddr) error {
+func (h *proxiedTCPHandler) Handle(_downstream net.Conn, addr *net.TCPAddr) error {
 	host, ok := h.grabber.ReverseLookup(addr.IP)
 	if !ok {
 		return log.Errorf("Invalid ip address %v, will not connect", addr.IP)
@@ -60,7 +62,7 @@ func (h *proxiedTCPHandler) Handle(downstream net.Conn, addr *net.TCPAddr) error
 	ctx, cancelContext := context.WithTimeout(context.Background(), dialTimeout)
 	addrString := fmt.Sprintf("%v:%d", host, addr.Port)
 
-	// MEMORY_OPTIMIZATION dialing is very memory intensive because of the cryptography involved, so we limit the
+	// MEMORY_OPTIMIZATION - dialing is very memory intensive because of the cryptography involved, so we limit the
 	// concurrency of dialing to keep our memory usage under control
 	req := &dialRequest{
 		ctx:      ctx,
@@ -76,7 +78,7 @@ func (h *proxiedTCPHandler) Handle(downstream net.Conn, addr *net.TCPAddr) error
 			req.err <- err
 			return
 		}
-		req.upstream <- upstream
+		req.upstream <- newThreadLimitingTCPConn(upstream, h.upstreamWriteWorker)
 	}
 
 	atomic.AddInt64(&h.dialingConns, 1)
@@ -93,6 +95,8 @@ func (h *proxiedTCPHandler) Handle(downstream net.Conn, addr *net.TCPAddr) error
 		cancelContext()
 		return log.Errorf("Unable to dial %v: %v", addrString, err)
 	}
+
+	downstream := newThreadLimitingTCPConn(_downstream, h.downstreamWriteWorker)
 
 	h.mx.Lock()
 	h.upstreams[downstream] = upstream
@@ -118,7 +122,7 @@ func (h *proxiedTCPHandler) copy(downstream net.Conn, upstream net.Conn) {
 		h.mx.Unlock()
 	}()
 
-	// Note - we don't pool these as pooling seems to create additional memory pressure somehow
+	// MEMORY_OPTIMIZATION - we don't pool these as pooling seems to create additional memory pressure somehow
 	bufOut := make([]byte, h.mtu)
 	bufIn := make([]byte, h.mtu)
 
@@ -130,8 +134,8 @@ func (h *proxiedTCPHandler) copy(downstream net.Conn, upstream net.Conn) {
 		closeTimer.Reset(closeTimeout)
 	}
 
-	// MEMORY_OPTIMIZATION use a threadLimitingTCPConn to limit the number of goroutines that write to lwip
-	outErrCh, inErrCh := netx.BidiCopyWithOpts(upstream, newThreadLimitingTCPConn(downstream, h.downstreamWriteWorker), &netx.CopyOpts{
+	// MEMORY_OPTIMIZATION - use a threadLimitingTCPConn to limit the number of goroutines that write to lwip
+	outErrCh, inErrCh := netx.BidiCopyWithOpts(upstream, downstream, &netx.CopyOpts{
 		BufOut: bufOut,
 		BufIn:  bufIn,
 		OnOut:  keepFresh,

@@ -131,7 +131,7 @@ func newDirectUDPHandler(client *client, dialer UDPDialer, grabber dnsgrab.Serve
 		dialer:                dialer,
 		capturedDNSHost:       capturedDNSHost,
 		grabber:               grabber,
-		downstreamWriteWorker: newWorker(10),
+		downstreamWriteWorker: newWorker(0),
 		upstreams:             make(map[core.UDPConn]UDPConn),
 	}
 	go result.trackStats()
@@ -167,7 +167,7 @@ func (h *directUDPHandler) Connect(downstream core.UDPConn, target *net.UDPAddr)
 
 	cb := &UDPCallbacks{
 		h: h,
-		// MEMORY_OPTIMIZATION use a threadLimitingUDPConn to limit the number of goroutines that are writing to LWIP
+		// MEMORY_OPTIMIZATION - use a threadLimitingUDPConn to limit the number of goroutines that are writing to LWIP
 		downstream:    newThreadLimitingUDPConn(downstream, h.downstreamWriteWorker),
 		upstream:      upstream,
 		target:        target,
@@ -219,7 +219,7 @@ func (h *directUDPHandler) receiveDNS(downstream core.UDPConn, data []byte, addr
 		return log.Errorf("Unable to process dns query: %v", err)
 	}
 
-	// MEMORY_OPTIMIZATION use a threadLimitingUDPConn to limit the number of goroutines that are writing to LWIP
+	// MEMORY_OPTIMIZATION - use a threadLimitingUDPConn to limit the number of goroutines that are writing to LWIP
 	_, writeErr := newThreadLimitingUDPConn(downstream, h.downstreamWriteWorker).WriteFrom(response, addr)
 	return writeErr
 }

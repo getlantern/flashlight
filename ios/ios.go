@@ -59,7 +59,7 @@ func newWriterAdapter(writer Writer) io.WriteCloser {
 		requests: make(chan *writeRequest, ipWriteBufferDepth),
 	}
 
-	// MEMORY_OPTIMIZATION handle all writing of output packets on a single goroutine to avoid creating more native threads
+	// MEMORY_OPTIMIZATION - handle all writing of output packets on a single goroutine to avoid creating more native threads
 	go wa.handleWrites()
 	return wa
 }

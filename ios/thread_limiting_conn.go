@@ -2,6 +2,7 @@ package ios
 
 import (
 	"net"
+	"runtime"
 	"sync"
 
 	"github.com/eycorsican/go-tun2socks/core"
@@ -22,6 +23,9 @@ func newWorker(bufferDepth int) *worker {
 }
 
 func (w *worker) work() {
+	// MEMORY_OPTIMIZATION - locking to the OS thread seems to help keep Go from spawning more OS threads when cgo calls are blocked
+	runtime.LockOSThread()
+
 	for task := range w.tasks {
 		task()
 	}
