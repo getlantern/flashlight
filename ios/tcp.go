@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -29,7 +30,7 @@ type proxiedTCPHandler struct {
 	client                *client
 	grabber               dnsgrab.Server
 	mtu                   int
-	dialWorker            *worker
+	dialRequests          chan *dialRequest
 	downstreamWriteWorker *worker
 	upstreamWriteWorker   *worker
 	upstreams             map[io.Closer]io.Closer
@@ -44,13 +45,36 @@ func newProxiedTCPHandler(c *client, bal *balancer.Balancer, grabber dnsgrab.Ser
 		client:                c,
 		grabber:               grabber,
 		mtu:                   c.mtu,
-		dialWorker:            newWorker(0),
+		dialRequests:          make(chan *dialRequest),
 		downstreamWriteWorker: newWorker(0),
 		upstreamWriteWorker:   newWorker(0),
 		upstreams:             make(map[io.Closer]io.Closer),
 	}
 	go result.trackStats()
+	result.handleDials()
 	return result
+}
+
+// dialing is very memory intensive because of the cryptography involved, so we limit the concurrency of dialing to keep our memory usage
+// under control
+func (h *proxiedTCPHandler) handleDials() {
+	for i := 0; i < maxConcurrentDials; i++ {
+		go h.handleDial()
+	}
+}
+
+func (h *proxiedTCPHandler) handleDial() {
+	// MEMORY_OPTIMIZATION - locking to the OS thread seems to help keep Go from spawning more OS threads when cgo calls are blocked
+	runtime.LockOSThread()
+
+	for req := range h.dialRequests {
+		upstream, err := h.dialOut(req.ctx, balancer.NetworkConnect, req.addr)
+		if err == nil {
+			req.upstream <- upstream
+		} else {
+			req.err <- err
+		}
+	}
 }
 
 func (h *proxiedTCPHandler) Handle(_downstream net.Conn, addr *net.TCPAddr) error {
@@ -72,17 +96,10 @@ func (h *proxiedTCPHandler) Handle(_downstream net.Conn, addr *net.TCPAddr) erro
 	}
 	var upstream net.Conn
 	var err error
-	doDial := func() {
-		upstream, err := h.dialOut(req.ctx, balancer.NetworkConnect, req.addr)
-		if err != nil {
-			req.err <- err
-			return
-		}
-		req.upstream <- newThreadLimitingTCPConn(upstream, h.upstreamWriteWorker)
-	}
 
 	atomic.AddInt64(&h.dialingConns, 1)
-	h.dialWorker.tasks <- doDial
+	h.dialRequests <- req
+
 	select {
 	case upstream = <-req.upstream:
 		// okay

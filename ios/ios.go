@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	maxDNSGrabCache = 1000          // this doesn't need to be huge because our fake DNS records have a TTL of only 1 second
+	maxDNSGrabCache = 10000         // this doesn't need to be huge because our fake DNS records have a TTL of only 1 second
 	dnsCacheMaxAge  = 1 * time.Hour // this doesn't need to be long because our fake DNS records have a TTL of only 1 second
 
 	quotaSaveInterval            = 1 * time.Minute
@@ -34,6 +34,7 @@ const (
 	dialTimeout  = 30 * time.Second
 	closeTimeout = 1 * time.Second
 
+	maxConcurrentDials = 8
 	ipWriteBufferDepth = 100
 )
 
