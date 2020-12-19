@@ -71,7 +71,7 @@ func (c *client) optimizeMemoryUsage() {
 				// MEMORY_OPTIMIZATION - set small send and receive buffers for cases where we have lots of connections and a flaky network
 				// This can reduce throughput, especially on networks with high packet loss.
 				bytesRemain := int(atomic.LoadInt64(&c.memoryAvailable))
-				bufferSize := bytesRemain / 100 // this factor gives us a buffer size of about 20KB when remaining memory is about 2MB.
+				bufferSize := bytesRemain / 25 // this factor gives us a buffer size of about 80KB when remaining memory is about 2MB.
 				if bufferSize < 4096 {
 					// never go smaller than 4096
 					bufferSize = 4096

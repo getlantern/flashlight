@@ -70,7 +70,7 @@ func (h *proxiedTCPHandler) handleDial() {
 	for req := range h.dialRequests {
 		upstream, err := h.dialOut(req.ctx, balancer.NetworkConnect, req.addr)
 		if err == nil {
-			req.upstream <- upstream
+			req.upstream <- newThreadLimitingTCPConn(upstream, h.upstreamWriteWorker)
 		} else {
 			req.err <- err
 		}

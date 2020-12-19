@@ -34,7 +34,7 @@ const (
 	dialTimeout  = 30 * time.Second
 	closeTimeout = 1 * time.Second
 
-	maxConcurrentDials = 8
+	maxConcurrentDials = 4
 	ipWriteBufferDepth = 100
 )
 
