@@ -228,6 +228,8 @@ func (c *client) start() (ClientWriter, error) {
 	// 	c.realDNSHost,
 	// 	cache,
 	// )
+	// At the moment we just use an in-memory cache because I suspect that the persistent boltdb cache creates extra memory pressure due to
+	// mmap'ing the data file and potentially spawning some extra native threads.
 	grabber, err := dnsgrab.Listen(
 		maxDNSGrabCache,
 		"127.0.0.1:0",
