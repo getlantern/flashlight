@@ -1,16 +1,20 @@
 package ios
 
 import (
+	"context"
+	"net"
 	"os"
 	"path/filepath"
 	"runtime"
 	"runtime/debug"
 	"runtime/pprof"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/dustin/go-humanize"
 	"github.com/getlantern/flashlight/chained"
+	"github.com/getlantern/netx"
 )
 
 // Memory management on iOS is critical because we're running in a network extension that's limited to 15 MB of memory. We handle this using several techniques.
@@ -23,14 +27,7 @@ import (
 // 4. Set an aggressive GCPercent
 // 5. Use Go 1.14 instead of 1.15 (seems to have lower memory usage for some reason)
 // 6. Use short idle timeouts to reduce the number of simultaneously open connections
-
-func init() {
-	// MEMORY_OPTIMIZATION set more aggressive IdleTimeout to help deal with memory constraints on iOS
-	chained.IdleTimeout = 15 * time.Second
-
-	// set an aggressive target for triggering GC after new allocations reach 20% of heap
-	debug.SetGCPercent(20)
-}
+// 7. Use small send and receive buffers for upstream TCP connections, adapting to the available amount of system memory
 
 var (
 	profilePath   string
@@ -55,10 +52,42 @@ type MemChecker interface {
 	BytesRemain() int
 }
 
-func (c *client) trackMemory() {
+func (c *client) optimizeMemoryUsage() {
+	// MEMORY_OPTIMIZATION - limit the number of CPUs used to reduce the number of OS threads (and associated stack) to keep memory usage down
+	runtime.GOMAXPROCS(1)
+
+	// MEMORY_OPTIMIZATION - set more aggressive IdleTimeout to help deal with memory constraints on iOS
+	chained.IdleTimeout = 15 * time.Second
+
+	// MEMORY_OPTIMIZATION - set an aggressive target for triggering GC after new allocations reach 20% of heap
+	debug.SetGCPercent(20)
+
+	var dialer net.Dialer
+	netx.OverrideDial(func(ctx context.Context, network, addr string) (net.Conn, error) {
+		conn, err := dialer.DialContext(ctx, network, addr)
+		if err == nil {
+			tcpConn, ok := conn.(*net.TCPConn)
+			if ok {
+				// MEMORY_OPTIMIZATION - set small send and receive buffers for cases where we have lots of connections and a flaky network
+				// This can reduce throughput, especially on networks with high packet loss.
+				bytesRemain := int(atomic.LoadInt64(&c.memoryAvailable))
+				bufferSize := bytesRemain / 100 // this factor gives us a buffer size of about 20KB when remaining memory is about 2MB.
+				if bufferSize < 4096 {
+					// never go smaller than 4096
+					bufferSize = 4096
+				}
+				tcpConn.SetWriteBuffer(bufferSize)
+				tcpConn.SetReadBuffer(bufferSize)
+			}
+		}
+		return conn, err
+	})
+}
+
+func (c *client) logMemory() {
 	for {
-		c.doTrackMemory()
-		time.Sleep(trackMemoryInterval)
+		c.doLogMemory()
+		time.Sleep(logMemoryInterval)
 	}
 }
 
@@ -71,19 +100,19 @@ func (c *client) gcPeriodically() {
 			continue
 		default:
 			freeMemory()
+			atomic.StoreInt64(&c.memoryAvailable, int64(c.memChecker.BytesRemain()))
 		}
 	}
 }
 
-func (c *client) doTrackMemory() {
-	bytesRemain := c.memChecker.BytesRemain()
-
-	memstats := &runtime.MemStats{}
-	runtime.ReadMemStats(memstats)
-
+func (c *client) doLogMemory() {
+	bytesRemain := atomic.LoadInt64(&c.memoryAvailable)
 	if bytesRemain < 0 {
 		bytesRemain = 0
 	}
+
+	memstats := &runtime.MemStats{}
+	runtime.ReadMemStats(memstats)
 
 	numOSThreads, _ := runtime.ThreadCreateProfile(nil)
 	statsLog.Debugf("Memory System Bytes Remain: %v    Num OS Threads: %d    Go InUse: %v",

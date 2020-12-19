@@ -5,7 +5,6 @@ import (
 	"io"
 	"io/ioutil"
 	"path/filepath"
-	"runtime"
 	"sync"
 	"time"
 
@@ -29,8 +28,8 @@ const (
 	shortFrontedAvailableTimeout = 30 * time.Second
 	longFrontedAvailableTimeout  = 5 * time.Minute
 
-	trackMemoryInterval = 5 * time.Second
-	forceGCInterval     = 25 * time.Millisecond
+	logMemoryInterval = 5 * time.Second
+	forceGCInterval   = 25 * time.Millisecond
 
 	dialTimeout  = 30 * time.Second
 	closeTimeout = 1 * time.Second
@@ -176,13 +175,11 @@ type client struct {
 	udpHandler      *directUDPHandler
 	ipStack         tun2socks.LWIPStack
 	clientWriter    *cw
+	memoryAvailable int64
 	started         time.Time
 }
 
 func Client(packetsOut Writer, udpDialer UDPDialer, memChecker MemChecker, configDir string, mtu int, capturedDNSHost, realDNSHost string) (ClientWriter, error) {
-	// limit the number of CPUs used to reduce the number of OS threads (and associated stack) to keep memory usage down
-	runtime.GOMAXPROCS(1)
-
 	if mtu <= 0 {
 		log.Debug("Defaulting MTU to 1500")
 		mtu = 1500
@@ -198,7 +195,10 @@ func Client(packetsOut Writer, udpDialer UDPDialer, memChecker MemChecker, confi
 		realDNSHost:     realDNSHost,
 		started:         time.Now(),
 	}
-	go c.trackMemory()
+
+	c.optimizeMemoryUsage()
+	go c.gcPeriodically()
+	go c.logMemory()
 
 	return c.start()
 }
