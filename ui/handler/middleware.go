@@ -27,6 +27,10 @@ func BodyParser(next http.Handler) http.Handler {
 		if err != nil {
 			log.Errorf("Unable to read request body: %v", err)
 			return
+		} else if len(bytes) == 0 {
+			// No request body, skip adding context
+			next.ServeHTTP(w, req)
+			return
 		}
 		ctx := context.WithValue(req.Context(), BodyKey, bytes)
 		next.ServeHTTP(w, req.WithContext(ctx))
