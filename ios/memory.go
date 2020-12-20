@@ -56,8 +56,8 @@ func (c *client) optimizeMemoryUsage() {
 	// MEMORY_OPTIMIZATION - limit the number of CPUs used to reduce the number of OS threads (and associated stack) to keep memory usage down
 	runtime.GOMAXPROCS(1)
 
-	// MEMORY_OPTIMIZATION - set more aggressive IdleTimeout to help deal with memory constraints on iOS
-	chained.IdleTimeout = 15 * time.Second
+	// MEMORY_OPTIMIZATION - set very aggressive IdleTimeout to help deal with memory constraints on iOS
+	chained.IdleTimeout = shortIdleTimeout
 
 	// MEMORY_OPTIMIZATION - set an aggressive target for triggering GC after new allocations reach 20% of heap
 	debug.SetGCPercent(20)

@@ -31,11 +31,13 @@ const (
 	logMemoryInterval = 5 * time.Second
 	forceGCInterval   = 25 * time.Millisecond
 
-	dialTimeout  = 30 * time.Second
-	closeTimeout = 1 * time.Second
+	dialTimeout      = 30 * time.Second
+	shortIdleTimeout = 65 * time.Second
+	closeTimeout     = 1 * time.Second
 
-	maxConcurrentDials = 4
-	ipWriteBufferDepth = 100
+	maxConcurrentDials         = 1
+	ipWriteBufferDepth         = 10
+	downstreamWriteBufferDepth = 10
 )
 
 type Writer interface {

@@ -45,7 +45,7 @@ func newProxiedTCPHandler(c *client, bal *balancer.Balancer, grabber dnsgrab.Ser
 		grabber:               grabber,
 		mtu:                   c.mtu,
 		dialRequests:          make(chan *dialRequest),
-		downstreamWriteWorker: newWorker(100),
+		downstreamWriteWorker: newWorker(downstreamWriteBufferDepth),
 		upstreams:             make(map[io.Closer]io.Closer),
 	}
 	go result.trackStats()
