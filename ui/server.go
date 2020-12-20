@@ -6,6 +6,7 @@ import (
 	"mime"
 	"net"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httputil"
 	"net/url"
 	"strconv"
@@ -31,6 +32,7 @@ import (
 	"github.com/getlantern/flashlight/ui/yinbi"
 	"github.com/getlantern/flashlight/util"
 	"github.com/go-chi/chi"
+	"golang.org/x/net/publicsuffix"
 )
 
 // A set of ports that chrome considers restricted
@@ -179,7 +181,13 @@ func (s *Server) attachHandlers(params ServerParams) {
 func createHTTPClient() *http.Client {
 	rt := proxied.ChainedThenFronted()
 	rt.SetMasqueradeTimeout(30 * time.Second)
+	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return &http.Client{
+		Jar:       jar,
 		Transport: rt,
 	}
 }
