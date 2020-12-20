@@ -188,6 +188,26 @@ func (h YinbiHandler) paymentHandler() http.Handler {
 	return paymentRouter
 }
 
+func (h YinbiHandler) createAccountHandler() http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Debug("Received new create Yinbi account request")
+		var params api.CreateAccountParams
+		err := handler.DecodeJSONRequest(w, r, &params)
+		if err != nil {
+			err = fmt.Errorf("Error decoding create account request: %v", err)
+			handler.ErrorHandler(w, err, http.StatusInternalServerError)
+			return
+		}
+		err = h.yinbiClient.CreateAccount(&params)
+		if err != nil {
+			handler.ErrorHandler(w, err, http.StatusInternalServerError)
+		} else {
+			handler.SuccessResponse(w)
+		}
+
+	})
+}
+
 // userHandler is the http.Handler used for Yinbi wallet user related
 // UI routes
 func (h YinbiHandler) userHandler() http.Handler {
@@ -202,20 +222,7 @@ func (h YinbiHandler) userHandler() http.Handler {
 	// Yinbi asset
 
 	r.Group(func(r chi.Router) {
-		r.Post(createAccountEndpoint, func(w http.ResponseWriter, r *http.Request) {
-			log.Debug("Received new create Yinbi account request")
-			var params api.CreateAccountParams
-			err := handler.DecodeJSONRequest(w, r, &params)
-			if err != nil {
-				return
-			}
-			err = h.yinbiClient.CreateAccount(&params)
-			if err != nil {
-				handler.ErrorHandler(w, err, http.StatusInternalServerError)
-			} else {
-				handler.SuccessResponse(w)
-			}
-		})
+		r.Post(createAccountEndpoint, h.createAccountHandler())
 
 		r.Post(createMnemonicEndpoint, func(w http.ResponseWriter, r *http.Request) {
 			mnemonic := h.yinbiClient.CreateMnemonic()
