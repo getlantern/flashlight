@@ -29,6 +29,8 @@ const (
 	redemptionCodesEndpoint = "/codes"
 
 	// user endpoints
+	// Request URL: http://localhost:16823/wallet/user/mnemonic
+
 	createAccountEndpoint  = "/account/new"
 	createMnemonicEndpoint = "/mnemonic"
 	saveAddressEndpoint    = "/address"
@@ -70,10 +72,11 @@ func (h YinbiHandler) ConfigureRoutes() http.Handler {
 	}
 
 	r := handler.NewRouter()
-
-	for endpoint, handler := range routes {
-		r.Handle(endpoint, handler())
-	}
+	r.Group(func(r chi.Router) {
+		for endpoint, handler := range routes {
+			r.Mount(endpoint, handler())
+		}
+	})
 
 	return r
 }
@@ -82,6 +85,7 @@ func (h YinbiHandler) GetPathPrefix() string {
 	return pathPrefix
 }
 
+// New creates a new YinbiHandler instance
 func New(params api.APIParams) YinbiHandler {
 	appDir := appdir.General(params.AppName)
 	httpClient := params.HTTPClient
