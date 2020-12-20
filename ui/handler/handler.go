@@ -108,7 +108,7 @@ func SuccessResponse(w http.ResponseWriter, vargs ...interface{}) {
 	var args interface{}
 	if len(vargs) == 0 {
 		args = successResponse
-	} else if reflect.ValueOf(vargs).Kind() == reflect.Map {
+	} else if reflect.ValueOf(vargs[0]).Kind() == reflect.Map {
 		// if the args returned in the success response
 		//  represent a map, attach the success key to it
 		m := vargs[0].(map[string]interface{})
