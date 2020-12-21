@@ -198,13 +198,12 @@ func (h YinbiHandler) createAccountHandler() http.HandlerFunc {
 			handler.ErrorHandler(w, err, http.StatusInternalServerError)
 			return
 		}
-		err = h.yinbiClient.CreateAccount(&params)
+		resp, err := h.yinbiClient.CreateAccount(&params)
 		if err != nil {
 			handler.ErrorHandler(w, err, http.StatusInternalServerError)
 		} else {
-			handler.SuccessResponse(w)
+			handler.SuccessResponse(w, resp)
 		}
-
 	})
 }
 
