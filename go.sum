@@ -227,6 +227,7 @@ github.com/aws/aws-sdk-go v1.36.2 h1:UAeFPct+jHqWM+tgiqDrC9/sfbWj6wkcvpsJ+zdcsvA
 github.com/aws/aws-sdk-go v1.36.2/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
 github.com/aws/aws-sdk-go v1.36.11 h1:6lVRjsmRpQwq58+YHBbBe7BZuY3l6onDBLN4twOXT7U=
 github.com/aws/aws-sdk-go v1.36.11/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
+github.com/aws/aws-sdk-go v1.36.12 h1:YJpKFEMbqEoo+incs5qMe61n1JH3o4O1IMkMexLzJG8=
 github.com/aws/aws-sdk-go v1.36.12/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
 github.com/aymerick/raymond v2.0.3-0.20180322193309-b565731e1464+incompatible/go.mod h1:osfaiScAUVup+UC9Nfq76eWqDhXlp+4UYaA8uhTBO6g=
 github.com/badoux/checkmail v0.0.0-20181210160741-9661bd69e9ad h1:kXfVkP8xPSJXzicomzjECcw6tv1Wl9h1lNenWBfNKdg=
@@ -369,6 +370,8 @@ github.com/getlantern/auth-server v0.0.0-20201217211518-93770433cd1a h1:A5QxUG0J
 github.com/getlantern/auth-server v0.0.0-20201217211518-93770433cd1a/go.mod h1:gBrtg42AJKjxbm1mJCnwXGcz3uvGLDl6+wxbWAgqpZI=
 github.com/getlantern/auth-server v0.0.0-20201221164040-d1ba171146da h1:aSmnB8jf0bExDjfoi3VSWjvQZ8emIW+FP59yhT0aM9g=
 github.com/getlantern/auth-server v0.0.0-20201221164040-d1ba171146da/go.mod h1:gBrtg42AJKjxbm1mJCnwXGcz3uvGLDl6+wxbWAgqpZI=
+github.com/getlantern/auth-server v0.0.0-20201221164456-bb1fa23a0264 h1:TJ/nW0jOwT+0UO1ezniLUCMtdfYKYEqAjsW3UPp5Q9Q=
+github.com/getlantern/auth-server v0.0.0-20201221164456-bb1fa23a0264/go.mod h1:gBrtg42AJKjxbm1mJCnwXGcz3uvGLDl6+wxbWAgqpZI=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99 h1:fnjb9PYZRMU6Tok5i3anP/bAqhUtG2kn9xgff3IlA+8=
 github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99/go.mod h1:4rYfIUYagdnY0KCu5/zOBX5CIRIi+j+LHdQ+LmD/Lyg=
 github.com/getlantern/bbrconn v0.0.0-20180619163322-86cf8c16f3d0 h1:OtUNxwmNp9+mTZMuKw9MrNLJKMG731zWZIWwQfFGZfs=
@@ -645,6 +648,8 @@ github.com/getlantern/yinbi-server v0.0.0-20201207212130-1d0a8dfe4a60 h1:NNFgaUd
 github.com/getlantern/yinbi-server v0.0.0-20201207212130-1d0a8dfe4a60/go.mod h1:O0mHYnx4q3PmhiM2yhEHKJVANxm39NkZ3XfXZRZp8uU=
 github.com/getlantern/yinbi-server v0.0.0-20201217211659-4cf3add61c1b h1:/JW728V8twsI1e8HoSRNa5dFelUrJ0pP57hVNVOYBME=
 github.com/getlantern/yinbi-server v0.0.0-20201217211659-4cf3add61c1b/go.mod h1:O0mHYnx4q3PmhiM2yhEHKJVANxm39NkZ3XfXZRZp8uU=
+github.com/getlantern/yinbi-server v0.0.0-20201221164551-707fa79fb4c5 h1:Zje+7B4PinxjsmXigINmxI5CZqT+Cw5DRE4eHqGAYlk=
+github.com/getlantern/yinbi-server v0.0.0-20201221164551-707fa79fb4c5/go.mod h1:d5rTd/q2y++nJ3mxt+me33wkc9Zayx7MD2LFuo4kChw=
 github.com/getlantern/zenodb v0.0.0-20191107150234-58f0e128172a/go.mod h1:/QuMPlUCcgfXRy+yAwXWcAkBegF2Nl1lw0nJ+kSWEsA=
 github.com/getlantern/zenodb v0.0.0-20200613184607-425f1dea9db1 h1:2S3iHuoFuwfxMkeizLJZuTAPojoMJb3eP4iUZiciZVg=
 github.com/getlantern/zenodb v0.0.0-20200613184607-425f1dea9db1/go.mod h1:jttohOig8lld+9Dm2VsQXPNzRy3+dF6SZZSTn3SMttI=
