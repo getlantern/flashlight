@@ -11,6 +11,7 @@ import (
 	tun2socks "github.com/eycorsican/go-tun2socks/core"
 
 	"github.com/getlantern/dnsgrab"
+	"github.com/getlantern/dnsgrab/persistentcache"
 	"github.com/getlantern/errors"
 
 	"github.com/getlantern/flashlight/balancer"
@@ -21,23 +22,22 @@ import (
 )
 
 const (
-	maxDNSGrabCache = 10000         // this doesn't need to be huge because our fake DNS records have a TTL of only 1 second
-	dnsCacheMaxAge  = 1 * time.Hour // this doesn't need to be long because our fake DNS records have a TTL of only 1 second
+	dnsCacheMaxAge = 1 * time.Hour // this doesn't need to be long because our fake DNS records have a TTL of only 1 second
 
 	quotaSaveInterval            = 1 * time.Minute
 	shortFrontedAvailableTimeout = 30 * time.Second
 	longFrontedAvailableTimeout  = 5 * time.Minute
 
 	logMemoryInterval = 5 * time.Second
-	forceGCInterval   = 25 * time.Millisecond
+	forceGCInterval   = 250 * time.Millisecond
 
 	dialTimeout      = 30 * time.Second
-	shortIdleTimeout = 65 * time.Second
+	shortIdleTimeout = 5 * time.Second
 	closeTimeout     = 1 * time.Second
 
-	maxConcurrentDials         = 1
-	ipWriteBufferDepth         = 10
-	downstreamWriteBufferDepth = 10
+	maxConcurrentDials         = 2
+	ipWriteBufferDepth         = 100
+	downstreamWriteBufferDepth = 100
 )
 
 type Writer interface {
@@ -220,22 +220,15 @@ func (c *client) start() (ClientWriter, error) {
 	}
 	bal := balancer.New(func() bool { return c.uc.AllowProbes }, 30*time.Second, dialers...)
 
-	// cacheFile := filepath.Join(c.configDir, "dnsgrab.cache")
-	// cache, err := persistentcache.New(cacheFile, dnsCacheMaxAge)
-	// if err != nil {
-	// 	return nil, errors.New("Unable to initialize dnsgrab cache at %v: %v", cacheFile, err)
-	// }
-	// grabber, err := dnsgrab.ListenWithCache(
-	// 	"127.0.0.1:0",
-	// 	c.realDNSHost,
-	// 	cache,
-	// )
-	// At the moment we just use an in-memory cache because I suspect that the persistent boltdb cache creates extra memory pressure due to
-	// mmap'ing the data file and potentially spawning some extra native threads.
-	grabber, err := dnsgrab.Listen(
-		maxDNSGrabCache,
+	cacheFile := filepath.Join(c.configDir, "dnsgrab.cache")
+	cache, err := persistentcache.New(cacheFile, dnsCacheMaxAge)
+	if err != nil {
+		return nil, errors.New("Unable to initialize dnsgrab cache at %v: %v", cacheFile, err)
+	}
+	grabber, err := dnsgrab.ListenWithCache(
 		"127.0.0.1:0",
 		c.realDNSHost,
+		cache,
 	)
 	if err != nil {
 		return nil, errors.New("Unable to start dnsgrab: %v", err)
