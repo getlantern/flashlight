@@ -20,7 +20,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/getlantern/appdir v0.0.0-20200615192800-a0ef1968f4da
-	github.com/getlantern/auth-server v0.0.0-20201217211518-93770433cd1a
+	github.com/getlantern/auth-server v0.0.0-20201221164040-d1ba171146da
 	github.com/getlantern/autoupdate v0.0.0-20180719190525-a22eab7ded99
 	github.com/getlantern/borda v0.0.0-20200613191039-d7b1c2cc6021
 	github.com/getlantern/bufconn v0.0.0-20190625204133-a08544339f8d
@@ -121,7 +121,6 @@ require (
 	github.com/rs/cors v1.7.0
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
-	github.com/stellar/go v0.0.0-20201217173652-abcfaa9ff07b // indirect
 	github.com/stretchr/testify v1.6.1
 	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	github.com/ulule/limiter/v3 v3.8.0 // indirect
@@ -130,7 +129,7 @@ require (
 	golang.org/x/crypto v0.0.0-20201217014255-9d1352758620 // indirect
 	golang.org/x/net v0.0.0-20201216054612-986b41b23924
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a // indirect
-	golang.org/x/sys v0.0.0-20201214210602-f9fddec55a1e
+	golang.org/x/sys v0.0.0-20201221093633-bc327ba9c2f0
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20201214200347-8c77b98c765d // indirect

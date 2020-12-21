@@ -115,7 +115,7 @@ func SuccessResponse(w http.ResponseWriter, vargs ...interface{}) {
 		m[successKey] = true
 		args = m
 	} else {
-		args = vargs
+		args = vargs[0]
 	}
 	common.WriteJSON(w, http.StatusOK, args)
 }
