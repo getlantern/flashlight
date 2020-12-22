@@ -23,7 +23,7 @@ func (h YinbiHandler) accountHandler() http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Get(accountDetailsEndpoint, h.getAccountDetails)
 		r.Post(resetPasswordEndpoint, h.resetPassword)
-		r.Get(accountTransactionsEndpoint, h.getAccountTransactions)
+		r.Post(accountTransactionsEndpoint, h.updateAccountTransactions)
 		r.Post(accountRecoverEndpoint, h.recoverAccount)
 	})
 	return r
@@ -73,18 +73,15 @@ func (h YinbiHandler) recoverAccount(w http.ResponseWriter, r *http.Request) {
 // the balances and transaction history for a given Stellar
 // address
 func (h YinbiHandler) getAccountDetails(w http.ResponseWriter, r *http.Request) {
-	var request struct {
-		Address string `json:"address"`
-	}
-	err := handler.DecodeJSONRequest(w, r, &request)
-	if err != nil {
+	address := handler.GetQueryParam(r, "address")
+	if address == "" {
+		log.Debug("No address provided. Ignoring get account details request")
 		return
 	}
-	address := request.Address
 	log.Debugf("Looking up balance for account with address %s", address)
 	details, err := h.yinbiClient.GetAccountDetails(address)
 	if err != nil {
-		log.Debugf("Error retrieving balance: %v", err)
+		log.Errorf("Error retrieving balance: %v", err)
 		handler.ErrorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
@@ -92,10 +89,11 @@ func (h YinbiHandler) getAccountDetails(w http.ResponseWriter, r *http.Request) 
 	handler.SuccessResponse(w, map[string]interface{}{
 		"balances": details.Balances,
 	})
-
 }
 
-func (h YinbiHandler) getAccountTransactions(w http.ResponseWriter, r *http.Request) {
+// updateAccountTransactions looks up the transaction
+// history on the Stellar network for the given account
+func (h YinbiHandler) updateAccountTransactions(w http.ResponseWriter, r *http.Request) {
 	var params client.AccountTransactionParams
 	err := handler.DecodeJSONRequest(w, r, &params)
 	if err != nil {
