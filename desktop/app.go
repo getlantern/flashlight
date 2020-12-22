@@ -300,6 +300,7 @@ func (app *App) enableYinbiWallet(enabledFeatures *map[string]bool) {
 func (app *App) startFeaturesService(chans ...<-chan bool) {
 	if service, err := app.ws.Register("features", func(write func(interface{})) {
 		enabledFeatures := app.flashlight.EnabledFeatures()
+		enableYinbiWallet(&enabledFeatures)
 		log.Debugf("Sending features enabled to new client: %v", enabledFeatures)
 		write(enabledFeatures)
 	}); err != nil {
