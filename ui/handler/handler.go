@@ -73,6 +73,15 @@ func (h Handler) GetYinbiAddr(uri string) string {
 	return fmt.Sprintf("%s%s", h.yinbiAddr, uri)
 }
 
+// GetQueryParam takes an HTTP request and returns the given query arg with name (if it exists)
+func GetQueryParam(r *http.Request, name string) string {
+	keys, ok := r.URL.Query()[name]
+	if !ok || len(keys[0]) < 1 {
+		return ""
+	}
+	return keys[0]
+}
+
 // DoHTTPRequest creates and sends a new HTTP request to the given url
 // with an optional requestBody. It returns an HTTP response
 func (h Handler) DoHTTPRequest(method, url string,
