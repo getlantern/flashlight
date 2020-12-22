@@ -76,8 +76,9 @@ func initInternal() {
 		ProAPIHost = "api-staging.getiantem.org"
 		ReplicaSearchAPIHost = "replica-search-staging.lantern.io"
 		ReplicaThumbnailerHost = "replica-thumbnailer-staging.lantern.io"
-		useYinbiStaging()
 	}
+	// TEMP : use staging defaults for Yinbi. Will change after launch
+	useYinbiStaging()
 	forceAds, _ = strconv.ParseBool(os.Getenv("FORCEADS"))
 }
 
