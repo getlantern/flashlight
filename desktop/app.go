@@ -287,6 +287,14 @@ func (app *App) Run() {
 	}()
 }
 
+// enableYinbiWallet adds Yinbi wallet related features to the features map
+// sent back to the UI
+func (app *App) enableYinbiWallet(enabledFeatures *map[string]bool) {
+	for _, feature := range []string{"replica", "yinbi", "yinbiwallet", "auth"} {
+		(*enabledFeatures)[feature] = true
+	}
+}
+
 // startFeaturesService starts a new features service that dispatches features to any relevant
 // listeners.
 func (app *App) startFeaturesService(chans ...<-chan bool) {
@@ -301,6 +309,7 @@ func (app *App) startFeaturesService(chans ...<-chan bool) {
 			go func(c <-chan bool) {
 				for range c {
 					features := app.flashlight.EnabledFeatures()
+					app.enableYinbiWallet(&features)
 					log.Debugf("EnabledFeatures: %v", features)
 					app.checkForReplica(features)
 					select {
