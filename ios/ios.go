@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	dnsCacheMaxAge = 1 * time.Hour // this doesn't need to be long because our fake DNS records have a TTL of only 1 second
+	maxDNSGrabAge = 1 * time.Hour // this doesn't need to be long because our fake DNS records have a TTL of only 1 second. We use a smaller value than on Android to be conservative with memory usage.
 
 	quotaSaveInterval            = 1 * time.Minute
 	shortFrontedAvailableTimeout = 30 * time.Second
@@ -220,8 +220,11 @@ func (c *client) start() (ClientWriter, error) {
 	}
 	bal := balancer.New(func() bool { return c.uc.AllowProbes }, 30*time.Second, dialers...)
 
+	// We use a persistent cache for dnsgrab because some clients seem to hang on to our fake IP addresses for a while, even though we set a TTL of 1 second.
+	// That can be a problem when the network extension is automatically restarted. Caching the dns cache on disk allows us to successfully reverse look up
+	// those IP addresses even after a restart.
 	cacheFile := filepath.Join(c.configDir, "dnsgrab.cache")
-	cache, err := persistentcache.New(cacheFile, dnsCacheMaxAge)
+	cache, err := persistentcache.New(cacheFile, maxDNSGrabAge)
 	if err != nil {
 		return nil, errors.New("Unable to initialize dnsgrab cache at %v: %v", cacheFile, err)
 	}

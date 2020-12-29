@@ -36,7 +36,7 @@ import (
 )
 
 const (
-	maxDNSGrabAge = 24 * time.Hour
+	maxDNSGrabAge = 24 * time.Hour // this doesn't need to be huge, since we use a TTL of 1 second for our DNS responses
 )
 
 var (
