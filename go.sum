@@ -372,6 +372,8 @@ github.com/getlantern/idletiming v0.0.0-20190529182719-d2fbc83372a5/go.mod h1:MG
 github.com/getlantern/idletiming v0.0.0-20200228204104-10036786eac5/go.mod h1:McaLC6faRlxJ9QjjqSjpEeYIjKnKA8+dzjoR+eYXCio=
 github.com/getlantern/idletiming v0.0.0-20201214155000-1177e7c23966 h1:kABvA4pJy9DzDypSoM3mb8n5+Yp6E9iFIUF4+3cVD2Q=
 github.com/getlantern/idletiming v0.0.0-20201214155000-1177e7c23966/go.mod h1:McaLC6faRlxJ9QjjqSjpEeYIjKnKA8+dzjoR+eYXCio=
+github.com/getlantern/idletiming v0.0.0-20201229174729-33d04d220c4e h1:b0VWlP1TB369RANq5GnV76sGDm98eQwVJaaoH8OXOmw=
+github.com/getlantern/idletiming v0.0.0-20201229174729-33d04d220c4e/go.mod h1:McaLC6faRlxJ9QjjqSjpEeYIjKnKA8+dzjoR+eYXCio=
 github.com/getlantern/ipproxy v0.0.0-20201020142114-ed7e3a8d5d87 h1:AWhpwnC6n/a7NLgRwhSm8bNauGUtOrRUvYXeiZ6vSwE=
 github.com/getlantern/ipproxy v0.0.0-20201020142114-ed7e3a8d5d87/go.mod h1:n2pvzFBL6JmhwaBOUQa7eM45kInmrVq/b78qdKh5BUk=
 github.com/getlantern/iptool v0.0.0-20170421160045-8723ea29ea42 h1:uSvHE7r08LiSG9s7SnLhS5soMzzKSCBtG1cSrGQ/rP4=
