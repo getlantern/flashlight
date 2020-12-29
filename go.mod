@@ -34,7 +34,7 @@ require (
 	github.com/getlantern/event v0.0.0-20170919023932-f16a5563f52e
 	github.com/getlantern/eventual v1.0.0
 	github.com/getlantern/filepersist v0.0.0-20160317154340-c5f0cd24e799
-	github.com/getlantern/fronted v0.0.0-20201211172922-2b863d32ad35
+	github.com/getlantern/fronted v0.0.0-20201229165541-138879ce456e
 	github.com/getlantern/geolookup v0.0.0-20200121184643-02217082e50f
 	github.com/getlantern/go-ping v0.0.0-20191213124541-9d4b7e6e7de6
 	github.com/getlantern/go-socks5 v0.0.0-20171114193258-79d4dd3e2db5
@@ -42,7 +42,7 @@ require (
 	github.com/getlantern/golog v0.0.0-20201105130739-9586b8bde3a9
 	github.com/getlantern/gowin v0.0.0-20160824205538-88fa116ddffc // indirect
 	github.com/getlantern/hellosplitter v0.1.0
-	github.com/getlantern/hidden v0.0.0-20201215190232-20a287a67ea5
+	github.com/getlantern/hidden v0.0.0-20201229170000-e66e7f878730
 	github.com/getlantern/http-proxy-lantern/v2 v2.6.23
 	github.com/getlantern/httpseverywhere v0.0.0-20201210200013-19ae11fc4eca
 	github.com/getlantern/i18n v0.0.0-20181205222232-2afc4f49bb1c
@@ -112,7 +112,7 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/vulcand/oxy v0.0.0-20180330141130-3a0f6c4b456b // indirect
 	github.com/xtaci/smux v1.5.15-0.20200704123958-f7188026ba01
-	golang.org/x/mobile v0.0.0-20201208152944-da85bec010a2 // indirect
+	golang.org/x/mobile v0.0.0-20201217150744-e6ae53a27f4f // indirect
 	golang.org/x/net v0.0.0-20201021035429-f5854403a974
 	golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
