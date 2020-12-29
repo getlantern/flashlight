@@ -1,3 +1,4 @@
+// connmaker is a utility for creating lots of TCP connections without closing them, to help stress the memory on the ios demo app
 package main
 
 import (

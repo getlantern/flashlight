@@ -249,6 +249,7 @@ type noopMemChecker struct{}
 func (c *noopMemChecker) BytesRemain() int {
 	memstats := &runtime.MemStats{}
 	runtime.ReadMemStats(memstats)
+	// This gives us a positive but not immensely large bytes remaining
 	return 8000000 - int(memstats.HeapInuse)
 }
 

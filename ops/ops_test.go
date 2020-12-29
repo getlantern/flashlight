@@ -62,7 +62,7 @@ func TestProxyName(t *testing.T) {
 	// runTest(true, "fp-obfs4-donyc3-20160715-005", "fp-obfs4-donyc3-20160715-005", "donyc3")
 	runTest(true, "fp-donyc3-20180101-006-kcp", "fp-donyc3-20180101-006", "donyc3")
 	runTest(true, "fp-donyc3-20180101-006", "fp-donyc3-20180101-006", "donyc3")
-	// For performance reasons, we don't bother checking that the name is totally valid
+	// For performance reasons, ProxyName() no longer checks that the name is totally valid
 	// runTest(false, "fp-14325-adsfds-006", "", "")
 	runTest(false, "cloudcompile", "", "")
 }

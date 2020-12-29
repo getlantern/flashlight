@@ -22,7 +22,7 @@ import (
 // All places in the code that do odd stuff in order to help with memory optimization are marked with MEMORY_OPTIMIZATION
 //
 // 1. Limit the number of goroutines that write to/from lwip in order to limit the number of OS threads (each OS thread has 0.5MB of stack allocated to it, which gets big pretty quickly)
-// 2. Limit dialing upstream to a single goroutine in order to limit the memory involved with public key cryptography
+// 2. Limit concurrency for dialing upstream in order to limit the memory involved with public key cryptography
 // 3. Use a fork of go-tun2socks tuned for low memory usage (see https://lwip.fandom.com/wiki/Tuning_TCP and https://lwip.fandom.com/wiki/Lwipopts.h)
 // 4. Set an aggressive GCPercent
 // 5. Use Go 1.14 instead of 1.15 (seems to have lower memory usage for some reason)
