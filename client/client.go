@@ -138,7 +138,7 @@ type Client struct {
 	lang              func() string
 	adSwapTargetURL   func() string
 
-	reverseDNS func(addr string) string
+	reverseDNS func(addr string) (string, error)
 
 	httpProxyIP   string
 	httpProxyPort string
@@ -164,7 +164,7 @@ func NewClient(
 	allowPrivateHosts func() bool,
 	lang func() string,
 	adSwapTargetURL func() string,
-	reverseDNS func(addr string) string,
+	reverseDNS func(addr string) (string, error),
 ) (*Client, error) {
 	// A small LRU to detect redirect loop
 	rewriteLRU, err := lru.New(100)
@@ -509,7 +509,12 @@ func (client *Client) ListenAndServeSOCKS5(requestedAddr string) error {
 		HandleConnect: func(ctx context.Context, conn net.Conn, req *socks5.Request, replySuccess func(boundAddr net.Addr) error, replyError func(err error) error) error {
 			op, ctx := ops.BeginWithNewBeam("proxy", ctx)
 			defer op.End()
-			addr := client.reverseDNS(fmt.Sprintf("%v:%v", req.DestAddr.IP, req.DestAddr.Port))
+
+			host := fmt.Sprintf("%v:%v", req.DestAddr.IP, req.DestAddr.Port)
+			addr, err := client.reverseDNS(host)
+			if err != nil {
+				return op.FailIf(log.Errorf("Error performing reverseDNS for %v: %v", host, err))
+			}
 			errOnReply := replySuccess(nil)
 			if errOnReply != nil {
 				return op.FailIf(log.Errorf("Unable to reply success to SOCKS5 client: %v", errOnReply))

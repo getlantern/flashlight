@@ -259,7 +259,7 @@ func (app *App) Run() {
 				}
 				return app.PlansURL()
 			},
-			func(addr string) string { return addr }, // no dnsgrab reverse lookups on desktop
+			func(addr string) (string, error) { return addr, nil }, // no dnsgrab reverse lookups on desktop
 		)
 		if err != nil {
 			app.Exit(err)

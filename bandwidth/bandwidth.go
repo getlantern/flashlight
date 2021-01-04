@@ -56,7 +56,7 @@ func Track(resp *http.Response) {
 
 	xbq := resp.Header.Get("XBQ")
 	if xbq == "" {
-		log.Debugf("Response missing XBQ header, can't read bandwidth quota")
+		log.Tracef("Response missing XBQ header, can't read bandwidth quota")
 		return
 	}
 	// Remove the XBQ header to avoid leaking it to clients
