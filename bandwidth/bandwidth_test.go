@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/getlantern/eventual"
+	"github.com/getlantern/flashlight/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,9 +23,9 @@ func TestRoundTrip(t *testing.T) {
 	assert.Nil(t, q)
 	assert.False(t, tracked)
 
-	Track(build(5, 500, 2))
-	Track(build(6, 500, 3))
-	Track(build(4, 500, 1))
+	Track(build(5, 500, 2, 20))
+	Track(build(6, 500, 3, 30))
+	Track(build(4, 500, 1, 10))
 
 	q, tracked = GetQuota()
 	time.Sleep(50 * time.Millisecond)
@@ -38,14 +39,15 @@ func TestRoundTrip(t *testing.T) {
 		asof := epoch.Add(3 * time.Second)
 		assert.EqualValues(t, asof, q.AsOf)
 		assert.EqualValues(t, asof, q2.AsOf)
+		assert.EqualValues(t, 30, q2.TTLSeconds)
 	}
 
 }
 
-func build(used uint64, allowed uint64, asof int64) *http.Response {
+func build(used uint64, allowed uint64, asof int64, ttlSeconds int64) *http.Response {
 	resp := &http.Response{
 		Header: make(http.Header),
 	}
-	resp.Header.Set("XBQ", fmt.Sprintf("%d/%d/%d", used, allowed, asof))
+	resp.Header.Set(common.XBQHeaderv2, fmt.Sprintf("%d/%d/%d/%d", used, allowed, asof, ttlSeconds))
 	return resp
 }
