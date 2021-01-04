@@ -169,7 +169,7 @@ func (s *Server) attachHandlers(params ServerParams) {
 
 	// configure routes passed with server params
 	for _, h := range params.Handlers {
-		s.mux.Mount(h.Pattern, util.NoCache(h.Handler))
+		s.mux.Handle(h.Pattern, util.NoCache(h.Handler))
 	}
 
 	s.Handle("/startup", util.NoCache(http.HandlerFunc(startupHandler)))
