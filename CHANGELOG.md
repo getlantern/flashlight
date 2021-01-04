@@ -1,4 +1,16 @@
 
+<a name="lantern-6.2.9"></a>
+## [lantern-6.2.9](https://github.com/getlantern/flashlight/compare/lantern-6.2.8...lantern-6.2.9)
+
+> 2020-12-21
+
+### Pull Requests
+
+* Merge pull request [#963](https://github.com/getlantern/flashlight/issues/963) from getlantern/big-sur-ui-fix
+* Merge pull request [#962](https://github.com/getlantern/flashlight/issues/962) from getlantern/4474-replica-ga
+* Merge pull request [#961](https://github.com/getlantern/flashlight/issues/961) from getlantern/httpseverywhere-test-fix
+
+
 <a name="lantern-6.2.8"></a>
 ## [lantern-6.2.8](https://github.com/getlantern/flashlight/compare/lantern-6.2.7...lantern-6.2.8)
 

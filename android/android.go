@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/autoupdate"
 	"github.com/getlantern/dnsgrab"
+	"github.com/getlantern/dnsgrab/persistentcache"
 	"github.com/getlantern/eventual"
 	"github.com/getlantern/flashlight"
 	"github.com/getlantern/flashlight/balancer"
@@ -34,7 +36,7 @@ import (
 )
 
 const (
-	maxDNSGrabCache = 10000
+	maxDNSGrabAge = 24 * time.Hour // this doesn't need to be huge, since we use a TTL of 1 second for our DNS responses
 )
 
 var (
@@ -304,9 +306,17 @@ func run(configDir, locale string,
 
 	log.Debugf("Writing log messages to %s/lantern.log", configDir)
 
-	grabber, err := dnsgrab.Listen(maxDNSGrabCache,
+	cache, err := persistentcache.New(filepath.Join(configDir, "dnsgrab.cache"), maxDNSGrabAge)
+	if err != nil {
+		log.Errorf("Unable to open dnsgrab cache: %v", err)
+		return
+	}
+
+	grabber, err := dnsgrab.ListenWithCache(
 		"127.0.0.1:0",
-		session.GetDNSServer())
+		session.GetDNSServer(),
+		cache,
+	)
 	if err != nil {
 		log.Errorf("Unable to start dnsgrab: %v", err)
 		return
@@ -347,7 +357,7 @@ func run(configDir, locale string,
 		session.IsProUser,
 		func() string { return "" }, // only used for desktop
 		func() string { return "" }, // only used for desktop
-		func(addr string) string {
+		func(addr string) (string, error) {
 			host, port, splitErr := net.SplitHostPort(addr)
 			if splitErr != nil {
 				host = addr
@@ -355,17 +365,16 @@ func run(configDir, locale string,
 			ip := net.ParseIP(host)
 			if ip == nil {
 				log.Debugf("Unable to parse IP %v, passing through address as is", host)
-				return addr
+				return addr, nil
 			}
-			updatedHost := grabber.ReverseLookup(ip)
-			if updatedHost == "" {
-				log.Debugf("Unable to reverse lookup %v, passing through address as is (this shouldn't happen much)", ip)
-				return addr
+			updatedHost, ok := grabber.ReverseLookup(ip)
+			if !ok {
+				return "", errors.New("Invalid IP address")
 			}
 			if splitErr != nil {
-				return updatedHost
+				return updatedHost, nil
 			}
-			return fmt.Sprintf("%v:%v", updatedHost, port)
+			return fmt.Sprintf("%v:%v", updatedHost, port), nil
 		},
 	)
 	if err != nil {
