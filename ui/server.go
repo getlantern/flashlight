@@ -164,7 +164,7 @@ func (s *Server) attachHandlers(params ServerParams) {
 	// configure UI handlers with routes setup internally
 	for _, h := range handlers {
 		prefix := h.GetPathPrefix()
-		s.mux.Mount(prefix, h.ConfigureRoutes())
+		s.Handle(prefix, h.ConfigureRoutes())
 	}
 
 	// configure routes passed with server params
