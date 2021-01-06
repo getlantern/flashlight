@@ -62,7 +62,7 @@ require (
 	github.com/getlantern/mtime v0.0.0-20200417132445-23682092d1f7
 	github.com/getlantern/multipath v0.0.0-20201027015000-69ed0bd15259
 	github.com/getlantern/netx v0.0.0-20201229185957-3fadd2c8f5ba
-	github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b
+	github.com/getlantern/notifier v0.0.0-20210106212810-664054afd96d
 	github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6
 	github.com/getlantern/osversion v0.0.0-20190510010111-432ecec19031
 	github.com/getlantern/packetforward v0.0.0-20200421081927-11933f311913
