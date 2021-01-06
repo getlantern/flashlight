@@ -80,6 +80,7 @@ require (
 	github.com/getlantern/sysproxy v0.0.0-20171129134559-eb982eb14035
 	github.com/getlantern/systray v1.0.3-0.20200611154022-031edda14837
 	github.com/getlantern/tarfs v0.0.0-20171005185713-4987a6195239
+	github.com/getlantern/timezone v0.0.0-20210104163318-083eaadcecbd
 	github.com/getlantern/tinywss v0.0.0-20200121221108-851921f95ad7
 	github.com/getlantern/tlsdefaults v0.0.0-20171004213447-cf35cfd0b1b4
 	github.com/getlantern/tlsdialer v0.0.0-20200205115148-9bde2ed72c94
