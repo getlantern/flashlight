@@ -425,8 +425,8 @@ github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd h1:mn98vs69Kqw56iK
 github.com/getlantern/netx v0.0.0-20190110220209-9912de6f94fd/go.mod h1:wKdY0ikOgzrWSeB9UyBVKPRhjXQ+vTb+BPeJuypUuNE=
 github.com/getlantern/netx v0.0.0-20201229185957-3fadd2c8f5ba h1:nbXBFlsbvYMU2v+unTqErG3Pq+0vUBHlC7j7IvYjS9o=
 github.com/getlantern/netx v0.0.0-20201229185957-3fadd2c8f5ba/go.mod h1:g7yY/ImU8M+7lS09wVG3GTsxNvtPMTvkeWZVfxowtMo=
-github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b h1:zmsspqmbtaRMndpJRPSX40ebZBuu2MbBDpJ7Xb0RXQA=
-github.com/getlantern/notifier v0.0.0-20190813022016-6b15be83383b/go.mod h1:8hWwZg+ROrvRlE/QHMOCRUzjKSObVv8FEOP6A5F6N0s=
+github.com/getlantern/notifier v0.0.0-20210106212810-664054afd96d h1:x/YP2f1S//ZG6HiXpgRJrIoydbSaz3FqaUDviVwU+U4=
+github.com/getlantern/notifier v0.0.0-20210106212810-664054afd96d/go.mod h1:8hWwZg+ROrvRlE/QHMOCRUzjKSObVv8FEOP6A5F6N0s=
 github.com/getlantern/ops v0.0.0-20190325191751-d70cb0d6f85f/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=
 github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6 h1:QthAQCekS1YOeYWSvoHI6ZatlG4B+GBDLxV/2ZkBsTA=
 github.com/getlantern/ops v0.0.0-20200403153110-8476b16edcd6/go.mod h1:D5ao98qkA6pxftxoqzibIBBrLSUli+kYnJqrgBf9cIA=
