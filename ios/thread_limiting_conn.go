@@ -1,6 +1,7 @@
 package ios
 
 import (
+	"errors"
 	"net"
 	"runtime"
 	"sync"
@@ -8,6 +9,10 @@ import (
 	"github.com/eycorsican/go-tun2socks/core"
 
 	"github.com/getlantern/safechannels"
+)
+
+var (
+	errWriteOnClosedConn = errors.New("write on closed threadLimitingTCPConn")
 )
 
 type worker struct {
@@ -50,7 +55,10 @@ func (c *threadLimitingTCPConn) Write(b []byte) (int, error) {
 	c.writeWorker.tasks <- func() {
 		c.writeResult.Write(c.Conn.Write(b))
 	}
-	result := <-c.writeResult.Read()
+	result, ok := <-c.writeResult.Read()
+	if !ok {
+		return 0, errWriteOnClosedConn
+	}
 	return result.N, result.Err
 }
 
