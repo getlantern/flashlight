@@ -28,7 +28,17 @@ import (
 func tlsConfigForProxy(configDir string, ctx context.Context, name string, s *ChainedServerInfo, uc common.UserConfig) (
 	*tls.Config, []hello) {
 
+	fmt.Printf("s.TLSClientSessionState:\n<%s>\n", s.TLSClientSessionState)
+
+	configuredHelloID := s.clientHelloID()
+	var ss *tls.ClientSessionState
+	var err error
+	if s.TLSClientSessionState != "" {
+		ss, err = tlsresumption.ParseClientSessionState(s.TLSClientSessionState)
+		if err != nil {
+			log.Errorf("Unable to parse serialized client session state, continuing with normal handshake: %v", err)
 		} else {
+			log.Debug("Using serialized client session state")
 			if configuredHelloID.Client == "Golang" {
 				log.Debug("Need to mimic browser hello for session resumption, defaulting to HelloChrome_Auto")
 				configuredHelloID = tls.HelloChrome_Auto

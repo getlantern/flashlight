@@ -85,7 +85,7 @@ require (
 	github.com/getlantern/tlsdialer/v3 v3.0.1-0.20200819212748-a098113dd9f3
 	github.com/getlantern/tlsmasq v0.3.0
 	github.com/getlantern/tlsresumption v0.0.0-20200205020452-74fc6ea4e074
-	github.com/getlantern/tlsutil v0.2.0
+	github.com/getlantern/tlsutil v0.3.0
 	github.com/getlantern/uuid v1.2.0
 	github.com/getlantern/waitforserver v1.0.1
 	github.com/getlantern/winsvc v0.0.0-20160824205134-8bb3a5dbcc1d // indirect
@@ -136,3 +136,7 @@ replace github.com/google/netstack => github.com/getlantern/netstack v0.0.0-2020
 
 // For https://github.com/getlantern/lantern-internal/issues/4277
 replace crawshaw.io/sqlite => github.com/getlantern/sqlite v0.3.3-0.20201015053730-228fbc4f607f
+
+// replace github.com/getlantern/tlsmasq => ../tlsmasq
+
+// replace github.com/getlantern/tlsutil => ../tlsutil
