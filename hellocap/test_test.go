@@ -168,7 +168,7 @@ func TestTest(t *testing.T) {
 }
 
 func TestAllOrigins(t *testing.T) {
-	const originsFile = "/Users/harryharpham/Desktop/tmp/origins.txt"
+	const originsFile = "origins.txt"
 
 	decodeUint16 := func(s string) (uint16, error) {
 		b, err := hex.DecodeString(strings.TrimPrefix(s, "0x"))
