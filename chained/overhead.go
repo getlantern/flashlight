@@ -69,3 +69,7 @@ func (c *overheadconn) Read(b []byte) (int, error) {
 	}
 	return n, err
 }
+
+func (c *overheadconn) Wrapped() net.Conn {
+	return c.Conn
+}
