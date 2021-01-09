@@ -27,10 +27,10 @@ var adSwapJavaScriptInjections = map[string]string{
 
 func (client *Client) handle(conn net.Conn) error {
 	op, ctx := ops.BeginWithNewBeam("proxy", context.Background())
-	// Set user agent connection to idle a little before the upstream connection
-	// so that we don't read data from the client after the upstream connection
-	// has already timed out.
-	conn = idletiming.Conn(conn, chained.IdleTimeout-1*time.Second, nil)
+	// Use idletiming on client connections to make sure we don't get dangling server connections when clients disappear without our knowledge
+	conn = idletiming.Conn(conn, chained.IdleTimeout, func() {
+		log.Debugf("Client connection idle for %v, closed", chained.IdleTimeout)
+	})
 	err := client.proxy.Handle(ctx, conn, conn)
 	if err != nil {
 		log.Error(op.FailIf(err))
