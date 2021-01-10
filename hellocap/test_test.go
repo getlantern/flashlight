@@ -2,6 +2,7 @@ package hellocap
 
 import (
 	"bufio"
+	"context"
 	"crypto/tls"
 	"encoding/binary"
 	"encoding/hex"
@@ -49,9 +50,10 @@ var (
 type origin struct {
 	hostname, sni string
 	suites        []uint16
+	rsa           bool // false implies EC
 }
 
-func startProxy(t *testing.T, addr string) (proxyAddr string) {
+func startProxy(t *testing.T, addr string, rsa bool) (proxyAddr string) {
 	t.Helper()
 
 	nonFatalErrors := make(chan error)
@@ -62,6 +64,11 @@ func startProxy(t *testing.T, addr string) (proxyAddr string) {
 	}()
 	t.Cleanup(func() { close(nonFatalErrors) })
 
+	_cert := cert
+	if rsa {
+		_cert = rsaCert
+	}
+
 	cfg := tlsmasq.ListenerConfig{
 		ProxiedHandshakeConfig: ptlshs.ListenerConfig{
 			DialOrigin:     func() (net.Conn, error) { return net.Dial("tcp", addr) },
@@ -69,7 +76,7 @@ func startProxy(t *testing.T, addr string) (proxyAddr string) {
 			NonFatalErrors: nonFatalErrors,
 		},
 		TLSConfig: &tls.Config{
-			Certificates: []tls.Certificate{cert, rsaCert},
+			Certificates: []tls.Certificate{_cert},
 		},
 	}
 	l, err := tlsmasq.Listen("tcp", "", cfg)
@@ -104,11 +111,16 @@ func startProxy(t *testing.T, addr string) (proxyAddr string) {
 }
 
 func testWithShaker(o origin, hs ptlshs.Handshaker) func(t *testing.T) {
+	timeout := 2 * time.Second
+
 	return func(t *testing.T) {
 		t.Helper()
 		// t.Parallel()
 
-		proxyAddr := startProxy(t, o.hostname+":443")
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		proxyAddr := startProxy(t, o.hostname+":443", o.rsa)
 		cfg := tlsmasq.DialerConfig{
 			ProxiedHandshakeConfig: ptlshs.DialerConfig{
 				Secret:     secret,
@@ -120,51 +132,21 @@ func testWithShaker(o origin, hs ptlshs.Handshaker) func(t *testing.T) {
 				InsecureSkipVerify: true,
 			},
 		}
-		conn, err := tlsmasq.DialTimeout("tcp", proxyAddr, cfg, 2*time.Second)
+		d := tlsmasq.WrapDialer(&net.Dialer{}, cfg)
+		conn, err := d.DialContext(ctx, "tcp", proxyAddr)
 		require.NoError(t, err)
 		defer conn.Close()
 
-		require.NoError(t, conn.(tlsmasq.Conn).Handshake())
+		handshakeErr := make(chan error, 1)
+		go func() { handshakeErr <- conn.(tlsmasq.Conn).Handshake() }()
+
+		select {
+		case err := <-handshakeErr:
+			require.NoError(t, err)
+		case <-ctx.Done():
+			t.Fatal(ctx.Err())
+		}
 	}
-}
-
-func TestTest(t *testing.T) {
-	// o := origin{"stream.ru", "stream.ru", []uint16{
-	// 	0xc030, 0xcca8, 0xc02f, 0xc028, 0xc027, 0xc014, 0xc013,
-	// 	0x009d, 0x009c, 0x003d, 0x003c, 0x0035, 0x002f,
-	// }}
-	o := origin{"planetlabor.com", "www.planetlabor.com", []uint16{
-		0xc030, 0x009f, 0xc02f, 0x009e, 0xc028, 0x006b, 0xc027, 0x0067, 0xc014,
-		0x0039, 0xc013, 0x0033, 0x009d, 0x009c, 0x003d, 0x003c, 0x0035, 0x002f,
-	}}
-
-	// t.Run("stdlib", testWithShaker(ptlshs.StdLibHandshaker{
-	// 	Config: &tls.Config{
-	// 		ServerName:   sni,
-	// 		CipherSuites: suites,
-	// 		MaxVersion:   tls.VersionTLS12,
-	// 	},
-	// }))
-	// t.Run("hello golang", testWithShaker(&utlsHandshaker{
-	// 	cfg: &utls.Config{
-	// 		ServerName:   sni,
-	// 		CipherSuites: suites,
-	// 		MaxVersion:   tls.VersionTLS12,
-	// 	},
-	// 	roller: &helloRoller{
-	// 		hellos: []hello{{utls.HelloGolang, nil}},
-	// 	},
-	// }))
-	t.Run("chrome83", testWithShaker(o, &utlsHandshaker{
-		cfg: &utls.Config{
-			ServerName:   o.sni,
-			CipherSuites: o.suites,
-			MaxVersion:   tls.VersionTLS12,
-		},
-		roller: &helloRoller{
-			hellos: []hello{{utls.HelloChrome_83, nil}},
-		},
-	}))
 }
 
 func TestAllOrigins(t *testing.T) {
@@ -180,12 +162,12 @@ func TestAllOrigins(t *testing.T) {
 
 	parseOriginLine := func(line string) (*origin, error) {
 		splits := strings.Split(line, ";")
-		if len(splits) != 3 {
-			return nil, fmt.Errorf("expected 3 segments, got %d", len(splits))
+		if len(splits) != 4 {
+			return nil, fmt.Errorf("expected 4 segments, got %d", len(splits))
 		}
 
 		suites := []uint16{}
-		suiteStrings := strings.Split(splits[2], ",")
+		suiteStrings := strings.Split(splits[3], ",")
 		if len(suiteStrings) == 1 && suiteStrings[0] == "" {
 			return nil, errors.New("no cipher suites specified")
 		}
@@ -196,7 +178,10 @@ func TestAllOrigins(t *testing.T) {
 			}
 			suites = append(suites, suite)
 		}
-		return &origin{splits[0], splits[1], suites}, nil
+		if splits[2] != "rsa" && splits[2] != "ec" {
+			return nil, fmt.Errorf("unexpected cert specifier '%s'", splits[2])
+		}
+		return &origin{splits[0], splits[1], suites, splits[2] == "rsa"}, nil
 	}
 
 	f, err := os.Open(originsFile)
@@ -258,20 +243,82 @@ func TestTest2(t *testing.T) {
 	fmt.Printf("%#x\n", conn.ConnectionState().CipherSuite)
 }
 
-func TestNormalHandshake(t *testing.T) {
-	conn, err := tls.Dial("tcp", "mdusd.org:443", &tls.Config{
-		ServerName: "mdusd.org",
-		CipherSuites: []uint16{
-			0xc02c, 0xc030, 0xcca9, 0xcca8, 0xc02b, 0xc02f, 0xc024, 0xc028, 0xc023,
-			0xc027, 0xc014, 0xc013, 0x009d, 0x009c, 0x003d, 0x003c, 0x0035, 0x002f,
-		},
-		MaxVersion: tls.VersionTLS12,
-	})
+func TestNormalHandshakes(t *testing.T) {
+	const (
+		originsFile = "origins.txt"
+		timeout     = 2 * time.Second
+	)
+
+	decodeUint16 := func(s string) (uint16, error) {
+		b, err := hex.DecodeString(strings.TrimPrefix(s, "0x"))
+		if err != nil {
+			return 0, err
+		}
+		return binary.BigEndian.Uint16(b), nil
+	}
+
+	parseOriginLine := func(line string) (*origin, error) {
+		splits := strings.Split(line, ";")
+		if len(splits) != 4 {
+			return nil, fmt.Errorf("expected 4 segments, got %d", len(splits))
+		}
+
+		suites := []uint16{}
+		suiteStrings := strings.Split(splits[3], ",")
+		if len(suiteStrings) == 1 && suiteStrings[0] == "" {
+			return nil, errors.New("no cipher suites specified")
+		}
+		for _, s := range suiteStrings {
+			suite, err := decodeUint16(s)
+			if err != nil {
+				return nil, fmt.Errorf("bad cipher string '%s': %v", s, err)
+			}
+			suites = append(suites, suite)
+		}
+		if splits[2] != "rsa" && splits[2] != "ec" {
+			return nil, fmt.Errorf("unexpected cert specifier '%s'", splits[2])
+		}
+		return &origin{splits[0], splits[1], suites, splits[2] == "rsa"}, nil
+	}
+
+	f, err := os.Open(originsFile)
 	require.NoError(t, err)
-	defer conn.Close()
-	require.NoError(t, conn.Handshake())
-	fmt.Printf("cipher suite: %#x\n", conn.ConnectionState().CipherSuite)
-	fmt.Printf("version: %#x\n", conn.ConnectionState().Version)
+	defer f.Close()
+
+	origins := []origin{}
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		o, err := parseOriginLine(scanner.Text())
+		require.NoError(t, err)
+		origins = append(origins, *o)
+	}
+
+	for _, o := range origins {
+		t.Run(o.hostname, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
+			defer cancel()
+
+			cfg := &utls.Config{
+				ServerName:   o.sni,
+				CipherSuites: o.suites,
+				MaxVersion:   tls.VersionTLS12,
+			}
+			tcpConn, err := (&net.Dialer{}).DialContext(ctx, "tcp", o.hostname+":443")
+			require.NoError(t, err)
+			conn := utls.UClient(tcpConn, cfg, utls.HelloChrome_83)
+			defer conn.Close()
+
+			handshakeErr := make(chan error, 1)
+			go func() { handshakeErr <- conn.Handshake() }()
+
+			select {
+			case err := <-handshakeErr:
+				require.NoError(t, err)
+			case <-ctx.Done():
+				t.Fatal(ctx.Err())
+			}
+		})
+	}
 }
 
 func TestUTLSHandshake(t *testing.T) {
