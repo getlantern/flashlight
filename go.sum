@@ -502,12 +502,16 @@ github.com/getlantern/tlsdialer/v3 v3.0.1-0.20200819212748-a098113dd9f3 h1:amkTb
 github.com/getlantern/tlsdialer/v3 v3.0.1-0.20200819212748-a098113dd9f3/go.mod h1:ZK1keXRsQsvmyCUCnVdmPOXH47OTlyEbSlGrV5C0urA=
 github.com/getlantern/tlsmasq v0.3.0 h1:GkRvituXHmb8fNMhl1xJhaqGlF0DjeC94/Yensg1CSE=
 github.com/getlantern/tlsmasq v0.3.0/go.mod h1:MKzh5QPCD33MjPDUn1sTHkoUXFjtShpIC8e+rlGCDRc=
+github.com/getlantern/tlsmasq v0.3.1-0.20210107150627-b7fb62e52978 h1:xcWwTVbhueVyeelON6iOD5KpJscqpalPxZ7gP3Kt00Y=
+github.com/getlantern/tlsmasq v0.3.1-0.20210107150627-b7fb62e52978/go.mod h1:HzjsGw2KJtQGeOkuOf0gi5ssSZ4BVlfLxGmX/ILJd+Y=
 github.com/getlantern/tlsredis v0.0.0-20180308045249-5d4ed6dd3836 h1:Qx9tRhqZdhF0RBxHe2OVE1OJ30ipOCPfMraDrZED3bc=
 github.com/getlantern/tlsredis v0.0.0-20180308045249-5d4ed6dd3836/go.mod h1:1ZJE0mXEdPyyuF1daUTDBo2nVWB/6nuZy7IcNmRnHrc=
 github.com/getlantern/tlsresumption v0.0.0-20200205020452-74fc6ea4e074 h1:jTMIPFsft81lFB9b9IOJLrQprlNjsITjlLZ8J1muva0=
 github.com/getlantern/tlsresumption v0.0.0-20200205020452-74fc6ea4e074/go.mod h1:Z9JXt049556DEYg7tD1tY4/ROWiec9laxBhFawTx8lE=
 github.com/getlantern/tlsutil v0.2.0 h1:i1X/r3w6FLaceoNBkTsRXWcE3Ujz7rbWmtipS28vvQo=
 github.com/getlantern/tlsutil v0.2.0/go.mod h1:Vxsyr9DVnYwsqHaEzMYkg9fT8aBrnO2eI+gdICMQbQU=
+github.com/getlantern/tlsutil v0.3.0 h1:4k5tIcRkeGSlLZl1lzzf/l6k6f734x1iOrZ5N7ignHQ=
+github.com/getlantern/tlsutil v0.3.0/go.mod h1:8v4sW+apnxSkhURB6IUpQ9zuf1r0+i+CywWSZHxXpzw=
 github.com/getlantern/utls v0.0.0-20191119185840-3db8c755b682 h1:gK0+CerB0oFReyfhHZhTDywm7YU7NIx/xrhRGDhgiK0=
 github.com/getlantern/utls v0.0.0-20191119185840-3db8c755b682/go.mod h1:81/JblRrFcHdL/b50CIN3OuJmkt41KbgnjQu+mBSbgQ=
 github.com/getlantern/utls v0.0.0-20200903013459-0c02248f7ce1 h1:+Egmu6VMMPm8/FHz8TOtQ1Usn3zg0gkS7ZHrLFycyok=
@@ -1108,6 +1112,8 @@ golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37/go.mod h1:LzIPMQfyMNhhGPh
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de h1:ikNHVSjEfnvz6sxdSPCaPt572qowuyMDMJLLm3Db3ig=
 golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
+golang.org/x/crypto v0.0.0-20201117144127-c1f2f97bffc9 h1:phUcVbl53swtrUN8kQEXFhUxPlIlWyBfKmidCu7P95o=
+golang.org/x/crypto v0.0.0-20201117144127-c1f2f97bffc9/go.mod h1:jdWPYTVW3xRLrWPugEBEK3UY2ZEsg3UU495nc5E+M+I=
 golang.org/x/exp v0.0.0-20190121172915-509febef88a4/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=
 golang.org/x/lint v0.0.0-20180702182130-06c8688daad7/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=
 golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=
@@ -1225,6 +1231,7 @@ golang.org/x/sys v0.0.0-20200929083018-4d22bbb62b3c h1:/h0vtH0PyU0xAoZJVcRw1k0Ng
 golang.org/x/sys v0.0.0-20200929083018-4d22bbb62b3c/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f h1:+Nyd8tzPX9R7BWHguqsrbFdRx3WQ/1ib8I44HXV5yTA=
 golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/term v0.0.0-20201117132131-f5c789dd3221/go.mod h1:Nr5EML6q2oocZ2LXRh80K7BxOlk5/8JxuGnuhpl+muw=
 golang.org/x/text v0.0.0-20170915032832-14c0d48ead0c/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
