@@ -1,4 +1,23 @@
 
+<a name="lantern-6.3.0"></a>
+## [lantern-6.3.0](https://github.com/getlantern/flashlight/compare/lantern-6.2.10...lantern-6.3.0)
+
+> 2021-01-12
+
+### Reverts
+
+* Add the TTLS param to bandwidth updates
+
+### Pull Requests
+
+* Merge pull request [#974](https://github.com/getlantern/flashlight/issues/974) from getlantern/ui-6.3.0
+* Merge pull request [#973](https://github.com/getlantern/flashlight/issues/973) from getlantern/sentry-0.9.0
+* Merge pull request [#972](https://github.com/getlantern/flashlight/issues/972) from getlantern/ui-6.2.11
+* Merge pull request [#969](https://github.com/getlantern/flashlight/issues/969) from getlantern/markhor/issue4656
+* Merge pull request [#971](https://github.com/getlantern/flashlight/issues/971) from getlantern/ox/ignore-idle-errors
+* Merge pull request [#970](https://github.com/getlantern/flashlight/issues/970) from getlantern/notifier-plans-fix
+
+
 <a name="lantern-6.2.10"></a>
 ## [lantern-6.2.10](https://github.com/getlantern/flashlight/compare/lantern-6.2.9...lantern-6.2.10)
 
