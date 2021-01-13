@@ -70,7 +70,7 @@ type Session interface {
 	UpdateStats(string, string, string, int, int)
 	SetStaging(bool)
 	ProxyAll() bool
-	BandwidthUpdate(int, int, int, int)
+	BandwidthUpdate(int, int, int)
 	Locale() string
 	Code() string
 	GetCountryCode() string
@@ -394,8 +394,7 @@ func run(configDir, locale string,
 func bandwidthUpdates(session Session) {
 	go func() {
 		for quota := range bandwidth.Updates {
-			percent, remaining, allowed := getBandwidth(quota)
-			session.BandwidthUpdate(percent, remaining, allowed, int(quota.TTLSeconds))
+			session.BandwidthUpdate(getBandwidth(quota))
 		}
 	}()
 }
@@ -426,7 +425,7 @@ func setBandwidth(session Session) {
 	quota, _ := bandwidth.GetQuota()
 	percent, remaining, allowed := getBandwidth(quota)
 	if percent != 0 && remaining != 0 {
-		session.BandwidthUpdate(percent, remaining, allowed, int(quota.TTLSeconds))
+		session.BandwidthUpdate(percent, remaining, allowed)
 	}
 }
 
