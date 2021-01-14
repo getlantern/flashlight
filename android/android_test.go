@@ -39,7 +39,7 @@ func (c testSettings) GetHttpProxyHost() string { return "127.0.0.1" }
 func (c testSettings) GetHttpProxyPort() int    { return 49128 }
 
 func (c testSession) AfterStart()                   {}
-func (c testSession) BandwidthUpdate(int, int, int) {}
+func (c testSession) BandwidthUpdate(int, int, int, int) {}
 func (c testSession) ConfigUpdate(bool)             {}
 func (c testSession) ShowSurvey(survey string)      {}
 func (c testSession) GetUserID() int64              { return 0 }
