@@ -11,5 +11,6 @@ type AuthConfig interface {
 type UserConfig interface {
 	AuthConfig
 	GetLanguage() string
+	GetTimeZone() (string, error)
 	GetInternalHeaders() map[string]string
 }
