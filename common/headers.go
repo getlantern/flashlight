@@ -4,9 +4,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
-
-	"github.com/getlantern/timezone"
 )
 
 const (
@@ -50,7 +47,7 @@ func AddCommonHeadersWithOptions(uc UserConfig, req *http.Request, overwriteAuth
 	req.Header.Add(SupportedDataCaps, "monthly")
 	req.Header.Add(SupportedDataCaps, "weekly")
 	req.Header.Add(SupportedDataCaps, "daily")
-	tz, err := timezone.IANANameForTime(time.Now())
+	tz, err := uc.GetTimeZone()
 	if err != nil {
 		log.Debugf("omitting timezone header because: %v", err)
 	} else {
