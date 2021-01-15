@@ -1,4 +1,18 @@
 
+<a name="lantern-6.3.2"></a>
+## [lantern-6.3.2](https://github.com/getlantern/flashlight/compare/lantern-6.3.1...lantern-6.3.2)
+
+> 2021-01-15
+
+### Reverts
+
+* Revert "Add the TTLS param to bandwidth updates"
+
+### Pull Requests
+
+* Merge pull request [#977](https://github.com/getlantern/flashlight/issues/977) from getlantern/ox/fix-android-timezone-2
+
+
 <a name="lantern-6.3.1"></a>
 ## [lantern-6.3.1](https://github.com/getlantern/flashlight/compare/lantern-6.3.0...lantern-6.3.1)
 
