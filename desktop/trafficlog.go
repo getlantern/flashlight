@@ -6,12 +6,14 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/getlantern/appdir"
 	"github.com/getlantern/errors"
 	"github.com/getlantern/flashlight/config"
 	"github.com/getlantern/flashlight/icons"
+	"github.com/getlantern/i18n"
 	"github.com/getlantern/trafficlog"
 	"github.com/getlantern/trafficlog-flashlight/tlproc"
 )
@@ -21,14 +23,17 @@ const (
 	trafficlogRequestTimeout      = time.Second
 	trafficlogDefaultSaveDuration = 5 * time.Minute
 
-	// This message is only displayed when the traffic log needs to be installed.
-	trafficlogInstallPrompt = "Lantern needs your permission to install diagnostic tools"
-
 	// An asset in the icons package.
 	trafficlogInstallIcon = "connected_32.ico"
 
 	// This file, in the config directory, holds a timestamp from the last failed installation.
 	trafficlogLastFailedInstallFile = "tl_last_failed"
+)
+
+var (
+	// This prompt is only displayed when the traffic log needs to be installed.
+	translatedAppName       = i18n.T(strings.ToUpper(common.AppName))
+	trafficlogInstallPrompt = i18n.T("BACKEND_INSTALL_DIAGNOSTIC_TOOLS", translatedAppName, translatedAppName)
 )
 
 // getCapturedPackets writes all packets captured during the input duration. The traffic log must be
